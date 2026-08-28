@@ -128,6 +128,23 @@
 >   arreglos los escribió el orquestador a mano. ▶ **De aquí en adelante: sin subagentes por defecto**,
 >   tests acotados con `--filter` y la suite entera UNA vez antes de subir; si una tarea justifica
 >   paralelizar, se propone con su coste y decide el owner.
+>   ▶▶ **SESIÓN CERRADA el 2026-08-28 a las 15:50 (hora de Madrid)** con todo empujado (`8d27187`),
+>   el gate en verde (suite **3315 / 21.713** · JS 813 · Pint ✓ · docs-check ✓ · build ✓) y
+>   **desplegado en staging**. `audit-clock` NO corrido: esta tanda no añadió ni tocó fixtures con
+>   calendario (comprobado sobre el diff del commit).
+>   ▶ ❗ **POR DÓNDE RETOMA LA SIGUIENTE SESIÓN DE ESTE CARRIL** (`[DECIDIDO owner, 2026-08-28]`):
+>   **otros puntos sobre el PANEL DE ADMIN**, que el owner dirá al arrancar. Antes de tocar nada:
+>   `/arranque-sesion`, y para el panel la fila de `CLAUDE.md` «Panel admin / puerta / operación
+>   diaria» (`docs/PANEL-ADMIN.md`) — y si toca la ficha del cliente o los pedidos,
+>   `specs/desmontar-view-order.md` (⚠️ `ViewOrder` está DESMONTADO: la orquestación NO vuelve a la
+>   página) y `specs/menores-a-cargo.md` §9.10/§9.11.
+>   ▶ **Lo que queda pendiente y NO bloquea**: **(1)** el OJO del owner sobre §5.octodecies en staging
+>   —y en particular el **lector real** con el PNG descargado, que ninguna suite mide—; **(2)** los
+>   **14 hallazgos menores** de la revisión, en `DEUDA.md` con su reproducción (ninguno rompe hoy;
+>   los tres de guardas que miden de menos son de una línea cada uno); **(3)** **JumpPoints**, que
+>   sigue esperando el ✅ del owner al resumen de una página de `specs/lealtad-jumppoints.md` §9 —y
+>   sus seis decisiones—; **(4)** dos decisiones del agente que el owner puede revertir barato: el
+>   **modo oscuro** de la pantalla de puerta (8 líneas) y los **6 menores por página** (una constante).
 >   ▶ **Y a las 09:35, las ENTRADAS en staging** (`ENTORNOS.md` §4): el `ProductionSeeder` las deja no
 >   vendibles y sin franjas; ahora las 4 entradas están a la venta con las plantillas de JUMP/KIDS de local
 >   (154, 60 min, 10–20 h) y 3.875 franjas. **El owner va a hacer la prueba de cabo a rabo en staging**

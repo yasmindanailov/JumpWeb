@@ -2088,6 +2088,20 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       descargar, renovar con confirmación) · **«Rotar carné QR»** en `ViewUser` (el `cards.rotated` lleva al
       OPERADOR de actor). `[DECIDIDO owner]`: **el panel NO declara menores**. +8 tests PHP · JS 773 → 790 ·
       headless **14/14** · techos por feature (chunk 247, payload 8.550). Sigue 🟦 solo por el OJO del owner.
+      ✅ **Y EL PULIDO DE LOS OCHO PUNTOS DEL OWNER, EN EL ÁRBOL (2026-08-28 tarde, `#217`, spec §9.7 y
+      §9.7.1)**, tras su prueba en staging: el **icono de la instalación dentro del QR** con margen
+      (7 módulos tapados; re-medido con 40 carnés REALES porque el primer número se midió con un token
+      que no era un carné: 7 → 0 fallos, 9 → 10 de 40) · **«Mi cuenta» en tarjetas** · **«Mi QR» junto
+      al nombre** · el **QR como credencial** con aviso permanente y confirmación en el cajón ·
+      **«Menores a cargo»** con alta desplegable y paginación de 6 · el **selector del embudo**
+      rediseñado · los **menores en la ficha del panel** · la **pantalla de puerta** entera (⚠️ su
+      paleta estaba ROTA: los grises y el color de marca computaban vacío) · y la palabra **«QR»**.
+      ⚠️ **La casilla del menor NO estaba rota** (modo interno + exención sin firmar, `#202`·2).
+      **Revisión adversarial: 23 hallazgos, 9 arreglados y 14 en `DEUDA`** — entre los arreglados, el
+      **cuerpo del semáforo de la puerta no se pintaba** y **«Mi QR» salía mudo** para quien gana la
+      sesión sin recargar. Suite 3315 / 21.713 · sondeos 38 ✓ y 15/15 · desplegado en staging.
+      **Sigue 🟦: falta el OJO del owner** (guion `VERIFICACION-E2E-CAJON.md` §5.octodecies, y en
+      particular el LECTOR real del recinto con el PNG descargado).
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de
