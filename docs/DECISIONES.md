@@ -11807,3 +11807,88 @@ sigue apagando lo que apagaba.
 
 ❗ **Esto NO se revisa con una captura: se revisa interactuando.** Es lo único de esta tanda que no
 puede medir una sonda — si algo se siente lento o brusco, el número está en un token.
+
+---
+
+## #223 · 2026-08-28 · La barra de móvil y el racimo de la cabecera son EL MISMO botón — y el rol de ACCIÓN se queda sin ningún CTA de armazón
+
+**Contexto.** `[DECIDIDO owner]`, con sus palabras: «el CTA que hay en desktop de reservar y
+registro juntos, con transformación el uno del otro, **lo quiero igual**, mismo tamaño, altura, en
+el móvil, **mismos colores también**, con la misma animación de invitar a darle al icono».
+
+**El diagnóstico no era «hay que ajustar la barra»: eran DOS COMPONENTES.** Arriba
+`.cta-med`/`.cta-ghost`; abajo `.cta-prime`, una pieza propia cuyo trabajo era parecerse a la de
+arriba. Nadie los sincronizaba, así que divergieron.
+
+**Medido en navegador headless a 390 px, ANTES de tocar nada:**
+
+| | racimo del nav | barra de móvil |
+|---|---|---|
+| alto | **54 px** (48 en ≤619) | **100 px** |
+| chip del icono | 30 × 26 | **64 × 42** |
+| relleno de «comprar» | tinta `var(--fg)` = `#101418` | **`var(--action)` = `#F2711C`** |
+| la mitad COLAPSADA | fantasma de tarjeta (blanco) | **también naranja** |
+| invitación (asomo + aro) | sí | **no existía** |
+
+▶ Los 100 px no eran «un padding de más»: `align-items: stretch` en el racimo hacía que la mitad
+más alta estirase a la otra, así que el rótulo partido en dos líneas subía **las dos**.
+
+**La separación que faltaba es COMPONENTE / COLOCACIÓN.** `.cta-pair` (nuevo nombre de lo que era
+`.nav__pair`) pone forma, altura, chip, tipografía, relleno, intercambio e invitación, y lo
+consumen los dos sitios. `.nav__pair` y `.book-bar__pair` solo dicen **dónde se pone y cuánto mide
+cada mitad**, que es lo único que de verdad difiere: arriba comparten fila con el logotipo y tienen
+ancho fijo (224/56); abajo la expandida se estira hasta el borde.
+▶ Por eso los modificadores de estado pasan a ser `cta-pair--account` / `cta-pair--invita`: con el
+nombre del SITIO habría que escribir cada regla de intercambio dos veces, que es exactamente como
+se llegó al problema.
+
+**`.cta-prime` se RETIRA entero** (42 líneas de forma + 8 de color de icono + 3 reglas de superficie
+de tinta + 1 de `:active`). Nació para el hero, el hero se quedó sin CTA en `#195`, y desde entonces
+su único consumidor era la barra.
+
+⚠️⚠️ **Consecuencia de sistema, asumida por el owner: el rol de ACCIÓN se queda sin ningún CTA de
+armazón.** `.cta-prime` era el único que quedaba dentro (`#209`); `.cta-med` había salido en `#213`
+porque su color lo manda una coreografía, no un rol. El rol **no desaparece** —lo siguen pintando
+`.btn`, `.cartbar`, `.skip-link` y `.flash`— pero el par es tinta + fantasma en las doce vistas,
+arriba y abajo. Es `#213` aplicado al hermano que se había quedado fuera.
+
+**Dos cosas que enseñó la ejecución, y las dos costaron una medición:**
+
+⚠️⚠️ **`min-width: 0` no es un ajuste fino: sin él el reparto no funciona en absoluto.** Un hijo de
+flex tiene `min-width: auto`, o sea que **no encoge por debajo del ancho de su contenido**, y el
+contenido es un rótulo con `white-space: nowrap`. El `flex-basis: 56px` se declaraba y el navegador
+lo ignoraba, legítimamente: la mitad colapsada medía **188 px en vez de 56**. Arriba no pasa porque
+el ancho es FIJO. *Un CSS que se lee correcto y no hace nada es peor que uno que falla.*
+
+⚠️ **Se anima `flex-grow`, no `flex-basis`.** Las dos mitades parten de la misma base y lo único que
+cambia es quién se queda el sobrante: un número, que sí interpola. La versión anterior no animaba
+ningún ancho — fingía el intercambio plegando el rótulo con `max-width`.
+
+**Y la lección de método: las 31 aserciones del armazón pasaban TODAS con la barra rota.**
+Comprobaban que la barra tiene dos mitades, que son enlaces, que se intercambian y que sin JS
+navegan. **Ninguna comprobaba que se PARECEN a nada**, porque la semejanza la garantizaba una
+persona. Guarda nueva —`test_the_mobile_bar_is_the_same_component_as_the_nav_pair`— que asevera la
+**causa**, no las medidas (que envejecerían): los dos racimos declaran `cta-pair`, las mitades son
+`cta-med`/`cta-ghost`, y **la colocación no puede declarar `height`, `background`, `padding`,
+`font-size`, `font-family`, `border-radius` ni `color`**. La sombra sí, y es deliberado: la barra
+flota (cuarto rol de elevación, `#217`) y el racimo va apoyado.
+▶ **Probada por mutación**: `height: 70px` en `.book-bar__cta` → muere; quitar `cta-pair` del
+racimo de la barra → muere.
+
+⚠️ **Y una guarda vecina resultó estar mirando la página entera.** `test_nav_cta_omits_price_subtitle`
+aseveraba que sin catálogo no aparece `cta-med__s` **en todo el HTML**. Funcionaba de casualidad:
+la barra usaba otra clase para su subtítulo. Al compartir componente empezó a fallar por un elemento
+que no es su sujeto — y con la coincidencia al revés habría dado un falso verde igual de fácil.
+Acotada al nav. *Es la tercera vez que este repo paga «acota al elemento antes de creerte un test
+verde».*
+
+⚠️ **Un tercer test no fijaba nada desde `#223` hacia atrás**: `HomePageTest` aseveraba que el hero
+no contiene `cta-prime` — una clase que ya no existe en ninguna parte, así que la ausencia se
+cumplía sola. Y su motivo («el hero no lleva CTA») también había caducado: `#216` le devolvió sus
+dos botones. Re-apuntada a lo que sí es cierto: el hero tiene sus propios botones y **no reutiliza
+el par del armazón**, con guarda de la guarda.
+
+**Verificación.** Navegador headless a 390 px: comprar **298 × 48** en tinta, cuenta **56 × 48** en
+fantasma, invitación activa al cargar, el clic **intercambia sin navegar** (`location.pathname`
+sigue en `/`) y la invitación se apaga al tocarla. Escritorio a 1280: **224 × 54** y **56 × 54**.
+Suite acotada (armazón + acción + huérfanos + home): **101 verdes**. Pint limpio.

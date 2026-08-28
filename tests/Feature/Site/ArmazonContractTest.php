@@ -820,7 +820,12 @@ class ArmazonContractTest extends TestCase
 
         $clases = $par[0]->getAttribute('data-bind-class');
 
-        foreach (['nav__pair--account', 'nav__pair--invita'] as $marca) {
+        // ⚠️ Los modificadores de estado se renombraron en `#223`: pasan de llevar el nombre del
+        // SITIO (`nav__pair--…`) al del COMPONENTE (`cta-pair--…`), porque desde esa tanda el par
+        // vive en dos sitios —el racimo de la cabecera y la barra de móvil— y son las MISMAS
+        // reglas de intercambio. Con el nombre del sitio habría que duplicarlas, que es como se
+        // llegó a tener dos botones que debían ser iguales y no lo eran.
+        foreach (['cta-pair--account', 'cta-pair--invita'] as $marca) {
             $this->assertStringContainsString(
                 $marca, $clases,
                 "el par no publica `{$marca}`: sin esa clase el CSS no sabe qué mitad es ancha ".
@@ -913,9 +918,9 @@ class ArmazonContractTest extends TestCase
         // ⚠️ Las DOS piezas por separado. El regex genérico de la primera versión lo cumplía el
         // ARO, así que retirar el asomo dejaba la guarda verde: media invitación es la que no se
         // ve, porque el aro late alrededor de un botón que ya no se mueve.
-        foreach (['nav__alt > .cta-ghost' => 'cta-asoma', 'nav__alt-ring' => 'cta-aro'] as $quien => $paso) {
+        foreach (['cta-pair__alt > .cta-ghost' => 'cta-asoma', 'cta-pair__alt-ring' => 'cta-aro'] as $quien => $paso) {
             $this->assertMatchesRegularExpression(
-                '/\.nav__pair--invita \.'.preg_quote($quien, '/').'[^{]*\{[^}]*animation:\s*'.$paso.'/', $css,
+                '/\.cta-pair--invita \.'.preg_quote($quien, '/').'[^{]*\{[^}]*animation:\s*'.$paso.'/', $css,
                 "la invitación ha perdido su mitad `{$paso}`: sin ella el par de dos pasos no se ".
                 'descubre solo.',
             );
@@ -925,7 +930,7 @@ class ArmazonContractTest extends TestCase
         $apagada = false;
 
         foreach (array_slice($reduce, 1) as $bloque) {
-            if (str_contains(substr($bloque, 0, 400), 'nav__pair--invita') && str_contains(substr($bloque, 0, 400), 'animation: none')) {
+            if (str_contains(substr($bloque, 0, 400), 'cta-pair--invita') && str_contains(substr($bloque, 0, 400), 'animation: none')) {
                 $apagada = true;
             }
         }
@@ -1206,13 +1211,118 @@ class ArmazonContractTest extends TestCase
     {
         $css = $this->stylesheets();
 
+        // ⚠️ **El MECANISMO cambió en `#223` y estas dos aserciones lo siguen.** Antes el reparto
+        // era `flex: 1 1 auto` contra `flex: 0 0 auto`, que no se puede ANIMAR: el ancho iba de
+        // `auto` a `auto` y el intercambio se fingía plegando el rótulo con `max-width`. Ahora los
+        // dos hijos parten de la MISMA base (`--cta-pair-mini`) y lo único que cambia es
+        // `flex-grow` —un número, que sí interpola—, así que el intercambio de la barra se ve
+        // igual que el del racimo de arriba, que era el encargo.
+        // ▶ La regla que se fija sigue siendo la misma: **sin JavaScript, la ancha es la de
+        // comprar**, y el par se tiene que poder invertir.
         $this->assertMatchesRegularExpression(
-            '/\.book-bar__cta--buy\s*\{[^}]*flex:\s*1 1 auto/s', $css,
+            '/\.book-bar__cta--buy\s*\{[^}]*flex-grow:\s*1/s', $css,
             'la mitad de comprar no arranca expandida',
         );
         $this->assertMatchesRegularExpression(
-            '/\.book-bar--signup \.book-bar__cta--alt\s*\{[^}]*flex:\s*1 1 auto/s', $css,
+            '/\.book-bar--signup \.book-bar__pair > \.cta-pair__alt\s*\{[^}]*flex-grow:\s*1/s', $css,
             'la mitad de la cuenta no se expande nunca: el par no se puede invertir',
+        );
+        // ⚠️ **Y la base COMÚN es lo que hace que el intercambio se pueda animar**: si un lado
+        // volviera a `auto`, las dos aserciones de arriba seguirían verdes y el gesto se perdería.
+        $this->assertMatchesRegularExpression(
+            '/\.book-bar__cta--buy,\s*\.book-bar__pair > \.cta-pair__alt\s*\{[^}]*flex:\s*0 1 var\(--cta-pair-mini\)/s', $css,
+            'las dos mitades ya no parten de la misma base: `flex-grow` no puede animar el reparto',
+        );
+        // ⚠️⚠️ **`min-width: 0`, y NO es cosmético**: sin él un hijo de flex no encoge por debajo
+        // del ancho de su contenido (`min-width: auto`), el `flex-basis` de 56 px se ignora y la
+        // mitad colapsada mide lo que mida su rótulo. Medido en el navegador antes de ponerlo:
+        // **188 px en vez de 56**. Es el fallo que se ve como «no funciona el diseño» y se lee
+        // como CSS correcto.
+        $this->assertMatchesRegularExpression(
+            '/\.book-bar__cta--buy,\s*\.book-bar__pair > \.cta-pair__alt\s*\{[^}]*min-width:\s*0/s', $css,
+            'las mitades han perdido `min-width: 0`: la colapsada volverá a medir su contenido',
+        );
+    }
+
+    /**
+     * **La barra de móvil y el racimo de la cabecera son EL MISMO BOTÓN** (`#223`, 2026-08-28).
+     *
+     * `[DECIDIDO owner]`: «lo quiero igual, mismo tamaño, altura, mismos colores, con la misma
+     * animación de invitar». Hasta esa fecha eran DOS componentes —`.cta-prime` abajo,
+     * `.cta-med`/`.cta-ghost` arriba— que alguien tenía que mantener sincronizados a mano.
+     *
+     * ⚠️⚠️ **No se mantuvieron, y ninguna guarda lo veía.** Medido en el navegador a 390 px antes
+     * de la refundición: la barra medía **100 px de alto contra 54**, su chip de icono **64×42
+     * contra 30×26**, y **las dos mitades salían naranjas** cuando arriba la colapsada es un
+     * fantasma de tarjeta. Los 31 casos del armazón pasaban todos: comprobaban que la barra
+     * TIENE dos mitades, que son enlaces y que se intercambian — nunca que se PARECEN a nada.
+     *
+     * ▶ Por eso este caso no asevera medidas (que envejecerían con el diseño) sino la **causa**:
+     * que la barra no vuelva a tener forma propia. Aporta COLOCACIÓN; la forma la pone el
+     * componente compartido. Si alguien vuelve a escribir aquí una altura o un relleno, el
+     * mecanismo ha vuelto a partirse aunque el número que ponga sea el correcto hoy.
+     */
+    public function test_the_mobile_bar_is_the_same_component_as_the_nav_pair(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        // ── 1. Los DOS racimos declaran el mismo componente ──────────────────────────────────
+        foreach (['book-bar__pair' => 'la barra de móvil', 'nav__pair' => 'el racimo de la cabecera'] as $sitio => $quien) {
+            $nodo = $this->nodes($html, $sitio);
+            $this->assertCount(1, $nodo, "no se encuentra {$quien}");
+            $this->assertStringContainsString(
+                'cta-pair', $nodo[0]->getAttribute('class'),
+                "{$quien} no declara `cta-pair`: ha dejado de compartir componente y su forma ".
+                'volverá a divergir sin que nada avise.',
+            );
+        }
+
+        // ── 2. Las mitades de la barra son las MISMAS clases que arriba ──────────────────────
+        foreach (['book-bar__cta--buy' => 'cta-med', 'book-bar__cta--alt' => 'cta-ghost'] as $mitad => $componente) {
+            $nodo = $this->nodes($html, $mitad);
+            $this->assertCount(1, $nodo, "falta la mitad `{$mitad}`");
+            $this->assertStringContainsString(
+                $componente, $nodo[0]->getAttribute('class'),
+                "`{$mitad}` no usa `{$componente}`, que es el botón del nav: ha vuelto a tener ".
+                'pieza propia.',
+            );
+        }
+
+        // ── 3. La COLOCACIÓN no puede redefinir la FORMA ─────────────────────────────────────
+        // Éstas son exactamente las propiedades por las que las dos piezas divergieron. La sombra
+        // NO está en la lista y es deliberado: la barra flota sobre el contenido (cuarto rol de
+        // elevación, `#217`) y el racimo va apoyado, así que es la única diferencia de aspecto
+        // que la colocación tiene derecho a declarar.
+        $prohibidas = ['height', 'background', 'padding', 'font-size', 'font-family', 'border-radius', 'color'];
+        $reglas = $this->cssRules(public_path('css/site.css'));
+
+        foreach ($reglas as $selector => $cuerpo) {
+            // Sólo las reglas que apuntan a los BOTONES de la barra: `.book-bar` a secas es el
+            // contenedor fijo y sí tiene padding y transform propios, que son su trabajo.
+            if (! str_contains($selector, 'book-bar__cta') && ! str_contains($selector, 'book-bar__pair >')) {
+                continue;
+            }
+
+            foreach ($prohibidas as $prop) {
+                $this->assertDoesNotMatchRegularExpression(
+                    '/(^|[;{\s])'.preg_quote($prop, '/').'\s*:/', $cuerpo,
+                    "`{$selector}` declara `{$prop}`. La barra de móvil aporta COLOCACIÓN, no ".
+                    'forma: la forma la pone `.cta-pair`, que comparte con el nav. Declararla '.
+                    'aquí es exactamente como se llegó a tener 100 px de alto abajo y 54 arriba.',
+                );
+            }
+        }
+
+        // Guarda de la guarda: si el filtro de arriba no casara con ninguna regla, el bucle
+        // pasaría sin mirar nada — el modo de fallo que este repo ya ha pagado varias veces.
+        $miradas = array_filter(
+            array_keys($reglas),
+            fn (string $sel): bool => str_contains($sel, 'book-bar__cta') || str_contains($sel, 'book-bar__pair >'),
+        );
+        $this->assertGreaterThanOrEqual(
+            5, count($miradas),
+            'el filtro sólo ve '.count($miradas).' reglas de la barra: se ha roto y no está '.
+            'mirando nada.',
         );
     }
 
@@ -1587,10 +1697,14 @@ class ArmazonContractTest extends TestCase
         $reglas = $this->cssRules(public_path('css/site.css'));
 
         $esperado = [
+            // ⚠️ Los anchos FIJOS siguen siendo del nav y sólo del nav (`#223`): abajo, en la
+            // barra de móvil, la mitad expandida se estira con `flex` hasta el borde de la
+            // pantalla. Por eso el selector lleva las DOS clases —`.nav__pair` (colocación) y
+            // `.cta-pair--account` (estado del componente)— y no una sola.
             '.nav__pair .cta-med' => 'var(--cta-pair-w)',
             '.nav__pair .cta-ghost' => 'var(--cta-pair-mini)',
-            '.nav__pair--account .cta-med' => 'var(--cta-pair-mini)',
-            '.nav__pair--account .cta-ghost' => 'var(--cta-pair-w)',
+            '.nav__pair.cta-pair--account .cta-med' => 'var(--cta-pair-mini)',
+            '.nav__pair.cta-pair--account .cta-ghost' => 'var(--cta-pair-w)',
         ];
 
         foreach ($esperado as $selector => $ancho) {
@@ -1642,7 +1756,7 @@ class ArmazonContractTest extends TestCase
     {
         $reglas = $this->cssRules(public_path('css/site.css'));
 
-        foreach (['.nav__pair .cta-med__body', '.nav__pair--account .cta-ghost__body'] as $entra) {
+        foreach (['.cta-pair .cta-med__body', '.cta-pair--account .cta-ghost__body'] as $entra) {
             $this->assertArrayHasKey($entra, $reglas, "falta `{$entra}`");
             $this->assertStringContainsString(
                 'transition-delay: var(--cta-pair-in', (string) $reglas[$entra],
@@ -1650,7 +1764,7 @@ class ArmazonContractTest extends TestCase
             );
         }
 
-        foreach (['.nav__pair .cta-ghost__body', '.nav__pair--account .cta-med__body'] as $sale) {
+        foreach (['.cta-pair .cta-ghost__body', '.cta-pair--account .cta-med__body'] as $sale) {
             $this->assertArrayHasKey($sale, $reglas, "falta `{$sale}`");
             $this->assertStringContainsString(
                 'transition-delay: 0s, 0s', (string) $reglas[$sale],

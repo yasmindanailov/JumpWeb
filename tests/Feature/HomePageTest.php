@@ -252,11 +252,29 @@ class HomePageTest extends TestCase
         TicketType::query()->update(['is_sellable' => false]);
         Cache::flush();
 
-        $response = $this->get('/')->assertOk();
+        $html = $this->get('/')->assertOk()->getContent();
 
-        $response->assertSee('nav-cta-med', false);
-        $response->assertSee('cta-med__t', false);
-        $response->assertDontSee('cta-med__s', false); // sin subtítulo
+        // ⚠️⚠️ **ACOTADO AL NAV, y la falta de acotación la destapó `#223`.** Este caso miraba la
+        // PÁGINA ENTERA. Funcionaba de casualidad: la barra de móvil usaba otra clase
+        // (`cta-prime__s`) para su subtítulo, así que «no hay `cta-med__s` en ninguna parte»
+        // equivalía a «el nav no lo pinta». Al pasar la barra a usar el MISMO componente, la
+        // aserción empezó a fallar por un elemento que no es su sujeto — y habría dado un falso
+        // verde igual de fácil si la coincidencia hubiera ido en el otro sentido.
+        // ▶ Y las dos conductas son DISTINTAS a propósito: sin catálogo el nav **omite** el
+        // subtítulo (no deja una línea vacía en una fila apretada) y la barra de abajo lo
+        // **sustituye** por «Cumpleaños online», que es lo honesto en la pieza que sí tiene sitio.
+        // Sin acotar, este caso no podía expresar eso.
+        $nav = $this->slice($html, 'nav-cta-med');
+
+        $this->assertStringContainsString('cta-med__t', $nav, 'el CTA del nav perdió su rótulo');
+        $this->assertStringNotContainsString(
+            'cta-med__s', $nav,
+            'sin catálogo vendible el CTA del NAV no debe pintar subtítulo (dejaría una línea vacía)',
+        );
+
+        // Guarda de la guarda: si el recorte no trajera el botón, la ausencia de arriba se
+        // cumpliría sola. Es el modo de fallo que este fichero ya documenta dos veces.
+        $this->assertStringContainsString('nav-cta-med', $nav, 'el recorte no trae el CTA del nav');
     }
 
     /**
@@ -286,11 +304,24 @@ class HomePageTest extends TestCase
         $this->assertStringContainsString('hero__stage', $hero, 'el recorte del hero no trae el escenario');
         $this->assertStringContainsString('hero__title', $hero, 'el recorte del hero no trae el titular');
 
-        $this->assertStringNotContainsString(
-            'cta-prime', $hero,
-            'el hero ha vuelto a llevar un CTA. La primera pantalla es eslogan, titular, estado y '.
-            'vídeo; comprar se ofrece DESPUÉS (spec §12).',
-        );
+        // ⚠️⚠️ **Esta aserción decía `cta-prime` y desde `#223` NO FIJABA NADA**: esa clase ya no
+        // existe en ninguna parte del producto, así que la ausencia se cumplía sola. Y el motivo
+        // que daba —«el hero no lleva CTA»— también había caducado: `#216` le devolvió sus dos
+        // botones (`hero__act--buy` / `--alt`), que es lo que hace el mockup.
+        // ▶ Lo que SÍ sigue siendo cierto, y es lo que se asevera ahora: el hero tiene sus PROPIOS
+        // botones y **no reutiliza el par del armazón**. Son dos piezas con coreografías
+        // distintas —el par intercambia mitades, el del hero no— y mezclarlas volvería a crear el
+        // problema que `#223` acaba de cerrar.
+        foreach (['cta-med', 'cta-ghost', 'cta-pair', 'book-bar'] as $ajeno) {
+            $this->assertStringNotContainsString(
+                $ajeno, $hero,
+                "el hero ha metido dentro `{$ajeno}`, que es el par del armazón. El hero tiene sus ".
+                'propios botones (`hero__act--*`) y una coreografía distinta.',
+            );
+        }
+        // Guarda de la guarda: el hero SÍ tiene botones, y si dejara de tenerlos las cuatro
+        // ausencias de arriba pasarían por el motivo equivocado.
+        $this->assertStringContainsString('hero__act', $hero, 'el hero se ha quedado sin sus botones');
 
         // …y lo que SÍ tiene que traer, que es lo que ocupó el sitio del CTA.
         $this->assertStringContainsString('hero__kicker', $hero, 'falta el eslogan sobre el titular');
@@ -310,7 +341,8 @@ class HomePageTest extends TestCase
      * **El botón de comprar lleva el precio anclado — donde quiera que viva.**
      *
      * Es la mitad SUPERVIVIENTE del test del CTA del hero. El sujeto cambió (ahora es la barra
-     * flotante de móvil, que conserva la misma estructura `cta-prime`); la regla es la misma:
+     * flotante de móvil, que desde `#223` usa la misma estructura que el nav, `cta-med`); la regla
+     * es la misma:
      * icono + cuerpo (título + subtítulo) + flecha, con «desde X €» cuando hay catálogo vendible.
      */
     public function test_the_buy_cta_carries_the_price_anchor(): void
@@ -320,17 +352,20 @@ class HomePageTest extends TestCase
         $html = $this->get('/')->assertOk()->getContent();
 
         // ⚠️ **Acotado a la barra, y no es un refinamiento: sin acotar el test NO fijaba nada.**
-        // Medido por mutación: `assertSee('cta-prime')` casa con `cta-prime__ico`, así que
+        // Medido por mutación: `assertSee('cta-med')` casa con `cta-med__ico`, así que
         // retirar la clase del botón lo dejaba verde; y `assertSeeText('desde X')` lo satisfacía
         // el CTA del NAV, que dice el mismo texto con otra clave de idioma. Las dos mutaciones
         // pasaban. Es literalmente el aviso de `CONVENCIONES §3.quater`: «si un dato viaja al
         // cliente y su único test conduce la superficie vieja, el contrato NO lo está fijando».
         $bar = $this->slice($html, 'book-bar__cta');
 
-        $this->assertStringContainsString('cta-prime ', $bar, 'el botón perdió la estructura `cta-prime`');
-        $this->assertStringContainsString('cta-prime__t', $bar, 'falta el título del botón');
-        $this->assertStringContainsString('cta-prime__s', $bar, 'falta el subtítulo del botón');
-        $this->assertStringContainsString('cta-prime__arrow', $bar, 'falta la flecha del botón');
+        // ⚠️ **La estructura cambió de componente en `#223`**, no de regla: la barra dejó de tener
+        // pieza propia (`.cta-prime`) y usa la MISMA que el racimo de la cabecera. La flecha ya no
+        // se asevera porque `.cta-med` no la tiene — `#213` la retiró del CTA del armazón: el
+        // botón ya dice a dónde va con su rótulo y su icono.
+        $this->assertStringContainsString('cta-med ', $bar, 'el botón perdió la estructura `cta-med`');
+        $this->assertStringContainsString('cta-med__t', $bar, 'falta el título del botón');
+        $this->assertStringContainsString('cta-med__s', $bar, 'falta el subtítulo del botón');
         $this->assertStringContainsString(
             "desde {$expected}", $bar,
             "el botón de compra ya no ancla el precio («desde {$expected}»). Ojo: el CTA del nav ".
@@ -361,7 +396,7 @@ class HomePageTest extends TestCase
 
     public function test_buy_cta_falls_back_to_no_price_subtitle_when_catalog_empty(): void
     {
-        // Sin entradas vendibles: el botón SIGUE mostrando subtítulo (la clase `cta-prime__s`
+        // Sin entradas vendibles: el botón SIGUE mostrando subtítulo (la clase `cta-med__s`
         // permanece) con el fallback "Cumpleaños online" (copy `hero.cta_buy_no_price`) —
         // honesto: lo único reservable online hoy. El botón nunca queda mudo.
         // ⚠️ Se re-apuntó del hero a la barra de móvil (`#195`): el sujeto cambió de sitio, la
@@ -371,8 +406,8 @@ class HomePageTest extends TestCase
 
         $response = $this->get('/')->assertOk();
 
-        $response->assertSee('cta-prime', false);
-        $response->assertSee('cta-prime__s', false);
+        $response->assertSee('cta-med', false);
+        $response->assertSee('cta-med__s', false);
         $response->assertSeeText('Cumpleaños online');
     }
 

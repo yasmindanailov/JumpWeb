@@ -1,8 +1,23 @@
-{{-- **EL CTA DOBLE DE MÓVIL** (`docs/specs/armazon-y-menu.md` §4.9, armazón · tanda 2c·4).
+{{-- **EL CTA DOBLE DE MÓVIL** (`docs/specs/armazon-y-menu.md` §4.9 y §13, armazón · tanda 2c·4).
 
      `[DECIDIDO owner, 2026-08-27]`: la barra de abajo deja de ser un botón y pasa a ser **el CTA
      doble del mockup** — uno expandido con su subtítulo y el otro colapsado a solo icono; pulsar
      el colapsado lo expande y colapsa al otro; pulsar el expandido **actúa**.
+
+     ⚠️⚠️ **Y desde el 2026-08-28 (`#223`) NO es «un botón parecido al del nav»: es EL MISMO
+     COMPONENTE** (`[DECIDIDO owner]`). Aquí vivía `.cta-prime`, una pieza propia que tenía que
+     parecerse a `.cta-med`/`.cta-ghost` y no se parecía en nada — **medido en el navegador a
+     390 px: 100 px de alto contra 54, chip de icono de 64×42 contra 30×26, y las DOS mitades
+     naranjas** cuando en el nav la colapsada es un fantasma de tarjeta. No era un defecto de
+     ajuste: eran dos componentes que alguien tenía que mantener sincronizados a mano, y no se
+     mantuvieron. Ahora la barra **no aporta forma, solo COLOCACIÓN**: qué mitad se estira y que
+     el racimo ocupe el ancho del pulgar. Todo lo demás —altura, chip, tipografía, relleno,
+     intercambio e invitación— lo pone `.cta-pair`, que es el mismo que pinta el nav.
+
+     ▶ **Consecuencia de sistema, y es deliberada**: con `.cta-prime` retirado, el rol de ACCIÓN
+     (`theme.action`, `#209`) **ya no pinta esta barra**. El naranja del cliente se queda en
+     `.btn`, `.cartbar` y los avisos; el CTA del armazón es tinta en las doce vistas, arriba y
+     abajo. Es lo mismo que `#213` decidió para el nav, aplicado al hermano que quedaba fuera.
 
      ▶ **Comprar sigue siendo UN solo gesto**: arranca expandido. Registrarse cuesta dos, y eso es
      la jerarquía, no un descuido.
@@ -27,18 +42,24 @@
 <div class="book-bar" x-data="mobileBookBar"
      :class="[visible && 'book-bar--on', $store.ctaPair.mode === 'account' && 'book-bar--signup']"
      x-effect="document.body.classList.toggle('book-bar-visible', visible)">
-    <div class="book-bar__pair">
+    {{-- `cta-pair` = el COMPONENTE (forma y coreografía, compartido con el nav).
+         `book-bar__pair` = la COLOCACIÓN (ancho de pulgar, cuál se estira).
+         Los dos modificadores de estado son los del componente, no los del sitio: si fueran
+         `book-bar--…` habría que duplicar cada regla de intercambio y volveríamos al problema. --}}
+    <div class="cta-pair book-bar__pair"
+         :class="[$store.ctaPair.mode === 'account' && 'cta-pair--account',
+                  ! $store.ctaPair.touched && 'cta-pair--invita']">
 
-        {{-- Mitad A · COMPRAR. Expandida al cargar. --}}
+        {{-- Mitad A · COMPRAR. Expandida al cargar. Mismo marcado que `nav-cta-med`. --}}
         <a href="{{ route('entradas') }}"
-           class="cta-prime book-bar__cta book-bar__cta--buy"
+           class="cta-med book-bar__cta book-bar__cta--buy"
            aria-label="{{ __('landing.hero.cta_buy') }}"
            :aria-label="$store.ctaPair.mode === 'buy' ? '{{ __('landing.hero.cta_buy') }}' : '{{ __('landing.nav.cta_switch_buy') }}'"
            @click.prevent="$store.ctaPair.mode === 'buy' ? $store.purchase.open() : ($store.ctaPair.show('buy'))">
-            <span class="cta-prime__ico"><x-icons.ic-e2 :width="54" :height="35" /></span>
-            <span class="cta-prime__body">
-                <span class="cta-prime__t">{{ __('landing.hero.cta_buy') }}</span>
-                <span class="cta-prime__s">
+            <span class="cta-med__ico"><x-icons.ic-e2 :width="28" :height="18" /></span>
+            <span class="cta-med__body">
+                <span class="cta-med__t">{{ __('landing.nav.cta_buy') }}</span>
+                <span class="cta-med__s">
                     @if (! empty($ctaMinPriceLabel))
                         {{ __('landing.hero.cta_buy_from', ['amount' => $ctaMinPriceLabel]) }}
                     @else
@@ -46,58 +67,65 @@
                     @endif
                 </span>
             </span>
-            <span class="cta-prime__arrow" aria-hidden="true">→</span>
         </a>
 
-        {{-- Mitad B · la CUENTA. Colapsada al cargar.
+        {{-- Mitad B · la CUENTA. Colapsada al cargar, y **fantasma**: relleno de tarjeta, no de
+             tinta — que es lo que la distingue de la otra mitad de un vistazo.
              · Sin sesión y con trámite externo configurado → lleva al sistema del parque, en
                pestaña nueva, y su glifo es el portapapeles: es un FORMULARIO, no un alta.
              · Sin sesión y sin trámite externo → crea una cuenta, con la pareja de `user`.
              · Con sesión → abre el área de cliente.
-             Es el mismo reparto que el racimo de la cabecera; aquí solo cambia el envase. --}}
+             Es el mismo reparto que el racimo de la cabecera; aquí solo cambia la colocación.
+             El aro de la invitación necesita un envoltorio posicionado, igual que en el nav. --}}
         @guest
             @if (! empty($site['registration_url']))
-                <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener"
-                   class="cta-prime book-bar__cta book-bar__cta--alt"
-                   aria-label="{{ $site['registration_label'] }}"
-                   :aria-label="$store.ctaPair.mode === 'account' ? '{{ $site['registration_label'] }}' : '{{ __('landing.nav.cta_switch_signup') }}'"
-                   @click="if ($store.ctaPair.mode !== 'account') { $event.preventDefault(); $store.ctaPair.show('account'); }">
-                    <span class="cta-prime__ico"><x-icons.clipboard-check :width="26" :height="26" /></span>
-                    <span class="cta-prime__body">
-                        <span class="cta-prime__t">{{ $site['registration_label'] }}</span>
-                        @if (! empty($site['registration_subtitle']))
-                            <span class="cta-prime__s">{{ $site['registration_subtitle'] }}</span>
-                        @endif
-                    </span>
-                    <span class="cta-prime__arrow" aria-hidden="true">→</span>
-                </a>
+                <span class="cta-pair__alt">
+                    <span class="cta-pair__alt-ring" aria-hidden="true"></span>
+                    <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener"
+                       class="cta-ghost book-bar__cta book-bar__cta--alt"
+                       aria-label="{{ $site['registration_label'] }}"
+                       :aria-label="$store.ctaPair.mode === 'account' ? '{{ $site['registration_label'] }}' : '{{ __('landing.nav.cta_switch_signup') }}'"
+                       @click="if ($store.ctaPair.mode !== 'account') { $event.preventDefault(); $store.ctaPair.show('account'); }">
+                        <span class="cta-ghost__ico"><x-icons.clipboard-check /></span>
+                        <span class="cta-ghost__body">
+                            <span class="cta-ghost__t">{{ $site['registration_label'] }}</span>
+                            @if (! empty($site['registration_subtitle']))
+                                <span class="cta-ghost__s">{{ $site['registration_subtitle'] }}</span>
+                            @endif
+                        </span>
+                    </a>
+                </span>
             @else
-                <a href="{{ route('registro') }}"
-                   class="cta-prime book-bar__cta book-bar__cta--alt"
-                   aria-label="{{ __('landing.nav.reserve') }}"
-                   :aria-label="$store.ctaPair.mode === 'account' ? '{{ __('landing.nav.reserve') }}' : '{{ __('landing.nav.cta_switch_signup') }}'"
-                   @click.prevent="$store.ctaPair.mode === 'account' ? $store.purchase.openAccount($event, 'register') : ($store.ctaPair.show('account'))">
-                    <span class="cta-prime__ico"><x-icons.user-plus :width="26" :height="26" /></span>
-                    <span class="cta-prime__body">
-                        <span class="cta-prime__t">{{ __('landing.nav.reserve') }}</span>
-                        <span class="cta-prime__s">{{ __('landing.nav.cta_switch_signup_sub') }}</span>
-                    </span>
-                    <span class="cta-prime__arrow" aria-hidden="true">→</span>
-                </a>
+                <span class="cta-pair__alt">
+                    <span class="cta-pair__alt-ring" aria-hidden="true"></span>
+                    <a href="{{ route('registro') }}"
+                       class="cta-ghost book-bar__cta book-bar__cta--alt"
+                       aria-label="{{ __('landing.nav.reserve') }}"
+                       :aria-label="$store.ctaPair.mode === 'account' ? '{{ __('landing.nav.reserve') }}' : '{{ __('landing.nav.cta_switch_signup') }}'"
+                       @click.prevent="$store.ctaPair.mode === 'account' ? $store.purchase.openAccount($event, 'register') : ($store.ctaPair.show('account'))">
+                        <span class="cta-ghost__ico"><x-icons.user-plus /></span>
+                        <span class="cta-ghost__body">
+                            <span class="cta-ghost__t">{{ __('landing.nav.reserve') }}</span>
+                            <span class="cta-ghost__s">{{ __('landing.nav.cta_switch_signup_sub') }}</span>
+                        </span>
+                    </a>
+                </span>
             @endif
         @else
-            <a href="{{ route('account') }}"
-               class="cta-prime book-bar__cta book-bar__cta--alt"
-               aria-label="{{ __('landing.footer.account_link') }}"
-               :aria-label="$store.ctaPair.mode === 'account' ? '{{ __('landing.footer.account_link') }}' : '{{ __('landing.nav.cta_switch_account') }}'"
-               @click.prevent="$store.ctaPair.mode === 'account' ? $store.purchase.open() : ($store.ctaPair.show('account'))">
-                <span class="cta-prime__ico"><x-icons.user :width="26" :height="26" /></span>
-                <span class="cta-prime__body">
-                    <span class="cta-prime__t">{{ __('landing.footer.account_link') }}</span>
-                    <span class="cta-prime__s">{{ __('landing.nav.cta_account_sub') }}</span>
-                </span>
-                <span class="cta-prime__arrow" aria-hidden="true">→</span>
-            </a>
+            <span class="cta-pair__alt">
+                <span class="cta-pair__alt-ring" aria-hidden="true"></span>
+                <a href="{{ route('account') }}"
+                   class="cta-ghost book-bar__cta book-bar__cta--alt"
+                   aria-label="{{ __('landing.footer.account_link') }}"
+                   :aria-label="$store.ctaPair.mode === 'account' ? '{{ __('landing.footer.account_link') }}' : '{{ __('landing.nav.cta_switch_account') }}'"
+                   @click.prevent="$store.ctaPair.mode === 'account' ? $store.purchase.open() : ($store.ctaPair.show('account'))">
+                    <span class="cta-ghost__ico"><x-icons.user /></span>
+                    <span class="cta-ghost__body">
+                        <span class="cta-ghost__t">{{ __('landing.footer.account_link') }}</span>
+                        <span class="cta-ghost__s">{{ __('landing.nav.cta_account_sub') }}</span>
+                    </span>
+                </a>
+            </span>
         @endguest
     </div>
 </div>

@@ -60,7 +60,6 @@ class ActionFillTest extends TestCase
         '.bd-pack__cta' => '«Reservar este cumple»',
         '.bd-btn--solid' => 'el primario del par del editor de invitaciones',
         // site.css
-        '.cta-prime' => 'el CTA grande de compra',
         // ⚠️ **Entra en la 2c·8** (`#216`): el hero recupera sus dos botones y el primero es el que
         // hace avanzar la compra, o sea acción de manual. El segundo (`.hero__act--alt`) NO entra:
         // es un contorno sobre el vídeo, y su relleno es un velo de tinta, no un color de acción.
@@ -69,8 +68,14 @@ class ActionFillTest extends TestCase
         // comprar más visible de la web, pero su color no lo manda el rol: lo manda una
         // COREOGRAFÍA — tinta con el menú cerrado, AVISO mientras el menú lo tapa—, que es lo que
         // hace el mockup del 2.º cliente y lo que el owner decidió con las tres fuentes delante.
-        // Su hermano `.cta-prime` (la barra de compra de móvil) sí es acción, y ahí el mockup
-        // también lo pinta de acción: es una diferencia real entre las dos piezas.
+        //
+        // ⚠️⚠️ **Y desde `#223` NINGÚN CTA de armazón está en el rol.** Aquí estaba `.cta-prime`,
+        // la barra de compra de móvil, con el argumento de que era «el hermano que sí es acción».
+        // Ese argumento se cayó cuando se midió la barra: era un componente aparte que tenía que
+        // parecerse a `.cta-med` y no se parecía (100 px de alto contra 54, y las dos mitades
+        // naranjas). `[DECIDIDO owner]`: la barra pasa a SER `.cta-med`/`.cta-ghost`, así que
+        // hereda la coreografía y sale del rol con su hermano. El rol lo siguen pintando `.btn`,
+        // `.cartbar`, `.skip-link` y `.flash`.
         '.cartbar' => 'la barra del carrito: lleva a pagar',
         '.svc-cta--book' => '«Reservar» de servicios',
         '.acct__btn--primary' => 'el primario del cajón de cuenta',
@@ -93,9 +98,6 @@ class ActionFillTest extends TestCase
         // El CTA de la tarifa destacada INVIERTE al pasar el cursor (fondo de tarjeta + texto de
         // tinta) en vez de oscurecerse. Es otro patrón de hover, no el del rol.
         '.price--feat .price__cta:hover' => 'background+color',
-        // El velo interior del icono del CTA (`__ico`) y su glifo en hover: son un velo del 10 %
-        // sobre el relleno, no el relleno. Funcionan sobre cualquier color y no siguen al rol.
-        '.cta-prime:hover .cta-prime__ico' => 'background',
     ];
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -119,7 +121,10 @@ class ActionFillTest extends TestCase
         );
 
         // Y por NOMBRE, no por umbral: un umbral no distingue «leo poco» de «leo otra cosa».
-        foreach (['.cta-prime', '.btn', '.cartbar', '.skip-link', '.flash'] as $selector) {
+        // ⚠️ `.cta-prime` estaba en esta lista y se retira con él (`#223`). Se sustituye por
+        // `.cta-med`, que es la pieza que ocupó su sitio: la lista tiene que nombrar cosas que
+        // EXISTEN, o deja de distinguir «leo poco» de «leo otra cosa», que es para lo que está.
+        foreach (['.cta-med', '.btn', '.cartbar', '.skip-link', '.flash'] as $selector) {
             $this->assertArrayHasKey(
                 $selector, $rules,
                 "el escaneo no encuentra la regla `{$selector}`, que existe: está leyendo otra cosa.",
@@ -215,43 +220,21 @@ class ActionFillTest extends TestCase
     }
 
     /**
-     * **Los compañeros INTERNOS del CTA también siguen al relleno.**
+     * **Las piezas INTERIORES del CTA de acción: RETIRADO con su sujeto** (`#223`, 2026-08-28).
      *
-     * El botón grande no es un rectángulo con texto: lleva un icono, un subtítulo y un «occluder»
-     * que tiene que fundirse con el FONDO del botón. Si el relleno cambia y ellos no, el icono
-     * delantero se ve como un bloque crema sobre el naranja. Se aseveran por nombre porque son
-     * exactamente las piezas que una conversión apresurada se deja.
+     * Este caso aseveraba que `.cta-prime__ico .ic-e2`, su `.occ`, su `.tk` y `.cta-prime__s`
+     * seguían al relleno de acción. **Su sujeto entero era `.cta-prime`**, que ya no existe: la
+     * barra de compra de móvil es ahora `.cta-med`/`.cta-ghost` y su color lo manda la
+     * coreografía, no el rol (ver el comentario de `ACTION_FILLS`).
+     *
+     * ⚠️ **No se re-apunta a otro botón, y eso se comprobó antes de borrarlo**: el único CTA que
+     * queda en el rol con partes internas sería `.hero__act--buy`, y medido en las dos hojas **no
+     * declara ninguna** (`__ico`, `__s`, glifo). Re-apuntar el caso a un selector sin piezas lo
+     * habría dejado verde sin mirar nada, que es peor que no tenerlo — es el modo de fallo que
+     * este fichero existe para evitar.
+     *
+     * ▶ Si algún día vuelve a haber un CTA de acción con velo interior, este caso vuelve con él.
      */
-    public function test_the_inner_parts_of_the_cta_follow_the_fill(): void
-    {
-        // ⚠️ Solo las de `.cta-prime`: las de `.cta-med` se separaron en `#213` cuando ese botón
-        // dejó de ser acción. Estaban en reglas COMPARTIDAS por los dos, y partirlas era la mitad
-        // del trabajo que una conversión apresurada se deja.
-        $esperado = [
-            '.cta-prime__ico .ic-e2' => 'var(--on-action)',
-            '.cta-prime__ico .ic-e2 svg .occ' => 'var(--action)',
-            '.cta-prime__ico .tk' => 'var(--on-action)',
-            '.cta-prime__s' => 'color-mix(in srgb, var(--on-action) 70%, transparent)',
-        ];
-
-        $rules = $this->rules();
-
-        foreach ($esperado as $selector => $valor) {
-            $this->assertArrayHasKey($selector, $rules, "no existe la regla `{$selector}`");
-
-            $valores = array_map(
-                fn (array $d): string => $d[1],
-                array_filter($rules[$selector], fn (array $d): bool => in_array($d[0], ['color', 'fill'], true)),
-            );
-
-            $this->assertContains(
-                $valor, $valores,
-                "`{$selector}` ya no pinta con «{$valor}».\n".
-                '▶ Es una pieza DENTRO del botón: si no sigue al relleno, se queda con el color del '.
-                'relleno anterior y se ve como un parche sobre el nuevo.',
-            );
-        }
-    }
 
     /**
      * **Las excepciones están enumeradas y solo pueden encoger.**

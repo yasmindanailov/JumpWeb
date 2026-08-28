@@ -104,9 +104,14 @@
              solo en la que quede colapsada.
              ⚠️ El aspecto —qué mitad es ancha— lo decide el CSS con DOS clases. El JS no reparte
              anchos: publica estado. Misma regla que el hero (`#195`) y el recorte del menú (`#201`). --}}
-        <div class="nav__pair"
-             :class="[$store.ctaPair.mode === 'account' && 'nav__pair--account',
-                      ! $store.ctaPair.touched && 'nav__pair--invita']">
+        {{-- ⚠️ **`cta-pair` es el COMPONENTE; `nav__pair` es la COLOCACIÓN** (`#223`). La forma, la
+             altura, el intercambio y la invitación las pone el primero, que comparte con la barra
+             de móvil; el segundo solo dice los anchos fijos del racimo de la cabecera. Por eso los
+             modificadores de estado son `cta-pair--…` y no `nav__pair--…`: viven en el componente,
+             que es quien reacciona a ellos, y así valen igual en los dos sitios sin duplicar nada. --}}
+        <div class="cta-pair nav__pair"
+             :class="[$store.ctaPair.mode === 'account' && 'cta-pair--account',
+                      ! $store.ctaPair.touched && 'cta-pair--invita']">
         {{-- ── MITAD A · COMPRAR. Va PRIMERA, y eso es del mockup ───────────────────────────────
              Medido en `Landing PJP Modos`: su racimo es `[Reservar] [Registrarse] [Menú]`, con el
              botón de tinta a la izquierda del blanco. El nuestro los tenía al revés desde que el
@@ -148,8 +153,8 @@
                  botón lleva a ese sistema en una pestaña nueva, con etiqueta + subtítulo por idioma.
                  Si NO hay URL, cae al comportamiento actual: abre el modal de registro interno. --}}
             @if (! empty($site['registration_url']))
-                <span class="nav__alt">
-                    <span class="nav__alt-ring" aria-hidden="true"></span>
+                <span class="cta-pair__alt">
+                    <span class="cta-pair__alt-ring" aria-hidden="true"></span>
                     <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener" class="cta-ghost cta-ghost--stack nav-cta-ghost"
                        aria-label="{{ $site['registration_label'] }}"
                        :aria-label="$store.ctaPair.mode === 'account' ? @js($site['registration_label']) : @js(__('landing.nav.cta_switch_signup'))"
@@ -176,8 +181,8 @@
                      trámite de registro de acceso del parque, una URL externa— es un formulario y
                      conserva el portapapeles. Con un solo glifo para las dos, el trámite quedaría
                      etiquetado como si fuera un alta de cuenta. --}}
-                <span class="nav__alt">
-                    <span class="nav__alt-ring" aria-hidden="true"></span>
+                <span class="cta-pair__alt">
+                    <span class="cta-pair__alt-ring" aria-hidden="true"></span>
                     <a href="{{ route('registro') }}" class="cta-ghost nav-cta-ghost"
                        aria-label="{{ __('landing.nav.reserve') }}"
                        :aria-label="$store.ctaPair.mode === 'account' ? @js(__('landing.nav.reserve')) : @js(__('landing.nav.cta_switch_signup'))"
@@ -219,8 +224,8 @@
                  Wilhelmina» cambian el ancho con cada visitante; con un rótulo fijo eso no pasa, y
                  el nombre accesible sigue diciendo de quién es la cuenta. El visible es PREFIJO del
                  accesible, que es lo que exige «label in name» (WCAG 2.5.3). --}}
-            <span class="nav__alt">
-                <span class="nav__alt-ring" aria-hidden="true"></span>
+            <span class="cta-pair__alt">
+                <span class="cta-pair__alt-ring" aria-hidden="true"></span>
                 <a href="{{ route('account') }}" class="cta-ghost nav-cta-ghost nav__acct"
                    aria-label="{{ __('landing.footer.account_link') }} · {{ $acctLabel }}"
                    :aria-label="$store.ctaPair.mode === 'account' ? @js(__('landing.footer.account_link').' · '.$acctLabel) : @js(__('landing.nav.cta_switch_account'))"

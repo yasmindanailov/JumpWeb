@@ -2013,8 +2013,6 @@ body.no-scroll { overflow: hidden; }
 /* E2 — Par de entradas: icono del primario «Reservas aquí». La entrada de atrás se abre en
    abanico al hover/focus del CTA (no en bucle); reduced-motion la deja en reposo. */
 .ic-e2 svg .tk-back { transform-origin: 14% 88%; transform-box: fill-box; }
-.cta-prime:hover .ic-e2 svg .tk-back,
-.cta-prime:focus-visible .ic-e2 svg .tk-back,
 .cta-med:hover .ic-e2 svg .tk-back,
 .cta-med:focus-visible .ic-e2 svg .tk-back {
     animation: e2-fan 1.3s var(--ease-entra);
@@ -2025,16 +2023,15 @@ body.no-scroll { overflow: hidden; }
     100% { transform: rotate(0deg); }
 }
 /* Color del icono E2 dentro de los CTAs (hereda el patrón del .tk que sustituye). */
-.cta-prime__ico .ic-e2 { color: var(--on-action); }
+/* ⚠️ **Aquí había una pareja de reglas para `.cta-prime` y se van con él** (`#223`): pintaban el
+   glifo con el rol de ACCIÓN porque la barra de móvil era naranja. Ahora la barra usa `.cta-med`,
+   así que hereda estas mismas y no hay nada que sincronizar. */
 .cta-med__ico .ic-e2 { color: var(--bg); }
-.cta-prime:hover .cta-prime__ico .ic-e2 { color: var(--on-action-hover); }
 .cta-med:hover .cta-med__ico .ic-e2 { color: var(--on-brand); }
 /* El «occluder» de E2 (la entrada de delante) debe fundirse con el FONDO del botón, no con
    --bg (que asume fondo claro). Sin esto, sobre el botón oscuro la entrada delantera se ve
    como un bloque crema. Reposo = --fg (botón oscuro) · hover = --zone-1 · on-video = --bg. */
-.cta-prime__ico .ic-e2 svg .occ { fill: var(--action); }
 .cta-med__ico .ic-e2 svg .occ { fill: var(--fg); }
-.cta-prime:hover .cta-prime__ico .ic-e2 svg .occ { fill: var(--action-hover); }
 .cta-med:hover .cta-med__ico .ic-e2 svg .occ { fill: var(--zone-1); }
 
 /* E5 — Taco de entradas: cabecera «Entradas» del catálogo. La de atrás se dispensa al hover
@@ -2201,9 +2198,22 @@ body.no-scroll { overflow: hidden; }
    superficie oscura. Sin ellos el ámbito de tinta lo repintaba y el par perdía su contraste
    interno: dos botones oscuros, uno al lado del otro. */
 
-.nav__pair {
+/* ══ `.cta-pair` — EL PAR, COMO COMPONENTE (`#223`) ═══════════════════════════════════════════
+   Hasta el 2026-08-28 esto se llamaba `.nav__pair` y vivía sólo en la cabecera; la barra de móvil
+   tenía su propia pieza (`.cta-prime`) que **tenía que parecerse a ésta y no se parecía**: medido
+   en el navegador a 390 px, 100 px de alto contra 54, chip de icono de 64×42 contra 30×26, y las
+   dos mitades en naranja de acción donde aquí hay tinta + fantasma.
+
+   ▶ **La separación es COMPONENTE / COLOCACIÓN.** Aquí: forma, altura, chip, tipografía, relleno,
+   intercambio e invitación. En `.nav__pair` y en `.book-bar__pair`, sólo dónde se pone y cuánto
+   mide cada mitad — que es lo ÚNICO que de verdad difiere entre arriba y abajo (arriba comparten
+   fila con el logotipo y tienen ancho fijo; abajo la expandida se estira hasta el borde).
+   ⚠️ Por eso los modificadores de estado son `cta-pair--account` / `cta-pair--invita` y no llevan
+   el nombre del sitio: si lo llevaran, cada regla de intercambio habría que escribirla dos veces,
+   que es exactamente como se llegó al problema. */
+.cta-pair {
     /* Las medidas del par, en un solo sitio y como tokens: una instalación puede estrechar el
-       racimo entero sin tocar ninguna regla. */
+       racimo entero sin tocar ninguna regla. Las leen los DOS sitios. */
     --cta-pair-w: 224px;      /* la mitad expandida */
     --cta-pair-mini: 56px;    /* la colapsada: padding + chip + aire */
     --cta-pair-h: 54px;
@@ -2217,10 +2227,12 @@ body.no-scroll { overflow: hidden; }
 
     display: flex; align-items: center; gap: inherit;
 }
-@media (max-width: 1099px) { .nav__pair { --cta-pair-w: 182px; } }
-@media (max-width: 619px)  { .nav__pair { --cta-pair-w: 138px; --cta-pair-h: 48px; } }
+@media (max-width: 1099px) { .cta-pair { --cta-pair-w: 182px; } }
+@media (max-width: 619px)  { .cta-pair { --cta-pair-w: 138px; --cta-pair-h: 48px; } }
 
-.nav__alt { position: relative; display: inline-flex; }
+/* El envoltorio de la mitad colapsada. Existe porque el ARO de la invitación necesita algo
+   posicionado alrededor del botón, y lo usan los dos sitios. */
+.cta-pair__alt { position: relative; display: inline-flex; }
 
 /* La forma COMÚN de las dos mitades. Lo único que las distingue es el relleno y el ancho. */
 .cta-ghost,
@@ -2309,33 +2321,36 @@ body.no-scroll { overflow: hidden; }
 /* ══ EL INTERCAMBIO ═══════════════════════════════════════════════════════════════════════════
    Reposo: COMPRAR ancho, la cuenta a su icono. Es la jerarquía, no un default cualquiera —comprar
    cuesta un gesto y la cuenta dos—. El estado lo publica `$store.ctaPair`; el reparto, esto. */
+/* ⚠️ **Los anchos fijos son del NAV, no del componente**: arriba el racimo comparte fila con el
+   logotipo, así que las dos mitades miden lo que se les dice. Abajo, en la barra, el reparto lo
+   hace `flex` porque la expandida tiene que llegar al borde de la pantalla. */
 .nav__pair .cta-med   { width: var(--cta-pair-w); }
 .nav__pair .cta-ghost { width: var(--cta-pair-mini); }
-.nav__pair--account .cta-med   { width: var(--cta-pair-mini); }
-.nav__pair--account .cta-ghost { width: var(--cta-pair-w); }
+.nav__pair.cta-pair--account .cta-med   { width: var(--cta-pair-mini); }
+.nav__pair.cta-pair--account .cta-ghost { width: var(--cta-pair-w); }
 
 /* El texto de dentro: el que SE VA se va sin esperar, el que ENTRA espera a que le hagan sitio.
    ⚠️ Ese retardo asimétrico no es un adorno: sin él los dos rótulos se cruzan a mitad de camino y
    durante 200 ms se leen dos cosas a la vez en un racimo de 300 px. */
-.nav__pair .cta-ghost__body,
-.nav__pair .cta-med__body {
+.cta-pair .cta-ghost__body,
+.cta-pair .cta-med__body {
     display: inline-flex; flex-direction: column;
     line-height: 1.16; text-align: left;
     transition: opacity var(--dur-estado) var(--ease-sale), transform var(--dur-cae) var(--ease-sale);
 }
-.nav__pair .cta-med__body {
+.cta-pair .cta-med__body {
     opacity: 1; transform: translateX(0);
     transition-delay: var(--cta-pair-in, var(--dur-toque)), 0s;
 }
-.nav__pair .cta-ghost__body {
+.cta-pair .cta-ghost__body {
     opacity: 0; transform: translateX(-6px);
     transition-delay: 0s, 0s;
 }
-.nav__pair--account .cta-med__body {
+.cta-pair--account .cta-med__body {
     opacity: 0; transform: translateX(-6px);
     transition-delay: 0s, 0s;
 }
-.nav__pair--account .cta-ghost__body {
+.cta-pair--account .cta-ghost__body {
     opacity: 1; transform: translateX(0);
     transition-delay: var(--cta-pair-in, var(--dur-toque)), 0s;
 }
@@ -2359,21 +2374,21 @@ body.no-scroll { overflow: hidden; }
     74% { opacity: 0.5; transform: scale(1); }
     100% { opacity: 0; transform: scale(1.45); }
 }
-.nav__alt-ring {
+.cta-pair__alt-ring {
     position: absolute; inset: -4px;
     border: 2px solid var(--zone-1);
     border-radius: var(--r-btn);
     opacity: 0; pointer-events: none;
 }
-.nav__pair--invita .nav__alt > .cta-ghost { animation: cta-asoma var(--dur-invite) ease-in-out infinite; }
-.nav__pair--invita .nav__alt-ring { animation: cta-aro var(--dur-invite) ease-out infinite; }
+.cta-pair--invita .cta-pair__alt > .cta-ghost { animation: cta-asoma var(--dur-invite) ease-in-out infinite; }
+.cta-pair--invita .cta-pair__alt-ring { animation: cta-aro var(--dur-invite) ease-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-    .nav__pair--invita .nav__alt > .cta-ghost,
-    .nav__pair--invita .nav__alt-ring { animation: none; }
+    .cta-pair--invita .cta-pair__alt > .cta-ghost,
+    .cta-pair--invita .cta-pair__alt-ring { animation: none; }
     .cta-ghost, .cta-med,
-    .nav__pair .cta-ghost__body,
-    .nav__pair .cta-med__body { transition: none; }
+    .cta-pair .cta-ghost__body,
+    .cta-pair .cta-med__body { transition: none; }
 }
 
 .cta-med:hover .tk .stub,
@@ -2448,62 +2463,32 @@ body[data-has-hero] .nav--over .nav__cta {
    véase Capa D para la adaptación móvil). */
 
 /* ====================================================================
-   Jerarquía de CTAs — Capa C: CTA "prime" del hero.
+   Jerarquía de CTAs — Capa C: **RETIRADA** (`#223`, 2026-08-28).
    --------------------------------------------------------------------
-   Peso máximo (5/5 mockup). Repite el verbo "Comprar entradas" del header
-   con anclaje de precio + tagline "sin colas": pattern matching, no saturación
-   (Disney repite el CTA primario 3-4× según Baymard). Variante `--onvideo`
-   invierte el fondo a cream para destacar sobre el vídeo de fondo del hero
-   sin perder el peso visual (sombra reforzada).
-   ==================================================================== */
-.cta-prime {
-    display: inline-flex; align-items: center; gap: 16px;
-    /* Padding interno equilibrado: top=bottom para simetría vertical, right algo
-       mayor que left por la flecha (estándar UI — el desbalance compensa el peso
-       óptico de la flecha contra el icono más grande de la izquierda). */
-    padding: 14px 22px 14px 16px;
-    background: var(--action); color: var(--on-action);
-    border: 0; border-radius: var(--r-btn);
-    font-family: var(--font-body); font-weight: 600;
-    cursor: pointer; text-decoration: none;
-    transition: transform var(--dur-entra) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale);
-    box-shadow: none;
-}
-.cta-prime:hover {
-    background: var(--action-hover); color: var(--on-action-hover);
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: var(--shadow-lift);
-}
-.cta-prime:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
-.cta-prime__ico {
-    width: 64px; height: 42px;
-    background: rgba(255, 255, 255, 0.10);
-    border-radius: var(--r-sm);
-    display: grid; place-items: center;
-    flex-shrink: 0;
-    transition: background var(--dur-sale) var(--ease-sale);
-}
-.cta-prime:hover .cta-prime__ico { background: color-mix(in srgb, var(--fg) 10%, transparent); }
-.cta-prime:hover .cta-prime__ico .tk { color: var(--fg); }
-.cta-prime__ico .tk { color: var(--on-action); }
-.cta-prime__body { display: inline-flex; flex-direction: column; gap: 3px; line-height: 1.05; text-align: left; }
-.cta-prime__t { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
-.cta-prime__s {
-    font-family: var(--font-mono); font-size: 11px;
-    text-transform: uppercase; letter-spacing: 0.10em;
-    color: color-mix(in srgb, var(--on-action) 70%, transparent);
-}
-.cta-prime:hover .cta-prime__s { color: rgba(255, 255, 255, 0.72); }
-.cta-prime__arrow { margin-left: 6px; font-size: 22px; line-height: 1; transition: transform var(--dur-entra) var(--ease-sale); }
-.cta-prime:hover .cta-prime__arrow { transform: translateX(5px); }
-.cta-prime:hover .tk .stub,
-.cta-prime:focus-visible .tk .stub { animation: tear-once 0.7s cubic-bezier(0.5, 0, 0.25, 1) both; }/* ⚠️ Estas dos van SOBRE EL BOTÓN, y el botón INVIERTE respecto a la superficie: dentro de
-   tinta el `.cta-prime` es claro. Por eso leen los alias `--paper-*`, que existen justo
-   «para poder VOLVER a papel desde dentro de tinta». Verificado por aritmética: rinden el
-   mismo color que rendían con `--onvideo` (#E2DDD2 y #6B675D). Todo lo demás que hacía
-   `--onvideo` aquí lo hace ya la regla BASE dentro del ámbito, sin declarar nada. */
-[data-surface="ink"] .cta-prime__ico { background: color-mix(in srgb, var(--paper-fg) 8%, transparent); }
-[data-surface="ink"] .cta-prime__s { color: var(--paper-fg-mute); }[data-surface="ink"] .cta-prime:hover .cta-prime__ico { background: color-mix(in srgb, var(--paper-fg) 12%, transparent); }
+   Aquí vivía `.cta-prime`, el «CTA de peso máximo». Nació para el hero, el hero se
+   quedó sin CTA (`#195`) y desde entonces su ÚNICO consumidor era la barra flotante
+   de móvil — o sea, un componente entero manteniéndose para un solo sitio, y cuyo
+   trabajo era parecerse a `.cta-med`.
+
+   `[DECIDIDO owner, 2026-08-28]`: **la barra de móvil es el MISMO botón que el nav**.
+   Con eso `.cta-prime` se queda sin ningún consumidor y se retira.
+   Lo que hacía lo hace ahora `.cta-pair`.
+
+   ⚠️⚠️ **Consecuencia de sistema, deliberada**: `.cta-prime` era el ÚNICO CTA en el rol
+   de ACCIÓN (`theme.action`, `#209`). El rol NO desaparece —lo siguen pintando `.btn`,
+   `.cartbar`, `.skip-link` y `.flash`— pero **ya no hay ningún CTA de armazón naranja**:
+   arriba y abajo, en las doce vistas, el par es tinta + fantasma. Es `#213` aplicado al
+   hermano que se había quedado fuera.
+
+   ⚠️ Medido antes de retirarlo, en el navegador a 390 px: la barra medía **100 px** de
+   alto contra los 54 del nav, su chip de icono **64×42** contra 30×26, y **las dos
+   mitades salían naranjas** — la colapsada también, cuando arriba es un fantasma de
+   tarjeta. Ninguna de las tres era un ajuste pendiente: eran dos componentes que
+   alguien tenía que sincronizar a mano, y no se sincronizaron.
+   ==================================================================== *//* ⚠️ **Aquí había tres reglas de `.cta-prime` en superficie de tinta y se van con él** (`#223`).
+   No hacen falta ni hay que reescribirlas: `.cta-med` y `.cta-ghost` YA tienen su tratamiento
+   completo dentro del ámbito de tinta (justo abajo), y la barra de móvil es ahora esos dos. Un
+   caso menos que mantener por duplicado, que es de lo que iba la refundición. */
 
 /* ── EL CTA DEL ARMAZÓN DENTRO DEL MENÚ ────────────────────────────────────────────────────────
    `[DECIDIDO owner, 2026-08-28]`: **como el mockup**. Su CTA fijo va en tinta con el menú cerrado
@@ -2567,7 +2552,7 @@ body[data-has-hero] .nav--over .nav__cta {
     /* Comprar sale del racimo y reaparece abajo como `.book-bar`; el alta sale del racimo y vive
        en el menú (`mob-menu__foot`). En el pulgar quedan la hamburguesa y la barra. */
     .nav-cta-med,
-    .nav__pair .nav__alt { display: none; }
+    .nav__pair .cta-pair__alt { display: none; }
 }
 
 /* ====================================================================
@@ -2609,70 +2594,80 @@ body[data-has-hero] .nav--over .nav__cta {
     .book-bar { transition: visibility 0s var(--ease-bucle) var(--dur-sale); }
     .book-bar--on { transition: visibility 0s; }
 }
-/* El botón flotante toma del CTA «prime» del hero (`.cta-prime`) su estructura, icono, tipografía
-   22px, ALTURA y el viraje a color de marca en hover. Aquí lo adaptamos al contexto sticky:
-   FULL-WIDTH (ocupa el ancho del viewport con el padding del contenedor, como el botón anterior),
-   fondo NEGRO (`.cta-prime` base, no `--onvideo`), interactivo (el contenedor es `pointer-events:
-   none`) y con sombra reforzada a dos capas para flotar sobre el contenido. */
-/* **EL PAR** (armazón · tanda 2c·4). El contenedor no captura toques —lo dejaba pasar ya antes—
-   y cada mitad sí. Cuál es la ancha lo dice UNA clase en la barra; aquí no hay más lógica que
-   ésa, y por defecto —o sea, también **sin JavaScript**— la ancha es la de comprar. */
+/* ══ LA BARRA DE MÓVIL = EL MISMO PAR QUE EL NAV (`#223`, 2026-08-28) ═══════════════════════
+   `[DECIDIDO owner]`: «lo quiero igual, mismo tamaño, altura, mismos colores, con la misma
+   animación de invitar». Así que la barra **ya no aporta forma**: la pone `.cta-pair`, el mismo
+   componente que pinta el racimo de la cabecera. Aquí queda sólo la COLOCACIÓN.
+
+   ⚠️⚠️ **Aquí vivían ~50 líneas que daban forma, y se van enteras** con `.cta-prime`. Eran las
+   que tenían que perseguir al nav a mano, y no lo consiguieron: medido en el navegador a 390 px,
+   100 px de alto contra 54, chip de 64×42 contra 30×26, y las dos mitades naranjas.
+
+   ⚠️ **`align-items` pasa de `stretch` a `center`, y ése era el MULTIPLICADOR del defecto**: con
+   `stretch`, la mitad más alta estiraba a la otra — el rótulo de comprar partido en dos líneas
+   subía las DOS mitades a 100 px. Con una altura de componente ya no hay nada que estirar. */
 .book-bar__pair {
-    display: flex; align-items: stretch; gap: 8px;
+    display: flex; align-items: center; gap: 8px;
     pointer-events: none;
 }
-.book-bar__cta--buy { flex: 1 1 auto; }
-.book-bar__cta--alt { flex: 0 0 auto; }
-.book-bar--signup .book-bar__cta--buy { flex: 0 0 auto; }
-.book-bar--signup .book-bar__cta--alt { flex: 1 1 auto; }
 
-/* ⚠️ **La mitad colapsada encoge por su CONTENIDO, no por una anchura animada.** Transicionar
-   `flex-basis` o `width` entre `auto` y un número no es fiable; el texto sí se puede plegar, y el
-   botón sigue al plegado sin que nadie anime una caja. El texto se queda en el árbol —no
-   `display:none`— y el nombre accesible lo fija el `aria-label`, que además dice qué hace AHORA. */
-.book-bar__cta .cta-prime__body,
-.book-bar__cta .cta-prime__arrow {
-    overflow: hidden;
-    transition: max-width var(--dur-entra) var(--ease-sale), opacity var(--dur-sale) var(--ease-sale);
-    max-width: 22ch; opacity: 1;
-}
-.book-bar__cta--alt .cta-prime__body,
-.book-bar__cta--alt .cta-prime__arrow,
-.book-bar--signup .book-bar__cta--buy .cta-prime__body,
-.book-bar--signup .book-bar__cta--buy .cta-prime__arrow {
-    max-width: 0; opacity: 0;
-}
-.book-bar--signup .book-bar__cta--alt .cta-prime__body,
-.book-bar--signup .book-bar__cta--alt .cta-prime__arrow {
-    max-width: 22ch; opacity: 1;
-}
+/* ── EL REPARTO ───────────────────────────────────────────────────────────────────────────────
+   La ÚNICA diferencia real con el nav: arriba las dos mitades tienen ancho fijo (224/56) porque
+   comparten fila con el logotipo; aquí abajo la expandida se ESTIRA hasta el borde de la
+   pantalla. Por eso el reparto es `flex` y no `width`, y por eso vive aquí y no en el componente.
 
-/* La mitad colapsada sigue siendo un objetivo táctil entero. */
+   ⚠️ **Se anima `flex-grow`, no `flex-basis`.** Los dos hijos parten de la MISMA base
+   (`--cta-pair-mini`, los 56 px de la mitad colapsada) y lo único que cambia es quién se queda el
+   espacio sobrante: un número, que sí interpola. Animar `flex-basis` entre `auto` y una medida no
+   es fiable —es el mismo motivo por el que la versión anterior no animaba el ancho sino que
+   plegaba el texto con `max-width`— y con esto el intercambio se ve igual que arriba.
+
+   ⚠️ **El hijo directo de la cuenta es el ENVOLTORIO, no el botón** (`.cta-pair__alt`, el que
+   posiciona el aro de la invitación). Si el reparto se le pusiera al `<a>`, `flex` mediría el
+   envoltorio —ancho de contenido— y la mitad de la cuenta nunca llegaría al borde al expandirse.
+   El botón, dentro, llena lo que su envoltorio mida. */
+.book-bar__cta--buy,
+.book-bar__pair > .cta-pair__alt {
+    flex: 0 1 var(--cta-pair-mini);
+    /* ⚠️⚠️ **`min-width: 0` NO es tuning: sin él el reparto no funciona en absoluto**, y salió en
+       la primera medición — la mitad colapsada daba **188 px en vez de 56**. Un hijo de flex tiene
+       `min-width: auto`, o sea que **no encoge por debajo del ancho de su contenido**, y el
+       contenido aquí es un rótulo con `white-space: nowrap`: el `flex-basis` de 56 px se declaraba
+       y el navegador lo ignoraba, legítimamente. Arriba esto no pasa porque el ancho es FIJO.
+       ▶ El recorte lo hace `overflow: hidden`, que el componente ya trae; esto sólo le da permiso. */
+    min-width: 0;
+    transition: flex-grow var(--cta-pair-swap, var(--dur-cae)) var(--ease-sale);
+}
+.book-bar__cta--buy { flex-grow: 1; }
+.book-bar__pair > .cta-pair__alt { flex-grow: 0; }
+.book-bar--signup .book-bar__cta--buy { flex-grow: 0; }
+.book-bar--signup .book-bar__pair > .cta-pair__alt { flex-grow: 1; }
+
+/* El botón de la cuenta llena su envoltorio SIEMPRE: el que cambia de tamaño es el envoltorio. */
+.book-bar__pair > .cta-pair__alt > .cta-ghost { flex: 1 1 auto; min-width: 0; }
+
+/* La mitad colapsada sigue siendo un objetivo táctil entero. `--cta-pair-mini` son 56 px y ya lo
+   supera; el `min-width` se queda como SUELO por si una instalación estrecha el token. */
 .book-bar__cta--alt,
-.book-bar--signup .book-bar__cta--buy { min-width: var(--tap-min); justify-content: center; }
+.book-bar--signup .book-bar__cta--buy { min-width: var(--tap-min); }
 
-@media (prefers-reduced-motion: reduce) {
-    .book-bar__cta .cta-prime__body,
-    .book-bar__cta .cta-prime__arrow { transition: opacity var(--dur-toque) var(--ease-bucle); }
-}
-
+/* ⚠️ **La sombra sí es de aquí**: el par del nav va apoyado en la página y usa los roles de
+   armazón; esto FLOTA sobre el contenido, que es el cuarto rol de elevación (`#217`). Es la única
+   propiedad de aspecto que la colocación tiene derecho a cambiar, y por eso es la única. */
 .book-bar__cta {
     pointer-events: auto;
     box-shadow: var(--shadow-float);
 }
-/* En full-width el cuerpo crece y empuja la flecha al borde derecho (como el botón anterior). */
-.book-bar__cta .cta-prime__body { flex: 1; }
-/* El hover ya vira a marca (lo da `.cta-prime:hover`); aquí solo anulamos el "lift" del hero, que
-   pegado al borde inferior quedaría raro. El TAP (interacción real en móvil) replica ese viraje a
-   marca con un leve hundido de feedback. */
-.book-bar__cta:hover { transform: none; }
-.book-bar__cta:active {
-    background: var(--action-hover); color: var(--on-action-hover);
-    transform: scale(0.99);
+
+/* ⚠️ **El hundido del tap NO se declara aquí, y probarlo costó una regla muerta**: la lista de
+   `:active` de la familia `cta-*` vive al final de la hoja para ganarle al `:hover` por orden de
+   fuente, así que cualquier `transform` que se pusiera aquí lo pisaría ella. La barra hereda el
+   mismo gesto que el par de arriba —`translateY(0) scale(0.97)`— y eso es lo correcto: es el
+   mismo botón. */
+@media (prefers-reduced-motion: reduce) {
+    .book-bar__cta--buy,
+    .book-bar__pair > .cta-pair__alt { transition: none; }
 }
-.book-bar__cta:active .cta-prime__ico { background: color-mix(in srgb, var(--fg) 10%, transparent); }
-.book-bar__cta:active .cta-prime__ico .tk { color: var(--fg); }
-.book-bar__cta:active .cta-prime__s { color: color-mix(in srgb, var(--fg) 65%, transparent); }
 
 @media (max-width: 720px) {
     .book-bar { display: block; }
@@ -3042,7 +3037,6 @@ body[data-has-hero] .nav--over .nav__cta {
    pulsar. Su :hover vive en site.css (carga DESPUÉS de landing.css), así que el "press" se
    declara aquí —y al final de la sección— para ganar al :hover por orden de fuente.
    Mismo gesto que .btn:active (translateY(0) scale(0.97)). */
-.cta-prime:active,
 .cta-med:active,
 .cta-ghost:active,
 .bk-cta:active:not(:disabled),
