@@ -11184,3 +11184,65 @@ Guion: `VERIFICACION-E2E-CAJON.md` **§5.terdecies**.
 ningún gate que compare estructura o claves*. Y una segunda, más barata: **un `[console] error` en
 un sondeo headless es un hallazgo, no ruido** — el TDZ llevaba allí desde U2 y el guion 19/19 lo
 había impreso.
+---
+
+## #211 · 2026-08-28 · Lo que el OJO del owner vio y ninguna guarda: el menú sin salida, la compra sin botón, y el hueco del ICONO de instalación
+
+**Cómo salió.** El owner miró la web con el paquete del cliente puesto y dijo cuatro cosas: falta el
+logotipo, falta su icono, falta el CTA del menú y falta la X de cerrar. **Las cuatro eran ciertas**,
+y dos de ellas eran defectos que **ninguna de las 31 aserciones del armazón podía ver**, porque
+todas comprobaban que el menú se ABRE.
+
+**1 · El menú no tenía salida con el ratón.** `.nav__burger` hacía `menuOpen = true` a secas. El
+menú es `inset: 0` y tapa la página entera: las únicas salidas eran `Escape` y pulsar un destino.
+▶ Se resuelve como en el mockup —el mismo botón **alterna**— pero el aspa sale del **SET de
+iconos** (`x-icons.close`), no de rotar dos rayas: el dibujo es uno de los tres mecanismos del tema
+y una instalación tiene que poder sustituirlo. Los dos glifos se apilan en la misma celda y los
+alterna el CSS por `.nav--over`: sin JS y sin que el botón cambie de tamaño.
+⚠️ **Lo único del mockup que no se copia**: su `aria-label` dice «Abrir menú» estando abierto. Aquí
+alterna, y el botón gana `aria-expanded`.
+
+**2 · Con el menú abierto no había dónde comprar, y el diagnóstico obvio era falso.** El owner pidió
+«el CTA del menú». Medido antes de añadirlo: **el menú del mockup tampoco lleva CTA propio** — usa
+el de la cabecera. La diferencia real es que **el suyo está siempre visible y el nuestro nace
+oculto** en la portada (`navCtaReveal`, `#194`). Así que no faltaba un botón: faltaba **revelar el
+que ya hay**. Una regla, sin estado nuevo: `body[data-has-hero] .nav--over .nav-cta-med`.
+▶ Con el paquete puesto sale en **naranja sobre la tinta del menú**, que es lo que pide su sistema.
+
+**3 · El hueco del ICONO de instalación** (`public/img/client-favicon.svg`), tercera pieza del mismo
+patrón que la hoja de tema y el logotipo: no se versiona, se carga si existe, `deploy.sh` lo excluye
+del `--delete`. `[DECIDIDO owner]`: **solo el SVG**. Consecuencia conocida y escrita: iOS y el
+«añadir a pantalla de inicio» de Android siguen usando los PNG del producto.
+▶ Y con el icono del cliente puesto, **el PNG del producto sale del `<head>`**: un navegador que
+entienda los dos prefiere el PNG por ser más específico en tamaño y volvería a enseñar la «J».
+
+**4 · Los colores de zona pasan a los del cliente** (`[DECIDIDO owner]`, y los tres artboards
+coinciden): Kids `#1AA9DE`, Jump `#A3C21C`, Cumpleaños `#E6007E`. Es **dato del panel**, no código.
+Con eso, medido en `/`, `/servicios` y `/entradas`, **no queda ningún color ajeno al sistema del
+cliente** salvo los de dos zonas de prueba (ver `DEUDA.md`).
+
+❗ **Lo que la revisión del icono destapó, y era la pregunta del owner**: `public/favicon.svg` es el
+icono del PRODUCTO —correcto que exista como suelo— **pintado en `#FF5B22`**, el naranja del PRIMER
+cliente, quemado en un fichero que ninguna guarda de color mira. Es la misma fuga que `#139` cerró
+en el CSS. Y `public/favicon.ico` está **versionado y pesa 0 bytes**. Las dos, fichas en `DEUDA.md`.
+
+⚠️⚠️ **El logotipo se INTENTÓ y se paró, con el porqué medido.** Su lockup son dos líneas en Lilita
+One con **seis capas apiladas por palabra** —tres contornos, una escalera de seis sombras, relleno
+por letra y dos degradados recortados al texto— más una figura que **no es una silueta plana** (el
+PNG lleva cian, negro, blanco y un degradado). Se reconstruyó en SVG con contornos reales de la
+fuente y geometría medida en el navegador, y se llegó a **29 % de píxeles distintos**: se parece
+mucho, no es idéntico. `[DECIDIDO owner]`: **el logotipo y el icono los exporta él desde Claude
+Design** y se entregan como ficheros. ▶ El PNG que SÍ es exacto —render del original a 4× y 8×—
+queda como respaldo.
+▶ Tres cosas que costaron la tarde y valen para el siguiente: `readFileSync(x).buffer` devuelve el
+**pool** de Node, no el fichero · `opentype.js` emite **`NaN`** en la «K» de esa fuente y el
+navegador deja de leer el `d` **sin dar error** · y un degradado con `userSpaceOnUse` se resuelve en
+el espacio **ya transformado**, no en el del lienzo.
+
+⚠️ **Y la lección de método de esta tanda, por tercera vez en dos días**: una aserción por SUBCADENA
+pasa en falso. `.nav-cta-med-NO` contiene `.nav-cta-med`, y `client-favicon.svg` contiene
+`favicon.svg`. Las dos guardas nacieron verdes con el código roto y **lo demostró la mutación**.
+
+**Verificación**: +6 casos (3 en `ArmazonContractTest`, 3 en `ClientThemePackageTest`) ·
+**10 mutaciones, las 10 muerden** · **sonda de navegador 15/15**
+(`VERIFICACION-E2E-CAJON.md` §5.quaterdecies).

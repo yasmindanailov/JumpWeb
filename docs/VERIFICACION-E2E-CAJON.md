@@ -1343,3 +1343,37 @@ tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del 
   prop) pero solo el login se ha conducido con un «no» delante.
 - **El «Volver» con la cesta VACÍA**: alcanzable (producto retirado con el cajón abierto), lo fija el
   árbol, no se ha conducido.
+---
+
+## §5.quaterdecies · EL MENÚ SE CIERRA Y SIEMPRE OFRECE COMPRAR — ✅ recorrido en headless el 2026-08-28 (15/15), pendiente del OJO del owner (`DECISIONES #211`)
+
+> Carril C (`specs/armazon-y-menu.md` §6). Playwright dentro del contenedor, `http://localhost`.
+> Guion: `menu.mjs`. **No toca datos.** ⚠️ Requiere la ventana a **1440×900 o más**: por debajo de
+> 1080 px manda el cajón lateral, que es otra pieza.
+
+### M1 · Arriba del todo, sin haber bajado nada
+1. Abre `/`. **El CTA de compra del armazón NO se ve** (nace oculto; lo destapa `navCtaReveal` al
+   pasar el hero). La hamburguesa tiene `aria-expanded="false"` y enseña **las tres rayas**.
+2. Pulsa la hamburguesa. El menú se abre a pantalla completa. La hamburguesa pasa a
+   `aria-expanded="true"`, **enseña una X** y su nombre accesible es **«Cerrar menú»**.
+3. ❗ **Y aparece el botón de comprar**, en **`rgb(242, 113, 28)`** — el naranja de acción, sobre la
+   tinta del menú. Antes de `#211`, aquí no había ningún sitio donde comprar.
+
+### M2 · Las tres salidas
+4. Pulsa la hamburguesa otra vez → **el menú se cierra** y vuelven las rayas. (Antes de `#211` esto
+   no ocurría: el botón solo abría.)
+5. Reabre y pulsa `Escape` → cierra. Reabre y pulsa cualquier destino → cierra y navega.
+6. Con el menú cerrado en la portada, el CTA vuelve a esconderse.
+
+### M3 · Los colores de zona
+7. Baja a las tarjetas de zona: **ninguna usa `#FF5B22` ni `#C6FF3A`** (la paleta del primer
+   cliente). Kids es cian `#1AA9DE` y Jump lima `#A3C21C`.
+   ⚠️ **En esta máquina saldrán además dos tarjetas «Cap»** en naranja: son **zonas de prueba**
+   (`slug = cap` y `cap2`, sondas de aforo) que están ACTIVAS y salen en la portada pública. No es
+   un defecto del tema; es dato de esta base de datos. Ficha en `DEUDA.md`.
+
+### Lo que el guion no cubre y hay que mirar con el ojo
+- **El menú por debajo de 1080 px**: ahí manda el cajón lateral, que es la 2c·4b y sigue sin hacer.
+- **La animación** del recorte circular al abrir y el aspa al alternar: el guion mira estados, no
+  el camino entre ellos.
+- **El logotipo**: sigue siendo el nombre en la fuente de rótulo, no la marca del cliente.

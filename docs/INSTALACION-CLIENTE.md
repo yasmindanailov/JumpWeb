@@ -115,6 +115,43 @@ tiene, y un logotipo sin `alt` lo deja sin nombre accesible.
 composición de capas. Se pierde poder retocarlo desde la herramienta de diseño; es el precio de que
 entre por el mismo sitio que el resto del paquete.
 
+**a.quater) El ICONO DE PESTAÑA → `public/img/client-favicon.svg`** (`DECISIONES #211`).
+Tercera pieza del mismo patrón, con las **mismas tres**: no se versiona, se carga si existe, y
+`deploy.sh` lo excluye del `--delete`. El suelo es `public/favicon.svg`, el icono del PRODUCTO.
+⚠️ **Solo se sustituye el SVG** (`[DECIDIDO owner]`): los navegadores modernos lo usan, pero **iOS y
+el «añadir a pantalla de inicio» de Android usan los PNG**, que siguen siendo los del producto.
+Ampliarlo es añadir dos ficheros más al mismo patrón.
+▶ Cuando la instalación trae su SVG, **el PNG de 64 px sale del `<head>`**: un navegador que
+entienda los dos lo preferiría por ser más específico en tamaño y volvería a enseñar la «J» del
+producto teniendo el del cliente al lado.
+⚠️ **El icono del producto lleva `#FF5B22` quemado** —el naranja del PRIMER cliente— y `favicon.ico`
+está versionado con 0 bytes. Fichas en `DEUDA.md`.
+
+**a.quinquies) ❗ QUÉ PEDIRLE AL DISEÑADOR, exactamente.**
+Esta lista existe porque el logotipo del 2.º cliente **se intentó reconstruir y no salió idéntico**
+(`#211`): su lockup son dos líneas con seis capas apiladas por palabra y una figura que no es una
+silueta plana. **Lo exporta la herramienta de diseño; el producto solo abre el hueco.**
+
+| Pieza | Fichero | Cómo tiene que venir |
+|---|---|---|
+| **Logotipo, sobre fondo claro** | `public/img/client-logo.svg` | **SVG con el texto convertido a CONTORNOS** · `viewBox` presente · fondo transparente |
+| **Logotipo, sobre fondo oscuro** | `public/img/client-logo-ink.svg` | Igual, pero legible sobre tinta. ❗ **Hace falta**: al abrir el menú a pantalla completa el logo cae sobre superficie oscura. Hoy es texto y se adapta solo; **una imagen no**. ⚠️ El hueco para esta variante **todavía no existe**: es media hora de trabajo, no está hecho |
+| **Logotipo, respaldo raster** | `public/img/client-logo@4x.png` | PNG con transparencia, **≥ 216 px de alto** (4× de los 54 px a los que lo pinta la barra). Sirve para correos y para Open Graph, donde un SVG no vale |
+| **Icono de pestaña** | `public/img/client-favicon.svg` | **SVG cuadrado** (`viewBox` cuadrado, p. ej. `0 0 64 64`) · **con su propio fondo**, no transparente · **legible a 16 px** |
+
+⚠️⚠️ **Las tres reglas que no son opcionales, y el porqué de cada una:**
+1. **Texto en contornos, nunca `<text>`.** El logotipo se sirve dentro de un `<img>`, y ahí **las
+   fuentes externas no se cargan**: un SVG con `<text font-family="Lilita One">` sale con la fuente
+   de sustitución en cualquier máquina que no la tenga instalada, sin fallar y sin avisar.
+2. **Sin `<script>`, sin `<style>` externo y sin referencias a otros ficheros.** Un `<img>` no
+   ejecuta JavaScript y no trae recursos externos: lo que no esté dentro del SVG, no se pinta.
+3. **`viewBox` obligatorio.** Es lo que permite que la misma pieza sirva a 54 px en la barra y más
+   grande en el pie. Sin él, el navegador usa el tamaño intrínseco y no escala.
+
+⚠️ **Y el icono tiene decisiones de diseño abiertas**, no técnicas: su propio artboard dice que «la
+figura completa aguanta de 48 px para arriba» y que por debajo hay que cambiarla por el troquel, y
+deja **tres barras a elegir**. Eso lo decide el owner, no el producto.
+
 **b) Estructura y detalle → `public/css/client.css`** (`DECISIONES #143`).
 Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cuatro** —después de
 `landing.css`, del tema inyectado y de `site.css`—, así que redefinir un token ahí gana en cascada:

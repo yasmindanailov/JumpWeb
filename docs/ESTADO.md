@@ -427,7 +427,7 @@
 > defecto** (el desglose EN/FR en crudo) **en paralelo, sin saberlo**. Se salvó la mitad que no
 > coincidía —la guarda— y se tiró el resto. **Antes de abrir una ficha de `DEUDA.md`, mira si el otro
 > la tiene abierta**: el reparto por carriles no basta cuando una ficha cae en la frontera.
-> El último usado es **`#209`**.
+> El último usado es **`#211`**.
 > ⚠️ **Y el `#207` volvió a demostrar la regla el 2026-08-28**: el carril C escribió su tanda con
 > `#207` en cinco sitios y, al ir a empujar, el carril A ya se había llevado **`#207` Y `#208`**.
 > Renumerar costó cinco ediciones. ▶ **Y además `#207` está OCUPADO por la base heredada** («Fase
@@ -535,6 +535,17 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3222 en verde** (20.979 aserciones), medida el 2026-08-28 por el carril C **sobre el árbol
+  CONJUNTO** (su `#211` rebasado encima del `#210` del carril A). ⚠️ **Se MIDIÓ, no se sumó**: en su
+  propio árbol el carril C daba 3.150 · 18.486, y esa evidencia es ANTERIOR a la fusión.
+  ▶ **+6 casos y +37 aserciones**: `ArmazonContractTest` (la hamburguesa ALTERNA y dice en
+  qué estado está · enseña una X sacada del set de iconos · con el menú abierto SIEMPRE hay botón de
+  comprar) y `ClientThemePackageTest` (el hueco del ICONO de instalación, sus tres piezas, y que las
+  DOS plantillas lo usen). **10 mutaciones, las 10 muerden · sonda de navegador 15/15.**
+  ⚠️ **Una de esas guardas nació DÉBIL y lo demostró la mutación**: aseveraba por SUBCADENA y
+  `.nav-cta-med-NO` contiene `.nav-cta-med`, así que pasaba con el CSS roto. Es la **tercera** vez
+  en dos días (las otras: `favicon.svg` dentro de `client-favicon.svg`, y `cta-prime` dentro de
+  `cta-prime__ico` en `#195`). **Antes de creerte un test verde, acota al elemento.** Antes:
 - Suite **3216 en verde** (20.942 aserciones, `--parallel` **~71 s**), medida el 2026-08-28 a las 07:10 (hora de
   Madrid), tras **`#210`** (el OJO del owner en localhost): **+3 tests y +7 aserciones** — `SidebarSetupBindingsTest`
   (3 casos: props sombreadas, `watch` antes de su `const`, la guarda de la guarda). ⚠️ El hook `pre-push` contrasta
@@ -1011,7 +1022,7 @@ retención.
 |---|---|
 | **A · menores + puerta** | **SESIÓN del 2026-08-27 noche → 28 madrugada**: `[DECIDIDO owner]` `#208`. ✅ **El PANEL de menores (tanda 5, `specs/menores-a-cargo.md` §9.10.4) EN EL ÁRBOL** (`8ab0f5c`): «Para:» en la ficha, «Asignar menores» en la línea, el alta manual con selector; +45 tests, sonda de concurrencia, headless 13/13. ✅ **El SUBSISTEMA A (`specs/identidad-qr-puerta.md` §9.4) EN EL ÁRBOL**: carné QR de 20 caracteres, visita acreditada, ficha compuesta, pantalla con caducidad en servidor, correo con PNG, `GET|POST /me/card`; 5/5 mutaciones, headless 15/15. **Ambos 🟦 por el OJO del owner** (§9.10.4 y §9.4 «lo que queda»: el panel, la puerta, el correo en Gmail/Outlook y **el lector real del recinto**), más los guiones §5.decies/§5.undecies y los DOS valores de retención en meses. ▶ Lo siguiente de agente, cuando el owner lo pida: la zona «Mi carné» del cajón y la rotación desde el panel (`DEUDA.md`), y **D · JumpPoints**, que ya tiene su hecho observable (`customer_visits`) |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
-| **C · tema** | ❗❗ **La pasada de NAVEGADOR, y ya son SEIS tandas visuales sin mirar**: `#195` (el hero pierde su CTA y encoge), `#196` (19 elementos pierden su sombra), `#201` (el menú a pantalla completa), `#203` (la barra DISUELTA en dos racimos, en las 12 vistas), `#205` (el CTA doble de móvil) y **`#209` (el botón de comprar YA SALE EN NARANJA en esta máquina)**. ⚠️ **Con el paquete puesto, esta máquina las enseña YA con su marca.** ▶ Y dos cosas concretas: el **SVG del logotipo** en `public/img/client-logo.svg` y **cuál de las TRES variantes de «El parque»** para la tanda 3 (`Descubre-el-Parque` · `Recorrido-Parque` · `Elige tu Zona`; preguntado el 28: «todavía no lo decido»). ▶ ✅ **El artboard del menú en MÓVIL YA LLEGÓ** (dentro de `Landing PJP Modos`, 2026-08-28): la 2c·4b se desbloquea, pero **su barra inferior son 3 iconos + 1 CTA y la nuestra es un CTA doble (`#205`)** — eso hay que contrastarlo con él antes de rehacerla. ▶ `[PENDIENTE: owner]` **avisar cuando el color de acción no alcance AA** (spec §15.8). ▶ Ya validó `#193` y `#194` |
+| **C · tema** | ❗ **LO QUE ESPERA DE TI AHORA: el LOGOTIPO y el ICONO exportados desde Claude Design** (`[DECIDIDO owner, 2026-08-28]`, `#211`) — la lista exacta de formatos está en `INSTALACION-CLIENTE.md` §4.a.quinquies. ▶ Y la pasada de NAVEGADOR: **SEIS tandas visuales sin mirar**: `#195` (el hero pierde su CTA y encoge), `#196` (19 elementos pierden su sombra), `#201` (el menú a pantalla completa), `#203` (la barra DISUELTA en dos racimos, en las 12 vistas), `#205` (el CTA doble de móvil) y **`#209` (el botón de comprar YA SALE EN NARANJA en esta máquina)**. ⚠️ **Con el paquete puesto, esta máquina las enseña YA con su marca.** ▶ Y dos cosas concretas: el **SVG del logotipo** en `public/img/client-logo.svg` y **cuál de las TRES variantes de «El parque»** para la tanda 3 (`Descubre-el-Parque` · `Recorrido-Parque` · `Elige tu Zona`; preguntado el 28: «todavía no lo decido»). ▶ ✅ **El artboard del menú en MÓVIL YA LLEGÓ** (dentro de `Landing PJP Modos`, 2026-08-28): la 2c·4b se desbloquea, pero **su barra inferior son 3 iconos + 1 CTA y la nuestra es un CTA doble (`#205`)** — eso hay que contrastarlo con él antes de rehacerla. ▶ `[PENDIENTE: owner]` **avisar cuando el color de acción no alcance AA** (spec §15.8). ▶ Ya validó `#193` y `#194` |
 
 ⚠️ **«La landing sigue bloqueada» dejó de ser cierto y esta sección lo decía**: la capa de tema ya
 tiene las tandas **1, 2a, 2b y la ELEVACIÓN** en `main` (`#192`→`#196`) y la **2c escrita**. Lo que

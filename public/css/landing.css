@@ -531,6 +531,19 @@ img { display: block; max-width: 100%; }
 }
 .nav__burger:hover { background: var(--fg); color: var(--bg); transform: scale(1.08); }
 
+/* **Los dos dibujos de la hamburguesa: rayas cerrada, X abierta.**
+   Se apilan en la MISMA celda (`grid-area: 1/1`) en vez de mostrarse y ocultarse con `display`,
+   para que el botón no cambie de tamaño al alternar — con `display:none` el `inline-flex` mide
+   solo el glifo visible y el círculo daba un salto de 2 px al abrir.
+   ⚠️ El que no se ve va `visibility:hidden`, no `opacity:0`: así tampoco es alcanzable con el
+   ratón ni lo anuncia un lector de pantalla. Es la misma decisión que el menú cerrado, y su
+   porqué está escrito ahí. */
+.nav__burger { display: inline-grid; place-items: center; }
+.nav__burger-ico { grid-area: 1 / 1; transition: opacity var(--dur-fade) ease; }
+.nav__burger-ico--x { opacity: 0; visibility: hidden; }
+.nav--over .nav__burger-ico--bars { opacity: 0; visibility: hidden; }
+.nav--over .nav__burger-ico--x { opacity: 1; visibility: visible; }
+
 .mob-menu {
   position: fixed; inset: 0; z-index: 100;
   pointer-events: none;

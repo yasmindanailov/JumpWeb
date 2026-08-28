@@ -161,8 +161,26 @@
             <span class="cta-med__arrow" aria-hidden="true">→</span>
         </button>
 
-        <button class="nav__burger" x-ref="burger" @click="menuOpen = true" aria-label="{{ __('landing.nav.menu_open') }}">
-            <x-icons.menu />
+        {{-- **La hamburguesa ABRE Y CIERRA, y enseña una X cuando está abierta.**
+
+             ⚠️⚠️ Hasta aquí hacía `menuOpen = true` a secas, y eso era un defecto de verdad: el menú
+             es `inset: 0` y tapa la página entera, así que **con el ratón no había forma de salir**
+             — solo `Escape` o pulsar un destino. Lo cazó el owner mirando, no ninguna guarda.
+             ▶ Se resuelve como en su mockup: **el mismo botón alterna** (`alternaMenu`) y su dibujo
+             pasa a X. Nosotros lo hacemos con el SET de iconos en vez de rotando dos rayas, porque
+             el dibujo es uno de los tres mecanismos del tema: `x-icons.close` ya existe y una
+             instalación puede sustituirlo.
+
+             ⚠️ El `aria-label` **también alterna**: el del mockup dice «Abrir menú» siempre, incluso
+             estando abierto, y eso es lo único que no se copia. Y gana `aria-expanded`, que es lo
+             que convierte el botón en un revelador para quien no ve el dibujo. --}}
+        <button class="nav__burger" x-ref="burger"
+                @click="menuOpen = ! menuOpen"
+                :aria-expanded="menuOpen ? 'true' : 'false'"
+                :aria-label="menuOpen ? @js(__('landing.nav.menu_close')) : @js(__('landing.nav.menu_open'))"
+                aria-label="{{ __('landing.nav.menu_open') }}">
+            <x-icons.menu class="nav__burger-ico nav__burger-ico--bars" />
+            <x-icons.close class="nav__burger-ico nav__burger-ico--x" />
         </button>
     </div>
 </nav>

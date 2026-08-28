@@ -22,9 +22,9 @@
     {{-- Página privada (datos de menores): nunca indexar. --}}
     <meta name="robots" content="noindex, nofollow">
 
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="icon" href="{{ asset('favicon-64.png') }}" sizes="64x64" type="image/png">
-    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+    {{-- El MISMO hueco que el layout público: si los dos no salen del componente, una instalación
+         pone su icono y esta pantalla sigue con el del producto — sin fallar y sin avisar. --}}
+    <x-site.favicon />
 
     {{-- Mismas fuentes que el resto del sitio. --}}
     <link rel="preconnect" href="https://fonts.bunny.net">

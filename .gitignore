@@ -29,6 +29,11 @@
 # versiona, se carga si existe, y `deploy.sh` lo excluye del `--delete`—. Sin él, el armazón
 # pinta el nombre en la fuente de rótulo, que es el suelo del producto.
 /public/img/client-logo.svg
+# Y el tercero: el ICONO DE PESTAÑA de la instalación. Mismas tres piezas. El suelo es
+# `public/favicon.svg`, que es el icono DEL PRODUCTO — ⚠️ y lleva `#FF5B22` quemado, o sea el
+# naranja del PRIMER cliente: es la misma fuga que `#139` cerró en el CSS, sobrevivida en un
+# fichero. Ficha en `DEUDA.md`.
+/public/img/client-favicon.svg
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage

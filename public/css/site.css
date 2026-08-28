@@ -2187,7 +2187,16 @@ body[data-has-hero] .nav-cta-med {
                 opacity 0.24s ease,
                 transform 0.32s cubic-bezier(0.34, 1.56, 0.5, 1);
 }
-body[data-has-hero] .nav-cta-med.is-revealed {
+body[data-has-hero] .nav-cta-med.is-revealed,
+/* ⚠️⚠️ **Y con el MENÚ ABIERTO, siempre** — esto no es un adorno, cierra un agujero medido: en la
+   portada el CTA nace oculto (lo destapa `navCtaReveal` al pasar el hero), así que **abrir el menú
+   desde arriba del todo dejaba la pantalla ENTERA sin un solo botón de comprar**. El menú es
+   `inset: 0` y tapa la página: si él no ofrece la compra, nadie la ofrece.
+   ▶ Medido en el mockup del 2.º cliente: **su menú tampoco lleva CTA propio** — usa el de la
+   cabecera, que en el suyo está SIEMPRE visible. Aquí no lo estaba, y ésa era la diferencia.
+   ▶ Va con `.nav--over`, la clase que el armazón ya pone al abrir, así que no hace falta estado
+   nuevo ni JS: el CTA es el mismo botón, con el mismo destino y el mismo rol de acción. */
+body[data-has-hero] .nav--over .nav-cta-med {
     max-width: 22em;
     padding-inline: 12px 16px;
     margin-left: 0;

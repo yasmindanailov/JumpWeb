@@ -330,6 +330,9 @@ RSYNC_EXCLUDES=(
     --exclude='/public/img/client-logo.svg'  # el LOGOTIPO de la instalación: mismo motivo exacto
                                              # que la hoja de arriba. Sin la exclusión, el primer
                                              # despliegue lo borra y la marca vuelve a ser texto
+    --exclude='/public/img/client-favicon.svg'  # el ICONO DE PESTAÑA de la instalación: idem. Es la
+                                                # tercera pieza del mismo patrón; sin ella el
+                                                # despliegue devuelve el icono del producto
     --exclude='/bootstrap/cache/*'   # llevaría la config local horneada; se regenera allí
     --exclude='/.phpunit.result.cache'
     --exclude='/compose.yaml'

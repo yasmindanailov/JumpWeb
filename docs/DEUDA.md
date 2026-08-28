@@ -257,6 +257,17 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
 
 ---
 
+## ▶ Media/Baja · lo que destapó el OJO del owner sobre la marca (2026-08-28, `DECISIONES #211`)
+
+| Sev. | Ítem | Qué (medido) | Dónde muerde | La retira |
+|---|---|---|---|---|
+| **Media** | **El icono del PRODUCTO lleva quemado el naranja del PRIMER cliente** | `public/favicon.svg` es un cuadrado `#FF5B22` con una «J». Es correcto que el producto tenga icono propio; **el color no**: `#FF5B22` es el acento histórico de la primera instalación, la misma fuga que `#139` cerró en el CSS | Toda instalación **sin** icono propio enseña en la pestaña el naranja de otro cliente. Y ninguna guarda de color lo mira: es un fichero, no CSS | Decidir el color del PRODUCTO (¿neutro? ¿la marca de JumpWeb?) y repintar los tres ficheros. No es urgente porque una instalación puede taparlo con su SVG desde `#211` |
+| **Baja** | **`public/favicon.ico` está versionado y pesa 0 bytes** | Medido: `wc -c` = 0, y **ningún `<link>` lo referencia**. El navegador lo pide solo por convención | Poco: servir 0 bytes y no tenerlo dan el mismo resultado visible. Pero es un fichero versionado que no significa nada, y el siguiente que lo vea perderá el rato | Borrarlo, o ponerle contenido. Se dejó porque retirar ficheros tiene su protocolo (`CONVENCIONES §3.quater`) y esto no lo pedía nadie |
+| **Media** | **Dos zonas de PRUEBA salen en la portada pública** | `zones` id 5 y 6, nombre «Cap», `slug` `cap`/`cap2`, `is_active = true`, color `#FF5B22`. Son sondas de aforo. **Salen como tarjetas de zona en `/` y `/entradas`** de esta máquina | Confunde la pasada de navegador del owner —parecen zonas reales con el color del cliente anterior— y falsea cualquier medida de color sobre la portada | Es dato de ESTA base de datos, no del producto: desactivarlas o borrarlas. **No se ha tocado**: son datos del owner y borrar datos no se hace por iniciativa propia |
+| **Baja** | **El logotipo del cliente no se pudo reconstruir en vectorial** | Su lockup son 2 líneas en Lilita One con **6 capas por palabra** (3 contornos, escalera de 6 sombras, relleno por letra, 2 degradados recortados al texto) + una figura que **no es silueta plana**. La reconstrucción con contornos reales y geometría medida llegó a **29 % de píxeles distintos** | En que la marca sigue siendo el nombre en la fuente de rótulo | `[DECIDIDO owner, 2026-08-28]`: **lo exporta él desde Claude Design**. El hueco ya existe (`#206`). ▶ **Y falta un hueco para la variante sobre TINTA**: con el menú abierto el logo cae sobre superficie oscura, y una imagen no se adapta sola como sí hace el texto de hoy |
+
+---
+
 ## ▶ Baja/Media · lo que el QUINTO mecanismo midió y NO arregló (2026-08-28, `DECISIONES #209`)
 
 | Sev. | Ítem | Qué (medido) | Dónde muerde | La retira |

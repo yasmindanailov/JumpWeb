@@ -25,10 +25,8 @@
     <link rel="canonical" href="{{ $canonical }}">
     <meta name="robots" content="{{ $noindex ? 'noindex, nofollow' : 'index, follow' }}">
 
-    {{-- Favicon / icono de la web: SVG (navegadores modernos) + PNG (iOS/legacy). --}}
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="icon" href="{{ asset('favicon-64.png') }}" sizes="64x64" type="image/png">
-    <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+    {{-- Favicon / icono de la web. Sustituible por instalación (`#211`): ver el componente. --}}
+    <x-site.favicon />
 
     {{-- Open Graph / redes sociales --}}
     <meta property="og:site_name" content="{{ config('app.name') }}">

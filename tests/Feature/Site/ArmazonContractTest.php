@@ -583,6 +583,130 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
+     * **EL MENÚ SE PUEDE CERRAR CON EL RATÓN — y hasta el 2026-08-28 no se podía.**
+     *
+     * ⚠️⚠️ La hamburguesa hacía `menuOpen = true` a secas. El menú es `inset: 0` y tapa la página
+     * entera, así que las ÚNICAS salidas eran `Escape` y pulsar un destino: quien usa el ratón se
+     * quedaba encerrado. **Lo cazó el owner mirando la pantalla; ninguna de las 31 aserciones del
+     * armazón lo veía**, porque todas comprobaban que el menú se ABRE.
+     *
+     * Se aseveran las tres mitades, porque con dos parece que funciona: que el botón ALTERNE, que
+     * DIGA en qué estado está (`aria-expanded`, lo único que ve quien no ve el dibujo) y que su
+     * nombre accesible cambie — el mockup del cliente dice «Abrir menú» incluso estando abierto, y
+     * eso es lo único suyo que aquí no se copia.
+     */
+    public function test_the_burger_opens_and_closes_and_says_which(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        $burger = $this->nodes($html, 'nav__burger')[0];
+
+        $this->assertStringContainsString(
+            'menuOpen = ! menuOpen', $burger->getAttribute('data-alpine-click'),
+            'la hamburguesa ha dejado de ALTERNAR. Si solo abre, el menú a pantalla completa no '.
+            'tiene salida con el ratón: tapa la página entera.',
+        );
+
+        $this->assertNotSame(
+            '', $burger->getAttribute('data-bind-aria-expanded'),
+            'la hamburguesa no publica `aria-expanded`: es un revelador, y sin eso quien navega '.
+            'con lector de pantalla no sabe si lo que va a pulsar abre o cierra.',
+        );
+
+        $this->assertNotSame(
+            '', $burger->getAttribute('data-bind-aria-label'),
+            'el nombre accesible de la hamburguesa no cambia con el estado: diría «abrir menú» '.
+            'estando abierto, que es justo el defecto que el mockup del cliente tiene.',
+        );
+
+        $this->assertNotSame(
+            '', $burger->getAttribute('aria-label'),
+            'sin `aria-label` estático el botón se queda SIN NOMBRE cuando no hay JavaScript.',
+        );
+    }
+
+    /**
+     * **Y enseña una X mientras está abierto.**
+     *
+     * El dibujo sale del SET de iconos (`x-icons.close`), no en línea: el dibujo es uno de los
+     * tres mecanismos del tema y una instalación tiene que poder sustituirlo. Los dos glifos se
+     * sirven siempre y los alterna el CSS por `.nav--over`, así que funciona sin JavaScript de
+     * dibujo y el botón no cambia de tamaño al alternar.
+     */
+    public function test_the_burger_shows_a_close_glyph_while_open(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        $burger = $this->nodes($html, 'nav__burger')[0];
+        $clases = [];
+
+        foreach ($this->xpath($html)->query('.//svg', $burger) as $svg) {
+            $clases[] = $svg->getAttribute('class');
+        }
+
+        $this->assertCount(2, $clases, 'la hamburguesa debe servir DOS glifos (rayas y aspa), y sirve '.count($clases));
+
+        foreach (['nav__burger-ico--bars', 'nav__burger-ico--x'] as $marca) {
+            $this->assertTrue(
+                (bool) array_filter($clases, fn (string $c): bool => str_contains($c, $marca)),
+                "falta el glifo `{$marca}` en la hamburguesa",
+            );
+        }
+
+        $css = (string) file_get_contents(public_path('css/landing.css'));
+
+        $this->assertStringContainsString(
+            '.nav--over .nav__burger-ico--x', $css,
+            'nada alterna los dos glifos con el menú abierto: se verían los dos a la vez.',
+        );
+    }
+
+    /**
+     * **Con el menú abierto SIEMPRE hay un botón de comprar.**
+     *
+     * ⚠️⚠️ Otro agujero que solo se ve mirando: en la portada el CTA del armazón **nace oculto** y
+     * lo destapa `navCtaReveal` al pasar el hero. Abrir el menú desde arriba del todo dejaba la
+     * pantalla entera —el menú tapa la página— **sin un solo sitio donde comprar**.
+     * ▶ Medido en el mockup del 2.º cliente: su menú tampoco lleva CTA propio; usa el de la
+     * cabecera, que en el suyo está SIEMPRE visible. La diferencia era ésa, no el botón.
+     */
+    public function test_the_open_menu_always_offers_the_purchase(): void
+    {
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', (string) file_get_contents(public_path('css/site.css')));
+
+        // ⚠️ Se asevera el SELECTOR COMPLETO y lo que declara, no una subcadena: con
+        // `assertStringContainsString` un selector mal escrito —`.nav-cta-med-NO`— **contiene** la
+        // cadena buscada y la guarda pasaba. Lo demostró la mutación, que era el único modo de
+        // verlo: el test estaba verde con el CSS roto.
+        $encontrada = null;
+
+        foreach (preg_split('/(?<=\})/', $css) ?: [] as $trozo) {
+            if (! preg_match('/([^{}]*)\{([^{}]*)\}\s*$/', $trozo, $m)) {
+                continue;
+            }
+
+            foreach (explode(',', $m[1]) as $selector) {
+                if (preg_replace('/\s+/', ' ', trim($selector)) === 'body[data-has-hero] .nav--over .nav-cta-med') {
+                    $encontrada = $m[2];
+                }
+            }
+        }
+
+        $this->assertNotNull(
+            $encontrada,
+            "Nada revela el CTA de compra cuando el menú está abierto.\n".
+            "▶ En la portada nace oculto (`navCtaReveal`), y el menú es `inset: 0`: sin esta regla,\n".
+            '  abrir el menú desde arriba deja la pantalla sin ninguna forma de comprar.',
+        );
+
+        foreach (['opacity: 1', 'pointer-events: auto'] as $declaracion) {
+            $this->assertStringContainsString(
+                $declaracion, (string) $encontrada,
+                "la regla existe pero no declara `{$declaracion}`: el CTA seguiría oculto o sin ".
+                'poder pulsarse con el menú abierto.',
+            );
+        }
+    }
+
+    /**
      * **Todo enlace del menú lo cierra al pulsarlo.**
      *
      * Mismo motivo que en el cajón: la mitad de los destinos son anclas de la MISMA página, y sin

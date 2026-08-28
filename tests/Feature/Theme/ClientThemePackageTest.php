@@ -150,6 +150,93 @@ class ClientThemePackageTest extends TestCase
     }
 
     /**
+     * **EL ICONO DE PESTAÑA de la instalación** — el tercer hueco del mismo patrón (`#211`).
+     *
+     * ⚠️ Con el icono del cliente puesto, **el PNG del producto sale del `<head>`**: un navegador
+     * que entienda los dos elegiría el PNG por ser más específico en tamaño y volvería a enseñar la
+     * «J» de JumpWeb teniendo el del cliente al lado. El `apple-touch-icon` se queda porque para
+     * iOS no hay alternativa vectorial — y eso es una limitación CONOCIDA del alcance elegido
+     * (`[DECIDIDO owner, 2026-08-28]`: solo el SVG).
+     */
+    public function test_the_installation_favicon_replaces_the_product_one(): void
+    {
+        // Sin fichero: manda el icono del producto, con su PNG de respaldo.
+        $html = $this->get('/')->assertOk()->getContent();
+        $this->assertStringContainsString('favicon.svg', $html);
+        $this->assertStringContainsString('favicon-64.png', $html);
+
+        $path = public_path('img/client-favicon.svg');
+        @mkdir(dirname($path), 0o777, true);
+
+        try {
+            file_put_contents($path, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"></svg>');
+
+            $html = $this->get('/')->assertOk()->getContent();
+
+            $this->assertMatchesRegularExpression(
+                '/client-favicon\.svg\?v=\d+/', $html,
+                'el icono de la instalación no se sirve, o va sin cache-busting',
+            );
+            // ⚠️ Acotado al fichero del PRODUCTO: `client-favicon.svg` contiene la cadena
+            // `favicon.svg`, así que un `assertStringNotContainsString` suelto falla siempre —
+            // y su mensaje culpa al código en vez de a la aserción.
+            $this->assertDoesNotMatchRegularExpression(
+                '#href="[^"]*/favicon\.svg#', $html,
+                'se sirven el icono del cliente Y el del producto: son alternativas, no capas',
+            );
+            $this->assertStringNotContainsString(
+                'favicon-64.png', $html,
+                'sigue el PNG del producto en el `<head>`: un navegador que entienda los dos '.
+                'prefiere el PNG por tamaño y enseñaría la «J» de JumpWeb.',
+            );
+        } finally {
+            @unlink($path);
+        }
+    }
+
+    /** **Las otras dos piezas del icono**: ni se versiona, ni lo borra el despliegue. */
+    public function test_the_installation_favicon_is_not_versioned_and_survives_the_deploy(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '#^/public/img/client-favicon\.svg\s*$#m',
+            (string) file_get_contents(base_path('.gitignore')),
+            '`.gitignore` no ignora el icono de la instalación: la marca de un cliente acabaría '.
+            'versionada en el repo del PRODUCTO.',
+        );
+
+        $this->assertMatchesRegularExpression(
+            "#^\s*--exclude='/public/img/client-favicon\.svg'#m",
+            (string) file_get_contents(base_path('scripts/deploy.sh')),
+            '`deploy.sh` no excluye el icono del `rsync --delete`: el primer despliegue lo borra y '.
+            'vuelve el icono del producto, en silencio.',
+        );
+    }
+
+    /**
+     * **Y las DOS plantillas usan el mismo hueco.**
+     *
+     * Si `focused-layout` se quedara con los `<link>` a mano, una instalación pondría su icono y la
+     * pantalla de menores seguiría con el del producto — sin fallar y sin avisar. Es el mismo modo
+     * de fallo que la hoja de tema tuvo hasta `#143`.
+     */
+    public function test_both_layouts_take_the_favicon_from_the_same_hole(): void
+    {
+        foreach (['layout', 'focused-layout'] as $vista) {
+            $blade = (string) file_get_contents(resource_path("views/components/{$vista}.blade.php"));
+
+            $this->assertStringContainsString(
+                '<x-site.favicon />', $blade,
+                "`{$vista}.blade.php` no usa el componente del icono",
+            );
+            $this->assertStringNotContainsString(
+                "asset('favicon.svg')", $blade,
+                "`{$vista}.blade.php` sigue enlazando el icono del producto a mano: esa copia no ".
+                'pasa por el hueco y se queda con la marca de JumpWeb.',
+            );
+        }
+    }
+
+    /**
      * **Sin hoja del cliente, el `<head>` no cambia** — que es el estado de este repo y el de
      * cualquier instalación que aún no tenga tema propio.
      *

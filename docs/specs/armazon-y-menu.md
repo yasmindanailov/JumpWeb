@@ -974,3 +974,57 @@ cuadre que falla.**
   artboard de móvil— la anunció él mismo.
 - **Entrada final**: **`DECISIONES #200`** — la spec, las siete decisiones y la ejecución de la
   tanda 2c·0.
+
+---
+
+## 6. La 2c·5 — el menú se puede CERRAR, y siempre ofrece comprar (`#211`, 2026-08-28)
+
+> Las dos cosas las cazó **el owner mirando la pantalla**. Ninguna de las 31 aserciones del armazón
+> las veía, y no por descuido: **todas comprobaban que el menú se ABRE**.
+
+### 6.1 ❗❗ El menú no tenía salida con el ratón
+
+Medido: `.nav__burger` hacía `@click="menuOpen = true"`. A secas. El menú es `inset: 0` y tapa la
+página entera, así que las únicas salidas eran **`Escape`** y **pulsar un destino**. Quien usa el
+ratón y no quiere ir a ninguno de los diez sitios, se quedaba dentro.
+
+▶ **En el mockup del cliente el mismo botón ALTERNA** (`onClick={{ alternaMenu }}`) y sus dos rayas
+rotan ±45° hasta formar un aspa, con un rótulo que pasa de «Menú» a «Cerrar».
+
+Aquí se resuelve igual pero con **el SET de iconos** en vez de rotando rayas: `x-icons.close` ya
+existe, y el dibujo es uno de los tres mecanismos del tema —una instalación tiene que poder
+sustituirlo—. Los dos glifos se sirven siempre y los alterna el CSS por `.nav--over`, así que:
+no hace falta JS para el dibujo, y el botón **no cambia de tamaño** al alternar (se apilan en la
+misma celda de una rejilla; con `display:none` el círculo daba un salto de 2 px).
+
+⚠️ **Lo único del mockup que NO se copia**: su `aria-label` dice «Abrir menú» **también estando
+abierto**. Aquí alterna, y además el botón gana `aria-expanded` — que es lo único que tiene quien
+no ve el dibujo. El `aria-label` estático se queda como suelo sin JavaScript.
+
+### 6.2 ❗❗ Y con el menú abierto no había dónde comprar
+
+El owner pidió «el CTA del menú». Medido antes de añadir nada: **el menú del mockup tampoco lleva
+CTA propio** — usa el de la cabecera. La diferencia es que **el suyo está siempre visible y el
+nuestro no**: en la portada `.nav-cta-med` nace oculto y lo destapa `navCtaReveal` al pasar el hero
+(`#194`). Abriendo el menú desde arriba del todo, la pantalla entera se quedaba **sin un solo sitio
+donde comprar**.
+
+▶ El arreglo es una regla, sin estado nuevo ni JS: `body[data-has-hero] .nav--over .nav-cta-med`
+revela el mismo botón, con el mismo destino y el mismo rol de acción. Con el paquete del cliente
+puesto sale en **naranja** sobre la tinta del menú, que es exactamente lo que su sistema pide.
+
+⚠️ **La guarda de esto nació DÉBIL y lo demostró la mutación.** Comprobaba
+`assertStringContainsString('… .nav-cta-med')`, y un selector mal escrito —`.nav-cta-med-NO`—
+**contiene** esa cadena: el test pasaba con el CSS roto. Hoy asevera el selector completo tras
+partir la hoja en reglas, y además que declare `opacity: 1` y `pointer-events: auto`.
+▶ Es la tercera vez en esta sesión que una subcadena hace pasar una aserción falsa (las otras dos:
+`favicon.svg` dentro de `client-favicon.svg`, y `cta-prime` dentro de `cta-prime__ico` en `#195`).
+
+### 6.3 Verificación
+
+- **`ArmazonContractTest` +3 casos**, **`ClientThemePackageTest` +3** (el hueco del icono).
+- **10 mutaciones, las 10 muerden** (detección por código de salida, nunca por `grep`).
+- **Sonda de navegador 15/15** (`VERIFICACION-E2E-CAJON.md` §5.quaterdecies): en la portada el CTA
+  nace oculto · la hamburguesa dice `aria-expanded=false` y enseña rayas · al abrir dice `true`,
+  enseña la X, su nombre pasa a «Cerrar menú» y **aparece el CTA en `rgb(242,113,28)`** · al
+  volver a pulsarla el menú se cierra · `Escape` sigue cerrando.
