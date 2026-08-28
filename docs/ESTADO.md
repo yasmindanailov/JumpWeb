@@ -72,7 +72,12 @@
 >   (techo 243 → 247, por feature) · payload con sesión 8.472 (techo 7.800 → 8.550, por feature) ·
 >   suite **3224 / 21.012** sobre el árbol del carril A y **3230 / 21.049 sobre el árbol CONJUNTO** tras
 >   rebasar sobre el `#211` del carril C (empujado a las 07:18 mientras corría el gate; tres conflictos de
->   «ambos añaden al final», resueltos con los dos bloques). ⚠️ **Para el carril C**: esta tanda tocó `resources/js/sidebar/**`
+>   «ambos añaden al final», resueltos con los dos bloques). ✅ **DESPLEGADO EN STAGING a las 07:53**
+>   (`577cf4f`, `ENTORNOS.md` §4: volcado previo de la BD, 4 migraciones, salud 7/7, rutas del carné en 401
+>   JSON, chunk idéntico al local). ▶ **Para el OJO del owner en staging**: «Mi carné» con su cuenta de
+>   CLIENTE `yasmindanailov@gmail.com` (verificada) y «Rotar carné QR» con la de ADMIN `yasi09265@gmail.com`
+>   sobre esa ficha; el correo de staging va al LOG (`MAIL_MAILER=log`), así que el adjunto del correo NO
+>   se ve allí — la zona «Mi carné» sí. ⚠️ **Para el carril C**: esta tanda tocó `resources/js/sidebar/**`
 >   (`AccountSection.vue`, `ZoneIcon.vue`, `navigation.js`, zona y store nuevos) y añadió
 >   `resources/views/components/icons/qr.blade.php`: `git pull --rebase` antes de empujar. ▶ ❗ **POR
 >   DÓNDE RETOMA la siguiente sesión de ESTE carril**: **(0)** el owner: su OJO sobre «Mi carné» (móvil y

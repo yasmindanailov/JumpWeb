@@ -312,6 +312,22 @@ Ficha abierta en `DEUDA.md`; el contenido acordado está en `DECISIONES #137`.
 > la trampa: **los dos ficheros pesan casi igual**, así que comprobar el tamaño no distingue uno de
 > otro; hay que comprobar el CONTENIDO, y por HTTP. (Hay además un `~/public_html/robots.txt` de 25 B
 > con la guarda, resto de cuando el docroot era `public_html`: hoy **no se sirve** y es inocuo.)
+>
+> ✅ **DESPLEGADO el 2026-08-28 a las 07:53 (hora de Madrid), commit `577cf4f`** (carril A: `#210` + el
+> `#211` del carril C + `#212`, las dos superficies del carné). Dry-run limpio (PHP remoto 8.5.1, seis
+> guardas del `.env` ✓, 353 entradas), **volcado de la BD ANTES de migrar** (`~/backups/jumpweb-pre-212-*.sql.gz`,
+> 68 KB, 41 tablas, `orders` dentro) y `--go`: **4 migraciones** (`customer_cards`, `customer_visits`,
+> `puerta.profile`, `dependent_assignments`), `redsys_environment = test`, 1415 franjas, salud 7/7. Verificado
+> además lo que el script no mira: `GET /me/card`, `GET /me/card/png` y `POST /me/card/rotate` responden **401
+> JSON** (no 404), las cinco tablas nuevas existen, el permiso `puerta.profile` está, el chunk del cajón servido
+> es **idéntico byte a byte** al local, y el log sin errores. ⚠️ Los tres ajustes nuevos de puerta NO están en
+> `settings` y `PuertaSettings` cae a sus defaults (30 · 5 · 1): es lo diseñado (`identidad-qr-puerta.md` §9.2 A·9).
+> ⚠️ **Dos trampas del volcado, medidas**: (1) extraer la contraseña del `.env` con `cut`/`tr` la mutila si
+> lleva caracteres especiales — se lee con `php artisan tinker --execute='echo config("database.connections.mysql.password");'`
+> dentro de una variable del shell remoto, sin que salga por el terminal—; y (2) **`mariadb-dump` lee `~/.my.cnf`
+> (el usuario `jumpweb_1` que rota el panel) y la contraseña del fichero de opciones GANA a `MYSQL_PWD`**, así que
+> «Access denied for user 'jumpweb_1_test'» no era la contraseña de la app: era la del otro usuario. `--no-defaults`
+> lo arregla. El aviso del cron es el conocido `#115`: sigue sin demonio.
 
 **El principio que sí está decidido**: staging se levanta con el MISMO procedimiento que levantaría la
 instalación de un cliente. Si se configura a mano deja de ser una prueba del producto y pasa a ser un
