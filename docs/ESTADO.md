@@ -2,7 +2,7 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-28, 15:30 (cierre del carril C)**.
+> aquí solo se enlaza.** Última actualización: **2026-08-28, 17:40 (carril A · la FORMA del panel, `#223` + `#224`)**.
 >
 > ❗❗ **ATENCIÓN: desde el 2026-08-27 hay TRES CARRILES sobre `main` (no dos).** El B cerró ese día a
 > las 07:30 con todo empujado y verde; el A cerró a las 18:40 con las TANDAS 1, 2 y 3 de «menores a
@@ -91,6 +91,136 @@
 >   pie **no hacía nada** — era mudo desde 4.3·2: la máquina no tenía la arista `CATALOG → CART` y `go()`
 >   rechaza en silencio. Arista + caso + **guarda nueva en `foot.test.js`** (todo CTA del pie tiene que ser
 >   una transición que la máquina admita; la mutación da 2 rojos), sondeo 4/4, JS 790 → 792. Redesplegado.
+>   ▶ ✅ **Y EL PULIDO DE LOS OCHO PUNTOS DEL OWNER (`DECISIONES #217`, specs `identidad-qr-puerta.md`
+>   §9.7/§9.7.1 y `menores-a-cargo.md` §9.11)**, tras su prueba en staging. **Medido antes de diseñar**
+>   (seis lectores), construido por **cuatro implementadores en paralelo con ficheros disjuntos**, y
+>   revisado después. Lo que entró: el **icono de la instalación dentro del QR** con su margen (7 módulos
+>   tapados, el único valor con dos escalones antes del precipicio; verificado con **dos decodificadores**
+>   a dos tamaños) · **«Mi cuenta» en tarjetas** de 2 columnas · **«Mi QR» junto al nombre** (y fuera de
+>   ahí la próxima reserva) · el **QR presentado como credencial** con aviso permanente y **confirmación
+>   dentro del cajón** al renovar · **«Menores a cargo»** con alta desplegable y **paginación de 6 que
+>   solo aparece si hace falta** (tope real medido: 20 por defecto, 100 configurable) · el **bloque de
+>   asignar menores** rediseñado, con la fila no marcable **visiblemente** deshabilitada y su motivo
+>   aparte · los **menores en la ficha del cliente del panel** · la **pantalla de puerta** entera · y la
+>   palabra **«QR»** en cliente, correo y panel. ⚠️⚠️ **Dos hallazgos que nadie buscaba**: la casilla del
+>   menor **no estaba rota** (staging en modo interno + exención del menor sin firmar, `#202`·2) y la
+>   **paleta de la puerta SÍ lo estaba** (los grises y el color de marca computaban vacío: texto negro
+>   puro, borde negro sólido, y las 99 variantes de modo oscuro inertes). **64 mutaciones**, suite
+>   **3299 / 21.542**, JS **813**, chunk 250,67/251, sondeos 38 ✓ y 15/15. Guion para el ojo del owner:
+>   `VERIFICACION-E2E-CAJON.md` **§5.octodecies**. ⚠️ **Tres decisiones del agente reversibles y baratas**:
+>   el modo oscuro de la puerta (8 líneas), 6 menores por página (una constante) y el margen del icono
+>   comido de dentro (otra). ▶ **Lo siguiente**: el OJO del owner sobre §5.octodecies —y en especial el
+>   **lector real** con el PNG descargado— y después **JumpPoints**, cuyo resumen de una página sigue
+>   esperando su ✅ en `lealtad-jumppoints.md` §9.
+>   ▶ ✅ **Y la REVISIÓN ADVERSARIAL del pulido, con sus arreglos** (`#217` addendum): 23 hallazgos
+>   confirmados, **9 arreglados** (los de conducta y seguridad) y 14 en `DEUDA.md` con su reproducción.
+>   Los cuatro que valieron la revisión: **el cuerpo del semáforo de la puerta no se pintaba** (el
+>   componente no imprime su slot por defecto: el empleado veía un icono y ni una palabra), **«Mi QR»
+>   salía mudo** para quien gana la sesión sin recargar —el camino normal de una primera compra—, el
+>   **margen del QR estaba medido con un token que no es un carné** (re-medido con 40 reales: 7 módulos
+>   0 fallos, 9 módulos 10 de 40; la conducta enviada era la correcta, el número escrito no), y **la
+>   guarda del icono transparente pasaba en verde con el cuadrado negro puesto**. Más: el QR del titular
+>   anterior se quedaba en pantalla al cambiar de cuenta, el foco saltaba al `<body>` al cerrar dos
+>   formularios, el motivo de la casilla deshabilitada dejó de anunciarse a un lector de pantalla, y la
+>   puerta decidía a quién acreditar la visita leyendo estado que el navegador puede reescribir
+>   (`#[Locked]`). Suite **3303 / 21.554** · JS 813 · chunk 251,02 (techo 252). ⚠️ **DECISIÓN DEL OWNER
+>   SOBRE EL MÉTODO (2026-08-28)**: la revisión costó ~2,8 M de tokens de agentes y **se paró ahí**; los
+>   arreglos los escribió el orquestador a mano. ▶ **De aquí en adelante: sin subagentes por defecto**,
+>   tests acotados con `--filter` y la suite entera UNA vez antes de subir; si una tarea justifica
+>   paralelizar, se propone con su coste y decide el owner.
+>   ▶▶ **SESIÓN CERRADA el 2026-08-28 a las 15:50 (hora de Madrid)** con todo empujado (`8d27187`),
+>   el gate en verde (suite **3315 / 21.713** · JS 813 · Pint ✓ · docs-check ✓ · build ✓) y
+>   **desplegado en staging**. `audit-clock` NO corrido: esta tanda no añadió ni tocó fixtures con
+>   calendario (comprobado sobre el diff del commit).
+>   ▶ ❗ **POR DÓNDE RETOMA LA SIGUIENTE SESIÓN DE ESTE CARRIL** (`[DECIDIDO owner, 2026-08-28]`):
+>   **otros puntos sobre el PANEL DE ADMIN**, que el owner dirá al arrancar. Antes de tocar nada:
+>   `/arranque-sesion`, y para el panel la fila de `CLAUDE.md` «Panel admin / puerta / operación
+>   diaria» (`docs/PANEL-ADMIN.md`) — y si toca la ficha del cliente o los pedidos,
+>   `specs/desmontar-view-order.md` (⚠️ `ViewOrder` está DESMONTADO: la orquestación NO vuelve a la
+>   página) y `specs/menores-a-cargo.md` §9.10/§9.11.
+>   ▶ ✅ **SESIÓN DEL 2026-08-28 POR LA TARDE (carril A) — LA FORMA DEL PANEL, TANDA 1 (`DECISIONES #223`,
+>   `specs/panel-navegacion.md`).** El owner pidió «simplificar el panel, mejor UI/UX, empezando por el
+>   MENÚ y la organización de cada acción: hay mucho jaleo, y ajustes que no hacen falta en el día a día».
+>   **Medido antes de proponer nada**: el admin veía **24 entradas en 6 grupos, todos desplegados**, y
+>   solo **4** eran del día a día según `PANEL-ADMIN.md` §2 — el **83 % del menú era puesta en marcha**;
+>   cero búsqueda global; «Pedidos» ordenando por fecha de COMPRA y no de visita; «Usuarios» mezclando 23
+>   clientes con 5 del equipo; «Calendario» y «Crear pedido» **duplicados** (menú + barra superior); y
+>   **un solo fichero de test en todo el repo miraba la navegación**. ⚠️⚠️ **La PRIMERA medición fue FALSA
+>   y casi arranca el diseño torcido**: volcar la navegación de dos roles en el MISMO proceso dijo que el
+>   empleado veía las 24 del admin —que sería un agujero de seguridad—. **Filament MEMOIZA la navegación**;
+>   en procesos separados el empleado veía 5 y el gateo estaba bien. *Cuando un instrumento dice que algo
+>   está roto de par en par, la primera hipótesis es el instrumento.* ❗ **El owner CORRIGIÓ al agente y para
+>   bien**: se le propuso un menú de 10 entradas con 4 grupos plegables (clusters) y contestó «**no quiero
+>   toggles, el menú PLANO**; ajustes, catálogos, programación, contenido web y sistema que salgan solo
+>   desde el icono del usuario, escondido». Con su corrección el menú queda en **5**, no en 10. **Lo que
+>   entró**: menú plano **Hoy · Calendario · Pedidos · Clientes · Puerta** sin grupos · las **19** restantes
+>   a **`/admin/ajustes`** en tarjetas por área **con una línea de qué hace cada una** (el problema real no
+>   era que «Temporadas» se llame mal, sino que nadie sabía para qué era) · la entrada **dentro del menú del
+>   avatar** · «Calendario» retirado de la barra superior (único duplicado; «Crear pedido» se queda porque
+>   es una ACCIÓN, no un sitio) · «Usuarios» partido en **dos pestañas de la MISMA pantalla**, «Clientes»
+>   (menú) y «Equipo» (Ajustes), cortadas por `User::PANEL_ROLES`, la misma lista que decide
+>   `canAccessPanel()`. **Medido después**: admin **24 → 5**; empleado **5 → 4** (no ve «Clientes»: exige
+>   `users.manage`, que su rol no tiene — es decisión de permisos, no omisión) y **no ve «Ajustes» en
+>   absoluto**. ⚠️ **Ocultar NO es autorizar**: las 19 conservan intacto su `canViewAny()`/`canAccess()`,
+>   verificados uno por uno. ⚠️⚠️ **El riesgo real de esconder es dejar una pantalla HUÉRFANA** —fuera del
+>   menú y fuera de Ajustes, inalcanzable salvo tecleando la URL, sin que nada avise—: por eso
+>   `AdminSettingsHub::areas()` es fuente única y **`AdminNavigationTest` exige que toda pantalla registrada
+>   esté en el menú, en `areas()` o en `OUTSIDE_HUB`**. ⚠️⚠️ **Las utilidades de color de Tailwind habrían
+>   dejado el ARO DE FOCO invisible**: `hover:border-primary-500` y `focus-visible:ring-primary-600` compilan,
+>   pero `--color-primary-500/600` **no están declaradas** (solo la 400) — el mismo fallo que dejó la puerta
+>   en blanco y negro en `#217`. El estilo pasó a `theme.css` con `var(--primary-*)`, que además hace que el
+>   color de marca por instalación mande. ⚠️ **Un test se volvió VACÍO sin ponerse rojo** (`RateTypeResourceTest`:
+>   su `assertFalse(shouldRegisterNavigation())` pasaba por falta de permiso y ahora pasa para cualquiera) y
+>   ⚠️ **un `sed` de renumeración se comió 21 ficheros ajenos** (cookies, landing, `app.js`), detectado
+>   comparando fichero a fichero y revertido con `git checkout --`. **Verificación**: 12 casos nuevos ·
+>   **3 mutaciones, las 3 muerden** · suite del panel **1162 / 5125** · headless con capturas a 1440 y 390 px.
+>   ▶ ✅ **Y LA TANDA 2, EL BUSCADOR (`#224`, spec §7)**, pedida por el owner en la misma sesión
+>   («buscador total del panel, sobre clientes, pedidos y demás»). Es la otra mitad del menú plano:
+>   al esconder 19 pantallas, **escribir sustituye a mirar el menú**. Entran **14 recursos**
+>   buscables —pedidos por código y por nombre/correo del titular; clientes por nombre, correo y
+>   teléfono; y los doce de configuración— **más una categoría que Filament NO trae: las
+>   PANTALLAS**, sacadas de las MISMAS fuentes que las pintan (la navegación + `visibleAreas()`),
+>   buscables **por su descripción** («precio» → Tarifas, «festivo» → Fechas especiales) y **sin
+>   tildes** («catalogo» → «Catálogo»). Atajo `CTRL+K` / `⌘K`. ▶ `[DECIDIDO owner]`: **el empleado
+>   busca PEDIDOS, no clientes** —se sostiene sin código nuevo, y comprobar a una persona sigue
+>   siendo la pantalla de Puerta, que es la que lleva límite y auditoría (`SEC-05`)—. ⚠️ **Al
+>   buscador de clientes NO se le puso ese tratamiento a propósito**: allí busca un rol BAJO y el
+>   límite frena una enumeración; aquí busca un ADMIN, que ya puede paginar la lista entera. **Si
+>   algún día se le abre al empleado, eso cambia.** ⚠️⚠️ **De regalo, un defecto VIVO que apareció
+>   midiendo**: **buscar «jump» en el Catálogo del panel no encontraba «Jump · 1 hora»** —MySQL
+>   extrae un valor JSON con colación `utf8mb4_bin` y el `LIKE` distingue mayúsculas; medido 0 vs
+>   5—, y estaba así en `CatalogTable` y `RateTypeTable` desde que se escribieron, sin ningún test
+>   que lo viera. Arreglados los dos. ⚠️⚠️ **Y la palanca de Filament para eso NO es portable**:
+>   genera `lower(json_extract(...))` en MySQL pero `lower(tabla.name->es)` en SQLite, que es donde
+>   corre la suite → panel bien, suite roja. Se resuelve con `wrap()` de la gramática + `LOWER()` a
+>   mano. ❗ **Un test en SQLite NO demuestra la conducta en MySQL** (su `LIKE` ya ignora
+>   mayúsculas, comprobado mutándolo): por eso hay DOS comprobaciones, la de conducta y otra que
+>   asevera la CONSULTA. ⚠️ **PHP 8.4+ prohíbe redeclarar una propiedad de un trait con otro valor
+>   inicial** (error FATAL al cargar la clase). ⚠️⚠️ **Y la guarda más importante pareció CIEGA al
+>   mutarla y no lo era**: la defensa tiene DOS capas —`canViewAny()` abre la búsqueda del recurso,
+>   `canView()` da la URL de cada resultado, y **Filament descarta el resultado sin URL**—, así que
+>   la mutación era demasiado débil. ⚠️ El atajo se anunciaba «META+K» en Windows/Linux; con
+>   `mod+k` sale ⌘+K en Mac y CTRL+K en el resto (verificado con los tres user-agents), y lo vio el
+>   sondeo headless, no un test. **11 casos nuevos · 4 mutaciones, las 4 muerden · suite del panel
+>   1174 / 5155 · conducta comprobada a mano contra MySQL · capturas.**
+>   ▶ ❗ **LO QUE QUEDA DE ESTA TANDA**: **(1)** el **OJO del owner** sobre el menú, «Ajustes» y las pestañas —
+>   es un cambio de UI/UX y la suite no puede decir si «se entiende» · **(2)** repasar con él **los rótulos y
+>   las 19 descripciones** (`[DECIDIDO owner]`: las propone el agente, las revisa él) · **(3)** la pantalla
+>   **«Hoy»**, que es la mitad que queda del «todo está separado» (la otra, el buscador, ya está:
+>   `#224`). ❗ **«Hoy» YA EXISTE** —es el Escritorio renombrado, con las reservas del día— y lo que
+>   le falta son CINCO columnas, medido: si firmó la exención · si trae menores · si ya entró hoy
+>   (la visita de la puerta, que nadie lee) · **si llega debiendo dinero** (los ajustes de señal y
+>   extras que se cobran en persona) · y el teléfono. **No es una pantalla nueva** (`specs/panel-navegacion.md` §6·U3).
+>   ⚠️ **Para el carril C**: esta tanda tocó `resources/css/filament/admin/theme.css` (+120 líneas al final),
+>   `lang/{es,zh_CN}/admin.php`, `app/Filament/**` y `app/Domain/Identity/Models/User.php`. **NO toca**
+>   `public/css/*`, `resources/js/**`, `home.blade.php` ni el cajón.
+>   ▶ **Lo que queda pendiente y NO bloquea**: **(1)** el OJO del owner sobre §5.octodecies en staging
+>   —y en particular el **lector real** con el PNG descargado, que ninguna suite mide—; **(2)** los
+>   **14 hallazgos menores** de la revisión, en `DEUDA.md` con su reproducción (ninguno rompe hoy;
+>   los tres de guardas que miden de menos son de una línea cada uno); **(3)** **JumpPoints**, que
+>   sigue esperando el ✅ del owner al resumen de una página de `specs/lealtad-jumppoints.md` §9 —y
+>   sus seis decisiones—; **(4)** dos decisiones del agente que el owner puede revertir barato: el
+>   **modo oscuro** de la pantalla de puerta (8 líneas) y los **6 menores por página** (una constante).
 >   ▶ **Y a las 09:35, las ENTRADAS en staging** (`ENTORNOS.md` §4): el `ProductionSeeder` las deja no
 >   vendibles y sin franjas; ahora las 4 entradas están a la venta con las plantillas de JUMP/KIDS de local
 >   (154, 60 min, 10–20 h) y 3.875 franjas. **El owner va a hacer la prueba de cabo a rabo en staging**
@@ -602,6 +732,19 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3338 en verde** (21.814 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las 17:45
+  (hora de Madrid) por el carril A tras **`#223`** (menú plano + «Ajustes») y **`#224`** (el buscador),
+  que suman **23 casos** —`AdminNavigationTest` y `AdminGlobalSearchTest`, ninguno de los dos existía—
+  sobre los 3315 del pulido `#217`. JS **813** (estas dos tandas no tocan JS) · chunk 251,02 (techo 252).
+  ⚠️ **La medición anterior, 3315 / 21.713 a las 15:35, fue la del árbol CONJUNTO** —el pulido `#217`
+  con los nueve arreglos de su revisión, rebasado sobre los ocho commits del carril C (hasta `#222`)—,
+  y su lección sigue valiendo:
+  ⚠️ **La fusión no fue limpia y lo cazó la suite, no el rebase**: el carril C había estrenado
+  `MotionScaleTest` (la escala de MOVIMIENTO de su tanda 2d) y mis clases nuevas del cajón llevaban las
+  duraciones y las curvas escritas a mano (`0.15s ease`, `0.22s`, `0.18s`). Adaptadas a los roles de su
+  escala (`--dur-toque`/`--dur-sale` con `--ease-sale`: el hover no lleva rebote, lo dice su tabla).
+  ▶ Es el tercer aviso del mismo tipo en la jornada: **dos carriles sobre el mismo árbol se cruzan en
+  las GUARDAS, no en el código** — el rebase da verde y la suite conjunta es la que habla.
 - Suite **3253 en verde** (21.386 aserciones), medida el 2026-08-28 por la tarde por el carril C
   tras **`#222`** (**la tanda 2d: el MOVIMIENTO**, el SEXTO mecanismo del tema y el último que
   faltaba). ▶ Medido antes: **239 declaraciones, 53 duraciones, 20 curvas** — y **200 de los 220
@@ -651,6 +794,7 @@ que sirva staging de verdad.
   regla lleva también el **layout** del hueco, así que salió roja con el código correcto. Se acota
   a lo que protege: que no PINTE.
 - Suite **3242 en verde** (21.229 aserciones), medida el 2026-08-28 a mediodía por el carril C
+- Suite **3241 en verde** (21.227 aserciones), medida el 2026-08-28 a mediodía por el carril C
   **sobre el árbol CONJUNTO** —tras rebasar encima del `#215` del carril A— con `--parallel` en
   **47 s**, tras `#216` (**el armazón nace bajo el hero, el hero recupera sus dos botones, el
   CTA doble se alinea en sus ocho medidas y entra el paquete de MARCA del 2.º cliente**).

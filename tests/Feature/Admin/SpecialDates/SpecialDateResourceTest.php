@@ -79,7 +79,11 @@ class SpecialDateResourceTest extends TestCase
     {
         $this->actingAs($this->admin());
         $this->assertTrue(SpecialDateResource::canViewAny());
-        $this->assertTrue(SpecialDateResource::shouldRegisterNavigation());
+        // #223: fuera de la barra lateral a propósito — esta pantalla es de puesta en
+        // marcha y se entra por «Ajustes». Ocultar no autoriza: el acceso lo sigue
+        // decidiendo `canViewAny()`, que se asevera justo arriba. La FORMA del menú la
+        // guarda `AdminNavigationTest`.
+        $this->assertFalse(SpecialDateResource::shouldRegisterNavigation());
     }
 
     public function test_staff_is_denied(): void

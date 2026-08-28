@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\LandingServices;
 
 use App\Domain\Content\Models\LandingService;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\LandingServices\Pages\CreateLandingService;
 use App\Filament\Resources\LandingServices\Pages\EditLandingService;
 use App\Filament\Resources\LandingServices\Pages\ListLandingServices;
@@ -28,6 +29,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class LandingServiceResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = LandingService::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBriefcase;
@@ -36,11 +39,6 @@ class LandingServiceResource extends Resource
 
     // Grupo Contenido: tras Atracciones (10), antes de FAQ (20).
     protected static ?int $navigationSort = 15;
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.contenido');
-    }
 
     public static function getNavigationLabel(): string
     {
@@ -109,8 +107,27 @@ class LandingServiceResource extends Resource
             && (auth()->user()?->hasPermission('content.manage') ?? false);
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasPermission('content.manage') ?? false;
+        return false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // El título del servicio. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['title->es', 'slug'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'title';
     }
 }

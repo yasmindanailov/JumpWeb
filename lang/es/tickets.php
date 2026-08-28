@@ -289,6 +289,10 @@ return [
         'hint' => 'Marca a los menores que vienen con estas entradas; el resto son adultos.',
         'full' => 'No caben más: una entrada por menor.',
         'adult' => 'ya tiene 18 años',
+        // El estado POSITIVO de la exención, que solo existe en modo interno (§9.11 D·2,
+        // `DECISIONES #217`): fuera de él no hay firma que comprobar y anunciar una sería mentir.
+        // Va en la fila del menor, al lado de la edad; los tres de arriba son su reverso, el porqué.
+        'signed' => 'exención firmada',
         'unsigned' => 'exención sin firmar: fírmala en «Menores a cargo»',
         'outdated' => 'firmaste una versión anterior: acepta la nueva en «Menores a cargo»',
         'notice' => 'Tienes menores a cargo: indica para quién es cada entrada antes de pagar (o déjalas como adultos).',

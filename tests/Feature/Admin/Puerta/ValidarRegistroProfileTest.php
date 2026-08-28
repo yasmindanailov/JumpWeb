@@ -19,6 +19,7 @@ use App\Domain\Identity\Services\CustomerCards;
 use App\Domain\Identity\Services\DependentAssigner;
 use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
+use App\Domain\Identity\Services\PuertaSettings;
 use App\Domain\Identity\Services\WaiverSignatureRequest;
 use App\Domain\Identity\Services\WaiverSigner;
 use App\Domain\Payments\Models\Payment;
@@ -158,9 +159,12 @@ class ValidarRegistroProfileTest extends TestCase
             ->assertSet('profile.visit_registered_today', false)
             ->assertSee('Ana Titular')
             ->assertSee('Entrada 1h')
-            ->assertSee('9 años · exención ✓')
-            ->assertSee('6 años · sin exención')
-            ->assertSee('Registrar visita')
+            // §9.7 C·5: los menores se aseveran por `data-*`, NO por la cadena compuesta
+            // «9 años · exención ✓». Esa cadena la formaba la plantilla juntando dos rótulos con un
+            // separador, así que el test caía al cambiar la puntuación y NO caía si el dato era otro.
+            ->assertSee('data-gate-minor-age="9" data-gate-minor-waiver="current"', false)
+            ->assertSee('data-gate-minor-age="6" data-gate-minor-waiver="missing"', false)
+            ->assertSee('data-gate-visit="register"', false)
             ->assertDontSee(self::MINOR)
             ->assertDontSee('Vera Secreta')
             ->assertDontSee('ana@example.com')
@@ -193,7 +197,7 @@ class ValidarRegistroProfileTest extends TestCase
             ->assertSet('result.status', ValidarRegistro::STATUS_REGISTERED_WITH_WAIVER)
             ->assertSet('profile', null)
             ->assertDontSee('Ana Titular')
-            ->assertDontSee('Registrar visita');
+            ->assertDontSee('data-gate-visit', false);
 
         $this->assertSame(0, AuditLog::where('action', 'puerta.profile_viewed')->count(), 'sin ficha no hay divulgación que auditar');
     }
@@ -209,7 +213,7 @@ class ValidarRegistroProfileTest extends TestCase
             ->call('search')
             ->assertSet('result.status', ValidarRegistro::STATUS_CARD_REVOKED)
             ->assertSet('profile', null)
-            ->assertSee('Carné caducado')
+            ->assertSee('data-gate-card-revoked', false)
             ->assertDontSee('Ana Titular');
 
         Livewire::actingAs($this->staff())
@@ -218,7 +222,7 @@ class ValidarRegistroProfileTest extends TestCase
             ->call('search')
             ->assertSet('result.status', ValidarRegistro::STATUS_CARD_UNKNOWN)
             ->assertSet('profile', null)
-            ->assertSee('Carné no reconocido');
+            ->assertSee('data-gate-card-unknown', false);
 
         $this->assertSame(2, AuditLog::where('action', 'puerta.card_scanned')->count(), 'los dos escaneos quedan auditados');
     }
@@ -321,6 +325,49 @@ class ValidarRegistroProfileTest extends TestCase
 
     // ─── La visita: explícita, idempotente, con permiso (§8.3) ────────────────
 
+    /**
+     * ⚠️⚠️ **EL NAVEGADOR NO DECIDE A QUIÉN SE LE ACREDITA LA VISITA NI CUÁNDO CADUCA LA FICHA**
+     * (2026-08-28, revisión de `#217`).
+     *
+     * `$profile` es estado público de Livewire: viaja en el snapshot y **vuelve del cliente**. Mientras
+     * `registerVisit()` leyó de ahí el `user_id`, un cliente manipulado podía acreditarle la visita a
+     * OTRA persona —y de las visitas salen los JumpPoints (§8.3), o sea que es una moneda— y estirar
+     * el `expires_at` para resucitar una ficha vencida, justo lo que `SEC-04` aplicado al tiempo
+     * impide. Hoy las dos cosas viven en propiedades `#[Locked]` que solo escribe el servidor.
+     *
+     * Este caso conduce el ataque de las dos formas: cambiando la copia pública (que Livewire acepta,
+     * porque es pública) y cambiando la bloqueada (que Livewire rechaza).
+     */
+    public function test_the_browser_cannot_choose_who_gets_the_visit_nor_extend_the_profile(): void
+    {
+        [$holder, $token] = $this->customer();
+        $otro = User::factory()->create(['email' => 'otro@example.com']);
+        $staff = $this->staff();
+
+        $page = Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', $token)->call('search');
+
+        // (1) La copia PÚBLICA se puede cambiar… y no decide nada.
+        $page->set('profile.user_id', $otro->id)->call('registerVisit');
+
+        $this->assertSame(1, CustomerVisit::where('user_id', $holder->id)->count(), 'la visita es del titular de la ficha');
+        $this->assertSame(0, CustomerVisit::where('user_id', $otro->id)->count(), 'y NO de quien dijo el navegador');
+
+        // (2) La propiedad BLOQUEADA no se puede cambiar: Livewire lo rechaza.
+        try {
+            $page->set('profileUserId', $otro->id);
+            $this->fail('`profileUserId` tiene que estar bloqueada: el navegador no puede escribirla');
+        } catch (\Throwable $e) {
+            $this->assertStringContainsString('profileUserId', $e->getMessage());
+        }
+
+        // (3) Y estirar el vencimiento por la copia pública tampoco resucita una ficha vencida.
+        $page->set('profile.expires_at', now()->addHour()->timestamp);
+        $this->travel(PuertaSettings::profileTtlMinutes() + 1)->minutes();
+        $page->call('registerVisit')->assertSet('profile', null);
+
+        $this->assertSame(1, CustomerVisit::count(), 'la ficha estaba vencida en el SERVIDOR: no hay segunda visita');
+    }
+
     public function test_the_visit_is_registered_once_per_day_with_the_operator_and_needs_the_permission(): void
     {
         [$holder, $token] = $this->customer();
@@ -331,8 +378,8 @@ class ValidarRegistroProfileTest extends TestCase
 
         $page->call('registerVisit')
             ->assertSet('profile.visit_registered_today', true)
-            ->assertSee('Visita registrada hoy')
-            ->assertDontSee('Registrar visita');
+            ->assertSee('data-gate-visit="registered"', false)
+            ->assertDontSee('data-gate-visit="register"', false);
         $page->call('registerVisit');
 
         $this->assertSame(1, CustomerVisit::where('user_id', $holder->id)->count(), 'una por día: volver a pulsar no suma');
@@ -347,6 +394,110 @@ class ValidarRegistroProfileTest extends TestCase
 
         // Sin el permiso de la ficha no hay visita que registrar.
         Livewire::actingAs($this->staffWithoutProfile())->test(ValidarRegistro::class)->call('registerVisit')->assertForbidden();
+    }
+
+    // ─── El rediseño (§9.7 C·5): un solo semáforo y NUNCA el nombre de un menor ──
+
+    /**
+     * ⚠️⚠️ **La guarda del invariante, y su mutación.**
+     *
+     * «De un menor, la puerta enseña EDAD y ESTADO DE LA EXENCIÓN, jamás el nombre» es estructural:
+     * `GateProfileData` no tiene campo para el nombre. Pero lo estructural protege al DTO, no a la
+     * PLANTILLA: el día que alguien añada un campo al DTO —o que llegue por otra vía— la vista lo
+     * pintaría sin que nada fallara, porque el fixture normal no trae nombre que enseñar.
+     *
+     * Aquí se INYECTA el nombre en el estado de la ficha y se exige que la vista siga sin pintarlo.
+     * Mutación comprobada: basta con añadir `{{ $m['name'] ?? '' }}` en `validar.blade.php` (o en
+     * `partials/reservation.blade.php`) para que este test se ponga rojo; el test de arriba, que solo
+     * mira el fixture sano, sigue verde.
+     */
+    public function test_the_view_prints_only_age_and_waiver_even_if_the_state_carries_a_name(): void
+    {
+        [, $token] = $this->customer();
+
+        $page = Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', $token)->call('search');
+
+        $page->set('profile.dependents', [
+            ['age' => 9, 'waiver' => 'current', 'name' => self::MINOR, 'email' => 'menor@example.com'],
+        ])->set('profile.today_reservations.0.minors', [
+            ['age' => 9, 'waiver' => 'current', 'name' => self::MINOR],
+        ]);
+
+        $page->assertSee('data-gate-minor-age="9" data-gate-minor-waiver="current"', false)
+            ->assertDontSee(self::MINOR)
+            ->assertDontSee('Zorrocotroco')
+            ->assertDontSee('menor@example.com');
+    }
+
+    /**
+     * El semáforo pasó de OCHO tarjetas duplicadas a UN callout (§9.7 C·5). Que sea uno no es estética:
+     * dos semáforos a la vez son dos respuestas a la vez para el empleado.
+     */
+    public function test_the_semaphore_is_one_component_carrying_the_status(): void
+    {
+        [, $token] = $this->customer();
+
+        $html = Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', $token)->call('search')->html();
+
+        $this->assertSame(1, substr_count($html, 'data-gate-status='), 'un solo semáforo por respuesta');
+        $this->assertStringContainsString('data-gate-status="'.ValidarRegistro::STATUS_REGISTERED_WITH_WAIVER.'"', $html);
+    }
+
+    /**
+     * «Abierta por QR» vs «por búsqueda tecleada» no es decoración: el tecleo es el camino con
+     * limitador propio y el que convierte la puerta en un oráculo (§4.6·1). El empleado tiene que
+     * verlo, y el atributo es el que miran los guiones headless.
+     */
+    public function test_the_profile_says_out_loud_how_it_was_opened(): void
+    {
+        [, $token] = $this->customer();
+
+        Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', $token)->call('search')
+            ->assertSee('data-gate-via="card"', false)
+            ->assertSee('data-gate-via-badge="card"', false);
+
+        Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', 'ana@example.com')->call('search')
+            ->assertSee('data-gate-via="lookup"', false)
+            ->assertSee('data-gate-via-badge="lookup"', false);
+    }
+
+    /** Las seis tarjetas de la ficha (§9.7 C·5): si una desaparece, el empleado pierde un dato. */
+    public function test_the_profile_shows_the_six_blocks(): void
+    {
+        [, $token] = $this->customer();
+
+        Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', $token)->call('search')
+            ->assertSee('data-gate-today', false)          // HOY
+            ->assertSee('data-gate-waiver="current"', false) // EXENCIÓN
+            ->assertSee('data-gate-card="active"', false)  // QR
+            ->assertSee('data-gate-minors', false)         // MENORES
+            ->assertSee('data-gate-visit="register"', false); // VISITA
+    }
+
+    /**
+     * Dos ramas que el fixture sano NO recorre y que son justo las que importan en el mostrador:
+     *  - **la ventana ±N** («tiene reserva, pero otro día» ≠ «no tiene nada», §4.6 estado 2);
+     *  - **el pendiente de cobrar en puerta**, que con sistema de señal es lo que hace que el negocio
+     *    cobre o no cobre (§4.7). Sin este caso, la única línea de dinero con tratamiento de alerta
+     *    de toda la pantalla no se pintaba en ningún test.
+     */
+    public function test_the_window_and_the_money_due_at_the_gate_are_rendered(): void
+    {
+        [, $token] = $this->customer();
+
+        $page = Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', $token)->call('search');
+
+        $page->set('profile.window', [[
+            'order_code' => 'R-MANANA1', 'order_item_id' => 99, 'date' => '2026-09-06', 'time_window' => '11:00–12:00',
+            'product' => 'Entrada 1h', 'is_entry' => true, 'quantity' => 2, 'addons' => ['Calcetines'],
+            'paid_online_cents' => 500, 'pending_gate_cents' => 1500, 'charge_method' => 'redsys',
+            'paid_at' => null, 'created_at' => '2026-09-01 09:00:00', 'minors' => [],
+        ]]);
+
+        $page->assertSee('data-gate-window', false)
+            ->assertSee('data-gate-reservation="R-MANANA1"', false)
+            ->assertSee('data-gate-pending', false)
+            ->assertSee('15,00');
     }
 
     public function test_the_page_still_renders_in_zh_with_the_profile_strings(): void

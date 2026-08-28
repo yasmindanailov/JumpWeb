@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Pages;
 
 use App\Domain\Content\Models\Page;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Pages\Pages\EditPage;
 use App\Filament\Resources\Pages\Pages\ListPages;
 use App\Filament\Resources\Pages\Schemas\PageForm;
@@ -25,6 +26,8 @@ use Filament\Tables\Table;
  */
 class PageResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = Page::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
@@ -33,11 +36,6 @@ class PageResource extends Resource
 
     // Detrás de Normas (93), antes de Usuarios (100).
     protected static ?int $navigationSort = 40;
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.contenido');
-    }
 
     public static function getNavigationLabel(): string
     {
@@ -99,8 +97,27 @@ class PageResource extends Resource
         return false; // borrarlas dejaría su ruta (legal.{slug}) y los enlaces del pie en 404
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasPermission('content.manage') ?? false;
+        return false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // Por título o por slug (aviso-legal, cookies...). El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['title->es', 'slug'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'title';
     }
 }

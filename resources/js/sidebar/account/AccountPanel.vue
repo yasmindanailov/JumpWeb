@@ -72,12 +72,45 @@ async function leave() {
     -->
     <div class="acct__inner">
         <template v-if="panel.identified">
+            <!--
+              ⚠️⚠️ **La sub-línea de la próxima reserva NO está aquí desde el 2026-08-28**
+              (`identidad-qr-puerta.md` §9.7 C·2, `DECISIONES #217`). Se decía en DOS sitios —aquí y
+              en el índice del área— y el segundo es el que el cliente abre para mirarla; el hueco lo
+              ocupa lo que sí se necesita con el móvil en la mano: el QR de la puerta.
+              ▶ Con ella se fue `panel.subline` de la cara identificada. La de INVITADO conserva la
+              suya, que dice otra cosa: por qué merece la pena entrar.
+            -->
             <div class="acct__row">
                 <span class="acct__avatar" aria-hidden="true">{{ panel.initial }}</span>
                 <span class="acct__txt">
                     <span class="acct__hello">{{ panel.hello }}</span>
-                    <span class="acct__sub">{{ panel.subline }}</span>
                 </span>
+
+                <!--
+                  ⚠️ **«Mi QR» es un ATAJO, no una zona nueva**: abre la MISMA `ZONES.CARD` que la
+                  tarjeta del índice. Está aquí porque el momento de usarlo es la cola de la puerta,
+                  donde dos toques de más son dos toques de más. El rótulo sale de
+                  `account.card.title`, que ya viaja con sesión: un texto propio sería un segundo
+                  nombre para la misma pantalla.
+                  ⚠️ Sin `href`: no hay página que sirva de suelo para el carné —es una credencial y
+                  su única superficie es esta zona—, al revés que «Mis reservas», que sí la tiene.
+                -->
+                <button type="button" class="acct__qr"
+                        @click="accountStore.openZone(ZONES.CARD)">
+                    <span class="acct__qr-ico" aria-hidden="true">
+                        <!-- `qr` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+                            <rect x="3.6" y="3.6" width="6.6" height="6.6" rx="1.4" stroke="currentColor" stroke-width="1.7" />
+                            <rect x="13.8" y="3.6" width="6.6" height="6.6" rx="1.4" stroke="currentColor" stroke-width="1.7" />
+                            <rect x="3.6" y="13.8" width="6.6" height="6.6" rx="1.4" stroke="currentColor" stroke-width="1.7" />
+                            <rect x="13.8" y="13.8" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
+                            <rect x="17.6" y="13.8" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
+                            <rect x="13.8" y="17.6" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
+                            <rect x="17.6" y="17.6" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
+                        </svg>
+                    </span>
+                    {{ panel.card }}
+                </button>
             </div>
 
             <!--

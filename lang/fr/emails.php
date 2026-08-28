@@ -50,7 +50,7 @@ return [
         'deposit_paid' => 'Acompte payé en ligne : :amount €',
         'pending_at_park' => 'À régler au parc le jour de ta réservation : :amount € (en espèces ou par carte).',
         'paid_at' => 'Date du paiement : :when',
-        'card_attached' => 'Votre carte QR est en pièce jointe (carne-qr.png) : présentez-la à l’entrée et nous vous accueillerons aussitôt. Elle est personnelle et n’expire pas ; en cas de perte, vous pouvez la renouveler depuis votre compte.',
+        'card_attached' => 'Votre QR est en pièce jointe (carne-qr.png) : présentez-le à l’entrée et nous vous accueillerons aussitôt. Il est personnel et n’expire pas ; en cas de perte, vous pouvez le renouveler depuis votre compte.',
         'action' => 'Voir mes réservations',
         'paid_confirmation' => 'On t’attend à la date et l’heure que tu as choisies. Tu peux voir tous les détails depuis « Mes réservations », dans ton compte.',
         'paid_confirmation_guest_form' => 'On t’attend à la date et l’heure que tu as choisies. On te demandera bientôt par e-mail les infos des invités ; tu peux aussi les compléter quand tu veux depuis « Mes réservations ».',

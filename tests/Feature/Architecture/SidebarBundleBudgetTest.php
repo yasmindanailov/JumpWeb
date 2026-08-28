@@ -380,8 +380,62 @@ class SidebarBundleBudgetTest extends TestCase
      * sean 3,65 y no 12**: el QR lo dibuja el SERVIDOR (`GET /me/card/png`, los mismos bytes que el
      * adjunto del correo) — un codificador de QR en el navegador habría costado ≥ 8 KiB minificados para
      * repetir un dibujo que ya existe. **247 deja 0,71 KiB**: la holgura estrecha de siempre.
+     *
+     * ⚠️⚠️ **247 → 248 el 2026-08-28 por la tarde, y lo paga el PULIDO DEL CAJÓN tras la prueba del
+     * owner en staging** (`specs/identidad-qr-puerta.md` §9.7 C·1/C·2/C·4 y `menores-a-cargo.md`
+     * §9.11 D·2, `DECISIONES #217`) — subida por FEATURE (`#197`·2). **Medido reconstruyendo la base
+     * y añadiendo las cuatro piezas una a una**, cinco builds, y la primera cifra confirma que el
+     * ledger no había envejecido: la base da **252.200 B = 246,29 KiB**, exactamente la entrada
+     * anterior.
+     *   · **C·1, el índice en TARJETAS: 246,29 → 245,99, −0,30 KiB.** ▶ **BAJA**, y es la poda que
+     *     este presupuesto pide antes de subir nada: la rejilla se lleva por delante el `catalog__go`
+     *     y su flecha SVG en línea, que se pintaba OCHO veces y no señalaba nada en una tarjeta
+     *     centrada. Las clases nuevas son CSS, y el CSS no viaja en este chunk.
+     *   · **C·2, «Mi QR» junto al nombre: 245,99 → 246,72, +0,73.** Casi todo es la copia byte a byte
+     *     del icono `qr` (siete `<rect>`), que no se puede compartir con la de `ZoneIcon` sin que la
+     *     paridad deje de comparar dos copias independientes. El rótulo no pesa: reutiliza
+     *     `account.card.title`.
+     *   · **C·4, renovar con aviso y confirmación propias: 246,72 → 247,44, +0,72.** Es el marcado
+     *     que sustituye a `window.confirm`: el párrafo permanente, la caja con su pregunta y los dos
+     *     botones, más `nextTick` para llevar el foco al que confirma.
+     *   · **D·2, el selector de menores rediseñado: 247,44 → 247,88, +0,44.** La fila pasa de un
+     *     `<label>` con un `<span>` a un `<li>` con nombre, edad, estado y motivo en elementos
+     *     propios; en `assignment.js` entra `statusFor()` y sale la concatenación del `label`.
+     * **Total +1,59 KiB brutos +1,89 / −0,30 de poda. 248 deja 0,12 KiB (123 B)**, la holgura más
+     * estrecha que ha tenido este techo — a propósito: lo siguiente que entre en el cajón no puede
+     * entrar sin medirse.
+     *
+     * ⚠️⚠️ **248 → 251 el 2026-08-28 por la tarde, y lo pagan las DOS pantallas que el owner mandó
+     * rehacer** —«esa presentación del QR la quiero más profesional… no el QR así suelto» y «la página
+     * de menores a cargo hay que mejorarla: en vez del formulario completo, un botón que lo saque, y
+     * paginación de ser necesario»— subida por FEATURE (`#197`·2). **Medido reconstruyendo la base y
+     * añadiendo las dos piezas por separado**, tres builds; la primera cifra confirma que el ledger de
+     * arriba no había envejecido: la base da **253.828 B = 247,88 KiB**, la entrada anterior.
+     *   · **El QR como CREDENCIAL: 247,88 → 248,40, +0,53 KiB (538 B).** Es solo plantilla: el marco
+     *     `qr-frame`/`qr-tile`/`qr-slot` + las cuatro esquinas, el bloque del código y la separación de
+     *     las dos acciones. ▶ **Y es barato porque el marco YA EXISTÍA**: son las clases con las que
+     *     `<x-site.registration-qr>` dibuja un QR en la landing desde `#268`, así que lo único que
+     *     entra aquí son cinco nodos y sus reglas viven en el CSS, que no viaja en este chunk.
+     *   · **Menores: el alta desplegable y la lista paginada: 248,40 → 250,67, +2,26 KiB (2.315 B).**
+     *     Aquí sí hay lógica: `account/dependents.js` gana `lastPageOf`, `clampPage`, `pageSlice`,
+     *     `dependentsPager` y el `dependentsView()` con sus siete transiciones (todo con `node --test`),
+     *     el store gana `forget()`, y la plantilla gana el disparador con `aria-expanded`, la fila de
+     *     guardar/cancelar y el `<nav class="pagination">`. ⚠️ **Lo que NO pesa** es el paginador
+     *     visible: es el `.pagination` del sitio, el mismo que «Mis pedidos» — cero CSS y cero
+     *     componentes nuevos.
+     * **Total +2,79 KiB (253.828 → 256.681 B). 251 deja 0,33 KiB (343 B)**: la holgura de siempre.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 247;
+    /**
+     * ⚠️ **251 → 252 el 2026-08-28, y lo paga la REVISIÓN de `#217`, no una feature.** Medido:
+     * 250,67 → **251,02 KiB** (+0,35). Son cuatro arreglos de conducta que la revisión adversarial
+     * confirmó y que no se podían dejar fuera: el `aria-describedby` que vuelve a unir el motivo con
+     * la casilla del menor (más el prefijo por línea, sin el cual dos líneas de la cesta apuntarían al
+     * mismo `id`), el foco que regresa al disparador al plegar los dos formularios, y la invalidación
+     * del QR al cambiar de titular. **252 deja 1,0 KiB**, la holgura más ancha que ha tenido este
+     * techo en toda la fase — a propósito: lo siguiente que entre vuelve a medirse contra un número
+     * que aprieta, no contra el susto de los 0,02 KiB con que este se pasó.
+     */
+    private const SIDEBAR_CHUNK_MAX_KB = 252;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

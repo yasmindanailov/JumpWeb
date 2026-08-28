@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Offers;
 
 use App\Domain\Content\Models\Offer;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Offers\Pages\CreateOffer;
 use App\Filament\Resources\Offers\Pages\EditOffer;
 use App\Filament\Resources\Offers\Pages\ListOffers;
@@ -23,6 +24,8 @@ use Filament\Tables\Table;
  */
 class OfferResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = Offer::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedGift;
@@ -31,11 +34,6 @@ class OfferResource extends Resource
 
     // Grupo Contenido: tras FAQ (20).
     protected static ?int $navigationSort = 25;
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.contenido');
-    }
 
     public static function getNavigationLabel(): string
     {
@@ -99,8 +97,27 @@ class OfferResource extends Resource
             && (auth()->user()?->hasPermission('content.manage') ?? false);
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasPermission('content.manage') ?? false;
+        return false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // El título. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['title->es'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'title';
     }
 }

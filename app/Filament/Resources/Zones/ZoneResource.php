@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Zones;
 
 use App\Domain\Booking\Models\Zone;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Zones\Pages\CreateZone;
 use App\Filament\Resources\Zones\Pages\EditZone;
 use App\Filament\Resources\Zones\Pages\ListZones;
@@ -28,6 +29,8 @@ use Filament\Tables\Table;
  */
 class ZoneResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = Zone::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
@@ -36,11 +39,6 @@ class ZoneResource extends Resource
 
     // Tras Plantillas de franja (80), antes de Usuarios (100).
     protected static ?int $navigationSort = 30;
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.catalogo');
-    }
 
     public static function getNavigationLabel(): string
     {
@@ -104,8 +102,27 @@ class ZoneResource extends Resource
             && (auth()->user()?->hasPermission('content.manage') ?? false);
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasPermission('content.manage') ?? false;
+        return false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // Por nombre o por slug. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name->es', 'slug'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'name';
     }
 }

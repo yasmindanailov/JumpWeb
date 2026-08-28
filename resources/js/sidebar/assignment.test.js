@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    REASON_ADULT, REASON_OUTDATED, REASON_UNSIGNED,
+    REASON_ADULT, REASON_OUTDATED, REASON_UNSIGNED, STATUS_SIGNED,
     applyRejections, assignableIds, assignableOptions, assignmentRejections, dependentsById,
     needsAssignment, reconcileAssignments, toggleDependent, trimToQuantity,
 } from './assignment.js';
@@ -20,10 +20,46 @@ const minor = (over = {}) => ({
 });
 
 describe('a quién se ofrece', () => {
-    test('un menor con la exención vigente se puede marcar, con su etiqueta', () => {
+    /**
+     * ⚠️ **Nombre y edad viajan POR SEPARADO desde el 2026-08-28** (§9.11 D·2): antes salían fundidos
+     * en un `label` («Lucas · 9 años») y el selector no podía darles peso distinto, que es lo que hizo
+     * que el owner leyera el motivo de una fila apagada como parte del nombre. La forma ENTERA se
+     * asevera con `deepEqual` a propósito: un campo nuevo que se cuele sin decidirse pone esto rojo.
+     */
+    test('un menor con la exención vigente se puede marcar, con su nombre, su edad y su estado', () => {
         const [option] = assignableOptions([minor()], MESSAGES);
 
-        assert.deepEqual(option, { id: 12, name: 'Lucas', label: 'Lucas · 9 años', assignable: true, reasonKey: null });
+        assert.deepEqual(option, {
+            id: 12, name: 'Lucas', age: '9 años', assignable: true, reasonKey: null, statusKey: STATUS_SIGNED,
+        });
+    });
+
+    /**
+     * ⚠️⚠️ **El estado positivo NO es el reverso del motivo.** Fuera del modo interno se puede marcar
+     * —no hay firma que comprobar— pero **no hay nada firmado que anunciar**: decir «exención firmada»
+     * ahí sería afirmar un hecho falso, y es el fallo que este caso existe para impedir.
+     */
+    test('fuera del modo interno la fila no lleva estado, aunque se pueda marcar', () => {
+        for (const mode of ['externo', 'desactivado']) {
+            const [option] = assignableOptions([minor({ waiver: { mode, signed: false, outdated: false } })], MESSAGES);
+
+            assert.equal(option.assignable, true, mode);
+            assert.equal(option.statusKey, null, mode);
+        }
+    });
+
+    /** Y quien no se puede marcar tampoco lleva estado positivo: lleva su motivo, que es otra cosa. */
+    test('quien no se puede marcar no lleva estado, lleva motivo', () => {
+        const [option] = assignableOptions([minor({ waiver: { mode: 'interno', signed: false, outdated: false } })], MESSAGES);
+
+        assert.equal(option.statusKey, null);
+        assert.equal(option.reasonKey, REASON_UNSIGNED);
+    });
+
+    /** La edad se traduce con el grupo del EMBUDO; sin diccionario no rompe, sale vacía. */
+    test('la edad sale ya traducida, y sin diccionario no revienta', () => {
+        assert.equal(assignableOptions([minor()], MESSAGES)[0].age, '9 años');
+        assert.equal(assignableOptions([minor()])[0].age, '');
     });
 
     /** `[DECIDIDO owner]` #202·2: sin exención firmada no se asigna — se enseña, deshabilitado, con el porqué. */

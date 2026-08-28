@@ -3,7 +3,7 @@
  * componente Livewire (`docs/specs/account-context-vue.md` §4.10).
  *
  * Módulo PLANO, sin Vue (`CE-6`): aquí viven las DECISIONES —qué inicial lleva el avatar, a dónde
- * lleva el aviso, qué sub-línea toca— y por eso se pueden probar con `node --test` y comparar contra
+ * lleva el aviso, qué rótulo toca— y por eso se pueden probar con `node --test` y comparar contra
  * el Blade al que sustituyen. El componente pinta y no decide.
  *
  * ⚠️⚠️ **Ninguna regla de negocio vive aquí** (`CE-4`). Qué cuenta como próxima reserva, qué
@@ -35,18 +35,20 @@ export function initialOf(firstName) {
 }
 
 /**
- * La sub-línea: la próxima reserva, o que no hay ninguna.
+ * ⚠️⚠️ **Aquí vivía `sublineOf()`, y se RETIRÓ el 2026-08-28** (`identidad-qr-puerta.md` §9.7 C·2,
+ * `DECISIONES #217`). Componía la sub-línea de la cara identificada con la próxima reserva —o con
+ * «no tienes ninguna»—, y esa frase se decía en DOS superficies: aquí y en el índice del área
+ * (`AccountHomeZone`), que es el sitio al que el cliente entra a mirarla. El owner pidió el hueco
+ * para «Mi QR», así que la de aquí desaparece y el índice pasa a ser la única.
  *
- * ⚠️ Pinta `date_label` **tal como llega**. Recomponerla aquí sería la quinta copia de una fórmula
- * que ya divergió una vez en cuatro superficies.
+ * ▶ Se fueron con ella sus casos de `node --test` y **sus dos rótulos** (`sidecart.next` y
+ * `sidecart.no_upcoming`), que viajaban en el arranque de **todas** las páginas públicas —el grupo
+ * `sidecart` no se poda por sesión porque el bloque cambia de cara sin recargar—. Un texto que viaja
+ * siempre para no pintarse nunca es exactamente lo que el presupuesto del montaje persigue.
+ *
+ * ⚠️ La cara de INVITADO conserva su sub-línea (`sidecart.guest_sub`): dice otra cosa —por qué
+ * merece la pena entrar— y no la repite nadie.
  */
-export function sublineOf(context, account) {
-    const next = context?.next_reservation ?? null;
-
-    if (next === null) return t(account, 'sidecart.no_upcoming');
-
-    return tp(account, 'sidecart.next', { date: next.date_label, product: next.product_name });
-}
 
 /**
  * El aviso de formularios pendientes, o `null` si no hay ninguno.
@@ -126,7 +128,6 @@ export function panelOf(context, { account = {}, messages = {}, urls = {} } = {}
         identified: true,
         initial: initialOf(context.first_name),
         hello: tp(account, 'nav.hello', { name: context.first_name }),
-        subline: sublineOf(context, account),
         alert: alertOf(context, account, urls),
         counter: counterOf(context, account),
         signOut: t(account, 'nav.sign_out'),
@@ -134,5 +135,9 @@ export function panelOf(context, { account = {}, messages = {}, urls = {} } = {}
         // ⚠️ El MISMO rótulo que el índice usa para su propia pantalla (`account.account.title`): el
         // botón y su destino tienen que llamarse igual, o el cliente cree que va a otro sitio.
         account: t(account, 'account.title'),
+        // ⚠️ Y por lo mismo, el atajo del QR se rotula con el título de SU zona (`account.card.title`,
+        // que viaja solo con sesión y por eso se lee solo en esta rama): el botón y la pantalla a la
+        // que lleva tienen que llamarse igual.
+        card: t(account, 'account.card.title'),
     };
 }

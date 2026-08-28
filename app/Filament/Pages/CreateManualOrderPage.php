@@ -137,22 +137,19 @@ class CreateManualOrderPage extends Page
         return auth()->user()?->hasPermission('orders.create_manual') ?? false;
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        // Plan B · L1: «Crear pedido» es tarea de mostrador frecuente → AL SIDEBAR (grupo
-        // Operativa). El botón del topbar se conserva como atajo redundante. `canAccess()`
-        // (permiso `orders.create_manual`) sigue protegiendo ruta y visibilidad.
-        return auth()->user()?->hasPermission('orders.create_manual') ?? false;
+        return false;
     }
 
     public static function getNavigationLabel(): string
     {
         return __('admin.orders.create_manual.nav_label');
-    }
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.orders.nav_group');
     }
 
     public function getTitle(): string

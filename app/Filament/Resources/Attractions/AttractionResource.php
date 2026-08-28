@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Attractions;
 
 use App\Domain\Content\Models\Attraction;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Attractions\Pages\CreateAttraction;
 use App\Filament\Resources\Attractions\Pages\EditAttraction;
 use App\Filament\Resources\Attractions\Pages\ListAttractions;
@@ -25,6 +26,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class AttractionResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = Attraction::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSparkles;
@@ -33,11 +36,6 @@ class AttractionResource extends Resource
 
     // Detrás de Zonas (90), antes de FAQ (92): la atracción cuelga de una zona.
     protected static ?int $navigationSort = 10;
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.contenido');
-    }
 
     public static function getNavigationLabel(): string
     {
@@ -106,8 +104,27 @@ class AttractionResource extends Resource
             && (auth()->user()?->hasPermission('content.manage') ?? false);
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasPermission('content.manage') ?? false;
+        return false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // El nombre de la atracción. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name->es'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'name';
     }
 }

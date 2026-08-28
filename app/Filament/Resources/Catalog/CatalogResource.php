@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Catalog;
 
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Catalog\Pages\CreateCatalog;
 use App\Filament\Resources\Catalog\Pages\EditCatalog;
 use App\Filament\Resources\Catalog\Pages\ListCatalog;
@@ -43,6 +44,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class CatalogResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = TicketType::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
@@ -52,11 +55,6 @@ class CatalogResource extends Resource
     protected static ?string $slug = 'catalog';
 
     protected static ?int $navigationSort = 10;
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.catalogo');
-    }
 
     public static function getNavigationLabel(): string
     {
@@ -136,9 +134,14 @@ class CatalogResource extends Resource
         return auth()->user()?->hasPermission('catalog.manage') ?? false;
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasPermission('catalog.manage') ?? false;
+        return false;
     }
 
     public static function canCreate(): bool
@@ -159,5 +162,19 @@ class CatalogResource extends Resource
         return ($record instanceof TicketType)
             && (auth()->user()?->hasPermission('catalog.manage') ?? false)
             && ! self::hasSales($record);
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // Entradas, packs y complementos. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name->es'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'name';
     }
 }

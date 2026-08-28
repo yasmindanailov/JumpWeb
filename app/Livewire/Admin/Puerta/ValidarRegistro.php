@@ -12,10 +12,12 @@ use App\Domain\Identity\Services\WaiverStatus;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\PhoneNormalizer;
+use Filament\Facades\Filament;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -100,6 +102,43 @@ class ValidarRegistro extends Component
      */
     public ?array $profile = null;
 
+    /**
+     * ⚠️⚠️ **EL SUJETO Y EL RELOJ DE LA FICHA, BLOQUEADOS** (2026-08-28, revisión de `#217`).
+     *
+     * `$profile` es estado PÚBLICO de Livewire: viaja al navegador en el snapshot y **el navegador
+     * puede devolverlo cambiado**. Hasta hoy, «a quién se le registra la visita» (`user_id`) y
+     * «cuándo caduca la ficha» (`expires_at`) se leían de ahí, así que un cliente manipulado podía
+     * acreditar la visita de OTRA persona —de donde saldrán los JumpPoints (§8.3)— o resucitar una
+     * ficha ya vencida, que es justamente lo que `SEC-04` aplicado al tiempo existe para impedir.
+     *
+     * `#[Locked]` hace que Livewire **rechace cualquier cambio que venga del cliente**: solo las
+     * escribe el servidor, en `openProfile()` y en `clear()`. Se quedan además dentro de `$profile`
+     * para que la vista siga leyendo un solo objeto, pero **nadie decide nada con esa copia**.
+     */
+    #[Locked]
+    public ?int $profileUserId = null;
+
+    #[Locked]
+    public ?int $profileExpiresAt = null;
+
+    /**
+     * Esta página vive FUERA del shell de Filament (decisión #119) y por eso no pasa por el middleware
+     * `SetUpPanel` del panel. Consecuencia MEDIDA en navegador (§9.7 C·5): sin panel «actual» y
+     * booteado, `@filamentStyles` no emite `--gray-*`, `--primary-*`, `--success-*`… y el bundle del
+     * panel —que las USA— pintaba texto negro puro donde pedía gris y un borde negro sólido donde
+     * pedía un `ring` al 5 %.
+     *
+     * Va en `boot()` y no en `mount()` a propósito: `mount()` corre UNA vez, y los componentes de
+     * Filament de la vista (`callout`, `section`, `badge`, `button`) resuelven color e iconos contra
+     * el panel **en cada** render — también en las peticiones Livewire posteriores, que no vuelven a
+     * pasar por el layout. `bootCurrentPanel()` se autoprotege de correr dos veces por petición.
+     */
+    public function boot(): void
+    {
+        Filament::setCurrentPanel(Filament::getDefaultPanel());
+        Filament::bootCurrentPanel();
+    }
+
     public function mount(): void
     {
         $this->authorizeAccess();
@@ -125,6 +164,8 @@ class ValidarRegistro extends Component
         $this->authorizeAccess();
         $this->ensureFresh();
         $this->profile = null;
+        $this->profileUserId = null;
+        $this->profileExpiresAt = null;
 
         $raw = trim($this->input);
         $type = self::detectInputType($raw);
@@ -243,9 +284,14 @@ class ValidarRegistro extends Component
         $ttl = PuertaSettings::profileTtlMinutes();
         $data = app(GateProfile::class)->for($user, DisplayTime::today(), PuertaSettings::windowDays());
 
+        $this->profileUserId = (int) $user->getKey();
+        $this->profileExpiresAt = now()->addMinutes($ttl)->timestamp;
+
         $this->profile = $data->toArray() + [
             'via' => $via,
-            'expires_at' => now()->addMinutes($ttl)->timestamp,
+            // ⚠️ Copia para la VISTA (el velo y el reloj de Alpine la leen). La decisión la toma
+            // `$profileExpiresAt`, que el navegador no puede tocar.
+            'expires_at' => $this->profileExpiresAt,
             'ttl_minutes' => $ttl,
         ];
         AuditLogger::log('puerta.profile_viewed', $user, ['via' => $via]);
@@ -258,8 +304,12 @@ class ValidarRegistro extends Component
      */
     private function ensureFresh(): void
     {
-        if ($this->profile !== null && (int) ($this->profile['expires_at'] ?? 0) <= now()->timestamp) {
+        if ($this->profile !== null && (int) ($this->profileExpiresAt ?? 0) <= now()->timestamp) {
             $this->profile = null;
+            $this->profileUserId = null;
+            $this->profileExpiresAt = null;
+            $this->profileUserId = null;
+            $this->profileExpiresAt = null;
             $this->result = null;
         }
     }
@@ -278,7 +328,7 @@ class ValidarRegistro extends Component
             return;
         }
 
-        $customer = User::find((int) ($this->profile['user_id'] ?? 0));
+        $customer = User::find((int) ($this->profileUserId ?? 0));
         if ($customer === null) {
             $this->clear();
 
@@ -287,7 +337,8 @@ class ValidarRegistro extends Component
 
         app(GateVisits::class)->register($customer, Auth::user(), DisplayTime::today());
         $this->profile['visit_registered_today'] = true;
-        $this->profile['expires_at'] = now()->addMinutes(PuertaSettings::profileTtlMinutes())->timestamp;
+        $this->profileExpiresAt = now()->addMinutes(PuertaSettings::profileTtlMinutes())->timestamp;
+        $this->profile['expires_at'] = $this->profileExpiresAt;
     }
 
     public function clear(): void
@@ -297,6 +348,8 @@ class ValidarRegistro extends Component
         $this->input = '';
         $this->result = null;
         $this->profile = null;
+        $this->profileUserId = null;
+        $this->profileExpiresAt = null;
     }
 
     public function render(): View
@@ -305,6 +358,9 @@ class ValidarRegistro extends Component
 
         return view('livewire.admin.puerta.validar', [
             'canViewProfile' => $this->canViewProfile(),
+            // El semáforo se resuelve FUERA de la plantilla (§9.7 C·5): la vista pinta un callout y
+            // no decide colores. `null` mientras no hay búsqueda.
+            'semaphore' => $this->result === null ? null : GateSemaphore::for($this->result),
         ]);
     }
 

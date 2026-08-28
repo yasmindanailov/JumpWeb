@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\SpecialDates;
 
 use App\Domain\Booking\Models\SpecialDate;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\SpecialDates\Pages\CreateSpecialDate;
 use App\Filament\Resources\SpecialDates\Pages\EditSpecialDate;
 use App\Filament\Resources\SpecialDates\Pages\ListSpecialDates;
@@ -40,6 +41,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class SpecialDateResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = SpecialDate::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFlag;
@@ -47,11 +50,6 @@ class SpecialDateResource extends Resource
     protected static ?string $slug = 'special-dates';
 
     protected static ?int $navigationSort = 30;
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.programacion');
-    }
 
     public static function getNavigationLabel(): string
     {
@@ -115,9 +113,14 @@ class SpecialDateResource extends Resource
         return auth()->user()?->hasPermission('prices.manage') ?? false;
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasPermission('prices.manage') ?? false;
+        return false;
     }
 
     /**
@@ -129,5 +132,19 @@ class SpecialDateResource extends Resource
     {
         return ($record instanceof SpecialDate)
             && (auth()->user()?->hasPermission('prices.manage') ?? false);
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // La FECHA es su identidad; la nota, el porqué. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['date', 'note->es'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'date';
     }
 }

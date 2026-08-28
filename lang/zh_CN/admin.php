@@ -8,19 +8,53 @@ return [
         'configuracion' => '设置',
     ],
 
-    // 侧边栏分组 (Plan B · L1)。'operativa'/'sistema' 复用既有术语 (运营/系统);
-    // 其余为临时译法，最终文案在 copys 阶段确认。
-    'nav_groups' => [
-        'operativa' => '运营',
-        'programacion' => '排期',
-        'catalogo' => '商品与价格',
-        'contenido' => '网站内容',
-        'sistema' => '系统',
+    // #219 — 「设置」：所有一次性配置页面的唯一入口（已移出侧边栏）。
+    // 每张卡片附一句说明：这些页面一年只进两次，只有名称不足以分辨。
+    // #224 — el buscador del panel. «screens» es la categoría de resultados que Filament
+    // no trae de serie: pantallas, no registros.
+    'search' => [
+        'screens' => '页面',
+        'screen_detail' => '作用',
+    ],
+
+    'hub' => [
+        'nav_label' => '设置',
+        'title' => '设置',
+        'subheading' => '只需配置一次、日常无需使用的内容。',
+        'areas' => [
+            'sales' => '商品与价格',
+            'schedule' => '排期与容量',
+            'web' => '网站内容',
+            'system' => '系统',
+        ],
+        'items' => [
+            'catalog' => ['label' => '商品目录', 'description' => '在售的门票、套餐与附加项目。'],
+            'rate_types' => ['label' => '费率', 'description' => '价格类型及其适用的日期。'],
+            'zones' => ['label' => '区域', 'description' => '场地区域及其容量与颜色。'],
+            'weekly_schedule' => ['label' => '营业时间', 'description' => '每周各日的开门与关门时间。'],
+            'seasons' => ['label' => '季节', 'description' => '营业时间不同于平常的时段。'],
+            'special_dates' => ['label' => '特殊日期', 'description' => '单独的日期：节假日、闭园与特殊营业时间。'],
+            'slots' => ['label' => '时段', 'description' => '实际对外发售的场次。'],
+            'slot_templates' => ['label' => '时段模板', 'description' => '每周时段的生成规则。'],
+            'attractions' => ['label' => '设施', 'description' => '网站上展示的各区域内容。'],
+            'landing_services' => ['label' => '服务（网站）', 'description' => '服务页面的各个板块。'],
+            'faqs' => ['label' => '常见问题', 'description' => '网站上发布的问答。'],
+            'offers' => ['label' => '优惠', 'description' => '浮动提示中的信息性促销。'],
+            'park_rules' => ['label' => '园区规则', 'description' => '网站上发布的园区规则。'],
+            'pages' => ['label' => '法律页面', 'description' => '法律声明、隐私、Cookie 与条款。'],
+            'settings' => ['label' => '设置', 'description' => '企业与税务资料、销售、门口与支付。'],
+            'team' => ['label' => '团队', 'description' => '在此工作并可进入后台的账号。'],
+            'roles' => ['label' => '角色与权限', 'description' => '各角色在后台可以做什么。'],
+            'audit' => ['label' => '事件', 'description' => '关键操作与系统告警的记录。'],
+            'maintenance' => ['label' => '维护', 'description' => '关闭网站、预订或某个页面。'],
+        ],
     ],
 
     'puerta' => [
+        // #219: el rotulo del MENU es «门口» (el sitio); «title» sigue siendo
+        // el titulo de la pantalla, que describe la accion.
+        'nav_label' => '门口',
         'validar' => [
-            'nav_group' => '门口',
             'title' => '验证注册',
             // 第6阶段 · 子系统A：会员卡（二维码）、手动查询限制与入口档案。
             'input_placeholder_card' => '扫描会员卡，或输入电子邮件或电话',
@@ -51,7 +85,7 @@ return [
                 'paid_on' => '付款于 :when',
                 'method_desk' => '柜台',
                 'method_redsys' => '网上',
-                'minors_on_line' => '此行的未成年人：:list',
+                'minors_on_line_label' => '本行的未成年人',
                 'minors' => '监护的未成年人',
                 'minors_empty' => '未登记任何未成年人（有效答复：按现行方式在系统外处理）。',
                 'minor' => ':age 岁',
@@ -62,6 +96,12 @@ return [
                 'visit_registered' => '今日已登记到访',
                 'visit_hint' => '这是到访的凭证（JumpPoints）。每天一次；重复点击不会累计。',
                 'veil' => '因无操作已隐藏档案 — 点击继续',
+                'waiver_section' => '免责声明',
+                'card_section' => '客户二维码',
+                'visit_section' => '到访',
+                'via_card' => '通过二维码打开',
+                'via_lookup' => '通过搜索打开',
+                'waiver_disabled' => '本场馆不在入口检查免责声明。',
                 'expires' => '档案将在 :minutes 分钟后自动关闭。',
             ],
             'intro' => '请输入客户的电子邮件或电话号码，以确认客户是否已注册并已签署免责声明。',
@@ -90,7 +130,6 @@ return [
     // Calendario unificado (Fase 7.4, decisión #14).
     'calendar' => [
         'nav_label' => '日历',
-        'nav_group' => '运营',
         'title' => '日历',
         'filter' => [
             'all' => '全部',
@@ -166,6 +205,10 @@ return [
     // Dashboard del panel (Fase 7.4 iter2, decisión #14): widgets operativos +
     // filtro de periodo compartido (hoy / esta semana / este mes).
     'dashboard' => [
+        // #219: «Escritorio» no decia que hay dentro; esta pantalla contesta la
+        // pregunta con la que se abre el panel cada manana.
+        'nav_label' => '今天',
+        'title' => '今天',
         'period' => [
             'label' => '时间范围',
             'today' => '今天',
@@ -200,7 +243,6 @@ return [
     // Pedidos (Fase 7.1b, decisión #127).
     'orders' => [
         'nav_label' => '订单',
-        'nav_group' => '运营',
         'model_label_singular' => '订单',
         'model_label_plural' => '订单',
 
@@ -974,7 +1016,15 @@ return [
 
     // 第 7.5 阶段 — 用户管理(GDPR),决策 #180。
     'users' => [
-        'nav_label' => '用户',
+        // #219: el menu dice «客户» porque es lo que se busca a diario; el EQUIPO
+        // es la otra pestana de esta misma pantalla y se entra por Ajustes.
+        'nav_label' => '客户',
+        'tabs' => [
+            'clients' => '客户',
+            'team' => '团队',
+        ],
+        'title_clients' => '客户',
+        'title_team' => '团队',
         'model_label_singular' => '用户',
         'model_label_plural' => '用户',
         'heading' => '用户',

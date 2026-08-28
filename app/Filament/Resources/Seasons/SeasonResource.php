@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Seasons;
 
 use App\Domain\Booking\Models\Season;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Seasons\Pages\CreateSeason;
 use App\Filament\Resources\Seasons\Pages\EditSeason;
 use App\Filament\Resources\Seasons\Pages\ListSeasons;
@@ -28,6 +29,8 @@ use Filament\Tables\Table;
  */
 class SeasonResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = Season::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSun;
@@ -35,11 +38,6 @@ class SeasonResource extends Resource
     protected static ?string $slug = 'seasons';
 
     protected static ?int $navigationSort = 20;
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.programacion');
-    }
 
     public static function getNavigationLabel(): string
     {
@@ -97,14 +95,33 @@ class SeasonResource extends Resource
         return auth()->user()?->hasPermission('slots.manage') ?? false;
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasPermission('slots.manage') ?? false;
+        return false;
     }
 
     public static function canDelete($record): bool
     {
         return ($record instanceof Season)
             && (auth()->user()?->hasPermission('slots.manage') ?? false);
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // `name` aquí NO es JSON: es varchar. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'name';
     }
 }

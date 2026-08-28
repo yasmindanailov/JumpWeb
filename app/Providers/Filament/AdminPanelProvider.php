@@ -4,8 +4,10 @@ namespace App\Providers\Filament;
 
 use App\Domain\Content\Services\ThemeSettings;
 use App\Domain\Platform\Models\Setting;
+use App\Filament\Pages\AdminSettingsHub;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Support\InitialsAvatarProvider;
+use App\Filament\Support\PanelGlobalSearchProvider;
 use App\Http\Middleware\RequiresStaffOrAdmin;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetAdminLocale;
@@ -13,7 +15,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -51,16 +53,14 @@ class AdminPanelProvider extends PanelProvider
 {
     public function boot(): void
     {
-        // Topbar: accesos rápidos "Calendario" + "Crear pedido" (Fase 7.3, #120) + selector de
-        // idioma (#123), todos en `USER_MENU_BEFORE` (antes del avatar). El ORDEN de registro =
-        // orden visual: primero "Calendario", luego "Crear pedido", luego el selector de idioma →
-        // quedan a la IZQUIERDA del avatar en ese orden. Gateados por permiso/vista, sin tocar la
-        // estructura del topbar de Filament.
-        FilamentView::registerRenderHook(
-            PanelsRenderHook::USER_MENU_BEFORE,
-            fn (): View => view('filament.admin.calendar-topbar-button'),
-        );
-
+        // Topbar: la CTA "Crear pedido" (Fase 7.3, #120) + el selector de idioma (#123), los dos
+        // en `USER_MENU_BEFORE` (antes del avatar). El ORDEN de registro = orden visual.
+        // Gateados por permiso/vista, sin tocar la estructura del topbar de Filament.
+        //
+        // ⚠️ El botón "Calendario" SE RETIRÓ aquí (#223): con el menú plano el Calendario es una
+        // entrada fija de la barra lateral, y tenerlo también arriba era el único enlace
+        // duplicado del panel. "Crear pedido" se queda porque NO es un sitio sino una acción:
+        // es lo único del panel que se hace desde cualquier pantalla.
         FilamentView::registerRenderHook(
             PanelsRenderHook::USER_MENU_BEFORE,
             fn (): View => view('filament.admin.create-order-topbar-button'),
@@ -122,45 +122,72 @@ class AdminPanelProvider extends PanelProvider
                 'warning' => Color::Orange,
                 'danger' => Color::Red,
             ])
+            // #224 — BUSCADOR del panel, en la barra superior y con ⌘K / Ctrl+K.
+            //
+            // Es la otra mitad de #223: al esconder 19 pantallas detrás de «Ajustes», la forma
+            // rápida de llegar a cualquier sitio deja de ser mirar el menú y pasa a ser escribir.
+            // El proveedor propio añade una categoría que Filament no trae —PANTALLAS—, porque
+            // de serie solo encuentra registros.
+            //
+            // Autorización: no hay que añadir nada. Filament exige `canAccess()` del recurso
+            // antes de buscar en él (`Resource::canGloballySearch()`), y las pantallas salen de
+            // fuentes ya filtradas por permiso. Un empleado, por tanto, encuentra PEDIDOS y sus
+            // cuatro sitios, y ni un cliente (`[DECIDIDO owner, 2026-08-28]`).
+            //
+            // ⚠️ El atajo es `mod+k`, NO `['command+k', 'ctrl+k']`. Con los dos por separado el
+            // sufijo que se pinta junto a la caja sale de `Arr::first()`, así que en Windows y
+            // Linux anunciaba «META+K» —visto en el sondeo—. `mod` es el modificador que tanto
+            // Mousetrap como el propio ayudante de Filament traducen por plataforma: ⌘K en Mac,
+            // CTRL+K en el resto, y con UNA sola declaración.
+            ->globalSearch(PanelGlobalSearchProvider::class)
+            ->globalSearchKeyBindings(['mod+k'])
+            ->globalSearchFieldKeyBindingSuffix()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 Dashboard::class,
             ])
-            // Plan B · L1: navegación reorganizada en 5 grupos para el empleado no técnico
-            // (el cluster monolítico «Configuración» se retiró). Labels como CLOSURE → se
-            // resuelven POR PETICIÓN, así casan con `getNavigationGroup()` de cada recurso en
-            // el idioma del panel (es / zh_CN, #123). Orden = el del array; lo delicado al final.
-            ->navigationGroups([
-                NavigationGroup::make(fn (): string => __('admin.nav_groups.operativa'))
-                    ->icon(Heroicon::OutlinedBriefcase)->collapsible(),
-                NavigationGroup::make(fn (): string => __('admin.nav_groups.programacion'))
-                    ->icon(Heroicon::OutlinedCalendarDays)->collapsible(),
-                NavigationGroup::make(fn (): string => __('admin.nav_groups.catalogo'))
-                    ->icon(Heroicon::OutlinedBanknotes)->collapsible(),
-                NavigationGroup::make(fn (): string => __('admin.nav_groups.contenido'))
-                    ->icon(Heroicon::OutlinedGlobeAlt)->collapsible(),
-                NavigationGroup::make(fn (): string => __('admin.nav_groups.sistema'))
-                    ->icon(Heroicon::OutlinedCog6Tooth)->collapsible(),
-            ])
+            // #223 — MENÚ PLANO. Antes había 5 grupos plegables con 24 entradas desplegadas a la
+            // vez; medido contra `PANEL-ADMIN.md`, solo 4 de esas 24 eran del día a día (§2) y
+            // 19 eran puesta en marcha (§3/§4). `[DECIDIDO owner, 2026-08-28]`: la barra lateral
+            // se queda SOLO con los sitios del día a día, sin grupos y sin plegables —un grupo
+            // plegable sigue ocupando sitio y sigue obligando a decidir dónde mirar—, y las 19
+            // salen del camino a `AdminSettingsHub`, al que se entra por el menú del avatar.
+            //
+            // Ya no se declara `navigationGroups()`: cada recurso/página devuelve `null` en
+            // `getNavigationGroup()` y su sitio lo fija `$navigationSort` (10 en 10).
             // Widgets del dashboard (7.4 iter2): se auto-descubren de
             // `app/Filament/Widgets` (DashboardStatsWidget + ReservationsWidget).
             // La card de saludo `AccountWidget` se retiró por decisión de la
             // clienta — el escritorio es puramente operativo (#179).
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->navigationItems([
-                // Fase 7.1a: atajo de "Validar registro" en la sidebar del panel rico
-                // para el admin/staff que entra al panel sin recordar la URL directa.
-                // La página dedicada vive fuera del shell Filament (decisión #119).
+                // Fase 7.1a: atajo de "Puerta" en la sidebar del panel rico para el admin/staff
+                // que entra al panel sin recordar la URL directa. La página dedicada vive fuera
+                // del shell Filament (decisión #119).
+                //
+                // #223: sin grupo (el menú es plano) y ÚLTIMA de las cinco (sort 50). El rótulo
+                // pasa a ser «Puerta» —el término del glosario— en vez de «Validar registro»:
+                // en un menú de una palabra por línea, el sitio se nombra por el sitio.
                 NavigationItem::make('puerta-validar')
-                    // Plan B · L1: el grupo de 1 ítem «Puerta» se fusiona en «Operativa».
-                    ->group(fn () => __('admin.nav_groups.operativa'))
-                    ->label(fn () => __('admin.puerta.validar.title'))
+                    ->label(fn () => __('admin.puerta.nav_label'))
                     ->icon(Heroicon::OutlinedShieldCheck)
                     ->url(fn () => route('admin.puerta.validar'))
                     ->openUrlInNewTab(false)
                     ->visible(fn () => auth()->user()?->hasPermission('registrations.validate') ?? false)
-                    ->sort(30),
+                    ->sort(50),
+            ])
+            // #223 — la puerta a las 19 pantallas de puesta en marcha: DENTRO del menú del
+            // avatar (`[DECIDIDO owner]`), no en la barra lateral ni como icono suelto del
+            // topbar. `visible()` delega en `AdminSettingsHub::canAccess()`, que a su vez
+            // pregunta a cada pantalla: a un empleado no le aparece, porque no abriría nada.
+            ->userMenuItems([
+                'ajustes' => MenuItem::make()
+                    ->label(fn (): string => __('admin.hub.nav_label'))
+                    ->icon(Heroicon::OutlinedCog6Tooth)
+                    ->url(fn (): string => AdminSettingsHub::getUrl())
+                    ->visible(fn (): bool => AdminSettingsHub::canAccess())
+                    ->sort(-1),
             ])
             ->middleware([
                 EncryptCookies::class,

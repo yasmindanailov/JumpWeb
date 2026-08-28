@@ -4336,3 +4336,244 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     .menu--open { opacity: 1; transition-delay: 0s; }
     .menu__item a { transition: color var(--dur-toque) var(--ease-bucle); transform: none; }
 }
+
+/* ══ EL PULIDO DEL CAJÓN TRAS LA PRUEBA DEL OWNER EN STAGING ═══════════════════════════════
+   (`docs/specs/identidad-qr-puerta.md` §9.7 C·1/C·2/C·4 y `menores-a-cargo.md` §9.11 D·2,
+   `DECISIONES #217`).
+
+   ⚠️ **Bloque AISLADO al final de la hoja y a propósito**: no toca ni una regla anterior. Las
+   tres piezas nuevas —las tarjetas del índice, el botón «Mi QR» y el selector de menores—
+   necesitan ganar por ORDEN DE FUENTE a reglas que sí existen (`.catalog__ico` le pone al icono
+   un `margin-right` y un color; `.check` le pone al rótulo `cursor: pointer`), y editarlas
+   allí habría cambiado también el catálogo del paso 1 y el resto de casillas del embudo.
+
+   ⚠️ Cero literales de color y cero cantos escritos a mano: todo sale de los tokens que un
+   paquete de instalación redefine (`ShapeScaleTest`, `RawColourIsNotATokenTest`).
+   ------------------------------------------------------------------------------------------ */
+
+/* ── C·1 · El índice de «Mi cuenta», en TARJETAS ───────────────────────────────────────────
+   El owner miró el índice y vio una LISTA de ocho filas iguales: para llegar a lo suyo hay que
+   leerlas todas. En rejilla de dos, las ocho caben de un vistazo y el icono —que antes medía
+   18 px al lado del texto— pasa a ser lo primero que se reconoce.
+
+   ⚠️ **El icono crece por CSS, NUNCA tocando el `<svg>`**: sus `width`/`height="18"` son la
+   copia byte a byte del componente Blade que `SidebarIconParityTest` compara. Un `26` escrito
+   en el atributo pondría el gate en rojo y, peor, separaría el dibujo del cajón del del sitio.
+
+   ⚠️ **`.catalog__item` NO se reutiliza** aunque el árbol se le pareciera: es la fila del
+   CATÁLOGO DE PRODUCTOS (paso 1 del embudo) y cambiarla para que aquí se vea bien habría
+   repintado la compra. Dos superficies distintas, dos vocabularios. */
+.acc-tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-8);
+    margin-bottom: var(--sp-4);
+}
+.acc-tile {
+    /* `relative` sostiene al contador, que va en la esquina: en la fila iba detrás del rótulo,
+       y centrado bajo un icono ese sitio ya no existe. */
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    gap: var(--sp-8);
+    width: 100%;
+    padding: var(--sp-16) var(--sp-10);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    background: var(--bg-card);
+    text-align: center;
+    cursor: pointer;
+    /* ⚠️ Duraciones y curvas por ROL, no a mano (`MotionScaleTest`, tanda 2d del tema): el hover de
+       una tarjeta es «toque», y el hover NUNCA lleva rebote — la escala lo dice y la guarda lo exige. */
+    transition: border-color var(--dur-toque) var(--ease-sale), transform var(--dur-sale) var(--ease-sale), box-shadow var(--dur-sale) var(--ease-sale);
+}
+/* La sombra SOLO en hover: una tarjeta quieta está apoyada, no elevada — es la regla de los
+   tres roles de elevación (`specs/tema-por-instalacion.md` §13). */
+.acc-tile:hover { border-color: var(--fg); transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+.acc-tile:active { transform: translateY(0) scale(0.97); transition: transform var(--dur-toque) var(--ease-sale); }
+.acc-tile:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+.acc-tile__ico { display: inline-flex; }
+/* ⚠️ El `margin-right` lo trae `.catalog__ico`, que es la clase que emite `ZoneIcon` y que en la
+   fila separaba icono y texto. Centrado bajo el rótulo ese margen descentra el dibujo, así que
+   se anula aquí en vez de quitárselo al componente (lo usa también el catálogo). */
+.acc-tile__ico svg {
+    width: 26px; height: 26px; margin-right: 0;
+    color: var(--fg-mute);
+    transition: color var(--dur-toque) var(--ease-sale);
+}
+.acc-tile:hover .acc-tile__ico svg { color: var(--zone-1); }
+.acc-tile__name {
+    font-family: var(--font-body); font-weight: var(--fw-semibold);
+    font-size: var(--fs-13); line-height: 1.25; color: var(--fg);
+}
+/* Hereda el aspecto de `.acct__count` (la píldora del bloque de cuenta) y solo cambia de sitio:
+   el número es el MISMO dato, y dos píldoras distintas para un mismo número es deriva. */
+.acc-tile__count { position: absolute; top: var(--sp-8); right: var(--sp-8); }
+
+/* ── C·2 · «Mi QR» al lado del nombre ──────────────────────────────────────────────────────
+   El carné es lo que el cliente enseña EN LA PUERTA, con el móvil en la mano y a veces sin
+   cobertura: pedirle que abra «Mi cuenta» y busque la sexta tarjeta es una pantalla de más en
+   el peor momento. El hueco lo deja la sub-línea de la próxima reserva, que se retira de aquí
+   porque el índice del área ya la enseña (§9.7 C·2). */
+.acct__qr {
+    flex: none;
+    display: inline-flex; align-items: center; gap: var(--sp-6);
+    padding: var(--sp-6) var(--sp-10);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--fg);
+    font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-semibold);
+    white-space: nowrap; cursor: pointer;
+    transition: background var(--dur-toque) var(--ease-sale), color var(--dur-toque) var(--ease-sale), border-color var(--dur-toque) var(--ease-sale);
+}
+.acct__qr:hover { background: var(--fg); color: var(--bg-card); border-color: var(--fg); }
+.acct__qr:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+.acct__qr-ico { flex: none; display: inline-flex; }
+.acct__qr-ico svg { width: 14px; height: 14px; }
+
+/* ── C·4 · La fila de dos botones de una confirmación DENTRO del cajón ─────────────────────
+   `window.confirm` es del NAVEGADOR: sale fuera del cajón, no se puede rotular en tres idiomas
+   con el resto del área y el owner no llegó a verlo en su recorrido. La confirmación pasa a ser
+   marcado propio (`purchase__confirm` + estos dos botones del sistema). */
+.acc-actions { display: flex; flex-wrap: wrap; gap: var(--sp-8); margin-top: var(--sp-10); }
+.acc-actions .btn { flex: 1 1 auto; justify-content: center; }
+
+/* ── D·2 · «¿Para quién son estas entradas?», en su propia sección ─────────────────────────
+   Lo que el owner vio y llamó «no me deja darle al checkbox»: la casilla de un menor sin
+   exención estaba `disabled` pero su rótulo seguía con `opacity: 1` y `cursor: pointer` —lo
+   pone `.check`— y el motivo iba PEGADO al nombre, dentro del mismo `<span>`. Nada decía que
+   la fila estuviera apagada, y el motivo se leía como parte del nombre.
+
+   ▶ Tres cambios y ninguno relaja la regla: la fila apagada se VE apagada, el motivo tiene su
+   propio elemento debajo, y el bloque se separa de lo que tiene encima (es una pregunta
+   distinta de «cuántas entradas quieres»). Quién puede marcarse lo sigue decidiendo
+   `assignment.js` y lo vuelve a decidir el servidor. */
+.dep-pick { padding-top: var(--sp-12); border-top: 1px solid var(--line); }
+.dep-pick__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-8); }
+.dep-pick__row {
+    padding: var(--sp-10) var(--sp-12);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    background: var(--bg-card);
+}
+/* Apagada: fondo del segundo tono y el rótulo atenuado. `.check` fija `cursor: pointer` con
+   especificidad (0,1,0); esta regla es (0,2,0) y además va después, así que gana sin tocarla. */
+.dep-pick__row--off { background: var(--bg-soft); }
+.dep-pick__row--off .dep-pick__pick { opacity: 0.55; cursor: not-allowed; }
+.dep-pick__pick { align-items: center; }
+.dep-pick__who { display: flex; align-items: baseline; gap: var(--sp-7); flex-wrap: wrap; }
+.dep-pick__name { font-weight: var(--fw-semibold); color: var(--fg); }
+.dep-pick__age { font-size: var(--fs-12); color: var(--fg-mute); }
+/* La sangría iguala el hueco que dejan la casilla y su separación, para que el motivo caiga bajo el
+   NOMBRE y no bajo el cuadradito. **Son 33 px y están MEDIDOS en el navegador**, no calculados de
+   cabeza: 16 de caja + 10 del `gap` de `.check` + **7 de los márgenes que el propio navegador le pone
+   a un `<input type="checkbox">`** (4 a la izquierda y 3 a la derecha en Chromium). La primera
+   versión puso 26 —los dos primeros sumandos— y el sondeo la cazó: el motivo salía 7 px a la
+   izquierda del nombre, que es justo la desalineación que delata una sangría inventada. */
+.dep-pick__why {
+    margin: var(--sp-6) 0 0;
+    padding-left: calc(var(--sp-16) + var(--sp-10) + var(--sp-7));
+    font-family: var(--font-body); font-size: var(--fs-11); line-height: 1.35;
+    color: var(--warn);
+}
+.dep-pick__ok {
+    font-family: var(--font-body); font-size: var(--fs-10); font-weight: var(--fw-bold);
+    letter-spacing: 0.03em; text-transform: uppercase; color: var(--ok);
+}
+
+/* ── El QR de puerta, presentado como CREDENCIAL ────────────────────────────────────────────
+   (encargo del owner, 2026-08-28: «esa presentación del QR la quiero más profesional, mejor
+   UI/UX, no el QR así suelto, respeta los diseños y estilos»; `zones/CardZone.vue`).
+
+   ⚠️⚠️ **El marco NO es nuevo: es el de la landing.** `.qr-frame`, `.qr-tile`, `.qr-slot` y las
+   cuatro `.qr-corner` son las clases con las que `<x-site.registration-qr>` dibuja un QR en la
+   página pública desde `#268` — papel claro de contraste FIJO (que es lo que hace fiable el
+   escaneo) y esquinas al color de marca. Reutilizarlas es la respuesta literal a «respeta los
+   diseños y estilos»: el mismo objeto se dibuja igual en las dos superficies, y el paquete de
+   instalación que retoque ese marco retoca las dos a la vez. Aquí SOLO se añade lo que el cajón
+   necesita y la landing no: el tamaño dentro de un panel estrecho, un `<img>` en vez de un SVG en
+   línea (el dibujo lo hace el servidor) y el bloque del código.
+
+   ⚠️ Cero literales de color y cero cantos escritos a mano, como el resto de este bloque. */
+.qr-pass {
+    /* `.qr-tile` lee `--qr-size` y lo define `.regcard`, que aquí no existe: sin esta línea el
+       recuadro nacería con `width: var(--qr-size)` inválido y se quedaría en `auto`. 264 px es el
+       tamaño NATURAL del PNG que sirve el servidor (versión 2 + zona de silencio 4, a escala 8);
+       el `min()` de abajo lo encoge cuando el cajón es más estrecho que eso. */
+    --qr-size: 264px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: var(--sp-4);
+    text-align: center;
+}
+/* ⚠️ **El ancho REAL manda sobre el natural.** El cajón mide `min(440px, 100%)` y a 380 px de
+   pantalla el interior de la tarjeta baja a ~300 px: con el `width` fijo de `.qr-tile` el recuadro
+   se saldría. `min(var(--qr-size), 100%)` + `aspect-ratio` lo deja cuadrado a cualquier ancho, y
+   `height: auto` neutraliza el `height: var(--qr-size)` de la regla original sin tocarla. */
+.qr-pass .qr-tile { width: min(var(--qr-size), 100%); height: auto; aspect-ratio: 1; }
+/* La landing mete un `<svg>` en el hueco y aquí va un `<img>` del servidor: la regla hermana
+   (`.qr-slot svg`) no lo alcanza, y sin ésta la imagen conserva sus 264 px de atributo y desborda. */
+.qr-pass .qr-slot img { display: block; width: 100%; height: 100%; }
+
+/* El código que se DICTA en la puerta si la cámara falla. Monoespaciado —`--font-mono` es el token
+   del sistema, el mismo de los códigos de pedido— porque se lee letra a letra y en ancho fijo se ve
+   que son cinco grupos de cuatro; el `letter-spacing` separa los caracteres sin separar los grupos. */
+.qr-pass__code {
+    margin: var(--sp-4) 0 0;
+    padding: var(--sp-8) var(--sp-12);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    background: var(--bg-soft);
+    font-family: var(--font-mono); font-size: var(--fs-15); font-weight: var(--fw-semibold);
+    letter-spacing: 0.08em; line-height: 1.4; color: var(--fg);
+    /* Un token de 20 caracteres en cinco grupos no cabe de una línea en el cajón estrecho: parte por
+       el espacio de grupo, que es donde también lo parte quien lo dicta. */
+    word-spacing: 0.2em; overflow-wrap: break-word; max-width: 100%;
+}
+
+/* ⚠️ **«No hay QR» ocupa el hueco de un QR.** Con la clave del servidor rotada (§8.1) no hay nada
+   que dibujar, y un párrafo suelto encogía la pantalla entera: el botón que lo arregla —renovar—
+   saltaba hacia arriba y el cliente lo buscaba donde ya no estaba. Recuadro del mismo tamaño, borde
+   discontinuo (no es un marco, es su ausencia) y el motivo dentro. */
+.qr-pass__empty {
+    display: flex; align-items: center; justify-content: center;
+    width: min(var(--qr-size), 100%); aspect-ratio: 1;
+    margin: 0;
+    padding: var(--sp-20);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--r);
+    background: var(--bg-soft);
+    font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.5; color: var(--fg-mute);
+}
+
+.qr-pass__hint { max-width: 42ch; }
+/* La acción PRINCIPAL, a todo el ancho de la tarjeta: `.acc-actions` ya reparte y `.btn` ya centra. */
+.qr-pass__acts { width: 100%; margin-top: var(--sp-16); }
+
+/* ── Renovar: separado, discreto y con su aviso permanente ─────────────────────────────────
+   La línea de arriba no es decoración: marca dónde acaba «esto es tu QR» y empieza «esto lo
+   destruye». El botón es `--ghost` a propósito (`CardZone.vue`: una acción destructiva y rara no
+   puede tener el aspecto de la principal). */
+.qr-pass__renew {
+    width: 100%;
+    margin-top: var(--sp-20);
+    padding-top: var(--sp-16);
+    border-top: 1px solid var(--line);
+    display: flex; flex-direction: column; align-items: center;
+}
+.qr-pass__notice { margin: var(--sp-10) 0 0; max-width: 42ch; font-size: var(--fs-12); }
+.qr-pass__renew .purchase__confirm { width: 100%; text-align: left; }
+
+/* ── «Menores a cargo»: el alta se DESPLIEGA y la lista se pagina ──────────────────────────
+   (encargo del owner, 2026-08-28: «en vez de añadir el formulario completo para añadir menor,
+   añade un botón y que salga el form… y añade paginación de ser necesario»; `DependentsZone.vue`).
+
+   ⚠️ **Casi todo se resuelve SIN CSS nuevo**: el disparador es `.btn--zone.auth__submit` (el mismo
+   botón a todo el ancho del resto del área), el formulario sigue dentro de `.account__card`, sus
+   dos botones van en `.acc-actions` —la fila que este mismo bloque estrenó para la confirmación del
+   QR— y el paginador es `.pagination` + `.pagination__info` + `.btn--ghost`, exactamente el de «Mis
+   pedidos» y «Mis reservas» dentro de este mismo cajón. Lo único propio es la separación del alta
+   respecto de la lista: son dos cosas distintas y hasta hoy iban pegadas. */
+.dep-add { margin-bottom: var(--sp-4); }
+/* La paginación del sitio nace con `margin-top: 40px`, pensada para una página completa; dentro del
+   cajón esa distancia deja el paginador fuera de la vista tras la última tarjeta. */
+.dep-page { margin-top: var(--sp-20); }

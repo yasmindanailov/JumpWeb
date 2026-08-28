@@ -2088,6 +2088,56 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       descargar, renovar con confirmación) · **«Rotar carné QR»** en `ViewUser` (el `cards.rotated` lleva al
       OPERADOR de actor). `[DECIDIDO owner]`: **el panel NO declara menores**. +8 tests PHP · JS 773 → 790 ·
       headless **14/14** · techos por feature (chunk 247, payload 8.550). Sigue 🟦 solo por el OJO del owner.
+      ✅ **Y EL PULIDO DE LOS OCHO PUNTOS DEL OWNER, EN EL ÁRBOL (2026-08-28 tarde, `#217`, spec §9.7 y
+      §9.7.1)**, tras su prueba en staging: el **icono de la instalación dentro del QR** con margen
+      (7 módulos tapados; re-medido con 40 carnés REALES porque el primer número se midió con un token
+      que no era un carné: 7 → 0 fallos, 9 → 10 de 40) · **«Mi cuenta» en tarjetas** · **«Mi QR» junto
+      al nombre** · el **QR como credencial** con aviso permanente y confirmación en el cajón ·
+      **«Menores a cargo»** con alta desplegable y paginación de 6 · el **selector del embudo**
+      rediseñado · los **menores en la ficha del panel** · la **pantalla de puerta** entera (⚠️ su
+      paleta estaba ROTA: los grises y el color de marca computaban vacío) · y la palabra **«QR»**.
+      ⚠️ **La casilla del menor NO estaba rota** (modo interno + exención sin firmar, `#202`·2).
+      **Revisión adversarial: 23 hallazgos, 9 arreglados y 14 en `DEUDA`** — entre los arreglados, el
+      **cuerpo del semáforo de la puerta no se pintaba** y **«Mi QR» salía mudo** para quien gana la
+      sesión sin recargar. Suite 3315 / 21.713 · sondeos 38 ✓ y 15/15 · desplegado en staging.
+      **Sigue 🟦: falta el OJO del owner** (guion `VERIFICACION-E2E-CAJON.md` §5.octodecies, y en
+      particular el LECTOR real del recinto con el PNG descargado).
+- [x] ✅ **LA FORMA DEL PANEL — tanda 1: el MENÚ PLANO** (2026-08-28 tarde, `#223`,
+      `docs/specs/panel-navegacion.md`). Fuera de roadmap, por encargo directo del owner: «simplificar
+      el panel, mejor UI/UX, empezando por el menú». **Medido antes**: 24 entradas en 6 grupos, todos
+      desplegados, y solo **4** del día a día (`PANEL-ADMIN.md` §2) → el **83 % del menú era puesta en
+      marcha**; cero búsqueda global; «Usuarios» mezclando clientes y equipo; «Calendario» y «Crear
+      pedido» duplicados; **1 solo fichero de test miraba la navegación**. ⚠️⚠️ **La primera medición
+      fue FALSA**: Filament **memoiza** la navegación y dijo que el empleado veía las 24 del admin —no
+      era cierto, el gateo estaba bien—; para medir dos roles, **un proceso por rol**. ❗ **El owner
+      corrigió la propuesta del agente** (10 entradas con grupos plegables → **menú PLANO de 5**) y
+      mejoró el resultado. **Entró**: menú **Hoy · Calendario · Pedidos · Clientes · Puerta** · las
+      **19** de puesta en marcha a **`/admin/ajustes`**, en tarjetas con su descripción, entrando por el
+      **menú del avatar** · «Calendario» fuera de la barra superior · «Usuarios» partido en pestañas
+      **Clientes**/**Equipo** por `User::PANEL_ROLES`. **Resultado**: admin **24 → 5**, empleado
+      **5 → 4** y sin «Ajustes». ⚠️ **Ocultar no es autorizar** (los 19 `canViewAny()`/`canAccess()`,
+      intactos y verificados uno a uno) ⚠️⚠️ **y el riesgo real es la pantalla HUÉRFANA**: por eso
+      `AdminNavigationTest` exige que toda pantalla registrada esté en el menú, en
+      `AdminSettingsHub::areas()` o en `OUTSIDE_HUB`. ⚠️⚠️ **Las utilidades de color de Tailwind
+      habrían dejado el aro de foco INVISIBLE** (`--color-primary-500/600` no declaradas aunque sus
+      clases compilan): el fallo de `#217`, cazado antes de subirlo. **12 casos nuevos · 3 mutaciones,
+      las 3 muerden · suite del panel 1162 / 5125 · headless con capturas.**
+      **Sigue 🟦: falta el OJO del owner**, y con él el repaso de los rótulos. ▶ **Lo que el menú NO
+      arregla y sigue abierto**: la pantalla **«Hoy»** y la **búsqueda global (⌘K)** (spec §6).
+- [x] ✅ **LA FORMA DEL PANEL — tanda 2: el BUSCADOR** (2026-08-28, `#224`, spec §7). `[DECIDIDO
+      owner]`: «buscador total del panel, sobre clientes, pedidos y demás». 14 recursos buscables
+      **más una categoría que Filament no trae: las PANTALLAS**, sacadas de las mismas fuentes que
+      las pintan y buscables **por su descripción** («precio» → Tarifas) y sin tildes («catalogo» →
+      Catálogo). ⚠️ **El empleado busca PEDIDOS, no clientes** (`[DECIDIDO owner]`), y se sostiene
+      sin código nuevo. ⚠️⚠️ **De regalo, un defecto VIVO**: buscar «jump» en el Catálogo del panel
+      no encontraba «Jump · 1 hora» —MySQL extrae el JSON con colación `utf8mb4_bin` y el LIKE
+      distinguía mayúsculas; medido 0 vs 5—, desde que se escribieron esas tablas y sin ningún test
+      que lo viera. ⚠️ **La palanca de Filament para arreglarlo NO es portable** (rompe en SQLite,
+      que es donde corre la suite): se resuelve con `wrap()` de la gramática + `LOWER()` a mano, y
+      con DOS comprobaciones, porque **un test en SQLite no puede demostrar la conducta en MySQL**.
+      ⚠️ **Y la guarda clave pareció CIEGA al mutarla y no lo era**: la defensa tiene dos capas
+      (`canViewAny` abre la búsqueda, `canView` da la URL, y sin URL Filament descarta el
+      resultado). **11 casos · 4 mutaciones, las 4 muerden · suite del panel 1174 / 5155.**
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de

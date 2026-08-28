@@ -29,7 +29,13 @@ class CatalogTable
                     ->label(__('admin.catalog.col_name'))
                     // `name` es JSON i18n → se muestra/busca/ordena por la clave es.
                     ->getStateUsing(fn (TicketType $record): string => (string) ($record->tr('name') ?? '—'))
-                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where('name->es', 'like', "%{$search}%"))
+                    // ⚠️ `LOWER(...)`, no un `where` a secas (#224): MySQL extrae el JSON con
+                    // colación `utf8mb4_bin`, así que el LIKE distinguía mayúsculas y buscar
+                    // «jump» aquí NO encontraba «Jump · 1 hora» (medido: 0 filas vs 5). Estaba
+                    // así desde que se escribió esta tabla y no lo veía ningún test.
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereRaw(
+                        "LOWER(JSON_UNQUOTE(JSON_EXTRACT(name, '$.es'))) LIKE ?", ['%'.mb_strtolower($search).'%'],
+                    ))
                     ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('name->es', $direction))
                     ->limit(40),
 

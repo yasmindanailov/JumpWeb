@@ -1,6 +1,9 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { bornOnLabel, coverageKey, dependentForm, dependentNeedsSignature, dependentWaiverKey, replaceDependent } from './dependents.js';
+import {
+    DEPENDENTS_PER_PAGE, bornOnLabel, clampPage, coverageKey, dependentForm, dependentNeedsSignature,
+    dependentWaiverKey, dependentsPager, dependentsView, lastPageOf, pageSlice, replaceDependent,
+} from './dependents.js';
 
 /**
  * Lo que el cliente SÍ decide sobre un menor a cargo: qué frase, si se ofrece firmar y cómo se lee su
@@ -70,5 +73,177 @@ describe('colocar la respuesta del servidor en la lista', () => {
         assert.deepEqual(replaceDependent(list, signed).map((d) => [d.id, d.waiver.signed]), [[1, true], [2, false]]);
         assert.equal(replaceDependent(list, { ...minor(), id: 3 }).length, 3);
         assert.deepEqual(replaceDependent(null, minor()), [minor()]);
+    });
+});
+
+/**
+ * **La lista paginada y el alta desplegable** (2026-08-28, encargo del owner).
+ *
+ * ⚠️ Lo que de verdad se prueba aquí no es «cortar un array de seis en seis»: son las dos
+ * transiciones que la pantalla no puede equivocarse — dónde queda el cliente DESPUÉS de añadir (el
+ * nuevo cae al final de la lista, y con paginación ese final puede estar en otra página) y después de
+ * quitar (la página en la que estaba puede haberse quedado vacía).
+ */
+const many = (n) => Array.from({ length: n }, (_, i) => ({ id: i + 1, name: `M${i + 1}` }));
+
+const messages = {
+    account: {
+        dependents: {
+            pagination: { label: 'Paginación de menores', prev: 'Anteriores', next: 'Siguientes', page: 'Página :current de :last' },
+        },
+    },
+};
+
+describe('cuántas páginas hay', () => {
+    test('una lista vacía sigue estando en la página 1: nunca 0', () => {
+        assert.equal(lastPageOf(0), 1);
+        assert.equal(lastPageOf(null), 1);
+    });
+
+    test('el corte es exacto en el múltiplo y sube en el siguiente', () => {
+        assert.equal(lastPageOf(6, 6), 1);
+        assert.equal(lastPageOf(7, 6), 2);
+    });
+
+    test('con el tope por defecto del servidor (20) y con el máximo que admite el panel (100)', () => {
+        assert.equal(lastPageOf(20, DEPENDENTS_PER_PAGE), 4);
+        assert.equal(lastPageOf(100, DEPENDENTS_PER_PAGE), 17);
+    });
+});
+
+describe('la página pedida se mete en lo que existe', () => {
+    test('por debajo de la primera y por encima de la última', () => {
+        assert.equal(clampPage(0, 20, 6), 1);
+        assert.equal(clampPage(-3, 20, 6), 1);
+        assert.equal(clampPage(99, 20, 6), 4);
+    });
+
+    test('lo que no es un número cae en la primera, no en NaN', () => {
+        assert.equal(clampPage(undefined, 20, 6), 1);
+        assert.equal(clampPage('x', 20, 6), 1);
+    });
+});
+
+describe('las filas de una página', () => {
+    test('la ventana es la que toca y la última página trae el resto', () => {
+        assert.deepEqual(pageSlice(many(7), 1, 3).map((r) => r.id), [1, 2, 3]);
+        assert.deepEqual(pageSlice(many(7), 3, 3).map((r) => r.id), [7]);
+    });
+
+    test('una página fuera de rango devuelve la última CON filas, nunca un hueco', () => {
+        assert.deepEqual(pageSlice(many(7), 9, 3).map((r) => r.id), [7]);
+    });
+
+    test('sin lista no revienta', () => {
+        assert.deepEqual(pageSlice(null, 1, 3), []);
+    });
+});
+
+describe('el paginador', () => {
+    test('⚠️ es `null` si todo cabe en una página: una cuenta con dos menores no ve una barra de páginas', () => {
+        assert.equal(dependentsPager(2, 1, messages, 6), null);
+        assert.equal(dependentsPager(6, 1, messages, 6), null);
+        assert.equal(dependentsPager(0, 1, messages, 6), null);
+    });
+
+    test('con más de una página trae los rótulos del grupo y las dos puertas', () => {
+        const pager = dependentsPager(7, 1, messages, 6);
+
+        assert.equal(pager.current, 1);
+        assert.equal(pager.last, 2);
+        assert.equal(pager.canPrev, false);
+        assert.equal(pager.canNext, true);
+        assert.equal(pager.label, 'Paginación de menores');
+        assert.equal(pager.prevLabel, 'Anteriores');
+        assert.equal(pager.nextLabel, 'Siguientes');
+        assert.equal(pager.pageLabel, 'Página 1 de 2');
+    });
+
+    test('en la última se puede volver y no avanzar, y la página se recorta', () => {
+        const pager = dependentsPager(7, 99, messages, 6);
+
+        assert.equal(pager.current, 2);
+        assert.equal(pager.canPrev, true);
+        assert.equal(pager.canNext, false);
+        assert.equal(pager.pageLabel, 'Página 2 de 2');
+    });
+});
+
+describe('el estado de la pantalla', () => {
+    test('nace en la primera página y con el alta PLEGADA', () => {
+        const view = dependentsView();
+
+        assert.equal(view.page, 1);
+        assert.equal(view.adding, false);
+        assert.deepEqual(view.form, { name: '', born_on: '' });
+    });
+
+    test('abrir despliega con el formulario limpio; cancelar pliega y tira lo tecleado', () => {
+        const view = dependentsView();
+
+        view.form.name = 'a medias';
+        view.open();
+        assert.equal(view.adding, true);
+        assert.deepEqual(view.form, { name: '', born_on: '' });
+
+        view.form.name = 'otra vez';
+        view.cancel();
+        assert.equal(view.adding, false);
+        assert.deepEqual(view.form, { name: '', born_on: '' });
+    });
+
+    test('⚠️ tras AÑADIR salta a la página donde ha caído el nuevo, que es la última', () => {
+        const view = dependentsView(6);
+
+        view.form.name = 'Lior';
+        view.added(7);
+
+        assert.equal(view.adding, false, 'el alta se pliega sola al guardar bien');
+        assert.deepEqual(view.form, { name: '', born_on: '' });
+        assert.equal(view.page, 2, 'con seis por página, el séptimo está en la 2 — si no se salta, no se ve');
+    });
+
+    test('añadir dentro de la primera página no mueve al cliente de sitio', () => {
+        const view = dependentsView(6);
+
+        view.added(3);
+        assert.equal(view.page, 1);
+    });
+
+    test('⚠️ tras QUITAR el único de la última página, la página se recoloca en vez de quedarse en blanco', () => {
+        const view = dependentsView(6);
+
+        view.go(2, 7);
+        assert.equal(view.page, 2);
+
+        view.removed(6);
+        assert.equal(view.page, 1);
+    });
+
+    test('quitar sin vaciar la página deja al cliente donde estaba', () => {
+        const view = dependentsView(6);
+
+        view.go(2, 13);
+        view.removed(12);
+
+        assert.equal(view.page, 2);
+    });
+
+    test('ir a una página que no existe no lleva a ninguna parte rara', () => {
+        const view = dependentsView(6);
+
+        view.go(99, 7);
+        assert.equal(view.page, 2);
+
+        view.go(0, 7);
+        assert.equal(view.page, 1);
+    });
+
+    test('`rows()` devuelve la página que se mira, no la lista entera', () => {
+        const view = dependentsView(3);
+
+        view.go(2, 7);
+
+        assert.deepEqual(view.rows(many(7)).map((r) => r.id), [4, 5, 6]);
     });
 });

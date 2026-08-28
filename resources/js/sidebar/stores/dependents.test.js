@@ -43,7 +43,11 @@ describe('lo que el EMBUDO lee de la lista (Fase 6 · tanda 4)', () => {
 
         const options = store.optionsFor({ dependents: { age: ':age años' } });
         assert.deepEqual(options.map((o) => [o.id, o.assignable]), [[1, true], [2, false]]);
-        assert.equal(options[0].label, 'Lucas · 9 años');
+        // ⚠️ Nombre y edad viajan POR SEPARADO desde el 2026-08-28 (`menores-a-cargo.md` §9.11 D·2):
+        // el `label` de una sola cadena se retiró porque impedía al selector darles peso distinto.
+        assert.equal(options[0].name, 'Lucas');
+        assert.equal(options[0].age, '9 años');
+        assert.equal(options[0].label, undefined, 'la etiqueta fundida ya no existe');
         assert.deepEqual(store.assignable, [1]);
         assert.deepEqual(store.byId, { 1: { id: 1, name: 'Lucas' }, 2: { id: 2, name: 'Vera' } });
 
@@ -233,5 +237,26 @@ describe('firmar la exención en su nombre', () => {
         assert.equal(store.notice, '');
         assert.equal(store.signedId, null);
         assert.equal(store.items.length, 1);
+    });
+
+    /**
+     * ⚠️ La zona llama a `forget()` al DESPLEGAR el alta (2026-08-28): sin él, el error del intento
+     * anterior se leería bajo un formulario recién abierto y vacío, como si fuera de éste.
+     */
+    test('forget() borra el veredicto del último intento y CONSERVA la sesión caducada', () => {
+        const store = useDependentsStore();
+        store.list = [lucas()];
+        store.fields = { name: ['Ya lo has declarado.'] };
+        store.notice = 'Has alcanzado el máximo (20).';
+        store.done = true;
+        store.expired = true;
+
+        store.forget();
+
+        assert.deepEqual(store.fields, {});
+        assert.equal(store.notice, '');
+        assert.equal(store.done, false);
+        assert.equal(store.expired, true, 'esconder una sesión caducada dejaría al cliente tecleando en balde');
+        assert.equal(store.items.length, 1, 'no toca la lista');
     });
 });

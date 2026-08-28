@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Roles;
 
 use App\Domain\Identity\Models\Role;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Roles\Pages\EditRole;
 use App\Filament\Resources\Roles\Pages\ListRoles;
 use App\Filament\Resources\Roles\Schemas\RoleForm;
@@ -33,6 +34,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class RoleResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = Role::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
@@ -41,11 +44,6 @@ class RoleResource extends Resource
 
     // Tras Usuarios (100).
     protected static ?int $navigationSort = 40;
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.sistema');
-    }
 
     public static function getNavigationLabel(): string
     {
@@ -103,9 +101,14 @@ class RoleResource extends Resource
         return self::canManageAccess();
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return self::canManageAccess();
+        return false;
     }
 
     public static function canCreate(): bool
@@ -121,5 +124,19 @@ class RoleResource extends Resource
     private static function canManageAccess(): bool
     {
         return auth()->user()?->hasPermission('access.manage') ?? false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // El nombre del rol. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'name';
     }
 }

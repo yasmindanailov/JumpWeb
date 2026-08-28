@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\RateTypes;
 
 use App\Domain\Booking\Models\RateType;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\RateTypes\Pages\CreateRateType;
 use App\Filament\Resources\RateTypes\Pages\EditRateType;
 use App\Filament\Resources\RateTypes\Pages\ListRateTypes;
@@ -43,6 +44,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class RateTypeResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = RateType::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCurrencyEuro;
@@ -50,11 +53,6 @@ class RateTypeResource extends Resource
     protected static ?string $slug = 'rate-types';
 
     protected static ?int $navigationSort = 20;
-
-    public static function getNavigationGroup(): ?string
-    {
-        return __('admin.nav_groups.catalogo');
-    }
 
     public static function getNavigationLabel(): string
     {
@@ -121,9 +119,14 @@ class RateTypeResource extends Resource
         return auth()->user()?->hasPermission('prices.manage') ?? false;
     }
 
+    /**
+     * #223 — fuera del menú lateral: esta pantalla es de puesta en marcha, no del día a
+     * día, y se entra por «Ajustes» (`AdminSettingsHub`, menú del avatar). Ocultar NO es
+     * autorizar: quien decide el acceso sigue siendo `canAccess()`/`canViewAny()`.
+     */
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasPermission('prices.manage') ?? false;
+        return false;
     }
 
     /**
@@ -136,5 +139,19 @@ class RateTypeResource extends Resource
         return ($record instanceof RateType)
             && (auth()->user()?->hasPermission('prices.manage') ?? false)
             && $record->canBeDeleted();
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // Por rótulo o por clave. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['label->es', 'key'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'label';
     }
 }

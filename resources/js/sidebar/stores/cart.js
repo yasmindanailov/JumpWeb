@@ -6,6 +6,7 @@ import {
 import { applyRejections, reconcileAssignments, toggleDependent } from '../assignment.js';
 import { useCatalogStore } from './catalog.js';
 import { useDependentsStore } from './dependents.js';
+import { useCardStore } from './card.js';
 
 /**
  * El estado de la CESTA (reorganización del SPA, 2026-08-22).
@@ -108,8 +109,15 @@ export const useCartStore = defineStore('cart', {
 
             // Otro titular = otros menores (tanda 4): la lista del anterior no puede seguir sirviendo
             // opciones. `invalidate()` no tenía llamadores hasta aquí (spec §9.9.1·10).
+            //
+            // ⚠️⚠️ **Y su QR tampoco** (2026-08-28, revisión de `#217`): `stores/card.js::invalidate()`
+            // se escribió con la zona y se quedó **sin ningún llamador**, así que en un dispositivo
+            // compartido —una tablet del parque, el móvil de casa— quien entraba después seguía viendo
+            // en «Mi QR» el código del titular ANTERIOR hasta recargar la página. Un carné no es una
+            // lista de opciones: es una credencial que identifica a una persona en la puerta.
             if (String(this.owner ?? '') !== String(newOwner ?? '')) {
                 useDependentsStore().invalidate();
+                useCardStore().invalidate();
             }
 
             this.setOwner(newOwner);

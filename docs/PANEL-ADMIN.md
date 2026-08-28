@@ -36,6 +36,43 @@ entradas. Incluye **empleados con permisos limitados**.
 
 ---
 
+## 1.bis Por dónde se llega a cada cosa (la FORMA del panel) ⭐
+
+> `[DECIDIDO owner, 2026-08-28]` · `DECISIONES #223` · detalle y porqué:
+> **`specs/panel-navegacion.md`** (léela antes de mover una entrada de sitio).
+
+Hasta esa fecha el menú tenía **24 entradas en 6 grupos**, y solo **4** eran de la §2 de este
+doc: el 83 % era configuración de puesta en marcha compitiendo por el ojo del empleado. Ahora
+la barra lateral es **plana y solo tiene los sitios del día a día**:
+
+```
+Hoy · Calendario · Pedidos · Clientes · Puerta          ← el menú, sin grupos
+[⊕ Crear pedido] [🌐] ( avatar ▾ → «Ajustes» · «Salir» )  ← la barra superior
+```
+
+- Las **19 pantallas de §3 y §4** viven en **`/admin/ajustes`**, en tarjetas por área y cada una
+  con una línea de qué hace. Se entra **solo** por el menú del avatar.
+- **«Crear pedido» es una acción, no un sitio**: por eso está arriba y no en el menú.
+  «Calendario» se retiró de la barra superior — era el único enlace duplicado del panel.
+- **«Usuarios» es ahora «Clientes»**, y el EQUIPO es la otra pestaña de esa misma pantalla,
+  a la que se llega desde Ajustes (§3 lo describe igual: la ficha y sus acciones no cambian).
+- El **empleado** ve 4 entradas (no «Clientes»: exige `users.manage`) y **no ve «Ajustes»**.
+
+⚠️ **Ocultar no es autorizar.** Las 19 conservan intacto su `canViewAny()`/`canAccess()`. Para
+quitarle una pantalla a alguien se le quita el permiso, **nunca** la entrada del menú.
+
+**Y hay BUSCADOR** (barra superior, `CTRL+K` / `⌘K`, `DECISIONES #224`): encuentra pedidos,
+clientes, productos y demás registros — **y también PANTALLAS**, por su nombre o por lo que
+hacen («precio» encuentra Tarifas). Es lo que hace barato tener 19 escondidas.
+⚠️ **Un empleado busca PEDIDOS, no clientes** (`[DECIDIDO owner]`): para comprobar a una
+persona está la pantalla de Puerta (§2.5), que es la que lleva límite y auditoría.
+
+⚠️ **Ninguna pantalla puede quedar huérfana.** Un recurso nuevo que no entre ni en el menú ni en
+Ajustes sería inalcanzable salvo tecleando su URL. `AdminNavigationTest` lo impide: toda pantalla
+registrada tiene que estar en uno de los tres sitios declarados, o la suite se pone roja.
+
+---
+
 ## 2. 🔵 Operación diaria (lo que más se usa)
 
 ### 2.1 Calendario (centro de mando)

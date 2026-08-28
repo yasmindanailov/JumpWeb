@@ -153,6 +153,7 @@ const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
                 <!-- ¿Para quién son estas entradas? (Fase 6 · tanda 4): solo ENTRADAS, solo con menores
                      que ofrecer. Aquí se edita una línea ya en la cesta —y persistida: son ids—. -->
                 <DependentPicker v-if="! line.is_pack && dependentOptions.length"
+                                 :scope="'l' + line.index"
                                  :options="dependentOptions" :selected="line.dependent_ids ?? []" :quantity="line.quantity" :messages="messages"
                                  @toggle="$emit('toggle-dependent', line.index, $event)" />
 
