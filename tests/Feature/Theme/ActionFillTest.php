@@ -76,6 +76,11 @@ class ActionFillTest extends TestCase
         // naranjas). `[DECIDIDO owner]`: la barra pasa a SER `.cta-med`/`.cta-ghost`, así que
         // hereda la coreografía y sale del rol con su hermano. El rol lo siguen pintando `.btn`,
         // `.cartbar`, `.skip-link` y `.flash`.
+        // ⚠️ **El CTA del CIERRE entra en `#235`**, y es del mockup: su botón de reservar del final
+        // es NARANJA, no el color de marca. Encaja con `#209` —es el botón que hace avanzar la
+        // compra— y con el sitio: el cierre es donde más falta hace que se distinga.
+        // Nuestra versión anterior usaba `.btn--zone`, que es la MARCA (el cian).
+        '.reserve__act' => 'el CTA del hero del cierre',
         '.cartbar' => 'la barra del carrito: lleva a pagar',
         '.svc-cta--book' => '«Reservar» de servicios',
         '.acct__btn--primary' => 'el primario del cajón de cuenta',

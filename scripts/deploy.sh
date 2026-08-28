@@ -345,6 +345,9 @@ RSYNC_EXCLUDES=(
     --exclude='/public/img/client-icon-192.png'
     --exclude='/public/img/client-icon-512.png'
     --exclude='/public/img/client-icon-512-maskable.png'
+    # El TAG de la ciudad del hero del cierre (`--deco-tag`, #235): mismo motivo exacto que los
+    # de arriba. Sin esta línea el --delete se lo lleva y la esquina del cierre se queda vacía.
+    --exclude='/public/img/client-tag.svg'
     --exclude='/bootstrap/cache/*'   # llevaría la config local horneada; se regenera allí
     --exclude='/.phpunit.result.cache'
     --exclude='/compose.yaml'

@@ -6,6 +6,8 @@ use App\Domain\Content\Models\LandingService;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use Database\Seeders\LandingContentSeeder;
+use Dom\HTMLDocument;
+use Dom\XPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -336,7 +338,7 @@ class ArmazonContractTest extends TestCase
         $sinCierre = [];
 
         /** @var \DOMElement $link */
-        foreach ($xpath->query('.//a', $drawer) as $link) {
+        foreach ($xpath->query('.//h:a', $drawer) as $link) {
             if (! str_contains($link->getAttribute('data-alpine-click'), 'menuOpen = false')) {
                 $sinCierre[] = $link->getAttribute('href');
             }
@@ -437,8 +439,8 @@ class ArmazonContractTest extends TestCase
                 "`{$path}`: el salto apunta a `#main` y ahí no hay nada",
             );
 
-            $body = $xpath->query('//body')->item(0);
-            $primero = $xpath->query('.//a[@href] | .//button | .//input | .//select | .//textarea', $body)->item(0);
+            $body = $xpath->query('//h:body')->item(0);
+            $primero = $xpath->query('.//h:a[@href] | .//h:button | .//h:input | .//h:select | .//h:textarea', $body)->item(0);
 
             $this->assertSame(
                 'skip-link', $primero?->getAttribute('class'),
@@ -643,7 +645,7 @@ class ArmazonContractTest extends TestCase
         $burger = $this->nodes($html, 'nav__burger')[0];
         $rayas = [];
 
-        foreach ($this->xpath($html)->query('.//span', $burger) as $span) {
+        foreach ($this->xpath($html)->query('.//h:span', $burger) as $span) {
             if (str_contains($span->getAttribute('class'), 'nav__burger-bar ')) {
                 $rayas[] = $span->getAttribute('class');
             }
@@ -965,7 +967,7 @@ class ArmazonContractTest extends TestCase
         $sinCierre = [];
 
         /** @var \DOMElement $link */
-        foreach ($xpath->query('.//a', $this->nodes($html, 'menu__list')[0]) as $link) {
+        foreach ($xpath->query('.//h:a', $this->nodes($html, 'menu__list')[0]) as $link) {
             if (! str_contains($link->getAttribute('data-alpine-click'), 'menuOpen = false')) {
                 $sinCierre[] = $link->getAttribute('href');
             }
@@ -1129,7 +1131,7 @@ class ArmazonContractTest extends TestCase
         );
 
         $xpath = $this->xpath($html);
-        $noscript = $xpath->query('//noscript[.//a[contains(@href, "/lang/")]]');
+        $noscript = $xpath->query('//h:noscript[.//h:a[contains(@href, "/lang/")]]');
 
         $this->assertGreaterThan(
             0, $noscript->length,
@@ -1222,7 +1224,8 @@ class ArmazonContractTest extends TestCase
         foreach (['book-bar__cta--buy', 'book-bar__cta--alt'] as $mitad) {
             $node = $this->nodes($html, $mitad)[0];
 
-            $this->assertSame('a', $node->nodeName, "`{$mitad}` no es un enlace: sin JS no haría nada");
+            // ⚠️ En el DOM de HTML5 `nodeName` viene en MAYÚSCULAS; se normaliza, como ya hace su vecino.
+            $this->assertSame('a', strtolower($node->nodeName), "`{$mitad}` no es un enlace: sin JS no haría nada");
             $this->assertNotSame('', $node->getAttribute('href'), "`{$mitad}` no tiene destino");
             $this->assertNotSame('#', $node->getAttribute('href'), "`{$mitad}` apunta a la nada");
             $this->assertStringNotContainsString(
@@ -1545,7 +1548,25 @@ class ArmazonContractTest extends TestCase
         return $out;
     }
 
-    private function xpath(string $html): \DOMXPath
+    /**
+     * ⚠️⚠️ **Parser de HTML5, y el cambio arregla un punto CIEGO que llevaba aquí desde el principio.**
+     *
+     * Esto usaba `DOMDocument::loadHTML`, que es un parser de **HTML4**: no conoce `<footer>`,
+     * `<nav>`, `<main>` ni `<section>`, los trata como elementos desconocidos y **rompe el
+     * anidamiento** en cuanto uno contiene un `<div>` después de otro desconocido.
+     *
+     * ▶ **Medido el 2026-08-28** (`#235`), al meter un `<nav>` en el pie: el árbol parseado ponía
+     * `div.foot__bottom` colgando del `<body>` y no del `<footer>`, cuyos hijos se quedaban en dos.
+     * O sea que **`within($html, 'foot', …)` devolvía 0 pase lo que pase** — y la guarda del
+     * selector de idioma, que aseveraba `assertEmpty(...)`, llevaba pasando **sin mirar nada**.
+     * ▶ Es la lección que este repo ya tiene escrita tres veces: *cuando un instrumento dice que
+     * algo no está, la primera hipótesis es el instrumento.* Aquí decía la verdad al revés.
+     *
+     * `Dom\HTMLDocument` (PHP 8.4+) sí es un parser de HTML5 y anida bien. Los ayudantes de este
+     * fichero solo usan `query`, `getAttribute`, `nodeName`, `textContent` y `childNodes`, que
+     * existen igual en `Dom\Element`.
+     */
+    private function xpath(string $html): XPath
     {
         $key = md5($html);
 
@@ -1553,13 +1574,19 @@ class ArmazonContractTest extends TestCase
             return $this->docs[$key];
         }
 
-        $doc = new \DOMDocument;
-        $previous = libxml_use_internal_errors(true);
-        $doc->loadHTML('<?xml encoding="utf-8" ?>'.$this->renameAlpineAttributes($html));
-        libxml_clear_errors();
-        libxml_use_internal_errors($previous);
+        $doc = HTMLDocument::createFromString(
+            $this->renameAlpineAttributes($html),
+            LIBXML_NOERROR,
+            'UTF-8',
+        );
 
-        return $this->docs[$key] = new \DOMXPath($doc);
+        $xpath = new XPath($doc);
+        // ⚠️ **En HTML5 los elementos viven en el espacio de nombres XHTML**, así que `.//a` deja
+        // de casar y hay que escribir `.//h:a`. Es el precio de tener un parser que anida bien, y
+        // es barato: en este fichero solo ocho consultas nombran etiquetas.
+        $xpath->registerNamespace('h', 'http://www.w3.org/1999/xhtml');
+
+        return $this->docs[$key] = $xpath;
     }
 
     /**
@@ -1610,7 +1637,7 @@ class ArmazonContractTest extends TestCase
 
         foreach ($roots as $root) {
             /** @var \DOMElement $link */
-            foreach ($xpath->query('.//a[@href]', $root) as $link) {
+            foreach ($xpath->query('.//h:a[@href]', $root) as $link) {
                 $href = $link->getAttribute('href');
                 $parts = parse_url($href);
                 $path = $parts['path'] ?? '/';

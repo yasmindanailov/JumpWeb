@@ -188,17 +188,25 @@ return [
     'faq' => ['eyebrow' => 'FAQ', 'title' => 'Questions', 'title_em' => 'fréquentes'],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
     // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.
+    // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
+    // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.
+    // ⚠️ Las claves `*_touch` NO son un lujo: el mockup cambia el texto según el puntero, y
+    // «Espacio para saltar» en un móvil es una instrucción que no se puede seguir.
     'game' => [
-        'play' => 'Jouer',
+        'play' => 'Espace pour sauter le château',
+        'play_touch' => 'Touche pour sauter le château',
         'rec' => 'rec :m m',
         'm' => 'm',
-        'again' => 'Encore',
-        'exit' => 'Quitter',
-        'over' => 'Terminé !',
-        'newrec' => 'Nouveau record !',
+        'again' => 'Encore · espace',
+        'again_touch' => 'Encore',
+        'book' => 'Réserver',
+        'over' => 'Terminé',
+        'newrec' => 'nouveau record !',
         'bands' => 'bracelets',
-        'aria' => 'Saute la ville : mini-jeu. Appuie pour sauter.',
-        'hint' => 'Espace ou touche pour sauter',
+        'record' => 'record :m m',
+        'aria' => 'Saute la ville : mini-jeu. Appuie pour commencer et pour sauter.',
+        'hint' => 'maintiens espace · éch quitte',
+        'hint_touch' => 'maintiens pour sauter plus haut',
     ],
     'reserve' => [
         'title' => 'ON VA', 'stroke' => 'Y', 'fill' => 'ALLER',

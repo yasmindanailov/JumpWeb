@@ -29,50 +29,38 @@
          que es COLOCACIÓN —el aire que deja debajo— y nada más. --}}
     <x-site.brand-strip class="foot__strip" />
 
-    <div class="foot__grid">
-        <div>
-            <div class="foot__brand">{{ $site['name'] ?? config('app.name') }}<span class="nav__period" aria-hidden="true"><span class="nav__period-dot"></span><span class="nav__period-block"></span></span></div>
-            <p>{{ $site['tagline'] ?? __('landing.footer.tag') }}</p>
-        </div>
+    {{-- ⚠️⚠️ **UNA SOLA FILA DE ENLACES** (`#235`, `[DECIDIDO owner]`: «lo quiero una sola línea
+         el footer con los enlaces, no 3 columnas con varias filas»). Aquí había una rejilla de
+         cuatro columnas —marca + tres listas con título— que ocupaba media pantalla.
 
-        <div>
-            <h4>{{ __('landing.footer.col_park') }}</h4>
-            <ul>
-                @foreach (__('landing.footer.links_park') as $i => $link)
-                    <li><a href="{{ $parkUrls[$i] ?? url('/') }}" style="opacity:0.9">{{ $link }}</a></li>
-                @endforeach
-            </ul>
-        </div>
+         ▶ **El bloque de marca se va con ellas, y eso es 1:1**: el mockup no tiene marca en las
+         columnas, la lleva en la fila inferior junto al copyright. Nuestro copyright ya dice el
+         nombre del parque, así que no se pierde nada.
 
-        <div>
-            <h4>{{ __('landing.footer.col_info') }}</h4>
-            <ul>
-                @foreach (__('landing.footer.links_info') as $i => $link)
-                    <li><a href="{{ $infoUrls[$i] ?? url('/') }}" style="opacity:0.9">{{ $link }}</a></li>
-                @endforeach
-                {{-- #231 p8: «Mi cuenta» en Información (el enlace «Contacto» se mueve a la columna
-                     Contacto). Para invitados, /mi-cuenta redirige al login (comportamiento estándar). --}}
-                <li><a href="{{ route('account') }}" style="opacity:0.9">{{ __('landing.footer.account_link') }}</a></li>
-                {{-- #216: «Registro» del parque (externo si está configurado). --}}
-                @if (! empty($site['registration_url']))
-                    {{-- #216 pto.1: el enlace de «Registro» del pie usa el título configurado en Ajustes. --}}
-                    <li><a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener" style="opacity:0.9">{{ $site['registration_label'] }}</a></li>
-                @endif
-            </ul>
-        </div>
+         ⚠️ **Los títulos de columna también se van, y no se sustituyen por nada**: en una fila
+         única, «El parque / Información / Contacto» serían tres rótulos separando enlaces que se
+         leen igual de bien seguidos. Un encabezado que no agrupa nada es ruido.
 
-        <div>
-            <h4>{{ __('landing.footer.col_contact') }}</h4>
-            <ul>
-                {{-- #231 p8: el enlace «Contacto» (página) vive ahora en esta categoría. --}}
-                <li><a href="{{ route('contacto') }}" style="opacity:0.9">{{ __('landing.footer.contact_link') }}</a></li>
-                @if (! empty($site['phone']))<li><a href="tel:{{ preg_replace('/\s+/', '', $site['phone']) }}" style="opacity:0.9">{{ $site['phone'] }}</a></li>@endif
-                @if (! empty($site['email']))<li><a href="mailto:{{ $site['email'] }}" style="opacity:0.9">{{ $site['email'] }}</a></li>@endif
-                <li><a href="{{ $site['instagram'] ?? '#' }}" style="opacity:0.9">Instagram</a></li>
-                <li><a href="{{ $site['tiktok'] ?? '#' }}" style="opacity:0.9">TikTok</a></li>
-            </ul>
-        </div>
-    </div>
+         ⚠️ **Y NINGÚN enlace se retira sin decirlo.** La fila envuelve si no caben —son 14 con la
+         configuración de este cliente y a 1240 px ocupan dos renglones—; quitar destinos es una
+         decisión de producto, no de maquetación, y se toma mirando cuáles sobran de verdad. --}}
+    <nav class="foot__links" aria-label="{{ __('landing.footer.col_info') }}">
+        @foreach (__('landing.footer.links_park') as $i => $link)
+            <a href="{{ $parkUrls[$i] ?? url('/') }}">{{ $link }}</a>
+        @endforeach
+        @foreach (__('landing.footer.links_info') as $i => $link)
+            <a href="{{ $infoUrls[$i] ?? url('/') }}">{{ $link }}</a>
+        @endforeach
+        <a href="{{ route('account') }}">{{ __('landing.footer.account_link') }}</a>
+        @if (! empty($site['registration_url']))
+            <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener">{{ $site['registration_label'] }}</a>
+        @endif
+        <a href="{{ route('contacto') }}">{{ __('landing.footer.contact_link') }}</a>
+        @if (! empty($site['phone']))<a href="tel:{{ preg_replace('/\s+/', '', $site['phone']) }}">{{ $site['phone'] }}</a>@endif
+        @if (! empty($site['email']))<a href="mailto:{{ $site['email'] }}">{{ $site['email'] }}</a>@endif
+        <a href="{{ $site['instagram'] ?? '#' }}">Instagram</a>
+        <a href="{{ $site['tiktok'] ?? '#' }}">TikTok</a>
+    </nav>
 
     <div class="foot__bottom">
         {{-- ⚠️⚠️ **VUELVE el selector de idioma** (`#233`, `[DECIDIDO owner]`: «el footer tiene

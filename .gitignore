@@ -33,6 +33,8 @@
 # superficie oscura y **una imagen no se adapta**: el suelo de texto sí lo hacía, un `<img>` no.
 # Sin este fichero el logotipo de la instalación se sigue viendo, pero contra su propio fondo.
 /public/img/client-logo-ink.svg
+# Pieza decorativa de marca del cierre (`--deco-tag`, `#235`): el tag de la ciudad.
+/public/img/client-tag.svg
 # Y su respaldo RASTER (`#216`): correos y Open Graph no renderizan SVG. `@4x` de los 54 px a los
 # que la barra pinta el logotipo.
 /public/img/client-logo@4x.png

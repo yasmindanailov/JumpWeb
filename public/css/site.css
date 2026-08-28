@@ -1836,13 +1836,83 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     height: calc(var(--c-h0) + (100svh - var(--cierre-gap) * 2 - var(--c-h0)) * var(--cierre-p));
 }
 
-/* El contenido va centrado y por encima de la trama. */
-.reserve__body { position: relative; z-index: 1; text-align: center; padding: clamp(24px, 5vw, 80px); }
+/* ── EL CUERPO, 1:1 CON EL MOCKUP (`#235`) ─────────────────────────────────────────────────────
+   El relleno de la tarjeta es asimétrico a propósito: abajo reserva sitio para el lienzo del
+   juego (`clamp(122px, 14vw, 156px)`), que va pegado al canto. */
+.reserve__box { padding: clamp(40px, 6vw, 80px) clamp(24px, 5vw, 80px) clamp(122px, 14vw, 156px); }
+.reserve__body { position: relative; z-index: 1; text-align: center; }
 
 /* ⚠️ El titular CRECE con la tarjeta, igual que el del hero encoge con él (`#222`). Sin esto, la
    tarjeta se hace pantalla completa y el texto se queda del tamaño de una tarjeta pequeña. */
 .reserve h2 {
+    font-family: var(--font-display); font-weight: 400;
     font-size: calc(var(--cierre-t-ini) + (var(--cierre-t-end) - var(--cierre-t-ini)) * var(--cierre-p));
+    line-height: 0.94; letter-spacing: -0.005em;
+    text-transform: uppercase; color: var(--fg); margin: 0;
+}
+/* ⚠️⚠️ **El segundo renglón es CONTORNO + ACENTO, no un bloque resaltado.** Nuestro tratamiento
+   anterior pintaba la última palabra sobre una pastilla de color de marca girada; el mockup la
+   deja en TEXTO del color de acento, y la palabra de en medio en contorno fino. Es la diferencia
+   entre un titular de landing genérica y el suyo. */
+.reserve h2 .stroke { color: transparent; -webkit-text-stroke: 1.5px var(--fg-mute); }
+.reserve h2 .fill {
+    color: var(--zone-1);
+    background: none; padding: 0; border-radius: 0; transform: none; display: inline;
+}
+.reserve p {
+    max-width: 480px; margin: 22px auto 0;
+    font-size: 16.5px; line-height: 1.6; color: var(--fg-mute);
+    transition: opacity var(--dur-estado) var(--ease-sale);
+}
+
+/* ── LOS DOS CTA DEL CIERRE ────────────────────────────────────────────────────────────────────
+   ⚠️ **El primero es el ROL DE ACCIÓN**, no el color de marca. Lo dice el mockup y encaja con
+   `#209`: es el botón que hace avanzar la compra, y el cierre es el sitio donde más lo necesita.
+   Nuestra versión anterior usaba `.btn--zone`, que es la MARCA — el cian, no el naranja. */
+.reserve__actions {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 32px;
+    transition: opacity var(--dur-estado) var(--ease-sale),
+                transform var(--dur-entra) var(--ease-sale);
+}
+.reserve__act {
+    flex: 1 1 240px; max-width: 340px;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 58px; padding: 0 30px;
+    font-family: var(--font-body); font-weight: 800; font-size: 17.5px; letter-spacing: 0.01em;
+    border: 0; border-radius: var(--r-btn); cursor: pointer; text-decoration: none;
+    background: var(--action); color: var(--on-action);
+    transition: background var(--dur-sale) var(--ease-sale), transform var(--dur-sale) var(--ease-sale);
+}
+.reserve__act:hover { background: var(--action-hover); color: var(--on-action-hover); transform: translateY(-1px); }
+.reserve__act:active { transform: translateY(0); }
+.reserve__act:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
+.reserve__act--alt {
+    background: transparent; color: var(--fg);
+    border: 1.5px solid var(--line-strong);
+    transition: border-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
+}
+.reserve__act--alt:hover { background: transparent; border-color: var(--zone-1); color: var(--zone-1); transform: none; }
+
+/* ⚠️⚠️ **AL JUGAR, EL TEXTO Y LOS CTA SE APARTAN** (`#235`, del mockup). No es un adorno: el lienzo
+   crece del 17 % al 44 % de la ventana y se comería la mitad del bloque. Y `pointer-events: none`
+   en los botones **no es opcional**: invisibles seguirían tragándose el toque de saltar, que en un
+   juego de un solo botón es todo el juego. */
+.reserve__box--jugando .reserve__body p { opacity: 0; }
+.reserve__box--jugando .reserve__actions { opacity: 0; transform: translateY(-10px); pointer-events: none; }
+
+/* ── EL TAG DE LA CIUDAD ───────────────────────────────────────────────────────────────────────
+   Una pieza de marca girada en la esquina. El producto pone el hueco; el dibujo lo trae el
+   paquete de instalación en `--deco-tag` (`INSTALACION-CLIENTE.md` §4.e).
+   ⚠️ Aquí NO hace falta el truco de la máscara transparente que sí necesitan las manchas del menú:
+   con `background-image: none` no se pinta nada, porque este hueco no lleva color de fondo. */
+.reserve__tag {
+    position: absolute; z-index: 4; pointer-events: none;
+    right: clamp(24px, 4vw, 56px); bottom: clamp(20px, 3vw, 40px);
+    width: clamp(72px, 8vw, 108px); aspect-ratio: 377 / 197;
+    background-image: var(--deco-tag); background-size: contain;
+    background-repeat: no-repeat; background-position: center;
+    transform: rotate(-7deg);
+    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45));
 }
 
 /* El recorrido, al FINAL del documento. Es lo que da scroll para que la tarjeta acabe de crecer
@@ -1892,13 +1962,17 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     backdrop-filter: blur(3px);
     transition: background var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
 }
-.salta__invita:hover { background: color-mix(in srgb, var(--bg) 88%, transparent); border-color: var(--fg); }
+.salta__invita:hover { background: color-mix(in srgb, var(--bg) 88%, transparent); border-color: var(--attn); }
 .salta__invita:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
+/* ⚠️ Círculo de AVISO con un triángulo de reproducción, no una flecha de marca: aquí el amarillo
+   sí significa lo que nombra —«esto es lo que hay que pulsar»— y es lo que hace el mockup. */
 .salta__invita-ico {
     display: grid; place-items: center;
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--zone-1); color: var(--on-brand);
+    width: 19px; height: 19px; border-radius: 50%;
+    background: var(--attn); color: var(--paper-fg);
+    flex: 0 0 auto;
 }
+.salta__invita-ico svg { display: block; margin-left: 1px; }
 .salta__invita-t {
     font-family: var(--font-mono); font-size: 11px;
     letter-spacing: 0.16em; text-transform: uppercase;
@@ -1914,7 +1988,7 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
    lienzo pasa de 150 px a ~358 al empezar a jugar, y con la altura fija el marcador quedaba DENTRO
    del juego, encima del muñeco. `--salta-h-now` la publica el componente en cada cambio de fase. */
 .salta__hud {
-    position: absolute; left: 50%; bottom: calc(var(--salta-h-now, var(--salta-h)) + 10px);
+    position: absolute; left: 50%; bottom: calc(var(--salta-h-now, var(--salta-h)) - 30px);
     transform: translateX(-50%);
     z-index: 8; pointer-events: none;
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
@@ -1944,29 +2018,50 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     transform: translateX(-50%);
     z-index: 9; pointer-events: auto;
     display: flex; flex-direction: column; align-items: center; gap: 8px;
-    padding: 16px 22px;
+    padding: 13px 22px 12px;
     background: color-mix(in srgb, var(--bg) 88%, transparent);
-    border: 1px solid var(--line-strong);
+    border: 1px solid color-mix(in srgb, var(--attn) 50%, transparent);
     border-radius: var(--r);
     backdrop-filter: blur(4px);
+    /* ⚠️ El mockup teclea `0 22px 50px rgba(0,0,0,.45)`; aquí sale del ROL. `--shadow-modal` del
+       paquete del cliente vale `0 24px 60px rgba(0,0,0,.45)` —dos píxeles de diferencia— y este
+       panel ES un modal: flota sobre el juego y se lleva la atención entera. */
+    box-shadow: var(--shadow-modal);
     text-align: center;
 }
-.salta__fin-t {
-    font-family: var(--font-display); font-weight: 400; font-size: 20px;
-    line-height: 1; text-transform: uppercase; color: var(--fg);
+.salta__fin-rec {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--attn);
 }
-.salta__fin-m { font-family: var(--font-mono); font-size: 13px; color: var(--fg-mute); }
-.salta__fin-m strong { color: var(--attn); font-size: 17px; }
-.salta__fin-acts { display: inline-flex; gap: 8px; margin-top: 4px; }
-.salta__btn {
-    min-height: var(--tap-min); padding: 0 16px;
-    border-radius: var(--r-btn); border: 0; cursor: pointer;
-    background: var(--zone-1); color: var(--on-brand);
-    font-family: var(--font-mono); font-size: 11px;
+.salta__fin-m { display: flex; align-items: baseline; gap: 16px; }
+.salta__fin-m strong {
+    font-family: var(--font-display); font-weight: 400; font-size: 42px;
+    line-height: 0.9; color: var(--fg);
+}
+.salta__fin-u { font-size: 17px; opacity: 0.5; }
+.salta__fin-band {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--font-mono); font-size: 12.5px; color: var(--attn);
+}
+.salta__fin-band .salta__aro { width: 11px; height: 11px; }
+.salta__fin-best {
+    font-family: var(--font-mono); font-size: 10px;
     letter-spacing: 0.14em; text-transform: uppercase;
-    transition: background var(--dur-sale) var(--ease-sale);
+    color: color-mix(in srgb, var(--fg) 42%, transparent);
 }
-.salta__btn--ghost { background: transparent; color: var(--fg); border: 1px solid var(--line-strong); }
+.salta__fin-acts { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+.salta__btn {
+    min-height: 48px; padding: 0 22px;
+    border-radius: var(--r-md); border: 0; cursor: pointer;
+    background: var(--zone-1); color: var(--on-brand);
+    font-family: var(--font-mono); font-size: 10.5px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    transition: background var(--dur-sale) var(--ease-sale),
+                border-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
+}
+.salta__btn:hover { background: color-mix(in srgb, var(--zone-1) 88%, var(--paper-fg)); }
+.salta__btn--ghost { background: transparent; color: var(--fg); border: 1.5px solid var(--line-strong); }
+.salta__btn--ghost:hover { background: transparent; border-color: var(--zone-1); color: var(--zone-1); }
 .salta__btn:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
 
 /* ⚠️ El lienzo NO se esconde con movimiento reducido: enseña un fotograma quieto, que es un

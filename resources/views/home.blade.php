@@ -488,82 +488,97 @@
          existen. Con movimiento reducido se pone a 0 y desaparece, o quedaría una pantalla de
          scroll vacío que nadie sabría por qué está ahí. --}}
     <section id="reserve" class="reserve" x-data="cierreChoreo">
-            <div class="reserve__box" data-surface="ink">
-                {{-- La trama de puntos, la misma que el menú: es la única textura que el sistema
-                     admite sobre tinta, y aquí sale del mismo mecanismo. --}}
-                <div class="menu__grain" aria-hidden="true"></div>
+        {{-- ⚠️ **`saltaJuego` vive en la TARJETA, no en el lienzo** (`#235`): el mockup desvanece el
+             párrafo y los CTA mientras se juega, y para eso el estado del juego tiene que alcanzar
+             a hermanos suyos. Con el `x-data` en el lienzo, la mitad de arriba no se enteraba. --}}
+        <div class="reserve__box" data-surface="ink"
+             x-data="saltaJuego"
+             :class="fase === 'jugando' && 'reserve__box--jugando'">
+            {{-- La trama de puntos, la misma que el menú: es la única textura que el sistema
+                 admite sobre tinta, y aquí sale del mismo mecanismo. --}}
+            <div class="menu__grain" aria-hidden="true"></div>
 
-                <div class="reserve__body">
-                    <h2>
-                        {{ __('landing.reserve.title') }}<br />
-                        <span class="stroke">{{ __('landing.reserve.stroke') }}</span>
-                        <span class="fill">{{ __('landing.reserve.fill') }}</span>
-                    </h2>
-                    <p>{{ __('landing.reserve.copy') }}</p>
-                    <div class="reserve__actions">
-                        <a href="{{ route('entradas') }}" @click.prevent="$store.purchase.open()" class="btn btn--zone btn--lg">{{ __('landing.reserve.cta') }}<x-icons.arrow-right :width="16" :height="16" /></a>
-                        @if ($site['has_phone'])
-                            <a href="tel:{{ $site['phone_tel'] }}" class="btn btn--ghost btn--lg">{{ __('landing.reserve.cta2') }} {{ $site['phone'] }}</a>
-                        @endif
-                    </div>
-                </div>
+            {{-- ══ EL LIENZO Y LA UI DEL JUEGO ═══════════════════════════════════════════════════
+                 El lienzo hace de ESCENARIO: en reposo es una tira de 150 px con un muñeco en
+                 piloto automático; al empezar a jugar crece al 44 % de la ventana, y esa altura ES
+                 el zoom (`k = alto / 300`).
 
-                {{-- ══ «SALTA LA CIUDAD» — el minijuego del cierre (`#231`, del mockup) ══════════
-                     El lienzo vive pegado al canto inferior de la tarjeta y **hace de escenario**:
-                     mientras nadie juega, un muñeco recorre las almenas en piloto automático. Al
-                     pulsar «Jugar», el mismo lienzo pasa a ser el juego.
+                 ⚠️ **El lienzo ARRANCA la partida al tocarlo**, no solo el botón. En la primera
+                 versión solo arrancaba desde el botón, así que con teclado había que tabular hasta
+                 él y pulsar Enter — que es justo lo que el owner señaló. Ahora el espacio, las
+                 flechas, `W`, `Enter` y el toque hacen lo mismo: empezar si no se juega, saltar si
+                 se juega. Es lo que hace el mockup con un solo manejador. --}}
+            <canvas class="salta__lienzo" x-ref="lienzo" aria-hidden="true"
+                    :style="fase === 'off' ? 'pointer-events:none' : 'pointer-events:auto;cursor:pointer'"
+                    @pointerdown="toca($event)"></canvas>
 
-                     ⚠️ **El motor se descarga aparte** (`import()` dinámico en `app.js`): son
-                     ~15 KB sobre un bundle de 19, y esto solo se alcanza al final del todo de la
-                     portada. Vite lo emite en su propio trozo.
+            <button type="button" class="salta__invita" x-show="fase === 'listo'"
+                    @click="juega()"
+                    :aria-label="@js(__('landing.game.aria'))">
+                <span class="salta__invita-ico" aria-hidden="true">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8.4 5.2 19 12 8.4 18.8z"/></svg>
+                </span>
+                <span class="salta__invita-t" x-text="tactil ? @js(__('landing.game.play_touch')) : @js(__('landing.game.play'))"></span>
+                <span class="salta__rec" x-show="record > 0" x-text="@js(__('landing.game.rec', ['m' => '§'])).replace('§', record)"></span>
+            </button>
 
-                     ⚠️ **`aria-hidden` en el lienzo, y el juego es accesible IGUAL**: lo que un
-                     lector de pantalla no puede describir es el DIBUJO, no la acción. El botón de
-                     jugar, el marcador y el resultado son texto de verdad, y se salta con la barra
-                     espaciadora o con las flechas — la tecla solo se captura mientras se juega,
-                     para no robarle el scroll a la página.
+            {{-- Marcador. `aria-live` para que quien no ve el lienzo sepa cómo va. --}}
+            <div class="salta__hud" x-show="fase === 'jugando'" aria-live="polite" aria-atomic="true">
+                <span class="salta__chip">
+                    <strong x-text="metros">0</strong>
+                    <span class="salta__u">{{ __('landing.game.m') }}</span>
+                </span>
+                <span class="salta__chip salta__chip--band">
+                    <span class="salta__aro" aria-hidden="true"></span>
+                    <strong x-text="pulseras">0</strong>
+                    <span class="sr-only">{{ __('landing.game.bands') }}</span>
+                </span>
+                <span class="salta__pista">
+                    <span x-text="@js(__('landing.game.record', ['m' => '§'])).replace('§', record)"></span>
+                    ·
+                    <span x-text="tactil ? @js(__('landing.game.hint_touch')) : @js(__('landing.game.hint'))"></span>
+                </span>
+            </div>
 
-                     ⚠️ **Con `prefers-reduced-motion` no se precarga ni corre la demo**: el motor
-                     pinta UN fotograma quieto. Sigue siendo jugable si alguien lo pide —eso es una
-                     acción suya, no una animación que le imponemos— pero nadie ve un muñeco
-                     corriendo sin haberlo pedido. --}}
-                <div class="salta" x-data="saltaJuego" x-cloak>
-                    <canvas class="salta__lienzo" x-ref="lienzo" aria-hidden="true"
-                            :style="fase === 'off' ? 'pointer-events:none' : 'pointer-events:auto;cursor:pointer'"
-                            @pointerdown="toca($event)"></canvas>
+            {{-- Resultado. Su segundo botón es RESERVAR, no «salir»: es el final de la portada y el
+                 sitio donde alguien que acaba de jugar está más dispuesto. Lo hace el mockup. --}}
+            <div class="salta__fin" x-show="fase === 'fin'" role="status">
+                <span class="salta__fin-rec" x-show="nuevoRecord">{{ __('landing.game.newrec') }}</span>
+                <span class="salta__fin-m">
+                    <strong x-text="metros">0</strong><span class="salta__fin-u"> {{ __('landing.game.m') }}</span>
+                    <span class="salta__fin-band"><span class="salta__aro" aria-hidden="true"></span><span x-text="pulseras">0</span></span>
+                </span>
+                <span class="salta__fin-best" x-text="@js(__('landing.game.record', ['m' => '§'])).replace('§', record)"></span>
+                <span class="salta__fin-acts">
+                    <button type="button" class="salta__btn" @click="juega()"
+                            x-text="tactil ? @js(__('landing.game.again_touch')) : @js(__('landing.game.again'))"></button>
+                    <button type="button" class="salta__btn salta__btn--ghost"
+                            @click="sal(); $store.purchase.open()">{{ __('landing.game.book') }}</button>
+                </span>
+            </div>
 
-                    <button type="button" class="salta__invita" x-show="fase === 'listo'"
-                            @click="juega()"
-                            aria-label="{{ __('landing.game.play') }} — {{ __('landing.game.aria') }}">
-                        <span class="salta__invita-ico" aria-hidden="true"><x-icons.arrow-right :width="16" :height="16" /></span>
-                        <span class="salta__invita-t">{{ __('landing.game.play') }}</span>
-                        <span class="salta__rec" x-show="record > 0" x-text="@js(__('landing.game.rec', ['m' => '§'])).replace('§', record)"></span>
-                    </button>
+            {{-- ⚠️ **EL TAG DE LA CIUDAD** (`#235`, del mockup): una pieza de marca girada en la
+                 esquina inferior derecha. Es del CLIENTE, así que el producto pone el hueco y el
+                 paquete de instalación pone el dibujo (`--deco-tag`). Sin él no se pinta nada:
+                 `background-image: none` no dibuja caja, así que aquí no hace falta el truco de la
+                 máscara transparente que sí necesitan las manchas del menú. --}}
+            <span class="reserve__tag" aria-hidden="true"></span>
 
-                    {{-- Marcador. `aria-live` para que quien no ve el lienzo sepa cómo va. --}}
-                    <div class="salta__hud" x-show="fase === 'jugando'" aria-live="polite" aria-atomic="true">
-                        <span class="salta__chip">
-                            <strong x-text="metros">0</strong>
-                            <span class="salta__u">{{ __('landing.game.m') }}</span>
-                        </span>
-                        <span class="salta__chip salta__chip--band">
-                            <span class="salta__aro" aria-hidden="true"></span>
-                            <strong x-text="pulseras">0</strong>
-                            <span class="sr-only">{{ __('landing.game.bands') }}</span>
-                        </span>
-                        <span class="salta__pista">{{ __('landing.game.hint') }}</span>
-                    </div>
-
-                    <div class="salta__fin" x-show="fase === 'fin'" role="status">
-                        <span class="salta__fin-t" x-text="nuevoRecord ? @js(__('landing.game.newrec')) : @js(__('landing.game.over'))"></span>
-                        <span class="salta__fin-m"><strong x-text="metros">0</strong> {{ __('landing.game.m') }}</span>
-                        <span class="salta__fin-acts">
-                            <button type="button" class="salta__btn" @click="juega()">{{ __('landing.game.again') }}</button>
-                            <button type="button" class="salta__btn salta__btn--ghost" @click="sal()">{{ __('landing.game.exit') }}</button>
-                        </span>
-                    </div>
+            <div class="reserve__body">
+                <h2>
+                    {{ __('landing.reserve.title') }}<br />
+                    <span class="stroke">{{ __('landing.reserve.stroke') }}</span>
+                    <span class="fill">{{ __('landing.reserve.fill') }}</span>
+                </h2>
+                <p>{{ __('landing.reserve.copy') }}</p>
+                <div class="reserve__actions">
+                    <a href="{{ route('entradas') }}" @click.prevent="$store.purchase.open()" class="reserve__act">{{ __('landing.reserve.cta') }}</a>
+                    @if ($site['has_phone'])
+                        <a href="tel:{{ $site['phone_tel'] }}" class="reserve__act reserve__act--alt">{{ __('landing.reserve.cta2') }} {{ $site['phone'] }}</a>
+                    @endif
                 </div>
             </div>
+        </div>
     </section>
     </main>
 

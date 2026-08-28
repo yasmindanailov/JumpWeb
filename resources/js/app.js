@@ -723,17 +723,36 @@ document.addEventListener('alpine:init', () => {
             this.$el?.style.setProperty('--salta-h-now', this.altoLienzo() + 'px');
         },
 
+        /** ¿Puntero grueso? El mockup cambia los rótulos: «Espacio para saltar» en un móvil es una
+         *  instrucción que no se puede seguir. */
+        get tactil() { return !!window.matchMedia?.('(pointer: coarse)').matches; },
+
         init() {
             this._onAbierto = (e) => { this.abierto(!!e.detail); };
             window.addEventListener('cierre:abierto', this._onAbierto);
-            // ⚠️ La tecla se escucha en `window` y **solo actúa jugando**: si se escuchara siempre,
-            // el espacio dejaría de hacer scroll en toda la portada.
+
+            // ⚠️⚠️ **La tecla ARRANCA la partida, no solo salta — y ésta era la queja del owner.**
+            // La primera versión solo actuaba con `fase === 'jugando'`, así que la única forma de
+            // empezar era tabular hasta el botón y pulsar Enter. En el mockup el mismo manejador
+            // hace las dos cosas: si no se juega, empieza; si se juega, salta.
+            // ⚠️ Y sigue sin escucharse en `off`: fuera del cierre, el espacio tiene que seguir
+            // haciendo scroll en toda la portada.
+            const esSalto = (e) => e.key === ' ' || e.code === 'Space' || e.key === 'ArrowUp'
+                || e.key === 'w' || e.key === 'W' || e.key === 'Enter';
             this._onTecla = (e) => {
-                if (this.fase !== 'jugando') return;
-                if (e.key !== ' ' && e.code !== 'Space' && e.key !== 'ArrowUp' && e.key !== 'w' && e.key !== 'W') return;
+                if (this.fase === 'off') return;
+                if (!esSalto(e)) return;
+                // Si el foco está en un botón, dejar que el navegador lo active él: si no,
+                // «Enter» dispararía el juego Y el botón, y `Reservar` abriría el cajón a la vez.
+                if (e.target instanceof HTMLElement && e.target.closest('button, a')) return;
                 e.preventDefault();
-                if (!e.repeat) this._motor?.pulsa();
+                if (e.repeat) return;
+                if (this.fase === 'jugando') this._motor?.pulsa();
+                else this.juega();
             };
+            // `Esc` sale de la partida, como dice el propio rótulo del marcador.
+            this._onEsc = (e) => { if (e.key === 'Escape' && this.fase !== 'off' && this.fase !== 'listo') this.sal(); };
+            window.addEventListener('keydown', this._onEsc);
             this._onSuelta = (e) => {
                 if (e.type === 'keyup' && e.key !== ' ' && e.code !== 'Space' && e.key !== 'ArrowUp' && e.key !== 'w' && e.key !== 'W') return;
                 this._motor?.suelta();
@@ -797,13 +816,17 @@ document.addEventListener('alpine:init', () => {
         },
 
         toca(e) {
-            if (this.fase === 'jugando') { e.preventDefault(); this._motor?.pulsa(); }
+            if (this.fase === 'off') return;
+            e.preventDefault();
+            if (this.fase === 'jugando') this._motor?.pulsa();
+            else this.juega();
         },
 
         sal() { this._motor?.para(); this.record = this._motor?.record ?? this.record; this.fase = 'listo'; this._publicaAlto(); },
 
         destroy() {
             window.removeEventListener('cierre:abierto', this._onAbierto);
+            window.removeEventListener('keydown', this._onEsc);
             window.removeEventListener('keydown', this._onTecla);
             window.removeEventListener('keyup', this._onSuelta);
             window.removeEventListener('pointerup', this._onSuelta);

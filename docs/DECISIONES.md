@@ -12713,3 +12713,70 @@ Headless a 1280 y 390, cuatro posiciones de recorrido: la tarjeta va de **1160×
 pasando por detrás (`pie_top` 1002 → −171). Zoom del juego re-medido: 0,5 en reposo y **1,19**
 jugando. Pie: selector de idioma presente con su variante `--up`, 3 columnas, 22 enlaces, tira.
 **Cero desbordamiento horizontal** en los dos anchos.
+
+---
+
+## #235 · 2026-08-28 · El hero del cierre, 1:1 de verdad — y el instrumento no tenía la culpa: la tenía yo
+
+**Contexto.** El owner volvió a mirarlo y señaló cuatro cosas: «el hero tiene otro tamaño y los CTA
+son diferentes», «falta el tag de Lorca», «al empezar a jugar los CTA se esconden» y «para jugar hay
+que darle a Enter». Más: «el footer, una sola línea con los enlaces, no 3 columnas».
+
+▶ **Y la causa de las cuatro es la misma: `#229` y `#231` reconstruyeron el bloque de memoria en vez
+de leerlo entero.** Esta vez se sacó el `<section id="reservar">` completo del artboard —6.981 bytes,
+marcado y estilos calculados— y se copió.
+
+### Lo que faltaba
+
+| | El mockup | Lo que había |
+|---|---|---|
+| Titular | contorno fino + palabra en ACENTO | contorno grueso + **pastilla de color girada** |
+| CTA principal | **rol de ACCIÓN** (naranja), 58 px, `flex: 1 1 240px` | `.btn--zone` (el cian de MARCA), otra caja |
+| Al jugar | párrafo y CTA **se apartan** (`opacity:0` + `translateY(-10px)` + `pointer-events:none`) | se quedaban |
+| Arrancar | espacio, flechas, `W` **o el toque en el lienzo** | solo el botón → con teclado, tabular y `Enter` |
+| Tag de la ciudad | pieza de marca girada −7° en la esquina | **no estaba** |
+| Marcador | metros · pulseras · **récord** · pista de teclado | sin récord |
+| Fin de partida | «¡nuevo récord!» + marca grande + **«Reservar»** | «Otra vez» + «Salir» |
+
+⚠️ **El segundo botón del fin de partida es RESERVAR y no «salir», y eso es producto, no estilo**:
+es el final de la portada y el momento en que alguien acaba de jugar. Salir no lleva a ninguna parte.
+
+⚠️ **`pointer-events: none` en los CTA ocultos no es opcional**: invisibles seguirían tragándose el
+toque de saltar, y en un juego de un solo botón eso es todo el juego.
+
+⚠️ **El tag es del CLIENTE**: el producto pone el hueco (`--deco-tag`) y el paquete pone el dibujo,
+con su exclusión en `deploy.sh` — **la tercera pieza que se olvida** (`INSTALACION-CLIENTE.md` §4).
+Va como fichero y no en línea: son 199 KB de SVG trazado, 45,6 gzipeado — cabe por la red, pero como
+`data:` se comería la hoja.
+
+### El pie, a una fila
+
+`[DECIDIDO owner]`. Se van la rejilla de cuatro columnas, sus tres encabezados y el bloque de marca
+—el mockup tampoco lo tiene: lleva la marca en la fila inferior, y nuestro copyright ya dice el
+nombre—. Quedan 14 enlaces en una fila que **envuelve**: el número de destinos lo manda la
+instalación, y con `nowrap` un cliente con quince los perdería por el borde.
+⚠️ **Ningún enlace se retira sin decirlo**: quitar destinos es decisión de producto.
+
+### ⚠️⚠️ La lección: culpé al instrumento DOS veces y el fallo era mío
+
+La guarda del selector de idioma no lo encontraba en el pie. Diagnostiqué, en este orden:
+**(1)** «el `<nav>` que acabo de meter rompe el parser» → falso.
+**(2)** «`DOMDocument::loadHTML` es HTML4 y no conoce `<footer>`» → cierto, pero **no era la causa**.
+**(3)** Al mirar el árbol parseado *después* de cambiar el parser, `.foot__bottom` seguía colgando
+del `<body>`. La causa era **un `</div>` de más** que dejó mi propio corte de la rejilla.
+
+▶ Este repo tiene escrito tres veces «cuando un instrumento dice que algo no está, la primera
+hipótesis es el instrumento». **Aquí esa heurística me costó dos diagnósticos**: la primera hipótesis
+debería haber sido contar mis propias etiquetas, que es un `grep` de dos líneas.
+▶ **El cambio de parser se queda igualmente**, y hay que decir por qué: no porque fuera la causa,
+sino porque la app sirve HTML5 y la guarda lo leía como HTML4. Eso sí era un punto ciego real — con
+`assertEmpty`, esa misma guarda llevaba pasando **sin mirar nada**. Coste: registrar el espacio de
+nombres XHTML y prefijar **siete** consultas por nombre de etiqueta, más normalizar `nodeName`, que
+en HTML5 viene en MAYÚSCULAS.
+
+### Verificación
+
+Headless a 1280: tarjeta 1260×880 anclada en `top: 10`, titular a 108 px, tag a 108 px con el asset
+del cliente. **Pulsando ESPACIO sin tocar el botón**: fase `jugando`, 10 m, CTA a `opacity: 0` y
+`pointer-events: none`, párrafo a 0. Cero errores de JavaScript. Pie: 14 enlaces en una fila, cero
+encabezados, selector de idioma presente. Suite acotada: **176 verdes**.
