@@ -1286,3 +1286,60 @@ tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del 
   hovers de fantasma. Es lo que más se notaría y ninguna captura lo demuestra sola.
 - **La barra de compra de MÓVIL** (`.book-bar__cta`), cuyo estado pulsado usa `--action-hover`: en
   táctil no hay hover y ese estado solo se ve con el dedo.
+
+## §5.terdecies · EL «NO» DEL LOGIN EN EL ÁREA y el «VOLVER» DEL CARRITO — ✅ recorrido en headless el 2026-08-28 (9/9 + 9/9), pendiente del OJO del owner (`DECISIONES #210`)
+
+> Carril A. Mismo andamio que §5.bis (`/root/e2e`, puente 8081→80). Dos guiones sin helper de BD:
+> `login-probe.js` (una cuenta que NO existe: `probe-nadie@jumpweb.test`, así no gasta el limitador
+> de nadie) y `cart-back-probe.js` (visitante anónimo, la primera entrada del catálogo). Los dos
+> imprimen **los errores de consola**, y eso no es decoración: ⚠️ **un `[console] error` en un
+> sondeo es un hallazgo** — el `ReferenceError` del TDZ de `PurchaseSection.vue` llevaba impreso
+> desde el guion 19/19 de §5.undecies sin que nadie lo leyera.
+
+### L1 · La contraseña mala se DICE
+1. Abre `/login` (el cajón nace en la zona de entrar). Escribe cualquier correo y una contraseña
+   mala. Pulsa «Iniciar sesión».
+2. Bajo el campo del correo aparece **«Estas credenciales no coinciden con nuestros registros.»**
+   (`.form__error`, ~13 px). ❗ Hasta `#210` aquí **no aparecía nada** — ni texto ni cambio de estado —
+   y ese es exactamente el «no sale nada» del owner.
+
+### L2 · El limitador se DICE, y en el banner
+3. Repite hasta el sexto intento seguido (5 fallos por correo+IP en 60 s, `SEC-06`).
+4. Arriba del formulario, en rojo, **«Demasiados intentos. Inténtalo de nuevo en N segundos.»**
+   (`.auth__errors[role=alert]`). El aviso de credenciales desaparece: son excluyentes a propósito
+   (hallazgo L-02 del origen).
+
+### L3 · La consola, limpia
+5. En toda la pasada, **cero `ReferenceError`** al montar el cajón y **ningún `GET /me/dependents`**
+   de un visitante sin sesión. (Los 401/429 del propio login sí salen: son la respuesta esperada.)
+
+### C1 · El carrito tiene «Volver»
+6. En incógnito, abre `/entradas`: el catálogo **no** lleva «Volver» (no hay a dónde). Elige una
+   entrada, un día, una hora y «Añadir».
+7. En el carrito, **ANTES del título «Tu carrito»**, hay un «← Volver» (`bk-back purchase__back`),
+   el mismo que tienen «Identifícate» y «Pagar». ❗ Hasta `#210` la única salida era «+ Añadir otra
+   reserva», al pie — y con la cesta vacía, ninguna.
+
+### C2 · «Volver» no destruye nada
+8. Púlsalo: vuelves al **catálogo** y la barra-carrito sigue diciendo «1 artículo · 9,90 € · Ir al
+   carrito». La cesta se conserva; solo cambia la pantalla.
+
+### Resultado headless (2026-08-28, 06:40, hora de Madrid)
+- `login-probe.js` tras el arreglo: **9/9** — L1 ×5 (401 y el `.form__error` visible, con caja y
+  con el texto de `auth.failed`) · L2 ×2 (429 con `.auth__errors[role=alert]` y «…N segundos»; el
+  aviso de credenciales desaparece) · L3 ×2 (cero errores de consola; ningún `GET /me/dependents`).
+  ⚠️ La primera versión del guion **no aseveraba nada** —imprimía y se leía a ojo— y la revisión
+  adversarial de `#210` lo señaló: los `check()` son de después, y el 9/9 es de la re-ejecución.
+  **Antes del arreglo, el mismo guion**: `fields.email = ""`, `global = ""`, `visibles: []`.
+- `cart-back-probe.js`: **9/9** — C0 sin «Volver» en el catálogo · C1 uno en el carrito, antes del
+  título, rótulo «Volver», con caja · C2 paso 1 con `lines = 1` y el pie intacto · C3 cero errores de
+  consola y ningún `/me/dependents` espontáneo.
+
+### Lo que el guion no cubre y hay que mirar con el ojo
+- **El color del aviso**: `.form__error` se computa en tinta (`rgb(20, 19, 15)`), no en `--err`. Es
+  legible; si debe ser rojo lo decide el tema (carril C).
+- **Los otros avisos del área** que salían de `auth.*` y llegaban vacíos —limitador del alta, del
+  recuperar, del cambio de contraseña, de perfil/privacidad/menores—: el arreglo es el mismo (una
+  prop) pero solo el login se ha conducido con un «no» delante.
+- **El «Volver» con la cesta VACÍA**: alcanzable (producto retirado con el cajón abierto), lo fija el
+  árbol, no se ha conducido.

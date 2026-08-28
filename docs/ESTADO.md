@@ -2,7 +2,7 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-27**.
+> aquí solo se enlaza.** Última actualización: **2026-08-28**.
 >
 > ❗❗ **ATENCIÓN: desde el 2026-08-27 hay TRES CARRILES sobre `main` (no dos).** El B cerró ese día a
 > las 07:30 con todo empujado y verde; el A cerró a las 18:40 con las TANDAS 1, 2 y 3 de «menores a
@@ -34,7 +34,31 @@
 >   gate en verde: suite **3213 / 20.935** · Pint ✓ · docs-check ✓ · build ✓ ·
 >   `audit-clock` NO corrido a propósito (los fixtures nuevos van con `travelTo` fijo o con las
 >   mismas fechas relativas que sus vecinos; ninguno afirma una edad o un día concreto sin fijar el
->   reloj). ⚠️ **Tras el cierre, el owner abrió el panel y NO VIO NADA de menores** (ni en un pedido,
+>   reloj). ▶ ✅ **SESIÓN CORTA del 2026-08-28 por la mañana (06:23 → 07:15, hora de Madrid; carril A;
+>   `DECISIONES #210`) — el OJO del owner en localhost, ANTES de retomar la lista de abajo.** Reportó
+>   «pulso iniciar sesión y no sale nada» y «el carrito no tiene CTA para volver». Medido y arreglado:
+>   **(1)** el «no» del login (401 y 429) era **INVISIBLE en el ÁREA DE CLIENTE desde el 2026-08-23**:
+>   `const auth = useAuthStore()` sombreaba la prop `auth` en `AccountSection.vue` (en `<script setup>`
+>   la constante gana en la plantilla y Vue no avisa; ninguna guarda podía verlo) → `authStore`, y
+>   `AccountPanel.vue` con la misma trampa benigna → `accountStore`. ❗ **El owner sigue sin poder entrar
+>   porque su contraseña NO casa** (a las 06:12 el log tiene 5 `auth.login_failed` + 8 `lockout`; la
+>   cuenta la creó él por la web el 26, sin verificar): ahora el cajón **se lo dice**; recuperar por
+>   «¿Olvidaste tu contraseña?» → Mailpit `:8028`, y `/mi-cuenta` le pedirá verificar el correo.
+>   **(2)** el carrito tiene **«Volver»** (`bk-back`, al catálogo con la cesta intacta, también con la
+>   cesta vacía; 3 claves del manifiesto +3 nodos; chunk 242,64 / techo 243). **(3)** De regalo: el
+>   `watch` de menores de `PurchaseSection.vue` seguía **ENCIMA de su `const`** (un TDZ que la spec
+>   §9.9.8·4 daba por arreglado — `ReferenceError` en cada montaje y un `GET /me/dependents → 401` por
+>   visitante anónimo) → debajo, con la corrección DELANTE del texto en la spec. Guarda nueva
+>   **`SidebarSetupBindingsTest`** (props sombreadas —también por `import`— + `watch` antes de su
+>   `const`; **3/3 mutaciones muerden**; endurecida en la misma sesión por una revisión adversarial de
+>   19 agentes con 15 hallazgos confirmados, todos aplicados), headless **9/9 + 9/9**
+>   (`VERIFICACION-E2E-CAJON.md` **§5.terdecies**), spec
+>   `auth-en-cajon.md` **§8.ter**, `AccountDoorWiringTest` re-apuntado al nombre nuevo. Cierre con el
+>   gate en verde: suite **3216 / 20.942** · JS 773 · Pint ✓ · docs-check ✓ · build ✓.
+>   `[PENDIENTE: owner]`: si el área de cliente gana casos de contrato de árbol (hoy cero) o ESLint
+>   entra en el gate (`DEUDA.md`). ⚠️ Para el carril C: el `.form__error` del cajón se computa en
+>   TINTA, no en `--err` (legible; lo decide el tema). **Esta sesión NO tocó la lista de retoma de
+>   abajo: sigue vigente tal cual.** ⚠️ **Tras el cierre, el owner abrió el panel y NO VIO NADA de menores** (ni en un pedido,
 >   ni al crear uno) y no pudo probar el QR: **es la condición de diseño, no un fallo** —solo aparece
 >   con un cliente que tenga menores declarados DESDE SU CUENTA en la web, y el carné nace con el
 >   correo de confirmación—. **El guion de prueba paso a paso está en `identidad-qr-puerta.md`
@@ -511,6 +535,10 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3216 en verde** (20.942 aserciones, `--parallel` **~71 s**), medida el 2026-08-28 a las 07:10 (hora de
+  Madrid), tras **`#210`** (el OJO del owner en localhost): **+3 tests y +7 aserciones** — `SidebarSetupBindingsTest`
+  (3 casos: props sombreadas, `watch` antes de su `const`, la guarda de la guarda). ⚠️ El hook `pre-push` contrasta
+  ESTA línea —la primera del ledger— con lo que la suite acaba de dar: el primer push de `#210` cayó justo por eso.
 - Suite **3213 en verde** (20.935 aserciones, `--parallel` **~80 s**), medida el 2026-08-28 de madrugada
   por el carril A tras **A3+A4** del subsistema A (`specs/identidad-qr-puerta.md` §9.4): **+16 tests** —
   la pantalla (`ValidarRegistroProfileTest`: el carné por el input, quién ve la ficha, los dos

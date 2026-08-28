@@ -58,7 +58,20 @@ const props = defineProps({
 });
 
 const store = useAccountStore();
-const auth = useAuthStore();
+
+/**
+ * ⚠️⚠️ **Se llama `authStore` y NO `auth`, y esa letra costó cinco días de un fallo invisible**
+ * (2026-08-23 → 2026-08-28, `DECISIONES #210`). Esta sección declara la prop `auth` —el DICCIONARIO
+ * con los literales del «no» del servidor— y el store del paso 5 se instanciaba aquí como
+ * `const auth = useAuthStore()`. En `<script setup>` **una constante con el nombre de una prop la
+ * SOMBREA en la plantilla**: `:auth="auth"` bajaba el STORE a las ocho zonas, `t(store, 'failed')`
+ * devolvía `''` y el `v-if` no pintaba nada. El owner pulsaba «Iniciar sesión» con una contraseña
+ * mala y **no ocurría nada**: ni «credenciales incorrectas», ni el aviso del limitador (medido en
+ * headless: `fields.email` = `""` tras el 401, `global` = `""` tras el 429). Vue no avisa, la suite
+ * no lo ve —el árbol descarta el texto y el área no tiene casos de contrato— y el embudo no lo
+ * sufría porque allí el store se llama `authStore`. Lo vigila `SidebarSetupBindingsTest`.
+ */
+const authStore = useAuthStore();
 
 const title = computed(() => translate(props.account, titleKeyOf(store.zone)));
 
@@ -201,7 +214,7 @@ const signIn = () => store.go(ZONES.LOGIN);
           la única que sabe a dónde lleva.
         -->
         <AuthTabs
-            v-if="(store.zone === ZONES.LOGIN || store.zone === ZONES.REGISTER) && ! auth.awaitingVerification"
+            v-if="(store.zone === ZONES.LOGIN || store.zone === ZONES.REGISTER) && ! authStore.awaitingVerification"
             :account="account"
             :active="store.zone" />
 

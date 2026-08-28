@@ -316,14 +316,6 @@ async function loadDependents() {
     cartStore.dropUnassignable();
 }
 
-// ⚠️ **Con sesión, la lista se pide en cuanto se SABE quién es el titular** —al nacer (el boot ya lo
-// sembró, U0), al identificarse en el paso 5 y al cambiar de titular—, no solo al restaurar una cesta.
-// Lo cazó el guion headless (§5.undecies), no ningún test: el cajón que nace abierto en `/entradas`
-// con sesión y sin cesta no pasa por `refreshIdentity()`, y el paso 3 salía SIN el selector.
-// `restoreCart()` y el login la vuelven a pedir a propósito: esperan a la MISMA petición y podan
-// después de tener las líneas en la mano.
-watch(() => cartStore.owner, (owner) => { if (owner !== null) loadDependents(); }, { immediate: true });
-
 // ── La CESTA ──────────────────────────────────────────────────────────────────────────────────
 //
 // En memoria en 4.3·2. La persistencia en `localStorage` —con su dueño, su purga al cambiar de
@@ -338,6 +330,23 @@ watch(() => cartStore.owner, (owner) => { if (owner !== null) loadDependents(); 
  * caducidad de la cesta guardada, de `cart.js`. Mover el estado no movió ninguna regla.
  */
 const cartStore = useCartStore();
+
+// ⚠️ **Con sesión, la lista se pide en cuanto se SABE quién es el titular** —al nacer (el boot ya lo
+// sembró, U0), al identificarse en el paso 5 y al cambiar de titular—, no solo al restaurar una cesta.
+// Lo cazó el guion headless (§5.undecies), no ningún test: el cajón que nace abierto en `/entradas`
+// con sesión y sin cesta no pasa por `refreshIdentity()`, y el paso 3 salía SIN el selector.
+// `restoreCart()` y el login la vuelven a pedir a propósito: esperan a la MISMA petición y podan
+// después de tener las líneas en la mano.
+//
+// ⚠️⚠️ **Va DEBAJO de `const cartStore`, y no es estilo: es un TDZ que Vue TRAGA** (`DECISIONES
+// #210`). Hasta el 2026-08-28 esta línea estaba quince líneas más arriba, antes de la declaración:
+// el getter lanzaba `ReferenceError: Cannot access 'cartStore' before initialization` en CADA
+// montaje, Vue lo capturaba, lo escribía en consola y **llamaba al callback con `undefined`** — que
+// `!== null`—, así que la carga saltaba una vez para todo el mundo (un `GET /me/dependents → 401`
+// por visitante anónimo) y el observador nacía SIN dependencias: nunca volvía a dispararse. La
+// spec de menores §9.9.8·4 daba este arreglo por hecho y no lo estaba. Lo vigila
+// `SidebarSetupBindingsTest`.
+watch(() => cartStore.owner, (owner) => { if (owner !== null) loadDependents(); }, { immediate: true });
 
 /** El día de HOY en el huso del navegador es `cart.js::todayIso()` (se mudó en la tanda 4 de menores). */
 
@@ -1157,6 +1166,7 @@ function goBack() {
             :locale="locale"
             :dependent-options="dependentsStore.optionsFor(messages)"
             :notice="cartStore.notice"
+            @back="addAnother"
             @remove="removeLine"
             @add-another="addAnother"
             @update-field="updateCartField"

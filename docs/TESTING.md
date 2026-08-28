@@ -307,6 +307,15 @@ degrada en silencio.
   direcciones, códigos de error del enum ↔ los del documento, y que los esquemas sean lo bastante
   estrictos (`additionalProperties: false` + `required` completo) para que renombrar un campo
   ponga en rojo el test del endpoint. Esa estrictez ES la prueba por mutación.
+- **`SidebarSetupBindingsTest`** (2026-08-28, `DECISIONES #210`) — dos fallos de `<script setup>`
+  que Vue TRAGA y que ninguna otra guarda del cajón puede ver: una `const`/función/`import` de
+  profundidad 0 con el **nombre de una prop** (la sombrea en la plantilla: el login del área estuvo
+  mudo cinco días por `const auth = useAuthStore()`), y un `watch`/`watchEffect`/`watchSyncEffect`
+  de profundidad 0 que lee una constante **declarada debajo** (TDZ: Vue captura el `ReferenceError`,
+  sigue con `undefined` y el observador nace sin dependencias). Escáner de los `.vue` de
+  `resources/js` —consciente de cadenas, comentarios y profundidad, no un parser— con su guarda de
+  la guarda; lo que no cubre está en su docblock (ESLint es el siguiente escalón, `DEUDA.md`). Se une
+  a `SidebarComponentBudgetTest` (CE-6) y `SidebarBundleBudgetTest` como guardas del cajón.
 
 > Al tocar estos tests: modificar una baseline para AÑADIR una entrada es casi siempre la
 > señal de que la mudanza está mal hecha, no de que la lista se haya quedado corta.

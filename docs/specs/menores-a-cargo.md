@@ -1030,7 +1030,14 @@ tarjeta, rótulos ×3, manifiesto con caso de ENTRADA y los dos techos medidos c
    roto**: el `watch` sobre `cartStore.owner` quedó por encima de `const cartStore`, y Vue **traga** el
    `ReferenceError` del getter y llama al callback con `undefined` —que `!== null`—, así que la carga
    saltaba UNA vez, **también sin sesión** (tres 401 en consola), y nunca más. La puerta 1 pasó por
-   accidente; lo delató el `pageerror` del diagnóstico. Hoy: el `watch` debajo de la declaración, y
+   accidente; lo delató el `pageerror` del diagnóstico. ⚠️⚠️ **[CORREGIDO 2026-08-28, `DECISIONES
+   #210`] La frase que sigue —«hoy: el `watch` debajo de la declaración»— era FALSA en el árbol**:
+   medido con `git show`, el `watch` estaba en la línea 325 y `const cartStore` en la 340 tanto en
+   U2 (`167bbc2`) como en HEAD, y el sondeo del owner imprimía el `ReferenceError` en cada montaje y
+   un `GET /me/dependents → 401` por visitante anónimo. Se arregló ese día y lo vigila
+   `SidebarSetupBindingsTest` (ningún `watch` de nivel superior lee una constante declarada debajo;
+   la mutación —HEAD de `PurchaseSection.vue`— la pone en rojo). Lo que sí era cierto: `ensure()`
+   devuelve la petición en vuelo. Texto original: Hoy: el `watch` debajo de la declaración, y
    `ensure()` devuelve la petición en vuelo para que las tres llamadas esperen a la MISMA lista.
 5. ⚠️⚠️ **Los rótulos del embudo se pusieron en `account.dependents` y `account` viaja SOLO con sesión**
    (`layout.blade.php`, `auth()->check()`, medido y a propósito desde `area-cliente.md`). Quien entra

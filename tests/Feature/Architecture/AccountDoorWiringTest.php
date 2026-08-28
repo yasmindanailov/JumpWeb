@@ -53,8 +53,10 @@ class AccountDoorWiringTest extends TestCase
     {
         $panel = $this->source(self::PANEL);
 
+        // ⚠️ `accountStore`, no `account`, desde el 2026-08-28 (`DECISIONES #210`): la constante se
+        // llamaba como la prop `account` y la sombreaba en la plantilla. El sujeto es el mismo.
         $this->assertStringContainsString(
-            'account.openZone(ZONES.ORDERS)', $panel,
+            'accountStore.openZone(ZONES.ORDERS)', $panel,
             'El botón «Mis reservas» ha dejado de pedirle la zona al cajón. Sin esto vuelve a navegar '.
             'a la página, que es exactamente lo que el área de cliente existe para sustituir.'
         );
@@ -263,7 +265,7 @@ class AccountDoorWiringTest extends TestCase
         // ▶ Este recuento **hereda el sujeto** de `Detalles216Test::test_sidecart_my_reservations_…`,
         // que se retiró al pintarse el bloque en Vue (2026-08-23).
         $this->assertSame(
-            2, substr_count($this->source(self::PANEL), 'account.openZone(ZONES.LOGIN)'),
+            2, substr_count($this->source(self::PANEL), 'accountStore.openZone(ZONES.LOGIN)'),
             'La cara de invitado tiene DOS botones y los dos llevan a la zona de entrar. Si solo uno '.
             'la pide, el otro «no falla y no hace nada» (`DECISIONES #117`).'
         );

@@ -596,3 +596,44 @@ vacíos (`#113`). Hoy lo cubre `SidebarVerifyScreenTest`, que además comprueba 
 ▶ **La lección, que es la de `#89`/`#93` con un caso nuevo**: *un test que conduce la superficie
 vieja no fija el contrato de la que sobrevive* — y a veces no fija nada, porque la que sobrevive
 nunca tuvo la regla.
+
+## 8.ter ⚠️⚠️ Lo que el OJO del owner encontró el 2026-08-28: el «no» del login fue INVISIBLE en el área durante cinco días (`DECISIONES #210`)
+
+**El síntoma**: «pulso iniciar sesión y no sale nada ni ocurre nada». **El hecho**: el servidor
+contestaba —cinco `auth.login_failed` y ocho `auth.login_lockout` en el log, 401 y 429 en la red,
+el diccionario `auth` entero en el HTML— y el cajón **no pintaba ninguno de los dos avisos**.
+
+**La causa, en `sections/AccountSection.vue`**: la sección declara la prop `auth` (el grupo
+`lang/auth.php`: `failed`, `throttle`) y a la vez hacía `const auth = useAuthStore()`. En
+`<script setup>` **una constante con el nombre de una prop la SOMBREA en la plantilla** —el
+compilador resuelve `auth` al binding de setup, sin aviso—, así que `:auth="auth"` bajaba el
+**store** a las ocho zonas. `LoginZone` lo pasaba a `login.js`, `t(store, 'failed')` devolvía `''`
+(que es lo que `i18n.js` promete cuando falta un texto) y el `v-if` no pintaba nada. ⚠️ **Nació con
+`#123` (`aeedb64`, 2026-08-23 a las 18:46, «el bloque de cuenta pasa a Vue»)**, que añadió la
+constante para `! auth.awaitingVerification` en las pestañas — **NO con la tanda A4** (`720f24d`, la
+madrugada de ese día), que creó `LoginZone` y la prop `auth` sin sombrearla. El embudo no lo sufrió
+porque en `PurchaseSection.vue` el store se llama `authStore`.
+
+**Alcance real**: no era solo el login. Todo aviso del área que sale de `auth.*` —el limitador del
+alta, del recuperar (`forgot.js`), del cambio de contraseña, de cerrar las otras sesiones
+(`SessionsZone` → `credentials.js` → `form-outcome.js`), del perfil, de privacidad y de menores— llegaba
+vacío en las ocho zonas que reciben `:auth="auth"`. Solo se notaba con un «no» del servidor delante.
+
+**Por qué ninguna guarda lo vio, y esto es lo que hay que recordar de esta sección**:
+- el **diff de árbol** descarta los nodos de texto a propósito, y **el área de cliente no tiene ningún
+  caso de contrato**: las 12 zonas de `ZONES` (11 componentes `*Zone.vue`; `OrdersZone` sirve a dos)
+  se comparan solo por el chunk y por los guiones;
+- `node --test` **no monta `.vue`**: `login.test.js` prueba `loginErrors()` con un diccionario
+  fabricado y sale verde;
+- las **paridades de texto** comparan CLAVES contra `__()`, y las claves estaban;
+- los **guiones headless** entraban siempre con la contraseña buena.
+
+**El arreglo** es `authStore`, y la **guarda** es `SidebarSetupBindingsTest` (Architecture): ninguna
+`const`/función de nivel superior puede llevar el nombre de una prop declarada, en ningún componente
+del cajón. Cazó por su cuenta un segundo sombreado, benigno, en `account/AccountPanel.vue`
+(`const account` sobre la prop `account`; la plantilla quería el store) — renombrado por la regla.
+**3 mutaciones, las 3 muerden.** Headless después: 401 → texto bajo el campo (400×17 px), 429 → banner
+con los segundos. Guion en `VERIFICACION-E2E-CAJON.md` §5.terdecies.
+
+▶ Queda `[PENDIENTE: owner]` si el área debe ganar casos de contrato de árbol (hoy cero) o si ESLint
+(`no-use-before-define` + `vue/no-dupe-keys`) entra en el gate: ficha en `DEUDA.md`.

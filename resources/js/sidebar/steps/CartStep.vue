@@ -44,7 +44,7 @@ const props = defineProps({
     notice: { type: String, default: '' },
 });
 
-defineEmits(['remove', 'add-another', 'update-field', 'toggle-dependent']);
+defineEmits(['back', 'remove', 'add-another', 'update-field', 'toggle-dependent']);
 
 const t = (key) => translate(props.messages, key);
 const tp = (key, params) => translateWith(props.messages, key, params);
@@ -73,6 +73,26 @@ const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
 </script>
 
 <template>
+    <!--
+        ⚠️ **El paso 4 no tiene banda de progreso** —`progress.js` solo la compone para el 2 y el 3—, así
+        que hasta el 2026-08-28 el carrito era la única pantalla del embudo CON paso anterior y SIN
+        «Volver» ni CTA propio (el 2 y el 3 lo traen por la banda; el 5 y el 8, por su `bk-back`; el
+        1, 6, 7, 9, 10 y 11 no lo llevan a propósito): se entraba desde la hora y la única salida era
+        «+ Añadir otra reserva», al pie. Lo vio el owner
+        (`DECISIONES #210`). Mismo nodo que el «Volver» de los pasos 5 y 8 (`bk-back purchase__back`), y
+        el mismo destino que «añadir otra»: el catálogo, con la selección limpia. Con la cesta VACÍA
+        también se pinta —es justo la pantalla que se quedaba sin CTA y sin salida—.
+    -->
+    <button type="button" class="bk-back purchase__back" @click="$emit('back')">
+        <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true" focusable="false">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+        </svg>
+        <span>{{ t('back') }}</span>
+    </button>
+
     <h3 class="wiz__title">{{ t('cart_title') }}</h3>
 
     <p v-if="lines.length === 0" class="purchase__empty">{{ t('cart_empty') }}</p>

@@ -363,6 +363,14 @@ class SidebarBundleBudgetTest extends TestCase
      * encogiendo—: **234,70 → 242,19 KiB, +7,49**. Es del tamaño de la zona de menores (+8,07) por lo
      * mismo: cada casilla del selector es un bloque con su motivo, y se pinta en dos pasos. **243 deja
      * 0,81 KiB**: la holgura estrecha de siempre, a propósito — lo siguiente se mide.
+     *
+     * ⚠️ **242,18 → 242,64 el 2026-08-28 (`DECISIONES #210`), y NO sube el techo: cabe.** Es el
+     * «Volver» del carrito (botón + svg + rótulo: 247.990 → 248.460 B, **+470 B = +0,46 KiB**), el
+     * único paso del embudo con paso anterior y sin salida hacia atrás. El resto del `#210` —dos
+     * renombrados y mover un `watch`— no pesa. ⚠️ La cifra de partida NO es la 242,19 de la entrada
+     * anterior: el arreglo visual del selector (`748030a`, la misma noche) dejó el chunk en 247.990 B
+     * = 242,18 y no re-anotó el ledger; la revisión adversarial de `#210` lo midió reconstruyendo
+     * HEAD. **243 deja 0,36 KiB**: lo siguiente que entre en el cajón se mide y decide, como siempre.
      */
     private const SIDEBAR_CHUNK_MAX_KB = 243;
 

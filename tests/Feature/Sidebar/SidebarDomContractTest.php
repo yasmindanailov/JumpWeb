@@ -327,7 +327,13 @@ class SidebarDomContractTest extends TestCase
         $api['cart'][0]['dependent_ids'] = [$dependents['data'][0]['id']];
         $api['dependents'] = $dependents;
 
-        $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true, api: $api,
+        // ⚠️ Anclado en `bk-back`, no en `wiz__title`, desde que el paso 4 tiene «Volver» (`#210`): el
+        // botón va ANTES del título y `treeOf()` solo recorre hermanos SIGUIENTES — anclar en el título
+        // dejaría el botón fuera del contrato, y un CTA que se cae del árbol sin que nada lo vea es
+        // exactamente lo que este test existe para impedir. Los tres casos del paso 4 alimentados por
+        // la API anclan igual; el de la línea SIN fecha (props cocinadas, más abajo) sigue anclado en
+        // `cart__item` y a propósito NO contiene el botón: lo fijan estos tres.
+        $vue = $this->vueTree(4, [], 'bk-back', withSiblings: true, api: $api,
             state: [...$this->clientState(), 'cartNotice' => 'assign']);
 
         $this->assertTree(__FUNCTION__, $vue,
@@ -345,7 +351,7 @@ class SidebarDomContractTest extends TestCase
     {
         $this->setUpFullCart();
 
-        $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true,
+        $vue = $this->vueTree(4, [], 'bk-back', withSiblings: true,
             api: $this->cartApiPayload($this->fullCartItems()), state: $this->clientState());
 
         $this->assertTree(__FUNCTION__, $vue,
@@ -357,13 +363,14 @@ class SidebarDomContractTest extends TestCase
      * ⚠️ **La cesta vacía en el paso 4 es alcanzable y no es un caso teórico**: `removeLine()` y
      * `mount()` miran `$this->cart`, pero el recuento sale del PRESUPUESTO, así que un producto
      * retirado de la venta con el cajón abierto deja la cesta «no vacía» y el contador a cero. Ahí el
-     * paso pinta su aviso y el pie desaparece: la pantalla queda sin CTA y sin salida. Es la conducta
-     * de los dos motores y hay que transcribirla igual.
+     * paso pinta su aviso y el pie desaparece: la pantalla queda sin CTA. Era la conducta de los dos
+     * motores y se transcribió igual; ▶ **desde `#210` (2026-08-28) SÍ tiene salida**: el «Volver»
+     * del paso 4 se pinta también con la cesta vacía, y este árbol lo fija.
      */
     public function test_the_empty_cart_step_emits_the_same_tree_in_both_engines(): void
     {
 
-        $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true,
+        $vue = $this->vueTree(4, [], 'bk-back', withSiblings: true,
             api: $this->cartApiPayload([]), state: $this->clientState());
 
         $this->assertTree(__FUNCTION__, $vue,

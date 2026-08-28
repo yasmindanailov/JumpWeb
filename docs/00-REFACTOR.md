@@ -371,6 +371,14 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       (`DECISIONES #29`). Es el mismo ítem listado dentro del paso 3.
 
 ### Fase 4 — Sidebar SPA ✅ — de 4.0a a 4.6, HECHOS: **los ONCE pasos transcritos** con Vue 3 + Pinia, y el extremo a extremo con navegador y pasarela REAL ya realizado (`#59`, que destapó que el motor no vendía y se arregló). **4.7 CERRADO el 2026-08-21** (`#111`, `#112`): manifiesto congelado (·1), inventario (·2a), corrección del contador (·2b·1), la migración (B) con la que el diff de árbol se alimenta del servidor (`#67`–`#73`), el re-apunte (·2b·2), la independización del contrato de árbol (·2b·3·0) y **el BORRADO de `Purchase.php` con el flag (·2b·3 + ·3)**. **4.4b·2, HECHO** el 2026-08-20 (`#108`). ✅ **El cajón SPA es el motor ÚNICO**: la paridad estaba cerrada desde `#73` y la sustitución lo está desde hoy. ✅ **A7 verificado en navegador el 2026-08-22** —y destapó que la costura de intención **nunca se cableó** (`#117`), arreglado el mismo día— y **`4.7` VALIDADO POR EL OWNER**, que es la cuarta condición del DoD. ✅ **Y el cajón queda REORGANIZADO antes del área de cliente** (`#119`, a petición del owner): tres capas —módulos planos, nueve stores de Pinia, componentes—, el embudo fuera de la raíz (`sections/PurchaseSection.vue`, raíz de 16 líneas) y el grafo del embudo CERRADO con guarda. ✅ **Y el ÁREA DE CLIENTE queda TERMINADA el 2026-08-22** (`#66`, `#120`), en tres tandas —leer, gestionar y retirar—: las cinco gestiones viven en el cajón, `/mi-cuenta/…` se retiró y **sus rutas sobreviven como PUERTA** que abre el cajón en su zona, porque 8 correos ya entregados apuntan ahí. ⚠️ **Con eso la fase CIERRA**: no queda ninguna casilla suya sin marcar. Lo que el área NO se llevó —la **auth** y **`account-context`**— quedó fuera de las tres tandas **a propósito** y tenía ficha propia en `DEUDA.md`, junto con las cinco secuencias transversales del embudo (deuda sin intereses: su coste no crece) ✅ **Y el 2026-08-23 cae el ÚLTIMO trozo de `#66`: la AUTH entra en el cajón y el MODAL de la cabecera se RETIRA** (`DECISIONES #122`, `specs/auth-en-cajon.md`): entrar, darse de alta y recuperar contraseña son tres zonas más, el paso 5 del embudo gana «he olvidado mi contraseña» con vuelta a la compra, y las tres rutas sobreviven como PUERTAS. ⚠️ **Su valor no fue el código sino lo que MIDIÓ**: la revisión adversarial paró dos bloqueantes —los textos del área viajan solo con sesión, y el contexto del alta estaba quemado— y la auditoría de los 36 tests del modal destapó **un hueco de seguridad vivo** (el desenlace de pago de otra persona sobrevivía a un login en dispositivo compartido) más dos huecos de guardia. Validado por el owner en navegador. ⚠️ **Lo que sigue fuera del cajón es `account-context`**, hoy el ÚNICO componente Livewire del layout — y del que cuelga que `livewire.js` llegue a la página.
+- [x] **2026-08-28 · el OJO del owner en localhost, dos detalles y un TDZ** (`DECISIONES #210`,
+      carril A): el «no» del login era **INVISIBLE en el área de cliente desde el 2026-08-23** —una
+      `const auth` sombreaba la prop `auth` en `AccountSection.vue`; ninguna guarda podía verlo—,
+      el **carrito no tenía «Volver»** (paso 4 sin banda ni `bk-back`; ahora lo tiene, también con
+      la cesta vacía, +3 nodos en 3 claves del manifiesto) y el `watch` de menores seguía por encima
+      de su `const` (TDZ). Guarda nueva `SidebarSetupBindingsTest` (3 mutaciones muerden; endurecida
+      en la misma sesión por una revisión adversarial de 19 agentes: 15 hallazgos, todos aplicados),
+      headless 9/9 + 9/9, spec `auth-en-cajon.md` **§8.ter**, guion §5.terdecies.
 - [x] **Diseño escrito y REVISADO adversarialmente** (2026-08-13): `docs/specs/sidebar-spa.md`
       **v2**. Tres revisores independientes (paridad funcional · tema y contrato visual · riesgo de
       implementación) declararon la v1 **INSUFICIENTE · SÓLIDO-CON-CAMBIOS ×2**; los hallazgos se
@@ -2034,7 +2042,10 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
           `tickets.dependents`** (los del embudo viajan siempre), manifiesto +2, techos re-medidos
           (chunk 243 · payload con sesión 7.800 · orquestador 428), guion §5.undecies **19/19** por
           las dos puertas y sonda de 16 `assign()` simultáneos → 1 fila. ⚠️ Dos defectos cazados por
-          el guion, no por la suite (§9.9.8·4 y ·5).
+          el guion, no por la suite (§9.9.8·4 y ·5). ❗ **Y el arreglo de ·4 NO estaba en el árbol**
+          (2026-08-28, `#210`): el `watch` seguía por encima de `const cartStore` (TDZ, `ReferenceError`
+          en cada montaje, un 401 de menores por visitante anónimo); corregido, con la corrección
+          delante del texto en la spec y guarda (`SidebarSetupBindingsTest`).
     - ~~U3 · el panel~~ **FUERA** (rectificación del owner la misma noche: el panel tendrá su propia
           sesión; D14 se conserva como diseño). ▶ **Esa sesión es la del carril A del 2026-08-27 noche**
           (`#207`, `#208`): **EN EJECUCIÓN como tanda 5, spec §9.10** (abajo).

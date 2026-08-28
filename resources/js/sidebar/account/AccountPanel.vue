@@ -26,7 +26,11 @@ import { signOut } from './sign-out.js';
  * bloque y el resto de la página no puedan discrepar.
  */
 const context = useAccountContextStore();
-const account = useAccountStore();
+// ⚠️ `accountStore`, no `account`: este componente declara la prop `account` (el diccionario) y una
+// constante con ese nombre la SOMBREA en la plantilla. Aquí era benigno —la plantilla quería el store
+// y la prop se lee por `props.account`—, pero es la misma trampa que dejó mudo el login del área
+// durante cinco días (`sections/AccountSection.vue`, `DECISIONES #210`). `SidebarSetupBindingsTest`.
+const accountStore = useAccountStore();
 const section = useSectionStore();
 const purchase = usePurchaseStore();
 
@@ -82,7 +86,7 @@ async function leave() {
               `zone` es `null` y se deja navegar — el post-form es una página.
             -->
             <a v-if="panel.alert" :href="panel.alert.href" class="acct__alert"
-               @click="panel.alert.zone && ($event.preventDefault(), account.openZone(panel.alert.zone))">
+               @click="panel.alert.zone && ($event.preventDefault(), accountStore.openZone(panel.alert.zone))">
                 <span class="acct__alert-ico" aria-hidden="true">!</span>
                 <span class="acct__alert-text">{{ panel.alert.text }}</span>
                 <span class="acct__alert-arrow" aria-hidden="true">→</span>
@@ -96,7 +100,7 @@ async function leave() {
             -->
             <div class="acct__cta">
                 <a :href="urls.my_orders" class="acct__btn acct__btn--primary acct__btn--reservas"
-                   @click="$event.preventDefault(), account.openZone(ZONES.ORDERS)">
+                   @click="$event.preventDefault(), accountStore.openZone(ZONES.ORDERS)">
                     {{ panel.reservations }}
                     <template v-if="panel.counter">
                         <span class="acct__count" aria-hidden="true">{{ panel.counter.count }}</span>
@@ -105,7 +109,7 @@ async function leave() {
                 </a>
 
                 <a :href="urls.account" class="acct__btn acct__btn--ghost"
-                   @click="$event.preventDefault(), account.openZone(ZONES.HOME)">
+                   @click="$event.preventDefault(), accountStore.openZone(ZONES.HOME)">
                     {{ panel.account }}
                 </a>
 
@@ -147,7 +151,7 @@ async function leave() {
             -->
             <div class="acct__cta">
                 <button type="button" class="acct__btn acct__btn--primary"
-                        :disabled="identifying" @click="account.openZone(ZONES.LOGIN)">
+                        :disabled="identifying" @click="accountStore.openZone(ZONES.LOGIN)">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                          aria-hidden="true" focusable="false">
@@ -159,7 +163,7 @@ async function leave() {
                 </button>
 
                 <button type="button" class="acct__btn acct__btn--ghost"
-                        :disabled="identifying" @click="account.openZone(ZONES.LOGIN)">
+                        :disabled="identifying" @click="accountStore.openZone(ZONES.LOGIN)">
                     {{ panel.reservations }}
                 </button>
             </div>

@@ -11091,3 +11091,96 @@ cabecera y pie—; las secciones (las tres variantes de «El parque», los artbo
 devuelto: la decisión de `#195` sigue en pie.
 
 ▶ Detalle completo, tabla de roles y trampas: `specs/tema-por-instalacion.md` **§15**.
+
+## #210 · 2026-08-28 · El OJO del owner en localhost: el «no» del login era INVISIBLE en el área de cliente desde hacía cinco días, el carrito no tenía «Volver», y un TDZ que la spec daba por arreglado seguía en el árbol
+
+**Contexto.** Nada más cerrar la sesión de la madrugada (`#208`), el owner abrió localhost y trajo dos
+detalles: «inicio sesión con mi correo, pulso y **no sale nada ni ocurre nada**» y «en el carrito **no
+hay CTA para volver atrás**». Se midió ANTES de tocar nada (carril A, desde las 06:23, hora de Madrid; el contenedor va en UTC).
+
+**Lo medido, en orden.**
+1. **El log ya tenía la respuesta**: a las 04:12 UTC, **cinco `auth.login_failed` en 10 s y ocho
+   `auth.login_lockout`** desde la IP del host. Las peticiones LLEGABAN y el servidor decía que no
+   —la contraseña no casa; después, el limitador de `SEC-06`—. Lo que fallaba era que el cajón **no
+   pintaba ninguno de los dos «no»**: 13 clics en 16 s son los de alguien a quien no le contestan.
+2. **Reproducido en headless** (`/login` → `LoginZone`, contraseña mala ×6): tras el 401 el store
+   quedaba con `fields.email = ""`; tras el 429, `global = ""`. Cadena vacía → `v-if` falso → **nada
+   en pantalla**, con el diccionario `auth` viajando entero en el HTML y el sobre correcto en la red.
+3. **La causa es UNA letra**: `sections/AccountSection.vue` declara la prop `auth` —el diccionario
+   `lang/auth.php` (`failed`, `throttle`)— y hacía `const auth = useAuthStore()`. **En `<script setup>`
+   una constante con el nombre de una prop la sombrea en la plantilla**: `:auth="auth"` bajaba el
+   STORE a las OCHO zonas y `t(store, 'failed')` devolvía `''`. Desde `aeedb64` (`#123`, 2026-08-23 a
+   las 18:46: «el bloque de cuenta pasa a Vue», que añadió la constante para las pestañas — no la
+   tanda A4 de esa madrugada, que creó la prop sin sombrearla). El embudo (paso 5) no lo sufría
+   porque allí el store se llama `authStore`. Afectaba a TODO aviso del área que sale de `auth.*`:
+   credenciales, limitador del login, del alta, del recuperar, del cambio de contraseña, de cerrar
+   las otras sesiones, de perfil, privacidad y menores — las ocho zonas con `:auth="auth"`.
+4. **Ninguna guarda podía verlo, y conviene decir por qué cada una**: el diff de árbol descarta el
+   texto —y **el área de cliente no tiene NINGÚN caso de contrato de árbol**—; `node --test` no monta
+   `.vue`; las paridades de texto comparan CLAVES contra `__()`; y los guiones headless habían entrado
+   siempre con la contraseña buena. Solo un navegador con una contraseña mala.
+5. **Por el camino, el sondeo imprimió un `ReferenceError: Cannot access '_' before initialization`
+   al montar y un `GET /me/dependents → 401` de un visitante ANÓNIMO.** `PurchaseSection.vue:325`
+   tenía `watch(() => cartStore.owner, …, { immediate: true })` **quince líneas por encima de
+   `const cartStore`** (340). Vue captura el error del getter, lo escribe en consola y **llama al
+   callback con `undefined`** —que `!== null`—: la carga de menores saltaba UNA vez para todo el
+   mundo y el observador nacía sin dependencias, sin volver a dispararse. `menores-a-cargo.md`
+   §9.9.8·4 decía «hoy: el `watch` debajo de la declaración»: **falso en el árbol desde `167bbc2`**
+   (medido con `git show`: la misma posición en U2 y en HEAD). La spec lleva ahora la corrección
+   delante del texto.
+6. **El carrito**: `progress.js` solo compone la banda de progreso —y su «Volver»— para los pasos 2 y
+   3; los pasos 5 y 8 traen su propio `bk-back`; **el 4 no tenía nada**: se entraba desde la hora y la
+   única salida era «+ Añadir otra reserva», al pie. Con la cesta VACÍA (alcanzable, y el propio test
+   lo decía) no había NINGÚN CTA.
+
+**Lo hecho.**
+- `AccountSection.vue`: `authStore`. Y `AccountPanel.vue`, que la guarda nueva señaló sin que nadie lo
+  pidiera: la MISMA trampa, hoy benigna (la plantilla quería el store y la prop se lee por
+  `props.account`) → `accountStore`, **por la regla y no por el síntoma**.
+- `PurchaseSection.vue`: el `watch` debajo de `const cartStore` (428 líneas de código, sin cambio).
+- `CartStep.vue`: **«Volver»** (`bk-back purchase__back`, `tickets.back`) ANTES del título, también
+  con la cesta vacía; destino el catálogo con el MISMO manejador que «añadir otra» (`addAnother`).
+  Tres claves del manifiesto congelado (+3 nodos cada una); los tres casos del paso 4 se anclan ahora
+  en `bk-back` porque `treeOf()` solo recorre hermanos SIGUIENTES — anclados en el título, el botón
+  habría quedado FUERA del contrato.
+- **Guarda nueva `SidebarSetupBindingsTest`** (Architecture, 3 casos): (a) ninguna `const`/función de
+  nivel superior lleva el nombre de una prop de `defineProps`; (b) ningún `watch`/`watchEffect` de
+  nivel superior lee en su getter —o en la llamada entera, con `immediate: true`— una `const`/`let`
+  declarada más abajo; (c) la guarda de la guarda, con las dos formas escritas a mano. Es un escáner
+  de texto, no un parser: lo que NO cubre está dicho en su docblock, y ESLint queda como opción en
+  `DEUDA.md`.
+
+**Verificación.** **3 mutaciones, las 3 muerden**: HEAD de `AccountSection.vue` → rojo en `:61` ·
+HEAD de `PurchaseSection.vue` → rojo («`:325` lee `cartStore`, declarada en la línea 340») · HEAD de
+`AccountPanel.vue` → rojo en `:29`. **Headless tras el arreglo** (`login-probe.js`): 401 → «Estas
+credenciales no coinciden con nuestros registros.» bajo el campo (400×17 px, visible) · 429 → banner
+«Demasiados intentos. Inténtalo de nuevo en 56 segundos.» · **cero `ReferenceError`, cero
+`/me/dependents` de anónimo**. **Sondeo del carrito 9/9** (`cart-back-probe.js`): nace sin «Volver»
+en el catálogo · en el carrito hay UNO, antes del título, «Volver» · pulsarlo → paso 1 con la cesta
+INTACTA y el pie «1 artículo · 9,90 € · Ir al carrito» · cero errores de consola. Contrato **35/35**
+tras `MANIFEST_REFRESH=1`, diff del JSON = **exactamente 3 claves**. Chunk **242,18 → 242,64 KiB**
+(247.990 → 248.460 B, +470 B = +0,46; techo 243, no sube; la partida es la medida de HEAD, no la
+242,19 del ledger, que `748030a` no re-anotó). Suite completa en verde al cierre (cifra en `ESTADO.md`).
+Guion: `VERIFICACION-E2E-CAJON.md` **§5.terdecies**.
+
+**Lo que queda, y de quién es.**
+- ❗ **El owner sigue sin poder entrar porque la contraseña NO casa** —la cuenta la creó él por la web
+  el 2026-08-26 a las 18:31 (`terms`/`privacy`/`waiver` sellados, correo sin verificar)—: ahora el
+  cajón **se lo dice**. Recuperar → «¿Olvidaste tu contraseña?» y el correo sale por Mailpit
+  (`localhost:8028`). Tras entrar, la cuenta sin verificar irá al aviso de verificación (también
+  en Mailpit).
+- `[PENDIENTE: owner]` si el ÁREA DE CLIENTE debe tener casos de contrato de árbol (hoy **cero**:
+  las 12 zonas de `ZONES` —11 componentes `*Zone.vue`; `OrdersZone` sirve a dos— se comparan solo
+  por el chunk y los guiones) y si ESLint entra en el gate.
+- ▶ **La guarda nueva se ENDURECIÓ en la misma sesión por la revisión adversarial** (19 agentes,
+  15 hallazgos confirmados, 0 refutados): un `import` sombrea igual que una `const` (medido con
+  `@vue/compiler-sfc`), y el primer escáner daba falsos positivos por propiedades/cadenas/parámetros
+  y no veía `{immediate:true}`, la desestructuración multilínea, `let x;`, `const stop = watch(…)` ni
+  una cadena con `/*` dentro. Cada forma está ahora en la guarda de la guarda.
+- ▶ **Observación para el carril C**, no tocada: el `.form__error` del cajón se computa en TINTA
+  (`rgb(20, 19, 15)`), no en `--err` — legible, pero no es rojo. Lo decide el tema.
+
+▶ **La lección**, que es la de `#113` con otra piel: *un texto que viaja y no se pinta no lo ve
+ningún gate que compare estructura o claves*. Y una segunda, más barata: **un `[console] error` en
+un sondeo headless es un hallazgo, no ruido** — el TDZ llevaba allí desde U2 y el guion 19/19 lo
+había impreso.
