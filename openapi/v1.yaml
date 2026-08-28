@@ -2335,7 +2335,7 @@ components:
     PublicConfig:
       type: object
       additionalProperties: false
-      required: [registration, catalog_search_min_items, cart_max_lines, turnstile_site_key]
+      required: [registration, catalog_search_min_items, cart_max_lines, low_availability_max, turnstile_site_key]
       properties:
         registration:
           type: object
@@ -2382,6 +2382,24 @@ components:
 
             Es invariante de servidor (`PAY-12`): esto es un reflejo para no ofrecer un botón que el
             servidor va a rechazar, nunca la autoridad.
+        low_availability_max:
+          type: integer
+          minimum: 0
+          description: |
+            Una hora se presenta como **casi llena** cuando las plazas libres que publica
+            `POST /availability/{product}/times` son **menores o iguales** que este número
+            (`available <= low_availability_max`).
+
+            `0` **desactiva** el aviso, y es una respuesta del operador, no una falta: con `0` no se
+            anuncia ninguna hora aunque `available` valga `0`.
+
+            ⚠️ Viaja el UMBRAL y no el veredicto por hora. El veredicto se derivaría de `available`,
+            que ya viaja en cada hora; meterlo además ahí sería un campo derivado repetido once veces
+            por día. El operador va escrito aquí por lo mismo que en los otros dos números: publicarlo
+            sin él reparte la regla entre servidor y cliente.
+
+            ⚠️ **No es una regla de aforo** (`AFORO-02`). Cambiarlo no vende una plaza más ni menos:
+            solo cambia cuántas horas llevan el aviso. Quien decide el cupo es `SlotOffer`.
         turnstile_site_key:
           type: string
           nullable: true

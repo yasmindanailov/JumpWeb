@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api\V1;
 
+use App\Domain\Booking\Services\AvailabilitySettings;
 use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Identity\Models\User;
@@ -34,7 +35,30 @@ class PublicConfigTest extends ApiTestCase
             ->assertJsonPath('registration', null)
             ->assertJsonPath('turnstile_site_key', null)
             ->assertJsonPath('catalog_search_min_items', CatalogSettings::searchMinItems())
-            ->assertJsonPath('cart_max_lines', OrderCreator::MAX_LINES_PER_CART);
+            ->assertJsonPath('cart_max_lines', OrderCreator::MAX_LINES_PER_CART)
+            ->assertJsonPath('low_availability_max', AvailabilitySettings::LOW_MAX_DEFAULT);
+    }
+
+    /**
+     * El umbral del aviso «casi llena» (`#239`), que es lo que el cajón compara contra `available`.
+     *
+     * ⚠️ **Y el `0` viaja como `0`, no se omite.** Es la respuesta «no avises nunca» y un cliente que
+     * recibiera el campo ausente no podría distinguirla de «no me lo han dicho» — que en el cajón
+     * significa lo mismo por respaldo, pero por casualidad y no por contrato.
+     */
+    public function test_it_publishes_the_low_availability_threshold(): void
+    {
+        Setting::updateOrCreate(['key' => AvailabilitySettings::LOW_MAX_KEY], ['value' => '3', 'group' => 'booking']);
+        Setting::flushMemo();
+
+        $this->getJson(self::PATH)->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('low_availability_max', 3);
+
+        Setting::updateOrCreate(['key' => AvailabilitySettings::LOW_MAX_KEY], ['value' => '0', 'group' => 'booking']);
+        Setting::flushMemo();
+
+        $this->getJson(self::PATH)->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('low_availability_max', 0);
     }
 
     /** Público de verdad: el cajón se abre sin cuenta, y estos valores hacen falta antes de haberla. */

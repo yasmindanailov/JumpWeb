@@ -2007,6 +2007,8 @@ return [
 
         'catalog_search_min_items' => 'Mostrar el buscador a partir de N productos',
         'catalog_search_min_items_hint' => 'El buscador del catálogo aparece solo cuando el nº total de productos vendibles SUPERA este número. Déjalo vacío para el valor por defecto (12). 0 = el buscador se muestra siempre.',
+        'low_availability_max' => 'Avisar de «Casi llena» cuando queden N plazas',
+        'low_availability_max_hint' => 'En el paso de hora, una hora se marca «Casi llena» cuando le quedan ESTE número de plazas o menos. Déjalo vacío para el valor por defecto (8). 0 = no avisar nunca. No cambia el aforo: solo lo que ve el cliente.',
 
         'section_sales' => 'Ventas',
         'section_sales_hint' => 'Ajustes técnicos de la venta. Cámbialos con cuidado: un valor fuera de rango se rechaza al guardar.',

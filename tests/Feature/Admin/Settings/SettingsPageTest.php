@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Settings;
 
+use App\Domain\Booking\Services\AvailabilitySettings;
 use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -182,6 +183,43 @@ class SettingsPageTest extends TestCase
             ->fillForm(['catalog.search_min_items' => 9999]) // > 100 (CatalogSettings::SEARCH_MIN_ITEMS_MAX)
             ->call('save')
             ->assertHasFormErrors(['catalog.search_min_items']);
+    }
+
+    /**
+     * `#239` — el umbral del aviso «casi llena» del paso de hora del cajón.
+     *
+     * ⚠️ **El `0` se guarda y NO se confunde con «vacío»**: es la respuesta «no avisar nunca». Un
+     * formulario que lo tratase como ausente devolvería el aviso al default de 8 en cuanto el
+     * operador intentara apagarlo, y nada lo diría.
+     */
+    public function test_save_persists_the_low_availability_threshold(): void
+    {
+        Livewire::actingAs($this->admin())
+            ->test(Settings::class)
+            ->fillForm(['booking.low_availability_max' => 3])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('3', Setting::value('booking.low_availability_max'));
+        $this->assertSame(3, AvailabilitySettings::lowMax());
+
+        Livewire::actingAs($this->admin())
+            ->test(Settings::class)
+            ->fillForm(['booking.low_availability_max' => 0])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        Setting::flushMemo();
+        $this->assertSame(0, AvailabilitySettings::lowMax(), 'apagar el aviso tiene que poder guardarse');
+    }
+
+    public function test_save_rejects_a_low_availability_threshold_out_of_range(): void
+    {
+        Livewire::actingAs($this->admin())
+            ->test(Settings::class)
+            ->fillForm(['booking.low_availability_max' => 9999]) // > 100 (AvailabilitySettings::LOW_MAX_MAX)
+            ->call('save')
+            ->assertHasFormErrors(['booking.low_availability_max']);
     }
 
     public function test_save_rejects_invalid_email(): void

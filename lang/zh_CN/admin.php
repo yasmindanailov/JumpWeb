@@ -1654,6 +1654,8 @@ return [
 
         'catalog_search_min_items' => '产品数量超过 N 时显示搜索框',
         'catalog_search_min_items_hint' => '只有当可售产品总数超过此数字时，目录搜索框才会出现。留空使用默认值（12）。0 = 始终显示搜索框。',
+        'low_availability_max' => '剩余名额少于 N 时提示“即将满员”',
+        'low_availability_max_hint' => '在选择时间的步骤中，某个时段的剩余名额小于或等于此数字时会标注“即将满员”。留空使用默认值（8）。0 = 从不提示。不影响容量，只影响客户看到的内容。',
 
         'section_sales' => '销售',
         'section_sales_hint' => '销售的技术参数。请谨慎修改：超出范围的值在保存时会被拒绝。',

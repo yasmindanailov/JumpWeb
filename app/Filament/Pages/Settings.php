@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Booking\Services\AvailabilitySettings;
 use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\SocialEmbed;
@@ -180,6 +181,10 @@ class Settings extends Page
         // Catálogo del sidebar de compra (#226): nº de productos a partir del cual aparece el
         // buscador. Vacío → default de `CatalogSettings` (12). El helper clampa el valor leído.
         'catalog.search_min_items' => 'catalog',
+        // Aviso de «casi llena» en el paso de hora del cajón (`#239`): plazas libres a partir de las
+        // cuales la hora deja de anunciarse. Vacío → default de `AvailabilitySettings` (8); `0`
+        // apaga el aviso. NO es una regla de aforo: no vende ni retiene una plaza (`AFORO-02`).
+        'booking.low_availability_max' => 'booking',
     ];
 
     public static function canAccess(): bool
@@ -659,6 +664,9 @@ class Settings extends Page
      * - `seo.og_image`: imagen Open Graph al compartir el sitio.
      * - `catalog.search_min_items` (#226): umbral del buscador del catálogo (vacío → default 12 de
      *   `CatalogSettings`; la validación replica su rango).
+     * - `booking.low_availability_max` (`#239`): plazas libres a partir de las cuales una hora se
+     *   anuncia «casi llena» en el cajón (vacío → default 8 de `AvailabilitySettings`; `0` apaga el
+     *   aviso). Es escaparate, no aforo.
      * - `cookies.banner_enabled` (#223): banner de consentimiento. Default ON; apagarlo solo oculta
      *   el banner — el bloqueo previo de iframes de tercero sigue activo.
      */
@@ -705,6 +713,17 @@ class Settings extends Page
                     ->minValue(CatalogSettings::SEARCH_MIN_ITEMS_MIN)
                     ->maxValue(CatalogSettings::SEARCH_MIN_ITEMS_MAX)
                     ->placeholder((string) CatalogSettings::SEARCH_MIN_ITEMS_DEFAULT),
+                // `#239` — el aviso de «Casi llena» del paso de hora. Vive junto al umbral del
+                // buscador porque es lo mismo: un número que decide qué ENSEÑA el cajón, no qué
+                // vende. `0` apaga el aviso, así que NO lleva `required` ni default en el formulario:
+                // el helper garantiza siempre un valor válido y dejarlo en blanco es legítimo.
+                TextInput::make('booking.low_availability_max')
+                    ->label(__('admin.settings.low_availability_max'))
+                    ->helperText(__('admin.settings.low_availability_max_hint'))
+                    ->integer()
+                    ->minValue(AvailabilitySettings::LOW_MAX_MIN)
+                    ->maxValue(AvailabilitySettings::LOW_MAX_MAX)
+                    ->placeholder((string) AvailabilitySettings::LOW_MAX_DEFAULT),
                 Toggle::make('cookies.banner_enabled')
                     ->label(__('admin.settings.cookies_banner_enabled'))
                     ->helperText(__('admin.settings.cookies_banner_enabled_hint')),

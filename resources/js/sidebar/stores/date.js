@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import {
-    buildWeeks, canGoNext, canGoPrev, initialMonth, monthLabel as composeMonthLabel,
+    buildStrip, buildWeeks, canGoNext, canGoPrev, initialMonth, monthLabel as composeMonthLabel,
     offeredMonths as monthsWithOffer, shiftMonth, weekdayHeaders as composeWeekdayHeaders,
 } from '../calendar.js';
 import { dayPriceCents as priceOfDay } from '../offer.js';
@@ -47,11 +47,29 @@ export const useDateStore = defineStore('date', {
          * Lo inyecta el montaje.
          */
         locale: 'es',
+
+        /**
+         * ¿Está desplegado el calendario mensual? (`DECISIONES #239`)
+         *
+         * ⚠️ **Nace CERRADO y vuelve a cerrarse con cada oferta nueva**: la tira es la vía normal y
+         * el calendario el atajo para el salto largo. Que sobreviviera a un cambio de producto
+         * dejaría al siguiente cliente con la pantalla más densa por una decisión que tomó otro.
+         */
+        calendarOpen: false,
     }),
 
     getters: {
         /** La rejilla del mes que se está viendo. Compara dato a dato con `SidebarCalendarParityTest`. */
         weeks: (state) => (state.month ? buildWeeks(state.month, state.offered, state.selected) : []),
+
+        /**
+         * La TIRA de días reservables agrupados por mes — la vía normal del paso (`#239`).
+         *
+         * ⚠️ **No se acota a N días.** Son los que ofrece el servidor (182 medidos), y recortarla
+         * aquí sería decidir en el cliente hasta cuándo se vende. Quien no quiera deslizar tiene el
+         * calendario.
+         */
+        strip: (state) => buildStrip(state.offered, state.selected, state.locale),
 
         /** Los meses navegables se acotan a los que tienen oferta: no se pasea por meses vacíos. */
         navigableMonths: (state) => monthsWithOffer(state.offered),
@@ -87,6 +105,9 @@ export const useDateStore = defineStore('date', {
         setOffer(days) {
             this.offered = Array.isArray(days) ? days : [];
             this.month = initialMonth(this.offered);
+            // Ver `calendarOpen`: una oferta nueva es un producto nuevo, y el paso vuelve a su forma
+            // por defecto.
+            this.calendarOpen = false;
         },
 
         select(date) {
@@ -105,6 +126,11 @@ export const useDateStore = defineStore('date', {
         /** Mueve el mes visible. El tope lo ponen `canPrev`/`canNext`; esto no lo comprueba. */
         shift(delta) {
             this.month = shiftMonth(this.month, delta);
+        },
+
+        /** Despliega o pliega el calendario mensual. La tira sigue estando debajo en los dos estados. */
+        toggleCalendar() {
+            this.calendarOpen = ! this.calendarOpen;
         },
 
         /** Olvida el día elegido y conserva la oferta (volver atrás dentro del mismo producto). */

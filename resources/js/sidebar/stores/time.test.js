@@ -117,3 +117,50 @@ describe('el store de la hora', () => {
         assert.deepEqual(h.offered, [], 'pero cambiar de día sí: la oferta era de ESE día');
     });
 });
+
+// ── El umbral del aviso «casi llena» (`DECISIONES #239`) ──────────────────────────────────────────
+
+describe('el umbral de «casi llena»', () => {
+    /** Sin `/config` el cajón calla: no sabe qué considera «pocas» esta instalación. */
+    test('arranca en 0, que es NO AVISAR', () => {
+        setActivePinia(createPinia());
+
+        assert.equal(useTimeStore().lowMax, 0);
+    });
+
+    test('guarda el entero que publica el servidor, incluido el 0', () => {
+        setActivePinia(createPinia());
+        const h = useTimeStore();
+
+        h.setLowMax(8);
+        assert.equal(h.lowMax, 8);
+
+        h.setLowMax(0);
+        assert.equal(h.lowMax, 0, 'el 0 es una respuesta del operador, no una falta');
+    });
+
+    /** ⚠️ Un umbral que no es entero no se adivina: se ignora y el aviso calla. */
+    test('descarta lo que no sea un entero no negativo', () => {
+        setActivePinia(createPinia());
+        const h = useTimeStore();
+        h.setLowMax(8);
+
+        for (const basura of ['8', null, undefined, -1, 2.5, NaN, {}]) {
+            h.setLowMax(basura);
+            assert.equal(h.lowMax, 0, `«${String(basura)}» no es un umbral`);
+        }
+    });
+
+    /** El umbral es de la INSTALACIÓN: cambiar de día no lo borra. */
+    test('sobrevive al reset de la oferta', () => {
+        setActivePinia(createPinia());
+        const h = useTimeStore();
+        h.setLowMax(8);
+        h.setOffer([{ time: '10:00:00', available: 3, max_quantity: 3 }]);
+
+        h.reset();
+
+        assert.deepEqual(h.offered, []);
+        assert.equal(h.lowMax, 8);
+    });
+});

@@ -73,6 +73,13 @@ return [
     'next_month' => 'Mes siguiente',
     'legend_normal' => 'Día normal',
     'legend_special' => 'Especial (festivo, finde o víspera)',
+    // Tira de días + calendario plegable (`DECISIONES #239`). La tira es la vía normal; el
+    // calendario, el atajo para el salto largo.
+    'calendar_show' => 'Ver más fechas',
+    'calendar_hide' => 'Ocultar el calendario',
+    // Aviso de ocupación del chip de hora. `[DECIDIDO owner]`: SIN número — dice que queda poco, no
+    // cuánto. El umbral lo pone el operador en Ajustes (`booking.low_availability_max`).
+    'almost_full' => 'Casi llena',
     'back' => 'Volver',
     'add_to_cart' => 'Añadir al carrito',
     'cart_title' => 'Tu carrito',

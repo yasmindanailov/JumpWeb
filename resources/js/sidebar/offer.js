@@ -79,3 +79,27 @@ export function dayPriceCents(offeredDates, date) {
 
     return list.find((d) => d?.date === date)?.price_cents ?? null;
 }
+
+/**
+ * ¿Esta hora se anuncia como **casi llena**? (`DECISIONES #239`)
+ *
+ * ⚠️ **Espejo exacto de `AvailabilitySettings::isLow()`**, y por eso el umbral llega del servidor con
+ * su operador escrito en el contrato (`available <= low_availability_max`, `GET /config`). Reinventar
+ * aquí la comparación —o el número— es como divergen las dos superficies del mismo aviso.
+ *
+ * ⚠️ **`0` significa «no avisar», no «avisar cuando no queden plazas»**, y por eso se comprueba el
+ * umbral ANTES de comparar: si el operador escribió cero pidió silencio. Sin sesión de configuración
+ * —`/config` caído— el umbral se queda en 0 y ninguna hora se anuncia: inventar escasez que no se ha
+ * podido leer es peor que no decir nada.
+ *
+ * ⚠️ **Lee `available`, NO `max_quantity`**: `available` son las plazas que le quedan a la FRANJA, que
+ * es lo que «casi llena» significa. `max_quantity` es cuántas admite esta compra —en un pack son
+ * números distintos (60 frente a 20, medido)— y anunciar con él diría «casi llena» de una franja
+ * vacía en cuanto la fiesta llegara a su tope.
+ */
+export function isAlmostFull(offeredTime, lowMax) {
+    const available = offeredTime?.available;
+
+    return Number.isInteger(lowMax) && lowMax > 0
+        && Number.isInteger(available) && available <= lowMax;
+}

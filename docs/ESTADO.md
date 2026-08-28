@@ -394,6 +394,72 @@
 >       la exención firmada es CONDICIÓN para asignar, la fila no marcable tiene que seguir
 >       **visiblemente** deshabilitada con su motivo, y ese motivo se anuncia a un lector de pantalla.
 >
+>   ▶▶ ✅ **SESIÓN DEL 2026-08-28 (noche, carril A) — LAS UNIDADES 2, 3 y 4 DEL CAJÓN EN MÓVIL
+>   (`DECISIONES #239`, spec propia `specs/cajon-en-movil.md`).**
+>   ⚠️⚠️ **Lo PRIMERO fue corregir una premisa de la medición anterior, y cambió el diseño.** `#237`
+>   escribió «un mes de 42 celdas donde solo 2 eran reservables» y de ahí dedujo que sobraban días.
+>   Medido contra `AvailabilityOffer` antes de tocar nada: **182 días reservables** por producto
+>   (horizonte 6 meses, el parque abre a diario), **11 horas** al día (10 en packs) y aforos 40 · 25 ·
+>   60. ▶ **No faltaban días: sobraba rejilla.** El «2 de 42» solo vale del mes en curso, que abre casi
+>   entero en el pasado. Y por eso **el calendario NO se retira** —una reserva de cumpleaños se hace
+>   con meses de antelación y 182 chips no se recorren con el dedo—: queda plegado tras «Ver más
+>   fechas» (`[DECIDIDO owner]`).
+>   **Lo que entró**: la **tira de días reservables** (`calendar.js::buildStrip()`, agrupa por mes, con
+>   el año en el rótulo solo cuando cambia), el **calendario plegable** que vuelve a cerrarse con cada
+>   oferta nueva, la **tira de horas** con ajuste, el aviso **«Casi llena» sin número**
+>   (`[DECIDIDO owner]`) con umbral configurable desde Ajustes (`booking.low_availability_max`,
+>   `AvailabilitySettings` + `low_availability_max` en `GET /config` **con su operador escrito**), y
+>   los **objetivos de 44 px**: celdas 43→**45** (aritmética, no gusto: baja el relleno del calendario
+>   de 12 a 8 y el hueco de 4 a 3), flechas 32→**44**, chips de hora 68×39→**72×44** y el «Volver» de
+>   la banda con **45 px de área** sin engordar una banda que se pinta en todos los pasos.
+>   ⚠️⚠️ **La HORA lleva una OBJECIÓN MEDIDA que el owner mantuvo, y está escrita** (spec §4.2): son 11
+>   horas y **cabían las 11 a la vez** en tres filas de 350 px; la tira enseña **4 de 11**. La eligió
+>   por coherencia con los carruseles del artboard de móvil del cliente. Queda por escrito para que la
+>   siguiente sesión sepa que fue una decisión, no un descuido.
+>   ⚠️⚠️ **La vela sola NO bastaba y lo dijo el navegador**: el degradado va hacia `--bg` (#F4EFE3) y
+>   los chips son `--bg-card` (#FBF7EC) —**casi el mismo color**—, así que lo que dice «hay más» es el
+>   chip **cortado por el borde de la pantalla**: las dos tiras salen **a sangre**. ⚠️ Y el **separador
+>   de mes NACÍA CORTADO** (`x = −5`) sin su `scroll-snap-align`: *una parada de ajuste no es «un sitio
+>   donde se pulsa», es «un sitio donde la tira puede quedarse quieta»*.
+>   ⚠️⚠️ **Una guarda nació LAXA y lo dijo la mutación**: el caso «el aviso mira `available`, no
+>   `max_quantity`» usaba 60/20 con umbral 8 —**los dos por encima**—, así que intercambiar el campo
+>   pasaba en verde. Rehecho con 60/6.
+>   ⚠️⚠️ **Y DOS instrumentos propios salieron mal antes de acertar**: medir la caja pintada daba
+>   «Volver» como defecto (61×17) cuando su área táctil son 45 —llamaba defecto a la solución— y
+>   `elementFromPoint()` daba **178 defectos** en la tira porque los chips fuera del carril están fuera
+>   del viewport. **Tercera vez en la semana que el sospechoso correcto es el instrumento.**
+>   **El contrato de árbol gana DOS casos** —el calendario desplegado y el aviso—: desde el rediseño
+>   los casos que había **dejaron de emitir una sola celda de la rejilla**, así que `.cal__grid`,
+>   `.cal__day`, las flechas y la leyenda salían del gate sin que nada avisara. Manifiesto regenerado a
+>   propósito (4 cambiadas, 2 nuevas).
+>   **Verificación**: suite **3374 / 22.251** · JS 813 → **835** · **10 mutaciones, las 10 muerden** ·
+>   headless **22/22** a 390×844 y 2/2 con el umbral alto (`VERIFICACION-E2E-CAJON.md`
+>   **§5.novodecies**) · chunk 252,27 → **255,13 KiB** (techo 253 → 256, medido construyendo con y sin)
+>   · Pint ✓ · docs-check ✓ · build ✓. `audit-clock` **NO corrido**: la tanda no añade fixtures con
+>   calendario ni afirma ninguna fecha sin reloj fijo.
+>   ❗ **LO QUE QUEDA DE ESTA TANDA**: **(1)** el **OJO del owner** sobre §5.novodecies —y en especial
+>   deslizar las dos tiras con el dedo—; **(2)** el **hueco vertical**, medido y sin resolver a
+>   propósito: **366 px vacíos en fecha (66 %)** y **452 en hora (81 %)**, y la tira lo **empeoró unos
+>   50 px** respecto a los ~400 de `#237` —donde había tres filas de chips ahora hay una—. Rellenarlo es
+>   decisión de producto (`[PENDIENTE: owner]`); **(3)** la **unidad 5**, carrito e identificación, que
+>   sigue **SIN MEDIR**.
+>   ⚠️ **Para el carril C**: esta tanda tocó `public/css/site.css` en el bloque del CAJÓN (líneas
+>   ~1150–1500: `.timestrip`, `.daystrip`, `.cal*`, `.bk-back`), `resources/js/sidebar/**`,
+>   `scripts/render-sidebar.mjs`, `lang/*/tickets.php`, `lang/{es,zh_CN}/admin.php`, `openapi/v1.yaml`
+>   y `app/{Domain/Booking/Services,Filament/Pages,Http/Resources}`. **NO toca** `landing.css`,
+>   `home.blade.php`, el armazón ni el menú.
+>
+>   ▶ **Y queda APUNTADO, sin empezar, el CUMPLEAÑOS MIXTO** (`specs/cumple-mixto.md`, ⬜ borrador):
+>   un cumple KIDS con un invitado por encima de la edad del pack pasa a **MIXTO** —etiqueta «MIXTA»
+>   para cliente y operador y la diferencia de precio por persona en los dos desgloses—.
+>   ⚠️⚠️ **Medido: TRES premisas del encargo no se cumplen hoy** — el post-formulario **no pide la
+>   edad** (`guest_fields` son `name·allergy·notes·special_menu`), los dos packs **cuestan lo mismo**
+>   (15/18 €) y **comparten zona** (la 4, mismas franjas y aforo), lo que contradice «KIDS o JUMP lo
+>   condiciona la hora de cada zona»: **hay que comprobarlo contra la instalación REAL**, porque si
+>   allí son zonas distintas esto toca **AFORO** y deja de ser una etiqueta con recargo.
+>   ❗ **El primer paso no es código: son las SEIS preguntas de §5**, y la del **cobro** no se puede
+>   elegir por defecto —es dinero **después** de un pedido pagado (`PAY-04`)—.
+>
 >   ▶ **Lo que sigue esperando al OWNER** (no bloquea a nadie): su ojo sobre el **menú plano**, el
 >   **buscador** y la **puerta en tablet** —las tres en `main`, ninguna vista en su navegador—; el
 >   repaso de los **rótulos** de las 19 pantallas de Ajustes; y el ✅ a **JumpPoints**, que además

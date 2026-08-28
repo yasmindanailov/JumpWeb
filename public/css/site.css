@@ -1143,9 +1143,46 @@ body.no-scroll { overflow: hidden; }
 .wiz__title { margin: 0 0 14px; font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: var(--fs-20); color: var(--fg); }
 .purchase__empty { color: var(--fg-mute); font-family: var(--font-body); font-size: var(--fs-14); }
 
-.purchase__chips { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
-.purchase__chip { padding: var(--sp-10) var(--sp-16); border-radius: var(--r-btn); border: 1px solid var(--line); background: var(--bg-card); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); cursor: pointer; transition: border-color var(--dur-sale) var(--ease-sale); }
+/* ══ LA TIRA DE HORAS (paso 3 · `DECISIONES #239`) ═════════════════════════════════════════════
+   `[DECIDIDO owner, 2026-08-28]`: tira deslizable con AJUSTE, no una rejilla que envuelve y no un
+   deslizador continuo —con once horas hay que pasar por todas y el dedo tapa el valor que eliges—.
+   ⚠️ **Medido y dicho antes de construirlo**: las once horas CABÍAN en tres filas de la rejilla
+   anterior (chips de 68×39, ~350 px útiles), así que la tira enseña ~4,8 de 11 y esconde el resto
+   tras un gesto. El owner lo eligió igualmente por coherencia con los carruseles del artboard de
+   móvil del cliente; queda escrito para que la siguiente sesión sepa que fue una decisión y no un
+   descuido. Por eso la vela de abajo no es opcional: es lo único que dice que la lista sigue.
+   ▶ Misma mecánica que `.daystrip`: el porqué de cada línea está allí y no se repite. */
+.timestrip { position: relative; margin-inline: calc(var(--sp-20) * -1); }
+.timestrip__track {
+    display: flex; align-items: stretch; gap: var(--sp-8);
+    padding-inline: var(--sp-20);
+    overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--sp-20);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-block: var(--sp-2);
+}
+.timestrip__track::-webkit-scrollbar { display: none; }
+.timestrip::after {
+    content: "";
+    position: absolute; top: 0; bottom: 0; right: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, var(--bg));
+    pointer-events: none;
+}
+/* 44 px de alto mínimo: eran 68×39 (`#237`). El chip apila hora y, si procede, «Casi llena», así que
+   crece a lo alto sin perder el ancho cómodo para el pulgar. */
+.purchase__chip { flex: none; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-2); min-height: 44px; min-width: 72px; padding: var(--sp-8) var(--sp-14); border-radius: var(--r-btn); border: 1px solid var(--line); background: var(--bg-card); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); cursor: pointer; transition: border-color var(--dur-sale) var(--ease-sale); }
 .purchase__chip:hover { border-color: var(--fg); }
+/* La hora dentro del chip. `line-height: 1` para que el rótulo de «casi llena» quede pegado debajo
+   sin que el interlineado le abra un hueco que descoloca la altura de la tira. */
+.purchase__chip-t { line-height: 1; }
+/* «Casi llena»: `--warn` es el token de señal del producto (el mismo del «a cobrar en el parque»),
+   no un amarillo nuevo. ⚠️ Es ESCAPARATE, no aforo: quien decide el cupo es `SlotOffer` (`AFORO-02`). */
+.purchase__chip-full { font-size: var(--fs-9); font-weight: var(--fw-bold); line-height: 1; letter-spacing: 0.03em; text-transform: uppercase; color: var(--warn); }
+/* Sobre el acento de zona el ámbar se pierde: el rótulo hereda la tinta del chip elegido. */
+.purchase__chip.is-active .purchase__chip-full { color: var(--fg); opacity: 0.78; }
 
 .purchase__entries { display: flex; flex-direction: column; gap: 8px; }
 .entry { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
@@ -1289,6 +1326,12 @@ body.no-scroll { overflow: hidden; }
    el contenedor. flex-shrink:0 evita que la punta se aplaste en cajas estrechas. */
 .arrow-ico { vertical-align: middle; flex-shrink: 0; }
 .bk-back:hover { gap: var(--sp-11); }
+/* ⚠️ **El área táctil crece SIN mover el diseño** (`#237`: medido 61×17, muy por debajo de 44).
+   Un `min-height: 44px` engordaría la banda de progreso, que se pinta en TODOS los pasos del embudo;
+   una capa transparente da los 45 px de alto y no ocupa una sola fila más. El pseudo va absoluto
+   sobre el propio botón, así que el clic sigue siendo del botón. */
+.bk-back { position: relative; }
+.bk-back::before { content: ""; position: absolute; inset: -14px calc(var(--sp-8) * -1); }
 
 /* ⚠️ **El «Volver» del ÁREA lleva su propio aire abajo.** `.bk-back` es la base compartida y no debe
    traer margen —en el embudo vive dentro de la banda de progreso, cuyo `gap` ya lo separa—, así que
@@ -1398,14 +1441,138 @@ body.no-scroll { overflow: hidden; }
 .purchase__note { margin: 10px 0 0; font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); line-height: 1.5; }
 /* Aviso de señal bajo el total del paso de cantidad (#227 F2): «Señal X€ ahora · resto en el parque». */
 
+/* ══ LA TIRA DE DÍAS RESERVABLES (paso 2 · `DECISIONES #239`) ══════════════════════════════════
+   La vía NORMAL para elegir día; el calendario queda detrás de «ver más fechas» para el salto largo.
+
+   ⚠️ **Por qué, medido el 2026-08-28**: el calendario pintaba 42 celdas y abre en el mes en curso,
+   donde la mayoría ya han pasado — a 28 de agosto, **4 seleccionables de 42**. No faltaban días (hay
+   182 en el horizonte): sobraba rejilla. Aquí solo hay días que se pueden reservar.
+
+   ⚠️ **`position: relative` en el carril NO es decorativo**: `DateStep.vue` coloca la tira al entrar
+   con `scrollLeft` a partir del `offsetLeft` del chip elegido, y `offsetLeft` se mide contra el
+   `offsetParent`. Sin esto el origen sería un ancestro cualquiera y el cálculo daría un número
+   plausible y equivocado. */
+/* ⚠️ **A SANGRE, y es la señal de que la lista sigue.** Medido en navegador: `--bg` (#F4EFE3) y
+   `--bg-card` (#FBF7EC) casi coinciden, así que un degradado entre ellos apenas se lee — la vela sola
+   no bastaba. Lo que no se puede confundir es **un chip cortado por el borde de la pantalla**, y para
+   eso el carril tiene que llegar hasta él: sale del relleno de `.purchase__scroll` (20 px) con margen
+   negativo y se lo devuelve por dentro, de modo que el primer chip sigue alineado con el título. */
+.daystrip { position: relative; margin-inline: calc(var(--sp-20) * -1); }
+.daystrip__track {
+    position: relative;
+    display: flex; align-items: stretch; gap: var(--sp-6);
+    padding-inline: var(--sp-20);
+    overflow-x: auto; overflow-y: hidden;
+    /* El AJUSTE: el dedo suelta y el chip se coloca. `proximity` y no `mandatory` porque con 182
+       chips un ajuste obligatorio pelea con el impulso largo del deslizamiento. */
+    scroll-snap-type: x proximity;
+    /* El ajuste alinea con el CONTENIDO, no con el borde a sangre: si no, el chip elegido quedaría
+       pegado al filo de la pantalla. */
+    scroll-padding-inline: var(--sp-20);
+    /* Sin barra: en un cajón de 390 px se come 15 de los 350 útiles. Lo que dice que la lista sigue
+       son el corte del borde y la vela de aquí abajo. */
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-block: var(--sp-2);
+}
+.daystrip__track::-webkit-scrollbar { display: none; }
+
+/* ❗ **LA VELA, y se apaga SOLA sin una línea de JS ni `animation-timeline`.**
+   Es un degradado hacia `--bg` sobre el fondo del cajón, que también es `--bg`: cuando bajo la vela
+   hay un chip, lo desvanece y se ve; cuando la lista ya se acabó, el degradado cae sobre el mismo
+   color que lo pinta y **es invisible**. La señal se regula sola con el contenido, que es
+   exactamente lo que la vela del menú (`#221`) resolvió con una animación de scroll.
+   ⚠️ Va en el ENVOLTORIO y no en el carril: un `::after` dentro de un contenedor con scroll viaja
+   con el contenido y se iría al deslizar. */
+.daystrip::after {
+    content: "";
+    position: absolute; top: 0; bottom: 0; right: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, var(--bg));
+    pointer-events: none;
+}
+
+/* El separador de mes dentro del carril. No es interactivo, así que no aspira a 44 px.
+   ⚠️ **Lleva `scroll-snap-align` aunque no se pueda pulsar, y sin eso NACE CORTADO.** Medido: con el
+   ajuste solo en los días, el navegador colocaba el primer chip contra el borde del contenido y
+   dejaba el rótulo del mes en `x = −5`. Una parada de ajuste no es «un sitio donde se pulsa», es
+   «un sitio donde la tira puede quedarse quieta», y el principio de un mes lo es. */
+.daystrip__month {
+    flex: none;
+    scroll-snap-align: start;
+    display: flex; align-items: center;
+    padding: 0 var(--sp-6);
+    border-left: 1px solid var(--line);
+    font-family: var(--font-body); font-size: var(--fs-10); font-weight: var(--fw-bold);
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-mute);
+    writing-mode: vertical-rl;
+    /* El primero no lleva raya: no separa nada. */
+}
+.daystrip__month:first-child { border-left: 0; padding-left: 0; }
+
+/* 56×76: por encima del mínimo táctil de 44 en los dos ejes, y con sitio para las tres líneas
+   (día de la semana · número · precio) que hacen que se ELIJA de un vistazo. */
+.daystrip__day {
+    flex: none;
+    scroll-snap-align: start;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: var(--sp-2);
+    min-width: 56px; min-height: 76px;
+    padding: var(--sp-8) var(--sp-6);
+    border: 1px solid var(--line); border-radius: var(--r-md);
+    background: var(--bg-card);
+    font-family: var(--font-body); color: var(--fg);
+    cursor: pointer;
+    transition: border-color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-toque) var(--ease-sale);
+}
+.daystrip__day:hover { border-color: var(--fg); }
+.daystrip__wd { font-size: var(--fs-10); font-weight: var(--fw-semibold); color: var(--fg-mute); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1; }
+.daystrip__num { font-size: var(--fs-18); font-weight: var(--fw-bold); line-height: 1; }
+.daystrip__price { font-size: var(--fs-10); font-weight: 500; line-height: 1; color: var(--fg-mute); }
+/* Día especial (festivo, finde o víspera): el MISMO código de color que la rejilla, para que la
+   leyenda del calendario siga explicando la tira. */
+.daystrip__day--special { background: var(--attn); border-color: var(--attn); }
+.daystrip__day--special .daystrip__wd,
+.daystrip__day--special .daystrip__price { color: var(--fg); opacity: 0.78; }
+/* Elegido: mismo tratamiento que `.cal__day.is-selected` — acento de zona + anillo, y tinta sobre el
+   acento para que el contraste aguante cualquier marca white-label (`#213`). */
+.daystrip__day.is-selected {
+    background: var(--zone-1); border-color: var(--zone-1);
+    box-shadow: 0 0 0 2px var(--fg) inset;
+    color: var(--on-brand);
+}
+.daystrip__day.is-selected .daystrip__wd,
+.daystrip__day.is-selected .daystrip__price { color: var(--fg); opacity: 0.78; }
+
+/* «Ver más fechas» / «Ocultar el calendario». Ancho completo y 44 px de alto: es el único camino al
+   calendario, así que fallarlo con el pulgar deja sin salida al que reserva a tres meses. */
+.cal-more {
+    display: flex; align-items: center; justify-content: center; gap: var(--sp-8);
+    width: 100%; min-height: 44px; margin-top: var(--sp-10);
+    border: 1px solid var(--line); border-radius: var(--r-btn);
+    background: transparent; color: var(--fg-mute);
+    font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold);
+    cursor: pointer;
+    transition: border-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
+}
+.cal-more:hover { border-color: var(--fg); color: var(--fg); }
+.cal-more__chev { width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-2px) rotate(45deg); transition: transform var(--dur-estado) var(--ease-sale); }
+.cal-more.is-open .cal-more__chev { transform: translateY(2px) rotate(225deg); }
+.cal-more.is-open + .cal { margin-top: var(--sp-10); }
+
 /* Calendario (paso 1): rejilla mensual coloreada por tipo de tarifa */
-.cal { padding: var(--sp-12); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
+/* ⚠️ **El relleno baja de 12 a 8 y el hueco de 4 a 3, y no es cosmética: es el objetivo táctil.**
+   Medido a 390 px el 2026-08-28 (`#237`): la celda salía **43×43**, por debajo del mínimo de 44. La
+   aritmética es `(351 − 2·relleno − 2·borde − 6·hueco) / 7`; con 12 y 4 daba 43, con 8 y 3 da **45**.
+   Agrandar la celda sin quitarle sitio al contenedor era la única vía: el cajón mide 390 y no crece. */
+.cal { padding: var(--sp-8); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
 .cal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .cal__month { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); text-transform: capitalize; }
-.cal__nav { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font-size: var(--fs-18); line-height: 1; cursor: pointer; }
+/* 44×44: eran 32×32 (`#237`). El dibujo del chevron no crece —lo manda `font-size`—, crece la caja. */
+.cal__nav { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font-size: var(--fs-18); line-height: 1; cursor: pointer; }
 .cal__nav:hover:not(:disabled) { border-color: var(--fg); }
 .cal__nav:disabled { opacity: 0.35; cursor: not-allowed; }
-.cal__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--sp-4); }
+.cal__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--sp-3); }
 .cal__grid--head { margin-bottom: 4px; }
 .cal__wd { padding: var(--sp-4) 0; text-align: center; font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-semibold); color: var(--fg-mute); text-transform: capitalize; }
 .cal__day {

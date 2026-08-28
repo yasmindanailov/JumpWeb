@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Domain\Booking\Services\AvailabilitySettings;
 use App\Domain\Booking\Services\CatalogSettings;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Platform\Services\Turnstile;
@@ -13,10 +14,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Fase 4 · paso 4.0b — los ajustes de INSTALACIÓN que un cliente necesita para pintar el cajón bien
  * a la primera (`docs/specs/sidebar-spa.md` §4.4).
  *
- * Son cuatro cosas que hoy Blade le inyecta a la vista y que ningún endpoint publicaba: el bloque de
- * registro externo, el umbral del buscador, la clave pública del anti-bot y el tope de líneas de la
- * cesta. Sin ellas, un cliente **aprende las reglas chocándose** —descubre el tope con un 422— y eso
- * es exactamente una regla de negocio naciendo en el cliente.
+ * Son las cosas que hoy Blade le inyecta a la vista y que ningún endpoint publicaba: el bloque de
+ * registro externo, el umbral del buscador, la clave pública del anti-bot, el tope de líneas de la
+ * cesta y el umbral del aviso de «casi llena». Sin ellas, un cliente **aprende las reglas
+ * chocándose** —descubre el tope con un 422— y eso es exactamente una regla de negocio naciendo en
+ * el cliente.
  *
  * **Van juntas y no repartidas** por el número de peticiones: sueltas serían dos endpoints más y uno
  * de ellos caería en el paso de identificación, con el usuario esperando. Juntas son **una** petición
@@ -37,17 +39,18 @@ class PublicConfigResource extends JsonResource
     /** El recurso va en la raíz: lo devuelve el propio controlador (§4.3 del spec de la API). */
     public static $wrap = null;
 
-    /** No envuelve ningún modelo: los cuatro valores salen de sus lectores defensivos. */
+    /** No envuelve ningún modelo: los cinco valores salen de sus lectores defensivos. */
     public function __construct()
     {
         parent::__construct(null);
     }
 
     /**
-     * ⚠️ **Los dos números llevan su OPERADOR en la descripción del contrato, no solo su valor.**
+     * ⚠️ **Los TRES números llevan su OPERADOR en la descripción del contrato, no solo su valor.**
      * Medido: el buscador aparece con `total > search_min_items` —estrictamente mayor, y sobre el
-     * catálogo SIN filtrar— y el servidor rechaza una cesta con `líneas > cart_max_lines`. Publicar
-     * el número sin el operador reparte la regla entre servidor y cliente, que es como divergen.
+     * catálogo SIN filtrar—, el servidor rechaza una cesta con `líneas > cart_max_lines`, y una hora
+     * se anuncia casi llena con `available <= low_availability_max`. Publicar el número sin el
+     * operador reparte la regla entre servidor y cliente, que es como divergen.
      *
      * @return array<string, mixed>
      */
@@ -59,6 +62,13 @@ class PublicConfigResource extends JsonResource
             'registration' => $registration?->toArray(),
             'catalog_search_min_items' => CatalogSettings::searchMinItems(),
             'cart_max_lines' => OrderCreator::MAX_LINES_PER_CART,
+            // ⚠️ **El umbral, no el veredicto**, y por el mismo motivo que los dos de arriba: el
+            // veredicto es por HORA y las horas llegan por `POST availability/{producto}/times`, que
+            // ya publica `available`. Publicar aquí el número **con su operador** (`available <=
+            // low_availability_max`) deja la regla en un solo sitio sin meter un campo derivado en
+            // cada una de las once horas de cada día.
+            // `0` desactiva el aviso, y es una respuesta del operador, no una falta.
+            'low_availability_max' => AvailabilitySettings::lowMax(),
             // `null` cuando la instalación no tiene anti-bot configurado, que es un estado NORMAL:
             // sin claves el widget es un no-op y el registro funciona igual (`SEGURIDAD` regla 5).
             // Decirlo con `null` es más honesto que omitir el campo — el cliente sabe que preguntó.

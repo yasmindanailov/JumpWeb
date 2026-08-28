@@ -68,6 +68,12 @@ return [
     'next_month' => 'Mois suivant',
     'legend_normal' => 'Jour normal',
     'legend_special' => 'Spécial (férié, week-end ou veille)',
+    // Bande de jours + calendrier repliable (`DECISIONES #239`).
+    'calendar_show' => 'Voir plus de dates',
+    'calendar_hide' => 'Masquer le calendrier',
+    // Indication d'occupation sur la puce d'horaire. `[DECIDIDO owner]` : sans chiffre — elle dit
+    // qu'il reste peu de places, pas combien. Le seuil est réglé par l'exploitant.
+    'almost_full' => 'Presque complet',
     'back' => 'Retour',
     'add_to_cart' => 'Ajouter au panier',
     'cart_title' => 'Ton panier',

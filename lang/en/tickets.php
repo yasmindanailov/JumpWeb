@@ -68,6 +68,12 @@ return [
     'next_month' => 'Next month',
     'legend_normal' => 'Regular day',
     'legend_special' => 'Special (holiday, weekend or eve)',
+    // Day strip + collapsible calendar (`DECISIONES #239`).
+    'calendar_show' => 'See more dates',
+    'calendar_hide' => 'Hide calendar',
+    // Occupancy hint on the time chip. `[DECIDIDO owner]`: no number — it says few are left, not how
+    // many. The threshold is set by the operator (`booking.low_availability_max`).
+    'almost_full' => 'Almost full',
     'back' => 'Back',
     'add_to_cart' => 'Add to cart',
     'cart_title' => 'Your cart',

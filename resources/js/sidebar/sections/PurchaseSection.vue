@@ -225,6 +225,11 @@ onMounted(async () => {
         // El tope de líneas lo publica el servidor: quemarlo aquí sería el cuarto sitio del que leer
         // el mismo número.
         cartStore.setMaxLines(config.data?.cart_max_lines);
+        // El umbral del aviso «casi llena» (`#239`). Mismo trato que los dos de arriba: el número lo
+        // decide el operador desde el panel y viaja con su operador escrito en el contrato
+        // (`available <= low_availability_max`). Si no llega, el store se queda en 0 y NO se avisa:
+        // inventar escasez que no se ha podido leer es peor que callar.
+        timeStore.setLowMax(config.data?.low_availability_max);
         // ⚠️ El BIT del anti-bot, no su clave: no nulo ⟺ el alta exige captcha, y entonces el cajón
         // el cajón monta su propio widget de Turnstile con ella (`turnstile.js`, 4.4b·2).
         authStore.setSignupSiteKey(signupRequiresCaptcha(config.data) ? config.data.turnstile_site_key : '');
@@ -1121,6 +1126,8 @@ function goBack() {
 
         <DateStep
             v-else-if="store.step === STEPS.DATE"
+            :strip="dateStore.strip"
+            :calendar-open="dateStore.calendarOpen"
             :weeks="dateStore.weeks"
             :weekday-headers="dateStore.weekdayHeaders"
             :month-label="dateStore.monthLabel"
@@ -1129,12 +1136,14 @@ function goBack() {
             :selected-date="dateStore.selected"
             :messages="messages"
             @select="selectDate"
+            @toggle-calendar="dateStore.toggleCalendar"
             @prev-month="dateStore.shift(-1)"
             @next-month="dateStore.shift(1)" />
 
         <TimeStep
             v-else-if="store.step === STEPS.TIME"
-            :times="timeStore.offered.map((t) => t.time)"
+            :times="timeStore.offered"
+            :low-max="timeStore.lowMax"
             :selected-time="timeStore.selected"
             :quantity="selectionStore.quantity"
             :min-quantity="catalogStore.minQuantity"

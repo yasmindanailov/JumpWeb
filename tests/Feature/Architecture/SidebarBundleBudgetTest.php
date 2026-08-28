@@ -472,7 +472,26 @@ class SidebarBundleBudgetTest extends TestCase
      * ▶ **253 deja 0,73 KiB**, otra vez una holgura que aprieta. Es lo correcto: la holgura ancha del
      * apunte anterior existía para que lo siguiente se midiera de verdad, y se ha medido.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 253;
+    /**
+     * ⚠️ **253 → 256 el 2026-08-28, y lo paga el REDISEÑO de los pasos 2 y 3** (`#239`,
+     * `[DECIDIDO owner]`). Medido construyendo con y sin los cambios, no estimando: **252,27 →
+     * 255,13 KiB, +2,86**.
+     *
+     * Qué entra, y por qué ninguna de las tres piezas era opcional:
+     *   · **La tira de días** — `calendar.js::buildStrip()` (agrupa por mes, nombra el día con `Intl`
+     *     en horario LOCAL y mete el año en el rótulo solo cuando cambia) más el carril, el separador
+     *     de mes y el chip de tres líneas en `DateStep.vue`. Es la pieza grande, y sustituye a leer
+     *     una rejilla de 42 celdas de las que a 28 de agosto solo 4 eran reservables.
+     *   · **El calendario plegable** — el disparador con su `aria-expanded` y el estado en el store.
+     *     El calendario NO se retira: es la única vía al salto largo (`#237`, medido: 182 días
+     *     ofrecidos, seis meses de horizonte).
+     *   · **El aviso «casi llena»** — `offer.js::isAlmostFull()`, el umbral en el store y el rótulo en
+     *     el chip. Es lo más barato de los tres: una comparación y un `<span>`.
+     *
+     * ▶ **256 deja 0,87 KiB.** Holgura que aprieta, como la de las dos entradas anteriores y por el
+     * mismo motivo: lo siguiente que entre se mide contra un número, no contra un susto.
+     */
+    private const SIDEBAR_CHUNK_MAX_KB = 256;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

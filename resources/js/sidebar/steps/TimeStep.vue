@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
+import { isAlmostFull } from '../offer.js';
 import DependentPicker from './DependentPicker.vue';
 
 /**
@@ -24,8 +25,19 @@ import DependentPicker from './DependentPicker.vue';
  * button` es un selector que depende del tipo de elemento.
  */
 const props = defineProps({
-    /** Horas ofrecidas, en formato canónico `HH:MM:SS`. Las decide `SlotOffer` con la cesta delante. */
+    /**
+     * Horas ofrecidas **tal y como llegan de la API** (`{time, available, max_quantity, sellable}`),
+     * no una lista de cadenas. Las decide `SlotOffer` con la cesta delante.
+     *
+     * ⚠️ Antes llegaban ya aplanadas a `HH:MM:SS`, y por eso el chip no podía decir nada del cupo:
+     * el dato existía en el contrato desde el primer día y se tiraba en el cableado.
+     */
     times: { type: Array, default: () => [] },
+    /**
+     * Umbral del aviso «casi llena», tal y como lo publica `GET /config` (`#239`). `0` = no avisar,
+     * que es también el respaldo cuando la configuración no se pudo leer.
+     */
+    lowMax: { type: Number, default: 0 },
     selectedTime: { type: String, default: null },
     quantity: { type: Number, default: 0 },
     minQuantity: { type: Number, default: 0 },
@@ -65,6 +77,12 @@ const tp = (key, params) => translateWith(props.messages, key, params);
 /** `10:00:00` → `10:00`. El servidor guarda la hora canónica; el chip enseña la corta. */
 const shortTime = (time) => time.slice(0, 5);
 
+/**
+ * ¿Esta hora se anuncia como casi llena? La regla vive en `offer.js`, espejo de
+ * `AvailabilitySettings::isLow()`; aquí solo se pinta (`CE-4`).
+ */
+const almostFull = (offered) => isAlmostFull(offered, props.lowMax);
+
 const hasAddons = computed(() => props.addons.groups.length > 0 || props.addons.singles.length > 0);
 
 const canDecrease = computed(() => props.quantity > (props.isPack ? props.minQuantity : 0));
@@ -74,12 +92,19 @@ const canIncrease = computed(() => props.quantity < props.maxQuantity);
 <template>
     <h3 class="wiz__title">{{ t('step_time') }}</h3>
 
-    <div class="purchase__chips">
-        <button v-for="time in times" :key="time"
-                type="button"
-                class="purchase__chip"
-                :class="time === selectedTime ? 'is-active' : ''"
-                @click="$emit('select-time', time)">{{ shortTime(time) }}</button>
+    <!-- La tira de horas: deslizable con ajuste (`#239`, `[DECIDIDO owner]`). `role="group"` porque
+         son botones hermanos que forman UNA elección; el nombre lo pone el rótulo del paso. -->
+    <div class="timestrip">
+        <div class="timestrip__track" role="group" :aria-label="t('step_time')">
+            <button v-for="offered in times" :key="offered.time"
+                    type="button"
+                    class="purchase__chip"
+                    :class="offered.time === selectedTime ? 'is-active' : ''"
+                    @click="$emit('select-time', offered.time)">
+                <span class="purchase__chip-t">{{ shortTime(offered.time) }}</span>
+                <span v-if="almostFull(offered)" class="purchase__chip-full">{{ t('almost_full') }}</span>
+            </button>
+        </div>
     </div>
 
     <template v-if="selectedTime">

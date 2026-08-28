@@ -2182,6 +2182,36 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       celdas con 2 reservables (se busca en vez de elegir); hora **12 de 13** (chips 68×39), ~400 px
       vacíos y ningún chip dice cómo está de lleno; catálogo **bien**. `[DECIDIDO owner]`: tira
       deslizable con ajuste para la hora y «quedan pocas» bajo umbral configurable.
+      ▶ ✅ **UNIDADES 2, 3 y 4 EN EL ÁRBOL** (2026-08-28, `#239`, spec propia
+      **`specs/cajon-en-movil.md`**). ⚠️⚠️ **Lo primero fue CORREGIR la premisa de `#237`**: de «2 de
+      42» se dedujo que sobraban días, y medido hay **182 días reservables** (horizonte 6 meses) —no
+      faltaban días, **sobraba rejilla**; el «2 de 42» solo vale del mes en curso, que abre casi
+      entero en el pasado—. Por eso el calendario **no se retira**: queda plegado tras «Ver más
+      fechas» para el salto largo (`[DECIDIDO owner]`). Entra la **tira de días**
+      (`calendar.js::buildStrip()`), la **tira de horas** con ajuste, el aviso **«Casi llena»** sin
+      número con umbral en el panel (`booking.low_availability_max`, `AvailabilitySettings` +
+      `GET /config` con su operador escrito), y los objetivos de **44 px** (celdas 43→45, flechas
+      32→44, chips 68×39→72×44, «Volver» con 45 px de área sin engordar la banda).
+      ⚠️⚠️ **La HORA lleva una objeción MEDIDA que el owner mantuvo**: las 11 horas **cabían a la
+      vez** en tres filas y la tira enseña **4 de 11**. Escrito en la spec §4.2 para que no se lea
+      como un descuido.
+      ⚠️ **La vela sola no bastaba** (`--bg` y `--bg-card` casi coinciden): lo que dice «hay más» es el
+      chip **cortado por el borde**, así que las tiras salen a sangre. Y el separador de mes **nacía
+      cortado** sin su `scroll-snap-align`.
+      **Verificación**: JS 813 → 835 · +20 casos PHP · **10 mutaciones, las 10 muerden** · headless
+      **22/22** (`VERIFICACION-E2E-CAJON.md` §5.novodecies) · chunk 252,27 → 255,13 KiB (techo 256).
+      ❗ **Queda**: el **OJO del owner**, la unidad 5 (carrito e identificación, **sin medir**) y el
+      **hueco vertical** —366 px vacíos en fecha, **452 en hora**, y la tira lo empeoró ~50—, que es
+      decisión de producto (`[PENDIENTE: owner]`).
+- [ ] **CUMPLEAÑOS MIXTO** — apuntado por el owner el 2026-08-28, **sin diseñar**: un cumple KIDS con
+      un invitado por encima de la edad del pack pasa a **MIXTO** (etiqueta «MIXTA» para cliente y
+      operador, y la diferencia de precio KIDS↔JUMP por persona, visible en el desglose de los dos).
+      ⚠️⚠️ **Medido: TRES premisas del encargo no se cumplen hoy** — el post-formulario **no pide la
+      edad**, los dos packs **cuestan lo mismo** (15/18 €) y **comparten zona** (la 4), lo que
+      contradice «cada zona tiene su hora»: hay que comprobarlo contra la instalación REAL, porque si
+      allí son zonas distintas esto toca **AFORO**. ❗ **El primer paso NO es código: son las seis
+      preguntas de `specs/cumple-mixto.md` §5**, y la del **cobro** es dinero después de un pedido
+      pagado. ⚠️ El post-formulario es editable, así que «mixto» **va y viene**.
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de

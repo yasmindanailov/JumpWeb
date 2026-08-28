@@ -1611,3 +1611,52 @@ falta el `<noscript>` y la portada se queda sin navegación para quien no ejecut
   el icono del PRODUCTO.
 - **El contraste** de los dos tonos nuevos de la puerta (`--success-*` sobre blanco y sobre gris
   oscuro): medidos los colores, no calculados los ratios.
+
+---
+
+## §5.novodecies · LA FECHA Y LA HORA EN MÓVIL — ✅ medido en headless el 2026-08-28 (22/22 + 2/2), pendiente del OJO del owner (`DECISIONES #239`)
+
+El rediseño de los pasos 2 y 3 del embudo a **390×844** (`specs/cajon-en-movil.md`). Playwright dentro
+del contenedor (`/home/sail/e2e/`), la web en `http://localhost`. La sonda vive fuera del árbol a
+propósito: `deploy.sh` no excluye una carpeta nueva en la raíz.
+
+### Lo que la sonda midió, y contra qué se compara
+
+| | Antes (`#237`) | Ahora |
+|---|---|---|
+| Chips de día reservable | — | **182**, con separador por mes (`Ago · Sept · … · Feb 2027`) |
+| Celda del calendario | 43×43 | **45×45** |
+| Flecha de mes | 32×32 | **44×44** |
+| Chip de día | — | **56×76** |
+| Chip de hora | 68×39 | **72×44** |
+| «Ver más fechas» | — | 350×44 |
+| Controles bajo 44 px · fecha / hora | 11 de 12 · 12 de 13 | **0 · 0** |
+| Horas visibles sin deslizar | 11 de 11 | **4 de 11** |
+| Desborde horizontal de la página | — | **0 px** |
+
+Y además: el calendario **nace plegado** con `aria-expanded="false"`, «Ver más fechas» lo abre y lo
+anuncia; la tira **desplaza de verdad** (11.535 px de contenido en 390 de carril); al **volver** con el
+día 40 elegido el carril se coloca en él (`scrollLeft 2445`, chip a la vista); y el clic **10 px por
+encima** del «Volver» sigue siendo suyo.
+
+El camino completo del aviso —panel → `/config` → store → chip— con el umbral a **100**: **11 de 11**
+horas con «Casi llena» y el rótulo literal correcto. Con el umbral por defecto (8) y 40 plazas libres:
+**ninguna**, que es lo correcto.
+
+⚠️⚠️ **DOS instrumentos propios salieron mal antes de acertar.** Medir la CAJA PINTADA daba «Volver»
+como defecto (61×17) cuando su área táctil son 45 px —llamaba defecto a la solución—; medirlo con
+`elementFromPoint()` daba **178 defectos** en la tira, porque los chips fuera del carril están fuera
+del VIEWPORT y ahí no hay nada que golpear. Lo que vale es geometría: la caja **más el pseudo-elemento
+que amplía el área**.
+
+### ❗ Lo que tiene que mirar el OWNER (un headless mide, no valida)
+
+1. **Deslizar las dos tiras con el dedo**: que el ajuste no pelee con el impulso y que el chip cortado
+   por el borde de la pantalla se lea como «hay más».
+2. **La hora enseña 4 de 11**: decir si compensa. Está discutido y decidido en
+   `specs/cajon-en-movil.md` §4.2, con el número que lo motivó.
+3. **«Ver más fechas»** → el calendario, elegir un día de dentro de tres meses, y volver.
+4. **«Casi llena»**: subir el umbral en *Ajustes → Aspecto y opciones de la web*, ver el rótulo, y
+   dejarlo donde quiera. `0` lo apaga.
+5. **El hueco vertical** (`specs/cajon-en-movil.md` §7.4): 366 px vacíos en fecha y **452 en hora**.
+   Está medido y sin resolver a propósito — rellenarlo es decisión suya.

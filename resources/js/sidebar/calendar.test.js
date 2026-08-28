@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    buildWeeks, canGoNext, canGoPrev, initialMonth, monthLabel, monthOf, offeredMonths, shiftMonth,
-    weekdayHeaders,
+    buildStrip, buildWeeks, canGoNext, canGoPrev, initialMonth, monthLabel, monthOf, offeredMonths,
+    shiftMonth, weekdayHeaders,
 } from './calendar.js';
 
 /**
@@ -249,4 +249,112 @@ test('sin oferta, el respaldo es el mes de HOY en local, no en UTC', () => {
     } finally {
         process.env.TZ = original;
     }
+});
+
+// ── La TIRA de días reservables (`DECISIONES #239`) ───────────────────────────────────────────────
+
+/**
+ * ⚠️ **La tira solo puede llevar días OFRECIDOS.** Es toda su razón de ser: el calendario pinta 42
+ * celdas de las que a 28 de agosto solo 4 eran seleccionables, y la tira existe para que el cliente
+ * ELIJA en vez de buscar. Un día no ofrecido dentro de la tira la devolvería al problema original.
+ */
+test('la tira lleva EXACTAMENTE los días ofrecidos, en su orden, y ninguno más', () => {
+    const oferta = [
+        { date: '2026-08-28', price_cents: 990, rate_key: 'normal' },
+        { date: '2026-08-30', price_cents: 1200, rate_key: 'special' },
+        { date: '2026-09-01', price_cents: 990, rate_key: 'normal' },
+    ];
+
+    const dias = buildStrip(oferta, null, 'es').flatMap((grupo) => grupo.days.map((d) => d.date));
+
+    assert.deepEqual(dias, ['2026-08-28', '2026-08-30', '2026-09-01']);
+});
+
+test('agrupa por mes conservando el orden de la oferta', () => {
+    const oferta = [
+        { date: '2026-08-30', price_cents: null, rate_key: 'normal' },
+        { date: '2026-09-01', price_cents: null, rate_key: 'normal' },
+        { date: '2026-09-02', price_cents: null, rate_key: 'normal' },
+    ];
+
+    const grupos = buildStrip(oferta, null, 'es');
+
+    assert.equal(grupos.length, 2);
+    assert.deepEqual(grupos.map((g) => g.month), ['2026-08', '2026-09']);
+    assert.deepEqual(grupos.map((g) => g.days.length), [1, 2]);
+});
+
+/**
+ * ⚠️ **El AÑO entra en el rótulo solo cuando cambia**, y este es el caso que lo fija: con seis meses
+ * de horizonte desde agosto la tira llega a febrero del año siguiente, y dos «Feb» indistinguibles a
+ * 182 chips de distancia son un error de reserva. El año de referencia es el del PRIMER día ofrecido,
+ * no el de «hoy»: la tira se rotula contra sí misma.
+ */
+test('el rótulo del mes lleva AÑO solo cuando cambia de año', () => {
+    const grupos = buildStrip([
+        { date: '2026-12-30', price_cents: null, rate_key: 'normal' },
+        { date: '2027-01-02', price_cents: null, rate_key: 'normal' },
+    ], null, 'es');
+
+    assert.ok(! /2026|2027/.test(grupos[0].label), `el primer mes no lleva año: «${grupos[0].label}»`);
+    assert.ok(/2027/.test(grupos[1].label), `el mes del año siguiente sí: «${grupos[1].label}»`);
+});
+
+test('el día elegido viene MARCADO, y solo él', () => {
+    const oferta = [
+        { date: '2026-08-28', price_cents: null, rate_key: 'normal' },
+        { date: '2026-08-29', price_cents: null, rate_key: 'normal' },
+    ];
+
+    const dias = buildStrip(oferta, '2026-08-29', 'es').flatMap((g) => g.days);
+
+    assert.deepEqual(dias.map((d) => d.selected), [false, true]);
+});
+
+test('cada día lleva su precio y su tipo de tarifa tal y como llegan de la API', () => {
+    const [grupo] = buildStrip([{ date: '2026-08-29', price_cents: 1200, rate_key: 'special' }], null, 'es');
+
+    assert.equal(grupo.days[0].price_cents, 1200);
+    assert.equal(grupo.days[0].type, 'special');
+    assert.equal(grupo.days[0].day, 29);
+});
+
+/** Un día sin tarifa ese día es legítimo (`dayPriceCents` documenta el `null`): no se inventa un 0. */
+test('un día sin precio conserva el null, no cae a cero', () => {
+    const [grupo] = buildStrip([{ date: '2026-08-29', price_cents: null, rate_key: 'normal' }], null, 'es');
+
+    assert.equal(grupo.days[0].price_cents, null);
+});
+
+test('sin oferta la tira está vacía, y una entrada no-lista no lanza', () => {
+    assert.deepEqual(buildStrip([], null, 'es'), []);
+    assert.deepEqual(buildStrip(undefined, null, 'es'), []);
+    assert.deepEqual(buildStrip(null, null, 'es'), []);
+});
+
+/**
+ * ⚠️ **El mismo huso que el resto del módulo, y aquí muerde distinto.** `buildWeeks()` se desplazaría
+ * una casilla; la tira pondría el **nombre del día equivocado** en el chip, que es lo que el cliente
+ * lee para decidir. Con `TZ` al oeste, `new Date('2026-08-29')` es el 28 local — un día antes.
+ */
+test('el nombre del día se calcula en horario LOCAL, no parseando la cadena', () => {
+    const original = process.env.TZ;
+
+    try {
+        process.env.TZ = 'America/Los_Angeles';
+        const [grupo] = buildStrip([{ date: '2026-08-29', price_cents: null, rate_key: 'normal' }], null, 'es');
+
+        // 29 de agosto de 2026 es SÁBADO. Parseando la cadena saldría viernes.
+        assert.equal(grupo.days[0].weekday, 'Sáb', `salió «${grupo.days[0].weekday}»`);
+        assert.equal(grupo.days[0].day, 29);
+    } finally {
+        process.env.TZ = original;
+    }
+});
+
+test('los rótulos van capitalizados y sin el punto de la abreviatura', () => {
+    const [grupo] = buildStrip([{ date: '2026-08-29', price_cents: null, rate_key: 'normal' }], null, 'es');
+
+    assert.equal(grupo.days[0].weekday, 'Sáb');
+    assert.equal(grupo.label.charAt(0), grupo.label.charAt(0).toUpperCase());
 });

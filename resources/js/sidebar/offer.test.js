@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { dayPriceCents, initialQuantity, maxQuantityFor, minQuantityFor, timeAt } from './offer.js';
+import { dayPriceCents, initialQuantity, isAlmostFull, maxQuantityFor, minQuantityFor, timeAt } from './offer.js';
 
 /**
  * Lo que la oferta dice del paso 3 (Fase 4 · paso 4.7·2b·2·B).
@@ -110,4 +110,49 @@ test('un día sin tarifa da null, igual que un día que no está en la oferta', 
     assert.equal(dayPriceCents(DATES, '2026-09-01'), null);
     assert.equal(dayPriceCents(DATES, null), null);
     assert.equal(dayPriceCents(null, '2026-08-14'), null);
+});
+
+// ── El aviso de «casi llena» (`DECISIONES #239`) ──────────────────────────────────────────────────
+
+test('una hora se anuncia casi llena cuando sus plazas libres NO SUPERAN el umbral', () => {
+    assert.equal(isAlmostFull({ time: '10:00:00', available: 8, max_quantity: 8 }, 8), true, 'el borde entra');
+    assert.equal(isAlmostFull({ time: '10:00:00', available: 9, max_quantity: 9 }, 8), false, 'uno por encima, no');
+    assert.equal(isAlmostFull({ time: '10:00:00', available: 1, max_quantity: 1 }, 8), true);
+});
+
+/**
+ * ⚠️ **`0` es «no avisar», no «avisar cuando no queden plazas».** Sin esta rama, un operador que
+ * apaga el aviso lo vería aparecer en la única franja donde más chirría.
+ */
+test('con umbral 0 no se anuncia ninguna hora, ni siquiera una sin plazas', () => {
+    assert.equal(isAlmostFull({ time: '10:00:00', available: 0, max_quantity: 0 }, 0), false);
+    assert.equal(isAlmostFull({ time: '10:00:00', available: 3, max_quantity: 3 }, 0), false);
+});
+
+/** Sin `/config` el umbral no se pudo leer: no se inventa escasez. */
+test('sin umbral leído no se anuncia nada', () => {
+    assert.equal(isAlmostFull({ time: '10:00:00', available: 1 }, undefined), false);
+    assert.equal(isAlmostFull({ time: '10:00:00', available: 1 }, null), false);
+    assert.equal(isAlmostFull({ time: '10:00:00', available: 1 }, '8'), false, 'una cadena no es un umbral');
+});
+
+/**
+ * ⚠️ **Lee `available`, NO `max_quantity`**, y en un pack no son el mismo número: medido en la
+ * instalación de referencia, `available = 60` (plazas de la franja) y `max_quantity = 20` (invitados
+ * de ESA fiesta). Con el campo equivocado la franja vacía se anunciaría «casi llena».
+ */
+test('en un pack el aviso mira las plazas de la FRANJA, no el tope de la fiesta', () => {
+    // ⚠️ Los dos números tienen que caer a LADOS DISTINTOS del umbral, o el caso no distingue el
+    // campo: la primera versión usaba 60/20 con umbral 8 —los dos por encima— y la mutación que
+    // cambiaba `available` por `max_quantity` pasaba en verde. Un pack de máximo 6 invitados en una
+    // franja con 60 plazas libres es el estado real que separa los dos.
+    assert.equal(isAlmostFull({ time: '10:00:00', available: 60, max_quantity: 6 }, 8), false,
+        'franja vacía con fiesta pequeña: NO está casi llena');
+    assert.equal(isAlmostFull({ time: '10:00:00', available: 6, max_quantity: 20 }, 8), true,
+        'franja casi llena aunque la fiesta admita más: SÍ está casi llena');
+});
+
+test('una hora sin el campo no lanza y no se anuncia', () => {
+    assert.equal(isAlmostFull(null, 8), false);
+    assert.equal(isAlmostFull({ time: '10:00:00' }, 8), false);
 });

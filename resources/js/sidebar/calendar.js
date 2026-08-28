@@ -199,3 +199,79 @@ export function initialMonth(offeredDates = [], now = new Date()) {
 
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 }
+
+/**
+ * La TIRA de días reservables, agrupados por mes (`DECISIONES #239`).
+ *
+ * ⚠️ **Por qué existe, medido el 2026-08-28.** El calendario mensual pintaba **42 celdas** y abría
+ * en el mes en curso, donde la mayoría ya han pasado: a 28 de agosto quedaban **4 de 42**
+ * seleccionables. El cliente no elegía, **buscaba**. Y el problema no era que hubiera pocos días
+ * —hay **182**, seis meses de horizonte con el parque abierto a diario—: era que la rejilla obliga a
+ * leer el mes entero para encontrar «pasado mañana», que es lo que compra casi todo el mundo.
+ *
+ * Esto no sustituye al calendario, que sigue existiendo tras «ver más fechas» para el salto largo
+ * —un cumpleaños dentro de tres meses no se alcanza deslizando—. `[DECIDIDO owner, 2026-08-28]`.
+ *
+ * ⚠️ **Aquí no se decide qué días se ofrecen** (`AFORO-02`, `CE-4`): eso lo dice `SlotOffer` y llega
+ * por `GET availability/{producto}/dates`. Esto agrupa por mes y pone el nombre del día. Igual que
+ * `buildWeeks()`, es presentación.
+ *
+ * ⚠️ **Y también en horario LOCAL**, por lo mismo que todo este módulo: `new Date('2026-08-01')` es
+ * medianoche UTC y en un huso al oeste cae en julio. Las fechas se parten a mano.
+ *
+ * ⚠️ **El AÑO entra en el rótulo del mes solo cuando cambia.** Con seis meses de horizonte desde
+ * agosto la tira llega a febrero del año siguiente, y dos «Feb» indistinguibles a 182 chips de
+ * distancia son un error de reserva. Ponerlo siempre sería ruido en el 90 % de los casos.
+ *
+ * @param {Array<{date: string, price_cents: number|null, rate_key: string}>} offeredDates lo que devuelve la API
+ * @param {string|null} selectedDate
+ * @param {string} locale
+ * @returns {Array<{month: string, label: string, days: Array<{date: string, day: number, weekday: string, price_cents: number|null, type: string|null, selected: boolean}>}>}
+ */
+export function buildStrip(offeredDates = [], selectedDate = null, locale = 'es') {
+    const list = Array.isArray(offeredDates) ? offeredDates : [];
+
+    if (list.length === 0) {
+        return [];
+    }
+
+    const weekdayOf = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+    const monthOnly = new Intl.DateTimeFormat(locale, { month: 'short' });
+    const monthAndYear = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' });
+
+    // El año de referencia es el del PRIMER día ofrecido, no el de «hoy»: la tira se rotula contra
+    // sí misma, así que abrir en enero un horizonte que empieza en diciembre no repite el año en
+    // todos los grupos.
+    const [firstYear] = parts(list[0].date);
+
+    const groups = [];
+    let current = null;
+
+    for (const offer of list) {
+        const [year, month, day] = parts(offer.date);
+        const key = `${year}-${String(month).padStart(2, '0')}`;
+        // ⚠️ Construida con tres números, NUNCA parseando la cadena: ver la cabecera del módulo.
+        const date = new Date(year, month - 1, day);
+
+        if (current === null || current.month !== key) {
+            current = { month: key, label: capitalize((year === firstYear ? monthOnly : monthAndYear).format(date)), days: [] };
+            groups.push(current);
+        }
+
+        current.days.push({
+            date: offer.date,
+            day,
+            weekday: capitalize(weekdayOf.format(date).replace('.', '')),
+            price_cents: offer.price_cents ?? null,
+            type: offer.rate_key ?? null,
+            selected: offer.date === selectedDate,
+        });
+    }
+
+    return groups;
+}
+
+/** Mayúscula inicial. `Intl` devuelve «vie» y «ago» en español, y la tira los pinta como rótulo. */
+function capitalize(label) {
+    return label.charAt(0).toUpperCase() + label.slice(1);
+}

@@ -133,3 +133,51 @@ describe('el store del día', () => {
         assert.equal(d.month, '2026-09', 'ni recoloca el calendario');
     });
 });
+
+// ── La TIRA y el calendario plegable (`DECISIONES #239`) ──────────────────────────────────────────
+
+describe('la tira de días reservables', () => {
+    /** ⚠️ Antes-y-después, como el resto del fichero: un getter sin evaluar no puede estar rancio. */
+    test('se REFRESCA al elegir día y al recibir oferta nueva', () => {
+        const d = store();
+        d.setOffer(OFERTA);
+
+        assert.deepEqual(d.strip.flatMap((g) => g.days.map((x) => x.selected)), [false, false, false]);
+
+        d.select('2026-10-03');
+        assert.deepEqual(d.strip.flatMap((g) => g.days.map((x) => x.selected)), [false, true, false]);
+
+        d.setOffer([{ date: '2027-01-05', price_cents: 500 }]);
+        assert.equal(d.strip.length, 1, 'la tira sigue a la oferta nueva');
+        assert.equal(d.strip[0].days.length, 1);
+    });
+
+    test('el calendario nace CERRADO', () => {
+        assert.equal(store().calendarOpen, false);
+    });
+
+    test('«ver más fechas» lo abre y lo cierra', () => {
+        const d = store();
+
+        d.toggleCalendar();
+        assert.equal(d.calendarOpen, true);
+
+        d.toggleCalendar();
+        assert.equal(d.calendarOpen, false);
+    });
+
+    /**
+     * ⚠️ Un producto nuevo devuelve el paso a su forma por defecto. Sin esto, quien despliega el
+     * calendario en una entrada se encuentra la pantalla densa al mirar el pack siguiente, por una
+     * decisión que tomó para otra cosa.
+     */
+    test('una oferta nueva vuelve a cerrar el calendario', () => {
+        const d = store();
+        d.setOffer(OFERTA);
+        d.toggleCalendar();
+
+        d.setOffer([{ date: '2027-01-05', price_cents: 500 }]);
+
+        assert.equal(d.calendarOpen, false);
+    });
+});

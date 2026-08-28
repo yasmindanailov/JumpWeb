@@ -20,6 +20,15 @@ export const useTimeStore = defineStore('time', {
 
         /** La hora elegida (`HH:MM`), o `null`. */
         selected: null,
+
+        /**
+         * Umbral del aviso «casi llena», tal y como lo publica `GET /config` (`DECISIONES #239`).
+         *
+         * ⚠️ **Arranca en 0, que significa NO AVISAR.** Si `/config` no llegó, el cajón no sabe qué
+         * considera «pocas» esta instalación, y anunciar escasez sin ese dato sería inventarla. El
+         * respaldo silencioso es la única postura honesta.
+         */
+        lowMax: 0,
     }),
 
     getters: {
@@ -33,6 +42,16 @@ export const useTimeStore = defineStore('time', {
     actions: {
         setOffer(times) {
             this.offered = Array.isArray(times) ? times : [];
+        },
+
+        /**
+         * Guarda el umbral que publica el servidor.
+         *
+         * ⚠️ **Sanea a entero y descarta cualquier otra cosa**, incluida una cadena numérica: un
+         * umbral que no es un entero no se «arregla» adivinando, se ignora — y el respaldo (0) calla.
+         */
+        setLowMax(value) {
+            this.lowMax = Number.isInteger(value) && value >= 0 ? value : 0;
         },
 
         /**
@@ -64,7 +83,12 @@ export const useTimeStore = defineStore('time', {
             this.selected = null;
         },
 
-        /** Olvida las dos cosas: la oferta de horas es de UN día, y al cambiar de día ya no vale. */
+        /**
+         * Olvida las dos cosas: la oferta de horas es de UN día, y al cambiar de día ya no vale.
+         *
+         * ⚠️ **El umbral NO se olvida**: es de la instalación, no del día, y llega una sola vez en el
+         * arranque. Borrarlo aquí dejaría el aviso mudo desde la segunda fecha que mira el cliente.
+         */
         reset() {
             this.offered = [];
             this.selected = null;

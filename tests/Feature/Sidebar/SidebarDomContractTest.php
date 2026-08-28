@@ -174,6 +174,35 @@ class SidebarDomContractTest extends TestCase
         );
     }
 
+    /**
+     * ⚠️ **El CALENDARIO del paso 2, desplegado — y este caso no es un extra: sin él el calendario
+     * entero deja de estar cubierto** (`#239`).
+     *
+     * Desde el rediseño el paso abre con la TIRA y el calendario nace plegado, así que los dos casos
+     * de arriba ya **no emiten ni una celda de la rejilla**. Si nadie lo abre, `.cal__grid`,
+     * `.cal__day`, las flechas del mes y la leyenda salen del gate sin que nada avise — y son
+     * exactamente los selectores estructurales que este test existe para vigilar (un `<span>` donde
+     * había un `<button>` pierde el estilo con el contrato de clases cumplido al 100 %).
+     *
+     * Es la misma lección que el `aria-current` de aquí arriba, aplicada a un bloque entero: **hay que
+     * llevar el estado a donde el árbol existe.**
+     */
+    public function test_the_month_calendar_is_the_same_tree_when_unfolded(): void
+    {
+        $product = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->slotsForNextDays($product, 5);
+
+        $vue = $this->vueTree(2, [], 'wiz__title', withSiblings: true,
+            api: $this->dateApiPayload($product->id),
+            state: $this->clientState(calendarOpen: true));
+
+        $this->assertTree(__FUNCTION__, $vue,
+            "El árbol del calendario desplegado ha CAMBIADO.\n".
+            "⚠️ Una celda no reservable es un `<span>` y una reservable un `<button>`: el CSS los\n".
+            "distingue por el TIPO DE ELEMENTO, no por la clase.\n\n"
+        );
+    }
+
     // ── El paso 3: hora, cantidad y complementos ──────────────────────────────────────────────
 
     /**
@@ -208,6 +237,40 @@ class SidebarDomContractTest extends TestCase
 
         $this->assertTree(__FUNCTION__, $vue,
             "El árbol del paso de hora DIFIERE entre los dos motores.\n\n"
+        );
+    }
+
+    /**
+     * ⚠️ **Una hora casi llena LO DICE, y este caso es el único que hace aparecer ese nodo** (`#239`).
+     *
+     * `[DECIDIDO owner]`: sin número — dice que queda poco, no cuánto. El umbral lo publica
+     * `GET /config` (`available <= low_availability_max`, por defecto 8) y lo edita el operador.
+     *
+     * ⚠️ **La franja se siembra con capacidad 6 a propósito.** Con las 20 de siempre `available` vale
+     * 20, el rótulo no se pinta y el caso saldría verde sin cubrir nada: es la trampa que este fichero
+     * ya documenta con `aria-current`. Y el aforo se mira sobre `available`, NO sobre `max_quantity`
+     * —en un pack no son el mismo número—, así que se prueba con una ENTRADA, donde el número que se
+     * lee es inequívocamente el de la franja.
+     */
+    public function test_a_nearly_full_hour_says_so(): void
+    {
+        $entry = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        $this->slotsForNextDays($entry, 3, capacity: 6);
+
+        $date = now()->addDay()->toDateString();
+
+        $vue = $this->vueTree(3, [], 'timestrip', withSiblings: false,
+            api: $this->timeApiPayload($entry->id, $date, '10:00:00', 1),
+            state: $this->clientState($date, '10:00:00', 1));
+
+        $this->assertStringContainsString(
+            'purchase__chip-full', $vue,
+            "El caso no está haciendo aparecer el rótulo de «casi llena», así que no cubre nada.\n".
+            'Comprueba la capacidad de la franja contra `low_availability_max` de `GET /config`.'
+        );
+
+        $this->assertTree(__FUNCTION__, $vue,
+            "El árbol de la tira de horas con el aviso de «casi llena» ha CAMBIADO.\n\n"
         );
     }
 
@@ -1714,7 +1777,7 @@ class SidebarDomContractTest extends TestCase
      * seleccionables — es decir, pasaría sin mirar lo que de verdad importa: la celda con precio,
      * la seleccionada y la deshabilitada.
      */
-    private function slotsForNextDays(TicketType $product, int $days): void
+    private function slotsForNextDays(TicketType $product, int $days, int $capacity = 20): void
     {
         for ($i = 1; $i <= $days; $i++) {
             // ⚠️ Las franjas son de la ZONA, no del producto, y su clave única es (zona, día, hora).
@@ -1726,7 +1789,7 @@ class SidebarDomContractTest extends TestCase
                     'date' => now()->addDays($i)->toDateString(),
                     'start_time' => '10:00:00',
                 ],
-                ['end_time' => '11:00:00', 'capacity' => 20, 'online_capacity' => 20],
+                ['end_time' => '11:00:00', 'capacity' => $capacity, 'online_capacity' => $capacity],
             );
         }
     }
@@ -1768,6 +1831,7 @@ class SidebarDomContractTest extends TestCase
         ?int $step = null,
         ?int $productId = null,
         ?array $notice = null,
+        bool $calendarOpen = false,
     ): array {
         return array_filter([
             'selectedDate' => $selectedDate,
@@ -1778,6 +1842,10 @@ class SidebarDomContractTest extends TestCase
             'productId' => $productId,
             'notice' => $notice,
             'locale' => app()->getLocale(),
+            // ⚠️ **El calendario del paso 2 nace PLEGADO** (`#239`), así que su árbol solo existe en el
+            // caso que lo abre. `false` se cae con el `array_filter` de abajo y el renderizador aplica
+            // su propio respaldo, que es el mismo.
+            'calendarOpen' => $calendarOpen ?: null,
         ], fn ($value) => $value !== null);
     }
 
@@ -1806,6 +1874,11 @@ class SidebarDomContractTest extends TestCase
                 'quantity' => $quantity, 'date' => $date, 'time' => $time,
             ])->assertOk()->json(),
             'catalog' => $this->getJson($root.'/catalog/products')->assertOk()->json(),
+            // ⚠️ **`/config` entra el 2026-08-28** (`#239`): de ahí sale el umbral del aviso «casi
+            // llena», y sin él el chip nunca lo pinta — el caso saldría verde sin cubrir nada del
+            // rótulo. Es la misma lección que el `aria-current` del día elegido: un nodo solo está
+            // cubierto por el caso que lo hace aparecer.
+            'config' => $this->getJson($root.'/config')->assertOk()->json(),
         ];
     }
 

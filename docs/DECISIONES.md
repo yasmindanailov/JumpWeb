@@ -13063,3 +13063,91 @@ anchos**. Minijuego intacto y re-medido: **150 (k = 0,5)** en reposo, **358 (k =
 CTA a `opacity: 0` con `pointer-events: none`, **cero errores de JavaScript**.
 **`CappedContainerGutterTest` nuevo (4 casos) · 4 mutaciones, las 4 muerden.**
 Suite **3.359 / 22.125** · Pint ✓.
+
+## #239 · 2026-08-28 · La FECHA deja de ser una rejilla y la HORA una lista: el paso 2 y el 3 del cajón, en móvil
+
+Segunda entrega del encargo «el SPA tiene que ser perfecto en móvil, que es el 90 %». La primera
+(`#237`) fue **medir**, y de ahí salió el orden de trabajo. Aquí van las unidades 2, 3 y 4.
+Spec con todo el detalle: **`docs/specs/cajon-en-movil.md`**.
+
+### ⚠️ Lo primero fue corregir una premisa de la propia medición anterior
+
+`#237` escribió «un mes de 42 celdas donde solo **2** eran reservables» y de ahí dedujo que sobraban
+días. Medido de nuevo contra `AvailabilityOffer` antes de diseñar nada: hay **182 días reservables**
+por producto (horizonte de 6 meses, el parque abre a diario), **11 horas** por día en entradas y 10 en
+packs, con aforos de 40 · 25 · 60.
+
+▶ O sea que **no faltaban días, sobraba rejilla**: lo de «2 de 42» es cierto solo del **mes en curso**,
+que abre casi entero en el pasado. El defecto no es «hay poca oferta», es «el calendario abre en el mes
+que ya pasó y obliga a leer una rejilla para elegir pasado mañana». Y eso cambia el diseño: la tira
+resuelve el caso normal, pero **el calendario no se puede retirar** —una reserva de cumpleaños se hace
+con meses de antelación y 182 chips no se recorren con el dedo—.
+
+### Las tres decisiones del owner
+
+1. **Tira de días + «Ver más fechas»** con el calendario plegado detrás. `[DECIDIDO owner]`.
+2. **La hora es una tira deslizable con ajuste.** `[DECIDIDO owner]` ⚠️⚠️ **y con una objeción medida
+   encima, que mantuvo**: son 11 horas y en 390 px **cabían las 11 a la vez** en tres filas; la tira
+   enseña **4 de 11** (medido en navegador) y esconde siete tras un gesto. La eligió por coherencia con
+   los carruseles con `scroll-snap` del artboard de móvil del cliente. Queda escrito para que la
+   siguiente sesión sepa que fue una decisión y no un descuido — y por eso la señal de «la lista sigue»
+   pasa a ser obligatoria, no un adorno.
+3. **El aviso dice «Casi llena», sin número.** `[DECIDIDO owner]`. No publica el aforo restante.
+
+### Lo que entró
+
+- **`buildStrip()`** en `calendar.js`: agrupa por mes, nombra el día con `Intl` **en horario local** y
+  mete el año en el rótulo **solo cuando cambia** —con seis meses de horizonte la tira llega a febrero
+  del año siguiente, y dos «Feb» indistinguibles a 182 chips de distancia son un error de reserva—.
+- El **calendario plegable**, que nace cerrado y **vuelve a cerrarse con cada oferta nueva**: un
+  producto nuevo devuelve el paso a su forma por defecto en vez de heredar la decisión de otro.
+- El **aviso «Casi llena»**: `AvailabilitySettings` (lector defensivo, clave `booking.low_availability_max`,
+  defecto 8, rango 0–100), el campo en el panel, `low_availability_max` en `GET /config` **con su
+  operador escrito en el contrato** (`available <= low_availability_max`) y `offer.js::isAlmostFull()`.
+- **Objetivos de 44 px**: celdas 43→**45** (el relleno del calendario baja de 12 a 8 y el hueco de 4 a
+  3; es aritmética: `(351 − 2·relleno − 2·borde − 6·hueco)/7`), flechas 32→**44**, chips de hora
+  68×39→**72×44**, y el «Volver» de la banda con **45 px de área** sin engordar la banda.
+
+### Las cuatro cosas que costaron
+
+⚠️⚠️ **El aviso lee `available`, NUNCA `max_quantity`**, y la guarda que lo protegía **nació laxa**:
+usaba `available = 60, max_quantity = 20` con umbral 8 —los dos por encima—, así que intercambiar el
+campo pasaba **en verde**. Rehecha con 60/6, que los pone a lados distintos. *Una guarda no se sabe si
+sirve hasta que se muta con el fallo REAL que la motivó.*
+
+⚠️⚠️ **La vela sola no bastaba, y lo dijo el navegador**: el degradado va hacia `--bg` (#F4EFE3) y los
+chips son `--bg-card` (#FBF7EC) — **casi el mismo color**, así que el chip que asoma no se leía. Lo que
+no se puede confundir es un chip **cortado por el borde de la pantalla**, así que las dos tiras salen
+**a sangre**. La vela se queda porque se apaga sola: un degradado hacia el color del fondo es invisible
+cuando debajo ya no hay contenido, sin una línea de JS ni `animation-timeline`.
+
+⚠️ **El separador de mes NACÍA CORTADO** (`x = −5`): con `scroll-snap-align` solo en los días, el
+navegador colocaba el primer chip contra el borde del contenido y se comía el rótulo «Ago». **Una
+parada de ajuste no es «un sitio donde se pulsa», es «un sitio donde la tira puede quedarse quieta».**
+
+⚠️⚠️ **Dos instrumentos propios salieron mal antes de acertar, y los dos daban un número creíble**:
+medir la caja pintada daba «Volver» como defecto (61×17) cuando su área táctil son 45 —**llamaba
+defecto a la solución**—, y medirlo con `elementFromPoint()` daba **178 defectos** en la tira porque
+los chips fuera del carril están fuera del viewport. Vale la geometría: la caja **más el pseudo que
+amplía el área**. Tercera vez en la semana que el sospechoso correcto es el instrumento.
+
+### El contrato de árbol, y por qué gana DOS casos
+
+Desde el rediseño el paso 2 abre con la tira, así que los casos que ya había **dejaron de emitir una
+sola celda de la rejilla**: sin un caso que la despliegue, `.cal__grid`, `.cal__day`, las flechas y la
+leyenda salían del gate sin que nada avisara. Igual con el aviso, que con el umbral por defecto y 40
+plazas libres no aparece. Es la lección que el fichero ya tenía escrita para `aria-current`: **hay que
+llevar el estado a donde el árbol existe.** Manifiesto regenerado a propósito (4 entradas cambiadas,
+2 nuevas).
+
+### ❗ Lo medido que NO se ha resuelto, y es del owner
+
+**El hueco vertical.** Con 558 px de área desplazable: fecha **366 px vacíos (66 %)**, hora antes de
+elegir **452 (81 %)**. ⚠️ **La tira EMPEORÓ ese hueco unos 50 px** respecto a los ~400 de `#237` —donde
+había tres filas de chips ahora hay una—. Es la contrapartida directa de la decisión 2 y no se ha
+rellenado con nada: tapar un hueco con contenido inventado es una decisión de producto.
+`[PENDIENTE: owner]`.
+
+**Verificación**: JS 813 → **835** · PHP +20 casos · **10 mutaciones, las 10 muerden** · headless
+**22/22** a 390×844 y 2/2 más con el umbral alto (`VERIFICACION-E2E-CAJON.md` §5.novodecies) · chunk
+252,27 → **255,13 KiB** (techo 253 → 256, medido construyendo con y sin).

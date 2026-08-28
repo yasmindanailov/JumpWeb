@@ -104,7 +104,10 @@ class SidebarComponentBudgetTest extends TestCase
         // Y a 428 el mismo día: el guion headless cazó que el cajón nacido abierto con sesión no pedía
         // los menores (una línea de `watch` sobre el titular), y la pagó `showLineProblems`, que pasó
         // a UNA llamada porque «aplicar lo decidido a la cesta» es del store (`applyLineProblems`).
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 428, 'api' => 2],
+        // 428 → 429 el 2026-08-28 (`#239`): UNA línea, y es cableado, no lógica —`timeStore.setLowMax()`
+        // junto a las otras dos lecturas de `/config`—. La regla del aviso «casi llena» vive en
+        // `offer.js::isAlmostFull()`, que es un módulo plano con sus propios casos (`CE-6`).
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 429, 'api' => 2],
     ];
 
     /**

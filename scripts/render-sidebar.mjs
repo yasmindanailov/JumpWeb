@@ -49,7 +49,8 @@ import VerifyingStep from '../resources/js/sidebar/steps/VerifyingStep.vue';
 import { STEPS } from '../resources/js/sidebar/machine.js';
 import { searchIsEnabled, sectionsFrom } from '../resources/js/sidebar/catalog.js';
 import {
-    buildWeeks, canGoNext, canGoPrev, initialMonth, monthLabel, offeredMonths, weekdayHeaders,
+    buildStrip, buildWeeks, canGoNext, canGoPrev, initialMonth, monthLabel, offeredMonths,
+    weekdayHeaders,
 } from '../resources/js/sidebar/calendar.js';
 import { dayPriceCents, initialQuantity, maxQuantityFor, minQuantityFor } from '../resources/js/sidebar/offer.js';
 import { cartRows } from '../resources/js/sidebar/cart.js';
@@ -112,6 +113,12 @@ const PROPS_FROM_API = {
         const months = offeredMonths(dates);
 
         return {
+            // La TIRA (`#239`): la vía normal del paso. Se compone aquí, con el mismo código que
+            // corre en el navegador, por el mismo motivo que la rejilla.
+            strip: buildStrip(dates, state.selectedDate ?? null, state.locale),
+            // ⚠️ El calendario nace PLEGADO, así que un caso que quiera su árbol tiene que pedirlo:
+            // el estado por defecto no lo pinta y un caso que no lo diga no cubre nada de él.
+            calendarOpen: state.calendarOpen ?? false,
             weeks: buildWeeks(month, dates, state.selectedDate ?? null),
             weekdayHeaders: weekdayHeaders(state.locale),
             monthLabel: monthLabel(month, state.locale),
@@ -133,7 +140,13 @@ const PROPS_FROM_API = {
         const time = state.selectedTime ?? null;
 
         return {
-            times: times.map((t) => t.time),
+            // ⚠️ **Las horas van CRUDAS, no aplanadas a `HH:MM`** (`#239`): el chip necesita
+            // `available` para decir «casi llena». Aplanarlas aquí era el punto ciego que dejaba el
+            // dato fuera del componente aunque el contrato lo publicara desde el primer día.
+            times,
+            // El umbral sale de `GET /config`, que es de donde lo saca el cajón real. Sin esa
+            // respuesta en el caso vale 0 y ninguna hora se anuncia — el mismo respaldo que el store.
+            lowMax: api.config?.low_availability_max ?? 0,
             selectedTime: time,
             // La cantidad se DERIVA por defecto —así el gate ejercita el suelo y el techo—, pero un
             // caso puede forzarla: el cliente también la mueve con los botones del selector.
