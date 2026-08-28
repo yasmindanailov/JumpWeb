@@ -312,13 +312,29 @@ class HomePageTest extends TestCase
         // botones y **no reutiliza el par del armazón**. Son dos piezas con coreografías
         // distintas —el par intercambia mitades, el del hero no— y mezclarlas volvería a crear el
         // problema que `#223` acaba de cerrar.
-        foreach (['cta-med', 'cta-ghost', 'cta-pair', 'book-bar'] as $ajeno) {
-            $this->assertStringNotContainsString(
-                $ajeno, $hero,
-                "el hero ha metido dentro `{$ajeno}`, que es el par del armazón. El hero tiene sus ".
-                'propios botones (`hero__act--*`) y una coreografía distinta.',
-            );
-        }
+        // ⚠️⚠️ **CAMBIA DE SIGNO EN `#225`, y el motivo es el encargo.** Aquí se aseveraba que el
+        // hero **no** reutilizaba el par del armazón, porque entonces tenía botones propios con
+        // otra coreografía. `[DECIDIDO owner, 2026-08-28]`: la primera pantalla lleva **el mismo
+        // CTA**, abajo a la derecha, y al bajar se apaga justo cuando el de la cabecera se
+        // enciende. O sea que reutilizarlo dejó de ser un error y pasó a ser el mecanismo.
+        // ▶ Lo que sí sigue prohibido —y es lo que se asevera ahora— es que se cuele la BARRA DE
+        // MÓVIL dentro del hero: ésa vive fija abajo, tiene su propia visibilidad y dentro del
+        // hero se pintaría dos veces.
+        $this->assertStringContainsString(
+            'hero__pair-slot', $hero,
+            'el hero se ha quedado sin su CTA. La primera pantalla vuelve a no ofrecer comprar: es '.
+            'el agujero que `#224` abrió y `#225` cerró.',
+        );
+        $this->assertStringContainsString(
+            'cta-pair', $hero,
+            'el CTA del hero ha dejado de ser el componente compartido. Si deja de serlo, el relevo '.
+            'con el de la cabecera enseña dos botones distintos a mitad del cruce.',
+        );
+        $this->assertStringNotContainsString(
+            'book-bar', $hero,
+            'el hero ha metido dentro la barra flotante de móvil, que vive fija abajo y tiene su '.
+            'propia visibilidad: ahí dentro se pintaría dos veces.',
+        );
         // ⚠️⚠️ **EL HERO SE VACÍA EN `#224`** (`[DECIDIDO owner, 2026-08-28]`: «por ahora sin
         // texto y sin botones»). Aquí se aseveraba que el hero SÍ tenía sus botones y su eslogan;
         // las dos aserciones se van con su sujeto.
@@ -492,12 +508,21 @@ class HomePageTest extends TestCase
     /**
      * **El armazón nace bajo el hero, y la portada sigue ofreciendo la compra.**
      *
-     * ⚠️⚠️ **CORRECCIÓN, y va DELANTE del texto que corrige** (`#224`, 2026-08-28): el hero **se
-     * ha vaciado** por decisión del owner —«por ahora sin texto y sin botones»— eligiendo
-     * explícitamente «hero limpio y armazón oculto, como el mockup». O sea que la regla que este
-     * caso defendía **está suspendida a propósito**, y el caso pasa a aseverar el estado decidido
-     * para que nadie lo cambie sin enterarse. El razonamiento de abajo sigue siendo válido y por
-     * eso se conserva: es el motivo por el que la ficha de `DEUDA.md` está abierta.
+     * ⚠️⚠️ **DOS CORRECCIONES EN DOS DÍAS, y van DELANTE del texto que corrigen.**
+     *
+     * **(`#224`, 2026-08-28)** el hero se vació —«por ahora sin texto y sin botones»— y la regla
+     * que este caso defiende quedó **suspendida a propósito**: la primera pantalla se quedó sin
+     * ningún sitio donde comprar. El caso pasó a aseverar ese estado, y la ficha se abrió en
+     * `DEUDA.md` con severidad Alta.
+     *
+     * **(`#225`, mismo día)** el owner cierra el agujero por la puerta buena: la primera pantalla
+     * recupera **el mismo CTA del armazón**, abajo a la derecha, y al bajar se apaga justo cuando
+     * el de la cabecera se enciende. La ficha se cierra y este caso vuelve a su signo original.
+     *
+     * ▶ **La REGLA no ha cambiado ninguna de las dos veces**: quien llega a la portada y no hace
+     * scroll tiene que poder comprar. Lo que ha cambiado tres veces es QUIÉN la cumple —los
+     * botones propios del hero (`#216`), nadie (`#224`), el par del armazón (`#225`)—. Por eso el
+     * caso se re-apunta y no se borra: el sujeto es volátil, la regla no.
      *
      * ⚠️ **RE-APUNTADO, no retirado** (2c·8, `#216`): este caso aseveraba `x-data="navCtaReveal"`,
      * el componente que ocultaba SOLO el botón de comprar del armazón. Ese componente se retira —su
@@ -510,36 +535,70 @@ class HomePageTest extends TestCase
     public function test_the_hero_offers_the_purchase_because_the_frame_is_hidden_under_it(): void
     {
         $html = (string) $this->get('/')->assertOk()->getContent();
+        $css = (string) file_get_contents(public_path('css/site.css'));
 
-        // ⚠️⚠️ **ESTE CASO CAMBIA DE SIGNO EN `#224`, y el motivo va entero en el docblock.**
-        // `[DECIDIDO owner, 2026-08-28]`: el hero se vacía «por ahora», con el efecto delante y
-        // eligiendo explícitamente «hero limpio y armazón oculto, como el mockup».
-        //
-        // ▶ La regla de producto que este caso defendía —«la primera pantalla ofrece comprar»—
-        // **está suspendida a propósito**, no rota por descuido. Y como está suspendida, lo que
-        // se asevera ahora es el ESTADO DECIDIDO: que las dos mitades del acoplamiento siguen
-        // donde el owner las dejó. El día que alguien devuelva el botón al hero, o haga visible
-        // el armazón desde el primer píxel, este caso se pone rojo y le obliga a leer esto y a
-        // cerrar la ficha de `DEUDA.md` en vez de dejarla abierta para siempre.
-        //
-        // ⚠️ **No se borra, y no es ceremonia**: borrarlo dejaría el agujero sin ningún sitio en
-        // la suite que lo nombre, y un agujero que no aparece en ninguna parte deja de ser una
-        // decisión pendiente para convertirse en cómo son las cosas.
-        $this->assertDoesNotMatchRegularExpression(
-            '/<a[^>]+class="hero__act/', $html,
-            "El hero ha recuperado un botón de acción.\n".
-            "▶ Si es a propósito, ESTO ES UNA BUENA NOTICIA: cierra el agujero de la primera\n".
-            "  pantalla. Pero hay que hacerlo entero — retirar esta aserción, restaurar la que\n".
-            "  exigía el botón de comprar, y cerrar la ficha de `DEUDA.md`.\n".
-            '▶ Si NO es a propósito, alguien ha revertido `#224` sin enterarse.',
+        // ── 1 · La primera pantalla OFRECE COMPRAR ────────────────────────────────────────────
+        // ⚠️ El sujeto cambió dos veces en dos días y por eso conviene decirlo: `#216` lo cumplía
+        // con botones propios del hero, `#224` los retiró y dejó el agujero abierto a sabiendas,
+        // y `#225` lo cierra con **el mismo CTA del armazón**, colocado abajo a la derecha. La
+        // REGLA no ha cambiado nunca: quien llega y no hace scroll tiene que poder comprar.
+        $inicio = strpos($html, 'id="top"');
+        $this->assertNotFalse($inicio, 'no se encuentra el hero en la home');
+        $hero = substr($html, $inicio, strpos($html, '</header>', $inicio) - $inicio);
+
+        $this->assertStringContainsString(
+            'hero__pair-slot', $hero,
+            "La primera pantalla no ofrece comprar.\n".
+            "▶ El armazón nace OCULTO bajo el hero (`--nav-p`), así que sin este CTA quien llega a\n".
+            "  la portada y no hace scroll no tiene ningún sitio donde comprar ni forma de navegar.\n".
+            '▶ Es el agujero que `#224` abrió a propósito y `#225` cerró. Si vuelve, hay que reabrir '.
+            'la ficha de `DEUDA.md`.',
         );
 
-        // La otra mitad del acoplamiento: el armazón sigue naciendo oculto bajo el hero.
+        // ── 2 · Y es EL MISMO botón, no uno parecido ──────────────────────────────────────────
+        $this->assertStringContainsString(
+            'cta-pair', $hero,
+            'el CTA de la primera pantalla ha dejado de ser el componente compartido: a mitad del '.
+            'relevo se leerían dos botones distintos.',
+        );
+
+        // ── 3 · El relevo se apaga CUANDO el otro se enciende, y va atado al mismo token ──────
+        // ⚠️ Sin esto, alguien podría escribir `opacity: calc(1 - var(--nav-p))` —que parece lo
+        // mismo— y el CTA del hero seguiría valiendo 0,15 al llegar `.nav--live`, o sea que
+        // desaparecería de golpe. Los dos hechos tienen que ocurrir en el mismo fotograma.
+        $this->assertMatchesRegularExpression(
+            '/\.hero__pair-slot\s*\{[^}]*opacity:\s*calc\(\(var\(--nav-reveal-live\)\s*-\s*var\(--nav-p\)\)\s*\/\s*var\(--nav-reveal-live\)\)/s',
+            $css,
+            'el CTA de la primera pantalla ya no se apaga atado a `--nav-reveal-live`, que es el '.
+            'umbral en el que entra `.nav--live`. Si los dos se separan, el botón desaparece de '.
+            'golpe a mitad de fundido o se queda visible cuando ya no se puede pulsar.',
+        );
+
+        // ── 4 · `opacity: 0` NO saca del tabulador: el apagado son TRES cosas ─────────────────
+        foreach (['pointer-events:\s*none' => 'el ratón', 'visibility:\s*hidden' => 'el teclado y el lector de pantalla'] as $decl => $quien) {
+            $this->assertMatchesRegularExpression(
+                '/\.nav--live \.hero__pair-slot\s*\{[^}]*'.$decl.'/s', $css,
+                "el CTA apagado de la primera pantalla sigue alcanzable para {$quien}: `opacity: 0` ".
+                'no saca del orden de tabulación ni del árbol de accesibilidad. Quien navegue con '.
+                'tabulador se encontraría dos «Reservar» invisibles antes del que sí se ve.',
+            );
+        }
+
+        // ── 5 · En MÓVIL no se duplica ────────────────────────────────────────────────────────
+        // Ahí el CTA ya vive abajo, en la barra flotante. Dos botones idénticos a diez píxeles uno
+        // de otro no son redundancia útil.
+        $this->assertMatchesRegularExpression(
+            '/@media \(max-width: 720px\)\s*\{[^}]*\.hero__pair-slot\s*\{[^}]*display:\s*none/s',
+            $css,
+            'el CTA del hero se pinta también en móvil, donde ya está la barra flotante: serían dos '.
+            'botones iguales pegados.',
+        );
+
+        // ── 6 · La otra mitad del acoplamiento sigue en su sitio ──────────────────────────────
         $this->assertStringContainsString(
             'heroChoreo', $html,
-            'ha desaparecido la coreografía que oculta el armazón bajo el hero. Si el armazón ya '.
-            'es visible desde el primer píxel, el agujero de la primera pantalla está cerrado por '.
-            'la otra puerta: revisa este caso y la ficha de `DEUDA.md`.',
+            'ha desaparecido la coreografía que oculta el armazón bajo el hero. Si el armazón ya es '.
+            'visible desde el primer píxel, este relevo sobra: revísalo entero, no lo dejes a medias.',
         );
 
         $this->assertStringNotContainsString(

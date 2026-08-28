@@ -796,19 +796,22 @@ document.addEventListener('alpine:init', () => {
             }
 
             if (document.body.dataset.hasHero) {
-                // LANDING (única página con hero): comportamiento original — la barra entra cuando el
-                // CTA «prime» del hero abandona el viewport (mismo sentinel que el reveal del header) →
-                // hero y barra nunca co-visibles; sigue oculta en la primera pantalla.
-                const trigger = document.querySelector('.hero__sentinel');
-                if (trigger && 'IntersectionObserver' in window) {
-                    this._io = new IntersectionObserver(
-                        ([entry]) => { this.revealed = !entry.isIntersecting; },
-                        { threshold: 0 }
-                    );
-                    this._io.observe(trigger);
-                } else {
-                    this.revealed = true; // fail-open: sin observer, mejor la barra visible que ausente
-                }
+                // ⚠️⚠️ **LANDING: la barra ya NO espera al hero** (`#225`,
+                // `[DECIDIDO owner, 2026-08-28]`). Aquí había un `IntersectionObserver` sobre
+                // `.hero__sentinel` cuya regla era «hero y barra nunca co-visibles», heredada de
+                // cuando el hero tenía su propio CTA grande y los dos habrían competido.
+                //
+                // ▶ Ese motivo ya no existe: `#224` vació el hero y `#225` le puso el CTA del
+                // armazón, **que en móvil no se pinta justamente porque el CTA vive aquí abajo**.
+                // Esperar al hero dejaba la primera pantalla de móvil sin ningún sitio donde
+                // comprar — el mismo agujero que en escritorio cierra el par del hero.
+                //
+                // ⚠️ **En móvil no hay relevo, y por eso esto es tan corto**: el CTA de escritorio
+                // viaja de la esquina del hero a la cabecera, pero aquí ya está donde tiene que
+                // estar. La barra flotante ES el CTA de la primera pantalla y el de todas las
+                // demás; lo único que sigue haciendo falta es que se aparte del pie, y de eso se
+                // encarga el observador de `.foot`, que no cambia.
+                this.revealed = true;
             } else {
                 // RESTO DE PÁGINAS (sin hero): la barra aparece al hacer SCROLL, pero con un umbral
                 // MENOR que la landing (que espera a que el hero completo —~1 viewport— salga del

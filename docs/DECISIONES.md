@@ -11978,3 +11978,78 @@ pegajoso se queda en `0` mientras dura el recorrido, el hero encoge en su sitio 
 escritorio), el hueco se cierra a 0 y el desbordamiento horizontal es **0 px** en los tres anchos.
 Suite acotada (home + armazón + acción + formas + superficies + sticky + páginas públicas): **136
 verdes**. Pint limpio.
+
+---
+
+## #225 · 2026-08-28 · El CTA de la primera pantalla es un RELEVO — el mismo botón cambiando de sitio, no dos botones
+
+**Contexto.** `[DECIDIDO owner]`: «en la primera pantalla añadiremos el mismo CTA en la parte
+inferior derecha y, al deslizar, en el momento que aparece el CTA en el menú lo quitamos del hero.
+En móvil no afecta, porque está en el mismo sitio: float sticky button». Y: «el velo oscuro lo
+quitamos».
+
+▶ **Cierra el agujero que `#224` abrió a sabiendas** —la primera pantalla sin compra ni
+navegación— y con una salida MEJOR que las dos que se habían planteado: ni el armazón se destapa,
+ni el hero recupera botones propios. Aparece **el mismo botón**, y al bajar se muda a la esquina.
+
+### El componente, porque ya iban tres copias
+
+El par vivía dos veces en marcado (cabecera y barra de móvil). Con el tercer sitio, se extrae a
+**`<x-site.cta-pair place="nav|hero|bar">`**: **16,8 KB de marcado duplicado retirados**, con sus
+tres ramas de sesión cada una. `#223` pagó esta lección con el CSS; ésta es la misma con el
+marcado, y llegaba antes de que doliera.
+▶ **El hero usa el copy del NAV a propósito**: si el rótulo cambiara a mitad del cruce se leerían
+dos textos a la vez y el relevo dejaría de parecer un botón moviéndose para parecer dos peleándose.
+⚠️ **Los dos perfiles de copy NO se unifican**: el nav OMITE el subtítulo sin precio —dejaría una
+línea vacía en una fila apretada— y la barra lo SUSTITUYE por «Cumpleaños online». Las dos
+conductas tienen caso propio; unificarlas sería cambiar producto, no limpiar código.
+
+### El relevo
+
+`opacity: calc((var(--nav-reveal-live) - var(--nav-p)) / var(--nav-reveal-live))`.
+▶ **Se apaga con la MISMA señal con la que el otro se enciende**, no con un observador propio: con
+dos señales, un navegador podría apagar antes de encender y dejar la pantalla sin CTA durante unos
+fotogramas.
+▶ **Y llega a cero exactamente cuando entra `.nav--live`**, dividiendo por el mismo token que marca
+ese punto. Con `1 - var(--nav-p)` —que parece lo mismo— aún valdría 0,15 al llegar el relevo y
+desaparecería de golpe.
+▶ Medido: a scroll 120 el del hero está a **0,38** y el de la cabecera a **0,52**. Nunca hay un
+fotograma sin CTA.
+⚠️ **El apagado son TRES cosas**: opacidad (lo que se ve), `pointer-events` (el ratón) y
+`visibility` (el teclado y el lector). Sin la tercera, quien navega con tabulador se encuentra dos
+«Reservar» invisibles antes del que sí se ve.
+
+### ⚠️⚠️ Dos fallos LATENTES que este cambio destapó
+
+**1. Once reglas pintaban el CTA de AMARILLO dentro del hero.** Decían
+`[data-surface="ink"] .cta-med` —«en cualquier superficie de tinta»— cuando su intención, escrita
+en su propio comentario, era «dentro del MENÚ». No se notaba porque el único `.cta-med` en tinta
+era el del nav con el menú abierto. Al poner el par en el hero —que declara tinta para el vídeo—
+el botón de comprar salió **Amarillo Aviso**, el color que significa «lo único que hay que mirar en
+esta pantalla», sin que nadie lo hubiera decidido. Acotadas a `.nav[data-surface="ink"]`.
+▶ **Un selector más ancho que su intención no falla el día que se escribe: falla el día que
+alguien añade el segundo caso que casa.**
+
+**2. En MÓVIL la primera pantalla tampoco tenía compra**, y por otro motivo: `mobileBookBar`
+esperaba a que `.hero__sentinel` saliera del viewport, con la regla «hero y barra nunca
+co-visibles» — heredada de cuando el hero tenía su propio CTA grande y los dos habrían competido.
+Ese motivo murió con `#224`. Ahora la barra entra desde el primer píxel.
+
+### El velo
+
+`.hero__stage-scrim` se retira, marcado y CSS. Era un degradado oscuro cuyo único trabajo era hacer
+legible el TEXTO sobre el vídeo; `#224` vació el hero, así que oscurecía el vídeo para que se leyera
+algo que ya no está. El CTA que queda no lo necesita: es un botón de tinta con su propia sombra.
+⚠️ Su guarda exigía **las cuatro paradas del degradado** —nació de un fallo real: se convirtieron
+dos y se dejaron dos—. Se retira con su sujeto, pero **la lección se conserva escrita** en el
+fichero: de un degradado se exigen TODAS sus paradas por nombre, porque media conversión se lee
+igual de bien que una entera.
+
+### Verificación
+
+Navegador headless. Escritorio 1280: relevo medido en cinco posiciones de scroll, el par del hero
+en tinta + fantasma de 56 px con su aro de invitación, idéntico al de la cabecera. Móvil 390: barra
+visible desde `scroll 0`, par del hero en `display: none`, **cero desbordamiento horizontal** y el
+aro dentro de márgenes en los dos anchos. Suite acotada: **173 verdes**. Pint limpio.
+**Guarda del relevo probada por mutación**: desatar el fundido del umbral muere; quitar
+`visibility: hidden` muere.

@@ -864,11 +864,11 @@ img { display: block; max-width: 100%; }
     repeating-linear-gradient(135deg, color-mix(in srgb, var(--bg) 97.5%, white) 0 22px, var(--bg) 22px 23px);
 }
 /* scrim for content legibility — between video and overlay content */
-.hero__stage-scrim {
-  position: absolute; inset: 0; z-index: 3; pointer-events: none;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--bg) 45%, transparent) 0%, color-mix(in srgb, var(--bg) 8%, transparent) 30%, color-mix(in srgb, var(--bg) 10%, transparent) 55%, color-mix(in srgb, var(--bg) 65%, transparent) 100%);
-}
+/* ⚠️ **Aquí vivía `.hero__stage-scrim` y se retira con su sujeto** (`#225`): un degradado oscuro
+   de arriba abajo cuyo único trabajo era hacer legible el TEXTO sobre el vídeo. `#224` vació el
+   hero, así que oscurecía el vídeo para que se leyera algo que ya no está.
+   ▶ El CTA que sí queda no lo necesita: es un botón de tinta con su propia sombra, y se sostiene
+   solo sobre cualquier fotograma. */
 .hero__stage[data-has-video="true"] .hero__stage-placeholder { display: none; }
 
 /* overlay content layout — chip+tag top, title middle, CTA bottom */

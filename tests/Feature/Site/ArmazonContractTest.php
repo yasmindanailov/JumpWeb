@@ -741,16 +741,16 @@ class ArmazonContractTest extends TestCase
         $reglas = $this->cssRules(public_path('css/site.css'));
 
         $this->assertArrayHasKey(
-            '[data-surface="ink"] .cta-med', $reglas,
+            '.nav[data-surface="ink"] .cta-med', $reglas,
             'el CTA del armazón ya no cambia de color dentro del menú: se quedaría en tinta sobre '.
             'la tinta del menú, que es un botón invisible.',
         );
 
-        $this->assertStringContainsString('var(--attn)', $reglas['[data-surface="ink"] .cta-med']);
-        $this->assertStringContainsString('var(--paper-fg)', $reglas['[data-surface="ink"] .cta-med']);
+        $this->assertStringContainsString('var(--attn)', $reglas['.nav[data-surface="ink"] .cta-med']);
+        $this->assertStringContainsString('var(--paper-fg)', $reglas['.nav[data-surface="ink"] .cta-med']);
 
         $this->assertArrayHasKey(
-            '[data-surface="ink"] .cta-med:focus-visible', $reglas,
+            '.nav[data-surface="ink"] .cta-med:focus-visible', $reglas,
             "El botón pasa a AVISO dentro del menú y NADIE cambia su anillo de foco.\n".
             "▶ `--focus-color` sigue a la superficie, y en el paquete de este cliente vale su MISMO\n".
             "  Amarillo Aviso: amarillo sobre amarillo. El foco de teclado desaparece sin que nada\n".
@@ -1421,7 +1421,7 @@ class ArmazonContractTest extends TestCase
     public function test_the_pending_dot_uses_the_warning_token(): void
     {
         $this->assertMatchesRegularExpression(
-            '/background:\s*var\(--attn\)/', $this->ruleBody('.nav__acct-dot'),
+            '/background:\s*var\(--attn\)/', $this->ruleBody('.cta-pair__acct-dot'),
             'el punto de aviso no usa el token de aviso: cabecera y panel dirían lo mismo con '.
             'colores distintos',
         );

@@ -42,90 +42,10 @@
 <div class="book-bar" x-data="mobileBookBar"
      :class="[visible && 'book-bar--on', $store.ctaPair.mode === 'account' && 'book-bar--signup']"
      x-effect="document.body.classList.toggle('book-bar-visible', visible)">
-    {{-- `cta-pair` = el COMPONENTE (forma y coreografía, compartido con el nav).
-         `book-bar__pair` = la COLOCACIÓN (ancho de pulgar, cuál se estira).
-         Los dos modificadores de estado son los del componente, no los del sitio: si fueran
-         `book-bar--…` habría que duplicar cada regla de intercambio y volveríamos al problema. --}}
-    <div class="cta-pair book-bar__pair"
-         :class="[$store.ctaPair.mode === 'account' && 'cta-pair--account',
-                  ! $store.ctaPair.touched && 'cta-pair--invita']">
-
-        {{-- Mitad A · COMPRAR. Expandida al cargar. Mismo marcado que `nav-cta-med`. --}}
-        <a href="{{ route('entradas') }}"
-           class="cta-med book-bar__cta book-bar__cta--buy"
-           aria-label="{{ __('landing.hero.cta_buy') }}"
-           :aria-label="$store.ctaPair.mode === 'buy' ? '{{ __('landing.hero.cta_buy') }}' : '{{ __('landing.nav.cta_switch_buy') }}'"
-           @click.prevent="$store.ctaPair.mode === 'buy' ? $store.purchase.open() : ($store.ctaPair.show('buy'))">
-            <span class="cta-med__ico"><x-icons.ic-e2 :width="28" :height="18" /></span>
-            <span class="cta-med__body">
-                <span class="cta-med__t">{{ __('landing.nav.cta_buy') }}</span>
-                <span class="cta-med__s">
-                    @if (! empty($ctaMinPriceLabel))
-                        {{ __('landing.hero.cta_buy_from', ['amount' => $ctaMinPriceLabel]) }}
-                    @else
-                        {{ __('landing.hero.cta_buy_no_price') }}
-                    @endif
-                </span>
-            </span>
-        </a>
-
-        {{-- Mitad B · la CUENTA. Colapsada al cargar, y **fantasma**: relleno de tarjeta, no de
-             tinta — que es lo que la distingue de la otra mitad de un vistazo.
-             · Sin sesión y con trámite externo configurado → lleva al sistema del parque, en
-               pestaña nueva, y su glifo es el portapapeles: es un FORMULARIO, no un alta.
-             · Sin sesión y sin trámite externo → crea una cuenta, con la pareja de `user`.
-             · Con sesión → abre el área de cliente.
-             Es el mismo reparto que el racimo de la cabecera; aquí solo cambia la colocación.
-             El aro de la invitación necesita un envoltorio posicionado, igual que en el nav. --}}
-        @guest
-            @if (! empty($site['registration_url']))
-                <span class="cta-pair__alt">
-                    <span class="cta-pair__alt-ring" aria-hidden="true"></span>
-                    <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener"
-                       class="cta-ghost book-bar__cta book-bar__cta--alt"
-                       aria-label="{{ $site['registration_label'] }}"
-                       :aria-label="$store.ctaPair.mode === 'account' ? '{{ $site['registration_label'] }}' : '{{ __('landing.nav.cta_switch_signup') }}'"
-                       @click="if ($store.ctaPair.mode !== 'account') { $event.preventDefault(); $store.ctaPair.show('account'); }">
-                        <span class="cta-ghost__ico"><x-icons.clipboard-check /></span>
-                        <span class="cta-ghost__body">
-                            <span class="cta-ghost__t">{{ $site['registration_label'] }}</span>
-                            @if (! empty($site['registration_subtitle']))
-                                <span class="cta-ghost__s">{{ $site['registration_subtitle'] }}</span>
-                            @endif
-                        </span>
-                    </a>
-                </span>
-            @else
-                <span class="cta-pair__alt">
-                    <span class="cta-pair__alt-ring" aria-hidden="true"></span>
-                    <a href="{{ route('registro') }}"
-                       class="cta-ghost book-bar__cta book-bar__cta--alt"
-                       aria-label="{{ __('landing.nav.reserve') }}"
-                       :aria-label="$store.ctaPair.mode === 'account' ? '{{ __('landing.nav.reserve') }}' : '{{ __('landing.nav.cta_switch_signup') }}'"
-                       @click.prevent="$store.ctaPair.mode === 'account' ? $store.purchase.openAccount($event, 'register') : ($store.ctaPair.show('account'))">
-                        <span class="cta-ghost__ico"><x-icons.user-plus /></span>
-                        <span class="cta-ghost__body">
-                            <span class="cta-ghost__t">{{ __('landing.nav.reserve') }}</span>
-                            <span class="cta-ghost__s">{{ __('landing.nav.cta_switch_signup_sub') }}</span>
-                        </span>
-                    </a>
-                </span>
-            @endif
-        @else
-            <span class="cta-pair__alt">
-                <span class="cta-pair__alt-ring" aria-hidden="true"></span>
-                <a href="{{ route('account') }}"
-                   class="cta-ghost book-bar__cta book-bar__cta--alt"
-                   aria-label="{{ __('landing.footer.account_link') }}"
-                   :aria-label="$store.ctaPair.mode === 'account' ? '{{ __('landing.footer.account_link') }}' : '{{ __('landing.nav.cta_switch_account') }}'"
-                   @click.prevent="$store.ctaPair.mode === 'account' ? $store.purchase.open() : ($store.ctaPair.show('account'))">
-                    <span class="cta-ghost__ico"><x-icons.user /></span>
-                    <span class="cta-ghost__body">
-                        <span class="cta-ghost__t">{{ __('landing.footer.account_link') }}</span>
-                        <span class="cta-ghost__s">{{ __('landing.nav.cta_account_sub') }}</span>
-                    </span>
-                </a>
-            </span>
-        @endguest
-    </div>
+    {{-- ⚠️ **El par se fue a `<x-site.cta-pair>` en `#225`**: es el mismo botón que la cabecera y
+         que la primera pantalla, y ya iban dos veces que dos copias divergían.
+         `place="bar"` trae la colocación (ancho de pulgar, cuál se estira) y el perfil de copy de
+         la barra —que SUSTITUYE el subtítulo cuando no hay precio en vez de omitirlo, porque aquí
+         sí hay sitio y un botón mudo es peor—. --}}
+    <x-site.cta-pair place="bar" />
 </div>

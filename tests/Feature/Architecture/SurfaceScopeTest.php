@@ -469,7 +469,10 @@ class SurfaceScopeTest extends TestCase
         // (selector, propiedad, rol esperado) — «dark» = luminancia < 0,2 · «light» = > 0,5
         $expected = [
             ['.hero__stage', 'background', 'dark'],
-            ['.hero__stage-scrim', 'background', 'dark'],
+            // ⚠️ Aquí había `.hero__stage-scrim`, el velo oscuro del hero. Se RETIRÓ con su sujeto
+            // en `#225` (`[DECIDIDO owner]`): existía para hacer legible el TEXTO sobre el vídeo, y
+            // `#224` vació el hero. Quedan tres filas y siguen cubriendo lo que importa —el fondo,
+            // el sustituto del vídeo y el rótulo—, así que la guarda no pierde alcance.
             ['.hero__stage-placeholder', 'background', 'dark'],
             ['.hero__stage-label', 'color', 'light'],
         ];
@@ -518,13 +521,20 @@ class SurfaceScopeTest extends TestCase
             }
         }
 
-        // ⚠️ Por NOMBRE y no por umbral — la lección que este mismo fichero ya documenta. Del
-        // scrim se exigen las CUATRO paradas: fue exactamente el hueco por el que se convirtieron
-        // dos y se dejaron dos.
-        $this->assertCount(
-            4, $checked['.hero__stage-scrim'] ?? [],
-            'el escaneo ve '.count($checked['.hero__stage-scrim'] ?? []).' paradas del degradado del '.
-            'scrim y son CUATRO. Si vuelve a ver menos, media conversión pasaría desapercibida.',
+        // ⚠️⚠️ **Aquí se exigían las CUATRO paradas del degradado del scrim, y se van con él**
+        // (`#225`): el velo se retiró porque `#224` vació el hero y ya no hay texto que hacer
+        // legible. Aquella aserción nació de un fallo REAL —se convirtieron dos paradas y se
+        // dejaron dos—, así que la lección se conserva aquí aunque su sujeto no exista: **de un
+        // degradado hay que exigir TODAS sus paradas por nombre**, porque media conversión se lee
+        // exactamente igual de bien que una entera.
+        // ▶ Si algún día vuelve un degradado dentro del hero, esta aserción vuelve con él.
+        //
+        // Y en su lugar se exige que el escaneo siga viendo ALGO, o las tres filas de arriba
+        // pasarían sin mirar nada.
+        $this->assertNotEmpty(
+            $checked,
+            'el escaneo no ha llegado a juzgar NINGÚN color dentro del hero: el localizador se ha '.
+            'roto y esta guarda estaría verde sin mirar nada.',
         );
 
         $this->assertSame(

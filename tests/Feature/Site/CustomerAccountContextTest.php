@@ -475,8 +475,8 @@ class CustomerAccountContextTest extends TestCase
             // par, y «label in name» (WCAG 2.5.3) exige que el visible sea el PREFIJO. El saludo
             // sigue ahí —que es lo que no podía perderse— pero detrás.
             ->assertSee('Hola, Mara', false)               // el nombre accesible, en TEXTO
-            ->assertSee('nav__acct-icon', false)            // icono de cuenta en el nav
-            ->assertSee('nav__acct-dot', false)             // puntito (hay form pendiente)
+            ->assertSee('cta-pair__acct-icon', false)            // icono de cuenta en el nav
+            ->assertSee('cta-pair__acct-dot', false)             // puntito (hay form pendiente)
             // ⚠️ El SUELO del hueco: la única salida de sesión servida de la aplicación (§4.8).
             ->assertSee('Cerrar sesión')
             ->assertSee(route('logout'), false);
@@ -499,7 +499,7 @@ class CustomerAccountContextTest extends TestCase
 
         $this->actingAs($user)->get(route('account'))
             ->assertOk()
-            ->assertSee('nav__acct-icon', false)
-            ->assertDontSee('nav__acct-dot', false);
+            ->assertSee('cta-pair__acct-icon', false)
+            ->assertDontSee('cta-pair__acct-dot', false);
     }
 }

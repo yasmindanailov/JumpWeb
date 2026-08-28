@@ -317,9 +317,13 @@
    retira en la 2c·7.** Desde que la cuenta es **una mitad del PAR**, su caja es la del botón
    fantasma (`.cta-ghost`) como las otras dos ramas: si además tuviera la suya, un `border-radius:
    50%` y un `width` fijo impedirían que se ensanchara al expandirse — el mecanismo entero.
+   ⚠️ **Estas dos se llamaban `nav__acct-*` y se renombran en `#225`**: el par vive en TRES sitios
+   —la cabecera, la primera pantalla y la barra de móvil— y un nombre con el prefijo del nav
+   mentía en dos de los tres. `.nav__acct` a secas SÍ se queda ahí: ese es el marcador del chip
+   DE LA CABECERA, que es lo que cuentan los casos para distinguir invitado de cliente.
    ▶ La clase `.nav__acct` SIGUE en el marcado: es la identidad de «esta mitad es la cuenta», y de
    ella cuelgan el icono y el punto de aviso, que sí son suyos. */
-.nav__acct-icon {
+.cta-pair__acct-icon {
     position: relative; display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px;
 }
@@ -330,7 +334,7 @@
    ▶ Y no hay punto «de reposo»: la ausencia ya significa que no hay nada, y no gasta un color de
    estado. Con dos puntos que solo cambian de tono, quien no discrimina ese par ve «un punto» en
    los dos casos y el color deja de informar. */
-.nav__acct-dot {
+.cta-pair__acct-dot {
     position: absolute; top: -4px; right: -4px; width: 9px; height: 9px;
     border-radius: 50%; background: var(--attn); border: 2px solid var(--bg-card);
 }
@@ -1779,6 +1783,57 @@ body.no-scroll { overflow: hidden; }
 }
 .hero--full .hero__strip-box { width: 100%; max-width: var(--hero-w-end); }
 
+/* ══ EL CTA DE LA PRIMERA PANTALLA — Y ES UN RELEVO (`#225`, 2026-08-28) ═════════════════════
+   `[DECIDIDO owner]`: «añadiremos el mismo CTA en la parte inferior derecha y, al deslizar, en el
+   momento que aparece el CTA en el menú lo quitamos del hero».
+
+   ▶ **Cierra el agujero que `#224` abrió a sabiendas**: con el armazón naciendo oculto, la primera
+   pantalla se había quedado sin ningún sitio donde comprar. Ahora lo tiene, y al bajar no aparece
+   un segundo botón: aparece EL MISMO, arriba.
+
+   ⚠️ **Se apaga con la MISMA señal con la que el otro se enciende**, `--nav-p`, no con un
+   observador propio. Con dos señales distintas el cruce se vería distinto en cada navegador —uno
+   podría apagar antes de encender y dejar la pantalla sin CTA durante unos fotogramas—. Es la
+   misma regla que `#216` aplicó al armazón: una sola señal para una sola coreografía.
+
+   ⚠️⚠️ **Y llega a CERO exactamente cuando `.nav--live` entra**, dividiendo por el mismo token que
+   marca ese punto. Si se escribiera `1 - var(--nav-p)`, al llegar el relevo aún valdría 0,15 y el
+   botón desaparecería de golpe al ponerse `visibility: hidden`. Atado al token, los dos hechos
+   ocurren en el mismo fotograma y si alguien mueve el umbral se mueven juntos.
+
+   ⚠️ **`opacity: 0` NO deja de recibir clics ni sale del orden de tabulación.** Por eso el apagado
+   son TRES cosas y no una: la opacidad (lo que se ve), `pointer-events` (el ratón) y `visibility`
+   (el teclado y el lector de pantalla). Sin la tercera, quien navega con tabulador se encontraría
+   con dos botones «Reservar» invisibles antes de llegar al que sí se ve. */
+.hero__pair-slot {
+    position: absolute; z-index: 6;
+    right: clamp(24px, 3vw, 44px);
+    bottom: clamp(24px, 3vw, 40px);
+}
+body[data-has-hero] .hero__pair-slot {
+    opacity: calc((var(--nav-reveal-live) - var(--nav-p)) / var(--nav-reveal-live));
+    transform: translateY(calc(var(--nav-reveal-lift) * var(--nav-p)));
+    transition: opacity var(--dur-estado) var(--ease-sale),
+                transform var(--dur-entra) var(--ease-sale);
+}
+body[data-has-hero].nav--live .hero__pair-slot {
+    pointer-events: none;
+    visibility: hidden;
+}
+/* ⚠️ **En MÓVIL no se pinta**: el CTA ya vive abajo, en la barra flotante, y está en el mismo
+   sitio. Dos botones idénticos a diez píxeles uno de otro no son redundancia útil: son un error.
+   El corte es el mismo 720 px en el que entra `.book-bar`, para que nunca haya una franja sin
+   ninguno de los dos. */
+@media (max-width: 720px) {
+    .hero__pair-slot { display: none; }
+}
+/* Sin coreografía —otra vista, o movimiento reducido— el CTA del hero se queda visible y quieto,
+   que es el estado bueno: `--nav-p` no se publica nunca y el armazón está a la vista desde el
+   principio, así que aquí no sobra nadie. */
+@media (prefers-reduced-motion: reduce) {
+    body[data-has-hero] .hero__pair-slot { transition: none; }
+}
+
 /* Fuera de la portada no hay coreografía y la tira no tiene sitio: sólo existe con `--full`. */
 .hero:not(.hero--full) .hero__strip { display: none; }
 
@@ -2368,10 +2423,20 @@ body.no-scroll { overflow: hidden; }
 /* ⚠️ **Los anchos fijos son del NAV, no del componente**: arriba el racimo comparte fila con el
    logotipo, así que las dos mitades miden lo que se les dice. Abajo, en la barra, el reparto lo
    hace `flex` porque la expandida tiene que llegar al borde de la pantalla. */
-.nav__pair .cta-med   { width: var(--cta-pair-w); }
-.nav__pair .cta-ghost { width: var(--cta-pair-mini); }
-.nav__pair.cta-pair--account .cta-med   { width: var(--cta-pair-mini); }
-.nav__pair.cta-pair--account .cta-ghost { width: var(--cta-pair-w); }
+.nav__pair .cta-med,
+.hero__pair .cta-med   { width: var(--cta-pair-w); }
+.nav__pair .cta-ghost,
+.hero__pair .cta-ghost { width: var(--cta-pair-mini); }
+.nav__pair.cta-pair--account .cta-med,
+.hero__pair.cta-pair--account .cta-med   { width: var(--cta-pair-mini); }
+.nav__pair.cta-pair--account .cta-ghost,
+.hero__pair.cta-pair--account .cta-ghost { width: var(--cta-pair-w); }
+
+/* ⚠️ El hueco entre mitades: el racimo de la cabecera lo HEREDA de `.nav__cta` (`gap: inherit` en
+   el componente), y el del hero no tiene de quién heredarlo — su envase no es flex—. Se declara
+   con el mismo valor para que las dos mitades midan igual en los dos sitios, que es lo que hace
+   creíble el relevo. */
+.hero__pair { gap: 14px; }
 
 /* El texto de dentro: el que SE VA se va sin esperar, el que ENTRA espera a que le hagan sitio.
    ⚠️ Ese retardo asimétrico no es un adorno: sin él los dos rótulos se cruzan a mitad de camino y
@@ -2535,6 +2600,16 @@ body[data-has-hero] .nav--over .nav__cta {
    caso menos que mantener por duplicado, que es de lo que iba la refundición. */
 
 /* ── EL CTA DEL ARMAZÓN DENTRO DEL MENÚ ────────────────────────────────────────────────────────
+   ⚠️⚠️ **EL SELECTOR SE ACOTA AL NAV EN `#225`, y arreglaba un fallo LATENTE.** Estas once reglas
+   decían `[data-surface="ink"] .cta-med`, o sea «este botón, en CUALQUIER superficie de tinta».
+   Su intención —la que explica el párrafo de abajo— siempre fue «dentro del MENÚ». No se notaba
+   porque el único `.cta-med` que existía en una superficie de tinta era el del nav con el menú
+   abierto.
+   ▶ **Al poner el par también en la primera pantalla (`#225`), se notó de golpe**: el hero declara
+   `data-surface="ink"` para el vídeo, así que su botón de comprar salía **AMARILLO AVISO** — el
+   color que significa «lo único que hay que mirar en esta pantalla» — sin que nadie lo hubiera
+   decidido. Un selector más ancho que su intención no falla el día que se escribe: falla el día
+   que alguien añade el segundo caso que casa.
    `[DECIDIDO owner, 2026-08-28]`: **como el mockup**. Su CTA fijo va en tinta con el menú cerrado
    y **pasa a AVISO cuando el menú lo tapa** — no sigue a la superficie ni se queda en el color de
    acción: cambia de rol. Deja de ser «el botón de comprar» y pasa a ser «lo único que hay que
@@ -2553,26 +2628,26 @@ body[data-has-hero] .nav--over .nav__cta {
    y en el paquete del cliente vale su Amarillo Aviso: un botón de aviso con un anillo de aviso
    deja el foco de teclado **invisible**, y eso no falla ni avisa. Aquí el anillo pasa a tinta,
    que sobre el amarillo da 11,26. Es la misma clase de defecto que `#206` encontró en su paleta. */
-[data-surface="ink"] .cta-med {
+.nav[data-surface="ink"] .cta-med {
     background: var(--attn);
     color: var(--paper-fg);
 }
-[data-surface="ink"] .cta-med:hover {
+.nav[data-surface="ink"] .cta-med:hover {
     background: var(--attn);
     color: var(--paper-fg);
 }
-[data-surface="ink"] .cta-med:focus-visible {
+.nav[data-surface="ink"] .cta-med:focus-visible {
     outline-color: var(--paper-fg);
 }
 /* El chip del icono invierte con él: sobre el botón de aviso, un velo OSCURO. */
-[data-surface="ink"] .cta-med__ico,
-[data-surface="ink"] .cta-med:hover .cta-med__ico { background: color-mix(in srgb, var(--paper-fg) 16%, transparent); }
-[data-surface="ink"] .cta-med__ico .tk,
-[data-surface="ink"] .cta-med:hover .cta-med__ico .tk,
-[data-surface="ink"] .cta-med__ico .ic-e2,
-[data-surface="ink"] .cta-med:hover .cta-med__ico .ic-e2 { color: var(--paper-fg); }
-[data-surface="ink"] .cta-med__ico .ic-e2 svg .occ,
-[data-surface="ink"] .cta-med:hover .cta-med__ico .ic-e2 svg .occ { fill: var(--attn); }
+.nav[data-surface="ink"] .cta-med__ico,
+.nav[data-surface="ink"] .cta-med:hover .cta-med__ico { background: color-mix(in srgb, var(--paper-fg) 16%, transparent); }
+.nav[data-surface="ink"] .cta-med__ico .tk,
+.nav[data-surface="ink"] .cta-med:hover .cta-med__ico .tk,
+.nav[data-surface="ink"] .cta-med__ico .ic-e2,
+.nav[data-surface="ink"] .cta-med:hover .cta-med__ico .ic-e2 { color: var(--paper-fg); }
+.nav[data-surface="ink"] .cta-med__ico .ic-e2 svg .occ,
+.nav[data-surface="ink"] .cta-med:hover .cta-med__ico .ic-e2 svg .occ { fill: var(--attn); }
 
 /* ══ EL RACIMO EN MÓVIL — Capa D (reescrita en la 2c·8, `#216`) ═══════════════════════════════
    Medido en el mockup: por debajo de 620 px su racimo derecho es **solo la hamburguesa**
