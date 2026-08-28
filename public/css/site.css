@@ -192,9 +192,21 @@
    Alto fijo para que la esquina no baile entre una marca y otra, y ancho libre: un lockup puede
    ser mucho más ancho que alto. `max-width` lo sujeta en móvil, donde comparte fila con el racimo.
 
-   ⚠️ **Sube de 26 px a 54**, que es lo que mide en `Landing PJP Modos` (`height:54px` en el
-   lockup de su cabecera) y lo que el owner pidió al verlo. A 26 px un lockup de DOS LÍNEAS —que es
-   lo que es el del 2.º cliente— deja cada palabra en 13 px y deja de leerse.
+   ⚠️⚠️ **70 px, y ese número está MEDIDO — no es el `height:54px` que declara el mockup** (`#218`).
+   Esa es la trampa: en el mockup, `height:54px` está en el `<a>` que envuelve el lockup, y **el
+   lockup DESBORDA su caja**, porque son dos líneas de texto con contornos de 5–6,5 px que se
+   pintan fuera de la caja de línea. Copiar el 54 dejaba el logotipo un **30 % más pequeño**.
+
+   ▶ **La medida que zanjó**: se renderizaron los dos sin sombra, sobre fondo transparente, y se
+   comparó el bounding box de **píxeles opacos** — tinta contra tinta. Mockup **189 × 68**; el
+   nuestro a `height:54` daba **147 × 52**. Factor **1,29 por ancho y 1,31 por alto**, que al
+   coincidir confirman la medida. A 70 px la tinta sale **190,6 × 67,4**: menos del 1 % en las dos.
+   ⚠️ Antes se intentó con dos instrumentos que **discrepaban** (1,17 y 1,29) porque medían la
+   CAJA y no la tinta: el rectángulo de un `<span>` de texto es su caja de línea, con el aire que
+   la fuente reserva arriba y abajo, y no lo que se ve. **Cuando dos medidas no cuadran, casi
+   siempre están midiendo cosas distintas.**
+   ▶ Y de paso quedó comprobado que **el SVG del owner es fiel en proporción**: 2,779 de ratio
+   frente a 2,827, un 1,7 %. Solo faltaba la escala.
 
    ⚠️⚠️ **Y se sostiene con `drop-shadow`, no con una pastilla detrás.** No es lo mismo que
    `box-shadow`: `box-shadow` proyecta la CAJA —un rectángulo, aunque el dibujo tenga forma— y
@@ -208,17 +220,19 @@
    instalación con logotipo recto se ve igual de bien, y `prefers-reduced-motion` lo apaga. */
 .nav__brand-logo {
     display: block;
-    height: 54px;
+    height: 70px;
     width: auto;
-    max-width: min(320px, 52vw);
+    max-width: min(340px, 54vw);
     filter: drop-shadow(0 6px 16px color-mix(in srgb, var(--paper-fg) 45%, transparent))
             drop-shadow(0 1px 0 color-mix(in srgb, var(--paper-fg) 25%, transparent));
     transition: transform 0.34s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 .nav__brand:hover .nav__brand-logo { transform: translateY(-2px) rotate(-1.5deg); }
 
+/* En teléfono el mockup encoge TODA la cabecera con `scale(.66)`; aquí se aplica ese mismo factor
+   al alto del logotipo (70 × 0,66 ≈ 46), que es lo que le toca cuando comparte fila con el racimo. */
 @media (max-width: 719px) {
-    .nav__brand-logo { height: 40px; }
+    .nav__brand-logo { height: 46px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

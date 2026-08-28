@@ -1751,7 +1751,15 @@ class ArmazonContractTest extends TestCase
             'box-shadow', $logo,
             '`box-shadow` proyecta la CAJA, no la silueta: sobre un logotipo recortado dibuja un rectángulo.',
         );
-        $this->assertStringContainsString('height: 54px', $logo, 'el logotipo volvió a su altura vieja');
+        // ⚠️ **70 y no 54, y el número está MEDIDO** (`#218`): el `height:54px` del mockup está en el
+        // `<a>` que envuelve el lockup, y el lockup DESBORDA esa caja por sus contornos. Comparando
+        // píxeles opacos —tinta contra tinta, sin sombra— el del mockup mide 189 × 68 y el nuestro
+        // a 54 daba 147 × 52. Copiar el 54 lo dejaba un 30 % más pequeño.
+        $this->assertStringContainsString(
+            'height: 70px', $logo,
+            "el logotipo volvió a una altura que NO es la medida.\n".
+            '▶ 70 px es lo que iguala su TINTA con la del mockup (189 × 68), no lo que declara su `<a>`.',
+        );
     }
 
     /**

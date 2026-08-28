@@ -1427,6 +1427,41 @@ difusa que la despega y **un contorno de 1 px** para cuando cae sobre algo claro
 ▶ **Y sube de 26 px a 54**, que es lo que mide en el mockup. A 26 px un lockup de DOS LÍNEAS —que
 es lo que es el del 2.º cliente— deja cada palabra en 13 px y deja de leerse.
 
+### 10.5 ⚠️⚠️ CORRECCIÓN (`#218`): los 54 px de arriba estaban MAL, y son 70
+
+El owner, mirando la 2c·9: «el logo quiero que sea el mismo que en el mockup, mismo tamaño, sombra,
+todo». Tenía razón, y el fallo estaba en **de dónde salió el 54**.
+
+❗ **`height: 54px` en el mockup está en el `<a>` que ENVUELVE el lockup, no en el dibujo.** El
+lockup son dos líneas de texto con contornos de 5 a 6,5 px, y **los contornos se pintan fuera de la
+caja de línea**: el `<a>` mide 54 y el dibujo mide 68. Copiar el número declarado dejaba el
+logotipo un **30 % más pequeño** que el del mockup — con la sombra, además, proporcionalmente más
+grande, porque `drop-shadow` va en píxeles absolutos y no escala con la imagen.
+
+▶ **La medida que zanjó, y hubo que llegar a la tercera.** Las dos primeras discrepaban:
+
+| Instrumento | Qué medía en realidad | Factor |
+|---|---|---|
+| bounding box de los dos bloques | la CAJA del `<a>` frente a la del `<img>` | 1,17 |
+| ancho del `<span>` de «JUMPPARK» | la caja de LÍNEA del texto, con el aire de la fuente | 1,29 |
+| **píxeles opacos, sin sombra, sobre transparente** | **la tinta** | **1,29 · 1,31** |
+
+⚠️ **Cuando dos medidas no cuadran, casi siempre están midiendo cosas distintas.** El rectángulo de
+un `<span>` de texto no es lo que se ve: incluye el espacio que la fuente reserva arriba y abajo, y
+excluye lo que el contorno pinta fuera. La única comparación honesta entre un texto con contornos y
+un SVG de contornos es **tinta contra tinta**.
+
+**Medido**: mockup **189 × 68** · el nuestro a 54 daba **147 × 52** · a **70** da **190 × 67**, o
+sea menos del 1,5 % en las dos dimensiones. ▶ Y de paso quedó comprobado que **el SVG del owner es
+fiel en proporción**: 2,779 de ratio frente a 2,827, un 1,7 %. Solo faltaba escala.
+
+**La sombra ya era idéntica y ahora se puede afirmar**: renderizando los dos con filtro sobre el
+mismo papel, el halo mide **18 arriba · 19 abajo · 20 izquierda · 20 derecha** en los DOS, y el
+color computado del filtro es `rgba(16,20,24,.45)`, exactamente el del mockup — sale de
+`color-mix(… var(--paper-fg) 45% …)` porque el paquete del cliente define ese `--paper-fg`.
+
+⚠️ **En teléfono, 46 px**: el mockup encoge toda la cabecera con `scale(.66)`, y 70 × 0,66 ≈ 46.
+
 ### 10.4 Verificación
 
 - **`ArmazonContractTest` +3 casos** y **1 re-apuntado**: el del aspa, que exigía dos glifos del set

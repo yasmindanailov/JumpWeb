@@ -590,6 +590,13 @@ que sirva staging de verdad.
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
 - Suite **3245 en verde** (21.314 aserciones), medida el 2026-08-28 por la tarde por el carril C
+  tras `#217` y **`#218`** (el logotipo a su tamaño REAL: el `height:54px` del mockup es la caja que
+  lo envuelve, no el dibujo — son **70**). ⚠️ **Hubo que llegar a la TERCERA medida**: las dos
+  primeras discrepaban (1,17 y 1,29) y ninguna estaba rota — medían la CAJA y la caja de LÍNEA, no
+  la tinta. **Cuando dos medidas no cuadran, casi siempre están midiendo cosas distintas.**
+  Medido tinta contra tinta: mockup 189 × 68, nosotros 190 × 67, y el halo de la sombra idéntico
+  (18 · 19 · 20 · 20)
+- Suite **3245 en verde** (21.314 aserciones), medida el 2026-08-28 por la tarde por el carril C
   tras `#217` (**las tres piezas que el OJO del owner vio distintas**: las sombras del racimo, la
   forma del botón de menú y el logotipo). ▶ **`ArmazonContractTest` +3 casos**, **1 re-apuntado**
   (el del aspa: exigía dos glifos del SET de iconos y ahora exige que **las dos rayas giren**) y
@@ -1108,6 +1115,7 @@ número se eligió **mirando el remoto** y esta tanda es **`#216`**.
 | `#216` · armazón | **El armazón NACE BAJO EL HERO** (`[DECIDIDO owner]`, como el mockup): con el hero a pantalla completa **no hay logo, ni CTA, ni hamburguesa** |
 | `#216` · hero | **Y por eso el hero recupera sus dos botones**, reabriendo `#195`: el mockup puede ocultar su cabecera **porque su hero ofrece la acción** |
 | `#216` · CTA | Las **ocho** diferencias medidas del CTA doble, alineadas: orden, anchos fijos 224/56, alturas iguales, el colapso, el retardo del rótulo, la sombra, el hover y el color dentro del menú |
+| `#218` · el logo | ❗ **El logotipo no medía lo que el mockup**: su `height:54px` está en el `<a>` que ENVUELVE el lockup y el dibujo desborda por sus contornos (54 declarados, **68 reales**). A 70 px la tinta coincide al 1,5 % |
 | `#217` · el ojo | ❗ **Las TRES piezas que el owner vio distintas y la sonda no**: las **sombras** del racimo (entra un CUARTO rol, el mobiliario flotante), la **forma del botón de menú** (era un círculo; ahora el rectángulo del mockup con etiqueta y dos rayas que ROTAN) y el **logotipo** (fuera la pastilla, 26 → 54 px y `drop-shadow` que sigue la SILUETA) |
 
 ## ❗❗ Lo que MÁS importa que sepas antes de tocar nada

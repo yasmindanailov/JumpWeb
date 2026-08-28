@@ -11582,3 +11582,47 @@ rol lea el alias estable.
 regla lleva también el **layout** del hueco, así que salió roja con el código correcto. Se acota a
 lo que de verdad protege: que no PINTE (`background`, `border`). **Una guarda que prohíbe un nombre
 en vez de un hecho caza lo que no debe.**
+
+---
+
+## #218 · 2026-08-28 · El logotipo NO medía lo que el mockup: el `height:54px` de su mockup es la caja que lo envuelve, no el dibujo — y hubo que llegar a la TERCERA medida
+
+**Contexto.** El owner, sobre `#217`: «el logo quiero que sea el mismo que en el mockup, mismo
+tamaño, sombra, todo». Tenía razón, y el fallo estaba **en de dónde salió el 54**.
+
+❗❗ **`height: 54px` en el mockup está en el `<a>` que ENVUELVE el lockup, no en el dibujo.** Su
+lockup son dos líneas de texto con contornos de 5 a 6,5 px, y **un contorno se pinta fuera de la
+caja de línea**: el `<a>` mide 54 y el dibujo mide **68**. Copiar el número declarado dejaba el
+logotipo un **30 % más pequeño** — y con la sombra proporcionalmente más grande, porque
+`drop-shadow` va en píxeles absolutos y no escala con la imagen.
+
+⚠️⚠️ **Y la lección de método: hubo que llegar a la TERCERA medida, porque las dos primeras
+discrepaban.**
+
+| Instrumento | Qué medía DE VERDAD | Factor |
+|---|---|---|
+| bounding box de los dos bloques | la CAJA del `<a>` frente a la del `<img>` | 1,17 |
+| ancho del `<span>` de «JUMPPARK» | la caja de LÍNEA del texto, con el aire de la fuente | 1,29 |
+| **píxeles opacos, sin sombra, sobre fondo transparente** | **la tinta** | **1,29 · 1,31** |
+
+▶ **Cuando dos medidas no cuadran, casi siempre están midiendo cosas distintas** — y aquí ninguna
+de las dos primeras estaba «rota»: las dos daban un número correcto de algo que no era lo que hacía
+falta. El rectángulo de un `<span>` de texto incluye el espacio que la fuente reserva arriba y
+abajo, y excluye lo que el contorno pinta fuera. La única comparación honesta entre un texto con
+contornos y un SVG de contornos es **tinta contra tinta**, y que los dos factores del tercer
+instrumento coincidieran (1,29 por ancho, 1,31 por alto) es lo que lo acredita.
+
+**Medido**: mockup **189 × 68** · a `height:54` dábamos **147 × 52** · a **70** damos **190 × 67**,
+menos del 1,5 % en las dos dimensiones. ▶ De paso quedó comprobado que **el SVG que exportó el owner
+es fiel en proporción**: 2,779 de ratio frente a 2,827, un 1,7 % — solo faltaba la escala.
+
+**La sombra ya era idéntica, y ahora se puede AFIRMAR en vez de suponer**: renderizando los dos con
+filtro sobre el mismo papel, el halo mide **18 arriba · 19 abajo · 20 izquierda · 20 derecha** en
+los dos, y el color computado es `rgba(16,20,24,.45)`, exactamente el del mockup — sale de
+`color-mix(… var(--paper-fg) 45% …)` porque el paquete del cliente define ese `--paper-fg`.
+
+⚠️ **En teléfono, 46 px**: el mockup encoge toda su cabecera con `scale(.66)` y 70 × 0,66 ≈ 46.
+
+**Verificación**: suite **3245 / 21.314** · Pint ✓ · docs-check ✓ · la guarda del logotipo pasa a
+exigir **70** con la medida escrita en su mensaje, para que el siguiente no vuelva a copiar el
+número declarado del mockup · comparativa visual de los dos, superpuestos.
