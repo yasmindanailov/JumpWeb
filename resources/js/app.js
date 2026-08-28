@@ -836,7 +836,7 @@ document.addEventListener('alpine:init', () => {
     }));
 
     window.Alpine.data('cierreChoreo', () => ({
-        _raf: null, _last: null, _fija: false, _r0: null, _abierto: false,
+        _raf: null, _last: null, _lastQ: null, _fija: false, _r0: null, _abierto: false,
         init() {
             if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
             this._onScroll = () => {
@@ -844,7 +844,7 @@ document.addEventListener('alpine:init', () => {
                 this._raf = requestAnimationFrame(() => { this._raf = null; this.apply(); });
             };
             window.addEventListener('scroll', this._onScroll, { passive: true });
-            this._onResize = () => { this._r0 = null; this._last = null; this.suelta(); this._onScroll(); };
+            this._onResize = () => { this._r0 = null; this._last = null; this._lastQ = null; this.suelta(); this._onScroll(); };
             window.addEventListener('resize', this._onResize, { passive: true });
             this.apply();
         },
@@ -856,15 +856,26 @@ document.addEventListener('alpine:init', () => {
             this._fija = false;
         },
 
-        publica(p) {
-            if (p === this._last) return;
-            this._last = p;
+        /**
+         * ⚠️⚠️ **Se publican DOS progresos, y confundirlos fue un fallo real** (`#250`).
+         * `p` es el progreso SUAVIZADO y manda la geometría —la tarjeta crece con él—; `q` es el
+         * CRUDO, y es el que manda todo lo demás: la retirada del armazón, el umbral de «esto ya
+         * está a pantalla completa» y el arranque del minijuego. En el mockup son dos variables
+         * distintas (`q` y `e`) y solo `e` entra en los `lerp`.
+         * ▶ Medido con la fórmula del mockup al lado: usando el suavizado para la retirada, al 7 %
+         * del crecimiento su armazón valía **0,19 de opacidad y el nuestro 0,55** — el suavizado va
+         * por detrás del crudo justo en el tramo donde el armazón tiene que irse.
+         */
+        publica(p, q) {
+            if (p === this._last && q === this._lastQ) return;
+            this._last = p; this._lastQ = q;
             this.$el.style.setProperty('--cierre-p', String(p));
             // ⚠️ **También en el `<body>`**: quien lo lee —el armazón, que se retira ante el
             // cierre— es HERMANO de esta sección, y una custom property solo baja por el árbol.
             document.body.style.setProperty('--cierre-p', String(p));
-            document.body.classList.toggle('cierre--live', p >= 0.3);
-            const abierto = p >= 0.985;
+            document.body.style.setProperty('--cierre-q', String(q));
+            document.body.classList.toggle('cierre--live', q >= 0.3);
+            const abierto = q >= 0.985;
             if (abierto !== this._abierto) {
                 this._abierto = abierto;
                 window.dispatchEvent(new CustomEvent('cierre:abierto', { detail: abierto }));
@@ -895,7 +906,7 @@ document.addEventListener('alpine:init', () => {
                 this.suelta();
                 // Su caja NATURAL se mide mientras está en el flujo: una vez fija ya no se puede.
                 this._r0 = caja.getBoundingClientRect();
-                this.publica(0);
+                this.publica(0, 0);
                 return;
             }
 
@@ -918,7 +929,7 @@ document.addEventListener('alpine:init', () => {
             // La curva del mockup: arranque lineal y final que se posa. No la cúbica del hero —
             // aquí lo que crece tiene que notarse desde el primer píxel o parece que no pasa nada.
             const p = Math.round((0.22 * bruto + 0.78 * (bruto * bruto * (3 - 2 * bruto))) * 1000) / 1000;
-            this.publica(p);
+            this.publica(p, Math.round(bruto * 1000) / 1000);
         },
 
         destroy() {

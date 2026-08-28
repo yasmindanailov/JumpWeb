@@ -12,6 +12,19 @@
 > hace siempre sobre la lista de ficheros del propio diff (`git status`), nunca con un `grep` del
 > árbol: un `sed` global llegó a corromper cinco referencias del otro carril.
 >
+> ❗❗ **`#251` — LA TRANSICIÓN DEL CIERRE NO ERA IDÉNTICA, y el desvío estaba donde nadie miraba.**
+> El crecimiento de la tarjeta SÍ lo era (17 posiciones × 2 anchos contra la fórmula del artboard:
+> ancho 0,0 px, alto ≤ 0,5). Lo que no: **la retirada del armazón**, por dos causas encadenadas —la
+> curva era LINEAL y el mockup la hace CÚBICA, y además leía el progreso EQUIVOCADO—.
+> ▶ **La coreografía publica DOS progresos y no son intercambiables**: `--cierre-q` (CRUDO) manda la
+> retirada, el umbral de «ya llena» y el arranque del minijuego; `--cierre-p` (SUAVIZADO) manda la
+> geometría. En el mockup **solo el suavizado entra en los `lerp`**. Medido al 7 % del crecimiento:
+> su armazón valía **0,19 de opacidad y el nuestro 0,82**. ⚠️ *Dos progresos con nombres parecidos
+> son dos progresos que alguien intercambiará* — lo vigila `CierreChoreographyTest` (6 mutaciones).
+> ⚠️ **Y una guarda PROPIA se puso roja con el producto sano** por aseverar el NOMBRE de un token:
+> re-apuntada a resolver la cadena de `var()`. *Aseverar el texto literal ata la guarda a una
+> implementación.*
+>
 > ❗❗ **`#250` — LA COLUMNA DEL SITIO ES AHORA LA DEL MOCKUP: 1176 px, no 1380.** `[DECIDIDO
 > owner]`. Afecta a las **doce vistas** y a cualquiera que escriba CSS, así que va delante.
 > ▶ **El ancho se escribe UNA vez, en `--col-max`**, y de ahí salen las tres formas en las que el
@@ -1058,6 +1071,12 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3389 en verde** (22.320 aserciones, 1 skipped a propósito) · **JS 835**, medida el
+  2026-08-28 por la noche **sobre el árbol CONJUNTO**, tras rebasar `#251` (la transición del cierre,
+  carril C) encima del `#240` del carril A. ▶ **+5 casos en este corte**:
+  `CierreChoreographyTest` —el progreso crudo y el suavizado no se confunden—, **6 mutaciones y las
+  6 muerden**. ⚠️ **Los tests de JS los corre el runner de NODE** (`npm run test:js`), no vitest:
+  `npx vitest run` dio «58 ficheros fallan» y era el instrumento.
 - Suite **3384 en verde** (22.292 aserciones, 1 skipped a propósito), medida el 2026-08-28 por
   la noche **sobre el árbol CONJUNTO**, tras rebasar **«Crear pedido» en tablet** (`#240`) encima del
   `#250` del carril C. ▶ **+7 casos**: `CreateManualOrderTabletTest`, que fija las decisiones de forma

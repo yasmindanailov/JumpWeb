@@ -1684,6 +1684,40 @@ class ArmazonContractTest extends TestCase
         return $out;
     }
 
+    /** El valor de UNA declaración dentro del cuerpo de una regla. */
+    private function declarationValue(string $body, string $property): string
+    {
+        return preg_match('/(?<![-\w])'.preg_quote($property, '/').'\s*:([^;}]+)/', $body, $m) === 1 ? $m[1] : '';
+    }
+
+    /**
+     * Expande `var(--x)` con el valor declarado de `--x` hasta que no quede ninguno.
+     *
+     * Sirve para aseverar de qué depende una declaración **de verdad**, en vez de atarse al nombre
+     * del token que tenga hoy en medio. El tope de vueltas es un cortacircuitos: un token que se
+     * refiera a sí mismo colgaría el bucle, y en este repo ya hubo un diccionario que ciclaba
+     * (`#196`).
+     */
+    private function resolveVars(string $value, int $vueltas = 8): string
+    {
+        $css = (string) file_get_contents(public_path('css/site.css'));
+
+        for ($i = 0; $i < $vueltas && str_contains($value, 'var('); $i++) {
+            $antes = $value;
+            $value = (string) preg_replace_callback('/var\((--[\w-]+)[^)]*\)/', function (array $m) use ($css) {
+                return preg_match('/'.preg_quote($m[1], '/').'\s*:([^;}]+)/', $css, $d) === 1
+                    ? '('.$m[1].' '.trim($d[1]).')'
+                    : $m[0];
+            }, $value);
+
+            if ($value === $antes) {
+                break;
+            }
+        }
+
+        return $value;
+    }
+
     /* ══ LA 2c·8 — EL ARMAZÓN NACE BAJO EL HERO Y EL CTA ES EL DEL MOCKUP (`#216`) ═══════════ */
 
     /**
@@ -1713,8 +1747,15 @@ class ArmazonContractTest extends TestCase
                 "▶ `[DECIDIDO owner, 2026-08-28]`: en la portada el armazón nace oculto bajo el hero,\n".
                 '  como el mockup. Si un racimo se queda fuera, la primera pantalla sale a medias.',
             );
+            // ⚠️⚠️ **Y la retirada se asevera RESOLVIENDO la cadena de tokens, no por el nombre
+            // de uno.** Esta aserción decía `var(--cierre-salida)` y se puso ROJA con el armazón
+            // sano en cuanto `#250` metió la curva cúbica en un token intermedio: la retirada
+            // seguía ahí, con otro nombre. Es la misma lección que la aserción de arriba ya había
+            // aprendido con `--nav-p`, una capa más abajo. Ahora se expande `var()` hasta el
+            // final y se exige que la opacidad dependa del PROGRESO DEL CIERRE, se llame como se
+            // llame el token de en medio.
             $this->assertMatchesRegularExpression(
-                '/opacity:[^;]*var\(--cierre-salida\)/', $cuerpo,
+                '/--cierre-q\b/', $this->resolveVars($this->declarationValue($cuerpo, 'opacity')),
                 "`{$racimo}` no se retira ante el hero del cierre (`#229`).\n".
                 "▶ La tarjeta de cierre es de TINTA y ocupa la pantalla entera; el botón de comprar\n".
                 "  se rellena con `var(--fg)` y quedaría OSCURO SOBRE OSCURO — se vio en la primera\n".

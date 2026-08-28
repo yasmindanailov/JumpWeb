@@ -3055,12 +3055,29 @@ body[data-has-hero] {
    ▶ La salida arranca casi al principio del crecimiento y dura poco (`(p − 0.02) / 0.28`, los
    números del mockup): para cuando la tarjeta llena media pantalla, el armazón ya no está.
    ▶ Y **no hace falta clamp**: `opacity` recorta sola por debajo de 0, así que un valor negativo
-   se comporta exactamente como «del todo fuera». */
-body { --cierre-p: 0; --cierre-salida: calc((var(--cierre-p) - 0.02) / 0.28); }
+   se comporta exactamente como «del todo fuera». Lo mismo vale al CUBO: un negativo elevado al
+   cubo sigue siendo negativo, y un valor por encima de 1 sigue estando por encima.
+
+   ⚠️⚠️ **La retirada es CÚBICA, no lineal, y esto se midió** (`#250`). El mockup calcula
+   `v = ne · (1 − salida)³` y aquí estaba como `1 − salida`, a secas. La diferencia no es teórica:
+   comparando fotograma a fotograma contra su propia fórmula, al **7 % del crecimiento** su armazón
+   valía **0,19 de opacidad y el nuestro 0,82** — o sea que el suyo ya casi no estaba y el nuestro
+   seguía entero. Era **el único desvío perceptible de toda la transición**: la geometría coincidía
+   al sub-píxel (≤ 0,4 px de alto, ≤ 0,1 de ancho) y el desvío del armazón llegaba a **0,62**.
+   ▶ Va en su propio token porque `calc()` solo multiplica números, y así el cubo se lee. */
+body {
+    --cierre-p: 0;
+    --cierre-q: 0;
+    /* ⚠️ Lee el progreso CRUDO (`--cierre-q`), no el suavizado: es lo que hace el mockup, y con el
+       suavizado el armazón se quedaba puesto medio recorrido de más. */
+    --cierre-salida: calc((var(--cierre-q) - 0.02) / 0.28);
+    /* Lo que QUEDA del armazón, con la curva del mockup: `(1 − salida)³`. */
+    --cierre-queda: calc((1 - var(--cierre-salida)) * (1 - var(--cierre-salida)) * (1 - var(--cierre-salida)));
+}
 
 body[data-has-hero] .nav__left,
 body[data-has-hero] .nav__cta {
-    opacity: calc(var(--nav-p) * (1 - var(--cierre-salida)));
+    opacity: calc(var(--nav-p) * var(--cierre-queda));
     transform: translateY(calc(var(--nav-reveal-lift) * (var(--nav-p) - 1)));
     pointer-events: none;
     transition: opacity var(--dur-estado) var(--ease-sale), transform var(--dur-entra) var(--ease-sale);

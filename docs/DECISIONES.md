@@ -13295,3 +13295,69 @@ antes y después). Menú, tarjeta del cierre y minijuego re-medidos sin cambio.
 **`ColumnIsDeclaredOnceTest` nuevo (3 casos) · 6 mutaciones, las 6 muerden.** El lector de hojas se
 extrae a `Tests\Support\ReadsSiteStylesheets`, que tres guardas se estaban copiando.
 Suite **3.364 / 22.147** · Pint ✓ · docs-check ✓.
+
+---
+
+## #251 · 2026-08-28 · La transición del cierre NO era idéntica, y el desvío estaba donde nadie miraba: dos progresos con nombres parecidos
+
+**Contexto.** El owner preguntó: «¿la transición es idéntica al mockup?». Es una pregunta que **no
+se puede contestar mirando** —la geometría de un fotograma suelto siempre parece correcta—, así que
+se transcribió su `aplicaCierre` a la sonda y se comparó **fotograma a fotograma**, alimentando su
+fórmula con nuestros mismos datos de entrada.
+
+### 1 · Lo que ya era idéntico
+
+Con **17 posiciones de scroll** y dos anchos: progreso ≤ **0,0005** (el redondeo a milésimas del
+propio publicador) · ancho **0,0 px** · alto ≤ **0,5 px**. El gesto ya era el suyo.
+
+### 2 · ⚠️⚠️ Lo que no: la retirada del ARMAZÓN, por dos causas encadenadas
+
+**(a) La curva era LINEAL y en el mockup es CÚBICA** (`v = ne · (1 − salida)³`). Con la lineal el
+armazón se queda puesto medio recorrido de más.
+
+**(b) Y leía el progreso EQUIVOCADO.** La coreografía produce **dos** números y no son
+intercambiables: `q`, el **crudo**, manda la retirada, el umbral de «ya llena» y el arranque del
+minijuego; `e`, el **suavizado**, manda la geometría. En el mockup **solo `e` entra en los `lerp`**.
+`#229` usó el suavizado también para la salida —porque los dos se llaman «el progreso»— y el
+suavizado **va por detrás** del crudo justo en el tramo donde el armazón tiene que irse.
+
+▶ **Medido al 7 % del crecimiento**: el armazón del mockup valía **0,19** de opacidad y el nuestro
+**0,82**. Con la cúbica pero leyendo el suavizado, **0,55**. Leyendo el crudo, **0,19**. Peor desvío
+en las 17 posiciones: **0,62 → 0,005**.
+
+⚠️ *Dos progresos con nombres parecidos son dos progresos que alguien intercambiará.* Ahora se
+publican los dos con nombre distinto y `CierreChoreographyTest` asevera **las dos mitades**: que la
+retirada y los umbrales leen el crudo, y que la geometría lee el suavizado.
+⚠️ De paso, dos umbrales caen donde el mockup los pone: `cierre--live` salta **exactamente cuando la
+retirada termina** (`q = 0,30`) y el minijuego arranca en `q > 0,985` en vez de en `e > 0,985`, que
+caía en `q ≈ 0,955`.
+
+### 3 · La divergencia que se deja a propósito
+
+El mockup interpola el canto de la tarjeta de **26 a 24** y el nuestro es **24 constante**: 2 px al
+principio. Se queda así porque **26 no está en la escala de forma declarada por el propio cliente**
+(0 · 6 · 10 · 16 · 24 · 999), así que el constante es *más* fiel a su sistema que el `lerp` de su
+artboard. Hermana de la del canto de los CTA (`DEUDA.md`).
+
+### 4 · ⚠️ Y una guarda propia se puso ROJA con el producto sano
+
+`ArmazonContractTest` aseveraba la retirada por el **nombre del token** (`var(--cierre-salida)`). Al
+meter la cúbica en un token intermedio, la retirada seguía ahí con otro nombre y la guarda falló. Se
+re-apunta **resolviendo la cadena de `var()`** y exigiendo que la opacidad dependa del progreso del
+cierre, se llame como se llame lo de en medio.
+▶ Es la misma lección que esa misma aserción ya había aprendido una capa más abajo con `--nav-p`, y
+que tenía escrita en su propio comentario: *aseverar el texto literal ata la guarda a una
+implementación.*
+
+### Verificación
+
+17 posiciones × 2 anchos contra la fórmula del artboard: progreso ≤ 0,0005 · ancho 0,0 px · alto ≤
+0,5 px · retirada ≤ 0,005. Minijuego re-medido tras mover su umbral (150 / k = 0,5 · 358 / k = 1,193,
+cero errores de JS). **`CierreChoreographyTest` nuevo (5 casos) · 6 mutaciones, las 6 muerden**,
+incluida la que reproduce el fallo real. Suite **3.382 / 22.296** · JS **835** · Pint ✓ ·
+docs-check ✓ · build ✓.
+⚠️ **Y el instrumento volvió a mentir dos veces en esta tanda**: `npx vitest run` dio «58 ficheros
+fallan» porque este repo corre los tests de JS con el runner de Node (`npm run test:js`), y antes el
+bundle SSR rancio tras un rebase dio 34 rojos que no eran del cambio.
+❗ **Lo que ninguna sonda mide es cómo se SIENTE**: esto se revisa bajando hasta el final de la
+portada, no con una captura.

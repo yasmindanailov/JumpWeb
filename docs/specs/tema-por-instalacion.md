@@ -1686,3 +1686,88 @@ fuentes, y cambiarla sería **una línea de su `client.css`**, no código del pr
   necesitaban y cada una se lo escribía. Es la respuesta de `#233` otra vez — *cuando algo está en
   dos sitios, la salida no es retirarlo de uno, es que haya una definición*.
 - Suite **3364 / 22.147** · Pint ✓ · docs-check ✓.
+
+---
+
+## 19. LA TRANSICIÓN DEL CIERRE — dos progresos con nombres parecidos (`#251`, 2026-08-28)
+
+**La pregunta del owner fue «¿la transición es idéntica al mockup?»**, y era una pregunta que no se
+podía contestar mirando: la geometría de un fotograma suelto **siempre parece correcta**. Se contestó
+transcribiendo su `aplicaCierre` a la sonda y comparando **fotograma a fotograma**, alimentando su
+fórmula con nuestros mismos datos de entrada (la caja natural, `vh`, `vw`, el máximo de scroll y el
+pie).
+
+### 19.1 Lo que ya era idéntico
+
+Con **17 posiciones de scroll** dentro del recorrido y a dos anchos:
+
+| | peor desvío |
+|---|---|
+| progreso | **0,0005** (es el redondeo a milésimas del propio publicador) |
+| ancho de la tarjeta | **0,0 px** |
+| alto de la tarjeta | **0,5 px** |
+
+O sea que el crecimiento —el gesto— ya era el suyo: mismo recorrido, mismo `q`, misma curva
+(`0,22·q + 0,78·smoothstep(q)`), mismos destinos (`100vw − 20`, `100svh − 20`, `top: 10`).
+
+### 19.2 ⚠️⚠️ Lo que NO lo era: la retirada del armazón
+
+El desvío estaba donde no se estaba mirando. **Dos causas encadenadas**, y ninguna la veía nada:
+
+**1 · La curva era LINEAL y en el mockup es CÚBICA.** Él calcula `v = ne · (1 − salida)³`; aquí
+estaba como `1 − salida`. Con la cúbica el armazón cae de golpe al principio y luego se apaga; con
+la lineal se va repartiendo, y **se queda puesto medio recorrido de más**.
+
+**2 · Y leía el progreso EQUIVOCADO** — la de verdad. La coreografía produce **dos** números:
+
+| | qué es | qué mueve |
+|---|---|---|
+| `q` | el progreso **CRUDO** del scroll | la retirada del armazón · el umbral de «ya llena» · el arranque del minijuego |
+| `e` | el mismo, **SUAVIZADO** | la geometría: ancho, alto, izquierda y la talla del titular |
+
+En el mockup **solo `e` entra en los `lerp`**; todo lo demás va con `q`. Aquí `#229` usó
+`--cierre-p` —el suavizado— también para la salida, porque los dos se llaman «el progreso». Y el
+suavizado **va por detrás** del crudo justo en el tramo donde el armazón tiene que irse.
+
+▶ **Medido, al 7 % del crecimiento**: el armazón del mockup valía **0,19** de opacidad y el nuestro
+**0,82**. Con la cúbica pero leyendo el suavizado, **0,55**. Leyendo el crudo, **0,19**.
+Peor desvío de la retirada en las 17 posiciones: **0,62 → 0,005**.
+
+⚠️ *Dos progresos con nombres parecidos son dos progresos que alguien intercambiará.* Por eso ahora
+se publican los dos, con nombre distinto, y hay una guarda —`CierreChoreographyTest`— que asevera
+**las dos mitades**: que la retirada y los umbrales leen el crudo, y que la geometría lee el
+suavizado. **6 mutaciones, las 6 muerden.**
+
+⚠️ Y como efecto lateral, dos umbrales quedan donde el mockup los pone: `cierre--live` —lo que saca
+al armazón del hit-testing— salta **exactamente cuando la retirada termina** (`q = 0,30`), y el
+minijuego arranca en `q > 0,985` en vez de en `e > 0,985`, que caía en `q ≈ 0,955`.
+
+### 19.3 La única divergencia que se deja a propósito
+
+El mockup interpola el canto de la tarjeta de **26 a 24**; el nuestro es **24 constante**. Son 2 px
+al principio del recorrido, y se queda así con motivo: **26 no está en la escala de forma declarada
+por el propio cliente** (0 · 6 · 10 · 16 · 24 · 999), así que el constante 24 es *más* fiel a su
+sistema que el `lerp` de su artboard. Es hermana de la del canto de los CTA (`DEUDA.md`).
+
+### 19.4 ⚠️ Una guarda propia se puso roja con el producto sano
+
+`ArmazonContractTest` aseveraba la retirada por el **nombre del token** (`var(--cierre-salida)`).
+Al meter la cúbica en un token intermedio, la retirada seguía ahí —con otro nombre— y la guarda
+falló. ▶ Se re-apunta **resolviendo la cadena de `var()`** hasta el final y exigiendo que la
+opacidad dependa del progreso del cierre, se llame como se llame lo de en medio. Es la misma lección
+que esa misma aserción ya había aprendido una capa más abajo con `--nav-p`, escrita en su propio
+comentario: *aseverar el texto literal ata la guarda a una implementación.*
+
+### 19.5 Verificación
+
+- **17 posiciones × 2 anchos** contra la fórmula del artboard: progreso ≤ **0,0005** · ancho **0,0
+  px** · alto ≤ **0,5 px** · retirada del armazón ≤ **0,005**. Solo el canto se aparta (2 px, a
+  propósito).
+- Minijuego intacto y re-medido tras mover su umbral: 150 / k = 0,5 en reposo, 358 / k = 1,193
+  jugando, **cero errores de JavaScript** en tres anchos.
+- **`CierreChoreographyTest` nuevo (5 casos)** · **6 mutaciones, las 6 muerden** — incluida la que
+  reproduce el fallo real (devolver la retirada al progreso suavizado).
+- Suite **3382 / 22.296** · JS **835** · Pint ✓ · docs-check ✓ · build ✓.
+- ❗ **Lo que ninguna sonda puede medir: cómo se siente.** Como la tanda 2d, esto no se revisa con
+  una captura — se revisa **bajando hasta el final de la portada** y mirando cuándo desaparece el
+  armazón.

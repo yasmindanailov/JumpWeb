@@ -2588,6 +2588,15 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > ▶ **Dos lecciones de instrumento**: un comparador que mide la envolvente de un GIRO miente, y un
 > barrido de roturas **sin pasada de control** inventa roturas (31, las mismas antes y después).
 >
+> ✅ **Y `#251` — LA TRANSICIÓN DEL CIERRE**, a pregunta del owner («¿es idéntica al mockup?»).
+> Se transcribió su `aplicaCierre` a la sonda y se comparó **fotograma a fotograma**: el
+> crecimiento ya era el suyo (17 posiciones × 2 anchos; ancho 0,0 px, alto ≤ 0,5), pero **la
+> retirada del armazón no** —curva LINEAL donde el mockup la hace CÚBICA, y leyendo el progreso
+> equivocado—. ▶ **La coreografía publica DOS progresos**: el CRUDO manda la retirada y los
+> umbrales, el SUAVIZADO manda la geometría. Al 7 % del crecimiento su armazón valía 0,19 y el
+> nuestro 0,82. `CierreChoreographyTest`, 6 mutaciones.
+> ⚠️ Una guarda propia se puso roja con el producto sano por aseverar el NOMBRE de un token.
+>
 > ❗❗ **EL CARRIL C NO TIENE NADA PENDIENTE DE AGENTE en hero, menú, pie y cierre.** Lo que queda es
 > del owner: su ojo en navegador, cuál de las tres variantes de «El parque», y el aviso de contraste
 > AA del color de acción. ▶ **Y quedan DOS encargos suyos sin empezar**: los **iconos** del canvas
