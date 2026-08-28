@@ -11702,3 +11702,47 @@ los comentarios blanqueados. *Un `grep` que encuentra no demuestra que exista: h
 —el CTA doble de `#205`— y NO se cambia por los 3 iconos + «Reservar» de su artboard. Los tres
 destinos ya están en el menú, a un toque. ▶ Eso deja la **2c·4b** reducida a lo que de verdad
 falta: **el menú a pantalla completa en móvil**.
+
+---
+
+## #221 · 2026-08-28 · La 2c·4b: el menú a pantalla completa manda TAMBIÉN en móvil — y donde el mockup usa `nowrap` nosotros no podemos, porque nuestros rótulos los manda la BD
+
+**Contexto.** Con la barra inferior decidida (`#220`: se queda el CTA doble), lo que quedaba de la
+2c·4b era retirar el interruptor de 1080 px y hacer que el menú funcione por debajo. Estaba
+`[PENDIENTE: owner]` desde la 2c·4 esperando su artboard de móvil, que llegó el 28.
+
+**Qué había, medido forzando el menú por debajo del corte** —que es la única forma de saber por qué
+estaba apagado—: a **390 px** un ítem medía **671 px dentro de un menú de 390** (los rótulos se
+salían por la derecha, cortados a media palabra) y a **1024** el PRIMER ítem salía en `y = −26`,
+porque la lista está centrada y al no caber el centrado **corta por los dos lados**.
+
+❗ **La causa del primero es la misma que la del titular del hero (`#220`)**: un `clamp` cuyo SUELO
+no cabe. `clamp(30px, min(5.2vw, 9vh), 68px)` da **30 px fijos** por debajo de 577 px de ancho, y
+con `white-space: nowrap` un rótulo largo no tiene dónde ir. Dos tandas seguidas, el mismo patrón.
+
+⚠️⚠️ **Y aquí el mockup NO puede resolverlo por nosotros.** Su menú usa `nowrap` y puede
+permitírselo porque **sus destinos son cortos y fijos** («Entradas», «Zonas», «Cómo llegar»). **Los
+nuestros salen de la base de datos** —`[DECIDIDO owner]`, §4.2— y hay «Excursiones de colegio».
+▶ Por eso en móvil **los rótulos envuelven**: es lo único que respeta a la vez el diseño y el hecho
+de que el contenido lo pone el parque. Copiar el `nowrap` habría sido copiar una decisión suya que
+depende de un dato que nosotros no controlamos. **Lo demás sí sale del mockup** (título
+`clamp(26px, min(9vw,7vh), 44px)`, subtítulo oculto, padding de fila y márgenes).
+
+**LA VELA, que su menú tiene y el nuestro no.** Medido a 390 px: la lista mide **521 px** y su
+contenido **806** — **cinco de los diez destinos quedan fuera** — y la barra de scroll está oculta
+a propósito. Sin señal, **una lista que continúa parece terminada**. El mockup la apaga con
+JavaScript; aquí se apaga con `animation-timeline: scroll()`, **sin una línea de JS**, y donde no
+haya soporte se queda visible: una señal de más contenido cuando ya no lo hay es un adorno, **no
+tenerla cuando sí lo hay es un menú que esconde la mitad de sus destinos**.
+
+**El cajón (`.mob-menu`) queda APAGADO, no retirado**: son ~200 líneas de CSS y un bloque de blade
+que **ningún test cubre**, así que retirarlo pide su propia pasada con `CONVENCIONES §3.quater`.
+Ficha en `DEUDA.md`. Con esto **el armazón queda completo en los doce anchos**.
+
+**Verificación**: suite **3249 / 21.353** · Pint ✓ · docs-check ✓ · `ArmazonContractTest` +3 casos ·
+**6 mutaciones, las 6 muerden** · medido en 390 · 768 · 1024.
+
+⚠️ **Y una comprobación propia dio un FALSO NEGATIVO**: dijo que el último destino no era
+alcanzable, porque medía su posición **sin desplazar** en vez de si la lista puede desplazarse — y
+sí podía (contenido 806 sobre 521 de alto). *Preguntar «¿está a la vista?» no es preguntar «¿se
+puede llegar?».*

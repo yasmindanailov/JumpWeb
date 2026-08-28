@@ -1546,3 +1546,67 @@ pulgar.
 ▶ **Eso reduce la 2c·4b a lo que de verdad falta: el MENÚ a pantalla completa en móvil.** Por
 debajo de 1080 px sigue mandando el cajón lateral de siempre, que —`§1.3`— **no lo toca ningún
 test**, ni PHP ni JS.
+
+---
+
+## 12. La 2c·4b — el menú a pantalla completa TAMBIÉN en móvil (`#221`, 2026-08-28)
+
+> Con la barra inferior decidida (§11.4), lo que quedaba de la 2c·4b era esto: **retirar el
+> interruptor de 1080 px** y hacer que el menú funcione por debajo.
+
+### 12.1 Qué había: un menú que en móvil NO cabía
+
+Medido forzándolo a verse por debajo del corte, que es la única forma de saber por qué estaba
+apagado:
+
+| Ancho | Qué pasaba |
+|---|---|
+| 390 | un ítem medía **671 px dentro de un menú de 390**: los rótulos se salían por la derecha, cortados a media palabra |
+| 1024 | el **primer** ítem salía en `y = −26`: la lista está centrada y, al no caber, el centrado corta **por los dos lados** |
+
+❗ **La causa del primero es la misma que la del titular del hero** (`#220`): un `clamp` cuyo
+**suelo** no cabe. `clamp(30px, min(5.2vw, 9vh), 68px)` da **30 px fijos** por debajo de 577 px de
+ancho, y con `white-space: nowrap` un rótulo largo no tiene dónde ir.
+
+### 12.2 ⚠️⚠️ Y aquí el mockup NO puede resolverlo por nosotros
+
+Su menú usa `nowrap` y puede permitírselo: **sus destinos son cortos y fijos** —«Entradas»,
+«Zonas», «Cómo llegar»—. **Los nuestros salen de la base de datos** (§4.2, `[DECIDIDO owner]`: la
+lista la manda la BD) y hay «Excursiones de colegio» o «Ubicación y horario».
+
+▶ Por eso en móvil **los rótulos envuelven**. Es lo único que respeta a la vez el diseño y el hecho
+de que el contenido lo pone el parque. Copiar el `nowrap` habría sido copiar una decisión que
+depende de un dato que nosotros no controlamos.
+
+Lo demás sí sale del mockup, medido en `enlacesMenu` con `esMovil = ancho < 1100`: título
+`clamp(26px, min(9vw,7vh), 44px)`, **subtítulo oculto**, padding de fila menor y márgenes
+estrechos. Y `justify-content: flex-start` en la lista, que es lo que arregla el recorte de 1024.
+
+### 12.3 La VELA, que el mockup tiene y nosotros no teníamos
+
+Medido a 390 px: la lista mide **521 px** y su contenido **806** — o sea que **cinco de los diez
+destinos quedan fuera**—, y la barra de scroll está oculta a propósito (`scrollbar-width: none`).
+Sin ninguna señal, **una lista que continúa parece terminada**.
+
+▶ El mockup la apaga con JavaScript al llegar al final (`miraListaMenu`). Aquí se apaga con
+`animation-timeline: scroll()`, **sin una línea de JS**, y donde el navegador no lo entienda se
+queda visible — que es el estado seguro: una señal de más contenido cuando ya no lo hay es un
+adorno; **no tenerla cuando sí lo hay es un menú que esconde la mitad de sus destinos**.
+⚠️ Va en el envoltorio y no en la lista: un `::after` dentro de un contenedor con scroll **viaja
+con el contenido**, así que se iría hacia arriba en cuanto alguien desplazara.
+
+### 12.4 El cajón queda APAGADO, no retirado
+
+`.mob-menu` no lo enseña ya ningún ancho, pero su marcado se sigue sirviendo. **No se borra en esta
+tanda a propósito**: son ~200 líneas de CSS y un bloque de blade que —§1.3— **ningún test cubre**,
+así que retirarlo pide su propia pasada con la auditoría de `CONVENCIONES §3.quater`. Ficha en
+`DEUDA.md`.
+
+### 12.5 Verificación
+
+- **`ArmazonContractTest` +3 casos** · **6 mutaciones, las 6 muerden**.
+- Medido en **390 · 768 · 1024**: los ítems caben (310 en 390, 688 en 768, 944 en 1024), el primero
+  ya no sale cortado, y la lista conserva su scroll (contenido 806 sobre 521 de alto).
+- ⚠️ **Y una comprobación propia dio un falso negativo**: `alcanzable: false`, porque medía la
+  posición del último ítem **sin desplazar** en vez de si la lista puede desplazarse. La lista sí
+  tenía scroll. *Preguntar «¿está a la vista?» no es preguntar «¿se puede llegar?».*

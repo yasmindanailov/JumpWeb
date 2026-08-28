@@ -1900,6 +1900,89 @@ class ArmazonContractTest extends TestCase
         );
     }
 
+    /* ══ LA 2c·4b — EL MENÚ A PANTALLA COMPLETA, TAMBIÉN EN MÓVIL (`#221`) ═══════════════════ */
+
+    /**
+     * **La navegación es la MISMA en los doce anchos.**
+     *
+     * Hasta aquí, por debajo de 1080 px el menú era `display: none` y mandaba el cajón lateral —
+     * `[PENDIENTE: owner]` desde la 2c·4, esperando su artboard de móvil, que llegó el 28—.
+     * ⚠️ Y el cajón queda **apagado**, no borrado: son ~200 líneas y un bloque de marcado que
+     * ningún test cubre, así que retirarlo pide su propia pasada (`CONVENCIONES §3.quater`).
+     */
+    public function test_the_full_screen_menu_also_rules_on_mobile(): void
+    {
+        $css = $this->stylesheets();
+
+        $this->assertStringNotContainsString(
+            '.menu { display: none; }', $css,
+            "el menú a pantalla completa vuelve a apagarse en móvil.\n".
+            '▶ Desde la 2c·4b la navegación es la misma en los doce anchos.',
+        );
+        $this->assertStringContainsString(
+            '.mob-menu { display: none; }', $css,
+            "el cajón lateral vuelve a pintarse.\n".
+            '▶ Con el menú en todos los anchos, tener las DOS es tener dos navegaciones a la vez.',
+        );
+    }
+
+    /**
+     * **En móvil los rótulos del menú ENVUELVEN, porque los manda la BD.**
+     *
+     * ⚠️⚠️ El mockup usa `white-space: nowrap` y puede permitírselo: sus destinos son cortos y
+     * fijos («Entradas», «Zonas»). **Los nuestros salen de la base de datos** y hay «Excursiones de
+     * colegio». Medido a 390 px con `nowrap`: un ítem medía **671 px dentro de un menú de 390** y
+     * el rótulo quedaba cortado a media palabra.
+     * ▶ Es el mismo patrón que el titular del hero (`#220`): un `clamp` cuyo **suelo** no cabía —
+     * `clamp(30px, min(5.2vw, 9vh), 68px)` da 30 px fijos por debajo de 577 px de ancho.
+     */
+    public function test_the_menu_labels_wrap_on_mobile(): void
+    {
+        $reglas = $this->cssRules(public_path('css/site.css'));
+        $movil = null;
+
+        // La regla de `.menu__t` dentro del bloque de móvil: `cssRules` concatena las dos, así que
+        // basta con que el conjunto declare el ajuste y el tamaño chico.
+        $cuerpo = (string) ($reglas['.menu__t'] ?? '');
+
+        $this->assertStringContainsString(
+            'white-space: normal', $cuerpo,
+            "los rótulos del menú siguen en `nowrap` en móvil.\n".
+            '▶ Los manda la BD: «Excursiones de colegio» no cabe en 390 px a ningún tamaño legible.',
+        );
+        $this->assertStringContainsString(
+            'clamp(26px, min(9vw, 7vh), 44px)', $cuerpo,
+            'falta el tamaño de móvil del mockup para los rótulos del menú.',
+        );
+
+        $this->assertStringContainsString(
+            'display: none', (string) ($reglas['.menu__s'] ?? ''),
+            'el subtítulo del menú no se retira en móvil: en una fila estrecha compite con el destino.',
+        );
+    }
+
+    /**
+     * **Y hay una VELA que dice que la lista sigue.**
+     *
+     * Medido a 390 px: la lista mide 521 px y su contenido 806 — **cinco de los diez destinos
+     * quedan fuera**—, y la barra de scroll está oculta a propósito (`scrollbar-width: none`).
+     * Sin la vela, una lista que continúa parece terminada.
+     */
+    public function test_the_menu_says_the_list_continues(): void
+    {
+        $cuerpo = (string) ($this->cssRules(public_path('css/site.css'))['.menu__inner::after'] ?? '');
+
+        $this->assertStringContainsString(
+            'linear-gradient', $cuerpo,
+            "no hay vela al final de la lista del menú.\n".
+            '▶ Con la barra de scroll oculta y la mitad de los destinos fuera, nada dice que haya más.',
+        );
+        $this->assertStringContainsString(
+            'pointer-events: none', $cuerpo,
+            'la vela se traga los clics del último destino visible.',
+        );
+    }
+
     /** Literal XPath seguro aunque el texto lleve comillas. */
     private function quote(string $value): string
     {

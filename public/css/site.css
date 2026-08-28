@@ -3772,6 +3772,74 @@ html:not(.js) .gf-fiche__foot { display: none; }
     line-height: 1; letter-spacing: -0.02em;
     white-space: nowrap;
 }
+
+/* ══ EL MENÚ EN MÓVIL (2c·4b, `#221`) ═════════════════════════════════════════════════════════
+   Medido en el mockup (`enlacesMenu`, con `esMovil = ancho < 1100`): título más pequeño, subtítulo
+   OCULTO, padding de fila menor y márgenes estrechos.
+
+   ⚠️⚠️ **Y una cosa que el mockup NO puede resolver por nosotros: `white-space: nowrap`.** Sus
+   rótulos son cortos y fijos («Entradas», «Zonas», «Cómo llegar»); **los nuestros salen de la BD**
+   y hay «Excursiones de colegio» o «Ubicación y horario». Con `nowrap`, a 390 px un ítem medía
+   **671 px dentro de un menú de 390** — se salía por la derecha y el rótulo quedaba cortado a
+   media palabra. En móvil los títulos **envuelven**, que es lo único que respeta a la vez el
+   diseño y el hecho de que el contenido lo manda el parque.
+   ▶ Es el mismo patrón que el titular del hero (`#220`): **el suelo de un `clamp` no cabía**, aquí
+   `clamp(30px, min(5.2vw, 9vh), 68px)` daba 30 px fijos por debajo de 577 px de ancho.
+
+   ⚠️ **`justify-content: flex-start`**: la lista está centrada, y cuando no cabe —10 destinos en
+   844 px de alto— el centrado corta **por los dos lados**; medido a 1024 px, el primer ítem salía
+   en `y = -26`. Alineada arriba, lo que no cabe se alcanza con el scroll que la lista ya tiene. */
+@media (max-width: 1080px) {
+    .menu__inner {
+        padding: clamp(88px, 12vh, 120px) var(--wrap-gutter) clamp(48px, 7vh, 88px);
+        gap: 18px;
+    }
+    .menu__list { justify-content: flex-start; }
+    .menu__item a { padding: clamp(9px, 1.6vh, 16px) 2px; gap: 12px; }
+    .menu__t {
+        font-size: clamp(26px, min(9vw, 7vh), 44px);
+        white-space: normal;
+    }
+    /* El subtítulo se va, como en el mockup: en una fila estrecha compite con el destino. */
+    .menu__s { display: none; }
+    .menu__item a:hover,
+    .menu__item a:focus-visible { padding-left: 2px; }
+
+    /* ❗ **LA VELA: la señal de que la lista SIGUE.** Medido a 390 px: la lista mide 521 px y su
+       contenido 806, o sea que **cinco de los diez destinos quedan fuera** — y la barra de scroll
+       está oculta a propósito (`scrollbar-width: none`), así que sin esto nada dice que haya más.
+       El mockup tiene la suya (`velaMenuRef`) y la apaga con JavaScript al llegar al final.
+       ⚠️ **Aquí se apaga con `animation-timeline: scroll()`, sin una línea de JS**, y donde el
+       navegador no lo entienda se queda visible — que es el estado seguro: una señal de más
+       contenido cuando ya no lo hay es un adorno; **no tenerla cuando sí lo hay es una lista que
+       parece terminada y no lo está**.
+       ⚠️ Va en el envoltorio y no en la lista: un `::after` dentro de un contenedor con scroll
+       viaja con el contenido, así que se iría hacia arriba en cuanto alguien desplazara. */
+    .menu__inner { position: relative; }
+    .menu__inner::after {
+        content: "";
+        position: absolute; left: 0; right: 0;
+        bottom: calc(clamp(48px, 7vh, 88px) + 18px + var(--menu-foot-h, 145px));
+        height: 56px;
+        background: linear-gradient(to top, var(--bg), transparent);
+        pointer-events: none;
+    }
+}
+
+/* La vela se apaga sola al llegar al final de la lista, donde el navegador sepa hacerlo. */
+@supports (animation-timeline: scroll()) {
+    @media (max-width: 1080px) {
+        .menu__inner::after {
+            animation: menu-vela linear both;
+            animation-timeline: scroll(nearest block);
+            animation-range: contain;
+        }
+    }
+    @keyframes menu-vela {
+        0%, 80% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+}
 .menu__s {
     flex: 0 0 auto;
     font-family: var(--font-body); font-size: 13.5px;
@@ -3827,15 +3895,16 @@ html:not(.js) .gf-fiche__foot { display: none; }
    la barra se disolvió— así que aquí solo queda la capa. */
 .nav--over { z-index: 110; }
 
-/* En móvil manda el cajón (tanda 2c·4, `[PENDIENTE: owner]`), así que el menú a
-   pantalla completa NO existe ahí — y `display:none` lo saca también del foco,
-   que es lo que `visibility` sola no haría. Por encima del corte, al revés. */
-@media (max-width: 1080px) {
-    .menu { display: none; }
-}
-@media (min-width: 1081px) {
-    .mob-menu { display: none; }
-}
+/* ══ EL MENÚ A PANTALLA COMPLETA, TAMBIÉN EN MÓVIL — la 2c·4b (`#221`) ════════════════════════
+   ⚠️⚠️ **Aquí vivía el interruptor de 1080 px**: por debajo mandaba el cajón lateral y el menú
+   `display:none`. Era `[PENDIENTE: owner]` desde la 2c·4 —esperaba su artboard de móvil, que llegó
+   el 2026-08-28— y ahora se retira: **la navegación es la misma en los doce anchos**.
+
+   ❗ **El cajón (`.mob-menu`) queda sin ningún ancho que lo enseñe.** No se borra en esta tanda a
+   propósito: son ~200 líneas de CSS y un bloque de marcado que **ningún test cubre** (`§1.3`), así
+   que retirarlo pide su propia pasada con la auditoría de `CONVENCIONES §3.quater`. Hasta
+   entonces, lo apaga esta regla y lo dice una ficha de `DEUDA.md`. */
+.mob-menu { display: none; }
 
 /* El contrato de movimiento del cliente: desaparecen desplazamientos y escalas,
    se mantienen las opacidades cortas. Sin esto el recorte circular es un barrido

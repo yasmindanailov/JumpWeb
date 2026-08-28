@@ -589,6 +589,17 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3249 en verde** (21.353 aserciones), medida el 2026-08-28 por la tarde por el carril C
+  tras **`#221`** (**la 2c·4b: el menú a pantalla completa manda también en móvil**, y con eso el
+  ARMAZÓN queda completo en los doce anchos). ▶ Medido forzando el menú por debajo del corte —la
+  única forma de saber por qué estaba apagado—: a 390 px un ítem medía **671 px dentro de un menú
+  de 390**, y a 1024 el primero salía en `y = −26`. ⚠️⚠️ **Donde el mockup usa `nowrap` nosotros no
+  podemos**: sus destinos son cortos y fijos, **los nuestros los manda la BD**. Y entra la **vela**
+  que dice que la lista sigue (a 390 px, cinco de diez destinos quedan fuera con la barra de scroll
+  oculta), apagada con `animation-timeline: scroll()` **sin una línea de JS**.
+  ⚠️ Una comprobación propia dio un **falso negativo** —dijo que el último destino no era
+  alcanzable midiendo su posición sin desplazar—: *preguntar «¿está a la vista?» no es preguntar
+  «¿se puede llegar?»*.
 - Suite **3246 en verde** (21.320 aserciones), medida el 2026-08-28 por la tarde por el carril C
   tras **`#220`** (el HERO EN TELÉFONO: el titular no cabía y la culpa era del **suelo** de un
   `clamp` — `clamp(63px, 13vw, 96px)` nunca baja de 63 y el hueco daba para 49). ▶ Con él, tres
@@ -1124,6 +1135,7 @@ número se eligió **mirando el remoto** y esta tanda es **`#216`**.
 | `#216` · armazón | **El armazón NACE BAJO EL HERO** (`[DECIDIDO owner]`, como el mockup): con el hero a pantalla completa **no hay logo, ni CTA, ni hamburguesa** |
 | `#216` · hero | **Y por eso el hero recupera sus dos botones**, reabriendo `#195`: el mockup puede ocultar su cabecera **porque su hero ofrece la acción** |
 | `#216` · CTA | Las **ocho** diferencias medidas del CTA doble, alineadas: orden, anchos fijos 224/56, alturas iguales, el colapso, el retardo del rótulo, la sombra, el hover y el color dentro del menú |
+| `#221` · la 2c·4b | ✅ **El menú a pantalla completa manda también en móvil, y con eso el ARMAZÓN está completo en los doce anchos.** El cajón lateral queda APAGADO (ficha en `DEUDA`), no retirado |
 | `#220` · el hero móvil | ❗ **El titular del hero no cabía en un teléfono**: un `clamp` no es una talla adaptable, es una talla con dos topes y **el suelo manda**. Con él, tres divergencias más: el corte en 720 en vez de 620, un centrado que el mockup no tiene, y que **el titular no encogía con el hero** |
 | `#219` · el arnés | ❗❗ **El arnés de mutación ENVENENÓ la caché de vistas de Blade**: restaurar con `shutil.move` conserva el mtime, así que el compilado con la mutación se cree más nuevo que el fuente y **gana para siempre**. La web servía el fallo con el fichero correcto en disco, la suite verde y el `pre-push` verde — **solo lo vio el ojo del owner en una captura**. Arreglado con `os.utime` en los cinco arneses; la trampa entra en `CONVENCIONES §3.quater`, que pasa de 4 a 6 |
 | `#218` · el logo | ❗ **El logotipo no medía lo que el mockup**: su `height:54px` está en el `<a>` que ENVUELVE el lockup y el dibujo desborda por sus contornos (54 declarados, **68 reales**). A 70 px la tinta coincide al 1,5 % |
@@ -1192,7 +1204,9 @@ número se eligió **mirando el remoto** y esta tanda es **`#216`**.
 1. **La tanda 2d, el MOVIMIENTO** — no depende de nadie. Medido: **237 declaraciones de transición,
    48 duraciones y 20 curvas** frente a las **7 y 4** que declara el sistema del cliente. No mueve
    píxeles, mueve TIEMPO: **no se revisa con una captura, se revisa interactuando**.
-2. **La 2c·4b, el menú en MÓVIL** — ✅ **ya no la bloquea el artboard** (llegó el 28 dentro de
+2. ✅ **La 2c·4b está HECHA** (`#221`): el menú manda en los doce anchos y la barra inferior se
+   queda como el owner la validó. Lo único que deja detrás es el cajón lateral apagado, con ficha.
+   ▶ El texto de abajo se conserva porque explica de dónde venía. **La 2c·4b, el menú en MÓVIL** — ✅ **ya no la bloquea el artboard** (llegó el 28 dentro de
    `Landing PJP Modos`, con la pasada de móvil completa). ⚠️ **Pero su barra inferior son 3 iconos +
    1 CTA y la nuestra es el CTA doble que el owner validó el día antes**: eso se le pregunta antes
    de rehacerla, no se elige.
