@@ -1899,6 +1899,9 @@ img { display: block; max-width: 100%; }
     font-size: 14px;
 }
 .foot__links a { color: var(--fg-mute); transition: color var(--dur-toque) var(--ease-sale); }
+/* El eslogan editable de la instalación, delante del copyright. Va en su propia línea si no cabe:
+   es texto libre y su longitud la decide el cliente. */
+.foot__tag { display: block; color: var(--fg); }
 .foot__links a:hover { color: var(--fg); }
 .foot__links a:focus-visible { outline: var(--focus-outline); outline-offset: 3px; border-radius: var(--r-xs); }
 

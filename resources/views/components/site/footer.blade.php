@@ -90,7 +90,18 @@
                 </ul>
             </noscript>
 
-            <span class="foot__copy">© {{ date('Y') }} {{ \Illuminate\Support\Str::upper($site['name'] ?? config('app.name')) }} — {{ $site['footer_rights'] ?? __('landing.footer.rights') }}</span>
+            {{-- ⚠️⚠️ **El ESLOGAN vuelve aquí, y lo cazó la suite completa** (`#235`). Vivía en el
+                 bloque de marca que se retiró al aplanar el pie a una fila, y con él desapareció
+                 de la web entera: es un ajuste EDITABLE del panel (`landing.tagline.*`), así que
+                 quitarlo en silencio deja un campo que el cliente rellena y no sale en ninguna
+                 parte. En una fila única su sitio natural es junto al copyright.
+                 ▶ Lo destapó `LandingTextsAndSocialTest`, un caso de AJUSTES —a dos carpetas de
+                 distancia de lo que se tocó—. Segunda vez en esta sesión que un cambio de armazón
+                 rompe algo cuyo nombre de fichero no lo sugería. --}}
+            <span class="foot__copy">
+                <span class="foot__tag">{{ $site['tagline'] ?? __('landing.footer.tag') }}</span>
+                © {{ date('Y') }} {{ \Illuminate\Support\Str::upper($site['name'] ?? config('app.name')) }} — {{ $site['footer_rights'] ?? __('landing.footer.rights') }}
+            </span>
         </div>
 
         <span class="foot__legal">

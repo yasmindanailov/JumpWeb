@@ -12842,6 +12842,16 @@ sino porque la app sirve HTML5 y la guarda lo leía como HTML4. Eso sí era un p
 nombres XHTML y prefijar **siete** consultas por nombre de etiqueta, más normalizar `nodeName`, que
 en HTML5 viene en MAYÚSCULAS.
 
+### ⚠️ Y aplanar el pie se llevó por delante el ESLOGAN
+
+Vivía en el bloque de marca que se retiró, y con él **desapareció de la web entera**. Es un ajuste
+EDITABLE del panel (`landing.tagline.*`): quitarlo en silencio deja un campo que el cliente rellena
+y no sale en ninguna parte. Vuelve junto al copyright, que es su sitio natural en una fila única.
+▶ Lo destapó `LandingTextsAndSocialTest`, un caso de AJUSTES a dos carpetas de distancia. **Segunda
+vez en esta sesión** que un cambio de armazón rompe algo cuyo nombre de fichero no lo sugería
+—la primera fue el estado de apertura en `#230`—. La regla se confirma: *cuando el cambio se pinta
+en las doce vistas, el radio de las guardas afectadas no se adivina leyendo rutas.*
+
 ### Verificación
 
 Headless a 1280: tarjeta 1260×880 anclada en `top: 10`, titular a 108 px, tag a 108 px con el asset
