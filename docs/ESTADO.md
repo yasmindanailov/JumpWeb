@@ -36,9 +36,15 @@
 > las entradas del otro carril. **Mirar el remoto al elegir número no basta: hay que volver a
 > mirarlo al publicar.**
 >
-> ❗ **Lo que queda del encargo del owner**: el **minijuego** del hero del pie (≈400 líneas de JS:
-> bucle, física, generación, muñeco de píxeles, récord persistido), los **iconos** del canvas, el
-> contenido real del cliente y la subida a staging.
+> ✅ **El minijuego está HECHO** (`#231`): «Salta la ciudad», corredor infinito sobre las almenas,
+> con su física, su generación procedural y su récord. **Se carga en un trozo aparte** (12 kB) para
+> no cobrárselo a quien entra en la portada; el techo de peso de la landing sube de 20 a 22 kB, y el
+> trozo del juego estrena el suyo. Verificado en navegador: 42 m jugados, cero errores de JS.
+>
+> ❗ **Lo que queda del encargo del owner**: los **iconos** del canvas (47 UI + 3 cargadores + 14
+> zonas, con la decisión previa de si entran en el PRODUCTO o en el paquete de tema), el contenido
+> real del cliente y la subida a staging. Y el **OJO del owner** sobre todo lo de esta tanda: un
+> navegador headless mide, no valida (`CONVENCIONES §3.bis`).
 
 > ❗❗ **AVISO AL CARRIL A (2026-08-28, 15:30) — el carril C cerró y tocó CSS a lo ancho.**
 > Ocho cortes empujados (`46e5f93` → `a300aba`). **Ninguno toca el panel, el cajón
@@ -757,7 +763,7 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3341 en verde** (21.940 aserciones, 1 skipped a propósito), medida el 2026-08-28 en el gate de `#230`
+- Suite **3347 en verde** (22.013 aserciones, 1 skipped a propósito), medida el 2026-08-28 en el gate de `#231`
   (hora de Madrid) por el carril A tras **`#223`** (menú plano + «Ajustes») y **`#224`** (el buscador),
   que suman **23 casos** —`AdminNavigationTest` y `AdminGlobalSearchTest`, ninguno de los dos existía—
   sobre los 3315 del pulido `#217`. JS **813** (estas dos tandas no tocan JS) · chunk 251,02 (techo 252).
