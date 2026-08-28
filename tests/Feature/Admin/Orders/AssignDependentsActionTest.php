@@ -179,7 +179,7 @@ class AssignDependentsActionTest extends TestCase
     public function test_the_icon_is_offered_only_on_entries_of_a_holder_with_dependents_to_staff_who_can_edit(): void
     {
         $holder = $this->customer();
-        $this->add($holder, 'Lucas');
+        $this->add($holder, 'Lior');
         [$order, [$entryItem, $packItem]] = $this->paidOrder($holder, [[$this->entry, 2], [$this->pack, 4]]);
 
         $html = Livewire::actingAs($this->editor())->test(ViewOrder::class, ['record' => $order->code])->html();
@@ -204,8 +204,8 @@ class AssignDependentsActionTest extends TestCase
     public function test_the_modal_lists_the_candidates_with_their_reason_and_preselects_the_current_set(): void
     {
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');              // firmado y asignado
-        $vera = $this->add($holder, 'Vera', '2019-11-02');   // sin firma → deshabilitada, con motivo
+        $lucas = $this->add($holder, 'Lior');              // firmado y asignado
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');   // sin firma → deshabilitada, con motivo
         $this->signFor($holder, $lucas);
         [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 3]]);
         $this->assignViaCheckout($holder, $order, $item, [$lucas->id]);
@@ -218,9 +218,9 @@ class AssignDependentsActionTest extends TestCase
         // El HTML del modal no forma parte del render del componente en el test: se lee el SCHEMA montado.
         $list = $this->mountedCheckboxList($page->instance());
         $this->assertSame('¿Para quién son estas entradas?', (string) $list->getLabel());
-        $this->assertSame([$lucas->id => 'Lucas · 9 años', $vera->id => 'Vera · 6 años'], $list->getOptions());
-        $this->assertFalse($list->isOptionDisabled($lucas->id, 'Lucas · 9 años'));
-        $this->assertTrue($list->isOptionDisabled($vera->id, 'Vera · 6 años'), 'sin firma no se puede MARCAR');
+        $this->assertSame([$lucas->id => 'Lior · 9 años', $vera->id => 'Vilma · 6 años'], $list->getOptions());
+        $this->assertFalse($list->isOptionDisabled($lucas->id, 'Lior · 9 años'));
+        $this->assertTrue($list->isOptionDisabled($vera->id, 'Vilma · 6 años'), 'sin firma no se puede MARCAR');
         $this->assertSame('sin exención firmada y vigente', (string) $list->getDescription($vera->id));
         $this->assertNull($list->getDescription($lucas->id));
     }
@@ -230,8 +230,8 @@ class AssignDependentsActionTest extends TestCase
     {
         $this->mode('externo');
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $lucas = $this->add($holder, 'Lior');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 2]]);
         $this->assignViaCheckout($holder, $order, $item, [$lucas->id, $vera->id]);
         app(DependentRegistry::class)->remove($holder, $vera->id);
@@ -241,17 +241,17 @@ class AssignDependentsActionTest extends TestCase
             ->assertActionDataSet(['dependent_ids' => [$lucas->id]]);
 
         $list = $this->mountedCheckboxList($page->instance());
-        $this->assertSame([$lucas->id => 'Lucas · 9 años'], $list->getOptions(), 'Vera ya no es una casilla');
+        $this->assertSame([$lucas->id => 'Lior · 9 años'], $list->getOptions(), 'Vilma ya no es una casilla');
         $notice = $this->mountedSchema($page->instance())->getComponent(fn ($c): bool => $c instanceof Placeholder && $c->getName() === 'conserved');
         $this->assertInstanceOf(Placeholder::class, $notice);
-        $this->assertStringContainsString('Vera ya no están en la cuenta del cliente', (string) $notice->getContent());
+        $this->assertStringContainsString('Vilma ya no están en la cuenta del cliente', (string) $notice->getContent());
 
-        // Y Vera sigue ocupando una unidad: Lucas + Max no caben en una línea de dos.
+        // Y Vilma sigue ocupando una unidad: Lior + Max no caben en una línea de dos.
         $max = $this->add($holder, 'Max', '2016-01-01');
         Livewire::actingAs($this->editor())->test(ViewOrder::class, ['record' => $order->code])
             ->callAction('assignDependents', data: ['dependent_ids' => [$lucas->id, $max->id]], arguments: ['item' => $item->id])
             ->assertNotified(__('admin.orders.dependents.rejected', ['reasons' => __('admin.orders.dependents.reasons.too_many')]));
-        $this->assertSame([$lucas->id, $vera->id], $this->assigned($item), 'nada cambió: Vera conservada, Lucas mantenido');
+        $this->assertSame([$lucas->id, $vera->id], $this->assigned($item), 'nada cambió: Vilma conservada, Lior mantenido');
     }
 
     private function mountedSchema(ViewOrder $component): Schema
@@ -288,8 +288,8 @@ class AssignDependentsActionTest extends TestCase
     public function test_saving_sets_the_set_and_audits_with_the_operator(): void
     {
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $lucas = $this->add($holder, 'Lior');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         $this->signFor($holder, $lucas);
         $this->signFor($holder, $vera);
         [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 2]]);
@@ -299,7 +299,7 @@ class AssignDependentsActionTest extends TestCase
         Livewire::actingAs($operator)->test(ViewOrder::class, ['record' => $order->code])
             ->callAction('assignDependents', data: ['dependent_ids' => [$vera->id]], arguments: ['item' => $item->id])
             ->assertHasNoActionErrors()
-            ->assertNotified(__('admin.orders.dependents.saved', ['names' => 'Vera']));
+            ->assertNotified(__('admin.orders.dependents.saved', ['names' => 'Vilma']));
 
         $this->assertSame([$vera->id], $this->assigned($item));
         $unassigned = AuditLog::where('action', 'dependents.unassigned')->sole();
@@ -308,7 +308,7 @@ class AssignDependentsActionTest extends TestCase
         $assigned = AuditLog::where('action', 'dependents.assigned')->orderByDesc('id')->firstOrFail();
         $this->assertSame($operator->id, (int) $assigned->user_id);
         $this->assertSame($vera->id, (int) $assigned->payload['dependent_id']);
-        $this->assertStringNotContainsString('Vera', json_encode(AuditLog::all()), 'RGPD-02');
+        $this->assertStringNotContainsString('Vilma', json_encode(AuditLog::all()), 'RGPD-02');
 
         // Desmarcar a todos: todas las entradas son de adultos.
         Livewire::actingAs($operator)->test(ViewOrder::class, ['record' => $order->code])
@@ -320,7 +320,7 @@ class AssignDependentsActionTest extends TestCase
     public function test_saving_the_same_set_changes_nothing(): void
     {
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
+        $lucas = $this->add($holder, 'Lior');
         $this->signFor($holder, $lucas);
         [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 2]]);
         $this->assignViaCheckout($holder, $order, $item, [$lucas->id]);
@@ -336,14 +336,14 @@ class AssignDependentsActionTest extends TestCase
     /**
      * FAIL-CLOSED en el mostrador: el estado cambió bajo los pies (versión nueva publicada con el modal
      * abierto) y nada se escribe. La primera capa que lo para es el FORMULARIO —Filament valida cada
-     * valor contra las opciones habilitadas al enviar, y Vera ya está deshabilitada—; el dominio
+     * valor contra las opciones habilitadas al enviar, y Vilma ya está deshabilitada—; el dominio
      * (`DependentAssignerTest`) es la última, para lo que no pase por el formulario.
      */
     public function test_a_rejection_writes_nothing_and_says_why(): void
     {
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $lucas = $this->add($holder, 'Lior');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         $this->signFor($holder, $lucas);
         $this->signFor($holder, $vera);
         [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 2]]);
@@ -351,8 +351,8 @@ class AssignDependentsActionTest extends TestCase
         $page = Livewire::actingAs($this->editor())->test(ViewOrder::class, ['record' => $order->code])
             ->mountAction('assignDependents', ['item' => $item->id]);
 
-        // Con el modal abierto se publica un texto nuevo: Vera (a añadir) ya no tiene firma vigente;
-        // Lucas (que se mantiene) tampoco, pero lo que se mantiene no se re-valida.
+        // Con el modal abierto se publica un texto nuevo: Vilma (a añadir) ya no tiene firma vigente;
+        // Lior (que se mantiene) tampoco, pero lo que se mantiene no se re-valida.
         $this->publish();
 
         $page->setActionData(['dependent_ids' => [$lucas->id, $vera->id]])
@@ -366,8 +366,8 @@ class AssignDependentsActionTest extends TestCase
     public function test_more_minors_than_units_is_rejected(): void
     {
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $lucas = $this->add($holder, 'Lior');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         $this->signFor($holder, $lucas);
         $this->signFor($holder, $vera);
         [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 1]]);
@@ -384,7 +384,7 @@ class AssignDependentsActionTest extends TestCase
     public function test_staff_without_edit_permission_is_blocked_and_audited(): void
     {
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
+        $lucas = $this->add($holder, 'Lior');
         $this->signFor($holder, $lucas);
         [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 1]]);
 
@@ -422,7 +422,7 @@ class AssignDependentsActionTest extends TestCase
     public function test_a_cancelled_item_is_blocked(): void
     {
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
+        $lucas = $this->add($holder, 'Lior');
         $this->signFor($holder, $lucas);
         [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 1]]);
         $item->forceFill(['cancelled_at' => now()])->save();
@@ -438,7 +438,7 @@ class AssignDependentsActionTest extends TestCase
     public function test_a_pack_line_is_blocked(): void
     {
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
+        $lucas = $this->add($holder, 'Lior');
         $this->signFor($holder, $lucas);
         [$order, [$packItem]] = $this->paidOrder($holder, [[$this->pack, 4]]);
 

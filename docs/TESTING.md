@@ -404,6 +404,17 @@ Todas son **dev-only** (gateadas a no-producción) y limpian siempre lo que crea
 
 ## Datos de prueba (el fixture de la suite)
 
+> ⚠️⚠️ **Un CENTINELA de nombre no puede ser un nombre que Faker pueda generar** (2026-08-28, medido:
+> el `pre-push` de una doc cayó con `assertStringNotContainsString('Vera', json_encode($export))` porque
+> Faker es_ES le dio al titular «Fernando **Vera** Tercero»). `Vera`, `Lucas`, `Ana`, `Iker` están en
+> `vendor/fakerphp/faker/src/Faker/Provider/es_ES/Person.php`, y «no aparece en TODO el JSON» es una
+> aserción sobre un pajar que lleva nombres al azar. Los menores de prueba de los siete tests con esa
+> aserción se llaman ahora **`Lior`** y **`Vilma`** (0 apariciones en Faker, ni como subcadena; y
+> conservan el orden alfabético con «Max», por si alguna lista se ordena por nombre). ▶ Antes de
+> escribir `NotContainsString('<nombre>', <json con usuarios>)`: `grep -c "'<nombre>'"` en ese fichero
+> de Faker tiene que dar 0. Las cuatro aserciones con `'Ana'` (`QuoteTest`, `MeWaiverTest`, `GuestFormTest`,
+> `WaiverProofPdfTest`) miran payloads sin nombres de usuario y no han fallado, pero son la misma familia.
+
 > Verificado contra código: 2026-08-12. Recuento vivo de la suite → `ESTADO.md`
 > (fuente única, CONVENCIONES §4); las cifras de tiempos de arriba son del origen.
 

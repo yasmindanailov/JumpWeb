@@ -108,13 +108,13 @@ class DependentPrivacyTest extends TestCase
     public function test_the_export_carries_the_assigned_dependents_names_per_line_and_no_internal_id(): void
     {
         $holder = User::factory()->create();
-        $lucas = $this->add($holder, 'Lucas', '2017-03-12');
+        $lucas = $this->add($holder, 'Lior', '2017-03-12');
         $this->assignTicket($holder, $lucas);
 
         $export = app(AccountPrivacy::class)->exportFor($holder->fresh());
 
         $line = $export['orders'][0]['items'][0];
-        $this->assertSame(['Lucas'], $line['dependents']);
+        $this->assertSame(['Lior'], $line['dependents']);
         $this->assertArrayNotHasKey('id', $line, 'el id del ítem es solo para cruzar: no se exporta');
         $this->assertSame(['product', 'date', 'time', 'quantity', 'unit_price_cents', 'seats', 'event_data', 'addons', 'dependents'], array_keys($line));
     }
@@ -124,7 +124,7 @@ class DependentPrivacyTest extends TestCase
     {
         $holder = User::factory()->create();
         $registry = app(DependentRegistry::class);
-        $lucas = $this->add($holder, 'Lucas', '2017-03-12');
+        $lucas = $this->add($holder, 'Lior', '2017-03-12');
         $item = $this->assignTicket($holder, $lucas);
         $this->assertSame(DependentRemoval::Unlinked, $registry->remove($holder, $lucas->id));
 
@@ -170,19 +170,19 @@ class DependentPrivacyTest extends TestCase
     public function test_the_export_document_carries_the_active_dependents_only(): void
     {
         $holder = User::factory()->create();
-        $active = $this->add($holder, 'Lucas', '2017-03-12');
-        $unlinked = $this->add($holder, 'Vera', '2019-11-02');
+        $active = $this->add($holder, 'Lior', '2017-03-12');
+        $unlinked = $this->add($holder, 'Vilma', '2019-11-02');
         $this->signFor($holder, $unlinked);
         $this->assertSame(DependentRemoval::Unlinked, app(DependentRegistry::class)->remove($holder, $unlinked->id));
 
         $export = app(AccountPrivacy::class)->exportFor($holder->fresh());
 
         $this->assertSame([[
-            'name' => 'Lucas',
+            'name' => 'Lior',
             'born_on' => '2017-03-12',
             'added_at' => $active->created_at->toIso8601String(),
         ]], $export['dependents']);
-        $this->assertStringNotContainsString('Vera', json_encode($export), 'la retirada con firma vive bajo el régimen restringido, fuera del art. 20');
+        $this->assertStringNotContainsString('Vilma', json_encode($export), 'la retirada con firma vive bajo el régimen restringido, fuera del art. 20');
     }
 
     /** §4.4 + §5 — la fila DESVINCULADA que se queda sin firma se poda; la que aún la tiene y la activa, no. */
@@ -239,7 +239,7 @@ class DependentPrivacyTest extends TestCase
         $admin = User::factory()->create(['email' => 'admin-keep@x.test']);
         $admin->roles()->sync([Role::where('name', 'admin')->value('id')]);
         $customer = User::factory()->create(['email' => 'cliente@x.test']);
-        $dependent = $this->add($customer, 'Lucas', '2017-03-12');
+        $dependent = $this->add($customer, 'Lior', '2017-03-12');
         $this->signFor($customer, $dependent);
         // Y con una entrada asignada (tanda 4): la cascada desde `order_items` la borra ANTES que a
         // los menores, así que la limpieza no tiene que conocerla.

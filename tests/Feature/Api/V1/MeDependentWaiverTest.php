@@ -42,7 +42,7 @@ class MeDependentWaiverTest extends ApiTestCase
         ])->first();
     }
 
-    private function add(User $holder, string $name = 'Lucas', string $bornOn = '2017-03-12'): Dependent
+    private function add(User $holder, string $name = 'Lior', string $bornOn = '2017-03-12'): Dependent
     {
         return app(DependentRegistry::class)->add($holder, $name, $bornOn);
     }
@@ -81,7 +81,7 @@ class MeDependentWaiverTest extends ApiTestCase
 
         // La identidad del menor viaja EN la firma (v3), y el canal es el del titular que firma.
         $this->assertSame($user->id, $signature->user_id);
-        $this->assertSame('Lucas', $signature->subject_name);
+        $this->assertSame('Lior', $signature->subject_name);
         $this->assertSame('2017-03-12', $signature->subject_born_on->toDateString());
         $this->assertSame(3, $signature->canonical_version);
         $this->assertNull($signature->prev_hash, 'su propia cadena empieza aquí');
@@ -95,7 +95,7 @@ class MeDependentWaiverTest extends ApiTestCase
         $log = AuditLog::where('action', 'waiver.signed')->latest('id')->firstOrFail();
         $this->assertSame('dependent', $log->payload['subject_type']);
         $this->assertSame($lucas->id, $log->payload['subject_id']);
-        $this->assertStringNotContainsString('Lucas', json_encode($log->payload));
+        $this->assertStringNotContainsString('Lior', json_encode($log->payload));
     }
 
     public function test_the_list_and_my_waiver_carry_the_dependents_signature_and_it_goes_outdated_with_a_new_version(): void
@@ -104,7 +104,7 @@ class MeDependentWaiverTest extends ApiTestCase
         $document = $this->publish();
         $user = User::factory()->create();
         $lucas = $this->add($user);
-        $this->add($user, 'Vera', '2019-11-02');
+        $this->add($user, 'Vilma', '2019-11-02');
         $this->accept($user, $lucas->id, ['document_id' => $document->id])->assertCreated();
 
         $list = $this->actingAs($user)->getJson(self::ROOT.'/me/dependents')->assertOk()->assertValidResponse(200);
@@ -115,7 +115,7 @@ class MeDependentWaiverTest extends ApiTestCase
         $this->assertFalse($mine->json('signed'), 'el estado del titular es el suyo');
         $this->assertSame('dependent', $mine->json('signatures.0.subject'));
         $this->assertSame($lucas->id, $mine->json('signatures.0.dependent_id'));
-        $this->assertSame('Lucas', $mine->json('signatures.0.dependent_name'));
+        $this->assertSame('Lior', $mine->json('signatures.0.dependent_name'));
 
         // El PDF de la firma del menor es del titular: se sirve por la ruta de sus firmas.
         $pdf = $this->actingAs($user)->get($mine->json('signatures.0.pdf_url'));

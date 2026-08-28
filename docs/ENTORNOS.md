@@ -328,6 +328,16 @@ Ficha abierta en `DEUDA.md`; el contenido acordado está en `DECISIONES #137`.
 > (el usuario `jumpweb_1` que rota el panel) y la contraseña del fichero de opciones GANA a `MYSQL_PWD`**, así que
 > «Access denied for user 'jumpweb_1_test'» no era la contraseña de la app: era la del otro usuario. `--no-defaults`
 > lo arregla. El aviso del cron es el conocido `#115`: sigue sin demonio.
+>
+> ⚠️ **El CATÁLOGO de staging ya NO es el del `ProductionSeeder` puro (2026-08-28, 09:35, a petición del
+> owner para la prueba de cabo a rabo).** El seeder siembra las cuatro ENTRADAS con `is_sellable = false`
+> («no se venden online por ahora») y solo da plantillas de franjas a Cumpleaños, así que la web de staging
+> vendía únicamente packs. Se hizo por `tinker`, idempotente: `is_sellable = 1` en las entradas #15–#18,
+> **154 plantillas** para JUMP (zona 1: aforo 60 / online 40) y KIDS (zona 2: 40 / 25), 7 días × 11 franjas
+> de 60 min de 10:00 a 20:00 — **las mismas que tiene local desde el 2026-08-12**, no un horario inventado—,
+> y `slots:generate-rolling` (3.875 franjas). Verificado por la API: 8 referencias publicadas, fechas con
+> precio (15 € especial / 12 € normal) y horas. ▶ Un `--seed` posterior NO lo deshace (el seeder hace
+> `updateOrCreate` sobre las entradas y volvería a ponerlas `false`: si se re-siembra, hay que repetir esto).
 
 **El principio que sí está decidido**: staging se levanta con el MISMO procedimiento que levantaría la
 instalación de un cliente. Si se configura a mano deja de ser una prueba del producto y pasa a ser un

@@ -130,8 +130,8 @@ class CreateManualOrderDependentsTest extends TestCase
     public function test_the_selector_offers_the_customers_minors_with_their_reason_only_for_entries(): void
     {
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $lucas = $this->add($holder, 'Lior');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         $this->signFor($holder, $lucas);
         $age = Dependent::ageBetween('2017-03-12', Carbon::parse($this->date));
 
@@ -143,8 +143,8 @@ class CreateManualOrderDependentsTest extends TestCase
             ->set('data.sel_date', $this->date);
 
         $page->assertSee('¿Para quién son estas entradas?')
-            ->assertSee("Lucas · {$age} años")
-            ->assertSee('Vera · ')
+            ->assertSee("Lior · {$age} años")
+            ->assertSee('Vilma · ')
             ->assertSee('sin exención firmada y vigente');
 
         // Un pack no lleva menores; sin cliente tampoco hay selector.
@@ -164,8 +164,8 @@ class CreateManualOrderDependentsTest extends TestCase
     public function test_adding_a_line_keeps_only_assignable_minors_and_refuses_more_than_units(): void
     {
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
-        $vera = $this->add($holder, 'Vera', '2019-11-02'); // sin firma: no asignable
+        $lucas = $this->add($holder, 'Lior');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02'); // sin firma: no asignable
         $max = $this->add($holder, 'Max', '2016-01-01');
         $this->signFor($holder, $lucas);
         $this->signFor($holder, $max);
@@ -183,9 +183,9 @@ class CreateManualOrderDependentsTest extends TestCase
         $cart = $page->get('cart');
         $this->assertCount(1, $cart);
         $this->assertSame([$lucas->id], $cart[0]['dependent_ids'], 'un id no asignable o inexistente se descarta');
-        $this->assertSame(['Lucas'], $cart[0]['dependent_display']);
+        $this->assertSame(['Lior'], $cart[0]['dependent_display']);
         $page->assertSet('data.sel_dependent_ids', []);
-        $page->assertSee('Para: Lucas');
+        $page->assertSee('Para: Lior');
 
         // Dos menores para una entrada: aviso y NO se añade la línea.
         $page->set('data.sel_product_id', $this->entry->id)
@@ -204,7 +204,7 @@ class CreateManualOrderDependentsTest extends TestCase
     {
         Notification::fake();
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
+        $lucas = $this->add($holder, 'Lior');
         $this->signFor($holder, $lucas);
         $operator = $this->staff();
 
@@ -212,7 +212,7 @@ class CreateManualOrderDependentsTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $holder->id)
             ->set('data.payment_method', 'cash')
-            ->set('cart', [$this->cartLine(2, [$lucas->id], ['Lucas']), $this->cartLine(1)])
+            ->set('cart', [$this->cartLine(2, [$lucas->id], ['Lior']), $this->cartLine(1)])
             ->call('create')
             ->assertNotNotified(__('admin.orders.dependents.manual_assign_failed', ['count' => 1]));
 
@@ -223,7 +223,7 @@ class CreateManualOrderDependentsTest extends TestCase
         $this->assertSame(0, DependentAssignment::where('order_item_id', $second->id)->count());
         $audit = AuditLog::where('action', 'dependents.assigned')->sole();
         $this->assertSame($operator->id, (int) $audit->user_id, 'en el mostrador, el `by` es el operador');
-        $this->assertStringNotContainsString('Lucas', json_encode($audit->payload));
+        $this->assertStringNotContainsString('Lior', json_encode($audit->payload));
     }
 
     /** FAIL-CLOSED antes del dinero: un menor que dejó de ser asignable no crea ni cobra NADA. */
@@ -231,10 +231,10 @@ class CreateManualOrderDependentsTest extends TestCase
     {
         Notification::fake();
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
+        $lucas = $this->add($holder, 'Lior');
         $this->signFor($holder, $lucas);
-        // La línea se añadió con Lucas asignable; después se publicó un texto nuevo y su firma quedó «anterior».
-        $cart = [$this->cartLine(1, [$lucas->id], ['Lucas'])];
+        // La línea se añadió con Lior asignable; después se publicó un texto nuevo y su firma quedó «anterior».
+        $cart = [$this->cartLine(1, [$lucas->id], ['Lior'])];
         $this->publish();
 
         Livewire::actingAs($this->staff())
@@ -255,7 +255,7 @@ class CreateManualOrderDependentsTest extends TestCase
     {
         Notification::fake();
         $holder = $this->customer();
-        $lucas = $this->add($holder, 'Lucas');
+        $lucas = $this->add($holder, 'Lior');
         $this->signFor($holder, $lucas);
         $this->app->instance(CheckoutLines::class, new class implements CheckoutLines
         {
@@ -269,7 +269,7 @@ class CreateManualOrderDependentsTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $holder->id)
             ->set('data.payment_method', 'cash')
-            ->set('cart', [$this->cartLine(1, [$lucas->id], ['Lucas'])])
+            ->set('cart', [$this->cartLine(1, [$lucas->id], ['Lior'])])
             ->call('create')
             ->assertNotified(__('admin.orders.dependents.manual_assign_failed', ['count' => 1]));
 

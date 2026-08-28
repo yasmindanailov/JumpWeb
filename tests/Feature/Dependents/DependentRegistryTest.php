@@ -84,9 +84,9 @@ class DependentRegistryTest extends TestCase
     {
         $holder = User::factory()->create();
 
-        $dependent = $this->registry()->add($holder, '  Lucas  ', '2017-03-12');
+        $dependent = $this->registry()->add($holder, '  Lior  ', '2017-03-12');
 
-        $this->assertSame('Lucas', $dependent->name, 'el nombre se guarda recortado');
+        $this->assertSame('Lior', $dependent->name, 'el nombre se guarda recortado');
         $this->assertSame('2017-03-12', $dependent->born_on->toDateString());
         $this->assertNull($dependent->removed_at);
         $this->assertSame($holder->id, $dependent->user_id);
@@ -99,7 +99,7 @@ class DependentRegistryTest extends TestCase
         $this->assertNotNull($log);
         $this->assertSame($dependent->id, $log->payload['dependent_id']);
         $this->assertSame($holder->id, $log->target_id);
-        $this->assertStringNotContainsString('Lucas', json_encode($log->payload));
+        $this->assertStringNotContainsString('Lior', json_encode($log->payload));
         $this->assertStringNotContainsString('2017', json_encode($log->payload));
     }
 
@@ -267,7 +267,7 @@ class DependentRegistryTest extends TestCase
     public function test_removing_without_references_deletes_the_row(): void
     {
         $holder = User::factory()->create();
-        $dependent = $this->registry()->add($holder, 'Lucas', '2017-03-12');
+        $dependent = $this->registry()->add($holder, 'Lior', '2017-03-12');
 
         $mode = $this->registry()->remove($holder, $dependent->id);
 
@@ -282,7 +282,7 @@ class DependentRegistryTest extends TestCase
     public function test_removing_with_a_waiver_signature_unlinks_and_keeps_the_row(): void
     {
         $holder = User::factory()->create();
-        $dependent = $this->registry()->add($holder, 'Lucas', '2017-03-12');
+        $dependent = $this->registry()->add($holder, 'Lior', '2017-03-12');
         $signature = $this->signFor($holder, $dependent);
 
         $mode = $this->registry()->remove($holder, $dependent->id);
@@ -291,7 +291,7 @@ class DependentRegistryTest extends TestCase
         $kept = Dependent::find($dependent->id);
         $this->assertNotNull($kept, 'la fila con firma detrás no se borra');
         $this->assertTrue($kept->isRemoved());
-        $this->assertSame('Lucas', $kept->name, 'desvincular no anonimiza: el registro tiene que seguir identificando al sujeto');
+        $this->assertSame('Lior', $kept->name, 'desvincular no anonimiza: el registro tiene que seguir identificando al sujeto');
         $this->assertDatabaseHas('waiver_signatures', ['id' => $signature->id, 'subject_id' => $dependent->id]);
         $this->assertTrue($signature->fresh()->verifyHash());
 
@@ -320,7 +320,7 @@ class DependentRegistryTest extends TestCase
     public function test_removing_with_an_assigned_ticket_unlinks_and_keeps_the_row(): void
     {
         $holder = User::factory()->create();
-        $dependent = $this->registry()->add($holder, 'Lucas', '2017-03-12');
+        $dependent = $this->registry()->add($holder, 'Lior', '2017-03-12');
         $assignment = $this->assignTicket($holder, $dependent);
 
         $mode = $this->registry()->remove($holder, $dependent->id);
@@ -341,7 +341,7 @@ class DependentRegistryTest extends TestCase
     public function test_a_referenced_dependent_cannot_be_deleted_from_anywhere(): void
     {
         $holder = User::factory()->create();
-        $dependent = $this->registry()->add($holder, 'Lucas', '2017-03-12');
+        $dependent = $this->registry()->add($holder, 'Lior', '2017-03-12');
         $this->signFor($holder, $dependent);
 
         try {
@@ -382,11 +382,11 @@ class DependentRegistryTest extends TestCase
     public function test_re_adding_after_removal_is_a_new_row(): void
     {
         $holder = User::factory()->create();
-        $first = $this->registry()->add($holder, 'Lucas', '2017-03-12');
+        $first = $this->registry()->add($holder, 'Lior', '2017-03-12');
         $this->signFor($holder, $first);
         $this->registry()->remove($holder, $first->id);
 
-        $again = $this->registry()->add($holder, 'Lucas', '2017-03-12');
+        $again = $this->registry()->add($holder, 'Lior', '2017-03-12');
 
         $this->assertNotSame($first->id, $again->id);
         $this->assertSame(0, $again->waiverSignatures()->count(), 'la fila nueva necesita su propia firma');

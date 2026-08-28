@@ -78,7 +78,7 @@ class DependentAssignerTest extends TestCase
         return app(DependentAssigner::class);
     }
 
-    private function add(User $holder, string $name = 'Lucas', string $bornOn = '2017-03-12'): Dependent
+    private function add(User $holder, string $name = 'Lior', string $bornOn = '2017-03-12'): Dependent
     {
         return app(DependentRegistry::class)->add($holder, $name, $bornOn);
     }
@@ -154,7 +154,7 @@ class DependentAssignerTest extends TestCase
         $this->mode('interno');
         $holder = User::factory()->create();
         $lucas = $this->add($holder);
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         $this->signFor($holder, $lucas);
         $this->signFor($holder, $vera);
 
@@ -229,7 +229,7 @@ class DependentAssignerTest extends TestCase
         $this->mode('externo');
         $holder = User::factory()->create();
         $lucas = $this->add($holder);
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
 
         $errors = $this->assigner()->check($holder, $this->request([[$this->entry, 1, [$lucas->id, $vera->id]]]));
 
@@ -271,7 +271,7 @@ class DependentAssignerTest extends TestCase
         $this->mode('externo');
         $holder = User::factory()->create();
         $lucas = $this->add($holder);
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         $order = $this->order($holder, [[$this->entry, 2], [$this->entry, 1]]);
         [$first, $second] = $order->items()->orderBy('id')->get();
 
@@ -292,7 +292,7 @@ class DependentAssignerTest extends TestCase
         $logs = AuditLog::where('action', 'dependents.assigned')->get();
         $this->assertCount(3, $logs);
         $this->assertSame(['dependent_id' => $lucas->id, 'order_item_id' => $first->id, 'order_id' => $order->id], $logs->first()->payload);
-        $this->assertStringNotContainsString('Lucas', json_encode($logs), 'RGPD-02: la auditoría lleva ids, nunca el nombre');
+        $this->assertStringNotContainsString('Lior', json_encode($logs), 'RGPD-02: la auditoría lleva ids, nunca el nombre');
     }
 
     /** §4.10 — idempotente: una segunda pasada no escribe ni audita dos veces. */
@@ -319,11 +319,11 @@ class DependentAssignerTest extends TestCase
         $this->mode('externo');
         $holder = User::factory()->create();
         $lucas = $this->add($holder);
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         $order = $this->order($holder, [[$this->entry, 2]]);
         Log::spy();
 
-        // Entre `check()` y `assign()` el titular retiró a Vera desde otra pestaña.
+        // Entre `check()` y `assign()` el titular retiró a Vilma desde otra pestaña.
         app(DependentRegistry::class)->remove($holder, $vera->id);
 
         $outcome = $this->assigner()->assign($holder, $order->id, $this->request([[$this->entry, 2, [$lucas->id, $vera->id]]]));
@@ -418,7 +418,7 @@ class DependentAssignerTest extends TestCase
         $this->mode('externo');
         $holder = User::factory()->create();
         $lucas = $this->add($holder);
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         $order = $this->order($holder, [[$this->entry, 2]]);
         $item = $order->items()->firstOrFail();
         $this->assigner()->assign($holder, $order->id, $this->request([[$this->entry, 2, [$lucas->id, $vera->id]]]));
@@ -481,7 +481,7 @@ class DependentAssignerTest extends TestCase
         $this->mode('interno');
         $holder = User::factory()->create();
         $lucas = $this->add($holder);                             // firmado → asignable
-        $vera = $this->add($holder, 'Vera', '2019-11-02');        // sin firma
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');        // sin firma
         $noa = $this->add($holder, 'Noa', '2008-09-01');          // 17 hoy, 18 el día de la visita
         $max = $this->add($holder, 'Max', '2016-01-01');          // se retira: no sale
         $this->signFor($holder, $lucas);
@@ -498,7 +498,7 @@ class DependentAssignerTest extends TestCase
         );
         $this->assertSame([], $this->assigner()->candidates(User::factory()->create(), self::VISIT), 'sin menores no hay lista');
 
-        // Fuera del modo interno no hay firma que mirar: Vera pasa a ser asignable.
+        // Fuera del modo interno no hay firma que mirar: Vilma pasa a ser asignable.
         $this->mode('externo');
         $this->assertNull($this->assigner()->candidates($holder, self::VISIT)[1]['reason']);
     }
@@ -509,7 +509,7 @@ class DependentAssignerTest extends TestCase
         $this->mode('externo');
         $holder = User::factory()->create();
         $lucas = $this->add($holder);
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         $order = $this->order($holder, [[$this->entry, 2]]);
         $item = $order->items()->firstOrFail();
         $this->assigner()->assign($holder, $order->id, $this->request([[$this->entry, 2, [$lucas->id]]]));
@@ -528,7 +528,7 @@ class DependentAssignerTest extends TestCase
         $assigned = AuditLog::where('action', 'dependents.assigned')->orderByDesc('id')->firstOrFail();
         $this->assertSame($operator->id, (int) $assigned->user_id);
         $this->assertSame($vera->id, $assigned->payload['dependent_id']);
-        $this->assertStringNotContainsString('Vera', json_encode(AuditLog::all()), 'RGPD-02');
+        $this->assertStringNotContainsString('Vilma', json_encode(AuditLog::all()), 'RGPD-02');
     }
 
     public function test_sync_is_idempotent_and_writes_nothing_for_the_same_set(): void
@@ -559,7 +559,7 @@ class DependentAssignerTest extends TestCase
         $this->mode('interno');
         $holder = User::factory()->create();
         $lucas = $this->add($holder);
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         $this->signFor($holder, $lucas);
         $order = $this->order($holder, [[$this->entry, 3]]);
         $item = $order->items()->firstOrFail();
@@ -569,7 +569,7 @@ class DependentAssignerTest extends TestCase
 
         $this->assertFalse($outcome->ok());
         $this->assertSame(['1' => DependentAssigner::REASON_WAIVER_UNSIGNED, '2' => DependentAssigner::REASON_NOT_YOURS], $outcome->rejections);
-        $this->assertSame(0, DependentAssignment::count(), 'con un rechazo no se escribe NADA, tampoco Lucas');
+        $this->assertSame(0, DependentAssignment::count(), 'con un rechazo no se escribe NADA, tampoco Lior');
         $this->assertSame(0, AuditLog::where('action', 'dependents.assigned')->count());
 
         $tooMany = $this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id, $lucas->id, $vera->id, $foreign->id, 999]);
@@ -582,26 +582,26 @@ class DependentAssignerTest extends TestCase
         $this->mode('externo');
         $holder = User::factory()->create();
         $lucas = $this->add($holder);
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         $max = $this->add($holder, 'Max', '2016-01-01');
         $order = $this->order($holder, [[$this->entry, 2]]);
         $item = $order->items()->firstOrFail();
         $this->assigner()->assign($holder, $order->id, $this->request([[$this->entry, 2, [$lucas->id, $vera->id]]]));
-        // Vera se retira de la cuenta: con una entrada asignada detrás, se DESVINCULA (§4.4).
+        // Vilma se retira de la cuenta: con una entrada asignada detrás, se DESVINCULA (§4.4).
         app(DependentRegistry::class)->remove($holder, $vera->id);
         $this->assertNotNull($vera->fresh()->removed_at);
 
-        // Mantener a Lucas: Vera sigue ahí sin que el operador la haya tocado.
+        // Mantener a Lior: Vilma sigue ahí sin que el operador la haya tocado.
         $same = $this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id]);
         $this->assertTrue($same->ok());
         $this->assertFalse($same->changed());
         $this->assertEqualsCanonicalizing([$lucas->id, $vera->id], DependentAssignment::where('order_item_id', $item->id)->pluck('dependent_id')->all());
 
-        // Y ocupa una unidad: Lucas + Max serían tres en una línea de dos.
+        // Y ocupa una unidad: Lior + Max serían tres en una línea de dos.
         $full = $this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id, $max->id]);
         $this->assertSame(['' => DependentAssigner::REASON_TOO_MANY], $full->rejections);
 
-        // Cambiar a Lucas por Max sí cabe: Vera se conserva, Lucas sale, Max entra.
+        // Cambiar a Lior por Max sí cabe: Vilma se conserva, Lior sale, Max entra.
         $swap = $this->assigner()->sync($holder, $order->id, $item->id, [$max->id]);
         $this->assertSame([1, 1, 0], [$swap->added, $swap->removed, $swap->kept]);
         $this->assertEqualsCanonicalizing([$vera->id, $max->id], DependentAssignment::where('order_item_id', $item->id)->pluck('dependent_id')->all());
@@ -613,13 +613,13 @@ class DependentAssignerTest extends TestCase
         $this->mode('interno');
         $holder = User::factory()->create();
         $lucas = $this->add($holder);
-        $vera = $this->add($holder, 'Vera', '2019-11-02');
+        $vera = $this->add($holder, 'Vilma', '2019-11-02');
         $this->signFor($holder, $lucas);
         $order = $this->order($holder, [[$this->entry, 2]]);
         $item = $order->items()->firstOrFail();
         $this->assertTrue($this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id])->ok());
 
-        // Se publica un texto nuevo: la firma de Lucas queda «anterior» y ya no sería asignable de nuevo…
+        // Se publica un texto nuevo: la firma de Lior queda «anterior» y ya no sería asignable de nuevo…
         $this->publish();
         $this->assertSame(DependentAssigner::REASON_WAIVER_UNSIGNED, $this->assigner()->candidates($holder, self::VISIT)[0]['reason']);
 
@@ -628,7 +628,7 @@ class DependentAssignerTest extends TestCase
         $this->assertTrue($kept->ok());
         $this->assertSame(1, $kept->kept);
 
-        // Añadir a Vera (sin firma) sí se rechaza, y no se escribe nada.
+        // Añadir a Vilma (sin firma) sí se rechaza, y no se escribe nada.
         $added = $this->assigner()->sync($holder, $order->id, $item->id, [$lucas->id, $vera->id]);
         $this->assertSame(['1' => DependentAssigner::REASON_WAIVER_UNSIGNED], $added->rejections);
         $this->assertSame([$lucas->id], DependentAssignment::pluck('dependent_id')->all());

@@ -222,7 +222,7 @@ class GateProfileTest extends TestCase
     {
         $holder = $this->holder();
         $lucas = app(DependentRegistry::class)->add($holder, 'Zorrocotroco Único', '2017-03-12'); // 9 hoy
-        $vera = app(DependentRegistry::class)->add($holder, 'Vera', '2019-11-02');                   // 6, sin firma
+        $vera = app(DependentRegistry::class)->add($holder, 'Vilma', '2019-11-02');                   // 6, sin firma
         $this->signFor($holder, $lucas);
         [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 2, self::TODAY], [$this->pack, 4, self::TODAY]]);
         $this->mode('externo');
@@ -240,7 +240,7 @@ class GateProfileTest extends TestCase
         $this->assertSame([], $profile->today_reservations[1]['minors'], 'un pack no lleva menores');
         $json = json_encode($profile->toArray(), JSON_UNESCAPED_UNICODE);
         $this->assertStringNotContainsString('Zorrocotroco', $json, 'el nombre de un menor no está en la ficha: no hay campo para él');
-        $this->assertStringNotContainsString('Vera', $json);
+        $this->assertStringNotContainsString('Vilma', $json);
         $this->assertStringNotContainsString($holder->email, $json, 'ni el email completo del titular (§4.6)');
 
         // Fuera del modo interno no hay exención que enseñar.

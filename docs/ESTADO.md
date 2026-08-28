@@ -77,7 +77,14 @@
 >   JSON, chunk idéntico al local). ▶ ✅ **Y a las 08:05, `#215`**: el owner vio que «Ir al carrito» del
 >   pie **no hacía nada** — era mudo desde 4.3·2: la máquina no tenía la arista `CATALOG → CART` y `go()`
 >   rechaza en silencio. Arista + caso + **guarda nueva en `foot.test.js`** (todo CTA del pie tiene que ser
->   una transición que la máquina admita; la mutación da 2 rojos), sondeo 4/4, JS 790 → 792. Redesplegado. ▶ **Para el OJO del owner en staging**: «Mi carné» con su cuenta de
+>   una transición que la máquina admita; la mutación da 2 rojos), sondeo 4/4, JS 790 → 792. Redesplegado.
+>   ▶ **Y a las 09:35, las ENTRADAS en staging** (`ENTORNOS.md` §4): el `ProductionSeeder` las deja no
+>   vendibles y sin franjas; ahora las 4 entradas están a la venta con las plantillas de JUMP/KIDS de local
+>   (154, 60 min, 10–20 h) y 3.875 franjas. **El owner va a hacer la prueba de cabo a rabo en staging**
+>   (cliente + admin), activará él la exención INTERNA, y después dirá qué pulir; JumpPoints, después.
+>   ⚠️ El push de esa doc cayó por un test **flaky por construcción** (`assertStringNotContainsString('Vera',
+>   …)` sobre un JSON con nombres de Faker, y Faker es_ES tiene «Vera»): centinelas renombrados a `Lior`/`Vilma`
+>   en los siete tests de la familia, regla escrita en `TESTING.md` «Datos de prueba». ▶ **Para el OJO del owner en staging**: «Mi carné» con su cuenta de
 >   CLIENTE `yasmindanailov@gmail.com` (verificada) y «Rotar carné QR» con la de ADMIN `yasi09265@gmail.com`
 >   sobre esa ficha; el correo de staging va al LOG (`MAIL_MAILER=log`), así que el adjunto del correo NO
 >   se ve allí — la zona «Mi carné» sí. ⚠️ **Para el carril C**: esta tanda tocó `resources/js/sidebar/**`
