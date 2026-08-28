@@ -144,7 +144,15 @@
             <a href="{{ route('account') }}" class="cta-ghost {{ $s['alt'] }}{{ $place === 'nav' ? ' nav__acct' : '' }}"
                aria-label="{{ __('landing.footer.account_link') }} · {{ $acctLabel }}"
                :aria-label="$store.ctaPair.mode === 'account' ? @js(__('landing.footer.account_link').' · '.$acctLabel) : @js(__('landing.nav.cta_switch_account'))"
-               x-on:click.prevent="$store.ctaPair.mode === 'account' ? $store.purchase.open() : $store.ctaPair.show('account')">
+               {{-- ⚠️⚠️ **`openAccount()`, NO `open()`** (`DECISIONES #242`). Este enlace lleva a
+                    `/mi-cuenta` y hasta hoy su clic abría el cajón **en el EMBUDO**: `open()` deja la
+                    sección en la de por defecto, que es la compra. Reproducido en navegador — pulsar
+                    «Mi cuenta» aterrizaba en `is-catalog`, y con una cesta guardada `restoreCart()`
+                    remataba llevando al **carrito**. El cliente pulsaba una cosa y llegaba a otra.
+                    ▶ **La regla, y por eso hay guarda**: un enlace cuyo `href` es la cuenta tiene que
+                    abrir la CUENTA. Interceptar el clic puede cambiar el CÓMO —sin recargar— pero
+                    nunca el DÓNDE. --}}
+               x-on:click.prevent="$store.ctaPair.mode === 'account' ? $store.purchase.openAccount($event, 'home') : $store.ctaPair.show('account')">
                 <span class="cta-ghost__ico cta-pair__acct-icon">
                     <x-icons.user />
                     @if ($acct['hasPendingForm'])

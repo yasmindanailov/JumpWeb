@@ -27,10 +27,10 @@ use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions as SchemaActions;
@@ -464,12 +464,26 @@ class CreateManualOrderPage extends Page
             ->schema([
                 Section::make(__('admin.orders.create_manual.step_payment'))
                     ->schema([
-                        Radio::make('payment_method')
+                        // ⚠️ **DOS TARJETAS con icono, no dos radios** (`#242`, `[OWNER]`). Con la
+                        // tablet en la mano y un cliente delante, el último gesto del pedido es el que
+                        // menos margen de error admite: una diana de 44 px con un dibujo se acierta sin
+                        // mirar, un círculo de 16 px no.
+                        // ❗ **El control cambia; la regla NO.** `ToggleButtons` es el componente NATIVO
+                        // —conserva `required` y `default`, y las claves siguen siendo las de
+                        // `ManualOrderFulfiller`—, así que el cobro se decide exactamente igual: la
+                        // forma de tarjeta la pone el CSS, no una segunda implementación del campo.
+                        ToggleButtons::make('payment_method')
                             ->label(__('admin.orders.create_manual.payment_method'))
                             ->options([
                                 ManualOrderFulfiller::METHOD_CASH => __('admin.orders.create_manual.method_cash'),
                                 ManualOrderFulfiller::METHOD_DATAFONO => __('admin.orders.create_manual.method_datafono'),
                             ])
+                            ->icons([
+                                ManualOrderFulfiller::METHOD_CASH => Heroicon::OutlinedBanknotes,
+                                ManualOrderFulfiller::METHOD_DATAFONO => Heroicon::OutlinedCreditCard,
+                            ])
+                            ->inline()
+                            ->extraAttributes(['class' => 'cmo-pay'])
                             ->default(ManualOrderFulfiller::METHOD_CASH)
                             ->required(),
                     ]),

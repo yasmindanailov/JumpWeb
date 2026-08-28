@@ -5037,9 +5037,14 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     font-family: var(--font-body); font-size: var(--fs-11); line-height: 1.35;
     color: var(--warn);
 }
+/* ⚠️ **Cambia de sujeto y de PESO en `#242`**: aquí decía «EXENCIÓN FIRMADA» en verde, mayúsculas y
+   negrita —un estado que el owner retiró por obvio: una fila marcable ya lo significa—. Ahora dice
+   «1 entrada asignada», que es lo que el control no puede decir solo, y lo dice **sutilmente**
+   (`[OWNER]`): minúsculas, sin peso y en tinta atenuada. Es una nota al margen del nombre, no una
+   medalla. */
 .dep-pick__ok {
-    font-family: var(--font-body); font-size: var(--fs-10); font-weight: var(--fw-bold);
-    letter-spacing: 0.03em; text-transform: uppercase; color: var(--ok);
+    font-family: var(--font-body); font-size: var(--fs-10); font-weight: 500;
+    color: var(--fg-mute);
 }
 
 /* ── El QR de puerta, presentado como CREDENCIAL ────────────────────────────────────────────

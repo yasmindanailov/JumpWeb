@@ -431,4 +431,93 @@ class CreateManualOrderTabletTest extends TestCase
         );
         $this->assertStringContainsString('@media (hover: hover) and (pointer: fine)', $css);
     }
+
+    /**
+     * ⚠️⚠️ **El «Atrás» es de solo ICONO, y por eso su nombre accesible es OBLIGATORIO** (`#242`,
+     * `[OWNER]`: «quita el texto "atrás", solo deja el icono, y su background como está»).
+     *
+     * El rótulo competía con el botón que hace avanzar, que es el que se busca; una flecha a la
+     * izquierda se entiende sin leerla. Pero **un botón de solo icono sin `aria-label` queda MUDO**
+     * para un lector de pantalla: «botón», y nada más. Verificado en navegador: 44×44, con su fondo, y
+     * el nombre accesible sigue siendo el mismo texto que antes se veía.
+     */
+    public function test_the_back_button_is_icon_only_but_not_mute(): void
+    {
+        $vista = (string) file_get_contents(base_path(self::VIEW));
+        $nav = $this->between($vista, '<div class="cmo-nav">', '</div>');
+
+        $this->assertStringContainsString('icon="heroicon-o-arrow-left"', $nav, 'El «Atrás» ha perdido su icono.');
+        $this->assertStringNotContainsString(
+            "{{ __('admin.orders.create_manual.back') }}", $nav,
+            'El texto «Atrás» ha vuelto a pintarse: compite con el botón que hace avanzar.'
+        );
+        $this->assertStringContainsString(
+            ":aria-label=\"__('admin.orders.create_manual.back')\"", $nav,
+            "El «Atrás» de solo icono se ha quedado MUDO.\n".
+            'Sin `aria-label` un lector de pantalla dice «botón» y nada más.'
+        );
+    }
+
+    /**
+     * ⚠️⚠️ **El método de cobro son dos TARJETAS con icono, y el control cambió sin tocar la REGLA**
+     * (`#242`, `[OWNER]`: «en vez de checkbox simple, añade dos cards con su icono»).
+     *
+     * Es el último gesto del pedido y el que menos margen de error admite: con la tablet en la mano y
+     * un cliente delante, una diana de 96 px con un dibujo se acierta sin mirar; un círculo de radio de
+     * 16 px, no. Medido en navegador: **154×96 cada una**, cero controles bajo 44 px en el paso.
+     *
+     * ❗ **Lo que esta guarda protege no es la forma, es que la forma no se lleve por delante el
+     * cobro**: las claves siguen siendo las de `ManualOrderFulfiller`, el campo sigue siendo
+     * `required` y sigue naciendo en EFECTIVO. Una tarjeta bonita que mande otro método sería el peor
+     * fallo posible de esta pantalla.
+     */
+    public function test_the_payment_method_is_two_cards_without_changing_the_rule(): void
+    {
+        $pagina = (string) file_get_contents(base_path('app/Filament/Pages/CreateManualOrderPage.php'));
+        $bloque = $this->between($pagina, "ToggleButtons::make('payment_method')", '->required(),');
+
+        // Dos tarjetas, cada una con su dibujo.
+        $this->assertStringContainsString('->icons([', $bloque, 'Las tarjetas de cobro han perdido sus iconos.');
+        $this->assertStringContainsString('Heroicon::OutlinedBanknotes', $bloque);
+        $this->assertStringContainsString('Heroicon::OutlinedCreditCard', $bloque);
+
+        // ❗ Y la REGLA intacta: las claves del cobro, el obligatorio y el valor de partida.
+        $this->assertStringContainsString('ManualOrderFulfiller::METHOD_CASH', $bloque);
+        $this->assertStringContainsString('ManualOrderFulfiller::METHOD_DATAFONO', $bloque);
+        $this->assertStringContainsString(
+            '->default(ManualOrderFulfiller::METHOD_CASH)', $bloque,
+            'El cobro ha dejado de nacer en EFECTIVO, que es lo que más se usa en un mostrador.'
+        );
+
+        $css = $this->css();
+
+        // ⚠️ La elegida se marca por el `:checked` del propio radio. La primera versión se colgó de un
+        // `aria-pressed` **que este componente no emite** — la sonda leyó cadena vacía en las dos
+        // tarjetas, así que el aro no aparecía en ninguna.
+        $this->assertStringContainsString(
+            '.cmo-pay input:checked + .fi-btn', $css,
+            "La tarjeta elegida ha dejado de distinguirse por el estado REAL del radio.\n".
+            '`aria-pressed` no existe en `ToggleButtons`: se comprobó en navegador.'
+        );
+
+        // ⚠️ Y `flex-direction` NO manda aquí: `.fi-btn` es `display: grid` (medido). Una regla inerte
+        // se lee como activa y lleva a decisiones falsas.
+        $tarjeta = $this->between($css, '.cmo-pay .fi-btn {', '}');
+        $this->assertStringNotContainsString(
+            'flex-direction', $tarjeta,
+            'Ha vuelto un `flex-direction` a un elemento que es `display: grid`: no hace nada.'
+        );
+        $this->assertStringContainsString('grid-auto-flow: row', $tarjeta);
+    }
+
+    /** Lo que hay entre dos marcas, para aseverar sobre un bloque y no sobre el fichero entero. */
+    private function between(string $fuente, string $desde, string $hasta): string
+    {
+        $i = strpos($fuente, $desde);
+        $this->assertNotFalse($i, "no se encuentra «{$desde}»");
+
+        $j = strpos($fuente, $hasta, $i);
+
+        return substr($fuente, $i, $j === false ? null : $j - $i);
+    }
 }

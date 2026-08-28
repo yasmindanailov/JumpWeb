@@ -1847,3 +1847,59 @@
 /* ⚠️ **`x-cloak` es obligatorio con `x-show`**: sin él las dos flechas se pintan durante el instante
  * que tarda Alpine en arrancar, y en una tabla larga eso es un parpadeo por cada carga. */
 [x-cloak] { display: none !important; }
+
+/* ── El MÉTODO DE COBRO, en dos tarjetas (#242, `[OWNER]`) ──────────────────────────────────────
+ *
+ * «En vez de checkbox simple, añade dos cards con su icono de Efectivo y Datáfono». Es el último
+ * gesto del pedido y el que menos margen de error admite: con la tablet en la mano y un cliente
+ * delante, una diana grande con un dibujo se acierta sin mirar; un círculo de radio de 16 px, no.
+ *
+ * ❗ **Es CSS sobre el componente nativo, no un control propio.** `ToggleButtons` conserva `required`,
+ * `default` y las claves de `ManualOrderFulfiller`, así que **el cobro se decide exactamente igual**.
+ * La tarjeta es forma; la regla no se toca. */
+/* ⚠️ **La rejilla va en el CONTENEDOR, no en `.fi-fo-toggle-buttons-btn-ctn`**: ese envoltorio es
+ * **por opción** —lleva el `<input type=radio>` y su `<label class="fi-btn">`—, no el de todas. La
+ * primera versión puso ahí el `grid` y las tarjetas salieron sin repartirse el ancho. Se leyó de la
+ * plantilla del componente, no se supuso. */
+.cmo-pay {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: calc(var(--spacing) * 3);
+    width: 100%;
+}
+
+.cmo-pay .fi-fo-toggle-buttons-btn-ctn { display: flex; }
+
+/* ⚠️⚠️ **`.fi-btn` de Filament es `display: grid`, no flex**, así que el `flex-direction: column`
+ * que había aquí era una declaración INERTE — y el `getComputedStyle` la devolvía igual («column»),
+ * porque `flex-direction` se computa aplique o no. Lo destapó medir DÓNDE caen el icono y el texto
+ * (y=34 y y=38: la misma línea) en vez de creerle al valor computado.
+ * ▶ *Un valor computado dice lo que vale la propiedad, no si esa propiedad manda.* */
+.cmo-pay .fi-btn {
+    flex: 1;
+    grid-auto-flow: row;
+    justify-items: center;
+    align-content: center;
+    gap: calc(var(--spacing) * 2);
+    min-height: 96px;
+    padding: calc(var(--spacing) * 4);
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+/* El dibujo manda en la tarjeta: es lo que se reconoce de un vistazo. */
+.cmo-pay .fi-btn .fi-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
+/* ⚠️ La tarjeta ELEGIDA tiene que distinguirse **por algo más que el color de fondo**: en una tablet
+ * a un brazo de distancia y con reflejos, un relleno claro se pierde. El aro la separa sin depender
+ * de la luz.
+ * ⚠️⚠️ **Se cuelga del `:checked` del propio `<input>`, no de un `aria-pressed`** — que fue lo que se
+ * supuso primero y **no existe** en este componente: la sonda leyó cadena vacía en las dos tarjetas.
+ * El radio es el estado de verdad; el `label` es su hermano inmediato. */
+.cmo-pay input:checked + .fi-btn {
+    box-shadow: inset 0 0 0 2px var(--primary-600);
+}

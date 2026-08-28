@@ -569,6 +569,44 @@ puede estar mutando otra cosa.* Y de paso destapó el huérfano.
 
 ---
 
+## 11. La segunda vuelta del owner sobre «Crear pedido» (`#242`)
+
+Dos puntos suyos, los dos del último tramo de la pantalla.
+
+### 11.1 El «Atrás» pasa a ser solo icono
+
+`[OWNER]`: «quita el texto "atrás", solo deja el icono, y su background como está». El rótulo competía
+con el botón que hace avanzar, que es el que se busca; una flecha a la izquierda se entiende sin
+leerla. ▶ **El nombre accesible NO se pierde**: un botón de solo icono sin `aria-label` queda **mudo**
+para un lector de pantalla. Verificado: 44×44, con su fondo, y `aria-label="Anterior"`.
+
+### 11.2 El método de cobro, en dos TARJETAS con icono
+
+`[OWNER]`: «en vez de checkbox simple, añade dos cards con su icono de Efectivo y Datáfono». Es el
+último gesto del pedido y el que menos margen de error admite: con la tablet en la mano y un cliente
+delante, una diana de **154×96** con un dibujo se acierta sin mirar; un círculo de radio de 16 px, no.
+
+❗ **Cambia el CONTROL, no la REGLA.** `ToggleButtons` es el componente nativo y conserva las claves de
+`ManualOrderFulfiller`, el `required` y el arranque en **efectivo** — la forma de tarjeta la pone el
+CSS, no una segunda implementación del campo. Una tarjeta bonita que mandara otro método sería el peor
+fallo posible de esta pantalla, y por eso la guarda asevera las tres cosas.
+
+### 11.3 ⚠️⚠️ Dos instrumentos mintieron, y el segundo enseña algo reutilizable
+
+**(1)** El aro de la tarjeta elegida se colgó de un **`aria-pressed` que `ToggleButtons` no emite**: la
+sonda leyó cadena vacía en las dos tarjetas. El estado real es el `:checked` del propio `<input>`, que
+es hermano del `<label>`. Se leyó de la plantilla del componente en vez de suponerlo.
+
+**(2)** `flex-direction: column` sobre `.fi-btn` era una declaración **INERTE** —`.fi-btn` es
+`display: grid`— y **`getComputedStyle` la devolvía igual**, «column», porque esa propiedad se computa
+aplique o no. Lo destapó medir **dónde caen** el icono y el texto (y=34 y y=38: la misma línea).
+▶ *Un valor computado dice lo que vale la propiedad, no si esa propiedad manda.*
+
+**Verificación**: `CreateManualOrderTabletTest` sube a **15 casos** · **4 mutaciones más, las 4
+muerden** · sonda `pago.mjs` **8/8** en iPad horizontal, con cero controles bajo 44 px en el paso.
+
+---
+
 ## 6. Lo que queda
 
 | | Qué | Por qué importa | Estado |

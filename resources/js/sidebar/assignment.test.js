@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    REASON_ADULT, REASON_OUTDATED, REASON_UNSIGNED, STATUS_SIGNED,
+    REASON_ADULT, REASON_OUTDATED, REASON_UNSIGNED,
     applyRejections, assignableIds, assignableOptions, assignmentRejections, dependentsById,
     needsAssignment, reconcileAssignments, toggleDependent, trimToQuantity,
 } from './assignment.js';
@@ -25,34 +25,39 @@ describe('a quién se ofrece', () => {
      * en un `label` («Lucas · 9 años») y el selector no podía darles peso distinto, que es lo que hizo
      * que el owner leyera el motivo de una fila apagada como parte del nombre. La forma ENTERA se
      * asevera con `deepEqual` a propósito: un campo nuevo que se cuele sin decidirse pone esto rojo.
+     *
+     * ⚠️ **Re-apuntado, no reescrito, al retirar `statusKey`** (`#242`): su sujeto es LA FORMA de la
+     * opción, que sigue viva. El campo se fue; el `deepEqual` se queda, que es lo que lo hace útil.
      */
-    test('un menor con la exención vigente se puede marcar, con su nombre, su edad y su estado', () => {
+    test('un menor con la exención vigente se puede marcar, con su nombre y su edad', () => {
         const [option] = assignableOptions([minor()], MESSAGES);
 
         assert.deepEqual(option, {
-            id: 12, name: 'Lucas', age: '9 años', assignable: true, reasonKey: null, statusKey: STATUS_SIGNED,
+            id: 12, name: 'Lucas', age: '9 años', assignable: true, reasonKey: null,
         });
     });
 
     /**
-     * ⚠️⚠️ **El estado positivo NO es el reverso del motivo.** Fuera del modo interno se puede marcar
-     * —no hay firma que comprobar— pero **no hay nada firmado que anunciar**: decir «exención firmada»
-     * ahí sería afirmar un hecho falso, y es el fallo que este caso existe para impedir.
+     * ⚠️ **Re-apuntado al retirar el estado positivo** (`#242`). El caso decía «fuera del modo interno
+     * la fila no lleva estado»; de sus dos mitades, la del rótulo se fue con él y **la de CONDUCTA se
+     * queda, que es la que importa**: sin modo interno no hay firma que comprobar, así que un menor se
+     * puede marcar aunque no tenga nada firmado. Perder eso sería dejar de vender en las instalaciones
+     * que no gestionan la exención aquí.
      */
-    test('fuera del modo interno la fila no lleva estado, aunque se pueda marcar', () => {
+    test('fuera del modo interno se puede marcar aunque no haya nada firmado', () => {
         for (const mode of ['externo', 'desactivado']) {
             const [option] = assignableOptions([minor({ waiver: { mode, signed: false, outdated: false } })], MESSAGES);
 
             assert.equal(option.assignable, true, mode);
-            assert.equal(option.statusKey, null, mode);
+            assert.equal(option.reasonKey, null, mode);
         }
     });
 
-    /** Y quien no se puede marcar tampoco lleva estado positivo: lleva su motivo, que es otra cosa. */
-    test('quien no se puede marcar no lleva estado, lleva motivo', () => {
+    /** Y quien no se puede marcar lleva su MOTIVO, que es lo único que no es obvio de una fila apagada. */
+    test('quien no se puede marcar lleva motivo', () => {
         const [option] = assignableOptions([minor({ waiver: { mode: 'interno', signed: false, outdated: false } })], MESSAGES);
 
-        assert.equal(option.statusKey, null);
+        assert.equal(option.assignable, false);
         assert.equal(option.reasonKey, REASON_UNSIGNED);
     });
 

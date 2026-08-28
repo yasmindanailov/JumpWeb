@@ -29,8 +29,6 @@ export const REASON_OUTDATED = 'dependents.outdated';
  * causas distintas —la exención está firmada, o la instalación no comprueba ninguna— y decir
  * «exención firmada» en el segundo caso sería afirmar algo que nadie ha firmado. Fuera del modo
  * interno la fila no lleva estado, que es lo correcto: ahí no hay nada que informar.
- */
-export const STATUS_SIGNED = 'dependents.signed';
 
 /** ¿La exención de este menor permite asignarle una entrada? Fuera del modo interno, siempre. */
 function waiverAllows(dependent) {
@@ -57,21 +55,15 @@ function reasonFor(dependent) {
 }
 
 /**
- * El estado de la exención cuando SÍ se puede marcar, o `null` si no hay nada que decir.
- *
- * Solo en modo interno: fuera de él la instalación no comprueba firmas y anunciar una sería mentir.
- */
-function statusFor(dependent) {
-    if (reasonFor(dependent) !== null) {
-        return null;
-    }
-
-    return dependent?.waiver?.mode === 'interno' && dependent?.waiver?.signed === true ? STATUS_SIGNED : null;
-}
-
-/**
  * Lo que el selector OFRECE por cada menor declarado: **nombre y edad por separado**, si se puede
- * marcar y el estado de su exención — el porqué cuando no se puede, o «firmada» cuando sí.
+ * marcar y —cuando no se puede— por qué.
+ *
+ * ⚠️⚠️ **El estado POSITIVO («exención firmada») se RETIRÓ el 2026-08-29** (`DECISIONES #242`,
+ * `[OWNER]`: «lo de exención firmada lo quitamos, es innecesario porque es obvio: no podemos asignar
+ * menores sin firmar la exención»). Tiene razón y es la mitad que importa: **una fila marcable YA
+ * significa que la exención está en regla**, así que el rótulo repetía con palabras lo que el propio
+ * control ya decía. Lo que NO se retira es el motivo cuando NO se puede marcar: eso no es obvio, es
+ * la única pista de qué hay que hacer para poder asignar.
  *
  * Se ofrecen TODOS los declarados —también los que no se pueden marcar— a propósito: ver a Lucas
  * deshabilitado con «exención sin firmar» es exactamente el «te enteras comprando» de §4.7. Ocultarlo
@@ -85,7 +77,7 @@ function statusFor(dependent) {
  *
  * @param {Array<object>} dependents  `data` de `GET /me/dependents`
  * @param {object} messages  el grupo del EMBUDO (`tickets`), que viaja siempre: `dependents.age`
- * @returns {Array<{id: number, name: string, age: string, assignable: boolean, reasonKey: string|null, statusKey: string|null}>}
+ * @returns {Array<{id: number, name: string, age: string, assignable: boolean, reasonKey: string|null}>}
  */
 export function assignableOptions(dependents, messages = {}) {
     return (Array.isArray(dependents) ? dependents : []).map((dependent) => ({
@@ -94,7 +86,6 @@ export function assignableOptions(dependents, messages = {}) {
         age: tp(messages, 'dependents.age', { age: dependent.age ?? '' }),
         assignable: reasonFor(dependent) === null,
         reasonKey: reasonFor(dependent),
-        statusKey: statusFor(dependent),
     }));
 }
 

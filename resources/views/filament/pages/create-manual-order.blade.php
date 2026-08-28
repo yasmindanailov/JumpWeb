@@ -68,14 +68,20 @@
                  más repetido de la pantalla y el que decide el cobro: en la columna pegajosa está
                  siempre a la misma altura del pulgar, se llene lo que se llene el formulario. --}}
             <div class="cmo-nav">
+                {{-- ⚠️ **Solo el ICONO, con su fondo** (`#242`, `[OWNER]`). El rótulo «Atrás» compite
+                     con el botón que hace avanzar, que es el que se busca; una flecha a la izquierda
+                     se entiende sin leerla. ▶ **El nombre accesible NO se pierde**: sin `aria-label`
+                     un botón de solo icono queda MUDO para un lector de pantalla, así que el mismo
+                     texto que antes se veía sigue estando, solo que no se pinta. --}}
                 <x-filament::button
                     color="gray"
                     icon="heroicon-o-arrow-left"
                     wire:click="back"
                     :disabled="$this->step === \App\Filament\Pages\CreateManualOrderPage::STEP_CUSTOMER"
-                >
-                    {{ __('admin.orders.create_manual.back') }}
-                </x-filament::button>
+                    :aria-label="__('admin.orders.create_manual.back')"
+                    :title="__('admin.orders.create_manual.back')"
+                    class="cmo-nav__back"
+                />
 
                 @if ($this->step < \App\Filament\Pages\CreateManualOrderPage::STEP_PAYMENT)
                     <x-filament::button

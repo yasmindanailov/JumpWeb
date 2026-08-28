@@ -2,8 +2,9 @@
 
 > Estado: 🟦 **código de las unidades 1–3 en `main`, con la vuelta del owner aplicada; queda su ✅** ·
 > Última actualización: 2026-08-28 · Decisiones asociadas: `DECISIONES #237` (la medición y el
-> aviso de cookies), **`#239`** (el rediseño de los pasos de FECHA y HORA) y **`#241`** (la vuelta del
-> owner: las flechas de ratón y las fichas de hora, §7.bis).
+> aviso de cookies), **`#239`** (el rediseño de los pasos de FECHA y HORA) **`#241`** (la vuelta del
+> owner: las flechas de ratón y las fichas de hora, §7.bis) y **`#242`** (la segunda vuelta: el
+> selector de menores y el bug de «Mi cuenta», §7.ter).
 >
 > ❗ **Encargo del owner (2026-08-28)**: «el SPA tiene que ser perfecto en móvil, que es el 90 %».
 > Este documento es el sitio único de esa tanda: qué se midió, qué se decidió y qué queda.
@@ -336,6 +337,56 @@ Sonda propia (`VERIFICACION-E2E-CAJON.md` §5.vicies), **11/11**, con las dos mi
 ⚠️ **Una de esas guardas salió en rojo con el código correcto**: `assertStringNotContainsString(
 'onMounted', $fichero)` casaba con el **docblock**, que explica precisamente por qué no se usa. Se
 miran las líneas de código, no el fichero entero.
+
+---
+
+## 7.ter La segunda vuelta del owner (`#242`)
+
+### 7.ter.1 ⚠️⚠️ Un BUG que no era de esta tanda: «Mi cuenta» llevaba al carrito
+
+`[OWNER]`: «al darle a "mi cuenta" desde la landing y tengo producto en el carrito me va directo al
+carrito». **Reproducido con el código de antes y el de después**, con sesión y una línea en la cesta:
+
+| | |
+|---|---|
+| antes | `is-cart` · título **«Tu carrito»** |
+| ahora | `is-account` · título **«Mi cuenta»** |
+
+La causa no estaba en el embudo: el chip de cuenta de la cabecera lleva a `route('account')` y su clic
+llamaba a `$store.purchase.open()`, que abre el cajón **en la sección por defecto, que es la compra**.
+Sin cesta pasaba desapercibido —se abría el catálogo—; con cesta, `restoreCart()` remataba.
+
+▶ **La regla, ahora con guarda** (`AccountDoorWiringTest`): *interceptar un clic puede cambiar el CÓMO
+—abrir el cajón en vez de recargar la página— pero **nunca el DÓNDE**. Un `href` es una promesa.*
+
+⚠️ **Dos trampas de la sonda antes de poder reproducirlo**: el racimo del armazón **nace bajo el hero**
+(`#216`), así que un clic forzado sobre un contenedor con `pointer-events: none` **no dispara nada**;
+y `.sidecart__panel` lleva su clase de modo **también con el cajón cerrado**, así que leerla sin
+comprobar `is-open` no dice nada.
+
+### 7.ter.2 El selector de menores, tres cambios
+
+`[OWNER]`, y los tres apuntan a lo mismo: **quitar de la pantalla lo que ya se entiende solo.**
+
+1. **Con la línea llena, las filas que no caben se APAGAN** y desaparece la línea «No caben más». Con
+   una entrada y tres menores dice lo mismo y ahorra una línea, que en 390 px es sitio de verdad.
+2. **El menor asignado lleva «1 entrada asignada»** al lado, en segundo plano — es lo que el control
+   no puede decir por sí solo.
+3. **Fuera «exención firmada»**: «es innecesario porque es obvio, no podemos asignar menores sin firmar
+   la exención». Cierto — **una fila marcable ya lo significa**.
+
+⚠️ **Esto CORRIGE un comentario que el propio componente tenía escrito**, y la corrección va delante
+del texto: decía que una fila bloqueada por «lleno» no debe apagarse por ser un estado temporal.
+▶ **Las dos clases de fila apagada siguen distinguiéndose**, que era el motivo original: la que no se
+puede marcar NUNCA lleva su **motivo** debajo; la que está llena, no. El motivo es lo único que no es
+obvio, y es lo que se conserva.
+
+⚠️ El estado positivo se retira con `CONVENCIONES §3.quater`: de los tres tests que lo tocaban,
+**ninguno se borra** — los tres tenían un sujeto que sobrevive.
+
+**Verificado en navegador a 390×844, 16/16**: tres menores, una entrada; al marcar el primero las
+otras dos filas se apagan (opacidad 0,55) y sus casillas quedan deshabilitadas; el aviso dice «1
+entrada asignada» a 10 px frente a los 13 del nombre y sin mayúsculas; y **al desmarcar, vuelven**.
 
 ---
 

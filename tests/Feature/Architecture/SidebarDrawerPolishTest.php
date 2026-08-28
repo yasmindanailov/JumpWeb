@@ -189,14 +189,19 @@ class SidebarDrawerPolishTest extends TestCase
      * ⚠️⚠️ **Que una fila esté `disabled` no significa que se VEA deshabilitada**, y esa distancia
      * es el defecto entero: medido en navegador, el rótulo conservaba `opacity: 1` y `cursor:
      * pointer` porque los pone `.check`. Aquí se fija el mecanismo por los dos extremos — la clase se
-     * emite por `assignable`, y la hoja la apaga.
+     * emite por el mismo predicado que deshabilita la casilla, y la hoja la apaga.
+     *
+     * ⚠️ **Re-apuntado en `#242`, no reescrito**: su sujeto —«una fila bloqueada se ve bloqueada»—
+     * sigue vivo. Lo que cambió es que ahora se apaga **también** la fila que no cabe porque la línea
+     * está llena (`[OWNER]`, sustituye a la línea «No caben más»), así que las dos condiciones viven
+     * en un predicado con nombre en vez de en línea.
      */
     public function test_a_minor_that_cannot_be_assigned_looks_disabled(): void
     {
-        $this->assertMatchesRegularExpression(
-            '/:class="option\.assignable \? \'\' : \'dep-pick__row--off\'"/',
+        $this->assertStringContainsString(
+            ':class="blocked(option) ? \'dep-pick__row--off\' : \'\'"',
             $this->source(self::PICKER),
-            'La fila de un menor no asignable ha dejado de marcarse: se vería idéntica a una activa.'
+            'La fila de un menor bloqueado ha dejado de marcarse: se vería idéntica a una activa.'
         );
 
         $hoja = $this->source(self::SHEET);
@@ -259,11 +264,90 @@ class SidebarDrawerPolishTest extends TestCase
     {
         $picker = $this->source(self::PICKER);
 
+        // ⚠️ **Re-apuntado en `#242`**: la condición se mudó a un predicado con nombre porque ahora la
+        // usan DOS sitios —la casilla y la clase de la fila—, y escribirla dos veces es como diverge.
+        // Lo que se asevera sigue siendo lo mismo: **las dos mitades de la regla del owner**.
+        $this->assertStringContainsString(':disabled="blocked(option)"', $picker);
+
         $this->assertStringContainsString(
-            ':disabled="! option.assignable || (full && ! checked(option.id))"', $picker,
+            'const blocked = (option) => ! option.assignable || (full.value && ! checked(option.id));', $picker,
             "La condición que deshabilita una casilla ha cambiado. Es la regla del owner, no estilo:\n".
             'sin exención firmada no se asigna, y con la línea llena no caben más.'
         );
+
+        // ⚠️⚠️ Y el motivo NO puede irse con ella: apagar sin decir por qué deja al titular sin saber
+        // qué hacer. Es la mitad que `#242` conserva a propósito al retirar el estado positivo.
+        $this->assertStringContainsString('class="dep-pick__why"', $picker);
+    }
+
+    /**
+     * ⚠️⚠️ **«Exención firmada» se RETIRÓ, y el hueco no se queda vacío** (`DECISIONES #242`,
+     * `[OWNER]`: «es innecesario, porque es obvio: no podemos asignar menores sin firmar la
+     * exención»). Tiene razón — **una fila marcable ya significa que está en regla**—, así que el
+     * rótulo repetía con palabras lo que el control decía solo.
+     *
+     * En su sitio va lo que el control NO puede decir: que a ese menor ya se le asignó una entrada.
+     * Y va **en segundo plano**: es una nota al margen del nombre, no una medalla.
+     */
+    public function test_the_assigned_hint_replaced_the_obvious_waiver_status(): void
+    {
+        $picker = $this->source(self::PICKER);
+
+        // El estado positivo se fue de las tres capas: el módulo, el componente y el diccionario.
+        $this->assertStringNotContainsString('statusKey', $picker, 'El estado positivo ha vuelto al selector.');
+        $this->assertStringNotContainsString(
+            'statusFor', $this->source('resources/js/sidebar/assignment.js'),
+            'El estado positivo ha vuelto al módulo que compone las opciones.'
+        );
+        $this->assertStringNotContainsString(
+            "'signed' =>", $this->source('lang/es/tickets.php'),
+            'El rótulo «exención firmada» sigue en el diccionario del embudo.'
+        );
+
+        // Y el aviso nuevo va en la fila MARCADA, no en cualquiera.
+        $this->assertStringContainsString(
+            '<span v-if="checked(option.id)" class="dep-pick__ok">{{ t(\'dependents.assigned\') }}</span>',
+            $picker,
+            'El aviso de «1 entrada asignada» ha dejado de colgar de que el menor esté marcado.'
+        );
+
+        // Sutil: sin mayúsculas forzadas y sin el peso que tenía el estado que sustituye.
+        $hoja = $this->source(self::SHEET);
+        $ok = $this->between($hoja, '.dep-pick__ok {', '}');
+
+        $this->assertStringNotContainsString(
+            'text-transform: uppercase', $ok,
+            'El aviso ha vuelto a gritar. `[OWNER]`: «al lado de manera SUTIL».'
+        );
+        $this->assertStringNotContainsString('var(--fw-bold)', $ok, 'El aviso ha vuelto a llevar peso de negrita.');
+    }
+
+    /**
+     * ⚠️ **La línea «No caben más» se sustituye por apagar las filas que no caben** (`#242`,
+     * `[OWNER]`). Con una entrada y tres menores dice lo mismo y ahorra una línea, que en un cajón de
+     * 390 px es sitio de verdad. Verificado en navegador: al marcar uno, las otras dos filas quedan
+     * apagadas con opacidad 0,55, y al desmarcar VUELVEN.
+     */
+    public function test_the_full_line_became_two_dimmed_rows(): void
+    {
+        $picker = $this->source(self::PICKER);
+
+        // ⚠️ Se prohíbe la ESTRUCTURA, no solo el rótulo. La primera versión miraba únicamente la
+        // clave `dependents.full`, y una mutación que reintrodujera la línea con otro texto pasaba en
+        // verde: lo que el owner retiró es **una línea que ocupa alto**, se llame como se llame.
+        $this->assertDoesNotMatchRegularExpression(
+            '/<p[^>]*v-if="full"/', $picker,
+            'La línea «No caben más» ha vuelto: el owner pidió apagar las filas en su lugar.'
+        );
+        $this->assertStringNotContainsString('dependents.full', $picker);
+        $this->assertStringNotContainsString(
+            "'full' =>", $this->source('lang/es/tickets.php'),
+            'El rótulo «No caben más» sigue en el diccionario, sin nadie que lo pinte.'
+        );
+
+        // ⚠️ Y lo que NO se puede perder al apagar por «lleno»: la fila que no se puede marcar NUNCA
+        // sigue llevando su MOTIVO. Es lo único que no es obvio de una fila apagada.
+        $this->assertStringContainsString('class="dep-pick__why"', $picker);
     }
 
     // ── EL QR COMO CREDENCIAL (encargo del owner, 2026-08-28) ─────────────────────────────────

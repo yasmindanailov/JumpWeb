@@ -581,6 +581,40 @@
 >   ❗ **Queda el OJO del owner**: con el ratón, deslizar las dos tiras del cajón; con el dedo, que NO
 >   aparezca ninguna flecha; y en la tablet, montar un pedido de cabo a rabo.
 >
+>   ▶▶ ✅ **Y LA SEGUNDA VUELTA DEL OWNER (`DECISIONES #242`)** — `specs/cajon-en-movil.md` §7.ter y
+>   `specs/panel-navegacion.md` §11. Cinco puntos suyos, y **uno era un BUG de conducta**.
+>   ⚠️⚠️ **«MI CUENTA» LLEVABA AL CARRITO.** «Que el cliente vaya al enlace que lo lleva, no lo
+>   redirecciones a otro sitio en el SPA». **Reproducido con el código de antes y el de después**, con
+>   sesión y una línea en la cesta: antes `is-cart` / **«Tu carrito»**, ahora `is-account` /
+>   **«Mi cuenta»**. La causa: el chip de cuenta de la cabecera lleva a `route('account')` y su clic
+>   llamaba a `$store.purchase.open()`, que abre el cajón **en la sección por defecto, la compra**. Sin
+>   cesta no se notaba —salía el catálogo—; con cesta, `restoreCart()` remataba. ▶ **La regla queda en
+>   una guarda**: *interceptar un clic puede cambiar el CÓMO, nunca el DÓNDE. Un `href` es una promesa.*
+>   ⚠️ **Dos trampas antes de poder reproducirlo**: el racimo **nace bajo el hero** (`#216`), así que un
+>   clic forzado con `pointer-events: none` **no dispara nada**; y `.sidecart__panel` lleva su clase de
+>   modo **también con el cajón cerrado**.
+>   **Los otros cuatro**: **(a)** el selector de menores apaga las filas que no caben en vez de pintar
+>   «No caben más» —lo que **CORRIGE un comentario que el propio componente tenía escrito**, con la
+>   corrección delante del texto; las dos clases de fila apagada siguen distinguiéndose porque la que
+>   no se puede marcar NUNCA conserva su **motivo**—; **(b)** el menor asignado lleva **«1 entrada
+>   asignada»** en segundo plano; **(c)** fuera **«exención firmada»** —«es obvio: no podemos asignar
+>   menores sin firmar»—, retirado con `CONVENCIONES §3.quater` y **sin borrar ninguno de sus tres
+>   tests**, que tenían sujeto propio; **(d)** en el panel, el **«Atrás» pasa a solo icono** (con su
+>   `aria-label`, que si no queda MUDO) y el **método de cobro a dos TARJETAS con icono** de 154×96
+>   —❗ **cambia el control, no la regla**: `ToggleButtons` nativo conserva las claves de
+>   `ManualOrderFulfiller`, el `required` y el arranque en efectivo—.
+>   ⚠️⚠️ **CUATRO instrumentos mintieron, dos dentro de una guarda**: la guarda de los enlaces de cuenta
+>   **pasaba en verde con el defecto puesto** porque el comentario que explica el arreglo vive DENTRO
+>   del `<a>` —**tercera vez en la jornada** que una aserción caza la prosa—; una mutación no mordía y
+>   **la mala era la mutación**, no la guarda (reintroducía la línea sin su rótulo → la guarda pasó a
+>   prohibir la ESTRUCTURA); el aro de la tarjeta se colgó de un **`aria-pressed` que `ToggleButtons`
+>   no emite**; y **`flex-direction` sobre `.fi-btn` era una declaración INERTE** —es `display: grid`—
+>   **que `getComputedStyle` devolvía igual**. ▶ *Un valor computado dice lo que vale la propiedad, no
+>   si esa propiedad manda.*
+>   **Verificación**: suite **3402 / 22.394** · JS 843 · **11 mutaciones, las 11 muerden** · headless
+>   **16/16** (menores a 390 px), **8/8** (tarjetas de cobro) y la reproducción del bug en los dos
+>   sentidos (`VERIFICACION-E2E-CAJON.md` **§5.unvicies**) · Pint ✓ · docs-check ✓ · build ✓.
+>
 >   ▶ **Y queda APUNTADO, sin empezar, el CUMPLEAÑOS MIXTO** (`specs/cumple-mixto.md`, ⬜ borrador):
 >   un cumple KIDS con un invitado por encima de la edad del pack pasa a **MIXTO** —etiqueta «MIXTA»
 >   para cliente y operador y la diferencia de precio por persona en los dos desgloses—.
@@ -1132,6 +1166,12 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3403 en verde** (22.406 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 de madrugada **sobre el árbol CONJUNTO**, tras rebasar la **segunda vuelta del owner**
+  (`#242`, carril A) encima del `#252` del carril C. ▶ **+5 casos**: la guarda de que **un enlace
+  a la cuenta abre la CUENTA** (`AccountDoorWiringTest`), dos del selector de menores y dos del panel
+  —el «Atrás» de solo icono que no puede quedar MUDO y las tarjetas de cobro—. **11 mutaciones y las
+  11 muerden**, dos de ellas tras corregir guardas que pasaban en verde con el defecto puesto.
 - Suite **3398 en verde** (22.385 aserciones, 1 skipped a propósito) · **JS 862**, medida el
   2026-08-29 **sobre el árbol CONJUNTO**, tras rebasar
   `#252` (el imán, el pie a una fila y la marquesina fuera, carril C) encima del `#241` del carril A.

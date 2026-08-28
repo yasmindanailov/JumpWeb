@@ -326,4 +326,73 @@ class AccountDoorWiringTest extends TestCase
 
         return (string) file_get_contents($path);
     }
+
+    /**
+     * ⚠️⚠️ **Un enlace cuyo `href` es la CUENTA tiene que abrir la CUENTA** (`DECISIONES #242`).
+     *
+     * Nace de un defecto que reportó el owner y que se reprodujo en navegador: el chip «Mi cuenta» de
+     * la cabecera llevaba a `route('account')` y su clic llamaba a **`$store.purchase.open()`**, que
+     * abre el cajón en la sección POR DEFECTO —la compra—. Medido con el código de antes y el de
+     * después, con una cesta guardada:
+     *
+     *   antes → `is-cart`, título **«Tu carrito»**
+     *   ahora → `is-account`, título **«Mi cuenta»**
+     *
+     * Sin cesta el fallo pasaba desapercibido: se abría el catálogo, que se parece bastante a «no ha
+     * pasado nada». Con cesta, `restoreCart()` remataba llevando al carrito.
+     *
+     * ▶ **La regla que fija esta guarda**: interceptar un clic puede cambiar el CÓMO —abrir el cajón
+     * en vez de recargar la página— pero **nunca el DÓNDE**. Un `href` es una promesa.
+     */
+    public function test_every_intercepted_account_link_opens_the_account_section(): void
+    {
+        $vistas = glob(resource_path('views/components/site/*.blade.php')) ?: [];
+
+        $this->assertNotEmpty($vistas, 'control del propio test: no se están leyendo las vistas del sitio');
+
+        $interceptados = [];
+
+        foreach ($vistas as $ruta) {
+            // ⚠️⚠️ **Fuera los comentarios de Blade ANTES de mirar nada.** La primera versión de esta
+            // guarda **pasaba en verde con el defecto puesto**: el comentario que explica por qué hay
+            // que usar `openAccount()` vive DENTRO de la etiqueta `<a>`, así que la aserción se
+            // encontraba a sí misma. Es la tercera vez en la misma jornada que una comprobación caza
+            // la PROSA en vez del código.
+            $blade = preg_replace('/\{\{--.*?--\}\}/s', '', (string) file_get_contents($ruta));
+
+            // Cada `<a …>` entero, no por líneas: el `href` y el `x-on:click` viven en líneas
+            // distintas del mismo elemento. La alternancia salta los `>` que haya DENTRO de comillas.
+            preg_match_all('/<a\s(?:"[^"]*"|\'[^\']*\'|[^>])*>/s', (string) $blade, $enlaces);
+
+            foreach ($enlaces[0] as $enlace) {
+                if (! str_contains($enlace, "route('account')")) {
+                    continue;
+                }
+
+                // Sin intercepción no hay nada que comprobar: el navegador sigue el `href` y llega solo.
+                if (! preg_match('/(?:x-on:click|@click)[^=]*=\s*"([^"]*)"/s', $enlace, $click)) {
+                    continue;
+                }
+
+                $fichero = basename($ruta);
+                $interceptados[] = $fichero;
+
+                $this->assertStringContainsString(
+                    'openAccount(', $click[1],
+                    "«{$fichero}» intercepta el clic de un enlace a la CUENTA sin abrir la cuenta.\n".
+                    "⚠️ `open()` deja la sección en la de por defecto, que es la COMPRA: el cliente pulsa\n".
+                    "«Mi cuenta» y con una cesta guardada aterriza en el CARRITO (reproducido en navegador).\n".
+                    'Interceptar un clic puede cambiar el CÓMO, nunca el DÓNDE.'
+                );
+            }
+        }
+
+        // ⚠️ Control del propio test, y apunta al enlace CONCRETO que motivó la guarda: con un
+        // «hay al menos uno» bastaba cualquier otro para dejarla mirando a otro lado.
+        $this->assertContains(
+            'cta-pair.blade.php', $interceptados,
+            'El chip de cuenta de la cabecera ya no intercepta su clic, o cambió de fichero: esta '
+            .'guarda dejaría de vigilar justo el enlace que la motivó.'
+        );
+    }
 }

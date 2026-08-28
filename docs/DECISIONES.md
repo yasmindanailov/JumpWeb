@@ -13316,6 +13316,88 @@ mutaciones y las 12 muerden** · sondas headless **11/11** (cajón, escritorio y
 **16/16** (panel) · chunk 255,13 → **256,67 KiB** (techo 256 → 257, medido construyendo con y sin) ·
 Pint ✓ · docs-check ✓.
 
+## #242 · 2026-08-29 · Cinco puntos del owner, y uno era un BUG: «Mi cuenta» llevaba al carrito
+
+Vuelta del owner sobre `#239`–`#241`. Cuatro son de presentación; el quinto es un defecto de conducta
+que llevaba meses ahí y que solo se ve con una cesta guardada.
+
+### 1 · ⚠️⚠️ El BUG: «Mi cuenta» abría el EMBUDO
+
+`[OWNER]`: «al darle a "mi cuenta" desde la landing y tengo producto en el carrito me va directo al
+carrito; que el cliente vaya al enlace que lo lleva, no lo redirecciones a otro sitio en el SPA».
+
+**Reproducido en navegador con el código de antes y el de después**, con sesión y una línea en la cesta:
+
+| | |
+|---|---|
+| antes | `is-cart` · título **«Tu carrito»** |
+| ahora | `is-account` · título **«Mi cuenta»** |
+
+La causa: el chip de la cabecera lleva a `route('account')` y su clic llamaba a
+**`$store.purchase.open()`**, que abre el cajón en la sección POR DEFECTO —la compra—. Sin cesta el
+fallo pasaba desapercibido: se abría el catálogo, que se parece bastante a «no ha pasado nada»; con
+cesta, `restoreCart()` remataba llevando al carrito. Ahora llama a `openAccount($event, 'home')`, que
+es lo que ya hacían los otros dos enlaces de auth del armazón.
+
+▶ **La regla queda escrita en una guarda**: *interceptar un clic puede cambiar el CÓMO —abrir el cajón
+en vez de recargar— pero **nunca el DÓNDE**. Un `href` es una promesa.*
+
+⚠️ **Dos trampas de la sonda antes de poder reproducirlo**: el racimo **nace bajo el hero** (`#216`),
+así que un clic forzado sobre un contenedor con `pointer-events: none` **no dispara nada** y el estado
+no se movía —parecía un fallo del arreglo—; y `.sidecart__panel` lleva su clase de modo **también con
+el cajón cerrado**, así que leerla sin comprobar `is-open` no dice nada.
+
+### 2 · El selector de menores: tres cambios
+
+`[OWNER]`. **(a)** con la línea llena, las filas que no caben **se apagan** en vez de pintar la línea
+«No caben más» —con una entrada y tres menores dice lo mismo y ahorra una línea, que en 390 px es
+sitio de verdad—; **(b)** el menor asignado lleva **«1 entrada asignada»** al lado, en segundo plano;
+**(c)** fuera **«exención firmada»**: «es innecesario porque es obvio, no podemos asignar menores sin
+firmar la exención». Tiene razón — **una fila marcable ya lo significa**.
+
+⚠️ **Esto CORRIGE un comentario que el propio componente tenía escrito** (y la corrección va delante
+del texto): decía que una fila bloqueada por «lleno» no debe apagarse porque es un estado temporal.
+▶ **Las dos clases de fila apagada siguen distinguiéndose**, que era el motivo original: la que no se
+puede marcar NUNCA lleva su **motivo** debajo; la que está llena, no. El motivo es lo único que no es
+obvio, y es lo que se conserva.
+
+⚠️ `statusFor()` y el rótulo `dependents.signed` se retiran con el protocolo de `CONVENCIONES
+§3.quater`: de los tres tests que los tocaban, **ninguno se borra** — los tres tenían un sujeto que
+sobrevive (la FORMA de la opción, «fuera del modo interno se puede marcar igual», y el motivo).
+
+### 3 · «Atrás» del panel, solo icono
+
+`[OWNER]`. Competía con el botón que hace avanzar, que es el que se busca. ▶ **El nombre accesible NO
+se pierde**: un botón de solo icono sin `aria-label` queda **mudo** para un lector de pantalla.
+
+### 4 · El método de cobro, en dos TARJETAS con icono
+
+`[OWNER]`: «en vez de checkbox simple, añade dos cards con su icono de Efectivo y Datáfono». Es el
+último gesto del pedido y el que menos margen de error admite: **154×96** con un dibujo se acierta sin
+mirar. ❗ **Cambia el control, no la regla**: `ToggleButtons` es el componente nativo y conserva las
+claves de `ManualOrderFulfiller`, el `required` y el arranque en EFECTIVO.
+
+### ⚠️⚠️ Y CUATRO instrumentos propios mintieron, dos de ellos dentro de una guarda
+
+**(1)** La guarda de los enlaces de cuenta **pasaba en verde con el defecto puesto**: el comentario que
+explica por qué hay que usar `openAccount()` vive **dentro** de la etiqueta `<a>`, así que la aserción
+se encontraba a sí misma. Hay que despojar la prosa antes de mirar el código — **tercera vez en la
+misma jornada**.
+**(2)** Una mutación no mordía y **mi mutación era mala**, no la guarda: reintroducía la línea «No
+caben más» sin su rótulo. La guarda pasó a prohibir la **estructura** (`<p v-if="full">`) y no solo el
+texto: lo que el owner retiró es *una línea que ocupa alto*, se llame como se llame.
+**(3)** El aro de la tarjeta elegida se colgó de un **`aria-pressed` que `ToggleButtons` no emite** —la
+sonda leyó cadena vacía en las dos—; el estado real es el `:checked` del radio.
+**(4)** ⚠️ **`flex-direction: column` sobre `.fi-btn` era una declaración INERTE, y `getComputedStyle`
+la devolvía igual** («column»), porque esa propiedad se computa aplique o no. `.fi-btn` es
+**`display: grid`**. Lo destapó medir **dónde caen** el icono y el texto (y=34 y y=38: la misma línea)
+en vez de creerle al valor computado. ▶ *Un valor computado dice lo que vale la propiedad, no si esa
+propiedad manda.*
+
+**Verificación**: suite **3402 / 22.394** · JS 843 · **11 mutaciones y las 11 muerden** · sondas
+headless **16/16** (menores, a 390 px), **8/8** (las tarjetas de cobro) y la reproducción del bug
+medida en los dos sentidos · Pint ✓ · docs-check ✓.
+
 ## #250 · 2026-08-28 · [DECIDIDO owner] La columna del sitio es la del MOCKUP — y no era más ancha, era más estrecha
 
 **Contexto.** El owner, tras el arreglo del hero del cierre (`#238`): «para hacer la landing al

@@ -1691,3 +1691,39 @@ el dedo no se pinta**, y los 44 px son del puntero grueso.
 1. **Con el ratón**, en la portada: deslizar las dos tiras con las flechas y con la rueda.
 2. **Con el dedo**, en el móvil: que NO aparezca ninguna flecha y que el gesto siga igual.
 3. Las **fichas de hora** al tamaño de las de fecha: si le compensa ver 4 de 11 con ese peso.
+
+---
+
+## §5.unvicies · LOS MENORES Y EL BUG DE «MI CUENTA» — ✅ medido el 2026-08-29 (16/16 + reproducción en los dos sentidos), pendiente del OJO del owner (`DECISIONES #242`)
+
+### El selector de menores, a 390×844 (`sonda-menores.mjs`, 16/16)
+
+Tres menores declarados y una línea de **una** entrada, que es el caso que el owner describió:
+
+| | |
+|---|---|
+| Antes de marcar | 0 filas apagadas · ninguna línea de «no caben más» · **ningún «exención firmada»** |
+| Al marcar el primero | las **otras dos se apagan** (opacidad **0,55**) y sus casillas quedan deshabilitadas |
+| | el aviso **«1 entrada asignada»** aparece **en la fila marcada** |
+| | y es SUTIL: **10 px** frente a los 13 del nombre, sin mayúsculas forzadas |
+| Al desmarcar | las filas apagadas **vuelven** |
+
+### El bug de «Mi cuenta» (`repro-cuenta.mjs`), medido en los DOS sentidos
+
+Con sesión y una línea en la cesta, pulsando el chip de cuenta de la cabecera en la portada:
+
+| | |
+|---|---|
+| con el código de antes | `is-cart` · título **«Tu carrito»** |
+| con el arreglo | `is-account` · título **«Mi cuenta»** |
+
+⚠️⚠️ **Dos trampas antes de poder reproducirlo**: el racimo **nace bajo el hero** (`#216`), así que un
+clic forzado sobre un contenedor con `pointer-events: none` **no dispara nada** —el estado no se movía
+y parecía un fallo del arreglo—; y `.sidecart__panel` lleva su clase de modo **también con el cajón
+cerrado**, así que leerla sin comprobar `is-open` no dice nada.
+
+### ❗ Lo que tiene que mirar el OWNER
+
+1. Con **tres menores y una entrada**: marcar, ver los otros dos apagados, desmarcar y verlos volver.
+2. Pulsar **«Mi cuenta»** desde la portada **con algo en el carrito**: tiene que abrir su cuenta.
+3. Y desde el **pie**, que es una navegación normal: también.
