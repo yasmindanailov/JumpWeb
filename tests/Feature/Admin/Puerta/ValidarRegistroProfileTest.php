@@ -164,7 +164,6 @@ class ValidarRegistroProfileTest extends TestCase
             // separador, así que el test caía al cambiar la puntuación y NO caía si el dato era otro.
             ->assertSee('data-gate-minor-age="9" data-gate-minor-waiver="current"', false)
             ->assertSee('data-gate-minor-age="6" data-gate-minor-waiver="missing"', false)
-            ->assertSee('data-gate-visit="register"', false)
             ->assertDontSee(self::MINOR)
             ->assertDontSee('Vera Secreta')
             ->assertDontSee('ana@example.com')
@@ -376,9 +375,17 @@ class ValidarRegistroProfileTest extends TestCase
         $page = Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', $token)->call('search');
         $this->assertSame(0, CustomerVisit::count(), 'ABRIR la ficha no acredita nada');
 
+        // #234: la TARJETA de visita se retiró de la pantalla hasta que exista JumpPoints, así que
+        // ya no hay `data-gate-visit` que aseverar. La MAQUINARIA sigue entera y es lo que este caso
+        // mide: el hecho es idempotente por día, lleva al operador y exige el permiso. Se comprueba
+        // por el ESTADO del componente y por la fila en base, que es donde vive la verdad.
+        // ⚠️ Se asevera el marcador COMPLETO, no el prefijo: `data-gate-visit-badge` —la píldora
+        // «visita registrada hoy» de la cabecera, que SÍ sigue— contiene `data-gate-visit`, así que
+        // un `assertDontSee` por subcadena falla aunque la tarjeta esté bien retirada. Cuarta vez
+        // que la subcadena engaña en este repo.
         $page->call('registerVisit')
             ->assertSet('profile.visit_registered_today', true)
-            ->assertSee('data-gate-visit="registered"', false)
+            ->assertDontSee('data-gate-visit="registered"', false)
             ->assertDontSee('data-gate-visit="register"', false);
         $page->call('registerVisit');
 
@@ -462,16 +469,26 @@ class ValidarRegistroProfileTest extends TestCase
     }
 
     /** Las seis tarjetas de la ficha (§9.7 C·5): si una desaparece, el empleado pierde un dato. */
-    public function test_the_profile_shows_the_six_blocks(): void
+    /**
+     * Los bloques de la ficha, que desde `#234` son **CUATRO** y no seis: `[DECIDIDO owner]` fuera
+     * el QR del cliente —muy pocos casos dan problema de carné y se comía una columna— y fuera la
+     * VISITA hasta que exista JumpPoints, que es lo único que da sentido a acreditarla.
+     *
+     * Los dos retirados se aseveran AUSENTES a propósito: que no estén es la decisión, y si vuelven
+     * tiene que ser mirando también el reparto de columnas del kiosco, que cuadra con cuatro.
+     */
+    public function test_the_profile_shows_the_four_blocks(): void
     {
         [, $token] = $this->customer();
 
         Livewire::actingAs($this->staff())->test(ValidarRegistro::class)->set('input', $token)->call('search')
-            ->assertSee('data-gate-today', false)          // HOY
+            ->assertSee('data-gate-today', false)            // HOY
             ->assertSee('data-gate-waiver="current"', false) // EXENCIÓN
-            ->assertSee('data-gate-card="active"', false)  // QR
-            ->assertSee('data-gate-minors', false)         // MENORES
-            ->assertSee('data-gate-visit="register"', false); // VISITA
+            ->assertSee('data-gate-minors', false)           // MENORES
+            ->assertDontSee('data-gate-card', false)         // el QR, retirado
+            // Marcador COMPLETO: `data-gate-visit-badge` (la píldora de la cabecera, que se queda)
+            // contiene `data-gate-visit` y haría fallar un `assertDontSee` por prefijo.
+            ->assertDontSee('data-gate-visit="register', false); // la visita, retirada
     }
 
     /**
@@ -509,7 +526,6 @@ class ValidarRegistroProfileTest extends TestCase
         app()->setLocale('zh_CN');
 
         Livewire::actingAs($staff)->test(ValidarRegistro::class)->set('input', $token)->call('search')
-            ->assertSee('入口档案')
-            ->assertSee('登记到访');
+            ->assertSee('入口档案');
     }
 }

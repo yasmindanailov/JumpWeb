@@ -2,8 +2,8 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-28, 19:00 — carril A (la FORMA del panel,
-> `#223`, `#224` y `#232`) rebasado sobre el carril C (el mockup 1:1, `#225`→`#231`)**.
+> aquí solo se enlaza.** Última actualización: **2026-08-28, 19:40 — carril A (la FORMA del panel,
+> `#223`, `#224`, `#232` y `#234`) sobre el carril C (el mockup 1:1, `#225`→`#233`)**.
 >
 > ❗❗ **ATENCIÓN: desde el 2026-08-27 hay TRES CARRILES sobre `main` (no dos).** El B cerró ese día a
 > las 07:30 con todo empujado y verde; el A cerró a las 18:40 con las TANDAS 1, 2 y 3 de «menores a
@@ -269,6 +269,32 @@
 >   5 botones a 32–36) y las **tablas** («Pedidos» se sale 97 px en vertical y 163 en horizontal),
 >   porque el owner usa el resto del panel en ordenador. ⚠️ La palanca existe y **no se usa en
 >   ninguna tabla**: `Split`/`Stack` de Filament.
+>   ▶ ✅ **Y EL PULIDO DE LA PUERTA, con el owner delante (`#234`, spec §8.6)**: ocho puntos suyos.
+>   **(1)** fuera el buscador pegado —▶ **no es marcha atrás: el (2) elimina el problema que
+>   resolvía**— · **(2)** tras cada búsqueda válida el campo **se vacía y conserva el foco**, para que
+>   entre dos clientes no haya ningún gesto (el lector de QR es un teclado); ⚠️ con entrada INVÁLIDA
+>   no se vacía, que ahí hay que corregir · **(3)** fuera la tarjeta del **QR** · **(4)** fuera la de
+>   **VISITA** hasta que exista JumpPoints — ❗ **era el ÚNICO sitio que registraba visitas, así que
+>   `customer_visits` DEJA DE CRECER**; la maquinaria sigue entera y probada, falta el botón
+>   (`lealtad-jumppoints.md` **§9.bis** con las tres preguntas que deja abiertas, y ficha en `DEUDA`)
+>   · **(5)** las dos columnas **arrancan a la misma altura** (medido: las dos en 464 px) ·
+>   **(6)** el cursor va al campo **al entrar y al volver desde otro programa** — ⚠️ un caso que
+>   `autofocus` NO cubre, porque volver del TPV no recarga la página; con `preventScroll` para no
+>   arrastrar a quien estaba leyendo la ficha · **(7)** el **hueco grande entre las tarjetas de la
+>   izquierda NO era un margen**: con `grid` las dos columnas comparten la altura de fila, «Hoy»
+>   (98 px) vivía en la de «Exención» (187) y dejaba **89 px en blanco**; ahora son **dos pilas
+>   independientes** y todos los huecos miden **16 px** · **(8)** «0 menores a cargo declarados
+>   (respuesta válida…)» estaba escrito para quien lee la spec → **«Sin menores declarados.»**
+>   ⚠️⚠️ **Cuatro trampas**: busqué los tests en `tests/Feature/Puerta/` **y me dejé
+>   `tests/Feature/Admin/Puerta/`** (cuatro casos saltaron al correr la suite, re-apuntados por
+>   sujeto) · `assertDontSee('data-gate-visit')` falla aunque la tarjeta esté bien quitada porque
+>   `data-gate-visit-badge` **contiene esa subcadena** (cuarta vez en el repo) · ⚠️⚠️ **una sonda dijo
+>   que la búsqueda ya no abría NINGUNA ficha y el código estaba bien**: mis propios sondeos habían
+>   agotado el limitador de búsquedas tecleadas por hora — **tercera vez en la jornada que el
+>   sospechoso correcto es el instrumento**, y llegué a escribir en el código que había «medido» otra
+>   causa · y un script dejó un `</div>` huérfano al final del fichero, que cazó contar aperturas y
+>   cierres, no la vista. **`GateKioskTest` sube a 7 casos · 83 de puerta en verde · sondeos con
+>   capturas.** Alto por caso: **810** (cabe) · **816** · **1.018**.
 >   ▶ ❗ **LO QUE QUEDA DE ESTA TANDA**: **(1)** el **OJO del owner** sobre el menú, «Ajustes» y las pestañas —
 >   es un cambio de UI/UX y la suite no puede decir si «se entiende» · **(2)** repasar con él **los rótulos y
 >   las 19 descripciones** (`[DECIDIDO owner]`: las propone el agente, las revisa él) · **(3)** la pantalla
@@ -798,7 +824,15 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3351 en verde** (22.034 aserciones, 1 skipped a propósito), medida el
+- Suite **3355 en verde** (22.040 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las
+  20:00 (hora de Madrid) **sobre el árbol CONJUNTO de los dos carriles**: el A con la FORMA del
+  panel (`#223` menú plano + «Ajustes», `#224` el buscador, `#232` la puerta en tablet y `#234` su
+  pulido, que suman **30 casos** —`AdminNavigationTest`, `AdminGlobalSearchTest` y `GateKioskTest`,
+  ninguno de los tres existía—) y el C con el mockup 1:1 (`#225`→`#233`).
+  ⚠️⚠️ **Los dos carriles han chocado DOS VECES en el número de decisión en una tarde**: `#225` (el
+  del panel pasó a `#232`) y `#233` (pasó a `#234`). Con dos carriles apendando al mismo registro
+  numerado esto se repetirá; la renumeración se hace **siempre sobre una lista EXPLÍCITA de
+  ficheros**, porque un `sed` sobre el árbol llegó a corromper cinco referencias del otro carril.
   2026-08-28 a las 19:00 (hora de Madrid) **sobre el árbol CONJUNTO**: el carril A (`#223` menú plano +
   «Ajustes», `#224` el buscador y `#232` la puerta en tablet, que suman **27 casos** —`AdminNavigationTest`,
   `AdminGlobalSearchTest` y `GateKioskTest`, ninguno de los tres existía—) rebasado sobre el carril C

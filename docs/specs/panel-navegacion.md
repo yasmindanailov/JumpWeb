@@ -323,9 +323,9 @@ que hay delante— · **44 px de mínimo táctil** · y **el buscador pegado arr
 `display: contents` o contenedor de scroll nuevo por el medio se lo lleva por delante, y con él la
 privacidad de la ficha.
 
-▶ **El buscador pegado no es por el scroll: es la decisión de uso.** En un kiosco la acción más
-repetida es «el siguiente», y empezar de nuevo obligaba a bajar del todo. Además el lector de QR
-escribe en ese campo: si no está en pantalla, hay que buscarlo antes de cada escaneo.
+⚠️⚠️ **El buscador pegado arriba se RETIRÓ en la vuelta siguiente** (`#234`, §8.6): resolvía
+«empezar de nuevo obliga a bajar del todo», y ese problema desapareció cuando el campo pasó a
+vaciarse y recuperar el foco solo. **La solución buena hizo innecesaria a la anterior.**
 
 ⚠️ **«Nueva búsqueda» NO se ocultó, aunque era el candidato obvio a recortar** (44 px al final):
 además de vaciar el campo, **quita de la pantalla la ficha del cliente anterior**. En una tablet
@@ -346,12 +346,46 @@ fallado aquí, donde no existía ninguna regla en el rango de la tablet.
 | Tablet vertical 810×1080 | **cabe** | **sí** | 0 |
 | Móvil 390×844 | 487 px | no | 0 |
 
+⚠️ Estas cifras son de la tanda 3, **con** las tarjetas de QR y visita. Tras retirarlas (§8.6):
+810 (cabe) · 816 (se pasa 6) · 1.018 en el caso de la exención vieja.
+
 El móvil no es el dispositivo de destino y su conducta no cambia respecto de antes.
 
 **Verificación**: `GateKioskTest` (4 casos) con **4 mutaciones y las 4 muerden** · 79 casos de
 puerta en verde · sondeo headless en cinco anchos con capturas. ❗ **Una guarda de PHP no puede
 ver si «se ve bien»**: las cifras salen del sondeo, y quedan escritas para que la próxima vez se
 **re-midan** en vez de suponerse.
+
+### 8.6 La vuelta del owner sobre la pantalla (`#234`)
+
+Seis puntos suyos tras verla, más dos que salieron de mirar la captura:
+
+| | Qué pidió | Qué se hizo |
+|---|---|---|
+| 1 | Quitar el buscador pegado | Retirado. ▶ **No es marcha atrás**: el punto 2 elimina el problema que resolvía |
+| 2 | Que tras buscar el campo se vacíe **y conserve el foco** | `search()` lo vacía y avisa al navegador. ⚠️ Con entrada INVÁLIDA no se vacía: ahí hay que corregir |
+| 3 | Fuera la tarjeta del QR | Retirada: pocos casos dan problema y ocupaba una columna |
+| 4 | Fuera la tarjeta de Visita, hasta JumpPoints | Retirada. ❗ Era el único sitio que registraba visitas → `customer_visits` deja de crecer (`lealtad-jumppoints.md` §9.bis y `DEUDA.md`) |
+| 5 | Las dos columnas, a la misma altura | Hechas dos pilas independientes. Medido: las dos arrancan en 464 px |
+| 6 | Foco al ENTRAR y **al volver desde el TPV** | ⚠️ `autofocus` **no** cubre eso: no recarga la página. Se añade `focus.window` + `visibilitychange`, con `preventScroll` |
+| 7 | «¿Por qué hay tanto hueco entre las tarjetas?» | **No era un margen**: con `grid` las dos columnas comparten la altura de fila — «Hoy» (98 px) vivía en la de «Exención» (187) y dejaba **89 px** en blanco. Dos pilas lo arreglan: ahora todos los huecos son **16 px** |
+| 8 | «¿Por qué pone *0 menores a cargo declarados (respuesta válida…)*?» | Porque estaba escrito para quien lee la spec. Ahora: **«Sin menores declarados.»** |
+
+⚠️⚠️ **Cuatro trampas, todas de método o de instrumento:**
+
+1. Busqué los tests afectados en `tests/Feature/Puerta/` **y me dejé `tests/Feature/Admin/Puerta/`**:
+   cuatro casos aseveraban el HTML de las tarjetas retiradas y saltaron al correr la suite, no al
+   planificar. Re-apuntados por SUJETO, no borrados.
+2. **`assertDontSee('data-gate-visit')` falla aunque la tarjeta esté bien quitada**: la píldora de
+   cabecera `data-gate-visit-badge` —que sí se queda— contiene esa subcadena. **Cuarta vez que la
+   subcadena engaña en este repo.**
+3. ⚠️⚠️ **Una sonda dijo que la búsqueda había dejado de abrir NINGUNA ficha y el código estaba
+   bien**: mis propios sondeos habían agotado el limitador de búsquedas TECLEADAS por hora y la
+   pantalla contestaba «demasiadas búsquedas». **Tercera vez en la jornada que el sospechoso
+   correcto es el instrumento** — y llegué a escribir en el código un comentario afirmando haber
+   «medido» otra causa. Corregido, con la corrección escrita donde estaba el error.
+4. Un script de reestructuración dejó un `</div>` huérfano **al final del fichero** (buscó «el
+   último `</div>`» y ese era el del documento). Lo cazó contar aperturas y cierres, no la vista.
 
 ### 8.5 Lo que NO entra, y por qué
 

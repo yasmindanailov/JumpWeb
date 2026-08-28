@@ -29,6 +29,34 @@
                 autofocus
                 inputmode="text"
                 class="gate-search__input"
+                {{-- ▶ EL CURSOR VIVE AQUÍ. Tres momentos, y cada uno es un caso distinto:
+
+                     1. `x-init` — al abrir la pantalla. El `autofocus` de arriba ya lo intenta, pero
+                        depende de que el navegador lo honre; esto lo hace determinista.
+                     2. `focus.window` / `visibilitychange` — **al VOLVER desde otro programa**. Es el
+                        caso que `autofocus` NO cubre: el empleado se va al TPV y regresa, la página
+                        no se recarga —solo recupera el foco de ventana— y el cursor se había
+                        quedado fuera. Sin esto hay que ir a pinchar el campo antes de cada escaneo.
+                        ⚠️ Con `preventScroll` a propósito: si estaba leyendo la ficha del cliente
+                        más abajo, recuperar el cursor no debe arrastrarle de vuelta arriba. El
+                        lector escribe igual en un campo enfocado aunque no esté a la vista.
+                     3. `gate-input-cleared` — tras cada búsqueda válida, que lo emite `search()`.
+
+                     Cada listener es una mitad muda sin la otra: si se cae el `dispatch()` del
+                     componente, el (3) no se entera y nada falla a la vista. `GateKioskTest` los
+                     asevera por separado. --}}
+                {{-- SIN `x-data`: un componente Livewire YA es un componente Alpine, así que `x-init`
+                     y `x-on` funcionan sin declarar ámbito, y abrir uno propio sobre un elemento con
+                     `wire:model` es meterse en un cruce que no hace falta.
+                     ⚠️ Nota honesta para el que venga: llegué a escribir aquí que «medido, con
+                     `x-data` la búsqueda dejaba de abrir ninguna ficha». **Era falso.** Lo que
+                     pasaba es que mis propios sondeos habían agotado el limitador de búsquedas
+                     TECLEADAS por hora (`puerta.lookup_rate_limited`) y la pantalla contestaba
+                     «demasiadas búsquedas». El limitador funcionaba; el diagnóstico, no. --}}
+                x-init="$el.focus()"
+                x-on:focus.window="$el.focus({ preventScroll: true })"
+                x-on:visibilitychange.document="document.hidden || $el.focus({ preventScroll: true })"
+                x-on:gate-input-cleared.window="$el.focus()"
             />
             <x-filament::button type="submit" size="lg" :icon="Heroicon::OutlinedMagnifyingGlass" class="gate-search__btn">
                 <span wire:loading.remove wire:target="search">{{ __('admin.puerta.validar.button') }}</span>
@@ -149,6 +177,12 @@
                         </header>
 
                         <div class="gate-grid">
+                        {{-- ⚠️ DOS COLUMNAS DE VERDAD, no una rejilla (#234). Con `grid` las dos
+                             columnas COMPARTEN las alturas de fila: medido, «Hoy» (98 px) vivía en la
+                             fila de «Exención» (187) y dejaba **89 px vacíos** debajo antes de «Otros
+                             días». Ninguna propiedad de rejilla arregla eso —la fila es la fila—, así
+                             que cada columna es su propia pila y solo el reparto horizontal es grid. --}}
+                        <div class="gate-col" data-gate-col="main">
                             {{-- 2 · HOY (en plural): los tres estados en voz alta (§4.6). --}}
                             <x-filament::section
                                 :heading="__('admin.puerta.validar.profile.today')"
@@ -188,6 +222,9 @@
                                 </x-filament::section>
                             @endif
 
+                        </div>
+
+                        <div class="gate-col" data-gate-col="side">
                             {{-- 1b · EXENCIÓN. Tarjeta propia y no solo una píldora: es el dato por el
                                  que existía esta pantalla y el que decide si el cliente salta. Una
                                  versión ANTERIOR del texto NO frena a nadie (§4.8): se señala en ámbar
@@ -218,21 +255,6 @@
                                 @endif
                             </x-filament::section>
 
-                            {{-- 1c · El QR del cliente. `revoked` no es un error del cliente: rotó su QR
-                                 (o se le revocó el acceso) y el camino es buscarle por email (§4.5). --}}
-                            <x-filament::section
-                                :heading="__('admin.puerta.validar.profile.card_section')"
-                                :icon="Heroicon::OutlinedQrCode"
-                                :icon-color="$profile['card'] === 'active' ? 'success' : 'gray'"
-                                compact
-                                class="gate-card"
-                            >
-                                <p class="gate-fact">
-                                    <x-filament::badge :color="$profile['card'] === 'active' ? 'success' : 'gray'" size="lg" data-gate-card="{{ $profile['card'] }}">
-                                        {{ __('admin.puerta.validar.profile.card_'.$profile['card']) }}
-                                    </x-filament::badge>
-                                </p>
-                            </x-filament::section>
 
                             {{-- 3 · Menores a cargo: SOLO edad y estado de la exención (§4.6 fila 3).
                                  ⚠️⚠️ NUNCA el nombre ni el correo. Es estructural —`GateProfileData` no
@@ -264,35 +286,17 @@
                                 @endif
                             </x-filament::section>
 
-                            {{-- 4 · La VISITA (§8.3): un acto explícito, idempotente por día. Es lo que
-                                 acredita que ha venido y de donde saldrán los JumpPoints — por eso NO
-                                 puede colgar de «se abrió la ficha». --}}
-                            <x-filament::section
-                                :heading="__('admin.puerta.validar.profile.visit_section')"
-                                :icon="Heroicon::OutlinedCheckCircle"
-                                :icon-color="$profile['visit_registered_today'] ? 'success' : 'primary'"
-                                compact
-                                class="gate-visit"
-                            >
-                                @if ($profile['visit_registered_today'])
-                                    {{-- Texto plano y no otra píldora: la píldora de «visita registrada»
-                                         ya está en la cabecera, que es donde se lee de un vistazo. --}}
-                                    <p class="gate-visit__done" data-gate-visit="registered">
-                                        {{ __('admin.puerta.validar.profile.visit_registered') }}
-                                    </p>
-                                @else
-                                    <x-filament::button
-                                        wire:click="registerVisit"
-                                        size="lg"
-                                        :icon="Heroicon::OutlinedCheckCircle"
-                                        class="gate-visit__btn"
-                                        data-gate-visit="register"
-                                    >
-                                        {{ __('admin.puerta.validar.profile.visit_register') }}
-                                    </x-filament::button>
-                                @endif
-                                <p class="gate-hint">{{ __('admin.puerta.validar.profile.visit_hint') }}</p>
-                            </x-filament::section>
+                            {{-- ⚠️ AQUÍ IBA LA TARJETA DE «VISITA» (#234, `[DECIDIDO owner]`): se retira
+                                 HASTA QUE EXISTA JUMPPOINTS, que es lo único que da sentido a acreditar
+                                 una visita, y entonces se decide bien dónde y cómo va.
+                                 ❗ **Consecuencia, y es de datos, no de pantalla**: era el ÚNICO sitio
+                                 desde el que se registraba una visita, así que a partir de ahora
+                                 `customer_visits` deja de crecer. La maquinaria sigue entera y probada
+                                 —`registerVisit()`, el hecho idempotente por día y `GateVisitsTest`—:
+                                 lo que falta es su botón. Ficha en `DEUDA.md` y en
+                                 `specs/lealtad-jumppoints.md` §9. --}}
+                        </div>
+
                         </div>
 
                         <p class="gate-expires">{{ __('admin.puerta.validar.profile.expires', ['minutes' => $profile['ttl_minutes']]) }}</p>

@@ -87,7 +87,7 @@ return [
                 'method_redsys' => '网上',
                 'minors_on_line_label' => '本行的未成年人',
                 'minors' => '监护的未成年人',
-                'minors_empty' => '未登记任何未成年人（有效答复：按现行方式在系统外处理）。',
+                'minors_empty' => '未登记任何未成年人。',
                 'minor' => ':age 岁',
                 'minor_waiver_current' => '免责声明 ✓',
                 'minor_waiver_outdated' => '旧版本免责声明',
