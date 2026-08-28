@@ -35,7 +35,7 @@
    THEME VARIABLES
      --jj-spinner-size   base size (multiplied internally)  default 36px
      --jj-spinner-color  ink color of both shapes           default currentColor
-     --jj-spinner-speed  full loop duration                 default 1.4s
+     --jj-spinner-speed  full loop duration        default var(--dur-espera) = 900ms
    ==================================================================== */
 
 /* >>> SPINNER:CONTRACT >>>
@@ -49,7 +49,14 @@
   /* tokens */
   --jj-spinner-size: 36px;
   --jj-spinner-color: currentColor;
-  --jj-spinner-speed: 1.4s;
+  /* ⚠️ **Entra en la escala de movimiento con la 2d** (`#222`): un spinner es EL cargador, y el
+     sistema le da un tiempo propio —`--dur-espera`, 900 ms— porque «una espera con easing parece
+     un fallo de red intermitente» y su ciclo es el único número que se repite en toda la web.
+     ▶ **El token del spinner NO desaparece**: sigue siendo el punto por el que una instalación
+     ajusta SU cargador desde el marcado, como documenta la cabecera. Lo que cambia es de dónde
+     sale su valor por defecto — de un literal a la escala. El fallback conserva el 1,4 s por si
+     esta hoja se sirve sin las otras dos, que es como se prueba aislada. */
+  --jj-spinner-speed: var(--dur-espera, 1.4s);
 
   /* layout */
   position: relative;

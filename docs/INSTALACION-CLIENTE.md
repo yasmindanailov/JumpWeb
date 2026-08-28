@@ -246,10 +246,34 @@ pasó a ser «¿para qué sirve cada sombra?» y salieron **tres roles**:
 imprimible y el pulgar de un interruptor—, enumeradas en `specs/tema-por-instalacion.md` §13.5, y
 **la lista solo encoge**: era de seis hasta que el selector de idioma salió del pie (`#205`).
 
-⚠️ **Lo que el paquete TODAVÍA no puede cambiar, dicho para que nadie lo busque:**
-- **El TEMPO.** 237 declaraciones de transición con **48 duraciones y 20 curvas** distintas. Hay 4
-  tokens (`--dur-collapse`, `--dur-fade`, `--ease-panel`, `--ease-bounce`) que cubren una parte
-  mínima. §10.4.
+✅ **d) EL TEMPO — y esto CORRIGE al párrafo que había aquí** (`DECISIONES #222`, tanda 2d).
+Decía «lo que el paquete TODAVÍA no puede cambiar: el tempo, 237 declaraciones con 48 duraciones y
+20 curvas, y 4 tokens que cubren una parte mínima». **Ya no es cierto**: el movimiento es un
+sistema, y un paquete lo retempla entero redefiniendo **once tokens**.
+
+```css
+    /* CURVAS · cuatro, con contrato. Redefinirlas mueve TODO el movimiento del producto. */
+    --ease-entra: cubic-bezier(.34, 1.56, .64, 1); /* lo que APARECE: se pasa de largo y vuelve */
+    --ease-cae:   cubic-bezier(.2, 1.56, .25, 1);  /* el rebote GRANDE: uno por pantalla */
+    --ease-sale:  cubic-bezier(.4, 0, .2, 1);      /* cierres, foco y TODO el hover */
+    --ease-bucle: linear;                          /* solo esperas */
+
+    /* DURACIONES · siete, cada una con su uso. */
+    --dur-toque:  120ms;  /* hover de icono y de enlace */
+    --dur-sale:   180ms;  /* botones, cierres, salidas: la mitad de su entrada */
+    --dur-estado: 240ms;  /* cambio de estado dentro de un componente */
+    --dur-entra:  320ms;  /* entrada simple de una tarjeta */
+    --dur-cae:    420ms;  /* cascada, sello, confirmación. EL TECHO */
+    --dur-salto:  620ms;  /* la única excepción: el salto del hero */
+    --dur-espera: 900ms;  /* ciclo de espera (el spinner lo lee) */
+```
+
+⚠️ **Tres principios ordenan la tabla, y explican por qué no es simétrica**: lo que entra rebota y
+lo que sale no —y sale en la **mitad** de tiempo—; el sobreimpulso se paga en **píxeles**, nunca en
+opacidad ni color; y **nada en bucle salvo las esperas**.
+⚠️ **Lo que queda fuera son los bucles AMBIENTALES** —marquesinas, iconos que laten, el latido del
+CTA doble (`--dur-invite`)—: no son tiempos de respuesta, así que no compiten con los siete.
+`MotionScaleTest` los reconoce por llevar `infinite`, no por su nombre.
 
 ⚠️ **Y un aviso sobre la tira**: si tu marca solo tiene dos colores, **no la redefinas** — el
 default cicla sobre `--zone-1` y `--zone-2` y siempre da colores enteros. Repartir cinco pasos

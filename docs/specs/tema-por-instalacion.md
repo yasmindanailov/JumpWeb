@@ -1383,3 +1383,92 @@ Enumeradas en `ActionFillTest::EXCEPTIONS`, y **la lista solo puede encoger**:
 - ⚠️ **`[data-surface="ink"] .cta-prime__ico` y `.cta-prime__s` pueden estar muertas**: existían para
   cuando el CTA grande vivía dentro del hero, y el hero perdió su CTA en `#195`. No se retiran aquí
   —retirar código viejo tiene su propio protocolo (`CONVENCIONES §3.quater`)—; ficha en `DEUDA.md`.
+
+---
+
+## 16. EL MOVIMIENTO — el SEXTO mecanismo del tema (`#222`, tanda 2d, 2026-08-28)
+
+> `[DECIDIDO owner, 2026-08-28]`, a pregunta simple: **toda la web**; y el **color sigue cambiando
+> en hover** donde ya estaba validado.
+
+### 16.1 Lo que había: 53 duraciones y una curva que nadie elegía
+
+Medido antes de tocar nada. ⚠️ **Y la primera medida fue reconciliar la doc**, que decía «237
+declaraciones, 48 duraciones, 20 curvas»: esos números contaban `transition` **+** `animation`, y
+con ese mismo criterio hoy salen **239 · 53 · 20**. No había envejecido; estaba contando otra cosa
+de la que yo empecé contando.
+
+| | |
+|---|---|
+| declaraciones de movimiento | **239** |
+| duraciones distintas | **53** |
+| curvas distintas | **20** |
+| ❗ **usos de curva que eran `ease`** | **200 de 220** |
+
+▶ **Ese último número es toda la tanda.** `ease` es la curva por defecto del navegador: el **90 %
+del movimiento de la web no lo decidía nadie**. No era una escala con ruido — **no había ninguna**,
+igual que con las sombras en §13.
+
+### 16.2 La escala no se extrae: se toma del cliente y se traduce a ROLES
+
+`Microanimaciones PJP` declara **4 curvas y 7 duraciones**, cada una con su uso escrito. Se traducen
+a roles del producto —los nombres describen para qué sirve el tiempo, no la metáfora de la marca—:
+
+| Curva | Valor | Para qué |
+|---|---|---|
+| `--ease-entra` | `cubic-bezier(.34, 1.56, .64, 1)` | lo que **aparece**: se pasa de largo y vuelve |
+| `--ease-cae` | `cubic-bezier(.2, 1.56, .25, 1)` | el rebote **grande**: uno por pantalla |
+| `--ease-sale` | `cubic-bezier(.4, 0, .2, 1)` | cierres, foco y **todo el hover**: sin opinión |
+| `--ease-bucle` | `linear` | solo esperas: un easing parece un fallo de red |
+
+`--dur-toque` 120 · `--dur-sale` 180 · `--dur-estado` 240 · `--dur-entra` 320 · `--dur-cae` 420
+(**el techo**) · `--dur-salto` 620 (la única excepción) · `--dur-espera` 900.
+
+⚠️ **Tres principios ordenan la tabla, y explican que no sea simétrica:**
+1. **Lo que entra rebota; lo que sale, no** — y sale en la **mitad** de tiempo. Un modal que rebota
+   al cerrarse parece que ha fallado.
+2. **El sobreimpulso se paga en píxeles**: es desplazamiento y escala, nunca opacidad ni color.
+3. **Nada en bucle salvo las esperas.**
+
+### 16.3 ⚠️⚠️ La conversión se hizo a MEDIAS la primera vez, otra vez
+
+El primer filtro de «esto es un bucle ambiental, no lo toques» buscaba palabras —`float`, `scroll`,
+`gallery`— **en los 260 caracteres anteriores**. Saltó **once declaraciones que sí había que
+convertir**: `--shadow-float` mencionado en un comentario vecino salvó a `.lang-dd__panel`, y el
+título «reveal on scroll» salvó a `.ride-card` y a tres `.reveal`.
+
+▶ **Es exactamente lo de §11.4** —«el scrim tiene cuatro paradas y se convirtieron dos»— con otra
+herramienta y dos tandas después. Se rehízo con un criterio **objetivo y leído en la propia
+declaración**: lleva `infinite`, o está en una lista de **tres** animaciones de dibujo que son
+largas a propósito (`tear-once`, `e2-fan`, `e5-deal`). *Un filtro que mira el contexto acierta hasta
+que el contexto cambia.*
+
+### 16.4 El escondite: las `custom properties`
+
+`--cta-pair-swap: 0.46s` y `--cta-pair-in: 0.14s` vivían **dentro de una variable**, así que ningún
+inventario de `transition` los veía. `MotionScaleTest` mira también ahí: **un literal metido en un
+token sigue siendo un literal**.
+▶ Entran en la escala (`--dur-cae` y `--dur-toque`), y con ellos **el spinner**: giraba a 1,4 s y
+pasa a leer `--dur-espera` (900 ms) **conservando su token propio**, que es el punto por el que una
+instalación ajusta su cargador desde el marcado (`sistemas/UI-SPINNER.md`).
+▶ Y los cuatro tokens de `#42` —`--dur-collapse`, `--dur-fade`, `--ease-panel`, `--ease-bounce`, 36
+usos— se re-apuntan y **desaparecen**: eran un parche, no un sistema.
+
+### 16.5 Lo que queda FUERA, y por qué no es deuda
+
+Los **bucles ambientales**: marquesinas, iconos que laten, badges que botan, el latido del CTA doble
+(`--dur-invite`). No son tiempos de respuesta a un gesto, así que no compiten con los siete.
+⚠️ El sistema del cliente los llamaría **ruido** —«banners que respiran, flechas que se balancean,
+iconos que laten»— pero **retirarlos es una decisión de producto, no de mecanismo**, y el owner ya
+dejó la tanda 3 fuera de alcance. Aquí solo se declaran.
+
+### 16.6 Verificación
+
+- **608 usos de token · CERO duraciones y CERO curvas literales fuera de la escala** · 25
+  declaraciones ambientales, sin tocar.
+- **`MotionScaleTest` nuevo (4 casos)** · **7 mutaciones, las 7 muerden** — incluidas «alguien
+  esconde un literal dentro de una custom property» y «vuelve el `ease` heredado».
+- Sonda de navegador: los once tokens resuelven, la coreografía del armazón sigue **exacta**
+  (`--nav-p: 0.561` a scrollY = 120) y `prefers-reduced-motion` sigue apagando lo que apagaba.
+- ❗ **Y lo que ninguna sonda puede medir: cómo se siente.** Esta tanda no se revisa con una
+  captura, se revisa **interactuando**. Si algo va lento o brusco, el número está en un token.

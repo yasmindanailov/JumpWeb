@@ -11746,3 +11746,64 @@ Ficha en `DEUDA.md`. Con esto **el armazón queda completo en los doce anchos**.
 alcanzable, porque medía su posición **sin desplazar** en vez de si la lista puede desplazarse — y
 sí podía (contenido 806 sobre 521 de alto). *Preguntar «¿está a la vista?» no es preguntar «¿se
 puede llegar?».*
+
+---
+
+## #222 · 2026-08-28 · La tanda 2d: el MOVIMIENTO es un sistema — cuatro curvas y siete duraciones, y el 90 % de la web no elegía curva, la heredaba
+
+**Contexto.** Última tanda del tema. `[DECIDIDO owner]` a pregunta simple: **toda la web**, y el
+**color sigue cambiando en hover** donde ya está validado.
+
+**Medido antes de tocar nada** —y la primera cifra fue reconciliar la doc, que decía 237 · 48 · 20:
+esos números contaban `transition` **+** `animation`, y con ese criterio salen **239 · 53 · 20**—:
+
+| | |
+|---|---|
+| declaraciones de movimiento | **239** |
+| duraciones distintas | **53** |
+| curvas distintas | **20** |
+| ❗ usos de curva que eran `ease` | **200 de 220** |
+
+▶ **Ese último número es toda la tanda**: `ease` es la curva por defecto del navegador, así que el
+**90 % del movimiento de la web no lo decidía nadie**. No era una escala con ruido: **no había
+ninguna**, igual que con las sombras en `#196`.
+
+**La escala NO se extrae de lo que había: se toma del cliente, que sí la tiene escrita**
+(`Microanimaciones PJP`) y se traduce a ROLES del producto. Cuatro curvas —`entra` (lo que aparece
+se pasa y vuelve) · `cae` (el rebote grande, uno por pantalla) · `sale` (cierres, foco y **todo el
+hover**) · `bucle` (solo esperas)— y siete duraciones, de 120 a 900 ms, cada una con su uso.
+▶ Y **tres principios ordenan la tabla**, que es lo que explica que no sea simétrica: lo que entra
+rebota y lo que sale no —y sale en la **mitad** de tiempo—; el sobreimpulso se paga en **píxeles**,
+nunca en opacidad ni color; y **nada en bucle salvo las esperas**.
+
+**Resultado, medido después: 608 usos de token · CERO duraciones y CERO curvas literales fuera de
+la escala** · 25 declaraciones ambientales sin tocar, declaradas como tales.
+
+⚠️⚠️ **Y la lección más cara: mi primer filtro de «ambiente» buscaba palabras en el CONTEXTO y
+saltó ONCE declaraciones que sí había que convertir.** `--shadow-float` mencionado en un comentario
+vecino salvó a `.lang-dd__panel`; el título «reveal on scroll» salvó a `.ride-card` y a tres
+`.reveal`. **Era exactamente la conversión a medias de `#196`** —«el scrim tiene cuatro paradas y se
+convirtieron dos»— repetida con otra herramienta. ▶ Se rehízo con un criterio **objetivo y leído en
+la propia declaración**: lleva `infinite` o está en una lista de tres animaciones de dibujo. *Un
+filtro que mira el contexto acierta hasta que el contexto cambia.*
+
+⚠️ **El escondite de los literales eran las `custom properties`**: `--cta-pair-swap: 0.46s` y
+`--cta-pair-in: 0.14s` vivían dentro de una variable, así que **ningún inventario de `transition`
+las veía**. La guarda mira también ahí. Un literal metido en un token sigue siendo un literal.
+
+**Y dos piezas entran en el sistema por primera vez**: los cuatro tokens viejos de `#42`
+—`--dur-collapse`, `--dur-fade`, `--ease-panel`, `--ease-bounce`, 36 usos— se re-apuntan y
+desaparecen; y **el spinner**, que giraba a 1,4 s, pasa a leer `--dur-espera` (900 ms) conservando
+su token propio, que es el punto por el que una instalación ajusta su cargador desde el marcado.
+
+⚠️ **La CUARTA contradicción del cliente**, y `[DECIDIDO owner]` que gana lo ya validado: su sistema
+prohíbe animar el color («si cambia, deja de identificar») y nuestra web lo anima en **129
+declaraciones**, incluido el hover del CTA de comprar. Ficha en `DEUDA.md`.
+
+**Verificación**: suite **3253 / 21.386** · Pint ✓ · docs-check ✓ · **`MotionScaleTest` nuevo, 4
+casos** · **7 mutaciones, las 7 muerden** · sonda de navegador: los once tokens resuelven, la
+coreografía del armazón sigue exacta (`--nav-p: 0.561` a scrollY = 120) y `prefers-reduced-motion`
+sigue apagando lo que apagaba.
+
+❗ **Esto NO se revisa con una captura: se revisa interactuando.** Es lo único de esta tanda que no
+puede medir una sonda — si algo se siente lento o brusco, el número está en un token.
