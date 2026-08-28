@@ -43,6 +43,7 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\QrLogo;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
@@ -67,6 +68,12 @@ class AppServiceProvider extends ServiceProvider
         // Contexto de cuenta del cliente (#221): singleton para memoizar por petición — el nav
         // (puntito de aviso) y el sidebar lo piden por separado y comparten una única consulta.
         $this->app->singleton(CustomerAccountContext::class);
+
+        // El icono que va DENTRO del QR del carné (`identidad-qr-puerta.md` §9.7 C·3): singleton
+        // para que el rasterizado del SVG de la instalación se haga UNA vez por petición. El memo
+        // vive en la instancia, no en una estática, justo para que el contenedor nuevo de cada test
+        // lo reinicie solo (`SUITE-02`: un memo estático haría depender del ORDEN de los tests).
+        $this->app->singleton(QrLogo::class);
 
         // Las factories siguen VIVIENDO PLANAS en `database/factories/`, aunque los modelos se
         // repartan por módulos (Fase 2). Por defecto Laravel adivina el nombre a partir del

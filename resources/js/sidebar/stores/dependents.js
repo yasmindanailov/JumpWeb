@@ -67,6 +67,22 @@ export const useDependentsStore = defineStore('dependents', {
         },
 
         /**
+         * Olvida el veredicto del ÚLTIMO intento sin tocar nada más. Lo llama la zona al DESPLEGAR el
+         * formulario de alta (2026-08-28).
+         *
+         * ⚠️ **No es `reset()`, y la diferencia importa**: aquél borra también `expired`, la señal de
+         * que la sesión se perdió por el camino — y esconderla dejaría al cliente tecleando un alta
+         * que el servidor va a rechazar sin decir por qué. Aquí solo se van el error por campo y el
+         * aviso general, que es lo que si no se vería bajo un formulario recién abierto y vacío:
+         * el rechazo del intento ANTERIOR, leído como si fuera de éste.
+         */
+        forget() {
+            this.fields = {};
+            this.notice = '';
+            this.done = false;
+        },
+
+        /**
          * Pide la lista **solo si no la tiene**. Bandera propia, no `busy` (misma razón que `stores/privacy.js`).
          *
          * ⚠️ **Dos llamadas seguidas esperan a la MISMA petición.** El embudo la pide al nacer con sesión

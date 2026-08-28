@@ -7,6 +7,7 @@ use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
+use App\Livewire\Admin\Puerta\GateSemaphore;
 use App\Livewire\Admin\Puerta\ValidarRegistro;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -90,6 +91,54 @@ class ValidarRegistroTest extends TestCase
     }
 
     // ─── 3 estados de resultado ──────────────────────────────────────────
+
+    /**
+     * ⚠️⚠️ **El CUERPO del semáforo tiene que PINTARSE, no solo existir en el dato** (2026-08-28,
+     * revisión adversarial de `#217`).
+     *
+     * El rediseño colapsó las ocho tarjetas del `@switch` en un `x-filament::callout` y metió el cuerpo
+     * en su **slot por defecto** — que ese componente **NO imprime**: solo pinta `heading`,
+     * `description`, `footer` y `controls`. Resultado: la frase que le dice al empleado qué hacer
+     * («este QR ya no vale, busca por email o teléfono») **desapareció de la pantalla**. Y en los tres
+     * estados que hablan de la BÚSQUEDA —`invalid_input`, `rate_limited`, `lookup_limited`— el
+     * `heading` es `null` a propósito y el cuerpo era el ÚNICO texto: el callout salía con un icono,
+     * el eco de lo tecleado y **ni una palabra**.
+     *
+     * ▶ **Ninguna guarda lo vio, y por eso existe ésta**: `GateSemaphoreTest` asevera sobre el DATO que
+     * devuelve `GateSemaphore::for()` —que era correcto— y los casos de la pantalla miraban el
+     * `heading` o un `data-*`. Entre «el dato es correcto» y «el empleado lo lee» cabía un componente
+     * que ignora su slot. Esta guarda recorre TODOS los estados y compara contra el HTML renderizado.
+     */
+    public function test_every_semaphore_state_paints_its_body(): void
+    {
+        $mudos = [];
+
+        foreach ((new \ReflectionClass(ValidarRegistro::class))->getConstants() as $name => $status) {
+            if (! str_starts_with($name, 'STATUS_')) {
+                continue;
+            }
+
+            $esperado = GateSemaphore::for(['status' => $status, 'date' => '05/09/2026']);
+
+            $html = Livewire::actingAs($this->staff())
+                ->test(ValidarRegistro::class)
+                ->set('result', ['status' => $status, 'query' => 'ana@example.com', 'date' => '05/09/2026'])
+                ->html();
+
+            foreach (['heading', 'body'] as $parte) {
+                if ($esperado[$parte] !== null && ! str_contains($html, e($esperado[$parte]))) {
+                    $mudos[] = "{$status} · {$parte}: «{$esperado[$parte]}»";
+                }
+            }
+        }
+
+        $this->assertSame(
+            [], $mudos,
+            "Hay estados del semáforo cuyo texto NO llega a la pantalla:\n  ".implode("\n  ", $mudos)."\n\n".
+            '⚠️ El empleado ve un color y un icono, y no sabe qué hacer. Comprueba que el cuerpo va por '.
+            'una propiedad que el componente IMPRIMA (`description`), no por su slot por defecto.'
+        );
+    }
 
     public function test_state_registered_with_waiver_returns_status_and_date(): void
     {

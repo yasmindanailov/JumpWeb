@@ -11,12 +11,17 @@ return [
     ],
 
     'sidecart' => [
-        'next' => 'Tu as :product le :date',
+        // ⚠️⚠️ **Aquí vivían `next` y `no_upcoming`, y se RETIRARON el 2026-08-28**
+        // (`specs/identidad-qr-puerta.md` §9.7 C·2, `DECISIONES #217`): eran la sub-línea de la
+        // próxima reserva bajo el nombre, que se decía en DOS sitios —el bloque de cuenta y el índice
+        // del área— y el hueco lo ocupa ahora el atajo «Mi QR». El índice sigue enseñándola.
+        // ▶ Se van también del ARRANQUE, y eso vale más que el borrado: este grupo NO se poda por
+        // sesión —el bloque cambia de cara sin recargar— así que viajaban en **todas** las páginas
+        // públicas para no pintarse nunca. Con ellas se fue `panel.js::sublineOf()` y sus casos.
         'form_pending_one' => 'Un formulaire est en attente pour :product',
         'form_pending_many' => 'Tu as :count formulaires en attente',
         'guest_hello' => 'Salut, sauteur·se !',
         'guest_sub' => 'Connecte-toi pour garder tes réservations.',
-        'no_upcoming' => 'Aucune réservation à venir.',
         'upcoming_count' => ':count réservations à venir',
         // Sidebar v2 — petit tag affiché quand le compte se réduit à l'entrée du flux.
     ],
@@ -104,6 +109,9 @@ return [
             'born_on' => 'Date de naissance',
             'add' => 'Ajouter',
             'adding' => 'Ajout…',
+            // Le formulaire d'ajout se DÉPLIE depuis un bouton (owner, 2026-08-28) : `add_title`
+            // nomme le déclencheur ET la section qu'il ouvre ; `add_cancel` la replie.
+            'add_cancel' => 'Annuler',
             'age' => ':age ans',
             'adult' => 'Il a désormais 18 ans : votre décharge ne le couvre plus.',
             'remove' => 'Retirer',
@@ -118,21 +126,40 @@ return [
             'assigned_none' => 'Attribué à aucun mineur.',
             'assigned_show' => 'Voir pour qui',
             'assigned_hide' => 'Masquer pour qui',
+            // La liste est paginée CÔTÉ CLIENT (elle arrive entière de `GET /me/dependents`) et la
+            // barre de pages n'apparaît que s'il y a plus d'une page.
+            'pagination' => [
+                'label' => 'Pagination des mineurs',
+                'prev' => 'Précédents',
+                'next' => 'Suivants',
+                'page' => 'Page :current sur :last',
+            ],
         ],
-        // La carte QR (Phase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·2) : la voir, la dicter, la télécharger, la renouveler.
+        // Le QR (Phase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·2) : le voir, le dicter, le télécharger, le renouveler.
+        // ⚠️ Le mot côté client est « QR » (`[DECIDIDO owner, 2026-08-28]`, §9.7 C·6). **« carte » est
+        // FÉMININ et « QR » MASCULIN** : les pronoms et les participes ont tourné avec le mot
+        // (montre-la → montre-le, imprimée → imprimé, renouvelée → renouvelé, celle → celui).
         'card' => [
-            'title' => 'Ma carte',
-            'intro' => 'Ta carte QR t’identifie à l’entrée : montre-la sur ton téléphone ou imprimée. Elle ne permet pas de te connecter à ton compte.',
-            'alt' => 'Ta carte QR',
+            'title' => 'Mon QR',
+            'intro' => 'Ton QR t’identifie à l’entrée : montre-le sur ton téléphone ou imprimé. Il ne permet pas de te connecter à ton compte.',
+            'alt' => 'Ton QR',
             'token_label' => 'Si la caméra ne lit pas, dicte ce code :',
             'download' => 'Télécharger (PNG)',
-            'hint' => 'C’est la même carte que tu reçois avec chaque confirmation de réservation.',
-            'unavailable' => 'Cette carte ne peut plus être affichée. Renouvelle-la et tu en auras une nouvelle immédiatement.',
-            'rotate' => 'Renouveler la carte',
+            'hint' => 'C’est le même QR que tu reçois avec chaque confirmation de réservation.',
+            'unavailable' => 'Ce QR ne peut plus être affiché. Renouvelle-le et tu en auras un nouveau immédiatement.',
+            'rotate' => 'Renouveler mon QR',
             'rotating' => 'Renouvellement…',
-            'rotate_confirm' => 'La carte actuelle cessera de fonctionner immédiatement : celle de l’e-mail et toute copie imprimée. Renouveler ?',
-            'rotated' => 'Carte renouvelée. L’ancienne ne fonctionne plus.',
-            'expired' => 'Ta session a expiré : reconnecte-toi pour voir ta carte.',
+            // ⚠️ El aviso va SIEMPRE visible bajo el botón, no dentro de la confirmación
+            // (`specs/identidad-qr-puerta.md` §9.7 C·4): quien no pulsaba nunca llegaba a leer que el
+            // QR anterior deja de valer, porque el texto solo existía dentro de `window.confirm`.
+            // Y la confirmación vive ya DENTRO del cajón (`[DECIDIDO owner]`, `DECISIONES #217`): la
+            // del navegador salía fuera, sin nuestros tres idiomas, y el owner no llegó a verla.
+            'rotate_notice' => 'Le QR précédent cessera de fonctionner immédiatement : celui de l’e-mail et toute copie imprimée.',
+            'rotate_confirm_title' => 'Veux-tu vraiment le renouveler ?',
+            'rotate_confirm_yes' => 'Oui, renouveler',
+            'rotate_confirm_no' => 'Annuler',
+            'rotated' => 'QR renouvelé. L’ancien ne fonctionne plus.',
+            'expired' => 'Ta session a expiré : reconnecte-toi pour voir ton QR.',
         ],
     ],
 

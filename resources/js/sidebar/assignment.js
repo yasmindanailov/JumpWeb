@@ -22,6 +22,16 @@ export const REASON_ADULT = 'dependents.adult';
 export const REASON_UNSIGNED = 'dependents.unsigned';
 export const REASON_OUTDATED = 'dependents.outdated';
 
+/**
+ * El estado POSITIVO de la exención: «firmada».
+ *
+ * ⚠️ **No es el reverso de `reasonFor()` y por eso es una clave aparte.** «Se puede marcar» tiene DOS
+ * causas distintas —la exención está firmada, o la instalación no comprueba ninguna— y decir
+ * «exención firmada» en el segundo caso sería afirmar algo que nadie ha firmado. Fuera del modo
+ * interno la fila no lleva estado, que es lo correcto: ahí no hay nada que informar.
+ */
+export const STATUS_SIGNED = 'dependents.signed';
+
 /** ¿La exención de este menor permite asignarle una entrada? Fuera del modo interno, siempre. */
 function waiverAllows(dependent) {
     const waiver = dependent?.waiver ?? {};
@@ -47,23 +57,44 @@ function reasonFor(dependent) {
 }
 
 /**
- * Lo que el selector OFRECE por cada menor declarado: la etiqueta, si se puede marcar y, si no, por qué.
+ * El estado de la exención cuando SÍ se puede marcar, o `null` si no hay nada que decir.
+ *
+ * Solo en modo interno: fuera de él la instalación no comprueba firmas y anunciar una sería mentir.
+ */
+function statusFor(dependent) {
+    if (reasonFor(dependent) !== null) {
+        return null;
+    }
+
+    return dependent?.waiver?.mode === 'interno' && dependent?.waiver?.signed === true ? STATUS_SIGNED : null;
+}
+
+/**
+ * Lo que el selector OFRECE por cada menor declarado: **nombre y edad por separado**, si se puede
+ * marcar y el estado de su exención — el porqué cuando no se puede, o «firmada» cuando sí.
  *
  * Se ofrecen TODOS los declarados —también los que no se pueden marcar— a propósito: ver a Lucas
  * deshabilitado con «exención sin firmar» es exactamente el «te enteras comprando» de §4.7. Ocultarlo
  * dejaría al titular pensando que no lo declaró.
  *
+ * ⚠️⚠️ **`label` (el «Lucas · 9 años» de una sola cadena) se RETIRÓ el 2026-08-28** (§9.11 D·2,
+ * `DECISIONES #217`). El owner probó el embudo en staging y leyó «Vera · 6 años — exención sin
+ * firmar» como si el motivo fuera parte del nombre: era un único `<span>`, así que ni el rótulo ni el
+ * motivo podían tener peso propio. Componer la cadena aquí impedía al selector maquetarla, y maquetar
+ * es lo único que hace. Ahora salen `name`, `age` y la clave del estado, y el marcado los coloca.
+ *
  * @param {Array<object>} dependents  `data` de `GET /me/dependents`
  * @param {object} messages  el grupo del EMBUDO (`tickets`), que viaja siempre: `dependents.age`
- * @returns {Array<{id: number, name: string, label: string, assignable: boolean, reasonKey: string|null}>}
+ * @returns {Array<{id: number, name: string, age: string, assignable: boolean, reasonKey: string|null, statusKey: string|null}>}
  */
 export function assignableOptions(dependents, messages = {}) {
     return (Array.isArray(dependents) ? dependents : []).map((dependent) => ({
         id: Number(dependent.id),
         name: String(dependent.name ?? ''),
-        label: `${dependent.name ?? ''} · ${tp(messages, 'dependents.age', { age: dependent.age ?? '' })}`,
+        age: tp(messages, 'dependents.age', { age: dependent.age ?? '' }),
         assignable: reasonFor(dependent) === null,
         reasonKey: reasonFor(dependent),
+        statusKey: statusFor(dependent),
     }));
 }
 

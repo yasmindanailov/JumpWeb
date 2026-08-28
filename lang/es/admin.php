@@ -44,23 +44,27 @@ return [
             'invalid_input' => 'Introduce un email o un teléfono válido.',
             'rate_limited' => 'Demasiadas búsquedas seguidas. Espera un minuto e inténtalo de nuevo.',
 
-            // Fase 6 · subsistema A (`specs/identidad-qr-puerta.md` §4.5, §4.6, §9.2 A·5): el carné por el
-            // mismo input, el limitador de la búsqueda tecleada y la FICHA.
-            'input_placeholder_card' => 'Escanea el carné, o escribe el email o el teléfono',
-            'card_query' => 'Carné escaneado',
-            'card_revoked' => 'Carné caducado',
-            'card_revoked_cta' => 'Este carné ya no vale (se rotó o se revocó). Busca al cliente por email o teléfono.',
-            'card_unknown' => 'Carné no reconocido',
-            'card_unknown_cta' => 'El código tiene forma de carné pero no está en el sistema. Busca por email o teléfono.',
+            // Fase 6 · subsistema A (`specs/identidad-qr-puerta.md` §4.5, §4.6, §9.2 A·5): el QR del
+            // cliente por el mismo input, el limitador de la búsqueda tecleada y la FICHA.
+            // ⚠️ De cara a personas la palabra es «QR» (`[DECIDIDO owner]`, `#217`); las CLAVES siguen
+            // diciendo `card` porque el nombre técnico —`customer_cards`, `puerta.card_scanned`— no
+            // cambia. Y aquí se dice «QR del cliente» y no «QR» a secas: en esta pantalla convive con
+            // el QR de la ENTRADA, y el empleado tiene que saber cuál se le está nombrando.
+            'input_placeholder_card' => 'Escanea el QR del cliente, o escribe el email o el teléfono',
+            'card_query' => 'QR escaneado',
+            'card_revoked' => 'QR caducado',
+            'card_revoked_cta' => 'Este QR ya no vale (se renovó o se revocó). Busca al cliente por email o teléfono.',
+            'card_unknown' => 'QR no reconocido',
+            'card_unknown_cta' => 'El código tiene forma de QR de cliente pero no está en el sistema. Busca por email o teléfono.',
             'lookup_limited' => 'Demasiadas búsquedas tecleadas en una hora. El escaneo sigue funcionando; para buscar por email o teléfono espera o avisa a un responsable.',
             'profile' => [
                 'title' => 'Ficha de puerta',
                 'waiver_signed' => 'Exención firmada el :date',
                 'waiver_outdated' => 'versión anterior — deja pasar',
                 'waiver_missing' => 'Sin exención firmada',
-                'card_active' => 'Carné activo',
-                'card_revoked' => 'Carné revocado',
-                'card_none' => 'Sin carné',
+                'card_active' => 'QR activo',
+                'card_revoked' => 'QR revocado',
+                'card_none' => 'Sin QR',
                 'today' => 'Hoy',
                 'today_empty' => 'Sin reserva hoy. Puede comprar en puerta.',
                 'window' => 'Otros días (±:days)',
@@ -74,7 +78,10 @@ return [
                 'paid_on' => 'pagado el :when',
                 'method_desk' => 'mostrador',
                 'method_redsys' => 'web',
-                'minors_on_line' => 'Menores en esta línea: :list',
+                // ⚠️ `minors_on_line` («Menores en esta línea: :list») se retiró el 2026-08-28 con el
+                // rediseño: componía la lista en UNA cadena y hoy cada menor es su propia píldora con
+                // su `data-gate-minor-*`. Lo que queda es solo el rótulo.
+                'minors_on_line_label' => 'Menores en esta línea',
                 'minors' => 'Menores a cargo',
                 'minors_empty' => '0 menores a cargo declarados (respuesta válida: se resuelve fuera del sistema, como hoy).',
                 'minor' => ':age años',
@@ -86,6 +93,16 @@ return [
                 'visit_hint' => 'Es lo que acredita que ha venido (JumpPoints). Una vez por día; volver a pulsar no suma.',
                 'veil' => 'Ficha oculta por inactividad — toca para seguir',
                 'expires' => 'La ficha se cierra sola a los :minutes min.',
+
+                // Las CABECERAS de las tarjetas de la ficha y cómo se abrió (rediseño del 2026-08-28,
+                // `identidad-qr-puerta.md` §9.7 C·5). Cortas a propósito: son títulos de tarjeta, y con
+                // la clave en crudo se salían del marco.
+                'waiver_section' => 'Exención',
+                'card_section' => 'QR del cliente',
+                'visit_section' => 'Visita',
+                'via_card' => 'Abierta por QR',
+                'via_lookup' => 'Abierta por búsqueda',
+                'waiver_disabled' => 'Esta instalación no comprueba la exención en la puerta.',
             ],
         ],
     ],
@@ -1299,12 +1316,35 @@ return [
         'section_data' => 'Datos de la cuenta',
         'section_roles' => 'Roles',
         'section_consents' => 'Consentimientos',
+        // Fase 6 · C (`specs/menores-a-cargo.md` §9.11 D·3): los menores del titular en la ficha, de
+        // SOLO LECTURA — el panel no los declara ni los edita (`[DECIDIDO owner, 2026-08-28]`).
+        'section_dependents' => 'Menores a cargo',
         'section_orders' => 'Pedidos',
 
         'orders_summary' => [
             'empty' => 'Este cliente todavía no tiene pedidos.',
         ],
 
+        // ⚠️ El ESTADO de la exención NO se redacta aquí: se reutilizan
+        // `admin.orders.dependents.waiver_{current,outdated,missing}`, los mismos que la ficha del
+        // PEDIDO, para que el operador lea la misma frase en las dos pantallas.
+        'dependents' => [
+            'empty' => 'Este cliente no tiene menores a cargo declarados. Los declara él mismo desde su cuenta, en «Menores a cargo».',
+            // ⚠️ Tras anonimizar, las filas que conservan una exención firmada SOBREVIVEN desvinculadas
+            // bajo el régimen restringido de `RGPD-01`: su sitio es la acción «Registro del waiver»
+            // (con permiso propio y cada consulta auditada), no una lista de la ficha.
+            'anonymized' => 'Cuenta anonimizada: los menores que conserven una exención firmada siguen en régimen restringido y solo se consultan desde «Registro del waiver».',
+            'col_name' => 'Nombre',
+            'col_age' => 'Edad',
+            'col_waiver' => 'Exención',
+            'col_since' => 'Declarado',
+            'col_removed' => 'Retirado',
+            // ⚠️ «(hoy)» no es adorno: en la ficha del PEDIDO la edad es la del día de la visita, y sin
+            // esta palabra el mismo menor parece tener dos edades distintas en dos pantallas del panel.
+            'age_today' => ':age años (hoy)',
+            'adult' => 'ya tiene 18 años',
+            'removed_on' => 'retirado el :date',
+        ],
         'consents' => [
             'empty' => 'Esta cuenta no tiene consentimientos registrados.',
             'types' => [
@@ -1331,14 +1371,18 @@ return [
                 'blocked' => 'No se puede enviar el enlace a esta cuenta.',
             ],
             // El carné QR (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·5): rotar desde la ficha.
+            // ⚠️ La palabra de cara a personas es «QR» (`[DECIDIDO owner, 2026-08-28]`, `#217`); la
+            // CLAVE sigue siendo `rotate_card` porque el nombre técnico —`CustomerCards::rotate()`,
+            // `cards.rotated`, `POST /me/card/rotate`— no cambia, y renombrarla rompería la auditoría
+            // sin ganar nada. Aquí se dice «del cliente» porque el operador ve muchos QR, no el suyo.
             'rotate_card' => [
-                'label' => 'Rotar carné QR',
-                'modal_heading' => 'Rotar el carné QR del cliente',
-                'modal_description_active' => 'El carné actual (emitido el :date) dejará de valer EN EL ACTO: el del correo y cualquier copia impresa. Se emite uno nuevo, que el cliente verá en «Mi carné» y en su próxima confirmación de pedido.',
-                'modal_description_none' => 'Este cliente todavía no tiene carné. Se emitirá uno nuevo, que verá en «Mi carné» y en su próxima confirmación de pedido.',
-                'submit' => 'Rotar carné',
-                'success' => 'Carné rotado: el anterior ya no vale y el cliente tiene uno nuevo.',
-                'blocked' => 'No se puede rotar el carné de esta cuenta.',
+                'label' => 'Renovar QR del cliente',
+                'modal_heading' => 'Renovar el QR del cliente',
+                'modal_description_active' => 'El QR actual (emitido el :date) dejará de valer EN EL ACTO: el del correo y cualquier copia impresa. Se emite uno nuevo, que el cliente verá en «Mi QR» y en su próxima confirmación de pedido.',
+                'modal_description_none' => 'Este cliente todavía no tiene QR. Se emitirá uno nuevo, que verá en «Mi QR» y en su próxima confirmación de pedido.',
+                'submit' => 'Renovar QR',
+                'success' => 'QR renovado: el anterior ya no vale y el cliente tiene uno nuevo.',
+                'blocked' => 'No se puede renovar el QR de esta cuenta.',
             ],
             'anonymize' => [
                 'label' => 'Anonimizar',

@@ -257,6 +257,10 @@ return [
         'hint' => 'Tick the minors coming with these tickets; the rest are adults.',
         'full' => 'No room left: one ticket per minor.',
         'adult' => 'already 18',
+        // El estado POSITIVO de la exención, que solo existe en modo interno (§9.11 D·2,
+        // `DECISIONES #217`): fuera de él no hay firma que comprobar y anunciar una sería mentir.
+        // Va en la fila del menor, al lado de la edad; los tres de arriba son su reverso, el porqué.
+        'signed' => 'waiver signed',
         'unsigned' => 'waiver not signed: sign it under “Minors in my care”',
         'outdated' => 'you signed an earlier version: accept the new one under “Minors in my care”',
         'notice' => 'You have minors in your care: say who each ticket is for before paying (or leave them as adults).',

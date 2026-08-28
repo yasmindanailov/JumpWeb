@@ -11,12 +11,17 @@ return [
     ],
 
     'sidecart' => [
-        'next' => 'Tienes el :date · :product',
+        // ⚠️⚠️ **Aquí vivían `next` y `no_upcoming`, y se RETIRARON el 2026-08-28**
+        // (`specs/identidad-qr-puerta.md` §9.7 C·2, `DECISIONES #217`): eran la sub-línea de la
+        // próxima reserva bajo el nombre, que se decía en DOS sitios —el bloque de cuenta y el índice
+        // del área— y el hueco lo ocupa ahora el atajo «Mi QR». El índice sigue enseñándola.
+        // ▶ Se van también del ARRANQUE, y eso vale más que el borrado: este grupo NO se poda por
+        // sesión —el bloque cambia de cara sin recargar— así que viajaban en **todas** las páginas
+        // públicas para no pintarse nunca. Con ellas se fue `panel.js::sublineOf()` y sus casos.
         'form_pending_one' => 'Tienes pendiente un formulario para :product',
         'form_pending_many' => 'Tienes :count formularios pendientes',
         'guest_hello' => 'Hola, saltador/a',
         'guest_sub' => 'Inicia sesión y guarda tus reservas.',
-        'no_upcoming' => 'No tienes reservas próximas.',
         'upcoming_count' => ':count reservas próximas',
         // Sidebar v2 — tag sutil que muestra la cuenta cuando se minimiza al entrar en el flujo.
     ],
@@ -108,6 +113,12 @@ return [
             'born_on' => 'Fecha de nacimiento',
             'add' => 'Añadir',
             'adding' => 'Añadiendo…',
+            // ── El alta se DESPLIEGA desde un botón (encargo del owner, 2026-08-28) ───────────
+            // `add_title` rotula el disparador Y la sección que abre: el botón y la pantalla a la
+            // que lleva tienen que llamarse igual, o el cliente cree que va a otro sitio (la misma
+            // regla que el atajo «Mi QR» del bloque de cuenta). `add_cancel` la pliega y tira lo
+            // tecleado.
+            'add_cancel' => 'Cancelar',
             'age' => ':age años',
             'adult' => 'Ya tiene 18 años: tu exención ya no le cubre.',
             'remove' => 'Quitar',
@@ -123,22 +134,48 @@ return [
             'assigned_none' => 'Sin asignar a ningún menor.',
             'assigned_show' => 'Ver para quién es',
             'assigned_hide' => 'Ocultar para quién es',
+            // ── La lista se PAGINA en cliente, y solo cuando hace falta ──────────────────────
+            // Llega entera de `GET /me/dependents`, así que paginar es cortar lo que ya está en
+            // memoria. Con una sola página el paginador NO se pinta (`dependentsPager()` devuelve
+            // `null`): una cuenta con dos menores no puede ver una barra de páginas para dos
+            // tarjetas. Mismos rótulos y misma forma que `orders.pagination` y `purchases.pagination`
+            // — las tres listas del cajón se paginan igual.
+            'pagination' => [
+                'label' => 'Paginación de menores',
+                'prev' => 'Anteriores',
+                'next' => 'Siguientes',
+                'page' => 'Página :current de :last',
+            ],
         ],
-        // El carné QR (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·2): verlo, dictarlo, descargarlo y
-        // renovarlo. Solo con sesión: es una credencial de puerta.
+        // El QR de puerta (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·2): verlo, dictarlo,
+        // descargarlo y renovarlo. Solo con sesión: es una credencial de puerta.
+        //
+        // ⚠️ **La palabra de cara al cliente es «QR», no «carné»** (`[DECIDIDO owner, 2026-08-28]`,
+        // §9.7 C·6, `DECISIONES #217`): es lo que el cliente ya dice en la cola —«enséñame el QR»— y
+        // «carné» sugería una tarjeta física que el parque no emite. **Las CLAVES no cambian**
+        // (`account.card.*`), ni los nombres técnicos (`CustomerCard`, `/me/card`, `carne-qr.png`):
+        // renombrarlos habría tocado rutas, contrato y auditoría para arreglar un texto.
         'card' => [
-            'title' => 'Mi carné',
-            'intro' => 'Tu carné QR te identifica en la puerta: enséñalo desde el móvil o impreso. No sirve para entrar en tu cuenta.',
-            'alt' => 'Tu carné QR',
+            'title' => 'Mi QR',
+            'intro' => 'Tu QR te identifica en la puerta: enséñalo desde el móvil o impreso. No sirve para entrar en tu cuenta.',
+            'alt' => 'Tu QR',
             'token_label' => 'Si la cámara falla, dicta este código:',
             'download' => 'Descargar (PNG)',
-            'hint' => 'Es el mismo carné que recibes en cada confirmación de reserva.',
-            'unavailable' => 'Este carné ya no se puede mostrar. Renuévalo y tendrás uno nuevo al instante.',
-            'rotate' => 'Renovar carné',
+            'hint' => 'Es el mismo QR que recibes en cada confirmación de reserva.',
+            'unavailable' => 'Este QR ya no se puede mostrar. Renuévalo y tendrás uno nuevo al instante.',
+            'rotate' => 'Renovar mi QR',
             'rotating' => 'Renovando…',
-            'rotate_confirm' => 'El carné actual dejará de valer en el acto: el del correo y cualquier copia impresa. ¿Renovar?',
-            'rotated' => 'Carné renovado. El anterior ya no vale.',
-            'expired' => 'Tu sesión ha caducado: vuelve a entrar para ver tu carné.',
+            // ⚠️ El aviso va SIEMPRE visible bajo el botón, no dentro de la confirmación
+            // (`specs/identidad-qr-puerta.md` §9.7 C·4): quien no pulsaba nunca llegaba a leer que el
+            // QR anterior deja de valer, porque el texto solo existía dentro de `window.confirm`.
+            // Y la confirmación vive ya DENTRO del cajón (`[DECIDIDO owner]`, `DECISIONES #217`): la
+            // del navegador salía fuera, sin nuestros tres idiomas, y el owner no llegó a verla.
+            'rotate_notice' => 'El QR anterior dejará de funcionar en el acto: el del correo y cualquier copia impresa.',
+            'rotate_confirm_title' => '¿Seguro que quieres renovarlo?',
+            'rotate_confirm_yes' => 'Sí, renovar',
+            'rotate_confirm_no' => 'Cancelar',
+            'rotated' => 'QR renovado. El anterior ya no vale.',
+            'expired' => 'Tu sesión ha caducado: vuelve a entrar para ver tu QR.',
         ],
     ],
 

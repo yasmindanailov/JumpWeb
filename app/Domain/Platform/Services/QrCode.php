@@ -2,6 +2,7 @@
 
 namespace App\Domain\Platform\Services;
 
+use App\Domain\Platform\Services\Qr\PngWithLogo;
 use chillerlan\QRCode\Common\EccLevel;
 use chillerlan\QRCode\Output\QROutputInterface;
 use chillerlan\QRCode\QRCode as ChillerlanQRCode;
@@ -52,6 +53,16 @@ class QrCode
      * entra en modo alfanumérico: 20 caracteres caben en versión 2 (25×25), medido.
      *
      * Necesita GD (presente en el contenedor; staging sin inventariar, §4.10).
+     *
+     * ▶ **Y lleva el ICONO de la instalación en el centro** (§9.7 C·3), que es lo que convierte un
+     * cuadro de ruido en el carné de un parque concreto. Quién es ese icono lo decide
+     * {@see QrLogo}; dibujarlo, {@see PngWithLogo}. Aquí solo se elige el camino — y **sin icono se
+     * toma el de siempre, literalmente la misma línea de antes**: los bytes del adjunto del correo
+     * y de `GET /me/card.png` no cambian ni un byte cuando no hay nada que estampar.
+     *
+     * ⚠️ El icono NO se pasa por parámetro a propósito: el correo y el endpoint tienen que producir
+     * la MISMA imagen (`MeCardTest` lo exige byte a byte), y un parámetro es una forma de que un día
+     * dejen de hacerlo.
      */
     public static function png(string $data, int $scale = 8): string
     {
@@ -64,6 +75,12 @@ class QrCode
             'imageTransparent' => false,
         ]);
 
-        return (new ChillerlanQRCode($options))->render($data);
+        $logo = app(QrLogo::class)->png();
+
+        if ($logo === null) {
+            return (new ChillerlanQRCode($options))->render($data);
+        }
+
+        return PngWithLogo::render($options, $data, $logo);
     }
 }

@@ -286,9 +286,16 @@
                             // ▶ Misma decisión y mismo motivo que `login`, `register` y `forgot`.
                             // ⚠️ Podados clave a clave: de `nav` se pintan tres de sus rótulos, y de
                             // `sidecart` cinco — `tag` se retiró por muerta.
+                            // ⚠️⚠️ **Y `next`/`no_upcoming` salen el 2026-08-28** (`specs/identidad-qr-puerta.md`
+                            // §9.7 C·2, `DECISIONES #217`): la sub-línea de la próxima reserva se
+                            // retira del bloque de cuenta —el índice del área ya la enseña— y su
+                            // hueco lo ocupa «Mi QR». Este grupo **no se poda por sesión**, así que
+                            // esos dos rótulos viajaban en TODAS las páginas públicas para no
+                            // pintarse nunca: es la poda que el presupuesto del montaje pide antes
+                            // de subir ningún techo. También se fueron de `lang/`.
                             'nav' => \Illuminate\Support\Arr::only(__('account.nav'), ['hello', 'sign_out', 'login']),
                             'sidecart' => \Illuminate\Support\Arr::only(__('account.sidecart'), [
-                                'guest_hello', 'guest_sub', 'next', 'no_upcoming',
+                                'guest_hello', 'guest_sub',
                                 'form_pending_one', 'form_pending_many', 'upcoming_count',
                             ]),
                             // ⚠️ **El rótulo de «Mi cuenta» viaja SIEMPRE, por lo mismo que los de
@@ -296,7 +303,17 @@
                             // cara **sin recargar**. Con sesión, el subgrupo entero lo sustituye más
                             // abajo —y lleva esta misma clave—, así que el cajón lee un solo camino
                             // (`account.account.title`) haya sesión o no.
-                            'account' => ['title' => __('account.account.title')],
+                            // ⚠️⚠️ **Y con él, el de «Mi QR»** (2026-08-28, revisión de `#217`): el bloque
+                            // tiene CUATRO botones desde que existe el atajo al QR, y el cuarto se rotula
+                            // con `account.account.card.title`. Sin esta línea, quien gana la sesión **sin
+                            // recargar** —el paso 5 del embudo, o el área— repinta el bloque con un botón
+                            // MUDO y sin nombre accesible: el rótulo solo viajaba en el subgrupo con
+                            // sesión, que en esa página nunca llegó. Medido en navegador por la revisión.
+                            // ▶ Es la MISMA regla que el rótulo de arriba, y por el mismo motivo: **lo que
+                            // el bloque puede pintar sin recargar tiene que viajar siempre**. Cuesta 26 B
+                            // por página anónima; el subgrupo entero (12 rótulos, ~800 B) NO viaja: la
+                            // ZONA del QR sigue siendo solo para quien tiene sesión.
+                            'account' => ['title' => __('account.account.title'), 'card' => ['title' => __('account.account.card.title')]],
                             // ⚠️ **Podado clave a clave**: el subgrupo `verify` son 14 rótulos y esta
                             // pantalla pinta **nueve**. Los cinco que se quedan fuera —`intro` y los
                             // tres `notice_resend_*`— son de la PÁGINA de verificación de la web

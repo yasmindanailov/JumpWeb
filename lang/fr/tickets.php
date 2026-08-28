@@ -256,6 +256,10 @@ return [
         'hint' => 'Cochez les mineurs qui viennent avec ces billets ; les autres sont des adultes.',
         'full' => 'Plus de place : un billet par mineur.',
         'adult' => 'a déjà 18 ans',
+        // El estado POSITIVO de la exención, que solo existe en modo interno (§9.11 D·2,
+        // `DECISIONES #217`): fuera de él no hay firma que comprobar y anunciar una sería mentir.
+        // Va en la fila del menor, al lado de la edad; los tres de arriba son su reverso, el porqué.
+        'signed' => 'décharge signée',
         'unsigned' => 'décharge non signée : signez-la dans « Mineurs à ma charge »',
         'outdated' => 'vous avez signé une version antérieure : acceptez la nouvelle dans « Mineurs à ma charge »',
         'notice' => 'Vous avez des mineurs à charge : indiquez pour qui est chaque billet avant de payer (ou laissez-les en adultes).',

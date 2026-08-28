@@ -1541,3 +1541,73 @@ falta el `<noscript>` y la portada se queda sin navegación para quien no ejecut
   caja de antes.
 - ⚠️ **El logotipo se pinta a 26 px de alto y tu mockup lo pinta a 54.** Medido, **no cambiado**: no
   estaba en el encargo. Si a tu ojo se ve pequeño, es una línea.
+
+## §5.octodecies · EL PULIDO DE LOS OCHO PUNTOS — ✅ recorrido en headless el 2026-08-28 (38 ✓ el cajón · 15/15 la puerta · 4 sondas), pendiente del OJO del owner (`DECISIONES #217`)
+
+> Carril A. Lo que el owner pidió tras su prueba en staging, en el orden en que se ve. Guiones dentro
+> del contenedor: `/root/e2e/qr-dep-probe.js` (38 comprobaciones), `puerta-redesign-probe.js` (colores
+> computados en claro y oscuro, antes y después de un `wire:update`) y el ya existente `puerta-probe.js`
+> (15/15, conducta). Cliente de prueba `probe-card@jumpweb.test`.
+>
+> ⚠️ **Antes de empezar, mira el MODO de la exención** (Ajustes → Waiver). En **interno**, un menor sin
+> su exención firmada NO se puede asignar a una entrada y su fila sale atenuada **a propósito**
+> (`#202`·2): es lo que el owner confundió con «no me deja pulsar». Fírmala en «Menores a cargo» o pon
+> el modo en externo.
+
+### P1 · «Mi cuenta» en tarjetas
+1. Cajón → Mi cuenta. Las ocho entradas son **tarjetas en 2 columnas**, icono grande arriba y rótulo
+   debajo, sin la flecha de antes. Medido: rejilla `196px 196px`, icono computado **26×26** (el `<svg>`
+   sigue con `width="18"` en el fuente — la paridad byte a byte con el sistema de diseño no se toca).
+
+### P2 · «Mi QR» junto al nombre
+2. En el panel de cuenta, bajo la cabecera: ya **no** está la línea de la próxima reserva (la sigue
+   diciendo el índice, que es donde se lee sin colapsar) y a la **derecha del nombre** hay un botón
+   pequeño **«Mi QR»** con el icono del código. Lleva a la zona del QR.
+
+### P3 · El QR, presentado como credencial
+3. Entra en «Mi QR»: el código va **dentro de un marco con aire**, el número debajo en un bloque
+   legible, «Descargar (PNG)» como acción principal y **«Renovar mi QR» discreta**. Medido a 380 px de
+   cajón: recuadro 264×264, imagen 234 px, **cero desbordes** (`scrollWidth == clientWidth`).
+4. **El QR lleva el icono de la instalación en el centro, con margen**. Escanéalo con el móvil: tiene
+   que leer igual. ▶ Y **descarga el PNG y pásalo por el LECTOR del recinto**: eso es lo que ninguna
+   suite puede medir.
+5. Pulsa «Renovar mi QR»: sale un aviso permanente («el QR anterior dejará de funcionar…») y una
+   **confirmación dentro del cajón** (ya no el diálogo del navegador). Al confirmar, el código y la
+   imagen cambian; el anterior deja de valer en la puerta.
+
+### P4 · Menores a cargo
+6. Zona «Menores a cargo»: el formulario de alta **ya no está desplegado**; hay un botón **«Añadir
+   menor»** que lo revela con el foco en el primer campo y lo cierra al guardar.
+7. Con **más de 6** menores aparece el paginador (el mismo de «Mis pedidos»); con dos o tres **no
+   aparece nada**. El número sale de medir la tarjeta: 196 px cuando solo informa y 322 mientras la
+   exención está sin firmar.
+
+### P5 · Asignar menores en la compra
+8. Compra una entrada. En el paso de la hora y en el carrito, el bloque **«¿Para quién son estas
+   entradas?»** es ahora una sección con una fila por menor (nombre · edad · estado de la exención).
+   La fila que **no se puede marcar** se ve atenuada (`opacity 0.55`, `cursor: not-allowed`) y su
+   motivo va **en su propia línea**, alineado bajo el nombre (sangría medida: 33 px, incluidos los 7 px
+   que Chromium le pone al checkbox por su cuenta).
+
+### P6 · La ficha del cliente en el panel
+9. Panel → Usuarios → un cliente con menores: sección **«Menores a cargo»** con nombre, **edad de hoy**,
+   exención con su versión, cuándo se declaró y si está retirado. Una cuenta anonimizada no lista a
+   nadie y dice dónde mirar.
+
+### P7 · La pantalla de puerta
+10. `/admin/puerta/validar`: **la paleta ya no está rota** (antes los grises y el color de marca
+    computaban vacío: el texto salía negro puro y el borde del formulario negro sólido). Ahora el
+    semáforo es **un solo bloque de color**, la ficha va en tarjetas (Hoy · Otros días · Exención · QR ·
+    Menores · Visita), el foco del buscador es del **color de tu marca** y la tipografía es la del panel.
+11. ⚠️ **El modo oscuro está activo** (sigue el mismo ajuste que el panel). Es una decisión del agente:
+    las variantes estaban escritas y muertas. Si no lo quieres, se revierte en 8 líneas.
+12. Los menores siguen sin nombre: **edad y estado de la exención**, nunca más.
+
+### Lo que el guion no cubre y hay que mirar con el ojo
+- **El lector real** con el PNG descargado de la web (no solo con la cámara del móvil).
+- **La tablet del recinto**: tamaños táctiles y la ficha completa en su pantalla.
+- **El icono dentro del QR con el SVG de un cliente real**: en local no hay rasterizador de SVG en
+  Imagick (sí `rsvg-convert`) y en staging al revés — el resultado se ha probado con los dos, pero con
+  el icono del PRODUCTO.
+- **El contraste** de los dos tonos nuevos de la puerta (`--success-*` sobre blanco y sobre gris
+  oscuro): medidos los colores, no calculados los ratios.

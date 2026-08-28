@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { alertOf, counterOf, initialOf, panelOf, sublineOf } from './panel.js';
+import { alertOf, counterOf, initialOf, panelOf } from './panel.js';
 
 /**
  * La red del bloque de cuenta del panel (`docs/specs/account-context-vue.md` §4.10).
@@ -12,12 +12,10 @@ import { alertOf, counterOf, initialOf, panelOf, sublineOf } from './panel.js';
 
 const ACCOUNT = {
     nav: { hello: 'Hola, :name', sign_out: 'Cerrar sesión', login: 'Iniciar sesión' },
-    account: { title: 'Mi cuenta' },
+    account: { title: 'Mi cuenta', card: { title: 'Mi QR' } },
     sidecart: {
         guest_hello: 'Hola, saltador/a',
         guest_sub: 'Inicia sesión y guarda tus reservas.',
-        next: 'Tienes el :date · :product',
-        no_upcoming: 'No tienes reservas próximas.',
         form_pending_one: 'Tienes pendiente un formulario para :product',
         form_pending_many: 'Tienes :count formularios pendientes',
         upcoming_count: ':count reservas próximas',
@@ -74,28 +72,18 @@ describe('la inicial del avatar', () => {
     });
 });
 
-describe('la sub-línea', () => {
-    test('anuncia la próxima reserva con su etiqueta y su producto', () => {
-        assert.equal(
-            sublineOf(ctx({ next_reservation: NEXT }), ACCOUNT),
-            'Tienes el Sáb. 5 sep. · Cumpleaños Jump',
-        );
-    });
-
-    /**
-     * ⚠️ La etiqueta se pinta TAL COMO LLEGA. Si esto la recompusiera, sería la quinta copia de una
-     * fórmula que ya divergió en cuatro superficies (`DayLabelSingleSourceTest`).
-     */
-    test('no recompone la fecha: usa la etiqueta del servidor', () => {
-        const raro = { ...NEXT, date_label: 'LO QUE DIGA EL SERVIDOR' };
-
-        assert.match(sublineOf(ctx({ next_reservation: raro }), ACCOUNT), /LO QUE DIGA EL SERVIDOR/);
-    });
-
-    test('sin reservas, lo dice', () => {
-        assert.equal(sublineOf(ctx(), ACCOUNT), 'No tienes reservas próximas.');
-    });
-});
+/**
+ * ⚠️⚠️ **Aquí vivía `describe('la sub-línea')`, con sus tres casos, y murió con su SUJETO el
+ * 2026-08-28** (`identidad-qr-puerta.md` §9.7 C·2): `sublineOf()` componía la próxima reserva bajo el
+ * nombre en la cara identificada, y esa frase se retiró del bloque porque el índice del área ya la
+ * enseña. Sus casos NO se re-apuntan a otra cosa —lo que probaban ya no existe— y se van con ella
+ * los dos rótulos que leían (`sidecart.next`, `sidecart.no_upcoming`), también del arranque.
+ *
+ * ▶ El caso «no recompone la fecha: usa la etiqueta del servidor» **no queda huérfano**: lo que
+ * defendía —que `date_label` se pinta tal como llega— lo sigue fijando `DayLabelSingleSourceTest` en
+ * el servidor, y la única superficie del cajón que hoy pinta esa etiqueta (`AccountHomeZone`) la
+ * interpola sin tocarla.
+ */
 
 describe('el aviso de formularios pendientes', () => {
     test('sin pendientes no hay aviso', () => {
@@ -190,7 +178,11 @@ describe('el bloque entero', () => {
         assert.equal(p.identified, true);
         assert.equal(p.initial, 'A');
         assert.equal(p.hello, 'Hola, Ada');
-        assert.equal(p.subline, 'Tienes el Sáb. 5 sep. · Cumpleaños Jump');
+        // ⚠️ **La cara identificada YA NO lleva sub-línea** (§9.7 C·2): en su sitio va «Mi QR», y la
+        // próxima reserva la dice el índice del área. Se asevera la AUSENCIA, no se calla el campo:
+        // si alguien la devuelve aquí, vuelven a existir dos sitios que decir lo mismo.
+        assert.equal(p.subline, undefined, 'la próxima reserva ya no se dice en el bloque de cuenta');
+        assert.equal(p.card, 'Mi QR', 'el atajo se rotula con el título de su zona');
         assert.equal(p.alert.text, 'Tienes pendiente un formulario para Cumpleaños Jump');
         assert.equal(p.counter.count, 2);
         assert.equal(p.signOut, 'Cerrar sesión');
@@ -206,7 +198,7 @@ describe('el bloque entero', () => {
         assert.equal(p.hello, 'Hola, Grace');
         assert.equal(p.alert, null);
         assert.equal(p.counter, null);
-        assert.equal(p.subline, 'No tienes reservas próximas.');
+        assert.equal(p.subline, undefined);
     });
 
     /**
@@ -232,6 +224,18 @@ describe('los tres destinos de la fila de botones', () => {
      */
     test('el botón de cuenta se llama como la pantalla a la que lleva', () => {
         assert.equal(panelOf(ctx(), DEPS).account, ACCOUNT.account.title);
+    });
+
+    /**
+     * ⚠️ **Y el atajo del QR, igual** (§9.7 C·2): se rotula con `account.card.title`, el mismo título
+     * que lleva su tarjeta en el índice y la cabecera de la zona. Es la regla de arriba aplicada al
+     * cuarto destino, y por eso se compara contra el diccionario y no contra un literal.
+     * ⚠️ Solo existe en la cara IDENTIFICADA: `account.card` viaja únicamente con sesión, así que un
+     * invitado leería una cadena vacía — `i18n.js` devuelve `''` cuando falta y nada avisa.
+     */
+    test('el atajo del QR se llama como la zona a la que lleva, y solo con sesión', () => {
+        assert.equal(panelOf(ctx(), DEPS).card, ACCOUNT.account.card.title);
+        assert.equal(panelOf(null, DEPS).card, undefined);
     });
 
     /**

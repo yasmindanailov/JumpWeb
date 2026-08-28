@@ -11,12 +11,17 @@ return [
     ],
 
     'sidecart' => [
-        'next' => 'You have :product on :date',
+        // ⚠️⚠️ **Aquí vivían `next` y `no_upcoming`, y se RETIRARON el 2026-08-28**
+        // (`specs/identidad-qr-puerta.md` §9.7 C·2, `DECISIONES #217`): eran la sub-línea de la
+        // próxima reserva bajo el nombre, que se decía en DOS sitios —el bloque de cuenta y el índice
+        // del área— y el hueco lo ocupa ahora el atajo «Mi QR». El índice sigue enseñándola.
+        // ▶ Se van también del ARRANQUE, y eso vale más que el borrado: este grupo NO se poda por
+        // sesión —el bloque cambia de cara sin recargar— así que viajaban en **todas** las páginas
+        // públicas para no pintarse nunca. Con ellas se fue `panel.js::sublineOf()` y sus casos.
         'form_pending_one' => 'You have a pending form for :product',
         'form_pending_many' => 'You have :count pending forms',
         'guest_hello' => 'Hi, jumper!',
         'guest_sub' => 'Log in to keep your bookings.',
-        'no_upcoming' => 'No upcoming bookings.',
         'upcoming_count' => ':count upcoming bookings',
         // Sidebar v2 — subtle tag shown when the account minimises on entering the flow.
     ],
@@ -104,6 +109,9 @@ return [
             'born_on' => 'Date of birth',
             'add' => 'Add',
             'adding' => 'Adding…',
+            // The add form is now DISCLOSED by a button (owner, 2026-08-28): `add_title` labels both
+            // the trigger and the section it opens; `add_cancel` folds it back and drops the input.
+            'add_cancel' => 'Cancel',
             'age' => ':age years old',
             'adult' => 'Now 18: your waiver no longer covers them.',
             'remove' => 'Remove',
@@ -118,21 +126,39 @@ return [
             'assigned_none' => 'Not assigned to any minor.',
             'assigned_show' => 'See who it is for',
             'assigned_hide' => 'Hide who it is for',
+            // The list is paginated CLIENT-SIDE (it arrives whole from `GET /me/dependents`) and the
+            // pager is only painted when there is more than one page.
+            'pagination' => [
+                'label' => 'Minors pagination',
+                'prev' => 'Previous',
+                'next' => 'Next',
+                'page' => 'Page :current of :last',
+            ],
         ],
-        // The QR card (Phase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·2): see it, read it out, download it, renew it.
+        // The door QR (Phase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·2): see it, read it out, download it, renew it.
+        // ⚠️ The customer-facing word is «QR», never «card» (`[DECIDIDO owner, 2026-08-28]`, §9.7 C·6):
+        // EN used to mix «QR card» and «QR pass». Keys and technical names are unchanged.
         'card' => [
-            'title' => 'My card',
-            'intro' => 'Your QR card identifies you at the door: show it on your phone or printed. It does not sign you in to your account.',
-            'alt' => 'Your QR card',
+            'title' => 'My QR',
+            'intro' => 'Your QR identifies you at the door: show it on your phone or printed. It does not sign you in to your account.',
+            'alt' => 'Your QR',
             'token_label' => 'If the camera fails, read out this code:',
             'download' => 'Download (PNG)',
-            'hint' => 'It is the same card you receive with every booking confirmation.',
-            'unavailable' => 'This card can no longer be shown. Renew it and you will have a new one right away.',
-            'rotate' => 'Renew card',
+            'hint' => 'It is the same QR you receive with every booking confirmation.',
+            'unavailable' => 'This QR can no longer be shown. Renew it and you will have a new one right away.',
+            'rotate' => 'Renew my QR',
             'rotating' => 'Renewing…',
-            'rotate_confirm' => 'The current card will stop working immediately: the one in your email and any printed copy. Renew?',
-            'rotated' => 'Card renewed. The previous one no longer works.',
-            'expired' => 'Your session has expired: sign in again to see your card.',
+            // ⚠️ El aviso va SIEMPRE visible bajo el botón, no dentro de la confirmación
+            // (`specs/identidad-qr-puerta.md` §9.7 C·4): quien no pulsaba nunca llegaba a leer que el
+            // QR anterior deja de valer, porque el texto solo existía dentro de `window.confirm`.
+            // Y la confirmación vive ya DENTRO del cajón (`[DECIDIDO owner]`, `DECISIONES #217`): la
+            // del navegador salía fuera, sin nuestros tres idiomas, y el owner no llegó a verla.
+            'rotate_notice' => 'Your previous QR stops working immediately: the one in your email and any printed copy.',
+            'rotate_confirm_title' => 'Renew it for sure?',
+            'rotate_confirm_yes' => 'Yes, renew',
+            'rotate_confirm_no' => 'Cancel',
+            'rotated' => 'QR renewed. The previous one no longer works.',
+            'expired' => 'Your session has expired: sign in again to see your QR.',
         ],
     ],
 

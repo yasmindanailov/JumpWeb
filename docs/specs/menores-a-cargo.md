@@ -1305,3 +1305,55 @@ pregunta de producto `[PENDIENTE: owner]`: si el PANEL debe poder declarar menor
 6. **El contador de `ESTADO.md` se mide sobre el árbol CONJUNTO**: dos pushes cayeron por no ser
    fast-forward mientras corría el gate (el carril C empujaba a la vez), y el rebase dejó un conflicto en
    el contador que se resolvió MIDIENDO (3160 sobre el árbol fusionado), no sumando.
+
+### 9.11 El PULIDO tras la prueba del owner en staging (2026-08-28, carril A, `DECISIONES #217`)
+
+> Tres de los ocho puntos del owner son de menores. El espejo de esta sección —el QR, la cuenta y la
+> puerta— vive en `identidad-qr-puerta.md` **§9.7**. **Todo se midió antes de diseñar** (seis lectores
+> en paralelo), y la medición desmintió el punto que más urgía.
+
+**D·1 · ⚠️⚠️ «No me deja darle al checkbox del menor» NO ES UN DEFECTO — y esto es lo que hay que leer
+antes de tocar `assignment.js`.** Staging está en modo de exención **INTERNO desde el 2026-08-28 a las
+07:31:26**, y lo puso el propio owner desde Ajustes (`audit_logs` #39: `settings.updated`,
+`waiver.mode: "" → "interno"`, user 1), seguido de publicar el texto v1 (07:32:08) y firmar su propia
+exención como titular (07:32:48). En modo interno **la exención firmada del MENOR es CONDICIÓN para
+asignarlo** (`[DECIDIDO owner]`, `#202`·2) y el menor de esa cuenta no la tiene, así que la casilla sale
+`disabled` **por construcción**, con su motivo escrito al lado. Medido en staging y reproducido idéntico
+en local; y **contraprobado**: cambiando `waiver.mode` a `externo` en local, la MISMA casilla se marca y
+`selection.dependentIds` recoge el id. ▶ La cadena, para el siguiente que lo dude:
+`DependentResource` publica `waiver.{mode,signed,outdated}` → `assignment.js::waiverAllows()` →
+`assignable:false` con `reasonFor()` → `DependentPicker.vue` lo pinta `:disabled`. **No se relaja**: el
+servidor (`DependentAssigner::check()`) devolvería 422 igualmente.
+▶ **Lo que SÍ es un defecto, y es de interfaz**: la fila deshabilitada **se ve igual** que una activa
+—medido: el `<label>` conserva `opacity: 1` y `cursor: pointer`, y solo el gris nativo del checkbox la
+distingue— y el motivo se lee pegado al nombre, como si fuera parte de él. Un cliente lo lee como
+«la web no responde», que es exactamente lo que pasó. Lo arregla D·2.
+▶ **Y una trampa para el que pruebe**: en modo interno hay que firmar la exención del menor
+(Mi cuenta → Menores a cargo → «Firmar») ANTES de comprar, o cambiar el modo a externo.
+
+**D·2 · El bloque de asignación, rediseñado** (`steps/DependentPicker.vue`, pasos 3 y 4). Deja de ser
+una lista suelta: **sección propia con su título**, una **fila por menor** con nombre · edad · estado de
+la exención, y la fila no marcable **atenuada de verdad** con su motivo en un elemento propio, no dentro
+del rótulo. Vocabulario visual el de los complementos del paso 3 (`.addons`, `.addons__intro`, `.check`,
+`.form__hint`), que el cliente ya conoce de ese mismo paso, más lo mínimo nuevo. ⚠️ **Cambia el ÁRBOL
+del manifiesto congelado** (el selector se pinta en los pasos 3 y 4): regenerar con `MANIFEST_REFRESH=1`
+y justificar en el commit qué claves cambian y por qué — es un contrato visual, no una foto.
+
+**D·3 · Los menores en la FICHA DEL CLIENTE del panel** (`Filament/Resources/Users/**`). Hoy no salen:
+`grep Dependent app/Filament/Resources/Users` daba **cero**, y lo único de menores en el panel vive en la
+ficha del PEDIDO (`Orders/Support/AssignedDependents`). Entra una sección **de solo lectura** en la
+columna derecha, bajo «Consentimientos», con el mismo patrón que ya usa ese infolist (`Section` +
+`View::make(partial)`): nombre · edad (la de HOY, y el rótulo lo dice) · exención con su versión · desde
+cuándo · retirado. Reglas, cada una con su porqué:
+- **Todos** los `dependents()` del titular, activos y desvinculados, con la fila retirada MARCADA —la
+  misma conducta que la ficha del pedido (D14·3): el operador tiene que poder explicar por qué una
+  entrada quedó a nombre de alguien que ya no está en la cuenta—;
+- la columna de exención **solo en modo interno** (fuera, la gestiona el parque y no hay nada que decir);
+- **cuenta anonimizada → no se lista nada**, solo la frase que remite al registro probatorio del waiver:
+  tras `anonymize()` toda fila superviviente está desvinculada bajo el régimen restringido de `RGPD-01`,
+  y su sitio es la acción «Registro del waiver» (`waiver.view`, con `waiver.proof_viewed` auditado), que
+  ya imprime esos nombres;
+- **el panel NO declara ni edita menores** (`[DECIDIDO owner, 2026-08-28]`, cierra el `[PENDIENTE]` de
+  `identidad-qr-puerta.md` §9.5): el dato lo declara el titular, el mostrador solo ASIGNA;
+- **presupuesto de consultas con test** (≤4 en interno, 1 fuera): una ficha de cliente no puede crecer en
+  consultas con el número de menores.

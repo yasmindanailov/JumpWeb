@@ -583,3 +583,558 @@
 .dark .jj-calendar .fc-daygrid-day:hover {
     background-color: rgba(255, 255, 255, 0.03);
 }
+
+/* ─── Pantalla de PUERTA (`specs/identidad-qr-puerta.md` §9.7 C·5) ─────────────
+ *
+ * Página dedicada, FUERA del shell de Filament (decisión #119), pero que reusa este mismo bundle.
+ * Aquí vive solo lo que Filament no da: la rejilla de la ficha, la tarjeta de reserva y el velo.
+ * El resto —secciones, callout, badges y botones— son componentes de Filament, así que estas reglas
+ * no repintan nada que el panel ya sepa pintar.
+ *
+ * ⚠️ **Todos los colores salen de los tokens del panel** (`--gray-*`, `--primary-*`, `--warning-*`…),
+ * que los emite `@filamentStyles` desde `layouts/puerta.blade.php`. La versión anterior de esta
+ * pantalla llevaba la paleta escrita a mano en la vista (167 utilidades distintas) y, como el layout
+ * NO llamaba a `@filamentStyles`, las 84 utilidades `gray-*` resolvían a nada: medido en navegador,
+ * `text-gray-500` daba `rgb(0,0,0)` y el `ring-1 ring-gray-950/5` del formulario, un borde negro
+ * sólido. Si algún día vuelve a verse «todo negro», el sospechoso es ese `@filamentStyles`, no esto.
+ *
+ * Modo oscuro con el mismo selector que Filament (`:where(.dark, .dark *)` ≈ `.dark X`), porque el
+ * layout pone `.dark` con la MISMA clave de `localStorage` que el panel. */
+
+.gate-shell {
+    /* 3xl (48rem): la ficha cabe en dos columnas y el nombre del cliente sigue siendo lo primero que
+     * se lee a un metro de distancia. Antes era 2xl, de cuando la pantalla solo decía sí/no. */
+    margin-inline: auto;
+    width: 100%;
+    max-width: 48rem;
+    padding: calc(var(--spacing) * 4);
+}
+
+@media (min-width: 640px) {
+    .gate-shell {
+        padding: calc(var(--spacing) * 8);
+    }
+}
+
+.gate {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 5);
+}
+
+/* ─── Cabecera de la página ─────────────────────────────────────────────── */
+
+.gate-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 4);
+}
+
+.gate-head__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--gray-950);
+}
+
+.gate-head__intro {
+    margin-top: calc(var(--spacing) * 1);
+    font-size: 0.875rem;
+    color: var(--gray-500);
+}
+
+.gate-head__back {
+    flex-shrink: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-500);
+    text-underline-offset: 4px;
+}
+
+.gate-head__back:hover {
+    color: var(--gray-700);
+    text-decoration: underline;
+}
+
+.gate-head__title:where(.dark, .dark *) {
+    color: var(--color-white);
+}
+
+.gate-head__intro:where(.dark, .dark *),
+.gate-head__back:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+.gate-head__back:hover:where(.dark, .dark *) {
+    color: var(--gray-300);
+}
+
+/* ─── El formulario: un solo campo, y es TAMBIÉN por donde entra el lector ──
+ * El lector de carnés es un «keyboard wedge»: teclea el token y pulsa Enter aquí. Por eso el campo
+ * es grande y siempre enfocable, no un buscador discreto. */
+
+.gate-search {
+    border-radius: var(--radius-xl);
+    background-color: var(--color-white);
+    padding: calc(var(--spacing) * 4);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    outline: 1px solid color-mix(in oklab, var(--gray-950) 5%, transparent);
+    outline-offset: -1px;
+}
+
+.gate-search:where(.dark, .dark *) {
+    background-color: var(--gray-900);
+    outline-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+.gate-search__row {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 3);
+}
+
+@media (min-width: 640px) {
+    .gate-search {
+        padding: calc(var(--spacing) * 6);
+    }
+
+    .gate-search__row {
+        flex-direction: row;
+    }
+}
+
+.gate-search__input {
+    display: block;
+    width: 100%;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-white);
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+    font-size: 1rem;
+    color: var(--gray-950);
+    outline: 1px solid color-mix(in oklab, var(--gray-950) 10%, transparent);
+    outline-offset: -1px;
+}
+
+.gate-search__input::placeholder {
+    color: var(--gray-400);
+}
+
+.gate-search__input:focus {
+    outline: 2px solid var(--primary-600);
+    outline-offset: -2px;
+}
+
+.gate-search__input:where(.dark, .dark *) {
+    background-color: var(--gray-900);
+    color: var(--color-white);
+    outline-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+.gate-search__input:where(.dark, .dark *)::placeholder {
+    color: var(--gray-500);
+}
+
+.gate-search__input:focus:where(.dark, .dark *) {
+    outline-color: var(--primary-500);
+}
+
+@media (min-width: 640px) {
+    .gate-search__btn {
+        flex-shrink: 0;
+    }
+}
+
+/* ─── El SEMÁFORO: UN callout de Filament, no ocho tarjetas ─────────────── */
+
+.gate-result {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 4);
+}
+
+/* El cuerpo y la nota viven DENTRO de `.fi-callout-description`, que es un `<p>` del componente de
+   Filament: por eso son `<span>` (un `<p>` dentro de otro lo cierra el navegador) y necesitan el
+   `display: block` para seguir siendo dos párrafos a la vista. */
+.gate-callout__body,
+.gate-callout__note {
+    display: block;
+}
+
+.gate-callout__body {
+    font-size: 0.9375rem;
+}
+
+.gate-callout__note {
+    margin-top: calc(var(--spacing) * 2);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.gate-callout__query {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: calc(var(--spacing) * 2);
+    font-size: 0.8125rem;
+}
+
+.gate-callout__query-label {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+}
+
+.gate-callout__query-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+}
+
+/* ─── La FICHA ──────────────────────────────────────────────────────────── */
+
+.gate-profile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 4);
+}
+
+.gate-profile__body {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 4);
+}
+
+/* Velo por inactividad (§4.8): tapa, NO cierra — el cierre lo hace el servidor. */
+.gate-profile__body--veiled {
+    filter: blur(4px);
+    user-select: none;
+}
+
+.gate-veil {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-xl);
+    background-color: color-mix(in oklab, var(--gray-100) 95%, transparent);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--gray-700);
+}
+
+.gate-veil:where(.dark, .dark *) {
+    background-color: color-mix(in oklab, var(--gray-950) 95%, transparent);
+    color: var(--gray-200);
+}
+
+/* Identidad: el nombre es lo más grande de la pantalla a propósito. */
+.gate-id {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 3);
+}
+
+.gate-id__eyebrow {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gray-500);
+}
+
+.gate-id__name {
+    margin-top: calc(var(--spacing) * 0.5);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--gray-950);
+}
+
+.gate-id__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+}
+
+.gate-id__eyebrow:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+.gate-id__name:where(.dark, .dark *) {
+    color: var(--color-white);
+}
+
+/* Rejilla de tarjetas: HOY y PRÓXIMOS DÍAS ocupan el ancho (llevan listas); EXENCIÓN, QR, MENORES
+ * y VISITA van en dos columnas porque cada una es un dato de una línea. */
+.gate-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--spacing) * 4);
+}
+
+@media (min-width: 40rem) {
+    .gate-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .gate-grid__wide {
+        grid-column: 1 / -1;
+    }
+}
+
+/* La ventana ±N es contexto, no la respuesta: pesa menos que «hoy». */
+.gate-window {
+    --gate-window-dim: 0.85;
+
+    opacity: var(--gate-window-dim);
+}
+
+.gate-empty {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.gate-empty:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+.gate-fact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+}
+
+.gate-hint {
+    margin-top: calc(var(--spacing) * 2);
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+}
+
+.gate-hint:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+.gate-visit__done {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--success-600);
+}
+
+.gate-visit__done:where(.dark, .dark *) {
+    color: var(--success-400);
+}
+
+.gate-expires {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+}
+
+.gate-expires:where(.dark, .dark *) {
+    color: var(--gray-500);
+}
+
+/* ─── Tarjeta de reserva ────────────────────────────────────────────────── */
+
+.gate-res-list {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 2);
+}
+
+.gate-res {
+    border-radius: var(--radius-lg);
+    background-color: var(--gray-50);
+    padding: calc(var(--spacing) * 3);
+    outline: 1px solid color-mix(in oklab, var(--gray-950) 5%, transparent);
+    outline-offset: -1px;
+}
+
+.gate-res:where(.dark, .dark *) {
+    background-color: color-mix(in oklab, var(--color-white) 5%, transparent);
+    outline-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+.gate-res__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 2);
+}
+
+.gate-res__product {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.gate-res__code {
+    /* ⚠️ `var(--font-mono)` NO vale aquí: su cadena empieza por `--mono-font-family`, que solo define
+     * el layout, y si algún día falta, TODA la declaración es inválida y el código sale en sans
+     * (medido antes de cablear la tipografía). Con el fallback dentro del `var()` la degradación es a
+     * mono del sistema, que es lo que un código de pedido necesita para no confundir 0 con O. */
+    font-family: var(--mono-font-family, ui-monospace), SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.gate-res__meta {
+    margin-top: calc(var(--spacing) * 1);
+    font-size: 0.875rem;
+    color: var(--gray-700);
+}
+
+.gate-res__day {
+    font-weight: 500;
+}
+
+/* El separador es decorativo: lo pinta el CSS (`content`) y el `<span>` va VACÍO. ⚠️ Medido en la
+ * captura del sondeo: con el «·» también dentro del span salían DOS puntos seguidos («· ·18:00»).
+ * Se pinta desde aquí para que no viaje al portapapeles, no lo lea el lector de pantalla y los tests
+ * no tengan que casar cadenas compuestas. */
+.gate-res__sep::before {
+    content: "·";
+    margin-inline: calc(var(--spacing) * 1.5);
+    color: var(--gray-400);
+}
+
+.gate-res__addon {
+    margin-inline-start: calc(var(--spacing) * 1.5);
+    color: var(--gray-500);
+}
+
+.gate-res__pending {
+    margin-top: calc(var(--spacing) * 2);
+    border-radius: var(--radius-md);
+    background-color: var(--warning-50);
+    padding: calc(var(--spacing) * 1) calc(var(--spacing) * 2);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--warning-700);
+    outline: 1px solid color-mix(in oklab, var(--warning-600) 20%, transparent);
+    outline-offset: -1px;
+}
+
+.gate-res__settled {
+    margin-top: calc(var(--spacing) * 2);
+    font-size: 0.875rem;
+    color: var(--success-700);
+}
+
+.gate-res__paid {
+    margin-top: calc(var(--spacing) * 1);
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.gate-res__minors {
+    margin-top: calc(var(--spacing) * 2);
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+}
+
+.gate-res__product:where(.dark, .dark *) {
+    color: var(--gray-100);
+}
+
+.gate-res__meta:where(.dark, .dark *) {
+    color: var(--gray-300);
+}
+
+.gate-res__code:where(.dark, .dark *),
+.gate-res__addon:where(.dark, .dark *),
+.gate-res__paid:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+.gate-res__pending:where(.dark, .dark *) {
+    background-color: color-mix(in oklab, var(--warning-400) 10%, transparent);
+    color: var(--warning-300);
+    outline-color: color-mix(in oklab, var(--warning-400) 30%, transparent);
+}
+
+.gate-res__settled:where(.dark, .dark *) {
+    color: var(--success-300);
+}
+
+/* ─── Menores: SOLO edad y estado de la exención ────────────────────────────
+ * ⚠️⚠️ Nunca el nombre ni el correo (§4.6). No hay clase para un nombre porque no hay nombre: el DTO
+ * `GateProfileData` no tiene campo para él. Esto es la mitad visual de un invariante estructural. */
+
+.gate-minors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+}
+
+.gate-minor {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    border-radius: var(--radius-lg);
+    background-color: var(--gray-100);
+    padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2.5);
+}
+
+.gate-minor__age {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    font-variant-numeric: tabular-nums;
+}
+
+.gate-minor:where(.dark, .dark *) {
+    background-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+.gate-minor__age:where(.dark, .dark *) {
+    color: var(--gray-200);
+}
+
+/* ─── Pie: volver a buscar (es el `clear()` que ya re-autoriza) ──────────── */
+
+.gate-foot {
+    text-align: center;
+}
+
+.gate-foot__btn {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-500);
+    text-underline-offset: 4px;
+}
+
+.gate-foot__btn:hover {
+    color: var(--gray-700);
+    text-decoration: underline;
+}
+
+.gate-foot__btn:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+.gate-foot__btn:hover:where(.dark, .dark *) {
+    color: var(--gray-300);
+}
+
+.gate-res__minors-label {
+    margin-top: calc(var(--spacing) * 2);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gray-500);
+}
+
+.gate-res__minors-label:where(.dark, .dark *) {
+    color: var(--gray-400);
+}

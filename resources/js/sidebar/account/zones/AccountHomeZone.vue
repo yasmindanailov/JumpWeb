@@ -53,35 +53,48 @@ const context = useAccountContextStore();
         <button type="button" @click="emit('go', ZONES.PRIVACY)">{{ translate(account, 'account.privacy.waiver.pending_cta') }}</button>
     </p>
 
-    <div class="catalog">
-        <button v-for="zone in HOME_ENTRIES" :key="zone" type="button" class="catalog__item" @click="emit('go', zone)">
-            <span class="catalog__name">
-                <!-- ⚠️ El icono va DENTRO del rótulo, no como tercer hijo de `.catalog__item`: ése es
-                     `space-between` y un hijo más dejaría el texto flotando en el medio. -->
-                <ZoneIcon :zone="zone" />
-                {{ translate(account, titleKeyOf(zone)) }}
-                <!-- `store.upcoming`, no `upcoming`: sin el prefijo resolvía a `undefined` y el
-                     contador NO se pintaba nunca (revisión `#169` §10.3, CAJ-5). -->
-                <template v-if="zone === HOME_ENTRIES[0] && store.upcoming > 0">
-                    <!--
-                      ⚠️ El número va `aria-hidden` y su lectura la da el `sr-only` de al lado, con la
-                      MISMA clave que usa el bloque `.acct` del panel para lo mismo. Medido en
-                      navegador: el primer intento puso ahí el subtítulo de la zona, y un lector de
-                      pantalla leía «Mis reservas 1 Aquí tienes tus reservas y su estado» — que no
-                      dice qué es ese 1.
-                    -->
-                    <span class="acct__count" aria-hidden="true">{{ store.upcoming }}</span>
-                    <span class="sr-only">{{ translateWith(account, 'sidecart.upcoming_count', { count: store.upcoming }) }}</span>
-                </template>
-            </span>
-            <span class="catalog__go" aria-hidden="true">
-                <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
-                     aria-hidden="true" focusable="false">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                </svg>
-            </span>
+    <!--
+      ⚠️⚠️ **REJILLA DE TARJETAS, y no la fila del catálogo** (`identidad-qr-puerta.md` §9.7 C·1,
+      `DECISIONES #217`). El owner recorrió el área en staging y describió el índice como «una lista
+      que hay que leer entera»: ocho filas con el mismo peso, el icono a 18 px pegado al texto y una
+      flecha idéntica en las ocho. En dos columnas las ocho entran de un vistazo y **el icono pasa a
+      ser lo que se reconoce**, que es como se navega un índice que no se lee.
+
+      ⚠️ **`.catalog__item` NO se reutiliza aquí, y esto es lo importante de la clase nueva**: esa
+      clase es la fila del CATÁLOGO DE PRODUCTOS del paso 1 del embudo. Reaprovecharla obligaba a
+      cambiar sus reglas para que aquí se vieran tarjetas — y con ellas, la primera pantalla de la
+      compra. Vocabulario propio (`acc-tile*`), en un bloque aislado al final de `site.css`.
+
+      ⚠️ **La flecha desaparece**: era del sistema de la fila (`catalog__go`), y en una tarjeta
+      centrada no señala nada. La tarjeta entera sigue siendo el botón.
+    -->
+    <div class="acc-tiles">
+        <button v-for="zone in HOME_ENTRIES" :key="zone" type="button" class="acc-tile" @click="emit('go', zone)">
+            <!--
+              ⚠️ El icono se agranda POR CSS (`.acc-tile__ico svg`), no cambiando los `width`/`height`
+              del `<svg>`: esos atributos son la copia byte a byte del `<x-icons.*>` del sistema de
+              diseño que `SidebarIconParityTest` compara. Tocarlos aquí pondría el gate en rojo y
+              dejaría el dibujo del cajón desincronizado del de la web.
+            -->
+            <span class="acc-tile__ico" aria-hidden="true"><ZoneIcon :zone="zone" /></span>
+            <span class="acc-tile__name">{{ translate(account, titleKeyOf(zone)) }}</span>
+
+            <!-- `store.upcoming`, no `upcoming`: sin el prefijo resolvía a `undefined` y el
+                 contador NO se pintaba nunca (revisión `#169` §10.3, CAJ-5). -->
+            <template v-if="zone === HOME_ENTRIES[0] && store.upcoming > 0">
+                <!--
+                  ⚠️ El número va `aria-hidden` y su lectura la da el `sr-only` de al lado, con la
+                  MISMA clave que usa el bloque `.acct` del panel para lo mismo. Medido en
+                  navegador: el primer intento puso ahí el subtítulo de la zona, y un lector de
+                  pantalla leía «Mis reservas 1 Aquí tienes tus reservas y su estado» — que no
+                  dice qué es ese 1.
+                  ⚠️ **Conserva `acct__count`** y solo AÑADE su sitio en la tarjeta: el aspecto de
+                  la píldora es el mismo dato en las dos superficies, y duplicar la regla sería la
+                  deriva de siempre.
+                -->
+                <span class="acct__count acc-tile__count" aria-hidden="true">{{ store.upcoming }}</span>
+                <span class="sr-only">{{ translateWith(account, 'sidecart.upcoming_count', { count: store.upcoming }) }}</span>
+            </template>
         </button>
     </div>
 </template>

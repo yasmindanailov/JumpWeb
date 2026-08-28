@@ -9,39 +9,53 @@
     $method = $r['charge_method'] === 'desk'
         ? __('admin.puerta.validar.profile.method_desk')
         : __('admin.puerta.validar.profile.method_redsys');
-    $minorLabel = static function (array $m): string {
-        $label = __('admin.puerta.validar.profile.minor', ['age' => $m['age']]);
-
-        return $m['waiver'] === null ? $label : $label.' · '.__('admin.puerta.validar.profile.minor_waiver_'.$m['waiver']);
-    };
 @endphp
-<li class="rounded-lg bg-gray-50 p-3 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10" data-gate-reservation="{{ $r['order_code'] }}">
-    <div class="flex flex-wrap items-baseline justify-between gap-2">
-        <span class="font-semibold text-gray-900 dark:text-gray-100">{{ $r['product'] }}</span>
-        <span class="font-mono text-xs text-gray-500 dark:text-gray-400">{{ $r['order_code'] }}</span>
+<li class="gate-res" data-gate-reservation="{{ $r['order_code'] }}">
+    <div class="gate-res__top">
+        <span class="gate-res__product">{{ $r['product'] }}</span>
+        <span class="gate-res__code">{{ $r['order_code'] }}</span>
     </div>
-    <div class="mt-1 text-sm text-gray-700 dark:text-gray-300">
-        <span class="font-medium">{{ DisplayTime::dayLabel($r['date']) }}</span>
-        @if ($r['time_window'])<span class="text-gray-400"> · </span>{{ $r['time_window'] }}@endif
-        <span class="text-gray-400"> · </span>{{ $units }}
+    <p class="gate-res__meta">
+        <span class="gate-res__day">{{ DisplayTime::dayLabel($r['date']) }}</span>
+        @if ($r['time_window'])<span class="gate-res__sep" aria-hidden="true"></span>{{ $r['time_window'] }}@endif
+        <span class="gate-res__sep" aria-hidden="true"></span>{{ $units }}
         @foreach ($r['addons'] as $addon)
-            <span class="text-gray-500 dark:text-gray-400"> · + {{ $addon }}</span>
+            <span class="gate-res__addon">+ {{ $addon }}</span>
         @endforeach
-    </div>
+    </p>
+
+    {{-- El dinero SALE del ledger (`OrderLedger`), nunca se recompone aquí (§4.7). Y «pendiente de
+         cobrar en puerta» no es opcional: con sistema de señal, si el empleado no lo ve, el negocio
+         no cobra. Por eso es la única línea de la tarjeta con tratamiento de ALERTA. --}}
     @if ((int) $r['pending_gate_cents'] > 0)
-        <p class="mt-2 rounded-md bg-amber-50 px-2 py-1 text-sm font-semibold text-amber-800 ring-1 ring-amber-600/20 dark:bg-amber-400/10 dark:text-amber-300 dark:ring-amber-400/30" data-gate-pending>
+        <p class="gate-res__pending" data-gate-pending>
             {{ __('admin.puerta.validar.profile.pending_gate', ['amount' => Money::amount((int) $r['pending_gate_cents'])]) }}
         </p>
     @else
-        <p class="mt-2 text-sm text-green-700 dark:text-green-300">{{ __('admin.puerta.validar.profile.nothing_pending') }}</p>
+        <p class="gate-res__settled">{{ __('admin.puerta.validar.profile.nothing_pending') }}</p>
     @endif
-    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+
+    <p class="gate-res__paid">
         {{ __('admin.puerta.validar.profile.paid', ['amount' => Money::amount((int) $r['paid_online_cents']), 'method' => $method]) }}
-        · {{ __('admin.puerta.validar.profile.booked_on', ['when' => DisplayTime::format($r['created_at'], 'd/m/Y H:i')]) }}@if ($r['paid_at']) · {{ __('admin.puerta.validar.profile.paid_on', ['when' => DisplayTime::format($r['paid_at'], 'd/m/Y H:i')]) }}@endif
+        <span class="gate-res__sep" aria-hidden="true"></span>{{ __('admin.puerta.validar.profile.booked_on', ['when' => DisplayTime::format($r['created_at'], 'd/m/Y H:i')]) }}@if ($r['paid_at'])<span class="gate-res__sep" aria-hidden="true"></span>{{ __('admin.puerta.validar.profile.paid_on', ['when' => DisplayTime::format($r['paid_at'], 'd/m/Y H:i')]) }}@endif
     </p>
+
+    {{-- ⚠️⚠️ Menores de la línea: EDAD y estado de la exención, JAMÁS el nombre (§4.6). El DTO no
+         tiene campo para el nombre — que siga siendo verdad depende también de que aquí no se
+         imprima nada más que `age` y `waiver`. --}}
     @if ($r['minors'] !== [])
-        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
-            {{ __('admin.puerta.validar.profile.minors_on_line', ['list' => implode(', ', array_map($minorLabel, $r['minors']))]) }}
-        </p>
+        <p class="gate-res__minors-label">{{ __('admin.puerta.validar.profile.minors_on_line_label') }}</p>
+        <ul class="gate-res__minors" data-gate-line-minors>
+            @foreach ($r['minors'] as $m)
+                <li class="gate-minor" data-gate-minor data-gate-minor-age="{{ (int) $m['age'] }}" data-gate-minor-waiver="{{ $m['waiver'] ?? 'unknown' }}">
+                    <span class="gate-minor__age">{{ __('admin.puerta.validar.profile.minor', ['age' => (int) $m['age']]) }}</span>
+                    @if ($m['waiver'] !== null)
+                        <x-filament::badge size="xs" :color="$m['waiver'] === 'current' ? 'success' : ($m['waiver'] === 'outdated' ? 'warning' : 'danger')">
+                            {{ __('admin.puerta.validar.profile.minor_waiver_'.$m['waiver']) }}
+                        </x-filament::badge>
+                    @endif
+                </li>
+            @endforeach
+        </ul>
     @endif
 </li>

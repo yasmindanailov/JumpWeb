@@ -325,14 +325,27 @@ class SidebarMountTest extends TestCase
             'el subgrupo `register` ha dejado de estar podado a lo que el formulario de alta pinta'
         );
 
-        // ⚠️⚠️ **`account.title` viaja SIN sesión, y es el rótulo de uno de los TRES botones del
+        // ⚠️⚠️ **`account.title` viaja SIN sesión, y es el rótulo de uno de los botones del
         // bloque.** Sin él, quien entra en el paso 5 y vuelve al catálogo vería ese botón **en
         // blanco**: `i18n.js` devuelve cadena vacía cuando falta una clave y nada avisa. Con sesión
         // el subgrupo entero lo sustituye —y lleva esta misma clave—, así que el cajón lee un solo
         // camino haya sesión o no.
+        //
+        // ⚠️⚠️ **Y `account.card.title` con él desde el 2026-08-28** (revisión de `#217`): el bloque
+        // ganó un cuarto botón, el atajo «Mi QR», y su rótulo se quedó SOLO en el subgrupo con sesión.
+        // Resultado medido en navegador: quien se identifica en el paso 5 —que es el camino normal de
+        // una primera compra— se encontraba el botón **mudo y sin nombre accesible**. La regla que
+        // este caso fija es la de siempre, aplicada a un botón nuevo: **lo que el bloque puede pintar
+        // sin recargar tiene que viajar siempre**. Lo que NO viaja es el resto del subgrupo (los 11
+        // rótulos de la ZONA del QR): esa pantalla solo existe con sesión.
         $this->assertSame(
-            ['title'], array_keys($boot['account']['account'] ?? []),
-            'sin sesión, del subgrupo `account` solo debe viajar el rótulo que el bloque pinta'
+            ['title', 'card'], array_keys($boot['account']['account'] ?? []),
+            'sin sesión, del subgrupo `account` solo deben viajar los rótulos que el bloque pinta'
+        );
+
+        $this->assertSame(
+            ['title'], array_keys($boot['account']['account']['card'] ?? []),
+            'de `card` solo viaja el RÓTULO del botón: la zona del QR es de quien tiene sesión'
         );
 
         // Y los dos entran PODADOS clave a clave, no enteros.
@@ -343,7 +356,7 @@ class SidebarMountTest extends TestCase
         );
         $this->assertSame(
             // ⚠️ El ORDEN lo fija `lang/*/account.php`, no la lista de `Arr::only`.
-            ['next', 'form_pending_one', 'form_pending_many', 'guest_hello', 'guest_sub', 'no_upcoming', 'upcoming_count'],
+            ['form_pending_one', 'form_pending_many', 'guest_hello', 'guest_sub', 'upcoming_count'],
             array_keys($boot['account']['sidecart'] ?? []),
             'el subgrupo `sidecart` ha dejado de estar podado. ⚠️ `tag` NO entra: se retiró por muerta '.
             '(`display: none` incondicional, sostenida solo por su propio test)'
@@ -422,8 +435,18 @@ class SidebarMountTest extends TestCase
         // techo con margen sobrante deja de apretar* (`SidebarBundleBudgetTest`): **2.850 deja 108**.
         // ⚠️ Un `tinker` contra la BD de desarrollo dio 2.505 con todos los grupos un ~10 % más
         // cortos; la cifra que vale es la de aquí, que mide el mismo `data-boot` que asevera.
+        //
+        // ⚠️ **2.850 → 2.750 el 2026-08-28, y BAJA porque el PULIDO del cajón podó sin poner nada**
+        // (`specs/identidad-qr-puerta.md` §9.7 C·2, `DECISIONES #217`). La sub-línea de la próxima
+        // reserva sale del bloque de cuenta —la enseña el índice del área, que es donde el cliente
+        // entra a mirarla— y con ella se van `sidecart.next` y `sidecart.no_upcoming`: **−83 B**, de
+        // 2.742 a **2.659**. Este grupo NO se poda por sesión —el bloque cambia de cara sin
+        // recargar—, así que esos dos rótulos viajaban en TODAS las páginas públicas para no pintarse
+        // nunca. Lo que ocupa su hueco («Mi QR») **no cuesta nada aquí**: se rotula con
+        // `account.card.title`, que viaja solo con sesión. Con 2.850 sobraban 191 B y *un techo con
+        // margen sobrante deja de apretar*: **2.750 deja 91**, la holgura de siempre.
         $this->assertLessThan(
-            2850, $anonBytes,
+            2750, $anonBytes,
             "Los textos de auth del montaje anónimo pesan {$anonBytes} B. Es un presupuesto, no un ".
             'objetivo: si hace falta subirlo, súbelo a propósito sabiendo que viaja en cada página.'
         );
@@ -463,6 +486,9 @@ class SidebarMountTest extends TestCase
         $this->assertSame(
             [
                 'title', 'intro', 'empty', 'add_title', 'name', 'name_hint', 'born_on', 'add', 'adding',
+                // El alta se DESPLIEGA desde un botón (2026-08-28): el disparador se rotula con
+                // `add_title` —el mismo texto que titula lo que abre— y `add_cancel` lo pliega.
+                'add_cancel',
                 'age', 'adult', 'remove', 'removing', 'remove_confirm',
                 'waiver_unsigned', 'waiver_current', 'waiver_outdated',
                 // Fase 6 · tanda 4 (`DECISIONES #202`): lo que la tarjeta de «Mis reservas» pinta de
@@ -472,6 +498,10 @@ class SidebarMountTest extends TestCase
                 // entra anónimo y se identifica en el paso 5 los necesita sin recargar. Se pusieron
                 // aquí primero y el guion headless (§5.undecies) los encontró en blanco.
                 'for_label', 'assigned_none', 'assigned_show', 'assigned_hide',
+                // La lista se pagina en CLIENTE y el paginador solo se pinta con más de una página
+                // (2026-08-28). Los cuatro rótulos son los de `orders.pagination`, con su propio
+                // `label`: «Paginación de reservas» sobre una lista de menores sería un texto falso.
+                'pagination',
             ],
             array_keys($boot['account']['account']['dependents'] ?? []),
             'el subgrupo `dependents` ha crecido: si la zona no pinta lo nuevo, hay que podarlo'
@@ -507,7 +537,7 @@ class SidebarMountTest extends TestCase
         // de cuenta y viaja **sin sesión también**, así que su contenido se asevera arriba, en el caso
         // del montaje anónimo. Aquí solo se comprueba que con sesión no ha crecido de más.
         $this->assertSame(
-            ['next', 'form_pending_one', 'form_pending_many', 'guest_hello', 'guest_sub', 'no_upcoming', 'upcoming_count'],
+            ['form_pending_one', 'form_pending_many', 'guest_hello', 'guest_sub', 'upcoming_count'],
             array_keys($boot['account']['sidecart'] ?? []),
         );
 
@@ -612,8 +642,38 @@ class SidebarMountTest extends TestCase
         // de renovar (~110 B: «el del correo y cualquier copia impresa», §4.5), y los dos se quedan:
         // son las dos frases que evitan un malentendido caro en la puerta. **8.550 deja 78 B**: la
         // holgura estrecha de siempre, a propósito.
+        //
+        // ⚠️ **El techo NO se mueve el 2026-08-28 con el PULIDO del cajón** (§9.7 C·2/C·4,
+        // `DECISIONES #217`), y merece su párrafo porque el saldo es de tres movimientos:
+        // · **−83 B** de poda: `sidecart.next` y `sidecart.no_upcoming` se retiran con la sub-línea
+        //   del bloque de cuenta (el índice del área ya la enseña);
+        // · **−118 B**: `card.rotate_confirm`, el texto del `window.confirm` que se retira;
+        // · **+236 B**: los CUATRO rótulos de la confirmación dentro del cajón —el aviso permanente
+        //   bajo el botón, la pregunta y sus dos botones—, que la zona pinta todos.
+        // Neto **+35**: de 8.472 a **8.507 B**. La poda paga dos tercios de la feature y **8.550
+        // sigue valiendo, ahora con 43 B**. El atajo «Mi QR» no añade rótulo: reutiliza
+        // `account.card.title`, que es además la regla de «el botón se llama como su pantalla».
+        //
+        // ⚠️⚠️ **8.550 → 8.700 el 2026-08-28 por la tarde: las DOS pantallas que el owner mandó
+        // rehacer** —la presentación del QR y «Menores a cargo»— subida por FEATURE (`#197`·2).
+        // Medido: **8.507 → 8.615 B**, y el neto sale de tres movimientos:
+        // · **−39 B de PODA, y es la que paga el encargo de la PALABRA**: «QR» sustituye a «carné» en
+        //   los nueve rótulos de `account.card` que lo nombraban (`[DECIDIDO owner]`, §9.7 C·6) y el
+        //   grupo ADELGAZA —«Mi QR» contra «Mi carné», «Tu QR» contra «Tu carné QR»—: de 835 a 796 B.
+        //   Es la primera vez que un cambio de vocabulario devuelve payload en vez de costarlo.
+        // · **+23 B**: `dependents.add_cancel`, el «Cancelar» que pliega el alta. Es el ÚNICO rótulo
+        //   nuevo del desplegable: el disparador reutiliza `add_title`, que ya viajaba, porque el
+        //   botón y la sección que abre tienen que llamarse igual.
+        // · **+122 B**: `dependents.pagination`, los cuatro rótulos del paginador. No se reutilizan
+        //   los de `orders.pagination` —«Anteriores», «Siguientes» y «Página :current de :last» sí
+        //   valdrían, pero su `label` dice «Paginación de reservas»— y un lector de pantalla anunciaría
+        //   una lista de reservas sobre una de menores. El grupo propio son 122 B por no mentir.
+        // ▶ Y **el paginador no se pinta si todo cabe en una página**, así que esos 122 B viajan para
+        // una barra que la cuenta normal —dos o tres menores— no llega a ver. Se pagan igual: el
+        // arranque no sabe cuántos menores tiene quien abre la página.
+        // **8.700 deja 85 B**: la holgura estrecha de siempre, a propósito.
         $this->assertLessThan(
-            8550, $bytes,
+            8700, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

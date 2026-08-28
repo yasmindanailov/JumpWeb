@@ -91,6 +91,43 @@
 >   pie **no hacía nada** — era mudo desde 4.3·2: la máquina no tenía la arista `CATALOG → CART` y `go()`
 >   rechaza en silencio. Arista + caso + **guarda nueva en `foot.test.js`** (todo CTA del pie tiene que ser
 >   una transición que la máquina admita; la mutación da 2 rojos), sondeo 4/4, JS 790 → 792. Redesplegado.
+>   ▶ ✅ **Y EL PULIDO DE LOS OCHO PUNTOS DEL OWNER (`DECISIONES #217`, specs `identidad-qr-puerta.md`
+>   §9.7/§9.7.1 y `menores-a-cargo.md` §9.11)**, tras su prueba en staging. **Medido antes de diseñar**
+>   (seis lectores), construido por **cuatro implementadores en paralelo con ficheros disjuntos**, y
+>   revisado después. Lo que entró: el **icono de la instalación dentro del QR** con su margen (7 módulos
+>   tapados, el único valor con dos escalones antes del precipicio; verificado con **dos decodificadores**
+>   a dos tamaños) · **«Mi cuenta» en tarjetas** de 2 columnas · **«Mi QR» junto al nombre** (y fuera de
+>   ahí la próxima reserva) · el **QR presentado como credencial** con aviso permanente y **confirmación
+>   dentro del cajón** al renovar · **«Menores a cargo»** con alta desplegable y **paginación de 6 que
+>   solo aparece si hace falta** (tope real medido: 20 por defecto, 100 configurable) · el **bloque de
+>   asignar menores** rediseñado, con la fila no marcable **visiblemente** deshabilitada y su motivo
+>   aparte · los **menores en la ficha del cliente del panel** · la **pantalla de puerta** entera · y la
+>   palabra **«QR»** en cliente, correo y panel. ⚠️⚠️ **Dos hallazgos que nadie buscaba**: la casilla del
+>   menor **no estaba rota** (staging en modo interno + exención del menor sin firmar, `#202`·2) y la
+>   **paleta de la puerta SÍ lo estaba** (los grises y el color de marca computaban vacío: texto negro
+>   puro, borde negro sólido, y las 99 variantes de modo oscuro inertes). **64 mutaciones**, suite
+>   **3299 / 21.542**, JS **813**, chunk 250,67/251, sondeos 38 ✓ y 15/15. Guion para el ojo del owner:
+>   `VERIFICACION-E2E-CAJON.md` **§5.octodecies**. ⚠️ **Tres decisiones del agente reversibles y baratas**:
+>   el modo oscuro de la puerta (8 líneas), 6 menores por página (una constante) y el margen del icono
+>   comido de dentro (otra). ▶ **Lo siguiente**: el OJO del owner sobre §5.octodecies —y en especial el
+>   **lector real** con el PNG descargado— y después **JumpPoints**, cuyo resumen de una página sigue
+>   esperando su ✅ en `lealtad-jumppoints.md` §9.
+>   ▶ ✅ **Y la REVISIÓN ADVERSARIAL del pulido, con sus arreglos** (`#217` addendum): 23 hallazgos
+>   confirmados, **9 arreglados** (los de conducta y seguridad) y 14 en `DEUDA.md` con su reproducción.
+>   Los cuatro que valieron la revisión: **el cuerpo del semáforo de la puerta no se pintaba** (el
+>   componente no imprime su slot por defecto: el empleado veía un icono y ni una palabra), **«Mi QR»
+>   salía mudo** para quien gana la sesión sin recargar —el camino normal de una primera compra—, el
+>   **margen del QR estaba medido con un token que no es un carné** (re-medido con 40 reales: 7 módulos
+>   0 fallos, 9 módulos 10 de 40; la conducta enviada era la correcta, el número escrito no), y **la
+>   guarda del icono transparente pasaba en verde con el cuadrado negro puesto**. Más: el QR del titular
+>   anterior se quedaba en pantalla al cambiar de cuenta, el foco saltaba al `<body>` al cerrar dos
+>   formularios, el motivo de la casilla deshabilitada dejó de anunciarse a un lector de pantalla, y la
+>   puerta decidía a quién acreditar la visita leyendo estado que el navegador puede reescribir
+>   (`#[Locked]`). Suite **3303 / 21.554** · JS 813 · chunk 251,02 (techo 252). ⚠️ **DECISIÓN DEL OWNER
+>   SOBRE EL MÉTODO (2026-08-28)**: la revisión costó ~2,8 M de tokens de agentes y **se paró ahí**; los
+>   arreglos los escribió el orquestador a mano. ▶ **De aquí en adelante: sin subagentes por defecto**,
+>   tests acotados con `--filter` y la suite entera UNA vez antes de subir; si una tarea justifica
+>   paralelizar, se propone con su coste y decide el owner.
 >   ▶ **Y a las 09:35, las ENTRADAS en staging** (`ENTORNOS.md` §4): el `ProductionSeeder` las deja no
 >   vendibles y sin franjas; ahora las 4 entradas están a la venta con las plantillas de JUMP/KIDS de local
 >   (154, 60 min, 10–20 h) y 3.875 franjas. **El owner va a hacer la prueba de cabo a rabo en staging**
@@ -602,6 +639,15 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3315 en verde** (21.713 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las 15:35
+  (hora de Madrid) **sobre el árbol CONJUNTO** —el pulido `#217` con los nueve arreglos de su revisión,
+  rebasado sobre los ocho commits del carril C (hasta `#222`)—. JS **813** · chunk 251,02 (techo 252).
+  ⚠️ **La fusión no fue limpia y lo cazó la suite, no el rebase**: el carril C había estrenado
+  `MotionScaleTest` (la escala de MOVIMIENTO de su tanda 2d) y mis clases nuevas del cajón llevaban las
+  duraciones y las curvas escritas a mano (`0.15s ease`, `0.22s`, `0.18s`). Adaptadas a los roles de su
+  escala (`--dur-toque`/`--dur-sale` con `--ease-sale`: el hover no lleva rebote, lo dice su tabla).
+  ▶ Es el tercer aviso del mismo tipo en la jornada: **dos carriles sobre el mismo árbol se cruzan en
+  las GUARDAS, no en el código** — el rebase da verde y la suite conjunta es la que habla.
 - Suite **3253 en verde** (21.386 aserciones), medida el 2026-08-28 por la tarde por el carril C
   tras **`#222`** (**la tanda 2d: el MOVIMIENTO**, el SEXTO mecanismo del tema y el último que
   faltaba). ▶ Medido antes: **239 declaraciones, 53 duraciones, 20 curvas** — y **200 de los 220
@@ -651,6 +697,7 @@ que sirva staging de verdad.
   regla lleva también el **layout** del hueco, así que salió roja con el código correcto. Se acota
   a lo que protege: que no PINTE.
 - Suite **3242 en verde** (21.229 aserciones), medida el 2026-08-28 a mediodía por el carril C
+- Suite **3241 en verde** (21.227 aserciones), medida el 2026-08-28 a mediodía por el carril C
   **sobre el árbol CONJUNTO** —tras rebasar encima del `#215` del carril A— con `--parallel` en
   **47 s**, tras `#216` (**el armazón nace bajo el hero, el hero recupera sus dos botones, el
   CTA doble se alinea en sus ocho medidas y entra el paquete de MARCA del 2.º cliente**).

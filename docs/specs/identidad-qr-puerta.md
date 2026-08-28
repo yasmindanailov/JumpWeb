@@ -767,3 +767,149 @@ cajón) por el coste del gate.
 LECTOR REAL con un PNG descargado desde la web. De agente, nada de esta tanda; en `DEUDA` sigue solo el
 QR *inline* (CID) del correo. Una puerta por URL (`/mi-cuenta/carne`) no se abrió: ningún correo apunta
 ahí todavía; si el owner la quiere, es una línea en `AccountDoor::ZONE_BY_ROUTE`.
+
+### 9.7 PULIDO tras la prueba del owner en staging — diseño (2026-08-28, carril A, `DECISIONES #217`)
+
+> El owner recorrió staging (cliente y admin) y trajo ocho puntos; cuatro son decisiones suyas a
+> pregunta simple `[DECIDIDO owner, 2026-08-28]`: **(i)** el icono DENTRO del QR es **el de la
+> instalación que ya existe** (`client-favicon.svg`; sin él, el del producto), no un campo nuevo del
+> panel; **(ii)** la PALABRA de cara a personas es **«QR»** («Mi QR», «Renovar mi QR», «tu QR» para el
+> cliente; «QR del cliente», «QR escaneado», «QR caducado» para el empleado; «Renovar QR del cliente»
+> en el panel; los nombres técnicos `card`/`CustomerCard`/rutas NO cambian); **(iii)** al renovar,
+> **aviso permanente + confirmación dentro del cajón** (no el diálogo del navegador); **(iv)** el bloque
+> de menores del embudo, «la mejor opción para no saturar y coherente con el diseño» → lo decide el
+> agente (`menores-a-cargo.md` §9.11). Los puntos de menores (5, 6, 7) viven en esa spec; aquí los del
+> QR, la cuenta y la puerta. **Medido antes de diseñar por seis lectores** (`#217`).
+
+**C·1 · El índice de «Mi cuenta» en TARJETAS** (`AccountHomeZone.vue`): rejilla de **2 columnas**, cada
+entrada una tarjeta con el **icono grande arriba** (el mismo `ZoneIcon`, escalado por CSS: los atributos
+`width/height="18"` no se tocan, así la paridad byte a byte con `<x-icons.*>` sigue) y el rótulo debajo;
+el contador de reservas próximas se conserva. Clases **NUEVAS** `acc-tiles` / `acc-tile` /
+`acc-tile__ico` / `acc-tile__name` / `acc-tile__count` en un **bloque CSS aislado al final de
+`site.css`** con tokens (`--sp-*`, `--r`, `--line`, `--bg-card`, `--bg-soft`, `--fg-mute`, `--zone-1`,
+`--shadow-lift` solo en hover). ⚠️ `.catalog__item` NO se toca: lo usa el paso 1 del embudo y 14 sondas
+de `/root/e2e` lo usan como señal de «índice cargado» — esas sondas se re-apuntan a `acc-tile`. La flecha
+`arrow-right` desaparece de las tarjetas (era del sistema de diseño: no toca `DRAWER_OWN`).
+
+**C·2 · «Mi QR» en el bloque de cuenta** (`AccountPanel.vue` + `account/panel.js`): la sub-línea de la
+próxima reserva bajo el nombre **se retira** (el índice de la cuenta sigue enseñándola, `AccountHomeZone`
+:44-48, que pasa a ser el único sitio), y a la **derecha del nombre** va un botón pequeño **«Mi QR»** con
+el icono `qr` (copia byte a byte, como en `ZoneIcon`) que hace `accountStore.openZone(ZONES.CARD)`.
+Clases nuevas `acct__qr` (+ `acct__qr-ico`) en el mismo bloque CSS; el rótulo es `account.card.title`
+(ya viaja con sesión). `panel.js::panelOf()` deja de componer `subline` con la próxima reserva (sus
+casos cambian); la cara de invitado no cambia. `AccountDoorWiringTest` cuenta `openZone(ZONES.LOGIN)`
+×2 y `ZONES.ORDERS` ×1: no se tocan.
+
+**C·3 · El icono DENTRO del QR** (`QrCode::png()`): la librería (`chillerlan/php-qrcode` 5.0.5) NO dibuja
+logos; solo sabe reservar hueco (`addLogoSpace`, que **empeora** la lectura: medido). Diseño:
+`Platform\Services\Qr\PngWithLogo extends QRGdImagePNG` que pinta el QR (`returnResource`), superpone el
+icono centrado con `imagecopyresampled` y devuelve el PNG; **el tamaño se expresa en MÓDULOS**
+(`LOGO_MODULES = 7` → 56 px a escala 8, 21 % del PNG): medido con **dos decodificadores reales** (jsQR y
+ZXing en el contenedor) a 264 y a 132 px, 7 módulos leen siempre y el precipicio está en 8–9. El icono
+lo resuelve `Platform\Services\QrLogo::png(): ?string` — `public/img/client-favicon.svg` si existe (el
+mismo `@filemtime` que `favicon.blade.php`), si no **`public/apple-touch-icon.png` del producto tal cual**
+(ya es PNG: cero rasterizado) — con rasterizado **por cadena degradante**: Imagick solo si
+`queryFormats('SVG')` lo trae (**staging sí, local NO**: al contenedor de Sail le falta
+`libmagickcore-6.q16-7-extra`), si no `rsvg-convert` por `proc_open` con timeout (**local sí, staging
+NO**), si no `null` = QR liso con un `Log::warning` deduplicado; **caché por CONTENIDO** del SVG
+(`storage/app/qr-logo/<sha1>-256.png`, sobrevive al rsync) y memo por proceso (dos llamadas en la misma
+petición dan bytes idénticos: `MeCardTest` exige igualdad byte a byte con `QrCode::png()` y se conserva
+porque el correo y el endpoint llaman a la MISMA función). ⚠️ El favicon del producto lleva `<text>` y
+los dos rasterizadores lo pintan descentrado: la regla «contornos, nunca `<text>`» de
+`INSTALACION-CLIENTE.md` §4 vale también para el icono. Guardas: `QrCodePngLogoTest` (con logo los
+bytes cambian y **jsQR recupera el token** — el decodificador se corre en Node dentro del test si está
+en `/root/e2e`, y si no el caso se marca *skipped* diciendo por qué; sin logo son los bytes de hoy),
+`QrLogoTest` (cadena de degradación con dobles, caché por contenido).
+
+**C·4 · Renovar, con aviso y confirmación propias** (`CardZone.vue`): un párrafo SIEMPRE visible bajo el
+botón («El QR anterior dejará de funcionar en el acto: el del correo y cualquier copia impresa») y, al
+pulsar, una confirmación **dentro del cajón** con los componentes del área (`auth__errors`/`purchase__confirm`
++ dos botones), no `window.confirm`. Rótulos `account.card.rotate_notice`, `rotate_confirm_title`,
+`rotate_confirm_yes`, `rotate_confirm_no` ×3 (payload con sesión: subir el techo por feature).
+
+**C·5 · La pantalla de PUERTA, diseño profesional** (`validar.blade.php` + partial + `layouts/puerta.blade.php`).
+❗ **Prerrequisito medido: la paleta gris de la página está ROTA** — 84 utilidades `gray-*` resuelven a
+`var(--gray-*)`, que solo emite `@filamentStyles`, y el layout de puerta no lo llama (medido: texto
+`rgb(0,0,0)`, fondo transparente, ring negro sólido; y 99 variantes `dark:` inertes). Se cablea el
+panel en el layout (`SetUpPanel` + `@filamentStyles`, que trae además la tipografía del panel) y se
+retira el `bg-gray-50 dark:…` del `<body>` (`.fi-body` ya lo pinta). Después, la ficha en **secciones
+Filament** (`x-filament::section`, `badge`, `callout`, `empty-state`, `button`) con clases nuevas `gate-*`
+en `resources/css/filament/admin/theme.css` (donde ya viven `.zone-card` y `.jj-calendar`): el
+**semáforo es UN `callout`** (sustituye a las 8 tarjetas duplicadas del `@switch`), cabecera del cliente
+con nombre + estado + «abierta por QR / por búsqueda», rejilla de 2 columnas con tarjetas **Hoy** ·
+**Próximos días** · **Exención** · **QR** · **Menores** (edad + exención, NUNCA el nombre: la guarda con
+mutación sigue) · **Visita** (el botón). **Todos los `data-gate-*` se conservan** y los tests pasan a
+mirar `data-gate-*` y claves, no cadenas compuestas. `max-w-2xl → 3xl`.
+
+**C·6 · La palabra «QR»**: 9 rótulos ×3 en `account.card`, 3 en `emails.order_confirmation.card_attached`
+(⚠️ EN ya decía «QR pass» y FR vosea mientras `account` tutea: se unifica), 17 en `admin.puerta.*` /
+`profile.card_*` / `users.actions.rotate_card.*` / `settings`, y 11 «会员卡» en zh_CN (≈ «tarjeta de
+socio»: se cambia a «客户二维码»). ⚠️ «QR» ya nombra el QR de la ENTRADA (`GLOSARIO.md`): en la puerta se
+dice **«QR del cliente»** donde convivan; en el cajón basta «Mi QR». Tests con literal:
+`ValidarRegistroProfileTest` (2 `assertSee`) → por clave; los guiones de `/root/e2e` (fuera del repo)
+se re-apuntan. Las claves de lang, `carne-qr.png` y las rutas **no cambian**.
+
+**Orden**: C·3 y la sección de menores del panel (§9.11 D·3) en paralelo (ficheros disjuntos) · C·1 + C·2
++ C·4 + el bloque de menores (§9.11 D·2) en el cajón, con un solo build y un solo manifiesto · C·5 · C·6
+al final, cuando nadie más toque `lang/`. Cada unidad con su red y su sondeo; revisión adversarial y
+despliegue a staging al cerrar.
+
+#### 9.7.1 EJECUTADA — lo medido, unidad por unidad (2026-08-28, carril A)
+
+> Cuatro implementadores en paralelo con ficheros disjuntos y el orquestador reservándose `lang/` del
+> panel. Lo que sigue son medidas, no impresiones.
+
+**C·3 · el icono dentro del QR** — `Platform\Services\Qr\PngWithLogo` + `Platform\Services\QrLogo`.
+22 casos nuevos, **11 mutaciones y las 11 muerden**. Lo que enseñó:
+- ⚠️ **Una mutación SOBREVIVIÓ en la primera pasada** (`imagealphablending` a `false`): los dos iconos
+  de prueba eran opacos, así que la mezcla de alfa no cambiaba un píxel. Con un icono TRANSPARENTE
+  —que es como se entrega casi cualquier logotipo— el QR se habría estampado con un **cuadrado negro**
+  en mitad del carné. Es el fallo que solo aparece con el icono de un cliente real: producción, una
+  instalación sola, y ningún test rojo. Ahora hay caso para eso.
+- **El precipicio de lectura, con DOS decodificadores** (el de la librería, puerto de ZXing, y **jsQR**
+  en Node), a 264 y a 132 px: 7 y 9 módulos tapados leen; **11 no leen**, en los cuatro cruces.
+- ⚠️ **`extension_loaded('imagick')` NO es «sabe leer SVG»**: en el contenedor local da `true` y
+  `Imagick::queryFormats('SVG')` viene **vacío** (falta `libmagickcore-6.q16-7-extra`); staging es al
+  revés (tiene el coder y NO tiene `rsvg-convert`). Por eso la cadena degrada de verdad.
+- **Sin rasterizador con un SVG de cliente presente, el QR sale LISO, nunca con el icono del
+  producto**: enseñar la «J» de JumpWeb dentro del carné de un cliente que entregó su marca sería una
+  fuga de white-label impresa en un correo. Hay mutación que lo vigila.
+- ▶ **El MARGEN** (`LOGO_PAD_MODULES = 1`, pedido por el owner el mismo día): el cuadro tapado **sigue
+  siendo de 7 módulos** —el único valor con dos escalones por debajo del precipicio— y lo que encoge es
+  el dibujo, de 7 a **5 módulos** (15 % del lado). Crecer hacia fuera habría dejado 9 tapados, a un solo
+  escalón, para un parque que imprime y escanea con lector de mostrador. El anillo se rellena con el
+  color de fondo **leído del propio lienzo**, no con blanco quemado. Mutación (`pad = 0`): cae.
+
+**D·3 · los menores en la ficha del cliente del panel** — `Users/Support/HolderDependents` + partial +
+sección en el infolist. 7 casos, **8 mutaciones que muerden**, **presupuesto de consultas medido**
+(4 en modo interno con 1 menor y con 4; 1 fuera). Cuenta anonimizada: no lista a nadie y remite al
+registro probatorio del waiver. La edad es la de HOY y **el rótulo lo dice** («:age años (hoy)»): en la
+ficha del PEDIDO es la del día de la visita, y sin esa palabra el mismo menor parece tener dos edades
+distintas en dos pantallas del panel.
+
+**C·5 · la pantalla de puerta** — 72 → **77 casos** en verde con los rótulos definitivos, **11
+mutaciones**. Lo que enseñó:
+- **La paleta estaba rota, y ahora hay números**: antes `--gray-50/500/950`, `--primary-600` y
+  `--success-600` computaban **vacío**; el `<body>` transparente; el texto «gris» **negro puro**; el
+  anillo del formulario **negro sólido**. Después: los siete tokens resueltos, el gris real, el foco de
+  la MARCA del cliente (`--primary-600` con el tono de `theme.brand`, no el ámbar de fábrica) y la
+  tipografía del panel.
+- ⚠️ **Dos guardas separadas, y la mutación explica por qué**: quitar el `boot()` del panel deja los
+  tokens **emitidos igual** —los de fábrica— así que la página *parece* arreglada mientras el color de
+  marca desaparece. Una sola guarda habría dado verde.
+- ⚠️ **La guarda de «nunca el nombre de un menor» no cubría la PLANTILLA**: inyectando `name` en el
+  estado y pintándolo, los 12 casos anteriores seguían verdes. Ahora hay caso que lo caza (mutación M6).
+- **El semáforo sale de la vista** a `Livewire\Admin\Puerta\GateSemaphore` (tabla estado → tono +
+  icono, con guarda por reflexión de que es TOTAL): los 8 `@case` con la paleta a mano desaparecen. Y
+  **el único rojo es «no registrado»**: un QR no reconocido en rojo empuja al empleado a negar la
+  entrada a alguien que sí está en el sistema.
+- `[DECIDIDO agente]` **modo oscuro activado** leyendo la misma clave que el panel (las 99 variantes
+  `dark:` llevaban ahí inertes porque nada ponía `.dark`). Va más allá del encargo: **revertirlo son 8
+  líneas** si el owner no lo quiere.
+
+**C·6 · la palabra «QR»** — hecho en el panel y en el correo (es/en/fr; ⚠️ el inglés decía «QR pass» y
+el francés «carte QR» **voseando** mientras el cajón tutea: se unifica). En la puerta se dice **«QR del
+cliente»** y no «QR» a secas, porque ahí convive con el QR de la ENTRADA y el empleado tiene que saber
+cuál se le nombra. Las CLAVES de `lang/`, el nombre del adjunto (`carne-qr.png`), las rutas y el
+vocabulario del código (`card`, `CustomerCard`) **no cambian**: renombrarlos rompería la auditoría sin
+ganar nada.
