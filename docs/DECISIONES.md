@@ -11663,3 +11663,42 @@ distinguirla del rojo, una guarda sin ejercitar pasa por probada.
 
 **Verificación**: suite **3245 / 21.314** · Pint ✓ · docs-check ✓ · arnés re-corrido: **11/11
 muerden** y **la web sigue sirviendo la etiqueta después**, que es lo que antes no pasaba.
+
+---
+
+## #220 · 2026-08-28 · El titular del hero no cabía en un teléfono, y la culpa era del SUELO de un `clamp` — con tres divergencias más en la misma pieza
+
+**Contexto.** Revisando el móvil después de `#218`: el titular del hero **se salía por la derecha**
+en pantallas estrechas. `#216` metió dos botones en ese hero y nadie había mirado cómo quedaba por
+debajo de 720 px.
+
+❗❗ **Un `clamp` no es una talla adaptable: es una talla con DOS TOPES, y el suelo manda.**
+`clamp(63px, 13vw, 96px)` nunca baja de 63; a 390 px, `13vw` son 50,7 y el hueco daba para 49, pero
+pedía 63. El mockup usa `max(38, min(72, vw·0,125))` — **suelo 38**. Medido: **29 % más grande**.
+
+▶ **Y es un defecto que no falla**: el `clamp` es válido y el navegador lo aplica. La sonda tampoco
+lo veía, porque **el elemento no desborda su caja**: una palabra sola no se parte, así que se sale
+por encima del borde sin cambiar el `scrollWidth`. Hubo que comparar **el ancho del texto con el
+hueco disponible**, no esperar a que el elemento se quejara.
+
+**Tres divergencias más en la misma pieza**: el corte estaba en **720** y el del mockup en **620** ·
+un **`text-align: center`** que el mockup no tiene —y que antes no se notaba porque debajo del
+titular no había nada, pero desde `#216` hay dos botones a la izquierda— · y **el titular no
+encogía con el hero**, que el mockup sí hace (`lerp(f0, f1)`: de 124 a 94 px de tope en escritorio,
+de 72 a 58 en teléfono). Sin eso, el hero se minimiza y el texto se queda igual.
+
+**Entra en la coreografía con el mecanismo que ya existía** —`--hero-p` y `calc()`—, sin una línea
+de JavaScript nueva: el JS sigue publicando un solo número y el CSS decide todo lo demás.
+
+**Verificación**: suite **3246 / 21.320** · Pint ✓ · docs-check ✓ · medido en **seis anchos** (360 ·
+390 · 430 · 620 · 900 · 1440), donde el tamaño coincide **exactamente** con la fórmula del mockup ·
+`ArmazonContractTest` +1 caso · **3 mutaciones, las 3 muerden**.
+
+⚠️ **Y la guarda nació ROJA con el código correcto**: buscaba el `clamp` prohibido en el fichero
+crudo, y **la cadena está en el COMENTARIO que explica por qué se retiró**. Se lee sobre el CSS con
+los comentarios blanqueados. *Un `grep` que encuentra no demuestra que exista: hay que mirar dónde.*
+
+`[DECIDIDO owner, 2026-08-28]` en la misma vuelta: **la barra inferior de móvil se queda como está**
+—el CTA doble de `#205`— y NO se cambia por los 3 iconos + «Reservar» de su artboard. Los tres
+destinos ya están en el menú, a un toque. ▶ Eso deja la **2c·4b** reducida a lo que de verdad
+falta: **el menú a pantalla completa en móvil**.

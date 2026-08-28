@@ -1475,3 +1475,74 @@ color computado del filtro es `rgba(16,20,24,.45)`, exactamente el del mockup �
 - Medido en navegador: logotipo **147 × 54 sin fondo ni borde** con el `drop-shadow` doble · botón
   de menú **103 × 54, radio 10, sombra `.16`**, y **121 × 54 en papel macizo** con el menú abierto ·
   las tres sombras del racimo en sus valores (`.24` / `.18` / `.16`).
+
+---
+
+## 11. El HERO EN TELÉFONO — el titular no cabía, y la culpa era del SUELO de un `clamp` (`#220`, 2026-08-28)
+
+> Encontrado al revisar el móvil después de `#218`: **el titular del hero se salía por la derecha**
+> en pantallas estrechas. `#216` metió dos botones en ese hero y nadie había mirado cómo quedaba
+> por debajo de 720 px.
+
+### 11.1 ⚠️⚠️ Un `clamp` no es una talla adaptable: es una talla con DOS TOPES
+
+```css
+font-size: clamp(63px, 13vw, 96px);   /* lo que había */
+```
+
+**Un `clamp` nunca baja de su suelo.** A 390 px, `13vw` son 50,7 — pero el suelo son 63, así que
+pedía 63 px con hueco para 49. El mockup usa `max(38, min(72, vw·0,125))`, o sea **suelo 38**.
+
+| Ancho | Mockup | Nosotros | |
+|---|---|---|---|
+| 360 | 45 | **63** | se salía |
+| 390 | 49 | **63** | se salía |
+| 430 | 54 | **63** | justo |
+| 620 | 72 | 81 | |
+
+▶ **Es un defecto que no falla**: el `clamp` es válido, el navegador lo aplica, y solo se ve
+mirando. Y la sonda tampoco lo veía, porque el elemento **no desborda su caja**: una palabra sola
+no se parte, así que se sale por encima del borde sin cambiar el `scrollWidth`. Hubo que comparar
+**el ancho del texto con el hueco disponible**, no pedirle al elemento que se quejara.
+
+### 11.2 Tres divergencias más, en la misma pieza
+
+1. **El corte estaba en 720 y el del mockup está en 620** (`vw < 620` es su «teléfono»). Entre
+   620 y 720 su hero usa la escala grande y nosotros la pequeña.
+2. **`text-align: center`** en móvil, que el mockup no tiene. Antes no se notaba porque debajo del
+   titular no había nada; desde `#216` hay dos botones alineados a la izquierda, y un titular
+   centrado encima de ellos es una incoherencia visible.
+3. ❗ **El titular NO encogía con el hero.** El mockup lo interpola con el mismo progreso que la
+   caja (`lerp(f0, f1)` en `aplicaHero`): de 124 a 94 px de tope en escritorio, de 72 a 58 en
+   teléfono. Sin eso, el hero se minimiza y **el texto se queda igual**, así que la tarjeta pequeña
+   acaba llena de letra. Entra en la coreografía con el mecanismo que ya existía —`--hero-p` y
+   `calc()`—, sin una línea de JavaScript nueva.
+
+### 11.3 Verificación
+
+- Medido en **seis anchos**: 360 · 390 · 430 · 620 · 900 · 1440. El tamaño coincide **exactamente**
+  con la fórmula del mockup en los seis (45,0 / 48,8 / 53,8 / 54,0 / 75,6 / 121,0), el titular
+  encoge al bajar (121 → 86) y `text-align` es `start`.
+- ⚠️ **A 360 px quedan 1 px de trazo fuera del hueco** (texto 261, hueco 260). Es el contorno, no
+  la letra, y la captura lo confirma: la palabra cabe entera. No se fuerza más porque el padding
+  lateral del hero sale de `--wrap-gutter`, que es lo que lo alinea con el resto del sitio.
+- **`ArmazonContractTest` +1 caso** · **3 mutaciones, las 3 muerden**.
+- ⚠️ **Y la guarda nació ROJA con el código correcto**: buscaba el `clamp` prohibido en el fichero
+  crudo y **la cadena está en el COMENTARIO que explica por qué se retiró**. Se lee sobre el CSS
+  con los comentarios blanqueados. *Un `grep` que encuentra no demuestra que exista: hay que mirar
+  dónde.* Es la misma trampa que §1.2 pagó contando clases.
+
+### 11.4 `[DECIDIDO owner, 2026-08-28]` — la barra inferior de móvil SE QUEDA
+
+Su artboard de móvil pide una barra de **3 iconos (Zonas · Cumples · Llegar) + «Reservar»**, y la
+nuestra es el **CTA doble** de `#205`, que él mismo validó el 27. Preguntado con las dos opciones y
+su coste delante: **se queda el CTA doble.**
+
+▶ Motivo: los tres destinos del artboard **ya están en el menú a pantalla completa**, a un toque de
+la hamburguesa, y cambiar la barra partiría en dos una decisión de producto que hoy es una sola
+—`$store.ctaPair` lo comparten la cabecera y la barra— dejando el acceso a la cuenta fuera del
+pulgar.
+
+▶ **Eso reduce la 2c·4b a lo que de verdad falta: el MENÚ a pantalla completa en móvil.** Por
+debajo de 1080 px sigue mandando el cajón lateral de siempre, que —`§1.3`— **no lo toca ningún
+test**, ni PHP ni JS.

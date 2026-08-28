@@ -1849,6 +1849,57 @@ class ArmazonContractTest extends TestCase
         }
     }
 
+    /* ══ EL HERO EN TELÉFONO — LAS MEDIDAS DEL MOCKUP (`#220`) ═══════════════════════════════ */
+
+    /**
+     * **El titular ENCOGE con el hero, y su suelo cabe en un teléfono.**
+     *
+     * ⚠️⚠️ **El defecto que motiva esta guarda es un `clamp` con el SUELO mal puesto**, y es de
+     * los que no fallan: `clamp(63px, 13vw, 96px)` nunca baja de 63 px, así que en un teléfono de
+     * 390 pedía 63 px cuando el hueco daba para 49 — y «DIVERSIÓN» se salía por la derecha. Un
+     * `clamp` no es una talla adaptable: es una talla con dos topes, y **el suelo manda por debajo
+     * de ellos**. Medido: 29 % más grande que el del mockup.
+     *
+     * ⚠️ **Y el titular sale de la COREOGRAFÍA, no de un tamaño suelto**: en el mockup encoge con
+     * la caja (`lerp(f0, f1)`), y sin eso la tarjeta pequeña acaba llena de letra.
+     */
+    public function test_the_hero_headline_shrinks_with_the_hero_and_fits_a_phone(): void
+    {
+        $reglas = $this->cssRules(public_path('css/site.css'));
+
+        $titular = (string) ($reglas['.hero__title.hero__title--onvideo'] ?? '');
+        $this->assertStringContainsString(
+            'var(--hero-p', $titular,
+            "el titular no sigue a la coreografía del hero.\n".
+            '▶ En el mockup encoge con la caja; si no, el hero se minimiza y el texto se queda igual.',
+        );
+
+        // ⚠️ **Sobre el CSS SIN COMENTARIOS, y no es un detalle**: la primera versión de esta guarda
+        // leyó el fichero crudo y salió ROJA con el código correcto, porque el `clamp` prohibido
+        // aparece en el COMENTARIO que explica por qué se retiró. Un `grep` que encuentra no
+        // demuestra que exista: hay que mirar dónde. `stylesheets()` los blanquea.
+        $raiz = $this->stylesheets();
+
+        foreach ([
+            'clamp(54px, 8.4vw, 124px)' => 'el tamaño de partida en escritorio',
+            'clamp(44px, 6vw, 94px)' => 'el de llegada en escritorio',
+            'clamp(38px, 12.5vw, 72px)' => 'el de partida en teléfono',
+            'clamp(32px, 9.8vw, 58px)' => 'el de llegada en teléfono',
+        ] as $valor => $qué) {
+            $this->assertStringContainsString(
+                $valor, $raiz,
+                "falta {$qué} (`{$valor}`), que es el del mockup.",
+            );
+        }
+
+        // ⚠️ Y el SUELO no puede volver a subir: es lo que sacaba el titular de la pantalla.
+        $this->assertStringNotContainsString(
+            'clamp(63px, 13vw, 96px)', $raiz,
+            "vuelve el `clamp` cuyo SUELO no cabe en un teléfono.\n".
+            '▶ A 390 px pedía 63 px con hueco para 49, y el titular se salía por la derecha.',
+        );
+    }
+
     /** Literal XPath seguro aunque el texto lleve comillas. */
     private function quote(string $value): string
     {

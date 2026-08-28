@@ -589,6 +589,15 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3246 en verde** (21.320 aserciones), medida el 2026-08-28 por la tarde por el carril C
+  tras **`#220`** (el HERO EN TELÉFONO: el titular no cabía y la culpa era del **suelo** de un
+  `clamp` — `clamp(63px, 13vw, 96px)` nunca baja de 63 y el hueco daba para 49). ▶ Con él, tres
+  divergencias más de la misma pieza: el corte estaba en 720 y el del mockup en 620, un
+  `text-align: center` que el mockup no tiene, y **el titular no encogía con el hero**. Medido en
+  seis anchos: coincide **exactamente** con la fórmula del mockup en los seis.
+  ⚠️ **La guarda nació ROJA con el código correcto**: buscaba el `clamp` prohibido en el fichero
+  crudo y la cadena está en el COMENTARIO que explica por qué se retiró. *Un `grep` que encuentra
+  no demuestra que exista.*
 - Suite **3245 en verde** (21.314 aserciones), medida el 2026-08-28 por la tarde por el carril C
   tras `#217` y **`#218`** (el logotipo a su tamaño REAL: el `height:54px` del mockup es la caja que
   lo envuelve, no el dibujo — son **70**). ⚠️ **Hubo que llegar a la TERCERA medida**: las dos
@@ -1115,6 +1124,7 @@ número se eligió **mirando el remoto** y esta tanda es **`#216`**.
 | `#216` · armazón | **El armazón NACE BAJO EL HERO** (`[DECIDIDO owner]`, como el mockup): con el hero a pantalla completa **no hay logo, ni CTA, ni hamburguesa** |
 | `#216` · hero | **Y por eso el hero recupera sus dos botones**, reabriendo `#195`: el mockup puede ocultar su cabecera **porque su hero ofrece la acción** |
 | `#216` · CTA | Las **ocho** diferencias medidas del CTA doble, alineadas: orden, anchos fijos 224/56, alturas iguales, el colapso, el retardo del rótulo, la sombra, el hover y el color dentro del menú |
+| `#220` · el hero móvil | ❗ **El titular del hero no cabía en un teléfono**: un `clamp` no es una talla adaptable, es una talla con dos topes y **el suelo manda**. Con él, tres divergencias más: el corte en 720 en vez de 620, un centrado que el mockup no tiene, y que **el titular no encogía con el hero** |
 | `#219` · el arnés | ❗❗ **El arnés de mutación ENVENENÓ la caché de vistas de Blade**: restaurar con `shutil.move` conserva el mtime, así que el compilado con la mutación se cree más nuevo que el fuente y **gana para siempre**. La web servía el fallo con el fichero correcto en disco, la suite verde y el `pre-push` verde — **solo lo vio el ojo del owner en una captura**. Arreglado con `os.utime` en los cinco arneses; la trampa entra en `CONVENCIONES §3.quater`, que pasa de 4 a 6 |
 | `#218` · el logo | ❗ **El logotipo no medía lo que el mockup**: su `height:54px` está en el `<a>` que ENVUELVE el lockup y el dibujo desborda por sus contornos (54 declarados, **68 reales**). A 70 px la tinta coincide al 1,5 % |
 | `#217` · el ojo | ❗ **Las TRES piezas que el owner vio distintas y la sonda no**: las **sombras** del racimo (entra un CUARTO rol, el mobiliario flotante), la **forma del botón de menú** (era un círculo; ahora el rectángulo del mockup con etiqueta y dos rayas que ROTAN) y el **logotipo** (fuera la pastilla, 26 → 54 px y `drop-shadow` que sigue la SILUETA) |

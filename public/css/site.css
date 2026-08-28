@@ -1675,6 +1675,14 @@ body.no-scroll { overflow: hidden; }
     --hero-h-ini: calc(100svh - var(--hero-gap) * 2);
     --hero-h-end: min(78vh, 660px);
     --hero-w-end: 1240px;
+    /* ⚠️ **El TITULAR también encoge, y hasta ahora no lo hacía** (`#220`). El mockup lo interpola
+       con el mismo progreso que la caja (`lerp(f0, f1)` en `aplicaHero`), así que al minimizarse
+       el hero el titular baja de 124 a 94 px de tope. Sin esto, el hero encogía y el texto se
+       quedaba del mismo tamaño: la tarjeta pequeña acababa llena de letra.
+       ▶ Los cuatro números son los del mockup: `max(54, min(124, vw·0,084))` → `max(44, min(94,
+       vw·0,06))`, que en CSS es exactamente un `clamp`. */
+    --hero-t-ini: clamp(54px, 8.4vw, 124px);
+    --hero-t-end: clamp(44px, 6vw, 94px);
     --hero-p: 0;
 
     width: 100%; max-width: none; margin: 0; padding: 0;
@@ -2657,7 +2665,12 @@ body[data-has-hero] .nav--over .nav__cta {
    tamaño de landing.css sin que falle nada.
    ==================================================================== */
 .hero__title.hero__title--onvideo {
-    font-size: clamp(44px, 8.5vw, 128px);
+    /* ⚠️ **Sale de la COREOGRAFÍA, no de un `clamp` suelto** (`#220`): encoge con el hero, igual
+       que en el mockup. Fuera de la portada `--hero-p` no existe y el `var()` cae a su valor
+       inicial, que es el tamaño de siempre — el suelo es el estado grande, que es el seguro. */
+    font-size: calc(var(--hero-t-ini, clamp(54px, 8.4vw, 124px))
+                  + (var(--hero-t-end, clamp(44px, 6vw, 94px)) - var(--hero-t-ini, clamp(54px, 8.4vw, 124px)))
+                  * var(--hero-p, 0));
     /* Margen vertical reservado para que el chip "Abierto" arriba y el subtítulo
        abajo del título no toquen los bordes en breakpoints estrechos. */
     margin: clamp(10px, 1vw, 16px) 0 0;
@@ -2761,14 +2774,28 @@ body[data-has-hero] .nav--over .nav__cta {
 @media (prefers-reduced-motion: reduce) {
     .hero__act { transition: background 0.18s linear, color 0.18s linear, border-color 0.18s linear; }
     .hero__act--buy:hover { transform: none; }
-}@media (max-width: 720px) {
-    .hero__title.hero__title--onvideo {
-        font-size: clamp(63px, 13vw, 96px);
-        text-align: center;
+}/* ══ EL HERO EN TELÉFONO — LAS MEDIDAS DEL MOCKUP (`#220`) ════════════════════════════════════
+   ⚠️⚠️ **Aquí el titular era `clamp(63px, 13vw, 96px)` y ese 63 de mínimo lo SACABA de la caja**:
+   un `clamp` nunca baja de su suelo, así que a 390 px pedía 63 px cuando el ancho disponible daba
+   para 49 — y «DIVERSIÓN» se salía por la derecha. El mockup usa `max(38, min(72, vw·0,125))`, o
+   sea un suelo de **38**. Medido: a 390 px son 49 px frente a nuestros 63, un **29 % más grande**.
+
+   ⚠️ **Y el corte pasa de 720 a 619 px**, que es donde el mockup separa el teléfono (`vw < 620`).
+   Entre 620 y 720 su hero sigue usando la escala grande, y nosotros la usábamos pequeña.
+
+   ⚠️ **Se retira `text-align: center`**: el mockup alinea TODO el contenido del hero a la
+   izquierda —eslogan, titular, botones y estado—, y desde `#216` los botones están ahí. Un
+   titular centrado sobre dos botones alineados a la izquierda es una incoherencia que antes no se
+   veía porque debajo no había nada. */
+@media (max-width: 619px) {
+    .hero.hero--full {
+        --hero-t-ini: clamp(38px, 12.5vw, 72px);
+        --hero-t-end: clamp(32px, 9.8vw, 58px);
     }
     .hero__stage-content {
         padding-block: clamp(16px, 4vw, 28px);
-    }}
+    }
+}
 
 /* ====================================================================
    Complementos por producto en la landing (#194)
