@@ -1,7 +1,7 @@
 # Navegación del panel — el menú plano y «Ajustes»
 
-> Estado: 🟦 **TANDAS 1 y 2 EN EL ÁRBOL** (2026-08-28) · pendiente del OJO del owner
-> Decisiones: `DECISIONES.md` **#223** (el menú) y **#224** (el buscador) · Encargo del owner: «simplificar el panel, mejor UI/UX,
+> Estado: 🟦 **TANDAS 1, 2 y 3 EN EL ÁRBOL** (2026-08-28) · pendiente del OJO del owner
+> Decisiones: `DECISIONES.md` **#223** (el menú), **#224** (el buscador) y **#232** (la puerta en tablet) · Encargo del owner: «simplificar el panel, mejor UI/UX,
 > empezando por el menú y la organización de cada acción».
 > Doc funcional del panel: `PANEL-ADMIN.md` (qué hace cada pantalla). **Esto es solo la FORMA:
 > dónde vive cada pantalla y por dónde se llega.**
@@ -281,6 +281,88 @@ mirar es reducir la lista, no el rebote.
 
 ---
 
+## 8. Tanda 3 — la PUERTA en tablet: modo kiosco (`#232`)
+
+`[DECIDIDO owner, 2026-08-28]`, dos respuestas que definen el diseño: **la tablet va FIJA en un
+soporte y en HORIZONTAL**, y **la puerta tiene tablet propia** (el resto del panel se usa en
+ordenador). Eso la convierte en un kiosco: no se optimiza «que quepa», sino que **la respuesta y
+la acción se vean sin desplazar** y que se acierte con el dedo, de pie y a un brazo de distancia.
+
+### 8.1 Medido antes
+
+| | |
+|---|---|
+| Alto del contenido con ficha abierta (iPad h. 1080×810) | **1.298 px** contra 1.080 de pantalla |
+| Ancho usado | **768 px** de 1.080 — un tercio en blanco |
+| Reglas CSS del panel entre 640 y 1280 px | **ninguna** |
+| Controles por debajo de 44 px | los de la pantalla, a **32–36 px** |
+
+⚠️ **Medir el caso PEOR y creerlo típico habría torcido el diseño.** Los 1.298 px son un cliente
+con la **exención de versión anterior**, que añade un párrafo. Por caso real: «no registrado» **810**
+(cabía exacto), «registrado, falta firmar» **896**, «versión anterior» **1.115**. Faltaban ~90 px
+en el caso común, no 300.
+
+### 8.2 ⚠️⚠️ La primera idea salió PEOR, y lo dijo la medición
+
+Pasar la rejilla de tarjetas de **tres a cuatro columnas** para ganar altura. Al estrecharse a
+242 px las tarjetas **envuelven su texto y crecen a lo alto** —«Exención» 187 → 226, «Visita»
+148 → 168—: la rejilla bajó 18 px y el total **subió 3**. Se cambió ancho por alto. Vuelta a tres.
+
+*En una rejilla, más columnas no es menos altura: es menos anchura por tarjeta, y el texto la
+recupera por abajo.*
+
+### 8.3 Lo que entró
+
+Todo **CSS**, sin tocar el árbol de la vista: ancho de 48rem → **80rem** por encima de 64rem
+(1024 px: cubre iPad horizontal 1080, Air 1194, Pro 1366 y el escritorio) · rejilla de **tres**
+columnas · cabecera en **una línea** · **nombre a 2,5 rem** —es lo que se contrasta con la persona
+que hay delante— · **44 px de mínimo táctil** · y **el buscador pegado arriba**.
+
+▶ **Que sea todo CSS es deliberado.** El velo de privacidad es un `filter: blur()` sobre
+`.gate-profile__body` con un `.gate-veil` encima en `position: absolute`: cualquier
+`display: contents` o contenedor de scroll nuevo por el medio se lo lleva por delante, y con él la
+privacidad de la ficha.
+
+▶ **El buscador pegado no es por el scroll: es la decisión de uso.** En un kiosco la acción más
+repetida es «el siguiente», y empezar de nuevo obligaba a bajar del todo. Además el lector de QR
+escribe en ese campo: si no está en pantalla, hay que buscarlo antes de cada escaneo.
+
+⚠️ **«Nueva búsqueda» NO se ocultó, aunque era el candidato obvio a recortar** (44 px al final):
+además de vaciar el campo, **quita de la pantalla la ficha del cliente anterior**. En una tablet
+fija en el mostrador es lo único que impide que los datos de quien acaba de pasar sigan a la vista
+del siguiente de la cola. Es privacidad, no comodidad, y hay guarda que impide ocultarlo.
+
+⚠️ **El mínimo táctil va FUERA de todo `@media`** a propósito: un ratón nunca falló por un botón
+grande, y así no depende de acertar el ancho del dispositivo — que es exactamente lo que había
+fallado aquí, donde no existía ninguna regla en el rango de la tablet.
+
+### 8.4 Resultado medido
+
+| Pantalla | Se pasa | ¿Se ve «Registrar visita»? | Controles < 44 px |
+|---|---|---|---|
+| iPad horizontal 1080×810 | 64 px | **sí** | 0 |
+| iPad Air 1194×834 | 40 px | **sí** | 0 |
+| iPad Pro 1366×1024 | **cabe** | **sí** | 0 |
+| Tablet vertical 810×1080 | **cabe** | **sí** | 0 |
+| Móvil 390×844 | 487 px | no | 0 |
+
+El móvil no es el dispositivo de destino y su conducta no cambia respecto de antes.
+
+**Verificación**: `GateKioskTest` (4 casos) con **4 mutaciones y las 4 muerden** · 79 casos de
+puerta en verde · sondeo headless en cinco anchos con capturas. ❗ **Una guarda de PHP no puede
+ver si «se ve bien»**: las cifras salen del sondeo, y quedan escritas para que la próxima vez se
+**re-midan** en vez de suponerse.
+
+### 8.5 Lo que NO entra, y por qué
+
+El **calendario** (8 reservas pintadas a 36 px de alto y 5 botones de 32–36) y las **tablas**
+(«Pedidos» se sale 97 px en vertical y 163 en horizontal) siguen sin tocar: `[DECIDIDO owner]` el
+resto del panel se usa en ordenador. Si algún día se usa en tablet, la palanca ya existe y no la
+usamos en ninguna tabla — los componentes `Split`/`Stack` de Filament, que apilan una fila como
+tarjeta por debajo de un punto de ruptura. Ficha en `DEUDA.md`.
+
+---
+
 ## 6. Lo que queda
 
 | | Qué | Por qué importa | Estado |
@@ -289,6 +371,7 @@ mirar es reducir la lista, no el rebote.
 | **U2** | Repasar los **rótulos y las 19 descripciones** | `[DECIDIDO owner]` D3: las propone el agente, las revisa él | ⬜ pendiente |
 | **U3** | **Las cinco columnas que le faltan a «Hoy»** | ❗ **«Hoy» YA EXISTE**: es el Escritorio renombrado, y ya trae filtro Hoy/Semana/Mes, dos cifras, la tabla **Cuándo · Producto · Cliente · Cantidad · Estado · Formulario**, un clic al pedido y «Imprimir resumen del día». **Medido: cero menciones a exención, menores, visita o ajustes en sus dos widgets.** Lo que falta: **si firmó la exención** (lo primero que se mira en la puerta) · **si trae menores y quiénes** · **si ya entró hoy** (la visita que registra la puerta desde `#208`, que nadie lee) · **si llega debiendo dinero** (`OrderAdjustment` de señal y extras, que se cobran en persona) · **el teléfono**. **No es una pantalla nueva: son cinco columnas.** ⚠️ Y una afirmación del agente que resultó FALSA: dijo que un pedido manual dejado a deber no saldría en «Hoy» — `ManualOrderFulfiller` los crea SIEMPRE pagados y el resto va como ajuste | ⬜ sin empezar |
 | ~~**U4**~~ | ~~Búsqueda global~~ | **HECHA** (`#224`, §7): 14 recursos + una categoría de PANTALLAS que Filament no trae. El empleado busca pedidos, no clientes. De regalo, un defecto vivo: buscar «jump» en el Catálogo no encontraba «Jump · 1 hora» | ✅ |
+| **U6** | El **calendario** y las **tablas** en tablet | Medido: 8 reservas del calendario a **36 px** y 5 botones a 32–36; «Pedidos» se sale **97 px** en vertical y **163** en horizontal. `[DECIDIDO owner]`: el resto del panel se usa en ORDENADOR, así que no urge. La palanca existe y **no se usa en ninguna tabla**: `Split`/`Stack` de Filament apilan la fila como tarjeta bajo un punto de ruptura | ⬜ sin empezar |
 | **U5** | Los `$navigationSort` de las 19 escondidas ya no ordenan nada | El orden de Ajustes lo manda `areas()`. Son propiedades muertas, inofensivas pero mentirosas | ficha en `DEUDA.md` |
 
 ▶ **Si el owner aprueba, el orden natural es U3 y luego U4**: son las dos mitades de «todo está

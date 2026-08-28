@@ -12582,6 +12582,60 @@ llega al final, que es justo el visitante que ya ha demostrado interés.
 
 ---
 
+## #232 · 2026-08-28 · [DECIDIDO owner] La pantalla de PUERTA es un KIOSCO de tablet, no una página que también cabe — y cuatro columnas salieron PEOR que tres
+
+**Encargo del owner**: «hay que preparar el panel para TABLET, y la página de verificación de
+puerta también». A pregunta simple decidió dos cosas que cambian el diseño entero: **la tablet de
+la puerta va FIJA en un soporte y en HORIZONTAL**, y **la puerta tiene tablet propia** —el resto
+del panel se usa en ordenador—. Con eso, esta tanda es la puerta como kiosco; el calendario y las
+tablas quedan para después y con menos prisa.
+
+**Medido antes** (iPad horizontal 1080×810, con una ficha abierta): el contenido medía **1.298 px
+de alto contra 1.080 de pantalla** —había que hacer scroll para ver menores y visita— y la columna
+se quedaba en **768 px** (`max-width: 48rem`), desperdiciando un tercio del ancho. Y el dato que lo
+explica todo: el CSS del panel **no tenía ni una sola regla entre 640 y 1280 px**, que es
+exactamente el rango de una tablet.
+
+⚠️ **Medir el caso PEOR y creerlo típico habría llevado el diseño por otro lado.** Los 1.298 px
+eran un cliente con la **exención de una versión anterior**, que añade un párrafo. Por caso real:
+«no registrado» **810 px** (cabía exacto), «registrado, falta firmar» **896** y el de la versión
+vieja **1.115**. O sea que faltaban ~90 px en el caso común, no 300.
+
+⚠️⚠️ **Y la primera idea salió PEOR, medida**: pasar la rejilla de tarjetas de tres a **cuatro**
+columnas para ganar altura. Al estrecharse a 242 px, las tarjetas envuelven su texto y **crecen a
+lo alto** —«Exención» 187 → 226, «Visita» 148 → 168—: la rejilla bajó 18 px y el total **subió 3**.
+Se cambió ancho por alto. Volvió a tres columnas.
+
+**Lo que entró, todo CSS y sin tocar el árbol de la vista**: el ancho pasa de 48rem a **80rem** por
+encima de 64rem (1024 px, que cubre iPad horizontal, Air, Pro y el escritorio) · la rejilla a tres
+columnas · la cabecera a **una sola línea** (en un kiosco el título es rótulo, no contenido) · el
+**nombre a 2,5 rem**, que es lo que se contrasta con la persona que hay delante · y **el buscador
+se queda pegado arriba**, que es la decisión de uso: en un kiosco la acción más repetida es «el
+siguiente», y el lector de QR escribe justo ahí.
+
+▶ **Que sea todo CSS es deliberado**: el velo de privacidad de la ficha es un `filter: blur()`
+sobre `.gate-profile__body` con un `.gate-veil` encima en `position: absolute`, así que cualquier
+`display: contents` o contenedor de scroll nuevo por el medio se lleva por delante la privacidad.
+
+⚠️ **«Nueva búsqueda» NO se ocultó, aunque era el candidato obvio a recortar** (44 px al final de
+la página): además de vaciar el campo, **quita de la pantalla la ficha del cliente anterior**. En
+una tablet fija en el mostrador es lo único que impide que los datos de quien acaba de pasar sigan
+a la vista del siguiente de la cola. Es un control de privacidad, y hay guarda que impide ocultarlo.
+
+**Objetivos táctiles**: los controles salían de **32–36 px** y el mínimo es 44 (Apple; Material
+dice 48). La regla va **fuera de todo `@media`** a propósito: un ratón nunca falló por un botón
+grande, y así no depende de acertar el ancho — que es justo lo que había fallado aquí.
+
+**Resultado medido** (cliente con la ficha abierta, en cinco anchos): iPad horizontal se pasa
+**64 px**, Air **40**, Pro y la tablet en vertical **caben exactos**, y en los cuatro **la acción
+«Registrar visita» se ve sin desplazar**. **Cero controles por debajo de 44 px.** En un móvil de
+390 px la página sigue desplazándose 487 px, que es lo esperable y no es el dispositivo de destino.
+
+**Verificación**: `GateKioskTest` (4 casos) con **4 mutaciones y las 4 muerden** —ocultar «Nueva
+búsqueda», meter el mínimo táctil dentro del bloque de kiosco, quitar el pegado del buscador y
+devolver el ancho a 48rem— · 79 casos de puerta en verde · sondeo headless en cinco anchos con
+capturas. ❗ **Lo que una guarda de PHP no puede ver es si «se ve bien»**: las cifras salen del
+sondeo, y por eso quedan escritas — para que la próxima vez se re-midan en vez de suponerse.
 ## #233 · 2026-08-28 · Tres correcciones del cierre que solo vio el OJO del owner — y la del medio dice que `#229` eligió mal
 
 **Contexto.** El owner miró el hero del pie y dijo tres cosas: «está roto», «el juego está mucho más

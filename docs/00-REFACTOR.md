@@ -442,7 +442,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       `DEUDA.md` una divergencia preexistente que la extracción destapó: el mismo `contact.phone` se
       normaliza de dos formas distintas según quién lo pinte.
       **3,5 de 5**: la mitad SIN PII del resumen del paso 6 — seis campos que el sidebar componía y
-      ningún endpoint publicaba. El desglose de señal es **por RESERVA y no por pedido** (#225 F3:
+      ningún endpoint publicaba. El desglose de señal es **por RESERVA y no por pedido** (#232 F3:
       en una cesta mixta entrada+pack, etiquetar el agregado engaña), y la composición del aviso
       «señal pagada · resto en el parque» baja a `ReservationFinancials`, que ya se declaraba fuente
       única del bloque de totales — son tres condiciones y cuatro superficies pintándolo.
@@ -649,7 +649,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
         `line.total_cents` desde el mismo presupuesto (`PAY-12`: una sola fuente de CÁLCULO).
       · ⚠️ **Dos rótulos que el diff daba por buenos**: el desglose es «Pagas ahora (señal)» en el paso
         3 y «Pagas ahora» —NEUTRO— en la cesta, porque en una cesta mixta no todo lo que se cobra ahora
-        es señal (#225). El normalizador descarta el texto: lo fija `SidebarCartParityTest`.
+        es señal (#232). El normalizador descarta el texto: lo fija `SidebarCartParityTest`.
       · **La cesta ya viaja en la consulta de horas** (`AFORO-02`). Iba `items: []` desde 4.2 con un
         comentario que decía que la clave estaba puesta «para que no se olvide»: este era el momento.
       · ⚠️ **Un caso del gate pasaba con el fallo dentro, y lo dijo la mutación**: `.cart__lines` se
@@ -2138,6 +2138,18 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       ⚠️ **Y la guarda clave pareció CIEGA al mutarla y no lo era**: la defensa tiene dos capas
       (`canViewAny` abre la búsqueda, `canView` da la URL, y sin URL Filament descarta el
       resultado). **11 casos · 4 mutaciones, las 4 muerden · suite del panel 1174 / 5155.**
+- [x] ✅ **LA FORMA DEL PANEL — tanda 3: la PUERTA en TABLET, modo kiosco** (2026-08-28, `#232`,
+      spec §8). `[DECIDIDO owner]`: tablet **fija en soporte y horizontal**, y **propia** de la
+      puerta. **Medido antes**: 1.298 px de alto contra 1.080 de pantalla, 768 px de ancho usado de
+      1.080, y **cero reglas CSS entre 640 y 1280 px**. ⚠️ **El caso peor no era el típico** (1.115
+      vs 896: el párrafo extra de la exención vieja). ⚠️⚠️ **Cuatro columnas salieron PEOR que
+      tres** —al estrecharse, las tarjetas crecen a lo alto: la rejilla bajó 18 px y el total subió
+      3—. Entró, todo CSS: 80rem de ancho, 3 columnas, cabecera en una línea, nombre a 2,5 rem,
+      44 px táctiles fuera de todo `@media` y el **buscador pegado arriba**. ⚠️ **«Nueva búsqueda»
+      NO se ocultó**: quita de pantalla la ficha del cliente anterior, o sea privacidad. **Resultado:
+      Pro y vertical caben, iPad h. se pasa 64 px, y en las cuatro se ve la acción sin desplazar;
+      cero controles bajo 44 px.** 4 casos · 4 mutaciones, las 4 muerden · headless en 5 anchos.
+      ▶ Fuera a propósito: calendario y tablas (ficha en `DEUDA`).
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de

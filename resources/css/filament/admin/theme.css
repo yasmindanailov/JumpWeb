@@ -1139,6 +1139,133 @@
     color: var(--gray-400);
 }
 
+/* ─── La puerta en TABLET: modo KIOSCO (#232) ─────────────────────────────────
+ *
+ * `[DECIDIDO owner, 2026-08-28]`: la puerta tiene **tablet propia, fija en un soporte y en
+ * HORIZONTAL**. Eso la convierte en un kiosco, no en «una página que también cabe».
+ *
+ * ⚠️ **Medido antes** sobre iPad horizontal (1080×810) y vertical (810×1080): el contenido con
+ * una ficha abierta medía **1.298 px de alto contra 1.080 de pantalla** —el empleado tenía que
+ * hacer scroll para ver menores y visita— y la columna se quedaba en **768 px** (`max-width:
+ * 48rem`) desperdiciando un tercio del ancho en horizontal. El CSS del panel **no tenía ni una
+ * regla entre 640 y 1280 px**, que es justo el rango de una tablet.
+ *
+ * Todo lo de aquí es LAYOUT, no estructura: la vista no se toca. Es deliberado — el velo de
+ * privacidad es un `filter: blur()` sobre `.gate-profile__body` con un `.gate-veil` encima en
+ * `position: absolute`, así que cualquier `display: contents` o contenedor de scroll nuevo por
+ * el medio se lo llevaría por delante, y con él la privacidad de la ficha.
+ *
+ * El corte es `64rem` (1024 px): cubre iPad horizontal (1080), Air (1194), Pro (1366) y el
+ * escritorio, que gana lo mismo. Por debajo sigue mandando el diseño de una columna. */
+
+@media (min-width: 64rem) {
+    /* El ancho deja de ser el de un documento y pasa a ser el de una pantalla. */
+    .gate-shell {
+        max-width: 80rem;
+    }
+
+    /* TRES columnas: las tarjetas con lista (HOY, OTROS DÍAS) ocupan dos y las de un dato caben
+     * al lado en vez de debajo.
+     *
+     * ⚠️ **Con CUATRO columnas sale PEOR, y es contraintuitivo**: al estrecharse a 242 px las
+     * tarjetas envuelven su texto y crecen a lo alto —«Exención» pasó de 187 a 226 px, «Visita»
+     * de 148 a 168—, así que la rejilla solo bajó 18 px y el total SUBIÓ 3. Se cambió ancho por
+     * alto. Medido, no supuesto.
+     *
+     * Medido por caso real, que es lo que decide si hay scroll o no:
+     *  · «No registrado» ......................  810 px → cabe exacto en un iPad horizontal
+     *  · «Registrado, falta firmar» (el común) .  896 px → se pasaba 86
+     *  · «Registrado, exención de versión vieja» 1.115 px → se pasaba 305 (lleva un párrafo más)
+     * Con esto y con los huecos de abajo, los dos primeros caben. El tercero sigue pidiendo
+     * scroll, y por eso el buscador se queda pegado arriba. */
+    .gate-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: start;
+    }
+
+    .gate-grid__wide {
+        grid-column: span 2;
+    }
+
+    /* Huecos más cortos entre bloques: en una pantalla que no se desplaza, 20 px cinco veces
+     * son 100 px que no se ven. */
+    .gate {
+        gap: calc(var(--spacing) * 3);
+    }
+
+    /* ▶ El buscador SE QUEDA PEGADO ARRIBA. No es solo por el scroll del caso largo: en un
+     * kiosco la acción más repetida es «el siguiente», y hasta ahora empezar de nuevo obligaba
+     * a bajar del todo a por «Nueva búsqueda». Con esto, atender al siguiente es tocar el campo
+     * que ya está delante — y el lector de QR escribe justo ahí.
+     *
+     * ⚠️ «Nueva búsqueda» NO se retira: además de vaciar el campo, **quita de la pantalla la
+     * ficha del cliente anterior**, que es un control de privacidad, no una comodidad. */
+    .gate-search {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+    }
+
+    /* La cabecera es instrucción, no contenido: en un kiosco se lee una vez en la vida, y cada
+     * píxel suyo se lo quita a la ficha. Título e instrucción pasan a UNA línea compartida. */
+    .gate-head {
+        align-items: baseline;
+    }
+
+    .gate-head > :first-child {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: calc(var(--spacing) * 3);
+    }
+
+    .gate-head__title {
+        font-size: 1.25rem;
+    }
+
+    .gate-head__intro {
+        font-size: 0.8125rem;
+    }
+
+    /* El nombre se lee A UN BRAZO DE DISTANCIA: es lo que el empleado contrasta con la persona
+     * que tiene delante, y la tablet está en un soporte, no en la mano. */
+    .gate-id__name {
+        font-size: 2.5rem;
+    }
+
+    /* El campo es lo único que se toca en el 90 % de las visitas (o lo rellena el lector de QR
+     * solo): más alto y con letra más grande, que se acierta de un dedo y sin mirar. */
+    .gate-search__input {
+        padding-block: calc(var(--spacing) * 4);
+        font-size: 1.125rem;
+    }
+}
+
+/* ─── Objetivos táctiles: 44 px, en TODOS los anchos ──────────────────────────
+ *
+ * ⚠️ Medido en la tablet: los controles de esta pantalla salían de 32–36 px. El mínimo táctil
+ * es 44 px (el de Apple; Material dice 48). Se aplica sin `@media` a propósito: un ratón nunca
+ * ha fallado por un botón GRANDE, y así no depende de acertar el ancho del dispositivo. */
+
+.gate button,
+.gate [role="button"],
+.gate .fi-btn,
+.gate .fi-icon-btn,
+/* «Volver al panel» es un enlace de texto de 21 px: secundario, pero se toca con el mismo dedo.
+ * Con `inline-flex` + `min-height` crece su ZONA de acierto sin crecer la letra ni la cabecera. */
+.gate-head__back {
+    min-height: 44px;
+}
+
+.gate-head__back {
+    display: inline-flex;
+    align-items: center;
+}
+
+.gate-search__input {
+    min-height: 44px;
+}
+
 /* ─── «Ajustes»: la puerta única a la puesta en marcha (#223) ──────────────────
  *
  * `AdminSettingsHub`. El menú lateral pasó de 24 entradas a 5 y las 19 restantes viven aquí,
