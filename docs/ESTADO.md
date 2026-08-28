@@ -649,6 +649,57 @@
 >   ❗ **El primer paso no es código: son las SEIS preguntas de §5**, y la del **cobro** no se puede
 >   elegir por defecto —es dinero **después** de un pedido pagado (`PAY-04`)—.
 >
+>   ▶▶ ❗❗ **CIERRE DE ESTA SESIÓN (2026-08-29, 01:40 hora de Madrid; el contenedor va en UTC, 2 h
+>   menos) — POR DÓNDE RETOMA LA SIGUIENTE.** Todo empujado (`f1ef0b2`) y con el gate en verde: suite
+>   **3403 / 22.406** · JS **862** · Pint ✓ · docs-check ✓ · build ✓ · **`audit-clock` CORRIDO y verde
+>   en las 12 fronteras** (las 10 fijas más las dos que cruzan medianoche a mitad de pase). ⚠️ **Se
+>   corrió porque esta sesión SÍ añadió fixtures con calendario**: `CreateManualOrderTabletTest` siembra
+>   20 días de franjas **relativas a hoy** y asevera que la tira enseña 14; sin la auditoría, un fallo
+>   por el día de la semana o por un cambio de mes se habría descubierto días después y en el carril
+>   equivocado.
+>
+>   **Lo que entró, en cuatro decisiones**: `#239` (la FECHA como tira de días reservables + la HORA
+>   como tira con ajuste + el aviso «Casi llena» con umbral en el panel) · `#240` («Crear pedido» en
+>   tablet: dos columnas con el resumen pegajoso, chips de hora, tira de 14 días y 44 px en todo) ·
+>   `#241` (la vuelta del owner: **flechas de ratón** en las tres tiras y las fichas de hora al tamaño
+>   de las de día) · `#242` (su segunda vuelta: el selector de menores, el «Atrás» de solo icono, las
+>   tarjetas de cobro **y un BUG — «Mi cuenta» abría el carrito**).
+>
+>   ▶ ❗ **LO SIGUIENTE, y está acordado**: el owner dijo «vamos a continuar» sin nombrar la tarea, así
+>   que **pregúntale al arrancar**. Lo que hay sobre la mesa, en el orden en que lo dejó él:
+>     **1.** **Unidad 5 del cajón en móvil** — carrito e identificación, **SIN MEDIR todavía**. Se mide
+>        igual que `#237` (`specs/cajon-en-movil.md` §1) antes de tocar nada.
+>     **2.** **El hueco vertical del cajón**, medido y sin resolver a propósito: **366 px vacíos en
+>        fecha (66 %)** y **452 en hora (81 %)**, y la tira lo empeoró ~50. Rellenarlo es decisión de
+>        producto, no de implementación (`cajon-en-movil.md` §7.4, `[PENDIENTE: owner]`).
+>     **3.** **El CUMPLEAÑOS MIXTO** (`specs/cumple-mixto.md`, ⬜): **el primer paso no es código, son
+>        las seis preguntas de su §5** — y tres premisas del encargo **no se cumplen hoy**.
+>     **4.** **U6 del panel** (`panel-navegacion.md` §6): el calendario y las tablas en tablet, que
+>        vuelven a la mesa ahora que la tablet es un dispositivo de trabajo.
+>     **5.** El **armazón del panel** sigue bajo 44 px en TODAS las pantallas (ficha en `DEUDA.md`):
+>        ⚠️ agrandarlo cambia el aspecto en ORDENADOR, así que se decide con él antes de tocarlo.
+>
+>   ▶ **Lo que espera al OJO del owner de esta sesión** (nada bloquea): con el **ratón**, deslizar las
+>   dos tiras del cajón; con el **dedo**, que NO aparezca ninguna flecha; **tres menores y una entrada**
+>   para ver el marcado/desmarcado; **«Mi cuenta» con algo en el carrito**; y en la **tablet**, montar
+>   un pedido de cabo a rabo. Guiones: `VERIFICACION-E2E-CAJON.md` **§5.novodecies**, **§5.vicies** y
+>   **§5.unvicies**.
+>
+>   ⚠️ **Método que funcionó y conviene repetir**: los **rangos de numeración por carril** (A tomó
+>   `#239`–`#249`, C siguió por `#250`) **quitaron de raíz** las tres colisiones del día anterior — el
+>   otro agente los respetó sin hablar con nadie. ▶ **De ese rango quedan libres `#243`–`#249`**: la
+>   siguiente sesión del carril A empieza ahí, y si se agota, **reserva el siguiente rango en esta
+>   misma línea antes de usarlo**. Se rebasó sobre su trabajo **tres veces** y todos los
+>   conflictos fueron de doc «ambos añaden al final/principio»: se conservan LOS DOS bloques.
+>
+>   ⚠️⚠️ **La lección más cara de la jornada, y se repitió NUEVE veces**: *cuando algo parece roto, el
+>   primer sospechoso es el instrumento.* Sondas que medían la pantalla de login, aserciones que cazaban
+>   su propio comentario (**tres veces**), una mutación que mutaba un método muerto, un `sticky` medido
+>   al revés, `elementFromPoint()` sobre nodos fuera del viewport, un `aria-pressed` que no existe y un
+>   `flex-direction` **inerte que `getComputedStyle` devolvía igual**. ▶ **Ninguno era un fallo del
+>   producto**, y los nueve costaron tiempo. Antes de creerte un rojo —o un verde—, comprueba que el
+>   instrumento mide lo que dice medir.
+>
 >   ▶ **Lo que sigue esperando al OWNER** (no bloquea a nadie): su ojo sobre el **menú plano**, el
 >   **buscador** y la **puerta en tablet** —las tres en `main`, ninguna vista en su navegador—; el
 >   repaso de los **rótulos** de las 19 pantallas de Ajustes; y el ✅ a **JumpPoints**, que además

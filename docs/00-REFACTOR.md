@@ -2200,9 +2200,40 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       cortado** sin su `scroll-snap-align`.
       **Verificación**: JS 813 → 835 · +20 casos PHP · **10 mutaciones, las 10 muerden** · headless
       **22/22** (`VERIFICACION-E2E-CAJON.md` §5.novodecies) · chunk 252,27 → 255,13 KiB (techo 256).
+      ▶ ✅ **Y LAS DOS VUELTAS DEL OWNER, aplicadas** (2026-08-29, `#241` y `#242`; spec §7.bis y
+      §7.ter). **`#241`**: con RATÓN no se podía deslizar ninguna tira —la barra va oculta a
+      propósito—, así que entran **flechas** en las tres, **solo donde hay ratón** (`hover: hover` Y
+      `pointer: fine`) y solo si llevan a algún sitio; y las **fichas de hora suben a 76×76**, como las
+      de día, con el aviso en segundo plano. ⚠️⚠️ **Las flechas NACIERON MUERTAS**: el cableado se
+      enganchaba en `onMounted` y el carril vive dentro de un `v-if` que espera la oferta —al montar el
+      componente el nodo **no existe**—. Ahora observa el NODO.
+      **`#242`**: el selector de menores **apaga** las filas que no caben (fuera la línea «No caben
+      más»), el asignado lleva **«1 entrada asignada»** en segundo plano y se retira **«exención
+      firmada»** por obvia; ⚠️ eso **CORRIGE un comentario del propio componente**, con la corrección
+      delante del texto, y **conserva el MOTIVO** de la fila que no se puede marcar nunca — lo único
+      que no es obvio. ⚠️⚠️ **Y de regalo un BUG que no era de esta tanda**: «Mi cuenta» abría el
+      cajón **en el EMBUDO** (`purchase.open()` deja la sección por defecto), así que con cesta
+      guardada aterrizaba en el **CARRITO**. Reproducido en los dos sentidos y con guarda: *un `href`
+      es una promesa*.
       ❗ **Queda**: el **OJO del owner**, la unidad 5 (carrito e identificación, **sin medir**) y el
       **hueco vertical** —366 px vacíos en fecha, **452 en hora**, y la tira lo empeoró ~50—, que es
       decisión de producto (`[PENDIENTE: owner]`).
+- [x] **«CREAR PEDIDO» DEL PANEL, EN TABLET** — `[DECIDIDO owner]`: el gerente crea las reservas desde
+      la tablet, lo que **CORRIGE la premisa de `#232`** para esta pantalla
+      (`specs/panel-navegacion.md` §9 y §11, `#240` y `#242`).
+      ⚠️⚠️ **La primera medición dijo «cabe» y era FALSA por medir solo el paso 1**: el denso es el 2 —
+      **1.292 px en una pantalla de 810**, con el **resumen del pedido y el botón de avanzar FUERA de
+      pantalla**, que son las dos cosas que hay que ver con un cliente delante.
+      **Lo que entró**: dos columnas con el **resumen pegajoso** y la navegación dentro de él, la hora
+      en **chips**, una **tira de 14 días** con el calendario amplio tras un CTA «Abrir calendario»,
+      **44 px** en todo, el **titular del pedido** en el resumen, el «Atrás» de **solo icono** y el
+      método de cobro en **dos tarjetas con icono**. **Resultado: de 4/8/15 controles bajo 44 px a
+      CERO en los tres pasos.**
+      ⚠️ **Dos puertas para elegir día** (tira y calendario) → **una** regla: `onDateChosen()`. Y
+      cambiar el control de la hora **no cambió la regla**: una franja llena se enseña deshabilitada y
+      el servidor la rechaza.
+      ❗ **Queda**: el **OJO del owner** con la tablet, el **armazón del panel** (barra, menú y buscador
+      siguen bajo 44 px en TODAS las pantallas — ficha en `DEUDA.md`) y **U6** (calendario y tablas).
 - [ ] **CUMPLEAÑOS MIXTO** — apuntado por el owner el 2026-08-28, **sin diseñar**: un cumple KIDS con
       un invitado por encima de la edad del pack pasa a **MIXTO** (etiqueta «MIXTA» para cliente y
       operador, y la diferencia de precio KIDS↔JUMP por persona, visible en el desglose de los dos).
