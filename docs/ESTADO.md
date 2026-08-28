@@ -4,7 +4,13 @@
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-08-28 — carril A (la FORMA del panel y los
 > menores: `#223`, `#224`, `#232`, `#234`, `#236`, `#237`) y carril C (el mockup 1:1: `#225`→`#235`
-> y **`#238`, la COLUMNA**)**.
+> y **`#238`, la COLUMNA**)**. ▶ Y la noche del 28, **el CAJÓN EN MÓVIL (`#239`)**.
+>
+> ❗❗ **RANGO DE NUMERACIÓN RESERVADO POR CARRIL, para no repetir las TRES colisiones del día 28**:
+> el **carril A** toma **`#239`–`#249`** y el **carril C** sigue por **`#250`** en adelante. Mirar el
+> remoto al ELEGIR número **no basta** —hay que volver a mirarlo al PUBLICAR—, y una renumeración se
+> hace siempre sobre la lista de ficheros del propio diff (`git status`), nunca con un `grep` del
+> árbol: un `sed` global llegó a corromper cinco referencias del otro carril.
 >
 > ❗❗ **`#238` — LA TARJETA DEL CIERRE MEDÍA 160 px A 2560, Y EL MENÚ 60. Afecta a cualquiera que
 > escriba CSS**, así que va delante de todo lo demás. `--wrap-gutter` vale
