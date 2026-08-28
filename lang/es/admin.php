@@ -306,6 +306,10 @@ return [
             'date' => 'Fecha',
             'time' => 'Franja horaria',
             'time_help' => 'Solo se muestran las franjas con plazas disponibles.',
+            // `#240`: unos chips sin opciones no pintan nada, así que el hueco lo explica la ayuda.
+            'time_pick_date_first' => 'Elige primero un día para ver las franjas.',
+            // `#240`: el día se elige en la tira; el calendario queda para el salto largo.
+            'date_other' => 'Otra fecha (calendario)',
             'no_times_for_date' => 'No hay franjas disponibles para esta fecha. Regenera o abre franjas, o elige otro día.',
             'quantity' => 'Cantidad',
             'guests' => 'Invitados',

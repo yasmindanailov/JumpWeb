@@ -31,6 +31,7 @@ use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\ToggleButtons;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions as SchemaActions;
@@ -71,6 +72,9 @@ class CreateManualOrderPage extends Page
     public const STEP_PRODUCTS = 2;
 
     public const STEP_PAYMENT = 3;
+
+    /** Cuántos días ofrecibles enseña la tira rápida del paso 2 (`#240`). El resto, el calendario. */
+    private const QUICK_DAYS = 14;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPlusCircle;
 
@@ -323,8 +327,25 @@ class CreateManualOrderPage extends Page
                                 $this->initManualAddonDefaults();
                             }),
 
+                        // ⚠️ **La TIRA DE DÍAS RÁPIDOS, y el calendario se queda debajo** (`#240`, U7).
+                        // Con la tablet en la mano el popover del calendario son cuatro toques y
+                        // objetivos de 36 px, y la reserva de mostrador casi siempre es para hoy o
+                        // para los próximos días. La tira resuelve ESE caso con un toque.
+                        // ❗ **El calendario NO se retira**, y es la misma razón que en el cajón del
+                        // cliente (`specs/cajon-en-movil.md` §4.1): un cumpleaños se reserva con meses
+                        // de antelación y eso no se alcanza deslizando. La tira son 14 días; el resto,
+                        // el calendario.
+                        ViewComponent::make('filament.pages.partials.manual-order-daystrip')
+                            ->viewData(fn (): array => ['days' => $this->quickDays()])
+                            ->visible(fn (): bool => $this->quickDays() !== []),
+
                         DatePicker::make('sel_date')
-                            ->label(__('admin.orders.create_manual.date'))
+                            // ⚠️ **Cambia de rótulo porque ya no es el control principal** (`#240`):
+                            // el día se elige en la tira de arriba, que es la que lleva «Fecha». Dos
+                            // controles con la misma etiqueta uno debajo de otro se leen como un fallo.
+                            ->label(fn (): string => $this->quickDays() === []
+                                ? __('admin.orders.create_manual.date')
+                                : __('admin.orders.create_manual.date_other'))
                             ->native(false)
                             ->closeOnDateSelection()           // cierra el popover al elegir día
                             // Fuente ÚNICA compartida con la web (SlotOffer): solo se habilitan los
@@ -338,18 +359,28 @@ class CreateManualOrderPage extends Page
                                 ?? DisplayTime::today()->addMonths(PaymentSettings::purchaseHorizonMonths()))
                             ->disabledDates(fn (): array => $this->disabledOfferDates())
                             ->live()
-                            ->afterStateUpdated(function (callable $set): void {
-                                $set('sel_time', null);
-                                // La asignabilidad de un menor depende de la FECHA (D13): se re-elige.
-                                $set('sel_dependent_ids', []);
-                            }),
+                            // ⚠️ **Las DOS puertas de elegir día llaman a lo MISMO.** Desde `#240` hay
+                            // dos —la tira y el calendario— y duplicar aquí el «olvida la hora y los
+                            // menores» sería exactamente cómo divergen: se arregla una y la otra se
+                            // queda con una hora de otro día. La regla vive en `onDateChosen()`.
+                            // ⚠️ Le pasa el `$set` de Filament, y no es ceremonia: dentro de un
+                            // `afterStateUpdated` **escribir en `$this->data` a mano se pierde** —el
+                            // formulario vuelve a sincronizar su estado después—, así que la hora de
+                            // otro día sobrevivía. Lo dijo la guarda de las dos puertas, no el ojo.
+                            ->afterStateUpdated(fn (callable $set) => $this->onDateChosen($set)),
 
-                        Select::make('sel_time')
+                        // ⚠️ **CHIPS, no un desplegable** (`#240`, U7): con la tablet en la mano un
+                        // `<select>` son dos toques y una lista que tapa la pantalla, y las horas de
+                        // un día caben todas a la vista. `ToggleButtons` es el componente NATIVO de
+                        // Filament para esto y conserva `disableOptionWhen`, que es lo que sostiene
+                        // la conducta de abajo — cambiar el control no puede cambiar la regla.
+                        ToggleButtons::make('sel_time')
                             ->label(__('admin.orders.create_manual.time'))
                             ->options(fn (): array => $this->timeOptions())
                             // Entradas llenas: se muestran DESHABILITADAS (no se ocultan), igual que la web.
                             ->disableOptionWhen(fn (string $value): bool => ! ($this->timeMap()[$value]['sellable'] ?? false))
                             ->helperText(fn (): string => $this->timeFieldHelp())
+                            ->inline()
                             ->live(),
 
                         TextInput::make('sel_qty')
@@ -1158,10 +1189,82 @@ class CreateManualOrderPage extends Page
     }
 
     /** Ayuda del selector de hora: avisa si la fecha elegida no tiene franjas ofrecibles. */
+    /**
+     * Los días de la TIRA RÁPIDA: los primeros **14 ofrecibles** del producto en curso (`#240`, U7).
+     *
+     * ⚠️ **Son ofrecibles, no «los próximos 14 del calendario»**: salen de `offerableDates()`, que es
+     * `SlotOffer` —la misma fuente que la web (`AFORO-02`)—, así que un día cerrado no aparece. Aquí
+     * no se decide qué días se venden; se cogen los primeros de los que ya se venden.
+     *
+     * ⚠️ **14 y no 182.** El calendario sigue debajo para el salto largo, y meter el horizonte entero
+     * en la tira serían ~180 nodos re-renderizados por Livewire en cada cambio del formulario.
+     *
+     * @return array<int, array{date: string, day: string, weekday: string, selected: bool}>
+     */
+    public function quickDays(): array
+    {
+        $selected = (string) ($this->data['sel_date'] ?? '');
+
+        return array_map(function (string $ymd) use ($selected): array {
+            $day = Carbon::parse($ymd);
+
+            return [
+                'date' => $ymd,
+                'day' => $day->translatedFormat('j'),
+                // Abreviatura del día en el idioma del PANEL: quien lo usa es el operador.
+                'weekday' => mb_convert_case($day->translatedFormat('D'), MB_CASE_TITLE),
+                'selected' => $ymd === $selected,
+            ];
+        }, array_slice($this->offerableDates(), 0, self::QUICK_DAYS));
+    }
+
+    /**
+     * Elegir día por la TIRA. Es la segunda puerta del mismo hecho, así que termina en
+     * {@see onDateChosen()} igual que el calendario.
+     */
+    public function pickQuickDay(string $ymd): void
+    {
+        // Defensa: solo un día que la oferta admita. Un `wire:click` con otra fecha no puede colar
+        // una que `SlotOffer` no da — el navegador propone, el servidor decide.
+        if (! in_array($ymd, $this->offerableDates(), true)) {
+            return;
+        }
+
+        $this->data['sel_date'] = $ymd;
+        $this->onDateChosen();
+    }
+
+    /**
+     * Lo que pasa cuando se elige un día, **venga de donde venga**.
+     *
+     * ⚠️ Existe porque hay DOS puertas —la tira y el calendario— y una regla escrita dos veces es
+     * una regla que diverge: la hora y los menores dependen de la FECHA (`D13`), así que quedarse con
+     * los de otro día es ofrecer algo que el checkout rechazaría.
+     */
+    private function onDateChosen(?callable $set = null): void
+    {
+        // Dos ESCRITORES, una regla. Dentro del formulario manda el `$set` de Filament; fuera —el
+        // `wire:click` de la tira— se escribe en el estado de la página, que es donde vive.
+        $set ??= function (string $key, mixed $value): void {
+            $this->data[$key] = $value;
+        };
+
+        $set('sel_time', null);
+        $set('sel_dependent_ids', []);
+    }
+
     private function timeFieldHelp(): string
     {
         if (! empty($this->data['sel_date']) && $this->selectedProduct() && $this->timeMap() === []) {
             return __('admin.orders.create_manual.no_times_for_date');
+        }
+
+        // ⚠️ **Sin día elegido el campo de la hora se queda VACÍO**, y eso lo trajo el cambio de
+        // control (`#240`): un `<select>` siempre pintaba su «Seleccione una opción», pero unos chips
+        // sin opciones no pintan nada y el rótulo queda huérfano. Así que el hueco lo explica el
+        // propio texto de ayuda en vez de dejar al operador mirando un espacio en blanco.
+        if (empty($this->data['sel_date'])) {
+            return __('admin.orders.create_manual.time_pick_date_first');
         }
 
         return __('admin.orders.create_manual.time_help');

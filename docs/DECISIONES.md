@@ -13152,6 +13152,80 @@ rellenado con nada: tapar un hueco con contenido inventado es una decisión de p
 **22/22** a 390×844 y 2/2 más con el umbral alto (`VERIFICACION-E2E-CAJON.md` §5.novodecies) · chunk
 252,27 → **255,13 KiB** (techo 253 → 256, medido construyendo con y sin).
 
+## #240 · 2026-08-28 · «Crear pedido» deja de ser un formulario de ratón: dos columnas y el resumen que no se pierde de vista
+
+Segundo encargo del owner de la jornada (`specs/panel-navegacion.md` §6·U7, y ahora §9):
+`[DECIDIDO owner]` **el gerente crea las reservas desde la tablet**, lo que **corrige la premisa de
+`#232`** —«la puerta tiene tablet propia, el resto del panel se usa en ordenador»— para esta pantalla.
+
+### ⚠️⚠️ La primera medición dijo «cabe» y era FALSA
+
+Se midió el paso 1 y se concluyó que la pantalla entraba en las cuatro tablets. **El paso 2 es el
+denso y es el que se sale.** Medido en iPad horizontal (1080×810):
+
+| | Contenido | Se pasa | Controles de la página bajo 44 px |
+|---|---|---|---|
+| Paso 1 · Cliente | 762 px | cabe | 4 |
+| Paso 2 · vacío | 1.026 px | **216** | 8 |
+| Paso 2 · con producto | **1.292** | **482** | **15** (steppers a 28×28, un icono a 16×16) |
+
+▶ **Y lo que dolía no era el alto**: quedaban **fuera de pantalla** el **resumen del pedido** (a 1.100
+px) y **el botón de avanzar** —las dos cosas que hay que ver con un cliente delante—, todo apilado en
+**una columna de 648 px** dentro de un lienzo apaisado de 1080. El pedido más simple: **~16 toques**.
+
+### Lo que entró (`[DECIDIDO owner]` sobre tres opciones con su coste)
+
+**Dos columnas con el resumen PEGAJOSO** y la navegación dentro de él —es el gesto más repetido y el
+que decide el cobro—; la **hora en chips** (`ToggleButtons`, el componente nativo, que conserva
+`disableOptionWhen`: cambiar el control no puede cambiar la regla); una **tira de 14 días rápidos**
+para la fecha **conservando el calendario** debajo como «Otra fecha»; y **44 px** en todo lo que se toca.
+
+⚠️ **El corte son 50rem y cubre las dos orientaciones, aunque no es evidente cuál es más ancha**: en
+apaisado (1080) el menú se lleva ~250 px y quedan **760**; en vertical (810) el menú se esconde y
+quedan **810**. **La tablet en vertical tiene MÁS ancho útil que en horizontal.**
+
+⚠️ **La columna derecha mide 17rem y no 20**: con 20 el formulario se quedaba en **304 px de
+contenido** —más estrecho que un móvil— y los complementos se partían en dos líneas.
+
+⚠️ **La tira son 14 días y no los 182 del horizonte**, al revés que en el cajón del cliente: aquí no
+hay motor cliente, son nodos que **Livewire re-renderiza en cada cambio del formulario**.
+
+### La trampa que esta tanda podía haber dejado dentro
+
+⚠️⚠️ **Ahora hay DOS puertas para elegir día** y la hora y los menores dependen de la FECHA (`D13`):
+quedarse con la hora de otro día es ofrecer algo que el checkout rechazaría. Las dos terminan en
+`onDateChosen()`. ⚠️ **Y dentro de un `afterStateUpdated` escribir en `$this->data` a mano SE
+PIERDE** —el formulario re-sincroniza después—, así que la regla recibe el `$set` de Filament cuando
+la llama el formulario y escribe en el estado de la página cuando la llama el `wire:click`: **un
+escritor por puerta, una regla.** Lo dijo la guarda, no el ojo.
+
+### Resultado
+
+| iPad horizontal | Antes | Ahora |
+|---|---|---|
+| Paso 1 | 762 px · 4 bajo 44 | **554 · 0** |
+| Paso 2 vacío | 1.026 · 8 | **778 · 0** (cabe) |
+| Paso 2 con producto | 1.292 · 15 | **1.182 · 0** |
+| Resumen y avanzar | fuera de pantalla | **siempre a la vista** |
+
+⚠️ Los 11–12 controles bajo 44 que quedan son del **ARMAZÓN del panel** —barra, menú, buscador—, de
+todas las pantallas y no de ésta: ficha en `DEUDA.md`.
+
+### ⚠️⚠️ TRES instrumentos propios salieron mal, y uno llegó hasta la guarda
+
+**(1)** La primera sonda midió la pantalla de **LOGIN** durante cuatro tamaños, dando cuatro cifras
+idénticas y creíbles: `waitForURL('**/admin/**')` casa también con `/admin/login`.
+**(2)** La comprobación del pegajoso pedía que **no se moviera**, y un `sticky` sí se mueve —hasta su
+tope— y allí se queda: la aserción estaba al revés.
+**(3)** La guarda de la navegación **pasaba en verde con la mutación puesta** porque `cmo-nav-fuera`
+**contiene** `cmo-nav`. ▶ **Quinta vez que la subcadena engaña a una aserción en este repo.**
+Y un cuarto de propina: el caso de las dos puertas daba «el calendario conserva la hora» con el código
+bien — el paso 2 no estaba VISIBLE en el arnés, y **un campo oculto no tiene `afterStateUpdated`**.
+
+**Verificación**: `CreateManualOrderTabletTest` (7 casos) con **6 mutaciones y las 6 muerden** · 50
+casos de «crear pedido» y 77 del panel en verde · sondeo headless **11/11** de conducta y medición en
+las cuatro tablets, con capturas.
+
 ---
 
 ## #250 · 2026-08-28 · [DECIDIDO owner] La columna del sitio es la del MOCKUP — y no era más ancha, era más estrecha

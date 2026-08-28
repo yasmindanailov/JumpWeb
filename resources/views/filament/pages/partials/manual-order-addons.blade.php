@@ -61,7 +61,10 @@
     {{-- Complementos sueltos: incluidos (tarta), obligatorios u opcionales --}}
     @foreach ($model['singles'] as $opt)
         <div x-data="{ info: false }" wire:key="m-addon-{{ $opt['id'] }}" @class(['flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 p-3 dark:border-white/10', 'opacity-60' => ! $opt['available']])>
-            <div class="min-w-0">
+            {{-- ⚠️ `flex-1` además de `min-w-0`: sin él, en la columna estrecha del rediseño de tablet
+                 (`#240`) un nombre largo empujaba el stepper a una segunda línea y la fila se leía
+                 rota. Con los dos, el nombre envuelve DENTRO de su caja y el control no se mueve. --}}
+            <div class="min-w-0 flex-1">
                 <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $opt['name'] }}</span>
                 @if ($opt['badge'])
                     <span class="ml-1 inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">{{ __('tickets.addon_badge_'.$opt['badge']) }}</span>
@@ -76,9 +79,9 @@
             @if (! $opt['available'])
                 {{-- Dependiente «requiere»: bloqueado hasta elegir el requisito. Control inerte. --}}
                 <div class="flex flex-none items-center gap-2 opacity-50" aria-hidden="true">
-                    <button type="button" class="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-400 dark:border-gray-600" disabled>&minus;</button>
+                    <button type="button" class="manual-addon-step flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-400 dark:border-gray-600" disabled>&minus;</button>
                     <span class="w-6 text-center text-sm font-semibold tabular-nums text-gray-400">0</span>
-                    <button type="button" class="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-400 dark:border-gray-600" disabled>+</button>
+                    <button type="button" class="manual-addon-step flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-400 dark:border-gray-600" disabled>+</button>
                 </div>
             @elseif ($opt['can_toggle'])
                 {{-- Per-invitado opcional: checkbox (la cantidad la fija el aforo = invitados). --}}
@@ -92,11 +95,11 @@
                 <span class="flex-none text-xs font-medium text-gray-500 dark:text-gray-400">{{ __('tickets.addon_per_guest_qty', ['count' => $opt['qty']]) }}</span>
             @else
                 <div class="flex flex-none items-center gap-2">
-                    <button type="button" @class(['flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300', 'opacity-40' => ! $opt['can_dec']])
+                    <button type="button" @class(['manual-addon-step flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300', 'opacity-40' => ! $opt['can_dec']])
                             @disabled(! $opt['can_dec'])
                             x-on:click="$wire.call('decManualAddon', {{ $opt['id'] }})">&minus;</button>
                     <span class="w-6 text-center text-sm font-semibold tabular-nums text-gray-900 dark:text-white">{{ $opt['qty'] }}</span>
-                    <button type="button" @class(['flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300', 'opacity-40' => ! $opt['can_inc']])
+                    <button type="button" @class(['manual-addon-step flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300', 'opacity-40' => ! $opt['can_inc']])
                             @disabled(! $opt['can_inc'])
                             x-on:click="$wire.call('incManualAddon', {{ $opt['id'] }})">+</button>
                 </div>

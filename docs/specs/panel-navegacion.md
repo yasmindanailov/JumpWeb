@@ -403,6 +403,107 @@ tarjeta por debajo de un punto de ruptura. Ficha en `DEUDA.md`.
 
 ---
 
+## 9. Tanda 4 — «CREAR PEDIDO» en tablet (`#240`, U7)
+
+`[DECIDIDO owner, 2026-08-28]`: **el gerente crea las reservas desde la tablet**. Eso **corrige la
+premisa de §8** —«la puerta tiene tablet propia, el resto del panel se usa en ordenador»— para esta
+pantalla en concreto.
+
+### 9.1 Lo medido antes de tocar nada (iPad horizontal, 1080×810)
+
+| | Contenido | Se pasa | Controles de la PÁGINA bajo 44 px |
+|---|---|---|---|
+| Paso 1 · Cliente | 762 px | cabe | **4** (todos de 36 de alto) |
+| Paso 2 · vacío | 1.026 px | **216 px** | **8** |
+| Paso 2 · con producto | **1.292 px** | **482 px** | **15** — steppers a **28×28**, un icono a **16×16** |
+
+⚠️⚠️ **La primera medición dijo «cabe» y era FALSA por medir solo el paso 1.** El paso 2 es el denso
+y es el que se sale. Se corrigió antes de diseñar: sin eso, la tanda habría atacado el problema
+equivocado.
+
+▶ **Y lo que de verdad dolía no era el alto**: con un producto elegido quedaban **fuera de pantalla**
+el **resumen del pedido** (a 1.100 px) y **el botón de avanzar** — las dos cosas que el gerente
+necesita ver con un cliente delante—, todo apilado en **una columna de 648 px** dentro de un lienzo
+apaisado de 1080. Contando desde el código, el pedido más simple eran **~16 toques**.
+
+### 9.2 Lo que entró
+
+**Dos columnas con el resumen PEGAJOSO.** A la izquierda lo que se está añadiendo; a la derecha el
+resumen, el total y la navegación del asistente, que **no se pierden de vista** mientras el
+formulario crece.
+
+⚠️ **El punto de ruptura son 50rem (800 px) y cubre las dos orientaciones, aunque no es evidente cuál
+es más ancha**: en apaisado (1080) el menú lateral se lleva ~250 px y el área principal queda en
+**760**; en vertical (810) el menú se esconde y queda en **810**. **La tablet en vertical tiene más
+ancho útil que en horizontal.**
+
+⚠️ **La columna derecha mide 17rem, no 20.** Con 20 (320 px) la columna del formulario se quedaba en
+**304 px de contenido** —más estrecha que un móvil, con los complementos partiéndose en dos líneas—.
+El resumen es una lista corta de importes: cabe en 272 y devuelve 48 al área de trabajo.
+
+⚠️ **La navegación vive CON el resumen**, no debajo del formulario: es el gesto más repetido y el que
+decide el cobro, así que está siempre a la misma altura.
+
+**Controles táctiles.** La **hora** pasa de desplegable a **chips** (`ToggleButtons`, el componente
+nativo de Filament, que conserva `disableOptionWhen` — cambiar el control no puede cambiar la regla).
+La **fecha** gana una **tira de 14 días rápidos** y el calendario **se queda debajo**, rebautizado
+«Otra fecha»: un cumpleaños se reserva con meses de antelación y eso no se alcanza deslizando (la
+misma razón que en `specs/cajon-en-movil.md` §4.1). Y **44 px** en todo lo que se toca.
+
+⚠️⚠️ **La tira son 14 días y no los 182 del horizonte**: aquí no hay un motor cliente que pinte una
+lista larga barata — son nodos que **Livewire vuelve a renderizar en cada cambio del formulario**.
+
+### 9.3 La trampa que esta tanda podía haber dejado dentro
+
+⚠️⚠️ **Ahora hay DOS puertas para elegir día —la tira y el calendario— y la hora y los menores
+dependen de la FECHA** (`D13`). Quedarse con la hora de otro día es ofrecer algo que el checkout
+rechazaría, y **una regla escrita dos veces es una regla que diverge**: se arregla una y la otra se
+queda atrás. Las dos terminan en `onDateChosen()`, y hay guarda por conducta que las recorre.
+
+⚠️ **Y dentro de un `afterStateUpdated` escribir en `$this->data` a mano SE PIERDE** —el formulario
+vuelve a sincronizar su estado después—, así que la regla recibe el `$set` de Filament cuando la
+llama el formulario y escribe en el estado de la página cuando la llama el `wire:click`. **Un
+escritor por puerta, una regla.** Lo dijo la guarda, no el ojo.
+
+⚠️ **El `wire:click` de la tira lleva una fecha, así que `pickQuickDay()` vuelve a comprobarla contra
+la oferta**: el navegador propone, el servidor decide (`AFORO-02`).
+
+### 9.4 Resultado medido
+
+| iPad horizontal 1080×810 | Antes | Ahora |
+|---|---|---|
+| Paso 1 | 762 px · 4 bajo 44 | **554 px · 0** |
+| Paso 2 vacío | 1.026 px · 8 bajo 44 | **778 px · 0** (cabe) |
+| Paso 2 con producto | 1.292 px · 15 bajo 44 | **1.182 px · 0** |
+| Resumen y botón de avanzar | fuera de pantalla | **siempre a la vista** (columna pegajosa) |
+
+Y verificado en navegador que **funciona**, no solo que mide: elegir día en la tira trae los 11 chips
+de hora, el calendario refleja el mismo día, la columna se detiene en su tope al desplazar 600 px, el
+resumen recoge la línea y el paso 3 no deja ningún control bajo 44. **Sonda 11/11.**
+
+⚠️ **Los 11–12 controles bajo 44 px que sigue habiendo en la pantalla son del ARMAZÓN del panel**
+—barra superior, menú lateral, buscador—, no de esta página. Afectan a **todas** las pantallas y no
+se tocan aquí: ficha en `DEUDA.md`.
+
+**Verificación**: `CreateManualOrderTabletTest` (7 casos) con **6 mutaciones y las 6 muerden** · 50
+casos de «crear pedido» en verde · sondeo headless con capturas.
+
+⚠️⚠️ **Tres instrumentos propios salieron mal antes de acertar, y esta vez uno pasó a la guarda**: la
+primera sonda midió la pantalla de **LOGIN** durante cuatro tamaños porque `waitForURL('**/admin/**')`
+casa también con `/admin/login`; la comprobación del pegajoso pedía que **no se moviera** cuando un
+`sticky` sí se mueve —hasta su tope—; y la guarda de la navegación **pasaba en verde con la mutación
+puesta** porque `cmo-nav-fuera` **contiene** `cmo-nav`. ▶ **Quinta vez que la subcadena engaña a una
+aserción en este repo.**
+
+### 9.5 Lo que queda
+
+- El **OJO del owner** con la tablet en la mano.
+- El **armazón del panel** en tablet (§9.4), que es de todas las pantallas.
+- **U6**: el calendario y las tablas, que vuelven a la mesa ahora que la tablet es un dispositivo de
+  trabajo — quien crea un pedido mira el calendario.
+
+---
+
 ## 6. Lo que queda
 
 | | Qué | Por qué importa | Estado |
@@ -411,7 +512,7 @@ tarjeta por debajo de un punto de ruptura. Ficha en `DEUDA.md`.
 | **U2** | Repasar los **rótulos y las 19 descripciones** | `[DECIDIDO owner]` D3: las propone el agente, las revisa él | ⬜ pendiente |
 | **U3** | **Las cinco columnas que le faltan a «Hoy»** | ❗ **«Hoy» YA EXISTE**: es el Escritorio renombrado, y ya trae filtro Hoy/Semana/Mes, dos cifras, la tabla **Cuándo · Producto · Cliente · Cantidad · Estado · Formulario**, un clic al pedido y «Imprimir resumen del día». **Medido: cero menciones a exención, menores, visita o ajustes en sus dos widgets.** Lo que falta: **si firmó la exención** (lo primero que se mira en la puerta) · **si trae menores y quiénes** · **si ya entró hoy** (la visita que registra la puerta desde `#208`, que nadie lee) · **si llega debiendo dinero** (`OrderAdjustment` de señal y extras, que se cobran en persona) · **el teléfono**. **No es una pantalla nueva: son cinco columnas.** ⚠️ Y una afirmación del agente que resultó FALSA: dijo que un pedido manual dejado a deber no saldría en «Hoy» — `ManualOrderFulfiller` los crea SIEMPRE pagados y el resto va como ajuste | ⬜ sin empezar |
 | ~~**U4**~~ | ~~Búsqueda global~~ | **HECHA** (`#224`, §7): 14 recursos + una categoría de PANTALLAS que Filament no trae. El empleado busca pedidos, no clientes. De regalo, un defecto vivo: buscar «jump» en el Catálogo no encontraba «Jump · 1 hora» | ✅ |
-| **U7** | ⚠️⚠️ **«Crear pedido» del panel, para TABLET** (`[DECIDIDO owner, 2026-08-28, tarde]`) | ❗ **Esto CORRIGE la premisa de §8**: allí el owner dijo «la puerta tiene tablet propia, el resto del panel se usa en ORDENADOR», y por eso el calendario y las tablas quedaron fuera. **Ha cambiado: el GERENTE va a crear las reservas desde la tablet**, en `/admin/crear-pedido`. Así que esa pantalla necesita su propia pasada de tablet —tamaños táctiles, y sobre todo **presentación**: hoy es un formulario largo de 1.362 líneas pensado para un ratón—. ▶ Y con ella vuelve a la mesa parte de **U6**: quien crea un pedido mira el calendario | ⬜ sin empezar |
+| ~~**U7**~~ | ✅ **HECHA** (`#240`, §9): dos columnas con el resumen pegajoso, la hora en chips, la fecha con tira de 14 días rápidos y 44 px en todo. ⚠️⚠️ **«Crear pedido» del panel, para TABLET** (`[DECIDIDO owner, 2026-08-28, tarde]`) | ❗ **Esto CORRIGE la premisa de §8**: allí el owner dijo «la puerta tiene tablet propia, el resto del panel se usa en ORDENADOR», y por eso el calendario y las tablas quedaron fuera. **Ha cambiado: el GERENTE va a crear las reservas desde la tablet**, en `/admin/crear-pedido`. Así que esa pantalla necesita su propia pasada de tablet —tamaños táctiles, y sobre todo **presentación**: hoy es un formulario largo de 1.362 líneas pensado para un ratón—. ▶ Y con ella vuelve a la mesa parte de **U6**: quien crea un pedido mira el calendario | ⬜ sin empezar |
 | **U6** | El **calendario** y las **tablas** en tablet | Medido: 8 reservas del calendario a **36 px** y 5 botones a 32–36; «Pedidos» se sale **97 px** en vertical y **163** en horizontal. `[DECIDIDO owner]`: el resto del panel se usa en ORDENADOR, así que no urge. La palanca existe y **no se usa en ninguna tabla**: `Split`/`Stack` de Filament apilan la fila como tarjeta bajo un punto de ruptura | ⬜ sin empezar |
 | **U5** | Los `$navigationSort` de las 19 escondidas ya no ordenan nada | El orden de Ajustes lo manda `areas()`. Son propiedades muertas, inofensivas pero mentirosas | ficha en `DEUDA.md` |
 

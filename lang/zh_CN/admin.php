@@ -289,6 +289,8 @@ return [
             'date' => '日期',
             'time' => '时间段',
             'time_help' => '仅显示有空位的时间段。',
+            'time_pick_date_first' => '请先选择日期以查看可用时间段。',
+            'date_other' => '其他日期（日历）',
             'no_times_for_date' => '该日期没有可用时间段。请重新生成或开放时间段，或选择其他日期。',
             'quantity' => '数量',
             'guests' => '人数',

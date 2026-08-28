@@ -472,6 +472,41 @@
 >   y `app/{Domain/Booking/Services,Filament/Pages,Http/Resources}`. **NO toca** `landing.css`,
 >   `home.blade.php`, el armazón ni el menú.
 >
+>   ▶▶ ✅ **Y EL SEGUNDO ENCARGO DE LA NOCHE: «CREAR PEDIDO» EN TABLET** (`DECISIONES #240`,
+>   `specs/panel-navegacion.md` §9, la U7 que quedaba abierta). `[DECIDIDO owner]` sobre tres opciones
+>   con su coste, y con las capturas de la pantalla actual delante: **dos columnas + controles táctiles**.
+>   ⚠️⚠️ **La primera medición dijo «cabe» y era FALSA porque midió solo el paso 1.** El denso es el 2:
+>   con un producto elegido medía **1.292 px en una pantalla de 810** —se pasaba 482— y con él quedaban
+>   **fuera de pantalla el RESUMEN del pedido (a 1.100 px) y el botón de avanzar**, las dos cosas que
+>   hay que ver con un cliente delante. Todo en **una columna de 648 px** dentro de un lienzo apaisado
+>   de 1080, y **~16 toques** para el pedido más simple.
+>   **Lo que entró**: dos columnas con el **resumen PEGAJOSO** y la navegación dentro de él; la **hora
+>   en chips** (`ToggleButtons`, el nativo de Filament, que conserva `disableOptionWhen`); una **tira de
+>   14 días rápidos** para la fecha **conservando el calendario** debajo como «Otra fecha»; y **44 px**
+>   en todo lo que se toca. **Resultado: paso 1 762→554, paso 2 vacío 1.026→778 (cabe), paso 2 con
+>   producto 1.292→1.182, y de 4/8/15 controles bajo 44 a CERO en los tres.**
+>   ⚠️ **El corte son 50rem y cubre las dos orientaciones aunque no sea evidente cuál es más ancha**: en
+>   apaisado el menú se lleva 250 px y quedan **760**; en vertical el menú se esconde y quedan **810**.
+>   ⚠️⚠️ **La trampa que podía haber quedado dentro**: ahora hay **DOS puertas para elegir día** y la
+>   hora y los menores dependen de la FECHA — una regla escrita dos veces diverge. Las dos terminan en
+>   `onDateChosen()`, y **dentro de un `afterStateUpdated` escribir en `$this->data` a mano SE PIERDE**
+>   (el formulario re-sincroniza después), así que la regla recibe el `$set` de Filament por una puerta
+>   y escribe el estado de la página por la otra. Lo dijo la guarda, no el ojo.
+>   ⚠️⚠️ **TRES instrumentos propios salieron mal, y uno llegó hasta la guarda**: la sonda midió la
+>   pantalla de **LOGIN** cuatro veces (`waitForURL('**/admin/**')` casa con `/admin/login`); la
+>   comprobación del pegajoso pedía que **no se moviera** cuando un `sticky` sí se mueve hasta su tope;
+>   y la guarda de la navegación **pasaba en verde con la mutación puesta** porque `cmo-nav-fuera`
+>   contiene `cmo-nav` — **quinta vez que la subcadena engaña a una aserción aquí**. Y un cuarto: el
+>   caso de las dos puertas acusaba al calendario con el código bien, porque **un campo oculto no tiene
+>   `afterStateUpdated`** y el arnés dejaba el paso en 1.
+>   **Verificación**: `CreateManualOrderTabletTest` (7 casos) · **6 mutaciones, las 6 muerden** · 50
+>   casos de «crear pedido» y 77 del panel en verde · headless **11/11** de conducta + medición en las
+>   cuatro tablets, con capturas.
+>   ❗ **Queda**: el **OJO del owner** con la tablet en la mano; el **armazón del panel** (barra, menú y
+>   buscador siguen bajo 44 px en TODAS las pantallas — ficha nueva en `DEUDA.md`, y agrandarlo cambia
+>   el aspecto en ordenador, así que se decide con él); y **U6**, el calendario y las tablas, que
+>   vuelven a la mesa ahora que la tablet es un dispositivo de trabajo.
+>
 >   ▶ **Y queda APUNTADO, sin empezar, el CUMPLEAÑOS MIXTO** (`specs/cumple-mixto.md`, ⬜ borrador):
 >   un cumple KIDS con un invitado por encima de la edad del pack pasa a **MIXTO** —etiqueta «MIXTA»
 >   para cliente y operador y la diferencia de precio por persona en los dos desgloses—.
@@ -1023,6 +1058,13 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3384 en verde** (22.292 aserciones, 1 skipped a propósito), medida el 2026-08-28 por
+  la noche **sobre el árbol CONJUNTO**, tras rebasar **«Crear pedido» en tablet** (`#240`) encima del
+  `#250` del carril C. ▶ **+7 casos**: `CreateManualOrderTabletTest`, que fija las decisiones de forma
+  —el corte de dos columnas, la columna pegajosa, la navegación DENTRO de ella y los siete selectores
+  táctiles que salieron de MEDIR— y la conducta de las **dos puertas** para elegir día. **6
+  mutaciones y las 6 muerden**, la última tras corregir una guarda que pasaba en verde por comparar
+  una SUBCADENA.
 - Suite **3377 en verde** (22.276 aserciones, 1 skipped a propósito), medida el 2026-08-28 por la
   noche **sobre el árbol CONJUNTO**, tras rebasar `#250` (la COLUMNA, carril C) encima del `#239` del
   carril A. ▶ **+3 casos en este corte**: `ColumnIsDeclaredOnceTest` —el ancho de la columna se

@@ -1392,3 +1392,278 @@
 .jj-hub__desc:where(.dark, .dark *) {
     color: var(--gray-400);
 }
+
+/* ═══ «CREAR PEDIDO» EN TABLET: DOS COLUMNAS Y OBJETIVOS TÁCTILES (#240, U7) ═══════════════════
+ *
+ * `[DECIDIDO owner, 2026-08-28]`: el GERENTE crea las reservas desde la tablet, así que esta
+ * pantalla deja de ser un formulario de ratón. ⚠️ **Medido en iPad horizontal (1080×810) ANTES de
+ * tocar nada**, que es de donde sale cada decisión de aquí abajo:
+ *
+ *   · paso 1 «Cliente»            → 762 px, cabe · 4 controles bajo 44 px (todos de 36 de alto)
+ *   · paso 2 «Productos» vacío    → 1.026 px, **se pasa 216** · 8 controles bajo 44
+ *   · paso 2 con producto elegido → **1.292 px, se pasa 482** · 15 controles bajo 44, y entre
+ *     ellos los steppers de complementos a **28×28** y un icono a **16×16**
+ *
+ * ▶ Y lo que de verdad dolía no era el alto: con el producto elegido quedaban **fuera de pantalla**
+ * el **resumen del pedido** (a 1.100 px) y el botón de avanzar — las dos cosas que el gerente
+ * necesita ver con un cliente delante. Todo apilado en una columna de 648 px dentro de un lienzo
+ * apaisado de 1080. */
+
+/* ─── El armazón de dos columnas ────────────────────────────────────────────────
+ *
+ * ⚠️ **El punto de ruptura es de VIEWPORT y aun así cubre los dos casos de tablet**, que no es
+ * evidente: en apaisado (1080) el menú lateral se lleva ~250 px y el área principal queda en **760**;
+ * en vertical (810) el menú se esconde y el área queda en **810** — o sea que **la tablet en
+ * vertical tiene MÁS ancho útil que en horizontal**. Con el corte en 50rem (800 px) las dos entran.
+ *
+ * ⚠️ La columna derecha mide 20rem fija y la izquierda `minmax(0, 1fr)`: sin el `minmax(0, …)` una
+ * rejilla con contenido ancho —una tira que desborda— empuja la columna y rompe el reparto. */
+.cmo-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--spacing) * 6);
+    align-items: start;
+}
+
+@media (min-width: 50rem) {
+    .cmo-layout {
+        /* ⚠️ **17rem y no 20**: medido en apaisado el área principal son 760 px, y con 20rem (320)
+         * la columna del formulario se quedaba en **304 px de contenido** — más estrecha que un
+         * móvil, con los complementos partiéndose en dos líneas. El resumen es una lista corta de
+         * importes: cabe en 272 px y le devuelve 48 al área de trabajo. */
+        grid-template-columns: minmax(0, 1fr) 17rem;
+    }
+
+    /* Lo que se lleva y lo que se cobra **no se pierden de vista** mientras se monta el pedido.
+     * ⚠️ `top` deja hueco para la barra superior del panel, que también es pegajosa. */
+    .cmo-aside {
+        position: sticky;
+        top: calc(var(--spacing) * 6);
+    }
+}
+
+.cmo-main,
+.cmo-aside {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 6);
+    min-width: 0;
+}
+
+/* La navegación vive con el resumen: es el gesto más repetido y el que decide el cobro. */
+.cmo-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 3);
+}
+
+/* ─── Objetivos táctiles: 44 px, sin `@media` ────────────────────────────────────
+ *
+ * Mismo criterio que la pantalla de puerta (`#232`): **un ratón nunca falló por un control grande**,
+ * y aplicarlo sin punto de ruptura evita depender de acertar el ancho del dispositivo — que es
+ * exactamente lo que falló allí, donde no había ni una regla en el rango de la tablet. */
+.cmo-layout .fi-input,
+.cmo-layout .fi-select-input-btn,
+.cmo-layout .fi-btn,
+.cmo-layout .fi-icon-btn,
+.cmo-layout .fi-fo-toggle-buttons-option-label,
+/* ⚠️ El calendario emergente son DOS nodos —el disparador y el campo de texto de dentro— y hay que
+ * nombrar los dos: subir solo el de fuera deja el `<input>` en 36 y el dedo sigue fallando. Salieron
+ * de medir, no de leer el DOM: eran los dos últimos controles bajo 44 de la pantalla. */
+.cmo-layout .fi-fo-date-time-picker-trigger,
+.cmo-layout .fi-fo-date-time-picker-display-text-input {
+    min-height: 44px;
+}
+
+/* Un botón de solo icono necesita ANCHO además de alto: el de quitar una línea del resumen salió a
+ * **32×44** — alto suficiente y estrecho—, y es el que borra del pedido. */
+.cmo-layout .fi-icon-btn {
+    min-width: 44px;
+}
+
+/* La «x» que vacía el select: 16×16 medidos. Es DESTRUCTIVA y vive dentro de un control que ya mide
+ * 44, así que se le da su propia zona de acierto sin agrandar el dibujo. */
+.cmo-layout .fi-select-input-value-remove-btn {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* Una casilla o un radio miden 16 px por diseño y no se agrandan: **el objetivo es su FILA**, que es
+ * lo que se pulsa. Se le da 44 de alto y el dibujo se queda como está.
+ * ⚠️ Esto también salió de medir el paso 3, donde los dos métodos de cobro eran los únicos controles
+ * que quedaban por debajo — y la primera sonda los contó mirando el `<input>`, no la fila. */
+.cmo-layout .fi-fo-radio-label,
+.cmo-layout .fi-fo-checkbox-list-option-label {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+/* Los steppers de los complementos, que salían a 28×28. Van por su clase del partial, no por
+ * `button` a secas: dentro de esta rejilla hay más botones (los de Filament ya suben arriba). */
+.cmo-layout .manual-addon-step {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* ─── El indicador de pasos ──────────────────────────────────────────────────────
+ * Sale de utilidades de Tailwind a una clase propia por la lección de `#223`: las utilidades de
+ * COLOR del panel compilan pero sus variables (`--color-primary-500/600`) no están declaradas, así
+ * que el estilo sale invisible con el test en verde. Aquí manda `var(--primary-*)`. */
+.cmo-steps {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    font-size: 0.875rem;
+}
+
+.cmo-steps__item {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    border-radius: 9999px;
+    padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 10%, transparent);
+    background-color: var(--gray-50);
+    color: var(--gray-500);
+}
+
+.cmo-steps__item.is-current {
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary-600) 20%, transparent);
+    background-color: color-mix(in oklab, var(--primary-500) 10%, var(--color-white));
+    color: var(--primary-700);
+}
+
+.cmo-steps__num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background-color: var(--gray-200);
+    color: var(--gray-600);
+}
+
+.cmo-steps__num.is-done {
+    background-color: var(--primary-600);
+    color: var(--color-white);
+}
+
+.cmo-steps__sep {
+    color: var(--gray-300);
+}
+
+.cmo-steps__item:where(.dark, .dark *) {
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-white) 10%, transparent);
+    background-color: color-mix(in oklab, var(--color-white) 5%, transparent);
+    color: var(--gray-400);
+}
+
+.cmo-steps__item.is-current:where(.dark, .dark *) {
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary-400) 30%, transparent);
+    background-color: color-mix(in oklab, var(--primary-400) 10%, transparent);
+    color: var(--primary-300);
+}
+
+.cmo-steps__num:where(.dark, .dark *) {
+    background-color: var(--gray-700);
+    color: var(--gray-300);
+}
+
+.cmo-steps__sep:where(.dark, .dark *) {
+    color: var(--gray-600);
+}
+
+/* ─── La tira de días rápidos del paso 2 (#240) ─────────────────────────────────
+ *
+ * Mismo gesto que la del cajón del cliente (`specs/cajon-en-movil.md` §5.2) y por el mismo motivo:
+ * un popover de calendario con el dedo son cuatro toques y objetivos de 36 px. Aquí la lista es
+ * CORTA —14 días— así que no hace falta ni ajuste ni vela: caben casi todos y lo que sobra se
+ * alcanza con un deslizamiento corto. */
+/* El rótulo de la tira: se pinta como cualquier etiqueta de campo de Filament, con su aire debajo. */
+.cmo-daystrip > .fi-fo-field-label-content {
+    display: block;
+    margin-bottom: calc(var(--spacing) * 1.5);
+}
+
+.cmo-daystrip__track {
+    display: flex;
+    gap: calc(var(--spacing) * 2);
+    overflow-x: auto;
+    padding-block: calc(var(--spacing) * 1);
+    scrollbar-width: none;
+}
+
+.cmo-daystrip__track::-webkit-scrollbar {
+    display: none;
+}
+
+/* 56×56: por encima del mínimo táctil en los dos ejes, con sitio para el día de la semana encima
+ * del número — que es lo que permite elegir «el sábado» sin contar casillas. */
+.cmo-daystrip__day {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--spacing) * 0.5);
+    min-width: 56px;
+    min-height: 56px;
+    border-radius: 0.5rem;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 10%, transparent);
+    background-color: var(--color-white);
+    color: var(--gray-950);
+}
+
+.cmo-daystrip__day:hover {
+    box-shadow: inset 0 0 0 1px var(--primary-500);
+}
+
+.cmo-daystrip__day.is-selected {
+    box-shadow: inset 0 0 0 2px var(--primary-600);
+    background-color: color-mix(in oklab, var(--primary-500) 10%, var(--color-white));
+    color: var(--primary-700);
+}
+
+.cmo-daystrip__wd {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--gray-500);
+}
+
+.cmo-daystrip__num {
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.cmo-daystrip__day.is-selected .cmo-daystrip__wd {
+    color: var(--primary-600);
+}
+
+.cmo-daystrip__day:where(.dark, .dark *) {
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-white) 10%, transparent);
+    background-color: color-mix(in oklab, var(--color-white) 5%, transparent);
+    color: var(--color-white);
+}
+
+.cmo-daystrip__day.is-selected:where(.dark, .dark *) {
+    box-shadow: inset 0 0 0 2px var(--primary-400);
+    background-color: color-mix(in oklab, var(--primary-400) 15%, transparent);
+    color: var(--primary-300);
+}
+
+.cmo-daystrip__wd:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+.cmo-daystrip__day.is-selected .cmo-daystrip__wd:where(.dark, .dark *) {
+    color: var(--primary-300);
+}
