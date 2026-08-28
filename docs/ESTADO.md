@@ -1006,6 +1006,12 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3374 en verde** (22.251 aserciones, 1 skipped a propósito), medida el 2026-08-28 por la
+  noche (hora de Madrid) tras las unidades 2–4 del **cajón en móvil** (`#239`). ▶ **+13 casos y +121
+  aserciones**: `AvailabilitySettingsTest` (9, el lector defensivo y el predicado del aviso —con dos
+  casos solo para el `0`, que significa «no avisar» y no «avisar cuando no queden plazas»), dos del
+  contrato de árbol —**el calendario desplegado y el aviso «Casi llena»**, que sin un caso que los
+  haga aparecer salían del gate sin que nada avisara— y dos del panel. **JS: 813 → 835.**
 - Suite **3361 en verde** (22.130 aserciones, 1 skipped a propósito), medida el 2026-08-28 por la
   noche (hora de Madrid) **sobre el árbol CONJUNTO**, tras rebasar `#238` (la COLUMNA, carril C)
   encima del `#237` del carril A. ▶ **+4 casos y +37 aserciones en este corte**:
