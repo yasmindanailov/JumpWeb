@@ -360,6 +360,33 @@ perder**: es la línea entre un programa de fidelización y un grifo.
 
 ---
 
+## 9.bis ❗ La VISITA ya no se puede registrar: su botón se retiró y vuelve AQUÍ
+
+`[DECIDIDO owner, 2026-08-28]` (`DECISIONES #234`): la tarjeta de «Visita» de la pantalla de puerta
+**se retiró hasta que exista JumpPoints**, que es lo único que da sentido a acreditar una visita.
+Cuando se diseñe la ejecución de este subsistema hay que decidir **dónde y cómo vuelve**.
+
+⚠️ **Consecuencia y es de DATOS, no de pantalla**: era el ÚNICO sitio desde el que se registraba una
+visita, así que **`customer_visits` deja de crecer desde el 2026-08-28**. Cuando esto arranque, el
+histórico anterior a la fecha en que se reponga el botón **no existirá**, y eso afecta a §8.1: el
+hecho observable que justificaba la dependencia `A → D` sigue construido, pero sin escritor.
+
+**La maquinaria está entera y probada** —`ValidarRegistro::registerVisit()` (idempotente por día,
+con el operador y auditoría), `CustomerVisit`, `GateProfileData::visitRegisteredToday` y
+`GateVisitsTest`—: lo único que falta es su botón.
+
+▶ **Tres preguntas que el diseño de este subsistema tiene que contestar**, y que la retirada deja
+planteadas en vez de resueltas:
+1. ¿Acreditar la visita es un acto del empleado (un botón) o se deriva de algo que ya ocurre
+   —canjear una entrada, por ejemplo—? `identidad-qr-puerta.md` §8.3 ya avisa de que **no puede
+   colgar de «se abrió la ficha»**: la ficha se abre varias veces por cliente.
+2. Si vuelve como tarjeta en la puerta, **hay que revisar el reparto de columnas del kiosco**: hoy
+   cuadra con CUATRO tarjetas repartidas en dos pilas (`panel-navegacion.md` §8).
+3. ¿Se recupera de algún modo el histórico perdido, o los puntos empiezan a contar el día que se
+   reponga? Es una decisión de producto, no técnica.
+
+---
+
 ## 9. Resumen de UNA página para el ✅ del owner (2026-08-28, carril A; `DECISIONES #212`·3)
 
 > El owner pidió repasar la spec antes de aprobarla («quiero repasarla antes»). Esto es lo que dice,

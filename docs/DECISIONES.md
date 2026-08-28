@@ -12713,3 +12713,74 @@ Headless a 1280 y 390, cuatro posiciones de recorrido: la tarjeta va de **1160×
 pasando por detrás (`pie_top` 1002 → −171). Zoom del juego re-medido: 0,5 en reposo y **1,19**
 jugando. Pie: selector de idioma presente con su variante `--up`, 3 columnas, 22 enlaces, tira.
 **Cero desbordamiento horizontal** en los dos anchos.
+
+---
+
+## #234 · 2026-08-28 · [DECIDIDO owner] El pulido de la puerta: el cursor vive en el campo, fuera dos tarjetas y las columnas a la misma altura — y el buscador pegado se RETIRA porque sobra
+
+Seis puntos del owner sobre la pantalla de puerta, todos suyos y todos aplicados:
+
+1. **Fuera el buscador pegado arriba** (`#232`). ▶ **Y esto es lo interesante: no es una marcha
+   atrás, es que la solución buena hizo innecesaria a la anterior.** El pegado resolvía «empezar de
+   nuevo obliga a bajar del todo»; con el punto 2 ese problema deja de existir, así que mantenerlo
+   sería ruido permanente en pantalla para un problema que ya no está.
+2. **Tras cada búsqueda válida, el campo se vacía y se queda con el foco.** En un mostrador, entre
+   dos clientes no debe haber ningún gesto: el lector de QR es un teclado, así que con el cursor ya
+   dentro el siguiente escaneo entra solo y su Enter dispara la búsqueda. ⚠️ **Si lo tecleado es
+   inválido el campo NO se vacía**, a propósito: ahí hay que poder corregir, no volver a teclear.
+3. **Fuera la tarjeta del QR del cliente**: son muy pocos los casos con problema de carné y se
+   comía una columna entera.
+4. **Fuera la tarjeta de VISITA, hasta que exista JumpPoints**, que es lo único que da sentido a
+   acreditar una visita; entonces se decide bien dónde y cómo va. ❗ **Consecuencia real, y es de
+   datos**: era el ÚNICO sitio desde el que se registraba una visita, así que `customer_visits`
+   **deja de crecer**. La maquinaria sigue entera y probada —`registerVisit()`, idempotente por día,
+   con operador y auditoría, y `GateVisitsTest`—: lo que falta es su botón. Anotado en
+   `specs/lealtad-jumppoints.md` §9 y en `DEUDA.md`.
+5. **Las dos columnas arrancan a la misma altura**: a la izquierda HOY y OTROS DÍAS, a la derecha
+   EXENCIÓN y MENORES. Antes «Exención» empezaba a la altura de «Otros días» porque la colocación
+   automática esperaba al cursor. Medido después: las dos en **464 px**.
+6. **Y uno que añadió sobre la marcha**: al ENTRAR en la pantalla —y al volver a ella desde otro
+   programa— el cursor va solo al campo. ⚠️ **Es un caso que `autofocus` NO cubre**: `autofocus`
+   actúa al CARGAR la página, y volver desde el TPV no la recarga —solo devuelve el foco a la
+   ventana—, así que el cursor se quedaba fuera y había que pinchar antes de cada escaneo. Se
+   resuelve con `focus.window` + `visibilitychange`, y con **`preventScroll`**: si el empleado
+   estaba leyendo la ficha más abajo, recuperar el cursor no puede arrastrarle arriba.
+
+7. **«¿Por qué hay tanto hueco entre las tarjetas de la izquierda?»** (lo vio el owner en la
+   captura). No era un margen: **con `grid`, las dos columnas COMPARTEN la altura de cada fila**.
+   Medido: la fila valía 187 px porque «Exención» la ocupaba, «Hoy» medía 98, y quedaban **89 px en
+   blanco** debajo antes de «Otros días». Ninguna propiedad de rejilla lo arregla —la fila es la
+   fila—, así que las tarjetas pasan a ser **dos pilas independientes** (`.gate-col`) y el grid solo
+   reparte el ancho. Después: **todos los huecos a 16 px**, el normal.
+8. **«¿Por qué pone *0 menores a cargo declarados (respuesta válida: se resuelve fuera del sistema,
+   como hoy)*?»** Porque ese texto se escribió para quien lee la spec, no para un empleado en un
+   mostrador: el paréntesis explicaba al diseñador que cero menores es un estado normal y no un
+   error. En la puerta sobra. Ahora dice **«Sin menores declarados.»**
+
+**Medido después** (iPad horizontal 810 px de alto): «no registrado» **810** (cabe), «falta firmar»
+**816** (se pasa 6), «exención de versión anterior» **1.018**. Antes de quitar las dos tarjetas eran
+810 / 896 / 1.115. Foco verificado en navegador en cinco escenarios, con un caso de CONTROL que
+demuestra que la sonda mide algo: al abrir ✓, tras pinchar otra cosa ✗, al volver de otro programa
+✓, al volver a la pestaña ✓, tras buscar ✓ y con el campo vacío.
+
+**Cuatro trampas de esta tanda, todas del instrumento o del método:**
+
+1. ⚠️ **Busqué los tests afectados en `tests/Feature/Puerta/` y me dejé `tests/Feature/Admin/Puerta/`**:
+   cuatro casos aseveraban el HTML de las tarjetas retiradas y saltaron al correr la suite, no al
+   planificar. Se re-apuntaron por SUJETO: el de la visita sigue midiendo su maquinaria (idempotencia,
+   operador, permiso) por el estado y la fila en base, y el de los bloques pasa de seis a cuatro
+   **aseverando ausentes** los dos retirados.
+2. ⚠️⚠️ **`assertDontSee('data-gate-visit')` falla aunque la tarjeta esté bien quitada**: la píldora
+   de cabecera `data-gate-visit-badge` —que SÍ se queda— contiene esa subcadena. **Cuarta vez que la
+   subcadena engaña en este repo.** Se asevera el marcador completo.
+3. ⚠️⚠️ **Una sonda dijo que la búsqueda había dejado de abrir NINGUNA ficha, y el código estaba
+   bien**: mis propios sondeos habían agotado el **limitador de búsquedas tecleadas por hora**
+   (`puerta.lookup_rate_limited`) y la pantalla contestaba «demasiadas búsquedas». El limitador
+   funcionaba; el diagnóstico, no. **Tercera vez en la jornada que el sospechoso correcto es el
+   instrumento** — y llegué a escribir en el código un comentario afirmando haber «medido» que la
+   causa era otra. Corregido, y la corrección se quedó escrita ahí.
+4. Se retiró `x-data` del input igualmente: abrir un ámbito de Alpine propio sobre un elemento con
+   `wire:model` es un cruce innecesario. **Pero no era la causa de nada**, y decirlo importa.
+
+**Verificación**: `GateKioskTest` sube a 7 casos (entran los del vaciado+foco, el foco al volver, las
+cuatro tarjetas y las dos columnas) · 83 casos de puerta en verde · sondeos headless con capturas.

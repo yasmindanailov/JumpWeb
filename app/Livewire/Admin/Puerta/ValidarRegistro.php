@@ -173,10 +173,26 @@ class ValidarRegistro extends Component
         if ($type === null) {
             // En invalid_input devolvemos el `query` SOLO si hay algo escrito —
             // si está vacío, el mensaje genérico "Introduce un email…" basta.
+            //
+            // ⚠️ Y aquí el campo NO se vacía, al revés que abajo: si lo escrito está mal, el
+            // empleado tiene que poder CORREGIRLO en vez de teclearlo entero otra vez.
             $this->result = ['status' => self::STATUS_INVALID_INPUT, 'query' => $raw];
 
             return;
         }
+
+        // ▶ El campo se vacía y recupera el foco EN CUANTO la entrada es válida (`#234`,
+        // `[DECIDIDO owner]`). En un mostrador, entre dos clientes no debe haber ningún gesto:
+        // el lector de QR es un teclado, así que con el cursor ya dentro el siguiente escaneo
+        // entra solo y su Enter dispara la búsqueda. Antes había que borrar lo anterior a mano.
+        //
+        // Se hace ANTES de los limitadores a propósito: `$raw` ya está capturado, y si la
+        // búsqueda se rechaza por límite el empleado tampoco va a reintentarla con ese texto.
+        //
+        // El eco de a quién corresponde la respuesta NO se pierde al vaciar: viaja en
+        // `$result['query']`, que es lo que pinta el callout.
+        $this->input = '';
+        $this->dispatch('gate-input-cleared');
 
         $userId = Auth::id();
 

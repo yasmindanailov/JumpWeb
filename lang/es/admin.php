@@ -118,7 +118,7 @@ return [
                 // su `data-gate-minor-*`. Lo que queda es solo el rótulo.
                 'minors_on_line_label' => 'Menores en esta línea',
                 'minors' => 'Menores a cargo',
-                'minors_empty' => '0 menores a cargo declarados (respuesta válida: se resuelve fuera del sistema, como hoy).',
+                'minors_empty' => 'Sin menores declarados.',
                 'minor' => ':age años',
                 'minor_waiver_current' => 'exención ✓',
                 'minor_waiver_outdated' => 'exención de versión anterior',
