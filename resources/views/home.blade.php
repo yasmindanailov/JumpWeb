@@ -464,18 +464,51 @@
     </section>
 
     {{-- ===================== RESERVE CTA ===================== --}}
-    <section id="reserve" class="reserve wrap">
-        <h2>
-            {{ __('landing.reserve.title') }}<br />
-            <span class="stroke">{{ __('landing.reserve.stroke') }}</span>
-            <span class="fill">{{ __('landing.reserve.fill') }}</span>
-        </h2>
-        <p>{{ __('landing.reserve.copy') }}</p>
-        <div class="reserve__actions">
-            <a href="{{ route('entradas') }}" @click.prevent="$store.purchase.open()" class="btn btn--zone btn--lg">{{ __('landing.reserve.cta') }}<x-icons.arrow-right :width="16" :height="16" /></a>
-            @if ($site['has_phone'])
-                <a href="tel:{{ $site['phone_tel'] }}" class="btn btn--ghost btn--lg">{{ __('landing.reserve.cta2') }} {{ $site['phone'] }}</a>
-            @endif
+    {{-- ══ EL HERO DEL CIERRE (`#227`, del mockup `Landing PJP Modos`) ═════════════════════════
+         `[DECIDIDO owner]`: «lo mismo en el footer y el hero del footer».
+
+         ▶ **Es la imagen ESPECULAR del hero de cabecera**, y esa simetría es el gesto: el de
+         arriba empieza a pantalla completa y encoge hasta ser una tarjeta; éste empieza siendo
+         una tarjeta y **crece hasta llenar la pantalla** al llegar al final. Hasta las tallas del
+         titular son las mismas al revés — arranca en la talla FINAL del hero de cabecera y acaba
+         en su talla INICIAL.
+
+         ⚠️⚠️ **El mockup lo hace con `position: fixed` y anchos calculados en JavaScript; aquí NO.**
+         Su `aplicaCierre` mide la tarjeta, la fija a la ventana y le escribe `left`, `width`,
+         `height` y `border-radius` en cada fotograma. Nosotros usamos el mismo recurso que el hero
+         de cabecera —un envoltorio PEGAJOSO y un recorrido de scroll real— porque el resultado es
+         idéntico y el reparto de responsabilidades no: aquí el JavaScript publica **un número**
+         (`--cierre-p`) y todo lo demás lo decide el CSS, así que una instalación puede alargar el
+         recorrido, cambiar la talla de partida o apagar el crecimiento desde su paquete.
+         ▶ Y hay un motivo práctico además del arquitectónico: con `position: fixed` la tarjeta
+         sale del flujo y hay que devolverle su hueco a mano (`sec.style.minHeight = r0.height`),
+         que es exactamente el tipo de arreglo que se rompe cuando el contenido cambia de alto.
+
+         ⚠️ **El recorrido es altura REAL**, igual que el del hero: son píxeles de scroll que
+         existen. Con movimiento reducido se pone a 0 y desaparece, o quedaría una pantalla de
+         scroll vacío que nadie sabría por qué está ahí. --}}
+    <section id="reserve" class="reserve" x-data="cierreChoreo">
+        <div class="reserve__sticky">
+            <div class="reserve__box" data-surface="ink">
+                {{-- La trama de puntos, la misma que el menú: es la única textura que el sistema
+                     admite sobre tinta, y aquí sale del mismo mecanismo. --}}
+                <div class="menu__grain" aria-hidden="true"></div>
+
+                <div class="reserve__body">
+                    <h2>
+                        {{ __('landing.reserve.title') }}<br />
+                        <span class="stroke">{{ __('landing.reserve.stroke') }}</span>
+                        <span class="fill">{{ __('landing.reserve.fill') }}</span>
+                    </h2>
+                    <p>{{ __('landing.reserve.copy') }}</p>
+                    <div class="reserve__actions">
+                        <a href="{{ route('entradas') }}" @click.prevent="$store.purchase.open()" class="btn btn--zone btn--lg">{{ __('landing.reserve.cta') }}<x-icons.arrow-right :width="16" :height="16" /></a>
+                        @if ($site['has_phone'])
+                            <a href="tel:{{ $site['phone_tel'] }}" class="btn btn--ghost btn--lg">{{ __('landing.reserve.cta2') }} {{ $site['phone'] }}</a>
+                        @endif
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
     </main>

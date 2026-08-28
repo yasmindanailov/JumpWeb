@@ -12129,3 +12129,67 @@ siempre al lado de un aro latiendo para siempre no informa más: compite.
 tallas del titular medidas contra el ancho útil real, el menú de móvil intacto (la columna
 desaparece por debajo de 1100 y ahí la lista recupera todo el ancho). Suite acotada: **141 verdes**.
 Pint limpio, `docs-check` verde.
+
+---
+
+## #227 · 2026-08-28 · El hero del CIERRE — la imagen especular del de cabecera, y tres fallos que solo se ven midiendo
+
+**Contexto.** `[DECIDIDO owner]`: «lo mismo en el footer y el hero del footer».
+
+**La simetría ES el gesto.** El hero de cabecera empieza a pantalla completa y encoge hasta ser una
+tarjeta; éste empieza siendo una tarjeta y **crece hasta llenar la pantalla** al llegar al final.
+Medido en el mockup: hasta las tallas del titular son las mismas al revés —arranca en la talla
+FINAL del de cabecera (`clamp(40px, 6vw, 90px)`) y acaba en su talla INICIAL (`clamp(54px, 8.4vw,
+124px)`)—.
+
+**Y NO se copia su implementación.** `aplicaCierre` mide la tarjeta, la fija con `position: fixed`
+y le escribe `left`, `width`, `height` y `border-radius` en cada fotograma. Aquí es un envoltorio
+**pegajoso** dentro de una sección con recorrido real, y el JS publica **un número**. Dos motivos:
+el arquitectónico —una instalación puede alargar el recorrido o apagar el crecimiento desde su
+paquete— y uno práctico: con `fixed` la tarjeta sale del flujo y hay que devolverle su hueco a mano
+(`sec.style.minHeight = r0.height`), que es el tipo de arreglo que se rompe al cambiar el contenido.
+
+### ⚠️⚠️ Tres fallos, y los tres eran MUDOS
+
+**1. `getComputedStyle` NO resuelve una custom property sin registrar.** El JS leía el recorrido con
+`parseFloat(getComputedStyle(el).getPropertyValue('--cierre-runway'))`, exactamente como
+`heroChoreo` con el suyo. Allí funciona porque vale `420px`, un número. Aquí vale
+`max(420px, 75vh)` y **vuelve como texto**: `parseFloat` da `NaN`, la guarda `runway <= 0` era
+falsa y **`--cierre-p` no se publicaba nunca**. La tarjeta no crecía y nada fallaba.
+▶ Medido: `p` se quedaba en `0` en las cuatro posiciones de scroll. ▶ Ahora el recorrido se **mide
+en píxeles reales** —alto de la sección menos alto de la tarjeta—, que además sigue siendo
+themeable: quien cambie el token cambia el alto de la sección y esto lo ve.
+
+**2. Un `sticky` deja de pegarse cuando su contenedor se acaba — y aquí el contenido CRECE.** La
+sección se dimensionó con la talla de reposo (`h-ini + runway`). Al final la tarjeta mide casi el
+doble, así que el pegajoso se quedaba sin sitio a mitad de camino: **a `p = 0,70` la tarjeta estaba
+en `top: −42` y a `p = 0,98` en `top: −361`**. Crecía y se escapaba a la vez. La sección se
+dimensiona con la talla FINAL.
+
+**3. Y el recorrido se divide contra la talla FINAL, no contra la de reposo.** Segundo intento,
+mismo tipo de error: dividiendo por `alto de sección − reposo` (1087 px medidos), `p` **no podía
+pasar de 0,62** — a partir de ahí el pegajoso ya no tenía sitio. Se miden las dos tallas forzando
+la propiedad a 0 y a 1, una vez por montaje y por `resize`.
+
+### El armazón se retira, y no es composición: es LEGIBILIDAD
+
+La tarjeta es de TINTA y ocupa la pantalla entera; el botón de comprar se rellena con `var(--fg)` y
+quedaba **oscuro sobre oscuro**. Se vio en la primera captura: el rótulo «RESERVAR» flotando sin
+botón debajo. La salida son los números del mockup (`(p − 0.02) / 0.28`).
+⚠️ **Y `opacity` recorta sola por debajo de 0**, así que no hace falta `clamp`: un valor negativo se
+comporta exactamente como «del todo fuera».
+
+⚠️⚠️ **Eso abría el agujero de `#211` por una TERCERA puerta.** La retirada oculta el racimo con
+`visibility: hidden`, y esa propiedad no la pisaba ninguna de las tres declaraciones de
+`.nav--over`: con el menú abierto al final de la página, la hamburguesa —**que es la forma de
+cerrarlo**— desaparecía y el menú quedaba atrapado. Guarda añadida y **probada por mutación**.
+
+⚠️ Y una regla mía **se escribió y no se aplicaba**: `body.cierre--live` perdía en especificidad
+contra `.nav--live` y el `pointer-events` computado seguía diciendo `auto`. No llegó a ser un fallo
+—`visibility: hidden` ya saca del hit-testing—, pero *una regla que no se aplica es peor que no
+escribirla: la siguiente persona la lee y la da por hecha.*
+
+**Verificación.** Headless a 1280 y 390, cuatro posiciones de recorrido cada uno: `p` de 0 a 1, la
+tarjeta de **1200×468 a 1260×880** (escritorio) y de **310×439 a 370×824** (móvil) —viewport menos
+20 en los dos—, `top` clavado en 10 durante todo el recorrido, titular de 77 a 108 y de 40 a 54, y
+**cero desbordamiento horizontal**. Suite acotada: **141 verdes**. Pint limpio.

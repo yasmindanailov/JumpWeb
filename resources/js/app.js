@@ -682,6 +682,92 @@ document.addEventListener('alpine:init', () => {
     //    frame cuando ya se ha llegado al final del recorrido, que es donde más tiempo se
     //    pasa el visitante.
     //  • `destroy()` suelta el listener y cancela el frame pendiente.
+    // ══ EL HERO DEL CIERRE (`#227`) ══════════════════════════════════════════════════════════
+    //  Publica `--cierre-p`, el progreso de 0 a 1 con el que la tarjeta de cierre crece hasta
+    //  llenar la pantalla. **No decide nada de diseño**: cuánto crece, desde qué talla y con qué
+    //  cantos lo dice el CSS, igual que en el hero de cabecera (`#195`).
+    //
+    //  ⚠️ El mockup hace esto con `position: fixed` y escribiendo `left`/`width`/`height` en cada
+    //  fotograma. Aquí la tarjeta es `sticky` dentro de una sección con recorrido real, así que
+    //  basta con medir cuánto se ha consumido ese recorrido. Menos código y, sobre todo, la
+    //  tarjeta no sale nunca del flujo: no hay que devolverle su hueco a mano.
+    //
+    //  ⚠️ `prefers-reduced-motion` → NO se monta. `--cierre-p` se queda en 0 y el CSS deja la
+    //  tarjeta en su talla de reposo; el recorrido también se anula ahí, así que no queda hueco.
+    window.Alpine.data('cierreChoreo', () => ({
+        _raf: null,
+        _last: null,
+        _onScroll: null,
+        init() {
+            if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+            this._onScroll = () => {
+                if (this._raf !== null) return;
+                this._raf = requestAnimationFrame(() => { this._raf = null; this.apply(); });
+            };
+            window.addEventListener('scroll', this._onScroll, { passive: true });
+            this._onResize = () => { this._total = null; this._last = null; this._onScroll(); };
+            window.addEventListener('resize', this._onResize, { passive: true });
+            this.apply();
+        },
+        // ⚠️⚠️ **El recorrido se MIDE, no se lee del token — y esto costó una medición.**
+        //  La primera versión hacía `parseFloat(getComputedStyle(el).getPropertyValue('--cierre-
+        //  runway'))`, igual que `heroChoreo` con el suyo. Con `heroChoreo` funciona porque ahí el
+        //  token vale `420px`, un número. Aquí vale `max(420px, 75vh)` y **`getComputedStyle` NO
+        //  resuelve una custom property que no esté registrada con `@property`**: devuelve el
+        //  texto tal cual. `parseFloat('max(420px…')` da `NaN`, la guarda `runway <= 0` era falsa,
+        //  y `--cierre-p` **no se publicaba nunca**. La tarjeta no crecía y nada fallaba.
+        //  ▶ Se midió en navegador: `p` se quedaba en `0` en las cuatro posiciones de scroll.
+        //  ▶ La geometría real no tiene ese problema: el recorrido ES el alto de la sección menos
+        //  el alto de la tarjeta en reposo, y los dos son píxeles de verdad. Además sigue siendo
+        //  themeable —quien cambie `--cierre-runway` en su paquete cambia el alto de la sección y
+        //  esto lo ve—, que era el motivo de leer el token.
+        //  ⚠️⚠️ **Y el recorrido se mide contra la talla FINAL, no contra la de reposo.** Éste fue
+        //  el segundo intento y también salió mal a la primera: un `sticky` solo puede viajar lo
+        //  que le sobra a su contenedor con el tamaño que el contenido tiene EN CADA MOMENTO, y
+        //  aquí el contenido crece. Dividiendo por `alto de sección − reposo` (1087 px medidos),
+        //  `p` no podía pasar de **0,62**: a partir de ahí el pegajoso ya se había quedado sin
+        //  sitio, y la tarjeta se iba por arriba antes de terminar de crecer.
+        //  ▶ Se miden las DOS tallas forzando la propiedad a 0 y a 1. Es una medida por montaje y
+        //  por `resize`, no por fotograma.
+        medir() {
+            const caja = this.$el.querySelector('.reserve__box');
+            if (!caja) { this._total = 0; return; }
+            const previo = this.$el.style.getPropertyValue('--cierre-p');
+            this.$el.style.setProperty('--cierre-p', '1');
+            const final = caja.offsetHeight;
+            this._total = Math.max(0, this.$el.offsetHeight - final);
+            if (previo === '') this.$el.style.removeProperty('--cierre-p');
+            else this.$el.style.setProperty('--cierre-p', previo);
+        },
+        apply() {
+            if (this._total == null) this.medir();
+            const tope = parseFloat(getComputedStyle(this.$el).top) || 10;
+            if (!this._total) return;
+            // Cuánto ha subido la sección por encima de su punto de anclaje, sobre el recorrido.
+            const arriba = tope - this.$el.getBoundingClientRect().top;
+            const bruto = Math.min(1, Math.max(0, arriba / this._total));
+            // La misma curva del mockup: un arranque lineal y un final que se posa
+            // (`0.22·q + 0.78·smoothstep(q)`), no la cúbica del hero — aquí lo que crece tiene que
+            // notarse desde el primer píxel o parece que no pasa nada.
+            const p = Math.round((0.22 * bruto + 0.78 * (bruto * bruto * (3 - 2 * bruto))) * 1000) / 1000;
+            if (p === this._last) return;
+            this._last = p;
+            this.$el.style.setProperty('--cierre-p', String(p));
+            // ⚠️ **Y también en el `<body>`**, por el mismo motivo que `--nav-p`: quien lo lee —el
+            // armazón, que se retira ante el cierre— es HERMANO de esta sección, no descendiente
+            // suyo, y una custom property solo baja por el árbol.
+            document.body.style.setProperty('--cierre-p', String(p));
+            // Un hecho binario, igual que `nav--live`: «el armazón ya está tan fuera que pulsarlo
+            // sería un accidente». Qué significa «tan fuera» lo decide el CSS.
+            document.body.classList.toggle('cierre--live', p >= 0.3);
+        },
+        destroy() {
+            if (this._onScroll) window.removeEventListener('scroll', this._onScroll);
+            if (this._onResize) window.removeEventListener('resize', this._onResize);
+            if (this._raf !== null) cancelAnimationFrame(this._raf);
+        },
+    }));
+
     window.Alpine.data('heroChoreo', () => ({
         _raf: null,
         _last: null,

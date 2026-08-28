@@ -1783,6 +1783,73 @@ body.no-scroll { overflow: hidden; }
 }
 .hero--full .hero__strip-box { width: 100%; max-width: var(--hero-w-end); }
 
+/* ══ EL HERO DEL CIERRE (`#227`, 2026-08-28) ═════════════════════════════════════════════════
+   La imagen ESPECULAR del hero de cabecera: aquél empieza a pantalla completa y encoge hasta ser
+   una tarjeta; éste empieza siendo una tarjeta y CRECE hasta llenar la pantalla al llegar al
+   final. Hasta las tallas del titular son las mismas al revés — arranca en la talla FINAL del de
+   cabecera y acaba en su talla INICIAL.
+
+   ⚠️ **Mismo recurso que el hero: envoltorio pegajoso + recorrido de scroll real**, no
+   `position: fixed` con anchos escritos por JavaScript. El JS publica `--cierre-p` y nada más.
+
+   ⚠️ **El recorrido es altura REAL del `<section>`**: son píxeles de scroll que existen. Con
+   movimiento reducido se pone a 0 y el hueco desaparece — si no, quedaría una pantalla de scroll
+   vacío que nadie sabría por qué está ahí. Es la misma regla, y el mismo remedio, que el hero. */
+.reserve {
+    --cierre-runway: max(420px, 75vh);   /* cuánto scroll dura el crecimiento */
+    --cierre-gap: 10px;                  /* el margen de la tarjeta cuando ya llena la pantalla */
+    --cierre-h-ini: clamp(420px, 52vh, 560px);
+    --cierre-h-end: calc(100svh - var(--cierre-gap) * 2);
+    --cierre-w-ini: min(1240px, 100vw - var(--wrap-gutter) * 2);
+    --cierre-w-end: calc(100vw - var(--cierre-gap) * 2);
+    /* Las dos tallas del titular son las del hero de cabecera, en orden inverso. */
+    --cierre-t-ini: clamp(40px, 6vw, 90px);
+    --cierre-t-end: clamp(54px, 8.4vw, 124px);
+    --cierre-p: 0;
+
+    position: relative;
+    margin-top: clamp(112px, 10.5vw, 180px);
+    padding: 0;
+    /* ⚠️⚠️ **La altura es la FINAL más el recorrido, no la de reposo — y esto se midió.**
+       Un `sticky` deja de pegarse cuando su contenedor se acaba, y aquí el contenido CRECE: al
+       final la tarjeta mide `--cierre-h-end`, casi el doble que en reposo. Con la sección
+       dimensionada a la talla de reposo, el pegajoso se quedaba sin sitio a mitad de camino y la
+       tarjeta se iba por arriba mientras seguía creciendo.
+       ▶ Medido antes de corregirlo: a `p = 0,70` la tarjeta estaba en `top: -42` y a `p = 0,98`
+       en **`top: -361`**. Crecía y se escapaba a la vez.
+       ▶ Con la talla final, el recorrido que el pegajoso puede sostener es exactamente
+       `--cierre-runway`, que es lo que el JS mide. */
+    min-height: calc(var(--cierre-h-end) + var(--cierre-runway));
+}
+.reserve__sticky {
+    position: sticky; top: var(--cierre-gap);
+    display: flex; justify-content: center;
+    padding-inline: calc(var(--wrap-gutter) + (var(--cierre-gap) - var(--wrap-gutter)) * var(--cierre-p));
+}
+.reserve__box {
+    position: relative; overflow: hidden;
+    width: 100%;
+    max-width: calc(var(--cierre-w-ini) + (var(--cierre-w-end) - var(--cierre-w-ini)) * var(--cierre-p));
+    height: calc(var(--cierre-h-ini) + (var(--cierre-h-end) - var(--cierre-h-ini)) * var(--cierre-p));
+    border-radius: var(--r-lg);
+    display: flex; flex-direction: column; justify-content: center;
+    box-shadow: var(--shadow-lift);
+}
+/* El contenido va centrado y por encima de la trama. */
+.reserve__body { position: relative; z-index: 1; text-align: center; padding: clamp(24px, 5vw, 80px); }
+
+/* ⚠️ El titular CRECE con la tarjeta, igual que el del hero encoge con él (`#220`). Sin esto, la
+   tarjeta se hace pantalla completa y el texto se queda del tamaño de una tarjeta pequeña: el
+   cierre acabaría siendo una pantalla casi vacía con una línea en medio. */
+.reserve h2 {
+    font-size: calc(var(--cierre-t-ini) + (var(--cierre-t-end) - var(--cierre-t-ini)) * var(--cierre-p));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reserve { --cierre-runway: 0px; --cierre-p: 0; }
+}
+
+
 /* ══ EL CTA DE LA PRIMERA PANTALLA — Y ES UN RELEVO (`#225`, 2026-08-28) ═════════════════════
    `[DECIDIDO owner]`: «añadiremos el mismo CTA en la parte inferior derecha y, al deslizar, en el
    momento que aparece el CTA en el menú lo quitamos del hero».
@@ -2534,9 +2601,20 @@ body[data-has-hero] {
     --nav-reveal-lift: 16px;     /* de cuánto más arriba baja al entrar */
 }
 
+/* ⚠️⚠️ **EL ARMAZÓN SE RETIRA ANTE EL HERO DEL CIERRE** (`#227`, y el mockup hace lo mismo en
+   `aplicaFlotantes`): cuando la tarjeta de cierre empieza a crecer, el logotipo y el racimo se
+   van. No es un capricho de composición — **es legibilidad**: la tarjeta es de TINTA y ocupa la
+   pantalla entera, así que el botón de comprar, que se rellena con `var(--fg)`, quedaría oscuro
+   sobre oscuro. Se vio en la primera captura del cierre: el rótulo «RESERVAR» flotando sin botón.
+   ▶ La salida arranca casi al principio del crecimiento y dura poco (`(p − 0.02) / 0.28`, los
+   números del mockup): para cuando la tarjeta llena media pantalla, el armazón ya no está.
+   ▶ Y **no hace falta clamp**: `opacity` recorta sola por debajo de 0, así que un valor negativo
+   se comporta exactamente como «del todo fuera». */
+body { --cierre-p: 0; --cierre-salida: calc((var(--cierre-p) - 0.02) / 0.28); }
+
 body[data-has-hero] .nav__left,
 body[data-has-hero] .nav__cta {
-    opacity: var(--nav-p);
+    opacity: calc(var(--nav-p) * (1 - var(--cierre-salida)));
     transform: translateY(calc(var(--nav-reveal-lift) * (var(--nav-p) - 1)));
     pointer-events: none;
     transition: opacity var(--dur-estado) var(--ease-sale), transform var(--dur-entra) var(--ease-sale);
@@ -2544,6 +2622,17 @@ body[data-has-hero] .nav__cta {
 
 body[data-has-hero].nav--live .nav__left,
 body[data-has-hero].nav--live .nav__cta { pointer-events: auto; }
+
+/* ⚠️ **`opacity: 0` NO deja de recibir clics**, y aquí importa más que en ningún sitio: el
+   armazón retirado queda JUSTO ENCIMA de la tarjeta de cierre a pantalla completa, así que sus
+   botones invisibles se comerían los clics de lo que hay debajo. La clase la pone el mismo JS que
+   publica el progreso. */
+/* ⚠️ **La especificidad tiene que GANAR a `.nav--live`, y a la primera no ganaba** (medido: el
+   `pointer-events` computado seguía diciendo `auto`). No llegó a ser un fallo —`visibility:
+   hidden` ya saca del hit-testing y del árbol de accesibilidad—, pero una regla que se escribe y
+   no se aplica es peor que no escribirla: la siguiente persona la lee y la da por hecha. */
+body[data-has-hero].cierre--live .nav__left,
+body[data-has-hero].cierre--live .nav__cta { pointer-events: none; visibility: hidden; }
 
 /* ❗ **Con el menú abierto el racimo de la derecha se fuerza, y no es un adorno**: la hamburguesa
    vive dentro y **es la forma de cerrar el menú**. Sin esta regla, abrir el menú desde arriba del
@@ -2554,6 +2643,12 @@ body[data-has-hero] .nav--over .nav__cta {
     opacity: 1;
     transform: none;
     pointer-events: auto;
+    /* ⚠️⚠️ **`visibility` explícito, y no es redundante: sin él el menú se queda SIN SALIDA.**
+       La retirada ante el hero del cierre (`#227`) oculta el racimo con `visibility: hidden`, y
+       esa propiedad no la pisaba ninguna de las tres líneas de arriba. Con el menú abierto al
+       final de la página, la hamburguesa —que **es la forma de cerrarlo**— desaparecía y el menú
+       quedaba atrapado. Es literalmente el agujero de `#211`, por una tercera puerta. */
+    visibility: visible;
 }
 
 @media (prefers-reduced-motion: reduce) {

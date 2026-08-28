@@ -1644,17 +1644,39 @@ class ArmazonContractTest extends TestCase
         foreach (['body[data-has-hero] .nav__left', 'body[data-has-hero] .nav__cta'] as $racimo) {
             $cuerpo = (string) ($reglas[$racimo] ?? '');
 
-            $this->assertStringContainsString(
-                'opacity: var(--nav-p)', $cuerpo,
+            // ⚠️ Se asevera que la opacidad LEE `--nav-p`, no que valga exactamente eso: desde
+            // `#227` el armazón tiene dos motivos para no estar —todavía no ha entrado bajo el
+            // hero, o ya se ha retirado ante el hero del CIERRE— y la fórmula los multiplica.
+            // Aseverar el texto literal ataba la guarda a UNA de las dos coreografías.
+            $this->assertMatchesRegularExpression(
+                '/opacity:[^;]*var\(--nav-p\)/', $cuerpo,
                 "`{$racimo}` no sigue a `--nav-p`.\n".
                 "▶ `[DECIDIDO owner, 2026-08-28]`: en la portada el armazón nace oculto bajo el hero,\n".
                 '  como el mockup. Si un racimo se queda fuera, la primera pantalla sale a medias.',
+            );
+            $this->assertMatchesRegularExpression(
+                '/opacity:[^;]*var\(--cierre-salida\)/', $cuerpo,
+                "`{$racimo}` no se retira ante el hero del cierre (`#227`).\n".
+                "▶ La tarjeta de cierre es de TINTA y ocupa la pantalla entera; el botón de comprar\n".
+                "  se rellena con `var(--fg)` y quedaría OSCURO SOBRE OSCURO — se vio en la primera\n".
+                '  captura: el rótulo «RESERVAR» flotando sin botón debajo.',
             );
             $this->assertStringContainsString(
                 'pointer-events: none', $cuerpo,
                 "`{$racimo}` es invisible pero SIGUE recibiendo clics: `opacity: 0` no los bloquea.",
             );
         }
+
+        // ⚠️⚠️ **Y el menú abierto conserva su salida.** La retirada ante el cierre oculta el
+        // racimo con `visibility: hidden`, que las tres declaraciones de `.nav--over` no pisaban:
+        // con el menú abierto al final de la página, la hamburguesa —que ES la forma de cerrarlo—
+        // desaparecía y el menú quedaba atrapado. Es el agujero de `#211` por una tercera puerta.
+        $this->assertMatchesRegularExpression(
+            '/visibility:\s*visible/', (string) ($reglas['body[data-has-hero] .nav--over .nav__cta'] ?? ''),
+            'con el menú abierto el racimo no fuerza `visibility: visible`: si el visitante lo abre '.
+            'al final de la página, la hamburguesa se oculta con la retirada del cierre y el menú '.
+            'se queda sin ninguna forma de cerrarse.',
+        );
     }
 
     /**
