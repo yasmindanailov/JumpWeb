@@ -625,38 +625,49 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
-     * **Y enseña una X mientras está abierto.**
+     * **Y la X se FORMA mientras está abierto: las dos rayas GIRAN.**
      *
-     * El dibujo sale del SET de iconos (`x-icons.close`), no en línea: el dibujo es uno de los
-     * tres mecanismos del tema y una instalación tiene que poder sustituirlo. Los dos glifos se
-     * sirven siempre y los alterna el CSS por `.nav--over`, así que funciona sin JavaScript de
-     * dibujo y el botón no cambia de tamaño al alternar.
+     * ⚠️⚠️ **RE-APUNTADO en `#217`, y con un coste que este comentario tiene que decir.** Este
+     * caso exigía DOS glifos del set de iconos (`x-icons.menu` / `x-icons.close`), porque el
+     * dibujo es uno de los tres mecanismos del tema y una instalación tiene que poder
+     * sustituirlo. `[DECIDIDO owner, 2026-08-28]`: **gana el mockup**, que dibuja dos rayas y las
+     * ROTA — una animación que dos SVG intercambiados no pueden dar—. El hueco de icono por
+     * instalación **se pierde en esta pieza**; ficha en `DEUDA.md`.
+     * ▶ Lo que el caso protege NO cambia: con el menú abierto el botón enseña un aspa, y lo hace
+     * **sin JavaScript de dibujo** —lo alterna el CSS por `.nav--over`—, así que sigue
+     * funcionando si Alpine no arranca.
      */
-    public function test_the_burger_shows_a_close_glyph_while_open(): void
+    public function test_the_burger_forms_a_close_glyph_while_open(): void
     {
-        $html = $this->get('/')->assertOk()->getContent();
+        $html = (string) $this->get('/')->assertOk()->getContent();
         $burger = $this->nodes($html, 'nav__burger')[0];
-        $clases = [];
+        $rayas = [];
 
-        foreach ($this->xpath($html)->query('.//svg', $burger) as $svg) {
-            $clases[] = $svg->getAttribute('class');
+        foreach ($this->xpath($html)->query('.//span', $burger) as $span) {
+            if (str_contains($span->getAttribute('class'), 'nav__burger-bar ')) {
+                $rayas[] = $span->getAttribute('class');
+            }
         }
 
-        $this->assertCount(2, $clases, 'la hamburguesa debe servir DOS glifos (rayas y aspa), y sirve '.count($clases));
-
-        foreach (['nav__burger-ico--bars', 'nav__burger-ico--x'] as $marca) {
-            $this->assertTrue(
-                (bool) array_filter($clases, fn (string $c): bool => str_contains($c, $marca)),
-                "falta el glifo `{$marca}` en la hamburguesa",
-            );
-        }
+        $this->assertCount(2, $rayas, 'la hamburguesa dibuja DOS rayas, y dibuja '.count($rayas));
 
         $css = (string) file_get_contents(public_path('css/landing.css'));
 
-        $this->assertStringContainsString(
-            '.nav--over .nav__burger-ico--x', $css,
-            'nada alterna los dos glifos con el menú abierto: se verían los dos a la vez.',
-        );
+        // ⚠️ Se exige el GIRO de las DOS, no que exista «una regla bajo `.nav--over`»: con una
+        // sola girando, el aspa sale con un palo torcido y la guarda pasaría igual.
+        foreach ([
+            '.nav--over .nav__burger-bar--top' => 'rotate(45deg)',
+            '.nav--over .nav__burger-bar--bottom' => 'rotate(-45deg)',
+        ] as $selector => $giro) {
+            $cuerpo = (string) ($this->cssRules(public_path('css/landing.css'))[$selector] ?? '');
+            $this->assertStringContainsString(
+                $giro, $cuerpo,
+                "`{$selector}` no gira con el menú abierto: el aspa no se forma.",
+            );
+        }
+
+        // Y el dibujo no puede depender del JavaScript: lo alterna la clase que el armazón ya pone.
+        $this->assertStringContainsString('.nav--over .nav__burger-bar--top', $css);
     }
 
     /**
@@ -1693,6 +1704,141 @@ class ArmazonContractTest extends TestCase
             'max-width: 640px', $cuerpo,
             'sin el tope, la fila cruza el hero entero y los dos botones se estiran.',
         );
+    }
+
+    /* ══ LA 2c·9 — LAS TRES PIEZAS QUE EL OJO DEL OWNER VIO DISTINTAS (`#217`) ═══════════════ */
+
+    /**
+     * **El logotipo FLOTA: sin pastilla detrás, y se sostiene con `drop-shadow`.**
+     *
+     * ❗ La pastilla no se borra, **se acota a quien la necesita**: sigue sosteniendo el suelo del
+     * producto —el nombre en la fuente de rótulo, que sin nada detrás queda ilegible en cuanto
+     * pasa una tarjeta por debajo— y desaparece cuando hay logotipo.
+     * ⚠️ **`drop-shadow` y no `box-shadow`, y la diferencia es el motivo de todo esto**:
+     * `box-shadow` proyecta la CAJA —un rectángulo, aunque el dibujo tenga forma— y `drop-shadow`
+     * sigue el ALFA de la imagen. Es lo único que deja flotar una marca recortada sin caja.
+     */
+    public function test_the_client_logo_floats_without_a_pill(): void
+    {
+        $landing = $this->cssRules(public_path('css/landing.css'));
+        $site = $this->cssRules(public_path('css/site.css'));
+
+        // ⚠️ **No se prohíbe la CLAVE `.nav__brand`, se prohíbe que PINTE**: esa regla también
+        // lleva el layout del hueco (`display`, `gap`), que tiene que quedarse. Aseverar la clave
+        // entera es lo que hizo fallar la primera versión de esta guarda con el código correcto.
+        $marca = (string) ($landing['.nav__brand'] ?? '');
+
+        foreach (['background:', 'border:'] as $pinta) {
+            $this->assertStringNotContainsString(
+                $pinta, $marca,
+                "`.nav__brand` vuelve a llevar pastilla (`{$pinta}`) para TODOS.\n".
+                '▶ Con logotipo tiene que flotar; la pastilla es solo para el suelo de texto.',
+            );
+        }
+        $this->assertArrayHasKey(
+            '.nav__brand:has(.nav__brand-row)', $landing,
+            "el suelo de TEXTO se quedó sin pastilla.\n".
+            '▶ Sin nada detrás, el nombre del sitio es ilegible en cuanto pasa una tarjeta por debajo.',
+        );
+
+        $logo = (string) ($site['.nav__brand-logo'] ?? '');
+        $this->assertStringContainsString(
+            'filter: drop-shadow', $logo,
+            'el logotipo no lleva `drop-shadow`: sin pastilla y sin sombra, flota sobre el contenido '.
+            'sin nada que lo despegue.',
+        );
+        $this->assertStringNotContainsString(
+            'box-shadow', $logo,
+            '`box-shadow` proyecta la CAJA, no la silueta: sobre un logotipo recortado dibuja un rectángulo.',
+        );
+        $this->assertStringContainsString('height: 54px', $logo, 'el logotipo volvió a su altura vieja');
+    }
+
+    /**
+     * **El botón de menú es el RECTÁNGULO del mockup, con su etiqueta.**
+     *
+     * Era un círculo de 44 px sin texto. `[DECIDIDO owner]`: idéntico al mockup — rect de 10 px,
+     * la altura del racimo, y la palabra al lado.
+     * ⚠️ **La etiqueta visible NO es el nombre accesible**, y por eso se comprueban los dos: el
+     * `aria-label` dice la ACCIÓN («Abrir menú») y la etiqueta dice dónde estás («Menú»). «Cerrar»
+     * a secas no diría qué se cierra.
+     */
+    public function test_the_burger_is_the_mockup_rectangle(): void
+    {
+        $reglas = $this->cssRules(public_path('css/landing.css'));
+        $cuerpo = (string) ($reglas['.nav__burger'] ?? '');
+
+        $this->assertStringContainsString(
+            'border-radius: var(--r-md)', $cuerpo,
+            'el botón de menú volvió a ser un círculo (o a un radio que no es el del mobiliario).',
+        );
+        $this->assertStringContainsString(
+            'height: var(--cta-pair-h', $cuerpo,
+            'el botón de menú no comparte altura con el racimo: al lado del par se ve desalineado.',
+        );
+
+        $html = (string) $this->get('/')->assertOk()->getContent();
+        $burger = $this->nodes($html, 'nav__burger')[0];
+
+        $this->assertNotSame(
+            '', $burger->getAttribute('aria-label'),
+            'la etiqueta visible NO sustituye al nombre accesible: «Cerrar» no dice qué se cierra.',
+        );
+        $this->assertStringContainsString(
+            __('landing.nav.burger_label'), $burger->textContent,
+            'el botón de menú no lleva su etiqueta visible.',
+        );
+        $this->assertStringContainsString(
+            __('landing.nav.burger_label_open'), $burger->textContent,
+            "falta el rótulo de abierto.\n".
+            '▶ Se sirven los DOS y elige el CSS: con Alpine cambiando el texto habría parpadeo en la '.
+            'primera pintura, y sin JavaScript se vería el que toca porque el menú nace cerrado.',
+        );
+    }
+
+    /**
+     * **Las tres piezas del racimo llevan la sombra del MOBILIARIO, no la de otra cosa.**
+     *
+     * `#216` las dejó con `--shadow-float`, el rol de «flota sobre el contenido», y con el paquete
+     * del 2.º cliente eso rinde su sombra DURA (`5px 5px 0`). Su mockup las pinta difusas, y ahí
+     * había una contradicción entre sus fuentes (`M-05` dice que las difusas son solo para modal).
+     * `[DECIDIDO owner, 2026-08-28]`: **gana el mockup**, y entra un CUARTO rol —el mobiliario
+     * flotante— con los tres pesos y las dos alturas que su racimo declara.
+     */
+    public function test_the_cluster_uses_the_furniture_shadow(): void
+    {
+        $site = $this->cssRules(public_path('css/site.css'));
+        $landing = $this->cssRules(public_path('css/landing.css'));
+
+        $esperado = [
+            '.cta-med' => 'var(--shadow-nav-fill)',
+            '.cta-med:hover' => 'var(--shadow-nav-fill-lift)',
+            '.cta-ghost' => 'var(--shadow-nav-ghost)',
+            '.cta-ghost:hover' => 'var(--shadow-nav-ghost-lift)',
+        ];
+
+        foreach ($esperado as $selector => $token) {
+            $this->assertStringContainsString(
+                'box-shadow: '.$token, (string) ($site[$selector] ?? ''),
+                "`{$selector}` no declara `{$token}`: su sombra no es la del mobiliario.",
+            );
+        }
+
+        $this->assertStringContainsString(
+            'box-shadow: var(--shadow-nav)', (string) ($landing['.nav__burger'] ?? ''),
+            'el botón de menú se quedó sin sombra: al lado de dos botones que la llevan, parece pegado.',
+        );
+
+        // Y los cinco valores existen de verdad, en el sistema del producto y no sueltos en una regla.
+        $raiz = (string) file_get_contents(public_path('css/landing.css'));
+
+        foreach (['--shadow-nav:', '--shadow-nav-ghost:', '--shadow-nav-ghost-lift:',
+            '--shadow-nav-fill:', '--shadow-nav-fill-lift:'] as $token) {
+            $this->assertStringContainsString(
+                $token, $raiz,
+                "falta el token `{$token}`: sin declarar, `var()` cae a nada y la sombra desaparece en silencio.",
+            );
+        }
     }
 
     /** Literal XPath seguro aunque el texto lleve comillas. */

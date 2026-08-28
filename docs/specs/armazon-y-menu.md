@@ -1346,3 +1346,97 @@ ancho con los dos a `x = 50`; después 640 px, con `x = 50` y `x = 396`.
 - **Arnés de mutación**: **quince** mutaciones, cada una con el fallo REAL de su guarda — las 15
   muerden. Incluye las dos guardas que hubo que **acotar** (no aflojar) porque aseveraban por
   subcadena, y la del `width` del hero.
+
+---
+
+## 10. La 2c·9 — las tres piezas que el OJO del owner vio distintas (`#217`, 2026-08-28)
+
+> `[DECIDIDO owner, 2026-08-28]`, mirando la 2c·8 contra su mockup: «las sombras son diferentes
+> para el botón y el icono, la forma del menú es diferente, y el logo está float sin ningún
+> background detrás y es más grande».
+>
+> ▶ **Las tres eran ciertas y ninguna la veía la sonda.** La sonda medía existencia, color, tamaño
+> y estado —todo correcto— porque la 2c·8 alineó el CTA doble y **no miró las otras dos piezas del
+> racimo ni el logotipo**. Es la misma lección de §9.7.bis, otra vez: *medir no es mirar*.
+
+### 10.1 Las sombras: entra un CUARTO rol
+
+`#216` dejó el racimo con `--shadow-float` («flota sobre el contenido»), y con el paquete del 2.º
+cliente eso rinde su sombra **dura** (`5px 5px 0`). Su mockup las pinta difusas. Era la ficha de
+`DEUDA.md` sobre la tercera contradicción de sus fuentes, y **el owner la resuelve: gana el
+mockup**, como ya pasó con el color del CTA.
+
+Medido en `Landing PJP Modos`:
+
+| Pieza | Reposo | Al pasar el cursor |
+|---|---|---|
+| Reservar (relleno de tinta) | `0 10px 28px rgba(16,20,24,.24)` | `0 18px 40px …,.32` |
+| Registro (fantasma) | `0 10px 26px rgba(16,20,24,.18)` | `0 16px 36px …,.26` |
+| Menú | `0 10px 28px rgba(16,20,24,.16)` | **no toca la sombra: LEVANTA el botón** |
+
+▶ **Son CINCO tokens, no uno**, y no es proliferación: el mockup declara **tres pesos** —el relleno
+de tinta pesa más y proyecta más— y **dos alturas**. Van al sistema (`landing.css`), leen
+`--paper-fg` como los otros tres roles, y una instalación los redefine.
+⚠️ **`M-05` del cliente sigue valiendo para el resto**: lo que cambia es que el mobiliario flotante
+deja de estar cubierto por esa norma, porque **el propio cliente lo dibuja así**.
+
+### 10.2 El botón de menú: la forma del mockup, y lo que cuesta
+
+| | Antes | Ahora |
+|---|---|---|
+| Forma | **círculo** de 44 px | rect de `--r-md`, alto del racimo (54 · 48), padding `0 18px` |
+| Dibujo | dos iconos del set, cruzados por opacidad | **dos rayas de 19 y 12 px que ROTAN** hasta formar la X |
+| Texto | ninguno | etiqueta **«MENÚ» / «CERRAR»** en mono, oculta bajo 620 px |
+| Fondo | tarjeta | tarjeta; **abierto, papel macizo** y sin keyline visible |
+| Sombra | ninguna | `--shadow-nav` |
+| Hover | invertía y `scale(1.08)` | `translateY(-2px)` |
+
+⚠️⚠️ **Esto CUESTA algo concreto: el hueco de icono por instalación se pierde EN ESTA PIEZA.**
+`#211` eligió `x-icons.menu`/`close` justamente porque el dibujo es uno de los tres mecanismos del
+tema. Dos rayas de CSS no salen de ningún set. El owner lo decidió con el coste delante; ficha en
+`DEUDA.md`. ▶ **A cambio se gana el giro**: la X no aparece, **se forma**.
+
+⚠️ **Los colores salen de los alias `--paper-*`.** Con el menú abierto el armazón está dentro de una
+superficie de tinta, donde `--bg` vale oscuro: `background: var(--bg)` habría pintado el botón de
+negro sobre negro. Es la misma corrección que el fantasma del par en `#216`.
+
+⚠️ **Y el objetivo táctil**: aquí había un `@media` que forzaba 44×44 «para no encoger en móvil»
+(Lote 9), y con la forma nueva eso lo devolvía a **cuadrado**. Se retira: el alto es 48 en teléfono
+y el ancho lo da el padding, así que pasa de sobra.
+
+### 10.3 El logotipo: flota, y su sombra sigue la SILUETA
+
+El logotipo llevaba una **pastilla** —fondo de tarjeta, keyline y padding— con este razonamiento
+escrito al lado: «el mockup lo resuelve con un `drop-shadow` sobre su logotipo, pero **aquí la
+nuestra es TEXTO** y esa vía está cerrada por `M-05`».
+
+▶ **El razonamiento era correcto cuando la marca era texto.** Desde `#216` una instalación sirve su
+LOGOTIPO, que es una imagen: la vía del mockup se abre.
+
+⚠️ **La pastilla no se borra: se acota a quien la necesita.** Sigue sosteniendo el suelo del
+producto —el nombre en la fuente de rótulo, que sin nada detrás queda ilegible en cuanto pasa una
+tarjeta por debajo— y desaparece cuando hay logotipo. Lo decide `:has(.nav__brand-row)`, o sea **el
+CSS y no el servidor**: el hueco lo rellena un componente y la barra no sabe qué le van a meter. Si
+el navegador no entiende `:has()`, se queda la pastilla — el estado seguro, no el roto.
+
+⚠️⚠️ **`drop-shadow`, no `box-shadow`, y ésa es toda la diferencia**: `box-shadow` proyecta la
+CAJA —un rectángulo, aunque el dibujo tenga forma— y `drop-shadow` sigue el **alfa** de la imagen.
+Es lo único que deja flotar una marca recortada sin caja detrás. Son **dos**, como el mockup: una
+difusa que la despega y **un contorno de 1 px** para cuando cae sobre algo claro.
+
+▶ **Y sube de 26 px a 54**, que es lo que mide en el mockup. A 26 px un lockup de DOS LÍNEAS —que
+es lo que es el del 2.º cliente— deja cada palabra en 13 px y deja de leerse.
+
+### 10.4 Verificación
+
+- **`ArmazonContractTest` +3 casos** y **1 re-apuntado**: el del aspa, que exigía dos glifos del set
+  y ahora exige que **las dos rayas giren** (con una sola girando el aspa sale con un palo torcido,
+  y aseverar «hay una regla bajo `.nav--over`» lo dejaría pasar).
+- ⚠️ **Y una guarda propia nació DEMASIADO GRUESA**: prohibía la clave `.nav__brand` entera, y esa
+  regla también lleva el **layout** del hueco. Salió roja con el código correcto. Se acota a lo que
+  de verdad protege: que no PINTE (`background`, `border`).
+- **11 mutaciones, las 11 muerden** — incluidas «vuelve la pastilla para todos», «el suelo de texto
+  se queda sin pastilla», «el logotipo se sostiene con `box-shadow`» y «solo una raya gira».
+- Medido en navegador: logotipo **147 × 54 sin fondo ni borde** con el `drop-shadow` doble · botón
+  de menú **103 × 54, radio 10, sombra `.16`**, y **121 × 54 en papel macizo** con el menú abierto ·
+  las tres sombras del racimo en sus valores (`.24` / `.18` / `.16`).

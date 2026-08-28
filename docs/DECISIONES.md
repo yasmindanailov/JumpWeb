@@ -11520,3 +11520,65 @@ de un componente de JavaScript, el del rótulo alterno exige que NO vuelva, y `A
 declara `.hero__act--buy` — · sonda de navegador con la coreografía contrastada contra la
 aritmética del mockup · arnés de **15 mutaciones, las 15 muerden**, cada una con el fallo REAL de
 su guarda.
+
+---
+
+## #217 · 2026-08-28 · El OJO del owner sobre la 2c·8: las TRES piezas que la sonda no vio — las sombras del racimo (entra un CUARTO rol), la forma del botón de menú, y el logotipo que flota
+
+**Contexto.** El owner mira `#216` contra su mockup: «las sombras son diferentes para el botón y el
+icono, la forma del menú es diferente, y **el logo está float sin ningún background detrás y es más
+grande**». Las tres eran ciertas.
+
+❗❗ **Y ninguna la veía la sonda, con la suite verde y 15 mutaciones mordiendo.** La sonda de `#216`
+medía existencia, color, tamaño y estado del CTA doble —todo correcto— porque esa tanda alineó el
+par y **no miró las otras dos piezas del racimo ni el logotipo**. Es la tercera vez en dos días:
+`#216` ya se comió los botones del hero apilados por lo mismo. ▶ **Medir no es mirar.**
+
+**1 · LAS SOMBRAS: entra un CUARTO rol.** `#216` dejó el racimo con `--shadow-float` («flota sobre
+el contenido») y con el paquete del 2.º cliente eso rinde su sombra **dura** (`5px 5px 0`). Su
+mockup las pinta difusas: era la ficha de `DEUDA.md` sobre la **tercera contradicción de sus
+fuentes**, y `[DECIDIDO owner]` la resuelve — **gana el mockup**, como con el color del CTA.
+Medido: `0 10px 28px .24` (tinta) → hover `0 18px 40px .32` · `0 10px 26px .18` (fantasma) → hover
+`0 16px 36px .26` · `0 10px 28px .16` (menú, cuyo hover **levanta el botón** en vez de tocar la
+sombra). ▶ **Cinco tokens y no uno**: el mockup declara tres PESOS y dos ALTURAS. Van al sistema y
+leen `--paper-fg`, como los otros tres roles. `M-05` sigue valiendo para el resto del producto.
+
+**2 · EL BOTÓN DE MENÚ.** Era un **círculo** de 44 px con dos iconos cruzados por opacidad; pasa a
+ser el rectángulo del mockup —`--r-md`, la altura del racimo, etiqueta «MENÚ»/«CERRAR» y sombra
+propia—, con **dos rayas que ROTAN** hasta formar la X y un hover que levanta.
+⚠️⚠️ **Cuesta algo concreto y hay que decirlo: el hueco de icono por instalación se pierde EN ESTA
+PIEZA.** `#211` eligió `x-icons.menu`/`close` justamente porque el dibujo es uno de los tres
+mecanismos del tema; dos rayas de CSS no salen de ningún set. El owner lo decidió **con el coste
+delante**. Ficha en `DEUDA.md`. ▶ A cambio se gana el giro: la X no aparece, **se forma**.
+⚠️ Los colores salen de los alias `--paper-*`: dentro del menú de tinta, `background: var(--bg)`
+habría pintado el botón de negro sobre negro. Misma corrección que el fantasma del par en `#216`.
+⚠️ Y se retira un `@media` que forzaba 44×44 «para no encoger en móvil»: con la forma nueva lo
+devolvía a **cuadrado**, y el objetivo táctil ya lo cubren el alto (48) y el padding.
+
+**3 · EL LOGOTIPO FLOTA.** Llevaba una **pastilla** con este razonamiento escrito al lado: «el
+mockup lo resuelve con un `drop-shadow`, pero **aquí la nuestra es TEXTO** y esa vía está cerrada
+por `M-05`». ▶ **Era correcto cuando la marca era texto.** Desde `#216` una instalación sirve una
+IMAGEN, y la vía se abre.
+⚠️ **La pastilla no se borra: se acota a quien la necesita** (`:has(.nav__brand-row)`), porque el
+suelo del producto —el nombre en la fuente de rótulo— sin nada detrás es ilegible en cuanto pasa
+una tarjeta por debajo. Lo decide el CSS y no el servidor: el hueco lo rellena un componente y la
+barra no sabe qué le van a meter; si el navegador no entiende `:has()`, se queda la pastilla, que es
+el estado **seguro**.
+⚠️⚠️ **`drop-shadow`, no `box-shadow`, y ésa es toda la diferencia**: `box-shadow` proyecta la CAJA
+—un rectángulo, aunque el dibujo tenga forma— y `drop-shadow` sigue el **alfa**. Es lo único que
+deja flotar una marca recortada sin caja. Son dos, como el mockup: una difusa y **un contorno de
+1 px**. Y sube de 26 a **54 px**: a 26, un lockup de dos líneas deja cada palabra en 13 px.
+
+**Verificación**: suite **3245 / 21.314** · Pint ✓ · docs-check ✓ · `ArmazonContractTest` **+3
+casos** · **1 re-apuntado** —el del aspa, que exigía dos glifos del set y ahora exige que **las dos
+rayas giren**: con una sola girando el aspa sale con un palo torcido, y aseverar «hay una regla bajo
+`.nav--over`» lo dejaría pasar— · **12 mutaciones, las 12 muerden**.
+
+⚠️ **`ShapeScaleTest` hizo exactamente su trabajo**: las cinco sombras nuevas la pusieron en rojo
+obligando a decidir qué eran, y la respuesta fue **«un rol»**, no «una excepción». Se amplía su
+lista de ROLES —la de excepciones **solo encoge**, la de roles no— y también la que exige que cada
+rol lea el alias estable.
+⚠️ **Y una guarda propia nació DEMASIADO GRUESA**: prohibía la clave `.nav__brand` entera, y esa
+regla lleva también el **layout** del hueco, así que salió roja con el código correcto. Se acota a
+lo que de verdad protege: que no PINTE (`background`, `border`). **Una guarda que prohíbe un nombre
+en vez de un hecho caza lo que no debe.**

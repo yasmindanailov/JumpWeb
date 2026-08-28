@@ -253,13 +253,31 @@
              ⚠️ El `aria-label` **también alterna**: el del mockup dice «Abrir menú» siempre, incluso
              estando abierto, y eso es lo único que no se copia. Y gana `aria-expanded`, que es lo
              que convierte el botón en un revelador para quien no ve el dibujo. --}}
+        {{-- ⚠️⚠️ **El dibujo pasa de dos ICONOS a dos RAYAS que rotan** (`#217`,
+             `[DECIDIDO owner]`: idéntico al mockup), y eso tiene un coste que hay que decir: aquí
+             se pierde el hueco de icono por instalación. `#211` puso `x-icons.menu`/`close`
+             justamente porque el dibujo es uno de los tres mecanismos del tema y un cliente puede
+             sustituir el fichero; dos rayas de CSS no salen de ningún set. Ficha en `DEUDA.md`.
+             ▶ **A cambio, la X se FORMA en vez de aparecer**: dos SVG intercambiados no giran.
+
+             ⚠️ Las rayas van `aria-hidden`: el nombre accesible lo da el `aria-label`, que dice la
+             ACCIÓN («Abrir menú» / «Cerrar menú»). La etiqueta VISIBLE dice dónde estás («Menú» /
+             «Cerrar») y es más corta — por eso no puede ser el nombre accesible: «Cerrar» a secas
+             no dice qué se cierra.
+             ⚠️ **Las dos etiquetas se sirven las dos y elige el CSS.** Con Alpine cambiando el
+             texto habría un parpadeo en la primera pintura; y sin JavaScript, la que se ve es la
+             correcta porque el menú está cerrado. --}}
         <button class="nav__burger" x-ref="burger"
                 @click="menuOpen = ! menuOpen"
                 :aria-expanded="menuOpen ? 'true' : 'false'"
                 :aria-label="menuOpen ? @js(__('landing.nav.menu_close')) : @js(__('landing.nav.menu_open'))"
                 aria-label="{{ __('landing.nav.menu_open') }}">
-            <x-icons.menu class="nav__burger-ico nav__burger-ico--bars" />
-            <x-icons.close class="nav__burger-ico nav__burger-ico--x" />
+            <span class="nav__burger-bars" aria-hidden="true">
+                <span class="nav__burger-bar nav__burger-bar--top"></span>
+                <span class="nav__burger-bar nav__burger-bar--bottom"></span>
+            </span>
+            <span class="nav__burger-label nav__burger-label--closed">{{ __('landing.nav.burger_label') }}</span>
+            <span class="nav__burger-label nav__burger-label--open">{{ __('landing.nav.burger_label_open') }}</span>
         </button>
     </div>
 </nav>

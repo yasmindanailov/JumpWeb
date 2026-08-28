@@ -228,6 +228,31 @@
   --shadow-float: 0 16px 36px -10px color-mix(in srgb, var(--paper-fg) 50%, transparent);
   --shadow-modal: 0 30px 64px -20px color-mix(in srgb, var(--paper-fg) 50%, transparent);
 
+  /* ── LA SOMBRA DEL MOBILIARIO FLOTANTE (`#217`) ─────────────────────────────────────────
+     ❗ **Un CUARTO rol, y hace falta porque los tres de arriba no describen esta pieza.** El
+     armazón no está «apoyado» (no lleva sombra), ni «se despega al pasar el ratón» (`lift`), ni
+     «tapa la página» (`modal`): **flota permanentemente sobre un contenido que se mueve por
+     debajo**. Eso es una cuarta respuesta a «¿para qué sirve esta sombra?», no un escalón más de
+     una escala.
+
+     ⚠️⚠️ **Y esto RESUELVE la ficha de `DEUDA.md` sobre la sombra del 2.º cliente**, que era la
+     TERCERA contradicción de sus fuentes: su mockup pinta el mobiliario con sombra difusa y su
+     hallazgo `M-05` dice que las difusas son solo para modal. `[DECIDIDO owner, 2026-08-28]`:
+     **gana el mockup**, como ya pasó con el color del CTA. `M-05` sigue valiendo para el resto.
+
+     Son CINCO valores y no uno porque el mockup declara **tres pesos** —el relleno de tinta pesa
+     más y proyecta más— y **dos alturas**. Medido en `Landing PJP Modos`:
+       reservar  `0 10px 28px .24` → hover `0 18px 40px .32`
+       registro  `0 10px 26px .18` → hover `0 16px 36px .26`
+       menú      `0 10px 28px .16`  (su hover no toca la sombra: LEVANTA el botón)
+     ⚠️ Leen `--paper-fg` por lo mismo que los tres de arriba: dentro del menú de tinta, `--fg`
+     vale claro y la sombra se volvería luz. */
+  --shadow-nav:            0 10px 28px color-mix(in srgb, var(--paper-fg) 16%, transparent);
+  --shadow-nav-ghost:      0 10px 26px color-mix(in srgb, var(--paper-fg) 18%, transparent);
+  --shadow-nav-ghost-lift: 0 16px 36px color-mix(in srgb, var(--paper-fg) 26%, transparent);
+  --shadow-nav-fill:       0 10px 28px color-mix(in srgb, var(--paper-fg) 24%, transparent);
+  --shadow-nav-fill-lift:  0 18px 40px color-mix(in srgb, var(--paper-fg) 32%, transparent);
+
   /* ── EL ANILLO DE FOCO ─────────────────────────────────────────────────────────────────
      Medido antes de esta tanda: **23 reglas de foco, CINCO tratamientos distintos y CERO
      tokens**. O sea que un cliente podía cambiar toda su marca y el anillo con el que su
@@ -455,12 +480,23 @@ img { display: block; max-width: 100%; }
   display: flex; align-items: center; gap: clamp(28px, 4vw, 56px);
   min-width: 0;
 }
-/* Sin barra detrás, la marca se queda sola sobre el contenido que pase por
-   debajo. El mockup lo resuelve con un `drop-shadow` sobre su logotipo de seis
-   capas; aquí la nuestra es TEXTO y esa vía está cerrada por `M-05` (la difusa
-   solo existe en modales), así que se sostiene con la misma receta que el resto
-   del racimo: superficie de tarjeta y keyline. */
-.nav__brand {
+/* ══ LA MARCA, SOLA SOBRE EL CONTENIDO ════════════════════════════════════════════════════════
+   ⚠️⚠️ **CORRECCIÓN (`#217`), y va delante del texto que corrige.** Aquí había una PASTILLA
+   —fondo de tarjeta, keyline y padding— con este razonamiento: «el mockup lo resuelve con un
+   `drop-shadow` sobre su logotipo, pero **aquí la nuestra es TEXTO** y esa vía está cerrada por
+   `M-05`». El razonamiento era correcto **cuando la marca era texto**. Desde `#216` una
+   instalación sirve su LOGOTIPO, que es una imagen: la vía del mockup se abre, y el owner la
+   pidió («el logo está float, sin ningún background detrás»).
+
+   ▶ **La pastilla no se borra: se acota a quien la necesita.** Sigue sosteniendo el suelo del
+   producto —el nombre en la fuente de rótulo, que sin nada detrás queda ilegible en cuanto pasa
+   una tarjeta por debajo— y desaparece cuando hay logotipo, que se sostiene solo con su sombra.
+   Es lo mismo que se hizo con `alt`/`sr-only` en el componente: la forma sigue al contenido.
+
+   ⚠️ `:has()` es lo que permite decidirlo **en CSS y no en el servidor**: el hueco lo rellena un
+   componente y la barra no sabe qué le van a meter. Si el navegador no lo entiende, la pastilla
+   se queda — que es el estado seguro, no el roto. */
+.nav__brand:has(.nav__brand-row) {
   padding: 8px 14px;
   background: var(--bg-card);
   border: 1px solid var(--line);
@@ -516,34 +552,101 @@ img { display: block; max-width: 100%; }
 /* polished nav links */
 .nav__cta { display: flex; align-items: center; gap: 14px; }
 
-/* ---------- mobile burger + drawer ---------- */
-/* La hamburguesa está en TODOS los anchos desde la tanda 2c·1: la barra ya no
-   lleva enlaces, así que es la única puerta a la navegación. */
+/* ══ EL BOTÓN DE MENÚ — LA FORMA DEL MOCKUP (`#217`) ═══════════════════════════════════════════
+   `[DECIDIDO owner, 2026-08-28]`: **idéntico al mockup**. Era un CÍRCULO de 44 px con dos iconos
+   que se cruzaban por opacidad; pasa a ser el rectángulo del mockup, con la etiqueta al lado y
+   **dos rayas que ROTAN hasta formar la X**.
+
+   Medido en `estiloBotonMenu`, `estiloRaya1` y `estiloRaya2`:
+     rect de 10 px · alto 54 (48 en teléfono) · padding `0 18px` (`0 15px` estrecho) · gap 11
+     cerrado: fondo de tarjeta + keyline    abierto: fondo de PAPEL, sin keyline visible
+     sombra `0 10px 28px .16` · hover `translateY(-2px)` · rayas 19 y 12 px, `.4s`
+
+   ⚠️⚠️ **Esto CUESTA algo concreto y hay que decirlo: el hueco de icono por instalación se pierde
+   EN ESTA PIEZA.** `#211` eligió `x-icons.menu`/`x-icons.close` justamente porque el dibujo es uno
+   de los tres mecanismos del tema y una instalación puede sustituir el fichero. Dos rayas
+   dibujadas con CSS no salen de ningún set. El owner lo decidió con el coste delante; ficha en
+   `DEUDA.md`. ▶ **A cambio se gana el giro**, que dos SVG intercambiados no pueden dar: la X no
+   aparece, se FORMA.
+
+   ⚠️ **Los colores salen de los alias `--paper-*`.** Con el menú abierto el armazón está dentro de
+   una superficie de tinta, donde `--bg` vale oscuro: escribir `background: var(--bg)` pintaría el
+   botón de negro sobre negro. `--paper-bg` es el papel en las dos superficies. Es la misma
+   corrección que el fantasma del par.
+
+   ⚠️ **El objetivo táctil no baja de 44 px**: el alto es el del racimo (54, o 48 en teléfono) y el
+   ancho lo da el padding, así que incluso sin etiqueta pasa de sobra. */
 .nav__burger {
-  display: inline-flex;
-  width: var(--tap-min); height: var(--tap-min);   /* Lote 9: objetivo táctil 44px */
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  align-items: center; justify-content: center;
-  background: var(--bg-card);
-  color: var(--fg);
-  transition: background 0.2s ease, color 0.2s ease;
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 11px;
+  height: var(--cta-pair-h, 54px);
+  padding: 0 18px;
+  border: 1px solid var(--paper-line-strong);
+  border-radius: var(--r-md);
+  background: var(--paper-bg-card);
+  color: var(--paper-fg);
+  box-shadow: var(--shadow-nav);
+  transition: transform 0.34s cubic-bezier(0.2, 0.9, 0.2, 1),
+              background 0.3s ease, border-color 0.3s ease;
 }
-.nav__burger:hover { background: var(--fg); color: var(--bg); transform: scale(1.08); }
+/* El hover LEVANTA el botón. Es el único del racimo que se mueve, y en el mockup también: los dos
+   CTA solo cambian de sombra porque son objetivos de compra —moverlos invita al clic accidental—;
+   éste abre un menú, y el gesto de «asomar» es la afordancia. */
+.nav__burger:hover { transform: translateY(-2px); }
 
-/* **Los dos dibujos de la hamburguesa: rayas cerrada, X abierta.**
-   Se apilan en la MISMA celda (`grid-area: 1/1`) en vez de mostrarse y ocultarse con `display`,
-   para que el botón no cambie de tamaño al alternar — con `display:none` el `inline-flex` mide
-   solo el glifo visible y el círculo daba un salto de 2 px al abrir.
-   ⚠️ El que no se ve va `visibility:hidden`, no `opacity:0`: así tampoco es alcanzable con el
-   ratón ni lo anuncia un lector de pantalla. Es la misma decisión que el menú cerrado, y su
-   porqué está escrito ahí. */
-.nav__burger { display: inline-grid; place-items: center; }
-.nav__burger-ico { grid-area: 1 / 1; transition: opacity var(--dur-fade) ease; }
-.nav__burger-ico--x { opacity: 0; visibility: hidden; }
-.nav--over .nav__burger-ico--bars { opacity: 0; visibility: hidden; }
-.nav--over .nav__burger-ico--x { opacity: 1; visibility: visible; }
+/* Abierto: el botón pasa a PAPEL macizo y su keyline desaparece dentro de él. Con el menú de tinta
+   detrás, es la pieza más clara de la pantalla — que es lo que la convierte en «la salida». */
+.nav--over .nav__burger {
+  background: var(--paper-bg);
+  border-color: var(--paper-bg);
+}
 
+/* Las dos rayas, apiladas. `width: 19px` en la caja y no en cada raya: la segunda mide 12 y crece
+   a 19 al abrir, y así crece hacia la derecha en vez de centrarse. */
+.nav__burger-bars {
+  display: flex; flex-direction: column; gap: 4px;
+  width: 19px;
+  flex-shrink: 0;
+}
+.nav__burger-bar {
+  height: 2px;
+  background: currentColor;
+  border-radius: var(--r-pill);
+  transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.2, 1), width 0.4s ease;
+}
+.nav__burger-bar--top { width: 19px; }
+.nav__burger-bar--bottom { width: 12px; }
+/* ⚠️ Los `translateY` son la MITAD del hueco (4 px) más medio grosor: sin ellos las dos rayas
+   giran en su sitio y la X sale con las aspas descentradas. */
+.nav--over .nav__burger-bar--top { transform: translateY(3px) rotate(45deg); }
+.nav--over .nav__burger-bar--bottom { width: 19px; transform: translateY(-3px) rotate(-45deg); }
+
+/* La palabra al lado del dibujo. ⚠️ **NO es el nombre accesible** —ése lo da el `aria-label`, que
+   dice la ACCIÓN («Abrir menú»)—: ésta es una etiqueta corta que dice DÓNDE estás. Por debajo de
+   620 px no se pinta, como en el mockup: ahí el pulgar necesita el ancho. */
+.nav__burger-label {
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+}
+.nav__burger-label--open { display: none; }
+.nav--over .nav__burger-label--closed { display: none; }
+.nav--over .nav__burger-label--open { display: inline; }
+
+@media (max-width: 619px) {
+  .nav__burger { padding: 0 15px; }
+  .nav__burger-label { display: none; }
+  .nav--over .nav__burger-label--open { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav__burger { transition: background 0.3s ease, border-color 0.3s ease; }
+  .nav__burger:hover { transform: none; }
+  .nav__burger-bar { transition: none; }
+}
+
+/* ---------- cajón de navegación en móvil ---------- */
 .mob-menu {
   position: fixed; inset: 0; z-index: 100;
   pointer-events: none;
@@ -1974,7 +2077,10 @@ input[type="radio"]:focus-visible,
      derecha vía el justify-between del nav). */
   .nav__brand-row { font-size: 20px; }
   .nav__cta { gap: 12px; }
-  .nav__burger { width: var(--tap-min); height: var(--tap-min); }   /* Lote 9: no encoger en móvil (44px táctil) */
+  /* ⚠️ Aquí forzaba `width`/`height` a 44 px «para no encoger en móvil» (Lote 9), y con la forma
+     del mockup (`#217`) eso lo devolvía a CUADRADO: el botón ya no es un círculo de lado fijo
+     sino un rectángulo cuyo ancho lo da su contenido más el padding. El objetivo táctil sigue
+     cubierto —alto 48 px en teléfono y ancho muy por encima de 44— así que la regla sobraba. */
 }
 
 @media (max-width: 420px) {

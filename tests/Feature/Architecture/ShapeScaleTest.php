@@ -361,12 +361,25 @@ class ShapeScaleTest extends TestCase
      * y `modal` (tapa la página)— y lo que no entra en ninguno **no lleva sombra**: una tarjeta
      * quieta no está elevada, está apoyada.
      *
+     * ⚠️ **CUARTO ROL desde `#217`: el MOBILIARIO FLOTANTE.** El armazón no encaja en ninguno de
+     * los tres —no está apoyado, no se despega al pasar el ratón, no tapa la página—: **flota
+     * permanentemente sobre un contenido que se mueve por debajo**. Son cinco valores porque el
+     * mockup del 2.º cliente declara tres pesos (el relleno de tinta proyecta más) y dos alturas.
+     * ▶ **Esta guarda funcionó exactamente como debía**: la tanda añadió cinco sombras nuevas y
+     * salió en rojo obligando a decidir qué eran. La respuesta fue «un rol», no «una excepción» —
+     * y la diferencia importa, porque **la lista de excepciones solo encoge y la de roles no**.
+     *
      * ▶ Si esto se relaja, un cliente que redefina su tema deja de mover las sombras que se le
      * escapen — y no falla nada, simplemente se queda con las del primero.
      */
     public function test_every_shadow_comes_from_a_role_or_is_a_declared_exception(): void
     {
-        $roles = ['var(--shadow-lift)', 'var(--shadow-float)', 'var(--shadow-modal)'];
+        $roles = [
+            'var(--shadow-lift)', 'var(--shadow-float)', 'var(--shadow-modal)',
+            // El mobiliario flotante (`#217`): tres pesos y dos alturas, todos del mismo rol.
+            'var(--shadow-nav)', 'var(--shadow-nav-ghost)', 'var(--shadow-nav-ghost-lift)',
+            'var(--shadow-nav-fill)', 'var(--shadow-nav-fill-lift)',
+        ];
         $offenders = [];
         $seen = 0;
 
@@ -421,6 +434,7 @@ class ShapeScaleTest extends TestCase
             "  · se despega al pasar el ratón     → `var(--shadow-lift)`\n".
             "  · flota sobre el contenido         → `var(--shadow-float)`\n".
             "  · tapa la página, con velo detrás  → `var(--shadow-modal)`\n".
+            "  · es MOBILIARIO que flota siempre  → `var(--shadow-nav*)` (`#217`)\n".
             "  · está quieta y apoyada            → `none`. Una tarjeta en reposo no está elevada.\n".
             'La lista de excepciones SOLO ENCOGE: si estás ampliándola, casi seguro es un rol.',
         );
@@ -437,7 +451,11 @@ class ShapeScaleTest extends TestCase
     {
         $root = $this->rootTokens();
 
-        foreach (['--shadow-lift', '--shadow-float', '--shadow-modal'] as $token) {
+        foreach ([
+            '--shadow-lift', '--shadow-float', '--shadow-modal',
+            '--shadow-nav', '--shadow-nav-ghost', '--shadow-nav-ghost-lift',
+            '--shadow-nav-fill', '--shadow-nav-fill-lift',
+        ] as $token) {
             $this->assertArrayHasKey($token, $root, "falta el rol de sombra `{$token}`");
 
             $this->assertStringContainsString(

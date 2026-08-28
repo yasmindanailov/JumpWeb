@@ -22,6 +22,11 @@ return [
         'menu_label' => 'Menu principal',
         'menu_open' => 'Ouvrir le menu',
         'menu_close' => 'Fermer le menu',
+        // Rótulo VISIBLE del botón de menú (`#217`, como el mockup del 2.º cliente). NO es el
+        // nombre accesible —ése lo dan `menu_open`/`menu_close`, que dicen la ACCIÓN—: éste es
+        // una palabra corta al lado del dibujo, y por debajo de 620 px no se pinta.
+        'burger_label' => 'Menu',
+        'burger_label_open' => 'Fermer',
         'skip' => 'Aller au contenu',
         'slider_prev' => 'Précédent',
         'slider_next' => 'Suivant',

@@ -589,6 +589,17 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3245 en verde** (21.314 aserciones), medida el 2026-08-28 por la tarde por el carril C
+  tras `#217` (**las tres piezas que el OJO del owner vio distintas**: las sombras del racimo, la
+  forma del botón de menú y el logotipo). ▶ **`ArmazonContractTest` +3 casos**, **1 re-apuntado**
+  (el del aspa: exigía dos glifos del SET de iconos y ahora exige que **las dos rayas giren**) y
+  **`ShapeScaleTest` amplía su lista de ROLES**, no la de excepciones. **12 mutaciones, las 12
+  muerden.** ⚠️ **`ShapeScaleTest` funcionó exactamente como debía**: las cinco sombras nuevas la
+  pusieron en rojo obligando a decidir qué eran — y la respuesta fue «un CUARTO rol», no «una
+  excepción». La lista de excepciones solo encoge; la de roles no.
+  ⚠️ **Y una guarda propia nació DEMASIADO GRUESA**: prohibía la clave `.nav__brand` entera, y esa
+  regla lleva también el **layout** del hueco, así que salió roja con el código correcto. Se acota
+  a lo que protege: que no PINTE.
 - Suite **3242 en verde** (21.229 aserciones), medida el 2026-08-28 a mediodía por el carril C
   **sobre el árbol CONJUNTO** —tras rebasar encima del `#215` del carril A— con `--parallel` en
   **47 s**, tras `#216` (**el armazón nace bajo el hero, el hero recupera sus dos botones, el
@@ -1097,6 +1108,7 @@ número se eligió **mirando el remoto** y esta tanda es **`#216`**.
 | `#216` · armazón | **El armazón NACE BAJO EL HERO** (`[DECIDIDO owner]`, como el mockup): con el hero a pantalla completa **no hay logo, ni CTA, ni hamburguesa** |
 | `#216` · hero | **Y por eso el hero recupera sus dos botones**, reabriendo `#195`: el mockup puede ocultar su cabecera **porque su hero ofrece la acción** |
 | `#216` · CTA | Las **ocho** diferencias medidas del CTA doble, alineadas: orden, anchos fijos 224/56, alturas iguales, el colapso, el retardo del rótulo, la sombra, el hover y el color dentro del menú |
+| `#217` · el ojo | ❗ **Las TRES piezas que el owner vio distintas y la sonda no**: las **sombras** del racimo (entra un CUARTO rol, el mobiliario flotante), la **forma del botón de menú** (era un círculo; ahora el rectángulo del mockup con etiqueta y dos rayas que ROTAN) y el **logotipo** (fuera la pastilla, 26 → 54 px y `drop-shadow` que sigue la SILUETA) |
 
 ## ❗❗ Lo que MÁS importa que sepas antes de tocar nada
 
@@ -1110,9 +1122,12 @@ número se eligió **mirando el remoto** y esta tanda es **`#216`**.
    desde el contexto corrompe el fichero en silencio** (medido: 4.632 B de 6.900, con cabecera y
    dimensiones válidas). Los rasters se **generan del vector**. Detalle en
    `mockup_playjumppark/README.md`, que es donde se mantiene.
-4. ⚠️ **El logotipo se pinta a 26 px de alto y el mockup lo pinta a 54.** Medido, no cambiado: no
-   estaba en el encargo y ampliar el alcance en silencio es lo que esta casa prohíbe. Es una línea
-   (`.nav__brand-logo { height }`) cuando el owner lo diga.
+4. ✅ **El logotipo ya está a 54 px** (`#217`): lo pidió el owner al verlo. Y con él se fueron la
+   pastilla de detrás —acotada al suelo de TEXTO, que sí la necesita— y la sombra de caja, que
+   pasa a `drop-shadow` porque una marca recortada necesita que su sombra siga la **silueta**.
+5. ⚠️⚠️ **La sonda no ve la FORMA.** Las tres cosas de `#217` las cazó el ojo del owner con la
+   suite en verde y 15 mutaciones mordiendo: la sonda medía existencia, color, tamaño y estado —y
+   todo estaba bien—. Es la tercera vez en dos días. **Medir no es mirar.**
 
 ---
 

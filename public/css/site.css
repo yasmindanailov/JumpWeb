@@ -188,14 +188,42 @@
     color: var(--fg-mute); text-transform: none;
 }
 
-/* El logotipo de una instalación, cuando lo hay. Alto fijo para que la esquina no baile entre
-   una marca y otra, y ancho libre: un lockup puede ser mucho más ancho que alto. `max-width` lo
-   sujeta en móvil, donde el racimo comparte fila con la hamburguesa. */
+/* ══ EL LOGOTIPO DE LA INSTALACIÓN — LAS MEDIDAS DEL MOCKUP (`#217`) ══════════════════════════
+   Alto fijo para que la esquina no baile entre una marca y otra, y ancho libre: un lockup puede
+   ser mucho más ancho que alto. `max-width` lo sujeta en móvil, donde comparte fila con el racimo.
+
+   ⚠️ **Sube de 26 px a 54**, que es lo que mide en `Landing PJP Modos` (`height:54px` en el
+   lockup de su cabecera) y lo que el owner pidió al verlo. A 26 px un lockup de DOS LÍNEAS —que es
+   lo que es el del 2.º cliente— deja cada palabra en 13 px y deja de leerse.
+
+   ⚠️⚠️ **Y se sostiene con `drop-shadow`, no con una pastilla detrás.** No es lo mismo que
+   `box-shadow`: `box-shadow` proyecta la CAJA —un rectángulo, aunque el dibujo tenga forma— y
+   `drop-shadow` sigue el ALFA de la imagen, así que la sombra tiene la silueta del logotipo. Es la
+   única forma de que una marca recortada flote sobre un fondo cualquiera sin caja.
+   ▶ Son DOS sombras, como en el mockup: una difusa que lo despega del contenido y **un contorno
+   de 1 px** (`0 1px 0`) que le da un borde inferior mínimo para cuando cae sobre algo claro.
+
+   ⚠️ El hover **inclina** (`rotate(-1.5deg)`), y eso es del mockup: la marca del cliente es un
+   lockup girado a mano, así que responder con un giro es coherente con su dibujo. En una
+   instalación con logotipo recto se ve igual de bien, y `prefers-reduced-motion` lo apaga. */
 .nav__brand-logo {
     display: block;
-    height: 26px;
+    height: 54px;
     width: auto;
-    max-width: min(220px, 46vw);
+    max-width: min(320px, 52vw);
+    filter: drop-shadow(0 6px 16px color-mix(in srgb, var(--paper-fg) 45%, transparent))
+            drop-shadow(0 1px 0 color-mix(in srgb, var(--paper-fg) 25%, transparent));
+    transition: transform 0.34s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+.nav__brand:hover .nav__brand-logo { transform: translateY(-2px) rotate(-1.5deg); }
+
+@media (max-width: 719px) {
+    .nav__brand-logo { height: 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nav__brand-logo { transition: none; }
+    .nav__brand:hover .nav__brand-logo { transform: none; }
 }
 
 /* ══ LA VARIANTE SOBRE TINTA (`#216`) ═══════════════════════════════════════════════════════════
@@ -2153,7 +2181,6 @@ body.no-scroll { overflow: hidden; }
     overflow: hidden; white-space: nowrap;
     font-family: var(--font-body);
     cursor: pointer; text-decoration: none;
-    box-shadow: var(--shadow-float);
     transition: width var(--cta-pair-swap, 0.46s) cubic-bezier(0.2, 0.9, 0.2, 1),
                 background 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
@@ -2167,8 +2194,12 @@ body.no-scroll { overflow: hidden; }
     background: var(--paper-bg-card); color: var(--paper-fg);
     border: 1px solid var(--paper-line-strong);
     font-weight: 500;
+    box-shadow: var(--shadow-nav-ghost);
 }
-.cta-ghost:hover { border-color: var(--paper-fg); }
+/* ⚠️ **El hover ELEVA, no mueve** (`#216`), y ahora eleva de verdad: el mockup solo cambia la
+   sombra en sus dos CTA —`0 10px 26px` → `0 16px 36px`—, que es la señal de «esto se puede
+   pulsar» sin desplazar el objetivo bajo el cursor. */
+.cta-ghost:hover { border-color: var(--paper-fg); box-shadow: var(--shadow-nav-ghost-lift); }
 .cta-ghost:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 .cta-ghost__ico {
     width: 30px; height: 26px;
@@ -2188,8 +2219,9 @@ body.no-scroll { overflow: hidden; }
     background: var(--fg); color: var(--bg);
     border: 0;
     font-weight: 600;
+    box-shadow: var(--shadow-nav-fill);
 }
-.cta-med:hover { background: var(--zone-1); color: var(--on-brand); }
+.cta-med:hover { background: var(--zone-1); color: var(--on-brand); box-shadow: var(--shadow-nav-fill-lift); }
 .cta-med:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
 .cta-med__ico {
     width: 30px; height: 26px;
