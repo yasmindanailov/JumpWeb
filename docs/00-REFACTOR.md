@@ -2539,8 +2539,26 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
         la franja vacía se traga los clics de todo el ancho.
       · **2c·3** (`#204`) la cuenta en icono con punto de aviso en amarillo, y tres glifos al set.
       · **2c·4a** (`#205`) el **CTA DOBLE** de móvil; el idioma sale del pie con `<noscript>` de suelo.
-      ❗ **Falta la pasada de NAVEGADOR de las CINCO tandas**, y el owner eligió mirarlas juntas
-      sabiendo el coste de la atribución.
+      · **2c·5** (`#211`) ❗❗ **el menú no se podía CERRAR con el ratón** —la hamburguesa solo abría—
+        y **abrirlo desde la portada dejaba la pantalla sin ningún botón de comprar** (el CTA nace
+        oculto). Las dos las cazó el OJO del owner: **ninguna de las 31 aserciones las veía, porque
+        todas comprobaban que el menú se ABRE.** ▶ Medido: el menú del mockup **tampoco lleva CTA
+        propio** — usa el de la cabecera, que en el suyo está siempre visible. No faltaba un botón:
+        faltaba REVELAR el que ya hay.
+      · **2c·6** (`#213`) el CTA **cambia de ROL dentro del menú**: tinta fuera, **AVISO** dentro,
+        como su mockup. ▶ Por eso **`.cta-med` SALE del rol de acción** de `#209` (13 reglas → 12):
+        su color no lo manda un rol sino una coreografía. ⚠️⚠️ Y **su anillo de foco es el MISMO
+        amarillo**: sin cambiarlo, el foco de teclado sobre ese botón queda **invisible**.
+      · **2c·7** (`#214`) el racimo es un **PAR**: uno ancho, el otro reducido a su icono; **1.er
+        clic expande, 2.º actúa**, y mientras nadie lo toca la mitad colapsada **asoma** con un
+        **aro** que late. ▶ El estado sube a `$store.ctaPair`, **compartido con la barra de móvil**:
+        son la misma decisión. ⚠️ La rama **con sesión era la ÚNICA del par sin suelo sin JS**.
+      ❗ **Falta la pasada de NAVEGADOR de las OCHO tandas visuales**, y el owner eligió mirarlas
+      juntas sabiendo el coste de la atribución.
+      ❗ **Y lo único que queda de la 2c es la 2c·4b, el menú en MÓVIL** — que **ya no la bloquea el
+      artboard**: llegó el 2026-08-28 dentro de `Landing PJP Modos`. ⚠️ Su barra inferior son **3
+      iconos + 1 CTA** y la nuestra es el **CTA doble** que el owner validó el día antes: eso hay
+      que preguntárselo antes de rehacerla.
 - 🟦 **El PRIMER PAQUETE DE CLIENTE REAL** (2026-08-28, `#206`). ✅ **Demuestra que los cuatro
       mecanismos COMPONEN**: la web sale con la marca del 2.º cliente y la suite entera pasa, con
       cero migraciones y cero dominio. **El paquete NO está en el repo y no puede estarlo**: vive en

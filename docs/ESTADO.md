@@ -331,7 +331,24 @@
 >   ▶ Del cierre anterior de este carril sigue vigente: al cerrar una tanda que toque fixtures con
 >   calendario, `bash scripts/audit-clock.sh` (está en `/cierre-sesion`; NO en el `pre-push`) — la
 >   primera pasada cazó un fixture que iba a tumbar el gate de los DOS agentes seis días después.
-> · 🆕 **Agente C (el TEMA) → SESIÓN 2026-08-28: el QUINTO mecanismo, el relleno de ACCIÓN, EMPUJADO**
+> · 🆕 **Agente C (el TEMA) → SESIÓN DEL 2026-08-28 CERRADA con CUATRO tandas empujadas y verdes**:
+>   `#209` el quinto mecanismo (el relleno de ACCIÓN) · `#211` el menú se puede CERRAR y siempre
+>   ofrece comprar, más el hueco del ICONO de instalación · `#213` el CTA cambia de rol dentro del
+>   menú (tinta fuera, AVISO dentro) · `#214` el CTA es un PAR con invitación.
+>   ▶ **Ficheros de este carril, actualizados**: `public/css/{site,landing}.css` ·
+>   `resources/views/components/site/{nav,menu,mobile-book-bar,favicon}.blade.php` ·
+>   `resources/views/components/{layout,focused-layout}.blade.php` · `resources/js/app.js` (el store
+>   `ctaPair`) · `app/Domain/Content/Services/ThemeSettings.php` · `tests/Feature/Theme/**` ·
+>   `tests/Feature/Site/ArmazonContractTest.php` · `.gitignore` · `scripts/deploy.sh`.
+>   ⚠️ **Compartidos con el carril A, tocados en un punto cada uno**: `app/Filament/Pages/Settings.php`
+>   (un campo + su clave del `MANAGED`), `lang/es/admin.php` (dos claves), `lang/{es,en,fr}/landing.php`
+>   (el rótulo del CTA), `tests/Feature/HomePageTest.php`, `tests/Feature/Sidebar/SidebarMountTest.php`
+>   y `tests/Feature/Site/CustomerAccountContextTest.php` (tres tests RE-APUNTADOS, ninguno retirado).
+>   **Si los tocas, `git pull --rebase` antes.**
+>   ⚠️ **Esta máquina es una INSTALACIÓN**: `public/css/client.css`, `theme.brand`/`theme.brand_secondary`/
+>   **`theme.action = #F2711C`** en la BD local y `THEME_FONTS` en el `.env`. En otra máquina nada de eso
+>   existe y la web se ve con el tema del producto: **es lo correcto, no un fallo**.
+>   Antes, en la misma jornada: el QUINTO mecanismo, el relleno de ACCIÓN, EMPUJADO**
 >   (`#209`, `specs/tema-por-instalacion.md` **§15**). Con él **la capa de tema tiene sus CINCO
 >   mecanismos** y la landing ya puede ser 1:1 con el mockup en color. El botón de comprar de esta
 >   máquina **ya sale en el naranja del cliente**, dentro y fuera del menú de tinta.
@@ -1034,13 +1051,60 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ SI ENTRAS NUEVO (2026-08-28): la capa de tema tiene ya sus **CINCO mecanismos** — el quinto es el relleno de ACCIÓN
+# ❗ SI ENTRAS NUEVO (2026-08-28, cierre del carril C): el TEMA tiene sus CINCO mecanismos y el ARMAZÓN pasó por el OJO del owner
 
 **`git fetch` antes de nada y lee las tres filas de la cabecera antes de elegir tarea.**
 
-▶ **Lo último del carril C** (`#209`, `specs/tema-por-instalacion.md` §15): **el botón que hace
-avanzar la compra ya es un ROL con token propio**, configurable desde el panel (`theme.action`).
-Con eso **la landing puede ser 1:1 con el mockup en color**, que era lo único que faltaba.
+## ▶ Lo que hizo esta sesión del carril C, en una línea cada cosa
+
+| | |
+|---|---|
+| `#209` | **El QUINTO mecanismo del tema: el relleno de ACCIÓN** (`tema-por-instalacion.md` §15). El botón de comprar deja de estar atado a `var(--fg)` y es un **ROL** de cuatro tokens con **un solo dato en el panel** (`theme.action`) |
+| `#211` | ❗❗ **El menú no se podía CERRAR con el ratón** y **abrirlo desde la portada dejaba la pantalla sin botón de comprar**. Y el **hueco del ICONO de instalación** (`client-favicon.svg`) |
+| `#213` | El CTA **cambia de ROL dentro del menú**: tinta fuera, **AVISO** dentro, como el mockup. `.cta-med` **sale** del rol de acción |
+| `#214` | El racimo es un **PAR**: uno ancho, el otro reducido a su icono; 1.er clic expande, 2.º actúa, con **invitación** que se apaga al tocarlo |
+
+## ❗❗ Lo que MÁS importa que sepas antes de tocar nada
+
+1. **`[DECIDIDO owner, 2026-08-28]` — del canvas SOLO se toma el SISTEMA DE DISEÑO**: colores,
+   elementos, iconos, formas, menú, hero de cabecera y pie. **El resto del canvas «son pruebas» y no
+   se toca** hasta que él lo diga. Eso deja fuera las **tres** variantes de «El parque» y los cuatro
+   artboards de cumpleaños.
+2. ⚠️ **`#195` sigue en pie**: el mockup ha devuelto el CTA al hero y **nosotros no lo copiamos**
+   (`[DECIDIDO owner, 2026-08-28]`).
+3. ❗ **El LOGOTIPO y el ICONO los exporta el owner desde Claude Design** y los entrega como
+   ficheros. Se intentó reconstruir el lockup en SVG y **no salió idéntico** (29 % de píxeles
+   distintos): son **6 capas por palabra** más una figura que no es silueta plana. ▶ **La lista
+   exacta de formatos y las tres reglas que no son opcionales están en `INSTALACION-CLIENTE.md`
+   §4.a.quinquies.** El hueco ya existe; falta **la variante sobre TINTA**, cuyo hueco NO está hecho.
+4. ⚠️⚠️ **Tres fuentes del cliente se contradicen** sobre el color de su CTA fijo (implementación
+   dice aviso · su norma dice «el amarillo nunca es fondo de botón» · su tabla de orden dice color
+   de acción). Se sigue la implementación **por decisión suya**; ficha en `DEUDA.md`.
+
+## ▶ POR DÓNDE SIGUE ESTE CARRIL
+
+1. **La tanda 2d, el MOVIMIENTO** — no depende de nadie. Medido: **237 declaraciones de transición,
+   48 duraciones y 20 curvas** frente a las **7 y 4** que declara el sistema del cliente. No mueve
+   píxeles, mueve TIEMPO: **no se revisa con una captura, se revisa interactuando**.
+2. **La 2c·4b, el menú en MÓVIL** — ✅ **ya no la bloquea el artboard** (llegó el 28 dentro de
+   `Landing PJP Modos`, con la pasada de móvil completa). ⚠️ **Pero su barra inferior son 3 iconos +
+   1 CTA y la nuestra es el CTA doble que el owner validó el día antes**: eso se le pregunta antes
+   de rehacerla, no se elige.
+3. **La tanda 3, las secciones** — ⏸️ fuera de alcance por decisión del owner (punto 1 de arriba).
+
+## ⚠️ Y una lección de método que esta sesión pagó CUATRO veces
+
+**Una aserción por SUBCADENA pasa en falso, y una guarda laxa nace ciega.** Los cuatro casos, todos
+cazados por el arnés de mutación y no por la suite: `.nav-cta-med-NO` contiene `.nav-cta-med` ·
+`client-favicon.svg` contiene `favicon.svg` · buscar `$store.ctaPair` «en algún sitio» del atributo
+pasaba con los anchos leyendo una variable local · y un `animation:` genérico bajo `--invita` lo
+cumplía el ARO, así que retirar el asomo dejaba la guarda verde.
+▶ **Acota al elemento, y muta la guarda con el fallo REAL que la motivó.**
+▶ Y lo mismo con los instrumentos de medida: en esta sesión mintieron **cinco** —un inventario de
+color que inventaba hexes, un extractor que no imprimía ni un botón y concluía «no hay ninguno»,
+`readFileSync(x).buffer` devolviendo el pool de Node, `opentype.js` emitiendo `NaN` en una glifo, y
+Chromium devolviendo `color-mix()` como `color(srgb …)` en canales 0–1—. **Cuando un instrumento
+dice que algo no existe, la primera hipótesis es el instrumento.**
 ❗❗ **Y tres cosas que cambian el mapa para quien entre ahora:**
 1. **`[DECIDIDO owner, 2026-08-28]` — del canvas SOLO se toma el SISTEMA DE DISEÑO**: colores,
    elementos, iconos, formas, menú, hero de cabecera y pie. **El resto del canvas son pruebas y no
@@ -1084,7 +1148,7 @@ retención.
 |---|---|
 | **A · menores + puerta** | **SESIÓN del 2026-08-27 noche → 28 madrugada**: `[DECIDIDO owner]` `#208`. ✅ **El PANEL de menores (tanda 5, `specs/menores-a-cargo.md` §9.10.4) EN EL ÁRBOL** (`8ab0f5c`): «Para:» en la ficha, «Asignar menores» en la línea, el alta manual con selector; +45 tests, sonda de concurrencia, headless 13/13. ✅ **El SUBSISTEMA A (`specs/identidad-qr-puerta.md` §9.4) EN EL ÁRBOL**: carné QR de 20 caracteres, visita acreditada, ficha compuesta, pantalla con caducidad en servidor, correo con PNG, `GET|POST /me/card`; 5/5 mutaciones, headless 15/15. **Ambos 🟦 por el OJO del owner** (§9.10.4 y §9.4 «lo que queda»: el panel, la puerta, el correo en Gmail/Outlook y **el lector real del recinto**), más los guiones §5.decies/§5.undecies y los DOS valores de retención en meses. ▶ Lo siguiente de agente, cuando el owner lo pida: la zona «Mi carné» del cajón y la rotación desde el panel (`DEUDA.md`), y **D · JumpPoints**, que ya tiene su hecho observable (`customer_visits`) |
 | **B · panel/dinero** | Nada de agente. La pasada de NAVEGADOR del owner por las 10 acciones (`specs/desmontar-view-order.md` §6·5) |
-| **C · tema** | ❗ **LO QUE ESPERA DE TI AHORA: el LOGOTIPO y el ICONO exportados desde Claude Design** (`[DECIDIDO owner, 2026-08-28]`, `#211`) — la lista exacta de formatos está en `INSTALACION-CLIENTE.md` §4.a.quinquies. ▶ Y la pasada de NAVEGADOR: **SEIS tandas visuales sin mirar**: `#195` (el hero pierde su CTA y encoge), `#196` (19 elementos pierden su sombra), `#201` (el menú a pantalla completa), `#203` (la barra DISUELTA en dos racimos, en las 12 vistas), `#205` (el CTA doble de móvil) y **`#209` (el botón de comprar YA SALE EN NARANJA en esta máquina)**. ⚠️ **Con el paquete puesto, esta máquina las enseña YA con su marca.** ▶ Y dos cosas concretas: el **SVG del logotipo** en `public/img/client-logo.svg` y **cuál de las TRES variantes de «El parque»** para la tanda 3 (`Descubre-el-Parque` · `Recorrido-Parque` · `Elige tu Zona`; preguntado el 28: «todavía no lo decido»). ▶ ✅ **El artboard del menú en MÓVIL YA LLEGÓ** (dentro de `Landing PJP Modos`, 2026-08-28): la 2c·4b se desbloquea, pero **su barra inferior son 3 iconos + 1 CTA y la nuestra es un CTA doble (`#205`)** — eso hay que contrastarlo con él antes de rehacerla. ▶ `[PENDIENTE: owner]` **avisar cuando el color de acción no alcance AA** (spec §15.8). ▶ Ya validó `#193` y `#194` |
+| **C · tema** | ❗ **LO QUE ESPERA DE TI, por orden de bloqueo:** **(1)** el **LOGOTIPO** y el **ICONO** exportados desde Claude Design — la lista exacta de formatos y las tres reglas que no son opcionales están en `INSTALACION-CLIENTE.md` **§4.a.quinquies**; ⚠️ falta además el hueco de la variante **sobre TINTA** del logo, que no está hecho. **(2)** La **pasada de NAVEGADOR: son OCHO tandas visuales sin mirar** — `#195` (el hero pierde su CTA), `#196` (19 elementos pierden su sombra), `#201` (menú a pantalla completa), `#203` (la barra disuelta), `#205` (CTA doble de móvil), `#209` (el botón de comprar en naranja), `#211` (el menú ya se cierra y siempre ofrece comprar) y `#213`+`#214` (el CTA es un PAR y se vuelve AVISO dentro del menú). Los guiones para recorrerlas: `VERIFICACION-E2E-CAJON.md` **§5.duodecies · §5.quindecies · §5.sexdecies**. **(3)** **La barra inferior de móvil**: el mockup pide **3 iconos + 1 CTA** y la nuestra es el **CTA doble** que validaste el 27 — hay que elegir antes de hacer la 2c·4b. **(4)** **Cuál de las TRES variantes de «El parque»** (`Descubre-el-Parque` · `Recorrido-Parque` · `Elige tu Zona`). ▶ `[PENDIENTE: owner]` menor: avisar en el panel cuando el color de acción no alcance AA (`tema-por-instalacion.md` §15.8). ▶ Ya validó `#193` y `#194` |
 
 ⚠️ **«La landing sigue bloqueada» dejó de ser cierto y esta sección lo decía**: la capa de tema ya
 tiene las tandas **1, 2a, 2b y la ELEVACIÓN** en `main` (`#192`→`#196`) y la **2c escrita**. Lo que
