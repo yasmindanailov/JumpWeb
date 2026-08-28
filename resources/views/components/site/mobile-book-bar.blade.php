@@ -4,7 +4,7 @@
      doble del mockup** — uno expandido con su subtítulo y el otro colapsado a solo icono; pulsar
      el colapsado lo expande y colapsa al otro; pulsar el expandido **actúa**.
 
-     ⚠️⚠️ **Y desde el 2026-08-28 (`#223`) NO es «un botón parecido al del nav»: es EL MISMO
+     ⚠️⚠️ **Y desde el 2026-08-28 (`#225`) NO es «un botón parecido al del nav»: es EL MISMO
      COMPONENTE** (`[DECIDIDO owner]`). Aquí vivía `.cta-prime`, una pieza propia que tenía que
      parecerse a `.cta-med`/`.cta-ghost` y no se parecía en nada — **medido en el navegador a
      390 px: 100 px de alto contra 54, chip de icono de 64×42 contra 30×26, y las DOS mitades
@@ -42,7 +42,7 @@
 <div class="book-bar" x-data="mobileBookBar"
      :class="[visible && 'book-bar--on', $store.ctaPair.mode === 'account' && 'book-bar--signup']"
      x-effect="document.body.classList.toggle('book-bar-visible', visible)">
-    {{-- ⚠️ **El par se fue a `<x-site.cta-pair>` en `#225`**: es el mismo botón que la cabecera y
+    {{-- ⚠️ **El par se fue a `<x-site.cta-pair>` en `#227`**: es el mismo botón que la cabecera y
          que la primera pantalla, y ya iban dos veces que dos copias divergían.
          `place="bar"` trae la colocación (ancho de pulgar, cuál se estira) y el perfil de copy de
          la barra —que SUSTITUYE el subtítulo cuando no hay precio en vez de omitirlo, porque aquí

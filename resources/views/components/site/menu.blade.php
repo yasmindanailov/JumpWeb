@@ -35,7 +35,7 @@
          se dibuja con un token de color, no con un literal. --}}
     <div class="menu__grain" aria-hidden="true"></div>
 
-    {{-- ⚠️ **Dos manchas de marca al fondo, y son HUECOS, no dibujos** (`#226`, del mockup). El
+    {{-- ⚠️ **Dos manchas de marca al fondo, y son HUECOS, no dibujos** (`#228`, del mockup). El
          producto pone el sitio, el tamaño, la opacidad y el COLOR —de los tokens de marca—; la
          FORMA la trae el paquete de instalación en `--deco-blob-a` / `--deco-blob-b`. Sin
          paquete no se pinta nada: la máscara por defecto es transparente, así que el hueco
@@ -45,7 +45,7 @@
     <div class="menu__blob menu__blob--a" aria-hidden="true"></div>
     <div class="menu__blob menu__blob--b" aria-hidden="true"></div>
 
-    {{-- ⚠️ **La VISTA PREVIA de la columna lateral se alimenta de los MISMOS ítems** (`#226`), no
+    {{-- ⚠️ **La VISTA PREVIA de la columna lateral se alimenta de los MISMOS ítems** (`#228`), no
          de una segunda lista: si fueran dos fuentes, un destino nuevo aparecería en la lista y no
          en la vista, o al revés, y nadie se enteraría hasta verlo. `mira` es el índice del ítem
          señalado; arranca en 0 para que la tarjeta no nazca vacía. --}}
@@ -59,7 +59,7 @@
          aria-label="{{ __('landing.nav.menu_label') }}" x-ref="menuPanel"
          x-data="{ mira: 0, vistas: @js($vistas) }">
 
-        {{-- ── LAS DOS COLUMNAS (`#226`, del mockup) ────────────────────────────────────────────
+        {{-- ── LAS DOS COLUMNAS (`#228`, del mockup) ────────────────────────────────────────────
              La lista a la izquierda y una columna de 320 px a la derecha. **No es decoración: es
              lo que hace legible la lista.** Con el menú a todo el ancho, un destino corto como
              «Empresas» deja su subtítulo flotando a 900 px del título y la fila se lee como dos

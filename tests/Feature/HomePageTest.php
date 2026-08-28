@@ -92,7 +92,7 @@ class HomePageTest extends TestCase
 
     public function test_entry_cards_show_a_book_cta_and_call_fallback_when_not_sellable(): void
     {
-        // #226 punto 5: cada card de entrada tiene un CTA. Las vendibles → «Reservar» (abre el
+        // #228 punto 5: cada card de entrada tiene un CTA. Las vendibles → «Reservar» (abre el
         // sidebar); las que NO tienen venta online (is_sellable=false) → fallback «Llamar» (tel:
         // del contacto), porque la entrada sigue apareciendo en la landing (filtro is_active).
         Setting::updateOrCreate(['key' => 'contact.phone'], ['value' => '968 22 22 22', 'group' => 'contact']);
@@ -254,7 +254,7 @@ class HomePageTest extends TestCase
 
         $html = $this->get('/')->assertOk()->getContent();
 
-        // ⚠️⚠️ **ACOTADO AL NAV, y la falta de acotación la destapó `#223`.** Este caso miraba la
+        // ⚠️⚠️ **ACOTADO AL NAV, y la falta de acotación la destapó `#225`.** Este caso miraba la
         // PÁGINA ENTERA. Funcionaba de casualidad: la barra de móvil usaba otra clase
         // (`cta-prime__s`) para su subtítulo, así que «no hay `cta-med__s` en ninguna parte»
         // equivalía a «el nav no lo pinta». Al pasar la barra a usar el MISMO componente, la
@@ -304,15 +304,15 @@ class HomePageTest extends TestCase
         $this->assertStringContainsString('hero__stage', $hero, 'el recorte del hero no trae el escenario');
         $this->assertStringContainsString('hero__video', $hero, 'el recorte del hero no trae el vídeo');
 
-        // ⚠️⚠️ **Esta aserción decía `cta-prime` y desde `#223` NO FIJABA NADA**: esa clase ya no
+        // ⚠️⚠️ **Esta aserción decía `cta-prime` y desde `#225` NO FIJABA NADA**: esa clase ya no
         // existe en ninguna parte del producto, así que la ausencia se cumplía sola. Y el motivo
         // que daba —«el hero no lleva CTA»— también había caducado: `#216` le devolvió sus dos
         // botones (`hero__act--buy` / `--alt`), que es lo que hace el mockup.
         // ▶ Lo que SÍ sigue siendo cierto, y es lo que se asevera ahora: el hero tiene sus PROPIOS
         // botones y **no reutiliza el par del armazón**. Son dos piezas con coreografías
         // distintas —el par intercambia mitades, el del hero no— y mezclarlas volvería a crear el
-        // problema que `#223` acaba de cerrar.
-        // ⚠️⚠️ **CAMBIA DE SIGNO EN `#225`, y el motivo es el encargo.** Aquí se aseveraba que el
+        // problema que `#225` acaba de cerrar.
+        // ⚠️⚠️ **CAMBIA DE SIGNO EN `#227`, y el motivo es el encargo.** Aquí se aseveraba que el
         // hero **no** reutilizaba el par del armazón, porque entonces tenía botones propios con
         // otra coreografía. `[DECIDIDO owner, 2026-08-28]`: la primera pantalla lleva **el mismo
         // CTA**, abajo a la derecha, y al bajar se apaga justo cuando el de la cabecera se
@@ -323,7 +323,7 @@ class HomePageTest extends TestCase
         $this->assertStringContainsString(
             'hero__pair-slot', $hero,
             'el hero se ha quedado sin su CTA. La primera pantalla vuelve a no ofrecer comprar: es '.
-            'el agujero que `#224` abrió y `#225` cerró.',
+            'el agujero que `#226` abrió y `#227` cerró.',
         );
         $this->assertStringContainsString(
             'cta-pair', $hero,
@@ -335,7 +335,7 @@ class HomePageTest extends TestCase
             'el hero ha metido dentro la barra flotante de móvil, que vive fija abajo y tiene su '.
             'propia visibilidad: ahí dentro se pintaría dos veces.',
         );
-        // ⚠️⚠️ **EL HERO SE VACÍA EN `#224`** (`[DECIDIDO owner, 2026-08-28]`: «por ahora sin
+        // ⚠️⚠️ **EL HERO SE VACÍA EN `#226`** (`[DECIDIDO owner, 2026-08-28]`: «por ahora sin
         // texto y sin botones»). Aquí se aseveraba que el hero SÍ tenía sus botones y su eslogan;
         // las dos aserciones se van con su sujeto.
         // ▶ Lo que ocupa su sitio no es nada: es lo que se pidió. Y por eso se asevera el hecho
@@ -377,7 +377,7 @@ class HomePageTest extends TestCase
      * **El botón de comprar lleva el precio anclado — donde quiera que viva.**
      *
      * Es la mitad SUPERVIVIENTE del test del CTA del hero. El sujeto cambió (ahora es la barra
-     * flotante de móvil, que desde `#223` usa la misma estructura que el nav, `cta-med`); la regla
+     * flotante de móvil, que desde `#225` usa la misma estructura que el nav, `cta-med`); la regla
      * es la misma:
      * icono + cuerpo (título + subtítulo) + flecha, con «desde X €» cuando hay catálogo vendible.
      */
@@ -395,7 +395,7 @@ class HomePageTest extends TestCase
         // cliente y su único test conduce la superficie vieja, el contrato NO lo está fijando».
         $bar = $this->slice($html, 'book-bar__cta');
 
-        // ⚠️ **La estructura cambió de componente en `#223`**, no de regla: la barra dejó de tener
+        // ⚠️ **La estructura cambió de componente en `#225`**, no de regla: la barra dejó de tener
         // pieza propia (`.cta-prime`) y usa la MISMA que el racimo de la cabecera. La flecha ya no
         // se asevera porque `.cta-med` no la tiene — `#213` la retiró del CTA del armazón: el
         // botón ya dice a dónde va con su rótulo y su icono.
@@ -510,18 +510,18 @@ class HomePageTest extends TestCase
      *
      * ⚠️⚠️ **DOS CORRECCIONES EN DOS DÍAS, y van DELANTE del texto que corrigen.**
      *
-     * **(`#224`, 2026-08-28)** el hero se vació —«por ahora sin texto y sin botones»— y la regla
+     * **(`#226`, 2026-08-28)** el hero se vació —«por ahora sin texto y sin botones»— y la regla
      * que este caso defiende quedó **suspendida a propósito**: la primera pantalla se quedó sin
      * ningún sitio donde comprar. El caso pasó a aseverar ese estado, y la ficha se abrió en
      * `DEUDA.md` con severidad Alta.
      *
-     * **(`#225`, mismo día)** el owner cierra el agujero por la puerta buena: la primera pantalla
+     * **(`#227`, mismo día)** el owner cierra el agujero por la puerta buena: la primera pantalla
      * recupera **el mismo CTA del armazón**, abajo a la derecha, y al bajar se apaga justo cuando
      * el de la cabecera se enciende. La ficha se cierra y este caso vuelve a su signo original.
      *
      * ▶ **La REGLA no ha cambiado ninguna de las dos veces**: quien llega a la portada y no hace
      * scroll tiene que poder comprar. Lo que ha cambiado tres veces es QUIÉN la cumple —los
-     * botones propios del hero (`#216`), nadie (`#224`), el par del armazón (`#225`)—. Por eso el
+     * botones propios del hero (`#216`), nadie (`#226`), el par del armazón (`#227`)—. Por eso el
      * caso se re-apunta y no se borra: el sujeto es volátil, la regla no.
      *
      * ⚠️ **RE-APUNTADO, no retirado** (2c·8, `#216`): este caso aseveraba `x-data="navCtaReveal"`,
@@ -539,8 +539,8 @@ class HomePageTest extends TestCase
 
         // ── 1 · La primera pantalla OFRECE COMPRAR ────────────────────────────────────────────
         // ⚠️ El sujeto cambió dos veces en dos días y por eso conviene decirlo: `#216` lo cumplía
-        // con botones propios del hero, `#224` los retiró y dejó el agujero abierto a sabiendas,
-        // y `#225` lo cierra con **el mismo CTA del armazón**, colocado abajo a la derecha. La
+        // con botones propios del hero, `#226` los retiró y dejó el agujero abierto a sabiendas,
+        // y `#227` lo cierra con **el mismo CTA del armazón**, colocado abajo a la derecha. La
         // REGLA no ha cambiado nunca: quien llega y no hace scroll tiene que poder comprar.
         $inicio = strpos($html, 'id="top"');
         $this->assertNotFalse($inicio, 'no se encuentra el hero en la home');
@@ -551,7 +551,7 @@ class HomePageTest extends TestCase
             "La primera pantalla no ofrece comprar.\n".
             "▶ El armazón nace OCULTO bajo el hero (`--nav-p`), así que sin este CTA quien llega a\n".
             "  la portada y no hace scroll no tiene ningún sitio donde comprar ni forma de navegar.\n".
-            '▶ Es el agujero que `#224` abrió a propósito y `#225` cerró. Si vuelve, hay que reabrir '.
+            '▶ Es el agujero que `#226` abrió a propósito y `#227` cerró. Si vuelve, hay que reabrir '.
             'la ficha de `DEUDA.md`.',
         );
 

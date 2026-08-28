@@ -47,14 +47,14 @@
                    poster="{{ asset('videos/header_poster.jpg') }}?v={{ @filemtime(public_path('videos/header_poster.jpg')) }}" aria-hidden="true">
                 <source src="{{ asset('videos/header_hero.mp4') }}?v={{ @filemtime(public_path('videos/header_hero.mp4')) }}" type="video/mp4">
             </video>
-            {{-- ⚠️ **Aquí vivía `.hero__stage-scrim` y se RETIRA** (`#225`,
+            {{-- ⚠️ **Aquí vivía `.hero__stage-scrim` y se RETIRA** (`#227`,
                  `[DECIDIDO owner, 2026-08-28]`: «el velo oscuro lo quitamos»). Era un degradado
                  oscuro de arriba abajo cuyo único trabajo era hacer legible el texto sobre el
-                 vídeo. Al vaciarse el hero (`#224`) se quedó sin sujeto: un velo que oscurece un
+                 vídeo. Al vaciarse el hero (`#226`) se quedó sin sujeto: un velo que oscurece un
                  vídeo para que se lea algo que ya no está ahí. --}}
             <span class="hero__stage-label">{{ __('landing.hero.reel') }}</span>
             {{-- ⚠️⚠️ **EL HERO SE VACÍA — sin eslogan, sin titular visible, sin botones y sin
-                 chip de estado** (`#224`, `[DECIDIDO owner, 2026-08-28]`: «el hero lo quiero
+                 chip de estado** (`#226`, `[DECIDIDO owner, 2026-08-28]`: «el hero lo quiero
                  **por ahora** sin texto y sin botones, después valoraremos cómo lo hacemos»).
                  La primera pantalla pasa a ser el vídeo y la tira de marca, y nada más.
 
@@ -80,12 +80,12 @@
                 <h1 class="sr-only">{{ __('landing.hero.l1') }} {{ __('landing.hero.l2') }}</h1>
             </div>
 
-            {{-- ⚠️⚠️ **EL CTA DE LA PRIMERA PANTALLA, Y ES UN RELEVO** (`#225`,
+            {{-- ⚠️⚠️ **EL CTA DE LA PRIMERA PANTALLA, Y ES UN RELEVO** (`#227`,
                  `[DECIDIDO owner, 2026-08-28]`: «añadiremos el mismo CTA en la parte inferior
                  derecha y, al deslizar, en el momento que aparece el CTA en el menú lo quitamos
                  del hero»).
 
-                 ▶ **Cierra el agujero que `#224` abrió a sabiendas**: la primera pantalla vuelve a
+                 ▶ **Cierra el agujero que `#226` abrió a sabiendas**: la primera pantalla vuelve a
                  ofrecer comprar. La ficha Alta de `DEUDA.md` se puede cerrar con esto.
 
                  ▶ **Es EL MISMO componente que el racimo de la cabecera**, no uno parecido, y por
@@ -105,7 +105,7 @@
             </div>
         </div>
 
-        {{-- ⚠️ **LA TIRA DE MARCA DEL HERO, y VIAJA** (`#224`, del mockup `Landing PJP Modos`).
+        {{-- ⚠️ **LA TIRA DE MARCA DEL HERO, y VIAJA** (`#226`, del mockup `Landing PJP Modos`).
              Arranca como un pelo de 4 px pegado al filo superior de la página —por encima del
              hero, que a esa altura va a sangre— y al encoger el hero **baja hasta quedar 28 px
              por debajo de la tarjeta**. Empieza siendo el borde de la página y acaba siendo el
@@ -464,7 +464,7 @@
     </section>
 
     {{-- ===================== RESERVE CTA ===================== --}}
-    {{-- ══ EL HERO DEL CIERRE (`#227`, del mockup `Landing PJP Modos`) ═════════════════════════
+    {{-- ══ EL HERO DEL CIERRE (`#229`, del mockup `Landing PJP Modos`) ═════════════════════════
          `[DECIDIDO owner]`: «lo mismo en el footer y el hero del footer».
 
          ▶ **Es la imagen ESPECULAR del hero de cabecera**, y esa simetría es el gesto: el de

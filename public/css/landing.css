@@ -419,7 +419,7 @@
 
 * { box-sizing: border-box; }
 
-/* ⚠️⚠️ **`overflow-x` es `clip`, y NO es lo mismo que `hidden`** (`#224`, 2026-08-28).
+/* ⚠️⚠️ **`overflow-x` es `clip`, y NO es lo mismo que `hidden`** (`#226`, 2026-08-28).
    `hidden` convierte al elemento en **contenedor de scroll**. En `<body>` eso rompe, en silencio,
    TODOS los `position: sticky` de la página: se anclan al scrollport del body en vez de al del
    viewport, y como el body no es quien scrollea, no llegan a pegarse nunca.
@@ -864,8 +864,8 @@ img { display: block; max-width: 100%; }
     repeating-linear-gradient(135deg, color-mix(in srgb, var(--bg) 97.5%, white) 0 22px, var(--bg) 22px 23px);
 }
 /* scrim for content legibility — between video and overlay content */
-/* ⚠️ **Aquí vivía `.hero__stage-scrim` y se retira con su sujeto** (`#225`): un degradado oscuro
-   de arriba abajo cuyo único trabajo era hacer legible el TEXTO sobre el vídeo. `#224` vació el
+/* ⚠️ **Aquí vivía `.hero__stage-scrim` y se retira con su sujeto** (`#227`): un degradado oscuro
+   de arriba abajo cuyo único trabajo era hacer legible el TEXTO sobre el vídeo. `#226` vació el
    hero, así que oscurecía el vídeo para que se leyera algo que ya no está.
    ▶ El CTA que sí queda no lo necesita: es un botón de tinta con su propia sombra, y se sostiene
    solo sobre cualquier fotograma. */
@@ -1870,10 +1870,10 @@ img { display: block; max-width: 100%; }
    de 4 px de alto el navegador ESCALA los radios para que no se solapen, así que `999px` rinde
    exactamente los 2 px de una píldora aplastada. Sale de la escala sin mover un píxel.
 
-   ⚠️ **`.brand-strip` es el COMPONENTE y `.foot__strip` la COLOCACIÓN** (`#224`). Estaban fundidos
+   ⚠️ **`.brand-strip` es el COMPONENTE y `.foot__strip` la COLOCACIÓN** (`#226`). Estaban fundidos
    porque la tira existía en un solo sitio; el mockup la usa **dos veces** —remata el pie y
    encabeza el hero, donde además VIAJA con el scroll—, y con las dos reglas fundidas la segunda
-   habría sido una copia. Misma separación que `#223` acaba de hacer con el par de CTA. */
+   habría sido una copia. Misma separación que `#225` acaba de hacer con el par de CTA. */
 .brand-strip {
   display: flex; height: 4px;
   border-radius: var(--r-pill); overflow: hidden;

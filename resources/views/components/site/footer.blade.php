@@ -24,7 +24,7 @@
         $langNames = \App\Domain\Platform\Services\SiteLocales::NAMES;
     @endphp
     {{-- La tira de marca que remata el pie y sustituye al filete de 1 px que había.
-         ⚠️ **El marcado se fue a `<x-site.brand-strip>` en `#224`**: el mockup la usa también en
+         ⚠️ **El marcado se fue a `<x-site.brand-strip>` en `#226`**: el mockup la usa también en
          el hero de cabecera, y dos copias pegadas de lo mismo divergen. Aquí queda `foot__strip`,
          que es COLOCACIÓN —el aire que deja debajo— y nada más. --}}
     <x-site.brand-strip class="foot__strip" />

@@ -69,7 +69,7 @@ class ActionFillTest extends TestCase
         // COREOGRAFÍA — tinta con el menú cerrado, AVISO mientras el menú lo tapa—, que es lo que
         // hace el mockup del 2.º cliente y lo que el owner decidió con las tres fuentes delante.
         //
-        // ⚠️⚠️ **Y desde `#223` NINGÚN CTA de armazón está en el rol.** Aquí estaba `.cta-prime`,
+        // ⚠️⚠️ **Y desde `#225` NINGÚN CTA de armazón está en el rol.** Aquí estaba `.cta-prime`,
         // la barra de compra de móvil, con el argumento de que era «el hermano que sí es acción».
         // Ese argumento se cayó cuando se midió la barra: era un componente aparte que tenía que
         // parecerse a `.cta-med` y no se parecía (100 px de alto contra 54, y las dos mitades
@@ -121,7 +121,7 @@ class ActionFillTest extends TestCase
         );
 
         // Y por NOMBRE, no por umbral: un umbral no distingue «leo poco» de «leo otra cosa».
-        // ⚠️ `.cta-prime` estaba en esta lista y se retira con él (`#223`). Se sustituye por
+        // ⚠️ `.cta-prime` estaba en esta lista y se retira con él (`#225`). Se sustituye por
         // `.cta-med`, que es la pieza que ocupó su sitio: la lista tiene que nombrar cosas que
         // EXISTEN, o deja de distinguir «leo poco» de «leo otra cosa», que es para lo que está.
         foreach (['.cta-med', '.btn', '.cartbar', '.skip-link', '.flash'] as $selector) {
@@ -220,7 +220,7 @@ class ActionFillTest extends TestCase
     }
 
     /**
-     * **Las piezas INTERIORES del CTA de acción: RETIRADO con su sujeto** (`#223`, 2026-08-28).
+     * **Las piezas INTERIORES del CTA de acción: RETIRADO con su sujeto** (`#225`, 2026-08-28).
      *
      * Este caso aseveraba que `.cta-prime__ico .ic-e2`, su `.occ`, su `.tk` y `.cta-prime__s`
      * seguían al relleno de acción. **Su sujeto entero era `.cta-prime`**, que ya no existe: la

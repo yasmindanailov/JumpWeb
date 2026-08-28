@@ -157,7 +157,7 @@ vivían dentro de los consumidores), así que el paso 1 las EXTRAJO a dos read-m
 (`CustomerReservationsReader`, `PublishableCatalogReader`) que se quedan en `app/Support` hasta
 el paso 6; **(d)** los contratos de Booking reciben `int $userId` y no el modelo `User`, con lo
 que el grafo se ahorra una flecha Booking→Identity.
-Efecto colateral valioso: la regla de comprabilidad #226 estaba **duplicada** en dos consultas
+Efecto colateral valioso: la regla de comprabilidad #228 estaba **duplicada** en dos consultas
 SQL independientes (`Attraction::complementIsPurchasable()` y `LandingComplementResolver`) que
 podían divergir en silencio; el contrato las unificó en una.
 La frontera (`ModuleBoundariesTest`) escanea con el **tokenizador de PHP**, no con regex —los
@@ -326,7 +326,7 @@ zona. Ni un método más.
 **(b) De regalo murieron DOS reglas duplicadas.** Content reimplementaba «cuál es la temporada
 vigente» y «cuál es la ventana efectiva de una fecha especial», con comentarios que decían
 literalmente *«para no divergir de lo que aplican las reservas»*. Es exactamente la trampa que el
-paso 1 encontró en la coherencia #226 (dos consultas SQL con la misma regla): dos copias acaban
+paso 1 encontró en la coherencia #228 (dos consultas SQL con la misma regla): dos copias acaban
 separándose. Ahora la regla la aplica su dueño y Content solo formatea. Coste en consultas: CERO
 —`OperatingSchedule` ya memoizaba horarios, temporadas y excepciones—, y de hecho retira las que
 Content hacía por su cuenta.
@@ -1667,14 +1667,14 @@ nuevas, cero PII, y `PAY-12` respetado (una sola fuente de CÁLCULO, no una sola
 
 **(c) Lo que el cliente NO compone, y por qué cada cosa**: el total del paso 3 lo publica el endpoint;
 el desglose viene ya partido (`deposit_cents` + `gate_remainder_cents`), porque reconstruirlo restando
-sería reimplementar la Opción A de #225 —los complementos de una línea con señal van íntegros al
+sería reimplementar la Opción A de #227 —los complementos de una línea con señal van íntegros al
 parque—; y el recuento de la barra-carrito es **pluralización de Laravel**, no `n === 1`. La única
 resta que queda es `park = total − online` en la cesta, y es legítima porque son dos AGREGADOS de la
 misma fuente y es literalmente lo que hace el servidor.
 
 **(d) Dos rótulos que el diff de árbol daba por buenos.** El desglose se llama «Pagas ahora (señal)»
 en el paso 3 y «Pagas ahora» —NEUTRO— en la cesta y en el pago, porque en una cesta mixta lo que se
-cobra ahora no es solo señal (#225). El normalizador del gate descarta los nodos de texto, así que
+cobra ahora no es solo señal (#227). El normalizador del gate descarta los nodos de texto, así que
 reutilizar el componente sin parametrizar el rótulo pasa verde y cambia la copia. Lo fija
 `SidebarCartParityTest`, verificado por mutación.
 
@@ -6195,7 +6195,7 @@ decisiones suyas, tomadas con el riesgo de cada opción escrito delante.**
    ▶ **Se evaluó el «arbitraje espejo» y NO existe**: comprar sábado y moverse a lunes deja una
    reserva de lunes a precio de lunes, que es lo que se habría comprado directamente — no hay
    ganancia. El único coste real es **operativo**: el reembolso lo ejecuta un operador a mano, como
-   toda bajada (`#225` D8: bajar = solo cancelar, el reembolso va aparte).
+   toda bajada (`#227` D8: bajar = solo cancelar, el reembolso va aparte).
 
 **Dónde se toca, medido** (spec §14.2·A1). El despacho del modal está localizado y el arreglo REUSA la
 maquinaria de dinero que ya existe, sin añadir ninguna:
@@ -6221,7 +6221,7 @@ ejecución ENSEÑÓ, que es lo que no estaba en el plan:
 2. ⚠️⚠️ **`compensado` NO se puede definir por línea**, y se intentó. La versión por-línea
    sobre-reporta cuando la pérdida de valor no deja huella en el ítem —un cambio a producto más
    barato deja un `unit_price` nuevo, así que «cantidad_original × unit_price» miente—, que es
-   exactamente el caso que `#225` arregló anclando `pendienteDevolucion` a caja. Rompía su test. Va
+   exactamente el caso que `#227` arregló anclando `pendienteDevolucion` a caja. Rompía su test. Va
    anclado a CAJA a nivel de pedido y se REPARTE por reserva: una sola fórmula, un solo número.
 3. ⚠️ **La identidad `D` cazó un defecto que acababa de introducir el propio arreglo**: al exigir
    «cobrado» para resolver las cestas de puerta, el desglose ↳ se quedó con el predicado viejo y dejó
@@ -11810,7 +11810,7 @@ puede medir una sonda — si algo se siente lento o brusco, el número está en 
 
 ---
 
-## #223 · 2026-08-28 · La barra de móvil y el racimo de la cabecera son EL MISMO botón — y el rol de ACCIÓN se queda sin ningún CTA de armazón
+## #225 · 2026-08-28 · La barra de móvil y el racimo de la cabecera son EL MISMO botón — y el rol de ACCIÓN se queda sin ningún CTA de armazón
 
 **Contexto.** `[DECIDIDO owner]`, con sus palabras: «el CTA que hay en desktop de reservar y
 registro juntos, con transformación el uno del otro, **lo quiero igual**, mismo tamaño, altura, en
@@ -11882,7 +11882,7 @@ que no es su sujeto — y con la coincidencia al revés habría dado un falso ve
 Acotada al nav. *Es la tercera vez que este repo paga «acota al elemento antes de creerte un test
 verde».*
 
-⚠️ **Un tercer test no fijaba nada desde `#223` hacia atrás**: `HomePageTest` aseveraba que el hero
+⚠️ **Un tercer test no fijaba nada desde `#225` hacia atrás**: `HomePageTest` aseveraba que el hero
 no contiene `cta-prime` — una clase que ya no existe en ninguna parte, así que la ausencia se
 cumplía sola. Y su motivo («el hero no lleva CTA») también había caducado: `#216` le devolvió sus
 dos botones. Re-apuntada a lo que sí es cierto: el hero tiene sus propios botones y **no reutiliza
@@ -11895,7 +11895,7 @@ Suite acotada (armazón + acción + huérfanos + home): **101 verdes**. Pint lim
 
 ---
 
-## #224 · 2026-08-28 · La tira de marca sube al hero y VIAJA — y por el camino se descubre que la coreografía del hero nunca se vio en un navegador
+## #226 · 2026-08-28 · La tira de marca sube al hero y VIAJA — y por el camino se descubre que la coreografía del hero nunca se vio en un navegador
 
 **Contexto.** `[DECIDIDO owner]`: «el hero header tiene una barra colorida como la que tenemos en
 la landing ahora en el footer; al hacer full vw el hero, la barra está encima del hero. El hero lo
@@ -11909,7 +11909,7 @@ copia local: **0 líneas, 241.273 bytes exactos**. Estaba fresco.
 
 Existía una sola vez, incrustada en el pie. El mockup la usa **dos**, así que pasa a ser
 COMPONENTE (`<x-site.brand-strip>`) con dos colocaciones: `.foot__strip` (el aire de debajo) y
-`.hero__strip` (posición y viaje). Misma separación que `#223` acababa de hacer con el par de CTA,
+`.hero__strip` (posición y viaje). Misma separación que `#225` acababa de hacer con el par de CTA,
 y por el mismo motivo: dos copias de lo que debe ser idéntico no se mantienen idénticas solas.
 
 **Y viaja.** El mockup escribe `top = lerp(3, pt_ahora + alto_ahora + 28)`: arranca como un pelo de
@@ -11981,14 +11981,14 @@ verdes**. Pint limpio.
 
 ---
 
-## #225 · 2026-08-28 · El CTA de la primera pantalla es un RELEVO — el mismo botón cambiando de sitio, no dos botones
+## #227 · 2026-08-28 · El CTA de la primera pantalla es un RELEVO — el mismo botón cambiando de sitio, no dos botones
 
 **Contexto.** `[DECIDIDO owner]`: «en la primera pantalla añadiremos el mismo CTA en la parte
 inferior derecha y, al deslizar, en el momento que aparece el CTA en el menú lo quitamos del hero.
 En móvil no afecta, porque está en el mismo sitio: float sticky button». Y: «el velo oscuro lo
 quitamos».
 
-▶ **Cierra el agujero que `#224` abrió a sabiendas** —la primera pantalla sin compra ni
+▶ **Cierra el agujero que `#226` abrió a sabiendas** —la primera pantalla sin compra ni
 navegación— y con una salida MEJOR que las dos que se habían planteado: ni el armazón se destapa,
 ni el hero recupera botones propios. Aparece **el mismo botón**, y al bajar se muda a la esquina.
 
@@ -11996,7 +11996,7 @@ ni el hero recupera botones propios. Aparece **el mismo botón**, y al bajar se 
 
 El par vivía dos veces en marcado (cabecera y barra de móvil). Con el tercer sitio, se extrae a
 **`<x-site.cta-pair place="nav|hero|bar">`**: **16,8 KB de marcado duplicado retirados**, con sus
-tres ramas de sesión cada una. `#223` pagó esta lección con el CSS; ésta es la misma con el
+tres ramas de sesión cada una. `#225` pagó esta lección con el CSS; ésta es la misma con el
 marcado, y llegaba antes de que doliera.
 ▶ **El hero usa el copy del NAV a propósito**: si el rótulo cambiara a mitad del cruce se leerían
 dos textos a la vez y el relevo dejaría de parecer un botón moviéndose para parecer dos peleándose.
@@ -12033,12 +12033,12 @@ alguien añade el segundo caso que casa.**
 **2. En MÓVIL la primera pantalla tampoco tenía compra**, y por otro motivo: `mobileBookBar`
 esperaba a que `.hero__sentinel` saliera del viewport, con la regla «hero y barra nunca
 co-visibles» — heredada de cuando el hero tenía su propio CTA grande y los dos habrían competido.
-Ese motivo murió con `#224`. Ahora la barra entra desde el primer píxel.
+Ese motivo murió con `#226`. Ahora la barra entra desde el primer píxel.
 
 ### El velo
 
 `.hero__stage-scrim` se retira, marcado y CSS. Era un degradado oscuro cuyo único trabajo era hacer
-legible el TEXTO sobre el vídeo; `#224` vació el hero, así que oscurecía el vídeo para que se leyera
+legible el TEXTO sobre el vídeo; `#226` vació el hero, así que oscurecía el vídeo para que se leyera
 algo que ya no está. El CTA que queda no lo necesita: es un botón de tinta con su propia sombra.
 ⚠️ Su guarda exigía **las cuatro paradas del degradado** —nació de un fallo real: se convirtieron
 dos y se dejaron dos—. Se retira con su sujeto, pero **la lección se conserva escrita** en el
@@ -12056,7 +12056,7 @@ aro dentro de márgenes en los dos anchos. Suite acotada: **173 verdes**. Pint l
 
 ---
 
-## #226 · 2026-08-28 · El menú se parte en dos columnas — y el subtítulo no se esconde: se MUDA a la vista previa
+## #228 · 2026-08-28 · El menú se parte en dos columnas — y el subtítulo no se esconde: se MUDA a la vista previa
 
 **Contexto.** `[DECIDIDO owner]`: «revisa bien el mockup, lo quiero idéntico 1:1 — hero, menú,
 transiciones, animaciones». El menú ya era casi 1:1 desde `#200`–`#205`: mismo recorte circular
@@ -12132,7 +12132,7 @@ Pint limpio, `docs-check` verde.
 
 ---
 
-## #227 · 2026-08-28 · El hero del CIERRE — la imagen especular del de cabecera, y tres fallos que solo se ven midiendo
+## #229 · 2026-08-28 · El hero del CIERRE — la imagen especular del de cabecera, y tres fallos que solo se ven midiendo
 
 **Contexto.** `[DECIDIDO owner]`: «lo mismo en el footer y el hero del footer».
 

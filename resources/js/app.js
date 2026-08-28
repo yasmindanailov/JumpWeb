@@ -682,7 +682,7 @@ document.addEventListener('alpine:init', () => {
     //    frame cuando ya se ha llegado al final del recorrido, que es donde más tiempo se
     //    pasa el visitante.
     //  • `destroy()` suelta el listener y cancela el frame pendiente.
-    // ══ EL HERO DEL CIERRE (`#227`) ══════════════════════════════════════════════════════════
+    // ══ EL HERO DEL CIERRE (`#229`) ══════════════════════════════════════════════════════════
     //  Publica `--cierre-p`, el progreso de 0 a 1 con el que la tarjeta de cierre crece hasta
     //  llenar la pantalla. **No decide nada de diseño**: cuánto crece, desde qué talla y con qué
     //  cantos lo dice el CSS, igual que en el hero de cabecera (`#195`).
@@ -882,12 +882,12 @@ document.addEventListener('alpine:init', () => {
             }
 
             if (document.body.dataset.hasHero) {
-                // ⚠️⚠️ **LANDING: la barra ya NO espera al hero** (`#225`,
+                // ⚠️⚠️ **LANDING: la barra ya NO espera al hero** (`#227`,
                 // `[DECIDIDO owner, 2026-08-28]`). Aquí había un `IntersectionObserver` sobre
                 // `.hero__sentinel` cuya regla era «hero y barra nunca co-visibles», heredada de
                 // cuando el hero tenía su propio CTA grande y los dos habrían competido.
                 //
-                // ▶ Ese motivo ya no existe: `#224` vació el hero y `#225` le puso el CTA del
+                // ▶ Ese motivo ya no existe: `#226` vació el hero y `#227` le puso el CTA del
                 // armazón, **que en móvil no se pinta justamente porque el CTA vive aquí abajo**.
                 // Esperar al hero dejaba la primera pantalla de móvil sin ningún sitio donde
                 // comprar — el mismo agujero que en escritorio cierra el par del hero.

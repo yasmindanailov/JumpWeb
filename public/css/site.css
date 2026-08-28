@@ -317,7 +317,7 @@
    retira en la 2c·7.** Desde que la cuenta es **una mitad del PAR**, su caja es la del botón
    fantasma (`.cta-ghost`) como las otras dos ramas: si además tuviera la suya, un `border-radius:
    50%` y un `width` fijo impedirían que se ensanchara al expandirse — el mecanismo entero.
-   ⚠️ **Estas dos se llamaban `nav__acct-*` y se renombran en `#225`**: el par vive en TRES sitios
+   ⚠️ **Estas dos se llamaban `nav__acct-*` y se renombran en `#227`**: el par vive en TRES sitios
    —la cabecera, la primera pantalla y la barra de móvil— y un nombre con el prefijo del nav
    mentía en dos de los tres. `.nav__acct` a secas SÍ se queda ahí: ese es el marcador del chip
    DE LA CABECERA, que es lo que cuentan los casos para distinguir invitado de cliente.
@@ -1148,7 +1148,7 @@ body.no-scroll { overflow: hidden; }
 .purchase__foot--info { margin-top: 16px; padding-top: 0; border-top: 0; }
 .purchase__total { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--font-body); }
 .purchase__total strong { font-size: var(--fs-22); font-family: var(--font-display); font-stretch: 75%; }
-/* Señal/depósito (#225): sub-líneas «Pagas ahora (señal) / En el parque» bajo el total. */
+/* Señal/depósito (#227): sub-líneas «Pagas ahora (señal) / En el parque» bajo el total. */
 .purchase__split { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg-mute); }
 .purchase__split strong { font-weight: var(--fw-bold); color: var(--fg); }
 
@@ -1378,7 +1378,7 @@ body.no-scroll { overflow: hidden; }
 .purchase__cta-tertiary:hover { color: var(--bg); }
 .purchase__confirm { margin-top: 12px; padding: var(--sp-10) var(--sp-12); background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r-sm); font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.5; color: var(--fg); }
 .purchase__note { margin: 10px 0 0; font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); line-height: 1.5; }
-/* Aviso de señal bajo el total del paso de cantidad (#225 F2): «Señal X€ ahora · resto en el parque». */
+/* Aviso de señal bajo el total del paso de cantidad (#227 F2): «Señal X€ ahora · resto en el parque». */
 
 /* Calendario (paso 1): rejilla mensual coloreada por tipo de tarifa */
 .cal { padding: var(--sp-12); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
@@ -1539,13 +1539,13 @@ body.no-scroll { overflow: hidden; }
 .catalog__feat { font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); line-height: 1.4; }
 .catalog__price { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); color: var(--fg); white-space: nowrap; flex: none; }
 /* Columna derecha de la card: precio y, DEBAJO, el anuncio de señal del producto, alineados a la
-   derecha (#225 F2 → la señal va bajo el precio, no bajo la descripción). */
+   derecha (#227 F2 → la señal va bajo el precio, no bajo la descripción). */
 .catalog__pricecol { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-3); text-align: right; }
 /* Flecha CTA de la card (Sidebar v2): affordance de «entra a reservar», se desliza y toma el acento al hover. */
 .catalog__go { flex: none; display: inline-grid; place-items: center; color: var(--fg-mute); transition: transform var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
 .catalog__go svg { width: 18px; height: 18px; }
 .catalog__item:hover .catalog__go { transform: translateX(3px); color: var(--zone-1); }
-/* Anuncio de señal en el catálogo (#225 F2): «Señal 30,00 €» bajo el PRECIO (en `.catalog__pricecol`). */
+/* Anuncio de señal en el catálogo (#227 F2): «Señal 30,00 €» bajo el PRECIO (en `.catalog__pricecol`). */
 .catalog__deposit { font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-semibold); color: var(--warn); line-height: 1.3; }
 
 /* ====================================================================
@@ -1663,7 +1663,7 @@ body.no-scroll { overflow: hidden; }
 /* Complementos agrupados bajo su producto (carrito/pago/confirmación) */
 .cart__addons { list-style: none; margin: 6px 0 0; padding: var(--sp-6) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3); }
 .cart__addons li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
-/* Nota de señal por producto (#225 F2): «Señal X€ ahora · resto en el parque» en la card del
+/* Nota de señal por producto (#227 F2): «Señal X€ ahora · resto en el parque» en la card del
    producto que cobra señal — evita etiquetar el agregado como «(señal)» en cestas mixtas. */
 .cart__deposit { margin: 6px 0 0; padding: var(--sp-6) var(--sp-8); border-radius: var(--r-sm); background: color-mix(in srgb, var(--warn) 8%, transparent); font-family: var(--font-body); font-size: var(--fs-12); line-height: 1.4; color: var(--warn); font-weight: var(--fw-semibold); }
 
@@ -1715,7 +1715,7 @@ body.no-scroll { overflow: hidden; }
     --hero-t-end: clamp(44px, 6vw, 94px);
     --hero-p: 0;
 
-    /* ⚠️ **Lo que mide AHORA cada cosa, declarado UNA vez** (`#224`). El envoltorio, la caja y la
+    /* ⚠️ **Lo que mide AHORA cada cosa, declarado UNA vez** (`#226`). El envoltorio, la caja y la
        tira de marca necesitan los mismos dos valores interpolados, y hasta ahora cada regla
        repetía el `calc`. La tira los necesita **sumados** —su destino es «justo debajo de la
        tarjeta»—, así que con la fórmula repetida en tres sitios el día que cambie el recorrido
@@ -1753,7 +1753,7 @@ body.no-scroll { overflow: hidden; }
     max-height: none;
 }
 
-/* ══ LA TIRA DE MARCA DEL HERO, Y VIAJA (`#224`, del mockup) ═════════════════════════════════
+/* ══ LA TIRA DE MARCA DEL HERO, Y VIAJA (`#226`, del mockup) ═════════════════════════════════
    Arranca a 3 px del filo superior de la página: el hero está a sangre y su canto empieza a
    10 px, así que la tira asoma **por encima** en ese hueco. Al encoger el hero, viaja hasta
    quedar 28 px **por debajo** de la tarjeta. Empieza siendo el borde de la página y acaba siendo
@@ -1783,7 +1783,7 @@ body.no-scroll { overflow: hidden; }
 }
 .hero--full .hero__strip-box { width: 100%; max-width: var(--hero-w-end); }
 
-/* ══ EL HERO DEL CIERRE (`#227`, 2026-08-28) ═════════════════════════════════════════════════
+/* ══ EL HERO DEL CIERRE (`#229`, 2026-08-28) ═════════════════════════════════════════════════
    La imagen ESPECULAR del hero de cabecera: aquél empieza a pantalla completa y encoge hasta ser
    una tarjeta; éste empieza siendo una tarjeta y CRECE hasta llenar la pantalla al llegar al
    final. Hasta las tallas del titular son las mismas al revés — arranca en la talla FINAL del de
@@ -1850,11 +1850,11 @@ body.no-scroll { overflow: hidden; }
 }
 
 
-/* ══ EL CTA DE LA PRIMERA PANTALLA — Y ES UN RELEVO (`#225`, 2026-08-28) ═════════════════════
+/* ══ EL CTA DE LA PRIMERA PANTALLA — Y ES UN RELEVO (`#227`, 2026-08-28) ═════════════════════
    `[DECIDIDO owner]`: «añadiremos el mismo CTA en la parte inferior derecha y, al deslizar, en el
    momento que aparece el CTA en el menú lo quitamos del hero».
 
-   ▶ **Cierra el agujero que `#224` abrió a sabiendas**: con el armazón naciendo oculto, la primera
+   ▶ **Cierra el agujero que `#226` abrió a sabiendas**: con el armazón naciendo oculto, la primera
    pantalla se había quedado sin ningún sitio donde comprar. Ahora lo tiene, y al bajar no aparece
    un segundo botón: aparece EL MISMO, arriba.
 
@@ -2010,7 +2010,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
    complementos (`.orders__line--addon`), para no engordarlos. */
 .orders__line:not(.orders__line--addon) .orders__line-name { font-size: 15px; font-weight: 700; }
 .orders__line-when { color: var(--fg-mute); text-transform: capitalize; }
-/* Nota de señal por producto en «Mis pedidos» (#225 F3): «Señal 30€ · resto en el parque». Reubicada
+/* Nota de señal por producto en «Mis pedidos» (#227 F3): «Señal 30€ · resto en el parque». Reubicada
    (2026-06-15) al PIE de la card de la reserva, separada de los datos del evento por una línea sutil
    (mismo separador discontinuo que `.orders__final`). Pie financiero de la reserva. */
 .orders__product-deposit { margin-top: 2px; padding-top: 8px; border-top: 1px dashed var(--line); font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--warn); }
@@ -2037,12 +2037,12 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__gate { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; font-family: var(--font-body); font-size: 13px; color: var(--fg); }
 .orders__gate-label { color: var(--fg-mute); }
 .orders__gate-amount { color: var(--warn); font-weight: 700; }
-/* Desglose ↳ por componente de "A cobrar en el parque" (#225 F2): cargos de
+/* Desglose ↳ por componente de "A cobrar en el parque" (#227 F2): cargos de
    edición + "Resto de la señal". Indentado, más pequeño y atenuado; el importe
    conserva el naranja de `.orders__gate-amount` con peso algo menor. */
 .orders__gate-line { display: flex; justify-content: space-between; gap: 12px; margin-top: 3px; padding-left: 14px; font-family: var(--font-body); font-size: 12px; color: var(--fg-mute); }
 .orders__gate-line strong { color: var(--warn); font-weight: 600; }
-/* Toggle "Ver desglose" del desglose ↳ (#225 F3): link sobrio, sin fondo de botón. */
+/* Toggle "Ver desglose" del desglose ↳ (#227 F3): link sobrio, sin fondo de botón. */
 .orders__gate-toggle { margin: 2px 0 0; padding: 0; background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--warn); text-decoration: underline; }
 .orders__gate-toggle:hover { color: var(--warn-hover); }
 .orders__gate-caption { margin: 2px 0 0; font-family: var(--font-body); font-size: 12px; line-height: 1.4; color: var(--fg-mute); }
@@ -2189,7 +2189,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
     100% { transform: rotate(0deg); }
 }
 /* Color del icono E2 dentro de los CTAs (hereda el patrón del .tk que sustituye). */
-/* ⚠️ **Aquí había una pareja de reglas para `.cta-prime` y se van con él** (`#223`): pintaban el
+/* ⚠️ **Aquí había una pareja de reglas para `.cta-prime` y se van con él** (`#225`): pintaban el
    glifo con el rol de ACCIÓN porque la barra de móvil era naranja. Ahora la barra usa `.cta-med`,
    así que hereda estas mismas y no hay nada que sincronizar. */
 .cta-med__ico .ic-e2 { color: var(--bg); }
@@ -2364,7 +2364,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
    superficie oscura. Sin ellos el ámbito de tinta lo repintaba y el par perdía su contraste
    interno: dos botones oscuros, uno al lado del otro. */
 
-/* ══ `.cta-pair` — EL PAR, COMO COMPONENTE (`#223`) ═══════════════════════════════════════════
+/* ══ `.cta-pair` — EL PAR, COMO COMPONENTE (`#225`) ═══════════════════════════════════════════
    Hasta el 2026-08-28 esto se llamaba `.nav__pair` y vivía sólo en la cabecera; la barra de móvil
    tenía su propia pieza (`.cta-prime`) que **tenía que parecerse a ésta y no se parecía**: medido
    en el navegador a 390 px, 100 px de alto contra 54, chip de icono de 64×42 contra 30×26, y las
@@ -2601,7 +2601,7 @@ body[data-has-hero] {
     --nav-reveal-lift: 16px;     /* de cuánto más arriba baja al entrar */
 }
 
-/* ⚠️⚠️ **EL ARMAZÓN SE RETIRA ANTE EL HERO DEL CIERRE** (`#227`, y el mockup hace lo mismo en
+/* ⚠️⚠️ **EL ARMAZÓN SE RETIRA ANTE EL HERO DEL CIERRE** (`#229`, y el mockup hace lo mismo en
    `aplicaFlotantes`): cuando la tarjeta de cierre empieza a crecer, el logotipo y el racimo se
    van. No es un capricho de composición — **es legibilidad**: la tarjeta es de TINTA y ocupa la
    pantalla entera, así que el botón de comprar, que se rellena con `var(--fg)`, quedaría oscuro
@@ -2644,7 +2644,7 @@ body[data-has-hero] .nav--over .nav__cta {
     transform: none;
     pointer-events: auto;
     /* ⚠️⚠️ **`visibility` explícito, y no es redundante: sin él el menú se queda SIN SALIDA.**
-       La retirada ante el hero del cierre (`#227`) oculta el racimo con `visibility: hidden`, y
+       La retirada ante el hero del cierre (`#229`) oculta el racimo con `visibility: hidden`, y
        esa propiedad no la pisaba ninguna de las tres líneas de arriba. Con el menú abierto al
        final de la página, la hamburguesa —que **es la forma de cerrarlo**— desaparecía y el menú
        quedaba atrapado. Es literalmente el agujero de `#211`, por una tercera puerta. */
@@ -2667,7 +2667,7 @@ body[data-has-hero] .nav--over .nav__cta {
    véase Capa D para la adaptación móvil). */
 
 /* ====================================================================
-   Jerarquía de CTAs — Capa C: **RETIRADA** (`#223`, 2026-08-28).
+   Jerarquía de CTAs — Capa C: **RETIRADA** (`#225`, 2026-08-28).
    --------------------------------------------------------------------
    Aquí vivía `.cta-prime`, el «CTA de peso máximo». Nació para el hero, el hero se
    quedó sin CTA (`#195`) y desde entonces su ÚNICO consumidor era la barra flotante
@@ -2689,18 +2689,18 @@ body[data-has-hero] .nav--over .nav__cta {
    mitades salían naranjas** — la colapsada también, cuando arriba es un fantasma de
    tarjeta. Ninguna de las tres era un ajuste pendiente: eran dos componentes que
    alguien tenía que sincronizar a mano, y no se sincronizaron.
-   ==================================================================== *//* ⚠️ **Aquí había tres reglas de `.cta-prime` en superficie de tinta y se van con él** (`#223`).
+   ==================================================================== *//* ⚠️ **Aquí había tres reglas de `.cta-prime` en superficie de tinta y se van con él** (`#225`).
    No hacen falta ni hay que reescribirlas: `.cta-med` y `.cta-ghost` YA tienen su tratamiento
    completo dentro del ámbito de tinta (justo abajo), y la barra de móvil es ahora esos dos. Un
    caso menos que mantener por duplicado, que es de lo que iba la refundición. */
 
 /* ── EL CTA DEL ARMAZÓN DENTRO DEL MENÚ ────────────────────────────────────────────────────────
-   ⚠️⚠️ **EL SELECTOR SE ACOTA AL NAV EN `#225`, y arreglaba un fallo LATENTE.** Estas once reglas
+   ⚠️⚠️ **EL SELECTOR SE ACOTA AL NAV EN `#227`, y arreglaba un fallo LATENTE.** Estas once reglas
    decían `[data-surface="ink"] .cta-med`, o sea «este botón, en CUALQUIER superficie de tinta».
    Su intención —la que explica el párrafo de abajo— siempre fue «dentro del MENÚ». No se notaba
    porque el único `.cta-med` que existía en una superficie de tinta era el del nav con el menú
    abierto.
-   ▶ **Al poner el par también en la primera pantalla (`#225`), se notó de golpe**: el hero declara
+   ▶ **Al poner el par también en la primera pantalla (`#227`), se notó de golpe**: el hero declara
    `data-surface="ink"` para el vídeo, así que su botón de comprar salía **AMARILLO AVISO** — el
    color que significa «lo único que hay que mirar en esta pantalla» — sin que nadie lo hubiera
    decidido. Un selector más ancho que su intención no falla el día que se escribe: falla el día
@@ -2808,7 +2808,7 @@ body[data-has-hero] .nav--over .nav__cta {
     .book-bar { transition: visibility 0s var(--ease-bucle) var(--dur-sale); }
     .book-bar--on { transition: visibility 0s; }
 }
-/* ══ LA BARRA DE MÓVIL = EL MISMO PAR QUE EL NAV (`#223`, 2026-08-28) ═══════════════════════
+/* ══ LA BARRA DE MÓVIL = EL MISMO PAR QUE EL NAV (`#225`, 2026-08-28) ═══════════════════════
    `[DECIDIDO owner]`: «lo quiero igual, mismo tamaño, altura, mismos colores, con la misma
    animación de invitar». Así que la barra **ya no aporta forma**: la pone `.cta-pair`, el mismo
    componente que pinta el racimo de la cabecera. Aquí queda sólo la COLOCACIÓN.
@@ -3365,7 +3365,7 @@ body[data-has-hero] .nav--over .nav__cta {
    clara y consistente con el resto de CTAs de ancho completo del flujo. */
 .orders__guestform-btn { width: 100%; justify-content: center; }
 
-/* Bloque de registro «del parque» en la pantalla final de la compra (#223): texto informativo
+/* Bloque de registro «del parque» en la pantalla final de la compra (#225): texto informativo
    editable + botón al sistema externo. Callout sobrio para no competir con «Ver mis reservas». */
 .purchase__reginfo {
     margin-top: 16px; padding: var(--sp-14) var(--sp-16);
@@ -4078,7 +4078,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
         100% { opacity: 0; }
     }
 }
-/* ══ LAS DOS COLUMNAS DEL MENÚ (`#226`, del mockup `Landing PJP Modos`) ══════════════════════
+/* ══ LAS DOS COLUMNAS DEL MENÚ (`#228`, del mockup `Landing PJP Modos`) ══════════════════════
    La lista a la izquierda y una columna de 320 px a la derecha con la vista previa del destino
    señalado, el estado de apertura, el teléfono y cómo llegar.
 
@@ -4090,7 +4090,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
    ⚠️ **Desaparece por debajo de 1100 px**, el mismo corte que el racimo de la cabecera, y ahí la
    lista recupera todo el ancho. Es lo que hace el mockup (`esMovil`), y encaja con nuestra vela:
    ésa vive en `@media (max-width: 1080px)`, o sea justo donde ya no hay columna que tapar. */
-/* ══ LAS MANCHAS DE FONDO DEL MENÚ (`#226`) ══════════════════════════════════════════════════
+/* ══ LAS MANCHAS DE FONDO DEL MENÚ (`#228`) ══════════════════════════════════════════════════
    Dos formas grandes en las esquinas opuestas, muy apagadas, con los dos colores de marca. Son
    el «ritmo decorativo» que el sistema del cliente pide en cada pantalla grande.
 

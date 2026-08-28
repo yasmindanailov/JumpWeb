@@ -820,7 +820,7 @@ class ArmazonContractTest extends TestCase
 
         $clases = $par[0]->getAttribute('data-bind-class');
 
-        // ⚠️ Los modificadores de estado se renombraron en `#223`: pasan de llevar el nombre del
+        // ⚠️ Los modificadores de estado se renombraron en `#225`: pasan de llevar el nombre del
         // SITIO (`nav__pair--…`) al del COMPONENTE (`cta-pair--…`), porque desde esa tanda el par
         // vive en dos sitios —el racimo de la cabecera y la barra de móvil— y son las MISMAS
         // reglas de intercambio. Con el nombre del sitio habría que duplicarlas, que es como se
@@ -1211,7 +1211,7 @@ class ArmazonContractTest extends TestCase
     {
         $css = $this->stylesheets();
 
-        // ⚠️ **El MECANISMO cambió en `#223` y estas dos aserciones lo siguen.** Antes el reparto
+        // ⚠️ **El MECANISMO cambió en `#225` y estas dos aserciones lo siguen.** Antes el reparto
         // era `flex: 1 1 auto` contra `flex: 0 0 auto`, que no se puede ANIMAR: el ancho iba de
         // `auto` a `auto` y el intercambio se fingía plegando el rótulo con `max-width`. Ahora los
         // dos hijos parten de la MISMA base (`--cta-pair-mini`) y lo único que cambia es
@@ -1245,7 +1245,7 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
-     * **La barra de móvil y el racimo de la cabecera son EL MISMO BOTÓN** (`#223`, 2026-08-28).
+     * **La barra de móvil y el racimo de la cabecera son EL MISMO BOTÓN** (`#225`, 2026-08-28).
      *
      * `[DECIDIDO owner]`: «lo quiero igual, mismo tamaño, altura, mismos colores, con la misma
      * animación de invitar». Hasta esa fecha eran DOS componentes —`.cta-prime` abajo,
@@ -1645,7 +1645,7 @@ class ArmazonContractTest extends TestCase
             $cuerpo = (string) ($reglas[$racimo] ?? '');
 
             // ⚠️ Se asevera que la opacidad LEE `--nav-p`, no que valga exactamente eso: desde
-            // `#227` el armazón tiene dos motivos para no estar —todavía no ha entrado bajo el
+            // `#229` el armazón tiene dos motivos para no estar —todavía no ha entrado bajo el
             // hero, o ya se ha retirado ante el hero del CIERRE— y la fórmula los multiplica.
             // Aseverar el texto literal ataba la guarda a UNA de las dos coreografías.
             $this->assertMatchesRegularExpression(
@@ -1656,7 +1656,7 @@ class ArmazonContractTest extends TestCase
             );
             $this->assertMatchesRegularExpression(
                 '/opacity:[^;]*var\(--cierre-salida\)/', $cuerpo,
-                "`{$racimo}` no se retira ante el hero del cierre (`#227`).\n".
+                "`{$racimo}` no se retira ante el hero del cierre (`#229`).\n".
                 "▶ La tarjeta de cierre es de TINTA y ocupa la pantalla entera; el botón de comprar\n".
                 "  se rellena con `var(--fg)` y quedaría OSCURO SOBRE OSCURO — se vio en la primera\n".
                 '  captura: el rótulo «RESERVAR» flotando sin botón debajo.',
@@ -1719,7 +1719,7 @@ class ArmazonContractTest extends TestCase
         $reglas = $this->cssRules(public_path('css/site.css'));
 
         $esperado = [
-            // ⚠️ Los anchos FIJOS siguen siendo del nav y sólo del nav (`#223`): abajo, en la
+            // ⚠️ Los anchos FIJOS siguen siendo del nav y sólo del nav (`#225`): abajo, en la
             // barra de móvil, la mitad expandida se estira con `flex` hasta el borde de la
             // pantalla. Por eso el selector lleva las DOS clases —`.nav__pair` (colocación) y
             // `.cta-pair--account` (estado del componente)— y no una sola.

@@ -470,8 +470,8 @@ class SurfaceScopeTest extends TestCase
         $expected = [
             ['.hero__stage', 'background', 'dark'],
             // ⚠️ Aquí había `.hero__stage-scrim`, el velo oscuro del hero. Se RETIRÓ con su sujeto
-            // en `#225` (`[DECIDIDO owner]`): existía para hacer legible el TEXTO sobre el vídeo, y
-            // `#224` vació el hero. Quedan tres filas y siguen cubriendo lo que importa —el fondo,
+            // en `#227` (`[DECIDIDO owner]`): existía para hacer legible el TEXTO sobre el vídeo, y
+            // `#226` vació el hero. Quedan tres filas y siguen cubriendo lo que importa —el fondo,
             // el sustituto del vídeo y el rótulo—, así que la guarda no pierde alcance.
             ['.hero__stage-placeholder', 'background', 'dark'],
             ['.hero__stage-label', 'color', 'light'],
@@ -522,7 +522,7 @@ class SurfaceScopeTest extends TestCase
         }
 
         // ⚠️⚠️ **Aquí se exigían las CUATRO paradas del degradado del scrim, y se van con él**
-        // (`#225`): el velo se retiró porque `#224` vació el hero y ya no hay texto que hacer
+        // (`#227`): el velo se retiró porque `#226` vació el hero y ya no hay texto que hacer
         // legible. Aquella aserción nació de un fallo REAL —se convirtieron dos paradas y se
         // dejaron dos—, así que la lección se conserva aquí aunque su sujeto no exista: **de un
         // degradado hay que exigir TODAS sus paradas por nombre**, porque media conversión se lee

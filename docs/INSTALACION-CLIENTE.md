@@ -328,7 +328,7 @@ fuente no aparece, el slug está mal escrito (minúsculas y guiones, pesos en ce
   el design system base del producto — y desde `#143` son de verdad el único sitio donde vive
   cada color, que es lo que hace que (b) sirva para algo.
 
-### 4.d · Las MANCHAS decorativas del menú (`#226`, 2026-08-28)
+### 4.d · Las MANCHAS decorativas del menú (`#228`, 2026-08-28)
 
 El menú a pantalla completa lleva **dos siluetas grandes** en las esquinas opuestas, muy apagadas.
 Son el «ritmo decorativo» que el sistema del 2.º cliente pide en cada pantalla grande.

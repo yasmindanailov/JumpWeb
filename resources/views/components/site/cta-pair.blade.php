@@ -1,12 +1,12 @@
 @props(['place' => 'nav'])
 
-{{-- **EL PAR DE CTA — UN SOLO COMPONENTE PARA SUS TRES SITIOS** (`#225`, 2026-08-28).
+{{-- **EL PAR DE CTA — UN SOLO COMPONENTE PARA SUS TRES SITIOS** (`#227`, 2026-08-28).
 
      Una mitad expandida y la otra colapsada a su icono; el primer clic en la colapsada la expande
      y colapsa a la otra, el segundo actúa. El estado lo publica `$store.ctaPair` y es UNO para
      toda la página: los tres sitios son la misma decisión, no tres decisiones parecidas.
 
-     ⚠️⚠️ **Existe porque ya había DOS copias y divergieron** (`#223`): la barra de móvil medía
+     ⚠️⚠️ **Existe porque ya había DOS copias y divergieron** (`#225`): la barra de móvil medía
      100 px de alto contra 54, con chip de 64×42 contra 30×26 y las dos mitades naranjas. Aquello
      se arregló compartiendo el CSS. Al llegar el TERCER sitio —el CTA de la primera pantalla— la
      misma lección aplica al MARCADO: tres copias de tres ramas de sesión cada una no se mantienen

@@ -17,7 +17,7 @@
     // (show_in_nav) memoizado en el composer (`$navServices`), enlazando a /servicios#slug.
     $servicesItems = array_merge(
         [['t' => __('landing.nav.services_items.birthdays.t'), 's' => __('landing.nav.services_items.birthdays.s'), 'url' => route('cumpleanos')]],
-        // ⚠️ `img` entra en `#226` para la VISTA PREVIA del menú (la columna lateral del mockup).
+        // ⚠️ `img` entra en `#228` para la VISTA PREVIA del menú (la columna lateral del mockup).
         // Solo los servicios del CMS tienen imagen; los ítems fijos —zonas, atracciones, info—
         // no, y ahí la tarjeta cae a su fondo rayado. Es el mismo trato que el mockup le da a lo
         // que aún no tiene foto, así que la ausencia no se ve como un hueco.
@@ -109,9 +109,9 @@
              solo en la que quede colapsada.
              ⚠️ El aspecto —qué mitad es ancha— lo decide el CSS con DOS clases. El JS no reparte
              anchos: publica estado. Misma regla que el hero (`#195`) y el recorte del menú (`#201`). --}}
-        {{-- ⚠️ **El par se fue a `<x-site.cta-pair>` en `#225`.** Vive en TRES sitios —aquí, la
+        {{-- ⚠️ **El par se fue a `<x-site.cta-pair>` en `#227`.** Vive en TRES sitios —aquí, la
              primera pantalla y la barra flotante de móvil— y son la misma decisión: tres copias de
-             tres ramas de sesión cada una no se mantienen iguales solas. `#223` ya pagó esa lección
+             tres ramas de sesión cada una no se mantienen iguales solas. `#225` ya pagó esa lección
              con el CSS; esto es la misma con el marcado.
              ▶ `place` decide colocación y copy. Aquí, el racimo de la cabecera. --}}
         <x-site.cta-pair place="nav" />

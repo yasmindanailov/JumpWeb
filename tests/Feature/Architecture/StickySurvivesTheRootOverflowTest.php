@@ -8,7 +8,7 @@ use Tests\TestCase;
 /**
  * **`<body>` no puede ser un contenedor de scroll: rompe todos los `position: sticky` de la web.**
  *
- * ⚠️⚠️ **Esto no es teoría de CSS: es un fallo que estuvo servido y nadie vio** (`#224`,
+ * ⚠️⚠️ **Esto no es teoría de CSS: es un fallo que estuvo servido y nadie vio** (`#226`,
  * 2026-08-28). `html, body { overflow-x: hidden }` llevaba ahí desde siempre, y `hidden` —a
  * diferencia de `clip`— convierte al elemento en **contenedor de scroll**. Un `sticky` que cuelga
  * de `<body>` pasa entonces a anclarse al scrollport del body en vez de al del viewport; y como
@@ -106,7 +106,7 @@ class StickySurvivesTheRootOverflowTest extends TestCase
                     "DE SCROLL.\n\n".
                     'Con eso, TODO `position: sticky` de la web se ancla al body en vez de al '.
                     'viewport y deja de pegarse — en silencio, sin fallar y sin avisar. Ya pasó '.
-                    '(`#224`): el hero de la portada nunca se pegó y dejaba 569 px de hueco '.
+                    '(`#226`): el hero de la portada nunca se pegó y dejaba 569 px de hueco '.
                     "vacío debajo.\n\n".
                     '▶ Si lo que hace falta es RECORTAR el desbordamiento horizontal (la '.
                     'marquesina se sale hasta x=2533 en un viewport de 1280), el valor es '.
