@@ -47,11 +47,12 @@
                    poster="{{ asset('videos/header_poster.jpg') }}?v={{ @filemtime(public_path('videos/header_poster.jpg')) }}" aria-hidden="true">
                 <source src="{{ asset('videos/header_hero.mp4') }}?v={{ @filemtime(public_path('videos/header_hero.mp4')) }}" type="video/mp4">
             </video>
-            {{-- ⚠️ **Aquí vivía `.hero__stage-scrim` y se RETIRA** (`#227`,
-                 `[DECIDIDO owner, 2026-08-28]`: «el velo oscuro lo quitamos»). Era un degradado
-                 oscuro de arriba abajo cuyo único trabajo era hacer legible el texto sobre el
-                 vídeo. Al vaciarse el hero (`#226`) se quedó sin sujeto: un velo que oscurece un
-                 vídeo para que se lea algo que ya no está ahí. --}}
+            {{-- ⚠️ **LA CORTINA VUELVE CON SU SUJETO** (`#253`, `[DECIDIDO owner, 2026-08-29]`: «al
+                 vídeo le ponemos la cortina»). `#227` la retiró y tenía razón entonces: `#226`
+                 había vaciado el hero y era un velo para hacer legible un texto que ya no estaba.
+                 Vuelve el texto, vuelve la cortina — sin ella, un titular claro sobre un vídeo se
+                 lee en unos fotogramas y en otros no, que es peor que no leerse nunca. --}}
+            <div class="hero__stage-scrim" aria-hidden="true"></div>
             <span class="hero__stage-label">{{ __('landing.hero.reel') }}</span>
             {{-- ⚠️⚠️ **EL HERO SE VACÍA — sin eslogan, sin titular visible, sin botones y sin
                  chip de estado** (`#226`, `[DECIDIDO owner, 2026-08-28]`: «el hero lo quiero
@@ -76,8 +77,43 @@
                  portada, y una página sin encabezado principal es una regresión de SEO y de
                  accesibilidad que no tiene nada que ver con lo que se pidió. «Sin texto» es una
                  decisión VISUAL; el documento sigue necesitando su título. --}}
+            {{-- ⚠️⚠️ **EL HERO RECUPERA SU TITULAR** (`#253`, `[DECIDIDO owner, 2026-08-29]`: «en el
+                 hero pondremos un titular, un texto "Activa tu modo diversión" en el centro y al
+                 vídeo le ponemos la cortina»). Cierra el paréntesis que `#226` abrió a propósito
+                 —«por ahora sin texto, después valoramos cómo lo hacemos»— y con él **se cierra
+                 también el agujero de accesibilidad y de SEO** que quedaba: el `<h1>` deja de ser
+                 solo para lectores de pantalla y vuelve a estar en la página.
+                 ▶ Los tres textos ya existían en los idiomas desde `#226` (`hero.kicker`,
+                 `hero.l1`, `hero.l2`): nunca se retiraron, solo se dejaron de pintar.
+                 ⚠️ **Centrado, y eso NO es del mockup**: el suyo los alinea abajo a la izquierda.
+                 Lo pidió el owner explícitamente («en el centro»), así que queda escrito que es
+                 una desviación decidida y no un descuido. El ESTILO del rótulo sí es el suyo:
+                 rotulador, girado, en el color de acción. --}}
             <div class="hero__stage-content">
-                <h1 class="sr-only">{{ __('landing.hero.l1') }} {{ __('landing.hero.l2') }}</h1>
+                <span class="hero__kicker">{{ __('landing.hero.kicker') }}</span>
+                {{-- ⚠️ `--onvideo` no es decorativo: es el modificador que hace que el titular
+                     **encoja con el hero** (`#220`, `--hero-t-ini` → `--hero-t-end`). Sin él cae
+                     en la escala base, que es la del titular gigante de la portada antigua: medido,
+                     320 px a 1920 y **558 px de ancho en un teléfono de 390**. --}}
+                <h1 class="hero__title hero__title--onvideo">{{ __('landing.hero.l1') }}<br>{{ __('landing.hero.l2') }}</h1>
+
+                {{-- ⚠️⚠️ **Y con el titular vuelven LOS DOS BOTONES** (`#253`). No es un extra: el
+                     owner pide «el CTA del hero más grande», y el CTA del hero **no existía** —
+                     `#226` lo retiró al vaciarlo—. ▶ Con esto se cierra la ficha Alta de `DEUDA.md`
+                     que `#226` abrió a sabiendas: el armazón nace oculto bajo el hero, así que sin
+                     estos botones **la primera pantalla no ofrece ni comprar ni navegar**. Es el
+                     mismo razonamiento de `#216`, y sigue siendo el que sostiene que el armazón
+                     pueda esconderse. --}}
+                <div class="hero__acts">
+                    <a href="{{ route('entradas') }}" class="hero__act hero__act--buy"
+                       @click.prevent="$store.purchase.open()">
+                        <span class="hero__act-t">{{ __('landing.hero.cta_buy') }}</span>
+                        @if (! empty($ctaMinPriceLabel))
+                            <span class="hero__act-s">{{ __('landing.hero.cta_buy_from', ['amount' => $ctaMinPriceLabel]) }}</span>
+                        @endif
+                    </a>
+                    <a href="{{ route('precios') }}" class="hero__act hero__act--alt">{{ __('landing.hero.cta_prices') }}</a>
+                </div>
             </div>
 
             {{-- ⚠️⚠️ **EL CTA DE LA PRIMERA PANTALLA, Y ES UN RELEVO** (`#227`,

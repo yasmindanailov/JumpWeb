@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Architecture;
 
+use Tests\Support\ReadsSiteStylesheets;
 use Tests\TestCase;
 
 /**
@@ -36,6 +37,8 @@ use Tests\TestCase;
  */
 class ArmazonCssHasNoOrphansTest extends TestCase
 {
+    use ReadsSiteStylesheets;
+
     private const SHEETS = 'public/css/*.css';
 
     /**
@@ -217,6 +220,71 @@ class ArmazonCssHasNoOrphansTest extends TestCase
             implode(', ', $huerfanas).'. Una excepción sin sujeto no es inofensiva: '.
             'tapa al siguiente que se llame igual.',
         );
+    }
+
+    /**
+     * **Y AL REVÉS: ningún MODIFICADOR que un componente emite se queda sin regla** (`#253`).
+     *
+     * ⚠️⚠️ El caso de arriba vigila el CSS que nadie pinta. Éste vigila lo contrario, y es el que
+     * faltaba: **`.lang-dd--up` se retiró en `#205`, `#233` volvió a pedirla y nadie la restauró**.
+     * El componente aceptaba `:up`, el pie lo pasaba, y durante cinco días el prop **no hacía
+     * absolutamente nada**: el panel seguía abriéndose hacia abajo y saliéndose de la pantalla. No
+     * fallaba, no avisaba y ninguna guarda lo veía. Lo cazó el ojo del owner.
+     *
+     * ▶ *Un modificador sin regla es un `class=""` de más, y encima uno que alguien lee como si
+     * significara algo.* Es más peligroso que una regla muerta: la regla muerta no promete nada.
+     */
+    public function test_no_modifier_a_component_emits_is_missing_its_rule(): void
+    {
+        // ⚠️⚠️ **Los COMENTARIOS se blanquean, y sin eso esta guarda nace CIEGA** — comprobado por
+        // mutación en el momento de escribirla: al renombrar `.lang-dd--up` el caso seguía en
+        // verde, porque el nombre aparecía en el comentario que explica la regla. Es la cuarta vez
+        // que este repo tropieza con lo mismo: *un `grep` que SÍ encuentra tampoco demuestra que
+        // la cosa exista donde crees*.
+        $css = implode("\n", $this->siteSheets());
+
+        $huerfanos = [];
+
+        foreach (glob(resource_path('views/components/site/*.blade.php')) ?: [] as $vista) {
+            $blade = (string) preg_replace('/\{\{--.*?--\}\}/s', '', (string) file_get_contents($vista));
+
+            // Dos formas de emitir una clase: literal en `class="…"` y condicional en el array de
+            // `$attributes->class([...])`, que es justo por donde entró el fallo.
+            // ⚠️⚠️ **En el array condicional el modificador es la CLAVE, no el valor**
+            // (`['lang-dd--up' => $up]`), y la primera versión de esta guarda buscaba el valor. Con
+            // eso **no veía el único caso que existe**, así que salía verde con y sin la regla. La
+            // mutación tuvo que hacerse tres veces para dar con ello: la primera renombró una de las
+            // dos reglas, la segunda las dos —y seguía verde—, y solo entonces se miró el patrón.
+            // ▶ *Una guarda que nunca ha estado roja no ha demostrado nada.*
+            preg_match_all('/class="([^"]*)"/', $blade, $literales);
+            preg_match_all("/'([a-z0-9_-]+(?:__[a-z0-9-]+)?--[a-z0-9-]+)'\s*=>/", $blade, $condicionales);
+
+            $clases = $condicionales[1];
+            foreach ($literales[1] as $lista) {
+                foreach (preg_split('/\s+/', $lista) ?: [] as $c) {
+                    $clases[] = $c;
+                }
+            }
+
+            foreach (array_unique($clases) as $clase) {
+                // Solo modificadores (`bloque--mod` o `bloque__elem--mod`) y nada interpolado.
+                if (str_contains($clase, '{') || preg_match('/^[a-z][a-z0-9-]*(__[a-z0-9-]+)?--[a-z0-9-]+$/', $clase) !== 1) {
+                    continue;
+                }
+                if (! str_contains($css, '.'.$clase)) {
+                    $huerfanos[] = basename($vista).' · .'.$clase;
+                }
+            }
+        }
+
+        $this->assertSame([], array_values(array_unique($huerfanos)), implode("\n", [
+            'Estos modificadores se emiten desde un componente y NO tienen ninguna regla:',
+            '  · '.implode("\n  · ", array_unique($huerfanos)),
+            '',
+            'Un modificador sin regla no falla: no hace nada. Y el siguiente que lea el componente',
+            'va a creer que sí — que es lo que pasó con `.lang-dd--up`, que estuvo cinco días',
+            'aceptando un `:up` que no abría el panel hacia arriba.',
+        ]));
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────

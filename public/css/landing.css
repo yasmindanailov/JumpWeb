@@ -873,11 +873,28 @@ img { display: block; max-width: 100%; }
     repeating-linear-gradient(135deg, color-mix(in srgb, var(--bg) 97.5%, white) 0 22px, var(--bg) 22px 23px);
 }
 /* scrim for content legibility — between video and overlay content */
-/* ⚠️ **Aquí vivía `.hero__stage-scrim` y se retira con su sujeto** (`#227`): un degradado oscuro
-   de arriba abajo cuyo único trabajo era hacer legible el TEXTO sobre el vídeo. `#226` vació el
-   hero, así que oscurecía el vídeo para que se leyera algo que ya no está.
-   ▶ El CTA que sí queda no lo necesita: es un botón de tinta con su propia sombra, y se sostiene
-   solo sobre cualquier fotograma. */
+/* ══ LA CORTINA DEL VÍDEO ══════════════════════════════════════════════════════════════════════
+   ⚠️ **Vuelve con su sujeto** (`#253`, `[DECIDIDO owner]`: «al vídeo le ponemos la cortina»).
+   `#227` la retiró y tenía razón entonces: `#226` había vaciado el hero, así que era un velo que
+   oscurecía un vídeo para hacer legible un texto que ya no estaba. Ahora el texto vuelve, y sin
+   cortina un titular claro sobre un fotograma claro es ilegible **en algunos fotogramas y en otros
+   no** — que es la peor forma de fallar, porque parece que funciona.
+   ▶ Las cuatro paradas son las del mockup: `.28` arriba, `.15` al 40 % y `.82` abajo. Lee
+   `--paper-fg` y no un `rgba` crudo: una cortina es ausencia de luz y es oscura en las dos
+   superficies (`#143` sacó de esta hoja los blancos y negros crudos). */
+.hero__stage-scrim {
+  position: absolute; inset: 0; z-index: 3;
+  pointer-events: none;
+  /* ⚠️ **La parada del medio sube de 15 % a 40 %, y es consecuencia directa del centrado.** El
+     mockup adelgaza ahí —`.28 / .15 / .82`— porque su texto va ABAJO, donde la cortina pesa. Con el
+     bloque centrado (`[DECIDIDO owner]`), el titular cae justo en el punto más fino: se leía en un
+     fotograma oscuro y se perdía en uno claro. *Una cortina se calibra contra dónde está el texto,
+     no contra el gradiente del que se copió.* */
+  background: linear-gradient(180deg,
+      color-mix(in srgb, var(--paper-fg) 28%, transparent) 0%,
+      color-mix(in srgb, var(--paper-fg) 40%, transparent) 45%,
+      color-mix(in srgb, var(--paper-fg) 82%, transparent) 100%);
+}
 .hero__stage[data-has-video="true"] .hero__stage-placeholder { display: none; }
 
 /* overlay content layout — chip+tag top, title middle, CTA bottom */
@@ -885,6 +902,9 @@ img { display: block; max-width: 100%; }
   position: absolute; inset: 0;
   z-index: 5;
   padding: clamp(24px, 3vw, 40px) clamp(24px, 3vw, 44px);
+  /* ⚠️ El estado del hero A PANTALLA COMPLETA lo decide `.hero--full .hero__stage-content` en
+     `site.css`, que tiene más peso: **el centrado que pidió el owner vive allí** (`#253`). Aquí
+     queda la base para el resto de heroes. */
   display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start;
   /* ⚠️ Aquí había `color: var(--bg)` para forzar texto crema sobre el vídeo. Se RETIRA: el
      ámbito `[data-surface="ink"]` del stage ya pone `color: var(--fg)`, que en tinta vale
@@ -915,7 +935,11 @@ img { display: block; max-width: 100%; }
   transform: rotate(-2.2deg);
   transform-origin: left bottom;
   margin: 0 0 clamp(12px, 1.4vw, 20px) 4px;
-  color: var(--zone-1);
+  /* ⚠️ **El mismo color que en el menú** (`.menu__slogan`, `--zone-2`) y no el que tenía: es la
+     MISMA frase en los dos sitios, y dos colores para una frase son dos frases. El mockup la pinta
+     en su segundo acento —el naranja—, que aquí es el rol de ACCIÓN: usarlo para un texto
+     decorativo desdibujaría el rol que `#209` construyó, así que se queda en marca. */
+  color: var(--zone-2);
 }
 
 /* El punto de «Abierto ahora». Verde de ÉXITO (`--ok`), no el color de acción: es un ESTADO,
@@ -2042,7 +2066,8 @@ input[type="radio"]:focus-visible,
      encuadre hacia el centro-superior para que el chaval saltando quede dentro del recorte.
      Ajustable: si el sujeto está más abajo/lado, cambiar este object-position. */
   .hero__video { object-position: 78% 32%; }
-  .hero__stage-content { padding: 22px 20px 24px; }.hero__title--onvideo { font-size: clamp(56px, 18vw, 96px); }
+  .hero__stage-content { padding: 22px 20px 24px; }  /* el corte de móvil lo afina `site.css` */
+  .hero__title--onvideo { font-size: clamp(56px, 18vw, 96px); }
   .hero__stage-label { display: none; }
   /* zones intro */
   .zones__title { font-size: clamp(44px, 13vw, 80px); }

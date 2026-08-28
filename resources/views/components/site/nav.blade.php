@@ -73,7 +73,11 @@
      y declara superficie de TINTA, que es lo que hace legible su contenido sobre el menú sin
      escribir un solo color a mano: los siete tokens de superficie se re-escopan solos. --}}
 <nav class="nav"
-     :class="[menuOpen && 'nav--over', navHidden && 'nav--hidden']"
+     {{-- ⚠️ Enlace por OBJETO y no por array (`#253`): con `[cond && 'clase']` Alpine escribe el
+          literal `false` en el atributo cuando la condición no se cumple. Medido: `class="nav
+          false"`. No rompe nada —no hay ninguna regla `.false`— pero es una clase inventada en el
+          armazón de las doce vistas, y la siguiente persona que la vea va a buscarla. --}}
+     :class="{ 'nav--over': menuOpen, 'nav--hidden': navHidden }"
      x-bind:data-surface="menuOpen ? 'ink' : false">
     <div class="nav__left">
         <a href="{{ url('/') }}" class="nav__brand">

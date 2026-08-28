@@ -303,8 +303,19 @@
     height: var(--nav-logo-h);
     width: auto;
     max-width: min(340px, 54vw);
-    filter: drop-shadow(0 6px 16px color-mix(in srgb, var(--paper-fg) 45%, transparent))
-            drop-shadow(0 1px 0 color-mix(in srgb, var(--paper-fg) 25%, transparent));
+    /* ⚠️⚠️ **La sombra se CONTIENE, y la explicación importa porque la respuesta parecía ser otra**
+       (`#253`). El owner dijo «nuestro logo tiene demasiada sombra, el del mockup tiene menos».
+       Medido: **nuestro CSS era IDÉNTICO al suyo** —`drop-shadow(0 6px 16px …45%)` +
+       `drop-shadow(0 1px 0 …25%)`, copiado de su lockup—. La diferencia no está en el filtro: está
+       en a QUÉ se le aplica. Su lockup son glifos de texto con una extrusión fina hecha a
+       `text-shadow`; el nuestro es **un SVG que ya trae su relieve azul horneado**, una masa
+       oscura maciza. El mismo desenfoque de 16 px bajo una masa así deja un halo; bajo unas letras,
+       no. ▶ *Copiar un filtro no es copiar un resultado si el sujeto es otro.*
+       ▶ Por eso NO hay nada que pedirle al diseñador: el asset está bien y el relieve ya hace de
+       profundidad. Lo que sobraba era nuestro desenfoque. 6→3 de desplazamiento, 16→7 de radio y
+       45→30 % de tinta; la línea de 1 px se queda, más suave, para cuando cae sobre algo claro. */
+    filter: drop-shadow(0 3px 7px color-mix(in srgb, var(--paper-fg) 30%, transparent))
+            drop-shadow(0 1px 0 color-mix(in srgb, var(--paper-fg) 14%, transparent));
     transition: transform var(--dur-entra) var(--ease-sale);
 }
 .nav__brand:hover .nav__brand-logo { transform: translateY(-2px) rotate(-1.5deg); }
@@ -331,11 +342,24 @@
 [data-surface="ink"] .nav__brand-logo--paper { display: none; }
 [data-surface="ink"] .nav__brand-logo--ink { display: block; }
 
-/* ⚠️ Aquí vivía `.lang-dd--up`, la variante que abría el panel hacia arriba para el pie, y **se
-   retiró el 2026-08-27** con el selector de idioma del pie (`[DECIDIDO owner]`, armazón · tanda
-   2c·4): el selector vive ahora en las cápsulas del menú, donde se abre hacia abajo como el
-   componente base. ▶ Con ella cae **una de las seis excepciones de sombra direccional** que
-   declaró la elevación (`#196`): esa lista solo encoge, y ésta encogió sola. */
+/* ══ EL PANEL QUE SE ABRE HACIA ARRIBA ═════════════════════════════════════════════════════════
+   ⚠️⚠️ **Esta clase se RETIRÓ en `#205` y `#233` volvió a pedirla sin restaurarla.** El componente
+   acepta `:up` desde entonces y el pie lo pasaba, así que durante cinco días **el prop no hacía
+   absolutamente nada**: el panel seguía abriéndose hacia abajo y saliéndose de la pantalla. No
+   fallaba, no avisaba y ningún test lo veía — un modificador sin regla es un `class=""` de más.
+   Lo cazó el ojo del owner: «el selector al abrirlo se queda recortado por abajo». Medido después:
+   **38 px fuera a 1920×1080 y 54 a 1280×900**.
+   ▶ Vuelve porque ahora el selector vive en la fila INFERIOR del menú (`#253`), que es justo el
+   sitio donde un panel hacia abajo no cabe.
+   ⚠️ **La sombra NO vuelve a ser una excepción direccional**: usa el rol `--shadow-float` como
+   todo el mobiliario. `#196` retiró esa excepción al retirar la clase, y esa lista solo encoge —
+   restaurar la clase no es motivo para volver a abrirla. */
+.lang-dd--up .lang-dd__panel {
+    top: auto; bottom: calc(100% + 10px);
+    transform-origin: bottom right;
+    transform: translateY(8px) scale(0.97);
+}
+.lang-dd--up.lang-dd--open .lang-dd__panel { transform: translateY(0) scale(1); }
 
 /* Bloque izquierdo del bottom row: lang-dd arriba + copyright debajo, alineados al inicio. */
 .foot__bottom-left {
@@ -2090,7 +2114,7 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
 .reserve {
     --cierre-gap: 10px;                  /* el margen de la tarjeta cuando ya llena la pantalla */
     /* Las dos tallas del titular son las del hero de cabecera, en orden inverso. */
-    --cierre-t-ini: clamp(40px, 6vw, 90px);
+    --cierre-t-ini: clamp(40px, min(6vw, 11vh), 90px);
     --cierre-t-end: clamp(54px, 8.4vw, 124px);
     --cierre-p: 0;
 
@@ -2126,8 +2150,21 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
    ⚠️ `min-height` en la sección es el HUECO que deja la tarjeta al salir del flujo. Sin él, todo
    lo que va debajo —el pie entero— pegaría un salto hacia arriba en el fotograma del anclaje. */
 .reserve--fija { min-height: var(--c-h0, 0px); }
+/* ⚠️⚠️ **`z-index: 90`, y bajarlo de 210 ARREGLA UN FALLO QUE EL OWNER VIO EN UN TELÉFONO**
+   (`#253`): con 210 esta tarjeta quedaba **por encima del cajón de compra** (160), así que al
+   pulsar «Reservar» al terminar la partida el cajón SÍ se abría —y con él su cerrojo de scroll—
+   pero quedaba **detrás del juego**. Lo que se veía: el juego, sin cajón y sin poder desplazar.
+   ▶ 210 no salía de ninguna escala: era «muy arriba». El orden por rol lo fija `LayerOrderTest`
+   (`#237`) — la página hasta 110 · cookies 140 · lo que el cliente ABRE 150-160 · avisos 200+ —
+   y **esta tarjeta es PÁGINA**, no un superpuesto. A 90 pasa por encima del pie y del armazón
+   (50/60) mientras éste se retira, y por debajo del menú (100), del aviso (140), del modal (150)
+   y del cajón (160), que son las cuatro cosas que tienen que poder taparla.
+   ⚠️ **88 y no 90, para no EMPATAR con la barra flotante de móvil** (`.book-bar`, 90). Un empate no
+   falla: lo decide el orden en el documento, que es la clase de dependencia que se rompe el día que
+   alguien mueve un bloque de sitio. Por debajo, además, es lo correcto: la barra es el botón de
+   comprar persistente y tiene que seguir alcanzable sobre la tarjeta. */
 .reserve--fija .reserve__box {
-    position: fixed; z-index: 210; box-sizing: border-box;
+    position: fixed; z-index: 88; box-sizing: border-box;
     top: var(--cierre-gap);
     left:   calc(var(--c-x0) + (var(--cierre-gap) - var(--c-x0)) * var(--cierre-p));
     width:  calc(var(--c-w0) + (100vw - var(--cierre-gap) * 2 - var(--c-w0)) * var(--cierre-p));
@@ -2136,9 +2173,30 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
 
 /* ── EL CUERPO, 1:1 CON EL MOCKUP (`#235`) ─────────────────────────────────────────────────────
    El relleno de la tarjeta es asimétrico a propósito: abajo reserva sitio para el lienzo del
-   juego (`clamp(122px, 14vw, 156px)`), que va pegado al canto. */
-.reserve__box { padding: clamp(40px, 6vw, 80px) clamp(24px, 5vw, 80px) clamp(122px, 14vw, 156px); }
-.reserve__body { position: relative; z-index: 1; text-align: center; }
+   juego, que va pegado al canto.
+
+   ⚠️⚠️ **Pero esa reserva CRECE con la tarjeta, y ahí estaba media respuesta al punto estático**
+   (`#253`). El juego solo se monta cuando la tarjeta llena la pantalla (`q > 0,985`), así que en
+   reposo **esos 156 px están literalmente vacíos** — se estaban reservando para algo que todavía
+   no existe. Y el pie tiene que caber DEBAJO de la tarjeta en la misma ventana: a 1440×900 la
+   composición se pasaba 40 px, y a 1366×768, 161.
+   ▶ Ahora el relleno inferior interpola con el mismo progreso que todo lo demás: **24 px en
+   reposo → la tira entera cuando ya hay tira**. Es exactamente el mismo criterio que el resto de
+   la coreografía —lo que solo existe abierto, se reserva abierto— y no cambia ni un píxel del
+   estado a pantalla completa, que es el que el owner validó.
+   ⚠️ El titular también se acota **por ALTO** además de por ancho: en una ventana baja, dos
+   renglones a 90 px se comen el sitio del pie. `min(6vw, 11vh)` no toca las pantallas grandes. */
+.reserve__box {
+    padding:
+        clamp(40px, min(6vw, 7vh), 80px)
+        clamp(24px, 5vw, 80px)
+        calc(24px + (clamp(122px, 14vw, 156px) - 24px) * var(--cierre-p));
+}
+/* ⚠️ **Por encima de la tira** (`z-index: 3` contra el 2 del lienzo). En reposo el relleno inferior
+   ya no aparta la tira entera (§ de arriba), así que el lienzo se solapa con los CTA: está en
+   blanco y no recibe el puntero —`fase === 'off'`—, pero apoyarse en eso es apoyarse en dos
+   condiciones que viven en otro fichero. Con el texto encima, el solape deja de importar. */
+.reserve__body { position: relative; z-index: 3; text-align: center; }
 
 /* ⚠️ El titular CRECE con la tarjeta, igual que el del hero encoge con él (`#222`). Sin esto, la
    tarjeta se hace pantalla completa y el texto se queda del tamaño de una tarjeta pequeña. */
@@ -2251,11 +2309,21 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
 .reserve { --salta-h: 150px; }
 
 .salta { position: absolute; inset: 0; pointer-events: none; }
+/* ⚠️ **`-webkit-tap-highlight-color: transparent`, y lo vio el owner en un teléfono** (`#253`): al
+   tocar para jugar salía el recuadro azul con el que el navegador marca un enlace pulsado. Es el
+   resalte por defecto de WebKit sobre cualquier elemento interactivo; en un juego de un solo botón
+   convierte cada salto en un parpadeo de interfaz.
+   ⚠️ **Y `touch-action: manipulation` es lo que deja SEGUIR DESPLAZANDO con el dedo sobre el
+   lienzo** — un toque salta y un arrastre desplaza. Su otra mitad está en el JS: en táctil no se
+   llama a `preventDefault()`, que es lo que cancelaba el gesto de desplazar y dejaba al visitante
+   encerrado en el juego. Las dos piezas se necesitan; con una sola el fallo vuelve. */
 .salta__lienzo {
     position: absolute; left: 0; right: 0; bottom: 0;
     width: 100%; height: var(--salta-h);
     z-index: 2; touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
+.salta__invita, .salta__btn { -webkit-tap-highlight-color: transparent; }
 
 /* La invitación va JUSTO encima del lienzo, no centrada en la tarjeta: quien la pulsa está
    mirando al muñeco. */
@@ -2438,10 +2506,13 @@ body[data-has-hero].nav--live .hero__pair-slot {
 @media (prefers-reduced-motion: reduce) {
     .hero.hero--full { --hero-runway: 0px; --hero-p: 0; }
 }
-/* ⚠️ El contenido del hero va ABAJO, no centrado. Estaba centrado para agrupar «título + CTA»
-   como una unidad; al retirarse el CTA (`#195`) ese motivo desaparece, y la estructura del
-   mockup apoya el bloque —eslogan, titular y estado— en el canto inferior. */
-.hero--full .hero__stage-content { justify-content: flex-end; }
+/* ⚠️⚠️ **CENTRADO otra vez, y esta regla es la que MANDA** (`#253`, `[DECIDIDO owner]`: «un texto
+   "Activa tu modo diversión" **en el centro**»). Iba abajo desde `#195`, con este motivo escrito:
+   «estaba centrado para agrupar título + CTA como una unidad; al retirarse el CTA ese motivo
+   desaparece». **Vuelven los dos CTA** (`#253`), así que vuelve el motivo — y además lo pidió él.
+   ▶ Se corrige AQUÍ y no en `landing.css`: esta regla tiene más peso (`.hero--full` delante) y
+   centrar allí no habría hecho nada. Es el mismo tropiezo que la `padding-block` de más abajo. */
+.hero--full .hero__stage-content { justify-content: center; align-items: center; text-align: center; }
 /* Mantén el placeholder como FALLBACK detrás del vídeo: si el vídeo no carga, se ve el fondo. */
 .hero--full .hero__stage[data-has-video="true"] .hero__stage-placeholder { display: block; }
 /* Vídeo de fondo del hero (placeholder): cubre el escenario, bajo el velo y el texto. */
@@ -3125,7 +3196,20 @@ body[data-has-hero] {
     --nav-reveal-span: 0.44;     /* cuánto dura la entrada, en fracción de ese mismo recorrido */
     --nav-reveal-live: 0.85;     /* a partir de aquí se puede pulsar */
     --nav-reveal-lift: 16px;     /* de cuánto más arriba baja al entrar */
+    /* Cuánto sube el racimo al retirarse por dirección de scroll. Tiene que sacarlo de la pantalla
+       entero: nace en `--nav-pad-block` y mide `--nav-cluster-h`, más un respiro. */
+    --nav-hide-lift: calc(var(--nav-pad-block) + var(--nav-cluster-h) + 20px);
+    /* El TERCER factor del armazón: 1 visible · 0 retirado por ir hacia abajo. Vive en el `<body>`
+       porque las dos mitades del racimo son hermanas del `.nav` que lleva la clase. */
+    --nav-dir: 1;
 }
+
+/* ⚠️ La clase la pone `nav-choreography.js` sobre el `.nav`, y el factor tiene que llegar a sus
+   descendientes: por eso se redefine aquí y no se escriben `opacity`/`transform` otra vez —eso es
+   lo que llevaba a que una regla pisara a la otra en silencio—. */
+.nav--hidden { --nav-dir: 0; }
+.nav--hidden .nav__left,
+.nav--hidden .nav__cta { pointer-events: none; }
 
 /* ⚠️⚠️ **EL ARMAZÓN SE RETIRA ANTE EL HERO DEL CIERRE** (`#229`, y el mockup hace lo mismo en
    `aplicaFlotantes`): cuando la tarjeta de cierre empieza a crecer, el logotipo y el racimo se
@@ -3157,8 +3241,23 @@ body {
 
 body[data-has-hero] .nav__left,
 body[data-has-hero] .nav__cta {
-    opacity: calc(var(--nav-p) * var(--cierre-queda));
-    transform: translateY(calc(var(--nav-reveal-lift) * (var(--nav-p) - 1)));
+    /* ⚠️⚠️ **La dirección del scroll entra como un TERCER FACTOR, y hasta `#253` no entraba en
+       absoluto.** `.nav--hidden` existe desde siempre y su regla vive en `landing.css`
+       (`transform: translateY(calc(-100% - 20px)); opacity: 0`), pero **esta regla la pisa**:
+       `site.css` va después y aquí se escribe la misma pareja de propiedades. Medido: la clase
+       entraba y salía con el scroll —la lógica de `nav-choreography.js` era correcta— y la
+       opacidad se quedaba en 1. O sea que en la portada el armazón **nunca se retiró al bajar**,
+       que es lo que el owner pidió. En las once vistas sin hero seguía funcionando, porque allí
+       esta regla no aplica.
+       ▶ *Dos reglas peleándose por la misma propiedad no se resuelven con especificidad: se
+       resuelven multiplicando.* El armazón tiene ahora tres motivos para no estar —no ha entrado
+       bajo el hero, se ha retirado ante el cierre, o vas hacia abajo— y los tres son factores del
+       mismo producto. */
+    opacity: calc(var(--nav-p) * var(--cierre-queda) * var(--nav-dir));
+    transform: translateY(calc(
+        var(--nav-reveal-lift) * (var(--nav-p) - 1)
+        - var(--nav-hide-lift) * (1 - var(--nav-dir))
+    ));
     pointer-events: none;
     transition: opacity var(--dur-estado) var(--ease-sale), transform var(--dur-entra) var(--ease-sale);
 }
@@ -3516,11 +3615,16 @@ body[data-has-hero] .nav--over .nav__cta {
 .hero__act {
     display: inline-flex; align-items: center; justify-content: center;
     flex-direction: column; gap: 2px;
-    flex: 1 1 200px;
-    min-height: 60px;
-    padding: 10px 26px;
+    /* ⚠️ **Más grande, también en teléfono** (`#253`, `[DECIDIDO owner]`: «el CTA del hero lo
+       quiero más grande, y en el móvil también»). Antes: 60 px de alto, 17/18 de talla y base
+       200/240. La talla y el alto suben con la ventana pero **arrancan por encima de lo de antes**,
+       que es lo que hace que también crezca en un teléfono — un `clamp` cuyo suelo no se mueve deja
+       el móvil exactamente igual, y es el fallo que `#220` ya pagó en el titular del hero. */
+    flex: 1 1 240px;
+    min-height: clamp(66px, 6.4vw, 78px);
+    padding: 12px clamp(26px, 2.4vw, 34px);
     border-radius: var(--r-btn);
-    font-family: var(--font-body); font-weight: 800; font-size: 17px;
+    font-family: var(--font-body); font-weight: 800; font-size: clamp(18px, 1.5vw, 21px);
     letter-spacing: 0.01em; text-align: center;
     cursor: pointer; text-decoration: none;
     transition: background var(--dur-sale) var(--ease-bucle), color var(--dur-sale) var(--ease-bucle), border-color var(--dur-sale) var(--ease-bucle),
@@ -3529,10 +3633,10 @@ body[data-has-hero] .nav--over .nav__cta {
 .hero__act:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
 
 .hero__act--buy {
-    flex-basis: 240px;
+    flex-basis: 280px;
     background: var(--action); color: var(--on-action);
     border: 0;
-    font-size: 18px;
+    font-size: clamp(19px, 1.6vw, 22px);
 }
 .hero__act--buy:hover {
     background: var(--action-hover); color: var(--on-action-hover);
@@ -3575,7 +3679,12 @@ body[data-has-hero] .nav--over .nav__cta {
         --hero-t-end: clamp(32px, 9.8vw, 58px);
     }
     .hero__stage-content {
-        padding-block: clamp(16px, 4vw, 28px);
+        /* ⚠️ **Abajo hay que dejar sitio a la barra flotante** (`#253`): es `fixed`, solo existe en
+           móvil, y con el bloque centrado el segundo botón le caía detrás — medido a 390×844,
+           «Ver precios» salía cortado por la mitad. Ampliar la caja por abajo sube el bloque
+           entero, porque el centrado se calcula sobre ella. */
+        padding-top: clamp(16px, 4vw, 28px);
+        padding-bottom: calc(clamp(16px, 4vw, 28px) + 84px + env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -4533,11 +4642,22 @@ html:not(.js) .gf-fiche__foot { display: none; }
     display: flex; flex-direction: column; gap: 24px;
 }
 
+/* ⚠️⚠️ **`safe center`, y sin él el primer destino se corta por arriba** (`#253`). Un
+   `justify-content: center` sobre un contenedor con scroll desborda **por los DOS lados** cuando el
+   contenido no cabe, y lo que se sale por arriba **no se alcanza ni con el scroll**. Estaba
+   documentado y resuelto… solo por debajo de 1080 px de ancho (`justify-content: flex-start` en su
+   `@media`), como si fuera un problema de teléfonos. No lo es: es un problema de ALTO. Medido a
+   1280×900 —una ventana de escritorio corriente— el primer ítem nacía **75 px por encima** del
+   borde de la lista, con `scrollTop` a 0. Lo vio el owner.
+   ▶ `safe` centra mientras quepa y se comporta como `start` en cuanto desborda, que es exactamente
+   la regla que el `@media` intentaba escribir. Se declara **después** del `center` de reserva: donde
+   no se entienda la palabra clave, la línea entera se descarta y queda la conducta de hoy. */
 .menu__list {
     list-style: none; margin: 0; padding: 0;
     flex: 1; min-height: 0;
     overflow-y: auto; overflow-x: hidden;
     display: flex; flex-direction: column; justify-content: center;
+    justify-content: safe center;
     scrollbar-width: none;
 }
 .menu__list::-webkit-scrollbar { width: 0; }

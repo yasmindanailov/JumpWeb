@@ -1097,15 +1097,20 @@ class ArmazonContractTest extends TestCase
     {
         $html = $this->get('/')->assertOk()->getContent();
 
-        // Está en los dos sitios del mockup…
+        // ⚠️⚠️ **VUELVE A ESTAR EN UN SOLO SITIO** (`#253`, `[DECIDIDO owner, 2026-08-29]`: «quita
+        // el selector de idioma del footer, ya lo tenemos en el menú»). No es un regreso a `#205`
+        // por su razón —el coste de las dos copias sigue sin existir, porque hay un componente—:
+        // es que **el pie es la mitad de la composición del punto estático del cierre** y esa
+        // composición no cabía en la ventana. Lo que se retira aquí es alto que se recupera allí.
         $this->assertNotEmpty(
             $this->within($html, 'menu__chips', 'lang-dd'),
-            'el selector de idioma no está en las cápsulas del menú',
+            'el selector de idioma no está en las cápsulas del menú, que es su único sitio.',
         );
-        $this->assertNotEmpty(
+        $this->assertEmpty(
             $this->within($html, 'foot', 'lang-dd'),
-            'el selector de idioma no está en el pie. El mockup lo tiene ahí, y sin él el bloque '.
-            'inferior se queda con menos elementos que el suyo (`#233`).',
+            "el selector de idioma ha vuelto al pie.\n".
+            '▶ `[DECIDIDO owner]` vive solo en el menú. El pie tiene que caber junto a la tarjeta '.
+            'del cierre en una pantalla, y cada pieza suya cuenta.',
         );
 
         // …y los dos salen de la MISMA definición. Esto es lo que de verdad protege.
@@ -1124,8 +1129,8 @@ class ArmazonContractTest extends TestCase
             $usos += substr_count($blade, '<x-site.lang-switch');
         }
         $this->assertSame(
-            2, $usos,
-            "El selector de idioma no se sirve del componente en sus dos sitios ({$usos} de 2).\n".
+            1, $usos,
+            "El selector de idioma no se sirve del componente ({$usos} usos, se espera 1).\n".
             '▶ La regla no es «que esté en un sitio»: es que haya UNA definición. Dos copias del '.
             'marcado son dos listas de idiomas, y así se acaba ofreciendo uno que la otra no tiene.',
         );

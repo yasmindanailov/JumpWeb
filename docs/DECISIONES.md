@@ -13609,3 +13609,125 @@ Guardas nuevas y endurecidas con **4 mutaciones, las 4 muerden**. Techo de peso 
 · docs-check ✓ · build ✓.
 ❗ **Un imán se juzga con la mano**: hay que bajar por la portada y notar si retiene donde debe y si
 suelta cuando uno insiste.
+
+---
+
+## #253 · 2026-08-29 · [DECIDIDO owner] Ocho puntos de la portada — y dos eran fallos que dejaban al visitante encerrado
+
+Ocho encargos del owner sobre la portada. Siete resueltos; el primero necesita una decisión suya y
+está al final. **Dos de ellos no eran ajustes: eran fallos.**
+
+### 1 · ⚠️⚠️ El cajón se abría DETRÁS del juego, y con el scroll ya bloqueado
+
+En un teléfono, al acabar la partida del cierre y pulsar «Reservar»: *«no se abre el sidebar, se
+queda el juego, y no puedo hacer scroll hacia arriba»*. El cajón **sí se abría** —y su cerrojo de
+scroll con él—; lo que pasaba es que la tarjeta del cierre estaba en `z-index: 210` y **el cajón en
+160**. Un superpuesto invisible que además congela la página.
+▶ 210 no salía de ninguna escala: era «muy arriba». El orden por rol lo fijó `#237` —página hasta
+110 · cookies 140 · lo que el cliente ABRE 150-160 · avisos 200+— y **esta tarjeta es PÁGINA**. Pasa
+a **88**: por encima del pie y del armazón, por debajo del menú, del aviso, del modal y del cajón.
+⚠️ **88 y no 90 para no EMPATAR con la barra flotante de móvil**: un empate no falla, lo decide el
+orden del documento — la clase de dependencia que se rompe el día que alguien mueve un bloque.
+
+Y las otras dos mitades del mismo punto: el **resalte azul** de WebKit al tocar el lienzo
+(`-webkit-tap-highlight-color`), y que **`preventDefault()` sobre un `pointerdown` cancela el gesto
+de desplazar** que el navegador iba a empezar con ese dedo. En táctil ya no se llama, y **tocar el
+lienzo no arranca la partida** (para eso está el botón) — que es la regla del mockup y evita que el
+primer arrastre para desplazar empiece un juego que nadie pidió.
+
+### 2 · ⚠️⚠️ El punto estático del cierre no cabía en la ventana
+
+*«El footer completo sigo sin poder verlo.»* Medido: la composición —tarjeta + pie— necesitaba
+**921 px** y **solo cabía por encima de ~1500 px de ventana**. A 1440×900 faltaban 40; a 1366×768,
+161. No era el imán: era **física**.
+
+Dos cosas dieron el espacio, y las dos tenían su propio motivo:
+- **el pie pierde el selector de idioma** (`[DECIDIDO owner]`: «ya lo tenemos en el menú»);
+- **la tarjeta deja de reservar en reposo la tira del juego**. El juego solo se monta cuando la
+  tarjeta llena la pantalla, así que en reposo esos **156 px estaban literalmente vacíos**. Ahora la
+  reserva interpola con el mismo progreso que todo lo demás: 24 en reposo → la tira entera cuando ya
+  hay tira. **Ni un píxel cambia en el estado a pantalla completa**, que es el que el owner validó.
+
+▶ Resultado: cabe en **8 de 9 ventanas** medidas, de 1920×1080 a 1280×720 y 390×844. La que falta es
+390×667, y eso ya es aritmética: ficha en `DEUDA.md`.
+
+### 3 · ⚠️ El armazón nunca se retiró al bajar, y la lógica era correcta
+
+`.nav--hidden` entraba y salía con el scroll —`nav-choreography.js` funcionaba— pero **la regla del
+hero en `site.css` pisa a la de `landing.css`**, que es donde vive el efecto. Medido: la clase
+puesta y la opacidad en 1. En las once vistas sin hero sí funcionaba, porque allí esa regla no
+aplica. ▶ *Dos reglas peleándose por la misma propiedad no se resuelven con especificidad: se
+resuelven multiplicando.* El armazón tiene tres motivos para no estar —no ha entrado bajo el hero,
+se ha retirado ante el cierre, o vas hacia abajo— y ahora son tres factores del mismo producto.
+
+### 4 · Dos recortes del menú, y uno llevaba cinco días sin hacer nada
+
+- **El desplegable de idioma se salía por abajo** (medido: 38 px a 1920×1080, 54 a 1280×900).
+  ⚠️⚠️ **`.lang-dd--up` se RETIRÓ en `#205` y `#233` volvió a pedirla sin restaurarla**: el
+  componente aceptaba `:up`, el pie lo pasaba, y el prop **no hacía absolutamente nada**. Un
+  modificador sin regla es un `class=""` de más — y encima uno que alguien lee como si significara
+  algo. Guarda nueva, general: **ningún modificador que un componente emite puede quedarse sin
+  regla**.
+- **El primer destino se cortaba por arriba.** `justify-content: center` en un contenedor con scroll
+  desborda **por los dos lados**, y lo que se sale por arriba **no se alcanza ni con el scroll**.
+  Estaba resuelto… solo por debajo de 1080 px de ANCHO, como si fuera un problema de teléfonos. Es
+  de ALTO: medido a 1280×900, el primer ítem nacía 75 px por encima del borde con `scrollTop` a 0.
+  ▶ `safe center`, que es exactamente la regla que aquel `@media` intentaba escribir.
+
+### 5 · El hero recupera titular, rótulo y cortina — y los botones que no tenía
+
+`[DECIDIDO owner]`. Cierra el paréntesis de `#226` («por ahora sin texto»), y con él **el `<h1>`
+deja de ser solo para lectores de pantalla**. ⚠️ **Centrado es una desviación decidida del mockup**,
+que lo alinea abajo a la izquierda; queda escrito para que nadie lo «corrija».
+⚠️ **Y el centrado obligó a recalibrar la cortina**: el mockup adelgaza su parada media al 15 %
+porque su texto va abajo, donde el gradiente pesa. Centrado, el titular cae justo en el punto más
+fino — se leía en un fotograma oscuro y se perdía en uno claro. *Una cortina se calibra contra dónde
+está el texto, no contra el gradiente del que se copió.*
+⚠️ **El CTA del hero no era pequeño: no existía.** `#226` lo retiró. Vuelven los dos botones —lo que
+`#216` razonó y lo que sostiene que el armazón pueda esconderse— y suben de talla, **con el suelo
+del `clamp` por encima de lo anterior**, que es lo que hace que también crezca en un teléfono
+(`#220` otra vez).
+
+### 6 · La sombra del logotipo: la respuesta no era la que parecía
+
+*«Nuestro logo tiene demasiada sombra, el del mockup tiene menos; ¿pido que rehagan el PNG?»*
+Medido: **nuestro CSS era IDÉNTICO al suyo** —`drop-shadow(0 6px 16px …45%)` + `drop-shadow(0 1px 0
+…25%)`, copiado de su lockup—. La diferencia no está en el filtro: está en **a qué se le aplica**.
+Su lockup son glifos de texto con una extrusión fina hecha a `text-shadow`; el nuestro es un SVG que
+**ya trae su relieve azul horneado**, una masa oscura maciza. El mismo desenfoque bajo una masa así
+deja un halo; bajo unas letras, no.
+▶ **No hay nada que pedirle al diseñador.** Se contiene por nuestro lado: 6→3 de desplazamiento,
+16→7 de radio, 45→30 % de tinta. *Copiar un filtro no es copiar un resultado si el sujeto es otro.*
+
+### 7 · El logo del menú y la variante sobre tinta
+
+`[DECIDIDO owner]`: en el menú, el logotipo original. Salía blanco porque el paquete del cliente
+trae `client-logo-ink.svg`, un `#FFFFFF` plano, y el producto la prefiere sobre superficies de
+tinta. **El mecanismo se queda** —un cliente puede necesitarla—; lo que sobra es esa variante en
+ESTE paquete. Retirada de la instalación local; el owner tiene que quitarla de su `marca/`.
+
+### ⚠️⚠️ Y una guarda propia nació ciega POR TRES MOTIVOS distintos — la quinta vez en cuatro días
+
+La guarda de los modificadores huérfanos pasó en verde con el fallo puesto **tres veces seguidas**:
+1. la mutación renombró **una** de las dos reglas y la otra salvaba el nombre;
+2. renombradas las dos, el nombre seguía vivo **dentro del comentario** que explica la regla;
+3. blanqueados los comentarios, seguía verde porque **el modificador es la CLAVE del array**
+   (`['lang-dd--up' => $up]`) y el patrón buscaba el valor: **no veía el único caso que existe**.
+▶ *Una guarda que nunca ha estado roja no ha demostrado nada.* Y una que se muta una sola vez
+tampoco: hicieron falta tres para llegar al patrón.
+
+### Lo que queda, y es una decisión suya
+
+**La animación del logotipo** (el relevo de la Y por la silueta) no se puede hacer con lo que hay:
+nuestro logotipo es **un `<img>` con un SVG plano**, y una imagen no se anima por dentro. El asset
+sí tiene las piezas —`id="fig"`, `id="cuerpo"`— así que la salida técnica existe: **servirlo en
+línea** en vez de por `<img>`. Cuesta ~64 KB de marcado (~15 KB comprimidos) en el armazón de las
+doce vistas. Es coste real y la decisión es del owner.
+
+### Verificación
+
+Suite **3.400 / 22.405** · JS **862** · Pint ✓ · docs-check ✓ · build ✓. Composición del cierre: **8
+de 9 ventanas**. Alineación del armazón: **12 px de aire en once ventanas**. Menú: los dos recortes
+medidos antes y después. Barrido de 13 anchos × 6 vistas: **cero desborde de página y cero errores
+de JavaScript** (el recuento de elementos que asoman sube porque la fila del pie es ahora una tira
+deslizante **por diseño** y porque la marquesina retirada tapaba a otros en el top-3 de la sonda).

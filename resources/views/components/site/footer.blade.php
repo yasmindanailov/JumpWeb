@@ -67,24 +67,20 @@
     </div>
 
     <div class="foot__bottom">
-        {{-- ⚠️⚠️ **VUELVE el selector de idioma** (`#233`, `[DECIDIDO owner]`: «el footer tiene
-             menos elementos»). `#205` lo retiró de aquí razonando que «dos selectores del mismo
-             idioma en la misma página son dos sitios que mantener y uno que se queda atrás» —y era
-             verdad **mientras fueran dos copias**. Ahora es UN componente
-             (`<x-site.lang-switch>`) usado en dos sitios, así que ese coste no existe; y el mockup
-             lo tiene en los dos, en las cápsulas del menú y aquí abajo.
-             ▶ Con él, el `<noscript>` de abajo deja de ser la única puerta sin JavaScript… pero
-             **no se retira**: el desplegable se abre con Alpine, así que sin JS sigue sin abrirse.
-             Los dos siguen haciendo falta y por motivos distintos.
+        {{-- ⚠️⚠️ **El selector de idioma SALE de aquí otra vez** (`#253`, `[DECIDIDO owner]`: «quita
+             el selector de idioma del footer, ya lo tenemos en el menú»). Vuelve así a la postura de
+             `#205`, que `#233` había revertido para parecerse al mockup.
+             ▶ **No es solo una pieza menos**: el pie es la mitad de la composición del punto
+             estático del cierre, y a 1440×900 esa composición se pasaba **40 px** de la ventana. Lo
+             que se retira aquí es alto que se recupera allí. Medido en `#253`.
 
-             ❗ **Y con él se va el ÚNICO cambio de idioma que funcionaba SIN JavaScript**: el menú
-             se abre con Alpine, así que sin JS no se abre y sus cápsulas no se alcanzan. El resto
-             de la navegación sobrevive —las tres columnas de enlaces de aquí arriba son anclas de
-             verdad—, pero el idioma se quedaba sin ninguna. Por eso el `<noscript>` de abajo: no
-             lo ve nadie con JS, y sin JS es la única puerta. Es el mismo recurso que ya usan el
-             reintento de pago y el marco de consentimiento. --}}
+             ❗❗ **Lo que NO se va es el `<noscript>`, y esto es lo importante**: el desplegable del
+             menú se abre con Alpine, así que **sin JavaScript el idioma se quedaría sin ninguna
+             puerta**. Estas tres anclas son esa puerta. No las ve nadie con JS y son lo único que
+             hay sin él — el mismo recurso que usan el reintento de pago y el marco de
+             consentimiento. Retirarlas «porque el selector ya no está» sería quitar la salida y la
+             señal a la vez. --}}
         <div class="foot__bottom-left">
-            <x-site.lang-switch :up="true" />
             <noscript>
                 <ul class="foot__lang-fallback">
                     @foreach ($locales as $l)

@@ -335,31 +335,48 @@ class HomePageTest extends TestCase
             'el hero ha metido dentro la barra flotante de móvil, que vive fija abajo y tiene su '.
             'propia visibilidad: ahí dentro se pintaría dos veces.',
         );
-        // ⚠️⚠️ **EL HERO SE VACÍA EN `#226`** (`[DECIDIDO owner, 2026-08-28]`: «por ahora sin
-        // texto y sin botones»). Aquí se aseveraba que el hero SÍ tenía sus botones y su eslogan;
-        // las dos aserciones se van con su sujeto.
-        // ▶ Lo que ocupa su sitio no es nada: es lo que se pidió. Y por eso se asevera el hecho
-        // que sustituye —queda el vídeo y la tira de marca— para que este caso no se quede
-        // comprobando ausencias, que se cumplen solas.
-        foreach (['hero__kicker', 'hero__acts', 'hero__chip'] as $retirado) {
-            $this->assertStringNotContainsString(
-                $retirado, $hero,
-                "el hero ha recuperado `{$retirado}`. Si es a propósito, hay que revisar la ficha ".
-                'de `DEUDA.md` sobre la primera pantalla sin compra: parte del motivo por el que '.
-                'está abierta es justamente que el hero se vació.',
+        // ⚠️⚠️ **EL HERO SE VUELVE A LLENAR EN `#253`, y el paréntesis de `#226` se cierra.**
+        // Aquí se aseveraba la AUSENCIA de eslogan, botones y chip —«por ahora sin texto y sin
+        // botones», con la palabra «por ahora» dentro de la propia decisión—.
+        // `[DECIDIDO owner, 2026-08-29]`: «en el hero pondremos un titular, un texto "Activa tu
+        // modo diversión" en el centro, al vídeo le ponemos la cortina, y el CTA más grande».
+        // ▶ **Y con eso se cierra la ficha Alta de `DEUDA.md`**: el motivo por el que estaba
+        // abierta era que el armazón nace oculto bajo el hero y la primera pantalla se quedaba sin
+        // comprar. Vuelven los dos botones propios del hero, que es lo que `#216` razonó.
+        // ⚠️ El chip de estado NO vuelve: no se pidió. Se sigue aseverando su ausencia para que
+        // este caso no dé por buena una vuelta que nadie decidió.
+        foreach (['hero__kicker', 'hero__acts', 'hero__act--buy'] as $vuelto) {
+            $this->assertStringContainsString(
+                $vuelto, $hero,
+                "el hero ha perdido `{$vuelto}`.\n".
+                '▶ Con el armazón naciendo OCULTO bajo el hero, sin estos la primera pantalla no '.
+                'ofrece ni comprar ni navegar: es el agujero que `#216` cerró y `#226` reabrió.',
             );
         }
+        $this->assertStringNotContainsString(
+            'hero__chip', $hero,
+            'ha vuelto el chip de estado al hero y nadie lo pidió: `#226` lo retiró y `#253` solo '.
+            'devolvió el titular, el eslogan y los botones.',
+        );
         $this->assertStringContainsString('hero__strip', $hero, 'el hero se ha quedado sin la tira de marca');
 
-        // ⚠️ **El `<h1>` NO se va, y esto lo fija.** Era el ÚNICO de la portada; «sin texto» es una
-        // decisión visual y no puede llevarse por delante el encabezado del documento. Se queda
-        // como `sr-only`: invisible, pero presente para lectores de pantalla y buscadores.
+        // ⚠️ **La CORTINA vuelve con su sujeto** (`#253`). `#227` la retiró porque el hero estaba
+        // vacío: era un velo que oscurecía el vídeo para hacer legible un texto que ya no estaba.
+        // Con el titular de vuelta, sin ella se lee en unos fotogramas y en otros no.
+        $this->assertStringContainsString(
+            'hero__stage-scrim', $hero,
+            "el hero sirve un titular sobre el vídeo SIN cortina.\n".
+            '▶ Un texto claro sobre un fotograma claro es ilegible, y como depende del fotograma '.
+            'falla de forma intermitente — que es peor que fallar siempre.',
+        );
+
+        // ⚠️ **El `<h1>` sigue siendo el único de la portada.** Deja de ser `sr-only` porque el
+        // titular vuelve a verse, pero lo que se asevera es lo mismo: que existe y trae texto.
         $this->assertMatchesRegularExpression(
-            '/<h1[^>]*class="[^"]*\bsr-only\b[^"]*"[^>]*>\s*\S/', $hero,
-            "el hero no sirve un `<h1>` accesible.\n".
-            '▶ Es el único encabezado principal de la portada. Vaciar el hero VISUALMENTE no puede '.
-            'dejar el documento sin título: eso es una regresión de SEO y de accesibilidad que '.
-            'nadie pidió.',
+            '/<h1[^>]*>\s*\S/', $hero,
+            "el hero no sirve un `<h1>` con texto.\n".
+            '▶ Es el único encabezado principal de la portada: sin él, el documento se queda sin '.
+            'título para lectores de pantalla y buscadores.',
         );
 
         // ⚠️ El chip de estado NO se asevera aquí: es data-driven y **no se pinta sin horario**

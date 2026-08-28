@@ -32,12 +32,22 @@ use Tests\TestCase;
  */
 class LayerOrderTest extends TestCase
 {
-    private const CSS = 'public/css/site.css';
+    /**
+     * ⚠️ **Las DOS hojas del producto, y no solo `site.css`** (`#253`). El armazón declara su capa
+     * en `landing.css` —es de las reglas heredadas del mockup— y buscando en una sola hoja el
+     * localizador devolvía `null`, o sea que una aserción sobre él se caía por «no lo encuentro»
+     * en vez de por lo que quería medir. Una escala de capas que solo lee media hoja no es una
+     * escala: es la mitad que alguien miró.
+     */
+    private const CSS = ['public/css/site.css', 'public/css/landing.css'];
 
     /** El `z-index` declarado en la primera regla de un selector. */
     private function layer(string $selector): ?int
     {
-        $css = (string) file_get_contents(base_path(self::CSS));
+        $css = implode("\n", array_map(
+            fn (string $hoja) => (string) file_get_contents(base_path($hoja)),
+            self::CSS,
+        ));
         $quoted = preg_quote($selector, '/');
 
         if (! preg_match('/'.$quoted.'\s*\{[^}]*z-index:\s*(\d+)/s', $css, $m)) {
@@ -85,5 +95,55 @@ class LayerOrderTest extends TestCase
                 .'abierto a propósito.',
             );
         }
+    }
+
+    /**
+     * **La tarjeta del cierre es PÁGINA, no un superpuesto** (`#253`).
+     *
+     * ⚠️⚠️ **Y esto no es teoría de capas: es el fallo que el owner vio en un teléfono.** La tarjeta
+     * del hero del cierre estaba en `z-index: 210` —«muy arriba», fuera de toda escala— y con eso
+     * quedaba **por encima del cajón de compra**. Al pulsar «Reservar» al terminar la partida el
+     * cajón se abría de verdad, con su cerrojo de scroll incluido, pero **detrás del juego**: lo que
+     * se veía era el juego, sin cajón y sin poder desplazar. Un superpuesto invisible que además
+     * congela la página es la peor forma de este fallo.
+     *
+     * ▶ Lo que se fija aquí es que **nada de la página se cuele por encima de lo que el cliente
+     * abre a propósito**. La tarjeta puede —y debe— tapar el pie y el armazón; no el menú, ni el
+     * aviso, ni el modal, ni el cajón.
+     */
+    public function test_the_closing_card_never_covers_what_the_client_opened(): void
+    {
+        $tarjeta = $this->layer('.reserve--fija .reserve__box');
+
+        $this->assertNotNull($tarjeta, 'No se encuentra el `z-index` de la tarjeta del cierre.');
+
+        foreach ([
+            '.menu' => 'el menú a pantalla completa',
+            '.cookie' => 'el aviso de cookies',
+            '.modal' => 'el modal',
+            '.sidecart' => 'el cajón de compra',
+        ] as $selector => $que) {
+            $capa = $this->layer($selector);
+            $this->assertNotNull($capa, "No se encuentra el `z-index` de {$que} ({$selector}).");
+            $this->assertLessThan(
+                $capa,
+                $tarjeta,
+                "La tarjeta del cierre ({$tarjeta}) tapa {$que} ({$capa}).\n".
+                '▶ Es contenido de PÁGINA: crece hasta llenar la pantalla, pero sigue estando debajo '.
+                'de todo lo que el visitante abre a propósito. Con 210 el cajón se abría DETRÁS del '.
+                'juego —invisible y con el scroll ya bloqueado por su cerrojo—.',
+            );
+        }
+
+        // Y la otra mitad: sí tiene que pasar por encima del armazón, o al crecer se le quedarían
+        // el logotipo y los botones flotando sobre la tinta mientras se retiran.
+        $nav = $this->layer('.nav');
+        $this->assertNotNull($nav, 'No se encuentra el `z-index` del armazón.');
+        $this->assertGreaterThan(
+            $nav,
+            $tarjeta,
+            "La tarjeta del cierre ({$tarjeta}) ha quedado por DEBAJO del armazón ({$nav}): mientras ".
+            'se retira, sus botones se verían recortados sobre la tarjeta de tinta.',
+        );
     }
 }

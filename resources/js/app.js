@@ -831,9 +831,26 @@ document.addEventListener('alpine:init', () => {
             m.arranca();
         },
 
+        /**
+         * ⚠️⚠️ **En TÁCTIL el lienzo no arranca la partida y no cancela el gesto** (`#253`), y las
+         * dos mitades arreglan el mismo fallo que el owner vio en un teléfono: *«no puedo hacer
+         * scroll hacia arriba, me quedo bloqueado en el juego»*.
+         * · `preventDefault()` sobre un `pointerdown` **cancela el gesto de desplazar** que el
+         *   navegador iba a empezar con ese dedo. Sobre un lienzo que ocupa el ancho de la tarjeta
+         *   a pantalla completa, eso deja al visitante encerrado. En ratón sí se llama: ahí no hay
+         *   gesto que cancelar y evita el `click` fantasma.
+         * · Y **tocar el lienzo no EMPIEZA la partida**: para eso está el botón, que es explícito.
+         *   Es la regla del mockup (`pulsaJuego`: `if (f !== 'jugando' && lienzo && touch) return`),
+         *   y sin ella el primer arrastre para desplazar arranca un juego que nadie pidió.
+         */
         toca(e) {
             if (this.fase === 'off') return;
-            e.preventDefault();
+
+            const tactil = e.pointerType === 'touch';
+
+            if (tactil && this.fase !== 'jugando') return;
+            if (! tactil) e.preventDefault();
+
             if (this.fase === 'jugando') this._motor?.pulsa();
             else this.juega();
         },

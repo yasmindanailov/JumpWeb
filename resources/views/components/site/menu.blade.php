@@ -167,8 +167,13 @@
                      que es la fuente única — el pie tenía su propia copia de la lista y **dos
                      listas de idiomas es cómo se acaba ofreciendo uno que la otra no reconoce**
                      (lo dice el docblock de esa clase, y aquí se respeta). --}}
+                {{-- ⚠️ **`:up` aquí también** (`#253`): esta cápsula vive en la fila INFERIOR del
+                     menú, así que un panel que se abra hacia abajo se sale de la pantalla. Medido
+                     con el ojo del owner y luego con la sonda: **38 px fuera a 1920×1080 y 54 a
+                     1280×900**. Es el mismo motivo por el que el pie lo llevaba, y ahora que el
+                     selector vive solo aquí es aquí donde hace falta. --}}
                 <li>
-                    <x-site.lang-switch trigger="menu__chip" />
+                    <x-site.lang-switch trigger="menu__chip" :up="true" />
                 </li>
 
                 {{-- Redes: solo si la instalación las tiene configuradas. Las URLs llegan ya

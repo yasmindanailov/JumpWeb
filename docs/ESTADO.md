@@ -6,7 +6,30 @@
 > menores: `#223`, `#224`, `#232`, `#234`, `#236`, `#237`) y carril C (el mockup 1:1: `#225`→`#235`
 > y **`#238`, la COLUMNA**)**. ▶ Y la noche del 28, **el CAJÓN EN MÓVIL (`#239`)**.
 > ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
-> la marquesina.**
+> la marquesina. Y `#253` — ocho puntos de la portada, DOS de ellos fallos.**
+>
+> ❗❗ **`#253` — EL CAJÓN SE ABRÍA DETRÁS DEL JUEGO, y con el scroll ya bloqueado.** En un teléfono,
+> al pulsar «Reservar» tras la partida del cierre: el cajón se abría de verdad —y su cerrojo con
+> él— pero la tarjeta estaba en `z-index: 210` y el cajón en 160. Un superpuesto invisible que
+> además congela la página. ▶ La tarjeta baja a **88**: es PÁGINA, no un superpuesto. **88 y no 90
+> para no empatar con `.book-bar`** — un empate lo decide el orden del documento.
+> ⚠️⚠️ **Si tocas el scroll o una capa, la escala por rol está en `LayerOrderTest`**, y ahora
+> también vigila esta tarjeta.
+> ⚠️ **El punto estático del cierre no cabía**: necesitaba 921 px y solo entraba por encima de
+> ~1500 de ventana. No era el imán, era física. Cabe en **8 de 9 ventanas** tras quitar el selector
+> de idioma del pie y dejar de reservar en reposo una tira de juego **que en reposo está vacía**.
+> ⚠️ **El armazón nunca se retiró al bajar en la portada**: la lógica era correcta y **la regla del
+> hero pisaba a la de `landing.css`**. Ahora la dirección es un TERCER FACTOR del mismo producto.
+> ⚠️⚠️ **`.lang-dd--up` llevaba CINCO DÍAS sin existir**: `#205` la retiró, `#233` volvió a pedirla
+> y nadie la restauró, así que el prop `:up` no hacía nada. Guarda nueva y general: **ningún
+> modificador que un componente emite puede quedarse sin regla**. ❗ **Nació ciega TRES veces**
+> (mutación incompleta · el nombre vivo en un comentario · el modificador es la CLAVE del array).
+> ⚠️ **La sombra del logotipo**: nuestro CSS era **idéntico** al del mockup. Lo que cambia es el
+> sujeto — su lockup son glifos, el nuestro un SVG con el relieve horneado. *Copiar un filtro no es
+> copiar un resultado si el sujeto es otro.* No hay nada que pedirle al diseñador.
+> ❗ **Lo único pendiente del owner: la animación del logotipo** (el relevo de la Y). No se puede con
+> un `<img>`; el asset tiene las piezas (`id="fig"`), así que la salida es **servirlo en línea** —
+> ~64 KB de marcado (~15 comprimidos) en las doce vistas. Es coste real y la decisión es suya.
 >
 > ❗❗ **`#252` — LA PORTADA TIENE DOS PUNTOS ESTÁTICOS Y AHORA EL SCROLL ENCAJA EN ELLOS.**
 > `[DECIDIDO owner]`. Arriba, el hero encogido con el racimo colocado; abajo, la tarjeta del cierre
@@ -1166,6 +1189,12 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3405 en verde** (22.434 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 **sobre el árbol CONJUNTO**, tras rebasar `#253` (los ocho puntos de la portada, carril
+  C) encima del `#242` del carril A. ▶ **+2 casos en este corte**: la capa de la tarjeta del cierre
+  (`LayerOrderTest`) y los modificadores huérfanos (`ArmazonCssHasNoOrphansTest`).
+  ⚠️ La guarda de los huérfanos **nació ciega tres veces** y solo la tercera mutación dio con el
+  motivo: el modificador es la CLAVE del array, no el valor.
 - Suite **3403 en verde** (22.406 aserciones, 1 skipped a propósito) · **JS 862**, medida el
   2026-08-29 de madrugada **sobre el árbol CONJUNTO**, tras rebasar la **segunda vuelta del owner**
   (`#242`, carril A) encima del `#252` del carril C. ▶ **+5 casos**: la guarda de que **un enlace
