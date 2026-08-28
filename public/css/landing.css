@@ -481,7 +481,7 @@ img { display: block; max-width: 100%; }
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
   display: flex; align-items: flex-start; justify-content: space-between;
-  padding: 16px clamp(24px, 4vw, 48px);
+  padding: var(--nav-pad-block) clamp(24px, 4vw, 48px);
   gap: 24px;
   pointer-events: none;
 }
@@ -598,11 +598,15 @@ img { display: block; max-width: 100%; }
    corrección que el fantasma del par.
 
    ⚠️ **El objetivo táctil no baja de 44 px**: el alto es el del racimo (54, o 48 en teléfono) y el
-   ancho lo da el padding, así que incluso sin etiqueta pasa de sobra. */
+   ancho lo da el padding, así que incluso sin etiqueta pasa de sobra.
+   ⚠️⚠️ **Y hasta `#252` esa frase era falsa.** Leía `var(--cta-pair-h, 54px)` y este botón **no
+   es descendiente de `.cta-pair`**, así que en teléfono se quedaba en 54 —el valor de reserva—
+   mientras el par de al lado bajaba a 48. Ahora los dos leen `--nav-btn-h`, que vive en `:root`
+   y es también lo que el hero usa para saber cuánto hueco dejarle al racimo. */
 .nav__burger {
   display: inline-flex; align-items: center; justify-content: center;
   gap: 11px;
-  height: var(--cta-pair-h, 54px);
+  height: var(--nav-btn-h);
   padding: 0 18px;
   border: 1px solid var(--paper-line-strong);
   border-radius: var(--r-md);
@@ -946,22 +950,7 @@ img { display: block; max-width: 100%; }
   display: inline-block; background: var(--zone-1); color: var(--on-brand);
   padding: 0 0.12em 0.04em; border-radius: 18px;
   transform: rotate(-2deg);
-}/* ---------- marquee ---------- */
-.marquee {
-  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
-  background: var(--bg); overflow: hidden; padding: 22px 0;
-}
-.marquee__track {
-  display: flex; gap: 56px;
-  animation: scroll 28s linear infinite;
-  width: max-content;
-}
-.marquee__item {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: 52px; line-height: 1; letter-spacing: -0.03em;
-  display: inline-flex; align-items: center; gap: 48px;
-}
-/* ---------- foam block accent (rotated rounded squares) ---------- */
+}/* ---------- foam block accent (rotated rounded squares) ---------- */
 .jj-block {
   display: inline-block;
   background: var(--zone-1);
@@ -972,18 +961,8 @@ img { display: block; max-width: 100%; }
 .jj-block--sm { width: 14px; height: 14px; border-radius: 3.5px; transform: rotate(22deg); }
 .jj-block--md { width: 22px; height: 22px; border-radius: 5px;   transform: rotate(15deg); }
 .jj-block--lg { width: 36px; height: 36px; border-radius: var(--r-sm);   transform: rotate(14deg); }
-.jj-block--xl { width: 42px; height: 42px; border-radius: 9px;  transform: rotate(12deg); }
 .jj-block--inv { background: var(--fg); }
 .jj-block--zone2 { background: var(--zone-2); }
-
-.marquee__item .mark {
-  color: var(--zone-1);
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: 56px; line-height: 0.8;
-  display: inline-block; transform: translateY(-2px);
-}
-.marquee__item .outline { color: transparent; -webkit-text-stroke: 1.5px var(--fg); }
-@keyframes scroll { to { transform: translateX(-50%); } }
 
 /* ---------- zones intro ---------- */
 .zones__head {
@@ -1897,11 +1876,55 @@ img { display: block; max-width: 100%; }
    columnas. La fila envuelve —`flex-wrap`— porque el número de destinos lo manda la instalación:
    con `nowrap` un cliente con quince enlaces los perdería por el borde, que es el mismo error que
    `#228` cazó en el menú. */
+/* ══ UNA SOLA FILA (`#252`, `[DECIDIDO owner]`: «solo quiero 1 fila, no más») ═══════════════════
+   Aquí la fila ENVOLVÍA, y con los 14 destinos de esta instalación salían **dos renglones**.
+
+   ⚠️ **La aritmética manda y conviene dejarla escrita**: a 14 px de talla y 34 de hueco los 14
+   enlaces piden **1.469 px** y la columna del sitio da **1.176**. No cabe por poco: cabe por
+   MUCHO menos. Con 12,5 px y un hueco de 16 piden **1.125**, o sea 51 px de margen (4 %) — que ya
+   no es un cable trampa, pero tampoco es infinito.
+   ▶ **Y por eso la fila no envuelve: se DESLIZA.** El número de destinos lo manda la instalación,
+   así que «una fila» solo puede sostenerse si lo que no cabe se alcanza con un gesto en vez de
+   caer a un segundo renglón. Es la misma mecánica que la tira de horas y la lista del menú, y la
+   de los carruseles del artboard de móvil del cliente.
+   ⚠️ La barra de scroll va OCULTA a propósito, así que **la vela del envoltorio no es un adorno**:
+   es lo único que dice que la lista sigue. */
+.foot__links-wrap { position: relative; margin-bottom: clamp(30px, 4vw, 52px); }
 .foot__links {
-    display: flex; flex-wrap: wrap; align-items: center;
-    gap: 10px clamp(18px, 2.4vw, 34px);
-    margin-bottom: clamp(30px, 4vw, 52px);
-    font-size: 14px;
+    display: flex; flex-wrap: nowrap; align-items: center;
+    gap: clamp(12px, 1.4vw, 16px);
+    font-size: 12.5px;
+    overflow-x: auto; overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+.foot__links::-webkit-scrollbar { display: none; }
+/* `flex: none` + `nowrap` para que un destino de dos palabras no se parta por dentro, que es la
+   otra forma de acabar con dos renglones. El alto mínimo es el objetivo táctil del mockup. */
+.foot__links a { flex: none; white-space: nowrap; display: inline-flex; align-items: center; min-height: 40px; }
+/* ❗ **LA VELA.** Va en el ENVOLTORIO y no en la fila: un `::after` dentro de un contenedor con
+   scroll viaja con el contenido y se iría hacia la izquierda en cuanto alguien deslizara.
+   Se apaga sola al llegar al final donde el navegador entienda `animation-timeline`; donde no,
+   se queda puesta — que es el estado seguro: una señal de más contenido cuando ya no lo hay es un
+   adorno, y no tenerla cuando sí lo hay es una lista que parece terminada y no lo está. */
+.foot__links-wrap::after {
+    content: "";
+    position: absolute; top: 0; bottom: 0; right: 0;
+    width: 44px;
+    background: linear-gradient(to right, transparent, var(--bg));
+    pointer-events: none;
+}
+@supports (animation-timeline: scroll()) {
+    .foot__links-wrap::after {
+        animation: foot-vela var(--ease-bucle) both;
+        animation-timeline: scroll(nearest inline);
+        animation-range: contain;
+    }
+    @keyframes foot-vela {
+        0%, 80% { opacity: 1; }
+        100% { opacity: 0; }
+    }
 }
 .foot__links a { color: var(--fg-mute); transition: color var(--dur-toque) var(--ease-sale); }
 /* El eslogan editable de la instalación, delante del copyright. Va en su propia línea si no cabe:
@@ -2011,7 +2034,6 @@ input[type="radio"]:focus-visible,
 
 @media (max-width: 768px) {
   .section { padding: 64px 0; }
-  .nav { padding: 12px 20px; }
   .nav__brand { font-size: 18px; }
   /* hero */
   .hero { padding: 92px 0 40px; min-height: auto; }
@@ -2021,11 +2043,7 @@ input[type="radio"]:focus-visible,
      Ajustable: si el sujeto está más abajo/lado, cambiar este object-position. */
   .hero__video { object-position: 78% 32%; }
   .hero__stage-content { padding: 22px 20px 24px; }.hero__title--onvideo { font-size: clamp(56px, 18vw, 96px); }
-  .hero__stage-label { display: none; }/* marquee */
-  .marquee { padding: 14px 0; }
-  .marquee__item { font-size: 36px; gap: 32px; }
-  .marquee__item .star { font-size: 22px; }
-  .marquee__track { gap: 32px; }
+  .hero__stage-label { display: none; }
   /* zones intro */
   .zones__title { font-size: clamp(44px, 13vw, 80px); }
   .zones__intro { font-size: 16px; }
@@ -2121,7 +2139,6 @@ input[type="radio"]:focus-visible,
   .nav__brand-row { font-size: 18px; } /* #231 p9: logo grande pero ajustado al ancho mínimo */
   .hero__stage { aspect-ratio: 4 / 5; }
   .hero__title--onvideo { font-size: clamp(48px, 19vw, 80px); }
-  .marquee__item { font-size: 28px; gap: 24px; }
   .ride-card { flex: 0 0 86%; }
   .polaroid { flex: 0 0 168px; }
   .price__num { font-size: 56px; }

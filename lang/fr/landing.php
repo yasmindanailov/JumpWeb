@@ -72,7 +72,6 @@ return [
             ['num' => '+1M', 'label' => 'Sauts / an'],
         ],
     ],
-    'marquee' => ['SAUTE', 'VOLE', 'RIS', 'RECOMMENCE', 'PROFITE'],
     'zones' => [
         'eyebrow' => 'Les deux zones', 'title' => 'Un parc,', 'title_em' => 'deux zones.',
         'intro' => 'On a conçu deux univers différents — un pour ceux qui sautent déjà sans freins, un pour ceux qui apprennent. Choisis le tien.',

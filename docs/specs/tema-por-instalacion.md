@@ -1771,3 +1771,107 @@ comentario: *aseverar el texto literal ata la guarda a una implementación.*
 - ❗ **Lo que ninguna sonda puede medir: cómo se siente.** Como la tanda 2d, esto no se revisa con
   una captura — se revisa **bajando hasta el final de la portada** y mirando cuándo desaparece el
   armazón.
+
+---
+
+## 20. EL IMÁN DE LOS DOS PUNTOS ESTÁTICOS (`#252`, 2026-08-29)
+
+`[DECIDIDO owner, 2026-08-29]`, y conviene citarlo entero porque el encargo trae su propio criterio:
+
+> «La sección de hero header y hero footer tienen **un punto del vw donde es el estático**, donde se
+> ve todo perfectamente… y a partir de ahí al hacer scroll hacia abajo empieza la transición hacia
+> full viewport. Ese punto estático quiero que tenga **como un imán**, que al hacer scroll de alguna
+> manera se pare ahí por un momento, para que no ocurra que el cliente hace scroll y **se pierde ese
+> punto donde se ve todo en su sitio**. Que no se ejecute la transición de full viewport sin querer
+> en el footer.»
+
+### 20.1 Los dos puntos, y por qué son estados y no fotogramas
+
+| | dónde está | qué se ve |
+|---|---|---|
+| cabecera | `y = --hero-runway` | el hero ya encogido a tarjeta, con logotipo, par de CTA, hamburguesa y tira de marca colocados |
+| cierre | `y = maxY − recorrido del cierre` | la tarjeta del cierre en reposo y **el pie entero debajo**: tira, los enlaces, idioma y legales |
+
+Cualquier punto intermedio de esos dos recorridos es un hero a medio encoger o una tarjeta a medio
+crecer: no es un estado, es un fotograma. El imán existe para que el visitante **caiga siempre en un
+estado**.
+
+### 20.2 ⚠️⚠️ NO es el `freno` del mockup, y la diferencia es el encargo
+
+El mockup tiene un mecanismo así (`vigilaFreno` + `encaja`), y de él se toma **todo el envoltorio**:
+el retardo de **170 ms** desde el último evento, la curva `1 − (1 − p)³`, la duración
+`clamp(280, |Δ|·1,1, 620)`, el **enfriamiento de 1 s** y que **cualquier gesto cancele**.
+
+▶ **Lo que NO se copia es a dónde encaja.** El suyo va hacia el lado al que ibas, así que **bajando
+por el cierre te lleva a pantalla completa** — justo lo que el owner pidió que no pasara. Aquí
+bajando te lleva **primero al punto estático**, y solo un segundo empujón deliberado —pasado el
+**45 %** del recorrido— completa la transición. Subiendo, siempre al punto estático: nunca se empuja
+hacia abajo a quien sube.
+
+### 20.3 ⚠️⚠️ El rumbo NO se puede sacar del último evento de scroll
+
+La primera versión comparaba cada evento con el anterior. **Pasó los 16 casos unitarios y falló en el
+navegador**, en un caso concreto: subiendo desde el fondo, el imán devolvía al visitante a pantalla
+completa.
+
+La causa, medida con una línea de tiempo de posiciones: **al llegar al final la portada crece 34 px**
+—hay 55 imágenes, 51 perezosas y ninguna declara su proporción (ficha en `DEUDA.md`)— y el anclaje de
+scroll del navegador compensa moviendo la posición. Eso llega como **un evento de scroll hacia
+abajo**, y el detector se lo creyó.
+
+▶ **El rumbo es el movimiento NETO desde la última parada**, con un mínimo de 24 px para creerse que
+hay un gesto detrás. Un reflujo de 34 px dentro de un gesto de 200 ya no cambia el signo.
+⚠️ *Un detector de dirección que cree cada evento está creyendo también a los que no ha hecho nadie.*
+
+### 20.4 Dónde vive, y por qué
+
+En `resources/js/ui/scroll-magnet.js`, partido en dos mitades como el cerrojo de scroll: **la
+decisión es una función pura** (`destinoIman`, `rumbo`) y el instalador es el único que toca el DOM.
+Así la decisión se ejercita con `node --test` —**19 casos**— en vez de con una sonda de navegador de
+tres minutos. Mismo criterio que `nav-choreography.js`, y por el mismo motivo.
+
+⚠️ **Cuesta 1,6 KiB a TODA página pública**, aunque solo la portada tenga heroes: el módulo se
+instala siempre y sale por `null` en las once vistas restantes. El techo de peso sube de **23 a 26
+KiB** a propósito, con margen del 6 % — no otro cable trampa.
+
+### 20.5 El punto estático de la cabecera, ALINEADO
+
+`[DECIDIDO owner]`: «el logo, el CTA y el icono del menú tienen que verse perfectamente en su sitio
+encima del hero; actualmente el logo está demasiado abajo y está encima del hero».
+
+⚠️ **Era cierto, y la causa es que el hueco se medía en `vh` y el racimo no cambia con la altura de
+ventana.** Era `--hero-top-end: clamp(76px, 9vh, 104px)`: a 1080 px de alto daba 97 y el racimo acaba
+en 86 —sobraba aire—; **a 900 daba 81 y el logotipo se metía 5 px dentro del hero**. Un hueco medido
+en `vh` para tapar algo que mide siempre lo mismo acierta por tramos.
+
+▶ Ahora se **deriva**: `--nav-pad-block + --nav-cluster-h + --hero-top-air`, donde el alto del racimo
+es `max(--nav-logo-h, --nav-btn-h)`. Medido: **12 px de aire exactos en once ventanas** de 2560×1440
+a 360×640. Devolver el `clamp` deja el racimo encima del hero en **4 de ellas**.
+
+⚠️ **Y al derivarlo apareció un token FUERA DE ALCANCE**: la hamburguesa leía `var(--cta-pair-h,
+54px)` y **no es descendiente de `.cta-pair`**, así que se quedaba en el valor de reserva y nunca
+bajaba a 48 en teléfono —que es literalmente lo que prometía su propio comentario—. Es el mismo fallo
+que `#233` documentó con `--cierre-runway`: *un token fuera de alcance no falla, rinde su reserva.*
+
+### 20.6 ⚠️ Y una guarda propia nació CIEGA — la cuarta vez
+
+La primera versión de la guarda del botón de menú aseveraba la cadena de `var()` **resuelta**, y al
+mutar con el fallo real (devolver `var(--cta-pair-h, 54px)`) **pasaba en verde**: resolver la cadena
+seguía llegando al token bueno, porque `--cta-pair-h` ahora lo lee. La guarda bendecía exactamente el
+defecto que la motivaba.
+▶ Lo que importaba no era de dónde venía el número, sino que el token estuviera **en alcance**. Ahora
+asevera la lectura **directa** y que el token se declare en `:root`. **4 mutaciones, las 4 muerden.**
+
+### 20.7 Verificación
+
+- **Decisión**: 19 casos con `node --test`, incluidos los tres del rumbo escritos **desde el fallo
+  real** que costó la sonda.
+- **Navegador**: 8 casos × 2 anchos (1280×900 y 390×844), **16/16**, aseverando el **estado** al que
+  se encaja (`--hero-p`, `--cierre-q`) y no el píxel — porque el documento se mueve (§20.3).
+  Cubren los dos heroes en las dos direcciones, la retención bajo el umbral, el segundo empujón que
+  sí completa, y **dos casos de que el imán NO toca nada** a media página y lejos del cierre.
+- **Alineación**: 11 ventanas, 12 px de aire en todas.
+- **Guardas nuevas**: `test_the_hero_gap_is_derived_from_the_cluster` y el botón de menú endurecido.
+- Suite **3390 / 22.332** · JS **854** · Pint ✓ · docs-check ✓ · build ✓.
+- ❗ **Un imán se juzga con la mano, no con una sonda**: hay que bajar por la portada y notar si
+  retiene donde debe y si suelta cuando uno insiste.

@@ -45,10 +45,17 @@ class SidebarBundleBudgetTest extends TestCase
      * pasó a fijarse a la ventana, que es lo que hace el mockup, y eso son dos condiciones de
      * anclaje y tres medidas publicadas.
      *
+     * ⚠️ **De 23 a 26 en `#252`**, y con el mismo criterio: lo medido son **24,5 KiB**, así que el
+     * techo deja ~1,5 de margen (6 %) en vez de repetir el cable trampa. Lo que entra es el **imán
+     * de los dos puntos estáticos** (`ui/scroll-magnet.js`, `[DECIDIDO owner]`): la decisión pura,
+     * el rumbo por movimiento neto, el viaje con su curva y el enfriamiento. Son ~1,6 KiB y se los
+     * cobra TODA página pública, aunque solo la portada tenga heroes — el módulo se instala
+     * siempre y sale por `null` en las once vistas restantes. Cabe, y se sabe lo que cuesta.
+     *
      * ⚠️ Y ojo con la unidad al leer la salida de Vite: **Vite cuenta en kB decimales y esto en
      * KiB**. «22,46 kB» son 21,93 KiB, y esa diferencia ya despistó una vez en esta misma tanda.
      */
-    private const LANDING_ENTRY_MAX_KB = 23;
+    private const LANDING_ENTRY_MAX_KB = 26;
 
     /**
      * Techo del trozo del minijuego (`#231`). Medido al construirlo: **12,08 kB**.

@@ -59,7 +59,6 @@ class ShapeScaleTest extends TestCase
         '.jj-block--xs' => [9, 2.0],
         '.jj-block--sm' => [14, 3.5],
         '.jj-block--md' => [22, 5.0],
-        '.jj-block--xl' => [42, 9.0],
         '.bk-context .jj-block' => [11, 3.0],
         '.offw-burst .spark' => [9, 2.0],
         '.svc-marquee__item::after' => [13, 3.5],

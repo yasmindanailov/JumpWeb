@@ -142,8 +142,6 @@
         <div class="hero__sentinel" aria-hidden="true"></div>
     </header>
 
-    <x-site.marquee />
-
     {{-- ===================== ZONAS ===================== --}}
     <section id="zones" class="section wrap">
         <div class="zones__head">
@@ -274,8 +272,6 @@
             <div class="slider-progress__bar" :style="{ left: (progressLeft*100)+'%', width: (progressWidth*100)+'%' }"></div>
         </div>
     </section>
-
-    <x-site.marquee />
 
     {{-- ===================== PRECIOS ===================== --}}
     <section id="pricing" class="section wrap">

@@ -13449,3 +13449,81 @@ fallan» porque este repo corre los tests de JS con el runner de Node (`npm run 
 bundle SSR rancio tras un rebase dio 34 rojos que no eran del cambio.
 ❗ **Lo que ninguna sonda mide es cómo se SIENTE**: esto se revisa bajando hasta el final de la
 portada, no con una captura.
+
+---
+
+## #252 · 2026-08-29 · [DECIDIDO owner] El IMÁN de los dos puntos estáticos, el pie a una fila y fuera la marquesina
+
+Tres encargos del owner sobre la portada. El segundo es el grande y trae su propio criterio.
+
+### 1 · Los enlaces del pie, UNA fila
+
+`[DECIDIDO owner]`: «solo quiero 1 fila, no más». Envolvían, y con los 14 destinos de esta
+instalación salían dos renglones.
+
+⚠️ **La aritmética manda**: a 14 px de talla y 34 de hueco los 14 enlaces piden **1.469 px** y la
+columna da **1.176**. No cabía por poco: no cabía por mucho. Con **12,5 px y hueco de 16** piden
+1.099 — 77 px de margen (6 %).
+▶ **Y por eso la fila no envuelve: se DESLIZA.** El número de destinos lo manda la instalación, así
+que «una fila» solo se sostiene si lo que no cabe se alcanza con un gesto en vez de caer a un segundo
+renglón. Misma mecánica que la tira de horas y la lista del menú, con su **vela** —la barra de scroll
+va oculta, así que sin ella nada diría que la lista sigue—.
+
+### 2 · El IMÁN, y la alineación del punto estático
+
+> «Ese punto estático quiero que tenga **como un imán**… para que no ocurra que el cliente hace
+> scroll y se pierde ese punto donde se ve todo en su sitio. Que no se ejecute la transición de full
+> viewport sin querer en el footer.»
+
+Del `freno` del mockup se toma **todo el envoltorio** —retardo de 170 ms, curva `1 − (1 − p)³`,
+duración `clamp(280, |Δ|·1,1, 620)`, enfriamiento de 1 s y que cualquier gesto cancele—. ▶ **Lo que
+NO se copia es a dónde encaja**: el suyo va hacia el lado al que ibas, así que bajando por el cierre
+te lleva a pantalla completa — justo lo que se pidió evitar. Aquí bajando encaja **primero en el
+punto estático**, y solo un segundo empujón pasado el **45 %** completa la transición.
+
+⚠️⚠️ **El rumbo NO se puede sacar del último evento de scroll, y esto pasó los 16 casos unitarios y
+falló en el navegador.** Al llegar al final la portada **crece 34 px** —55 imágenes, 51 perezosas,
+ninguna declara proporción (ficha en `DEUDA`)— y el anclaje de scroll compensa moviendo la posición:
+eso llega como un evento hacia abajo y el detector se lo creía. Subiendo desde el fondo, el imán
+devolvía al visitante a pantalla completa. ▶ El rumbo es el **movimiento neto desde la última
+parada**, con un mínimo de 24 px. *Un detector que cree cada evento cree también a los que no ha
+hecho nadie.*
+
+**Y la alineación.** `[DECIDIDO owner]`: «el logo está demasiado abajo y encima del hero». Era
+cierto: el hueco se medía en `vh` —`clamp(76px, 9vh, 104px)`— y el racimo **no cambia con la altura
+de ventana**. A 1080 sobraba aire; **a 900 el logotipo se metía 5 px dentro del hero**. Ahora se
+deriva de la geometría real del racimo: **12 px de aire exactos en once ventanas**.
+⚠️ Al derivarlo apareció un **token fuera de alcance**: la hamburguesa leía `var(--cta-pair-h, 54px)`
+y no es descendiente de `.cta-pair`, así que **nunca bajaba a 48 en teléfono** — lo que su propio
+comentario prometía. Mismo fallo que `#233` con `--cierre-runway`.
+
+### 3 · Fuera la marquesina
+
+`[DECIDIDO owner]`: «quita la marquesina ya, para este cliente no la vamos a usar». Se retira
+**entera**, no se apaga: componente, las dos llamadas de la portada, su CSS y sus dos escalones de
+`@media`, su `@keyframes`, las tres claves de idioma y `.jj-block--xl`, que solo ella usaba — y con
+él su entrada en `ShapeScaleTest`, cuyas listas **solo encogen**.
+⚠️ Y se re-mide la RAZÓN de `StickySurvivesTheRootOverflowTest`, que la citaba como ejemplo de
+desbordamiento horizontal: ahora cita la marquesina de polaroids (x = 8.222 a 1280) y la de
+`/servicios` (2.301). *Una guarda cuyo ejemplo se retira sigue verde y deja de poder explicarse.*
+❗ **NO se tocan las otras dos**: `/servicios` tiene la suya (`.svc-marquee`) y la galería su tira de
+polaroids. Eran otro encargo si el owner las quiere fuera.
+
+### ⚠️ Y otra guarda propia nació CIEGA — la cuarta vez en tres días
+
+La guarda del botón de menú aseveraba la cadena de `var()` **resuelta**, y al mutarla con el fallo
+real **pasaba en verde**: resolver la cadena seguía llegando al token bueno porque `--cta-pair-h`
+ahora lo lee. Bendecía exactamente el defecto que la motivaba. Ahora asevera la lectura **directa** y
+que el token viva en `:root`, que es lo que lo pone en alcance.
+
+### Verificación
+
+Decisión del imán: **19 casos** con `node --test`, tres escritos desde el fallo real del rumbo.
+Navegador: **8 casos × 2 anchos, 16/16**, aseverando el ESTADO (`--hero-p`, `--cierre-q`) y no el
+píxel —el documento se mueve—, con dos casos de que el imán **no toca nada**. Alineación: **11
+ventanas, 12 px de aire en todas**. Pie: **1 fila en 1920, 1280 y 390**, cero desborde de página.
+Guardas nuevas y endurecidas con **4 mutaciones, las 4 muerden**. Techo de peso de la landing **23 →
+26 KiB** a propósito (medido 24,5; el imán son ~1,6). Suite **3.390 / 22.332** · JS **854** · Pint ✓
+· docs-check ✓ · build ✓.
+❗ **Un imán se juzga con la mano**: hay que bajar por la portada y notar si retiene donde debe y si
+suelta cuando uno insiste.

@@ -51,6 +51,24 @@
        secciones son cajas de 1240 con 32 de sangrado, o sea 1176 de contenido. Cambiar este
        número mueve el sitio entero —las doce vistas— a la vez, que es justo lo que tiene que
        pasar: una columna que hay que cambiar en tres sitios acaba siendo tres columnas. */
+    /* ══ LA GEOMETRÍA DEL RACIMO DE LA ESQUINA, y el hueco que el hero le tiene que dejar ═══
+       `[DECIDIDO owner, 2026-08-29]`: en el punto estático del hero de cabecera «el logo, el CTA
+       y el icono del menú tienen que verse perfectamente en su sitio ENCIMA del hero».
+       ⚠️⚠️ **No lo estaban, y la causa es que el hueco dependía de la ALTURA DE VENTANA y el
+       racimo no.** Era `clamp(76px, 9vh, 104px)`: a 1080 px de alto daba 97 y el racimo acaba en
+       86, así que sobraba aire; **a 900 daba 81 y el logotipo se metía 5 px DENTRO del hero**.
+       Un hueco medido en `vh` para tapar algo que mide siempre lo mismo acierta por tramos.
+       ▶ Ahora el hueco se DERIVA: dónde nace el racimo + lo que mide el más alto + aire. */
+    --nav-pad-block: 16px;   /* el aire de arriba del armazón (`.nav`) */
+    --nav-logo-h: 70px;      /* el logotipo, medido contra la tinta del mockup (`#218`) */
+    /* ⚠️ El alto de los BOTONES de la esquina —la hamburguesa y el par de CTA—, que es el que
+       manda el racimo en cuanto el logotipo encoge. Estaba como reserva dentro de `.cta-pair`, y
+       **la hamburguesa no es descendiente suya**: leía `var(--cta-pair-h, 54px)` y se quedaba
+       siempre en el 54 de la reserva, aunque su propio comentario dijera «54, o 48 en teléfono».
+       Medido a 390: 54. Un token fuera de alcance no falla, rinde su reserva. */
+    --nav-btn-h: 54px;
+    --nav-cluster-h: max(var(--nav-logo-h), var(--nav-btn-h));
+
     --col-max: 1176px;
     /* El sangrado lateral de un contenedor YA ACOTADO (`max-width` propio). Es una LONGITUD FIJA
        a propósito: dentro de una caja acotada, un porcentaje mide el padre y miente. Los tres
@@ -129,6 +147,11 @@
    producto ya usaba para el logotipo y el par de CTA: no se estrena ningún punto de ruptura. */
 @media (max-width: 1099px) { :root { --col-gutter: 24px; } }
 @media (max-width: 719px)  { :root { --col-gutter: 16px; } }
+/* Los escalones del racimo. Cada número vive UNA vez: el alto del racimo sale de ellos con
+   `max()`, así que subir el logotipo o el par de CTA mueve el hueco del hero solo. */
+@media (max-width: 768px) { :root { --nav-pad-block: 12px; } }
+@media (max-width: 719px) { :root { --nav-logo-h: 46px; } }
+@media (max-width: 619px) { :root { --nav-btn-h: 48px; } }
 
 /* ====================================================================
    Lote 9 — Objetivos táctiles (WCAG 2.5.5). Ampliamos el ÁREA de toque a
@@ -183,7 +206,9 @@
    reposo (sin romper layout: logo en su sitio, marquesinas en el primer fotograma):
      • logo (punto que salta, `jjLogoHop`)
      • «latido» del pin del mapa (`pulse`)
-     • 2 marquesinas (`scroll` de texto · `galleryScroll` de polaroids)
+     • la marquesina de polaroids de la galería (`galleryScroll`)
+   ⚠️ Aquí había una segunda marquesina —la banda de PALABRAS de la portada, `scroll`— y se
+   RETIRÓ entera (`#252`, `[DECIDIDO owner]`: «quita la marquesina»). Con ella se fue su gateo.
    El resto de loops ya se gatean junto a su definición (cards destacadas en
    landing.css §1152; badge del catálogo, iconos de marca y nav-scan en site.css).
    Los «latidos» `.chip__dot`/`.hero__live-dot` del mockup se PODARON (CSS muerto:
@@ -192,7 +217,6 @@
 @media (prefers-reduced-motion: reduce) {
     .nav__period-dot,        /* jjLogoHop */
     .map-pin,                /* pulse (pin del mapa) */
-    .marquee__track,         /* scroll (marquesina de texto) */
     .gallery-marquee__track  /* galleryScroll (marquesina de polaroids) */
     { animation: none; }
 }
@@ -276,7 +300,7 @@
    instalación con logotipo recto se ve igual de bien, y `prefers-reduced-motion` lo apaga. */
 .nav__brand-logo {
     display: block;
-    height: 70px;
+    height: var(--nav-logo-h);
     width: auto;
     max-width: min(340px, 54vw);
     filter: drop-shadow(0 6px 16px color-mix(in srgb, var(--paper-fg) 45%, transparent))
@@ -287,9 +311,8 @@
 
 /* En teléfono el mockup encoge TODA la cabecera con `scale(.66)`; aquí se aplica ese mismo factor
    al alto del logotipo (70 × 0,66 ≈ 46), que es lo que le toca cuando comparte fila con el racimo. */
-@media (max-width: 719px) {
-    .nav__brand-logo { height: 46px; }
-}
+/* El escalón de teléfono vive en `--nav-logo-h`, junto a los otros dos del racimo: aquí solo
+   quedaría repetido, y el hueco del hero dejaría de enterarse al cambiarlo. */
 
 @media (prefers-reduced-motion: reduce) {
     .nav__brand-logo { transition: none; }
@@ -1950,7 +1973,9 @@ body.no-scroll { overflow: hidden; }
     --hero-runway: 420px;                    /* cuánto scroll dura la transición */
     --hero-gap: 10px;                        /* margen del hero al empezar */
     --hero-gap-end: clamp(16px, 2.2vw, 32px);/* margen al terminar */
-    --hero-top-end: clamp(76px, 9vh, 104px); /* hueco para el nav al terminar = el de antes */
+    /* ⚠️ El hueco del racimo NO se estima: se calcula. Ver el bloque de `--nav-cluster-h`. */
+    --hero-top-air: 12px;                    /* el aire entre el racimo y el canto del hero */
+    --hero-top-end: calc(var(--nav-pad-block) + var(--nav-cluster-h) + var(--hero-top-air));
     /* ⚠️ `svh` DESPUÉS de `vh`, no en lugar de: en móvil `100vh` incluye la barra del navegador
        y el hero se sale por abajo hasta que el usuario hace scroll. `svh` es la altura estable.
        Quien no entienda la unidad se queda con la primera línea, que sigue siendo válida. */
@@ -2428,7 +2453,6 @@ body[data-has-hero].nav--live .hero__pair-slot {
     .hero.hero--full {
         --hero-runway: 300px;
         --hero-gap-end: 12px;
-        --hero-top-end: 69px;                /* el hueco del nav en móvil, el de siempre */
         --hero-h-end: min(72vh, 520px);
     }
 }
@@ -2884,7 +2908,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
        racimo entero sin tocar ninguna regla. Las leen los DOS sitios. */
     --cta-pair-w: 224px;      /* la mitad expandida */
     --cta-pair-mini: 56px;    /* la colapsada: padding + chip + aire */
-    --cta-pair-h: 54px;
+    --cta-pair-h: var(--nav-btn-h);
     --cta-pair-pad: 13px;
     /* ⚠️ **Estos dos ERAN literales y entran en la escala con la 2d** (`#222`): `0.46s` y `0.14s`
        estaban declarados a mano dentro de una custom property, que es el escondite perfecto —el
@@ -2896,7 +2920,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
     display: flex; align-items: center; gap: inherit;
 }
 @media (max-width: 1099px) { .cta-pair { --cta-pair-w: 182px; } }
-@media (max-width: 619px)  { .cta-pair { --cta-pair-w: 138px; --cta-pair-h: 48px; } }
+@media (max-width: 619px)  { .cta-pair { --cta-pair-w: 138px; } }  /* el alto lo baja `--nav-pair-h` */
 
 /* El envoltorio de la mitad colapsada. Existe porque el ARO de la invitación necesita algo
    posicionado alrededor del botón, y lo usan los dos sitios. */

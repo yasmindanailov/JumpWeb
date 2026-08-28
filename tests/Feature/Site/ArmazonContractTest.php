@@ -1991,8 +1991,11 @@ class ArmazonContractTest extends TestCase
         // `<a>` que envuelve el lockup, y el lockup DESBORDA esa caja por sus contornos. Comparando
         // píxeles opacos —tinta contra tinta, sin sombra— el del mockup mide 189 × 68 y el nuestro
         // a 54 daba 147 × 52. Copiar el 54 lo dejaba un 30 % más pequeño.
+        // ⚠️ Se asevera el VALOR RESUELTO y no el texto: desde `#252` la altura sale de
+        // `--nav-logo-h`, porque el hueco que el hero le deja al racimo se calcula con ella. Atar
+        // la guarda al literal la puso roja con el logotipo intacto — segunda vez en dos tandas.
         $this->assertStringContainsString(
-            'height: 70px', $logo,
+            '70px', $this->resolveVars($this->declarationValue($logo, 'height')),
             "el logotipo volvió a una altura que NO es la medida.\n".
             '▶ 70 px es lo que iguala su TINTA con la del mockup (189 × 68), no lo que declara su `<a>`.',
         );
@@ -2007,6 +2010,37 @@ class ArmazonContractTest extends TestCase
      * `aria-label` dice la ACCIÓN («Abrir menú») y la etiqueta dice dónde estás («Menú»). «Cerrar»
      * a secas no diría qué se cierra.
      */
+    /**
+     * **El hueco que el hero le deja al racimo se CALCULA, no se estima** (`#252`).
+     *
+     * `[DECIDIDO owner, 2026-08-29]`: en el punto estático el logotipo, el CTA y el icono del menú
+     * tienen que verse en su sitio ENCIMA del hero. ⚠️ **No lo estaban**, y la causa era que el
+     * hueco se medía en `vh` —`clamp(76px, 9vh, 104px)`— mientras el racimo mide siempre lo mismo:
+     * a 1080 px de alto sobraba aire y **a 900 el logotipo se metía 5 px dentro del hero**.
+     * ▶ Medido tras derivarlo: **12 px de aire exactos en las once ventanas probadas**. Devolver el
+     * `clamp` deja el racimo encima del hero en **4 de ellas**.
+     */
+    public function test_the_hero_gap_is_derived_from_the_cluster(): void
+    {
+        $hero = (string) ($this->cssRules(public_path('css/site.css'))['.hero.hero--full'] ?? '');
+        $gap = $this->declarationValue($hero, '--hero-top-end');
+
+        foreach (['--nav-pad-block', '--nav-cluster-h', '--hero-top-air'] as $token) {
+            $this->assertStringContainsString(
+                $token, $gap,
+                "el hueco del hero ha dejado de leer `{$token}`.\n".
+                '▶ Es la suma de dónde nace el racimo, lo que mide el más alto y el aire entre ambos. '.
+                'Cualquier otra fórmula acierta por tramos: la anterior iba en `vh` y fallaba a 900.',
+            );
+        }
+
+        $this->assertStringContainsString(
+            'max(', $this->declarationValue((string) ($this->cssRules(public_path('css/site.css'))[':root'] ?? ''), '--nav-cluster-h'),
+            '`--nav-cluster-h` tiene que ser el MÁXIMO de las piezas del racimo: en escritorio manda '.
+            'el logotipo (70) y en teléfono la hamburguesa (54), y quedarse con una deja la otra fuera.',
+        );
+    }
+
     public function test_the_burger_is_the_mockup_rectangle(): void
     {
         $reglas = $this->cssRules(public_path('css/landing.css'));
@@ -2016,9 +2050,31 @@ class ArmazonContractTest extends TestCase
             'border-radius: var(--r-md)', $cuerpo,
             'el botón de menú volvió a ser un círculo (o a un radio que no es el del mobiliario).',
         );
+        // ⚠️⚠️ **Se asevera que los DOS beben del MISMO token, no que uno cite al otro.** Hasta
+        // `#252` esto decía `height: var(--cta-pair-h`… y ese token se declara DENTRO de
+        // `.cta-pair`, de la que este botón no es descendiente: leía siempre su valor de reserva
+        // (54) y **nunca bajaba a 48 en teléfono**, que es justo lo que su comentario prometía.
+        // Una guarda que comprueba la cita y no el origen bendice exactamente ese fallo.
+        // ⚠️⚠️ **Y se asevera la lectura DIRECTA, no la cadena resuelta — la primera versión de esta
+        // guarda nació CIEGA y lo demostró la mutación.** Al devolver el fallo real
+        // (`var(--cta-pair-h, 54px)`), resolver la cadena seguía llegando a `--nav-btn-h` —porque
+        // `--cta-pair-h` ahora lo lee— y la guarda pasaba **bendiciendo exactamente el defecto**.
+        // Lo que importa aquí no es de dónde viene el número: es que el token esté EN ALCANCE.
+        $this->assertMatchesRegularExpression(
+            '/height:\s*var\(--nav-btn-h\)/', $cuerpo,
+            "el botón de menú no lee el alto del racimo DIRECTAMENTE.\n".
+            '▶ Leerlo a través de `--cta-pair-h` no vale: ese token se declara dentro de `.cta-pair` y '.
+            'este botón NO es descendiente suyo, así que se queda con el valor de reserva para siempre.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/:root\s*\{[^}]*--nav-btn-h\s*:/s', (string) file_get_contents(public_path('css/site.css')),
+            '`--nav-btn-h` tiene que declararse en `:root`: es lo único que lo pone al alcance de las '.
+            'tres piezas que lo necesitan —la hamburguesa, el par de CTA y el hueco del hero—.',
+        );
         $this->assertStringContainsString(
-            'height: var(--cta-pair-h', $cuerpo,
-            'el botón de menú no comparte altura con el racimo: al lado del par se ve desalineado.',
+            '--nav-btn-h',
+            $this->declarationValue((string) ($this->cssRules(public_path('css/site.css'))['.cta-pair'] ?? ''), '--cta-pair-h'),
+            'el par de CTA ya no comparte alto con la hamburguesa: al lado se ven desalineados.',
         );
 
         $html = (string) $this->get('/')->assertOk()->getContent();

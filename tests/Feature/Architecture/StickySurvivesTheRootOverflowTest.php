@@ -109,7 +109,8 @@ class StickySurvivesTheRootOverflowTest extends TestCase
                     '(`#226`): el hero de la portada nunca se pegó y dejaba 569 px de hueco '.
                     "vacío debajo.\n\n".
                     '▶ Si lo que hace falta es RECORTAR el desbordamiento horizontal (la '.
-                    'marquesina se sale hasta x=2533 en un viewport de 1280), el valor es '.
+                    'marquesina de polaroids de la galería se sale hasta x=8222 en un viewport '.
+                    'de 1280, y la de /servicios hasta 2301), el valor es '.
                     '`clip`: recorta igual y no crea contenedor de scroll.',
                 );
             }

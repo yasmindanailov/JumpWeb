@@ -2597,6 +2597,22 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > nuestro 0,82. `CierreChoreographyTest`, 6 mutaciones.
 > ⚠️ Una guarda propia se puso roja con el producto sano por aseverar el NOMBRE de un token.
 >
+> ✅ **Y `#252` — EL IMÁN, EL PIE A UNA FILA Y FUERA LA MARQUESINA** (2026-08-29, tres encargos del
+> owner). El scroll **encaja en los dos puntos estáticos** de la portada; **no es el `freno` del
+> mockup**, que bajando por el cierre te lleva a pantalla completa: aquí te **retiene** hasta que
+> insistes. Vive en `ui/scroll-magnet.js` (mitad pura, 19 casos de `node --test`).
+> - ⚠️⚠️ **El rumbo NO sale del último evento de scroll.** La portada crece 34 px al llegar al final
+>   —55 imágenes sin proporción declarada— y el anclaje del navegador compensa: eso llega como un
+>   evento hacia abajo. **Pasó los 16 casos unitarios y falló en el navegador.** El rumbo es el
+>   movimiento NETO desde la última parada.
+> - ⚠️ **El hueco del racimo se CALCULA**, no se estima en `vh`: a 900 px de alto el logotipo se
+>   metía 5 px dentro del hero. Ahora, **12 px de aire en once ventanas**. Y apareció un token
+>   **fuera de alcance** (la hamburguesa nunca bajaba a 48 en teléfono).
+> - ⚠️ **La guarda de ese botón nació CIEGA** —resolvía la cadena de `var()` y bendecía el fallo—:
+>   cuarta vez en tres días. Se asevera la lectura DIRECTA y el alcance del token.
+> - El pie: **una fila que se desliza**, porque el número de destinos lo manda la instalación.
+>   La marquesina de palabras, **retirada entera**; siguen la de `/servicios` y la de la galería.
+>
 > ❗❗ **EL CARRIL C NO TIENE NADA PENDIENTE DE AGENTE en hero, menú, pie y cierre.** Lo que queda es
 > del owner: su ojo en navegador, cuál de las tres variantes de «El parque», y el aviso de contraste
 > AA del color de acción. ▶ **Y quedan DOS encargos suyos sin empezar**: los **iconos** del canvas

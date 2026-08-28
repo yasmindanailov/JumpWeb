@@ -44,6 +44,9 @@
          ⚠️ **Y NINGÚN enlace se retira sin decirlo.** La fila envuelve si no caben —son 14 con la
          configuración de este cliente y a 1240 px ocupan dos renglones—; quitar destinos es una
          decisión de producto, no de maquetación, y se toma mirando cuáles sobran de verdad. --}}
+    {{-- El envoltorio existe para la VELA: un `::after` dentro de un contenedor con scroll
+         viajaría con el contenido. Su porqué completo está junto a la regla. --}}
+    <div class="foot__links-wrap">
     <nav class="foot__links" aria-label="{{ __('landing.footer.col_info') }}">
         @foreach (__('landing.footer.links_park') as $i => $link)
             <a href="{{ $parkUrls[$i] ?? url('/') }}">{{ $link }}</a>
@@ -61,6 +64,7 @@
         <a href="{{ $site['instagram'] ?? '#' }}">Instagram</a>
         <a href="{{ $site['tiktok'] ?? '#' }}">TikTok</a>
     </nav>
+    </div>
 
     <div class="foot__bottom">
         {{-- ⚠️⚠️ **VUELVE el selector de idioma** (`#233`, `[DECIDIDO owner]`: «el footer tiene

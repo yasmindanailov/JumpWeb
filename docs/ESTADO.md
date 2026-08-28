@@ -5,6 +5,28 @@
 > aquí solo se enlaza.** Última actualización: **2026-08-28 — carril A (la FORMA del panel y los
 > menores: `#223`, `#224`, `#232`, `#234`, `#236`, `#237`) y carril C (el mockup 1:1: `#225`→`#235`
 > y **`#238`, la COLUMNA**)**. ▶ Y la noche del 28, **el CAJÓN EN MÓVIL (`#239`)**.
+> ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
+> la marquesina.**
+>
+> ❗❗ **`#252` — LA PORTADA TIENE DOS PUNTOS ESTÁTICOS Y AHORA EL SCROLL ENCAJA EN ELLOS.**
+> `[DECIDIDO owner]`. Arriba, el hero encogido con el racimo colocado; abajo, la tarjeta del cierre
+> en reposo con **el pie entero visible**. Al parar el scroll dentro de sus recorridos, la página se
+> coloca en el estado más cercano en la dirección del gesto. ▶ **No es el `freno` del mockup**: el
+> suyo bajando por el cierre te lleva a pantalla completa, y aquí bajando te **retiene en el punto
+> estático** hasta que insistes (45 % del recorrido). Vive en `ui/scroll-magnet.js`, mitad pura y
+> mitad DOM, con **19 casos** de `node --test`.
+> ⚠️⚠️ **Si tocas cualquier detector de dirección de scroll, lee esto**: el rumbo NO se puede sacar
+> del último evento. La portada **crece 34 px al llegar al final** —55 imágenes, 51 perezosas,
+> **ninguna declara proporción**— y el anclaje de scroll compensa: eso llega como un evento hacia
+> abajo. Pasó los 16 casos unitarios y falló en el navegador. **El rumbo es el movimiento NETO desde
+> la última parada.** Ficha del CLS en `DEUDA.md`.
+> ⚠️ **Y el hueco que el hero deja al racimo ya no se estima: se CALCULA.** Iba en `vh` y el racimo
+> no cambia con la altura de ventana — a 900 px de alto el logotipo se metía 5 px dentro del hero.
+> Ahora sale de `--nav-pad-block + max(--nav-logo-h, --nav-btn-h) + --hero-top-air`: **12 px de aire
+> exactos en once ventanas**. De paso apareció que la hamburguesa leía un token **fuera de su
+> alcance** (`--cta-pair-h`, declarado dentro de `.cta-pair`) y **nunca bajaba a 48 en teléfono**.
+> ⚠️ **La marquesina de palabras de la portada está RETIRADA, no apagada** (componente, CSS,
+> `@keyframes`, claves de idioma y `.jj-block--xl`). Siguen la de `/servicios` y la de la galería.
 >
 > ❗❗ **RANGO DE NUMERACIÓN RESERVADO POR CARRIL, para no repetir las TRES colisiones del día 28**:
 > el **carril A** toma **`#239`–`#249`** y el **carril C** sigue por **`#250`** en adelante. Mirar el
@@ -1110,6 +1132,13 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3398 en verde** (22.385 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 **sobre el árbol CONJUNTO**, tras rebasar
+  `#252` (el imán, el pie a una fila y la marquesina fuera, carril C) encima del `#241` del carril A.
+  ▶ **+1 caso PHP y +19 de JS en este corte**: `test_the_hero_gap_is_derived_from_the_cluster` y la
+  red del imán (`ui/scroll-magnet.test.js`), con **4 mutaciones PHP y las 4 mordiendo**. ⚠️ **El
+  techo de peso de la landing sube de 23 a 26 KiB a propósito** —medido 24,5; el imán son ~1,6 y se
+  los cobra toda página pública— con margen del 6 %, no otro cable trampa.
 - Suite **3397 en verde** (22.365 aserciones, 1 skipped a propósito), medida el 2026-08-28 por la
   noche tras la **vuelta del owner sobre las dos pantallas nuevas** (`#241`). ▶ **+13 casos**:
   `strip.js` con 8 en `node --test` (la aritmética del recorrido de una tira), 2 más en

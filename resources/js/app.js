@@ -1,6 +1,7 @@
 import { installScrollLock } from './ui/scroll-lock.js';
 import { reveal } from './ui/account-host.js';
 import { shouldHideNav } from './ui/nav-choreography.js';
+import { installScrollMagnet } from './ui/scroll-magnet.js';
 
 // Livewire (Fase 4) trae su propio Alpine y lo arranca él. Por eso aquí NO
 // importamos ni iniciamos Alpine: registramos nuestros componentes/almacenes
@@ -16,6 +17,21 @@ document.addEventListener('alpine:init', () => {
     // La lógica y la manipulación de la clase viven en `ui/scroll-lock.js` —el dueño único, que
     // `ScrollLockOwnerTest` vigila—; esto es solo el envoltorio que le da acceso a las plantillas.
     const scrollLock = installScrollLock();
+
+    // ── EL IMÁN DE LOS DOS PUNTOS ESTÁTICOS (`#252`, `[DECIDIDO owner]`) ───────────────────────
+    // Solo en la portada, que es la única vista con heroes: en las otras once los dos recorridos
+    // valen 0 y el módulo devuelve `null` sin tocar nada. Los recorridos se LEEN del CSS en cada
+    // decisión —no se cachean— porque los dos cambian con el ancho y con `prefers-reduced-motion`,
+    // donde valen 0 y el imán desaparece con ellos.
+    const px = (el, prop) => (el ? parseFloat(getComputedStyle(el).getPropertyValue(prop)) || 0 : 0);
+    installScrollMagnet({
+        locked: () => document.documentElement.classList.contains('no-scroll'),
+        runways: () => ({
+            heroRunway: px(document.querySelector('.hero.hero--full'), '--hero-runway'),
+            cierreRunway: px(document.querySelector('.reserve__runway'), 'height')
+                || px(document.body, '--cierre-runway'),
+        }),
+    });
     window.Alpine.store('scrollLock', scrollLock);
 
     // ⚠️⚠️ **Aquí vivía `$store.auth`, el almacén del modal de autenticación, y se retiró el

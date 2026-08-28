@@ -72,7 +72,6 @@ return [
             ['num' => '+1M', 'label' => 'Jumps / year'],
         ],
     ],
-    'marquee' => ['JUMP', 'FLY', 'LAUGH', 'REPEAT', 'ENJOY'],
     'zones' => [
         'eyebrow' => 'Two zones', 'title' => 'One park,', 'title_em' => 'two zones.',
         'intro' => 'We built two different worlds — one for the kids who fly without brakes, one for those just learning to jump. Pick yours.',

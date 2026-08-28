@@ -89,7 +89,6 @@ return [
             ['num' => '+1M', 'label' => 'Saltos al año'],
         ],
     ],
-    'marquee' => ['SALTA', 'VUELA', 'RÍETE', 'REPITE', 'DISFRUTA'],
     'zones' => [
         'eyebrow' => 'Las dos zonas', 'title' => 'Un parque,', 'title_em' => 'dos zonas.',
         'intro' => 'Diseñamos dos universos diferentes: uno para los que vuelan sin frenos y otro para los que están descubriendo el salto. Elige el tuyo.',
