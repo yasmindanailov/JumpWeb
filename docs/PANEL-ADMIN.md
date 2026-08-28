@@ -109,6 +109,13 @@ registrada tiene que estar en uno de los tres sitios declarados, o la suite se p
 - Ver **ocupación (aforo)** por franja en tiempo real.
 
 ### 2.5 Validar registro / waiver en puerta (privacidad por diseño) ⭐
+
+> 📱 **Es un KIOSCO de tablet** (`DECISIONES #232`, `specs/panel-navegacion.md` §8): tablet propia,
+> fija en un soporte y en horizontal. El buscador se queda pegado arriba —atender al siguiente es
+> tocar el campo que ya está delante, y el lector de QR escribe ahí—, todo control mide 44 px y la
+> ficha entera con «Registrar visita» se ve sin desplazar. ⚠️ **«Nueva búsqueda» no se puede
+> ocultar**: además de vaciar el campo, quita de la pantalla la ficha del cliente anterior.
+
 Todo el que entra debe estar registrado (= aceptó términos y waiver). En puerta se valida
 buscando por **email o teléfono**:
 - Resultado: **solo** un estado → ✅ «Registrado · waiver aceptado (fecha)» o ❌ «No registrado».

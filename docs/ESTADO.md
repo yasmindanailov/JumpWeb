@@ -2,7 +2,8 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-28 (carril C · el mockup 1:1: `#225`→`#230`)**.
+> aquí solo se enlaza.** Última actualización: **2026-08-28, 19:00 — carril A (la FORMA del panel,
+> `#223`, `#224` y `#232`) rebasado sobre el carril C (el mockup 1:1, `#225`→`#231`)**.
 >
 > ❗❗ **ATENCIÓN: desde el 2026-08-27 hay TRES CARRILES sobre `main` (no dos).** El B cerró ese día a
 > las 07:30 con todo empujado y verde; el A cerró a las 18:40 con las TANDAS 1, 2 y 3 de «menores a
@@ -234,6 +235,32 @@
 >   `mod+k` sale ⌘+K en Mac y CTRL+K en el resto (verificado con los tres user-agents), y lo vio el
 >   sondeo headless, no un test. **11 casos nuevos · 4 mutaciones, las 4 muerden · suite del panel
 >   1174 / 5155 · conducta comprobada a mano contra MySQL · capturas.**
+>   ▶ ✅ **Y LA TANDA 3, LA PUERTA EN TABLET (`#232`, spec §8)**. `[DECIDIDO owner]` a pregunta
+>   simple: **la tablet de la puerta va FIJA en un soporte y en HORIZONTAL**, y **tiene tablet
+>   propia** (el resto del panel se usa en ordenador). Eso la convierte en un KIOSCO. **Medido
+>   antes**: con una ficha abierta el contenido medía **1.298 px contra 1.080 de pantalla** y la
+>   columna se quedaba en **768 px** de 1.080; el CSS del panel **no tenía ni una regla entre 640 y
+>   1280 px**, el rango exacto de una tablet. ⚠️ **Medir el caso PEOR y creerlo típico habría
+>   torcido el diseño**: los 1.298 son un cliente con la exención de versión anterior; por caso real
+>   «no registrado» **810** (cabía), «falta firmar» **896**, «versión anterior» **1.115** — faltaban
+>   ~90 px, no 300. ⚠️⚠️ **Y la primera idea salió PEOR y lo dijo la medición**: pasar la rejilla de
+>   3 a **4 columnas** estrechó las tarjetas a 242 px, su texto envolvió y **crecieron a lo alto**
+>   (Exención 187 → 226): la rejilla bajó 18 px y el total **subió 3**. Vuelta a tres. **Lo que
+>   entró, todo CSS**: ancho 48rem → **80rem** desde 64rem · rejilla de 3 columnas · cabecera en una
+>   línea · **nombre a 2,5 rem** · **44 px de mínimo táctil FUERA de todo `@media`** · y el
+>   **buscador pegado arriba**, que es la decisión de uso (en un kiosco la acción más repetida es
+>   «el siguiente», y el lector de QR escribe en ese campo). ▶ **Todo CSS es deliberado**: el velo de
+>   privacidad es un `blur()` con un `.gate-veil` absoluto encima, y cualquier `display: contents` o
+>   contenedor de scroll nuevo se lo lleva por delante. ⚠️ **«Nueva búsqueda» NO se ocultó** pese a
+>   ser el candidato obvio a recortar: **quita de la pantalla la ficha del cliente anterior**, o sea
+>   que es privacidad y no comodidad — con guarda que impide ocultarlo. **Resultado**: iPad
+>   horizontal se pasa 64 px, Air 40, Pro y vertical **caben**, y en las cuatro **se ve «Registrar
+>   visita» sin desplazar**; **cero controles bajo 44 px**. `GateKioskTest` (4 casos) · **4
+>   mutaciones, las 4 muerden** · 79 casos de puerta verdes · headless en cinco anchos con capturas.
+>   ▶ **Fuera de esta tanda a propósito** (ficha en `DEUDA`): el **calendario** (8 reservas a 36 px,
+>   5 botones a 32–36) y las **tablas** («Pedidos» se sale 97 px en vertical y 163 en horizontal),
+>   porque el owner usa el resto del panel en ordenador. ⚠️ La palanca existe y **no se usa en
+>   ninguna tabla**: `Split`/`Stack` de Filament.
 >   ▶ ❗ **LO QUE QUEDA DE ESTA TANDA**: **(1)** el **OJO del owner** sobre el menú, «Ajustes» y las pestañas —
 >   es un cambio de UI/UX y la suite no puede decir si «se entiende» · **(2)** repasar con él **los rótulos y
 >   las 19 descripciones** (`[DECIDIDO owner]`: las propone el agente, las revisa él) · **(3)** la pantalla
@@ -763,10 +790,14 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3347 en verde** (22.013 aserciones, 1 skipped a propósito), medida el 2026-08-28 en el gate de `#231`
-  (hora de Madrid) por el carril A tras **`#223`** (menú plano + «Ajustes») y **`#224`** (el buscador),
-  que suman **23 casos** —`AdminNavigationTest` y `AdminGlobalSearchTest`, ninguno de los dos existía—
-  sobre los 3315 del pulido `#217`. JS **813** (estas dos tandas no tocan JS) · chunk 251,02 (techo 252).
+- Suite **3351 en verde** (22.016 aserciones, 1 skipped a propósito), medida el
+  2026-08-28 a las 19:00 (hora de Madrid) **sobre el árbol CONJUNTO**: el carril A (`#223` menú plano +
+  «Ajustes», `#224` el buscador y `#232` la puerta en tablet, que suman **27 casos** —`AdminNavigationTest`,
+  `AdminGlobalSearchTest` y `GateKioskTest`, ninguno de los tres existía—) rebasado sobre el carril C
+  (`#225`→`#231`, el mockup 1:1 y el minijuego del pie). JS **813** por parte del carril A, que no toca JS.
+  ⚠️ **Los dos carriles usaron el número `#225`**: el del panel se renumeró a **`#232`** al fusionar,
+  y la corrección se hizo sobre una lista EXPLÍCITA de ficheros — un `sed` global sobre el árbol llegó a
+  corromper cinco referencias del carril C, incluida la línea que avisa de este mismo riesgo.
   ⚠️ **La medición anterior, 3315 / 21.713 a las 15:35, fue la del árbol CONJUNTO** —el pulido `#217`
   con los nueve arreglos de su revisión, rebasado sobre los ocho commits del carril C (hasta `#222`)—,
   y su lección sigue valiendo:
