@@ -11399,3 +11399,32 @@ el MISMO atributo, sí usaba el store—. La otra aceptaba cualquier `animation:
 **aro** la cumplía: retirar el asomo la dejaba verde. **Media invitación es la que no se ve.**
 ▶ Y el propio guion de navegador cayó en lo mismo: aseveró el intercambio con «60 px más» y la
 mitad de la cuenta expandida mide MENOS que la de comprar. **Se asevera el hecho, no un número.**
+
+## #215 · 2026-08-28 · «Ir al carrito» desde el catálogo era un botón MUDO desde 4.3·2: la máquina no tenía la arista `CATALOG → CART` y `go()` la rechazaba en silencio — y una guarda nueva cruza lo que el pie OFRECE con lo que la máquina ADMITE
+
+**Contexto.** El owner: «el botón del sidebar de ir al carrito no funciona». Medido antes de tocar
+nada: con cesta, en el catálogo (tras «Volver» de `#210` **y** tras «+ Añadir otra reserva», que
+ya existía), la barra-carrito del pie («1 artículo · 9,90 € · Ir al carrito») **no hacía nada**
+(`cartbar-probe.js`: paso 1 → clic → paso 1, 2/4). No era de hoy: «Volver» solo lo hizo más visible.
+
+**Causa, en tres piezas que se probaban por separado.** `foot.js` (4.3·2, 2026-08-14) ofrece en el
+paso 1 la acción `goToCart`; `PurchaseSection::goToCart()` hace `store.go(STEPS.CART)`; y
+`machine.js::FUNNEL_TRANSITIONS[CATALOG]` era **`[DATE]`** desde 4.1. `go()` **rechaza en silencio**
+una transición que no existe —conducta deliberada y documentada: «un doble clic o un evento que llegó
+tarde, no un error de programa»—, así que el botón era mudo sin excepción, sin log y sin test rojo:
+`machine.test.js` probaba la máquina sola, `foot.test.js` probaba el pie solo, y el fallo vivía
+exactamente **entre los dos**. El diff de árbol tampoco podía verlo: descarta los manejadores.
+
+**Lo hecho.** La arista `[STEPS.CATALOG]: [STEPS.DATE, STEPS.CART]` con su porqué escrito; un caso
+en `machine.test.js`; y **la guarda que faltaba, en `foot.test.js`**: para cada paso con pie, la
+acción que publica tiene que ser una transición que `canGo()` admita (con los destinos declarados a
+mano desde `runAction`, no leídos de la máquina), más su guarda de la guarda (el catálogo con cesta
+TIENE que ofrecer `goToCart`; si el pie dejara de publicar acciones, el bucle no puede pasar sin mirar).
+
+**Verificación.** Mutación (quitar la arista) → **2 rojos**, el caso y la guarda. `node --test` 790 →
+**792**. Sondeo **4/4**: «Ir al carrito» lleva al carrito tras «Volver» y tras «+ Añadir otra
+reserva», cero errores de consola. Chunk 246,29 KiB (sin cambio). Desplegado a staging tras el push.
+
+▶ **La lección**: *un rechazo silencioso por diseño necesita una guarda que lo cruce con quien lo
+invoca*. `go()` hace bien en no lanzar; lo que no puede pasar es que nadie compruebe que cada botón
+que la interfaz ofrece existe en el grafo.

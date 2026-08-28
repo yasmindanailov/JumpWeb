@@ -1331,6 +1331,12 @@ tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del 
 8. Púlsalo: vuelves al **catálogo** y la barra-carrito sigue diciendo «1 artículo · 9,90 € · Ir al
    carrito». La cesta se conserva; solo cambia la pantalla.
 
+### C3 · La barra-carrito del catálogo LLEVA al carrito (`DECISIONES #215`)
+9. En el catálogo con cesta, pulsa la barra del pie («… · Ir al carrito»): **vuelves al carrito** con
+   tu línea. ❗ Hasta `#215` este botón era **mudo** —desde 4.3·2, dos semanas—: la máquina no tenía la
+   arista `CATALOG → CART` y rechazaba el salto en silencio. Pruébalo también tras «+ Añadir otra
+   reserva», que es el otro camino que deja al cliente ahí.
+
 ### Resultado headless (2026-08-28, 06:40, hora de Madrid)
 - `login-probe.js` tras el arreglo: **9/9** — L1 ×5 (401 y el `.form__error` visible, con caja y
   con el texto de `auth.failed`) · L2 ×2 (429 con `.auth__errors[role=alert]` y «…N segundos»; el
@@ -1338,6 +1344,10 @@ tiene que salir limpio. Si el hash de una fila no cuadra, el problema no es del 
   ⚠️ La primera versión del guion **no aseveraba nada** —imprimía y se leía a ojo— y la revisión
   adversarial de `#210` lo señaló: los `check()` son de después, y el 9/9 es de la re-ejecución.
   **Antes del arreglo, el mismo guion**: `fields.email = ""`, `global = ""`, `visibles: []`.
+- `cartbar-probe.js` (`#215`, 2026-08-28 a las 08:05): **4/4** tras el arreglo — A1 el catálogo con cesta
+  ofrece «Ir al carrito» · A2 pulsarlo lleva al carrito (paso 4, la línea sigue) · B lo mismo tras
+  «+ Añadir otra reserva» · C cero errores de consola. **Antes del arreglo, el mismo guion: 2/4** (A2 y
+  B con el paso clavado en 1).
 - `cart-back-probe.js`: **9/9** — C0 sin «Volver» en el catálogo · C1 uno en el carrito, antes del
   título, rótulo «Volver», con caja · C2 paso 1 con `lines = 1` y el pie intacto · C3 cero errores de
   consola y ningún `/me/dependents` espontáneo.

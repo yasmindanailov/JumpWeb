@@ -75,6 +75,19 @@ describe('transiciones', () => {
     });
 
     /**
+     * ⚠️ **Faltó desde 4.1 hasta el 2026-08-28** (`DECISIONES #215`): la barra-carrito del catálogo
+     * («Ir al carrito», `foot.js` paso 1) hacía `go(CART)` y la máquina lo rechazaba en silencio. El
+     * botón era mudo tras «Volver» y tras «+ Añadir otra reserva», medido en navegador.
+     */
+    test('desde el catálogo con cesta se va al carrito (la barra-carrito del pie)', () => {
+        const machine = createMachine();
+
+        assert.ok(canGo(STEPS.CATALOG, STEPS.CART));
+        assert.ok(machine.go(STEPS.CART));
+        assert.equal(machine.step, STEPS.CART);
+    });
+
+    /**
      * ⚠️ **Las tres salidas están MEDIDAS contra `Purchase::retryPayment()`** (4.6·2), y las dos que
      * había antes estaban mal: el reintento no vuelve a la pantalla de pago —reabre el cobro sobre un
      * pedido que ya existe y sale DIRECTO a la pasarela— y faltaba la salida a identificarse, que es lo

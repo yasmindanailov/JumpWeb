@@ -107,7 +107,13 @@ export const FUNNEL_STEPS = [
  * EMBUDO, y solo suyo.
  */
 export const FUNNEL_TRANSITIONS = {
-    [STEPS.CATALOG]: [STEPS.DATE],
+    // ⚠️⚠️ **`CART` faltó aquí desde 4.1 hasta el 2026-08-28** (`DECISIONES #215`): la barra-carrito
+    // del catálogo («N artículos · importe · Ir al carrito», `foot.js` paso 1, desde 4.3·2) hacía
+    // `store.go(CART)` y `go()` la rechazaba EN SILENCIO —que es su conducta deliberada ante un salto
+    // imposible—, así que el botón era mudo y ningún test lo veía: la máquina se probaba sola y el pie
+    // se probaba solo. Medido en navegador tras «Volver» y tras «+ Añadir otra reserva». Lo vigila
+    // `foot.test.js`: todo CTA que el pie ofrece tiene que ser una transición que la máquina admita.
+    [STEPS.CATALOG]: [STEPS.DATE, STEPS.CART],
     [STEPS.DATE]: [STEPS.CATALOG, STEPS.TIME],
     [STEPS.TIME]: [STEPS.DATE, STEPS.CART],
     [STEPS.CART]: [STEPS.CATALOG, STEPS.IDENTIFY, STEPS.PAY],

@@ -74,7 +74,10 @@
 >   rebasar sobre el `#211` del carril C (empujado a las 07:18 mientras corría el gate; tres conflictos de
 >   «ambos añaden al final», resueltos con los dos bloques). ✅ **DESPLEGADO EN STAGING a las 07:53**
 >   (`577cf4f`, `ENTORNOS.md` §4: volcado previo de la BD, 4 migraciones, salud 7/7, rutas del carné en 401
->   JSON, chunk idéntico al local). ▶ **Para el OJO del owner en staging**: «Mi carné» con su cuenta de
+>   JSON, chunk idéntico al local). ▶ ✅ **Y a las 08:05, `#215`**: el owner vio que «Ir al carrito» del
+>   pie **no hacía nada** — era mudo desde 4.3·2: la máquina no tenía la arista `CATALOG → CART` y `go()`
+>   rechaza en silencio. Arista + caso + **guarda nueva en `foot.test.js`** (todo CTA del pie tiene que ser
+>   una transición que la máquina admita; la mutación da 2 rojos), sondeo 4/4, JS 790 → 792. Redesplegado. ▶ **Para el OJO del owner en staging**: «Mi carné» con su cuenta de
 >   CLIENTE `yasmindanailov@gmail.com` (verificada) y «Rotar carné QR» con la de ADMIN `yasi09265@gmail.com`
 >   sobre esa ficha; el correo de staging va al LOG (`MAIL_MAILER=log`), así que el adjunto del correo NO
 >   se ve allí — la zona «Mi carné» sí. ⚠️ **Para el carril C**: esta tanda tocó `resources/js/sidebar/**`

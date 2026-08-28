@@ -1,6 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { AMOUNT_PLACEHOLDER, buildFooter } from './foot.js';
+import { STEPS, canGo } from './machine.js';
 
 /**
  * Fase 4 · paso 4.3·2 — la red del pie (criterio CE-6).
@@ -135,5 +136,57 @@ describe('la cesta', () => {
         assert.equal(footer.split.nowLabel, 'Pagas ahora');
         assert.equal(footer.split.now, '300,00 €');
         assert.equal(footer.split.park, '999,00 €');
+    });
+});
+
+/**
+ * ⚠️⚠️ **Todo CTA que el pie OFRECE tiene que ser una transición que la máquina ADMITA**
+ * (2026-08-28, `DECISIONES #215`). Existe porque durante dos semanas no fue así y nadie lo vio: la
+ * barra-carrito del catálogo («Ir al carrito», desde 4.3·2) hacía `go(CART)` y `machine.js` no tenía
+ * la arista `CATALOG → CART`, así que `go()` la rechazaba **en silencio** —su conducta deliberada ante
+ * un salto imposible— y el botón era mudo. `machine.test.js` probaba la máquina sola y este fichero
+ * probaba el pie solo; el fallo vivía exactamente entre los dos.
+ *
+ * Lo que se cruza: para cada paso con pie, la acción que publica y **a dónde lleva** esa acción en
+ * `PurchaseSection.vue` (`runAction`). Una acción con varios destinos posibles pasa si la máquina
+ * admite AL MENOS uno; una sin destino de máquina (ninguna hoy) tendría que declararse aquí.
+ */
+describe('cada CTA del pie es una transición que la máquina admite', () => {
+    /** A dónde lleva cada acción del pie, leído de `PurchaseSection.vue` — no de la máquina. */
+    const DESTINATIONS = {
+        goToCart: [STEPS.CART],
+        goToTime: [STEPS.TIME],
+        addToCart: [STEPS.CART],
+        checkout: [STEPS.IDENTIFY, STEPS.PAY],
+        confirmReservation: [STEPS.REDIRECTING],
+    };
+
+    const full = (step) => state({
+        step, cartCount: 2, cartTotalCents: 129900, cartOnlineCents: 129900,
+        hasDate: true, hasTime: true, lineTotalCents: 990, lineHasDeposit: false,
+        lineDepositCents: 0, lineGateRemainderCents: 0,
+    });
+
+    test('con cesta, ningún paso del embudo ofrece un botón que la máquina rechace', () => {
+        const offered = [];
+        const mute = [];
+
+        for (const step of Object.values(STEPS)) {
+            const footer = buildFooter(full(step));
+
+            if (footer === null || ! footer.action) continue;
+
+            offered.push(`${step}:${footer.action}`);
+            const targets = DESTINATIONS[footer.action];
+
+            assert.ok(targets, `la acción «${footer.action}» del paso ${step} no tiene destino declarado en este test`);
+
+            if (! targets.some((to) => canGo(step, to))) mute.push(`${step}:${footer.action} → ${targets.join('|')}`);
+        }
+
+        assert.deepEqual(mute, [], 'botones del pie que la máquina rechazaría en silencio');
+        // La guarda de la guarda: si el pie dejara de publicar acciones, el bucle pasaría sin mirar nada.
+        assert.ok(offered.includes(`${STEPS.CATALOG}:goToCart`), 'el catálogo con cesta tiene que ofrecer «Ir al carrito»');
+        assert.ok(offered.length >= 4, `se han visto pocas acciones: ${offered.join(', ')}`);
     });
 });
