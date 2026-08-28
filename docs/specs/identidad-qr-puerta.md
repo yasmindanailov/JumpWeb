@@ -619,6 +619,37 @@ la suite). De agente, en `DEUDA.md`: la zona «Mi carné» del cajón (pintar el
 desde la ficha de usuario del panel, y el QR *inline* (CID) si el ojo lo pide. Y `lealtad-jumppoints.md`
 (D) ya tiene su hecho observable: `customer_visits`.
 
+### 9.5 Cómo probarlo en local — el guion para el OJO del owner (2026-08-28)
+
+> ❗ El owner abrió el panel tras el cierre y **no vio nada de menores** ni en un pedido ni en el alta
+> manual, y no pudo probar el QR. **No es un fallo: es la condición de diseño** — todo lo de menores
+> aparece SOLO cuando el cliente del pedido tiene menores declarados, y los declara **el cliente desde
+> su cuenta en la web** (el panel no los crea, spec de menores §4.2); y el carné nace con el correo de
+> confirmación o con `GET /me/card`. Este guion evita descubrirlo a ciegas.
+
+0. **Antes**: `git pull` + `php artisan migrate` en el contenedor (tres migraciones nuevas: carnés,
+   visitas, permiso `puerta.profile`); Ajustes → Puerta en modo **interno** con una versión publicada.
+1. **Un cliente con menores (en la WEB, como cliente, correo VERIFICADO)**: cajón → Mi cuenta → «Menores
+   a cargo» → añadir (nombre + fecha, menor de 18) → **firmar su exención** en su tarjeta. Sin firma el
+   menor sale deshabilitado con el motivo en todos los selectores (`#202`·2).
+2. **La ficha del pedido**: un pedido PAGADO de ese cliente, futuro, con una **ENTRADA** (no un pack). En
+   la fila de iconos de la entrada (calendario · impresora · lápiz) hay uno nuevo con **dos personas**:
+   «Asignar menores». Al guardar, bajo la fecha: «Para: Nombre (9 años · exención ✓)».
+3. **El alta manual**: paso 1 ese cliente; paso 2 una ENTRADA y una fecha → bajo «Cantidad» aparece
+   «¿Para quién son estas entradas?».
+4. **La puerta** (`/admin/puerta/validar`): teclear el email → semáforo + FICHA (si el pedido no es de
+   hoy sale en «Otros días»); «Registrar visita» una vez; 60 s quieta → velo; 5 min → se cierra sola.
+5. **El carné**: pedido pagado → Acciones del pedido → Reenviar email → Confirmación → Mailpit
+   (`localhost:8028`) → adjunto `carne-qr.png` → la cámara del móvil enseña los 20 caracteres (`JW…`)
+   → teclearlos en el campo de la puerta (mayúsculas y espacios dan igual). Un lector USB escanea
+   directamente sobre ese campo.
+
+❓ **`[PENDIENTE: owner]` — ¿debe el PANEL poder declarar menores de un cliente (alta manual/ficha)?**
+Hoy no puede a propósito (§4.2 de menores: el dato lo declara el titular; el mostrador solo ASIGNA). Si
+el owner lo quiere, es una decisión de producto con su coste (una acción en la ficha de usuario y en el
+alta manual sobre `DependentRegistry::add()`, más la firma DECLARADA del menor como en `#178`); no se
+empieza sin su ✅.
+
 **Trampas (lo que la ejecución enseñó)**
 
 1. **`anonymize()` SÍ termina en `revokeAllAccess()`**: §9.1·5 se escribió al revés leyendo media

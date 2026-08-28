@@ -29,11 +29,19 @@
 >   carné por el MISMO input + dos limitadores + caducidad EN SERVIDOR + «Registrar visita», el PNG en el
 >   correo y `GET|POST /me/card`. **5/5 mutaciones · headless 15/15 con capturas.** Queda el OJO del
 >   owner (pantalla, correo en Gmail/Outlook, **lector real**). ⚠️ `docs-check`: **36 modelos · 85
->   migraciones**. **SESIÓN CERRADA el 2026-08-28 a las 00:40 (hora de Madrid; el contenedor va en UTC,
->   2 h menos)** con todo empujado (`225c402`) y el gate en verde: suite **3213 / 20.935** · Pint ✓ · docs-check ✓ · build ✓ ·
+>   migraciones**. **SESIÓN CERRADA el 2026-08-28 a las 06:20 (hora de Madrid; el contenedor va en UTC,
+>   2 h menos; el código se cerró a las 00:40 y el último corte es solo doc)** con todo empujado y el
+>   gate en verde: suite **3213 / 20.935** · Pint ✓ · docs-check ✓ · build ✓ ·
 >   `audit-clock` NO corrido a propósito (los fixtures nuevos van con `travelTo` fijo o con las
 >   mismas fechas relativas que sus vecinos; ninguno afirma una edad o un día concreto sin fijar el
->   reloj). ▶ ❗ **POR DÓNDE RETOMA la siguiente sesión de ESTE carril**: **(1)** nada de agente
+>   reloj). ⚠️ **Tras el cierre, el owner abrió el panel y NO VIO NADA de menores** (ni en un pedido,
+>   ni al crear uno) y no pudo probar el QR: **es la condición de diseño, no un fallo** —solo aparece
+>   con un cliente que tenga menores declarados DESDE SU CUENTA en la web, y el carné nace con el
+>   correo de confirmación—. **El guion de prueba paso a paso está en `identidad-qr-puerta.md`
+>   §9.5** (léelo antes de tocar nada), y deja una pregunta de producto **`[PENDIENTE: owner]`: ¿el
+>   PANEL debe poder declarar menores de un cliente?** (hoy no, a propósito; no se empieza sin su ✅).
+>   ▶ ❗ **POR DÓNDE RETOMA la siguiente sesión de ESTE carril**: **(0)** el guion de §9.5 con el
+>   owner delante, y su respuesta a la pregunta · **(1)** nada de agente
 >   está a medias — lo primero es el OJO del owner sobre el panel (`menores-a-cargo.md` §9.10.4 «lo
 >   que queda») y la puerta (`identidad-qr-puerta.md` §9.4 «lo que queda»: `/admin/puerta/validar`
 >   con un cliente con carné y menores; el correo de confirmación en Gmail/Outlook/móvil; y el

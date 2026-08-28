@@ -1271,6 +1271,11 @@ Lo que NO entra: la puerta (subsistema A, después) · un permiso propio (D14·2
 **Lo que queda** — el OJO del owner en su navegador (§9.10.4 es headless: mide, no valida): la ficha de
 un pedido con menores, el modal, y el alta manual con un cliente con menores. Y del cuerpo de la spec,
 los DOS valores de retención.
+▶ ⚠️ **El owner lo abrió tras el cierre (2026-08-28) y NO VIO NADA de menores** ni en un pedido ni en
+el alta manual: **es la condición de diseño, no un fallo** — el icono, el «Para:» y el selector solo
+existen si el cliente del pedido tiene menores declarados, y los declara el cliente desde su cuenta en
+la web (§4.2). **El guion de prueba está en `identidad-qr-puerta.md` §9.5**, y de ahí sale una
+pregunta de producto `[PENDIENTE: owner]`: si el PANEL debe poder declarar menores de un cliente.
 
 **Trampas (lo que la ejecución enseñó)**
 
