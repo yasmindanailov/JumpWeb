@@ -651,12 +651,15 @@
 >
 >   ▶▶ ❗❗ **CIERRE DE ESTA SESIÓN (2026-08-29, 01:40 hora de Madrid; el contenedor va en UTC, 2 h
 >   menos) — POR DÓNDE RETOMA LA SIGUIENTE.** Todo empujado (`f1ef0b2`) y con el gate en verde: suite
->   **3403 / 22.406** · JS **862** · Pint ✓ · docs-check ✓ · build ✓ · **`audit-clock` CORRIDO y verde
->   en las 12 fronteras** (las 10 fijas más las dos que cruzan medianoche a mitad de pase). ⚠️ **Se
->   corrió porque esta sesión SÍ añadió fixtures con calendario**: `CreateManualOrderTabletTest` siembra
->   20 días de franjas **relativas a hoy** y asevera que la tira enseña 14; sin la auditoría, un fallo
->   por el día de la semana o por un cambio de mes se habría descubierto días después y en el carril
->   equivocado.
+>   **3403 / 22.406** en el corte de este carril y **3405 / 22.434 sobre el árbol CONJUNTO** tras
+>   rebasar encima del `#253` del carril C · JS **862** · Pint ✓ · docs-check ✓ · build ✓ ·
+>   **`audit-clock` CORRIDO y verde en las 12 fronteras** (las 10 fijas más las dos que cruzan
+>   medianoche a mitad de pase). ⚠️ **Se corrió porque esta sesión SÍ añadió fixtures con calendario**:
+>   `CreateManualOrderTabletTest` siembra 20 días de franjas **relativas a hoy** y asevera que la tira
+>   enseña 14; sin la auditoría, un fallo por el día de la semana o por un cambio de mes se habría
+>   descubierto días después y en el carril equivocado.
+>   ⚠️ **La auditoría se corrió sobre el corte de 3403**, antes del rebase: cubre los fixtures de esta
+>   sesión, no los dos casos que trajo `#253`.
 >
 >   **Lo que entró, en cuatro decisiones**: `#239` (la FECHA como tira de días reservables + la HORA
 >   como tira con ajuste + el aviso «Casi llena» con umbral en el panel) · `#240` («Crear pedido» en
