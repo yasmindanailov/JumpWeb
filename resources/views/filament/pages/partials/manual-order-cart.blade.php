@@ -1,6 +1,15 @@
 @php($euros = fn (int $cents) => \App\Domain\Platform\Services\Money::amount($cents))
 
-<x-filament::section :heading="__('admin.orders.create_manual.cart_title')" class="mt-6">
+<x-filament::section :heading="__('admin.orders.create_manual.cart_title')">
+    {{-- ⚠️ **De quién es este pedido, arriba del todo** (`#241`, `[OWNER]`). En una tablet de
+         mostrador el resumen es lo único que queda a la vista mientras se monta la reserva, y sin el
+         titular no dice PARA QUIÉN se está montando — con una cola delante, eso es cobrarle a otro.
+         El texto es el MISMO que pinta el buscador de clientes (`customerDisplay()`), no una segunda
+         redacción: nombre + correo, o nombre + teléfono si no tiene correo. --}}
+    @if ($this->currentCustomerLabel())
+        <p class="cmo-cart__who" data-cart-customer>{{ $this->currentCustomerLabel() }}</p>
+    @endif
+
     @if (empty($this->cart))
         <p class="text-sm text-gray-500 dark:text-gray-400">
             {{ __('admin.orders.create_manual.cart_empty_hint') }}

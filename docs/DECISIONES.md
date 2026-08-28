@@ -13228,6 +13228,94 @@ las cuatro tablets, con capturas.
 
 ---
 
+## #241 · 2026-08-28 · El OJO del owner sobre las dos pantallas nuevas: con RATÓN no se deslizaba, y las plazas pesaban lo mismo que la hora
+
+Seis puntos suyos tras ver `#239` (el cajón en móvil) y `#240` («Crear pedido» en tablet). Ninguno es
+un fallo de conducta: los seis son **UX que se quedó a medias**, y cuatro de ellos solo se ven usando
+la pantalla con el dispositivo que toca.
+
+### 1 · Las tiras no se podían deslizar con RATÓN
+
+`[OWNER]`: «en la fecha en desktop el UX se queda a medias, no hay manera de deslizar con el ratón y
+no hay flechas para deslizar; sí o sí el cliente tiene que desplegar el calendario». **Cierto y
+medido**: la barra de scroll va oculta a propósito (`scrollbar-width: none` — en 390 px se comía 15 de
+los 350 útiles), así que con el dedo se desliza y con ratón **no había salida**.
+
+Entran flechas en las **tres** tiras (fecha y hora del cajón, días del panel). ⚠️ **Solo donde hay
+ratón**, y esa es la mitad importante: en una pantalla táctil dos botones flotando sobre la tira tapan
+chips y compiten con el gesto que ya funciona. `hover: hover` **y** `pointer: fine` juntas, porque
+`hover` sola la cumple un táctil con lápiz. ▶ **Y que además LLEVEN a algún sitio es otra pregunta**,
+que responde el estado: el CSS dice «hay ratón», el componente dice «hay recorrido».
+
+⚠️⚠️ **Las flechas del cajón NACIERON MUERTAS y la primera sonda lo cazó.** El composable se
+enganchaba en `onMounted`, y el carril vive dentro de un `v-if` que espera la oferta del servidor: **al
+montar el componente el nodo todavía no existe**. Medido en navegador: **11.535 px de recorrido en un
+carril de 440** y la flecha oculta por su propio `v-show`. Se engancha al NODO (`watch`), no al
+montaje. ▶ *Un composable que asume que su elemento existe al montar falla justo en los componentes
+que esperan datos, que son casi todos.*
+
+⚠️ **La aritmética se repite en el panel a propósito y está declarado**: el panel no carga el bundle
+del cajón, así que `strip.js` y el `x-data` de Alpine son dos copias. Los dos números —80 % de salto y
+**un píxel de tolerancia**— tienen que seguir siendo los mismos. La tolerancia no es defensiva: sin
+ella la flecha «siguiente» **no se apaga nunca**, porque `scrollLeft` es fraccionario con zoom.
+
+### 2 · Las plazas pesaban lo mismo que la hora
+
+`[OWNER]`: «las franjas de hora, lo de las plazas debería mostrarse de manera más sutil, no al mismo
+nivel que la hora». En `#240` la hora era un `ToggleButtons` nativo, **y su etiqueta es texto plano**
+—no tiene `allowHtml`—, así que «10:00 · 20 plazas» salía todo con el mismo peso. Pasa a un partial
+propio: hora a 15 px en negrita, plazas a 11 px sin peso y en gris.
+
+❗ **Cambiar el control no puede cambiar la regla**, y aquí el deshabilitado dejaba de ser del
+framework: una franja llena sigue viajando marcada como no vendible —**se enseña deshabilitada, no se
+esconde**, igual que en la web— y `pickTime()` la rechaza en el SERVIDOR. Hay guarda, y muerde.
+
+⚠️ **De regalo, un huérfano**: `timeOptions()` se quedó sin llamador al cambiar el control. Se retiró
+con el protocolo de `CONVENCIONES §3.quater` — el test que lo usaba vigila **la paridad web↔panel**,
+que sigue viva, así que **se re-apuntó a `timeChips()` en vez de borrarse**.
+
+### 3 · «Otra fecha» pasa a ser un CTA «Abrir calendario»
+
+`[OWNER]`. Antes era un campo más apilado en la columna; ahora es una **acción** que se busca cuando
+hace falta, con el calendario amplio plegado detrás. Misma decisión y mismo motivo que en el cajón.
+
+### 4 · Las fichas de HORA del cajón, del tamaño de las de día
+
+`[DECIDIDO owner]` a pregunta simple con tres opciones: **76×76, como los chips de fecha**, con la
+hora arriba en grande y «Casi llena» debajo en segundo plano. Las dos tiras del embudo se leen ahora
+como una familia, y el aviso deja de competir con la hora — la misma corrección que el punto 2, del
+otro lado del producto. **Medido: se siguen viendo 4 de 11 sin deslizar**; lo que cambia es la
+jerarquía de dentro, no cuántas caben.
+
+### 5 · El resumen del pedido dice de QUIÉN es, y arranca a la altura de su vecina
+
+`[OWNER]`. ⚠️ **El desfase no era un margen del armazón: era un `mt-6`** en el propio partial del
+carrito, que se arrastraba de cuando el resumen iba DEBAJO del formulario. Retirado: **las dos cards
+arrancan en 229 px, medido**. Y el titular usa **el mismo texto que el buscador de clientes**
+(`customerDisplay()`) — componer aquí una segunda forma sería tener dos maneras de nombrar a la misma
+persona en la misma página.
+
+⚠️ **La columna sube a 19rem, y el número tiene historia**: 20 dejaba el formulario en 304 px de
+contenido (más estrecho que un móvil); se bajó a 17; con el titular dentro, 17 le apretaba el correo.
+**19** es donde caben las dos cosas.
+
+### ⚠️⚠️ Y DOS instrumentos volvieron a mentir, uno de ellos dentro de una mutación
+
+**(1)** La mutación «las franjas llenas se esconden» **no mordía**, y el código estaba bien: el ancla
+del `sed` aparecía **dos veces** —en `timeChips()` y en el `timeOptions()` huérfano— y mutó el método
+muerto. *Una mutación que no muerde puede estar mutando otra cosa.* Y de paso destapó el huérfano.
+**(2)** La sonda de objetivos táctiles contó **la flecha** (32×32) como defecto. No lo es: solo existe
+dentro de `@media (hover: hover) and (pointer: fine)`, o sea que **con el dedo no se pinta**, y el
+mínimo de 44 px es del puntero grueso.
+Y una tercera, en una guarda: `assertStringNotContainsString('onMounted', $fichero)` salía en rojo con
+el código correcto **porque el docblock explica por qué no se usa `onMounted`**. Se miran las líneas
+de código, no el fichero entero — la misma lección de `armazon-y-menu.md` §1.2, por el otro lado.
+
+**Verificación**: suite **3397 / 22.365** · JS 813 → **843** (`strip.js` con 8 casos) · **12
+mutaciones y las 12 muerden** · sondas headless **11/11** (cajón, escritorio y móvil táctil) y
+**16/16** (panel) · chunk 255,13 → **256,67 KiB** (techo 256 → 257, medido construyendo con y sin) ·
+Pint ✓ · docs-check ✓.
+
 ## #250 · 2026-08-28 · [DECIDIDO owner] La columna del sitio es la del MOCKUP — y no era más ancha, era más estrecha
 
 **Contexto.** El owner, tras el arreglo del hero del cierre (`#238`): «para hacer la landing al

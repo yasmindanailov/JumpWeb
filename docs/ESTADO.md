@@ -520,6 +520,45 @@
 >   el aspecto en ordenador, así que se decide con él); y **U6**, el calendario y las tablas, que
 >   vuelven a la mesa ahora que la tablet es un dispositivo de trabajo.
 >
+>   ▶▶ ✅ **Y LA VUELTA DEL OWNER SOBRE LAS DOS PANTALLAS NUEVAS** (`DECISIONES #241`,
+>   `specs/cajon-en-movil.md` §7.bis y `specs/panel-navegacion.md` §10). Seis puntos suyos tras verlas
+>   en su navegador; ninguno es un fallo de conducta, los seis son **UX a medias**.
+>   **(1)** ⚠️⚠️ **Con RATÓN no se podía deslizar ninguna tira** —«sí o sí hay que desplegar el
+>   calendario»—, y era cierto: la barra va oculta a propósito. Entran flechas en las TRES tiras (fecha
+>   y hora del cajón, días del panel), **solo donde hay ratón** (`hover: hover` **y** `pointer: fine`
+>   juntas — la primera sola la cumple un táctil con lápiz) y **solo si llevan a algún sitio**.
+>   ⚠️⚠️ **Las del cajón NACIERON MUERTAS y lo cazó la primera sonda**: el cableado se enganchaba en
+>   `onMounted` y el carril vive dentro de un `v-if` que espera la oferta, así que **al montar el
+>   componente el nodo no existe**. Medido: 11.535 px de recorrido en un carril de 440 y la flecha
+>   oculta por su propio `v-show`. Ahora observa el NODO. ▶ *Un composable que asume que su elemento
+>   existe al montar falla justo en los componentes que esperan datos, que son casi todos.*
+>   **(2)** **Las plazas de una franja pesaban lo mismo que la hora** en el panel. La causa era el
+>   control: `ToggleButtons` tiene la etiqueta en **texto plano** y no admite `allowHtml`. Pasa a
+>   partial propio (hora 15 px en negrita, plazas 11 px en gris). ❗ **Cambiar el control no cambia la
+>   regla**: una franja llena se sigue enseñando **deshabilitada, no escondida**, y `pickTime()` la
+>   rechaza en el SERVIDOR. ⚠️ De regalo, `timeOptions()` quedó huérfano y se retiró con el protocolo
+>   de `CONVENCIONES §3.quater` — su test vigila la **paridad web↔panel**, así que **se re-apuntó**.
+>   **(3)** **«Otra fecha» pasa a un CTA «Abrir calendario»** con el calendario amplio plegado detrás.
+>   **(4)** **Las fichas de hora del cajón, al tamaño de las de día** (76×76, `[DECIDIDO owner]` a
+>   pregunta simple): la hora arriba y «Casi llena» debajo en segundo plano — la misma corrección que
+>   el punto 2, del otro lado del producto. **Medido: se siguen viendo 4 de 11.**
+>   **(5)** **El resumen del pedido dice de QUIÉN es** —con el MISMO texto que el buscador de clientes,
+>   no una segunda redacción— y **(6)** arranca a la altura de su vecina: ⚠️ **el desfase no era del
+>   armazón, era un `mt-6`** del propio partial, de cuando el resumen iba debajo del formulario.
+>   **Medido: las dos cards en 229 px.** La columna sube a **19rem** (con 20 el formulario se quedaba
+>   en 304 px de contenido; con 17 se le apretaba el correo al titular).
+>   ⚠️⚠️ **Y DOS instrumentos volvieron a mentir, uno dentro de una mutación**: la mutación «las franjas
+>   llenas se esconden» **no mordía** porque el ancla del `sed` aparecía **dos veces** y mutó el método
+>   MUERTO —*una mutación que no muerde puede estar mutando otra cosa*, y de paso destapó el huérfano—;
+>   y la sonda contó **la flecha** (32×32) como defecto táctil cuando solo existe con ratón. Y una
+>   tercera en una guarda: `assertStringNotContainsString('onMounted', …)` salía en rojo con el código
+>   correcto **porque el docblock explica por qué no se usa** — se miran las líneas de CÓDIGO.
+>   **Verificación**: suite **3397 / 22.365** · JS **843** · **12 mutaciones, las 12 muerden** ·
+>   headless **11/11** (cajón: escritorio Y móvil táctil, `VERIFICACION-E2E-CAJON.md` §5.vicies) y
+>   **16/16** (panel) · chunk 255,13 → **256,67 KiB** (techo 256 → **257**, deja 0,33) · Pint ✓.
+>   ❗ **Queda el OJO del owner**: con el ratón, deslizar las dos tiras del cajón; con el dedo, que NO
+>   aparezca ninguna flecha; y en la tablet, montar un pedido de cabo a rabo.
+>
 >   ▶ **Y queda APUNTADO, sin empezar, el CUMPLEAÑOS MIXTO** (`specs/cumple-mixto.md`, ⬜ borrador):
 >   un cumple KIDS con un invitado por encima de la edad del pack pasa a **MIXTO** —etiqueta «MIXTA»
 >   para cliente y operador y la diferencia de precio por persona en los dos desgloses—.
@@ -1071,6 +1110,13 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3397 en verde** (22.365 aserciones, 1 skipped a propósito), medida el 2026-08-28 por la
+  noche tras la **vuelta del owner sobre las dos pantallas nuevas** (`#241`). ▶ **+13 casos**:
+  `strip.js` con 8 en `node --test` (la aritmética del recorrido de una tira), 2 más en
+  `SidebarDrawerPolishTest` (las flechas nacen apagadas · el cableado observa el NODO) y 6 en
+  `CreateManualOrderTabletTest` (una franja llena se enseña deshabilitada y **el servidor la rechaza**,
+  la hora pesa más que las plazas, el calendario nace plegado, el resumen nombra al cliente con el
+  mismo texto que el buscador). **12 mutaciones y las 12 muerden.** JS **813 → 843**.
 - Suite **3389 en verde** (22.320 aserciones, 1 skipped a propósito) · **JS 835**, medida el
   2026-08-28 por la noche **sobre el árbol CONJUNTO**, tras rebasar `#251` (la transición del cierre,
   carril C) encima del `#240` del carril A. ▶ **+5 casos en este corte**:

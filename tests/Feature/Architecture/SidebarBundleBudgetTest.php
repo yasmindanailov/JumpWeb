@@ -491,7 +491,21 @@ class SidebarBundleBudgetTest extends TestCase
      * ▶ **256 deja 0,87 KiB.** Holgura que aprieta, como la de las dos entradas anteriores y por el
      * mismo motivo: lo siguiente que entre se mide contra un número, no contra un susto.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 256;
+    /**
+     * ⚠️ **256 → 257 el 2026-08-28, y lo paga que las tiras se puedan usar con RATÓN** (`#241`,
+     * `[OWNER]`: «en escritorio no hay manera de deslizar, y no hay flechas»). Medido construyendo:
+     * **255,13 → 256,67 KiB, +1,54**.
+     *
+     * Entran `strip.js` (la aritmética del recorrido, con sus casos en `node --test`), `useStrip.js`
+     * (el ciclo de vida —oyente de scroll y `ResizeObserver`, porque **el contenido de la tira cambia
+     * sin que nadie la desplace**) y dos botones por tira con su nombre accesible.
+     * ▶ **No es un adorno**: sin ellas, en escritorio la única salida del paso de fecha era desplegar
+     * el calendario, que es exactamente lo que la tira venía a evitar.
+     *
+     * ▶ **257 deja 0,33 KiB**, la holgura más estrecha que ha tenido este techo. A propósito: lo
+     * siguiente que entre tendrá que justificarse o podar.
+     */
+    private const SIDEBAR_CHUNK_MAX_KB = 257;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

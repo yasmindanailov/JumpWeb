@@ -460,4 +460,70 @@ class SidebarDrawerPolishTest extends TestCase
     {
         return (string) file_get_contents(base_path($relative));
     }
+
+    // ─── Las flechas de las tiras (`#241`) ────────────────────────────────────────────────────
+
+    /**
+     * ⚠️⚠️ **Las flechas de las tiras SOLO pueden existir donde hay ratón.**
+     *
+     * Nacen de un defecto real (`[OWNER, 2026-08-28]`: «en escritorio no hay manera de deslizar con el
+     * ratón, y no hay flechas — sí o sí hay que desplegar el calendario»), pero en una pantalla táctil
+     * son dos botones flotando ENCIMA de la tira: tapan chips y compiten con el gesto que ya funciona.
+     *
+     * ▶ Y las dos consultas van JUNTAS a propósito: `hover: hover` sola la cumple un táctil con lápiz,
+     * que no es este caso. Verificado en navegador las dos mitades — a 1440 px se ven y mueven la tira;
+     * a 390 px con `hasTouch` **no se pinta ninguna**.
+     */
+    public function test_the_strip_arrows_only_exist_where_there_is_a_mouse(): void
+    {
+        $css = (string) file_get_contents(base_path('public/css/site.css'));
+
+        $this->assertMatchesRegularExpression(
+            '/\.daystrip__nav,\s*\.timestrip__nav\s*\{\s*display:\s*none;?\s*\}/',
+            $css,
+            'Las flechas de las tiras han dejado de nacer APAGADAS. En táctil tapan la tira.'
+        );
+
+        $this->assertStringContainsString(
+            '@media (hover: hover) and (pointer: fine)', $css,
+            "Las flechas ya no se acotan a los dispositivos con ratón.\n".
+            '⚠️ Las DOS consultas: `hover: hover` sola la cumple un táctil con lápiz.'
+        );
+    }
+
+    /**
+     * ⚠️⚠️ **El cableado de la tira se engancha al NODO, no al montaje del componente**, y esta guarda
+     * existe porque la primera versión hizo lo segundo y **las flechas nacieron muertas**: el carril
+     * vive dentro de un `v-if` que espera la oferta del servidor, así que al montar el componente el
+     * elemento **todavía no existe** y no se registraba ningún oyente. Medido en navegador: 11.535 px
+     * de recorrido en un carril de 440 y la flecha oculta por su propio `v-show`.
+     *
+     * ▶ *Un composable que asume que su elemento existe al montar falla justo en los componentes que
+     * esperan datos, que son casi todos.*
+     */
+    public function test_the_strip_wiring_watches_the_node_instead_of_the_mount(): void
+    {
+        $fuente = (string) file_get_contents(base_path('resources/js/sidebar/useStrip.js'));
+
+        // ⚠️ **Se miran las líneas de CÓDIGO, no el fichero entero.** La primera versión de esta
+        // guarda salió en rojo con el código correcto: el docblock EXPLICA el fallo y por tanto
+        // nombra `onMounted`. Es la misma lección que costó una medición en `armazon-y-menu.md` §1.2
+        // —un `grep` que cuenta comentarios no está midiendo el código—, aquí por el otro lado.
+        $codigo = preg_replace('#/\*.*?\*/#s', '', $fuente);
+        $codigo = preg_replace('#^\s*(//|\*).*$#m', '', (string) $codigo);
+
+        $this->assertStringNotContainsString(
+            'onMounted', (string) $codigo,
+            "`useStrip.js` ha vuelto a engancharse en `onMounted`.\n".
+            'El carril nace dentro de un `v-if`: al montar el componente todavía no existe.'
+        );
+        $this->assertStringContainsString('watch(track', (string) $codigo);
+
+        // Control del propio despojo: si dejara de quitar comentarios, esto lo diría.
+        $this->assertStringContainsString(
+            'onMounted', $fuente,
+            'El docblock ha dejado de explicar POR QUÉ no se usa `onMounted`, y esa es la mitad que '
+            .'impide que el siguiente lo vuelva a poner.'
+        );
+    }
 }

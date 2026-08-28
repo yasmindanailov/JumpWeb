@@ -310,6 +310,11 @@ return [
             'time_pick_date_first' => 'Elige primero un día para ver las franjas.',
             // `#240`: el día se elige en la tira; el calendario queda para el salto largo.
             'date_other' => 'Otra fecha (calendario)',
+            'calendar_show' => 'Abrir calendario',
+            'calendar_hide' => 'Cerrar calendario',
+            // Flechas de la tira de días (`#241`): solo con ratón, pero su nombre accesible siempre.
+            'strip_prev' => 'Ver días anteriores',
+            'strip_next' => 'Ver días siguientes',
             'no_times_for_date' => 'No hay franjas disponibles para esta fecha. Regenera o abre franjas, o elige otro día.',
             'quantity' => 'Cantidad',
             'guests' => 'Invitados',

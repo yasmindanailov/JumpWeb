@@ -1183,16 +1183,21 @@ body.no-scroll { overflow: hidden; }
     background: linear-gradient(to right, transparent, var(--bg));
     pointer-events: none;
 }
-/* 44 px de alto mínimo: eran 68×39 (`#237`). El chip apila hora y, si procede, «Casi llena», así que
-   crece a lo alto sin perder el ancho cómodo para el pulgar. */
-.purchase__chip { flex: none; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-2); min-height: 44px; min-width: 72px; padding: var(--sp-8) var(--sp-14); border-radius: var(--r-btn); border: 1px solid var(--line); background: var(--bg-card); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); cursor: pointer; transition: border-color var(--dur-sale) var(--ease-sale); }
+/* 76×76: **la misma altura que un chip de día** (`#241`, `[DECIDIDO owner]`), para que las dos tiras
+   del embudo se lean como una familia y no como dos controles distintos. Antes eran 68×39 (`#237`) y
+   luego 72×44. Medido: con este ancho se siguen viendo **4 de 11** sin deslizar, igual que antes —lo
+   que cambia es la jerarquía de dentro, no cuántas caben—. */
+.purchase__chip { flex: none; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-4); min-height: 76px; min-width: 76px; padding: var(--sp-8) var(--sp-10); border-radius: var(--r-btn); border: 1px solid var(--line); background: var(--bg-card); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); cursor: pointer; transition: border-color var(--dur-sale) var(--ease-sale); }
 .purchase__chip:hover { border-color: var(--fg); }
-/* La hora dentro del chip. `line-height: 1` para que el rótulo de «casi llena» quede pegado debajo
-   sin que el interlineado le abra un hueco que descoloca la altura de la tira. */
-.purchase__chip-t { line-height: 1; }
+/* La hora MANDA en el chip: es lo que se elige. `line-height: 1` para que el aviso quede pegado
+   debajo sin que el interlineado le abra un hueco que descoloca la altura de la tira. */
+.purchase__chip-t { font-size: var(--fs-15); font-weight: var(--fw-bold); line-height: 1; }
 /* «Casi llena»: `--warn` es el token de señal del producto (el mismo del «a cobrar en el parque»),
    no un amarillo nuevo. ⚠️ Es ESCAPARATE, no aforo: quien decide el cupo es `SlotOffer` (`AFORO-02`). */
-.purchase__chip-full { font-size: var(--fs-9); font-weight: var(--fw-bold); line-height: 1; letter-spacing: 0.03em; text-transform: uppercase; color: var(--warn); }
+/* ⚠️ **El aviso va en SEGUNDO plano, no al mismo nivel que la hora** (`[OWNER, 2026-08-28]`). Es
+   contexto de la decisión, no la decisión: por eso baja de peso, envuelve en dos líneas si hace falta
+   y se queda en el ámbar de señal del producto. */
+.purchase__chip-full { max-width: 100%; font-size: var(--fs-9); font-weight: var(--fw-semibold); line-height: 1.15; letter-spacing: 0.02em; text-align: center; color: var(--warn); }
 /* Sobre el acento de zona el ámbar se pierde: el rótulo hereda la tinta del chip elegido. */
 .purchase__chip.is-active .purchase__chip-full { color: var(--fg); opacity: 0.78; }
 
@@ -1555,6 +1560,57 @@ body.no-scroll { overflow: hidden; }
 }
 .daystrip__day.is-selected .daystrip__wd,
 .daystrip__day.is-selected .daystrip__price { color: var(--fg); opacity: 0.78; }
+
+/* ══ LAS FLECHAS DE LAS TIRAS (`#241`) ═════════════════════════════════════════════════════════
+   `[OWNER, 2026-08-28]`: «en escritorio no hay manera de deslizar con el ratón, y no hay flechas —
+   sí o sí hay que desplegar el calendario». Cierto y medido: la barra de scroll va oculta a propósito
+   (en 390 px se comía 15 de los 350 útiles), así que con dedo se desliza y con ratón no había salida.
+
+   ⚠️ **Solo donde hay RATÓN**, y esa es la mitad importante de la regla: en una pantalla táctil dos
+   botones flotando sobre la tira tapan chips y compiten con el gesto que ya funciona. `hover: hover`
+   **y** `pointer: fine` juntos, porque un táctil con lápiz declara `hover` y no es este caso.
+   ▶ Que además LLEVEN a algún sitio lo decide el estado (`strip.js`), que es otra pregunta: el CSS
+   dice «hay ratón», el componente dice «hay recorrido». */
+.daystrip__nav,
+.timestrip__nav { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+    .daystrip__nav,
+    .timestrip__nav {
+        position: absolute; top: 50%; z-index: 2;
+        display: flex; align-items: center; justify-content: center;
+        width: 32px; height: 32px;
+        transform: translateY(-50%);
+        border: 1px solid var(--line-strong); border-radius: var(--r-pill);
+        background: var(--bg-card);
+        color: var(--fg);
+        box-shadow: var(--shadow-lift);
+        cursor: pointer;
+        transition: border-color var(--dur-sale) var(--ease-sale);
+    }
+
+    .daystrip__nav:hover,
+    .timestrip__nav:hover { border-color: var(--fg); }
+
+    /* Pegadas al borde del carril. Las tiras salen a sangre (`#239`), así que el borde del carril es
+       el borde del panel: la flecha se apoya justo dentro. */
+    .daystrip__nav--prev,
+    .timestrip__nav--prev { left: var(--sp-4); }
+    .daystrip__nav--next,
+    .timestrip__nav--next { right: var(--sp-4); }
+
+    /* El dibujo es un chevron de bordes, como el de «Ver más fechas»: cero peso y hereda el color. */
+    .daystrip__nav span,
+    .timestrip__nav span {
+        width: 8px; height: 8px;
+        border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+    }
+
+    .daystrip__nav--prev span,
+    .timestrip__nav--prev span { transform: translateX(2px) rotate(135deg); }
+    .daystrip__nav--next span,
+    .timestrip__nav--next span { transform: translateX(-2px) rotate(-45deg); }
+}
 
 /* «Ver más fechas» / «Ocultar el calendario». Ancho completo y 44 px de alto: es el único camino al
    calendario, así que fallarlo con el pulgar deja sin salida al que reserva a tres meses. */

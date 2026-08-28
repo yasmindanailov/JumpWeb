@@ -1,8 +1,9 @@
 # [SPEC] El CAJÓN en móvil — el embudo de compra a 390 px
 
-> Estado: 🟦 **código de las unidades 1–3 en `main`; queda el OJO del owner** ·
+> Estado: 🟦 **código de las unidades 1–3 en `main`, con la vuelta del owner aplicada; queda su ✅** ·
 > Última actualización: 2026-08-28 · Decisiones asociadas: `DECISIONES #237` (la medición y el
-> aviso de cookies) y **`#239`** (el rediseño de los pasos de FECHA y HORA).
+> aviso de cookies), **`#239`** (el rediseño de los pasos de FECHA y HORA) y **`#241`** (la vuelta del
+> owner: las flechas de ratón y las fichas de hora, §7.bis).
 >
 > ❗ **Encargo del owner (2026-08-28)**: «el SPA tiene que ser perfecto en móvil, que es el 90 %».
 > Este documento es el sitio único de esa tanda: qué se midió, qué se decidió y qué queda.
@@ -272,6 +273,69 @@ Un navegador headless mide, no valida (`CONVENCIONES §3.bis`). Lo que hay que m
 filas de chips ahora hay una. Es la contrapartida directa de §4.2 y no se ha rellenado con nada,
 porque inventar contenido para tapar un hueco es una decisión de producto, no de implementación.
 ▶ `[PENDIENTE: owner]`.
+
+---
+
+## 7.bis El OJO del owner sobre las dos tiras (`#241`)
+
+Tras verlo en su navegador, dos puntos suyos. Ninguno es un fallo de conducta; los dos son UX a medias.
+
+### 7.bis.1 Con RATÓN no se podía deslizar
+
+`[OWNER, 2026-08-28]`: «en la fecha en desktop el UX se queda a medias, no hay manera de deslizar con
+el ratón y no hay flechas; sí o sí el cliente tiene que desplegar el calendario».
+
+**Cierto, y la causa está en §5.2**: la barra de scroll va oculta a propósito. Con el dedo se desliza;
+con ratón no había salida. Entran flechas en las dos tiras.
+
+⚠️ **Solo donde hay ratón**, y esa es la mitad importante de la regla: en una pantalla táctil dos
+botones flotando sobre la tira tapan chips y compiten con el gesto que ya funciona. Las DOS consultas
+juntas —`hover: hover` **y** `pointer: fine`—, porque la primera sola la cumple un táctil con lápiz.
+
+▶ **Y que además LLEVEN a algún sitio es otra pregunta**, y la responde el estado: el CSS dice «hay
+ratón», el componente dice «hay recorrido» (`strip.js`, con sus casos en `node --test`). Una flecha
+que no lleva a ningún sitio es peor que no tenerla, así que se ocultan en los extremos.
+
+⚠️⚠️ **Las flechas NACIERON MUERTAS, y eso es lo que más enseñó esta vuelta.** El composable se
+enganchaba en `onMounted` y **el carril vive dentro de un `v-if` que espera la oferta del servidor**:
+al montar el componente el nodo todavía no existe, así que `track.value` era `null`, no se registraba
+ningún oyente y las flechas se quedaban apagadas para siempre. Medido en navegador: **11.535 px de
+recorrido en un carril de 440 px** y la flecha con `display: none` puesto por su propio `v-show`.
+Se engancha al NODO (`watch(track, …)`), no al montaje.
+▶ *Un composable que asume que su elemento existe al montar falla justo en los componentes que
+esperan datos, que son casi todos.*
+
+### 7.bis.2 Las fichas de hora, del tamaño de las de día
+
+`[DECIDIDO owner]` a pregunta simple con tres opciones (mismo tamaño que el día · más grandes aún ·
+dejarlas): **76×76, como los chips de fecha**, con la hora arriba en grande y «Casi llena» debajo en
+segundo plano.
+
+Con eso las dos tiras del embudo se leen como una familia, y —lo que de verdad pedía el owner en la
+otra pantalla— **el aviso deja de pesar lo mismo que la hora**: es contexto de la decisión, no la
+decisión.
+
+⚠️ **Medido: se siguen viendo 4 de 11 sin deslizar.** Lo que cambia es la jerarquía de dentro del
+chip, no cuántos caben — el ancho no se movió.
+
+### 7.bis.3 Verificación
+
+Sonda propia (`VERIFICACION-E2E-CAJON.md` §5.vicies), **11/11**, con las dos mitades que importan:
+
+| | |
+|---|---|
+| Escritorio 1440 | la flecha se ve, **mueve la tira** (0 → 367), la contraria aparece al moverse y la de avance **se apaga al final** |
+| Escritorio 1440 · horas | la tira de horas también la tiene, y también mueve |
+| **Móvil 390 con `hasTouch`** | **no se pinta ninguna flecha** |
+| Móvil | chip de día **56×76** · chip de hora **76×76** · **4 de 11** horas visibles |
+
+`strip.js` con **8 casos** en `node --test` y **3 mutaciones que muerden**; dos guardas más en
+`SidebarDrawerPolishTest` (que las flechas nazcan apagadas y que el cableado observe el NODO), con
+**3 mutaciones más**.
+
+⚠️ **Una de esas guardas salió en rojo con el código correcto**: `assertStringNotContainsString(
+'onMounted', $fichero)` casaba con el **docblock**, que explica precisamente por qué no se usa. Se
+miran las líneas de código, no el fichero entero.
 
 ---
 

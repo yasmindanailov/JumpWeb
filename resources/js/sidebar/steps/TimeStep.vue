@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
 import { isAlmostFull } from '../offer.js';
+import { useStrip } from '../useStrip.js';
 import DependentPicker from './DependentPicker.vue';
 
 /**
@@ -83,6 +84,9 @@ const shortTime = (time) => time.slice(0, 5);
  */
 const almostFull = (offered) => isAlmostFull(offered, props.lowMax);
 
+/** Las flechas de RATÓN de la tira. El porqué, en `useStrip.js` y en `DateStep.vue`. */
+const { track, nav, move } = useStrip();
+
 const hasAddons = computed(() => props.addons.groups.length > 0 || props.addons.singles.length > 0);
 
 const canDecrease = computed(() => props.quantity > (props.isPack ? props.minQuantity : 0));
@@ -95,7 +99,12 @@ const canIncrease = computed(() => props.quantity < props.maxQuantity);
     <!-- La tira de horas: deslizable con ajuste (`#239`, `[DECIDIDO owner]`). `role="group"` porque
          son botones hermanos que forman UNA elección; el nombre lo pone el rótulo del paso. -->
     <div class="timestrip">
-        <div class="timestrip__track" role="group" :aria-label="t('step_time')">
+        <button type="button" class="timestrip__nav timestrip__nav--prev" v-show="nav.prev"
+                :aria-label="t('strip_prev')" @click="move(-1)"><span aria-hidden="true"></span></button>
+        <button type="button" class="timestrip__nav timestrip__nav--next" v-show="nav.next"
+                :aria-label="t('strip_next')" @click="move(1)"><span aria-hidden="true"></span></button>
+
+        <div ref="track" class="timestrip__track" role="group" :aria-label="t('step_time')">
             <button v-for="offered in times" :key="offered.time"
                     type="button"
                     class="purchase__chip"

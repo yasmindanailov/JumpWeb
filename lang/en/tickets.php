@@ -74,6 +74,8 @@ return [
     // Occupancy hint on the time chip. `[DECIDIDO owner]`: no number — it says few are left, not how
     // many. The threshold is set by the operator (`booking.low_availability_max`).
     'almost_full' => 'Almost full',
+    'strip_prev' => 'See previous',
+    'strip_next' => 'See next',
     'back' => 'Back',
     'add_to_cart' => 'Add to cart',
     'cart_title' => 'Your cart',

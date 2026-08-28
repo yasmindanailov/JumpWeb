@@ -287,4 +287,148 @@ class CreateManualOrderTabletTest extends TestCase
             'La tira ha aceptado un día que `SlotOffer` no ofrece.'
         );
     }
+
+    // ─── Lo que pidió el OJO del owner (`#241`) ───────────────────────────────────────────────
+
+    /**
+     * ⚠️⚠️ **Cambiar el CONTROL no puede cambiar la REGLA, y esta es la guarda que lo sostiene.**
+     *
+     * En `#240` la hora era un `ToggleButtons` nativo con `disableOptionWhen`; en `#241` pasa a un
+     * partial propio porque su etiqueta es texto plano y no dejaba bajarle el peso a las plazas
+     * (`[OWNER]`). Al escribir el control a mano, **el deshabilitado deja de ser del framework**: una
+     * franja llena tiene que seguir viajando marcada como no vendible —**se enseña deshabilitada, no
+     * se esconde**, igual que en la web— y `pickTime()` tiene que rechazarla en el SERVIDOR, porque
+     * un `wire:click` se puede llamar con cualquier hora.
+     */
+    public function test_a_full_slot_is_shown_disabled_and_cannot_be_chosen(): void
+    {
+        $product = $this->seedProduct();
+        $dia = now()->addDay()->toDateString();
+
+        // La franja de ese día se queda sin cupo online: sigue existiendo, pero no se vende.
+        Slot::where('zone_id', $product->zone_id)->where('date', $dia)->update(['online_capacity' => 0]);
+
+        $component = Livewire::actingAs($this->seedAdmin())
+            ->test(CreateManualOrderPage::class)
+            ->set('step', CreateManualOrderPage::STEP_PRODUCTS)
+            ->set('data.sel_product_id', $product->id)
+            ->set('data.sel_date', $dia);
+
+        $chips = $component->instance()->timeChips();
+
+        $this->assertNotSame([], $chips, 'La franja llena ha DESAPARECIDO: se enseña deshabilitada, no se esconde.');
+        $this->assertFalse($chips[0]['sellable'], 'La franja llena no está marcada como no vendible.');
+
+        // Y la puerta del servidor la rechaza aunque el navegador la pida.
+        $component->call('pickTime', $chips[0]['time']);
+
+        $this->assertNull(
+            $component->get('data.sel_time'),
+            'El servidor ha aceptado una franja que no se vende. El navegador propone, el servidor decide.'
+        );
+    }
+
+    /** Una franja vendible sí entra: el control tiene que servir para lo que existe. */
+    public function test_a_sellable_slot_can_be_chosen(): void
+    {
+        $product = $this->seedProduct();
+
+        $component = Livewire::actingAs($this->seedAdmin())
+            ->test(CreateManualOrderPage::class)
+            ->set('step', CreateManualOrderPage::STEP_PRODUCTS)
+            ->set('data.sel_product_id', $product->id)
+            ->set('data.sel_date', now()->addDay()->toDateString());
+
+        $component->call('pickTime', '10:00:00');
+
+        $this->assertSame('10:00:00', $component->get('data.sel_time'));
+    }
+
+    /**
+     * ⚠️ **Las plazas van en SEGUNDO plano, no al mismo nivel que la hora** (`[OWNER, 2026-08-28]`).
+     * Es contexto de la decisión, no la decisión. Aquí se fija que sean **dos nodos distintos**: con
+     * uno solo —que es lo que hacía el control anterior, «10:00 · 20 plazas» en una cadena— no hay
+     * forma de darles pesos distintos.
+     */
+    public function test_the_hour_and_the_seats_are_two_separate_nodes(): void
+    {
+        $partial = (string) file_get_contents(base_path('resources/views/filament/pages/partials/manual-order-times.blade.php'));
+
+        $this->assertStringContainsString('class="cmo-times__h"', $partial);
+        $this->assertStringContainsString('class="cmo-times__seats"', $partial);
+
+        $css = $this->css();
+        preg_match('/\.cmo-times__h\s*\{[^}]*font-size:\s*([\d.]+)rem/', $css, $hora);
+        preg_match('/\.cmo-times__seats\s*\{[^}]*font-size:\s*([\d.]+)rem/', $css, $plazas);
+
+        $this->assertNotEmpty($hora, 'La hora ha perdido su tamaño propio.');
+        $this->assertNotEmpty($plazas, 'Las plazas han perdido su tamaño propio.');
+        $this->assertGreaterThan(
+            (float) $plazas[1], (float) $hora[1],
+            'Las plazas han vuelto a pesar lo mismo que la hora, o más. La hora es lo que se elige.'
+        );
+    }
+
+    /**
+     * El calendario amplio nace PLEGADO tras su CTA (`[OWNER]`: «mejor un CTA "abrir calendario"»).
+     * Misma decisión y mismo motivo que en el cajón del cliente: la tira resuelve la reserva de
+     * mostrador y el calendario es el atajo para el salto largo.
+     */
+    public function test_the_wide_calendar_is_folded_behind_its_cta(): void
+    {
+        $component = Livewire::actingAs($this->seedAdmin())->test(CreateManualOrderPage::class);
+
+        $this->assertFalse($component->get('calendarOpen'), 'El calendario amplio ya no nace plegado.');
+
+        $component->call('toggleCalendar');
+        $this->assertTrue($component->get('calendarOpen'));
+
+        $component->call('toggleCalendar');
+        $this->assertFalse($component->get('calendarOpen'), 'El CTA tiene que poder cerrarlo también.');
+    }
+
+    /**
+     * ⚠️ **El resumen dice DE QUIÉN es el pedido** (`[OWNER]`), y con el MISMO texto que el buscador de
+     * clientes: componer aquí una segunda forma sería tener dos maneras de nombrar a la misma persona
+     * en la misma página. En una tablet de mostrador el resumen es lo único que queda a la vista
+     * mientras se monta la reserva; sin el titular, con una cola delante, eso es cobrarle a otro.
+     */
+    public function test_the_summary_names_the_customer_with_the_same_text_as_the_search(): void
+    {
+        $admin = $this->seedAdmin();
+        $cliente = User::factory()->create(['name' => 'Vilma Probe', 'email' => 'vilma@jumpweb.test']);
+        $cliente->roles()->sync([Role::where('name', 'customer')->value('id')]);
+
+        $component = Livewire::actingAs($admin)
+            ->test(CreateManualOrderPage::class)
+            ->set('data.customer_id', $cliente->id);
+
+        $this->assertSame(
+            'Vilma Probe · vilma@jumpweb.test',
+            $component->instance()->currentCustomerLabel(),
+            'El resumen ha dejado de usar el mismo texto que el buscador de clientes.'
+        );
+
+        // Sin cliente elegido no hay cabecera que pintar.
+        $vacio = Livewire::actingAs($admin)->test(CreateManualOrderPage::class);
+        $this->assertNull($vacio->instance()->currentCustomerLabel());
+    }
+
+    /**
+     * ⚠️ **Las flechas de la tira SOLO existen donde hay ratón.** Nacen de un defecto real
+     * (`[OWNER]`: «en desktop no hay manera de deslizar»), pero en una tablet táctil dos botones
+     * flotando sobre la tira tapan chips y compiten con el gesto que ya funciona. Las DOS consultas
+     * juntas: `hover: hover` sola la cumple un táctil con lápiz.
+     */
+    public function test_the_panel_strip_arrows_only_exist_where_there_is_a_mouse(): void
+    {
+        $css = $this->css();
+
+        $this->assertMatchesRegularExpression(
+            '/\.cmo-daystrip__nav\s*\{\s*display:\s*none;?\s*\}/',
+            $css,
+            'Las flechas de la tira del panel han dejado de nacer APAGADAS.'
+        );
+        $this->assertStringContainsString('@media (hover: hover) and (pointer: fine)', $css);
+    }
 }

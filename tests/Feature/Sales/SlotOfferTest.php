@@ -165,9 +165,12 @@ class SlotOfferTest extends TestCase
         $maxOfferable = $this->invoke($page, 'maxOfferableDate');
         $this->assertSame($d2, $maxOfferable?->toDateString(), 'el tope del panel es la última franja REAL');
 
-        $panelTimes = $this->invoke($page, 'timeOptions');
+        // ⚠️ **Re-apuntado a `timeChips()` en `#241`, no reescrito**: el SUJETO de esta guarda es «el
+        // panel ofrece exactamente lo que el servicio compartido», y eso sigue vivo — lo que cambió es
+        // quién compone las horas (`timeOptions()` se retiró con el `ToggleButtons` que lo usaba).
+        $panelTimes = array_column($this->invoke($page, 'timeChips'), 'time');
         $sourceTimes = $this->offer->offerableTimes($this->entry, $d1);
-        $this->assertSame(array_keys($sourceTimes), array_keys($panelTimes), 'el panel ofrece exactamente lo que el servicio compartido');
+        $this->assertSame(array_keys($sourceTimes), $panelTimes, 'el panel ofrece exactamente lo que el servicio compartido');
 
         // Una fecha del horizonte SIN franja no es ofrecible (no existe en la fuente).
         $emptyDay = $this->today->copy()->addDays(10)->toDateString();

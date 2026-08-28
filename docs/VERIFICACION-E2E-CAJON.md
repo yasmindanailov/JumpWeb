@@ -1660,3 +1660,34 @@ que amplía el área**.
    dejarlo donde quiera. `0` lo apaga.
 5. **El hueco vertical** (`specs/cajon-en-movil.md` §7.4): 366 px vacíos en fecha y **452 en hora**.
    Está medido y sin resolver a propósito — rellenarlo es decisión suya.
+
+---
+
+## §5.vicies · LAS FLECHAS DE LAS TIRAS y las fichas de hora — ✅ medido en headless el 2026-08-28 (11/11), pendiente del OJO del owner (`DECISIONES #241`)
+
+La vuelta del owner sobre `#239`: «en la fecha en desktop el UX se queda a medias, no hay manera de
+deslizar con el ratón y no hay flechas». Sonda `sonda-flechas.mjs`, dos contextos en la misma corrida.
+
+| | |
+|---|---|
+| **Escritorio 1440** · fecha | la flecha SIGUIENTE se ve; la ANTERIOR está apagada al principio |
+| | pulsarla **mueve la tira** (scrollLeft 0 → 367) y aparece la ANTERIOR |
+| | al final del recorrido la SIGUIENTE **se apaga** |
+| **Escritorio 1440** · hora | la tira de horas también la tiene, y también mueve |
+| **Móvil 390 con `hasTouch`** | **no se pinta ninguna flecha** — el dedo ya desliza |
+| Móvil | chip de día **56×76** · chip de hora **76×76** · **4 de 11** horas visibles |
+
+⚠️⚠️ **La primera corrida encontró las flechas MUERTAS, y el defecto era real**: el cableado se
+enganchaba en `onMounted` y el carril vive dentro de un `v-if` que espera la oferta del servidor, así
+que al montar el componente **el nodo todavía no existía**. Medido: 11.535 px de recorrido en un
+carril de 440 y la flecha oculta por su propio `v-show`. Arreglado observando el NODO.
+
+⚠️ **Y una trampa de la propia sonda**: contó la flecha (32×32) como control por debajo del mínimo
+táctil. No lo es — solo existe dentro de `@media (hover: hover) and (pointer: fine)`, o sea que **con
+el dedo no se pinta**, y los 44 px son del puntero grueso.
+
+### ❗ Lo que tiene que mirar el OWNER
+
+1. **Con el ratón**, en la portada: deslizar las dos tiras con las flechas y con la rueda.
+2. **Con el dedo**, en el móvil: que NO aparezca ninguna flecha y que el gesto siga igual.
+3. Las **fichas de hora** al tamaño de las de fecha: si le compensa ver 4 de 11 con ese peso.

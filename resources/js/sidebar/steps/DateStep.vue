@@ -1,7 +1,8 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted } from 'vue';
 import { t as translate } from '../i18n.js';
 import { dayPrice } from '../money.js';
+import { useStrip } from '../useStrip.js';
 
 /**
  * Paso 2 — el DÍA (Fase 4 · paso 4.2; rehecho en `DECISIONES #239`).
@@ -55,8 +56,14 @@ defineEmits(['select', 'prev-month', 'next-month', 'toggle-calendar']);
 
 const t = (key) => translate(props.messages, key);
 
-/** El carril desplazable de la tira. Solo se usa para colocarla al entrar (ver `onMounted`). */
-const track = ref(null);
+/**
+ * El carril desplazable: su referencia, si cada flecha lleva a algún sitio, y el clic que las mueve.
+ *
+ * ⚠️ **Las flechas existen porque con RATÓN no se desliza** (`#241`, `[OWNER]`): la barra va oculta
+ * a propósito —en 390 px se comía 15 de los 350 útiles— así que en escritorio la única salida era
+ * desplegar el calendario. En una pantalla táctil sobran, y ahí las apaga el CSS.
+ */
+const { track, nav, move } = useStrip();
 
 /**
  * Al entrar con un día YA elegido, la tira se coloca en él.
@@ -105,6 +112,14 @@ const dayClasses = (cell) => [
     <h3 class="wiz__title">{{ t('step_date') }}</h3>
 
     <div v-if="strip.length" class="daystrip">
+        <!-- Las flechas de RATÓN. `v-show` y no `v-if` a propósito: así el nodo existe siempre y el
+             contrato de árbol lo fija; quién las ve lo deciden el estado (¿hay recorrido?) y el CSS
+             (¿hay ratón?), que son dos preguntas distintas. -->
+        <button type="button" class="daystrip__nav daystrip__nav--prev" v-show="nav.prev"
+                :aria-label="t('strip_prev')" @click="move(-1)"><span aria-hidden="true"></span></button>
+        <button type="button" class="daystrip__nav daystrip__nav--next" v-show="nav.next"
+                :aria-label="t('strip_next')" @click="move(1)"><span aria-hidden="true"></span></button>
+
         <!-- El carril desplazable. `role="group"` porque son botones hermanos que forman UNA
              elección; el nombre lo pone el mismo rótulo que titula el paso. -->
         <div ref="track" class="daystrip__track" role="group" :aria-label="t('step_date')">

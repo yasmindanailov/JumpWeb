@@ -74,6 +74,8 @@ return [
     // Indication d'occupation sur la puce d'horaire. `[DECIDIDO owner]` : sans chiffre — elle dit
     // qu'il reste peu de places, pas combien. Le seuil est réglé par l'exploitant.
     'almost_full' => 'Presque complet',
+    'strip_prev' => 'Voir les précédents',
+    'strip_next' => 'Voir les suivants',
     'back' => 'Retour',
     'add_to_cart' => 'Ajouter au panier',
     'cart_title' => 'Ton panier',

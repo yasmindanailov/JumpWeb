@@ -80,6 +80,9 @@ return [
     // Aviso de ocupación del chip de hora. `[DECIDIDO owner]`: SIN número — dice que queda poco, no
     // cuánto. El umbral lo pone el operador en Ajustes (`booking.low_availability_max`).
     'almost_full' => 'Casi llena',
+    // Flechas de las tiras (`#241`): solo se ven con ratón, pero su nombre accesible viaja siempre.
+    'strip_prev' => 'Ver anteriores',
+    'strip_next' => 'Ver siguientes',
     'back' => 'Volver',
     'add_to_cart' => 'Añadir al carrito',
     'cart_title' => 'Tu carrito',

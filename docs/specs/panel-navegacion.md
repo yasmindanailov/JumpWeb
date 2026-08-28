@@ -504,6 +504,71 @@ aserción en este repo.**
 
 ---
 
+## 10. La vuelta del OWNER sobre «Crear pedido» (`#241`)
+
+Cuatro puntos suyos tras ver la tanda 4 en su navegador. Ninguno es un fallo de conducta: los cuatro
+son UX que se quedó a medias.
+
+### 10.1 Con RATÓN no se podía deslizar la tira de días
+
+`[OWNER]`: «en la página de creación de pedido ocurre lo mismo, en desktop no hay manera de deslizar».
+Entran flechas, **solo donde hay ratón** (`hover: hover` **y** `pointer: fine`) y **solo si llevan a
+algún sitio** (lo decide el estado, en un `x-data` de Alpine).
+
+⚠️ **La aritmética se repite a propósito y está declarado**: el panel no carga el bundle del cajón, así
+que `resources/js/sidebar/strip.js` y este `x-data` son dos copias. **Los dos números tienen que seguir
+siendo los mismos** — el 80 % de salto y **el píxel de tolerancia**, que no es defensivo: sin él la
+flecha «siguiente» no se apaga nunca, porque `scrollLeft` es fraccionario con zoom.
+
+### 10.2 Las plazas pesaban lo mismo que la hora
+
+`[OWNER]`: «lo de las plazas debería mostrarse de manera más sutil, no al mismo nivel que la hora».
+
+**La causa era el control**: `ToggleButtons` es el componente nativo, pero **su etiqueta es texto
+plano** —no tiene `allowHtml`—, así que «10:00 · 20 plazas» salía todo con el mismo peso. Pasa a un
+partial propio: hora a 15 px en negrita, plazas a 11 px sin peso y en gris.
+
+❗ **Cambiar el control no puede cambiar la regla**, y aquí el deshabilitado dejaba de ser del
+framework: una franja llena sigue viajando marcada como no vendible —**se enseña deshabilitada, no se
+esconde**, igual que en la web— y `pickTime()` la rechaza **en el servidor**, porque un `wire:click` se
+puede llamar con cualquier hora. Hay guarda, y muerde.
+
+⚠️ **De regalo, un huérfano**: `timeOptions()` se quedó sin llamador. Retirado con el protocolo de
+`CONVENCIONES §3.quater` — el test que lo usaba vigila **la paridad web↔panel**, que sigue viva, así
+que **se re-apuntó a `timeChips()`** en vez de borrarse.
+
+### 10.3 «Otra fecha» pasa a ser el CTA «Abrir calendario»
+
+`[OWNER]`. Antes era un campo más apilado en la columna; ahora es una **acción** con el calendario
+amplio plegado detrás. Misma decisión y mismo motivo que en el cajón del cliente.
+
+### 10.4 El resumen: de quién es el pedido, y a la altura de su vecina
+
+`[OWNER]`: «añadimos el nombre del cliente, o su correo, y la card a la misma altura que la de la
+izquierda; y esa columna puedes hacerla un poco más ancha».
+
+⚠️ **El desfase no era del armazón: era un `mt-6`** en el propio partial del carrito, de cuando el
+resumen iba DEBAJO del formulario. Retirado. **Medido: las dos cards arrancan en 229 px.**
+
+El titular usa **el mismo texto que el buscador de clientes** (`customerDisplay()`): componer aquí una
+segunda forma sería tener dos maneras de nombrar a la misma persona en la misma página. Y la columna
+sube a **19rem** — con 20 el formulario se quedaba en 304 px de contenido, con 17 se le apretaba el
+correo al titular; 19 es donde caben las dos cosas.
+
+### 10.5 Verificación
+
+Sonda `sonda-u7b.mjs`, **16/16** en iPad horizontal: el titular en el resumen con nombre + contacto,
+las dos cards en 229, la columna en 304 px, la flecha que mueve (0 → 256) y su contraria que aparece,
+el CTA que despliega el calendario con su `aria-expanded`, las 11 franjas como chips con **la hora a
+15 px y las plazas a 11**, y **cero controles bajo 44 px** (excluida la flecha, que solo existe con
+ratón). `CreateManualOrderTabletTest` sube a **13 casos** con **6 mutaciones más, las 6 muerden**.
+
+⚠️⚠️ **Una mutación NO mordía y el código estaba bien**: el ancla del `sed` aparecía **dos veces** —en
+`timeChips()` y en el `timeOptions()` huérfano— y mutó el método muerto. ▶ *Una mutación que no muerde
+puede estar mutando otra cosa.* Y de paso destapó el huérfano.
+
+---
+
 ## 6. Lo que queda
 
 | | Qué | Por qué importa | Estado |

@@ -1427,11 +1427,12 @@
 
 @media (min-width: 50rem) {
     .cmo-layout {
-        /* ⚠️ **17rem y no 20**: medido en apaisado el área principal son 760 px, y con 20rem (320)
-         * la columna del formulario se quedaba en **304 px de contenido** — más estrecha que un
-         * móvil, con los complementos partiéndose en dos líneas. El resumen es una lista corta de
-         * importes: cabe en 272 px y le devuelve 48 al área de trabajo. */
-        grid-template-columns: minmax(0, 1fr) 17rem;
+        /* ⚠️ **19rem, y el número tiene historia.** Primero 20 (320 px): la columna del formulario se
+         * quedaba en **304 px de contenido** —más estrecha que un móvil, con los complementos
+         * partiéndose en dos líneas—. Se bajó a 17. Con el resumen llevando ya el TITULAR del pedido
+         * (`#241`), 17 le apretaba el nombre y el correo, así que sube a **19** (304 px), que es el
+         * punto donde caben las dos cosas: el formulario en ~408 y el resumen sin partir el correo. */
+        grid-template-columns: minmax(0, 1fr) 19rem;
     }
 
     /* Lo que se lleva y lo que se cobra **no se pierden de vista** mientras se monta el pedido.
@@ -1667,3 +1668,182 @@
 .cmo-daystrip__day.is-selected .cmo-daystrip__wd:where(.dark, .dark *) {
     color: var(--primary-300);
 }
+
+
+/* ─── Lo que pidió el OJO del owner sobre «Crear pedido» (#241) ─────────────────────────────────
+ * Cuatro cosas, todas suyas y todas de la misma pantalla:
+ *   1. con RATÓN no había forma de deslizar la tira → flechas, solo donde hay ratón;
+ *   2. las plazas de una franja pesaban lo mismo que la hora → dos niveles;
+ *   3. «Otra fecha» era un campo más → un CTA «Abrir calendario»;
+ *   4. el resumen no decía de QUIÉN es el pedido y empezaba más abajo que la columna izquierda.
+ */
+
+/* ── 1 · Las flechas de la tira de días ──
+ * ⚠️ **Solo donde hay RATÓN**, igual que en el cajón del cliente (`site.css`): en una pantalla táctil
+ * dos botones flotando sobre la tira tapan chips y compiten con el gesto que ya funciona. Las DOS
+ * consultas juntas, porque `hover: hover` sola la cumple un táctil con lápiz. */
+.cmo-daystrip__body { position: relative; }
+
+.cmo-daystrip__nav { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+    .cmo-daystrip__nav {
+        position: absolute; top: 50%; z-index: 2;
+        display: flex; align-items: center; justify-content: center;
+        width: 32px; height: 32px;
+        transform: translateY(-50%);
+        border-radius: 9999px;
+        box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 15%, transparent), 0 2px 6px color-mix(in oklab, var(--gray-950) 12%, transparent);
+        background-color: var(--color-white);
+        color: var(--gray-700);
+    }
+
+    .cmo-daystrip__nav:hover { box-shadow: inset 0 0 0 1px var(--primary-500), 0 2px 6px color-mix(in oklab, var(--gray-950) 12%, transparent); }
+    .cmo-daystrip__nav--prev { left: 0; }
+    .cmo-daystrip__nav--next { right: 0; }
+
+    .cmo-daystrip__nav span {
+        width: 7px; height: 7px;
+        border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+    }
+
+    .cmo-daystrip__nav--prev span { transform: translateX(2px) rotate(135deg); }
+    .cmo-daystrip__nav--next span { transform: translateX(-2px) rotate(-45deg); }
+
+    .cmo-daystrip__nav:where(.dark, .dark *) {
+        background-color: var(--gray-800);
+        color: var(--gray-200);
+        box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-white) 15%, transparent);
+    }
+}
+
+/* ── 2 · Las franjas: la hora manda, las plazas son contexto ──
+ * `[OWNER]`: «lo de las plazas debería mostrarse de manera más sutil, no al mismo nivel que la hora».
+ * ⚠️ Una franja LLENA se enseña deshabilitada, no se esconde: que el operador vea que esa hora existe
+ * y está llena es información; que le falte, no. */
+.cmo-times > .fi-fo-field-label-content {
+    display: block;
+    margin-bottom: calc(var(--spacing) * 1.5);
+}
+
+.cmo-times__track {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+}
+
+.cmo-times__slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--spacing) * 0.5);
+    min-width: 76px;
+    min-height: 56px;
+    padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2);
+    border-radius: 0.5rem;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 10%, transparent);
+    background-color: var(--color-white);
+    color: var(--gray-950);
+}
+
+.cmo-times__slot:hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--primary-500); }
+
+.cmo-times__slot.is-selected {
+    box-shadow: inset 0 0 0 2px var(--primary-600);
+    background-color: color-mix(in oklab, var(--primary-500) 10%, var(--color-white));
+    color: var(--primary-700);
+}
+
+/* Deshabilitada: se ve, no se usa, y se NOTA que no se usa. */
+.cmo-times__slot:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.cmo-times__h { font-size: 0.9375rem; font-weight: 700; line-height: 1; }
+
+/* El cupo, en segundo plano: la mitad de tamaño y sin peso. Es contexto de la decisión, no la decisión. */
+.cmo-times__seats { font-size: 0.6875rem; font-weight: 400; line-height: 1; color: var(--gray-500); }
+
+.cmo-times__slot.is-selected .cmo-times__seats { color: var(--primary-600); }
+
+.cmo-times__help {
+    margin-top: calc(var(--spacing) * 1.5);
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.cmo-times__slot:where(.dark, .dark *) {
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-white) 10%, transparent);
+    background-color: color-mix(in oklab, var(--color-white) 5%, transparent);
+    color: var(--color-white);
+}
+
+.cmo-times__slot.is-selected:where(.dark, .dark *) {
+    box-shadow: inset 0 0 0 2px var(--primary-400);
+    background-color: color-mix(in oklab, var(--primary-400) 15%, transparent);
+    color: var(--primary-300);
+}
+
+.cmo-times__seats:where(.dark, .dark *) { color: var(--gray-400); }
+
+/* ── 3 · «Abrir calendario» ──
+ * Una ACCIÓN, no un campo: se busca cuando hace falta. Ancho completo y 44 px, como «Ver más fechas»
+ * del cajón, porque es la única puerta al salto largo. */
+.cmo-calcta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--spacing) * 2);
+    width: 100%;
+    min-height: 44px;
+    border-radius: 0.5rem;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 10%, transparent);
+    background-color: transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-600);
+}
+
+.cmo-calcta:hover {
+    box-shadow: inset 0 0 0 1px var(--primary-500);
+    color: var(--primary-700);
+}
+
+/* Un cuadradito de calendario dibujado con bordes: cero peso y hereda el color. */
+.cmo-calcta__ico {
+    width: 13px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-top-width: 4px;
+    border-radius: 2px;
+}
+
+.cmo-calcta:where(.dark, .dark *) {
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-white) 10%, transparent);
+    color: var(--gray-400);
+}
+
+/* ── 4 · De QUIÉN es el pedido, en el resumen ──
+ * En una tablet de mostrador el resumen es lo único que queda a la vista mientras se monta la
+ * reserva. Sin el titular no dice para quién, y con una cola delante eso es cobrarle a otro. */
+.cmo-cart__who {
+    margin-bottom: calc(var(--spacing) * 3);
+    padding-bottom: calc(var(--spacing) * 2);
+    border-bottom: 1px solid color-mix(in oklab, var(--gray-950) 8%, transparent);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--gray-950);
+    overflow-wrap: anywhere;
+}
+
+.cmo-cart__who:where(.dark, .dark *) {
+    border-bottom-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+    color: var(--color-white);
+}
+
+/* ⚠️ **`x-cloak` es obligatorio con `x-show`**: sin él las dos flechas se pintan durante el instante
+ * que tarda Alpine en arrancar, y en una tabla larga eso es un parpadeo por cada carga. */
+[x-cloak] { display: none !important; }

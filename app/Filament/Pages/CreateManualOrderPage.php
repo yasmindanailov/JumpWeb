@@ -31,7 +31,6 @@ use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\ToggleButtons;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions as SchemaActions;
@@ -105,6 +104,16 @@ class CreateManualOrderPage extends Page
 
     /** Paso actual del asistente (1 Cliente · 2 Productos · 3 Pago). */
     public int $step = self::STEP_CUSTOMER;
+
+    /**
+     * ¿Está desplegado el calendario amplio del paso 2? (`#241`, `[OWNER]`: «mejor un CTA "abrir
+     * calendario" y así puedes elegir otra fecha del calendario más amplio»).
+     *
+     * ⚠️ **Nace CERRADO**: la tira de 14 días resuelve la reserva de mostrador, y el calendario es el
+     * atajo para el salto largo — la misma decisión y el mismo motivo que en el cajón del cliente
+     * (`specs/cajon-en-movil.md` §4.1).
+     */
+    public bool $calendarOpen = false;
 
     /**
      * Alta de cliente SIN email a la espera de la decisión de duplicados (#263; decisión clienta:
@@ -339,10 +348,20 @@ class CreateManualOrderPage extends Page
                             ->viewData(fn (): array => ['days' => $this->quickDays()])
                             ->visible(fn (): bool => $this->quickDays() !== []),
 
+                        // El CTA que abre el calendario amplio (`#241`, `[OWNER]`). Solo existe cuando
+                        // hay tira: sin ella el calendario ES el control de fecha y no se pliega.
+                        ViewComponent::make('filament.pages.partials.manual-order-calendar-cta')
+                            ->viewData(fn (): array => ['open' => $this->calendarOpen])
+                            ->visible(fn (): bool => $this->quickDays() !== []),
+
                         DatePicker::make('sel_date')
                             // ⚠️ **Cambia de rótulo porque ya no es el control principal** (`#240`):
                             // el día se elige en la tira de arriba, que es la que lleva «Fecha». Dos
                             // controles con la misma etiqueta uno debajo de otro se leen como un fallo.
+                            // ▶ Y desde `#241` **está PLEGADO tras su CTA**: «Otra fecha» era un campo
+                            // más en la columna; «Abrir calendario» es una acción que se busca cuando
+                            // se necesita, que es como lo usa el mostrador.
+                            ->visible(fn (): bool => $this->calendarOpen || $this->quickDays() === [])
                             ->label(fn (): string => $this->quickDays() === []
                                 ? __('admin.orders.create_manual.date')
                                 : __('admin.orders.create_manual.date_other'))
@@ -369,19 +388,20 @@ class CreateManualOrderPage extends Page
                             // otro día sobrevivía. Lo dijo la guarda de las dos puertas, no el ojo.
                             ->afterStateUpdated(fn (callable $set) => $this->onDateChosen($set)),
 
-                        // ⚠️ **CHIPS, no un desplegable** (`#240`, U7): con la tablet en la mano un
-                        // `<select>` son dos toques y una lista que tapa la pantalla, y las horas de
-                        // un día caben todas a la vista. `ToggleButtons` es el componente NATIVO de
-                        // Filament para esto y conserva `disableOptionWhen`, que es lo que sostiene
-                        // la conducta de abajo — cambiar el control no puede cambiar la regla.
-                        ToggleButtons::make('sel_time')
-                            ->label(__('admin.orders.create_manual.time'))
-                            ->options(fn (): array => $this->timeOptions())
-                            // Entradas llenas: se muestran DESHABILITADAS (no se ocultan), igual que la web.
-                            ->disableOptionWhen(fn (string $value): bool => ! ($this->timeMap()[$value]['sellable'] ?? false))
-                            ->helperText(fn (): string => $this->timeFieldHelp())
-                            ->inline()
-                            ->live(),
+                        // ⚠️ **CHIPS de dos niveles** (`#241`, `[OWNER]`: «lo de las plazas debería
+                        // mostrarse de manera más sutil, no al mismo nivel que la hora»). En `#240`
+                        // esto era un `ToggleButtons` nativo, y su etiqueta es TEXTO PLANO —no admite
+                        // `allowHtml`—, así que «10:00 · 20 plazas» salía todo con el mismo peso.
+                        // Con un partial propio la hora manda y el cupo queda de contexto.
+                        // ❗ **Cambiar el control NO cambia la regla**: una franja no vendible sigue
+                        // saliendo deshabilitada, lo decide el mismo `timeMap()` y lo comprueba
+                        // `pickTime()` en el servidor. Hay guarda.
+                        ViewComponent::make('filament.pages.partials.manual-order-times')
+                            ->viewData(fn (): array => [
+                                'times' => $this->timeChips(),
+                                'label' => __('admin.orders.create_manual.time'),
+                                'help' => $this->timeFieldHelp(),
+                            ]),
 
                         TextInput::make('sel_qty')
                             ->label(fn (): string => $this->isPackSelected()
@@ -883,6 +903,23 @@ class CreateManualOrderPage extends Page
     }
 
     /** Etiqueta de display de un cliente: nombre · (email o, si no hay, teléfono / «sin email»). */
+    /**
+     * El titular del pedido en curso, para la cabecera del resumen (`#241`, `[OWNER]`: «añadimos el
+     * nombre del cliente, o su correo»).
+     *
+     * ⚠️ **Reutiliza `customerDisplay()`**, que es la misma cadena que pinta el buscador de clientes:
+     * nombre + correo, o nombre + teléfono cuando no hay correo (cliente de agenda, `#263`). Componer
+     * aquí una segunda forma sería tener dos maneras de nombrar a la misma persona en la misma página.
+     *
+     * `null` mientras no hay cliente elegido — el resumen entonces no pinta cabecera.
+     */
+    public function currentCustomerLabel(): ?string
+    {
+        $id = (int) ($this->data['customer_id'] ?? 0);
+
+        return $id > 0 ? $this->customerLabel($id) : null;
+    }
+
     private function customerDisplay(User $u): string
     {
         $contact = filled($u->email)
@@ -1152,17 +1189,6 @@ class CreateManualOrderPage extends Page
      * a la web): aplica la ventana viva del día y el cupo de pack ≥ min_qty. Las entradas llenas se
      * muestran DESHABILITADAS (sellable=false). @return array<string,string>
      */
-    private function timeOptions(): array
-    {
-        $options = [];
-        foreach ($this->timeMap() as $start => $info) {
-            $options[$start] = substr((string) $start, 0, 5)
-                .' · '.__('admin.orders.create_manual.seats', ['n' => $info['available']]);
-        }
-
-        return $options;
-    }
-
     /**
      * Mapa franja → {available, sellable} de `SlotOffer`, memoizado por petición (lo consumen las
      * opciones, el `disableOptionWhen` y el helper del selector de hora).
@@ -1189,6 +1215,56 @@ class CreateManualOrderPage extends Page
     }
 
     /** Ayuda del selector de hora: avisa si la fecha elegida no tiene franjas ofrecibles. */
+    /**
+     * Las FRANJAS del día elegido, listas para pintar (`#241`).
+     *
+     * ⚠️ **`available` y `sellable` salen del MISMO `timeMap()`** que usaba el control anterior: el
+     * cupo lo decide `SlotOffer` (`AFORO-02`) y aquí solo se le pone forma. Una franja llena viaja
+     * igualmente, marcada como no vendible: **se enseña deshabilitada, no se esconde**, igual que en
+     * la web — así el operador ve que esa hora existe y está llena, en vez de que le falte.
+     *
+     * @return array<int, array{time: string, label: string, seats: int, sellable: bool, selected: bool}>
+     */
+    public function timeChips(): array
+    {
+        $selected = (string) ($this->data['sel_time'] ?? '');
+
+        $chips = [];
+        foreach ($this->timeMap() as $start => $info) {
+            $chips[] = [
+                'time' => (string) $start,
+                'label' => substr((string) $start, 0, 5),
+                'seats' => (int) $info['available'],
+                'sellable' => (bool) $info['sellable'],
+                'selected' => (string) $start === $selected,
+            ];
+        }
+
+        return $chips;
+    }
+
+    /**
+     * Elegir franja desde los chips.
+     *
+     * ⚠️ **Vuelve a comprobar que la franja sea VENDIBLE**, y no es ceremonia: el control lo pinta el
+     * navegador y un `wire:click` se puede llamar con cualquier hora. Es la misma defensa que
+     * {@see pickQuickDay()} — el navegador propone, el servidor decide.
+     */
+    public function pickTime(string $time): void
+    {
+        if (! ($this->timeMap()[$time]['sellable'] ?? false)) {
+            return;
+        }
+
+        $this->data['sel_time'] = $time;
+    }
+
+    /** Despliega o pliega el calendario amplio del paso 2 (`#241`). */
+    public function toggleCalendar(): void
+    {
+        $this->calendarOpen = ! $this->calendarOpen;
+    }
+
     /**
      * Los días de la TIRA RÁPIDA: los primeros **14 ofrecibles** del producto en curso (`#240`, U7).
      *
