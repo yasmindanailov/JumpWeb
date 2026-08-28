@@ -14,6 +14,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Fase 7.5 — Gestión de usuarios (RGPD del día a día), decisión #180.
@@ -117,5 +118,53 @@ class UserResource extends Resource
     public static function canDelete($record): bool
     {
         return false;  // borrado físico NO contemplado; baja RGPD = anonimizar
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+
+    /**
+     * Nombre, correo y teléfono: las tres formas en que el negocio identifica a alguien.
+     *
+     * ⚠️ **Esto es PII y su puerta es `users.manage`**, o sea SOLO admin — Filament exige
+     * `canAccess()` antes de buscar en un recurso, así que un empleado no obtiene ni un
+     * resultado de aquí (`[DECIDIDO owner, 2026-08-28]`: el empleado busca pedidos, no
+     * clientes). Y no hace falta el límite con auditoría de la puerta (`SEC-05`), que existe
+     * porque allí busca un rol BAJO: un admin ya puede paginar la lista entera de clientes, de
+     * modo que buscarla no le concede nada que no tuviera. Si algún día se le abre al empleado,
+     * eso cambia y hay que traerse el tratamiento de la puerta entero.
+     *
+     * Las cuentas anonimizadas siguen apareciendo, a propósito: conservan sus pedidos por
+     * obligación fiscal y hay que poder llegar a ellos. Ya no llevan PII (`RGPD-01`).
+     *
+     * @return array<int, string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'email', 'phone'];
+    }
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        return (string) $record->name;
+    }
+
+    /** @return array<string, string> */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return array_filter([
+            __('admin.users.col_email') => (string) $record->email,
+            __('admin.users.col_phone') => (string) ($record->phone ?? ''),
+        ]);
+    }
+
+    /**
+     * Sin el `with('roles')` de `getEloquentQuery()`: ese eager-load existe para el badge de
+     * rol de la TABLA y para el predicado de acciones sensibles de la ficha, y aquí solo se
+     * pintan nombre, correo y teléfono. En una caja que consulta al teclear, cargar una
+     * relación que nadie mira se paga en cada pulsación.
+     */
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return static::getModel()::query();
     }
 }

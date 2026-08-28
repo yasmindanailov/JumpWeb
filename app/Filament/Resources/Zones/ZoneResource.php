@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Zones;
 
 use App\Domain\Booking\Models\Zone;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Zones\Pages\CreateZone;
 use App\Filament\Resources\Zones\Pages\EditZone;
 use App\Filament\Resources\Zones\Pages\ListZones;
@@ -28,6 +29,8 @@ use Filament\Tables\Table;
  */
 class ZoneResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = Zone::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
@@ -107,5 +110,19 @@ class ZoneResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         return false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // Por nombre o por slug. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name->es', 'slug'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'name';
     }
 }

@@ -7,6 +7,7 @@ use App\Domain\Platform\Models\Setting;
 use App\Filament\Pages\AdminSettingsHub;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Support\InitialsAvatarProvider;
+use App\Filament\Support\PanelGlobalSearchProvider;
 use App\Http\Middleware\RequiresStaffOrAdmin;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetAdminLocale;
@@ -121,6 +122,26 @@ class AdminPanelProvider extends PanelProvider
                 'warning' => Color::Orange,
                 'danger' => Color::Red,
             ])
+            // #224 — BUSCADOR del panel, en la barra superior y con ⌘K / Ctrl+K.
+            //
+            // Es la otra mitad de #223: al esconder 19 pantallas detrás de «Ajustes», la forma
+            // rápida de llegar a cualquier sitio deja de ser mirar el menú y pasa a ser escribir.
+            // El proveedor propio añade una categoría que Filament no trae —PANTALLAS—, porque
+            // de serie solo encuentra registros.
+            //
+            // Autorización: no hay que añadir nada. Filament exige `canAccess()` del recurso
+            // antes de buscar en él (`Resource::canGloballySearch()`), y las pantallas salen de
+            // fuentes ya filtradas por permiso. Un empleado, por tanto, encuentra PEDIDOS y sus
+            // cuatro sitios, y ni un cliente (`[DECIDIDO owner, 2026-08-28]`).
+            //
+            // ⚠️ El atajo es `mod+k`, NO `['command+k', 'ctrl+k']`. Con los dos por separado el
+            // sufijo que se pinta junto a la caja sale de `Arr::first()`, así que en Windows y
+            // Linux anunciaba «META+K» —visto en el sondeo—. `mod` es el modificador que tanto
+            // Mousetrap como el propio ayudante de Filament traducen por plataforma: ⌘K en Mac,
+            // CTRL+K en el resto, y con UNA sola declaración.
+            ->globalSearch(PanelGlobalSearchProvider::class)
+            ->globalSearchKeyBindings(['mod+k'])
+            ->globalSearchFieldKeyBindingSuffix()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

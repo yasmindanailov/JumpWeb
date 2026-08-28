@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\LandingServices;
 
 use App\Domain\Content\Models\LandingService;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\LandingServices\Pages\CreateLandingService;
 use App\Filament\Resources\LandingServices\Pages\EditLandingService;
 use App\Filament\Resources\LandingServices\Pages\ListLandingServices;
@@ -28,6 +29,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class LandingServiceResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = LandingService::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBriefcase;
@@ -112,5 +115,19 @@ class LandingServiceResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         return false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // El título del servicio. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['title->es', 'slug'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'title';
     }
 }

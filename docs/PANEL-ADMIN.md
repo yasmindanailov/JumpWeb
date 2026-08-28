@@ -61,6 +61,12 @@ Hoy · Calendario · Pedidos · Clientes · Puerta          ← el menú, sin gr
 ⚠️ **Ocultar no es autorizar.** Las 19 conservan intacto su `canViewAny()`/`canAccess()`. Para
 quitarle una pantalla a alguien se le quita el permiso, **nunca** la entrada del menú.
 
+**Y hay BUSCADOR** (barra superior, `CTRL+K` / `⌘K`, `DECISIONES #224`): encuentra pedidos,
+clientes, productos y demás registros — **y también PANTALLAS**, por su nombre o por lo que
+hacen («precio» encuentra Tarifas). Es lo que hace barato tener 19 escondidas.
+⚠️ **Un empleado busca PEDIDOS, no clientes** (`[DECIDIDO owner]`): para comprobar a una
+persona está la pantalla de Puerta (§2.5), que es la que lleva límite y auditoría.
+
 ⚠️ **Ninguna pantalla puede quedar huérfana.** Un recurso nuevo que no entre ni en el menú ni en
 Ajustes sería inalcanzable salvo tecleando su URL. `AdminNavigationTest` lo impide: toda pantalla
 registrada tiene que estar en uno de los tres sitios declarados, o la suite se pone roja.

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\SpecialDates;
 
 use App\Domain\Booking\Models\SpecialDate;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\SpecialDates\Pages\CreateSpecialDate;
 use App\Filament\Resources\SpecialDates\Pages\EditSpecialDate;
 use App\Filament\Resources\SpecialDates\Pages\ListSpecialDates;
@@ -40,6 +41,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class SpecialDateResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = SpecialDate::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFlag;
@@ -129,5 +132,19 @@ class SpecialDateResource extends Resource
     {
         return ($record instanceof SpecialDate)
             && (auth()->user()?->hasPermission('prices.manage') ?? false);
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // La FECHA es su identidad; la nota, el porqué. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['date', 'note->es'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'date';
     }
 }

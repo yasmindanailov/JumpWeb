@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\RateTypes;
 
 use App\Domain\Booking\Models\RateType;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\RateTypes\Pages\CreateRateType;
 use App\Filament\Resources\RateTypes\Pages\EditRateType;
 use App\Filament\Resources\RateTypes\Pages\ListRateTypes;
@@ -43,6 +44,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class RateTypeResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = RateType::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCurrencyEuro;
@@ -136,5 +139,19 @@ class RateTypeResource extends Resource
         return ($record instanceof RateType)
             && (auth()->user()?->hasPermission('prices.manage') ?? false)
             && $record->canBeDeleted();
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // Por rótulo o por clave. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['label->es', 'key'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'label';
     }
 }

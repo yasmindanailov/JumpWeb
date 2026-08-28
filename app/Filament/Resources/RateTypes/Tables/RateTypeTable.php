@@ -26,7 +26,9 @@ class RateTypeTable
                     ->getStateUsing(fn (RateType $record): string => (string) ($record->tr('label') ?? '—'))
                     ->description(fn (RateType $record): string => $record->key)
                     ->searchable(query: fn ($query, string $search) => $query
-                        ->where('label->es', 'like', "%{$search}%")
+                        // ⚠️ `LOWER(...)` por lo mismo que en `CatalogTable` (#224): la extracción
+                        // JSON de MySQL es `utf8mb4_bin` y el LIKE distinguía mayúsculas.
+                        ->whereRaw("LOWER(JSON_UNQUOTE(JSON_EXTRACT(label, '$.es'))) LIKE ?", ['%'.mb_strtolower($search).'%'])
                         ->orWhere('key', 'like', "%{$search}%")),
 
                 TextColumn::make('weekdays')

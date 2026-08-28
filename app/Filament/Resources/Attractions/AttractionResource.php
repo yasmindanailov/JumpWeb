@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Attractions;
 
 use App\Domain\Content\Models\Attraction;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Attractions\Pages\CreateAttraction;
 use App\Filament\Resources\Attractions\Pages\EditAttraction;
 use App\Filament\Resources\Attractions\Pages\ListAttractions;
@@ -25,6 +26,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class AttractionResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = Attraction::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSparkles;
@@ -109,5 +112,19 @@ class AttractionResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         return false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // El nombre de la atracción. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name->es'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'name';
     }
 }

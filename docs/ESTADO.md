@@ -2,7 +2,7 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-28, 16:40 (carril A · la FORMA del panel, `#223`)**.
+> aquí solo se enlaza.** Última actualización: **2026-08-28, 17:40 (carril A · la FORMA del panel, `#223` + `#224`)**.
 >
 > ❗❗ **ATENCIÓN: desde el 2026-08-27 hay TRES CARRILES sobre `main` (no dos).** El B cerró ese día a
 > las 07:30 con todo empujado y verde; el A cerró a las 18:40 con las TANDAS 1, 2 y 3 de «menores a
@@ -174,11 +174,43 @@
 >   ⚠️ **un `sed` de renumeración se comió 21 ficheros ajenos** (cookies, landing, `app.js`), detectado
 >   comparando fichero a fichero y revertido con `git checkout --`. **Verificación**: 12 casos nuevos ·
 >   **3 mutaciones, las 3 muerden** · suite del panel **1162 / 5125** · headless con capturas a 1440 y 390 px.
+>   ▶ ✅ **Y LA TANDA 2, EL BUSCADOR (`#224`, spec §7)**, pedida por el owner en la misma sesión
+>   («buscador total del panel, sobre clientes, pedidos y demás»). Es la otra mitad del menú plano:
+>   al esconder 19 pantallas, **escribir sustituye a mirar el menú**. Entran **14 recursos**
+>   buscables —pedidos por código y por nombre/correo del titular; clientes por nombre, correo y
+>   teléfono; y los doce de configuración— **más una categoría que Filament NO trae: las
+>   PANTALLAS**, sacadas de las MISMAS fuentes que las pintan (la navegación + `visibleAreas()`),
+>   buscables **por su descripción** («precio» → Tarifas, «festivo» → Fechas especiales) y **sin
+>   tildes** («catalogo» → «Catálogo»). Atajo `CTRL+K` / `⌘K`. ▶ `[DECIDIDO owner]`: **el empleado
+>   busca PEDIDOS, no clientes** —se sostiene sin código nuevo, y comprobar a una persona sigue
+>   siendo la pantalla de Puerta, que es la que lleva límite y auditoría (`SEC-05`)—. ⚠️ **Al
+>   buscador de clientes NO se le puso ese tratamiento a propósito**: allí busca un rol BAJO y el
+>   límite frena una enumeración; aquí busca un ADMIN, que ya puede paginar la lista entera. **Si
+>   algún día se le abre al empleado, eso cambia.** ⚠️⚠️ **De regalo, un defecto VIVO que apareció
+>   midiendo**: **buscar «jump» en el Catálogo del panel no encontraba «Jump · 1 hora»** —MySQL
+>   extrae un valor JSON con colación `utf8mb4_bin` y el `LIKE` distingue mayúsculas; medido 0 vs
+>   5—, y estaba así en `CatalogTable` y `RateTypeTable` desde que se escribieron, sin ningún test
+>   que lo viera. Arreglados los dos. ⚠️⚠️ **Y la palanca de Filament para eso NO es portable**:
+>   genera `lower(json_extract(...))` en MySQL pero `lower(tabla.name->es)` en SQLite, que es donde
+>   corre la suite → panel bien, suite roja. Se resuelve con `wrap()` de la gramática + `LOWER()` a
+>   mano. ❗ **Un test en SQLite NO demuestra la conducta en MySQL** (su `LIKE` ya ignora
+>   mayúsculas, comprobado mutándolo): por eso hay DOS comprobaciones, la de conducta y otra que
+>   asevera la CONSULTA. ⚠️ **PHP 8.4+ prohíbe redeclarar una propiedad de un trait con otro valor
+>   inicial** (error FATAL al cargar la clase). ⚠️⚠️ **Y la guarda más importante pareció CIEGA al
+>   mutarla y no lo era**: la defensa tiene DOS capas —`canViewAny()` abre la búsqueda del recurso,
+>   `canView()` da la URL de cada resultado, y **Filament descarta el resultado sin URL**—, así que
+>   la mutación era demasiado débil. ⚠️ El atajo se anunciaba «META+K» en Windows/Linux; con
+>   `mod+k` sale ⌘+K en Mac y CTRL+K en el resto (verificado con los tres user-agents), y lo vio el
+>   sondeo headless, no un test. **11 casos nuevos · 4 mutaciones, las 4 muerden · suite del panel
+>   1174 / 5155 · conducta comprobada a mano contra MySQL · capturas.**
 >   ▶ ❗ **LO QUE QUEDA DE ESTA TANDA**: **(1)** el **OJO del owner** sobre el menú, «Ajustes» y las pestañas —
 >   es un cambio de UI/UX y la suite no puede decir si «se entiende» · **(2)** repasar con él **los rótulos y
 >   las 19 descripciones** (`[DECIDIDO owner]`: las propone el agente, las revisa él) · **(3)** la pantalla
->   **«Hoy»** y **(4)** la **búsqueda global (⌘K)**, que son las dos mitades del «todo está separado» que el
->   menú por sí solo **no puede cerrar** (`specs/panel-navegacion.md` §6). ⚠️ La búsqueda **toca RGPD/SEC**.
+>   **«Hoy»**, que es la mitad que queda del «todo está separado» (la otra, el buscador, ya está:
+>   `#224`). ❗ **«Hoy» YA EXISTE** —es el Escritorio renombrado, con las reservas del día— y lo que
+>   le falta son CINCO columnas, medido: si firmó la exención · si trae menores · si ya entró hoy
+>   (la visita de la puerta, que nadie lee) · **si llega debiendo dinero** (los ajustes de señal y
+>   extras que se cobran en persona) · y el teléfono. **No es una pantalla nueva** (`specs/panel-navegacion.md` §6·U3).
 >   ⚠️ **Para el carril C**: esta tanda tocó `resources/css/filament/admin/theme.css` (+120 líneas al final),
 >   `lang/{es,zh_CN}/admin.php`, `app/Filament/**` y `app/Domain/Identity/Models/User.php`. **NO toca**
 >   `public/css/*`, `resources/js/**`, `home.blade.php` ni el cajón.
@@ -700,10 +732,10 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3327 en verde** (21.794 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las 16:55
-  (hora de Madrid) por el carril A tras **`#223`** (la FORMA del panel: menú plano + «Ajustes»), que
-  suma **12 casos** —`AdminNavigationTest`, que no existía— sobre los 3315 del pulido `#217`. JS **813**
-  (esta tanda no toca JS) · chunk 251,02 (techo 252).
+- Suite **3338 en verde** (21.814 aserciones, 1 skipped a propósito), medida el 2026-08-28 a las 17:45
+  (hora de Madrid) por el carril A tras **`#223`** (menú plano + «Ajustes») y **`#224`** (el buscador),
+  que suman **23 casos** —`AdminNavigationTest` y `AdminGlobalSearchTest`, ninguno de los dos existía—
+  sobre los 3315 del pulido `#217`. JS **813** (estas dos tandas no tocan JS) · chunk 251,02 (techo 252).
   ⚠️ **La medición anterior, 3315 / 21.713 a las 15:35, fue la del árbol CONJUNTO** —el pulido `#217`
   con los nueve arreglos de su revisión, rebasado sobre los ocho commits del carril C (hasta `#222`)—,
   y su lección sigue valiendo:

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Seasons;
 
 use App\Domain\Booking\Models\Season;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Seasons\Pages\CreateSeason;
 use App\Filament\Resources\Seasons\Pages\EditSeason;
 use App\Filament\Resources\Seasons\Pages\ListSeasons;
@@ -28,6 +29,8 @@ use Filament\Tables\Table;
  */
 class SeasonResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = Season::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSun;
@@ -106,5 +109,19 @@ class SeasonResource extends Resource
     {
         return ($record instanceof Season)
             && (auth()->user()?->hasPermission('slots.manage') ?? false);
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // `name` aquí NO es JSON: es varchar. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'name';
     }
 }

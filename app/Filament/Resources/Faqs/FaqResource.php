@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Faqs;
 
 use App\Domain\Content\Models\Faq;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Faqs\Pages\CreateFaq;
 use App\Filament\Resources\Faqs\Pages\EditFaq;
 use App\Filament\Resources\Faqs\Pages\ListFaqs;
@@ -24,6 +25,8 @@ use Filament\Tables\Table;
  */
 class FaqResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = Faq::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQuestionMarkCircle;
@@ -103,5 +106,19 @@ class FaqResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         return false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // La pregunta. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['question->es'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'question';
     }
 }

@@ -2124,6 +2124,20 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       las 3 muerden · suite del panel 1162 / 5125 · headless con capturas.**
       **Sigue 🟦: falta el OJO del owner**, y con él el repaso de los rótulos. ▶ **Lo que el menú NO
       arregla y sigue abierto**: la pantalla **«Hoy»** y la **búsqueda global (⌘K)** (spec §6).
+- [x] ✅ **LA FORMA DEL PANEL — tanda 2: el BUSCADOR** (2026-08-28, `#224`, spec §7). `[DECIDIDO
+      owner]`: «buscador total del panel, sobre clientes, pedidos y demás». 14 recursos buscables
+      **más una categoría que Filament no trae: las PANTALLAS**, sacadas de las mismas fuentes que
+      las pintan y buscables **por su descripción** («precio» → Tarifas) y sin tildes («catalogo» →
+      Catálogo). ⚠️ **El empleado busca PEDIDOS, no clientes** (`[DECIDIDO owner]`), y se sostiene
+      sin código nuevo. ⚠️⚠️ **De regalo, un defecto VIVO**: buscar «jump» en el Catálogo del panel
+      no encontraba «Jump · 1 hora» —MySQL extrae el JSON con colación `utf8mb4_bin` y el LIKE
+      distinguía mayúsculas; medido 0 vs 5—, desde que se escribieron esas tablas y sin ningún test
+      que lo viera. ⚠️ **La palanca de Filament para arreglarlo NO es portable** (rompe en SQLite,
+      que es donde corre la suite): se resuelve con `wrap()` de la gramática + `LOWER()` a mano, y
+      con DOS comprobaciones, porque **un test en SQLite no puede demostrar la conducta en MySQL**.
+      ⚠️ **Y la guarda clave pareció CIEGA al mutarla y no lo era**: la defensa tiene dos capas
+      (`canViewAny` abre la búsqueda, `canView` da la URL, y sin URL Filament descarta el
+      resultado). **11 casos · 4 mutaciones, las 4 muerden · suite del panel 1174 / 5155.**
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de

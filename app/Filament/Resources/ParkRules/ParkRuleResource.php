@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ParkRules;
 
 use App\Domain\Content\Models\VenueRule;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\ParkRules\Pages\CreateParkRule;
 use App\Filament\Resources\ParkRules\Pages\EditParkRule;
 use App\Filament\Resources\ParkRules\Pages\ListParkRules;
@@ -23,6 +24,8 @@ use Filament\Tables\Table;
  */
 class ParkRuleResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = VenueRule::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedExclamationTriangle;
@@ -102,5 +105,19 @@ class ParkRuleResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         return false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // El enunciado de la norma. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name->es'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'name';
     }
 }

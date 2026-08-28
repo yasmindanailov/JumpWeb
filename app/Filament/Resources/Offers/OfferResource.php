@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Offers;
 
 use App\Domain\Content\Models\Offer;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Offers\Pages\CreateOffer;
 use App\Filament\Resources\Offers\Pages\EditOffer;
 use App\Filament\Resources\Offers\Pages\ListOffers;
@@ -23,6 +24,8 @@ use Filament\Tables\Table;
  */
 class OfferResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = Offer::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedGift;
@@ -102,5 +105,19 @@ class OfferResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         return false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // El título. El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['title->es'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'title';
     }
 }

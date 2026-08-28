@@ -1,7 +1,7 @@
 # Navegación del panel — el menú plano y «Ajustes»
 
-> Estado: 🟦 **TANDA 1 EN EL ÁRBOL** (2026-08-28) · pendiente del OJO del owner
-> Decisión: `DECISIONES.md` **#223** · Encargo del owner: «simplificar el panel, mejor UI/UX,
+> Estado: 🟦 **TANDAS 1 y 2 EN EL ÁRBOL** (2026-08-28) · pendiente del OJO del owner
+> Decisiones: `DECISIONES.md` **#223** (el menú) y **#224** (el buscador) · Encargo del owner: «simplificar el panel, mejor UI/UX,
 > empezando por el menú y la organización de cada acción».
 > Doc funcional del panel: `PANEL-ADMIN.md` (qué hace cada pantalla). **Esto es solo la FORMA:
 > dónde vive cada pantalla y por dónde se llega.**
@@ -191,14 +191,104 @@ panel **1162 / 5125** verde · sondeo headless con capturas a 1440 y 390 px (19 
 
 ---
 
+## 7. Tanda 2 — el BUSCADOR (`#224`)
+
+`[DECIDIDO owner]`: «quiero buscador total del panel, sobre clientes, pedidos y demás». Es la
+otra mitad de la tanda 1: al esconder 19 pantallas, **escribir sustituye a mirar el menú**.
+
+### 7.1 Qué encuentra
+
+| Categoría | Qué | Se busca por |
+|---|---|---|
+| Pedidos | los pedidos | código · nombre y correo del titular |
+| Clientes | las cuentas | nombre · correo · teléfono |
+| Catálogo, Zonas, Tarifas, Temporadas, Fechas especiales, FAQ, Ofertas, Normas, Páginas, Atracciones, Servicios, Roles | sus registros | su nombre (y el slug donde lo hay) |
+| **Pantallas** | las 24 del panel | **su rótulo Y su descripción** |
+
+**«Pantallas» no la trae Filament**: de serie la búsqueda global solo encuentra REGISTROS. La
+añade `PanelGlobalSearchProvider`, y sale de las mismas dos fuentes que las pintan —la
+navegación del panel y `AdminSettingsHub::visibleAreas()`—, nunca de una lista aparte: una
+pantalla nueva aparece sola y **ya viene filtrada por permiso**.
+
+▶ Buscar por la DESCRIPCIÓN es la mitad útil: «Tarifas» se encuentra escribiendo *precio* y
+«Fechas especiales» escribiendo *festivo*. Quien busca casi nunca sabe cómo se llama la
+pantalla; sabe qué quiere hacer. Y la comparación **ignora tildes**: «catalogo» encuentra
+«Catálogo», porque nadie las pone al teclear.
+
+### 7.2 Lo que NO encuentra, y por qué
+
+- **Un empleado no encuentra CLIENTES** (`[DECIDIDO owner, 2026-08-28]`). Busca **pedidos** —que
+  es como llega la gente al mostrador— y para comprobar a una persona ya tiene la pantalla de
+  Puerta, que es la que lleva límite y auditoría (`SEC-05`). Se sostiene sin código nuevo:
+  Filament exige `canAccess()` del recurso y `UserResource` pide `users.manage`.
+- **Franjas y plantillas de franja**: no tienen identidad textual (son fecha + hora); se llega
+  por el calendario o por su pantalla.
+- **Incidencias**: es un registro de eventos, no una entidad, y por `RGPD-02` no lleva PII que
+  buscar.
+
+⚠️ **Por qué NO se le puso límite ni auditoría al buscador de clientes**, aunque la puerta sí lo
+tenga: allí busca un rol BAJO sobre todos los clientes, y ahí el límite frena una enumeración.
+Aquí busca un ADMIN, que ya puede paginar la lista entera — buscarla no le concede nada nuevo.
+**Si algún día se le abre al empleado, eso cambia y hay que traerse el tratamiento de la puerta
+entero**, y así está escrito en `UserResource`.
+
+### 7.3 ⚠️⚠️ El defecto que apareció midiendo, y ya estaba ahí
+
+**Buscar «jump» en el Catálogo del panel no encontraba «Jump · 1 hora».** Medido: `%jump%` → **0
+filas**, `%Jump%` → **5**.
+
+MySQL extrae un valor JSON con colación **`utf8mb4_bin`**, así que un `LIKE` sobre `name->es`
+distingue mayúsculas. El patrón `->where('name->es', 'like', "%{$search}%")` estaba en
+`CatalogTable` y en `RateTypeTable` **desde que se escribieron**, y no lo veía ningún test.
+Arreglados los dos, además del buscador nuevo.
+
+⚠️ **Y la palanca de Filament para eso no es portable.** `$isGlobalSearchForcedCaseInsensitive`
+genera `lower(json_extract(...))` en MySQL —correcto— pero en SQLite emite `lower(tabla.name->es)`
+en crudo, que SQLite lee como una columna llamada `es` y revienta la consulta. **La suite corre
+en SQLite y producción es MySQL.** La salida es pedirle la columna a la GRAMÁTICA (`wrap()`), que
+sabe traducir `name->es` en cada motor, y envolverla en `LOWER()` a mano
+(`ProvidesGlobalSearch::applyGlobalSearchAttributeConstraints`).
+
+❗ **Un test en SQLite NO puede demostrar esto**: su `LIKE` ya ignora mayúsculas, así que quitar
+el `LOWER()` lo deja verde —comprobado mutándolo—. Por eso hay **dos** comprobaciones: el caso de
+conducta, y otro que asevera la CONSULTA (que la columna va en `LOWER()` y el término en
+minúsculas), que sí muerde en cualquier motor. La conducta en MySQL se verificó a mano contra la
+base local.
+
+### 7.4 Otras tres cosas que enseñó la ejecución
+
+1. ⚠️ **PHP 8.4+ prohíbe que una clase redeclare una propiedad de un trait con otro valor
+   inicial**: `$globalSearchTitleAttribute` en el trait + su valor en cada recurso = error FATAL
+   de composición, y no de ejecución sino al cargar la clase. Es un **método**, no una propiedad.
+2. ⚠️⚠️ **La guarda más importante —«un empleado no encuentra clientes»— pareció CIEGA al
+   mutarla**, y no lo era: la defensa tiene **dos capas**. `canViewAny()` abre la búsqueda del
+   recurso, pero `canView()` decide la URL de cada resultado y **Filament descarta el resultado
+   que no tiene URL**. Romper una sola capa no reproduce el fallo. *Una mutación que no muerde
+   puede significar que la mutación era demasiado débil, no que la guarda no sirva.*
+3. **El atajo se anunciaba «META+K»** en Windows y Linux: con `['command+k', 'ctrl+k']` el sufijo
+   sale de `Arr::first()`. Con **`mod+k`** —el modificador que traducen tanto Mousetrap como el
+   ayudante de Filament— sale ⌘+K en Mac y CTRL+K en el resto, con una sola declaración.
+   Verificado con los tres user-agents. Lo vio el sondeo headless, no un test.
+
+**Verificación**: 11 casos (`AdminGlobalSearchTest`) · **4 mutaciones, las 4 muerden** tras
+corregir la que era demasiado débil · suite del panel **1174 / 5155** · sondeo headless con
+capturas · conducta en MySQL comprobada a mano.
+
+⚠️ **Coste por pulsación**: el proveedor recorre los 14 recursos buscables, o sea hasta 14
+consultas con `LIMIT` por búsqueda, con el rebote de 500 ms de Filament. Con estas tablas
+(decenas de filas salvo pedidos y clientes) no se nota; si algún día se nota, lo que hay que
+mirar es reducir la lista, no el rebote.
+
+---
+
 ## 6. Lo que queda
 
 | | Qué | Por qué importa | Estado |
 |---|---|---|---|
 | **U1** | **El OJO del owner** sobre el menú, Ajustes y las pestañas | Es un cambio de UI/UX: la suite no puede decir si «se entiende» | ⬜ pendiente |
 | **U2** | Repasar los **rótulos y las 19 descripciones** | `[DECIDIDO owner]` D3: las propone el agente, las revisa él | ⬜ pendiente |
-| **U3** | **La pantalla «Hoy»** — que conteste quién viene, pagado, firmado, y lleve al pedido de un clic | Es el problema (2) de §1.1, y **no lo arregla el menú**. Hoy «Pedidos» ordena por fecha de compra, no de visita | ⬜ sin empezar |
-| **U4** | **Búsqueda global (⌘K)** en pedidos y clientes | Es el problema (3), y el que más quita la sensación de «todo separado». ⚠️ **Toca RGPD/SEC**: hay que gatearla por permiso y decidir qué campos se indexan — `INVARIANTES` §3 y §4 **antes** de escribir nada | ⬜ sin empezar |
+| **U3** | **Las cinco columnas que le faltan a «Hoy»** | ❗ **«Hoy» YA EXISTE**: es el Escritorio renombrado, y ya trae filtro Hoy/Semana/Mes, dos cifras, la tabla **Cuándo · Producto · Cliente · Cantidad · Estado · Formulario**, un clic al pedido y «Imprimir resumen del día». **Medido: cero menciones a exención, menores, visita o ajustes en sus dos widgets.** Lo que falta: **si firmó la exención** (lo primero que se mira en la puerta) · **si trae menores y quiénes** · **si ya entró hoy** (la visita que registra la puerta desde `#208`, que nadie lee) · **si llega debiendo dinero** (`OrderAdjustment` de señal y extras, que se cobran en persona) · **el teléfono**. **No es una pantalla nueva: son cinco columnas.** ⚠️ Y una afirmación del agente que resultó FALSA: dijo que un pedido manual dejado a deber no saldría en «Hoy» — `ManualOrderFulfiller` los crea SIEMPRE pagados y el resto va como ajuste | ⬜ sin empezar |
+| ~~**U4**~~ | ~~Búsqueda global~~ | **HECHA** (`#224`, §7): 14 recursos + una categoría de PANTALLAS que Filament no trae. El empleado busca pedidos, no clientes. De regalo, un defecto vivo: buscar «jump» en el Catálogo no encontraba «Jump · 1 hora» | ✅ |
 | **U5** | Los `$navigationSort` de las 19 escondidas ya no ordenan nada | El orden de Ajustes lo manda `areas()`. Son propiedades muertas, inofensivas pero mentirosas | ficha en `DEUDA.md` |
 
 ▶ **Si el owner aprueba, el orden natural es U3 y luego U4**: son las dos mitades de «todo está

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Pages;
 
 use App\Domain\Content\Models\Page;
+use App\Filament\Concerns\ProvidesGlobalSearch;
 use App\Filament\Resources\Pages\Pages\EditPage;
 use App\Filament\Resources\Pages\Pages\ListPages;
 use App\Filament\Resources\Pages\Schemas\PageForm;
@@ -25,6 +26,8 @@ use Filament\Tables\Table;
  */
 class PageResource extends Resource
 {
+    use ProvidesGlobalSearch;
+
     protected static ?string $model = Page::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
@@ -102,5 +105,19 @@ class PageResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         return false;
+    }
+
+    // ─── Buscador del panel (#224) ───────────────────────────────────────────
+    // Por título o por slug (aviso-legal, cookies...). El rótulo lo resuelve `ProvidesGlobalSearch`.
+
+    /** @return array<int, string> */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['title->es', 'slug'];
+    }
+
+    protected static function globalSearchTitleAttribute(): string
+    {
+        return 'title';
     }
 }

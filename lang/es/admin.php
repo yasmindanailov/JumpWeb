@@ -11,6 +11,13 @@ return [
     // #219 — «Ajustes»: la puerta ÚNICA a las pantallas de puesta en marcha, que salieron
     // del menú lateral. Cada tarjeta lleva una línea de qué hace: a estas pantallas se entra
     // dos veces al año y su nombre, solo, no basta para saber cuál es la que buscas.
+    // #224 — el buscador del panel. «screens» es la categoría de resultados que Filament
+    // no trae de serie: pantallas, no registros.
+    'search' => [
+        'screens' => 'Pantallas',
+        'screen_detail' => 'Qué es',
+    ],
+
     'hub' => [
         'nav_label' => 'Ajustes',
         'title' => 'Ajustes',

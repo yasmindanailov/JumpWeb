@@ -10,6 +10,13 @@ return [
 
     // #219 — 「设置」：所有一次性配置页面的唯一入口（已移出侧边栏）。
     // 每张卡片附一句说明：这些页面一年只进两次，只有名称不足以分辨。
+    // #224 — el buscador del panel. «screens» es la categoría de resultados que Filament
+    // no trae de serie: pantallas, no registros.
+    'search' => [
+        'screens' => '页面',
+        'screen_detail' => '作用',
+    ],
+
     'hub' => [
         'nav_label' => '设置',
         'title' => '设置',

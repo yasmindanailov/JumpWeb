@@ -11999,3 +11999,69 @@ hoy —pagado, firmado, un clic al pedido— y la **búsqueda global (⌘K)**. S
 «todo está separado» que el menú, por sí solo, no puede cerrar (`specs/panel-navegacion.md` §6).
 ⚠️ La búsqueda **toca RGPD/SEC**: se gatea por permiso y se decide qué campos se indexan leyendo
 `INVARIANTES` §3 y §4 ANTES de escribir nada.
+
+---
+
+## #224 · 2026-08-28 · [DECIDIDO owner] El BUSCADOR del panel — y una categoría que Filament no trae: PANTALLAS. De paso, un defecto vivo: buscar «jump» en el Catálogo no encontraba «Jump · 1 hora»
+
+**Encargo del owner**, en la misma sesión que `#223`: «quiero buscador total del panel, sobre
+clientes, pedidos y demás». Es la otra mitad del menú plano: al esconder 19 pantallas detrás de
+«Ajustes», **escribir sustituye a mirar el menú**, y sin buscador esconder tiene un precio.
+
+**Lo que entra** (`specs/panel-navegacion.md` §7): 14 recursos buscables —pedidos por código y por
+nombre/correo del titular; clientes por nombre, correo y teléfono; y los doce de configuración por
+su nombre— más **una categoría que la búsqueda global de Filament NO trae: las PANTALLAS**. De
+serie solo encuentra registros; `PanelGlobalSearchProvider` añade las 24, sacadas de las MISMAS
+dos fuentes que las pintan (la navegación del panel y `AdminSettingsHub::visibleAreas()`), así que
+una pantalla nueva aparece sola y ya viene filtrada por permiso.
+
+▶ **Se busca por el rótulo Y por la descripción**, que es la mitad útil: «Tarifas» se encuentra
+escribiendo *precio* y «Fechas especiales» escribiendo *festivo*. Quien busca casi nunca sabe cómo
+se llama la pantalla; sabe qué quiere hacer. Y **ignora tildes**: «catalogo» encuentra «Catálogo».
+
+**La decisión del owner, que es la única parte que toca datos personales**: *un EMPLEADO busca
+PEDIDOS, no clientes*. Se sostiene sin código nuevo —Filament exige `canAccess()` y `UserResource`
+pide `users.manage`—, y comprobar a una persona sigue haciéndose en la pantalla de Puerta, que es
+la que lleva límite y auditoría (`SEC-05`). ⚠️ **Al buscador de clientes NO se le puso ese
+tratamiento a propósito**: en la puerta busca un rol BAJO sobre todos los clientes y ahí el límite
+frena una enumeración; aquí busca un ADMIN, que ya puede paginar la lista entera, de modo que
+buscarla no le concede nada nuevo. **Si algún día se le abre al empleado, eso cambia** y hay que
+traerse el tratamiento de la puerta entero — escrito en el propio `UserResource`.
+
+**⚠️⚠️ El defecto que apareció midiendo, y ya estaba ahí**: **buscar «jump» en el Catálogo del
+panel no encontraba «Jump · 1 hora»**. Medido: `%jump%` → **0 filas**, `%Jump%` → **5**. MySQL
+extrae un valor JSON con colación **`utf8mb4_bin`**, así que el `LIKE` sobre `name->es` distingue
+mayúsculas. El patrón estaba en `CatalogTable` y en `RateTypeTable` desde que se escribieron y no
+lo veía ningún test. Arreglados los dos.
+
+**⚠️ Y la palanca de Filament para eso NO es portable.** `$isGlobalSearchForcedCaseInsensitive`
+genera `lower(json_extract(...))` en MySQL —correcto— pero en SQLite emite `lower(tabla.name->es)`
+en crudo, que SQLite lee como una columna llamada `es` y revienta la consulta. **La suite corre en
+SQLite y producción es MySQL**: la bandera dejaba el panel bien y la suite roja. La salida es
+pedirle la columna a la GRAMÁTICA (`wrap()`), que sabe traducirla en cada motor, y envolverla en
+`LOWER()` a mano. ❗ **Un test en SQLite no puede demostrar esto** —su `LIKE` ya ignora mayúsculas,
+comprobado mutándolo—, así que hay DOS comprobaciones: la de conducta y otra que asevera la
+CONSULTA, que sí muerde en cualquier motor. La conducta en MySQL se verificó a mano.
+
+**Otras tres cosas que enseñó la ejecución:**
+
+1. ⚠️ **PHP 8.4+ prohíbe que una clase redeclare una propiedad de un trait con otro valor
+   inicial**: es un error FATAL de composición al CARGAR la clase, no en ejecución. El atributo
+   que identifica cada resultado pasó a ser un **método**, que sí se sobrescribe sin ceremonia.
+2. ⚠️⚠️ **La guarda más importante —«un empleado no encuentra clientes»— pareció CIEGA al mutarla,
+   y no lo era.** La defensa tiene **dos capas**: `canViewAny()` abre la búsqueda del recurso, pero
+   `canView()` decide la URL de cada resultado y **Filament descarta el resultado sin URL**. Romper
+   una sola no reproduce el fallo. *Una mutación que no muerde puede significar que la mutación era
+   demasiado débil, no que la guarda no sirva* — y la primera hipótesis, verificada, fue que el
+   propio `sed` de la mutación no se hubiera aplicado.
+3. **El atajo se anunciaba «META+K»** en Windows y Linux: con `['command+k','ctrl+k']` el sufijo
+   sale de `Arr::first()`. Con **`mod+k`** sale ⌘+K en Mac y CTRL+K en el resto, con una sola
+   declaración. Verificado con los tres user-agents. Lo vio el sondeo headless, no un test.
+
+**Verificación**: 11 casos nuevos (`AdminGlobalSearchTest`) · **4 mutaciones, las 4 muerden** tras
+corregir la que era demasiado débil · suite del panel **1174 / 5155** · sondeo headless con
+capturas · conducta comprobada a mano contra MySQL.
+
+⚠️ **Coste por pulsación**: el proveedor recorre los 14 recursos buscables (hasta 14 consultas con
+`LIMIT`), con el rebote de 500 ms de Filament. Con estas tablas no se nota; si algún día se nota,
+lo que se reduce es la lista, no el rebote.
