@@ -14,7 +14,10 @@ use Tests\TestCase;
  *
  * | | quién lo manda | qué mueve |
  * |---|---|---|
- * | `--cierre-q` | el progreso **CRUDO** del scroll | la retirada del armazón · el umbral de «ya llena» · el arranque del minijuego |
+ * | `--cierre-q` | el progreso **CRUDO** del scroll | la retirada del armazón · el umbral de «ya llena» · que el minijuego sea JUGABLE |
+ *
+ * ⚠️ **El minijuego ya no ARRANCA aquí** (`#256`): su animación la enciende ver el lienzo, como en
+ * el mockup, y este umbral solo decide cuándo se puede jugar. Lo vigila `SaltaJuegoTest`.
  * | `--cierre-p` | el mismo, **SUAVIZADO** (`0,22·q + 0,78·smoothstep(q)`) | la geometría: ancho, alto, izquierda y la talla del titular |
  *
  * Es la separación del mockup, donde son `q` y `e` y **solo `e` entra en los `lerp`**.
@@ -90,8 +93,8 @@ class CierreChoreographyTest extends TestCase
         $this->assertMatchesRegularExpression(
             '/const abierto = q >= 0\.985/',
             $js,
-            'el aviso de «la tarjeta ya llena la pantalla» —que enciende el minijuego— usa el umbral '.
-            'del mockup (`q > 0.985`) sobre el progreso CRUDO.',
+            'el aviso de «la tarjeta ya llena la pantalla» —que hace JUGABLE el minijuego— usa el '.
+            'umbral del mockup (`q > 0.985`) sobre el progreso CRUDO.',
         );
     }
 

@@ -725,7 +725,7 @@ document.addEventListener('alpine:init', () => {
     window.Alpine.data('saltaJuego', () => ({
         fase: 'off',            // off · listo · jugando · fin
         metros: 0, pulseras: 0, record: 0, nuevoRecord: false,
-        _motor: null, _cargando: false, _abierto: false,
+        _motor: null, _cargando: false, _abierto: false, _io: null,
         get reduce() { return !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches; },
 
         /** La altura del lienzo, que es también el zoom del juego (`k = alto / 300`). */
@@ -746,6 +746,25 @@ document.addEventListener('alpine:init', () => {
         init() {
             this._onAbierto = (e) => { this.abierto(!!e.detail); };
             window.addEventListener('cierre:abierto', this._onAbierto);
+            // ⚠️⚠️ **La DEMO arranca cuando el lienzo SE VE, no cuando la tarjeta llena la
+            // pantalla** (`#256`, `[DECIDIDO owner]`: «que la animación del juego esté activada en
+            // su punto estático»). Es lo que hace el mockup y nosotros no hacíamos: su bucle corre
+            // en modo demo siempre que el lienzo está a la vista (`vigilaVista` → `casBucle`), y
+            // `q > 0,985` allí solo decide si se puede JUGAR. Aquí el motor ni se descargaba hasta
+            // ese umbral, así que en el punto estático la tira estaba **en blanco**.
+            // ▶ **Y el anclaje NO sirve como señal, aunque lo parezca**: medido, en el punto
+            //   estático la tarjeta está anclada a 1366, 1280 y 390 px, pero a 1440 y 1920 **no**
+            //   —ahí la composición cabe con la sección todavía 20 px por debajo del tope—, así
+            //   que el juego se habría quedado en blanco justo en las pantallas grandes.
+            // ▶ Los dos umbrales siguen siendo dos y no se tocan el uno al otro: la VISTA enciende
+            //   la animación, `cierre:abierto` la hace jugable. Sin esa separación, en el punto
+            //   estático el espacio dejaría de desplazar la página para empezar una partida que
+            //   nadie ha pedido — y la invitación saldría en una tarjeta que aún no es el juego.
+            // ⚠️ `$nextTick`: en `init()` Alpine todavía no ha recorrido a los hijos, así que
+            // `$refs.lienzo` puede no existir aún. Con el observador registrado en el tick
+            // siguiente, el lienzo ya está y —si la página carga directamente al final— el
+            // observador dispara de inmediato, sin esperar a que alguien desplace.
+            this.$nextTick(() => this._observa());
 
             // ⚠️⚠️ **La tecla ARRANCA la partida, no solo salta — y ésta era la queja del owner.**
             // La primera versión solo actuaba con `fase === 'jugando'`, así que la única forma de
@@ -810,6 +829,38 @@ document.addEventListener('alpine:init', () => {
             return this._motor;
         },
 
+        /**
+         * **Trae el motor la primera vez que el lienzo asoma por la ventana**, y se desengancha.
+         *
+         * ⚠️ Aquí SÍ vale un `IntersectionObserver`, y el motor explica por qué él no lo usa: su
+         * lienzo se pega y CRECE con el scroll, y un observador sobre algo que cambia de tamaño da
+         * entradas y salidas espurias. Eso importa cuando la respuesta se consulta sesenta veces
+         * por segundo para encender y apagar un bucle; aquí la pregunta se hace **una vez** y se
+         * cierra. Un falso positivo adelanta 12 kB; no hay falso negativo posible.
+         *
+         * ⚠️ **La fase NO cambia**: sigue en `off`, que es lo que deja el lienzo sin puntero, la
+         * invitación oculta y el espacio desplazando la página. Lo que aparece es la demo.
+         *
+         * ⚠️ Con movimiento reducido no se trae nada: son 12 kB de una animación que esa persona
+         * ha pedido no ver. Es la misma promesa que `abierto()`.
+         *
+         * ⚠️ Sin `IntersectionObserver` no se hace nada y el motor sigue llegando por
+         * `cierre:abierto`, que es exactamente la conducta que había antes de `#256`: se pierde la
+         * demo en reposo, no el juego.
+         */
+        _observa() {
+            if (this.reduce || !('IntersectionObserver' in window)) return;
+            const cv = this.$refs.lienzo;
+            if (!cv) return;
+            this._io = new IntersectionObserver((entradas) => {
+                if (!entradas.some((e) => e.isIntersecting)) return;
+                this._io.disconnect();
+                this._io = null;
+                this.carga();
+            });
+            this._io.observe(cv);
+        },
+
         async abierto(si) {
             if (si) {
                 if (this.fase === 'off') this.fase = 'listo';
@@ -858,6 +909,7 @@ document.addEventListener('alpine:init', () => {
         sal() { this._motor?.para(); this.record = this._motor?.record ?? this.record; this.fase = 'listo'; this._publicaAlto(); },
 
         destroy() {
+            this._io?.disconnect();
             window.removeEventListener('cierre:abierto', this._onAbierto);
             window.removeEventListener('keydown', this._onEsc);
             window.removeEventListener('keydown', this._onTecla);

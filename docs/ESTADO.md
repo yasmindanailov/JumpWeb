@@ -8,6 +8,34 @@
 > ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
 > la marquesina. Y `#253` — ocho puntos de la portada, DOS de ellos fallos.**
 >
+> ❗❗ **`#256` — LA DEMO DEL MINIJUEGO YA CORRE EN EL PUNTO ESTÁTICO, y la señal NO era la que
+> parecía.** `[DECIDIDO owner]`: «el hero del pie más largo» + «que la animación del juego esté
+> activada en su punto estático» son **un solo encargo**: lo segundo necesita sitio, lo primero es
+> ese sitio. El mockup ya lo hacía —su bucle corre en modo **demo** siempre que el lienzo se ve, y
+> `q > 0,985` allí solo decide si se puede JUGAR—; a nosotros el trozo de 12 kB no se descargaba
+> hasta ese umbral, así que en reposo la tira estaba **en blanco**.
+> ⚠️⚠️ **El primer intento usó el ANCLAJE y falló justo en las pantallas grandes**: medido, en el
+> punto estático la tarjeta está anclada a 1366, 1280 y 390 px pero **no a 1440 ni a 1920** (ahí la
+> composición cabe con la sección todavía 20 px por debajo del tope). *El nombre de un umbral no
+> demuestra dónde cae.* La señal buena es la del mockup —**que el lienzo SE VEA**— con un
+> `IntersectionObserver` de un solo disparo.
+> ⚠️ **Los dos umbrales no se tocan**: la VISTA enciende la ANIMACIÓN, `cierre:abierto` la hace
+> JUGABLE. Si la vista cambiara la fase, en el punto estático **el espacio dejaría de desplazar la
+> página**. Verificado en navegador: sigue desplazando.
+> ⚠️ **La reserva de la tira vuelve a ser constante y eso NO contradice a `#253`**: su criterio —«lo
+> que solo existe abierto, se reserva abierto»— no cambia; cambia el hecho, porque ahora la tira SÍ
+> existe en reposo. Con `prefers-reduced-motion` el hueco baja a 24 px, que es donde el motor nunca
+> se carga.
+> ⚠️⚠️ **Y el cambio DESTAPÓ un fallo dormido**: el motor **cacheaba el ancho del lienzo**. Montado
+> a pantalla completa medía el definitivo; arrancando en el punto estático mide **1176** y luego la
+> tarjeta crece — **62 % de estiramiento a 1920**. `ResizeObserver`, no `clientWidth` por fotograma.
+> ⚠️ La tarjeta en reposo crece **solo donde el hueco no cabía**: 1366 448→**555**, 1280 483→**548**,
+> 390 449→**521**; a 1920 y 1440 **no se mueve** (manda el `min-height` de `#254`). El coste dicho:
+> tapa 86 · 44 · 53 px de la parte alta del pie en esas tres.
+> ⚠️ **8 mutaciones, las 8 muerden — pero DOS no mordían y era el ARNÉS**: el escape de `\$` en
+> comillas dobles de bash llevó una mutación a otra línea. *Cuando una mutación no muerde, la
+> primera hipótesis es la mutación.*
+>
 > ❗❗ **`#254` — EL LOGOTIPO SE SIRVE EN LÍNEA, y eso cambia el modelo de amenaza.** Para poder
 > animarlo (`[DECIDIDO owner]`) deja de ir en un `<img>`: **dentro de un `<img>` un SVG es inerte y
 > en línea NO**. El fichero lo pone el operador con el paquete del cliente, pero eso es una
@@ -1262,6 +1290,12 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3421 en verde** (22.515 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 tras `#256` (la demo del minijuego en el punto estático). ▶ **+2 casos** en
+  `SaltaJuegoTest`: que la demo arranque al VER el lienzo —y que alguien LLAME al registro— y que la
+  tira tenga su hueco también en reposo. El de `prefers-reduced-motion` gana la **puerta nueva de
+  descarga**, porque *lo que un gate declara que no mira es un hueco con nombre*.
+  **8 mutaciones, las 8 muerden** — ⚠️ y **dos no mordían por culpa del ARNÉS**, no de las guardas.
 - Suite **3419 en verde** (22.495 aserciones, 1 skipped a propósito) · **JS 862**, medida el
   2026-08-29 al CERRAR la sesión del carril C (`#250` → `#255`). ▶ **+1 caso**: el simétrico del
   test del reloj (`#255`), la franja de hoy **todavía en curso** — sin él, el caso arreglado se

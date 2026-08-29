@@ -108,6 +108,21 @@ export function montaSalta(cv, opciones) {
     let raf = null, prev = 0, acum = 0;
     let anchoCv = 0, recalc = true;
     let visible = false, jugando = false, quieto = false;
+    /**
+     * ⚠️⚠️ **El ancho del lienzo está CACHEADO, y desde `#256` puede cambiar mientras se pinta.**
+     * Antes el motor se cargaba con la tarjeta ya a pantalla completa (`q > 0,985`), así que medía
+     * el ancho definitivo y ahí se quedaba. Ahora arranca en el punto ESTÁTICO —la tarjeta mide su
+     * columna, 1176 px— y luego crece hasta el ancho de la ventana: sin volver a medir, el búfer
+     * se queda en 1176 y el navegador lo estira. A 1920 son **62 % de más**.
+     * ▶ Se resuelve con un observador de tamaño y NO leyendo `clientWidth` en cada fotograma: esa
+     * lectura fuerza el cálculo de estilo dentro del bucle, que es justo lo que la caché evitaba.
+     * ▶ Sin `ResizeObserver` se vuelve a medir en cada fotograma (`mide()`): más caro, pero
+     * correcto — un dibujo estirado se ve, y un `clientWidth` de más no.
+     * ⚠️ Se declara **aquí, con el resto del estado**, y no junto a `observador.observe()`: `mide()`
+     * lo lee, y una `const` declarada más abajo que su lector es la clase de trampa que este repo
+     * ya ha pagado (`auth-en-cajon.md` §8.ter).
+     */
+    const observador = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { recalc = true; }) : null;
     let pulsado = false, pintado = -1;
     let record = 0;
     try { record = parseInt(window.localStorage.getItem(CLAVE_RECORD) || '0', 10) || 0; } catch { record = 0; }
@@ -554,7 +569,7 @@ export function montaSalta(cv, opciones) {
     // ── el bucle ─────────────────────────────────────────────────────────────────────────────
     function mide() {
         if (!cv) return;
-        if (recalc || !anchoCv) { anchoCv = cv.clientWidth || 0; recalc = false; }
+        if (recalc || !anchoCv || !observador) { anchoCv = cv.clientWidth || 0; recalc = false; }
         const alto = O.alto();
         const nk = alto / 300;
         if (j && k && Math.abs(nk / k - 1) > 0.004) {
@@ -634,6 +649,7 @@ export function montaSalta(cv, opciones) {
 
     const onVis = () => { if (document.hidden) duerme(); else if (visible) despierta(); };
     document.addEventListener('visibilitychange', onVis);
+    if (observador) observador.observe(cv);
 
     return {
         get record() { return record; },
@@ -653,6 +669,7 @@ export function montaSalta(cv, opciones) {
         destruye() {
             duerme();
             document.removeEventListener('visibilitychange', onVis);
+            observador?.disconnect();
             j = null;
         },
     };

@@ -2117,6 +2117,10 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     --cierre-t-ini: clamp(40px, min(6vw, 11vh), 90px);
     --cierre-t-end: clamp(54px, 8.4vw, 124px);
     --cierre-p: 0;
+    /* El HUECO que la tarjeta le aparta al minijuego, abajo del todo. Es el número del mockup y
+       **no coincide con el alto del dibujo** (`--salta-h`, 150 px): eso está explicado donde se
+       declara el dibujo. Se declara aquí, junto al resto de lo que una instalación puede tocar. */
+    --salta-hueco: clamp(122px, 14vw, 156px);
 
     position: relative;
     max-width: calc(var(--col-max) + var(--col-gutter) * 2);
@@ -2175,22 +2179,25 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
    El relleno de la tarjeta es asimétrico a propósito: abajo reserva sitio para el lienzo del
    juego, que va pegado al canto.
 
-   ⚠️⚠️ **Pero esa reserva CRECE con la tarjeta, y ahí estaba media respuesta al punto estático**
-   (`#253`). El juego solo se monta cuando la tarjeta llena la pantalla (`q > 0,985`), así que en
-   reposo **esos 156 px están literalmente vacíos** — se estaban reservando para algo que todavía
-   no existe. Y el pie tiene que caber DEBAJO de la tarjeta en la misma ventana: a 1440×900 la
-   composición se pasaba 40 px, y a 1366×768, 161.
-   ▶ Ahora el relleno inferior interpola con el mismo progreso que todo lo demás: **24 px en
-   reposo → la tira entera cuando ya hay tira**. Es exactamente el mismo criterio que el resto de
-   la coreografía —lo que solo existe abierto, se reserva abierto— y no cambia ni un píxel del
-   estado a pantalla completa, que es el que el owner validó.
+   ⚠️⚠️ **`#253` la hizo INTERPOLAR y `#256` la devuelve a constante — y las dos veces por el mismo
+   criterio, no por cambiar de opinión.** El criterio es «lo que solo existe abierto, se reserva
+   abierto»: en `#253` la tira **no existía** en reposo (el motor no se cargaba hasta `q > 0,985`),
+   así que reservarle 156 px era apartar sitio para nada y el pie no cabía debajo. En `#256` el
+   motor arranca **en el punto estático** —como el mockup, cuyo bucle corre en modo demo siempre
+   que el lienzo se ve—, así que la tira SÍ existe en reposo y su hueco vuelve a ser fijo.
+   ▶ El mockup lo escribe exactamente así, sin interpolar: `padding: … clamp(122px,14vw,156px)`.
+   ▶ **El estado a pantalla completa no se mueve ni un píxel**: la interpolación valía justo esto
+   en `p = 1`, que es el estado que el owner validó.
+   ⚠️ Con movimiento reducido **no hay tira**: la coreografía no se monta, así que el motor nunca
+   se carga y el lienzo se queda en blanco. Ahí el hueco vuelve a 24 px (§ el bloque de
+   `prefers-reduced-motion` del final) o serían 156 px de vacío permanente.
    ⚠️ El titular también se acota **por ALTO** además de por ancho: en una ventana baja, dos
    renglones a 90 px se comen el sitio del pie. `min(6vw, 11vh)` no toca las pantallas grandes. */
 .reserve__box {
     padding:
         clamp(40px, min(6vw, 7vh), 80px)
         clamp(24px, 5vw, 80px)
-        calc(24px + (clamp(122px, 14vw, 156px) - 24px) * var(--cierre-p));
+        var(--salta-hueco);
     /* ⚠️⚠️ **En reposo la tarjeta ocupa EL HUECO QUE DEJA EL PIE** (`#254`, `[DECIDIDO owner]`:
        «podemos permitirnos darle más altura, y no hace falta que el punto estático tenga el logo,
        el CTA y el menú a la vista»). Y «más alta» se expresa así y no con un número: el punto
@@ -2287,8 +2294,13 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
    con el pie ya pasado por detrás. */
 .reserve__runway { height: var(--cierre-runway); }
 
+/* ⚠️ **El hueco del juego también se retira aquí, y no es cosmético** (`#256`): con movimiento
+   reducido la coreografía del cierre NO se monta, así que la tarjeta nunca se ancla, el motor
+   nunca se carga y el lienzo se queda en blanco. Reservarle entonces 122–156 px sería dejar una
+   franja vacía permanente al pie de la tarjeta, en la única configuración donde nadie la va a
+   llenar. `24px` es el mismo suelo que tenía la interpolación de `#253` en `p = 0`. */
 @media (prefers-reduced-motion: reduce) {
-    .reserve { --cierre-p: 0; }
+    .reserve { --cierre-p: 0; --salta-hueco: 24px; }
     body[data-has-hero] { --cierre-runway: 0px; }
 }
 
@@ -2317,7 +2329,9 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
    tarjeta el motor le escribe `height: 150px` y saltaba 28 px de golpe**. El alto del lienzo
    además ES el zoom del juego (`k = alto / 300`, `#233`): a 122 se jugaba a 0,41 en vez de a 0,5.
    ▶ Que el hueco (122–156) y el dibujo (150) no coincidan es del mockup: por debajo de 872 px la
-   tira asoma sobre el texto, y ahí es donde vive el castillo. */
+   tira asoma sobre el texto, y ahí es donde vive el castillo.
+   ▶ El hueco es `--salta-hueco`, declarado arriba con el resto de lo que el cierre expone; éste
+   es el DIBUJO. Son dos números y tienen que poder moverse por separado. */
 .reserve { --salta-h: 150px; }
 
 .salta { position: absolute; inset: 0; pointer-events: none; }

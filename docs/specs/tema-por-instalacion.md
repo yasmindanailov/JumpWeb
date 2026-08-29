@@ -1875,3 +1875,85 @@ asevera la lectura **directa** y que el token se declare en `:root`. **4 mutacio
 - Suite **3390 / 22.332** · JS **854** · Pint ✓ · docs-check ✓ · build ✓.
 - ❗ **Un imán se juzga con la mano, no con una sonda**: hay que bajar por la portada y notar si
   retiene donde debe y si suelta cuando uno insiste.
+
+---
+
+## 21. LA DEMO DEL MINIJUEGO EN EL PUNTO ESTÁTICO (`#256`, 2026-08-29)
+
+> `[DECIDIDO owner, 2026-08-29]`: «haz el hero del pie más largo» y «que la animación del juego esté
+> activada en su punto estático». **Son un solo encargo**: lo segundo necesita sitio y lo primero es
+> ese sitio.
+
+### 21.1 La señal NO es el anclaje, aunque se llame igual que el punto estático
+
+El mockup enciende su bucle del castillo **siempre que el lienzo se ve** (`vigilaVista` →
+`casBucle`), y en cualquier fase que no sea `jugando`/`fin` lo corre en **modo demo**. `q > 0,985`
+allí decide **solo si se puede jugar**. Nuestro motor tenía la demo y su interruptor de visibilidad
+idénticos; lo que faltaba estaba arriba: **el trozo no se descargaba hasta `cierre:abierto`**.
+
+⚠️⚠️ **El primer intento usó el ANCLAJE y falló donde el owner mira.** Publicar `cierre:anclado` como
+hecho binario parecía la señal obvia —el punto estático *es* donde la tarjeta se ancla— y medido en
+navegador **no lo es en todas partes**:
+
+| | 1920 | 1440 | 1366 | 1280 | 768 | 390 |
+|---|---|---|---|---|---|---|
+| ¿anclada en el punto estático? | **no** | **no** | sí | sí | **no** | sí |
+
+En las grandes la composición cabe con la sección todavía **20 px por debajo del tope**, así que
+nunca se ancla ahí. ▶ *El nombre de un umbral no demuestra dónde cae.* La señal buena es la del
+mockup —que el lienzo SE VEA— y se registra con un `IntersectionObserver` **de un solo disparo**.
+
+⚠️ Aquí sí vale un `IntersectionObserver` y el motor explica por qué él no lo usa: su lienzo se pega
+y CRECE, y un observador sobre algo que cambia de tamaño da entradas y salidas espurias. Eso importa
+cuando la respuesta se consulta sesenta veces por segundo; **aquí la pregunta se hace una vez y se
+cierra**.
+
+⚠️ **Los dos umbrales no se tocan**: la VISTA enciende la animación, `cierre:abierto` la hace
+jugable. Si la vista cambiara la fase, en el punto estático **el espacio dejaría de desplazar la
+página** (`_onTecla` solo se aparta con `fase === 'off'`). Verificado: sigue desplazando.
+
+### 21.2 La reserva de la tira vuelve a ser constante, y eso NO contradice a `#253`
+
+`#253` la hizo interpolar (24 px en reposo → la tira entera abierta) con el criterio «lo que solo
+existe abierto, se reserva abierto». Era correcto entonces: **el juego no existía en reposo**. Con la
+demo corriendo desde el punto estático la premisa se invierte. El criterio no cambia; cambia el hecho.
+
+▶ El hueco es `--salta-hueco`. El HUECO (122–156) y el DIBUJO (`--salta-h`, 150) son dos números del
+mockup que **no coinciden** y tienen que poder moverse por separado.
+⚠️ Con `prefers-reduced-motion` baja a **24 px**: ahí la coreografía ni se monta, el motor nunca se
+carga y reservar 156 px sería una franja vacía permanente.
+
+### 21.3 «Más largo» = exactamente lo que pide el juego
+
+Medido antes de proponer nada: **la tarjeta y el pie ya llenaban la ventana exacta** (a 1920,
+757 + 293 = 1050 de 1080, **0 px libres**). Con la medida delante, el owner eligió **«solo lo que
+pida el juego»** entre cuatro salidas.
+
+| tarjeta en reposo | 1920 | 1440 | 1366 | 1280 | 768 | 390 |
+|---|---|---|---|---|---|---|
+| antes | 757 | 578 | 448 | 483 | — | 449 |
+| después | **757** | **578** | **555** | **548** | **661** | **521** |
+| tapa del pie | 0 | 0 | 86 | 44 | 0 | 53 |
+
+▶ A 1920 y 1440 no se mueve nada: manda el `min-height` de `#254`. Donde crece es donde era corta, y
+ahí tapa la parte alta del pie — que es lo que hace el mockup.
+
+### 21.4 El fallo que el cambio destapa: el ancho del lienzo estaba cacheado
+
+⚠️⚠️ Montándose con la tarjeta **ya a pantalla completa**, el motor medía el ancho definitivo y la
+caché nunca fallaba. Arrancando en el punto estático mide **1176** —la columna— y luego la tarjeta
+crece hasta la ventana: el búfer se queda en 1176 y el navegador lo estira. **A 1920, 62 % de más.**
+▶ `ResizeObserver` sobre el lienzo, **no** `clientWidth` por fotograma: esa lectura fuerza el cálculo
+de estilo dentro del bucle, que es justo lo que la caché evitaba.
+⚠️ El `const` va **con el resto del estado**, no junto a su `observe()`: `mide()` lo lee, y una
+`const` por debajo de su lector es la trampa de `auth-en-cajon.md` §8.ter.
+
+### 21.5 Qué lo vigila
+
+`SaltaJuegoTest`: 3 casos nuevos —la demo arranca al VER el lienzo (y alguien LLAMA al registro), la
+tira tiene sitio en reposo, la fase no se toca ahí— y el de `prefers-reduced-motion` endurecido con
+la **puerta nueva de descarga**, porque *lo que un gate declara que no mira es un hueco con nombre*.
+**8 mutaciones, las 8 muerden.**
+⚠️ **Dos no mordían y era el ARNÉS**: el escape de `\$` dentro de comillas dobles de bash llevó una
+mutación a **otra línea** (la de `carga()`, no la de `_observa`) y otra no casaba por el cierre de
+llaves. *Cuando una mutación no muerde, la primera hipótesis es la mutación.*

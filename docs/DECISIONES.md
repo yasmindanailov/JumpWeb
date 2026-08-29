@@ -13853,3 +13853,100 @@ hoy — que es exactamente lo que el caso roto estaba tapando.
 ⚠️ **`audit-clock.sh` existe para esta familia y no se había corrido en las últimas tandas** porque
 ninguna añadía fixtures de calendario. Aquí lo encontró el propio reloj, por casualidad de la hora.
 Es el argumento de la herramienta, no en su contra: *la casualidad no es un plan de pruebas*.
+
+---
+
+## #256 · 2026-08-29 · [DECIDIDO owner] La demo del minijuego corre YA en el punto estático, y la tarjeta le devuelve su sitio
+
+Dos encargos del owner, y son **uno**: «haz el hero del pie más largo» y «que la animación del juego
+esté activada en su punto estático». Lo segundo necesita sitio; lo primero es ese sitio.
+
+### 1 · El mockup SÍ anima en reposo, y nosotros no — el desvío estaba en el arranque
+
+Medido contra `Landing PJP Modos`, que es el artboard normativo: su bucle del castillo
+(`casBucle`) corre **siempre que el lienzo se ve** (`vigilaVista`), y cuando la fase no es
+`jugando`/`fin` lo hace en **modo demo** —el muñeco en piloto automático, a 30 fps—. El umbral
+`q > 0,985` allí decide **solo si se puede jugar**.
+
+▶ Nuestro motor tenía la demo entera y su propio interruptor de visibilidad, idénticos. Lo que
+faltaba estaba una capa más arriba: **el trozo de 12 kB no se descargaba hasta `cierre:abierto`**,
+o sea hasta que la tarjeta ya llenaba la pantalla. En el punto estático la tira estaba **en blanco**.
+
+⚠️⚠️ **Y el ANCLAJE no vale como señal, aunque se llame igual que el punto estático.** Fue el primer
+intento —`cierre:anclado`, publicado como hecho binario— y **falló en las pantallas grandes**: medido
+en navegador, en el punto estático la tarjeta está anclada a **1366, 1280 y 390** px pero **no a 1440
+ni a 1920**, porque ahí la composición cabe con la sección todavía **20 px por debajo del tope**. Una
+guarda escrita sobre `cierre--anclado` habría pasado en verde con el juego en blanco justo donde el
+owner mira. ▶ *El nombre de un umbral no demuestra dónde cae: la señal es la del mockup —que el
+lienzo SE VEA— y se registra con un `IntersectionObserver` de un solo disparo.*
+
+⚠️ **Los dos umbrales siguen siendo dos y no se tocan**: la VISTA enciende la animación,
+`cierre:abierto` la hace jugable. Si la vista cambiara la fase, en el punto estático **el espacio
+dejaría de desplazar la página** para empezar una partida que nadie ha pedido (`_onTecla` solo se
+aparta con `fase === 'off'`) y la invitación saldría en una tarjeta que aún no es el juego.
+Verificado en navegador: el espacio sigue desplazando (11.003 → 11.676).
+
+### 2 · La reserva de la tira vuelve a ser constante — y eso NO contradice a `#253`
+
+`#253` hizo interpolar el `padding-bottom` de la tarjeta (24 px en reposo → la tira entera al
+abrirse) con el criterio «lo que solo existe abierto, se reserva abierto». Era correcto **entonces**:
+el juego no existía en reposo, así que apartarle 156 px era aire muerto que además dejaba al pie sin
+caber debajo. Con la demo corriendo desde el punto estático **la premisa se invierte**, y el mockup lo
+escribe sin interpolar: `padding: … clamp(122px,14vw,156px)`.
+
+▶ El criterio no cambia; cambia el hecho al que se aplica. El hueco es ahora `--salta-hueco`, un token
+propio: el HUECO (122–156) y el DIBUJO (`--salta-h`, 150) son dos números del mockup que no coinciden
+y tienen que poder moverse por separado.
+
+⚠️ **Con `prefers-reduced-motion` el hueco se anula a 24 px**, y no es cosmético: ahí la coreografía
+del cierre **ni se monta**, así que el motor nunca se carga y el lienzo se queda en blanco.
+Reservarle 122–156 px sería una franja vacía permanente en la única configuración donde nadie la va a
+llenar.
+
+### 3 · «Más largo» es exactamente lo que pide el juego — con su coste dicho
+
+`[DECIDIDO owner]` a pregunta simple, con la medida delante: **la tarjeta y el pie ya llenaban la
+ventana exacta** en el punto estático (a 1920: 757 + 293 = 1050 de 1080, **0 px libres**; a 1440,
+1366 y 390, entre 2 y 5). Así que «más largo» obliga a que ceda algo. De las cuatro salidas ofrecidas
+eligió **«solo lo que pida el juego»**: la tarjeta crece por su reserva, y ni un píxel más.
+
+Medido en seis ventanas, tarjeta en reposo antes → después:
+
+| | 1920×1080 | 1440×900 | 1366×768 | 1280×800 | 768×1024 | 390×844 |
+|---|---|---|---|---|---|---|
+| antes | 757 | 578 | 448 | 483 | — | 449 |
+| después | **757** | **578** | **555** | **548** | **661** | **521** |
+| tapa del pie | 0 | 0 | 86 | 44 | 0 | 53 |
+
+▶ A 1920 y 1440 **no cambia nada**: ahí manda el `min-height` de `#254` y el hueco ya cabía dentro.
+Donde crece es donde la tarjeta era corta, y ahí pasa a tapar la parte alta del pie — que es lo que
+hace el mockup, cuya tarjeta va por encima del pie.
+
+### 4 · Un fallo que el cambio DESTAPA: el motor cachea el ancho del lienzo
+
+⚠️⚠️ Hasta ahora el motor se montaba con la tarjeta **ya a pantalla completa**, así que medía el ancho
+definitivo y la caché nunca se equivocaba. Arrancando en el punto estático mide **1176 px** —la
+columna— y después la tarjeta crece hasta el ancho de la ventana: sin volver a medir, el búfer se
+queda en 1176 y el navegador lo estira. **A 1920 son 62 % de más.**
+
+▶ Se resuelve con un `ResizeObserver` sobre el lienzo, **no** leyendo `clientWidth` en cada
+fotograma: esa lectura fuerza el cálculo de estilo dentro del bucle, que es justo lo que la caché
+evitaba. Sin `ResizeObserver` se vuelve a medir por fotograma — más caro, pero correcto.
+▶ Verificado: búfer y caja CSS coinciden en las seis ventanas, en reposo y a pantalla completa.
+⚠️ El `const` se declara **con el resto del estado**, no junto a su `observe()`: `mide()` lo lee, y
+una `const` declarada más abajo que su lector es la trampa de `auth-en-cajon.md` §8.ter.
+
+### Lo verificado
+
+- **Navegador, seis ventanas**: la demo pinta en reposo en las seis (firma del lienzo cambiando entre
+  fotogramas), la invitación sigue oculta hasta pantalla completa, cero errores de JS.
+- **Movimiento reducido**: el trozo **no se descarga** (cero peticiones a `salta-*.js`), el hueco baja
+  a 24 px y el lienzo queda en blanco.
+- **Guardas**: 3 casos nuevos en `SaltaJuegoTest` + el existente de `prefers-reduced-motion`
+  endurecido con la puerta nueva. **8 mutaciones, las 8 muerden.**
+- ⚠️ **Dos de las ocho no mordían… y era el arnés**: el escape de `\$` dentro de comillas dobles de
+  bash hizo que una mutación cayera en **otra** línea (la de `carga()`, no la de `_observa`), y otra
+  no casaba por el cierre de llaves. *Cuando una mutación no muerde, la primera hipótesis es la
+  mutación.*
+- `CierreChoreographyTest` sigue verde y su texto se corrige: `q > 0,985` ya no «enciende el
+  minijuego», lo hace **jugable**.

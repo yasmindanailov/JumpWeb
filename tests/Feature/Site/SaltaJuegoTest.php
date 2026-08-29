@@ -4,6 +4,7 @@ namespace Tests\Feature\Site;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
+use Tests\Support\ReadsSiteStylesheets;
 use Tests\TestCase;
 
 /**
@@ -24,11 +25,79 @@ use Tests\TestCase;
  */
 class SaltaJuegoTest extends TestCase
 {
+    use ReadsSiteStylesheets;
     use RefreshDatabase;
 
     private function motor(): string
     {
         return (string) file_get_contents(resource_path('js/site/salta.js'));
+    }
+
+    /**
+     * El cuerpo del componente `saltaJuego`, **acotado**.
+     *
+     * ⚠️ `app.js` monta una docena de componentes y varios usan `IntersectionObserver`: aseverar
+     * contra el fichero entero daría verde con el observador de OTRO. Es la lección de §12.4 del
+     * tema —`assertSee('cta-prime')` casaba con `cta-prime__ico`—: *acota al elemento antes de
+     * creerte un test verde.*
+     */
+    private function componenteDelJuego(): string
+    {
+        $app = (string) file_get_contents(resource_path('js/app.js'));
+
+        $ini = strpos($app, "Alpine.data('saltaJuego'");
+        $this->assertNotFalse($ini, 'no se encuentra el componente `saltaJuego` en `app.js`');
+
+        $fin = strpos($app, "Alpine.data('cierreChoreo'", $ini);
+        $this->assertNotFalse($fin, 'no se encuentra dónde acaba `saltaJuego`: el corte sería a ciegas');
+
+        return substr($app, $ini, $fin - $ini);
+    }
+
+    /** Un método del componente del juego, acotado por conteo de llaves. */
+    private function metodoDelJuego(string $nombre): string
+    {
+        $cuerpo = $this->componenteDelJuego();
+
+        // ⚠️ La DEFINICIÓN, no la llamada: `this._observa()` aparece antes en el fichero, y
+        // cortar desde ahí devolvería el bloque equivocado sin que nada avisara.
+        $this->assertSame(
+            1,
+            preg_match('/(?<![\w.$])(?:async\s+)?'.preg_quote($nombre, '/').'\s*\([^)]*\)\s*\{/', $cuerpo, $m, PREG_OFFSET_CAPTURE),
+            "el componente del juego ya no define `{$nombre}()`",
+        );
+
+        $abre = $m[0][1] + strlen($m[0][0]) - 1;
+        $n = 0;
+
+        for ($i = $abre, $len = strlen($cuerpo); $i < $len; $i++) {
+            if ($cuerpo[$i] === '{') {
+                $n++;
+            } elseif ($cuerpo[$i] === '}' && --$n === 0) {
+                return substr($cuerpo, $abre, $i - $abre + 1);
+            }
+        }
+
+        $this->fail("no se puede acotar `{$nombre}()`: las llaves no cierran");
+    }
+
+    /** El relleno de la tarjeta de cierre, tal y como está escrito. */
+    private function declaracionDeRelleno(): string
+    {
+        $cuerpos = array_map(
+            fn (array $r) => $r['body'],
+            array_filter($this->siteRules(), fn (array $r) => $r['selector'] === '.reserve__box'),
+        );
+
+        $this->assertNotEmpty($cuerpos, 'no se encuentra la regla `.reserve__box`');
+
+        $this->assertSame(
+            1,
+            preg_match('/(?<![-\w])padding\s*:([^;]+);/', implode(' ', $cuerpos), $m),
+            'no se encuentra el relleno de la tarjeta de cierre, que es donde vive el hueco del juego',
+        );
+
+        return $m[1];
     }
 
     #[Test]
@@ -132,6 +201,96 @@ class SaltaJuegoTest extends TestCase
         );
     }
 
+    /**
+     * **LA DEMO ARRANCA CUANDO EL LIENZO SE VE, NO CUANDO LA TARJETA LLENA LA PANTALLA** (`#256`).
+     *
+     * `[DECIDIDO owner]`: «que la animación del juego esté activada en su punto estático». Es lo
+     * que hace el mockup —su bucle corre en modo demo siempre que el lienzo está a la vista, y
+     * `q > 0,985` allí solo decide si se puede JUGAR— y lo que aquí no se hacía: el motor no se
+     * descargaba hasta ese umbral, así que en reposo la tira estaba **en blanco**.
+     *
+     * ⚠️⚠️ **Y el ANCLAJE no vale como señal, aunque sea el nombre del punto estático.** Medido en
+     * navegador: en ese punto la tarjeta está anclada a 1366, 1280 y 390 px, pero **no** a 1440 ni
+     * a 1920 —ahí la composición cabe con la sección todavía 20 px por debajo del tope—. Una guarda
+     * escrita sobre `cierre--anclado` habría pasado en verde con el juego en blanco justo en las
+     * pantallas grandes.
+     */
+    #[Test]
+    public function la_demo_arranca_al_ver_el_lienzo_y_no_al_llenar_la_pantalla(): void
+    {
+        // ⚠️ **Primero, que alguien lo LLAME.** Un método perfecto que no invoca nadie deja la
+        // tira en blanco y pasa cualquier guarda escrita solo sobre su cuerpo.
+        $this->assertStringContainsString(
+            '_observa()', $this->metodoDelJuego('init'),
+            'el componente ya no registra el observador al montarse: el método puede seguir '.
+            'entero y la demo no arrancar nunca.',
+        );
+
+        $observa = $this->metodoDelJuego('_observa');
+
+        $this->assertStringContainsString(
+            'new IntersectionObserver(', $observa,
+            "El minijuego ha dejado de mirar cuándo asoma su lienzo.\n".
+            "▶ Sin eso el motor solo llega por `cierre:abierto` (`q > 0,985`), que es cuando la\n".
+            '  tarjeta YA llena la pantalla: en el punto estático la tira se queda en blanco.',
+        );
+
+        $this->assertStringContainsString(
+            '$refs.lienzo', $observa,
+            'lo que hay que observar es el LIENZO, no la tarjeta: la tarjeta entra en la ventana '.
+            'mucho antes que la tira, y traerse 12 kB entonces es cobrárselos de más.',
+        );
+
+        $this->assertStringContainsString(
+            'this.carga()', $observa,
+            'observar el lienzo sin traer el motor no enciende nada: la demo la pinta el motor.',
+        );
+
+        // ⚠️ **Y la fase NO puede cambiar aquí.** Poner `listo` en el punto estático enseñaría la
+        // invitación en una tarjeta que todavía no es el juego y, peor, el ESPACIO dejaría de
+        // desplazar la página para arrancar una partida que nadie ha pedido: `_onTecla` solo se
+        // aparta con `fase === 'off'`. Verificado en navegador (el espacio siguió desplazando).
+        $this->assertStringNotContainsString(
+            'this.fase', $observa,
+            'la vista del lienzo enciende la ANIMACIÓN, no el juego: si aquí se toca la fase, en el '.
+            'punto estático el espacio deja de desplazar la página y empieza una partida.',
+        );
+    }
+
+    /**
+     * **LA TIRA DEL JUEGO TIENE SU SITIO TAMBIÉN EN REPOSO** (`#256`), que es la otra mitad.
+     *
+     * `#253` hizo que el `padding-bottom` de la tarjeta interpolara con `--cierre-p` —24 px en
+     * reposo, la tira entera al abrirse— y era lo correcto **entonces**: el juego no existía en
+     * reposo, así que apartarle 156 px era aire muerto que además dejaba al pie sin caber debajo.
+     * Con la demo corriendo desde el punto estático la premisa se invierte, y el mockup lo escribe
+     * sin interpolar (`padding: … clamp(122px,14vw,156px)`).
+     *
+     * ⚠️ El modo de fallo que esto caza es MUDO: con la reserva interpolada la demo corre igual,
+     * pero **por detrás del párrafo y de los dos CTA**. No falla nada y no lo enseña una captura
+     * del estado abierto, que es el que se suele mirar.
+     */
+    #[Test]
+    public function la_tira_del_juego_tiene_su_sitio_tambien_en_reposo(): void
+    {
+        $padding = $this->declaracionDeRelleno();
+
+        $this->assertStringNotContainsString(
+            'var(--cierre-p)', $padding,
+            "El hueco del minijuego ha vuelto a interpolar con el progreso del cierre.\n".
+            "▶ Desde `#256` la demo corre YA en el punto estático, así que en reposo la tira\n".
+            "  existe: con la reserva a 24 px el muñeco corre por detrás del texto y de los CTA.\n".
+            '▶ El mockup lo escribe constante.',
+        );
+
+        $this->assertStringContainsString(
+            'var(--salta-hueco)', $padding,
+            'el hueco del minijuego tiene que salir de su token: es lo que permite que una '.
+            'instalación lo mueva, y lo que el bloque de `prefers-reduced-motion` anula cuando no '.
+            'hay tira que meter dentro.',
+        );
+    }
+
     #[Test]
     public function con_movimiento_reducido_no_se_descarga_ni_corre_la_demo(): void
     {
@@ -145,6 +304,24 @@ class SaltaJuegoTest extends TestCase
             '/if \(!this\.reduce\) await this\.carga\(\)/', $app,
             'el motor se precarga también con `prefers-reduced-motion`: son 12 kB de una animación '.
             'que esa persona ha pedido no ver.',
+        );
+
+        // ⚠️⚠️ **Y desde `#256` hay una SEGUNDA puerta de descarga.** La primera guarda seguiría
+        // verde con la preferencia rota, porque mira la puerta vieja: *lo que un gate declara que
+        // no mira es un hueco con nombre* (`TESTING.md` §2.quater).
+        $this->assertStringContainsString(
+            'if (this.reduce ||', $this->metodoDelJuego('_observa'),
+            'la puerta nueva —traer el motor al ver el lienzo— no respeta `prefers-reduced-motion`: '.
+            'son los mismos 12 kB por la otra puerta.',
+        );
+
+        // Y sin tira que enseñar, tampoco se le aparta sitio: serían 122–156 px de vacío
+        // permanente al pie de la tarjeta, en la única configuración donde nadie los va a llenar.
+        $this->assertStringContainsString(
+            '--salta-hueco: 24px',
+            implode("\n", $this->siteSheets()),
+            'con movimiento reducido el motor no se carga, así que la tarjeta reservaría 122–156 px '.
+            'para una tira que nunca aparece.',
         );
 
         // Y si llega a cargarse —porque alguien pulsa «Jugar»—, el fondo no corre: un fotograma.
