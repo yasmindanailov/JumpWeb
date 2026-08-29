@@ -193,4 +193,23 @@ class MixedPartyBadgeTest extends TestCase
             // ⚠️ Y NUNCA como cargo: si esto apareciera, el operador cobraría lo que no se debe.
             ->assertDontSee(__('admin.orders.mixed_party.applied', ['amount' => '14,00 €']));
     }
+
+    public function test_a_charge_whose_family_was_retired_is_still_explained(): void
+    {
+        // ⚠️⚠️ El bloque entero colgaba de `$mix->applies`, así que retirar la familia en el
+        // catálogo dejaba al operador con un importe en «a cobrar en el parque» y CERO explicación
+        // en pantalla. El dinero escrito manda sobre si esto se pinta: mientras el cliente lo deba,
+        // el operador tiene que poder leer de dónde sale.
+        $order = $this->paidPartyWith([4, 5, 8]);
+        $this->kids->forceFill(['guest_age_family' => null])->save();
+
+        $this->actingAs($this->staff())
+            ->get('/admin/orders/'.$order->code)
+            ->assertOk()
+            ->assertSee(__('admin.orders.mixed_party.applied', ['amount' => '7,00 €']))
+            ->assertSee(__('admin.orders.mixed_party.orphaned'))
+            // Y sin fingir un veredicto que ya no se puede derivar: nada de «hay invitados de otro
+            // tramo», porque hoy el sistema no sabe decirlo.
+            ->assertDontSee(__('admin.orders.mixed_party.title'));
+    }
 }

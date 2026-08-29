@@ -482,6 +482,7 @@ return [
             'unpriced' => 'No se puede calcular el suplemento: falta el precio de algún pack para ese día.',
             'without_age' => 'Faltan :count edades por declarar: el veredicto todavía puede cambiar.',
             'out_of_range' => ':count invitados con una edad que no cubre ningún pack de la familia: revisa los tramos en el catálogo.',
+            'orphaned' => 'Este pack ya no pertenece a ninguna familia por edad, así que no hay veredicto que comparar. El suplemento de arriba sigue vivo: es el que se le comunicó al cliente y es lo que se cobra en el parque.',
         ],
         'guest_badge_pending' => 'Pendiente',
         'guests_empty' => 'El cliente aún no ha rellenado el formulario de reserva.',
