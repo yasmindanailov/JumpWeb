@@ -2896,6 +2896,30 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       ⚠️⚠️ **La sonda mintió DOS veces con números creíbles**: recortando en coordenadas de viewport
       (áreas **negativas**) y sin aplicar el `transform` del pseudo (altos de 58 donde son 44).
       **9 casos · 8 mutaciones, las 8 muerden.** ❗ Sigue pendiente el ojo del owner.
+- [x] **2g · El CTA flotante y la FÍSICA del salto del logotipo** (`#265`, 2026-08-29,
+      `[DECIDIDO owner]`). El CTA de móvil pasa de **48 a 56** (token propio, `--book-bar-h`) y
+      **pierde una sombra que era el rol equivocado** —`--shadow-float`, que con este paquete vale
+      `5px 5px 0`, pisaba la que el componente ya traía—. Y el salto del logotipo recupera **las
+      siete curvas por tramo**, el **asentamiento** del lockup y el **tempo** (`v = 0.9`): medido
+      contra la fórmula del mockup, **0,000 px en 21 muestras**.
+      ⚠️⚠️ **Los ocho fotogramas ya eran los suyos**: lo que faltaba era la gravedad entre ellos. Es
+      `#262` por el otro lado — *hay que saber si el movimiento vive en los fotogramas o en la curva
+      antes de tocar ninguno*.
+      ⚠️⚠️ **Y el `fill: both` del asentamiento MATABA el hover del logotipo**, sin fallar nada.
+      ❗ **Queda del owner**: el **relevo de la Y** necesita que exporte el logo con esa pieza
+      (`INSTALACION-CLIENTE.md` §4.a.sexies). Eso **corrige a `#263`**, que lo declaró imposible.
+- [x] **2h · El salto del logotipo, que NUNCA se había visto** (`#266`, 2026-08-29). Salido de una
+      **revisión adversarial de `#265` antes de empujarlo**. La animación caía sobre `#fig`, que vive
+      en `<defs>` y **no se pinta**: `#254` la introdujo, `#263` la dio por arreglada en once vistas
+      y `#265` le puso la física, y **el dibujo no se movió ni un píxel** en las tres.
+      ⚠️⚠️ **Lo zanjó un CONTROL**: `style` en línea repinta 773 px, la misma transformación por
+      `@keyframes`, cero. *Que una animación exista y compute no es que el dibujo se mueva* — es la
+      lección de `#263` un nivel más abajo, y **un cero sin control no distingue «no se mueve» de
+      «no lo estoy mirando bien»**.
+      ❗ Y la **amplitud estaba 7,5× corta**: dentro de un SVG los `px` son unidades del `viewBox`.
+      Ahora va en **% de la figura**, que es más white-label que el mockup.
+      ⚠️ El «0,000 px» de `#265` era **adimensional**, y estaba escrito en seis sitios.
+      **+2 casos · 7 mutaciones, las 7 muerden.**
 - [ ] **3 · Las secciones**, pieza a pieza. ⏸️ **FUERA DE ALCANCE hasta que el owner lo diga**
       (`[DECIDIDO owner, 2026-08-28]`: del canvas solo se toma el sistema de diseño —colores,
       elementos, iconos, formas, menú, hero y pie—; el resto «son pruebas»).

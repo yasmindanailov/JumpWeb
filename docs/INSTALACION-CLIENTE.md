@@ -169,6 +169,45 @@ silueta plana. **Lo exporta la herramienta de diseño; el producto solo abre el 
 figura completa aguanta de 48 px para arriba» y que por debajo hay que cambiarla por el troquel, y
 deja **tres barras a elegir**. Eso lo decide el owner, no el producto.
 
+---
+
+**a.sexies) ❗❗ SI EL LOGOTIPO LLEVA UNA PIEZA QUE SE ANIMA: cómo tiene que venir separada** (`#265`)
+
+El logotipo del 2.º cliente tiene una **silueta que hace de letra**, y su mockup la hace SALTAR: el
+lockup aparece entero, la figura entra desde abajo con su arco, y **la letra a la que sustituye se
+desvanece** justo cuando ella aterriza. Eso último se llama **el relevo**, y hoy **no se puede hacer**.
+
+▶ **Por qué**: el SVG exportado dibuja `#u1` = «**PLA**» y `#fig` = la silueta. La **Y tipográfica no
+existe como pieza**, así que **desde que la página carga hasta que la figura aterriza** —466,7 ms de
+espera **más** el vuelo de 1.000, o sea **1,47 s**— el logotipo se lee «PLA JUMPPARK», con un hueco
+donde el mockup enseña su Y. ⚠️ Aquí decía «475 ms» y era una cifra que no salía de ningún número del
+sistema (`#266`): la espera son 466,7 y el hueco dura todo el vuelo.
+`[DECIDIDO owner, 2026-08-29]`: **el logo se vuelve a exportar con la Y**.
+
+**Lo que tiene que traer el fichero**, exactamente:
+
+| | |
+|---|---|
+| La pieza | La **Y** completa, con las **mismas capas** que las demás letras: los 26 pasos de extrusión, la capa de tinta, la de blanco, su color propio (`#1AA9DE` en el artboard) y los dos degradados (`sombraTexto` y `brilloTexto`) |
+| Su `id` | `uy` — un **`<path id="uy">` dentro de `<defs>`**, hermano de `u1`/`u2`/`fig`, más sus `<use>` en el dibujo. ⚠️ **No un `<g id="uy">` con las capas dentro**: en este fichero los `id` son plantillas en `<defs>` y lo que se dibuja son `<use>` que las referencian (31 para `u1`, 31 para `u2`, 21 para `fig`). Pedir la estructura equivocada se descubre al integrar, no al recibir |
+| Dónde | Exactamente donde iría la Y de «PLAY», o sea **debajo** de la silueta: las dos ocupan el mismo sitio y se relevan |
+| Su origen | El mockup la escala desde `50% 88%` al retirarla. Si viene como grupo propio, el producto lo declara; no hay que hacer nada en el fichero |
+
+⚠️⚠️ **Y la pieza tiene que quedar DENTRO del grupo que se anima, o no se moverá con él** (`#266`):
+la animación cae sobre «el grupo que contiene los `use` de la figura», porque una animación CSS
+sobre un elemento de `<defs>` **no alcanza al clon del `<use>`** — eso costó tres tandas.
+
+⚠️ **El resto del logotipo NO cambia**: es el mismo fichero con una pieza más. Nada de rehacerlo —
+está verificado byte a byte contra el PNG que exportó el owner.
+
+⚠️ **Y no vale una Y en `<text>`**, por la regla 1 de arriba: sin la fuente instalada saldría otra.
+
+▶ **Los números del relevo, ya medidos del mockup**, para cuando la pieza llegue: la Y se va en
+**560 ms** (con el tempo, 622), empezando **130 ms antes del aterrizaje**, con
+`opacity 1 → .34 → 0`, `translate(0, 0 → 4 → 8 px)` y `scale(1 → .994 → .985)`, curva
+`cubic-bezier(.35, .1, .6, 1)`. La silueta ya nace invisible durante la espera, así que **esa mitad
+del relevo está hecha**.
+
 **b) Estructura y detalle → `public/css/client.css`** (`DECISIONES #143`).
 Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cuatro** —después de
 `landing.css`, del tema inyectado y de `site.css`—, así que redefinir un token ahí gana en cascada:

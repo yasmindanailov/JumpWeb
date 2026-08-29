@@ -67,6 +67,12 @@
        siempre en el 54 de la reserva, aunque su propio comentario dijera «54, o 48 en teléfono».
        Medido a 390: 54. Un token fuera de alcance no falla, rinde su reserva. */
     --nav-btn-h: 54px;
+    /* ⚠️ **El CTA flotante de móvil NO mide lo que el racimo de arriba** (`#265`, `[DECIDIDO
+       owner]`: «hazlo más grande»). Heredaba `--nav-btn-h`, que en teléfono baja a 48 porque
+       arriba comparte fila con el logotipo y la hamburguesa — abajo no comparte con nadie y el
+       mockup lo pone en **56** (`min-height:56px` en su barra de acciones). Es el único sitio del
+       armazón donde el alto no puede salir del racimo: son dos piezas con dos restricciones. */
+    --book-bar-h: 56px;
     --nav-cluster-h: max(var(--nav-logo-h), var(--nav-btn-h));
 
     --col-max: 1176px;
@@ -3638,6 +3644,9 @@ body[data-has-hero] .nav--over .nav__cta {
 .book-bar__pair {
     display: flex; align-items: center; gap: 8px;
     pointer-events: none;
+    /* El par entero mide desde aquí: es la colocación la que decide el alto, y las dos mitades
+       —y su chip, y su glifo, que salen de `--cta-pair-h` desde `#260`— crecen con él. */
+    --cta-pair-h: var(--book-bar-h);
 }
 
 /* ── EL REPARTO ───────────────────────────────────────────────────────────────────────────────
@@ -3680,12 +3689,20 @@ body[data-has-hero] .nav--over .nav__cta {
 .book-bar__cta--alt,
 .book-bar--signup .book-bar__cta--buy { min-width: var(--tap-min); }
 
-/* ⚠️ **La sombra sí es de aquí**: el par del nav va apoyado en la página y usa los roles de
-   armazón; esto FLOTA sobre el contenido, que es el cuarto rol de elevación (`#217`). Es la única
-   propiedad de aspecto que la colocación tiene derecho a cambiar, y por eso es la única. */
+/* ⚠️⚠️ **AQUÍ HABÍA UNA SOMBRA, Y ERA EL ROL EQUIVOCADO** (`#265`). El comentario decía «esto
+   FLOTA sobre el contenido, que es el cuarto rol de elevación (`#217`)» — y el cuarto rol **es la
+   familia `--shadow-nav-*`**, no `--shadow-float`. Con el paquete de este cliente,
+   `--shadow-float` vale `5px 5px 0`: una sombra DURA de tinta pura desplazada 5 px abajo y a la
+   derecha, sobre un botón que flota a 10 px del borde inferior de la pantalla. No se lee como
+   elevación, se lee como un desalineado.
+   ▶ **El arreglo no es poner otra sombra: es RETIRAR ésta.** `.cta-med` y `.cta-ghost` ya declaran
+   la suya —`--shadow-nav-fill` y `--shadow-nav-ghost`, medidas del propio mockup en `#217`— y esta
+   regla, por ir después en la hoja con la misma especificidad, las pisaba las dos. Con ella fuera,
+   el botón de abajo queda **idéntico al de la cabecera**, que es lo que `#225` pidió y lo que esta
+   colocación llevaba escrito en su propio encabezado: «la barra ya no aporta forma».
+   ⚠️ El `pointer-events: auto` SÍ es de aquí: el contenedor los apaga para dejar pasar el scroll. */
 .book-bar__cta {
     pointer-events: auto;
-    box-shadow: var(--shadow-float);
 }
 
 /* ⚠️ **El hundido del tap NO se declara aquí, y probarlo costó una regla muerta**: la lista de
@@ -5676,23 +5693,81 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    420 de espera, que es exactamente `--dur-cae`. El mockup usa 1000/467; la diferencia es un 10 %
    y no justifica estrenar dos duraciones fuera del sistema. */
 .nav__brand-logo--inline { display: block; height: var(--nav-logo-h); }
-.nav__brand-logo--inline svg { display: block; height: 100%; width: auto; }
+/* ⚠️⚠️ **`overflow: visible` NO es cosmético: sin él no se ve VENIR al saltador** (`#266`). Un
+   `<svg>` recorta por defecto (hoja del navegador), así que con la silueta a 3 × su altura por
+   debajo —el punto de partida del mockup— queda FUERA de la caja y **aparece de golpe** a media
+   subida. El mockup no recorta: su lockup es HTML y el saltador cruza por encima de lo que haya.
+   ⚠️ En REPOSO el dibujo no excede su `viewBox`, así que esto no cambia nada de lo que se ve
+   quieto: solo deja pasar el vuelo. */
+.nav__brand-logo--inline svg { display: block; height: 100%; width: auto; overflow: visible; }
 
+/* ⚠️⚠️ **CADA TRAMO LLEVA SU CURVA, Y ÉSA ERA LA PIEZA QUE FALTABA** (`#265`). Los ocho
+   fotogramas ya eran los del mockup al dígito, pero la animación aplicaba **una sola** curva a
+   todos —`--ease-cae`, que es un rebote con overshoot (1.56)—, así que **cada tramo se pasaba de
+   largo y volvía**: un salto cuyas posiciones ya describen dos rebotes, rebotando además dentro de
+   cada tramo. El owner lo vio como «no hace la misma animación» y es exactamente eso.
+   ▶ Es el hallazgo de `#262` por el otro lado: allí *el rebote no vivía en la curva, vivía en los
+   fotogramas*. Aquí los fotogramas dan las POSICIONES y las curvas dan la GRAVEDAD entre ellas —
+   subir desacelerando, caer acelerando—, y por eso son siete y no una.
+   ⚠️ **No entran en la escala de movimiento y `MotionScaleTest` lo sabe**: una escala de cuatro
+   curvas de interfaz describe *cómo responde un control*, no la física de un cuerpo que salta.
+   La guarda las admite SOLO dentro de los `@keyframes` declarados como coreografía.
+   ⚠️ **La declaración `animation` ya no lleva curva y no es un olvido**: los siete tramos que
+   inician movimiento traen la suya, así que cualquier curva puesta ahí sería inerte — y un token
+   inerte es peor que ninguno, porque parece que decide algo. */
+/* ❗❗❗ **LOS DESPLAZAMIENTOS VAN EN PORCENTAJE DE LA FIGURA** (`#266`). Estaban copiados del
+   mockup en PÍXELES —`translateY(90px)`—, y aquí eso **no son píxeles**: un `transform` sobre un
+   elemento SVG se resuelve en **unidades de usuario del `viewBox`**, y el del logotipo instalado es
+   `0 0 1527 560.5` pintado a 70 px de alto, o sea un factor de **0,1249**.
+   ▶ Medido: la silueta entraba desde **11,24 px** donde el mockup la trae desde 90, y subía **2,25**
+   donde él sube 18. **El salto era 7,5 veces más pequeño.**
+   ⚠️⚠️ **Y la verificación de `#265` no podía verlo**: su comparador normalizaba la escala fuera
+   (dividía por el primer punto), así que validaba la FORMA de la curva y era ciego al TAMAÑO. El
+   «0,000 px de desviación» era una cifra ADIMENSIONAL disfrazada de píxeles.
+   ▶ **La unidad correcta es el porcentaje**: con `transform-box: fill-box` un `%` en `translate` se
+   resuelve contra la caja de la PROPIA figura. Verificado: `translateY(300%)` la mueve 84,67 px,
+   que son exactamente 3 × sus 28,22 px pintados.
+   ⚠️ **Y eso es MÁS white-label que el mockup**: él escribe 90 px porque su silueta mide 30, así que
+   su salto está atado a ese dibujo. En porcentaje, el logotipo de cualquier instalación salta igual
+   sea cual sea su `viewBox`. Los ratios son los suyos: 90/30 = 300 %.
+   ⚠️ El 80 % es **−8,333 %**: el mockup escribe `(-alto * .14).toFixed(1)`, o sea que emite **−2,5**
+   y no −2,52 — `#265` copió la fórmula sin su redondeo. */
 @keyframes brand-hop {
-    0%   { opacity: 0; transform: translateY(90px) scale(0.93, 1.08); }
-    5%   { opacity: 1; transform: translateY(74px) scale(0.93, 1.08); }
-    38%  { transform: translateY(-18px) scale(1.02, 0.99); }
-    62%  { transform: translateY(2px)  scale(0.96, 1.05); }
-    70%  { transform: translateY(5px)  scale(1.14, 0.84); }
-    80%  { transform: translateY(-3px) scale(0.96, 1.06); }
-    91%  { transform: translateY(2px)  scale(1.05, 0.95); }
+    0%   { opacity: 0; transform: translateY(300%) scale(0.93, 1.08); animation-timing-function: cubic-bezier(0.1, 0.62, 0.3, 1); }
+    5%   { opacity: 1; transform: translateY(246.667%) scale(0.93, 1.08); animation-timing-function: cubic-bezier(0.12, 0.6, 0.32, 1); }
+    38%  { transform: translateY(-60%) scale(1.02, 0.99); animation-timing-function: cubic-bezier(0.5, 0, 0.85, 0.45); }
+    62%  { transform: translateY(6.667%)  scale(0.96, 1.05); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.5); }
+    70%  { transform: translateY(16.667%) scale(1.14, 0.84); animation-timing-function: cubic-bezier(0.2, 0.8, 0.4, 1); }
+    80%  { transform: translateY(-8.333%) scale(0.96, 1.06); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.5); }
+    91%  { transform: translateY(6.667%)  scale(1.05, 0.95); animation-timing-function: cubic-bezier(0.2, 0.7, 0.4, 1); }
     100% { opacity: 1; transform: translateY(0) scale(1, 1); }
+}
+/* ⚠️ **El ASENTAMIENTO del lockup entero, que no teníamos.** Cuando la silueta aterriza, el mockup
+   hunde TODO el logotipo 2 px y lo devuelve (`L.animate`, 340 ms). Es lo que le da peso al golpe:
+   sin él, el saltador cae sobre algo que no se entera. */
+@keyframes brand-settle {
+    0%   { transform: translateY(0); animation-timing-function: cubic-bezier(0.3, 0.9, 0.3, 1); }
+    28%  { transform: translateY(2px); animation-timing-function: cubic-bezier(0.3, 0.9, 0.3, 1); }
+    100% { transform: translateY(0); }
 }
 /* ⚠️ `transform-box: fill-box` es lo que hace que el `transform-origin` se mida sobre la PIEZA y no
    sobre el lienzo entero del SVG: sin él, un `scale` sobre la silueta la manda a otro sitio del
    dibujo. Y el origen es su base —`50% 90%`, el del mockup—, que es lo que hace que el aplastado
    del aterrizaje se sienta como peso y no como un cambio de tamaño. */
-.nav__brand-logo--inline svg #fig {
+/* ❗❗❗ **LA ANIMACIÓN VA EN EL GRUPO QUE DIBUJA LA SILUETA, NO EN `#fig`** (`#266`).
+   `#fig` vive dentro de `<defs>`: **no se pinta**. Lo que se pinta son los 21 `<use href="#fig">`
+   que lo referencian, y **una animación CSS sobre el original NO alcanza al clon del `<use>`** —el
+   atributo `style` en línea sí se clona, una animación no—. Medido con control: `style.transform`
+   sobre `#fig` repinta 773 px; la misma transformación por `@keyframes`, **cero**.
+   ▶ Consecuencia: **el salto del logotipo no se vio NUNCA**, desde `#254`. `#263` lo dio por
+   arreglado en once vistas y `#265` le puso la física del mockup, y las tres tandas midieron lo
+   mismo: que la animación está DECLARADA y que su valor COMPUTADO cambia. *Que una animación
+   compute no es que el dibujo se mueva* — la lección de `#263` un nivel más abajo.
+   ⚠️ El selector es SEMÁNTICO y no estructural: «el grupo que contiene los `use` de la figura». Un
+   `:nth-of-type(3)` se rompería con el logotipo de la siguiente instalación. Se excluye el grupo
+   del recorte (`[clip-path]`), que también los contiene: transformarlo además del padre movería el
+   contorno dos veces. */
+.nav__brand-logo--inline svg g:has(> use[href="#fig"]):not([clip-path]) {
     transform-box: fill-box;
     transform-origin: 50% 90%;
 }
@@ -5706,13 +5781,42 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    ▶ El marcador correcto ya existía: `body[data-has-hero]`, que el layout pone solo donde hay
    coreografía. Sin hero el armazón está desde el primer píxel, así que la condición es «existe y no
    está oculto»; con hero, además, que el racimo haya entrado. */
-body:not([data-has-hero]) .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig,
-body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig {
-    animation: brand-hop var(--dur-espera) var(--dur-cae) var(--ease-cae) both;
+/* ⚠️ **El FACTOR DE VELOCIDAD de la coreografía, que es suyo y faltaba.** Los números de diseño
+   del mockup son literalmente los nuestros —`tSalto = 420` y `dSalto = 900`, o sea `--dur-cae` y
+   `--dur-espera`—, pero su código los pasa todos por `d = (ms) => ms / v` con `v = 0.9`: **la
+   coreografía entera va un 11 % más lenta de lo que sus números dicen**. Sin este factor la forma
+   del salto sale exacta y el tacto no, que es la mitad de «la misma animación».
+   ▶ Va aquí y no en la escala: no es una duración nueva, es el **tempo de esta coreografía**, y
+   por eso lo multiplica todo —vuelo, espera y aterrizaje— desde un solo sitio. */
+:root { --brand-hop-tempo: 0.9; }
+
+body:not([data-has-hero]) .nav:not(.nav--hidden) .nav__brand-logo--inline svg g:has(> use[href="#fig"]):not([clip-path]),
+body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline svg g:has(> use[href="#fig"]):not([clip-path]) {
+    animation: brand-hop calc(var(--dur-espera) / var(--brand-hop-tempo))
+                         calc(var(--dur-cae) / var(--brand-hop-tempo)) both;
+}
+/* El asentamiento entra al aterrizar: la espera más el 70 % del vuelo, con el mismo tempo.
+   ⚠️⚠️ **SIN `both`, Y NO ES UN DESCUIDO: con él, esta animación MATA EL HOVER DEL LOGOTIPO.**
+   `both` implica `forwards`, o sea que al acabar deja el `transform` del último fotograma FIJADO
+   en el elemento — y una animación gana siempre a la cascada, así que el
+   `translateY(-2px) rotate(-1.5deg)` del `:hover` deja de aplicarse **para siempre**. Medido: con
+   el cursor encima, la matriz seguía siendo la identidad.
+   ▶ Aquí no hace falta ninguna de las dos mitades del `both`: el primer fotograma ES el reposo
+   (`translateY(0)`), así que durante la espera no hay nada que mantener, y al terminar el elemento
+   vuelve solo a donde ya estaba. **El `both` de `#fig` sí se queda**: allí el primer fotograma es
+   `opacity: 0` y sin él la silueta se vería antes de salir.
+   ⚠️ Y ojo con cómo se comprueba: `matrix(1, 0, 0, 1, 0, 0)` **no es «no hay transform», es la
+   identidad**. Un test que pregunte «¿tiene transform?» sale verde con el hover muerto. */
+body:not([data-has-hero]) .nav:not(.nav--hidden) .nav__brand-logo--inline,
+body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
+    animation: brand-settle calc(var(--dur-entra) / var(--brand-hop-tempo))
+                            calc((var(--dur-cae) + var(--dur-espera) * 0.7) / var(--brand-hop-tempo));
 }
 @media (prefers-reduced-motion: reduce) {
-    body:not([data-has-hero]) .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig,
-    body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig { animation: none; }
+    body:not([data-has-hero]) .nav:not(.nav--hidden) .nav__brand-logo--inline svg g:has(> use[href="#fig"]):not([clip-path]),
+    body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline svg g:has(> use[href="#fig"]):not([clip-path]),
+    body:not([data-has-hero]) .nav:not(.nav--hidden) .nav__brand-logo--inline,
+    body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline { animation: none; }
 }
 
 /* ══ EL OBJETIVO TÁCTIL MÍNIMO — 44×44 AL DEDO, SIN MOVER EL DIBUJO (`#264`) ══════════════════

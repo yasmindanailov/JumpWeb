@@ -70,6 +70,29 @@ class MotionScaleTest extends TestCase
         'e5-deal' => 'el cupón del icono `e5`',
     ];
 
+    /**
+     * **Las COREOGRAFÍAS: `@keyframes` cuyos tramos declaran su propia física** (`#265`).
+     *
+     * Una escala de cuatro curvas describe **cómo responde un control** —lo que aparece, lo que
+     * cae, lo que se va, lo que espera—. No describe **la gravedad**: un cuerpo que salta sube
+     * desacelerando y cae acelerando, y eso son dos curvas distintas dentro del mismo movimiento.
+     * El salto del logotipo tiene **siete** tramos y el mockup declara una para cada uno.
+     *
+     * ⚠️⚠️ **La alternativa era peor de las dos maneras.** Con una sola curva de la escala pasó lo
+     * que motivó esta ficha: `--ease-cae` tiene overshoot (1.56), así que **cada tramo se pasaba de
+     * largo y volvía** — un salto cuyas posiciones ya describen dos rebotes, rebotando además
+     * dentro de cada tramo. Y meter las siete en la escala la convertiría en once curvas, o sea en
+     * ninguna.
+     *
+     * ▶ **Lo que la excepción NO permite**: una curva suelta en un `transition`, ni una curva
+     * dentro de un `@keyframes` que no esté aquí. La lista es corta a propósito y **solo puede
+     * encoger**, como las de `ShapeScaleTest`.
+     */
+    private const COREOGRAFIAS = [
+        'brand-hop' => 'el salto de la silueta del logotipo: 7 tramos con la física del mockup',
+        'brand-settle' => 'el asentamiento del lockup cuando la silueta aterriza',
+    ];
+
     public function test_the_scale_is_declared_once_and_reads_a_role(): void
     {
         $raiz = $this->hojas();
@@ -218,8 +241,16 @@ class MotionScaleTest extends TestCase
                 continue;
             }
 
+            $coreografias = $this->rangosDeCoreografia($sinComentarios);
+
             foreach ($m[1] as $hit) {
                 [$valor, $donde] = $hit;
+
+                // ⚠️ Una curva DENTRO de una coreografía es su física, no una elección de estilo.
+                if ($this->dentroDeAlguno($donde, $coreografias)) {
+                    continue;
+                }
+
                 $abre = strrpos(substr($sinComentarios, 0, $donde), '{');
                 $selector = $abre === false ? '?' : trim(substr($sinComentarios, 0, $abre));
                 $selector = trim(substr($selector, (int) strrpos($selector, '}')), " \t\n}");
@@ -258,6 +289,84 @@ class MotionScaleTest extends TestCase
         }
 
         return array_map(fn (array $x): float => (float) $x[1] * ($x[2] === 's' ? 1000 : 1), $m);
+    }
+
+    /**
+     * Los tramos `[inicio, fin]` que ocupa cada `@keyframes` de la lista de coreografías.
+     *
+     * ⚠️ Se emparejan las LLAVES, no se busca el siguiente `}`: un `@keyframes` contiene un bloque
+     * por fotograma, así que el primer cierre está a dos líneas del principio y el rango saldría
+     * ridículamente corto — con la guarda pasando en verde por no llegar a mirar nada.
+     *
+     * @return list<array{0: int, 1: int}>
+     */
+    private function rangosDeCoreografia(string $css): array
+    {
+        $out = [];
+
+        foreach (array_keys(self::COREOGRAFIAS) as $nombre) {
+            if (! preg_match('/@keyframes\s+'.preg_quote($nombre, '/').'\s*\{/', $css, $m, PREG_OFFSET_CAPTURE)) {
+                continue;
+            }
+
+            $inicio = $m[0][1];
+            $profundidad = 0;
+
+            for ($i = $inicio + strlen($m[0][0]) - 1, $n = strlen($css); $i < $n; $i++) {
+                if ($css[$i] === '{') {
+                    $profundidad++;
+                } elseif ($css[$i] === '}' && --$profundidad === 0) {
+                    $out[] = [$inicio, $i];
+
+                    break;
+                }
+            }
+        }
+
+        return $out;
+    }
+
+    /** @param  list<array{0: int, 1: int}>  $rangos */
+    private function dentroDeAlguno(int $donde, array $rangos): bool
+    {
+        foreach ($rangos as [$desde, $hasta]) {
+            if ($donde >= $desde && $donde <= $hasta) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * **Las coreografías declaradas existen de verdad.**
+     *
+     * Sin esto, un nombre mal escrito o un `@keyframes` retirado dejarían la excepción apuntando al
+     * vacío — y la guarda seguiría en verde, vigilando una lista de fantasmas.
+     */
+    public function test_every_declared_choreography_exists(): void
+    {
+        // ⚠️⚠️ **Los comentarios se BLANQUEAN, y sin eso la guarda es CIEGA**: comentar un bloque
+        // es la forma habitual de desactivar CSS, y `@keyframes brand-hop { … }` dentro de un
+        // comentario satisfacía este caso — o sea que la coreografía podía desaparecer entera con
+        // la guarda escrita para evitarlo en verde. Es la trampa de `#252` («el nombre vivo dentro
+        // de su propio comentario»), repetida.
+        $css = implode("\n", array_map(
+            fn (string $ruta): string => (string) preg_replace_callback(
+                '#/\*.*?\*/#s',
+                fn (array $m): string => str_repeat(' ', strlen($m[0])),
+                (string) file_get_contents($ruta),
+            ),
+            array_filter(glob(public_path('css/*.css')) ?: [], fn (string $r): bool => ! str_ends_with($r, 'client.css')),
+        ));
+
+        foreach (self::COREOGRAFIAS as $nombre => $porque) {
+            $this->assertMatchesRegularExpression(
+                '/@keyframes\s+'.preg_quote($nombre, '/').'\s*\{/',
+                $css,
+                "la coreografía `{$nombre}` ({$porque}) no existe: la excepción apunta al vacío",
+            );
+        }
     }
 
     private function esAmbiental(string $valor): bool

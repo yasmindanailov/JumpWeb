@@ -198,4 +198,260 @@ class InlineBrandLogoTest extends TestCase
             'Se ha perdido la rama de la portada: allí el armazón nace oculto y el salto tiene que esperar a `.nav--live`.',
         );
     }
+
+    /**
+     * **La coreografía es la del mockup: cada tramo con su curva** (`#265`).
+     *
+     * ⚠️⚠️ **Se comprueba EN QUÉ fotograma está cada curva, no cuántas hay** (`#266`). Contarlas
+     * dejaba pasar dos defectos: mover una curva al 100 % —donde no gobierna ningún tramo, porque
+     * no hay intervalo después del último fotograma— mantenía el total en 7 con un tramo corriendo
+     * a `ease`; y un comentario que nombrara la propiedad sumaba una de más.
+     */
+    public function test_the_hop_declares_its_physics_frame_by_frame(): void
+    {
+        $css = $this->siteCssSinComentarios();
+
+        $this->assertMatchesRegularExpression(
+            '/@keyframes\s+brand-hop\s*\{/', $css, 'ha desaparecido la coreografía del salto',
+        );
+
+        $conCurva = [];
+
+        foreach (preg_split('/(?<=\})\s*/', trim($this->cuerpoDeKeyframes($css, 'brand-hop'))) ?: [] as $trozo) {
+            if (preg_match('/^(\d+)%\s*\{(.*)\}$/s', trim($trozo), $f) === 1 && str_contains($f[2], 'animation-timing-function')) {
+                $conCurva[] = (int) $f[1];
+            }
+        }
+
+        sort($conCurva);
+
+        $this->assertSame(
+            [0, 5, 38, 62, 70, 80, 91],
+            $conCurva,
+            "Los tramos del salto ya no declaran su curva donde deben.\n"
+            .'Fotogramas con curva: ['.implode(', ', $conCurva)."]\n"
+            .'▶ Cada `animation-timing-function` gobierna el tramo que EMPIEZA en su fotograma: el 100 % '
+            .'no puede llevarla y ninguno de los otros siete puede perderla, o ese tramo pasa a la curva '
+            .'por defecto del navegador — que es justo lo que esta ficha combate.',
+        );
+
+        $this->assertDoesNotMatchRegularExpression(
+            '/animation:\s*brand-hop[^;]*(?:--ease-|cubic-bezier|(?<![-\w])ease(?![-\w]))/',
+            $css,
+            'la declaración de `brand-hop` vuelve a llevar una curva: sería inerte y parecería que decide algo',
+        );
+    }
+
+    /**
+     * **El asentamiento NO puede fijar el `transform`, o mata el hover del logotipo.**
+     *
+     * ⚠️⚠️ `both` implica `forwards`: deja el último fotograma fijado y una animación gana siempre
+     * a la cascada, así que el `translateY(-2px) rotate(-1.5deg)` del `:hover` dejaba de aplicarse
+     * **para siempre**, sin que fallara nada.
+     *
+     * ⚠️ **Y ojo con cómo se comprueba en navegador**: `matrix(1, 0, 0, 1, 0, 0)` **no es «no hay
+     * transform», es la identidad**. La primera sonda preguntó «¿tiene transform?», dijo que sí, y
+     * el hover estaba muerto.
+     */
+    public function test_the_settle_never_pins_the_transform(): void
+    {
+        $css = $this->siteCssSinComentarios();
+
+        preg_match_all('/animation:\s*brand-settle[^;]*/', $css, $m);
+
+        $this->assertNotEmpty($m[0], 'ha desaparecido el asentamiento del lockup');
+
+        foreach ($m[0] as $declaracion) {
+            $this->assertDoesNotMatchRegularExpression(
+                '/(?<![-\w])(?:both|forwards)(?![-\w])/',
+                $declaracion,
+                "El asentamiento fija el `transform` al terminar y con eso MATA el hover del logotipo.\n"
+                ."Declaración: {$declaracion}\n"
+                .'▶ No hace falta: su primer fotograma ya es el reposo.',
+            );
+        }
+
+        // ⚠️ **Y el mismo fallo escrito APARTE** (`#266`): un `animation-fill-mode: forwards` suelto
+        // hace lo mismo que el `both` del atajo, y mirar solo el atajo no lo veía.
+        foreach ($this->reglasQueDeclaran($css, 'brand-settle') as $selector => $cuerpo) {
+            $this->assertDoesNotMatchRegularExpression(
+                '/animation-fill-mode\s*:\s*(?:both|forwards)/',
+                $cuerpo,
+                "El asentamiento fija el `transform` con un `animation-fill-mode` suelto.\nSelector: {$selector}",
+            );
+        }
+    }
+
+    /**
+     * ❗❗❗ **LA ANIMACIÓN TIENE QUE CAER SOBRE ALGO QUE SE PINTE** (`#266`).
+     *
+     * La guarda del defecto más caro de este carril: desde `#254` el salto se declaraba sobre
+     * `#fig`, que vive dentro de `<defs>` y **no se dibuja** —lo que se dibuja son los `<use>` que
+     * lo referencian—, y **una animación CSS sobre el original no alcanza al clon del `<use>`**.
+     * Resultado: **el logotipo nunca saltó**, en ninguna vista, durante tres tandas.
+     *
+     * ▶ Medido con control, que es lo que lo zanjó: `style.transform` EN LÍNEA sobre `#fig` repinta
+     * 773 px —el atributo `style` sí se clona—; la misma transformación por `@keyframes`, **cero**.
+     *
+     * ⚠️⚠️ `#263` ya había escrito la lección —«que la pieza llegue no es que se mueva»— y la aplicó
+     * un nivel por encima: comprobó que la animación EXISTE en las doce vistas. Esto es el nivel de
+     * abajo: *que una animación exista y compute no es que el dibujo se mueva.* Las tres tandas que
+     * tocaron esto (`#254`, `#263`, `#265`) midieron valores computados, nunca píxeles.
+     *
+     * ⚠️ Estática, así que solo vigila lo decidible en el CSS: que el sujeto de la animación no sea
+     * un `id` de `<defs>`. Que se pinte de verdad lo dice la sonda, con su control.
+     */
+    public function test_the_hop_animates_something_that_is_actually_painted(): void
+    {
+        $svg = (string) file_get_contents(public_path('img/client-logo.svg'));
+        $defs = preg_match('/<defs\b.*?<\/defs>/s', $svg, $d) === 1 ? $d[0] : '';
+
+        preg_match_all('/id="([^"]+)"/', $defs, $ids);
+        $enDefs = $ids[1] ?? [];
+
+        $this->assertNotEmpty($enDefs, 'el logotipo instalado no declara `<defs>`: la guarda estaría vigilando el vacío');
+
+        preg_match_all('/([^{}]*)\{[^{}]*animation:\s*brand-hop[^{}]*\}/', $this->siteCssSinComentarios(), $m);
+        $selectores = array_filter(array_map('trim', explode(',', implode(',', $m[1] ?? []))));
+
+        $this->assertNotEmpty($selectores, 'nadie declara ya `animation: brand-hop`');
+
+        // ⚠️⚠️ **Lo que se prohíbe es que el `id` sea el SUJETO del selector, no que aparezca.** La
+        // primera versión buscaba `#fig` por subcadena y se ponía roja con el producto SANO: el
+        // selector correcto lo cita dentro de `use[href="#fig"]`, que es justo la forma buena. Es
+        // la trampa de aseverar por subcadena que este repo ya ha pagado tres veces.
+        foreach ($selectores as $selector) {
+            foreach ($enDefs as $id) {
+                $this->assertDoesNotMatchRegularExpression(
+                    '/#'.preg_quote($id, '/').'\s*$/',
+                    $selector,
+                    "El salto se declara SOBRE `#{$id}`, que vive dentro de `<defs>` y NO SE PINTA.\n"
+                    ."Selector: {$selector}\n"
+                    .'▶ Una animación CSS sobre el original no alcanza al clon del `<use>`: el logotipo no se '
+                    .'movería, y no fallaría nada. Anímese el GRUPO que dibuja la figura.',
+                );
+            }
+        }
+    }
+
+    /**
+     * **La AMPLITUD del salto es proporcional a la figura, no un número de píxeles** (`#266`).
+     *
+     * ⚠️⚠️ Estaban copiados del mockup en píxeles (`translateY(90px)`), y en un elemento SVG eso
+     * **no son píxeles**: son unidades del `viewBox`. Con el logotipo instalado el factor es
+     * 0,1249, así que la silueta entraba desde **11,24 px** donde el mockup la trae desde 90 — el
+     * salto era **7,5 veces más pequeño** — y la verificación de `#265` no podía verlo, porque su
+     * comparador normalizaba la escala fuera: su «0,000 px» era una cifra ADIMENSIONAL.
+     *
+     * ▶ En porcentaje, con `transform-box: fill-box`, el desplazamiento se mide contra la caja de
+     * la propia figura: los ratios del mockup (90/30 = 300 %) valen para el logotipo de cualquier
+     * instalación. Es **más white-label que el propio mockup**, que los tiene atados a su figura.
+     */
+    public function test_the_hop_amplitude_is_relative_to_the_figure(): void
+    {
+        $css = $this->siteCssSinComentarios();
+
+        preg_match_all(
+            '/translateY\(\s*(-?[\d.]+)(px|%|em|rem)\s*\)/',
+            $this->cuerpoDeKeyframes($css, 'brand-hop'),
+            $t,
+            PREG_SET_ORDER,
+        );
+
+        $this->assertNotEmpty($t, 'el salto ya no desplaza nada');
+
+        foreach ($t as [$todo, , $unidad]) {
+            $this->assertSame(
+                '%',
+                $unidad,
+                "El salto vuelve a desplazar en `{$unidad}` (`{$todo}`).\n"
+                .'▶ Dentro de un SVG eso NO son píxeles: son unidades del `viewBox`, y con el logotipo de '
+                .'esta instalación el factor es 0,1249 — el salto se vería 7,5 veces más pequeño sin que '
+                .'nada fallara. La amplitud va en % de la propia figura.',
+            );
+        }
+
+        // ⚠️ **Acotado a la regla DEL LOGOTIPO, y no es tiquismiquis**: la primera versión buscaba
+        // `fill-box` en toda la hoja y **no mordía** al quitarlo de aquí, porque hay otros cuatro
+        // usos. Una guarda que se satisface con la declaración de OTRO no vigila la propia.
+        $conFillBox = array_filter(
+            $this->reglasQueDeclaran($css, 'transform-box'),
+            fn (string $cuerpo, string $selector): bool => str_contains($selector, 'nav__brand-logo--inline')
+                && preg_match('/transform-box\s*:\s*fill-box/', $cuerpo) === 1,
+            ARRAY_FILTER_USE_BOTH,
+        );
+
+        $this->assertNotEmpty(
+            $conFillBox,
+            'la regla del logotipo ha perdido `transform-box: fill-box`: el % del salto pasaría a medirse '.
+            'contra el lienzo entero del SVG en vez de contra la figura, y la amplitud volvería a ser otra',
+        );
+    }
+
+    /** El texto de `site.css` con los comentarios blanqueados (conservando offsets). */
+    private function siteCssSinComentarios(): string
+    {
+        return (string) preg_replace_callback(
+            '#/\*.*?\*/#s',
+            fn (array $m): string => str_repeat(' ', strlen($m[0])),
+            (string) file_get_contents(public_path('css/site.css')),
+        );
+    }
+
+    /**
+     * El cuerpo de un `@keyframes`, emparejando LLAVES.
+     *
+     * ⚠️ No vale buscar el siguiente `}`: un `@keyframes` contiene un bloque por fotograma, así que
+     * el primer cierre está a una línea del principio y el cuerpo saldría casi vacío — con la
+     * guarda pasando en verde por no llegar a mirar nada.
+     */
+    private function cuerpoDeKeyframes(string $css, string $nombre): string
+    {
+        if (preg_match('/@keyframes\s+'.preg_quote($nombre, '/').'\s*\{/', $css, $m, PREG_OFFSET_CAPTURE) !== 1) {
+            return '';
+        }
+
+        $inicio = $m[0][1] + strlen($m[0][0]);
+        $prof = 1;
+
+        for ($i = $inicio, $n = strlen($css); $i < $n; $i++) {
+            if ($css[$i] === '{') {
+                $prof++;
+            } elseif ($css[$i] === '}' && --$prof === 0) {
+                return substr($css, $inicio, $i - $inicio);
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Las reglas cuyo cuerpo cita `$nombre`, indexadas por selector.
+     *
+     * @return array<string, string>
+     */
+    private function reglasQueDeclaran(string $css, string $nombre): array
+    {
+        $out = [];
+        $inicio = 0;
+
+        while (($llave = strpos($css, '{', $inicio)) !== false) {
+            $cierre = strpos($css, '}', $llave);
+
+            if ($cierre === false) {
+                break;
+            }
+
+            $cuerpo = substr($css, $llave + 1, $cierre - $llave - 1);
+
+            if (str_contains($cuerpo, $nombre)) {
+                $sel = trim(substr($css, $inicio, $llave - $inicio));
+                $out[preg_replace('/\s+/', ' ', substr($sel, -70)) ?? '?'] = $cuerpo;
+            }
+
+            $inicio = $cierre + 1;
+        }
+
+        return $out;
+    }
 }

@@ -15249,3 +15249,223 @@ Suite **3495 / 22.920** (1 skipped) · Pint ✓ · docs-check ✓ · build ✓.
 ⚠️ **De los 7 solapes nuevos, 4 no los causa la tanda**: el barrido recorre la página por
 **fracciones** de su alto, y el pie encogió 30 px, así que las mismas fracciones caen en otro sitio.
 *Un barrido relativo no compara con el de antes salvo que la página mida lo mismo.*
+
+---
+
+## #265 · 2026-08-29 · [DECIDIDO owner] El CTA flotante de móvil crece y pierde una sombra que era el rol equivocado, y el salto del logotipo recupera su física
+
+> ⚠️⚠️ **CORREGIDA POR `#266`, y la corrección va antes que el texto.** Todo lo del CTA flotante
+> sigue vigente. Lo del logotipo, **a medias**: las curvas y el tempo eran correctos, pero
+> (a) **el salto no se veía en absoluto** —la animación caía sobre `#fig`, que vive en `<defs>` y no
+> se pinta—, (b) **la amplitud estaba 7,5 veces corta** porque los `px` dentro de un SVG son
+> unidades del `viewBox`, y (c) **su «0,000 px de desviación» era una cifra ADIMENSIONAL**: el
+> comparador normalizaba la escala fuera. Donde abajo se lee «al dígito» y «0,000 px», léase §4 de
+> `#266`.
+
+`[DECIDIDO owner]`: «el CTA en el móvil, float en el bottom, **hazlo más grande y arregla la
+sombra**. El logotipo debe ser **idéntico al mockup y hacer la misma animación**».
+
+### 1 · El asset del logotipo YA era idéntico, y eso acota el encargo
+
+Primera medición, antes de tocar nada: `public/img/client-logo.svg` y `client-logo@4x.png` son
+**byte a byte** (`md5`) los que exportó el owner en `mockup_playjumppark/marca/`. Así que «idéntico
+al mockup» **no puede ser el fichero**: es cómo se pinta y cómo se mueve.
+▶ *Comprobar que el asset es el que se cree ANTES de buscar el defecto en el dibujo* — es la misma
+regla que `desglose-dinero-cliente.md` §17 aprendió con un pedido que parecía roto y era un dato.
+
+### 2 · ❗❗ La animación: los ocho fotogramas eran suyos y aun así no se parecía
+
+`brand-hop` copiaba los ocho fotogramas de su `K.animate` —⚠️ **siete de los ocho**: el del 80 %
+valía −3 y esta tanda lo cambió, y aun así el mockup emite **−2,5** y no −2,52, porque redondea con
+`.toFixed(1)` (`#266` §2)—. Lo que no copiaba eran **las curvas**: el mockup declara **una por tramo** —siete— y nosotros aplicábamos **una sola a todos**,
+`--ease-cae`, que es el rebote grande de la escala y **tiene overshoot (1.56)**.
+
+▶ **Un salto cuyas posiciones ya describen dos rebotes, rebotando además dentro de cada tramo.** Por
+eso «no hacía la misma animación» aunque las posiciones coincidieran.
+
+⚠️⚠️ **Es el hallazgo de `#262` por el otro lado.** Allí se escribió que *el rebote de `6d` no vive
+en la curva, vive en los fotogramas*. Aquí los fotogramas dan las POSICIONES y las curvas dan la
+**gravedad** entre ellas: subir desacelerando, caer acelerando. Son dos cosas distintas y la lección
+completa es que **hay que saber cuál de las dos lleva el movimiento antes de tocar ninguna**.
+
+▶ Y faltaban dos piezas más de su coreografía:
+- **el ASENTAMIENTO del lockup** (`L.animate`): al aterrizar, todo el logotipo se hunde 2 px y
+  vuelve. Sin él, el saltador cae sobre algo que no se entera;
+- **el TEMPO**: sus números de diseño son literalmente los nuestros —`tSalto = 420` y
+  `dSalto = 900`, o sea `--dur-cae` y `--dur-espera`— pero su código los pasa por `d = ms / 0.9`.
+  **La coreografía entera va un 11 % más lenta de lo que sus números dicen.**
+
+**Verificado en navegador**: la posición vertical de la silueta muestreada en **21 puntos** contra la
+fórmula del mockup reimplementada (con sus siete curvas de Bézier resueltas por bisección):
+**desviación máxima 0,000 px**. Y los tiempos vivos son los suyos: vuelo **1000 ms**, espera
+**466,7**, asentamiento a **1166,7**.
+
+### 3 · ⚠️⚠️ El `fill: both` del asentamiento MATABA el hover del logotipo
+
+`both` implica `forwards`: al terminar deja el `transform` del último fotograma **fijado**, y una
+animación gana siempre a la cascada. El `translateY(-2px) rotate(-1.5deg)` del `:hover` dejaba de
+aplicarse **para siempre**, y no fallaba nada.
+
+⚠️ **Y la sonda que lo comprobó dijo primero que estaba bien.** Preguntaba «¿tiene transform?» y la
+respuesta era `matrix(1, 0, 0, 1, 0, 0)` — que **no es «no hay transform»: es la identidad**. El
+criterio correcto es comparar el transform de reposo con el de hover, no ver si existe.
+▶ El `both` de `#fig` **sí se queda**: allí el primer fotograma es `opacity: 0` y sin él la silueta
+se vería antes de salir.
+
+### 4 · El relevo de la Y no se puede hacer, y por una razón concreta
+
+El mockup releva **cuatro piezas**: «PLA» + la Y tipográfica + el «PLAY» completo + la silueta. Al
+aterrizar, la Y se desvanece bajando 8 px y la figura se queda en su sitio.
+
+▶ **Nuestro SVG dibuja `#u1` = «PLA» y `#fig` = la silueta: la Y no existe como pieza.** Por eso
+durante los **475 ms** que la figura tarda en llegar el logotipo se lee «PLA JUMPPARK».
+`[DECIDIDO owner]`: **el logo se vuelve a exportar con la Y**. Lo que tiene que traer el fichero
+—`id`, capas, sitio— y los números del relevo ya medidos están en `INSTALACION-CLIENTE.md`
+§4.a.sexies. **No se construye nada sobre un asset que no existe.**
+
+⚠️ Esto **corrige a `#263`**, que declaró el relevo imposible («en nuestro logotipo la silueta YA ES
+la Y»). El hecho era cierto; la conclusión, no: lo que falta es una pieza, no una posibilidad.
+
+### 5 · El CTA flotante: más grande, y una sombra que era el ROL EQUIVOCADO
+
+**El tamaño** (48 → **56**): heredaba `--cta-pair-h`, que en teléfono baja a 48 **porque arriba el
+racimo comparte fila con el logotipo y la hamburguesa**. Abajo no comparte con nadie, y el mockup
+pone su barra de acciones en `min-height: 56px`. Token propio, `--book-bar-h`: es el único sitio del
+armazón donde el alto no puede salir del racimo — son dos piezas con dos restricciones.
+
+**La sombra**: `.book-bar__cta` declaraba `var(--shadow-float)`, que con el paquete de este cliente
+vale **`5px 5px 0`** — una sombra DURA de tinta pura desplazada abajo y a la derecha, sobre un botón
+que flota a 10 px del borde inferior. No se lee como elevación: se lee como un desalineado.
+
+⚠️⚠️ **Y su propio comentario decía la respuesta**: «esto FLOTA sobre el contenido, que es el cuarto
+rol de elevación (`#217`)». El cuarto rol **es la familia `--shadow-nav-*`**, no `--shadow-float`.
+▶ **El arreglo no fue poner otra sombra: fue RETIRAR ésta.** `.cta-med` y `.cta-ghost` ya declaran
+la suya —medidas del propio mockup en `#217`— y esta regla, por ir después en la hoja con la misma
+especificidad, las pisaba las dos. Con ella fuera el botón de abajo queda **idéntico al de la
+cabecera**, que es lo que `#225` pidió y lo que esta colocación llevaba escrito en su encabezado:
+«la barra ya no aporta forma». `[DECIDIDO owner]`: no se tiñe de naranja como su artboard, porque
+entonces las dos mitades del par dejarían de ser idénticas entre sí.
+
+### 6 · `MotionScaleTest` aprende qué es una COREOGRAFÍA
+
+Una escala de cuatro curvas describe **cómo responde un control**. No describe **la gravedad**. Las
+siete curvas del salto no pueden entrar en la escala —serían once, o sea ninguna— ni quedarse
+prohibidas. La guarda gana una lista de `@keyframes` de coreografía y **solo dentro de ellos** admite
+una curva escrita.
+
+⚠️ **Con su propio caso de que la lista no apunte al vacío**, y eso no fue teórico: un
+`git checkout` mal apuntado durante la mutación se llevó el CSS de la sesión, y **la primera que
+avisó fue esa aserción**. ▶ *Y la lección de método que la sesión pagó: la regla del repo dice
+commitear en local ANTES de mutar, y no se siguió.*
+
+### Lo verificado
+
+Salto **0,000 px** de desviación frente a la fórmula del mockup en 21 muestras · tiempos vivos
+1000 / 466,7 / 1166,7 ms · hover del logotipo medido vivo (`rotate(-1.5deg) translateY(-2px)`) ·
+CTA flotante **298×56** con `0 10px 28px` al 24 %, y su mitad fantasma al 18 % · el racimo de arriba
+**sin mover** (hamburguesa 48). Suite **3498 / 22.946** (1 skipped) · Pint ✓ · docs-check ✓.
+**7 mutaciones, las 7 muerden** (3 sobre la excepción de coreografía, 4 sobre las guardas del salto).
+
+---
+
+## #266 · 2026-08-29 · El salto del logotipo NUNCA se vio: tres tandas midiendo que la animación existe, ninguna que el dibujo se mueva
+
+Esta entrada nace de una **revisión adversarial de `#265` antes de empujarlo**: cinco revisores
+independientes sobre el diff y tres refutadores por hallazgo. De 27 hallazgos crudos, el que lo
+cambió todo salió con **3/3 votos a favor** y con un control que yo no había hecho.
+
+### 1 · ❗❗❗ El defecto: una animación sobre un elemento de `<defs>` no pinta nada
+
+`#254` declaró el salto sobre `#fig`. **`#fig` vive dentro de `<defs>`: no se dibuja.** Lo que se
+dibuja son los **21 `<use href="#fig">`** que lo referencian — y **una animación CSS sobre el
+original no alcanza al clon del `<use>`**.
+
+▶ **El control es lo que lo zanja**, y es lo que faltaba en las tres tandas anteriores:
+`style.transform` EN LÍNEA sobre `#fig` **repinta 773 px** —el atributo `style` sí se clona—; la
+misma transformación por `@keyframes`, **cero píxeles**.
+
+⚠️⚠️ **`#254`, `#263` y `#265` midieron lo mismo, y las tres se quedaron a un nivel del hecho:**
+
+| tanda | qué midió | qué NO vio |
+|---|---|---|
+| `#254` | que el logotipo se sirve en línea y trae `id="fig"` | que no se movía |
+| `#263` | que la animación **existe** en las doce vistas (`getAnimations()` ≠ 0) | que no se movía |
+| `#265` | que el valor **computado** recorre la curva del mockup (0,000 px) | que no se movía |
+
+▶ **`#263` ya había escrito la lección — «que la pieza llegue no es que se mueva» — y la aplicó un
+nivel por encima.** Ésta es la de abajo: *que una animación exista y compute no es que el dibujo se
+mueva.* La única medida que lo habría visto es la que ninguna de las tres hizo: **píxeles, con un
+control que demuestre que el instrumento sabe detectar movimiento.**
+
+▶ **El arreglo**: la animación va al **grupo que dibuja la silueta**, con selector SEMÁNTICO
+—`g:has(> use[href="#fig"]):not([clip-path])`, «el grupo que contiene los `use` de la figura»— y no
+estructural: un `:nth-of-type(3)` se rompería con el logotipo de la siguiente instalación. Se
+excluye el grupo del recorte, que también los contiene, o el contorno se movería dos veces.
+
+### 2 · ❗❗ Y la amplitud estaba 7,5 veces corta, por la misma clase de error
+
+Los desplazamientos estaban copiados del mockup en píxeles (`translateY(90px)`). **En un elemento
+SVG eso no son píxeles: son unidades de usuario del `viewBox`.** El del logotipo instalado es
+`0 0 1527 560.5` pintado a 70 px de alto → factor **0,1249**.
+
+| | mockup | nosotros (antes) |
+|---|---|---|
+| figura | 30 px | 28,22 px ✔ |
+| entra desde | 90 px = **3,00 ×** su altura | 11,24 px = **0,40 ×** |
+| sube | 18 px = 0,60 × | 2,25 px = 0,08 × |
+
+▶ **La unidad correcta es el PORCENTAJE.** Con `transform-box: fill-box`, un `%` en `translate` se
+mide contra la caja de la propia figura. Verificado: `translateY(300%)` la mueve 84,67 px = 3 × sus
+28,22 px pintados.
+⚠️ **Y eso es MÁS white-label que el mockup**: él escribe 90 px porque su silueta mide 30, así que
+su salto está atado a ese dibujo. En porcentaje, el logotipo de cualquier instalación salta igual
+sea cual sea su `viewBox`.
+⚠️ El 80 % es **−8,333 %** y no −8,4: el mockup escribe `(-alto * .14).toFixed(1)`, o sea que emite
+**−2,5**. `#265` copió su fórmula sin el redondeo y aun así escribió «al dígito».
+
+### 3 · Y el SVG recortaba el vuelo
+
+Un `<svg>` recorta por defecto. Con la silueta a 3 × su altura por debajo —el punto de partida del
+mockup— quedaba fuera de la caja y **aparecía de golpe** a media subida. `overflow: visible`. En
+reposo el dibujo no excede su `viewBox`, así que no cambia nada de lo que se ve quieto.
+
+### 4 · ⚠️⚠️ Lo que esto le hace a la verificación de `#265`
+
+**«Desviación máxima 0,000 px en 21 muestras» era una cifra ADIMENSIONAL disfrazada de píxeles.** El
+guion normalizaba la escala fuera —`const escala = muestras[0][1] / 90` y luego `y / escala`—, así
+que el primer punto valía 90 por definición: comparaba la **forma** de la curva y era **ciego al
+tamaño**. Y encima leía el `transform` computado de un elemento que no se pinta, mientras el texto
+afirmaba que leía «el transform pintado».
+
+▶ Ese número se había escrito en **seis sitios**. Todos corregidos aquí.
+▶ *Un comparador que normaliza la escala valida la forma y no puede ver la amplitud.* Y **un
+verificador que compara el CSS contra una reimplementación de ese mismo CSS es casi una
+tautología**: lo que hay que comparar es el dibujo contra el mockup, en píxeles.
+
+### 5 · Lo que la revisión encontró además, y se ha arreglado
+
+- **Las guardas leían el CSS CRUDO**: un `@keyframes` **comentado** las satisfacía, así que la
+  coreografía podía desaparecer entera con las guardas escritas para evitarlo en verde. Es la
+  trampa de `#252` («el nombre vivo dentro de su propio comentario»), repetida en tres guardas.
+- **El conteo de curvas no miraba EN QUÉ fotograma están**: mover una al 100 % —donde no gobierna
+  ningún tramo— mantenía el total en 7 con un tramo corriendo a `ease`. Ahora se asevera la LISTA
+  de fotogramas, `[0, 5, 38, 62, 70, 80, 91]`.
+- **El asentamiento no veía un `animation-fill-mode: forwards` suelto**, solo el `both` del atajo.
+- **La guarda de `fill-box` nació LAXA**: buscaba la declaración en toda la hoja, donde hay **14**,
+  y no mordía al quitarla del logotipo. *Una guarda que se satisface con la declaración de otro no
+  vigila la propia.*
+
+### 6 · ⚠️ Y una regla del repo incumplida DOS veces en la misma sesión
+
+`desmontar-view-order.md` §9.1: **commitear en local ANTES de mutar**. Dos veces un
+`git checkout -- public/css/site.css` para revertir una mutación se llevó por delante todo el
+trabajo sin commitear del fichero. La primera vez lo avisó —irónicamente— la aserción nueva de que
+una coreografía declarada exista de verdad.
+
+### Lo verificado
+
+Salto visible por primera vez, medido en píxeles **con control**: prog 0,05 → 492 px de diferencia
+en la zona y 19-96 (la silueta abajo, fuera del logotipo); 0,38 → 835 px en y **0-53** (arriba); 0,70
+→ 665; 0,91 → 546. **El control** —mover el grupo a mano— repinta 871 px, así que el instrumento sabe
+detectar movimiento. Amplitud: `translateY(300%)` = 84,67 px = 3,00 × la figura, el ratio del mockup.
+**7 mutaciones, las 7 muerden** (la última tras acotar una guarda que nació laxa).

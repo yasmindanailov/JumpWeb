@@ -1779,3 +1779,97 @@ visitado. *Un barrido relativo no compara con el de antes salvo que la página m
 2. **La FAQ**: pulsar 8 px por encima del texto de una pregunta ya la abre. Es el área invisible.
 3. **El menú**: las cápsulas y el desplegable de idioma miden 44 y se ven así — ahí sí se creció.
 4. **Que en el ordenador no ha cambiado nada del pie**, que es donde manda el mockup.
+
+---
+
+## §5.tervicies · EL SALTO DEL LOGOTIPO — ⚠️⚠️ **ESTA SECCIÓN ESTÁ CORREGIDA POR §5.quatervicies: su «0,000 px» NO ERA UNA MEDIDA EN PÍXELES** (`DECISIONES #266`)
+
+> ❗❗❗ **LEE LA CORRECCIÓN ANTES QUE EL TEXTO.** Lo que sigue describe un guion que valida la FORMA
+> de la curva y es **ciego a la amplitud**: normaliza la escala fuera (`const escala =
+> muestras[0][1] / 90` y luego `y / escala`), así que su primer punto vale 90 por definición y la
+> cifra resultante es **adimensional**. Además lee el `transform` computado de `#fig`, que vive en
+> `<defs>` y **no se pinta**, mientras el texto afirma que lee «el transform pintado».
+> ▶ Con él en verde, el salto **no se veía en absoluto** y su amplitud estaba **7,5 veces corta**.
+> **La sección viva es §5.quatervicies.** Ésta se conserva porque la lección es el guion, no el número.
+
+### El texto original de `#265`, conservado tal cual
+
+> Guion: `/home/sail/e2e/logo.mjs`. **No compara capturas: compara TRAYECTORIAS.** Reimplementa la
+> animación del mockup —sus ocho fotogramas y sus siete curvas de Bézier, resueltas por bisección—,
+> fija `currentTime` en 21 puntos del recorrido y lee el `transform` pintado en cada uno.
+
+▶ **Por qué así y no con una captura**: el defecto que motivó la tanda era que las posiciones
+coincidían y **el movimiento entre ellas no**. Cualquier captura de un fotograma clave habría salido
+idéntica antes y después; lo que cambia es la curva de en medio.
+
+| | Resultado |
+|---|---|
+| Desviación máxima frente a la fórmula del mockup | **0,000 px** (21 muestras) |
+| Vuelo / espera / asentamiento | **1000 / 466,7 / 1166,7 ms** — los suyos, con el factor `v = 0.9` |
+| Curvas declaradas por tramo | **7 de 7** |
+| Hover del logotipo tras la coreografía | vivo: `rotate(-1.5deg) translateY(-2px)` |
+
+⚠️⚠️ **DOS TRAMPAS DE ESTE GUION, las dos pagadas:**
+1. **`matrix(1, 0, 0, 1, 0, 0)` NO es «no hay transform»: es la identidad.** La primera versión
+   preguntaba «¿tiene transform?» para comprobar el hover, respondía que sí, y el hover estaba
+   muerto —lo mataba un `fill: both`—. El criterio es **comparar reposo con hover**, no ver si
+   existe.
+2. **La vista que se abre importa.** El salto se mide en `/servicios` y no en la portada: allí el
+   armazón nace bajo el hero y la animación espera a `.nav--live`, así que al cargar no se dispara.
+   Es el reverso de `#263`.
+
+### ❗ Lo que tiene que mirar el OWNER
+
+1. **Recargar `/servicios`** y ver el salto entero: entra desde abajo, sube, cae, aplasta, rebota
+   dos veces y **el logotipo entero se hunde 2 px** al recibirlo.
+2. **Pasar el cursor por encima** después: tiene que seguir levantándose y girando.
+3. **El CTA flotante en un teléfono**: mide 56 y su sombra es la misma que la del botón de arriba.
+
+
+---
+
+## §5.quatervicies · EL SALTO DEL LOGOTIPO, MEDIDO EN PÍXELES Y CON CONTROL — ✅ 2026-08-29 (`DECISIONES #266`)
+
+> Guion: `/home/sail/e2e/ver.mjs`. **No lee estilos computados: compara PÍXELES**, y trae un
+> **control** que demuestra que el instrumento sabe detectar movimiento antes de creerle un cero.
+
+❗❗❗ **POR QUÉ HACE FALTA UN CONTROL, y es la lección más cara de este carril.** Tres tandas
+midieron que la animación del logotipo estaba declarada (`#254`), que existía en las doce vistas
+(`#263`) y que su valor computado recorría la curva del mockup (`#265`). Las tres en verde, y **el
+logotipo no se movía**: la animación caía sobre `#fig`, que vive dentro de `<defs>` y no se dibuja.
+▶ *Que una animación exista y compute no es que el dibujo se mueva.* Y un cero sin control no
+distingue «no se mueve» de «no lo estoy mirando bien».
+
+### Cómo mide
+
+1. Congela **todas** las animaciones del documento menos `brand-hop` —si no, el asentamiento corre
+   en tiempo real y sus 2 px de desplazamiento ensucian cada captura: eso ya produjo un falso
+   «sí se mueve» de 993 px.
+2. Fija `currentTime` en varios puntos del recorrido y captura la **página entera** (no el
+   elemento: `locator.screenshot()` recorta a su caja y ahí un salto que se sale no se ve).
+3. Difiere contra el reposo y reporta **cuántos píxeles** cambian **y en qué banda vertical**.
+4. **Control**: mueve el grupo a mano con `style.transform` y comprueba que eso sí repinta.
+
+### Lo que dijo, corrido el 2026-08-29
+
+| instante | píxeles distintos | banda vertical | qué significa |
+|---|---|---|---|
+| 0,05 · entrando | 492 | y **19-96** | la silueta está abajo, fuera del logotipo |
+| 0,38 · cima | 835 | y **0-53** | arriba, sale por encima |
+| 0,70 · aplasta | 665 | y 19-57 | |
+| 0,91 · último rebote | 546 | y 19-55 | |
+| **CONTROL** (a mano) | **871** | y 19-96 | el instrumento sabe ver movimiento |
+
+▶ **La banda vertical cambia con el instante**: eso es movimiento, no aparición y desaparición.
+▶ Amplitud: `translateY(300%)` mueve la figura **84,67 px** = 3,00 × sus 28,22 px pintados, que es
+el ratio del mockup (90 px sobre una silueta de 30).
+
+⚠️ **Y una trampa del sujeto**: en `/servicios` hay **dos** `.nav__brand-logo--inline` —el del
+armazón y el del cajón, que está a 0×0 y oculto—. Un `querySelector` sin acotar a `.nav` mide el
+que no se ve.
+
+### ❗ Lo que tiene que mirar el OWNER
+
+1. **Recargar `/servicios`**: el saltador entra desde abajo, sube por encima del lockup, cae,
+   aplasta, rebota dos veces y **el logotipo entero se hunde 2 px** al recibirlo.
+2. **Pasar el cursor por encima** después: tiene que seguir levantándose y girando.
