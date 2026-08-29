@@ -83,6 +83,12 @@ class CriticalPathGateTest extends TestCase
         // el escenario `panel-edit` de `purchase:verify-oversell`, que se vio FALLAR con el lock mutado.
         'app/Domain/Booking/Services/ZoneDaySlotLock.php',
         'app/Domain/Booking/Services/OrderItemEditor.php',
+        // Cumpleaños MIXTO (2026-08-29): escribe dinero —una línea de venta y su cargo de puerta—
+        // dentro de un `lockForUpdate()`, y tiene verificador propio sobre MySQL
+        // (`mixed-party:verify-concurrency`, visto FALLAR sin el lock: 12 líneas y 84,00 € donde
+        // debía haber 7,00 €). Es el mismo criterio con el que entró `WaiverSigner`. No estaba, y la
+        // pieza llevaba una jornada en `main` sin gate.
+        'app/Domain/Booking/Services/MixedPartySurcharge.php',
     ];
 
     /**

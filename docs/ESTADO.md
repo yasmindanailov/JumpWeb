@@ -5,6 +5,46 @@
 > aquí solo se enlaza.** Última actualización: **2026-08-29 (noche) — carril C: el ÁREA TÁCTIL de
 > 44 (`#264`), la vuelta del owner sobre el CTA flotante y el logotipo (`#265`) y, tras una revisión
 > adversarial de esa tanda, **`#266`: el salto del logotipo NUNCA se había visto**.
+> ❗❗❗ **2026-08-29 (tarde) · carril A — LA REVISIÓN ADVERSARIAL DEL CUMPLEAÑOS MIXTO Y SUS CINCO
+> TANDAS DE ARREGLO** (`#249` · `#268`→`#272`). **Si tocas el suplemento, empieza por
+> `specs/cumple-mixto.md` §17.**
+> El subsistema (`#243`→`#248`) aterrizó en una jornada sin que nadie lo revisara: ~1.300 líneas que
+> escriben dinero sobre pedidos ya pagados. La revisión encontró **seis defectos y son UNO**: *el
+> importe no se guardaba, se recalculaba entero desde el catálogo vigente en cada disparo — y cuando
+> no había con qué calcular, se escribía CERO en vez de dejarlo quieto.*
+> ❗❗ **El peor lo dispara el CLIENTE**: vaciar sus casillas de edad y guardar **borraba su propio
+> cargo**. Mentir con la edad —que el owner ya dio por inevitable— obliga a inventarse un número
+> creíble; borrarla no. Con él caían `RGPD-01` (anonimizar borraba la deuda) y cualquier tramo tocado
+> en el catálogo.
+> ⚠️⚠️ **Y la guarda que existía para el defecto del precio pasaba en VERDE con el defecto puesto**:
+> aseveraba el importe justo después de subir la tarifa, **sin volver a guardar**, y el defecto vivía
+> en el guardado siguiente. *Una guarda que no ejercita el disparador no vigila la regla, vigila el
+> reposo.*
+> ▶ **Lo que AGUANTÓ, verificado aparte y no por sus propios tests**: `PAY-16`/`PAY-17` cierran
+> (13.590 → 15.090 de valor, +1.500 a puerta, online intacto), el AFORO no se mueve (20 → 20) y por
+> **DOS** mecanismos —`slot_id = null` ya excluye la fila **aunque el portador fuera un pack**, lo que
+> matiza a §12.3—, idempotencia, reversibilidad al dígito, rastro sin sesión y cascada al cancelar.
+> ▶ **Los cinco arreglos**: una ausencia no es una corrección (`#268`) · el operador ve el cargo
+> huérfano (`#269`) · **el RECIBO**, con el `[DECIDIDO owner]` de los **14,00 € y no 24,00 €**
+> (`#270`) · **no se construye el perdón** `[DECIDIDO owner]` —el argumento decisivo es suyo, de
+> `#244`: «cualquier gestión de dinero post-reserva ya cobrada se hace en las instalaciones»— y el
+> panel deja de ofrecer un gesto que deshacía **en el mismo clic**, con dos correos contradictorios
+> (`#271`) · la pieza entra en el `CRITICAL_RE` y la regla en **`PAY-19`** (`#272`).
+> ❗ **Lo que NO cierra está en `DEUDA.md` con su medida**, y lo más caro es el **caso ESPEJO**: una
+> configuración que CREA un cargo de la nada (medido: reordenar los tramos convirtió una fiesta sin
+> cargo en **40,00 €**). Cerrarlo exige sellar el régimen **en la reserva** —columna + migración— y es
+> decisión del owner. Con él va su gemelo: la etiqueta MIXTA puede **contradecir** al cargo, y ahora
+> de forma permanente. **Se cambió un fallo de dinero por uno de coherencia**, que es mejor negocio,
+> pero hay que saberlo.
+> ⚠️ **Falta el OJO del owner**: nada de esto se ha visto en navegador.
+>
+> ▶ **PARA EL CARRIL C — retira este aviso cuando lo leas.**
+> `test_the_hop_animates_something_that_is_actually_painted` (`#265`/`#267`) leía
+> `public/img/client-logo.svg` **sin comprobar que exista**, y ese fichero está gitignorado
+> (`.gitignore:31`). No fallaba: **erraba**, así que `main` quedó sin poder empujarse desde cualquier
+> clon sin el paquete de marca — el mío, uno nuevo, o staging. Arreglado con la MISMA guarda que su
+> caso hermano tiene seis por encima en el propio fichero.
+>
 >
 > ❗❗❗ **`#267` — LA SOMBRA DEL LOGOTIPO: TRES VUELTAS DEL OWNER, DOS AJUSTES A OJO, NINGUNA
 > COMPARACIÓN.** `#253` bajó la tinta de 45 a 30 razonando que «copiar un filtro no es copiar un

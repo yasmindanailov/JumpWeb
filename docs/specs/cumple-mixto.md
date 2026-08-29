@@ -455,6 +455,14 @@ ayuda del campo de edad, y **después**, con el importe en pantalla y el correo.
 
 ### 12.2 · Cuándo se dispara — y cuándo NO
 
+> ❗❗ **CORRECCIÓN (2026-08-29, §17): esta regla estaba ESCRITA y no estaba CONSTRUIDA.** Se
+> implementaba sola —«no hay disparador en los cambios de configuración»— y eso solo aguanta hasta el
+> siguiente disparo de hecho, porque la reconciliación re-derivaba el importe entero del catálogo
+> vigente. Y el disparo siguiente suele ser el cliente corrigiendo un nombre, que este formulario
+> invita a hacer durante días. **Medido, con las edades intactas: una subida de tarifa llevaba un cargo
+> de 15,00 € a 30,00 €; estrechar un tramo, a 0,00 €.** Hoy la sostiene el RECIBO que cada línea lleva
+> en su `context` (`MixedPartySurcharge::unitFor`). **Lee §17 antes que esta tabla.**
+
 `[DECIDIDO owner]`: se reconcilia cuando cambia el **HECHO** y nunca cuando cambia la
 **CONFIGURACIÓN**.
 
@@ -474,6 +482,9 @@ zona/día** (§4.3 de `desmontar-view-order.md`), en su propia transacción cort
 
 ⚠️ El desfase entre lo escrito y lo derivado —que solo puede nacer de un cambio de configuración—
 **se enseña** en la ficha del pedido. Es lo que lo hace comprobable en vez de invisible.
+⚠️⚠️ **Y se enseña también cuando el pack dejó de participar en su familia** (§17.3·2): ese bloque
+colgaba de `$mix->applies`, así que retirar la familia lo hacía desaparecer entero dejando al operador
+un importe en «a cobrar en el parque» y **cero** explicación en pantalla.
 
 ### 12.3 · Por qué el portador es un COMPLEMENTO y lo crea el sistema
 
@@ -847,3 +858,128 @@ Los tres casos A/B/C entran como escenarios del guardián **antes** de escribir 
 con una mutación que debe morder: **quitar la cascada** (crédito sin tocar los cubos de puerta) tiene
 que poner en rojo el caso A, y **devolver el clamp** tiene que poner en rojo el caso B. Si alguna de
 las dos no muerde, el diseño no está probado — está escrito.
+
+---
+
+## 17. ❗❗ LA REVISIÓN ADVERSARIAL, Y LOS SEIS DEFECTOS QUE ENCONTRÓ (2026-08-29, `#249` → `#272`)
+
+> **Empieza por aquí si vas a tocar el suplemento.** Este apartado CORRIGE a §12.2: la regla que esa
+> tabla enuncia estaba escrita y **no estaba construida**. El cuerpo de arriba describe el diseño;
+> esto describe lo que el código hacía de verdad y lo que se cambió.
+
+El subsistema entero (`#243`→`#248`) aterrizó en una jornada: ~1.300 líneas de dominio que escriben
+dinero sobre pedidos ya pagados. Nadie lo había revisado. La revisión se hizo **sin escribir código**,
+midiendo cada hallazgo sobre el pedido real `R-BEEL3E` en transacciones revertidas.
+
+### 17.1 · Lo que AGUANTÓ (verificado de forma independiente, no por sus propios tests)
+
+- **El dinero cuadra**: `PAY-16`/`PAY-17` cierran antes, durante y después de escribir el suplemento.
+  Medido: valor 13.590 → 15.090, +1.500 a puerta, `pagadoOnline` intacto en 4.590, `cuadra = true`.
+- **El aforo no se mueve** (20 → 20 invitados libres para una fiesta nueva), y por **dos** mecanismos
+  independientes: `slot_id = null` ya excluye la fila del `JOIN` de `PackAvailability`, y además el
+  portador es un complemento. ⚠️ Eso matiza a §12.3: el motivo que da —«el portador no puede ser el
+  pack de destino»— es correcto, pero la línea no contaría **aunque lo fuera**, porque no tiene franja.
+- **Idempotente y reversible al dígito**; **el rastro se escribe** también desde el enlace firmado sin
+  sesión (`user_id = null`); cancelar la reserva **cascadea** a la línea; el panel **bloquea** editar
+  una reserva finalizada, así que no se reconcilia después del evento.
+
+### 17.2 · Los SEIS defectos, y por qué son UNO
+
+El importe no se guardaba: **se recalculaba entero desde el catálogo vigente en cada disparo**. Y
+cuando no había con qué calcular, se escribía **cero** en vez de dejarlo quieto.
+
+| # | Qué pasaba (medido, con las EDADES INTACTAS) | Gravedad |
+|---|---|---|
+| 1 | El parque sube la tarifa del pack destino; el cliente corrige un **nombre** → el cargo pasa de 15,00 € a **30,00 €**, con su correo | Alta |
+| 2 | Falta el precio del pack destino ese día → el veredicto dice `null` («no se pudo tarificar») y el reconciliador lo escribía como **0,00 €**, cancelando la línea | Media |
+| 3 | El operador anula la línea para perdonar el cargo → **vuelve sola** y al cliente le llega un correo anunciándole lo que le acaban de perdonar | Media |
+| 4 | El tipo `age` puede llegar a `event_fields` y ahí rompe el `enum` de `CatalogEventField` en `openapi/v1.yaml` | Baja |
+| 5 | **El cliente vacía sus casillas de edad y guarda → su cargo desaparece** | **Alta** |
+| 6 | `RGPD-01` anonimiza y pone `guest_data` a `null` → la siguiente pasada **borra la deuda** | Alta |
+
+⚠️⚠️ **El 5 es el peor y no lo vio nadie durante la implementación**: mentir con la edad —que el owner
+ya dio por inevitable (§12.6)— obliga a inventarse un número creíble; **borrarla no**. Lo dispara el
+propio interesado y no exige más que vaciar tres casillas.
+
+⚠️⚠️ **Y la guarda que existía para el defecto 1 pasaba en VERDE con el defecto puesto.**
+`test_the_written_amount_survives_a_catalogue_price_change` aseveraba el importe **justo después** de
+subir el precio, sin volver a guardar — y ahí no hay nada que probar, porque nada dispara una
+reconciliación. El defecto vivía en el guardado SIGUIENTE. *Una guarda que no ejercita el disparador
+no vigila la regla, vigila el reposo.*
+
+### 17.3 · Lo que se construyó
+
+1. **Una ausencia no es una corrección** (`derivationGoverns`): con el veredicto incompleto —falta una
+   edad, sobra una fuera de rango, o el pack dejó de participar— lo escrito **puede CRECER pero nunca
+   encoger ni retirarse**. La asimetría es deliberada: declarar la edad que faltaba es un dato nuevo y
+   legítimo; borrarla no. Cierra 2, 5 y 6.
+2. **El operador ve el cargo aunque el catálogo haya cambiado**: el bloque de la ficha colgaba de
+   `$mix->applies`, así que retirar la familia lo hacía desaparecer dejando un importe a cobrar y cero
+   explicación. Ahora manda el dinero escrito.
+3. **El RECIBO** (`unitFor`): cada línea guarda en su `context` los dos hechos que sostienen su
+   precio —`booked_type_id` y `priced_on`— y hereda el unitario escrito mientras no se muevan. Sin
+   columna nueva y sin migración. Cierra 1. ⚠️ **La cantidad nunca se hereda, solo el unitario**
+   (`[DECIDIDO owner]`: un invitado declarado tras una subida entra a **14,00 €, no a 24,00 €**).
+   ⚠️ Y no congela de más: mover el día o cambiar el pack **sí** re-tarifican (`PAY-18`), con caso de
+   control para las dos cosas.
+4. **La línea no la gobierna el operador**: el panel ofrecía ponerla a 0 y la reconciliación la
+   resucitaba **en la misma pulsación**, con dos correos contradictorios al cliente. `[DECIDIDO owner]`
+   **no se construye el botón de perdonar** —§17.5—, así que el gesto deja de ofrecerse y el **editor**
+   lo descarta. Cierra 3.
+5. **`MixedPartySurcharge` entra en el `CRITICAL_RE`** del `pre-push` y en `CriticalPathGateTest`, con
+   el mismo criterio que `WaiverSigner`: escribe dinero bajo lock y tiene verificador propio.
+6. **`PAY-19`** recoge la regla entera en `INVARIANTES.md`.
+
+### 17.4 · ¿Para qué perdonaría un suplemento el operador? — **para nada**
+
+`[DECIDIDO owner, 2026-08-29]`. El argumento decisivo es suyo y ya estaba escrito en `#244`: «la
+política es que cualquier gestión de dinero post-reserva ya cobrada se hace en las instalaciones». Ese
+suplemento **se cobra en el mostrador y el sistema no registra si se cobró**, así que quien quiera
+perdonarlo ya puede: no cobrándolo. Un botón no daría poder nuevo — solo borraría del pedido algo que
+ya se le comunicó al cliente.
+
+Y dos razones más: **empeoraría el rastro** (hoy, si no se cobra, la diferencia se nota; con el botón
+el perdón queda escrito como estado legítimo y deja de notarse) y **no tiene forma correcta de
+escribirse** (si el cliente sube después de 2 a 5 invitados, o el perdón se mantiene —tres cabezas
+regaladas en silencio— o caduca —y el operador se encuentra su perdón deshecho—).
+
+⚠️ Medido de paso: **en todo el sistema no existe ningún descuento manual** — ni cupón, ni cortesía,
+ni precio editable. Así que «¿puede el operador perdonar 6,00 €?» es en realidad «¿debería el parque
+poder regalar algo?», que es una decisión propia y mucho mayor. Ficha en `DEUDA.md`.
+
+### 17.5 · Lo que SIGUE ABIERTO, dicho sin adornos
+
+- ❗ **El caso ESPEJO**: una configuración que **crea** un cargo donde no había ninguno. Medido: una
+  reserva de Jump con 8 invitados de 12 años y **cero** cargo; se reordenan los tramos (Kids pasa a
+  1–12); el cliente corrige un nombre → **40,00 €** de cargo nuevo. El recibo no lo cierra porque ahí
+  no hay nada escrito que proteger. Cerrarlo exige sellar el régimen **en la reserva** —columna nueva y
+  migración—, y eso es decisión del owner.
+- ❗ **La etiqueta puede contradecir al cargo, y ahora de forma PERMANENTE.** Medido en ese mismo
+  estado: la hoja de sala imprime «Cumpleaños Jump» **sin** la etiqueta MIXTA, la pastilla de cada niño
+  dice que está en su propio pack, y el mostrador cobra 40,00 € «por 8 invitados que corresponden a
+  Cumpleaños Kids». Antes esa contradicción duraba hasta el siguiente guardado (que borraba el cargo);
+  ahora el cargo sobrevive. **Se cambió un fallo de dinero por uno de coherencia** — mejor negocio,
+  pero hay que saberlo.
+- ⬜ **No hay forma de ver qué reservas tienen desfase**: cero columnas y cero filtros en las tablas del
+  panel. Solo se ve abriendo la ficha, de una en una.
+- ⬜ **Tras anonimizar, el importe queda quieto también hacia abajo**: bajar de 10 a 8 invitados sigue
+  cobrando por 10. Se cambia dinero mal por dinero quieto; es una elección, no una solución.
+- ⬜ **Las líneas escritas antes de esta tanda** no llevan recibo hasta su primera pasada. Se heredan
+  igual (nunca se re-tarifican desde el catálogo de hoy), pero si la configuración cambia antes de esa
+  pasada, sufren el defecto una última vez.
+- ⬜ Sigue fuera lo que ya estaba fuera: el cliente puede bajar la edad la víspera (§12.6), el **AFORO**
+  no reparte plazas entre Kids y Jump (§12.7), y la **API** no sirve ni el veredicto ni el suplemento.
+- ⬜ **Nada de esto está visto en navegador todavía**: falta el OJO del owner.
+
+### 17.6 · Cuatro veces que mintió el INSTRUMENTO, no el código
+
+1. La primera sonda cambió el `unit_price` del ítem a mano y dio «el ledger no cuadra»: el descuadre
+   era **suyo**, no del subsistema.
+2. `GuestAgeMixReader` va en **`scoped`** y memoiza familia y precios, así que dentro de un mismo
+   proceso un cambio de catálogo **no se veía**. Es el mismo motivo por el que las guardas nuevas
+   necesitan `nextRequest()` (`$app->forgetScopedInstances()`): sin él **nacen ciegas**.
+3. Se leyó `AuditLog->context` en vez de `->payload` y se concluyó «no hay rastro» habiendo 16 filas.
+4. Doce filas de auditoría idénticas parecían una fuga y eran el **residuo de la corrida deliberada
+   sin lock** que la propia doc documenta (12 × 7,00 € = 84,00 €).
+
+*Cuando un instrumento dice que algo está roto, la primera hipótesis es el instrumento.*

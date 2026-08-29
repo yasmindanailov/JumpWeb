@@ -60,10 +60,14 @@ touched_critical=''
 # transacción de aforo de las ediciones del panel (el escenario `panel-edit` de
 # `purchase:verify-oversell` es su instrumento). La suite (SQLite) no emite `FOR UPDATE`: solo los
 # verificadores sobre MySQL ven lo que estos dos ficheros pueden romper.
+# ⚠️ `MixedPartySurcharge` entra desde el 2026-08-29 con el mismo criterio que `WaiverSigner`:
+# escribe dinero bajo `lockForUpdate` y tiene verificador propio sobre MySQL
+# (`mixed-party:verify-concurrency`, visto FALLAR sin el lock: 12 líneas y 84,00 € donde debía haber
+# 7,00 €). No estaba, y llevaba una jornada entera en producción de `main` sin gate.
 # ⚠️ No entran `ItemEditPricing` ni `OrderItemEventDataWriter` (sus vecinos de la misma extracción):
 # el primero es aritmética de solo lectura y el segundo no toca ni dinero ni aforo. Son los controles
 # negativos de `CriticalPathGateTest`.
-CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator|WaiverSigner|ZoneDaySlotLock|OrderItemEditor)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
+CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator|WaiverSigner|ZoneDaySlotLock|OrderItemEditor|MixedPartySurcharge)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
 
 while read -r _local_ref local_sha remote_ref remote_sha; do
     [[ "$remote_ref" == "refs/heads/main" ]] || continue
@@ -102,6 +106,7 @@ if [[ -n "$touched_critical" && "${VERIFY_CONC:-0}" != "1" ]]; then
     echo '    docker compose exec -u sail laravel.test php artisan redsys:verify-concurrency --workers=16' >&2
     echo '    docker compose exec -u sail laravel.test php artisan purchase:verify-oversell --workers=16' >&2
     echo '    docker compose exec -u sail laravel.test php artisan waiver:verify-chain --workers=16   # si tocas WaiverSigner' >&2
+    echo '    docker compose exec -u sail laravel.test php artisan mixed-party:verify-concurrency --workers=12  # si tocas MixedPartySurcharge' >&2
     echo '  y confirma con:  VERIFY_CONC=1 git push' >&2
     exit 1
 fi

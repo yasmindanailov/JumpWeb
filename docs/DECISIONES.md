@@ -15553,3 +15553,141 @@ Densidad de sombra tras el cambio: **1.252.968**, idéntica a la de B y a un 5 %
 filtro computado `rgba(16,20,24,0.45)` en papel, portada y menú de tinta · guarda
 `test_the_logo_shadow_keeps_the_mockup_numbers` con su mutación (volver a la sombra tenue la pone
 roja) · suite verde · Pint ✓ · docs-check ✓.
+
+## #249 · 2026-08-29 · La revisión adversarial del cumpleaños MIXTO: seis defectos, y son UNO
+
+`#243`→`#248` aterrizaron en una jornada: ~1.300 líneas de dominio que escriben dinero sobre pedidos
+ya pagados, sin que nadie las revisara. La revisión se hizo **sin escribir código**, midiendo cada
+hallazgo sobre el pedido real `R-BEEL3E` en transacciones revertidas. Detalle en
+`specs/cumple-mixto.md` §17.
+
+▶ **Lo que aguantó**, verificado de forma independiente y no por sus propios tests: `PAY-16`/`PAY-17`
+cierran antes, durante y después (13.590 → 15.090 de valor, +1.500 a puerta, online intacto); el
+AFORO no se mueve (20 → 20) y por **dos** mecanismos, porque `slot_id = null` ya excluye la fila del
+`JOIN` **aunque el portador fuera un pack**; idempotente y reversible al dígito; el rastro se escribe
+también desde el enlace firmado sin sesión; cancelar la reserva cascadea a la línea; y el panel
+bloquea editar una reserva finalizada.
+
+❗❗ **La raíz común de los seis: el importe no se guardaba, se recalculaba entero desde el catálogo
+vigente en cada disparo — y cuando no había con qué calcular, se escribía CERO en vez de dejarlo
+quieto.**
+
+1. Subir la tarifa del pack destino + el cliente corrigiendo un **nombre** → 15,00 € pasan a 30,00 €.
+2. Falta el precio del destino ese día → el veredicto dice `null` y se escribía 0,00 €.
+3. El operador anula la línea para perdonar → vuelve sola, con correo al cliente.
+4. El tipo `age` puede llegar a `event_fields` y romper el `enum` de `openapi/v1.yaml`.
+5. ❗❗ **El cliente vacía sus casillas de edad → su cargo desaparece.** El peor: mentir con la edad
+   —que el owner ya dio por inevitable— obliga a inventarse un número creíble; **borrarla no**.
+6. `RGPD-01` anonimiza (`guest_data` a `null`) → la siguiente pasada borra la deuda.
+
+⚠️⚠️ **Y la guarda que existía para el 1 pasaba en VERDE con el defecto puesto**: aseveraba el importe
+justo después de subir el precio, **sin volver a guardar**, y el defecto vivía en el guardado
+siguiente. *Una guarda que no ejercita el disparador no vigila la regla, vigila el reposo.*
+
+⚠️ Cuatro veces mintió el instrumento y no el código (§17.6), incluida la memoización `scoped` de
+`GuestAgeMixReader`, que es por lo que las guardas nuevas necesitan `nextRequest()`.
+
+## #268 · 2026-08-29 · Una AUSENCIA no es una CORRECCIÓN
+
+Cierra los defectos 2, 5 y 6 de `#249`. Con el veredicto INCOMPLETO —falta una edad, sobra una que
+ningún pack cubre, o el pack dejó de participar en su familia— lo escrito **puede CRECER pero nunca
+encoger ni retirarse** (`MixedPartySurcharge::derivationGoverns`).
+
+La asimetría es deliberada: **declarar** la edad que faltaba es un dato nuevo y legítimo; **borrarla**
+no lo es. Así el importe sigue apareciendo mientras el cliente rellena el formulario y deja de poder
+desaparecer cuando lo vacía.
+
+⚠️ `apply()` devuelve ahora el total que queda ESCRITO y no el del objetivo: al abstenerse, sumar el
+objetivo habría anunciado al cliente una bajada que no se ha escrito.
+
+**Verificación**: +7 casos · 3 mutaciones, las 3 muerden. ⚠️ La de ENCOGER no mordía al principio:
+faltaba el caso de vaciar **una** edad en vez de todas, que es además el abuso realista.
+
+## #269 · 2026-08-29 · El operador ve el cargo aunque el catálogo haya cambiado
+
+El bloque de fiesta mixta de la ficha del pedido colgaba entero de `$mix->applies`, así que retirar la
+familia por edad lo hacía desaparecer — dejando un importe en «a cobrar en el parque» y **cero**
+explicación en pantalla. Ahora el **dinero escrito** manda sobre si el bloque se pinta, con su propia
+frase: se le dicen las dos cosas —que el cargo sigue vivo y que ya no hay veredicto contra el que
+contrastarlo—, sin fingir un veredicto que el sistema no sabe derivar.
+
+**Verificación**: +1 caso conduciendo la página real por HTTP · 1 mutación y muerde · rótulo en los
+dos idiomas del panel.
+
+## #270 · 2026-08-29 · [DECIDIDO owner] El cargo lleva su RECIBO: 14,00 €, no 24,00 €
+
+Cierra el defecto 1 de `#249`, que era **una regla del owner escrita y no construida**: §12.2 decía
+que el importe sigue al HECHO y nunca a la CONFIGURACIÓN, pero se implementaba sola —«no hay
+disparador en los cambios de configuración»— y eso solo aguanta hasta el siguiente disparo de hecho.
+
+▶ Cada línea guarda ahora en el `context` de su ajuste los dos hechos que sostienen su precio
+—`booked_type_id` y `priced_on`— y hereda el unitario escrito mientras no se muevan. **Sin columna
+nueva y sin migración**: el `context` ya se escribía.
+
+❗ **La pregunta que esto abría, contestada por el owner**: si el parque sube la tarifa y DESPUÉS el
+cliente declara otro invitado mayor, ese invitado entra al precio **que se le comunicó** — «14,00 €,
+no 24,00 €». Por eso la CANTIDAD nunca se hereda, solo el UNITARIO.
+
+⚠️ Y no congela de más: mover el día o cambiar el pack **son hechos** y re-tarifican (`PAY-18`), con
+caso de control para las dos cosas. ⚠️ Las líneas anteriores a esta tanda no llevan recibo: se
+heredan igual —preferir el catálogo de hoy movería justo el dinero que esto protege— y se sellan en su
+primera pasada sin tocar un céntimo.
+
+▶ **Y la mitad que ve el cliente**: con cargo escrito, su explicación se compone también de lo
+escrito. Antes mezclaba el importe comunicado con los precios de hoy, así que una subida los hacía
+contradecirse —«Jump a 30,00 € en vez de Kids a 18,00 €» encima de un suplemento de 7,00 €— y quien
+hiciera la resta tendría razón.
+
+**Verificación**: +5 casos · 5 mutaciones y las 5 muerden.
+
+## #271 · 2026-08-29 · [DECIDIDO owner] NO se construye el perdón del suplemento — y el panel deja de ofrecerlo
+
+El owner preguntó «¿para qué perdonaría un suplemento el operador?», y la respuesta honesta es **para
+nada**. El argumento decisivo es suyo y ya estaba escrito en `#244`: «la política es que cualquier
+gestión de dinero post-reserva ya cobrada se hace en las instalaciones». Ese suplemento **se cobra en
+el mostrador y el sistema no registra si se cobró**, así que quien quiera perdonarlo ya puede: no
+cobrándolo. Un botón no daría poder nuevo, **empeoraría el rastro** —el perdón pasaría a ser un estado
+legítimo y dejaría de notarse— y **no tiene forma correcta de escribirse** cuando el cliente cambia
+después el número de invitados.
+
+▶ **Pero el panel SÍ ofrecía ese gesto y lo deshacía solo.** Medido conduciendo el editor real: poner
+la línea a 0 en «Gestionar producto» → Complementos se ACEPTABA, y la reconciliación post-commit la
+volvía a crear **en la misma pulsación**, mandando al cliente DOS correos que se contradicen. Ahora el
+repeater no la ofrece y **el EDITOR la descarta**.
+
+⚠️ **La guarda va en `OrderItemEditor` y no solo en la pantalla**, y eso corrige lo que se había
+anunciado: sí toca el `CRITICAL_RE`. Lo cambió el propio test, que llamó al editor directamente y se
+saltó la defensa de la página — esa puerta es por donde entra TODO cambio de complementos.
+
+▶ Y el correo deja de atribuirle al cliente lo que hizo el parque: decía «Has actualizado las edades
+de los invitados» también cuando la reconciliación la disparaba el panel.
+
+⚠️ Medido de paso: **en todo el sistema no existe ningún descuento manual** — ni cupón, ni cortesía,
+ni precio editable. Así que «¿puede el operador perdonar 6,00 €?» es en realidad «¿debería el parque
+poder regalar algo?», que es una decisión propia y mucho mayor. Ficha en `DEUDA.md`.
+
+**Verificación**: +2 casos · 2 mutaciones y las 2 muerden · por tocar `OrderItemEditor`,
+`purchase:verify-oversell` ✓ y `redsys:verify-concurrency` ✓ sobre InnoDB real.
+
+## #272 · 2026-08-29 · La pieza entra en el candado del `pre-push`, y la regla en `PAY-19`
+
+`MixedPartySurcharge` escribe dinero bajo `lockForUpdate` y tiene verificador propio sobre MySQL
+(`mixed-party:verify-concurrency`), y **no estaba en el `CRITICAL_RE` ni en `CriticalPathGateTest`**:
+llevaba una jornada en `main` sin gate. Entra con el mismo criterio con el que entró `WaiverSigner`, y
+el `echo` del hook nombra su verificador — antes solo nombraba tres comandos y el siguiente agente
+habría visto el push bloqueado sin saber qué correr.
+
+▶ **`PAY-19`** recoge la regla entera en `INVARIANTES.md`, con su LÍMITE escrito: no cubre el caso
+ESPEJO.
+
+❗ **Lo que queda abierto va a `DEUDA.md` con su medida**, y lo más caro es el **caso espejo**: una
+configuración que CREA un cargo donde no había ninguno (medido: reordenar los tramos convirtió una
+fiesta sin cargo en 40,00 €). El recibo no lo cierra porque ahí no hay nada escrito que proteger, y
+cerrarlo exige sellar el régimen **en la reserva** — columna nueva y migración, decisión del owner.
+⚠️ Con él queda su gemelo: la etiqueta MIXTA puede **contradecir** al cargo, y ahora de forma
+permanente. **Se cambió un fallo de dinero por uno de coherencia**, que es mejor negocio, pero hay que
+saberlo.
+
+**Verificación**: 1 mutación sobre el patrón del hook y `CriticalPathGateTest` la caza ·
+`mixed-party:verify-concurrency` 12/12 con una sola línea de 7,00 €, **visto FALLAR sin el lock** (12
+líneas, 84,00 €).
