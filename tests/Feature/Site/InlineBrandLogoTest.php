@@ -303,6 +303,16 @@ class InlineBrandLogoTest extends TestCase
      */
     public function test_the_hop_animates_something_that_is_actually_painted(): void
     {
+        // ⚠️ La MISMA guarda que su hermano de arriba, que este caso se dejó: el logotipo del
+        // cliente está gitignorado (`.gitignore:31`, `INSTALACION-CLIENTE.md` §4.a) y solo existe
+        // en la máquina que tiene su paquete instalado. Sin esto el caso no falla: ERRORA con
+        // «Failed to open stream» en todo clon que no lo tenga —incluido el `pre-push`, que corre
+        // la suite entera—, así que `main` quedaba sin poder empujarse desde ninguna otra máquina.
+        // Cazado por el carril A al rebasar sobre `#267` (2026-08-29).
+        if (! is_file(public_path('img/client-logo.svg'))) {
+            $this->markTestSkipped('no hay paquete de marca instalado en esta máquina: es lo normal en el producto');
+        }
+
         $svg = (string) file_get_contents(public_path('img/client-logo.svg'));
         $defs = preg_match('/<defs\b.*?<\/defs>/s', $svg, $d) === 1 ? $d[0] : '';
 
