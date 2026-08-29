@@ -29,25 +29,26 @@ defineProps({
       lado. Un icono anunciado además del rótulo lo diría todo dos veces.
     -->
         <!-- `calendar` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
-        <svg v-if="zone === ZONES.ORDERS" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        <svg v-if="zone === ZONES.ORDERS" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
              class="catalog__ico" aria-hidden="true" focusable="false">
-            <rect x="3.6" y="5.4" width="16.8" height="14.2" rx="2.2" stroke="currentColor" stroke-width="1.7" />
-            <path d="M3.6 10.1h16.8" stroke="currentColor" stroke-width="1.7" />
-            <path d="M8.4 3.4v3.4M15.6 3.4v3.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z" />
+            <circle cx="8.6" cy="14.2" r="1.5" />
+            <circle cx="12" cy="14.2" r="1.5" />
+            <circle cx="15.4" cy="14.2" r="1.5" />
         </svg>
 
         <!-- `user` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
-        <svg v-else-if="zone === ZONES.PROFILE" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        <svg v-else-if="zone === ZONES.PROFILE" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
              class="catalog__ico" aria-hidden="true" focusable="false">
-            <circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7" />
-            <path d="M5 19.5c0-3.4 3.1-5.6 7-5.6s7 2.2 7 5.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            <circle cx="12" cy="7.8" r="4.2" />
+            <path d="M4.4 20.4a7.6 7.6 0 0 1 15.2 0 1.4 1.4 0 0 1-1.4 1.4H5.8a1.4 1.4 0 0 1-1.4-1.4z" />
         </svg>
 
         <!-- `lock` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
-        <svg v-else-if="zone === ZONES.PASSWORD" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        <svg v-else-if="zone === ZONES.PASSWORD" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
              class="catalog__ico" aria-hidden="true" focusable="false">
-            <rect x="4.6" y="10.4" width="14.8" height="9.2" rx="2.2" stroke="currentColor" stroke-width="1.7" />
-            <path d="M8.4 10.4V7.9a3.6 3.6 0 0 1 7.2 0v2.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 13a2.6 2.6 0 0 1 2.6-2.6h9.6A2.6 2.6 0 0 1 19.4 13v5.8a2.6 2.6 0 0 1-2.6 2.6H7.2a2.6 2.6 0 0 1-2.6-2.6zm7.4 1.8a1.7 1.7 0 0 0-1 3.1v1.1a1 1 0 0 0 2 0v-1.1a1.7 1.7 0 0 0-1-3.1z" />
+            <path d="M8.2 10.4V8.2a3.8 3.8 0 0 1 7.6 0v2.2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
         </svg>
 
         <!-- `devices` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
@@ -59,43 +60,41 @@ defineProps({
         </svg>
 
         <!-- `shield` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
-        <svg v-else-if="zone === ZONES.PRIVACY" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        <svg v-else-if="zone === ZONES.PRIVACY" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
              class="catalog__ico" aria-hidden="true" focusable="false">
-            <path d="M12 3.1 19.2 6v5.5c0 4.3-3 7.6-7.2 9.4-4.2-1.8-7.2-5.1-7.2-9.4V6z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.2 4 5.1v6.6c0 4.9 3.3 8.7 8 10.5 4.7-1.8 8-5.6 8-10.5V5.1zm-1 13.6L7.2 12l2-2 1.8 1.8 4.2-4.2 2 2z" />
         </svg>
 
         <!-- `users` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). Nace con
              «Menores a cargo» (Fase 6 · C): reutilizar `user` habría dejado dos entradas del índice
              con el MISMO dibujo, justo donde el cliente elige entre «Tus datos» y sus menores. -->
-        <svg v-else-if="zone === ZONES.DEPENDENTS" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        <svg v-else-if="zone === ZONES.DEPENDENTS" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
              class="catalog__ico" aria-hidden="true" focusable="false">
-            <circle cx="9" cy="8.2" r="3.2" stroke="currentColor" stroke-width="1.7" />
-            <path d="M2.8 19.5c0-3.2 2.8-5.3 6.2-5.3s6.2 2.1 6.2 5.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-            <circle cx="16.4" cy="9.4" r="2.5" stroke="currentColor" stroke-width="1.7" />
-            <path d="M15.4 14.3c3.2.1 5.9 2.2 5.9 5.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            <circle cx="8.6" cy="7.6" r="3.6" />
+            <circle cx="17.2" cy="8.8" r="2.8" />
+            <path d="M2.4 19.8a6.2 6.2 0 0 1 12.4 0 1.2 1.2 0 0 1-1.2 1.2H3.6a1.2 1.2 0 0 1-1.2-1.2z" />
+            <path d="M16.4 13.6a5.2 5.2 0 0 1 5.2 6.2 1.2 1.2 0 0 1-1.2 1.2h-2.6v-1.2a7.8 7.8 0 0 0-1.6-4.8z" />
         </svg>
 
         <!-- `receipt` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`).
              ⚠️ Nace con la zona, como `shield` nació con privacidad: no había ningún icono pequeño
              que dijera «pedido», y reusar el `calendar` de «Mis reservas» habría dejado dos entradas
              del índice con el MISMO dibujo, que es donde el cliente elige entre las dos. -->
-        <svg v-else-if="zone === ZONES.PURCHASES" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        <svg v-else-if="zone === ZONES.PURCHASES" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
              class="catalog__ico" aria-hidden="true" focusable="false">
-            <path d="M5.4 3.6h13.2v16.8l-2.64-1.5-2.64 1.5-2.64-1.5-2.64 1.5-2.64-1.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-            <path d="M8.8 8.4h6.4M8.8 12.2h4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.8 3.4a1.6 1.6 0 0 1 1.6-1.6h11.2a1.6 1.6 0 0 1 1.6 1.6v18.8l-3.2-2-3.2 2-3.2-2-3.2 2zm3.4 3.2a1.3 1.3 0 0 0 0 2.6h7.6a1.3 1.3 0 0 0 0-2.6zm0 4.8a1.3 1.3 0 0 0 0 2.6h4.8a1.3 1.3 0 0 0 0-2.6z" />
         </svg>
 
         <!-- `qr` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). Nace con
              «Mi carné» (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.6 B·3): no había ningún
              icono pequeño que dijera «código», y es la entrada que el cliente busca en la puerta. -->
-        <svg v-else-if="zone === ZONES.CARD" width="18" height="18" viewBox="0 0 24 24" fill="none"
-             class="catalog__ico" aria-hidden="true" focusable="false">
-            <rect x="3.6" y="3.6" width="6.6" height="6.6" rx="1.4" stroke="currentColor" stroke-width="1.7" />
-            <rect x="13.8" y="3.6" width="6.6" height="6.6" rx="1.4" stroke="currentColor" stroke-width="1.7" />
-            <rect x="3.6" y="13.8" width="6.6" height="6.6" rx="1.4" stroke="currentColor" stroke-width="1.7" />
-            <rect x="13.8" y="13.8" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
-            <rect x="17.6" y="13.8" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
-            <rect x="13.8" y="17.6" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
-            <rect x="17.6" y="17.6" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
+        <svg v-else-if="zone === ZONES.CARD" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
+             stroke="currentColor" stroke-width="3" class="catalog__ico" aria-hidden="true" focusable="false">
+            <rect x="3.5" y="3.5" width="6.4" height="6.4" rx="1.4" fill="none" />
+            <rect x="14.1" y="3.5" width="6.4" height="6.4" rx="1.4" fill="none" />
+            <rect x="3.5" y="14.1" width="6.4" height="6.4" rx="1.4" fill="none" />
+            <rect x="13.4" y="13.4" width="3.4" height="3.4" rx="1" stroke="none" />
+            <rect x="18.2" y="17.6" width="3.4" height="3.4" rx="1" stroke="none" />
+            <rect x="13.4" y="18.2" width="3" height="3" rx="1" stroke="none" />
         </svg>
 </template>

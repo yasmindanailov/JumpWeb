@@ -127,7 +127,10 @@
                     @endif
                     @if (! empty($site['has_phone']))
                         <a class="menu__fact" href="tel:{{ $site['phone_tel'] }}">
-                            <x-icons.devices :width="18" :height="18" />{{ $site['phone'] }}
+                            {{-- ⚠️ Era `devices` —una pantalla y un portátil— junto a un NÚMERO DE
+                                 TELÉFONO: el dibujo no decía lo que el enlace hace. El set del
+                                 artboard trae `ui/movil` y es exactamente esto (`#257`). --}}
+                            <x-icons.phone :width="18" :height="18" />{{ $site['phone'] }}
                         </a>
                     @endif
                     <a class="menu__fact" href="{{ url('/#info') }}" @click="menuOpen = false">

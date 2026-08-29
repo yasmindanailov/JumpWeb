@@ -13950,3 +13950,117 @@ una `const` declarada más abajo que su lector es la trampa de `auth-en-cajon.md
   mutación.*
 - `CierreChoreographyTest` sigue verde y su texto se corrige: `q > 0,985` ya no «enciende el
   minijuego», lo hace **jugable**.
+
+---
+
+## #257 · 2026-08-29 · [DECIDIDO owner] El SET DE ICONOS del artboard entra en el producto, y con él una anatomía
+
+`[DECIDIDO owner]`, a dos preguntas con la medida delante: **el set se parte por el corte que hace
+el propio artboard** —los genéricos al PRODUCTO, los de parque al paquete del cliente— y **en esta
+tanda se dibujan los de UI; las 14 zonas, después**.
+
+### 1 · Lo medido antes de proponer nada
+
+`Iconos PJP` declara en portada «47 iconos UI»; medidos son **48**, en siete grupos que él mismo
+etiqueta —y el color de grupo **no significa lo mismo en las dos secciones**: en «02 SET UI» el
+naranja es «lo que solo existe en un parque de camas elásticas», en «08» es «Pedidos y pago». La
+clasificación es local a cada sección, no global.
+
+| grupo | n |
+|---|---|
+| Navegación y estructura · papel | 9 |
+| Reserva y parque · cian | 11 |
+| Contacto e información · lima | 6 |
+| **Del parque · naranja** | **5** |
+| Mis reservas · cian | 6 |
+| Pedidos y pago · naranja | 5 |
+| Mi cuenta · lima | 6 |
+
+Y lo nuestro: **26 componentes, 17 de trazo y 9 de masa**, sobre **siete lienzos distintos**, con 34
+usos en Blade y **42 `<svg>` en el cajón** que `SidebarIconParityTest` obliga a mantener idénticos.
+▶ O sea que no era «añadir iconos»: era **cambiar el idioma de dibujo del producto**.
+
+⚠️⚠️ **Y el dato que decidió la respuesta**: hoy **no existe** forma de que un cliente sustituya el
+dibujo de un icono. `client.css` puede con el color, la forma y los dibujos que viajan por CSS
+(`--deco-tag`, `--deco-blob-*`, el spinner, que son pseudo-elementos y máscaras), pero los
+`<x-icons.*>` son **componentes Blade con el SVG en línea**: una hoja de estilos no puede tocar su
+geometría. Por eso «todo al paquete del cliente» habría bloqueado la tanda entera.
+
+### 2 · La geometría se COPIA con un guion; no se transcribe
+
+Los 43 dibujos salen del artboard con un extractor, y de ahí a los componentes con un generador. **No
+se teclea ni una coordenada**: en este repo transcribir un asset desde el contexto ya corrompió un
+fichero en silencio —cabecera y dimensiones válidas, 4.632 B de 6.900— (`armazon-y-menu.md` §9.7).
+
+Los **dos** que el artboard no dibuja se derivan por **espejo con `transform`**, no recalculando a
+mano: `arrow-left` (de `ui/flecha-der`) y `login` (de `cta/salir`). Con `scale(-1 1)` el módulo es 1,
+así que el grosor del trazo no cambia.
+
+### 3 · Dos nombres los corrigió MIRAR los dibujos, no leerlos
+
+Se renderizaron los 43 en una hoja de contacto antes de cablear nada, y ahí aparecieron dos errores
+de mapeo que el nombre del artboard invitaba a cometer:
+
+- **`ui/taquilla` es un CANDADO**, no una taquilla de venta: en un parque «taquilla» es donde dejas
+  las cosas. Va a `lock` (sustituye), y `cta/seguridad` —un escudo con un check— va a `shield`.
+- **`pag/pedido` es una BOLSA de compra**, no un recibo. El que dibuja lo que nuestro `receipt` ya
+  dibujaba es **`pag/factura`**; la bolsa entra como `bag`.
+
+▶ *Un nombre de icono es una hipótesis sobre su dibujo.* Verificarla cuesta una captura.
+
+⚠️ De regalo, un icono que decía lo que no era: el menú enseñaba **`devices`** —una pantalla y un
+portátil— **junto al número de teléfono**. Ahora es `phone` (`ui/movil`).
+
+### 4 · La anatomía se vuelve ejecutable
+
+El artboard escribe sus reglas (§01 rejilla 24 · §05 talla de trabajo 24 · §06 ✕ trazo < 3, ✕
+duotono) y ahora las vigila `IconSetAnatomyTest`: `currentColor` **sin excepciones** —un color
+quemado saca ese glifo del tema y se queda con el color del cliente anterior—, rejilla 24 salvo los
+marcadores de catálogo, y nada de línea fina.
+
+⚠️⚠️ **El matiz que hace útil la guarda sale de que el artboard SE SALTA SU PROPIA REGLA**: `ui/check`
+declara `stroke-width="1.4"`. No es una línea fina — es una **masa** con un trazo hilo que le redondea
+las juntas. La prohibición es para el icono que se dibuja *con* el trazo, así que la condición solo
+se mira donde hay `fill="none"`. Sin ese matiz la guarda habría salido roja con el set del cliente
+puesto tal cual, que es la definición de una guarda que mide otra cosa. Va con **control explícito**:
+si `check` deja de ser masa con hilo, el caso lo dice.
+
+**5 mutaciones, las 5 muerden** (color quemado · fuera de rejilla · línea fina · recorrido corto ·
+la guarda relajada quitando la discriminación).
+
+### 5 · Dos fallos de INSTRUMENTO, y son el mismo
+
+⚠️⚠️ **`width` sin frontera de palabra casa dentro de `stroke-width`**, y pasó **dos veces en una
+hora**:
+
+1. El extractor que quitaba `width`/`height` del `<svg>` del artboard dejó `stroke-` suelto y habría
+   escrito atributos rotos en el cajón. Se vio porque el volcado enseñaba `stroke-` a medias.
+2. **`SidebarDrawerPolishTest` se puso ROJO con el producto sano**: su
+   `/<svg[^>]*width="(?!18")/` casó con el `stroke-width="3"` del primer icono del set nuevo que
+   pinta con trazo (`qr`). Corregido con `(?<![-\w])`.
+
+▶ Es la misma familia que las cuatro guardas ciegas de esta semana. *Un patrón que no acota el
+principio del atributo no mide el atributo que dice medir.*
+
+### 6 · El alcance, con su radio dicho
+
+- **57 componentes** (eran 26): 43 del artboard + 2 derivados + 12 nuestros que se quedan.
+- **14 sustituciones**, y por tanto **14 copias del cajón** actualizadas en **6 ficheros** — las
+  encontró la guarda de paridad, una por una, que es exactamente para lo que existe.
+- ⚠️ **El cajón cambia de aspecto con la landing, y no es un efecto colateral: es el mecanismo.**
+  `landing-white-label.md` §4.5.3 dice que el set es compartido a propósito para que las dos
+  superficies no diverjan. Sus iconos pasan de trazo 1.7 a masa: **pesan más a la vista**, y eso
+  necesita el OJO del owner.
+- **Se quedan en el idioma anterior TRES**: `devices`, `cookie` y `chevron-down`, porque el artboard
+  no los dibuja. Redibujarlos a ojo es lo que en `#211` salió con un 29 % de píxeles distintos: se
+  le piden al diseñador. Lista de excepción declarada, y **solo encoge**.
+- ⚠️ `chevron-down` **no lo usa nadie** (cero referencias en todo el repo). Ficha en `DEUDA`.
+- **Fuera de esta tanda**: los 5 «Del parque» y las 14 zonas (rejilla 64, masa 8) — son del cliente y
+  además no tienen hoy ninguna pantalla que las pinte. Salen del artboard en minutos cuando exista
+  el mecanismo de sustitución por instalación.
+
+### Lo verificado
+
+Suite **3421 / 22.515** · paridad de iconos verde tras las 14 copias · navegador a 1440 en menú,
+cajón y cumpleaños con **cero errores de JS** · hoja de contacto de los 43 revisada a ojo, que es lo
+que cazó los dos nombres mal · 5 mutaciones, las 5 muerden.

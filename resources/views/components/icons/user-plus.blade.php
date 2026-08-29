@@ -1,25 +1,18 @@
-@props([
-    'width' => 18,
-    'height' => 18,
-])
-
-{{-- Glifo «crear cuenta» del set (armazón · tanda 2c·3).
-
-     ⚠️ **Es la PAREJA de `user`, y eso no es estética: lo declara el sistema del cliente.** Su
-     hoja de iconos dice, con estas palabras, que entrar y darse de alta no son lo mismo y que
-     el segundo es «la convención, sin invención ninguna: misma cabeza y mismos hombros con el
-     más separado abajo a la derecha». Aquí se respeta: cabeza y hombros IDÉNTICOS a `user`, y
-     el más aparte.
-
-     ⚠️ **Y NO sustituye al portapapeles en todos los casos.** El botón de la esquina sirve a dos
-     destinos distintos según la instalación: si el parque tiene su propio **trámite de registro
-     de acceso** (una URL externa), eso es un formulario y su glifo sigue siendo el portapapeles;
-     si no lo tiene, el botón **crea una cuenta** y ese es éste. El icono sigue al DESTINO, no a
-     la posición del botón. `armazon-y-menu.md` §4.7. --}}
-<svg {{ $attributes->merge(['class' => 'user-plus-ico']) }}
-     width="{{ $width }}" height="{{ $height }}" viewBox="0 0 24 24" fill="none"
+{{-- Crear cuenta · `ui/registro` del artboard `Iconos PJP` (§02 SET UI).
+     Rejilla **24**, área viva 20, masa mínima 3, **un solo color** por `currentColor`. Es la
+     anatomía que declara el propio artboard (§01) y lo que §06 prohíbe romper: trazo por debajo
+     de 3 y duotono dentro del glifo. Talla de trabajo, 24 (§05).
+     ⚠️ El dibujo se **copia con un guion desde el artboard**, no se transcribe a mano: en este
+     repo transcribir un asset desde el contexto ya corrompió un fichero en silencio
+     (`armazon-y-menu.md` §9.7).
+     ▶ **SUSTITUYE** al dibujo anterior, que era de otro idioma: trazo fino, y varios sobre
+     otra rejilla. Si este dibujo cambia, la copia del cajón tiene que cambiar con él
+     (`SidebarIconParityTest`).
+--}}
+<svg {{ $attributes->merge(['width' => 24, 'height' => 24, 'class' => 'user-plus-ico']) }} viewBox="0 0 24 24" fill="currentColor"
      aria-hidden="true" focusable="false">
-    <circle cx="10" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7" />
-    <path d="M3 19.5c0-3.4 3.1-5.6 7-5.6 1.3 0 2.5.25 3.5.68" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-    <path d="M18 14.5v6M15 17.5h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+    <circle cx="9" cy="8" r="3.6" />
+    <path d="M2.6 19.4a6.4 6.4 0 0 1 12.8 0 1.2 1.2 0 0 1-1.2 1.2H3.8a1.2 1.2 0 0 1-1.2-1.2z" />
+    <rect x="17.4" y="15.4" width="2.8" height="6" rx="1.4" />
+    <rect x="15.8" y="17" width="6" height="2.8" rx="1.4" />
 </svg>

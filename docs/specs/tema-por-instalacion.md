@@ -1957,3 +1957,79 @@ la **puerta nueva de descarga**, porque *lo que un gate declara que no mira es u
 ⚠️ **Dos no mordían y era el ARNÉS**: el escape de `\$` dentro de comillas dobles de bash llevó una
 mutación a **otra línea** (la de `carga()`, no la de `_observa`) y otra no casaba por el cierre de
 llaves. *Cuando una mutación no muerde, la primera hipótesis es la mutación.*
+
+---
+
+## 22. EL SET DE ICONOS — el tercer mecanismo, ya con anatomía (`#257`, 2026-08-29)
+
+> `[DECIDIDO owner, 2026-08-29]`, a dos preguntas con la medida delante:
+> **(1)** el set se parte **por el corte que hace el propio artboard** —los genéricos al PRODUCTO,
+> los de parque al paquete del cliente—; **(2)** en esta tanda se dibujan **los de UI**, y las 14
+> zonas después.
+
+### 22.1 Por qué «todo al paquete del cliente» no era una opción
+
+Hoy **no existe** forma de que un cliente sustituya el DIBUJO de un icono. Medido: `client.css`
+alcanza al color, a la forma y a los dibujos que viajan por CSS (`--deco-tag`, `--deco-blob-*`, el
+spinner, que son pseudo-elementos y máscaras), pero los `<x-icons.*>` son **componentes Blade con el
+SVG en línea** y una hoja de estilos no puede tocar su geometría.
+
+▶ Eso convierte «sustituir iconos por instalación» en un **séptimo mecanismo por construir**, y es lo
+que deja fuera de esta tanda a los 19 dibujos de parque (5 «Del parque» + 14 zonas). No se pierden:
+salen del artboard en minutos cuando el mecanismo exista.
+
+### 22.2 La anatomía, que ahora es ejecutable
+
+| | regla del artboard |
+|---|---|
+| §01 | lienzo **24**, área viva 20, margen 2, masa mínima **3** |
+| §05 | **24 es la talla de trabajo** (20 solo en chips mono · 32 en cabecera · 48 con pegatina) |
+| §06 | ✕ trazo por debajo de 3 · ✕ duotono dentro del glifo · ✕ pegatina por debajo de 40 |
+
+Lo vigila **`IconSetAnatomyTest`**: `currentColor` **sin excepciones**, rejilla 24 salvo los
+marcadores de catálogo, y nada de línea fina. **5 mutaciones, las 5 muerden.**
+
+⚠️⚠️ **El matiz sale de que el artboard SE SALTA SU PROPIA REGLA.** `ui/check` declara
+`stroke-width="1.4"` y no es una línea fina: es una **masa** con un trazo hilo que le redondea las
+juntas. La prohibición es para el icono que se dibuja *con* el trazo, así que la condición se mira
+**solo donde hay `fill="none"`**. Sin ese matiz la guarda habría nacido roja con el set del cliente
+puesto tal cual. Lleva **control explícito**: si `check` deja de ser masa con hilo, el caso lo dice.
+
+### 22.3 La geometría se COPIA, y los dos que faltan se derivan por espejo
+
+Extractor del artboard → generador → componentes. **Ni una coordenada tecleada**: transcribir un
+asset desde el contexto ya corrompió un fichero en silencio en este repo (`armazon-y-menu.md` §9.7).
+
+`arrow-left` y `login` **el artboard no los dibuja** —dibuja su par— y se derivan con
+`transform="translate(24 0) scale(-1 1)"`, no recalculando trayectos con arcos a mano. El módulo de
+la escala es 1, así que el grosor no cambia.
+
+### 22.4 Un nombre de icono es una HIPÓTESIS sobre su dibujo
+
+Los 43 se renderizaron en una hoja de contacto **antes de cablear nada**, y ahí salieron dos mapeos
+mal que el nombre invitaba a hacer:
+
+- **`ui/taquilla` es un CANDADO** —en un parque, «taquilla» es donde dejas las cosas—, así que va a
+  `lock`; y `cta/seguridad`, un escudo con check, va a `shield`.
+- **`pag/pedido` es una BOLSA**, no un recibo. Lo que dibuja nuestro `receipt` es **`pag/factura`**.
+
+⚠️ De regalo: el menú enseñaba **`devices`** —una pantalla y un portátil— **junto al número de
+teléfono**. Ahora es `phone`.
+
+### 22.5 El radio, dicho
+
+- **57 componentes** (eran 26) · 14 sustituciones · **14 copias del cajón** actualizadas en 6
+  ficheros, encontradas una a una por `SidebarIconParityTest`.
+- ⚠️ **El cajón cambia de aspecto con la landing y eso es el MECANISMO, no un daño colateral**
+  (`landing-white-label.md` §4.5.3): el set es compartido para que las dos superficies no diverjan.
+  Sus iconos pasan de trazo 1.7 a masa y **pesan más a la vista** — necesita el OJO del owner.
+- **Tres se quedan en el idioma anterior** (`devices`, `cookie`, `chevron-down`) porque el artboard
+  no los dibuja; redibujarlos a ojo es lo que en `#211` salió con un 29 % de píxeles distintos. Lista
+  de excepción declarada, y **solo encoge**.
+
+### 22.6 Dos fallos de instrumento, y son el mismo
+
+⚠️⚠️ **`width` sin frontera de palabra casa dentro de `stroke-width`**, y pasó **dos veces en una
+hora**: el extractor dejó `stroke-` a medias, y **`SidebarDrawerPolishTest` se puso ROJO con el
+producto sano** al llegar el primer icono del set que pinta con trazo. Los dos, corregidos con
+`(?<![-\w])`. Es la misma familia que las cuatro guardas ciegas de esta semana.

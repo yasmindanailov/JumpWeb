@@ -1,8 +1,15 @@
-{{-- Recibo (zona «Mis pedidos»: el desglose de dinero de cada pedido).
-     Mismo idioma que `user`, `shield` y `calendar`: 18×18 sobre 24, trazo 1.7 y `currentColor`.
-     El borde inferior dentado es lo que lo distingue del `calendar` de «Mis reservas» a 18 px,
-     que es el tamaño al que se ven los dos, uno encima del otro, en el índice de Mi cuenta. --}}
-<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M5.4 3.6h13.2v16.8l-2.64-1.5-2.64 1.5-2.64-1.5-2.64 1.5-2.64-1.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-    <path d="M8.8 8.4h6.4M8.8 12.2h4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+{{-- Factura · `pag/factura` del artboard `Iconos PJP` (§08 RESERVAS Y CUENTA).
+     Rejilla **24**, área viva 20, masa mínima 3, **un solo color** por `currentColor`. Es la
+     anatomía que declara el propio artboard (§01) y lo que §06 prohíbe romper: trazo por debajo
+     de 3 y duotono dentro del glifo. Talla de trabajo, 24 (§05).
+     ⚠️ El dibujo se **copia con un guion desde el artboard**, no se transcribe a mano: en este
+     repo transcribir un asset desde el contexto ya corrompió un fichero en silencio
+     (`armazon-y-menu.md` §9.7).
+     ▶ **SUSTITUYE** al dibujo anterior, que era de otro idioma: trazo fino, y varios sobre
+     otra rejilla. Si este dibujo cambia, la copia del cajón tiene que cambiar con él
+     (`SidebarIconParityTest`).
+--}}
+<svg {{ $attributes->merge(['width' => 24, 'height' => 24]) }} viewBox="0 0 24 24" fill="currentColor"
+     aria-hidden="true" focusable="false">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M4.8 3.4a1.6 1.6 0 0 1 1.6-1.6h11.2a1.6 1.6 0 0 1 1.6 1.6v18.8l-3.2-2-3.2 2-3.2-2-3.2 2zm3.4 3.2a1.3 1.3 0 0 0 0 2.6h7.6a1.3 1.3 0 0 0 0-2.6zm0 4.8a1.3 1.3 0 0 0 0 2.6h4.8a1.3 1.3 0 0 0 0-2.6z" />
 </svg>

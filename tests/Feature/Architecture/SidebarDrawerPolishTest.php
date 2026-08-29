@@ -112,8 +112,13 @@ class SidebarDrawerPolishTest extends TestCase
 
         $iconos = $this->source(self::ICONS);
 
+        // ⚠️⚠️ **La frontera de palabra no es cosmética: sin ella esto casa DENTRO de
+        // `stroke-width`.** Lo destapó `#257`, al entrar en el cajón el primer icono del set nuevo
+        // que pinta con trazo (`qr`, que declara `stroke-width="3"` en el `<svg>`): la guarda se
+        // puso roja con el producto sano. Es la tercera vez en dos días que un patrón sin
+        // `(?<![-\w])` mide otra cosa —también le pasó al extractor de esta misma tanda—.
         $this->assertSame(
-            0, preg_match_all('/<svg[^>]*width="(?!18")/', $iconos),
+            0, preg_match_all('/<svg[^>]*(?<![-\w])width="(?!18")/', $iconos),
             "Algún icono de `ZoneIcon.vue` ha dejado de medir 18: esos atributos son la COPIA del\n".
             'componente Blade, y el tamaño de la tarjeta se decide en CSS.'
         );

@@ -1,17 +1,16 @@
-@props([
-    'width' => 16,
-    'height' => 16,
-])
-
-{{-- Flecha derecha canónica (avanzar / «ir a» / siguiente). Trazo dominante del
-     proyecto: viewBox 24, stroke 2.2 (line + punta). `currentColor` + `aria-hidden`
-     (decorativa: el texto del enlace/botón ya da el significado) + `focusable="false"`.
-     Unifica las copias inline dispersas (events, servicios, compra, nav, slider). La
-     familia tipográfica `cta-*__arrow` del header NO usa este componente (rasgo de diseño). --}}
-<svg {{ $attributes->merge(['class' => 'arrow-ico']) }}
-     width="{{ $width }}" height="{{ $height }}" viewBox="0 0 24 24" fill="none"
-     stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+{{-- Avanzar · `ui/flecha-der` del artboard `Iconos PJP` (§02 SET UI).
+     Rejilla **24**, área viva 20, masa mínima 3, **un solo color** por `currentColor`. Es la
+     anatomía que declara el propio artboard (§01) y lo que §06 prohíbe romper: trazo por debajo
+     de 3 y duotono dentro del glifo. Talla de trabajo, 24 (§05).
+     ⚠️ El dibujo se **copia con un guion desde el artboard**, no se transcribe a mano: en este
+     repo transcribir un asset desde el contexto ya corrompió un fichero en silencio
+     (`armazon-y-menu.md` §9.7).
+     ▶ **SUSTITUYE** al dibujo anterior, que era de otro idioma: trazo fino, y varios sobre
+     otra rejilla. Si este dibujo cambia, la copia del cajón tiene que cambiar con él
+     (`SidebarIconParityTest`).
+--}}
+<svg {{ $attributes->merge(['width' => 24, 'height' => 24, 'class' => 'arrow-ico']) }} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
      aria-hidden="true" focusable="false">
-    <line x1="5" y1="12" x2="19" y2="12" />
-    <polyline points="12 5 19 12 12 19" />
+    <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
+    <path d="M4.6 12h9.4" fill="none" />
 </svg>

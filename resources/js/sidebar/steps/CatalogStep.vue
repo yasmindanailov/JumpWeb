@@ -146,11 +146,13 @@ const anyMatch = computed(() => normalised.value === '' || props.sections.some((
                                 <span v-if="item.deposit_label" class="catalog__deposit">{{ tp('deposit_catalog', { amount: item.deposit_label }) }}</span>
                             </span>
                             <span class="catalog__go" aria-hidden="true">
-                                <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                     stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                                <!-- `arrow-right` del sistema de diseño, copiado byte a byte
+                                     (`SidebarIconParityTest`). -->
+                                <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                                     stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
                                      aria-hidden="true" focusable="false">
-                                    <line x1="5" y1="12" x2="19" y2="12" />
-                                    <polyline points="12 5 19 12 12 19" />
+                                    <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
+                                    <path d="M4.6 12h9.4" fill="none" />
                                 </svg>
                             </span>
                         </button>

@@ -1,15 +1,12 @@
-@props([
-    'width' => 16,
-    'height' => 16,
-])
-
-{{-- Flecha izquierda canónica (volver / anterior). Espejo de `arrow-right`: mismo
-     trazo (viewBox 24, stroke 2.2), `currentColor` + `aria-hidden` + `focusable="false"`.
-     Unifica las flechas «atrás»/«prev» inline (compra, stepper de cumpleaños, slider). --}}
-<svg {{ $attributes->merge(['class' => 'arrow-ico']) }}
-     width="{{ $width }}" height="{{ $height }}" viewBox="0 0 24 24" fill="none"
-     stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+{{-- Retroceder · DERIVADO de `ui/flecha-der` del artboard `Iconos PJP` (§02 SET UI).
+     El artboard **no dibuja la flecha izquierda**: dibuja una y el par se obtiene por espejo. Aquí
+     se hace con un `transform`, no recalculando coordenadas a mano — el espejo es exacto por
+     construcción y no hay ninguna cifra que transcribir mal.
+     ⚠️ La escala es de módulo 1, así que el grosor del trazo no cambia con el espejo. --}}
+<svg {{ $attributes->merge(['width' => 24, 'height' => 24]) }} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
      aria-hidden="true" focusable="false">
-    <line x1="19" y1="12" x2="5" y2="12" />
-    <polyline points="12 19 5 12 12 5" />
+    <g transform="translate(24 0) scale(-1 1)">
+        <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
+        <path d="M4.6 12h9.4" fill="none" />
+    </g>
 </svg>

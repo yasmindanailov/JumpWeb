@@ -99,14 +99,14 @@ async function leave() {
                         @click="accountStore.openZone(ZONES.CARD)">
                     <span class="acct__qr-ico" aria-hidden="true">
                         <!-- `qr` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-                            <rect x="3.6" y="3.6" width="6.6" height="6.6" rx="1.4" stroke="currentColor" stroke-width="1.7" />
-                            <rect x="13.8" y="3.6" width="6.6" height="6.6" rx="1.4" stroke="currentColor" stroke-width="1.7" />
-                            <rect x="3.6" y="13.8" width="6.6" height="6.6" rx="1.4" stroke="currentColor" stroke-width="1.7" />
-                            <rect x="13.8" y="13.8" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
-                            <rect x="17.6" y="13.8" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
-                            <rect x="13.8" y="17.6" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
-                            <rect x="17.6" y="17.6" width="2.8" height="2.8" rx="0.6" fill="currentColor" />
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
+                             stroke="currentColor" stroke-width="3" aria-hidden="true" focusable="false">
+                            <rect x="3.5" y="3.5" width="6.4" height="6.4" rx="1.4" fill="none" />
+                            <rect x="14.1" y="3.5" width="6.4" height="6.4" rx="1.4" fill="none" />
+                            <rect x="3.5" y="14.1" width="6.4" height="6.4" rx="1.4" fill="none" />
+                            <rect x="13.4" y="13.4" width="3.4" height="3.4" rx="1" stroke="none" />
+                            <rect x="18.2" y="17.6" width="3.4" height="3.4" rx="1" stroke="none" />
+                            <rect x="13.4" y="18.2" width="3" height="3" rx="1" stroke="none" />
                         </svg>
                     </span>
                     {{ panel.card }}
@@ -158,12 +158,11 @@ async function leave() {
                 <button type="button" class="acct__btn acct__btn--ghost acct__btn--icon"
                         :disabled="leaving" :aria-label="panel.signOut" :title="panel.signOut"
                         @click="leave()">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    <!-- `logout` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"
                          aria-hidden="true" focusable="false">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                        <polyline points="16 17 21 12 16 7" />
-                        <line x1="21" y1="12" x2="9" y2="12" />
+                        <path d="M11 3h-5A2.6 2.6 0 0 0 3.4 5.6v12.8A2.6 2.6 0 0 0 6 21h5a1.5 1.5 0 0 0 0-3H6.4V6H11a1.5 1.5 0 0 0 0-3z" />
+                        <path d="M16.4 6.9 14.3 9l2 2h-5.5a1.5 1.5 0 0 0 0 3h5.5l-2 2 2.1 2.1 5.1-5.6z" />
                     </svg>
                 </button>
             </div>
@@ -185,12 +184,15 @@ async function leave() {
             <div class="acct__cta">
                 <button type="button" class="acct__btn acct__btn--primary"
                         :disabled="identifying" @click="accountStore.openZone(ZONES.LOGIN)">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    <!-- `login` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`).
+                         ⚠️ Lleva el `<g transform>` del componente: el espejo es PARTE del dibujo, y
+                         quitarlo aquí dejaría la puerta mirando al revés sin que nada fallara. -->
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"
                          aria-hidden="true" focusable="false">
-                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                        <polyline points="10 17 15 12 10 7" />
-                        <line x1="15" y1="12" x2="3" y2="12" />
+                        <g transform="translate(24 0) scale(-1 1)">
+                            <path d="M11 3h-5A2.6 2.6 0 0 0 3.4 5.6v12.8A2.6 2.6 0 0 0 6 21h5a1.5 1.5 0 0 0 0-3H6.4V6H11a1.5 1.5 0 0 0 0-3z" />
+                            <path d="M16.4 6.9 14.3 9l2 2h-5.5a1.5 1.5 0 0 0 0 3h5.5l-2 2 2.1 2.1 5.1-5.6z" />
+                        </g>
                     </svg>
                     {{ panel.login }}
                 </button>

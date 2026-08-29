@@ -98,11 +98,14 @@ const signIn = () => store.go(ZONES.LOGIN);
           vive en el store (probada con `node --test`), no aquí — un componente pinta.
         -->
         <button type="button" class="bk-back account__back" @click="store.back()">
-            <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+            <!-- `arrow-left` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
+            <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                 stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
                  aria-hidden="true" focusable="false">
-                <line x1="19" y1="12" x2="5" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
+                <g transform="translate(24 0) scale(-1 1)">
+                    <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
+                    <path d="M4.6 12h9.4" fill="none" />
+                </g>
             </svg>
             <span>{{ translate(messages, 'back') }}</span>
         </button>

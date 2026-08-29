@@ -1,16 +1,13 @@
-{{-- Acceder · `ui/cuenta` del artboard `Iconos PJP` (§02 SET UI).
+{{-- Reembolso · `pag/reembolso` del artboard `Iconos PJP` (§08 RESERVAS Y CUENTA).
      Rejilla **24**, área viva 20, masa mínima 3, **un solo color** por `currentColor`. Es la
      anatomía que declara el propio artboard (§01) y lo que §06 prohíbe romper: trazo por debajo
      de 3 y duotono dentro del glifo. Talla de trabajo, 24 (§05).
      ⚠️ El dibujo se **copia con un guion desde el artboard**, no se transcribe a mano: en este
      repo transcribir un asset desde el contexto ya corrompió un fichero en silencio
      (`armazon-y-menu.md` §9.7).
-     ▶ **SUSTITUYE** al dibujo anterior, que era de otro idioma: trazo fino, y varios sobre
-     otra rejilla. Si este dibujo cambia, la copia del cajón tiene que cambiar con él
-     (`SidebarIconParityTest`).
 --}}
-<svg {{ $attributes->merge(['width' => 24, 'height' => 24]) }} viewBox="0 0 24 24" fill="currentColor"
+<svg {{ $attributes->merge(['width' => 24, 'height' => 24]) }} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
      aria-hidden="true" focusable="false">
-    <circle cx="12" cy="7.8" r="4.2" />
-    <path d="M4.4 20.4a7.6 7.6 0 0 1 15.2 0 1.4 1.4 0 0 1-1.4 1.4H5.8a1.4 1.4 0 0 1-1.4-1.4z" />
+    <path d="M6.6 8.8H15a5.6 5.6 0 0 1 0 11.2H9.4" fill="none" />
+    <path d="M9.8 3.8 4.8 8.8l5 5z" stroke="none" />
 </svg>

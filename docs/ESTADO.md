@@ -8,6 +8,35 @@
 > ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
 > la marquesina. Y `#253` — ocho puntos de la portada, DOS de ellos fallos.**
 >
+> ❗❗ **`#257` — EL SET DE ICONOS DEL ARTBOARD ENTRA EN EL PRODUCTO: 26 componentes → 57.**
+> `[DECIDIDO owner]` a dos preguntas: el set se parte **por el corte del propio artboard** (los
+> genéricos al PRODUCTO, los de parque al paquete del cliente) y en esta tanda se dibujan **los de
+> UI**; las 14 zonas, después.
+> ⚠️⚠️ **No era «añadir iconos»: era cambiar el IDIOMA DE DIBUJO del producto.** Medido antes:
+> nuestros 26 iban **17 de trazo y 9 de masa, sobre SIETE lienzos distintos**; el set del artboard
+> es masa sobre rejilla 24, `currentColor` y masa mínima 3.
+> ⚠️⚠️ **Y lo que decidió la respuesta**: hoy **no existe** forma de que un cliente sustituya el
+> DIBUJO de un icono — `client.css` alcanza al color, la forma y lo que viaja por CSS, pero los
+> `<x-icons.*>` llevan el SVG en línea. «Todo al paquete del cliente» habría bloqueado la tanda.
+> ⚠️ **La geometría se COPIA con un guion, no se transcribe** (`armazon-y-menu.md` §9.7), y los dos
+> que el artboard no dibuja —`arrow-left`, `login`— se derivan **por espejo con `transform`**.
+> ❗ **Un nombre de icono es una HIPÓTESIS sobre su dibujo**: se renderizaron los 43 en una hoja de
+> contacto antes de cablear, y ahí salieron dos mapeos mal —**`ui/taquilla` es un CANDADO** y
+> **`pag/pedido` una BOLSA**—. De regalo, el menú enseñaba `devices` **junto al teléfono**.
+> ⚠️⚠️ **`SidebarIconParityTest` hizo su trabajo**: cazó **14 copias del cajón** que se quedaron
+> viejas, en 6 ficheros. ▶ **El cajón cambia de aspecto con la landing y eso es el MECANISMO**
+> (`landing-white-label.md` §4.5.3): sus iconos pasan de trazo 1.7 a masa y **pesan más a la vista**
+> — **necesita el OJO del owner**.
+> ⚠️⚠️ **Dos fallos de INSTRUMENTO, y son el mismo**: `width` sin frontera de palabra casa dentro de
+> `stroke-width`. Le pasó al extractor **y** a `SidebarDrawerPolishTest`, que **se puso ROJO con el
+> producto sano** al llegar el primer icono del set que pinta con trazo. Los dos, con `(?<![-\w])`.
+> ⚠️ **La guarda nueva (`IconSetAnatomyTest`) tiene su matiz porque EL ARTBOARD SE SALTA SU REGLA**:
+> `ui/check` lleva trazo 1.4 y es masa con un hilo que redondea juntas, no una línea fina. La regla
+> se mira **solo donde hay `fill="none"`**, con control explícito. 5 mutaciones, las 5 muerden.
+> ▶ Se quedan en el idioma anterior **tres** (`devices`, `cookie`, `chevron-down`): el artboard no
+> los dibuja y redibujarlos a ojo es lo de `#211` (29 % de píxeles distintos). `chevron-down` además
+> **no lo usa nadie** — ficha en `DEUDA`.
+>
 > ❗❗ **`#256` — LA DEMO DEL MINIJUEGO YA CORRE EN EL PUNTO ESTÁTICO, y la señal NO era la que
 > parecía.** `[DECIDIDO owner]`: «el hero del pie más largo» + «que la animación del juego esté
 > activada en su punto estático» son **un solo encargo**: lo segundo necesita sitio, lo primero es
@@ -1290,6 +1319,13 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3425 en verde** (22.531 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 tras `#257` (el set de iconos del artboard). ▶ **+4 casos**: `IconSetAnatomyTest`, que
+  hace ejecutable la anatomía del set —`currentColor` sin excepciones, rejilla 24, nada de línea
+  fina **donde el trazo dibuja la forma**—. **5 mutaciones, las 5 muerden**, y lleva control
+  explícito del matiz (`check` es masa con hilo, no línea fina).
+  ⚠️ Y una guarda vecina se corrigió: `SidebarDrawerPolishTest` medía `width` sin frontera de
+  palabra y **casaba dentro de `stroke-width`**.
 - Suite **3421 en verde** (22.515 aserciones, 1 skipped a propósito) · **JS 862**, medida el
   2026-08-29 tras `#256` (la demo del minijuego en el punto estático). ▶ **+2 casos** en
   `SaltaJuegoTest`: que la demo arranque al VER el lienzo —y que alguien LLAME al registro— y que la

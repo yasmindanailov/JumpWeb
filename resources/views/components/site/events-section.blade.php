@@ -157,7 +157,9 @@
                             <ul class="bd-pack__list">
                                 @foreach ($p->tr('features') ?? [] as $f)
                                     <li>
-                                        <span class="bd-check"><x-icons.check :width="12" :height="10" /></span>
+                                        {{-- ⚠️ CUADRADO. El check pasó a la rejilla 24 del set (`#257`) y una talla
+                                             12×10 sobre un lienzo cuadrado ya no encoge: DEFORMA. --}}
+                                        <span class="bd-check"><x-icons.check :width="12" :height="12" /></span>
                                         <span><span class="bd-feat__t">{{ $f }}</span></span>
                                     </li>
                                 @endforeach
@@ -224,7 +226,7 @@
                             :class="{ 'is-active': i === active, 'is-done': i < active, 'bd-proc__stop--pay': s.pay }"
                             role="tab" :aria-selected="i === active" @click="go(i)">
                         <span class="bd-proc__cube">
-                            <template x-if="i < active"><x-icons.check :width="13" :height="11" /></template>
+                            <template x-if="i < active"><x-icons.check :width="13" :height="13" /></template>
                             <template x-if="i >= active && s.pay"><span x-text="deposit + '€'"></span></template>
                             <template x-if="i >= active && !s.pay"><span x-text="i + 1"></span></template>
                         </span>
