@@ -2348,3 +2348,31 @@ se comporta como una propiedad.*
 ⚠️ **Residuo medido: 3,6–4,7 px.** `1cap` da la altura que la fuente DECLARA, y la de Bungee es un
 5,6 % menor que la que pinta (77,4 contra 82 a 1280). No hay unidad CSS para la tinta; cerrarlo
 exigiría volver al número de Bungee. Se deja y se anota.
+
+### 25.10 · La 4.ª vuelta: pegado al texto y a la derecha TAMBIÉN en el móvil
+
+`[DECIDIDO owner]`: «pega el toggle más al texto, quita el `margin-inline`. Y en el móvil también lo
+quiero a la derecha, no debajo; si hace falta el texto que se haga más pequeño».
+
+▶ **Por qué se caía**: por debajo de ~600 px el renglón no da para la palabra más el interruptor, y
+la ÚNICA oportunidad de corte que hay es el espacio entre los dos. Basta con que quepan.
+
+⚠️ **La primera cuenta dijo que a 480 sobraba sitio y aun así envolvía.** Faltaba **el espacio**: un
+`Range` sobre el nodo de texto **no lo cuenta cuando cae en fin de línea**, porque ahí cuelga. *Un
+ancho medido sobre texto YA ENVUELTO no es el ancho que ese texto necesitaría en una línea.*
+
+▶ El renglón necesita **7,3 × el cuerpo** (5,99 palabra · 0,25 espacio · 1,20 interruptor) y el
+ancho disponible por debajo de 600 es **la ventana menos 52 px**, igual en 320/360/390/414/480. De
+ahí `--hero-t-fit: calc((100vw - 52px) / 7.3)`, metido en un `min()` con el tamaño que ya tenía.
+
+▶ **Sin media query, porque el tope es inerte donde sobra sitio**: a 768 da 98 contra 64,5 que pide
+el titular; a 1280, 168 contra 107,5. Un punto de ruptura menos es un punto de ruptura que no
+envejece. Medido: **un renglón en ocho anchos (320 → 1280) y cero desbordes**, con el cuerpo intacto
+de 600 para arriba.
+
+⚠️ **La coreografía de `#220` sigue viva con menos recorrido en teléfono**: a 390 el titular encogía
+de 54 a 44 al bajar y ahora va de 46,3 a 44. En el punto estático el cuerpo es el de siempre.
+
+⚠️⚠️ **El 7,3 depende de la PALABRA**, y `hero.l1` lo pone la instalación —hoy «DIVERSIÓN» (es),
+«FUN» (en), «DU FUN» (fr); el castellano es el peor—. Con un rótulo más largo el interruptor volvería
+a caerse. Medir texto desde CSS no se puede. **Ficha en `DEUDA`.**

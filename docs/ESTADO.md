@@ -22,6 +22,16 @@
 > cambia su propio `font-size`, así que ahí `--sw-u` valía un tercio y el sangrado salió a **1,84 en
 > vez de 5,6**. **No falla nada, solo queda mal puesto** — y no lo ve ninguna guarda de tokens ni
 > ninguna captura: lo cazó medir `left` y escalarlo a los 44 del artboard.
+> ❗❗ **4.ª vuelta: pegado al texto y A LA DERECHA TAMBIÉN EN EL MÓVIL** («si hace falta el texto
+> que se haga más pequeño»). Fuera el `margin-inline`, y el titular gana un tope
+> `--hero-t-fit: calc((100vw - 52px) / 7.3)` dentro de un `min()`. ⚠️ **Sin media query, porque el
+> tope es INERTE donde sobra sitio** (a 768 da 98 y el titular pide 64,5): un punto de ruptura menos
+> es uno que no envejece. Medido: **un renglón en ocho anchos, 320 → 1280, y cero desbordes**, con
+> el cuerpo intacto de 600 para arriba. ⚠️ La primera cuenta dijo que a 480 sobraba sitio y aun así
+> envolvía: **faltaba el ESPACIO**, que un `Range` no cuenta cuando cae en fin de línea. *Un ancho
+> medido sobre texto ya envuelto no es el que ese texto necesitaría en una línea.* ⚠️⚠️ **El 7,3
+> depende de la PALABRA**, y `hero.l1` lo pone la instalación — con un rótulo más largo el
+> interruptor volvería a caerse (`DEUDA`).
 > ❗❗ **Y en la 3.ª vuelta el interruptor sube a la ALTURA DE LAS MAYÚSCULAS del titular** («grande
 > al tamaño del texto, misma altura»). ⚠️⚠️ **Lo cazó el OJO del owner —«está más abajo»— con mi
 > verificación diciendo que estaba bien**: había medido que las ALTURAS coinciden y **nunca comparé

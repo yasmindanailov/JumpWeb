@@ -14661,3 +14661,49 @@ a simple vista la pista y las letras empiezan y acaban juntas.
 
 ▶ **Medido tras el arreglo**, seis anchos: rótulo en **8,50 a la escala del artboard en los seis**
 —la proporción interna no se movió—, un renglón en todos salvo 390, **cero desbordes**.
+
+### 10 · La CUARTA vuelta: pegado al texto, y a la derecha TAMBIÉN en el móvil
+
+`[DECIDIDO owner]`: «pega el toggle más al texto, quita el `margin-inline`. Y en el móvil también lo
+quiero a la derecha, no debajo; **si hace falta el texto que se haga más pequeño**».
+
+▶ El margen se va y queda solo el espacio de palabra del titular, que es el que separa dos palabras.
+
+#### 10.1 · Por qué se caía a la línea de abajo, y qué faltaba en mi cuenta
+
+Por debajo de ~600 px el renglón no daba para «DIVERSIÓN» + interruptor. La primera cuenta dijo que
+a 480 **sobraba sitio** y aun así envolvía, y eso no cuadraba: lo que faltaba era **el espacio entre
+la palabra y el interruptor**, que un `Range` sobre el nodo de texto **no cuenta cuando cae en fin de
+línea** —ahí el espacio cuelga—. *Un ancho medido sobre el texto ya envuelto no es el ancho que ese
+texto necesitaría en una línea.*
+
+Con el espacio dentro, el renglón necesita **7,3 veces el cuerpo**: 5,99 la palabra · 0,25 el
+espacio · 1,20 el interruptor (2,75·`--sw-u`, con `--sw-u` = cap/1,65 y cap ≈ 0,72 del cuerpo). Y el
+ancho disponible por debajo de 600 es **la ventana menos 52 px**, medido igual en 320, 360, 390, 414
+y 480.
+
+#### 10.2 · Un `min()` que se activa solo, y ni una media query
+
+`--hero-t-fit: calc((100vw - 52px) / 7.3)` entra en un `min()` con el tamaño que ya tenía el
+titular. ▶ **Es inerte donde sobra sitio**: a 768 el tope sale 98 y el titular pide 64,5; a 1280,
+168 contra 107,5. Por eso **no lleva media query** — el tope se activa solo, y un punto de ruptura
+menos es un punto de ruptura que no envejece.
+
+Medido en ocho anchos tras el cambio — **un renglón en los ocho y cero desbordes**:
+
+| ancho | 320 | 360 | 390 | 414 | 480 | 600 | 768 | 1280 |
+|---|---|---|---|---|---|---|---|---|
+| cuerpo antes | 40 | 45 | 48,8 | 51,8 | 60 | 72 | 64,5 | 107,5 |
+| cuerpo ahora | 36,7 | 42,2 | 46,3 | 49,6 | 58,6 | **72** | **64,5** | **107,5** |
+| renglones | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+
+⚠️ **La coreografía de `#220` sigue viva pero con menos recorrido en teléfono**: a 390 el titular
+encogía de 54 a 44 al bajar y ahora va de 46,3 a 44, porque el tope muerde por arriba. En el punto
+estático el cuerpo es el mismo de siempre (44) y ahí el renglón pide 321 de los 338 que hay.
+
+#### 10.3 · ⚠️ El 7,3 depende de la PALABRA, y la palabra la pone la instalación
+
+`hero.l1` es contenido: hoy «DIVERSIÓN» (es), «FUN» (en), «DU FUN» (fr) — el castellano es el peor de
+los tres, así que las otras dos caben de sobra. **Con un rótulo más largo el titular volvería a
+envolver.** Medir texto desde CSS no se puede; hacerlo bien pediría JavaScript, y no lo vale una
+pieza decorativa. **Ficha en `DEUDA`**, con el número para que el siguiente no tenga que medirlo.

@@ -3695,9 +3695,30 @@ body[data-has-hero] .nav--over .nav__cta {
     /* ⚠️ **Sale de la COREOGRAFÍA, no de un `clamp` suelto** (`#220`): encoge con el hero, igual
        que en el mockup. Fuera de la portada `--hero-p` no existe y el `var()` cae a su valor
        inicial, que es el tamaño de siempre — el suelo es el estado grande, que es el seguro. */
-    font-size: calc(var(--hero-t-ini, clamp(54px, 8.4vw, 124px))
-                  + (var(--hero-t-end, clamp(44px, 6vw, 94px)) - var(--hero-t-ini, clamp(54px, 8.4vw, 124px)))
-                  * var(--hero-p, 0));
+    /* ▶ **El `min()` es lo que mantiene el interruptor A LA DERECHA en un teléfono**
+       (`[DECIDIDO owner]`: «en el móvil también lo quiero a la derecha, no debajo; si hace falta el
+       texto que se haga más pequeño»). Sin él, por debajo de ~600 px la palabra y el interruptor no
+       caben en un renglón y el segundo se cae solo a la línea de abajo — la ÚNICA oportunidad de
+       corte que hay es el espacio entre los dos, así que basta con que quepan para que no rompa.
+       ⚠️ **`--hero-t-fit` es inerte donde sobra sitio**: a 768 el tope sale 98 y el titular pide
+       64,5, así que `min()` no toca nada por encima de ~600. Por eso NO lleva media query: el tope
+       se activa solo, y un punto de ruptura menos es un punto de ruptura que no envejece. */
+    font-size: min(
+        calc(var(--hero-t-ini, clamp(54px, 8.4vw, 124px))
+           + (var(--hero-t-end, clamp(44px, 6vw, 94px)) - var(--hero-t-ini, clamp(54px, 8.4vw, 124px)))
+           * var(--hero-p, 0)),
+        var(--hero-t-fit)
+    );
+    /* ▶ **El tope que hace que quepan palabra + interruptor en un renglón.**
+       El renglón necesita **7,3 veces el cuerpo**: 5,99 la palabra, 0,25 el espacio y 1,20 el
+       interruptor (2,75·`--sw-u`, con `--sw-u` = cap/1,65 y cap ≈ 0,72 del cuerpo). Y el ancho
+       disponible por debajo de 600 px es la ventana menos los 52 px de margen del hero, medido
+       igual en 320, 360, 390, 414 y 480.
+       ⚠️⚠️ **El 7,3 depende de la PALABRA, y la palabra la pone la instalación** (`hero.l1`: hoy
+       «DIVERSIÓN» en es, «FUN» en en, «DU FUN» en fr — el castellano es el peor de los tres). Con
+       un rótulo más largo el titular volvería a envolver. Medirlo en CSS no se puede; hacerlo bien
+       pediría JavaScript, y no lo vale una pieza decorativa. **Queda anotado en `DEUDA`.** */
+    --hero-t-fit: calc((100vw - 52px) / 7.3);
     /* Margen vertical reservado para que el chip "Abierto" arriba y el subtítulo
        abajo del título no toquen los bordes en breakpoints estrechos. */
     margin: clamp(10px, 1vw, 16px) 0 0;
@@ -5458,7 +5479,6 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
        envoltorio a `1em` todo se escribe contra el titular directamente, sin una escala intermedia
        que haya que deshacer mentalmente. */
     font-size: 1em;
-    margin-inline-start: 0.21em;
     /* ⚠️⚠️ **`inline-block`, y NO `inline-flex`: ahí está la diferencia entre casar con las letras y
        quedar 17 px por debajo.** Un contenedor flex **toma su línea base de su primer ítem**, y el
        primer ítem aquí es el bulbo, que va CENTRADO en la pista — así que la línea base cae por la
