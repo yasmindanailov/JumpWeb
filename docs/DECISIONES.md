@@ -14492,7 +14492,11 @@ encendido) y **cero animaciones vivas**. ⚠️ Un interruptor quieto en la posi
 propia etiqueta —al lado dice «ON»— es un defecto, no una simplificación, y es de los que **no ve
 nadie**: casi nadie navega con esa preferencia puesta.
 
-### 6 · Lo que NO se toca
+### 6 · El rótulo — ⚠️ CORREGIDO POR LA §8: en la 2.ª vuelta se metió DENTRO de la pista
+
+> ⚠️ **Lo que sigue describe la primera vuelta y ya NO es lo que hay.** El canvas actualizó el `6d`
+> el mismo día metiendo el «ON» **dentro** de la pista, y el owner pidió aplicarlo y retirar el que
+> estaba fuera. **Lee §8 antes que este párrafo.**
 
 El rótulo `hero.l2` («ON») **sigue siendo texto de la instalación** y sigue dentro del `<h1>`: el
 dibujo va `aria-hidden` y un lector de pantalla sigue leyendo «Diversión ON». Lo que se pierde es la
@@ -14507,3 +14511,59 @@ su propia línea, centrado; sin desbordes en ninguno de los dos anchos.
 el chat**, con la codificación rota en los acentos. Por eso no se sobrescribió la copia local: meter
 un fichero con mojibake corrompería el activo. ▶ **Lo que se necesita del `6d` está transcrito
 aquí y en el comentario de `site.css`**, que son ASCII puro y por tanto fieles.
+
+### 8 · La SEGUNDA vuelta del mismo día: el «ON» entra dentro de la pista
+
+`[DECIDIDO owner]`: «he añadido un texto **ON** dentro del toggle al estar on: añade este mismo
+icono animado y **quita el que tenemos y el texto ON que has puesto**».
+
+El canvas volvió a publicar `Iconos PJP.dc.html` con el `6d` cambiado: la pista pasa a
+`position: relative` y aloja un `<span>` con el rótulo, con **bucle propio** (`pjptoggletexto`) y
+esta nota del autor: *«El "ON" en Bungee entra con el relleno y solo vive en el tamaño grande: a
+20 px es una mancha y se cae»*. Dos medidas nuevas —**5,6 de sangrado y 8,5 de cuerpo**—, y las dos
+vuelven a ser múltiplos exactos de 1/16, así que entran en el mismo sistema.
+
+▶ **Los tiempos del rótulo NO son los del bulbo, y ése es el detalle**: entra al **40 %**, o sea
+DESPUÉS de que la pista se llene al 38 % («entra con el relleno»), y se va al **88 %**, ANTES de que
+la pista se vacíe. Nunca se le ve sobre la pista apagada. Medido fotograma a fotograma: 0 en 0/18/26
+· 1 en 38–80 · 0,18 en 82 · 0 desde 88.
+
+#### 8.1 · ⚠️⚠️ Una custom property en `em` NO es una longitud: se re-resuelve en cada elemento
+
+La primera versión puso el sangrado como `calc(var(--sw-u) * 0.35)`, que es la misma forma que usan
+la pista y el bulbo. **Salió a 1,84 en vez de 5,6.**
+
+La causa es de manual y no falla nada: `--sw-u` vale `0.62em`, y una custom property **se sustituye
+como TEXTO**; el `em` lo resuelve el elemento que la USA, contra su propio `font-size`. Y este
+rótulo se cambia el `font-size` a 0,53 de `--sw-u`… con lo cual, a partir de esa línea, `--sw-u`
+vale ahí **un tercio** de lo que vale en la pista. El `font-size` sí salió bien porque en la propia
+declaración de `font-size` el `em` se resuelve contra el PADRE.
+
+▶ Arreglado poniendo el sangrado en `em` **del propio rótulo**: 5,6/8,5 = **0,658824**, exacto, y
+además es como se piensa un sangrado tipográfico —contra el cuerpo de su letra, no contra la caja—.
+⚠️ **Esto NO lo habría visto una guarda de tokens ni una captura**: el rótulo seguía dentro de la
+pista, con su color y su tipo, solo que 3,8 px a la izquierda de donde toca. Lo cazó medir
+`getComputedStyle().left` y **escalarlo a los 44 del artboard**.
+
+#### 8.2 · El nombre accesible se sirve APARTE
+
+El dibujo entero va `aria-hidden` —incluido el rótulo— y la palabra se repite en un `.sr-only`. No
+es ceremonia: dentro del interruptor **el rótulo se desvanece y vuelve cada 3,4 s**, y un nombre
+accesible que parpadea no es un nombre accesible. Verificado recorriendo el `<h1>` y saltando los
+subárboles ocultos: sigue leyéndose **«DIVERSIÓN ON»**, en los dos modos de movimiento.
+
+#### 8.3 · ⚠️ La familia NO se escribe: se hereda
+
+El artboard dice `font-family: 'Bungee'`. Escribirlo aquí clavaría la tipografía de **una**
+instalación dentro del producto. El rótulo no declara familia y la hereda del titular, que lee
+`--font-display`; el paquete de este cliente lo mapea a Bungee. Verificado: rótulo y titular
+resuelven a la misma familia.
+⚠️ **Y ahí el cliente se contradice consigo mismo otra vez**: su norma tipográfica dice «Bungee solo
+en mayúsculas y **nunca por debajo de 20 px**», y su propio artboard lo pone a 8,5. Se sigue al
+artboard —es el dibujo que él firma— y queda anotado. Ninguna guarda vigila esa regla hoy.
+
+#### 8.4 · Lo medido tras el cambio
+
+Escalado a los 44 del artboard: sangrado **5,60** · cuerpo **8,50** · bulbo **15,20** · las tres
+paradas del bulbo intactas (19,00 · 16,40 · −2,40). Sin movimiento: **cero animaciones**, pista
+llena, rótulo a opacidad 1. Sin desbordes a 390 px.

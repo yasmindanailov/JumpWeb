@@ -2180,8 +2180,11 @@ interruptor como icono estático dentro de una fila de texto, y hoy ninguna lo h
 
 ### 25.2 · «Idéntico» se construyó, no se copió
 
-Las ocho medidas del artboard —**44 · 26,4 · 3,6 · 2 · 15,2 · 16,4 · 19 · −2,4**— son **todas
-múltiplos exactos de 1/16**. Escritas en `em` sobre una sola unidad `--sw-u` salen idénticas *y*
+> ⚠️ **Son DIEZ, no ocho**: la 2.ª vuelta del canvas (§25.8) añadió el rótulo de dentro con **5,6**
+> de sangrado y **8,5** de cuerpo. Los dos vuelven a ser múltiplos exactos de 1/16.
+
+Las diez medidas del artboard —**44 · 26,4 · 3,6 · 2 · 15,2 · 16,4 · 19 · −2,4 · 5,6 · 8,5**— son
+**todas múltiplos exactos de 1/16**. Escritas en `em` sobre una sola unidad `--sw-u` salen idénticas *y*
 escalan con el titular: mover `--sw-u` mueve la pieza entera sin tocar una proporción.
 
 Medido en navegador (pista de 62,33 px → factor 44/62,33 = 0,7059): el bulbo va a **19,00**, se
@@ -2241,3 +2244,41 @@ de color). Lo que quedaría por vigilar —las proporciones del `calc()`— se r
 la portada**, y `#251`/§19 ya dejó escrito que aseverar el texto literal de una declaración ata la
 guarda a una implementación. ▶ La verificación es la **medición en navegador** de §25.2 y §25.6, que
 es más fuerte que una aserción de texto y está registrada con sus números.
+
+### 25.8 · La 2.ª vuelta: el «ON» dentro de la pista (`[DECIDIDO owner]`, mismo día)
+
+El canvas volvió a publicar el `6d` con la pista en `position: relative` y un `<span>` dentro con el
+rótulo y **bucle propio**. Nota del autor: *«entra con el relleno y solo vive en el tamaño grande: a
+20 px es una mancha y se cae»*. El owner pidió aplicarlo y **retirar el rótulo que iba fuera**.
+
+▶ **Los tiempos del rótulo no son los del bulbo**: entra al **40 %**, después de que la pista se
+llene al 38 %, y se va al **88 %**, antes de que se vacíe. Nunca se le ve sobre la pista apagada.
+
+#### 25.8.1 · ⚠️⚠️ Una custom property en `em` no es una longitud
+
+El sangrado escrito como `calc(var(--sw-u) * 0.35)` —la misma forma que usan la pista y el bulbo—
+**salió a 1,84 en vez de 5,6**. `--sw-u` vale `0.62em` y una custom property **se sustituye como
+texto**: el `em` lo resuelve el elemento que la usa. Este rótulo se cambia su propio `font-size`, así
+que ahí `--sw-u` vale un tercio. (El `font-size` sí salió bien: en esa declaración el `em` se
+resuelve contra el PADRE.)
+
+▶ Regla: **si un descendiente cambia su `font-size`, no puede medirse con un token en `em`.** El
+sangrado va en `em` del propio rótulo: 5,6/8,5 = **0,658824**.
+⚠️ **Ninguna guarda de tokens ni ninguna captura habrían visto esto**: el rótulo seguía dentro de la
+pista, con su color y su tipo, 3,8 px corrido. Lo cazó medir `left` y **escalarlo a los 44 del
+artboard** — el mismo instrumento de §25.2.
+
+#### 25.8.2 · La familia se HEREDA, y ahí el cliente se contradice
+
+El artboard escribe `'Bungee'`; aquí no se escribe familia ninguna y se hereda del titular, que lee
+`--font-display`. Escribirla clavaría la tipografía de **una** instalación en el producto.
+⚠️ Su norma dice «Bungee solo en mayúsculas y **nunca por debajo de 20 px**» y su artboard lo pone a
+**8,5**. Se sigue al artboard, que es el dibujo que él firma, y queda anotado: **ninguna guarda
+vigila esa regla hoy** (`DEUDA`).
+
+#### 25.8.3 · El nombre accesible se sirve aparte
+
+El dibujo entero va `aria-hidden` —rótulo incluido— y la palabra se repite en `.sr-only`: dentro del
+interruptor **el rótulo parpadea cada 3,4 s**, y un nombre accesible que parpadea no lo es.
+Verificado recorriendo el `<h1>` y saltando los subárboles ocultos: **«DIVERSIÓN ON»** en los dos
+modos de movimiento.

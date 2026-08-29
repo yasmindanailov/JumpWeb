@@ -13,9 +13,20 @@
 > cuatro variantes; `6d` es la ANIMADA — «El salto, no el deslizamiento». Sustituye al interruptor
 > dibujado a mano de `#254`/`#261`, **así que la mitad de esas dos entradas que describe la cápsula
 > con relieve `inset` está CADUCADA** (la otra mitad, la del CTA, sigue vigente).
-> ⚠️⚠️ **«Idéntico» se CONSTRUYÓ, no se copió**: sus ocho medidas son múltiplos exactos de **1/16**,
-> así que en `em` sobre una sola unidad salen 1:1 *y* escalan. Medido en navegador: el bulbo va a
-> **19,00**, asienta en **16,40**, sale a **−2,40** — los tres números del artboard al dígito.
+> ⚠️⚠️ **«Idéntico» se CONSTRUYÓ, no se copió**: sus **diez** medidas son múltiplos exactos de
+> **1/16**, así que en `em` sobre una sola unidad salen 1:1 *y* escalan. Medido en navegador: el
+> bulbo va a **19,00**, asienta en **16,40**, sale a **−2,40** y el rótulo a **5,60 / 8,50** — todos
+> al dígito.
+> ⚠️⚠️ **Y de ahí salió la lección de la sesión: un token en `em` NO es una longitud.** Una custom
+> property se sustituye como TEXTO y el `em` lo resuelve **el elemento que la usa**; el rótulo se
+> cambia su propio `font-size`, así que ahí `--sw-u` valía un tercio y el sangrado salió a **1,84 en
+> vez de 5,6**. **No falla nada, solo queda mal puesto** — y no lo ve ninguna guarda de tokens ni
+> ninguna captura: lo cazó medir `left` y escalarlo a los 44 del artboard.
+> ⚠️ El rótulo «ON» va **DENTRO** de la pista (2.ª vuelta del canvas el mismo día) con bucle propio,
+> y **el nombre accesible se sirve aparte en `.sr-only`**: uno que parpadea cada 3,4 s no lo es.
+> Verificado, sigue leyéndose «DIVERSIÓN ON». ⚠️ **La familia se HEREDA** (`--font-display`), no se
+> escribe — y ahí el cliente se contradice: su norma dice «Bungee nunca por debajo de 20 px» y su
+> artboard lo pone a **8,5** (`DEUDA`: ninguna guarda vigila esa regla).
 > ⚠️⚠️ **La curva NO es la suya y está medido por qué**: se separan **0,50 px a la talla del hero**,
 > y estrenar una quinta curva por medio píxel deshace la tanda 2d. **El rebote de `6d` no vive en la
 > curva: vive en los FOTOGRAMAS.** ⚠️ La duración (3,4 s) SÍ es suya y entra como AMBIENTAL
@@ -1427,8 +1438,9 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3425 en verde** (22.602 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-29 tras `#262` (el interruptor del titular pasa a ser el `6d` del canvas). ▶ **Mismo
+- Suite **3425 en verde** (22.615 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 tras `#262` (el interruptor del titular pasa a ser el `6d` del canvas, con el rótulo
+  ya dentro de la pista). ▶ **Mismo
   número de casos y +34 aserciones**: no entra ningún test nuevo — la escala de movimiento gana un
   token ambiental (`--dur-switch`) y `MotionScaleTest` lo recorre en sus cuatro casos, que están
   escritos sobre la lista y no sobre una cuenta fija.

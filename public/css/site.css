@@ -5411,15 +5411,17 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
 .dep-page { margin-top: var(--sp-20); }
 
 /* ══ EL INTERRUPTOR DEL TITULAR DEL HERO — `ui/toggle-on` · 6d (`#262`) ════════════════════════
-   `[DECIDIDO owner, 2026-08-29]`: «tenemos ya el icono, vamos a usar el 6d… tráelo idéntico».
+   `[DECIDIDO owner, 2026-08-29]`: «tenemos ya el icono, vamos a usar el 6d… tráelo idéntico», y en
+   la segunda vuelta «he añadido un texto ON dentro del toggle al estar on: añade este mismo icono
+   animado y quita el que tenemos y el texto ON que has puesto».
    El canvas trajo el LOTE 6 y con él la pieza oficial del sistema: `6d`, «El salto, no el
-   deslizamiento». Lo que había aquí era un interruptor DIBUJADO A MANO en dos vueltas con el
+   deslizamiento». Lo que había aquí antes era un interruptor DIBUJADO A MANO en dos vueltas con el
    owner delante (`#261`); esto lo sustituye por el suyo.
 
-   ▶ **La geometría es 1:1, y no por copiar números sino por CONSTRUCCIÓN**: las siete medidas del
-   artboard (44 · 26,4 · 3,6 · 2 · 15,2 · 16,4 · 19 · −2,4) son todas múltiplos exactos de 1/16,
-   así que escritas en `em` sobre `--sw-u` salen idénticas **y** escalan con el titular. Mover
-   `--sw-u` mueve la pieza entera sin tocar una sola proporción.
+   ▶ **La geometría es 1:1, y no por copiar números sino por CONSTRUCCIÓN**: las diez medidas del
+   artboard (44 · 26,4 · 3,6 · 2 · 15,2 · 16,4 · 19 · −2,4 · 5,6 · 8,5) son todas múltiplos exactos
+   de 1/16, así que escritas en `em` sobre `--sw-u` salen idénticas **y** escalan con el titular.
+   Mover `--sw-u` mueve la pieza entera sin tocar una sola proporción.
 
    ⚠️⚠️ **La CURVA no es la suya, y está medido por qué.** El artboard usa
    `cubic-bezier(.34, 1.4, .5, 1)`; nuestro `--ease-entra` es `(.34, 1.56, .64, 1)`. Invertidas las
@@ -5439,11 +5441,14 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    siempre». Aquí el encendido es `--ok`, que es lo que `#254` decidió con `ActionFillTest` delante
    («acción es el control que hace AVANZAR; encendido es un ESTADO»). El apagado es `--fg-mute` y
    no su `#5E666D`: ese gris vive sobre una tarjeta `#1A1F25` y sobre el vídeo del hero
-   desaparecería. Y el bulbo encendido lee **`--paper-fg`, la TINTA, no `--fg`**, porque dentro del
-   hero `--fg` vale CLARO (`tema-por-instalacion.md` §13).
+   desaparecería. Y el rótulo y el bulbo encendidos leen **`--paper-fg`, la TINTA, no `--fg`**,
+   porque dentro del hero `--fg` vale CLARO (`tema-por-instalacion.md` §13).
 
-   ▶ **Sigue sin ser un control**: nada se enciende ni se apaga al pulsarlo, así que el dibujo va
-   `aria-hidden` y lo que se lee es el rótulo del titular, que lo pone la instalación (`hero.l2`). */
+   ▶ **El rótulo «ON» vive AHORA DENTRO de la pista** y lo pone la instalación (`hero.l2`), igual
+   que cuando iba fuera. ⚠️ **El dibujo entero va `aria-hidden` y la palabra se sirve APARTE en
+   `.sr-only`**: dentro del interruptor el rótulo se desvanece y vuelve, y un nombre accesible que
+   parpadea no es un nombre accesible. Así el `<h1>` se sigue leyendo «DIVERSIÓN ON» de principio a
+   fin, y sigue sin prometer un control que no existe. */
 .hero__switch {
     /* Su TALLA PROPIA (`#261`, `[DECIDIDO owner]`: «más pequeño, no tan grande, y a la derecha»).
        El interruptor va EN LÍNEA detrás de la palabra, así que no puede medir lo mismo que ella. */
@@ -5452,20 +5457,21 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     /* Centrado ÓPTICO con la palabra: no sobre la línea base —quedaría colgando— sino sobre el
        centro de la caja de mayúsculas, que es lo que el ojo alinea con un titular en versalitas. */
     vertical-align: 0.74em;
-    display: inline-flex; align-items: center; gap: 0.42em;
+    display: inline-flex; align-items: center;
     line-height: 1;
     /* El texto del titular lleva `-webkit-text-stroke` en otras variantes; el rótulo del
        interruptor no, porque a esta talla el filo lo cierra. */
     -webkit-text-stroke: 0;
 }
-.hero__switch-t { display: block; }
 
 /* LA PISTA. `box-sizing: border-box` como el artboard, que lo declara en `*`: sus 3,6 de borde van
-   DENTRO de los 44 de ancho, no fuera. Sin esto la pista mide 51,2 y el bulbo no llega al final. */
+   DENTRO de los 44 de ancho, no fuera. Sin esto la pista mide 51,2 y el bulbo no llega al final.
+   ⚠️ `position: relative` no es adorno: es lo que ancla el rótulo de dentro. */
 .hero__switch-sw {
     /* ▶ **La unidad de la pieza: aquí y en ningún otro sitio.** 44/16 = 2,75, así que el ancho de
        la pista es 2,75·u y todo lo demás sale del mismo múltiplo. */
     --sw-u: 0.62em;
+    position: relative;
     box-sizing: border-box;
     display: flex; align-items: center; flex: none;
     width: calc(var(--sw-u) * 2.75);                          /* 44    */
@@ -5484,8 +5490,33 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     background: var(--fg-mute);
     animation: heroSwitchKnob var(--dur-switch) var(--ease-entra) infinite;
 }
+/* EL RÓTULO DE DENTRO. Cuerpo 8,5/16 = 0,53125 de `--sw-u`; sangrado 5,6.
+   ⚠️⚠️ **EL SANGRADO NO PUEDE SALIR DE `--sw-u`, Y ÉSTA ES LA TRAMPA QUE COSTÓ LA PRIMERA
+   VERSIÓN.** `--sw-u` vale `0.62em`, y una custom property se sustituye como TEXTO: el `em` se
+   resuelve contra el `font-size` del elemento que la USA. Este rótulo se cambia su propio
+   `font-size` a 0,53 de `--sw-u`, así que a partir de esa línea **`--sw-u` vale aquí un tercio de
+   lo que vale en la pista**. Medido: `left` salió a **1,84 en vez de 5,6** — y no falla nada, solo
+   queda mal puesto. ▶ Por eso el sangrado va en `em` PROPIOS del rótulo: 5,6/8,5 = 0,658824, que
+   es exacto y además es como se piensa un sangrado tipográfico —contra el cuerpo de su letra—.
+   El `font-size` sí puede leer `--sw-u` porque en la propia declaración de `font-size` el `em` se
+   resuelve contra el PADRE, que es la pista.
+   ⚠️ **La familia NO se escribe aquí**: se HEREDA del titular, que lee `--font-display`. El
+   artboard dice «Bungee» porque ése es el rótulo de ESTE cliente; escribirlo clavaría la
+   tipografía de una instalación dentro del producto. Verificado: rótulo y titular resuelven a la
+   misma familia. */
+.hero__switch-on {
+    position: absolute;
+    font-size: calc(var(--sw-u) * 0.53125);   /* 8,5 */
+    left: 0.658824em;                         /* 5,6 — em del RÓTULO, no de `--sw-u` */
+    top: 50%;
+    transform: translateY(-50%);
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--paper-fg);
+    animation: heroSwitchLabel var(--dur-switch) var(--ease-entra) infinite;
+}
 
-/* Los dos bucles, fotograma a fotograma como el artboard. ⚠️ La pista se llena **a mitad de
+/* Los tres bucles, fotograma a fotograma como el artboard. ⚠️ La pista se llena **a mitad de
    recorrido** (38 %), no al llegar: es lo que el artboard llama «cuando el gesto ya es
    irreversible». Y al apagarse la pista se vacía en el 100 % mientras el bulbo aún vuelve. */
 @keyframes heroSwitchTrack {
@@ -5502,8 +5533,16 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     92%      { transform: translateX(calc(var(--sw-u) * -0.15)) scaleX(1.14); }                /* −2,4  */
     100%     { transform: translateX(0);                                       background: var(--fg-mute); }
 }
-/* Sin movimiento se queda ENCENDIDO, no apagado: el rótulo de al lado dice «ON» y un interruptor
-   quieto en la posición contraria a su propia etiqueta es un defecto, no una simplificación. */
+/* ⚠️ El rótulo NO comparte los tiempos del bulbo: entra al 40 %, DESPUÉS de que la pista se llene
+   al 38 % («entra con el relleno»), y se va al 88 %, ANTES de que la pista se vacíe. Nunca se le ve
+   sobre la pista apagada. */
+@keyframes heroSwitchLabel {
+    0%, 26%   { opacity: 0; }
+    40%, 80%  { opacity: 1; }
+    88%, 100% { opacity: 0; }
+}
+/* Sin movimiento se queda ENCENDIDO, no apagado: el interruptor dice «ON» y uno quieto en la
+   posición contraria a su propia etiqueta es un defecto, no una simplificación. */
 @media (prefers-reduced-motion: reduce) {
     .hero__switch-sw {
         animation: none;
@@ -5514,6 +5553,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
         transform: translateX(calc(var(--sw-u) * 1.025));
         background: var(--paper-fg);
     }
+    .hero__switch-on { animation: none; opacity: 1; }
 }
 
 /* ══ EL LOGOTIPO EN LÍNEA Y SU SALTO (`#254`) ══════════════════════════════════════════════════
