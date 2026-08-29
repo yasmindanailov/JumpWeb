@@ -41,6 +41,14 @@ use Illuminate\Support\Facades\DB;
  * retoque una tarifa. El desfase entre lo escrito y lo derivado **se enseña** en la ficha del
  * pedido, que es lo que lo hace comprobable en vez de invisible.
  *
+ * ## Una AUSENCIA no es una CORRECCIÓN
+ *
+ * Reconciliar hacia lo derivado solo vale mientras lo derivado DIGA algo. Con el veredicto a medias
+ * —falta una edad, sobra una que ningún pack cubre, o el pack dejó de participar en su familia— lo
+ * escrito puede CRECER pero nunca encoger ni retirarse ({@see derivationGoverns}). Sin esa puerta,
+ * tres caminos distintos borraban un cargo real y ninguno era un cambio del hecho: el cliente
+ * vaciando sus propias casillas de edad, `RGPD-01` al anonimizar, y un tramo tocado en el catálogo.
+ *
  * ## Lo que NO cierra, y hay que saberlo
  *
  * ⚠️ Un cliente puede declarar 8 años, ver el suplemento y bajarlo a 6 la víspera. Eso **no se puede
@@ -93,15 +101,17 @@ class MixedPartySurcharge
                 return null;
             }
 
-            $target = $this->targetState($item);
+            $mix = $this->mix->for($item);
+            $target = $this->targetState($mix);
             $old = $this->totalOf($current);
 
-            $this->apply($item, $carrier->id, $current, $target, $actor);
-
-            $new = array_sum(array_map(
-                static fn (array $t): int => $t['count'] * $t['unit'],
-                $target,
-            ));
+            // ⚠️⚠️ **Una AUSENCIA no es una CORRECCIÓN** (§12.2.bis). Con el veredicto a medias, lo
+            // escrito solo puede CRECER: nunca se encoge ni se retira. Sin esta puerta, tres formas
+            // de que falte un dato borraban un cargo real y ninguna era un cambio del hecho.
+            $new = $this->apply(
+                $item, $carrier->id, $current, $target, $actor,
+                mayShrink: $this->derivationGoverns($mix),
+            );
 
             if ($new === $old) {
                 return null;
@@ -130,6 +140,32 @@ class MixedPartySurcharge
     }
 
     /**
+     * ¿Puede el veredicto derivado MANDAR sobre lo ya escrito, hasta el punto de retirarlo?
+     *
+     * Solo cuando dice algo COMPLETO y COMPARABLE: que el pack sigue participando en una familia
+     * por edad y que no falta ni sobra ninguna edad. En cualquier otro caso el veredicto no es una
+     * afirmación («no hay suplemento»), es un silencio («todavía no consta»), y un silencio no
+     * puede borrar un cargo que ya se le comunicó al cliente.
+     *
+     * ⚠️⚠️ **Las TRES formas de silencio están MEDIDAS, y las tres borraban dinero real** (§12.2.bis,
+     * sondas sobre el pedido `R-BEEL3E` en transacción revertida):
+     *  - el cliente **vacía las casillas de edad** y guarda → el cargo desaparecía. Es el peor,
+     *    porque lo dispara el propio interesado y no exige más que borrar;
+     *  - `User::anonymize()` (`RGPD-01`) pone `guest_data` a `null` → la siguiente pasada borraba el
+     *    cargo. El derecho al olvido borra los datos del cliente, **no la contabilidad del parque**;
+     *  - alguien **retira la familia o estrecha un tramo** en el catálogo → el veredicto pasa a «no
+     *    aplica» o a «fuera de rango» y arrastraba el cargo con él.
+     *
+     * ▶ **Crecer sí puede**, y es asimétrico a propósito: declarar la edad que faltaba es un dato
+     * nuevo y legítimo; borrarla no lo es. Así el importe sigue apareciendo mientras el cliente
+     * rellena el formulario, y deja de poder desaparecer cuando lo vacía.
+     */
+    private function derivationGoverns(GuestAgeMix $mix): bool
+    {
+        return $mix->applies && $mix->isComplete();
+    }
+
+    /**
      * El estado que DEBERÍA tener el suplemento, por producto de destino.
      *
      * Se agrupa por destino y no en una sola línea porque cada destino tiene **su** diferencia por
@@ -138,12 +174,14 @@ class MixedPartySurcharge
      * diferencia es 0 o no se pudo resolver el precio del día): una línea de 0,00 € no es
      * información, es ruido en el desglose del cliente.
      *
+     * ⚠️ Recibe el veredicto YA DERIVADO en vez de derivarlo: quien llama necesita el mismo objeto
+     * para decidir si ese veredicto puede mandar sobre lo escrito ({@see derivationGoverns}), y dos
+     * derivaciones de la misma reserva en la misma pasada podrían no coincidir.
+     *
      * @return array<int, array{count:int, unit:int, name:string}>
      */
-    private function targetState(OrderItem $item): array
+    private function targetState(GuestAgeMix $mix): array
     {
-        $mix = $this->mix->for($item);
-
         $state = [];
         foreach ($mix->upgrades as $upgrade) {
             $unit = $upgrade['unit_cents'];
@@ -212,17 +250,37 @@ class MixedPartySurcharge
      * sitio para que ninguna se olvide de su gemela — el modo de fallo de esto es dejar una línea
      * viva de un destino que ya no aplica, y eso cobra dinero que nadie debe.
      *
+     * Devuelve el total que queda ESCRITO, que no siempre es el del objetivo: con `$mayShrink` en
+     * `false` las bajadas y las retiradas se omiten, y quien llama necesita el importe real para
+     * decidir si hay algo que auditar y que contarle al cliente. Calcularlo sumando `$target` —que
+     * es lo que se hacía— anunciaría una bajada que no se ha escrito.
+     *
      * @param  array<int, array{item:OrderItem, adjustment:OrderAdjustment, count:int, unit:int}>  $current
      * @param  array<int, array{count:int, unit:int, name:string}>  $target
+     * @param  bool  $mayShrink  ¿el veredicto manda lo bastante como para RETIRAR dinero escrito?
+     *                           ({@see derivationGoverns}); con `false`, esto solo puede crecer
      */
-    private function apply(OrderItem $principal, int $carrierId, array $current, array $target, User $actor): void
+    private function apply(OrderItem $principal, int $carrierId, array $current, array $target, User $actor, bool $mayShrink): int
     {
+        $written = 0;
+
         foreach ($target as $typeId => $want) {
             $amount = $want['count'] * $want['unit'];
 
             if (isset($current[$typeId])) {
                 $line = $current[$typeId];
+                $before = $line['count'] * $line['unit'];
+
                 if ($line['count'] === $want['count'] && $line['unit'] === $want['unit']) {
+                    $written += $before;
+
+                    continue;
+                }
+                // La abstención, aplicada línea a línea y por IMPORTE: menos invitados con la misma
+                // diferencia y los mismos invitados con menos diferencia son la misma pérdida.
+                if ($amount < $before && ! $mayShrink) {
+                    $written += $before;
+
                     continue;
                 }
                 $line['item']->forceFill([
@@ -233,6 +291,7 @@ class MixedPartySurcharge
                     'amount_cents' => $amount,
                     'context' => $this->context($typeId, $want, $want['name'] ?? null),
                 ])->save();
+                $written += $amount;
 
                 continue;
             }
@@ -262,10 +321,16 @@ class MixedPartySurcharge
                 'reason' => 'mixed_party_surcharge',
                 'context' => $this->context($typeId, $want, $want['name'] ?? null),
             ]);
+            $written += $amount;
         }
 
         foreach ($current as $typeId => $line) {
             if (isset($target[$typeId])) {
+                continue;
+            }
+            if (! $mayShrink) {
+                $written += $line['count'] * $line['unit'];
+
                 continue;
             }
             // Cancelar y no borrar: la línea deja de contar en TODOS los desgloses (los financieros
@@ -273,6 +338,8 @@ class MixedPartySurcharge
             // net-cero. Borrarla destruiría el rastro de que existió.
             $line['item']->markCancelled($actor);
         }
+
+        return $written;
     }
 
     /**

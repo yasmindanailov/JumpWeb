@@ -168,6 +168,36 @@ class MixedPartySurchargeTest extends TestCase
         return ReservationFinancials::make($order, $order->items->firstWhere('id', $item->id));
     }
 
+    /**
+     * El corte entre DOS PETICIONES, que en un test no existe y sin el cual estas guardas nacen
+     * ciegas.
+     *
+     * ⚠️⚠️ `GuestAgeMixReader` va en `scoped` y memoiza la familia y los precios del día para no
+     * consultarlos una vez por invitado. En producción eso vive lo que vive una petición; dentro de
+     * un test es UN proceso, así que un caso que cambia el catálogo y vuelve a guardar seguiría
+     * leyendo los valores de antes y **pasaría en verde con el defecto puesto**. Le pasó a la sonda
+     * que encontró todo esto: el precio se borró de la base y el veredicto lo seguía viendo.
+     */
+    private function nextRequest(): void
+    {
+        $this->app->forgetScopedInstances();
+    }
+
+    /** Un empleado con lo justo para editar una reserva desde el panel. */
+    private function staff(): User
+    {
+        $this->seed(RoleSeeder::class);
+        $this->seed(PermissionSeeder::class);
+
+        $staff = User::factory()->create();
+        $staff->roles()->sync([Role::where('name', 'staff')->value('id')]);
+        $staff->roles->first()->permissions()->sync(
+            Permission::whereIn('name', ['orders.view', 'orders.edit_item'])->pluck('id'),
+        );
+
+        return $staff;
+    }
+
     // ─── Que el dinero CUADRE, que es lo que la forma «obvia» rompía ─────────────
 
     public function test_a_guest_above_the_range_adds_value_and_is_due_at_the_park(): void
@@ -359,11 +389,7 @@ class MixedPartySurchargeTest extends TestCase
         $item = $this->declareAges($this->reservation(4), [8, 4, 5, 9]);
         $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'los de 8 y 9');
 
-        $staff = User::factory()->create();
-        $staff->roles()->sync([Role::where('name', 'staff')->value('id')]);
-        $staff->roles->first()->permissions()->sync(
-            Permission::whereIn('name', ['orders.view', 'orders.edit_item'])->pluck('id'),
-        );
+        $staff = $this->staff();
 
         $item = $item->fresh(['ticketType', 'slot']);
         $outcome = app(OrderItemEditor::class)->edit(
@@ -389,5 +415,109 @@ class MixedPartySurchargeTest extends TestCase
 
         $this->assertSame(700, $this->financials($item->fresh())->aCobrarPuerta);
         $this->assertSame(700, app(MixedPartySurcharge::class)->written($item->fresh())['cents']);
+    }
+
+    // ─── Una AUSENCIA no es una CORRECCIÓN (§12.2.bis) ───────────────────────────
+    //
+    // Las cuatro formas de que falte un dato, y las cuatro borraban un cargo real. Se miden por
+    // `aCobrarPuerta` y no solo por `written()`: lo que importa no es que quede la fila, es que el
+    // cliente siga debiendo ese dinero en el desglose que él ve.
+
+    public function test_blanking_the_ages_does_not_erase_the_charge(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+
+        // El propio cliente vuelve al formulario y BORRA las edades. Es el peor de los cuatro
+        // caminos: no necesita más que vaciar tres casillas, y lo dispara el interesado.
+        $this->nextRequest();
+        $item = $this->declareAges($item, [null, null, null]);
+
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'borrar la edad no borra el cargo');
+        $this->assertCount(1, $this->surchargeLines($item));
+    }
+
+    public function test_blanking_one_age_does_not_shrink_the_charge(): void
+    {
+        // ⚠️ La mitad que la retirada no cubre: aquí la línea NO desaparece, ENCOGE. Es además el
+        // abuso realista —se vacía UNA casilla, no las cuatro— y por importe es la misma pérdida.
+        $item = $this->declareAges($this->reservation(4), [8, 9, 4, 5]);
+        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'los de 8 y 9');
+
+        $this->nextRequest();
+        $item = $this->declareAges($item, [8, null, 4, 5]);
+
+        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'vaciar una edad no rebaja el cargo');
+        $this->assertSame(2, (int) $this->surchargeLines($item)->first()->quantity);
+    }
+
+    public function test_anonymising_the_customer_does_not_erase_the_charge(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+
+        // `RGPD-01`: el derecho al olvido vacía `guest_data`. Borra los datos del cliente; la
+        // contabilidad del parque sobrevive por diseño (la FK es RESTRICT, la factura sigue atada).
+        OrderItem::whereKey($item->id)->update(['guest_data' => null]);
+
+        $this->nextRequest();
+        app(MixedPartySurcharge::class)->reconcile($item->fresh(), $this->staff(), 'panel_item_edit');
+
+        $this->assertSame(700, $this->financials($item->fresh())->aCobrarPuerta);
+    }
+
+    public function test_retiring_the_age_family_does_not_erase_the_charge(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+
+        // Configuración, no hecho: alguien desconecta el pack de su familia. El veredicto pasa a
+        // «no aplica» — que no es «no hay suplemento», es «ya no sé decirlo».
+        $this->kids->forceFill(['guest_age_family' => null])->save();
+
+        $this->nextRequest();
+        $item = $this->declareAges($item, [4, 5, 8]);
+
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+    }
+
+    public function test_narrowing_a_band_does_not_erase_the_charge(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+
+        // El tramo de JUMP se estrecha y el invitado de 8 se queda sin pack que lo cubra: un HUECO
+        // DE CONFIGURACIÓN, que el veredicto ya sabe contar aparte (`outOfRange`).
+        $this->jump->forceFill(['guest_age_min' => 9])->save();
+
+        $this->nextRequest();
+        $item = $this->declareAges($item, [4, 5, 8]);
+
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+    }
+
+    public function test_an_incomplete_verdict_is_silent_towards_the_customer(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+        Notification::fake();
+        AuditLog::query()->delete();
+
+        $this->nextRequest();
+        $this->declareAges($item, [null, null, null]);
+
+        // Abstenerse no es un cambio: ni correo que contradiga al anterior, ni fila de auditoría
+        // que anuncie un movimiento que no ha ocurrido.
+        Notification::assertNothingSent();
+        $this->assertSame(0, AuditLog::where('action', 'orders.mixed_party_surcharge_synced')->count());
+    }
+
+    public function test_a_partial_verdict_can_still_grow(): void
+    {
+        // La asimetría es deliberada: DECLARAR la edad que faltaba es un dato nuevo y legítimo, así
+        // que el importe sube mientras el cliente rellena. Solo se le niega el camino de vuelta.
+        $item = $this->declareAges($this->reservation(3), [8, null, null]);
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+
+        $this->nextRequest();
+        $item = $this->declareAges($item, [8, 9, null]);
+
+        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'dos invitados por encima del tramo');
     }
 }
