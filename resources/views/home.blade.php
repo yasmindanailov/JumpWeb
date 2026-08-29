@@ -240,7 +240,7 @@
         <div class="rides__controls">
             <div class="zone-tabs">
                 @foreach ($zones as $zone)
-                    <button class="zone-tab" :class="zone==='{{ $zone->accent }}' && 'active'" @click="setZone('{{ $zone->accent }}')">{{ __('landing.rides.zone_tab') }} {{ $zone->tr('name') }}</button>
+                    <button class="zone-tab" data-tap :class="zone==='{{ $zone->accent }}' && 'active'" @click="setZone('{{ $zone->accent }}')">{{ __('landing.rides.zone_tab') }} {{ $zone->tr('name') }}</button>
                 @endforeach
             </div>
             <div class="slider-nav">
@@ -368,7 +368,7 @@
                         {{ $site['address2'] ?? '' }}<br />
                         {{ __('landing.info.parking') }}
                     </p>
-                    <a href="{{ $site['maps'] ?? '#' }}" class="btn btn--ghost btn--sm">{{ __('landing.info.directions') }}</a>
+                    <a href="{{ $site['maps'] ?? '#' }}" class="btn btn--ghost btn--sm" data-tap>{{ __('landing.info.directions') }}</a>
                 </div>
             </div>
         </div>
@@ -464,7 +464,7 @@
             <div class="faq__list">
                 @foreach ($faqs as $i => $faq)
                     <div class="faq__item" :class="faqOpen==={{ $i }} && 'open'">
-                        <button type="button" class="faq__q"
+                        <button type="button" class="faq__q" data-tap
                                 @click="faqOpen = faqOpen==={{ $i }} ? -1 : {{ $i }}"
                                 :aria-expanded="faqOpen==={{ $i }} ? 'true' : 'false'"
                                 aria-controls="faq-answer-{{ $i }}">{{ $faq->tr('question') }}<span class="ico" aria-hidden="true"><x-icons.plus :width="14" :height="14" /></span></button>

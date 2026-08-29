@@ -107,7 +107,7 @@
                 @if ($packages->count() > 1)
                     <div class="bd-tabs" role="tablist" aria-label="{{ __('landing.events.choose') }}">
                         @foreach ($packages as $p)
-                            <button type="button" class="bd-tab" role="tab"
+                            <button type="button" class="bd-tab" data-tap role="tab"
                                     :class="pack === '{{ $p->id }}' && 'is-active'"
                                     :aria-selected="pack === '{{ $p->id }}'"
                                     @click="pack = '{{ $p->id }}'">{{ $p->tr('name') }}</button>
@@ -183,7 +183,7 @@
                     {{-- En la landing, JUSTO DEBAJO de la card del cumpleaños: pregunta + enlace
                          sutil a la tarjeta de invitación de /cumpleanos (no se satura la home con
                          el editor completo). En /cumpleanos no va (ahí está el editor). --}}
-                    <a class="bd-invite-cta" href="{{ route('cumpleanos') }}#tarjeta-invitacion">
+                    <a class="bd-invite-cta" data-tap href="{{ route('cumpleanos') }}#tarjeta-invitacion">
                         {{ __('landing.events.invite_link') }}
                         <x-icons.arrow-right :width="15" :height="15" />
                     </a>
@@ -275,7 +275,7 @@
                                  «Jump» y «Kids» dentro (`DECISIONES #139`). El punto de color toma
                                  el `--zone-1` que la propia paleta pinta en línea. --}}
                             @foreach ($invitePalettes as $palette)
-                                <button type="button" class="bd-swatch"
+                                <button type="button" class="bd-swatch" data-tap
                                         style="{{ $palette['style'] }}"
                                         :class="invZone === @js($palette['key']) && 'is-active'"
                                         @click="invZone = @js($palette['key'])"><span class="dot"></span>{{ $palette['label'] }}</button>

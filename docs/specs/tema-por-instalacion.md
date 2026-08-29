@@ -2376,3 +2376,178 @@ de 54 a 44 al bajar y ahora va de 46,3 a 44. En el punto estático el cuerpo es 
 ⚠️⚠️ **El 7,3 depende de la PALABRA**, y `hero.l1` lo pone la instalación —hoy «DIVERSIÓN» (es),
 «FUN» (en), «DU FUN» (fr); el castellano es el peor—. Con un rótulo más largo el interruptor volvería
 a caerse. Medir texto desde CSS no se puede. **Ficha en `DEUDA`.**
+
+---
+
+## 26. EL OBJETIVO TÁCTIL MÍNIMO — 44 AL DEDO, SIN MOVER EL DIBUJO (`#264`, 2026-08-29)
+
+`#259` §6 dejó esto medido y sin tocar: **«115 controles por debajo de 44 px en móvil»**, con el
+`[DECIDIDO owner]` de que era **tanda propia**. Ésta es esa tanda.
+
+### 26.1 · La cifra de partida era de INSTANCIAS, y el trabajo se hace sobre CONTROLES
+
+Aquellos 115 contaban apariciones: los 14 destinos del pie salen en las siete vistas, así que un
+solo enlace mal medido se cuenta siete veces. Contando **controles distintos** —misma clase, mismo
+rótulo, misma medida— son **37**, medidos con la sonda ya sana (§26.6) sobre las siete vistas
+públicas renderizables a 390 px, y ésa es la lista sobre la que se trabaja:
+
+⚠️ **Tres cifras para el mismo defecto, y las tres se han escrito en este repo: 115 · 51 · 37.** La
+primera contaba instancias; la segunda salió de una sonda que aún no filtraba visibilidad ni
+aplicaba el `transform` del pseudo; la tercera es la buena. **La que vale es siempre la del
+instrumento que ha demostrado estar sano**, y por eso §26.6 va antes que cualquier número.
+
+| Zona | Controles | Medida |
+|---|---|---|
+| Pie · destinos | 14 enlaces | 37–139 **× 40** |
+| Pie · bloque legal | 5 enlaces + el botón de cookies | 47,9–86,5 **× 14** |
+| FAQ | 6 acordeones | 358 **× 28** |
+| Cookies | «Configurar» · «Más información» · «Leer la política» · 2 interruptores | 17 · 18 · 16 · 42×**24** |
+| Menú | 3 cápsulas + el disparador de idioma + 3 opciones del desplegable | ×38 y ×37 |
+| Cumpleaños | 2 pestañas · 2 muestras · el enlace de la invitación | ×41 · ×34 · 325×**17** |
+| Servicios | 3 saltos · 2 pestañas de zona | ×36 · ×37 |
+| Páginas de contenido | «Volver al inicio» | 108,7 **× 21** |
+| Landing | «Cómo llegar» · «Reservar» · el salto al contenido | ×39 · ×42 · ×38 |
+
+⚠️ **Ninguna cifra cambia el diagnóstico anterior; lo que cambia es la unidad.** Se deja escrito
+porque la siguiente sesión que lea «115» y encuentre 51 va a pensar que algo se perdió.
+
+### 26.2 · Las dos decisiones del owner
+
+▶ **1. Donde el dibujo está ajustado 1:1 con el mockup, el objetivo crece AL DEDO Y NO A LA VISTA.**
+`[DECIDIDO owner, 2026-08-29]`. Un pseudo-elemento absoluto centrado lleva el área a 44 sin mover
+un píxel; donde crecer no daña —las cápsulas del menú, «Reservar», el desplegable de idioma— se
+crece de verdad con `min-height`, que se lee mucho mejor en el CSS. La alternativa —crecerlo todo—
+subía la FAQ 96 px y el pie 54, o sea deshacía a mano parte de `#250`→`#263`.
+
+▶ **2. El bloque legal del pie pasa a TIRA QUE SE DESLIZA**, el patrón que `#252` ya dio a los
+destinos. `[DECIDIDO owner, 2026-08-29]`. No había una tercera salida: a 390 px esos seis eslabones
+envuelven en **tres renglones de 14 px separados 18**, y llevarlos a 44 apilados hacía **crecer el
+pie 54 px**. En una tira miden 44 y el pie **encoge 30** —el bloque legal baja 34 y los destinos
+suben 4—, altura que recupera el punto estático del cierre, que hoy no cabe en un iPhone SE (ficha
+abierta en `DEUDA`). Medido: pie **365 → 335** a 390 px, una fila, deslizante, con desborde 0.
+
+⚠️⚠️ **Y EL ALTO TÁCTIL DE LAS DOS TIRAS TUVO QUE ACOTARSE A `(pointer: coarse)`, que es lo que
+enseñó medir en las dos ventanas.** Puesto sin puerta hacía justo lo que se buscaba en teléfono y
+**crecía el pie 20 px en escritorio**, donde el mockup lo fija a 1176 — el bloque legal pasaba de 14
+a 44 sin que nadie tocara una pantalla. *Un objetivo táctil que engorda la pantalla donde no hay
+dedos no es un objetivo táctil: es un cambio de diseño con otro nombre.* Con la puerta, escritorio
+vuelve a ser **idéntico**: pie 287, destinos 40, fila inferior 53, legal 14.
+
+### 26.3 · El mecanismo
+
+```css
+@media (pointer: coarse) {
+    [data-tap] { position: relative; }
+    [data-tap]::before {
+        content: ""; position: absolute; top: 50%; left: 50%;
+        width: max(100%, var(--tap-min)); height: max(100%, var(--tap-min));
+        transform: translate(-50%, -50%);
+    }
+}
+```
+
+⚠️⚠️ **`max(100%, …)` no es una floritura: sin él la regla ENCOGE.** Un área de 44 centrada sobre un
+control que ya mide 60 le quita 8 px por lado, y eso no lo ve nadie —el control sigue funcionando,
+solo deja de responder por el borde—. Un mínimo solo puede ampliar.
+
+⚠️⚠️ **Va bajo `(pointer: coarse)` a propósito.** Con ratón, un área 30 px más alta que su enlace
+dispararía el `:hover` desde lejos y el cursor cambiaría a mano sobre el vacío. Es `pointer` y no
+`any-pointer` por lo mismo: en un portátil táctil manda el ratón.
+
+⚠️ **Es `::before` y no `::after` porque `.ck-tgl::after` dibuja el pomo** del interruptor de
+cookies. Medido antes de elegir: de las 19 familias, `::after` estaba ocupado en una y `::before` en
+ninguna. Si alguien lo mueve a `::after` «porque da igual», ese pomo desaparece y **el interruptor
+sigue funcionando**, así que no lo vería ningún test de conducta. Hay guarda.
+
+⚠️ **El marcador va en el MARCADO (`data-tap`), no en una lista de selectores dentro del CSS.** Una
+lista habría que escribirla dos veces —una para `position: relative` y otra para el pseudo— y dos
+copias que hay que mantener a la vez es de donde salen la mitad de las fichas de este documento.
+En el marcado, además, lo puede vigilar una guarda de árbol.
+
+### 26.4 · ❗❗ El mecanismo YA EXISTÍA, y tenía un defecto
+
+Esta tanda declaró `--tap-min: 44px`… y **la guarda que acababa de escribirse la puso roja: el token
+ya estaba** en `site.css`, del **«Lote 9»**, sirviendo a cuatro controles del cajón
+(`.entry__stepper button`, `.cal__nav`, `.cart__remove`, `.bk-foot__info-btn`) con la misma idea de
+pseudo-elemento centrado.
+
+▶ **Y escribía `width: var(--tap-min)` a secas, o sea que encogía** el área de cualquiera de esos
+cuatro que ya midiera más de 44. Corregido al `max()` en su sitio, que solo puede ampliar.
+▶ **La puerta de puntero NO se le ha puesto**, y es deliberado: retirar área con ratón en el cajón
+es una regresión que nadie ha pedido — son controles de icono pequeños y el ratón agradece el
+margen. Se queda como estaba, documentado, y los dos bloques se citan el uno al otro.
+
+⚠️ *Un mecanismo nuevo que resulta ser el segundo lo caza una guarda de unicidad, no la memoria.*
+
+### 26.5 · Las tres excepciones, y por qué son de norma
+
+1. **El enlace EN LÍNEA del texto de cookies** («Más información») se queda a 18 px. Un objetivo de
+   44 de alto sobre una línea de 18 se come el renglón de arriba y el de abajo: texto que se lee y
+   se selecciona, no se pulsa. **WCAG exime justamente a los enlaces en línea** dentro de un bloque
+   de texto (2.5.5 y 2.5.8, «inline»). Tiene caso propio, para que la excepción no parezca descuido.
+2. **Las opciones del desplegable de idioma** no llevan el área invisible y crecen de verdad: van
+   **pegadas (hueco 0)**, así que un objetivo centrado sobre una caja de 37 se metería 3,5 px dentro
+   de la vecina. *Un área táctil que se solapa con la de al lado no amplía nada: mueve el destino
+   del dedo.* Es la única familia donde eso está medido y no supuesto.
+3. **Las dos tiras del pie** tampoco pueden llevarlo: son carriles con `overflow-x: auto`, y **un
+   eje no visible obliga al otro a `auto`** — el área se recortaría sin que nada fallara. En una
+   tira el objetivo solo puede ser alto de verdad.
+
+▶ Dos márgenes se suben tres píxeles por lo mismo: `.cookie__config` (13 → 16) y `.cookie__policy`
+(14 → 17), porque el área crece 13,5 y 14 hacia arriba y habría tocado la del vecino.
+
+### 26.6 · ⚠️⚠️ La sonda salió ROTA, y sus números eran creíbles a medias
+
+La primera versión midió el área efectiva interceptándola con **todos** los ancestros que recortan,
+en coordenadas de viewport. Devolvió anchos de **−652**, altos de **−511** y **29 solapes**. Ninguno
+era del producto:
+
+- **Recortar contra un ancestro con el control desplazado fuera de la parte visible de su carril da
+  un área NEGATIVA** — y un negativo pasa el filtro de «menor que 44» como si fuera un defecto. Los
+  chips del pie que aún no se han deslizado a la vista salían todos como rotos.
+- **Dos controles en CAPAS distintas se solapan siempre**: con el menú abierto, la FAQ sigue detrás
+  y sus cajas comparten coordenadas. «`faq__q` ↔ `menu__chip`» no es un defecto, es un menú.
+
+▶ Lo que lo zanja es `checkVisibility()` + `elementFromPoint(centro)` **como FILTRO**, con la
+geometría siguiendo de MEDIDA. No es lo mismo que el error de `#239`, donde `elementFromPoint` se
+usó *como medida* y dio 178 falsos: ahí la pregunta era «cuánto mide» y aquí es «está en pantalla y
+por delante».
+
+⚠️⚠️ **Y la MISMA sonda mintió una SEGUNDA vez, ya con esos dos arreglos puestos**: calculaba el
+rectángulo del pseudo-elemento **sin aplicar su `transform`**, así que un `translate(-50%, -50%)` se
+perdía y el área salía desplazada media caja. Daba altos de **58** donde son 44 y siete solapes que
+no existían. *Un pseudo-elemento no está donde dicen su `top` y su `left`: está donde lo deja su
+matriz.* ▶ **Dos mentiras de un mismo instrumento en una tarde, y las dos con números creíbles.**
+
+⚠️ **Y la guarda también estrenó su trampa**: `Dom\HTMLDocument` devuelve los nombres de etiqueta en
+**MAYÚSCULAS** y XPath distingue el caso, así que `//p` y `//a` dan **cero** con el documento entero
+delante — sin error y sin aviso. El caso del enlace en línea salió «rojo por vacío». Se consulta por
+`//*` y por clase, y para bajar a una etiqueta, `getElementsByTagName()`.
+
+### 26.7 · Lo verificado
+
+| | Antes | Ahora |
+|---|---|---|
+| Controles distintos bajo 44 (7 vistas, 390 px) | **37** | **1** — el enlace en línea exento |
+| `[data-tap]` recortados por un ancestro | — | **0** |
+| Solapes entre áreas | 4 | 11, **todos con ganador inequívoco** |
+| Pie a 390 px | 365 | **335** |
+| Bloque legal a 390 px | 78, tres renglones | **44**, una tira que se desliza |
+| Pie a 1280 px | 287 · 40 · 53 · 14 | **idéntico** |
+| Desborde horizontal | — | **0 px** en las siete vistas |
+
+▶ **Los 11 solapes se midieron uno a uno preguntando quién gana en el centro de la región**, y en
+nueve gana la pieza flotante que se pinta encima —la barra de móvil, el panel del idioma—, que es
+exactamente su trabajo. **Ninguno es dos objetivos de la misma capa peleándose por el dedo.**
+⚠️ De los siete nuevos, **cuatro no los causa la tanda**: el barrido recorre la página por
+fracciones de su alto, y el pie encogió 30 px, así que las mismas fracciones caen en otro sitio.
+*Un barrido relativo no compara con el de antes salvo que la página mida lo mismo.*
+
+▶ **En escritorio solo se mueven las cuatro familias que crecen a propósito**, y está medido:
+`.price__cta` 42 → 44 · `.menu__chip` 38 → 44 · `.lang-dd__panel a` 37 → 44 · `.skip-link` 38 → 44
+(con foco de teclado, que es su único estado visible). `.faq__q` (29), `.zone-tab` (37) y las dos
+tiras del pie se quedan exactamente como estaban.
+
+▶ **Guarda**: `TouchTargetTest`, 9 casos · **8 mutaciones y las 8 muerden**, cada una en su caso —y
+la de mudar el área a `::after` muerde en tres, que es lo correcto: rompe el mínimo, el centrado y
+el pomo del interruptor de cookies a la vez.

@@ -35,7 +35,7 @@
             @endforeach
         </div>
 
-        <a href="{{ url('/') }}" class="page__back">{{ __('site.back_home') }}</a>
+        <a href="{{ url('/') }}" class="page__back" data-tap>{{ __('site.back_home') }}</a>
     </main>
 
     <x-site.footer />

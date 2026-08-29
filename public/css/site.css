@@ -80,7 +80,10 @@
     --float-cta-inset: 14px;
     /* Objetivo táctil mínimo (Lote 9, WCAG 2.5.5): tamaño del área de toque de los controles
        de icono. Se aplica preservando el tamaño VISIBLE (pseudo-elemento centrado o caja
-       transparente), salvo donde subir el visible es trivial (burger, cerrar drawer). */
+       transparente), salvo donde subir el visible es trivial (burger, cerrar drawer).
+       ▶ **Desde `#264` es también el mínimo de la LANDING entera**, por dos vías: `[data-tap]`
+       (el área crece sin mover el dibujo) y `min-height` donde crecer no daña. El número vive
+       aquí y solo aquí — `TouchTargetTest` pone la suite roja si aparece un segundo. */
     --tap-min: 44px;
     /* Colores SEMÁNTICOS de estado (Lote 12): éxito / error / señal·depósito / reembolso.
        Consolidan ~25 hex con deriva (verdes/rojos/ámbares casi-idénticos) en un set único; el
@@ -166,13 +169,18 @@
 .cal__nav,
 .cart__remove,
 .bk-foot__info-btn { position: relative; }
+/* ⚠️⚠️ **Era `width: var(--tap-min)` a secas y eso ENCOGE** (`#264`): un área de 44 px centrada
+   sobre un control que ya mide 60 le quita 8 px por lado, y el defecto es invisible —el control
+   sigue funcionando, solo que su borde deja de responder—. Con `max()` la regla solo puede
+   ampliar, que es lo único que un mínimo debería hacer. Es la misma forma del `[data-tap]` del
+   final de la hoja, que nació de este bloque. */
 .entry__stepper button::after,
 .cal__nav::after,
 .cart__remove::after,
 .bk-foot__info-btn::after {
     content: ""; position: absolute;
     top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: var(--tap-min); height: var(--tap-min);
+    width: max(100%, var(--tap-min)); height: max(100%, var(--tap-min));
 }
 
 /* Skip-link (Lote 11, a11y): 1.er focusable de la home; oculto fuera de pantalla hasta recibir
@@ -181,6 +189,7 @@
    contrastaría. */
 .skip-link {
     position: absolute; top: 8px; left: 8px; z-index: 200;
+    display: inline-flex; align-items: center; min-height: var(--tap-min);
     padding: 10px 16px; border-radius: var(--r-btn);
     background: var(--fg); color: var(--bg);
     font-family: var(--font-body); font-weight: 700; font-size: 14px;
@@ -227,6 +236,7 @@
 
 .lang-dd__trigger {
     display: inline-flex; align-items: center; gap: 6px;
+    min-height: var(--tap-min);
     padding: 9px 12px;
     border: 1px solid var(--line); border-radius: var(--r-btn);
     background: var(--bg-card); color: var(--fg);
@@ -255,8 +265,13 @@
     opacity: 1; visibility: visible; transform: translateY(0) scale(1);
     transition: opacity var(--dur-estado) var(--ease-sale), transform var(--dur-entra) var(--ease-sale), visibility 0s;
 }
+/* ⚠️⚠️ **Éstas NO pueden llevar el área invisible y es la única familia donde eso es un hecho
+   medido, no una preferencia** (`#264`): las tres opciones van PEGADAS —hueco 0 entre ellas—, así
+   que un objetivo de 44 centrado sobre una caja de 37 se metería 3,5 px dentro de la vecina. Un
+   área táctil que se solapa con la de al lado no amplía nada: mueve el destino del dedo. */
 .lang-dd__panel a {
     display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    min-height: var(--tap-min);
     padding: 10px 12px; border-radius: var(--r-sm);
     font-family: var(--font-body); font-size: 13px; font-weight: 700;
     letter-spacing: 0.08em; color: var(--fg);
@@ -376,7 +391,10 @@
     display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
 }
 
-.foot__legal { display: flex; gap: 18px; }
+/* ⚠️ El `gap` es lo ÚNICO que queda aquí del bloque legal: desde `#264` es una tira que se
+   desliza, y su mecánica —carril, vela, alto táctil— la comparte con `.foot__links` en una regla
+   sola (`landing.css`). Un `display: flex` repetido aquí sería la segunda copia que diverge. */
+.foot__legal { gap: 18px; }
 
 /* Lote 8: el selector de idioma del footer (`.lang-dd`) SÍ se muestra en móvil —el mismo
    selector del desktop—: `.foot__bottom-left` lo apila justo encima del copyright y es el único
@@ -4333,8 +4351,11 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .cookie__actions { display: flex; gap: 9px; margin-top: 18px; }
 /* Igualdad (AEPD): los botones comparten clase/peso (.btn--ghost), ninguno con el color de marca. */
 .cookie-btn { flex: 1; min-width: 0; justify-content: center; }
+/* ⚠️ El `margin-top` sube de 13 a 16 (`#264`): el área táctil de 44 crece 13,5 px hacia arriba y
+   con 13 de hueco habría tocado la de los botones de aceptar/rechazar. Tres píxeles que no se ven
+   y que son la diferencia entre dos objetivos separados y dos que se pisan. */
 .cookie__config {
-    margin-top: 13px; width: 100%; text-align: center;
+    margin-top: 16px; width: 100%; text-align: center;
     font-family: var(--font-body); font-size: 12.5px; font-weight: 600; color: var(--fg-mute);
     background: none; border: 0; cursor: pointer;
     text-decoration: underline; text-underline-offset: 3px; transition: color var(--dur-sale) var(--ease-sale);
@@ -4345,7 +4366,8 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
    fila dentro de los 416px de la tarjeta, así que se apilan a lo ancho (la capa compacta, con
    labels cortos, sí va en fila). */
 .cookie__prefs-actions { display: flex; flex-direction: column; gap: 9px; margin-top: 18px; }
-.cookie__policy { display: inline-block; margin-top: 14px; font-size: 12px; color: var(--fg-mute); text-decoration: underline; }
+/* Mismo ajuste y mismo motivo que `.cookie__config`: 14 → 17 de hueco para los 14 que crece. */
+.cookie__policy { display: inline-block; margin-top: 17px; font-size: 12px; color: var(--fg-mute); text-decoration: underline; }
 .cookie__policy:hover { color: var(--zone-1); }
 .pref { display: flex; align-items: flex-start; gap: 13px; padding: 14px 0; border-top: 1px solid var(--line); }
 .pref:first-child { margin-top: 8px; }
@@ -4374,6 +4396,8 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit;
     cursor: pointer; opacity: .85; text-decoration: none;
 }
+/* La vela de la tira legal: misma pieza y mismo porqué que la de los destinos (`#252`), que vive
+   junto a `.foot__links-wrap::after` en `landing.css` — aquí solo se declara el caso. */
 .foot__cookie-config:hover { opacity: 1; text-decoration: underline; }
 
 @media (max-width: 520px) {
@@ -5162,8 +5186,12 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     color: var(--zone-2);
     transform: rotate(-2deg);
 }
+/* ⚠️ El alto sube de 38 a `--tap-min` (`#264`). Aquí se crece DE VERDAD y no con el área
+   invisible: una cápsula del menú tiene sitio de sobra, y un chip que se ve de 44 se toca mejor
+   que uno de 38 con 6 px de aire fingido. `[DECIDIDO owner]`. */
 .menu__chip {
     display: inline-flex; align-items: center; gap: 8px;
+    min-height: var(--tap-min);
     padding: 9px 16px;
     border: 1px solid var(--line-strong);
     border-radius: var(--r-pill);
@@ -5685,4 +5713,56 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline sv
 @media (prefers-reduced-motion: reduce) {
     body:not([data-has-hero]) .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig,
     body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig { animation: none; }
+}
+
+/* ══ EL OBJETIVO TÁCTIL MÍNIMO — 44×44 AL DEDO, SIN MOVER EL DIBUJO (`#264`) ══════════════════
+   `[data-tap]` amplía el área que recibe el toque con un pseudo-elemento absoluto CENTRADO sobre
+   el control. El `max(100%, …)` lo deja del tamaño del control cuando éste ya es grande, así que
+   la misma regla vale para un enlace de 14 px de alto y para un botón de 300 de ancho: **nunca
+   ENCOGE un objetivo, solo lo lleva al mínimo**.
+
+   ❗ **La decisión que ordena la tanda** (`[DECIDIDO owner, 2026-08-29]`): donde el dibujo está
+   ajustado 1:1 con el mockup, el objetivo crece **al dedo y no a la vista**; donde crecer no daña
+   —los chips del menú, el desplegable de idioma, «Reservar»— se crece de verdad con `min-height`.
+   Lo segundo se lee mejor en el CSS; lo primero es lo único que no deshace `#250`→`#263`.
+
+   ⚠️⚠️ **Va bajo `(pointer: coarse)` A PROPÓSITO.** Con ratón, un área 30 px más alta que su
+   enlace dispararía el `:hover` desde lejos y el cursor cambiaría a mano sobre el vacío: el
+   defecto medido es «115 controles por debajo del mínimo **en móvil**», y ahí es donde se corrige.
+   Es `pointer` y no `any-pointer` por lo mismo: en un portátil táctil manda el ratón.
+
+   ⚠️⚠️ **NO SIRVE DENTRO DE UN CONTENEDOR QUE RECORTA.** `.foot__links` y `.foot__legal` son
+   carriles con `overflow-x: auto`, y un eje no visible obliga al otro a `auto`: el área se cortaría
+   sin que nada fallara. Ahí el alto se sube de verdad (`min-height: var(--tap-min)`), que es
+   además por lo que el bloque legal pasó a tira deslizante.
+
+   ⚠️ **Es `::before` y no `::after`**: `.ck-tgl::after` ya dibuja el pomo del interruptor de
+   cookies. Medido antes de elegirlo: de las 19 familias, `::after` estaba ocupado en una y
+   `::before` en ninguna.
+
+   ⚠️ El pseudo **no pinta nada** y no lleva `pointer-events`: si los apagara dejaría de recibir el
+   toque, que es justo lo que existe para hacer.
+
+   ❗❗ **ESTO NO ES EL PRIMER MECANISMO: el «Lote 9» ya tenía uno y hay que saberlo antes de tocar
+   ninguno de los dos.** Vive arriba, sirve a cuatro controles del cajón (`.entry__stepper button`,
+   `.cal__nav`, `.cart__remove`, `.bk-foot__info-btn`) y su token es este mismo `--tap-min`, que
+   **ya estaba declarado** — esta tanda lo redeclaró por un momento y lo cazó su propia guarda.
+   ▶ Dos diferencias, y las dos son deliberadas:
+   · aquél escribía `width: var(--tap-min)` a secas, o sea que **ENCOGE el área de cualquier
+     control que ya midiera más de 44** (corregido en su sitio, al `max()`);
+   · aquél corre en todos los punteros. No se le ha puesto la puerta de `(pointer: coarse)` porque
+     retirar área con ratón en el cajón es una regresión que nadie ha pedido: son controles de
+     icono pequeños y el ratón agradece el margen. */
+
+@media (pointer: coarse) {
+    [data-tap] { position: relative; }
+    [data-tap]::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: max(100%, var(--tap-min));
+        height: max(100%, var(--tap-min));
+        transform: translate(-50%, -50%);
+    }
 }

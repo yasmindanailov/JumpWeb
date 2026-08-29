@@ -23,7 +23,7 @@
                 {{-- ⚠️ El color de la pestaña activa va INLINE (`DECISIONES #138`). `.zone-tab.active`
                      ya es genérica en `landing.css` —consume `--zone-1`/`--on-brand`—, así que esto
                      RETIRA las reglas `.zone-tab--jump/--kids` en vez de añadir otra. --}}
-                <button type="button" class="zone-tab"
+                <button type="button" class="zone-tab" data-tap
                     style="{{ \App\Domain\Content\Services\ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent) }}"
                     :class="priceZone === @js($zone->slug) && 'active'"
                     @click="priceZone = @js($zone->slug)"

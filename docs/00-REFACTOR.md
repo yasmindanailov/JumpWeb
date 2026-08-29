@@ -2883,6 +2883,19 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       **no saltaba en ONCE de las doce vistas** porque su regla exigía una clase que solo pone el
       hero. ❗ Sigue pendiente el ojo del owner y **el color de la pista** (`--ok` verde contra el
       Lima Bote del artboard).
+- [x] **2f · El OBJETIVO TÁCTIL de 44 en la landing** (`#264`, 2026-08-29, `[DECIDIDO owner]`). Lo
+      que `#259` §6 dejó medido y sin tocar. **37 → 1** control bajo 44 en las siete vistas públicas
+      (el que queda es el enlace EN LÍNEA del texto de cookies, exento por WCAG).
+      ▶ **Dos decisiones del owner**: el objetivo crece **al dedo y no a la vista** donde el dibujo
+      está 1:1 con el mockup (`[data-tap]`, un pseudo centrado bajo `(pointer: coarse)`), y **el
+      bloque legal del pie pasa a TIRA que se desliza** —el patrón de `#252`—, con lo que el pie
+      **encoge 30 px** en teléfono y queda **idéntico** en escritorio.
+      ⚠️⚠️ **El mecanismo YA EXISTÍA desde el «Lote 9» y ENCOGÍA**: su `width: var(--tap-min)` a
+      secas recorta el área de cualquier control que ya midiera más de 44, sin que nada falle. Lo
+      cazó la guarda de unicidad del token, no la memoria. Corregido al `max()`.
+      ⚠️⚠️ **La sonda mintió DOS veces con números creíbles**: recortando en coordenadas de viewport
+      (áreas **negativas**) y sin aplicar el `transform` del pseudo (altos de 58 donde son 44).
+      **9 casos · 8 mutaciones, las 8 muerden.** ❗ Sigue pendiente el ojo del owner.
 - [ ] **3 · Las secciones**, pieza a pieza. ⏸️ **FUERA DE ALCANCE hasta que el owner lo diga**
       (`[DECIDIDO owner, 2026-08-28]`: del canvas solo se toma el sistema de diseño —colores,
       elementos, iconos, formas, menú, hero y pie—; el resto «son pruebas»).

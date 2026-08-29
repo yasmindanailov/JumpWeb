@@ -1727,3 +1727,55 @@ cerrado**, así que leerla sin comprobar `is-open` no dice nada.
 1. Con **tres menores y una entrada**: marcar, ver los otros dos apagados, desmarcar y verlos volver.
 2. Pulsar **«Mi cuenta»** desde la portada **con algo en el carrito**: tiene que abrir su cuenta.
 3. Y desde el **pie**, que es una navegación normal: también.
+
+---
+
+## §5.duovicies · EL OBJETIVO TÁCTIL DE 44 EN LA LANDING — ✅ medido el 2026-08-29 (37 → 1), pendiente del OJO del owner (`DECISIONES #264`)
+
+> Recorre las **siete vistas públicas renderizables** a 390×844 con `hasTouch` y mide el **área
+> efectiva** de cada control: su caja, más los pseudo-elementos absolutos que la amplían, menos lo
+> que le recorte un ancestro. Guion: `/home/sail/e2e/tap44.mjs`.
+
+❗❗ **LEE ESTO ANTES DE CREERTE UN NÚMERO SUYO.** Esta sonda salió mal **dos veces** y las dos daban
+cifras plausibles:
+
+1. **Recortar en coordenadas de viewport** con el control desplazado fuera de la parte visible de su
+   carril devuelve un área **negativa**, y un negativo pasa el filtro de «menor que 44» como si
+   fuera un defecto. Salieron anchos de **−652**.
+   ▶ Solo se recorta contra un ancestro que **de verdad contiene la caja del control**.
+2. **El rectángulo de un pseudo-elemento no está donde dicen su `top` y su `left`: está donde lo
+   deja su `transform`.** Sin aplicarlo, el `translate(-50%, -50%)` del área se perdía y salían
+   altos de **58** donde son 44, más siete solapes inventados.
+   ▶ La matriz calculada trae los porcentajes ya resueltos a px: `matrix(a,b,c,d,tx,ty)`.
+
+⚠️ Y **dos controles en capas distintas se solapan siempre** en coordenadas de viewport: con el menú
+abierto la FAQ sigue detrás. El filtro es `checkVisibility()` + `elementFromPoint(centro)`, usados
+**como filtro** y no como medida — que es la diferencia con el error de §5.novodecies, donde
+`elementFromPoint` se usó *para medir* y dio 178 falsos.
+
+### Lo que dice, corrido el 2026-08-29
+
+| | Antes | Ahora |
+|---|---|---|
+| Controles distintos bajo 44 | **37** | **1** — el enlace en línea del texto de cookies, exento por WCAG |
+| `[data-tap]` recortados por un ancestro | — | **0** |
+| Solapes entre áreas | 4 | 11, **todos con ganador inequívoco** (en 9 gana la pieza flotante) |
+| Pie a 390 px | 365 | **335** · bloque legal 78 (3 renglones) → **44** (una tira) |
+| Pie a 1280 px | 287 · 40 · 53 · 14 | **idéntico** |
+| Desborde horizontal | — | **0 px** en las siete |
+
+▶ **La pasada de CONTROL no es opcional aquí**, y esta tanda lo pagó: el barrido recorre la página
+por **fracciones de su alto**, y como el pie encogió 30 px las mismas fracciones caen en otro sitio
+— cuatro de los siete solapes «nuevos» eran solapes viejos que el barrido anterior no había
+visitado. *Un barrido relativo no compara con el de antes salvo que la página mida lo mismo.*
+
+⚠️ El `skip-link` **no lo ve esta sonda**: solo es visible con foco de teclado. Se mide aparte
+(`Tab` y leer su caja): **154×44**.
+
+### ❗ Lo que tiene que mirar el OWNER
+
+1. **El pie en un teléfono de verdad**: los dos carriles —destinos y legales— se deslizan con el
+   dedo, la vela dice que siguen, y ningún enlace se queda inalcanzable.
+2. **La FAQ**: pulsar 8 px por encima del texto de una pregunta ya la abre. Es el área invisible.
+3. **El menú**: las cápsulas y el desplegable de idioma miden 44 y se ven así — ahí sí se creció.
+4. **Que en el ordenador no ha cambiado nada del pie**, que es donde manda el mockup.

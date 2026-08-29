@@ -1384,7 +1384,9 @@ img { display: block; max-width: 100%; }
 /* CTA de la card de entrada: ancho completo, anclado al fondo de la card (`margin-top:auto`) para
    que todas las cards alineen su botón. En las destacadas (fondo de zona) el botón invierte para
    no fundirse con el color de la card al pasar el ratón. */
-.price__cta { width: 100%; justify-content: center; margin-top: auto; }
+/* ⚠️ 42 px medidos, dos por debajo del mínimo (`#264`). Un CTA de compra no se toca con un área
+   invisible pudiendo medir lo que dice que mide. */
+.price__cta { width: 100%; justify-content: center; margin-top: auto; min-height: var(--tap-min); }
 .price--feat .price__cta { background: var(--action); color: var(--on-action); }
 .price--feat .price__cta:hover { background: var(--bg-card); color: var(--fg); }
 .price__name { font-family: var(--font-body); font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; }
@@ -1913,26 +1915,66 @@ img { display: block; max-width: 100%; }
    de los carruseles del artboard de móvil del cliente.
    ⚠️ La barra de scroll va OCULTA a propósito, así que **la vela del envoltorio no es un adorno**:
    es lo único que dice que la lista sigue. */
-.foot__links-wrap { position: relative; margin-bottom: clamp(30px, 4vw, 52px); }
-.foot__links {
+/* ⚠️⚠️ **DOS FILAS COMPARTEN ESTA MECÁNICA Y SE ESCRIBE UNA VEZ** (`#264`): los DESTINOS
+   (`.foot__links`, `#252`) y el bloque LEGAL (`.foot__legal`). El legal se pasó a tira porque a
+   390 px envolvía en **tres** renglones de 14 px de alto y no había forma de llevarlo a los 44 sin
+   mover el pie: apilarlos a 44 lo hacía crecer **54 px**, y esta tira lo deja en 44 —o sea que el
+   pie **ENCOGE 34**, altura que recupera el punto estático del cierre (`DEUDA`)—.
+   `[DECIDIDO owner, 2026-08-29]`, con el precedente de `#252` delante.
+   ▶ Es el mismo argumento de `#226` y `#227`: la respuesta a «esto está en dos sitios» es una
+   regla, no una copia. */
+.foot__links-wrap,
+.foot__legal-wrap { position: relative; }
+.foot__links-wrap { margin-bottom: clamp(30px, 4vw, 52px); }
+/* ⚠️ **Sin este tope la tira legal no tendría límite y NO habría scroll**: en `.foot__bottom` es
+   un ítem flex que se dimensiona por su contenido —y en móvil, con `align-items: flex-start`,
+   además se encoge—, así que los 416 px de eslabones desbordarían el pie en vez de deslizarse.
+   `min-width: 0` es la otra mitad: un ítem flex no baja de su contenido sin él. */
+.foot__legal-wrap { max-width: 100%; min-width: 0; }
+.foot__links,
+.foot__legal {
     display: flex; flex-wrap: nowrap; align-items: center;
-    gap: clamp(12px, 1.4vw, 16px);
-    font-size: 12.5px;
     overflow-x: auto; overflow-y: hidden;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
 }
-.foot__links::-webkit-scrollbar { display: none; }
+.foot__links { gap: clamp(12px, 1.4vw, 16px); font-size: 12.5px; }
+.foot__links::-webkit-scrollbar,
+.foot__legal::-webkit-scrollbar { display: none; }
 /* `flex: none` + `nowrap` para que un destino de dos palabras no se parta por dentro, que es la
-   otra forma de acabar con dos renglones. El alto mínimo es el objetivo táctil del mockup. */
-.foot__links a { flex: none; white-space: nowrap; display: inline-flex; align-items: center; min-height: 40px; }
+   otra forma de acabar con dos renglones.
+   ⚠️⚠️ **El alto es `--tap-min` y NO los 40 px del mockup.** Aquí no vale el área invisible del
+   `[data-tap]`: dentro de un contenedor con scroll un eje no visible obliga al otro a `auto`, así
+   que un pseudo que sobresaliera **se recortaría sin que nada fallara**. En una tira, el objetivo
+   táctil solo puede ser alto de verdad. */
+.foot__links a,
+.foot__legal > * {
+    flex: none; white-space: nowrap;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+/* Los 40 px son de los DESTINOS y son del mockup; el bloque legal nunca los tuvo —es texto
+   pequeño de una línea— y dárselos aquí le subía 26 px en escritorio sin que nadie lo pidiera. */
+.foot__links a { min-height: 40px; }
+/* ⚠️⚠️ **EL ALTO TÁCTIL DE LAS DOS TIRAS VA BAJO PUNTERO GRUESO, y eso se aprendió MIDIENDO.**
+   Puesto sin puerta, el pie encogía 30 px en teléfono —lo que se buscaba— pero **CRECÍA 20 en
+   escritorio**: el bloque legal pasaba de 14 a 44 y el mockup fija ese pie a 1176. Un objetivo
+   táctil que engorda la pantalla donde no hay dedos no es un objetivo táctil, es un cambio de
+   diseño con otro nombre.
+   ⚠️ **El ancho también, y se olvidó en la primera pasada**: en una tira `nowrap` lo da el rótulo,
+   y «Tarifas» medía 38 y «Galería» 41. Lo cazó la sonda, no el ojo — un objetivo de 38×44 parece
+   perfecto en una captura. */
+@media (pointer: coarse) {
+    .foot__links a,
+    .foot__legal > * { min-height: var(--tap-min); min-width: var(--tap-min); }
+}
 /* ❗ **LA VELA.** Va en el ENVOLTORIO y no en la fila: un `::after` dentro de un contenedor con
    scroll viaja con el contenido y se iría hacia la izquierda en cuanto alguien deslizara.
    Se apaga sola al llegar al final donde el navegador entienda `animation-timeline`; donde no,
    se queda puesta — que es el estado seguro: una señal de más contenido cuando ya no lo hay es un
    adorno, y no tenerla cuando sí lo hay es una lista que parece terminada y no lo está. */
-.foot__links-wrap::after {
+.foot__links-wrap::after,
+.foot__legal-wrap::after {
     content: "";
     position: absolute; top: 0; bottom: 0; right: 0;
     width: 44px;
@@ -1940,7 +1982,8 @@ img { display: block; max-width: 100%; }
     pointer-events: none;
 }
 @supports (animation-timeline: scroll()) {
-    .foot__links-wrap::after {
+    .foot__links-wrap::after,
+    .foot__legal-wrap::after {
         animation: foot-vela var(--ease-bucle) both;
         animation-timeline: scroll(nearest inline);
         animation-range: contain;
@@ -2140,10 +2183,10 @@ input[type="radio"]:focus-visible,
   .foot__grid { grid-template-columns: 1fr; gap: 28px; }
   .foot__brand { font-size: 44px; }
   .foot__bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
-  /* #231 p8: «configuración de cookies» en su PROPIA línea, a ancho completo y en solitario
-     (sin los enlaces legales a sus lados). */
-  .foot__legal { flex-wrap: wrap; }
-  .foot__cookie-config { flex-basis: 100%; text-align: left; margin-top: 4px; }
+  /* ⚠️ **`#231` p8 puso «configuración de cookies» en su PROPIA línea a ancho completo**, y eso
+     lo deshace `#264`: en una tira que se desliza no hay renglones que repartir, y una línea
+     propia por debajo del carril volvería a meter el alto que la tira acaba de ahorrar. El botón
+     va como un eslabón más, el último. */
 }
 
 @media (max-width: 560px) {

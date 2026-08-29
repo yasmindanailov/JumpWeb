@@ -2,7 +2,39 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-29 (13:30, hora de Madrid) — carril A:
+> aquí solo se enlaza.** Última actualización: **2026-08-29 (tarde) — carril C: el ÁREA TÁCTIL de
+> 44 en la landing (`#264`)**.
+>
+> ❗❗❗ **`#264` — EL OBJETIVO TÁCTIL DE 44 LLEGA A LA LANDING.** Lo que `#259` §6 dejó medido y sin
+> tocar. **37 → 1** control bajo 44 en las siete vistas públicas a 390 px; el que queda es el enlace
+> **en línea** del texto de cookies, que **WCAG exime** (2.5.5 y 2.5.8) y tiene caso propio para que
+> la excepción no parezca descuido.
+> ▶ **Dos decisiones del owner, tomadas con los números delante**: el objetivo crece **al dedo y no
+> a la vista** donde el dibujo está 1:1 con el mockup —un pseudo centrado (`[data-tap]`) bajo
+> `(pointer: coarse)`—, y **el bloque legal del pie pasa a TIRA que se desliza**, el patrón de
+> `#252`. Crecerlo todo subía la FAQ 96 px y el pie 54.
+> ⚠️⚠️ **EL MECANISMO YA EXISTÍA Y ENCOGÍA**: el «Lote 9» tenía el mismo pseudo centrado para cuatro
+> controles del cajón, con `width: var(--tap-min)` **a secas** — un cuadrado de 44 sobre un control
+> de 60 le quita 8 px por lado, **y el control sigue funcionando**. Lo cazó la guarda de unicidad
+> del token, no la memoria. Corregido al `max(100%, …)`, que es lo único que un mínimo debe hacer.
+> ⚠️⚠️ **Y EL ALTO DE LAS DOS TIRAS DEL PIE TAMBIÉN NECESITA LA PUERTA DE PUNTERO**, y eso solo lo
+> dijo medir en las dos ventanas: sin ella el pie encogía 30 px en teléfono —lo buscado— y **crecía
+> 20 en escritorio**, donde el mockup lo fija. *Un objetivo táctil que engorda la pantalla donde no
+> hay dedos es un cambio de diseño con otro nombre.* Con la puerta, escritorio es **idéntico**.
+> ⚠️⚠️ **LA SONDA MINTIÓ DOS VECES, LAS DOS CON NÚMEROS CREÍBLES**: recortando el área contra los
+> ancestros **en coordenadas de viewport** con el control fuera de la parte visible de su carril
+> (áreas **negativas**, y un negativo pasa el filtro de «menor que 44»), y luego calculando el
+> rectángulo del pseudo **sin aplicar su `transform`** (altos de **58** donde son 44). *Un
+> pseudo-elemento no está donde dicen su `top` y su `left`: está donde lo deja su matriz.*
+> ⚠️ Y **115 · 51 · 37 son tres cifras del MISMO defecto**: instancias, sonda a medias, e
+> instrumento sano. **La que vale es la del instrumento que ha demostrado estarlo.**
+> ⚠️ Guarda `TouchTargetTest`: 9 casos, **8 mutaciones y las 8 muerden** — y la de mudar el área a
+> `::after` muerde en tres, porque ahí `.ck-tgl::after` dibuja el pomo del interruptor de cookies.
+>
+> ▶ **NUMERACIÓN, para el otro carril**: esta sesión toma **`#264`–`#274`**. El carril A venía en
+> `#243`–`#248`. **Mirar el remoto al elegir número no basta: hay que volver a mirarlo al PUBLICAR.**
+>
+> Antes: **2026-08-29 (13:30) — carril A:
 > CUMPLEAÑOS MIXTO, cinco tandas (`#243`→`#247`) y el descuento aparcado con su diseño (`#248`); y
 > carril C, el interruptor del titular (`#254`→`#262`)**.
 > Antes: 2026-08-28 — carril A (la FORMA del panel y los menores: `#223`, `#224`, `#232`, `#234`,
@@ -1602,8 +1634,17 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3486 en verde** (22.805 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-29 sobre el árbol CONJUNTO: `#243`→`#248` del carril A (cumpleaños MIXTO: +60 casos, +176
+- Suite **3495 en verde** (22.920 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 por la tarde tras `#264` (el área táctil de 44 en la landing). ▶ **+9 casos**:
+  `TouchTargetTest`, que fija el mecanismo —token único, área centrada que **nunca encoge**, puerta
+  de puntero grueso, `::before` porque `::after` dibuja el pomo del interruptor de cookies— y el
+  marcado: **ningún control conocido pierde su marcador**, y el enlace en línea NO lo gana.
+  **8 mutaciones, las 8 muerden.**
+  ⚠️ **Lo que esta guarda NO puede hacer, y va escrito en su cabecera**: no mide píxeles. Que un
+  control lleve el marcador no demuestra que su área acabe midiendo 44 —puede recortarla un ancestro
+  con `overflow`—. Eso lo dice la sonda de `VERIFICACION-E2E-CAJON.md` §5.duovicies.
+- Antes, tras `#263`: suite **3486 en verde** (22.805 aserciones, 1 skipped a propósito) · **JS
+  862**, medida el 2026-08-29 sobre el árbol CONJUNTO: `#243`→`#248` del carril A (cumpleaños MIXTO: +60 casos, +176
   aserciones) sobre `#263` del carril C.
   ⚠️⚠️ **ESTE NÚMERO DEPENDE DE LA MÁQUINA, y el hook lo exige exacto.** El carril A midió aquí
   **22.801 / 2 skipped** y el C **22.805 / 1**: la diferencia es que `InlineBrandLogoTest` se salta
@@ -2282,6 +2323,56 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
+# ❗ SI ENTRAS NUEVO (2026-08-29, tarde-noche · carril C): EL ÁREA TÁCTIL DE 44 EN LA LANDING — `#264`
+
+**`git fetch` antes de nada.** ⚠️⚠️ **Hay OTRO agente en este repo, trabajando en el PANEL ADMIN.**
+La coordinación va por la doc: esta sesión toma **`#264`–`#274`**; el carril A venía en
+`#243`–`#248`. **Mirar el remoto al elegir número no basta: hay que volver a mirarlo al PUBLICAR**,
+y correr la suite sobre el árbol COMBINADO, que no lo hace nadie más.
+⚠️ Esta tanda toca `public/css/site.css`, `public/css/landing.css` y ocho vistas Blade **públicas**;
+del panel no toca nada (`resources/css/filament/admin/theme.css` sigue intacto).
+
+## ▶ Qué hizo esta sesión
+
+| | |
+|---|---|
+| `#264` | El **objetivo táctil de 44** llega a la landing: **37 → 1** control por debajo. El que queda es el enlace **en línea** del texto de cookies, que WCAG exime |
+
+## ❗❗ LO QUE MÁS IMPORTA QUE SEPAS
+
+1. ❗❗ **SI VAS A AMPLIAR UN ÁREA TÁCTIL: el mecanismo son DOS y hay que saber cuál toca.**
+   `[data-tap]` (final de `site.css`) amplía sin mover el dibujo y **solo con puntero grueso**; el
+   bloque del **«Lote 9»** (arriba, mismo fichero) hace lo mismo para cuatro controles del cajón y
+   **corre en todos los punteros a propósito**. El token `--tap-min` es de los dos y se declara UNA
+   vez — hay guarda.
+2. ⚠️⚠️ **El del Lote 9 ENCOGÍA y llevaba así desde entonces**: `width: var(--tap-min)` a secas pone
+   el área en 44 aunque el control mida 60, o sea le quita 8 px por lado **sin que nada falle**.
+   Ahora los dos usan `max(100%, …)`. *Un mínimo solo puede ampliar.*
+3. ❗ **Dentro de un carril con scroll el área invisible NO SIRVE**: un eje no visible obliga al otro
+   a `auto` y el pseudo se recorta **sin que nada avise**. Por eso las dos tiras del pie crecen de
+   verdad, y por eso el bloque legal pasó a tira.
+4. ⚠️⚠️ **Si mides áreas táctiles en navegador, lee `VERIFICACION-E2E-CAJON.md` §5.duovicies ANTES
+   de creerte un número.** Esa sonda salió mal dos veces con cifras plausibles: recortando en
+   coordenadas de viewport (áreas **negativas**) y sin aplicar el `transform` del pseudo (**58**
+   donde son 44). Y **dos controles en capas distintas se solapan siempre**.
+5. ⚠️ **Un barrido por FRACCIONES del alto no compara con el de antes si la página cambió de alto.**
+   El pie encogió 30 px y aparecieron cuatro «solapes nuevos» que llevaban ahí desde siempre.
+
+## ▶ POR DÓNDE SIGUE
+
+0. ❗ **El OJO del owner** sobre esto: el pie en un teléfono de verdad (los dos carriles se deslizan,
+   la vela dice que siguen), la FAQ (se abre pulsando 8 px por encima del texto) y que **en el
+   ordenador el pie no ha cambiado nada**.
+1. ❗ **Siguen abiertas las dos preguntas del owner de `#262`**, las dos a una línea de código: el
+   **color de la pista** del interruptor (hoy `--ok` verde, el artboard usa Lima Bote) y el residuo
+   de 3,6–4,7 px entre la pista y las mayúsculas.
+2. **Microanimaciones** (`Microanimaciones PJP.dc.html`) y después **elementos fachada**
+   (`Elementos Fachada.dc.html`) — el plan que el owner dio al abrir la sesión anterior.
+3. ⬜ **Lo que sigue sin caber**: la composición del cierre en 390×667. La tanda le devolvió **30 px**
+   al recortar el pie, así que la ficha de `DEUDA` está **menos apretada pero abierta**.
+
+---
+
 # ❗ SI ENTRAS NUEVO (2026-08-29, tarde · carril C): EL SET DE ICONOS, EL INTERRUPTOR `6d` Y EL LOGOTIPO — `#256` → `#263`, **Y STAGING YA VA CON LA MARCA DEL CLIENTE**
 
 **`git fetch` antes de nada.** ⚠️⚠️ **Con dos agentes sobre `main`, mirar el remoto al ELEGIR
@@ -2349,8 +2440,8 @@ antes de cualquier despliegue** y corre la suite sobre el árbol COMBINADO: nadi
    (`#A3C21C`, que tiene token `--strip-2` pero con el rol de la tira del pie);
    · **el residuo de 3,6–4,7 px** entre la pista y las mayúsculas, que viene de que `1cap` da la
    altura DECLARADA por la fuente y la de Bungee es un 5,6 % menor que la que pinta.
-2. **La tanda del ÁREA TÁCTIL 44** (`[DECIDIDO owner]`, sigue sin empezar): **115 controles medidos
-   por debajo del mínimo en móvil** — 63 enlaces a 40×14, 25 botones, 1 casilla. Es la siguiente.
+2. ~~**La tanda del ÁREA TÁCTIL 44**~~ ✅ **HECHA** (`#264`, 2026-08-29 tarde) — y de paso quedó
+   claro que aquellos «115» eran instancias: los controles distintos eran **37**.
 3. **Microanimaciones** (`Microanimaciones PJP.dc.html`) y después **elementos fachada**
    (`Elementos Fachada.dc.html`), que es el plan que el owner dio al abrir la sesión.
 4. **El OJO del owner** sobre lo de esta sesión, ahora ya en staging con su marca puesta.

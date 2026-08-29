@@ -1,0 +1,365 @@
+<?php
+
+namespace Tests\Feature\Architecture;
+
+use Database\Seeders\LandingContentSeeder;
+use Dom\Element;
+use Dom\HTMLDocument;
+use Dom\XPath;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\ReadsSiteStylesheets;
+use Tests\TestCase;
+
+/**
+ * **EL OBJETIVO TÁCTIL MÍNIMO — 44×44 AL DEDO** (`docs/specs/tema-por-instalacion.md` §26).
+ *
+ * Medido a 390 px sobre las siete vistas públicas renderizables: **51 controles distintos** por
+ * debajo del mínimo (30 enlaces, 15 botones, los dos interruptores del panel de cookies y los
+ * ítems del selector de idioma). `[DECIDIDO owner, 2026-08-29]`: **tanda propia**, y con dos
+ * decisiones que ordenan todo lo demás.
+ *
+ * ▶ **1. Donde el dibujo está ajustado 1:1 con el mockup, el objetivo crece AL DEDO y NO A LA
+ * VISTA**: `[data-tap]` pone un pseudo-elemento absoluto centrado que lleva el área a 44 sin mover
+ * un píxel. Donde crecer no daña —los chips del menú, «Reservar», el desplegable de idioma— se
+ * crece de verdad con `min-height`, que se lee mucho mejor en el CSS.
+ *
+ * ▶ **2. El bloque legal del pie pasa a TIRA QUE SE DESLIZA**, el patrón que `#252` ya dio a los
+ * destinos: a 390 px envolvía en tres renglones de 14 px y no había forma de llevarlo a 44 sin
+ * mover el pie —apilarlo lo hacía crecer 54 px; la tira lo deja en 44 y el pie **encoge 34**—.
+ *
+ * ⚠️⚠️ **Lo que esta guarda NO puede hacer, y hay que saberlo antes de confiar en ella**: no mide
+ * píxeles. Que un control lleve el marcador no demuestra que su área acabe midiendo 44 —puede
+ * recortarla un ancestro con `overflow`, o puede solaparse con la del vecino—. Eso solo lo dice
+ * una sonda en navegador, y la de esta tanda vive en `VERIFICACION-E2E-CAJON.md` §5.vicies.
+ * Lo que esta guarda fija es lo que la sonda **no puede** vigilar en cada push: que el mecanismo
+ * siga siendo el que se decidió y que ningún control conocido pierda su marcador por el camino.
+ *
+ * ⚠️ **La lista de familias SOLO CRECE.** Retirar una de aquí es devolver un control al montón de
+ * los 51, y eso no se hace en silencio.
+ */
+class TouchTargetTest extends TestCase
+{
+    use ReadsSiteStylesheets;
+    use RefreshDatabase;
+
+    /**
+     * Las familias que crecen DE VERDAD, con el porqué de cada una.
+     *
+     * Todas leen el token: un `44px` escrito a mano aquí sería el mismo defecto que `#238` y
+     * `#250` persiguieron con la columna — el número vive en un sitio o vive en seis.
+     */
+    private const GROWS = [
+        '.menu__chip' => 'cápsula del menú: 38 px medidos, y ahí hay sitio de sobra',
+        '.lang-dd__trigger' => 'el disparador del idioma, que es una cápsula más',
+        '.lang-dd__panel a' => 'las opciones van PEGADAS (hueco 0): un área centrada se metería en la vecina',
+        '.skip-link' => 'primer focusable de la página, 38 px',
+        '.price__cta' => 'el CTA de una tarifa, a 42: dos por debajo',
+        '.foot__links a' => 'la tira de destinos, dentro de un carril que RECORTA',
+        '.foot__legal > *' => 'la tira legal, el mismo carril y el mismo motivo',
+    ];
+
+    /**
+     * Los controles que amplían el área sin mover el dibujo, y dónde vive cada uno.
+     *
+     * @var array<string, array{0: string, 1: string}> clase => [ruta, por qué no crece]
+     */
+    private const TAPPED = [
+        'faq__q' => ['/', 'acordeón de 28 px: crecerlo subiría la sección 96'],
+        'zone-tab' => ['/', 'pestaña de zona, 37 px, con la rejilla del mockup detrás'],
+        'bd-tab' => ['/', 'pestaña de cumpleaños, 41'],
+        'bd-invite-cta' => ['/', 'el enlace de la invitación, 17 px de alto'],
+        'cookie__config' => ['/', 'el «Configurar» del banner, 17'],
+        'cookie__policy' => ['/', 'el enlace de la política dentro del panel, 16'],
+        'ck-tgl' => ['/', 'el interruptor de finalidad: 42×24, y su ::after ya dibuja el pomo'],
+        'page__back' => ['/normas', 'el «Volver al inicio» de las páginas de contenido, 21'],
+        'svc-hero__jump' => ['/servicios', 'los saltos a cada servicio, 36'],
+        'bd-swatch' => ['/cumpleanos', 'las muestras de color de la invitación, 34'],
+    ];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(LandingContentSeeder::class);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────
+    //  El instrumento, antes que lo que mide
+    // ─────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * **El barrido ve las hojas y sabe leer un selector de atributo.**
+     *
+     * Sin esto, cualquier caso de abajo podría estar pasando en verde sobre cero reglas. Y el
+     * segundo control no sobra: este fichero busca por `[data-tap]`, y un barrido que solo supiera
+     * casar clases devolvería vacío sin fallar.
+     */
+    public function test_the_scan_sees_the_sheets_and_can_read_an_attribute_selector(): void
+    {
+        $rules = $this->siteRules();
+
+        $this->assertGreaterThan(500, count($rules), 'el barrido se ha quedado corto: es el instrumento, no la hoja');
+
+        $atributo = array_filter($rules, fn (array $r) => str_contains($r['selector'], '[data-tap]'));
+
+        $this->assertNotEmpty($atributo, 'el barrido no encuentra ninguna regla por selector de atributo');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────
+    //  El mecanismo
+    // ─────────────────────────────────────────────────────────────────────────────────
+
+    /** El mínimo es un TOKEN, vale 44 px y se declara una sola vez. */
+    public function test_the_minimum_is_a_token_declared_once_and_worth_44(): void
+    {
+        $declaraciones = [];
+
+        foreach ($this->siteSheets() as $sheet => $css) {
+            preg_match_all('/--tap-min\s*:\s*([^;}]+)/', $css, $m);
+
+            foreach ($m[1] as $valor) {
+                $declaraciones[] = [$sheet, trim($valor)];
+            }
+        }
+
+        $this->assertCount(
+            1,
+            $declaraciones,
+            'el mínimo táctil se declara en '.count($declaraciones).' sitios: '.json_encode($declaraciones),
+        );
+        $this->assertSame('44px', $declaraciones[0][1], 'el mínimo táctil ya no vale 44 px');
+    }
+
+    /**
+     * **El mecanismo existe, y SOLO bajo `(pointer: coarse)`.**
+     *
+     * ⚠️ No es un detalle: con ratón, un área 30 px más alta que su enlace dispararía el `:hover`
+     * desde lejos y el cursor cambiaría a mano sobre el vacío. El defecto que se corrige es «115
+     * controles por debajo del mínimo **en móvil**», y ahí es donde tiene que actuar.
+     */
+    public function test_the_touch_area_only_exists_for_a_coarse_pointer(): void
+    {
+        $css = $this->siteSheets()['site.css'] ?? '';
+
+        $this->assertNotSame('', $css, 'no se encuentra site.css');
+
+        $fuera = preg_replace('/@media\s*\(\s*pointer\s*:\s*coarse\s*\)\s*\{.*?\n\}/s', '', $css);
+
+        $this->assertStringContainsString('[data-tap]::before', $css, 'el mecanismo táctil no está declarado');
+        $this->assertStringNotContainsString(
+            '[data-tap]::before',
+            (string) $fuera,
+            'el área táctil se declara FUERA de `(pointer: coarse)`: con ratón el hover saltaría desde lejos',
+        );
+    }
+
+    /**
+     * **El área está CENTRADA y nunca encoge un control.**
+     *
+     * `max(100%, var(--tap-min))` es lo que hace que la misma regla valga para un enlace de 14 px
+     * de alto y para un botón de 300 de ancho. Un `width: 44px` a secas convertiría en 44 los
+     * objetivos que ya son mayores, que es peor que no hacer nada.
+     */
+    public function test_the_area_is_centred_over_the_control_and_never_shrinks_it(): void
+    {
+        $body = $this->ruleBody('[data-tap]::before');
+
+        $this->assertStringContainsString('position: absolute', $body, 'el área no está fuera del flujo');
+
+        foreach (['width', 'height'] as $eje) {
+            $this->assertMatchesRegularExpression(
+                '/(?<![-\w])'.$eje.'\s*:\s*max\(\s*100%\s*,\s*var\(--tap-min\)\s*\)/',
+                $body,
+                "el $eje del área táctil no es `max(100%, var(--tap-min))`: o no llega al mínimo, o ENCOGE los controles que ya lo cumplen",
+            );
+        }
+
+        foreach (['top: 50%', 'left: 50%', 'translate(-50%, -50%)'] as $pieza) {
+            $this->assertStringContainsString($pieza, $body, "el área táctil no está centrada: falta `$pieza`");
+        }
+    }
+
+    /**
+     * **Es `::before` porque `::after` está ocupado, y sigue estándolo.**
+     *
+     * `.ck-tgl::after` dibuja el pomo del interruptor de cookies. Si alguien mueve el área táctil a
+     * `::after` «porque da igual», ese pomo desaparece — y el interruptor seguiría funcionando, así
+     * que no lo vería ningún test de conducta.
+     */
+    public function test_the_area_uses_before_because_the_cookie_toggle_owns_after(): void
+    {
+        $css = $this->siteSheets()['site.css'] ?? '';
+
+        $this->assertStringNotContainsString('[data-tap]::after', $css, 'el área táctil se ha mudado a ::after, que en `.ck-tgl` dibuja el pomo');
+        $this->assertStringContainsString('.ck-tgl::after', $css, 'el pomo del interruptor de cookies ha desaparecido');
+    }
+
+    /** Las familias que crecen de verdad leen el TOKEN, no un literal. */
+    public function test_the_families_that_grow_read_the_token(): void
+    {
+        foreach (self::GROWS as $selector => $porque) {
+            $body = $this->ruleBody($selector);
+
+            $this->assertMatchesRegularExpression(
+                '/(?<![-\w])min-height\s*:\s*var\(--tap-min\)/',
+                $body,
+                "`$selector` ($porque) ya no crece hasta el mínimo táctil, o lo escribe con un literal",
+            );
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────
+    //  El marcado
+    // ─────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * **Ningún control conocido pierde su marcador.**
+     *
+     * Es el caso que de verdad protege la tanda: el mecanismo puede seguir perfecto en el CSS y un
+     * control quedarse sin `data-tap` al reescribir su plantilla, sin que falle nada.
+     */
+    public function test_every_known_control_still_carries_the_marker(): void
+    {
+        $html = [];
+
+        foreach (self::TAPPED as $clase => [$ruta, $porque]) {
+            $html[$ruta] ??= (string) $this->get($ruta)->assertOk()->getContent();
+
+            $nodos = $this->nodes($html[$ruta], $clase);
+
+            $this->assertNotEmpty($nodos, "`$clase` no se pinta en $ruta: la guarda estaría vigilando el vacío");
+
+            $interactivos = array_filter($nodos, fn ($nodo) => ! $nodo->hasAttribute('aria-disabled'));
+
+            $this->assertNotEmpty(
+                $interactivos,
+                "todos los `$clase` de $ruta están deshabilitados: la guarda estaría vigilando el vacío",
+            );
+
+            foreach ($interactivos as $nodo) {
+                $this->assertTrue(
+                    $nodo->hasAttribute('data-tap'),
+                    "`$clase` ($porque) ha perdido su área táctil en $ruta",
+                );
+            }
+        }
+    }
+
+    /**
+     * **El enlace EN LÍNEA del texto de cookies se queda fuera, y es de norma.**
+     *
+     * Un objetivo de 44 px de alto sobre una línea de 18 se come el renglón de arriba y el de
+     * abajo: texto que se lee y se selecciona, no se pulsa. WCAG exime justamente a los enlaces en
+     * línea dentro de un bloque de texto (2.5.5 y 2.5.8, «inline»). Sin este caso, la excepción
+     * parecería un descuido y el siguiente que pase la «arreglaría».
+     */
+    public function test_the_inline_link_inside_the_cookie_text_is_left_out_on_purpose(): void
+    {
+        $html = (string) $this->get('/')->assertOk()->getContent();
+
+        $parrafos = $this->nodes($html, 'cookie__body');
+
+        $this->assertNotEmpty($parrafos, 'el texto del banner de cookies ha desaparecido');
+
+        $enlaces = [];
+
+        foreach ($parrafos as $parrafo) {
+            foreach ($parrafo->getElementsByTagName('a') as $enlace) {
+                $enlaces[] = $enlace;
+            }
+        }
+
+        $this->assertNotEmpty($enlaces, 'el texto del banner de cookies ya no lleva enlace');
+
+        foreach ($enlaces as $enlace) {
+            $this->assertFalse(
+                $enlace->hasAttribute('data-tap'),
+                'el enlace en línea del texto de cookies ha ganado un área táctil de 44: se comería los renglones vecinos',
+            );
+        }
+    }
+
+    /**
+     * **El bloque legal es una TIRA, y su envoltorio no es decorativo.**
+     *
+     * Sin el envoltorio la vela viajaría con el contenido —el porqué está junto a la regla— y sin
+     * el carril el bloque volvería a envolver en tres renglones de 14 px, que es de donde viene
+     * toda esta tanda.
+     */
+    public function test_the_legal_block_is_a_rail_with_its_sail(): void
+    {
+        $html = (string) $this->get('/')->assertOk()->getContent();
+        $xpath = $this->xpath($html);
+
+        $this->assertGreaterThan(
+            0,
+            $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' foot__legal-wrap ')]//*[contains(concat(' ', normalize-space(@class), ' '), ' foot__legal ')]")->count(),
+            'la tira legal ha perdido su envoltorio: la vela viajaría con el contenido al deslizar',
+        );
+
+        $carril = $this->ruleBody('.foot__links, .foot__legal');
+
+        $this->assertStringContainsString('overflow-x: auto', $carril, 'la tira legal ya no es un carril');
+        $this->assertStringContainsString('flex-wrap: nowrap', $carril, 'la tira legal puede volver a envolver');
+
+        foreach ($this->siteRules() as $regla) {
+            if (! str_contains($regla['selector'], '.foot__legal')) {
+                continue;
+            }
+
+            $this->assertDoesNotMatchRegularExpression(
+                '/flex-wrap\s*:\s*wrap/',
+                $regla['body'],
+                'una regla devuelve el `flex-wrap: wrap` al bloque legal ('.$regla['selector'].'): volvería a tres renglones de 14 px',
+            );
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────
+    //  Apoyos
+    // ─────────────────────────────────────────────────────────────────────────────────
+
+    /** El cuerpo de la regla cuyo selector cita exactamente `$selector` (uno de la lista basta). */
+    private function ruleBody(string $selector): string
+    {
+        $body = '';
+
+        foreach ($this->siteRules() as $regla) {
+            $partes = array_map('trim', explode(',', $regla['selector']));
+
+            if (in_array($selector, $partes, true) || $regla['selector'] === $selector) {
+                $body .= $regla['body']."\n";
+            }
+        }
+
+        $this->assertNotSame('', $body, "no existe ninguna regla para `$selector`");
+
+        return $body;
+    }
+
+    /** @return list<Element> */
+    private function nodes(string $html, string $class): array
+    {
+        $out = [];
+
+        foreach ($this->xpath($html)->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' ".$class." ')]") as $node) {
+            $out[] = $node;
+        }
+
+        return $out;
+    }
+
+    /**
+     * ⚠️⚠️ **`Dom\HTMLDocument` devuelve los nombres de etiqueta en MAYÚSCULAS y XPath distingue
+     * el caso**: `//p` y `//a` dan CERO con el documento entero delante, sin error y sin aviso.
+     * Por eso aquí solo se consulta por `//*` y por clase; para bajar a una etiqueta concreta se
+     * usa `getElementsByTagName()`, que sí es insensible. Costó un caso en verde vigilando el
+     * vacío, que es la forma en que estas guardas mienten.
+     */
+    private function xpath(string $html): XPath
+    {
+        // Los atributos de Alpine (`@click`, `:class`) no son nombres válidos para el parser.
+        $limpio = (string) preg_replace('/\s(@|:|x-on:|x-bind:)([a-zA-Z0-9_.\-]+)=/', ' data-alpine-$2=', $html);
+
+        return new XPath(HTMLDocument::createFromString($limpio, LIBXML_NOERROR, 'UTF-8'));
+    }
+}

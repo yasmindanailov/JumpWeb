@@ -110,7 +110,7 @@
         </aside>
         </div>{{-- /.contact-layout --}}
 
-        <a href="{{ url('/') }}" class="page__back" style="margin-top:32px">{{ __('site.back_home') }}</a>
+        <a href="{{ url('/') }}" class="page__back" data-tap style="margin-top:32px">{{ __('site.back_home') }}</a>
     </main>
 
     <x-site.footer />

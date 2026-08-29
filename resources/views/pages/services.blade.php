@@ -31,7 +31,7 @@
             @if ($services->isNotEmpty())
                 <nav class="svc-hero__index" aria-label="{{ __('services.title') }}">
                     @foreach ($services as $service)
-                        <a href="#{{ $service->slug }}" class="svc-hero__jump">{{ $service->tr('title') }}</a>
+                        <a href="#{{ $service->slug }}" class="svc-hero__jump" data-tap>{{ $service->tr('title') }}</a>
                     @endforeach
                 </nav>
             @endif
@@ -100,7 +100,7 @@
                                         @if (count($service->price_table['zones']) > 1)
                                             <div class="zone-tabs" role="tablist" aria-label="{{ __('services.rates.title') }}">
                                                 @foreach ($service->price_table['zones'] as $z => $zone)
-                                                    <button type="button" role="tab" class="zone-tab"
+                                                    <button type="button" role="tab" class="zone-tab" data-tap
                                                             style="{{ $zoneStyles[$zone['accent'] ?? ''] ?? '' }}"
                                                             :class="rz === {{ $z }} && 'active'"
                                                             :aria-selected="rz === {{ $z }} ? 'true' : 'false'"

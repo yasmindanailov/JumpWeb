@@ -29,6 +29,11 @@
             </div>
 
             <h2 class="cookie__title">{{ __('cookies.banner.title') }}</h2>
+            {{-- ⚠️ **Este enlace se queda SIN `data-tap` a propósito** (`#264`): va EN LÍNEA dentro
+                 del párrafo, y un objetivo de 44 px de alto sobre una línea de 18 se comería el
+                 renglón de arriba y el de abajo — texto que se lee y se selecciona, no se pulsa.
+                 WCAG exime justamente a los enlaces en línea dentro de un bloque de texto (2.5.5 y
+                 2.5.8, «inline»). Es la única excepción de la tanda y es de norma, no de descuido. --}}
             <p class="cookie__body">
                 {{ __('cookies.banner.text') }}
                 <a href="{{ route('legal.cookies') }}">{{ __('cookies.banner.policy') }}</a>
@@ -42,7 +47,7 @@
                     <button type="button" class="btn btn--ghost cookie-btn" @click="$store.cookies.rejectAll()">{{ __('cookies.banner.reject') }}</button>
                     <button type="button" class="btn btn--ghost cookie-btn" @click="$store.cookies.acceptAll()">{{ __('cookies.banner.accept') }}</button>
                 </div>
-                <button type="button" class="cookie__config" @click="$store.cookies.openPanel()">{{ __('cookies.banner.configure') }}</button>
+                <button type="button" class="cookie__config" data-tap @click="$store.cookies.openPanel()">{{ __('cookies.banner.configure') }}</button>
             </div>
 
             {{-- ───────── Capa 2: preferencias ───────── --}}
@@ -63,7 +68,7 @@
                         <span class="pref__name">{{ __('cookies.panel.maps_title') }}</span>
                         <span class="pref__desc">{{ __('cookies.panel.maps_desc') }}</span>
                     </div>
-                    <button type="button" class="ck-tgl" :class="{ 'is-on': local.maps }" @click="local.maps = !local.maps"
+                    <button type="button" class="ck-tgl" data-tap :class="{ 'is-on': local.maps }" @click="local.maps = !local.maps"
                             :aria-pressed="local.maps ? 'true' : 'false'" aria-label="{{ __('cookies.panel.maps_title') }}"></button>
                 </div>
 
@@ -73,7 +78,7 @@
                         <span class="pref__name">{{ __('cookies.panel.social_title') }}</span>
                         <span class="pref__desc">{{ __('cookies.panel.social_desc') }}</span>
                     </div>
-                    <button type="button" class="ck-tgl" :class="{ 'is-on': local.social }" @click="local.social = !local.social"
+                    <button type="button" class="ck-tgl" data-tap :class="{ 'is-on': local.social }" @click="local.social = !local.social"
                             :aria-pressed="local.social ? 'true' : 'false'" aria-label="{{ __('cookies.panel.social_title') }}"></button>
                 </div>
 
@@ -83,7 +88,7 @@
                     <button type="button" class="btn btn--ghost cookie-btn" @click="$store.cookies.savePanel(local)">{{ __('cookies.panel.save') }}</button>
                     <button type="button" class="btn btn--ghost cookie-btn" @click="$store.cookies.acceptAll()">{{ __('cookies.panel.accept_all') }}</button>
                 </div>
-                <a class="cookie__policy" href="{{ route('legal.cookies') }}">{{ __('cookies.panel.policy_link') }}</a>
+                <a class="cookie__policy" data-tap href="{{ route('legal.cookies') }}">{{ __('cookies.panel.policy_link') }}</a>
             </div>
         </div>
     </aside>

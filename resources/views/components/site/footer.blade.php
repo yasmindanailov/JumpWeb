@@ -104,6 +104,14 @@
             </span>
         </div>
 
+        {{-- ⚠️⚠️ **EL BLOQUE LEGAL ES UNA TIRA QUE SE DESLIZA** (`#264`, `[DECIDIDO owner]`), el
+             mismo patrón que `#252` dio a los destinos de arriba. El envoltorio no es decorativo:
+             existe para la VELA, porque un `::after` dentro del carril viajaría con el contenido
+             (su porqué entero está junto a la regla).
+             ▶ **El motivo es táctil**: a 390 px estos seis eslabones envolvían en tres renglones de
+             14 px de alto. Apilarlos a 44 hacía crecer el pie 54 px; en una tira miden 44 y el pie
+             ENCOGE 34. --}}
+        <span class="foot__legal-wrap">
         <span class="foot__legal">
             @foreach ($legalLabels as $i => $item)
                 <a href="{{ $legalUrls[$i] ?? url('/') }}">{{ $item }}</a>
@@ -111,6 +119,7 @@
             {{-- Enlace permanente para revisar/revocar el consentimiento de cookies (art. 7.3 RGPD,
                  #219): reabre el panel de preferencias. Es un botón porque actúa sobre el store Alpine. --}}
             <button type="button" class="foot__cookie-config" @click="$store.cookies.openPanel()">{{ __('cookies.banner.manage_link') }}</button>
+        </span>
         </span>
     </div>
 </footer>
