@@ -1754,8 +1754,21 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3501 en verde** (22.978 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-29 tras `#267` (la sombra del logotipo). ▶ **+1 caso**: que el filtro conserve los números
+- Suite **3516 en verde** (23.001 aserciones, **3 skipped**) · **JS 862**, medida el 2026-08-29 por
+  la tarde **sobre el árbol CONJUNTO**, tras la revisión adversarial del cumpleaños mixto y sus cinco
+  tandas (`#249` · `#268`→`#272`) rebasadas sobre el `#267` del carril C.
+  ▶ **+15 casos**: 14 en `MixedPartySurchargeTest` —las cuatro formas de ausencia, el recibo, el
+  «14,00 € y no 24,00 €», los dos controles de que el día y el pack SÍ re-tarifican, la línea que el
+  operador no gobierna y el correo que deja de atribuirle lo que no hizo— y 1 en `MixedPartyBadgeTest`
+  (el cargo huérfano se sigue explicando). **11 mutaciones y las 11 muerden.**
+  ⚠️ **El tercer `skipped` es NUEVO y no es una regresión**: `InlineBrandLogoTest` tiene dos casos que
+  solo corren donde está instalado el paquete de marca del cliente, y esta máquina no lo tiene. El
+  segundo de ellos **erraba** en vez de saltarse —dejando `main` sin poder empujarse desde cualquier
+  clon sin ese paquete— y se le puso la misma guarda que ya tenía su hermano.
+  ⚠️⚠️ Y una lección de guarda que vale para todo este carril: **`GuestAgeMixReader` va en `scoped`**,
+  así que un caso que cambia el catálogo y vuelve a guardar leería los valores memoizados y **nacería
+  ciego**. Lo resuelve el helper `nextRequest()`, que simula el corte entre dos peticiones.
+- Antes, tras `#267` (la sombra del logotipo): suite **3501 en verde** (22.978 aserciones). ▶ **+1 caso**: que el filtro conserve los números
   del mockup, con su mutación —volver a la sombra tenue de `#263` la pone roja—.
 - Antes, tras `#266`: suite **3500 en verde** (22.972 aserciones, 1 skipped a propósito) · **JS 862**. ▶ **+2 casos** en `InlineBrandLogoTest`: que la animación caiga sobre algo
   que **se pinte** (no un `id` de `<defs>`) y que la **amplitud sea proporcional a la figura**.
