@@ -284,11 +284,11 @@
                     </div>
                     <div class="bd-editor__actions">
                         <button type="button" class="bd-btn bd-btn--solid" @click="download()" :disabled="busy">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            <x-icons.download :width="14" :height="14" />
                             {{ __('landing.events.invite.download') }}
                         </button>
                         <button type="button" class="bd-btn bd-btn--ghost" @click="share()" :disabled="busy">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"></line><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"></line></svg>
+                            <x-icons.share :width="14" :height="14" />
                             {{ __('landing.events.invite.share') }}
                         </button>
                     </div>
@@ -334,15 +334,18 @@
                             </h3>
                             <div class="bd-card__details">
                                 <div class="bd-card__row">
-                                    <span class="ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
+                                    {{-- ⚠️ Los tres de esta tarjeta se CAPTURAN con html2canvas al
+                                         descargar la invitación (`birthdayInvite._render`), así que
+                                         siguen siendo SVG en línea: el componente emite lo mismo. --}}
+                                    <span class="ico"><x-icons.calendar :width="12" :height="12" /></span>
                                     <span class="lbl">{{ __('landing.events.invite.when') }}</span><span class="val" x-text="displayDate">—</span>
                                 </div>
                                 <div class="bd-card__row">
-                                    <span class="ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15.5 14"></polyline></svg></span>
+                                    <span class="ico"><x-icons.clock :width="12" :height="12" /></span>
                                     <span class="lbl">{{ __('landing.events.invite.time') }}</span><span class="val" x-text="displayTime">17:00</span>
                                 </div>
                                 <div class="bd-card__row">
-                                    <span class="ico"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
+                                    <span class="ico"><x-icons.pin :width="12" :height="12" /></span>
                                     <span class="lbl">{{ __('landing.events.invite.where') }}</span><span class="val">{{ $parkName }}@if (! empty($site['address1'])) · {{ $site['address1'] }}@endif</span>
                                 </div>
                             </div>

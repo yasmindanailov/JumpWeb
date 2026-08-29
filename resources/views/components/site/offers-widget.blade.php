@@ -74,15 +74,17 @@
              @keydown.escape.window="close()" @keydown="trap($event)">
             <div class="offw-card" x-ref="card">
                 <button type="button" class="offw-close" @click="close()" aria-label="{{ __('offers.close') }}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                    {{-- ⚠️ Sin talla: la pone el CSS (`.offw-close svg`), y una regla gana a un
+                         atributo. Pasar `:width` aquí sería una segunda fuente para el mismo número. --}}
+                    <x-icons.close />
                 </button>
 
                 @if ($offers->count() > 1)
                     <button type="button" class="offw-arrow offw-arrow--prev" @click="go(i - 1)" aria-label="{{ __('offers.prev') }}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                        <x-icons.arrow-left />
                     </button>
                     <button type="button" class="offw-arrow offw-arrow--next" @click="go(i + 1)" aria-label="{{ __('offers.next') }}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        <x-icons.arrow-right />
                     </button>
                 @endif
 

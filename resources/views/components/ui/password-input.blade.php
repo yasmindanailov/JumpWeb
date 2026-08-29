@@ -33,16 +33,13 @@
             :aria-label="show ? '{{ __('account.account.password.hide') }}' : '{{ __('account.account.password.show') }}'"
             :aria-pressed="show.toString()"
             tabindex="-1">
-        {{-- Ojo (mostrar). Icono Heroicons "eye" simplificado, 18×18. --}}
-        <svg x-show="!show" class="pwd-input__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M2.036 12.322a1 1 0 0 1 0-.644C3.423 7.512 7.36 4.5 12 4.5s8.577 3.012 9.964 7.178a1 1 0 0 1 0 .644C20.577 16.488 16.64 19.5 12 19.5s-8.577-3.012-9.964-7.178Z"
-                  stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7" />
-        </svg>
-        {{-- Ojo tachado (ocultar). --}}
-        <svg x-show="show" x-cloak class="pwd-input__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M3 3l18 18M10.584 10.587a2 2 0 0 0 2.828 2.83M9.363 5.365A9.466 9.466 0 0 1 12 5c4.64 0 8.577 3.012 9.964 7.178a1 1 0 0 1 0 .644 9.46 9.46 0 0 1-3.07 4.385M6.61 6.61C4.547 7.97 2.999 9.984 2.036 12.178a1 1 0 0 0 0 .644C3.423 16.988 7.36 19.5 12 19.5a9.46 9.46 0 0 0 5.39-1.61"
-                  stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        {{-- ⚠️ Los dos ojos eran **Heroicons a trazo 1,7**, o sea otra librería y otro idioma dentro
+             del mismo formulario. Desde `#258` salen del set (`eye` / `eye-off`), dibujados con la
+             anatomía del artboard porque él no los tiene.
+             ⚠️⚠️ **El cajón lleva su COPIA de estos dos** (`PasswordInput.vue`): son los únicos
+             dibujos del sistema que no viven en `components/icons/`, y `SidebarIconParityTest` los
+             recoge aparte con el nombre `pwd-eye-0/1`. Si cambias uno, cambia el otro. --}}
+        <x-icons.eye x-show="!show" :width="18" :height="18" />
+        <x-icons.eye-off x-show="show" x-cloak :width="18" :height="18" />
     </button>
 </div>

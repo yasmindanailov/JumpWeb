@@ -29,12 +29,15 @@ defineProps({
       lado. Un icono anunciado además del rótulo lo diría todo dos veces.
     -->
         <!-- `calendar` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
+        <!-- ⚠️ Pasa de `calendar` a `booking` (`#258`), y el argumento es del propio artboard: al
+             razonar `ui/reserva` escribe que «la landing usa `ui/fecha` para reservar, y **un
+             calendario a secas no dice que la plaza ya esté cogida**». Aquí la entrada es «Mis
+             reservas» —lo ya reservado—, no un selector de fecha.
+             `booking` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
         <svg v-if="zone === ZONES.ORDERS" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"
              class="catalog__ico" aria-hidden="true" focusable="false">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z" />
-            <circle cx="8.6" cy="14.2" r="1.5" />
-            <circle cx="12" cy="14.2" r="1.5" />
-            <circle cx="15.4" cy="14.2" r="1.5" />
+            <path d="M8.4 14.6 10.9 17.1 15.6 12.4" fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
 
         <!-- `user` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->

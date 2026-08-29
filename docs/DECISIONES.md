@@ -14068,3 +14068,150 @@ principio del atributo no mide el atributo que dice medir.*
 Suite **3421 / 22.515** · paridad de iconos verde tras las 14 copias · navegador a 1440 en menú,
 cajón y cumpleaños con **cero errores de JS** · hoja de contacto de los 43 revisada a ojo, que es lo
 que cazó los dos nombres mal · 5 mutaciones, las 5 muerden.
+
+---
+
+## #258 · 2026-08-29 · La auditoría del set, ejecutada entera — y una guarda que llevaba meses CIEGA
+
+El owner pidió revisar «todos los iconos, los que tenemos y los del mockup, para valorar cuáles
+cambiar, dónde ponerlos, si faltan poner nuevos o si faltan quitar algunos», y después: «procede con
+todos». La auditoría salió en **seis bloques** y aquí están los seis ejecutados. El set pasa de
+**55 a 61 componentes**.
+
+### 1 · Catorce sitios que el set ya cubría y seguían en el idioma anterior
+
+Medido: **34 `<svg>` dibujados fuera del set** —20 en la web pública, 13 en el panel, 1 widget—.
+De los 20 públicos, **14 tenían ya su equivalente en el set** y seguían siendo trazo Feather de 2 al
+lado de masas de 3: la FAQ de la portada, el botón del minijuego, los cinco de la invitación de
+cumpleaños, los cuatro del widget de ofertas y los tres del formulario de invitados.
+
+⚠️ **El botón del minijuego ya era el dibujo del artboard, escrito en línea**: `ui/play` letra por
+letra. Un dibujo suelto en el marcado no lo puede sustituir un cliente, que es todo el motivo de que
+el set exista (`landing-white-label.md` §4.5).
+
+⚠️ **Dos trampas de talla al cablear**: los `check` iban a `12×10` y `13×11`, y sobre la rejilla
+cuadrada de 24 eso ya no encoge — **deforma**. Y en el widget de ofertas la talla la pone el CSS
+(`.offw-close svg`), así que pasarla también por atributo sería una segunda fuente para el mismo
+número.
+
+### 2 · `DRAWER_OWN` se queda VACÍA, y ése era el objetivo
+
+Los cuatro dibujos «propios» del cajón —la lupa del buscador, la flecha del pie del carrito, la ⓘ del
+desglose y la tarjeta del CTA de pagar— existían por **una sola razón: no había componente**. El set
+cubre los cuatro, así que la excepción se quedó sin motivo.
+
+▶ **Que la lista esté vacía es lo que hace fuerte al test**: con ella llena, un dibujo huérfano se
+podía «arreglar» añadiéndolo ahí.
+
+⚠️ **El CTA del pie dejó de ser un `<svg>` con dos `<template>` dentro.** Los dos dibujos del set
+**no comparten pintura** —`card` es masa sin trazo y `arrow-right` es masa MÁS un trazo de 3 que
+dibuja su asta—, y con un solo `<svg>` habría que poner la unión de atributos: la tarjeta saldría con
+un borde de 3 px que no lleva. Siguen siendo UN nodo en el árbol servido, así que el contrato no se
+mueve.
+
+### 3 · ⚠️⚠️ Y ahí apareció que `SidebarIconParityTest` llevaba CIEGA desde que se escribió un comentario
+
+El fichero existe para impedir que el cajón sirva un dibujo sin fuente —nació de los **20 `<svg>`
+vacíos** de `DECISIONES #113`—, y **se lo estaba saltando**.
+
+Limpiaba los comentarios de **HTML** antes de buscar, con su motivo escrito. Pero el docblock de
+`PasswordInput.vue` cita «dos `<svg>` dentro» en un comentario de **JavaScript**: el escáner arrancaba
+en la CITA, el `(.*?)` se comía hasta el primer `</svg>` de verdad y **el icono de en medio no lo
+miraba nadie**. Y no fallaba, que es lo peor: lo tragado contiene `<template>`, así que `geometries()`
+se iba por la rama de las ramas, no encontraba ninguna cerrada y devolvía **lista vacía**.
+
+▶ **Al arreglarlo aparecieron TRES dibujos ciegos**, no uno: los dos ojos de `PasswordInput.vue` y —lo
+que de verdad importa— **dos flechas de `CartStep.vue` y `PayStep.vue`** que se habían quedado en el
+idioma anterior sin que nada avisara, en el carrito y en la pantalla de pagar.
+
+⚠️⚠️ **Y la primera guarda que escribí para eso NO mordía**: anclaba en «`PasswordInput.vue` tiene que
+dar DOS dibujos», y con el escáner descarrilado **también da dos** —la cita cuenta como uno—. Lo que
+distingue el caso es otra cosa: **una cita es un `<svg>` pelado, y todo icono de verdad declara su
+`viewBox`**. Verificado por mutación: con la limpieza vieja, rojo.
+
+### 4 · Los cuatro ESTADOS como pegatina (§04 del artboard)
+
+Es el hueco que el owner señaló —«tenemos un tic para las confirmaciones»— y era el más grande:
+
+| | qué había | qué hay |
+|---|---|---|
+| Éxito | el **confeti** a 56 px | pegatina verde con el check del set |
+| Error | **nada** | pegatina roja con la X |
+| Sin plazas / pausa | **nada** | pegatina amarilla con el aviso |
+| Cargando | el spinner del producto | **se queda**: ya es sustituible por instalación y el del artboard nace para GIRAR |
+
+▶ **El relleno entra por los tokens SEMÁNTICOS**, no por un color tecleado, y por eso sale con la
+paleta del cliente sin una línea suya: su `client.css` ya mapea `--ok`/`--err`/`--attn` a
+`#5FA82E`/`#D93E14`/`#F5C400`, que son exactamente los tres colores que el artboard declara.
+▶ **La sombra entra por ROL** (`--shadow-float`): difusa en el producto, `5px 5px 0` en su paquete —
+la dura del artboard, sin tecleárnosla.
+⚠️ **La tinta es `--paper-fg` y no `--fg`**: la pegatina puede caer sobre el hero, donde `--fg` vale
+claro. Contraste medido con su paquete: **6,28 · 4,10 · 11,26 · 6,85**, los cuatro por encima del
+3:1 que WCAG pide a un objeto gráfico.
+⚠️ **El confeti se retira de la confirmación** porque el artboard dice que «la pegatina de estado
+nunca convive con otra en la misma pantalla». **La celebración no se pierde**: `celebrate()` sigue
+lanzando el confeti a pantalla completa, que es donde el gesto se nota.
+
+### 5 · Los cinco sujetos que el artboard NO dibuja
+
+**Medido: el mockup no tiene ni un chevron** —32 dibujos distintos, ninguno—, porque su lenguaje
+resuelve el «hay más» con flechas. Pero el producto tiene dos desplegables que lo necesitan y una
+flecha de masa a 9 px es una mancha.
+
+▶ Se dibujan **tres**: `chevron-down`, `eye` y `eye-off`. **Y eso NO contradice a `#211`**: allí lo
+que no salió fue un **logotipo** —seis capas por palabra, identidad de marca—; esto son glifos
+mecánicos cuya forma la determina casi entera la anatomía (rejilla 24, área viva 20, masa 3, remates
+redondos). Si el owner los prefiere del diseñador, son tres ficheros.
+⚠️ Los ojos van con **trazo**, y eso también sale del artboard: sus dos glifos de la misma familia
+—`ui/hora` y `ui/buscar`— se dibujan igual. La regla de §06 es «nada por debajo de 3», no «nada de
+trazo».
+⚠️ **El DISQUETE se retira y no se sustituye.** Tres motivos y el tercero decide: el set no dibuja
+«guardar», un disquete era el último anacronismo de la web, y §06 dice «máximo un icono por fila de
+texto». Ese botón ya dice «Guardar».
+
+### 6 · Los de PRODUCTO — y lo que el cliente dibujó y nunca cerró
+
+`ProductIcon::CHOICES` pasa de **6 a 11**. Entran `ticket`, `gift`, `pack`, `party` y `school-trip`.
+
+⚠️⚠️ **Se AÑADEN, no sustituyen, y el motivo es de DATOS**: `forProduct()` trata una clave desconocida
+como ausente, así que retirar una de las seis ilustraciones **degradaría en silencio** todo producto
+que la tuviera guardada en `ticket_types.icon`.
+
+Los tres últimos salen del **LOTE 2** del artboard, que el cliente dibujó con variantes, razonó y
+**nunca llegó a decidir** —su texto cierra con «dime los códigos que te quedas y los sustituyo en el
+set de la sección 02»—. **La variante la elige su propio texto, no nosotros**: `pack` es 1k porque él
+la llama «hermana directa de 1a», y 1a es justamente la entrada que ganó; `party` (1l) y
+`school-trip` (1m) son los DOS, porque él escribe que el autobús «merece su propio glifo junto a 1l».
+
+⚠️⚠️ **Y aquí el extractor se equivocó de celda.** Emparejó etiqueta y descripción por posición, y en
+las filas que tienen columna «ACTUAL» eso **desplaza todo un puesto**: `booking` salió con el dibujo
+de la celda ACTUAL —que es lo que hay HOY, el calendario pelado— y quedó **idéntico a `calendar`**. La
+propuesta buena es **1d**, «calendario y check», de la que el artboard dice «es el gesto que se lee
+más rápido y el que mejor aguanta a 20». *Se vio porque el resultado era sospechosamente igual a otro
+icono, no porque fallara nada.*
+
+▶ Y con él, «Mis reservas» del cajón pasa de `calendar` a `booking`, con el argumento del propio
+artboard: «la landing usa `ui/fecha` para reservar, y **un calendario a secas no dice que la plaza ya
+esté cogida**».
+
+### Lo verificado
+
+- Suite **3425 / 22.555** · Pint ✓ · docs-check ✓ · build ✓ · SSR ✓.
+- **Navegador a 1440**: FAQ, cajón (buscador, flechas, pie, «Volver»), campo de contraseña y las tres
+  pegatinas con los tokens reales. **Cero errores de JS.**
+- **Mutaciones**: la ceguera del escáner (roja con la limpieza vieja) · la excepción con valor de
+  `booking` (roja si alguien baja ese trazo a 1,5).
+- ⚠️ **El manifiesto del cajón se regeneró a propósito** (`MANIFEST_REFRESH=1`): 6 entradas, las de
+  las tres pantallas de desenlace. Es el cambio de árbol que la guarda tenía que cazar, y lo cazó.
+- ⚠️ **El techo del chunk del cajón sube de 257 a 260** con el reparto dicho: **+0,04** por los
+  dibujos que cambian de idioma y **+2,60** por las cinco ramas nuevas de `ProductIcon.vue`, que es
+  capacidad nueva. Quedan 0,36 kB de holgura, la misma estrechez que antes.
+
+### Lo que queda fuera, dicho
+
+- **El PANEL** (13 `<svg>` propios + los Heroicons que trae Filament) es otro idioma entero. Se dejó
+  fuera a propósito: es herramienta de operador, no superficie de marca.
+- **El regalo del widget de ofertas** sigue siendo el suyo: está **animado**, y cambiarlo por `gift`
+  perdería la animación.
+- **`socks` e `ic-b7`** no tienen equivalente en el artboard, y las cuatro ilustraciones de entrada y
+  tarta se quedan por la razón de datos de arriba.

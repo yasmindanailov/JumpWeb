@@ -51,6 +51,20 @@ const t = (key) => translate(props.messages, key);
 
 <template>
     <div class="purchase__failed" role="alert">
+        <!-- ⚠️ Esta pantalla NO tenía ningún icono (`#258`): decía «pago rechazado» solo con texto,
+             mientras la de al lado celebraba con un dibujo de 56 px. El artboard declara el error
+             como pegatina —Rojo Goteo— igual que el éxito.
+             ⚠️ Va `aria-hidden`: el estado ya lo anuncia el `role="alert"` del contenedor y el
+             titular. Un icono anunciado además sería decirlo dos veces.
+             `close` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
+        <div class="purchase__party" aria-hidden="true">
+            <span class="state-badge state-badge--err">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(45 12 12)" />
+                    <rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(-45 12 12)" />
+                </svg>
+            </span>
+        </div>
         <h3 class="wiz__title">{{ t('payment_failed_title') }}</h3>
         <p class="purchase__note">{{ t('payment_failed_intro') }}</p>
 

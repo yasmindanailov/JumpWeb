@@ -2033,3 +2033,74 @@ teléfono**. Ahora es `phone`.
 hora**: el extractor dejó `stroke-` a medias, y **`SidebarDrawerPolishTest` se puso ROJO con el
 producto sano** al llegar el primer icono del set que pinta con trazo. Los dos, corregidos con
 `(?<![-\w])`. Es la misma familia que las cuatro guardas ciegas de esta semana.
+
+---
+
+## 23. LA AUDITORÍA DEL SET, EJECUTADA (`#258`, 2026-08-29)
+
+> El owner pidió revisar «todos los iconos, los que tenemos y los del mockup», y después «procede con
+> todos». Seis bloques, los seis hechos. El set pasa de **55 a 61**.
+
+### 23.1 Lo que la medición encontró
+
+**34 `<svg>` dibujados fuera del set**: 20 en la web pública, 13 en el panel, 1 widget. De los 20:
+
+| | |
+|---|---|
+| **14** ya tenían equivalente en el set | FAQ · minijuego · los 5 de la invitación · los 4 de ofertas · los 3 de invitados |
+| **5** eran sujetos que el artboard NO dibuja | chevron (×2) · ojo · ojo tachado · disquete |
+| **1** es decorativo | el sello de 100×100 de la tarjeta de cumpleaños |
+
+Y **4 dibujos «propios» del cajón** declarados en `DRAWER_OWN`, los cuatro por la misma razón: no
+había componente. **Hoy la lista está VACÍA**, y que lo esté es lo que hace fuerte a la guarda: con
+ella llena, un huérfano se «arregla» añadiéndolo ahí.
+
+### 23.2 ⚠️⚠️ La guarda de paridad llevaba CIEGA desde que se escribió un comentario
+
+`SidebarIconParityTest` limpiaba los comentarios de **HTML** antes de buscar —con su motivo escrito—
+pero no los de **JavaScript**. El docblock de `PasswordInput.vue` cita «dos `<svg>` dentro»: el
+escáner arrancaba en la CITA, el `(.*?)` llegaba hasta el primer `</svg>` real y **se tragaba el icono
+de en medio**. Sin fallar, porque lo tragado lleva `<template>` dentro y la geometría salía vacía.
+
+▶ **Tres dibujos ciegos**, no uno: los dos ojos y **dos flechas de `CartStep` y `PayStep`** que
+seguían en el idioma anterior en el carrito y en la pantalla de pagar.
+
+⚠️⚠️ **Y la primera guarda contra eso NO mordía**: anclar en «este fichero da DOS dibujos» falla
+porque con el escáner descarrilado **también da dos**. Lo que distingue el caso: **una cita es un
+`<svg>` pelado, y todo icono declara su `viewBox`**.
+
+### 23.3 Los cuatro ESTADOS como pegatina
+
+`.state-badge` — círculo, keyline de tinta de 2, sombra dura, mínimo 40. Relleno por tokens
+SEMÁNTICOS (`--ok`/`--err`/`--attn`), así que sale con la paleta del cliente **sin una línea suya**;
+sombra por ROL (`--shadow-float`), difusa en el producto y `5px 5px 0` en su paquete.
+
+| estado | antes | ahora |
+|---|---|---|
+| Éxito | el confeti a 56 px | pegatina verde con `check` |
+| Error | **nada** | pegatina roja con `close` |
+| Sin plazas / pausa | **nada** | pegatina amarilla con `warning` |
+| Cargando | el spinner del producto | **se queda** (ya es sustituible, y el del artboard nace para girar) |
+
+⚠️ Tinta `--paper-fg`, no `--fg`: la pegatina puede caer sobre el hero. Contraste medido con el
+paquete del cliente: **6,28 · 4,10 · 11,26 · 6,85** — los cuatro sobre el 3:1 de WCAG para un objeto
+gráfico.
+
+### 23.4 Dibujar lo que el artboard no tiene NO contradice a `#211`
+
+Se dibujan tres (`chevron-down`, `eye`, `eye-off`). En `#211` lo que no salió fue un **logotipo**:
+seis capas por palabra, identidad de marca. Esto son **glifos mecánicos** cuya forma la determina casi
+entera la anatomía. ⚠️ Y el disquete de «guardar» **se retira sin sustituto**: §06 dice «máximo un
+icono por fila de texto», y ese botón ya dice Guardar.
+
+### 23.5 Los de producto, y la trampa del extractor
+
+`ProductIcon::CHOICES` pasa de 6 a 11. ⚠️⚠️ **Se AÑADEN por una razón de DATOS**: `forProduct()` trata
+una clave desconocida como ausente, así que retirar una ilustración **degradaría en silencio** todo
+producto que la tuviera guardada.
+
+Tres salen del LOTE 2, que el cliente **nunca cerró**; la variante la elige su propio texto.
+⚠️⚠️ **El extractor emparejó etiqueta y descripción por POSICIÓN**, y en las filas con columna
+«ACTUAL» eso desplaza todo un puesto: `booking` salió con el dibujo de ACTUAL —lo que hay hoy— y
+quedó **idéntico a `calendar`**. *Se vio porque el resultado era sospechosamente igual a otro icono,
+no porque fallara nada.*

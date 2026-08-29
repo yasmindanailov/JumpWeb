@@ -8,6 +8,37 @@
 > ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
 > la marquesina. Y `#253` — ocho puntos de la portada, DOS de ellos fallos.**
 >
+> ❗❗ **`#258` — LA AUDITORÍA DEL SET, EJECUTADA ENTERA, y una guarda que llevaba CIEGA.**
+> Seis bloques, los seis hechos. El set pasa de **55 a 61** y `DRAWER_OWN` **se queda VACÍA** —los
+> cuatro dibujos propios del cajón existían porque no había componente, y ahora lo hay—.
+> ⚠️⚠️ **`SidebarIconParityTest` se saltaba tres dibujos y no lo sabía nadie.** Limpiaba los
+> comentarios de HTML antes de buscar pero **no los de JavaScript**: el docblock de
+> `PasswordInput.vue` cita «dos `<svg>` dentro», el escáner arrancaba en la CITA y **se tragaba el
+> icono de en medio** — sin fallar, porque lo tragado lleva `<template>` y la geometría salía vacía.
+> ▶ Al arreglarlo aparecieron **tres** ciegos: los dos ojos y **dos flechas del carrito y de pagar**
+> que seguían en el idioma anterior. Es `DECISIONES #113` otra vez, dentro del fichero que existe
+> para impedirlo.
+> ⚠️⚠️ **Y la primera guarda contra esa ceguera NO mordía**: anclar en «este fichero da DOS dibujos»
+> falla porque con el escáner descarrilado **también da dos**. Lo que distingue el caso es que **una
+> cita es un `<svg>` pelado y todo icono declara su `viewBox`**.
+> ❗ **Los cuatro ESTADOS ya son PEGATINA** (§04 del artboard): antes el éxito enseñaba el confeti y
+> **el rechazo y la pausa no enseñaban nada**. Círculo, keyline de tinta, sombra dura; el relleno
+> entra por los tokens semánticos y la sombra por rol, así que sale con la paleta del cliente **sin
+> una línea suya**. Contraste medido: 6,28 · 4,10 · 11,26 · 6,85.
+> ⚠️ **El confeti se retira de la confirmación** («la pegatina nunca convive con otra en la misma
+> pantalla»); la celebración sigue: `celebrate()` lanza el confeti a pantalla completa.
+> ⚠️ **Se dibujan TRES glifos que el artboard no tiene** (`chevron-down`, `eye`, `eye-off`) — medido:
+> el mockup **no usa ni un chevron** en 32 dibujos—. No contradice a `#211`: allí lo que no salió fue
+> un LOGOTIPO; esto son glifos mecánicos que la anatomía determina casi entera. **Y el disquete de
+> «guardar» se retira sin sustituto.**
+> ⚠️ **`ProductIcon::CHOICES` pasa de 6 a 11, AÑADIENDO**: retirar una ilustración degradaría en
+> silencio todo producto que la tuviera guardada en `ticket_types.icon`.
+> ⚠️⚠️ **Y el extractor del artboard emparejó por POSICIÓN**: en las filas con columna «ACTUAL» eso
+> desplaza un puesto, y `booking` salió **idéntico a `calendar`**. Se vio porque el resultado era
+> sospechosamente igual a otro icono, no porque fallara nada.
+> ▶ **Fuera a propósito**: el PANEL (13 `<svg>` + los Heroicons de Filament) es otro idioma y es
+> herramienta de operador; y el regalo del widget de ofertas **está animado**.
+>
 > ❗❗ **`#257` — EL SET DE ICONOS DEL ARTBOARD ENTRA EN EL PRODUCTO: 26 componentes → 55.**
 > ⚠️ *(La primera cifra publicada fue 57 y estaba mal: sumaba los 43 del artboard a los 26 de antes
 > sin descontar los **16 que SOBRESCRIBEN** un fichero existente. Una suma no es una medida.)*
@@ -1321,6 +1352,14 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3425 en verde** (22.555 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 tras `#258` (la auditoría del set, ejecutada). ▶ **Mismo número de casos y +24
+  aserciones**: lo que entró no son tests nuevos sino guardas endurecidas —la paridad del cajón deja
+  de estar ciega a un `<svg>` citado en un comentario, y la anatomía gana una excepción **con su
+  valor medido** para el trazo de 2,9 que trae `booking` del artboard—.
+  ⚠️ El techo del chunk del cajón sube **257 → 260**: +0,04 por los dibujos que cambian de idioma y
+  **+2,60 por las cinco ramas nuevas** de `ProductIcon.vue`, que es capacidad, no engorde.
+  ⚠️ El manifiesto del cajón se regeneró a propósito (6 entradas: las tres pantallas de desenlace).
 - Suite **3425 en verde** (22.531 aserciones, 1 skipped a propósito) · **JS 862**, medida el
   2026-08-29 tras `#257` (el set de iconos del artboard). ▶ **+4 casos**: `IconSetAnatomyTest`, que
   hace ejecutable la anatomía del set —`currentColor` sin excepciones, rejilla 24, nada de línea

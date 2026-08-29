@@ -125,7 +125,7 @@
                                     <span class="gf-fiche__status gf-fiche__status--pending">{{ __('guestform.status_pending') }}</span>
                                     <span class="gf-fiche__status gf-fiche__status--done">{{ __('guestform.status_done') }}</span>
                                     <span class="gf-fiche__chev" aria-hidden="true">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        <x-icons.chevron-down :width="16" :height="16" />
                                     </span>
                                 </button>
 
@@ -148,10 +148,10 @@
                                             @unless ($readonly)
                                                 <div class="gf-fiche__foot">
                                                     <button type="button" class="btn btn--ghost btn--sm gf-nav-prev" data-act="prev" @if ($i === 0) disabled @endif>
-                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>{{ __('guestform.nav_prev') }}
+                                                        <x-icons.arrow-left :width="13" :height="13" />{{ __('guestform.nav_prev') }}
                                                     </button>
                                                     <button type="button" class="btn btn--zone btn--sm" data-act="next" @if ($i === $reservation->quantity - 1) disabled @endif>
-                                                        {{ $i === $reservation->quantity - 1 ? __('guestform.nav_last') : __('guestform.nav_next') }}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                                                        {{ $i === $reservation->quantity - 1 ? __('guestform.nav_last') : __('guestform.nav_next') }}<x-icons.arrow-right :width="13" :height="13" />
                                                     </button>
                                                 </div>
                                             @endunless
@@ -166,9 +166,16 @@
                 {{-- ───── Barra de guardar (botón = componente .btn del sitio) ───── --}}
                 @unless ($readonly)
                     <div class="gf-savebar">
+                        {{-- ⚠️⚠️ **El DISQUETE se retira y no se sustituye** (`#258`). Tres motivos, y
+                             el tercero decide: el set del artboard no dibuja «guardar» y no había
+                             equivalente; un disquete es el único anacronismo que quedaba en toda la
+                             web; y §06 del artboard dice «máximo un icono por fila de texto — si
+                             hacen falta tres, lo que falta es una lista». Este botón ya dice
+                             «Guardar» con todas sus letras, así que el icono no informaba: decoraba.
+                             ▶ Si el owner lo quiere de vuelta, es una línea y un glifo del
+                             diseñador. --}}
                         <button type="submit" class="btn btn--zone btn--lg">
                             {{ __('guestform.submit') }}
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                         </button>
                         <p class="gf-savebar__help">{{ __('guestform.hint') }}</p>
                     </div>
@@ -193,7 +200,8 @@
 
     {{-- Toast de guardado (flash del servidor; relevante al recargar por enlace firmado). --}}
     <div class="gf-toast {{ session('status') === 'guest-form-saved' ? 'is-on' : '' }}" id="gf-toast" role="status">
-        <span class="tcheck"><svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+        {{-- ⚠️ CUADRADO: el check pasó a la rejilla 24 del set y 12×10 ya no encoge, DEFORMA. --}}
+        <span class="tcheck"><x-icons.check :width="12" :height="12" /></span>
         <span>{{ __('guestform.toast_saved') }}</span>
     </div>
 

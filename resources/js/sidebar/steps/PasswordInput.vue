@@ -40,14 +40,21 @@ const revealed = ref(false);
         <input :id="id" v-model="model" :type="revealed ? 'text' : 'password'"
                :autocomplete="autocomplete" required>
         <button type="button" class="pwd-input__toggle" tabindex="-1" @click="revealed = ! revealed">
-            <svg v-show="! revealed" class="pwd-input__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M2.036 12.322a1 1 0 0 1 0-.644C3.423 7.512 7.36 4.5 12 4.5s8.577 3.012 9.964 7.178a1 1 0 0 1 0 .644C20.577 16.488 16.64 19.5 12 19.5s-8.577-3.012-9.964-7.178Z"
-                      stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7" />
+            <!-- `eye` y `eye-off` del sistema de diseño, copiados byte a byte
+                 (`SidebarIconParityTest`). Eran Heroicons a trazo 1,7 — otra librería y otro idioma
+                 dentro del mismo campo—, y **el primero de los dos llevaba sin comprobarse desde
+                 que se escribió el docblock de arriba**: la guarda arrancaba en el «`<svg>`» que ese
+                 comentario cita y se lo tragaba entero (`#258`). -->
+            <svg v-show="! revealed" class="pwd-input__icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2.6 12s3.5-6.6 9.4-6.6S21.4 12 21.4 12s-3.5 6.6-9.4 6.6S2.6 12 2.6 12z" />
+                <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
             </svg>
-            <svg v-show="revealed" class="pwd-input__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M3 3l18 18M10.584 10.587a2 2 0 0 0 2.828 2.83M9.363 5.365A9.466 9.466 0 0 1 12 5c4.64 0 8.577 3.012 9.964 7.178a1 1 0 0 1 0 .644 9.46 9.46 0 0 1-3.07 4.385M6.61 6.61C4.547 7.97 2.999 9.984 2.036 12.178a1 1 0 0 0 0 .644C3.423 16.988 7.36 19.5 12 19.5a9.46 9.46 0 0 0 5.39-1.61"
-                      stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+            <svg v-show="revealed" class="pwd-input__icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2.6 12s3.5-6.6 9.4-6.6S21.4 12 21.4 12s-3.5 6.6-9.4 6.6S2.6 12 2.6 12z" />
+                <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+                <path d="M4.4 4.4 19.6 19.6" />
             </svg>
         </button>
     </div>

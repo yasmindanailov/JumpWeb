@@ -509,10 +509,27 @@ class SidebarBundleBudgetTest extends TestCase
      * ▶ **No es un adorno**: sin ellas, en escritorio la única salida del paso de fecha era desplegar
      * el calendario, que es exactamente lo que la tira venía a evitar.
      *
-     * ▶ **257 deja 0,33 KiB**, la holgura más estrecha que ha tenido este techo. A propósito: lo
-     * siguiente que entre tendrá que justificarse o podar.
+     * ▶ **257 dejaba 0,33 KiB**, la holgura más estrecha que ha tenido este techo. A propósito: lo
+     * siguiente que entrara tendría que justificarse o podar.
+     *
+     * ▶ **260 (`#258`), y aquí está la justificación que el párrafo de arriba pedía.** El cajón pasa
+     * a pintar el set de iconos del artboard, y **una MASA pesa más que un TRAZO**: un icono de
+     * línea son dos o tres primitivas cortas (`<line>`, `<polyline>`), y su equivalente de masa es
+     * un `<path>` con el contorno entero recortado.
+     *
+     * Medido sobre este chunk, **257,00 → 259,64 kB (+2,64)**, y el reparto importa porque no es
+     * todo lo mismo:
+     *  · **+0,04** los catorce dibujos que ya existían y cambian de idioma, más los dos ojos.
+     *  · **+2,60** las CINCO ramas nuevas de `ProductIcon.vue` (`ticket` · `gift` · `pack` ·
+     *    `party` · `school-trip`), que son marcadores de catálogo que antes no se podían elegir.
+     *
+     * ⚠️ **La segunda mitad es capacidad nueva, no engorde**: sin esas ramas, un producto marcado
+     * con una de las claves nuevas se pintaría con el respaldo y nadie se enteraría —lo impide
+     * `ProductIconSingleSourceTest`, que exige una rama por clave ofrecida—.
+     * ⚠️ **Se sube a 260 y no a 265.** Queda **0,36 kB** de holgura, que es la misma estrechez que
+     * tenía antes: lo siguiente que entre vuelve a tener que justificarse o podar.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 257;
+    private const SIDEBAR_CHUNK_MAX_KB = 260;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

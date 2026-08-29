@@ -53,7 +53,13 @@ const anyMatch = computed(() => normalised.value === '' || props.sections.some((
 <template>
     <div class="catalog-acc">
         <div v-if="searchEnabled" class="catalog-search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg>
+            <!-- `search` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`).
+                 Era un dibujo PROPIO del cajón —declarado en `DRAWER_OWN`— porque no existía
+                 componente; desde `#257` sí existe (`ui/buscar`). -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" aria-hidden="true">
+                <circle cx="10.6" cy="10.6" r="6.4" />
+                <path d="M15.6 15.6 20 20" />
+            </svg>
             <input v-model="query" type="search" class="catalog-search__input"
                    :placeholder="t('catalog_search')" :aria-label="t('catalog_search')">
         </div>

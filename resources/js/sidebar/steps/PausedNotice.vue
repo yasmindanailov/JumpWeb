@@ -21,6 +21,16 @@ defineProps({
 
 <template>
     <div class="purchase__maint">
+        <!-- La tercera pegatina del artboard: AVISO. Aquí no hay error ni éxito — las reservas
+             están pausadas—, y era la otra pantalla del cajón que no enseñaba nada (`#258`).
+             `warning` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
+        <div class="purchase__party" aria-hidden="true">
+            <span class="state-badge state-badge--attn">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M10.6 4.4a1.6 1.6 0 0 1 2.8 0l8.4 14.6a1.6 1.6 0 0 1-1.4 2.4H3.6a1.6 1.6 0 0 1-1.4-2.4zM12 8.9a1.4 1.4 0 0 0-1.4 1.4v3.6a1.4 1.4 0 0 0 2.8 0v-3.6A1.4 1.4 0 0 0 12 8.9zm0 8.7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" />
+                </svg>
+            </span>
+        </div>
         <h3 class="wiz__title">{{ notice.title }}</h3>
         <p class="purchase__maint-body">{{ notice.message }}</p>
         <div class="purchase__maint-ctas">

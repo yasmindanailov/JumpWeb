@@ -40,21 +40,23 @@ class SidebarIconParityTest extends TestCase
     /**
      * Dibujos que son del CAJÓN y no del sistema de diseño, con el motivo de que no haya componente.
      *
-     * Los cuatro venían INLINE en el blade del motor retirado (`purchase.blade.php`) —comprobado uno
-     * a uno contra él—, no de `<x-icons.*>`, así que al borrarlo su única fuente pasó a ser el
-     * componente Vue. Se declaran para que la lista no tenga que mentir, y para que añadir uno nuevo
-     * sea una decisión consciente y no un descuido.
+     * ✅ **VACÍA desde `#257`, y ése era el objetivo.** Tenía cuatro —la lupa del buscador, la flecha
+     * del pie del carrito, la ⓘ del desglose y la tarjeta del CTA de pagar—, y el motivo de los
+     * cuatro era el mismo: **no existía componente**. Venían INLINE del blade del motor retirado
+     * (`purchase.blade.php`), así que al borrarlo su única fuente pasó a ser el componente Vue.
+     * El set del artboard cubre los cuatro (`ui/buscar` · `ui/flecha-der` · `ui/info` ·
+     * `pag/tarjeta`), de modo que la excepción se quedó sin razón de ser.
      *
-     * ⚠️ Van en forma CANÓNICA (atributos en orden alfabético), que es como los deja `canonical()`.
+     * ⚠️⚠️ **Que esté vacía es lo que hace fuerte al test de al lado**: con la lista llena, un
+     * dibujo huérfano podía «arreglarse» añadiéndolo aquí. Vacía, la única salida es que el cajón
+     * pinte lo que pinta el sistema de diseño.
+     *
+     * ▶ Si algún día vuelve a hacer falta una entrada, va con su motivo escrito y en forma CANÓNICA
+     * (atributos en orden alfabético), que es como los deja `canonical()`. **La lista solo encoge.**
      *
      * @var array<string, string>
      */
-    private const DRAWER_OWN = [
-        'lupa del buscador del catálogo' => '<circle cx="11" cy="11" r="7"/><line x1="21" x2="16.5" y1="21" y2="16.5"/>',
-        'flecha del pie del carrito' => '<line x1="4" x2="19" y1="12" y2="12"/><polyline points="13 6 19 12 13 18"/>',
-        'ⓘ del desglose de la señal' => '<circle cx="12" cy="12" r="9"/><line x1="12" x2="12" y1="11" y2="16"/><circle cx="12" cy="8" fill="currentColor" r="0.6"/>',
-        'tarjeta del CTA de pagar' => '<rect height="14" rx="2.5" width="20" x="2" y="5"/><line x1="2" x2="22" y1="10" y2="10"/>',
-    ];
+    private const DRAWER_OWN = [];
 
     public function test_no_icon_in_the_drawer_is_an_empty_shell(): void
     {
@@ -126,6 +128,34 @@ class SidebarIconParityTest extends TestCase
 
         $this->assertContains('sidebar/Sidebar.vue', $vistos, 'ha dejado de mirar la raíz del cajón');
         $this->assertContains('sidebar/steps/CatalogStep.vue', $vistos, 'ha dejado de mirar los pasos');
+
+        // ⚠️⚠️ **Y que un `<svg>` CITADO EN UN COMENTARIO no descarrile el escáner.** Es el fallo
+        // que `#258` encontró vivo: el docblock de `PasswordInput.vue` menciona «dos `<svg>`
+        // dentro», el recorrido arrancaba ahí, el `(.*?)` se comía hasta el primer `</svg>` real y
+        // **el primer icono no lo miraba nadie**. No fallaba —el trozo tragado contiene
+        // `<template>`, así que `geometries()` devolvía lista vacía— y así llevaba desde que se
+        // escribió el comentario. Al arreglarlo aparecieron TRES dibujos ciegos.
+        // ⚠️ **Contar los dibujos NO sirve, y se comprobó mutando**: con el escáner descarrilado
+        // salen igualmente DOS —la cita tragada cuenta como uno—. Lo que distingue el caso es que
+        // una cita es un `<svg>` PELADO: **todo icono de verdad declara su `viewBox`**, y ninguna
+        // mención en prosa lo hace.
+        $sinLienzo = array_values(array_filter(
+            array_map(
+                fn (array $svg): string => $svg[0].' → '.$svg[1],
+                $this->drawerSvgs(),
+            ),
+            fn (string $linea): bool => ! str_contains($linea, 'viewBox='),
+        ));
+
+        $this->assertSame([], $sinLienzo,
+            "El recorrido ha encontrado un «`<svg>`» SIN `viewBox`, y eso no es un icono: es una\n".
+            "MENCIÓN en un comentario.\n".
+            "▶ Pasó de verdad (`#258`): el docblock de `PasswordInput.vue` cita «dos `<svg>` dentro»\n".
+            "  en un comentario de JavaScript. El escáner arrancaba ahí, el `(.*?)` se comía hasta el\n".
+            "  primer `</svg>` real y **el icono de en medio no lo miraba nadie** — sin fallar,\n".
+            "  porque lo tragado lleva `<template>` dentro y la geometría salía vacía.\n".
+            '▶ Al arreglarlo aparecieron TRES dibujos que llevaban ciegos desde entonces.'
+        );
     }
 
     /**
@@ -173,7 +203,19 @@ class SidebarIconParityTest extends TestCase
             // ⚠️ Los comentarios van FUERA antes de buscar: varios docblocks del cajón citan
             // «`<svg>`» al explicar por qué el diff no desciende en él, y esa cita se colaba como si
             // fuera un icono (y no era XML válido, que es como se descubrió).
-            $fuente = preg_replace('/<!--.*?-->/s', '', (string) file_get_contents($fichero)) ?? '';
+            //
+            // ⚠️⚠️ **Y quitar solo los de HTML dejaba CIEGA a la guarda, medido el 2026-08-29**
+            // (`#258`). El docblock de `PasswordInput.vue` cita «dos `<svg>` dentro» en un comentario
+            // de **JavaScript**, que no es `<!-- -->`: el escáner arrancaba ahí, el `(.*?)` llegaba
+            // hasta el primer `</svg>` de verdad y se **tragaba entero el primer icono**. Y no
+            // fallaba, que es lo peor: ese trozo contiene `<template>`, así que `geometries()` se iba
+            // por la rama de las ramas, no encontraba ninguna cerrada y devolvía **una lista vacía**.
+            // ▶ Resultado: uno de los dibujos del cajón llevaba sin comprobarse desde que se escribió
+            // el docblock — el modo de fallo exacto de `DECISIONES #113`, dentro del fichero que
+            // existe para impedirlo. *Un gate que declara mirar N cosas y mira N−1 no avisa nunca.*
+            $fuente = (string) file_get_contents($fichero);
+            $fuente = preg_replace('/<!--.*?-->/s', '', $fuente) ?? $fuente;
+            $fuente = preg_replace('#/\*.*?\*/#s', '', $fuente) ?? $fuente;
             preg_match_all('/(<svg\b[^>]*>)(.*?)<\/svg>/s', $fuente, $m, PREG_SET_ORDER);
 
             foreach ($m as $svg) {

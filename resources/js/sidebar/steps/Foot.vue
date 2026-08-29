@@ -39,9 +39,10 @@ const open = ref(false);
                 <span class="cartbar__total">{{ footer.amount }}</span>
             </span>
             <span class="cartbar__go">{{ footer.cta }}
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="4" y1="12" x2="19" y2="12" />
-                    <polyline points="13 6 19 12 13 18" />
+                <!-- `arrow-right` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+                    <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
+                    <path d="M4.6 12h9.4" fill="none" />
                 </svg>
             </span>
         </button>
@@ -53,10 +54,11 @@ const open = ref(false);
                         <button type="button" class="bk-foot__info-btn" :aria-label="messages.deposit_info ?? ''"
                                 :aria-expanded="open ? 'true' : 'false'"
                                 @click="open = ! open">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="12" cy="12" r="9" />
-                                <line x1="12" y1="11" x2="12" y2="16" />
-                                <circle cx="12" cy="8" r="0.6" fill="currentColor" />
+                            <!-- `info` del sistema de diseño, copiado byte a byte
+                                 (`SidebarIconParityTest`). Era propio del cajón por no haber
+                                 componente; desde `#257` existe (`ui/info`). -->
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zm0 3.8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-1.5 5.4a1.5 1.5 0 0 1 3 0v5.2a1.5 1.5 0 0 1-3 0z" />
                             </svg>
                         </button>
                         <span v-show="open" class="bk-foot__pop">
@@ -68,20 +70,22 @@ const open = ref(false);
                 </span>
                 <button type="button" class="bk-cta" :disabled="footer.disabled" @click="$emit('action', footer.action)">
                     <span>{{ footer.cta }}</span>
-                    <!-- Mismo NODO para el icono de tarjeta y el de flecha: el diff no desciende dentro
-                         de un `<svg>`, así que lo que cambia es el dibujo, no el árbol.
-                         ⚠️ Por eso mismo el diff TAMPOCO ve si el dibujo falta: los `<template>` de
-                         dentro no crean nodo, y quien vigila que haya geometría es
-                         `SidebarIconParityTest` (4.7·2b·4). -->
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <template v-if="footer.icon === 'card'">
-                            <rect x="2" y="5" width="20" height="14" rx="2.5" />
-                            <line x1="2" y1="10" x2="22" y2="10" />
-                        </template>
-                        <template v-else>
-                            <line x1="4" y1="12" x2="19" y2="12" />
-                            <polyline points="13 6 19 12 13 18" />
-                        </template>
+                    <!-- ⚠️⚠️ **Dejan de ser un solo NODO con dos `<template>` dentro, y no es un
+                         capricho** (`#257`). Los dos dibujos son ahora los del set, y **no
+                         comparten pintura**: `card` es masa (`fill="currentColor"`, sin trazo) y
+                         `arrow-right` es masa MÁS un trazo de 3 que dibuja su asta. Con un solo
+                         `<svg>` habría que poner la unión de atributos, y entonces la tarjeta
+                         saldría con un borde de 3 px que no lleva.
+                         ▶ Sigue habiendo UN `<svg>` en el árbol servido —solo una rama se pinta—,
+                         así que el contrato de árbol ve lo mismo que antes.
+                         ⚠️ El diff no desciende dentro de un `<svg>`, así que tampoco ve si el
+                         dibujo falta: quien lo vigila es `SidebarIconParityTest` (4.7·2b·4). -->
+                    <svg v-if="footer.icon === 'card'" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.4 4.6h17.2a1.9 1.9 0 0 1 1.9 1.9v11a1.9 1.9 0 0 1-1.9 1.9H3.4a1.9 1.9 0 0 1-1.9-1.9v-11a1.9 1.9 0 0 1 1.9-1.9zm.1 4.2v2.4h17v-2.4zm2.1 5.8a1.4 1.4 0 0 0 0 2.8h4a1.4 1.4 0 0 0 0-2.8z" />
+                    </svg>
+                    <svg v-else viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+                        <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
+                        <path d="M4.6 12h9.4" fill="none" />
                     </svg>
                 </button>
             </div>

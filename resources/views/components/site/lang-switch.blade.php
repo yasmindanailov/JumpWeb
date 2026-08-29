@@ -28,9 +28,10 @@
             aria-haspopup="menu"
             aria-label="{{ __('landing.footer.language') }}">
         {{ \App\Domain\Platform\Services\SiteLocales::NAMES[app()->getLocale()] ?? strtoupper(app()->getLocale()) }}
-        <svg class="chev" width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-            <path d="M2 4l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        {{-- ⚠️ Era un chevron propio en lienzo 10×10 y trazo 1,6 — por debajo del mínimo del set.
+             Ahora sale del sistema; la clase `.chev` la sigue llevando porque es la que lo gira al
+             abrir (`.lang-dd--open .chev`). --}}
+        <x-icons.chevron-down class="chev" :width="10" :height="10" />
     </button>
     <div class="lang-dd__panel" role="menu">
         @foreach (\App\Domain\Platform\Services\SiteLocales::SUPPORTED as $l)

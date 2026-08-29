@@ -30,7 +30,11 @@ const props = defineProps({
 });
 
 /** Las que este registro sabe dibujar. Espejo de `Booking\Services\ProductIcon::CHOICES`. */
-const KNOWN = ['ic-b1', 'ic-b7', 'ic-e2', 'ic-e5', 'socks', 'ticket-tear-off'];
+const KNOWN = [
+    'ic-b1', 'ic-b7', 'ic-e2', 'ic-e5', 'socks', 'ticket-tear-off',
+    // Los cinco del set del artboard (`#258`). Ver el bloque de plantilla para el porqué.
+    'ticket', 'gift', 'pack', 'party', 'school-trip',
+];
 
 /**
  * ⚠️ La clave se NORMALIZA aquí y la plantilla no lleva `v-else` genérico, a propósito. Con un
@@ -112,6 +116,50 @@ const key = computed(() => (KNOWN.includes(props.icon) ? props.icon : 'ticket-te
                 <circle class="grip g5" cx="30.2" cy="27.9" r="0.95" />
                 <circle class="grip g6" cx="32.8" cy="27.4" r="0.95" />
             </g>
+        </svg>
+    </span>
+
+    <!-- ══ LOS CINCO DEL SET DEL ARTBOARD (`#258`) ══════════════════════════════════════════════
+         Los seis de arriba son ILUSTRACIONES en su propia escala (40×40 · 50×32 · 60×36) y siguen
+         ofreciéndose: son el aspecto que el catálogo ya tiene, y **retirarlos degradaría en silencio
+         cada producto que los tenga guardados en `ticket_types.icon`** — `forProduct()` trata una
+         clave desconocida como ausente. Estos cinco entran AL LADO, en la rejilla de 24 del set.
+         ⚠️ `pack`, `party` y `school-trip` salen del LOTE 2 del artboard, que el cliente dibujó y
+         nunca cerró; la variante la elige su propio texto (ver cada componente Blade). -->
+    <span v-else-if="key === 'ticket'" class="prod-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z" />
+        </svg>
+    </span>
+
+    <span v-else-if="key === 'gift'" class="prod-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.4 9.2h17.2v3.4h-1.2v7.2a1.8 1.8 0 0 1-1.8 1.8H6.4a1.8 1.8 0 0 1-1.8-1.8v-7.2H3.4zm7 3.4v6.6h3.2v-6.6z" />
+            <circle cx="8.9" cy="5.6" r="2.8" />
+            <circle cx="15.1" cy="5.6" r="2.8" />
+        </svg>
+    </span>
+
+    <span v-else-if="key === 'pack'" class="prod-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4 6.4h2.9a1.5 1.5 0 0 0 3 0h3.4a1.5 1.5 0 0 0 3 0h2.9A2.4 2.4 0 0 1 22 8.8v6.4a2.4 2.4 0 0 1-2.4 2.4h-2.9a1.5 1.5 0 0 0-3 0h-3.4a1.5 1.5 0 0 0-3 0H4.4A2.4 2.4 0 0 1 2 15.2V8.8a2.4 2.4 0 0 1 2.4-2.4zM8.8 9.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm6.4-4.2a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6z" />
+        </svg>
+    </span>
+
+    <span v-else-if="key === 'party'" class="prod-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round">
+            <path d="M2.6 7.2q9.4 3 18.8 0" fill="none" stroke-width="3" stroke-linecap="round" />
+            <path d="M3.4 9.4h4L5.4 14z" />
+            <path d="M10 10.2h4l-2 4.6z" />
+            <path d="M16.6 9.4h4L18.6 14z" />
+        </svg>
+    </span>
+
+    <span v-else-if="key === 'school-trip'" class="prod-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.6 3.8h12.8a3 3 0 0 1 3 3v8.4a3 3 0 0 1-3 3H5.6a3 3 0 0 1-3-3V6.8a3 3 0 0 1 3-3zm1.2 3.4a1.3 1.3 0 0 0-1.3 1.3v2.2a1.3 1.3 0 0 0 1.3 1.3h10.4a1.3 1.3 0 0 0 1.3-1.3V8.5a1.3 1.3 0 0 0-1.3-1.3z" />
+            <circle cx="7.6" cy="19.4" r="2.4" />
+            <circle cx="16.4" cy="19.4" r="2.4" />
         </svg>
     </span>
 

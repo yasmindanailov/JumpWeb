@@ -467,7 +467,7 @@
                         <button type="button" class="faq__q"
                                 @click="faqOpen = faqOpen==={{ $i }} ? -1 : {{ $i }}"
                                 :aria-expanded="faqOpen==={{ $i }} ? 'true' : 'false'"
-                                aria-controls="faq-answer-{{ $i }}">{{ $faq->tr('question') }}<span class="ico" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg></span></button>
+                                aria-controls="faq-answer-{{ $i }}">{{ $faq->tr('question') }}<span class="ico" aria-hidden="true"><x-icons.plus :width="14" :height="14" /></span></button>
                         <div class="faq__a" id="faq-answer-{{ $i }}">{{ $faq->tr('answer') }}</div>
                     </div>
                 @endforeach
@@ -531,7 +531,10 @@
                     @click="juega()"
                     :aria-label="@js(__('landing.game.aria'))">
                 <span class="salta__invita-ico" aria-hidden="true">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8.4 5.2 19 12 8.4 18.8z"/></svg>
+                    {{-- ⚠️ Era este MISMO dibujo escrito en línea: `ui/play` del artboard, letra
+                         por letra. Al set porque un dibujo suelto en el marcado no lo puede
+                         sustituir un cliente (`landing-white-label.md` §4.5). --}}
+                    <x-icons.play :width="11" :height="11" />
                 </span>
                 <span class="salta__invita-t" x-text="tactil ? @js(__('landing.game.play_touch')) : @js(__('landing.game.play'))"></span>
                 <span class="salta__rec" x-show="record > 0" x-text="@js(__('landing.game.rec', ['m' => '§'])).replace('§', record)"></span>

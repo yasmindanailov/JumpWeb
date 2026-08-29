@@ -49,19 +49,17 @@ const t = (key) => translate(props.messages, key);
 
 <template>
     <div class="purchase__confirm purchase__done" role="status">
+        <!-- ⚠️⚠️ **La PEGATINA DE ÉXITO sustituye al confeti** (`#258`, §04 del artboard: «Éxito ·
+             reserva creada, pago correcto · Verde Salta»). El confeti marcaba lo mismo, así que
+             tenerlos los dos rompía la regla que el propio artboard escribe: «la pegatina de estado
+             nunca convive con otra en la misma pantalla».
+             ▶ La celebración NO se pierde: `celebrate()` sigue lanzando el confeti a pantalla
+             completa al confirmar (`app.js`), que es donde el gesto se nota.
+             `check` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
         <div class="purchase__party" aria-hidden="true">
-            <span class="icon ic-b7" aria-hidden="true">
-                <svg viewBox="0 0 40 40" width="56" height="56">
-                    <g class="pop">
-                        <path d="M 8 32 L 14.5 15.5 L 27.5 24.5 Z" />
-                        <path d="M 10.6 25.4 L 15.8 29" class="thin" />
-                        <path d="M 12.55 20.45 L 21.65 26.75" class="thin" />
-                    </g>
-                    <rect class="c1 accent-fill" x="26.5" y="9" width="2.4" height="2.4" rx="0.7" />
-                    <rect class="c2 filled" x="32.5" y="13.5" width="2" height="2" rx="0.6" />
-                    <circle class="c3 accent-fill" cx="30.5" cy="5.5" r="1.2" />
-                    <path d="M 22 13.5 L 25 10.5" class="thin" />
-                    <path d="M 27.5 19 L 31.5 17" class="thin" />
+            <span class="state-badge state-badge--ok">
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z" />
                 </svg>
             </span>
         </div>

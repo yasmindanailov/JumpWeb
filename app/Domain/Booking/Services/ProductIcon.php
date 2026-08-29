@@ -34,7 +34,18 @@ final class ProductIcon
      *
      * @var list<string>
      */
-    public const CHOICES = ['ic-b1', 'ic-b7', 'ic-e2', 'ic-e5', 'ticket-tear-off', 'socks'];
+    public const CHOICES = [
+        // Los seis originales: ILUSTRACIONES en su propia escala (40×40 · 50×32 · 60×36).
+        'ic-b1', 'ic-b7', 'ic-e2', 'ic-e5', 'ticket-tear-off', 'socks',
+        // ── Los cinco del set del artboard (`#258`), en la rejilla de 24 ────────────────────────
+        // ⚠️⚠️ **Se AÑADEN, no sustituyen, y el motivo es de datos**: `forProduct()` trata una clave
+        // desconocida como ausente, así que retirar una de las seis de arriba **degradaría en
+        // silencio** todo producto que la tuviera guardada en `ticket_types.icon` — pasaría a la
+        // tarta o al ticket sin que nadie lo pidiera ni se enterara.
+        // ⚠️ `pack`, `party` y `school-trip` salen del LOTE 2 del artboard, que el cliente dibujó y
+        // **nunca cerró**; la variante la elige su propio texto, no nosotros (ver cada componente).
+        'ticket', 'gift', 'pack', 'party', 'school-trip',
+    ];
 
     /** El de un pack cuando no ha elegido: la tarta. Es el aspecto que el catálogo ya tenía. */
     public const DEFAULT_PACK = 'ic-b1';

@@ -2573,6 +2573,45 @@ body[data-has-hero].nav--live .hero__pair-slot {
 /* ====================================================================
    Confirmación de la reserva (Capa 4): resumen + celebración.
    ==================================================================== */
+/* ══ LA PEGATINA DE ESTADO (`#258`, §04 del artboard `Iconos PJP`) ═══════════════════════════
+   ⚠️⚠️ **Es el ÚNICO sitio donde un icono lleva COLOR PROPIO**, y el artboard lo dice con esas
+   palabras: «los cuatro estados no son señalética, son noticia». En todo lo demás el glifo hereda
+   `currentColor` del texto que acompaña; aquí el color ES la información.
+
+   Su forma sale medida de su propio artboard, no a ojo: **círculo** (`border-radius: 999px`),
+   **2 px de keyline de tinta**, **sombra dura de 5** y **mínimo 40 px** — por debajo, dice §06, «la
+   pegatina se convierte en una mancha».
+
+   ▶ **El relleno entra por los tokens SEMÁNTICOS del producto**, no por un color tecleado: el
+   paquete del 2.º cliente ya mapea `--ok`, `--err` y `--attn` a sus tres colores de estado
+   (`#5FA82E` · `#D93E14` · `#F5C400`), así que la pegatina sale con SU paleta sin una línea suya.
+   ▶ **La sombra entra por ROL** (`--shadow-float`, «flota sobre el contenido»): en el producto es
+   difusa y en su paquete vale `5px 5px 0`, que es exactamente la dura del artboard. Ese es el
+   mecanismo de `#196`/§13 haciendo su trabajo; tecleando `5px 5px 0` aquí se lo quitaríamos.
+   ⚠️ **La tinta es `--paper-fg` y no `--fg`**: la pegatina puede vivir dentro del cajón o sobre el
+   hero, donde `--fg` vale CLARO — y el glifo tiene que seguir siendo oscuro sobre el color vivo.
+   ⚠️ **El tamaño se pide, no se hereda**: `--state-size` con suelo de 40 para que nadie la baje por
+   debajo del mínimo desde una regla de fuera. */
+.state-badge {
+    display: inline-grid; place-items: center; flex: none;
+    width: max(40px, var(--state-size, 56px));
+    height: max(40px, var(--state-size, 56px));
+    border-radius: var(--r-pill);
+    background: var(--state-fill, var(--ok));
+    border: 2px solid var(--paper-fg);
+    box-shadow: var(--shadow-float);
+    color: var(--paper-fg);
+}
+/* El glifo ocupa poco más de la mitad: es lo que deja aire entre el dibujo y el keyline. */
+.state-badge svg { width: 54%; height: 54%; display: block; }
+.state-badge--ok   { --state-fill: var(--ok); }
+.state-badge--err  { --state-fill: var(--err); }
+.state-badge--attn { --state-fill: var(--attn); }
+/* «Cargando» es el cuarto estado del artboard. Su anillo lo pinta el spinner del producto, que ya
+   es sustituible por instalación (`UI-SPINNER.md`): duplicarlo aquí como icono quieto sería tener
+   dos dibujos de lo mismo, y el del artboard además nace para GIRAR (lote de microanimación). */
+.state-badge--wait { --state-fill: var(--zone-1); }
+
 .purchase__done { text-align: center; }
 .purchase__done .wiz__title { text-align: center; }
 .purchase__party { font-size: 40px; line-height: 1; margin-bottom: 4px; }

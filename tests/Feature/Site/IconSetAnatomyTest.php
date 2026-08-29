@@ -56,7 +56,23 @@ class IconSetAnatomyTest extends TestCase
      *
      * @var list<string>
      */
-    private const TRAZO_FINO_HEREDADO = ['devices', 'cookie', 'chevron-down'];
+    private const TRAZO_FINO_HEREDADO = ['devices', 'cookie'];
+
+    /**
+     * **Dibujos del ARTBOARD que se saltan su propio §06, con el valor MEDIDO.**
+     *
+     * `booking` (`ui/reserva` 1d) trae el check a **2,9** — una décima por debajo del mínimo que su
+     * propia sección de reglas fija. No se le corrige el dibujo: el encargo es 1:1 y redondear a 3
+     * un trazado del cliente es exactamente el tipo de «mejora» que luego nadie sabe explicar.
+     *
+     * ⚠️⚠️ **La excepción lleva el NÚMERO, no el nombre a secas**, y esa es la diferencia con una
+     * lista de exentos: tolera *ese* valor y nada más. Si alguien baja ese trazo a 1,5, la guarda
+     * vuelve a morder. Es la misma idea que «las listas de excepción solo encogen», aplicada al
+     * valor en vez de al sujeto.
+     *
+     * @var array<string, float>
+     */
+    private const HILO_DEL_ARTBOARD = ['booking' => 2.9];
 
     /**
      * **La guarda de la guarda: que el recorrido VEA el set entero.**
@@ -161,9 +177,16 @@ class IconSetAnatomyTest extends TestCase
             foreach ($this->etiquetasSinRelleno($svg) as $etiqueta) {
                 $grosor = $this->grosorEfectivo($etiqueta, $svg);
 
-                if ($grosor !== null && $grosor < 3.0) {
-                    $finos[] = $nombre.' → '.$grosor;
+                if ($grosor === null || $grosor >= 3.0) {
+                    continue;
                 }
+
+                // La excepción del artboard vale SOLO para su valor medido; cualquier otro muerde.
+                if ((self::HILO_DEL_ARTBOARD[$nombre] ?? null) === $grosor) {
+                    continue;
+                }
+
+                $finos[] = $nombre.' → '.$grosor;
             }
         }
 
