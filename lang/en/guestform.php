@@ -12,6 +12,7 @@ return [
     'regime_unknown' => 'Age out of range',
     'mixed_title' => 'Mixed party',
     'mixed_line' => ':count guest(s) belong to ":target" (:target_price per guest) rather than ":booked" (:booked_price).',
+    'mixed_line_written' => ':count guest(s) belong to “:target”: :unit more per guest.',
     'mixed_surcharge' => 'That adds a :amount supplement, payable at the park on the day of the party.',
     'mixed_savings' => 'That would make your party :amount cheaper. It is not discounted automatically: mention it at reception on the day.',
     'mixed_no_difference' => 'There is no price difference between the two: nothing extra to pay for this.',

@@ -15,6 +15,7 @@ return [
     'regime_unknown' => 'Edad fuera de tramo',
     'mixed_title' => 'Fiesta mixta',
     'mixed_line' => 'A :count invitado(s) les corresponde «:target» (:target_price por invitado) en vez de «:booked» (:booked_price).',
+    'mixed_line_written' => 'A :count invitado(s) les corresponde «:target»: :unit más por invitado.',
     'mixed_surcharge' => 'Por eso se abona un suplemento de :amount en el parque, el día de la fiesta.',
     'mixed_savings' => 'Por eso tu fiesta saldría :amount más barata. No se descuenta automáticamente: coméntalo en recepción el día de la fiesta.',
     'mixed_no_difference' => 'No hay diferencia de precio entre los dos: no tienes nada que abonar por este motivo.',

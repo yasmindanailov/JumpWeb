@@ -405,16 +405,126 @@ class MixedPartySurchargeTest extends TestCase
         $this->assertSame(700, $this->financials($item->fresh())->aCobrarPuerta);
     }
 
+    // ─── El RECIBO: lo escrito deja de seguir al catálogo (§12.2) ────────────────
+
     public function test_the_written_amount_survives_a_catalogue_price_change(): void
     {
+        // ⚠️⚠️ **Este caso nació CIEGO y es la lección más cara de la revisión.** Aseveraba el
+        // importe JUSTO DESPUÉS de subir el precio, sin volver a guardar — y ahí no había nada que
+        // probar, porque nada dispara una reconciliación. El defecto vivía en el guardado
+        // SIGUIENTE: el reconciliador re-derivaba del catálogo de hoy, así que el cliente
+        // corrigiendo un NOMBRE se llevaba su cargo de 7,00 € a 12,00 €. La guarda pasaba en verde
+        // con el fallo puesto y por eso llegó a `main`.
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
 
-        // El parque sube el precio de JUMP. `[DECIDIDO owner]`: lo escrito NO se recalcula — es lo
-        // que se le comunicó al cliente. El desfase se ENSEÑA, no se aplica.
+        // El parque sube el precio de JUMP: CONFIGURACIÓN, no hecho.
+        $this->jump->prices()->update(['amount_cents' => 3000]);
+        Notification::fake();
+        AuditLog::query()->delete();
+
+        // Y el cliente hace lo que ese formulario invita a hacer durante días: tocar un dato. Las
+        // edades no cambian; el hecho es el mismo.
+        $this->nextRequest();
+        $item = $this->declareAges($item, [4, 5, 8]);
+
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'lo escrito es lo que se le comunicó');
+        $this->assertSame(700, app(MixedPartySurcharge::class)->written($item)['cents']);
+        // Y si el importe no se mueve, tampoco hay nada que anunciarle ni que auditar.
+        Notification::assertNothingSent();
+        $this->assertSame(0, AuditLog::where('action', 'orders.mixed_party_surcharge_synced')->count());
+    }
+
+    public function test_a_guest_added_after_a_price_rise_pays_the_communicated_price(): void
+    {
+        // `[DECIDIDO owner, 2026-08-29]`, la única pregunta que el recibo abría: si el parque sube
+        // la tarifa y DESPUÉS el cliente declara otro invitado mayor, ese invitado entra al precio
+        // que se le comunicó. «14,00 €, no 24,00 €.»
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+
+        $this->jump->prices()->update(['amount_cents' => 3000]); // derivado de hoy: 12,00 € por cabeza
+
+        $this->nextRequest();
+        $item = $this->declareAges($item, [4, 9, 8]);
+
+        // 2 × 7,00 € (el unitario comunicado), no 2 × 12,00 €. La CANTIDAD sigue al hecho; el
+        // UNITARIO, al recibo.
+        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(2, (int) $this->surchargeLines($item)->first()->quantity);
+        $this->assertSame(700, (int) $this->surchargeLines($item)->first()->unit_price);
+    }
+
+    public function test_moving_the_reservation_to_another_day_does_reprice(): void
+    {
+        // El CONTROL de que el recibo no ha congelado de más: mover la reserva de día es un HECHO,
+        // y la diferencia sale del catálogo de ESE día — el mismo criterio que `PAY-18` aplica al
+        // precio de la propia reserva. Sin este caso, «no seguir al catálogo» podría implementarse
+        // congelándolo TODO y nada se pondría rojo.
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
         $this->jump->prices()->update(['amount_cents' => 3000]);
 
-        $this->assertSame(700, $this->financials($item->fresh())->aCobrarPuerta);
-        $this->assertSame(700, app(MixedPartySurcharge::class)->written($item->fresh())['cents']);
+        $otherDay = Slot::create([
+            'zone_id' => $this->zone->id, 'date' => now()->addDays(27)->toDateString(),
+            'start_time' => '11:00:00', 'end_time' => '13:00:00',
+            'capacity' => 200, 'online_capacity' => 200,
+        ]);
+
+        $this->nextRequest();
+        $staff = $this->staff();
+        $item = $item->fresh(['ticketType', 'slot', 'order']);
+        $outcome = app(OrderItemEditor::class)->changeSlot(
+            $item->order, $item, $otherDay->date->toDateString(), '11:00:00',
+            (string) $item->updated_at->getTimestamp(), null, $staff,
+        );
+        // ⚠️ La hora va con SEGUNDOS: `resolveSlotForItem` compara `start_time` por igualdad exacta,
+        // así que «11:00» no resuelve ninguna franja y el editor devuelve `invalid_slot_selection`.
+        $this->assertFalse($outcome->isBlocked(), 'bloqueado: '.json_encode($outcome));
+
+        // 30,00 − 18,00 = 12,00 €: el día nuevo se tarifica con el catálogo del día nuevo.
+        $this->assertSame(1200, app(MixedPartySurcharge::class)->written($item->fresh())['cents']);
+    }
+
+    public function test_the_receipt_records_the_two_facts_behind_the_price(): void
+    {
+        // La forma del recibo es contrato: `unitFor()` decide con estas dos claves si el unitario
+        // escrito manda o si hay que volver al catálogo. Si alguien renombra una, el importe
+        // dejaría de congelarse y NADA fallaría — se limitaría a seguir al catálogo otra vez.
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+
+        $mark = OrderAdjustment::where('order_id', $item->order_id)->get()
+            ->firstWhere(fn (OrderAdjustment $a) => is_array($a->context) && isset($a->context['mixed_party']))
+            ->context['mixed_party'];
+
+        $this->assertSame((int) $this->kids->id, $mark['booked_type_id'], 'bajo qué pack se reservó');
+        $this->assertSame($this->slot->date->toDateString(), $mark['priced_on'], 'con el catálogo de qué día');
+        $this->assertSame(700, $mark['unit_cents']);
+    }
+
+    public function test_a_line_written_before_the_receipt_is_sealed_without_moving_the_amount(): void
+    {
+        // Las líneas escritas antes de esta tanda no llevan recibo. Se heredan igual —preferir el
+        // catálogo de hoy para ellas movería justo el dinero que esto protege— y se sellan en su
+        // primera pasada, sin tocar un céntimo.
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+
+        $adjustment = OrderAdjustment::where('order_id', $item->order_id)->get()
+            ->firstWhere(fn (OrderAdjustment $a) => is_array($a->context) && isset($a->context['mixed_party']));
+        $legacy = $adjustment->context;
+        unset($legacy['mixed_party']['booked_type_id'], $legacy['mixed_party']['priced_on']);
+        $adjustment->forceFill(['context' => $legacy])->save();
+
+        $this->jump->prices()->update(['amount_cents' => 3000]);
+
+        $this->nextRequest();
+        $item = $this->declareAges($item, [4, 5, 8]);
+
+        $this->assertSame(700, app(MixedPartySurcharge::class)->written($item)['cents'], 'sin recibo también se hereda');
+        $this->assertSame(
+            (int) $this->kids->id,
+            $adjustment->fresh()->context['mixed_party']['booked_type_id'],
+            'y queda sellada para la próxima',
+        );
     }
 
     // ─── Una AUSENCIA no es una CORRECCIÓN (§12.2.bis) ───────────────────────────

@@ -521,11 +521,32 @@ class GuestFormTest extends TestCase
             ->assertSee(__('guestform.mixed_title'))
             // ⚠️ La ARITMÉTICA, no solo el importe: sin decir qué pack le toca y a qué precio, el
             // cliente recibe una cifra sin origen (`[owner, 2026-08-29]`, §14).
-            ->assertSee(__('guestform.mixed_line', [
-                'count' => 1, 'target' => 'Cumpleaños Jump', 'target_price' => '25,00 €',
-                'booked' => 'Cumpleaños Kids', 'booked_price' => '18,00 €',
+            // ⚠️ Con cargo escrito la frase sale de lo ESCRITO, no del catálogo de hoy: es la
+            // diferencia que se le comunicó, por invitado.
+            ->assertSee(__('guestform.mixed_line_written', [
+                'count' => 1, 'target' => 'Cumpleaños Jump', 'unit' => '7,00 €',
             ]))
             ->assertSee(__('guestform.mixed_surcharge', ['amount' => '7,00 €']));
+    }
+
+    public function test_the_client_reads_the_price_that_was_communicated_to_him(): void
+    {
+        // ⚠️⚠️ Antes, la explicación se componía con los precios de HOY y el importe con lo ESCRITO,
+        // así que una subida de tarifa las hacía contradecirse: «te corresponde Jump a 30,00 € en
+        // vez de Kids a 18,00 €» encima de un suplemento de 7,00 €. El cliente que hiciera la resta
+        // tendría razón, y con razón desconfiaría del importe.
+        $reservation = $this->mixedFamilyReservation([4, 8]);
+        TicketType::where('name->es', 'Cumpleaños Jump')->first()->prices()->update(['amount_cents' => 3000]);
+
+        $this->actingAs($reservation->order->user)
+            ->get(route('reservation.guests', $reservation))
+            ->assertOk()
+            ->assertSee(__('guestform.mixed_line_written', [
+                'count' => 1, 'target' => 'Cumpleaños Jump', 'unit' => '7,00 €',
+            ]))
+            ->assertSee(__('guestform.mixed_surcharge', ['amount' => '7,00 €']))
+            // Y ni rastro del precio de hoy, que no es el suyo.
+            ->assertDontSee('30,00 €');
     }
 
     public function test_the_form_explains_the_cheaper_direction_without_promising_a_refund(): void

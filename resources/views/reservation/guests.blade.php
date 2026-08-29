@@ -84,7 +84,31 @@
                      con dinero de por medio, y eso dejaba al cliente viendo una etiqueta «MIXTA» en
                      su pedido sin una línea que la explicara — medido sobre un pedido real.
                      ⚠️ El IMPORTE sale de lo ESCRITO en su pedido; la EXPLICACIÓN, del veredicto. --}}
-                @if ($ageMix->mixed)
+                @if ($ageSurcharge['cents'] > 0)
+                    {{-- ⚠️⚠️ **Con cargo escrito, TODO sale de lo escrito**, también la explicación.
+                         Componerla con los precios de hoy la hacía contradecir al importe en cuanto
+                         el parque retocaba una tarifa —«Jump a 30,00 € en vez de Kids a 18,00 €»
+                         encima de un suplemento de 7,00 €—, y el cliente que hiciera la resta
+                         tendría razón. Se pinta aunque el veredicto ya no se pueda derivar (alguien
+                         retiró la familia): mientras lo deba, tiene derecho a leer por qué. --}}
+                    <div class="gf-mix" role="status">
+                        <p class="gf-mix__title">{{ __('guestform.mixed_title') }}</p>
+                        @foreach ($ageSurcharge['lines'] as $line)
+                            <p class="gf-mix__text">
+                                {{ __('guestform.mixed_line_written', [
+                                    'count' => $line['count'],
+                                    'target' => $line['name'],
+                                    'unit' => \App\Domain\Platform\Services\Money::format($line['unit']),
+                                ]) }}
+                            </p>
+                        @endforeach
+                        <p class="gf-mix__text">
+                            {{ __('guestform.mixed_surcharge', ['amount' => \App\Domain\Platform\Services\Money::format($ageSurcharge['cents'])]) }}
+                        </p>
+                    </div>
+                @elseif ($ageMix->mixed)
+                    {{-- Sin cargo no hay nada comunicado que respetar, así que manda el veredicto de
+                         hoy: es información, no una deuda. --}}
                     <div class="gf-mix" role="status">
                         <p class="gf-mix__title">{{ __('guestform.mixed_title') }}</p>
                         @foreach ($ageMix->upgrades as $up)
@@ -99,9 +123,7 @@
                             </p>
                         @endforeach
                         <p class="gf-mix__text">
-                            @if ($ageSurcharge['cents'] > 0)
-                                {{ __('guestform.mixed_surcharge', ['amount' => \App\Domain\Platform\Services\Money::format($ageSurcharge['cents'])]) }}
-                            @elseif ($ageMix->hasSavings())
+                            @if ($ageMix->hasSavings())
                                 {{-- `[owner]`: se AVISA de que saldría más barata, no se descuenta solo. --}}
                                 {{ __('guestform.mixed_savings', ['amount' => \App\Domain\Platform\Services\Money::format($ageMix->savingsCents)]) }}
                             @else

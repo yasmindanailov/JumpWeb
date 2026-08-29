@@ -12,6 +12,7 @@ return [
     'regime_unknown' => 'Âge hors tranche',
     'mixed_title' => 'Fête mixte',
     'mixed_line' => ':count invité(s) relèvent de « :target » (:target_price par invité) et non de « :booked » (:booked_price).',
+    'mixed_line_written' => ':count invité(s) relèvent de « :target » : :unit de plus par invité.',
     'mixed_surcharge' => 'Un supplément de :amount est donc à régler au parc, le jour de la fête.',
     'mixed_savings' => 'Votre fête serait donc :amount moins chère. Ce n’est pas déduit automatiquement : signalez-le à l’accueil le jour de la fête.',
     'mixed_no_difference' => 'Il n’y a aucune différence de prix entre les deux : rien de plus à régler pour cette raison.',
