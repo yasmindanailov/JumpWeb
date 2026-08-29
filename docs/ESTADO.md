@@ -8,6 +8,19 @@
 > ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
 > la marquesina. Y `#253` — ocho puntos de la portada, DOS de ellos fallos.**
 >
+> ❗ **`#260` — DOS DETALLES DEL HERO, y los dos son el mismo fallo**: un número escrito suelto que
+> dejó de tener sentido cuando lo de al lado cambió de tamaño.
+> ⚠️ **El interruptor parecía un punto porque el pomo medía el 49 % de su pista** (75 sobre 152). Al
+> **77 %** y en claro sobre el verde ya lee como interruptor. ⚠️⚠️ Su relieve va con sombras
+> `inset` y **no con un rol de elevación**: el paquete del cliente declara `--shadow-lift: none` y
+> `--shadow-float: 5px 5px 0`, así que un rol **borraría** el relieve o **sacaría el pomo fuera de
+> la pista**. Un interruptor no flota: se hunde en su ranura.
+> ⚠️ **El icono del CTA no crecía con su botón**: en el hero el botón va a 74 px y el glifo se
+> quedaba en 22, dentro de un chip fijo de 30×26 — **dos literales**. Ahora salen de
+> `--cta-pair-h` con las proporciones que el armazón ya tenía (0,5556 y 0,7333): armazón 30/22, el
+> glifo **no se mueve**; hero 41/30. ⚠️ La talla del `<svg>` la manda el CSS: con `:width` en el
+> Blade había dos fuentes **y ganaba la del marcado**.
+>
 > ❗❗ **`#259` — EL CARGADOR ES «TRES BOTES», Y EL CATÁLOGO DEJA DE DEDUCIR SU DIBUJO.**
 > `[DECIDIDO owner]`. ▶ **1:1 verificado: 47 de 47 idénticos** byte a byte tras normalizar (43 del
 > set + 4 del LOTE 2), comparados con un guion contra el artboard.
@@ -1382,8 +1395,8 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3425 en verde** (22.554 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-29 tras `#259` (el cargador «Tres botes» y el catálogo). ▶ **Mismo número de casos y +24
+- Suite **3425 en verde** (22.558 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 tras `#260` (los dos detalles del hero). ▶ **Mismo número de casos y +24
   aserciones**: lo que entró no son tests nuevos sino guardas endurecidas —la paridad del cajón deja
   de estar ciega a un `<svg>` citado en un comentario, y la anatomía gana una excepción **con su
   valor medido** para el trazo de 2,9 que trae `booking` del artboard—.

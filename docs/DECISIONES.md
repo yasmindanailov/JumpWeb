@@ -14309,3 +14309,56 @@ guardas del spinner, 2 muerden (la tercera no era un invariante).
 la cabecera de sección.
 ⚠️ Y una guarda del spinner **se puso roja con el dibujo sano**: leía una lista `a, b { … }` como un
 único selector. Una lista de selectores son varios selectores.
+
+---
+
+## #260 · 2026-08-29 · [DECIDIDO owner] El interruptor del hero parecía un punto, y el icono del CTA no crecía con su botón
+
+Dos detalles del hero, los dos con la misma forma: **un número escrito suelto que dejó de tener
+sentido cuando lo de al lado cambió de tamaño.**
+
+### 1 · El interruptor: la causa era GEOMETRÍA, no color
+
+`[DECIDIDO owner]`: «hazlo más real ese toggle, profesional».
+
+Medido a 1440: la pista media **152 px y el pomo 75** — el **49 %**. En un interruptor de verdad el
+pomo llena su pista; al 49 % lo que se lee es una viñeta detrás del texto. Ahora va al **77 %**
+(119 sobre 155) con el mismo aire arriba, abajo y a la derecha, que es lo que lo hace verse SENTADO
+en su carril.
+
+▶ Y el pomo pasa a ser **claro sobre el verde**. En tinta era del mismo valor que las letras, así
+que se leía como puntuación: un pomo es una pieza distinta de su pista y eso se dice con el valor.
+
+⚠️⚠️ **El relieve va con sombras `inset`, y no es una preferencia**: una sombra de ELEVACIÓN aquí la
+decide el paquete del cliente, y el suyo declara `--shadow-lift: none` y
+`--shadow-float: 5px 5px 0`. La primera **borraría** el relieve y la segunda **sacaría el pomo
+fuera de la pista**. Un interruptor no flota sobre el contenido: se hunde en su ranura, así que no
+es ninguno de los tres roles. `ShapeScaleTest` exime a `inset` por ese mismo motivo, y los tintes
+salen de `color-mix` sobre tokens — ningún literal.
+
+⚠️ Todo sigue en `em`, así que escala con la coreografía del titular sin una media query: a 390 px
+el pomo mide 48 sobre 62, **el mismo 77 %**.
+
+### 2 · El icono del CTA: dos números en píxeles que nadie subió
+
+`[DECIDIDO owner]`: «el tamaño del icono depende del tamaño del botón».
+
+Medido: en el hero el botón crece a **74 px** con la coreografía (`--cta-pair-h`) y el icono se
+quedaba en **22**, dentro de un chip fijo de `30×26`. O sea, un dibujo de tamaño de barra dentro de
+un botón de tamaño de hero. En el armazón, a 54, la proporción era la correcta — **al agrandar el
+botón nadie agrandó lo de dentro porque eran dos literales**.
+
+▶ Ahora hay UNA fuente, `--cta-pair-h`, y las dos proporciones salen de los números que el armazón
+ya tenía: chip **0,5556** del botón (30 sobre 54) y glifo **0,7333** del chip (22 sobre 30).
+Resultado medido: armazón 30/22 —**el glifo no se mueve**— y hero **41/30**.
+
+⚠️ **La talla del `<svg>` la manda el CSS y no un atributo del Blade.** Con `:width` en la plantilla
+había dos fuentes para el mismo número **y ganaba la del marcado**, que es exactamente lo que dejó
+el icono a 22 px dentro de un botón de 74.
+⚠️ **Lo que sí cambia en el armazón es que el chip pasa a ser CUADRADO** (30×26 → 30×30): la caja
+apaisada venía de cuando el glifo era `ic-e2`, una ilustración de 50×32.
+
+### Lo verificado
+
+Suite **3425 / 22.558** · Pint ✓ · navegador a 1440 y 390 con **cero errores de JS**, midiendo las
+dos proporciones en los dos contextos (armazón y hero) para comprobar que el armazón no se movía.

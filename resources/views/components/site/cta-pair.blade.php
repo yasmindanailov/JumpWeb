@@ -73,7 +73,10 @@
              armazón el sujeto es «una entrada», y el set del artboard tiene su glifo: `ui/entrada`.
              ▶ Con él, el icono vuelve a ser UN SOLO COLOR —la regla del set— y las cuatro reglas de
              CSS que pintaban por separado la entrada de delante y su «occluder» dejan de existir. --}}
-        <span class="cta-med__ico"><x-icons.ticket :width="22" :height="22" /></span>
+        {{-- ⚠️ SIN talla: la pone el CSS a partir de la altura del botón (`--cta-ico`, `#260`).
+             Escribirla aquí sería una segunda fuente para el mismo número — y ganaría ésta, que es
+             justo lo que dejó el icono a 22 px dentro de un botón de 74. --}}
+        <span class="cta-med__ico"><x-icons.ticket /></span>
         <span class="cta-med__body">
             <span class="cta-med__t">{{ __('landing.nav.cta_buy') }}</span>
             @if (! empty($etiquetaPrecio))

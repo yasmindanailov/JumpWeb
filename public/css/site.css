@@ -3135,8 +3135,24 @@ body[data-has-hero].nav--live .hero__pair-slot {
 }
 .cta-med:hover { background: var(--zone-1); color: var(--on-brand); box-shadow: var(--shadow-nav-fill-lift); }
 .cta-med:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
+/* ⚠️⚠️ **El chip y su glifo SALEN DE LA ALTURA DEL BOTÓN, y antes no** (`#260`). Medido en el hero:
+   el botón crece a **74 px** con la coreografía (`--cta-pair-h`) y el icono se quedaba en **22**,
+   dentro de un chip fijo de 30×26 — o sea, un dibujo de tamaño de barra dentro de un botón de
+   tamaño de hero. En el armazón, a 54 px de alto, la proporción era la correcta; al agrandar el
+   botón nadie agrandó lo de dentro porque **eran dos números sueltos escritos en píxeles**.
+   ▶ Ahora hay UNA fuente: `--cta-pair-h`. Las dos proporciones salen de los números que el armazón
+   YA tenía —chip 30 sobre botón 54 = 0,5556; glifo 22 sobre chip 30 = 0,7333—, así que **en el
+   armazón el glifo no se mueve** (22 px exactos) y en el hero pasa de 22 a **30**.
+   ⚠️ **Lo que sí cambia en el armazón es que el chip pasa a ser CUADRADO**: 30×26 → 30×30, cuatro
+   píxeles más de alto. La caja apaisada venía de cuando el glifo era `ic-e2`, una ilustración de
+   50×32; con `ui/entrada`, que es cuadrado, dejaba el dibujo descentrado por arriba.
+   ⚠️ **La talla del `<svg>` la manda el CSS, no un atributo del Blade**: con `:width` en la
+   plantilla habría dos fuentes para el mismo número y la del marcado gana. */
+.cta-med {
+    --cta-ico: calc(var(--cta-pair-h, 54px) * 0.5556);
+}
 .cta-med__ico {
-    width: 30px; height: 26px;
+    width: var(--cta-ico); height: var(--cta-ico);
     /* El velo del chip sale del TEMA: sobre el botón de tinta rinde claro, y dentro del menú lo
        re-escopa la regla de superficie de abajo. Antes era `rgba(255,255,255,.10)`, un blanco
        crudo que ninguna instalación podía tocar (ficha de `DEUDA.md`, `#194`). */
@@ -3146,6 +3162,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
     flex-shrink: 0;
     transition: background var(--dur-sale) var(--ease-sale);
 }
+.cta-med__ico svg { width: calc(var(--cta-ico) * 0.7333); height: calc(var(--cta-ico) * 0.7333); }
 .cta-med__ico .tk { width: 28px; height: 18px; color: var(--bg); }
 .cta-med__ico .tk svg { width: 28px; height: 18px; }
 .cta-med:hover .cta-med__ico { background: color-mix(in srgb, var(--fg) 10%, transparent); }
@@ -5382,9 +5399,25 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    ⚠️ **Escala con el titular y no con la ventana**: todo va en `em`, así que el interruptor crece
    y encoge con la coreografía del hero (`#220`) sin una sola media query. Un tamaño en `px` aquí
    se quedaría quieto mientras el titular pasa de 124 a 48. */
+/* ⚠️⚠️ **REHECHO en `#260`: no parecía un interruptor, parecía un punto detrás del texto.** Y la
+   causa era GEOMETRÍA, no color: medido a 1440, la pista media **152 px y el pomo 75** — el 49 %—.
+   En un interruptor de verdad el pomo llena su pista: es lo único que distingue «encendido» de una
+   viñeta. Ahora va al **79 %**, con el mismo aire arriba, abajo y a la derecha, que es lo que hace
+   que se vea SENTADO en su carril y no pegado al canto.
+   ▶ Y el pomo pasa a ser CLARO sobre el verde. En ink era del mismo valor que las letras y por eso
+   se leía como puntuación; un pomo es una pieza distinta de su pista, y eso se dice con el valor.
+
+   ⚠️ **El relieve va con sombras `inset` y no con un rol de elevación, a propósito.** Una elevación
+   aquí la decide el paquete del cliente, y el suyo dice `--shadow-lift: none` y
+   `--shadow-float: 5px 5px 0`: la primera borraría el relieve y la segunda sacaría el pomo fuera
+   de la pista. Un interruptor no «flota sobre el contenido» — se hunde en su ranura—, así que no
+   es ninguno de los tres roles. `ShapeScaleTest` exime a `inset` por ese mismo motivo.
+   ⚠️ Los tintes salen de `color-mix` sobre tokens: ningún literal, así que la ranura sigue al tema. */
 .hero__switch {
-    display: inline-flex; align-items: center; gap: 0.26em;
-    padding: 0.1em 0.14em 0.1em 0.34em;
+    display: inline-flex; align-items: center; gap: 0.28em;
+    /* Aire IGUAL en los tres lados que rodean al pomo. El izquierdo es mayor porque ahí entra el
+       rótulo, no el pomo. */
+    padding: 0.11em 0.11em 0.11em 0.36em;
     border-radius: var(--r-pill);
     background: var(--ok);
     color: var(--paper-fg);
@@ -5393,16 +5426,22 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     /* El texto del titular lleva `-webkit-text-stroke` en otras variantes; aquí no, porque el
        contraste ya lo da la cápsula. */
     -webkit-text-stroke: 0;
+    /* La RANURA: sombra arriba y filo claro abajo. Es lo que hace que la pista se vea hundida y no
+       una pastilla pintada. */
+    box-shadow: inset 0 0.05em 0.1em color-mix(in srgb, var(--paper-fg) 32%, transparent),
+                inset 0 -0.035em 0.07em color-mix(in srgb, var(--paper-bg) 40%, transparent);
 }
 .hero__switch-t { display: block; padding-bottom: 0.06em; }
-/* El pomo: un círculo a la derecha, que es lo que dice «está en ON». Su tamaño sale del propio
-   texto para que no haya dos escalas conviviendo. */
+/* El pomo. Su tamaño sale del propio texto para que no haya dos escalas conviviendo, y llena la
+   pista: ésa es toda la diferencia entre un interruptor y un punto. */
 .hero__switch-knob {
     display: block; flex: none;
-    width: 0.62em; height: 0.62em;
+    width: 0.98em; height: 0.98em;
     border-radius: 50%;
-    background: var(--paper-fg);
-    box-shadow: var(--shadow-lift);
+    background: var(--paper-bg);
+    /* El volumen del pomo: luz arriba, sombra abajo. También `inset`, por lo dicho arriba. */
+    box-shadow: inset 0 0.07em 0.06em color-mix(in srgb, var(--paper-bg) 90%, transparent),
+                inset 0 -0.07em 0.09em color-mix(in srgb, var(--paper-fg) 26%, transparent);
 }
 
 /* ══ EL LOGOTIPO EN LÍNEA Y SU SALTO (`#254`) ══════════════════════════════════════════════════
