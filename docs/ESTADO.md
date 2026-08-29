@@ -8,6 +8,22 @@
 > ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
 > la marquesina. Y `#253` — ocho puntos de la portada, DOS de ellos fallos.**
 >
+> ❗❗❗ **`#262` — EL INTERRUPTOR DEL TITULAR YA NO ES DIBUJO PROPIO: ES EL `6d` DEL CANVAS.**
+> `[DECIDIDO owner]`: «tenemos ya el icono… **tráelo idéntico**». El canvas trajo un **LOTE 6** con
+> cuatro variantes; `6d` es la ANIMADA — «El salto, no el deslizamiento». Sustituye al interruptor
+> dibujado a mano de `#254`/`#261`, **así que la mitad de esas dos entradas que describe la cápsula
+> con relieve `inset` está CADUCADA** (la otra mitad, la del CTA, sigue vigente).
+> ⚠️⚠️ **«Idéntico» se CONSTRUYÓ, no se copió**: sus ocho medidas son múltiplos exactos de **1/16**,
+> así que en `em` sobre una sola unidad salen 1:1 *y* escalan. Medido en navegador: el bulbo va a
+> **19,00**, asienta en **16,40**, sale a **−2,40** — los tres números del artboard al dígito.
+> ⚠️⚠️ **La curva NO es la suya y está medido por qué**: se separan **0,50 px a la talla del hero**,
+> y estrenar una quinta curva por medio píxel deshace la tanda 2d. **El rebote de `6d` no vive en la
+> curva: vive en los FOTOGRAMAS.** ⚠️ La duración (3,4 s) SÍ es suya y entra como AMBIENTAL
+> (`--dur-switch`), porque el techo de la escala son 620 ms y esto no responde a un gesto.
+> ⚠️ **Colores por ROL**: su pista es Lima Bote, la nuestra `--ok`. ⚠️ Sin movimiento se congela en
+> **ON**, no en OFF. ⚠️ **La copia local del canvas sigue sin el LOTE 6**: `DesignSync` sin
+> autorización, `/design-consent` da 403 y el fichero llegó pegado con la codificación rota.
+>
 > ❗ **`#261` — EL INTERRUPTOR SE VA EN LÍNEA A LA DERECHA, y las dos mitades del CTA por fin miden
 > igual.** `[DECIDIDO owner]` con las tres colocaciones dibujadas: el titular pasa a UNA línea
 > —«DIVERSIÓN [ON]»— y el interruptor **se queda dentro del `<h1>`**, así que la frase se sigue
@@ -1411,11 +1427,17 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3425 en verde** (22.568 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-29 tras `#261` (el interruptor en línea y el par del CTA). ▶ **Mismo número de casos y +24
-  aserciones**: lo que entró no son tests nuevos sino guardas endurecidas —la paridad del cajón deja
-  de estar ciega a un `<svg>` citado en un comentario, y la anatomía gana una excepción **con su
-  valor medido** para el trazo de 2,9 que trae `booking` del artboard—.
+- Suite **3425 en verde** (22.602 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 tras `#262` (el interruptor del titular pasa a ser el `6d` del canvas). ▶ **Mismo
+  número de casos y +34 aserciones**: no entra ningún test nuevo — la escala de movimiento gana un
+  token ambiental (`--dur-switch`) y `MotionScaleTest` lo recorre en sus cuatro casos, que están
+  escritos sobre la lista y no sobre una cuenta fija.
+  ⚠️ **`#262` no trae guarda propia, y es una decisión**: el token y la curva los cubre
+  `MotionScaleTest`, el canto `ShapeScaleTest` y los colores `RawColourIsNotATokenTest`; lo único que
+  quedaría —las proporciones del `calc()`— **se rompería a la vista en la portada**, y la
+  verificación registrada es la MEDICIÓN en navegador (`tema-por-instalacion.md` §25.2 y §25.6),
+  que es más fuerte que aseverar el texto de una declaración (la lección de `#251`).
+- Antes, tras `#261` (el interruptor en línea y el par del CTA): **3425 / 22.568**.
   ⚠️ El techo del chunk del cajón sube **257 → 260**: +0,04 por los dibujos que cambian de idioma y
   **+2,60 por las cinco ramas nuevas** de `ProductIcon.vue`, que es capacidad, no engorde.
   ⚠️ El manifiesto del cajón se regeneró a propósito (6 entradas: las tres pantallas de desenlace).

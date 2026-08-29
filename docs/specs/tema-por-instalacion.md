@@ -2146,3 +2146,98 @@ cualquiera de los glifos de masa. Lo que daba de layout vive ahora en `.prod-ico
 
 **115 controles por debajo de 44 px en móvil** (63 enlaces, 25 botones, 1 casilla; solo cinco llevan
 icono). `[DECIDIDO owner]`: **tanda propia** — toca el pie, la FAQ, las cookies y el cierre.
+
+---
+
+## 25. EL INTERRUPTOR DEL TITULAR ES YA EL `6d` DEL CANVAS (`#262`, 2026-08-29)
+
+`[DECIDIDO owner]`: «tenemos ya el icono, vamos a usar el **6d** … **tráelo idéntico**».
+
+### 25.1 · Qué trajo el LOTE 6 (y qué NO está en la copia local)
+
+⚠️⚠️ **`mockup_playjumppark/Iconos PJP.dc.html` es la copia del 27-08 y NO tiene el LOTE 6.**
+`DesignSync` sigue sin autorización —`/design-consent` devolvió **403**, que su propio mensaje
+atribuye a la sesión de claude.ai— y el fichero llegó **pegado en el chat**. No se sobrescribió la
+copia local porque el pegado trae **la codificación rota en los acentos**, y meter mojibake en el
+activo lo corrompe. ▶ Para refrescarla de verdad: `/login` y después `/design-login`, o exportar el
+fichero al directorio.
+
+La sección `00 / TOGGLE ON · LOTE 6` trae cuatro piezas:
+
+| id | qué es | veredicto del artboard |
+|---|---|---|
+| `6a` | pista maciza con el bulbo TROQUELADO | **el elegido** como `ui/toggle-on` |
+| `6b` | pista hueca, bulbo macizo | *«sobra — invierte la lógica de relleno del set entero»* |
+| `6c` | la pareja on/off completa | el off obligatorio si el on se dibuja con masa |
+| `6d` | **la versión ANIMADA**, «El salto, no el deslizamiento» | lo que pide el owner |
+
+⚠️ `6d` **no es un glifo**: es una caja con borde y transición, no un `<svg>`. El propio artboard lo
+avisa en `6a` — *«como icono, no como control real: el interruptor de la interfaz se construye con
+caja y transición, no con un glifo»*. Por eso no entra en `resources/views/components/icons/` ni lo
+ve `SidebarIconParityTest`: vive en `site.css` como `.hero__switch-sw`.
+▶ **`6a`, `6b` y `6c` siguen sin traerse.** Solo harían falta si alguna pantalla necesita el
+interruptor como icono estático dentro de una fila de texto, y hoy ninguna lo hace.
+
+### 25.2 · «Idéntico» se construyó, no se copió
+
+Las ocho medidas del artboard —**44 · 26,4 · 3,6 · 2 · 15,2 · 16,4 · 19 · −2,4**— son **todas
+múltiplos exactos de 1/16**. Escritas en `em` sobre una sola unidad `--sw-u` salen idénticas *y*
+escalan con el titular: mover `--sw-u` mueve la pieza entera sin tocar una proporción.
+
+Medido en navegador (pista de 62,33 px → factor 44/62,33 = 0,7059): el bulbo va a **19,00**, se
+asienta en **16,40** y sale a **−2,40**. Los tres números del artboard al dígito.
+⚠️ El único desvío es el **borde**: `calc()` pide 5,0996 px y el navegador **encaja los bordes en
+píxeles enteros**, así que pinta 5 (0,080221 de ratio contra 0,081818). Son 0,1 px y no es la
+fórmula: es cómo se pintan los bordes.
+
+### 25.3 · ⚠️⚠️ La curva NO es la suya, y por qué es la decisión correcta
+
+| | curva | rebasamiento de pico |
+|---|---|---|
+| artboard `6d` | `cubic-bezier(.34, 1.4, .5, 1)` | 1,00 px |
+| nuestro `--ease-entra` | `cubic-bezier(.34, 1.56, .64, 1)` | 1,86 px |
+
+Invertidas por Newton y comparadas punto a punto: **0,86 px de separación máxima a la talla del
+artboard, 0,50 px a la del hero**.
+
+▶ **Estrenar una quinta curva por medio píxel deshace la tanda 2d** —§16: de 20 curvas a 4, con el
+90 % del movimiento de la web sin decidir por nadie—. Y `--ease-entra` está DEFINIDA como *«lo que
+APARECE: se pasa de largo y vuelve»*, que es literalmente la frase con la que el artboard describe
+`6d`. ⚠️ Lo decisivo: **el rebote de `6d` no vive en la curva, vive en los FOTOGRAMAS** (19 → 16,4),
+y ésos están copiados exactos. La curva solo interpola entre ellos.
+
+### 25.4 · La duración sí entra, como AMBIENTAL
+
+3,4 s no cabe en la escala (techo 620 ms) porque no responde a un gesto. Entra como **`--dur-switch`**
+en el bloque de ambientales, junto a `--dur-invite`, y en `TOKENS_AMBIENTALES` de `MotionScaleTest`.
+Es el mecanismo el que importa: una instalación lo calma cambiando un token, no un `@keyframes`.
+
+### 25.5 · ⚠️ Colores: roles, no los literales del artboard
+
+Su tarjeta pinta la pista de **Lima Bote `#A3C21C`** porque es una pieza suelta sin texto al lado —su
+propia §02 exige *«currentColor, siempre»*—.
+
+- **encendido → `--ok`**. Lo fijó `#254` con `ActionFillTest` delante: *acción* es el control que
+  hace AVANZAR, *encendido* es un ESTADO. Lima Bote **sí tiene token** (`--strip-2`) pero su rol es
+  la tira del pie; usarlo aquí sería un rol prestado. `[PENDIENTE: owner]`: si prefiere el lima, es
+  una línea.
+- **apagado → `--fg-mute`**, no su `#5E666D`. Ese gris vive sobre una tarjeta `#1A1F25`; sobre el
+  vídeo del hero desaparecería. En tinta resuelve a `#9AA1A8`, que es el gris del propio cliente.
+- **bulbo encendido → `--paper-fg`**, la TINTA — **no `--fg`, que dentro del hero vale CLARO** (§13).
+  Resuelve a `#101418`: el literal exacto del artboard, por el camino correcto.
+
+### 25.6 · Sin movimiento se queda ENCENDIDO
+
+Con `prefers-reduced-motion` los dos bucles se retiran y la pieza se congela en ON. Verificado:
+pista `#5FA82E`, bulbo `#101418`, `translateX` 23,23 y **cero animaciones vivas**.
+⚠️ Congelarlo en OFF, al lado de un rótulo que dice «ON», sería un defecto **que no ve nadie** —casi
+nadie navega con esa preferencia—, y es justo el tipo de fallo mudo que este carril lleva cazando.
+
+### 25.7 · Sin guarda nueva, a propósito
+
+El set de escala ya lo cubre por tres lados: `MotionScaleTest` (el token y la curva),
+`ShapeScaleTest` (`--r-pill`, sin literales de canto) y `RawColourIsNotATokenTest` (cero literales
+de color). Lo que quedaría por vigilar —las proporciones del `calc()`— se rompería **a la vista, en
+la portada**, y `#251`/§19 ya dejó escrito que aseverar el texto literal de una declaración ata la
+guarda a una implementación. ▶ La verificación es la **medición en navegador** de §25.2 y §25.6, que
+es más fuerte que una aserción de texto y está registrada con sus números.

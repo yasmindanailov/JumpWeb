@@ -104,7 +104,7 @@
                      el dibujo va `aria-hidden` y lo que se lee es el texto del titular, tal cual.
                      ⚠️ El rótulo sale del idioma (`hero.l2`): el dibujo es del producto, la
                      palabra es de la instalación. --}}
-                <h1 class="hero__title hero__title--onvideo">{{ __('landing.hero.l1') }} <span class="hero__switch"><span class="hero__switch-t">{{ __('landing.hero.l2') }}</span><span class="hero__switch-knob" aria-hidden="true"></span></span></h1>
+                <h1 class="hero__title hero__title--onvideo">{{ __('landing.hero.l1') }} <span class="hero__switch"><span class="hero__switch-t">{{ __('landing.hero.l2') }}</span><span class="hero__switch-sw" aria-hidden="true"><span class="hero__switch-knob"></span></span></span></h1>
 
                 {{-- ⚠️⚠️ **EL CTA DEL HERO ES EL PAR DEL ARMAZÓN, y baja aquí** (`#254`,
                      `[DECIDIDO owner]`: «esos dos botones los quitamos y ponemos debajo el CTA que

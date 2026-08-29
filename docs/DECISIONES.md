@@ -14413,3 +14413,97 @@ ilustración apaisada de 40×24 y la regla cuadrada del set la habría aplastado
 
 Suite **3425 / 22.568** · navegador a 1440 y 390, midiendo las dos mitades **en los dos estados del
 relevo** (reposo e invertido) y el desfase óptico del interruptor con un `Range` sobre el texto.
+
+---
+
+## #262 · 2026-08-29 · [DECIDIDO owner] El interruptor del titular deja de ser dibujo propio: entra el `6d` del canvas
+
+`[DECIDIDO owner]`: «tenemos ya el icono, vamos a usar el **6d**. Revísalo y tráelo a la landing, y
+lo ponemos al lado del texto del hero. Es un icono con animación. **Tráelo idéntico**».
+
+El canvas trajo un **LOTE 6** entero (`Iconos PJP.dc.html`, sección `00 / TOGGLE ON · LOTE 6`) con
+cuatro variantes: `6a` masa con bulbo troquelado, `6b` pista hueca, `6c` la pareja on/off y **`6d`,
+la versión ANIMADA** — «El salto, no el deslizamiento». El propio artboard recomienda `6a` como
+glifo estático y descarta `6b`; `6d` no compite con ellos porque no es un glifo, es la coreografía.
+
+▶ Sustituye al interruptor **dibujado a mano** que `#254` estrenó y `#261` afinó en dos vueltas con
+el owner delante. Aquello era una cápsula con ranura y relieve `inset`; esto es la pieza del sistema.
+
+### 1 · Idéntico se demostró MIDIENDO, no mirando
+
+La geometría no se copió número a número: se reconstruyó. Las ocho medidas del artboard
+—**44 · 26,4 · 3,6 · 2 · 15,2 · 16,4 · 19 · −2,4**— son todas múltiplos exactos de 1/16, así que
+escritas en `em` sobre una única unidad `--sw-u` salen idénticas **y** escalan con el titular.
+
+**Medido en navegador** (pista renderizada de 62,33 px; factor 44/62,33 = 0,7059):
+
+| parada | nuestro `translateX` | ×0,7059 | artboard |
+|---|---|---|---|
+| 30 % (rebasa al entrar) | 26,91 px | **19,00** | 19 |
+| 38 %–82 % (asentado) | 23,23 px | **16,40** | 16,4 |
+| 92 % (rebasa al salir) | −3,40 px | **−2,40** | −2,4 |
+
+Y las proporciones: alto 0,5999 (artboard 0,6) · relleno 0,045455 (0,045455) · bulbo 0,345449
+(0,345455). ⚠️ El borde da 0,080221 contra 0,081818 y **no es un fallo de la fórmula**: `calc()`
+pide 5,0996 px y el navegador **encaja los bordes en píxeles enteros**, así que pinta 5. Es 0,1 px.
+
+### 2 · ⚠️⚠️ La CURVA no es la suya, y la decisión está medida
+
+El artboard usa `cubic-bezier(.34, 1.4, .5, 1)`; nuestro `--ease-entra` es `(.34, 1.56, .64, 1)`.
+Invertidas las dos por Newton —que es como las evalúa el navegador— y comparadas punto a punto:
+
+- separación **máxima 0,86 px** a la talla del artboard, **0,50 px** a la del hero;
+- rebasamiento de pico: **1,00 px el suyo, 1,86 px el nuestro**.
+
+▶ **No se estrena una quinta curva por medio píxel.** Deshacer lo que montó la tanda 2d —de 20
+curvas a 4, con el 90 % del movimiento de la web sin decidir por nadie— tiene un coste real, y
+`--ease-entra` está DEFINIDA como *«lo que APARECE: se pasa de largo y vuelve»*, que es literalmente
+la frase con la que el artboard describe este icono.
+⚠️ Y lo que más importa: **el rebote de `6d` no vive en la curva, vive en los FOTOGRAMAS** (el bulbo
+se va a 19 y se asienta en 16,4). Ésos sí están copiados al dígito, y son el 100 % del carácter.
+
+### 3 · La DURACIÓN sí es suya, y por eso lleva token
+
+3,4 s no cabe en la escala —cuyo techo es 620 ms (`--dur-salto`)— porque **no es la respuesta a un
+gesto**: es un bucle AMBIENTAL, la misma categoría que `--dur-invite`. Entra como `--dur-switch` en
+el bloque de ambientales de `site.css` y en `TOKENS_AMBIENTALES` de `MotionScaleTest`, para que una
+instalación pueda calmarlo sin reescribir un `@keyframes`.
+
+### 4 · ⚠️ Los colores son ROLES, no los literales del artboard
+
+Su tarjeta pinta la pista de **Lima Bote `#A3C21C`** porque es una pieza suelta sin texto al lado —su
+propia §02 exige «currentColor, siempre»—. Aquí:
+
+- **encendido → `--ok`**, que es lo que `#254` decidió con `ActionFillTest` delante: *acción* es el
+  control que hace AVANZAR y *encendido* es un ESTADO. (Lima Bote existe como token, `--strip-2`,
+  pero su ROL es la tira del pie; usarlo aquí sería un rol prestado.)
+- **apagado → `--fg-mute`** y no su `#5E666D`: ese gris vive sobre una tarjeta `#1A1F25`; sobre el
+  vídeo del hero desaparecería. En tinta resuelve a `#9AA1A8`, que es el gris del propio cliente.
+- **bulbo encendido → `--paper-fg`, la TINTA, y no `--fg`**, porque dentro del hero `--fg` vale
+  CLARO (`tema-por-instalacion.md` §13). Resuelve a `#101418`: **el literal exacto del artboard**.
+
+`[PENDIENTE: owner]` — si prefiere el lima del artboard en vez del verde, es **una línea**.
+
+### 5 · Sin movimiento se queda ENCENDIDO, no apagado
+
+Con `prefers-reduced-motion` los dos bucles se retiran y la pieza se congela en la posición ON.
+Verificado en navegador: pista `#5FA82E`, bulbo `#101418`, `translateX` 23,23 (la parada de
+encendido) y **cero animaciones vivas**. ⚠️ Un interruptor quieto en la posición contraria a su
+propia etiqueta —al lado dice «ON»— es un defecto, no una simplificación, y es de los que **no ve
+nadie**: casi nadie navega con esa preferencia puesta.
+
+### 6 · Lo que NO se toca
+
+El rótulo `hero.l2` («ON») **sigue siendo texto de la instalación** y sigue dentro del `<h1>`: el
+dibujo va `aria-hidden` y un lector de pantalla sigue leyendo «Diversión ON». Lo que se pierde es la
+cápsula verde que lo envolvía —era del interruptor de `#254`, no del rótulo—, así que la palabra
+queda como la etiqueta pequeña que ya era. A 390 px el titular envuelve y «ON [interruptor]» cae a
+su propia línea, centrado; sin desbordes en ninguno de los dos anchos.
+
+### 7 · ⚠️ La copia local del canvas SIGUE CADUCADA
+
+`mockup_playjumppark/Iconos PJP.dc.html` es la del **27-08 07:34** y **no tiene el LOTE 6**:
+`DesignSync` sigue sin autorización (`/design-consent` devolvió 403) y el fichero llegó **pegado en
+el chat**, con la codificación rota en los acentos. Por eso no se sobrescribió la copia local: meter
+un fichero con mojibake corrompería el activo. ▶ **Lo que se necesita del `6d` está transcrito
+aquí y en el comentario de `site.css`**, que son ASCII puro y por tanto fieles.

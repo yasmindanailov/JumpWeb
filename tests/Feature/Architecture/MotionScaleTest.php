@@ -47,6 +47,7 @@ class MotionScaleTest extends TestCase
      */
     private const TOKENS_AMBIENTALES = [
         '--dur-invite' => 'el latido que invita a descubrir el CTA doble (2c·7)',
+        '--dur-switch' => 'el ciclo del interruptor del titular del hero — `ui/toggle-on` · 6d (#262)',
     ];
 
     /**

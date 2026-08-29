@@ -141,6 +141,7 @@
        No son tiempos de respuesta a un gesto, así que no compiten con los siete de arriba. Cada
        uno tiene su token para que una instalación pueda calmarlos sin reescribir `@keyframes`. */
     --dur-invite: 4.6s;   /* el latido que invita a descubrir el CTA doble (2c·7) */
+    --dur-switch: 3.4s;   /* el ciclo del interruptor del titular. Es el número del artboard (6d) */
 }
 
 /* Los dos escalones del sangrado de columna. Son los cortes del mockup —1100 y 720—, que este
@@ -5409,81 +5410,110 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    cajón esa distancia deja el paginador fuera de la vista tras la última tarjeta. */
 .dep-page { margin-top: var(--sp-20); }
 
-/* ══ EL INTERRUPTOR DEL TITULAR DEL HERO (`#254`) ══════════════════════════════════════════════
-   `[DECIDIDO owner, 2026-08-29]`: «Diversión ON, y ese ON que sea un toggle que esté activado,
-   respetando el diseño».
+/* ══ EL INTERRUPTOR DEL TITULAR DEL HERO — `ui/toggle-on` · 6d (`#262`) ════════════════════════
+   `[DECIDIDO owner, 2026-08-29]`: «tenemos ya el icono, vamos a usar el 6d… tráelo idéntico».
+   El canvas trajo el LOTE 6 y con él la pieza oficial del sistema: `6d`, «El salto, no el
+   deslizamiento». Lo que había aquí era un interruptor DIBUJADO A MANO en dos vueltas con el
+   owner delante (`#261`); esto lo sustituye por el suyo.
 
-   ▶ **Es tipografía, no un control.** No hay nada que encender: el dibujo va `aria-hidden` y lo
-   que se lee sigue siendo el texto del `<h1>`. Poner aquí un `role="switch"` anunciaría a un
-   lector de pantalla un interruptor que no hace nada.
+   ▶ **La geometría es 1:1, y no por copiar números sino por CONSTRUCCIÓN**: las siete medidas del
+   artboard (44 · 26,4 · 3,6 · 2 · 15,2 · 16,4 · 19 · −2,4) son todas múltiplos exactos de 1/16,
+   así que escritas en `em` sobre `--sw-u` salen idénticas **y** escalan con el titular. Mover
+   `--sw-u` mueve la pieza entera sin tocar una sola proporción.
 
-   ⚠️⚠️ **El relleno es `--ok`, NO el rol de acción — y lo dijo una guarda.** El primer intento usó
-   `var(--action)` porque el naranja quedaba bien, y `ActionFillTest` lo rechazó con su propio
-   argumento: *acción es el control PRIMARIO que hace avanzar; una pegatina o una pestaña activa
-   también rellenan y no son acción*. Un interruptor decorativo es exactamente eso.
-   ▶ Y la respuesta ya estaba escrita en este mismo fichero: el chip de «Abierto ahora» del hero usa
-   **`--ok`, no el color de acción, porque es un ESTADO y no un botón** (hallazgo `C-04` de la
-   auditoría del cliente). «Encendido» es un estado. Mismo token, mismo motivo.
-   ⚠️ El rótulo y el pomo van en `--paper-fg`, la tinta que NO se invierte con la superficie: sobre
-   el verde se lee en las dos, y un blanco crudo es lo que `#143` sacó de esta hoja.
+   ⚠️⚠️ **La CURVA no es la suya, y está medido por qué.** El artboard usa
+   `cubic-bezier(.34, 1.4, .5, 1)`; nuestro `--ease-entra` es `(.34, 1.56, .64, 1)`. Invertidas las
+   dos por Newton y comparadas punto a punto, se separan **0,86 px a la talla del artboard y 0,50 px
+   a la del hero**. Estrenar una quinta curva por medio píxel deshace justo lo que montó la tanda
+   2d —de 20 curvas a 4, con el 90 % del movimiento sin decidir—, y `--ease-entra` está DEFINIDA
+   como «lo que APARECE: se pasa de largo y vuelve», que es literalmente la frase con la que el
+   artboard describe este icono. ▶ Además **el rebote de 6d no vive en la curva: vive en los
+   FOTOGRAMAS** —el bulbo se va a 19 y se asienta en 16,4—, y ésos sí están copiados al dígito.
 
-   ⚠️ **Escala con el titular y no con la ventana**: todo va en `em`, así que el interruptor crece
-   y encoge con la coreografía del hero (`#220`) sin una sola media query. Un tamaño en `px` aquí
-   se quedaría quieto mientras el titular pasa de 124 a 48. */
-/* ⚠️⚠️ **REHECHO en `#260`: no parecía un interruptor, parecía un punto detrás del texto.** Y la
-   causa era GEOMETRÍA, no color: medido a 1440, la pista media **152 px y el pomo 75** — el 49 %—.
-   En un interruptor de verdad el pomo llena su pista: es lo único que distingue «encendido» de una
-   viñeta. Ahora va al **79 %**, con el mismo aire arriba, abajo y a la derecha, que es lo que hace
-   que se vea SENTADO en su carril y no pegado al canto.
-   ▶ Y el pomo pasa a ser CLARO sobre el verde. En ink era del mismo valor que las letras y por eso
-   se leía como puntuación; un pomo es una pieza distinta de su pista, y eso se dice con el valor.
+   ⚠️ **La DURACIÓN sí es suya, y por eso lleva token propio** (`--dur-switch`). 3,4 s no cabe en la
+   escala, cuyo techo es 620 ms, porque no es la respuesta a un gesto: es un bucle AMBIENTAL, la
+   misma categoría que `--dur-invite`. Con token, una instalación lo calma sin tocar `@keyframes`.
 
-   ⚠️ **El relieve va con sombras `inset` y no con un rol de elevación, a propósito.** Una elevación
-   aquí la decide el paquete del cliente, y el suyo dice `--shadow-lift: none` y
-   `--shadow-float: 5px 5px 0`: la primera borraría el relieve y la segunda sacaría el pomo fuera
-   de la pista. Un interruptor no «flota sobre el contenido» — se hunde en su ranura—, así que no
-   es ninguno de los tres roles. `ShapeScaleTest` exime a `inset` por ese mismo motivo.
-   ⚠️ Los tintes salen de `color-mix` sobre tokens: ningún literal, así que la ranura sigue al tema. */
+   ⚠️ **Los colores son ROLES, no los literales del artboard.** El suyo pinta la pista de Lima Bote
+   (`#A3C21C`) porque es una tarjeta suelta sin texto al lado — su propia §02 exige «currentColor,
+   siempre». Aquí el encendido es `--ok`, que es lo que `#254` decidió con `ActionFillTest` delante
+   («acción es el control que hace AVANZAR; encendido es un ESTADO»). El apagado es `--fg-mute` y
+   no su `#5E666D`: ese gris vive sobre una tarjeta `#1A1F25` y sobre el vídeo del hero
+   desaparecería. Y el bulbo encendido lee **`--paper-fg`, la TINTA, no `--fg`**, porque dentro del
+   hero `--fg` vale CLARO (`tema-por-instalacion.md` §13).
+
+   ▶ **Sigue sin ser un control**: nada se enciende ni se apaga al pulsarlo, así que el dibujo va
+   `aria-hidden` y lo que se lee es el rótulo del titular, que lo pone la instalación (`hero.l2`). */
 .hero__switch {
-    /* ⚠️⚠️ **Su TALLA PROPIA, y de aquí sale todo lo de dentro** (`#261`, `[DECIDIDO owner]`: «más
-       pequeño, no tan grande, y a la derecha»). El interruptor deja de ser el segundo renglón del
-       titular y pasa a ir EN LÍNEA detrás de la palabra, así que ya no puede medir lo mismo que
-       ella: a 0,34 del titular es una pieza que acompaña, no otra palabra.
-       ▶ Como todo lo de dentro va en `em`, esta sola línea encoge la pista, el pomo, el aire y el
-       rótulo a la vez **manteniendo las proporciones** — el pomo sigue llenando el 77 % de su
-       pista, que es lo que lo hace parecer un interruptor. */
+    /* Su TALLA PROPIA (`#261`, `[DECIDIDO owner]`: «más pequeño, no tan grande, y a la derecha»).
+       El interruptor va EN LÍNEA detrás de la palabra, así que no puede medir lo mismo que ella. */
     font-size: 0.34em;
     margin-inline-start: 0.62em;
     /* Centrado ÓPTICO con la palabra: no sobre la línea base —quedaría colgando— sino sobre el
        centro de la caja de mayúsculas, que es lo que el ojo alinea con un titular en versalitas. */
     vertical-align: 0.74em;
-    display: inline-flex; align-items: center; gap: 0.28em;
-    /* Aire IGUAL en los tres lados que rodean al pomo. El izquierdo es mayor porque ahí entra el
-       rótulo, no el pomo. */
-    padding: 0.11em 0.11em 0.11em 0.36em;
-    border-radius: var(--r-pill);
-    background: var(--ok);
-    color: var(--paper-fg);
+    display: inline-flex; align-items: center; gap: 0.42em;
     line-height: 1;
-    /* El texto del titular lleva `-webkit-text-stroke` en otras variantes; aquí no, porque el
-       contraste ya lo da la cápsula. */
+    /* El texto del titular lleva `-webkit-text-stroke` en otras variantes; el rótulo del
+       interruptor no, porque a esta talla el filo lo cierra. */
     -webkit-text-stroke: 0;
-    /* La RANURA: sombra arriba y filo claro abajo. Es lo que hace que la pista se vea hundida y no
-       una pastilla pintada. */
-    box-shadow: inset 0 0.05em 0.1em color-mix(in srgb, var(--paper-fg) 32%, transparent),
-                inset 0 -0.035em 0.07em color-mix(in srgb, var(--paper-bg) 40%, transparent);
 }
-.hero__switch-t { display: block; padding-bottom: 0.06em; }
-/* El pomo. Su tamaño sale del propio texto para que no haya dos escalas conviviendo, y llena la
-   pista: ésa es toda la diferencia entre un interruptor y un punto. */
+.hero__switch-t { display: block; }
+
+/* LA PISTA. `box-sizing: border-box` como el artboard, que lo declara en `*`: sus 3,6 de borde van
+   DENTRO de los 44 de ancho, no fuera. Sin esto la pista mide 51,2 y el bulbo no llega al final. */
+.hero__switch-sw {
+    /* ▶ **La unidad de la pieza: aquí y en ningún otro sitio.** 44/16 = 2,75, así que el ancho de
+       la pista es 2,75·u y todo lo demás sale del mismo múltiplo. */
+    --sw-u: 0.62em;
+    box-sizing: border-box;
+    display: flex; align-items: center; flex: none;
+    width: calc(var(--sw-u) * 2.75);                          /* 44    */
+    height: calc(var(--sw-u) * 1.65);                         /* 26,4  */
+    padding: calc(var(--sw-u) * 0.125);                       /*  2    */
+    border: calc(var(--sw-u) * 0.225) solid var(--fg-mute);   /*  3,6  */
+    border-radius: var(--r-pill);
+    animation: heroSwitchTrack var(--dur-switch) var(--ease-entra) infinite;
+}
+/* EL BULBO. 15,2/16 = 0,95. Hereda `--sw-u` de la pista, que es su padre. */
 .hero__switch-knob {
     display: block; flex: none;
-    width: 0.98em; height: 0.98em;
-    border-radius: 50%;
-    background: var(--paper-bg);
-    /* El volumen del pomo: luz arriba, sombra abajo. También `inset`, por lo dicho arriba. */
-    box-shadow: inset 0 0.07em 0.06em color-mix(in srgb, var(--paper-bg) 90%, transparent),
-                inset 0 -0.07em 0.09em color-mix(in srgb, var(--paper-fg) 26%, transparent);
+    width: calc(var(--sw-u) * 0.95);
+    height: calc(var(--sw-u) * 0.95);
+    border-radius: var(--r-pill);
+    background: var(--fg-mute);
+    animation: heroSwitchKnob var(--dur-switch) var(--ease-entra) infinite;
+}
+
+/* Los dos bucles, fotograma a fotograma como el artboard. ⚠️ La pista se llena **a mitad de
+   recorrido** (38 %), no al llegar: es lo que el artboard llama «cuando el gesto ya es
+   irreversible». Y al apagarse la pista se vacía en el 100 % mientras el bulbo aún vuelve. */
+@keyframes heroSwitchTrack {
+    0%, 18%  { background: transparent; border-color: var(--fg-mute); }
+    38%, 82% { background: var(--ok);   border-color: var(--ok); }
+    100%     { background: transparent; border-color: var(--fg-mute); }
+}
+/* ⚠️ El `scaleX(1.14)` va DESPUÉS del `translateX`, como en el artboard: estira el bulbo en el
+   punto de máxima velocidad y lo devuelve a 1 al asentarse. El orden importa. */
+@keyframes heroSwitchKnob {
+    0%, 18%  { transform: translateX(0);                                       background: var(--fg-mute); }
+    30%      { transform: translateX(calc(var(--sw-u) * 1.1875)) scaleX(1.14); }               /*  19   */
+    38%, 82% { transform: translateX(calc(var(--sw-u) * 1.025)) scaleX(1);     background: var(--paper-fg); } /* 16,4 */
+    92%      { transform: translateX(calc(var(--sw-u) * -0.15)) scaleX(1.14); }                /* −2,4  */
+    100%     { transform: translateX(0);                                       background: var(--fg-mute); }
+}
+/* Sin movimiento se queda ENCENDIDO, no apagado: el rótulo de al lado dice «ON» y un interruptor
+   quieto en la posición contraria a su propia etiqueta es un defecto, no una simplificación. */
+@media (prefers-reduced-motion: reduce) {
+    .hero__switch-sw {
+        animation: none;
+        background: var(--ok); border-color: var(--ok);
+    }
+    .hero__switch-knob {
+        animation: none;
+        transform: translateX(calc(var(--sw-u) * 1.025));
+        background: var(--paper-fg);
+    }
 }
 
 /* ══ EL LOGOTIPO EN LÍNEA Y SU SALTO (`#254`) ══════════════════════════════════════════════════
