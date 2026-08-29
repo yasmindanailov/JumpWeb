@@ -22,6 +22,19 @@
 > cambia su propio `font-size`, así que ahí `--sw-u` valía un tercio y el sangrado salió a **1,84 en
 > vez de 5,6**. **No falla nada, solo queda mal puesto** — y no lo ve ninguna guarda de tokens ni
 > ninguna captura: lo cazó medir `left` y escalarlo a los 44 del artboard.
+> ❗❗ **Y en la 3.ª vuelta el interruptor sube a la ALTURA DE LAS MAYÚSCULAS del titular** («grande
+> al tamaño del texto, misma altura»). ⚠️⚠️ **Lo cazó el OJO del owner —«está más abajo»— con mi
+> verificación diciendo que estaba bien**: había medido que las ALTURAS coinciden y **nunca comparé
+> las POSICIONES**. *Medir la dimensión correcta de la cosa equivocada da un verde perfecto.*
+> ⚠️⚠️ Detrás había **dos suposiciones falsas sobre la línea base**: un `inline-flex` **NO** la
+> sintetiza en su borde inferior —**la toma de su primer ítem**, aquí el bulbo, centrado— y pasarlo
+> a `inline-block` tampoco basta, porque el flex de dentro **la sigue propagando**. Lo zanja
+> `overflow` ≠ `visible`, que es regla explícita de CSS: 19 px → **+2,6 / −2,0**. **Si alguien quita
+> ese `overflow` por limpieza, la pieza se cae 19 px y no falla nada.**
+> ⚠️⚠️ Y destapó que la talla era **la altura de mayúscula de BUNGEE metida a mano**: ahora sale de
+> la unidad **`cap`**, así que sigue sola a la fuente de cada instalación. Va en `@supports` porque
+> un valor inválido dentro de una custom property **no cae al anterior** — la cascada de respaldo no
+> funciona con `var()`.
 > ⚠️ El rótulo «ON» va **DENTRO** de la pista (2.ª vuelta del canvas el mismo día) con bucle propio,
 > y **el nombre accesible se sirve aparte en `.sr-only`**: uno que parpadea cada 3,4 s no lo es.
 > Verificado, sigue leyéndose «DIVERSIÓN ON». ⚠️ **La familia se HEREDA** (`--font-display`), no se
@@ -1438,7 +1451,7 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3425 en verde** (22.615 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+- Suite **3425 en verde** (22.619 aserciones, 1 skipped a propósito) · **JS 862**, medida el
   2026-08-29 tras `#262` (el interruptor del titular pasa a ser el `6d` del canvas, con el rótulo
   ya dentro de la pista). ▶ **Mismo
   número de casos y +34 aserciones**: no entra ningún test nuevo — la escala de movimiento gana un

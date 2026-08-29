@@ -2282,3 +2282,69 @@ El dibujo entero va `aria-hidden` —rótulo incluido— y la palabra se repite 
 interruptor **el rótulo parpadea cada 3,4 s**, y un nombre accesible que parpadea no lo es.
 Verificado recorriendo el `<h1>` y saltando los subárboles ocultos: **«DIVERSIÓN ON»** en los dos
 modos de movimiento.
+
+### 25.9 · La 3.ª vuelta: a la altura de las MAYÚSCULAS (`[DECIDIDO owner]`)
+
+«Grande al tamaño del texto, misma altura».
+
+▶ **«La altura del texto» no es el `font-size`: es la tinta.** El cuerpo incluye el hueco de
+ascendentes y descendentes que unas mayúsculas no usan; alinear contra él deja el interruptor más
+alto que las letras. Medido con `TextMetrics` sobre la «D» —sin la tilde de la Ó, que falsea el
+ascenso—: **82 px sobre 107,5, o sea 0,7626**. De ahí, `--sw-u = 0,7626/1,65 = 0,4622em`, y el
+envoltorio pasa a `1em` para escribirlo todo contra el titular sin escala intermedia.
+
+⚠️⚠️ **Con CONTROL, porque medir un respaldo da un número plausible y equivocado**: la misma «D» en
+la genérica mide 64,7 de ancho contra 80 y 78 de ascenso contra 80 → la fuente cargada es la buena.
+⚠️ Y el ancho del titular en el DOM (643,6) **no coincide** con el del lienzo (668) sin que eso
+delate otra fuente: es el `letter-spacing` negativo, que `TextMetrics` no aplica. *Un control que no
+cuadra hay que explicarlo antes de tirar la medida* — es el mismo error que §10.6 documentó al
+revés.
+
+▶ **Alineación** — ⚠️⚠️ **esta frase era FALSA y va corregida en §25.9.1; no la sigas.** Decía que
+un `inline-flex` sin texto dentro sintetiza su línea base en el borde inferior. No lo hace.
+
+▶ **Medido en seis anchos** (1920 · 1440 · 1280 · 1024 · 768 · 390): la pista y las mayúsculas
+coinciden dentro de **±1,2 px**, y el rótulo sigue en **8,50 a la escala del artboard en los seis** —
+que es la prueba de que agrandar la pieza es cambiar **una** línea. Un renglón en todos salvo 390.
+Cero desbordes.
+
+▶ **Efecto secundario que CORRIGE a §25.8.2**: a esta talla el rótulo va a **26,4 px a 1280** y
+**30,4 a 1920**, así que la norma «Bungee nunca por debajo de 20 px» **ya se cumple por encima de
+~1000 px**. Solo se incumple por debajo (21,1 · 15,8 · 12,0), que es justo donde el artboard dice
+que el rótulo «se cae». La ficha de `DEUDA` queda acotada a decidir ese suelo.
+
+#### 25.9.1 · ⚠️⚠️ La LÍNEA BASE: dos suposiciones falsas y un instrumento que faltaba
+
+Lo cazó el ojo del owner —«está más abajo»— y **mi verificación decía que estaba bien**: había medido
+que las ALTURAS coinciden (±1,2 px en seis anchos) y **nunca comparé las POSICIONES**. *Medir la
+dimensión correcta de la cosa equivocada da un verde perfecto.*
+
+▶ El instrumento que faltaba es una **sonda de línea base**: un `inline-block` vacío de alto 0 como
+primer hijo del titular, cuyo borde inferior se apoya exactamente en la línea base. Restándole el
+ascenso de `TextMetrics` sale la caja de mayúsculas, y ya se puede comparar con el rect de la pista.
+
+| suposición | realidad | desfase |
+|---|---|---|
+| «un `inline-flex` sin texto sintetiza su baseline en el borde inferior» | **un contenedor flex toma su línea base de su PRIMER ÍTEM** — aquí el bulbo, centrado | +17,4 px a 1280 (0,161em, sistemático) |
+| «con `inline-block` ya sí» | el contenedor flex de dentro **sigue propagando** su línea base | +19 px |
+| — | **`inline-block` + `overflow` ≠ `visible` → línea base en el borde inferior del margen** (regla explícita de CSS) | **+2,6 / −2,0** |
+
+⚠️ Ese `overflow: hidden` **no recorta nada** —la caja del envoltorio es la de la pista y el bulbo
+estirado se queda dentro de su borde (40,9 de 44)—, pero **si alguien lo quita por «limpieza» la
+pieza se cae 19 px y no falla nada**.
+
+#### 25.9.2 · La unidad `cap`: la talla deja de ser la de Bungee
+
+`0.4622em` era **la altura de mayúscula de Bungee metida a mano en el producto**: otra instalación
+con otro `--font-display` habría tenido el interruptor descuadrado con su propio titular sin que
+fallara nada. La unidad **`cap` es la altura de mayúscula de la fuente que haya**, así que
+`--sw-u: calc(1cap / 1.65)` hace que la pieza siga sola a la tipografía de cada cliente.
+
+⚠️ **Va en `@supports`, no como segunda declaración**: un valor inválido dentro de una custom
+property **no cae al anterior** —se propaga como inválido y colapsa la pista—, así que la cascada de
+respaldo **no funciona con `var()`**. Es la hermana de la trampa de §25.8.1: *una custom property no
+se comporta como una propiedad.*
+
+⚠️ **Residuo medido: 3,6–4,7 px.** `1cap` da la altura que la fuente DECLARA, y la de Bungee es un
+5,6 % menor que la que pinta (77,4 contra 82 a 1280). No hay unidad CSS para la tinta; cerrarlo
+exigiría volver al número de Bungee. Se deja y se anota.

@@ -14567,3 +14567,97 @@ artboard —es el dibujo que él firma— y queda anotado. Ninguna guarda vigila
 Escalado a los 44 del artboard: sangrado **5,60** · cuerpo **8,50** · bulbo **15,20** · las tres
 paradas del bulbo intactas (19,00 · 16,40 · −2,40). Sin movimiento: **cero animaciones**, pista
 llena, rótulo a opacidad 1. Sin desbordes a 390 px.
+
+### 9 · La TERCERA vuelta: a la altura de las mayúsculas del titular
+
+`[DECIDIDO owner]`: «hazlo grande al tamaño del texto, **misma altura**».
+
+▶ **«La altura del texto» NO es el `font-size`: es la TINTA**, y hay que medirla. El cuerpo del
+titular incluye el hueco de ascendentes y descendentes que unas mayúsculas no usan; alinear contra
+él dejaría el interruptor más alto que las letras. Medido con `TextMetrics` sobre la fuente real —la
+«D» de Bungee, sin la tilde de la Ó, que falsea el ascenso—: **82 px sobre 107,5 de cuerpo, o sea
+`0,7626`**.
+
+⚠️ **Con control, porque medir un respaldo daría un número plausible y equivocado**: la misma «D» en
+la genérica del sistema mide **64,7 de ancho contra 80** y **78 de ascenso contra 80**, así que la
+fuente cargada es la buena. ⚠️ El ancho del titular en el DOM (643,6) **no** coincide con el del
+lienzo (668) y eso **no** delata otra fuente: es el `letter-spacing` negativo del titular, que
+`TextMetrics` no aplica. *Un control que no cuadra hay que explicarlo antes de tirar la medida.*
+
+▶ De ahí sale la unidad: la pista mide 1,65·u, luego **u = 0,7626/1,65 = 0,4622em** del titular. Y el
+envoltorio pasa de `0.34em` a **`1em`**, para que todo se escriba contra el titular directamente sin
+una escala intermedia que haya que deshacer mentalmente.
+
+▶ **La alineación** — ⚠️ **la primera versión de este párrafo era FALSA y costó dos vueltas; ver
+§9.3.** Decía que un `inline-flex` sin texto dentro sintetiza su línea base en el borde inferior. No
+lo hace.
+
+#### 9.1 · Medido en seis anchos
+
+| ancho | cuerpo | mayúsculas | pista | pista − mayúsculas | rótulo (escala artboard) |
+|---|---|---|---|---|---|
+| 1920 | 124,0 | 94 | 157,6 × 94,6 | **+0,6** | 8,50 |
+| 1440 | 121,0 | 91 | 153,7 × 92,2 | **+1,2** | 8,50 |
+| 1280 | 107,5 | 82 | 136,7 × 82,0 | **0,0** | 8,50 |
+| 1024 | 86,0 | 66 | 109,3 × 65,6 | **−0,4** | 8,50 |
+| 768 | 64,5 | 50 | 82,0 × 49,2 | **−0,8** | 8,50 |
+| 390 | 48,8 | 37 | 62,0 × 37,2 | **+0,2** | 8,50 |
+
+▶ **La proporción interna no se movió**: el rótulo sigue midiendo 8,50 a la escala del artboard en
+los seis, que es lo que demuestra que agrandar la pieza es cambiar **una** línea. Un renglón en
+todos salvo 390, donde el titular ya envolvía desde `#220`. **Cero desbordes.**
+
+#### 9.2 · Un efecto secundario que CORRIGE a §8.3
+
+Con la pieza a esta talla el rótulo pasa de 12,0 px a **26,4 px a 1280** y **30,4 a 1920**, así que
+la norma del cliente —«Bungee nunca por debajo de 20 px»— **ya se cumple por encima de ~1000 px**.
+Sigue incumpliéndose por debajo (21,1 a 1024 · 15,8 a 768 · 12,0 a 390), que es donde el propio
+artboard dice que el rótulo *«se cae»* porque a 20 px es una mancha. ▶ La ficha de `DEUDA` queda
+acotada a eso: **no es «el cliente se contradice», es «falta decidir el suelo»**.
+
+#### 9.3 · ⚠️⚠️ «Está más abajo» — dos suposiciones sobre la LÍNEA BASE, las dos falsas
+
+Lo cazó el OJO del owner: «está más abajo, no está a la misma altura que el texto». **Y mi
+verificación decía que sí**: había medido que las ALTURAS coinciden (±1,2 px en seis anchos) y **no
+había comparado nunca las POSICIONES**. Medir la dimensión correcta de la cosa equivocada da un
+verde perfecto.
+
+▶ El instrumento que faltaba: una **sonda de línea base** —un `inline-block` vacío de alto 0 como
+primer hijo del titular, cuyo borde inferior se apoya exactamente en la línea base—. Con ella, la
+caja de mayúsculas sale de restar el ascenso de `TextMetrics`, y ya se puede comparar contra el
+rect de la pista. Medido: **+17,4 px a 1280, +19,8 a 1920, +10,4 a 768** — el mismo **0,161em** en
+los tres, o sea un desfase SISTEMÁTICO.
+
+**Falsa la primera vez:** «un `inline-flex` sin texto dentro sintetiza su línea base en el borde
+inferior». No: **un contenedor flex toma su línea base de su primer ítem**, y aquí el primer ítem es
+el bulbo, que va CENTRADO en la pista. Por eso la línea base caía por la mitad.
+
+**Falsa la segunda:** pasarlo a `inline-block` tampoco bastó — quedaban **19 px** — porque el
+contenedor flex de dentro **sigue propagando su línea base hacia arriba**.
+
+▶ Lo que lo zanja es la regla explícita de CSS: **un `inline-block` con `overflow` distinto de
+`visible` toma su línea base en el borde inferior del margen**. Con `overflow: hidden` el desfase
+pasa de 19 px a **+2,6 arriba / −2,0 abajo**. ⚠️ Y ahí no recorta nada: la caja del envoltorio es
+exactamente la de la pista, y el bulbo estirado se queda dentro de su borde (40,9 de 44). **Si
+alguien quita ese `overflow` por «limpieza», la pieza se cae 19 px y no falla nada.**
+
+#### 9.4 · Y de paso: `0.4622em` era la fuente de UN cliente metida en el producto
+
+La proporción medida (0,7626) es **la altura de mayúscula de Bungee**. Otra instalación con otro
+`--font-display` habría tenido el interruptor descuadrado respecto a su propio titular, sin que
+fallara nada — exactamente lo que el white-label no puede permitirse.
+
+▶ La unidad **`cap` ES la altura de mayúscula de la fuente que haya**, así que la pieza sigue sola a
+la tipografía de cada cliente: `--sw-u: calc(1cap / 1.65)`.
+⚠️ **Va en `@supports` y no como segunda declaración**: un valor inválido dentro de una custom
+property **no cae al declarado antes** —se propaga como inválido y colapsa la pista—, así que la
+cascada de respaldo, que sí funciona con propiedades normales, **no funciona con `var()`**. El suelo
+en `em` se queda como respaldo real.
+
+⚠️ **Queda un residuo medido de 3,6–4,7 px**: `1cap` da la altura de mayúscula que la fuente
+DECLARA, y la de Bungee es un 5,6 % menor que la que de verdad pinta (77,4 contra 82 a 1280). No hay
+unidad CSS para la tinta. Cerrarlo exigiría volver al número de Bungee, así que se deja y se anota:
+a simple vista la pista y las letras empiezan y acaban juntas.
+
+▶ **Medido tras el arreglo**, seis anchos: rótulo en **8,50 a la escala del artboard en los seis**
+—la proporción interna no se movió—, un renglón en todos salvo 390, **cero desbordes**.

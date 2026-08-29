@@ -5450,14 +5450,34 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    parpadea no es un nombre accesible. Así el `<h1>` se sigue leyendo «DIVERSIÓN ON» de principio a
    fin, y sigue sin prometer un control que no existe. */
 .hero__switch {
-    /* Su TALLA PROPIA (`#261`, `[DECIDIDO owner]`: «más pequeño, no tan grande, y a la derecha»).
-       El interruptor va EN LÍNEA detrás de la palabra, así que no puede medir lo mismo que ella. */
-    font-size: 0.34em;
-    margin-inline-start: 0.62em;
-    /* Centrado ÓPTICO con la palabra: no sobre la línea base —quedaría colgando— sino sobre el
-       centro de la caja de mayúsculas, que es lo que el ojo alinea con un titular en versalitas. */
-    vertical-align: 0.74em;
-    display: inline-flex; align-items: center;
+    /* ▶ **A LA ALTURA DE LAS MAYÚSCULAS DEL TITULAR** (`[DECIDIDO owner]`: «grande al tamaño del
+       texto, misma altura»), que **no es el `font-size`**: es la TINTA. Medida con `TextMetrics`
+       sobre la fuente real —y con control contra una genérica, para no estar midiendo un respaldo—,
+       la «D» de Bungee ocupa **82 px sobre 107,5 de cuerpo, o sea 0,7626**.
+       ▶ Como la pista mide 1,65·u, la unidad sale de ahí: u = 0,7626/1,65 = **0,4622em**. Con el
+       envoltorio a `1em` todo se escribe contra el titular directamente, sin una escala intermedia
+       que haya que deshacer mentalmente. */
+    font-size: 1em;
+    margin-inline-start: 0.21em;
+    /* ⚠️⚠️ **`inline-block`, y NO `inline-flex`: ahí está la diferencia entre casar con las letras y
+       quedar 17 px por debajo.** Un contenedor flex **toma su línea base de su primer ítem**, y el
+       primer ítem aquí es el bulbo, que va CENTRADO en la pista — así que la línea base cae por la
+       mitad y el borde inferior se va muy por debajo del renglón. Un `inline-block` **sin líneas de
+       texto dentro** (la pista es `flex`, el rótulo es `absolute`) sintetiza su línea base en el
+       **borde inferior del margen**, que es justo lo que hace falta: apoyado en la base y creciendo
+       hacia arriba exactamente una altura de mayúscula.
+       ▶ Medido antes de esto: **+17,4 px a 1280, +19,8 a 1920, +10,4 a 768** — el mismo 0,161em en
+       los tres, o sea un desfase sistemático, no un ajuste fino. */
+    display: inline-block;
+    /* ⚠️⚠️ **`overflow: hidden` NO es para recortar nada: es lo que FIJA la línea base.** Con
+       `inline-block` a secas tampoco valía —el contenedor flex de dentro sigue PROPAGANDO su línea
+       base hacia arriba, y quedaban 19 px—. La regla de CSS que lo zanja es explícita: un
+       `inline-block` con `overflow` distinto de `visible` toma su línea base en el **borde inferior
+       del margen**. Y aquí no recorta: la caja del envoltorio es exactamente la de la pista, y el
+       bulbo estirado se queda dentro de su borde (40,9 de 44).
+       ▶ Si alguien quita esta línea por «limpieza», el interruptor se cae 19 px y nada falla. */
+    overflow: hidden;
+    vertical-align: baseline;
     line-height: 1;
     /* El texto del titular lleva `-webkit-text-stroke` en otras variantes; el rótulo del
        interruptor no, porque a esta talla el filo lo cierra. */
@@ -5469,8 +5489,11 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    ⚠️ `position: relative` no es adorno: es lo que ancla el rótulo de dentro. */
 .hero__switch-sw {
     /* ▶ **La unidad de la pieza: aquí y en ningún otro sitio.** 44/16 = 2,75, así que el ancho de
-       la pista es 2,75·u y todo lo demás sale del mismo múltiplo. */
-    --sw-u: 0.62em;
+       la pista es 2,75·u y todo lo demás sale del mismo múltiplo.
+       ▶ Su valor lo fija la altura de las MAYÚSCULAS del titular, porque la pista mide 1,65·u:
+       u = cap/1,65. Este suelo en `em` es la proporción **medida de Bungee** (0,7626), y sirve de
+       respaldo; el valor bueno lo pone el `@supports` de abajo. */
+    --sw-u: 0.4622em;
     position: relative;
     box-sizing: border-box;
     display: flex; align-items: center; flex: none;
@@ -5481,6 +5504,17 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     border-radius: var(--r-pill);
     animation: heroSwitchTrack var(--dur-switch) var(--ease-entra) infinite;
 }
+/* ⚠️⚠️ **`0.4622em` es la altura de mayúscula DE BUNGEE metida a mano en el producto**, y eso es
+   justo lo que el white-label no puede hacer: otra instalación con otro `--font-display` tendría el
+   interruptor descuadrado respecto a su propio titular, sin que fallara nada.
+   ▶ La unidad `cap` **es** la altura de mayúscula de la fuente que haya, así que la pieza sigue a la
+   tipografía de cada cliente sola. Va en `@supports` porque un valor inválido dentro de una custom
+   property **no cae al declarado antes** —se propaga como inválido y colapsa la pista—: la cascada
+   de respaldo no funciona con `var()`, y esto sí. */
+@supports (height: 1cap) {
+    .hero__switch-sw { --sw-u: calc(1cap / 1.65); }
+}
+
 /* EL BULBO. 15,2/16 = 0,95. Hereda `--sw-u` de la pista, que es su padre. */
 .hero__switch-knob {
     display: block; flex: none;
