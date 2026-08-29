@@ -345,8 +345,25 @@
        la suavidad y la OPACIDAD hace la densidad**. La respuesta es el radio del mockup con mucha
        menos tinta: 18 de radio (él usa 16) y **18 %** (él, 45). Comparadas las cuatro combinaciones
        en el navegador, a tamaño real y sobre la superficie oscura donde vive. */
-    filter: drop-shadow(0 5px 18px color-mix(in srgb, var(--paper-fg) 18%, transparent))
-            drop-shadow(0 1px 0 color-mix(in srgb, var(--paper-fg) 14%, transparent));
+    /* ❗❗❗ **TERCERA VUELTA DEL OWNER SOBRE ESTA SOMBRA, Y LA PRIMERA QUE SE MIDE** (`#267`).
+       Son **los números del mockup, sin tocar**: `0 6px 16px` al 45 % y la línea de contacto
+       `0 1px 0` al 25 %.
+       ▶ **Lo medido, y refuta el razonamiento de `#253`**: se renderizó SU lockup con SU filtro (A),
+       nuestro SVG con SU filtro (B) y nuestro SVG con el filtro que teníamos (C), y se comparó la
+       densidad de sombra sobre el mismo papel.
+         A · su lockup, su filtro   → 1.193.218
+         B · nuestro SVG, su filtro → 1.252.968   ← **5 % de diferencia con A**
+         C · lo que teníamos        →   645.997   ← **la mitad**
+       ▶ O sea: **el mismo filtro sobre nuestro sujeto SÍ da su misma sombra.** `#253` concluyó lo
+       contrario —«copiar un filtro no es copiar un resultado si el sujeto es otro»— y bajó la tinta
+       de 45 a 30 y luego a 18; `#263` corrigió el radio pero dejó la opacidad. **Ninguna de las dos
+       comparó contra el original**: las dos razonaron sobre el sujeto y ajustaron a ojo.
+       ⚠️ *Cuando el owner dice tres veces que algo se ve distinto, lo que falta no es otro ajuste:
+       es la comparación que nadie ha hecho.*
+       ⚠️ Sigue leyendo `--paper-fg` y no el literal del cliente: dentro del menú de tinta `--fg`
+       vale claro y la sombra se volvería luz. Lo que se copia son los NÚMEROS, no el color. */
+    filter: drop-shadow(0 6px 16px color-mix(in srgb, var(--paper-fg) 45%, transparent))
+            drop-shadow(0 1px 0 color-mix(in srgb, var(--paper-fg) 25%, transparent));
     transition: transform var(--dur-entra) var(--ease-sale);
 }
 .nav__brand:hover .nav__brand-logo { transform: translateY(-2px) rotate(-1.5deg); }

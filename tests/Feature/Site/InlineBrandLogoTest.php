@@ -388,6 +388,45 @@ class InlineBrandLogoTest extends TestCase
         );
     }
 
+    /**
+     * **La sombra del logotipo son LOS NÚMEROS DEL MOCKUP** (`#267`).
+     *
+     * ⚠️⚠️ La guarda de una discusión que costó **tres vueltas del owner**: `#253` («demasiada
+     * sombra») bajó la tinta de 45 a 30 razonando que «copiar un filtro no es copiar un resultado
+     * si el sujeto es otro»; `#263` («la suya es más suave, la nuestra densa y definida») corrigió
+     * el radio y la dejó en 18; y a la tercera el owner seguía viéndola distinta.
+     *
+     * ▶ **Ninguna de las dos comparó contra el original.** Al renderizar su lockup con su filtro,
+     * el nuestro con su filtro y el nuestro con el que teníamos, y medir la densidad de sombra
+     * sobre el mismo papel: **1.193.218 · 1.252.968 · 645.997**. O sea que el mismo filtro sobre
+     * nuestro sujeto SÍ da su sombra (5 % de diferencia), y la nuestra era **la mitad**.
+     *
+     * ⚠️ Se asevera la GEOMETRÍA (offset, radio y porcentajes), no el color: éste sigue saliendo de
+     * `--paper-fg` para que dentro del menú de tinta la sombra no se vuelva luz.
+     */
+    public function test_the_logo_shadow_keeps_the_mockup_numbers(): void
+    {
+        $regla = '';
+
+        foreach ($this->reglasQueDeclaran($this->siteCssSinComentarios(), 'drop-shadow') as $selector => $cuerpo) {
+            if (str_contains($selector, '.nav__brand-logo') && ! str_contains($selector, '--inline')) {
+                $regla = $cuerpo;
+            }
+        }
+
+        $this->assertNotSame('', $regla, 'el logotipo ha perdido su sombra');
+
+        foreach ([
+            '/drop-shadow\(\s*0\s+6px\s+16px/' => 'la sombra difusa ya no es `0 6px 16px`, que es la del mockup',
+            '/45%/' => 'la sombra difusa ya no lleva el 45 % del mockup — se midió que con menos queda a la mitad de densidad',
+            '/drop-shadow\(\s*0\s+1px\s+0/' => 'ha desaparecido la línea de contacto `0 1px 0`',
+            '/25%/' => 'la línea de contacto ya no lleva el 25 % del mockup',
+            '/var\(--paper-fg\)/' => 'la sombra ha dejado de leer `--paper-fg`: dentro del menú de tinta se volvería luz',
+        ] as $patron => $porque) {
+            $this->assertMatchesRegularExpression($patron, $regla, $porque."\n▶ Son los números de `#267`, medidos contra el lockup del mockup. No se ajustan a ojo.");
+        }
+    }
+
     /** El texto de `site.css` con los comentarios blanqueados (conservando offsets). */
     private function siteCssSinComentarios(): string
     {

@@ -2920,6 +2920,17 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       Ahora va en **% de la figura**, que es más white-label que el mockup.
       ⚠️ El «0,000 px» de `#265` era **adimensional**, y estaba escrito en seis sitios.
       **+2 casos · 7 mutaciones, las 7 muerden.**
+- [x] **2i · La SOMBRA del logotipo, medida contra el mockup** (`#267`, 2026-08-29). Tercera vuelta
+      del owner sobre lo mismo. `#253` y `#263` ajustaron nuestro filtro y lo compararon **consigo
+      mismo**; el original no entró en ninguna de las dos. Con su lockup delante —lo entregó en
+      HTML— se midió la densidad de sombra: **su lockup 1.193.218 · nuestro SVG con SU filtro
+      1.252.968 · lo que teníamos 645.997**. La nuestra era **la mitad**, y el razonamiento de
+      `#253` («el sujeto es otro») queda refutado: el mismo filtro sobre nuestro sujeto da su
+      sombra, con un 5 % de diferencia.
+      ⚠️ *Cuando el owner dice tres veces que algo se ve distinto, lo que falta no es otro ajuste:
+      es la comparación que nadie ha hecho.*
+      ⚠️ De paso, la geometría del asset resultó estar a **2-3 %** de su mockup: lo que se veía
+      distinto era la sombra, no el dibujo. Guarda con mutación.
 - [ ] **3 · Las secciones**, pieza a pieza. ⏸️ **FUERA DE ALCANCE hasta que el owner lo diga**
       (`[DECIDIDO owner, 2026-08-28]`: del canvas solo se toma el sistema de diseño —colores,
       elementos, iconos, formas, menú, hero y pie—; el resto «son pruebas»).

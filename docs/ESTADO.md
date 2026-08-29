@@ -6,6 +6,22 @@
 > 44 (`#264`), la vuelta del owner sobre el CTA flotante y el logotipo (`#265`) y, tras una revisión
 > adversarial de esa tanda, **`#266`: el salto del logotipo NUNCA se había visto**.
 >
+> ❗❗❗ **`#267` — LA SOMBRA DEL LOGOTIPO: TRES VUELTAS DEL OWNER, DOS AJUSTES A OJO, NINGUNA
+> COMPARACIÓN.** `#253` bajó la tinta de 45 a 30 razonando que «copiar un filtro no es copiar un
+> resultado si el sujeto es otro»; `#263` corrigió el radio y la dejó en 18 comparando **cuatro
+> variantes NUESTRAS entre sí**. El original no entró en ninguna de las dos.
+> ▶ **Medido por fin, con su lockup delante** (que entregó en HTML, así que por primera vez se puede
+> renderizar el suyo al lado del nuestro): densidad de sombra **A su lockup 1.193.218 · B nuestro SVG
+> con SU filtro 1.252.968 · C lo que teníamos 645.997**. B está a un **5 %** de A; **C era la mitad**.
+> ▶ Eso **refuta el razonamiento de `#253`**: el mismo filtro sobre nuestro sujeto SÍ da su sombra.
+> Quedan sus números: `0 6px 16px` al **45 %** y `0 1px 0` al **25 %**.
+> ⚠️ **Lo que se copia son los NÚMEROS, no el color**: sigue leyendo `--paper-fg`, o dentro del menú
+> de tinta la sombra se volvería luz. Verificado en papel, portada y menú.
+> ⚠️ Y de paso se comparó la GEOMETRÍA: la figura sale a **0,181** del ancho de JUMPPARK contra su
+> 0,177, y colocada en 0,198 contra 0,192 — **2-3 %**. Lo que se veía distinto era la sombra.
+> ⚠️⚠️ *Cuando el owner dice tres veces que algo se ve distinto, lo que falta no es otro ajuste: es
+> la comparación que nadie ha hecho.*
+>
 > ❗❗❗ **`#266` — TRES TANDAS MIDIENDO QUE LA ANIMACIÓN EXISTE, NINGUNA QUE EL DIBUJO SE MUEVA.**
 > El salto se declaraba sobre `#fig`, que vive dentro de `<defs>` y **no se pinta**: lo que se pinta
 > son los 21 `<use>` que lo referencian, y **una animación CSS sobre el original no alcanza al clon
@@ -1698,8 +1714,10 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3500 en verde** (22.972 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-29 tras `#266`. ▶ **+2 casos** en `InlineBrandLogoTest`: que la animación caiga sobre algo
+- Suite **3501 en verde** (22.978 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 tras `#267` (la sombra del logotipo). ▶ **+1 caso**: que el filtro conserve los números
+  del mockup, con su mutación —volver a la sombra tenue de `#263` la pone roja—.
+- Antes, tras `#266`: suite **3500 en verde** (22.972 aserciones, 1 skipped a propósito) · **JS 862**. ▶ **+2 casos** en `InlineBrandLogoTest`: que la animación caiga sobre algo
   que **se pinte** (no un `id` de `<defs>`) y que la **amplitud sea proporcional a la figura**.
   **7 mutaciones, las 7 muerden** — la última tras acotar una guarda que nació laxa.
 - Antes, tras `#265`: suite **3498 en verde** (22.946 aserciones, 1 skipped a propósito) · **JS 862**, medida el
@@ -2414,6 +2432,7 @@ del panel no toca nada (`resources/css/filament/admin/theme.css` sigue intacto).
 | `#264` | El **objetivo táctil de 44** llega a la landing: **37 → 1** control por debajo. El que queda es el enlace **en línea** del texto de cookies, que WCAG exime |
 | `#265` | Vuelta del owner: el **CTA flotante** crece a 56 y pierde una sombra que era el **rol equivocado**; y el **salto del logotipo** recupera su física — 7 curvas, el asentamiento y el tempo |
 | `#266` | Revisión adversarial de `#265`: **el salto NUNCA se vio** (animación sobre un elemento de `<defs>`) y su **amplitud estaba 7,5× corta** (los `px` de un SVG son unidades del `viewBox`) |
+| `#267` | **La sombra del logotipo, medida por fin contra su lockup**: la nuestra tenía la mitad de densidad. Quedan los números del mockup |
 
 ## ❗❗ LO QUE MÁS IMPORTA QUE SEPAS
 

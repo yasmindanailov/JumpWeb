@@ -15073,6 +15073,12 @@ pieza decorativa. **Ficha en `DEUDA`**, con el número para que el siguiente no 
 
 ## #263 · 2026-08-29 · El logotipo no saltaba en ONCE de las doce vistas, y su sombra era dura por el ajuste anterior
 
+> ⚠️⚠️ **DOS CORRECCIONES, y las dos van antes que el texto.** (1) **`#266`**: el salto **no se veía**
+> —la animación caía sobre un elemento de `<defs>`—, así que «lo arreglé en once vistas» era
+> arreglar dónde se declaraba algo que no pintaba nada. (2) **`#267`**: el ajuste de sombra de aquí
+> comparó **cuatro variantes NUESTRAS entre sí**, nunca contra el mockup; medido después, la
+> nuestra tenía **la mitad** de densidad que la suya. Los números buenos son los del mockup.
+
 `[DECIDIDO owner]`: «el logotipo que tenemos no es idéntico al de la landing, y **no hace la
 animación**; el de la landing tiene una sombra más suave, el nuestro una totalmente densa y
 definida. Revísalo, si hace falta rehaz el logo».
@@ -15469,3 +15475,81 @@ en la zona y 19-96 (la silueta abajo, fuera del logotipo); 0,38 → 835 px en y 
 → 665; 0,91 → 546. **El control** —mover el grupo a mano— repinta 871 px, así que el instrumento sabe
 detectar movimiento. Amplitud: `translateY(300%)` = 84,67 px = 3,00 × la figura, el ratio del mockup.
 **7 mutaciones, las 7 muerden** (la última tras acotar una guarda que nació laxa).
+
+---
+
+## #267 · 2026-08-29 · [DECIDIDO owner] La sombra del logotipo: tercera vuelta, y la primera vez que se compara con el mockup
+
+`[DECIDIDO owner]`: «sigue siendo diferente al del mockup, **la sombra es diferente** en el logotipo
+del mockup, revísalo con rigor, yo lo comparo con el del mockup de la landing».
+
+### 1 · Tres vueltas, dos ajustes a ojo, ninguna comparación
+
+| | qué dijo el owner | qué se hizo | cómo se decidió |
+|---|---|---|---|
+| `#253` | «nuestro logo tiene demasiada sombra» | 45 % → 30 %, radio 16 → 7 | razonando sobre el sujeto |
+| `#263` | «la suya es más suave, la nuestra densa y definida» | radio 7 → 18, tinta 30 → 18 | comparando **cuatro combinaciones nuestras entre sí** |
+| `#267` | «sigue siendo diferente» | **los números del mockup** | **midiendo contra su lockup** |
+
+▶ **Las dos primeras ajustaron nuestro filtro y lo compararon consigo mismo.** `#263` llegó a
+comparar cuatro variantes «en el navegador, a tamaño real y sobre la superficie oscura donde vive»
+— cuatro variantes **nuestras**. El original no entró en ninguna de las dos comparaciones.
+
+⚠️ *Cuando el owner dice tres veces que algo se ve distinto, lo que falta no es otro ajuste: es la
+comparación que nadie ha hecho.*
+
+### 2 · Lo que se midió, y refuta el razonamiento de `#253`
+
+Se pudo hacer porque el owner acababa de entregar **su lockup en HTML** (texto vivo en Lilita One,
+con sus capas): por primera vez se puede renderizar SU logotipo al lado del nuestro.
+
+Tres versiones sobre el mismo papel, misma captura, y se mide la **densidad de sombra** —píxeles
+oscurecidos entre 2 y 70 de luminancia, o sea sombra y no tinta— :
+
+| | densidad | filas con sombra |
+|---|---|---|
+| **A** · su lockup, su filtro | **1.193.218** | 228 |
+| **B** · nuestro SVG, **su** filtro | **1.252.968** | 236 |
+| **C** · nuestro SVG, el filtro que teníamos | **645.997** | 224 |
+
+▶ **B está a un 5 % de A. C es la mitad.**
+
+▶ Eso **refuta lo que `#253` dejó escrito**: «copiar un filtro no es copiar un resultado si el
+sujeto es otro — su lockup son glifos con extrusión fina, el nuestro una masa maciza». Medido, el
+mismo filtro sobre nuestro sujeto da su misma sombra. La diferencia no estaba en el sujeto: estaba
+en que le habíamos quitado **más de la mitad de la tinta**.
+
+▶ Queda `0 6px 16px` al **45 %** y `0 1px 0` al **25 %**, sus números exactos.
+⚠️ **Lo que se copia son los NÚMEROS, no el color**: sigue leyendo `--paper-fg`, porque dentro del
+menú de tinta `--fg` vale claro y la sombra se volvería luz. Verificado en los tres contextos
+—papel, portada y menú abierto—: el filtro computa `rgba(16,20,24,0.45)` en los tres, que es el
+literal del mockup.
+
+### 3 · Y de paso, la geometría: el asset SÍ es su mockup
+
+Con su lockup delante se pudo comparar algo más que la sombra. Relativo al ancho de «JUMPPARK»:
+
+| | su mockup | nuestro SVG |
+|---|---|---|
+| alto de la figura | 0,177 | **0,181** |
+| posición de la figura | 0,192 | **0,198** |
+
+▶ **2-3 % de diferencia**, dentro del error de método (el suyo es texto vivo con trazos, el nuestro
+contornos). **Lo que el owner veía era la sombra**, no el dibujo.
+
+### 4 · ⚠️⚠️ Y una regla del repo incumplida TRES veces en la misma sesión
+
+`desmontar-view-order.md` §9.1: **commitear en local antes de mutar**. Tres veces un
+`git checkout -- public/css/site.css` para revertir una mutación se llevó por delante el trabajo sin
+commitear del fichero, y las tres hubo que rehacerlo.
+
+▶ **La corrección no es acordarse: es cambiar el método.** Las mutaciones se revierten desde una
+**copia del fichero** (`cp` antes, `cp` después), que no depende de que el árbol esté commiteado.
+Un `git checkout -- <fichero>` no distingue la mutación del trabajo.
+
+### Lo verificado
+
+Densidad de sombra tras el cambio: **1.252.968**, idéntica a la de B y a un 5 % de su lockup ·
+filtro computado `rgba(16,20,24,0.45)` en papel, portada y menú de tinta · guarda
+`test_the_logo_shadow_keeps_the_mockup_numbers` con su mutación (volver a la sombra tenue la pone
+roja) · suite verde · Pint ✓ · docs-check ✓.

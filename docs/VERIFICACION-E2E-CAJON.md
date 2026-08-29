@@ -1873,3 +1873,42 @@ que no se ve.
 1. **Recargar `/servicios`**: el saltador entra desde abajo, sube por encima del lockup, cae,
    aplasta, rebota dos veces y **el logotipo entero se hunde 2 px** al recibirlo.
 2. **Pasar el cursor por encima** después: tiene que seguir levantándose y girando.
+
+---
+
+## §5.quinvicies · LA SOMBRA DEL LOGOTIPO, CONTRA EL LOCKUP DEL MOCKUP — ✅ 2026-08-29 (`DECISIONES #267`)
+
+> Guion: `/home/sail/e2e/somb/somb.html` + `medir.mjs`. **Renderiza el lockup del owner y el nuestro
+> en la MISMA página** y compara la densidad de sombra sobre el mismo papel.
+
+❗❗❗ **POR QUÉ HACE FALTA, y es la lección de tres vueltas del owner.** `#253` y `#263` ajustaron
+nuestro filtro y lo compararon **consigo mismo** —`#263` llegó a comparar «cuatro combinaciones en
+el navegador, a tamaño real»: cuatro variantes **nuestras**—. El original no entró en ninguna de las
+dos, y la sombra acabó con **la mitad** de densidad que la suya.
+▶ *Comparar variantes propias entre sí no es comparar con el original.* Se pudo hacer solo cuando el
+owner entregó su lockup en HTML, que es lo que permite renderizarlo al lado.
+
+### Cómo mide
+
+Cuatro filas sobre el mismo papel (`#F4EFE3`), todas capturadas juntas:
+**A** su lockup con su filtro · **B** nuestro SVG con SU filtro · **C** nuestro SVG con el filtro a
+evaluar · **D** nuestro SVG sin filtro (control: la sombra que ya trae horneada).
+
+Para cada fila cuenta los píxeles **oscurecidos entre 2 y 70 de luminancia** respecto al papel: por
+debajo de 2 es ruido, por encima de 70 es la tinta del dibujo. Suma esa diferencia → **densidad**.
+
+| | densidad | lectura |
+|---|---|---|
+| **A** · su lockup, su filtro | 1.193.218 | la referencia |
+| **B** · nuestro SVG, su filtro | 1.252.968 | **5 % de A** → el sujeto no es el problema |
+| **C** · el filtro de `#263` | 645.997 | **la mitad** |
+| **D** · sin filtro | 207.507 | solo el relieve horneado |
+
+⚠️ **La fila D no sobra**: sin ella no se sabe cuánta de la sombra medida es del filtro y cuánta del
+relieve que el SVG ya trae. Un control por abajo, como el de §5.quatervicies por arriba.
+
+⚠️ **Y el mojibake**: el bloque HTML del owner llegó pegado en el chat con la codificación rota
+(`â` por guiones, `Ã±` por ñ) y **no es reparable con un `latin-1 → utf-8`**: el daño es mixto. Solo
+afecta a la prosa —el CSS y el marcado son ASCII—, así que para medir se extrajo lo técnico y se
+descartó el texto. **No se guardó el fichero pegado como activo**, que es lo que `#262` §25.1 ya
+advirtió.
