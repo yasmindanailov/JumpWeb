@@ -314,8 +314,17 @@
        no. ▶ *Copiar un filtro no es copiar un resultado si el sujeto es otro.*
        ▶ Por eso NO hay nada que pedirle al diseñador: el asset está bien y el relieve ya hace de
        profundidad. Lo que sobraba era nuestro desenfoque. 6→3 de desplazamiento, 16→7 de radio y
-       45→30 % de tinta; la línea de 1 px se queda, más suave, para cuando cae sobre algo claro. */
-    filter: drop-shadow(0 3px 7px color-mix(in srgb, var(--paper-fg) 30%, transparent))
+       45→30 % de tinta; la línea de 1 px se queda, más suave, para cuando cae sobre algo claro.
+
+       ⚠️⚠️ **CORRECCIÓN (`#263`): bajar el RADIO fue la mitad equivocada del ajuste.** El owner
+       volvió con lo contrario —«el de la landing tiene una sombra más suave, el nuestro una
+       totalmente densa y definida»— y **las dos notas son ciertas a la vez**: un desenfoque de 7 px
+       es *menos* sombra, sí, pero también un borde *más duro*, que es justo lo que se ve como una
+       mancha definida pegada a la masa. ▶ Las dos dimensiones son independientes: **el RADIO hace
+       la suavidad y la OPACIDAD hace la densidad**. La respuesta es el radio del mockup con mucha
+       menos tinta: 18 de radio (él usa 16) y **18 %** (él, 45). Comparadas las cuatro combinaciones
+       en el navegador, a tamaño real y sobre la superficie oscura donde vive. */
+    filter: drop-shadow(0 5px 18px color-mix(in srgb, var(--paper-fg) 18%, transparent))
             drop-shadow(0 1px 0 color-mix(in srgb, var(--paper-fg) 14%, transparent));
     transition: transform var(--dur-entra) var(--ease-sale);
 }
@@ -5646,9 +5655,21 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     transform-box: fill-box;
     transform-origin: 50% 90%;
 }
-body.nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig {
+/* ⚠️⚠️ **SON DOS REGLAS, Y LA SEGUNDA FALTABA: en once de las doce vistas el logotipo NO SALTABA**
+   (`#263`). El comentario de arriba afirmaba lo contrario —«en las once vistas sin hero el armazón
+   está siempre, así que salta una vez y se queda»— y era **falso**: `.nav--live` la pone el
+   componente del hero, que **solo existe en la portada**. Medido en `/servicios`: el logotipo se
+   pinta (70 px de alto), `#fig` está en el árbol… y `body.nav--live` es `false`, así que
+   `getAnimations()` devuelve **cero**. El defecto llevaba puesto desde `#254` y **no lo veía
+   ninguna guarda**: todas comprueban que el logo se SIRVE, ninguna que se MUEVA.
+   ▶ El marcador correcto ya existía: `body[data-has-hero]`, que el layout pone solo donde hay
+   coreografía. Sin hero el armazón está desde el primer píxel, así que la condición es «existe y no
+   está oculto»; con hero, además, que el racimo haya entrado. */
+body:not([data-has-hero]) .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig,
+body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig {
     animation: brand-hop var(--dur-espera) var(--dur-cae) var(--ease-cae) both;
 }
 @media (prefers-reduced-motion: reduce) {
-    body.nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig { animation: none; }
+    body:not([data-has-hero]) .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig,
+    body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline svg #fig { animation: none; }
 }

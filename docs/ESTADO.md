@@ -8,6 +8,20 @@
 > ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
 > la marquesina. Y `#253` — ocho puntos de la portada, DOS de ellos fallos.**
 >
+> ❗❗❗ **`#263` — EL LOGOTIPO NO SALTABA EN ONCE DE LAS DOCE VISTAS.** La regla la disparaba
+> `body.nav--live`, y **esa clase la pone el componente del HERO, que solo existe en la portada**.
+> Medido en `/servicios`: logotipo pintado a 70 px, `#fig` en el árbol y `getAnimations()` a **cero**.
+> ⚠️⚠️ **El comentario del propio CSS afirmaba lo contrario** —«en las once vistas sin hero salta una
+> vez y se queda»—: una suposición escrita como hecho, desde `#254`. ⚠️⚠️ Y **ninguna guarda lo vio
+> con una mirando al lado**: `InlineBrandLogoTest` comprobaba que `id="fig"` llega al documento, y
+> eso pasaba en verde con la animación muerta. ▶ *Que la pieza llegue no es que se mueva.* Guarda
+> nueva, mutada con el fallo real y con el de al lado: las dos muerden.
+> ▶ **El ASSET está bien y no hay que rehacerlo**: 27 pasos de extrusión por palabra, 16 en la
+> silueta y los dos degradados — la receta exacta del mockup pasada a contornos.
+> ⚠️ **La sombra: bajar el RADIO fue la mitad equivocada del ajuste de `#253`.** Son dos dimensiones
+> independientes —**el radio hace la suavidad, la opacidad hace la densidad**— y bajar 16→7 dejó un
+> borde duro. Comparadas cuatro combinaciones en navegador: queda **5 · 18 · 18 %**, la suavidad del
+> mockup sin su densidad.
 > ❗❗❗ **`#262` — EL INTERRUPTOR DEL TITULAR YA NO ES DIBUJO PROPIO: ES EL `6d` DEL CANVAS.**
 > `[DECIDIDO owner]`: «tenemos ya el icono… **tráelo idéntico**». El canvas trajo un **LOTE 6** con
 > cuatro variantes; `6d` es la ANIMADA — «El salto, no el deslizamiento». Sustituye al interruptor
@@ -1461,7 +1475,7 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3425 en verde** (22.619 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+- Suite **3426 en verde** (22.625 aserciones, 1 skipped a propósito) · **JS 862**, medida el
   2026-08-29 tras `#262` (el interruptor del titular pasa a ser el `6d` del canvas, con el rótulo
   ya dentro de la pista). ▶ **Mismo
   número de casos y +34 aserciones**: no entra ningún test nuevo — la escala de movimiento gana un

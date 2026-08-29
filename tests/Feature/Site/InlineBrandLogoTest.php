@@ -145,4 +145,57 @@ class InlineBrandLogoTest extends TestCase
         );
         $this->assertStringContainsString('id="fig"', $html, 'no llega la pieza que se anima');
     }
+
+    /**
+     * **QUE EL LOGOTIPO LLEGUE NO ES QUE SE MUEVA** (`DECISIONES #263`).
+     *
+     * ⚠️⚠️ El caso anterior comprueba que `id="fig"` está en el documento, y eso **pasaba en verde
+     * mientras el logotipo NO SALTABA en once de las doce vistas**. La regla que lo animaba exigía
+     * `body.nav--live`, y esa clase la pone el componente del hero, **que solo existe en la
+     * portada**. Medido en `/servicios`: el logotipo pintado a 70 px, `#fig` en el árbol y
+     * `getAnimations()` devolviendo **cero**. El defecto entró con `#254` y ninguna guarda lo vio,
+     * porque todas miran que el logo se SIRVA.
+     *
+     * ▶ Esto mira la CONDICIÓN, que es lo único que se puede mirar sin navegador: la animación
+     * tiene que declararse en **dos ramas** —una para las vistas sin hero, que no puede depender de
+     * `.nav--live`, y otra para la portada, que sí—. Un navegador de verdad lo recorre en
+     * `VERIFICACION-E2E-CAJON.md`; aquí se fija que nadie vuelva a dejar una sola.
+     */
+    public function test_the_logo_hop_also_reaches_the_views_without_a_hero(): void
+    {
+        $css = (string) file_get_contents(public_path('css/site.css'));
+
+        // Los selectores que declaran la animación, sin el `@media` de movimiento reducido:
+        // ése la APAGA, así que contarlo daría ramas que no animan nada.
+        preg_match_all(
+            '/([^{}]+)\{[^{}]*animation:\s*brand-hop[^{}]*\}/',
+            preg_replace('/@media[^{]*\(prefers-reduced-motion[^{]*\{.*?\}\s*\}/s', '', $css) ?? $css,
+            $m,
+        );
+
+        $ramas = array_values(array_filter(array_map('trim', explode(',', implode(',', $m[1] ?? [])))));
+
+        $this->assertNotEmpty($ramas, 'nadie declara ya `animation: brand-hop`: el logotipo no salta en ninguna vista');
+
+        $sinHero = array_filter($ramas, fn (string $s) => str_contains($s, 'body:not([data-has-hero])'));
+        $conHero = array_filter($ramas, fn (string $s) => str_contains($s, 'body[data-has-hero]'));
+
+        $this->assertNotEmpty(
+            $sinHero,
+            "El salto del logotipo no tiene rama para las ONCE vistas sin hero, así que ahí no se mueve.\n"
+            .'Ramas encontradas: '.implode(' | ', $ramas),
+        );
+        foreach ($sinHero as $s) {
+            $this->assertStringNotContainsString(
+                'nav--live',
+                $s,
+                "La rama sin hero exige `.nav--live`, y esa clase la pone el componente del HERO: en esas vistas no llega nunca.\n"
+                ."Selector: {$s}",
+            );
+        }
+        $this->assertNotEmpty(
+            $conHero,
+            'Se ha perdido la rama de la portada: allí el armazón nace oculto y el salto tiene que esperar a `.nav--live`.',
+        );
+    }
 }

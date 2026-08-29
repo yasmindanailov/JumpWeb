@@ -14707,3 +14707,79 @@ estático el cuerpo es el mismo de siempre (44) y ahí el renglón pide 321 de l
 los tres, así que las otras dos caben de sobra. **Con un rótulo más largo el titular volvería a
 envolver.** Medir texto desde CSS no se puede; hacerlo bien pediría JavaScript, y no lo vale una
 pieza decorativa. **Ficha en `DEUDA`**, con el número para que el siguiente no tenga que medirlo.
+
+---
+
+## #263 · 2026-08-29 · El logotipo no saltaba en ONCE de las doce vistas, y su sombra era dura por el ajuste anterior
+
+`[DECIDIDO owner]`: «el logotipo que tenemos no es idéntico al de la landing, y **no hace la
+animación**; el de la landing tiene una sombra más suave, el nuestro una totalmente densa y
+definida. Revísalo, si hace falta rehaz el logo».
+
+### 1 · Lo primero medido: el ASSET está bien y no hay que rehacerlo
+
+El SVG que exportó el owner es una reconstrucción fiel del lockup del mockup, no una aproximación:
+**27 pasos de extrusión** por palabra (`u1` = PLAY, `u2` = JUMPPARK), **16** en la silueta, más los
+degradados `sombraTexto` y `brilloTexto` con las mismas paradas que sus `linear-gradient`, y todo en
+contornos. Es exactamente la receta que el artboard construye con siete capas de texto vivo en
+`Lilita One`. **No hay nada que pedirle al diseñador.**
+
+⚠️ Y trae `id="fig"`, que es la pieza que la coreografía necesita. `InlineSvg` no la pierde: su lista
+es de **etiquetas** prohibidas, no de atributos.
+
+### 2 · ⚠️⚠️ El defecto real: la animación estaba MUERTA en once vistas
+
+La regla la disparaba `body.nav--live`… y **esa clase la pone el componente del hero, que solo existe
+en la portada**. Medido en `/servicios`: el logotipo pintado a 70 px de alto, `#fig` en el árbol y
+`getAnimations()` devolviendo **cero**. Igual en `/contacto`.
+
+⚠️ **El comentario del propio CSS afirmaba lo contrario** —«en las once vistas sin hero el armazón
+está siempre, así que salta una vez y se queda»—. Era una suposición escrita como hecho, y llevaba
+así desde `#254`.
+
+⚠️⚠️ **Ninguna guarda lo veía, y había una mirando justo al lado**:
+`InlineBrandLogoTest` comprobaba que `id="fig"` llega al documento, y eso pasaba en verde con la
+animación muerta. ▶ *Que la pieza llegue no es que se mueva.*
+
+▶ El marcador correcto ya existía: **`body[data-has-hero]`**, que el layout pone solo donde hay
+coreografía, y que todas las demás reglas de `.nav--live` ya usan para acotarse. La animación pasa a
+**dos ramas**: sin hero, «existe y no está oculto»; con hero, además `.nav--live`.
+
+**Verificado tras el arreglo**: `/servicios` ✓ · `/contacto` ✓ · portada al cargar **sin** animación
+(correcto: el logotipo está oculto bajo el hero) · portada tras bajar ✓ · movimiento reducido, cero.
+
+**Guarda nueva**, `test_the_logo_hop_also_reaches_the_views_without_a_hero`: mira la CONDICIÓN —que
+existan las dos ramas y que la de sin-hero no dependa de `.nav--live`—. Mutada con **el fallo real**
+(volver a la rama única) y con el fallo de al lado (colar `.nav--live` en la rama nueva): **las dos
+muerden**, y el producto sano pasa.
+
+### 3 · La sombra: bajar el RADIO fue la mitad equivocada del ajuste
+
+`#253` ya tocó esto. Entonces el owner dijo «nuestro logo tiene demasiada sombra» y se bajó de
+`0 6px 16px 45%` a `0 3px 7px 30%`. Ahora dice lo contrario —«la nuestra es densa y definida, la
+suya más suave»— y **las dos notas son ciertas a la vez**.
+
+▶ **Son dos dimensiones independientes: el RADIO hace la suavidad y la OPACIDAD hace la densidad.**
+Bajar el radio de 16 a 7 quita sombra, sí, pero deja un borde **más duro**: una mancha definida
+pegada a la masa. La respuesta no era ninguno de los dos estados anteriores, sino el radio del
+mockup con mucha menos tinta.
+
+Comparadas **cuatro combinaciones en el navegador**, a tamaño real y sobre la superficie oscura
+donde el logotipo vive:
+
+| | desplaz. · radio · tinta | cómo se lee |
+|---|---|---|
+| A · lo que había (`#253`) | 3 · 7 · 30 % | halo apretado, borde definido |
+| B · el del mockup, literal | 6 · 16 · 45 % | suave pero pesada: el halo que `#253` rechazó |
+| **C · elegida** | **5 · 18 · 18 %** | la suavidad de B sin su densidad |
+| D | 6 · 22 · 12 % | casi imperceptible |
+
+⚠️ **La línea de 1 px se queda** (`0 1px 0`, 14 %): es la que da borde inferior cuando el logotipo
+cae sobre algo claro, y no tiene nada que ver con el halo.
+
+### 4 · Lo que sigue sin ser idéntico, y es estructural
+
+El mockup hace un **relevo**: la silueta entra de un salto **y se queda como letra Y**, mientras la
+Y tipográfica se desvanece. Aquí solo se hace la primera mitad, y no por falta de ganas: **en
+nuestro logotipo la silueta YA ES la Y** —no hay dos piezas que relevarse—. Está en `#254` y sigue
+igual.
