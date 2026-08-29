@@ -14044,7 +14044,11 @@ principio del atributo no mide el atributo que dice medir.*
 
 ### 6 · El alcance, con su radio dicho
 
-- **57 componentes** (eran 26): 43 del artboard + 2 derivados + 12 nuestros que se quedan.
+- **55 componentes** (eran 26): 43 del artboard + 2 derivados + **10** nuestros que se quedan.
+  ⚠️ **La primera cifra publicada fue 57, y estaba mal**: se sumaron los 43 del artboard a los 26 de
+  antes sin descontar que **16 de ellos SOBRESCRIBEN** un fichero existente (14 sustituciones + los
+  2 derivados, que también tenían componente). 26 − 16 + 29 nuevos = **55**. Corregida al montar la
+  hoja de contacto completa, que los cuenta de verdad. *Una suma no es una medida.*
 - **14 sustituciones**, y por tanto **14 copias del cajón** actualizadas en **6 ficheros** — las
   encontró la guarda de paridad, una por una, que es exactamente para lo que existe.
 - ⚠️ **El cajón cambia de aspecto con la landing, y no es un efecto colateral: es el mecanismo.**

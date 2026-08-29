@@ -2018,7 +2018,7 @@ teléfono**. Ahora es `phone`.
 
 ### 22.5 El radio, dicho
 
-- **57 componentes** (eran 26) · 14 sustituciones · **14 copias del cajón** actualizadas en 6
+- **55 componentes** (eran 26) · 14 sustituciones · **14 copias del cajón** actualizadas en 6
   ficheros, encontradas una a una por `SidebarIconParityTest`.
 - ⚠️ **El cajón cambia de aspecto con la landing y eso es el MECANISMO, no un daño colateral**
   (`landing-white-label.md` §4.5.3): el set es compartido para que las dos superficies no diverjan.

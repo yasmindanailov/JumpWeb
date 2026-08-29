@@ -75,7 +75,7 @@ class IconSetAnatomyTest extends TestCase
 
         $this->assertGreaterThanOrEqual(
             50, count($nombres),
-            'el recorrido ve menos de 50 iconos: el set tiene 57 y un descubrimiento corto pasa en '.
+            'el recorrido ve menos de 50 iconos: el set tiene 55 y un descubrimiento corto pasa en '.
             'verde sin mirar lo que falta.'
         );
     }

@@ -8,7 +8,9 @@
 > ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
 > la marquesina. Y `#253` — ocho puntos de la portada, DOS de ellos fallos.**
 >
-> ❗❗ **`#257` — EL SET DE ICONOS DEL ARTBOARD ENTRA EN EL PRODUCTO: 26 componentes → 57.**
+> ❗❗ **`#257` — EL SET DE ICONOS DEL ARTBOARD ENTRA EN EL PRODUCTO: 26 componentes → 55.**
+> ⚠️ *(La primera cifra publicada fue 57 y estaba mal: sumaba los 43 del artboard a los 26 de antes
+> sin descontar los **16 que SOBRESCRIBEN** un fichero existente. Una suma no es una medida.)*
 > `[DECIDIDO owner]` a dos preguntas: el set se parte **por el corte del propio artboard** (los
 > genéricos al PRODUCTO, los de parque al paquete del cliente) y en esta tanda se dibujan **los de
 > UI**; las 14 zonas, después.
