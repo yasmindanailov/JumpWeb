@@ -14215,3 +14215,97 @@ esté cogida**».
   perdería la animación.
 - **`socks` e `ic-b7`** no tienen equivalente en el artboard, y las cuatro ilustraciones de entrada y
   tarta se quedan por la razón de datos de arriba.
+
+---
+
+## #259 · 2026-08-29 · [DECIDIDO owner] El cargador es TRES BOTES, el catálogo deja de deducir su dibujo, y dos guardas más que no miraban
+
+El owner pidió cuatro cosas: verificar que los iconos son 1:1, los que faltaban, si los estados
+están en el SPA, y **cambiar todos los spinners a «Tres botes»**.
+
+### 1 · El 1:1, medido y no afirmado
+
+**47 de 47 idénticos**, byte a byte tras normalizar como hace `SidebarIconParityTest::canonical()`
+—XML, atributos ordenados—: los **43** del set (§02 + §08) y los **4** del LOTE 2. Comparados contra
+el artboard con un guion, no a ojo.
+
+### 2 · El CARGADOR pasa a ser «Tres botes», y deja de ser la marca de un cliente
+
+`[DECIDIDO owner]`: «nuestro loading será Tres botes». El dibujo anterior era, literalmente, «un
+punto que salta sobre un bloque de espuma, **el mismo vocabulario que su logo**»: un cargador con
+marca ajena dentro, servido a toda instalación. Tres puntos no dicen de quién es la web.
+
+Los números salen medidos del artboard: **punto 11 · hueco 9 · salto 7 · ciclo 900 ms · desfase
+120 ms**, y aquí van en proporción al tamaño para que los cinco tallajes sigan funcionando —
+`3·0,216 + 2·0,176 = 1`, o sea que los tres puntos y sus dos huecos llenan la caja exacta.
+
+⚠️ **Son TRES piezas y no dos**: los pseudo-elementos son los puntos de los extremos y **el del
+medio lo pinta el fondo del elemento**. Hacen falta tres cajas porque hacen falta tres FASES, y un
+`transform` sobre el elemento arrastraría a sus pseudo-elementos.
+⚠️ **El fotograma quieto con `prefers-reduced-motion` sale de su propia regla**: «los tres se quedan
+quietos: […] los puntos **se apagan al 40 %**».
+⚠️ El artboard reparte los tres cargadores por uso (aro = botón y página · botes = esperas cortas en
+lista · barra = cabecera de proceso). El owner elige botes para todo; queda dicho.
+
+⚠️⚠️ **Y un fallo que solo se vio en una captura**: el punto del medio salía **29 % más pequeño**.
+En un `radial-gradient` las paradas se miden sobre el RAYO, y el rayo por defecto
+(`farthest-corner`) llega a la esquina: `0,707 × lado`. Un `50%` ahí dibuja 5,5 px donde los
+pseudo-elementos tienen 7,8. Es `closest-side`. *Ninguna medida lo habría dicho: los tres puntos
+tenían el mismo `background-size`.*
+
+### 3 · La «entrada individual» que faltaba estaba en la cabecera
+
+El botón de comprar del armazón llevaba `ic-e2`, la ilustración **duotono** de dos entradas
+superpuestas en lienzo 50×32. Pasa a `ui/entrada`, y con ella **se van cuatro reglas de CSS** que
+pintaban por separado la entrada de delante y su «occluder» —el que había que fundir con el fondo
+del botón, distinto en reposo y en hover—. Eso es exactamente lo que §06 del artboard prohíbe: «dos
+colores dentro del mismo glifo».
+
+### 4 · ⚠️⚠️ El catálogo elegía su dibujo con `is_pack`, y la guarda que lo prohíbe miraba DOS ficheros
+
+`ProductIconSingleSourceTest` existe desde `#140` para impedir exactamente ese patrón. Su lista de
+superficies estaba **escrita a mano y tenía dos entradas**: `CartStep.vue` y `SummaryLine.vue`.
+**`CatalogStep.vue` no estaba** — la pantalla más visible del cajón—, así que siguió repartiendo el
+catálogo entero en dos dibujos con `v-if="item.is_pack"` sin que nada lo viera.
+
+▶ El descubrimiento pasa a ser **automático** (todos los `.vue` del cajón, a cualquier profundidad),
+con dos anclas para que no vuelva a quedarse corto. *Una lista que hay que acordarse de ampliar es
+una lista que envejece* — es la misma lección de `#113` y la que `SidebarIconParityTest` ya había
+aprendido con su `glob('**')`.
+
+Para arreglarlo, la clave del marcador **viaja ahora en el contrato**: `CatalogProduct.icon`,
+resuelto por el dominio (`ProductIcon`), publicado en `GET /api/v1/catalog/products` y declarado en
+`openapi/v1.yaml`. Añadir un campo es evolutivo. Sin él, el cliente no tenía nada más que mirar que
+`is_pack`.
+
+⚠️ **Y los valores por defecto cambian** (`[DECIDIDO owner]`): entrada → `ticket`, pack → `gift`.
+Mueve el icono de **todos** los productos que no hayan elegido uno, que hoy son todos. Las seis
+ilustraciones **siguen ofrecidas**: un producto vuelve a la tarta con un clic.
+
+⚠️⚠️ **Un hallazgo que casi convierte las masas en contornos**: la clase `.icon` **no es un
+contenedor neutro** — declara `fill: none; stroke: currentColor; stroke-width: 1.6` sobre cada
+`path`, `rect`, `line`, `polyline` y `circle`. Es correcta para las ilustraciones del idioma
+anterior, que se dibujan a línea, y habría convertido en un hilo cualquiera de los cinco glifos de
+masa. Los marcadores nuevos van sin ella, y lo que `.icon` daba de layout pasó a `.prod-ico`.
+
+### 5 · Los estados: sí, están en el SPA
+
+`ConfirmedStep` (verde), `DeclinedStep` (rojo) y `PausedNotice` (amarillo). Son componentes Vue del
+cajón, con el keyline de tinta de 2 px y la sombra dura por rol.
+
+### 6 · El área táctil de 44, MEDIDA y no tocada
+
+**115 controles por debajo de 44 px en móvil**: 63 enlaces (pie y menú, a 40 y a 14 px de alto), 25
+botones y 1 casilla. Solo cinco llevan icono. `[DECIDIDO owner]`: **tanda propia**, porque toca el
+pie, la FAQ, las cookies y el cierre — un cambio de composición en varias vistas, como fue `#232` en
+la puerta del panel.
+
+### Lo verificado
+
+Suite **3425 / 22.554** · Pint ✓ · docs-check ✓ · build ✓ · SSR ✓ · navegador a 1440 (cabecera,
+catálogo, los cinco tallajes del cargador) con **cero errores de JS** · 3 mutaciones sobre las
+guardas del spinner, 2 muerden (la tercera no era un invariante).
+⚠️ El manifiesto del cajón se regeneró **dos veces** a propósito: por el marcador de producto y por
+la cabecera de sección.
+⚠️ Y una guarda del spinner **se puso roja con el dibujo sano**: leía una lista `a, b { … }` como un
+único selector. Una lista de selectores son varios selectores.

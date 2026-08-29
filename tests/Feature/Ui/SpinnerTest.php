@@ -282,16 +282,31 @@ class SpinnerTest extends TestCase
         $rules = (string) preg_replace('/@(?:media|keyframes|supports)[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', $this->rulesOnly($drawing));
 
         preg_match_all('/([^{}]+)\{/', $rules, $selectors);
-        $found = array_filter(array_map('trim', $selectors[1]));
+        // ⚠️ **Una LISTA de selectores son varios selectores, y hay que juzgarlos por separado.**
+        // Sin partir por comas, `.jj-spinner::before, .jj-spinner::after { … }` —una regla
+        // perfectamente legítima, y la que agrupa los dos puntos de los extremos desde `#259`— se
+        // leía como un único selector rarísimo y el caso salía rojo con el dibujo sano.
+        $found = array_values(array_filter(array_map(
+            'trim',
+            preg_split('/\s*,\s*/', implode(',', array_map('trim', $selectors[1]))) ?: [],
+        )));
 
         $this->assertNotEmpty($found, 'no se ve ninguna regla en §B: el dibujo ha desaparecido o el escaneo está roto');
 
         foreach ($found as $selector) {
+            // ⚠️⚠️ **Lo que se vigila es la ESPECIFICIDAD, no la lista de nombres.** Desde `#259` el
+            // dibujo son TRES piezas —«tres botes»—: los dos pseudo-elementos y el propio elemento,
+            // que pinta el punto del medio con su fondo. `.jj-spinner` a secas tiene MENOS
+            // especificidad que `.jj-spinner::before`, así que el paquete de una instalación lo
+            // sigue ganando por orden de cascada, que es la garantía que este caso protege.
+            // ▶ Lo que sigue prohibido es exactamente lo de antes: un descendiente, una clase
+            // compuesta o cualquier cosa que suba la especificidad por encima de lo que el cliente
+            // puede escribir.
             $this->assertMatchesRegularExpression(
-                '/^\.jj-spinner::(?:before|after)$/', $selector,
+                '/^\.jj-spinner(?:::(?:before|after))?$/', $selector,
                 "el dibujo usa el selector «{$selector}», que no es el mínimo.\n".
-                '▶ Una instalación redefine `.jj-spinner::before` / `::after`. Cualquier especificidad '.
-                "extra aquí hace que su paquete cargue y NO pinte.\n".
+                '▶ Una instalación redefine `.jj-spinner`, `::before` y `::after`. Cualquier '.
+                "especificidad extra aquí hace que su paquete cargue y NO pinte.\n".
                 '▶ Si hace falta un selector nuevo, documenta en §B qué tiene que escribir el cliente.',
             );
         }

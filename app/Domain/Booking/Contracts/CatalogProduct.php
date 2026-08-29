@@ -69,6 +69,16 @@ final readonly class CatalogProduct
         public ?string $periodLabel,
         /** Destacado por configuración del panel. */
         public bool $featured,
+        /**
+         * La CLAVE del marcador de producto, ya resuelta (`Booking\Services\ProductIcon`).
+         *
+         * ⚠️⚠️ **Nunca es `null` y nunca se deduce en el cliente** (`#259`). El catálogo del cajón
+         * elegía su dibujo con `v-if="item.is_pack"` —el patrón exacto que `#140` retiró de las
+         * otras dos superficies— porque este campo no viajaba: sin él, el cliente no tenía nada más
+         * que mirar. Con la clave aquí, cambiar el icono de un producto es un desplegable del panel
+         * y no tocar Vue.
+         */
+        public string $icon,
         /** Zona operativa del producto, o null si no tiene (nunca en un producto con franjas). */
         public ?CatalogZone $zone,
     ) {}

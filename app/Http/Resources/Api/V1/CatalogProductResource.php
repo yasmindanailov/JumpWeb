@@ -39,6 +39,10 @@ class CatalogProductResource extends JsonResource
             'deposit_label' => $this->resource->depositLabel,
             'period_label' => $this->resource->periodLabel,
             'featured' => $this->resource->featured,
+            // ⚠️ Campo NUEVO (`#259`), y es evolutivo: añadir una clave no rompe a ningún cliente.
+            // Sin él, el cajón deducía el dibujo de `is_pack` y el catálogo entero se repartía en
+            // DOS iconos — el patrón que `#140` ya había retirado de la cesta y del resumen.
+            'icon' => $this->resource->icon,
             'zone' => $this->resource->zone === null
                 ? null
                 : (new CatalogZoneResource($this->resource->zone))->toArray($request),

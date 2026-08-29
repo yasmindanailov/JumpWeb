@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
+import ProductIcon from '../ProductIcon.vue';
 
 /**
  * Paso 1 — el CATÁLOGO (Fase 4 · paso 4.2).
@@ -76,25 +77,24 @@ const anyMatch = computed(() => normalised.value === '' || props.sections.some((
                       selectores estructurales. Se replica el árbol, no el dibujo — el interior del
                       `<svg>` es geometría y el diff no desciende en él.
                     -->
-                    <span v-if="section.key === 'entries'" class="icon ic-e5" aria-hidden="true">
-                        <svg viewBox="0 0 50 32" width="24" height="15">
-                            <g class="t-deal">
-                                <path d="M 12 4 L 46 4 L 46 7 A 2.2 2.2 0 0 0 46 11.4 L 46 16 L 12 16 L 12 11.4 A 2.2 2.2 0 0 0 12 7 Z" />
-                            </g>
-                            <path class="occ" d="M 8 9 L 42 9 L 42 12 A 2.2 2.2 0 0 0 42 16.4 L 42 21 L 8 21 L 8 16.4 A 2.2 2.2 0 0 0 8 12 Z" />
-                            <path class="occ" d="M 4 14 L 38 14 L 38 17 A 2.2 2.2 0 0 0 38 21.4 L 38 26 L 4 26 L 4 21.4 A 2.2 2.2 0 0 0 4 17 Z" />
-                            <path d="M 11 16.5 L 11 23.5" class="dashed" />
-                            <path d="M 15 18.5 L 33 18.5" />
-                            <path d="M 15 22 L 27 22" class="thin" />
+                    <!-- ⚠️⚠️ **Sin la clase `.icon`, y no es un descuido** (`#259`): esa clase fuerza
+                         `fill: none; stroke-width: 1.6` sobre cada `path`, o sea **dibuja a línea**.
+                         Es correcta para las ilustraciones del idioma anterior y convertiría estos
+                         dos glifos de MASA en un contorno fino. El envoltorio que sí es contrato es
+                         `.catalog-acc__icon`, que sigue igual.
+                         `pack` y `gift` del sistema de diseño, copiados byte a byte
+                         (`SidebarIconParityTest`). La sección de ENTRADAS lleva `ui/pack` —la tira
+                         troquelada, «varias entradas»— y no `ui/entrada`, porque rotula un GRUPO. -->
+                    <span v-if="section.key === 'entries'" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4 6.4h2.9a1.5 1.5 0 0 0 3 0h3.4a1.5 1.5 0 0 0 3 0h2.9A2.4 2.4 0 0 1 22 8.8v6.4a2.4 2.4 0 0 1-2.4 2.4h-2.9a1.5 1.5 0 0 0-3 0h-3.4a1.5 1.5 0 0 0-3 0H4.4A2.4 2.4 0 0 1 2 15.2V8.8a2.4 2.4 0 0 1 2.4-2.4zM8.8 9.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm6.4-4.2a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6z" />
                         </svg>
                     </span>
-                    <span v-else class="icon ic-b1" aria-hidden="true">
-                        <svg viewBox="0 0 40 40" width="18" height="18">
-                            <path d="M 7 33 L 33 33" />
-                            <path d="M 10 33 L 10 25 Q 10 22 13 22 L 27 22 Q 30 22 30 25 L 30 33" />
-                            <path d="M 11.5 27.5 L 28.5 27.5" class="dashed thin" />
-                            <path d="M 20 22 L 20 15" />
-                            <path class="flame accent-fill" d="M 20 14.5 Q 22.4 11.6 20 8.6 Q 17.6 11.6 20 14.5 Z" />
+                    <span v-else aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.4 9.2h17.2v3.4h-1.2v7.2a1.8 1.8 0 0 1-1.8 1.8H6.4a1.8 1.8 0 0 1-1.8-1.8v-7.2H3.4zm7 3.4v6.6h3.2v-6.6z" />
+                            <circle cx="8.9" cy="5.6" r="2.8" />
+                            <circle cx="15.1" cy="5.6" r="2.8" />
                         </svg>
                     </span>
                 </span>
@@ -118,30 +118,15 @@ const anyMatch = computed(() => normalised.value === '' || props.sections.some((
                                 :class="{ 'catalog__item--feat': item.featured }"
                                 :data-search="item.search"
                                 @click="emit('select', item.id)">
+                            <!-- ⚠️⚠️ **Aquí el catálogo elegía su dibujo con `v-if="item.is_pack"`** — el patrón
+                                 exacto que `#140` retiró de la cesta y del resumen, y que sobrevivió aquí porque
+                                 la guarda miraba una lista de DOS ficheros escrita a mano y ésta no estaba
+                                 (`#259`). Con él, un catálogo entero se repartía en dos dibujos y elegir el
+                                 icono de un producto exigía tocar Vue.
+                                 ▶ La clave la manda ahora el servidor en `item.icon`, resuelta por
+                                 `Booking\Services\ProductIcon`, igual que en las otras dos superficies. -->
                             <span class="catalog__tk">
-                                <span v-if="item.is_pack" class="icon ic-b1" aria-hidden="true">
-                                    <svg viewBox="0 0 40 40" width="26" height="26">
-                                        <path d="M 7 33 L 33 33" />
-                                        <path d="M 10 33 L 10 25 Q 10 22 13 22 L 27 22 Q 30 22 30 25 L 30 33" />
-                                        <path d="M 11.5 27.5 L 28.5 27.5" class="dashed thin" />
-                                        <path d="M 20 22 L 20 15" />
-                                        <path class="flame accent-fill" d="M 20 14.5 Q 22.4 11.6 20 8.6 Q 17.6 11.6 20 14.5 Z" />
-                                    </svg>
-                                </span>
-                                <span v-else class="tk" aria-hidden="true">
-                                    <svg viewBox="0 0 60 36" width="38" height="24" fill="none">
-                                        <g class="body">
-                                            <path d="M 4 4 L 42 4 L 42 8 A 1.4 1.4 0 0 0 42 12 L 42 16 A 1.4 1.4 0 0 0 42 20 L 42 24 A 1.4 1.4 0 0 0 42 28 L 42 32 L 4 32 L 4 28 A 1.4 1.4 0 0 0 4 24 L 4 20 A 1.4 1.4 0 0 0 4 16 L 4 12 A 1.4 1.4 0 0 0 4 8 Z" />
-                                            <line x1="14" y1="14" x2="34" y2="14" class="thin" />
-                                            <line x1="14" y1="20" x2="34" y2="20" class="thin" />
-                                        </g>
-                                        <path class="dashed" d="M 42 5.5 L 42 30.5" />
-                                        <g class="stub">
-                                            <path d="M 42 4 L 56 4 L 56 8 A 1.4 1.4 0 0 0 56 12 L 56 16 A 1.4 1.4 0 0 0 56 20 L 56 24 A 1.4 1.4 0 0 0 56 28 L 56 32 L 42 32 L 42 28 A 1.4 1.4 0 0 1 42 24 L 42 20 A 1.4 1.4 0 0 1 42 16 L 42 12 A 1.4 1.4 0 0 1 42 8 Z" />
-                                            <text class="stubnum" x="49" y="22.5" text-anchor="middle">1</text>
-                                        </g>
-                                    </svg>
-                                </span>
+                                <ProductIcon :icon="item.icon" />
                             </span>
                             <span class="catalog__info">
                                 <span class="catalog__name">{{ item.name }}<span v-if="item.badge" class="catalog__badge">{{ item.badge }}</span></span>

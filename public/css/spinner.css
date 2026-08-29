@@ -128,63 +128,103 @@
    ════════════════════════════════════════════════════════════════════
    §B · DIBUJO — EL PUNTO DE SUSTITUCIÓN DE UNA INSTALACIÓN
    --------------------------------------------------------------------
-   Todo lo que hay debajo de esta línea es la marca del primer cliente.
-   Para traer otro dibujo, redefine en `public/css/client.css` los dos
-   pseudo-elementos y su animación; se cargan después y ganan por orden
-   de cascada, sin tocar el producto.
+   **TRES BOTES** (`#259`, `[DECIDIDO owner]`), el cargador del artboard
+   `Iconos PJP` §08: tres puntos que rebotan con desfase.
+
+   ⚠️⚠️ **Esto ya NO es la marca del primer cliente, y ése era el
+   encargo.** Hasta `#259` el dibujo era «un punto que salta sobre un
+   bloque de espuma, el mismo vocabulario que su logo»: un cargador con
+   marca dentro, servido a toda instalación. Tres puntos no dicen de
+   quién es la web — el color lo pone el contexto y la forma no
+   pertenece a nadie—, así que el producto ya no impone una marca
+   ajena y el paquete sigue pudiendo traer la suya.
+
+   Los números salen medidos de su artboard, no a ojo:
+     · punto 11 · hueco 9 · salto 7 · ciclo 900 ms · desfase 120 ms
+   Aquí van en PROPORCIÓN al tamaño, para que los cinco tallajes de §A
+   sigan funcionando: 3·0,216 + 2·0,176 = 1, o sea que los tres puntos
+   y sus dos huecos llenan exactamente el ancho de la caja.
+
+   ⚠️ **Son TRES piezas, no dos**: los pseudo-elementos son el punto de
+   la IZQUIERDA y el de la DERECHA, y el del MEDIO lo pinta el fondo del
+   propio elemento. Hacen falta tres cajas porque hacen falta tres
+   FASES —el desfase de 120 ms es lo que distingue este cargador de
+   tres puntos parpadeando a la vez— y un `transform` sobre el elemento
+   arrastraría a sus pseudo-elementos.
+   ▶ Para traer otro dibujo, redefine en `public/css/client.css` las
+   piezas que uses; se carga después y gana por orden de cascada, sin
+   tocar el producto.
 
    · Apagar una pieza que no uses:  .jj-spinner::after { content: none; }
+     y, para el punto del medio, `.jj-spinner { background-image: none; }`
    · La geometría se compone sobre `--jj-spinner-size`, así que los
      cinco tamaños de §A siguen funcionando gratis.
    · El color sale de `--jj-spinner-color`; no lo escribas a mano o el
      spinner dejará de seguir al contexto que lo pinta.
    · No declares aquí `animation` sin comprobar §A: la garantía de
-     «reducir movimiento» ya la cubre el contrato.
+     «reducir movimiento» ya la cubre el contrato, y cubre las TRES
+     piezas porque nombra el elemento y sus dos pseudo-elementos.
    ════════════════════════════════════════════════════════════════════ */
 
-/* foam-block — base (static) */
+/* La geometría del dibujo, en proporción al tamaño de §A. */
+.jj-spinner {
+  --jj-bote: calc(var(--jj-spinner-size) * 0.216);   /* el punto (11 del artboard) */
+  --jj-salto: calc(var(--jj-bote) * 0.636);          /* el salto (7 sobre 11) */
+  --jj-desfase: calc(var(--jj-spinner-speed) * 0.1333); /* 120 ms sobre 900 */
+}
+
+/* El punto del MEDIO: lo pinta el fondo del elemento, y por eso salta moviendo
+   `background-position` en vez de `transform` — un `transform` aquí movería también los dos
+   pseudo-elementos y los tres botarían juntos. */
+.jj-spinner {
+  /* ⚠️⚠️ **`closest-side` no es un detalle: sin él el punto del medio sale un 29 % más pequeño.**
+     En un `radial-gradient` los porcentajes de las paradas se miden sobre el RAYO, y el rayo por
+     defecto (`farthest-corner`) llega a la esquina: 0,707 × el lado. Un `50%` ahí dibuja un círculo
+     de 5,5 px donde los pseudo-elementos tienen 7,8. Se vio en una captura —los tres puntos tenían
+     que ser idénticos y el del medio no lo era—, no en una medida. */
+  background-image: radial-gradient(circle closest-side,
+                    var(--jj-spinner-color) 0 100%, transparent 100%);
+  background-repeat: no-repeat;
+  background-size: var(--jj-bote) var(--jj-bote);
+  background-position: 50% 50%;
+  animation: jjSpinnerHopBg var(--jj-spinner-speed) ease-in-out var(--jj-desfase) infinite;
+}
+
+/* Los puntos de los EXTREMOS. Al ir pegados a los cantos de la caja, los dos huecos salen solos:
+   el ancho de §A menos los tres puntos, repartido. */
+.jj-spinner::before,
 .jj-spinner::after {
   content: "";
   position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: calc(var(--jj-spinner-size) * 0.62);
-  height: calc(var(--jj-spinner-size) * 0.62);
-  background: var(--jj-spinner-color);
-  border-radius: calc(var(--jj-spinner-size) * 0.14);
-  transform: translateX(-50%) rotate(18deg);
-}
-
-/* dot — hops on top */
-.jj-spinner::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: calc(var(--jj-spinner-size) * 0.78);
-  width: calc(var(--jj-spinner-size) * 0.42);
-  height: calc(var(--jj-spinner-size) * 0.42);
+  top: 50%;
+  width: var(--jj-bote);
+  height: var(--jj-bote);
+  margin-top: calc(var(--jj-bote) / -2);
   background: var(--jj-spinner-color);
   border-radius: 50%;
-  transform-origin: 50% 100%;
-  animation: jjSpinnerHop var(--jj-spinner-speed) cubic-bezier(0.4, 0, 0.5, 1) infinite;
-  /* base translateX so transform animation only handles Y + scale */
-  translate: -50% 0;
+  animation: jjSpinnerHop var(--jj-spinner-speed) ease-in-out infinite;
 }
+.jj-spinner::before { left: 0; }
+.jj-spinner::after { right: 0; animation-delay: calc(var(--jj-desfase) * 2); }
 
-/* base hop — squash + stretch + jump (same vocabulary as logo) */
+/* El bote: arriba al 40 % del ciclo y quieto desde el 80 %, que es la curva del artboard.
+   ⚠️ **No lleva `squash & stretch`**: el sistema del cliente dice que éste «es el único guiño de
+   rebote» y lo describe como salto, no como deformación. El vocabulario elástico era del dibujo
+   anterior, que sí era su marca. */
 @keyframes jjSpinnerHop {
-  0%, 14%  { transform: translateY(0)    scale(1,    1   ); }
-  26%      { transform: translateY(0)    scale(1.18, 0.74); }  /* squash + anticipation */
-  44%      { transform: translateY(-46%) scale(0.90, 1.14); }  /* lift-off stretch */
-  56%      { transform: translateY(-62%) scale(1,    1   ); }  /* peak */
-  70%      { transform: translateY(-22%) scale(1.06, 0.92); }  /* falling */
-  82%      { transform: translateY(0)    scale(1.20, 0.74); }  /* landing squash */
-  92%, 100%{ transform: translateY(0)    scale(1,    1   ); }
+  0%, 80%, 100% { transform: translateY(0); }
+  40%           { transform: translateY(calc(var(--jj-salto) * -1)); }
 }
 
-/* La postura de REPOSO del dibujo cuando se ha pedido reducir movimiento: el punto se queda a
-   media altura en vez de pegado al bloque. Es del dibujo, no del contrato — un dibujo sustituto
-   traerá la suya (o ninguna: §A ya ha parado la animación). */
+/* El mismo bote para el punto del medio, expresado sobre el fondo. */
+@keyframes jjSpinnerHopBg {
+  0%, 80%, 100% { background-position: 50% 50%; }
+  40%           { background-position: 50% calc(50% - var(--jj-salto)); }
+}
+
+/* La postura de REPOSO cuando se ha pedido reducir movimiento. Es del dibujo, no del contrato —§A
+   ya ha parado las animaciones—, y sale de la propia regla del artboard: «con
+   `prefers-reduced-motion` los tres se quedan quietos: […] **los puntos se apagan al 40 %**». */
 @media (prefers-reduced-motion: reduce) {
-  .jj-spinner::before { transform: translateY(-30%); }
+  .jj-spinner { opacity: 0.4; }
 }

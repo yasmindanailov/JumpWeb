@@ -8,6 +8,36 @@
 > ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
 > la marquesina. Y `#253` — ocho puntos de la portada, DOS de ellos fallos.**
 >
+> ❗❗ **`#259` — EL CARGADOR ES «TRES BOTES», Y EL CATÁLOGO DEJA DE DEDUCIR SU DIBUJO.**
+> `[DECIDIDO owner]`. ▶ **1:1 verificado: 47 de 47 idénticos** byte a byte tras normalizar (43 del
+> set + 4 del LOTE 2), comparados con un guion contra el artboard.
+> ❗ **El spinner deja de ser la marca de un cliente**: su dibujo era «un punto que salta sobre un
+> bloque de espuma, **el mismo vocabulario que su logo**», servido a toda instalación. Ahora son
+> tres puntos con los números del artboard (11 · 9 · 7 · 900 ms · desfase 120), en proporción al
+> tamaño. ⚠️ **Son TRES piezas y no dos**: los pseudo-elementos son los extremos y **el del medio lo
+> pinta el fondo del elemento**, porque hacen falta tres FASES y un `transform` en el elemento
+> arrastraría a sus pseudos. ⚠️ Reposo con movimiento reducido **al 40 % de opacidad**, que lo manda
+> él.
+> ⚠️⚠️ **Y un fallo que solo se vio en una CAPTURA**: el punto del medio salía **29 % más pequeño**.
+> En un `radial-gradient` las paradas se miden sobre el RAYO, y por defecto llega a la ESQUINA
+> (`0,707 × lado`). Es `closest-side`. *Ninguna medida lo habría dicho: los tres tenían el mismo
+> `background-size`.*
+> ⚠️⚠️ **`ProductIconSingleSourceTest` miraba una lista de DOS ficheros escrita a mano**, y
+> `CatalogStep.vue` —la pantalla más visible del cajón— no estaba: seguía repartiendo el catálogo en
+> dos dibujos con `v-if="item.is_pack"`, el patrón que esa guarda existe para prohibir desde `#140`.
+> Descubrimiento **automático** ahora, con dos anclas. *Una lista que hay que acordarse de ampliar es
+> una lista que envejece.*
+> ▶ Para arreglarlo, la clave del marcador **viaja en el contrato**: `CatalogProduct.icon`, resuelto
+> por el dominio, publicado en `GET /api/v1/catalog/products` y declarado en `openapi/v1.yaml`.
+> ⚠️ **Los valores por defecto cambian** (`[DECIDIDO owner]`): entrada → `ticket`, pack → `gift`.
+> Mueve el icono de TODOS los productos que no hayan elegido uno. Las seis ilustraciones siguen
+> ofrecidas: se vuelve a la tarta con un clic.
+> ⚠️⚠️ **`.icon` NO es un contenedor neutro**: declara `fill: none; stroke-width: 1.6` sobre cada
+> `path` — **dibuja a línea**— y habría convertido en un hilo los glifos de masa. Los marcadores
+> nuevos van sin ella.
+> ▶ **El «área táctil 44» está MEDIDA y no tocada: 115 controles bajo 44 px en móvil** (63 enlaces,
+> 25 botones, 1 casilla; solo cinco llevan icono). `[DECIDIDO owner]`: **tanda propia**.
+>
 > ❗❗ **`#258` — LA AUDITORÍA DEL SET, EJECUTADA ENTERA, y una guarda que llevaba CIEGA.**
 > Seis bloques, los seis hechos. El set pasa de **55 a 61** y `DRAWER_OWN` **se queda VACÍA** —los
 > cuatro dibujos propios del cajón existían porque no había componente, y ahora lo hay—.
@@ -1352,8 +1382,8 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3425 en verde** (22.555 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-29 tras `#258` (la auditoría del set, ejecutada). ▶ **Mismo número de casos y +24
+- Suite **3425 en verde** (22.554 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 tras `#259` (el cargador «Tres botes» y el catálogo). ▶ **Mismo número de casos y +24
   aserciones**: lo que entró no son tests nuevos sino guardas endurecidas —la paridad del cajón deja
   de estar ciega a un `<svg>` citado en un comentario, y la anatomía gana una excepción **con su
   valor medido** para el trazo de 2,9 que trae `booking` del artboard—.

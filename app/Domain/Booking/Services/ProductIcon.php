@@ -47,11 +47,26 @@ final class ProductIcon
         'ticket', 'gift', 'pack', 'party', 'school-trip',
     ];
 
-    /** El de un pack cuando no ha elegido: la tarta. Es el aspecto que el catálogo ya tenía. */
-    public const DEFAULT_PACK = 'ic-b1';
+    /**
+     * El de un pack cuando no ha elegido: el REGALO del set (`ui/regalo`, que el artboard etiqueta
+     * «Cumpleaños»).
+     *
+     * ⚠️⚠️ **Era `ic-b1`, la tarta, y cambiarlo mueve el icono de TODOS los packs que no hayan
+     * elegido uno** — que hoy son todos (`#259`, `[DECIDIDO owner]`). Se hace a propósito: el
+     * catálogo era la última superficie donde seguían mandando las ilustraciones del idioma
+     * anterior, en tres rejillas distintas, al lado de glifos de masa sobre 24.
+     * ▶ La tarta **no se retira**: sigue ofrecida en `CHOICES`, así que un producto puede volver a
+     * ella con un clic en el panel.
+     */
+    public const DEFAULT_PACK = 'gift';
 
-    /** Y el de todo lo demás: la entrada troquelada. */
-    public const DEFAULT_OTHER = 'ticket-tear-off';
+    /**
+     * Y el de todo lo demás: la ENTRADA del set (`ui/entrada`).
+     *
+     * ⚠️ Era `ticket-tear-off`, la ilustración de 60×36 con texto dentro. Mismo motivo y mismo
+     * trato: se queda ofrecida, deja de ser el respaldo.
+     */
+    public const DEFAULT_OTHER = 'ticket';
 
     /**
      * La clave de icono de un producto. **Nunca devuelve `null`**: una superficie que pinta un

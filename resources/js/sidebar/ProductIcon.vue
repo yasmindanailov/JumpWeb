@@ -26,7 +26,9 @@ import { computed } from 'vue';
 
 const props = defineProps({
     /** Clave del set de diseño. La resuelve el servidor; aquí no se deduce de `is_pack`. */
-    icon: { type: String, default: 'ticket-tear-off' },
+    // ⚠️ Espejo de `ProductIcon::DEFAULT_OTHER`, que desde `#259` es `ticket`. Si los dos se
+    //    separan, el cajón sirve un dibujo distinto del que el dominio dice servir.
+    icon: { type: String, default: 'ticket' },
 });
 
 /** Las que este registro sabe dibujar. Espejo de `Booking\Services\ProductIcon::CHOICES`. */
@@ -42,7 +44,7 @@ const KNOWN = [
  * la guarda «el cajón sabe dibujar todo lo que el panel ofrece» no podía comprobarlo — y añadir una
  * opción al desplegable habría servido el genérico sin que nada fallara.
  */
-const key = computed(() => (KNOWN.includes(props.icon) ? props.icon : 'ticket-tear-off'));
+const key = computed(() => (KNOWN.includes(props.icon) ? props.icon : 'ticket'));
 </script>
 
 <template>

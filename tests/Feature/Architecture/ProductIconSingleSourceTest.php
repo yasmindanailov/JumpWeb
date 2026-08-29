@@ -19,11 +19,37 @@ use Tests\TestCase;
  */
 class ProductIconSingleSourceTest extends TestCase
 {
-    /** Superficies que pintan el marcador de producto. La lista solo encoge. */
-    private const SURFACES = [
-        'resources/js/sidebar/steps/CartStep.vue',
-        'resources/js/sidebar/steps/SummaryLine.vue',
-    ];
+    /**
+     * ⚠️⚠️ **Aquí había una LISTA DE DOS FICHEROS escrita a mano, y por eso este caso no vio nada
+     * durante meses** (`#259`). `CatalogStep.vue` —el catálogo, la superficie MÁS visible del
+     * cajón— nunca estuvo en ella y siguió eligiendo su dibujo con `v-if="item.is_pack"`: el patrón
+     * exacto que este fichero existe para prohibir, en la pantalla donde más se nota.
+     *
+     * ▶ El descubrimiento pasa a ser AUTOMÁTICO: todos los `.vue` del cajón, a cualquier
+     * profundidad. Una lista que hay que acordarse de ampliar es una lista que envejece — es la
+     * misma lección de `DECISIONES #113` y la que `SidebarIconParityTest` ya aprendió con su
+     * `glob('**')` que no descendía.
+     *
+     * @return list<string>
+     */
+    private function surfaces(): array
+    {
+        $found = [];
+
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(base_path('resources/js/sidebar'), \FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($files as $file) {
+            if ($file->getExtension() === 'vue') {
+                $found[] = str_replace(base_path().'/', '', $file->getPathname());
+            }
+        }
+
+        sort($found);
+
+        return $found;
+    }
 
     /**
      * **Ninguna superficie elige el dibujo mirando `is_pack`.**
@@ -33,16 +59,23 @@ class ProductIconSingleSourceTest extends TestCase
      */
     public function test_no_surface_picks_the_drawing_from_is_pack(): void
     {
+        $superficies = $this->surfaces();
+
+        // ⚠️ **Guarda de la guarda**: si el recorrido deja de descender, este caso pasaría en verde
+        // mirando MENOS ficheros — que es exactamente cómo se le escapó el catálogo durante meses.
+        $this->assertContains(
+            'resources/js/sidebar/steps/CatalogStep.vue', $superficies,
+            'el recorrido ha dejado de ver el catálogo, que es donde este patrón sobrevivió sin que nadie lo mirara',
+        );
+        $this->assertContains(
+            'resources/js/sidebar/account/zones/OrdersZone.vue', $superficies,
+            'el recorrido ha dejado de descender hasta las zonas del área de cliente',
+        );
+
         $hallazgos = [];
 
-        foreach (self::SURFACES as $rel) {
+        foreach ($superficies as $rel) {
             $ruta = base_path($rel);
-
-            if (! is_file($ruta)) {
-                $hallazgos[] = "$rel · la superficie ya no existe: bórrala de la lista";
-
-                continue;
-            }
 
             if (preg_match('/v-(?:if|else-if)="[^"]*is_pack[^"]*"[^>]*class="[^"]*(?:icon|tk)\b/', (string) file_get_contents($ruta), $m)) {
                 $hallazgos[] = "$rel · «".trim($m[0]).'»';

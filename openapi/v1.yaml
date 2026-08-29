@@ -4426,6 +4426,7 @@ components:
         - deposit_label
         - period_label
         - featured
+        - icon
         - zone
       additionalProperties: false
       properties:
@@ -4471,6 +4472,13 @@ components:
           description: Unidad de precio configurable («por niño», «por persona»), o `null`.
         featured:
           type: boolean
+        icon:
+          type: string
+          description: >-
+            Clave del MARCADOR de producto en el sistema de diseño, ya resuelta por el servidor
+            (la elegida en el panel, o el respaldo de su tipo). Nunca `null`.
+            ⚠️ El cliente NO la deduce de `type`: hacerlo reparte el catálogo entero en dos dibujos
+            y convierte «elegir el icono de un producto» en tocar código de cliente.
         zone:
           # ⚠️ Escrito INLINE y no como `$ref`, a propósito. En OpenAPI 3.0 una referencia no admite
           # `nullable` a su lado, y la forma canónica —`allOf: [$ref]` + `nullable: true`— la
@@ -4507,6 +4515,7 @@ components:
         - deposit_label
         - period_label
         - featured
+        - icon
         - zone
         - min_quantity
         - max_quantity
@@ -4542,6 +4551,9 @@ components:
           nullable: true
         featured:
           type: boolean
+        icon:
+          type: string
+          description: Igual que en `CatalogProduct` (ver la descripción de allí).
         zone:
           # Inline por el mismo motivo que en `CatalogProduct` (ver el comentario de allí).
           type: object

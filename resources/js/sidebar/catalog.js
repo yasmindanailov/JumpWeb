@@ -57,6 +57,11 @@ export function toItem(product) {
         id: product?.id,
         name: product?.name,
         is_pack: product?.type === 'pack',
+        // ⚠️ La clave del MARCADOR, tal cual la manda el servidor (`#259`). No lleva respaldo aquí
+        // a propósito: el respaldo es del dominio (`ProductIcon::forProduct`) y ponerle otro en el
+        // cliente sería una segunda regla que algún día dirá algo distinto. Si llega `undefined`,
+        // el componente aplica el suyo, que es el mismo.
+        icon: product?.icon,
         featured: product?.featured ?? false,
         badge: product?.badge ?? '',
         features: features.join(' · '),

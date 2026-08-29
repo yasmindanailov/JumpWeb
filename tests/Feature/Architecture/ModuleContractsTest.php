@@ -585,6 +585,7 @@ class ModuleContractsTest extends TestCase
                     depositLabel: null,
                     periodLabel: 'por persona',
                     featured: false,
+                    icon: 'ticket',
                     zone: new CatalogZone(7, 'zona-del-contrato', 'Zona del contrato'),
                 )];
             }

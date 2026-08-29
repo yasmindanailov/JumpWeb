@@ -68,7 +68,12 @@
        aria-label="{{ $esBarra ? __('landing.hero.cta_buy') : __('landing.nav.reserve_tickets_aria') }}"
        :aria-label="$store.ctaPair.mode === 'buy' ? @js($esBarra ? __('landing.hero.cta_buy') : __('landing.nav.reserve_tickets_aria')) : @js(__('landing.nav.cta_switch_buy'))"
        @click.prevent="$store.ctaPair.mode === 'buy' ? $store.purchase.open() : $store.ctaPair.show('buy')">
-        <span class="cta-med__ico"><x-icons.ic-e2 :width="28" :height="18" /></span>
+        {{-- ⚠️ Era `ic-e2`, la ILUSTRACIÓN de dos entradas superpuestas en lienzo 50×32 (`#259`).
+             Se queda en el catálogo como marcador de producto, pero en el botón de comprar del
+             armazón el sujeto es «una entrada», y el set del artboard tiene su glifo: `ui/entrada`.
+             ▶ Con él, el icono vuelve a ser UN SOLO COLOR —la regla del set— y las cuatro reglas de
+             CSS que pintaban por separado la entrada de delante y su «occluder» dejan de existir. --}}
+        <span class="cta-med__ico"><x-icons.ticket :width="22" :height="22" /></span>
         <span class="cta-med__body">
             <span class="cta-med__t">{{ __('landing.nav.cta_buy') }}</span>
             @if (! empty($etiquetaPrecio))

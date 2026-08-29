@@ -22,6 +22,8 @@ const ENTRY = {
     period_label: 'por persona',
     deposit_label: null,
     featured: false,
+    // La clave del marcador, que el servidor resuelve y manda desde `#259`.
+    icon: 'ticket',
 };
 
 const PACK = {
@@ -85,6 +87,9 @@ test('traduce el producto de la API a la fila que pinta el catálogo', () => {
         id: 7,
         name: 'Jump 1 hora',
         is_pack: false,
+        // ⚠️ Pasa TAL CUAL, sin respaldo en el cliente: el respaldo es del dominio
+        // (`ProductIcon::forProduct`) y ponerle otro aquí sería una segunda regla.
+        icon: 'ticket',
         featured: false,
         badge: 'Popular',
         features: 'Calcetines incluidos · Todas las zonas',

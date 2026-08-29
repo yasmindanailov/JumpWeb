@@ -2104,3 +2104,45 @@ Tres salen del LOTE 2, que el cliente **nunca cerró**; la variante la elige su 
 «ACTUAL» eso desplaza todo un puesto: `booking` salió con el dibujo de ACTUAL —lo que hay hoy— y
 quedó **idéntico a `calendar`**. *Se vio porque el resultado era sospechosamente igual a otro icono,
 no porque fallara nada.*
+
+---
+
+## 24. EL CARGADOR Y EL MARCADOR DE PRODUCTO (`#259`, 2026-08-29)
+
+### 24.1 «Tres botes» — el cargador deja de ser la marca de un cliente
+
+`[DECIDIDO owner]`. El dibujo de `spinner.css` §B era, con sus palabras, «un punto que salta sobre un
+bloque de espuma, **el mismo vocabulario que su logo**»: un cargador con marca ajena dentro servido a
+toda instalación. Tres puntos no dicen de quién es la web.
+
+Números del artboard: **punto 11 · hueco 9 · salto 7 · ciclo 900 ms · desfase 120 ms**, aquí en
+proporción al tamaño — `3·0,216 + 2·0,176 = 1`, o sea que los tres puntos y sus dos huecos llenan la
+caja exacta y los cinco tallajes de §A siguen funcionando.
+
+⚠️ **TRES piezas, no dos**: los pseudo-elementos son los extremos y **el del medio lo pinta el fondo
+del elemento**. Hacen falta tres cajas porque hacen falta tres FASES, y un `transform` sobre el
+elemento arrastraría a sus pseudo-elementos.
+⚠️ El fotograma quieto sale de su propia regla: «los puntos **se apagan al 40 %**».
+⚠️⚠️ **`closest-side` no es un detalle**: en un `radial-gradient` las paradas se miden sobre el RAYO,
+y el rayo por defecto llega a la ESQUINA (`0,707 × lado`). Un `50%` ahí dibuja **29 % menos**. Se vio
+en una captura, no en una medida — los tres puntos tenían el mismo `background-size`.
+
+### 24.2 El marcador de producto entra en el CONTRATO
+
+⚠️⚠️ **El catálogo del cajón elegía su dibujo con `v-if="item.is_pack"`** —el patrón que `#140`
+retiró de la cesta y del resumen— y la guarda que lo prohíbe **miraba una lista de dos ficheros
+escrita a mano** en la que `CatalogStep.vue` no estaba. La pantalla más visible del cajón, sin mirar.
+
+▶ La clave viaja ahora en `CatalogProduct.icon`, resuelta por el dominio, publicada en
+`GET /api/v1/catalog/products` y declarada en `openapi/v1.yaml`. El descubrimiento de la guarda pasa
+a ser automático, con dos anclas.
+⚠️ Defectos nuevos (`[DECIDIDO owner]`): entrada → `ticket`, pack → `gift`. Mueve el icono de todos
+los productos sin elección propia; las seis ilustraciones **siguen ofrecidas**.
+⚠️⚠️ **`.icon` no es un contenedor neutro**: declara `fill: none; stroke: currentColor;
+stroke-width: 1.6` sobre cada primitiva, o sea **dibuja a línea**. Habría convertido en un hilo
+cualquiera de los glifos de masa. Lo que daba de layout vive ahora en `.prod-ico`.
+
+### 24.3 Lo que queda medido y sin tocar
+
+**115 controles por debajo de 44 px en móvil** (63 enlaces, 25 botones, 1 casilla; solo cinco llevan
+icono). `[DECIDIDO owner]`: **tanda propia** — toca el pie, la FAQ, las cookies y el cierre.

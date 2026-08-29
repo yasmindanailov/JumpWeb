@@ -2866,17 +2866,14 @@ body[data-has-hero].nav--live .hero__pair-slot {
     45%  { transform: rotate(-13deg); }
     100% { transform: rotate(0deg); }
 }
-/* Color del icono E2 dentro de los CTAs (hereda el patrón del .tk que sustituye). */
-/* ⚠️ **Aquí había una pareja de reglas para `.cta-prime` y se van con él** (`#225`): pintaban el
-   glifo con el rol de ACCIÓN porque la barra de móvil era naranja. Ahora la barra usa `.cta-med`,
-   así que hereda estas mismas y no hay nada que sincronizar. */
-.cta-med__ico .ic-e2 { color: var(--bg); }
-.cta-med:hover .cta-med__ico .ic-e2 { color: var(--on-brand); }
-/* El «occluder» de E2 (la entrada de delante) debe fundirse con el FONDO del botón, no con
-   --bg (que asume fondo claro). Sin esto, sobre el botón oscuro la entrada delantera se ve
-   como un bloque crema. Reposo = --fg (botón oscuro) · hover = --zone-1 · on-video = --bg. */
-.cta-med__ico .ic-e2 svg .occ { fill: var(--fg); }
-.cta-med:hover .cta-med__ico .ic-e2 svg .occ { fill: var(--zone-1); }
+/* ⚠️⚠️ **Aquí vivían CUATRO reglas para pintar `ic-e2` dentro del botón de comprar, y se van con
+   él** (`#259`). Existían porque esa ilustración es DUOTONO —dos entradas superpuestas más un
+   «occluder» que había que fundir con el fondo del botón, distinto en reposo y en hover—, y eso es
+   exactamente lo que §06 del artboard prohíbe: «dos colores dentro del mismo glifo».
+   ▶ El botón usa ahora `ui/entrada`, que es masa de un solo color y hereda `currentColor` del
+   propio botón. No hay nada que sincronizar: cuatro reglas menos y un caso menos de «el icono se
+   ve como un bloque crema sobre fondo oscuro».
+   ⚠️ `ic-e2` sigue vivo como MARCADOR DE PRODUCTO en el catálogo, con sus reglas allí. */
 
 /* E5 — Taco de entradas: cabecera «Entradas» del catálogo. La de atrás se dispensa al hover
    de la cabecera del acordeón (no en bucle); reduced-motion la deja en reposo. */
@@ -2985,7 +2982,14 @@ body[data-has-hero].nav--live .hero__pair-slot {
    Componente: <x-icons.product>. El nombre del producto sigue dando la semántica
    (el icono es decorativo → aria-hidden ya viene del icono base).
    ==================================================================== */
-.prod-ico { vertical-align: middle; margin-inline-end: 6px; opacity: 0.75; }
+/* ⚠️⚠️ **`display` y `line-height` viven AQUÍ desde `#259`, y el motivo es que los marcadores
+   nuevos NO PUEDEN llevar `.icon`.** Esa clase no es un contenedor neutro: fuerza
+   `fill: none; stroke: currentColor; stroke-width: 1.6` sobre cada `path`, `rect`, `line`,
+   `polyline` y `circle` — o sea, **dibuja a línea**. Es correcta para las seis ilustraciones del
+   idioma anterior, que se dibujan así, y convertiría en un contorno fino cualquiera de los cinco
+   glifos de MASA del set.
+   ▶ Los valores son los mismos que `.icon` ya daba, así que las seis viejas no se mueven. */
+.prod-ico { display: inline-grid; place-items: center; line-height: 0; vertical-align: middle; margin-inline-end: 6px; opacity: 0.75; }
 /* Monocromo: la llama de la tarta (acento de marca) hereda el color del texto y
    queda QUIETA; sin esto, un punto naranja parpadeante destacaría en cada fila. */
 .prod-ico svg .accent-fill { fill: currentColor; }

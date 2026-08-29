@@ -116,6 +116,9 @@ class CatalogReader implements ProductCatalog
             depositLabel: $product->depositLabel(),
             periodLabel: $product->tr('period_label') ?: null,
             featured: (bool) $product->featured,
+            // El marcador, resuelto por el dominio: la clave elegida en el panel o el respaldo de
+            // su tipo. Es la MISMA fuente que usan la cesta y el resumen (`ProductIcon`).
+            icon: $product->iconKey(),
             zone: $product->zone ? $this->describeZone($product->zone) : null,
         );
     }
