@@ -1602,9 +1602,15 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3486 en verde** (22.801 aserciones, 2 skipped a propósito) · **JS 862**, medida el
+- Suite **3486 en verde** (22.805 aserciones, 1 skipped a propósito) · **JS 862**, medida el
   2026-08-29 sobre el árbol CONJUNTO: `#243`→`#248` del carril A (cumpleaños MIXTO: +60 casos, +176
-  aserciones) sobre `#263` del carril C. ⚠️ **El segundo `skipped` es del carril C**, no nuevo de A.
+  aserciones) sobre `#263` del carril C.
+  ⚠️⚠️ **ESTE NÚMERO DEPENDE DE LA MÁQUINA, y el hook lo exige exacto.** El carril A midió aquí
+  **22.801 / 2 skipped** y el C **22.805 / 1**: la diferencia es que `InlineBrandLogoTest` se salta
+  su último caso —el que sirve el logotipo del cliente— **cuando `public/img/client-logo.svg` no
+  está instalado**, y ese fichero es del paquete de marca, gitignorado. ▶ Si el contador te sale
+  distinto y tu suite está verde, **no es un fallo: es que tienes o no tienes el paquete puesto**.
+  Pon el tuyo y sigue.
   ⚠️⚠️ **Y una lección del cierre**: la suite del árbol PROPIO dio verde y la del CONJUNTO 34 fallos
   — el rebase trae las FUENTES Vue del otro carril pero no su compilado, y `SidebarDomContractTest`
   renderiza el bundle. Su propio mensaje lo dice; `npm run build:ssr` lo arregla. **Con dos carriles
@@ -2275,6 +2281,80 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
   de la cabecera se retiró y las tres pantallas de auth son zonas de la sección de cuenta.
 
 ## ▶ Próximo paso
+
+# ❗ SI ENTRAS NUEVO (2026-08-29, tarde · carril C): EL SET DE ICONOS, EL INTERRUPTOR `6d` Y EL LOGOTIPO — `#256` → `#263`, **Y STAGING YA VA CON LA MARCA DEL CLIENTE**
+
+**`git fetch` antes de nada.** ⚠️⚠️ **Con dos agentes sobre `main`, mirar el remoto al ELEGIR
+número no basta: hay que volver a mirarlo al PUBLICAR.** Esta sesión usó **`#256`–`#263`**; el
+carril A publicó **`#243`–`#248`** (cumple mixto) **después** de mi push, y el rebase entró limpio.
+Antes de desplegar, mi `main` estaba **un commit por detrás** y el dry-run del deploy avisó de que
+borraría los ficheros del otro agente — **no era un daño, era mi árbol viejo**. ▶ **Haz `git pull`
+antes de cualquier despliegue** y corre la suite sobre el árbol COMBINADO: nadie más lo hace.
+
+## ▶ Qué hizo esta sesión, en una línea cada cosa
+
+| | |
+|---|---|
+| `#256` | La **demo del minijuego** corre ya en el punto estático. La señal es que el **lienzo SE VEA**, no el anclaje |
+| `#257` | El **set de iconos del artboard** entra en el producto: 26 componentes → 55, con la anatomía hecha ejecutable |
+| `#258` | **Auditoría del set ejecutada**: 61 componentes, `DRAWER_OWN` vacía, los cuatro ESTADOS ya son **pegatina** |
+| `#259` | El cargador es **«Tres botes»** y el marcador de producto viaja **en el contrato**, no se deduce de `is_pack` |
+| `#260`/`#261` | Dos vueltas del owner sobre el hero: el icono del CTA sale de la altura del botón, y el interruptor se va **en línea a la derecha** |
+| `#262` | **El interruptor es ya el `6d` del canvas**, en cuatro vueltas: idéntico · rótulo dentro · a la altura de las mayúsculas · pegado y a la derecha también en móvil |
+| `#263` | **El logotipo no saltaba en once de las doce vistas**, y su sombra era dura por el ajuste anterior |
+
+## ❗❗ LO QUE MÁS IMPORTA QUE SEPAS
+
+1. **STAGING VA YA CON LA MARCA DEL CLIENTE** (2026-08-29, `https://jumpweb.sites.aelium.app`).
+   Desplegado el commit `8cdaaa6` —los dos carriles juntos— y **encima instalado a mano el paquete
+   de Play Jump Park**, que el `rsync` excluye a propósito: los **10 ficheros** (`client.css`,
+   logotipo, favicon, iconos PWA, tag), `THEME_FONTS` en el `.env` remoto, y en BD
+   `theme.action = #F2711C`, `theme.brand = #1AA9DE`, `business.name` y los tres `seo.title.*`.
+   ⚠️ **Si vuelves a desplegar, el paquete NO viaja**: el `rsync --delete` no lo borra (está
+   excluido), pero un servidor nuevo se queda sin él. La receta está en `INSTALACION-CLIENTE.md`.
+   ⚠️ **Los datos LEGALES siguen siendo de demo a propósito**: `business.legal_name` («SaltoPark
+   S.L.»), `business.nif` (`B-12345678`), `business.address` («Villaparque») y `business.domain`.
+   **No se inventaron**: son los que imprimen facturas, y meter un NIF falso ahí es un dato falso en
+   un documento fiscal. **Hay que pedírselos al owner.**
+   ⚠️ Copia del `.env` remoto antes de tocarlo en `.env.bak-20260829-123102`.
+
+2. ⚠️⚠️ **La lección de método de la sesión: medir la dimensión correcta de la cosa equivocada da un
+   verde perfecto.** El interruptor «estaba bien» según mi verificación —las ALTURAS coincidían con
+   ±1,2 px en seis anchos— y el owner lo vio **17 px más abajo**: nunca comparé las POSICIONES. El
+   instrumento que faltaba es una **sonda de línea base** (un `inline-block` vacío de alto 0 como
+   primer hijo, cuyo borde inferior se apoya en ella). Está en `#262` §9.3.
+
+3. ⚠️⚠️ **Dos trampas de CSS que no fallan, solo salen mal, y ninguna guarda las ve:**
+   · **Un token en `em` NO es una longitud** — se sustituye como texto y el `em` lo resuelve *el
+   elemento que lo usa*; un descendiente que cambia su `font-size` lo ve valer otra cosa (el rótulo
+   salió a 1,84 en vez de 5,6). · **Un `inline-flex` toma su línea base de su PRIMER ÍTEM**, no de
+   su borde inferior, y un `inline-block` con flex dentro **sigue propagándola**: lo zanja
+   `overflow` ≠ `visible`. Las dos, en `tema-por-instalacion.md` §25.8.1 y §25.9.1.
+
+4. ❗ **`#263`: que la pieza llegue no es que se mueva.** El logotipo llevaba desde `#254` sin
+   animarse en once vistas, con una guarda mirando al lado que comprobaba que `id="fig"` llega al
+   documento — y eso pasaba en verde con la animación muerta. Guarda nueva y mutada con el fallo
+   real. ⚠️ **El asset del cliente está BIEN y no hay que rehacerlo**: 27 pasos de extrusión por
+   palabra, 16 en la silueta, los dos degradados; es la receta del mockup en contornos.
+
+5. ⚠️ **El canvas SIGUE sin poder bajarse solo**: `DesignSync` sin autorización y `/design-consent`
+   devuelve **403**. El LOTE 6 llegó **pegado en el chat**, con la codificación rota en los acentos,
+   así que **`mockup_playjumppark/Iconos PJP.dc.html` sigue siendo la copia del 27** y no tiene el
+   `6d`. Para refrescarla: `/login` y luego `/design-login`, o exportar el fichero al directorio.
+
+## ▶ POR DÓNDE SIGUE
+
+1. ❗ **Dos preguntas abiertas del owner, las dos a una línea de código:**
+   · **el COLOR de la pista del interruptor** — hoy `--ok` (verde), el artboard usa **Lima Bote**
+   (`#A3C21C`, que tiene token `--strip-2` pero con el rol de la tira del pie);
+   · **el residuo de 3,6–4,7 px** entre la pista y las mayúsculas, que viene de que `1cap` da la
+   altura DECLARADA por la fuente y la de Bungee es un 5,6 % menor que la que pinta.
+2. **La tanda del ÁREA TÁCTIL 44** (`[DECIDIDO owner]`, sigue sin empezar): **115 controles medidos
+   por debajo del mínimo en móvil** — 63 enlaces a 40×14, 25 botones, 1 casilla. Es la siguiente.
+3. **Microanimaciones** (`Microanimaciones PJP.dc.html`) y después **elementos fachada**
+   (`Elementos Fachada.dc.html`), que es el plan que el owner dio al abrir la sesión.
+4. **El OJO del owner** sobre lo de esta sesión, ahora ya en staging con su marca puesta.
+
 
 # ❗ SI ENTRAS NUEVO (2026-08-29 · carril C): LA PORTADA ESTÁ COMO EL OWNER LA PIDIÓ — `#250` → `#255`
 

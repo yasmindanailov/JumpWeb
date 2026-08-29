@@ -2876,6 +2876,13 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       duraciones distintas y 20 curvas** (el sistema del cliente declara 7 y 4); `200ms` sola tiene
       110 usos. No mueve píxeles, mueve TIEMPO: **no se revisa con una captura, se revisa
       interactuando**.
+- [x] **2e · El INTERRUPTOR del titular y el LOGOTIPO** (`#262`, `#263`, 2026-08-29). El
+      interruptor deja de ser dibujo propio y pasa a ser el **`6d` del LOTE 6** del canvas, con su
+      rótulo dentro y su bucle: geometría 1:1 por construcción (sus diez medidas son múltiplos
+      exactos de 1/16), duración propia como token AMBIENTAL y colores por ROL. Y el logotipo, que
+      **no saltaba en ONCE de las doce vistas** porque su regla exigía una clase que solo pone el
+      hero. ❗ Sigue pendiente el ojo del owner y **el color de la pista** (`--ok` verde contra el
+      Lima Bote del artboard).
 - [ ] **3 · Las secciones**, pieza a pieza. ⏸️ **FUERA DE ALCANCE hasta que el owner lo diga**
       (`[DECIDIDO owner, 2026-08-28]`: del canvas solo se toma el sistema de diseño —colores,
       elementos, iconos, formas, menú, hero y pie—; el resto «son pruebas»).
