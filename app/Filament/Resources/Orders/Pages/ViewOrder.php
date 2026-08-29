@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\ItemEditPricing;
+use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Domain\Booking\Services\OrderItemCanceller;
 use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\OrderItemEventDataWriter;
@@ -696,6 +697,7 @@ class ViewOrder extends ViewRecord
 
                 // ②b: miembros de grupos de elección → se excluyen de `addon_edits` (los gobierna el Radio).
                 $groupMemberIds = $this->groupMemberAddonTypeIds($item);
+                $mixedPartyLineIds = app(MixedPartySurcharge::class)->governedLineIds($item);
 
                 // ②b: precarga el Radio de cada grupo con el miembro PRESENTE (el que el cliente eligió
                 // al comprar), para que el modal arranque marcado en él. Con una Action+fillForm el
@@ -717,8 +719,14 @@ class ViewOrder extends ViewRecord
                     // para el repeater del Tab 2 (child_id + nombre + cantidad).
                     // ②b: los miembros de un grupo de elección NO se precargan aquí — su cambio lo
                     // gobierna el Radio del grupo (no una línea bloqueada redundante).
+                    // ⚠️⚠️ La línea del SUPLEMENTO de fiesta mixta NO se ofrece: no es un complemento
+                    // que el operador gobierne, es el reflejo de una edad que declaró el cliente.
+                    // Ofrecerla era ofrecer un gesto que el sistema deshace en la misma pulsación
+                    // (`specs/cumple-mixto.md` §12.4). El criterio lo da el dominio, no un id de
+                    // producto adivinado aquí.
                     'addon_edits' => $item->children
                         ->reject(fn (OrderItem $c): bool => $c->isCancelled())
+                        ->reject(fn (OrderItem $c): bool => in_array((int) $c->id, $mixedPartyLineIds, true))
                         ->reject(fn (OrderItem $c): bool => isset($groupMemberIds[(int) $c->ticket_type_id]))
                         ->values()
                         ->map(fn (OrderItem $c): array => [
@@ -983,11 +991,19 @@ class ViewOrder extends ViewRecord
      *
      * @return array{edits: array<int, array{child_id:int, quantity:int}>, adds: array<int, array{ticket_type_id:int, quantity:int}>}
      */
-    private function normalizeAddonEdits(array $data): array
+    private function normalizeAddonEdits(array $data, ?OrderItem $item = null): array
     {
+        // Regla 12: no se confía en que el formulario oculte lo que no debe llegar. Aunque el
+        // repeater ya no la pinte, una fila del suplemento que llegue por una petición fabricada se
+        // descarta aquí — si no, se aceptaría un cambio que la reconciliación desharía acto seguido.
+        $governed = $item === null ? [] : app(MixedPartySurcharge::class)->governedLineIds($item);
+
         $edits = [];
         foreach ((array) ($data['addon_edits'] ?? []) as $row) {
             if (! is_array($row) || ! isset($row['child_id'])) {
+                continue;
+            }
+            if (in_array((int) $row['child_id'], $governed, true)) {
                 continue;
             }
             $edits[] = [
@@ -1633,7 +1649,7 @@ class ViewOrder extends ViewRecord
         // (un email, un audit, movimientos financieros separados por #170).
         // ②b: la elección del Radio de cada grupo se materializa como un `add` (group-replacement).
         $data = $this->applyGroupChoices($item, $data);
-        $addonEdits = $this->normalizeAddonEdits($data);
+        $addonEdits = $this->normalizeAddonEdits($data, $item);
         $addonsChanged = $this->itemEditor()->addonEditsPresent($item, $addonEdits);
 
         // ⚠️⚠️ **Mover la FECHA re-tarifica** (`DECISIONES #127(d)`). Un cambio de día cuya tarifa

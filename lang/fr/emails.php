@@ -133,6 +133,7 @@ return [
         'subject' => 'Changement de ce que vous réglerez au parc (réservation n° :code)',
         'greeting' => 'Bonjour,',
         'intro' => 'Vous avez mis à jour l’âge des invités de votre réservation :code («:product»), ce qui modifie le montant à régler au parc.',
+        'intro_by_park' => 'Nous avons mis à jour ta réservation :code (« :product »), ce qui change le montant à régler au parc.',
         'added' => 'Supplément pour les invités d’une autre tranche d’âge : :amount €.',
         'updated' => 'Le supplément pour les invités d’une autre tranche d’âge passe de :old € à :new €.',
         'removed' => 'Il n’y a plus de supplément à régler : tous les invités entrent dans la formule réservée.',

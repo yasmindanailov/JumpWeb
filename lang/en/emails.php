@@ -133,6 +133,7 @@ return [
         'subject' => 'Change to what you will pay at the park (booking no. :code)',
         'greeting' => 'Hi,',
         'intro' => 'You updated the guest ages on your booking :code (":product"), and that changes what is due at the park.',
+        'intro_by_park' => 'We have updated your booking :code (“:product”), and that changes what is due at the park.',
         'added' => 'Supplement for guests in a different age range: :amount €.',
         'updated' => 'The supplement for guests in a different age range goes from :old € to :new €.',
         'removed' => 'There is no supplement left to pay: every guest fits the booked pack.',

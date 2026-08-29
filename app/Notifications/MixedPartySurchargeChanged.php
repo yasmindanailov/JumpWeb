@@ -31,10 +31,19 @@ class MixedPartySurchargeChanged extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    /**
+     * @param  bool  $byCustomer  ¿lo movió el propio cliente al guardar sus edades, o el parque?
+     *
+     * ⚠️ La frase de entrada decía «Has actualizado las edades de los invitados» SIEMPRE, también
+     * cuando la reconciliación la disparaba el panel al cambiar la cantidad o la fecha. Al cliente
+     * se le atribuía algo que no había hecho, en un correo que le anuncia un cargo — que es
+     * exactamente donde peor sienta.
+     */
     public function __construct(
         public OrderItem $item,
         public int $oldCents,
         public int $newCents,
+        public bool $byCustomer = true,
     ) {}
 
     /** @return array<int, string> */
@@ -52,7 +61,9 @@ class MixedPartySurchargeChanged extends Notification implements ShouldQueue
         $message = (new MailMessage)
             ->subject(__('emails.mixed_party_surcharge.subject', ['code' => $code]))
             ->greeting(__('emails.mixed_party_surcharge.greeting'))
-            ->line(__('emails.mixed_party_surcharge.intro', ['code' => $code, 'product' => $product]));
+            ->line(__($this->byCustomer
+                ? 'emails.mixed_party_surcharge.intro'
+                : 'emails.mixed_party_surcharge.intro_by_park', ['code' => $code, 'product' => $product]));
 
         $message->line(EmailProductCard::forItem($this->item));
 

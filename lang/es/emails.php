@@ -155,6 +155,7 @@ return [
         'subject' => 'Cambio en lo que abonarás en el parque (reserva nº :code)',
         'greeting' => 'Hola,',
         'intro' => 'Has actualizado las edades de los invitados de tu reserva :code («:product»), y eso cambia lo que se abona en el parque.',
+        'intro_by_park' => 'Hemos actualizado tu reserva :code («:product»), y eso cambia lo que se abona en el parque.',
         'added' => 'Suplemento por invitados de otro tramo de edad: :amount €.',
         'updated' => 'El suplemento por invitados de otro tramo de edad pasa de :old € a :new €.',
         'removed' => 'Ya no hay suplemento que abonar: todos los invitados entran en el pack reservado.',

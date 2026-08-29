@@ -589,7 +589,7 @@ class OrderItem extends Model
         // calculado aquí. De lo contrario, dos guardados simultáneos escribirían dos suplementos.
         $owner = $this->order?->user;
         if ($owner !== null) {
-            app(MixedPartySurcharge::class)->reconcile($this, $owner, 'guest_form');
+            app(MixedPartySurcharge::class)->reconcile($this, $owner, MixedPartySurcharge::REASON_GUEST_FORM);
         }
     }
 

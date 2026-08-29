@@ -511,10 +511,21 @@ class OrderItemEditor
             // Sub-fase 7.2e.4 (#170): complementos (NEUTROS al aforo) en la misma txn. Subir
             // cantidad → forceFill; quitar (0) → markCancelled (sin refund, #170); añadir → nuevo
             // child enlazado al parent.
+            // ⚠️⚠️ La línea del SUPLEMENTO de fiesta mixta no es un complemento que el operador
+            // gobierne: es el reflejo de una edad que declaró el cliente. Aceptar aquí un cambio
+            // suyo era aceptar un gesto que la reconciliación POST-COMMIT deshace en la MISMA
+            // pulsación —medido: la línea se cancelaba y volvía a nacer, con dos correos al cliente
+            // que se contradicen—. Va en el EDITOR y no solo en la pantalla porque esta es la puerta
+            // por la que entra todo cambio de complementos (`specs/cumple-mixto.md` §12.4).
+            $mixedPartyLines = $this->mixedParty->governedLineIds($locked);
+
             foreach ($addonEdits['edits'] ?? [] as $edit) {
                 /** @var OrderItem|null $child */
                 $child = OrderItem::query()->lockForUpdate()->find((int) $edit['child_id']);
                 if ($child === null || (int) $child->parent_item_id !== (int) $locked->id || $child->isCancelled()) {
+                    continue;
+                }
+                if (in_array((int) $child->id, $mixedPartyLines, true)) {
                     continue;
                 }
                 $q = (int) $edit['quantity'];

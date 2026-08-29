@@ -527,6 +527,73 @@ class MixedPartySurchargeTest extends TestCase
         );
     }
 
+    // ─── La línea del suplemento no la gobierna el operador (§12.4) ──────────────
+
+    public function test_the_operator_cannot_zero_the_surcharge_line_from_the_addons_tab(): void
+    {
+        // ⚠️⚠️ **El defecto, medido conduciendo el editor REAL**: el operador ponía la línea a 0 en
+        // «Gestionar producto» → Complementos, el editor lo aceptaba, y la reconciliación
+        // POST-COMMIT la volvía a crear EN LA MISMA PULSACIÓN — con dos correos al cliente que se
+        // contradicen. Ahora la fila se descarta en el servidor (regla 12), así que el gesto ni se
+        // acepta ni se deshace: simplemente no existe.
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+        $line = $this->surchargeLines($item)->first();
+        $this->assertNotNull($line);
+
+        $staff = $this->staff();
+        $this->nextRequest();
+        Notification::fake();
+
+        $item = $item->fresh(['ticketType', 'slot', 'order']);
+        $outcome = app(OrderItemEditor::class)->edit(
+            $item->order, $item, '', '', false,
+            (int) $item->ticket_type_id, (int) $item->quantity, null,
+            ['edits' => [['child_id' => $line->id, 'quantity' => 0]], 'adds' => []],
+            (string) $item->updated_at->getTimestamp(),
+            $staff,
+        );
+
+        $this->assertFalse($outcome->isBlocked(), (string) $outcome->reason);
+        $this->assertSame(700, $this->financials($item->fresh())->aCobrarPuerta, 'la línea sigue en pie');
+        $this->assertSame($line->id, $this->surchargeLines($item->fresh())->first()?->id, 'y es LA MISMA, no una resucitada');
+        // Y sin el correo que anunciaba el cargo recién perdonado.
+        Notification::assertNotSentTo($item->order->user, MixedPartySurchargeChanged::class);
+    }
+
+    public function test_a_change_made_by_the_park_does_not_tell_the_customer_he_made_it(): void
+    {
+        // El texto decía «Has actualizado las edades de los invitados» también cuando la
+        // reconciliación la disparaba el PANEL. Atribuirle al cliente algo que no hizo, en el correo
+        // que le anuncia un cargo, es donde peor sienta.
+        $item = $this->declareAges($this->reservation(4), [8, 4, 5, 9]);
+        $staff = $this->staff();
+        Notification::fake();
+
+        // El camino REAL: el operador baja los invitados desde el panel, y eso mueve el importe.
+        $this->nextRequest();
+        $item = $item->fresh(['ticketType', 'slot', 'order']);
+        app(OrderItemEditor::class)->edit(
+            $item->order, $item, '', '', false,
+            (int) $item->ticket_type_id, 2, null,
+            ['edits' => [], 'adds' => []],
+            (string) $item->updated_at->getTimestamp(),
+            $staff,
+        );
+
+        Notification::assertSentTo(
+            $item->order->user,
+            MixedPartySurchargeChanged::class,
+            function (MixedPartySurchargeChanged $n) use ($item): bool {
+                $mail = $n->toMail($item->order->user);
+
+                return $n->byCustomer === false
+                    && in_array(__('emails.mixed_party_surcharge.intro_by_park', [
+                        'code' => $item->order->code, 'product' => 'Cumpleaños Kids',
+                    ]), $mail->introLines, true);
+            },
+        );
+    }
+
     // ─── Una AUSENCIA no es una CORRECCIÓN (§12.2.bis) ───────────────────────────
     //
     // Las cuatro formas de que falte un dato, y las cuatro borraban un cargo real. Se miden por

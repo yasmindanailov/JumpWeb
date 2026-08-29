@@ -69,6 +69,9 @@ use Illuminate\Support\Facades\DB;
  */
 class MixedPartySurcharge
 {
+    /** El guardado del post-form por el CLIENTE, que es el único disparo que es suyo. */
+    public const REASON_GUEST_FORM = 'guest_form';
+
     public function __construct(private GuestAgeMixReader $mix) {}
 
     /**
@@ -143,7 +146,7 @@ class MixedPartySurcharge
         });
 
         if ($change !== null) {
-            $this->notify($principal, $change);
+            $this->notify($principal, $change, $reason);
         }
 
         return $change;
@@ -444,6 +447,31 @@ class MixedPartySurcharge
     }
 
     /**
+     * Los ids de las líneas hijas que ESTE servicio gobierna.
+     *
+     * ▶ Existe para que el PANEL pueda dejarlas fuera de la lista de complementos editables
+     * (`ViewOrder`), y el criterio se pregunta aquí en vez de deducirse allí: una línea de
+     * suplemento se reconoce por la MARCA de su ajuste, no por su producto. Mirar el producto
+     * portador sería un segundo criterio, más débil, que envejecería en cuanto alguien cambiara el
+     * ajuste `mixed_party.surcharge_product_id`.
+     *
+     * ⚠️⚠️ **Y no es cosmética.** Medido conduciendo el editor real: el operador ponía esa línea a 0
+     * en «Gestionar producto» → Complementos, el editor lo aceptaba y la reconciliación POST-COMMIT
+     * la volvía a crear **en la misma pulsación** — dejando al cliente dos correos que se
+     * contradicen. Esa línea no es un complemento que el operador gobierne: es el reflejo de un dato
+     * que declaró el cliente, y la única forma de moverla es mover el dato.
+     *
+     * @return list<int>
+     */
+    public function governedLineIds(OrderItem $principal): array
+    {
+        return array_values(array_map(
+            static fn (array $l): int => (int) $l['item']->id,
+            $this->currentLines($principal),
+        ));
+    }
+
+    /**
      * El `context` del ajuste: la MARCA que identifica la línea en la siguiente pasada y, a la vez,
      * lo que el cliente lee en su desglose (`OrderAdjustment::breakdownLabel`).
      *
@@ -482,14 +510,21 @@ class MixedPartySurcharge
      * post-form está pensado para editarse durante días; sin esa regla, un cliente que ajusta
      * nombres tres tardes seguidas recibiría tres correos idénticos.
      */
-    private function notify(OrderItem $principal, array $change): void
+    private function notify(OrderItem $principal, array $change, string $reason): void
     {
         // Por `Order::notifyCustomer` y no por `$user->notify`: es la puerta que ya comprueba que
         // el titular tiene email —una cuenta anonimizada (`RGPD-01`) no lo tiene— y la usan las
         // otras seis notificaciones de pedido. Una séptima con su propia condición sería una copia
         // que algún día diverge.
         $principal->order?->notifyCustomer(
-            new MixedPartySurchargeChanged($principal->fresh(['ticketType', 'slot', 'order']) ?? $principal, $change['old'], $change['new']),
+            new MixedPartySurchargeChanged(
+                $principal->fresh(['ticketType', 'slot', 'order']) ?? $principal,
+                $change['old'],
+                $change['new'],
+                // El `reason` ya distingue quién disparó la pasada, y es el único sitio donde consta:
+                // desde aquí no se puede mirar la sesión (esto corre también en cola y en consola).
+                byCustomer: $reason === self::REASON_GUEST_FORM,
+            ),
         );
     }
 }
