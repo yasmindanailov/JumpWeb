@@ -2234,15 +2234,23 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       el servidor la rechaza.
       ❗ **Queda**: el **OJO del owner** con la tablet, el **armazón del panel** (barra, menú y buscador
       siguen bajo 44 px en TODAS las pantallas — ficha en `DEUDA.md`) y **U6** (calendario y tablas).
-- [ ] **CUMPLEAÑOS MIXTO** — apuntado por el owner el 2026-08-28, **sin diseñar**: un cumple KIDS con
-      un invitado por encima de la edad del pack pasa a **MIXTO** (etiqueta «MIXTA» para cliente y
-      operador, y la diferencia de precio KIDS↔JUMP por persona, visible en el desglose de los dos).
-      ⚠️⚠️ **Medido: TRES premisas del encargo no se cumplen hoy** — el post-formulario **no pide la
-      edad**, los dos packs **cuestan lo mismo** (15/18 €) y **comparten zona** (la 4), lo que
-      contradice «cada zona tiene su hora»: hay que comprobarlo contra la instalación REAL, porque si
-      allí son zonas distintas esto toca **AFORO**. ❗ **El primer paso NO es código: son las seis
-      preguntas de `specs/cumple-mixto.md` §5**, y la del **cobro** es dinero después de un pedido
-      pagado. ⚠️ El post-formulario es editable, así que «mixto» **va y viene**.
+- [x] **CUMPLEAÑOS MIXTO** 🟦 — **CINCO TANDAS EN EL ÁRBOL el 2026-08-29** (`#243`→`#247`), con el
+      **descuento del caso barato APARCADO y su diseño escrito** (`#248`). ▶ Fila de enrutado en
+      `CLAUDE.md`; empieza por `specs/cumple-mixto.md` §11 (qué hay) y §12 (cómo se cobra).
+      ❗❗ **La pregunta que lo reencuadró la hizo el owner: el sistema NO tenía ninguna conexión entre
+      un cumple KIDS y uno JUMP.** `[DECIDIDO owner]` la conexión es **familia + tramo de edad**
+      (extremos incluidos), que vale para dos regímenes o para cinco.
+      ⚠️⚠️ **Medido sobre un pedido real: un `extra_due` suelto NO cobra, MUEVE dinero ya pagado**
+      (valor +0, pagado online −6,00 €, puerta +6,00). La forma que sí cobra es una **LÍNEA**.
+      ⚠️ El importe **se reconcilia solo** con las edades declaradas —`[DECIDIDO owner]`, el post-form
+      es editable— y se dispara con el **HECHO** (edades, cantidad, producto, fecha), nunca con la
+      **configuración** (precios, tramos): lo escrito es lo que se le comunicó al cliente.
+      ⚠️ La etiqueta va **pegada al nombre** desde un solo compositor, y la cogen de ahí las ocho
+      superficies de texto plano. Su precio: `isMixedParty()` necesita `ticketType` y `slot` cargadas.
+      ❗ **Queda**: el **OJO del owner** sobre el rótulo por niño y el aviso del caso barato · la
+      **pastilla en el cajón** (cosmética: el texto ya le llega) · el **AFORO**, aparcado por el owner
+      —en el parque real son zonas distintas y el niño mayor pasa a JUMP— · y el **descuento**
+      (`#248`), aparcado con su diseño verificado.
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de

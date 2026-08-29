@@ -1370,4 +1370,48 @@ class ManageItemQuantityProductTest extends TestCase
             'event_data' => [],
         ], $overrides);
     }
+
+    /**
+     * ⚠️⚠️ **Editar un pedido con un complemento DESPUBLICADO reventaba** (2026-08-29, `#244`).
+     *
+     * `validateAddonEdits` indexa `$newPivots` con los complementos del producto, y `addons()`
+     * filtra por VENDIBLE y ACTIVO — así que un hijo vivo cuyo producto dejó de serlo (lo normal:
+     * se retira de la venta después de haberse vendido) no tiene entrada ahí. El acceso iba con
+     * `?->`, que protege del `null` pero **no de una clave ausente**, y el edit moría con
+     * «Undefined array key» antes de llegar a ninguna validación.
+     *
+     * Lo destapó la línea del suplemento de fiesta mixta, que es no vendible a propósito
+     * (`specs/cumple-mixto.md` §12), pero el defecto no era suyo: cualquier instalación que
+     * despublique un complemento vendido se lo encuentra.
+     */
+    public function test_editing_an_item_with_an_unpublished_addon_child_does_not_blow_up(): void
+    {
+        [$order, $item] = $this->makePaidPackOrder(guests: 8);
+
+        $extra = TicketType::create([
+            'name' => ['es' => 'Tarta retirada'], 'type' => TicketType::TYPE_ADDON,
+            'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 0, 'position' => 91,
+        ]);
+        $this->packA->configurableAddons()->attach($extra->id, ['position' => 20]);
+        OrderItem::create([
+            'order_id' => $order->id, 'parent_item_id' => $item->id,
+            'ticket_type_id' => $extra->id, 'slot_id' => null,
+            'quantity' => 1, 'unit_price' => 2000, 'seats' => 0,
+        ]);
+
+        // El parque lo retira de la venta DESPUÉS de haberlo vendido.
+        $extra->forceFill(['is_sellable' => false])->save();
+
+        $item = $item->fresh(['ticketType', 'slot']);
+        $outcome = app(OrderItemEditor::class)->edit(
+            $order, $item, '', '', false,
+            (int) $item->ticket_type_id, 9, null,
+            ['edits' => [], 'adds' => []],
+            (string) $item->updated_at->getTimestamp(),
+            $this->staffWith(['orders.view', 'orders.edit_item']),
+        );
+
+        $this->assertFalse($outcome->isBlocked(), (string) $outcome->reason);
+        $this->assertSame(9, (int) $item->fresh()->quantity);
+    }
 }

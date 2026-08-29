@@ -1438,7 +1438,7 @@ class CreateManualOrderPage extends Page
             $fields[] = ($field['type'] ?? 'text') === 'textarea'
                 ? Textarea::make($name)->label($label)->required($required)->rows(2)
                 : TextInput::make($name)->label($label)->required($required)
-                    ->inputMode(($field['type'] ?? 'text') === 'number' ? 'numeric' : 'text');
+                    ->inputMode(TicketType::isNumericFieldType($field['type'] ?? null) ? 'numeric' : 'text');
         }
 
         return $fields;

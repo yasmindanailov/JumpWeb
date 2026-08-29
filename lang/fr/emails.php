@@ -129,6 +129,17 @@ return [
         'contact' => 'Si tu ne vois pas le remboursement sous une semaine, écris-nous avec le numéro de commande.',
         'product_fallback' => 'produit :id',
     ],
+    'mixed_party_surcharge' => [
+        'subject' => 'Changement de ce que vous réglerez au parc (réservation n° :code)',
+        'greeting' => 'Bonjour,',
+        'intro' => 'Vous avez mis à jour l’âge des invités de votre réservation :code («:product»), ce qui modifie le montant à régler au parc.',
+        'added' => 'Supplément pour les invités d’une autre tranche d’âge : :amount €.',
+        'updated' => 'Le supplément pour les invités d’une autre tranche d’âge passe de :old € à :new €.',
+        'removed' => 'Il n’y a plus de supplément à régler : tous les invités entrent dans la formule réservée.',
+        'where_to_pay' => 'Il se règle au parc le jour de la fête, avec le reste éventuel.',
+        'editable' => 'Vous pouvez continuer à modifier les informations des invités jusqu’au jour de l’événement ; si les âges changent, ce montant s’ajuste tout seul.',
+    ],
+
     'order_item_modified' => [
         'subject' => 'Modifications de « :product » dans ta réservation (n° :code)',
         'greeting' => 'Bonjour,',

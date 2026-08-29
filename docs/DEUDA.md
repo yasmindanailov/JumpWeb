@@ -262,6 +262,12 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
 
 ---
 
+## ▶ Baja · un comentario del contenedor promete algo que el binding no hace (2026-08-29, `DECISIONES #243`)
+
+| Sev. | Qué | Por qué | Impacto | Salida |
+|---|---|---|---|---|
+| **Baja** | **`OperatingCalendar` se ata con `bind`, pero su comentario dice que «se comparte por petición»** | `bind` construye una instancia NUEVA en cada resolución, así que la memoria de `OperatingSchedule` nace vacía cada vez; y la clase **no usa `once()`** (medido: 0 apariciones). El memo solo funciona dentro de la vida de quien la recibe inyectada | Ninguno funcional: es una consulta de horarios repetida, no un dato incorrecto. Lo que engaña es el **comentario**, que el siguiente agente leerá como garantía | Cambiarlo a `scoped` (una línea, como se hizo con `GuestAgeMixReader`) **o** corregir el comentario. No se tocó en `#243` porque cambiar el ciclo de vida de un servicio que consumen la landing, el SEO y el hero es una conducta nueva, y esa sesión no iba de eso |
+
 ## ▶ Media/Baja · las TRES fuentes del cliente que no coinciden en su propio CTA (2026-08-28, `DECISIONES #213`)
 
 | Sev. | Ítem | Qué (medido) | Dónde muerde | La retira |

@@ -2,6 +2,8 @@
 
 namespace App\Domain\Booking\Models;
 
+use App\Domain\Booking\Services\GuestAgeMixReader;
+use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Services\AuditLogger;
@@ -41,6 +43,13 @@ class OrderItem extends Model
     public const GUEST_FORM_STATUS_PENDING = 'pending';
 
     protected $guarded = [];
+
+    /**
+     * Memo por instancia del veredicto de fiesta mixta: una superficie pregunta varias veces al
+     * pintar la misma fila (el nombre, la pastilla, un aviso) y el recorrido de `guest_data` no
+     * tiene por qué repetirse. No se persiste ni se serializa.
+     */
+    private ?bool $mixedPartyMemo = null;
 
     protected $casts = [
         'quantity' => 'integer',
@@ -131,6 +140,51 @@ class OrderItem extends Model
         return $this->ticketType?->isPack()
             ? __('tickets.guests_count', ['count' => $cantidad])
             : trans_choice('tickets.entries_count', $cantidad, ['count' => $cantidad]);
+    }
+
+    /**
+     * ¿Esta reserva es una fiesta MIXTA? (`docs/specs/cumple-mixto.md` §13). Predicado DERIVADO de
+     * las edades declaradas, memoizado por instancia — una superficie puede preguntarlo varias
+     * veces al pintar la misma fila.
+     *
+     * ⚠️ Lee el veredicto y NO el suplemento escrito, y la diferencia importa: una fiesta con
+     * invitados de otro tramo es mixta aunque los dos packs cuesten lo mismo y no haya nada que
+     * cobrar (§8.8). La etiqueta describe un HECHO; el dinero es otra pregunta.
+     *
+     * ⚠️⚠️ **Necesita `ticketType` y `slot` cargadas.** Sin ellas son dos consultas por fila, y
+     * quien pinte una lista las paga sin enterarse. Las superficies que lo usan las traen con
+     * `with()`; lo vigila `MixedPartyLabelSurfacesTest`.
+     */
+    public function isMixedParty(): bool
+    {
+        return $this->mixedPartyMemo ??= app(GuestAgeMixReader::class)->for($this)->mixed;
+    }
+
+    /**
+     * El nombre del producto de ESTA reserva, con la etiqueta «MIXTA» si lo es.
+     *
+     * ▶ **Existe por la misma razón que sus hermanas** `displayTimeWindow()` y
+     * `displayQuantityLabel()`: la regla se compone UNA vez en el dominio y las superficies la leen.
+     * `[owner, 2026-08-29]`: «¿no podemos añadir esa etiqueta al nombre y que el resto lo coja de
+     * ahí, en vez de añadirlo a cada superficie?». Sí — pero el sitio único es la RESERVA, no el
+     * producto: `TicketType` lo comparten todas las fiestas y no puede saber si ESTA es mixta.
+     *
+     * ⚠️ **Es para las superficies de TEXTO PLANO** —los dos PDF, los correos, la puerta, el
+     * calendario—, las que no pueden pintar una pastilla. Las que sí (la ficha del pedido, y el
+     * cajón cuando llegue) leen `isMixedParty()` y la pintan aparte: si la etiqueta viviera SOLO
+     * dentro del nombre, dejaría de ser un dato —nadie podría filtrar «las fiestas mixtas de
+     * mañana»— y no habría forma de darle estilo propio.
+     *
+     * ⚠️ **No lo usan el catálogo ni el editor**: ahí el nombre es el del PRODUCTO (el destino de un
+     * cambio, una fila del catálogo), no el de una fiesta concreta.
+     */
+    public function displayProductName(): string
+    {
+        $name = (string) ($this->ticketType?->tr('name') ?? '—');
+
+        return $this->isMixedParty()
+            ? __('tickets.mixed_party_product_name', ['name' => $name, 'badge' => __('tickets.mixed_party_badge')])
+            : $name;
     }
 
     /**
@@ -525,6 +579,18 @@ class OrderItem extends Model
             'order_item_id' => $this->id,
             'via' => $via,
         ]);
+
+        // El suplemento de fiesta MIXTA sigue a las edades (`specs/cumple-mixto.md` §12,
+        // `[DECIDIDO owner]`). Va aquí, después del guardado, por el mismo motivo que el resto de
+        // esta secuencia: es el ÚNICO punto por el que entran los datos por-niño —web y API— y una
+        // copia por superficie sería una oportunidad de olvidarse.
+        //
+        // ⚠️ El reconciliador vuelve a LEER la reserva con la fila bloqueada: no se le pasa nada
+        // calculado aquí. De lo contrario, dos guardados simultáneos escribirían dos suplementos.
+        $owner = $this->order?->user;
+        if ($owner !== null) {
+            app(MixedPartySurcharge::class)->reconcile($this, $owner, 'guest_form');
+        }
     }
 
     /**

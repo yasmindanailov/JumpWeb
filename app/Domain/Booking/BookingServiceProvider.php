@@ -26,6 +26,7 @@ use App\Domain\Booking\Services\CheckoutOrchestrator;
 use App\Domain\Booking\Services\CustomerOrderHistoryReader;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\GateReservationsReader;
+use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PublishableCatalogReader;
 use App\Domain\Booking\Services\ReservationAdmissionPolicy;
@@ -88,5 +89,15 @@ class BookingServiceProvider extends ServiceProvider
         // se ata en `PaymentsServiceProvider`: el contrato es de Booking pero lo implementa Payments,
         // y la atadura vive donde vive la implementación.
         $this->app->bind(ReservationCheckout::class, CheckoutOrchestrator::class);
+
+        // El veredicto de fiesta MIXTA (`specs/cumple-mixto.md` §9·4) memoiza la familia del pack y
+        // los precios del día: la ficha de un pedido lo pregunta por varias reservas seguidas y
+        // todas comparten catálogo.
+        //
+        // ⚠️ **`scoped` y no `bind`**, que es lo que usa el resto de este fichero: un `bind`
+        // construye una instancia NUEVA en cada resolución, así que la memoria nacería vacía cada
+        // vez — un memo que nunca acierta. Sin contrato propio porque no cruza módulos: lo consumen
+        // el panel y la web, los dos dentro de Booking.
+        $this->app->scoped(GuestAgeMixReader::class);
     }
 }

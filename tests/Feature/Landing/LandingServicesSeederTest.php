@@ -42,7 +42,11 @@ class LandingServicesSeederTest extends TestCase
 
         $this->assertSame(0, Faq::count());
         $this->assertSame(0, VenueRule::count());
-        $this->assertSame(0, TicketType::count());   // cero packs de cumpleaños / entradas creados
+        // ⚠️ Se afirma lo que el comentario ya decía —cero packs y cero entradas— en vez de «cero
+        // productos»: desde `#244` la instalación nace con un complemento de sistema (el que lleva
+        // el suplemento de fiesta mixta), y contarlo aquí convertía esta aserción en un recuento
+        // global que este seeder no gobierna.
+        $this->assertSame(0, TicketType::whereIn('type', [TicketType::TYPE_PACK, TicketType::TYPE_ENTRY])->count());
     }
 
     public function test_is_idempotent(): void

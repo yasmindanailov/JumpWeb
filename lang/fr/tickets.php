@@ -33,6 +33,10 @@ return [
     'guests' => 'Invités',
     'guests_left' => ':count places restantes',
     'guests_count' => ':count invités',
+    'mixed_party_badge' => 'MIXTE',
+    'mixed_party_product_name' => ':name · :badge',
+    'gate_mixed_party_line' => 'Supplément pour :count invité d’une autre tranche d’âge|Supplément pour :count invités d’une autre tranche d’âge',
+    'gate_mixed_party_line_named' => 'Supplément pour :count invité relevant de :target|Supplément pour :count invités relevant de :target',
     // La quantité AVEC son substantif, qui est ce qui la distingue du montant (`DECISIONES #128`) :
     // « 8×216,00 € » se lit comme 8 × 216 = 1 728 € ; « 8 invités · 216,00 € », non.
     'entries_count' => ':count billet|:count billets',

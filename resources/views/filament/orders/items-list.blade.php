@@ -98,6 +98,10 @@
             // compró. Resuelve la duplicación que había antes: el badge "JUMP"/
             // "KIDS"/"Cumpleaños" arriba y el nombre "Cumpleaños Jump" como
             // subtítulo plano debajo eran dos lugares para la misma información.
+            // ⚠️ El nombre CRUDO del catálogo, no `displayProductName()`: esta pantalla pinta la
+            // etiqueta MIXTA como PASTILLA justo al lado (`specs/cumple-mixto.md` §13), y usar el
+            // compositor aquí la diría dos veces. Las superficies de texto plano —los dos PDF, los
+            // correos, la puerta, el calendario— sí usan el compositor, porque no pueden pintarla.
             $productName = $ticketType?->tr('name') ?? '—';
             $durationMin = $ticketType?->duration_min;
             $quantityLabel = $isPack
@@ -129,6 +133,10 @@
             // P6: icono del TIPO de producto a la izquierda del nombre (entrada → ticket,
             // cumpleaños/pack → tarta). Decorativo; el nombre sigue dando la semántica.
             $typeIcon = $isPack ? 'heroicon-o-cake' : 'heroicon-o-ticket';
+            // Veredicto de fiesta MIXTA (`docs/specs/cumple-mixto.md` §9·4): DERIVADO de las edades
+            // declaradas en el post-form, nunca sellado. El lector va en `scoped`, así que memoiza
+            // la familia y los precios del día entre las reservas de este mismo pedido.
+            $mix = app(\App\Domain\Booking\Services\GuestAgeMixReader::class)->for($item);
         @endphp
         {{-- P3/P6: borde superior 5px sólido con el color de la zona/tipo (acento data-driven, visible). --}}
         <div @class([
@@ -161,6 +169,14 @@
                     @if (! $isItemCancelled && $principalRefundedCents > 0)
                         <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset bg-amber-100 text-amber-700 ring-amber-600/30 dark:bg-amber-400/15 dark:text-amber-300 dark:ring-amber-400/40">
                             {{ __('admin.orders.refunded_badge') }}
+                        </span>
+                    @endif
+                    {{-- La etiqueta MIXTA va JUNTO al nombre pero NO forma parte de él (spec §8.9):
+                         el nombre sigue siendo el del catálogo en los 43 puntos que lo componen, y
+                         esto es un dato propio de la reserva que se puede filtrar y contar. --}}
+                    @if (! $isItemCancelled && $mix->mixed)
+                        <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold ring-1 ring-inset bg-violet-100 text-violet-700 ring-violet-600/30 dark:bg-violet-400/15 dark:text-violet-300 dark:ring-violet-400/40">
+                            {{ __('tickets.mixed_party_badge') }}
                         </span>
                     @endif
                 </div>
@@ -252,6 +268,79 @@
                             <span x-show="open" x-cloak>{{ __('admin.orders.show_less') }}</span>
                         </button>
                     </div>
+
+                    {{-- Fiesta MIXTA (`docs/specs/cumple-mixto.md` §12). `[DECIDIDO owner]`: el
+                         suplemento NO se aprueba — sigue solo a las edades declaradas. Lo que el
+                         operador necesita ver aquí son cuatro cosas distintas, y por eso no se
+                         funden en un número: cuánto está APLICADO, si lo escrito se ha quedado
+                         atrás, si falta el producto que lo lleva (y entonces esta fiesta no cobra
+                         nada) y si el veredicto está todavía a medias. --}}
+                    @php
+                        $mixWritten = app(\App\Domain\Booking\Services\MixedPartySurcharge::class)->written($item);
+                        $mixDrift = $mix->applies
+                            && $mix->surchargeCents !== null
+                            && $mix->surchargeCents !== $mixWritten['cents'];
+                        // El portador solo se consulta cuando su ausencia explicaría algo: cuando el
+                        // veredicto pide cobrar y no hay nada escrito.
+                        $mixCarrierMissing = $mix->mixed
+                            && ($mix->surchargeCents ?? 0) > 0
+                            && $mixWritten['cents'] === 0
+                            && \App\Domain\Booking\Services\MixedPartySettings::surchargeProduct() === null;
+                    @endphp
+                    @if (! $isItemCancelled && $mix->applies && ($mix->mixed || $mixWritten['cents'] > 0 || ! $mix->isComplete()))
+                        <div class="mt-2 space-y-1 rounded-md bg-violet-50 p-2 ring-1 ring-violet-600/15 dark:bg-violet-400/10 dark:ring-violet-400/20">
+                            @if ($mix->mixed)
+                                <div class="font-medium text-violet-800 dark:text-violet-300">
+                                    {{ __('admin.orders.mixed_party.title') }}
+                                </div>
+                                @foreach ($mix->upgrades as $upgrade)
+                                    <div class="text-violet-800/90 dark:text-violet-300/90">
+                                        {{ __('admin.orders.mixed_party.line', [
+                                            'count' => $upgrade['count'],
+                                            'name' => $upgrade['name'],
+                                            'unit' => $upgrade['unit_cents'] === null
+                                                ? '—'
+                                                : \App\Domain\Platform\Services\Money::format($upgrade['unit_cents']),
+                                        ]) }}
+                                    </div>
+                                @endforeach
+                            @endif
+
+                            @if ($mixWritten['cents'] > 0)
+                                <div class="font-semibold text-violet-900 dark:text-violet-200">
+                                    {{ __('admin.orders.mixed_party.applied', ['amount' => \App\Domain\Platform\Services\Money::format($mixWritten['cents'])]) }}
+                                </div>
+                            @elseif ($mix->hasSavings())
+                                {{-- ⚠️ INFORMATIVO, no dinero (`[owner, 2026-08-29]`, §14): la fiesta
+                                     saldría más barata en el régimen que le toca, pero NO se descuenta
+                                     sola. No entra en ningún total ni en «Pendiente de devolución»,
+                                     que es deuda real del parque y cuadra con `PAY-16`/`PAY-17`. --}}
+                                <div class="text-violet-900 dark:text-violet-200">
+                                    {{ __('admin.orders.mixed_party.cheaper', ['amount' => \App\Domain\Platform\Services\Money::format($mix->savingsCents)]) }}
+                                </div>
+                            @endif
+
+                            @if ($mixCarrierMissing)
+                                <div class="font-semibold text-red-700 dark:text-red-300">{{ __('admin.orders.mixed_party.missing_carrier') }}</div>
+                            @elseif ($mix->mixed && $mix->surchargeCents === null)
+                                <div class="text-amber-800 dark:text-amber-300">{{ __('admin.orders.mixed_party.unpriced') }}</div>
+                            @elseif ($mixDrift)
+                                <div class="text-amber-800 dark:text-amber-300">
+                                    {{ __('admin.orders.mixed_party.drift', [
+                                        'written' => \App\Domain\Platform\Services\Money::format($mixWritten['cents']),
+                                        'derived' => \App\Domain\Platform\Services\Money::format($mix->surchargeCents),
+                                    ]) }}
+                                </div>
+                            @endif
+
+                            @if ($mix->withoutAge > 0)
+                                <div class="text-amber-800 dark:text-amber-300">{{ __('admin.orders.mixed_party.without_age', ['count' => $mix->withoutAge]) }}</div>
+                            @endif
+                            @if ($mix->outOfRange > 0)
+                                <div class="text-amber-800 dark:text-amber-300">{{ __('admin.orders.mixed_party.out_of_range', ['count' => $mix->outOfRange]) }}</div>
+                            @endif
+                        </div>
+                    @endif
 
                     <div x-show="open" x-cloak class="mt-2 space-y-3">
                         @if (count($eventRows) > 0)

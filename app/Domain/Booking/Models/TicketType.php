@@ -72,6 +72,44 @@ class TicketType extends Model
     public const ANSWER_MAX_LENGTH = 2000;
 
     /**
+     * Tipos de campo de un esquema data-driven (`event_fields` y `guest_fields`). **Fuente ÚNICA**:
+     * hasta el 2026-08-29 esta lista estaba copiada en tres sitios (el modelo, el saneo del panel y
+     * el `Select` del formulario) y ninguno sabía de los otros — añadir un tipo exigía acertar los
+     * tres. Cualquier tipo nuevo entra aquí y en `fieldTypeLabelKey()`, y nada más.
+     */
+    public const FIELD_TYPE_TEXT = 'text';
+
+    public const FIELD_TYPE_NUMBER = 'number';
+
+    public const FIELD_TYPE_TEXTAREA = 'textarea';
+
+    /**
+     * **La EDAD del invitado** (`docs/specs/cumple-mixto.md` §9·3). No es un `number` con otro
+     * rótulo: es el campo del que el sistema deriva a qué producto de la familia corresponde cada
+     * niño, y de ahí sale un cobro. Por eso lo declara el ESQUEMA —no una convención sobre la
+     * clave, que un renombrado rompería en silencio— y por eso su saneo tiene cota real (§8.6: el
+     * `number` de hoy solo borra los no-dígitos, así que un «999» entra tal cual).
+     */
+    public const FIELD_TYPE_AGE = 'age';
+
+    /** @var list<string> */
+    public const FIELD_TYPES = [
+        self::FIELD_TYPE_TEXT,
+        self::FIELD_TYPE_NUMBER,
+        self::FIELD_TYPE_TEXTAREA,
+        self::FIELD_TYPE_AGE,
+    ];
+
+    /**
+     * Cota de una edad declarada en el post-form. No pretende ser una regla de negocio (el tramo lo
+     * ponen `guest_age_min`/`guest_age_max` de cada producto): es la cota de SANEO, la que impide
+     * que un «999» llegue a la aritmética de un suplemento. Fuera de rango = no respondido.
+     */
+    public const GUEST_AGE_MIN = 0;
+
+    public const GUEST_AGE_MAX = 120;
+
+    /**
      * Esquema POR DEFECTO de los datos por-niño de un pack de cumpleaños (#217): las 4 columnas
      * que la clienta pidió { nombre, alergia/intolerancia, observaciones, menú especial }. Es solo
      * el SEMBRADO inicial (lo siembra `LandingContentSeeder` en los packs) — el esquema es
@@ -107,6 +145,8 @@ class TicketType extends Model
         'min_advance_value' => 'integer',
         'prep_before_min' => 'integer',
         'prep_after_min' => 'integer',
+        'guest_age_min' => 'integer',
+        'guest_age_max' => 'integer',
         'featured' => 'boolean',
         'is_sellable' => 'boolean',
         'is_active' => 'boolean',
@@ -376,6 +416,74 @@ class TicketType extends Model
         return self::resolveFieldLabel($field);
     }
 
+    // ─── Familia y tramo de edad (cumpleaños MIXTO, `specs/cumple-mixto.md` §9) ───────
+
+    /**
+     * ¿Este tipo de campo se escribe con dígitos? Lo consultan las SEIS superficies que pintan un
+     * esquema data-driven (post-form web, los dos formularios del panel, los dos pasos del cajón)
+     * para elegir `type="number"` / `inputmode`. Vive aquí para que añadir un tipo numérico nuevo
+     * —como la EDAD— no obligue a acordarse de seis ficheros.
+     */
+    public static function isNumericFieldType(?string $type): bool
+    {
+        return in_array($type, [self::FIELD_TYPE_NUMBER, self::FIELD_TYPE_AGE], true);
+    }
+
+    /**
+     * La CLAVE del campo de edad de este pack, o `null` si su esquema no declara ninguno. Es el
+     * único puente entre el esquema data-driven y el veredicto de mezcla: se busca por TIPO, nunca
+     * por nombre de clave (una instalación puede llamarlo `edad`, `age` o `alter`).
+     *
+     * Si hubiera más de uno —el panel no lo impide— manda el PRIMERO del esquema: una decisión
+     * arbitraria pero estable, mejor que un resultado que dependa del orden de lectura.
+     */
+    public function guestAgeFieldKey(): ?string
+    {
+        foreach ($this->guestFields() as $field) {
+            if (($field['type'] ?? null) === self::FIELD_TYPE_AGE) {
+                return (string) $field['key'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * ¿Este producto participa en una familia por edad? Hacen falta las TRES cosas, y la ausencia
+     * de cualquiera lo apaga entero (una excursión de colegio no distingue edades):
+     *  - una familia declarada — es lo único que lo conecta con sus alternativos;
+     *  - un tramo, aunque sea abierto por un lado (`de 7 en adelante` es `min=7`, `max=null`);
+     *  - un campo de EDAD en su post-form: sin el dato no hay veredicto que derivar.
+     */
+    public function participatesInAgeFamily(): bool
+    {
+        return $this->guestAgeFamily() !== null
+            && ($this->guest_age_min !== null || $this->guest_age_max !== null)
+            && $this->guestAgeFieldKey() !== null;
+    }
+
+    /** La familia normalizada (recortada y en minúsculas), o `null` si no declara ninguna. */
+    public function guestAgeFamily(): ?string
+    {
+        $family = trim((string) ($this->guest_age_family ?? ''));
+
+        return $family === '' ? null : mb_strtolower($family);
+    }
+
+    /**
+     * ¿El tramo de este producto cubre esa edad? **Los dos extremos van INCLUIDOS** («de 1 a 6» es
+     * `1`–`6`: el de 6 entra y el de 7 no), que es como lo lee un humano y como lo dijo el owner.
+     * Un extremo nulo es «sin tope por ese lado», no «cero».
+     */
+    public function coversGuestAge(int $age): bool
+    {
+        if ($this->guest_age_min !== null && $age < (int) $this->guest_age_min) {
+            return false;
+        }
+
+        return ! ($this->guest_age_max !== null && $age > (int) $this->guest_age_max);
+    }
+
     /**
      * Normaliza un esquema de campos data-driven ({key, label, type, required}), compartido por
      * `event_fields` y `guest_fields`: descarta filas sin clave, fuerza `type` a uno válido y
@@ -399,7 +507,7 @@ class TicketType extends Model
             $entry = [
                 'key' => (string) $field['key'],
                 'label' => $field['label'] ?? $field['key'],
-                'type' => in_array($type, ['text', 'number', 'textarea'], true) ? $type : 'text',
+                'type' => in_array($type, self::FIELD_TYPES, true) ? $type : self::FIELD_TYPE_TEXT,
                 'required' => (bool) ($field['required'] ?? false),
             ];
 
@@ -462,9 +570,23 @@ class TicketType extends Model
             return null;
         }
         $value = trim((string) $value);
-        if (($field['type'] ?? 'text') === 'number') {
+        $type = $field['type'] ?? self::FIELD_TYPE_TEXT;
+
+        if (self::isNumericFieldType($type)) {
             $value = preg_replace('/\D+/', '', $value) ?? '';
         }
+
+        // ⚠️ La EDAD además se ACOTA, y fuera de rango vale «no respondido» (no se recorta ni se
+        // clampa): de este campo sale un cobro, y un valor imposible tiene que verse como el hueco
+        // que es —el campo se marca incompleto y el cliente lo corrige— y no colarse como un 120.
+        if ($type === self::FIELD_TYPE_AGE && $value !== '') {
+            $age = (int) $value;
+            if ($age < self::GUEST_AGE_MIN || $age > self::GUEST_AGE_MAX) {
+                return null;
+            }
+            $value = (string) $age; // normaliza «007» → «7»: la comparación con el tramo es numérica.
+        }
+
         // Cap defensivo (#217): impide inflar la columna JSON con valores enormes (post-form o compra).
         $value = mb_substr($value, 0, self::ANSWER_MAX_LENGTH);
 

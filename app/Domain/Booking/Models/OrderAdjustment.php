@@ -93,6 +93,28 @@ class OrderAdjustment extends Model
         $ctx = is_array($this->context) ? $this->context : [];
         $itemName = $this->orderItem?->ticketType?->tr('name') ?? '—';
 
+        // Suplemento de fiesta MIXTA (`docs/specs/cumple-mixto.md` §12). Va PRIMERO porque su
+        // contexto no tiene ninguna de las claves de abajo y caería al respaldo, que dice el nombre
+        // del producto portador sin explicar de dónde sale el cargo — justo el defecto que `#131`
+        // corrigió en la otra rama muda. Aquí el cliente lee «Suplemento por 3 invitados de otro
+        // tramo de edad», que se explica solo.
+        $mixed = $ctx['mixed_party'] ?? null;
+        if (is_array($mixed)) {
+            $guests = (int) ($mixed['guests'] ?? 0);
+            $target = $mixed['target_name'] ?? null;
+
+            // ⚠️ `trans_choice` y no `__`: con un solo invitado, la frase decía «Suplemento por 1
+            // invitadoS». Un desglose de dinero que no concuerda en número se lee como descuidado
+            // justo donde más confianza hace falta.
+            //
+            // ⚠️ Y con el NOMBRE del pack destino cuando el cargo lo guardó (`[owner, 2026-08-29]`:
+            // «que ponga por la diferencia de kids y jump»). Los cargos escritos antes de que el
+            // contexto lo llevara caen a la frase sin nombre, que sigue siendo cierta.
+            return $target !== null && $target !== ''
+                ? trans_choice('tickets.gate_mixed_party_line_named', $guests, ['count' => $guests, 'target' => $target])
+                : trans_choice('tickets.gate_mixed_party_line', $guests, ['count' => $guests]);
+        }
+
         // Complementos: lista de añadidos (+qty) y subidos (+delta).
         $addon = $ctx['addon_change'] ?? null;
         if (is_array($addon)) {

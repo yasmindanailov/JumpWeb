@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\GuestAgeMixReader;
+use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Http\Concerns\AuthorizesGuestForm;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,6 +48,27 @@ class GuestFormController extends Controller
             'generalFields' => $type->eventFields(TicketType::EVENT_STAGE_POSTFORM),
             'rows' => $reservation->guestData(),
             'progress' => $reservation->guestFormProgress(),
+            // El suplemento de fiesta MIXTA, para decírselo al cliente EN EL SITIO donde declara las
+            // edades (`docs/specs/cumple-mixto.md` §12).
+            //
+            // ⚠️ Se le enseña lo ESCRITO en su pedido, no el veredicto derivado. Son casi siempre
+            // lo mismo —al guardar se reconcilian—, pero cuando difieren (falta el producto que
+            // lleva el suplemento, o el parque cambió una tarifa después) lo derivado sería una
+            // promesa que su pedido no respalda. Prometer un importe que no está en su desglose es
+            // peor que no decir nada; lo derivado es información para el OPERADOR y vive en el panel.
+            'ageSurcharge' => app(MixedPartySurcharge::class)->written($reservation),
+            // Y el VEREDICTO derivado, que es lo que permite EXPLICAR el importe en vez de soltarlo
+            // («2 invitados corresponden a Kids, 11,00 € por invitado, en vez de Jump, 15,00 €»).
+            //
+            // ⚠️ Los dos, y cada uno para lo suyo: el DINERO sale de lo escrito —es lo que su pedido
+            // dice— y la EXPLICACIÓN del veredicto. Antes el aviso solo miraba lo escrito, y por eso
+            // **una fiesta mixta sin cargo no decía nada**: el cliente veía la etiqueta «MIXTA» en su
+            // pedido y ni una línea que la interpretase (§14, medido sobre `R-BEEL3E`).
+            'ageMix' => app(GuestAgeMixReader::class)->for($reservation),
+            // El régimen que le toca a CADA invitado, para el rótulo dentro de su recuadro
+            // (`[owner, 2026-08-29]`, §15). Sale del mismo recorrido que el veredicto: si tuviera su
+            // propia copia de la regla, una ficha podría decir «Kids» mientras el total dice otra cosa.
+            'guestRegimes' => app(GuestAgeMixReader::class)->guestRegimes($reservation),
             // SOLO LECTURA cuando la reserva ya se ha celebrado (su franja terminó): el post-form solo
             // sirve para PREPARAR la fiesta; pasada, se muestra pero no se edita. El enlace sigue
             // caducando a evento+14d (tope RGPD), pero la edición se cierra al terminar el evento.

@@ -257,6 +257,30 @@ class CatalogForm
             ]);
     }
 
+    /**
+     * Opciones del `Select` de tipo de campo de un esquema data-driven. Se DERIVAN de
+     * `TicketType::FIELD_TYPES` en vez de escribirse: los dos repetidores (datos del evento y datos
+     * por niño) tenían la lista copiada, así que un tipo nuevo salía en uno y no en el otro.
+     *
+     * ⚠️ **La EDAD solo se ofrece en los datos por niño.** Es un dato POR INVITADO del que sale un
+     * cobro; en `event_fields` sería una sola edad para toda la fiesta, que no significa nada y
+     * confundiría al operador con una opción que el veredicto nunca mira.
+     *
+     * @return array<string,string>
+     */
+    private static function fieldTypeOptions(bool $withAge = false): array
+    {
+        $options = [];
+        foreach (TicketType::FIELD_TYPES as $type) {
+            if ($type === TicketType::FIELD_TYPE_AGE && ! $withAge) {
+                continue;
+            }
+            $options[$type] = __('admin.catalog.event_field_types.'.$type);
+        }
+
+        return $options;
+    }
+
     private static function packSection(): Section
     {
         return Section::make(__('admin.catalog.section_pack'))
@@ -327,6 +351,39 @@ class CatalogForm
                         ->helperText(__('admin.catalog.prep_after_hint')),
                 ]),
 
+                // ─── Familia y tramo de edad (`specs/cumple-mixto.md` §9) ────────────────────
+                // Lo que conecta dos packs que son el MISMO servicio en dos regímenes (KIDS/JUMP).
+                // Hasta el 2026-08-29 no había forma de decirlo: eran dos filas sin relación. Con
+                // esto, el sistema sabe a qué producto le toca cada invitado por su edad y puede
+                // proponer el suplemento de una fiesta MIXTA. Sin familia, apagado.
+                Grid::make(['default' => 1, 'sm' => 3])->schema([
+                    TextInput::make('guest_age_family')
+                        ->label(__('admin.catalog.field_guest_age_family'))
+                        ->maxLength(40)
+                        // Misma forma que una clave técnica: se compara por igualdad exacta contra
+                        // la de sus hermanos, así que no puede admitir acentos ni espacios.
+                        ->rule('regex:/^[a-z0-9_\-]*$/')
+                        ->helperText(__('admin.catalog.guest_age_family_hint')),
+
+                    TextInput::make('guest_age_min')
+                        ->label(__('admin.catalog.field_guest_age_min'))
+                        ->numeric()
+                        ->minValue(TicketType::GUEST_AGE_MIN)
+                        ->maxValue(TicketType::GUEST_AGE_MAX)
+                        ->helperText(__('admin.catalog.guest_age_min_hint')),
+
+                    TextInput::make('guest_age_max')
+                        ->label(__('admin.catalog.field_guest_age_max'))
+                        ->numeric()
+                        ->minValue(TicketType::GUEST_AGE_MIN)
+                        ->maxValue(TicketType::GUEST_AGE_MAX)
+                        // El tope no puede quedar por debajo del suelo. Se re-valida en servidor
+                        // (`InteractsWithCatalogForm::normalizeGuestAgeFields`), que es donde
+                        // además se comprueba que el tramo no pise al de un hermano.
+                        ->gte('guest_age_min')
+                        ->helperText(__('admin.catalog.guest_age_max_hint')),
+                ]),
+
                 // Editor del esquema de "datos del evento" del pack (#86). La estructura del
                 // Repeater coincide 1:1 con la columna JSON `event_fields`
                 // (`[{key,type,required,label:{es,en,fr}}]`).
@@ -347,12 +404,8 @@ class CatalogForm
                                 ->label(__('admin.catalog.event_field_type'))
                                 ->native(false)
                                 ->required()
-                                ->default('text')
-                                ->options([
-                                    'text' => __('admin.catalog.event_field_types.text'),
-                                    'number' => __('admin.catalog.event_field_types.number'),
-                                    'textarea' => __('admin.catalog.event_field_types.textarea'),
-                                ]),
+                                ->default(TicketType::FIELD_TYPE_TEXT)
+                                ->options(self::fieldTypeOptions()),
 
                             Toggle::make('required')
                                 ->label(__('admin.catalog.event_field_required'))
@@ -412,12 +465,10 @@ class CatalogForm
                                 ->label(__('admin.catalog.event_field_type'))
                                 ->native(false)
                                 ->required()
-                                ->default('text')
-                                ->options([
-                                    'text' => __('admin.catalog.event_field_types.text'),
-                                    'number' => __('admin.catalog.event_field_types.number'),
-                                    'textarea' => __('admin.catalog.event_field_types.textarea'),
-                                ]),
+                                ->default(TicketType::FIELD_TYPE_TEXT)
+                                // El único esquema que ofrece EDAD: es un dato POR NIÑO, y de él
+                                // deriva el veredicto de fiesta mixta (`specs/cumple-mixto.md` §9).
+                                ->options(self::fieldTypeOptions(withAge: true)),
 
                             Toggle::make('required')
                                 ->label(__('admin.catalog.event_field_required'))

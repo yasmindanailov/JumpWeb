@@ -42,7 +42,7 @@ class GateReservationsReader implements GateReservations
                     orderItemId: (int) $item->getKey(),
                     date: (string) $item->slot?->date?->format('Y-m-d'),
                     timeWindow: $item->displayTimeWindow(),
-                    productName: (string) ($item->ticketType?->tr('name') ?? ''),
+                    productName: $item->displayProductName(),
                     isEntry: $item->ticketType?->type === TicketType::TYPE_ENTRY,
                     quantity: (int) $item->quantity,
                     addons: $item->children

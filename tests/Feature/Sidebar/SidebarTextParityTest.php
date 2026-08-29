@@ -171,7 +171,14 @@ class SidebarTextParityTest extends TestCase
      *
      * @var list<string>
      */
-    private const PLURALISED_BY_SERVER = ['entries_count', 'units_count'];
+    private const PLURALISED_BY_SERVER = [
+        'entries_count', 'units_count',
+        // Las dos líneas del suplemento de fiesta mixta (`specs/cumple-mixto.md` §15): las compone
+        // `OrderAdjustment::breakdownLabel()` con `trans_choice` y viajan YA RESUELTAS dentro de
+        // `gate_lines` del ledger. El cajón no las nombra — y esta guarda lo comprueba en la línea
+        // de abajo en vez de creérselo.
+        'gate_mixed_party_line', 'gate_mixed_party_line_named',
+    ];
 
     /**
      * Toda cadena entrecomillada que las fuentes del cajón nombran, para poder demostrar que una

@@ -4479,6 +4479,13 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .gf-meter__track { height: 8px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--bg) 14%, transparent); overflow: hidden; }
 .gf-meter__bar { height: 100%; width: 0%; background: var(--zone-1); border-radius: var(--r-pill); transition: width var(--dur-cae) var(--ease-sale); }
 
+/* Aviso de fiesta MIXTA en el post-form (`docs/specs/cumple-mixto.md` §9·7). Vive DENTRO del
+   `.gf-stub`, que es superficie oscura: sus colores se derivan de `--bg` como los de sus vecinos,
+   nunca de `--fg` —ahí `--fg` es el fondo—. */
+.gf-mix { margin-top: 18px; padding: 13px 15px; border-radius: var(--r-md); border: 1px solid color-mix(in srgb, var(--bg) 26%, transparent); background: color-mix(in srgb, var(--bg) 8%, transparent); }
+.gf-mix__title { font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: color-mix(in srgb, var(--bg) 60%, transparent); margin: 0 0 6px; }
+.gf-mix__text { font-size: 13.5px; line-height: 1.5; margin: 0; color: color-mix(in srgb, var(--bg) 88%, transparent); }
+
 /* perforación entre stub y form */
 .gf-perf { position: relative; height: 0; border-top: 2px dashed var(--line-strong); margin: 0 clamp(24px, 5vw, 44px); }
 .gf-perf::before, .gf-perf::after { content: ""; position: absolute; top: 0; width: 28px; height: 28px; background: var(--bg); border-radius: 50%; transform: translateY(-50%); }
@@ -4520,6 +4527,12 @@ html:not(.js) .gf-fiche__chev { display: none; }
 .gf-fiche.is-complete .gf-fiche__status--pending { display: none; }
 .gf-fiche:not(.is-complete) .gf-fiche__status--done { display: none; }
 .gf-fiche__chev { width: 26px; height: 26px; flex-shrink: 0; display: grid; place-items: center; color: var(--fg-mute); transition: transform var(--dur-entra) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
+/* El régimen del niño dentro de su ficha (`docs/specs/cumple-mixto.md` §15). Discreto por defecto
+   —es contexto, no un estado— y marcado cuando NO es el pack reservado, que es el que mueve el
+   precio. Reutiliza la forma del `__status` vecino para no inventar una pastilla nueva. */
+.gf-fiche__regime { display: inline-flex; align-items: center; flex-shrink: 0; font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.06em; padding: 5px 10px; border-radius: var(--r-pill); color: var(--fg-mute); background: var(--bg-soft); }
+.gf-fiche__regime.is-other { color: var(--on-brand); background: var(--zone-1); }
+.gf-fiche__regime.is-unknown { color: var(--err); background: color-mix(in srgb, var(--err) 12%, transparent); }
 .gf-fiche.is-open .gf-fiche__chev { transform: rotate(180deg); color: var(--fg); }
 .gf-fiche__body { display: grid; grid-template-rows: 1fr; }
 html.js .gf-fiche__body { grid-template-rows: 0fr; transition: grid-template-rows var(--dur-entra) var(--ease-sale); }

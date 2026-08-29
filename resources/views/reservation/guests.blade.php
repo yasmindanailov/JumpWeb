@@ -1,4 +1,20 @@
+@use('App\Domain\Booking\Models\TicketType')
 @php
+    // Atributos del <input> de cada columna por-niño, resueltos UNA vez. La pregunta «¿este tipo se
+    // escribe con dígitos?» la contesta el DOMINIO (`TicketType::isNumericFieldType`) y no un
+    // literal repetido en cada plantilla; la EDAD además lleva cota, porque de ese dato sale un
+    // cobro (`docs/specs/cumple-mixto.md` §8.6).
+    $guestInput = [];
+    foreach ($guestFields as $f) {
+        $isAge = ($f['type'] ?? null) === TicketType::FIELD_TYPE_AGE;
+        $numeric = TicketType::isNumericFieldType($f['type'] ?? null);
+        $guestInput[$f['key']] = [
+            'type' => $numeric ? 'number' : 'text',
+            'min' => $numeric ? ($isAge ? TicketType::GUEST_AGE_MIN : 0) : null,
+            'max' => $isAge ? TicketType::GUEST_AGE_MAX : null,
+        ];
+    }
+
     // Claves de los campos por-niño OBLIGATORIOS → una ficha está "completa" cuando todas están
     // rellenas (espejo de TicketType::guestDataCompletedCount; vacío de requeridas ⇒ completa). El
     // primer campo se usa como "nombre" mostrado en la cabecera de la ficha.
@@ -60,6 +76,40 @@
                         </div>
                     </div>
                 @endif
+
+                {{-- Fiesta MIXTA (`docs/specs/cumple-mixto.md` §14): se le dice al cliente EN EL
+                     SITIO donde declara las edades, que es lo que el owner pidió como
+                     «transparente y fácil de entender».
+                     ⚠️ Aparece SIEMPRE que la fiesta sea mixta, tenga o no cargo. Antes solo salía
+                     con dinero de por medio, y eso dejaba al cliente viendo una etiqueta «MIXTA» en
+                     su pedido sin una línea que la explicara — medido sobre un pedido real.
+                     ⚠️ El IMPORTE sale de lo ESCRITO en su pedido; la EXPLICACIÓN, del veredicto. --}}
+                @if ($ageMix->mixed)
+                    <div class="gf-mix" role="status">
+                        <p class="gf-mix__title">{{ __('guestform.mixed_title') }}</p>
+                        @foreach ($ageMix->upgrades as $up)
+                            <p class="gf-mix__text">
+                                {{ __('guestform.mixed_line', [
+                                    'count' => $up['count'],
+                                    'target' => $up['name'],
+                                    'target_price' => $up['target_price_cents'] === null ? '—' : \App\Domain\Platform\Services\Money::format($up['target_price_cents']),
+                                    'booked' => $type->tr('name'),
+                                    'booked_price' => $ageMix->basePriceCents === null ? '—' : \App\Domain\Platform\Services\Money::format($ageMix->basePriceCents),
+                                ]) }}
+                            </p>
+                        @endforeach
+                        <p class="gf-mix__text">
+                            @if ($ageSurcharge['cents'] > 0)
+                                {{ __('guestform.mixed_surcharge', ['amount' => \App\Domain\Platform\Services\Money::format($ageSurcharge['cents'])]) }}
+                            @elseif ($ageMix->hasSavings())
+                                {{-- `[owner]`: se AVISA de que saldría más barata, no se descuenta solo. --}}
+                                {{ __('guestform.mixed_savings', ['amount' => \App\Domain\Platform\Services\Money::format($ageMix->savingsCents)]) }}
+                            @else
+                                {{ __('guestform.mixed_no_difference') }}
+                            @endif
+                        </p>
+                    </div>
+                @endif
             </div>
 
             <div class="gf-perf"></div>
@@ -87,7 +137,7 @@
                                     @if ($field['type'] === 'textarea')
                                         <textarea id="g-{{ $field['key'] }}" name="general[{{ $field['key'] }}]" rows="2" @disabled($readonly)>{{ $reservation->event_data[$field['key']] ?? '' }}</textarea>
                                     @else
-                                        <input id="g-{{ $field['key'] }}" type="{{ $field['type'] === 'number' ? 'number' : 'text' }}" @if ($field['type'] === 'number') min="0" inputmode="numeric" @endif name="general[{{ $field['key'] }}]" value="{{ $reservation->event_data[$field['key']] ?? '' }}" @disabled($readonly)>
+                                        <input id="g-{{ $field['key'] }}" type="{{ TicketType::isNumericFieldType($field['type']) ? 'number' : 'text' }}" @if (TicketType::isNumericFieldType($field['type'])) min="0" inputmode="numeric" @endif name="general[{{ $field['key'] }}]" value="{{ $reservation->event_data[$field['key']] ?? '' }}" @disabled($readonly)>
                                     @endif
                                 </label>
                             @endforeach
@@ -122,6 +172,18 @@
                                         <span class="gf-fiche__role">{{ __('guestform.child', ['n' => $i + 1]) }}</span>
                                         <span class="gf-fiche__name {{ $headName === '' ? 'is-empty' : '' }}" data-name data-empty="{{ $emptyLabel }}">{{ $headName !== '' ? $headName : $emptyLabel }}</span>
                                     </span>
+                                    {{-- El régimen que le toca a ESTE niño por su edad
+                                         (`docs/specs/cumple-mixto.md` §15). Informativo: dice a qué
+                                         pack de la familia pertenece, y se marca cuando NO es el
+                                         reservado, que es el que mueve el precio de la fiesta.
+                                         ⚠️ Refleja lo GUARDADO: se actualiza al guardar, no al
+                                         teclear — el veredicto es del servidor (`CE-4`). --}}
+                                    @php($regime = $guestRegimes[$i] ?? null)
+                                    @if ($regime !== null && $regime['state'] === \App\Domain\Booking\Services\GuestAgeMixReader::ROW_OK)
+                                        <span @class(['gf-fiche__regime', 'is-other' => ! $regime['own']])>{{ $regime['name'] }}</span>
+                                    @elseif ($regime !== null && $regime['state'] === \App\Domain\Booking\Services\GuestAgeMixReader::ROW_OUT_OF_RANGE)
+                                        <span class="gf-fiche__regime is-unknown">{{ __('guestform.regime_unknown') }}</span>
+                                    @endif
                                     <span class="gf-fiche__status gf-fiche__status--pending">{{ __('guestform.status_pending') }}</span>
                                     <span class="gf-fiche__status gf-fiche__status--done">{{ __('guestform.status_done') }}</span>
                                     <span class="gf-fiche__chev" aria-hidden="true">
@@ -139,7 +201,7 @@
                                                         @if ($field['type'] === 'textarea')
                                                             <textarea id="c-{{ $i }}-{{ $field['key'] }}" name="guests[{{ $i }}][{{ $field['key'] }}]" rows="2" @if ($field['required']) data-required @endif @if ($idx === 0) data-name-input @endif @disabled($readonly)>{{ $rows[$i][$field['key']] ?? '' }}</textarea>
                                                         @else
-                                                            <input id="c-{{ $i }}-{{ $field['key'] }}" type="{{ $field['type'] === 'number' ? 'number' : 'text' }}" @if ($field['type'] === 'number') min="0" inputmode="numeric" @endif name="guests[{{ $i }}][{{ $field['key'] }}]" value="{{ $rows[$i][$field['key']] ?? '' }}" @if ($field['required']) data-required @endif @if ($idx === 0) data-name-input @endif @disabled($readonly)>
+                                                            <input id="c-{{ $i }}-{{ $field['key'] }}" type="{{ $guestInput[$field['key']]['type'] }}" @if ($guestInput[$field['key']]['min'] !== null) min="{{ $guestInput[$field['key']]['min'] }}" inputmode="numeric" @endif @if ($guestInput[$field['key']]['max'] !== null) max="{{ $guestInput[$field['key']]['max'] }}" @endif name="guests[{{ $i }}][{{ $field['key'] }}]" value="{{ $rows[$i][$field['key']] ?? '' }}" @if ($field['required']) data-required @endif @if ($idx === 0) data-name-input @endif @disabled($readonly)>
                                                         @endif
                                                     </label>
                                                 @endforeach

@@ -33,6 +33,10 @@ return [
     'guests' => 'Guests',
     'guests_left' => ':count spots left',
     'guests_count' => ':count guests',
+    'mixed_party_badge' => 'MIXED',
+    'mixed_party_product_name' => ':name · :badge',
+    'gate_mixed_party_line' => 'Supplement for :count guest in a different age range|Supplement for :count guests in a different age range',
+    'gate_mixed_party_line_named' => 'Supplement for :count guest who belongs to :target|Supplement for :count guests who belong to :target',
     // Quantity WITH its noun — that is what tells it apart from the amount (`DECISIONES #128`):
     // "8×216,00 €" reads as 8 × 216 = 1,728 €; "8 guests · 216,00 €" does not.
     'entries_count' => ':count ticket|:count tickets',

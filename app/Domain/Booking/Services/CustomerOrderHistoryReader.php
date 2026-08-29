@@ -71,7 +71,7 @@ class CustomerOrderHistoryReader implements CustomerOrderHistory
             // El `id` del ítem NO se exporta: lo lleva para que Identity cruce con la asignación de
             // menores (Fase 6 · tanda 4) y lo retire antes de emitir. Es la única llave de la línea.
             'id' => (int) $item->id,
-            'product' => $item->ticketType?->tr('name'),
+            'product' => $item->displayProductName(),
             'date' => $item->slot?->date?->toDateString(),
             'time' => $item->slot?->start_time,
             'quantity' => $item->quantity,

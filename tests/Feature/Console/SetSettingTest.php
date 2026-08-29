@@ -126,9 +126,14 @@ class SetSettingTest extends TestCase
 
     public function test_it_refuses_an_empty_key(): void
     {
+        // ⚠️ Se compara CONTRA EL ANTES y no contra cero: desde `#244` la instalación nace con un
+        // ajuste (el puntero al producto del suplemento de fiesta mixta), y «la tabla está vacía»
+        // dejó de ser lo que este caso quiere decir — que el comando no escribió nada.
+        $before = Setting::query()->count();
+
         $this->artisan('app:set-setting', ['key' => '  ', 'value' => 'x'])->assertExitCode(1);
 
-        $this->assertSame(0, Setting::query()->count());
+        $this->assertSame($before, Setting::query()->count());
     }
 
     // ── Y que un secreto no acabe en el log del despliegue ────────────────────────────────────────

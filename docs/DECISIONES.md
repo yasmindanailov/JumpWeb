@@ -9838,7 +9838,9 @@ una, la otra derivaba en silencio.
 **Lo que enseñó:**
 1. **El fósil.** `lockSlots` llevaba DOS docblocks apilados; el primero explicaba que «resuelve las
    zonas con una SUBCONSULTA dentro de la propia sentencia de bloqueo» — el fix INSUFICIENTE que
-   `#246` reprodujo como sobreventa y que `AFORO-01` prohíbe. Un lector fiel al primer docblock
+   `#147` reprodujo como sobreventa y que `AFORO-01` prohíbe. ⚠️ Esta cita decía `#246` —una
+   decisión que no existía— y se corrigió el 2026-08-29 al ir a usar ese número: un número de tres
+   cifras mal tecleado apunta a otra década del proyecto y nadie lo nota. Un lector fiel al primer docblock
    habría reintroducido el bug creyendo cumplir la invariante. Retirado.
 2. **Una mutación, dos puertas rojas.** Con el helper leyendo sin `FOR UPDATE`, `entry` FALLA
    (compra) y `panel-edit` FALLA (panel): la prueba de que las dos puertas comparten de verdad la
@@ -13397,6 +13399,365 @@ propiedad manda.*
 **Verificación**: suite **3402 / 22.394** · JS 843 · **11 mutaciones y las 11 muerden** · sondas
 headless **16/16** (menores, a 390 px), **8/8** (las tarjetas de cobro) y la reproducción del bug
 medida en los dos sentidos · Pint ✓ · docs-check ✓.
+
+## #243 · 2026-08-29 · [DECIDIDO owner] Cumpleaños MIXTO · la tanda 1: el sistema no tenía NINGUNA conexión entre un cumple KIDS y uno JUMP
+
+El encargo (`specs/cumple-mixto.md` §1) daba por hecho que el sistema sabe que «Cumpleaños Kids» y
+«Cumpleaños Jump» son el mismo servicio en dos regímenes. **La pregunta la hizo el owner y era la
+buena**: «¿cómo saber la diferencia entre un cumpleaños KIDS y uno JUMP? El sistema no tiene conexión
+entre ambos». Medido: `ticket_types` tiene 32 columnas y **ninguna agrupa productos** — ni pivote, ni
+convención de nombre. Solo comparten zona, y en la instalación real ni eso.
+
+### 1 · ⚠️⚠️ Lo que costó menos porque se midió antes: un ajuste suelto NO cobra, MUEVE dinero
+
+La forma obvia —un `OrderAdjustment` de tipo `extra_due` con el importe del suplemento— se probó
+sobre un pedido REAL (`R-BEEL3E`, pack con señal) dentro de una transacción revertida:
+
+| | valor | pagado online | a cobrar en el parque |
+|---|---|---|---|
+| con un `extra_due` de +6,00 € | **+0,00** | **−6,00** | **+6,00** |
+
+El cliente **no debe un céntimo más**: el desglose declara que 6,00 € de los que ya pagó pasan a
+cobrarse en el parque. La causa está en la aritmética de `ReservationFinancials::make()`
+—`online = subtotal − extraDue − depositRemainder`—: los dos canales **reparten el valor de la línea,
+no lo amplían**, y `PAY-16`/`PAY-17` cierran **porque** cada `extra_due` del editor va acompañado de
+una subida de `unit_price`/`quantity`. ▶ La forma que SÍ cobra es una **LÍNEA** (medido: valor +6,00,
+online +0, puerta +6,00), que es lo que ya hace el panel al añadir un complemento.
+⚠️ El docblock de `OrderAdjustment` ya lo decía —«por una edición que **subió el importe del
+pedido**»— pero esa subordinada era una REGLA y nadie la había escrito como tal.
+
+### 2 · ⚠️ Y el atajo que parecía gratis cobraba diez veces de más
+
+Cambiar el producto de la reserva (KIDS → JUMP) **ya existe** en `OrderItemEditor::edit()` y su
+frontera es justo la ZONA (`cross_zone_change_forbidden_product`; medido ejecutando el validador:
+Kids → Jump devuelve `null`). Pero cobra la diferencia **por TODOS los invitados**: con 10 niños y
+3,00 € de diferencia son 30,00 € donde el encargo pide 3,00 €. «Mixto» no es un cambio de producto.
+
+### 3 · La forma: FAMILIA + TRAMO DE EDAD `[DECIDIDO owner]`
+
+Cada producto declara su tramo (`guest_age_min`/`guest_age_max`, **los dos extremos incluidos**) y
+una `guest_age_family`; los que comparten familia son alternativos. El motor busca a qué producto le
+toca CADA invitado por su edad. Sirve para dos regímenes o para cinco, no nombra a ningún cliente y
+se apaga solo donde no hay familia. Se prefirió a un «puntero de mejora» de una sola columna porque
+ese solo sabe subir un peldaño: con un tercer régimen habría que rehacerlo.
+
+Y el reparto que lo sostiene: **el veredicto se DERIVA siempre; el dinero se ESCRIBE una vez.** El
+post-form es editable hasta el evento, así que la etiqueta va y viene sola y no hay sello que
+deshacer. `[DECIDIDO owner]`: **el sistema propone, el operador aplica** — ninguna acción del cliente
+escribe dinero sobre un pedido pagado.
+
+### 4 · Lo que enseñaron las guardas
+
+⚠️⚠️ **Una nació CIEGA y lo dijo la mutación, no la revisión.** El caso del borde afirmaba solo
+`assertFalse(mixed)`, y eso lo cumplen DOS mundos: «el niño de 6 pertenece a KIDS» y «no lo cubre
+ningún pack». Con el borde mutado a exclusivo el de 6 salía «fuera de rango» y el test seguía verde.
+▶ *Cuando la ausencia de algo tiene más de una causa, afirmar la ausencia no afirma nada.*
+
+⚠️ **El test de RENDER se pagó solo**: el `@use` del blade se escribió con la barra duplicada y el
+post-form devolvía **500 a cualquier cliente**. Ningún test de dominio lo veía.
+
+⚠️ **Y una lectura del esquema estuvo a punto de entrar como hecho**: `order_adjustments.applied_by`
+es NOT NULL con FK RESTRICT, lo que parecía demostrar que un cargo automático es imposible. Es falso
+— `OrderCreator` ya escribe el resto de la señal poniendo como `applied_by` al propio cliente.
+
+### 5 · Alcance
+
+En el árbol: la conexión, el tipo de campo `age` con cota, `GuestAgeMixReader`/`GuestAgeMix`, la
+puerta del catálogo contra tramos solapados, la etiqueta y la propuesta en la ficha del pedido y el
+aviso al cliente en el post-form. **Declarado fuera** (`specs/cumple-mixto.md` §11.3): la ACCIÓN de
+aplicar el suplemento (es dinero), el **AFORO** —`[DECIDIDO owner]`: el niño mayor pasa físicamente a
+JUMP, y las zonas del parque real son distintas—, el resto de superficies de la etiqueta y la API.
+
+**Verificación**: suite **3437 / 22.518** (1 skip preexistente) · **11 mutaciones y las 11 muerden**
+· dos sondas de dinero sobre un pedido real, en transacción revertida · Pint ✓ · docs-check ✓.
+
+## #244 · 2026-08-29 · [DECIDIDO owner] El suplemento de la fiesta MIXTA se cobra SOLO: reconciliar, no aprobar
+
+`#243` dejó el veredicto derivado y una PROPUESTA que el operador tenía que aceptar. El owner planteó
+lo contrario y su razonamiento desmonta la objeción con la que se había diseñado: «es lo mismo que
+cuando elige producto en el carrito, él decide cuánto pagará; y la política es que cualquier gestión
+de dinero post-reserva ya cobrada se hace en las instalaciones». Aquí **nada se cobra online**, así
+que un cargo pendiente puede recalcularse mientras nadie lo haya cobrado.
+
+▶ **Y el código ya garantizaba la mitad difícil, sin que nadie lo hubiera escrito**: la ventana en la
+que el cliente puede mover el importe se cierra EXACTAMENTE cuando el dinero se da por cobrado. Las
+dos cosas cuelgan del mismo predicado —`OrderItem::isFinishedInPractice()`—: el post-form pasa a solo
+lectura al terminar la franja y `Order::itemGateResolved()` deja de considerar pendiente el cargo en
+ese mismo instante. **No hay ni un minuto de solape.**
+
+### 1 · Reconciliar, no aprobar
+
+`Booking\Services\MixedPartySurcharge` deja en cada pasada lo ESCRITO igual a lo DERIVADO: crea la
+línea que falte, ajusta la que cambió y cancela la que sobre. De ahí salen tres propiedades que no
+hay que programar aparte: **idempotencia** (guardar dos veces no acumula), **simetría** —«si vuelve a
+bajar la edad, el precio vuelve a su normalidad» es el mismo camino, no una función de deshacer— y la
+imposibilidad de un desfase por culpa del cliente.
+
+⚠️ **Sin paso de confirmación, a propósito.** Una confirmación frena algo irreversible, y aquí nada
+lo es hasta el día de la fiesta. Lo que protege es decírselo antes (la ayuda del campo de edad) y
+después (el importe en pantalla y el correo).
+
+### 2 · ⚠️⚠️ La regla que ordena todo: el HECHO sí, la CONFIGURACIÓN no
+
+`[DECIDIDO owner]`. Reconcilian las edades, la cantidad de invitados, el producto y la fecha de la
+reserva. **No** reconcilian un cambio de precio del catálogo ni un cambio de tramo: lo escrito es lo
+que se le comunicó al cliente. El desfase **se enseña** en la ficha del pedido, que es lo que lo hace
+comprobable en vez de invisible.
+
+⚠️ **Los dos puntos del PANEL no eran opcionales.** Si el operador baja los invitados de 10 a 8 y
+nadie reconcilia, la línea sigue cobrando por dos niños que ya no están — y el guardado del cliente,
+que es el otro disparador, puede no volver a producirse nunca. Eso obligó a tocar `OrderItemEditor`,
+que está en el `CRITICAL_RE`: la reconciliación va POST-COMMIT y fuera del lock de zona/día, en su
+propia transacción corta.
+
+### 3 · ⚠️⚠️ Por qué el portador NO puede ser el pack de destino
+
+Medido: `PackAvailability` cuenta TODA fila de `order_items` cuyo producto sea de tipo `pack` en esa
+zona y día **sin mirar si es una línea hija**. Una línea de suplemento con «Cumpleaños Jump»
+consumiría una fiesta entera del cupo y sus plazas, en silencio y en la pieza más delicada del
+sistema. El portador es por eso un **complemento** —sin zona, `seats = 0`, `slot_id = null`—: ninguna
+consulta de aforo lo ve, porque todas cruzan por `slots`.
+
+`[DECIDIDO owner]` lo crea la migración y no el operador: si falta, esto **deja de cobrar en
+silencio**. Con guarda ruidosa —la ficha del pedido lo dice en rojo— porque un cobro que se apaga sin
+que nadie se entere era justo el modo de fallo a evitar. ⚠️ Nace con la instalación, así que **dos
+tests que contaban productos pasaron a aseverar lo que de verdad querían decir** (el catálogo
+vendible; cero packs y entradas) en vez de un recuento global que ya no gobiernan.
+
+⚠️⚠️ **Y la primera versión de esa migración perdía el producto en silencio.** Pedía
+`max(position) + 1`, que sobre una base VACÍA —la de cada arranque de la suite— vale **1**; pero
+`LandingContentSeeder` identifica sus productos con `updateOrCreate(['position' => N])`, así que
+**la posición ES su clave**. El seeder encontraba el portador en «su» posición 1 y lo sobrescribía
+con una entrada. La suite lo cazó como «5 complementos vendibles», y el quinto era **«Jump · 1
+hora» con `type` de complemento**: el nombre del seeder sobre el tipo del portador. Posición fija **0** a
+partir de ahora: fuera de la clave del seeder (numera desde 1) y fuera del `max(position) + 1` con
+el que `CreateCatalog` coloca cada producto nuevo — el primer intento, 900, empujaba a **901** a
+todo lo que el operador crease después. ▶ *Una migración que siembra un DATO compite con el seeder
+que cree que es dueño de esa tabla —hay que saber cuál es su CLAVE, que aquí no es el id— y con
+todo lo que se calcule a partir de ella.*
+
+### 4.bis · ⚠️ Un fallo PREEXISTENTE que esto destapó: editar con un complemento despublicado
+
+`validateAddonEdits` indexa `$newPivots` con los complementos del producto, y `addons()` filtra por
+VENDIBLE y ACTIVO — así que un hijo vivo cuyo producto dejó de serlo no tiene entrada ahí. El acceso
+iba con `?->`, que protege del `null` pero **no de una clave AUSENTE**, y el edit moría con
+«Undefined array key» antes de llegar a ninguna validación. Lo destapó la línea del suplemento, que
+es no vendible a propósito, pero **el defecto no era suyo**: cualquier instalación que retire de la
+venta un complemento ya vendido se lo encuentra al editar ese pedido. Arreglado en los tres accesos
+y con guarda propia (`ManageItemQuantityProductTest`), vista fallar.
+
+### 4 · Dónde vive la marca, y por qué no en `event_data`
+
+La marca «esta línea es un suplemento de fiesta mixta» va en el `context` del `OrderAdjustment`, que
+es 1:1 con su línea y existe para describir de dónde sale un cargo. **No** en `order_items.event_data`
+—que habría sido lo cómodo—: eso es lo que contestó el CLIENTE, y `RGPD-01` lo vacía al anonimizar.
+Ese mismo `context` es lo que el cliente lee en su desglose («Suplemento por 3 invitados de otro
+tramo de edad»), no el nombre pelado del portador: la lección de `#131`.
+
+### 5 · Lo que este diseño NO cierra, dicho sin adornos
+
+El cliente puede declarar 8, ver el suplemento y bajarlo a 6 la víspera. No se puede impedir sin
+quitarle la edición. `[owner]`: «puede mentir en la edad con este sistema o sin él; hasta al reservar
+puede mentir — eso es trabajo en persona». Se cierra **operativamente**: cada cambio de importe
+escribe `orders.mixed_party_surcharge_synced` en `audit_logs` (sin PII), y la hoja de sala ya imprime
+las columnas del esquema, así que la edad declarada sale en la puerta sin trabajo extra.
+
+**Fuera de alcance** `[owner]`: el **AFORO** («no hay problema por ahora, más tarde se itera si es
+necesario»), el resto de superficies de la etiqueta y la API.
+
+### 6 · El verificador que faltaba
+
+La carrera de esta función no la cubre ninguno de los dos verificadores del `CRITICAL_RE` —no
+ejercitan el post-form—, así que tiene el suyo: **`mixed-party:verify-concurrency`**, hermano de
+`purchase:verify-oversell` y `waiver:verify-chain`. N guardados simultáneos del mismo post-form
+deben dejar **una línea y un cargo**.
+
+⚠️⚠️ **Visto FALLAR sin el lock, y el número lo dice todo**: con 12 workers salieron **12 líneas y
+84,00 €** donde debía haber 7,00 € — el cargo multiplicado por el nº de guardados, sin excepción ni
+aviso, y el cliente se lo encontraría en caja. ⚠️ **No entra en el `CRITICAL_RE`** a propósito:
+meterlo ahí obligaría a correr dos comandos que no prueban nada de esta carrera.
+
+**Verificación**: suite **3452 / 22.561** (1 skip preexistente) · **7 mutaciones y las 7 muerden**
+(no cancelar la línea sobrante · crear siempre en vez de actualizar · la línea sin su cargo de
+puerta · notificar sin cambio de importe · desenganchar el reconciliador del post-form · y del
+EDITOR · y la vuelta de la clave ausente de `validateAddonEdits`) · **`mixed-party:verify-concurrency`
+12/12** y **visto fallar** sin el lock (12 líneas, 84,00 €) · por tocar `OrderItemEditor`
+(`CRITICAL_RE`): `purchase:verify-oversell` en sus **SEIS** escenarios —`entry`, `pack`,
+`pack-guests`, `pack-prep`, `mixed`, `panel-edit`— y `redsys:verify-concurrency` 16/16 · Pint ✓ ·
+docs-check ✓.
+
+⚠️ **Y correrlos todos destapó que `INVARIANTES` mentía en un recuento**: `AFORO-01` y `SUITE-04`
+decían «CINCO escenarios» y son **SEIS** desde `#177`, que añadió `panel-edit`. Corregido. *Un
+recuento canónico que el `docs-check` no verifica es un recuento que envejece en silencio.*
+
+## #245 · 2026-08-29 · [owner] La etiqueta MIXTA se pega al NOMBRE: un sitio y todas las superficies lo cogen de ahí
+
+La pregunta del owner tras ver la lista de superficies pendientes: «¿no podemos añadir esa etiqueta
+al nombre del producto y que el resto lo coja de ahí, en vez de añadirlo a cada superficie?».
+
+▶ **Sí, y es la doctrina que este repo ya tiene escrita**: `OrderItem::displayTimeWindow()` y
+`displayQuantityLabel()` existen exactamente por eso —la segunda documenta que era «la quinta copia
+de la misma regla»—. Lo único que había que corregir de la idea es DÓNDE: el sitio único es la
+**RESERVA**, no el producto. `TicketType` lo comparten todas las fiestas y no puede saber si ESTA es
+mixta; `OrderItem::displayProductName()` sí.
+
+### 1 · Una regla, dos formas de leerla
+
+El nombre CON la etiqueta lo usan las superficies de **texto plano** —hoja de sala, resumen del día,
+pantalla de puerta, calendario, la tarjeta de producto de los correos, «Mis pedidos»/«Mis reservas»
+y `OrderItemResource`—; el **dato suelto** (`isMixedParty()`) lo usan las que pueden pintar algo al
+lado: hoy la ficha del pedido, con su pastilla.
+
+⚠️ **No vive SOLO dentro del nombre a propósito.** Una etiqueta metida en la cadena deja de ser un
+dato: nadie podría filtrar «las fiestas mixtas de mañana», y la ficha tendría que elegir entre la
+pastilla y decirlo dos veces. ⚠️ Y **no la llevan el catálogo ni el editor** —ahí el nombre es el del
+PRODUCTO, no el de una fiesta— ni los complementos.
+
+### 2 · El premio que no se veía al plantearlo
+
+Componerla en el SERVIDOR hace que el cajón la reciba **sin gastar un byte** del payload de montaje,
+que viaja en cada página con sesión y tenía **83 B de holgura** sobre su techo. La alternativa
+—rótulo nuevo en el cliente— obligaba a podar o a subir el techo por feature.
+
+### 3 · ⚠️⚠️ El precio de «que todos lo cojan de ahí», y cómo se fija
+
+`isMixedParty()` necesita `ticketType` y `slot`: una lista que no las cargue paga **dos consultas por
+fila** y nadie se entera. Las cuatro superficies de lista ya las traen —medido—, y eso **se fija en
+vez de confiarse**: `MixedPartyLabelSurfacesTest` compara el nº de consultas al pintar el día con 2
+reservas y con 6 y exige que sea el MISMO. Verificado por mutación: quitarle el `slot` al resumen
+del día lo pone en rojo.
+
+⚠️ **Y un caso de ese mismo fichero nació CIEGO**: el del calendario llevaba una rama de escape —«si
+la ruta no da 200, asevera sobre el compositor»— que lo hacía pasar con un usuario sin permiso, sin
+llegar a mirar el calendario. Corregido: se conduce la ruta con `calendar.view` y sin condición.
+*Una rama alternativa dentro de un test es una forma de no probar nada.*
+
+**Verificación**: suite **3461 / 22.577** (1 skip preexistente) · **3 mutaciones y las 3 muerden**
+(nunca pega la etiqueta · la pega siempre · el eager-load perdido) · Pint ✓ · docs-check ✓.
+
+## #246 · 2026-08-29 · [DECIDIDO owner] El caso BARATO: se avisa, no se descuenta — y el aviso que no salía
+
+El owner probó la función en un pedido REAL (`R-BEEL3E`) y trajo dos cosas que resultaron ser la
+misma. Reservó **Cumpleaños Jump** (7–99, 15,00 €) y dos invitados tienen **3 y 2 años**: les
+corresponde **Cumpleaños Kids** (11,00 €). Kids es MÁS BARATO —11,00 − 15,00 = −4,00 €—, el suelo lo
+deja en 0, no se escribe línea… y por eso no salía ni el aviso ni el correo.
+
+### 1 · ⚠️⚠️ El defecto: una etiqueta que el lector no puede descifrar
+
+El aviso del post-form leía **solo lo escrito**, así que una fiesta mixta SIN cargo no decía nada: el
+cliente veía «Cumpleaños Jump · MIXTA» en su pedido y ni una línea que lo interpretase. *Un rótulo
+sin explicación es peor que no ponerlo.*
+
+▶ Ahora aparece **siempre que la fiesta sea mixta**, y con la aritmética que el owner pidió («que
+muestre el cambio de dinero de x € a x € porque x cuesta y»): «A 2 invitados les corresponde
+«Cumpleaños Kids» (11,00 € por invitado) en vez de «Cumpleaños Jump» (15,00 €)». ⚠️ El IMPORTE sigue
+saliendo de lo ESCRITO y la EXPLICACIÓN del veredicto: cada uno de su fuente.
+
+### 2 · El caso barato, y por qué NO va por el desglose
+
+`[DECIDIDO owner]`: «no se devuelve dinero automáticamente, pero avisar al operador y al cliente de
+que la reserva es X € más barata por ese cambio».
+
+⚠️⚠️ **Y esa cifra no puede viajar por el desglose de dinero.** El desglose ya tiene un canal
+«Pendiente de devolución» y es **deuda REAL** del parque, con `PAY-16`/`PAY-17` cuadrando sobre él:
+meter ahí un informativo lo descuadraría y —peor— el cliente leería una deuda que no existe. Va como
+aviso aparte y **no suma en ningún total**.
+
+▶ El veredicto publica ahora **dos cifras**: `surchargeCents` (lo que se cobra, con suelo en 0) y
+`savingsCents` (lo que costaría menos, informativo), las dos derivadas de la misma diferencia por
+cabeza, que viaja con su SIGNO junto a la parte cobrable.
+
+⚠️ **Por qué no se descuenta solo**, escrito para que no se reabra sin querer: el encargo era cobrar
+al que sube, y un descuento automático crearía **un incentivo para mentir a la baja** que hoy no
+existe — declarar 3 años a un niño de 12 saldría más barato, y se aplicaría solo.
+
+### 3 · Lo que NO era
+
+Tres sospechas del owner, ninguna acertada, y decirlo importa: **el correo** no faltaba (no se manda
+porque el importe no ha cambiado); **el CSS del badge** tampoco (ya se veía, dentro del nombre); y
+**el cálculo** era correcto —11,00 menos 15,00 es negativo—. Lo que faltaba era ENSEÑARLO.
+
+**Verificación**: dos casos nuevos que conducen las dos superficies en la dirección barata —el
+post-form y la ficha del panel— con su control negativo (que la frase del CARGO no aparezca), y la
+salida comprobada contra el pedido real del owner. Suite completa · Pint ✓ · docs-check ✓.
+
+## #247 · 2026-08-29 · [owner] El régimen dentro del recuadro de cada niño — y la línea del desglose decía «1 invitados»
+
+Dos encargos del owner tras ver la función funcionando.
+
+### 1 · La pastilla por ficha
+
+«En el propio formulario, donde ponen la edad del niño, que en el recuadro de ese niño ponga
+informativo a qué zona pertenece». Cada ficha lleva ahora el pack que le toca por su edad,
+**marcado cuando NO es el reservado** —que es el niño que mueve el precio— y en rojo cuando su edad
+no la cubre ningún pack de la familia, que es un hueco de configuración y no un error del cliente.
+
+⚠️ **Sale del MISMO recorrido que el veredicto**: `guestRegimes()` y `for()` comparten un `walk()`
+privado. Con una copia de la regla, una ficha podría decir «Kids» mientras el total de la fiesta dice
+otra cosa — y las dos serían defendibles mirando su propio código.
+
+⚠️ **Refleja lo GUARDADO, no lo tecleado** (`CE-4`): calcularlo en el navegador sería duplicar en
+JavaScript la regla de la que sale un cobro.
+
+⚠️ **Dice el PACK y no la ZONA**, aunque el encargo hablara de zona: medido, en la instalación de
+demo los dos packs de cumpleaños comparten `zone_id = 4`, así que el nombre de la zona sería idéntico
+para los dos niños y no distinguiría nada. El pack distingue siempre. En el parque real sí son zonas
+distintas: cambiarlo es una línea si el owner lo prefiere.
+
+### 2 · El desglose ya era uno solo — pero su frase estaba mal
+
+La otra pregunta era si el suplemento aparece en el desglose del pedido y si lo leen cliente y
+operador. **Sí, y sin nada nuevo**: `Order::pendingAtGateLines()` es la única composición de «A
+cobrar en el parque ↳», y la leen el cliente (`gate_lines` del ledger), el operador (el partial
+`reservation-financials`) y la hoja de sala.
+
+⚠️⚠️ **Pero la frase tenía dos defectos.** Decía «Suplemento por **1 invitados**» —sin `trans_choice`,
+y en un desglose de DINERO, que es donde peor sienta un descuido— y **no nombraba el pack**, así que
+el cliente leía un importe sin saber de qué diferencia salía. Ahora: «Suplemento por 1 invitado que
+corresponde a Cumpleaños Jump». ▶ El nombre se **guarda en el `context`** del cargo en vez de
+resolverse al leer: es lo que se le dijo al cliente, no cambia si el producto se renombra después y
+no cuesta una consulta por línea. Mismo criterio que el contexto de complementos.
+
+⚠️ **El resto del cambio lo cazó una guarda del cajón.** `SidebarTextParityTest` exige que toda clave
+de `tickets` con dos formas plurales esté declarada: o la resuelve el cajón con `tc()`, o la compone
+el servidor **y se demuestra que el cliente no la nombra**. Al pasar a `trans_choice`, las dos claves
+entraron en esa categoría y la suite lo dijo. *Sin esa guarda, el cliente habría visto la barra
+vertical en pantalla el día que alguien pintara la clave con `t()`.*
+
+**Verificación**: suite **3465 / 22.614** (1 skip preexistente) · dos casos nuevos en el post-form
+—la pastilla MARCADA del que cambia de régimen, y el control de que un pack SIN familia no gana
+ninguna— · la frase comprobada en singular y plural · la salida contrastada contra el pedido real
+del owner (`R-BEEL3E`: las fichas de 3 y 2 años salen marcadas, las seis de 12 no) · Pint ✓ ·
+docs-check ✓.
+
+## #248 · 2026-08-29 · [DECIDIDO owner] El descuento del caso barato se APARCA — con su diseño escrito, y con un supuesto suyo ya caído
+
+El owner pidió evaluar en serio hacer que el régimen decidiera el precio **en las dos direcciones**,
+y después de ver el diseño decidió lo contrario: **no se implementa por ahora y no se tocan las
+invariantes del dinero**. El caso barato se queda con el **aviso al operador y al cliente**, que ya
+está en el árbol, y la decisión se retoma **en producción según las circunstancias**.
+
+▶ **La fase de diseño se hizo igual, y por eso esta entrada existe.** Lo que queda escrito
+(`specs/cumple-mixto.md` §16) no es documentación de algo que no se hizo: es el trabajo que no habrá
+que repetir el día que haga falta. Incluye por qué NO valen las cinco formas «obvias» —el total no
+existe como número, `unit_price` es UNSIGNED, un crédito de puerta suelto miente en el canal…—, la
+aritmética de los tres casos y la cota que demuestra que ningún canal queda negativo.
+
+### ⚠️⚠️ Y lo que más valió: un supuesto propio que se midió y resultó FALSO
+
+El diseño se apoyaba en que el «online original» de una línea de crédito sería 0. **Se comprobó
+contra el código y no lo es**: el respaldo de `Order::itemOriginalOnlineCents()` devuelve
+`itemCollectedCents($item)`, o sea lo cobrado AHORA, así que la deuda salía
+`max(0, −8,00 − (−8,00)) = 0`. **El caso «pack sin señal» habría perdido el dinero en silencio** — y
+es la configuración más común. La salida ya existía (el marcador que usan las bajadas), y de paso
+impone una condición al producto portador: **no puede tener señal**, porque la reconstrucción pasa
+por `depositCents()`.
+
+▶ *Cinco minutos de medición en la fase de diseño contra un desglose que suma mal en producción.*
+Es el argumento entero a favor de diseñar antes de escribir, con un número detrás.
+
+**Qué lo despertaría**: que en el parque real las fiestas mixtas a la baja sean lo bastante
+frecuentes como para que el gesto manual del operador deje de valer.
 
 ## #250 · 2026-08-28 · [DECIDIDO owner] La columna del sitio es la del MOCKUP — y no era más ancha, era más estrecha
 

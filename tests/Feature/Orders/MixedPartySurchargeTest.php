@@ -1,0 +1,393 @@
+<?php
+
+namespace Tests\Feature\Orders;
+
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\Price;
+use App\Domain\Booking\Models\RateType;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\MixedPartySettings;
+use App\Domain\Booking\Services\MixedPartySurcharge;
+use App\Domain\Booking\Services\OrderItemEditor;
+use App\Domain\Booking\Services\ReservationFinancials;
+use App\Domain\Identity\Models\Permission;
+use App\Domain\Identity\Models\Role;
+use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Models\Setting;
+use App\Notifications\MixedPartySurchargeChanged;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Notification;
+use Tests\TestCase;
+
+/**
+ * El SUPLEMENTO de una fiesta MIXTA, que es dinero (`docs/specs/cumple-mixto.md` §12).
+ *
+ * `[DECIDIDO owner, 2026-08-29]` el importe sigue solo a las edades declaradas, sin aprobación: aquí
+ * nada se cobra online, se cobra en el parque, y un cargo pendiente puede recalcularse mientras
+ * nadie lo haya cobrado.
+ *
+ * ⚠️⚠️ **Lo que estos casos protegen no es «suma bien»: es que el desglose siga CUADRANDO.** La
+ * forma «obvia» —un `extra_due` suelto— está medida y NO cobra: mueve dinero de «pagado online» a
+ * «a cobrar en el parque» y deja el valor igual (§8.3). Por eso hay un caso que asevera los TRES
+ * canales a la vez; sin él, un refactor podría volver a la forma que no cobra y todo lo demás
+ * seguiría verde.
+ *
+ * ⚠️ Y protegen la otra mitad, que es la que un modelo automático rompe primero: **reconciliar, no
+ * acumular**. Guardar dos veces no puede sumar dos suplementos.
+ */
+class MixedPartySurchargeTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private Zone $zone;
+
+    private Slot $slot;
+
+    private TicketType $kids;
+
+    private TicketType $jump;
+
+    private int $counter = 0;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Notification::fake();
+
+        $rate = RateType::create([
+            'key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'],
+            'weekdays' => null, 'priority' => 0, 'is_active' => true,
+        ]);
+        $this->zone = Zone::create(['slug' => 'cumples', 'name' => ['es' => 'Cumpleaños']]);
+        $this->slot = Slot::create([
+            'zone_id' => $this->zone->id, 'date' => now()->addDays(20)->toDateString(),
+            'start_time' => '11:00:00', 'end_time' => '13:00:00',
+            'capacity' => 200, 'online_capacity' => 200,
+        ]);
+
+        $this->kids = $this->pack('Cumpleaños Kids', 1, 6, 1800, $rate);
+        $this->jump = $this->pack('Cumpleaños Jump', 7, 99, 2500, $rate);
+    }
+
+    private function pack(string $name, int $min, int $max, int $cents, RateType $rate): TicketType
+    {
+        $pack = TicketType::create([
+            'name' => ['es' => $name], 'type' => TicketType::TYPE_PACK,
+            'zone_id' => $this->zone->id, 'seats_per_unit' => 1,
+            'min_qty' => 1, 'max_qty' => 30, 'is_sellable' => true, 'is_active' => true,
+            'position' => (int) TicketType::max('position') + 1,
+            'guest_fields' => [
+                ['key' => 'name', 'type' => TicketType::FIELD_TYPE_TEXT, 'required' => true, 'label' => ['es' => 'Nombre']],
+                ['key' => 'edad', 'type' => TicketType::FIELD_TYPE_AGE, 'required' => true, 'label' => ['es' => 'Edad']],
+            ],
+            'guest_age_family' => 'cumple', 'guest_age_min' => $min, 'guest_age_max' => $max,
+        ]);
+        Price::create([
+            'priceable_type' => $pack->getMorphClass(), 'priceable_id' => $pack->id,
+            'rate_type_id' => $rate->id, 'amount_cents' => $cents, 'currency' => 'EUR',
+        ]);
+
+        return $pack;
+    }
+
+    /** Una reserva PAGADA de N invitados del pack infantil, sin datos por-niño todavía. */
+    private function reservation(int $guests = 3): OrderItem
+    {
+        $order = Order::create([
+            'user_id' => User::factory()->create()->id,
+            'code' => 'JJ-MS'.str_pad((string) ++$this->counter, 4, '0', STR_PAD_LEFT),
+            'status' => Order::STATUS_PAID, 'paid_at' => now(),
+            'subtotal' => 1800 * $guests, 'tax' => 0, 'total' => 1800 * $guests, 'currency' => 'EUR',
+        ]);
+        Payment::create([
+            'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
+            'amount' => $order->total, 'currency' => 'EUR', 'provider' => 'redsys',
+            'status' => Payment::STATUS_PAID, 'paid_at' => now(),
+            'gateway_order' => str_pad((string) (200000 + $this->counter), 10, '0', STR_PAD_LEFT),
+        ]);
+
+        return $order->items()->create([
+            'ticket_type_id' => $this->kids->id, 'slot_id' => $this->slot->id,
+            'quantity' => $guests, 'unit_price' => 1800, 'seats' => $guests,
+        ]);
+    }
+
+    /**
+     * Guarda el post-form por la MISMA puerta que usan la web y la API. No se llama al
+     * reconciliador a mano: si un día dejara de estar enganchado ahí, estos casos tienen que caer.
+     *
+     * @param  list<int|null>  $ages
+     */
+    private function declareAges(OrderItem $item, array $ages): OrderItem
+    {
+        $rows = [];
+        foreach ($ages as $i => $age) {
+            $row = ['name' => 'Invitado '.($i + 1)];
+            if ($age !== null) {
+                $row['edad'] = (string) $age;
+            }
+            $rows[] = $row;
+        }
+        $item->submitGuestForm($rows, [], 'signed_link');
+
+        return $item->fresh(['ticketType', 'slot', 'order']);
+    }
+
+    /**
+     * Las líneas de suplemento VIVAS de una reserva. Se identifican por el ajuste que las marca y
+     * no por su producto: sin portador configurado, `where('ticket_type_id', null)` compilaría a
+     * `is null` y devolvería 0 por accidente, no por la razón que el caso quiere probar.
+     *
+     * @return Collection<int, OrderItem>
+     */
+    private function surchargeLines(OrderItem $item): Collection
+    {
+        $marked = OrderAdjustment::query()
+            ->where('order_id', $item->order_id)
+            ->get()
+            ->filter(fn (OrderAdjustment $a): bool => is_array($a->context) && isset($a->context['mixed_party']))
+            ->pluck('order_item_id')
+            ->all();
+
+        return $item->children()->whereNull('cancelled_at')->whereIn('id', $marked)->get();
+    }
+
+    private function financials(OrderItem $item): ReservationFinancials
+    {
+        $order = $item->order()->with(['items.ticketType', 'adjustments', 'payments'])->first();
+
+        return ReservationFinancials::make($order, $order->items->firstWhere('id', $item->id));
+    }
+
+    // ─── Que el dinero CUADRE, que es lo que la forma «obvia» rompía ─────────────
+
+    public function test_a_guest_above_the_range_adds_value_and_is_due_at_the_park(): void
+    {
+        $item = $this->reservation(3);
+        $before = $this->financials($item);
+
+        $item = $this->declareAges($item, [4, 5, 8]);
+        $after = $this->financials($item);
+
+        // 25,00 − 18,00 = 7,00 € por el invitado de 8.
+        $this->assertSame(700, $after->valor - $before->valor, 'la fiesta vale 7,00 € más');
+        $this->assertSame(0, $after->pagadoOnline - $before->pagadoOnline, 'no se cobró nada nuevo online');
+        $this->assertSame(700, $after->aCobrarPuerta - $before->aCobrarPuerta, 'se debe en el parque');
+        // ⚠️ Y NO abre capacidad de reembolso: de esta línea no se cobró nunca nada online, así que
+        // no puede aparecer como dinero que devolver. Sin esta aserción, una línea mal construida
+        // inflaría el techo de reembolso del pedido sin que nada más se pusiera rojo.
+        $this->assertSame(0, $after->pendienteReembolso - $before->pendienteReembolso);
+    }
+
+    public function test_the_surcharge_is_one_line_with_its_gate_charge(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+
+        $lines = $this->surchargeLines($item);
+        $this->assertCount(1, $lines);
+        $this->assertSame(1, (int) $lines[0]->quantity);
+        $this->assertSame(700, (int) $lines[0]->unit_price);
+
+        // ⚠️ Sin plazas y sin franja: es lo que la mantiene FUERA de toda consulta de aforo, que
+        // cruzan siempre por `slots` (§12).
+        $this->assertSame(0, (int) $lines[0]->seats);
+        $this->assertNull($lines[0]->slot_id);
+
+        $adjustment = OrderAdjustment::where('order_item_id', $lines[0]->id)->firstOrFail();
+        $this->assertSame(OrderAdjustment::TYPE_EXTRA_DUE, $adjustment->type);
+        $this->assertSame(700, (int) $adjustment->amount_cents);
+        $this->assertSame($this->jump->id, (int) $adjustment->context['mixed_party']['target_type_id']);
+    }
+
+    public function test_the_client_reads_a_line_that_explains_itself(): void
+    {
+        $item = $this->declareAges($this->reservation(4), [4, 8, 9, 5]);
+        $order = $item->order()->with(['items.ticketType', 'adjustments'])->first();
+
+        $labels = array_column($order->pendingAtGateLines(), 'label');
+
+        // Sin su rama propia caería al respaldo, que dice el nombre del producto portador sin
+        // explicar de dónde sale el cargo — el defecto que `#131` corrigió en la otra rama muda.
+        //
+        // ⚠️ `trans_choice` y con el NOMBRE del pack destino (`#247`): la frase concuerda en número
+        // —decía «1 invitadoS»— y dice a qué régimen corresponden, que es lo que el owner pidió.
+        $this->assertContains(
+            trans_choice('tickets.gate_mixed_party_line_named', 2, ['count' => 2, 'target' => 'Cumpleaños Jump']),
+            $labels,
+        );
+    }
+
+    // ─── Reconciliar, no acumular ────────────────────────────────────────────────
+
+    public function test_saving_twice_does_not_add_two_surcharges(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+        $item = $this->declareAges($item, [4, 5, 8]);
+
+        $this->assertCount(1, $this->surchargeLines($item));
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+    }
+
+    public function test_more_guests_above_the_range_update_the_same_line(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+        $item = $this->declareAges($item, [9, 5, 8]);
+
+        $lines = $this->surchargeLines($item);
+        $this->assertCount(1, $lines, 'se ACTUALIZA la línea, no se añade otra');
+        $this->assertSame(2, (int) $lines[0]->quantity);
+        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta);
+    }
+
+    public function test_correcting_the_age_takes_the_surcharge_back_to_zero(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+
+        $item = $this->declareAges($item, [4, 5, 6]);
+
+        $this->assertCount(0, $this->surchargeLines($item), 'la línea se retira');
+        $this->assertSame(0, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(0, $this->financials($item)->valor - 3 * 1800, 'el valor vuelve al del pack');
+    }
+
+    // ─── El aviso al titular ─────────────────────────────────────────────────────
+
+    public function test_the_customer_is_told_when_the_amount_changes(): void
+    {
+        $item = $this->reservation(3);
+        $user = $item->order->user;
+
+        $this->declareAges($item, [4, 5, 8]);
+        Notification::assertSentTo($user, MixedPartySurchargeChanged::class);
+    }
+
+    public function test_a_save_that_does_not_move_the_amount_sends_nothing(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+        $user = $item->order->user;
+        Notification::fake(); // descarta el correo de la primera vez
+
+        // Solo cambia un nombre: el post-form está hecho para editarse durante días y no puede
+        // mandar un correo por cada guardado.
+        $item->submitGuestForm([
+            ['name' => 'Otro nombre', 'edad' => '4'],
+            ['name' => 'Invitado 2', 'edad' => '5'],
+            ['name' => 'Invitado 3', 'edad' => '8'],
+        ], [], 'signed_link');
+
+        Notification::assertNothingSentTo($user);
+    }
+
+    // ─── El rastro, que es lo único que cierra el hueco de bajar la edad ─────────
+
+    public function test_every_change_leaves_a_trace_without_pii(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+        $this->declareAges($item, [4, 5, 6]);
+
+        $logs = AuditLog::where('action', 'orders.mixed_party_surcharge_synced')->get();
+
+        $this->assertCount(2, $logs, 'la subida y la bajada, las dos');
+        $this->assertSame([0, 700], $logs->pluck('payload.old_cents')->all());
+        $this->assertSame([700, 0], $logs->pluck('payload.new_cents')->all());
+        // `RGPD-02`: ni edades ni nombres de menores en el rastro.
+        $this->assertStringNotContainsString('Invitado', json_encode($logs->pluck('payload')->all()));
+    }
+
+    // ─── Los casos en los que NO se escribe ──────────────────────────────────────
+
+    public function test_without_a_carrier_product_nothing_is_written(): void
+    {
+        Setting::where('key', MixedPartySettings::SURCHARGE_PRODUCT_KEY)->delete();
+        Setting::flushMemo();
+
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+
+        // No se inventa una línea sin producto — y el panel lo grita en rojo (§12): un cobro que
+        // deja de aplicarse en silencio es el modo de fallo que había que evitar.
+        $this->assertCount(0, $this->surchargeLines($item));
+        $this->assertSame(0, $this->financials($item)->aCobrarPuerta);
+    }
+
+    public function test_two_packs_at_the_same_price_write_nothing(): void
+    {
+        $this->jump->prices()->update(['amount_cents' => 1800]);
+
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+
+        // Mixta sí (la etiqueta describe un hecho), cargo no: una línea de 0,00 € en el desglose
+        // del cliente es ruido, no información.
+        $this->assertCount(0, $this->surchargeLines($item));
+    }
+
+    public function test_a_cancelled_reservation_is_left_alone(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+        $operator = User::factory()->create();
+        $item->markCancelled($operator);
+
+        $before = $this->surchargeLines($item->fresh())->count();
+        app(MixedPartySurcharge::class)->reconcile($item->fresh(), $operator, 'test');
+
+        $this->assertSame($before, $this->surchargeLines($item->fresh())->count());
+    }
+
+    // ─── El HECHO cambia desde el panel, no solo desde el cliente ───────────────
+
+    public function test_lowering_the_guest_count_from_the_panel_shrinks_the_surcharge(): void
+    {
+        // ⚠️ Conduce el EDITOR REAL y no el reconciliador: lo que este caso protege no es la
+        // aritmética —eso ya lo cubren los de arriba— sino que la reconciliación siga ENGANCHADA a
+        // `OrderItemEditor`. Llamando a `reconcile()` a mano, desenchufarla del panel no rompería
+        // nada y la línea se quedaría cobrando por niños que ya no están en la fiesta.
+        $this->seed(RoleSeeder::class);
+        $this->seed(PermissionSeeder::class);
+
+        // El ORDEN de las fichas es parte del caso: al bajar la cantidad, `sanitizeGuestData`
+        // conserva las N PRIMERAS. Con los dos mayores al principio, bajar a 2 no quitaría a
+        // ninguno y el caso no probaría nada.
+        $item = $this->declareAges($this->reservation(4), [8, 4, 5, 9]);
+        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'los de 8 y 9');
+
+        $staff = User::factory()->create();
+        $staff->roles()->sync([Role::where('name', 'staff')->value('id')]);
+        $staff->roles->first()->permissions()->sync(
+            Permission::whereIn('name', ['orders.view', 'orders.edit_item'])->pluck('id'),
+        );
+
+        $item = $item->fresh(['ticketType', 'slot']);
+        $outcome = app(OrderItemEditor::class)->edit(
+            $item->order, $item, '', '', false,
+            (int) $item->ticket_type_id, 2, null,
+            ['edits' => [], 'adds' => []],
+            (string) $item->updated_at->getTimestamp(),
+            $staff,
+        );
+
+        $this->assertFalse($outcome->isBlocked(), (string) $outcome->reason);
+        // Quedan las fichas de 8 y 4: un solo invitado por encima del tramo.
+        $this->assertSame(700, $this->financials($item->fresh())->aCobrarPuerta);
+    }
+
+    public function test_the_written_amount_survives_a_catalogue_price_change(): void
+    {
+        $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+
+        // El parque sube el precio de JUMP. `[DECIDIDO owner]`: lo escrito NO se recalcula — es lo
+        // que se le comunicó al cliente. El desfase se ENSEÑA, no se aplica.
+        $this->jump->prices()->update(['amount_cents' => 3000]);
+
+        $this->assertSame(700, $this->financials($item->fresh())->aCobrarPuerta);
+        $this->assertSame(700, app(MixedPartySurcharge::class)->written($item->fresh())['cents']);
+    }
+}

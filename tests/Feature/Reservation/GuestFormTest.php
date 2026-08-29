@@ -4,6 +4,8 @@ namespace Tests\Feature\Reservation;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\Price;
+use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
@@ -441,5 +443,152 @@ class GuestFormTest extends TestCase
             'duration_min' => 60, 'seats_per_unit' => 1, 'tax_rate' => 21, 'is_sellable' => true, 'is_active' => true, 'position' => 1,
         ]);
         $this->assertFalse($this->paidOrder($user, $entry)->load('items.ticketType')->hasGuestForm());
+    }
+
+    // ─── Fiesta MIXTA: lo que ve el CLIENTE donde declara las edades (`specs/cumple-mixto.md` §9·7)
+
+    /**
+     * Monta la familia «cumple» (1–6 a 18,00 € · 7–99 a 25,00 €) y devuelve una reserva del pack
+     * infantil con las edades dadas, ya pagada y con franja (sin fecha no hay tarifa que resolver).
+     *
+     * @param  list<int>  $ages
+     */
+    private function mixedFamilyReservation(array $ages, string $booked = 'kids'): OrderItem
+    {
+        $rate = RateType::create([
+            'key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'],
+            'weekdays' => null, 'priority' => 0, 'is_active' => true,
+        ]);
+
+        $make = function (string $name, int $min, int $max, int $cents) use ($rate): TicketType {
+            $pack = TicketType::create([
+                'name' => ['es' => $name], 'type' => TicketType::TYPE_PACK,
+                'zone_id' => $this->zone->id, 'min_qty' => 1, 'max_qty' => 20,
+                'seats_per_unit' => 1, 'tax_rate' => 21, 'is_sellable' => true, 'is_active' => true,
+                'position' => (int) TicketType::max('position') + 1,
+                'guest_fields' => [
+                    ['key' => 'name', 'type' => TicketType::FIELD_TYPE_TEXT, 'required' => true, 'label' => ['es' => 'Nombre']],
+                    ['key' => 'edad', 'type' => TicketType::FIELD_TYPE_AGE, 'required' => true, 'label' => ['es' => 'Edad']],
+                ],
+                'guest_age_family' => 'cumple', 'guest_age_min' => $min, 'guest_age_max' => $max,
+            ]);
+            Price::create([
+                'priceable_type' => $pack->getMorphClass(), 'priceable_id' => $pack->id,
+                'rate_type_id' => $rate->id, 'amount_cents' => $cents, 'currency' => 'EUR',
+            ]);
+
+            return $pack;
+        };
+
+        $kids = $make('Cumpleaños Kids', 1, 6, 1800);
+        $jump = $make('Cumpleaños Jump', 7, 99, 2500);
+        $pack = $booked === 'kids' ? $kids : $jump;
+
+        $slot = Slot::create([
+            'zone_id' => $this->zone->id, 'date' => now()->addDays(10)->toDateString(),
+            'start_time' => '11:00:00', 'end_time' => '13:00:00', 'capacity' => 20, 'online_capacity' => 20,
+        ]);
+
+        $order = Order::create([
+            'user_id' => User::factory()->create()->id, 'code' => 'JJ-'.Str::upper(Str::random(6)),
+            'status' => Order::STATUS_PAID, 'paid_at' => now(),
+        ]);
+
+        $item = $order->items()->create([
+            'ticket_type_id' => $pack->id, 'slot_id' => $slot->id,
+            'quantity' => count($ages), 'unit_price' => (int) $pack->prices()->value('amount_cents'), 'seats' => count($ages),
+            'event_data' => ['celebrant' => 'Mara'],
+        ]);
+
+        // Por la puerta real: el aviso enseña lo ESCRITO en el pedido, y quien lo escribe es el
+        // guardado del post-form.
+        $rows = [];
+        foreach ($ages as $i => $age) {
+            $rows[] = ['name' => 'Invitado '.($i + 1), 'edad' => (string) $age];
+        }
+        $item->submitGuestForm($rows, [], 'signed_link');
+
+        return $item->fresh();
+    }
+
+    public function test_the_form_tells_the_client_when_the_party_becomes_mixed(): void
+    {
+        $reservation = $this->mixedFamilyReservation([4, 8]);
+
+        $this->actingAs($reservation->order->user)
+            ->get(route('reservation.guests', $reservation))
+            ->assertOk()
+            ->assertSee(__('guestform.mixed_title'))
+            // ⚠️ La ARITMÉTICA, no solo el importe: sin decir qué pack le toca y a qué precio, el
+            // cliente recibe una cifra sin origen (`[owner, 2026-08-29]`, §14).
+            ->assertSee(__('guestform.mixed_line', [
+                'count' => 1, 'target' => 'Cumpleaños Jump', 'target_price' => '25,00 €',
+                'booked' => 'Cumpleaños Kids', 'booked_price' => '18,00 €',
+            ]))
+            ->assertSee(__('guestform.mixed_surcharge', ['amount' => '7,00 €']));
+    }
+
+    public function test_the_form_explains_the_cheaper_direction_without_promising_a_refund(): void
+    {
+        // ⚠️⚠️ **El caso que el owner encontró en un pedido real**: reservó el pack CARO y dos
+        // invitados corresponden al barato. No hay cargo —la diferencia tiene suelo en 0—, y por eso
+        // el aviso NO salía: veía la etiqueta «MIXTA» en su pedido sin una línea que la explicara.
+        // Ahora sale, dice la aritmética y avisa de que saldría más barata **sin prometer nada**.
+        $reservation = $this->mixedFamilyReservation([9, 4, 3], booked: 'jump');
+
+        $this->actingAs($reservation->order->user)
+            ->get(route('reservation.guests', $reservation))
+            ->assertOk()
+            ->assertSee(__('guestform.mixed_title'))
+            ->assertSee(__('guestform.mixed_line', [
+                'count' => 2, 'target' => 'Cumpleaños Kids', 'target_price' => '18,00 €',
+                'booked' => 'Cumpleaños Jump', 'booked_price' => '25,00 €',
+            ]))
+            // 2 × (25,00 − 18,00) = 14,00 € — informativo, y el texto dice que NO se descuenta solo.
+            ->assertSee(__('guestform.mixed_savings', ['amount' => '14,00 €']))
+            // Y NUNCA la frase del cargo: aquí no se debe nada.
+            ->assertDontSee(__('guestform.mixed_surcharge', ['amount' => '14,00 €']));
+    }
+
+    public function test_the_form_says_nothing_when_every_guest_is_within_the_range(): void
+    {
+        // Control del caso anterior: sin él, un aviso que NUNCA se pinta pasaría igual de verde.
+        $reservation = $this->mixedFamilyReservation([4, 6]);
+
+        $this->actingAs($reservation->order->user)
+            ->get(route('reservation.guests', $reservation))
+            ->assertOk()
+            ->assertDontSee(__('guestform.mixed_title'));
+    }
+
+    public function test_each_child_card_shows_the_regime_that_matches_its_age(): void
+    {
+        // `[owner, 2026-08-29]`: «en el recuadro del niño, informativo, que ponga a qué régimen
+        // pertenece». Reserva KIDS con un invitado de 8: el suyo dice Kids, el mayor dice Jump.
+        $reservation = $this->mixedFamilyReservation([4, 8]);
+
+        $html = $this->actingAs($reservation->order->user)
+            ->get(route('reservation.guests', $reservation))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('gf-fiche__regime', $html);
+        // ⚠️ El del mayor va MARCADO: es el que mueve el precio de la fiesta. Sin esta aserción,
+        // pintar los dos iguales pasaría igual de verde.
+        $this->assertStringContainsString('gf-fiche__regime is-other', $html);
+        $this->assertStringContainsString('Cumpleaños Jump', $html);
+    }
+
+    public function test_a_pack_without_an_age_family_shows_no_regime_at_all(): void
+    {
+        // Control: el pack de siempre —sin familia ni campo de edad— no gana ningún rótulo. Sin
+        // esto, un `@if` mal escrito llenaría de pastillas todos los post-forms del producto.
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
+
+        $this->actingAs($user)
+            ->get(route('reservation.guests', $reservation))
+            ->assertOk()
+            ->assertDontSee('gf-fiche__regime');
     }
 }

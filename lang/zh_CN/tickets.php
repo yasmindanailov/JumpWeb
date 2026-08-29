@@ -9,6 +9,10 @@
 // ("位宾客"). Limpieza de paridad i18n — Fase 7.4 iter2.
 return [
     'guests_count' => ':count 位宾客',
+    'mixed_party_badge' => '混龄',
+    'mixed_party_product_name' => ':name · :badge',
+    'gate_mixed_party_line' => ':count 位其他年龄段来宾的补差价|:count 位其他年龄段来宾的补差价',
+    'gate_mixed_party_line_named' => ':count 位来宾应属于 :target 的补差价|:count 位来宾应属于 :target 的补差价',
     'time_no_limit' => '无限制',
 
     // Complementos (#190): el view-model compartido `AddonResolver::viewModel` se reutiliza en el

@@ -1432,7 +1432,7 @@ class ViewOrder extends ViewRecord
                 default => TextInput::make($fieldName)
                     ->label($label)
                     ->required($required)
-                    ->inputMode($type === 'number' ? 'numeric' : 'text'),
+                    ->inputMode(TicketType::isNumericFieldType($type) ? 'numeric' : 'text'),
             };
         }
 

@@ -127,7 +127,7 @@ final class DailyReservationsSummary
                 'typeLabel' => $isPack
                     ? __('admin.calendar.day_summary.type_pack')
                     : __('admin.calendar.day_summary.type_entry'),
-                'product' => $tt?->tr('name') ?? '—',
+                'product' => $item->displayProductName(),
                 'zoneColor' => $tt?->zone?->color ?? ReservationSlip::ZONE_COLOR_FALLBACK,
                 'customer' => $item->order?->user?->name ?? '—',
                 'phone' => $item->order?->user?->phone,

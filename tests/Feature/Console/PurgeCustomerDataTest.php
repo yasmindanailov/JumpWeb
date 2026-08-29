@@ -135,8 +135,12 @@ class PurgeCustomerDataTest extends TestCase
         $this->assertTrue($adminKept->fresh()->hasRole('admin'));
 
         // Contenido INTACTO.
+        // ⚠️ Se cuenta el catálogo VENDIBLE y no `TicketType::count()`: desde `#244` la instalación
+        // nace con un complemento no vendible —el que lleva el suplemento de fiesta mixta,
+        // `specs/cumple-mixto.md` §12— que no es contenido de este caso. Contar todo ataba esta
+        // aserción al nº de productos de sistema, que es justo lo que no está probando.
         $this->assertSame(1, Zone::count());
-        $this->assertSame(1, TicketType::count());
+        $this->assertSame(1, TicketType::sellable()->count());
         $this->assertSame(1, Slot::count());
         $this->assertSame(1, RateType::count());
     }

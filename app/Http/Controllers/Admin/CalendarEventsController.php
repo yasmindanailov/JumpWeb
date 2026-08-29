@@ -144,7 +144,9 @@ class CalendarEventsController extends Controller
 
         return [
             'id' => (string) $item->id,
-            'title' => (string) ($type->tr('name') ?? ''),
+            // Con la etiqueta MIXTA si lo es (`specs/cumple-mixto.md` §13): el calendario es
+            // texto plano dentro de una píldora y no puede pintar una pastilla aparte.
+            'title' => $item->displayProductName(),
             'start' => $start,
             'end' => $end,
             // El fondo de la píldora lo decide el ESTADO operativo (neutro

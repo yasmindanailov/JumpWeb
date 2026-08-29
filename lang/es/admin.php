@@ -467,6 +467,22 @@ return [
         'deposit_for_product' => 'de :product',
         // Badge corto junto al título «Formulario de reserva» (sin duplicarlo); icono ✓/! coherente.
         'guest_badge_ok' => 'Completado',
+        // Fiesta MIXTA (`docs/specs/cumple-mixto.md` §12). El suplemento se recalcula SOLO con las
+        // edades declaradas; aquí no hay nada que aprobar. Lo que el operador tiene que poder leer
+        // son cuatro cosas distintas y por eso son cuatro textos: cuánto está aplicado, si lo
+        // escrito se ha quedado atrás, si falta el producto que lo lleva, y si el veredicto aún
+        // está a medias.
+        'mixed_party' => [
+            'title' => 'Fiesta MIXTA: hay invitados de otro tramo de edad',
+            'line' => ':count × :name · :unit por invitado',
+            'applied' => 'Suplemento aplicado: :amount · se cobra en el parque',
+            'cheaper' => 'Esta fiesta saldría :amount más barata en el régimen que les corresponde. NO se descuenta solo: decides tú en recepción.',
+            'drift' => 'El suplemento escrito es :written y hoy correspondería :derived. No se recalcula solo: lo escrito es lo que se le comunicó al cliente.',
+            'missing_carrier' => 'No se puede aplicar el suplemento: falta el producto que lo lleva («Suplemento fiesta mixta» en el catálogo). Mientras falte, esta fiesta no cobra nada.',
+            'unpriced' => 'No se puede calcular el suplemento: falta el precio de algún pack para ese día.',
+            'without_age' => 'Faltan :count edades por declarar: el veredicto todavía puede cambiar.',
+            'out_of_range' => ':count invitados con una edad que no cubre ningún pack de la familia: revisa los tramos en el catálogo.',
+        ],
         'guest_badge_pending' => 'Pendiente',
         'guests_empty' => 'El cliente aún no ha rellenado el formulario de reserva.',
 
@@ -921,6 +937,9 @@ return [
                     'extra_due_applied' => 'Cargo añadido a cobrar en el parque',
                     'gate_credit_applied' => 'Abono sobre lo pendiente en el parque',
                     'deposit_remainder_credit_applied' => 'Abono sobre el resto de la señal',
+                    // El suplemento de fiesta mixta se recalcula solo con las edades declaradas; este
+                    // rastro es lo ÚNICO que deja ver «declaró 8 el día 3 y lo bajó a 6 el día 20».
+                    'mixed_party_surcharge_synced' => 'Suplemento de fiesta mixta recalculado',
 
                     // Reservas dentro del pedido. ⚠️ El código las emite con prefijo `orders.`
                     // aunque hablen de un producto, y el target es el PEDIDO.
@@ -1680,6 +1699,7 @@ return [
             'text' => 'Texto',
             'number' => 'Número',
             'textarea' => 'Texto largo',
+            'age' => 'Edad',
         ],
         'event_field_required' => 'Obligatorio',
         'event_field_label' => 'Etiqueta',
@@ -1696,6 +1716,17 @@ return [
         'guest_fields_hint' => 'Columnas que se piden de CADA invitado en el formulario posterior a la reserva (por defecto: nombre, alergia, observaciones, menú especial).',
         'guest_field_add' => 'Añadir columna',
         'guest_field_duplicate' => 'La clave ":key" está repetida en los datos por niño.',
+
+        // Familia y tramo de edad (cumpleaños MIXTO, `docs/specs/cumple-mixto.md` §9).
+        'field_guest_age_family' => 'Familia por edad',
+        'guest_age_family_hint' => 'Conecta este pack con los que son el MISMO servicio en otro tramo de edad (p. ej. escribe «cumple» en el infantil y en el juvenil). Solo minúsculas, números y guiones. Vacío = este producto no distingue edades y no propone suplementos.',
+        'field_guest_age_min' => 'Edad mínima',
+        'guest_age_min_hint' => 'Primera edad que cubre este pack, INCLUIDA. Vacío = sin tope por abajo.',
+        'field_guest_age_max' => 'Edad máxima',
+        'guest_age_max_hint' => 'Última edad que cubre este pack, INCLUIDA: con 6, el niño de 6 entra y el de 7 corresponde al pack siguiente. Vacío = sin tope por arriba.',
+        'guest_age_range_required' => 'Si el pack declara una familia por edad, tiene que declarar también su tramo (al menos la edad mínima o la máxima).',
+        'guest_age_range_inverted' => 'La edad máxima no puede ser menor que la mínima.',
+        'guest_age_range_overlap' => 'El tramo de edad pisa al de «:name», que está en la misma familia. Dos packs no pueden cubrir la misma edad: no habría forma de saber a cuál corresponde un invitado.',
 
         'warn_sellable_no_price' => 'Producto marcado como vendible pero sin precio en la tarifa base: no se podrá vender hasta fijar su precio en Tarifas y precios (7.8).',
 

@@ -58,6 +58,7 @@ class OrderItemEditor
         private ZoneDaySlotLock $zoneDayLock,
         private OrderItemEventDataWriter $eventData,
         private ItemEditPricing $pricing,
+        private MixedPartySurcharge $mixedParty,
     ) {}
 
     // ─── Operaciones ────────────────────────────────────────────────────────
@@ -201,6 +202,15 @@ class OrderItemEditor
             item: $item->fresh(),
             changes: $changes,
         ));
+
+        // El suplemento de fiesta MIXTA se re-tarifica al mover la fecha (`specs/cumple-mixto.md`
+        // §12): la diferencia entre packs sale del catálogo de ESE día, así que mover el día es
+        // mover el importe — el mismo criterio que `PAY-18` aplica al precio del propio ítem.
+        // Es un cambio del HECHO, no de la configuración, y por eso sí reconcilia.
+        // POST-COMMIT y fuera del lock de zona/día: abre su propia transacción corta (§4.3).
+        if ($by !== null) {
+            $this->mixedParty->reconcile($item->fresh(), $by, 'panel_slot_change');
+        }
 
         return ItemActionOutcome::done(['event_data_changed' => $eventDataChanged]);
     }
@@ -713,6 +723,15 @@ class OrderItemEditor
             gateCreditedCents: $gateCreditedCents,
         ));
 
+        // ⚠️⚠️ **Sin esto, la línea del suplemento se queda MINTIENDO.** Si el operador baja los
+        // invitados de 10 a 8, o cambia el pack, el veredicto derivado cambia al instante pero lo
+        // ESCRITO no — y seguiría cobrando por niños que ya no están. La reconciliación no puede
+        // colgar solo del guardado del cliente, que puede no volver a producirse nunca
+        // (`specs/cumple-mixto.md` §12). POST-COMMIT y fuera del lock de zona/día.
+        if ($by !== null) {
+            $this->mixedParty->reconcile($item->fresh(), $by, 'panel_item_edit');
+        }
+
         return ItemActionOutcome::done([
             'extra_due_cents' => $extraDueCents,
             'reduced_cents' => $reducedCents,
@@ -941,9 +960,16 @@ class OrderItemEditor
         // (group-replacement, ②b). Simúlalo aquí: ese miembro NO seguirá activo, así que un
         // dependiente que lo «requiere» debe disparar `addon_requires_missing` (igual que la web),
         // en vez de quedar huérfano. Sin esto, el panel divergiría de la autoridad pública.
+        // ⚠️⚠️ **`?->` NO protege de una clave AUSENTE.** `$newPivots` solo lleva los complementos
+        // VENDIBLES Y ACTIVOS del producto (`addons()` filtra por los dos), así que un hijo vivo
+        // cuyo producto ya no cumple una de esas condiciones —despublicado después de venderse, o
+        // un complemento de sistema que nunca se ofrece— no tiene entrada aquí y esto lanzaba
+        // «Undefined array key». Medido el 2026-08-29 al editar un pedido con la línea del
+        // suplemento de fiesta mixta, que es no vendible a propósito (`specs/cumple-mixto.md` §12).
+        // Un hijo sin pivote no tiene grupo ni requisito, que es exactamente lo que dice `null`.
         $addedGroups = [];
         foreach ($adds as $add) {
-            $group = $newPivots[(int) $add['ticket_type_id']]?->choiceGroup();
+            $group = ($newPivots[(int) $add['ticket_type_id']] ?? null)?->choiceGroup();
             if ($group !== null) {
                 $addedGroups[$group] = true;
             }
@@ -953,14 +979,14 @@ class OrderItemEditor
                 if ($child->isCancelled()) {
                     continue;
                 }
-                $childGroup = $newPivots[(int) $child->ticket_type_id]?->choiceGroup();
+                $childGroup = ($newPivots[(int) $child->ticket_type_id] ?? null)?->choiceGroup();
                 if ($childGroup !== null && isset($addedGroups[$childGroup])) {
                     unset($finalActiveTypeIds[(int) $child->ticket_type_id]);
                 }
             }
         }
         foreach (array_keys($finalActiveTypeIds) as $typeId) {
-            $required = $newPivots[$typeId]?->requiresAddonId();
+            $required = ($newPivots[$typeId] ?? null)?->requiresAddonId();
             if ($required !== null && ! isset($finalActiveTypeIds[$required])) {
                 return 'addon_requires_missing';
             }

@@ -60,7 +60,7 @@ class OrderItemResource extends JsonResource
 
         return [
             'id' => $item->id,
-            'product_name' => (string) ($item->ticketType?->tr('name') ?? ''),
+            'product_name' => $item->displayProductName(),
             'date' => $item->slot?->date?->toDateString(),
             // ⚠️ **La ETIQUETA va al lado de la fecha cruda, y es el mismo criterio que ya rige para
             // `time_window`**: el servidor publica el texto ya compuesto y el cliente no lo recompone.

@@ -44,12 +44,16 @@ class EditCatalog extends EditRecord
         'available_after_open_min', 'available_before_close_min',
         'min_qty', 'max_qty', 'deposit_type', 'deposit_value',
         'prep_before_min', 'prep_after_min',
+        // La familia y el tramo de edad deciden quién paga un suplemento (`specs/cumple-mixto.md`
+        // §9): moverlos cambia el veredicto de fiestas ya vendidas, así que se auditan como el
+        // resto de la configuración con consecuencias económicas.
+        'guest_age_family', 'guest_age_min', 'guest_age_max',
         'featured', 'is_active', 'is_sellable',
     ];
 
     private const BOOL_FIELDS = ['featured', 'is_active', 'is_sellable'];
 
-    private const STRING_FIELDS = ['deposit_type'];
+    private const STRING_FIELDS = ['deposit_type', 'guest_age_family'];
 
     /** Campos i18n/JSON cuyo cambio se audita solo por nombre (no se vuelca el contenido). */
     private const TEXT_FIELDS = [
@@ -142,6 +146,10 @@ class EditCatalog extends EditRecord
         if ($record->isPack()) {
             $data['seats_per_unit'] = 1;
         }
+
+        // Familia y tramo de edad (`specs/cumple-mixto.md` §9): la MISMA puerta que en la creación
+        // —normalizar, anular fuera del pack y bloquear tramos solapados—, no una copia.
+        $data = $this->normalizeGuestAgeFields($data, $record->isPack());
 
         // 3) Capturar el diff para auditar tras guardar.
         $this->auditPayload = $this->buildAuditDiff($record, $data);

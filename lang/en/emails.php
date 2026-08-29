@@ -129,6 +129,17 @@ return [
         'contact' => 'If you do not see the refund within a week, write to us with the order number.',
         'product_fallback' => 'product :id',
     ],
+    'mixed_party_surcharge' => [
+        'subject' => 'Change to what you will pay at the park (booking no. :code)',
+        'greeting' => 'Hi,',
+        'intro' => 'You updated the guest ages on your booking :code (":product"), and that changes what is due at the park.',
+        'added' => 'Supplement for guests in a different age range: :amount €.',
+        'updated' => 'The supplement for guests in a different age range goes from :old € to :new €.',
+        'removed' => 'There is no supplement left to pay: every guest fits the booked pack.',
+        'where_to_pay' => 'It is paid at the park on the day of the party, together with anything else outstanding.',
+        'editable' => 'You can keep editing the guest details until the day of the event; if the ages change, this amount adjusts on its own.',
+    ],
+
     'order_item_modified' => [
         'subject' => 'Changes to ":product" in your booking (no. :code)',
         'greeting' => 'Hello,',

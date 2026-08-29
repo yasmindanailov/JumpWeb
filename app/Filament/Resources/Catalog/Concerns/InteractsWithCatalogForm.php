@@ -254,10 +254,13 @@ trait InteractsWithCatalogForm
             }
             $seen[$key] = true;
 
-            $type = $row['type'] ?? 'text';
+            $type = $row['type'] ?? TicketType::FIELD_TYPE_TEXT;
             $entry = [
                 'key' => $key,
-                'type' => in_array($type, ['text', 'number', 'textarea'], true) ? $type : 'text',
+                // La lista de tipos válidos es la del DOMINIO, no una copia: hasta el 2026-08-29
+                // vivía escrita a mano aquí y en `TicketType::normalizeFieldSchema`, y añadir un
+                // tipo obligaba a acertar los dos sitios.
+                'type' => in_array($type, TicketType::FIELD_TYPES, true) ? $type : TicketType::FIELD_TYPE_TEXT,
                 'required' => (bool) ($row['required'] ?? false),
                 'label' => $this->compactI18n($row['label'] ?? null) ?? ['es' => $key],
             ];
@@ -274,6 +277,119 @@ trait InteractsWithCatalogForm
         }
 
         return $clean;
+    }
+
+    // ─── Familia y tramo de edad (cumpleaños MIXTO, `specs/cumple-mixto.md` §9) ───────
+
+    /**
+     * Normaliza y VALIDA las tres columnas que conectan un pack con sus alternativos por edad.
+     * Vive en el trait y no en cada página porque crear y editar tienen que decir exactamente lo
+     * mismo: es la puerta de un dato del que después sale un cobro.
+     *
+     * Hace tres cosas y las tres importan:
+     *
+     *  1. **Fuera del pack, no existen.** Se anulan las tres en cualquier otro tipo de producto —
+     *     el veredicto se deriva de las edades del post-form y una entrada no tiene post-form, así
+     *     que ahí serían letra muerta que alguien leería como configuración viva. Simétrico con lo
+     *     que ya se hace con `event_fields`/`guest_fields` (regla 12: no se confía en que el form
+     *     oculte lo que no debe llegar).
+     *  2. **La familia se normaliza al guardar** (recorte + minúsculas). Es lo que permite buscarla
+     *     por igualdad —usando su índice— y lo que evita que la conducta dependa del motor: MySQL
+     *     cotejaría «Cumple» y «cumple» como iguales y SQLite, donde corre la suite, no.
+     *  3. **Los tramos de una familia NO pueden solaparse.** Si dos productos cubren la edad 7, «a
+     *     qué régimen pertenece un niño de 7» deja de tener respuesta única; el lector la resuelve
+     *     de forma determinista para no romperse, pero la respuesta correcta es no dejar entrar el
+     *     dato. Misma doctrina que `AFORO-07` (`seats_per_unit` forzado en el guardado del
+     *     catálogo): lo que no puede ser, se bloquea al escribir.
+     *
+     * @param  array<string,mixed>  $data
+     * @return array<string,mixed>
+     */
+    protected function normalizeGuestAgeFields(array $data, bool $isPack): array
+    {
+        if (! $isPack) {
+            return array_merge($data, [
+                'guest_age_family' => null,
+                'guest_age_min' => null,
+                'guest_age_max' => null,
+            ]);
+        }
+
+        $family = mb_strtolower(trim((string) ($data['guest_age_family'] ?? '')));
+        $data['guest_age_family'] = $family === '' ? null : mb_substr($family, 0, 40);
+
+        $min = $this->nullableAge($data['guest_age_min'] ?? null);
+        $max = $this->nullableAge($data['guest_age_max'] ?? null);
+        $data['guest_age_min'] = $min;
+        $data['guest_age_max'] = $max;
+
+        if ($data['guest_age_family'] === null) {
+            // Sin familia no hay nada que comparar. El tramo suelto se conserva tal cual: no
+            // clasifica a nadie, pero tampoco es un error que merezca bloquear un guardado.
+            return $data;
+        }
+
+        if ($min === null && $max === null) {
+            $this->haltWith('admin.catalog.guest_age_range_required');
+        }
+        if ($min !== null && $max !== null && $max < $min) {
+            $this->haltWith('admin.catalog.guest_age_range_inverted');
+        }
+
+        $this->guardAgeRangeIsFree($data['guest_age_family'], $min, $max);
+
+        return $data;
+    }
+
+    /**
+     * Bloquea el guardado si el tramo pisa al de otro producto de la MISMA familia.
+     *
+     * Los extremos nulos se comparan como los topes reales de la columna (`unsignedTinyInteger`,
+     * 0–255): «de 7 en adelante» y «hasta 6» se solapan o no según números, no según casos
+     * especiales — y así el criterio es el mismo que aplica {@see TicketType::coversGuestAge}.
+     */
+    private function guardAgeRangeIsFree(string $family, ?int $min, ?int $max): void
+    {
+        $selfId = $this->record?->getKey();
+
+        $mine = [$min ?? 0, $max ?? 255];
+
+        $siblings = TicketType::query()
+            ->where('type', TicketType::TYPE_PACK)
+            ->where('guest_age_family', $family)
+            ->when($selfId !== null, fn ($q) => $q->whereKeyNot($selfId))
+            ->get(['id', 'name', 'guest_age_min', 'guest_age_max']);
+
+        foreach ($siblings as $sibling) {
+            $theirs = [(int) ($sibling->guest_age_min ?? 0), (int) ($sibling->guest_age_max ?? 255)];
+
+            if ($mine[0] <= $theirs[1] && $theirs[0] <= $mine[1]) {
+                Notification::make()
+                    ->title(__('admin.catalog.guest_age_range_overlap', ['name' => $sibling->tr('name')]))
+                    ->danger()
+                    ->send();
+
+                throw new Halt;
+            }
+        }
+    }
+
+    /** Una edad del formulario: entero o `null` («sin tope por ese lado»), nunca `0` por vacío. */
+    private function nullableAge(mixed $raw): ?int
+    {
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+
+        return max(0, min(255, (int) $raw));
+    }
+
+    /** Aviso rojo + parada del guardado, que es el patrón de bloqueo de esta pantalla. */
+    private function haltWith(string $messageKey): never
+    {
+        Notification::make()->title(__($messageKey))->danger()->send();
+
+        throw new Halt;
     }
 
     /** ¿El producto tiene precio en la tarifa base (`normal`)? Sin él no es vendible. */

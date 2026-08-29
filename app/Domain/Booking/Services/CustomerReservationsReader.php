@@ -41,7 +41,7 @@ class CustomerReservationsReader implements CustomerReservations
             ->map(fn (OrderItem $item): UpcomingReservation => new UpcomingReservation(
                 date: (string) $item->slot?->date?->format('Y-m-d'),
                 timeWindow: $item->displayTimeWindow(),
-                productName: (string) ($item->ticketType?->tr('name') ?? ''),
+                productName: $item->displayProductName(),
             ))
             ->all();
     }
@@ -99,7 +99,7 @@ class CustomerReservationsReader implements CustomerReservations
             foreach ($items as $item) {
                 $pending[] = new PendingGuestForm(
                     reservationId: (int) $item->id,
-                    productName: (string) ($item->ticketType?->tr('name') ?? ''),
+                    productName: $item->displayProductName(),
                 );
             }
         }

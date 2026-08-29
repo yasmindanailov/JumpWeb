@@ -72,7 +72,9 @@ final class EmailProductCard
     {
         $type = $item->ticketType;
         $isPack = $type?->isPack() ?? false;
-        $name = (string) ($type?->tr('name') ?? '');
+        // Con la etiqueta MIXTA si lo es (`specs/cumple-mixto.md` §13): el correo es donde el
+        // cliente ve su reserva descrita, y la etiqueta forma parte de la descripción.
+        $name = $item->displayProductName();
         $qty = (int) $item->quantity;
 
         // Entrada → «3× Entrada 1h» (cantidad delante, como en «Mis pedidos»); pack → solo el nombre

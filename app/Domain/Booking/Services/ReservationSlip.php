@@ -88,7 +88,9 @@ final class ReservationSlip
 
     public function productName(): string
     {
-        return $this->item->ticketType?->tr('name') ?? '—';
+        // Con la etiqueta MIXTA si lo es (`specs/cumple-mixto.md` §13): la hoja se lleva a la
+        // fiesta y es donde el operador tiene delante lo que va a cobrar.
+        return $this->item->displayProductName();
     }
 
     public function isPack(): bool

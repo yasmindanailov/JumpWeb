@@ -149,6 +149,19 @@ return [
     ],
     // Modificación de un producto del pedido (sub-fase 7.2e). Polivalente: el
     // caller pasa solo las líneas relevantes al cambio efectuado.
+    // Suplemento de fiesta MIXTA (`docs/specs/cumple-mixto.md` §12). Se manda cuando el IMPORTE
+    // cambia, en las dos direcciones: la bajada también es dinero (`#155`).
+    'mixed_party_surcharge' => [
+        'subject' => 'Cambio en lo que abonarás en el parque (reserva nº :code)',
+        'greeting' => 'Hola,',
+        'intro' => 'Has actualizado las edades de los invitados de tu reserva :code («:product»), y eso cambia lo que se abona en el parque.',
+        'added' => 'Suplemento por invitados de otro tramo de edad: :amount €.',
+        'updated' => 'El suplemento por invitados de otro tramo de edad pasa de :old € a :new €.',
+        'removed' => 'Ya no hay suplemento que abonar: todos los invitados entran en el pack reservado.',
+        'where_to_pay' => 'Se abona en el parque el día de la fiesta, junto con el resto pendiente.',
+        'editable' => 'Puedes seguir editando los datos de los invitados hasta el día del evento; si cambian las edades, este importe se ajusta solo.',
+    ],
+
     'order_item_modified' => [
         'subject' => 'Cambios en «:product» de tu reserva (nº :code)',
         'greeting' => 'Hola,',

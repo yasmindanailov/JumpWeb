@@ -2,9 +2,12 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-28 — carril A (la FORMA del panel y los
-> menores: `#223`, `#224`, `#232`, `#234`, `#236`, `#237`) y carril C (el mockup 1:1: `#225`→`#235`
-> y **`#238`, la COLUMNA**)**. ▶ Y la noche del 28, **el CAJÓN EN MÓVIL (`#239`)**.
+> aquí solo se enlaza.** Última actualización: **2026-08-29 (13:30, hora de Madrid) — carril A:
+> CUMPLEAÑOS MIXTO, cinco tandas (`#243`→`#247`) y el descuento aparcado con su diseño (`#248`); y
+> carril C, el interruptor del titular (`#254`→`#262`)**.
+> Antes: 2026-08-28 — carril A (la FORMA del panel y los menores: `#223`, `#224`, `#232`, `#234`,
+> `#236`, `#237`) y carril C (el mockup 1:1: `#225`→`#235` y **`#238`, la COLUMNA**). ▶ Y la noche
+> del 28, **el CAJÓN EN MÓVIL (`#239`)**.
 > ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
 > la marquesina. Y `#253` — ocho puntos de la portada, DOS de ellos fallos.**
 >
@@ -239,6 +242,130 @@
 > ⚠️⚠️ **Y el interruptor «ON» del titular usa `--ok`, no el rol de acción, porque lo dijo una
 > guarda**: `ActionFillTest` rechazó `--action` con su propio argumento. La respuesta ya estaba en
 > la misma hoja —el chip de «Abierto ahora» usa `--ok` porque es un ESTADO, no un botón—.
+> ▶ **2026-08-29 · carril A: `#243` — CUMPLEAÑOS MIXTO, tanda 1.** El sistema **no tenía ninguna
+> conexión** entre un cumple KIDS y uno JUMP (lo preguntó el owner y era cierto: `ticket_types` no
+> tiene ninguna columna que agrupe productos). `[DECIDIDO owner]` la conexión es **FAMILIA + TRAMO DE
+> EDAD**, que vale para dos regímenes o para cinco.
+>
+> ❗❗ **SI VAS A TOCAR DINERO EN UNA RESERVA YA PAGADA, LEE ESTO PRIMERO** (`specs/cumple-mixto.md`
+> §8.3, medido sobre el pedido real `R-BEEL3E` en transacción revertida): **un `OrderAdjustment` de
+> tipo `extra_due` suelto NO COBRA — MUEVE dinero ya pagado.** Añadir 6,00 € deja el valor igual,
+> baja «pagado online» a **−6,00 €** y sube «a cobrar en el parque» +6,00. `PAY-16`/`PAY-17` cierran
+> **porque** cada `extra_due` que escribe el editor va acompañado de una subida de
+> `unit_price`/`quantity`; los dos canales REPARTEN el valor de la línea, no lo amplían. La forma que
+> sí cobra es una **LÍNEA** (medido: valor +6,00 · online +0 · puerta +6,00), que es lo que ya hace
+> el panel al añadir un complemento.
+> ⚠️ **Y el atajo que parecía gratis cobra diez veces de más**: cambiar el producto de la reserva
+> (KIDS → JUMP) ya existe —y su frontera es la ZONA— pero cobra la diferencia por TODOS los
+> invitados: 30,00 € donde el encargo pide 3,00 €.
+> ⚠️ **La línea de diseño**: el veredicto se **DERIVA** siempre (el post-form es editable hasta el
+> evento, así que la etiqueta va y viene sola) y el dinero lo **ESCRIBE el operador** — ninguna
+> acción del cliente escribe dinero sobre un pedido pagado.
+> ⚠️ **Queda declarado fuera** (§11.3): la ACCIÓN de aplicar el suplemento, el **AFORO** —`[DECIDIDO
+> owner]`: en el parque real son zonas distintas y el niño mayor pasa a JUMP—, el resto de
+> superficies de la etiqueta y la API.
+> ⚠️ **Dos lecciones de guarda**: una nació CIEGA (`assertFalse(mixed)` lo cumplen dos mundos, «es de
+> KIDS» y «no lo cubre ningún pack») y **el test de render cazó un 500 en el post-form de todo
+> cliente** que ningún test de dominio veía.
+>
+> ▶ **Y `#244`, la TANDA 2: el suplemento se COBRA y se recalcula SOLO** `[DECIDIDO owner]`. No hay
+> aprobación del operador — el importe sigue a las edades declaradas, en las dos direcciones.
+> ❗❗ **La regla que hay que llevarse: se reconcilia cuando cambia el HECHO** (edades, cantidad,
+> producto, fecha de la reserva) **y NUNCA cuando cambia la CONFIGURACIÓN** (precios del catálogo,
+> tramos de edad): lo escrito es lo que se le comunicó al cliente, y el desfase **se enseña** en la
+> ficha del pedido en vez de aplicarse.
+> ▶ **Lo que hizo seguro el modelo automático ya estaba en el código y nadie lo había escrito**: la
+> ventana en la que el cliente puede mover el importe se cierra EXACTAMENTE cuando el dinero se da
+> por cobrado — las dos cosas cuelgan de `OrderItem::isFinishedInPractice()`.
+> ⚠️⚠️ **SI TOCAS ESTO: el producto que lleva el suplemento NO puede ser el pack de destino.**
+> Medido: `PackAvailability` cuenta toda fila cuyo producto sea de tipo `pack` en esa zona y día
+> **sin mirar si es una línea HIJA**, así que consumiría una fiesta del cupo y sus plazas en silencio
+> (`AFORO-01`). Es un COMPLEMENTO —sin zona, `seats=0`, `slot_id=null`— que crea la migración, con
+> guarda ROJA en la ficha si falta: un cobro que se apaga sin que nadie se entere era el modo de
+> fallo a evitar.
+> ⚠️ **Toca `OrderItemEditor`, que está en el `CRITICAL_RE`**: sin reconciliar desde el panel, bajar
+> los invitados de 10 a 8 dejaría la línea cobrando por dos niños que ya no están. Va POST-COMMIT y
+> fuera del lock de zona/día.
+> ⚠️ Lo que NO se cierra y es de la casa: el cliente puede bajar la edad la víspera. `[owner]`: «puede
+> mentir con este sistema o sin él, eso es trabajo en persona». Queda TRAZADO en `audit_logs` y la
+> hoja de sala ya imprime la edad declarada.
+>
+> ⚠️⚠️ **La verificación cazó DOS fallos, y el segundo no era mío**: (1) la migración pedía
+> `max(position) + 1`, que en una base VACÍA vale **1** — y `LandingContentSeeder` identifica sus
+> productos por **`position`**, así que sobrescribía el portador con «Jump · 1 hora» y la instalación
+> se quedaba sin él en silencio (posición fija **0** desde ahora: 900 tampoco valía, porque
+> `CreateCatalog` usa `max(position) + 1` y empujaba a 901 todo producto nuevo); (2)
+> `validateAddonEdits` accedía a
+> `$newPivots[$id]?->…` y **`?->` no protege de una clave AUSENTE**: editar un pedido con un
+> complemento **despublicado después de venderse** moría con «Undefined array key». Preexistente,
+> arreglado en los tres accesos y con guarda propia.
+> ❗ **Verificador nuevo: `mixed-party:verify-concurrency`** (`TESTING.md`), hermano de
+> `purchase:verify-oversell`. **Visto fallar** sin el lock: **12 líneas y 84,00 €** donde debía haber
+> 7,00 €. No entra en el `CRITICAL_RE` a propósito — ese gate impone dos comandos que no ejercitan
+> el post-form.
+>
+> ▶ **Y `#245`, la TANDA 3: la etiqueta va PEGADA AL NOMBRE** (idea del owner). Un solo compositor,
+> `OrderItem::displayProductName()`, y la cogen de ahí la hoja de sala, el resumen del día, la
+> puerta, el calendario, los correos, «Mis pedidos», «Mis reservas» y `OrderItemResource`.
+> ⚠️ **El sitio único es la RESERVA, no el producto**: `TicketType` lo comparten todas las fiestas y
+> no puede saber si ESTA es mixta. Es la misma doctrina que `displayTimeWindow()`.
+> ⚠️ La ficha del panel sigue con el nombre CRUDO porque pinta la pastilla aparte, y el dato suelto
+> (`isMixedParty()`) existe para quien pueda darle estilo o **filtrar** — una etiqueta metida solo
+> dentro de la cadena deja de ser un dato.
+> ⚠️⚠️ **El precio de que todos lo cojan de ahí**: `isMixedParty()` necesita `ticketType` y `slot`
+> cargadas, o son **dos consultas por fila** y quien pinte la lista no se entera. Lo fija
+> `MixedPartyLabelSurfacesTest` comparando el nº de consultas con 2 y con 6 reservas — y quitarle el
+> `slot` al resumen del día lo pone en rojo.
+> ⚠️ Un caso de ese fichero nació CIEGO (una rama de escape «si la ruta no da 200…» lo hacía pasar
+> sin mirar el calendario). *Una rama alternativa dentro de un test es una forma de no probar nada.*
+>
+> ▶ **Y `#246`, lo que el owner encontró PROBÁNDOLO en un pedido real**: reservó el pack CARO y dos
+> invitados corresponden al barato, así que no hay cargo — y **el aviso no salía**, porque leía solo
+> lo escrito. El cliente veía la etiqueta «MIXTA» y ninguna línea que la explicara.
+> ▶ Ahora el aviso sale **siempre que la fiesta sea mixta**, con la aritmética («2 invitados
+> corresponden a Kids, 11,00 € por invitado, en vez de Jump, 15,00 €»), y en la dirección barata
+> avisa de que saldría X € más barata `[DECIDIDO owner]`: **se avisa, no se descuenta**.
+> ⚠️⚠️ **Esa cifra NO va por el desglose de dinero**: «Pendiente de devolución» es deuda REAL del
+> parque y `PAY-16`/`PAY-17` cuadran sobre ella. Un informativo ahí lo descuadra y el cliente lee una
+> deuda que no existe. El veredicto publica ahora DOS cifras: la que se cobra (suelo en 0) y la que
+> costaría menos (informativa).
+> ⚠️ No se descuenta solo porque crearía **un incentivo para mentir a la baja** que hoy no existe.
+> ⚠️ De paso apareció una **cita rota en `DECISIONES`**: un «`#246`» que no existía y que en realidad
+> era `#147`. *Un número de tres cifras mal tecleado apunta a otra década del proyecto y nadie lo
+> nota* — lo destapó ir a usar ese número.
+>
+> ▶ **Y `#247`: el régimen en el recuadro de cada niño** (encargo del owner) más dos correcciones.
+> La pastilla sale del MISMO recorrido que el veredicto —`guestRegimes()` y `for()` comparten
+> `walk()`—, porque una copia de la regla haría que una ficha dijera «Kids» y el total otra cosa.
+> ⚠️ **Dice el PACK y no la ZONA** aunque el encargo hablara de zona: en la demo los dos packs de
+> cumpleaños comparten `zone_id = 4` y el nombre de la zona no distinguiría nada.
+> ⚠️⚠️ **Y la línea del desglose de puerta decía «Suplemento por 1 invitad_os_»** —sin `trans_choice`,
+> en un desglose de DINERO— **y no nombraba el pack**. Corregido: el nombre se GUARDA en el `context`
+> del cargo, no se resuelve al leer. ▶ El desglose es **uno solo** (`Order::pendingAtGateLines()`) y
+> lo leen cliente (ledger de la API), operador (partial `reservation-financials`) y hoja de sala.
+>
+> ⏸️ **Y `#248`: el DESCUENTO del caso barato queda APARCADO** `[DECIDIDO owner]` — se queda el aviso
+> a operador y cliente, **sin tocar las invariantes del dinero**; se retoma en producción según las
+> circunstancias. ▶ **Su diseño está escrito y verificado** (`specs/cumple-mixto.md` §16): las cinco
+> formas obvias que NO valen, la aritmética de los tres casos y la cota de que ningún canal queda
+> negativo. ⚠️⚠️ **Y un supuesto propio que se midió y era FALSO**: el respaldo de
+> `itemOriginalOnlineCents()` devuelve lo cobrado AHORA, así que un pack SIN SEÑAL habría perdido el
+> descuento en silencio. Si algún día se implementa, se empieza por ahí.
+>
+> ❗ **POR DÓNDE SIGUE EL CARRIL A** (cumpleaños mixto), en orden:
+>   1. **El OJO del owner** sobre lo último: el rótulo del régimen en el recuadro de cada niño, el
+>      aviso del caso barato en el post-form y la línea del desglose con el nombre del pack.
+>      ⚠️ **La instalación local ya está configurada** —familia `cumple`, tramos 1–6 y 7–99, campo de
+>      edad en los dos packs y precios 11,00/15,00 €—: eso es config de la demo, **no del producto**.
+>      Si se siembra de cero, hay que volver a ponerlo.
+>   2. **La pastilla en el cajón** — cosmética: el cliente ya lee la etiqueta dentro del nombre, falta
+>      darle estilo propio. Ojo al techo del payload de montaje (83 B de holgura sobre 9.100).
+>   3. **El AFORO** — aparcado por el owner. En el parque real KIDS y JUMP son zonas distintas y el
+>      niño mayor pasa a JUMP: una fiesta mixta reparte críos entre dos pools que hoy nadie cuenta.
+>      Toca `AFORO-01`/`AFORO-05`: **spec propia, no se empieza desde la de mixto**.
+>   4. **El descuento del caso barato** (`#248`) — aparcado con su diseño verificado en §16.
+> ⚠️ **Rango de numeración**: el carril A ha consumido hasta `#248`; le quedan `#249` y hay que
+> reservar rango nuevo antes de la siguiente tanda (el carril C sigue por `#250`+).
 >
 > ❗❗ **`#253` — EL CAJÓN SE ABRÍA DETRÁS DEL JUEGO, y con el scroll ya bloqueado.** En un teléfono,
 > al pulsar «Reservar» tras la partida del cierre: el cajón se abría de verdad —y su cerrojo con
@@ -1475,9 +1602,15 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3426 en verde** (22.625 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-29 tras `#262` (el interruptor del titular pasa a ser el `6d` del canvas, con el rótulo
-  ya dentro de la pista). ▶ **Mismo
+- Suite **3486 en verde** (22.801 aserciones, 2 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 sobre el árbol CONJUNTO: `#243`→`#248` del carril A (cumpleaños MIXTO: +60 casos, +176
+  aserciones) sobre `#263` del carril C. ⚠️ **El segundo `skipped` es del carril C**, no nuevo de A.
+  ⚠️⚠️ **Y una lección del cierre**: la suite del árbol PROPIO dio verde y la del CONJUNTO 34 fallos
+  — el rebase trae las FUENTES Vue del otro carril pero no su compilado, y `SidebarDomContractTest`
+  renderiza el bundle. Su propio mensaje lo dice; `npm run build:ssr` lo arregla. **Con dos carriles
+  sobre `main`, medir solo el árbol propio no dice nada del que se empuja.**
+  ▶ Antes, tras `#262` (el interruptor del titular pasa a ser el `6d` del canvas, con el rótulo
+  ya dentro de la pista): **3426 / 22.625**. ▶ **Mismo
   número de casos y +34 aserciones**: no entra ningún test nuevo — la escala de movimiento gana un
   token ambiental (`--dur-switch`) y `MotionScaleTest` lo recorre en sus cuatro casos, que están
   escritos sobre la lista y no sobre una cuenta fija.

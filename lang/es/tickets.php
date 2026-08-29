@@ -34,6 +34,16 @@ return [
     'guests' => 'Invitados',
     'guests_left' => 'quedan :count plazas',
     'guests_count' => ':count invitados',
+    // Fiesta MIXTA (`docs/specs/cumple-mixto.md` §9·7): un dato PROPIO de la reserva, no un
+    // trozo del nombre del producto. Vive en `tickets.*` y no en `admin.*` porque lo leen los
+    // dos, y `admin.*` solo existe en español y chino.
+    'mixed_party_badge' => 'MIXTA',
+    // La etiqueta PEGADA al nombre, para las superficies de texto plano (PDF, correos, puerta,
+    // calendario). Es una clave y no una concatenación en PHP para que una instalación pueda
+    // cambiar el separador sin tocar código.
+    'mixed_party_product_name' => ':name · :badge',
+    'gate_mixed_party_line' => 'Suplemento por :count invitado de otro tramo de edad|Suplemento por :count invitados de otro tramo de edad',
+    'gate_mixed_party_line_named' => 'Suplemento por :count invitado que corresponde a :target|Suplemento por :count invitados que corresponden a :target',
     // La cantidad CON su sustantivo, que es lo que la desambigua del importe (`DECISIONES #128`):
     // «8×216,00 €» se lee como 8 × 216 = 1.728 €, y «8 invitados · 216,00 €» no. Las compone
     // `OrderItem::displayQuantityLabel()`, en la voz del cliente — el panel tiene la suya.

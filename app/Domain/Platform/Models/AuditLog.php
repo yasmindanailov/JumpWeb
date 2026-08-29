@@ -138,6 +138,7 @@ class AuditLog extends Model
         'orders.item_refund_failed',
         'orders.item_refunded',
         'orders.item_slot_changed',
+        'orders.mixed_party_surcharge_synced',
         'orders.payment_init_failed',
         'orders.refund_blocked',
         'orders.refund_failed',
