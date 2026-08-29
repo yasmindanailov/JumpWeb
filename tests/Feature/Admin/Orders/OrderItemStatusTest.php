@@ -88,13 +88,46 @@ class OrderItemStatusTest extends TestCase
         $this->assertTrue($item->isFinishedInPractice());
     }
 
+    /**
+     * ⚠️⚠️ **Este caso estaba ROJO UN MINUTO AL DÍA, y se cazó al cerrar sesión a las 00:01**
+     * (`DECISIONES #255`). Construía la franja con `now()` —de `00:00:00` a `00:01:00` de HOY— y
+     * afirmaba que ya había terminado. Durante los primeros sesenta segundos de cada día, no había
+     * terminado: era la franja en curso.
+     *
+     * ▶ **Ni el fallo ni el arreglo son del sujeto**: `isFinishedInPractice()` respondía bien: la
+     * pregunta estaba mal hecha. Un test que depende del reloj de pared no prueba la conducta, prueba
+     * a qué hora se ejecuta — y `main` tiene dos carriles empujando, así que un rojo de un minuto le
+     * cuesta la sesión a quien no lo escribió.
+     *
+     * ▶ Se fija el reloj con `travelTo`, que es la convención del repo para esto (`TESTING.md`), y
+     * la franja pasa a ser una hora ya pasada del mismo día: **lo que el caso quería decir era «hoy,
+     * pero ya terminada», no «hoy a las 00:00»**. `audit-clock.sh` existe para encontrar esta
+     * familia; aquí la encontró el propio reloj.
+     */
     public function test_item_with_today_slot_after_end_time_is_finished(): void
     {
-        $today = now()->format('Y-m-d');
-        $slot = $this->makeSlot($today, '00:00:00', '00:01:00');
+        $this->travelTo('2026-05-14 18:30:00');
+
+        $slot = $this->makeSlot('2026-05-14', '10:00:00', '11:00:00');
         $item = $this->makeItem($this->makeOrder(), $slot);
 
         $this->assertTrue($item->isFinishedInPractice());
+    }
+
+    /**
+     * **Y su simétrico, que es el que faltaba**: la franja de HOY que aún no ha terminado.
+     *
+     * Sin este caso, el de arriba se podría cumplir con un `isFinishedInPractice()` que devolviera
+     * `true` para cualquier fecha de hoy — que es exactamente el fallo que el caso roto tapaba.
+     */
+    public function test_item_with_today_slot_still_running_is_not_finished(): void
+    {
+        $this->travelTo('2026-05-14 10:30:00');
+
+        $slot = $this->makeSlot('2026-05-14', '10:00:00', '11:00:00');
+        $item = $this->makeItem($this->makeOrder(), $slot);
+
+        $this->assertFalse($item->isFinishedInPractice());
     }
 
     public function test_addon_inherits_finished_state_from_parent(): void

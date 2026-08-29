@@ -1262,6 +1262,12 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3419 en verde** (22.495 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 al CERRAR la sesión del carril C (`#250` → `#255`). ▶ **+1 caso**: el simétrico del
+  test del reloj (`#255`), la franja de hoy **todavía en curso** — sin él, el caso arreglado se
+  cumpliría con una implementación que diera `true` para cualquier fecha de hoy.
+  ✅ **Y `audit-clock.sh` corrido y VERDE en las nueve fronteras**, las dos medianoches incluidas.
+  Se corre porque esta tanda tocó un fixture con calendario; no está en el `pre-push`.
 - Suite **3418 en verde** (22.494 aserciones, 1 skipped a propósito) · **JS 862**, medida el
   2026-08-29 tras `#254` (el cierre a la altura del hueco, el hero con un solo CTA, el interruptor
   del titular y el logotipo en línea, carril C). ▶ **+13 casos**: `InlineBrandLogoTest`, ocho de
@@ -1895,6 +1901,65 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
   de la cabecera se retiró y las tres pantallas de auth son zonas de la sección de cuenta.
 
 ## ▶ Próximo paso
+
+# ❗ SI ENTRAS NUEVO (2026-08-29 · carril C): LA PORTADA ESTÁ COMO EL OWNER LA PIDIÓ — `#250` → `#255`
+
+**`git fetch` antes de nada.** ⚠️ **Rangos de numeración repartidos**: el carril A toma `#239`–`#249`
+y el C sigue por `#250`. Esta sesión usó **`#250` a `#255`**; la siguiente del carril C empieza en
+`#256`. **Mirar el remoto al elegir número no basta: hay que volver a mirarlo al PUBLICAR.**
+
+## ▶ Qué hizo esta sesión, en una línea cada cosa
+
+| | |
+|---|---|
+| `#250` | **La COLUMNA del sitio es la del mockup**: 1176 px, no 1380. El ancho se escribe **una vez** en `--col-max` y de ahí salen sus tres formas. ⚠️ No se ensanchó: se **estrechó** |
+| `#251` | **La transición del cierre no era idéntica**: la retirada del armazón leía el progreso SUAVIZADO y es del CRUDO, y la curva era lineal donde el mockup la hace **cúbica** |
+| `#252` | **El IMÁN de los dos puntos estáticos**, el pie a **una fila deslizante** y **fuera la marquesina** de palabras |
+| `#253` | **Ocho puntos, y dos eran fallos**: el cajón se abría **detrás del juego** (z-index 210 sobre 160) y el armazón **nunca se retiraba al bajar** en la portada |
+| `#254` | **El cierre ocupa el hueco que le deja el pie**, el hero se queda con **UN** CTA, «**Diversión ON**» con interruptor, y **el logotipo salta** — servido en línea |
+| `#255` | Un test **rojo un minuto al día**, cazado por el reloj al cerrar |
+
+## ❗❗ LO QUE MÁS IMPORTA QUE SEPAS
+
+1. ❗❗ **SI ESCRIBES CSS**: `--wrap-gutter` es solo para elementos **a sangre completa** (su `100%`
+   mide el contenedor); un contenedor con `max-width` propio usa **`--col-gutter`**. Y **el ancho de
+   la columna no se escribe a mano**: sale de `--col-max`. Dos guardas lo vigilan.
+2. ❗❗ **SI TOCAS LA MARCA**: el logotipo se sirve **EN LÍNEA** para poder animarlo, y eso **cambia
+   el modelo de amenaza** — dentro de un `<img>` un SVG es inerte y en línea **no**. Todo pasa por
+   `InlineSvg`, lista blanca y **todo o nada**. Nunca lo saltes «porque el fichero es nuestro».
+3. ❗❗ **SI TOCAS UNA CAPA**: la escala por rol la fija `LayerOrderTest` —página hasta 110 · cookies
+   140 · lo que el cliente ABRE 150-160 · avisos 200+—. Un `z-index` «muy arriba» es cómo el cajón
+   acabó abriéndose detrás del juego con el scroll bloqueado.
+4. ⚠️⚠️ **Cinco guardas nacieron CIEGAS en cuatro días**, y una de ellas por **tres motivos
+   distintos** en la misma sesión (mutación incompleta · el nombre vivo dentro de su propio
+   comentario · el modificador siendo la CLAVE del array). *Una guarda que nunca ha estado roja no
+   ha demostrado nada, y una que se muta una sola vez tampoco.*
+5. ⚠️⚠️ **Los instrumentos mintieron cuatro veces**: un comparador midiendo la envolvente de un
+   elemento **girado** · un barrido de roturas **sin pasada de control** (marcó 31, las mismas 31
+   que antes del cambio) · `npx vitest` cuando este repo corre el JS con el runner de **Node** · y
+   un detector de dirección de scroll que se creía un evento de **reflujo**. Antes de creerte que
+   algo está roto, comprueba el instrumento.
+6. ⚠️ **La portada crece mientras se lee** —55 imágenes, 51 perezosas, **ninguna declara
+   proporción**—, así que **una medida en píxeles sobre ella nace caducada**: asevera el ESTADO
+   (`--hero-p`, `--cierre-q`), no la posición. Ficha en `DEUDA.md`.
+
+## ▶ POR DÓNDE SIGUE
+
+0. ❗ **El OJO del owner.** Lo que más conviene mirar, porque una sonda no lo puede juzgar: **el
+   tacto del imán** (¿retiene donde debe, suelta cuando insistes?), **el salto del logotipo** y **el
+   punto estático del cierre** en su propia pantalla.
+1. ⬜ **Lo que sigue sin caber**: la composición del cierre **no entra en 390×667** (un iPhone SE).
+   El contenido ya mide más que el hueco, así que las salidas son de PRODUCTO —menos enlaces en el
+   pie, o un CTA en vez de dos en el cierre— y se deciden mirando. Ficha en `DEUDA.md`.
+2. ⬜ **Dos fichas nuevas de `DEUDA.md`**, ninguna urgente: el **peso del logotipo en línea** (~64 KB
+   en las doce vistas, con dos salidas propuestas) y las **imágenes sin proporción declarada**.
+3. ⬜ Lo de antes sigue igual: los **iconos** del canvas (con la decisión previa de si entran en el
+   producto o en el paquete de tema) y el **contenido real del cliente**.
+4. ⚠️ **Y el owner tiene que quitar `client-logo-ink.svg` de su `marca/`**: se retiró de la
+   instalación local para que el menú enseñe el logotipo en color, pero volverá en el próximo
+   despliegue si sigue en el paquete.
+
+---
 
 # ❗ SI ENTRAS NUEVO (2026-08-28, noche · carril C): la COLUMNA DEL SITIO ES LA DEL MOCKUP — `#250`
 

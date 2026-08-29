@@ -13822,3 +13822,34 @@ de 9 ventanas con 20 px de margen**. Hero re-medido a 1920 y 390 (par 410×74, i
 cero botones sueltos, SVG en línea con su pieza). Salto del logotipo comprobado en las cuatro
 posiciones de scroll. **`InlineBrandLogoTest` nuevo (13 casos)**, ocho de ellos por proveedor de
 datos con un peligro cada uno, más el control positivo de que un SVG limpio SÍ se sirve entero.
+
+---
+
+## #255 · 2026-08-29 · Un test que estaba ROJO UN MINUTO AL DÍA, y lo cazó el reloj al cerrar sesión
+
+**Contexto.** La suite salió roja al arrancar el cierre, en `OrderItemStatusTest`, un fichero que
+esta sesión no había tocado y que estaba verde al empujar veinte minutos antes. El reloj del
+contenedor marcaba **00:01:53**.
+
+**La causa.** El caso construía una franja de HOY entre `00:00:00` y `00:01:00` con `now()` y
+afirmaba que ya había terminado. Durante los **primeros sesenta segundos de cada día** no había
+terminado: era la franja en curso. Repetido 53 segundos después, verde.
+
+▶ **Ni el fallo ni el arreglo son del sujeto.** `isFinishedInPractice()` respondía bien; **la
+pregunta estaba mal hecha**. Un test que depende del reloj de pared no prueba una conducta: prueba a
+qué hora se ejecuta.
+
+▶ **Y el coste no lo paga quien lo escribió.** Con dos carriles empujando a `main`, un rojo de un
+minuto al día se lo encuentra el que pase por ahí a esa hora, en un fichero que no conoce, con el
+gate bloqueando su push. Es la tercera vez que a este repo le amanece la suite roja sin que nadie
+tocara nada (`#64`, `#97`, `#162`).
+
+**El arreglo.** `travelTo` con un instante fijo —la convención del repo— y la franja pasa a ser una
+hora ya pasada del mismo día: *lo que el caso quería decir era «hoy, pero ya terminada», no «hoy a
+las 00:00»*. ⚠️ **Y entra su simétrico, que faltaba**: la franja de hoy **todavía en curso**. Sin
+él, el caso de arriba se cumpliría con una implementación que diera `true` para cualquier fecha de
+hoy — que es exactamente lo que el caso roto estaba tapando.
+
+⚠️ **`audit-clock.sh` existe para esta familia y no se había corrido en las últimas tandas** porque
+ninguna añadía fixtures de calendario. Aquí lo encontró el propio reloj, por casualidad de la hora.
+Es el argumento de la herramienta, no en su contra: *la casualidad no es un plan de pruebas*.

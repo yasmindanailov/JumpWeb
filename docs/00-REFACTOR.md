@@ -2644,6 +2644,26 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > - El pie: **una fila que se desliza**, porque el número de destinos lo manda la instalación.
 >   La marquesina de palabras, **retirada entera**; siguen la de `/servicios` y la de la galería.
 >
+> ✅ **Y `#254` — EL CIERRE A LA ALTURA DEL HUECO, EL HERO CON UN SOLO CTA, Y EL LOGOTIPO SALTA**
+> (2026-08-29, cuatro encargos del owner). Con esto la portada queda como él la pidió.
+> - **La tarjeta del cierre ocupa el hueco que le deja el pie** (`min-height` contra `--foot-h`,
+>   que publica la coreografía): 757 px a 1920 —era 434— y la composición cabe con **20 px de
+>   margen en 8 de 9 ventanas**. Y **el armazón se retira en cuanto la tarjeta se ancla**, que es
+>   el sitio que había que liberar. `[DECIDIDO owner]`.
+> - **El hero se queda con UN CTA**: el par del armazón, debajo del titular y de 224×54 a ~320×74.
+>   Los dos botones propios de `#253` duraron una tanda — eran una TERCERA pieza de compra.
+> - **«Diversión ON»**, con el ON como interruptor encendido. ⚠️⚠️ Usa `--ok` y **no** el rol de
+>   acción, y lo dijo `ActionFillTest` con su propio argumento: acción es el control que hace
+>   AVANZAR, y «encendido» es un ESTADO — el chip de «Abierto ahora» ya lo había resuelto así.
+> - ❗❗ **El logotipo se sirve EN LÍNEA**, porque un `<img>` no se anima por dentro. **Eso cambia el
+>   modelo de amenaza**: dentro de un `<img>` un SVG es inerte y en línea no. `InlineSvg` es lista
+>   blanca y **todo o nada**; el logotipo desaparece antes que servir algo ejecutable, y la
+>   plantilla tiene su suelo de texto. Coste fichado: ~64 KB de marcado en las doce vistas.
+>
+> ⚠️ **Y al cerrar sesión apareció un test ROJO UN MINUTO AL DÍA** (`#255`): afirmaba que una
+> franja de `00:00` a `00:01` **de hoy** ya había terminado. No era del sujeto —la conducta estaba
+> bien— sino de la pregunta. Arreglado con `travelTo` y con su simétrico, que faltaba.
+>
 > ❗❗ **EL CARRIL C NO TIENE NADA PENDIENTE DE AGENTE en hero, menú, pie y cierre.** Lo que queda es
 > del owner: su ojo en navegador, cuál de las tres variantes de «El parque», y el aviso de contraste
 > AA del color de acción. ▶ **Y quedan DOS encargos suyos sin empezar**: los **iconos** del canvas
