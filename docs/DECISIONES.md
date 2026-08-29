@@ -14362,3 +14362,54 @@ apaisada venía de cuando el glifo era `ic-e2`, una ilustración de 50×32.
 
 Suite **3425 / 22.558** · Pint ✓ · navegador a 1440 y 390 con **cero errores de JS**, midiendo las
 dos proporciones en los dos contextos (armazón y hero) para comprobar que el armazón no se movía.
+
+---
+
+## #261 · 2026-08-29 · [DECIDIDO owner] El interruptor se va en línea a la derecha, y las dos mitades del CTA por fin miden igual
+
+### 1 · El interruptor: en línea, pequeño y con la alineación MEDIDA
+
+`[DECIDIDO owner]` a pregunta con las tres colocaciones dibujadas: **en línea, a la derecha del
+titular**. El titular pasa a una sola línea —«DIVERSIÓN [ON]»— y el interruptor **se queda dentro
+del `<h1>`**, así que la frase sigue leyéndose entera y un lector de pantalla sigue diciendo
+«Diversión ON».
+
+▶ La talla se controla con **una sola línea**: `font-size: 0.34em` sobre el titular. Como todo lo de
+dentro va en `em`, esa línea encoge la pista, el pomo, el aire y el rótulo a la vez **manteniendo
+las proporciones** — el pomo sigue llenando el 77 % de su pista, que es lo que lo hace parecer un
+interruptor. Medido a 1440: la cápsula pasa de **378×155 a 121×53**.
+
+⚠️⚠️ **La alineación vertical no se puso a ojo: se midió.** Un `<span>` en línea se apoya en la
+LÍNEA BASE, y ahí una cápsula queda colgando bajo una palabra en versalitas. Se midió el rect real
+del nodo de texto con un `Range` y se ajustó `vertical-align` hasta que los dos centros coinciden:
+**desfase 16,3 px → −0,1 px**. Una captura no habría dado ese número.
+⚠️ Por debajo de ~430 px el titular ENVUELVE y el interruptor cae a su propia línea, centrado. No es
+un caso especial: es la misma regla de línea, y se ve bien porque la cápsula ya es pequeña.
+
+### 2 · El CTA: dos mitades que no medían igual, y una que no estaba centrada
+
+`[DECIDIDO owner]`: «el de la derecha es muy pequeño, igual tamaño en este CTA» y «el de reservar no
+está centrado cuando es solo icono».
+
+**Medido antes**: chip de **41×41 con glifo de 30** en la mitad de comprar y **30×26 con glifo de
+24** en la de la cuenta. La de la derecha se veía pequeña **porque lo era**: `#260` derivó el chip
+de la altura del botón solo en `.cta-med`. Ahora las dos leen el mismo `--cta-pair-h`.
+
+**Y el centrado**: la mitad colapsada tenía **19 px a un lado y 27 al otro**.
+⚠️⚠️ **No se puede centrar con `justify-content`**: el rótulo sigue en el árbol —se desvanece, no
+desaparece, porque el relevo lo anima— así que la línea flex mide más que el botón y centrar
+empujaría el icono **fuera por la izquierda**. Se centra con el RELLENO, que aquí es aritmética:
+`(ancho colapsado − chip) / 2`.
+⚠️ **Y hay que restar los BORDES.** Con `box-sizing: border-box` la caja de contenido mide el ancho
+menos dos bordes, y el fantasma lleva uno de 1 px: sin descontarlo quedaba **2 px descentrado**
+(18,4 contra 16,5). El grosor pasa a ser un token declarado (`--cta-border`) precisamente porque
+entra en una cuenta.
+▶ Medido después: **17,4 / 17,5** en las dos mitades y en los dos estados.
+
+⚠️ Y el portapapeles del registro externo se escala **por el ancho**, no cuadrado: es una
+ilustración apaisada de 40×24 y la regla cuadrada del set la habría aplastado.
+
+### Lo verificado
+
+Suite **3425 / 22.568** · navegador a 1440 y 390, midiendo las dos mitades **en los dos estados del
+relevo** (reposo e invertido) y el desfase óptico del interruptor con un `Range` sobre el texto.

@@ -8,6 +8,22 @@
 > ▶ **2026-08-29 · carril C: `#252` — el IMÁN de los dos puntos estáticos, el pie a UNA fila y fuera
 > la marquesina. Y `#253` — ocho puntos de la portada, DOS de ellos fallos.**
 >
+> ❗ **`#261` — EL INTERRUPTOR SE VA EN LÍNEA A LA DERECHA, y las dos mitades del CTA por fin miden
+> igual.** `[DECIDIDO owner]` con las tres colocaciones dibujadas: el titular pasa a UNA línea
+> —«DIVERSIÓN [ON]»— y el interruptor **se queda dentro del `<h1>`**, así que la frase se sigue
+> leyendo entera. Su talla la manda **una sola línea** (`font-size: 0.34em`): al ir todo en `em`,
+> encoge pista, pomo, aire y rótulo **manteniendo las proporciones** (378×155 → 121×53).
+> ⚠️⚠️ **La alineación vertical se MIDIÓ, no se puso a ojo**: un `<span>` en línea se apoya en la
+> línea base y ahí una cápsula queda colgando bajo una palabra en versalitas. Con un `Range` sobre
+> el nodo de texto, **desfase 16,3 px → −0,1**. Una captura no da ese número.
+> ⚠️ **Las dos mitades del CTA no medían igual**: 41×41 con glifo de 30 en comprar y **30×26 con 24**
+> en la cuenta — `#260` derivó el chip solo en `.cta-med`. Y la mitad colapsada estaba a **19/27**.
+> ⚠️⚠️ **Centrar no se puede con `justify-content`**: el rótulo sigue en el árbol (se desvanece, no
+> desaparece, porque el relevo lo anima), así que la línea flex mide más que el botón y centrar
+> empuja el icono FUERA. Se centra con el relleno — y **hay que restar los bordes**: con
+> `box-sizing: border-box` el fantasma quedaba 2 px descentrado por su borde de 1 px. Medido
+> después: **17,4 / 17,5** en las dos mitades y en los dos estados.
+>
 > ❗ **`#260` — DOS DETALLES DEL HERO, y los dos son el mismo fallo**: un número escrito suelto que
 > dejó de tener sentido cuando lo de al lado cambió de tamaño.
 > ⚠️ **El interruptor parecía un punto porque el pomo medía el 49 % de su pista** (75 sobre 152). Al
@@ -1395,8 +1411,8 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3425 en verde** (22.558 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-29 tras `#260` (los dos detalles del hero). ▶ **Mismo número de casos y +24
+- Suite **3425 en verde** (22.568 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-29 tras `#261` (el interruptor en línea y el par del CTA). ▶ **Mismo número de casos y +24
   aserciones**: lo que entró no son tests nuevos sino guardas endurecidas —la paridad del cajón deja
   de estar ciega a un `<svg>` citado en un comentario, y la anatomía gana una excepción **con su
   valor medido** para el trazo de 2,9 que trae `booking` del artboard—.

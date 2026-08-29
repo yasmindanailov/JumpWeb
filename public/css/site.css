@@ -3114,14 +3114,19 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .cta-ghost:hover { border-color: var(--paper-fg); box-shadow: var(--shadow-nav-ghost-lift); }
 .cta-ghost:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 .cta-ghost__ico {
-    width: 30px; height: 26px;
+    width: var(--cta-ico); height: var(--cta-ico);
     background: color-mix(in srgb, var(--paper-fg) 8%, transparent);
     border-radius: var(--r-xs);
     display: grid; place-items: center;
     flex-shrink: 0; line-height: 0;
 }
-.cta-ghost__ico .ic-reg { width: 22px; height: 14px; }
-.cta-ghost__ico .ic-reg svg { width: 22px; height: 14px; }
+/* Los glifos del set son CUADRADOS y comparten proporción con la otra mitad. */
+.cta-ghost__ico > svg { width: calc(var(--cta-ico) * 0.7333); height: calc(var(--cta-ico) * 0.7333); }
+/* ⚠️ **El portapapeles es una ILUSTRACIÓN apaisada (40×24), no un glifo cuadrado**, así que se
+   escala por el ANCHO y el alto lo pone su `viewBox`. Con la regla cuadrada de arriba saldría
+   aplastado. Es el registro externo del parque, el glifo que el artboard no dibuja (`DEUDA`). */
+.cta-ghost__ico .ic-reg { width: calc(var(--cta-ico) * 0.86); height: auto; }
+.cta-ghost__ico .ic-reg svg { width: 100%; height: auto; }
 
 /* MED — COMPRAR. Peso alto: relleno de tinta, color de marca al pasar el cursor.
    ⚠️ **NO es el rol de acción** (`#213`): el CTA fijo del mockup pinta tinta fuera del menú y
@@ -3148,9 +3153,19 @@ body[data-has-hero].nav--live .hero__pair-slot {
    50×32; con `ui/entrada`, que es cuadrado, dejaba el dibujo descentrado por arriba.
    ⚠️ **La talla del `<svg>` la manda el CSS, no un atributo del Blade**: con `:width` en la
    plantilla habría dos fuentes para el mismo número y la del marcado gana. */
-.cta-med {
+/* ⚠️ Se declara en las DOS mitades y no solo en la de comprar (`#261`): son el mismo par y el mismo
+   botón, así que sus chips tienen que medir lo mismo. Medido antes: 41×41 con glifo de 30 en la de
+   comprar y **30×26 con glifo de 24** en la de la cuenta — la de la derecha se veía pequeña porque
+   lo era. Las dos leen el mismo `--cta-pair-h` heredado del par. */
+.cta-med,
+.cta-ghost {
     --cta-ico: calc(var(--cta-pair-h, 54px) * 0.5556);
+    /* ⚠️ El GROSOR DEL BORDE, declarado, porque entra en la aritmética del centrado: con
+       `box-sizing: border-box` la caja de contenido mide el ancho menos dos bordes, y olvidarlo
+       dejaba el chip **2 px descentrado** en la mitad que sí tiene borde. */
+    --cta-border: 0px;
 }
+.cta-ghost { --cta-border: 1px; }
 .cta-med__ico {
     width: var(--cta-ico); height: var(--cta-ico);
     /* El velo del chip sale del TEMA: sobre el botón de tinta rinde claro, y dentro del menú lo
@@ -3200,6 +3215,22 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .hero__pair.cta-pair--account .cta-med   { width: var(--cta-pair-mini); }
 .nav__pair.cta-pair--account .cta-ghost,
 .hero__pair.cta-pair--account .cta-ghost { width: var(--cta-pair-w); }
+/* ⚠️⚠️ **La mitad COLAPSADA centra su chip, y NO se puede con `justify-content`** (`#261`). El
+   rótulo sigue en el árbol —se desvanece, no desaparece, porque el relevo lo anima—, así que la
+   línea flex mide más que el botón y centrar empujaría el icono FUERA por la izquierda. Se centra
+   con el RELLENO, que aquí es aritmética exacta: `(ancho colapsado − chip) / 2`.
+   ▶ Medido antes: el fantasma colapsado tenía **19 px a un lado y 27 al otro**, porque el relleno
+   era el de la mitad expandida y el chip medía otra cosa. */
+.nav__pair .cta-ghost,
+.hero__pair .cta-ghost,
+.nav__pair.cta-pair--account .cta-med,
+.hero__pair.cta-pair--account .cta-med {
+    padding-left: calc((var(--cta-pair-mini) - var(--cta-border) * 2 - var(--cta-ico)) / 2);
+    transition: width var(--cta-pair-swap, var(--dur-cae)) var(--ease-sale),
+                padding var(--cta-pair-swap, var(--dur-cae)) var(--ease-sale),
+                background var(--dur-entra) var(--ease-sale), color var(--dur-entra) var(--ease-sale),
+                border-color var(--dur-entra) var(--ease-sale), box-shadow var(--dur-entra) var(--ease-sale);
+}
 
 /* ⚠️ El hueco entre mitades: el racimo de la cabecera lo HEREDA de `.nav__cta` (`gap: inherit` en
    el componente), y el del hero no tiene de quién heredarlo — su envase no es flex—. Se declara
@@ -5414,6 +5445,18 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    es ninguno de los tres roles. `ShapeScaleTest` exime a `inset` por ese mismo motivo.
    ⚠️ Los tintes salen de `color-mix` sobre tokens: ningún literal, así que la ranura sigue al tema. */
 .hero__switch {
+    /* ⚠️⚠️ **Su TALLA PROPIA, y de aquí sale todo lo de dentro** (`#261`, `[DECIDIDO owner]`: «más
+       pequeño, no tan grande, y a la derecha»). El interruptor deja de ser el segundo renglón del
+       titular y pasa a ir EN LÍNEA detrás de la palabra, así que ya no puede medir lo mismo que
+       ella: a 0,34 del titular es una pieza que acompaña, no otra palabra.
+       ▶ Como todo lo de dentro va en `em`, esta sola línea encoge la pista, el pomo, el aire y el
+       rótulo a la vez **manteniendo las proporciones** — el pomo sigue llenando el 77 % de su
+       pista, que es lo que lo hace parecer un interruptor. */
+    font-size: 0.34em;
+    margin-inline-start: 0.62em;
+    /* Centrado ÓPTICO con la palabra: no sobre la línea base —quedaría colgando— sino sobre el
+       centro de la caja de mayúsculas, que es lo que el ojo alinea con un titular en versalitas. */
+    vertical-align: 0.74em;
     display: inline-flex; align-items: center; gap: 0.28em;
     /* Aire IGUAL en los tres lados que rodean al pomo. El izquierdo es mayor porque ahí entra el
        rótulo, no el pomo. */
@@ -5422,7 +5465,6 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     background: var(--ok);
     color: var(--paper-fg);
     line-height: 1;
-    vertical-align: baseline;
     /* El texto del titular lleva `-webkit-text-stroke` en otras variantes; aquí no, porque el
        contraste ya lo da la cápsula. */
     -webkit-text-stroke: 0;
