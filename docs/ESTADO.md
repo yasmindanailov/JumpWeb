@@ -2572,10 +2572,21 @@ del panel no toca nada (`resources/css/filament/admin/theme.css` sigue intacto).
 
 ## ▶ POR DÓNDE SIGUE
 
-0. ❗❗ **DESPLEGAR A STAGING, y esto va PRIMERO.** El owner compara con el canvas y **staging sirve
-   el CSS de dos días antes**: no tiene `#264` (área táctil), ni `#265`/`#266` (el CTA flotante y el
-   salto), ni `#273` (la sombra). Salió al preguntarle dónde miraba, en `#273`. **Mientras no se
-   despliegue, su ojo no puede validar nada de lo de estos dos días.**
+0. ✅ **STAGING DESPLEGADO Y VERIFICADO** (2026-08-30, commit `8443a19`) — sirve ya los dos carriles:
+   `#264` (área táctil), `#265`/`#266` (CTA flotante y el salto), `#273` (la sombra) y las seis
+   tandas del cumpleaños mixto. **Sin migraciones nuevas** («Nothing to migrate»); 3.845 franjas
+   generadas; `/up` y `/` en 200; `robots.txt` repuesto; 0 `failed_jobs`; 0 jobs varados.
+   ▶ **Verificado midiendo el CSS SERVIDO, no suponiéndolo**: el logotipo con `filter: none`, el
+   salto sobre `g:has(> use[href="#fig"])` con `dur 1000 / delay 466,7 / 8 tramos con curva`, la
+   amplitud en `translateY(300%)`, `[data-tap]::before` y `--book-bar-h: 56px`. El CTA de móvil
+   mide **298×56** con la sombra de mobiliario flotante.
+   ⚠️ **El paquete de marca NO viajó** —el `rsync` lo excluye a propósito— y el que estaba instalado
+   a mano sigue sirviéndose: el logotipo llega en línea. Si algún día se levanta un servidor nuevo,
+   hay que reinstalarlo (`INSTALACION-CLIENTE.md`).
+   ⚠️ El `--delete` retiró `\.env.bak-20260829-123102`, la copia que dejó `#217` en el servidor. El
+   `.env` real ni viaja ni se toca.
+   ⚠️ **Sigue el aviso conocido**: el script no ve ningún demonio cron, así que el crontab instalado
+   puede no ejecutarse nunca. Se comprueba en el panel del hosting (`#115`). No es nuevo.
 1. ❗ **El OJO del owner** sobre: el pie en un teléfono de verdad (los dos carriles se deslizan, la
    vela dice que siguen), la FAQ (se abre pulsando 8 px por encima del texto), que **en el ordenador
    el pie no ha cambiado nada**, el **salto del logotipo** recargando `/servicios` —que hasta `#266`
