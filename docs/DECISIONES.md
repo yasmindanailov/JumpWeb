@@ -16111,3 +16111,47 @@ baseline que no aprieta regala el crecimiento siguiente.
 
 ▶ Guarda: `MotionScaleTest::test_the_outcome_is_two_pieces_and_no_confetti` — **4 mutaciones y las 4
 muerden**, y una de ellas es que **el confeti no puede volver**.
+
+## #279 · 2026-08-30 · [DECIDIDO owner] El presupuesto de movimiento por pantalla: medido, no podado
+
+Su artboard escribe el criterio del owner como un NÚMERO —«máximo **dos** elementos animándose en
+pantalla»—, así que «no saturar» deja de ser una opinión y se puede medir. `[DECIDIDO owner]`:
+**«nada todavía, solo el informe»**.
+
+### 1 · El instrumento
+
+7 vistas × 2 ventanas × 5 paradas de scroll, contando solo lo que **intersecta el viewport y se
+pinta** (no lo que está en el documento) y solo animaciones en estado `running` (no pausadas ni en
+`fill`). ⚠️ **Con control**: la misma sonda sobre la portada con `prefers-reduced-motion` da **0**,
+que es lo que demuestra que sabe dar cero. Sin ese control, un cero es indistinguible de una sonda
+rota — la lección que este carril ha pagado cinco veces esta misma jornada.
+
+### 2 · Lo medido
+
+| pieza | bucles | dónde |
+|---|---|---|
+| **el icono de calcetines** | **8** | `/precios` (la vista llega a **9**) |
+| el interruptor del titular (`#262`) | 2 | `/` y `/entradas` |
+| **el aro + la mitad que asoma del CTA** (`#205`) | 2 | **las doce vistas** |
+| chapa «destacado» · llama de b1 · marquesina · pin del mapa | 1 cada uno | `/precios` `/entradas` · `/cumpleanos` · `/servicios` · `/contacto` |
+
+⚠️⚠️ **Dos hallazgos que cambian el planteamiento.** El primero: **un solo icono se come cuatro veces
+el presupuesto** — el de calcetines no es «una animación», son ocho (seis puntos que laten en
+secuencia escalonada a 0 · 120 · 240 · 320 · 420 · 620 ms, más dos calcetines que se mecen), y **no
+se pueden fusionar sin perder la secuencia**. El segundo: **la invitación del CTA corre en las doce
+vistas**, así que el techo está gastado antes de que aparezca nada más.
+
+### 3 · Lo que queda decidido para la próxima
+
+`[DECIDIDO owner]`: **el interruptor del titular debe PARAR tras unos ciclos**.
+⚠️⚠️ **Y no es cambiar `infinite` por un número, y está medido**: el estado ON de reposo —pista
+verde, pomo desplazado, rótulo visible— **existe SOLO dentro del bloque
+`@media (prefers-reduced-motion: reduce)`**. La declaración base del pomo es `var(--fg-mute)`, gris.
+Acotar las iteraciones dejaría el interruptor **APAGADO** junto a un titular que dice «DIVERSIÓN» —
+exactamente el defecto contra el que `#254` avisó («sin movimiento se congela en ON, no en OFF»). Hay
+que **promover ese estado fuera del bloque de accesibilidad**, que es donde debería haber estado
+siempre: es el REPOSO de la pieza, no una concesión.
+⚠️ Y `forwards` tampoco vale por sí solo: `heroSwitchTrack` acaba en `transparent`.
+
+▶ El orden por rentabilidad para cuando se retome está en `DEUDA.md`. El mapa crudo queda en
+`storage/app/logo-probe/simultaneidad.json` (gitignorado; la sonda se regenera).

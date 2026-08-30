@@ -2,8 +2,28 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-30 (tarde) — `#278`: el desenlace, dos
-> piezas y sin confeti.**
+> aquí solo se enlaza.** Última actualización: **2026-08-30 (cierre) — jornada del MOVIMIENTO y la
+> MARCA: `#275` → `#279`.**
+>
+> ❗❗❗ **POR DÓNDE SE RETOMA** (lo único que hay que leer para seguir):
+> **1 · El interruptor del titular tiene que PARAR tras unos ciclos** (`[DECIDIDO owner]`, `#279`).
+> ⚠️⚠️ **No es cambiar `infinite` por un número**: el estado ON de reposo vive SOLO dentro del bloque
+> de `prefers-reduced-motion`, así que acotar iteraciones lo dejaría APAGADO junto a un titular que
+> dice «DIVERSIÓN». Hay que promover ese estado fuera del bloque primero. Ficha en `DEUDA.md`.
+> **2 · La poda de bucles está MEDIDA y NO hecha** (`[DECIDIDO owner]`: «nada todavía, solo el
+> informe»). El mapa, en `#279` y en `DEUDA.md`: `/precios` llega a **9** y **8 son un solo icono**;
+> la invitación del CTA corre en **las doce vistas**. Orden por rentabilidad, en la ficha.
+> **3 · Falta el OJO del owner** en: el logotipo (`#275`), la cascada de franjas del cajón (`#277`) y
+> el desenlace (`#278`). Y **subir a staging** lo de `#277`/`#278` — lo de `#275`/`#276` ya está.
+>
+> ▶ **Lo cerrado hoy**: `#275` el logotipo por fin idéntico (tres defectos, todos en la EXPORTACIÓN) ·
+> `#276` el eslogan pegado al titular y el CTA de móvil · `#277` las microanimaciones valoradas + U2 y
+> U3 · `#278` el desenlace en dos piezas y sin confeti · `#279` el presupuesto de movimiento, medido.
+> ⚠️⚠️ **La lección de la jornada, que se repitió CINCO veces**: una sonda estática propia da un número
+> creíble y falso, y **solo un CONTROL en navegador lo desmonta**. Pasó con el reborde del logotipo,
+> con el hueco del eslogan, con los bucles sin proteger (dije 10, luego 6, eran **0**), con la
+> compensación del titular y con el «22,17 px» que eran 7,3. *Cuando un número propio decida un
+> cambio, medirlo en el navegador y con un control que deba salir distinto de cero.*
 >
 > ▶ **`#278` — EL DESENLACE SON DOS PIEZAS.** `[DECIDIDO owner]`: «quitamos el confeti, tampoco vamos
 > a saturar al cliente». Ya marcaba lo mismo dos veces —desde `#258` está la pegatina de éxito, y el
@@ -2659,7 +2679,40 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ SI ENTRAS NUEVO (2026-08-29 noche → 2026-08-30 · carril C): EL ÁREA TÁCTIL, EL SALTO QUE NUNCA SE VIO, LA SOMBRA Y EL HERO — `#264` · `#265` · `#266` · `#267` · `#273` · `#274`
+# ❗❗❗ SI ENTRAS NUEVO (2026-08-30, cierre · carril C): LA MARCA Y EL MOVIMIENTO — `#275` → `#279`
+
+**`git fetch` antes de nada**, y **vuelve a mirar el remoto al PUBLICAR**: hay otro agente en el
+repo. Esta jornada tomó **`#275`–`#279`**.
+
+## ▶ Lo que hay que hacer, en orden
+
+| # | qué | dónde está el detalle |
+|---|---|---|
+| **1** | **El interruptor del titular debe PARAR tras unos ciclos** (`[DECIDIDO owner]`). ⚠️⚠️ **NO es cambiar `infinite` por un número**: el estado ON de reposo vive **solo dentro del bloque de `prefers-reduced-motion`**, así que acotar iteraciones lo deja **apagado** junto a un titular que dice «DIVERSIÓN» — el defecto de `#254`. Hay que **promover ese estado fuera del bloque** primero, y ojo: `forwards` tampoco vale, porque `heroSwitchTrack` acaba en `transparent` | `DECISIONES #279` · ficha en `DEUDA.md` |
+| **2** | **La poda de bucles: medida y NO hecha** (`[DECIDIDO owner]`: «nada todavía, solo el informe»). `/precios` llega a **9** y **8 son un solo icono** (el de calcetines: seis puntos escalonados que **no se pueden fusionar sin perder la secuencia**); la invitación del CTA corre en **las doce vistas**, así que el techo de dos está gastado siempre | `DECISIONES #279` · ficha en `DEUDA.md` con el orden por rentabilidad |
+| **3** | **Falta el OJO del owner** en el logotipo (`#275`), la cascada de franjas del cajón (`#277`) y el desenlace (`#278`) | — |
+| **4** | **Subir a staging** lo de `#277` y `#278` (lo de `#275`/`#276` ya está subido, asset de marca incluido) | `scripts/deploy.sh --go`; la marca va aparte |
+| **5** | Del artboard de movimiento quedan **el hover pegatina** (⚠️ toca el mecanismo de color de acción de `#209`, que llega al panel y a los correos: **preguntar antes**) | `specs/tema-por-instalacion.md` §29 · `DEUDA.md` |
+
+## ▶ Qué hizo esta jornada
+
+| | |
+|---|---|
+| `#275` | **El logotipo, por fin idéntico**: los TRES defectos estaban en la **exportación**, no en el CSS — `text-shadow` no arrastra el trazo · el velo interior salía 3,4× más fuerte y en tono frío · y **la silueta venía restada de las letras** (a la «A» le faltaba el 16,8 %) |
+| `#276` | El **eslogan pegado** a la esquina superior izquierda del titular (⚠️ `margin: 0` no deja el hueco en cero: lo ponen los dos textos, cada uno en su `em`) y el **CTA de móvil** 9 px arriba — de él colgaban **dos números escritos a mano** |
+| `#277` | Las **microanimaciones valoradas**: el vocabulario ya estaba. **U2** (movimiento reducido conserva el fundido) y **U3** (la cascada de franjas) — que destapó que **`sellable` estaba en el contrato y el cajón no lo leía** |
+| `#278` | El **desenlace en dos piezas y sin confeti**: la pegatina entra y **el código se sella**. Retirarlo habría dejado **ciega una guarda ajena** que lo usaba de delimitador |
+| `#279` | El **presupuesto de movimiento por pantalla, medido** con control |
+
+⚠️⚠️ **La lección de la jornada, y se repitió CINCO veces**: una sonda estática propia da un número
+creíble y falso, y **solo un CONTROL en navegador lo desmonta**. Pasó con el reborde del logotipo, con
+el hueco del eslogan, con los bucles «sin proteger» (dije 10, luego 6, eran **0**), con la
+compensación del titular y con el «22,17 px» que eran 7,3. *Cuando un número propio decida un cambio,
+medirlo en el navegador y con un control que deba salir distinto de cero.*
+
+---
+
+# ❗ ANTERIOR (2026-08-29 noche → 2026-08-30 · carril C): EL ÁREA TÁCTIL, EL SALTO QUE NUNCA SE VIO, LA SOMBRA Y EL HERO — `#264` · `#265` · `#266` · `#267` · `#273` · `#274`
 
 **`git fetch` antes de nada.** ⚠️⚠️ **Hay OTRO agente en este repo, trabajando en el PANEL ADMIN.**
 La coordinación va por la doc: esta sesión toma **`#264`–`#274`**; el carril A venía en
