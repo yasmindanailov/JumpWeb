@@ -949,6 +949,24 @@ poder regalar algo?», que es una decisión propia y mucho mayor. Ficha en `DEUD
 
 ### 17.5 · Lo que SIGUE ABIERTO, dicho sin adornos
 
+> ❗❗ **CORRECCIÓN (2026-08-30), y va antes que el texto de abajo.** El ejemplo con el que se
+> describió el caso espejo —«Kids pasa a 1–12 y aparecen 40,00 €»— **NO REPRODUCE con los precios
+> reales de la instalación**: se midió en una sonda que había forzado antes el precio de Kids POR
+> ENCIMA del de Jump, y esa condición no viajó con el número. Medido de nuevo con Kids a 11,00 € y
+> Jump a 15,00 €: ensanchar el tramo de Kids da **0,00 €**, porque la diferencia hacia un pack más
+> barato tiene suelo en 0. **El mecanismo es real; el ejemplo era irreproducible.**
+> ▶ Lo que SÍ crea un cargo de la nada es que un cambio de tramos empuje a los invitados hacia el
+> pack **MÁS CARO** (medido: 40,00 € con el destino forzado caro; en la instalación real sería
+> estrechar el tramo de Kids para que sus niños caigan en Jump).
+> ❗❗❗ **Y de re-medirlo salió un agujero en `#270`/`PAY-19` que no estaba documentado: un tramo
+> ENSANCHADO destruye un cargo ya escrito.** Medido: 40,00 € comunicados → el parque decide que a
+> partir de 3 años se va a Jump → el cliente edita un nombre → **0,00 €**. La abstención de `#268`
+> no lo ve porque el veredicto sigue **completo** (`applies=true`, `isComplete()=true`): el RECIBO
+> congeló el PRECIO, no a QUIÉN se le aplica. ⚠️ Esa dirección es **benigna para el cliente** —le
+> quita un cargo—, así que si se cierra hay que decidir a la vez si el parque puede seguir siendo
+> generoso hacia atrás. Es la MISMA pieza que falta para el caso espejo: la reserva no recuerda con
+> qué tramos se hizo.
+
 - ❗ **El caso ESPEJO**: una configuración que **crea** un cargo donde no había ninguno. Medido: una
   reserva de Jump con 8 invitados de 12 años y **cero** cargo; se reordenan los tramos (Kids pasa a
   1–12); el cliente corrige un nombre → **40,00 €** de cargo nuevo. El recibo no lo cierra porque ahí

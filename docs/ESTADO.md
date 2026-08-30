@@ -30,9 +30,12 @@
 > `#244`: «cualquier gestión de dinero post-reserva ya cobrada se hace en las instalaciones»— y el
 > panel deja de ofrecer un gesto que deshacía **en el mismo clic**, con dos correos contradictorios
 > (`#271`) · la pieza entra en el `CRITICAL_RE` y la regla en **`PAY-19`** (`#272`).
-> ❗ **Lo que NO cierra está en `DEUDA.md` con su medida**, y lo más caro es el **caso ESPEJO**: una
-> configuración que CREA un cargo de la nada (medido: reordenar los tramos convirtió una fiesta sin
-> cargo en **40,00 €**). Cerrarlo exige sellar el régimen **en la reserva** —columna + migración— y es
+> ❗❗ **Lo que NO cierra está en `DEUDA.md`, y el 2026-08-30 se RE-MIDIÓ y salió peor de lo escrito**:
+> el ejemplo del caso espejo («Kids a 1–12 → 40,00 €») **no reproduce con los precios reales** —venía
+> de una sonda que había forzado Kids por encima de Jump—, y al re-medirlo apareció **un agujero en
+> `#270`/`PAY-19` que no estaba documentado: un tramo ENSANCHADO destruye un cargo ya escrito**
+> (40,00 € → 0,00 €), porque el veredicto sigue COMPLETO y la abstención de `#268` solo mira los
+> incompletos. **El recibo congeló el precio, no a quién se le aplica.** Cerrarlo exige sellar el régimen **en la reserva** —columna + migración— y es
 > decisión del owner. Con él va su gemelo: la etiqueta MIXTA puede **contradecir** al cargo, y ahora
 > de forma permanente. **Se cambió un fallo de dinero por uno de coherencia**, que es mejor negocio,
 > pero hay que saberlo.
