@@ -15928,3 +15928,57 @@ capas de defensa del guion deja la guarda en verde. Retirando el bloque entero, 
 `#274` multiplicaba: al segundo pase dejaba los trazos al 42 %). Cadena reproducible desde el export
 intacto, byte a byte. Guarda: `BrandLogoRepairTest` (10 casos, 6 mutaciones muerden).
 ▶ Detalle completo en `docs/specs/tema-por-instalacion.md` §27.
+
+## #276 · 2026-08-30 · [DECIDIDO owner] El eslogan pegado al titular, y el CTA de móvil un pelín más arriba
+
+Dos encargos pequeños del owner sobre la landing —no sobre el mockup— y los dos destapan un número
+escrito a mano.
+
+### 1 · El eslogan, pegado a la esquina superior izquierda del titular
+
+`[DECIDIDO owner]`: «pon el texto *Activa tu modo diversión* pegado al texto DIVERSIÓN en la esquina
+superior izquierda» y, después, «que no haya margen entre los dos».
+
+El bloque del hero va **centrado** desde `#253`, así que el eslogan se centraba sobre el titular y
+arrancaba por la mitad de la palabra. **Alinearlo a la izquierda del CONTENEDOR no vale**: eso lo
+manda al filo del hero, que es otro sitio. El filo que importa es el del TITULAR, y para conocerlo
+hay que compartir caja: entra `.hero__headline`, que se ajusta al titular y alinea el eslogan dentro.
+
+⚠️⚠️ **Y `margin: 0` NO deja el hueco en cero**: quedaban **7,3 px** sobre la «D» en escritorio y
+**3,0** en el teléfono. Los ponen los dos textos —el eslogan arrastra el aire que su caja de línea
+reserva bajo su tinta; el titular, la distancia de su caja a la altura de mayúscula—, así que **cada
+uno paga su parte en su PROPIO `em`**: es lo único que escala solo, porque los dos cuerpos cambian
+con la ventana en proporciones distintas (a 1440 el titular mide 5,5× el eslogan; a 390, 2,9×).
+▶ **El tope no lo pone el gusto, lo pone el CHOQUE**: el eslogan va girado −2,2° con el origen abajo
+a la izquierda, o sea que su tinta más baja cae justo sobre la «D». Barrido en **siete ventanas**, el
+mínimo peor queda en **0,2 px** —pegados sin tocarse— y con −0,22 em ya se solapan.
+⚠️ La doble clase del selector no es cosmética: la regla base del titular declara `margin: 0` con la
+misma especificidad y **va después** en la hoja, así que la corrección se aplicaba **a medias** y
+nada fallaba.
+
+### 2 · El CTA flotante de móvil, 9 px más arriba
+
+`[DECIDIDO owner]`, con el CSS que había probado en el inspector: el relleno inferior de `.book-bar`
+sube de 10 a **19 px**.
+
+⚠️⚠️ **Pero no es un número suelto: hay DOS piezas que se apoyaban en él, las dos escritas a mano.**
+El lanzador del widget de ofertas se aparta cuando la barra aparece y llevaba `92px` —que era
+`10 + 56 + 10` de la barra más sus 16 de reposo, calculado por alguien y copiado—; y el hero reserva
+sitio por abajo para que su bloque centrado no le caiga detrás, con un `84px` que era un redondeo de
+los 76 que la barra medía entonces. **Subir la barra sin tocarlos la habría metido por debajo del
+lanzador sin que fallara nada**: son dos elementos `fixed` que no se conocen y ninguna captura los
+enseña juntos.
+▶ El aire pasa a `--book-bar-pad-top` / `--book-bar-pad-bottom` y lo que la barra OCUPA a
+`--book-bar-block`; los dos consumidores lo derivan. Es la familia de `#252` («un token fuera de
+alcance no falla, rinde su reserva»).
+
+### 3 · Método
+
+⚠️⚠️ **Tres sondas propias dieron números creíbles y falsos**, y las tres se cazaron con un control:
+medir el hueco por FILAS daba 22,17 px donde eran 7,3 —buscaba la primera tinta del titular *por
+debajo* del eslogan y se saltaba la altura de mayúscula—; el hueco «mínimo» calculado sobre un tercio
+del ancho escondía el solape real del resto; y una primera guarda del envoltorio **no mordía** al
+colar un elemento entre el eslogan y el titular, porque un `.*?` perezoso retrocede hasta el `</span>`
+del intruso.
+▶ Guardas: `HomePageTest` (el envoltorio, con orden) y `ArmazonContractTest`
+(`what_the_floating_bar_takes_is_declared_once`). **4 mutaciones y las 4 muerden.**

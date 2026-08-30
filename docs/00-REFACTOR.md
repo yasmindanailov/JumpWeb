@@ -2968,6 +2968,15 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       ▶ Guiones `logo-sombra.php` y `logo-letra-a.php`, idempotentes; `logo-contorno.php` retirado.
       **+10 casos · 6 mutaciones, las 6 muerden** (y una séptima **no**, por débil: el guion tiene dos
       capas de defensa). ⚠️ **Falta el OJO del owner y subir el asset a staging.**
+- [x] **2m · El eslogan pegado al titular y el CTA de móvil** (`#276`, 2026-08-30, `[DECIDIDO owner]`).
+      Dos ajustes pequeños sobre NUESTRA landing, y los dos destapan un número escrito a mano.
+      ▶ El eslogan comparte caja con el titular (`.hero__headline`) para pegarse a su filo izquierdo,
+      y **`margin: 0` no deja el hueco en cero**: cada texto paga su parte en su PROPIO `em` porque
+      los dos cuerpos escalan distinto. Tope por CHOQUE, barrido en siete ventanas: **−0,18 em**,
+      mínimo 0,2 px, cero columnas solapadas.
+      ▶ El CTA de móvil sube 9 px y **de él colgaban dos literales** —el `92px` del lanzador de
+      ofertas y el `84px` de la reserva del hero—: ahora los dos derivan de `--book-bar-block`.
+      **+1 caso · 4 mutaciones, las 4 muerden** (una guarda nació LAXA por un `.*?` perezoso).
 - [ ] **3 · Las secciones**, pieza a pieza. ⏸️ **FUERA DE ALCANCE hasta que el owner lo diga**
       (`[DECIDIDO owner, 2026-08-28]`: del canvas solo se toma el sistema de diseño —colores,
       elementos, iconos, formas, menú, hero y pie—; el resto «son pruebas»).

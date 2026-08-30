@@ -2,8 +2,23 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-30 (mañana) — `#275`: el logotipo, por fin
-> idéntico.**
+> aquí solo se enlaza.** Última actualización: **2026-08-30 (mediodía) — `#276`: el eslogan pegado
+> al titular y el CTA de móvil.**
+>
+> ▶ **`#276` — DOS AJUSTES PEQUEÑOS DEL OWNER, DOS NÚMEROS ESCRITOS A MANO.**
+> **El eslogan** se centraba sobre el titular porque el bloque del hero va centrado: ahora comparte
+> caja con él (`.hero__headline`) y se pega a su filo IZQUIERDO. ⚠️⚠️ **`margin: 0` no deja el hueco
+> en cero** —quedaban 7,3 px en escritorio y 3,0 en móvil, y los ponen los DOS textos—, así que cada
+> uno paga su parte **en su propio `em`**: es lo único que escala, porque a 1440 el titular mide 5,5×
+> el eslogan y a 390 solo 2,9×. El tope lo pone el CHOQUE (va girado −2,2°): barrido en siete
+> ventanas, **−0,18 em** deja el mínimo en 0,2 px y −0,22 ya solapa.
+> **El CTA de móvil** sube 9 px, y de ahí colgaban **dos números a mano**: el `92px` con que el
+> lanzador de ofertas se aparta y el `84px` que el hero reserva por abajo. Subir la barra sin
+> tocarlos la habría metido bajo el lanzador **sin que fallara nada**. Ahora los dos derivan de
+> `--book-bar-block`.
+> ⚠️⚠️ **Tres sondas propias dieron números creíbles y falsos**: medir el hueco por FILAS daba 22,17
+> px donde eran 7,3 (se saltaba la altura de mayúscula) · el «mínimo» sobre un tercio del ancho
+> escondía el solape del resto · y la guarda del envoltorio **nació laxa**.
 >
 > ❗❗❗ **`#275` — LOS TRES DEFECTOS DEL LOGOTIPO ESTABAN EN LA EXPORTACIÓN, NO EN NUESTRO CSS.**
 > Quinta sesión sobre el mismo dibujo (`#253` · `#263` · `#267` · `#273` · `#274`), y la que la
@@ -1840,8 +1855,12 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3527 en verde** (23.053 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-30 tras `#275`. ▶ **+10 casos**: `BrandLogoRepairTest`, las dos reparaciones del logotipo
+- Suite **3528 en verde** (23.073 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-30 tras `#276`. ▶ **+1 caso** (`what_the_floating_bar_takes_is_declared_once`) y una
+  aserción nueva en `HomePageTest` (el eslogan y el titular comparten caja) — **4 mutaciones y las 4
+  muerden**. ⚠️ Una de esas guardas **nació LAXA**: con `.*?` no mordía al colar un elemento entre
+  los dos textos, porque el comodín perezoso retrocede hasta el `</span>` del intruso.
+- Antes, tras `#275`: suite **3527 en verde** (23.053 aserciones). ▶ **+10 casos**: `BrandLogoRepairTest`, las dos reparaciones del logotipo
   exportado (la extrusión sin trazo · el velo de dentro y su tono por palabra · la letra restituida en
   sus DOS apariciones · que rehúse media reparación · idempotencia de los dos guiones · y las tres
   piezas del patrón de marca para la letra) — **6 mutaciones y las 6 muerden**.

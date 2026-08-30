@@ -84,6 +84,18 @@
        hero, para que ambos tengan EXACTAMENTE el mismo ancho y el float deslice sobre el hueco que
        deja el hero sin saltos de anchura. Cambiar aquí afecta a los dos a la vez. */
     --float-cta-inset: 14px;
+    /* El aire VERTICAL del CTA flotante de móvil (`#276`, `[DECIDIDO owner]`: «hay que subirlo un
+       pelín»). Estaban los dos como literales dentro de la regla, y el de abajo se subió a 19.
+       ⚠️⚠️ **No es un número suelto: hay una pieza que se apoya en él.** El lanzador del widget de
+       ofertas se aparta cuando la barra aparece, y su desplazamiento estaba escrito a mano —`92px`,
+       que era `10 + 56 + 10 + 16` calculado por alguien y copiado—. Subir la barra sin tocar ese 92
+       la habría metido por debajo del lanzador **sin que fallara nada**. Ahora los dos leen
+       `--book-bar-block`, así que el hueco se mantiene solo. */
+    --book-bar-pad-top: 10px;
+    --book-bar-pad-bottom: 19px;
+    /* Lo que la barra OCUPA desde el filo inferior, sin el margen seguro del dispositivo (que cada
+       consumidor añade por su cuenta, porque no todos lo necesitan). */
+    --book-bar-block: calc(var(--book-bar-pad-top) + var(--book-bar-h) + var(--book-bar-pad-bottom));
     /* Objetivo táctil mínimo (Lote 9, WCAG 2.5.5): tamaño del área de toque de los controles
        de icono. Se aplica preservando el tamaño VISIBLE (pseudo-elemento centrado o caja
        transparente), salvo donde subir el visible es trivial (burger, cerrar drawer).
@@ -3635,8 +3647,11 @@ body[data-has-hero] .nav--over .nav__cta {
     left: 0; right: 0; bottom: 0;
     z-index: 90;
     display: none; /* solo móvil; el media query de abajo lo activa */
-    /* El inset lateral (= ancho del botón) lo comparte con el hero CTA vía `--float-cta-inset`. */
-    padding: 10px var(--float-cta-inset) calc(10px + env(safe-area-inset-bottom, 0px));
+    /* El inset lateral (= ancho del botón) lo comparte con el hero CTA vía `--float-cta-inset`;
+       el aire vertical vive en `--book-bar-pad-*`, porque el lanzador de ofertas se aparta usando
+       esa misma medida y con literales aquí los dos números se separaban en silencio (`#276`). */
+    padding: var(--book-bar-pad-top) var(--float-cta-inset)
+             calc(var(--book-bar-pad-bottom) + env(safe-area-inset-bottom, 0px));
     /* FLOAT real: sin panel de fondo, borde ni sombra de barra — solo el botón flota sobre
        el contenido. El contenedor NO captura toques (`pointer-events:none`): únicamente el
        botón es interactivo, así el resto del ancho deja pasar el scroll/tap al contenido. */
@@ -3923,7 +3938,9 @@ body[data-has-hero] .nav--over .nav__cta {
            «Ver precios» salía cortado por la mitad. Ampliar la caja por abajo sube el bloque
            entero, porque el centrado se calcula sobre ella. */
         padding-top: clamp(16px, 4vw, 28px);
-        padding-bottom: calc(clamp(16px, 4vw, 28px) + 84px + env(safe-area-inset-bottom, 0px));
+        /* ⚠️ La reserva se DERIVA de lo que la barra ocupa (`#276`). Aquí ponía `84px`, un número a
+           ojo para una barra que mide 76: ni era exacto ni seguía a la barra cuando cambiaba. */
+        padding-bottom: calc(clamp(16px, 4vw, 28px) + var(--book-bar-block) + env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -4676,7 +4693,13 @@ html:not(.js) .gf-fiche__foot { display: none; }
         bottom: calc(16px + env(safe-area-inset-bottom, 0px));
         transition: transform var(--dur-entra) var(--offw-spring), bottom var(--dur-entra) var(--offw-spring);
     }
-    body.book-bar-visible .offw-launch { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+    /* ⚠️ **Este número se DERIVA, no se escribe** (`#276`). Aquí ponía `92px`, que era
+       `10 + 56 + 10` de la barra más los 16 de su reposo, calculado a mano por alguien y copiado.
+       El día que la barra cambiara de aire —y cambió— el lanzador se le habría metido encima **sin
+       que fallara nada**: son dos elementos fijos que no se conocen. */
+    body.book-bar-visible .offw-launch {
+        bottom: calc(16px + var(--book-bar-block) + env(safe-area-inset-bottom, 0px));
+    }
 }
 
 .offw-gift { position: relative; display: inline-grid; place-items: center; width: 74px; height: 74px; }

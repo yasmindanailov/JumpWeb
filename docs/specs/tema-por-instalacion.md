@@ -2738,3 +2738,83 @@ mismo espécimen contra sí mismo, y una diferencia que DEBE salir distinta de c
 - El escalón de teléfono (`--nav-logo-h`) corta en **≤ 719 px** y el del mockup en **< 620**: entre esos dos anchos
   nuestro logotipo mide 46 px donde el suyo mide 70. La proporción sí es fiel (46/70 = 0,657 contra
   su `scale(.66)`). Ficha en `DEUDA.md`.
+
+---
+
+## 28. EL ESLOGAN PEGADO AL TITULAR Y EL CTA DE MÓVIL (`#276`, 2026-08-30)
+
+> Dos ajustes pequeños del owner **sobre nuestra landing, no sobre el mockup**, y los dos destapan
+> un número escrito a mano.
+
+### 28.1 · El eslogan se pega al filo del TITULAR, no al del hero
+
+`[DECIDIDO owner]`: «ponlo pegado al texto DIVERSIÓN en la esquina superior izquierda» · «que no
+haya margen entre los dos».
+
+El bloque del hero va **centrado** (`#253`), así que el eslogan se centraba sobre el titular y
+arrancaba por la mitad de la palabra. ▶ **Alinearlo a la izquierda del CONTENEDOR no sirve**: eso lo
+manda al filo del hero. El filo que importa es el del **titular**, y para conocerlo hay que compartir
+caja — entra `.hero__headline`, que se ajusta al titular y alinea el eslogan dentro.
+
+⚠️⚠️ **`margin: 0` no deja el hueco en cero.** Medido: **7,3 px** sobre la «D» en escritorio y **3,0**
+en el teléfono. Lo ponen los DOS textos:
+
+| quién | qué aporta |
+|---|---|
+| el ESLOGAN | el aire que su caja de línea reserva **por debajo de su tinta** |
+| el TITULAR | la distancia de su caja a la **altura de mayúscula** (con `line-height: 0.82` la tinta se le sale de la caja, así que resta poco, pero no es cero) |
+
+▶ **Cada uno paga su parte en su PROPIO `em`**, que es lo único que escala solo: los dos cuerpos
+cambian con la ventana en proporciones distintas (a 1440 el titular mide **5,5×** el eslogan; a 390,
+**2,9×**), así que un valor fijo que cerrase escritorio se pasaría en el teléfono.
+
+▶ **El tope no lo pone el gusto, lo pone el CHOQUE.** El eslogan va girado −2,2° con el origen abajo
+a la izquierda, o sea que su tinta más baja cae justo sobre la «D». Barrido en siete ventanas
+(1920 · 1440 · 1280 · 1024 · 430 · 390 · 390 corto):
+
+| compensación | hueco mínimo peor |
+|---|---|
+| sin tocar | 3,0 px |
+| −0,10 em | 1,0 |
+| **−0,18 em** (elegida) | **0,2** |
+| −0,22 em | solapan |
+
+Verificado en el producto: mínimo **0,17–1,33 px** y **cero columnas solapadas** en las cuatro
+ventanas de control.
+
+⚠️⚠️ **La doble clase del selector no es cosmética**: la regla base del titular declara `margin: 0`
+con la misma especificidad y **va después** en la hoja, así que con un solo `.hero__title--onvideo`
+la corrección se aplicaba **a medias** —cerraba la parte del eslogan y no la del titular— y nada
+fallaba.
+
+### 28.2 · El CTA flotante de móvil, y los dos números que colgaban de él
+
+`[DECIDIDO owner]`, con el CSS ya probado en su inspector: el relleno inferior de `.book-bar` sube de
+10 a **19 px**.
+
+⚠️⚠️ **No es un número suelto.** Dos piezas se apoyaban en él y las dos estaban escritas a mano:
+
+| pieza | llevaba | qué era |
+|---|---|---|
+| el lanzador del widget de ofertas, cuando se aparta | `92px` | `10 + 56 + 10` de la barra **+ 16** de su reposo |
+| la reserva del hero por abajo, para que el bloque centrado no caiga detrás | `84px` | un redondeo de los **76** que la barra medía entonces |
+
+▶ Subir la barra sin tocarlos la habría metido **por debajo del lanzador sin que fallara nada**: son
+dos elementos `fixed` que no se conocen y ninguna captura los enseña juntos. Es la familia de `#252`
+—*un token fuera de alcance no falla, rinde su reserva*—.
+▶ El aire pasa a `--book-bar-pad-top` / `--book-bar-pad-bottom`, lo que la barra ocupa a
+**`--book-bar-block`**, y los dos consumidores lo **derivan**.
+
+### 28.3 · Tres sondas propias que dieron números creíbles y falsos
+
+1. **Medir el hueco por FILAS** daba **22,17 px** donde eran 7,3: buscaba la primera tinta del
+   titular *por debajo* del eslogan y **se saltaba la altura de mayúscula**. Con ese número se
+   calculó una compensación que solapaba 15 px.
+2. **El «mínimo» calculado sobre un tercio del ancho** escondía el solape del resto. El hueco no es
+   uniforme —varía de 7,3 a 81,3 px a lo largo del eslogan—, así que la única métrica que vale es
+   **el mínimo por COLUMNA en todo el ancho**.
+3. **La primera guarda del envoltorio NO mordía** al colar un elemento entre el eslogan y el titular:
+   un `.*?` perezoso **retrocede hasta el `</span>` del intruso**. Acotada a `[^<]*`.
+
+▶ **Guardas**: `HomePageTest` (el envoltorio, con su orden) y `ArmazonContractTest`
+(`what_the_floating_bar_takes_is_declared_once`) · **4 mutaciones y las 4 muerden**.

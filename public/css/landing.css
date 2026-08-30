@@ -928,13 +928,55 @@ img { display: block; max-width: 100%; }
    ⚠️ Es un texto CORTO por contrato —el sistema del segundo cliente limita el rotulador a seis
    palabras—, así que no lleva `max-width`: si alguien mete un párrafo aquí, lo que hay que
    arreglar es el texto, no el CSS. */
+/* ── EL TITULAR Y SU ESLOGAN, EN LA MISMA CAJA (`#276`) ──────────────────────────────
+   `[DECIDIDO owner]`: «pon el eslogan pegado al texto DIVERSIÓN, en la esquina superior
+   izquierda». El bloque del hero va CENTRADO desde `#253`, así que el eslogan se centraba
+   sobre el titular y arrancaba por la mitad de la palabra.
+   ▶ **El filo que importa es el del TITULAR, no el del hero.** Alinear a la izquierda del
+   contenedor lo habría mandado al borde de la pantalla. Compartiendo caja, la caja se ajusta
+   al titular y el eslogan se alinea contra su filo real, sea cual sea el idioma o la talla.
+   ⚠️ `max-width: 100%` porque la caja mide `max-content`: sin él, en un teléfono el titular
+   se saldría del viewport. */
+.hero__headline {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 100%;
+  text-align: left;
+}
+
+/* ❗❗ **CERO DE MARGEN NO ES CERO DE HUECO** (`#276`). Con `margin: 0` seguían quedando **7,3 px**
+   de aire sobre la «D» en escritorio y 3,0 en el teléfono, y los ponen LOS DOS textos:
+     · el ESLOGAN arrastra el aire que su caja de línea reserva por debajo de su tinta;
+     · el TITULAR, la distancia de su caja a la altura de mayúscula (con `line-height: 0.82` la
+       tinta se le sale de la caja, así que este término resta poco pero no es cero).
+   ▶ **Cada elemento paga su parte en su PROPIO `em`**, que es lo único que escala solo: los dos
+   cuerpos cambian con la ventana en proporciones distintas (a 1440 el titular mide 5,5× el
+   eslogan; a 390, 2,9×), así que un valor fijo que cerrase escritorio se pasaría en el teléfono.
+   ▶ **El tope no lo pone el gusto, lo pone el CHOQUE**: el eslogan va girado −2,2° con el origen
+   abajo a la izquierda, o sea que su tinta más BAJA está justo sobre la «D», que es donde el hueco
+   es mínimo. Barrido en siete ventanas (1920 · 1440 · 1280 · 1024 · 430 · 390 · 390 corto), el
+   mínimo peor queda en **0,2 px**: pegados sin llegar a tocarse. Con −0,22 ya se solapan.
+   ⚠️⚠️ **La doble clase NO es cosmética**: la regla base del titular declara `margin: 0` con la
+   misma especificidad y VA DESPUÉS en esta hoja, así que con un solo `.hero__title--onvideo` esto
+   se aplicaba a medias — cerraba la parte del eslogan y no la del titular, y **nada fallaba**. */
+.hero__headline .hero__title.hero__title--onvideo { margin-top: -0.018em; }
+
 .hero__kicker {
   font-family: var(--font-accent);
   font-size: clamp(16px, 1.6vw, 22px);
   line-height: 1;
   transform: rotate(-2.2deg);
   transform-origin: left bottom;
-  margin: 0 0 clamp(12px, 1.4vw, 20px) 4px;
+  /* ⚠️ **Sin margen: pegado al titular** (`#276`, `[DECIDIDO owner]`: «que no haya margen entre el
+     texto DIVERSIÓN y el texto Activa tu modo…»). Antes eran 20 px, que con el bloque centrado lo
+     dejaban suelto encima.
+     ⚠️⚠️ **Cero de margen NO es cero de hueco, y esa es la trampa de esta pieza**: el titular va a
+     `line-height: 0.82`, así que su caja es MÁS CORTA que sus letras y la tinta se sale por arriba;
+     el eslogan, en cambio, va a `line-height: 1`, o sea que su caja reserva aire por debajo de su
+     tinta. El hueco que se ve es la suma de los dos, y no lo dice ningún margen: está medido en
+     navegador contra la TINTA. */
+  margin: 0 0 -0.18em 4px;
   /* ⚠️ **El mismo color que en el menú** (`.menu__slogan`, `--zone-2`) y no el que tenía: es la
      MISMA frase en los dos sitios, y dos colores para una frase son dos frases. El mockup la pinta
      en su segundo acento —el naranja—, que aquí es el rol de ACCIÓN: usarlo para un texto

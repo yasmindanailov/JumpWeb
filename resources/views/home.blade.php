@@ -90,7 +90,22 @@
                  una desviación decidida y no un descuido. El ESTILO del rótulo sí es el suyo:
                  rotulador, girado, en el color de acción. --}}
             <div class="hero__stage-content">
-                <span class="hero__kicker">{{ __('landing.hero.kicker') }}</span>
+                {{-- ⚠️⚠️ **EL ESLOGAN Y EL TITULAR VAN EN LA MISMA CAJA, y eso es lo que hace que el
+                     eslogan se pegue a la esquina superior IZQUIERDA del titular** (`#276`,
+                     `[DECIDIDO owner]`: «ponlo pegado al texto DIVERSIÓN en la esquina superior
+                     izquierda»).
+
+                     ▶ **Por qué hace falta un envoltorio y no basta una regla.** El bloque del hero
+                     va centrado (`align-items: center`, decisión del owner en `#253`), así que el
+                     eslogan se centraba sobre el titular: arrancaba por la mitad de la palabra.
+                     Alinearlo a la izquierda **del contenedor** lo habría mandado al filo del hero,
+                     que es otro sitio. El filo que importa es el del TITULAR, y para conocerlo hay
+                     que compartir caja con él: la caja se ajusta al titular y el eslogan se alinea
+                     dentro.
+                     ⚠️ `max-width: 100%` no es decorativo: sin él la caja mide `max-content` y en
+                     un teléfono el titular la sacaría del viewport. --}}
+                <div class="hero__headline">
+                    <span class="hero__kicker">{{ __('landing.hero.kicker') }}</span>
                 {{-- ⚠️ `--onvideo` no es decorativo: es el modificador que hace que el titular
                      **encoja con el hero** (`#220`, `--hero-t-ini` → `--hero-t-end`). Sin él cae
                      en la escala base, que es la del titular gigante de la portada antigua: medido,
@@ -104,7 +119,8 @@
                      el dibujo va `aria-hidden` y lo que se lee es el texto del titular, tal cual.
                      ⚠️ El rótulo sale del idioma (`hero.l2`): el dibujo es del producto, la
                      palabra es de la instalación. --}}
-                <h1 class="hero__title hero__title--onvideo">{{ __('landing.hero.l1') }} <span class="hero__switch"><span class="hero__switch-sw" aria-hidden="true"><span class="hero__switch-knob"></span><span class="hero__switch-on">{{ __('landing.hero.l2') }}</span></span><span class="sr-only">{{ __('landing.hero.l2') }}</span></span></h1>
+                    <h1 class="hero__title hero__title--onvideo">{{ __('landing.hero.l1') }} <span class="hero__switch"><span class="hero__switch-sw" aria-hidden="true"><span class="hero__switch-knob"></span><span class="hero__switch-on">{{ __('landing.hero.l2') }}</span></span><span class="sr-only">{{ __('landing.hero.l2') }}</span></span></h1>
+                </div>
 
                 {{-- ⚠️⚠️ **EL CTA DEL HERO ES EL PAR DEL ARMAZÓN, y baja aquí** (`#254`,
                      `[DECIDIDO owner]`: «esos dos botones los quitamos y ponemos debajo el CTA que

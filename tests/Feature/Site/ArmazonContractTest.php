@@ -2326,6 +2326,65 @@ class ArmazonContractTest extends TestCase
         );
     }
 
+    /**
+     * ❗❗ **LO QUE LA BARRA FLOTANTE OCUPA SE DECLARA UNA VEZ, Y QUIEN SE APARTA LO DERIVA**
+     * (`#276`, `[DECIDIDO owner]`: «en el móvil el CTA hay que subirlo un pelín»).
+     *
+     * Subir la barra son tres números, no uno: su propio relleno, **el desplazamiento del lanzador
+     * del widget de ofertas** —que se aparta cuando ella aparece— y **la reserva que el hero deja
+     * por abajo** para que el bloque centrado no le caiga detrás.
+     *
+     * ⚠️⚠️ **Los tres estaban escritos a mano y se conocían de memoria.** El lanzador llevaba
+     * `92px`, que era `10 + 56 + 10` de la barra más sus 16 de reposo, calculado por alguien y
+     * copiado; el hero llevaba `84px`, un redondeo de los 76 que la barra medía entonces. Subir la
+     * barra 9 px habría metido la barra por debajo del lanzador **sin que fallara nada**: son dos
+     * elementos `fixed` que no se conocen, y ninguna captura de la home los enseña juntos.
+     *
+     * ▶ Es la misma familia de defecto que `#252` («un token fuera de alcance no falla, rinde su
+     * reserva») y que el `92` de esta misma pieza: *un número derivado a mano deja de derivar en
+     * cuanto cambia su origen, y no avisa.*
+     */
+    public function test_what_the_floating_bar_takes_is_declared_once(): void
+    {
+        $hojas = $this->stylesheets();
+
+        $this->assertMatchesRegularExpression(
+            '/--book-bar-block:\s*calc\([^;]*var\(--book-bar-h\)[^;]*\)/',
+            $hojas,
+            "`--book-bar-block` no se calcula a partir del alto real de la barra.\n".
+            '▶ Es la medida de la que cuelgan el lanzador de ofertas y la reserva del hero.',
+        );
+
+        foreach ([
+            '.book-bar' => ['--book-bar-pad-top', '--book-bar-pad-bottom'],
+            '.hero__stage-content' => ['--book-bar-block'],
+        ] as $selector => $tokens) {
+            $cuerpo = $this->ruleBody($selector);
+
+            foreach ($tokens as $token) {
+                $this->assertStringContainsString(
+                    $token, $cuerpo,
+                    "`{$selector}` ha dejado de leer `{$token}`: su aire vuelve a ser un literal, y ".
+                    'lo que se aparta de la barra ya no se entera cuando cambia.',
+                );
+            }
+        }
+
+        // El lanzador que se aparta: su posición elevada tiene que DERIVAR, no repetir el número.
+        $elevado = $this->ruleBody('body.book-bar-visible .offw-launch');
+
+        $this->assertStringContainsString(
+            'var(--book-bar-block)', $elevado,
+            "el lanzador de ofertas vuelve a apartarse con un número escrito a mano.\n".
+            '▶ El día que la barra cambie de aire —y ha cambiado— se le mete encima en silencio.',
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/bottom:\s*calc\(\s*\d+px\s*\+\s*\d+px/',
+            $elevado,
+            'el desplazamiento del lanzador suma dos literales: uno de ellos es el alto de la barra.',
+        );
+    }
+
     /** Literal XPath seguro aunque el texto lleve comillas. */
     private function quote(string $value): string
     {

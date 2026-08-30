@@ -389,6 +389,26 @@ class HomePageTest extends TestCase
             'título para lectores de pantalla y buscadores.',
         );
 
+        // ⚠️⚠️ **EL ESLOGAN Y EL TITULAR COMPARTEN CAJA** (`#276`, `[DECIDIDO owner]`: «pon el
+        // eslogan pegado al texto DIVERSIÓN en la esquina superior izquierda»).
+        // ▶ **Por qué es marcado y no una regla suelta**: el bloque del hero va CENTRADO desde
+        // `#253`, así que el eslogan se centraba sobre el titular y arrancaba por la mitad de la
+        // palabra. Alinearlo a la izquierda del CONTENEDOR lo manda al filo del hero, que es otro
+        // sitio: el filo que importa es el del TITULAR, y para conocerlo hay que compartir caja.
+        // ⚠️ Si alguien saca el `<h1>` del envoltorio o mete algo entre medias, el eslogan vuelve a
+        // flotar centrado **y nada falla**: por eso se asevera el orden dentro de la caja.
+        $this->assertMatchesRegularExpression(
+            // ⚠️ `[^<]*` y no `.*?`: con el comodín perezoso el motor **retrocede hasta el
+            // `</span>` de lo que se haya colado en medio** y la aserción pasa igual. Lo dijo su
+            // mutación —meter un `<span>` entre el eslogan y el titular no la ponía roja—, que es
+            // exactamente el tipo de laxitud que este proyecto ya ha pagado tres veces.
+            '/<div class="hero__headline">\s*<span class="hero__kicker">[^<]*<\/span>\s*<h1[^>]*class="[^"]*hero__title/s',
+            $hero,
+            "el eslogan y el `<h1>` han dejado de compartir la caja `hero__headline`.\n".
+            '▶ Sin ella el eslogan se alinea contra el contenedor centrado, no contra el filo '.
+            'izquierdo del titular, y vuelve a arrancar por la mitad de la palabra.',
+        );
+
         // ⚠️ El chip de estado NO se asevera aquí: es data-driven y **no se pinta sin horario**
         // configurado (`HeroStatus`), que es justo el caso del entorno de test. Aseverarlo haría
         // que este caso fallara por un motivo que no tiene nada que ver con el CTA. Su presencia
