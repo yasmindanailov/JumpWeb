@@ -2818,3 +2818,94 @@ dos elementos `fixed` que no se conocen y ninguna captura los enseña juntos. Es
 
 ▶ **Guardas**: `HomePageTest` (el envoltorio, con su orden) y `ArmazonContractTest`
 (`what_the_floating_bar_takes_is_declared_once`) · **4 mutaciones y las 4 muerden**.
+
+---
+
+## 29. LAS MICROANIMACIONES DEL CLIENTE — qué de su artboard ya estaba (`#277`, 2026-08-30)
+
+> El owner entrega `Microanimaciones PJP` y pide **valorarlo antes de implementarlo**. Conviene
+> empezar por lo que NO hay que hacer.
+
+### 29.1 · El vocabulario ya estaba — nada que hacer
+
+**Las cuatro curvas y las siete duraciones son idénticas**: `#222` ya tomó este mismo artboard.
+Y su primera regla —«entra rebotando, sale limpio»— **se cumple sin que nadie la escribiera**: cero
+transiciones de salida con curva de sobreimpulso, medido.
+
+### 29.2 · Lo que diverge, medido
+
+| | el artboard | el producto | ¿se hace? |
+|---|---|---|---|
+| **bucles** | «los únicos permitidos son los tres cargadores» | **24 declaraciones**, solo 2 son cargador | ⏸️ ficha en `DEUDA.md` |
+| **hover** | pegatina que se aplasta; el color **no cambia nunca** | `.btn` sube y cambia el fondo a `--action-hover` | ⏸️ toca `#209` |
+| **movimiento reducido** | quitar recorrido, **mantener el fundido** | 12 de 31 bloques hacen `transition: none` | ✅ §29.3 |
+| **cascada de franjas** | cae, aplasta, desfase 90 | no existía | ✅ §29.4 |
+| **sello + check** | el desenlace de la reserva | no existía | ⏸️ pendiente |
+
+⚠️⚠️ **Sus dos artboards se contradicen.** Éste prohíbe los bucles decorativos —«banners que
+respiran, iconos que laten»— y el interruptor del titular, que son **tres bucles de 3,4 s**, salió del
+artboard **`6d` del propio cliente** (`#262`). Y el aro que invita al CTA es un `[DECIDIDO owner]`
+(`#205`). Podar es revertir dos decisiones suyas.
+⚠️ **Y el artboard se contradice a sí mismo**: su curva «Salida» dice servir «todo el hover», pero su
+propia tarjeta de iconos usa Bote a 120 ms. Es la **sexta** contradicción del cliente consigo mismo.
+
+### 29.3 · U2 · Sin recorrido no es sin fundido
+
+Su norma es explícita: «desaparecen los desplazamientos y las escalas, **pero se mantienen los
+cambios de opacidad de 120 ms** — quitar también el fundido deja la interfaz saltando de estado sin
+avisar». Medido en navegador **con control** (comparando contra `no-preference`):
+
+| | antes | ahora |
+|---|---|---|
+| el rótulo del CTA doble al intercambiarse | `none / 0s` → aparecía de golpe | `opacity / 0.12s` |
+| el bloque de cuenta del cajón | `none / 0s` | `opacity, visibility / 0.12s` |
+
+⚠️ Ese `visibility` **no es movimiento**: es lo que saca el bloque del orden de tabulación DESPUÉS de
+ocultarse. Con `none` desaparecía del árbol de accesibilidad de golpe.
+⚠️⚠️ Y había **un segundo bloque de movimiento reducido para el mismo elemento 200 líneas más abajo**
+que lo volvía a matar. Tras corregir el primero, `.acct` seguía computando `none`. *Dos bloques para
+el mismo elemento no se resuelven con especificidad: gana el último.*
+
+### 29.4 · U3 · La cascada de franjas — y el dato que nadie leía
+
+⚠️⚠️ **`sellable` llevaba desde siempre en el contrato y el cajón no lo leía.** `SlotOffer` marca las
+franjas llenas con `sellable: false` **a propósito** —su docblock dice «se muestran deshabilitadas, no
+se ocultan»— y el paso 3 las pintaba como un chip normal y clicable: sólo al pulsarlo aparecía
+«agotado» abajo, en el contador de cantidad.
+▶ **El PANEL sí lo respeta** (`manual-order-times.blade.php` → `@disabled(! $slot['sellable'])`): el
+mismo dato, honrado en la superficie del operador e ignorado en la del cliente. *Un contrato cumplido
+en una superficie y no en la otra no lo caza ningún test del contrato.*
+▶ La regla pasa a `offer.js::isSoldOut()`, junto a `isAlmostFull()`, para que el componente solo
+pinte (`CE-4`). ⚠️ **Se compara con `=== false`, no por veracidad**: una respuesta sin el campo tiene
+que seguir vendiendo, o el paso entero se queda mudo y nadie compra.
+
+**La coreografía, con sus números** — cae de **32 px** con la curva LONA en **420 ms**, aplasta a
+**1,12 / 0,76** al aterrizar, rebota a 0,98 / 1,05 y asienta; el origen es su **base** (`50% 100%`),
+que es lo que hace que el aplastado se lea como peso. Verificado en el cajón real: `chip-cae`, 0,42 s,
+desfase **0,09 / 0,18 / 0,27 / 0,36 s**.
+⚠️ **La franja completa cae igual que las demás**, regla suya explícita: «negarle el rebote sería
+castigarla dos veces». Se le quita la venta, no la presencia.
+⚠️ **El desfase se DERIVA, no se escribe.** 90 ms **no está en la escala de siete duraciones del
+propio artboard**, y un literal dentro de una `custom property` no lo ve ningún inventario de
+`transition` (la lección de `#222` §16.4). Se expresa como fracción del techo, igual que
+`--jj-desfase` («120 ms sobre 900»).
+⚠️ **El índice va topado a 7**: con 11 horas el último chip ya espera 900 ms; un día de treinta
+esperaría casi tres segundos. Los que quedan fuera del carril no se ven entrar.
+⚠️⚠️ **Y un `opacity: 0.62` nació MUERTO**: la cascada termina en `opacity: 1` y corre con `both`, así
+que **fija su último fotograma y gana a la regla CSS** —una animación gana siempre—. Medido: computaba
+1. Es el mecanismo de `#265`, ahora sobre la opacidad. Retirarlo es además **más fiel**: la norma pide
+rojo tachado, no atenuar.
+
+### 29.5 · Lo que enseñó el instrumento
+
+⚠️⚠️ **Cinco sondas estáticas propias dieron números creíbles y falsos, todas sobre lo mismo.** Dije
+que **10** bucles seguían corriendo con movimiento reducido; luego **6**; y **son cero** — una regla
+general (`.icon *`) los apaga a todos y ningún `grep` de selectores la veía, porque el selector de la
+regla no contiene el del icono. **Lo zanjó el navegador con `getAnimations()`.**
+⚠️ Y la suite lo dijo antes que yo: los 34 fallos de `SidebarDomContractTest` **no eran del cambio**,
+sino de no haber corrido `build:ssr` — ese test trae su propia guarda de «bundle SSR rancio», que es
+exactamente la clase de guarda que evita perseguir un fantasma.
+
+▶ **Guardas**: `MotionScaleTest::test_the_slot_cascade_keeps_its_contract` (4 mutaciones, las 4
+muerden — y la del literal muerde además la guarda de duraciones a mano) y dos casos nuevos en
+`offer.test.js` (la franja no vendible; y que **la ausencia del campo no es «completa»**).

@@ -2977,6 +2977,18 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       ▶ El CTA de móvil sube 9 px y **de él colgaban dos literales** —el `92px` del lanzador de
       ofertas y el `84px` de la reserva del hero—: ahora los dos derivan de `--book-bar-block`.
       **+1 caso · 4 mutaciones, las 4 muerden** (una guarda nació LAXA por un `.*?` perezoso).
+- [x] **2n · Las MICROANIMACIONES del cliente, valoradas · U2 y U3** (`#277`, 2026-08-30).
+      El owner entrega `Microanimaciones PJP` y pide valorarlo antes de implementar. **El vocabulario
+      ya estaba**: las 4 curvas y las 7 duraciones son idénticas (`#222` tomó este mismo artboard).
+      ▶ **U2**: su norma mantiene el fundido con movimiento reducido y nosotros hacíamos
+      `transition: none` — el rótulo del CTA aparecía de golpe y el bloque de cuenta perdía su
+      `visibility` diferido. ⚠️ Un segundo bloque 200 líneas más abajo lo volvía a matar.
+      ▶ **U3 · la cascada de franjas** con sus números (32 px, LONA, 420 ms, 1,12/0,76, desfase 90),
+      verificada en el cajón real. ⚠️⚠️ Destapó que **`sellable` estaba en el contrato y nadie lo
+      leía**: las franjas llenas se pintaban clicables. El PANEL sí lo respeta.
+      **+1 caso PHP · +2 JS · 4 mutaciones, las 4 muerden.**
+      ⏸️ Quedan en `DEUDA.md`: los 22 bucles (contradicen su propio `6d`), el hover pegatina (toca
+      `#209`) y el sello + check.
 - [ ] **3 · Las secciones**, pieza a pieza. ⏸️ **FUERA DE ALCANCE hasta que el owner lo diga**
       (`[DECIDIDO owner, 2026-08-28]`: del canvas solo se toma el sistema de diseño —colores,
       elementos, iconos, formas, menú, hero y pie—; el resto «son pruebas»).

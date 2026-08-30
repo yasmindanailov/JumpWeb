@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { dayPriceCents, initialQuantity, isAlmostFull, maxQuantityFor, minQuantityFor, timeAt } from './offer.js';
+import { dayPriceCents, initialQuantity, isAlmostFull, maxQuantityFor, minQuantityFor, timeAt, isSoldOut } from './offer.js';
 
 /**
  * Lo que la oferta dice del paso 3 (Fase 4 · paso 4.7·2b·2·B).
@@ -155,4 +155,26 @@ test('en un pack el aviso mira las plazas de la FRANJA, no el tope de la fiesta'
 test('una hora sin el campo no lanza y no se anuncia', () => {
     assert.equal(isAlmostFull(null, 8), false);
     assert.equal(isAlmostFull({ time: '10:00:00' }, 8), false);
+});
+
+/**
+ * ⚠️⚠️ **`sellable` llevaba desde siempre en el contrato y nadie lo leía** (`#277`). `SlotOffer` manda
+ * las franjas llenas con `sellable: false` **a propósito** —«se muestran deshabilitadas, no se
+ * ocultan»— y el paso 3 las pintaba clicables: sólo al pulsarlas aparecía «agotado» abajo.
+ */
+test('una franja marcada NO vendible está completa', () => {
+    assert.equal(isSoldOut({ time: '10:00:00', available: 0, max_quantity: 0, sellable: false }), true);
+    assert.equal(isSoldOut({ time: '10:00:00', available: 4, max_quantity: 4, sellable: true }), false);
+});
+
+/**
+ * ⚠️ **La ausencia del campo NO es «completa», y la diferencia no es cosmética.** Con `! sellable`
+ * una respuesta antigua o una carga sin el campo dejaría TODAS las horas deshabilitadas y nadie
+ * podría comprar. El aforo de verdad lo decide el servidor en el checkout (`AFORO-02`); esto es
+ * escaparate, así que ante la duda vende.
+ */
+test('una hora sin el campo sigue siendo vendible', () => {
+    assert.equal(isSoldOut({ time: '10:00:00', available: 4, max_quantity: 4 }), false);
+    assert.equal(isSoldOut(null), false);
+    assert.equal(isSoldOut(undefined), false);
 });

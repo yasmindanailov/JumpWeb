@@ -1289,6 +1289,62 @@ body.no-scroll { overflow: hidden; }
    que cambia es la jerarquía de dentro, no cuántas caben—. */
 .purchase__chip { flex: none; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-4); min-height: 76px; min-width: 76px; padding: var(--sp-8) var(--sp-10); border-radius: var(--r-btn); border: 1px solid var(--line); background: var(--bg-card); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); cursor: pointer; transition: border-color var(--dur-sale) var(--ease-sale); }
 .purchase__chip:hover { border-color: var(--fg); }
+/* ❗❗ **LA FRANJA COMPLETA: SE ENSEÑA, NO SE ESCONDE** (`#277`, artboard `Microanimaciones PJP`).
+   Su norma pinta tres estados y dice que el color **informa, no decora**: con plazas, con las
+   últimas, y completa —tachada—. El dato lleva desde siempre en el contrato (`sellable`) y el cajón
+   no lo leía: la franja llena se pintaba clicable y sólo al pulsarla aparecía «agotado» debajo.
+   ⚠️ Tachado sobre la HORA y no sobre el chip entero: lo que ya no se puede elegir es esa hora, y el
+   aviso de debajo tiene que seguir leyéndose. `--err` es el rol de señal del producto, no un rojo
+   nuevo — la instalación lo repinta con su paquete. */
+/* ⚠️⚠️ **Aquí había un `opacity: 0.62` MUERTO, y no fallaba nada.** La cascada de abajo termina en
+   `opacity: 1` y corre con `both`, así que **fija su último fotograma y gana a la cascada CSS** —una
+   animación gana siempre—. Medido: el valor computado seguía siendo 1. Es el mismo mecanismo que
+   `#265` documentó matando un `:hover` con `transform`, ahora sobre la opacidad.
+   ▶ Y retirarlo es además MÁS fiel: la norma no pide atenuar la franja llena, pide **rojo tachado**.
+   Atenuarla habría sido castigarla dos veces, que es justo lo que su artboard prohíbe. */
+.purchase__chip.is-full { cursor: not-allowed; border-style: dashed; }
+.purchase__chip.is-full .purchase__chip-t { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.purchase__chip.is-full .purchase__chip-full { color: var(--err); }
+.purchase__chip.is-full:hover { border-color: var(--line); }
+
+/* ❗❗❗ **LA CASCADA DE FRANJAS** (`#277`, `[DECIDIDO owner]`, del artboard `Microanimaciones PJP`).
+   Las horas **caen** al aparecer, una detrás de otra, y aterrizan aplastándose: es la lona de la
+   marca aplicada al único sitio del embudo donde llega una lista entera de golpe.
+
+   ▶ **Los números son suyos, al dígito**: cae de 32 px con la curva LONA (`--ease-cae`) en 420 ms
+   (`--dur-cae`), aplasta a `1.12 / 0.76` al tocar, rebota a `0.98 / 1.05` y asienta. El origen es su
+   BASE (`50% 100%`), que es lo que hace que el aplastado se lea como peso y no como un cambio de
+   tamaño.
+
+   ⚠️ **El desfase se DERIVA, no se escribe**: su artboard pide 90 ms sobre los 420, y aquí se
+   expresa como la fracción — mismo patrón que el desfase del cargador (`--jj-desfase`, «120 ms sobre
+   900»). Un literal de 90 ms no está en la escala de siete duraciones… **del propio artboard**, que
+   es una de sus contradicciones consigo mismo.
+
+   ⚠️⚠️ **La franja COMPLETA cae igual que las demás**, y es una regla suya explícita: «negarle el
+   rebote sería castigarla dos veces». Se le quita la venta, no la presencia.
+
+   ⚠️ **Se anima al MONTARSE, que es una vez.** Su norma prohíbe «cascada en cada scroll»; aquí lo
+   garantiza el mecanismo, no una bandera: una animación CSS corre cuando el elemento nace, y estos
+   nacen al entrar al paso o al cambiar de día —que es cuando la lista es nueva de verdad—. */
+.timestrip__track { --cascada-desfase: calc(var(--dur-cae) * 0.2143); }
+.purchase__chip {
+    transform-origin: 50% 100%;
+    animation: chip-cae var(--dur-cae) var(--ease-cae) calc(var(--i, 0) * var(--cascada-desfase)) both;
+}
+@keyframes chip-cae {
+    0%   { opacity: 0; transform: translateY(-32px) scale(0.9, 1.14); }
+    52%  { opacity: 1; transform: translateY(0) scale(1.12, 0.76); }
+    74%  { transform: translateY(-7px) scale(0.98, 1.05); }
+    90%  { transform: translateY(0) scale(1.03, 0.97); }
+    100% { opacity: 1; transform: translateY(0) scale(1, 1); }
+}
+/* Su propia norma de movimiento reducido: «desaparecen los desplazamientos y las escalas, pero se
+   mantienen los cambios de opacidad» — y su bloque reducido deja `pjpcae` en un fundido puro. */
+@media (prefers-reduced-motion: reduce) {
+    .purchase__chip { animation-name: chip-cae-quieta; }
+}
+@keyframes chip-cae-quieta { from { opacity: 0; } to { opacity: 1; } }
 /* La hora MANDA en el chip: es lo que se elige. `line-height: 1` para que el aviso quede pegado
    debajo sin que el interlineado le abra un hueco que descoloca la altura de la tira. */
 .purchase__chip-t { font-size: var(--fs-15); font-weight: var(--fw-bold); line-height: 1; }
@@ -1415,12 +1471,21 @@ body.no-scroll { overflow: hidden; }
     visibility: hidden;
 }
 
-/* La preferencia del sistema manda: se oculta igual, pero sin recorrido. */
+/* La preferencia del sistema manda: se oculta igual, pero sin recorrido.
+   ⚠️⚠️ **Sin recorrido no es sin fundido** (`#277`, norma del artboard `Microanimaciones PJP`).
+   Aquí ponía `transition: none`, y eso mataba tres cosas de golpe: el recorrido de la rejilla —que
+   es lo que se quería quitar—, **el fundido de opacidad** y **la transición de `visibility`**.
+   ▶ Las dos últimas no son movimiento: el fundido evita que el bloque salte de estado sin avisar, y
+   el `visibility` diferido es lo que lo saca del orden de tabulación **después** de ocultarse. Con
+   `none`, la de `visibility` pasa a 0s y el bloque desaparece del árbol de accesibilidad de golpe.
+   Medido en navegador con control: `opacity, visibility / 0.24s, 0s` → `none / 0s`. */
 @media (prefers-reduced-motion: reduce) {
     .acct,
     .sidecart__panel.is-booking .acct,
     .sidecart__panel.is-cart .acct,
-    .sidecart__panel.is-account .acct { transition: none; }
+    .sidecart__panel.is-account .acct {
+        transition: opacity var(--dur-toque) var(--ease-sale), visibility 0s var(--ease-bucle) var(--dur-toque);
+    }
 }
 /* ⚠️ **Aquí vivía `.acct__tag`, y se RETIRÓ el 2026-08-23** (`specs/account-context-vue.md` §4.9).
    Era la etiqueta que solo se veía con la cuenta minimizada; al desaparecer ese estado se quedó en
@@ -1524,9 +1589,13 @@ body.no-scroll { overflow: hidden; }
 .cartbar__go svg { width: 16px; height: 16px; transition: transform var(--dur-entra) var(--ease-entra); }
 .cartbar:hover .cartbar__go svg { transform: translateX(4px); }
 
-/* Respeto de `prefers-reduced-motion`: sin animaciones/transiciones decorativas. */
+/* Respeto de `prefers-reduced-motion`: sin animaciones/transiciones decorativas.
+   ⚠️⚠️ **`.acct` sale de esta lista** (`#277`): su fundido y su `visibility` diferido se arreglan
+   200 líneas más arriba, y **esta regla los volvía a matar** porque va después en la hoja. Medido:
+   tras corregir el bloque de arriba, `.acct` seguía computando `transition: none`. *Dos bloques de
+   movimiento reducido para el mismo elemento no se resuelven con especificidad: gana el último.* */
 @media (prefers-reduced-motion: reduce) {
-    .acct, .acct__avatar, .bk-progress, .bk-seg__bar::after, .bk-cta, .bk-cta svg, .cartbar, .cartbar__go svg { transition: none; animation: none; }
+    .acct__avatar, .bk-progress, .bk-seg__bar::after, .bk-cta, .bk-cta svg, .cartbar, .cartbar__go svg { transition: none; animation: none; }
 }
 .purchase__cta { width: 100%; justify-content: center; margin-top: 14px; }
 
@@ -3369,9 +3438,16 @@ body[data-has-hero].nav--live .hero__pair-slot {
 @media (prefers-reduced-motion: reduce) {
     .cta-pair--invita .cta-pair__alt > .cta-ghost,
     .cta-pair--invita .cta-pair__alt-ring { animation: none; }
+    /* ⚠️⚠️ **Movimiento reducido NO es «sin transición»** (`#277`, norma del artboard
+       `Microanimaciones PJP`): «desaparecen los desplazamientos y las escalas, pero **se mantienen
+       los cambios de opacidad**, porque quitar también el fundido deja la interfaz saltando de
+       estado sin avisar».
+       ▶ Aquí se notaba: al intercambiarse las dos mitades del CTA, el rótulo pasaba de
+       `opacity 0,24s` a **aparecer de golpe** — medido en navegador con control. Lo que se retira
+       es el ancho y el desplazamiento; el fundido se queda, y en la duración corta de la escala. */
     .cta-ghost, .cta-med,
     .cta-pair .cta-ghost__body,
-    .cta-pair .cta-med__body { transition: none; }
+    .cta-pair .cta-med__body { transition: opacity var(--dur-toque) var(--ease-sale); }
 }
 
 .cta-med:hover .tk .stub,

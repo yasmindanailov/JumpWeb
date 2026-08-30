@@ -369,6 +369,118 @@ class MotionScaleTest extends TestCase
         }
     }
 
+    /**
+     * ❗❗ **LA CASCADA DE FRANJAS: la coreografía que el artboard define con NÚMEROS** (`#277`).
+     *
+     * `Microanimaciones PJP` no describe esta pieza con adjetivos: dice de dónde cae, con qué curva,
+     * cuánto dura, cuánto se aplasta al aterrizar y con cuánto desfase entra la siguiente. Es la
+     * única del sistema con el recorrido escrito, así que es la única que se puede vigilar entera.
+     *
+     * ⚠️⚠️ **El DESFASE se deriva, no se escribe.** Su artboard pide 90 ms sobre los 420… y 90 no
+     * está en su propia escala de siete duraciones. Escribirlo como literal lo escondería de las dos
+     * guardas de arriba —un número dentro de una `custom property` no lo ve ningún inventario de
+     * `transition`, que es la lección de `#222` §16.4—, así que se expresa como fracción del techo,
+     * igual que el desfase del cargador (`--jj-desfase`, «120 ms sobre 900»).
+     *
+     * ⚠️ **Y con movimiento reducido la cascada NO desaparece: se queda en fundido.** Es la norma del
+     * propio artboard —«se mantienen los cambios de opacidad»— y su bloque reducido deja `pjpcae` en
+     * un `from{opacity:0} to{opacity:1}`. Quitarla del todo dejaría la lista apareciendo de golpe.
+     */
+    public function test_the_slot_cascade_keeps_its_contract(): void
+    {
+        $css = $this->hojas();
+
+        $chip = $this->cuerpoDeRegla($css, '.purchase__chip');
+
+        $this->assertMatchesRegularExpression(
+            '/animation:\s*chip-cae\s+var\(--dur-cae\)\s+var\(--ease-cae\)/',
+            $chip,
+            "la cascada de franjas ha dejado de caer con la curva LONA en el techo de la escala.\n".
+            '▶ Son los números del artboard: 420 ms y `cubic-bezier(.2,1.56,.25,1)`.',
+        );
+
+        $this->assertStringContainsString(
+            'transform-origin: 50% 100%', $chip,
+            "el chip ha perdido su origen en la BASE.\n".
+            '▶ Sin él el aplastado del aterrizaje se lee como un cambio de tamaño, no como peso.',
+        );
+
+        $this->assertMatchesRegularExpression(
+            '/--cascada-desfase:\s*calc\(\s*var\(--dur-cae\)\s*\*/',
+            $css,
+            "el desfase de la cascada ha dejado de DERIVARSE del techo de la escala.\n".
+            '▶ Escrito como literal (90 ms) se esconde de las dos guardas de arriba: un número dentro '.
+            'de una `custom property` no lo ve ningún inventario de `transition` (`#222` §16.4).',
+        );
+
+        // ⚠️ El cuerpo de un `@keyframes` lleva llaves DENTRO (un bloque por fotograma), así que un
+        // `[^}]*` se para en la primera y la guarda nace ciega. Se extrae equilibrando.
+        $this->assertStringContainsString(
+            'scale(1.12, 0.76)', $this->cuerpoDeKeyframes($css, 'chip-cae'),
+            'la cascada ya no aplasta al aterrizar (1.12 / 0.76): es lo que la convierte en una lona '.
+            'y no en un desvanecido.',
+        );
+
+        // ⚠️ Con movimiento reducido se cambia el NOMBRE de la animación, no se retira: así el
+        // fundido se conserva y el desplazamiento no. Si alguien lo sustituye por `animation: none`,
+        // la lista aparecerá de golpe y nada fallará.
+        $reducido = $this->cuerpoDeRegla($css, '.purchase__chip', enReducido: true);
+
+        $this->assertStringContainsString(
+            'animation-name: chip-cae-quieta', $reducido,
+            "con movimiento reducido la cascada no se queda en FUNDIDO.\n".
+            '▶ La norma del artboard mantiene los cambios de opacidad: quitarla del todo deja la '.
+            'lista apareciendo de golpe, que es lo que ese modo intenta evitar.',
+        );
+
+        $this->assertStringNotContainsString(
+            'transform', $this->cuerpoDeKeyframes($css, 'chip-cae-quieta'),
+            'la variante de movimiento reducido mueve algo: solo puede cambiar la opacidad.',
+        );
+    }
+
+    /** El cuerpo de un `@keyframes`, equilibrando las llaves de sus fotogramas. */
+    private function cuerpoDeKeyframes(string $css, string $nombre): string
+    {
+        $this->assertTrue(
+            (bool) preg_match('/@keyframes\s+'.preg_quote($nombre, '/').'\s*\{/', $css, $m, PREG_OFFSET_CAPTURE),
+            "no existe `@keyframes {$nombre}`: la guarda no vigilaría nada",
+        );
+
+        $i = $m[0][1] + strlen($m[0][0]);
+        $profundidad = 1;
+        $j = $i;
+
+        while ($j < strlen($css) && $profundidad > 0) {
+            $profundidad += match ($css[$j]) {
+                '{' => 1, '}' => -1, default => 0
+            };
+            $j++;
+        }
+
+        return substr($css, $i, $j - $i - 1);
+    }
+
+    /** El cuerpo de todas las reglas de un selector, dentro o fuera del bloque de movimiento reducido. */
+    private function cuerpoDeRegla(string $css, string $selector, bool $enReducido = false): string
+    {
+        $ambito = $css;
+
+        if ($enReducido) {
+            preg_match_all('/@media[^{]*prefers-reduced-motion:\s*reduce[^{]*\{((?:[^{}]|\{[^{}]*\})*)\}/s', $css, $m);
+            $ambito = implode("\n", $m[1] ?? []);
+        }
+
+        preg_match_all(
+            '/(?:^|[{}])\s*'.preg_quote($selector, '/').'\s*\{([^{}]*)\}/m',
+            $ambito, $hit,
+        );
+
+        $this->assertNotEmpty($hit[1], "no hay ninguna regla `{$selector}`".($enReducido ? ' con movimiento reducido' : '').': la guarda no vigilaría nada');
+
+        return implode(' ', $hit[1]);
+    }
+
     private function esAmbiental(string $valor): bool
     {
         if (preg_match('/(?<![-\w])infinite(?![-\w])/', $valor)) {

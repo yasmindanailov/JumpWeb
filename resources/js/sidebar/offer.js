@@ -103,3 +103,22 @@ export function isAlmostFull(offeredTime, lowMax) {
     return Number.isInteger(lowMax) && lowMax > 0
         && Number.isInteger(available) && available <= lowMax;
 }
+
+/**
+ * ¿Esta hora está **COMPLETA**? (`DECISIONES #277`)
+ *
+ * ⚠️⚠️ **El dato llevaba desde siempre en el contrato y NADIE lo leía.** `SlotOffer` marca las franjas
+ * llenas con `sellable: false` **a propósito** —su docblock dice «se muestran deshabilitadas, no se
+ * ocultan»— y el paso 3 las pintaba como un chip normal y clicable: sólo al pulsarlo aparecía
+ * «agotado» debajo, en el contador de cantidad. El dato estaba, el cableado no.
+ *
+ * ⚠️ **Se compara con `=== false`, no por veracidad, y la diferencia importa**: una respuesta antigua
+ * o una carga sin el campo tienen `undefined`, y ahí lo correcto es seguir siendo vendible —el aforo
+ * de verdad lo decide el servidor en el checkout (`AFORO-02`)—. Con `! sellable` una carga sin el
+ * campo dejaría el paso entero mudo y nadie podría comprar.
+ *
+ * ⚠️ **Esto NO decide aforo** (`CE-4`): lo lee. Quien lo decide es `SlotOffer`.
+ */
+export function isSoldOut(offeredTime) {
+    return offeredTime?.sellable === false;
+}

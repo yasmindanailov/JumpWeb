@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
-import { isAlmostFull } from '../offer.js';
+import { isAlmostFull, isSoldOut } from '../offer.js';
 import { useStrip } from '../useStrip.js';
 import DependentPicker from './DependentPicker.vue';
 
@@ -84,6 +84,9 @@ const shortTime = (time) => time.slice(0, 5);
  */
 const almostFull = (offered) => isAlmostFull(offered, props.lowMax);
 
+/** Franja COMPLETA. La regla vive en `offer.js` (`#277`); aquí solo se pinta (`CE-4`). */
+const soldOut = (offered) => isSoldOut(offered);
+
 /** Las flechas de RATÓN de la tira. El porqué, en `useStrip.js` y en `DateStep.vue`. */
 const { track, nav, move } = useStrip();
 
@@ -105,13 +108,30 @@ const canIncrease = computed(() => props.quantity < props.maxQuantity);
                 :aria-label="t('strip_next')" @click="move(1)"><span aria-hidden="true"></span></button>
 
         <div ref="track" class="timestrip__track" role="group" :aria-label="t('step_time')">
-            <button v-for="offered in times" :key="offered.time"
+            <!-- ⚠️⚠️ **`sellable` llevaba desde siempre en el contrato y NADIE lo leía** (`#277`).
+                 `SlotOffer` manda las franjas llenas con `sellable: false` **a propósito** —su
+                 docblock dice «se muestran deshabilitadas, no se ocultan»— y aquí se pintaban como
+                 un chip normal y clicable: sólo al pulsarlo aparecía «agotado» abajo. El dato
+                 estaba, el cableado no.
+                 ▶ Se compara con `=== false` y no por veracidad: una carga antigua sin el campo
+                 tiene que seguir siendo vendible, no quedarse muda.
+
+                 ⚠️ El índice alimenta el DESFASE de la cascada, y va topado: con 11 horas el último
+                 chip ya espera 900 ms, y un día con treinta esperaría casi tres segundos. Los que
+                 quedan fuera del carril no se ven entrar, así que el tope no se nota y el techo sí. -->
+            <button v-for="(offered, i) in times" :key="offered.time"
                     type="button"
                     class="purchase__chip"
-                    :class="offered.time === selectedTime ? 'is-active' : ''"
+                    :class="[
+                        offered.time === selectedTime ? 'is-active' : '',
+                        soldOut(offered) ? 'is-full' : '',
+                    ]"
+                    :style="{ '--i': Math.min(i, 7) }"
+                    :disabled="soldOut(offered)"
                     @click="$emit('select-time', offered.time)">
                 <span class="purchase__chip-t">{{ shortTime(offered.time) }}</span>
-                <span v-if="almostFull(offered)" class="purchase__chip-full">{{ t('almost_full') }}</span>
+                <span v-if="soldOut(offered)" class="purchase__chip-full">{{ t('sold_out') }}</span>
+                <span v-else-if="almostFull(offered)" class="purchase__chip-full">{{ t('almost_full') }}</span>
             </button>
         </div>
     </div>

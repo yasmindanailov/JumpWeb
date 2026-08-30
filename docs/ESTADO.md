@@ -2,8 +2,32 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-30 (mediodía) — `#276`: el eslogan pegado
-> al titular y el CTA de móvil.**
+> aquí solo se enlaza.** Última actualización: **2026-08-30 (tarde) — `#277`: las microanimaciones
+> del cliente, valoradas y las dos primeras unidades.**
+>
+> ▶ **`#277` — SU ARTBOARD DE MOVIMIENTO: LO QUE YA ESTABA Y LO QUE NO.** El owner entrega
+> `Microanimaciones PJP` y pide valorarlo antes de implementarlo. **Las cuatro curvas y las siete
+> duraciones ya eran idénticas** (`#222` tomó este mismo artboard), y su regla «entra rebotando, sale
+> limpio» se cumplía sin que nadie la escribiera.
+> ▶ **U2 · movimiento reducido**: su norma dice «quitar el recorrido pero **mantener el fundido**», y
+> nosotros hacíamos `transition: none`. Medido con control: el rótulo del CTA doble aparecía **de
+> golpe** y el bloque de cuenta perdía el fundido **y su `visibility` diferido** —que es lo que lo
+> saca del orden de tabulación—. ⚠️ Había **un segundo bloque de movimiento reducido para el mismo
+> elemento 200 líneas más abajo** que lo volvía a matar: *gana el último, no el más específico.*
+> ▶ **U3 · la cascada de franjas**, con sus números al dígito (cae de 32 px, LONA, 420 ms, aplasta a
+> 1,12/0,76, desfase 90 ms verificado en el cajón real). ⚠️⚠️ **Y destapó que `sellable` llevaba desde
+> siempre en el contrato y el cajón no lo leía**: `SlotOffer` marca las franjas llenas a propósito
+> —«se muestran deshabilitadas, no se ocultan»— y el paso 3 las pintaba clicables. **El panel sí lo
+> respeta**; el cajón del cliente no.
+> ⚠️⚠️ **Y un `opacity: 0.62` nació MUERTO**: la cascada acaba en `opacity: 1` con `both` y **fija su
+> último fotograma**, que gana a la regla CSS. Mecanismo de `#265`, ahora sobre la opacidad.
+> ❗ **Lo que queda del artboard, en `DEUDA.md`**: los **22 bucles decorativos** que su norma prohíbe
+> —y que **contradicen su propio artboard `6d`** y dos `[DECIDIDO owner]`—, el **hover pegatina** (que
+> toca el mecanismo de color de acción de `#209`) y el sello + check del desenlace.
+> ⚠️⚠️ **Cinco sondas estáticas mías dieron números falsos sobre lo mismo**: dije 10 bucles sin
+> proteger, luego 6, y **son cero**. Lo zanjó el navegador.
+>
+> ▶ Anterior: **2026-08-30 (mediodía) — `#276`: el eslogan pegado al titular y el CTA de móvil.**
 >
 > ▶ **`#276` — DOS AJUSTES PEQUEÑOS DEL OWNER, DOS NÚMEROS ESCRITOS A MANO.**
 > **El eslogan** se centraba sobre el titular porque el bloque del hero va centrado: ahora comparte
@@ -1855,8 +1879,11 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3528 en verde** (23.073 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-30 tras `#276`. ▶ **+1 caso** (`what_the_floating_bar_takes_is_declared_once`) y una
+- Suite **3529 en verde** (23.116 aserciones, 1 skipped a propósito) · **JS 864**, medida el
+  2026-08-30 tras `#277`. ▶ **+1 caso** (`the_slot_cascade_keeps_its_contract`) y **+2 en JS**
+  (`offer.test.js`: la franja no vendible, y que **la ausencia del campo no es «completa»**) —
+  **4 mutaciones y las 4 muerden**, y la del desfase literal muerde además la guarda de duraciones.
+- Antes, tras `#276`: suite **3528 en verde** (23.073 aserciones) · **JS 862**. ▶ **+1 caso** (`what_the_floating_bar_takes_is_declared_once`) y una
   aserción nueva en `HomePageTest` (el eslogan y el titular comparten caja) — **4 mutaciones y las 4
   muerden**. ⚠️ Una de esas guardas **nació LAXA**: con `.*?` no mordía al colar un elemento entre
   los dos textos, porque el comodín perezoso retrocede hasta el `</span>` del intruso.

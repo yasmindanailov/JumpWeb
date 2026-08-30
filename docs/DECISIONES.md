@@ -15982,3 +15982,78 @@ colar un elemento entre el eslogan y el titular, porque un `.*?` perezoso retroc
 del intruso.
 ▶ Guardas: `HomePageTest` (el envoltorio, con orden) y `ArmazonContractTest`
 (`what_the_floating_bar_takes_is_declared_once`). **4 mutaciones y las 4 muerden.**
+
+## #277 · 2026-08-30 · [DECIDIDO owner] Las microanimaciones del cliente: qué de su artboard ya estaba, y las dos primeras unidades
+
+El owner entrega `Microanimaciones PJP` y pide valorarlo antes de implementarlo. Medido contra el
+producto, el reparto es muy desigual y conviene dejarlo escrito.
+
+### 1 · Lo que ya estaba — el VOCABULARIO
+
+**Las cuatro curvas y las siete duraciones son idénticas**: `#222` ya tomó este artboard (`Bote →
+--ease-entra`, `Lona → --ease-cae`, `Salida → --ease-sale`, `Lineal → --ease-bucle`; 120/180/240/
+320/420/620/900), y `MotionScaleTest` ya impide escribirlas a mano. Y su regla «entra rebotando,
+sale limpio» **se cumple sin que nadie la escribiera**: 0 transiciones de salida con sobreimpulso.
+
+### 2 · Lo que diverge, medido
+
+| | el artboard | el producto |
+|---|---|---|
+| bucles | «los únicos permitidos son los tres cargadores» | **24 declaraciones**, solo 2 son cargador |
+| hover | pegatina que se aplasta; **el color no cambia nunca** | `.btn` sube y **cambia el fondo** a `--action-hover` |
+| movimiento reducido | quitar recorrido, **mantener el fundido** | 12 de 31 bloques hacen `transition: none` |
+| las 4 «que cuentan algo» | sello · check · cascada · salto | ninguna existía |
+
+⚠️ **Sus dos artboards se contradicen**: éste prohíbe los bucles decorativos y el interruptor del
+titular —3 bucles, 3,4 s— salió del artboard **`6d` del propio cliente** (`#262`). Podar es revertir
+dos `[DECIDIDO owner]`. `[DECIDIDO owner]`: **medir y anotar, no podar** — ficha en `DEUDA.md`.
+⚠️ Y **el artboard se contradice a sí mismo**: su curva «Salida» dice «todo el hover», pero su propia
+tarjeta de iconos usa Bote a 120 ms. Sexta contradicción del cliente consigo mismo.
+
+### 3 · U2 — movimiento reducido: sin recorrido no es sin fundido
+
+Su norma: «desaparecen los desplazamientos y las escalas, **pero se mantienen los cambios de opacidad
+de 120 ms** — quitar también el fundido deja la interfaz saltando de estado sin avisar».
+▶ Medido en navegador **con control**: el rótulo del CTA doble pasaba de `opacity 0,24s` a `none`
+—aparecía de golpe— y el bloque de cuenta perdía el fundido **y su `visibility` diferido**, que es lo
+que lo saca del orden de tabulación DESPUÉS de ocultarse.
+⚠️ Y había **un segundo bloque de movimiento reducido para el mismo elemento 200 líneas más abajo**
+que lo volvía a matar: *dos bloques para el mismo elemento no se resuelven con especificidad, gana el
+último.*
+
+### 4 · U3 — la cascada de franjas, y el dato que nadie leía
+
+⚠️⚠️ **`sellable` llevaba desde siempre en el contrato y el cajón no lo leía.** `SlotOffer` marca las
+franjas llenas con `sellable: false` **a propósito** —«se muestran deshabilitadas, no se ocultan»— y
+el paso 3 las pintaba como un chip normal y clicable: sólo al pulsarlo aparecía «agotado» abajo, en
+el contador de cantidad. ▶ **El PANEL sí lo respeta** (`manual-order-times.blade.php` usa
+`@disabled(! $slot['sellable'])`): el mismo dato, honrado en la superficie del operador e ignorado en
+la del cliente.
+▶ La regla pasa a `offer.js::isSoldOut()`, junto a su hermana, para que el componente solo pinte
+(`CE-4`). **Se compara con `=== false`, no por veracidad**: una carga sin el campo tiene que seguir
+vendiendo, o el paso entero se queda mudo.
+
+La cascada, con sus números: cae de **32 px** con la curva LONA en **420 ms**, aplasta a
+**1,12 / 0,76** al aterrizar, rebota y asienta; origen en la BASE; **desfase 90 ms** medido en
+navegador (0,09 / 0,18 / 0,27 / 0,36 s). La franja completa **cae igual que las demás**, que es regla
+suya explícita: «negarle el rebote sería castigarla dos veces».
+⚠️ **El desfase se DERIVA, no se escribe**: 90 ms no está en la escala de siete duraciones **del
+propio artboard**, y un literal dentro de una `custom property` no lo ve ningún inventario de
+`transition` (`#222` §16.4). Se expresa como fracción del techo, como `--jj-desfase`.
+⚠️ **El índice va topado a 7**: con 11 horas el último chip ya espera 900 ms y un día de treinta
+esperaría casi tres segundos.
+⚠️⚠️ Y **un `opacity: 0.62` nació MUERTO**: la cascada termina en `opacity: 1` con `both`, así que
+**fija su último fotograma y gana a la cascada CSS**. Es el mecanismo de `#265` sobre la opacidad.
+Retirarlo es además más fiel: la norma pide rojo tachado, no atenuar.
+
+### 5 · Método
+
+⚠️⚠️ **Cinco sondas estáticas propias dieron números creíbles y falsos**, todas sobre lo mismo: dije
+que 10 bucles seguían corriendo con movimiento reducido, luego 6, y **son cero** —una regla general
+(`.icon *`) los caza y ningún `grep` de selectores la veía—. Lo zanjó el navegador.
+⚠️ Y la suite lo dijo antes que yo: `SidebarDomContractTest` trae su propia guarda de **bundle SSR
+rancio**, así que los 34 fallos no eran del cambio sino de no haber corrido `build:ssr`.
+
+▶ Guardas: `MotionScaleTest::test_the_slot_cascade_keeps_its_contract` (**4 mutaciones, las 4
+muerden**, y la del literal muerde además la guarda de duraciones) y dos casos nuevos en
+`offer.test.js`. Detalle en `docs/specs/tema-por-instalacion.md` §29.
