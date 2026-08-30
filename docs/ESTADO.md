@@ -2546,7 +2546,7 @@ sesión. Ése es el último trozo, y su ficha está en `DEUDA.md`.
 
 ## ▶ Próximo paso
 
-# ❗ SI ENTRAS NUEVO (2026-08-29, tarde-noche · carril C): EL ÁREA TÁCTIL DE 44 EN LA LANDING — `#264`
+# ❗ SI ENTRAS NUEVO (2026-08-29 noche → 2026-08-30 · carril C): EL ÁREA TÁCTIL, EL SALTO QUE NUNCA SE VIO, LA SOMBRA Y EL HERO — `#264` · `#265` · `#266` · `#267` · `#273` · `#274`
 
 **`git fetch` antes de nada.** ⚠️⚠️ **Hay OTRO agente en este repo, trabajando en el PANEL ADMIN.**
 La coordinación va por la doc: esta sesión toma **`#264`–`#274`**; el carril A venía en
@@ -2564,6 +2564,8 @@ del panel no toca nada (`resources/css/filament/admin/theme.css` sigue intacto).
 | `#266` | Revisión adversarial de `#265`: **el salto NUNCA se vio** (animación sobre un elemento de `<defs>`) y su **amplitud estaba 7,5× corta** (los `px` de un SVG son unidades del `viewBox`) |
 | `#267` | **La sombra del logotipo, medida por fin contra su lockup**: la nuestra tenía la mitad de densidad. Quedan los números del mockup |
 | `#273` | Y el owner sigue viéndola excesiva: **fuera la sombra CSS**. La métrica de `#267` medía un agregado, y el ojo compara dibujos |
+| `#274` | El **contorno del logotipo** al 65 % por guion, y el **hero de móvil**: un tope de 520 px que el mockup no tiene |
+| — | El **contador de aserciones** vuelve a ser estable entre máquinas: mis dos casos dependían del paquete de marca, gitignorado |
 
 ## ❗❗ LO QUE MÁS IMPORTA QUE SEPAS
 
@@ -2597,7 +2599,15 @@ del panel no toca nada (`resources/css/filament/admin/theme.css` sigue intacto).
 
 ## ▶ POR DÓNDE SIGUE
 
-0. ✅ **STAGING DESPLEGADO Y VERIFICADO** (2026-08-30, commit `8443a19`) — sirve ya los dos carriles:
+0. ✅ **STAGING DESPLEGADO Y VERIFICADO — 2.ª vez el 2026-08-30, commit `1eb4828`**, ya con `#274`.
+   ▶ Verificado en el navegador CONTRA STAGING, no en local: hero `min(78svh, 660px)` con
+   **520 / 658 / 660 px** y huecos de **75 / 114 / 200** en SE · 14 · 15 Pro Max; logotipo con las
+   capas afinadas (**33,8 · 24,44 · 9,36**) y `filter: none`.
+   ❗❗ **EL LOGOTIPO SE SUBIÓ A MANO, y hay que saberlo**: `deploy.sh` excluye TODOS los ficheros de
+   marca, así que el asset afinado por `#274` **no viaja en el despliegue**. Se subió por `scp` tras
+   dejar copia en el servidor (`public/img/client-logo.svg.bak-antes-274`) y se comprobó por `md5`
+   que el remoto es byte a byte el local. **Cada vez que se afine el logotipo hay que repetirlo.**
+   ▶ Antes, el 1.er despliegue del día: commit `8443a19` — sirve ya los dos carriles:
    `#264` (área táctil), `#265`/`#266` (CTA flotante y el salto), `#273` (la sombra) y las seis
    tandas del cumpleaños mixto. **Sin migraciones nuevas** («Nothing to migrate»); 3.845 franjas
    generadas; `/up` y `/` en 200; `robots.txt` repuesto; 0 `failed_jobs`; 0 jobs varados.
@@ -2627,7 +2637,7 @@ del panel no toca nada (`resources/css/filament/admin/theme.css` sigue intacto).
    el white-label), su `<link>` es de Google Fonts —usamos Bunny por RGPD— y retira `InlineSvg` con
    sus guardas. ▶ A favor: `lilita-one:400` **ya viaja** en el `<link>` de todas las vistas, así que
    no costaría descarga. **Sin decidir.**
-1. ❗ **Siguen abiertas las dos preguntas del owner de `#262`**, las dos a una línea de código: el
+3. ❗ **Siguen abiertas las dos preguntas del owner de `#262`**, las dos a una línea de código: el
    **color de la pista** del interruptor (hoy `--ok` verde, el artboard usa Lima Bote) y el residuo
    de 3,6–4,7 px entre la pista y las mayúsculas.
 4. **Microanimaciones** (`Microanimaciones PJP.dc.html`) — el plan del owner. ⚠️ **Medido: la mitad
