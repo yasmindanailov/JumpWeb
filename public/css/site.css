@@ -349,8 +349,11 @@
        ⚠️ **Si un cliente necesita sombra**, su paquete puede añadirla en `client.css`: es una
        decisión de marca, no del producto. Lo que el producto no hace es imponerla sobre un dibujo
        que ya trae la suya.
-       ⚠️ **Sin sombra el logotipo sigue legible sobre tinta**: el asset lleva contorno blanco de
-       14,4 unidades, verificado en el menú a pantalla completa. */
+       ⚠️ **Sin sombra el logotipo sigue legible sobre tinta**, y lo que lo consigue es el anillo
+       CIAN (`#1AA9DE`, 6,85:1 sobre `#101418`), que es la capa más EXTERIOR de las tres — no el
+       blanco, que va cuarto y por tanto queda por DENTRO de la tinta. Corregido en `#275`: aquí
+       ponía «contorno blanco de 14,4 unidades» y medido, **cero** columnas del contorno presentan
+       blanco por fuera. Verificado en el menú a pantalla completa. */
     transition: transform var(--dur-entra) var(--ease-sale);
 }
 .nav__brand:hover .nav__brand-logo { transform: translateY(-2px) rotate(-1.5deg); }

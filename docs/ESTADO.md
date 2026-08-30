@@ -2,7 +2,47 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-29 (noche) — carril C: el ÁREA TÁCTIL de
+> aquí solo se enlaza.** Última actualización: **2026-08-30 (mañana) — `#275`: el logotipo, por fin
+> idéntico.**
+>
+> ❗❗❗ **`#275` — LOS TRES DEFECTOS DEL LOGOTIPO ESTABAN EN LA EXPORTACIÓN, NO EN NUESTRO CSS.**
+> Quinta sesión sobre el mismo dibujo (`#253` · `#263` · `#267` · `#273` · `#274`), y la que la
+> cierra. `[DECIDIDO owner]`: «lo quiero IDÉNTICO».
+> ▶ **1 · `text-shadow` NO arrastra el `-webkit-text-stroke`.** Su sombra son copias del glifo
+> **desnudo**; el export les puso a los 26 `<use>` de extrusión el trazo de la capa de color, o sea
+> **3,25 px más gordas por lado**. El faldón azul bajo las letras medía **7,1 px contra sus 4,0**, y
+> lo tenían **1121 de 1121** columnas frente a 852 de 1137 en el suyo. Ahora: **4,13**.
+> ▶ **2 · El velo del borde inferior salía 3,4× más fuerte y en el tono equivocado.**
+> `background-clip: text` mide sobre la **caja de línea**; `objectBoundingBox`, sobre la **tinta**.
+> No son la misma caja, así que sus paradas copiadas literalmente ponen al pie de las letras el valor
+> de arranque: **α 0,377 contra 0,112**. Y el lockup usa **un velo por palabra** —frío bajo la fría,
+> marrón bajo la cálida— mientras el export dejó el frío para las dos: un velo azul sobre amarillos
+> **desatura**, que es el «pierde color vivo» del owner. Corregido: **6 de 8 muestras idénticas**.
+> ▶ **3 · La silueta venía RESTADA de las letras.** A la «A» le faltaba el **16,8 %** del área.
+> Invisible en reposo —el saltador ocupa el hueco— y a la vista durante toda la animación, que es
+> donde el owner la cazó. Reconstruida desde **Lilita One** con la afín recuperada del propio trazado
+> usando P y L: control de consistencia **0,001 %**, y la L —validación independiente— cae con
+> **0,52 %** de área.
+> ⚠️⚠️ **La misma geometría vive en DOS sitios** (`#u1` y el `<path>` del relleno de color): arreglar
+> solo uno deja la parte restituida **en BLANCO** y no falla nada.
+> ❗ **`#274` queda REVERTIDO**: sus bandas al 65 % no eran el defecto —las del export ya eran las del
+> mockup al dígito— y el factor **creó** un anillo marino de 1,14 px por fuera del cian, en el 100 %
+> de las filas. `scripts/logo-contorno.php` se retira; entran `logo-sombra.php` y `logo-letra-a.php`,
+> **idempotentes** los dos.
+> ❗❗ **La lección de método**: cuatro tandas midieron el DIBUJO —bandas, densidad, halo, geometría— y
+> las cuatro dieron «equivalente». Lo que faltaba era medir el **MECANISMO**: qué dibuja realmente
+> `text-shadow`. *Cuando cinco mediciones del resultado dicen que no hay defecto y el ojo dice que sí,
+> lo que hay que medir es la herramienta que lo produce, no el resultado otra vez.*
+> ⚠️⚠️ **Siete trampas de instrumento**, todas con números creíbles: el subrayado por defecto del
+> `<a>` de su lockup (inflaba su caja de 60,75 a 65,5 px) · las `figcaption` dentro del recorte · el
+> antialias clasificado por vecino más próximo · **dos SVG en un documento comparten `id`**, así que
+> el arreglo salía idéntico al original · un `<g>` recortado con expresión regular que dejó el SVG mal
+> formado · medir una opacidad por un canal con **denominador 10** · y cambiar el color del velo a
+> media medición. **Las cazó tener siempre un CONTROL.**
+> ⚠️ **Falta el OJO del owner en navegador** y **subir el asset a staging**: el logotipo NO viaja en el
+> despliegue (`deploy.sh` excluye la marca).
+>
+> ▶ Anterior: **2026-08-29 (noche) — carril C: el ÁREA TÁCTIL de
 > 44 (`#264`), la vuelta del owner sobre el CTA flotante y el logotipo (`#265`) y, tras una revisión
 > adversarial de esa tanda, **`#266`: el salto del logotipo NUNCA se había visto**.
 > ❗❗❗ **2026-08-29 (tarde) · carril A — LA REVISIÓN ADVERSARIAL DEL CUMPLEAÑOS MIXTO Y SUS CINCO
@@ -1800,9 +1840,16 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3517 en verde** (23.020 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-30 tras `#274`. ▶ **+1 caso**: que el alto de reposo del hero sea **una sola fórmula con su
-  par `svh`** — **2 mutaciones y las 2 muerden** (devolver el tope de móvil · quitar el `svh`).
+- Suite **3527 en verde** (23.053 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-30 tras `#275`. ▶ **+10 casos**: `BrandLogoRepairTest`, las dos reparaciones del logotipo
+  exportado (la extrusión sin trazo · el velo de dentro y su tono por palabra · la letra restituida en
+  sus DOS apariciones · que rehúse media reparación · idempotencia de los dos guiones · y las tres
+  piezas del patrón de marca para la letra) — **6 mutaciones y las 6 muerden**.
+  ⚠️ Y una séptima **NO muerde**, por un motivo que hay que saber: quitar solo el `exit(1)` de la
+  comprobación del relleno deja la guarda verde **porque el guion tiene DOS capas de defensa**.
+  Retirando el bloque entero, muerde. *Una mutación que no muerde puede ser una mutación DÉBIL.*
+- Antes, tras `#274`: suite **3517 en verde** (23.020 aserciones, 1 skipped). ▶ **+1 caso**: que el
+  alto de reposo del hero sea **una sola fórmula con su par `svh`** — 2 mutaciones, las 2 muerden.
 - Antes, tras estabilizar el contador: suite **3516 en verde** (23.019 aserciones, 1 skipped). ▶ **El contador vuelve a ser ESTABLE entre máquinas**, que es
   lo que el carril A pidió al ver que el gate hacía ping-pong: los **dos** casos de
   `InlineBrandLogoTest` que dependían del paquete de marca ya no dependen.

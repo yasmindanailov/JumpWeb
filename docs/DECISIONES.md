@@ -15851,3 +15851,80 @@ Sin regresiones en cinco ventanas: hueco racimo→hero **12 px** en móvil y 10 
 número de `#252`), titular en **un renglón** en las cinco, desborde **0**, y el hero **cabe** en la
 ventana. Suite **3517 / 23.020** (1 skipped) · Pint ✓ · docs-check ✓ · guarda nueva con **2
 mutaciones, las 2 muerden**.
+
+## #275 · 2026-08-30 · [DECIDIDO owner] El logotipo, idéntico por fin: los dos defectos estaban en la EXPORTACIÓN
+
+`[DECIDIDO owner]`: «necesito que sea idéntico al mockup de la landing … llevamos 5 sesiones
+revisando el logotipo y no hay manera, lo quiero IDÉNTICO».
+
+Cuatro tandas (`#253`, `#263`, `#267`, `#273`, `#274`) buscaron el defecto en **nuestro CSS**. No
+estaba ahí: estaba en **cómo el lockup se tradujo a SVG**.
+
+### 1 · Lo primero, revertir `#274`
+
+`#274` adelgazó al 65 % el trazo de las capas de COLOR y dejó la extrusión a su grosor. Medido con
+dos instrumentos independientes, las bandas del export intacto del owner **ya eran las suyas al
+dígito** (cian 1,00 · tinta 1,50 · blanco 0,875 px), y el 65 % (a) las estropeó y (b) creó un
+**anillo azul marino por fuera del cian de 1,00 px en el 100 % de las filas**, que su lockup no
+tiene. Ése era el «borde exterior azul» que el owner volvió a ver.
+⚠️ Con dos caras más: sobre la tinta del menú el anillo exterior pasó de **6,85:1** de contraste a
+**1,41:1**; y la silueta —que es la Y— se quedó al 100 % mientras las letras iban al 65 %.
+▶ `scripts/logo-contorno.php` se retira: su docblock declaraba una invariante falsa y su guarda
+contaba que **no** había tocado la extrusión, que era justo el defecto.
+
+### 2 · `text-shadow` NO arrastra el `-webkit-text-stroke`
+
+La comparación que faltaba no era otra medición del dibujo, era un **experimento**: glifo con
+`-webkit-text-stroke: 6.5px` mide **20,63 px**; su `text-shadow`, **14,13**; y el mismo glifo **sin
+trazo**, **14,13** — el control. La sombra del mockup son copias del **glifo desnudo**, y la
+exportación les puso a los 26 `<use>` de extrusión el trazo de la capa de color: **3,25 px más
+gordas por lado**. El faldón azul bajo las letras medía **7,1 px contra sus 4,0**, y lo tenían
+**1121 de 1121** columnas frente a 852 de 1137 en el suyo. Corregido: **4,13 px**.
+⚠️ **`#fig` no entra, y no es una omisión**: su profundidad en el mockup es un `drop-shadow` de una
+`<img>`, que **sí** sigue el alfa completo del dibujo. Dos mecanismos que parecen el mismo y no lo son.
+
+### 3 · La silueta venía RESTADA de las letras
+
+La **A** de «PLA» viene mordida por el contorno del saltador: le falta el **16,8 %** del área. En
+reposo no se ve; `brand-hop` hace volar la silueta y la deja mutilada durante toda la animación.
+Reconstruida desde **Lilita One** con la afín recuperada del propio trazado usando P y L (intactas):
+consistencia del ajuste **0,001 %**, y la L —validación independiente— cae con **0,52 %** de área.
+⚠️⚠️ La misma geometría vive en `#u1` **y** en el `<path>` del relleno de color: arreglar solo el
+primero deja la parte restituida **en BLANCO** y no falla nada.
+▶ La letra es del CLIENTE (`#1`): `public/img/client-logo-a.path`, con las tres piezas del patrón.
+
+### 3.bis · El velo de DENTRO salía 3,4× más fuerte y en el tono equivocado
+
+`[owner]`: «esa sombra inferior interior es más fuerte y hace que el logo pierda color vivo».
+Dos causas. **La CAJA**: el lockup lo pinta con `background-clip: text`, que mide sobre la **caja de
+línea**; el export lo tradujo a `objectBoundingBox`, que mide sobre la **tinta**. No son la misma
+caja, así que sus paradas puestas al pie de las letras dan el valor de arranque donde en el suyo ya
+había decaído — **α 0,377 contra 0,112**, y el doble de largo. **El TONO**: el lockup usa un velo
+**por palabra** —frío bajo la fría, marrón bajo la cálida— y el export dejó **uno solo, el frío, para
+las dos**; un velo azul sobre amarillos y naranjas no oscurece, **desatura**.
+▶ Corregido a `.14 / 0` en `0 / 20 %` y con velo cálido propio: **6 de 8 muestras idénticas** a su
+lockup, las otras dos a 0,005 (un escalón de la sonda).
+⚠️ El color cálido **se pasa por argumento**: es dato de marca y no vive en `scripts/`.
+⚠️ **El BRILLO superior se midió también y NO diverge**: no se toca. *Que dos degradados compartan
+mecanismo no quiere decir que los dos estén mal.*
+
+### 4 · Método
+
+❗ **La lección**: cuatro tandas midieron el DIBUJO —bandas, densidad, halo, geometría— y las cuatro
+dieron «equivalente». Lo que faltaba era medir el **MECANISMO**: qué dibuja realmente `text-shadow`.
+*Cuando cinco mediciones del resultado dicen que no hay defecto y el ojo dice que sí, lo que hay que
+medir es la herramienta que lo produce, no el resultado otra vez.*
+⚠️ **Siete trampas de instrumento**, todas con números creíbles: el subrayado por defecto del `<a>`
+del lockup (inflaba su caja de 60,75 a 65,5 px) · las `figcaption` dentro del recorte · el antialias
+clasificado por vecino más próximo · **dos SVG en un documento comparten `id`**, así que el arreglo
+salía idéntico al original · y un `<g>` recortado con expresión regular dejó el SVG mal formado y el
+navegador se lo tragó · medir una opacidad por un canal con **denominador 10** · y cambiar el
+color del velo a media medición, que hacía parecer corto un ajuste que no lo era. Las cazó tener
+siempre un CONTROL.
+⚠️ **Y una mutación que no muerde puede ser DÉBIL**: quitar solo el `exit(1)` de una de las dos
+capas de defensa del guion deja la guarda en verde. Retirando el bloque entero, muerde.
+
+▶ Guiones: `scripts/logo-sombra.php` (las dos sombras) y `scripts/logo-letra-a.php`, **idempotentes** los dos (el de
+`#274` multiplicaba: al segundo pase dejaba los trazos al 42 %). Cadena reproducible desde el export
+intacto, byte a byte. Guarda: `BrandLogoRepairTest` (10 casos, 6 mutaciones muerden).
+▶ Detalle completo en `docs/specs/tema-por-instalacion.md` §27.

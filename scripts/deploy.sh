@@ -348,6 +348,10 @@ RSYNC_EXCLUDES=(
     # El TAG de la ciudad del hero del cierre (`--deco-tag`, #235): mismo motivo exacto que los
     # de arriba. Sin esta línea el --delete se lo lleva y la esquina del cierre se queda vacía.
     --exclude='/public/img/client-tag.svg'
+    # La LETRA que el export del cliente se comió (#275): geometría SUYA con la que
+    # `logo-letra-a.php` repara el logotipo. Mismo motivo; sin la exclusión se pierde en el
+    # primer despliegue y la reparación deja de poder rehacerse en el servidor.
+    --exclude='/public/img/client-logo-a.path'
     --exclude='/bootstrap/cache/*'   # llevaría la config local horneada; se regenera allí
     --exclude='/.phpunit.result.cache'
     --exclude='/compose.yaml'

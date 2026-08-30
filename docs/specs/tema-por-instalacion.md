@@ -2551,3 +2551,190 @@ tiras del pie se quedan exactamente como estaban.
 ▶ **Guarda**: `TouchTargetTest`, 9 casos · **8 mutaciones y las 8 muerden**, cada una en su caso —y
 la de mudar el área a `::after` muerde en tres, que es lo correcto: rompe el mínimo, el centrado y
 el pomo del interruptor de cookies a la vez.
+
+---
+
+## 27. EL LOGOTIPO, POR FIN IDÉNTICO — dos defectos de EXPORTACIÓN (`#275`, 2026-08-30)
+
+> **`[DECIDIDO owner]`**: «lo quiero IDÉNTICO». Quinta sesión sobre el mismo dibujo, y la que la
+> cierra. Los dos defectos estaban **en la exportación del lockup a SVG**, no en nuestro CSS — que
+> es donde las cuatro tandas anteriores buscaron.
+
+### 27.1 · Lo primero: qué se revirtió, y por qué
+
+`#274` adelgazó al **65 %** el `stroke-width` de las capas de COLOR de las palabras y dejó la
+extrusión a su grosor original. Medido ahora con dos instrumentos independientes:
+
+| a la talla de la web (70 px) | su lockup | export del owner | lo que servía `#274` |
+|---|---|---|---|
+| banda cian | 1,00 px | **1,00** | 0,625 |
+| banda tinta | 1,50 px | **1,50** | 1,00 |
+| banda blanca | 0,875 px | **0,875** | 0,625 |
+| **azul marino por FUERA del cian** | 0 | 0 | **1,00 px, en el 100 % de las filas** |
+
+▶ **Las bandas del export del owner ya eran las suyas, al dígito.** El 65 % las estropeó *y* creó
+un **anillo azul marino por fuera del cian** —al encoger la capa de color sin encoger la extrusión,
+la silueta de la profundidad pasó a ser más ancha que la letra— que su lockup no tiene. Ése era el
+«borde exterior azul demasiado grueso» que el owner volvió a ver.
+⚠️ Y tenía **una segunda cara**: sobre la superficie de TINTA del menú, el anillo exterior pasó de
+cian (**6,85:1** de contraste sobre `#101418`) a marino (**1,41–2,54:1**). Se sustituyó un borde de
+alto contraste por uno casi invisible sin que nada avisara.
+⚠️ Y una **tercera**: el guion no tocaba `#fig`, así que dentro del mismo lockup convivían letras al
+65 % y una figura —que **es** la Y— al 100 %.
+
+▶ `scripts/logo-contorno.php` **se retira**. Su docblock declaraba una invariante falsa y su propia
+guarda contaba que **no** había tocado la extrusión, que era justo el defecto.
+
+### 27.2 · Defecto 1 — `text-shadow` NO arrastra el `-webkit-text-stroke`
+
+Con las bandas ya idénticas, el owner seguía viendo diferencia: *«nosotros tenemos un borde de unos
+5 píxeles exterior… el logo de la landing lo tiene a unos 2 o 3»*. La comparación que faltaba era
+del **experimento**, no de otra medición del dibujo:
+
+| en navegador, Lilita One a 36 px | ancho |
+|---|---|
+| glifo **con** `-webkit-text-stroke: 6.5px` | **20,63 px** |
+| su **`text-shadow`** | **14,13 px** |
+| el mismo glifo **sin** trazo, su sombra | **14,13 px** ← el control |
+
+▶ **La sombra del mockup son copias del GLIFO DESNUDO.** La exportación a SVG les puso a los 26
+`<use>` de extrusión el mismo `stroke-width` que a la capa de color, así que cada copia salía
+**3,25 px más gorda por lado**. Medido a la talla de la web, el faldón azul bajo las letras:
+
+| | mediana | p90 | columnas con faldón |
+|---|---|---|---|
+| su lockup | **4,00 px** | 6,125 | 852 / 1137 |
+| export del owner | 7,125 | 9,75 | **1121 / 1121** |
+| `#274` (65 %) | 8,25 | 13,75 | 1121 / 1121 |
+| **corregido** | **4,125 px** | **6,125** | 882 / 1123 |
+
+⚠️ Fíjate en la última columna: con la sombra engordada **todas** las columnas tienen faldón, porque
+asoma siempre. Es la señal que distingue «más sombra» de «sombra mal construida».
+▶ De paso, el bulto total del lockup pasa de **189,6 × 65,9** a **186,4 × 62,6** contra sus
+**188,4 × 62,1**: del 6 % de desvío en alto al **0,8 %**.
+▶ Guion: `scripts/logo-sombra.php`. **`#fig` NO entra, y no es una omisión**: su profundidad en el
+mockup es un `drop-shadow` de una `<img>`, y **un `drop-shadow` sí sigue el alfa completo del dibujo,
+contorno incluido**. Ahí la extrusión con trazo es lo correcto. *Dos mecanismos que parecen el mismo
+y no lo son.*
+
+### 27.3 · Defecto 2 — la silueta venía RESTADA de las letras
+
+En el lockup, «PLA» es TEXTO y el saltador una `<img>` **encima**. En la exportación, **la silueta se
+restó del trazado de la palabra**: la **A** viene mordida por su contorno, le falta el **16,8 %** del
+área. En reposo no se ve —el dibujo ocupa el hueco—, pero `brand-hop` arranca en `opacity: 0` y hace
+volar la silueta, así que durante la espera y todo el vuelo el logotipo enseña una A mutilada.
+▶ Lo cazó el ojo del owner: *«se queda el contorno en la A de la silueta, no se va la A perfecta»*.
+
+**Cómo se reconstruye** (`scripts/logo-letra-a.php`, y esto es lo que hay que saber para rehacerlo):
+se toma la A de **Lilita One** —la misma fuente del lockup— y se coloca con la transformación afín
+recuperada **del propio trazado**, usando las letras **P y L**, que están intactas: se igualan
+centroides y covarianzas de área.
+
+    M = [[0.191294, -0.000132], [-0.016508, 0.192554]]     t = (164.47, 314.508)
+
+⚠️ **Con su control, que es lo que lo hace fiable**: la consistencia del ajuste (`|u|` contra `|w|`)
+sale a **0,001 %**, y la **L —cuya FORMA no se usó para ajustar, así que es validación
+independiente— cae encima con 0,52 % de área y 0,31 unidades de caja**: 0,04 px a la talla de la web.
+⚠️ Una afín mapea Béziers a Béziers de forma **exacta**, así que la letra no se aplana: se
+transforman sus puntos de control. El trazado pasa de 2.746 a 446 bytes.
+⚠️⚠️ **La misma geometría vive en DOS sitios**: en `#u1` —que alimenta contorno, tinta y blanco por
+`<use>`— y en el `<path>` del **relleno de color** de la letra, que es copia literal. Arreglar solo
+el primero **deja la parte restituida en BLANCO** y no falla nada. Se descubrió mirando la captura,
+con el arreglo ya dado por bueno.
+▶ **La letra es del CLIENTE, no del producto** (`DECISIONES #1`): vive en
+`public/img/client-logo-a.path`, con las **tres piezas** del patrón de marca (gitignorada, se pasa al
+guion, `deploy.sh` la excluye del `--delete`).
+▶ **Lo que de verdad cierra esto es el export**: `INSTALACION-CLIENTE.md` §4.a.septies lo exige.
+
+### 27.4 · Defecto 3 — el velo de DENTRO salía 3,4× más fuerte, y en el tono equivocado
+
+Con las bandas y la sombra exterior ya idénticas, el owner señaló lo último: *«desde abajo hay como
+una sombra muy ligera, casi no la aprecio; en el nuestro esa sombra inferior interior es más fuerte y
+hace que el logo pierda color vivo»*.
+
+▶ **Causa 1, la CAJA.** El lockup pinta ese velo con `background-clip: text`, así que **el degradado
+se mide sobre la CAJA DE LÍNEA**; la exportación lo tradujo a un `<linearGradient>` con
+`objectBoundingBox`, que se mide sobre la **TINTA**. No son la misma caja —la de línea baja hasta el
+hueco de los descendentes—, así que sus paradas, copiadas literalmente, ponen al pie de las letras un
+valor que en el suyo **ya había decaído**.
+
+Medido en el borde inferior de la «J» (α del velo, canal R contra el color del velo):
+
+| distancia | 0,25 | 0,50 | 1,00 | 1,50 | 2,00 | 3,00 | 4,00 | 6,00 px |
+|---|---|---|---|---|---|---|---|---|
+| **su lockup** | 0,112 | 0,107 | 0,096 | 0,086 | 0,076 | 0,051 | 0,025 | 0,000 |
+| el export | **0,377** | 0,360 | 0,326 | 0,293 | 0,259 | 0,192 | 0,155 | 0,092 |
+| **corregido** | 0,117 | **0,107** | **0,096** | **0,086** | 0,071 | **0,051** | **0,025** | **0,000** |
+
+**Seis de las ocho muestras salen idénticas**; las otras dos se separan 0,005, que es un escalón de
+cuantización de la sonda. Las paradas pasan de `.5 / .18 / 0` en `0 / 15 % / 33 %` a **`.14 / 0` en
+`0 / 20 %`** — dos paradas, porque el tramo que queda del suyo es RECTO.
+
+▶ **Causa 2, el TONO.** El lockup usa **un velo distinto por palabra** —`rgba(6,28,44,…)` bajo la
+palabra fría y `rgba(48,16,2,…)`, un marrón, bajo la cálida— y la exportación dejó **uno solo, el
+frío, para las dos**. Un velo azul sobre amarillos y naranjas no los oscurece: los **desatura**. Eso
+es literalmente el «pierde color vivo».
+⚠️ **El color cálido no vive en el producto**: se le pasa al guion por argumento, porque es un dato
+de la marca (`DECISIONES #1`). Sin él, el guion aplica solo la corrección de fuerza, que sí es general.
+
+⚠️ **Y el BRILLO superior se midió también, y NO diverge** (α 0,278 el suyo contra 0,263 el nuestro,
+y los dos se apagan a la misma distancia): no se toca. *Que dos degradados compartan mecanismo no
+quiere decir que los dos estén mal.*
+⚠️⚠️ **La primera sonda del brillo era basura y parecía un resultado**: medía α por el canal R contra
+un velo blanco, o sea con denominador 10, y devolvía valores cuantizados a saltos de 0,1. Se rehízo
+por el canal B (denominador 255).
+
+### 27.5 · Verificación
+
+Cadena reproducible desde el export intacto del owner:
+`logo-pjp.svg` → `logo-sombra.php #301002` → `logo-letra-a.php` = el fichero instalado, **byte a
+byte**, y los dos guiones son **idempotentes** (el de `#274` multiplicaba: al segundo pase dejaba los trazos
+al 42 %).
+
+Por píxel, con controles: **en reposo el logotipo no cambia (0,05 %)**; con la silueta oculta sí
+(0,49 %), que es la A completándose; ocultar la silueta cambia algo (1,97 %) y el mismo fichero
+contra sí mismo da 0.
+
+▶ **Guarda**: `BrandLogoRepairTest`, 10 casos · **6 mutaciones muerden**. Y una cuarta **no**, por un
+motivo que hay que saber: retirar solo el `exit(1)` de la comprobación del relleno deja la guarda en
+verde **porque el guion tiene DOS capas de defensa** (la comprobación del relleno y el «tienen que
+sustituirse las DOS apariciones»). Al retirar el bloque entero, muerde. *Una mutación que no muerde
+puede ser una mutación DÉBIL* — la lección de `panel-navegacion.md` §7.4·2, otra vez.
+⚠️ Los casos **no leen el logotipo instalado**, y es deliberado: está gitignorado y un caso que solo
+corre donde hay paquete de marca desestabiliza el contador de aserciones del `pre-push`.
+
+### 27.6 · Las trampas de instrumento de esta tanda (siete, y todas parecían resultados)
+
+1. **El lockup del owner es un `<a>`**, y sin reset de enlaces el navegador le pinta su **subrayado
+   azul** por defecto. Salía como una barra cruzando la palabra: contaminaba cualquier diff y **le
+   inflaba la caja de tinta de 60,75 a 65,5 px** — un número que llegué a reportar.
+2. **Las `figcaption` dentro del recorte** contaban como tinta: caja de 88 px donde son 70.
+3. **Clasificar colores por vecino más próximo** mete el antialias en la clase equivocada: una
+   mezcla papel↔cian cae en `#4FC0EA`, que es un color de LETRA. Umbrales estrictos, y el antialias
+   como clase propia que se descarta.
+4. **Dos SVG en el mismo documento comparten `id`**: los `<use>` del segundo resolvían contra los
+   `defs` del primero, así que el arreglo y el original salían idénticos (0 % de diferencia) y
+   parecía que la reparación no hacía nada. Se renderizan por separado.
+5. **Recortar un `<g>` con una expresión regular** dejó el SVG con 3 `<g>` y 4 `</g>`: el navegador
+   se lo tragó sin quejarse y devolvió otro 0 % perfectamente creíble.
+6. **Medir α por un canal MAL CONDICIONADO**: la opacidad de un velo blanco sobre amarillo puro
+   calculada por el canal R tiene denominador **10**, así que salía cuantizada a saltos de 0,1 y
+   parecía un perfil. Por el canal B el denominador es 255.
+7. **Y el denominador cambiado a media medición**: al comparar la variante corregida seguí usando el
+   color del velo VIEJO, así que su α salía un 23 % baja y el ajuste parecía quedarse corto.
+
+❗ Las siete daban números plausibles. **La que las cazó todas fue tener siempre un CONTROL** —el
+mismo espécimen contra sí mismo, y una diferencia que DEBE salir distinta de cero—.
+
+### 27.7 · Lo que esta tanda deja abierto
+
+- El logotipo se incrusta **DOS veces por página**: `nav.blade.php` monta `<x-site.brand>` en el
+  racimo y otra vez en la cabecera del cajón (`.mob-menu`). Son 128 KB, el **42 %** del HTML de
+  `GET /`, y la segunda copia no se pinta nunca — la regla `.mob-menu` de `site.css` la apaga con un
+  `display: none` **incondicional**. Ficha en `DEUDA.md`.
+- La variante sobre TINTA es **inerte** en la rama del SVG en línea: las reglas de
+  `.nav__brand-logo--ink` / `--paper` solo conocen esos dos modificadores y lo que se sirve lleva
+  `--inline`. Ficha en `DEUDA.md`.
+- El escalón de teléfono (`--nav-logo-h`) corta en **≤ 719 px** y el del mockup en **< 620**: entre esos dos anchos
+  nuestro logotipo mide 46 px donde el suyo mide 70. La proporción sí es fiel (46/70 = 0,657 contra
+  su `scale(.66)`). Ficha en `DEUDA.md`.

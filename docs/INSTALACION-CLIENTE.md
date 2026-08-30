@@ -197,18 +197,36 @@ sistema (`#266`): la espera son 466,7 y el hueco dura todo el vuelo.
 la animación cae sobre «el grupo que contiene los `use` de la figura», porque una animación CSS
 sobre un elemento de `<defs>` **no alcanza al clon del `<use>`** — eso costó tres tandas.
 
-❗❗ **Y SI VUELVES A EXPORTAR EL LOGOTIPO, HAY QUE PASARLE EL GUION DEL CONTORNO** (`#274`):
+❗❗❗ **Y SI VUELVES A EXPORTAR EL LOGOTIPO, HAY QUE PASARLE LOS DOS GUIONES** (`#275`):
 
 ```bash
-php scripts/logo-contorno.php public/img/client-logo.svg 0.65
+php scripts/logo-sombra.php  public/img/client-logo.svg '#301002'
+php scripts/logo-letra-a.php public/img/client-logo.svg public/img/client-logo-a.path
 ```
 
-El exportado trae el trazo de las capas de color más grueso de lo que su propio mockup dibuja
-(`[DECIDIDO owner]`, elegido sobre una tira de cuatro grosores). El guion toca **solo** el
-`stroke-width` de esas capas —no la extrusión, ni la silueta, ni los degradados, ni ningún `id`— y
-**aborta antes de escribir** si detecta que ha tocado algo que no le corresponde.
+⚠️ **Esto SUSTITUYE al guion de `#274`** (`logo-contorno.php`, retirado): aquel adelgazaba las bandas
+del contorno, que **ya eran las del mockup al dígito**, y de paso dejaba la extrusión asomando por
+fuera del cian. Su premisa era falsa.
+
+Los dos guiones son **idempotentes** y **abortan antes de escribir** si tocaran algo que no les
+corresponde. Corrigen **tres cosas que la exportación de un lockup CSS a SVG traduce mal**:
+
+| | qué pasa | por qué |
+|---|---|---|
+| La sombra de FUERA | la extrusión sale engordada media anchura de trazo por lado | **`text-shadow` NO arrastra el `-webkit-text-stroke`**: sus copias son el glifo desnudo |
+| La sombra de DENTRO | el velo del borde inferior sale 3,4× más fuerte, y frío bajo las dos palabras | `background-clip: text` mide sobre la **caja de línea**; `objectBoundingBox` mide sobre la **tinta** — y el lockup usa **un velo por palabra** |
+| La letra tapada | la letra bajo la silueta viene **mordida** por su contorno | la exportación **restó** la silueta del trazado de la palabra; se ve en cuanto la animación mueve la figura |
+
+❗ **Lo que cerraría esto de verdad es el export**: pídele al diseñador que la exportación **no reste
+la silueta de las letras** (que las palabras vayan completas y el dibujo encima) y que la profundidad
+sea una copia del glifo **sin** el trazo. Mientras venga así, hay que pasar los guiones.
+⚠️ `#301002` es el velo cálido de ESTE cliente y **no vive en el repo**: se le pasa al guion. Sin él
+se aplica solo la corrección de fuerza, que es general.
+⚠️ `public/img/client-logo-a.path` es la letra reconstruida, y es **una pieza más del paquete de
+marca**: gitignorada, y `deploy.sh` la excluye del `--delete`. Cómo se deriva, en
+`docs/specs/tema-por-instalacion.md` §27.3.
 ⚠️ **Y el logotipo NO viaja en el despliegue**: `deploy.sh` excluye todos los ficheros de marca, así
-que tras afinarlo hay que **subirlo a mano** al servidor (o pasar allí el guion).
+que tras afinarlo hay que **subirlo a mano** al servidor (o pasar allí los guiones).
 
 ⚠️ **El resto del logotipo NO cambia**: es el mismo fichero con una pieza más. Nada de rehacerlo —
 está verificado byte a byte contra el PNG que exportó el owner.

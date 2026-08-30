@@ -33,6 +33,12 @@
 # superficie oscura y **una imagen no se adapta**: el suelo de texto sí lo hacía, un `<img>` no.
 # Sin este fichero el logotipo de la instalación se sigue viendo, pero contra su propio fondo.
 /public/img/client-logo-ink.svg
+# Y la LETRA que su export se comió (`#275`). Cuando el lockup se exporta a SVG restando la
+# silueta del trazado de la palabra, la letra que el dibujo tapa queda mordida: en reposo no se
+# ve, pero `brand-hop` hace volar la silueta y deja la letra mutilada a la vista. `logo-letra-a.php`
+# la restituye con esta geometría, que es del CLIENTE y por eso no vive en `scripts/`
+# (`DECISIONES #1`). Mismas tres piezas que el resto del paquete de marca.
+/public/img/client-logo-a.path
 # Pieza decorativa de marca del cierre (`--deco-tag`, `#235`): el tag de la ciudad.
 /public/img/client-tag.svg
 # Y su respaldo RASTER (`#216`): correos y Open Graph no renderizan SVG. `@4x` de los 54 px a los

@@ -2942,15 +2942,32 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       opciones y dejar elegir. Guarda con control positivo y mutación.
 - [x] **2k · El CONTORNO del logotipo y el HERO de móvil** (`#274`, 2026-08-30, `[DECIDIDO owner]`).
       Los dos son lo mismo: **un número nuestro puesto encima de uno suyo**.
-      ▶ El contorno se afina al **65 %** por GUION (`scripts/logo-contorno.php`), porque modifica el
-      asset del cliente. ⚠️⚠️ **La aritmética decía que no había defecto** —bandas visibles
-      idénticas, stroke base 6,49 contra 6,50— y el ojo del owner decía que sí: se resolvió
-      enseñando opciones, como `#273`.
+      ⚠️⚠️ **La mitad del contorno quedó REVERTIDA por `#275`**: el 65 % no era el defecto —las
+      bandas del export ya eran las del mockup al dígito— y el factor **creó** un anillo marino por
+      fuera del cian. La aritmética de esta tanda tenía razón; lo que faltaba era medir el MECANISMO.
+      El diagnóstico del hero, en cambio, sigue bueno.
       ▶ El hero de móvil llevaba un `min(72vh, **520px**)` que **no sale del mockup** (el suyo es
       una sola fórmula, `Math.min(vh * 0.78, 660)`). Ese tope mordía por encima de 722 px de
       ventana: **252 px vacíos a 390×844 y 340 a 390×932**. Retirado → 114 y 200.
       ⚠️ `--hero-h-end` era además la única de las tres expresiones de ventana del hero **sin el par
       `vh` → `svh`**. **+1 caso · 2 mutaciones, las 2 muerden.**
+- [x] **2l · EL LOGOTIPO, IDÉNTICO** (`#275`, 2026-08-30, `[DECIDIDO owner]`: «lo quiero IDÉNTICO»).
+      Quinta sesión sobre el mismo dibujo y la que la cierra: **los tres defectos estaban en la
+      EXPORTACIÓN del lockup a SVG**, no en nuestro CSS — que es donde las cuatro tandas anteriores
+      buscaron.
+      ▶ **`text-shadow` NO arrastra el `-webkit-text-stroke`** (control: el mismo glifo con y sin
+      trazo da la MISMA sombra, 14,13 px): la extrusión salía 3,25 px más gorda por lado. Faldón azul
+      **7,1 px contra sus 4,0**, y en **1121 de 1121** columnas contra 852 de 1137. Ahora 4,13.
+      ▶ **El velo de dentro**, α **0,377 contra 0,112** y frío bajo las dos palabras: la caja de
+      línea no es la caja de tinta, y el lockup usa **un velo por palabra**. Corregido: **6 de 8
+      muestras idénticas**.
+      ▶ **La silueta venía restada de las letras**: a la «A» le faltaba el **16,8 %**, invisible en
+      reposo y a la vista durante toda la animación. Reconstruida desde Lilita One con la afín
+      recuperada del propio trazado (control 0,001 %; la L, independiente, a 0,52 % de área).
+      ⚠️⚠️ Esa geometría vive en **DOS** sitios y arreglar uno la deja **BLANCA**.
+      ▶ Guiones `logo-sombra.php` y `logo-letra-a.php`, idempotentes; `logo-contorno.php` retirado.
+      **+10 casos · 6 mutaciones, las 6 muerden** (y una séptima **no**, por débil: el guion tiene dos
+      capas de defensa). ⚠️ **Falta el OJO del owner y subir el asset a staging.**
 - [ ] **3 · Las secciones**, pieza a pieza. ⏸️ **FUERA DE ALCANCE hasta que el owner lo diga**
       (`[DECIDIDO owner, 2026-08-28]`: del canvas solo se toma el sistema de diseño —colores,
       elementos, iconos, formas, menú, hero y pie—; el resto «son pruebas»).
