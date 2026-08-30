@@ -163,6 +163,13 @@
        uno tiene su token para que una instalación pueda calmarlos sin reescribir `@keyframes`. */
     --dur-invite: 4.6s;   /* el latido que invita a descubrir el CTA doble (2c·7) */
     --dur-switch: 3.4s;   /* el ciclo del interruptor del titular. Es el número del artboard (6d) */
+
+    /* ⚠️ **Y el interruptor YA NO es un bucle**: salta este número de veces y se queda encendido
+       (`#280`, `[DECIDIDO owner]`). Sigue con su token ambiental porque 3,4 s no cabe en la escala
+       —no responde a un gesto—, pero deja de gastar presupuesto de movimiento para siempre
+       (`#279`). Cuántas veces salta es de la instalación; DÓNDE para, no: eso lo deriva
+       `--switch-runs` en `.hero__switch`, y ahí está la única cifra que no se toca. */
+    --switch-cycles: 3;   /* cuántas veces se enciende el interruptor del titular. El último se queda */
 }
 
 /* Los dos escalones del sangrado de columna. Son los cortes del mockup —1100 y 720—, que este
@@ -5724,6 +5731,17 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    parpadea no es un nombre accesible. Así el `<h1>` se sigue leyendo «DIVERSIÓN ON» de principio a
    fin, y sigue sin prometer un control que no existe. */
 .hero__switch {
+    /* ▶ **DÓNDE PARA EL ÚLTIMO CICLO, y por qué es 0,6** (`#280`).
+       El ciclo del artboard va *apagado → salto → encendido → vuelta a apagado*, así que un número
+       ENTERO de iteraciones termina en el fotograma apagado y el interruptor daría un respingo al
+       reposo. La salida es truncar la última iteración **dentro del tramo encendido**, donde el
+       valor animado es constante y coincide con el reposo: no hay salto porque no hay diferencia.
+       ▶ El tramo encendido es 38–82 % en la pista y el bulbo, y 40–80 % en el rótulo. **0,6 es el
+       centro del más estrecho**, con 20 puntos de margen a cada lado — y por eso no se ajusta a
+       ojo: si alguien mueve los `@keyframes`, `HeroSwitchRestsOnTest` compara este número contra
+       los tramos REALES y contra el reposo declarado abajo, y se pone rojo.
+       ▶ Va aquí, en el envoltorio, y se HEREDA a las tres piezas: la cifra vive una vez. */
+    --switch-runs: calc(var(--switch-cycles) - 1 + 0.6);
     /* ▶ **A LA ALTURA DE LAS MAYÚSCULAS DEL TITULAR** (`[DECIDIDO owner]`: «grande al tamaño del
        texto, misma altura»), que **no es el `font-size`**: es la TINTA. Medida con `TextMetrics`
        sobre la fuente real —y con control contra una genérica, para no estar midiendo un respaldo—,
@@ -5773,9 +5791,17 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     width: calc(var(--sw-u) * 2.75);                          /* 44    */
     height: calc(var(--sw-u) * 1.65);                         /* 26,4  */
     padding: calc(var(--sw-u) * 0.125);                       /*  2    */
-    border: calc(var(--sw-u) * 0.225) solid var(--fg-mute);   /*  3,6  */
+    /* ▶ **EL REPOSO DE LA PISTA ES ENCENDIDO** (`#280`). Hasta el 2026-08-30 esto decía
+       `var(--fg-mute)` y el encendido vivía SOLO dentro del bloque de movimiento reducido —o sea
+       que el estado natural de la pieza estaba escrito como una concesión de accesibilidad—.
+       ⚠️⚠️ Medido antes de moverlo: acotando las iteraciones con el apagado como reposo, el
+       interruptor terminaba **transparente y con el borde gris pero con el rótulo «ON» al 100 %**.
+       No es «se queda apagado»: es la palabra ON encendida sobre un interruptor apagado. */
+    border: calc(var(--sw-u) * 0.225) solid var(--ok);        /*  3,6  */
+    background: var(--ok);
     border-radius: var(--r-pill);
-    animation: heroSwitchTrack var(--dur-switch) var(--ease-entra) infinite;
+    animation: heroSwitchTrack var(--dur-switch) var(--ease-entra);
+    animation-iteration-count: var(--switch-runs);
 }
 /* ⚠️⚠️ **`0.4622em` es la altura de mayúscula DE BUNGEE metida a mano en el producto**, y eso es
    justo lo que el white-label no puede hacer: otra instalación con otro `--font-display` tendría el
@@ -5794,8 +5820,14 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     width: calc(var(--sw-u) * 0.95);
     height: calc(var(--sw-u) * 0.95);
     border-radius: var(--r-pill);
-    background: var(--fg-mute);
-    animation: heroSwitchKnob var(--dur-switch) var(--ease-entra) infinite;
+    /* ▶ **Y el reposo del bulbo es el lado encendido** (`#280`), por la misma razón que la pista.
+       El `translateX` es el 16,4 del artboard (1,025·u) y lee `--sw-u` HEREDADA de la pista, que
+       es donde vive la unidad. ⚠️ En el tramo encendido el `@keyframes` añade `scaleX(1)`: es la
+       identidad, así que la matriz resultante es la misma y el paso a reposo no mueve un píxel. */
+    background: var(--paper-fg);
+    transform: translateX(calc(var(--sw-u) * 1.025));
+    animation: heroSwitchKnob var(--dur-switch) var(--ease-entra);
+    animation-iteration-count: var(--switch-runs);
 }
 /* EL RÓTULO DE DENTRO. Cuerpo 8,5/16 = 0,53125 de `--sw-u`; sangrado 5,6.
    ⚠️⚠️ **EL SANGRADO NO PUEDE SALIR DE `--sw-u`, Y ÉSTA ES LA TRAMPA QUE COSTÓ LA PRIMERA
@@ -5820,12 +5852,21 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     line-height: 1;
     letter-spacing: 0.04em;
     color: var(--paper-fg);
-    animation: heroSwitchLabel var(--dur-switch) var(--ease-entra) infinite;
+    /* ▶ **El reposo del rótulo es visible** (`#280`). Aquí no había NADA que promover —sin
+       `opacity` propia el valor inicial ya es 1— y **eso es justo lo que hacía peor el defecto**:
+       al terminar un número entero de ciclos, la pista se apagaba y el rótulo se quedaba al 100 %.
+       Se escribe explícita para que el reposo de las tres piezas se lea junto y para que
+       `HeroSwitchRestsOnTest` tenga qué comparar contra el fotograma donde para. */
+    opacity: 1;
+    animation: heroSwitchLabel var(--dur-switch) var(--ease-entra);
+    animation-iteration-count: var(--switch-runs);
 }
 
-/* Los tres bucles, fotograma a fotograma como el artboard. ⚠️ La pista se llena **a mitad de
+/* Los tres ciclos, fotograma a fotograma como el artboard. ⚠️ La pista se llena **a mitad de
    recorrido** (38 %), no al llegar: es lo que el artboard llama «cuando el gesto ya es
-   irreversible». Y al apagarse la pista se vacía en el 100 % mientras el bulbo aún vuelve. */
+   irreversible». Y al apagarse la pista se vacía en el 100 % mientras el bulbo aún vuelve.
+   ⚠️⚠️ **El tramo encendido de cada uno es el contrato con `--switch-runs`**: la última iteración
+   se trunca dentro de él, así que mover esas paradas mueve dónde para la pieza. Está vigilado. */
 @keyframes heroSwitchTrack {
     0%, 18%  { background: transparent; border-color: var(--fg-mute); }
     38%, 82% { background: var(--ok);   border-color: var(--ok); }
@@ -5849,18 +5890,16 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     88%, 100% { opacity: 0; }
 }
 /* Sin movimiento se queda ENCENDIDO, no apagado: el interruptor dice «ON» y uno quieto en la
-   posición contraria a su propia etiqueta es un defecto, no una simplificación. */
+   posición contraria a su propia etiqueta es un defecto, no una simplificación.
+   ⚠️⚠️ **Aquí SOBRABA la mitad y por eso costó un defecto** (`#280`): hasta el 2026-08-30 este
+   bloque declaraba también el color de la pista, el desplazamiento del bulbo y la opacidad del
+   rótulo — o sea que **el reposo de la pieza vivía dentro de una excepción de accesibilidad** y
+   fuera de ella no existía. Ahora el reposo es el reposo, está arriba con cada pieza, y lo único
+   que este bloque tiene que decir es lo que de verdad es una concesión: que no se mueva. */
 @media (prefers-reduced-motion: reduce) {
-    .hero__switch-sw {
-        animation: none;
-        background: var(--ok); border-color: var(--ok);
-    }
-    .hero__switch-knob {
-        animation: none;
-        transform: translateX(calc(var(--sw-u) * 1.025));
-        background: var(--paper-fg);
-    }
-    .hero__switch-on { animation: none; opacity: 1; }
+    .hero__switch-sw,
+    .hero__switch-knob,
+    .hero__switch-on { animation: none; }
 }
 
 /* ══ EL LOGOTIPO EN LÍNEA Y SU SALTO (`#254`) ══════════════════════════════════════════════════

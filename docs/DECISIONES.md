@@ -16155,3 +16155,211 @@ siempre: es el REPOSO de la pieza, no una concesión.
 
 ▶ El orden por rentabilidad para cuando se retome está en `DEUDA.md`. El mapa crudo queda en
 `storage/app/logo-probe/simultaneidad.json` (gitignorado; la sonda se regenera).
+
+---
+
+## #280 · 2026-08-30 · [DECIDIDO owner] El interruptor del titular para, descansa ENCENDIDO y vuelve a saltar al volver el hero
+
+Lo que `#279` dejó decidido y sin hacer. `[DECIDIDO owner]`: **«que se pare tras unos ciclos»** —tres,
+en un token de la instalación— **y que vuelva a arrancar cuando se vuelve a lo alto de la página**.
+
+### 1 · El defecto, medido antes de tocar nada
+
+`#279` avisó de que esto no era cambiar `infinite` por un número. Acotando las iteraciones sobre el
+CSS de entonces, en navegador:
+
+| | pista | bulbo | rótulo |
+|---|---|---|---|
+| **acotado a 2 ciclos** | transparente + borde `--fg-mute` | gris, `translateX(0)` | **`opacity: 1`** |
+| control (`prefers-reduced-motion`) | `--ok` | `--paper-fg`, `translateX(48,09)` | `opacity: 1` |
+
+⚠️⚠️ **No es «se queda apagado»: es la palabra ON encendida sobre un interruptor apagado.** El
+rótulo no tenía `opacity` propia, así que su reposo ya era 1 —y eso, que parecía inocuo, es lo que
+convierte el defecto en una contradicción a la vista en vez de en una pieza sosa. El estado
+encendido entero vivía **solo dentro del `@media (prefers-reduced-motion: reduce)`**: el reposo de
+la pieza escrito como una concesión de accesibilidad.
+
+### 2 · Las dos mitades de la solución
+
+▶ **El reposo sube a la regla base.** Pista `--ok`, bulbo en `--paper-fg` a 1,025·u, rótulo
+`opacity: 1`. El bloque de movimiento reducido se queda con lo único que de verdad es una
+concesión: `animation: none`. **Y ahí está el criterio general**: *el reposo de una pieza no se
+escribe dentro de una excepción; si solo existe allí, fuera no existe*.
+
+▶ **El corte cae DENTRO del tramo encendido, no al final del ciclo.** El ciclo del artboard `6d` va
+*apagado → salto → encendido → vuelta a apagado*, así que un número entero de iteraciones termina en
+el fotograma apagado y al soltar la animación —`fill` es `none`— la pieza daría un respingo hasta el
+reposo. La salida es **truncar la última iteración**: `--switch-runs: calc(var(--switch-cycles) - 1
++ 0.6)`. El tramo encendido es 38–82 % en pista y bulbo y **40–80 % en el rótulo**, así que 0,6 es
+el centro del más estrecho, con 20 puntos de margen a cada lado. Ahí el valor animado es
+**constante**, y como es el mismo que el reposo, el paso no mueve nada.
+⚠️ **Y por eso no se rotaron los fotogramas**, que era la otra salida: la geometría y los tiempos de
+`6d` están al dígito desde `#262` y girar la fase los dejaría irreconocibles frente al artboard.
+
+▶ **Medido en navegador**: primer paint apagado (no hay destello), 9 % del ciclo apagado (control de
+que se mueve), y el fotograma del corte y el reposo **idénticos en las tres piezas — 0 px de salto**.
+
+### 3 · El rearranque, y por qué no puede ser Web Animations API
+
+⚠️⚠️ **Una animación CSS terminada con `fill: none` deja de ser «relevante» y desaparece de
+`getAnimations()`**: medido, la lista pasa de 1 a **0** en cuanto para. No hay objeto al que pedirle
+`play()`. Lo que funciona es obligar al motor de estilo a descartarla y recrearla —`animation-name`
+a `none`, una lectura de disposición en medio, y de vuelta a la cascada—, y la lectura en medio no
+es superstición: sin ella el navegador agrupa las dos escrituras, ve el valor final y concluye que
+nada ha cambiado.
+
+▶ `resources/js/ui/hero-switch.js`, con la decisión pura aparte (13 casos de `node --test`). **No
+decide nada de diseño**: ni duración, ni curva, ni ciclos — eso vive en `--dur-switch`,
+`--ease-entra` y `--switch-cycles`, que es donde una instalación puede tocarlo (`#254` §12.3).
+⚠️ **Hay que haber SALIDO del todo para volver a entrar**: con umbral 0 basta un temblor de un píxel
+—o el imán de scroll, o el crecimiento del documento al cargar las imágenes perezosas— para que
+lluevan entradas «visible», y rearrancar con cada una devolvería el tic que se acaba de quitar.
+⚠️ **Con movimiento reducido es un no-op y no lleva una segunda puerta**: el `@media` deja las tres
+en `animation: none`, así que quitar y devolver el `animation-name` devuelve `none`. Una
+comprobación de `matchMedia` aquí sería una segunda fuente para la misma regla.
+▶ **Sin JavaScript la pieza sigue completa**: la animación está en la regla base, salta sus ciclos al
+cargar y descansa encendida. Lo único que se pierde es la repetición.
+
+### 4 · Lo que esto le hace al presupuesto de `#279`
+
+Medido en la misma pasada, reproduciendo el estado anterior por inyección de `infinite`:
+
+| vista | pico de bucles antes | ahora |
+|---|---|---|
+| `/` | 5 | **2** — cumple el techo de dos de su artboard |
+| `/entradas` | 6 | **4** |
+
+⚠️ **Y una corrección a `#279`: el interruptor no eran 2 bucles, eran 3.** Su tabla contó lo que la
+sonda veía en un instante, y el rótulo pasa por `opacity: 0` en parte del ciclo —donde la sonda,
+con razón, no lo cuenta como visible—. *Contar animaciones en un instante subestima una pieza cuyo
+ciclo apaga una de sus partes*: hay que unir las muestras de varias paradas.
+
+### 5 · Las guardas
+
+**`HeroSwitchRestsOnTest`** (5 casos, 46 aserciones) vigila el **mecanismo**, no los números: lee
+los `@keyframes` reales, calcula dónde cae el corte a partir de `--switch-runs` y comprueba que ahí
+el valor es **constante** y **coincide con el reposo declarado**; que ninguna de las tres es
+`infinite`; que las tres leen `--switch-runs` y que `--switch-cycles` está en `:root`; que el bloque
+de movimiento reducido **solo** dice `animation: none`; y que el ciclo no mueve ninguna propiedad
+que la guarda no compare. **8 mutaciones, las 8 muerden.** En JS, **6 mutaciones más, las 6 muerden**.
+
+⚠️ **Y la guarda nació ROJA con el producto sano**, por una razón que vale para cualquier lector de
+CSS: buscaba `selector … {` con un `[^{]*` en medio, así que ante una lista `a,\n b,\n c { … }` se
+tragaba las tres y devolvía **una**. Se lee la regla entera y se parte la lista por comas.
+
+---
+
+## #281 · 2026-08-30 · «Elementos Fachada»: el kit de material gráfico del cliente, VALORADO (no implementado)
+
+El owner entrega el artboard `Elementos Fachada` —el kit sacado del mural de la entrada de su
+parque— y pide **sacar los elementos y valorar cómo y dónde se implementarían**. Mismo método que
+`#277` con `Microanimaciones PJP`: **primero qué de esto ya está en el producto**. Spec completa en
+`specs/elementos-fachada.md`. **Aquí no se implementa nada.**
+
+### 1 · Dos cosas que hubo que verificar antes de mirar el contenido
+
+⚠️⚠️ **La copia local del canvas está CADUCADA**: es del 27 a las 07:34 y le faltan **tres grupos
+enteros** —A (texturas), F (9 poses de adulto) y G (3 de niño)—; a cambio tiene un `D9` que en la
+versión nueva ya no está. Cuarta vez que esta copia caduca sin avisar.
+
+⚠️⚠️ **Y el fichero que llega pegado trae los acentos destrozados** (`diversiÃ³n`, `PUÃOS`) mientras
+**la copia local está en UTF-8 sano**: o sea que **el daño lo trae el pegado, no el canvas**. Es la
+trampa de `tema-por-instalacion.md` §25.1, y la conducta es la misma: no se sobrescribe la copia
+local con un pegado. El marcado y los SVG son ASCII y sí sirven para medir; la prosa, no.
+▶ `DesignSync` sigue **sin autorización** (`/design-login` no corre en sesión no interactiva), igual
+que en `#262` y `#279`.
+
+### 2 · `D9` desapareció porque el cliente resolvió su propio hueco, y lo resolvió MEJOR
+
+`D9` se llamaba «Las poses que faltan» y pedía **cuatro recortes en PNG**. Los grupos F y G son su
+respuesta: **doce poses en SVG a un color plano**. ⚠️ Eso **cambia el veredicto técnico entero**: un
+PNG no se recolorea, no escala, no se recorta con máscara y no hereda `currentColor`; un `<path>`
+sí las cuatro. Es la diferencia entre material de este cliente y material del producto.
+
+### 3 · El vocabulario de base YA ESTÁ, y eso reencuadra el encargo
+
+| pieza del artboard | veredicto medido |
+|---|---|
+| **A1 · trama de puntos** | **es `.menu__grain` al dígito**: `1.4px` · `1.6px` · `20px 20px`, los tres números |
+| **C2 · tiras** | **coincide en orden 5 de 5** con `--strip-1..5` (cian · lima · amarillo · naranja · rojo) |
+| **E1 · sombra dura** | **es** `--shadow-float: 5px 5px 0 var(--paper-fg)` |
+| **las 4 tipografías** | **son** `--font-display` · `--font-body` · `--font-accent` · `--font-mono` |
+| **A3 · rayos** | la técnica está (`repeating-conic-gradient` en `.offw-rays`) |
+| **`mix-blend-mode`** | **cero usos**: es lo único de mecanismo que falta |
+
+▶ **Lo que este artboard trae nuevo no es la técnica: es el REPERTORIO de formas.**
+
+### 4 · ❗ La línea que parte el kit, y es una deuda YA ABIERTA
+
+Las **6 manchas** y las **12 poses** son **arte de este cliente**. Y **F10/G5 («iconos de zona») son
+exactamente los dibujos que `#257` dejó anotados**: *«los 19 de parque no están: son del cliente y
+**no existe mecanismo** para sustituir un dibujo por instalación»*.
+
+⚠️⚠️ **Este artboard no crea el problema: aterriza justo encima del que ya teníamos escrito, y con
+el material para cerrarlo.** La pregunta no es «¿metemos manchas?», es **«¿construimos el hueco de
+ilustración por instalación?»** — el que ya tienen el logotipo y el icono y no tiene ningún dibujo.
+Sin él, esto **clava el mural de un parque dentro de un producto white-label**.
+
+### 5 · Una geometría, doce composiciones
+
+▶ **Plano, contorno y troquel salen del MISMO `<path>`**, verificado: F6 expande el `viewBox`
+**+5,1 = el `stroke-width` de 4,1 más margen** (152 → 157,1 y 194,3 → 199,4) y F7 añade un rect
+exterior con `fill-rule="evenodd"`. ⚠️ **Eso es NUEVO frente al grupo D viejo**, donde plano y
+contorno eran **dos geometrías distintas** (2.524 B y 3.746 B, con arranques distintos).
+
+⚠️⚠️ **Y las composiciones se montan con `<use>`, no repitiendo el path.** Medido: el artboard
+repite la silueta **44 veces** y su bloque `D8` pesa **100.374 B para 24 figuras** —4.182 B cada
+una—; con `<defs>` + `<use>` son ~5,4 KB: **18,6× menos**. Ahí esperan las dos trampas de `#266`
+(una animación sobre un elemento de `<defs>` **no pinta**, y los `px` de un `transform` dentro de un
+SVG son **unidades del `viewBox`**) y el presupuesto que `#275` dejó medido: el logotipo ya es el
+**42 % del HTML de `GET /`**.
+
+### 6 · SEIS contradicciones del propio artboard, todas medidas — y una séptima que era MÍA
+
+Titula **«Cuatro reglas»** y son **cinco** · su **F8 rompe su propia regla 05** —14 copias, 9 poses,
+**5 repetidas**— y encima su rótulo dice «poses distintas» · el grupo C se titula «Goteos y bandas»
+y **no tiene ningún goteo** · **D6** dice «desfase de 14 px» y usa **28 y 34** · **D5** dice
+«keyline de 13» y usa **13 y 15** (las dos, del grupo ya retirado) · y la regla 02 («la pintura
+nunca va debajo de un párrafo») se roza con **A5**, que la pone bajo formularios largos.
+
+⚠️⚠️ **La séptima no era suya, era mía y era FALSA**: dije que `D4` apuntaba a un
+`assets/saltador.png` inexistente, y **existe: 98.508 B**. Lo que falló fue el instrumento — un
+`head` truncó el listado del directorio a diez líneas y el fichero era la undécima. *Un listado
+truncado no dice que algo no exista: dice que no lo has visto.* Octava trampa de instrumento de este
+carril, y la más barata de todas.
+
+▶ **Lo que SÍ corrobora**: su cabecera —«nada de esto pinta el fondo de una sección: el fondo es
+papel y el material vive dentro de las tarjetas»— **confirma el hallazgo `S-00`** que
+`tema-por-instalacion.md` §1.2 ya había incorporado. Dos fuentes suyas independientes coinciden.
+
+### 7 · Lo DECIDIDO y lo que queda `[PENDIENTE: owner]`
+
+✅ **`[DECIDIDO owner, 2026-08-30]`: se construye el hueco de ILUSTRACIÓN POR INSTALACIÓN, y con él
+se cierra la deuda de `#257`.** Sería el **tercer** hueco por instalación del producto —tras
+`client-logo.svg` (`#254`) y `client-favicon.svg`— y el **primero para ilustración, no para marca**.
+⚠️ Su diseño **no está hecho**: es lo primero que hay que especificar cuando se retome, y de él
+depende todo lo 🟥 y la mitad de lo 🟨 del inventario.
+
+✅ **`[DECIDIDO owner, 2026-08-30]`: EL GRUPO D · SILUETAS SE RETIRA ENTERO** —*«nada, porque no me
+gusta»*— y **las otras 32 piezas entran**. Con D se va **la figura vieja**: la pose única del cristal.
+▶ **Su propio artboard ya había escrito el porqué.** La tarjeta `D9` que él mismo retiró decía
+*«todo lo de arriba es la misma pose transformada, **y se nota cuando se repite**»*: el grupo D es
+una pose repetida ocho veces y los grupos F/G son las doce que la sustituyen. La decisión **completa
+el artboard, no lo contradice**.
+⚠️ **Y no toca el logotipo**: medido, `client-logo.svg` **no contiene** el path de esa figura (0
+coincidencias). El saltador del logotipo es otro dibujo y sigue como lo dejó `#275`.
+▶ **Seis de los ocho tratamientos NO se pierden** —viven ya dentro de F/G con las poses nuevas:
+plano (`F1`/`F6`), friso (`F2`, `G3`), troquel (`F7`/`G6`), contorno (`F6`/`G6`), pareja (`F4`) y
+campo (`F8`)—. ❗ **Los dos sin gemelo, `D4` (pegatina) y `D6` (eco de salto), SE VAN TAMBIÉN** — preguntado con
+la consecuencia delante. El grupo desaparece **sin excepciones** y el kit queda en **32 de las 40**.
+⚠️⚠️ **Y esa consecuencia hay que dejarla escrita**: `D6` era **la única pieza del kit que contaba un
+movimiento**; todo lo demás está quieto. **De `Elementos Fachada` no sale ninguna animación**, y el
+movimiento del sitio lo sigue decidiendo `Microanimaciones PJP` (`#277`).
+
+⏸️ **La tanda sigue PARADA**: el owner volvió a subir el artboard —estructuralmente **idéntico**: los
+mismos 40 códigos en los mismos siete grupos— pero **otra vez con la codificación rota**, así que la
+copia local del canvas **sigue sin sobrescribirse** y sigue caducada. Zanjarlo necesita el canvas,
+no un pegado.
+
+▶ Detrás, el orden por rentabilidad que sale de §3 y §5 es: generalizar la trama · las dos variantes
+de tira que faltan · los estados vacíos con D8/F8 · y los iconos de zona F10/G5.

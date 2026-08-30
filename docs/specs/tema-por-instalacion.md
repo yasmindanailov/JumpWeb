@@ -2973,3 +2973,107 @@ y se aprieta en el mismo commit: una baseline que no aprieta regala el crecimien
 ▶ **Guarda**: `MotionScaleTest::test_the_outcome_is_two_pieces_and_no_confetti`, **4 mutaciones y las
 4 muerden** — y una de ellas es que **el confeti no puede volver**: no basta con haberlo borrado, hay
 que impedir que alguien lo reintroduzca sin enterarse de que su sitio ya está ocupado.
+
+---
+
+## 31. EL INTERRUPTOR PARA, Y PARA ENCENDIDO (`#280`, 2026-08-30)
+
+`[DECIDIDO owner]`: **«que se pare tras unos ciclos»** —tres— **y que vuelva a arrancar cuando se
+vuelve a lo alto de la página**. Es la unidad que `#279` dejó decidida y sin hacer, y **corrige a
+§25**, que montó la pieza como bucle sin fin porque así la enseña el artboard `6d`.
+
+### 31.1 · El defecto era peor que lo previsto, y hay que medirlo antes de creérselo
+
+`#279` avisó de que esto no era cambiar `infinite` por un número. Medido en navegador sobre el CSS
+de entonces, acotando las iteraciones:
+
+| | pista | bulbo | rótulo |
+|---|---|---|---|
+| **acotado a 2 ciclos** | transparente + borde `--fg-mute` | gris, `translateX(0)` | **`opacity: 1`** |
+| control (`prefers-reduced-motion`) | `--ok` | `--paper-fg`, `translateX(48,09)` | `opacity: 1` |
+
+⚠️⚠️ **No quedaba «apagado»: quedaba apagado con la palabra ON encendida encima.** El rótulo no
+tenía `opacity` propia, así que su valor inicial ya era 1 — y eso, que en la pieza en marcha no se
+nota, es lo que convierte el defecto en una contradicción a la vista.
+
+▶ **El estado encendido entero vivía dentro del `@media (prefers-reduced-motion: reduce)`.** Ésa es
+la lección general de esta unidad: *el reposo de una pieza no se escribe dentro de una excepción de
+accesibilidad; si solo existe allí, fuera no existe* — y no lo ve nadie, porque quien revisa con
+movimiento reducido ve la pieza perfecta.
+
+### 31.2 · Por qué el corte es 0,6 y no un número entero de ciclos
+
+El ciclo de `6d` va *apagado → salto → encendido → vuelta a apagado*, así que un número entero de
+iteraciones termina en el fotograma **apagado**; y al soltar la animación —`fill` es `none`— la
+pieza volvería a su regla base de golpe. La salida es **truncar la última iteración dentro del
+tramo encendido**, donde el valor animado es constante y **es el mismo que el reposo**: no hay salto
+porque no hay diferencia.
+
+```css
+--switch-cycles: 3;                                        /* :root — es de la INSTALACIÓN */
+--switch-runs: calc(var(--switch-cycles) - 1 + 0.6);       /* .hero__switch — dónde para */
+```
+
+▶ El tramo encendido es **38–82 %** en la pista y el bulbo y **40–80 %** en el rótulo: 0,6 es el
+centro del más estrecho, con 20 puntos de margen a cada lado.
+⚠️ **La otra salida era rotar los fotogramas** para que el ciclo empezara y acabara encendido. Se
+descartó: la geometría y los tiempos de `6d` están al dígito desde `#262` —es lo que hace la pieza
+comparable con el artboard— y girar la fase los dejaría irreconocibles.
+⚠️ **`forwards` tampoco valía**, como avisó `#279`: fija el último fotograma, que es el apagado.
+
+▶ **Medido**: primer paint apagado (no hay destello del reposo), 9 % del ciclo apagado —el control
+de que de verdad se mueve— y el fotograma del corte idéntico al reposo en las tres piezas:
+**0 px de salto**.
+
+### 31.3 · El rearranque no puede ser Web Animations API
+
+⚠️⚠️ **Una animación CSS terminada con `fill: none` deja de ser «relevante» y desaparece de
+`getAnimations()`**: medido, la lista pasa de **1 a 0** en cuanto para. No hay objeto al que pedirle
+`play()`, así que la vía obvia no existe. Lo que funciona es obligar al motor de estilo a
+**descartarla y recrearla**: `animation-name` a `none`, una lectura de disposición en medio, y de
+vuelta a la cascada. ⚠️ La lectura de en medio no es superstición: sin ella el navegador agrupa las
+dos escrituras del mismo fotograma, ve el valor final y concluye que nada ha cambiado.
+
+▶ Vive en `resources/js/ui/hero-switch.js` y **no decide nada de diseño**: ni duración, ni curva, ni
+ciclos. Eso está en `--dur-switch`, `--ease-entra` y `--switch-cycles`, que es donde una instalación
+puede tocarlo (mismo criterio que §12.3).
+⚠️ **Hay que haber SALIDO del todo del viewport para volver a entrar.** Con umbral 0 basta un
+temblor de un píxel —o el imán de §20, o el crecimiento del documento al cargar las imágenes
+perezosas— para que lluevan entradas «visible»: rearrancar con cada una devolvería el tic que se
+acaba de quitar.
+⚠️ **Con movimiento reducido es un no-op a propósito**, sin una segunda puerta de `matchMedia`: el
+`@media` deja las tres piezas en `animation: none`, así que quitar y devolver el `animation-name`
+devuelve `none`. Una comprobación aquí sería una segunda fuente para la misma regla, y habría que
+mantenerla sincronizada.
+▶ **Sin JavaScript la pieza sigue completa**: la animación está declarada en la regla base, salta
+sus ciclos al cargar y descansa encendida. Lo único que se pierde es la repetición.
+
+### 31.4 · Lo que le hace al presupuesto de `#279`
+
+Medido en la misma pasada, reproduciendo el estado anterior por inyección de `infinite`:
+
+| vista | pico de bucles antes | ahora |
+|---|---|---|
+| `/` | 5 | **2** — cumple el techo de dos de su artboard |
+| `/entradas` | 6 | **4** |
+
+Y en el conjunto de las hojas, las declaraciones en bucle bajan de **24 a 21**.
+
+⚠️ **Corrige a `#279`: el interruptor no eran 2 bucles, eran 3.** Su tabla contó lo que la sonda veía
+en un instante, y el rótulo pasa por `opacity: 0` en parte del ciclo, donde la sonda —con razón— no
+lo cuenta como visible. *Contar animaciones en un instante subestima una pieza cuyo ciclo apaga una
+de sus partes*: hay que unir las muestras de varias paradas.
+
+### 31.5 · La guarda
+
+**`HeroSwitchRestsOnTest`** vigila el **mecanismo**, no los números: lee los `@keyframes` reales,
+calcula dónde cae el corte a partir de `--switch-runs` y comprueba que ahí el valor es **constante**
+y **coincide con el reposo declarado**. Además: que ninguna de las tres es `infinite`, que las tres
+leen `--switch-runs`, que `--switch-cycles` está en `:root`, que el bloque de movimiento reducido
+**solo** dice `animation: none` —y que cubre exactamente las tres piezas, porque un bloque vacío es
+el otro extremo del mismo fallo— y que el ciclo no mueve ninguna propiedad que la guarda no compare.
+**8 mutaciones, las 8 muerden**; en JS, **6 más y las 6 muerden**.
+
+⚠️ **La guarda nació ROJA con el producto sano**, y la razón vale para cualquier lector de CSS:
+buscaba `selector … {` con un `[^{]*` en medio, así que ante una lista `a,\n b,\n c { … }` se
+tragaba las tres y devolvía **una**. Se lee la regla entera y se parte la lista por comas.

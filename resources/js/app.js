@@ -2,6 +2,7 @@ import { installScrollLock } from './ui/scroll-lock.js';
 import { reveal } from './ui/account-host.js';
 import { shouldHideNav } from './ui/nav-choreography.js';
 import { installScrollMagnet } from './ui/scroll-magnet.js';
+import { installHeroSwitch } from './ui/hero-switch.js';
 
 // Livewire (Fase 4) trae su propio Alpine y lo arranca él. Por eso aquí NO
 // importamos ni iniciamos Alpine: registramos nuestros componentes/almacenes
@@ -1569,6 +1570,15 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 });
+
+// ── EL INTERRUPTOR DEL TITULAR VUELVE A SALTAR AL VOLVER EL HERO (`#280`) ──────────────────────
+// `[DECIDIDO owner]`: el interruptor para tras `--switch-cycles` ciclos y descansa ENCENDIDO —eso
+// lo hace el CSS solo— y vuelve a arrancar cuando el hero regresa al viewport.
+//
+// ▶ **Va fuera de `alpine:init` a propósito**: no registra nada en Alpine ni lee ningún almacén, así
+// que colgarlo de ese evento sería atarlo a un motor que no usa. En las diez vistas sin interruptor
+// devuelve `null` sin tocar el documento.
+installHeroSwitch();
 
 // ⚠️⚠️ **Aquí escuchaba el evento `logged-in` de Livewire, y se retiró el 2026-08-23**
 // (`specs/account-context-vue.md` §4.6). Ese bus existía porque el bloque de cuenta era un componente

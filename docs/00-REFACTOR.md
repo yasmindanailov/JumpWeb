@@ -2997,14 +2997,54 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       ⚠️⚠️ Retirar el confeti habría dejado **ciega una guarda ajena** que lo usaba de delimitador, y
       destapó que la hora COMPLETA de `#277` **no la cubría nadie** (ninguna fixture tenía una franja
       llena). **+2 casos · 4 mutaciones, las 4 muerden.**
+- [x] **2o · El INTERRUPTOR del titular PARA, y para ENCENDIDO** (`#280`, 2026-08-30,
+      `[DECIDIDO owner]`). Lo que `#279` dejó decidido y sin hacer: tres ciclos y a reposo, y vuelve
+      a saltar cuando el hero regresa al viewport.
+      ⚠️⚠️ **Medido antes de tocar nada**: acotando iteraciones sobre el CSS de entonces la pieza no
+      quedaba «apagada», quedaba **apagada con la palabra ON al 100 % encima** —el rótulo no tenía
+      `opacity` propia—. El estado encendido entero vivía **solo dentro del bloque de movimiento
+      reducido**: el reposo de la pieza escrito como una concesión de accesibilidad.
+      ▶ Dos mitades: **el reposo sube a la regla base** y **el corte cae DENTRO del tramo encendido**
+      (`calc(var(--switch-cycles) - 1 + 0.6)`), donde el valor es constante y coincide con el reposo
+      — así el `fill: none` no da respingo. Medido: **0 px de salto** en las tres piezas.
+      ⚠️⚠️ El rearranque **no puede ser WAAPI**: una animación terminada con `fill: none` desaparece
+      de `getAnimations()` (medido, 1 → 0). Se descarta y se recrea desde `ui/hero-switch.js`, que
+      **no decide nada de diseño**.
+      ▶ **Presupuesto de `#279`**: `/` pasa de **5 a 2** bucles —cumple el techo de su artboard— y
+      `/entradas` de **6 a 4**. ⚠️ Y corrige a `#279`: el interruptor eran **3** bucles, no 2 —contar
+      en un instante subestima una pieza cuyo ciclo apaga una de sus partes—.
+      **+5 casos PHP · +13 JS · 14 mutaciones, las 14 muerden** (⚠️ la guarda nació ROJA con el
+      producto sano: un `[^{]*` se tragaba las listas de selectores separadas por comas).
+      ⏸️ Falta el **OJO del owner**.
+- [x] **2p · «Elementos Fachada» VALORADO, y el kit acotado a 32 de 40** (`#281`, 2026-08-30,
+      `[DECIDIDO owner]`). El owner entrega el kit de material gráfico del mural y pide valorarlo
+      antes de implementar — método de `#277`. Spec: `specs/elementos-fachada.md`. **No se implementa
+      nada.**
+      ▶ **El vocabulario de base YA ESTABA**: la trama A1 es `.menu__grain` **al dígito** (1,4 · 1,6 ·
+      20×20), la tira C2 coincide **en orden 5 de 5** con `--strip-1..5`, la sombra dura de E1 **es**
+      `--shadow-float` y las cuatro tipografías son los cuatro tokens. Lo nuevo es el REPERTORIO.
+      ⚠️⚠️ **La copia local del canvas está CADUCADA** (20 piezas contra 40) **y el fichero pegado
+      llega con la codificación rota** mientras la local está en UTF-8 sano: *el daño lo trae el
+      pegado, no el canvas*. Se subió dos veces y las dos igual. `DesignSync` sigue sin autorización.
+      ▶ **Tres decisiones del owner**: se construye el **hueco de ilustración por instalación** —que
+      cierra la deuda de `#257`— · el **grupo D se retira entero y sin excepciones** · y `D4`/`D6`,
+      los dos únicos sin gemelo en F/G, **se van también**.
+      ⚠️⚠️ **Coste declarado**: `D6` era **la única pieza del kit que contaba un movimiento**, así que
+      **de este artboard no sale ninguna animación**; el movimiento lo sigue decidiendo `#277`.
+      ⚠️ **Y una medición MÍA salió falsa**: dije que `D4` apuntaba a un `saltador.png` inexistente y
+      **existe (98.508 B)** — un `head` truncó el listado a diez líneas. *Un listado truncado no dice
+      que algo no exista: dice que no lo has visto.*
 - [ ] **3 · Las secciones**, pieza a pieza. ⏸️ **FUERA DE ALCANCE hasta que el owner lo diga**
       (`[DECIDIDO owner, 2026-08-28]`: del canvas solo se toma el sistema de diseño —colores,
       elementos, iconos, formas, menú, hero y pie—; el resto «son pruebas»).
       ⚠️ El owner subió **tres artboards** de la misma sección, no dos: `Descubre-el-Parque`,
       `Recorrido-Parque` y —el 28— `Elige tu Zona`, una maqueta isométrica en SVG de todo el parque.
       Las **tres** son «02 · El parque» y **cuál se queda sigue SIN DECIDIR** (preguntado el 28:
-      «todavía no lo decido»). `Elementos Fachada` sigue **sin migrar**: de ahí
-      se saca la FORMA, nunca el color.
+      «todavía no lo decido»). `Elementos Fachada` sigue **sin migrar** —de ahí
+      se saca la FORMA, nunca el color: medido, **cero** de sus nueve literales coinciden con
+      `client.css`— y **ya está VALORADO** en `specs/elementos-fachada.md` (`#281`): el vocabulario
+      de base ya estaba, lo nuevo es el REPERTORIO, y lo que decide si entra o no es **el hueco de
+      ilustración por instalación** que `#257` dejó anotado. ⏸️ Pendiente del owner.
 
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no

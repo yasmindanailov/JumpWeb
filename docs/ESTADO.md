@@ -2,19 +2,87 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-30 (cierre) — jornada del MOVIMIENTO y la
-> MARCA: `#275` → `#279`.**
+> aquí solo se enlaza.** Última actualización: **2026-08-30 — jornada del MOVIMIENTO, la MARCA y
+> el KIT DEL MURAL: `#275` → `#281`.**
 >
 > ❗❗❗ **POR DÓNDE SE RETOMA** (lo único que hay que leer para seguir):
-> **1 · El interruptor del titular tiene que PARAR tras unos ciclos** (`[DECIDIDO owner]`, `#279`).
-> ⚠️⚠️ **No es cambiar `infinite` por un número**: el estado ON de reposo vive SOLO dentro del bloque
-> de `prefers-reduced-motion`, así que acotar iteraciones lo dejaría APAGADO junto a un titular que
-> dice «DIVERSIÓN». Hay que promover ese estado fuera del bloque primero. Ficha en `DEUDA.md`.
-> **2 · La poda de bucles está MEDIDA y NO hecha** (`[DECIDIDO owner]`: «nada todavía, solo el
-> informe»). El mapa, en `#279` y en `DEUDA.md`: `/precios` llega a **9** y **8 son un solo icono**;
-> la invitación del CTA corre en **las doce vistas**. Orden por rentabilidad, en la ficha.
-> **3 · Falta el OJO del owner** en: el logotipo (`#275`), la cascada de franjas del cajón (`#277`) y
-> el desenlace (`#278`). Y **subir a staging** lo de `#277`/`#278` — lo de `#275`/`#276` ya está.
+> **1 · La poda de bucles está MEDIDA y NO hecha** (`[DECIDIDO owner]`: «nada todavía, solo el
+> informe»). El mapa, en `#279` y en `DEUDA.md`, **remedido tras `#280`**: `/precios` llega a **9** y
+> **8 son un solo icono**; la invitación del CTA corre en **las doce vistas**. Orden por
+> rentabilidad, en la ficha — y `#280` deja el **patrón** de cómo se saca una pieza de la lista sin
+> dejarla mal parada.
+> **2 · `Elementos Fachada`: VALORADO (`#281`) y ⏸️ PARADO.** ✅ **`[DECIDIDO owner]`: el GRUPO D ·
+> Siluetas se retira ENTERO** —*«no me gusta»*— **y las otras 32 piezas entran**. Con D se va la
+> figura vieja del cristal. ▶ **Su propio `D9` ya decía el porqué** («la misma pose transformada, y
+> se nota cuando se repite»), y **seis de los ocho tratamientos sobreviven dentro de F/G** con las
+> poses nuevas. ⚠️ **No toca el logotipo**: medido, `client-logo.svg` no contiene ese path.
+> ✅ **Y `D4` y `D6` se van también** (los dos únicos sin gemelo): el grupo desaparece **sin
+> excepciones** y el kit queda en **32 de las 40**. ⚠️⚠️ **Coste declarado**: `D6` era la **única
+> pieza del kit que contaba un movimiento**, así que **de este artboard no sale ninguna animación** —
+> el movimiento lo sigue decidiendo `Microanimaciones PJP` (`#277`).
+> ⚠️ El artboard se volvió a subir **estructuralmente idéntico** y **otra vez con la codificación
+> rota**: la copia local sigue caducada y sin sobrescribir. ✅ **Y lo otro decidido:
+> `[DECIDIDO owner]` se construye el HUECO DE ILUSTRACIÓN POR INSTALACIÓN**, que cierra la deuda de
+> `#257` y sería el tercer hueco por instalación tras el logotipo y el icono — el **primero para
+> ilustración y no para marca**. ⚠️ **Su diseño no está hecho**: es lo primero que hay que
+> especificar, y de él depende todo el material que es arte de este cliente (6 manchas + 12 poses).
+>
+> ❗❗❗ **EL ORDEN PARA RETOMAR `#281`, y no es «empezar a implementar»** (medido, no opinado):
+> **A · Lo que NO depende de nada y se puede hacer YA** — las piezas 🟩 de puro mecanismo:
+> generalizar la trama `A1` (que **ya está escrita** en `.menu__grain`: solo hay que sacarla del menú
+> y darle densidad), `A2`, `A5`, y las **dos variantes de tira que faltan** (`C2` en cuñas y
+> punteada, sobre `--strip-1..5`, que ya coincide en orden 5 de 5). No tocan el canvas ni el hueco.
+> **B · Refrescar el canvas.** Bloquea todo lo que toque un dibujo: la copia local está caducada y un
+> pegado llega roto. `/design-login` en sesión interactiva, o el `.dc.html` en `mockup_playjumppark/`.
+> **C · DISEÑAR el hueco de ilustración** (spec, no código). ⚠️⚠️ **Y ésta es la razón de que vaya
+> ANTES de extraer nada**: medido, **hoy NO existe mecanismo genérico** — cada hueco es una ruta a
+> mano (`img/client-logo.svg`, `client-logo-ink.svg`, `client-favicon.svg`, cada una con su
+> `@filemtime` + `asset()` en su Blade). **Dieciocho dibujos no pueden ser dieciocho rutas
+> copiadas**, y extraer las poses antes de conocer la forma destino es extraerlas dos veces.
+> **D · Solo entonces, sacar el material**: las **6 manchas ya son ficheros** (`splash-1..6.svg`,
+> 7.979 B, mismo orden que `B1`); las **12 poses NO** —viven en línea dentro del artboard—. Con
+> `<use>`, nunca repitiendo el `<path>` (`#266`).
+> **E · Y al final, montar piezas.**
+> **3 · Falta el OJO del owner** en: el logotipo (`#275`), la cascada de franjas del cajón (`#277`),
+> el desenlace (`#278`) y **el interruptor que ya para** (`#280`). Y **subir a staging** lo de
+> `#277`/`#278`/`#280` — lo de `#275`/`#276` ya está.
+>
+> ▶ **`#281` — EL KIT DEL MURAL, VALORADO (no implementado).** Método de `#277`: primero qué ya
+> está. ▶ **El vocabulario de base YA ESTABA**: la trama A1 **es `.menu__grain` al dígito** (1,4 ·
+> 1,6 · 20×20), la tira C2 coincide **en orden 5 de 5** con `--strip-1..5`, la sombra dura de E1
+> **es** `--shadow-float`, y las cuatro tipografías son los cuatro tokens. **Lo nuevo no es la
+> técnica: es el repertorio de formas.** Lo único que falta de mecanismo es `mix-blend-mode`, hoy
+> con cero usos.
+> ⚠️⚠️ **La copia local del canvas está CADUCADA** (sin los grupos A, F y G) **y el fichero pegado
+> trae la codificación rota mientras la local está en UTF-8 sano**: el daño lo trae el pegado, no el
+> canvas — no se sobrescribe. `DesignSync` sigue sin autorización.
+> ▶ **Su `D9` desapareció porque el cliente resolvió su propio hueco, y MEJOR de lo que pedía**:
+> pedía 4 recortes PNG y entregó **12 poses en SVG a un color plano**, que sí se recolorean, escalan
+> y recortan.
+> ▶ **Una geometría, doce composiciones**: plano, contorno y troquel salen del **mismo** `<path>`
+> (verificado), y las composiciones van con `<use>` — medido, `D8` pesa **100.374 B para 24
+> figuras** y con `<use>` son ~5,4 KB, **18,6× menos**.
+> ⚠️ **Siete contradicciones medidas del artboard**, entre ellas que titula «Cuatro reglas» y son
+> cinco, y que su **F8 rompe su propia regla 05** (14 copias, 9 poses, 5 repetidas).
+>
+> ▶ **`#280` — EL INTERRUPTOR DEL TITULAR PARA, Y PARA ENCENDIDO.** `[DECIDIDO owner]`: tres ciclos
+> —en `--switch-cycles`, de la instalación— y vuelve a saltar cuando el hero regresa al viewport.
+> ⚠️⚠️ **El defecto que avisaba `#279` era peor de lo previsto, y solo lo dijo el navegador**:
+> acotando iteraciones la pieza no quedaba «apagada», quedaba **apagada con la palabra ON al 100 %
+> encima** —el rótulo no tenía `opacity` propia—. El estado encendido entero vivía **solo dentro del
+> bloque de `prefers-reduced-motion`**: *el reposo de una pieza no se escribe dentro de una excepción
+> de accesibilidad; si solo existe allí, fuera no existe*, y no lo ve nadie porque quien revisa con
+> movimiento reducido la ve perfecta.
+> ▶ Dos mitades: **el reposo sube a la regla base** (el bloque de accesibilidad se queda solo con
+> `animation: none`) y **el corte cae DENTRO del tramo encendido** —`calc(var(--switch-cycles) - 1 +
+> 0.6)`—, donde el valor es constante y coincide con el reposo. Medido: **0 px de salto**.
+> ⚠️⚠️ **El rearranque no puede ser WAAPI**: una animación terminada con `fill: none` **desaparece de
+> `getAnimations()`** (medido, 1 → 0). Se descarta y se recrea desde `ui/hero-switch.js`, que **no
+> decide nada de diseño**. Sin JS la pieza sigue completa: salta al cargar y descansa encendida.
+> ▶ **Presupuesto de `#279`**: `/` pasa de **5 a 2** bucles —ya cumple el techo de dos de su
+> artboard— y `/entradas` de **6 a 4**; las declaraciones en bucle, de 24 a 21.
+> ⚠️ **Y corrige a `#279`: el interruptor eran 3 bucles, no 2** — contar animaciones en un instante
+> subestima una pieza cuyo ciclo apaga una de sus partes.
 >
 > ▶ **Lo cerrado hoy**: `#275` el logotipo por fin idéntico (tres defectos, todos en la EXPORTACIÓN) ·
 > `#276` el eslogan pegado al titular y el CTA de móvil · `#277` las microanimaciones valoradas + U2 y
@@ -1915,10 +1983,17 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3531 en verde** (23.179 aserciones, 1 skipped a propósito) · **JS 864**, medida el
-  2026-08-30 tras `#278`. ▶ **+2 casos**: el desenlace (dos piezas, sin confeti) y **la hora COMPLETA
-  en el contrato de árbol** — que `#277` había dejado sin cubrir porque **ninguna fixture tenía una
-  franja llena**. **4 mutaciones y las 4 muerden**, y una es que el confeti no puede volver.
+- Suite **3536 en verde** (23.225 aserciones, 1 skipped a propósito) · **JS 877**, medida el
+  2026-08-30 tras `#280`. ▶ **+5 casos PHP y +13 JS**: `HeroSwitchRestsOnTest`, que vigila el
+  MECANISMO del interruptor —lee los `@keyframes` reales, calcula dónde cae el corte y comprueba que
+  ahí el valor es **constante** y **coincide con el reposo declarado**—, y `hero-switch.test.js`.
+  **14 mutaciones y las 14 muerden** (8 en el CSS, 6 en el JS).
+  ⚠️ La guarda **nació ROJA con el producto sano**: buscaba `selector … {` con un `[^{]*` en medio,
+  así que ante una lista `a,\n b,\n c { … }` se tragaba las tres y devolvía **una**.
+- Antes, tras `#278`: suite **3531** (23.179 aserciones) · **JS 864**. ▶ **+2 casos**: el desenlace
+  (dos piezas, sin confeti) y **la hora COMPLETA en el contrato de árbol** — que `#277` había dejado
+  sin cubrir porque **ninguna fixture tenía una franja llena**. **4 mutaciones y las 4 muerden**, y
+  una es que el confeti no puede volver.
   ⚠️ La baseline de `PurchaseSection.vue` **BAJA** a 425 y se aprieta en el mismo commit.
 - Antes, tras `#277`: suite **3529 en verde** (23.116 aserciones) · **JS 864**. ▶ **+1 caso** (`the_slot_cascade_keeps_its_contract`) y **+2 en JS**
   (`offer.test.js`: la franja no vendible, y que **la ausencia del campo no es «completa»**) —

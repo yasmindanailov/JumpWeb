@@ -1912,3 +1912,67 @@ relieve que el SVG ya trae. Un control por abajo, como el de §5.quatervicies po
 afecta a la prosa —el CSS y el marcado son ASCII—, así que para medir se extrajo lo técnico y se
 descartó el texto. **No se guardó el fichero pegado como activo**, que es lo que `#262` §25.1 ya
 advirtió.
+
+---
+
+## §5.sexvicies · EL INTERRUPTOR DEL TITULAR PARA Y DESCANSA ENCENDIDO — ✅ 2026-08-30 (`DECISIONES #280`)
+
+> Tres sondas, cada una con su CONTROL. Corren desde `/home/sail/e2e` (receta de §5.bis) contra
+> `http://localhost/`. ⚠️ El contexto se abre con **`reducedMotion: 'no-preference'`**: headless
+> declara `reduce` por defecto y con él **no hay ninguna animación que medir**.
+
+### 1 · El defecto de partida (sonda `sw-base.mjs`, antes de tocar el CSS)
+
+Acotando las iteraciones sobre el CSS de entonces, sin promover el reposo:
+
+| | pista | bulbo | rótulo |
+|---|---|---|---|
+| en marcha (`infinite`) | — | — | — |
+| **acotado a 2 ciclos** | `rgba(0,0,0,0)` + borde `rgb(154,161,168)` | `rgb(154,161,168)`, `translateX(0)` | **`opacity: 1`** |
+| **CONTROL** (`reducedMotion: 'reduce'`) | `rgb(95,168,46)` = `--ok` | `rgb(16,20,24)`, `translateX(48,09)` | `opacity: 1` |
+
+⚠️⚠️ **No es «se queda apagado»: es la palabra ON encendida sobre un interruptor apagado.**
+⚠️ Y ya aquí se ve lo que decide el diseño del rearranque: al terminar, **`getAnimations()` devuelve
+`[]`**.
+
+### 2 · Que para donde descansa (sonda `sw-para.mjs`)
+
+| punto | resultado |
+|---|---|
+| primer paint (`waitUntil: 'commit'`) | **apagado** — el reposo promovido no destella |
+| 9 % del ciclo | apagado — **control** de que la animación corre de verdad |
+| justo antes de parar (t = 2,6 ciclos) | encendido, 1 animación viva |
+| ya parado | encendido, **0 animaciones** |
+| **¿coinciden?** | **SÍ — 0 px de salto** en las tres piezas |
+| **CONTROL** `reduce` | mismo reposo encendido, 0 animaciones |
+
+### 3 · El rearranque y sus dos controles (sonda `sw-rearranca.mjs`)
+
+| gesto | animaciones | veredicto |
+|---|---|---|
+| parado arriba | 0 | reposo |
+| **CONTROL: quedarse quieto 1,2 s** | 0 | no rearranca solo |
+| bajar hasta perder el hero | 0 | — |
+| **volver arriba** | **1, `running`, `currentTime` 350 ms** | **rearranca ✓** |
+| dejar que termine otra vez | 0 | — |
+| **CONTROL: temblor** (30 · 0 · 45 · 10 · 0 px, sin salir) | **0** | no es un tic ✓ |
+| **CONTROL: `reduce`, ida y vuelta** | **0**, pista encendida | el rearranque es un no-op ✓ |
+
+### 4 · El presupuesto de movimiento, antes y después (sonda `sw-presupuesto.mjs`)
+
+El «antes» se reproduce **inyectando `animation-iteration-count: infinite`** sobre las tres piezas,
+que es exactamente lo que había; se espera a que pasen los 2,6 ciclos para contar solo lo permanente.
+
+| | `/` | `/entradas` |
+|---|---|---|
+| antes (`infinite`) | 5 | 6 |
+| **ahora** | **2** — cumple el techo de dos de su artboard | **4** |
+
+⚠️ **Corrige a `#279`**: el interruptor eran **3** bucles, no 2. Su tabla contó lo que la sonda veía
+en un instante y el rótulo pasa por `opacity: 0` en parte del ciclo, donde la sonda —con razón— no lo
+cuenta como visible. *Contar animaciones en un instante subestima una pieza cuyo ciclo apaga una de
+sus partes*: hay que **unir las muestras de varias paradas**.
+
+⬜ **Pendiente del OJO del owner**: un headless mide, no valida (`CONVENCIONES §3.bis`). Lo que hay
+que mirar es que los tres saltos se lean como una invitación y no como un tic, y que el último
+asiente sin respingo.
