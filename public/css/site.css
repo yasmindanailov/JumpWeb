@@ -325,45 +325,32 @@
     height: var(--nav-logo-h);
     width: auto;
     max-width: min(340px, 54vw);
-    /* ⚠️⚠️ **La sombra se CONTIENE, y la explicación importa porque la respuesta parecía ser otra**
-       (`#253`). El owner dijo «nuestro logo tiene demasiada sombra, el del mockup tiene menos».
-       Medido: **nuestro CSS era IDÉNTICO al suyo** —`drop-shadow(0 6px 16px …45%)` +
-       `drop-shadow(0 1px 0 …25%)`, copiado de su lockup—. La diferencia no está en el filtro: está
-       en a QUÉ se le aplica. Su lockup son glifos de texto con una extrusión fina hecha a
-       `text-shadow`; el nuestro es **un SVG que ya trae su relieve azul horneado**, una masa
-       oscura maciza. El mismo desenfoque de 16 px bajo una masa así deja un halo; bajo unas letras,
-       no. ▶ *Copiar un filtro no es copiar un resultado si el sujeto es otro.*
-       ▶ Por eso NO hay nada que pedirle al diseñador: el asset está bien y el relieve ya hace de
-       profundidad. Lo que sobraba era nuestro desenfoque. 6→3 de desplazamiento, 16→7 de radio y
-       45→30 % de tinta; la línea de 1 px se queda, más suave, para cuando cae sobre algo claro.
+    /* ❗❗❗ **EL LOGOTIPO NO LLEVA SOMBRA CSS** (`#273`, `[DECIDIDO owner]`, decidido MIRANDO el
+       canvas al lado de la web). Cuarta vuelta sobre lo mismo, y la que la cierra.
 
-       ⚠️⚠️ **CORRECCIÓN (`#263`): bajar el RADIO fue la mitad equivocada del ajuste.** El owner
-       volvió con lo contrario —«el de la landing tiene una sombra más suave, el nuestro una
-       totalmente densa y definida»— y **las dos notas son ciertas a la vez**: un desenfoque de 7 px
-       es *menos* sombra, sí, pero también un borde *más duro*, que es justo lo que se ve como una
-       mancha definida pegada a la masa. ▶ Las dos dimensiones son independientes: **el RADIO hace
-       la suavidad y la OPACIDAD hace la densidad**. La respuesta es el radio del mockup con mucha
-       menos tinta: 18 de radio (él usa 16) y **18 %** (él, 45). Comparadas las cuatro combinaciones
-       en el navegador, a tamaño real y sobre la superficie oscura donde vive. */
-    /* ❗❗❗ **TERCERA VUELTA DEL OWNER SOBRE ESTA SOMBRA, Y LA PRIMERA QUE SE MIDE** (`#267`).
-       Son **los números del mockup, sin tocar**: `0 6px 16px` al 45 % y la línea de contacto
-       `0 1px 0` al 25 %.
-       ▶ **Lo medido, y refuta el razonamiento de `#253`**: se renderizó SU lockup con SU filtro (A),
-       nuestro SVG con SU filtro (B) y nuestro SVG con el filtro que teníamos (C), y se comparó la
-       densidad de sombra sobre el mismo papel.
-         A · su lockup, su filtro   → 1.193.218
-         B · nuestro SVG, su filtro → 1.252.968   ← **5 % de diferencia con A**
-         C · lo que teníamos        →   645.997   ← **la mitad**
-       ▶ O sea: **el mismo filtro sobre nuestro sujeto SÍ da su misma sombra.** `#253` concluyó lo
-       contrario —«copiar un filtro no es copiar un resultado si el sujeto es otro»— y bajó la tinta
-       de 45 a 30 y luego a 18; `#263` corrigió el radio pero dejó la opacidad. **Ninguna de las dos
-       comparó contra el original**: las dos razonaron sobre el sujeto y ajustaron a ojo.
-       ⚠️ *Cuando el owner dice tres veces que algo se ve distinto, lo que falta no es otro ajuste:
-       es la comparación que nadie ha hecho.*
-       ⚠️ Sigue leyendo `--paper-fg` y no el literal del cliente: dentro del menú de tinta `--fg`
-       vale claro y la sombra se volvería luz. Lo que se copia son los NÚMEROS, no el color. */
-    filter: drop-shadow(0 6px 16px color-mix(in srgb, var(--paper-fg) 45%, transparent))
-            drop-shadow(0 1px 0 color-mix(in srgb, var(--paper-fg) 25%, transparent));
+       ▶ **Por qué, y por qué las tres anteriores no lo vieron**: este SVG **ya trae su relieve
+       horneado** —26 pasos de extrusión azul por palabra, 15 en la silueta—, y eso ya lee como
+       profundidad. Cualquier `drop-shadow` encima se suma a una masa que ya es oscura. El lockup
+       del mockup, en cambio, es texto vivo con una extrusión de **6 pasos** a `text-shadow`: mucho
+       más fina, y por eso él sí necesita el filtro.
+       ▶ **`#253` diagnosticó esto exactamente** —«copiar un filtro no es copiar un resultado si el
+       sujeto es otro»— y se quedó a medias: **rebajó el filtro en vez de retirarlo**. `#263` ajustó
+       el radio. `#267` lo devolvió a los números del mockup por una medición que decía que ambos
+       sujetos daban la misma sombra.
+
+       ⚠️⚠️ **Y esa medición era la equivocada, aunque estuviera bien hecha.** Comparaba la
+       DENSIDAD TOTAL de sombra y luego el HALO, y las dos daban un 4-5 % de diferencia entre su
+       lockup y el nuestro. Pero lo que el owner juzga no es un agregado: es **los dos dibujos uno
+       al lado del otro**, y ahí el nuestro pesa más porque su masa oscura y su halo se suman.
+       *Una métrica agregada puede decir «equivalente» sobre dos cosas que el ojo separa al
+       instante.* Cuando el owner dice cuatro veces que algo se ve distinto, la respuesta no es una
+       medición mejor: es enseñarle opciones y que elija.
+
+       ⚠️ **Si un cliente necesita sombra**, su paquete puede añadirla en `client.css`: es una
+       decisión de marca, no del producto. Lo que el producto no hace es imponerla sobre un dibujo
+       que ya trae la suya.
+       ⚠️ **Sin sombra el logotipo sigue legible sobre tinta**: el asset lleva contorno blanco de
+       14,4 unidades, verificado en el menú a pantalla completa. */
     transition: transform var(--dur-entra) var(--ease-sale);
 }
 .nav__brand:hover .nav__brand-logo { transform: translateY(-2px) rotate(-1.5deg); }

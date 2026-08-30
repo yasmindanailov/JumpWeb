@@ -399,42 +399,47 @@ class InlineBrandLogoTest extends TestCase
     }
 
     /**
-     * **La sombra del logotipo son LOS NÚMEROS DEL MOCKUP** (`#267`).
+     * **EL LOGOTIPO NO LLEVA SOMBRA CSS** (`#273`, `[DECIDIDO owner]`).
      *
-     * ⚠️⚠️ La guarda de una discusión que costó **tres vueltas del owner**: `#253` («demasiada
-     * sombra») bajó la tinta de 45 a 30 razonando que «copiar un filtro no es copiar un resultado
-     * si el sujeto es otro»; `#263` («la suya es más suave, la nuestra densa y definida») corrigió
-     * el radio y la dejó en 18; y a la tercera el owner seguía viéndola distinta.
+     * ⚠️⚠️ La guarda de una discusión que costó **cuatro vueltas del owner** y tres ajustes que no
+     * la cerraron: `#253` bajó la tinta del 45 al 30 %, `#263` corrigió el radio y la dejó en 18,
+     * `#267` la devolvió a los números del mockup tras medir que los dos sujetos daban la misma
+     * densidad de sombra (4-5 % de diferencia, tanto en total como en halo).
      *
-     * ▶ **Ninguna de las dos comparó contra el original.** Al renderizar su lockup con su filtro,
-     * el nuestro con su filtro y el nuestro con el que teníamos, y medir la densidad de sombra
-     * sobre el mismo papel: **1.193.218 · 1.252.968 · 645.997**. O sea que el mismo filtro sobre
-     * nuestro sujeto SÍ da su sombra (5 % de diferencia), y la nuestra era **la mitad**.
+     * ▶ **La medición era correcta y la conclusión no.** Lo que el owner juzga no es un agregado:
+     * es su lockup y el nuestro **uno al lado del otro**, y ahí el nuestro pesa más porque su
+     * relieve horneado —26 pasos de extrusión, frente a los 6 del `text-shadow` del mockup— ya lee
+     * como profundidad y el filtro se le suma. *Una métrica agregada puede decir «equivalente»
+     * sobre dos cosas que el ojo separa al instante.*
      *
-     * ⚠️ Se asevera la GEOMETRÍA (offset, radio y porcentajes), no el color: éste sigue saliendo de
-     * `--paper-fg` para que dentro del menú de tinta la sombra no se vuelva luz.
+     * ▶ Decidido **mirando**, sobre una tira con cinco niveles. Y ésa es la lección de método: a la
+     * cuarta vuelta la respuesta no era otra medición, era enseñar opciones y dejar elegir.
+     *
+     * ⚠️ Un paquete de instalación **sí puede** añadir sombra en `client.css` — es decisión de
+     * marca. Lo que el producto no hace es imponerla sobre un dibujo que ya trae la suya.
      */
-    public function test_the_logo_shadow_keeps_the_mockup_numbers(): void
+    public function test_the_logo_carries_no_css_shadow(): void
     {
-        $regla = '';
+        $css = $this->siteCssSinComentarios();
 
-        foreach ($this->reglasQueDeclaran($this->siteCssSinComentarios(), 'drop-shadow') as $selector => $cuerpo) {
-            if (str_contains($selector, '.nav__brand-logo') && ! str_contains($selector, '--inline')) {
-                $regla = $cuerpo;
-            }
+        foreach ($this->reglasQueDeclaran($css, 'drop-shadow') as $selector => $cuerpo) {
+            $this->assertStringNotContainsString(
+                'nav__brand-logo',
+                $selector,
+                "El logotipo vuelve a llevar sombra CSS.\n"
+                ."Selector: {$selector}\n"
+                .'▶ `[DECIDIDO owner]` tras CUATRO vueltas y decidido mirando: este SVG ya trae su '
+                .'relieve horneado (26 pasos de extrusión) y cualquier `drop-shadow` encima se le suma. '
+                .'Si un cliente la quiere, la pone su `client.css`.',
+            );
         }
 
-        $this->assertNotSame('', $regla, 'el logotipo ha perdido su sombra');
-
-        foreach ([
-            '/drop-shadow\(\s*0\s+6px\s+16px/' => 'la sombra difusa ya no es `0 6px 16px`, que es la del mockup',
-            '/45%/' => 'la sombra difusa ya no lleva el 45 % del mockup — se midió que con menos queda a la mitad de densidad',
-            '/drop-shadow\(\s*0\s+1px\s+0/' => 'ha desaparecido la línea de contacto `0 1px 0`',
-            '/25%/' => 'la línea de contacto ya no lleva el 25 % del mockup',
-            '/var\(--paper-fg\)/' => 'la sombra ha dejado de leer `--paper-fg`: dentro del menú de tinta se volvería luz',
-        ] as $patron => $porque) {
-            $this->assertMatchesRegularExpression($patron, $regla, $porque."\n▶ Son los números de `#267`, medidos contra el lockup del mockup. No se ajustan a ojo.");
-        }
+        // ⚠️ Control positivo: sin esto el caso pasaría en verde con el barrido roto o con la hoja
+        // vacía. Hay otras familias que SÍ usan `drop-shadow` y tienen que seguir apareciendo.
+        $this->assertNotEmpty(
+            $this->reglasQueDeclaran($css, 'drop-shadow'),
+            'el barrido no encuentra ninguna regla con `drop-shadow`: es el instrumento, no la hoja',
+        );
     }
 
     /** El texto de `site.css` con los comentarios blanqueados (conservando offsets). */

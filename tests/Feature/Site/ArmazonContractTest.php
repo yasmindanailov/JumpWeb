@@ -1983,11 +1983,15 @@ class ArmazonContractTest extends TestCase
         );
 
         $logo = (string) ($site['.nav__brand-logo'] ?? '');
-        $this->assertStringContainsString(
-            'filter: drop-shadow', $logo,
-            'el logotipo no lleva `drop-shadow`: sin pastilla y sin sombra, flota sobre el contenido '.
-            'sin nada que lo despegue.',
-        );
+
+        // ⚠️⚠️ **AQUÍ SE EXIGÍA `filter: drop-shadow`, y `#273` lo RETIRÓ.** El razonamiento era
+        // «sin pastilla y sin sombra, flota sobre el contenido sin nada que lo despegue», y lo
+        // sustituye una decisión del owner tomada mirando: **el logotipo ya trae su propio relieve
+        // horneado** —26 pasos de extrusión por palabra— y eso es lo que lo despega. Añadirle un
+        // `drop-shadow` encima es lo que él veía como «demasiada sombra», cuatro veces seguidas.
+        // ▶ Que NO la lleve lo vigila `InlineBrandLogoTest::test_the_logo_carries_no_css_shadow`,
+        // que es donde vive la decisión; aquí sólo se retira la exigencia contraria para que las
+        // dos guardas no se peleen.
         $this->assertStringNotContainsString(
             'box-shadow', $logo,
             '`box-shadow` proyecta la CAJA, no la silueta: sobre un logotipo recortado dibuja un rectángulo.',

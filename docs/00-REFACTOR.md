@@ -2931,6 +2931,15 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       es la comparación que nadie ha hecho.*
       ⚠️ De paso, la geometría del asset resultó estar a **2-3 %** de su mockup: lo que se veía
       distinto era la sombra, no el dibujo. Guarda con mutación.
+- [x] **2j · El logotipo SIN sombra CSS** (`#273`, 2026-08-30, `[DECIDIDO owner]`). Cuarta vuelta,
+      y la que cierra. El SVG ya trae **26 pasos** de extrusión horneada; el lockup del mockup, que
+      es texto vivo, sólo **6** — por eso él necesita filtro y nosotros no.
+      ⚠️⚠️ **La medición de `#267` era correcta y la conclusión no**: densidad y halo daban 4-5 % de
+      diferencia, pero *una métrica agregada puede decir «equivalente» sobre dos cosas que el ojo
+      separa al instante*. Eso **devuelve la razón a `#253`**, que había diagnosticado bien y
+      corregido a medias.
+      ❗ **La lección de método**: a la cuarta vuelta la respuesta no era otra medición, era enseñar
+      opciones y dejar elegir. Guarda con control positivo y mutación.
 - [ ] **3 · Las secciones**, pieza a pieza. ⏸️ **FUERA DE ALCANCE hasta que el owner lo diga**
       (`[DECIDIDO owner, 2026-08-28]`: del canvas solo se toma el sistema de diseño —colores,
       elementos, iconos, formas, menú, hero y pie—; el resto «son pruebas»).

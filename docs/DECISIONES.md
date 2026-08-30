@@ -15480,6 +15480,14 @@ detectar movimiento. Amplitud: `translateY(300%)` = 84,67 px = 3,00 × la figura
 
 ## #267 · 2026-08-29 · [DECIDIDO owner] La sombra del logotipo: tercera vuelta, y la primera vez que se compara con el mockup
 
+> ⚠️⚠️ **CORREGIDA POR `#273`: la medición estaba bien y la conclusión no.** Los 4-5 % de diferencia
+> en densidad y halo son ciertos, pero **lo que el owner juzga no es un agregado**: es su lockup y el
+> nuestro uno al lado del otro, y ahí el nuestro pesa más porque su relieve horneado (26 pasos de
+> extrusión, frente a los 6 de su `text-shadow`) ya lee como profundidad. `[DECIDIDO owner]` a la
+> cuarta vuelta y **eligiendo sobre una tira de cinco niveles**: el logotipo **no lleva sombra CSS**.
+> ▶ Y eso **devuelve la razón a `#253`**, que esta entrada dio por refutado: su diagnóstico era
+> correcto; lo que falló fue rebajar el filtro en vez de retirarlo.
+
 `[DECIDIDO owner]`: «sigue siendo diferente al del mockup, **la sombra es diferente** en el logotipo
 del mockup, revísalo con rigor, yo lo comparo con el del mockup de la landing».
 
@@ -15691,3 +15699,66 @@ saberlo.
 **Verificación**: 1 mutación sobre el patrón del hook y `CriticalPathGateTest` la caza ·
 `mixed-party:verify-concurrency` 12/12 con una sola línea de 7,00 €, **visto FALLAR sin el lock** (12
 líneas, 84,00 €).
+---
+
+## #273 · 2026-08-30 · [DECIDIDO owner] El logotipo no lleva sombra CSS — cuarta vuelta, y la que la cierra
+
+`[DECIDIDO owner]`: «¿está solucionado? **sigo viendo el logo con demasiada sombra**». Elegido
+mirando una tira con cinco niveles, comparando el canvas con la web.
+
+### 1 · Cuatro vueltas sobre lo mismo, y lo que cada una hizo mal
+
+| | qué dijo | qué se hizo | el error |
+|---|---|---|---|
+| `#253` | «demasiada sombra» | 45 % → 30 %, radio 16 → 7 | **diagnosticó bien y corrigió a medias**: vio que nuestro sujeto ya trae relieve, y en vez de retirar el filtro lo rebajó |
+| `#263` | «la suya es más suave, la nuestra densa» | radio 7 → 18, tinta → 18 % | comparó **cuatro variantes NUESTRAS entre sí** |
+| `#267` | «sigue siendo diferente» | volvió a los números del mockup | midió bien y **concluyó mal** (§2) |
+| `#268` | «sigo viendo demasiada» | **fuera el filtro** | — |
+
+### 2 · ⚠️⚠️ La medición de `#267` era correcta, y la conclusión no
+
+`#267` renderizó su lockup y el nuestro sobre el mismo papel y midió **densidad total de sombra**
+(1.193.218 vs 1.252.968) y después el **halo** —la sombra que se sale de la silueta— (1.113.836 vs
+1.160.952). Las dos daban **4-5 %**, y de ahí concluyó que el mismo filtro sobre nuestro sujeto da
+su misma sombra, refutando a `#253`.
+
+▶ **Pero lo que el owner juzga no es un agregado.** Es su lockup y el nuestro **uno al lado del
+otro**, y ahí el nuestro pesa más: su relieve horneado —**26 pasos** de extrusión por palabra— ya
+lee como profundidad, y el filtro se le suma. El del mockup es texto vivo con **6 pasos** de
+`text-shadow`: mucho más fino, y por eso él sí necesita el filtro.
+
+⚠️ *Una métrica agregada puede decir «equivalente» sobre dos cosas que el ojo separa al instante.*
+Sumar píxeles oscurecidos no distingue «relieve macizo + halo» de «letra fina + halo».
+
+▶ **Y `#253` había diagnosticado esto exactamente**: «copiar un filtro no es copiar un resultado si
+el sujeto es otro». Su fallo no fue el diagnóstico, fue quedarse a medias — rebajar en vez de
+retirar. `#267` lo dio por refutado con una medición que no medía lo que se juzgaba.
+
+### 3 · La lección de método, que es la que vale
+
+**A la cuarta vuelta la respuesta no era otra medición: era enseñar opciones y dejar elegir.** Se
+generó una tira con cinco niveles sobre el logotipo real —sin sombra, 12 %, 18 %, 30 % y la del
+mockup— y el owner eligió el primero en un mensaje.
+
+⚠️ Tres tandas gastadas ajustando un número que sólo su ojo podía fijar. *Cuando alguien dice varias
+veces que algo se ve mal y cada corrección falla, lo que falta no es precisión: es la pregunta.*
+
+⚠️ **Y descartar lo trivial primero**: al comprobar dónde miraba salió que **staging sirve el filtro
+de `#263`** y no ha visto nada de hoy. No era el caso —comparaba con el canvas— pero pudo serlo, y
+se preguntó antes de seguir midiendo.
+
+### 4 · Lo que queda
+
+El logotipo se sirve con su relieve y nada más. **Si un cliente quiere sombra, la pone su
+`client.css`**: es decisión de marca, no del producto — lo que el producto no hace es imponerla
+sobre un dibujo que ya trae la suya.
+
+⚠️ **Sin sombra sigue legible sobre tinta**: el asset lleva contorno blanco de 14,4 unidades.
+Verificado en el menú a pantalla completa, donde el logotipo cae sobre `#101418`.
+
+### Lo verificado
+
+`filter: none` computado en los tres contextos —papel, portada y menú de tinta— · legibilidad sobre
+tinta comprobada en captura · guarda `test_the_logo_carries_no_css_shadow` **con control positivo**
+(si el barrido se rompiera, el caso pasaría en verde sobre la nada) y con su mutación: devolver el
+`drop-shadow` la pone roja.

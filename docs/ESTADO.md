@@ -24,7 +24,7 @@
 > (13.590 → 15.090 de valor, +1.500 a puerta, online intacto), el AFORO no se mueve (20 → 20) y por
 > **DOS** mecanismos —`slot_id = null` ya excluye la fila **aunque el portador fuera un pack**, lo que
 > matiza a §12.3—, idempotencia, reversibilidad al dígito, rastro sin sesión y cascada al cancelar.
-> ▶ **Los cinco arreglos**: una ausencia no es una corrección (`#268`) · el operador ve el cargo
+> ▶ **Los cinco arreglos**: una ausencia no es una corrección (`#273`) · el operador ve el cargo
 > huérfano (`#269`) · **el RECIBO**, con el `[DECIDIDO owner]` de los **14,00 € y no 24,00 €**
 > (`#270`) · **no se construye el perdón** `[DECIDIDO owner]` —el argumento decisivo es suyo, de
 > `#244`: «cualquier gestión de dinero post-reserva ya cobrada se hace en las instalaciones»— y el
@@ -46,8 +46,28 @@
 > caso hermano tiene seis por encima en el propio fichero.
 >
 >
-> ❗❗❗ **`#267` — LA SOMBRA DEL LOGOTIPO: TRES VUELTAS DEL OWNER, DOS AJUSTES A OJO, NINGUNA
-> COMPARACIÓN.** `#253` bajó la tinta de 45 a 30 razonando que «copiar un filtro no es copiar un
+> ❗❗❗ **`#273` — EL LOGOTIPO NO LLEVA SOMBRA CSS, y eso cierra CUATRO vueltas.** `[DECIDIDO
+> owner]`, elegido **mirando una tira de cinco niveles**. Este SVG **ya trae su relieve horneado**
+> —26 pasos de extrusión por palabra, frente a los **6** del `text-shadow` del mockup— y cualquier
+> `drop-shadow` encima se le suma. Su lockup sí necesita el filtro porque su extrusión es fina.
+> ⚠️⚠️ **La medición de `#267` era CORRECTA y la conclusión NO.** Densidad total y halo daban 4-5 %
+> de diferencia entre su lockup y el nuestro; pero **lo que el owner juzga no es un agregado**, es
+> los dos dibujos uno al lado del otro. *Una métrica agregada puede decir «equivalente» sobre dos
+> cosas que el ojo separa al instante.*
+> ▶ Eso **devuelve la razón a `#253`**, que `#267` dio por refutado: su diagnóstico —«copiar un
+> filtro no es copiar un resultado si el sujeto es otro»— era bueno; falló al **rebajar en vez de
+> retirar**.
+> ❗❗ **Y la lección de método, que es la que vale**: a la cuarta vuelta la respuesta no era otra
+> medición, era **enseñar opciones y dejar elegir**. Tres tandas gastadas ajustando un número que
+> sólo su ojo podía fijar. *Cuando alguien dice varias veces que algo se ve mal y cada corrección
+> falla, lo que falta no es precisión: es la pregunta.*
+> ⚠️ Y **descartar lo trivial primero**: al preguntarle dónde miraba salió que **staging sirve el
+> filtro de `#263`** y no ha visto nada de hoy. No era el caso, pero pudo serlo.
+> ⚠️ Si un cliente quiere sombra, la pone su `client.css`: es decisión de marca. Sin ella el
+> logotipo sigue legible sobre tinta (contorno blanco de 14,4 unidades), verificado en el menú.
+>
+> ❗❗ **`#267` — LA SOMBRA DEL LOGOTIPO: TRES VUELTAS DEL OWNER, DOS AJUSTES A OJO, NINGUNA
+> COMPARACIÓN.** ⚠️ **Corregida por `#273`.** `#253` bajó la tinta de 45 a 30 razonando que «copiar un filtro no es copiar un
 > resultado si el sujeto es otro»; `#263` corrigió el radio y la dejó en 18 comparando **cuatro
 > variantes NUESTRAS entre sí**. El original no entró en ninguna de las dos.
 > ▶ **Medido por fin, con su lockup delante** (que entregó en HTML, así que por primera vez se puede
@@ -1754,7 +1774,15 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3516 en verde** (23.001 aserciones, **3 skipped**) · **JS 862**, medida el 2026-08-29 por
+- Suite **3516 en verde** (23.017 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-30 **sobre el árbol CONJUNTO**, tras rebasar `#273` (el logotipo sin sombra CSS) encima de
+  las cinco tandas del carril A (`#249` · `#268`→`#272`). ▶ De mi lado, mismo número de casos que
+  `#267` y **−4 aserciones**: la guarda de la sombra cambia de sujeto —ya no asevera cinco números del mockup,
+  asevera que el logotipo no lleve `drop-shadow`, con control positivo— y `ArmazonContractTest`
+  pierde la exigencia CONTRARIA, que es la que puso la suite en rojo al aplicar la decisión.
+  ⚠️ **Ese rojo es la señal de que la decisión estaba bien tomada**: dos guardas no pueden exigir lo
+  contrario la una de la otra.
+- Antes, tras las cinco tandas del carril A: suite **3516 en verde** (23.001 aserciones, **3 skipped**) · **JS 862**, medida el 2026-08-29 por
   la tarde **sobre el árbol CONJUNTO**, tras la revisión adversarial del cumpleaños mixto y sus cinco
   tandas (`#249` · `#268`→`#272`) rebasadas sobre el `#267` del carril C.
   ▶ **+15 casos**: 14 en `MixedPartySurchargeTest` —las cuatro formas de ausencia, el recibo, el
@@ -2486,6 +2514,7 @@ del panel no toca nada (`resources/css/filament/admin/theme.css` sigue intacto).
 | `#265` | Vuelta del owner: el **CTA flotante** crece a 56 y pierde una sombra que era el **rol equivocado**; y el **salto del logotipo** recupera su física — 7 curvas, el asentamiento y el tempo |
 | `#266` | Revisión adversarial de `#265`: **el salto NUNCA se vio** (animación sobre un elemento de `<defs>`) y su **amplitud estaba 7,5× corta** (los `px` de un SVG son unidades del `viewBox`) |
 | `#267` | **La sombra del logotipo, medida por fin contra su lockup**: la nuestra tenía la mitad de densidad. Quedan los números del mockup |
+| `#273` | Y el owner sigue viéndola excesiva: **fuera la sombra CSS**. La métrica de `#267` medía un agregado, y el ojo compara dibujos |
 
 ## ❗❗ LO QUE MÁS IMPORTA QUE SEPAS
 
