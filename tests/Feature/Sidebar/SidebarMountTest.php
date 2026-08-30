@@ -779,8 +779,30 @@ class SidebarMountTest extends TestCase
             'no se encuentra el `close()` del cajón: esta guarda mira el fichero equivocado'
         );
 
-        $close = mb_substr($alpine, (int) mb_strpos($alpine, 'close() {'));
-        $close = mb_substr($close, 0, (int) mb_strpos($close, 'celebrate()'));
+        // ⚠️⚠️ **Este recorte se delimitaba con `celebrate()`, y al RETIRARSE el confeti (`#278`) la
+        // guarda se habría quedado VACÍA sin ponerse roja**: `mb_strpos` devuelve `false`, `mb_substr`
+        // con longitud 0 da la cadena vacía, y una cadena vacía no contiene nada — así que el
+        // `assertStringNotContainsString` de abajo pasaba vigilando la nada. Es la trampa que
+        // `panel-navegacion.md` §5·3 ya documentó («un test se volvió VACÍO sin ponerse rojo»).
+        // ▶ Ahora se delimita con el cierre del propio método y **se asevera que el corte existe**.
+        $inicio = mb_strpos($alpine, 'close() {');
+        $this->assertNotFalse($inicio, 'no se encuentra `close()`: esta guarda mira el fichero equivocado');
+
+        $close = mb_substr($alpine, (int) $inicio);
+        $fin = mb_strpos($close, "\n        },");
+
+        $this->assertNotFalse(
+            $fin,
+            'no se encuentra el FIN de `close()`: sin él este recorte se queda con el fichero entero '.
+            '(o vacío) y la aserción de abajo deja de vigilar el método que dice vigilar.',
+        );
+
+        $close = mb_substr($close, 0, (int) $fin);
+
+        $this->assertStringContainsString(
+            'scrollLock.unlock', $close,
+            'el recorte de `close()` no contiene su propio cuerpo: el delimitador ha dejado de servir.',
+        );
 
         $this->assertStringNotContainsString(
             "this.mode = 'catalog'", $close,

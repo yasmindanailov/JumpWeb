@@ -2,8 +2,24 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-30 (tarde) — `#277`: las microanimaciones
-> del cliente, valoradas y las dos primeras unidades.**
+> aquí solo se enlaza.** Última actualización: **2026-08-30 (tarde) — `#278`: el desenlace, dos
+> piezas y sin confeti.**
+>
+> ▶ **`#278` — EL DESENLACE SON DOS PIEZAS.** `[DECIDIDO owner]`: «quitamos el confeti, tampoco vamos
+> a saturar al cliente». Ya marcaba lo mismo dos veces —desde `#258` está la pegatina de éxito, y el
+> artboard de estados prohíbe que conviva con otra—, y con el sello serían TRES donde el techo son dos.
+> ▶ Queda: **la pegatina** entra creciendo y **el código de la reserva se SELLA**, secuenciados (el
+> sello espera `--dur-estado`, porque «nunca se solapan»). El sello es la única rotación animada del
+> sistema. ⚠️ **Va NEUTRO y es desviación decidida**: su artboard lo estampa en amarillo porque allí
+> es la única pieza; aquí comparte pantalla con una pegatina verde y dos rellenos saturados harían un
+> semáforo. Volver al amarillo es una línea si el owner lo prefiere al verlo.
+> ⚠️⚠️ **Retirar el confeti habría dejado CIEGA una guarda ajena sin ponerla roja**: `SidebarMountTest`
+> usaba `celebrate()` como DELIMITADOR, y sin él el recorte salía vacío — una cadena vacía no contiene
+> nada, así que su aserción pasaba vigilando la nada.
+> ⚠️⚠️ **Y destapó un hueco de `#277`**: la hora COMPLETA no la cubría nadie porque **ninguna fixture
+> tenía una franja llena**. *Un atributo solo está cubierto por el caso que lo hace aparecer.*
+>
+> ▶ Anterior: **2026-08-30 (tarde) — `#277`: las microanimaciones del cliente, valoradas.**
 >
 > ▶ **`#277` — SU ARTBOARD DE MOVIMIENTO: LO QUE YA ESTABA Y LO QUE NO.** El owner entrega
 > `Microanimaciones PJP` y pide valorarlo antes de implementarlo. **Las cuatro curvas y las siete
@@ -1879,8 +1895,12 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3529 en verde** (23.116 aserciones, 1 skipped a propósito) · **JS 864**, medida el
-  2026-08-30 tras `#277`. ▶ **+1 caso** (`the_slot_cascade_keeps_its_contract`) y **+2 en JS**
+- Suite **3531 en verde** (23.179 aserciones, 1 skipped a propósito) · **JS 864**, medida el
+  2026-08-30 tras `#278`. ▶ **+2 casos**: el desenlace (dos piezas, sin confeti) y **la hora COMPLETA
+  en el contrato de árbol** — que `#277` había dejado sin cubrir porque **ninguna fixture tenía una
+  franja llena**. **4 mutaciones y las 4 muerden**, y una es que el confeti no puede volver.
+  ⚠️ La baseline de `PurchaseSection.vue` **BAJA** a 425 y se aprieta en el mismo commit.
+- Antes, tras `#277`: suite **3529 en verde** (23.116 aserciones) · **JS 864**. ▶ **+1 caso** (`the_slot_cascade_keeps_its_contract`) y **+2 en JS**
   (`offer.test.js`: la franja no vendible, y que **la ausencia del campo no es «completa»**) —
   **4 mutaciones y las 4 muerden**, y la del desfase literal muerde además la guarda de duraciones.
 - Antes, tras `#276`: suite **3528 en verde** (23.073 aserciones) · **JS 862**. ▶ **+1 caso** (`what_the_floating_bar_takes_is_declared_once`) y una

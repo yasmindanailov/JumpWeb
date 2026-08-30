@@ -88,7 +88,11 @@ const t = (key) => translate(props.messages, key);
             </template>
         </template>
 
-        <p class="purchase__code">{{ t('order_code') }}: <strong>{{ orderCode }}</strong></p>
+        <!-- ⚠️ **El SELLO va sobre el CÓDIGO, que es lo que el cliente se lleva** (`#278`). En el
+             artboard sella «PLAZA 12» —la cosa conseguida—; aquí la cosa conseguida es el localizador.
+             ▶ El `<strong>` sigue siendo texto normal: se puede seleccionar y copiar. Lo que cambia
+             es su caja, no su naturaleza. -->
+        <p class="purchase__code">{{ t('order_code') }}: <strong class="purchase__stamp">{{ orderCode }}</strong></p>
         <p class="purchase__note">{{ t('email_sent_note') }}</p>
         <p v-if="confirmation?.status === 'paid'" class="purchase__note">{{ t('payment_confirmed_note') }}</p>
         <p v-else-if="confirmation?.status === 'pending'" class="purchase__note">{{ t('pending_payment') }}</p>

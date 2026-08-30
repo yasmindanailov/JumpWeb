@@ -16057,3 +16057,57 @@ rancio**, así que los 34 fallos no eran del cambio sino de no haber corrido `bu
 ▶ Guardas: `MotionScaleTest::test_the_slot_cascade_keeps_its_contract` (**4 mutaciones, las 4
 muerden**, y la del literal muerde además la guarda de duraciones) y dos casos nuevos en
 `offer.test.js`. Detalle en `docs/specs/tema-por-instalacion.md` §29.
+
+## #278 · 2026-08-30 · [DECIDIDO owner] El desenlace de la reserva: dos piezas y sin confeti
+
+`[DECIDIDO owner]`: «sobre el sello y el check, **quitamos el confeti**, tampoco vamos a saturar al
+cliente» · «quiero originalidad y diferenciación **sutil y elegante, sin saturar**».
+
+### 1 · El confeti se retira, y ya marcaba lo mismo dos veces
+
+Desde `#258` el desenlace enseña la **pegatina de éxito** —el estado del sistema de diseño del
+cliente— y el artboard de estados escribe su propia regla: «la pegatina de estado **nunca convive con
+otra** en la misma pantalla». El confeti era la otra. Y el de movimiento pone el techo en **dos**
+elementos animándose a la vez: con confeti, pegatina y sello eran **tres**.
+▶ Fuera `celebrate()` de `app.js` (130 partículas × 150 fotogramas sobre un `<canvas>` a pantalla
+completa) y fuera su `watch` en `PurchaseSection.vue`, que se queda sin sujeto.
+
+⚠️⚠️ **Y retirarlo habría dejado CIEGA una guarda ajena sin ponerla roja.** `SidebarMountTest` usaba
+`celebrate()` como **delimitador** para recortar el cuerpo de `close()`: sin él, `mb_strpos` devuelve
+`false`, `mb_substr` con longitud 0 da la cadena vacía, y una cadena vacía no contiene nada — así que
+su `assertStringNotContainsString` pasaba **vigilando la nada**. Es la trampa de `panel-navegacion.md`
+§5·3 («un test se volvió VACÍO sin ponerse rojo»). Ahora se delimita con el cierre del propio método
+y **se asevera que el corte existe**.
+
+### 2 · Lo que celebra ahora: dos piezas, y con su idioma
+
+**La pegatina** entra con los números del artboard (`0.3 → 1.16 → 1`, curva LONA, 420 ms) y **el
+código de la reserva se SELLA**: cae de −34 px girado −16° y a escala 1,35, y asienta en −6°. En el
+artboard el sello estampa «PLAZA 12» —la cosa conseguida—; aquí la cosa conseguida es el localizador.
+▶ **Se SECUENCIAN, no se solapan** (el sello espera `--dur-estado`): es la misma regla que su artboard
+aplica a la espera y el check, «nunca se solapan». Con las dos a la vez el ojo no sabe cuál mirar.
+⚠️ El sello es **la única rotación animada del sistema**, y lo dice su norma.
+
+⚠️⚠️ **El sello va NEUTRO y es una desviación decidida.** Su artboard lo estampa en amarillo porque
+allí es la única pieza de la pantalla; aquí comparte sitio con una pegatina verde, y dos rellenos
+saturados seguidos convierten el desenlace en un semáforo — justo lo que el owner pidió evitar. Y su
+amarillo es además el rol de AVISO del producto: un localizador no avisa de nada. Se conserva lo que
+lo hace un sello —keyline duro, sombra dura y giro—; el color lo pone la pegatina.
+⚠️ `display: inline-block` no es cosmético: sobre un `<strong>` en línea, `transform` no aplica.
+⚠️ Movimiento reducido: su norma es literal —«el sello **aparece sin caer**»—, así que se conserva el
+fundido y el giro de reposo (que no es movimiento: es la forma de la pieza).
+
+### 3 · Lo que el contrato de árbol enseñó
+
+Añadir una clase al `<strong>` puso rojo `SidebarDomContractTest`: el «lado Livewire» es hoy el
+**manifiesto congelado**, y regenerarlo **acepta cualquier deriva**. Se comprobó antes que la única
+deriva era la intencionada (3 árboles del desenlace) y se regeneró con el porqué en el commit, que es
+la única guarda que queda desde `#111`.
+⚠️⚠️ **Y destapó un hueco de cobertura**: el chip de hora COMPLETA de `#277` **no lo cubría nadie**,
+porque `disabled` es atributo de contrato… y **ninguna fixture tenía una franja llena**. *Un atributo
+solo está cubierto por el caso que lo hace aparecer.* Entra `test_a_full_hour_is_offered_disabled`.
+⚠️ Y la baseline de `PurchaseSection.vue` **BAJA** de 429 a 425 y se aprieta en el mismo commit: una
+baseline que no aprieta regala el crecimiento siguiente.
+
+▶ Guarda: `MotionScaleTest::test_the_outcome_is_two_pieces_and_no_confetti` — **4 mutaciones y las 4
+muerden**, y una de ellas es que **el confeti no puede volver**.

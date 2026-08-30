@@ -107,7 +107,12 @@ class SidebarComponentBudgetTest extends TestCase
         // 428 → 429 el 2026-08-28 (`#239`): UNA línea, y es cableado, no lógica —`timeStore.setLowMax()`
         // junto a las otras dos lecturas de `/config`—. La regla del aviso «casi llena» vive en
         // `offer.js::isAlmostFull()`, que es un módulo plano con sus propios casos (`CE-6`).
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 429, 'api' => 2],
+        // 429 → 425 el 2026-08-30 (`#278`): **BAJA**, y por una retirada. Al quitarse el confeti
+        // (`[DECIDIDO owner]`) el `watch` que lo disparaba se queda sin sujeto y se va entero — un
+        // observador que no observa nada es ruido que el siguiente agente tiene que descartar.
+        // ⚠️ La baseline se aprieta EN EL MISMO COMMIT, que es lo que este test exige: dejarla en 429
+        // regalaría cuatro líneas de crecimiento futuro sin que nadie se enterara.
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 425, 'api' => 2],
     ];
 
     /**

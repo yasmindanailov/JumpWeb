@@ -275,6 +275,41 @@ class SidebarDomContractTest extends TestCase
     }
 
     /**
+     * ❗❗ **UNA HORA COMPLETA SE ENSEÑA DESHABILITADA, y hasta `#277` no se enseñaba de ninguna forma.**
+     *
+     * `SlotOffer` manda las franjas llenas con `sellable: false` **a propósito** —su docblock dice
+     * «se muestran deshabilitadas, no se ocultan»— y el cajón **no leía el campo**: la pintaba como
+     * un chip normal y clicable, y sólo al pulsarlo aparecía «agotado» en el contador de cantidad.
+     *
+     * ⚠️⚠️ **Y el contrato de árbol no lo cazaba, porque NINGUNA fixture tenía una franja llena.**
+     * `disabled` es atributo de contrato para el normalizador, así que el nodo se habría comparado…
+     * si alguna vez hubiera aparecido. *Un atributo solo está cubierto por el caso que lo hace
+     * aparecer* — la misma lección que el `aria-current` del día elegido y que el umbral de `/config`.
+     */
+    public function test_a_full_hour_is_offered_disabled(): void
+    {
+        $entry = $this->product('Entrada 1h', TicketType::TYPE_ENTRY, 990);
+        // Sin una sola plaza online: `SlotOffer` la ofrece igual, marcada como no vendible.
+        $this->slotsForNextDays($entry, 3, capacity: 0);
+
+        $date = now()->addDay()->toDateString();
+
+        $vue = $this->vueTree(3, [], 'timestrip', withSiblings: false,
+            api: $this->timeApiPayload($entry->id, $date, '10:00:00', 1),
+            state: $this->clientState($date, '10:00:00', 1));
+
+        $this->assertStringContainsString(
+            'disabled', $vue,
+            "El caso no está haciendo aparecer una hora COMPLETA, así que no cubre nada.\n".
+            'Comprueba que `SlotOffer` sigue ofreciendo las llenas con `sellable: false` en vez de ocultarlas.'
+        );
+
+        $this->assertTree(__FUNCTION__, $vue,
+            "El árbol de la tira de horas con una franja COMPLETA ha CAMBIADO.\n\n"
+        );
+    }
+
+    /**
      * ⚠️ **El selector se acota con `max_quantity`, y esto es lo que lo comprueba.**
      *
      * El caso anterior no bastaba: con la cantidad lejos de sus topes, los dos botones salen

@@ -2760,6 +2760,65 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .purchase__party { font-size: 40px; line-height: 1; margin-bottom: 4px; }
 .cart--summary { margin: 14px 0; text-align: left; }
 .purchase__code { margin: 12px 0 0; font-family: var(--font-body); font-size: var(--fs-14); color: var(--fg); }
+
+/* ══ EL DESENLACE: DOS PIEZAS, Y NI UNA MÁS (`#278`, `[DECIDIDO owner]`) ═══════════════════════
+   `[DECIDIDO owner]`: «quitamos el confeti, tampoco vamos a saturar al cliente». El confeti a
+   pantalla completa se retira (`app.js`) y la celebración pasa al cajón, con el idioma del cliente:
+   **la pegatina que confirma** y **el código que se sella**.
+   ▶ **Dos, que es el techo que su propio artboard escribe** («máximo dos elementos animándose en
+   pantalla»). Con confeti eran tres, y además el de estados prohíbe que la pegatina conviva con otra.
+
+   ⚠️ **Se SECUENCIAN, no se solapan**: primero confirma, después se sella. Es la misma regla que su
+   artboard aplica a la espera y el check —«nunca se solapan: primero termina la espera»—, y con las
+   dos a la vez el ojo no sabe cuál mirar. El retardo es el de un cambio de estado, no un número. */
+.purchase__party .state-badge {
+    animation: confirma-check var(--dur-cae) var(--ease-cae) both;
+}
+@keyframes confirma-check {
+    0%   { opacity: 0; transform: scale(0.3); }
+    70%  { opacity: 1; transform: scale(1.16); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* El SELLO: cae girado y de más, y asienta torcido — que es como se estampa algo de verdad.
+   ⚠️ **Es la ÚNICA rotación animada del sistema**, y lo dice su artboard: si hubiera dos, dejaría de
+   leerse como un gesto y pasaría a ser un tic.
+   ⚠️ `display: inline-block` no es decorativo: sobre un `<strong>` en línea, `transform` no aplica. */
+.purchase__stamp {
+    display: inline-block;
+    padding: 2px var(--sp-8);
+    border: 2px solid var(--paper-fg);
+    border-radius: var(--r-btn);
+    /* ⚠️ **El artboard sella en AMARILLO y aquí el sello va NEUTRO, y es una desviación decidida.**
+       En su demo el sello es la única pieza de la pantalla; aquí comparte sitio con la pegatina de
+       éxito, que ya es verde. Dos rellenos saturados seguidos convierten el desenlace en un semáforo
+       —justo lo que `[DECIDIDO owner]` pidió evitar al quitar el confeti («no saturar»)— y su amarillo
+       es además el rol de AVISO del producto: un localizador no avisa de nada.
+       ▶ Lo que se conserva es lo que hace que sea un sello: el keyline duro, la sombra dura y el
+       giro. El color lo pone la pegatina, que es la que dice «ha salido bien». */
+    background: var(--bg);
+    color: var(--fg);
+    box-shadow: var(--shadow-float);
+    transform: rotate(-6deg);
+    animation: confirma-sello var(--dur-cae) var(--ease-cae) var(--dur-estado) both;
+}
+@keyframes confirma-sello {
+    0%   { opacity: 0; transform: translateY(-34px) rotate(-16deg) scale(1.35); }
+    60%  { opacity: 1; }
+    100% { opacity: 1; transform: translateY(0) rotate(-6deg) scale(1); }
+}
+/* Su norma de movimiento reducido, literal: «los cargadores pasan a forma estática y **el sello
+   aparece sin caer**». O sea que el fundido se queda y el recorrido no — y el giro de reposo tampoco
+   se pierde, porque no es movimiento: es la forma de la pieza. */
+@media (prefers-reduced-motion: reduce) {
+    .purchase__party .state-badge { animation-name: confirma-check-quieta; }
+    .purchase__stamp { animation-name: confirma-sello-quieta; }
+}
+@keyframes confirma-check-quieta { from { opacity: 0; } to { opacity: 1; } }
+@keyframes confirma-sello-quieta {
+    from { opacity: 0; transform: rotate(-6deg); }
+    to   { opacity: 1; transform: rotate(-6deg); }
+}
 /* ⚠️⚠️ **La barra de pestañas del CAJÓN manda sobre su propio ancho, y no lo hereda del viewport**
    (2026-08-23). `.zone-tabs` nace `inline-flex` porque en la landing vive dentro de contenedores que
    la centran (`.ticket-prices__tabs`, `.rides__controls`); la regla que la pone a ancho completo vive

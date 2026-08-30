@@ -164,25 +164,22 @@ async function tracked(promise) {
 const dateStore = useDateStore();
 
 /**
- * **La celebración de la reserva confirmada.**
+ * ⚠️⚠️ **AQUÍ SE DISPARABA EL CONFETI, y se ha RETIRADO** (`#278`, `[DECIDIDO owner]`: «quitamos el
+ * confeti, tampoco vamos a saturar al cliente»).
  *
- * ⚠️ **El confeti es del store de Alpine, no del cajón**, y por eso se dispara desde aquí:
- * `celebrate()` respeta `prefers-reduced-motion` y saca sus colores de los tokens de marca, así que
- * reimplementarlo en Vue sería una segunda celebración que se olvidaría de las dos cosas. Solo al
- * ENTRAR en el paso: con `immediate` se repetiría en cada repintado, y el Blade lo ata a un `x-init`
- * que corre una vez.
+ * ▶ **Marcaba lo mismo dos veces.** Desde `#258` el desenlace enseña la PEGATINA de éxito, y el
+ * artboard de estados escribe que «la pegatina nunca convive con otra en la misma pantalla»; el de
+ * movimiento pone el techo en **dos** piezas animándose a la vez. Con confeti, pegatina y sello eran
+ * tres.
+ * ▶ La celebración no se pierde: pasa al CAJÓN y la hace el sistema de diseño del cliente — el check
+ * entra con su curva y el código de la reserva se SELLA.
  *
  * ⚠️⚠️ **Aquí ESTABA también el puente de `mode`/`identifying`, y se subió a la raíz el 2026-08-22**
  * (`specs/area-cliente.md` §4.5). Desde que el cajón tiene dos secciones, esas dos señales dependen
- * de **la sección activa además del paso**, y un `watch` sobre el paso **no se dispara al conmutar**:
- * el panel se habría quedado con el último modo de la compra mientras el cliente mira sus pedidos.
- * Lo que se queda aquí es lo que de verdad es de la COMPRA — esto.
+ * de **la sección activa además del paso**, y un `watch` sobre el paso **no se dispara al conmutar**.
+ * Con el confeti fuera, este `watch` se queda sin sujeto y se retira entero: un observador que no
+ * observa nada es ruido que el siguiente agente tiene que descartar.
  */
-watch(() => store.step, (step, previous) => {
-    if (step !== STEPS.CONFIRMED || previous === STEPS.CONFIRMED) return;
-
-    window.Alpine?.store('purchase')?.celebrate?.();
-});
 
 /**
  * ⚠️ **El sondeo se para al SALIR del paso 11, y va en su propio observador a propósito.**

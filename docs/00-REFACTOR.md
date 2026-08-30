@@ -2989,6 +2989,14 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       **+1 caso PHP · +2 JS · 4 mutaciones, las 4 muerden.**
       ⏸️ Quedan en `DEUDA.md`: los 22 bucles (contradicen su propio `6d`), el hover pegatina (toca
       `#209`) y el sello + check.
+- [x] **2ñ · El DESENLACE: dos piezas y sin confeti** (`#278`, 2026-08-30, `[DECIDIDO owner]`).
+      El confeti ya marcaba lo mismo que la pegatina de éxito, y con el sello serían tres donde el
+      techo del artboard son dos. Queda la pegatina entrando y **el código de la reserva SELLADO**,
+      secuenciados. ⚠️ El sello va NEUTRO —desviación decidida: su artboard lo estampa en amarillo
+      porque allí es la única pieza—.
+      ⚠️⚠️ Retirar el confeti habría dejado **ciega una guarda ajena** que lo usaba de delimitador, y
+      destapó que la hora COMPLETA de `#277` **no la cubría nadie** (ninguna fixture tenía una franja
+      llena). **+2 casos · 4 mutaciones, las 4 muerden.**
 - [ ] **3 · Las secciones**, pieza a pieza. ⏸️ **FUERA DE ALCANCE hasta que el owner lo diga**
       (`[DECIDIDO owner, 2026-08-28]`: del canvas solo se toma el sistema de diseño —colores,
       elementos, iconos, formas, menú, hero y pie—; el resto «son pruebas»).

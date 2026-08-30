@@ -461,6 +461,73 @@ class MotionScaleTest extends TestCase
         return substr($css, $i, $j - $i - 1);
     }
 
+    /**
+     * ❗❗ **EL DESENLACE SON DOS PIEZAS, Y NI UNA MÁS** (`#278`, `[DECIDIDO owner]`: «quitamos el
+     * confeti, tampoco vamos a saturar al cliente»).
+     *
+     * Su artboard de movimiento pone el techo en «máximo dos elementos animándose en pantalla», y el
+     * de estados escribe que «la pegatina de estado nunca convive con otra en la misma pantalla». Con
+     * el confeti a pantalla completa eran **tres**, y dos de ellas decían lo mismo.
+     *
+     * ▶ Lo que queda: la **pegatina** que confirma y el **sello** sobre el código, secuenciados —
+     * primero confirma, después se sella—. Es la misma regla que su artboard aplica a la espera y el
+     * check: «nunca se solapan».
+     *
+     * ⚠️ **El sello es la ÚNICA rotación animada del sistema**, y lo dice su norma: con dos dejaría de
+     * leerse como un gesto.
+     */
+    public function test_the_outcome_is_two_pieces_and_no_confetti(): void
+    {
+        $css = $this->hojas();
+
+        $check = $this->cuerpoDeRegla($css, '.purchase__party .state-badge');
+        $sello = $this->cuerpoDeRegla($css, '.purchase__stamp');
+
+        $this->assertMatchesRegularExpression(
+            '/animation:\s*confirma-check\s+var\(--dur-cae\)\s+var\(--ease-cae\)/', $check,
+            'la pegatina de éxito ha dejado de entrar con la curva y el techo de la escala.',
+        );
+
+        // ⚠️ El retardo es lo que las SECUENCIA. Sin él las dos arrancan juntas y el ojo no sabe cuál
+        // mirar — que es exactamente lo que el techo de «dos a la vez» intenta evitar.
+        $this->assertMatchesRegularExpression(
+            '/animation:\s*confirma-sello\s+var\(--dur-cae\)\s+var\(--ease-cae\)\s+var\(--dur-estado\)/', $sello,
+            "el sello ha dejado de esperar a la pegatina.\n".
+            '▶ «Nunca se solapan: primero termina la espera» es regla del propio artboard.',
+        );
+
+        $this->assertStringContainsString(
+            'rotate(-6deg)', $sello,
+            'el sello ha perdido su giro de reposo: sin él no es un sello, es una etiqueta.',
+        );
+
+        // ⚠️⚠️ **El CONFETI no puede volver.** No basta con haberlo borrado: lo que esta guarda
+        // impide es que alguien lo reintroduzca sin enterarse de que su sitio ya está ocupado por
+        // dos piezas y de que el artboard de estados lo prohíbe explícitamente.
+        $js = (string) file_get_contents(base_path('resources/js/app.js'));
+
+        $this->assertDoesNotMatchRegularExpression(
+            '/^\s*celebrate\s*\(\s*\)\s*\{/m', $js,
+            "ha vuelto el confeti a pantalla completa (`celebrate()`).\n".
+            "▶ `[DECIDIDO owner, 2026-08-30]`: se retiró para no saturar. Marcaba lo mismo que la\n".
+            '  pegatina de éxito, y con ella y el sello serían TRES piezas donde el techo son dos.',
+        );
+
+        $reducido = $this->cuerpoDeRegla($css, '.purchase__stamp', enReducido: true);
+
+        $this->assertStringContainsString(
+            'animation-name: confirma-sello-quieta', $reducido,
+            "con movimiento reducido el sello no aparece SIN CAER.\n".
+            '▶ Su norma lo dice con esas palabras: «los cargadores pasan a forma estática y el sello '.
+            'aparece sin caer». Retirarlo del todo lo haría aparecer de golpe.',
+        );
+
+        $this->assertStringNotContainsString(
+            'translateY', $this->cuerpoDeKeyframes($css, 'confirma-sello-quieta'),
+            'la variante de movimiento reducido del sello sigue teniendo recorrido.',
+        );
+    }
+
     /** El cuerpo de todas las reglas de un selector, dentro o fuera del bloque de movimiento reducido. */
     private function cuerpoDeRegla(string $css, string $selector, bool $enReducido = false): string
     {

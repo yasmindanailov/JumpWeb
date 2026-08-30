@@ -275,64 +275,20 @@ document.addEventListener('alpine:init', () => {
                 window.location.reload();
             }
         },
-        // Feedback celebratorio al confirmar la reserva (paso 6). Ligero, sin dependencias y
-        // accesible: se omite si el usuario pidió menos animación (prefers-reduced-motion).
-        celebrate() {
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-            const canvas = document.createElement('canvas');
-            canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999';
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            document.body.appendChild(canvas);
-            const ctx = canvas.getContext('2d');
-            // Paleta del confeti derivada de los tokens de marca (white-label): si la clienta
-            // cambia el color desde el panel, la celebración lo respeta. Fallbacks = defaults.
-            const root = getComputedStyle(document.documentElement);
-            const tok = (name, fallback) => (root.getPropertyValue(name).trim() || fallback);
-            const colors = [
-                tok('--zone-1', '#ff5b22'),
-                tok('--zone-2', '#c6ff3a'),
-                tok('--fg', '#14130f'),
-                tok('--zone-1', '#ff5b22'),
-                tok('--zone-2', '#c6ff3a'),
-            ];
-
-            const parts = Array.from({ length: 130 }, () => ({
-                x: window.innerWidth / 2,
-                y: window.innerHeight / 3,
-                vx: (Math.random() - 0.5) * 12,
-                vy: Math.random() * -12 - 4,
-                size: Math.random() * 6 + 4,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                rot: Math.random() * Math.PI,
-                vr: (Math.random() - 0.5) * 0.3,
-            }));
-
-            let frame = 0;
-            const tick = () => {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                parts.forEach((p) => {
-                    p.vy += 0.3;
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.rot += p.vr;
-                    ctx.save();
-                    ctx.translate(p.x, p.y);
-                    ctx.rotate(p.rot);
-                    ctx.fillStyle = p.color;
-                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-                    ctx.restore();
-                });
-                frame++;
-                if (frame < 150) {
-                    requestAnimationFrame(tick);
-                } else {
-                    canvas.remove();
-                }
-            };
-            requestAnimationFrame(tick);
-        },
+        // ⚠️⚠️ **AQUÍ VIVÍA EL CONFETI, y retirarlo fue una decisión, no limpieza** (`#278`,
+        // `[DECIDIDO owner]`: «quitamos el confeti, tampoco vamos a saturar al cliente»).
+        //
+        // ▶ **Ya marcaba lo mismo dos veces.** Desde `#258` el desenlace enseña la PEGATINA de éxito
+        // —el estado del sistema de diseño del cliente—, y el artboard de estados escribe su propia
+        // regla: «la pegatina de estado nunca convive con otra en la misma pantalla». El confeti era
+        // la otra. Y el de movimiento pone el techo en dos piezas animándose a la vez: con confeti,
+        // pegatina y sello eran tres.
+        //
+        // ▶ Lo que celebra ahora está en el CAJÓN y es del cliente: el check entra con su curva y el
+        // código de la reserva se SELLA (`#278`). Dos piezas, que es el máximo que su norma admite.
+        //
+        // ⚠️ Eran 130 partículas a 150 fotogramas sobre un `<canvas>` a pantalla completa creado a
+        // mano; nada lo echará de menos en un teléfono.
     });
 
     // ⚠️ Aquí vivía el adaptador de intención del motor LIVEWIRE, y BORRARLO FUE UN ARREGLO, no solo
