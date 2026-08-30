@@ -893,7 +893,7 @@ cuando no había con qué calcular, se escribía **cero** en vez de dejarlo quie
 | 1 | El parque sube la tarifa del pack destino; el cliente corrige un **nombre** → el cargo pasa de 15,00 € a **30,00 €**, con su correo | Alta |
 | 2 | Falta el precio del pack destino ese día → el veredicto dice `null` («no se pudo tarificar») y el reconciliador lo escribía como **0,00 €**, cancelando la línea | Media |
 | 3 | El operador anula la línea para perdonar el cargo → **vuelve sola** y al cliente le llega un correo anunciándole lo que le acaban de perdonar | Media |
-| 4 | El tipo `age` puede llegar a `event_fields` y ahí rompe el `enum` de `CatalogEventField` en `openapi/v1.yaml` | Baja |
+| 4 | El tipo `age` puede llegar a `event_fields` y ahí rompe el `enum` de `CatalogEventField` en `openapi/v1.yaml` — ✅ **CERRADO** (`#282`, §17.7) | Baja |
 | 5 | **El cliente vacía sus casillas de edad y guarda → su cargo desaparece** | **Alta** |
 | 6 | `RGPD-01` anonimiza y pone `guest_data` a `null` → la siguiente pasada **borra la deuda** | Alta |
 
@@ -1001,3 +1001,24 @@ poder regalar algo?», que es una decisión propia y mucho mayor. Ficha en `DEUD
    sin lock** que la propia doc documenta (12 × 7,00 € = 84,00 €).
 
 *Cuando un instrumento dice que algo está roto, la primera hipótesis es el instrumento.*
+
+### 17.7 · ✅ Cerrado el defecto 4: cada esquema declara SUS tipos (2026-08-30, `#282`)
+
+El dominio conoce cuatro tipos de campo, pero **los dos esquemas no aceptan los mismos**: la EDAD es
+un dato POR INVITADO del que sale un cobro, y una sola edad para toda la fiesta no significa nada.
+Eso solo lo sabía el `Select` del panel; **las dos puertas de saneo aceptaban los cuatro en los dos
+esquemas**, que es exactamente lo que la regla 12 de este proyecto dice que no se puede suponer.
+
+▶ Ahora la lista vive en el dominio y por esquema —`TicketType::EVENT_FIELD_TYPES` y
+`GUEST_FIELD_TYPES`, servidas por `fieldTypesFor()`— y la leen las **tres** puertas: el `Select`, el
+saneo del panel y el del modelo. Un tipo nuevo entra donde signifique algo, no en todas partes.
+
+⚠️⚠️ **La guarda que importa no es la de conducta, es la del CONTRATO.** `ApiContractTest` compara
+`EVENT_FIELD_TYPES` con el `enum` de `CatalogEventField` en `openapi/v1.yaml` y falla **por los dos
+lados**: añadir un tipo al dominio sin declararlo, o declararlo sin que el dominio lo acepte. *El
+defecto no fue no saberlo: fue que nada lo comprobaba.* Lleva su control explícito —que las dos
+listas sigan siendo distintas—, porque si algún día se fundieran, la guarda pasaría en verde sin
+vigilar nada.
+
+**Verificación**: +4 casos · **4 mutaciones y las 4 muerden** (el modelo laxo, el panel laxo, el
+dominio estrenando un tipo sin contrato, y las dos listas fundidas).

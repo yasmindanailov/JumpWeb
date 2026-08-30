@@ -16363,3 +16363,29 @@ no un pegado.
 
 ▶ Detrás, el orden por rentabilidad que sale de §3 y §5 es: generalizar la trama · las dos variantes
 de tira que faltan · los estados vacíos con D8/F8 · y los iconos de zona F10/G5.
+## #282 · 2026-08-30 · Cada esquema de campos declara SUS tipos, y el contrato lo vigila
+
+Cierra el defecto 4 de `#249`. El dominio conoce cuatro tipos de campo data-driven, pero los dos
+esquemas **no aceptan los mismos**: la EDAD es un dato POR INVITADO del que sale un cobro, y una sola
+edad para toda la fiesta no significa nada. Eso solo lo sabía el `Select` del panel; **las dos
+puertas de saneo —la del panel y la del modelo— aceptaban los cuatro tipos en los dos esquemas**.
+
+Medido antes del arreglo: forzando `type: age` en `event_fields`, el valor persistía y salía por
+`GET /api/v1/catalog/products/{id}` contra el `enum` cerrado de `CatalogEventField`, que además va
+con `additionalProperties: false`. Para un cliente estricto de la API, una respuesta inválida.
+
+▶ La lista pasa a vivir en el dominio y **por esquema** (`TicketType::EVENT_FIELD_TYPES` y
+`GUEST_FIELD_TYPES`, servidas por `fieldTypesFor()`), y la leen las TRES puertas. Un tipo nuevo entra
+donde signifique algo, no en todas partes.
+
+⚠️⚠️ **La guarda que importa no es la de conducta, es la del CONTRATO**: `ApiContractTest` compara la
+lista del dominio con el `enum` del documento y falla por los DOS lados. *El defecto no fue no
+saberlo: fue que nada lo comprobaba.* Lleva control explícito —que las dos listas sigan siendo
+distintas—, porque si se fundieran pasaría en verde sin vigilar nada.
+
+⚠️ Y esto es lo que la regla 12 pide: el `Select` no ofrecía `age` en los datos del evento, pero
+**eso no es una defensa**, es una suposición sobre el formulario.
+
+**Verificación**: suite 3520 / 23.003 · +4 casos · 4 mutaciones y las 4 muerden (el modelo laxo · el
+panel laxo · el dominio estrenando un tipo sin declararlo en el contrato · las dos listas fundidas) ·
+Pint ✓ · docs-check ✓.

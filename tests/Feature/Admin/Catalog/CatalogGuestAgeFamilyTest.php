@@ -65,6 +65,56 @@ class CatalogGuestAgeFamilyTest extends TestCase
         return $method->invoke($page, $data, $isPack);
     }
 
+    /** Ejecuta el saneo de esquemas del panel, que es la puerta por la que entra un `type`. */
+    private function sanitizeSchema(array $rows, bool $perGuest): array
+    {
+        $page = new CreateCatalog;
+        $method = new ReflectionMethod($page::class, $perGuest ? 'sanitizeGuestFields' : 'sanitizeEventFields');
+        $method->setAccessible(true);
+
+        return $method->invoke($page, $rows);
+    }
+
+    // ─── La EDAD solo existe en los datos POR INVITADO (§17.2·4) ────────────
+
+    public function test_the_age_type_is_refused_in_the_event_schema(): void
+    {
+        // ⚠️⚠️ El `Select` del panel nunca ofrece `age` aquí, pero eso NO es una defensa: es la
+        // regla 12 de este proyecto —no se confía en que el formulario oculte lo que no debe
+        // llegar—. Medido antes del arreglo: forzado, persistía, y salía por
+        // `GET /catalog/products/{id}` contra el `enum` cerrado de su propio contrato.
+        $out = $this->sanitizeSchema([[
+            'key' => 'edad_fiesta', 'type' => TicketType::FIELD_TYPE_AGE,
+            'label' => ['es' => 'Edad'], 'required' => false, 'stage' => 'booking',
+        ]], perGuest: false);
+
+        $this->assertSame(TicketType::FIELD_TYPE_TEXT, $out[0]['type'], 'la edad no puede colarse en los datos del evento');
+    }
+
+    public function test_the_age_type_is_kept_in_the_guest_schema(): void
+    {
+        // El CONTROL: sin él, lo de arriba se cumpliría degradando el tipo en los DOS esquemas, y el
+        // campo del que sale el suplemento dejaría de existir sin que nada se pusiera rojo.
+        $out = $this->sanitizeSchema([[
+            'key' => 'edad', 'type' => TicketType::FIELD_TYPE_AGE,
+            'label' => ['es' => 'Edad'], 'required' => true,
+        ]], perGuest: true);
+
+        $this->assertSame(TicketType::FIELD_TYPE_AGE, $out[0]['type']);
+    }
+
+    public function test_the_model_also_refuses_it_when_reading_a_row_written_by_hand(): void
+    {
+        // La segunda puerta: una fila escrita directamente en la base —una semilla, una migración,
+        // un `update()` de consola— no pasa por el panel. El modelo la sanea al leerla.
+        $pack = $this->pack('Con edad en el evento', null, null, null);
+        $pack->forceFill(['event_fields' => [
+            ['key' => 'edad_fiesta', 'type' => TicketType::FIELD_TYPE_AGE, 'label' => ['es' => 'Edad'], 'stage' => 'booking'],
+        ]])->save();
+
+        $this->assertSame(TicketType::FIELD_TYPE_TEXT, $pack->fresh()->eventFields()[0]['type']);
+    }
+
     // ─── Normalización ───────────────────────────────────────────────────────
 
     public function test_the_family_is_normalised_on_write(): void

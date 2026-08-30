@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Domain\Booking\Models\TicketType;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiSurface;
 use Illuminate\Support\Facades\Route;
@@ -106,6 +107,46 @@ class ApiContractTest extends TestCase
     {
         return self::$contract ??= Yaml::parseFile(
             base_path((string) config('api.openapi.directory').'/'.(string) config('api.openapi.file'))
+        );
+    }
+
+    /**
+     * **Los tipos de campo del EVENTO son los mismos en el dominio y en el contrato.**
+     *
+     * ⚠️⚠️ Nace de un defecto medido (`specs/cumple-mixto.md` §17.2·4): el dominio estrenó un cuarto
+     * tipo de campo —la EDAD del invitado— y el saneo lo aceptaba en los DOS esquemas, aunque el
+     * `Select` del panel solo lo ofreciera en uno. Forzado, persistía y salía por
+     * `GET /catalog/products/{id}` contra este mismo `enum`, que además va con
+     * `additionalProperties: false`: para un cliente estricto, una respuesta inválida.
+     *
+     * ▶ Esta guarda cierra el hueco por los DOS lados: añadir un tipo al dominio sin declararlo en el
+     * contrato la pone roja, y declararlo en el contrato sin que el dominio lo acepte, también. Es lo
+     * único que impide que la próxima vez pase igual — el defecto no fue no saberlo, fue que **nada
+     * lo comprobaba**.
+     */
+    public function test_the_event_field_types_are_the_same_in_the_domain_and_in_the_contract(): void
+    {
+        $enContrato = $this->contract()['components']['schemas']['CatalogEventField']['properties']['type']['enum'] ?? null;
+
+        $this->assertIsArray($enContrato, 'el contrato ya no cierra los tipos de `CatalogEventField` con un `enum`');
+
+        $delDominio = TicketType::EVENT_FIELD_TYPES;
+        sort($enContrato);
+        sort($delDominio);
+
+        $this->assertSame(
+            $delDominio, $enContrato,
+            "los tipos de campo del EVENTO no coinciden.\n".
+            '  dominio  (TicketType::EVENT_FIELD_TYPES): '.implode(', ', $delDominio)."\n".
+            '  contrato (CatalogEventField.type.enum):   '.implode(', ', $enContrato)."\n".
+            '▶ El contrato manda: o el tipo entra en los dos, o no entra en ninguno.',
+        );
+
+        // Y el CONTROL: que la lista por invitado sea distinta, porque si algún día se fundieran las
+        // dos este caso pasaría en verde sin vigilar nada.
+        $this->assertNotSame(
+            TicketType::EVENT_FIELD_TYPES, TicketType::GUEST_FIELD_TYPES,
+            'si los dos esquemas aceptan lo mismo, esta guarda ya no distingue nada',
         );
     }
 

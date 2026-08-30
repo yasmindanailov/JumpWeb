@@ -260,7 +260,9 @@ trait InteractsWithCatalogForm
                 // La lista de tipos válidos es la del DOMINIO, no una copia: hasta el 2026-08-29
                 // vivía escrita a mano aquí y en `TicketType::normalizeFieldSchema`, y añadir un
                 // tipo obligaba a acertar los dos sitios.
-                'type' => in_array($type, TicketType::FIELD_TYPES, true) ? $type : TicketType::FIELD_TYPE_TEXT,
+                // ⚠️ Y es la de SU esquema, no la completa: `age` solo vale por invitado. Que el
+                // `Select` no lo ofrezca en los datos del evento no basta (regla 12).
+                'type' => in_array($type, TicketType::fieldTypesFor(perGuest: ! $withStage), true) ? $type : TicketType::FIELD_TYPE_TEXT,
                 'required' => (bool) ($row['required'] ?? false),
                 'label' => $this->compactI18n($row['label'] ?? null) ?? ['es' => $key],
             ];

@@ -271,10 +271,7 @@ class CatalogForm
     private static function fieldTypeOptions(bool $withAge = false): array
     {
         $options = [];
-        foreach (TicketType::FIELD_TYPES as $type) {
-            if ($type === TicketType::FIELD_TYPE_AGE && ! $withAge) {
-                continue;
-            }
+        foreach (TicketType::fieldTypesFor(perGuest: $withAge) as $type) {
             $options[$type] = __('admin.catalog.event_field_types.'.$type);
         }
 

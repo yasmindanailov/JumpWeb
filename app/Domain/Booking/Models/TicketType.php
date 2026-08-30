@@ -92,6 +92,7 @@ class TicketType extends Model
      */
     public const FIELD_TYPE_AGE = 'age';
 
+    /** Todos los tipos que el producto conoce. **No es la lista que acepta cada esquema**: ver abajo. */
     /** @var list<string> */
     public const FIELD_TYPES = [
         self::FIELD_TYPE_TEXT,
@@ -99,6 +100,50 @@ class TicketType extends Model
         self::FIELD_TYPE_TEXTAREA,
         self::FIELD_TYPE_AGE,
     ];
+
+    /**
+     * Los tipos que acepta el esquema de datos del EVENTO (`event_fields`), que se piden UNA vez al
+     * reservar. **La EDAD no está, y no es una omisión**: es un dato POR INVITADO del que sale un
+     * cobro, y una sola edad para toda la fiesta no significa nada.
+     *
+     * ⚠️⚠️ **Esta lista es también el CONTRATO de la API.** `GET /api/v1/catalog/products/{id}`
+     * publica estos campos y `openapi/v1.yaml` los declara con `enum` cerrado y
+     * `additionalProperties: false` — un tipo que llegue aquí y no esté en el contrato es una
+     * respuesta inválida para un cliente estricto. Lo vigila `CatalogFieldTypesMatchContractTest`,
+     * que compara las dos listas: añadir un tipo en un sitio y no en el otro pone la suite en rojo.
+     *
+     * @var list<string>
+     */
+    public const EVENT_FIELD_TYPES = [
+        self::FIELD_TYPE_TEXT,
+        self::FIELD_TYPE_NUMBER,
+        self::FIELD_TYPE_TEXTAREA,
+    ];
+
+    /** Los que acepta el esquema POR INVITADO (`guest_fields`), el único donde la EDAD significa algo. */
+    /** @var list<string> */
+    public const GUEST_FIELD_TYPES = [
+        self::FIELD_TYPE_TEXT,
+        self::FIELD_TYPE_NUMBER,
+        self::FIELD_TYPE_TEXTAREA,
+        self::FIELD_TYPE_AGE,
+    ];
+
+    /**
+     * Los tipos válidos de UNO de los dos esquemas. Fuente única para las TRES puertas por las que
+     * entra un esquema —el `Select` del panel, el saneo del panel y el del modelo—, que hasta el
+     * 2026-08-30 usaban la lista COMPLETA en los dos esquemas y solo el `Select` distinguía.
+     *
+     * ▶ Ahí estaba el hueco: el formulario no ofrecía `age` en los datos del evento, pero **el saneo
+     * lo aceptaba si llegaba**, que es justo lo que la regla 12 de este proyecto dice que no se puede
+     * suponer. Medido: forzado, persistía y salía por la API contra su propio contrato.
+     *
+     * @return list<string>
+     */
+    public static function fieldTypesFor(bool $perGuest): array
+    {
+        return $perGuest ? self::GUEST_FIELD_TYPES : self::EVENT_FIELD_TYPES;
+    }
 
     /**
      * Cota de una edad declarada en el post-form. No pretende ser una regla de negocio (el tramo lo
@@ -507,7 +552,9 @@ class TicketType extends Model
             $entry = [
                 'key' => (string) $field['key'],
                 'label' => $field['label'] ?? $field['key'],
-                'type' => in_array($type, self::FIELD_TYPES, true) ? $type : self::FIELD_TYPE_TEXT,
+                // El esquema del EVENTO no acepta `age`; el POR INVITADO sí. `$withStage` es lo que
+                // los distingue (solo `event_fields` lleva etapa), y aquí decide también los tipos.
+                'type' => in_array($type, self::fieldTypesFor(perGuest: ! $withStage), true) ? $type : self::FIELD_TYPE_TEXT,
                 'required' => (bool) ($field['required'] ?? false),
             ];
 

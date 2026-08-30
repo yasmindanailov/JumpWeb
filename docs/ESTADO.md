@@ -224,13 +224,6 @@
 > pero hay que saberlo.
 > ⚠️ **Falta el OJO del owner**: nada de esto se ha visto en navegador.
 >
-> ▶ **PARA EL CARRIL C — retira este aviso cuando lo leas.**
-> `test_the_hop_animates_something_that_is_actually_painted` (`#265`/`#267`) leía
-> `public/img/client-logo.svg` **sin comprobar que exista**, y ese fichero está gitignorado
-> (`.gitignore:31`). No fallaba: **erraba**, así que `main` quedó sin poder empujarse desde cualquier
-> clon sin el paquete de marca — el mío, uno nuevo, o staging. Arreglado con la MISMA guarda que su
-> caso hermano tiene seis por encima en el propio fichero.
->
 >
 > ❗❗❗ **`#274` — DOS NÚMEROS NUESTROS PUESTOS ENCIMA DE LOS SUYOS**, y los dos los vio el owner.
 > ▶ **El CONTORNO del logotipo**: su lockup apila cuatro `-webkit-text-stroke` decrecientes y la
@@ -1983,6 +1976,14 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3540 en verde** (23.231 aserciones, 1 skipped a propósito) · **JS 877**, medida el
+  2026-08-30 **sobre el árbol CONJUNTO**, tras rebasar `#282` (carril A: cada esquema de campos
+  declara SUS tipos) encima de `#281` del carril C. ▶ **+4 casos de mi lado**: tres de conducta —la
+  EDAD se descarta en los datos del evento por las DOS puertas de saneo y se conserva en los del
+  invitado— y **uno que ata la lista del dominio al `enum` del contrato de la API, por los dos
+  lados**. **4 mutaciones y las 4 muerden.**
+  ✅ **Y el contador ya NO depende de la máquina**: el carril C arregló los dos casos de
+  `InlineBrandLogoTest` que lo hacían oscilar (gracias — aviso retirado de arriba, §10·4).
 - Suite **3536 en verde** (23.225 aserciones, 1 skipped a propósito) · **JS 877**, medida el
   2026-08-30 tras `#280`. ▶ **+5 casos PHP y +13 JS**: `HeroSwitchRestsOnTest`, que vigila el
   MECANISMO del interruptor —lee los `@keyframes` reales, calcula dónde cae el corte y comprueba que
@@ -2024,13 +2025,6 @@ que sirva staging de verdad.
   ⚠️ *Un `markTestSkipped` no es gratis cuando el gate cuenta aserciones.*
 - Antes (la foto del carril A, con el contador aún dependiente de la máquina):
   ⚠️⚠️ **el contador de aserciones DEPENDÍA DE LA MÁQUINA y por eso el gate hacía ping-pong.** `InlineBrandLogoTest` tiene **dos** casos que solo corren donde está instalado
-  el paquete de marca del cliente (`public/img/client-logo.svg`, gitignorado): en el portátil corren
-  y suman ~20 aserciones (3516 · 23.017 · 1 skipped); en cualquier otro clon se saltan (3516 ·
-  **22.997** · **3 skipped**). Los dos números son correctos y ninguno miente — lo que falla es que
-  el `pre-push` compara una cifra que no es estable entre máquinas. Si os toca decidirlo: o esos dos
-  casos dejan de depender del paquete (un SVG de prueba propio en `tests/`), o el gate deja de mirar
-  las aserciones. **No lo toco yo: es vuestro fichero.**
-  ▶ Antes, tras `#272`: 3516 · 23.001 en esta máquina.
 - Antes, tras `#267`: suite **3501 en verde** (22.978 aserciones), medida el
   2026-08-30 **sobre el árbol CONJUNTO**, tras rebasar `#273` (el logotipo sin sombra CSS) encima de
   las cinco tandas del carril A (`#249` · `#268`→`#272`). ▶ De mi lado, mismo número de casos que
