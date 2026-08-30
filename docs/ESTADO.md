@@ -1777,10 +1777,20 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3516 en verde** (22.997 aserciones, **3 skipped**) · **JS 862**, medida el 2026-08-30
-  sobre el árbol CONJUNTO (`#273` del carril C + la corrección del caso espejo del carril A).
-  ⚠️⚠️ **PARA EL CARRIL C — el contador de aserciones DEPENDE DE LA MÁQUINA y por eso el gate os va a
-  hacer ping-pong.** `InlineBrandLogoTest` tiene **dos** casos que solo corren donde está instalado
+- Suite **3516 en verde** (23.019 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-30 sobre el árbol CONJUNTO. ▶ **El contador vuelve a ser ESTABLE entre máquinas**, que es
+  lo que el carril A pidió al ver que el gate hacía ping-pong: los **dos** casos de
+  `InlineBrandLogoTest` que dependían del paquete de marca ya no dependen.
+  · el de la anatomía del SVG vigila ahora **la lista que `INSTALACION-CLIENTE.md` EXIGE** al
+    paquete, no el fichero de un cliente — *un caso que solo corre donde hay un fichero privado no
+    es una guarda del producto, es una guarda de una instalación*;
+  · el del logotipo en línea **corre siempre y comprueba las DOS conductas** con el mismo número de
+    aserciones: con paquete, que se sirve en línea con su nombre accesible; sin él, que la plantilla
+    cae a su **suelo de texto** — la otra mitad del contrato, que no vigilaba nadie.
+  ▶ Verificado moviendo el logotipo de sitio: **59 aserciones con paquete y sin él**.
+  ⚠️ *Un `markTestSkipped` no es gratis cuando el gate cuenta aserciones.*
+- Antes (la foto del carril A, con el contador aún dependiente de la máquina):
+  ⚠️⚠️ **el contador de aserciones DEPENDÍA DE LA MÁQUINA y por eso el gate hacía ping-pong.** `InlineBrandLogoTest` tiene **dos** casos que solo corren donde está instalado
   el paquete de marca del cliente (`public/img/client-logo.svg`, gitignorado): en el portátil corren
   y suman ~20 aserciones (3516 · 23.017 · 1 skipped); en cualquier otro clon se saltan (3516 ·
   **22.997** · **3 skipped**). Los dos números son correctos y ninguno miente — lo que falla es que
@@ -2562,21 +2572,46 @@ del panel no toca nada (`resources/css/filament/admin/theme.css` sigue intacto).
 
 ## ▶ POR DÓNDE SIGUE
 
-0. ❗ **El OJO del owner** sobre esto: el pie en un teléfono de verdad (los dos carriles se deslizan,
-   la vela dice que siguen), la FAQ (se abre pulsando 8 px por encima del texto), que **en el
-   ordenador el pie no ha cambiado nada**, el **salto del logotipo** recargando `/servicios` (y su
-   hover después) y el **CTA flotante** en un teléfono.
-0.bis ❗❗ **BLOQUEADO POR EL OWNER, y es una exportación**: el **relevo de la Y** del logotipo. El SVG
-   dibuja «PLA» y la Y la hace la silueta, así que faltan 475 ms de logotipo incompleto al cargar.
+0. ❗❗ **DESPLEGAR A STAGING, y esto va PRIMERO.** El owner compara con el canvas y **staging sirve
+   el CSS de dos días antes**: no tiene `#264` (área táctil), ni `#265`/`#266` (el CTA flotante y el
+   salto), ni `#273` (la sombra). Salió al preguntarle dónde miraba, en `#273`. **Mientras no se
+   despliegue, su ojo no puede validar nada de lo de estos dos días.**
+1. ❗ **El OJO del owner** sobre: el pie en un teléfono de verdad (los dos carriles se deslizan, la
+   vela dice que siguen), la FAQ (se abre pulsando 8 px por encima del texto), que **en el ordenador
+   el pie no ha cambiado nada**, el **salto del logotipo** recargando `/servicios` —que hasta `#266`
+   no se había visto NUNCA— y su hover después, y el **CTA flotante** en un teléfono.
+2. ❗❗ **BLOQUEADO POR EL OWNER, y es una exportación**: el **relevo de la Y** del logotipo. El SVG
+   dibuja «PLA» y la Y la hace la silueta, así que el logotipo se lee incompleto desde que carga
+   hasta que la figura aterriza (**1,47 s**: 466,7 de espera + 1.000 de vuelo).
    `[DECIDIDO owner]`: lo exporta con la Y. **Qué tiene que traer el fichero está escrito al detalle
-   en `INSTALACION-CLIENTE.md` §4.a.sexies**, con los números del relevo ya medidos: cuando llegue,
-   es una tanda corta.
+   en `INSTALACION-CLIENTE.md` §4.a.sexies** —`<path id="uy">` en `<defs>` más sus `<use>`, y dentro
+   del grupo que se anima—, con los números del relevo ya medidos: cuando llegue, es una tanda corta.
+   ⚠️ **Él entregó en su lugar el lockup entero en HTML** (texto vivo en Lilita One, con el relevo
+   hecho). Adoptarlo es otra decisión, no un atajo: mete la marca en el MARCADO del producto (contra
+   el white-label), su `<link>` es de Google Fonts —usamos Bunny por RGPD— y retira `InlineSvg` con
+   sus guardas. ▶ A favor: `lilita-one:400` **ya viaja** en el `<link>` de todas las vistas, así que
+   no costaría descarga. **Sin decidir.**
 1. ❗ **Siguen abiertas las dos preguntas del owner de `#262`**, las dos a una línea de código: el
    **color de la pista** del interruptor (hoy `--ok` verde, el artboard usa Lima Bote) y el residuo
    de 3,6–4,7 px entre la pista y las mayúsculas.
-2. **Microanimaciones** (`Microanimaciones PJP.dc.html`) y después **elementos fachada**
-   (`Elementos Fachada.dc.html`) — el plan que el owner dio al abrir la sesión anterior.
-3. ⬜ **Lo que sigue sin caber**: la composición del cierre en 390×667. La tanda le devolvió **30 px**
+4. **Microanimaciones** (`Microanimaciones PJP.dc.html`) — el plan del owner. ⚠️ **Medido: la mitad
+   ya está hecha** (las cuatro curvas y las siete duraciones entraron en la tanda 2d, `#222`, y los
+   tres bucles en `#259`). Lo que queda son **tres piezas de tamaño muy distinto**:
+   · **las cuatro animaciones que «sí cuentan algo»** —cargando→confirmado, el sello de reserva
+     («PLAZA 12 cae de −34 px con −16° y aterriza en −6°»), la cascada de franjas con color que
+     informa y el salto—: tocan el CAJÓN, no la landing;
+   · **las cuatro PROHIBICIONES** (no rebotar al salir, no animar texto, no animar el color de
+     marca, no cascada en cada scroll): son reglas, y se hacen ejecutables como guardas;
+   · ❗ **el MOVIMIENTO REDUCIDO, que es un defecto YA PRESENTE**: su norma dice que con
+     `prefers-reduced-motion` desaparecen desplazamientos y escalas **pero se mantienen los fundidos
+     de opacidad de 120 ms**, porque «quitar también el fundido deja la interfaz saltando de estado
+     sin avisar». Medido: de nuestros **29** bloques, **20 apagan con `none`** — o sea que
+     contradicen su norma y le saltan los estados a quien activa esa preferencia.
+5. **Elementos fachada** (`Elementos Fachada.dc.html`), después.
+6. ❗ **Las dos preguntas del owner de `#262`**, a una línea de código cada una: el **color de la
+   pista** del interruptor (hoy `--ok` verde, su artboard usa Lima Bote) y el residuo de 3,6–4,7 px
+   entre la pista y las mayúsculas.
+7. ⬜ **Lo que sigue sin caber**: la composición del cierre en 390×667. `#264` le devolvió **30 px**
    al recortar el pie, así que la ficha de `DEUDA` está **menos apretada pero abierta**.
 
 ---

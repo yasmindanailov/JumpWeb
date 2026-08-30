@@ -131,19 +131,44 @@ class InlineBrandLogoTest extends TestCase
      */
     public function test_the_frame_serves_it_inline_with_an_accessible_name(): void
     {
-        if (! is_file(public_path('img/client-logo.svg'))) {
-            $this->markTestSkipped('no hay paquete de marca instalado en esta máquina: es lo normal en el producto');
-        }
-
+        // ⚠️⚠️ **Las DOS conductas, y con el MISMO número de aserciones.** Antes esto se saltaba sin
+        // paquete de marca —`public/img/client-logo.svg` está gitignorado— y el recuento de
+        // aserciones del `pre-push`, que exige coincidencia exacta, dejaba de ser estable entre
+        // máquinas: los dos carriles se rechazaban el push el uno al otro sin que ninguno mintiera.
+        // ▶ Un `markTestSkipped` no es gratis cuando el gate cuenta aserciones. Aquí el caso
+        // **corre siempre** y comprueba lo que toque: con paquete, que se sirve en línea con su
+        // nombre accesible; sin él, que la plantilla **cae a su suelo de texto** en vez de emitir
+        // un enlace vacío — que es la otra mitad del contrato y no la vigilaba nadie.
         $html = (string) $this->get('/')->assertOk()->getContent();
+        $conPaquete = is_file(public_path('img/client-logo.svg'));
 
-        $this->assertStringContainsString('nav__brand-logo--inline', $html, 'el armazón no sirve el logotipo en línea');
-        $this->assertMatchesRegularExpression(
-            '/nav__brand-logo--inline"[^>]*role="img"[^>]*aria-label="[^"]+"/',
-            $html,
+        $this->assertSame(
+            $conPaquete,
+            str_contains($html, 'nav__brand-logo--inline'),
+            $conPaquete
+                ? 'el armazón no sirve el logotipo en línea'
+                : 'el armazón sirve un logotipo en línea SIN paquete de marca instalado',
+        );
+        $this->assertSame(
+            $conPaquete,
+            preg_match('/nav__brand-logo--inline"[^>]*role="img"[^>]*aria-label="[^"]+"/', $html) === 1,
             'el logotipo en línea se ha quedado sin nombre accesible: es el único enlace de TODA página.',
         );
-        $this->assertStringContainsString('id="fig"', $html, 'no llega la pieza que se anima');
+        $this->assertSame(
+            $conPaquete,
+            str_contains($html, 'id="fig"'),
+            'no llega la pieza que se anima',
+        );
+
+        // Y el suelo: sin paquete tiene que quedar el nombre del sitio como TEXTO, no un hueco.
+        if (! $conPaquete) {
+            $this->assertMatchesRegularExpression(
+                '/nav__brand[^"]*"[^>]*>/', $html,
+                'sin paquete de marca el armazón no deja ni el suelo de texto: el enlace de marca quedaría vacío',
+            );
+        } else {
+            $this->assertStringContainsString('nav__brand', $html, 'ha desaparecido el enlace de marca');
+        }
     }
 
     /**
@@ -309,17 +334,15 @@ class InlineBrandLogoTest extends TestCase
         // «Failed to open stream» en todo clon que no lo tenga —incluido el `pre-push`, que corre
         // la suite entera—, así que `main` quedaba sin poder empujarse desde ninguna otra máquina.
         // Cazado por el carril A al rebasar sobre `#267` (2026-08-29).
-        if (! is_file(public_path('img/client-logo.svg'))) {
-            $this->markTestSkipped('no hay paquete de marca instalado en esta máquina: es lo normal en el producto');
-        }
-
-        $svg = (string) file_get_contents(public_path('img/client-logo.svg'));
-        $defs = preg_match('/<defs\b.*?<\/defs>/s', $svg, $d) === 1 ? $d[0] : '';
-
-        preg_match_all('/id="([^"]+)"/', $defs, $ids);
-        $enDefs = $ids[1] ?? [];
-
-        $this->assertNotEmpty($enDefs, 'el logotipo instalado no declara `<defs>`: la guarda estaría vigilando el vacío');
+        // ⚠️⚠️ **NO se lee el logotipo instalado, y eso es deliberado** (lo pidió el carril A al ver
+        // que el gate hacía ping-pong): `public/img/client-logo.svg` está **gitignorado**, así que
+        // este caso corría en la máquina con el paquete puesto y se SALTABA en las demás — y el
+        // recuento de aserciones del `pre-push`, que exige coincidencia exacta, dejaba de ser
+        // estable entre máquinas. *Un caso que solo corre donde hay un fichero privado no es una
+        // guarda del producto: es una guarda de una instalación.*
+        // ▶ La lista es la que **`INSTALACION-CLIENTE.md` §4.a.quinquies/§4.a.sexies EXIGE** al
+        // paquete, así que se vigila contra el contrato y no contra el fichero de un cliente.
+        $enDefs = ['u1', 'u2', 'fig', 'uy', 'recFig', 'cuerpo', 'sombraTexto', 'brilloTexto'];
 
         preg_match_all('/([^{}]*)\{[^{}]*animation:\s*brand-hop[^{}]*\}/', $this->siteCssSinComentarios(), $m);
         $selectores = array_filter(array_map('trim', explode(',', implode(',', $m[1] ?? []))));
