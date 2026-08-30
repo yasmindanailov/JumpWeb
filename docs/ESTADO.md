@@ -1777,7 +1777,18 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3516 en verde** (23.017 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+- Suite **3516 en verde** (22.997 aserciones, **3 skipped**) · **JS 862**, medida el 2026-08-30
+  sobre el árbol CONJUNTO (`#273` del carril C + la corrección del caso espejo del carril A).
+  ⚠️⚠️ **PARA EL CARRIL C — el contador de aserciones DEPENDE DE LA MÁQUINA y por eso el gate os va a
+  hacer ping-pong.** `InlineBrandLogoTest` tiene **dos** casos que solo corren donde está instalado
+  el paquete de marca del cliente (`public/img/client-logo.svg`, gitignorado): en el portátil corren
+  y suman ~20 aserciones (3516 · 23.017 · 1 skipped); en cualquier otro clon se saltan (3516 ·
+  **22.997** · **3 skipped**). Los dos números son correctos y ninguno miente — lo que falla es que
+  el `pre-push` compara una cifra que no es estable entre máquinas. Si os toca decidirlo: o esos dos
+  casos dejan de depender del paquete (un SVG de prueba propio en `tests/`), o el gate deja de mirar
+  las aserciones. **No lo toco yo: es vuestro fichero.**
+  ▶ Antes, tras `#272`: 3516 · 23.001 en esta máquina.
+- Antes, tras `#267`: suite **3501 en verde** (22.978 aserciones), medida el
   2026-08-30 **sobre el árbol CONJUNTO**, tras rebasar `#273` (el logotipo sin sombra CSS) encima de
   las cinco tandas del carril A (`#249` · `#268`→`#272`). ▶ De mi lado, mismo número de casos que
   `#267` y **−4 aserciones**: la guarda de la sombra cambia de sujeto —ya no asevera cinco números del mockup,
