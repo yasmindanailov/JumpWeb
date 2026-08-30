@@ -197,6 +197,19 @@ sistema (`#266`): la espera son 466,7 y el hueco dura todo el vuelo.
 la animación cae sobre «el grupo que contiene los `use` de la figura», porque una animación CSS
 sobre un elemento de `<defs>` **no alcanza al clon del `<use>`** — eso costó tres tandas.
 
+❗❗ **Y SI VUELVES A EXPORTAR EL LOGOTIPO, HAY QUE PASARLE EL GUION DEL CONTORNO** (`#274`):
+
+```bash
+php scripts/logo-contorno.php public/img/client-logo.svg 0.65
+```
+
+El exportado trae el trazo de las capas de color más grueso de lo que su propio mockup dibuja
+(`[DECIDIDO owner]`, elegido sobre una tira de cuatro grosores). El guion toca **solo** el
+`stroke-width` de esas capas —no la extrusión, ni la silueta, ni los degradados, ni ningún `id`— y
+**aborta antes de escribir** si detecta que ha tocado algo que no le corresponde.
+⚠️ **Y el logotipo NO viaja en el despliegue**: `deploy.sh` excluye todos los ficheros de marca, así
+que tras afinarlo hay que **subirlo a mano** al servidor (o pasar allí el guion).
+
 ⚠️ **El resto del logotipo NO cambia**: es el mismo fichero con una pieza más. Nada de rehacerlo —
 está verificado byte a byte contra el PNG que exportó el owner.
 

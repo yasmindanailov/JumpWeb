@@ -2043,7 +2043,13 @@ body.no-scroll { overflow: hidden; }
        Quien no entienda la unidad se queda con la primera línea, que sigue siendo válida. */
     --hero-h-ini: calc(100vh - var(--hero-gap) * 2);
     --hero-h-ini: calc(100svh - var(--hero-gap) * 2);
+    /* ⚠️⚠️ **El par `svh` DESPUÉS de `vh`, como sus hermanas** (`#274`). `--hero-h-ini` y la altura
+       del contenedor lo declaran desde `#252`; **ésta era la única de las tres expresiones de
+       ventana del hero que se había quedado sin él**, y es justo la que fija el alto del PUNTO
+       ESTÁTICO. En un teléfono `100vh` incluye la barra del navegador, así que el hero de reposo
+       cambiaba de alto según si la barra estaba dentro o fuera. */
     --hero-h-end: min(78vh, 660px);
+    --hero-h-end: min(78svh, 660px);
     /* ⚠️ El ancho final del hero es la caja EXTERIOR de la columna (`--col-max + 2 × sangrado`),
        no un número suyo: en el mockup su tarjeta acaba justo en el borde exterior de la columna
        de las secciones, así que sus cantos sobresalen un sangrado por cada lado del texto. */
@@ -2604,7 +2610,22 @@ body[data-has-hero].nav--live .hero__pair-slot {
     .hero.hero--full {
         --hero-runway: 300px;
         --hero-gap-end: 12px;
-        --hero-h-end: min(72vh, 520px);
+        /* ❗❗❗ **AQUÍ HABÍA UN `min(72vh, 520px)` QUE NO SALE DEL MOCKUP** (`#274`,
+           `[DECIDIDO owner]`: «en el móvil el hero es demasiado corto … hay mucho espacio debajo
+           del hero vídeo»).
+           ▶ **Su fórmula es UNA SOLA para todas las ventanas**: `Math.min(vh * 0.78, 660)`
+           (`Landing PJP Modos.dc.html`), que es exactamente la nuestra de escritorio. El override
+           de móvil bajaba el porcentaje (72 en vez de 78) **y el tope (520 en vez de 660)**, y ese
+           tope **muerde en todo teléfono de más de 722 px de ventana**: el hero deja de crecer y el
+           hueco de debajo crece 1:1 con la pantalla.
+           ▶ Medido en el punto estático (`--hero-p = 1`):
+             390×667 → hero 480 (72 %) · hueco 115 (17,2 %)   ← aquí el tope aún no muerde
+             390×844 → hero **520 (61,6 %)** · hueco **252 (29,9 %)**
+             390×932 → hero **520 (55,8 %)** · hueco **340 (36,5 %)**
+             1280×900 → hero 660 (73,3 %) · hueco 142 (15,8 %)  ← el que sí coincide con el mockup
+           ⚠️ **El tope de 660 SÍ es suyo y se queda**: su fórmula también topa ahí. Lo que no era
+           suyo es el segundo tope, más bajo, que sólo existía en móvil.
+           ⚠️ Y por eso el móvil hereda ahora la declaración de arriba **con su par `svh`**. */
     }
 }
 

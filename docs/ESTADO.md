@@ -49,7 +49,30 @@
 > caso hermano tiene seis por encima en el propio fichero.
 >
 >
-> ❗❗❗ **`#273` — EL LOGOTIPO NO LLEVA SOMBRA CSS, y eso cierra CUATRO vueltas.** `[DECIDIDO
+> ❗❗❗ **`#274` — DOS NÚMEROS NUESTROS PUESTOS ENCIMA DE LOS SUYOS**, y los dos los vio el owner.
+> ▶ **El CONTORNO del logotipo**: su lockup apila cuatro `-webkit-text-stroke` decrecientes y la
+> profundidad la da un `text-shadow` de **6 pasos**; el nuestro son `<use>` con `stroke-width` y
+> **26 pasos**. ⚠️⚠️ **La aritmética decía que no había defecto** —las bandas visibles calculan
+> idénticas (0,90 · 1,45 · 0,90 px) y el stroke base sale 6,49 contra 6,50— **y al ponerlos uno
+> encima del otro el nuestro es visiblemente más gordo**. Se resolvió como `#273`: **enseñando
+> opciones**; eligió el **65 %**. ⚠️ Va por GUION (`scripts/logo-contorno.php`) porque **modifica el
+> asset del cliente**: cuando el owner lo re-exporte, hay que volver a pasarlo. Y **no viaja en el
+> despliegue** — `deploy.sh` excluye los ficheros de marca.
+> ▶ **El HERO de móvil**: `--hero-h-end: min(72vh, **520px**)` en el `@media` de 768 — un segundo
+> tope que **no sale del mockup** (el suyo es `Math.min(vh * 0.78, 660)` para TODAS las ventanas).
+> **Muerde en toda ventana de más de 722 px**, así que el hero se clavaba en 520 y el hueco crecía
+> 1:1 con el teléfono: **252 px vacíos a 390×844 (29,9 %) y 340 a 390×932 (36,5 %)**. Retirado →
+> **658 px (78 %) y 114 de hueco (13,5 %)**. Escritorio intacto.
+> ⚠️⚠️ Y `--hero-h-end` era **la única de las tres expresiones de ventana del hero sin el par
+> `vh` → `svh`** que sus hermanas declaran desde `#252` — justo la que fija el punto estático.
+> ⚠️ **Cuatro trampas de instrumento** en la medición del contorno, todas por comparar cosas no
+> comparables — entre ellas **escalar el `font-size` sin caer en que `-webkit-text-stroke` son px
+> ABSOLUTOS y no escalan**.
+> ⚠️⚠️ **Y una del arnés**: los 24 refutadores del hero cayeron por cuota, y el script los devolvió
+> como «refutados» con `0/0`. *Cero votos a favor no es refutado: es no haber podido votar.* Se
+> verificó a mano en cinco ventanas.
+>
+> ❗❗ **`#273` — EL LOGOTIPO NO LLEVA SOMBRA CSS, y eso cierra CUATRO vueltas.** `[DECIDIDO
 > owner]`, elegido **mirando una tira de cinco niveles**. Este SVG **ya trae su relieve horneado**
 > —26 pasos de extrusión por palabra, frente a los **6** del `text-shadow` del mockup— y cualquier
 > `drop-shadow` encima se le suma. Su lockup sí necesita el filtro porque su extrusión es fina.
@@ -1777,8 +1800,10 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3516 en verde** (23.019 aserciones, 1 skipped a propósito) · **JS 862**, medida el
-  2026-08-30 sobre el árbol CONJUNTO. ▶ **El contador vuelve a ser ESTABLE entre máquinas**, que es
+- Suite **3517 en verde** (23.020 aserciones, 1 skipped a propósito) · **JS 862**, medida el
+  2026-08-30 tras `#274`. ▶ **+1 caso**: que el alto de reposo del hero sea **una sola fórmula con su
+  par `svh`** — **2 mutaciones y las 2 muerden** (devolver el tope de móvil · quitar el `svh`).
+- Antes, tras estabilizar el contador: suite **3516 en verde** (23.019 aserciones, 1 skipped). ▶ **El contador vuelve a ser ESTABLE entre máquinas**, que es
   lo que el carril A pidió al ver que el gate hacía ping-pong: los **dos** casos de
   `InlineBrandLogoTest` que dependían del paquete de marca ya no dependen.
   · el de la anatomía del SVG vigila ahora **la lista que `INSTALACION-CLIENTE.md` EXIGE** al

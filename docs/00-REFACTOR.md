@@ -2940,6 +2940,17 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       corregido a medias.
       ❗ **La lección de método**: a la cuarta vuelta la respuesta no era otra medición, era enseñar
       opciones y dejar elegir. Guarda con control positivo y mutación.
+- [x] **2k · El CONTORNO del logotipo y el HERO de móvil** (`#274`, 2026-08-30, `[DECIDIDO owner]`).
+      Los dos son lo mismo: **un número nuestro puesto encima de uno suyo**.
+      ▶ El contorno se afina al **65 %** por GUION (`scripts/logo-contorno.php`), porque modifica el
+      asset del cliente. ⚠️⚠️ **La aritmética decía que no había defecto** —bandas visibles
+      idénticas, stroke base 6,49 contra 6,50— y el ojo del owner decía que sí: se resolvió
+      enseñando opciones, como `#273`.
+      ▶ El hero de móvil llevaba un `min(72vh, **520px**)` que **no sale del mockup** (el suyo es
+      una sola fórmula, `Math.min(vh * 0.78, 660)`). Ese tope mordía por encima de 722 px de
+      ventana: **252 px vacíos a 390×844 y 340 a 390×932**. Retirado → 114 y 200.
+      ⚠️ `--hero-h-end` era además la única de las tres expresiones de ventana del hero **sin el par
+      `vh` → `svh`**. **+1 caso · 2 mutaciones, las 2 muerden.**
 - [ ] **3 · Las secciones**, pieza a pieza. ⏸️ **FUERA DE ALCANCE hasta que el owner lo diga**
       (`[DECIDIDO owner, 2026-08-28]`: del canvas solo se toma el sistema de diseño —colores,
       elementos, iconos, formas, menú, hero y pie—; el resto «son pruebas»).

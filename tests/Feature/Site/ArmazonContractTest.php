@@ -2020,6 +2020,48 @@ class ArmazonContractTest extends TestCase
      * a secas no diría qué se cierra.
      */
     /**
+     * **EL ALTO DE REPOSO DEL HERO ES UNA SOLA FÓRMULA, Y ES LA DEL MOCKUP** (`#274`).
+     *
+     * `[DECIDIDO owner]`: «en el móvil el hero es demasiado corto … hay mucho espacio debajo del
+     * hero vídeo». Había un override de móvil —`min(72vh, 520px)`— que **no sale del mockup**: el
+     * suyo usa `Math.min(vh * 0.78, 660)` para TODAS las ventanas.
+     *
+     * ▶ Lo que hacía ese segundo tope, medido en el punto estático (`--hero-p = 1`):
+     *   390×844 → hero 520 px (61,6 %) y **252 px vacíos** bajo el vídeo (29,9 %)
+     *   390×932 → hero 520 px (55,8 %) y **340 px** (36,5 %)
+     * porque **muerde en toda ventana de más de 722 px**: el hero deja de crecer y el hueco crece
+     * 1:1 con el teléfono. En escritorio la misma pieza ocupa el 73,3 %.
+     *
+     * ⚠️ **El tope de 660 SÍ es del mockup y se queda.** Lo que no era suyo es el segundo, más bajo
+     * y sólo en móvil.
+     *
+     * ⚠️⚠️ **Y el par `vh` → `svh`**: `--hero-h-ini` y la altura del contenedor lo declaran desde
+     * `#252`, y `--hero-h-end` era **la única de las tres expresiones de ventana del hero sin él** —
+     * justo la que fija el punto estático. En un teléfono `100vh` incluye la barra del navegador.
+     */
+    public function test_the_hero_resting_height_is_one_formula_with_its_svh_pair(): void
+    {
+        $css = (string) preg_replace_callback(
+            '#/\*.*?\*/#s',
+            fn (array $m): string => str_repeat(' ', strlen($m[0])),
+            (string) file_get_contents(public_path('css/site.css')),
+        );
+
+        preg_match_all('/--hero-h-end\s*:\s*([^;]+);/', $css, $m);
+        $valores = array_map('trim', $m[1] ?? []);
+
+        $this->assertSame(
+            ['min(78vh, 660px)', 'min(78svh, 660px)'],
+            $valores,
+            "El alto de reposo del hero ya no es UNA fórmula con su par `svh`.\n"
+            .'Declaraciones encontradas: '.json_encode($valores)."\n"
+            .'▶ El mockup usa `Math.min(vh * 0.78, 660)` en TODAS las ventanas. Un segundo tope solo '
+            .'para móvil deja el hero clavado y el hueco de debajo crece 1:1 con el teléfono: a 390×932 '
+            .'eran 340 px vacíos, el 36,5 % de la pantalla.',
+        );
+    }
+
+    /**
      * **El hueco que el hero le deja al racimo se CALCULA, no se estima** (`#252`).
      *
      * `[DECIDIDO owner, 2026-08-29]`: en el punto estático el logotipo, el CTA y el icono del menú

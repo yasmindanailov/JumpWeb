@@ -15762,3 +15762,92 @@ Verificado en el menú a pantalla completa, donde el logotipo cae sobre `#101418
 tinta comprobada en captura · guarda `test_the_logo_carries_no_css_shadow` **con control positivo**
 (si el barrido se rompiera, el caso pasaría en verde sobre la nada) y con su mutación: devolver el
 `drop-shadow` la pone roja.
+
+---
+
+## #274 · 2026-08-30 · [DECIDIDO owner] El contorno del logotipo y el hero de móvil: los dos números que no salían del mockup
+
+Dos encargos del owner en el mismo mensaje, y los dos resultan ser lo mismo: **un número nuestro
+puesto encima de uno suyo**.
+
+### 1 · El contorno del logotipo: era el ASSET, no el CSS
+
+`[DECIDIDO owner]`: «fíjate que detrás del texto no hay sombra, hay como la forma del texto repetida
+detrás, **nosotros tenemos un borde muy grueso**, revisa ese diff y arréglalo».
+
+Nos entregó el marcado completo de su lockup, y con él delante se pudo comparar. Su receta apila
+cuatro capas de `-webkit-text-stroke` decreciente (6,5 · 6,5 · 4,7 · 1,8 en JUMPPARK) y la
+profundidad la da un `text-shadow` de **6 pasos** —lo que él llama «la forma del texto repetida»—.
+La nuestra son `<use>` con `stroke-width` (52 · 37,6 · 14,4) y **26 pasos** de extrusión.
+
+⚠️⚠️ **Y aquí la aritmética dijo que no había defecto, cuatro veces seguidas.** Las bandas visibles
+—la diferencia entre capas consecutivas— calculan **idénticas** en los dos: 0,90 px de cian, 1,45 de
+tinta y 0,90 de blanco. Y el stroke base sale a **6,49 px el nuestro contra 6,50 el suyo**. Con esos
+números no hay nada que arreglar.
+▶ **Pero al ponerlos uno encima del otro a tamaño real, el nuestro es visiblemente más gordo.** El
+owner lo vio y los números no. `#273` ya había enseñado por qué: *una métrica agregada puede decir
+«equivalente» sobre dos cosas que el ojo separa al instante* — y aquí ni siquiera era agregada, era
+la banda exacta.
+
+▶ **Se resolvió como `#273`: enseñando opciones.** Una tira con su lockup arriba y el nuestro al
+100 %, 80 %, 65 % y con solo la tinta afinada. Eligió el **65 %**.
+
+⚠️⚠️ **Esto MODIFICA el asset del cliente, y por eso es un GUION y no una edición**:
+`scripts/logo-contorno.php`. `#211` dejó escrito que el logotipo lo exporta el owner; cuando lo
+vuelva a exportar llegará otra vez con el trazo grueso y **hay que volver a pasar el guion**. El
+guion toca **solo** el `stroke-width` de las capas de color y trae su propia guarda: si tocara la
+extrusión o la silueta, aborta antes de escribir.
+⚠️ **El logotipo NO viaja en el despliegue** (`deploy.sh` lo excluye con los demás ficheros de
+marca): hay que subirlo aparte o pasar el guion en el servidor.
+
+⚠️ Cuatro trampas de instrumento en esta medición, todas por comparar cosas que no eran comparables:
+un zoom con escalas distintas · normalizar con una altura de mayúscula supuesta en vez de medida ·
+**escalar el `font-size` sin caer en que `-webkit-text-stroke` son px ABSOLUTOS y no escalan** · y
+cortes verticales que caían en sitios distintos de la letra.
+
+### 2 · El hero de móvil: un tope de 520 px que el mockup no tiene
+
+`[DECIDIDO owner]`: «en el móvil el hero es demasiado corto … hay mucho espacio debajo del hero
+vídeo, tiene que ser el espacio perfecto».
+
+Medido en el punto estático (`--hero-p = 1`), antes:
+
+| ventana | hero | hueco bajo el vídeo |
+|---|---|---|
+| 390×667 | 480 px (72 %) | 115 px (17,2 %) |
+| 390×844 | **520 px (61,6 %)** | **252 px (29,9 %)** |
+| 390×932 | **520 px (55,8 %)** | **340 px (36,5 %)** |
+| 1280×900 | 660 px (73,3 %) | 142 px (15,8 %) |
+
+▶ La causa: `--hero-h-end: min(72vh, **520px**)` en el `@media (max-width: 768px)`. **Ese segundo
+tope muerde en toda ventana de más de 722 px**, así que el hero deja de crecer y el hueco crece
+**1:1 con el teléfono**.
+▶ **Y no sale del mockup**: su fórmula es `Math.min(vh * 0.78, 660)` para **todas** las ventanas, o
+sea exactamente la nuestra de escritorio. El override de móvil bajaba el porcentaje (72 en vez de
+78) **y el tope (520 en vez de 660)**.
+
+▶ Retirado. Ahora, con su fórmula: 390×844 → **658 px (78 %)** y el hueco baja a **114 px (13,5 %)**;
+390×932 → 660 px y 200 px (21,5 %). **Escritorio, intacto.**
+
+⚠️ **El tope de 660 SÍ es suyo y se queda.** Lo que no era suyo es el segundo, más bajo.
+⚠️⚠️ **Y `--hero-h-end` era la única de las TRES expresiones de ventana del hero sin el par
+`vh` → `svh`** que sus hermanas declaran desde `#252` — justo la que fija el punto estático. En un
+teléfono `100vh` incluye la barra del navegador, así que el hero de reposo cambiaba de alto según si
+la barra estaba dentro o fuera. Añadido.
+
+### 3 · ⚠️ Sobre la revisión: 24 refutadores caídos por cuota
+
+El diagnóstico del hero salió de cuatro medidores independientes que **coincidieron**, pero los 24
+refutadores fallaron por límite semanal de la cuenta. **Sus hallazgos quedaron sin verificar de
+forma adversarial**, y el script los devolvió en la lista de «refutados» con `0/0` votos — que no es
+refutar, es no haber podido votar.
+▶ Se verificaron **a mano**, midiendo en cinco ventanas, y el diagnóstico se confirma.
+⚠️ *Un clasificador que trata «cero votos a favor» igual que «refutado» miente en cuanto el panel se
+cae.* Ficha para el siguiente que escriba uno.
+
+### Lo verificado
+
+Sin regresiones en cinco ventanas: hueco racimo→hero **12 px** en móvil y 10 en escritorio (el
+número de `#252`), titular en **un renglón** en las cinco, desborde **0**, y el hero **cabe** en la
+ventana. Suite **3517 / 23.020** (1 skipped) · Pint ✓ · docs-check ✓ · guarda nueva con **2
+mutaciones, las 2 muerden**.
