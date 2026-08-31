@@ -17283,3 +17283,13 @@ ejecución pagadas y escritas en §25.10 (el `git checkout` que se llevó trabaj
 la guarda J imposible con el portador vivo porque EL PROPIO CARGO cuenta como cobertura · la
 memo estática de `Setting::value` · el doble del contrato que crasheó paratest). Queda el OJO
 del owner; lo siguiente del plan es la **T6** (el guardián de solapes fuera del formulario).
+
+**Adenda (misma noche, pregunta del owner)**: «¿cualquier desglose a favor del cliente sale como
+−X €?» → se fabricó `T5-PRB01` a petición suya (4 × 15,00 € online, bajados 4 → 2 por el editor
+real) y el mapa quedó medido: la única ↳ de puerta que puede salir negativa es el descuento mixto
+(una bajada absorbida se netea y un neto ≤ 0 se filtra); el cajón va en positivo bajo rótulo a
+propósito. ⚠️⚠️ Y la sonda destapó una incoherencia ANTERIOR a la T5: «Pendiente de devolución»
+salía **−30,00 €** en el bloque del pedido y **30,00 €** en la card del producto de la MISMA
+pantalla — y la card firmaba su «Devuelto» pero no su pendiente. `[DECIDIDO owner]`: **la card
+gana el «−»** (guarda N de §25.8, acotada al partial y vista en rojo). El correo nuevo de la
+reducción quedó además verificado en vivo en Mailpit sobre ese pedido.

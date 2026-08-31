@@ -162,6 +162,28 @@ class ReservationFinancialsTest extends TestCase
         $this->assertSame(1200, $f->pendienteReembolso); // pagó 2, tiene 1 → se le debe 1
     }
 
+    /**
+     * T5 (`[DECIDIDO owner]` tras la sonda de `cumple-mixto.md` §25.10): en la CARD del producto,
+     * «Pendiente de devolución» lleva el «−», como el «Devuelto» de la misma card y el bloque del
+     * pedido — la misma pantalla decía −30,00 € y 30,00 € para el mismo concepto. Acotado al
+     * PARTIAL (`#295`): en la página entera el bloque del pedido ya pinta su propio «−» y la
+     * aserción no distinguiría. Mutación: quitar el «−» de la card.
+     */
+    public function test_the_card_prints_the_pending_refund_with_its_sign(): void
+    {
+        $order = $this->makeOrder(2400);
+        $by = User::factory()->create();
+        $item = $this->makeItem($order, qty: 1, unit: 1200);
+        $order->applyExtraDue($item, 1200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 3]]]);
+        $order->applyGateCredit($item->fresh(), 1200, $by, 'item_edit_reduction', ['changes' => ['quantity_change' => ['old' => 3, 'new' => 1]]]);
+
+        $rf = ReservationFinancials::make($order->fresh(['items', 'adjustments', 'payments.refunds']), $item->fresh());
+        $html = view('filament.orders.partials.reservation-financials', ['rf' => $rf])->render();
+
+        $this->assertStringContainsString(__('admin.orders.item_financial.pending_refund_label'), $html);
+        $this->assertStringContainsString('−12,00', $html, 'la deuda con el cliente lleva su signo en la card');
+    }
+
     public function test_deposit_remainder_splits_value_into_deposit_and_gate(): void
     {
         // #225: una línea con señal (valor 180, señal 30 → resto 150 a puerta), NO finalizada.

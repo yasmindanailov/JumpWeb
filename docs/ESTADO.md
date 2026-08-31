@@ -50,7 +50,13 @@
 > commitear · la guarda J imposible con el portador vivo (EL PROPIO CARGO cuenta como cobertura)
 > · la memo estática de `Setting::value` sin `flushMemo()` · el doble de `ModuleContractsTest`
 > crasheando paratest al crecer el contrato. ⚠️ Residuos asumidos: filas de audit del bloqueo en
-> `probe-card` (el rastro que D8 promete) y capturas en el contenedor. **Queda el OJO del owner;
+> `probe-card` (el rastro que D8 promete) y capturas en el contenedor. ▶ **Adenda de la misma
+> noche** (pregunta del owner, §25.10 «sonda B»): pedido `T5-PRB01` fabricado a petición suya para
+> mapear los saldos a favor — la única ↳ negativa posible es el descuento mixto (las bajadas
+> absorbidas se NETEAN); ⚠️⚠️ destapó que «Pendiente de devolución» salía −30,00 en el bloque y
+> 30,00 en la card de la MISMA pantalla → `[DECIDIDO owner]` la card gana el «−» (guarda N, vista
+> en rojo); el correo nuevo de la reducción, verificado en vivo en Mailpit. `T5-PRB01` queda en la
+> BD local (2 plazas de la franja real del 17-09). **Queda el OJO del owner;
 > lo siguiente es la T6** (el guardián de solapes fuera del formulario; la fase 3 de §20.2
 > despierta a §16; el AFORO sigue aparcado por el owner).
 > ❗❗❗ **2026-08-31 (noche) · T4 · EL −X €, EN EL ÁRBOL** (`#296`, `specs/cumple-mixto.md` §20

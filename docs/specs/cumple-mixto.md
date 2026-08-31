@@ -2586,6 +2586,7 @@ siempre.
 | K | `frozen` en neutro sobre un crédito congelado (panel y pestaña) | — |
 | L | Primeras aserciones de `net`/`drift`/`missing_credit_carrier`/`line`, acotadas al bloque | — |
 | M | Las líneas ↳ de puerta del panel con signo: la del descuento sale «−4,00 €» y NUNCA «+-4,00 €»; un cargo conserva su «+» | restaurar el `+` clavado |
+| N | La CARD del producto pinta «Pendiente de devolución» con «−», acotado al PARTIAL (`#295`: la página entera no distingue — el bloque del pedido ya pinta el suyo) | quitar el «−» de la card |
 
 ### 25.9 · Lo que decide el owner — ✅ `[DECIDIDO owner, 2026-08-31]` las tres
 
@@ -2665,6 +2666,20 @@ implementación LANZA, como su `pageFor()`, para que llegar por error no silenci
 
 ⚠️ Residuos asumidos en local: la sonda dejó filas de audit en `probe-card` (el intento bloqueado,
 a propósito: es el rastro que D8 promete) y las capturas en el contenedor, fuera del repo.
+
+**▶ La sonda B, nacida de una pregunta del owner** («¿cualquier desglose a favor del cliente sale
+como −X €?»): se fabricó `T5-PRB01` a petición suya —4 × 15,00 € pagados 100 % online, bajados
+4 → 2 por el editor REAL del panel— y el mapa medido es: la única ↳ de puerta que puede salir
+negativa es el descuento mixto (una bajada absorbida se NETEA por reserva y un neto ≤ 0 se
+filtra, no se pinta); «Devuelto» va con «−» en bloque y card; el cajón del cliente va en positivo
+bajo rótulo A PROPÓSITO (`#127`/`#130`) y no se toca; la hoja PDF destaca lo pendiente en caja
+aparte. ⚠️⚠️ **Y destapó una incoherencia anterior a la T5**: «Pendiente de devolución» salía
+**−30,00 €** en el bloque del pedido y **30,00 €** en la card del producto DE LA MISMA PANTALLA —
+y la card firmaba su «Devuelto» pero no su pendiente. ✅ `[DECIDIDO owner, 2026-08-31]`: **la card
+gana el «−»** (guarda N, vista en rojo). De propina, el correo NUEVO de la reducción quedó
+verificado en vivo en Mailpit sobre este pedido (la frase de las dos salidas, sin «procesemos» ni
+«Mis reservas»). ⚠️ Residuos asumidos: `T5-PRB01` queda en la BD local (con `T0-PRB*`/`T4-PRB*`;
+consume 2 plazas de la franja real del 17-09 12:00) y un correo más en Mailpit.
 
 **Lo que queda del plan** (§18.5): **T6** (el guardián de solapes fuera del formulario) · la
 **fase 3** de §20.2 despierta a §16 · el **AFORO** sigue aparcado por el owner. **De esta tanda

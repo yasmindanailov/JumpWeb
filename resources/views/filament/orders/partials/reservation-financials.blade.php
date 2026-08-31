@@ -97,7 +97,10 @@
     @if ($rf->pendienteReembolso > 0)
         <div class="flex items-center justify-between gap-3 text-xs font-semibold text-amber-700 dark:text-amber-300">
             <span>{{ __('admin.orders.item_financial.pending_refund_label') }}</span>
-            <span>{{ $fmt($rf->pendienteReembolso) }}</span>
+            {{-- T5 (`[DECIDIDO owner]`, sonda de §25.10): con «−», como el «Devuelto» de esta misma
+                 card y el bloque del pedido de al lado — era la única de las tres que iba sin signo
+                 y la misma pantalla decía −30,00 y 30,00 para el mismo concepto. --}}
+            <span>−{{ $fmt($rf->pendienteReembolso) }}</span>
         </div>
         <p class="text-[11px] leading-snug text-gray-500 dark:text-gray-400">
             {{ __('admin.orders.item_financial.pending_refund_caption') }}
