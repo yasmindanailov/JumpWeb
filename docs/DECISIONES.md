@@ -16489,3 +16489,55 @@ cambiarla re-tarifica. Queda intacta — y eso lo aclaró el owner, no yo.
 
 **Verificación**: sin código. Todo lo afirmado aquí está medido sobre el pedido real `R-BEEL3E` y
 sobre el catálogo real de la instalación, en transacciones revertidas. Plan por tandas en §18.5.
+
+## #285 · 2026-08-31 · [DECIDIDO owner] El −X € cerrado con Fable: el espejo acotado a puerta, y el dinero solo al guardar COMPLETO
+
+Iteración de diseño entre el owner y Fable sobre D5 de `#284`. El diseño vigente vive en
+`specs/cumple-mixto.md` **§20**, que SUSTITUYE a §16 (aquel pasa a ser la pieza de la fase 3, con
+sus condiciones de despertar escritas). Sin código.
+
+▶ **El diseño en una frase**: el descuento es el ESPEJO del suplemento —línea hija con subtotal
+negativo y `extra_due` negativo del mismo importe— **acotado al dinero de puerta de la reserva**; el
+exceso no se escribe, se enseña («X € a tu favor — se te devuelven en el parque»).
+
+❗ **Por qué es estrictamente mejor que §16, trazado sobre el código real**: con el espejo,
+`collected = max(0, −8 − (−8)) = 0` — **el clamp de `itemCollectedCents` nunca muerde** y los cubos
+de puerta se netean por reserva con signo. Los dos elementos de riesgo ALTO de §16 (relajar el clamp
+y el marcador de reconstrucción) existían solo para el caso «pagado 100 % online», que con el tope no
+se escribe. Cero mecánica contable nueva: el `extra_due` negativo ya es camino trillado
+(`applyGateCredit`).
+
+▶ **La hoja de ruta de cobro del owner, en TRES fases** — y cada una con su respuesta: (1) hoy,
+señal + resto en parque → el descuento automático cabe siempre (medido: cobertura ~3×); (2) pack
+entero online, gestiones en parque → el exceso es la línea «a tu favor» y se liquida EN el parque —
+circuito VERIFICADO con piezas existentes: `PaymentRefund::MODE_MANUAL` (record-only, motivo
+obligatorio) cae en el canal `compensado` y las identidades cierran; (3) todo online, también las
+gestiones → **feature propia con dos mitades simétricas** («cobro online post-reserva», que hoy no
+existe para NINGUNA dirección — el +X tampoco puede cobrarse online—, y «reembolso online
+post-reserva»). **Ahí despierta §16.**
+
+❗❗ **Y la regla que lo simplifica todo es del owner, no de Fable**: el dinero —las DOS direcciones—
+solo se mueve al guardar el formulario **COMPLETO**; un guardado incompleto no mueve nada, congela lo
+escrito y lo dice. Fable había propuesto una regla asimétrica (crédito solo con veredicto completo,
+cargo como hoy); el owner la sustituyó por una simétrica más simple y más coherente con «lo escrito
+es lo que se comunicó». ⚠️ **Cambia una conducta construida**: el cargo +X hoy crece con guardados
+parciales (`#268`); el cambio de disparador va en la **T2**. La protección de `#268` queda como red
+(borrar edades no destruye nada).
+
+▶ **El estado COMPLETO no se bloquea** (`[DECIDIDO owner]`, recomendación de Fable aceptada): en ese
+formulario viven las ALERGIAS, ya se prometió «editable hasta el día del evento», y la ventana la
+cierra sola el fin de la fiesta (`#244`). Cada guardado completo recalcula; borrar una edad congela.
+
+▶ **Dónde se ven los números** (`[DECIDIDO owner]`): el descuento automático SÍ mueve los totales
+—en la puerta le van a pedir 82 y no 90; enseñar 90 sería mentirle— con su línea etiquetada; el
+exceso NO los mueve hasta liquidarse (línea «a tu favor» propia, distinta de «Pendiente de
+devolución», que es deuda bancaria real).
+
+⚠️ Para la T5 queda anotado: el email de una reducción promete «te avisaremos cuando procesemos la
+devolución» — si la dirección es liquidar en el parque, esa frase promete de más.
+
+**Verificación**: sin código. La aritmética del espejo está trazada instrucción a instrucción sobre
+`ReservationFinancials::make` y los cuatro helpers de `Order`; el circuito del reembolso manual y
+`compensado`, leído en `ViewOrder::executeItemRefundBatch` y `reservationCompensatedCents`. La
+validación empírica (tres casos como escenarios del guardián + mutaciones + concurrencia) queda
+especificada en §20.8 para la T4.

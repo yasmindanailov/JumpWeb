@@ -30,6 +30,27 @@
 > que hunde el más común (un pack sin señal perdía el descuento en silencio).
 > ▶ **Plan en §18.5, seis tandas.** Empieza por el **ojo del owner en navegador** (T0) y sigue por el
 > **SELLO** (T1), que desbloquea la mitad de lo demás. Las que tocan dinero de verdad son T3 y T4.
+> ❗❗ **2026-08-31 (tarde) · EL −X € DISEÑADO Y CERRADO CON FABLE** (`#285`, sin código). **El
+> diseño vigente es `specs/cumple-mixto.md` §20 y SUSTITUYE a §16**, que pasa a ser la pieza de la
+> fase 3 con su corrección delante.
+> ▶ **El espejo acotado a puerta**: línea hija con subtotal negativo + `extra_due` negativo del
+> mismo importe — trazado sobre el código real que `collected = max(0, −8−(−8)) = 0`, así que **el
+> clamp nunca muerde** y los DOS elementos de riesgo ALTO de §16 (relajar el clamp, el marcador)
+> no hacen falta: existían solo para el caso «pagado 100 % online», que con el tope no se escribe.
+> ▶ **La hoja de ruta de cobro del owner, en TRES fases** (§20.2): hoy señal+parque → el descuento
+> cabe siempre; pack online+gestiones en parque → el exceso es «a tu favor, se te devuelve en el
+> parque» (circuito VERIFICADO: `MODE_MANUAL` + motivo obligatorio + canal `compensado`, identidades
+> cerradas); todo online → feature propia de cobro/reembolso online post-reserva, **donde despierta
+> §16** (ojo: hoy el +X tampoco puede cobrarse online — esa mitad no existe para nadie).
+> ❗❗ **La regla que simplifica todo es del OWNER**: el dinero —las dos direcciones— solo se mueve al
+> guardar el formulario **COMPLETO**; un guardado incompleto congela y lo dice. ⚠️ **Cambia `#268`
+> para los cargos** (hoy crecen con parciales): el cambio de disparador va en la **T2**.
+> ▶ **COMPLETO no se bloquea** (alergias · «editable hasta el día del evento» ya prometido · la
+> ventana la cierra el fin de la fiesta). Máquina de estados en §20.7.
+> ▶ Los números: el descuento automático SÍ mueve totales (en la puerta pedirán 82, no 90); el
+> exceso NO los mueve hasta liquidarse. T5 gana una nota: el email de reducción promete «procesaremos
+> la devolución», que con liquidación en parque promete de más.
+>
 >
 >
 > ❗❗❗ **POR DÓNDE SE RETOMA** (lo único que hay que leer para seguir):

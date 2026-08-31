@@ -716,6 +716,14 @@ barra vertical en pantalla el día que alguien pintara la clave con `t()`.*
 
 ## 16. ⏸️ DISEÑO APARCADO · el DESCUENTO del caso barato (2026-08-29, `DECISIONES #248`)
 
+> ❗❗ **CORRECCIÓN (2026-08-31, `#285`): este diseño YA NO es el vigente para el −X €.** El vigente
+> es **§20** —el espejo acotado a puerta, sin el clamp ni el marcador—. Y el «qué lo despertaría» de
+> abajo queda REESCRITO: no es «según las circunstancias», es **la fase 3 de la hoja de ruta de
+> cobro** (todo online, también las gestiones post-reserva), que llegará con su propia feature de
+> cobro/reembolso online post-reserva (§20.2). Sus piezas técnicas (la relajación del clamp, el
+> marcador de §16.5.bis y la condición del portador sin señal) siguen siendo correctas PARA ESE
+> MOMENTO, y por eso el diseño se conserva.
+>
 > ⏸️ **`[DECIDIDO owner, 2026-08-29]`: NO se implementa por ahora, y no se tocan las invariantes del
 > dinero.** El caso barato se queda como está — **el aviso al operador y al cliente**, que ya está en
 > el árbol— y la decisión se retoma **en producción, según las circunstancias**: si en la operación
@@ -1126,7 +1134,8 @@ staging los borra `app:purge-customers` en la puesta en marcha.
 no es producto nuevo, es una gestión sobre las condiciones ya aceptadas.» Ya construido en `#270`.
 
 **D5 · El −X € se implementa** (revierte `#246`/`#248`), y **se diseña con Fable antes de tocar
-nada**: el desglose es lo más sensible del sistema. Informe en §19.
+nada**: el desglose es lo más sensible del sistema. Informe en §19. ▶ ✅ **DISEÑADO Y CERRADO el
+2026-08-31: el diseño vigente es §20** (`#285`).
 
 **D6 · Una edad sin producto informa y NO deja completar el formulario, pero no toca el desglose.**
 Se guarda lo escrito (no se pierden los otros invitados), el formulario nunca queda completo, se le
@@ -1195,10 +1204,10 @@ empieza sin el informe de §19 aprobado.
 |---|---|---|---|
 | **T0** | **El ojo del owner en navegador**, con capturas | — | no |
 | **T1** | **El SELLO** (D1·D2·D3): la reserva guarda tramos y precios de su familia al nacer | A · B · el gemelo de la etiqueta | **sí** (nacimiento y edición de una reserva) |
-| **T2** | **La edad sin producto** (D6) + que deje de congelar el dinero | C | no |
+| **T2** | **La edad sin producto** (D6) + que deje de congelar el dinero + **el disparador pasa a «solo guardado COMPLETO»** (§20.6, cambia la conducta de `#268` para los cargos) | C | no |
 | **T3** | **El parque decide** (E·F·D7): la diferencia en hoja de sala y puerta, corregir la edad desde el panel auditado, y bajar del mínimo | E · F · D7 | **sí** (la edad mueve el suplemento) |
-| **T4** | **El −X €** (D5), con el diseño de Fable | el medio flujo que falta | **sí** |
-| **T5** | **Las palabras** (D9) + anonimizar con reserva viva (D8) | D8 · D9 | no (D9 es presentación) |
+| **T4** | **El −X €** con el diseño CERRADO de **§20** (espejo acotado a puerta; guardas y mutaciones en §20.8) | el medio flujo que falta | **sí** |
+| **T5** | **Las palabras** (D9) + anonimizar con reserva viva (D8) + ⚠️ el email de una reducción promete «procesaremos la devolución» y con la liquidación en parque promete de más (`#285`) | D8 · D9 | no (D9 es presentación) |
 | **T6** | **El guardián fuera del formulario** (G) | G | no |
 
 ⚠️ **T1 hace innecesario el aviso de `#283`**, que se queda como red: avisar de un cambio que ya no
@@ -1212,6 +1221,12 @@ MySQL real, y las dos entran por el `CRITICAL_RE`.
 
 ## 19. 📋 INFORME PARA FABLE · el −X €, sin romper el desglose (2026-08-31)
 
+> ✅ **CONTESTADO (2026-08-31, `#285`): las cuatro preguntas de §19.6 tienen respuesta en §20** —
+> (1) el crédito vive en una línea hija espejo, acotada a puerta; (2) sin puerta que absorber no se
+> escribe: se enseña y se liquida en el parque; (3) el crédito solo se mueve al guardar el formulario
+> COMPLETO, en ambas direcciones; (4) su frase se distingue de «Pendiente de devolución» y de una
+> compensación. Este informe queda como registro de lo que se le pidió a Fable.
+>
 > **Autocontenido a propósito.** Quien lea esto no necesita el resto del documento. `[owner]`: «el
 > desglose y los cálculos son muy sensibles por la flexibilidad y complejidad que tiene el sistema…
 > no quiero romper el desglose, he iterado mucho sobre ello».
@@ -1283,3 +1298,129 @@ en silencio, y justo en la configuración más común: un pack sin señal.**
   `redsys:verify-concurrency` y `mixed-party:verify-concurrency` sobre MySQL real.
 - Toda guarda nueva tiene que **verse ROJA** con el fallo real puesto antes de darla por buena, y en
   esta zona nacen ciegas sin `nextRequest()`: el lector va en `scoped` y memoiza.
+
+---
+
+## 20. ✅ EL −X €, DISEÑADO Y CERRADO CON EL OWNER (2026-08-31, `DECISIONES #285`)
+
+> **Esta sección SUSTITUYE a §16 como diseño vigente del descuento** y contesta las cuatro preguntas
+> que §19 dejó abiertas. §16 no se tira: pasa a ser la pieza de la **fase 3** (ver §20.2), con sus
+> condiciones de despertar escritas. Iterado entre el owner y Fable, sin código.
+
+### 20.1 · El diseño en una frase
+
+**El descuento es el ESPEJO del suplemento, acotado al dinero de puerta**: una línea hija con
+subtotal negativo y su `extra_due` negativo del mismo importe — el patrón exacto de la línea de
+cargo, con el signo cambiado. `crédito_escrito = min(crédito_derivado, cubos de puerta de la
+reserva)`. El exceso no se escribe: se enseña.
+
+### 20.2 · La hoja de ruta de cobro del owner, y qué necesita cada fase
+
+`[DECIDIDO owner, 2026-08-31]` el cobro evoluciona en TRES fases, y cada una tiene su respuesta:
+
+| Fase | El dinero | El −X € |
+|---|---|---|
+| **1 · Hoy**: señal online + resto en parque | Puerta grande | Automático. Medido: cobertura ~3× (90 € de puerta vs 32 € de crédito máximo con el catálogo real) |
+| **2 · Pack entero online, gestiones en parque** | Puerta = solo gestiones | El exceso sobre la puerta es la línea **«a tu favor — se te devuelve en el parque»** (§20.5) |
+| **3 · Todo online, también las gestiones** | Sin puerta | ▶ **Aquí despierta §16.** Pero la fase 3 es una feature propia con DOS mitades simétricas: «cobro online post-reserva» —**que hoy no existe para NINGUNA dirección: el +X € tampoco puede cobrarse online**— y «reembolso online post-reserva», cuya maquinaria parcial ya existe. El −X € online viaja en esa ola, no antes |
+
+### 20.3 · La aritmética, trazada instrucción a instrucción sobre el código real
+
+El suplemento de hoy: línea +7 € con `extra_due` +7 € → `collected = max(0, 7−7) = 0`, valor +7,
+puerta +7. **Los dos canales reparten el valor de la línea** (§8.3). El espejo:
+
+| Línea de crédito: subtotal −8 € + `extra_due` −8 € | Trazado |
+|---|---|
+| `valor` | −8 ✓ (`ReservationFinancials::make`, `valor += chargedSubtotalCents`) |
+| `collected = max(0, −8 − (−8))` | **= 0 — el clamp de `itemCollectedCents` NUNCA muerde** |
+| `gateNeto` con señal de 90 € | 90 − 8 = 82 ✓ (los cubos se netean POR RESERVA con signo, `:123`) |
+| Identidad `PAY-16` | 112 = 30 online + 82 puerta ✓ |
+
+▶ **Por qué esto es estrictamente mejor que §16**: los dos elementos de riesgo ALTO de aquel diseño
+—relajar el clamp (§16.6·4) y el marcador de reconstrucción (§16.5.bis)— existían **solo para el
+caso B** (pagado 100 % online). Con el tope de cobertura, ese caso no se escribe: se enseña. Cero
+mecánica contable nueva. El `extra_due` negativo es un camino trillado (`applyGateCredit` lo persiste
+así desde las bajadas) y la marca de línea-crédito es UN helper (`chargedSubtotalCents`, §16.6·1).
+
+⚠️ **Lo que SÍ comparte con §16 y sigue vigente de aquel diseño**: la cota demostrable (el crédito es
+`Σ (precio_reservado − precio_destino) × invitados` con destino > 0, así que nunca deja una reserva
+en valor negativo) y la doctrina de que los tres casos entran como escenarios del guardián de once
+ANTES del reconciliador.
+
+### 20.4 · Dónde se ve, y cuándo se mueven los números (`[DECIDIDO owner]`)
+
+| Situación | Línea que ve el cliente | ¿Cambian los totales? |
+|---|---|---|
+| Descuento automático (cabe en puerta) | «Descuento por N invitados que corresponden a “Kids”: −8,00 €» · «A pagar en el parque: 82,00 €» | **Sí** — en la puerta le van a pedir 82; enseñar 90 sería mentirle |
+| Exceso (fase 2) | «8,00 € **a tu favor** — se te devuelven en el parque», línea propia | **No** — intactos hasta que el parque liquide; entonces aparece como DEVUELTO (el registro del hecho, no un retoque) |
+
+⚠️ La frase del exceso se distingue a propósito de «Pendiente de devolución» (deuda bancaria real,
+`PAY-17`) y de una compensación: son tres cosas y se leen distinto.
+
+### 20.5 · El circuito del exceso en fase 2 — VERIFICADO con piezas que ya existen
+
+El cliente viene al parque de todas formas — es su fiesta. El circuito: (1) el desglose enseña la
+línea «a tu favor»; (2) el operador se lo da en mano o lo descuenta de su TPV; (3) si quiere
+constancia, registra el **reembolso manual** que ya existe — `PaymentRefund::MODE_MANUAL`
+(record-only), con **motivo OBLIGATORIO** («sin él el desglose no puede decirle al cliente si sigue
+debiendo ese importe», `ViewOrder`) — y ese registro cae en el canal **`compensado`**
+(`reservationCompensatedCents`), que existe exactamente para «dinero devuelto sin que desapareciera
+producto». **Las dos identidades siguen cerrando.** Reembolso bancario parcial: no se necesita en
+las fases 1–2.
+
+### 20.6 · Cuándo se mueve el dinero: SOLO al guardar el formulario COMPLETO (`[DECIDIDO owner]`)
+
+**Una sola regla para las dos direcciones**: el dinero se recalcula en cada guardado con TODAS las
+edades rellenas; un guardado incompleto **no mueve nada en ninguna dirección** — congela lo escrito
+y lo dice. Mientras se rellena, solo avisos (la pastilla por niño de `#247` y la aritmética de
+`#246`, que ya existen).
+
+▶ La justificación del lado del crédito cabe en una frase: *para cobrarte de más basta UNA ficha
+(cada cargo es independiente); para devolverte dinero hacen falta TODAS (el descuento es la cuenta
+de la fiesta entera, y descontar con la foto a medias es la puerta del abuso: edad barata + resto en
+blanco = dinero)*.
+
+⚠️⚠️ **Esto CAMBIA una conducta construida**: hoy el cargo +X crece con guardados parciales
+(`#268` lo permite a propósito). Pasa a «solo al completar» por decisión de producto — más coherente
+con «lo escrito es lo que se comunicó»— y la protección de `#268` QUEDA como red: borrar edades
+después de un completo sigue sin destruir nada. **El cambio de disparador va en la T2** (que ya
+redefine «completo» por D6), no en la T4.
+
+### 20.7 · El estado COMPLETO no se bloquea (`[DECIDIDO owner]`)
+
+Tres razones: en ese formulario viven las **alergias** (el dato más barato de corregir no puede
+exigir un teléfono); ya se lo prometimos («puedes seguir editando hasta el día del evento», email);
+y la ventana correcta ya existe y está medida — se cierra sola al terminar la fiesta, en el mismo
+instante en que el dinero se da por resuelto (`#244`).
+
+| El cliente… | Pasa esto |
+|---|---|
+| Guarda completo | Se recalcula el desglose, arriba o abajo |
+| Cambia una edad y guarda (sigue completo) | Se recalcula otra vez — cada guardado completo es una foto válida |
+| Borra una edad y guarda (incompleto) | Lo escrito se CONGELA y el formulario lo dice |
+| La fiesta termina | Solo lectura, como hoy |
+
+### 20.8 · Dependencias y validación (para la T4)
+
+- **T1 antes**: el crédito deriva de los precios SELLADOS (hoy `savingsCents` lee el catálogo vivo);
+  y el sello debe SUBSUMIR el recibo de `#270` — dos fuentes de verdad para lo mismo es el defecto.
+- **T2 antes**: redefine «completo» (D6: una edad sin producto es estado CONOCIDO) y mueve el
+  disparador a «solo guardado completo» (§20.6).
+- **Guardas de la T4, con su mutación obligatoria**: los tres casos A/B/C en el guardián de once
+  ANTES del reconciliador · quitar la CASCADA pone en rojo el caso A · quitar el TOPE de cobertura
+  pone en rojo el caso B (la reserva quedaría con puerta negativa y el cinturón `max(0,…)` mordería,
+  que el guardián prohíbe) · el crédito con veredicto incompleto NO se mueve, en ninguna dirección ·
+  y `mixed-party:verify-concurrency` gana el escenario del crédito (N guardados completos
+  simultáneos → UNA línea).
+- ⚠️ Las guardas de esta zona nacen ciegas sin `nextRequest()` (lector `scoped`).
+
+### 20.9 · Registro de la iteración (por qué el diseño cambió dos veces)
+
+1. §16 (2026-08-29): línea de crédito + cascada + clamp relajado + marcador. Correcto pero con dos
+   piezas de riesgo ALTO que solo servían al caso «pagado 100 % online».
+2. Fable (2026-08-31): el espejo acotado a puerta — trazado que el clamp nunca muerde y que el
+   `extra_due` negativo ya es camino trillado. Propuso además una regla asimétrica de reconciliación
+   (crédito solo con veredicto completo).
+3. **El owner la simplificó y mejoró**: una sola regla simétrica —dinero solo al guardar completo,
+   para las DOS direcciones— y la hoja de ruta de tres fases que recoloca §16 como pieza de la
+   fase 3 en vez de «por si acaso».
