@@ -125,6 +125,15 @@
 
                         $hasSlotMove = isset($payload['from_date'], $payload['to_date']);
 
+                        // T5 adenda (`cumple-mixto.md` §25.10): la forma de la CANTIDAD — la que
+                        // `#145` dejó fuera. El payload traía `from_quantity`/`to_quantity` desde
+                        // siempre y el modal decía «Cambió: cantidad» SIN los números: medido sobre
+                        // `T5-PRB01`, el correo del cliente («Cantidad: 4 → 2») sabía más que la
+                        // pantalla del operador.
+                        $qtyFrom = $payload['from_quantity'] ?? null;
+                        $qtyTo = $payload['to_quantity'] ?? null;
+                        $hasQtyMove = is_int($qtyFrom) && is_int($qtyTo) && $qtyFrom !== $qtyTo;
+
                         // Importe de un ajuste de puerta. `array_key_exists` y no `isset`: un
                         // marcador de reducción se registra con 0 a propósito, e `isset` lo
                         // escondería justo cuando el operador se pregunta por qué no cambió nada.
@@ -155,6 +164,14 @@
                                 'from' => $when($payload['from_date'] ?? null, $payload['from_time'] ?? null),
                                 'to' => $when($payload['to_date'] ?? null, $payload['to_time'] ?? null),
                             ]) }}
+                        </p>
+                    @endif
+
+                    {{-- Movimiento de CANTIDAD: convierte «Cambió: cantidad» en «4 → 2», que es lo
+                         que el operador necesita para leer la diferencia de al lado. --}}
+                    @if ($hasQtyMove)
+                        <p class="mt-1 text-xs text-gray-700 dark:text-gray-300">
+                            {{ __('admin.orders.audit_modal.quantity_move', ['from' => $qtyFrom, 'to' => $qtyTo]) }}
                         </p>
                     @endif
 

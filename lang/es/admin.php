@@ -913,6 +913,8 @@ return [
             // Detalle de una edición de reserva (`DECISIONES #145`). El registro guardaba estos
             // datos desde el principio y no los pintaba nadie.
             'slot_move' => 'Fecha y hora: :from → :to',
+            // T5 adenda: la forma que #145 dejó fuera — «Cambió: cantidad» sin los números.
+            'quantity_move' => 'Cantidad: :from → :to',
             'unit_price_move' => 'Precio unitario: :from → :to',
             'price_diff' => 'Diferencia: :amount',
             'adjustment_amount' => 'Importe: :amount',

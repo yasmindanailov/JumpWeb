@@ -2587,6 +2587,7 @@ siempre.
 | L | Primeras aserciones de `net`/`drift`/`missing_credit_carrier`/`line`, acotadas al bloque | — |
 | M | Las líneas ↳ de puerta del panel con signo: la del descuento sale «−4,00 €» y NUNCA «+-4,00 €»; un cargo conserva su «+» | restaurar el `+` clavado |
 | N | La CARD del producto pinta «Pendiente de devolución» con «−», acotado al PARTIAL (`#295`: la página entera no distingue — el bloque del pedido ya pinta el suyo) | quitar el «−» de la card |
+| O | El historial del pedido pinta «Cantidad: :from → :to» en una edición de cantidad (la forma que `#145` dejó fuera), renderizando el partial REAL | quitar el bloque `hasQtyMove` |
 
 ### 25.9 · Lo que decide el owner — ✅ `[DECIDIDO owner, 2026-08-31]` las tres
 
@@ -2678,8 +2679,19 @@ aparte. ⚠️⚠️ **Y destapó una incoherencia anterior a la T5**: «Pendien
 y la card firmaba su «Devuelto» pero no su pendiente. ✅ `[DECIDIDO owner, 2026-08-31]`: **la card
 gana el «−»** (guarda N, vista en rojo). De propina, el correo NUEVO de la reducción quedó
 verificado en vivo en Mailpit sobre este pedido (la frase de las dos salidas, sin «procesemos» ni
-«Mis reservas»). ⚠️ Residuos asumidos: `T5-PRB01` queda en la BD local (con `T0-PRB*`/`T4-PRB*`;
-consume 2 plazas de la franja real del 17-09 12:00) y un correo más en Mailpit.
+«Mis reservas»). ▶ **Y un SEGUNDO hallazgo del owner sobre el mismo pedido**: «no sé cuántas
+entradas había antes» — el historial del pedido guardaba `from_quantity`/`to_quantity` desde
+siempre y el modal decía «Cambió: cantidad» SIN los números (la forma que `#145` dejó fuera: su
+propio comentario cuenta que el renderizador «conocía seis formas, ninguna de ellas ésta» — y la
+de la cantidad seguía sin existir; el correo del CLIENTE sí decía «Cantidad: 4 → 2», así que el
+cliente sabía más que la pantalla del operador). ✅ `[DECIDIDO owner]`: la forma entra (guarda O,
+vista en rojo; verificada en vivo con captura mirada: «Cantidad: 4 → 2 · Diferencia: −30,00 €»).
+⚠️ La regla que dejan los dos hallazgos: **el «−X €» marca líneas de DINERO; el HECHO que las
+causa (cuántas eran antes) es historia y vive en el historial** — y ahora los dos cuentan lo
+mismo. ⚠️ Residuos asumidos: `T5-PRB01` queda en la BD local (con `T0-PRB*`/`T4-PRB*`; consume 2
+plazas de la franja real del 17-09 12:00), un correo más en Mailpit, y su entrada de historial
+dice «por usuario desconocido» (la bajada se lanzó desde tinker, sin sesión — desde el panel real
+el actor queda registrado, aseverado por los tests).
 
 **Lo que queda del plan** (§18.5): **T6** (el guardián de solapes fuera del formulario) · la
 **fase 3** de §20.2 despierta a §16 · el **AFORO** sigue aparcado por el owner. **De esta tanda

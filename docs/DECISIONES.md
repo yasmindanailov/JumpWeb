@@ -17293,3 +17293,13 @@ salía **−30,00 €** en el bloque del pedido y **30,00 €** en la card del p
 pantalla — y la card firmaba su «Devuelto» pero no su pendiente. `[DECIDIDO owner]`: **la card
 gana el «−»** (guarda N de §25.8, acotada al partial y vista en rojo). El correo nuevo de la
 reducción quedó además verificado en vivo en Mailpit sobre ese pedido.
+
+**Adenda 2 (misma noche, segundo hallazgo del owner sobre `T5-PRB01`)**: «no sé cuántas entradas
+había antes — en el historial no me sale». Medido: el payload de `orders.item_edited` guardaba
+`from_quantity: 4 → to_quantity: 2` desde siempre y el modal del historial pintaba «Cambió:
+cantidad» SIN los números — la forma que `#145` dejó fuera (aquella sesión añadió las del precio,
+la franja y el ajuste; la de la cantidad no existía), con la ironía de que el correo del CLIENTE
+sí decía «Cantidad: 4 → 2». `[DECIDIDO owner]`: la forma entra — «Cantidad: :from → :to» junto a
+la diferencia (guarda O de §25.8, vista en rojo; verificada en vivo con captura). La regla que
+dejan los dos hallazgos de la sonda B: **el «−X €» marca líneas de DINERO; el HECHO que las causa
+es historia y vive en el historial** — ahora los dos cuentan lo mismo.

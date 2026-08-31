@@ -165,6 +165,34 @@ class OrderAuditReadabilityTest extends TestCase
             'Y POR QUÉ cambió el precio: sin esto el operador ve un movimiento sin causa.');
     }
 
+    /**
+     * T5 adenda (`cumple-mixto.md` §25.10, cazado por el owner sobre `T5-PRB01`): la forma de la
+     * CANTIDAD, la que `#145` dejó fuera — el payload traía `from_quantity`/`to_quantity` desde
+     * siempre y el modal decía «Cambió: cantidad» SIN los números, así que el operador veía un
+     * −30,00 € sin poder saber cuántas entradas había antes (el correo del cliente sí lo decía).
+     * Mutación: quitar el bloque `hasQtyMove` del partial.
+     */
+    public function test_a_quantity_change_shows_the_before_and_after(): void
+    {
+        $order = $this->makeOrder();
+        AuditLogger::log('orders.item_edited', $order, [
+            'order_code' => $order->code,
+            'from_quantity' => 4,
+            'to_quantity' => 2,
+            'price_diff_cents' => -3000,
+            'changes' => ['quantity_change'],
+        ]);
+
+        $html = $this->renderAuditFor($order);
+
+        $this->assertStringContainsString(
+            __('admin.orders.audit_modal.quantity_move', ['from' => 4, 'to' => 2]),
+            $html,
+            'La cantidad de origen y la de destino: sin ellas el −30,00 € no tiene historia.',
+        );
+        $this->assertStringContainsString('-30,00', $html, 'Y la diferencia que explica la deuda.');
+    }
+
     public function test_a_slot_change_shows_the_dates_it_moved_between(): void
     {
         $order = $this->makeOrder();
