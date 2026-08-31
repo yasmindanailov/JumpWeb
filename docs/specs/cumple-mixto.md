@@ -1202,7 +1202,7 @@ empieza sin el informe de §19 aprobado.
 
 | | Tanda | Cierra | ¿Núcleo de dinero? |
 |---|---|---|---|
-| **T0** | **El ojo del owner en navegador**, con capturas | — | no |
+| **T0** | **El ojo del owner en navegador** — ▶ 🟦 **LAS CAPTURAS ESTÁN HECHAS** (2026-08-31, guion `t0.js` en `/root/e2e` del contenedor, 14 imágenes en `storage/app/t0-capturas/`): el aviso del catálogo `#283` **verificado en el ciclo real de Livewire** (avisa → re-guardar aplica → números distintos re-avisan → restaurado al dígito), el post-form (cargo 12 € → 8 €, congelado con edad borrada), los 3 correos (nace/cambia con «pasa de 12,00 € a 8,00 €»/desaparece), el desfase del panel, el huérfano y Gestionar sin la casilla. Pedidos sonda `T0-PRB01`/`T0-PRB02` (probe-card, franja 2026-09-15) y admin `e2e-panel-admin@jumpweb.test` quedan en la BD local para futuras sondas. **Queda SOLO el ojo: juzgar textos y claridad** | — | no |
 | **T1** | **El SELLO** (D1·D2·D3): la reserva guarda tramos y precios de su familia al nacer | A · B · el gemelo de la etiqueta | **sí** (nacimiento y edición de una reserva) |
 | **T2** | **La edad sin producto** (D6) + que deje de congelar el dinero + **el disparador pasa a «solo guardado COMPLETO»** (§20.6, cambia la conducta de `#268` para los cargos) | C | no |
 | **T3** | **El parque decide** (E·F·D7): la diferencia en hoja de sala y puerta, corregir la edad desde el panel auditado, y bajar del mínimo | E · F · D7 | **sí** (la edad mueve el suplemento) |

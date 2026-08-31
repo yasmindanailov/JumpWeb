@@ -50,6 +50,30 @@
 > ▶ Los números: el descuento automático SÍ mueve totales (en la puerta pedirán 82, no 90); el
 > exceso NO los mueve hasta liquidarse. T5 gana una nota: el email de reducción promete «procesaremos
 > la devolución», que con liquidación en parque promete de más.
+> ▶ **2026-08-31 (tarde) · T0 EJECUTADO EN HEADLESS — 14 capturas, y el mecanismo que faltaba,
+> verificado** (sin tocar código de producto). Carpeta: **`storage/app/t0-capturas/`** (gitignorada);
+> guion `t0.js` + pedidos sonda `T0-PRB01`/`T0-PRB02` y admin `e2e-panel-admin@jumpweb.test`
+> documentados en la fila T0 de `specs/cumple-mixto.md` §18.5.
+> ❗ **Lo que el guion PROBÓ funcionalmente**: el aviso del catálogo (`#283`) en el ciclo REAL de
+> Livewire — primera vez que alguien lo ve: avisa con los números (captura 02), re-guardar lo aplica
+> (03), números distintos re-avisan (04), y el catálogo quedó restaurado al dígito. Su guarda de
+> suite conducía el método por reflexión, no el formulario: esta era la verificación que faltaba.
+> ▶ Verificadas mirando la imagen (no por el nombre del fichero): la frase del cliente compuesta
+> desde lo ESCRITO («4,00 € más por invitado», 05) · el congelado con una edad borrada (09, 8,00 €
+> intactos con 7/8) · la línea de DESFASE del panel («escrito 8,00 € y hoy correspondería 18,00 €»,
+> 10) · el HUÉRFANO con su frase y el dinero vivo (12) · «Complementos actuales» VACÍO en Gestionar
+> con la línea del suplemento existiendo (11b) · y el correo «pasa de 12,00 € a 8,00 €» (08).
+> ⚠️⚠️ **Lección de instrumento, pagada**: las sondas de los días 29–31 filtraron CORREOS reales a
+> Mailpit — `QUEUE_CONNECTION=sync` envía en el acto y el mail no es transaccional, así que el
+> rollback de la BD no lo recoge. El owner recibió dos correos con importes de una sonda (30,00 €)
+> que la base nunca tuvo. *Toda sonda que pueda notificar lleva `Notification::fake()` o asume que
+> ensucia Mailpit.*
+> ⚠️ Dos confirmaciones VISUALES de huecos ya documentados (no defectos nuevos): el congelado es hoy
+> SILENCIOSO (el mensaje «no se actualizará hasta completar» llega con la T2/§20.6) y el huérfano
+> pierde la pastilla MIXTA mientras el cargo vive (lo cierra la T1, §18.4).
+> ▶ **Queda SOLO el ojo del owner sobre las 14 imágenes**: textos y claridad, lo que una sonda no
+> juzga.
+>
 >
 >
 >
