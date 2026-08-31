@@ -1,9 +1,9 @@
 # [SPEC] Sustituir el idioma visual HEREDADO por el de este cliente
 
-> Estado: 🟦 **TANDAS A, T1 y T2 EN EL ÁRBOL** (el sistema de etiquetas · el motivo del cliente
+> Estado: 🟦 **TANDAS A, T1, T2 y T3 EN EL ÁRBOL** (el sistema de etiquetas · el motivo del cliente
 > antiguo fuera · las normas de la portada rehechas con la primera mancha del kit · la marquesina de
-> `/servicios` sustituida por la cinta `C3`).
-> Última actualización: 2026-08-31 · Decisiones: **`#290`**, **`#292`** y **`#293`**.
+> `/servicios` sustituida por la cinta `C3` · **zonas y atracciones unificadas**).
+> Última actualización: 2026-08-31 · Decisiones: **`#290`**, **`#292`**, **`#293`** y **`#295`**.
 >
 > ❗❗❗ **CORRECCIÓN DE FUENTE, Y VA ANTES QUE TODO LO DEMÁS** (`[owner, 2026-08-31]`):
 > **`Landing PJP Modos` NO guía esta reestructuración.** *«La landing mockup NO, no te guíes de ella,
@@ -250,6 +250,93 @@ sustituye llevaba `30s` escritos a mano, así que una instalación no podía cal
 
 ⚠️ **Presupuesto de movimiento**: `/servicios` sigue en **6 bucles** — la cinta sustituye a la
 marquesina, no suma. El techo de 2 de su artboard sigue siendo la deuda que `#279` dejó medida.
+
+---
+
+## 3.quater · T3 · zonas y atracciones, unificadas (hecha)
+
+`[DECIDIDO owner]`: *«las zonas hay que unificarlo con las atracciones»*.
+
+**Antes**: dos secciones con dos cabeceras. Las tarjetas de zona, cada una con un CTA «Ver
+atracciones» que **saltaba** a la otra sección, y allí una **barra de pestañas** por zona con todos
+los carruseles en el DOM, mostrados con `x-show`.
+
+**Ahora**: una sola sección. Un `<article class="zone-block">` por zona con su tarjeta y —**solo si
+tiene atracciones**— su carrusel debajo. Se van: una cabecera, el salto, el CTA, y **una de las dos
+barras de pestañas que tenía la portada** (la de entradas se queda; es de otra sección).
+
+### 3.quater.1 · ❗ El defecto que esto destapó, y no era de presentación
+
+**La identidad de la zona en el marcado era `accent`, que AGRUPA y no identifica.** Medido: `cap` y
+`cap2` comparten el `accent` de `kids`, así que **tres carruseles emitían el mismo `x-ref` y el mismo
+`data-zone`**. Pulsar «Zona KIDS» abría **tres a la vez** —8 tarjetas y dos vacíos, 568 px de alto— y
+las flechas movían uno cualquiera, porque `$refs` resuelve a UNO.
+
+▶ **Y la misma raíz ya se había arreglado A MEDIAS**: `ThemeColorTest` tiene desde `#230` un caso
+llamado *«dos zonas que comparten acento ya no comparten color»* — se corrigió el COLOR y la
+identidad se quedó en `accent`. *Cuando un campo demuestra que no identifica, hay que mirar todo lo
+que lo usa para identificar, no solo el sitio donde dolió.*
+
+▶ La sección de **precios**, al lado, ya lo hacía bien: identifica por `slug` con estado local.
+
+### 3.quater.2 · Menos JavaScript, y no por gusto
+
+Se retiran del componente `landing`: `zone`, `setZone`, `goToRides`, `applyZoneAccent`,
+`scrollSlider`, `updateProgress`, `progressLeft`, `progressWidth`. Entra `zoneSlider`, **uno por
+carrusel**, con su propio progreso y su propio `$refs.slider` — el estado compartido era justo lo que
+hacía posible el defecto. La **paleta va inline en el bloque**, ya compuesta por el servidor
+(`ThemeSettings::zoneStyle()`); antes la aplicaba el JS a `#rides` entero.
+
+### 3.quater.3 · ⚠️⚠️ La revisión adversarial, y lo que encontró en MI trabajo
+
+Se pasaron **seis lentes independientes** sobre el diff (Alpine, código muerto, accesibilidad,
+guardas, datos/white-label, CSS) y cada hallazgo fue **refutado por un verificador aparte**:
+**40 hallazgos → 13 confirmados, 27 descartados.** Lo que sobrevivió, y es casi todo mío:
+
+| gravedad | hallazgo |
+|---|---|
+| **alta ×3** | **la guarda que re-apunté quedó VACÍA** — §3.quater.4 |
+| media | el carrusel enfocable **sin anillo de foco** — lo introduje con el `tabindex` |
+| media | las tarjetas, ya inertes, conservaban `cursor: pointer` y el levantamiento al hover |
+| media | la foto de la tarjeta: **de 62 % a 31 % de alto visible** al pasar a columna completa |
+| media | **la retirada de CSS fue A MEDIAS**: tres reglas base fuera y sus `@media` dentro |
+| media | **cuatro claves de idioma × tres idiomas** sin consumidor, y una describía las pestañas |
+| baja | paleta declarada dos veces · dos comentarios caducados · `.slider-nav__counter` huérfana |
+| baja | `trim($s, ' ·')` recorta **BYTES**: parte un `¡` y deja mojibake |
+
+⚠️ **Lo descartado también vale**: la jerarquía de encabezados, los nombres de las flechas y el
+destino del ancla `#rides` fueron señalados y **no sobrevivieron a la refutación**. Sin ese segundo
+paso habría «arreglado» tres cosas que no estaban rotas.
+
+### 3.quater.4 · ❗❗ La guarda que re-apunté quedó VACÍA, y lo firmaron TRES lentes
+
+`ThemeColorTest` aseveraba `data-color="#111111"` en el slider. Al retirar ese atributo la re-apunté
+a `--zone-1:#111111`… **sobre la página entera**. Y esa cadena **la emite además la sección de
+entradas** (`ticket-prices` compone el MISMO `zoneStyle()` para las mismas zonas). Medido: en `/`
+aparece **3 veces y solo UNA es el bloque de zona**.
+
+▶ Consecuencia: **borrando el `style` del bloque —o la sección de zonas entera— el test seguía en
+VERDE**. El vehículo viejo era único en toda la página; la subcadena nueva no.
+▶ Arreglo: se extrae el atributo `style` **del elemento** `.zone-block` y se comprueba ahí. La
+mutación de borrar ese `style` ahora tumba dos casos.
+▶ *Acota al elemento antes de creerte un test verde* (`tema-por-instalacion.md` §12.4), y **una
+guarda re-apuntada a otro vehículo no puede quedar más débil que la que sustituye**.
+
+### 3.quater.5 · La guarda, y dos casos que nacieron pasando en VACÍO
+
+`ZonesAndRidesUnifiedTest` (8 casos, **6 mutaciones muerden**): un carrusel por zona con atracciones
+y ni uno más · dos zonas con el mismo acento no comparten carrusel · cada carrusel se recorre con
+teclado y tiene nombre · el carrusel enfocable está en la lista del anillo de foco · las tarjetas
+inertes no fingen que se pulsan · la etiqueta de edad ni vacía ni partida.
+
+⚠️⚠️ **Dos de esos casos nacieron pasando en vacío y lo demostró la mutación**: en la BD de test solo
+hay tres zonas, la única sin atracciones no se muestra en la landing y las dos que se muestran tienen
+datos de edad — así que «una zona sin atracciones no emite carrusel» y «la etiqueta no sale vacía»
+salían verdes **hiciera lo que hiciera la vista**. Los dos crean ahora su sujeto.
+▶ *Un caso sin sujeto no vigila nada, y no se nota hasta que se muta.*
+
+⚠️ **Y una aserción mía también estaba mal**: la del mojibake buscaba `\xA1Desde`, y esa secuencia
+**aparece dentro del UTF-8 correcto** (`¡` son `C2 A1`). El defecto es un `A1` **sin su `C2` delante**.
 
 ---
 

@@ -75,14 +75,11 @@ return [
     'zones' => [
         'eyebrow' => 'Two zones', 'title' => 'One park,', 'title_em' => 'two zones.',
         'intro' => 'We built two different worlds — one for the kids who fly without brakes, one for those just learning to jump. Pick yours.',
-        'see_rides' => 'See the rides', 'surface' => 'Surface', 'rides' => 'Rides',
+        'surface' => 'Surface', 'rides' => 'Rides',
         'total_labels' => ['total sqm', 'rides', 'age-tuned zones'],
     ],
     'rides' => [
-        'eyebrow' => 'Rides', 'title' => 'Pick your zone,', 'title_em' => 'pick your jump.',
-        'intro' => 'Switch from one zone to the other in one click. Swipe to see all rides.',
-        'zone_tab' => 'Zone',
-        'buy' => 'Buy',
+        'eyebrow' => 'Rides', 'buy' => 'Buy',
     ],
     'pricing' => [
         'eyebrow' => 'Pricing', 'title' => 'Clear pricing,', 'title_em' => 'no surprises.',

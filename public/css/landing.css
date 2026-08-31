@@ -1158,25 +1158,42 @@ img { display: block; max-width: 100%; }
   color: var(--fg-mute);
 }
 
-.zone-intro {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+/* ══ ZONAS Y ATRACCIONES, UNIFICADAS ═══════════════════════════════════════════════════════════
+   Cada zona es un BLOQUE: su tarjeta y, debajo, sus atracciones. Antes eran dos secciones con dos
+   cabeceras y una barra de pestañas para saltar de una a otra.
+   ⚠️ **Escrito de móvil hacia arriba**: en el teléfono los bloques se apilan y la tarjeta ocupa el
+   ancho; el emparejado de dos columnas es la EXCEPCIÓN de escritorio, no al revés. */
+.zones-list { display: flex; flex-direction: column; gap: 56px; }
+.zone-block { display: flex; flex-direction: column; gap: 22px; }
+
+/* La cabecera del carrusel: de quién son estas atracciones, y las flechas. */
+.zone-block__rides { display: flex; flex-direction: column; gap: 14px; }
+.zone-block__rides-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
+/* ⚠️ Las flechas se ESCONDEN en el teléfono y no es un descuido: ahí el carrusel se recorre con el
+   dedo, y dos botones que repiten un gesto que ya existe son ruido. Vuelven con el puntero fino. */
+.zone-block__rides-head .slider-nav { display: none; }
+@media (pointer: fine) {
+  .zone-block__rides-head .slider-nav { display: flex; }
+}
+
+/* ⚠️ Aquí estaba `.zone-intro`, la rejilla de dos columnas que emparejaba las tarjetas de zona.
+   Con las atracciones DEBAJO de cada zona el emparejado ya no tiene sentido: cada bloque ocupa su
+   fila. La familia `.zone-intro__*` sigue viva —es la tarjeta sin foto—, solo se va el envoltorio. */
 .zone-intro__card {
   position: relative; overflow: hidden;
   border-radius: var(--r-lg);
   padding: 36px 32px 32px;
   min-height: 400px;
   display: flex; flex-direction: column; justify-content: space-between;
-  transition:
-    transform var(--dur-entra) var(--ease-sale),
-    box-shadow var(--dur-entra) var(--ease-sale);
-  cursor: pointer;
   border: 1px solid var(--line);
 }
-.zone-intro__card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lift);
-}
+/* ⚠️⚠️ **AQUÍ VIVÍAN `cursor: pointer` Y EL LEVANTAMIENTO AL HOVER, Y SE RETIRARON.** La tarjeta
+   era un `<a href="#rides">` que saltaba a la sección de atracciones; con las atracciones DEBAJO
+   de su propia zona volvió a ser un `<div>` inerte, y el CSS se quedó vistiéndola de enlace:
+   salía la manita, la tarjeta se levantaba 6 px, y al pulsar no pasaba nada.
+   ▶ *Una afordancia que sobrevive a su consumidor promete una interacción que ya no existe.* */
 /* El color de la zona llega INLINE desde el servidor (`--zone-1`/`--on-brand`, `DECISIONES #138`).
    Antes había una regla por acento y solo existían para `jump` y `kids`: una zona con cualquier otro
    acento se quedaba sin color, y dos zonas con el MISMO acento y distinto color divergían según la
@@ -1266,16 +1283,8 @@ img { display: block; max-width: 100%; }
   font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; display: block;
 }
 .zone-intro__meta .l { font-family: var(--font-body); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.7; margin-top: 4px; }
-.zone-intro__cta {
-  display: inline-flex; align-items: center; gap: 10px;
-  font-family: var(--font-body); font-size: 12px;
-  text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600;
-  background: var(--action); color: var(--on-action);
-  padding: 12px 18px; border-radius: var(--r-btn);
-  margin-top: 28px; align-self: flex-start;
-}
-.zone-intro__cta .arrow { transition: transform var(--dur-entra) var(--ease-sale); }
-.zone-intro__card:hover .zone-intro__cta .arrow { transform: translateX(4px); }
+/* ⚠️ `.zone-intro__cta` («Ver atracciones →») se retiró con la unificación: las atracciones están
+   justo debajo de la tarjeta, así que el botón llevaba a donde ya estabas. */
 
 /* big number watermark inside zone card */
 .zone-intro__bg {
@@ -1297,21 +1306,26 @@ img { display: block; max-width: 100%; }
   border-radius: var(--r-lg);
   border: 1px solid var(--line);
   display: flex; flex-direction: column;
-  /* Misma altura mínima que el fallback `.zone-intro__card` (400px) → en un grid mixto
-     (una zona con foto, otra sin) las cards quedan alineadas (revisión adversarial #230). */
+  /* ⚠️ El `min-height` se queda, pero su RAZÓN cambió: nació «para que en un grid mixto las cards
+     queden alineadas» (revisión adversarial `#230`), y ese grid —`.zone-intro`— se retiró con la
+     unificación. Hoy sostiene el alto de la tarjeta cuando la zona trae poco contenido. Se deja
+     dicho para que nadie conserve el número por una razón que ya no existe. */
   min-height: 400px;
   color: var(--fg);
-  cursor: pointer;
-  transition:
-    transform var(--dur-entra) var(--ease-sale),
-    box-shadow var(--dur-entra) var(--ease-sale);
 }
-.zone-photo-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lift);
-}
+/* ⚠️ Ídem que en la tarjeta sin foto: `cursor: pointer` y el hover que levantaba se retiraron al
+   dejar de ser un enlace. */
+/* ⚠️⚠️ **La foto pasa de ALTO FIJO a PROPORCIÓN, y el motivo está medido.** Con la unificación la
+   tarjeta dejó de ocupar media rejilla (580 px) y pasó a la columna entera (1174): con `height:
+   240px` clavado, la caja pasó de 2,42:1 a **4,89:1**, y como la foto va con `object-fit: cover`
+   eso significa que **solo se veía el 31 % del alto del original** —medido en navegador— donde
+   antes se veía el 62 %. Una foto encuadrada para la tarjeta antigua se queda sin cabezas.
+   ▶ `3 / 1` recupera la mitad de lo perdido (**50 % visible**) sin disparar el alto de la tarjeta;
+   la proporción escala sola con el ancho, que es lo que el alto fijo no hacía.
+   ⚠️ **No vuelve al 62 %**, y se dice: para eso harían falta 470 px de foto. Es una regresión
+   MITIGADA, no cerrada, y quien la cierre tendrá que decidir cuánto alto vale una tarjeta. */
 .zone-photo-card__photo {
-  width: 100%; height: 240px; display: block; object-fit: cover;
+  width: 100%; height: auto; aspect-ratio: 3 / 1; display: block; object-fit: cover;
 }
 .zone-photo-card__body {
   padding: 26px 30px 30px;
@@ -1343,16 +1357,7 @@ img { display: block; max-width: 100%; }
   font-family: var(--font-body); font-size: 10px; text-transform: uppercase;
   letter-spacing: 0.14em; opacity: 0.7; margin-top: 4px;
 }
-.zone-photo-card__cta {
-  display: inline-flex; align-items: center; gap: 10px;
-  font-family: var(--font-body); font-size: 12px;
-  text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600;
-  background: var(--action); color: var(--on-action);
-  padding: 12px 18px; border-radius: var(--r-btn);
-  margin-top: 24px; align-self: flex-start;
-}
-.zone-photo-card__cta .arrow { transition: transform var(--dur-entra) var(--ease-sale); }
-.zone-photo-card:hover .zone-photo-card__cta .arrow { transform: translateX(4px); }
+/* ⚠️ Ídem con el de la tarjeta con foto. */
 
 /* ---------- atracciones (tabs + slider) ---------- */
 .rides__head {
@@ -1370,10 +1375,8 @@ img { display: block; max-width: 100%; }
   font-size: clamp(48px, 7vw, 108px); line-height: 0.88; letter-spacing: -0.035em; margin: 0;
 }
 
-.rides__controls {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 28px; gap: 24px; flex-wrap: wrap;
-}
+/* ⚠️ `.rides__controls` era la fila «pestañas + flechas» de la sección de atracciones, que ya no
+   existe: las flechas viven ahora en la cabecera de cada carrusel. */
 .zone-tabs {
   display: inline-flex;
   background: var(--bg-card);
@@ -1392,10 +1395,9 @@ img { display: block; max-width: 100%; }
 .zone-tab.active { background: var(--zone-1); color: var(--on-brand); }
 
 .slider-nav { display: flex; gap: 8px; align-items: center; }
-.slider-nav__counter {
-  font-family: var(--font-body); font-size: 12px; color: var(--fg-mute);
-  text-transform: uppercase; letter-spacing: 0.14em; margin-right: 8px;
-}
+/* ⚠️ Aquí estaba `.slider-nav__counter`, el contador «1 / 8» que acompañaría a las flechas. **No
+   lo pinta nadie y no lo pintaba antes de este cambio**: era huérfana preexistente, y se barre
+   ahora porque este cambio mueve justo esta familia y el próximo inventario la contaría como viva. */
 .slider-arrow {
   width: 48px; height: 48px; border-radius: 50%;
   border: 1px solid var(--line-strong);
@@ -2214,13 +2216,25 @@ img { display: block; max-width: 100%; }
 *:focus { outline: none; }
 /* Lote 6 (a11y teclado): se añaden casillas/radios — antes quedaban SIN foco visible
    bajo el reset `*:focus` (las legales del registro eran inalcanzables a la vista al
-   tabular). El FAQ y las cards de zona pasaron a `<button>`/`<a>` → ya los cubren
-   `button`/`a`, por eso dejan de tener selector propio aquí. */
+   tabular). El FAQ pasó a `<button>` → ya lo cubre `button`, por eso deja de tener
+   selector propio aquí.
+   ⚠️⚠️ **Y `.slider` entra el 2026-08-31, el mismo día que se hizo focalizable.** Al darle
+   `tabindex="0"` para poder recorrerlo con el teclado quedó **enfocable y SIN anillo**: esta
+   lista es CERRADA y un `<div tabindex="0">` no casa con ninguna de sus entradas, así que el
+   reset `*:focus { outline: none }` de arriba se lo comía. Medido: `outline-style: none` en el
+   carrusel contra `solid` en un botón de la misma página. **Nada falla — el foco simplemente
+   desaparece de la vista** (WCAG 2.4.7), y encima en el único caso donde el teclado es la única
+   vía (con puntero grueso las flechas se esconden).
+   ▶ *Hacer algo enfocable no es hacerlo accesible: si el anillo sale de una lista cerrada, hay
+   que añadirlo a la lista.*
+   ⚠️ `.zone-intro__card`/`.zone-photo-card` NO entran: volvieron a ser `<div>` inertes con la
+   unificación de zonas y atracciones, así que no reciben foco. */
 a:focus-visible,
 button:focus-visible,
 [role="menuitem"]:focus-visible,
 input[type="checkbox"]:focus-visible,
 input[type="radio"]:focus-visible,
+.slider:focus-visible,
 .ride-card:focus-visible {
   /* Anillo de foco unificado en --fg: contrasta siempre (la marca --zone-1 puede
      caer a ~1:1 con la zona Kids activa) y NO redefine el border-radius del elemento
@@ -2232,7 +2246,6 @@ input[type="radio"]:focus-visible,
 
 /* active (pressed) — subtle "press" feedback on all buttons */
 .btn:active,
-.zone-intro__cta:active,
 .nav__burger:active,
 .mob-menu__close:active,
 .slider-arrow:active:not(:disabled),
@@ -2243,8 +2256,8 @@ input[type="radio"]:focus-visible,
 
 /* card press (smaller scale since cards are bigger) */
 .ride-card:active,
-.zone-intro__card:active,
-.zone-photo-card:active,
+/* ⚠️ `.zone-intro__card` y `.zone-photo-card` salieron el 2026-08-31: dejaron de ser enlaces con
+   la unificación, y un acuse de recibo al pulsar algo inerte es peor que no darlo. */
 .price:active,
 .gallery__item:active,
 .polaroid:active,
@@ -2256,10 +2269,7 @@ input[type="radio"]:focus-visible,
 /* touch devices — disable hover translates so they don't stick after tap */
 @media (hover: none) {
   .btn:hover,
-  .zone-intro__cta:hover,
   .ride-card:hover,
-  .zone-intro__card:hover,
-  .zone-photo-card:hover,
   .events__photo:hover,
   .price:hover,
   .gallery__item:hover,
@@ -2275,7 +2285,6 @@ input[type="radio"]:focus-visible,
 /* ---------- responsive ---------- */
 @media (max-width: 1080px) {
   .zones__head { grid-template-columns: 1fr; }
-  .zone-intro { grid-template-columns: 1fr; }
   .pricing__grid { grid-template-columns: 1fr 1fr; }
   .info__grid { grid-template-columns: 1fr; }
   .rules-grid { grid-template-columns: 1fr 1fr; }
@@ -2310,7 +2319,9 @@ input[type="radio"]:focus-visible,
   /* Zona con foto en móvil: misma altura mínima que el fallback + banda de foto más baja
      (la card pasa a 1-col, no necesita 240px de foto). Revisión adversarial #230. */
   .zone-photo-card { min-height: 360px; }
-  .zone-photo-card__photo { height: 200px; }
+  /* En móvil la tarjeta ya ocupaba el ancho antes del cambio: su alto se queda como estaba
+     (medido: 84 % del original visible, que es sano) y la proporción no manda aquí. */
+  .zone-photo-card__photo { height: 200px; aspect-ratio: auto; }
   .zone-intro__name { font-size: clamp(64px, 18vw, 120px); }
   .zone-intro__sub { font-size: 17px; }
   .zone-intro__copy { font-size: 14px; }
@@ -2318,10 +2329,10 @@ input[type="radio"]:focus-visible,
   /* rides */
   .rides__title { font-size: clamp(44px, 13vw, 80px); }
   .rides__head { flex-direction: column; align-items: flex-start; gap: 16px; }
-  .rides__controls { flex-direction: column; align-items: stretch; gap: 14px; }
-  /* #232: el switcher de zonas `.zone-tabs` a ANCHO COMPLETO en móvil — tanto en Atracciones
-     (#rides) como en Entradas (#pricing, donde su contenedor `.ticket-prices__tabs` lo centraba a
-     ancho de contenido) — con los 2 botones «Zona Jump/Kids» repartidos 50/50, sin hueco vacío. */
+  /* #232: el switcher de zonas `.zone-tabs` a ANCHO COMPLETO en móvil, con sus botones repartidos
+     sin hueco vacío. ⚠️ Su texto decía «tanto en Atracciones (#rides) como en Entradas»: desde la
+     unificación del 2026-08-31 **Atracciones ya no tiene pestañas**, y el único consumidor es la
+     sección de entradas (`.ticket-prices__tabs`). */
   .zone-tabs { display: flex; width: 100%; }
   .zone-tab { flex: 1; text-align: center; }
   .slider-nav { justify-content: flex-end; }

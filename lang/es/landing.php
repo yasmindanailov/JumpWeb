@@ -97,14 +97,11 @@ return [
     'zones' => [
         'eyebrow' => 'Las dos zonas', 'title' => 'Un parque,', 'title_em' => 'dos zonas.',
         'intro' => 'Diseñamos dos universos diferentes: uno para los que vuelan sin frenos y otro para los que están descubriendo el salto. Elige el tuyo.',
-        'see_rides' => 'Ver atracciones', 'surface' => 'Superficie', 'rides' => 'Atracciones',
+        'surface' => 'Superficie', 'rides' => 'Atracciones',
         'total_labels' => ['m² totales', 'atracciones', 'zonas por edad'],
     ],
     'rides' => [
-        'eyebrow' => 'Atracciones', 'title' => 'Elige tu zona,', 'title_em' => 'elige tu salto.',
-        'intro' => 'Pasa de una zona a otra con un clic. Desliza para ver todas las atracciones.',
-        'zone_tab' => 'Zona',
-        'buy' => 'Comprar',
+        'eyebrow' => 'Atracciones', 'buy' => 'Comprar',
     ],
     'pricing' => [
         'eyebrow' => 'Tarifas', 'title' => 'Tarifas claras,', 'title_em' => 'sin sorpresas.',

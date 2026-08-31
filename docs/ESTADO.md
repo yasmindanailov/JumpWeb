@@ -20,7 +20,7 @@
 > ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1, T2 y T3 hechas → sigue la T4) ═══════════
 > ❗❗❗ **2026-08-31 (noche) · T3 · EL PARQUE DECIDE, EN EL ÁRBOL** (`#294`,
 > `specs/cumple-mixto.md` §23 diseño · **§23.10 ejecución**).
-> Suite **3656 en verde** (23.733 aserciones, 1 skipped a propósito; árbol CONJUNTO sobre `#293`) ·
+> Suite **3664 en verde** (23.753 aserciones, 1 skipped a propósito; árbol CONJUNTO sobre `#295`) ·
 > **12/12 mutaciones muerden** (incluida la del DISPARADOR: el modal sin llamar al writer) ·
 > los TRES verificadores sobre MySQL (mixto · aforo en sus SEIS escenarios · redsys) · sonda
 > headless sobre `T0-PRB01` (guion `/root/e2e/t3.js`, 4 capturas + el PDF en
@@ -46,8 +46,7 @@
 > COMPLETO, EN EL ÁRBOL** (`#289`, `specs/cumple-mixto.md` §22 diseño · §22.9 ejecución).
 > Suite de entonces: 3639 tests / 23.658 aserciones — cifra del árbol conjunto de aquel cierre,
 > tras rebasar `#290` (el sistema de etiquetas) encima de la T1/T2 de mixtos (la VIVA, arriba: es
-> la única copia que lee el gate) · **7/7 mutaciones muerden** ·
-> `mixed-party:verify-concurrency` en verde · sonda headless (2 capturas en `/root/e2e/t2-capturas/`).
+> la única copia que lee el gate) · **7/7 mutaciones muerden** ·> `mixed-party:verify-concurrency` en verde · sonda headless (2 capturas en `/root/e2e/t2-capturas/`).
 > ▶ «Completo» son DOS preguntas (dinero: todas las edades declaradas · formulario: además ninguna
 > edad sin producto). ⚠️⚠️ **La puerta vive en `reconcile()` y vale también para el panel**
 > (`[DECIDIDO owner]`): con una edad en blanco no se escribe NADA — hasta hoy crecía (`#268`). ⚠️
@@ -92,6 +91,26 @@
 > envoltorio—: sin el segundo la cinta **se recorta a sí misma** (5 elementos, 22 px medidos).
 > ⚠️⚠️ **Y dos trampas de instrumento**: la sonda contaba ítems ya invisibles (6 falsos en móvil), y
 > el cero solo vale con CONTROL — que en móvil **no muerde**, así que ahí el alto extra es aire.
+>
+> ▶ ✅ **T3 hecha — ZONAS Y ATRACCIONES UNIFICADAS** (`#295`): un bloque por zona con su carrusel
+> debajo, y **solo si tiene atracciones**. Se van una cabecera, el salto, el CTA y **una de las dos
+> barras de pestañas** de la portada.
+> ❗❗ **Destapó un defecto que NO era de presentación**: la identidad de la zona era `accent`, que
+> **agrupa y no identifica** — `cap` y `cap2` comparten el de `kids`—, así que **tres carruseles
+> compartían `x-ref` y `data-zone`**: pulsar «Zona KIDS» abría tres a la vez. Ahora manda `slug`.
+> ⚠️ **La misma raíz estaba arreglada A MEDIAS desde `#230`** (se corrigió el color, no la identidad):
+> *cuando un campo demuestra que no identifica, hay que mirar todo lo que lo usa para identificar.*
+> ⚠️⚠️ **REVISIÓN ADVERSARIAL de seis lentes: 40 hallazgos, 13 confirmados, 27 descartados** — y casi
+> todo lo confirmado era MÍO y ninguna suite lo veía. Lo peor: **la guarda que re-apunté quedó VACÍA**
+> (aseveraba una subcadena que emite también la sección de entradas; borrando la sección de zonas
+> entera seguía verde). ▶ *Acota al elemento antes de creerte un test verde.*
+> ⚠️ También: el carrusel enfocable **sin anillo de foco** (lo introduje con el `tabindex`), las
+> tarjetas inertes fingiendo que se pulsan, la foto de **62 % a 31 %** de encuadre visible, la
+> retirada de CSS **a medias** y `trim($s, ' ·')` **recortando BYTES**.
+> ⚠️⚠️ **Y dos casos de mi guarda nueva nacieron pasando EN VACÍO**: la BD de test no tenía sujeto
+> para ellos. *Un caso sin sujeto no vigila nada, y no se nota hasta que se muta.*
+> ▶ **Lo DESCARTADO importa**: encabezados, nombres de flechas y el ancla se señalaron y **no
+> sobrevivieron a la refutación** — sin ese paso habría «arreglado» tres cosas sanas.
 >
 > ❗❗❗ **`Landing PJP Modos` YA NO GUÍA LA ESTRUCTURA DE LA LANDING** (`#292`, `[owner]`: «de esa
 > maqueta solo sacaremos la sección de reseñas»). ▶ **Corrige a `tema-por-instalacion.md` §1**: aquel

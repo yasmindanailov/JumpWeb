@@ -75,14 +75,11 @@ return [
     'zones' => [
         'eyebrow' => 'Les deux zones', 'title' => 'Un parc,', 'title_em' => 'deux zones.',
         'intro' => 'On a conçu deux univers différents — un pour ceux qui sautent déjà sans freins, un pour ceux qui apprennent. Choisis le tien.',
-        'see_rides' => 'Voir les attractions', 'surface' => 'Surface', 'rides' => 'Attractions',
+        'surface' => 'Surface', 'rides' => 'Attractions',
         'total_labels' => ['m² au total', 'attractions', 'zones par âge'],
     ],
     'rides' => [
-        'eyebrow' => 'Attractions', 'title' => 'Choisis ta zone,', 'title_em' => 'choisis ton saut.',
-        'intro' => "Passe d'une zone à l'autre en un clic. Fais défiler pour voir toutes les attractions.",
-        'zone_tab' => 'Zone',
-        'buy' => 'Acheter',
+        'eyebrow' => 'Attractions', 'buy' => 'Acheter',
     ],
     'pricing' => [
         'eyebrow' => 'Tarifs', 'title' => 'Tarifs clairs,', 'title_em' => 'sans surprise.',

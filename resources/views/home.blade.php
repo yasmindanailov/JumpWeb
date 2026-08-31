@@ -202,98 +202,108 @@
             @endforeach
         </div>
 
-        <div class="zone-intro">
+        {{-- **ZONAS Y ATRACCIONES, UNIFICADAS** (`specs/idioma-visual-heredado.md`, T3,
+             `[DECIDIDO owner]`: «las zonas hay que unificarlo con las atracciones»).
+
+             ▶ Antes eran DOS secciones con dos cabeceras: las tarjetas de zona y, más abajo, una
+             sección propia con **una barra de pestañas** para elegir zona y un carrusel por zona.
+             La tarjeta llevaba un CTA que saltaba a la otra sección y cambiaba la pestaña. Ahora
+             cada zona lleva **sus** atracciones justo debajo: se va una cabecera, se va el salto,
+             se va el CTA y se va **una de las dos barras de pestañas que tenía la portada** —la
+             otra, la de entradas, se queda—.
+
+             ⚠️⚠️ **Y eso cierra un defecto REAL, medido**: la identidad de la zona era `accent`, que
+             **agrupa y no identifica** — `cap` y `cap2` comparten el de `kids` —, así que tres
+             sliders emitían el mismo `x-ref` y el mismo `data-zone`. Pulsar «Zona KIDS» abría
+             **tres carruseles a la vez** (8 tarjetas + dos vacíos, 568 px), y las flechas movían
+             uno cualquiera. *Un campo que agrupa no sirve para identificar.* Ahora manda `slug`,
+             que es lo que la sección de precios ya hacía bien al lado.
+
+             ⚠️ **La paleta va INLINE en el bloque**, ya compuesta por el servidor: antes la aplicaba
+             el JavaScript a `#rides` entero. Una zona sin atracciones no emite carrusel — antes
+             emitía uno vacío. --}}
+        <div class="zones-list" id="rides">
             @foreach ($zones as $zone)
-                @if ($zone->image)
-                    {{-- Card de zona CON foto (patrón «Foto integrada en la tarjeta» del mockup
-                         `Ejemplos Imagenes Secciones.html`): banda de foto arriba + color de zona y
-                         datos abajo. Fondo = color de la zona (white-label, vía ThemeSettings). --}}
-                    <a class="zone-photo-card" href="#rides"
-                             style="background: {{ \App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent) }}; --on-brand: {{ \App\Domain\Content\Services\ThemeSettings::onBrand(\App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent)) }}"
-                             @click.prevent="goToRides('{{ $zone->accent }}')"
-                             aria-label="{{ $zone->tr('name') }} · {{ __('landing.zones.see_rides') }}">
-                        <img class="zone-photo-card__photo" src="{{ asset($zone->image) }}"
-                             alt="{{ $zone->tr('name') }}" loading="lazy">
-                        {{-- La ilustración de la zona, «apoyada en el borde» — literalmente lo que
-                             dice su `E3`: «foto arriba con mancha entrando por la esquina y silueta
-                             apoyada en el borde». La pose la asigna él en `F10` y no cambia.
-                             ⚠️⚠️ Va TAMBIÉN aquí y no solo en el fallback: ésta es la variante que
-                             usan las zonas con foto, o sea las reales. Con el dibujo solo en la otra
-                             rama, en esta instalación no se veía en NINGUNA parte. --}}
-                        <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-photo-card__ilu" />
-                        <div class="zone-photo-card__body">
-                            <span class="tag tag--senal tag--punteada zone-photo-card__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
-                            <h3 class="zone-photo-card__name">{{ $zone->tr('name') }}</h3>
-                            <p class="zone-photo-card__sub">{{ $zone->tr('subtitle') }}</p>
-                            <x-site.zone-metrics :zone="$zone" class="zone-photo-card__meta" />
-                            <span class="zone-photo-card__cta">{{ __('landing.zones.see_rides') }} <x-icons.arrow-right class="arrow" :width="14" :height="14" /></span>
+                <article class="zone-block"
+                         style="{{ \App\Domain\Content\Services\ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent) }}">
+                    @if ($zone->image)
+                        {{-- Card de zona CON foto (patrón «Foto integrada en la tarjeta» del mockup
+                             `Ejemplos Imagenes Secciones.html`): banda de foto arriba + color de zona y
+                             datos abajo. Fondo = color de la zona (white-label, vía ThemeSettings). --}}
+                        <div class="zone-photo-card"
+                                 style="background: {{ \App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent) }}; --on-brand: {{ \App\Domain\Content\Services\ThemeSettings::onBrand(\App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent)) }}"
+                                 >
+                            <img class="zone-photo-card__photo" src="{{ asset($zone->image) }}"
+                                 alt="{{ $zone->tr('name') }}" loading="lazy">
+                            {{-- La ilustración de la zona, «apoyada en el borde» — literalmente lo que
+                                 dice su `E3`: «foto arriba con mancha entrando por la esquina y silueta
+                                 apoyada en el borde». La pose la asigna él en `F10` y no cambia.
+                                 ⚠️⚠️ Va TAMBIÉN aquí y no solo en el fallback: ésta es la variante que
+                                 usan las zonas con foto, o sea las reales. Con el dibujo solo en la otra
+                                 rama, en esta instalación no se veía en NINGUNA parte. --}}
+                            <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-photo-card__ilu" />
+                            <div class="zone-photo-card__body">
+                                @if ($zone->tr('age_label') || $zone->tr('age_range'))
+                                <span class="tag tag--senal tag--punteada zone-photo-card__tag">{{ implode(' · ', array_filter([$zone->tr('age_label'), $zone->tr('age_range')])) }}</span>
+                            @endif
+                                <h3 class="zone-photo-card__name">{{ $zone->tr('name') }}</h3>
+                                <p class="zone-photo-card__sub">{{ $zone->tr('subtitle') }}</p>
+                                <x-site.zone-metrics :zone="$zone" class="zone-photo-card__meta" />
+                            </div>
                         </div>
-                    </a>
-                @else
-                    {{-- Fallback: card de zona sin foto (diseño actual con número de marca de fondo). --}}
-                    {{-- ⚠️ El color va INLINE, no en una clase `--{accent}` (`DECISIONES #138`): esas
-                         reglas solo existían para `jump` y `kids`, y una zona con otro acento se
-                         quedaba sin color en silencio. Lo compone `ThemeSettings::zoneStyle()`. --}}
-                    <a class="zone-intro__card" href="#rides"
-                       style="{{ \App\Domain\Content\Services\ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent) }}"
-                       @click.prevent="goToRides('{{ $zone->accent }}')"
-                       aria-label="{{ $zone->tr('name') }} · {{ __('landing.zones.see_rides') }}">
-                        <div class="zone-intro__bg">{{ $zone->tr('name') }}</div>
-                        {{-- **EL PRIMER CONSUMIDOR DEL HUECO DE ILUSTRACIÓN** (`#257`, cerrada aquí).
-                             La clave sale de `zones.slug`, que ya existe: por eso esta pantalla fue la
-                             elegida para estrenar el mecanismo —es la única que no exige declarar
-                             ninguna ranura nueva—.
-                             ⚠️ Sin `client-kit.svg` el componente **no emite nada** y la tarjeta queda
-                             exactamente como estaba: el hueco falla hacia invisible a propósito. --}}
-                        <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-intro__ilu" />
-                        <div class="zone-intro__top">
-                            <span class="tag tag--senal tag--punteada zone-intro__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
+                    @else
+                        {{-- Fallback: card de zona sin foto (diseño actual con número de marca de fondo).
+                             ⚠️ El color va INLINE, no en una clase `--{accent}` (`DECISIONES #138`): esas
+                             reglas solo existían para `jump` y `kids`, y una zona con otro acento se
+                             quedaba sin color en silencio. Lo compone `ThemeSettings::zoneStyle()`.
+                             ⚠️⚠️ **Y aquí NO se vuelve a escribir**: la paleta ya la declara el
+                             `<article class="zone-block">` que la envuelve, con la MISMA llamada y los
+                             mismos argumentos, así que la tarjeta la hereda. Repetirla dejaba dos
+                             fuentes para el mismo dato — el día que el bloque quisiera teñir algo
+                             distinto, la tarjeta seguiría con la suya y en silencio (es lo que `#260`
+                             documentó con el icono del CTA: dos fuentes y gana la del marcado). --}}
+                        <div class="zone-intro__card">
+                            <div class="zone-intro__bg">{{ $zone->tr('name') }}</div>
+                            {{-- **EL PRIMER CONSUMIDOR DEL HUECO DE ILUSTRACIÓN** (`#257`, cerrada aquí).
+                                 La clave sale de `zones.slug`, que ya existe: por eso esta pantalla fue la
+                                 elegida para estrenar el mecanismo —es la única que no exige declarar
+                                 ninguna ranura nueva—.
+                                 ⚠️ Sin `client-kit.svg` el componente **no emite nada** y la tarjeta queda
+                                 exactamente como estaba: el hueco falla hacia invisible a propósito. --}}
+                            <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-intro__ilu" />
+                            <div class="zone-intro__top">
+                                @if ($zone->tr('age_label') || $zone->tr('age_range'))
+                                <span class="tag tag--senal tag--punteada zone-intro__tag">{{ implode(' · ', array_filter([$zone->tr('age_label'), $zone->tr('age_range')])) }}</span>
+                            @endif
+                            </div>
+                            <div style="position:relative; z-index:1">
+                                <h3 class="zone-intro__name">{{ $zone->tr('name') }}</h3>
+                                <p class="zone-intro__sub">{{ $zone->tr('subtitle') }}</p>
+                                <p class="zone-intro__copy">{{ $zone->tr('description') }}</p>
+                            </div>
+                            <x-site.zone-metrics :zone="$zone" class="zone-intro__meta" style="position:relative; z-index:1" />
                         </div>
-                        <div style="position:relative; z-index:1">
-                            <h3 class="zone-intro__name">{{ $zone->tr('name') }}</h3>
-                            <p class="zone-intro__sub">{{ $zone->tr('subtitle') }}</p>
-                            <p class="zone-intro__copy">{{ $zone->tr('description') }}</p>
-                        </div>
-                        <x-site.zone-metrics :zone="$zone" class="zone-intro__meta" style="position:relative; z-index:1" />
-                        <span class="zone-intro__cta" style="position:relative; z-index:1">{{ __('landing.zones.see_rides') }} <x-icons.arrow-right class="arrow" :width="14" :height="14" /></span>
-                    </a>
-                @endif
-            @endforeach
-        </div>
-    </section>
+                    @endif
 
-    {{-- ===================== ATRACCIONES ===================== --}}
-    <section id="rides" class="section wrap">
-        <div class="rides__head">
-            <div>
-                <div class="eyebrow" style="margin-bottom:16px">{{ __('landing.rides.eyebrow') }}</div>
-                <h2 class="rides__title">{{ __('landing.rides.title') }}<br /><em style="font-style:normal; color:var(--zone-1)">{{ __('landing.rides.title_em') }}</em></h2>
-            </div>
-            <p>{{ __('landing.rides.intro') }}</p>
-        </div>
-
-        <div class="rides__controls">
-            <div class="zone-tabs">
-                @foreach ($zones as $zone)
-                    <button class="zone-tab" data-tap :class="zone==='{{ $zone->accent }}' && 'active'" @click="setZone('{{ $zone->accent }}')">{{ __('landing.rides.zone_tab') }} {{ $zone->tr('name') }}</button>
-                @endforeach
-            </div>
-            <div class="slider-nav">
-                <button class="slider-arrow" @click="scrollSlider(-1)" aria-label="{{ __('landing.nav.slider_prev') }}"><x-icons.arrow-left :width="16" :height="16" /></button>
-                <button class="slider-arrow" @click="scrollSlider(1)" aria-label="{{ __('landing.nav.slider_next') }}"><x-icons.arrow-right :width="16" :height="16" /></button>
-            </div>
-        </div>
-
-        @foreach ($zones as $zone)
-            {{-- ⚠️ El slider lleva la PALETA YA COMPUESTA (`data-zone-style`, `DECISIONES #139`).
-                 `data-color` traía solo el primario, así que el JS tenía que (a) quemar el secundario
-                 a la paleta del primer cliente y (b) **repetir la fórmula de contraste de
-                 `ThemeSettings::onBrand()`** en JavaScript. Dos definiciones de la misma regla es
-                 como empiezan las divergencias que el tema existe para cerrar. --}}
-            <div class="slider" x-ref="slider_{{ $zone->accent }}" data-zone="{{ $zone->accent }}"
-                 data-color="{{ \App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent) }}"
-                 data-zone-style="{{ \App\Domain\Content\Services\ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent) }}"
-                 x-show="zone==='{{ $zone->accent }}'" @scroll="updateProgress()" @if (! $loop->first) style="display:none" @endif>
+                    @if ($zone->attractions->isNotEmpty())
+                        {{-- Un componente por carrusel: su propio progreso y su propio `$refs.slider`.
+                             El estado compartido era justo lo que hacía posible el defecto de arriba. --}}
+                        <div class="zone-block__rides" x-data="zoneSlider">
+                            <div class="zone-block__rides-head">
+                                <span class="eyebrow">{{ __('landing.rides.eyebrow') }} · {{ $zone->tr('name') }}</span>
+                                <div class="slider-nav">
+                                    <button class="slider-arrow" @click="scroll(-1)" aria-label="{{ __('landing.nav.slider_prev') }}"><x-icons.arrow-left :width="16" :height="16" /></button>
+                                    <button class="slider-arrow" @click="scroll(1)" aria-label="{{ __('landing.nav.slider_next') }}"><x-icons.arrow-right :width="16" :height="16" /></button>
+                                </div>
+                            </div>
+                            {{-- ⚠️ **`tabindex="0"` y nombre accesible, y no es adorno**: una región que se DESPLAZA y no
+                                 recibe foco no se puede recorrer con el teclado (WCAG 2.1.1). Las flechas
+                                 no bastan: se esconden con puntero grueso, así que en una tablet con teclado
+                                 no quedaría ninguna vía. Es el mismo patrón que el carrusel de `/normas` ya
+                                 usaba antes de retirarse. --}}
+                            <div class="slider" x-ref="slider" data-zone="{{ $zone->slug }}" @scroll="update()"
+                                 tabindex="0" role="group"
+                                 aria-label="{{ __('landing.rides.eyebrow') }} · {{ $zone->tr('name') }}">
                 @foreach ($zone->attractions as $ride)
                     <article class="ride-card{{ $ride->is_special ? ' ride-card--special' : '' }}{{ $complements->isPurchasable($ride) ? ' ride-card--sellable' : '' }}">
                         <div class="ride-card__viz">
@@ -319,11 +329,14 @@
                         @endif
                     </article>
                 @endforeach
-            </div>
-        @endforeach
-
-        <div class="slider-progress">
-            <div class="slider-progress__bar" :style="{ left: (progressLeft*100)+'%', width: (progressWidth*100)+'%' }"></div>
+                            </div>
+                            <div class="slider-progress">
+                                <div class="slider-progress__bar" :style="{ left: (progressLeft*100)+'%', width: (progressWidth*100)+'%' }"></div>
+                            </div>
+                        </div>
+                    @endif
+                </article>
+            @endforeach
         </div>
     </section>
 

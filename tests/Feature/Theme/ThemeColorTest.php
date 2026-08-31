@@ -258,11 +258,32 @@ class ThemeColorTest extends TestCase
 
     // ───────────────── Cobertura adicional (revisión adversarial) ─────────────────
 
-    public function test_landing_sliders_carry_validated_zone_color(): void
+    /**
+     * **El color de la zona llega al DOM validado, EN EL BLOQUE DE LA ZONA.**
+     *
+     * ⚠️ El VEHÍCULO cambió el 2026-08-31: antes viajaba en un `data-color` del slider —un resto que
+     * ya no leía nadie— y ahora la paleta va inline en el `<article class="zone-block">`.
+     *
+     * ⚠️⚠️ **Y la primera re-apuntada quedó VACÍA: la cazó una revisión adversarial y la firmaron
+     * TRES lentes independientes.** Aseveraba la subcadena `--zone-1:#111111` sobre la página
+     * entera, y esa cadena **la emiten además las pestañas y la rejilla de la sección de entradas**
+     * (`ticket-prices` compone el MISMO `zoneStyle()` para las mismas zonas). Medido: en `/` sale
+     * **3 veces y solo UNA es el bloque de zona**, así que borrando el `style` del bloque —o la
+     * sección de zonas entera— el test seguía en VERDE.
+     * ▶ *Acota al elemento antes de creerte un test verde* (`tema-por-instalacion.md` §12.4), y
+     * **una guarda re-apuntada a otro vehículo no puede quedar más débil que la que sustituye**: el
+     * `data-color` viejo era único en toda la página; esta subcadena no lo es.
+     */
+    public function test_landing_blocks_carry_validated_zone_color(): void
     {
         Zone::where('accent', 'jump')->update(['color' => '#111111']);
 
-        $this->get('/')->assertOk()->assertSee('data-color="#111111"', false);
+        $this->assertContains(
+            '#111111', $this->zoneBlockColours(),
+            'ningún `<article class="zone-block">` pinta el color validado de la zona. Sin ese `style` '.
+            'en línea el bloque hereda `--zone-1: var(--brand)` del `:root` y TODA zona pierde su '.
+            'color en silencio.',
+        );
     }
 
     public function test_landing_sanitizes_corrupt_zone_color(): void
@@ -273,7 +294,43 @@ class ThemeColorTest extends TestCase
 
         $res = $this->get('/')->assertOk();
         $res->assertDontSee('corrupto', false);
-        $res->assertSee('data-color="#FF5B22"', false);
+
+        $this->assertContains(
+            '#FF5B22', $this->zoneBlockColours(),
+            'el bloque de zona no pinta el color saneado: el saneo del punto de salida ha dejado de '.
+            'llegar al elemento que de verdad tiñe la zona.',
+        );
+    }
+
+    /**
+     * Los `--zone-1` que declara CADA `<article class="zone-block">`, y solo ellos.
+     *
+     * ⚠️ Se extrae el atributo del elemento en vez de buscar la subcadena en la página: es lo que
+     * distingue «el bloque pinta el color» de «alguien, en algún sitio, escribió ese hex».
+     *
+     * @return list<string>
+     */
+    private function zoneBlockColours(): array
+    {
+        $html = (string) $this->get('/')->assertOk()->getContent();
+
+        preg_match_all('/<article class="zone-block"[^>]*style="([^"]*)"/', $html, $bloques);
+
+        $this->assertNotEmpty(
+            $bloques[1],
+            'no hay ningún `<article class="zone-block">` con `style` en la portada: esta guarda se '.
+            'ha quedado sin sujeto y a partir de aquí no comprueba nada.',
+        );
+
+        $colores = [];
+
+        foreach ($bloques[1] as $estilo) {
+            if (preg_match('/--zone-1:\s*([^;]+)/', $estilo, $m)) {
+                $colores[] = trim($m[1]);
+            }
+        }
+
+        return $colores;
     }
 
     public function test_panel_loads_with_custom_brand(): void

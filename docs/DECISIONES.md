@@ -17020,3 +17020,78 @@ permisos con `sync()` — cada empleado del fichero nuevo lleva su propio rol.
 `redsys:verify-concurrency` sobre MySQL real · sonda headless sobre `T0-PRB01` (guion
 `/root/e2e/t3.js`, capturas en `/root/e2e/t3-capturas/`): las tres superficies **miradas** — queda
 el OJO del owner.
+## #295 · 2026-08-31 · T3 del idioma visual: zonas y atracciones unificadas — y una guarda mía que quedó VACÍA
+
+**El encargo** (`[DECIDIDO owner]`): *«las zonas hay que unificarlo con las atracciones»*. Eran dos
+secciones con dos cabeceras: las tarjetas de zona, cada una con un CTA que **saltaba** a la otra, y
+allí una **barra de pestañas** con todos los carruseles en el DOM bajo `x-show`. Ahora un bloque por
+zona con su carrusel debajo, y **solo si tiene atracciones**. Se van una cabecera, el salto, el CTA y
+**una de las dos barras de pestañas de la portada**.
+
+**❗ Y destapó un defecto que no era de presentación: la identidad de la zona era `accent`, que
+AGRUPA y no identifica.** Medido: `cap` y `cap2` comparten el de `kids`, así que **tres carruseles
+emitían el mismo `x-ref` y el mismo `data-zone`** — pulsar «Zona KIDS» abría **tres a la vez** (8
+tarjetas y dos vacíos, 568 px) y las flechas movían uno cualquiera, porque `$refs` resuelve a UNO.
+▶ **La misma raíz ya se había arreglado A MEDIAS**: `ThemeColorTest` tiene desde `#230` el caso «dos
+zonas que comparten acento ya no comparten color» — se corrigió el COLOR y la identidad se quedó en
+`accent`. *Cuando un campo demuestra que no identifica, hay que mirar todo lo que lo usa para
+identificar, no solo el sitio donde dolió.* La sección de precios, al lado, ya usaba `slug`.
+
+**Menos JavaScript, y no por gusto**: se retiran `zone`, `setZone`, `goToRides`, `applyZoneAccent`,
+`scrollSlider`, `updateProgress` y el progreso compartido; entra `zoneSlider`, **uno por carrusel**.
+La paleta va **inline en el bloque**, ya compuesta por el servidor.
+
+**⚠️⚠️ REVISIÓN ADVERSARIAL: seis lentes independientes y un refutador por hallazgo — 40 hallazgos,
+13 confirmados, 27 descartados.** Casi todo lo confirmado era mío y **ninguno lo veía la suite**:
+
+**1 · La guarda que re-apunté quedó VACÍA (alta, y la firmaron TRES lentes).** `ThemeColorTest`
+aseveraba `data-color="#111111"`; al retirar ese atributo la re-apunté a `--zone-1:#111111` **sobre
+la página entera**, y esa cadena **la emite además la sección de entradas** (`ticket-prices` compone
+el mismo `zoneStyle()`). Medido: aparece **3 veces y solo UNA es el bloque de zona**, así que
+**borrando el `style` del bloque —o la sección entera— el test seguía VERDE**. El vehículo viejo era
+único; la subcadena nueva no. ▶ Ahora se extrae el `style` **del elemento** y la mutación tumba dos
+casos. *Acota al elemento antes de creerte un test verde*, y **una guarda re-apuntada no puede quedar
+más débil que la que sustituye**.
+
+**2 · El carrusel enfocable SIN anillo de foco**, y lo introduje yo el mismo día. Al darle
+`tabindex="0"` para poder recorrerlo con teclado quedó enfocable y sin indicador: la hoja tiene
+`*:focus { outline: none }` y **la lista que lo devuelve es CERRADA** —un `<div tabindex="0">` no casa
+con ninguna entrada—. Medido con tabulación real: `outline-style: none` contra `solid` en un botón.
+*Hacer algo enfocable no es hacerlo accesible.* ⚠️ Y duele el doble: con puntero grueso las flechas se
+esconden, o sea que el teclado es la ÚNICA vía.
+
+**3 · Las tarjetas, ya inertes, seguían fingiendo que se pulsan**: `cursor: pointer`, levantamiento al
+hover y «press» al pulsar sobrevivieron al `<a>` que se retiró. *Una afordancia que sobrevive a su
+consumidor promete una interacción que ya no existe.*
+
+**4 · La foto perdió la mitad de su encuadre**: al pasar de media rejilla (580 px) a columna completa
+(1174) con `height: 240px` clavado, la caja pasó de 2,42:1 a 4,89:1 y `object-fit: cover` dejaba
+**solo el 31 % del alto visible** donde antes había 62 %. Pasa a proporción (`3 / 1` → **50 %**), que
+escala sola. **Regresión mitigada, no cerrada** —recuperar el 62 % pedía 470 px de foto— y así queda
+dicho.
+
+**5 · La retirada de CSS fue A MEDIAS**: se fueron tres reglas base y **quedaron sus `@media`**
+(`.zone-intro`, `.rides__controls`, `.zone-intro__cta:hover`). Y **cuatro claves de idioma × tres
+idiomas** sin consumidor — una de ellas, el `intro` de atracciones, decía «Pasa de una zona a otra con
+un clic», describiendo unas pestañas retiradas.
+
+**6 · `trim($s, ' ·')` recorta BYTES, no caracteres.** El `·` es `C2 B7`, así que la lista pide quitar
+bytes `C2` y `B7` sueltos: una etiqueta que empiece por `¡`, `¿`, `«`, `±` o `°` **pierde su primer
+byte**. Control ejecutado: `trim('¡Desde 3! · 1,30 m', ' ·')` devuelve mojibake. Se compone con
+`implode` sobre las partes no vacías.
+
+**⚠️ Lo DESCARTADO también vale**: la jerarquía de encabezados, los nombres de las flechas y el
+destino del ancla `#rides` fueron señalados y **no sobrevivieron a la refutación**. Sin ese segundo
+paso habría «arreglado» tres cosas que no estaban rotas.
+
+**⚠️⚠️ Y dos casos de mi guarda nueva NACIERON PASANDO EN VACÍO.** En la BD de test solo hay tres
+zonas, la única sin atracciones no se muestra en la landing y las dos visibles tienen datos de edad:
+«una zona sin atracciones no emite carrusel» y «la etiqueta no sale vacía» salían verdes **hiciera lo
+que hiciera la vista**, y lo demostró la mutación. Los dos crean ahora su sujeto. *Un caso sin sujeto
+no vigila nada, y no se nota hasta que se muta.* ⚠️ Y una aserción mía también estaba mal: buscaba
+`\xA1Desde` como prueba de mojibake, y **esa secuencia aparece dentro del UTF-8 correcto**.
+
+**Verificación**: suite **3664 / 23.753** en el árbol CONJUNTO (3647 / 23.678 en el mío antes de rebasar) · Pint ✓ · `docs-check` ✓ · **8 mutaciones muerden** (6 en
+`ZonesAndRidesUnifiedTest`, 1 en `ThemeColorTest`, 1 en el recorte) · medido en Chrome real a 390 y
+1280: **cero errores de consola**, cero desbordes, los dos anclajes vivos, los carruseles
+**independientes** (mover JUMP deja KIDS a 0), foco visible con tabulación real y control.

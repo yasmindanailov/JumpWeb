@@ -2644,6 +2644,18 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > ⚠️ **La lista de ranuras decorativas está VACÍA a propósito**: una ranura sin consumidor es lo que
 > dejó los 19 dibujos de `#257` esperando años.
 >
+> ✅ **IDIOMA VISUAL · T3: ZONAS Y ATRACCIONES UNIFICADAS** (2026-08-31, `#295`). Un bloque por zona
+> con su carrusel debajo; fuera una cabecera, el salto, el CTA y una de las dos barras de pestañas.
+> ❗ **Cerró un defecto de identidad**: `accent` AGRUPA y no identifica (`cap`/`cap2` comparten el de
+> `kids`) → tres carruseles con el mismo `x-ref`. Manda `slug`. La misma raíz estaba arreglada a
+> medias desde `#230`.
+> ▶ **Menos JS**: se retiran `zone`/`setZone`/`goToRides`/`applyZoneAccent` y el progreso compartido;
+> entra `zoneSlider`, uno por carrusel. La paleta va inline, ya compuesta por el servidor.
+> ⚠️⚠️ **Revisión adversarial de 6 lentes: 40 hallazgos, 13 confirmados** — y casi todos míos: la
+> guarda re-apuntada quedó **VACÍA**, el carrusel enfocable **sin anillo de foco**, las tarjetas
+> inertes con afordancia de enlace, la foto de 62 % a **31 %** de encuadre, la retirada de CSS a
+> medias y un `trim` que recorta **bytes**. ⚠️ Y dos casos de la guarda nueva **nacieron en vacío**.
+>
 > ✅ **IDIOMA VISUAL · T2: LA CINTA `C3`** (2026-08-31, `#293`). La marquesina de `/servicios` —del
 > cliente antiguo— pasa a ser su banda: tinta a sangre, girada −2,4°, punto de color entre títulos y
 > bucle lento con **token ambiental propio** (antes, `30s` a mano: una instalación no podía calmarla).

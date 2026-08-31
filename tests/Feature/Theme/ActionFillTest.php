@@ -54,8 +54,9 @@ class ActionFillTest extends TestCase
         // landing.css
         '.btn' => 'el botón sólido de la landing y del cajón',
         '.btn:disabled:hover, .btn[aria-disabled="true"]:hover' => 'su guarda de deshabilitado',
-        '.zone-intro__cta' => 'el CTA de la zona',
-        '.zone-photo-card__cta' => 'el CTA de la tarjeta de zona',
+        // ⚠️ `.zone-intro__cta` y `.zone-photo-card__cta` («Ver atracciones →») salieron el
+        // 2026-08-31 con la unificación de zonas y atracciones: el botón llevaba a una sección que
+        // ahora está justo debajo de la tarjeta. La lista solo encoge.
         '.price--feat .price__cta' => 'el CTA de la tarifa destacada',
         '.bd-pack__cta' => '«Reservar este cumple»',
         '.bd-btn--solid' => 'el primario del par del editor de invitaciones',
