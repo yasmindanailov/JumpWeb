@@ -4,6 +4,33 @@
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-08-30 — jornada del MOVIMIENTO, la MARCA y
 > el KIT DEL MURAL: `#275` → `#281`.**
+> ❗❗❗ **2026-08-31 · LA VISIÓN DE RESERVAS MIXTAS, CERRADA CON EL OWNER** (`#284`). **Si vas a
+> construir algo de mixtos, lee `specs/cumple-mixto.md` §18 y nada más**: es la foto completa —nueve
+> decisiones, siete huecos medidos y el plan por tandas—. Sesión SIN código.
+> ▶ **La regla que lo ordena todo, en sus palabras**: «el cliente compra con unas condiciones y las
+> mantenemos; ya las siguientes reservas empiezan con las nuevas». Solo cambia de condiciones **lo
+> que cambia de producto**.
+> ❗❗ **EL SELLO VIVE EN LA RESERVA, NO EN EL PRODUCTO** (D1): cada reserva guarda al nacer una copia
+> de los tramos y precios de su familia, así que **el precio viejo solo existe dentro de las reservas
+> que lo llevan** y **no hace falta histórico de precios**. La corrección es del owner: yo estaba a
+> punto de plantear un histórico.
+> ❗❗ **Y destapó un hueco MAYOR que el caso espejo**: el **PRIMER** cargo se calcula con el catálogo
+> del día en que el cliente rellena el formulario, no con el del día en que compró. Medido: se
+> reserva con 5,00 € de diferencia por cabeza y se le cobran **10,00 €**. No hace falta tocar
+> tramos, basta subir un precio — y el formulario **siempre** se rellena más tarde.
+> ⚠️⚠️ **`PAY-18` NO era un choque con la visión: es la misma regla** («la fecha es un producto»), y
+> lo aclaró él. Queda intacta.
+> ⚠️ **Una edad sin producto es un estado CONOCIDO, no una incógnita** (D6), y eso **corrige a
+> `#268`**: hoy congela el dinero —medido, un bebé de 0 años impide que el cargo baje— y solo una
+> edad que FALTA debería hacerlo.
+> ⚠️ **`0 LIVE · 0 PRODUCCIÓN`**: no hay nada que rellenar al desplegar el sello. Retiré una pregunta
+> mía que el propio `ENTORNOS.md` ya contestaba.
+> ▶ **El −X € SE HACE** (revierte `#246`/`#248`) pero **se diseña con Fable antes de tocar nada**:
+> informe autocontenido en **§19**, con la aritmética verificada de los tres casos y la trampa medida
+> que hunde el más común (un pack sin señal perdía el descuento en silencio).
+> ▶ **Plan en §18.5, seis tandas.** Empieza por el **ojo del owner en navegador** (T0) y sigue por el
+> **SELLO** (T1), que desbloquea la mitad de lo demás. Las que tocan dinero de verdad son T3 y T4.
+>
 >
 > ❗❗❗ **POR DÓNDE SE RETOMA** (lo único que hay que leer para seguir):
 > **1 · La poda de bucles está MEDIDA y NO hecha** (`[DECIDIDO owner]`: «nada todavía, solo el

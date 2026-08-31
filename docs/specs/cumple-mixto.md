@@ -1058,3 +1058,228 @@ que no había nada que filtrar, no el filtro. Reescrita sobre el escenario que s
 **Verificación**: +7 casos · **5 mutaciones y las 5 muerden** (el aviso desconectado · la firma sin
 memoria · las celebradas contadas · la familia antigua perdida · el orden de la familia simulada
 divergiendo del lector).
+
+---
+
+## 18. ❗❗❗ LA VISIÓN DEL OWNER, CERRADA (2026-08-31, `DECISIONES #284`)
+
+> **Si vas a construir algo de reservas mixtas, LEE ESTE APARTADO Y NADA MÁS.** Es la foto completa
+> tras cerrar la visión con el owner: qué se decidió, qué ya es cierto, qué falta y en qué orden.
+> Lo de arriba (§1–§17) es la historia de cómo se llegó aquí.
+
+### 18.1 · La visión, en las palabras del owner
+
+Un pack declara **familia** y **tramo de edad**. Cuando el cliente declara en el post-form la edad de
+un invitado que pertenece a otro tramo de la misma familia, se le añade **+X €** o **−X €** según el
+otro producto sea más caro o más barato; si cuestan lo mismo, **solo se le avisa**.
+
+**El cliente compra con unas condiciones y se las mantenemos.** Solo cambia de condiciones lo que
+cambia de producto: la fecha es un producto (cambiarla re-tarifica), un complemento **nuevo** entra
+al precio de hoy, y lo que ya tenía conserva el suyo. Las siguientes reservas empiezan con las
+condiciones nuevas.
+
+**Los tramos de una familia no pueden solaparse** —el sistema lo impide— y **si una edad no tiene
+tramo, no es un hueco: es que no hay producto para ella**, y se le explica al cliente con las normas
+del parque.
+
+En el parque, el operador ve las edades y los precios y **decide**: puede corregir la edad, ajustar
+los invitados y valorar cada caso.
+
+### 18.2 · Lo que YA es cierto (verificado contra el código, no supuesto)
+
+| De la visión | Dónde vive | Estado |
+|---|---|---|
+| Familia + tramo vinculan dos packs | `TicketType`, `#243` | ✅ |
+| **+X €** al declarar una edad de otro tramo | `MixedPartySurcharge` | ✅ |
+| Mismo precio → solo aviso, sin cargo | `test_two_packs_at_the_same_price_write_nothing` | ✅ |
+| Tramos de una familia no pueden chocar | `guardAgeRangeIsFree` | ✅ (solo desde el panel — **D9**) |
+| Producto y fecha sin cambio → precio histórico | `ItemEditPricing:77` | ✅ |
+| Cambiar la fecha → precio del día destino | `PAY-18` | ✅ |
+| Cambiar el pack → precio de hoy del nuevo | `ItemEditPricing:81` | ✅ |
+| Complemento **nuevo** → precio de hoy | `ItemEditPricing:157` | ✅ |
+| Complemento que ya tenía → su precio original | `ItemEditPricing:131` | ✅ |
+| El suplemento hereda el unitario comunicado | `unitFor()`, `#270` | ✅ |
+| Un invitado declarado después de una subida entra al precio comunicado | `#270` | ✅ **D4** |
+| La hoja de sala imprime las edades declaradas | `ReservationSlip` | ✅ |
+| El catálogo avisa antes de mover un tramo con fiestas vendidas | `#283` | ✅ |
+
+⚠️ **`PAY-18` NO era un choque con la visión: es la misma regla.** «La fecha es un producto», dicho
+por el owner, y por eso cambiarla re-tarifica. Queda intacta.
+
+### 18.3 · Las decisiones tomadas (`[DECIDIDO owner, 2026-08-31]`)
+
+**D1 · El sello vive en la RESERVA, no en el producto.** Cada reserva guarda al nacer una copia de
+las condiciones de su familia —los **tramos** y los **precios** de cada pack para su fecha—. El
+producto tiene un solo precio, el de hoy; **el precio viejo solo existe dentro de las reservas que lo
+llevan**. No hace falta histórico de precios y no se construye ninguno.
+
+**D2 · Con el sello, ningún cambio de catálogo mueve una reserva vendida.** Ni un precio ni un tramo.
+Cierra el caso espejo, su gemelo (la etiqueta que contradice al cargo) y el hueco del **primer**
+cargo — que hoy se calcula con el catálogo del día en que el cliente rellena el formulario, no con el
+del día en que compró (§18.4·A).
+
+**D3 · No hace falta rellenar nada al desplegar.** `ENTORNOS.md`: **0 LIVE · 0 PRODUCCIÓN**. Si el
+sello entra antes de la apertura, toda reserva que exista nacerá con su copia. Los datos de local y
+staging los borra `app:purge-customers` en la puesta en marcha.
+
+**D4 · Un invitado declarado después de una subida entra al precio COMUNICADO.** «Un invitado nuevo
+no es producto nuevo, es una gestión sobre las condiciones ya aceptadas.» Ya construido en `#270`.
+
+**D5 · El −X € se implementa** (revierte `#246`/`#248`), y **se diseña con Fable antes de tocar
+nada**: el desglose es lo más sensible del sistema. Informe en §19.
+
+**D6 · Una edad sin producto informa y NO deja completar el formulario, pero no toca el desglose.**
+Se guarda lo escrito (no se pierden los otros invitados), el formulario nunca queda completo, se le
+explica con las normas del parque —textos configurables por instalación, distintos por caso: por
+debajo del tramo menor, por encima del mayor, hueco intermedio— y se le pide que llame. El operador
+valora y ajusta. **No se genera ninguna línea de dinero por esa edad.**
+
+**D7 · El operador puede bajar del mínimo del pack.** «Al final él decide sobre su producto.» Solo
+él, y queda auditado como acción suya. ⚠️ El mínimo existe por una razón de negocio: la excepción se
+registra, no se silencia. Revisable más adelante.
+
+**D8 · Anonimizar solo sin reservas en vigor.** Con una reserva por celebrar **no se puede** borrar
+la cuenta, y se le explica por qué. Con todas finalizadas, sí. Y se mantiene el régimen actual:
+**la factura se conserva, la lista de invitados se borra** (el deber fiscal cubre importes, fechas y
+código, no quién vino). ▶ **Efecto colateral: cierra por sí sola** la ficha del «techo tras
+anonimizar» — si no se puede anonimizar con reservas vivas, ninguna reserva anonimizada se
+reconcilia.
+
+**D9 · «Pagado en el parque» deja de afirmarse.** Solo cambia **la palabra y el enfoque**: la
+aritmética no se toca —`PAY-16` exige que el valor se reparta entre los cinco canales— y el cliente
+deja de leer que pagó algo que nadie registró. ▶ El **registro real del cobro** queda como feature
+aparte: en el parque siguen sumando consumiciones en su propio TPV, así que no se puede saber todo lo
+que se le cobró, y no se le añade una acción al operador por un dato informativo.
+
+### 18.4 · Los huecos MEDIDOS que estas decisiones cierran
+
+**A · El primer cargo usa el catálogo de HOY, no el del día de la compra.** Medido: se reserva con
+una diferencia de 5,00 € por cabeza, el parque sube el precio, y cuando el cliente rellena el
+formulario semanas después se le cobran **10,00 €** por cabeza. ⚠️ **Muerde más que el caso espejo**:
+no hace falta tocar tramos, basta con subir un precio — y el formulario se rellena siempre más tarde.
+Lo cierra **D1**.
+
+**B · Un cambio de tramo mueve lo vendido en las DOS direcciones.** Medido con el catálogo real
+(Kids 1–6 a 11,00 € · Jump 7–99 a 15,00 €) sobre una fiesta Kids de 8 invitados de 6 años: bajar el
+corte le crea **32,00 €**; subirlo se los quita. Lo cierra **D1**.
+
+**C · Una edad sin producto CONGELA el dinero.** Medido: con 15,00 € escritos, un invitado de 0 años
+—que el catálogo real no cubre— deja el veredicto «incompleto», y desde `#268` eso impide que el
+cargo baje aunque el cliente corrija las demás edades. ▶ **D6 lo reencuadra y obliga a un cambio de
+ingeniería**: una edad **sin producto** es un estado CONOCIDO, no una incógnita, así que debe dejar
+de contar como «incompleto». **Solo una edad que FALTA puede congelar el importe.**
+
+**D · El cliente no puede cambiar el número de invitados.** Medido: el post-form normaliza a
+exactamente `quantity` fichas. `[DECIDIDO owner]` **no se construye ahora**: se le avisa de que llame
+y lo ajusta el operador (**D7**). ⚠️ El owner lo dejó dicho como contradicción consciente; si algún
+día se hace, **es dinero y AFORO**, no una pantalla.
+
+**E · El operador no ve la diferencia por cabeza en el parque.** Medido: ni la hoja de sala ni la
+pantalla de puerta consultan el veredicto (**cero** referencias). Tiene la edad y hace la cuenta de
+memoria con el cliente delante. La visión exige que la vea.
+
+**F · El operador no puede corregir la edad desde el panel.** Medido: `guest_data` tiene **un solo
+escritor** y al panel solo le llega «copiar enlace». Puede abrir el enlace del cliente, pero el
+rastro dirá que lo hizo **el cliente**.
+
+**G · El guardián de solapes solo vive en el formulario.** Una semilla, un comando o un `update`
+directo pueden crear tramos solapados. No revienta —el lector resuelve por el de menor edad— pero
+«por construcción es imposible» solo es cierto si todo pasa por el panel.
+
+### 18.5 · El plan, por tandas
+
+⚠️ **El orden es de dependencia, no de gusto.** La T1 desbloquea la mitad de lo demás, y la T4 no se
+empieza sin el informe de §19 aprobado.
+
+| | Tanda | Cierra | ¿Núcleo de dinero? |
+|---|---|---|---|
+| **T0** | **El ojo del owner en navegador**, con capturas | — | no |
+| **T1** | **El SELLO** (D1·D2·D3): la reserva guarda tramos y precios de su familia al nacer | A · B · el gemelo de la etiqueta | **sí** (nacimiento y edición de una reserva) |
+| **T2** | **La edad sin producto** (D6) + que deje de congelar el dinero | C | no |
+| **T3** | **El parque decide** (E·F·D7): la diferencia en hoja de sala y puerta, corregir la edad desde el panel auditado, y bajar del mínimo | E · F · D7 | **sí** (la edad mueve el suplemento) |
+| **T4** | **El −X €** (D5), con el diseño de Fable | el medio flujo que falta | **sí** |
+| **T5** | **Las palabras** (D9) + anonimizar con reserva viva (D8) | D8 · D9 | no (D9 es presentación) |
+| **T6** | **El guardián fuera del formulario** (G) | G | no |
+
+⚠️ **T1 hace innecesario el aviso de `#283`**, que se queda como red: avisar de un cambio que ya no
+mueve nada no molesta, y sigue sirviendo para las reservas que aún no se hayan sellado.
+
+⚠️ **T3 y T4 son las dos que tocan dinero de verdad.** Las dos exigen `VERIFY_CONC=1` con
+`purchase:verify-oversell`, `redsys:verify-concurrency` y `mixed-party:verify-concurrency` sobre
+MySQL real, y las dos entran por el `CRITICAL_RE`.
+
+---
+
+## 19. 📋 INFORME PARA FABLE · el −X €, sin romper el desglose (2026-08-31)
+
+> **Autocontenido a propósito.** Quien lea esto no necesita el resto del documento. `[owner]`: «el
+> desglose y los cálculos son muy sensibles por la flexibilidad y complejidad que tiene el sistema…
+> no quiero romper el desglose, he iterado mucho sobre ello».
+
+### 19.1 · El encargo, en una frase
+
+Hoy, cuando un invitado corresponde a un pack **más caro**, se le cobra la diferencia. Cuando
+corresponde a uno **más barato**, solo se le **avisa**. `[DECIDIDO owner, 2026-08-31]` **tiene que
+descontar de verdad**, y aparecer en su desglose como aparece la subida.
+
+### 19.2 · Lo que NO se puede romper (y por qué es difícil)
+
+**`PAY-16` — el eje VALOR cierra:**
+`valor = pagadoOnline + pendienteOnline + aCobrarPuerta + cobradoPuerta + compensado`, y **ningún
+canal puede quedar negativo**. Los `max(0, …)` del dominio son cinturón, no soporte.
+
+**`PAY-17` — el eje CAJA cierra:** `cobrado por web − devuelto = pagadoOnline + pendienteDevolución`.
+
+⚠️⚠️ **Y las dos se evalúan EN EJECUCIÓN, no solo en tests** (`OrderLedger::$cuadra`, `#132`). Un
+pedido cuyo desglose no cuadra **deja de enseñársele al cliente entero**: no es un número feo, es una
+pantalla que desaparece.
+
+### 19.3 · Por qué no vale ninguna forma «obvia» (medido)
+
+- **Bajar el `unit_price` de la línea**: `order_items.unit_price` es **UNSIGNED**. No admite negativos.
+- **Un ajuste `extra_due` negativo suelto**: medido sobre un pedido real —un `extra_due` sin línea
+  **no cobra: MUEVE** dinero ya pagado. En negativo movería al revés, y sube «pagado online».
+- **Restar del total**: el total de una reserva **no existe como número guardado**; se deriva.
+
+### 19.4 · La forma que SÍ cierra, y su aritmética verificada
+
+Una **línea de CRÉDITO** con la misma cascada que usan las bajadas de cantidad, que el editor ya
+implementa (`creditReduction`, `gateCreditedCents`). Fiesta de 8 × 15,00 € = 120,00 €; dos invitados
+corresponden a un pack de 11,00 € → crédito 8,00 €:
+
+| Caso | valor | puerta | online | ¿cierra? |
+|---|---|---|---|---|
+| **A** · con señal (30 online, 90 puerta) | 112,00 | 82,00 | 30,00 | ✅ `30 + 82 = 112` |
+| **B** · pagado 100 % online | 112,00 | 0,00 | 112,00 | ✅ y la deuda de 8,00 € aparece sola |
+| **C** · señal pequeña (117 online, 3 puerta) | — | absorbe 3,00 y deja 5,00 de deuda | — | ✅ los dos canales positivos |
+
+### 19.5 · ⚠️⚠️ La trampa medida que hunde el caso B
+
+El caso B se apoyaba en que el «online original» de la línea de crédito fuera **0**. **Se comprobó
+contra el código y era FALSO**: el respaldo de `Order::itemOriginalOnlineCents()` devuelve **lo
+cobrado ahora**, o sea −8,00 €, y la deuda daba `max(0, −8 − 0 − (−8)) = 0`. **El descuento se perdía
+en silencio, y justo en la configuración más común: un pack sin señal.**
+
+▶ La salida existe y es la que usan las bajadas: la línea de crédito nace con un **marcador** propio.
+**Si se implementa esto, se empieza por aquí.**
+
+### 19.6 · Lo que Fable tiene que decidir
+
+1. **¿Dónde vive el crédito?** ¿Una línea hija negativa con su marcador, o un tipo de ajuste nuevo?
+   Hoy existen tres: `extra_due`, `deposit_remainder`, `collected_in_person`.
+2. **¿Qué pasa si no hay puerta que absorber y tampoco se pagó online** (pedido pendiente)?
+3. **¿El crédito caduca?** Si el cliente sube la edad otra vez, el −X € tiene que deshacerse igual
+   que el +X € — y con el mismo criterio de `#268`: una ausencia de datos no puede crearlo ni
+   destruirlo.
+4. **¿Cómo se lee en el desglose?** Tiene que distinguirse de «pendiente de devolución», que es deuda
+   real del parque, y de una compensación.
+
+### 19.7 · El contexto que hace falta para no repetir lo ya aprendido
+
+- El importe escrito **hereda el unitario comunicado** (`unitFor`, `#270`): el crédito también.
+- Con el veredicto **incompleto**, lo escrito puede crecer pero nunca encoger (`#268`). Un crédito es
+  dinero a favor del cliente: **decidir si esa regla se aplica igual o al revés**.
+- `MixedPartySurcharge` está en el `CRITICAL_RE`: tocarlo obliga a `purchase:verify-oversell`,
+  `redsys:verify-concurrency` y `mixed-party:verify-concurrency` sobre MySQL real.
+- Toda guarda nueva tiene que **verse ROJA** con el fallo real puesto antes de darla por buena, y en
+  esta zona nacen ciegas sin `nextRequest()`: el lector va en `scoped` y memoiza.

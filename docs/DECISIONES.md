@@ -16419,3 +16419,73 @@ escenario que no movía dinero de todas formas. *Probaba que no había nada que 
 
 **Verificación**: suite 3547 / 23.247 · +7 casos · 5 mutaciones y las 5 muerden · Pint ✓ ·
 docs-check ✓.
+
+## #284 · 2026-08-31 · [DECIDIDO owner] La VISIÓN de reservas mixtas, cerrada: nueve decisiones
+
+Sesión de producto con el owner sobre el subsistema completo. Él puso la visión, yo la contrasté
+contra el código midiendo cada afirmación, y de ahí salieron **nueve decisiones y siete huecos**. La
+foto entera vive en `specs/cumple-mixto.md` **§18**; aquí solo el porqué de cada una.
+
+▶ **La regla que ordena todo, en sus palabras**: «el cliente compra con unas condiciones y las
+mantenemos; ya las siguientes reservas empiezan con las nuevas». Solo cambia de condiciones **lo que
+cambia de producto**.
+
+**D1 · El sello vive en la RESERVA, no en el producto.** Cada reserva guarda al nacer una copia de
+los tramos y los precios de su familia. El producto tiene un solo precio, el de hoy, y **el precio
+viejo solo existe dentro de las reservas que lo llevan**. ▶ **Eso hace innecesario un histórico de
+precios**, que era la solución que yo estaba a punto de plantear: la corrección es del owner.
+
+**D2 · Ningún cambio de catálogo mueve una reserva vendida.** Ni precio ni tramo. Cierra el caso
+espejo, la etiqueta que contradice al cargo, y un hueco NUEVO que la conversación destapó (D-A).
+
+**D3 · No hay nada que rellenar al desplegar.** `ENTORNOS.md`: **0 LIVE · 0 PRODUCCIÓN**. ⚠️ Yo había
+planteado una pregunta sobre las reservas ya vendidas y **la retiré: el entorno ya la contestaba**.
+La detectó el owner —«¿qué problema hay? la primera reserva sella su precio, ¿no?»— y tenía razón.
+
+**D4 · Un invitado declarado tras una subida entra al precio COMUNICADO.** «No es producto nuevo, es
+una gestión sobre las condiciones ya aceptadas.» Confirma lo construido en `#270`.
+
+**D5 · El −X € SE HACE** (revierte `#246`/`#248`), y **se diseña con Fable antes de tocar nada**:
+`[owner]` «el desglose y los cálculos son muy sensibles… no quiero romper el desglose». Informe
+autocontenido en `specs/cumple-mixto.md` §19.
+
+**D6 · Una edad sin producto informa, no deja completar, y NO toca el desglose.** El reencuadre es
+suyo y es mejor que el mío: «no es que haya hueco, es que no hay producto para ellos» — el tramo ES
+el producto. Se guarda lo escrito, el formulario nunca queda completo, se explica con las normas del
+parque (textos por instalación y por caso) y se le pide que llame.
+
+**D7 · El operador puede bajar del mínimo del pack.** «Al final él decide sobre su producto.» Con
+rastro, y revisable. Hoy el editor lo rechaza con `pack_quantity_range`.
+
+**D8 · Anonimizar solo sin reservas en vigor**, informándolo; con todas finalizadas, sí. Se mantiene
+el régimen actual (factura sí, lista de invitados no). ▶ **Cierra por sí sola** la ficha del «techo
+tras anonimizar»: si no se puede anonimizar con reservas vivas, ninguna reserva anonimizada se
+reconcilia.
+
+**D9 · «Pagado en el parque» deja de afirmarse** — solo la palabra y el enfoque; **la aritmética no
+se toca**, porque `PAY-16` exige que el valor se reparta entre los cinco canales. ▶ El registro real
+del cobro queda como feature aparte: en el parque suman consumiciones en su propio TPV, así que no se
+puede saber lo que se le cobró, y no se le añade una acción al operador por un dato informativo.
+
+### Los huecos medidos que salieron de contrastar la visión
+
+❗ **A · El PRIMER cargo usa el catálogo de HOY, no el del día de la compra.** Medido: se reserva con
+una diferencia de 5,00 € por cabeza, el parque sube el precio, y al rellenar el formulario semanas
+después se cobran **10,00 €**. ⚠️ **Muerde más que el caso espejo**: no hace falta tocar tramos,
+basta subir un precio — y el formulario se rellena siempre más tarde. Lo cierra D1.
+
+❗ **C · Una edad sin producto CONGELA el dinero.** Medido: un invitado de 0 años —que el catálogo
+real no cubre— deja el veredicto «incompleto» y, desde `#268`, eso impide que el cargo baje aunque el
+cliente corrija las demás edades. ▶ D6 obliga a un cambio de ingeniería: **sin producto es un estado
+CONOCIDO, no una incógnita**; solo una edad que FALTA puede congelar el importe.
+
+▶ Y los que quedan con su medición en §18.4: el cliente no puede cambiar el nº de invitados
+(aplazado a conciencia), el operador no ve la diferencia por cabeza en el parque, no puede corregir
+la edad desde el panel sin que el rastro diga que fue el cliente, y el guardián de solapes solo vive
+en el formulario.
+
+⚠️ **`PAY-18` NO era un choque con la visión: es la misma regla.** «La fecha es un producto», así que
+cambiarla re-tarifica. Queda intacta — y eso lo aclaró el owner, no yo.
+
+**Verificación**: sin código. Todo lo afirmado aquí está medido sobre el pedido real `R-BEEL3E` y
+sobre el catálogo real de la instalación, en transacciones revertidas. Plan por tandas en §18.5.
