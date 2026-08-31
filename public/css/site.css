@@ -162,6 +162,7 @@
        No son tiempos de respuesta a un gesto, así que no compiten con los siete de arriba. Cada
        uno tiene su token para que una instalación pueda calmarlos sin reescribir `@keyframes`. */
     --dur-invite: 4.6s;   /* el latido que invita a descubrir el CTA doble (2c·7) */
+    --dur-cinta: 34s;     /* AMBIENTAL · la cinta `C3`: «en la web se mueve despacio» */
     --dur-switch: 3.4s;   /* el ciclo del interruptor del titular. Es el número del artboard (6d) */
 
     /* ⚠️ **Y el interruptor YA NO es un bucle**: salta este número de veces y se queda encendido
@@ -568,25 +569,61 @@
 }
 
 /* ---------- marquee (títulos de los servicios) ---------- */
-.svc-marquee {
-  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
-  overflow: hidden; padding: 20px 0; background: var(--bg);
+/* ══ C3 · LA CINTA ═════════════════════════════════════════════════════════════════════════════
+   «La banda inferior del mural: rótulo sobre tinta, girada, cruzando la página de lado a lado. En
+   la web se mueve despacio.» Sustituye a la marquesina heredada del cliente antiguo.
+
+   ⚠️⚠️ **Aquí vivía `.svc-marquee`, y su separador era el motivo «foam» del cliente ANTIGUO**
+   —13 px, radio 3,5, girado 22°— **copiado como geometría en vez de con la clase `.jj-block`**, que
+   es por lo que sobrevivió al barrido que retiró aquélla. *Un motivo copiado a mano no aparece
+   buscando su nombre.* Ahora el separador es el punto de color de su `C3`.
+
+   ⚠️ **Su nota dice «girada 2°» y su marcado usa −2,4°**: se toma el marcado, que es lo que se ve.
+   Es la enésima contradicción medida de este artboard y va anotada, no corregida en silencio.
+
+   ⚠️⚠️ **El ancho del 120 % con `margin-left: -10%` NO es adorno: es lo que hace posible el giro.**
+   Una banda del ancho exacto de la ventana, al girarse, deja **dos cuñas de papel** en las esquinas
+   superiores e inferiores. Sus dos números resuelven eso, y el recorte lo pone el envoltorio —
+   NUNCA `overflow-x` en `html`/`body`, que es lo que `#226` demostró que **rompe todos los
+   `sticky`** del sitio. */
+/* ⚠️⚠️ **El alto extra NO es aire: es GEOMETRÍA, y sin él la cinta se recorta a sí misma.** Al
+   girar, el interior sobresale por arriba y por abajo `½ · ancho · sen(giro)`, y `overflow: hidden`
+   se lo lleva: medido antes de ponerlo, **8 elementos cortados y el peor a 40,5 px** — el rótulo de
+   los extremos entraba partido por el canto de la banda.
+   ▶ El número sale de la fórmula, no del ojo: el interior mide el 120 % del ancho, así que por lado
+   son `0,6 · 100vw · sen(2,4°) = 2,51vw`. Va **2,6vw**, con el margen justo para el redondeo. */
+.brand-band { overflow: hidden; padding-block: 2.6vw; }
+.brand-band__inner {
+  width: 120%; margin-left: -10%;          /* suyos, al dígito */
+  background: var(--paper-fg);
+  padding: 14px 0;                          /* suyo */
+  overflow: hidden;
+  transform: rotate(-2.4deg);               /* suyo (su nota dice 2°) */
 }
-.svc-marquee__track {
-  display: flex; align-items: center; gap: 56px;
-  width: max-content; animation: svcMarquee 30s linear infinite;
+.brand-band__track {
+  display: flex; align-items: center; gap: 26px;   /* su gap */
+  width: max-content; padding-left: 24px;          /* su sangrado */
+  animation: brandBand var(--dur-cinta) linear infinite;
 }
-.svc-marquee__item {
-  display: inline-flex; align-items: center; gap: 56px;
+.brand-band__item {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: 24px; letter-spacing: -0.01em; text-transform: uppercase; white-space: nowrap;
+  font-size: clamp(18px, 2.4vw, 26px);      /* su talla arriba; abajo, la del teléfono */
+  letter-spacing: -0.01em; text-transform: uppercase; white-space: nowrap;
+  color: var(--paper-bg);
 }
-.svc-marquee__item::after {
-  content: ""; width: 13px; height: 13px; flex-shrink: 0;
-  background: var(--zone-1); border-radius: 3.5px; transform: rotate(22deg);
+/* Su cinta alterna un rótulo en amarillo. Aquí el número de ítems lo manda la BD, así que la
+   alternancia va por posición: los ítems son los hijos impares (1, 3, 5…) y los puntos los pares. */
+.brand-band__item:nth-child(4n + 3) { color: var(--strip-3); }
+.brand-band__dot {
+  width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto;   /* suyos */
+  background: var(--strip-2);
 }
-@keyframes svcMarquee { to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) { .svc-marquee__track { animation: none; } }
+.brand-band__dot:nth-child(4n) { background: var(--strip-1); }
+@keyframes brandBand { to { transform: translateX(-50%); } }
+/* ⚠️ El reposo NO se escribe aquí dentro: sin movimiento la cinta se queda en su fotograma 0, que
+   es el estado por defecto. Es la lección de `#280` —el reposo de una pieza no puede vivir solo
+   dentro de una excepción de accesibilidad—, y aquí se cumple sin escribir nada. */
+@media (prefers-reduced-motion: reduce) { .brand-band__track { animation: none; } }
 
 /* ---------- átomos compartidos ---------- */
 .svc-cta {

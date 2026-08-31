@@ -21,7 +21,7 @@
 > ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1 y T2 hechas → sigue la T3) ═══════════
 > ❗❗❗ **2026-08-31 (tarde-noche) · T2 · UNA EDAD SIN PRODUCTO + EL DINERO SOLO AL GUARDAR
 > COMPLETO, EN EL ÁRBOL** (`#289`, `specs/cumple-mixto.md` §22 diseño · §22.9 ejecución).
-> Suite **3635 en verde** (23.636 aserciones, 1 skipped a propósito) — **cifra del árbol CONJUNTO**,
+> Suite **3639 en verde** (23.658 aserciones, 1 skipped a propósito) — **cifra del árbol CONJUNTO**,
 > tras rebasar `#290` (el sistema de etiquetas) encima de la T1/T2 de mixtos · **7/7 mutaciones muerden** ·
 > `mixed-party:verify-concurrency` en verde · sonda headless (2 capturas en `/root/e2e/t2-capturas/`).
 > ▶ «Completo» son DOS preguntas (dinero: todas las edades declaradas · formulario: además ninguna
@@ -58,6 +58,18 @@
 > entorno por eso.
 >
 > ═══════════ CARRIL 2 · TEMA / FACHADA (`#286` · `#287`) ═══════════
+>
+> ▶ ✅ **T2 hecha — la cinta `C3` sustituye a la marquesina de `/servicios`** (`#293`): banda de
+> tinta a sangre, girada −2,4°, con punto de color entre títulos y bucle lento con token propio.
+> ⚠️ **De su `C3` se toma la FORMA, no el contenido ni la FUENTE**: los títulos siguen saliendo del
+> panel, y el rotulador **no se usa** porque su propio paquete lo reserva al eslogan y su auditoría
+> `T-02` lo limita a una por página — `/servicios` ya gasta la suya en el menú.
+> ❗ **El motivo «foam» del cliente antiguo estaba TAMBIÉN ahí**, copiado como geometría en vez de
+> con la clase: *un motivo copiado a mano no aparece buscando su nombre*. Segundo rastro retirado.
+> ⚠️⚠️ **Dos números de esa pieza parecen adorno y son geometría** —el ancho al 120 % y el alto del
+> envoltorio—: sin el segundo la cinta **se recorta a sí misma** (5 elementos, 22 px medidos).
+> ⚠️⚠️ **Y dos trampas de instrumento**: la sonda contaba ítems ya invisibles (6 falsos en móvil), y
+> el cero solo vale con CONTROL — que en móvil **no muerde**, así que ahí el alto extra es aire.
 >
 > ❗❗❗ **`Landing PJP Modos` YA NO GUÍA LA ESTRUCTURA DE LA LANDING** (`#292`, `[owner]`: «de esa
 > maqueta solo sacaremos la sección de reseñas»). ▶ **Corrige a `tema-por-instalacion.md` §1**: aquel

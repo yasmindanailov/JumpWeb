@@ -61,7 +61,10 @@ class ShapeScaleTest extends TestCase
         // landing. Queda solo el uso del cajón, que es otra tanda.
         '.bk-context .jj-block' => [11, 3.0],
         '.offw-burst .spark' => [9, 2.0],
-        '.svc-marquee__item::after' => [13, 3.5],
+        // ⚠️ `.svc-marquee__item::after` vivía aquí y SE RETIRÓ el 2026-08-31 con la marquesina:
+        // era el motivo «foam» del cliente antiguo **copiado como geometría**, no con la clase
+        // `.jj-block`, y por eso sobrevivió al barrido que retiró aquélla. Lo cazó este mismo
+        // caso, que es para lo que está. *Un motivo copiado a mano no aparece buscando su nombre.*
         '.svc-ed2__kicker::before' => [12, 3.0],
         // ⚠️ `.hero__stat .sep` vivía aquí y SE RETIRÓ el 2026-08-27 (tanda 2b, paso 1): la familia
         // `.hero__stat` entera estaba MUERTA —cero usos en `resources/`— y se fue con otras cinco.

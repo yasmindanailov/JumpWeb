@@ -1,8 +1,9 @@
 # [SPEC] Sustituir el idioma visual HEREDADO por el de este cliente
 
-> Estado: 🟦 **TANDAS A y T1 EN EL ÁRBOL** (el sistema de etiquetas · el motivo del cliente antiguo
-> fuera · las normas de la portada rehechas, con la primera mancha del kit).
-> Última actualización: 2026-08-31 · Decisiones: **`DECISIONES #290`** y **`#292`**.
+> Estado: 🟦 **TANDAS A, T1 y T2 EN EL ÁRBOL** (el sistema de etiquetas · el motivo del cliente
+> antiguo fuera · las normas de la portada rehechas con la primera mancha del kit · la marquesina de
+> `/servicios` sustituida por la cinta `C3`).
+> Última actualización: 2026-08-31 · Decisiones: **`#290`**, **`#292`** y **`#293`**.
 >
 > ❗❗❗ **CORRECCIÓN DE FUENTE, Y VA ANTES QUE TODO LO DEMÁS** (`[owner, 2026-08-31]`):
 > **`Landing PJP Modos` NO guía esta reestructuración.** *«La landing mockup NO, no te guíes de ella,
@@ -40,7 +41,7 @@ Lo que hay hoy en la landing con idioma del cliente **antiguo**, y qué dice el 
 | Badge de destacado («Top») | `price-card` | pastilla de tinta, girada **+6°** | **SEÑAL tinta** | ✅ **tanda A** |
 | Chip de suplemento | `price-card` | pastilla gris rellena | **DATO** | ✅ **tanda A** |
 | Etiqueta sobre foto | `/servicios` | pastilla de tinta, girada +5° | **SEÑAL punteada** | ✅ **tanda A** |
-| **Marquesina de palabras** | `/servicios` | títulos en bucle, tipografía neutra | **`C3` cinta del eslogan**: rótulo sobre tinta, girada 2°, lenta | ⬜ **siguiente** |
+| **Marquesina de palabras** | `/servicios` | títulos en bucle, tipografía neutra | **`C3` cinta**: banda de tinta a sangre, girada, con punto de color | ✅ **T2** |
 | Cubos 1-2-3 (`.bd-proc__cube`) | «Cómo se reserva» del cumple | cuadrados redondeados de 44 px | por decidir | ⬜ |
 | Nota de calcetines | portada, bajo precios | tarjeta con icono de línea | el icono ya es del set nuevo (`#257`); la caja no | ⬜ |
 | Pliego de pictogramas | `/normas` | **imagen subida** del cliente antiguo | es CONTENIDO, no diseño: lo cambia el panel | ⬜ |
@@ -191,6 +192,64 @@ en las dos anchuras, y asoma por el borde, que es lo que su nota pide para esta 
 
 ⚠️ **Presupuesto declarado**: **una pieza de dibujo por sección, y la portada entera no pasa de
 TRES**. Hoy gasta dos (las poses de zona y esta mancha); queda una.
+
+---
+
+## 3.ter · T2 · la cinta `C3` de `/servicios` (hecha)
+
+`[DECIDIDO owner]`: quitar la marquesina de palabras. La sustituye la banda de su `C3`: **tinta, a
+sangre completa, girada, con un punto de color entre títulos y moviéndose despacio**.
+
+### 3.ter.1 · Qué se toma de él y qué NO, con el motivo
+
+| | decisión |
+|---|---|
+| **la FORMA** | suya, al dígito: `width: 120%` · `margin-left: -10%` · `rotate(-2.4deg)` · `padding 14px 0` · `gap 26px` · `padding-left 24px` · rótulo 26 px · puntos de **12 px** |
+| **el CONTENIDO** | **NUESTRO**: los títulos siguen saliendo del panel. Su cinta lleva un eslogan fijo escrito en el mockup; el sitio es data-driven |
+| **la FUENTE** | **NO se toma la de rotulador**, aunque su `C3` la use. Su propio paquete dice de `--font-accent`: *«Guiño: **el eslogan, nada más**»*, y su auditoría **`T-02`** limita Permanent Marker a **una por página**. Medido: `/servicios` ya gasta la suya en el eslogan del menú |
+| **el COLOR** | roles, no literales: `--paper-fg` para la tinta, `--paper-bg` para el rótulo, `--strip-3` para el rótulo alterno y `--strip-2`/`--strip-1` para los puntos |
+
+⚠️ **Contradicción suya, anotada y no corregida en silencio**: su nota dice «girada **2°**» y su
+marcado usa **−2,4°**. Se toma el marcado, que es lo que se ve.
+
+### 3.ter.2 · ❗ El motivo «foam» del cliente antiguo estaba TAMBIÉN aquí
+
+El separador de la marquesina era `13px / radio 3,5 / girado 22°` — **el mismo `.jj-block`, copiado
+como geometría en vez de con la clase**. Por eso sobrevivió al barrido de la tanda A, que buscaba el
+nombre. *Un motivo copiado a mano no aparece buscando su nombre.* Lo cazó `ShapeScaleTest` al quedarse
+su excepción sin sujeto.
+
+### 3.ter.3 · ⚠️⚠️ Dos números que parecen adorno y son geometría
+
+1. **`width: 120%` + `margin-left: -10%`.** Una banda del ancho exacto de la ventana, al girarse,
+   deja **dos cuñas de papel** en las esquinas. Sus dos números existen para eso.
+2. **El alto del envoltorio.** Sin él la cinta **se recorta a sí misma**: medido, **5 elementos
+   cortados y el peor a 22 px** en escritorio, con el rótulo de los extremos partido por el canto.
+   El valor sale de `½ · ancho · sen(giro)` → con el interior al 120 %, **2,51vw** por lado.
+   ▶ **Y el recorte no puede ser `overflow-x` en `html`/`body`**: `#226` midió que eso rompe **todos
+   los `sticky`** del sitio.
+
+### 3.ter.4 · ⚠️⚠️ Dos trampas de instrumento, y las dos daban un número creíble
+
+1. **La primera sonda contaba como «cortados» ítems que ya estaban fuera de la ventana** por el
+   recorte horizontal de la marquesina: daba 6 cortados en móvil con la pieza sana. Acotada a lo que
+   de verdad se ve: **0**. Es el mismo error que `cajon-en-movil.md` §7.2 dejó escrito.
+2. **Y el cero solo vale con CONTROL**: quitando el alto, la sonda pasa a **5 cortados a 22 px** en
+   escritorio. ⚠️ En móvil el control **no muerde** —ahí el alto extra es aire, no necesidad—, y eso
+   también está dicho.
+
+### 3.ter.5 · La guarda, y una laxitud que cazó la mutación
+
+`BrandBandTest` (4 casos, **6 mutaciones muerden**). ⚠️⚠️ **Una aserción nació LAXA**: el ancho del
+interior se comprobaba con `/width:\s*1[0-9]{2}%/`, y ese patrón **acepta `100%`** —justo el valor
+que rompe la pieza—, así que la mutación pasaba en verde. Ahora se lee el número y se compara.
+*Un patrón que describe la FORMA del valor no dice nada sobre el valor.*
+
+⚠️ **El bucle lee `--dur-cinta`, un token AMBIENTAL declarado** (`MotionScaleTest`): la marquesina que
+sustituye llevaba `30s` escritos a mano, así que una instalación no podía calmarla.
+
+⚠️ **Presupuesto de movimiento**: `/servicios` sigue en **6 bucles** — la cinta sustituye a la
+marquesina, no suma. El techo de 2 de su artboard sigue siendo la deuda que `#279` dejó medida.
 
 ---
 

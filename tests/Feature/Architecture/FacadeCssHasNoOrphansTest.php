@@ -49,6 +49,7 @@ class FacadeCssHasNoOrphansTest extends TestCase
         'grain',        // A1 · trama de puntos, y A2 · la que se apaga
         'spray',        // A5 · niebla
         'rays',         // A3 · el abanico quieto
+        'brand-band',   // C3 · la cinta del eslogan
         'brand-strip',  // C2 · la tira, continua y en cuñas
         'brand-dots',   // C2 · la tira punteada
         'ilu',          // el hueco de ilustración por instalación

@@ -109,9 +109,13 @@ class PublicPagesTest extends TestCase
         $response->assertSee('id="eventos"', false);
         $response->assertSee('href="#excursionescolegio"', false); // el índice del hero apunta al anchor
 
-        // Estructura del layout editorial (mockup v2): hero con índice, marquee, filas y banda.
+        // Estructura del layout editorial: hero con índice, la CINTA, filas y banda.
+        // ⚠️ Aquí se aseveraba `svc-marquee`, la marquesina heredada del cliente antiguo. La
+        // sustituye la cinta `C3` (T2 del idioma visual, 2026-08-31) y el contrato pasa a ser
+        // `brand-band`: misma función —los títulos en bucle— y otra forma.
         $response->assertSee('svc-hero__index', false);
-        $response->assertSee('svc-marquee', false);
+        $response->assertSee('brand-band', false);
+        $response->assertDontSee('svc-marquee', false);
         $response->assertSee('svc-ed2__row', false);
         $response->assertSee('svc-other', false);
 

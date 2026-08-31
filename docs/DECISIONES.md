@@ -16925,3 +16925,51 @@ descuadradas no falla: se lee a medias.* (2) La mancha se colocó a ojo dos vece
 **Verificación**: suite **3635 / 23.636** · Pint ✓ · `docs-check` ✓ · `kit:build --check` servible ·
 solape con párrafo **0 px² en móvil y en escritorio**, medido con control · la mutación del tope de
 normas muerde · 5 mutaciones sobre `TagSystemTest` siguen mordiendo.
+## #293 · 2026-08-31 · T2 del idioma visual: la marquesina de `/servicios` pasa a ser la cinta `C3`
+
+**El encargo** (`[DECIDIDO owner]`): quitar la marquesina de palabras, que era del cliente antiguo.
+La sustituye la banda de su `C3`: **tinta, a sangre completa, girada, con un punto de color entre
+títulos y moviéndose despacio**.
+
+**Qué se toma de él y qué no.** La **FORMA**, al dígito (`width: 120%` · `margin-left: -10%` ·
+`rotate(-2.4deg)` · `padding 14px 0` · `gap 26px` · rótulo 26 px · puntos de 12 px). El **CONTENIDO**
+no: los títulos siguen saliendo del panel, porque el sitio es data-driven y su cinta lleva un eslogan
+fijo escrito en el mockup. Y **la FUENTE tampoco**, aunque su `C3` use la de rotulador: su propio
+paquete dice de `--font-accent` *«Guiño: el eslogan, nada más»* y su auditoría **`T-02`** la limita a
+**una por página** — medido, `/servicios` ya gasta la suya en el eslogan del menú. Hay guarda.
+⚠️ **Contradicción suya, anotada**: su nota dice «girada 2°» y su marcado usa **−2,4°**.
+
+**❗ El motivo «foam» del cliente antiguo estaba TAMBIÉN aquí, y por eso sobrevivió al barrido.** El
+separador de la marquesina era `13px / radio 3,5 / girado 22°`: **el mismo `.jj-block` copiado como
+geometría en vez de con la clase**. *Un motivo copiado a mano no aparece buscando su nombre.* Lo cazó
+`ShapeScaleTest` al quedarse su excepción sin sujeto — que es exactamente para lo que existe ese caso.
+
+**⚠️⚠️ Dos números que parecen adorno y son GEOMETRÍA.** (1) `width: 120%` + `margin-left: -10%`: una
+banda del ancho justo, al girarse, deja **dos cuñas de papel** en las esquinas. (2) El alto del
+envoltorio: sin él **la cinta se recorta a sí misma** —medido, **5 elementos cortados y el peor a
+22 px**, con el rótulo de los extremos partido por el canto—; el valor sale de `½·ancho·sen(giro)`,
+que con el interior al 120 % son **2,51vw** por lado. ▶ **Y el recorte no puede ser `overflow-x` en
+`html`/`body`**: `#226` midió que eso rompe **todos los `sticky`** del sitio.
+
+**⚠️⚠️ DOS TRAMPAS DE INSTRUMENTO, las dos con número creíble.** (1) La primera sonda contaba como
+cortados **ítems que ya estaban fuera de la ventana** por el recorte horizontal de la marquesina:
+daba 6 en móvil con la pieza sana. Acotada a lo visible: **0**. Mismo error que `cajon-en-movil.md`
+§7.2. (2) **Y el cero solo vale con CONTROL**: quitando el alto, la sonda sube a 5 cortados a 22 px
+en escritorio. ⚠️ En móvil el control **no muerde** —ahí el alto extra es aire, no necesidad—, y eso
+también queda dicho en vez de venderse como necesario.
+
+**⚠️⚠️ Y una guarda que nació LAXA, demostrado por mutación.** El ancho del interior se comprobaba
+con `/width:\s*1[0-9]{2}%/` y ese patrón **acepta `100%`** —justo el valor que rompe la pieza—, así
+que la mutación pasaba en VERDE. Ahora se lee el número y se compara con 100. *Un patrón que describe
+la FORMA del valor no dice nada sobre el valor.*
+
+**El bucle lee un TOKEN ambiental** (`--dur-cinta`, registrado en `MotionScaleTest`): la marquesina
+llevaba `30s` a mano, así que una instalación no podía calmarla. ⚠️ `/servicios` sigue en **6 bucles**
+—la cinta sustituye, no suma—; el techo de 2 de su artboard sigue siendo la deuda de `#279`.
+
+**⚠️ Un contrato de página cambió**: `PublicPagesTest` aseveraba `svc-marquee`; ahora asevera
+`brand-band` **y que la vieja no está**.
+
+**Verificación**: suite **3639 / 23.658** · Pint ✓ · `docs-check` ✓ · **6 mutaciones muerden** ·
+medido en Chrome real a 390 y 1280: **0 desbordes horizontales**, 0 elementos cortados con control
+que sí muerde, y cero rastro de la marquesina en el marcado servido.

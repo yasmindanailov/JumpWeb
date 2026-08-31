@@ -37,13 +37,34 @@
             @endif
         </header>
 
-        {{-- Marquee decorativo con los títulos de los servicios (duplicado para el bucle CSS) --}}
+        {{-- **LA CINTA `C3`** (`specs/idioma-visual-heredado.md`, T2). Sustituye a la marquesina
+             heredada del cliente antiguo: banda de tinta a sangre completa, girada, con los
+             títulos y un punto de color entre ellos, moviéndose despacio.
+
+             ▶ **De su `C3` se toma la FORMA, no el contenido ni la fuente**, y las dos cosas están
+             razonadas:
+             · El CONTENIDO sigue saliendo del panel (`LandingService`), porque el sitio es
+               data-driven y su cinta lleva un eslogan fijo escrito a mano en el mockup.
+             · La FUENTE **no** es la de rotulador, aunque su `C3` la use: su propio paquete dice
+               de `--font-accent` «Guiño: **el eslogan, nada más**», y su auditoría `T-02` limita
+               Permanent Marker a **una por página** — `/servicios` ya gasta la suya en el menú
+               (medido). Los títulos van en la de rótulo, que es la que ya usaban.
+
+             ⚠️ `aria-hidden`: es decoración. Los mismos títulos son enlaces reales en el índice
+             del hero, así que un lector de pantalla no pierde nada y no se repiten. --}}
         @if ($services->isNotEmpty())
-            <div class="svc-marquee" aria-hidden="true">
-                <div class="svc-marquee__track">
-                    @foreach (array_merge($services->all(), $services->all()) as $service)
-                        <span class="svc-marquee__item">{{ $service->tr('title') }}</span>
-                    @endforeach
+            <div class="brand-band" aria-hidden="true">
+                <div class="brand-band__inner">
+                    <div class="brand-band__track">
+                        {{-- Duplicado: el bucle desplaza el 50 % y tiene que volver a un fotograma
+                             idéntico. ⚠️ El punto va DENTRO del bucle a propósito —es separador de
+                             ítem, no una textura de pantalla—, y por eso no lo caza la guarda de
+                             decoración por pantalla: no está en su lista de texturas. --}}
+                        @foreach (array_merge($services->all(), $services->all()) as $service)
+                            <span class="brand-band__item">{{ $service->tr('title') }}</span>
+                            <span class="brand-band__dot"></span>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         @endif

@@ -2642,6 +2642,16 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > ⚠️ **La lista de ranuras decorativas está VACÍA a propósito**: una ranura sin consumidor es lo que
 > dejó los 19 dibujos de `#257` esperando años.
 >
+> ✅ **IDIOMA VISUAL · T2: LA CINTA `C3`** (2026-08-31, `#293`). La marquesina de `/servicios` —del
+> cliente antiguo— pasa a ser su banda: tinta a sangre, girada −2,4°, punto de color entre títulos y
+> bucle lento con **token ambiental propio** (antes, `30s` a mano: una instalación no podía calmarla).
+> ⚠️ **Forma suya, contenido nuestro, fuente NO**: su `C3` usa el rotulador y su propio paquete lo
+> reserva al eslogan (`T-02`: una por página, y `/servicios` ya gasta la suya en el menú).
+> ❗ **Segundo rastro del «foam» retirado**: el separador de la marquesina era `.jj-block` **copiado
+> como geometría**, no con la clase — por eso el barrido por nombre no lo vio.
+> ⚠️⚠️ **Dos números geométricos, no decorativos**: sin el alto del envoltorio la cinta se recorta a
+> sí misma (5 elementos, 22 px). Y **una guarda nació LAXA**: `1[0-9]{2}%` acepta `100%`.
+>
 > ✅ **IDIOMA VISUAL · T1: LAS NORMAS DE LA PORTADA** (2026-08-31, `#292`). Fuera el **pliego de
 > pictogramas del cliente antiguo** y el carrusel con todas las normas; quedan **tres** en texto y el
 > CTA a `/normas`. El tope de tres se declara en la VISTA —el panel decide QUÉ normas, el diseño
