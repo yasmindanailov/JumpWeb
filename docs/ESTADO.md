@@ -20,7 +20,7 @@
 > ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1–T4 hechas → sigue la T5) ═══════════
 > ❗❗❗ **2026-08-31 (noche) · T4 · EL −X €, EN EL ÁRBOL** (`#296`, `specs/cumple-mixto.md` §20
 > diseño de producto · §24 diseño fino · **§24.10 ejecución**).
-> Suite **3679 en verde** (24.017 aserciones, 1 skipped a propósito; árbol CONJUNTO sobre `#295`) ·
+> Suite **3679 en verde** (24.017 aserciones, 1 skipped a propósito; árbol CONJUNTO sobre `#297`) ·
 > JS **878** · **7/7 mutaciones muerden** · guardián de invariantes **11 → 15 escenarios** (A/B/C
 > con la línea a MANO antes del reconciliador; la identidad D cazó el `continue` en rojo, como §24.1
 > predijo) · verificadores: aforo SEIS + redsys + **el mixto en sus DOS escenarios** (`credit` visto
@@ -129,6 +129,36 @@
 > para ellos. *Un caso sin sujeto no vigila nada, y no se nota hasta que se muta.*
 > ▶ **Lo DESCARTADO importa**: encabezados, nombres de flechas y el ancla se señalaron y **no
 > sobrevivieron a la refutación** — sin ese paso habría «arreglado» tres cosas sanas.
+>
+> ❗❗❗ **POR DÓNDE SE RETOMA EL CARRIL DEL TEMA — LEE ESTO Y NADA MÁS** (`#297`, cierre del
+> 2026-08-31 noche). **La sesión terminó SIN código nuevo: todo lo que se construyó se REVIRTIÓ**
+> (`[owner]`: «déjalo como estaba, no quiero ninguna de esas opciones, en el siguiente chat
+> iteraremos sobre cómo se hará»). El árbol está en el estado de `#295`.
+>
+> ▶ **Lo que queda vivo es el DIAGNÓSTICO, y es del owner**: *«la estructura se parece a la página
+> del antiguo cliente: la manera en que se exponen los textos, cuándo va cada texto, cada dato»*.
+> **Medido**: las SIETE secciones usan el mismo molde —`ETIQUETA` → titular partido en dos con coma
+> → párrafo → contenido— y **el dato siempre llega el último**. El caso extremo es horarios y
+> ubicación: **cinco encabezados para cuatro líneas de dato**, 803 px en móvil (280 son el marcador
+> del mapa) y 31 palabras. A 390 px, `zones` ocupa **3.604** de los 14.831 de la portada.
+> ▶ **`[DECIDIDO owner]` y SIGUE EN PIE**: se rompe el molde y **cada sección adopta la forma de lo
+> que ES**. Lo rechazado son las tres formas concretas, **no el criterio**.
+> ⛔ **NO vuelvas a proponer** las tres de `#297` (A · el estado manda · B · la respuesta primero ·
+> C · el sitio manda): están medidas, montadas, vistas y descartadas. Su ficha, con los altos y el
+> porqué, está en `specs/idioma-visual-heredado.md` §3.quinquies.
+> ⚠️ **Y las tres fallaban en lo mismo**: A y B **crecían en escritorio** (+105 y +136 px) porque hoy
+> el horario y el mapa van en dos columnas y ellas apilaban todo en una. *Quien retome esto tiene
+> que resolver el escritorio, no solo el móvil.*
+> ▶ **Lo que NO hay que volver a medir** (cuatro propuestas independientes coincidieron): se retiran
+> la etiqueta, el titular partido, la rejilla de dos tarjetas, los dos `h3` internos, el `h4` de
+> fechas especiales y la caja blanca sobre el mapa; y suben el estado en vivo, la fecha especial
+> pegada a él, «Cómo llegar» por encima del mapa y el teléfono.
+> ⚠️ **Dos hallazgos técnicos que sobreviven**: `HeroStatus` **calcula la ventana de hoy y no la
+> devuelve** (y **no se deduce de `weeklyRows()`**: su `is_today` se apaga cuando manda una
+> temporada o una fecha especial), y **«Parking gratis 2h» está en el código, no en el panel** —
+> `[DECIDIDO owner]`: se retira cuando se rehaga la sección.
+> ⚠️ **Presupuesto de dibujo de la portada**: tres colocaciones; hoy gasta **dos** (las poses de zona
+> y la mancha de `/normas`), **queda una libre**.
 >
 > ❗❗❗ **`Landing PJP Modos` YA NO GUÍA LA ESTRUCTURA DE LA LANDING** (`#292`, `[owner]`: «de esa
 > maqueta solo sacaremos la sección de reseñas»). ▶ **Corrige a `tema-por-instalacion.md` §1**: aquel

@@ -3,7 +3,8 @@
 > Estado: 🟦 **TANDAS A, T1, T2 y T3 EN EL ÁRBOL** (el sistema de etiquetas · el motivo del cliente
 > antiguo fuera · las normas de la portada rehechas con la primera mancha del kit · la marquesina de
 > `/servicios` sustituida por la cinta `C3` · **zonas y atracciones unificadas**).
-> Última actualización: 2026-08-31 · Decisiones: **`#290`**, **`#292`**, **`#293`** y **`#295`**.
+> Última actualización: 2026-08-31 · Decisiones: **`#290`**, **`#292`**, **`#293`**, **`#295`**
+> y **`#297`** (el molde editorial, diagnosticado; tres formas rechazadas y revertidas).
 >
 > ❗❗❗ **CORRECCIÓN DE FUENTE, Y VA ANTES QUE TODO LO DEMÁS** (`[owner, 2026-08-31]`):
 > **`Landing PJP Modos` NO guía esta reestructuración.** *«La landing mockup NO, no te guíes de ella,
@@ -337,6 +338,63 @@ salían verdes **hiciera lo que hiciera la vista**. Los dos crean ahora su sujet
 
 ⚠️ **Y una aserción mía también estaba mal**: la del mojibake buscaba `\xA1Desde`, y esa secuencia
 **aparece dentro del UTF-8 correcto** (`¡` son `C2 A1`). El defecto es un `A1` **sin su `C2` delante**.
+
+---
+
+## 3.quinquies · ⛔ El MOLDE EDITORIAL: diagnosticado, y tres formas RECHAZADAS (`#297`)
+
+`[owner]`: *«la estructura se parece a la página web del antiguo cliente. La manera en que se
+exponen los textos, cuándo va cada texto, cada dato»*. **Tenía razón y se puede contar.**
+
+### 3.quinquies.1 · El molde, medido
+
+Las SIETE secciones de la portada usan el mismo compás: `ETIQUETA` → titular **partido en dos
+mitades con coma** (la segunda en color) → párrafo de intro → contenido. Y los titulares repiten la
+misma fórmula retórica: «Un parque, dos zonas.» · «Tarifas claras, sin sorpresas.» · «Saltar seguro,
+saltar feliz.» ▶ *Después de la segunda sección eso ya no se lee como voz de marca: se lee como
+plantilla.* Tercer patrón: **el dato siempre llega el último**.
+
+⚠️⚠️ **El caso extremo: horarios y ubicación tiene CINCO encabezados para CUATRO líneas de dato** —
+«Visítanos», «Horarios & ubicación», «Horarios», «Fechas especiales», «Ubicación»—, o sea que la
+sección **dice lo mismo dos veces**. 803 px en móvil, **280 de ellos el marcador del mapa**, y 31
+palabras en total. Y a 390 px, `zones` ocupa **3.604 px** de los 14.831 de la portada.
+
+### 3.quinquies.2 · Lo DECIDIDO, que sigue en pie
+
+`[DECIDIDO owner]`: **se rompe el molde y cada sección adopta la forma de lo que ES.** La que se
+explica sola no lleva párrafo; la que es una lista abre con la lista; la que es visual abre con la
+imagen. **Esto no se ha retirado**: lo rechazado son las tres formas concretas, no el criterio.
+
+### 3.quinquies.3 · ⛔ Las tres formas rechazadas — no volver a proponerlas
+
+Se montaron en la web real, conmutables por `?forma=a|b|c`, para poder juzgarlas con sus vecinas.
+`[owner]`: *«déjalo como estaba, no quiero ninguna de esas opciones»*. **Todo revertido.**
+
+| | forma | móvil | escritorio |
+|---|---|---|---|
+| **A** | el estado manda: abre «Abierto ahora», parte la sección en tiempo y lugar | 750 (−53) | 895 (**+105**) |
+| **B** | la respuesta primero: la dirección ES el botón, el horario al final | 781 (−22) | 926 (**+136**) |
+| **C** | el sitio manda: la dirección es el titular, el estado una línea | **673 (−130)** | **757 (−33)** |
+
+Las tres pasaban de 5 encabezados a 1. ⚠️ **A y B crecían en escritorio** porque hoy el horario y el
+mapa van en dos columnas y las formas apilaban todo en una: **quien retome esto tiene que resolver
+el escritorio, no solo el móvil.**
+
+### 3.quinquies.4 · ⚠️ Lo que NO hay que volver a medir
+
+Cuatro propuestas independientes coincidieron en **retirar**: la etiqueta, el titular partido, la
+rejilla de dos tarjetas, los dos `h3` internos, el `h4` de fechas especiales y la caja blanca posada
+sobre el mapa. Y en **mover**: el estado en vivo entra en la sección y sube; la fecha especial se
+pega al estado (*una excepción invalida la frase de arriba, no es un apéndice*); «Cómo llegar» pasa
+por encima del mapa; y el teléfono entra, que hoy la sección no lo tiene aunque el dato ya viaja.
+
+### 3.quinquies.5 · Dos hallazgos técnicos que sobreviven al rechazo
+
+1. **`HeroStatus` calcula la ventana de hoy y no la devuelve.** «Hasta las 21:00» es un campo más en
+   un array que ya existe. ▶ **Y no se deduce de `weeklyRows()`**: su `is_today` se apaga cuando hoy
+   lo gobierna una temporada o una fecha especial — se acierta casi siempre y se falla los días raros.
+2. **«Parking gratis 2h» está en el código, no en el panel** (`landing.info.parking`).
+   `[DECIDIDO owner]`: **se retira**, pendiente de aplicar cuando se rehaga la sección.
 
 ---
 

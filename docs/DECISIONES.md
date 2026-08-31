@@ -17142,3 +17142,68 @@ fallo histórico del cargo · aforo en sus SEIS escenarios + redsys sobre MySQL 
 (`/root/e2e/t4.js`, `T4-PRB01`/`T4-PRB02` quedan de sondas): la puerta verificó la aritmética en
 vivo (46,00 = 50,00 − 4,00) y el cajón pintó el «a tu favor»; el contrato, comprobado contra la API
 real (Σ de `gate_lines` con la línea de −4,00 == titular).
+
+## #297 · 2026-08-31 · El molde editorial de la portada, DIAGNOSTICADO — y tres formas RECHAZADAS
+
+**Sesión sin código en el árbol: todo lo que se construyó aquí se REVIRTIÓ** (`[owner]`: «déjalo
+como estaba, no quiero ninguna de esas opciones, en el siguiente chat iteraremos sobre cómo se
+hará»). Queda el diagnóstico, que es lo que vale, y el registro de lo descartado para que nadie lo
+vuelva a proponer creyendo que es nuevo.
+
+**❗ EL DIAGNÓSTICO DEL OWNER, Y ES CORRECTO — está medido.** Dijo: *«la estructura se parece a la
+página web del antiguo cliente. La manera en que se exponen los textos, cuándo va cada texto, cada
+dato»*. No es el estilo: es **un molde único repetido SIETE veces**.
+
+1. `ETIQUETA` en versalitas pequeñas.
+2. Titular **partido en dos mitades con coma**, la segunda en color.
+3. Párrafo de intro que explica lo que viene.
+4. Y solo entonces, el contenido.
+
+Y los titulares siguen la **misma fórmula retórica**, uno detrás de otro: «Un parque, **dos zonas.**»
+· «Tarifas claras, **sin sorpresas.**» · «Saltar seguro, **saltar feliz.**» · «Elige tu zona, **elige
+tu salto.**» ▶ *Después de la segunda sección eso ya no se lee como voz de marca: se lee como
+plantilla.* Tercer patrón: **el dato siempre llega el último**, detrás de la prosa que lo presenta.
+
+**⚠️⚠️ Y el caso extremo, medido, es la sección de horarios y ubicación: CINCO encabezados para
+CUATRO líneas de dato.** «Visítanos» · «Horarios & ubicación» · «Horarios» · «Fechas especiales» ·
+«Ubicación» — o sea que la sección **dice lo mismo dos veces**, en el titular y otra vez como
+encabezado de cada tarjeta. 803 px en móvil, de los cuales **280 son el marcador del mapa**, y 31
+palabras en total. Medido también el resto de la portada a 390 px: `zones` ocupa **3.604 px** de los
+14.831 de la página, `pricing` 2.732.
+
+**`[DECIDIDO owner]`: se rompe el molde, y cada sección adopta LA FORMA DE LO QUE ES** — la que se
+explica sola no lleva párrafo, la que es una lista abre con la lista, la que es visual abre con la
+imagen. Esa decisión SIGUE EN PIE; lo rechazado son las tres formas concretas que se le propusieron.
+
+**Lo que se exploró y se descartó** (banco de pruebas: la sección de horarios y ubicación, montada
+en la web real con `?forma=a|b|c` para poder compararla con sus vecinas):
+· **A · el estado manda** — abre «Abierto ahora», parte la sección en tiempo y lugar. 750 px móvil.
+· **B · la respuesta primero** — la dirección ES el botón, el horario baja al final. 781 px.
+· **C · el sitio manda** — la dirección es el titular, el estado una línea. 673 px.
+Las tres pasaban de **5 encabezados a 1**. ⚠️ **Y las tres CRECÍAN en escritorio** (A +105 px, B
++136) porque hoy el horario y el mapa van en dos columnas y las formas apilaban en una — C era la
+única que encogía en los dos anchos (−130 móvil, −33 escritorio).
+
+**⚠️ Lo que sí quedó establecido y no hay que volver a medir.** Cuatro propuestas independientes,
+sin verse entre sí, **coincidieron en retirar exactamente lo mismo**: la etiqueta, el titular
+partido, la rejilla de dos tarjetas, los dos `h3` internos, el `h4` de fechas especiales y la caja
+blanca posada sobre el mapa. Y en **mover** lo mismo: el estado en vivo sube y entra en la sección
+—hoy se calcula y solo se pinta en el menú—, la fecha especial se pega al estado (*una excepción
+invalida la frase de arriba, no es un apéndice al final de una tarjeta*), «Cómo llegar» pasa por
+encima del mapa y el teléfono entra, que la sección no lo tiene aunque el dato ya viaja.
+
+**⚠️ Dos hallazgos técnicos que sobreviven al rechazo:**
+1. **`HeroStatus` calcula la ventana de hoy y NO la devuelve.** Para decir «hasta las 21:00» hace
+   falta un campo más en un array que ya existe. ▶ **Y NO se puede deducir de `weeklyRows()`**: su
+   marca `is_today` se apaga a propósito cuando hoy lo gobierna una temporada o una fecha especial,
+   así que quien la use acertará casi siempre y fallará justo los días raros.
+2. **«Parking gratis 2h» está escrito en el código, no en el panel** (`landing.info.parking`): la
+   única afirmación de la sección que puede volverse falsa sin que nadie se entere.
+   `[DECIDIDO owner]`: **se retira** — pendiente de aplicar cuando se rehaga la sección.
+
+**⚠️ Y el presupuesto de dibujo de la portada está AGOTADO**: tres colocaciones —las poses de zona,
+la mancha de `/normas` y la que se probó aquí—. La probada se revirtió, así que **hoy quedan dos y
+sigue habiendo una libre**; la siguiente sección que quiera dibujo tiene ese hueco y ninguno más.
+
+**Verificación**: árbol devuelto al estado de `#295` (`git status` limpio, kit de vuelta a 4
+símbolos, `kit:build --check` servible, `GET /` 200) · suite y Pint verdes · `docs-check` ✓.

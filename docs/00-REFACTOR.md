@@ -2653,6 +2653,16 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > ⚠️ **La lista de ranuras decorativas está VACÍA a propósito**: una ranura sin consumidor es lo que
 > dejó los 19 dibujos de `#257` esperando años.
 >
+> ⛔ **IDIOMA VISUAL · EL MOLDE EDITORIAL: DIAGNOSTICADO, TRES FORMAS RECHAZADAS** (2026-08-31,
+> `#297`). **Sesión sin código: todo revertido** (`[owner]`: «déjalo como estaba… en el siguiente
+> chat iteraremos»). Queda el diagnóstico, medido: las SIETE secciones usan el mismo molde
+> —etiqueta → titular partido → párrafo → contenido— y el dato llega siempre el último; horarios y
+> ubicación tiene **cinco encabezados para cuatro líneas de dato**.
+> ▶ **Sigue en pie** el `[DECIDIDO owner]` de romper el molde: cada sección con la forma de lo que
+> ES. Lo rechazado son las tres formas, no el criterio.
+> ⚠️ **Las tres fallaban en el ESCRITORIO** (+105 y +136 px): hoy horario y mapa van en dos columnas
+> y ellas apilaban en una. Quien retome esto resuelve el escritorio, no solo el móvil.
+>
 > ✅ **IDIOMA VISUAL · T3: ZONAS Y ATRACCIONES UNIFICADAS** (2026-08-31, `#295`). Un bloque por zona
 > con su carrusel debajo; fuera una cabecera, el salto, el CTA y una de las dos barras de pestañas.
 > ❗ **Cerró un defecto de identidad**: `accent` AGRUPA y no identifica (`cap`/`cap2` comparten el de
