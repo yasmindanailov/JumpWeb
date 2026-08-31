@@ -73,6 +73,30 @@
 > pierde la pastilla MIXTA mientras el cargo vive (lo cierra la T1, §18.4).
 > ▶ **Queda SOLO el ojo del owner sobre las 14 imágenes**: textos y claridad, lo que una sonda no
 > juzga.
+> # ❗ SI ENTRAS NUEVO (2026-08-31, cierre): RESERVAS MIXTAS — LA VISIÓN CERRADA, EL PLAN EN MARCHA
+>
+> **`git fetch` antes de nada.** La sesión del 31 cerró TODO el diseño de reservas mixtas con el
+> owner y ejecutó el T0. **Tu punto de entrada es UNO: `specs/cumple-mixto.md` §18** (la visión, las
+> nueve decisiones D1–D9, los huecos medidos y el plan §18.5). El −X € está diseñado en **§20**
+> (`#285`, sustituye a §16). No queda NINGUNA decisión de producto abierta en mixtos.
+> ▶ **LO SIGUIENTE ES LA T1 — el SELLO** (`#284` D1/D2): cada reserva guarda al nacer los tramos y
+> precios de su familia; el precio viejo solo existe dentro de las reservas que lo llevan. El owner
+> pidió ir «paso a paso»: **diseño fino ANTES de código**, con las tres preguntas ya identificadas —
+> dónde vive la copia (columna/JSON en `order_items` u otra cosa) · cómo RE-SELLA el cambio de fecha
+> (`PAY-18`: día nuevo = precios nuevos) y el cambio de producto · y cómo SUBSUME el recibo de `#270`
+> (`unitFor` lee el sello si existe — **dos fuentes de verdad para lo mismo es el defecto**).
+> ⚠️ La T1 toca el NACIMIENTO de una reserva (`OrderCreator`, `CRITICAL_RE`): verificadores sobre
+> MySQL real y `VERIFY_CONC=1` al empujar.
+> ⚠️ Orden del resto: T2 (edad sin producto + disparador a «guardado completo», §20.6 — cambia la
+> conducta de `#268` para los cargos) · T3 (el parque decide) · T4 (el −X €, tras T1+T2) · T5 (las
+> palabras: D9, D8, el email de la devolución y el «hoy:» del desfase) · T6 (solapes fuera del form).
+> ▶ **T0**: 14 capturas verificadas en `storage/app/t0-capturas/` (gitignoradas); el owner ya cazó
+> el primer hallazgo. Pedidos sonda `T0-PRB01`/`T0-PRB02` y `e2e-panel-admin@jumpweb.test` viven en
+> la BD local para futuras sondas; guion `t0.js` en `/root/e2e` del contenedor.
+> ⚠️⚠️ **Si sondeas con notificaciones: `Notification::fake()` SIEMPRE** — `QUEUE_CONNECTION=sync`
+> envía en el acto y el rollback de la BD no recoge un correo ya enviado (el owner recibió dos con
+> importes que la base nunca tuvo).
+>
 >
 >
 >

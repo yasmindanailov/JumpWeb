@@ -2247,10 +2247,32 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       **configuración** (precios, tramos): lo escrito es lo que se le comunicó al cliente.
       ⚠️ La etiqueta va **pegada al nombre** desde un solo compositor, y la cogen de ahí las ocho
       superficies de texto plano. Su precio: `isMixedParty()` necesita `ticketType` y `slot` cargadas.
-      ❗ **Queda**: el **OJO del owner** sobre el rótulo por niño y el aviso del caso barato · la
-      **pastilla en el cajón** (cosmética: el texto ya le llega) · el **AFORO**, aparcado por el owner
-      —en el parque real son zonas distintas y el niño mayor pasa a JUMP— · y el **descuento**
-      (`#248`), aparcado con su diseño verificado.
+      ▶▶ **DESPUÉS (2026-08-29 → 31): la REVISIÓN ADVERSARIAL y la VISIÓN CERRADA — el punto de
+      entrada ya NO es §11/§12, es `specs/cumple-mixto.md` §18.** La revisión (`#249`) encontró seis
+      defectos que eran UNO —el importe se recalculaba entero del catálogo en cada disparo, y sin
+      datos escribía CERO— y se arregló en cinco tandas (`#268`→`#272`: la abstención, el cargo
+      huérfano visible, el RECIBO con el «14,00 € y no 24,00 €» del owner, el panel deja de ofrecer
+      un gesto que deshacía en el mismo clic, y `MixedPartySurcharge` al `CRITICAL_RE` + `PAY-19`).
+      Luego `#282` (tipos por esquema atados al contrato de la API), `#283` (el catálogo AVISA antes
+      de mover un tramo con fiestas vendidas, doble guardado con firma).
+      ❗❗ **`#284`: la VISIÓN del owner, cerrada — nueve decisiones (D1–D9) y plan por SEIS tandas
+      (§18.5)**, con el SELLO en la reserva (D1: el precio viejo solo existe dentro de las reservas
+      que lo llevan; sin histórico de precios) y un hueco MAYOR que el caso espejo medido de paso: el
+      PRIMER cargo usaba el catálogo del día del formulario, no el de la compra.
+      ❗❗ **`#285`: el −X € DISEÑADO con Fable — §20 SUSTITUYE a §16** (el espejo acotado a puerta:
+      el clamp nunca muerde, cero mecánica contable nueva; §16 pasa a ser la pieza de la fase 3 del
+      cobro). Y la regla que simplifica todo es del owner: **el dinero solo se mueve al guardar el
+      formulario COMPLETO, en las dos direcciones** (cambia `#268` para los cargos; va en la T2).
+      ✅ **T0 en headless (2026-08-31)**: 14 capturas en `storage/app/t0-capturas/`, el aviso de
+      `#283` verificado en el ciclo REAL de Livewire, y el primer hallazgo cazado por el OJO del
+      owner (el «hoy:» de la línea de desfase → T5).
+      ❗ **Queda, por orden del plan §18.5**: **T1 el SELLO** (la siguiente; diseño fino antes de
+      código: dónde vive la copia, el re-sellado al cambiar fecha, y SUBSUMIR el recibo de `#270`) ·
+      T2 edad sin producto + disparador a «guardado completo» · T3 el parque decide (editar edad
+      auditado, la diferencia por cabeza en hoja/puerta, bajar del mínimo D7) · T4 el −X € (diseño
+      cerrado, tras T1+T2) · T5 las palabras (D9, D8, el email de la devolución, el «hoy:») · T6 el
+      guardián de solapes fuera del formulario · el **AFORO** sigue aparcado por el owner (zonas
+      distintas, spec propia).
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de
