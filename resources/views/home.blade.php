@@ -158,7 +158,7 @@
              resto de la coreografía (`#195`): el JavaScript publica UNA custom property y no
              decide diseño, para que una instalación pueda cambiar el recorrido desde su hoja. --}}
         <div class="hero__strip" aria-hidden="true">
-            <x-site.brand-strip class="hero__strip-box" />
+            <x-site.brand-strip class="brand-strip--wedge hero__strip-box" />
         </div>
         </div>
 
@@ -209,6 +209,13 @@
                              aria-label="{{ $zone->tr('name') }} · {{ __('landing.zones.see_rides') }}">
                         <img class="zone-photo-card__photo" src="{{ asset($zone->image) }}"
                              alt="{{ $zone->tr('name') }}" loading="lazy">
+                        {{-- La ilustración de la zona, «apoyada en el borde» — literalmente lo que
+                             dice su `E3`: «foto arriba con mancha entrando por la esquina y silueta
+                             apoyada en el borde». La pose la asigna él en `F10` y no cambia.
+                             ⚠️⚠️ Va TAMBIÉN aquí y no solo en el fallback: ésta es la variante que
+                             usan las zonas con foto, o sea las reales. Con el dibujo solo en la otra
+                             rama, en esta instalación no se veía en NINGUNA parte. --}}
+                        <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-photo-card__ilu" />
                         <div class="zone-photo-card__body">
                             <span class="zone-photo-card__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
                             <h3 class="zone-photo-card__name">{{ $zone->tr('name') }}</h3>
@@ -227,6 +234,13 @@
                        @click.prevent="goToRides('{{ $zone->accent }}')"
                        aria-label="{{ $zone->tr('name') }} · {{ __('landing.zones.see_rides') }}">
                         <div class="zone-intro__bg">{{ $zone->tr('name') }}</div>
+                        {{-- **EL PRIMER CONSUMIDOR DEL HUECO DE ILUSTRACIÓN** (`#257`, cerrada aquí).
+                             La clave sale de `zones.slug`, que ya existe: por eso esta pantalla fue la
+                             elegida para estrenar el mecanismo —es la única que no exige declarar
+                             ninguna ranura nueva—.
+                             ⚠️ Sin `client-kit.svg` el componente **no emite nada** y la tarjeta queda
+                             exactamente como estaba: el hueco falla hacia invisible a propósito. --}}
+                        <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-intro__ilu" />
                         <div class="zone-intro__top">
                             <span class="zone-intro__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
                         </div>
@@ -527,7 +541,7 @@
              :class="fase === 'jugando' && 'reserve__box--jugando'">
             {{-- La trama de puntos, la misma que el menú: es la única textura que el sistema
                  admite sobre tinta, y aquí sale del mismo mecanismo. --}}
-            <div class="menu__grain" aria-hidden="true"></div>
+            <div class="grain" aria-hidden="true"></div>
 
             {{-- ══ EL LIENZO Y LA UI DEL JUEGO ═══════════════════════════════════════════════════
                  El lienzo hace de ESCENARIO: en reposo es una tira de 150 px con un muñeco en

@@ -352,6 +352,12 @@ RSYNC_EXCLUDES=(
     # `logo-letra-a.php` repara el logotipo. Mismo motivo; sin la exclusión se pierde en el
     # primer despliegue y la reparación deja de poder rehacerse en el servidor.
     --exclude='/public/img/client-logo-a.path'
+    # El KIT DE ILUSTRACIÓN de la instalación (`specs/hueco-ilustracion.md`): el sprite de <symbol>
+    # del que salen TODOS sus dibujos. Mismo motivo exacto que los de arriba, y aquí muerde más
+    # porque no es una pieza: son todas a la vez. Sin esta línea el --delete se lo lleva y la
+    # instalación se queda sin ilustración en cada vista, EN SILENCIO (el hueco falla hacia
+    # invisible a propósito: no hay caja rota que delate la pérdida).
+    --exclude='/public/img/client-kit.svg'
     --exclude='/bootstrap/cache/*'   # llevaría la config local horneada; se regenera allí
     --exclude='/.phpunit.result.cache'
     --exclude='/compose.yaml'
@@ -532,6 +538,20 @@ check "GET / → $home_code (esperado 200)" "$([[ "$home_code" == "200" ]] && ec
 robots=$(curl -s -m 20 "$SITE_URL/robots.txt" || echo "")
 check "GUARDA 4 · robots.txt contiene 'Disallow: /'" \
     "$(grep -qx 'Disallow: /' <<<"$robots" && echo 0 || echo 1)"
+
+# ── GUARDA 7 · el KIT DE ILUSTRACIÓN instalado sigue siendo servible ──────────────────────────
+# `specs/hueco-ilustracion.md` §5. ⚠️⚠️ **Este es el ÚNICO punto del sistema que ve el fichero
+# REAL.** `kit:build` valida al INSTALAR, pero si alguien copia un sprite a mano en el servidor no
+# lo revisa nadie — y las fugas de este hueco son SILENCIOSAS: medido en navegador, un `<style>`
+# interno del cliente GANA al color que pone el producto, y con un símbolo que trae
+# `fill="currentColor"` el tratamiento troquel pasa a pintar el 100 % de la caja. En los tres casos
+# el dibujo aparece y nada falla.
+#
+# ⚠️ **Sin kit NO falla, y es a propósito**: es el estado normal de una instalación que no trae
+# ilustración, y el hueco existe justamente para poder no tenerlo. Lo que esta guarda persigue es un
+# kit PRESENTE y ROTO. Fail-closed por SSH: si la orden no llega, el código de salida no es 0.
+kit_out=$(remote_php "artisan kit:build --check" 2>&1); kit_rc=$?
+check "GUARDA 7 · $(head -1 <<<"$kit_out")" "$kit_rc"
 
 # ⚠️ `grep -c X || echo 0` imprime DOS ceros cuando no hay coincidencias: `grep -c` ya emite «0» y
 # ADEMÁS sale con 1, así que el `||` añade otro. Eso rompió la comprobación de migraciones el

@@ -13,6 +13,39 @@
 > Última actualización: 2026-08-30 · Decisión asociada: `DECISIONES #281`.
 > Método: el mismo que `#277` con `Microanimaciones PJP` — **primero qué de esto ya está en el
 > producto, después qué falta, qué cuesta y qué contradice**. Aquí no se implementa nada.
+>
+> ---
+>
+> ## ❗❗❗ CINCO CORRECCIONES A ESTE DOCUMENTO (2026-08-31) — se leen ANTES que el cuerpo
+>
+> Salieron de medir el mecanismo que §10·1 pedía. El detalle vive en **`specs/hueco-ilustracion.md`
+> §12**, que es donde se mantiene; aquí van para que nadie construya sobre lo que este texto dice.
+>
+> 1. ⚠️⚠️ **§1.1 YA NO APLICA: el canvas se refrescó el 2026-08-31 y llegó SANO.** UTF-8 válido,
+>    **cero** mojibake, **40 piezas** con la distribución exacta que §1.1 predecía (A·4 B·6 C·2 D·8
+>    F·11 G·6 E·3) y `A4`/`C1`/`D9` ausentes como estaba medido. ▶ **El daño lo traía el PEGADO**:
+>    esta vez se DESCARGÓ como fichero. La trampa sigue vigente para la próxima.
+> 2. ⚠️⚠️ **§10·1 dice que el hueco de ilustración «no está diseñado». Ya existía, DOS veces**:
+>    `--deco-blob-*` (forma como máscara recoloreable) y `--deco-tag` (imagen a color), documentados
+>    en `INSTALACION-CLIENTE.md` §4.d y §4.e desde `#228`. Lo que faltaba era **generalizarlo**.
+> 3. ⚠️⚠️ **§4 clasifica `B1` como 🟥 arte del cliente ausente. DOS de las seis manchas YA VIAJAN
+>    INSTALADAS.** Verificado **byte a byte**: `--deco-blob-a` **es** `splash-1.svg` (1.304 B) y
+>    `--deco-blob-b` **es** `splash-4.svg` (1.493 B) — mismo sha1 normalizado, mismo `viewBox`, mismos
+>    7 círculos. **Este artboard ya alimentó al producto una vez.**
+> 4. ⚠️⚠️ **§6 y §9 temen un coste de bytes que el vehículo real no tiene, y sus dos cifras son
+>    CRUDAS.** El «18,6× menos» de `<use>` **comprimido es 1,4×** (90.925 → 2.506 B repitiendo el
+>    path; 4.849 → 1.856 B con `<use>`), y los «64 KB del logotipo» son 57.780 crudos pero **12.955
+>    gzip**. ▶ La ganancia real de `<use>` **no es la red**: es el DOM, el parseo y poder recolorear
+>    cada instancia. El marcado por instancia son **~180 B**, no 3.840.
+> 5. ⚠️ **§7 dice que los estados vacíos «hoy no tienen ninguno». Existen y se pintan**:
+>    `tickets.no_dates` en `DateStep.vue` y `CatalogStep.vue` (los dos con `v-if`), y en
+>    `lang/es/account.php` los de «Mis pedidos», «Mis reservas», el historial y los menores. Un dibujo
+>    ahí sería **decoración de un estado que funciona**, no tapar un agujero — por eso la lista de
+>    ranuras decorativas **nace vacía**.
+>
+> ▶ **Y una regla que sale de todo esto**: `#257` ya había medido que los 19 dibujos de parque *«no
+> tienen hoy ninguna pantalla que las pinte»* y llevan aparcados desde entonces. **Un dibujo nace en
+> el mismo cambio que su consumidor**, o se queda esperando.
 
 ---
 

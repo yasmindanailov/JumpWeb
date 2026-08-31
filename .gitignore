@@ -41,6 +41,11 @@
 /public/img/client-logo-a.path
 # Pieza decorativa de marca del cierre (`--deco-tag`, `#235`): el tag de la ciudad.
 /public/img/client-tag.svg
+# El KIT DE ILUSTRACIÓN de la instalación (`specs/hueco-ilustracion.md`): UN sprite de `<symbol>`
+# con todos sus dibujos, que el producto pinta con `<use>` poniendo él color, tamaño y tratamiento.
+# Es el TERCER hueco por instalación tras el logotipo y el icono, y el PRIMERO para ilustración y no
+# para marca. Mismas tres piezas que el resto del paquete; sin fichero no se pinta nada.
+/public/img/client-kit.svg
 # Y su respaldo RASTER (`#216`): correos y Open Graph no renderizan SVG. `@4x` de los 54 px a los
 # que la barra pinta el logotipo.
 /public/img/client-logo@4x.png

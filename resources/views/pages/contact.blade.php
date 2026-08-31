@@ -87,6 +87,10 @@
              está configurado + dirección + «Cómo llegar»). Mismo recurso de diseño, sin duplicar. --}}
         <aside class="contact-layout__aside">
         <div class="map-card map-card--aside">
+            {{-- A5 · niebla de spray. ⚠️ Su nota dice «formularios largos y paneles laterales», y
+                 EN EL FORMULARIO SE VEÍA MAL: los halos caían bajo las etiquetas, que es lo que su
+                 regla 02 prohíbe. Aquí es panel lateral y no hay párrafo encima. --}}
+            <div class="spray" aria-hidden="true"></div>
             {{-- Bloqueo previo (#219): el iframe del mapa solo carga con consentimiento «mapa». --}}
             <x-site.consent-frame category="maps" :src="$site['maps_embed']"
                 :title="__('landing.info.address_title')"

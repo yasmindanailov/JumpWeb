@@ -27,7 +27,7 @@
          ⚠️ **El marcado se fue a `<x-site.brand-strip>` en `#226`**: el mockup la usa también en
          el hero de cabecera, y dos copias pegadas de lo mismo divergen. Aquí queda `foot__strip`,
          que es COLOCACIÓN —el aire que deja debajo— y nada más. --}}
-    <x-site.brand-strip class="foot__strip" />
+    <x-site.brand-strip class="brand-strip--wedge foot__strip" />
 
     {{-- ⚠️⚠️ **UNA SOLA FILA DE ENLACES** (`#235`, `[DECIDIDO owner]`: «lo quiero una sola línea
          el footer con los enlaces, no 3 columnas con varias filas»). Aquí había una rejilla de

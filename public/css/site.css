@@ -2220,6 +2220,28 @@ body.no-scroll { overflow: hidden; }
     padding-inline: var(--hero-gap-end);
     pointer-events: none;
     top: calc(3px + (var(--hero-pt-now) + var(--hero-h-now) + var(--hero-strip-gap) - 3px) * var(--hero-p));
+
+    /* ⚠️⚠️ **NO SE PINTA MIENTRAS EL HERO OCUPA LA PANTALLA ENTERA** (`[DECIDIDO owner, 2026-08-31]`:
+       «quita la barra de arriba cuando el hero del header está full vw»). Con el hero completo la
+       tira queda en `top: 3px`, o sea clavada al filo superior y sobre el vídeo; al encoger el hero
+       viaja hasta su sitio, debajo de la tarjeta. Ahora aparece MIENTRAS viaja.
+
+       ▶ **Monta en `--nav-p`, no en `--hero-p`, y es deliberado.** Es la MISMA señal con la que
+       entra el armazón (`#216`), así que la página tiene UNA transición y no dos que puedan
+       descuadrarse entre navegadores — el mismo argumento que `#227` escribió para el relevo del
+       CTA, que se apaga con este mismo token. Y llega a 1 EXACTAMENTE cuando entra `.nav--live`,
+       porque divide por el token que marca ese punto: si alguien mueve el umbral, se mueven juntos.
+       ⚠️ Por encima de `--nav-reveal-live` el cálculo pasa de 1 y **lo acota el propio navegador**,
+       igual que el del CTA pasa de 0 hacia abajo. No hace falta `clamp()`.
+
+       ⚠️ **Aquí NO hacen falta las tres mitades del apagado** que sí necesitó el CTA (opacidad,
+       `pointer-events` y `visibility`): esta tira ya nace inerte —`pointer-events: none` arriba y
+       `aria-hidden` en el marcado—, así que no hay clic ni tabulador que rescatar.
+
+       ⚠️⚠️ **Sin JS y con movimiento reducido el hero NO encoge, así que esta tira no se ve nunca.**
+       Es consecuencia aceptada y no un descuido: es una pieza de la COREOGRAFÍA, y sin coreografía
+       no tiene momento en el que entrar. La marca no se pierde — el remate del pie es estático. */
+    opacity: calc(var(--nav-p) / var(--nav-reveal-live));
 }
 .hero--full .hero__strip-box { width: 100%; max-width: var(--hero-w-end); }
 
@@ -5047,11 +5069,6 @@ html:not(.js) .gf-fiche__foot { display: none; }
 }
 
 /* Trama de puntos: la única textura que el sistema admite sobre tinta. */
-.menu__grain {
-    position: absolute; inset: 0; pointer-events: none;
-    background-image: radial-gradient(circle, color-mix(in srgb, var(--fg) 11%, transparent) 1.4px, transparent 1.6px);
-    background-size: 20px 20px;
-}
 
 /* ⚠️⚠️ **Aquí vivía el MISMO defecto que en la tarjeta del cierre, y nadie lo vio porque las
    sondas del armazón corrieron a 1280 y a 390.** Esta columna está acotada a 1240, así que el
@@ -6095,3 +6112,197 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
         transform: translate(-50%, -50%);
     }
 }
+
+/* ══ EL HUECO DE ILUSTRACIÓN POR INSTALACIÓN ═══════════════════════════════════════════════════
+   `specs/hueco-ilustracion.md` §6.2. El dibujo lo trae la instalación en `client-kit.svg` y lo
+   pinta `<x-site.ilu>`; aquí se decide el COLOR y el grosor, que son del producto.
+
+   ⚠️ Leen `--paper-fg` y NO `--fg`, por lo mismo que las sombras de `#196`: dentro del hero `--fg`
+   vale CLARO, así que un dibujo que leyera `--fg` desaparecería sobre papel.
+
+   ⚠️⚠️ **Los tres tratamientos salen de UNA geometría** —el mismo `<symbol>`—, que es lo que hace
+   que doce poses no sean treinta y seis ficheros. Medido en navegador por cobertura de tinta:
+   plano 18,9 % · contorno 8,8 % · troquel 78,8 % (el inverso exacto del plano), con control vacío
+   a 0,0 %. Con máscara CSS solo salían dos de los tres: el contorno es imposible porque lo que
+   produce `mask-composite` no es un trazo (medido: 3,7 % contra el 8,8 % del trazo real, y con el
+   ancho variando 4× según la distancia al centro). */
+/* ⚠️⚠️ **`.ilu` NO impone `width`, y es deliberado.** Lo intentó y salió mal: `.ilu` vive en esta
+   hoja y los consumidores en `landing.css`, que se carga ANTES — misma especificidad, así que
+   `width: 100%` de aquí ganaba a `.zone-intro__ilu` y el dibujo salía a todo el ancho de la tarjeta
+   (medido: 638 px donde tocaban 190). *Gana el último, no el más específico* (`#277`).
+   ▶ El TAMAÑO es colocación, y la colocación es del consumidor. Aquí solo va lo que no compite.
+   ⚠️ `height: auto` funciona porque el componente copia el `viewBox` del símbolo al envoltorio: sin
+   él un `<svg>` no tiene proporción y cae a los 150 px por defecto. */
+.ilu { display: block; max-width: 100%; height: auto; }
+
+/* ⚠️⚠️ **`color` NO es redundante con `fill`, y es una DEFENSA medida.** Si el símbolo del cliente
+   trae `fill="currentColor"` —que es como exporta el artboard—, su atributo gana al `fill` que
+   hereda del `<use>` y el dibujo sale del color del documento. Fijando `color` aquí, ese
+   `currentColor` aterriza donde el producto quiere en vez de donde caiga.
+   ▶ Medido con un `color` magenta imposible de confundir: la fuga pasa de **35,6 %** de píxeles
+   ajenos a **0,0 %**, y la tinta vuelve al 35,6 % exacto del símbolo limpio. */
+/* ⚠️ **El color es un TOKEN CON CAÍDA, no un valor fijo**, y lo pidió la primera pantalla que usa
+   esto: `.zone-intro__card` es una superficie del COLOR DE LA ZONA (`background: var(--zone-1)`),
+   no papel, así que ahí `--paper-fg` sería el color equivocado. Cualquier superficie redefine
+   `--ilu-fg` y gana; sin redefinirlo manda el papel. Es la forma de `var(--action-brand, var(--fg))`
+   de `#209`. */
+.ilu--plano use { fill: var(--ilu-fg, var(--paper-fg)); color: var(--ilu-fg, var(--paper-fg)); }
+
+/* El grosor por defecto. ⚠️ Lo pisa el `stroke-width` que el componente pone en el `<use>` cuando
+   el símbolo declara `data-stroke`: no hay constante que valga para todas las familias —la rejilla
+   del artboard tiene piezas a 8 y a 12, y una pose de `viewBox` 396 necesita 4,1 donde una
+   constante derivada daría 49,5—. Vacío es una RESPUESTA: sin `data-stroke`, manda esto. */
+.ilu--contorno use {
+    fill: none;
+    /* ⚠️⚠️ Aquí la defensa es `transparent`, no un color: un `fill="currentColor"` del símbolo
+       derrota al `fill: none` y **el contorno sale MACIZO**. Medido: 37,9 % de tinta contra el
+       4,1 % del símbolo limpio — o sea que el tratamiento deja de existir sin que nada falle.
+       Con `color: transparent` el relleno colado es invisible y el trazo lo sigue poniendo el CSS:
+       vuelve a 4,1 % exacto. */
+    color: transparent;
+    stroke: var(--ilu-fg, var(--paper-fg));
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ⚠️⚠️ **`> rect`, y el `>` no es cosmético**: dentro del `<svg>` hay OTRO `rect` —el blanco de la
+   máscara— y una regla sin acotar le cambiaría el color, que es lo que define el recorte. El negro
+   del clon y el blanco del fondo van en `style=` en línea desde el componente, para que ninguna
+   regla de aquí pueda tocarlos. */
+.ilu--troquel > rect { fill: var(--ilu-fg, var(--paper-fg)); }
+
+/* ══ EL MATERIAL DE FACHADA · las piezas que son TÉCNICA y no dibujo ═══════════════════════════
+   `specs/elementos-fachada.md` grupos A y C. Salen del artboard del 2.º cliente, pero **no llevan
+   arte de nadie**: son degradados. Por eso viven en el producto y valen para cualquier instalación.
+
+   ⚠️⚠️ **DE AQUÍ SE SACA LA FORMA, NUNCA EL COLOR.** Sus números son suyos y están al dígito; sus
+   colores son roles nuestros. Un literal del artboard aquí lo caza `RawColourIsNotATokenTest`.
+
+   ⚠️ **Componente y COLOCACIÓN separados**, como `.brand-strip` / `.foot__strip` (`#226`): aquí solo
+   va lo que PINTA. El sitio y el tamaño los pone quien la usa — y además esta hoja se carga DESPUÉS
+   de `landing.css`, así que cualquier medida declarada aquí le ganaría a su consumidor (la lección
+   que costó el hueco de ilustración).
+
+   ▶ **CADA PIEZA TIENE SU INTERRUPTOR** y no es adorno de diseño: es lo que permite retirar todo
+   esto sin deshacer nada. Con la perilla a `0` la pieza desaparece y el sitio vuelve a como estaba. */
+:root {
+    /* A1 · densidad de la trama. ⚠️ El 0.2 NO es un número elegido: es el que deja la trama del menú
+       EXACTAMENTE como estaba antes de generalizarla — 55 % de tinta × 0.2 = el 11 % que tenía
+       horneado. Generalizar no puede cambiar lo que ya se ve. */
+    --trama: 0.2;
+    --trama-fade: 0.55;   /* A2 · la variante que se apaga; suya al dígito */
+    --spray: 1;           /* A5 · la niebla */
+    --rayos: 1;           /* A3 · el abanico quieto */
+    --rayos-size: 520px;  /* suyo */
+}
+
+/* ── A1 · TRAMA DE PUNTOS ──────────────────────────────────────────────────────────────────────
+   Sus tres números al dígito: 1,4 · 1,6 · 20×20. Era `.menu__grain`, y ese nombre MENTÍA: se usaba
+   también en la tarjeta del cierre, que no es el menú. Su nota pide además la perilla de densidad
+   —«arriba fina, abajo densa»— que el nombre viejo no tenía dónde poner. */
+.grain {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(circle, color-mix(in srgb, var(--fg) 55%, transparent) 1.4px, transparent 1.6px);
+    background-size: 20px 20px;
+    opacity: var(--trama);
+}
+
+/* La mitad inferior, densa y EN COLOR DE ZONA: es lo que su nota llama «marcar zona».
+   Sus números: 2 · 2,3 · 14×14 · al 50 % · media altura. */
+.grain--zona::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 50%;
+    background-image: radial-gradient(circle, var(--zone-1) 2px, transparent 2.3px);
+    background-size: 14px 14px;
+    opacity: 0.5;
+}
+
+/* ── A2 · TRAMA QUE SE APAGA ───────────────────────────────────────────────────────────────────
+   Puntos más gordos y más juntos (2,2 · 2,5 · 15×15) que entran por una esquina y desaparecen.
+   ⚠️ **Él lo hace TAPANDO con el color del papel; aquí es una MÁSCARA de verdad**, y no es purismo:
+   su versión solo funciona si el fondo es exactamente ese papel, y esto tiene que servir sobre
+   cualquier superficie. Su ángulo —115°— y su parada —74 %— se conservan. */
+.grain--fade {
+    background-image: radial-gradient(circle, color-mix(in srgb, var(--paper-fg) 55%, transparent) 2.2px, transparent 2.5px);
+    background-size: 15px 15px;
+    opacity: var(--trama-fade);
+    /* ⚠️ La parada es PERILLA porque su `74 %` es para un tile decorativo sin texto. Sobre una
+       tarjeta con párrafo, a 74 % los puntos llegan debajo de la letra — y eso incumple SU regla
+       02 («la pintura nunca va debajo de un párrafo»). Su nota de A2 y su regla 02 se contradicen,
+       y aquí manda la regla: quien coloque baja la parada hasta que el texto quede limpio. */
+    -webkit-mask-image: linear-gradient(115deg, #000, transparent var(--trama-fade-stop, 74%));
+    mask-image: linear-gradient(115deg, #000, transparent var(--trama-fade-stop, 74%));
+}
+
+/* ── A5 · NIEBLA DE SPRAY ──────────────────────────────────────────────────────────────────────
+   Tres halos difusos, sin borde. Su nota: «versión suave para fondos claros: formularios largos y
+   paneles laterales». Geometría suya (260/240/170 px, sus posiciones y sus paradas de 62/60/62 %);
+   los tres colores son ROLES de la tira, no sus literales. */
+.spray {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+    opacity: var(--spray);
+    background:
+        radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--strip-1) 50%, transparent), transparent 62%)
+            left -20px top -30px / 260px 260px no-repeat,
+        radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--strip-2) 55%, transparent), transparent 60%)
+            right -40px bottom -50px / 240px 240px no-repeat,
+        radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--strip-4) 40%, transparent), transparent 62%)
+            left 34% top 38% / 170px 170px no-repeat;
+}
+
+/* ── A3 · RAYOS, la variante QUIETA ────────────────────────────────────────────────────────────
+   ⚠️ **No es `.offw-rays`.** Aquél es el estallido del widget de ofertas: 2,6°/15° (24 rayos),
+   animado y con máscara de anillo. Éste es el panel de la fachada: **3,2°/8°, o sea 45 rayos**, y
+   no se mueve. Su regla, que hay que respetar al colocarlo: **uno por página**. */
+.rays {
+    position: absolute; pointer-events: none;
+    width: var(--rayos-size); height: var(--rayos-size);
+    background: repeating-conic-gradient(from 0deg at 50% 50%,
+        color-mix(in srgb, var(--paper-fg) 12%, transparent) 0deg 3.2deg, transparent 3.2deg 8deg);
+    opacity: var(--rayos);
+    /* ⚠️⚠️ **Sin esto el abanico se corta en un RECTÁNGULO DURO y parece un fallo.** En su artboard
+       el corte lo da el borde de la tarjeta y el centro del abanico queda FUERA de ella, así que
+       nunca se ve un canto recto. Aquí el contenedor es otro, así que el desvanecido se lo pone la
+       propia pieza — el mismo recurso que `.offw-rays` ya usaba para su anillo.
+       ⚠️⚠️ Y va `closest-side`: **por defecto un `radial-gradient` mide hasta la ESQUINA**, así que
+       el desvanecido no llega a terminar dentro de la caja y el canto recto SIGUE viéndose. Es
+       exactamente la trampa que `#259` dejó escrita, y se cayó en ella igual. */
+    -webkit-mask-image: radial-gradient(closest-side circle at 50% 50%, #000 30%, transparent 100%);
+    mask-image: radial-gradient(closest-side circle at 50% 50%, #000 30%, transparent 100%);
+}
+
+/* ── C2 · LAS DOS VARIANTES DE TIRA QUE FALTABAN ───────────────────────────────────────────────
+   La continua ya existía y coincide con la suya **en orden 5 de 5**. Éstas son sus otras dos formas:
+   «en cuñas para separar bloques» y punteada.
+   ⚠️ Su canto es `3px` y aquí va `--r-xs` (5): la escala de forma no tiene el 3, y en una tira de
+   pocos píxeles de alto **el navegador reescala los radios igualmente** —lo que el comentario de
+   `.brand-strip` ya dejó escrito—, así que el dibujo no cambia. */
+.brand-strip--wedge { gap: 5px; overflow: visible; }   /* su hueco, al dígito */
+/* ⚠️⚠️ **Sin canto, y eso SÍ es una desviación suya justificada por medición.** Su tile usa 3 px,
+   pero en una tira de 14 px de alto el `skewX(-12°)` solo desplaza 14·tan12° ≈ **3 px**: con
+   cualquier redondeo la inclinación DESAPARECE y las cuñas se leen como pastillas rectas — medido
+   en navegador. El canto se lleva justo la señal que distingue esta variante de la continua. */
+/* ⚠️ **No se declara canto, y eso ES la decisión**: el `<span>` ya nace recto, así que basta con
+   NO heredar el de la tira continua. Escribir `border-radius: 0` sería un literal fuera de la
+   escala de forma — y `ShapeScaleTest` lo cazó, con razón: la lista de excepciones solo encoge. */
+.brand-strip--wedge > span { transform: skewX(-12deg); }
+
+/* La punteada NO es la tira con otro traje: es otra pieza. Sus números: 3 · 3,4 · 16×10. */
+.brand-dots {
+    height: 10px; pointer-events: none;
+    background-image: radial-gradient(circle, var(--paper-fg) 3px, transparent 3.4px);
+    background-size: 16px 10px;
+}
+
+
+
+/* ⚠️⚠️ **AQUÍ HUBO UN FRISO DE CINCO SALTADORES Y SE RETIRÓ**
+   (`[DECIDIDO owner, 2026-08-31]`: «no me convence, fuera»). Se montó con sus números —las cinco
+   alturas como fracción de la mayor, los colores por rol, la segunda espejada— y aun así sobraba:
+   el menú ya llevaba la trama y dos manchas, y ésta era la tercera capa sobre la misma superficie.
+
+   ▶ **Tercera pieza decorativa rechazada seguida, y las tres por lo mismo**: cuatro tiras de marca
+   donde su landing usa dos, una mancha por tarjeta de precio, y cinco figuras sobre una superficie
+   que ya tenía dos capas. Lo que SÍ ha sobrevivido —la trama, la niebla, los rayos, las poses de
+   zona— comparte tres cosas: **una por pantalla, integrada en su superficie, y a baja opacidad**.
+   No es que el material no valga: es que este sitio lo admite en dosis pequeñas. */

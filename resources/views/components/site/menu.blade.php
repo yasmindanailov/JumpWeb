@@ -33,7 +33,7 @@
 
     {{-- Trama de puntos: la única textura que el sistema del cliente admite sobre tinta, y aquí
          se dibuja con un token de color, no con un literal. --}}
-    <div class="menu__grain" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
 
     {{-- ⚠️ **Dos manchas de marca al fondo, y son HUECOS, no dibujos** (`#228`, del mockup). El
          producto pone el sitio, el tamaño, la opacidad y el COLOR —de los tokens de marca—; la
@@ -44,6 +44,7 @@
          es el PRODUCTO y no lleva la marca de ningún cliente. --}}
     <div class="menu__blob menu__blob--a" aria-hidden="true"></div>
     <div class="menu__blob menu__blob--b" aria-hidden="true"></div>
+
 
     {{-- ⚠️ **La VISTA PREVIA de la columna lateral se alimenta de los MISMOS ítems** (`#228`), no
          de una segunda lista: si fueran dos fuentes, un destino nuevo aparecería en la lista y no

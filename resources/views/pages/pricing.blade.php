@@ -4,6 +4,9 @@
 
     <main id="main" class="page wrap">
         <div class="rides__head">
+            {{-- A3 · el abanico de rayos, QUIETO. Su regla es «uno por página», y éste es el de
+                 `/precios`. Detrás del titular y NUNCA detrás de un párrafo (su regla 02). --}}
+            <div class="rays pricing__rays" aria-hidden="true"></div>
             <div>
                 <div class="eyebrow" style="margin-bottom:16px">{{ __('landing.pricing.eyebrow') }}</div>
                 <h1 class="rides__title">{{ __('landing.pricing.title') }}<br /><em style="font-style:normal; color:var(--zone-1)">{{ __('landing.pricing.title_em') }}</em></h1>

@@ -18,6 +18,10 @@
         <div class="rules-grid">
             @foreach ($rules as $rule)
                 <div class="rule">
+                    {{-- A2 · la trama que se apaga. Su nota la manda aquí: «para tarjetas con
+                         mucho texto». Entra por una esquina y se desvanece antes de llegar al
+                         párrafo, que es lo que su regla 02 exige. --}}
+                    <div class="grain grain--fade" aria-hidden="true"></div>
                     <div class="rule__icon">!</div>
                     <span class="rule__name">{{ $rule->tr('name') }}</span>
                     <span class="rule__desc">{{ $rule->tr('description') }}</span>

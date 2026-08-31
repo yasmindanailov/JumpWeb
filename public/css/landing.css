@@ -1095,6 +1095,67 @@ img { display: block; max-width: 100%; }
    acento se quedaba sin color, y dos zonas con el MISMO acento y distinto color divergían según la
    superficie (la tarjeta usaba el suyo y la pestaña el de la primera zona de ese acento). */
 .zone-intro__card { background: var(--zone-1); color: var(--on-brand); }
+
+/* ── LA ILUSTRACIÓN DE LA ZONA (`specs/hueco-ilustracion.md`) ────────────────────────────────
+   El dibujo lo trae la instalación en `client-kit.svg` con la clave `zone-<slug>`; **sin paquete
+   no se emite nada** y la tarjeta queda exactamente como estaba.
+   ⚠️ `--ilu-fg` en `--on-brand` y no en `--paper-fg`: esta tarjeta es una superficie del color de
+   la zona, no papel — el mismo motivo por el que su texto ya lee `--on-brand`.
+   ⚠️ La opacidad **no es un número inventado**: es la de `--deco-blob-a` en el menú (`#228`), que
+   es la marca decorativa que este producto ya usa sobre una superficie grande.
+   ⚠️ Va DEBAJO del contenido —que se sube con `z-index: 1`— y encima del nombre gigante del fondo. */
+.zone-intro__card { --ilu-fg: var(--on-brand); }
+
+/* Y la MISMA colocación en la variante con foto, que es la que usan las zonas reales.
+   ⚠️ «Apoyada en el borde» es suyo y es literal: `bottom: 0`, sin margen. El cuerpo de la tarjeta
+   va sobre el color de zona, así que `--ilu-fg` es `--on-brand` igual que su texto. */
+.zone-photo-card { --ilu-fg: var(--on-brand); }
+/* ⚠️⚠️ **`isolation: isolate` + `z-index: -1`, y NO «subir el contenido con `position: relative`».**
+   Esa fue la primera solución y ROMPIÓ cosas: `> :not(.ilu) { position: relative }` es un martillo
+   que pisa a cualquier hijo colocado a propósito. Medido, se llevó por delante **dos**: la insignia
+   «TOP» de la tarjeta de precio —que es `absolute` en su esquina y, al volverse `relative`, pasó a
+   ser un hijo de flex y **se estiró a todo el ancho**— y el CTA de la tarjeta de zona con foto.
+   ▶ Dentro de un contexto de apilamiento, un hijo con `z-index: -1` pinta **encima del fondo del
+   padre y debajo de su contenido**, que es exactamente lo que hace falta — y **sin tocar a nadie**.
+   Verificado en navegador con los tres casos al lado: sin nada, con el martillo y con esto. */
+.zone-photo-card { isolation: isolate; }
+/* `B6` · LA MANCHA DE ESQUINA de la tarjeta de atracción.
+   ⚠️ «Recortada por el borde» es literal: sobresale y la corta el `overflow` de la tarjeta. Por eso
+   va con coordenadas negativas y no con un margen.
+   ⚠️ Lee `--zone-1` —el color de la ZONA— porque su nota dice que la mancha «marca la categoría por
+   color»: el dibujo es el mismo en las 23 tarjetas y lo que cambia es el color, que es justo lo que
+   evita tener que poner una etiqueta. */
+/* ⚠️ `.ride-card` ya trae `position: relative` y `overflow: hidden` de su propia regla: aquí solo
+   hace falta subir el contenido por encima de la mancha. */
+/* ⚠️⚠️ **AQUÍ HUBO UNA MANCHA POR TARJETA DE PRECIO Y SE RETIRÓ**
+   (`[DECIDIDO owner, 2026-08-31]`: «no me convence, demasiado ruido con varias tarjetas»).
+
+   ▶ **La lección, que vale para todo lo que venga**: el material de este cliente es SATURADO, y
+   repetirlo en un componente que se repite lo convierte en ruido. Es la misma queja que ya provocó
+   pasar de cuatro tiras de marca a dos. **La decoración va en la PANTALLA, no en el componente que
+   se repite** — y su propio artboard lo dice dos veces sin que nadie se lo pidiera: los rayos «uno
+   por página» y la mancha del precio «máximo una por pantalla».
+
+   ⚠️ Lo que SÍ se queda son las poses de las tarjetas de zona: son dos, no cuatro, y van al 17 % en
+   la tinta de su propia superficie, no a color pleno. La diferencia no es solo cuántas: es cuánto
+   pesa cada una.
+
+   ▶ La ranura `slot-mancha-esquina` y su dibujo siguen en el kit, construidos y validados. Lo que
+   falta es un sitio donde haya UNA, no cuatro. */
+
+.zone-photo-card__ilu {
+  z-index: -1;
+  position: absolute; right: 14px; bottom: 0;
+  width: min(34%, 170px); height: auto;
+  opacity: 0.17;
+  pointer-events: none;
+}
+.zone-intro__ilu {
+  position: absolute; right: -8px; bottom: 0;
+  width: min(38%, 190px); height: auto;
+  opacity: 0.17;
+  pointer-events: none;
+}
 .zone-intro__top { display: flex; justify-content: space-between; align-items: start; }
 .zone-intro__tag {
   font-family: var(--font-body); font-size: 11px; font-weight: 700;
@@ -2634,4 +2695,71 @@ input[type="radio"]:focus-visible,
   .bd-card__star .num { font-size: 30px; }
   .bd-card__top, .bd-card__msg { padding-right: 90px; }
   .bd-card__name { padding-right: 70px; }
+}
+
+/* ══ COLOCACIÓN DEL MATERIAL DE FACHADA ════════════════════════════════════════════════════════
+   El QUÉ vive en `site.css` (`.grain`, `.spray`, `.rays`, las variantes de tira); aquí solo el
+   DÓNDE. Es la separación de `#226`, y además necesaria: `site.css` se carga después, así que
+   cualquier medida declarada allí le ganaría a esto.
+
+   ⚠️⚠️ **El patrón de las tres es el mismo y no es opcional**: la decoración va absoluta, así que
+   pinta ENCIMA del contenido en flujo. El contenido sube con `position: relative` —lo mismo que
+   `.zone-intro__card` ya hacía con su nombre gigante—. Sin esa línea, la trama tapa el texto. */
+
+/* A2 · las tarjetas de `/normas`, «para tarjetas con mucho texto».
+   ⚠️ Sus dos números se BAJAN aquí, y el motivo está medido en navegador: con su `.55` y su parada
+   al 74 % los puntos llegan debajo del párrafo y la tarjeta se lee peor. Su regla 02 lo prohíbe, y
+   entre su nota y su regla manda la regla. Queda como acento de esquina, que es lo que su propia
+   descripción dice: «entran por una esquina y desaparecen». */
+/* ⚠️ El `z-index: -1` va aquí y NO en `.grain`: esa misma pieza se usa en el menú y en la tarjeta
+   del cierre, que no crean contexto de apilamiento propio — allí bajarla la mandaría detrás del
+   fondo y desaparecería. La capa es COLOCACIÓN, como el tamaño. */
+.rule .grain { z-index: -1; }
+.rule {
+  position: relative; overflow: hidden; isolation: isolate;
+  --trama-fade: 0.3;
+  --trama-fade-stop: 30%;
+}
+
+
+/* A5 · la niebla NO va en el formulario.
+   ⚠️⚠️ Se probó ahí y se veía mal: los halos caían bajo «Nombre», «Teléfono» y «Mensaje», que es
+   exactamente lo que su regla 02 prohíbe, y el recorte de la caja los cortaba en seco.
+   ▶ Su nota da la salida sin inventar nada: «formularios largos **y paneles laterales**». El panel
+   lateral de esta página es la tarjeta del mapa, que no lleva párrafo encima. */
+.map-card--aside { position: relative; overflow: hidden; isolation: isolate; }
+.map-card--aside .spray { z-index: -1; }
+
+
+/* A3 · el abanico quieto de `/precios`. Su regla es «uno por página»: éste es ese uno.
+   ⚠️ Su posición original (`top: 118%`) era para una tarjeta de 186 px; aquí la caja es otra, así
+   que la COLOCACIÓN se decide aquí —que es lo que hace un consumidor— y la FORMA sigue siendo suya
+   al dígito: 3,2° encendido y 8° de periodo. */
+.rides__head { position: relative; overflow: hidden; isolation: isolate; }
+
+.pricing__rays {
+  z-index: -1;
+  /* ⚠️⚠️ Va ENTERO dentro del contenedor, y no es capricho: con la caja sobresaliendo, el
+     `overflow: hidden` del `.rides__head` la corta en un CANTO RECTO **antes** de que el
+     desvanecido de la propia pieza haya terminado — y eso se lee como un fallo de render, no como
+     decoración. En su artboard el corte lo da el borde visible de una tarjeta; aquí no hay borde
+     que justifique una línea recta. */
+  right: 30px; top: 50%;
+  transform: translateY(-50%);
+  --rayos-size: 360px;
+}
+
+/* C2 en CUÑAS · las dos tiras de BORDE (cabecera del hero y remate del pie).
+   ⚠️⚠️ **Esto se aparta de su nota a propósito** (`[DECIDIDO owner, 2026-08-31]`). Ella dice
+   «continua para pie y cabecera, en cuñas para separar bloques»; el owner las quiere las dos en
+   cuña. Queda escrito para que nadie lo lea como un despiste.
+   ⚠️ **El alto NO es cosmético: es lo que hace que la cuña exista.** A los 4 px que tenían, un
+   `skewX(-12°)` desplaza 0,85 px y la inclinación es invisible — medido. Su propia variante en
+   cuñas mide **22 px** con **5 px** de hueco, y con eso el desplazamiento son 4,7 px y sí se lee. */
+.hero__strip-box.brand-strip--wedge,
+.foot__strip.brand-strip--wedge { height: 22px; }
+
+@media (max-width: 720px) {
+  /* En teléfono la niebla compite con los campos: se baja, no se retira. */
+  .form { --spray: 0.55; }
 }
