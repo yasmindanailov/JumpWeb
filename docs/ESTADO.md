@@ -9,9 +9,11 @@
 > OJO del owner sobre T5+T6. Carril IDIOMA VISUAL: T1 normas
 > (`#292`), T2 cinta C3 (`#293`) y T3 zonas/atracciones (`#295`) en el árbol.**
 > ❗ **SI ENTRAS NUEVO A MIXTOS: `specs/cumple-mixto.md` §18 (visión) → §21 (sello) → §22 (completo son
-> dos preguntas) → §23 (la T3) → §20 + §24 (la T4: el descuento espejo) → **§25 (la T5: las
-> palabras)**. Diseño fino antes de código y preguntas numeradas al owner: es el método que las
-> seis tandas han seguido.**
+> dos preguntas) → §23 (la T3) → §20 + §24 (la T4: el descuento espejo) → §25 (la T5: las
+> palabras) → **§26 (la T6: el guardián en el dominio)**. Diseño fino antes de código y preguntas
+> numeradas al owner: es el método que las seis tandas han seguido. ▶ **La retoma de este carril
+> ya NO es una tanda**: es el OJO del owner sobre T5+T6, y las piezas aparcadas por diseño (la
+> fase 3 de §20.2 · el AFORO · la ficha del fantasma de la señal en `DEUDA.md`).**
 > ⚠️ **Entorno, 2026-08-31**: el `php artisan serve` del contenedor amaneció muerto (SIGTERM 14:29) y a
 > las 16:3x el demonio de Docker Desktop dejó de responder (500 en su API; se recuperó reiniciándolo
 > desde Windows). Ninguna de las dos es del repo; si el `curl` del arranque da `000`, mira primero
@@ -23,7 +25,9 @@
 > ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1–T6 hechas: el plan de `#284`, COMPLETO) ═══════════
 > ❗❗❗ **2026-09-01 · T6 · EL GUARDIÁN DE SOLAPES EN EL DOMINIO, EN EL ÁRBOL** (`#299`,
 > `specs/cumple-mixto.md` **§26** diseño fino · **§26.5 ejecución**).
-> Suite **3704 en verde** (24.120 aserciones, 1 skipped a propósito) · **2/2 mutaciones muerden** (sin el hook de
+> Suite **3704 en verde** (24.120 aserciones, 1 skipped a propósito) · **`audit-clock` verde en
+> las 12 fronteras al cierre** (incluida la del 05-09, la fecha que habría volteado los tests
+> viejos de `MePrivacyTest` que la D8 pasó a relativas) · **2/2 mutaciones muerden** (sin el hook de
 > `saving`: 4 rojos; sin el dirty-check: cae el solape preexistente) · el verificador mixto en
 > verde en sus DOS escenarios con el guardián activo. ▶ El hueco **G** de `#284`: el guardián
 > vivía SOLO en el form del catálogo — ahora `TicketType::overlappingAgeSibling()` es la verdad
