@@ -143,12 +143,25 @@ class MixedPartyParkSurfacesTest extends TestCase
         ])->render();
     }
 
+    private function renderedSlipWithPrices(OrderItem $item): string
+    {
+        return view('pdf.reservation-slip', [
+            'slip' => ReservationSlip::make($item->order, $item),
+            'showPrices' => true,
+        ])->render();
+    }
+
     // ─── A · La hoja de sala ─────────────────────────────────────────────────────
 
-    public function test_the_slip_prints_the_written_lines_and_the_total(): void
+    /**
+     * T5 adenda 3 (`[DECIDIDO owner, 2026-08-31]`, `cumple-mixto.md` §25.10 — REVISA la decisión
+     * de la T3 que ponía el dinero mixto en la operativa «a sabiendas»): los IMPORTES viven solo
+     * en la hoja CON precios.
+     */
+    public function test_the_priced_slip_prints_the_written_lines_and_the_total(): void
     {
         // 2 invitados de Jump sobre Kids: 2 × 7,00 € = 14,00 € escritos.
-        $html = $this->renderedSlip($this->party([4, 8, 9]));
+        $html = $this->renderedSlipWithPrices($this->party([4, 8, 9]));
 
         $this->assertStringContainsString(__('admin.orders.slip.mixed_party_heading'), $html);
         $this->assertStringContainsString(
@@ -157,6 +170,28 @@ class MixedPartyParkSurfacesTest extends TestCase
         );
         // El total con su «se cobra en el parque» — la clave `applied` lo lleva dentro.
         $this->assertStringContainsString(
+            __('admin.orders.mixed_party.applied', ['amount' => ReservationSlip::money(1400)]),
+            $html,
+        );
+    }
+
+    /**
+     * La hoja OPERATIVA lleva los HECHOS de la mezcla y NI UN EURO (T5 adenda 3): la sala sabe
+     * quiénes corresponden a otro pack, pero el dinero es de la hoja con precios y de la ficha.
+     * Mutación: devolver el bloque con importes a la rama sin precios del partial.
+     */
+    public function test_the_operational_slip_tells_the_facts_without_a_single_euro(): void
+    {
+        $html = $this->renderedSlip($this->party([4, 8, 9]));
+
+        $this->assertStringContainsString(__('admin.orders.slip.mixed_party_heading'), $html);
+        $this->assertStringContainsString(
+            __('admin.orders.slip.mixed_party_fact_line', ['count' => 2, 'name' => 'Cumpleaños Jump']),
+            $html,
+        );
+        $this->assertStringNotContainsString('7,00', $html, 'la unidad del suplemento no puede salir en la operativa');
+        $this->assertStringNotContainsString('14,00', $html, 'el total del suplemento no puede salir en la operativa');
+        $this->assertStringNotContainsString(
             __('admin.orders.mixed_party.applied', ['amount' => ReservationSlip::money(1400)]),
             $html,
         );
@@ -173,12 +208,12 @@ class MixedPartyParkSurfacesTest extends TestCase
         );
     }
 
-    public function test_the_slip_shows_the_cheap_case_as_money_in_favour(): void
+    public function test_the_priced_slip_shows_the_cheap_case_as_money_in_favour(): void
     {
         // Invitado de 3 años en una fiesta Jump pagada 100 % online: el descuento no tiene puerta
-        // que lo absorba (T4, §20.4) → no se escribe y la hoja dice el «a tu favor», que es lo que
-        // el operador liquida en mano (§20.5).
-        $html = $this->renderedSlip($this->jumpParty([8, 3]));
+        // que lo absorba (T4, §20.4) → no se escribe y la hoja CON precios dice el «a tu favor»,
+        // que es lo que el operador liquida en mano (§20.5).
+        $html = $this->renderedSlipWithPrices($this->jumpParty([8, 3]));
 
         $this->assertStringContainsString(
             __('admin.orders.mixed_party.in_favour', ['amount' => ReservationSlip::money(700)]),
@@ -186,6 +221,15 @@ class MixedPartyParkSurfacesTest extends TestCase
         );
         // Y NO imprime un total aplicado: no hay nada escrito que cobrar.
         $this->assertStringNotContainsString(__('admin.orders.mixed_party.applied', ['amount' => ReservationSlip::money(0)]), $html);
+    }
+
+    /** En la operativa, el mismo caso es un AVISO sin cifra: hay que liquidar, el cuánto está en la de precios. */
+    public function test_the_operational_slip_flags_the_in_favour_without_the_amount(): void
+    {
+        $html = $this->renderedSlip($this->jumpParty([8, 3]));
+
+        $this->assertStringContainsString(__('admin.orders.slip.mixed_party_in_favour_fact'), $html);
+        $this->assertStringNotContainsString('7,00', $html, 'el importe a favor no puede salir en la operativa');
     }
 
     public function test_without_a_mix_the_slip_has_no_block(): void

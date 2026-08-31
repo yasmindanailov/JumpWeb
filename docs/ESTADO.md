@@ -22,8 +22,8 @@
 > ❗❗❗ **2026-08-31 (noche, 2.ª sesión) · T5 · LAS PALABRAS, EN EL ÁRBOL** (`#298`,
 > `specs/cumple-mixto.md` **§25** diseño fino · **§25.10 ejecución** · §25.9 las TRES decisiones
 > del owner: «Liquidado en el parque» · la puerta de D8 en las TRES vías · el correo del manual
-> entra). Suite **3694 en verde** (24.102 aserciones, 1 skipped a propósito; las +2 son las
-> guardas N y O de las adendas) · JS **878** ·
+> entra). Suite **3696 en verde** (24.109 aserciones, 1 skipped a propósito; el delta sobre el
+> cierre de la T5 son las guardas N, O y P de las adendas) · JS **878** ·
 > **10/10 mutaciones muerden, vistas en rojo una a una** · sonda `/root/e2e/t5.js` 10/10 ✓
 > (4 capturas, las dos críticas miradas). ▶ **D9**: las TRES claves que decían «Pagado en el
 > parque» dicen «Liquidado…» (es/en/fr/zh_CN); `paid_desk` intacta (cobro REGISTRADO);
@@ -59,7 +59,11 @@
 > en rojo); el correo nuevo de la reducción, verificado en vivo en Mailpit. ▶ Y su SEGUNDO
 > hallazgo: el historial decía «Cambió: cantidad» SIN los números (la forma que `#145` dejó fuera,
 > con `from/to_quantity` guardados desde siempre) → `[DECIDIDO owner]` entra «Cantidad: 4 → 2»
-> (guarda O, vista en rojo y mirada en vivo). `T5-PRB01` queda en la
+> (guarda O, vista en rojo y mirada en vivo). ▶ Y su TERCER hallazgo, con la hoja en papel: el
+> bloque mixto con importes salía en la hoja SIN precios — no era despiste (la T3 lo decidió «a
+> sabiendas», §23.2, por su hueco E), pero visto en papel `[DECIDIDO owner]` lo REVISA: **la
+> operativa lleva los HECHOS y ni un euro; los importes, solo en «Con precios y desglose»**
+> (guarda P vista en rojo; la corrección escrita DENTRO de §23.2). `T5-PRB01` queda en la
 > BD local (2 plazas de la franja real del 17-09). **Queda el OJO del owner;
 > lo siguiente es la T6** (el guardián de solapes fuera del formulario; la fase 3 de §20.2
 > despierta a §16; el AFORO sigue aparcado por el owner).

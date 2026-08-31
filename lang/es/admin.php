@@ -463,6 +463,10 @@ return [
             // Fiesta MIXTA (T3 · E): la cabecera del bloque; las líneas y avisos reutilizan
             // `admin.orders.mixed_party.*` para que la hoja y la ficha no puedan divergir.
             'mixed_party_heading' => 'Fiesta mixta',
+            // T5 adenda 3 (`[DECIDIDO owner]`): la hoja OPERATIVA lleva los HECHOS de la mezcla y
+            // ni un euro — los importes, solo en «Con precios y desglose».
+            'mixed_party_fact_line' => ':count × :name',
+            'mixed_party_in_favour_fact' => 'Hay un importe a favor del cliente que se liquida en el parque el día de la fiesta (el importe, en la hoja con precios).',
         ],
 
         // Datos del evento por item (#86, sub-fase 7.2a).

@@ -424,6 +424,8 @@ return [
             'cancelled_notice' => '预订已取消',
             // 混龄派对（T3 · E）：区块标题；行与提示复用 `admin.orders.mixed_party.*`。
             'mixed_party_heading' => '混龄派对',
+            'mixed_party_fact_line' => ':count × :name',
+            'mixed_party_in_favour_fact' => '有一笔应退给客户的金额,将于派对当天在园区结算(金额见含价格版预订单)。',
         ],
 
         // Datos del evento por item (#86, sub-fase 7.2a).

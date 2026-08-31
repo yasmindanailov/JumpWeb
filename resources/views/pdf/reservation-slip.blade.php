@@ -334,28 +334,43 @@
     {{-- Fiesta MIXTA (T3 · E, `specs/cumple-mixto.md` §23.2): lo ESCRITO del suplemento — la
          diferencia por cabeza que el operador hacía de memoria con el cliente delante. Se imprime
          lo escrito y NUNCA el veredicto derivado: es lo que se cobra (`PAY-19`); del veredicto solo
-         salen el caso barato y las edades sin producto, que el dinero no dice. ⚠️ Va en la hoja
-         OPERATIVA a sabiendas de que ésta no lleva precios (decisión 2026-06-14): la visión del
-         owner (§18.4·E) exige que la sala vea esta diferencia, y §23 lo decide así. --}}
+         salen el caso barato y las edades sin producto, que el dinero no dice.
+         ⚠️⚠️ REVISADO en la T5 (`[DECIDIDO owner, 2026-08-31]`, §25.10 adenda 3, y CORRIGE la
+         decisión de la T3 que aquí decía «va en la hoja operativa a sabiendas»): la hoja OPERATIVA
+         lleva los HECHOS de la mezcla y NI UN EURO — la sala sabe que hay tema mixto y quién
+         corresponde a qué pack; los importes viven solo en «Con precios y desglose». --}}
     @php $mixedParty = $slip->mixedParty(); @endphp
     @if ($mixedParty !== null)
         <div class="sec">
             <div class="sec-title">{{ __('admin.orders.slip.mixed_party_heading') }}</div>
-            @foreach ($mixedParty['lines'] as $line)
-                <div class="mixed-line">{{ __('admin.orders.mixed_party.line', ['count' => $line['count'], 'name' => $line['name'], 'unit' => $fmt($line['unit'])]) }}</div>
-            @endforeach
-            @if ($mixedParty['creditLabel'] !== null)
-                {{-- T4 (§24.5): el DESCUENTO escrito, con la frase compuesta por el dominio. --}}
-                <div class="mixed-line">{{ $mixedParty['creditLabel'] }}: −{{ $fmt($mixedParty['creditCents']) }}</div>
-            @endif
-            @if ($mixedParty['chargeCents'] > 0 && $mixedParty['creditCents'] > 0)
-                <div class="mixed-total">{{ __('admin.orders.mixed_party.net', ['amount' => ($mixedParty['netCents'] < 0 ? '−' : '+').$fmt(abs($mixedParty['netCents']))]) }}</div>
-            @elseif ($mixedParty['chargeCents'] > 0)
-                <div class="mixed-total">{{ __('admin.orders.mixed_party.applied', ['amount' => $fmt($mixedParty['chargeCents'])]) }}</div>
-            @endif
-            @if ($mixedParty['inFavourCents'] > 0)
-                {{-- El EXCESO a favor del cliente (§20.4): el operador lo liquida en mano (§20.5). --}}
-                <div class="mixed-note">{{ __('admin.orders.mixed_party.in_favour', ['amount' => $fmt($mixedParty['inFavourCents'])]) }}</div>
+            @if ($showPrices)
+                @foreach ($mixedParty['lines'] as $line)
+                    <div class="mixed-line">{{ __('admin.orders.mixed_party.line', ['count' => $line['count'], 'name' => $line['name'], 'unit' => $fmt($line['unit'])]) }}</div>
+                @endforeach
+                @if ($mixedParty['creditLabel'] !== null)
+                    {{-- T4 (§24.5): el DESCUENTO escrito, con la frase compuesta por el dominio. --}}
+                    <div class="mixed-line">{{ $mixedParty['creditLabel'] }}: −{{ $fmt($mixedParty['creditCents']) }}</div>
+                @endif
+                @if ($mixedParty['chargeCents'] > 0 && $mixedParty['creditCents'] > 0)
+                    <div class="mixed-total">{{ __('admin.orders.mixed_party.net', ['amount' => ($mixedParty['netCents'] < 0 ? '−' : '+').$fmt(abs($mixedParty['netCents']))]) }}</div>
+                @elseif ($mixedParty['chargeCents'] > 0)
+                    <div class="mixed-total">{{ __('admin.orders.mixed_party.applied', ['amount' => $fmt($mixedParty['chargeCents'])]) }}</div>
+                @endif
+                @if ($mixedParty['inFavourCents'] > 0)
+                    {{-- El EXCESO a favor del cliente (§20.4): el operador lo liquida en mano (§20.5). --}}
+                    <div class="mixed-note">{{ __('admin.orders.mixed_party.in_favour', ['amount' => $fmt($mixedParty['inFavourCents'])]) }}</div>
+                @endif
+            @else
+                @foreach ($mixedParty['lines'] as $line)
+                    <div class="mixed-line">{{ __('admin.orders.slip.mixed_party_fact_line', ['count' => $line['count'], 'name' => $line['name']]) }}</div>
+                @endforeach
+                @if ($mixedParty['creditLabel'] !== null)
+                    {{-- La frase del descuento SIN su importe: nombra a quiénes y hacia qué pack. --}}
+                    <div class="mixed-line">{{ $mixedParty['creditLabel'] }}</div>
+                @endif
+                @if ($mixedParty['inFavourCents'] > 0)
+                    <div class="mixed-note">{{ __('admin.orders.slip.mixed_party_in_favour_fact') }}</div>
+                @endif
             @endif
             @if ($mixedParty['withoutProduct'] > 0)
                 <div class="mixed-note">{{ __('admin.orders.mixed_party.out_of_range', ['count' => $mixedParty['withoutProduct']]) }}</div>

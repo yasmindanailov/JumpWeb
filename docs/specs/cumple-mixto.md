@@ -1982,6 +1982,13 @@ Queda en `DEUDA` que la app no recibe la explicación del caso (la API está fue
 
 ### 23.2 · E · Dónde se ve y de dónde sale (medido)
 
+> ⚠️⚠️ **REVISADO en la T5, adenda 3 (`[DECIDIDO owner, 2026-08-31]`, §25.10)**: la decisión de
+> esta tabla —el bloque con IMPORTES también en la hoja OPERATIVA, «a sabiendas de que no lleva
+> precios»— quedó corregida al verla el owner en papel: **la operativa lleva los HECHOS de la
+> mezcla (quién corresponde a qué pack, edades sin producto, y el aviso de que hay un a-favor que
+> liquidar) y NI UN EURO; los importes viven solo en «Con precios y desglose»**. Guarda P de
+> §25.8. La fila de la PUERTA no cambia.
+
 | Superficie | Hoy | Con la T3 |
 |---|---|---|
 | Hoja de sala (`ReservationSlip` + `pdf/reservation-slip.blade.php`) | imprime las columnas por niño —la edad ya sale— y los complementos; nada del suplemento | bloque «Fiesta mixta» tras la tabla de invitados: las líneas ESCRITAS (`MixedPartySurcharge::written()['lines']`), el total y «se cobra en el parque»; si no hay cargo y la fiesta saldría más barata, el aviso de §14; si hay edades sin producto, cuántas. Sin mezcla, el bloque no existe |
@@ -2588,6 +2595,7 @@ siempre.
 | M | Las líneas ↳ de puerta del panel con signo: la del descuento sale «−4,00 €» y NUNCA «+-4,00 €»; un cargo conserva su «+» | restaurar el `+` clavado |
 | N | La CARD del producto pinta «Pendiente de devolución» con «−», acotado al PARTIAL (`#295`: la página entera no distingue — el bloque del pedido ya pinta el suyo) | quitar el «−» de la card |
 | O | El historial del pedido pinta «Cantidad: :from → :to» en una edición de cantidad (la forma que `#145` dejó fuera), renderizando el partial REAL | quitar el bloque `hasQtyMove` |
+| P | La hoja OPERATIVA cuenta los hechos de la mezcla SIN un solo euro (líneas `:count × :name`, la frase del descuento sin cifra, el aviso del a-favor sin cifra); los importes solo con `showPrices` | devolver el dinero a la rama sin precios |
 
 ### 25.9 · Lo que decide el owner — ✅ `[DECIDIDO owner, 2026-08-31]` las tres
 
@@ -2692,6 +2700,17 @@ mismo. ⚠️ Residuos asumidos: `T5-PRB01` queda en la BD local (con `T0-PRB*`/
 plazas de la franja real del 17-09 12:00), un correo más en Mailpit, y su entrada de historial
 dice «por usuario desconocido» (la bajada se lanzó desde tinker, sin sesión — desde el panel real
 el actor queda registrado, aseverado por los tests).
+
+▶ **Adenda 3 — la hoja operativa, al ver el owner el dinero en papel**: preguntó por qué el
+bloque mixto (importes y «a favor» incluidos) salía en la hoja SIN precios. No era un despiste:
+la T3 lo decidió «a sabiendas» (§23.2) para cerrar su hueco E — pero visto en papel,
+`[DECIDIDO owner]` **la operativa lleva los HECHOS y ni un euro** (líneas «:count × :name», la
+frase del descuento sin cifra, el aviso de que hay un a-favor que se liquida — con el importe en
+la hoja de precios) y **los importes viven solo en «Con precios y desglose»**. Es la TERCERA
+revisión que sale de mirar el producto con el dato real delante, y corrige una decisión propia
+de la T3 — la corrección va escrita DENTRO de §23.2, antes del texto que corrige. Guarda P vista
+en rojo; los dos PDF de `T4-PRB01` generados en vivo (la operativa queda para el OJO en
+`08-hoja-operativa.pdf`).
 
 **Lo que queda del plan** (§18.5): **T6** (el guardián de solapes fuera del formulario) · la
 **fase 3** de §20.2 despierta a §16 · el **AFORO** sigue aparcado por el owner. **De esta tanda

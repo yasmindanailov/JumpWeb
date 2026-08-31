@@ -17303,3 +17303,13 @@ sí decía «Cantidad: 4 → 2». `[DECIDIDO owner]`: la forma entra — «Canti
 la diferencia (guarda O de §25.8, vista en rojo; verificada en vivo con captura). La regla que
 dejan los dos hallazgos de la sonda B: **el «−X €» marca líneas de DINERO; el HECHO que las causa
 es historia y vive en el historial** — ahora los dos cuentan lo mismo.
+
+**Adenda 3 (misma noche, el owner con la hoja en papel)**: «el a-favor sale aunque no haya pedido
+el PDF con el desglose». No era un despiste: la T3 puso el bloque mixto con importes en la hoja
+OPERATIVA «a sabiendas» (§23.2, su hueco E — que la sala vea la diferencia). Visto en papel,
+`[DECIDIDO owner]` lo REVISA: **la operativa lleva los HECHOS de la mezcla y ni un euro** —
+«:count × :name», la frase del descuento sin cifra y el aviso de que hay un a-favor que liquidar
+(el importe, en la hoja con precios) — y **los importes viven solo en «Con precios y desglose»**.
+La corrección va escrita DENTRO de §23.2, delante del texto que corrige; guarda P de §25.8 vista
+en rojo (devolver el dinero a la rama sin precios rompe dos casos). La puerta y la ficha no
+cambian.
