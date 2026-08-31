@@ -12,7 +12,8 @@
 > ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1 y T2 hechas → sigue la T3) ═══════════
 > ❗❗❗ **2026-08-31 (tarde-noche) · T2 · UNA EDAD SIN PRODUCTO + EL DINERO SOLO AL GUARDAR
 > COMPLETO, EN EL ÁRBOL** (`#289`, `specs/cumple-mixto.md` §22 diseño · §22.9 ejecución).
-> Suite **3629 en verde** (23.584 aserciones, 1 skipped a propósito) · **7/7 mutaciones muerden** ·
+> Suite **3634 en verde** (23.618 aserciones, 1 skipped a propósito) — **cifra del árbol CONJUNTO**,
+> tras rebasar `#290` (el sistema de etiquetas) encima de la T1/T2 de mixtos · **7/7 mutaciones muerden** ·
 > `mixed-party:verify-concurrency` en verde · sonda headless (2 capturas en `/root/e2e/t2-capturas/`).
 > ▶ «Completo» son DOS preguntas (dinero: todas las edades declaradas · formulario: además ninguna
 > edad sin producto). ⚠️⚠️ **La puerta vive en `reconcile()` y vale también para el panel**
@@ -47,6 +48,25 @@
 > entorno por eso.
 >
 > ═══════════ CARRIL 2 · TEMA / FACHADA (`#286` · `#287`) ═══════════
+>
+> ❗❗❗ **EL CARRIL DEL TEMA CAMBIA DE ENCARGO** (`#290`, y es lo primero que hay que saber): el
+> owner no quiere que se añada decoración, quiere que se **CAMBIE lo heredado** — *«las secciones y
+> los elementos de diseño que tienen son del cliente antiguo… primero hay que cambiar lo que
+> tenemos»*. Spec propia con el inventario y las tandas: **`specs/idioma-visual-heredado.md`**.
+> ▶ Eso **ACOTA la regla de `#286` sin anularla**: aquélla es para DECORACIÓN AÑADIDA. Un badge, un
+> separador o una cinta son **componentes funcionales** y se repiten porque los datos se repiten;
+> confundir las dos cosas paraliza el carril.
+> ▶ **Tanda A hecha**: el **sistema de etiquetas** (no había ninguno — cinco formas, cinco paddings,
+> cinco tallas y **cuatro rotaciones** para la misma función) y **`.jj-block` fuera**, el «foam» del
+> cliente antiguo, con sus iniciales en el nombre de la clase.
+> ⚠️⚠️ **Sus DOS artboards visten los badges distinto y entran los DOS** (`[DECIDIDO owner]`, elegido
+> sobre las tres renderizadas): **SEÑAL** → `E2` del mural · **DATO** → el mono fino de su landing.
+> ⚠️ **Quedan**: la marquesina de `/servicios` → cinta `C3` · los cubos 1-2-3 del cumple · la nota de
+> calcetines · la galería de polaroids · y **el SPA**, que el owner quiere iterar con **cambio de
+> presentación del catálogo**, no solo de traje.
+> ⚠️⚠️ **Lección de método de la jornada**: un script de edición murió en su primera aserción y las
+> dos ediciones de CSS siguientes **no se aplicaron**. La suite salió VERDE y la pieza no estaba en la
+> página. *Verde no es «el cambio está puesto»*; lo destapó la captura.
 >
 > ❗❗❗ **POR DÓNDE SE RETOMA EL TEMA, HOY** (esto sustituye al punto 1-5 de abajo en lo que cambia):
 > **1 · `[DECIDIDO owner, 2026-08-31]`: NO se coloca material nuevo** hasta que él vuelva a mirar el
@@ -2189,9 +2209,11 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3605 en verde** (23.425 aserciones, 1 skipped a propósito) · **JS 877**, medida el
-  2026-08-31 tras `#287` (el saneo de la primera pasada de fachada). ▶ **+12 casos**: la guarda de
-  huérfanas de fachada (6), la de decoración por pantalla (5) y el caso del kit sin ese dibujo (1).
+- **JS 877.** ⚠️ El contador de la suite es el de arriba y **es el único**: el `pre-push` lee la
+  PRIMERA línea «Suite **N en verde**» de este documento, así que una segunda copia aquí abajo no es
+  redundancia, es una mentira que el gate no ve. ▶ Lo que puso el carril del tema el 2026-08-31:
+  **+17 casos** —la guarda de huérfanas de fachada (6), la de decoración por pantalla (5), el caso
+  del kit sin ese dibujo (1) y `TagSystemTest` (5, el trinquete contra la erosión de las etiquetas)—.
   ▶ Antes, `#286` sobre el árbol CONJUNTO, tras rebasar el hueco de ilustración encima de
   `#282`–`#285` del carril de mixtos: **3593 · 23.394**, con **+46 casos** en dos ficheros:
   `IllustrationKitTest` (el contrato del kit: seguridad, atributos de presentación en raíz **y en

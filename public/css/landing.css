@@ -1023,12 +1023,23 @@ img { display: block; max-width: 100%; }
   flex-shrink: 0;
   vertical-align: middle;
 }
-.jj-block--xs { width: 9px;  height: 9px;  border-radius: 2px;   transform: rotate(22deg); }
-.jj-block--sm { width: 14px; height: 14px; border-radius: 3.5px; transform: rotate(22deg); }
-.jj-block--md { width: 22px; height: 22px; border-radius: 5px;   transform: rotate(15deg); }
-.jj-block--lg { width: 36px; height: 36px; border-radius: var(--r-sm);   transform: rotate(14deg); }
-.jj-block--inv { background: var(--fg); }
-.jj-block--zone2 { background: var(--zone-2); }
+/* ⚠️⚠️ **AQUÍ VIVÍAN LAS SEIS VARIANTES DE `.jj-block` Y SE RETIRARON**
+   (`[DECIDIDO owner, 2026-08-31]`: «fuera, y separo como él»). El cuadrado «foam» es del cliente
+   ANTIGUO —**sus iniciales están en el nombre de la clase**— y de las seis solo se usaba una, el
+   separador de las cifras de zonas; las otras cinco llevaban tiempo sin pintar nada. Su artboard no
+   tiene ese motivo: separa con TIRA (`C2`), y ése es hoy el separador.
+   ⚠️ **La regla base sobrevive y no es un descuido**: la usa `BookingProgress.vue` dentro del cajón
+   (`.bk-context .jj-block`), y el SPA es otra tanda —el owner lo separó a propósito—. El nombre se
+   va con ella; renombrarlo ahora tocaría el contrato de ÁRBOL del cajón. */
+
+/* El separador entre cifras: un tramo corto de la punteada de `C2`, en pseudo-elemento.
+   ⚠️ `flex: none` es imprescindible: dentro de un contenedor flex un pseudo con `width` fija se
+   encoge igual si se le deja. */
+.zone-stats__item + .zone-stats__item::before {
+  content: ""; flex: none; align-self: center;
+  width: 48px; height: 10px; margin-inline: 4px;
+  background-image: var(--dots-tile); background-size: 16px 10px;
+}
 
 /* ---------- zones intro ---------- */
 .zones__head {
@@ -1157,13 +1168,9 @@ img { display: block; max-width: 100%; }
   pointer-events: none;
 }
 .zone-intro__top { display: flex; justify-content: space-between; align-items: start; }
+/* Misma etiqueta que la tarjeta con foto, misma forma del sistema; solo cambia dónde vive. */
 .zone-intro__tag {
-  font-family: var(--font-body); font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.12em;
-  padding: 8px 14px; background: var(--bg); border-radius: var(--r-xs);
-  color: var(--fg);
-  transform: rotate(-2deg);
-  box-shadow: none;
+  --tag-tilt: -2deg;
 }
 .zone-intro__name {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
@@ -1235,13 +1242,12 @@ img { display: block; max-width: 100%; }
   display: flex; flex-direction: column; flex: 1;
   color: var(--on-brand);
 }
+/* ⚠️ La FORMA la pone `.tag--dato` (el sistema de etiquetas). Aquí solo queda la COLOCACIÓN —
+   dónde va y cuánto se inclina—, que es del consumidor. Antes esta regla escribía su propia
+   cápsula: 11px/700 en caja alta, `--r-xs` y fondo de papel, o sea una quinta forma distinta. */
 .zone-photo-card__tag {
   align-self: flex-start;
-  font-family: var(--font-body); font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.12em;
-  padding: 7px 13px; background: var(--bg); border-radius: var(--r-xs); color: var(--fg);
-  transform: rotate(-2deg);
-  box-shadow: none;
+  --tag-tilt: -2deg;
   margin-bottom: 16px;
 }
 .zone-photo-card__name {
@@ -1514,24 +1520,25 @@ img { display: block; max-width: 100%; }
    En la card DESTACADA (fondo = color de zona) el chip usa `--on-brand` (contraste white-label WCAG,
    como el resto de textos de `.price--feat`, #232/L4), nunca blanco fijo. Ver price-card.blade.php. */
 .price__special { display: flex; flex-wrap: wrap; gap: 8px; }
+/* ⚠️ Va en el FLUJO del texto, así que NO se gira: el ángulo es de las que se pegan encima de algo.
+   Y baja de relleno a contorno — es un dato que se lee, no una señal. */
 .price__special-chip {
-  display: inline-flex; align-items: baseline; gap: 7px;
-  background: var(--bg-soft); border-radius: var(--r-pill);
-  padding: 7px 14px; font-size: 12.5px; line-height: 1.25; color: var(--fg-mute);
+  gap: 7px; line-height: 1.25; color: var(--fg-mute);
 }
-.price__special-chip b { font-family: var(--font-mono); font-weight: 600; font-size: 12.5px; color: var(--fg); white-space: nowrap; }
+/* ⚠️ El importe solo se distingue por COLOR. Antes se distinguía también por tipografía —mono
+   600 a 12,5px— dentro de una cápsula que ahora ya es mono de 10,5: eran dos tallas dentro de
+   la misma etiqueta. Lo cazó `TagSystemTest`, que es para lo que está. */
+.price__special-chip b { color: var(--fg); white-space: nowrap; }
 .price--feat .price__special-chip {
   background: color-mix(in srgb, var(--on-brand) 15%, transparent);
   color: color-mix(in srgb, var(--on-brand) 88%, transparent);
 }
 .price--feat .price__special-chip b { color: var(--on-brand); }
+/* Forma del sistema (`.tag--senal .tag--tinta`); aquí, colocación. ⚠️ Su giro era **+6°**, el más
+   fuerte de los cuatro que había: pasa al ángulo único. */
 .price__badge {
   position: absolute; top: 14px; right: 14px;
-  background: var(--fg); color: var(--bg);
-  padding: 6px 12px; border-radius: var(--r-xs);
-  font-family: var(--font-body); font-size: 10px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.14em;
-  transform: rotate(6deg);
+  --tag-tilt: -2deg;
   box-shadow: none;
 }
 /* «Cards Destacadas» — Badge hop: en la card de producto DESTACADA (`.price--feat`) la pegatina da el

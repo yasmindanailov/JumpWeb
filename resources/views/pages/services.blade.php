@@ -178,7 +178,7 @@
                                     @if ($service->image)
                                         <img class="svc-photo__img" src="{{ asset($service->image) }}" alt="{{ $service->tr('title') }}" loading="lazy">
                                     @endif
-                                    <span class="svc-photo__tag">{{ $zoneLabel }}</span>
+                                    <span class="tag tag--senal tag--punteada svc-photo__tag">{{ $zoneLabel }}</span>
                                 </div>
                             </div>
                         </div>

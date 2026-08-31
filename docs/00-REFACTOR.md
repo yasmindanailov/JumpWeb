@@ -2635,6 +2635,20 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > ⚠️ **La lista de ranuras decorativas está VACÍA a propósito**: una ranura sin consumidor es lo que
 > dejó los 19 dibujos de `#257` esperando años.
 >
+> ✅ **EL IDIOMA VISUAL HEREDADO, TANDA A** (2026-08-31, `#290`) — y **el encargo cambia de marco**:
+> `[owner]` *«primero hay que cambiar lo que tenemos»*. La landing lleva elementos del cliente ANTIGUO
+> y hay que sustituirlos, no decorar encima. Spec propia: `specs/idioma-visual-heredado.md`.
+> ⚠️⚠️ **No había sistema de etiquetas**: cinco formas, cinco paddings, cinco tallas y cuatro
+> rotaciones para la misma función. Ahora es UNO, con dos registros repartidos por lo que el badge
+> HACE —**SEÑAL** (E2 del mural) y **DATO** (el mono fino de su landing)—, porque **sus dos artboards
+> las visten distinto** y `[DECIDIDO owner]` entran los dos.
+> ▶ **`.jj-block` fuera**: el «foam» del cliente antiguo, con **sus iniciales en el nombre de la
+> clase** y cinco de seis variantes sin usar. Separa la punteada de `C2`.
+> ⚠️⚠️ **La guarda de `#287` cazó a quien la escribió**: el separador nuevo repetía una textura por
+> fila. *Un separador es puntuación, y la puntuación la pinta el CSS.*
+> ⚠️ **`TagSystemTest` vigila la EROSIÓN** —el «pelín más de padding»— y ya cazó dos tallas dentro de
+> la misma etiqueta.
+>
 > ✅ **Y ESA PRIMERA PASADA, SANEADA** (2026-08-31, `#287`) — sesión sin material nuevo
 > (`[DECIDIDO owner]`). Tres defectos que la suite no veía, los tres medidos en navegador:
 > ▶ **`<x-site.ilu>` emitía un `<svg>` VACÍO** cuando el kit no traía ese dibujo —solo preguntaba por

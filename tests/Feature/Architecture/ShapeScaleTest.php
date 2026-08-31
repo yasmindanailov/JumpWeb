@@ -56,9 +56,9 @@ class ShapeScaleTest extends TestCase
      * entre uno nuevo hay que poder justificar que es un motivo y no un contenedor.
      */
     private const SQUARE_MOTIF = [
-        '.jj-block--xs' => [9, 2.0],
-        '.jj-block--sm' => [14, 3.5],
-        '.jj-block--md' => [22, 5.0],
+        // ⚠️ `.jj-block--xs/--sm/--md` vivían aquí y SE RETIRARON el 2026-08-31: el motivo «foam»
+        // es del cliente ANTIGUO —sus iniciales dan nombre a la clase— y el owner lo sacó de la
+        // landing. Queda solo el uso del cajón, que es otra tanda.
         '.bk-context .jj-block' => [11, 3.0],
         '.offw-burst .spark' => [9, 2.0],
         '.svc-marquee__item::after' => [13, 3.5],

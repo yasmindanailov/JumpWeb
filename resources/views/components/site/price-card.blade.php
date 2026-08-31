@@ -4,7 +4,7 @@
      pegada, MISMO estilo/texto que el «POR NIÑO» de la card de pack. Sin «desde» (el chip ya explica
      el recargo). Tarifa(s) especial(es) → chip «Suplemento +X€» debajo. Ver specialRateSurcharges(). --}}
 <div class="price {{ $ticket->featured ? 'price--feat' : '' }}">
-    @if ($ticket->tr('badge'))<span class="price__badge">{{ $ticket->tr('badge') }}</span>@endif
+    @if ($ticket->tr('badge'))<span class="tag tag--senal tag--tinta price__badge">{{ $ticket->tr('badge') }}</span>@endif
     <span class="price__name">{{ $ticket->tr('name') }}</span>
     <div class="price__num">{{ $ticket->euros() }}<span class="cents">,{{ $ticket->cents() }}</span><span class="eur">€</span><span class="price__per">{{ $ticket->tr('period_label') }}</span></div>
     <x-site.special-rate-chips :product="$ticket" />

@@ -16788,3 +16788,62 @@ formulario dice «faltan 1 edades: el suplemento no se recalculará…» y el ca
 un bebé de 0 años, «Una edad sin producto» con el texto del caso y el teléfono, la ficha marcada
 «Sin producto para esta edad» y el progreso en 7/8. Ni una fila nueva de auditoría: ninguno de los
 dos guardados movió dinero, que es la regla. Queda el OJO del owner.
+## #290 · 2026-08-31 · El idioma visual heredado, tanda A: el SISTEMA DE ETIQUETAS y el «foam» del cliente antiguo fuera
+
+**El encargo cambia de marco, y lo cambió el owner.** *«Más bien de "añadir cosas nuevas" de diseño,
+quiero "cambiar las que tengo"… las secciones y los elementos de diseño que tienen son del cliente
+antiguo… Pondremos nuevos elementos de manera sutil, pero primero hay que cambiar lo que tenemos.»*
+▶ Eso **no anula la regla de `#286`** —*la decoración va en la PANTALLA, no en el componente que se
+repite*—: la acota. Aquella regla es para DECORACIÓN AÑADIDA; un badge o un separador son
+**componentes funcionales** y se repiten porque los datos se repiten. Spec propia:
+**`specs/idioma-visual-heredado.md`**, con el inventario completo y las tandas que quedan.
+
+**⚠️⚠️ Lo primero que se midió: NO HABÍA SISTEMA DE ETIQUETAS.** La misma función se resolvía con
+**cinco formas** —radios `--r-xs`, `--r-pill` y `--r-md`; paddings 3/8 · 6/12 · 7/13 · 7/14 · 8/14;
+tallas 10 · 10,5 · 11 · 12,5 · 13— y **cuatro rotaciones** (−2°, −5°, +5°, +6°). Es el hallazgo de
+`#196` con las sombras otra vez: *no era una escala con ruido, es que no había ninguna.*
+
+**⚠️⚠️ Y DOS ARTBOARDS SUYOS VISTEN ESTO DISTINTO.** `Elementos Fachada` **E2** dice cápsula llena
+13px/700, punteada de 2px y tinta; `Landing PJP Modos` —su portada definitiva— usa `1.5px solid
+currentColor` y **mono 10,5/400**. ▶ `[DECIDIDO owner]`, **eligiendo sobre las tres renderizadas con
+nuestros tokens**: entran **las dos**, repartidas por lo que el badge HACE — **SEÑAL** (marca zona,
+avisa sobre una foto, destaca) va en E2; **DATO** (una edad, un suplemento) va en el registro fino.
+*Su contradicción no se resuelve eligiendo un ganador: se resuelve diciendo para qué sirve cada uno.*
+
+**El badge de atracción deja de ir relleno del color de zona**, y el motivo es medido: sobre una foto
+la punteada es **la única de las tres que se lee sin poner un rectángulo de color delante**. Encaja
+con la regla del propio mural: *la pintura no tapa*.
+
+**El giro: UNO** (`[DECIDIDO owner]`, −2°) y solo en las que se pegan encima de algo — una etiqueta en
+el flujo del texto no se gira. Medido en su landing: sus giros son −2°/−3° y son pocos.
+
+**`.jj-block` fuera** (`[DECIDIDO owner]`: «fuera, y separo como él»). El cuadrado «foam» es del
+cliente ANTIGUO —**sus iniciales dan nombre a la clase**— y de sus **seis** variantes **solo se usaba
+una**. Su artboard no tiene ese motivo: separa con tira. ⚠️ Sobrevive el uso del cajón
+(`BookingProgress.vue`), porque el SPA es otra tanda y renombrar tocaría su contrato de ÁRBOL.
+
+**⚠️⚠️ Y AQUÍ LA GUARDA DE ESTA MAÑANA ME CAZÓ A MÍ.** El separador nuevo era un
+`<span class="brand-dots">` por hueco, **dentro del `@foreach`**: `FacadeDecorationIsPerScreenTest`
+lo puso rojo, con razón. ▶ *Un separador es PUNTUACIÓN, y la puntuación la pinta el CSS* — pasa a
+`.zone-stats__item + .zone-stats__item::before`, y el patrón entra como **token** (`--dots-tile`), así
+que sigue disponible para la tira completa sin quedarse huérfano hoy. **Una guarda que solo caza a
+otros no está probada; ésta ya ha cazado a quien la escribió.**
+
+**El trinquete**: `TagSystemTest` (5 casos, **5 mutaciones muerden**). El caso que importa es el de
+EROSIÓN: *un sistema de etiquetas no se rompe de golpe, se rompe cuando la siguiente tarjeta necesita
+«un pelín más de padding» y se lo escribe en su regla.* ▶ Ya cazó una: el `<b>` del chip de suplemento
+seguía en mono **600 a 12,5 px** dentro de una cápsula que ya es mono de 10,5 — dos tallas dentro de
+la misma etiqueta, y no lo veía nadie.
+
+**⚠️ Consecuencia visible que conviene decir**: el registro SEÑAL **no fuerza mayúsculas**, porque el
+texto lo escribe el PANEL. Donde el panel tiene «Top» ahora se lee «Top» y no «TOP». Revertirlo es una
+línea, pero entonces el panel deja de mandar.
+
+**⚠️ Una lección de método, pagada hoy**: un script de edición murió en su primera aserción y **las
+dos ediciones de CSS siguientes no se aplicaron**. La suite salió **verde** —las guardas estaban
+contentas— y la pieza no estaba en la página. *Verde no es «el cambio está puesto»: eso solo lo dice
+mirar el resultado.* Lo destapó la captura, no el test.
+
+**Verificación**: suite **3610 / 23.459** · Pint ✓ · `docs-check` ✓ · **33 etiquetas convertidas** en
+tres vistas con **cero restos** de la forma vieja y **cero `jj-block`** en la landing (medido en
+Chrome real) · las cuatro conversiones vistas en navegador · 5 mutaciones sobre `TagSystemTest`.

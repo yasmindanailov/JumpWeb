@@ -613,13 +613,13 @@
 }
 /* La foto cubre el marco (5:4); el hatch del fondo queda de fallback si la imagen falta. */
 .svc-photo__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* Forma del sistema (`.tag--senal .tag--punteada`, la que se lee sobre una foto); aquí, colocación.
+   ⚠️ El color lo pone la FOTO: `currentColor` es el papel, porque va encima de la imagen. */
 .svc-photo__tag {
   position: absolute; right: 16px; top: 16px; z-index: 2;
-  font-size: 10px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.14em;
-  padding: 6px 12px; border-radius: var(--r-xs);
-  background: var(--fg); color: var(--bg); transform: rotate(5deg);
-  box-shadow: none; pointer-events: none;
+  color: var(--paper-bg, #fff);
+  --tag-tilt: -2deg;
+  pointer-events: none;
 }
 
 /* mini-ficha de specs (las condiciones rápidas, en formato tabla) */
@@ -1027,14 +1027,16 @@
 
 /* Sub-badge de atracción: diferenciador corto (XL/Mini/…) en la ficha (#4 · 2026-05-31).
    Esquina superior IZQUIERDA del viz (el badge de zona va a la derecha). */
+/* Forma del sistema (`.tag--senal .tag--punteada`); aquí, colocación.
+   ⚠️⚠️ **Deja de ir rellena del color de zona, y es una decisión con motivo**: esta etiqueta vive
+   ENCIMA de la foto de la atracción, y una cápsula rellena de color compite con la imagen — que es
+   justo lo que su regla del mural evita («la pintura no tapa»). La punteada se lee sobre cualquier
+   textura sin poner un rectángulo de color delante. El color de zona sigue mandando en la tarjeta.
+   ⚠️ Su giro era el segundo más fuerte (−5°): pasa al ángulo único. */
 .ride-card__badge {
   position: absolute; left: 14px; top: 14px; z-index: 2;
-  padding: 6px 12px; border-radius: var(--r-xs);
-  background: var(--zone-1); color: var(--on-brand);
-  font-family: var(--font-body); font-weight: 700; font-size: 11px;
-  text-transform: uppercase; letter-spacing: 0.04em;
-  transform: rotate(-5deg);
-  box-shadow: none;
+  color: var(--paper-bg, #fff);
+  --tag-tilt: -2deg;
 }
 
 /* ── Normas: 2 columnas (imagen + slider vertical de cards) (#10 · 2026-05-31) ── */
@@ -6172,6 +6174,60 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
    regla de aquí pueda tocarlos. */
 .ilu--troquel > rect { fill: var(--ilu-fg, var(--paper-fg)); }
 
+/* ══ EL SISTEMA DE ETIQUETAS ═══════════════════════════════════════════════════════════════════
+   Antes de esto NO HABÍA SISTEMA, y está medido: cinco formas distintas para la misma función
+   —radios `--r-xs`, `--r-pill` y `--r-md`, paddings 3/8 · 6/12 · 7/13 · 7/14 · 8/14, tallas 10 ·
+   10,5 · 11 · 12,5 · 13 y **cuatro rotaciones** (−2°, −5°, +5°, +6°)—. Es el mismo hallazgo que
+   `#196` con las sombras: no era una escala con ruido, es que no había ninguna.
+
+   ⚠️⚠️ **DOS artboards del cliente visten esto de forma DISTINTA, y las dos formas entran**
+   (`[DECIDIDO owner, 2026-08-31]`, elegido mirando las tres renderizadas con nuestros tokens):
+     · `Elementos Fachada` **E2** —el kit del mural— es contundente: cápsula llena 13px/700,
+       punteada de 2px para condiciones, tinta para normas.
+     · `Landing PJP Modos` —su portada definitiva— es fino: `1.5px solid currentColor`, mono 10,5px.
+   ▶ El criterio que los reparte es **qué hace el badge**: si es una SEÑAL (marca una zona, avisa de
+   una condición sobre una foto, destaca una tarjeta) manda E2; si es un DATO que se lee (una edad,
+   un suplemento) manda el registro de su landing. *Su contradicción no se resuelve eligiendo un
+   ganador: se resuelve diciendo para qué sirve cada uno.*
+
+   ⚠️ **`--zona`, `--norma` y `--estado` de E2 NO se declaran aquí**, y no es un olvido: hoy no
+   tienen consumidor, y una regla sin pantalla que la pinte es lo que esta misma tanda acaba de
+   retirar (`FacadeCssHasNoOrphansTest`). Entran con su pantalla. */
+.tag {
+    display: inline-flex; align-items: center;
+    border-radius: var(--r-pill);
+    white-space: nowrap;
+    /* ⚠️ **UN solo ángulo** (`[DECIDIDO owner]`). Había cuatro, y su propia landing gira poco y
+       poco: medido, sus giros son −2°/−3°. El gesto de pegatina se conserva; el ruido, no.
+       ▶ Es PERILLA y por defecto 0: girar es COLOCACIÓN —lo decide quien pone la etiqueta encima
+       de algo—, no una propiedad de la etiqueta. Una etiqueta en el flujo del texto no se gira. */
+    transform: rotate(var(--tag-tilt, 0deg));
+}
+
+/* ── SEÑAL · el registro de E2 ──────────────────────────────────────────────────────────────────
+   Sus números al dígito: gap 7, padding 7/14, 13px/700. ⚠️ **Sin `text-transform`**: sus ejemplos
+   van en caja normal y el texto lo escribe el panel — forzar mayúsculas aquí decidiría por él. */
+.tag--senal { gap: 7px; padding: 7px 14px; font-family: var(--font-body); font-weight: 700; font-size: 13px; }
+
+/* La punteada. En E2 es «condiciones»; aquí su sitio son las etiquetas SOBRE FOTO, y el motivo es
+   medido: sobre una imagen es la única de las tres que se lee sin fondo propio, porque el trazo
+   discontinuo se distingue de cualquier textura. ⚠️ Su padding es **1 px menor** que el de la
+   llena en los dos ejes: compensa exactamente el borde de 2 px, y por eso las dos miden igual. */
+.tag--punteada { border: 2px dashed currentColor; padding: 6px 13px; }
+
+/* Tinta: la etiqueta que DESTACA una tarjeta. Lee los alias de superficie, no `--fg`: dentro de la
+   tarjeta destacada `--fg` vale el color de la zona (misma cautela que las sombras de `#196`). */
+.tag--tinta { background: var(--fg); color: var(--bg); }
+
+/* ── DATO · el registro de su landing ───────────────────────────────────────────────────────────
+   `1.5px solid currentColor` + mono 10,5/400 + `letter-spacing .1em`, sus números. Aquí SÍ va en
+   mayúsculas, porque así lo escribe él y porque un dato en mono se lee como ficha técnica. */
+.tag--dato {
+    border: 1.5px solid currentColor; padding: 5px 12px;
+    font-family: var(--font-mono); font-size: 10.5px; font-weight: 400;
+    letter-spacing: 0.1em; text-transform: uppercase;
+}
+
 /* ══ EL MATERIAL DE FACHADA · las piezas que son TÉCNICA y no dibujo ═══════════════════════════
    `specs/elementos-fachada.md` grupos A y C. Salen del artboard del 2.º cliente, pero **no llevan
    arte de nadie**: son degradados. Por eso viven en el producto y valen para cualquier instalación.
@@ -6283,9 +6339,15 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
    escala de forma — y `ShapeScaleTest` lo cazó, con razón: la lista de excepciones solo encoge. */
 .brand-strip--wedge > span { transform: skewX(-12deg); }
 
-/* ⚠️ **Y LA PUNTEADA (`.brand-dots`) TAMBIÉN SE RETIRÓ, por lo mismo**: se escribió con sus
-   números (3 · 3,4 · 16×10) y **ninguna pantalla la pinta** — medido, `dots: 0` en las doce
-   capturas del sitio. No es la tira con otro traje, es otra pieza, y vuelve con su consumidor. */
+/* C2 · LA PUNTEADA. Vuelve con su consumidor (`[DECIDIDO owner, 2026-08-31]`): el separador entre
+   las cifras de zonas, donde estaba el cuadrado «foam» del cliente antiguo.
+   ⚠️⚠️ **Entra como TOKEN y no como clase, y lo decidió una guarda.** La primera versión era un
+   `<span class="brand-dots">` por hueco, dentro del `@foreach`: `FacadeDecorationIsPerScreenTest`
+   la puso roja, con razón —una textura repetida por fila es lo que el owner rechazó tres veces—.
+   ▶ Un separador es PUNTUACIÓN, y la puntuación la pinta el CSS. Como token, el patrón sigue
+   disponible para la tira completa el día que alguien la necesite, sin quedarse huérfano hoy.
+   Sus números, los suyos: 3 · 3,4 · 16×10. */
+:root { --dots-tile: radial-gradient(circle, var(--paper-fg) 3px, transparent 3.4px); }
 
 
 

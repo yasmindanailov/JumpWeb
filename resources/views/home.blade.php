@@ -189,7 +189,12 @@
 
         <div class="zone-stats">
             @foreach ([[$totalSqm, $totalLabels[0]], [$totalRides, $totalLabels[1]], [$totalZones, $totalLabels[2]]] as $i => $t)
-                @if ($i > 0)<span class="jj-block jj-block--sm" aria-hidden="true"></span>@endif
+                {{-- ⚠️ El separador entre cifras **ya no está en el marcado**: lo pinta el CSS con
+                     `.zone-stats__item + .zone-stats__item::before`. Aquí había un `<span>` con
+                     `.jj-block`, el cuadrado «foam» del cliente ANTIGUO —sus iniciales daban nombre
+                     a la clase—, y su primer sustituto repetía una TEXTURA una vez por fila, que es
+                     justo lo que `FacadeDecorationIsPerScreenTest` prohíbe. La guarda lo cazó: un
+                     separador es puntuación, y la puntuación es del CSS. --}}
                 <div class="zone-stats__item">
                     <span class="zone-stats__num">{{ $t[0] }}</span>
                     <span class="zone-stats__label">{{ $t[1] }}</span>
@@ -217,7 +222,7 @@
                              rama, en esta instalación no se veía en NINGUNA parte. --}}
                         <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-photo-card__ilu" />
                         <div class="zone-photo-card__body">
-                            <span class="zone-photo-card__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
+                            <span class="tag tag--dato zone-photo-card__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
                             <h3 class="zone-photo-card__name">{{ $zone->tr('name') }}</h3>
                             <p class="zone-photo-card__sub">{{ $zone->tr('subtitle') }}</p>
                             <x-site.zone-metrics :zone="$zone" class="zone-photo-card__meta" />
@@ -242,7 +247,7 @@
                              exactamente como estaba: el hueco falla hacia invisible a propósito. --}}
                         <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-intro__ilu" />
                         <div class="zone-intro__top">
-                            <span class="zone-intro__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
+                            <span class="tag tag--dato zone-intro__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
                         </div>
                         <div style="position:relative; z-index:1">
                             <h3 class="zone-intro__name">{{ $zone->tr('name') }}</h3>
@@ -293,7 +298,7 @@
                     <article class="ride-card{{ $ride->is_special ? ' ride-card--special' : '' }}{{ $complements->isPurchasable($ride) ? ' ride-card--sellable' : '' }}">
                         <div class="ride-card__viz">
                             @if ($ride->tr('badge'))
-                                <span class="ride-card__badge">{{ $ride->tr('badge') }}</span>
+                                <span class="tag tag--senal tag--punteada ride-card__badge">{{ $ride->tr('badge') }}</span>
                             @endif
                             @if ($ride->image)
                                 <img class="ride-card__img" src="{{ asset($ride->image) }}" alt="{{ $ride->tr('name') }}" loading="lazy">
