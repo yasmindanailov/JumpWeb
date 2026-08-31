@@ -440,6 +440,7 @@ return [
         'mixed_party' => [
             'title' => '混龄派对:有来宾属于其他年龄段',
             'line' => ':count × :name · 每位 :unit',
+            'conditions_line' => '按本预订的条件::count × :name · 每位 :unit',
             'applied' => '已计入补差价::amount · 在园区收取',
             // T4:折扣已真实生效;行的措辞由领域层(`breakdownLabel`)统一生成。
             'net' => '按年龄净额::amount · 在园区结算',
@@ -449,7 +450,7 @@ return [
             'missing_carrier' => '无法计入补差价:缺少承载它的产品(产品目录中的「混龄派对补差价」)。在此期间本场派对不会收取任何费用。',
             'unpriced' => '无法计算补差价:该日期缺少某个套餐的价格。',
             'without_age' => '还有 :count 位来宾未填写年龄:结果仍可能变化。',
-            'frozen' => '补差已冻结:还有 :count 位来宾未填写年龄。在客户填齐所有年龄之前不会重新计算(既不上调也不下调)。',
+            'frozen' => '按年龄计算的金额已冻结:还有 :count 位来宾未填写年龄。在客户填齐所有年龄之前不会重新计算(既不上调也不下调)。',
             'out_of_range' => ':count 位来宾的年龄在本预订的条件下没有对应产品:不对其收费,客户需致电,由园区现场处理。',
             'orphaned' => '此预订没有封存任何年龄条件(它在封存机制出现之前创建),因此没有可比对的判定结果。上方的补差仍然有效:那是已经通知客户的金额,也是到场时应收取的金额。',
             'stale_seal' => '此预订封存的条件与其套餐或日期不符:预订被移动时没有重新封存。在核查之前不会计算或变动任何补差;已记录的金额(如有)保持不变。',
@@ -961,7 +962,7 @@ return [
             'at_gate' => '在门店收取',
             // #225 F2:产品卡内「在门店收取」的定金余款明细行。
             'deposit_remainder_line' => '定金余款',
-            'collected_at_gate' => '已在门店收取',
+            'collected_at_gate' => '已在门店结清',
             'refunded_label' => '已退款',
             'pending_refund_label' => '待退还',
             'pending_refund_caption' => '客户因该产品的变更（减少数量或取消）多付了款,尚待退还。',
@@ -988,7 +989,7 @@ return [
             'pagado_online' => '线上已付',
             // P1/P10：若为现金/POS 手动收款（非网站），不写「线上」。
             'cobrado_manual' => '现金/POS 已收款',
-            'pagado_puerta' => '已在门店收取',
+            'pagado_puerta' => '已在门店结清',
             'pendiente_devolucion_caption_web' => '客户通过网站支付了 :total;因减少数量或取消,将退还 :pendiente。',
             // #171:明细子行的紧凑标签。
             'breakdown' => [
@@ -1152,6 +1153,7 @@ return [
                 'submit' => '永久匿名化',
                 'success' => '用户已成功匿名化。',
                 'blocked' => '无法匿名化该账户。',
+                'blocked_upcoming' => '无法匿名化:该客户尚有待举行的预订。请先取消这些预订,或等待其结束。',
             ],
         ],
     ],

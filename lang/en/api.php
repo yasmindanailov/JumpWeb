@@ -46,6 +46,8 @@ return [
         'waiver_email_unverified' => 'Verify your email address before signing the waiver.',
         'dependent_not_minor' => 'A dependent must be under 18.',
         'dependents_limit_reached' => 'Your account has reached its maximum number of dependents (:max).',
+        // T5 · D8: an account with an upcoming reservation cannot be deleted (`cumple-mixto.md` §25.4).
+        'account_has_upcoming_reservations' => 'We cannot delete your account yet: you have upcoming reservations. You can delete it once they have taken place or if they are cancelled.',
     ],
 
     // Per-field notices for assigning tickets to dependents (`POST /orders`, Phase 6 · batch 4).

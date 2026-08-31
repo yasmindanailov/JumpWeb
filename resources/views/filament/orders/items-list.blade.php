@@ -133,9 +133,9 @@
             // P6: icono del TIPO de producto a la izquierda del nombre (entrada → ticket,
             // cumpleaños/pack → tarta). Decorativo; el nombre sigue dando la semántica.
             $typeIcon = $isPack ? 'heroicon-o-cake' : 'heroicon-o-ticket';
-            // Veredicto de fiesta MIXTA (`docs/specs/cumple-mixto.md` §9·4): DERIVADO de las edades
-            // declaradas en el post-form, nunca sellado. El lector va en `scoped`, así que memoiza
-            // la familia y los precios del día entre las reservas de este mismo pedido.
+            // Veredicto de fiesta MIXTA: desde la T1 (`cumple-mixto.md` §21.5) deriva del SELLO de
+            // la reserva —los tramos y precios con los que se vendió—, nunca del catálogo vivo. El
+            // lector es sin estado (nada de `scoped` ni memoización: aquello caducó con el sello).
             $mix = app(\App\Domain\Booking\Services\GuestAgeMixReader::class)->for($item);
         @endphp
         {{-- P3/P6: borde superior 5px sólido con el color de la zona/tipo (acento data-driven, visible). --}}
@@ -274,7 +274,10 @@
                          operador necesita ver aquí son cuatro cosas distintas, y por eso no se
                          funden en un número: cuánto está APLICADO, si lo escrito se ha quedado
                          atrás, si falta el producto que lo lleva (y entonces esta fiesta no cobra
-                         nada) y si el veredicto está todavía a medias. --}}
+                         nada) y si el veredicto está todavía a medias.
+                         T5 (§25.6): el ORDEN es lo escrito primero y las condiciones después, con
+                         etiqueta — este bloque es la única superficie que mezcla derivado y
+                         escrito, y sin etiquetar cuál es cuál no se explicaba solo. --}}
                     @php
                         $mixService = app(\App\Domain\Booking\Services\MixedPartySurcharge::class);
                         $mixWritten = $mixService->written($item);
@@ -318,17 +321,6 @@
                                 <div class="font-medium text-violet-800 dark:text-violet-300">
                                     {{ __('admin.orders.mixed_party.title') }}
                                 </div>
-                                @foreach ($mix->upgrades as $upgrade)
-                                    <div class="text-violet-800/90 dark:text-violet-300/90">
-                                        {{ __('admin.orders.mixed_party.line', [
-                                            'count' => $upgrade['count'],
-                                            'name' => $upgrade['name'],
-                                            'unit' => $upgrade['unit_cents'] === null
-                                                ? '—'
-                                                : \App\Domain\Platform\Services\Money::format($upgrade['unit_cents']),
-                                        ]) }}
-                                    </div>
-                                @endforeach
                             @endif
 
                             @if ($mixWritten['charge_cents'] > 0)
@@ -357,6 +349,27 @@
                                 </div>
                             @endif
 
+                            {{-- T5 (§25.6·1, el hallazgo del T0): las CONDICIONES van DESPUÉS de lo
+                                 escrito —«el aplicado primero», el arreglo que dio el owner— y con
+                                 etiqueta de origen: sin ella, «2 × Jump · 9,00 €» pegado a
+                                 «Suplemento aplicado: 8,00 €» se lee como contradicción hasta llegar
+                                 a la frase del desfase (el owner mismo tuvo que preguntar). La
+                                 dirección barata no pinta su «0,00 €» ({@see GuestAgeMix::visibleUpgrades}):
+                                 su historia la cuentan el descuento y el «a tu favor» de arriba. --}}
+                            @if ($mix->mixed)
+                                @foreach ($mix->visibleUpgrades() as $upgrade)
+                                    <div class="text-violet-800/90 dark:text-violet-300/90">
+                                        {{ __('admin.orders.mixed_party.conditions_line', [
+                                            'count' => $upgrade['count'],
+                                            'name' => $upgrade['name'],
+                                            'unit' => $upgrade['unit_cents'] === null
+                                                ? '—'
+                                                : \App\Domain\Platform\Services\Money::format($upgrade['unit_cents']),
+                                        ]) }}
+                                    </div>
+                                @endforeach
+                            @endif
+
                             @if ($mixStale)
                                 {{-- En ROJO y antes que nada: es un dato inconsistente, no un estado
                                      del negocio. Ningún camino del producto lo produce; si aparece,
@@ -367,19 +380,28 @@
                                      que no hay veredicto contra el que contrastarlo, para que no
                                      lo lea como un error del sistema ni intente cuadrarlo. --}}
                                 <div class="text-amber-800 dark:text-amber-300">{{ __('admin.orders.mixed_party.orphaned') }}</div>
-                            @elseif ($mixCarrierMissing)
-                                <div class="font-semibold text-red-700 dark:text-red-300">{{ __('admin.orders.mixed_party.missing_carrier') }}</div>
-                            @elseif ($mixCreditCarrierMissing)
-                                <div class="font-semibold text-red-700 dark:text-red-300">{{ __('admin.orders.mixed_party.missing_credit_carrier') }}</div>
                             @elseif ($mix->mixed && $mix->surchargeCents === null)
                                 <div class="text-amber-800 dark:text-amber-300">{{ __('admin.orders.mixed_party.unpriced') }}</div>
-                            @elseif ($mixDrift)
-                                <div class="text-amber-800 dark:text-amber-300">
-                                    {{ __('admin.orders.mixed_party.drift', [
-                                        'written' => \App\Domain\Platform\Services\Money::format($mixWritten['charge_cents']),
-                                        'derived' => \App\Domain\Platform\Services\Money::format($mix->surchargeCents),
-                                    ]) }}
-                                </div>
+                            @else
+                                {{-- T5 (§25.6·3): los avisos van por LADOS y los lados son
+                                     INDEPENDIENTES — el portador del descuento puede faltar Y el
+                                     cargo estar en desfase A LA VEZ, y la cadena única se tragaba el
+                                     desfase (medido en §25.2). Dentro de cada lado sí hay
+                                     precedencia: el portador ausente ES la explicación de su propio
+                                     desfase, así que no se pintan los dos. --}}
+                                @if ($mixCarrierMissing)
+                                    <div class="font-semibold text-red-700 dark:text-red-300">{{ __('admin.orders.mixed_party.missing_carrier') }}</div>
+                                @elseif ($mixDrift)
+                                    <div class="text-amber-800 dark:text-amber-300">
+                                        {{ __('admin.orders.mixed_party.drift', [
+                                            'written' => \App\Domain\Platform\Services\Money::format($mixWritten['charge_cents']),
+                                            'derived' => \App\Domain\Platform\Services\Money::format($mix->surchargeCents),
+                                        ]) }}
+                                    </div>
+                                @endif
+                                @if ($mixCreditCarrierMissing)
+                                    <div class="font-semibold text-red-700 dark:text-red-300">{{ __('admin.orders.mixed_party.missing_credit_carrier') }}</div>
+                                @endif
                             @endif
 
                             @if ($mix->withoutAge > 0)

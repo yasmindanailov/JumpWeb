@@ -164,11 +164,19 @@ class RefundItemActionTest extends TestCase
         $this->assertSame(1200, (int) $refund->amount_cents);
         $this->assertFalse($item->fresh()->isCancelled());
 
-        // Email enviado SIN línea de cancelación.
+        // Email enviado SIN línea de cancelación — y con la voz de TARJETA (T5 §25.5, guarda G):
+        // el reembolso fue por la pasarela, así que la promesa del plazo bancario es verdad.
         Notification::assertSentTo(
             $order->user,
             OrderItemRefunded::class,
-            fn (OrderItemRefunded $n): bool => $n->alsoCancelledItem === false,
+            function (OrderItemRefunded $n) use ($order): bool {
+                $lines = collect($n->toMail($order->user)->introLines)->map(fn ($l) => (string) $l);
+
+                return $n->alsoCancelledItem === false
+                    && $n->manualRefund === false
+                    && $lines->contains(__('emails.order_item_refunded.when'))
+                    && ! $lines->contains(__('emails.order_item_refunded.when_manual'));
+            },
         );
     }
 
@@ -362,7 +370,21 @@ class RefundItemActionTest extends TestCase
         $this->assertSame(PaymentRefund::MANUAL_RESPONSE_MARKER, $refund->gateway_response_code);
         $this->assertSame(1200, (int) $refund->amount_cents);
 
-        Notification::assertSentTo($order->user, OrderItemRefunded::class);
+        // T5 (§25.5, guarda G): registrado como MANUAL —dinero devuelto fuera de la pasarela, el
+        // circuito de parque de §20.5—, el correo dice el hecho y NUNCA promete la tarjeta.
+        // Hasta el 2026-08-31 este camino enviaba «Verás el reintegro en la tarjeta… (3-5 días)»
+        // por dinero entregado en mano. Mutación: quitar la rama del modo en la Notification.
+        Notification::assertSentTo(
+            $order->user,
+            OrderItemRefunded::class,
+            function (OrderItemRefunded $n) use ($order): bool {
+                $lines = collect($n->toMail($order->user)->introLines)->map(fn ($l) => (string) $l);
+
+                return $n->manualRefund === true
+                    && $lines->contains(__('emails.order_item_refunded.when_manual'))
+                    && ! $lines->contains(__('emails.order_item_refunded.when'));
+            },
+        );
     }
 
     public function test_refund_succeeds_on_previously_cancelled_item(): void

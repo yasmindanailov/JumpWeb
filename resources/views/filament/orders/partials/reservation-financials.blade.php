@@ -69,7 +69,10 @@
                         @foreach ($gateLines as $line)
                             <div class="flex items-center justify-between gap-3 pl-6 text-[11px] text-orange-600/90 dark:text-orange-400/80">
                                 <span class="truncate">↳ {{ $line['label'] }}</span>
-                                <span class="whitespace-nowrap">+{{ $fmt($line['amount']) }}</span>
+                                {{-- T5 (§25.6·7): signo CONSCIENTE — el «+» clavado era de cuando toda
+                                     línea de puerta era un cargo; desde la T4 el descuento es negativa
+                                     y salía «+-4,00 €». El «−» tipográfico es el de «Devuelto». --}}
+                                <span class="whitespace-nowrap">{{ $line['amount'] < 0 ? '−' : '+' }}{{ $fmt(abs($line['amount'])) }}</span>
                             </div>
                         @endforeach
                     </div>

@@ -726,7 +726,17 @@ class OrderAdminActionsTest extends TestCase
         $this->assertSame(PaymentRefund::MANUAL_RESPONSE_MARKER, $refund->gateway_response_code);
         $this->assertSame($payment->id, $refund->payment_id);
 
-        Notification::assertSentTo($order->user, OrderRefunded::class, fn (OrderRefunded $n): bool => $n->alsoCancelled === true);
+        // T5 (§25.5, guarda G): con el registro MANUAL el correo dice el hecho —«se te ha devuelto
+        // en el parque»— y NUNCA la promesa de tarjeta, que aquí sería falsa. El comentario de
+        // arriba («email idéntico al éxito REST») dejó de ser cierto A PROPÓSITO ese día.
+        Notification::assertSentTo($order->user, OrderRefunded::class, function (OrderRefunded $n) use ($order): bool {
+            $lines = collect($n->toMail($order->user)->introLines)->map(fn ($l) => (string) $l);
+
+            return $n->alsoCancelled === true
+                && $n->manualRefund === true
+                && $lines->contains(__('emails.order_refunded.when_manual'))
+                && ! $lines->contains(__('emails.order_refunded.when'));
+        });
         Notification::assertNotSentTo($order->user, OrderCancelled::class);
     }
 

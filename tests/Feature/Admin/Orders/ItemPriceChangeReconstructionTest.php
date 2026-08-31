@@ -398,8 +398,13 @@ class ItemPriceChangeReconstructionTest extends TestCase
             function (OrderItemModified $n) use ($order): bool {
                 $lines = collect($n->toMail($order->user)->introLines)->map(fn ($l) => (string) $l);
 
+                // T5 (§25.5, guarda F): la frase describe el estado y las DOS salidas sin prometer
+                // canal ni correo — «procesemos la devolución» prometía de más con la liquidación
+                // en parque (`#285`), y «Mis reservas» no enseña importes desde `#130`.
                 return $n->pendingRefundCents === 1600
-                    && $lines->contains(__('emails.order_item_modified.reduction_pending_refund', ['amount' => '16,00']));
+                    && $lines->contains(__('emails.order_item_modified.reduction_pending_refund', ['amount' => '16,00']))
+                    && $lines->every(fn (string $l): bool => ! str_contains($l, 'procesemos la devolución')
+                        && ! str_contains($l, '«Mis reservas»'));
             },
         );
     }

@@ -34,6 +34,24 @@ interface CustomerReservations
     public function upcomingFor(int $userId): array;
 
     /**
+     * ¿Tiene el cliente alguna reserva POR CELEBRAR? — la puerta de la supresión (T5 · D8,
+     * `cumple-mixto.md` §25.4): con una, la cuenta no se puede anonimizar.
+     *
+     * **El criterio es EXACTAMENTE el de {@see upcomingFor}** (pagada + principal activo + franja
+     * cuyo fin no ha pasado, corte fino en PHP): la puerta y la pantalla de «próximas» del titular
+     * cuentan la misma historia. NO es el complemento de `terminated()` (el predicado de las dos
+     * pantallas del historial), y las tres divergencias son a propósito:
+     *  · una línea pagada SIN franja jamás «termina» (`isFinishedInPractice()` es `false` sin
+     *    slot) → bloquearía la supresión PARA SIEMPRE, un callejón del art. 17 — y sin franja no
+     *    hay fiesta que reconciliar, así que la consecuencia de D8 («ninguna reserva anonimizada
+     *    se reconcilia») se sostiene igual;
+     *  · una cesta `PENDING` sin expirar no es un compromiso del parque: caduca sola en minutos;
+     *  · el corte de fecha fino (colchón de zona horaria + `isFinishedInPractice()`) ya está
+     *    hecho ahí.
+     */
+    public function hasUpcomingFor(int $userId): bool;
+
+    /**
      * Post-forms de invitados (#217) pendientes: uno por cada pack pagado cuya franja aún
      * no ha finalizado. Un pack sin franja sigue pendiente.
      *

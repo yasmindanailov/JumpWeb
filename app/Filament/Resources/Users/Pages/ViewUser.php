@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
+use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CustomerCards;
@@ -361,6 +362,23 @@ class ViewUser extends ViewRecord
                     AuditLogger::log('users.anonymize_blocked', $record, ['reason' => 'not_allowed']);
                     Notification::make()
                         ->title(__('admin.users.actions.anonymize.blocked'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                // T5 · D8 (`cumple-mixto.md` §25.4, `[DECIDIDO owner]` §25.9 Q2: las TRES vías):
+                // con una reserva POR CELEBRAR la cuenta no se anonimiza tampoco desde el panel —
+                // si el operador pudiera, una reserva viva quedaría anónima y su importe congelado
+                // (la ficha del «techo tras anonimizar» se cierra POR esta puerta). Su escape ya
+                // existe: cancelar la reserva primero. ⚠️ La condición va aquí y NO en
+                // `isSensitiveActionAllowed()`: ésa la comparten «rotar carné» y «enviar reset»,
+                // que no deben endurecerse.
+                if (app(CustomerReservations::class)->hasUpcomingFor((int) $record->getKey())) {
+                    AuditLogger::log('users.anonymize_blocked', $record, ['reason' => 'upcoming_reservations']);
+                    Notification::make()
+                        ->title(__('admin.users.actions.anonymize.blocked_upcoming'))
                         ->danger()
                         ->send();
 

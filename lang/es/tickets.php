@@ -221,7 +221,11 @@ return [
         'value_total' => 'Valor del pedido',
         'paid_online' => 'Pagado por web',
         'pending_online' => 'Pendiente de pagar por web',
-        'paid_at_gate' => 'Pagado en el parque',
+        // T5 · D9 (`cumple-mixto.md` §25.3, `[DECIDIDO owner]` §25.9 Q1): la cuenta se LIQUIDA al
+        // pasar la visita de un pedido pagado — pero nadie registra el cobro (el hueco reservado es
+        // `TYPE_COLLECTED_IN_PERSON`, sin un solo uso), así que «Pagado» afirmaba lo que el sistema
+        // no sabe. ⚠️ `paid_desk` («Pagado en recepción») NO cambia: ése es un cobro REGISTRADO.
+        'paid_at_gate' => 'Liquidado en el parque',
         'pending_at_gate' => 'Pendiente de pagar en el parque',
         'compensated' => 'Compensación devuelta',
         // ⚠️ El MÉTODO manda en el rótulo (`DECISIONES #128`): el eje de caja suma todos los pagos

@@ -3,7 +3,9 @@
 namespace App\Domain\Identity\Services;
 
 use App\Domain\Booking\Contracts\CustomerOrderHistory;
+use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Identity\Contracts\CredentialChangeResult;
+use App\Domain\Identity\Exceptions\AccountHasUpcomingReservationsException;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\User;
 use Illuminate\Support\Facades\Log;
@@ -43,6 +45,7 @@ class AccountPrivacy
     public function __construct(
         private readonly AccountCredentials $credentials,
         private readonly CustomerOrderHistory $orders,
+        private readonly CustomerReservations $reservations,
         private readonly DependentAssigner $assigner,
     ) {}
 
@@ -60,6 +63,17 @@ class AccountPrivacy
      * ⚠️ **La reconfirmación es obligatoria aquí y esto es irreversible**: es la única de las cinco
      * gestiones que el titular no puede deshacer, así que la contraseña se pide siempre —no «solo
      * si cambia algo sensible», como en el perfil—.
+     *
+     * ⚠️⚠️ **Con una reserva POR CELEBRAR, la supresión NO se ejecuta** (T5 · D8, `#284`,
+     * `cumple-mixto.md` §25.4): se lanza {@see AccountHasUpcomingReservationsException} y la
+     * superficie se lo explica al titular (la API con un `409`). La puerta va DESPUÉS de
+     * `verify()` —que la existencia de reservas no se filtre a quien no tiene la contraseña, y el
+     * limitador siga mandando— y aquí y no en `User::anonymize()`: metería Booking en un modelo de
+     * Identity y arrastraría el censo y la idempotencia de `AnonymizeCoversEveryUserColumnTest`.
+     * El panel aplica la MISMA puerta por su lado (las tres vías, `[DECIDIDO owner]` §25.9 Q2);
+     * una cuenta ya anónima no llega hasta aquí (su contraseña es inservible → `verify()` falla).
+     *
+     * @throws AccountHasUpcomingReservationsException
      */
     public function anonymize(User $user, string $currentPassword, string $ip): CredentialChangeResult
     {
@@ -67,6 +81,12 @@ class AccountPrivacy
 
         if ($verdict->failed()) {
             return $verdict;
+        }
+
+        if ($this->reservations->hasUpcomingFor((int) $user->id)) {
+            Log::info('account.anonymize_blocked', ['user_id' => $user->id, 'reason' => 'upcoming_reservations']);
+
+            throw new AccountHasUpcomingReservationsException;
         }
 
         $userId = $user->id;

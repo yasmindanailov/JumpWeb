@@ -105,6 +105,8 @@ return [
         'amount' => 'Amount refunded: :amount €',
         'also_cancelled' => 'Your booking has also been cancelled.',
         'when' => 'You will see the refund on the card you paid with in the next 3-5 business days (depends on your bank).',
+        // T5 (§25.5, Q3): refund recorded as MANUAL — returned outside the gateway (the park circuit).
+        'when_manual' => 'This amount was returned to you at the park. This email is your receipt.',
         'action' => 'See my bookings',
         'contact' => 'If you do not see the refund within a week, write to us with the order number.',
     ],
@@ -125,6 +127,8 @@ return [
         'amount' => 'Amount refunded for ":product": :amount €',
         'also_cancelled' => '":product" has been cancelled.',
         'when' => 'You will see the refund on the card you paid with in the next 3-5 business days (depends on your bank).',
+        // T5 (§25.5, Q3): refund recorded as MANUAL — returned outside the gateway (the park circuit).
+        'when_manual' => 'This amount was returned to you at the park. This email is your receipt.',
         'action' => 'See my bookings',
         'contact' => 'If you do not see the refund within a week, write to us with the order number.',
         'product_fallback' => 'product :id',
@@ -158,9 +162,10 @@ return [
         'event_data_change' => 'Event details updated.',
         'addon_change' => 'Add-ons updated.',
         'extra_due' => 'Still to pay when you arrive at the park: :amount €',
-        'refunded' => 'Amount refunded to your card: :amount € (3-5 business days).',
-        // `#155`: a price reduction is money too — same vocabulary as the screen.
-        'reduction_pending_refund' => 'This change leaves :amount € pending refund to you. You can see it in “My bookings”, and we will email you once the refund is processed.',
+        // `#155`: a price reduction is money too — same vocabulary as the screen. T5 (§25.5):
+        // no channel or email promise — the money may come back via the bank or be settled at
+        // the park, and the manual-refund record is optional.
+        'reduction_pending_refund' => 'This change leaves :amount € pending refund to you. You can track it in “My orders”; we will return it to your card or at the park on the day of your visit.',
         'reduction_gate_credit' => 'With the new price you will pay :amount € less on arrival at the park.',
         'action' => 'See my bookings',
         'contact' => 'If you have any questions, write to us with the order number.',

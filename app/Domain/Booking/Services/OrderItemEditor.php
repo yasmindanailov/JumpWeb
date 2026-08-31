@@ -779,15 +779,14 @@ class OrderItemEditor
             $changes['event_data_change'] = true;
         }
 
-        // Un solo email consolidado. Una bajada (D8) ya NO auto-reembolsa → `refundedCents` null —
-        // pero desde `#155` SÍ se cuenta: cuánto queda pendiente de devolverle y cuánto pagará de
-        // menos en el parque.
+        // Un solo email consolidado. Una bajada (D8) ya NO auto-reembolsa — pero desde `#155` SÍ
+        // se cuenta: cuánto queda pendiente de devolverle y cuánto pagará de menos en el parque.
+        // (El `refundedCents: null` que iba aquí se retiró con su parámetro en la T5, §25.5.)
         $order->notifyCustomer(new OrderItemModified(
             order: $order->fresh(),
             item: $item->fresh(),
             changes: $changes,
             extraDueCents: $extraDueCents,
-            refundedCents: null,
             pendingRefundCents: $pendingRefundCents,
             gateCreditedCents: $gateCreditedCents,
         ));

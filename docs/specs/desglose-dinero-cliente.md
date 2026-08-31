@@ -94,6 +94,10 @@ PROYECCIÓN — qué dimensiones publica la API y con qué rótulo.
 
 ### 4.2 ⚠️⚠️ Al cliente le falta la línea que hace CUADRAR el bloque
 
+> ⚠️ **El rótulo cambió el 2026-08-31** (T5 de mixtos, `cumple-mixto.md` §25.3, D9 de `#284`): las
+> claves siguen siendo las mismas pero dicen **«Liquidado en el parque»** — «Pagado» afirmaba un
+> cobro que nadie registra. Lo de abajo se conserva como historia del diseño.
+
 El panel tiene `order_financial.pagado_puerta` = «Pagado en el parque». **El cliente no la tiene.** Y
 es exactamente la que falta para que su columna sume:
 

@@ -115,6 +115,9 @@ return [
         'amount' => 'Importe devuelto: :amount €',
         'also_cancelled' => 'Tu reserva también queda cancelada.',
         'when' => 'Verás el reintegro en la tarjeta con la que pagaste en los próximos 3-5 días laborables (depende de tu banco).',
+        // T5 (`cumple-mixto.md` §25.5, Q3): reembolso registrado como MANUAL — devuelto fuera de
+        // la pasarela (el circuito de parque de §20.5); la promesa de tarjeta aquí sería falsa.
+        'when_manual' => 'Este importe se te ha devuelto en el parque. Este correo te sirve de justificante.',
         'action' => 'Ver mis reservas',
         'contact' => 'Si en una semana no ves el reintegro, escríbenos con el número de pedido.',
     ],
@@ -143,6 +146,9 @@ return [
         'amount' => 'Importe devuelto de «:product»: :amount €',
         'also_cancelled' => '«:product» queda cancelado.',
         'when' => 'Verás el reintegro en la tarjeta con la que pagaste en los próximos 3-5 días laborables (depende de tu banco).',
+        // T5 (`cumple-mixto.md` §25.5, Q3): reembolso registrado como MANUAL — devuelto fuera de
+        // la pasarela (el circuito de parque de §20.5); la promesa de tarjeta aquí sería falsa.
+        'when_manual' => 'Este importe se te ha devuelto en el parque. Este correo te sirve de justificante.',
         'action' => 'Ver mis reservas',
         'contact' => 'Si en una semana no ves el reintegro, escríbenos con el número de pedido.',
         'product_fallback' => 'producto :id',
@@ -181,10 +187,11 @@ return [
         'event_data_change' => 'Datos del evento actualizados.',
         'addon_change' => 'Complementos actualizados.',
         'extra_due' => 'Pendiente de pago al llegar al parque: :amount €',
-        'refunded' => 'Importe devuelto a tu tarjeta: :amount € (3-5 días laborables).',
         // `#155`: la BAJADA también es dinero — mismo vocabulario que la pantalla («pendiente de
-        // devolverte») para que el email y «Mis reservas» digan lo mismo.
-        'reduction_pending_refund' => 'Este cambio deja :amount € pendientes de devolverte. Lo verás en «Mis reservas» y te avisaremos por email cuando procesemos la devolución.',
+        // devolverte»). T5 (`cumple-mixto.md` §25.5): sin prometer canal ni correo — el importe
+        // puede volver por banco o liquidarse en el parque (§20.5), y el registro del manual es
+        // opcional. El puntero es «Mis pedidos»: «Mis reservas» no enseña importes desde `#130`.
+        'reduction_pending_refund' => 'Este cambio deja :amount € pendientes de devolverte. Verás su estado en «Mis pedidos»; te los devolveremos a tu tarjeta o en el parque el día de tu visita.',
         'reduction_gate_credit' => 'Con el nuevo precio pagarás :amount € menos al llegar al parque.',
         'action' => 'Ver mis reservas',
         'contact' => 'Si tienes cualquier duda, escríbenos con el número de pedido.',

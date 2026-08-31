@@ -48,6 +48,8 @@ return [
         'waiver_email_unverified' => 'Para firmar el waiver primero hay que verificar el correo.',
         'dependent_not_minor' => 'La persona a cargo tiene que ser menor de edad.',
         'dependents_limit_reached' => 'Ya has llegado al máximo de menores a cargo de tu cuenta (:max).',
+        // T5 · D8: con una reserva por celebrar la cuenta no se puede borrar (`cumple-mixto.md` §25.4).
+        'account_has_upcoming_reservations' => 'No podemos eliminar tu cuenta todavía: tienes reservas por celebrar. Podrás eliminarla cuando hayan pasado o si se cancelan.',
     ],
 
     // Avisos POR CAMPO de la ASIGNACIÓN de entradas a menores a cargo (`POST /orders`, Fase 6 · tanda 4):

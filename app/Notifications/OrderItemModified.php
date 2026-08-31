@@ -25,9 +25,11 @@ use Illuminate\Notifications\Notification;
  *  - `$changes['event_data_change']`   → true (booleano simple; el detalle no se cita)
  *  - `$changes['addon_change']`        → ['added' => [...], 'removed' => [...], 'updated' => [...]]
  *
- * `$extraDueCents` / `$refundedCents` opcionales: si la edición generó cobro
- * extra en puerta o refund parcial parcial (compensación del diff de precio),
- * se incluyen líneas explícitas. Evita la sorpresa al cliente al llegar.
+ * `$extraDueCents` opcional: si la edición generó cobro extra en puerta, se incluye una línea
+ * explícita. Evita la sorpresa al cliente al llegar. (El `$refundedCents` que hubo aquí se RETIRÓ
+ * en la T5 —`cumple-mixto.md` §25.5—: llevaba cableado a `null` desde que la edición dejó de
+ * auto-reembolsar (D8 del desglose) y su línea prometía la tarjeta. Un reembolso real manda su
+ * propio correo, `OrderItemRefunded`.)
  *
  * Defensivo: si `$changes` está vacío y no hay importes, no debería enviarse
  * (el orquestador comprueba antes de notify). Para defensa en profundidad, el
@@ -50,7 +52,6 @@ class OrderItemModified extends Notification implements ShouldQueue
         public OrderItem $item,
         public array $changes = [],
         public ?int $extraDueCents = null,
-        public ?int $refundedCents = null,
         // ⚠️⚠️ **La BAJADA también es dinero, y este email no la contaba** (`#155`; medido en
         // `#149`: tras mover la fecha a un día más barato, el cliente al que se le debían 10,00 €
         // recibía un email sin un solo importe). Dos términos porque una bajada tiene dos destinos
@@ -117,13 +118,11 @@ class OrderItemModified extends Notification implements ShouldQueue
                 'amount' => number_format($this->extraDueCents / 100, 2, ',', '.'),
             ]));
         }
-        if ($this->refundedCents !== null && $this->refundedCents > 0) {
-            $message->line(__('emails.order_item_modified.refunded', [
-                'amount' => number_format($this->refundedCents / 100, 2, ',', '.'),
-            ]));
-        }
         // `#155`: la bajada, contada — el mismo vocabulario que la pantalla («pendiente de
-        // devolverte») para que el email y «Mis reservas» digan lo mismo.
+        // devolverte»). T5 (§25.5): la frase describe el estado y las DOS salidas (tarjeta o
+        // parque) SIN prometer canal ni correo — el registro del reembolso manual es OPCIONAL
+        // (§20.5), y prometer un aviso que puede no existir era la sobre-promesa de `#285`. El
+        // puntero de pantalla es «Mis pedidos»: «Mis reservas» no enseña importes desde `#130`.
         if ($this->pendingRefundCents !== null && $this->pendingRefundCents > 0) {
             $message->line(__('emails.order_item_modified.reduction_pending_refund', [
                 'amount' => number_format($this->pendingRefundCents / 100, 2, ',', '.'),

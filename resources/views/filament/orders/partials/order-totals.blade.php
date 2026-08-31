@@ -6,7 +6,7 @@
      * petición de la clienta). El bloque del pedido pasa a usar el MISMO vocabulario
      * que las cards de producto y a ser su SUMA EXACTA:
      *
-     *     Valor final = Pagado online + A cobrar en el parque + Pagado en el parque
+     *     Valor final = Pagado online + A cobrar en el parque + Liquidado en el parque (T5 · D9)
      *
      * y, en un eje aparte (dinero que vuelve al cliente): Devuelto + Pendiente de
      * devolución. Cada línea puede desplegar su detalle ↳ por reserva.
@@ -21,7 +21,7 @@
      * Reglas de visibilidad:
      *  - Pagado online: SIEMPRE (en el caso con actividad); es la base del valor.
      *  - A cobrar en el parque: si `hasPendingAtGate` (cargo pendiente por edición).
-     *  - Pagado en el parque: si `extraDueResolved > 0` (reservas ya finalizadas).
+     *  - Liquidado en el parque: si `extraDueResolved > 0` (reservas ya finalizadas).
      *  - Devuelto: si hay reembolso registrado.
      *  - Pendiente de devolución: si `hasPendienteDevolucion` (online sin producto
      *    detrás aún no devuelto; cubre reembolsos fallidos/pendientes).
@@ -220,7 +220,9 @@
                     @foreach ($gateLines as $line)
                         <div class="flex items-center justify-between gap-3 pl-6 text-xs text-orange-600/90 dark:text-orange-400/80">
                             <span class="truncate">↳ {{ $line['label'] }}</span>
-                            <span class="whitespace-nowrap">+{{ $fmt($line['amount']) }}</span>
+                            {{-- T5 (§25.6·7): signo consciente — desde la T4 la línea del descuento
+                                 es NEGATIVA y el «+» clavado pintaba «+-4,00 €». --}}
+                            <span class="whitespace-nowrap">{{ $line['amount'] < 0 ? '−' : '+' }}{{ $fmt(abs($line['amount'])) }}</span>
                         </div>
                     @endforeach
                     @foreach ($record->depositRemainderPendingByProduct() as $dr)
@@ -235,7 +237,7 @@
                 </div>
             @endif
 
-            {{-- Pagado en el parque. Detalle ↳ por reserva. --}}
+            {{-- Liquidado en el parque (T5 · D9). Detalle ↳ por reserva. --}}
             @if ($pagadoPuerta > 0)
                 <div class="flex items-center justify-between gap-3 pl-3 text-sm text-gray-700 dark:text-gray-300">
                     <span>{{ __('admin.orders.order_financial.pagado_puerta') }}</span>

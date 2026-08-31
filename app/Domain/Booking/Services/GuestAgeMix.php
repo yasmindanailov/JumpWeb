@@ -32,8 +32,11 @@ final class GuestAgeMix
      * @param  int  $guests  fichas de invitado de la reserva (= su cantidad)
      * @param  int  $withoutAge  fichas sin edad declarada: el veredicto es PARCIAL mientras haya
      * @param  int  $outOfRange  edades que NINGÚN producto de la familia cubre (config incompleta)
-     * @param  list<array{type_id:int, name:string, count:int, unit_cents:int|null}>  $upgrades  a qué
-     *                                                                                           producto corresponde cada grupo de invitados y cuánto cuesta la diferencia POR CABEZA
+     * @param  list<array{type_id:int, name:string, count:int, unit_cents:int|null, target_price_cents:int|null, diff_cents:int|null}>  $upgrades
+     *                                                                                                                                             a qué producto corresponde cada grupo de invitados y su aritmética: `unit_cents` es la
+     *                                                                                                                                             parte que se COBRA (`max(0, diff)`), `diff_cents` la diferencia CRUDA con signo (de
+     *                                                                                                                                             ella beben el descuento y el «a tu favor», T4) y `target_price_cents` el precio del
+     *                                                                                                                                             pack que le toca (para explicar «11,00 € en vez de 15,00 €»)
      * @param  int|null  $surchargeCents  total a cobrar; `null` = no se pudo tarificar (§8.4)
      * @param  int|null  $savingsCents  lo que la fiesta costaría MENOS si cada invitado estuviera en
      *                                  su pack — **informativo, NO es dinero** (§14)
@@ -92,6 +95,28 @@ final class GuestAgeMix
     public function upgradedGuests(): int
     {
         return array_sum(array_column($this->upgrades, 'count'));
+    }
+
+    /**
+     * Los grupos que una superficie de DIFERENCIAS puede pintar (T5, `cumple-mixto.md` §25.6): los
+     * de la dirección BARATA (`diff_cents < 0`) se quedan fuera — su «0,00 € por invitado» pegado a
+     * un descuento o a un «a tu favor» se lee como contradicción (el hallazgo del T0, medido en
+     * §25.2), y su historia ya la cuentan la línea del descuento escrito y el «a tu favor». El
+     * MISMO precio (`diff = 0`) SÍ se pinta («es mixta y no cuesta nada» es información, no ruido)
+     * y el sin-tarifa (`unit null`, «—») también.
+     *
+     * ⚠️⚠️ Es un filtro de PRESENTACIÓN: `upgrades` entero es pieza de CARGA —
+     * {@see MixedPartySurcharge} deriva el descuento exactamente de las entradas con
+     * `diff_cents < 0` (`creditTargets`) — y filtrarlo en el lector rompería el crédito de la T4.
+     *
+     * @return list<array{type_id:int, name:string, count:int, unit_cents:int|null, target_price_cents:int|null, diff_cents:int|null}>
+     */
+    public function visibleUpgrades(): array
+    {
+        return array_values(array_filter(
+            $this->upgrades,
+            fn (array $upgrade): bool => ($upgrade['diff_cents'] ?? null) === null || $upgrade['diff_cents'] >= 0,
+        ));
     }
 
     /**

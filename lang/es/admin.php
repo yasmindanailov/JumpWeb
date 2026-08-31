@@ -485,6 +485,11 @@ return [
         'mixed_party' => [
             'title' => 'Fiesta MIXTA: hay invitados de otro tramo de edad',
             'line' => ':count × :name · :unit por invitado',
+            // T5 (§25.6·1): la línea del veredicto en la FICHA lleva etiqueta de origen — es la
+            // única superficie que mezcla derivado y escrito, y sin ella «2 × Jump · 9,00 €» pegado
+            // al aplicado se leía como contradicción (el hallazgo del T0). La hoja y la puerta
+            // siguen con `line`: allí todo es ESCRITO y no hay dos fuentes que distinguir.
+            'conditions_line' => 'Según las condiciones de esta reserva: :count × :name · :unit por invitado',
             'applied' => 'Suplemento aplicado: :amount · se cobra en el parque',
             // T4 (`specs/cumple-mixto.md` §24.5): el descuento es REAL — la frase de la línea la
             // compone el dominio (`breakdownLabel`); estas tres acompañan al importe.
@@ -495,7 +500,10 @@ return [
             'missing_carrier' => 'No se puede aplicar el suplemento: falta el producto que lo lleva («Suplemento fiesta mixta» en el catálogo). Mientras falte, esta fiesta no cobra nada.',
             'unpriced' => 'No se puede calcular el suplemento: falta el precio de algún pack para ese día.',
             'without_age' => 'Faltan :count edades por declarar: el veredicto todavía puede cambiar.',
-            'frozen' => '{1} Suplemento congelado: falta :count edad por declarar. No se recalcula —ni arriba ni abajo— hasta que el cliente la complete.|[2,*] Suplemento congelado: faltan :count edades por declarar. No se recalcula —ni arriba ni abajo— hasta que el cliente las complete todas.',
+            // T5 (§25.6·4): en NEUTRO — lo congelado puede ser un suplemento O un descuento (desde
+            // la T4 `$mixHasWritten` incluye el crédito), y «Suplemento congelado» sobre un
+            // descuento afirmaba lo contrario de lo que había.
+            'frozen' => '{1} Importe por edades congelado: falta :count edad por declarar. No se recalcula —ni arriba ni abajo— hasta que el cliente la complete.|[2,*] Importe por edades congelado: faltan :count edades por declarar. No se recalcula —ni arriba ni abajo— hasta que el cliente las complete todas.',
             'out_of_range' => ':count invitados con una edad sin producto en las condiciones de esta reserva: no se cobra nada por ellos, el cliente tiene que llamar y se resuelve en el parque.',
             'orphaned' => 'Esta reserva no lleva sellada ninguna condición por edad (nació antes de que existiera el sello), así que no hay veredicto que comparar. El suplemento de arriba sigue vivo: es el que se le comunicó al cliente y es lo que se cobra en el parque.',
             'stale_seal' => 'El sello de condiciones de esta reserva no corresponde a su pack o a su fecha: se movió sin re-sellarla. Mientras no se revise no se calcula ni se mueve ningún suplemento; lo escrito, si lo hay, se conserva.',
@@ -1233,9 +1241,10 @@ return [
             // #225 F2: línea ↳ del resto de la señal dentro de "A cobrar en el parque"
             // (la card del producto, espejo del bloque del pedido order_financial).
             'deposit_remainder_line' => 'Resto de la señal',
-            // Unificado con el bloque del pedido (order_financial.pagado_puerta) y
-            // con el wording de la clienta: "Pagado en el parque" cuando finalizó.
-            'collected_at_gate' => 'Pagado en el parque',
+            // Unificado con el bloque del pedido (order_financial.pagado_puerta). T5 · D9
+            // (`cumple-mixto.md` §25.3): «Liquidado» y no «Pagado» — el cargo se da por resuelto al
+            // pasar la visita, pero nadie registra el cobro y el rótulo no puede afirmarlo.
+            'collected_at_gate' => 'Liquidado en el parque',
             'refunded_label' => 'Devuelto',
             'pending_refund_label' => 'Pendiente de devolución',
             // Robustez del desglose (#198): explica el PORQUÉ del pendiente en la card.
@@ -1270,7 +1279,7 @@ return [
             'pendiente_devolucion_caption' => 'El cliente pagó de más por un cambio en el pedido (una reducción de cantidad, una cancelación o un cambio a un precio menor) y está pendiente de devolvérselo.',
             // Rediseño valor-primero (sesión 2026-06-06): el bloque del pedido pasa a
             // ser la SUMA de las cards de producto, con el MISMO vocabulario →
-            // Valor final = Pagado online + A cobrar en el parque + Pagado en el parque.
+            // Valor final = Pagado online + A cobrar en el parque + Liquidado en el parque.
             'valor_final' => 'Valor final del pedido',
             'pagado_online' => 'Pagado online',
             // P1/P10: si el cobro fue manual (efectivo/datáfono) y no por la web, no se dice «online».
@@ -1280,7 +1289,8 @@ return [
             'pendiente_online' => 'Pendiente de cobro online',
             'compensado' => 'Compensación devuelta',
             'cobrado_web' => 'Cobrado por web (extracto)',
-            'pagado_puerta' => 'Pagado en el parque',
+            // T5 · D9: «Liquidado», no «Pagado» — mismo motivo que item_financial.collected_at_gate.
+            'pagado_puerta' => 'Liquidado en el parque',
             // Ancla del importe bruto pagado por web (conciliación con el banco),
             // en el detalle de "Pendiente de devolución".
             'pendiente_devolucion_caption_web' => 'El cliente pagó :total por web; tras una reducción, una cancelación o una bajada de precio se le devuelven :pendiente.',
@@ -1505,6 +1515,8 @@ return [
                 'submit' => 'Anonimizar definitivamente',
                 'success' => 'Usuario anonimizado correctamente.',
                 'blocked' => 'No se puede anonimizar esta cuenta.',
+                // T5 · D8: con reservas por celebrar la supresión espera (las tres vías, `cumple-mixto.md` §25.4).
+                'blocked_upcoming' => 'No se puede anonimizar: el cliente tiene reservas por celebrar. Cancélalas primero o espera a que pasen.',
             ],
         ],
     ],

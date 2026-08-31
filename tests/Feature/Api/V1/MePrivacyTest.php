@@ -64,12 +64,18 @@ class MePrivacyTest extends ApiTestCase
     /**
      * Un pedido con todo lo que el documento recorre: línea principal con franja y datos de evento,
      * un complemento anidado y una entrada emitida. Sin esto, la mitad del export se probaría vacía.
+     *
+     * ⚠️⚠️ **La franja es RELATIVA y por defecto PASADA** (T5 · D8, `cumple-mixto.md` §25.4). Hasta
+     * el 2026-08-31 llevaba `2026-09-05` clavado: tres tests borraban una cuenta con una reserva
+     * pagada FUTURA — la puerta de D8 los habría puesto en rojo HOY y en verde el 05-09, un verde
+     * que cambia de significado con el calendario. La fecha se elige aquí, nunca la elige el reloj:
+     * el pasado para lo que prueba la purga, `$slotDate` explícito para lo que prueba la puerta.
      */
-    private function orderFor(User $user, string $code = 'JW-EXPORT'): Order
+    private function orderFor(User $user, string $code = 'JW-EXPORT', ?string $slotDate = null): Order
     {
         $zone = Zone::create(['slug' => 'z-'.Str::lower(Str::random(5)), 'name' => ['es' => 'Zona']]);
         $slot = Slot::create([
-            'zone_id' => $zone->id, 'date' => '2026-09-05',
+            'zone_id' => $zone->id, 'date' => $slotDate ?? now()->subDays(7)->toDateString(),
             'start_time' => '10:00:00', 'end_time' => '11:00:00',
             'capacity' => 50, 'online_capacity' => 50,
         ]);
@@ -130,6 +136,94 @@ class MePrivacyTest extends ApiTestCase
         $this->assertNull($fresh->phone);
 
         $this->assertDatabaseHas('orders', ['user_id' => $user->id, 'code' => 'JW-EXPORT', 'total' => 9800]);
+    }
+
+    /**
+     * ⚠️⚠️ **T5 · D8** (`cumple-mixto.md` §25.4, `#284`): con una reserva POR CELEBRAR la supresión
+     * NO se ejecuta — `409 account_has_upcoming_reservations` y NADA purgado. Es la puerta que
+     * cierra por consecuencia la ficha del «techo tras anonimizar»: si ninguna cuenta con reserva
+     * viva puede anonimizarse, ninguna reserva anonimizada se reconcilia.
+     *
+     * Mutación que la valida: quitar la llamada a `hasUpcomingFor()` en `AccountPrivacy` la pone
+     * en rojo (y la de abajo, la del panel, cae con la suya).
+     */
+    public function test_it_refuses_to_delete_while_a_reservation_is_still_to_be_held(): void
+    {
+        $user = $this->holder();
+        $order = $this->orderFor($user, 'JW-FUTURO', now()->addDays(14)->toDateString());
+        $line = $order->items()->whereNull('parent_item_id')->firstOrFail();
+
+        $this->actingAs($user)
+            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->assertStatus(409)
+            ->assertValidResponse(409)
+            ->assertJsonPath('error.code', 'account_has_upcoming_reservations');
+
+        $fresh = User::find($user->id);
+        $line->refresh();
+
+        $this->assertFalse($fresh->isAnonymized(), 'la puerta de D8 no frenó la purga');
+        $this->assertSame('titular@ejemplo.test', $fresh->email);
+        $this->assertNotNull($line->guest_data, 'con la supresión bloqueada, la PII de terceros no se toca');
+    }
+
+    /** El escape de la puerta: una reserva futura CANCELADA ya no está «por celebrar». */
+    public function test_a_cancelled_upcoming_reservation_does_not_block_the_deletion(): void
+    {
+        $user = $this->holder();
+        $order = $this->orderFor($user, 'JW-CANCEL', now()->addDays(14)->toDateString());
+        $order->items()->whereNull('parent_item_id')->firstOrFail()
+            ->forceFill(['cancelled_at' => now()])->save();
+
+        $this->actingAs($user)
+            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->assertNoContent();
+
+        $this->assertTrue(User::find($user->id)->isAnonymized());
+    }
+
+    /**
+     * ⚠️ **Una línea pagada SIN franja no bloquea, a propósito** (`cumple-mixto.md` §25.4): sin
+     * slot, `isFinishedInPractice()` es `false` PARA SIEMPRE — bloquear por ella sería negar el
+     * art. 17 sin fecha de fin. Y sin franja no hay fiesta que reconciliar, así que la
+     * consecuencia de D8 se sostiene igual.
+     */
+    public function test_a_paid_line_without_a_slot_does_not_block_the_deletion(): void
+    {
+        $user = $this->holder();
+        $zone = Zone::create(['slug' => 'z-'.Str::lower(Str::random(5)), 'name' => ['es' => 'Zona']]);
+        $type = TicketType::create([
+            'name' => ['es' => 'Bono'], 'zone_id' => $zone->id,
+            'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 1,
+        ]);
+        $order = Order::create([
+            'user_id' => $user->id, 'code' => 'JW-SINSLOT', 'status' => Order::STATUS_PAID,
+            'subtotal' => 1000, 'tax' => 0, 'total' => 1000, 'currency' => 'EUR', 'paid_at' => now(),
+        ]);
+        $order->items()->create([
+            'ticket_type_id' => $type->id, 'slot_id' => null,
+            'quantity' => 1, 'unit_price' => 1000, 'seats' => 1,
+        ]);
+
+        $this->actingAs($user)
+            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->assertNoContent();
+
+        $this->assertTrue(User::find($user->id)->isAnonymized());
+    }
+
+    /** Una cesta PENDING no es un compromiso del parque: caduca sola y no retiene la cuenta. */
+    public function test_a_pending_cart_does_not_block_the_deletion(): void
+    {
+        $user = $this->holder();
+        $order = $this->orderFor($user, 'JW-CESTA', now()->addDays(14)->toDateString());
+        $order->forceFill(['status' => Order::STATUS_PENDING, 'paid_at' => null])->save();
+
+        $this->actingAs($user)
+            ->deleteJson(self::ROOT.'/me', ['current_password' => self::PASSWORD])
+            ->assertNoContent();
+
+        $this->assertTrue(User::find($user->id)->isAnonymized());
     }
 
     /**
@@ -296,7 +390,7 @@ class MePrivacyTest extends ApiTestCase
         $this->assertSame('JW-EXPORT', $response->json('orders.0.code'));
         $this->assertSame(9800, $response->json('orders.0.total_cents'));
         $this->assertSame('Cumple Jump', $response->json('orders.0.items.0.product'));
-        $this->assertSame('2026-09-05', $response->json('orders.0.items.0.date'));
+        $this->assertSame(now()->subDays(7)->toDateString(), $response->json('orders.0.items.0.date'));
         $this->assertSame('10:00:00', $response->json('orders.0.items.0.time'));
         $this->assertSame('Calcetines', $response->json('orders.0.items.0.addons.0.product'));
         $this->assertSame(400, $response->json('orders.0.items.0.addons.0.unit_price_cents'));

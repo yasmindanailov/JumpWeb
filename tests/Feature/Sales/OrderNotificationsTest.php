@@ -15,6 +15,7 @@ use App\Notifications\OrderPaymentDeclined;
 use App\Notifications\OrderRefunded;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Lang;
 use Tests\TestCase;
 
 /**
@@ -157,6 +158,23 @@ class OrderNotificationsTest extends TestCase
         $mail = (new OrderRefunded($order))->toMail($order->user)->toArray();
         $body = implode("\n", $mail['introLines'] ?? []);
         $this->assertStringContainsString('25,00', $body);
+    }
+
+    /**
+     * T5 (§25.5): las dos voces del canal del reembolso existen en los TRES idiomas del cliente —
+     * `Lang::has(..., fallback: false)`, la lección de `#134` §23.6: una clave que falte en EN/FR
+     * no sale en crudo, sale un cliente leyendo castellano en su email de dinero.
+     */
+    public function test_the_refund_channel_lines_exist_in_every_client_locale(): void
+    {
+        foreach (['order_refunded.when_manual', 'order_item_refunded.when_manual'] as $key) {
+            foreach (['es', 'en', 'fr'] as $locale) {
+                $this->assertTrue(
+                    Lang::has('emails.'.$key, $locale, false),
+                    "emails.{$key} falta en «{$locale}»",
+                );
+            }
+        }
     }
 
     public function test_order_confirmation_includes_paid_at_in_display_timezone(): void

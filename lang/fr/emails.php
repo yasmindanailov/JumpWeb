@@ -105,6 +105,8 @@ return [
         'amount' => 'Montant remboursé : :amount €',
         'also_cancelled' => 'Ta réservation est également annulée.',
         'when' => 'Tu verras le remboursement sur la carte avec laquelle tu as payé dans les 3 à 5 prochains jours ouvrés (selon ta banque).',
+        // T5 (§25.5, Q3) : remboursement enregistré comme MANUEL — rendu hors passerelle (le circuit du parc).
+        'when_manual' => 'Ce montant t’a été rendu au parc. Cet e-mail te sert de justificatif.',
         'action' => 'Voir mes réservations',
         'contact' => 'Si tu ne vois pas le remboursement sous une semaine, écris-nous avec le numéro de commande.',
     ],
@@ -125,6 +127,8 @@ return [
         'amount' => 'Montant remboursé pour « :product » : :amount €',
         'also_cancelled' => '« :product » est annulé.',
         'when' => 'Tu verras le remboursement sur la carte avec laquelle tu as payé dans les 3 à 5 prochains jours ouvrés (selon ta banque).',
+        // T5 (§25.5, Q3) : remboursement enregistré comme MANUEL — rendu hors passerelle (le circuit du parc).
+        'when_manual' => 'Ce montant t’a été rendu au parc. Cet e-mail te sert de justificatif.',
         'action' => 'Voir mes réservations',
         'contact' => 'Si tu ne vois pas le remboursement sous une semaine, écris-nous avec le numéro de commande.',
         'product_fallback' => 'produit :id',
@@ -158,10 +162,11 @@ return [
         'event_data_change' => 'Informations de l’événement mises à jour.',
         'addon_change' => 'Compléments mis à jour.',
         'extra_due' => 'À régler à l’arrivée au parc : :amount €',
-        'refunded' => 'Montant remboursé sur ta carte : :amount € (3-5 jours ouvrés).',
         // `#155` : une baisse de prix, c'est aussi de l'argent — même vocabulaire que l'écran.
+        // T5 (§25.5) : sans promettre de canal ni d'e-mail — l'argent peut revenir par la banque
+        // ou être réglé au parc.
         'reduction_gate_credit' => 'Avec le nouveau prix, tu paieras :amount € de moins à ton arrivée au parc.',
-        'reduction_pending_refund' => 'Ce changement laisse :amount € à te rembourser. Tu le verras dans « Mes réservations » et nous t’écrirons dès que le remboursement sera traité.',
+        'reduction_pending_refund' => 'Ce changement laisse :amount € à te rembourser. Tu en verras l’état dans « Mes commandes » ; nous te les rendrons sur ta carte ou au parc le jour de ta visite.',
 
         'action' => 'Voir mes réservations',
         'contact' => 'Si tu as des questions, écris-nous avec le numéro de commande.',

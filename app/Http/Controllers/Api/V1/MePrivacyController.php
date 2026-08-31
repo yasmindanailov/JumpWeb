@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identity\Exceptions\AccountHasUpcomingReservationsException;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountPrivacy;
 use App\Http\Api\ApiCollection;
+use App\Http\Api\ApiErrorCode;
+use App\Http\Api\ApiErrorResponse;
 use App\Http\Api\Concerns\TranslatesCredentialVerdicts;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\ConsentResource;
@@ -34,6 +37,10 @@ class MePrivacyController extends Controller
      *
      * ⚠️ **Exige reconfirmar la contraseña**, con el mismo limitador que `PUT me/password`: es la
      * única gestión irreversible de las cinco.
+     *
+     * ⚠️ **`409` con una reserva por celebrar** (T5 · D8, `cumple-mixto.md` §25.4): la supresión
+     * espera a que pase o se cancele, y el mensaje se lo explica — el cajón lo pinta tal cual
+     * (`form-outcome.js` enseña el `error.message` de cualquier 4xx como aviso).
      */
     public function destroy(Request $request, AccountPrivacy $privacy): JsonResponse
     {
@@ -42,7 +49,11 @@ class MePrivacyController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        $result = $privacy->anonymize($user, $data['current_password'], (string) $request->ip());
+        try {
+            $result = $privacy->anonymize($user, $data['current_password'], (string) $request->ip());
+        } catch (AccountHasUpcomingReservationsException) {
+            return ApiErrorResponse::make(ApiErrorCode::AccountHasUpcomingReservations, 409);
+        }
 
         if ($result->failed()) {
             return $this->credentialDenial($result);

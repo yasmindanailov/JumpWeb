@@ -29,11 +29,20 @@ class OrderItemRefunded extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    /**
+     * @param  bool  $manualRefund  T5 (`cumple-mixto.md` §25.5, Q3): el reembolso se registró como
+     *                              `PaymentRefund::MODE_MANUAL` — dinero devuelto FUERA de la
+     *                              pasarela (el circuito de parque de §20.5). Hasta el 2026-08-31
+     *                              este correo prometía «lo verás en tu tarjeta (3-5 días)» también
+     *                              por dinero entregado en mano: el panel distinguía el modo y el
+     *                              correo no podía.
+     */
     public function __construct(
         public Order $order,
         public OrderItem $item,
         public int $refundedAmountCents,
         public bool $alsoCancelledItem = false,
+        public bool $manualRefund = false,
     ) {}
 
     /**
@@ -70,8 +79,10 @@ class OrderItemRefunded extends Notification implements ShouldQueue
             ]));
         }
 
+        // La línea del CANAL sigue al modo real del registro: prometer la tarjeta por dinero
+        // devuelto en el parque era la sobre-promesa nº 2 de la T5 (§25.2).
         return $message
-            ->line(__('emails.order_item_refunded.when'))
+            ->line(__($this->manualRefund ? 'emails.order_item_refunded.when_manual' : 'emails.order_item_refunded.when'))
             ->action(__('emails.order_item_refunded.action'), route('account.orders'))
             ->line(__('emails.order_item_refunded.contact'));
     }

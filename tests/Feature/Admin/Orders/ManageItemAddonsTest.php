@@ -644,9 +644,9 @@ class ManageItemAddonsTest extends TestCase
         $this->assertNull($order->refunded_at);                // sigue sin reembolso real
 
         $this->assertSame(1, AuditLog::where('action', 'orders.item_edited')->count());
+        // (T5 §25.5: el `refundedCents` que este cierre comprobaba se RETIRÓ — iba cableado a null.)
         Notification::assertSentTo($order->user, OrderItemModified::class,
             fn (OrderItemModified $n): bool => $n->extraDueCents === null
-                && $n->refundedCents === null
                 && ! empty($n->changes['addon_change']['removed']));
     }
 

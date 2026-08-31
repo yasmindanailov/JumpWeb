@@ -2301,8 +2301,25 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       `mixed-party:verify-concurrency --scenario=credit` visto FALLAR sin el lock (12 líneas y
       −84,00 €); sonda en navegador con la aritmética verificada en vivo. Las frases de `#246`
       («no se descuenta solo») CADUCARON. Queda el OJO del owner.
-      ❗ **Queda, por orden del plan §18.5**: T5 las palabras (D9, D8, el email de la
-      devolución — el «hoy:» del desfase se disolvió con la T1) · T6 el guardián de solapes fuera
+      ✅ **T5 · LAS PALABRAS, EN EL ÁRBOL (2026-08-31 noche, 2.ª sesión, `#298`)** — diseño fino
+      en §25 (escrito contra el código ANTES de una línea; las tres ambigüedades preguntadas
+      numeradas: «Liquidado en el parque» · la puerta de D8 en las TRES vías · el correo del
+      manual entra) y ejecución en **§25.10**. **D9**: las tres claves a «Liquidado en el parque»
+      (`paid_desk` intacta; `TYPE_COLLECTED_IN_PERSON` sigue sin uso — el registro real es feature
+      aparte). **D8**: `CustomerReservations::hasUpcomingFor()` (el criterio de la pantalla del
+      titular, NO el complemento de `terminated()`) + puerta en `AccountPrivacy` (409) y en el
+      panel (audit del bloqueo); `RGPD-01` ampliada; la ficha del «techo tras anonimizar»
+      CONSTRUIDA. ⚠️ Tres tests borraban una cuenta con reserva FUTURA (fecha clavada → relativas).
+      **Correos**: las sobre-promesas eran DOS — la reducción reescrita (sin canal ni correo
+      prometidos, puntero a «Mis pedidos») y los reembolsos ganan el MODO (`when_manual`);
+      `order_item_modified.refunded` retirada. **Panel**: una afirmación de §18.5 resultó FALSA
+      («el 0,00 € se resuelve con la T4» — no): `visibleUpgrades()` (filtro de PRESENTACIÓN:
+      `creditTargets()` necesita esas entradas), lo escrito primero + condiciones etiquetadas,
+      la cadena por LADOS, `frozen` en neutro, primeras aserciones de `drift`/`net`/
+      `missing_credit_carrier`. **Y el «+-4,00 €»** que cazó el owner en mitad de la tanda (el `+`
+      clavado de las ↳, escondido tras el «Ver más» plegado). Suite 3692/24.098 · JS 878 · 10/10
+      mutaciones vistas en rojo · sonda `t5.js` 10/10 con capturas miradas. Queda el OJO del owner.
+      ❗ **Queda, por orden del plan §18.5**: T6 el guardián de solapes fuera
       del formulario (con el sello ya no mueve dinero) · la fase 3 de §20.2 (cobro online
       post-reserva) despierta a §16 cuando exista · el **AFORO** sigue aparcado por el owner
       (zonas distintas, spec propia).

@@ -17207,3 +17207,79 @@ sigue habiendo una libre**; la siguiente sección que quiera dibujo tiene ese hu
 
 **Verificación**: árbol devuelto al estado de `#295` (`git status` limpio, kit de vuelta a 4
 símbolos, `kit:build --check` servible, `GET /` 200) · suite y Pint verdes · `docs-check` ✓.
+
+## #298 · 2026-08-31 · T5 de mixtos: las palabras — D9, D8, los correos que prometían de más y el bloque que no se explicaba
+
+Sexta tanda del plan de `#284` (§18.5), diseñada en fino ANTES de una línea
+(`specs/cumple-mixto.md` **§25**, ejecución en **§25.10**) con las tres ambigüedades preguntadas
+numeradas al owner (§25.9): **Q1** la voz es «Liquidado en el parque» · **Q2** la puerta de D8
+cubre las TRES vías, panel incluido · **Q3** el correo del reembolso manual entra en la tanda.
+
+▶ **D9 — «Pagado en el parque» deja de afirmarse.** Medido: la afirmación eran exactamente TRES
+claves y CUATRO puntos de render (cajón, sub-card del panel + PDF hoja, totales del pedido); pasan
+a «Liquidado en el parque» (es/en/fr + `zh_CN` «已在门店结清») sin mover un identificador ni un
+céntimo. ⚠️ `tickets.paid_desk` intacta: el pedido de taquilla es un cobro REGISTRADO. ▶ La
+confirmación de que D9 es solo palabras ya estaba escrita en el código:
+`OrderAdjustment::TYPE_COLLECTED_IN_PERSON` existe declarada y SIN un solo uso — el hueco
+reservado para el registro real, que sigue siendo feature aparte. Guarda por PALABRAS PROHIBIDAS
+(no por texto exacto, `#251`): las tres claves no pueden volver a decir «Pagado/Cobrado».
+
+▶ **D8 — anonimizar solo sin reservas por celebrar, y el criterio es el de la pantalla del
+titular.** `CustomerReservations::hasUpcomingFor()` reutiliza `upcomingItems()` ENTERA (pagada +
+principal activo + franja sin terminar, corte fino en PHP): la puerta y «próximas» cuentan la
+misma historia. **NO es el complemento de `terminated()`**, y las tres divergencias son a
+propósito — una línea pagada SIN franja jamás «termina» (bloquearía el art. 17 PARA SIEMPRE), una
+cesta `PENDING` caduca sola, y el corte fino ya estaba hecho. La puerta vive en
+`AccountPrivacy::anonymize()` tras `verify()` (que las reservas no se filtren a quien no tiene la
+contraseña) — **nunca en `User::anonymize()`** (fronteras de módulo + el censo y la idempotencia
+de `AnonymizeCoversEveryUserColumnTest`) — y en la acción del panel con audit propio; la API
+responde `409 account_has_upcoming_reservations` y **el cajón no cambió NI UNA LÍNEA** (ya pintaba
+el `error.message` de cualquier 4xx). Cierra CONSTRUIDA la ficha del «techo tras anonimizar».
+⚠️⚠️ **TRES tests de `MePrivacyTest` borraban una cuenta con una reserva pagada FUTURA**
+(`2026-09-05` clavado): la puerta los puso en rojo HOY — y a partir del 05-09 habrían pasado
+SOLOS, un verde que cambia de significado con el calendario. Fechas RELATIVAS, elegidas por el
+test y nunca por el reloj.
+
+▶ **Los correos — las sobre-promesas eran DOS, no una.** (1) La de `#285`:
+`reduction_pending_refund` prometía «te avisaremos por email cuando procesemos la devolución» —
+y su puntero también había caducado («Mis reservas» no enseña importes desde `#130`). La frase
+nueva describe el estado y las DOS salidas (tarjeta o parque) SIN prometer canal ni correo: el
+registro del reembolso manual es OPCIONAL (§20.5) y prometer un aviso que puede no existir es la
+misma sobre-promesa por otra puerta. (2) La encadenada, encontrada al medir:
+`order_item_refunded.when`/`order_refunded.when` prometían «Verás el reintegro en la tarjeta
+(3-5 días)» TAMBIÉN con `PaymentRefund::MODE_MANUAL` — dinero en mano/TPV, el circuito que §20.5
+designa para el parque; el panel distinguía el modo y el correo no podía. Las dos Notifications
+ganan `manualRefund` y con él la voz del hecho («se te ha devuelto en el parque; este correo es
+tu justificante»); el reenvío deriva el modo del último reembolso con éxito. ▶ Y
+`emails.order_item_modified.refunded` se RETIRÓ con su parámetro: cableada a `null` desde el D8
+del desglose, con promesa de tarjeta dentro, esperando a que alguien la reviviera.
+
+▶ **El bloque del panel — lo que quedaba vivo del hallazgo del T0, tras T1+T4.** ⚠️⚠️ **Una
+afirmación del propio §18.5 resultó FALSA al medirla**: «el 0,00 € de la dirección barata se
+resuelve solo con la T4» — NO se resolvió (el veredicto mete TODOS los destinos con
+`unit = max(0, diff)` y el Blade no filtraba: «2 × Kids · 0,00 €» convivía con «14,00 € a favor»).
+El arreglo es un filtro de PRESENTACIÓN (`GuestAgeMix::visibleUpgrades()`): ⚠️⚠️ `upgrades` es
+pieza de CARGA — `creditTargets()` necesita exactamente las entradas de la dirección barata
+(`unit 0` pero `diff < 0`) y filtrar en el lector rompería el crédito de la T4; el MISMO precio
+conserva su línea («es mixta y no cuesta nada» es información). Además: lo ESCRITO primero y la
+línea del veredicto DESPUÉS con etiqueta («Según las condiciones de esta reserva: …», clave
+propia — `line` la comparte la hoja, donde todo es escrito); la cadena de estados pasa a LADOS
+independientes (el desfase del cargo ya no se lo traga el portador del descuento ausente — el
+único tragón real: `missing_carrier` antes que `drift` es CORRECTO, es la explicación de su
+propio desfase); `frozen` en NEUTRO («Importe por edades congelado» — lo congelado puede ser un
+descuento). Y las PRIMERAS aserciones de `drift`/`net`/`missing_credit_carrier`: eran cero.
+
+▶ **El «+-4,00 €», cazado por el OJO del owner en mitad de la tanda**: las ↳ del desglose de
+puerta del panel anteponían un `+` CLAVADO (de cuando toda línea era un cargo) al importe ya
+formateado — con el descuento negativo de la T4 salía «+-4,00 €». Se escondió detrás del «Ver
+más» plegado por defecto, justo donde la sonda de la T4 no miró. Signo consciente en los DOS
+partials; el cajón, la hoja y la puerta ya lo hacían bien.
+
+**Verificación**: suite **3692 (24.098 aserciones)** · JS 878 · **las 10 guardas con mutación de
+§25.8 vistas en ROJO una a una** · sonda en navegador (`t5.js`, 10/10 ✓, 4 capturas, las dos
+críticas miradas): el «−4,00 €» en vivo sobre `T4-PRB01`, el orden del bloque sobre `T0-PRB01`,
+y la puerta de D8 bloqueando en vivo la anonimización de `probe-card`. Cuatro trampas de
+ejecución pagadas y escritas en §25.10 (el `git checkout` que se llevó trabajo sin commitear ·
+la guarda J imposible con el portador vivo porque EL PROPIO CARGO cuenta como cobertura · la
+memo estática de `Setting::value` · el doble del contrato que crasheó paratest). Queda el OJO
+del owner; lo siguiente del plan es la **T6** (el guardián de solapes fuera del formulario).

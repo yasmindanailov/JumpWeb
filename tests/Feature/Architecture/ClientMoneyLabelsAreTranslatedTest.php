@@ -181,4 +181,45 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
 
         return array_keys($keys);
     }
+
+    /**
+     * **T5 · D9 (`cumple-mixto.md` §25.3, `#284`): las etiquetas del canal de puerta RESUELTO no
+     * afirman un cobro que nadie registró.** El cargo se da por resuelto al pasar la visita de un
+     * pedido pagado —decisión 7.2e—, pero el registro real del cobro no existe (el hueco reservado
+     * es `OrderAdjustment::TYPE_COLLECTED_IN_PERSON`, sin un solo uso): «Pagado en el parque»
+     * contaba como hecho lo que el sistema no sabe. La regla se asevera por PALABRAS PROHIBIDAS y
+     * no por texto exacto, para no atar la guarda a una implementación (`#251`).
+     *
+     * ⚠️ `tickets.paid_desk` («Pagado en recepción») queda FUERA a propósito: el pedido de
+     * taquilla es un cobro que el operador SÍ registró, y ahí «Pagado» es verdad.
+     *
+     * Mutación que la valida: restaurar «Pagado en el parque» en cualquiera de las tres claves.
+     */
+    public function test_the_settled_gate_labels_do_not_claim_an_unrecorded_payment(): void
+    {
+        $labels = [
+            ['tickets.ledger.paid_at_gate', 'es', ['Pagado', 'Cobrado']],
+            ['tickets.ledger.paid_at_gate', 'en', ['Paid', 'Collected']],
+            ['tickets.ledger.paid_at_gate', 'fr', ['Payé']],
+            ['admin.orders.item_financial.collected_at_gate', 'es', ['Pagado', 'Cobrado']],
+            ['admin.orders.item_financial.collected_at_gate', 'zh_CN', ['收取', '支付']],
+            ['admin.orders.order_financial.pagado_puerta', 'es', ['Pagado', 'Cobrado']],
+            ['admin.orders.order_financial.pagado_puerta', 'zh_CN', ['收取', '支付']],
+        ];
+
+        foreach ($labels as [$key, $locale, $forbidden]) {
+            $text = Lang::get($key, [], $locale);
+
+            $this->assertNotSame($key, $text, "`{$key}` no existe en «{$locale}»");
+            $this->assertNotSame('', trim((string) $text), "`{$key}` está vacía en «{$locale}»");
+
+            foreach ($forbidden as $word) {
+                $this->assertStringNotContainsString(
+                    $word,
+                    (string) $text,
+                    "`{$key}` en «{$locale}» vuelve a afirmar un cobro no registrado («{$word}»): D9 lo retiró a propósito."
+                );
+            }
+        }
+    }
 }

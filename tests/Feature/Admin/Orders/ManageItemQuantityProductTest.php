@@ -228,8 +228,9 @@ class ManageItemQuantityProductTest extends TestCase
         $this->assertSame(2400, $order->financialSummary()->pendienteDevolucion());
         $this->assertSame(2400, $order->itemPendingRefundCents($item));
 
+        // (T5 §25.5: el `refundedCents` que este cierre comprobaba se RETIRÓ — iba cableado a null.)
         Notification::assertSentTo($order->user, OrderItemModified::class,
-            fn (OrderItemModified $n): bool => $n->refundedCents === null && $n->extraDueCents === null);
+            fn (OrderItemModified $n): bool => $n->extraDueCents === null);
     }
 
     public function test_increase_then_decrease_credits_gate_without_phantom_or_online_refund(): void
@@ -434,7 +435,7 @@ class ManageItemQuantityProductTest extends TestCase
         $this->assertNull(OrderAdjustment::where('order_item_id', $item->id)->first());
         $this->assertNull(PaymentRefund::where('order_item_id', $item->id)->first());
         Notification::assertSentTo($order->user, OrderItemModified::class,
-            fn (OrderItemModified $n): bool => $n->extraDueCents === null && $n->refundedCents === null
+            fn (OrderItemModified $n): bool => $n->extraDueCents === null
                 && isset($n->changes['product_change']));
     }
 

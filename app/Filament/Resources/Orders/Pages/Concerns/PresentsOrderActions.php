@@ -435,6 +435,9 @@ trait PresentsOrderActions
                 item: $row['item']->fresh(),
                 refundedAmountCents: $row['amount_cents'],
                 alsoCancelledItem: $alsoCancelled,
+                // T5 (§25.5): con `manual` (record-only, dinero devuelto fuera de la pasarela) el
+                // correo dice el hecho — sin esto prometía la tarjeta por dinero dado en mano.
+                manualRefund: $mode === PaymentRefund::MODE_MANUAL,
             ));
         }
 

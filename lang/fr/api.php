@@ -46,6 +46,8 @@ return [
         'waiver_email_unverified' => 'Vérifiez votre adresse e-mail avant de signer la décharge.',
         'dependent_not_minor' => 'La personne à charge doit être mineure.',
         'dependents_limit_reached' => 'Votre compte a atteint le nombre maximal de personnes à charge (:max).',
+        // T5 · D8 : un compte avec une réservation à venir ne peut pas être supprimé (`cumple-mixto.md` §25.4).
+        'account_has_upcoming_reservations' => 'Nous ne pouvons pas encore supprimer votre compte : vous avez des réservations à venir. Vous pourrez le supprimer une fois passées ou si elles sont annulées.',
     ],
 
     // Avis PAR CHAMP de l'attribution de billets aux personnes à charge (`POST /orders`, Phase 6 · lot 4).

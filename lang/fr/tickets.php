@@ -187,7 +187,8 @@ return [
         'value_total' => 'Valeur de la commande',
         'paid_online' => 'Payé en ligne',
         'pending_online' => 'Reste à payer en ligne',
-        'paid_at_gate' => 'Payé au parc',
+        // T5 · D9 : le compte est soldé quand la visite passe — aucun encaissement n'est enregistré.
+        'paid_at_gate' => 'Réglé au parc',
         'pending_at_gate' => 'Reste à payer au parc',
         'compensated' => 'Remboursé en geste commercial',
         'paid_desk' => "Payé à l'accueil",

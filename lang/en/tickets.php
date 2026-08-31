@@ -188,7 +188,8 @@ return [
         'value_total' => 'Order value',
         'paid_online' => 'Paid online',
         'pending_online' => 'Left to pay online',
-        'paid_at_gate' => 'Paid at the park',
+        // T5 · D9: settled when the visit passes on a paid order — no collection is recorded.
+        'paid_at_gate' => 'Settled at the park',
         'pending_at_gate' => 'Left to pay at the park',
         'compensated' => 'Refunded as compensation',
         'paid_desk' => 'Paid at the desk',

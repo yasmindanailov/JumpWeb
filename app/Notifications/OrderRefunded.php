@@ -34,10 +34,17 @@ class OrderRefunded extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    /**
+     * @param  bool  $manualRefund  T5 (`cumple-mixto.md` §25.5, Q3): el reembolso se registró como
+     *                              `PaymentRefund::MODE_MANUAL` (fuera de la pasarela — el circuito
+     *                              de parque de §20.5). Con él, la línea del plazo bancario se
+     *                              sustituye por la voz del hecho: «se te ha devuelto en el parque».
+     */
     public function __construct(
         public Order $order,
         public ?Payment $payment = null,
         public bool $alsoCancelled = false,
+        public bool $manualRefund = false,
     ) {}
 
     /**
@@ -72,8 +79,10 @@ class OrderRefunded extends Notification implements ShouldQueue
             $message->line(__('emails.order_refunded.also_cancelled'));
         }
 
+        // La línea del CANAL sigue al modo real del registro (T5 §25.5): la de tarjeta solo cuando
+        // el reembolso fue por la pasarela.
         return $message
-            ->line(__('emails.order_refunded.when'))
+            ->line(__($this->manualRefund ? 'emails.order_refunded.when_manual' : 'emails.order_refunded.when'))
             ->action(__('emails.order_refunded.action'), route('account.orders'))
             ->line(__('emails.order_refunded.contact'));
     }

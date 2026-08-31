@@ -1224,7 +1224,7 @@ empieza sin el informe de §19 aprobado.
 | **T2** | **La edad sin producto** (D6) + que deje de congelar el dinero + **el disparador pasa a «solo guardado COMPLETO»** (§20.6, cambia la conducta de `#268` para los cargos). ▶ ✅ **EN EL ÁRBOL (2026-08-31, `#289`): diseño en §22, ejecución en §22.9.** «Completo» son DOS preguntas (dinero: todas las edades declaradas · formulario: además ninguna edad sin producto); la puerta vive en `reconcile()` con la fila bloqueada y vale también para el panel (`[DECIDIDO owner]`); tres textos por instalación con respaldo y `:phone`. Cazó de paso un hueco de contrato en la API (`general` como lista). Queda el OJO del owner | C | no (toca `MixedPartySurcharge` por el disparador) |
 | **T3** | **El parque decide** (E·F·D7): la diferencia en hoja de sala y puerta, corregir la edad desde el panel auditado, y bajar del mínimo. ▶ ✅ **EN EL ÁRBOL (2026-08-31 noche, `#294`): diseño en §23, ejecución en §23.10.** Lo escrito en hoja y puerta (y la guarda de presupuesto cazó un N+1 preexistente de la puerta), la pestaña «Invitados» por la MISMA puerta que el cliente (`OrderItemGuestDataWriter` → `submitGuestForm` con `via = panel` y actor operador), el interruptor de «bajar del mínimo» con permiso propio re-exigido en el editor y audit solo cuando se usa. 17 casos nuevos, 12/12 mutaciones, los tres verificadores sobre MySQL, sonda en navegador. Queda el OJO del owner | E · F · D7 | **sí** (la edad mueve el suplemento) |
 | **T4** | **El −X €** con el diseño CERRADO de **§20** (espejo acotado a puerta). ▶ ✅ **EN EL ÁRBOL (2026-08-31 noche, `#296`): diseño fino en §24, ejecución en §24.10.** La línea `is_credit` con su `extra_due` gemelo negativo, el tope de cobertura, la asimetría del silencio, el «a tu favor» hasta «Mis pedidos» y la API (`in_favour_hint`, decidido por el owner con el coste delante), y el verificador con su escenario propio visto FALLAR sin el lock. Queda el OJO del owner | el medio flujo que falta | **sí** |
-| **T5** | **Las palabras** (D9) + anonimizar con reserva viva (D8) + ⚠️ el email de una reducción promete «procesaremos la devolución» y con la liquidación en parque promete de más (`#285`) + ❗ **hallazgo del T0, cazado por el OJO del owner** (2026-08-31): en el bloque del panel, la línea del veredicto («2 × Cumpleaños Jump · 9,00 € por invitado») **no dice que es la tarifa DE HOY** — pegada a «Suplemento aplicado: 8,00 €» se lee como contradicción hasta llegar a la frase del desfase. El owner mismo tuvo que preguntar, y esa es la prueba: el bloque no se explica solo. Arreglo: «hoy: 9,00 € por invitado» cuando difiera de lo escrito, o el aplicado primero. ⚠️ El «0,00 € por invitado» de la dirección barata NO se toca: se resuelve solo con la T4 (pasa a «Descuento: −8,00 €») | D8 · D9 | no (D9 es presentación) |
+| **T5** | **Las palabras** (D9) + anonimizar con reserva viva (D8) + ⚠️ el email de una reducción promete «procesaremos la devolución» y con la liquidación en parque promete de más (`#285`) + ❗ **hallazgo del T0, cazado por el OJO del owner** (2026-08-31): en el bloque del panel, la línea del veredicto («2 × Cumpleaños Jump · 9,00 € por invitado») **no dice que es la tarifa DE HOY** — pegada a «Suplemento aplicado: 8,00 €» se lee como contradicción hasta llegar a la frase del desfase. El owner mismo tuvo que preguntar, y esa es la prueba: el bloque no se explica solo. Arreglo: «hoy: 9,00 € por invitado» cuando difiera de lo escrito, o el aplicado primero. ⚠️ El «0,00 € por invitado» de la dirección barata NO se toca: ~~se resuelve solo con la T4 (pasa a «Descuento: −8,00 €»)~~ ⚠️⚠️ **MEDIDO EN LA T5 (§25.2): FALSO — la T4 NO lo resolvió.** El veredicto mete TODOS los destinos con `unit = max(0, diff)` y el Blade no filtra: hoy conviven «2 × Cumpleaños Kids · 0,00 € por invitado» y «14,00 € a favor del cliente». Se cierra en la T5 (§25.6) | D8 · D9 | no (D9 es presentación) |
 | **T6** | **El guardián fuera del formulario** (G) | G | no |
 
 ⚠️ **T1 hace innecesario el aviso de `#283`**, que se queda como red: avisar de un cambio que ya no
@@ -2344,3 +2344,328 @@ local para futuras sondas (con `T0-PRB*`), y la sonda dejó 2 correos en Mailpit
 hallazgo del T0 sobre la línea del veredicto, que la T1 disolvió a medias) · **T6** (el guardián
 de solapes fuera del formulario) · la **fase 3** de §20.2 (cobro online post-reserva) despierta a
 §16 cuando exista para cualquiera de las dos direcciones.
+
+---
+
+## 25. 🟦 T5 · LAS PALABRAS (D9 · D8 · los correos · el bloque que no se explica) — diseño fino (2026-08-31, noche)
+
+> Diseño contra el código ANTES de una línea, como las cinco tandas anteriores. Las ambigüedades
+> van numeradas en el apartado de decisiones (25.9). Cuatro piezas: **D9** («Pagado en el parque»
+> deja de afirmarse), **D8** (anonimizar solo sin reservas por celebrar), **los correos que
+> prometen de más** (`#285` — y son DOS, no uno) y **lo que queda vivo del hallazgo del T0** en el
+> bloque del panel. Ninguna toca la lógica del núcleo de dinero — la ejecución acabó rozando el
+> `CRITICAL_RE` por UN fichero (`OrderItemEditor`, solo la retirada del argumento muerto del
+> correo), así que el push fue con los verificadores y `VERIFY_CONC=1` igualmente; D8 es RGPD y
+> se leyó primero la sección 3 de `docs/INVARIANTES.md`.
+
+### 25.1 · Lo que cambia, en una frase por pieza
+
+- **D9**: las TRES claves que afirman «Pagado en el parque» pasan a una voz que cierra la cuenta
+  sin afirmar un cobro que nadie registró; ni un identificador de canal ni un céntimo se mueven.
+- **D8**: la supresión (art. 17) gana una puerta — con una reserva por celebrar no se ejecuta y se
+  explica por qué — en las DOS vías del cliente y en la del panel.
+- **Correos**: la reducción deja de prometer «cuando procesemos la devolución», y el correo de un
+  reembolso registrado como MANUAL deja de prometer «lo verás en tu tarjeta» por dinero entregado
+  en mano.
+- **Panel**: el bloque de fiesta mixta se explica solo — lo ESCRITO primero, la línea del
+  veredicto etiquetada como condiciones, la dirección barata sin su «0,00 €» y la cadena de
+  estados sin tragarse el desfase.
+
+### 25.2 · Lo verificado ANTES de escribir (cada afirmación, medida hoy) — y las CORRECCIONES
+
+**⚠️⚠️ CORRECCIÓN a §18.5 · «el 0,00 € se resuelve solo con la T4» era FALSO.** `verdict()` mete
+en `upgrades` TODOS los destinos con `unit_cents = max(0, diff)` (`GuestAgeMixReader`) y el
+`@foreach` del bloque mixto de `items-list.blade.php` no filtra nada: reproducido con el caso del
+propio test de la dirección barata, hoy el bloque pinta «2 × Cumpleaños Kids · 0,00 € por
+invitado» pegado a «14,00 € a favor del cliente» — la contradicción del T0 con el signo cambiado.
+Y es asimétrico con el resto del sistema: `targetState()` descarta los `unit <= 0` como ruido
+(`MixedPartySurcharge::targetState()`) y hoja y puerta solo pintan lo ESCRITO.
+
+**⚠️ CORRECCIÓN al comentario del propio bloque**: `items-list.blade.php` presenta el veredicto
+como «derivado de las edades…, nunca sellado» y al lector como `scoped` que memoiza — las dos
+cosas caducaron con la T1 (deriva del sello; el lector es sin estado). Se reescribe al ejecutar.
+
+Lo medido, por pieza:
+
+- **D9 · el inventario completo son TRES claves y CUATRO puntos de render.**
+  `tickets.ledger.paid_at_gate` (es/en/fr → `financialsOf()` de `orders.js` → `PurchaseCard.vue`) ·
+  `admin.orders.item_financial.collected_at_gate` (es/zh_CN → el partial `reservation-financials`
+  y el PDF `reservation-slip`) · `admin.orders.order_financial.pagado_puerta`
+  (es/zh_CN → el partial `order-totals`). Ningún correo ni el resumen del día afirman pago en
+  el parque; el YAML no tiene ningún enum de estado que cambiar. ⚠️ **`tickets.paid_desk`
+  («Pagado en recepción») NO entra**: es el pedido de taquilla, un cobro que el operador SÍ
+  registró — afirmación verdadera. ⚠️ **Ningún test PHP asevera los literales** (todos van por
+  clave); el único literal a mano es el diccionario `MESSAGES` de `orders.test.js`. ⚠️ Los IDENTIFICADORES no se
+  tocan: `pagadoPuerta` lo exige `LedgerSingleSourceTest::test_the_ledger_exposes_every_channel`
+  y `paid_at_gate_cents` es contrato (`openapi/v1.yaml`, `LedgerResource`). ▶ Y la confirmación
+  de que D9 es SOLO palabras ya estaba escrita: `OrderAdjustment::TYPE_COLLECTED_IN_PERSON`
+  existe **declarada y sin un solo uso** — es el hueco reservado para el registro real del cobro,
+  la feature aparte que D9 deja fuera.
+- **D8 · `AccountPrivacy::anonymize()` no tiene HOY ninguna condición de negocio** — solo la
+  credencial (`verify()` → `$user->anonymize()`); el panel ni pasa por ahí (`ViewUser:377` llama
+  al modelo directo, con su propio patrón de bloqueo re-comprobado y auditado en `:358-368`).
+  El predicado «por celebrar» YA EXISTE: `CustomerReservationsReader::upcomingItems()` — pagada +
+  principal activo + franja + corte fino en PHP (`isFinishedInPractice()`).
+  ⚠️⚠️ **TRES tests de `MePrivacyTest` borran hoy una cuenta con una reserva PAGADA y FUTURA**
+  (slot `2026-09-05` escrito a mano): la puerta los pone en rojo — y a partir del 05-09 pasarían
+  SOLOS, un verde que cambia de significado con el calendario. Se arreglan con fechas RELATIVAS
+  explícitas, nunca dejando decidir al reloj. ⚠️ Los de `PrivacyTest` usan items SIN franja: con
+  la definición de §25.4 no se tocan. ▶ La ficha de deuda del «techo tras anonimizar» ya está
+  marcada «CERRADA POR CONSECUENCIA … queda como trabajo de la tanda T5» (`DEUDA.md`).
+- **Correos · las sobre-promesas son DOS, no una.** (1) La de `#285`:
+  `emails.order_item_modified.reduction_pending_refund` — «…te avisaremos por email cuando
+  procesemos la devolución» — se pinta con `pendingRefundCents > 0` sin saber cómo se liquidará
+  (`OrderItemModified::toMail()`), y **su puntero también caducó**: dice «Lo verás en
+  «Mis reservas»» y esa pantalla no enseña NINGÚN importe desde `#130` — los importes viven en
+  «Mis pedidos». El literal lo congela `ItemPriceChangeReconstructionTest:389-405`.
+  (2) La encadenada: `order_item_refunded.when` / `order_refunded.when` («Verás el reintegro en
+  la tarjeta… 3-5 días») se emiten TAMBIÉN con `PaymentRefund::MODE_MANUAL` — dinero en mano/TPV,
+  justo el circuito que §20.5 designa para liquidar en parque — porque la capa Filament construye
+  las Notifications sin pasarles el modo (`PresentsOrderActions:429-439`, `ViewOrder:341`, que
+  además FUERZA manual cuando `! isRedsysRefundable()`). El panel sí distingue
+  (`refund_item.mode_manual_desc`); el correo no puede. ▶ El patrón de referencia ya existe:
+  `MixedPartySurchargeChanged` separa la línea del IMPORTE de la línea del CANAL. ⚠️ Y
+  `emails.order_item_modified.refunded` está MUERTA (cableada a `null` desde el D8 del desglose,
+  `OrderItemEditor:788`): una promesa de tarjeta esperando a que alguien la reviva.
+- **Panel · lo que queda vivo del hallazgo del T0, tras T1+T4.** (a) El «0,00 €» de arriba.
+  (b) La ficha es la ÚNICA superficie que mezcla derivado y escrito en líneas contiguas sin decir
+  cuál es cuál — la T1 disolvió la CAUSA («la tarifa de hoy»: la unidad ya es la SELLADA), no la
+  LECTURA: sigue habiendo un escenario real (fecha movida re-precia el sello + edad en blanco
+  congela) donde «2 × Jump · 9,00 €» convive con «Suplemento aplicado: 8,00 €» y la explicación
+  llega dos líneas después, en prosa y en totales. (c) La cadena `@elseif` tiene UN tragón real:
+  `missing_credit_carrier` (`:372`) va antes que `drift` (`:376`) y hablan de LADOS distintos —
+  pueden ser verdad a la vez y hoy uno silencia al otro. (`missing_carrier` antes que `drift` es
+  CORRECTO: es la explicación de ese desfase; `unpriced` y `drift` son excluyentes por
+  construcción.) (d) `frozen` dice «Suplemento congelado» aunque lo congelado sea un DESCUENTO
+  (`$mixHasWritten` incluye `credit_cents`), y el mismo desliz está en `guestsTabStateText()`
+  (`ViewOrder:920-947`). (e) **Cero aserciones en todo el repo** sobre `drift`, `net`,
+  `missing_credit_carrier` y la clave `line` en el panel: la línea exacta que el owner señaló no
+  la amarra ningún test.
+- **⚠️ El «+-4,00 €», cazado por el OJO del owner en mitad de la tanda** (2026-08-31 noche): las
+  líneas ↳ del desglose de puerta del PANEL anteponen un `+` CLAVADO al importe
+  (los partials `reservation-financials` y `order-totals`) — escrito cuando toda
+  línea de puerta era un cargo; desde la T4 la línea del descuento es negativa y se pinta
+  «+-4,00 €». El cajón, la hoja y la puerta NO lo tienen (formatean con signo; la sonda de la T4
+  los verificó en vivo) — el defecto se escondió **detrás del «Ver más» plegado por defecto**,
+  justo donde la sonda no miró. El arreglo es signo consciente («−» tipográfico para negativos,
+  como ya hace la línea de «Devuelto» del mismo partial, `+` para cargos), en los DOS partials.
+- **⚠️⚠️ `upgrades` es pieza de CARGA, no de pantalla**: `creditTargets()`
+  (`MixedPartySurcharge:590`) necesita exactamente las entradas de la dirección barata
+  (`unit_cents = 0` pero `diff_cents < 0`). El filtro del cero es de PRESENTACIÓN o rompe el
+  crédito de la T4. ⚠️ El post-form NO comparte el problema (usa `guestform.mixed_line` con los
+  PRECIOS de los dos packs, no la diferencia). ⚠️ El docblock del DTO no documenta `diff_cents`
+  ni `target_price_cents`: se completa al ejecutar.
+
+### 25.3 · D9 — la palabra, y nada más
+
+Las tres claves cambian su TEXTO (Q1 decide la voz); las claves, los canales
+(`pagadoPuerta`/`paid_at_gate_cents`) y la aritmética (`PAY-16`) quedan idénticos. Entra el
+`zh_CN` de las dos del panel; `tickets.*` va en es/en/fr (lo exigen
+`ClientMoneyLabelsAreTranslatedTest` y `SidebarTextParityTest`). Se actualizan el fixture
+`MESSAGES` de `orders.test.js` (hoy quedaría mintiendo sin romper) y SOLO los comentarios que
+citan el rótulo como vigente (las cabeceras del partial `order-totals` y de los bloques de
+`lang/es/admin.php`) — los que
+citan «Pagado en el parque» como HISTORIA de un defecto se quedan. `tickets.ledger_in_favour` y
+`guestform.mixed_in_favour` («se te devuelven en el parque») NO entran: son promesas de futuro
+decididas con el owner en la T4, no afirmaciones de un cobro pasado.
+
+### 25.4 · D8 — la puerta de la supresión
+
+**«Reserva por celebrar» = lo que ya calcula `upcomingItems()`**: principal activo (no cancelado)
+de un pedido PAGADO, con franja cuyo fin no ha pasado (corte fino en PHP, colchón de zona horaria
+incluido). Por qué NO el complemento de `terminated()` (el predicado de las dos pantallas,
+`mis-reservas-por-reserva.md` §3.4): (1) una línea pagada SIN franja jamás «termina»
+(`isFinishedInPractice()` es `false` sin slot) → bloquearía la supresión PARA SIEMPRE, un
+callejón del art. 17; (2) una cesta `PENDING` sin expirar bloquearía durante minutos por nada;
+(3) el corte fino de fecha ya está hecho ahí. ▶ La consecuencia que cierra la ficha de deuda se
+sostiene: una línea sin franja no es una fiesta (sin día no hay sello ni tarifa) y **no se
+reconcilia** — toda reserva que SÍ pueda reconciliarse tiene franja, y con franja futura la
+cuenta no se puede borrar.
+
+- **Contrato**: `CustomerReservations` gana `hasUpcomingFor(int $userId): bool`, implementado
+  sobre `upcomingItems($userId)->isNotEmpty()` — una sola verdad, coste irrelevante en una baja.
+  Identity pregunta por contrato, como ya hace con `CustomerOrderHistory` (`ModuleBoundariesTest`).
+- **`AccountPrivacy::anonymize()`**: la puerta va tras `verify()` y antes de `$user->anonymize()`,
+  con `Log::info('account.anonymize_blocked', …)` simétrico del `account.anonymized`. ⚠️ **NO va
+  en `User::anonymize()`**: metería Booking en un modelo de Identity y arrastraría el censo y la
+  idempotencia de `AnonymizeCoversEveryUserColumnTest`. Una cuenta ya anónima no llega a la
+  puerta (su contraseña es inservible → `verify()` falla antes): `RGPD-01` no cambia de forma.
+- **API**: `ApiErrorCode` nuevo (`account_has_upcoming_reservations`, **409** — el precedente de
+  los 409 de negocio), mensaje en `api.errors.*` ×3 idiomas, y el YAML a la vez: la respuesta 409
+  en `deleteMe` y el código en el enum, o `ApiContractTest` cae (vigila las dos direcciones).
+  Borrador del mensaje: «No podemos eliminar tu cuenta todavía: tienes reservas por celebrar. Las
+  verás en «Mis reservas». Podrás eliminarla cuando hayan pasado o si se cancelan.»
+- **El cajón no cambia NI UNA LÍNEA**: `form-outcome.js` ya pinta el `error.message` de cualquier
+  4xx como `notice` y `PrivacyZone` lo enseña en su `role="alert"`. (El texto llega del servidor
+  en el idioma del titular; no entra en el `Arr::only` del layout porque no es una clave nueva
+  del cajón.)
+- **Panel** (Q2 decide si entra): re-comprobación EN LA EJECUCIÓN con el patrón que el fichero ya
+  usa (`fresh()` + Notification + audit `users.anonymize_blocked` con `reason:
+  upcoming_reservations`). ⚠️ **NO en `isSensitiveActionAllowed()`**: la comparten «rotar carné»
+  y «enviar reset», que no deben endurecerse. La vía de escape del operador ya existe: cancelar
+  la reserva primero (una cancelada no está «por celebrar»).
+- **La otra mitad de D8 ya es la conducta**: la factura se conserva y la lista de invitados se
+  borra (`RGPD-01`, aseverado por `PrivacyTest`/`MePrivacyTest`). No se construye: se cita.
+- **`INVARIANTES`**: `RGPD-01` gana el bloque de la puerta (las tres vías y el porqué del
+  predicado), como acumuló los de Fase 6.
+
+### 25.5 · Los correos
+
+- **`reduction_pending_refund`** (borrador, la voz definitiva la juzga el OJO): «Este cambio deja
+  :amount € pendientes de devolverte. Verás su estado en «Mis pedidos»; te los devolveremos a tu
+  tarjeta o en el parque el día de tu visita.» — describe el estado y las dos salidas SIN
+  prometer canal ni correo. ⚠️ No se promete «te avisaremos por email»: el registro del reembolso
+  manual es OPCIONAL (§20.5, «si quiere constancia»), y prometer un correo que puede no existir
+  es la misma sobre-promesa por otra puerta. El comentario de `#155` que la acompaña también
+  caducó («que el email y «Mis reservas» digan lo mismo») y se reescribe.
+- **`OrderItemRefunded` / `OrderRefunded` ganan el MODO** (Q3 decide si entra): con
+  `MODE_MANUAL`, la línea `when` pasa a la voz del hecho — «Este importe se te ha devuelto en el
+  parque (en mano o TPV); este correo es tu justificante.» — y con `MODE_REST` conserva la de
+  tarjeta. El modo entra por el constructor; los dos puntos de disparo son la capa Filament.
+- **`emails.order_item_modified.refunded` se RETIRA** (línea + parámetro + claves ×3): muerta
+  desde que la edición dejó de auto-reembolsar, y con promesa de tarjeta dentro.
+
+### 25.6 · El bloque del panel
+
+1. **Lo escrito PRIMERO** (el arreglo que el propio owner dio como alternativa en el T5; el
+   «hoy:» murió con la T1 — la unidad derivada ya es la SELLADA): título → aplicado → descuento →
+   neto → a favor → **la línea del veredicto, etiquetada como condiciones** («Según las
+   condiciones de esta reserva: :count × :name · :unit por invitado») → estados. Con eso el
+   operador lee primero la verdad operativa (lo comunicado) y después el patrón que la sostiene.
+2. **La dirección barata se filtra EN PRESENTACIÓN** (`diff_cents < 0`): su historia la cuentan
+   el descuento escrito y el «a tu favor». **El mismo precio (`diff = 0`) SE QUEDA** («es mixta y
+   no cuesta nada» es información, docblock de `GuestAgeMix`) y el sin-tarifa (`unit null`, «—»)
+   también. El filtro vive en un helper de pantalla del DTO (`visibleUpgrades()`), nunca en el
+   lector (§25.2: `creditTargets()` necesita esas entradas).
+3. **La cadena, por LADOS**: `stale`/`orphaned` siguen excluyentes (estados del sello); después,
+   el lado del CARGO (`missing_carrier` ?: `drift` — el portador ES la explicación de su desfase)
+   y el del CRÉDITO (`missing_credit_carrier`) se pintan INDEPENDIENTES. El único tragón real era
+   `missing_credit_carrier` delante de `drift`.
+4. **`frozen` en neutro**: «Importe por edades congelado…» (el texto actual dice «Suplemento»
+   aunque lo congelado sea un descuento) — mismo cambio en `guestsTabStateText()`.
+5. **El crédito sigue SIN línea de desfase, a propósito**, y el porqué ya está escrito en el
+   propio bloque (`:288-290`): su tope es la cobertura, su resto legítimo tiene línea propia
+   («a tu favor»), y sin veredicto que gobierne lo dicen las líneas de silencio/congelado.
+6. **Las primeras aserciones** de `drift`, `net`, `missing_credit_carrier` y `line` en el panel —
+   acotadas al ELEMENTO (`#295`), no a la página.
+7. **El signo de las líneas ↳ de puerta** (§25.2, el «+-4,00 €»): los dos partials del panel
+   pasan de `+` clavado a signo consciente — «−» tipográfico (el de la línea «Devuelto» del mismo
+   fichero) para una línea negativa, `+` para un cargo — en los bucles ↳ de los partials
+   `reservation-financials` y `order-totals`.
+
+### 25.7 · Lo que se toca, en orden de riesgo
+
+1. **D8** (la única conducta nueva): contrato + lector + `AccountPrivacy` + `ApiErrorCode` +
+   YAML + panel + `MePrivacyTest` con fechas relativas + casos nuevos.
+2. **Correos**: los dos constructores de Notification + textos ×3 idiomas + retirada de la línea
+   muerta.
+3. **Panel**: blade + helper del DTO + `guestsTabStateText` + los tests que faltan.
+4. **D9**: tres claves + `zh_CN` + fixture JS + comentarios.
+5. **Doc**: `INVARIANTES` (RGPD-01) · `DEUDA` (la ficha del techo pasa de «decidida» a
+   «ejecutada») · spec (§25.10 + la corrección de §18.5, ya puesta) · `DECISIONES` · `ESTADO` ·
+   tracker · fila de `CLAUDE.md`.
+
+Sin `npm run build` (no se toca ningún `.vue`/`.js` de producción; el fixture es de test) y sin
+`VERIFY_CONC` (ningún fichero del `CRITICAL_RE`); la suite entera + `npm test` + Pint, como
+siempre.
+
+### 25.8 · Guardas, con su mutación
+
+| | Guarda | Mutación |
+|---|---|---|
+| A | Las tres claves de D9 no afirman un cobro pasado (test de lang sobre las tres, es/en/fr/zh) | restaurar «Pagado en el parque» |
+| B | API: con reserva pagada FUTURA, `DELETE /me` → 409 y NADA purgado (fila, `guest_data`, sesiones y tokens intactos) | quitar la llamada a `hasUpcomingFor()` |
+| C | Panel: con reserva futura la acción bloquea, notifica y audita (`upcoming_reservations`); el registro NO queda anónimo | quitar la re-comprobación |
+| D | Controles: pasada · cancelada-futura · sin franja · cesta `PENDING` → la supresión SIGUE funcionando | — (control) |
+| E | `MePrivacyTest` con fechas RELATIVAS: el verde no cambia de significado con el calendario | — |
+| F | El correo de la reducción dice la frase nueva y NO «procesemos la devolución» ni «Mis reservas» | restaurar el literal |
+| G | Reembolso `MODE_MANUAL` → frase de parque y NUNCA la de tarjeta; `MODE_REST` → la de tarjeta | quitar la rama del modo |
+| H | Panel: la dirección barata sin «0,00 € por invitado»; el mismo precio CON su línea | quitar el filtro / filtrar todos los ceros |
+| I | Panel: «Suplemento aplicado» se pinta ANTES que la línea de condiciones, y ésta lleva su etiqueta | deshacer el orden |
+| J | Panel: `drift` del cargo visible AUNQUE falte el portador del descuento | restaurar el `elseif` |
+| K | `frozen` en neutro sobre un crédito congelado (panel y pestaña) | — |
+| L | Primeras aserciones de `net`/`drift`/`missing_credit_carrier`/`line`, acotadas al bloque | — |
+| M | Las líneas ↳ de puerta del panel con signo: la del descuento sale «−4,00 €» y NUNCA «+-4,00 €»; un cargo conserva su «+» | restaurar el `+` clavado |
+
+### 25.9 · Lo que decide el owner — ✅ `[DECIDIDO owner, 2026-08-31]` las tres
+
+- **Q1 · La voz que sustituye a «Pagado en el parque»** → **(a) «Liquidado en el parque»**
+  (EN «Settled at the park» · FR «Réglé au parc»; el panel comparte la voz y el `zh_CN` la
+  sigue). Las alternativas presentadas: «Dado por cobrado en el parque» (la más literal sobre el
+  mecanismo, burocrática) y «Correspondía pagar en el parque» (pura obligación, la más larga).
+- **Q2 · La puerta de D8 bloquea las TRES vías, panel incluido** → **(a)**. El argumento es el
+  del propio owner en `#284`: «si no se puede anonimizar con reservas vivas, ninguna reserva
+  anonimizada se reconcilia» solo es verdad si el panel también bloquea. El escape del operador
+  ya existe: cancelar la reserva primero y anonimizar después.
+- **Q3 · El correo del reembolso MANUAL entra en la tanda** → **(a)**: las dos Notifications
+  ganan el modo; con `MODE_MANUAL` dicen «se te ha devuelto en el parque; este correo es tu
+  justificante» y con reembolso bancario conservan la frase de tarjeta.
+
+### 25.10 · ✅ LO EJECUTADO (2026-08-31 noche, `DECISIONES #298`)
+
+**En el árbol, las cuatro piezas más la quinta que cazó el owner en mitad de la tanda.**
+
+- **D8 · la puerta de la supresión** — `CustomerReservations::hasUpcomingFor()` (implementado
+  sobre `upcomingItems()` entera: el corte fino lo da PHP, un `exists()` en SQL bloquearía un día
+  de más por el colchón de zona horaria) · la puerta en `AccountPrivacy::anonymize()` tras
+  `verify()` (que la existencia de reservas no se filtre a quien no tiene la contraseña) lanzando
+  `AccountHasUpcomingReservationsException` · **409 `account_has_upcoming_reservations`** en
+  `DELETE /me` (`ApiErrorCode` + `api.errors.*` ×3 + el YAML en las dos mitades, respuesta y enum
+  — `ApiContractTest` vigila) · **el cajón sin tocar NI UNA LÍNEA** (`form-outcome` ya pinta el
+  `error.message` de cualquier 4xx) · el panel con su propia re-comprobación en la ejecución
+  (Notification + audit `users.anonymize_blocked` reason `upcoming_reservations`; **NO** en
+  `isSensitiveActionAllowed()`, que comparten rotar carné y reset) · `RGPD-01` ampliada.
+  ⚠️ **`MePrivacyTest` pasó a fechas RELATIVAS**: sus tres tests borraban una cuenta con reserva
+  pagada FUTURA (`2026-09-05` clavado) y a partir del 05-09 habrían pasado SOLOS. ⚠️ Los casos de
+  control: cancelada-futura, sin franja, cesta `PENDING` y pasada siguen purgando.
+- **Los correos** — `reduction_pending_refund` reescrita ×3 (describe el estado y las DOS salidas
+  sin prometer canal ni correo; el puntero pasa de «Mis reservas» —que no enseña importes desde
+  `#130`— a «Mis pedidos») · `OrderItemRefunded`/`OrderRefunded` ganan `manualRefund` y con
+  `MODE_MANUAL` la línea del canal pasa a «se te ha devuelto en el parque; este correo es tu
+  justificante» (`when_manual` ×3; el reenvío deriva el modo del ÚLTIMO reembolso con éxito, y un
+  legacy sin filas cae a la voz de tarjeta, como hoy) · **`emails.order_item_modified.refunded`
+  RETIRADA con su parámetro** (cableada a `null` desde el D8 del desglose, con promesa de tarjeta
+  dentro).
+- **El bloque del panel** — lo ESCRITO primero y la línea del veredicto DESPUÉS con su etiqueta
+  (`conditions_line`: «Según las condiciones de esta reserva: …»; la hoja y la puerta siguen con
+  `line`, allí todo es escrito) · la dirección barata sin su «0,00 €» (`visibleUpgrades()`,
+  filtro de PRESENTACIÓN — `creditTargets()` necesita esas entradas; el MISMO precio conserva su
+  línea) · la cadena por LADOS (el desfase del cargo ya no se lo traga el portador del descuento
+  ausente) · `frozen` en NEUTRO («Importe por edades congelado», y la pestaña del modal lo hereda
+  por la clave compartida) · primeras aserciones de `drift`/`net`/`missing_credit_carrier`/
+  `conditions_line` (antes: CERO).
+- **El «+-4,00 €»** — signo consciente en las ↳ de los DOS partials (`reservation-financials` y
+  `order-totals`), «−» tipográfico para el descuento y `+` para los cargos.
+- **D9** — las tres claves a **«Liquidado en el parque»** (es/en/fr y el `zh_CN` del panel a
+  «已在门店结清»); `paid_desk` intacta (cobro REGISTRADO); identificadores y aritmética intactos;
+  el fixture JS actualizado y los comentarios de bloque — los que citan el rótulo viejo como
+  HISTORIA de un defecto se quedan (`Order::itemGateResolved()`, `ReservationFinancials::make()`
+  y el criterio de resolución de `OrderFinancialSummary`).
+
+**Medido.** Suite PHP **3692 (24.098 aserciones**, 1 skipped a propósito) · JS **878** ·
+**las 10 mutaciones de §25.8 con mutación muerden y se vieron en ROJO una a una** (A el literal
+viejo · B la puerta del servicio · C la del panel · F la promesa restaurada · G la rama del modo ·
+H el filtro quitado Y el filtro perezoso · I el orden · J la cadena única · M el `+` clavado) ·
+sonda en navegador (`/root/e2e/t5.js`, 10/10 ✓, 4 capturas en `/root/e2e/t5-capturas/`,
+**las dos críticas miradas**): el panel de `T4-PRB01` con «−4,00 €» en los dos desgloses, el
+bloque de `T0-PRB01` con el aplicado ANTES de las condiciones etiquetadas, la puerta de D8
+bloqueando en vivo la anonimización de `probe-card` (4 pedidos futuros) con su aviso, y el cajón
+del cliente intacto.
+
+⚠️ **Trampas que esta ejecución pagó y quedan escritas**: (1) un `git checkout` para deshacer una
+mutación se llevó los cambios SIN COMMITEAR del mismo fichero — las mutaciones siguientes fueron
+con copia en el scratchpad (la regla de `#181`, pagada en pequeño); (2) la primera versión de la
+guarda J era imposible de poner en verde: **el propio cargo de la pasada cuenta como cobertura**
+(§24.3), así que con el portador vivo el descuento se escribía y `missing_credit_carrier` jamás
+era verdad — el portador tiene que faltar ANTES del reconcile; (3) `Setting::value` **memoiza la
+tabla entera** en un estático: borrar un setting sin `flushMemo()` deja una guarda ciega; (4) el
+doble anónimo de `ModuleContractsTest` implementa el contrato ENTERO — el método nuevo lo hizo
+crashear (fatal en la declaración de clase, «premature end of process» en paratest) y su
+implementación LANZA, como su `pageFor()`, para que llegar por error no silencie nada.
+
+⚠️ Residuos asumidos en local: la sonda dejó filas de audit en `probe-card` (el intento bloqueado,
+a propósito: es el rastro que D8 promete) y las capturas en el contenedor, fuera del repo.
+
+**Lo que queda del plan** (§18.5): **T6** (el guardián de solapes fuera del formulario) · la
+**fase 3** de §20.2 despierta a §16 · el **AFORO** sigue aparcado por el owner. **De esta tanda
+queda el OJO del owner** (capturas listas; los textos nuevos son suyos de juzgar).

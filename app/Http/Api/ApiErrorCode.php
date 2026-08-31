@@ -179,6 +179,15 @@ enum ApiErrorCode: string
      */
     case DependentsLimitReached = 'dependents_limit_reached';
 
+    // ── T5 · supresión (art. 17) — `cumple-mixto.md` §25.4 (D8) ───────────────────────────────
+
+    /**
+     * 409 — la cuenta tiene reservas POR CELEBRAR (pagadas, con franja sin pasar): la supresión
+     * espera a que pasen o se cancelen, y se le explica al titular. No se arregla reintentando —
+     * es el mismo registro que los otros 409 de negocio.
+     */
+    case AccountHasUpcomingReservations = 'account_has_upcoming_reservations';
+
     /** Clave i18n del mensaje legible. Indirección deliberada: el código público no la conoce. */
     public function messageKey(): string
     {

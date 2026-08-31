@@ -342,6 +342,9 @@ class ViewOrder extends ViewRecord
                     $record->refresh(),
                     $payment,
                     alsoCancelled: $alsoCancelled,
+                    // T5 (§25.5): la línea del canal sigue al modo real — `manual` incluye el
+                    // forzado de arriba cuando el pago no es reembolsable por Redsys.
+                    manualRefund: $mode === PaymentRefund::MODE_MANUAL,
                 ));
 
                 $titleKey = match (true) {
@@ -476,6 +479,11 @@ class ViewOrder extends ViewRecord
                 $record,
                 $record->paidPayment(),
                 alsoCancelled: $record->status === Order::STATUS_CANCELLED,
+                // T5 (§25.5): en un reenvío el modo se lee del REGISTRO — el último reembolso con
+                // éxito. Un pedido legacy sin filas (pre-#142) cae a la voz de tarjeta, como hoy.
+                manualRefund: $record->payments->flatMap(fn ($p) => $p->refunds)
+                    ->where('status', PaymentRefund::STATUS_SUCCEEDED)
+                    ->sortByDesc('id')->first()?->mode === PaymentRefund::MODE_MANUAL,
             )),
             Order::RESEND_TYPE_CANCELLATION => $user->notify(new OrderCancelled($record)),
             Order::RESEND_TYPE_PAYMENT_RETRY => $user->notify(new OrderPaymentDeclined(

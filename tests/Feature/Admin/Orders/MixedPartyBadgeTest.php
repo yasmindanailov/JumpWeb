@@ -10,10 +10,12 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AgeFamilySealer;
+use App\Domain\Booking\Services\MixedPartySettings;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Platform\Models\Setting;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -194,7 +196,146 @@ class MixedPartyBadgeTest extends TestCase
             // 2 × (25,00 − 18,00) = 14,00 €.
             ->assertSee(__('admin.orders.mixed_party.in_favour', ['amount' => '14,00 €']))
             // ⚠️ Y NUNCA como cargo: si esto apareciera, el operador cobraría lo que no se debe.
-            ->assertDontSee(__('admin.orders.mixed_party.applied', ['amount' => '14,00 €']));
+            ->assertDontSee(__('admin.orders.mixed_party.applied', ['amount' => '14,00 €']))
+            // T5 (§25.6·2, guarda H): la dirección barata ya no pinta su «0,00 € por invitado» —
+            // pegado al «14,00 € a favor» era la contradicción del T0 con el signo cambiado, y su
+            // historia la cuentan el descuento y el «a tu favor». Mutación: quitar el filtro de
+            // `visibleUpgrades()` (o pintar `upgrades` entero) vuelve a enseñarlo.
+            ->assertDontSee('0,00 € por invitado');
+    }
+
+    /**
+     * T5 (§25.6·2, guarda H — la otra mitad): el MISMO precio (`diff = 0`) SÍ conserva su línea —
+     * «es mixta y no cuesta nada» es información, no ruido (docblock de `GuestAgeMix`). Es lo que
+     * separa el filtro correcto («fuera la dirección barata») del filtro perezoso («fuera todo
+     * cero»), y la mutación que lo distingue: filtrar por `unit_cents === 0` pone esto en rojo.
+     */
+    public function test_a_same_price_mix_keeps_its_zero_line_as_information(): void
+    {
+        Price::where('priceable_type', $this->jump->getMorphClass())
+            ->where('priceable_id', $this->jump->id)
+            ->update(['amount_cents' => 1800]);
+        $order = $this->paidPartyWith([4, 5, 8]);
+
+        $this->actingAs($this->staff())
+            ->get('/admin/orders/'.$order->code)
+            ->assertOk()
+            ->assertSee(__('admin.orders.mixed_party.title'))
+            ->assertSee(__('admin.orders.mixed_party.conditions_line', [
+                'count' => 1, 'name' => 'Cumpleaños Jump', 'unit' => '0,00 €',
+            ]))
+            ->assertDontSee(__('admin.orders.mixed_party.applied', ['amount' => '0,00 €']));
+    }
+
+    /**
+     * T5 (§25.6·1, guarda I — el hallazgo del T0): lo ESCRITO primero y las condiciones DESPUÉS,
+     * con su etiqueta de origen. El owner tuvo que preguntar por qué «2 × Jump · 9,00 €» convivía
+     * con «Suplemento aplicado: 8,00 €»: la ficha es la única superficie que mezcla derivado y
+     * escrito, y sin etiqueta no se explicaba sola. Mutación: devolver el `@foreach` a su sitio
+     * de antes del título invierte las posiciones.
+     */
+    public function test_the_written_amount_is_printed_before_the_labelled_conditions(): void
+    {
+        $order = $this->paidPartyWith([4, 5, 8]);
+
+        $response = $this->actingAs($this->staff())
+            ->get('/admin/orders/'.$order->code)
+            ->assertOk()
+            ->assertSee(__('admin.orders.mixed_party.conditions_line', [
+                'count' => 1, 'name' => 'Cumpleaños Jump', 'unit' => '7,00 €',
+            ]));
+
+        $html = $response->getContent();
+        $applied = mb_strpos($html, 'Suplemento aplicado:');
+        $conditions = mb_strpos($html, 'Según las condiciones de esta reserva:');
+
+        $this->assertNotFalse($applied);
+        $this->assertNotFalse($conditions);
+        $this->assertLessThan($conditions, $applied, 'lo escrito va ANTES que la línea de condiciones');
+    }
+
+    /**
+     * T5 (§25.6·3, guarda J): los avisos van por LADOS y los lados son INDEPENDIENTES — el
+     * portador del descuento puede faltar Y el cargo estar en desfase A LA VEZ. Hasta hoy la
+     * cadena `@elseif` única se tragaba el desfase (medido en §25.2: `missing_credit_carrier` iba
+     * antes que `drift` y hablan de lados distintos). Mutación: restaurar la cadena única.
+     */
+    public function test_a_charge_drift_is_still_told_when_the_credit_carrier_is_missing(): void
+    {
+        // Familia propia de TRES tramos para tener las dos direcciones a la vez: un invitado de 9
+        // sube (jump-tri, +7,00), uno de 1 baja (mini, «a favor» 3,00) y el de 4 queda en rango.
+        $rate = RateType::firstOrFail();
+        $mini = $this->pack('Cumpleaños Mini', 0, 2, 1500, $rate);
+        $kidsTri = $this->pack('Cumpleaños Kids Tri', 3, 6, 1800, $rate);
+        $jumpTri = $this->pack('Cumpleaños Jump Tri', 7, 99, 2500, $rate);
+        foreach ([$mini, $kidsTri, $jumpTri] as $p) {
+            $p->forceFill(['guest_age_family' => 'cumple-tri'])->save();
+        }
+
+        // El portador del DESCUENTO falta ANTES del reconcile — el orden importa y lo enseñó la
+        // primera versión de esta guarda: con el portador vivo, EL PROPIO CARGO de la pasada cuenta
+        // como cobertura (T4 §24.3) y el descuento se escribe (credit 3,00, inFavour 0), así que
+        // `missing_credit_carrier` jamás podía ser verdad. ⚠️ Y `Setting::value` memoiza la tabla
+        // entera en un estático: sin `flushMemo()` el reconcile leería la foto de antes del borrado.
+        Setting::where('key', MixedPartySettings::CREDIT_PRODUCT_KEY)->delete();
+        Setting::flushMemo();
+
+        $order = $this->paidPartyWith([9, 1, 4], $kidsTri);
+        $item = OrderItem::where('order_id', $order->id)->whereNull('parent_item_id')->firstOrFail();
+
+        // El DESFASE del cargo se fabrica por fuera (como el sello caducado de al lado): doblar la
+        // cantidad de la línea escrita deja escrito 14,00 contra un derivado de 7,00.
+        OrderItem::where('parent_item_id', $item->id)->where('is_credit', false)->update(['quantity' => 2]);
+
+        $this->actingAs($this->staff())
+            ->get('/admin/orders/'.$order->code)
+            ->assertOk()
+            ->assertSee(__('admin.orders.mixed_party.drift', ['written' => '14,00 €', 'derived' => '7,00 €']))
+            ->assertSee(__('admin.orders.mixed_party.missing_credit_carrier'));
+    }
+
+    /**
+     * T5 (§25.6·4, guarda K): `frozen` habla en NEUTRO — desde la T4 lo congelado puede ser un
+     * descuento, y «Suplemento congelado» sobre un descuento afirmaba lo contrario de lo que
+     * había. La clave la comparten la ficha y la pestaña del modal, así que la regla se asevera
+     * sobre el TEXTO (las dos formas del plural).
+     */
+    public function test_the_frozen_line_speaks_neutrally_about_the_amount(): void
+    {
+        foreach ([1, 2] as $count) {
+            $text = trans_choice('admin.orders.mixed_party.frozen', $count, ['count' => $count]);
+            $this->assertStringNotContainsString('Suplemento congelado', $text);
+            $this->assertStringContainsString('Importe por edades congelado', $text);
+        }
+    }
+
+    /**
+     * T5 (§25.6·7, guarda M — cazado por el OJO del owner en mitad de la tanda): las líneas ↳ del
+     * desglose de puerta llevan signo CONSCIENTE. El `+` clavado era de cuando toda línea era un
+     * cargo; con el descuento de la T4 pintaba «+-14,00 €». Mutación: restaurar el `+` fijo en
+     * cualquiera de los dos partials.
+     */
+    public function test_the_gate_breakdown_prints_the_credit_line_with_a_clean_sign(): void
+    {
+        $order = $this->paidPartyWith([9, 4, 3], $this->jump);
+        $item = OrderItem::where('order_id', $order->id)->whereNull('parent_item_id')->firstOrFail();
+
+        // Cobertura de puerta REAL (un cargo de edición) y re-guardado completo: el reconciliador
+        // escribe el descuento —min(14,00, cobertura)— con su `extra_due` gemelo NEGATIVO, que es
+        // la línea ↳ que hasta hoy salía «+-14,00 €».
+        $order->applyExtraDue($item, 5000, $this->staff(), 'ajuste de sonda');
+        $item->refresh()->submitGuestForm([
+            ['name' => 'Invitado 1', 'edad' => '9'],
+            ['name' => 'Invitado 2', 'edad' => '4'],
+            ['name' => 'Invitado 3', 'edad' => '3'],
+        ], [], 'signed_link');
+
+        $this->actingAs($this->staff())
+            ->get('/admin/orders/'.$order->code)
+            ->assertOk()
+            ->assertDontSee('+-14,00')
+            ->assertDontSee('+-4,00')
+            ->assertSee('−14,00 €');
     }
 
     public function test_a_frozen_surcharge_is_announced_with_how_many_ages_are_missing(): void

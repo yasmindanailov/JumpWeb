@@ -47,6 +47,21 @@ class CustomerReservationsReader implements CustomerReservations
     }
 
     /**
+     * ¿Tiene el cliente alguna reserva POR CELEBRAR? — la puerta de la supresión (T5 · D8,
+     * `cumple-mixto.md` §25.4). El porqué del criterio —y de que NO sea el complemento de
+     * `terminated()`— está en el contrato ({@see CustomerReservations::hasUpcomingFor}).
+     *
+     * Reutiliza {@see upcomingItems} entera a propósito: el corte fino de «ya finalizada» lo da
+     * `isFinishedInPractice()` en PHP, y un `exists()` en SQL se quedaría con el colchón de un día
+     * — bloquearía la baja un día de más. Una verdad, no dos; el coste (materializar las próximas)
+     * es irrelevante en una baja de cuenta.
+     */
+    public function hasUpcomingFor(int $userId): bool
+    {
+        return $this->upcomingItems($userId)->isNotEmpty();
+    }
+
+    /**
      * Formularios de reserva (#217) pendientes: uno por pedido pagado con un pack que los pide y
      * cuya franja AÚN NO ha finalizado (simétrico a la próxima reserva — no avisamos por un
      * cumpleaños ya celebrado, que dejaría el puntito/aviso encendidos para siempre). La consulta

@@ -2,6 +2,10 @@
 
 namespace Tests\Feature\Admin\Users;
 
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -10,6 +14,7 @@ use App\Filament\Resources\Users\Pages\ViewUser;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -118,6 +123,71 @@ class AnonymizeUserActionTest extends TestCase
         $this->assertSame(hash('sha256', $originalEmail), $log->payload['email_hash']);
         $this->assertArrayNotHasKey('email', $log->payload);
         $this->assertSame(3, $log->payload['consents_deleted']);
+    }
+
+    /**
+     * ⚠️⚠️ T5 · D8 (`cumple-mixto.md` §25.4, `[DECIDIDO owner]` §25.9 Q2: las TRES vías): con una
+     * reserva POR CELEBRAR tampoco el operador puede anonimizar — si pudiera, una reserva viva
+     * quedaría anónima con su importe congelado y la ficha del «techo tras anonimizar» seguiría
+     * abierta. Su escape es cancelar primero (el control de abajo).
+     *
+     * Mutación que la valida: quitar la re-comprobación de `hasUpcomingFor` en la acción.
+     */
+    public function test_anonymize_is_blocked_while_the_customer_has_an_upcoming_reservation(): void
+    {
+        $admin = $this->userWithRole('admin');
+        $customer = $this->customerWithConsents();
+        $this->paidReservationFor($customer, now()->addDays(10)->toDateString());
+
+        Livewire::actingAs($admin)
+            ->test(ViewUser::class, ['record' => $customer->id])
+            ->callAction('anonymizeUser', data: ['reason' => 'Solicitud RGPD #43']);
+
+        $customer->refresh();
+        $this->assertFalse($customer->isAnonymized(), 'la puerta de D8 no frenó al panel');
+
+        $log = AuditLog::where('action', 'users.anonymize_blocked')->latest()->first();
+        $this->assertNotNull($log);
+        $this->assertSame('upcoming_reservations', $log->payload['reason']);
+        $this->assertNull(AuditLog::where('action', 'users.anonymized')->first());
+    }
+
+    /** El control de la puerta: con la reserva ya CELEBRADA, la misma acción sí anonimiza. */
+    public function test_anonymize_works_once_the_reservation_has_passed(): void
+    {
+        $admin = $this->userWithRole('admin');
+        $customer = $this->customerWithConsents();
+        $this->paidReservationFor($customer, now()->subDays(10)->toDateString());
+
+        Livewire::actingAs($admin)
+            ->test(ViewUser::class, ['record' => $customer->id])
+            ->callAction('anonymizeUser', data: ['reason' => 'Solicitud RGPD #44']);
+
+        $this->assertTrue($customer->refresh()->isAnonymized());
+    }
+
+    /** Reserva pagada mínima (principal con franja) para ejercitar la puerta de D8. */
+    private function paidReservationFor(User $user, string $slotDate): void
+    {
+        $zone = Zone::create(['slug' => 'z-'.Str::lower(Str::random(5)), 'name' => ['es' => 'Zona']]);
+        $slot = Slot::create([
+            'zone_id' => $zone->id, 'date' => $slotDate,
+            'start_time' => '10:00:00', 'end_time' => '11:00:00',
+            'capacity' => 50, 'online_capacity' => 50,
+        ]);
+        $type = TicketType::create([
+            'name' => ['es' => 'Cumple'], 'zone_id' => $zone->id, 'duration_min' => 60,
+            'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 1,
+        ]);
+        $order = Order::create([
+            'user_id' => $user->id, 'code' => 'JW-D8-'.Str::upper(Str::random(5)),
+            'status' => Order::STATUS_PAID,
+            'subtotal' => 9000, 'tax' => 0, 'total' => 9000, 'currency' => 'EUR', 'paid_at' => now(),
+        ]);
+        $order->items()->create([
+            'ticket_type_id' => $type->id, 'slot_id' => $slot->id,
+            'quantity' => 1, 'unit_price' => 9000, 'seats' => 1,
+        ]);
     }
 
     public function test_anonymize_scrubs_ip_and_user_agent_from_actor_audit_rows(): void

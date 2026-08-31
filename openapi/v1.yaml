@@ -1239,6 +1239,10 @@ paths:
         ⚠️ La petición lleva CUERPO, que en `DELETE` es legal pero poco común: un cliente que use una
         capa HTTP que no lo permita tendrá que enviarlo igualmente — no hay variante por query, y no
         la hay a propósito (una contraseña en la URL acabaría en los logs del servidor).
+
+        ⚠️ **`409 account_has_upcoming_reservations` con una reserva POR CELEBRAR** (pagada, no
+        cancelada y cuya franja no ha terminado): la supresión espera a que pase o se cancele, y el
+        `message` se lo explica al titular. No se arregla reintentando.
       security:
         - sessionCookie: []
         - bearerAuth: []
@@ -1253,6 +1257,12 @@ paths:
           description: La cuenta ha quedado anonimizada y todas sus credenciales revocadas.
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '409':
+          description: Hay reservas por celebrar; la cuenta aún no se puede borrar (`account_has_upcoming_reservations`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '422':
           $ref: '#/components/responses/ValidationFailed'
         '429':
@@ -2263,6 +2273,8 @@ components:
                 # Fase 6 · menores a cargo (422 los dos).
                 - dependent_not_minor
                 - dependents_limit_reached
+                # T5 · supresión (art. 17): con reservas por celebrar la cuenta no se borra (409).
+                - account_has_upcoming_reservations
             message:
               type: string
               description: Mensaje legible en el idioma negociado.

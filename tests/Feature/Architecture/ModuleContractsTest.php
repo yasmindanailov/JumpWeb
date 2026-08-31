@@ -343,6 +343,16 @@ class ModuleContractsTest extends TestCase
             }
 
             /**
+             * ⚠️ Mismo criterio que `pageFor`: este doble es del contexto de cuenta, no de la
+             * puerta de la supresión (T5 · D8) — llegar hasta aquí sería un error, y devolver
+             * `false` lo silenciaría (una cuenta se borraría en un test sin que nadie lo pidiera).
+             */
+            public function hasUpcomingFor(int $userId): bool
+            {
+                throw new \LogicException('este doble no sirve la puerta de la supresión: es del contexto de cuenta');
+            }
+
+            /**
              * ⚠️ **Este doble NO se usa para el historial, y lanzar es lo correcto.** El contrato
              * ganó `pageFor()` el 2026-08-23 (historial por reserva) y este caso solo ejerce el
              * contexto de cuenta. Devolver un paginador vacío haría que un futuro consumidor que

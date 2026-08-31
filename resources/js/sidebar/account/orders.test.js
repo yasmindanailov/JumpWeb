@@ -33,7 +33,8 @@ const MESSAGES = {
         value_total: 'Valor del pedido',
         paid_online: 'Pagado por web',
         pending_online: 'Pendiente de pagar por web',
-        paid_at_gate: 'Pagado en el parque',
+        // T5 · D9: la voz real es «Liquidado» (el fixture MIENTE en silencio si no sigue a `lang/`).
+        paid_at_gate: 'Liquidado en el parque',
         pending_at_gate: 'Pendiente de pagar en el parque',
         compensated: 'Compensación devuelta',
         paid_desk: 'Pagado en recepción',

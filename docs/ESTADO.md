@@ -2,13 +2,14 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-31 (noche) — carril MIXTOS: T1 el SELLO
-> (`#288`), T2 la edad sin producto (`#289`), T3 el parque decide (`#294`) y **T4 el −X € (`#296`)
-> EN EL ÁRBOL**; lo siguiente es la T5 (las palabras, §18.5). Carril IDIOMA VISUAL: T1 normas
+> aquí solo se enlaza.** Última actualización: **2026-08-31 (noche, 2.ª sesión) — carril MIXTOS:
+> T1→T4 en el árbol (`#288`/`#289`/`#294`/`#296`) y **T5 LAS PALABRAS EN EL ÁRBOL (`#298`)**;
+> lo siguiente es la T6 (el guardián de solapes, §18.5). Carril IDIOMA VISUAL: T1 normas
 > (`#292`), T2 cinta C3 (`#293`) y T3 zonas/atracciones (`#295`) en el árbol.**
 > ❗ **SI ENTRAS NUEVO A MIXTOS: `specs/cumple-mixto.md` §18 (visión) → §21 (sello) → §22 (completo son
-> dos preguntas) → §23 (la T3) → **§20 + §24 (la T4: el descuento espejo)**. Diseño fino antes de
-> código y preguntas numeradas al owner: es el método que las cinco tandas han seguido.**
+> dos preguntas) → §23 (la T3) → §20 + §24 (la T4: el descuento espejo) → **§25 (la T5: las
+> palabras)**. Diseño fino antes de código y preguntas numeradas al owner: es el método que las
+> seis tandas han seguido.**
 > ⚠️ **Entorno, 2026-08-31**: el `php artisan serve` del contenedor amaneció muerto (SIGTERM 14:29) y a
 > las 16:3x el demonio de Docker Desktop dejó de responder (500 en su API; se recuperó reiniciándolo
 > desde Windows). Ninguna de las dos es del repo; si el `curl` del arranque da `000`, mira primero
@@ -17,7 +18,41 @@
 > veces (el carril del tema iba por 281 con el remoto en 285; el de mixtos escribió `#286` con el
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
-> ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1–T4 hechas → sigue la T5) ═══════════
+> ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1–T5 hechas → sigue la T6) ═══════════
+> ❗❗❗ **2026-08-31 (noche, 2.ª sesión) · T5 · LAS PALABRAS, EN EL ÁRBOL** (`#298`,
+> `specs/cumple-mixto.md` **§25** diseño fino · **§25.10 ejecución** · §25.9 las TRES decisiones
+> del owner: «Liquidado en el parque» · la puerta de D8 en las TRES vías · el correo del manual
+> entra). Suite **3692 en verde** (24.098 aserciones, 1 skipped a propósito) · JS **878** ·
+> **10/10 mutaciones muerden, vistas en rojo una a una** · sonda `/root/e2e/t5.js` 10/10 ✓
+> (4 capturas, las dos críticas miradas). ▶ **D9**: las TRES claves que decían «Pagado en el
+> parque» dicen «Liquidado…» (es/en/fr/zh_CN); `paid_desk` intacta (cobro REGISTRADO);
+> `TYPE_COLLECTED_IN_PERSON` sigue declarada y sin uso — el registro real es feature aparte.
+> ▶ **D8**: la supresión con reserva POR CELEBRAR se bloquea en las TRES vías (409
+> `account_has_upcoming_reservations`; el cajón sin tocar NI UNA LÍNEA; el panel audita el
+> bloqueo) — el criterio es `upcomingItems()` (el de la pantalla del titular), NO el complemento
+> de `terminated()` (una línea sin franja bloquearía el art. 17 PARA SIEMPRE); `RGPD-01` ampliada
+> y la ficha del «techo tras anonimizar» CONSTRUIDA. ⚠️⚠️ **Tres tests de `MePrivacyTest`
+> borraban una cuenta con reserva pagada FUTURA** (fecha `2026-09-05` clavada: desde el 05-09
+> habrían pasado solos) → fechas RELATIVAS. ▶ **Correos**: las sobre-promesas eran DOS —
+> `reduction_pending_refund` reescrita (sin canal ni correo prometidos; el puntero «Mis reservas»
+> también había caducado) y los correos de reembolso ganan el MODO (`when_manual`: «se te ha
+> devuelto en el parque; este correo es tu justificante»); `order_item_modified.refunded`
+> RETIRADA (muerta, con promesa de tarjeta dentro). ▶ **Panel**: ⚠️⚠️ **una afirmación de §18.5
+> resultó FALSA al medirla** («el 0,00 € se resuelve solo con la T4» — no se resolvió): filtro de
+> PRESENTACIÓN `visibleUpgrades()` (⚠️ `upgrades` es pieza de CARGA: `creditTargets()` necesita
+> la dirección barata; el mismo precio conserva su línea) · lo ESCRITO primero y las condiciones
+> etiquetadas con clave propia (`conditions_line`; `line` la comparte la hoja) · la cadena por
+> LADOS (el desfase del cargo ya no se lo traga el portador del descuento ausente) · `frozen` en
+> neutro · primeras aserciones de `drift`/`net`/`missing_credit_carrier` (eran CERO). ▶ **Y el
+> «+-4,00 €» que cazó el OJO del owner en mitad de la tanda**: el `+` clavado de las ↳ de los DOS
+> partials del panel (escondido tras el «Ver más» plegado, donde la sonda de la T4 no miró) →
+> signo consciente. ⚠️ Trampas pagadas (§25.10): el `git checkout` que se llevó trabajo sin
+> commitear · la guarda J imposible con el portador vivo (EL PROPIO CARGO cuenta como cobertura)
+> · la memo estática de `Setting::value` sin `flushMemo()` · el doble de `ModuleContractsTest`
+> crasheando paratest al crecer el contrato. ⚠️ Residuos asumidos: filas de audit del bloqueo en
+> `probe-card` (el rastro que D8 promete) y capturas en el contenedor. **Queda el OJO del owner;
+> lo siguiente es la T6** (el guardián de solapes fuera del formulario; la fase 3 de §20.2
+> despierta a §16; el AFORO sigue aparcado por el owner).
 > ❗❗❗ **2026-08-31 (noche) · T4 · EL −X €, EN EL ÁRBOL** (`#296`, `specs/cumple-mixto.md` §20
 > diseño de producto · §24 diseño fino · **§24.10 ejecución**).
 > Suite **3679 en verde** (24.017 aserciones, 1 skipped a propósito; árbol CONJUNTO sobre `#297`) ·
@@ -34,8 +69,8 @@
 > JAMÁS lleva `changes.*` (la trampa §16.5.bis, aseverada). ⚠️ Las frases de `#246` («no se
 > descuenta solo») CADUCARON en las 4 superficies + correo. ⚠️ Portador PROPIO «Descuento fiesta
 > mixta» (migración 91; `mixed_party.credit_product_id`). ⚠️ Sondas `T4-PRB01/02` y 2 correos en
-> Mailpit quedan en local, asumidos. **Queda el OJO del owner; lo siguiente es la T5** (las
-> palabras: D9 · D8 · el email de la reducción).
+> Mailpit quedan en local, asumidos. **Queda el OJO del owner**; ~~lo siguiente es la T5~~
+> **HECHA la misma noche, 2.ª sesión (`#298`, bloque de arriba)**.
 > ❗❗❗ **2026-08-31 (noche) · T3 · EL PARQUE DECIDE, EN EL ÁRBOL** (`#294`,
 > `specs/cumple-mixto.md` §23 diseño · **§23.10 ejecución**).
 > Suite de entonces: 3664 tests / 23.753 aserciones (conjunto sobre `#295`; la VIVA, arriba) ·
@@ -58,13 +93,9 @@
 > se roban los permisos con `sync()`: rol propio por empleado en el fichero nuevo. ⚠️ La sonda usó
 > `puerta.window_days=30` TEMPORAL (restaurado: fila borrada) y dejó filas de audit del escaneo en
 > `T0-PRB01`, asumidas. **Queda el OJO del owner** (capturas listas). ~~Lo siguiente era la T4~~
-> **HECHA la misma noche (`#296`, bloque de arriba)**. ▶ **LA RETOMA REAL ES LA T5** (las palabras:
-> §18.5 — D9 «pagado en el parque» deja de afirmarse · D8 anonimizar solo sin reservas en vigor ·
-> el email de la reducción que promete de más con la liquidación en parque (`#285`) · el resto del
-> hallazgo del T0 sobre la línea del veredicto). **Sin diseño fino aún: se escribe §25 contra el
-> código ANTES de una línea, como las cinco tandas anteriores, y las ambigüedades se preguntan
-> numeradas al owner.** No toca el núcleo de dinero (D9 es presentación; D8 es RGPD → leer
-> `INVARIANTES §3` primero).
+> **HECHA la misma noche (`#296`, bloque de arriba)**. ▶ ~~LA RETOMA REAL ES LA T5~~ **HECHA en la
+> 2.ª sesión de la noche con su §25 escrito ANTES del código y las tres preguntas numeradas
+> (`#298`, bloque de arriba): la retoma real pasa a ser la T6.**
 > ❗❗❗ **2026-08-31 (tarde-noche) · T2 · UNA EDAD SIN PRODUCTO + EL DINERO SOLO AL GUARDAR
 > COMPLETO, EN EL ÁRBOL** (`#289`, `specs/cumple-mixto.md` §22 diseño · §22.9 ejecución).
 > Suite de entonces: 3639 tests / 23.658 aserciones — cifra del árbol conjunto de aquel cierre,
