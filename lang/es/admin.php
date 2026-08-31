@@ -1728,6 +1728,10 @@ return [
         'guest_age_range_required' => 'Si el pack declara una familia por edad, tiene que declarar también su tramo (al menos la edad mínima o la máxima).',
         'guest_age_range_inverted' => 'La edad máxima no puede ser menor que la mínima.',
         'guest_age_range_overlap' => 'El tramo de edad pisa al de «:name», que está en la misma familia. Dos packs no pueden cubrir la misma edad: no habría forma de saber a cuál corresponde un invitado.',
+        'band_impact' => [
+            'title' => 'Este cambio afecta a :count fiesta(s) YA VENDIDA(S)',
+            'body' => 'Con los tramos nuevos, esas reservas pasarían a llevar :created de suplemento nuevo y se les retirarían :removed. Lo que ya se les comunicó cambiaría, y a sus titulares les llegaría un correo. Si es lo que quieres, vuelve a guardar para confirmarlo.',
+        ],
 
         'warn_sellable_no_price' => 'Producto marcado como vendible pero sin precio en la tarifa base: no se podrá vender hasta fijar su precio en Tarifas y precios (7.8).',
 

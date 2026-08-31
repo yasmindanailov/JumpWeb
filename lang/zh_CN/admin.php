@@ -1363,6 +1363,10 @@ return [
         'guest_age_range_required' => '套餐若声明了年龄家族,就必须同时声明年龄段(至少填写最小或最大年龄)。',
         'guest_age_range_inverted' => '最大年龄不能小于最小年龄。',
         'guest_age_range_overlap' => '该年龄段与同一家族中的「:name」重叠。两个套餐不能覆盖同一个年龄:否则无法判断来宾属于哪一个。',
+        'band_impact' => [
+            'title' => '此更改会影响 :count 个已售出的派对',
+            'body' => '按新的年龄段,这些预订将新增 :created 的补差,并会撤销 :removed。已经通知过客户的金额会发生变化,并且会向订单持有人发送邮件。如果确定要这样做,请再次保存以确认。',
+        ],
         'guest_fields_hint' => '在预订后的表单中,针对每位来宾要求填写的列(默认:姓名、过敏、备注、特殊餐食)。',
         'guest_field_add' => '添加列',
         'guest_field_duplicate' => '每位儿童信息中键名「:key」重复。',

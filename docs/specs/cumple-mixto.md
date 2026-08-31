@@ -1022,3 +1022,39 @@ vigilar nada.
 
 **Verificación**: +4 casos · **4 mutaciones y las 4 muerden** (el modelo laxo, el panel laxo, el
 dominio estrenando un tipo sin contrato, y las dos listas fundidas).
+
+### 17.8 · ✅ El AVISO antes de mover un tramo (2026-08-30, `#283`)
+
+`[DECIDIDO owner]` de las dos salidas al caso espejo —sellar el régimen en cada reserva, o avisar
+antes de tocar el catálogo— se hace **el aviso**. No cierra el agujero: **cierra la forma en que te
+pilla desprevenido**, que es el riesgo real, porque mover tramos es cosa de una vez al año y entonces
+toca a todas las fiestas vivas a la vez.
+
+▶ Al guardar un tramo en el catálogo, si el cambio movería dinero de fiestas **ya vendidas y sin
+celebrar**, el guardado se interrumpe UNA vez con los números: a cuántas afecta, cuánto crearía y
+cuánto retiraría. Volver a guardar lo mismo lo aplica. La FIRMA del cambio es lo que impide que
+«volver a guardar» sea un cheque en blanco: si el operador retoca los números, se le avisa de nuevo.
+
+⚠️ **El precio ya no entra**, y no es un olvido: desde `#270` cada línea lleva su recibo y hereda el
+unitario comunicado, así que retocar una tarifa no mueve lo vendido. El único eje que sigue
+moviéndolo es el TRAMO.
+
+⚠️⚠️ **El número del aviso sale del MISMO recorrido que el que se escribirá después.** Se clonan los
+packs en memoria con los valores propuestos y se le siembran al lector
+(`GuestAgeMixReader::pretendFamilyIs`) en vez de copiar la aritmética: una copia daría un aviso que
+envejece solo, y el operador decidiría mirando una cifra que el reconciliador no va a respetar. Y se
+simula **sin escribir**, para no disparar eventos de modelo ni auditoría por pintar un número.
+
+❗ **Lo que enseñó construirlo, y no estaba escrito en ninguna parte**: crear un cargo de la nada
+exige **DOS guardados**, no uno. Estrechar el tramo del pack barato no mueve un euro —sus invitados
+caen en un HUECO que no cubre ningún pack, el veredicto queda incompleto y la abstención de `#268`
+protege lo escrito—. El cargo nace en el segundo paso, al **ensanchar** el tramo del pack caro hasta
+alcanzarlos. El aviso salta ahí, que es donde el dinero se mueve.
+
+⚠️ Y una guarda **nació CIEGA**: la de «una fiesta ya celebrada no cuenta» estaba escrita sobre un
+escenario que no movía dinero de todas formas, así que quitar el filtro la dejaba en verde. Probaba
+que no había nada que filtrar, no el filtro. Reescrita sobre el escenario que sí crea los 32,00 €.
+
+**Verificación**: +7 casos · **5 mutaciones y las 5 muerden** (el aviso desconectado · la firma sin
+memoria · las celebradas contadas · la familia antigua perdida · el orden de la familia simulada
+divergiendo del lector).

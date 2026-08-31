@@ -1976,6 +1976,11 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3547 en verde** (23.247 aserciones, 1 skipped a propósito) · **JS 877**, medida el
+  2026-08-31 tras `#283` (el AVISO antes de mover un tramo). ▶ **+7 casos**: el impacto en las dos
+  direcciones, la fiesta ya celebrada que no cuenta, el cambio que no mueve a nadie y no
+  interrumpe, retirar la familia, y la confirmación en dos guardados con su firma.
+  **5 mutaciones y las 5 muerden.** ⚠️ Una guarda **nació ciega** y lo dijo la mutación.
 - Suite **3540 en verde** (23.231 aserciones, 1 skipped a propósito) · **JS 877**, medida el
   2026-08-30 **sobre el árbol CONJUNTO**, tras rebasar `#282` (carril A: cada esquema de campos
   declara SUS tipos) encima de `#281` del carril C. ▶ **+4 casos de mi lado**: tres de conducta —la

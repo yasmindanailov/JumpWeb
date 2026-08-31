@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Catalog\Concerns;
 
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\MixedPartyBandImpact;
+use App\Domain\Platform\Services\Money;
 use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;
 
@@ -307,6 +309,14 @@ trait InteractsWithCatalogForm
      * @param  array<string,mixed>  $data
      * @return array<string,mixed>
      */
+    /**
+     * Firma del cambio de tramos que el operador YA ha visto avisado ({@see warnAboutSoldParties}).
+     *
+     * Pública a propósito: Livewire solo conserva las propiedades públicas entre peticiones, y esto
+     * tiene que sobrevivir del guardado que avisa al guardado que confirma.
+     */
+    public string $ackBandImpact = '';
+
     protected function normalizeGuestAgeFields(array $data, bool $isPack): array
     {
         if (! $isPack) {
@@ -325,22 +335,79 @@ trait InteractsWithCatalogForm
         $data['guest_age_min'] = $min;
         $data['guest_age_max'] = $max;
 
-        if ($data['guest_age_family'] === null) {
-            // Sin familia no hay nada que comparar. El tramo suelto se conserva tal cual: no
-            // clasifica a nadie, pero tampoco es un error que merezca bloquear un guardado.
-            return $data;
+        if ($data['guest_age_family'] !== null) {
+            if ($min === null && $max === null) {
+                $this->haltWith('admin.catalog.guest_age_range_required');
+            }
+            if ($min !== null && $max !== null && $max < $min) {
+                $this->haltWith('admin.catalog.guest_age_range_inverted');
+            }
+
+            $this->guardAgeRangeIsFree($data['guest_age_family'], $min, $max);
         }
 
-        if ($min === null && $max === null) {
-            $this->haltWith('admin.catalog.guest_age_range_required');
-        }
-        if ($min !== null && $max !== null && $max < $min) {
-            $this->haltWith('admin.catalog.guest_age_range_inverted');
-        }
-
-        $this->guardAgeRangeIsFree($data['guest_age_family'], $min, $max);
+        // ⚠️ El aviso va DESPUÉS de las validaciones —avisar del impacto de un tramo inválido sería
+        // ruido— y se ejecuta también cuando la familia se RETIRA: dejar a un pack sin familia mueve
+        // el dinero de sus fiestas vendidas igual que estrechar su tramo.
+        $this->warnAboutSoldParties($data['guest_age_family'], $min, $max);
 
         return $data;
+    }
+
+    /**
+     * **Antes de guardar un tramo, dice a cuántas fiestas YA VENDIDAS afecta y por cuánto dinero.**
+     *
+     * `[DECIDIDO owner, 2026-08-30]` de las dos salidas al «caso espejo» —sellar el régimen en cada
+     * reserva, o avisar antes de tocar el catálogo— se hace **el aviso**: es media tanda, no toca el
+     * núcleo de dinero, y ataca el riesgo donde de verdad está, que es tocar tramos sin saber a quién
+     * se afecta (`specs/cumple-mixto.md` §17.8).
+     *
+     * ▶ **No bloquea: interrumpe una vez.** El primer guardado enseña los números y para; volver a
+     * guardar el MISMO cambio lo aplica. La firma es lo que hace que «volver a guardar» no sea un
+     * cheque en blanco: si el operador cambia los números, se le vuelve a avisar con los nuevos.
+     *
+     * ⚠️ Solo al EDITAR: un producto que aún no existe no tiene fiestas vendidas.
+     * ⚠️ Y solo si los tramos CAMBIAN, para no cobrarle una derivación completa a quien está
+     * corrigiendo el nombre del producto.
+     */
+    private function warnAboutSoldParties(?string $family, ?int $min, ?int $max): void
+    {
+        $record = $this->record ?? null;
+        if (! $record instanceof TicketType) {
+            return;
+        }
+
+        $sinCambio = $record->guestAgeFamily() === $family
+            && (int) $record->guest_age_min === (int) $min
+            && (int) $record->guest_age_max === (int) $max;
+        if ($sinCambio) {
+            return;
+        }
+
+        $firma = md5(implode('|', [(int) $record->getKey(), (string) $family, (string) $min, (string) $max]));
+        if ($this->ackBandImpact === $firma) {
+            return; // ya lo vio y ha vuelto a guardar lo mismo: es su decisión
+        }
+
+        $impacto = app(MixedPartyBandImpact::class);
+        $medido = $impacto->of($record, $family, $min, $max);
+        if (! $impacto->isWorthWarning($medido)) {
+            return;
+        }
+
+        $this->ackBandImpact = $firma;
+
+        Notification::make()
+            ->title(__('admin.catalog.band_impact.title', ['count' => $medido['reservations']]))
+            ->body(__('admin.catalog.band_impact.body', [
+                'created' => Money::format($medido['created_cents']),
+                'removed' => Money::format($medido['removed_cents']),
+            ]))
+            ->warning()
+            ->persistent()
+            ->send();
+
+        throw new Halt;
     }
 
     /**

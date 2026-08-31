@@ -229,6 +229,28 @@ class GuestAgeMixReader
     }
 
     /**
+     * Pre-siembra la familia de una simulación: deriva **como si** el catálogo dijera esto.
+     *
+     * ▶ Existe para poder contestar «¿a qué fiestas ya vendidas afectaría este cambio?» ANTES de
+     * guardarlo (`MixedPartyBandImpact`). La alternativa —escribir el cambio, medir y revertir—
+     * dispararía eventos de modelo y auditoría por un cálculo que solo sirve para enseñar un número.
+     *
+     * ⚠️ **No abre un camino nuevo de derivación: siembra el memo que ya existía.** El recorrido, la
+     * aritmética y el orden de la familia siguen siendo los mismos, que es lo único que garantiza
+     * que el número del aviso y el que se escribirá después salgan de la misma regla.
+     *
+     * ⚠️ Úsalo sobre una instancia PROPIA (`new GuestAgeMixReader(...)`), nunca sobre la del
+     * contenedor: es `scoped`, y contaminar su memo dejaría al resto de la petición derivando contra
+     * un catálogo que no existe.
+     *
+     * @param  list<TicketType>  $members  la familia tal y como quedaría, ya ordenada por quien llama
+     */
+    public function pretendFamilyIs(string $familyKey, array $members): void
+    {
+        $this->families[$familyKey] = $members;
+    }
+
+    /**
      * Los productos de la familia de `$type`, ORDENADOS por el inicio de su tramo (los abiertos por
      * abajo, primero). El orden manda: si dos tramos se solapasen —el panel lo impide al guardar,
      * pero un dato viejo puede— gana el de menor edad, que es determinista y explicable.

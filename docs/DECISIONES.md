@@ -16389,3 +16389,33 @@ distintas—, porque si se fundieran pasaría en verde sin vigilar nada.
 **Verificación**: suite 3520 / 23.003 · +4 casos · 4 mutaciones y las 4 muerden (el modelo laxo · el
 panel laxo · el dominio estrenando un tipo sin declararlo en el contrato · las dos listas fundidas) ·
 Pint ✓ · docs-check ✓.
+
+## #283 · 2026-08-30 · [DECIDIDO owner] El catálogo AVISA antes de mover un tramo con fiestas vendidas
+
+De las dos salidas al caso espejo —sellar el régimen en cada reserva (columna + migración) o avisar
+antes de tocar el catálogo— el owner elige **el aviso**. No cierra el agujero: cierra **la forma en
+que te pilla desprevenido**, que es el riesgo real. Mover tramos es cosa de una vez al año, y
+entonces toca a todas las fiestas vivas a la vez.
+
+▶ Al guardar un tramo, si el cambio movería dinero de fiestas ya vendidas y **sin celebrar**, el
+guardado se interrumpe UNA vez con los números —a cuántas afecta, cuánto crearía, cuánto retiraría—.
+Volver a guardar lo mismo lo aplica; la FIRMA del cambio impide que eso sea un cheque en blanco.
+
+⚠️ **El PRECIO ya no entra en el aviso**: desde `#270` cada línea lleva su recibo, así que retocar una
+tarifa no mueve lo vendido. El único eje que sigue moviéndolo es el TRAMO.
+
+⚠️⚠️ **El número sale del MISMO recorrido que el que se escribirá después**: se clonan los packs en
+memoria con los valores propuestos y se le siembran al lector (`pretendFamilyIs`) en vez de copiar la
+aritmética. Una copia daría un aviso que envejece solo. Y se simula **sin escribir**, para no
+disparar eventos de modelo ni auditoría por pintar un número.
+
+❗ **Construirlo enseñó algo que no estaba escrito**: crear un cargo de la nada exige **DOS**
+guardados. Estrechar el tramo del pack barato no mueve un euro —sus invitados caen en un hueco, el
+veredicto queda incompleto y la abstención de `#268` protege lo escrito—; el cargo nace al ENSANCHAR
+el tramo del caro hasta alcanzarlos. El aviso salta ahí.
+
+⚠️ Y una guarda nació CIEGA: la de «una fiesta ya celebrada no cuenta» estaba escrita sobre un
+escenario que no movía dinero de todas formas. *Probaba que no había nada que filtrar, no el filtro.*
+
+**Verificación**: suite 3547 / 23.247 · +7 casos · 5 mutaciones y las 5 muerden · Pint ✓ ·
+docs-check ✓.
