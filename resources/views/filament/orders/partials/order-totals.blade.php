@@ -337,6 +337,15 @@
                     <span x-show="! open">{{ __('admin.orders.show_more') }}</span>
                     <span x-show="open" x-cloak>{{ __('admin.orders.show_less') }}</span>
                 </button>
+                {{-- T5 adenda 4 (`[DECIDIDO owner]`, §25.10): el HISTORIAL a un clic desde el
+                     DINERO — el primer vistazo del operador es «¿qué ha pasado aquí?», y la foto no
+                     lista los cambios (los reescribe): la historia se abre desde donde se pregunta,
+                     no enterrada al final de «Detalles». Solo cuando hay algo que explicar
+                     (`$hasDetail`: el caso simple no gana ruido). --}}
+                <button type="button" wire:click="mountAction('viewOrderHistory')"
+                        class="ml-3 inline-flex items-center gap-1 pt-0.5 text-xs font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
+                    {{ __('admin.orders.audit_cta.button') }}
+                </button>
             @endif
         </div>
     @endunless

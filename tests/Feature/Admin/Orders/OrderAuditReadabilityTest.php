@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use Database\Seeders\PermissionSeeder;
@@ -215,6 +216,72 @@ class OrderAuditReadabilityTest extends TestCase
         $u->roles()->sync([Role::where('name', 'staff')->value('id')]);
 
         return $u;
+    }
+
+    /**
+     * T5 adenda 4 (`[DECIDIDO owner]`, `cumple-mixto.md` §25.10): el historial se abre A UN CLIC
+     * DESDE EL DINERO — el bloque del pedido y la card del producto ganan su acceso además del CTA
+     * del final de «Detalles». La foto no lista los cambios (los reescribe), así que un «Pendiente
+     * de devolución» sin historia al lado obliga al operador a buscarla enterrada. El control de
+     * abajo fija la otra mitad: un pedido SIN nada que explicar no gana ruido.
+     * Mutación: quitar cualquiera de los dos accesos nuevos.
+     */
+    public function test_the_history_is_one_click_away_from_the_money(): void
+    {
+        $order = $this->makeOrder();
+        $item = $order->items->first();
+        $order->applyExtraDue($item, 1500, User::factory()->create(), 'item_edit', ['changes' => ['quantity_change' => ['old' => 7, 'new' => 8]]]);
+
+        $html = Livewire::actingAs($this->staff())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->html();
+
+        // ⚠️ La aguja es `wire:click=...`, no la llamada a secas: UN solo botón de Filament
+        // emite la cadena 4 veces (wire:click + wire:target del botón y de su spinner) y contar
+        // llamadas convertía este recuento en ruido — el instrumento primero.
+        $this->assertGreaterThanOrEqual(
+            3,
+            substr_count($html, 'wire:click="mountAction(\'viewOrderHistory\')"'),
+            'con dinero que explicar: el CTA de «Detalles» + el del bloque del pedido + el de la card',
+        );
+    }
+
+    public function test_a_simple_order_keeps_a_single_history_entry_point(): void
+    {
+        // ⚠️ Fixture PROPIO y de verdad simple: el compartido (`makeOrder`) lleva un total que no
+        // casa con su línea y ningún pago — eso deja «pendiente online», que SÍ es algo que
+        // explicar, y el control nacería midiendo otra cosa.
+        $user = User::factory()->create();
+        $order = Order::create([
+            'user_id' => $user->id, 'code' => 'JJ-R'.bin2hex(random_bytes(2)),
+            'status' => Order::STATUS_PAID, 'paid_at' => now(),
+            'subtotal' => 15120, 'total' => 15120, 'currency' => 'EUR',
+        ]);
+        Payment::create([
+            'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
+            'amount' => 15120, 'currency' => 'EUR', 'provider' => 'redsys',
+            'status' => Payment::STATUS_PAID, 'paid_at' => now(),
+            'gateway_order' => '0000AUDIT1',
+        ]);
+        $slot = Slot::create([
+            'zone_id' => $this->zone->id, 'date' => '2099-01-01',
+            'start_time' => '18:00:00', 'end_time' => '19:30:00',
+            'capacity' => 10, 'online_capacity' => 5,
+        ]);
+        OrderItem::create([
+            'order_id' => $order->id, 'ticket_type_id' => $this->product->id,
+            'slot_id' => $slot->id, 'quantity' => 8, 'seats' => 8, 'unit_price' => 1890,
+        ]);
+
+        $html = Livewire::actingAs($this->staff())
+            ->test(ViewOrder::class, ['record' => $order->fresh()->code])
+            ->html();
+
+        $this->assertSame(
+            1,
+            substr_count($html, 'wire:click="mountAction(\'viewOrderHistory\')"'),
+            'sin nada que explicar, solo el CTA de «Detalles»: el caso simple no gana ruido',
+        );
     }
 
     private function makeOrder(): Order

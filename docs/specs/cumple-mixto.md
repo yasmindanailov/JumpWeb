@@ -2596,6 +2596,7 @@ siempre.
 | N | La CARD del producto pinta «Pendiente de devolución» con «−», acotado al PARTIAL (`#295`: la página entera no distingue — el bloque del pedido ya pinta el suyo) | quitar el «−» de la card |
 | O | El historial del pedido pinta «Cantidad: :from → :to» en una edición de cantidad (la forma que `#145` dejó fuera), renderizando el partial REAL | quitar el bloque `hasQtyMove` |
 | P | La hoja OPERATIVA cuenta los hechos de la mezcla SIN un solo euro (líneas `:count × :name`, la frase del descuento sin cifra, el aviso del a-favor sin cifra); los importes solo con `showPrices` | devolver el dinero a la rama sin precios |
+| Q | El historial a UN CLIC desde el dinero: con consecuencias que explicar, el acceso sale en el bloque del pedido Y en la card (aguja `wire:click=`, no la llamada a secas); el pedido simple conserva UN solo acceso (control) | quitar cualquiera de los dos accesos |
 
 ### 25.9 · Lo que decide el owner — ✅ `[DECIDIDO owner, 2026-08-31]` las tres
 
@@ -2712,6 +2713,30 @@ de la T3 — la corrección va escrita DENTRO de §23.2, antes del texto que cor
 en rojo; los dos PDF de `T4-PRB01` generados en vivo (la operativa queda para el OJO en
 `08-hoja-operativa.pdf`).
 
+▶ **Adenda 4 — el historial a un clic desde el dinero, y el FANTASMA de la señal**
+(2026-09-01, sobre `T4-PRB01`, que el owner había estado editando desde el panel — sus tres
+ediciones ejercitaron en vivo el interruptor de «bajar del mínimo» de la T3). Dos hallazgos:
+**(1)** su objeción de diseño, aceptada — «el operador necesita el primer vistazo, no buscar la
+auditoría enterrada» —: el acceso «Ver historial completo» sale ahora TAMBIÉN junto al desglose
+(bloque del pedido y card del producto), solo cuando hay CONSECUENCIAS que explicar (líneas de
+puerta, devuelto, pendiente o compensado — ⚠️ `hasActivity()` NO vale de condición: es verdad en
+cualquier pedido pagado, y el control fija que el caso simple no gana ruido). Guarda Q.
+**(2)** ⚠️⚠️ **el «Pendiente de devolución −20,00 €» de su card era un FANTASMA**, medido:
+`itemOriginalOnlineCents()` reconstruye el online original con `depositCents()` de la config
+**VIVA** (señal hoy 30,00 fija; el pedido nació con 10,00) → la card decía −20,00 con el eje del
+PEDIDO en 0 — divergencia pedido-vs-card en vivo, **el hermano de la señal del caso espejo que el
+sello cerró para los tramos**. `[DECIDIDO owner]`: **ficha en `DEUDA.md`** con el boceto del
+arreglo (la fila `deposit_remainder` del nacimiento ya registra la verdad); es núcleo de dinero y
+se hace como pieza propia. ⚠️⚠️ **Dos trampas de instrumento/Blade pagadas aquí**: (a) en
+`items-list` el extractor de bloques PHP de Blade casa desde el primer `@php(` con paréntesis
+hasta el primer CIERRE de bloque del fichero — introducir un bloque con cierre dejó media
+pantalla SIN COMPILAR, con el error («unexpected end of file») señalando el FINAL del fichero,
+lejos del culpable; y nombrar las directivas en un comentario reproduce el choque, porque la
+extracción corre antes que los comentarios; (b) contar `mountAction(...)` como aguja era ruido:
+**un solo botón de Filament emite la cadena 4 veces** (`wire:click` + los `wire:target` del botón
+y de su spinner) — la aguja es `wire:click="..."`.
+
 **Lo que queda del plan** (§18.5): **T6** (el guardián de solapes fuera del formulario) · la
-**fase 3** de §20.2 despierta a §16 · el **AFORO** sigue aparcado por el owner. **De esta tanda
-queda el OJO del owner** (capturas listas; los textos nuevos son suyos de juzgar).
+**fase 3** de §20.2 despierta a §16 · el **AFORO** sigue aparcado por el owner · la ficha nueva
+del fantasma de la señal, en `DEUDA.md`. **De esta tanda queda el OJO del owner** (capturas
+listas; los textos nuevos son suyos de juzgar).

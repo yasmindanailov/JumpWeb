@@ -557,7 +557,27 @@
                         @endforeach
                     @endif
 
-                    @include('filament.orders.partials.reservation-financials', ['rf' => $rf, 'struck' => $isItemCancelled, 'gateLines' => $record->reservationGateLines($item)])
+                    {{-- ⚠️ SOLO la forma con paréntesis en esta zona: el extractor de bloques PHP
+                         de Blade casa desde el PRIMER uso con paréntesis de arriba hasta el primer
+                         CIERRE de bloque que encuentre — introducir aquí un bloque con cierre dejó
+                         media pantalla sin compilar, con el error señalando el final del fichero. --}}
+                    @php($itemGateLines = $record->reservationGateLines($item))
+                    @include('filament.orders.partials.reservation-financials', ['rf' => $rf, 'struck' => $isItemCancelled, 'gateLines' => $itemGateLines])
+
+                    {{-- T5 adenda 4 (`[DECIDIDO owner]`, §25.10): el HISTORIAL a un clic desde el
+                         desglose del producto — la foto no lista los cambios, y el «Pendiente de
+                         devolución» de aquí arriba se explica en el historial. Va FUERA del partial
+                         compartido a propósito: `reservation-financials` lo renderiza también el
+                         modal del calendario, donde `viewOrderHistory` no existe. Solo cuando hay
+                         CONSECUENCIAS que explicar (líneas de puerta, devuelto, pendiente o
+                         compensado) — `hasActivity()` NO vale de condición: es verdad en cualquier
+                         pedido pagado, y el caso simple no debe ganar ruido (el control lo fija). --}}
+                    @if (count($itemGateLines) > 0 || $rf->devuelto > 0 || $rf->pendienteReembolso > 0 || $rf->compensado > 0)
+                        <button type="button" wire:click="mountAction('viewOrderHistory')"
+                                class="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
+                            {{ __('admin.orders.audit_cta.button') }}
+                        </button>
+                    @endif
                 </div>
             </div>
 

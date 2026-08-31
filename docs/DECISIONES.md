@@ -17313,3 +17313,20 @@ OPERATIVA «a sabiendas» (§23.2, su hueco E — que la sala vea la diferencia)
 La corrección va escrita DENTRO de §23.2, delante del texto que corrige; guarda P de §25.8 vista
 en rojo (devolver el dinero a la rama sin precios rompe dos casos). La puerta y la ficha no
 cambian.
+
+**Adenda 4 (2026-09-01, sobre `T4-PRB01` — que el owner había estado editando él mismo desde el
+panel, ejercitando en vivo el «bajar del mínimo» de la T3)**: dos cosas. **(1)** Su objeción de
+diseño, aceptada: *«el operador necesita el primer vistazo, no buscar en una card escondida la
+auditoría; el CTA debería estar al lado del desglose»* — el acceso «Ver historial completo» sale
+ahora TAMBIÉN junto al dinero (bloque del pedido y card del producto), solo cuando hay
+CONSECUENCIAS que explicar; el pedido simple conserva un único acceso (guarda Q, con control —
+⚠️ `hasActivity()` no vale de condición: es verdad en cualquier pedido pagado). **(2)** ⚠️⚠️ El
+«Pendiente de devolución −20,00 €» de su card era un **FANTASMA medido**: la reconstrucción del
+online original usa `depositCents()` de la config VIVA del catálogo (señal hoy 30,00; el pedido
+nació con 10,00) → card −20,00 con el eje del pedido en 0, divergencia en vivo de la clase que el
+cruce B4 caza — **el hermano de la señal del caso espejo que el sello cerró para los tramos**.
+`[DECIDIDO owner]`: ficha en `DEUDA.md` (con el boceto: la fila `deposit_remainder` del
+nacimiento ya registra la verdad); núcleo de dinero, pieza propia. ⚠️ Y dos trampas pagadas,
+escritas en §25.10: el extractor de bloques PHP de Blade contra el primer `@php(` del fichero
+(media pantalla sin compilar y el error señalando el final), y que un solo botón de Filament
+emite `mountAction(...)` cuatro veces — la aguja de un recuento es `wire:click="..."`.
