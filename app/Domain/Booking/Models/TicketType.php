@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Models;
 
+use App\Domain\Booking\Exceptions\OverlappingAgeRangeException;
 use App\Domain\Booking\Services\ProductIcon;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Platform\Concerns\HasTranslations;
@@ -527,6 +528,78 @@ class TicketType extends Model
         }
 
         return ! ($this->guest_age_max !== null && $age > (int) $this->guest_age_max);
+    }
+
+    /**
+     * El hermano de la MISMA familia cuyo tramo PISA al dado, o `null` si el tramo está libre.
+     *
+     * **Es la verdad ÚNICA del criterio de solape** (T6, `cumple-mixto.md` §26): los extremos
+     * nulos se comparan como los topes reales de la columna (`unsignedTinyInteger`, 0–255) — «de 7
+     * en adelante» y «hasta 6» se solapan o no según números, no según casos especiales, el mismo
+     * criterio que {@see coversGuestAge}. La consumen el guardián de dominio de {@see booted} y el
+     * form del catálogo (que le pone su aviso amable delante): nadie re-implementa la comparación.
+     */
+    public static function overlappingAgeSibling(string $family, ?int $min, ?int $max, ?int $exceptId = null): ?self
+    {
+        $mine = [$min ?? 0, $max ?? 255];
+
+        return self::query()
+            ->where('type', self::TYPE_PACK)
+            ->where('guest_age_family', $family)
+            ->when($exceptId !== null, fn ($q) => $q->whereKeyNot($exceptId))
+            ->get(['id', 'name', 'guest_age_min', 'guest_age_max'])
+            ->first(function (self $sibling) use ($mine): bool {
+                $theirs = [(int) ($sibling->guest_age_min ?? 0), (int) ($sibling->guest_age_max ?? 255)];
+
+                return $mine[0] <= $theirs[1] && $theirs[0] <= $mine[1];
+            });
+    }
+
+    /**
+     * T6 (`cumple-mixto.md` §26, el hueco G de `#284`): **los tramos de una familia no pueden
+     * solaparse, y la regla vive en el DOMINIO** — hasta aquí solo la aplicaba el form del panel,
+     * y «por construcción es imposible» era verdad únicamente ahí. Corre en `saving`, así que
+     * cubre toda escritura Eloquent: semillas, comandos, factories, tinker con `save()`.
+     *
+     * ⚠️ Valida SOLO cuando cambian los TÉRMINOS del tramo (familia o topes; una fila nueva los
+     * cambia todos): una fila con un solape metido por la puerta de atrás sigue editable en
+     * precio o nombre — bloquearla dejaría el catálogo ingobernable —, pero tocar SUS tramos
+     * exige sanearla. ⚠️ El límite, dicho: los eventos de Eloquent NO ven un
+     * `Query\Builder::update()` ni SQL crudo; los cinturones de siempre quedan (el lector
+     * resuelve por el tramo de menor edad, y el sellador copia la realidad sin frenar ventas).
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $type): void {
+            if ($type->type !== self::TYPE_PACK) {
+                return;
+            }
+
+            $family = $type->guestAgeFamily();
+            if ($family === null) {
+                return;
+            }
+
+            $termsTouched = ! $type->exists
+                || $type->isDirty(['guest_age_family', 'guest_age_min', 'guest_age_max', 'type']);
+            if (! $termsTouched) {
+                return;
+            }
+
+            $min = $type->guest_age_min !== null ? (int) $type->guest_age_min : null;
+            $max = $type->guest_age_max !== null ? (int) $type->guest_age_max : null;
+
+            if ($min !== null && $max !== null && $max < $min) {
+                throw new \InvalidArgumentException(sprintf(
+                    'Tramo de edad invertido (%d–%d) en la familia «%s».', $min, $max, $family,
+                ));
+            }
+
+            $sibling = self::overlappingAgeSibling($family, $min, $max, $type->getKey());
+            if ($sibling !== null) {
+                throw new OverlappingAgeRangeException($sibling);
+            }
+        });
     }
 
     /**

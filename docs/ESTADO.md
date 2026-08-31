@@ -2,9 +2,11 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-31 (noche, 2.ª sesión) — carril MIXTOS:
-> T1→T4 en el árbol (`#288`/`#289`/`#294`/`#296`) y **T5 LAS PALABRAS EN EL ÁRBOL (`#298`)**;
-> lo siguiente es la T6 (el guardián de solapes, §18.5). Carril IDIOMA VISUAL: T1 normas
+> aquí solo se enlaza.** Última actualización: **2026-09-01 — carril MIXTOS: T1→T5 en el árbol
+> (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL GUARDIÁN DE SOLAPES EN EL
+> ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** — siguen fuera por diseño la
+> fase 3 de §20.2, el AFORO (owner) y la ficha del fantasma de la señal en `DEUDA.md`; queda el
+> OJO del owner sobre T5+T6. Carril IDIOMA VISUAL: T1 normas
 > (`#292`), T2 cinta C3 (`#293`) y T3 zonas/atracciones (`#295`) en el árbol.**
 > ❗ **SI ENTRAS NUEVO A MIXTOS: `specs/cumple-mixto.md` §18 (visión) → §21 (sello) → §22 (completo son
 > dos preguntas) → §23 (la T3) → §20 + §24 (la T4: el descuento espejo) → **§25 (la T5: las
@@ -18,12 +20,30 @@
 > veces (el carril del tema iba por 281 con el remoto en 285; el de mixtos escribió `#286` con el
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
-> ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1–T5 hechas → sigue la T6) ═══════════
+> ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1–T6 hechas: el plan de `#284`, COMPLETO) ═══════════
+> ❗❗❗ **2026-09-01 · T6 · EL GUARDIÁN DE SOLAPES EN EL DOMINIO, EN EL ÁRBOL** (`#299`,
+> `specs/cumple-mixto.md` **§26** diseño fino · **§26.5 ejecución**). Suite **3704 en verde**
+> (24.120 aserciones, 1 skipped a propósito) · **2/2 mutaciones muerden** (sin el hook de
+> `saving`: 4 rojos; sin el dirty-check: cae el solape preexistente) · el verificador mixto en
+> verde en sus DOS escenarios con el guardián activo. ▶ El hueco **G** de `#284`: el guardián
+> vivía SOLO en el form del catálogo — ahora `TicketType::overlappingAgeSibling()` es la verdad
+> ÚNICA (nulos como 0/255) y el `saving` del MODELO revienta el solape
+> (`OverlappingAgeRangeException`, con el hermano dentro) y el invertido; el form DELEGA y
+> conserva su aviso. ⚠️ Valida SOLO al tocar los TÉRMINOS del tramo (un solape metido por la
+> puerta de atrás sigue editable en lo demás; tocar sus tramos exige sanearlo). ⚠️ Límite honesto:
+> los eventos de Eloquent no ven `Query\Builder::update()` ni SQL crudo — quedan los cinturones
+> (lector por menor edad; el sellador no frena ventas). ⚠️⚠️ **Dos fixtures ILEGALES legalizados,
+> no excepcionados** (el tri-familia de la T5 y el de cobertura de la T4 creaban solapes
+> TRANSITORIOS): *un fixture que necesita un estado que el dominio prohíbe prueba un mundo que no
+> existe*. ⚠️ Y un grep por clave i18n dijo «el form no tiene tests» — mentira del instrumento:
+> `CatalogGuestAgeFamilyTest` asevera por CONDUCTA (10 casos). Con el sello, un solape ya no
+> mueve dinero: la tanda cierra la frase «por construcción es imposible». **Queda el OJO del
+> owner sobre T5+T6.**
 > ❗❗❗ **2026-08-31 (noche, 2.ª sesión) · T5 · LAS PALABRAS, EN EL ÁRBOL** (`#298`,
 > `specs/cumple-mixto.md` **§25** diseño fino · **§25.10 ejecución** · §25.9 las TRES decisiones
 > del owner: «Liquidado en el parque» · la puerta de D8 en las TRES vías · el correo del manual
-> entra). Suite **3698 en verde** (24.112 aserciones, 1 skipped a propósito; el delta sobre el
-> cierre de la T5 son las guardas N, O, P y Q de las adendas) · JS **878** ·
+> entra). Suite de entonces: 3698 (24.112 aserciones; el delta sobre el cierre de la T5 son las
+> guardas N, O, P y Q de las adendas — la VIVA, arriba en el bloque de la T6) · JS **878** ·
 > **10/10 mutaciones muerden, vistas en rojo una a una** · sonda `/root/e2e/t5.js` 10/10 ✓
 > (4 capturas, las dos críticas miradas). ▶ **D9**: las TRES claves que decían «Pagado en el
 > parque» dicen «Liquidado…» (es/en/fr/zh_CN); `paid_desk` intacta (cobro REGISTRADO);

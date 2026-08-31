@@ -64,8 +64,12 @@ class MixedPartyBadgeTest extends TestCase
         $this->jump = $this->pack('Cumpleaños Jump', 7, 99, 2500, $rate);
     }
 
-    private function pack(string $name, int $min, int $max, int $cents, RateType $rate): TicketType
+    private function pack(string $name, int $min, int $max, int $cents, RateType $rate, string $family = 'cumple'): TicketType
     {
+        // T6: la familia entra como PARÁMETRO — la versión anterior creaba los packs tri-familia
+        // como `cumple` (Mini 0–2 PISABA a Kids 1–6) y los re-familiaba después, un solape
+        // transitorio que el guardián de dominio prohíbe con razón. El fixture se legaliza,
+        // no se excepciona el guardián.
         $pack = TicketType::create([
             'name' => ['es' => $name], 'type' => TicketType::TYPE_PACK,
             'zone_id' => $this->zone->id, 'seats_per_unit' => 1,
@@ -76,7 +80,7 @@ class MixedPartyBadgeTest extends TestCase
                 ['key' => 'name', 'type' => TicketType::FIELD_TYPE_TEXT, 'required' => true, 'label' => ['es' => 'Nombre']],
                 ['key' => 'edad', 'type' => TicketType::FIELD_TYPE_AGE, 'required' => true, 'label' => ['es' => 'Edad']],
             ],
-            'guest_age_family' => 'cumple', 'guest_age_min' => $min, 'guest_age_max' => $max,
+            'guest_age_family' => $family, 'guest_age_min' => $min, 'guest_age_max' => $max,
         ]);
 
         Price::create([
@@ -264,13 +268,12 @@ class MixedPartyBadgeTest extends TestCase
     {
         // Familia propia de TRES tramos para tener las dos direcciones a la vez: un invitado de 9
         // sube (jump-tri, +7,00), uno de 1 baja (mini, «a favor» 3,00) y el de 4 queda en rango.
+        // T6: nacen ya en su familia — crearlos como `cumple` y re-familiarlos creaba un solape
+        // transitorio (Mini 0–2 sobre Kids 1–6) que el guardián de dominio prohíbe.
         $rate = RateType::firstOrFail();
-        $mini = $this->pack('Cumpleaños Mini', 0, 2, 1500, $rate);
-        $kidsTri = $this->pack('Cumpleaños Kids Tri', 3, 6, 1800, $rate);
-        $jumpTri = $this->pack('Cumpleaños Jump Tri', 7, 99, 2500, $rate);
-        foreach ([$mini, $kidsTri, $jumpTri] as $p) {
-            $p->forceFill(['guest_age_family' => 'cumple-tri'])->save();
-        }
+        $mini = $this->pack('Cumpleaños Mini', 0, 2, 1500, $rate, family: 'cumple-tri');
+        $kidsTri = $this->pack('Cumpleaños Kids Tri', 3, 6, 1800, $rate, family: 'cumple-tri');
+        $jumpTri = $this->pack('Cumpleaños Jump Tri', 7, 99, 2500, $rate, family: 'cumple-tri');
 
         // El portador del DESCUENTO falta ANTES del reconcile — el orden importa y lo enseñó la
         // primera versión de esta guarda: con el portador vivo, EL PROPIO CARGO de la pasada cuenta

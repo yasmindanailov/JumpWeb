@@ -1115,7 +1115,7 @@ los invitados y valorar cada caso.
 | Familia + tramo vinculan dos packs | `TicketType`, `#243` | ✅ |
 | **+X €** al declarar una edad de otro tramo | `MixedPartySurcharge` | ✅ |
 | Mismo precio → solo aviso, sin cargo | `test_two_packs_at_the_same_price_write_nothing` | ✅ |
-| Tramos de una familia no pueden chocar | `guardAgeRangeIsFree` | ✅ (solo desde el panel — **D9**) |
+| Tramos de una familia no pueden chocar | `guardAgeRangeIsFree` | ✅ ~~(solo desde el panel — el hueco **G**; la etiqueta decía «D9» por errata)~~ **En el DOMINIO desde la T6** (§26) |
 | Producto y fecha sin cambio → precio histórico | `ItemEditPricing:77` | ✅ |
 | Cambiar la fecha → precio del día destino | `PAY-18` | ✅ |
 | Cambiar el pack → precio de hoy del nuevo | `ItemEditPricing:81` | ✅ |
@@ -2747,3 +2747,99 @@ decidida, registrada en `#298` adenda 5 para que nadie la reabra como hueco).
 **fase 3** de §20.2 despierta a §16 · el **AFORO** sigue aparcado por el owner · la ficha nueva
 del fantasma de la señal, en `DEUDA.md`. **De esta tanda queda el OJO del owner** (capturas
 listas; los textos nuevos son suyos de juzgar).
+
+---
+
+## 26. 🟦 T6 · EL GUARDIÁN DE SOLAPES, EN EL DOMINIO — diseño fino (2026-09-01)
+
+> El hueco **G** de §18.4: «por construcción es imposible» solo era cierto si todo pasaba por el
+> panel. Con el sello (T1) un solape **ya no mueve dinero** — solo enturbiaría ventas y veredictos
+> NUEVOS —, así que esta tanda cierra la frase, no un agujero de caja. Sin preguntas al owner:
+> todas las decisiones son derivadas y quedan registradas abajo.
+
+### 26.1 · Lo verificado ANTES de escribir (medido hoy)
+
+- **El guardián vive SOLO en el form**: `InteractsWithCatalogForm::guardAgeRangeIsFree` —
+  normaliza (familia en minúsculas ≤40, topes 0–255 con `null` = lado abierto), exige un tope,
+  prohíbe el invertido y comprueba el solape tratando los nulos como 0/255 (el MISMO criterio que
+  `TicketType::coversGuestAge`), con Notification + Halt.
+- **Su conducta SÍ tiene red**: `CatalogGuestAgeFamilyTest`, 10 casos (solape, topes abiertos
+  «por números y no por casos especiales», contiguos permitidos, otra familia no choca, editarse
+  a sí mismo no choca). ⚠️ Mi primer barrido dijo «cero tests» por grepear la CLAVE i18n — el
+  test asevera por CONDUCTA, no por literal: el instrumento, primero.
+- **`TicketType` no tiene `booted()`** ni ningún hook de ciclo de vida; el patrón existe en el
+  proyecto (`Setting`, `Offer`, `Dependent`…).
+- **Escritores fuera del form, HOY**: el verificador `mixed-party:verify-concurrency` (siembra
+  packs con familia), las factories/fixtures de la suite, y cualquier tinker/semilla futura.
+- **BD local LIMPIA** (`cumple`: 1–6 / 7–99, sin solape) y `ENTORNOS`: 0 LIVE — no hay datos que
+  sanear al desplegar.
+- **UN fixture con solape TRANSITORIO**: el helper tri-familia de la guarda J (T5) crea «Mini
+  0–2» como `cumple` (pisando a Kids 1–6) y re-familia DESPUÉS — con el guardián nuevo revienta,
+  y la salida correcta es LEGALIZAR el fixture, no excepcionar el guardián.
+
+### 26.2 · El diseño: una verdad, dos capas, y el límite dicho
+
+1. **La verdad única**: `TicketType::overlappingAgeSibling(string $family, ?int $min, ?int $max,
+   ?int $exceptId): ?self` — la consulta y el criterio de solape (nulos como 0/255) en UN sitio.
+   El form delega en ella (conserva su Notification + Halt); nadie más re-implementa el criterio.
+2. **La capa de dominio**: `TicketType::booted()` → en `saving`, si el producto es pack con
+   familia y **cambian los términos del tramo** (`guest_age_family`/`guest_age_min`/
+   `guest_age_max` sucios, o la fila es nueva): tramo invertido → `InvalidArgumentException`;
+   solape → **`OverlappingAgeRangeException`** (nueva, junto a `ReservationException`, con el
+   hermano dentro para poder nombrarle).
+3. **El caso PREEXISTENTE, decidido como derivada**: la validación corre SOLO cuando se tocan los
+   términos del tramo — una fila con solape metido por la puerta de atrás sigue editable en
+   precio, nombre o foto (bloquearla dejaría el catálogo ingobernable), pero tocar SUS tramos
+   exige sanearla. Es el mismo espíritu del sello: lo que no se toca, no se re-litiga.
+4. **El límite, honesto**: los eventos de Eloquent NO cubren `Query\Builder::update()` ni SQL
+   crudo (la misma puerta por la que el test del sello caducado fabrica su fila). Los cinturones
+   que ya existían se quedan: el lector resuelve por el tramo de MENOR edad, y el sellador copia
+   la realidad y **jamás bloquea una venta** (doctrina PAY: la configuración no frena caja).
+5. **Lo que NO entra**: prohibir a nivel dominio «familia sin ningún tope» (el form ya lo hace
+   como UX; semánticamente sería «cubre 0–255» y el solape lo caza en cuanto hay un hermano).
+
+### 26.3 · Guardas, con su mutación
+
+| | Guarda | Mutación |
+|---|---|---|
+| A | `TicketType::create` con tramo que pisa a un hermano (SIN form) → `OverlappingAgeRangeException` | quitar el hook de `saving` |
+| B | `save()` moviendo el tramo de un pack sobre su hermano → excepción | — (mismo hook) |
+| C | Fila con solape PREEXISTENTE (construida con `saveQuietly`, el bypass documentado) edita su PRECIO → guarda sin drama | quitar el dirty-check (validar siempre) |
+| D | Contiguos 1–6 / 7–99 y otra familia → pasan (controles) | — |
+| E | Invertido (max < min) a nivel dominio → excepción | — |
+| F | Entrada o familia `null` → sin validación (control) | — |
+| G | Los 10 casos del form (`CatalogGuestAgeFamilyTest`) siguen verdes: la UX no cambia | — (red existente) |
+
+### 26.4 · Además
+
+- El fixture tri-familia de la T5-J se LEGALIZA (el helper gana el parámetro `family`; fuera el
+  `forceFill` posterior).
+- §18.2 corrige la etiqueta de su fila del guardián: decía «(solo desde el panel — D9)» y el
+  hueco es **G** (errata).
+
+### 26.5 · ✅ LO EJECUTADO (2026-09-01, `DECISIONES #299`)
+
+**En el árbol.** `TicketType::overlappingAgeSibling()` — la verdad ÚNICA del criterio (nulos como
+0/255, el de `coversGuestAge`) — y el guardián en `TicketType::booted()` (`saving`): pack con
+familia y términos del tramo TOCADOS → invertido revienta con `InvalidArgumentException`, solape
+con **`OverlappingAgeRangeException`** (nueva, con el hermano dentro). El form del catálogo
+DELEGA en la verdad única y conserva su aviso amable (si desapareciera, el dominio seguiría
+bloqueando — con excepción en vez de con notificación). Los DOS fixtures ilegales que destapó la
+suite quedaron LEGALIZADOS, no excepcionados: el tri-familia de la T5-J (el helper gana el
+parámetro `family`; fuera el `forceFill` posterior) y el de cobertura de la T4
+(`test_charges_feed_the_coverage_of_the_discount` creaba Teens 12–99 ANTES de encoger Jump 7–99 —
+ahora encoge primero). *Un fixture que necesita un estado que el dominio prohíbe estaba probando
+un mundo que no existe.*
+
+**Medido.** Suite **3704 (24.120 aserciones**, 1 skipped a propósito) · las guardas A–F del §26.3
+en `AgeFamilyRangeDomainGuardTest` (todas por la puerta de atrás, sin form) + los 10 casos del
+form intactos (guarda G, red existente) · **las 2 mutaciones muerden**: sin el hook de `saving`,
+4 rojos; sin el dirty-check, el caso del solape preexistente cae · el verificador
+`mixed-party:verify-concurrency` en verde en sus DOS escenarios con el guardián activo (su
+siembra es un escritor real de la puerta de atrás, y convive) · BD local ya limpia (§26.1), 0
+LIVE: nada que sanear.
+
+**Con esto, el plan de `#284` (§18.5) queda SIN tandas pendientes**: T0–T6 en el árbol. Siguen
+fuera, por diseño: la **fase 3** de §20.2 (despierta a §16 cuando exista el cobro online
+post-reserva), el **AFORO** (aparcado por el owner), la ficha del fantasma de la señal en
+`DEUDA.md`, y el **OJO del owner** sobre T5+T6.

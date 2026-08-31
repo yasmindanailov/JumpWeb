@@ -2319,10 +2319,19 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       `missing_credit_carrier`. **Y el «+-4,00 €»** que cazó el owner en mitad de la tanda (el `+`
       clavado de las ↳, escondido tras el «Ver más» plegado). Suite 3692/24.098 · JS 878 · 10/10
       mutaciones vistas en rojo · sonda `t5.js` 10/10 con capturas miradas. Queda el OJO del owner.
-      ❗ **Queda, por orden del plan §18.5**: T6 el guardián de solapes fuera
-      del formulario (con el sello ya no mueve dinero) · la fase 3 de §20.2 (cobro online
+      ✅ **T6 · EL GUARDIÁN DE SOLAPES EN EL DOMINIO (2026-09-01, `#299`)** — diseño fino en §26,
+      ejecución en §26.5. El hueco G: el guardián vivía solo en el form del catálogo;
+      `TicketType::overlappingAgeSibling()` pasa a ser la verdad única y el `saving` del modelo
+      revienta solape (`OverlappingAgeRangeException`) e invertido — el form delega y conserva su
+      aviso. Valida solo al tocar los términos del tramo (el solape preexistente sigue editable en
+      lo demás); límite honesto: los eventos no ven `Builder::update()` ni SQL crudo (cinturones:
+      lector por menor edad, el sellador no frena ventas). Dos fixtures ilegales LEGALIZADOS (la
+      suite escondía solapes transitorios). 2/2 mutaciones, verificador mixto en verde en sus dos
+      escenarios. **El plan de `#284` queda SIN tandas pendientes (T0–T6).**
+      ❗ **Sigue fuera, por diseño**: la fase 3 de §20.2 (cobro online
       post-reserva) despierta a §16 cuando exista · el **AFORO** sigue aparcado por el owner
-      (zonas distintas, spec propia).
+      (zonas distintas, spec propia) · la ficha del fantasma de la señal (`#298` adenda 4) en
+      `DEUDA.md` · el OJO del owner sobre T5+T6.
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de

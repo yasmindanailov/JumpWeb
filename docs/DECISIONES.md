@@ -17343,3 +17343,42 @@ las incidencias de pago; una compra online pagada no deja entrada y la línea te
 la primera gestión. Se decidió NO añadirlo (el dato vive en «Creado el» y en Pagos de la misma
 ficha) y queda registrado aquí para que nadie lo reabra como hueco: es una AUSENCIA decidida, no
 un descuido.
+
+## #299 · 2026-09-01 · T6 de mixtos: el guardián de solapes vive en el DOMINIO — el plan de #284 queda sin tandas pendientes
+
+Séptima y última tanda del plan de `#284` (§18.5), el hueco **G**: «los tramos de una familia no
+pueden solaparse — el sistema lo impide» era verdad **solo dentro del panel** — el guardián vivía
+en el form del catálogo (`InteractsWithCatalogForm`) y una semilla, un comando o un `save()` de
+tinker podían crear tramos que se pisan sin que nada avisara. Medido antes de escribir
+(`specs/cumple-mixto.md` **§26**, diseño fino; ejecución en **§26.5**): el verificador de
+concurrencia mixto ya era un escritor real de esa puerta de atrás, la BD local estaba limpia y la
+suite escondía DOS fixtures con solapes TRANSITORIOS.
+
+▶ **El diseño: una verdad, dos capas, y el límite dicho.** `TicketType::overlappingAgeSibling()`
+es la verdad ÚNICA del criterio (nulos como 0/255 — el mismo que `coversGuestAge`); el guardián
+corre en el `saving` del MODELO (invertido → `InvalidArgumentException`; solape →
+`OverlappingAgeRangeException`, con el hermano dentro para nombrarle) y el form DELEGA
+conservando su aviso amable. ⚠️ **Valida solo cuando se tocan los TÉRMINOS del tramo** (derivada,
+registrada): una fila con un solape metido por la puerta de atrás sigue editable en precio o
+nombre — bloquearla dejaría el catálogo ingobernable —, pero tocar sus tramos exige sanearla.
+⚠️ **El límite, honesto**: los eventos de Eloquent no ven un `Query\Builder::update()` ni SQL
+crudo; quedan los cinturones de siempre (el lector resuelve por el tramo de menor edad, y el
+sellador copia la realidad sin frenar ventas — la config no frena caja). Con el sello de la T1,
+un solape ya NO mueve dinero: esta tanda cierra la frase «por construcción es imposible», no un
+agujero de caja.
+
+⚠️ **Los dos fixtures ilegales se LEGALIZARON, no se excepcionó el guardián**: el tri-familia de
+la T5 creaba «Mini 0–2» como `cumple` (pisando a Kids 1–6) y re-familiaba después; el de
+cobertura de la T4 creaba Teens 12–99 ANTES de encoger Jump 7–99. *Un fixture que necesita un
+estado que el dominio prohíbe estaba probando un mundo que no existe.* ⚠️ Y una mentira de
+instrumento cazada en la medición: un grep por la CLAVE i18n dijo «el guardián del form no tiene
+tests» — `CatalogGuestAgeFamilyTest` lo cubre con 10 casos POR CONDUCTA; grepear literales no ve
+los tests que aseveran conducta.
+
+**Verificación**: suite 3704 (24.120 aserciones) · `AgeFamilyRangeDomainGuardTest` con las seis
+guardas de §26.3, todas por Eloquent directo sin form · **2 mutaciones vistas en rojo** (sin el
+hook: 4 rojos; sin el dirty-check: cae el caso del solape preexistente) · el verificador mixto en
+verde en sus dos escenarios con el guardián activo · los 10 casos del form intactos. Errata de
+§18.2 corregida de paso (la fila del guardián decía «D9» y el hueco es G). **El plan de `#284`
+queda sin tandas pendientes** (T0–T6); siguen fuera por diseño la fase 3 de §20.2, el AFORO, la
+ficha del fantasma de la señal (`#298` adenda 4) y el OJO del owner sobre T5+T6.

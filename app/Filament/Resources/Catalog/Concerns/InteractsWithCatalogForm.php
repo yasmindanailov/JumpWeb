@@ -350,33 +350,23 @@ trait InteractsWithCatalogForm
     /**
      * Bloquea el guardado si el tramo pisa al de otro producto de la MISMA familia.
      *
-     * Los extremos nulos se comparan como los topes reales de la columna (`unsignedTinyInteger`,
-     * 0–255): «de 7 en adelante» y «hasta 6» se solapan o no según números, no según casos
-     * especiales — y así el criterio es el mismo que aplica {@see TicketType::coversGuestAge}.
+     * ▶ **Desde la T6 (`cumple-mixto.md` §26) el CRITERIO vive en el dominio** —
+     * {@see TicketType::overlappingAgeSibling}, la verdad única que también aplica el guardián de
+     * `saving` del modelo—: aquí queda solo la UX del panel (el aviso amable con el nombre del
+     * hermano, ANTES de que Filament intente guardar). Si este método desapareciera, el guardado
+     * seguiría bloqueado por el dominio — con una excepción en vez de con esta notificación.
      */
     private function guardAgeRangeIsFree(string $family, ?int $min, ?int $max): void
     {
-        $selfId = $this->record?->getKey();
+        $sibling = TicketType::overlappingAgeSibling($family, $min, $max, $this->record?->getKey());
 
-        $mine = [$min ?? 0, $max ?? 255];
+        if ($sibling !== null) {
+            Notification::make()
+                ->title(__('admin.catalog.guest_age_range_overlap', ['name' => $sibling->tr('name')]))
+                ->danger()
+                ->send();
 
-        $siblings = TicketType::query()
-            ->where('type', TicketType::TYPE_PACK)
-            ->where('guest_age_family', $family)
-            ->when($selfId !== null, fn ($q) => $q->whereKeyNot($selfId))
-            ->get(['id', 'name', 'guest_age_min', 'guest_age_max']);
-
-        foreach ($siblings as $sibling) {
-            $theirs = [(int) ($sibling->guest_age_min ?? 0), (int) ($sibling->guest_age_max ?? 255)];
-
-            if ($mine[0] <= $theirs[1] && $theirs[0] <= $mine[1]) {
-                Notification::make()
-                    ->title(__('admin.catalog.guest_age_range_overlap', ['name' => $sibling->tr('name')]))
-                    ->danger()
-                    ->send();
-
-                throw new Halt;
-            }
+            throw new Halt;
         }
     }
 

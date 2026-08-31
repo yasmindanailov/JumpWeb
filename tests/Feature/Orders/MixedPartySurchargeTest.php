@@ -912,8 +912,10 @@ class MixedPartySurchargeTest extends TestCase
         // 30,00 → cargo +5,00) y otro por DEBAJO (Kids 18,00 → descuento −7,00). El cargo de la
         // misma pasada ES cobertura: sin señal, el tope deja escribir 5,00 de los 7,00 — y los
         // 2,00 restantes quedan «a tu favor». La puerta cierra en CERO exacto.
-        $this->pack('Cumpleaños Teens', 12, 99, 3000, RateType::firstOrFail());
+        // T6: PRIMERO se encoge Jump y DESPUÉS nace Teens — al revés había un solape transitorio
+        // (Teens 12–99 sobre Jump 7–99) que el guardián de dominio prohíbe con razón (§26).
         $this->jump->forceFill(['guest_age_max' => 11])->save();
+        $this->pack('Cumpleaños Teens', 12, 99, 3000, RateType::firstOrFail());
 
         $item = $this->jumpParty([8, 13, 4]);
 
