@@ -235,7 +235,18 @@ class CmsLandingFlowTest extends TestCase
 
     // ────────────────────────────── Normas ─────────────────────────────
 
-    public function test_rule_created_in_panel_appears_on_home_and_normas(): void
+    /**
+     * **Una norma creada en el panel sale en `/normas` — y en la portada solo si entra en las TRES.**
+     *
+     * ⚠️⚠️ **Este caso cambió de contrato el 2026-08-31** (T1 del idioma visual,
+     * `[DECIDIDO owner]`: «las normas irán sin imagen, solo texto y un CTA… en la landing, lo más
+     * importante»). Antes la portada listaba TODAS; ahora enseña las **tres primeras** y manda a
+     * `/normas`, que es donde están todas.
+     * ▶ El caso se queda con las dos mitades porque la distinción es justo lo que hay que fijar:
+     * el operador decide QUÉ normas hay y en qué orden; **cuántas caben en la portada es una
+     * decisión de diseño**, y con `position: 99` esta norma va la última.
+     */
+    public function test_rule_created_in_panel_appears_on_normas_and_only_the_first_three_on_home(): void
     {
         Livewire::actingAs($this->admin())
             ->test(CreateParkRule::class)
@@ -249,8 +260,40 @@ class CmsLandingFlowTest extends TestCase
             ->assertHasNoFormErrors();
 
         Auth::logout();
-        $this->get('/')->assertOk()->assertSee('NormaNuevaZZ');
         $this->get('/normas')->assertOk()->assertSee('NormaNuevaZZ');
+        $this->get('/')->assertOk()->assertDontSee('NormaNuevaZZ');
+    }
+
+    /**
+     * **La portada enseña TRES normas, no más** — el tope es de diseño y tiene que estar fijado.
+     *
+     * ⚠️ Sin este caso, subir o bajar el tope no rompería nada: la portada seguiría cargando y
+     * nadie se enteraría de que enseña ocho normas donde caben tres.
+     */
+    public function test_the_home_shows_exactly_the_first_three_rules(): void
+    {
+        VenueRule::query()->update(['is_active' => false]);
+
+        foreach (range(1, 5) as $i) {
+            VenueRule::create(['name' => ['es' => "NormaTopeZZ{$i}"], 'position' => 100 + $i]);
+        }
+
+        $home = $this->get('/')->assertOk();
+
+        foreach ([1, 2, 3] as $i) {
+            $home->assertSee("NormaTopeZZ{$i}");
+        }
+
+        foreach ([4, 5] as $i) {
+            $home->assertDontSee("NormaTopeZZ{$i}");
+        }
+
+        // …y en `/normas` están las cinco, que es lo que sostiene que la portada pueda recortar.
+        $todas = $this->get('/normas')->assertOk();
+
+        foreach (range(1, 5) as $i) {
+            $todas->assertSee("NormaTopeZZ{$i}");
+        }
     }
 
     public function test_rule_reorder_in_panel_reflects_on_normas(): void
@@ -282,7 +325,10 @@ class CmsLandingFlowTest extends TestCase
 
     public function test_deactivated_rule_disappears_from_home_and_normas(): void
     {
-        $rule = VenueRule::create(['name' => ['es' => 'NormaVisibleZZ'], 'position' => 92]);
+        // ⚠️ `position: 0` a propósito: la portada solo enseña las TRES primeras desde la T1 del
+        // idioma visual, así que una norma con posición alta no aparecería ahí ni estando activa —
+        // y el caso dejaría de comprobar lo que dice comprobar.
+        $rule = VenueRule::create(['name' => ['es' => 'NormaVisibleZZ'], 'position' => 0]);
 
         $this->get('/')->assertSee('NormaVisibleZZ');
         $this->get('/normas')->assertSee('NormaVisibleZZ');

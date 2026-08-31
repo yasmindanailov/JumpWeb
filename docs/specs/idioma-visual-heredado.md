@@ -1,7 +1,17 @@
 # [SPEC] Sustituir el idioma visual HEREDADO por el de este cliente
 
-> Estado: 🟦 **TANDA A EN EL ÁRBOL** (el sistema de etiquetas + el motivo del cliente antiguo fuera).
-> Última actualización: 2026-08-31 · Decisión asociada: **`DECISIONES #290`**.
+> Estado: 🟦 **TANDAS A y T1 EN EL ÁRBOL** (el sistema de etiquetas · el motivo del cliente antiguo
+> fuera · las normas de la portada rehechas, con la primera mancha del kit).
+> Última actualización: 2026-08-31 · Decisiones: **`DECISIONES #290`** y **`#292`**.
+>
+> ❗❗❗ **CORRECCIÓN DE FUENTE, Y VA ANTES QUE TODO LO DEMÁS** (`[owner, 2026-08-31]`):
+> **`Landing PJP Modos` NO guía esta reestructuración.** *«La landing mockup NO, no te guíes de ella,
+> de ahí solo sacaremos la sección de reseñas.»*
+> ▶ Eso **corrige lo que dice `tema-por-instalacion.md` §1** —que esa maqueta «lleva el sistema
+> vigente»—: sigue valiendo para COLOR y para el sistema visual, pero **no para la estructura de la
+> landing**, que la decidimos nosotros con el branding y `Elementos Fachada`.
+> ▶ Consecuencia inmediata: el registro fino de badges que salía de ella **se retiró el mismo día**
+> (§3.2), y el sistema se queda con **una sola voz**, la del mural.
 > ⚠️ Su número se elige **mirando el REMOTO**, no el local: ya colisionó una vez con otro agente.
 >
 > ❗❗❗ **EL ENCARGO, EN PALABRAS DEL OWNER** (2026-08-31), y no es el que se venía haciendo:
@@ -30,7 +40,7 @@ Lo que hay hoy en la landing con idioma del cliente **antiguo**, y qué dice el 
 | Badge de destacado («Top») | `price-card` | pastilla de tinta, girada **+6°** | **SEÑAL tinta** | ✅ **tanda A** |
 | Chip de suplemento | `price-card` | pastilla gris rellena | **DATO** | ✅ **tanda A** |
 | Etiqueta sobre foto | `/servicios` | pastilla de tinta, girada +5° | **SEÑAL punteada** | ✅ **tanda A** |
-| **Marquesina de palabras** | `/servicios` | títulos en bucle, tipografía neutra | **`C3` cinta del eslogan**: rótulo sobre tinta, girada 2°, lenta | ⬜ **tanda B** |
+| **Marquesina de palabras** | `/servicios` | títulos en bucle, tipografía neutra | **`C3` cinta del eslogan**: rótulo sobre tinta, girada 2°, lenta | ⬜ **siguiente** |
 | Cubos 1-2-3 (`.bd-proc__cube`) | «Cómo se reserva» del cumple | cuadrados redondeados de 44 px | por decidir | ⬜ |
 | Nota de calcetines | portada, bajo precios | tarjeta con icono de línea | el icono ya es del set nuevo (`#257`); la caja no | ⬜ |
 | Pliego de pictogramas | `/normas` | **imagen subida** del cliente antiguo | es CONTENIDO, no diseño: lo cambia el panel | ⬜ |
@@ -54,13 +64,23 @@ tocaría el contrato de **ÁRBOL** del cajón (`tests/Fixtures/sidebar-dom-manif
 | zona | cápsula llena + **silueta mini 14×24** | cápsula llena, mono |
 | badge de atracción | punteada | mono **9,5 px sobre gris**, `padding 3/8` |
 
-▶ **`[DECIDIDO owner, 2026-08-31]`, elegido mirando las tres renderizadas con nuestros tokens: entran
-las DOS, repartidas por lo que el badge HACE.**
+▶ **Se resolvió DOS veces el mismo día, y la segunda manda.**
+1. Primero entraron **las dos**, repartidas por lo que el badge HACE (SEÑAL → E2 · DATO → su landing).
+2. ⚠️⚠️ **Y luego el owner retiró la fuente**: *«de esa maqueta solo sacaremos la sección de
+   reseñas»*. Sin fuente normativa, el argumento del registro fino se cae — `[DECIDIDO owner]`:
+   **«todo al registro del mural»**. Queda **UNA voz**: `E2`.
 
-- **SEÑAL** → E2. Marca una zona, avisa de una condición **sobre una foto**, destaca una tarjeta.
-- **DATO** → su landing. Una edad, un suplemento: se lee, no avisa.
+| papel | variante | dónde |
+|---|---|---|
+| **condición** | `.tag--punteada` — «punteadas para condiciones», su nota literal | edad de zona · suplemento · «XL» sobre foto |
+| **destacado** | `.tag--tinta` | «Top» de la tarjeta de precio |
 
-*Su contradicción no se resuelve eligiendo un ganador: se resuelve diciendo para qué sirve cada uno.*
+⚠️ **Coste declarado, y él lo eligió con la consecuencia delante**: la edad y el suplemento pesan más
+en la página. A cambio, el sitio habla con una sola voz.
+
+▶ **Lo que sigue valiendo del primer intento** es el método, no el resultado: *una contradicción entre
+dos fuentes no se resuelve eligiendo la que más gusta, se resuelve preguntando cuál es fuente para
+qué* — y aquí la respuesta la dio el owner retirando una.
 
 ### 2.1 · Por qué la punteada es la de «sobre foto» y no la rellena
 
@@ -129,6 +149,51 @@ cápsula que ya es mono de 10,5. Dos tallas dentro de la misma etiqueta, y no lo
 
 ---
 
+## 3.bis · T1 · las normas de la portada (hecha)
+
+`[DECIDIDO owner]`: *«las normas irán sin imagen, solo será texto, un texto simple y un CTA a la
+página de normas… en la landing, lo más importante»*.
+
+**Lo que había**: una rejilla de dos columnas con el **pliego de doce pictogramas del cliente
+ANTIGUO** (`images/historia-seguridad.png`) y, al lado, un **carrusel vertical con TODAS las normas**
+—`max-height: 620px` y scroll propio dentro de una página que ya hace scroll—. Dos formas de decir
+lo mismo, una con arte de otro parque, y ninguna pensada para un teléfono.
+
+**Lo que hay**: eyebrow + titular + una frase + **tres normas** numeradas en texto plano + el CTA a
+`/normas`. Se retiran `.rules-layout`, `.rules-layout__media` y `.rules-vslider`.
+
+▶ **El tope de tres se declara en la VISTA, no en el panel**, y la distinción importa: el operador
+decide **qué** normas hay y en qué orden; **cuántas caben en la portada es diseño**. Lo fija
+`CmsLandingFlowTest` con dos casos —el de la norma nueva, que ahora sale en `/normas` y **no** en la
+portada, y uno que asevera exactamente tres— y **la mutación de subir el tope a ocho los pone rojos**.
+
+▶ **CSS escrito de móvil hacia arriba**, que es lo que el owner pidió: la regla base es la del
+teléfono y el escritorio es la excepción. Al revés, el teléfono acaba siendo lo que sobra de una
+rejilla pensada para 1280.
+
+### 3.bis.1 · La primera mancha, y cómo se decidió dónde va
+
+Es la **primera ranura decorativa del producto** (`slot-normas`) y nace con su consumidor en el mismo
+cambio, que es la regla del carril. El dibujo es la mancha **`B1·03`** del artboard — la de «lengüetas
+largas», que **su propia nota manda a esquinas y bordes**; `01` y `04` no se podían usar porque **ya
+viajan instaladas** como `--deco-blob-a/b`.
+
+⚠️⚠️ **Dónde va lo decidió MEDIR, y el primer sitio estaba mal.** Arriba a la derecha caía sobre el
+párrafo de la primera norma —**13.755 px², medido en navegador**— y su regla 02 lo prohíbe: «la
+pintura nunca va debajo de un párrafo».
+▶ **Y bajarla no servía**: un barrido de cinco posiciones apenas movió el número. El motivo salió al
+mirar las cajas: la columna izquierda **está llena** —el párrafo de entrada acaba a **107 px** del
+final de la sección—, así que ahí no hay hueco que ganar. *Cuando mover una pieza no cambia el
+número, el problema no es la posición: es que no hay sitio.*
+▶ El hueco real está **detrás del titular**, que es tinta maciza y no un párrafo — y es literalmente
+lo que describe su `B3`: «la mancha detrás de la primera palabra». Medido ahí: **0 px² bajo párrafo**
+en las dos anchuras, y asoma por el borde, que es lo que su nota pide para esta familia.
+
+⚠️ **Presupuesto declarado**: **una pieza de dibujo por sección, y la portada entera no pasa de
+TRES**. Hoy gasta dos (las poses de zona y esta mancha); queda una.
+
+---
+
 ## 4. Lo que queda, y en qué orden
 
 | # | tanda | qué |
@@ -137,6 +202,13 @@ cápsula que ya es mono de 10,5. Dos tallas dentro de la misma etiqueta, y no lo
 | **C** | Los cubos 1-2-3 del cumple · la nota de calcetines | forma por decidir |
 | **D** | La galería de polaroids | ¿sigue el lenguaje polaroid o pasa a cinta con poses (`F11`)? |
 | **E** | **El SPA**: catálogo y badge de destacado | el owner quiere **cambiar la presentación**, no solo vestirla: es su propia spec |
+
+### 4.0 · ⛔ Lo que NO se hace
+
+**La zona de Ocio / el bar NO entra** (`[DECIDIDO owner, 2026-08-31]`, preguntado con las tres formas
+posibles delante). Era el único punto del encargo que podía tocar el modelo de datos —una `Zone` trae
+aforo, franjas y productos, y un bar no se reserva—, y queda descartado. **Zonas y atracciones sí se
+unifican**, que es presentación y no modelo.
 
 ### 4.1 · Decisiones abiertas
 

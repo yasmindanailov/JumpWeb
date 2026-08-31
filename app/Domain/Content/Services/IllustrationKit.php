@@ -48,10 +48,14 @@ class IllustrationKit
      * @var list<string>
      */
     public const SLOTS = [
-        // ⚠️ **VACÍA otra vez, y eso es la regla funcionando, no un retroceso.** Aquí llegaron a
-        // vivir `slot-mancha-esquina` y `slot-friso-1..5`; sus dos consumidores se retiraron
-        // (`[DECIDIDO owner, 2026-08-31]`) y las ranuras se van con ellos. **Una ranura sin pantalla
-        // que la pinte es exactamente lo que dejó los 19 dibujos de `#257` esperando años.**
+        // ⚠️ Antes estuvo VACÍA dos veces, y las dos por la misma regla: aquí llegaron a vivir
+        // `slot-mancha-esquina` y `slot-friso-1..5`, y se fueron con sus consumidores.
+        //
+        // **La PRIMERA que se queda es ésta, y se queda porque nace con su pantalla en el mismo
+        // cambio**: la sección de normas de la portada (T1 del idioma visual). Su dibujo es la
+        // mancha `B1·03` del artboard —la de «lengüetas largas», que su propia nota manda a
+        // «esquinas y bordes»—, y va UNA por pantalla, fuera del bucle de normas.
+        'slot-normas',
     ];
 
     /**

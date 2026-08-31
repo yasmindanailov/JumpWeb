@@ -2642,6 +2642,17 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > ⚠️ **La lista de ranuras decorativas está VACÍA a propósito**: una ranura sin consumidor es lo que
 > dejó los 19 dibujos de `#257` esperando años.
 >
+> ✅ **IDIOMA VISUAL · T1: LAS NORMAS DE LA PORTADA** (2026-08-31, `#292`). Fuera el **pliego de
+> pictogramas del cliente antiguo** y el carrusel con todas las normas; quedan **tres** en texto y el
+> CTA a `/normas`. El tope de tres se declara en la VISTA —el panel decide QUÉ normas, el diseño
+> CUÁNTAS caben— y hay guarda con mutación.
+> ▶ **Primera ranura decorativa del producto** (`slot-normas`, mancha `B1·03`), con su consumidor en
+> el mismo cambio. **Presupuesto: una pieza por sección, tres en toda la portada.**
+> ❗❗ **Y una FUENTE retirada**: `[owner]` «de la landing mockup solo sacaremos las reseñas», lo que
+> **corrige a `tema-por-instalacion.md` §1** y tumbó el registro fino de badges de la misma jornada —
+> `[DECIDIDO owner]` «todo al registro del mural»: una sola voz.
+> ⛔ **El bar / zona de Ocio NO entra**: era lo único del encargo que tocaba el modelo de datos.
+>
 > ✅ **EL IDIOMA VISUAL HEREDADO, TANDA A** (2026-08-31, `#290`) — y **el encargo cambia de marco**:
 > `[owner]` *«primero hay que cambiar lo que tenemos»*. La landing lleva elementos del cliente ANTIGUO
 > y hay que sustituirlos, no decorar encima. Spec propia: `specs/idioma-visual-heredado.md`.

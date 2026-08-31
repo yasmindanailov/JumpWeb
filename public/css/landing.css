@@ -1041,6 +1041,82 @@ img { display: block; max-width: 100%; }
   background-image: var(--dots-tile); background-size: 16px 10px;
 }
 
+/* ══ NORMAS EN LA PORTADA · texto simple y un CTA (T1 del idioma visual) ═══════════════════════
+   `[DECIDIDO owner]`: sin imagen, lo más importante y de ahí a `/normas`.
+   ⚠️ **Escrito de móvil hacia arriba**, que es el orden que el owner pidió («que sea perfecto en
+   móvil, que es lo más importante»): la regla base es la del teléfono y el escritorio es la
+   excepción. Al revés, el teléfono acaba siendo lo que sobra de una rejilla pensada para 1280. */
+.rules-lite {
+  position: relative; isolation: isolate;
+  display: flex; flex-direction: column; gap: 32px;
+}
+.rules-lite__intro {
+  margin: 18px 0 0; max-width: 46ch;
+  color: var(--fg-mute); font-size: 17px; line-height: 1.6;
+}
+
+/* La lista: numeración propia, sin viñetas del navegador. Aire entre normas, que es el encargo. */
+.rules-lite__list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 28px;
+}
+.rules-lite__item {
+  display: grid; gap: 4px 16px;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "num nombre" ".   desc";
+  padding-top: 22px; border-top: 1px solid var(--line);
+}
+.rules-lite__num {
+  grid-area: num;
+  font-family: var(--font-mono); font-size: 13px; color: var(--fg-mute);
+  letter-spacing: 0.08em; line-height: 1.5;
+}
+.rules-lite__name {
+  grid-area: nombre;
+  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
+  font-size: clamp(21px, 3.4vw, 27px); line-height: 1.1; letter-spacing: -0.02em;
+}
+.rules-lite__desc { grid-area: desc; color: var(--fg-mute); font-size: 16px; line-height: 1.6; max-width: 58ch; }
+.rules-lite__cta { align-self: flex-start; }
+
+/* La mancha del kit. ⚠️ Sin paquete el componente no emite nada y aquí no queda hueco: la sección
+   es un flex en columna y la pieza va ABSOLUTA, así que no reserva sitio.
+   ⚠️ `z-index: -1` con `isolation: isolate` en el contenedor — el patrón de `#286`: dentro de un
+   contexto de apilamiento propio pinta encima del fondo y debajo del contenido, sin tocar a nadie. */
+.rules-lite__mancha {
+  position: absolute; z-index: -1; pointer-events: none;
+  right: -6%; top: -4%; width: min(52%, 300px); height: auto;
+  --ilu-fg: var(--zone-1);
+  opacity: 0.14;
+}
+
+@media (min-width: 900px) {
+  /* Escritorio: el texto a la izquierda y la lista a la derecha, con la columna del sitio. */
+  .rules-lite {
+    display: grid; gap: 56px 72px;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: start;
+  }
+  .rules-lite__head { grid-column: 1; grid-row: 1 / span 2; }
+  .rules-lite__list { grid-column: 2; grid-row: 1; }
+  /* ⚠️ `justify-self: start` y no `align-self`: dentro de una rejilla el botón se ESTIRA a toda la
+     columna si no se le dice lo contrario, y `align-self` solo manda en el otro eje. Se vio en la
+     captura: un CTA de 640 px de ancho para tres palabras. */
+  .rules-lite__cta  { grid-column: 2; grid-row: 2; justify-self: start; margin-top: -20px; }
+  /* ⚠️⚠️ **En escritorio la mancha cambia de sitio, y el sitio lo decidió MEDIR, no mirar.**
+     Arriba a la derecha caía sobre el párrafo de la primera norma (**13.755 px²**, medido), y su
+     regla 02 lo prohíbe: «la pintura nunca va debajo de un párrafo».
+     ▶ **Y bajarla no servía**: la columna izquierda está LLENA —el párrafo de entrada acaba a solo
+     107 px del final de la sección—, así que ningún desplazamiento hacia abajo despeja nada. El
+     barrido lo enseñó: cinco posiciones y el solape apenas se movía. *Cuando mover una pieza no
+     cambia el número, el problema no es la posición: es que ahí no hay hueco.*
+     ▶ El hueco real está **detrás del titular**, que es tinta maciza y no un párrafo — y es
+     literalmente lo que describe su `B3`: «la mancha detrás de la primera palabra». Medido en esta
+     posición: **0 px² bajo párrafo**, y asoma 41 px por arriba y 24 por la izquierda, que es lo que
+     su nota pide para esta familia («recortada por el borde de la tarjeta»). */
+  .rules-lite__mancha { right: auto; bottom: auto; left: -4%; top: -12%; width: min(30%, 265px); }
+}
+
 /* ---------- zones intro ---------- */
 .zones__head {
   display: flex; flex-direction: column;

@@ -16870,3 +16870,58 @@ de §23.6 y las guardas las de §23.7; se retoma en la siguiente sesión.
 **Verificación**: sin código. Todo lo afirmado en §23 está medido contra el código (cero
 referencias al veredicto en hoja y puerta; un solo escritor de `guest_data`; `pack_quantity_range`
 en el editor y `minValue(min_qty)` en el modal; el presupuesto de consultas de la ficha de puerta).
+## #292 · 2026-08-31 · T1 del idioma visual: las normas de la portada, la primera mancha del kit — y una FUENTE retirada
+
+**❗❗ Lo primero, porque corrige a otros documentos**: `[owner]` *«la landing mockup NO, no te guíes
+de ella, de ahí solo sacaremos la sección de reseñas»*. ▶ **`Landing PJP Modos` deja de ser fuente
+para la ESTRUCTURA de la landing.** Sigue valiendo para color y sistema visual —lo que
+`tema-por-instalacion.md` §1 dice—, pero la reestructuración la decidimos nosotros con el branding y
+`Elementos Fachada`. **La corrección va escrita en la cabecera de `specs/idioma-visual-heredado.md`.**
+
+**⚠️⚠️ Y eso tumbó una decisión de la misma jornada, con razón.** Por la mañana el sistema de
+etiquetas entró con **dos registros** —SEÑAL (E2, el mural) y DATO (el mono fino de su landing)—, y el
+segundo se justificaba diciendo que esa maqueta era el artboard normativo. Retirada la fuente, el
+argumento se cae: `[DECIDIDO owner]` **«todo al registro del mural»**. `.tag--dato` se retira el mismo
+día y el sitio se queda con **una sola voz**. ⚠️ Coste declarado y elegido con la consecuencia
+delante: la edad y el suplemento pesan más en la página.
+▶ *Una contradicción entre dos fuentes no se resuelve eligiendo la que más gusta: se resuelve
+preguntando cuál es fuente para qué.* Aquí la respuesta llegó retirando una.
+
+**⛔ El BAR no entra.** Era el único punto del encargo que podía tocar el modelo —una `Zone` arrastra
+aforo, franjas y productos, y un bar no se reserva—, y `[DECIDIDO owner]` se descarta. **Zonas y
+atracciones sí se unifican**, que es presentación y no modelo.
+
+**T1 · las normas de la portada.** `[DECIDIDO owner]`: sin imagen, texto simple y un CTA. Se retira el
+**pliego de doce pictogramas del cliente ANTIGUO** y el carrusel vertical que listaba TODAS las normas
+—con `max-height: 620px` y scroll propio dentro de una página que ya hace scroll—. Quedan **tres**
+normas numeradas y el CTA a `/normas`.
+▶ **El tope de tres se declara en la VISTA, no en el panel**: el operador decide qué normas hay y en
+qué orden, **cuántas caben en la portada es diseño**. Lo fija `CmsLandingFlowTest` con dos casos y la
+mutación de subirlo a ocho los pone rojos. ⚠️ Un caso existente cambió de contrato y se reescribió: la
+norma nueva ahora sale en `/normas` y **no** en la portada.
+▶ **CSS escrito de móvil hacia arriba**, que es lo que el owner pidió («que sea perfecto en móvil»):
+la regla base es la del teléfono y el escritorio es la excepción.
+
+**La PRIMERA ranura decorativa del producto** (`slot-normas`), con su consumidor en el mismo cambio.
+El dibujo es la mancha **`B1·03`** — la de «lengüetas largas», que **su propia nota manda a esquinas y
+bordes**; `01` y `04` no servían porque **ya viajan instaladas** como `--deco-blob-a/b`.
+
+**⚠️⚠️ Dónde va lo decidió MEDIR, y el primer sitio estaba mal.** Arriba a la derecha caía sobre el
+párrafo de la primera norma: **13.755 px²**, medidos en navegador, contra su regla 02. ▶ **Y bajarla
+no servía**: cinco posiciones y el número apenas se movía. Al mirar las cajas salió el motivo —la
+columna izquierda **está llena**, el párrafo acaba a **107 px** del final de la sección—. *Cuando
+mover una pieza no cambia el número, el problema no es la posición: es que no hay sitio.* ▶ El hueco
+real está **detrás del titular**, que es tinta y no párrafo, y es literalmente su `B3`: «la mancha
+detrás de la primera palabra». Medido ahí: **0 px² bajo párrafo** en las dos anchuras.
+
+**⚠️ Presupuesto declarado para lo que viene**: **una pieza de dibujo por sección, y la portada entera
+no pasa de TRES**. Hoy gasta dos.
+
+**⚠️ Dos trampas de instrumento de esta tanda.** (1) Un recorte de CSS se llevó **una llave de más**
+—`index("}")` encontró la de una regla escrita en línea, no la del `@media`— y dejó la hoja
+descuadrada; lo cazó `ShapeScaleTest`, que pasó de ver 200 radios a ver 104. *Una hoja con las llaves
+descuadradas no falla: se lee a medias.* (2) La mancha se colocó a ojo dos veces antes de medirla.
+
+**Verificación**: suite **3635 / 23.636** · Pint ✓ · `docs-check` ✓ · `kit:build --check` servible ·
+solape con párrafo **0 px² en móvil y en escritorio**, medido con control · la mutación del tope de
+normas muerde · 5 mutaciones sobre `TagSystemTest` siguen mordiendo.

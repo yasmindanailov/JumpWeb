@@ -1040,33 +1040,14 @@
 }
 
 /* ── Normas: 2 columnas (imagen + slider vertical de cards) (#10 · 2026-05-31) ── */
-.rules-layout {
-  display: grid; grid-template-columns: 0.72fr 1.28fr; gap: 32px;
-  align-items: start; margin-top: 40px;
-}
-.rules-layout__media {
-  background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r-lg);
-  padding: 16px; display: flex; align-items: center; justify-content: center;
-  box-shadow: none;
-}
-.rules-layout__media img {
-  width: 100%; height: auto; max-height: 620px; object-fit: contain;
-  display: block; border-radius: var(--r);
-}
-.rules-vslider {
-  display: flex; flex-direction: column; gap: 14px;
-  max-height: 620px; overflow-y: auto; scroll-snap-type: y proximity;
-  scroll-behavior: smooth; padding: 4px 10px 4px 4px;
-}
-.rules-vslider:focus-visible { outline: var(--focus-outline); outline-offset: 4px; border-radius: var(--r); }
-.rules-vslider .rule { scroll-snap-align: start; }
-.rules-vslider::-webkit-scrollbar { width: 6px; }
-.rules-vslider::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: var(--r-pill); }
-.rules-vslider::-webkit-scrollbar-track { background: transparent; }
-@media (max-width: 768px) {
-  .rules-layout { grid-template-columns: 1fr; }
-  .rules-vslider { max-height: none; overflow: visible; }
-}
+/* ⚠️⚠️ **AQUÍ VIVÍA LA SECCIÓN DE NORMAS DE LA PORTADA Y SE RETIRÓ ENTERA** (T1 del idioma visual,
+   `[DECIDIDO owner, 2026-08-31]`). Eran `.rules-layout`, `.rules-layout__media` y `.rules-vslider`:
+   una rejilla de dos columnas con el **pliego de doce pictogramas del cliente ANTIGUO** a un lado y
+   un carrusel vertical con TODAS las normas al otro —dos formas de decir lo mismo, y el carrusel
+   con `max-height: 620px` y scroll propio dentro de una página que ya hace scroll—.
+   ▶ La sustituye `.rules-lite` en `landing.css`: tres normas en texto y un CTA a `/normas`.
+   ⚠️ **`.rule` NO se va**: es la tarjeta de la página `/normas`, que sigue usándola. */
+
 
 /* fila "recordar sesión" + "¿olvidaste tu contraseña?" */
 .auth__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 18px; }
@@ -6209,24 +6190,27 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
    van en caja normal y el texto lo escribe el panel — forzar mayúsculas aquí decidiría por él. */
 .tag--senal { gap: 7px; padding: 7px 14px; font-family: var(--font-body); font-weight: 700; font-size: 13px; }
 
-/* La punteada. En E2 es «condiciones»; aquí su sitio son las etiquetas SOBRE FOTO, y el motivo es
-   medido: sobre una imagen es la única de las tres que se lee sin fondo propio, porque el trazo
-   discontinuo se distingue de cualquier textura. ⚠️ Su padding es **1 px menor** que el de la
-   llena en los dos ejes: compensa exactamente el borde de 2 px, y por eso las dos miden igual. */
+/* La punteada: **CONDICIONES**, que es literalmente su papel en E2 —«punteadas para condiciones»—.
+   Una edad, un suplemento, un tamaño: todo lo que acota. ⚠️ Su padding es **1 px menor** que el de
+   la llena en los dos ejes: compensa exactamente el borde de 2 px, y por eso las dos miden igual.
+   ⚠️ **Sobre una foto es además la única que se lee sin fondo propio** —el trazo discontinuo se
+   distingue de cualquier textura—, así que la misma variante sirve encima de una imagen; el color
+   lo pone el consumidor con `currentColor`. */
 .tag--punteada { border: 2px dashed currentColor; padding: 6px 13px; }
 
 /* Tinta: la etiqueta que DESTACA una tarjeta. Lee los alias de superficie, no `--fg`: dentro de la
    tarjeta destacada `--fg` vale el color de la zona (misma cautela que las sombras de `#196`). */
 .tag--tinta { background: var(--fg); color: var(--bg); }
 
-/* ── DATO · el registro de su landing ───────────────────────────────────────────────────────────
-   `1.5px solid currentColor` + mono 10,5/400 + `letter-spacing .1em`, sus números. Aquí SÍ va en
-   mayúsculas, porque así lo escribe él y porque un dato en mono se lee como ficha técnica. */
-.tag--dato {
-    border: 1.5px solid currentColor; padding: 5px 12px;
-    font-family: var(--font-mono); font-size: 10.5px; font-weight: 400;
-    letter-spacing: 0.1em; text-transform: uppercase;
-}
+/* ⚠️⚠️ **AQUÍ VIVÍA `.tag--dato` —el registro fino de `Landing PJP Modos`— Y SE RETIRÓ EL MISMO DÍA**
+   (`[DECIDIDO owner, 2026-08-31]`: «todo al registro del mural»). Sus números eran `1.5px solid
+   currentColor` + mono 10,5/400 + `letter-spacing .1em`.
+   ▶ **El motivo no es estético, es de FUENTE**: aquel registro se justificaba diciendo que
+   `Landing PJP Modos` es el artboard normativo de la landing, y el owner ha aclarado que **de esa
+   maqueta solo sale la sección de reseñas**. Retirada la fuente, se cae el argumento — y el sistema
+   se queda con UN registro, el del mural, que es el que el kit sostiene.
+   ⚠️ **Coste declarado, y él lo eligió con la consecuencia delante**: la edad y el suplemento pesan
+   más en la página. A cambio, una sola voz. */
 
 /* ══ EL MATERIAL DE FACHADA · las piezas que son TÉCNICA y no dibujo ═══════════════════════════
    `specs/elementos-fachada.md` grupos A y C. Salen del artboard del 2.º cliente, pero **no llevan

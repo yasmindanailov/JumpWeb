@@ -11,7 +11,7 @@
 @if ($rows)
     <div class="price__special">
         @foreach ($rows as $sr)
-            <span class="tag tag--dato price__special-chip">
+            <span class="tag tag--senal tag--punteada price__special-chip">
                 @if ($sr['surchargeCents'] > 0)
                     <b>+{{ \App\Domain\Platform\Services\Money::amount($sr['surchargeCents']) }}&nbsp;€</b>
                 @else

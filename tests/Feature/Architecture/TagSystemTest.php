@@ -37,11 +37,11 @@ class TagSystemTest extends TestCase
      * @var array<string, list<string>>
      */
     private const CONSUMERS = [
-        '.zone-photo-card__tag' => ['tag', 'tag--dato'],
-        '.zone-intro__tag' => ['tag', 'tag--dato'],
+        '.zone-photo-card__tag' => ['tag', 'tag--senal', 'tag--punteada'],
+        '.zone-intro__tag' => ['tag', 'tag--senal', 'tag--punteada'],
         '.ride-card__badge' => ['tag', 'tag--senal', 'tag--punteada'],
         '.price__badge' => ['tag', 'tag--senal', 'tag--tinta'],
-        '.price__special-chip' => ['tag', 'tag--dato'],
+        '.price__special-chip' => ['tag', 'tag--senal', 'tag--punteada'],
         '.svc-photo__tag' => ['tag', 'tag--senal', 'tag--punteada'],
     ];
 
@@ -69,7 +69,7 @@ class TagSystemTest extends TestCase
     /** **El lector de reglas encuentra el sistema.** Sin esto, lo de abajo puede vigilar la nada. */
     public function test_the_system_is_declared(): void
     {
-        foreach (['.tag', '.tag--senal', '.tag--punteada', '.tag--tinta', '.tag--dato'] as $selector) {
+        foreach (['.tag', '.tag--senal', '.tag--punteada', '.tag--tinta'] as $selector) {
             $this->assertNotNull(
                 $this->rule($selector),
                 "el sistema de etiquetas no declara `{$selector}`: o se ha renombrado, o esta guarda ".

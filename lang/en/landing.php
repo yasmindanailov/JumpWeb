@@ -183,7 +183,7 @@ return [
         'weekdays' => [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'],
         'address_title' => 'Location', 'parking' => 'Free parking 2h', 'directions' => 'Directions',
     ],
-    'rules' => ['eyebrow' => 'Rules', 'title' => 'Jump safe,', 'title_em' => 'jump happy.'],
+    'rules' => ['eyebrow' => 'Rules', 'title' => 'Jump safe,', 'title_em' => 'jump happy.', 'intro' => 'Just enough so you don\'t waste time at the door. The rest is on the rules page.', 'cta' => 'See all the rules'],
     'faq' => ['eyebrow' => 'FAQ', 'title' => 'Frequent', 'title_em' => 'questions'],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
     // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.

@@ -21,7 +21,7 @@
 > ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1 y T2 hechas → sigue la T3) ═══════════
 > ❗❗❗ **2026-08-31 (tarde-noche) · T2 · UNA EDAD SIN PRODUCTO + EL DINERO SOLO AL GUARDAR
 > COMPLETO, EN EL ÁRBOL** (`#289`, `specs/cumple-mixto.md` §22 diseño · §22.9 ejecución).
-> Suite **3634 en verde** (23.618 aserciones, 1 skipped a propósito) — **cifra del árbol CONJUNTO**,
+> Suite **3635 en verde** (23.636 aserciones, 1 skipped a propósito) — **cifra del árbol CONJUNTO**,
 > tras rebasar `#290` (el sistema de etiquetas) encima de la T1/T2 de mixtos · **7/7 mutaciones muerden** ·
 > `mixed-party:verify-concurrency` en verde · sonda headless (2 capturas en `/root/e2e/t2-capturas/`).
 > ▶ «Completo» son DOS preguntas (dinero: todas las edades declaradas · formulario: además ninguna
@@ -58,6 +58,26 @@
 > entorno por eso.
 >
 > ═══════════ CARRIL 2 · TEMA / FACHADA (`#286` · `#287`) ═══════════
+>
+> ❗❗❗ **`Landing PJP Modos` YA NO GUÍA LA ESTRUCTURA DE LA LANDING** (`#292`, `[owner]`: «de esa
+> maqueta solo sacaremos la sección de reseñas»). ▶ **Corrige a `tema-por-instalacion.md` §1**: aquel
+> artboard sigue valiendo para color y sistema visual, **no para decidir qué secciones hay**. La
+> reestructuración la diseñamos nosotros con el branding y `Elementos Fachada`.
+> ▶ **Y eso tumbó una decisión de la misma jornada**: el registro fino de badges venía de esa maqueta
+> y se retiró — `[DECIDIDO owner]` «todo al registro del mural». Una sola voz.
+> ▶ ⛔ **El BAR / zona de Ocio NO entra** (`[DECIDIDO owner]`): era lo único que tocaba el modelo de
+> datos. **Zonas y atracciones sí se unifican**, que es presentación.
+> ▶ ✅ **T1 hecha — las normas de la portada**: fuera el pliego de pictogramas del cliente antiguo y
+> el carrusel con todas; quedan **tres** normas en texto y el CTA a `/normas`. El tope de tres se
+> declara en la VISTA, no en el panel, y hay guarda con mutación.
+> ▶ ✅ **Y con ella la PRIMERA ranura decorativa** (`slot-normas`, mancha `B1·03`). **Presupuesto
+> declarado: una pieza de dibujo por sección y la portada entera no pasa de TRES** — hoy gasta dos.
+> ⚠️⚠️ **Dónde va la mancha lo decidió MEDIR**: el primer sitio caía sobre un párrafo (13.755 px²) y
+> bajarla no servía porque *ahí no había hueco* — la columna estaba llena. *Cuando mover una pieza no
+> cambia el número, el problema no es la posición.*
+> ▶ **Lo siguiente**: la marquesina de `/servicios` → cinta `C3`; luego zonas+atracciones, cumpleaños
+> y «cómo se reserva», horarios, FAQ, la galería (que sale y deja sitio a las reseñas) y las páginas
+> individuales. ⛔ **Las reseñas siguen bloqueadas**: `google-reviews.md` espera tres datos del owner.
 >
 > ❗❗❗ **EL CARRIL DEL TEMA CAMBIA DE ENCARGO** (`#290`, y es lo primero que hay que saber): el
 > owner no quiere que se añada decoración, quiere que se **CAMBIE lo heredado** — *«las secciones y

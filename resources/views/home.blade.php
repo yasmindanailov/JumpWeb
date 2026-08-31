@@ -222,7 +222,7 @@
                              rama, en esta instalación no se veía en NINGUNA parte. --}}
                         <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-photo-card__ilu" />
                         <div class="zone-photo-card__body">
-                            <span class="tag tag--dato zone-photo-card__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
+                            <span class="tag tag--senal tag--punteada zone-photo-card__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
                             <h3 class="zone-photo-card__name">{{ $zone->tr('name') }}</h3>
                             <p class="zone-photo-card__sub">{{ $zone->tr('subtitle') }}</p>
                             <x-site.zone-metrics :zone="$zone" class="zone-photo-card__meta" />
@@ -247,7 +247,7 @@
                              exactamente como estaba: el hueco falla hacia invisible a propósito. --}}
                         <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-intro__ilu" />
                         <div class="zone-intro__top">
-                            <span class="tag tag--dato zone-intro__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
+                            <span class="tag tag--senal tag--punteada zone-intro__tag">{{ $zone->tr('age_label') }} · {{ $zone->tr('age_range') }}</span>
                         </div>
                         <div style="position:relative; z-index:1">
                             <h3 class="zone-intro__name">{{ $zone->tr('name') }}</h3>
@@ -410,27 +410,45 @@
     </section>
 
     {{-- ===================== NORMAS ===================== --}}
+    {{-- **T1 del carril de idioma visual** (`specs/idioma-visual-heredado.md`, `[DECIDIDO owner]`:
+         «las normas irán sin imagen, solo será texto, un texto simple y un CTA a la página de
+         normas… en la landing, lo más importante»).
+
+         ▶ Aquí había un **pliego de doce pictogramas del cliente ANTIGUO** (`images/historia-
+         seguridad.png`) junto a un carrusel vertical con TODAS las normas. Dos formas de decir lo
+         mismo, una de ellas con arte de otro parque, y ninguna cabía en un teléfono.
+         ▶ Ahora: **tres normas** —las tres primeras del panel, que es quien las ordena— en texto
+         plano y numerado, y el CTA a `/normas`, que es donde están todas.
+
+         ⚠️ **El TOPE de tres se declara aquí y no en el panel**: el operador decide QUÉ normas hay
+         y en qué orden; cuántas caben en la portada es una decisión de diseño, no de contenido. --}}
     <section class="section wrap">
-        <div class="rides__head">
-            <div>
-                <div class="eyebrow" style="margin-bottom:16px">{{ __('landing.rules.eyebrow') }}</div>
+        <div class="rules-lite">
+            {{-- `B1·03` del kit: mancha «de lengüetas largas», que es la que su propia nota manda a
+                 **esquinas y bordes**. Es la PRIMERA ranura decorativa del producto (`slot-normas`)
+                 y nace con su consumidor en el mismo cambio, que es la regla del carril.
+                 ⚠️ Va fuera del bucle a propósito: una por PANTALLA, no una por norma. --}}
+            <x-site.ilu clave="slot-normas" class="rules-lite__mancha" />
+
+            <div class="rules-lite__head">
+                <div class="eyebrow">{{ __('landing.rules.eyebrow') }}</div>
                 <h2 class="rides__title">{{ __('landing.rules.title') }}<br /><em style="font-style:normal; color:var(--zone-1)">{{ __('landing.rules.title_em') }}</em></h2>
+                <p class="rules-lite__intro">{{ __('landing.rules.intro') }}</p>
             </div>
-        </div>
-        <div class="rules-layout">
-            <div class="rules-layout__media">
-                <img src="{{ asset('images/historia-seguridad.png') }}"
-                     alt="{{ __('landing.rules.title') }} {{ __('landing.rules.title_em') }}" loading="lazy">
-            </div>
-            <div class="rules-vslider" tabindex="0" aria-label="{{ __('landing.rules.eyebrow') }}">
-                @foreach ($rules as $rule)
-                    <div class="rule">
-                        <div class="rule__icon">!</div>
-                        <span class="rule__name">{{ $rule->tr('name') }}</span>
-                        <span class="rule__desc">{{ $rule->tr('description') }}</span>
-                    </div>
+
+            <ol class="rules-lite__list">
+                @foreach ($rules->take(3) as $rule)
+                    <li class="rules-lite__item">
+                        <span class="rules-lite__num" aria-hidden="true">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                        <span class="rules-lite__name">{{ $rule->tr('name') }}</span>
+                        <span class="rules-lite__desc">{{ $rule->tr('description') }}</span>
+                    </li>
                 @endforeach
-            </div>
+            </ol>
+
+            <a href="{{ route('normas') }}" class="btn btn--ghost rules-lite__cta" data-tap>
+                {{ __('landing.rules.cta') }} <x-icons.arrow-right class="arrow" :width="14" :height="14" />
+            </a>
         </div>
     </section>
 
