@@ -71,7 +71,10 @@
 > pedido-vs-card en vivo → **ficha nueva en `DEUDA.md`** (el hermano de la señal del caso espejo;
 > el boceto del arreglo, dentro). ⚠️ Dos trampas pagadas en §25.10: el extractor de bloques PHP de
 > Blade contra el primer `@php(` del fichero, y que UN botón de Filament emite `mountAction`
-> cuatro veces (la aguja es `wire:click=`). `T5-PRB01` queda en la
+> cuatro veces (la aguja es `wire:click=`). ▶ Adenda 5 (01-09): «al historial le falta» era la
+> PÁGINA 1 de 3 — todo estaba registrado; el default sube a 10/página (`[DECIDIDO owner]`) y el
+> NACIMIENTO del pedido online queda FUERA del historial a propósito (`[DECIDIDO owner]`,
+> registrado para que nadie lo reabra: solo lo escriben los manuales). `T5-PRB01` queda en la
 > BD local (2 plazas de la franja real del 17-09). **Queda el OJO del owner;
 > lo siguiente es la T6** (el guardián de solapes fuera del formulario; la fase 3 de §20.2
 > despierta a §16; el AFORO sigue aparcado por el owner).

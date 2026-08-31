@@ -17330,3 +17330,16 @@ nacimiento ya registra la verdad); núcleo de dinero, pieza propia. ⚠️ Y dos
 escritas en §25.10: el extractor de bloques PHP de Blade contra el primer `@php(` del fichero
 (media pantalla sin compilar y el error señalando el final), y que un solo botón de Filament
 emite `mountAction(...)` cuatro veces — la aguja de un recuento es `wire:click="..."`.
+
+**Adenda 5 (2026-09-01, «al historial le sigue faltando…»)**: el owner leyó el historial de
+`T4-PRB01` como incompleto. Medido: **todo lo ocurrido estaba registrado y pintado** — su pantalla
+era la página 1 de 3 (default 5 por página, con «Siguiente» a la vista). De ahí salen dos
+decisiones: **(1) `[DECIDIDO owner]` el default sube a 10** (REVISA el «default 5» de #151bis:
+cada gestión escribe 2–3 entradas —edición + ajuste + recálculo mixto— y una sesión de ediciones
+ya no cabía en una página; el 5 sigue en el selector); guarda re-apuntada en
+`OrderAuditModalTest`, vista en rojo. **(2) `[DECIDIDO owner]` el NACIMIENTO del pedido online NO
+entra en el historial** — hoy solo lo escriben los pedidos manuales (`orders.created_manual`) y
+las incidencias de pago; una compra online pagada no deja entrada y la línea temporal empieza en
+la primera gestión. Se decidió NO añadirlo (el dato vive en «Creado el» y en Pagos de la misma
+ficha) y queda registrado aquí para que nadie lo reabra como hueco: es una AUSENCIA decidida, no
+un descuido.

@@ -531,9 +531,13 @@ class ViewOrder extends ViewRecord
      * Opciones de tamaño de página para el modal del audit log agregado del
      * Order (sub-fase 7.2d, decisión #151 + #151bis). El operador elige
      * cuántas entradas ver a la vez desde el selector renderizado por
-     * `<x-filament::pagination>`. Default 5 (decisión #151bis): el modal
-     * con sticky header+footer y poco contenido se siente más compacto,
-     * y el operador escala con el selector cuando lo necesita.
+     * `<x-filament::pagination>`.
+     *
+     * ⚠️ Default 10 desde la T5 (`[DECIDIDO owner, 2026-09-01]`, `#298` adenda 5 — REVISA el
+     * «default 5» de #151bis): cada gestión escribe 2–3 entradas (la edición + su ajuste + el
+     * recálculo mixto), así que con 5 una sola sesión de ediciones ya no cabía en una página y el
+     * owner leyó el historial como incompleto. El selector sigue ofreciendo 5 para quien lo
+     * prefiera compacto.
      */
     private const ORDER_AUDIT_PAGE_SIZES = [5, 10, 25, 50];
 
@@ -544,8 +548,8 @@ class ViewOrder extends ViewRecord
      *
      * `#[Url(as: ...)]` mantiene el valor en query string para deep-linking.
      */
-    #[Url(as: 'auditPerPage', except: 5, history: true, keep: false)]
-    public int $auditPerPage = 5;
+    #[Url(as: 'auditPerPage', except: 10, history: true, keep: false)]
+    public int $auditPerPage = 10;
 
     /**
      * Paginator del audit log agregado del Order. Renderizado por Livewire

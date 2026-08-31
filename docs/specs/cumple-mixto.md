@@ -2736,6 +2736,13 @@ extracción corre antes que los comentarios; (b) contar `mountAction(...)` como 
 **un solo botón de Filament emite la cadena 4 veces** (`wire:click` + los `wire:target` del botón
 y de su spinner) — la aguja es `wire:click="..."`.
 
+▶ **Adenda 5 — «al historial le sigue faltando…»** (2026-09-01): medido, TODO estaba registrado y
+pintado — la pantalla del owner era la página 1 de 3 (default 5). Dos decisiones: **el default
+sube a 10** (una sesión de ediciones cabe de un vistazo; guarda re-apuntada y vista en rojo) y
+**el NACIMIENTO del pedido online NO entra en el historial** (`[DECIDIDO owner]`: solo lo
+escriben los manuales y las incidencias; el dato vive en «Creado el» y en Pagos — es una AUSENCIA
+decidida, registrada en `#298` adenda 5 para que nadie la reabra como hueco).
+
 **Lo que queda del plan** (§18.5): **T6** (el guardián de solapes fuera del formulario) · la
 **fase 3** de §20.2 despierta a §16 · el **AFORO** sigue aparcado por el owner · la ficha nueva
 del fantasma de la señal, en `DEUDA.md`. **De esta tanda queda el OJO del owner** (capturas

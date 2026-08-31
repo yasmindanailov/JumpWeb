@@ -226,8 +226,7 @@ class OrderAuditModalTest extends TestCase
     {
         [$order, $item] = $this->makeOrderWithItem();
 
-        // 13 entradas de OrderItem para que la paginación sea no-trivial con
-        // el default de 5 por página (decisión #151bis): 13 / 5 = 3 páginas.
+        // 13 entradas de OrderItem para que la paginación sea no-trivial: 13 / 10 = 2 páginas.
         for ($i = 0; $i < 13; $i++) {
             AuditLogger::log(
                 action: 'order_items.event_data_updated',
@@ -239,17 +238,19 @@ class OrderAuditModalTest extends TestCase
         $component = Livewire::actingAs($this->staff())
             ->test(ViewOrder::class, ['record' => $order->code]);
 
-        // Default: 5 por página (#151bis).
-        $paginator = $component->instance()->getOrderAuditPaginatorProperty();
-        $this->assertSame(5, $paginator->perPage());
-        $this->assertSame(13, $paginator->total());
-        $this->assertSame(3, $paginator->lastPage());
-
-        // Cambio de page size via property pública.
-        $component->set('auditPerPage', 10);
+        // Default: 10 por página (T5 adenda 5, `[DECIDIDO owner]` — REVISA el 5 de #151bis: cada
+        // gestión escribe 2–3 entradas y una sesión de ediciones no cabía en una página; el owner
+        // leyó el historial como incompleto teniendo un «Siguiente» delante).
         $paginator = $component->instance()->getOrderAuditPaginatorProperty();
         $this->assertSame(10, $paginator->perPage());
+        $this->assertSame(13, $paginator->total());
         $this->assertSame(2, $paginator->lastPage());
+
+        // Cambio de page size via property pública (el 5 compacto sigue en el selector).
+        $component->set('auditPerPage', 5);
+        $paginator = $component->instance()->getOrderAuditPaginatorProperty();
+        $this->assertSame(5, $paginator->perPage());
+        $this->assertSame(3, $paginator->lastPage());
     }
 
     public function test_paginator_orders_entries_by_created_at_desc(): void
