@@ -100,7 +100,7 @@
 > despierta a §16; el AFORO sigue aparcado por el owner).
 > ❗❗❗ **2026-08-31 (noche) · T4 · EL −X €, EN EL ÁRBOL** (`#296`, `specs/cumple-mixto.md` §20
 > diseño de producto · §24 diseño fino · **§24.10 ejecución**).
-> Suite **3679 en verde** (24.017 aserciones, 1 skipped a propósito; árbol CONJUNTO sobre `#297`) ·
+> Suite de entonces: 3679 (24.017 aserciones, 1 skipped a propósito; árbol CONJUNTO sobre `#297` — la VIVA, arriba en la T6) ·
 > JS **878** · **7/7 mutaciones muerden** · guardián de invariantes **11 → 15 escenarios** (A/B/C
 > con la línea a MANO antes del reconciliador; la identidad D cazó el `continue` en rojo, como §24.1
 > predijo) · verificadores: aforo SEIS + redsys + **el mixto en sus DOS escenarios** (`credit` visto
