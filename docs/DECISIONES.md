@@ -16973,3 +16973,50 @@ llevaba `30s` a mano, así que una instalación no podía calmarla. ⚠️ `/ser
 **Verificación**: suite **3639 / 23.658** · Pint ✓ · `docs-check` ✓ · **6 mutaciones muerden** ·
 medido en Chrome real a 390 y 1280: **0 desbordes horizontales**, 0 elementos cortados con control
 que sí muerde, y cero rastro de la marquesina en el marcado servido.
+
+## #294 · 2026-08-31 · T3 de reservas mixtas: EL PARQUE DECIDE — la diferencia se VE, la edad se corrige con rastro propio y el mínimo tiene excepción auditada
+
+El owner dio el «adelante» a §23 de `specs/cumple-mixto.md` (diseñada en `#291`, con la Q1 ya
+decidida: los dos permisos nuevos en `staff`) y la T3 se construyó entera en el orden de §23.6.
+Cierra los huecos E, F y D7 de la visión (`#284`): registro completo en **§23.10**.
+
+**E · La diferencia por cabeza SE VE en el parque.** La hoja de sala (bloque «Fiesta mixta» tras la
+tabla de invitados) y la tarjeta de la pantalla de puerta (`GateReservation.mixedPartyLines`, bajo
+el producto y encima del pendiente) imprimen **lo ESCRITO** del suplemento — nunca el veredicto
+derivado, que solo aporta lo que el dinero no dice: el aviso del caso barato y cuántas edades sin
+producto. Las claves reutilizan `admin.orders.mixed_party.*`: la hoja y la ficha no pueden divergir.
+⚠️ El bloque va en la hoja OPERATIVA a sabiendas de que ésta no lleva precios (decisión clienta
+2026-06-14): la visión (§18.4·E) exige que la sala vea esta diferencia, y §23 lo decide así.
+
+**F · El operador corrige las edades desde el panel, por la MISMA puerta que el cliente.**
+`OrderItem::submitGuestForm()` gana `?array $general` (`null` = «no toques los generales») y
+`?User $by`; `OrderItemGuestDataWriter` (calcado del de `event_data`: permiso
+`orders.edit_guest_data` re-exigido `SEC-04`, token optimista, diff de lo SANEADO → `unchanged()`
+sin una sola fila de rastro) valida y delega — así el saneo, el audit (`via: panel`), la
+reconciliación (`REASON_PANEL_GUEST_FORM`, actor operador, `applied_by` = operador) y el correo
+(la voz de «el parque», no «has actualizado…») no pueden divergir de los del cliente. La pestaña
+«Invitados» del modal Gestionar: repeater FIJO de `quantity` fichas con el régimen SELLADO como
+rótulo; el guardado corre ANTES del despacho de edición, con el token refrescado si escribió.
+El writer queda FUERA del `CRITICAL_RE` como control negativo declarado (el dinero lo mueve
+`reconcile()`, que ya está en el gate).
+
+**D7 · Bajar del mínimo del pack, con permiso propio y rastro.** `OrderItemEditor::edit(...,
+belowMinimum)` salta SOLO el mínimo (máximo y `>= 1` siguen; `OrderCreator` sigue exigiéndolo al
+vender) y únicamente con `orders.edit_item_below_minimum`, re-exigido en el editor: un payload
+fabricado no compra nada. El audit gana `below_pack_minimum` + `pack_min_qty` **solo cuando la
+excepción se usó** — un `false` por edición sería ruido que entierra la señal.
+
+**Dos hallazgos al construir** (§23.10): la puerta pagaba un **N+1 por ajuste** preexistente
+(`breakdownLabel` caminaba `adjustment->orderItem->ticketType` y el resumen `parent->slot`) — el
+reader carga los eager anidados que la hoja ya usaba y el presupuesto quedó vigilado en las dos
+direcciones (techo fijo en `GateProfileTest`, crecimiento por filas en
+`MixedPartyParkSurfacesTest`); y dos usuarios de test sobre el MISMO rol `staff` se roban los
+permisos con `sync()` — cada empleado del fichero nuevo lleva su propio rol.
+
+**Verificación**: suite propia **3651** y **árbol CONJUNTO tras rebasar sobre `#293`: 3656 /
+23.733** · Pint ✓ · `docs-check` ✓ ·
+**12 mutaciones y las 12 muerden** (incluida la del DISPARADOR: el modal sin llamar al writer) ·
+`mixed-party:verify-concurrency` + `purchase:verify-oversell` (SEIS escenarios) +
+`redsys:verify-concurrency` sobre MySQL real · sonda headless sobre `T0-PRB01` (guion
+`/root/e2e/t3.js`, capturas en `/root/e2e/t3-capturas/`): las tres superficies **miradas** — queda
+el OJO del owner.

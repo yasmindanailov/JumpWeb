@@ -79,6 +79,14 @@ class MixedPartySurcharge
     /** El guardado del post-form por el CLIENTE, que es el único disparo que es suyo. */
     public const REASON_GUEST_FORM = 'guest_form';
 
+    /**
+     * El guardado de las fichas desde el PANEL (T3 · F, spec §23.3): la misma puerta que el
+     * cliente (`OrderItem::submitGuestForm`) con el OPERADOR de actor. Se distingue del de arriba
+     * porque decide la voz del correo ({@see notify}): al cliente se le dice «el parque ha
+     * actualizado…», no «has actualizado…» — el rastro no puede mentir sobre quién movió el dato.
+     */
+    public const REASON_PANEL_GUEST_FORM = 'panel_guest_form';
+
     public function __construct(private GuestAgeMixReader $mix) {}
 
     /**

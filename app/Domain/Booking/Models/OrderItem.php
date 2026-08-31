@@ -599,11 +599,20 @@ class OrderItem extends Model
      * datos que se dieron al reservar —aunque el esquema haya cambiado entre reservar y rellenar— y,
      * a la vez, vaciar un campo del post-form sí lo borra.
      *
+     * ▶ **T3 · F (`specs/cumple-mixto.md` §23.3): el PANEL entra por esta MISMA puerta**, con
+     * `$general = null` y el operador en `$by`. `null` en los generales significa «no los toques»
+     * —la pestaña «Invitados» edita fichas, no lo demás— y es distinto de `[]`, que significa
+     * «vacíalos». Con `$by`, la reconciliación toma al operador como actor y una razón propia
+     * (`MixedPartySurcharge::REASON_PANEL_GUEST_FORM`), así el correo del cambio de importe dice
+     * «el parque» y no «has actualizado…» — antes de la T3 el operador solo podía usar el enlace
+     * del cliente, y el rastro mentía (`via: signed_link`).
+     *
      * @param  array<mixed>  $guests  respuestas por invitado, en bruto
-     * @param  array<mixed>  $general  respuestas de los campos generales, en bruto
-     * @param  string  $via  por dónde entró el cliente (`signed_link` | `account`), solo para el audit
+     * @param  array<mixed>|null  $general  respuestas de los campos generales, en bruto; `null` = conservarlos
+     * @param  string  $via  por dónde entró quien guardó (`signed_link` | `account` | `panel`), solo para el audit
+     * @param  User|null  $by  el OPERADOR cuando guarda el panel; `null` = el propio titular
      */
-    public function submitGuestForm(array $guests, array $general, string $via): void
+    public function submitGuestForm(array $guests, ?array $general, string $via, ?User $by = null): void
     {
         $type = $this->ticketType;
 
@@ -613,13 +622,17 @@ class OrderItem extends Model
 
         $guestData = $type->sanitizeGuestData($guests, (int) $this->quantity);
 
-        $postformData = $type->sanitizeEventData($general, TicketType::EVENT_STAGE_POSTFORM);
-        $postformKeys = array_column($type->eventFields(TicketType::EVENT_STAGE_POSTFORM), 'key');
-        $preserved = array_diff_key($this->event_data ?? [], array_flip($postformKeys));
+        $eventData = $this->event_data ?? [];
+        if ($general !== null) {
+            $postformData = $type->sanitizeEventData($general, TicketType::EVENT_STAGE_POSTFORM);
+            $postformKeys = array_column($type->eventFields(TicketType::EVENT_STAGE_POSTFORM), 'key');
+            $preserved = array_diff_key($eventData, array_flip($postformKeys));
+            $eventData = array_merge($preserved, $postformData);
+        }
 
         $this->forceFill([
             'guest_data' => $guestData,
-            'event_data' => array_merge($preserved, $postformData),
+            'event_data' => $eventData,
         ])->save();
 
         // Sello de «completado» solo si de verdad lo está (el estado es derivado; esto es auditoría).
@@ -637,14 +650,20 @@ class OrderItem extends Model
 
         // El suplemento de fiesta MIXTA sigue a las edades (`specs/cumple-mixto.md` §12,
         // `[DECIDIDO owner]`). Va aquí, después del guardado, por el mismo motivo que el resto de
-        // esta secuencia: es el ÚNICO punto por el que entran los datos por-niño —web y API— y una
-        // copia por superficie sería una oportunidad de olvidarse.
+        // esta secuencia: es el ÚNICO punto por el que entran los datos por-niño —web, API y desde
+        // la T3 el panel— y una copia por superficie sería una oportunidad de olvidarse.
         //
         // ⚠️ El reconciliador vuelve a LEER la reserva con la fila bloqueada: no se le pasa nada
         // calculado aquí. De lo contrario, dos guardados simultáneos escribirían dos suplementos.
-        $owner = $this->order?->user;
-        if ($owner !== null) {
-            app(MixedPartySurcharge::class)->reconcile($this, $owner, MixedPartySurcharge::REASON_GUEST_FORM);
+        // Con `$by` (panel), el actor del ajuste es el OPERADOR y la razón la del panel: el rastro
+        // y el correo dicen quién movió el dato de verdad (§23.3).
+        $actor = $by ?? $this->order?->user;
+        if ($actor !== null) {
+            app(MixedPartySurcharge::class)->reconcile(
+                $this,
+                $actor,
+                $by !== null ? MixedPartySurcharge::REASON_PANEL_GUEST_FORM : MixedPartySurcharge::REASON_GUEST_FORM,
+            );
         }
     }
 

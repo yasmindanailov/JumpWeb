@@ -59,8 +59,12 @@ datos**. Pedirlo todo en la compra satura el flujo. Solución: **formulario post
 6. **Granularidad: por OrderItem-pack**, no por pedido.
 7. **Acceso del cliente**: «Mis pedidos» (autenticado) + **signed URL de larga vida** en el
    email (el evento es a semanas vista; los signed URL cortos no sirven).
-8. **Permisos**: reutiliza `orders.edit_event_data` para la edición por el empleado; el
-   reenvío reutiliza la infraestructura `RESEND_TYPE_*` de `ViewOrder`. Sin permisos nuevos.
+8. **Permisos**: reutiliza `orders.edit_event_data` para la edición de los datos del EVENTO por
+   el empleado; el reenvío reutiliza la infraestructura `RESEND_TYPE_*` de `ViewOrder`.
+   ⚠️ **«Sin permisos nuevos» CADUCÓ con la T3 de reservas mixtas** (2026-08-31, `#294`): las
+   FICHAS por invitado se editan desde el panel con el permiso propio **`orders.edit_guest_data`**
+   (pestaña «Invitados» del modal Gestionar, `specs/cumple-mixto.md` §23.3) — propio para poder
+   revocarlo por rol sin tocar la edición normal.
 9. **Pedidos manuales**: mismo `guest_data`/estado; el empleado rellena en la ficha o dispara
    el email/enlace.
 
@@ -185,6 +189,14 @@ seed siempre incluye `guest_fields`).
   estado del form + subcard colapsable «Formulario de reserva» con los datos por-invitado;
   edición con el patrón `eventDataFormFields()` + `saveItemEventData()` (permiso
   `orders.edit_event_data`).
+- **La cara empleado ESCRIBE desde la T3 de reservas mixtas** (2026-08-31, `#294`,
+  `specs/cumple-mixto.md` §23.3): pestaña **«Invitados»** en el modal Gestionar — repeater fijo de
+  `quantity` fichas, el régimen SELLADO como rótulo por ficha, permiso `orders.edit_guest_data` —
+  que entra por la MISMA puerta que el cliente (`OrderItemGuestDataWriter` →
+  `OrderItem::submitGuestForm` con `via: panel` y el operador de actor): el saneo, el sello de
+  completado, el audit y la reconciliación del suplemento no pueden divergir de los del cliente,
+  y el correo del cambio de importe habla con la voz del parque. Antes, el único camino del
+  operador era abrir el enlace del cliente — y el rastro decía que lo hizo el cliente.
 - **Reenviar email**: `RESEND_TYPE_GUEST_FORM` en `Order` + `match` en `dispatchResend()` +
   `ViewOrder::resendEmail` (revalida `canResend` + audit de éxito Y bloqueo). Un reenvío por
   reserva. En el modal del calendario va como **Filament Action anidada** (el visor es

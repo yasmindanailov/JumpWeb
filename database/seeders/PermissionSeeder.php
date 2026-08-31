@@ -32,7 +32,12 @@ class PermissionSeeder extends Seeder
         'orders.cancel',
         'orders.refund',
         'orders.edit_event_data',
+        // T3 de reservas mixtas (`specs/cumple-mixto.md` §23.5, `[DECIDIDO owner]` Q1·a): los dos
+        // en `staff` por defecto — «en el parque, el operador ve las edades y los precios y
+        // decide» —, revocables por rol desde la matriz.
+        'orders.edit_guest_data',
         'orders.edit_item',
+        'orders.edit_item_below_minimum',
         'orders.cancel_item',
         'orders.refund_item',
         'calendar.view',
@@ -56,7 +61,11 @@ class PermissionSeeder extends Seeder
         'orders.cancel' => 'Cancelar pedido',
         'orders.refund' => 'Reembolsar pedido',
         'orders.edit_event_data' => 'Editar datos del evento del pedido (homenajeado, edad, notas)',
+        // T3 de reservas mixtas (§23.5): permisos PROPIOS —y no dentro de `edit_item`— para poder
+        // revocarlos por rol sin quitarle al rol la edición normal de reservas.
+        'orders.edit_guest_data' => 'Editar los datos por invitado desde el panel',
         'orders.edit_item' => 'Editar item del pedido (fecha, cantidad, producto, datos, complementos)',
+        'orders.edit_item_below_minimum' => 'Bajar un pack por debajo de su mínimo de invitados, con rastro',
         'orders.cancel_item' => 'Cancelar item suelto del pedido (con reembolso automático)',
         'orders.refund_item' => 'Reembolsar item suelto del pedido',
         'calendar.view' => 'Ver calendario unificado',

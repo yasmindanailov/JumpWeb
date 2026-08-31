@@ -92,6 +92,11 @@ final class GateProfile
             'paid_at' => $r->paidAt,
             'created_at' => $r->createdAt,
             'minors' => $minors,
+            // T3 · E (`specs/cumple-mixto.md` §23.2): lo ESCRITO del suplemento de fiesta mixta,
+            // tal cual viaja en el contrato — la tarjeta lo pinta bajo el producto para que el
+            // empleado no haga la cuenta de memoria con el cliente delante.
+            'mixed_party_lines' => $r->mixedPartyLines,
+            'mixed_party_surcharge_cents' => $r->mixedPartySurchargeCents,
         ];
     }
 

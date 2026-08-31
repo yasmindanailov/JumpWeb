@@ -81,6 +81,9 @@ return [
                 'pending_gate' => '门口待付：:amount €',
                 'paid' => '已付：:amount €（:method）',
                 'nothing_pending' => '无待付款项',
+                // 混龄派对（T3 · E）：已写入的附加费 — 金额已计入 `pending_gate`。
+                'mixed_party_line' => ':count × :name · 每位来宾 :unit €',
+                'mixed_party_total' => '混龄派对附加费：:amount €',
                 'booked_on' => '预订于 :when',
                 'paid_on' => '付款于 :when',
                 'method_desk' => '柜台',
@@ -417,6 +420,8 @@ return [
             'pending_refund' => '待退还',
             'pending_refund_caption' => '因减少数量或取消而多付的款项,尚待退还给客户。',
             'cancelled_notice' => '预订已取消',
+            // 混龄派对（T3 · E）：区块标题；行与提示复用 `admin.orders.mixed_party.*`。
+            'mixed_party_heading' => '混龄派对',
         ],
 
         // Datos del evento por item (#86, sub-fase 7.2a).
@@ -790,6 +795,19 @@ return [
             'tab_event_data' => '活动详情',
             'tab_addons' => '附加项目',
 
+            // ── T3 · F:「来宾」标签页 ─────────────
+            'tab_guests' => '来宾',
+            'guests_intro' => '客户在来宾表单中申报的信息。若你修正某位来宾的年龄,混龄派对附加费会自动重新计算,客户将收到以园区名义发出的通知。',
+            'guests_saved' => '✓ 来宾信息已保存。',
+            'guest_regime' => '适用套餐::name',
+            'guest_regime_no_product' => '该年龄没有对应产品',
+            'guest_regime_no_age' => '未申报年龄',
+
+            // ── T3 · D7:低于套餐最少人数 ─────────────
+            'below_minimum_label' => '低于套餐最少人数(留有记录)',
+            'below_minimum_help' => '该套餐最少 :min 位来宾。启用后可降至 1 位;此例外会记录在订单历史中。',
+            'field_guests_help_below_minimum' => '最少人数已降至 1(套餐原为 :min)。将留有记录。',
+
             'field_date' => '日期',
             'field_time' => '时间',
             'current_marker' => '(当前)',
@@ -1016,6 +1034,10 @@ return [
                 'invalid_product' => '所选产品无效或未在售',
                 'invalid_quantity' => '所填数量无效',
                 'pack_quantity_range' => '宾客人数超出该套餐的允许范围',
+
+                // T3 · F:「来宾」标签页保存的拒绝原因。
+                'not_pack' => '该产品没有来宾表单',
+                'no_guest_fields' => '该套餐未定义来宾字段',
                 'product_unavailable_on_date' => '新产品在所选日期没有价格',
                 'orphan_addons' => '新产品不支持当前产品的某些附加项目;请先移除它们',
 
@@ -1191,7 +1213,9 @@ return [
             'orders_cancel' => '取消订单',
             'orders_refund' => '订单退款',
             'orders_edit_event_data' => '编辑订单的活动信息(寿星、年龄、备注)',
+            'orders_edit_guest_data' => '在后台编辑每位来宾的信息',
             'orders_edit_item' => '编辑订单产品(日期、数量、产品、信息、附加项)',
+            'orders_edit_item_below_minimum' => '允许套餐低于最少来宾数(留有记录)',
             'orders_cancel_item' => '取消订单中的单个产品',
             'orders_refund_item' => '对订单中的单个产品退款',
             'calendar_view' => '查看日历与工作台',

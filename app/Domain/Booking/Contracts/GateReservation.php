@@ -38,5 +38,16 @@ final readonly class GateReservation
         /** ISO-8601 o `null`. */
         public ?string $paidAt,
         public string $createdAt,
+        /**
+         * Lo ESCRITO del suplemento de fiesta MIXTA (`specs/cumple-mixto.md` §23.2): una línea por
+         * pack de destino, con el nombre GUARDADO al comunicarlo y la diferencia por invitado.
+         * Se enseña lo escrito y no el veredicto porque es lo que se cobra (`PAY-19`); sale de
+         * `MixedPartySurcharge::written()` sobre relaciones ya cargadas — coste cero en consultas.
+         *
+         * @var list<array{name:string, count:int, unit_cents:int}>
+         */
+        public array $mixedPartyLines = [],
+        /** Total escrito del suplemento (céntimos); `0` sin suplemento. Ya incluido en `pendingGateCents`. */
+        public int $mixedPartySurchargeCents = 0,
     ) {}
 }

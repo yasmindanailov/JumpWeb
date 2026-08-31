@@ -336,8 +336,12 @@ class GateProfileTest extends TestCase
         $forSmall = $count($small);
         $forBig = $count($big);
         $this->assertSame($forSmall, $forBig, "el presupuesto no crece con reservas ni menores ({$forSmall} frente a {$forBig})");
-        // Medido: 23 — las reservas con sus seis cargas eager (10), asignaciones y menores (2), sus firmas
-        // (3), el waiver del titular (2), el carné (2), los menores a cargo con sus firmas (3) y la visita (1).
-        $this->assertLessThanOrEqual(25, $forSmall, 'una ficha compuesta, no un escaneo que dispara decenas de consultas');
+        // Medido: 27 — las reservas con sus cargas eager (14: la T3 sumó cuatro LOTES —
+        // `order.items.{slot,ticketType,parent.slot}` y `adjustments.orderItem.ticketType`— a cambio
+        // de quitar las consultas POR AJUSTE de `breakdownLabel`/`isFinishedInPractice`, que sí
+        // crecían con las filas; `MixedPartyParkSurfacesTest` vigila esa mitad), asignaciones y
+        // menores (2), sus firmas (3), el waiver del titular (2), el carné (2), los menores a cargo
+        // con sus firmas (3) y la visita (1).
+        $this->assertLessThanOrEqual(28, $forSmall, 'una ficha compuesta, no un escaneo que dispara decenas de consultas');
     }
 }

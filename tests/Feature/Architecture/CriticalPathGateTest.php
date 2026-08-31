@@ -125,6 +125,12 @@ class CriticalPathGateTest extends TestCase
         // y obliga a decidirlo a conciencia.
         'app/Domain/Booking/Services/ItemEditPricing.php',
         'app/Domain/Booking/Services/OrderItemEventDataWriter.php',
+        // T3 de reservas mixtas (`specs/cumple-mixto.md` §23.3): el escritor de las fichas por
+        // invitado del panel VALIDA y entra por `OrderItem::submitGuestForm` — no toma el lock de
+        // zona/día y el dinero lo mueve `reconcile()`, que ya está en el gate. Mismo criterio que
+        // su gemelo de `event_data` y que los dos controladores del post-form. Si algún día
+        // escribiera dinero por su cuenta, este test se pone rojo y obliga a decidirlo.
+        'app/Domain/Booking/Services/OrderItemGuestDataWriter.php',
         // Y los dos últimos de la 4b: cancelar LIBERA aforo (no lo consume; los contadores excluyen
         // `cancelled_at`) y reembolsar delega el dinero en `Order::executePartialRefundBatch`, que es
         // donde viven sus locks. Ninguno toma el lock de zona/día.

@@ -113,6 +113,11 @@
 
         ul.addons { margin: 0; padding-left: 16px; }
         ul.addons li { margin-bottom: 2px; }
+
+        /* Fiesta MIXTA (T3 · E): las líneas escritas del suplemento + el total; avisos en ámbar. */
+        .mixed-line { font-size: 10px; margin-bottom: 2px; }
+        .mixed-total { font-size: 11px; font-weight: bold; margin-top: 2px; }
+        .mixed-note { font-size: 9px; color: #92400e; font-weight: bold; margin-top: 3px; }
         .struck { text-decoration: line-through; color: #9ca3af; }
         .tag-cancel { font-size: 9px; color: #991b1b; font-weight: bold; }
 
@@ -323,6 +328,30 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+    @endif
+
+    {{-- Fiesta MIXTA (T3 · E, `specs/cumple-mixto.md` §23.2): lo ESCRITO del suplemento — la
+         diferencia por cabeza que el operador hacía de memoria con el cliente delante. Se imprime
+         lo escrito y NUNCA el veredicto derivado: es lo que se cobra (`PAY-19`); del veredicto solo
+         salen el caso barato y las edades sin producto, que el dinero no dice. ⚠️ Va en la hoja
+         OPERATIVA a sabiendas de que ésta no lleva precios (decisión 2026-06-14): la visión del
+         owner (§18.4·E) exige que la sala vea esta diferencia, y §23 lo decide así. --}}
+    @php $mixedParty = $slip->mixedParty(); @endphp
+    @if ($mixedParty !== null)
+        <div class="sec">
+            <div class="sec-title">{{ __('admin.orders.slip.mixed_party_heading') }}</div>
+            @foreach ($mixedParty['lines'] as $line)
+                <div class="mixed-line">{{ __('admin.orders.mixed_party.line', ['count' => $line['count'], 'name' => $line['name'], 'unit' => $fmt($line['unit'])]) }}</div>
+            @endforeach
+            @if ($mixedParty['totalCents'] > 0)
+                <div class="mixed-total">{{ __('admin.orders.mixed_party.applied', ['amount' => $fmt($mixedParty['totalCents'])]) }}</div>
+            @elseif ($mixedParty['savingsCents'] > 0)
+                <div class="mixed-note">{{ __('admin.orders.mixed_party.cheaper', ['amount' => $fmt($mixedParty['savingsCents'])]) }}</div>
+            @endif
+            @if ($mixedParty['withoutProduct'] > 0)
+                <div class="mixed-note">{{ __('admin.orders.mixed_party.out_of_range', ['count' => $mixedParty['withoutProduct']]) }}</div>
+            @endif
         </div>
     @endif
 

@@ -227,8 +227,18 @@ El empleado **puede**:
 - Ver el calendario y las reservas/entradas.
 - Crear reservas/entradas en back-office.
 - Gestionar reservas existentes (confirmar, reprogramar, cancelar).
+- **Corregir las fichas por invitado de una fiesta** (T3 de reservas mixtas, 2026-08-31, `#294`):
+  pestaña «Invitados» del modal **Gestionar**, permiso propio `orders.edit_guest_data` (en `staff`
+  por defecto, revocable por rol). Entra por la misma puerta que el post-form del cliente y el
+  rastro dice que fue el parque (`specs/cumple-mixto.md` §23.3).
+- **Bajar un pack por debajo de su mínimo de invitados** (T3 · D7): interruptor explícito en
+  «Editar producto», permiso propio `orders.edit_item_below_minimum` (en `staff` por defecto),
+  y la excepción queda en el historial del pedido. El máximo sigue mandando y la web sigue
+  exigiendo el mínimo al vender.
 - **Verificar en puerta:** validar registro/waiver (§2.5), buscar pedidos, entregar pulsera
-  y marcar entradas como canjeadas (§2.4).
+  y marcar entradas como canjeadas (§2.4). La ficha de puerta y la hoja de sala enseñan desde la
+  T3 **lo escrito** del suplemento de fiesta mixta (la diferencia por cabeza que antes se hacía
+  de memoria).
 
 El empleado **NO** puede: configuración, información fiscal, precios, ni crear/borrar usuarios.
 

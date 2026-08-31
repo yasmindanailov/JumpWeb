@@ -2282,19 +2282,21 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       `reconcile()` y vale también para el panel (`[DECIDIDO owner]`, Q1); tres textos por
       instalación en Ajustes («Fiestas por edad») con `:phone`. ⚠️ Cazó un hueco de CONTRATO
       preexistente en la API (`general` vacío serializado como lista). Queda el OJO del owner.
-      🟦 **T3 · EL PARQUE DECIDE — DISEÑADA, CÓDIGO NO EMPEZADO** (`specs/cumple-mixto.md` §23,
-      2026-08-31 noche, `#291`): lo escrito del suplemento en hoja de sala y puerta (E), la pestaña
-      «Invitados» por la MISMA puerta que el cliente con `via = panel` y actor operador (F), el
-      interruptor de «bajar del mínimo» con permiso propio y rastro (D7). Q1 decidida: los dos
-      permisos nuevos entran en `staff`. **El owner paró antes del código para revisar §23**: nada
-      de la T3 está en el árbol.
-      ❗ **Queda, por orden del plan §18.5**: **T3** (construirla cuando el owner dé el «adelante» a
-      §23; toca `OrderItemEditor` y `MixedPartySurcharge` → `CRITICAL_RE` + verificadores +
-      `VERIFY_CONC=1`) · T4 el −X € (diseño cerrado en §20; el crédito deriva de los precios SELLADOS
-      y el disparador ya es «solo completo») · T5 las palabras (D9, D8, el email de la devolución —
-      el «hoy:» del desfase se disolvió con la T1) · T6 el guardián de solapes fuera del formulario
-      (con el sello ya no mueve dinero) · el **AFORO** sigue aparcado por el owner (zonas distintas,
-      spec propia).
+      ✅ **T3 · EL PARQUE DECIDE, EN EL ÁRBOL (2026-08-31 noche, `#294`)** — diseño en §23
+      (aprobado; Q1: los dos permisos en `staff`), ejecución en **§23.10**. Lo ESCRITO del
+      suplemento en hoja de sala y tarjeta de puerta (E; la guarda de presupuesto cazó un N+1
+      preexistente de la puerta con cualquier `extra_due`), la pestaña «Invitados» por la MISMA
+      puerta que el cliente —`OrderItemGuestDataWriter` → `submitGuestForm(guests, null, 'panel',
+      $by)`, rastro y correo del PARQUE— (F), y el interruptor de «bajar del mínimo» con
+      `orders.edit_item_below_minimum` re-exigido en el editor y audit solo al usarse (D7).
+      17 casos nuevos, 12/12 mutaciones, los tres verificadores sobre MySQL, sonda en navegador
+      (`/root/e2e/t3.js`). Queda el OJO del owner.
+      ❗ **Queda, por orden del plan §18.5**: T4 el −X € (diseño cerrado en §20; el crédito deriva
+      de los precios SELLADOS y el disparador ya es «solo completo»; núcleo de dinero →
+      `CRITICAL_RE` + verificadores + `VERIFY_CONC=1`) · T5 las palabras (D9, D8, el email de la
+      devolución — el «hoy:» del desfase se disolvió con la T1) · T6 el guardián de solapes fuera
+      del formulario (con el sello ya no mueve dinero) · el **AFORO** sigue aparcado por el owner
+      (zonas distintas, spec propia).
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de

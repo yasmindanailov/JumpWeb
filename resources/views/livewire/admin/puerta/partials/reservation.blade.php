@@ -24,6 +24,22 @@
         @endforeach
     </p>
 
+    {{-- T3 · E (`specs/cumple-mixto.md` §23.2): lo ESCRITO del suplemento de fiesta MIXTA, bajo el
+         producto y encima del pendiente — la diferencia por cabeza que el empleado hacía de memoria
+         con el cliente delante. Se enseña lo escrito y NUNCA el veredicto derivado: es lo que se
+         cobra (`PAY-19`), y ya está sumado dentro de «pendiente de cobrar en puerta». --}}
+    {{-- `?? 0`: la fila viaja en el ESTADO Livewire del componente, y un snapshot abierto antes de
+         un despliegue puede traer filas sin estas claves — un 500 en la cara del operador no es el
+         precio correcto de esa ventana. --}}
+    @if ((int) ($r['mixed_party_surcharge_cents'] ?? 0) > 0)
+        <div class="gate-res__mixed" data-gate-mixed-party>
+            @foreach ($r['mixed_party_lines'] ?? [] as $line)
+                <p class="gate-res__mixed-line">{{ __('admin.puerta.validar.profile.mixed_party_line', ['count' => (int) $line['count'], 'name' => $line['name'], 'unit' => Money::amount((int) $line['unit_cents'])]) }}</p>
+            @endforeach
+            <p class="gate-res__mixed-total">{{ __('admin.puerta.validar.profile.mixed_party_total', ['amount' => Money::amount((int) $r['mixed_party_surcharge_cents'])]) }}</p>
+        </div>
+    @endif
+
     {{-- El dinero SALE del ledger (`OrderLedger`), nunca se recompone aquí (§4.7). Y «pendiente de
          cobrar en puerta» no es opcional: con sistema de señal, si el empleado no lo ve, el negocio
          no cobra. Por eso es la única línea de la tarjeta con tratamiento de ALERTA. --}}

@@ -2,14 +2,13 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-31 (cierre, ~17:00) — carril MIXTOS: T1
-> el SELLO (`#288`) y T2 la edad sin producto + el dinero solo al guardar completo (`#289`) en el
-> árbol; T3 el parque decide DISEÑADA (§23, `#291`) y parada por el owner antes del código. Carril
-> FACHADA: la primera pasada SANEADA (`#287`) sobre el hueco de ilustración (`#286`).**
+> aquí solo se enlaza.** Última actualización: **2026-08-31 (noche) — carril MIXTOS: T1 el SELLO
+> (`#288`), T2 la edad sin producto + el dinero solo al guardar completo (`#289`) y **T3 el parque
+> decide (`#294`) EN EL ÁRBOL**; lo siguiente es la T4 (el −X €, diseño cerrado en §20). Carril
+> IDIOMA VISUAL: T1 normas (`#292`) y T2 cinta C3 (`#293`) en el árbol.**
 > ❗ **SI ENTRAS NUEVO A MIXTOS: `specs/cumple-mixto.md` §18 (visión) → §21 (sello) → §22 (completo son
-> dos preguntas) → §23 (la T3, diseñada: espera el «adelante» del owner y se construye en el orden
-> de §23.6 con las guardas de §23.7). Diseño fino antes de código y preguntas numeradas al owner: es
-> el método que las tres tandas han seguido.**
+> dos preguntas) → §23 (la T3: diseño §23.1–§23.8, ejecución §23.10). Diseño fino antes de código y
+> preguntas numeradas al owner: es el método que las cuatro tandas han seguido.**
 > ⚠️ **Entorno, 2026-08-31**: el `php artisan serve` del contenedor amaneció muerto (SIGTERM 14:29) y a
 > las 16:3x el demonio de Docker Desktop dejó de responder (500 en su API; se recuperó reiniciándolo
 > desde Windows). Ninguna de las dos es del repo; si el `curl` del arranque da `000`, mira primero
@@ -18,21 +17,44 @@
 > veces (el carril del tema iba por 281 con el remoto en 285; el de mixtos escribió `#286` con el
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
-> ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1 y T2 hechas → sigue la T3) ═══════════
+> ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1, T2 y T3 hechas → sigue la T4) ═══════════
+> ❗❗❗ **2026-08-31 (noche) · T3 · EL PARQUE DECIDE, EN EL ÁRBOL** (`#294`,
+> `specs/cumple-mixto.md` §23 diseño · **§23.10 ejecución**).
+> Suite **3656 en verde** (23.733 aserciones, 1 skipped a propósito; árbol CONJUNTO sobre `#293`) ·
+> **12/12 mutaciones muerden** (incluida la del DISPARADOR: el modal sin llamar al writer) ·
+> los TRES verificadores sobre MySQL (mixto · aforo en sus SEIS escenarios · redsys) · sonda
+> headless sobre `T0-PRB01` (guion `/root/e2e/t3.js`, 4 capturas + el PDF en
+> `/root/e2e/t3-capturas/`, **miradas**). ▶ **E**: hoja de sala y tarjeta de puerta imprimen lo
+> ESCRITO del suplemento (nunca el veredicto; del veredicto solo el caso barato y las edades sin
+> producto). ⚠️⚠️ La guarda de presupuesto cazó un **N+1 preexistente de la puerta** con cualquier
+> `extra_due` (las etiquetas caminaban `adjustment->orderItem->ticketType` por fila): eager
+> anidados en el reader, techo de `GateProfileTest` 25 → 28 a cambio de lotes constantes.
+> ▶ **F**: pestaña «Invitados» del modal Gestionar por la MISMA puerta que el cliente
+> (`OrderItemGuestDataWriter` → `submitGuestForm(guests, null, 'panel', $by)`): `via: panel`,
+> actor operador, correo con la voz del parque; el writer es control negativo del gate. ▶ **D7**:
+> bajar del mínimo con `orders.edit_item_below_minimum` re-exigido en el editor + interruptor,
+> audit `below_pack_minimum` solo al usarse; máximo y `>= 1` siguen; la web sigue exigiendo el
+> mínimo. ⚠️ Los dos permisos nuevos en `staff` (`[DECIDIDO owner]` Q1·a). ⚠️ **La presencia de la
+> pestaña NO se asevera con `assertSee`** (modal = `wire:partial`, la trampa del waiver §9.7): por
+> CONDUCTA — el form solo dehidrata campos declarados. ⚠️ Dos usuarios de test sobre el MISMO rol
+> se roban los permisos con `sync()`: rol propio por empleado en el fichero nuevo. ⚠️ La sonda usó
+> `puerta.window_days=30` TEMPORAL (restaurado: fila borrada) y dejó filas de audit del escaneo en
+> `T0-PRB01`, asumidas. **Queda el OJO del owner** (capturas listas) y LO SIGUIENTE es la **T4**
+> (el −X €, diseño CERRADO en §20 — núcleo de dinero: `CRITICAL_RE` + verificadores +
+> `VERIFY_CONC=1`).
 > ❗❗❗ **2026-08-31 (tarde-noche) · T2 · UNA EDAD SIN PRODUCTO + EL DINERO SOLO AL GUARDAR
 > COMPLETO, EN EL ÁRBOL** (`#289`, `specs/cumple-mixto.md` §22 diseño · §22.9 ejecución).
-> Suite **3639 en verde** (23.658 aserciones, 1 skipped a propósito) — **cifra del árbol CONJUNTO**,
-> tras rebasar `#290` (el sistema de etiquetas) encima de la T1/T2 de mixtos · **7/7 mutaciones muerden** ·
+> Suite de entonces: 3639 tests / 23.658 aserciones — cifra del árbol conjunto de aquel cierre,
+> tras rebasar `#290` (el sistema de etiquetas) encima de la T1/T2 de mixtos (la VIVA, arriba: es
+> la única copia que lee el gate) · **7/7 mutaciones muerden** ·
 > `mixed-party:verify-concurrency` en verde · sonda headless (2 capturas en `/root/e2e/t2-capturas/`).
 > ▶ «Completo» son DOS preguntas (dinero: todas las edades declaradas · formulario: además ninguna
 > edad sin producto). ⚠️⚠️ **La puerta vive en `reconcile()` y vale también para el panel**
 > (`[DECIDIDO owner]`): con una edad en blanco no se escribe NADA — hasta hoy crecía (`#268`). ⚠️
 > Tres textos por instalación en Ajustes → Web → «Fiestas por edad» (`:phone`; cadena pedido → app →
 > es → en → fr). ⚠️ **Hueco de contrato preexistente cazado**: `GuestFormResource` daba `general`
-> vacío como lista `[]` (el contrato dice objeto). ▶ **LO SIGUIENTE ES LA T3 — YA DISEÑADA en §23
-> (`#291`) y PARADA por el owner antes del código** (§18.5: el parque decide — editar la edad desde
-> el panel con rastro, la diferencia por cabeza en hoja/puerta, bajar del mínimo D7); cuando dé el
-> «adelante», toca el suplemento por la edad → `CRITICAL_RE` + verificadores + `VERIFY_CONC=1`.
+> vacío como lista `[]` (el contrato dice objeto). ▶ ~~Lo siguiente es la T3~~ **HECHA la misma
+> noche (`#294`, bloque de arriba)**.
 > ❗❗❗ **2026-08-31 (tarde) · T1 · EL SELLO ESTÁ EN EL ÁRBOL** (`#288`).
 > Antes de la T2 la suite estaba en 3616 (23.514 aserciones; **tras rebasar sobre `#287`**: sus 3605
 > + los 11 de la T1, medidos) · **JS 877** (sin tocar) ·

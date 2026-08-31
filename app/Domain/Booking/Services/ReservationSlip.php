@@ -56,7 +56,9 @@ final class ReservationSlip
 
         // `payments.refunds` para el desglose "Totales del producto" (línea Devuelto):
         // `Order::itemRefundedCents()` recorre los reembolsos confirmados.
-        $order->loadMissing(['user', 'payments.refunds']);
+        // `adjustments` para el bloque «Fiesta mixta» ({@see mixedParty()}): las líneas escritas
+        // del suplemento se reconocen por la marca del ajuste (`MixedPartySurcharge::written()`).
+        $order->loadMissing(['user', 'payments.refunds', 'adjustments']);
 
         return new self($order, $item);
     }
@@ -279,6 +281,47 @@ final class ReservationSlip
         }
 
         return $rows;
+    }
+
+    // ─── Fiesta mixta (T3 · E, `specs/cumple-mixto.md` §23.2) ─────────────────
+
+    /**
+     * El bloque «Fiesta mixta» de la hoja: lo ESCRITO del suplemento —las líneas por pack de
+     * destino y el total, que es lo que se cobra en el parque (`PAY-19`)—, el aviso del caso
+     * barato (§14: informativo, NO es dinero) y cuántos invitados tienen una edad sin producto
+     * en las condiciones selladas de la reserva.
+     *
+     * `null` = el bloque no existe: la fiesta no tiene cargo escrito, no saldría más barata y
+     * ninguna edad se queda sin producto. Una fiesta mixta con los dos packs al mismo precio cae
+     * aquí a propósito — la etiqueta MIXTA ya viaja en el nombre del producto (§13) y una caja de
+     * 0,00 € no le dice nada al operador.
+     *
+     * ⚠️ Se enseña lo ESCRITO, nunca el veredicto derivado: es lo que se le comunicó al cliente y
+     * lo que se cobra. El veredicto solo aporta lo que el dinero no dice — el caso barato y las
+     * edades sin producto — y por eso son los dos únicos datos que salen de él.
+     *
+     * @return array{lines: list<array{name:string, count:int, unit:int}>, totalCents:int, savingsCents:int, withoutProduct:int}|null
+     */
+    public function mixedParty(): ?array
+    {
+        $written = app(MixedPartySurcharge::class)->written($this->item);
+        $mix = app(GuestAgeMixReader::class)->for($this->item);
+        $withoutProduct = count($this->item->guestAgesWithoutProduct());
+
+        // El aviso del caso barato sigue el criterio de la ficha del pedido (items-list): solo
+        // cuando NO hay cargo escrito — con cargo, el dato que manda es el importe aplicado.
+        $savings = $written['cents'] === 0 && $mix->hasSavings() ? (int) $mix->savingsCents : 0;
+
+        if ($written['cents'] === 0 && $savings === 0 && $withoutProduct === 0) {
+            return null;
+        }
+
+        return [
+            'lines' => $written['lines'],
+            'totalCents' => $written['cents'],
+            'savingsCents' => $savings,
+            'withoutProduct' => $withoutProduct,
+        ];
     }
 
     // ─── Complementos ─────────────────────────────────────────────────────────

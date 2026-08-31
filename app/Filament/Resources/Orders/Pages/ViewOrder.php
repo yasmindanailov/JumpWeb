@@ -7,15 +7,18 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\ItemEditPricing;
 use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Domain\Booking\Services\OrderItemCanceller;
 use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\OrderItemEventDataWriter;
+use App\Domain\Booking\Services\OrderItemGuestDataWriter;
 use App\Domain\Booking\Services\OrderItemRefunder;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\AuditLogger;
+use App\Domain\Platform\Services\Money;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Orders\Pages\Concerns\AssignsDependents;
 use App\Filament\Resources\Orders\Pages\Concerns\ManagesItemCalendar;
@@ -709,6 +712,10 @@ class ViewOrder extends ViewRecord
 
                 return $groupDefaults + [
                     'optimistic_token' => (string) ($item->updated_at?->getTimestamp() ?? ''),
+                    // T3 · F: las fichas por invitado, SANEADAS y normalizadas a `quantity` filas —
+                    // la misma lectura que hace el post-form del cliente. `idx` ata cada fila a su
+                    // rótulo de régimen (el repeater indexa por uuid, no por posición).
+                    'guest_data' => $this->guestRowsForForm($item),
                     // Sub-fase 7.2e.3 (#167): precarga del producto y la cantidad
                     // actuales para los selectores del Tab 1 (solo se renderizan
                     // si el item es editable; las claves extra se ignoran si no).
@@ -782,10 +789,18 @@ class ViewOrder extends ViewRecord
      */
     private function manageItemTabs(OrderItem $item): array
     {
-        return [
+        $tabs = [
             $this->manageItemReservationTab($item),
             $this->manageItemEditProductTab($item),
         ];
+
+        // T3 · F (`specs/cumple-mixto.md` §23.3): la pestaña «Invitados» aparece con el permiso y
+        // no sin él — sin permiso el operador conserva lo que siempre tuvo, «copiar enlace».
+        if ($this->itemHasGuestsTab($item)) {
+            $tabs[] = $this->manageItemGuestsTab($item);
+        }
+
+        return $tabs;
     }
 
     private function itemHasEventDataTab(OrderItem $item): bool
@@ -795,6 +810,130 @@ class ViewOrder extends ViewRecord
         $canEditEventData = auth()->user()?->hasPermission('orders.edit_event_data') ?? false;
 
         return $isPack && $eventFields !== [] && $canEditEventData;
+    }
+
+    /**
+     * ¿Se ofrece la pestaña «Invitados»? (T3 · F, spec §23.3): un pack PRINCIPAL con esquema
+     * por-niño, no cancelado, y el operador con `orders.edit_guest_data`. El permiso se RE-exige
+     * en el escritor al guardar (`SEC-04`); aquí solo decide qué se pinta.
+     */
+    private function itemHasGuestsTab(OrderItem $item): bool
+    {
+        $type = $item->ticketType;
+
+        return $type !== null
+            && $type->isPack()
+            && $type->guestFields() !== []
+            && $item->parent_item_id === null
+            && ! $item->isCancelled()
+            && (auth()->user()?->hasPermission('orders.edit_guest_data') ?? false);
+    }
+
+    /**
+     * Pestaña «Invitados» (T3 · F, spec §23.3): un repeater FIJO de `quantity` fichas —sin añadir,
+     * quitar ni reordenar: el nº de invitados se cambia en «Editar producto», y el saneo del
+     * dominio normaliza a la cantidad vigente en cada lectura—, un campo por columna del esquema
+     * del pack, y en cada ficha el régimen del veredicto SELLADO como rótulo («Kids» · «Jump» ·
+     * «sin producto»), para que el operador vea lo que va a mover ANTES de moverlo.
+     *
+     * Arriba, el estado del suplemento: congelado (faltan N edades) o mixto con su importe — los
+     * mismos textos que la ficha del pedido, para que las dos pantallas no puedan divergir.
+     *
+     * ⚠️ Los campos NO son obligatorios a propósito: el operador puede completar solo las edades
+     * que faltan (descongelar, §22) o corregir una sin tocar el resto; el saneo del dominio
+     * descarta los vacíos, igual que en el post-form del cliente.
+     */
+    private function manageItemGuestsTab(OrderItem $item): Tab
+    {
+        $type = $item->ticketType;
+        // El régimen por ficha refleja lo GUARDADO, no lo tecleado (el criterio de §15 / CE-4):
+        // se precomputa del ítem y no del estado del formulario.
+        $regimes = app(GuestAgeMixReader::class)->guestRegimes($item);
+
+        $rowFields = [Hidden::make('idx')];
+        $rowFields[] = Placeholder::make('guest_regime')
+            ->hiddenLabel()
+            ->content(function (Get $get) use ($regimes): HtmlString {
+                $row = $regimes[(int) $get('idx')] ?? null;
+                $label = match (true) {
+                    $row === null => null,
+                    $row['state'] === GuestAgeMixReader::ROW_OUT_OF_RANGE => __('admin.orders.manage_item.guest_regime_no_product'),
+                    $row['state'] === GuestAgeMixReader::ROW_NO_AGE => __('admin.orders.manage_item.guest_regime_no_age'),
+                    default => __('admin.orders.manage_item.guest_regime', ['name' => (string) $row['name']]),
+                };
+
+                return new HtmlString('<span class="text-xs font-medium" style="opacity:.8;">'.e($label ?? '').'</span>');
+            })
+            ->columnSpanFull();
+
+        foreach ($type?->guestFields() ?? [] as $field) {
+            $key = $field['key'];
+            $fieldType = $field['type'] ?? TicketType::FIELD_TYPE_TEXT;
+            $label = $type->guestFieldLabel($field);
+
+            $rowFields[] = match ($fieldType) {
+                TicketType::FIELD_TYPE_TEXTAREA => Textarea::make($key)
+                    ->label($label)
+                    ->rows(2)
+                    ->columnSpanFull(),
+                // La edad ACOTADA al rango del dominio: de este campo sale un cobro, y el saneo
+                // del servidor descartaría igualmente un valor imposible (`sanitizeAnswerValue`).
+                TicketType::FIELD_TYPE_AGE => TextInput::make($key)
+                    ->label($label)
+                    ->numeric()
+                    ->integer()
+                    ->minValue(TicketType::GUEST_AGE_MIN)
+                    ->maxValue(TicketType::GUEST_AGE_MAX),
+                default => TextInput::make($key)
+                    ->label($label)
+                    ->inputMode(TicketType::isNumericFieldType($fieldType) ? 'numeric' : 'text'),
+            };
+        }
+
+        return Tab::make(__('admin.orders.manage_item.tab_guests'))
+            ->icon(Heroicon::OutlinedUsers)
+            ->schema([
+                Placeholder::make('guests_state')
+                    ->hiddenLabel()
+                    ->content(new HtmlString(
+                        '<p class="text-sm" style="opacity:.8;">'.e($this->guestsTabStateText($item)).'</p>'
+                    ))
+                    ->columnSpanFull(),
+                Repeater::make('guest_data')
+                    ->hiddenLabel()
+                    ->schema($rowFields)
+                    ->columns(['default' => 1, 'sm' => 2])
+                    ->addable(false)
+                    ->deletable(false)
+                    ->reorderable(false)
+                    ->columnSpanFull(),
+            ]);
+    }
+
+    /**
+     * El estado del suplemento que encabeza la pestaña: qué hay escrito y qué lo frena. Reutiliza
+     * las claves de la ficha del pedido (`admin.orders.mixed_party.*`) para no tener dos frases
+     * que puedan divergir sobre el mismo dinero.
+     */
+    private function guestsTabStateText(OrderItem $item): string
+    {
+        $mix = app(GuestAgeMixReader::class)->for($item);
+        if (! $mix->applies) {
+            return __('admin.orders.manage_item.guests_intro');
+        }
+
+        $written = app(MixedPartySurcharge::class)->written($item);
+
+        if ($mix->withoutAge > 0) {
+            return $written['cents'] > 0
+                ? trans_choice('admin.orders.mixed_party.frozen', $mix->withoutAge, ['count' => $mix->withoutAge])
+                : __('admin.orders.mixed_party.without_age', ['count' => $mix->withoutAge]);
+        }
+        if ($written['cents'] > 0) {
+            return __('admin.orders.mixed_party.applied', ['amount' => Money::format($written['cents'])]);
+        }
+
+        return __('admin.orders.manage_item.guests_intro');
     }
 
     /**
@@ -887,6 +1026,12 @@ class ViewOrder extends ViewRecord
     {
         $type = $item->ticketType;
         $isPack = $type?->isPack() ?? false;
+        $packMin = $isPack ? (int) ($type->min_qty ?? 1) : 1;
+        // D7 (`specs/cumple-mixto.md` §23.4): el interruptor solo se OFRECE con su permiso y con
+        // un mínimo que rebajar. El permiso se re-exige en `OrderItemEditor::edit()` (`SEC-04`):
+        // aquí solo decide qué se pinta.
+        $canGoBelowMinimum = $isPack && $packMin > 1
+            && (auth()->user()?->hasPermission('orders.edit_item_below_minimum') ?? false);
 
         $quantity = TextInput::make('quantity')
             ->label($isPack
@@ -895,23 +1040,36 @@ class ViewOrder extends ViewRecord
             ->numeric()
             ->integer()
             ->required()
-            ->minValue($isPack ? (int) ($type->min_qty ?? 1) : 1)
+            ->minValue($canGoBelowMinimum
+                ? fn (Get $get): int => $get('below_minimum') ? 1 : $packMin
+                : $packMin)
             ->live(onBlur: true);
 
         if ($isPack) {
             $quantity
                 ->maxValue($type->max_qty !== null ? (int) $type->max_qty : null)
-                ->helperText(__('admin.orders.manage_item.field_guests_help', [
-                    'min' => (int) ($type->min_qty ?? 1),
-                    'max' => $type->max_qty !== null ? (int) $type->max_qty : '∞',
-                ]));
+                ->helperText(fn (Get $get): string => $canGoBelowMinimum && $get('below_minimum')
+                    ? __('admin.orders.manage_item.field_guests_help_below_minimum', ['min' => $packMin])
+                    : __('admin.orders.manage_item.field_guests_help', [
+                        'min' => $packMin,
+                        'max' => $type->max_qty !== null ? (int) $type->max_qty : '∞',
+                    ]));
         }
 
         // Sub-fase 7.2e.3 (pulido #168): producto + cantidad EN LÍNEA (uno al
         // lado del otro) para ahorrar espacio vertical en el modal. El de
         // cantidad/invitados va más estrecho (4 de 12). En móvil ambos apilan
         // (grid de 1 columna por debajo de `sm`).
-        return [
+        $belowMinimumToggle = $canGoBelowMinimum
+            ? [Toggle::make('below_minimum')
+                ->label(__('admin.orders.manage_item.below_minimum_label'))
+                ->helperText(__('admin.orders.manage_item.below_minimum_help', ['min' => $packMin]))
+                ->default(false)
+                ->live()
+                ->columnSpanFull()]
+            : [];
+
+        return array_merge([
             Grid::make(['default' => 1, 'sm' => 12])
                 ->schema([
                     Select::make('product_id')
@@ -932,11 +1090,12 @@ class ViewOrder extends ViewRecord
                     $quantity->columnSpan(['default' => 1, 'sm' => 4]),
                 ])
                 ->columnSpanFull(),
+        ], $belowMinimumToggle, [
             Placeholder::make('price_preview')
                 ->label(__('admin.orders.manage_item.price_heading'))
                 ->content(fn (Get $get): HtmlString => $this->priceDiffPreview($item, $get))
                 ->columnSpanFull(),
-        ];
+        ]);
     }
 
     /** Formato de céntimos a euros con separadores ES (1.234,50). */
@@ -965,6 +1124,11 @@ class ViewOrder extends ViewRecord
     private function eventDataWriter(): OrderItemEventDataWriter
     {
         return app(OrderItemEventDataWriter::class);
+    }
+
+    private function guestDataWriter(): OrderItemGuestDataWriter
+    {
+        return app(OrderItemGuestDataWriter::class);
     }
 
     private function itemCanceller(): OrderItemCanceller
@@ -1485,7 +1649,7 @@ class ViewOrder extends ViewRecord
     // ─── Sub-fase 7.2e.2 — modal Gestionar Tab 1 (decisión #159) ──────────
 
     /**
-     * ¿El item tiene ALGÚN campo editable (slot o event_data)?
+     * ¿El item tiene ALGÚN campo editable (slot, event_data o fichas por invitado)?
      * Helper de visibilidad del botón "Guardar cambios" del modal Gestionar.
      */
     private function itemHasAnyEditableField(OrderItem $item, Order $order): bool
@@ -1496,7 +1660,27 @@ class ViewOrder extends ViewRecord
         $canEditEventData = auth()->user()?->hasPermission('orders.edit_event_data') ?? false;
         $hasEventDataForm = $isPack && $eventFields !== [] && $canEditEventData;
 
-        return $canEditSlot || $hasEventDataForm;
+        return $canEditSlot || $hasEventDataForm || $this->itemHasGuestsTab($item);
+    }
+
+    /**
+     * Las fichas por invitado con las que arranca la pestaña «Invitados» (T3 · F): lo guardado,
+     * saneado con la MISMA función que las persiste y normalizado a exactamente `quantity` filas.
+     *
+     * @return list<array<string,mixed>>
+     */
+    private function guestRowsForForm(OrderItem $item): array
+    {
+        if (! $this->itemHasGuestsTab($item)) {
+            return [];
+        }
+
+        $rows = $item->ticketType->sanitizeGuestData($item->guestData(), (int) $item->quantity);
+        foreach ($rows as $i => $row) {
+            $rows[$i] = ['idx' => $i] + $row;
+        }
+
+        return $rows;
     }
 
     // ─── Calendario visual del modal Gestionar (7.2e.2bis6, #160) ─────────
@@ -1604,6 +1788,50 @@ class ViewOrder extends ViewRecord
             return;
         }
 
+        // T3 · F (`specs/cumple-mixto.md` §23.3): las fichas por invitado se guardan PRIMERO, por
+        // la puerta única del dominio (`OrderItemGuestDataWriter` → `submitGuestForm`). Un guardado
+        // que cambia edades y cantidad a la vez sigue el orden invitados → edición: el saneo del
+        // dominio normaliza a la cantidad vigente en cada lectura, así que ninguna combinación
+        // deja fichas de más ni de menos.
+        $guestsOutcome = null;
+        if (array_key_exists('guest_data', $data) && $this->itemHasGuestsTab($item)) {
+            $guestsOutcome = $this->guestDataWriter()->save(
+                $order,
+                $item,
+                array_values(array_filter((array) $data['guest_data'], 'is_array')),
+                (string) ($data['optimistic_token'] ?? ''),
+                $user,
+            );
+
+            if ($guestsOutcome->isBlocked()) {
+                if ($guestsOutcome->reason === 'permission_denied') {
+                    Notification::make()
+                        ->title(__('admin.orders.manage_item.permission_denied'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+                $this->guestDataWriter()->auditBlocked($order, $item, $guestsOutcome->reason);
+                $this->manageItemBlockedNotification(
+                    $guestsOutcome->reason === 'stale_version' ? 'stale_item_version' : $guestsOutcome->reason,
+                );
+
+                return;
+            }
+
+            if ($guestsOutcome->changed) {
+                // La puerta única bumpeó `updated_at`: el resto del guardado sigue con el token
+                // REFRESCADO — el mismo gesto que el editor hace con `event_data` tras su mutación.
+                $item->refresh();
+                $data['optimistic_token'] = (string) ($item->updated_at?->getTimestamp() ?? '');
+                Notification::make()
+                    ->title(__('admin.orders.manage_item.guests_saved'))
+                    ->success()
+                    ->send();
+            }
+        }
+
         // Sub-fase 7.2e.2bis6 (decisión #160): el calendario visual del Tab 1
         // gestiona la selección fecha+hora via state Livewire (no via Selects
         // del form). El handler lee:
@@ -1685,7 +1913,16 @@ class ViewOrder extends ViewRecord
         //  - Slot cambió → ruta nueva 7.2e.2 con su propia defense in depth +
         //    delegación a `saveItemEventDataReturningDiffPresence` para
         //    consolidar el email cuando además hay event_data válido.
+        //  - T3 · F: con la pestaña «Invitados» presente, la cola de `event_data` calla cuando no
+        //    aplica o no cambió — sin esto, un guardado que SOLO tocó fichas acababa en «sin
+        //    cambios» (o en un 403 para un operador sin `edit_event_data`) encima de un guardado
+        //    que sí ocurrió.
         if (! $slotChanged) {
+            if ($guestsOutcome !== null) {
+                $this->saveItemEventDataAfterGuests($arguments, $data, $guestsOutcome->changed);
+
+                return;
+            }
             $this->saveItemEventData($arguments, $data);
 
             return;
@@ -1731,6 +1968,9 @@ class ViewOrder extends ViewRecord
             $addonEdits,
             (string) ($data['optimistic_token'] ?? ''),
             auth()->user(),
+            // D7 (§23.4): el interruptor de bajar del mínimo viaja tal cual — el editor re-exige
+            // su permiso en el punto de ejecución, así que un payload fabricado no compra nada.
+            belowMinimum: (bool) ($data['below_minimum'] ?? false),
         );
 
         if ($outcome->isBlocked()) {
@@ -1855,7 +2095,35 @@ class ViewOrder extends ViewRecord
      *     sanitize + obligatorios · legacy · lockForUpdate + diff + audit.
      *  Esta capa traduce el rechazo: audit `event_data_blocked` + aviso.
      */
-    private function saveItemEventData(array $arguments, array $data): void
+    /**
+     * La cola del guardado cuando la pestaña «Invitados» estaba presente (T3 · F): el camino de
+     * `event_data` solo se recorre si de verdad aplica — un pack con `eventFields` y el permiso —
+     * y su «sin cambios» calla cuando el guardado de fichas ya contó lo que pasó.
+     */
+    private function saveItemEventDataAfterGuests(array $arguments, array $data, bool $guestsChanged): void
+    {
+        $user = auth()->user();
+        $item = OrderItem::with('ticketType')->find($arguments['item'] ?? null);
+        $applies = $item !== null
+            && ($item->ticketType?->isPack() ?? false)
+            && ($item->ticketType?->eventFields() ?? []) !== []
+            && ($user?->hasPermission('orders.edit_event_data') ?? false);
+
+        if (! $applies) {
+            if (! $guestsChanged) {
+                Notification::make()
+                    ->title(__('admin.orders.item_detail.flash_no_changes'))
+                    ->info()
+                    ->send();
+            }
+
+            return;
+        }
+
+        $this->saveItemEventData($arguments, $data, quietWhenUnchanged: $guestsChanged);
+    }
+
+    private function saveItemEventData(array $arguments, array $data, bool $quietWhenUnchanged = false): void
     {
         $user = auth()->user();
         abort_unless(
@@ -1901,10 +2169,12 @@ class ViewOrder extends ViewRecord
         }
 
         if (! $outcome->changed) {
-            Notification::make()
-                ->title(__('admin.orders.item_detail.flash_no_changes'))
-                ->info()
-                ->send();
+            if (! $quietWhenUnchanged) {
+                Notification::make()
+                    ->title(__('admin.orders.item_detail.flash_no_changes'))
+                    ->info()
+                    ->send();
+            }
 
             return;
         }

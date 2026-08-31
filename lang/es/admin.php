@@ -109,6 +109,10 @@ return [
                 'pending_gate' => 'Pendiente de cobrar en puerta: :amount €',
                 'paid' => 'Pagado: :amount € (:method)',
                 'nothing_pending' => 'Nada pendiente de cobrar',
+                // Fiesta MIXTA (T3 · E, `specs/cumple-mixto.md` §23.2): lo ESCRITO del suplemento —
+                // es lo que se cobra (`PAY-19`) y ya está sumado dentro de `pending_gate`.
+                'mixed_party_line' => ':count × :name · :unit € por invitado',
+                'mixed_party_total' => 'Suplemento fiesta mixta: :amount €',
                 'booked_on' => 'Reservado el :when',
                 'paid_on' => 'pagado el :when',
                 'method_desk' => 'mostrador',
@@ -453,6 +457,9 @@ return [
             'pending_refund' => 'Pendiente de devolución',
             'pending_refund_caption' => 'Importe pagado de más (por una reducción, una cancelación o un cambio a un precio menor), pendiente de devolver al cliente.',
             'cancelled_notice' => 'Reserva cancelada',
+            // Fiesta MIXTA (T3 · E): la cabecera del bloque; las líneas y avisos reutilizan
+            // `admin.orders.mixed_party.*` para que la hoja y la ficha no puedan divergir.
+            'mixed_party_heading' => 'Fiesta mixta',
         ],
 
         // Datos del evento por item (#86, sub-fase 7.2a).
@@ -1009,6 +1016,19 @@ return [
             'tab_event_data' => 'Datos del evento',
             'tab_addons' => 'Complementos',
 
+            // ── T3 · F (`specs/cumple-mixto.md` §23.3): la pestaña «Invitados» ─────────────
+            'tab_guests' => 'Invitados',
+            'guests_intro' => 'Las fichas que declaró el cliente en el formulario de invitados. Si corriges una edad, el suplemento de fiesta mixta se recalcula solo y el cliente recibe el aviso firmado por el parque.',
+            'guests_saved' => '✓ Fichas de invitados guardadas.',
+            'guest_regime' => 'Régimen: :name',
+            'guest_regime_no_product' => 'Sin producto para esta edad',
+            'guest_regime_no_age' => 'Sin edad declarada',
+
+            // ── T3 · D7 (§23.4): bajar del mínimo del pack ─────────────────────────────────
+            'below_minimum_label' => 'Bajar del mínimo del pack (queda registrado)',
+            'below_minimum_help' => 'El mínimo de este pack es :min. Al activarlo puedes bajar hasta 1 invitado; la excepción queda en el historial del pedido.',
+            'field_guests_help_below_minimum' => 'Mínimo rebajado a 1 (el del pack es :min). Queda registrado.',
+
             'field_date' => 'Fecha',
             'field_time' => 'Hora',
             'current_marker' => '(actual)',
@@ -1321,6 +1341,10 @@ return [
                 'invalid_product' => 'el producto seleccionado no es válido o no está a la venta',
                 'invalid_quantity' => 'la cantidad indicada no es válida',
                 'pack_quantity_range' => 'el número de invitados está fuera del rango permitido para este pack',
+
+                // T3 · F: razones del guardado de fichas por invitado (pestaña «Invitados»).
+                'not_pack' => 'este producto no lleva formulario de invitados',
+                'no_guest_fields' => 'este pack no define campos por invitado',
                 'product_unavailable_on_date' => 'el producto nuevo no tiene precio para la fecha seleccionada',
                 'orphan_addons' => 'el producto nuevo no admite alguno de los complementos del producto actual; quítalos primero',
 
@@ -1540,7 +1564,9 @@ return [
             'orders_cancel' => 'Cancelar pedido',
             'orders_refund' => 'Reembolsar pedido',
             'orders_edit_event_data' => 'Editar datos del evento del pedido (homenajeado, edad, notas)',
+            'orders_edit_guest_data' => 'Editar los datos por invitado desde el panel',
             'orders_edit_item' => 'Editar producto del pedido (fecha, cantidad, producto, datos, complementos)',
+            'orders_edit_item_below_minimum' => 'Bajar un pack por debajo de su mínimo de invitados (queda registrado)',
             'orders_cancel_item' => 'Cancelar un producto suelto del pedido',
             'orders_refund_item' => 'Reembolsar un producto suelto del pedido',
             'calendar_view' => 'Ver calendario y escritorio',

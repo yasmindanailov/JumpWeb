@@ -1200,11 +1200,13 @@ día se hace, **es dinero y AFORO**, no una pantalla.
 
 **E · El operador no ve la diferencia por cabeza en el parque.** Medido: ni la hoja de sala ni la
 pantalla de puerta consultan el veredicto (**cero** referencias). Tiene la edad y hace la cuenta de
-memoria con el cliente delante. La visión exige que la vea.
+memoria con el cliente delante. La visión exige que la vea. ▶ ✅ **Cerrado por la T3** (`#294`,
+§23.10): las dos superficies imprimen lo ESCRITO del suplemento.
 
 **F · El operador no puede corregir la edad desde el panel.** Medido: `guest_data` tiene **un solo
 escritor** y al panel solo le llega «copiar enlace». Puede abrir el enlace del cliente, pero el
-rastro dirá que lo hizo **el cliente**.
+rastro dirá que lo hizo **el cliente**. ▶ ✅ **Cerrado por la T3** (`#294`, §23.10): la pestaña
+«Invitados», por la misma puerta y con el rastro del operador.
 
 **G · El guardián de solapes solo vive en el formulario.** Una semilla, un comando o un `update`
 directo pueden crear tramos solapados. No revienta —el lector resuelve por el de menor edad— pero
@@ -1220,7 +1222,7 @@ empieza sin el informe de §19 aprobado.
 | **T0** | **El ojo del owner en navegador** — ▶ 🟦 **LAS CAPTURAS ESTÁN HECHAS** (2026-08-31, guion `t0.js` en `/root/e2e` del contenedor, 14 imágenes en `storage/app/t0-capturas/`): el aviso del catálogo `#283` **verificado en el ciclo real de Livewire** (avisa → re-guardar aplica → números distintos re-avisan → restaurado al dígito), el post-form (cargo 12 € → 8 €, congelado con edad borrada), los 3 correos (nace/cambia con «pasa de 12,00 € a 8,00 €»/desaparece), el desfase del panel, el huérfano y Gestionar sin la casilla. Pedidos sonda `T0-PRB01`/`T0-PRB02` (probe-card, franja 2026-09-15) y admin `e2e-panel-admin@jumpweb.test` quedan en la BD local para futuras sondas. **Queda SOLO el ojo: juzgar textos y claridad** | — | no |
 | **T1** | **El SELLO** (D1·D2·D3): la reserva guarda tramos y precios de su familia al nacer. ▶ ✅ **EN EL ÁRBOL (2026-08-31, `#288`): diseño en §21, ejecución en §21.13.** `order_items.age_family_seal`; sello nuevo al cambiar de pack, el mismo re-preciado al cambiar de día (`[DECIDIDO owner]`, Q2); `unitFor` y el recibo desaparecen; `#283` retirado; dos huecos preexistentes cerrados de paso (día sin tarifa · cerrojo de `orphan_addons`). 13/13 mutaciones, verificadores sobre MySQL y sonda del hueco A en navegador. Queda el OJO del owner | A · B · el gemelo de la etiqueta · el huérfano | **sí** (nacimiento y edición de una reserva) |
 | **T2** | **La edad sin producto** (D6) + que deje de congelar el dinero + **el disparador pasa a «solo guardado COMPLETO»** (§20.6, cambia la conducta de `#268` para los cargos). ▶ ✅ **EN EL ÁRBOL (2026-08-31, `#289`): diseño en §22, ejecución en §22.9.** «Completo» son DOS preguntas (dinero: todas las edades declaradas · formulario: además ninguna edad sin producto); la puerta vive en `reconcile()` con la fila bloqueada y vale también para el panel (`[DECIDIDO owner]`); tres textos por instalación con respaldo y `:phone`. Cazó de paso un hueco de contrato en la API (`general` como lista). Queda el OJO del owner | C | no (toca `MixedPartySurcharge` por el disparador) |
-| **T3** | **El parque decide** (E·F·D7): la diferencia en hoja de sala y puerta, corregir la edad desde el panel auditado, y bajar del mínimo. ▶ 🟦 **DISEÑO FINO EN §23** (2026-08-31): lo escrito en hoja y puerta (coste cero en consultas), la pestaña «Invitados» por la MISMA puerta que el cliente con `via = panel` y actor operador, el interruptor de «bajar del mínimo» con permiso propio y rastro, y UNA pregunta (§23.8: permisos por defecto) | E · F · D7 | **sí** (la edad mueve el suplemento) |
+| **T3** | **El parque decide** (E·F·D7): la diferencia en hoja de sala y puerta, corregir la edad desde el panel auditado, y bajar del mínimo. ▶ ✅ **EN EL ÁRBOL (2026-08-31 noche, `#294`): diseño en §23, ejecución en §23.10.** Lo escrito en hoja y puerta (y la guarda de presupuesto cazó un N+1 preexistente de la puerta), la pestaña «Invitados» por la MISMA puerta que el cliente (`OrderItemGuestDataWriter` → `submitGuestForm` con `via = panel` y actor operador), el interruptor de «bajar del mínimo» con permiso propio re-exigido en el editor y audit solo cuando se usa. 17 casos nuevos, 12/12 mutaciones, los tres verificadores sobre MySQL, sonda en navegador. Queda el OJO del owner | E · F · D7 | **sí** (la edad mueve el suplemento) |
 | **T4** | **El −X €** con el diseño CERRADO de **§20** (espejo acotado a puerta; guardas y mutaciones en §20.8) | el medio flujo que falta | **sí** |
 | **T5** | **Las palabras** (D9) + anonimizar con reserva viva (D8) + ⚠️ el email de una reducción promete «procesaremos la devolución» y con la liquidación en parque promete de más (`#285`) + ❗ **hallazgo del T0, cazado por el OJO del owner** (2026-08-31): en el bloque del panel, la línea del veredicto («2 × Cumpleaños Jump · 9,00 € por invitado») **no dice que es la tarifa DE HOY** — pegada a «Suplemento aplicado: 8,00 €» se lee como contradicción hasta llegar a la frase del desfase. El owner mismo tuvo que preguntar, y esa es la prueba: el bloque no se explica solo. Arreglo: «hoy: 9,00 € por invitado» cuando difiera de lo escrito, o el aplicado primero. ⚠️ El «0,00 € por invitado» de la dirección barata NO se toca: se resuelve solo con la T4 (pasa a «Descuento: −8,00 €») | D8 · D9 | no (D9 es presentación) |
 | **T6** | **El guardián fuera del formulario** (G) | G | no |
@@ -2075,6 +2077,78 @@ defecto: se asignan a mano.
 
 ### 23.9 · Estado
 
-🟦 **Diseño escrito y Q1 decidida; el CÓDIGO no se ha empezado** — el owner pidió parar aquí
-(2026-08-31, noche) para revisar §23 antes de construir. Cuando dé el «adelante», el orden es el de
-§23.6 y las guardas las de §23.7. Nada de la T3 está en el árbol: ni permisos, ni pestaña, ni DTO.
+🟦 **CÓDIGO COMPLETO (2026-08-31, noche, `DECISIONES #294`)** — el owner dio el «adelante» tras
+revisar §23 y las tres unidades están en el árbol en el orden de §23.6, con las guardas de §23.7
+ejecutadas y mutadas (§23.10). Queda el OJO del owner (capturas de la sonda en
+`/root/e2e/t3-capturas/` del contenedor: la pestaña «Invitados», el interruptor de D7 encendido y
+apagado, la tarjeta de puerta con el suplemento y la hoja de sala en PDF).
+
+### 23.10 · ✅ LO EJECUTADO (2026-08-31, `DECISIONES #294`)
+
+**En el árbol.** **E**: `GateReservation` gana `mixedPartyLines` (estructuradas:
+`{name, count, unit_cents}`) y `mixedPartySurchargeCents`; `GateReservationsReader` las compone de
+`MixedPartySurcharge::written()` sobre relaciones ya cargadas; `GateProfile::row()` las pasa; la
+tarjeta de puerta las pinta bajo el producto y encima del pendiente (tolerante a filas de un
+snapshot Livewire anterior al despliegue: `?? 0`); `ReservationSlip::mixedParty()` y el bloque
+«Fiesta mixta» del PDF tras la tabla de invitados — líneas escritas, total con «se cobra en el
+parque», el aviso del caso barato (solo sin cargo, el criterio de la ficha) y cuántas edades sin
+producto; sin nada que decir, el bloque no existe. Las claves reutilizan
+`admin.orders.mixed_party.*` para que hoja y ficha no puedan divergir. **F**:
+`OrderItem::submitGuestForm(array $guests, ?array $general, string $via, ?User $by = null)` —
+`general: null` = «no toques los generales»; con `$by` el reconciliador toma al OPERADOR de actor y
+`MixedPartySurcharge::REASON_PANEL_GUEST_FORM` (el correo dice «el parque») —;
+`OrderItemGuestDataWriter` (permiso `orders.edit_guest_data` re-exigido `SEC-04` · pack con
+`guest_fields` · no cancelado · token optimista · diff de lo SANEADO contra lo saneado vigente →
+`unchanged()` sin una sola fila de rastro), declarado control negativo en `CriticalPathGateTest`;
+la pestaña «Invitados» (repeater FIJO de `quantity` fichas, el régimen SELLADO como rótulo por
+ficha, el estado del suplemento arriba con las claves de la ficha); `executeManageItemSave` llama
+al writer ANTES del despacho de edición y refresca el token si escribió. **D7**:
+`OrderItemEditor::edit(..., bool $belowMinimum = false)` — solo con
+`orders.edit_item_below_minimum`, re-exigido en el editor; `validateItemEditTarget()` salta SOLO el
+mínimo (máximo y `>= 1` siguen); el audit gana `below_pack_minimum` + `pack_min_qty` **solo cuando
+la excepción se usó** (un `false` por edición sería ruido); el `Toggle` con el `minValue` reactivo.
+Los dos permisos en `staff` (Q1·a) vía `PermissionSeeder` + `PermissionCatalog` + etiquetas es ·
+zh_CN.
+
+**Medido.** Suite **3634 → 3651** en verde con la T3 sola (+8 en `MixedPartyParkSurfacesTest`,
+guardas A y B, y +9 en `ManageItemGuestDataTest`, C–I); **el árbol CONJUNTO tras rebasar sobre
+`#293` (idioma visual): 3656 (23.733 aserciones, 1 skipped a propósito)**.
+**12 mutaciones y las 12 muerden** — el bloque de la hoja quitado (3 rojos) · el reader sin líneas
+(2) · el partial sin el bloque · el writer con `via: signed_link` sin `$by` · sin la comprobación
+de permiso · sin el corte de «sin cambios» · `general` a `[]` · saltar el mínimo siempre (2 rojos,
+uno en `ManageItemQuantityProductTest`) · el interruptor sin re-exigir permiso · el eager anidado
+quitado (presupuesto rojo) · el audit sin la marca · **el modal sin llamar al writer** (la del
+disparador, la que este proyecto siempre falla). `mixed-party:verify-concurrency` ·
+`purchase:verify-oversell` en sus SEIS escenarios · `redsys:verify-concurrency`, todos sobre MySQL
+real. Sonda headless sobre `T0-PRB01` (guion `/root/e2e/t3.js`): las tres superficies capturadas y
+**miradas** — la tarjeta de puerta dice «2 × Cumpleaños Jump · 4,00 € por invitado · Suplemento
+fiesta mixta: 8,00 €» entre el producto y el pendiente, exactamente §23.2.
+
+❗❗ **Dos hallazgos al construir, los dos cazados por guardas nuevas antes de llegar a `main`:**
+1. **La puerta pagaba un N+1 POR AJUSTE que nadie veía** (preexistente, no de la T3): las
+   etiquetas del desglose caminan `adjustment->orderItem->ticketType`
+   (`OrderAdjustment::breakdownLabel`) y el resumen financiero camina `slot` y `parent->slot` en
+   las líneas hijas — cuatro consultas sueltas por ficha con cualquier `extra_due` (una edición,
+   no solo el suplemento). El reader carga ahora los eager anidados (los mismos que la hoja ya
+   usaba) y el presupuesto de `GateProfileTest` subió su techo de 25 a 28 **a cambio de lotes
+   constantes**: lo que crece con las filas lo vigila `MixedPartyParkSurfacesTest`.
+2. **Dos usuarios de test sobre el MISMO rol `staff` se roban los permisos** (el `sync()` del
+   segundo desasigna al primero): el caso de D7 necesitaba a la vez un operador con el permiso y
+   otro sin él, y nació rojo por el fixture, no por el producto. Cada empleado de ese fichero
+   lleva su propio rol.
+
+⚠️ **La cola de `event_data` aprendió a CALLAR cuando el guardado fue solo de fichas**
+(`saveItemEventDataAfterGuests`): sin eso, guardar la pestaña «Invitados» en un pack sin campos de
+evento acababa en «sin cambios» —o en un 403 para un operador sin `edit_event_data`— encima de un
+guardado que SÍ ocurrió. El camino preexistente (sin pestaña) queda intacto.
+
+⚠️ **La presencia de la pestaña no se asevera con `assertSee`** (el modal es un `wire:partial`, la
+trampa de `waiver-probatorio.md` §9.7): se asevera por CONDUCTA — el formulario solo dehidrata los
+campos DECLARADOS, así que las fichas fluyen hasta el guardado exactamente cuando la pestaña
+existe, y un payload fabricado sin el permiso no escribe nada.
+
+**Lo que cambia para el plan.** La T3 cierra E · F · D7: el operador ya puede corregir la edad (y
+con ello RESOLVER la ficha «sin producto» de la T2 y descongelar rellenando las que faltan), la
+sala y la puerta ven la diferencia por cabeza, y el mínimo del pack tiene su excepción auditada.
+Sigue la **T4** (el −X € con el diseño cerrado de §20) — núcleo de dinero, con §19 aprobado — y
+después T5 (las palabras) y T6 (el guardián fuera del formulario).

@@ -1023,6 +1023,28 @@
     color: var(--gray-500);
 }
 
+/* ─── Fiesta MIXTA: lo ESCRITO del suplemento (T3 · E, cumple-mixto §23.2) ──────────────────────
+ * Informativo, no alerta: el importe ya viaja sumado dentro de «pendiente de cobrar en puerta»,
+ * que es la única línea con tratamiento de alerta. Aquí solo se explica de dónde sale. */
+.gate-res__mixed {
+    margin-top: calc(var(--spacing) * 2);
+    font-size: 0.875rem;
+    color: var(--gray-700);
+}
+
+.gate-res__mixed-line {
+    margin: 0;
+}
+
+.gate-res__mixed-total {
+    margin: 0;
+    font-weight: 600;
+}
+
+.gate-res__mixed:where(.dark, .dark *) {
+    color: var(--gray-300);
+}
+
 .gate-res__pending {
     margin-top: calc(var(--spacing) * 2);
     border-radius: var(--radius-md);

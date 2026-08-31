@@ -366,6 +366,10 @@ class OrderItemEditor
      *
      * @param  array{edits: array<int, array{child_id:int, quantity:int}>, adds: array<int, array{ticket_type_id:int, quantity:int}>}  $addonEdits  la intención de complementos, YA normalizada por la página
      * @param  array<string,mixed>|null  $eventData  los datos del evento del formulario, o `null` si no aplican
+     * @param  bool  $belowMinimum  D7 (`specs/cumple-mixto.md` §23.4): el operador ACTIVÓ el
+     *                              interruptor de bajar del mínimo del pack. Solo surte efecto con
+     *                              el permiso `orders.edit_item_below_minimum`; sin él, el mínimo
+     *                              sigue mandando aunque el interruptor venga puesto.
      */
     public function edit(
         Order $order,
@@ -379,11 +383,19 @@ class OrderItemEditor
         array $addonEdits,
         string $optimisticToken,
         ?User $by,
+        bool $belowMinimum = false,
     ): ItemActionOutcome {
         // Capa 1: permiso.
         if (! ($by?->hasPermission('orders.edit_item') ?? false)) {
             return ItemActionOutcome::blocked('permission_denied');
         }
+
+        // D7 (`[DECIDIDO owner]`, §18.3): «al final él decide sobre su producto» — pero el mínimo
+        // existe por una razón de negocio, así que la excepción exige un permiso PROPIO (revocable
+        // por rol sin tocar `orders.edit_item`) y se REGISTRA, no se silencia. Sin el permiso, el
+        // interruptor se ignora y el mínimo rechaza como siempre (`SEC-04`: se decide aquí, en el
+        // punto de ejecución, no en la visibilidad del formulario).
+        $belowMinimum = $belowMinimum && ($by?->hasPermission('orders.edit_item_below_minimum') ?? false);
 
         // Capa 2: bloqueo del item con fila fresca.
         $reason = $order->editItemBlockedReason($item);
@@ -411,7 +423,7 @@ class OrderItemEditor
         // Capa 4b: validar producto + cantidad. El huérfano se trata aparte para listar los
         // complementos afectados en el banner: deja de bloquear si se QUITA (cantidad 0) en este
         // mismo guardado (sub-fase 7.2e.4, #170); solo bloquea si quedan huérfanos sin quitar.
-        $targetReason = $this->validateItemEditTarget($item, $newType, $newQty);
+        $targetReason = $this->validateItemEditTarget($item, $newType, $newQty, $belowMinimum);
         if ($targetReason !== null) {
             if ($targetReason === 'orphan_addons') {
                 $orphans = $this->orphanAddonsForNewProduct($item, $newType);
@@ -644,6 +656,12 @@ class OrderItemEditor
             return ItemActionOutcome::blocked('insufficient_capacity_at_save');
         }
 
+        // D7: la excepción del mínimo se AUDITA solo cuando de verdad se usó — un `false` en cada
+        // edición normal sería ruido que entierra la señal. `pack_min_qty` acompaña para que el
+        // rastro diga de qué mínimo se bajó sin tener que reconstruir el catálogo de entonces.
+        $packMin = $newType->isPack() ? (int) ($newType->min_qty ?? 1) : 1;
+        $usedBelowMinimum = $belowMinimum && $newType->isPack() && $newQty < $packMin;
+
         // Audit del edit con el desglose de `changes`.
         AuditLogger::log(
             action: 'orders.item_edited',
@@ -663,7 +681,7 @@ class OrderItemEditor
                 'addon_upcharge_cents' => $addonUpcharge,
                 'changes' => array_keys($changes),
                 'addon_changes' => $addonPricing['changes']['addon_change'] ?? null,
-            ],
+            ] + ($usedBelowMinimum ? ['below_pack_minimum' => true, 'pack_min_qty' => $packMin] : []),
         );
 
         // Lado financiero por SIGNO del diff de Tab 1.
@@ -838,8 +856,13 @@ class OrderItemEditor
      * producto (mismo tipo + misma zona + vendible, sin addons huérfanos) +
      * cantidad (rango del pack). Devuelve la razón estructurada de bloqueo o
      * `null` si pasa.
+     *
+     * ⚠️ `$allowBelowMinimum` (D7, `specs/cumple-mixto.md` §23.4) salta SOLO el mínimo del pack:
+     * el máximo y el `>= 1` siguen mandando, y quien lo pasa en `true` es `edit()` DESPUÉS de
+     * comprobar el permiso `orders.edit_item_below_minimum` — este validador es puro y no mira
+     * permisos. Solo el panel: `OrderCreator` sigue exigiendo el mínimo al vender.
      */
-    public function validateItemEditTarget(OrderItem $item, TicketType $newType, int $newQty): ?string
+    public function validateItemEditTarget(OrderItem $item, TicketType $newType, int $newQty, bool $allowBelowMinimum = false): ?string
     {
         $oldType = $item->ticketType;
         $productChanged = (int) $newType->id !== (int) $item->ticket_type_id;
@@ -865,7 +888,7 @@ class OrderItemEditor
         if ($newType->isPack()) {
             $min = (int) ($newType->min_qty ?? 1);
             $max = $newType->max_qty !== null ? (int) $newType->max_qty : null;
-            if ($newQty < $min || ($max !== null && $newQty > $max)) {
+            if (($newQty < $min && ! $allowBelowMinimum) || ($max !== null && $newQty > $max)) {
                 return 'pack_quantity_range';
             }
         }
