@@ -253,6 +253,90 @@ class OrderFinancialInvariantsTest extends TestCase
         $this->assertSame(0, $summary->retenidoOnline(), 'el parque no retiene nada suyo');
     }
 
+    // ─── T4 · el −X € del descuento de fiesta mixta (`specs/cumple-mixto.md` §20 y §24) ─────
+    //
+    // Los tres casos A/B/C del diseño entran aquí ANTES del reconciliador (§16.8/§20.8), con la
+    // línea de crédito construida A MANO: lo que estos escenarios prueban es la CONTABILIDAD del
+    // espejo —una línea `is_credit` con su `extra_due` gemelo negativo— contra las dos identidades
+    // y los cinco canales, no el mecanismo que la escribe.
+
+    public function test_mixed_party_credit_with_deposit_reconciles(): void
+    {
+        // CASO A (§20.3): fiesta 8 × 15,00 € = 120,00 · señal 30,00 online · resto 90,00 en
+        // puerta · descuento 8,00 (2 invitados de un pack 4,00 € más barato). La puerta absorbe:
+        // el cliente pagará 82,00 en el parque.
+        $order = $this->makePaidOrder();
+        $item = $this->attachActiveItem($order, quantity: 8, unitPrice: 1500);
+        $this->attachDepositRemainder($order, $item, 9000);
+        $this->attachCreditLine($order, $item, 800, guests: 2, unitCents: 400);
+        $this->syncTotalToOnline($order);
+
+        $this->assertReconciles($order, 'T4·A crédito con señal (la puerta absorbe)');
+
+        $summary = $this->freshOrder($order)->financialSummary();
+        $this->assertSame(11200, $summary->totalFinalNeto(), 'el valor baja con el descuento');
+        $this->assertSame(8200, $summary->pendingAtGate(), '90,00 − 8,00: en la puerta le pedirán 82,00');
+        $this->assertSame(3000, $summary->pagadoOnline(), 'la señal no se toca');
+        $this->assertSame(0, $summary->pendienteDevolucion(), 'un descuento de puerta no es deuda bancaria');
+    }
+
+    public function test_mixed_party_credit_fully_online_writes_nothing(): void
+    {
+        // CASO B (§20.2 fase 2): pagado 100 % online → cobertura de puerta CERO → el descuento NO
+        // se escribe (el tope de §20.1); el exceso se ENSEÑA como «a tu favor» y se liquida en el
+        // parque (§20.5). Este escenario documenta la decisión: no hay línea que construir, y por
+        // eso los totales quedan INTACTOS — escribir aquí el crédito dejaría la puerta de la
+        // reserva en negativo y el cinturón `max(0,…)` mordería, que este guardián prohíbe.
+        // (La mutación de quitar el tope muerde en el caso B del reconciliador,
+        // `MixedPartySurchargeTest`.)
+        $order = $this->makePaidOrder();
+        $this->attachActiveItem($order, quantity: 8, unitPrice: 1500);
+        $this->syncTotalToOnline($order);
+
+        $this->assertReconciles($order, 'T4·B pagado 100 % online (el tope no deja escribir)');
+
+        $summary = $this->freshOrder($order)->financialSummary();
+        $this->assertSame(12000, $summary->totalFinalNeto(), 'sin cobertura, los totales no se mueven');
+        $this->assertSame(12000, $summary->pagadoOnline());
+        $this->assertSame(0, $summary->pendingAtGate());
+    }
+
+    public function test_mixed_party_credit_with_partial_coverage_reconciles(): void
+    {
+        // CASO C (§19.4): señal grande (117,00 online, 3,00 en puerta) → el tope deja escribir
+        // SOLO 3,00 de los 8,00 derivados; los 5,00 restantes son el «a tu favor» (no escrito).
+        $order = $this->makePaidOrder();
+        $item = $this->attachActiveItem($order, quantity: 8, unitPrice: 1500);
+        $this->attachDepositRemainder($order, $item, 300);
+        $this->attachCreditLine($order, $item, 300, guests: 2, unitCents: 400);
+        $this->syncTotalToOnline($order);
+
+        $this->assertReconciles($order, 'T4·C cobertura parcial (3,00 de 8,00)');
+
+        $summary = $this->freshOrder($order)->financialSummary();
+        $this->assertSame(11700, $summary->totalFinalNeto());
+        $this->assertSame(0, $summary->pendingAtGate(), 'la puerta queda exactamente en cero, no en negativo');
+        $this->assertSame(11700, $summary->pagadoOnline());
+    }
+
+    public function test_mixed_party_credit_resolves_with_the_finished_reservation(): void
+    {
+        // Y al FINALIZAR la fiesta, el crédito se resuelve con sus cubos: «cobrado en puerta»
+        // dice 82,00 —lo que de verdad se le cobró—, no 90,00.
+        $order = $this->makePaidOrder();
+        $item = $this->attachItemWithPastSlot($order);
+        $item->forceFill(['quantity' => 8, 'seats' => 8, 'unit_price' => 1500])->save();
+        $this->attachDepositRemainder($order, $item, 9000);
+        $this->attachCreditLine($order, $item, 800, guests: 2, unitCents: 400);
+        $this->syncTotalToOnline($order);
+
+        $this->assertReconciles($order, 'T4 crédito con la reserva FINALIZADA');
+
+        $summary = $this->freshOrder($order)->financialSummary();
+        $this->assertSame(8200, $summary->cobradoPuerta(), 'se cobró 82,00 en el parque, no 90,00');
+        $this->assertSame(0, $summary->pendingAtGate());
+    }
+
     // ─── Aserción de reconciliación ────────────────────────────────────────
 
     private function assertReconciles(Order $order, string $label): void
@@ -490,6 +574,45 @@ class OrderFinancialInvariantsTest extends TestCase
             'slot_id' => $slot->id,
             'quantity' => 1, 'seats' => 1, 'unit_price' => 1000,
         ]);
+    }
+
+    /**
+     * La LÍNEA DE CRÉDITO del descuento de fiesta mixta (T4, `specs/cumple-mixto.md` §24.3), tal
+     * como la escribe el reconciliador: una línea hija `is_credit` (su subtotal RESTA vía
+     * `chargedSubtotalCents`) con su `extra_due` gemelo NEGATIVO del mismo importe — el patrón
+     * exacto del cargo, con el signo cambiado. ⚠️ El `context` lleva la marca `mixed_party` con
+     * `credit: true` y JAMÁS `changes.*`: con un `quantity_change` dentro,
+     * `itemOriginalOnlineCents` «reconstruiría» un original y el eje de caja inventaría un
+     * pendiente de devolución (la trampa medida de §16.5.bis).
+     */
+    private function attachCreditLine(Order $order, OrderItem $principal, int $writtenCents, int $guests, int $unitCents): OrderItem
+    {
+        $this->ensureTicketTypeSetup();
+        $credit = OrderItem::create([
+            'order_id' => $order->id, 'parent_item_id' => $principal->id,
+            'ticket_type_id' => $this->jumpType->id,
+            'slot_id' => null,
+            'quantity' => 1, 'free_quantity' => 0, 'unit_price' => $writtenCents,
+            'is_credit' => true,
+            'seats' => 0,
+        ]);
+        OrderAdjustment::create([
+            'order_id' => $order->id,
+            'order_item_id' => $credit->id,
+            'type' => OrderAdjustment::TYPE_EXTRA_DUE,
+            'amount_cents' => -$writtenCents,
+            'currency' => 'EUR',
+            'applied_by' => User::factory()->create()->id,
+            'reason' => 'mixed_party_credit',
+            'context' => ['mixed_party' => [
+                'credit' => true,
+                'guests' => $guests,
+                'targets' => [['name' => 'Kids', 'count' => $guests, 'unit_cents' => $unitCents]],
+                'derived_cents' => $guests * $unitCents,
+            ]],
+        ]);
+
+        return $credit;
     }
 
     /** Resto de la SEÑAL (#225): la parte del valor que no se cobra online y se paga en el parque. */

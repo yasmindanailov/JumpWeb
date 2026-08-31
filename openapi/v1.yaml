@@ -3248,7 +3248,7 @@ components:
         mitad del asunto: hasta la tanda B, «Devuelto» y «Pendiente de devolución» se pintaban como
         restas dentro de la columna del valor, **de la que no restan** — y por eso la columna dejaba
         de leerse en cuanto pasaba cualquier cosa.
-      required: [value, cash, invoiced_cents, invoiced_hint, gate_lines, has_deposit, is_consistent, note]
+      required: [value, cash, invoiced_cents, invoiced_hint, gate_lines, in_favour_hint, has_deposit, is_consistent, note]
       additionalProperties: false
       properties:
         value:
@@ -3295,8 +3295,23 @@ components:
             desglose que ha visto siempre. ⚠️ **Las etiquetas las compone el SERVIDOR**, porque salen
             de reglas de dominio y de `lang/`: recomponerlas en cada cliente es como divergieron las
             cuatro copias del rótulo de día. Lista vacía si no hay nada pendiente en puerta.
+
+            ⚠️ Desde la T4 de fiestas por edad (`specs/cumple-mixto.md` §24.5) puede traer una línea
+            NEGATIVA: el descuento por invitados de un tramo más económico, con su frase. La Σ sigue
+            cuadrando con `value.pending_at_gate_cents`.
           items:
             $ref: '#/components/schemas/OrderGateLine'
+        in_favour_hint:
+          type: string
+          nullable: true
+          description: |
+            **El «a tu favor» de una fiesta por edad** (`specs/cumple-mixto.md` §20.4 y §24.4): la
+            parte del descuento que el dinero de puerta del pedido no pudo absorber. No está escrita
+            en ningún canal —por eso no descuadra nada— y se liquida EN el parque el día de la
+            fiesta. Frase ya compuesta y traducida, con dirección e importe.
+
+            ⚠️⚠️ **`null` ES la condición de enseñar la línea** (el patrón de `invoiced_hint`, `L6`):
+            el cliente no re-deriva nada.
         has_deposit:
           type: boolean
           description: |

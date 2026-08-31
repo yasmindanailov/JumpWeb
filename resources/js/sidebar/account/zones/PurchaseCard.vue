@@ -126,6 +126,10 @@ defineEmits(['toggle', 'retry']);
             <!-- ⚠️ **La FRASE, no un número.** La compone el servidor, que es quien sabe qué caso es. -->
             <p v-if="row.financials.note" class="orders__ledger-note">{{ row.financials.note }}</p>
 
+            <!-- El «a tu favor» de fiesta mixta (T4): frase compuesta por el servidor; `null` ES la
+                 condición de enseñarla (el patrón de `invoiced_hint`). No suma en ningún canal. -->
+            <p v-if="row.financials.inFavour" class="orders__ledger-note">{{ row.financials.inFavour }}</p>
+
             <!-- Trazabilidad: lo facturado al reservar, solo si ya no es lo que vale. -->
             <div v-if="row.financials.invoiced" class="orders__ledger-invoiced">
                 <div class="orders__gate">

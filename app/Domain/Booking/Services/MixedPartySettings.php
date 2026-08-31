@@ -21,6 +21,9 @@ class MixedPartySettings
 {
     public const SURCHARGE_PRODUCT_KEY = 'mixed_party.surcharge_product_id';
 
+    /** El portador del DESCUENTO (T4, spec §24.2) — producto propio por las ~6 superficies que imprimen su nombre. */
+    public const CREDIT_PRODUCT_KEY = 'mixed_party.credit_product_id';
+
     /**
      * Prefijo de los TRES textos que lee el cliente cuando una edad no tiene producto
      * (`DECISIONES #284` D6, spec §22.4): `mixed_party.no_product.{below|above|gap}.{es|en|fr}`.
@@ -82,7 +85,22 @@ class MixedPartySettings
      */
     public static function surchargeProduct(): ?TicketType
     {
-        $raw = Setting::value(self::SURCHARGE_PRODUCT_KEY);
+        return self::carrierProduct(self::SURCHARGE_PRODUCT_KEY);
+    }
+
+    /**
+     * El portador del DESCUENTO (T4, spec §24.2). Mismas tres condiciones y el mismo aviso: `null`
+     * no es un default silencioso — significa que una fiesta con invitados de un tramo más barato
+     * no puede descontarse, y la ficha del pedido lo enseña en rojo cuando hay algo que descontar.
+     */
+    public static function creditProduct(): ?TicketType
+    {
+        return self::carrierProduct(self::CREDIT_PRODUCT_KEY);
+    }
+
+    private static function carrierProduct(string $key): ?TicketType
+    {
+        $raw = Setting::value($key);
 
         if ($raw === null || $raw === '' || ! is_numeric($raw)) {
             return null;

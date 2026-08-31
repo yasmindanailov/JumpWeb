@@ -33,9 +33,10 @@ use App\Domain\Booking\Models\OrderItem;
  * para la fecha de la franja en el momento de sellar — la misma fuente que usó la compra, así que
  * el suplemento no puede divergir de lo que costaba el producto ese día cuando se vendió.
  *
- * ⚠️ **Con suelo en 0: bajar de régimen no abona nada.** Un invitado que corresponde a un producto
- * MÁS BARATO cuenta para la etiqueta —la fiesta es mixta de verdad— pero su diferencia es 0. El
- * encargo pide cobrar la diferencia al que sube; el −X € está diseñado (§20) y es la tanda T4.
+ * ⚠️ **El unitario del CARGO tiene suelo en 0** (`unit_cents` nunca negativo): un invitado que
+ * corresponde a un producto MÁS BARATO no reduce ningún cargo — su diferencia viaja con signo en
+ * `diff_cents` y alimenta el DESCUENTO (T4, §20/§24), que es una línea espejo propia con su tope
+ * de cobertura, no un cargo negativo.
  */
 class GuestAgeMixReader
 {

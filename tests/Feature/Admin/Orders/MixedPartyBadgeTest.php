@@ -180,11 +180,11 @@ class MixedPartyBadgeTest extends TestCase
             ->assertSee(__('admin.orders.mixed_party.without_age', ['count' => 2]));
     }
 
-    public function test_the_panel_says_the_party_would_be_cheaper_without_discounting_it(): void
+    public function test_the_panel_shows_the_cheaper_direction_as_money_in_favour(): void
     {
-        // El pack CARO con dos invitados que corresponden al barato: no hay cargo, pero el operador
-        // tiene que saberlo — `[owner, 2026-08-29]`: «avisar de que la reserva es X € más barata,
-        // sin devolver dinero automáticamente».
+        // El pack CARO con dos invitados que corresponden al barato, pagado 100 % online: desde la
+        // T4 (`[DECIDIDO owner]` D5, §20/§24) el descuento es real, pero sin puerta que lo absorba
+        // NO se escribe — el operador ve el «a favor del cliente», que es lo que liquida en mano.
         $order = $this->paidPartyWith([9, 4, 3], $this->jump);
 
         $this->actingAs($this->staff())
@@ -192,7 +192,7 @@ class MixedPartyBadgeTest extends TestCase
             ->assertOk()
             ->assertSee(__('tickets.mixed_party_badge'))
             // 2 × (25,00 − 18,00) = 14,00 €.
-            ->assertSee(__('admin.orders.mixed_party.cheaper', ['amount' => '14,00 €']))
+            ->assertSee(__('admin.orders.mixed_party.in_favour', ['amount' => '14,00 €']))
             // ⚠️ Y NUNCA como cargo: si esto apareciera, el operador cobraría lo que no se debe.
             ->assertDontSee(__('admin.orders.mixed_party.applied', ['amount' => '14,00 €']));
     }

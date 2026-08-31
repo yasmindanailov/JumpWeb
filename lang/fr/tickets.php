@@ -37,6 +37,8 @@ return [
     'mixed_party_product_name' => ':name · :badge',
     'gate_mixed_party_line' => 'Supplément pour :count invité d’une autre tranche d’âge|Supplément pour :count invités d’une autre tranche d’âge',
     'gate_mixed_party_line_named' => 'Supplément pour :count invité relevant de :target|Supplément pour :count invités relevant de :target',
+    'gate_mixed_party_credit_line' => 'Remise pour :count invité d’une tranche plus économique|Remise pour :count invités d’une tranche plus économique',
+    'gate_mixed_party_credit_line_named' => 'Remise pour :count invité relevant de :target|Remise pour :count invités relevant de :target',
     // La quantité AVEC son substantif, qui est ce qui la distingue du montant (`DECISIONES #128`) :
     // « 8×216,00 € » se lit comme 8 × 216 = 1 728 € ; « 8 invités · 216,00 € », non.
     'entries_count' => ':count billet|:count billets',
@@ -201,6 +203,7 @@ return [
         'invoiced_hint_more' => 'Au moment de la réservation, le montant facturé était de :invoiced. La commande a changé ensuite et vaut désormais :difference de plus.',
         'invoiced_hint_less' => 'Au moment de la réservation, le montant facturé était de :invoiced. La commande a changé ensuite et vaut désormais :difference de moins.',
     ],
+    'ledger_in_favour' => ':amount en votre faveur — remboursés au parc le jour de la fête.',
     'ledger_note' => [
         // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser
         // cierta (`DECISIONES #132`).

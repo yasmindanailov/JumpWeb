@@ -80,6 +80,11 @@ class GateReservationsReader implements GateReservations
                         'unit_cents' => $l['unit'],
                     ], $written['lines']),
                     mixedPartySurchargeCents: $written['cents'],
+                    mixedPartyCredit: $written['credit'] === null ? null : [
+                        'label' => $written['credit']['label'],
+                        'cents' => $written['credit']['cents'],
+                    ],
+                    mixedPartyInFavourCents: $this->mixedParty->inFavourCents($item),
                 );
             })
             ->all();

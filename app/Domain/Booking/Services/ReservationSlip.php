@@ -286,40 +286,40 @@ final class ReservationSlip
     // ─── Fiesta mixta (T3 · E, `specs/cumple-mixto.md` §23.2) ─────────────────
 
     /**
-     * El bloque «Fiesta mixta» de la hoja: lo ESCRITO del suplemento —las líneas por pack de
-     * destino y el total, que es lo que se cobra en el parque (`PAY-19`)—, el aviso del caso
-     * barato (§14: informativo, NO es dinero) y cuántos invitados tienen una edad sin producto
-     * en las condiciones selladas de la reserva.
+     * El bloque «Fiesta mixta» de la hoja: lo ESCRITO —las líneas de cargo por pack de destino, el
+     * DESCUENTO (T4, §24.5) y el neto, que es lo que se liquida en el parque (`PAY-19`)—, el
+     * EXCESO «a tu favor» que la puerta no pudo absorber (§20.4: derivado, no escrito, y el
+     * operador es quien lo liquida en mano, §20.5) y cuántos invitados tienen una edad sin
+     * producto en las condiciones selladas de la reserva.
      *
-     * `null` = el bloque no existe: la fiesta no tiene cargo escrito, no saldría más barata y
-     * ninguna edad se queda sin producto. Una fiesta mixta con los dos packs al mismo precio cae
-     * aquí a propósito — la etiqueta MIXTA ya viaja en el nombre del producto (§13) y una caja de
-     * 0,00 € no le dice nada al operador.
+     * `null` = el bloque no existe: nada escrito, nada a favor y ninguna edad sin producto. Una
+     * fiesta mixta con los dos packs al mismo precio cae aquí a propósito — la etiqueta MIXTA ya
+     * viaja en el nombre del producto (§13) y una caja de 0,00 € no le dice nada al operador.
      *
-     * ⚠️ Se enseña lo ESCRITO, nunca el veredicto derivado: es lo que se le comunicó al cliente y
-     * lo que se cobra. El veredicto solo aporta lo que el dinero no dice — el caso barato y las
-     * edades sin producto — y por eso son los dos únicos datos que salen de él.
+     * ⚠️ El dinero sale de lo ESCRITO, nunca del veredicto derivado. Del veredicto solo salen los
+     * dos datos que el dinero no dice: el exceso a favor y las edades sin producto.
      *
-     * @return array{lines: list<array{name:string, count:int, unit:int}>, totalCents:int, savingsCents:int, withoutProduct:int}|null
+     * @return array{lines: list<array{name:string, count:int, unit:int}>, chargeCents:int, creditLabel:?string, creditCents:int, netCents:int, inFavourCents:int, withoutProduct:int}|null
      */
     public function mixedParty(): ?array
     {
-        $written = app(MixedPartySurcharge::class)->written($this->item);
-        $mix = app(GuestAgeMixReader::class)->for($this->item);
+        $service = app(MixedPartySurcharge::class);
+        $written = $service->written($this->item);
         $withoutProduct = count($this->item->guestAgesWithoutProduct());
+        $inFavour = $service->inFavourCents($this->item);
 
-        // El aviso del caso barato sigue el criterio de la ficha del pedido (items-list): solo
-        // cuando NO hay cargo escrito — con cargo, el dato que manda es el importe aplicado.
-        $savings = $written['cents'] === 0 && $mix->hasSavings() ? (int) $mix->savingsCents : 0;
-
-        if ($written['cents'] === 0 && $savings === 0 && $withoutProduct === 0) {
+        if ($written['charge_cents'] === 0 && $written['credit_cents'] === 0
+            && $inFavour === 0 && $withoutProduct === 0) {
             return null;
         }
 
         return [
             'lines' => $written['lines'],
-            'totalCents' => $written['cents'],
-            'savingsCents' => $savings,
+            'chargeCents' => $written['charge_cents'],
+            'creditLabel' => $written['credit']['label'] ?? null,
+            'creditCents' => $written['credit_cents'],
+            'netCents' => $written['cents'],
+            'inFavourCents' => $inFavour,
             'withoutProduct' => $withoutProduct,
         ];
     }

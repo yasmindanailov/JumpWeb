@@ -37,6 +37,8 @@ return [
     'mixed_party_product_name' => ':name · :badge',
     'gate_mixed_party_line' => 'Supplement for :count guest in a different age range|Supplement for :count guests in a different age range',
     'gate_mixed_party_line_named' => 'Supplement for :count guest who belongs to :target|Supplement for :count guests who belong to :target',
+    'gate_mixed_party_credit_line' => 'Discount for :count guest in a cheaper age range|Discount for :count guests in a cheaper age range',
+    'gate_mixed_party_credit_line_named' => 'Discount for :count guest who belongs to :target|Discount for :count guests who belong to :target',
     // Quantity WITH its noun — that is what tells it apart from the amount (`DECISIONES #128`):
     // "8×216,00 €" reads as 8 × 216 = 1,728 €; "8 guests · 216,00 €" does not.
     'entries_count' => ':count ticket|:count tickets',
@@ -202,6 +204,7 @@ return [
         'invoiced_hint_more' => 'You were invoiced :invoiced when you booked. The order changed afterwards and is now worth :difference more.',
         'invoiced_hint_less' => 'You were invoiced :invoiced when you booked. The order changed afterwards and is now worth :difference less.',
     ],
+    'ledger_in_favour' => ':amount in your favour — refunded to you at the park on the day of the party.',
     'ledger_note' => [
         // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser
         // cierta (`DECISIONES #132`).

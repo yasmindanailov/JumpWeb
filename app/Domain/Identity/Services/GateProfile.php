@@ -94,9 +94,13 @@ final class GateProfile
             'minors' => $minors,
             // T3 · E (`specs/cumple-mixto.md` §23.2): lo ESCRITO del suplemento de fiesta mixta,
             // tal cual viaja en el contrato — la tarjeta lo pinta bajo el producto para que el
-            // empleado no haga la cuenta de memoria con el cliente delante.
+            // empleado no haga la cuenta de memoria con el cliente delante. Desde la T4 el total
+            // es el NETO (cargo − descuento) y viajan además el descuento con su frase y el
+            // «a tu favor», que el operador liquida en mano (§20.5).
             'mixed_party_lines' => $r->mixedPartyLines,
             'mixed_party_surcharge_cents' => $r->mixedPartySurchargeCents,
+            'mixed_party_credit' => $r->mixedPartyCredit,
+            'mixed_party_in_favour_cents' => $r->mixedPartyInFavourCents,
         ];
     }
 

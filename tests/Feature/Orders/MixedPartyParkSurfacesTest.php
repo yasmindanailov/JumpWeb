@@ -173,16 +173,18 @@ class MixedPartyParkSurfacesTest extends TestCase
         );
     }
 
-    public function test_the_slip_warns_the_cheap_case_without_inventing_money(): void
+    public function test_the_slip_shows_the_cheap_case_as_money_in_favour(): void
     {
-        // Invitado de 3 años en una fiesta Jump: le tocaría Kids (más barato). Aviso, no dinero.
+        // Invitado de 3 años en una fiesta Jump pagada 100 % online: el descuento no tiene puerta
+        // que lo absorba (T4, §20.4) → no se escribe y la hoja dice el «a tu favor», que es lo que
+        // el operador liquida en mano (§20.5).
         $html = $this->renderedSlip($this->jumpParty([8, 3]));
 
         $this->assertStringContainsString(
-            __('admin.orders.mixed_party.cheaper', ['amount' => ReservationSlip::money(700)]),
+            __('admin.orders.mixed_party.in_favour', ['amount' => ReservationSlip::money(700)]),
             $html,
         );
-        // Y NO imprime un total aplicado: no hay cargo escrito que cobrar.
+        // Y NO imprime un total aplicado: no hay nada escrito que cobrar.
         $this->assertStringNotContainsString(__('admin.orders.mixed_party.applied', ['amount' => ReservationSlip::money(0)]), $html);
     }
 

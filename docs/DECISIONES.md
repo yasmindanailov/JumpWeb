@@ -17095,3 +17095,50 @@ no vigila nada, y no se nota hasta que se muta.* ⚠️ Y una aserción mía tam
 `ZonesAndRidesUnifiedTest`, 1 en `ThemeColorTest`, 1 en el recorte) · medido en Chrome real a 390 y
 1280: **cero errores de consola**, cero desbordes, los dos anclajes vivos, los carruseles
 **independientes** (mover JUMP deja KIDS a 0), foco visible con tabulación real y control.
+## #296 · 2026-08-31 · T4 de reservas mixtas: EL −X € — el descuento es el ESPEJO del suplemento, acotado al dinero de puerta
+
+El owner dio el «adelante» a la T4 tras verificar la T3, con el encargo explícito de ser minucioso:
+es núcleo de dinero. El diseño de producto es el que él cerró en `#285` (**§20** de
+`specs/cumple-mixto.md`); esta sesión lo bajó a instrucciones **re-verificando cada supuesto contra
+el código del árbol de hoy** (§24.1: UNSIGNED re-medido, el clamp trazado, la trampa de §16.5.bis
+desactivada por construcción, el `continue` de las líneas negativas confirmado como el hueco que
+§16.6·3 predijo) y lo construyó entero. Registro completo en **§24.10**.
+
+**El mecanismo** (§24.3): una línea hija con la marca nueva **`order_items.is_credit`** —el signo lo
+pone `chargedSubtotalCents()`, en UN solo sitio, porque `unit_price` es UNSIGNED— y su `extra_due`
+gemelo NEGATIVO del mismo importe: el patrón exacto del cargo con el signo cambiado.
+**`crédito_escrito = min(derivado, cobertura de puerta)`**, con los cargos de la misma pasada
+contando como cobertura (verificado con una familia de TRES tramos: cargo +5,00 y descuento −5,00
+cierran la puerta en cero exacto). El EXCESO no se escribe: es el «a tu favor», que se liquida EN el
+parque (§20.5). El portador es un SEGUNDO producto de sistema («Descuento fiesta mixta», migración
+espejo de la del suplemento): su nombre lo imprimen ~6 superficies de lectura y así sale bien en
+todas gratis, renombrable por instalación.
+
+**La asimetría del silencio, decidida a sabiendas** (§24.3·7): el CARGO puede crecer con el
+veredicto en silencio (`#268`: declarar la edad que faltaba es un dato); el CRÉDITO **no se mueve en
+ninguna dirección sin un veredicto que gobierne** — crearlo o crecerlo en silencio regala dinero
+del parque, encogerlo se lo quita al cliente. La puerta de la T2 (nada con edades en blanco) cubre
+a los dos por igual.
+
+**Q1 de la tanda, preguntada con el coste de cada salida** — ¿dónde se enseña el «a tu favor» YA?
+`[DECIDIDO owner]`: **en todas las superficies, incluidos «Mis pedidos» y la API** — un campo nuevo
+`in_favour_hint` con el patrón EXACTO de `invoiced_hint` (`L6`, `#133`): el dominio compone la frase
+y **null ES la condición de enseñarla**; el cajón la pinta verbatim (una línea de Vue, cero lógica
+cliente).
+
+**Las frases de `#246`/§14 CADUCAN**: «NO se descuenta solo: decides tú en recepción» era verdad
+hasta hoy y ya no — el post-form, la ficha, la hoja y la puerta dicen el descuento escrito, el neto
+con signo y el «a tu favor»; el correo gana la voz del descuento (con el cruce de signo ROTULADO:
+«pasa de 5,00 € de suplemento a 7,00 € de descuento», porque un «pasa de X a Y» sin rótulos mentiría
+sobre la dirección).
+
+**Verificación**: guardián de invariantes **11 → 15 escenarios** (A/B/C con la línea a MANO, antes
+del reconciliador — §16.8— y el del crédito resuelto al finalizar; la identidad D cazó en rojo el
+`continue` como estaba previsto) · suite PHP del árbol CONJUNTO (sobre `#295` del otro carril): **3679 / 24.017** y JS **878** ·
+**7 mutaciones, las 7 muerden** (gemelo · tope · espejo desenganchado · silencio · `continue` ·
+hint · la trampa `changes` de §16.5.bis) · `mixed-party:verify-concurrency` gana
+`--scenario=credit` y se vio **FALLAR sin el lock: 12 líneas y −84,00 €**, el espejo exacto del
+fallo histórico del cargo · aforo en sus SEIS escenarios + redsys sobre MySQL · sonda en navegador
+(`/root/e2e/t4.js`, `T4-PRB01`/`T4-PRB02` quedan de sondas): la puerta verificó la aritmética en
+vivo (46,00 = 50,00 − 4,00) y el cajón pintó el «a tu favor»; el contrato, comprobado contra la API
+real (Σ de `gate_lines` con la línea de −4,00 == titular).

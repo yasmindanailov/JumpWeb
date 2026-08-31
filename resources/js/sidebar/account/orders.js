@@ -230,6 +230,10 @@ export function financialsOf(order, messages) {
                 hint: l.invoiced_hint,
             }
             : null,
+        // El «a tu favor» de fiesta mixta (T4, `specs/cumple-mixto.md` §24.4): la parte del
+        // descuento que la puerta del pedido no pudo absorber, liquidada EN el parque. La frase
+        // llega compuesta y `null` ES la condición de enseñarla — el patrón de `invoiced_hint`.
+        inFavour: l.in_favour_hint ?? null,
     };
 }
 

@@ -159,7 +159,15 @@ return [
         'added' => 'Suplemento por invitados de otro tramo de edad: :amount €.',
         'updated' => 'El suplemento por invitados de otro tramo de edad pasa de :old € a :new €.',
         'removed' => 'Ya no hay suplemento que abonar: todos los invitados entran en el pack reservado.',
+        // T4 (`specs/cumple-mixto.md` §24.5): la voz del DESCUENTO — el espejo del suplemento.
+        'credit_added' => 'Descuento por invitados de un tramo más económico: :amount €. Se descuenta de lo que pagarás en el parque.',
+        'credit_updated' => 'El descuento por invitados de un tramo más económico pasa de :old € a :new €.',
+        'credit_removed' => 'El descuento anterior ya no corresponde con las edades actuales y se ha retirado.',
+        'changed_direction' => 'Tu importe por edades pasa de :old a :new.',
+        'amount_surcharge' => ':amount € de suplemento',
+        'amount_discount' => ':amount € de descuento',
         'where_to_pay' => 'Se abona en el parque el día de la fiesta, junto con el resto pendiente.',
+        'where_discounted' => 'Ya está descontado de lo que pagarás en el parque el día de la fiesta.',
         'editable' => 'Puedes seguir editando los datos de los invitados hasta el día del evento; si cambian las edades, este importe se ajusta solo.',
     ],
 

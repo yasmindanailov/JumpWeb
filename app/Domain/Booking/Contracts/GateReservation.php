@@ -47,7 +47,22 @@ final readonly class GateReservation
          * @var list<array{name:string, count:int, unit_cents:int}>
          */
         public array $mixedPartyLines = [],
-        /** Total escrito del suplemento (céntimos); `0` sin suplemento. Ya incluido en `pendingGateCents`. */
+        /**
+         * El NETO escrito de fiesta mixta (céntimos, CON SIGNO desde la T4: cargo − descuento).
+         * `0` sin nada escrito. Ya incluido en `pendingGateCents`.
+         */
         public int $mixedPartySurchargeCents = 0,
+        /**
+         * El DESCUENTO escrito (T4, §24.5): su frase —compuesta por el dominio, la misma en todas
+         * las superficies— y su importe en positivo. `null` sin descuento.
+         *
+         * @var array{label:string, cents:int}|null
+         */
+        public ?array $mixedPartyCredit = null,
+        /**
+         * El EXCESO «a tu favor» (T4, §20.4): descuento derivado que la puerta no pudo absorber.
+         * El operador lo LIQUIDA en mano (§20.5) — por eso viaja hasta su pantalla.
+         */
+        public int $mixedPartyInFavourCents = 0,
     ) {}
 }

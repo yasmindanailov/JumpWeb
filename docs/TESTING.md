@@ -364,7 +364,8 @@ docker compose exec -u sail laravel.test php artisan redsys:verify-concurrency -
 docker compose exec -u sail laravel.test php artisan purchase:verify-oversell  --workers=16   # sobreventa (compra)
 docker compose exec -u sail laravel.test php artisan redsys:verify-sandbox                    # reembolso REST (sandbox real)
 docker compose exec -u sail laravel.test php artisan waiver:verify-chain      --workers=16   # cadena de firmas del waiver (Fase 6)
-docker compose exec -u sail laravel.test php artisan mixed-party:verify-concurrency --workers=12  # suplemento de fiesta mixta
+docker compose exec -u sail laravel.test php artisan mixed-party:verify-concurrency --workers=12  # fiesta mixta · escenario `charge` (el suplemento)
+docker compose exec -u sail laravel.test php artisan mixed-party:verify-concurrency --workers=12 --scenario=credit  # y el `credit` (el descuento, T4)
 ```
 
 - ⚠️ **Trampa del arnés (Livewire 4 + Filament 5), medida en `#161`**: la vista de modales de
@@ -388,12 +389,13 @@ docker compose exec -u sail laravel.test php artisan mixed-party:verify-concurre
   cadenas por sujeto eso no cazaría nada. **Visto fallar** sin el lock (2 filas del titular, 1 `prev_hash`
   repetido, cadena ROTA). Correr tras tocar `WaiverSigner`.
 
-- **`mixed-party:verify-concurrency`** (`specs/cumple-mixto.md` §12): N guardados simultáneos del
-  MISMO post-form, desde cero líneas → verifica que el `lockForUpdate` de `MixedPartySurcharge`
-  serializa: **UNA línea de suplemento y un solo cargo**. ⚠️⚠️ **Visto fallar** sin el lock, y el
-  número lo dice todo: con 12 workers salieron **12 líneas y 84,00 €** donde debía haber 7,00 € —el
-  cargo multiplicado por el nº de guardados, sin excepción ni aviso, y el cliente se lo encontraría
-  en caja—. Correr tras tocar el reconciliador.
+- **`mixed-party:verify-concurrency`** (`specs/cumple-mixto.md` §12 y §24): N guardados simultáneos
+  del MISMO post-form, desde cero líneas → verifica que el `lockForUpdate` de `MixedPartySurcharge`
+  serializa. **DOS escenarios desde la T4** (`--scenario=charge|credit`): el suplemento y su
+  espejo, el descuento. ⚠️⚠️ **Vistos fallar los dos** sin el lock, y el número lo dice todo: con
+  12 workers salieron **12 líneas y 84,00 €** donde debía haber 7,00 € (cargo) y **12 líneas y
+  −84,00 €** donde debía haber −7,00 € (descuento) — la línea multiplicada por el nº de guardados,
+  sin excepción ni aviso—. Correr LOS DOS tras tocar el reconciliador.
   ⚠️ **No está en el `CRITICAL_RE` del `pre-push`, a propósito**: ese gate impone los dos
   verificadores del núcleo de compra/cobro, que no ejercitan el post-form. Meterlo ahí obligaría a
   correr dos comandos que no prueban nada de esta carrera — ritual sin protección.

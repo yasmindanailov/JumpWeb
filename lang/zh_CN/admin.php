@@ -84,6 +84,8 @@ return [
                 // 混龄派对（T3 · E）：已写入的附加费 — 金额已计入 `pending_gate`。
                 'mixed_party_line' => ':count × :name · 每位来宾 :unit €',
                 'mixed_party_total' => '混龄派对附加费：:amount €',
+                'mixed_party_discount_total' => '混龄派对折扣：−:amount €',
+                'mixed_party_in_favour' => ':amount € 归客户所有 — 在园区现场退还',
                 'booked_on' => '预订于 :when',
                 'paid_on' => '付款于 :when',
                 'method_desk' => '柜台',
@@ -439,7 +441,10 @@ return [
             'title' => '混龄派对:有来宾属于其他年龄段',
             'line' => ':count × :name · 每位 :unit',
             'applied' => '已计入补差价::amount · 在园区收取',
-            'cheaper' => '按对应的套餐计算,本场派对会便宜 :amount。系统不会自动扣减:由你在前台决定。',
+            // T4:折扣已真实生效;行的措辞由领域层(`breakdownLabel`)统一生成。
+            'net' => '按年龄净额::amount · 在园区结算',
+            'in_favour' => ':amount 归客户所有 — 派对当天在园区退还(不属于待处理的银行退款)',
+            'missing_credit_carrier' => '无法计入折扣:缺少承载它的产品(产品目录中的「混龄派对折扣」)。在此期间该金额归客户所有,在园区结算。',
             'drift' => '已记录的补差价为 :written,按当前申报的年龄和本预订的条件应为 :derived。系统不会自动重算:已记录的金额就是告知客户的金额。',
             'missing_carrier' => '无法计入补差价:缺少承载它的产品(产品目录中的「混龄派对补差价」)。在此期间本场派对不会收取任何费用。',
             'unpriced' => '无法计算补差价:该日期缺少某个套餐的价格。',

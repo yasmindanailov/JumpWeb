@@ -44,6 +44,9 @@ return [
     'mixed_party_product_name' => ':name · :badge',
     'gate_mixed_party_line' => 'Suplemento por :count invitado de otro tramo de edad|Suplemento por :count invitados de otro tramo de edad',
     'gate_mixed_party_line_named' => 'Suplemento por :count invitado que corresponde a :target|Suplemento por :count invitados que corresponden a :target',
+    // T4 (`specs/cumple-mixto.md` §24.5): la línea espejo — el DESCUENTO, en negativo en el desglose.
+    'gate_mixed_party_credit_line' => 'Descuento por :count invitado de un tramo más económico|Descuento por :count invitados de un tramo más económico',
+    'gate_mixed_party_credit_line_named' => 'Descuento por :count invitado que corresponde a :target|Descuento por :count invitados que corresponden a :target',
     // La cantidad CON su sustantivo, que es lo que la desambigua del importe (`DECISIONES #128`):
     // «8×216,00 €» se lee como 8 × 216 = 1.728 €, y «8 invitados · 216,00 €» no. Las compone
     // `OrderItem::displayQuantityLabel()`, en la voz del cliente — el panel tiene la suya.
@@ -240,6 +243,9 @@ return [
         'invoiced_hint_more' => 'Al reservar se facturaron :invoiced. El pedido cambió después y ahora vale :difference más.',
         'invoiced_hint_less' => 'Al reservar se facturaron :invoiced. El pedido cambió después y ahora vale :difference menos.',
     ],
+    // T4 (`specs/cumple-mixto.md` §24.4): el «a tu favor» de fiesta mixta — el descuento que la
+    // puerta no pudo absorber; se liquida en el parque. `null` = no se enseña (patrón `L6`).
+    'ledger_in_favour' => ':amount a tu favor — se te devuelven en el parque el día de la fiesta.',
     'ledger_note' => [
         // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser
         // cierta (`DECISIONES #132`).

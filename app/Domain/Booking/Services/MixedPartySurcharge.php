@@ -87,6 +87,9 @@ class MixedPartySurcharge
      */
     public const REASON_PANEL_GUEST_FORM = 'panel_guest_form';
 
+    /** El `reason` del ajuste gemelo de la línea de CRÉDITO (T4, spec §24.3). */
+    public const ADJUSTMENT_REASON_CREDIT = 'mixed_party_credit';
+
     public function __construct(private GuestAgeMixReader $mix) {}
 
     /**
@@ -146,16 +149,24 @@ class MixedPartySurcharge
             }
 
             $target = $this->targetState($mix);
-            $old = $this->totalOf($current);
+            $currentCredit = $this->currentCredit($item);
+            // El estado se compara en NETO (cargo − descuento): es lo que el cliente debe de más
+            // o de menos en el parque por las edades, y lo que el correo y el audit cuentan (T4).
+            $old = $this->totalOf($current) - ($currentCredit['cents'] ?? 0);
 
             // ⚠️⚠️ **Una AUSENCIA no es una CORRECCIÓN** (§12.2.bis). Con el veredicto a medias, lo
             // escrito solo puede CRECER: nunca se encoge ni se retira. Sin esta puerta, tres formas
             // de que falte un dato borraban un cargo real y ninguna era un cambio del hecho.
-            $new = $this->apply(
+            $newCharges = $this->apply(
                 $item, $carrier->id, $current, $target, $actor,
                 mayShrink: $this->derivationGoverns($mix),
             );
 
+            // ▶ T4 (spec §24.3): el ESPEJO — el descuento, DESPUÉS de los cargos (que suman a la
+            // cobertura) y dentro del mismo lock. Su tope y su asimetría viven en `applyCredit`.
+            $newCredit = $this->applyCredit($item, $mix, $currentCredit, $actor);
+
+            $new = $newCharges - $newCredit;
             if ($new === $old) {
                 return null;
             }
@@ -168,6 +179,7 @@ class MixedPartySurcharge
                 'order_item_id' => $item->id,
                 'old_cents' => $old,
                 'new_cents' => $new,
+                'credit_cents' => $newCredit,
                 'guests' => array_sum(array_column($target, 'count')),
                 'reason' => $reason,
             ]);
@@ -298,6 +310,11 @@ class MixedPartySurcharge
             if (! is_array($mark) || $adjustment->order_item_id === null) {
                 continue;
             }
+            // La línea de CRÉDITO lleva la misma marca pero es el ESPEJO, no un cargo: tiene su
+            // propio lector ({@see currentCredit}) y su propia rama en la reconciliación.
+            if (($mark['credit'] ?? false) === true) {
+                continue;
+            }
             $child = $children->get((int) $adjustment->order_item_id);
             if ($child === null) {
                 continue; // su línea ya está cancelada: el cargo es inerte.
@@ -414,6 +431,232 @@ class MixedPartySurcharge
     }
 
     /**
+     * La línea de CRÉDITO viva de esta reserva (T4, spec §24.3), o `null`. Es UNA por reserva —el
+     * tope puede caer en un importe que no es múltiplo del unitario por cabeza, así que la forma
+     * cantidad×unitario del cargo no lo representa; el desglose por destino viaja en la marca—.
+     * Mismo criterio de lectura que {@see currentLines}: relaciones ya cargadas, cero consultas.
+     *
+     * @return array{item:OrderItem, adjustment:OrderAdjustment, cents:int, mark:array<string,mixed>}|null
+     */
+    private function currentCredit(OrderItem $principal): ?array
+    {
+        $order = $principal->order;
+        if ($order === null) {
+            return null;
+        }
+
+        $children = $principal->children->reject(fn (OrderItem $c): bool => $c->isCancelled())->keyBy('id');
+
+        foreach ($order->adjustments->where('type', OrderAdjustment::TYPE_EXTRA_DUE) as $adjustment) {
+            $context = is_array($adjustment->context) ? $adjustment->context : [];
+            $mark = $context['mixed_party'] ?? null;
+            if (! is_array($mark) || ($mark['credit'] ?? false) !== true || $adjustment->order_item_id === null) {
+                continue;
+            }
+            $child = $children->get((int) $adjustment->order_item_id);
+            if ($child === null) {
+                continue; // cancelada: el descuento es inerte (voided leftover).
+            }
+
+            return [
+                'item' => $child,
+                'adjustment' => $adjustment,
+                // El importe POSITIVO del descuento escrito. Del helper y no de `qty × unit` a
+                // mano: el signo es suyo (§24.2) y aquí se quiere la magnitud.
+                'cents' => -$child->chargedSubtotalCents(),
+                'mark' => $mark,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * El ESPEJO del suplemento (T4, spec §24.3): deja escrito
+     * `min(crédito_derivado, cobertura de puerta)` — el patrón exacto de la línea de cargo con el
+     * signo cambiado, y el EXCESO sin escribir (se enseña como «a tu favor», §20.4). Devuelve el
+     * crédito que queda ESCRITO tras la pasada, en positivo.
+     *
+     * ⚠️⚠️ **La asimetría del silencio es distinta a la del cargo, a propósito** (§24.3·7): el
+     * cargo puede CRECER con el veredicto en silencio (declarar la edad que faltaba es un dato
+     * nuevo, `#268`); el crédito NO SE MUEVE en ninguna dirección sin un veredicto que gobierne —
+     * crearlo o crecerlo en silencio regala dinero del parque, y encogerlo se lo quita al cliente.
+     * Con `sealed: true` (el pack se cambió a uno sin condiciones) el veredicto gobierna y el
+     * crédito se retira, igual que el cargo.
+     *
+     * @param  array{item:OrderItem, adjustment:OrderAdjustment, cents:int, mark:array<string,mixed>}|null  $current
+     */
+    private function applyCredit(OrderItem $principal, GuestAgeMix $mix, ?array $current, User $actor): int
+    {
+        $written = $current['cents'] ?? 0;
+
+        if (! $this->derivationGoverns($mix)) {
+            return $written;
+        }
+
+        $targets = $this->creditTargets($mix);
+        $derived = 0;
+        foreach ($targets as $t) {
+            $derived += $t['count'] * $t['unit_cents'];
+        }
+
+        // El TOPE de cobertura (§20.1): el crédito solo puede absorber dinero de puerta que exista.
+        // Se mide del estado ESCRITO bajo el lock, DESPUÉS de los cargos de esta misma pasada (que
+        // suman a la cobertura). Sin el tope, una reserva pagada 100 % online quedaría con la
+        // puerta en negativo y el cinturón `max(0,…)` mordería — el guardián de invariantes lo
+        // prohíbe expresamente.
+        $want = min($derived, $this->gateCoverageCents($principal));
+
+        if ($want === $written) {
+            return $written;
+        }
+
+        if ($want <= 0) {
+            // Cancelar y no borrar, como el cargo: la línea queda de rastro (voided leftover, las
+            // superficies la esconden solas).
+            $current['item']->markCancelled($actor);
+
+            return 0;
+        }
+
+        $carrier = MixedPartySettings::creditProduct();
+        if ($carrier === null) {
+            // Sin producto portador no se puede escribir NADA — ni crear ni corregir (el criterio
+            // del cargo): lo escrito se conserva y la ficha del pedido avisa en rojo (§24.7·L).
+            return $written;
+        }
+
+        $context = ['mixed_party' => [
+            'credit' => true,
+            'guests' => array_sum(array_column($targets, 'count')),
+            // El desglose por destino, con los NOMBRES tal y como se comunicaron (mismo criterio
+            // que `target_name` del cargo). ⚠️ JAMÁS `changes.*` aquí: con un `quantity_change`
+            // dentro, `itemOriginalOnlineCents` «reconstruiría» un original y el eje de caja
+            // inventaría un pendiente de devolución (§16.5.bis, medido).
+            'targets' => $targets,
+            'derived_cents' => $derived,
+        ]];
+
+        if ($current !== null) {
+            $current['item']->forceFill([
+                'quantity' => 1,
+                'free_quantity' => 0,
+                'unit_price' => $want,
+            ])->save();
+            $current['adjustment']->forceFill([
+                'amount_cents' => -$want,
+                'context' => $context,
+            ])->save();
+
+            return $want;
+        }
+
+        // ⚠️ `slot_id` a null y `seats` a 0, como el cargo: fuera de toda consulta de aforo.
+        $child = $principal->children()->create([
+            'order_id' => $principal->order_id,
+            'ticket_type_id' => $carrier->id,
+            'slot_id' => null,
+            'quantity' => 1,
+            'free_quantity' => 0,
+            'unit_price' => $want,
+            'is_credit' => true,
+            'seats' => 0,
+            'event_data' => null,
+        ]);
+
+        OrderAdjustment::create([
+            'order_id' => $principal->order_id,
+            'order_item_id' => $child->id,
+            'type' => OrderAdjustment::TYPE_EXTRA_DUE,
+            'amount_cents' => -$want,
+            'currency' => 'EUR',
+            'applied_by' => $actor->id,
+            'reason' => self::ADJUSTMENT_REASON_CREDIT,
+            'context' => $context,
+        ]);
+
+        return $want;
+    }
+
+    /**
+     * Los destinos MÁS BARATOS del veredicto: a qué pack corresponde cada grupo de invitados que
+     * baja de régimen y cuánto vale la diferencia por cabeza. El espejo de {@see targetState}.
+     *
+     * @return list<array{name:string, count:int, unit_cents:int}>
+     */
+    private function creditTargets(GuestAgeMix $mix): array
+    {
+        $targets = [];
+        foreach ($mix->upgrades as $upgrade) {
+            $diff = $upgrade['diff_cents'] ?? null;
+            if ($diff === null || $diff >= 0 || ($upgrade['count'] ?? 0) <= 0) {
+                continue;
+            }
+            $targets[] = [
+                'name' => (string) $upgrade['name'],
+                'count' => (int) $upgrade['count'],
+                'unit_cents' => -$diff,
+            ];
+        }
+
+        return $targets;
+    }
+
+    /**
+     * La COBERTURA de puerta de la reserva (§24.3·4): la suma neta de sus dos cubos —`extra_due`
+     * de las líneas NO-crédito (los cargos de fiesta mixta recién escritos y los de ediciones) y
+     * `deposit_remainder`— que es el dinero del que un descuento puede restar sin dejar ningún
+     * canal en negativo.
+     *
+     * ⚠️ Consulta FRESCA bajo el lock, no las relaciones: `apply()` acaba de crear o mover cargos
+     * en esta misma transacción y las colecciones cargadas antes no los ven.
+     */
+    private function gateCoverageCents(OrderItem $principal): int
+    {
+        $items = collect([$principal])->merge($principal->children()->get())
+            ->reject(fn (OrderItem $i): bool => $i->isCancelled());
+        $nonCreditIds = $items->reject(fn (OrderItem $i): bool => (bool) $i->is_credit)
+            ->map(fn (OrderItem $i): int => (int) $i->id)->all();
+        $allIds = $items->map(fn (OrderItem $i): int => (int) $i->id)->all();
+
+        $coverage = 0;
+        foreach (OrderAdjustment::query()->where('order_id', $principal->order_id)->whereIn('order_item_id', $allIds)->get() as $adj) {
+            if ($adj->type === OrderAdjustment::TYPE_EXTRA_DUE && in_array((int) $adj->order_item_id, $nonCreditIds, true)) {
+                $coverage += (int) $adj->amount_cents;
+            }
+            if ($adj->type === OrderAdjustment::TYPE_DEPOSIT_REMAINDER) {
+                $coverage += (int) $adj->amount_cents;
+            }
+        }
+
+        return max(0, $coverage);
+    }
+
+    /**
+     * El EXCESO «a tu favor» (T4, §20.4 y §24.4): la parte del descuento derivado que la puerta no
+     * pudo absorber y por eso NO está escrita — se enseña y se liquida en el parque (§20.5).
+     * `0` sin veredicto que gobierne: el exceso es una promesa, y una promesa no se hace sobre un
+     * silencio. Lectura pura sobre relaciones ya cargadas.
+     */
+    public function inFavourCents(OrderItem $principal): int
+    {
+        $mix = $this->mix->for($principal);
+        if (! $this->derivationGoverns($mix)) {
+            return 0;
+        }
+
+        $derived = 0;
+        foreach ($this->creditTargets($mix) as $t) {
+            $derived += $t['count'] * $t['unit_cents'];
+        }
+        if ($derived === 0) {
+            return 0;
+        }
+
+        return max(0, $derived - ($this->currentCredit($principal)['cents'] ?? 0));
+    }
+
+    /**
      * Lo que hay ESCRITO hoy de suplemento en esta reserva: importe y nº de invitados.
      *
      * Es lo que el cliente debe de verdad, y no siempre coincide con el veredicto derivado — por
@@ -428,14 +671,24 @@ class MixedPartySurcharge
      * retocara una tarifa: «te corresponde Jump a 30,00 € en vez de Kids a 18,00 €» encima de un
      * suplemento de 7,00 €. La resta no le cuadraría y tendría razón.
      *
-     * @return array{cents:int, guests:int, lines:list<array{name:string, count:int, unit:int}>}
+     * ▶ **Desde la T4, `cents` es el NETO (con signo)**: cargo − descuento. El descuento viaja
+     * aparte en `credit` —con su frase YA COMPUESTA por el dominio (`breakdownLabel`), para que
+     * la hoja, la puerta, el post-form y la ficha digan exactamente lo mismo— y los dos sumandos
+     * en `charge_cents`/`credit_cents` para quien necesite pintarlos por separado.
+     *
+     * @return array{cents:int, charge_cents:int, credit_cents:int, guests:int, lines:list<array{name:string, count:int, unit:int}>, credit:array{cents:int, guests:int, label:string}|null}
      */
     public function written(OrderItem $principal): array
     {
         $lines = $this->currentLines($principal);
+        $credit = $this->currentCredit($principal);
+        $chargeCents = $this->totalOf($lines);
+        $creditCents = $credit['cents'] ?? 0;
 
         return [
-            'cents' => $this->totalOf($lines),
+            'cents' => $chargeCents - $creditCents,
+            'charge_cents' => $chargeCents,
+            'credit_cents' => $creditCents,
             'guests' => array_sum(array_column($lines, 'count')),
             'lines' => array_values(array_map(static fn (array $l): array => [
                 // El nombre GUARDADO, no el resuelto: es el que se le dijo, y así la frase no
@@ -444,6 +697,11 @@ class MixedPartySurcharge
                 'count' => $l['count'],
                 'unit' => $l['unit'],
             ], $lines)),
+            'credit' => $credit === null ? null : [
+                'cents' => $creditCents,
+                'guests' => (int) ($credit['mark']['guests'] ?? 0),
+                'label' => $credit['adjustment']->breakdownLabel(),
+            ],
         ];
     }
 
@@ -466,10 +724,20 @@ class MixedPartySurcharge
      */
     public function governedLineIds(OrderItem $principal): array
     {
-        return array_values(array_map(
+        $ids = array_values(array_map(
             static fn (array $l): int => (int) $l['item']->id,
             $this->currentLines($principal),
         ));
+
+        // La línea de CRÉDITO (T4) también la gobierna este servicio, con más razón todavía: el
+        // operador que la pusiera a 0 en Complementos vería a la reconciliación recrearla en la
+        // misma pulsación — y además su tope depende de los cubos de puerta, no de un gesto.
+        $credit = $this->currentCredit($principal);
+        if ($credit !== null) {
+            $ids[] = (int) $credit['item']->id;
+        }
+
+        return $ids;
     }
 
     /**

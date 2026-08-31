@@ -276,28 +276,43 @@
                          atrás, si falta el producto que lo lleva (y entonces esta fiesta no cobra
                          nada) y si el veredicto está todavía a medias. --}}
                     @php
-                        $mixWritten = app(\App\Domain\Booking\Services\MixedPartySurcharge::class)->written($item);
+                        $mixService = app(\App\Domain\Booking\Services\MixedPartySurcharge::class);
+                        $mixWritten = $mixService->written($item);
+                        // ¿Hay ALGO escrito (cargo o descuento)? El neto puede ser 0 con las dos
+                        // cosas puestas (T4: un cargo cubierto entero por el descuento) y eso sigue
+                        // siendo dinero escrito que explicar.
+                        $mixHasWritten = $mixWritten['charge_cents'] > 0 || $mixWritten['credit_cents'] > 0;
+                        // El EXCESO «a tu favor» (T4, §20.4): descuento derivado que la puerta no
+                        // pudo absorber. Derivado, no escrito; 0 sin veredicto que gobierne.
+                        $mixInFavour = $mixService->inFavourCents($item);
+                        // El desfase se mira por el lado del CARGO (su propósito de siempre: lo
+                        // escrito no sigue al catálogo). El lado del descuento no «drifta»: su tope
+                        // es la cobertura y su resto legítimo ya tiene línea propia («a tu favor»).
                         $mixDrift = $mix->applies
                             && $mix->surchargeCents !== null
-                            && $mix->surchargeCents !== $mixWritten['cents'];
+                            && $mix->surchargeCents !== $mixWritten['charge_cents'];
                         // ⚠️⚠️ Hay dinero escrito que el cliente debe en el parque y NO hay veredicto
                         // contra el que contrastarlo. Sin esta rama el bloque entero desaparecía y
                         // el operador se encontraba un importe en «a cobrar en el parque» SIN una
                         // sola línea que lo explicara: medido, 7,00 € y cero explicación. Con el
                         // sello (`specs/cumple-mixto.md` §21.5) esto ya no lo produce un cambio de
                         // catálogo: lo produce una reserva SIN sello (anterior a él), y se dice así.
-                        $mixOrphaned = ! $mix->applies && ! $mix->staleSeal && $mixWritten['cents'] > 0;
+                        $mixOrphaned = ! $mix->applies && ! $mix->staleSeal && $mixHasWritten;
                         // El sello no corresponde a la fila (pack o fecha movidos sin re-sellar):
                         // el veredicto calla y no se mueve dinero, pero el operador tiene que verlo.
                         $mixStale = $mix->staleSeal;
-                        // El portador solo se consulta cuando su ausencia explicaría algo: cuando el
-                        // veredicto pide cobrar y no hay nada escrito.
+                        // Los portadores solo se consultan cuando su ausencia explicaría algo:
+                        // cuando el veredicto pide escribir y no hay nada escrito de ese lado.
                         $mixCarrierMissing = $mix->mixed
                             && ($mix->surchargeCents ?? 0) > 0
-                            && $mixWritten['cents'] === 0
+                            && $mixWritten['charge_cents'] === 0
                             && \App\Domain\Booking\Services\MixedPartySettings::surchargeProduct() === null;
+                        $mixCreditCarrierMissing = ($mix->savingsCents ?? 0) > 0
+                            && $mixWritten['credit_cents'] === 0
+                            && $mixInFavour > 0
+                            && \App\Domain\Booking\Services\MixedPartySettings::creditProduct() === null;
                     @endphp
-                    @if (! $isItemCancelled && ($mixOrphaned || $mixStale || ($mix->applies && ($mix->mixed || $mixWritten['cents'] > 0 || ! $mix->isComplete()))))
+                    @if (! $isItemCancelled && ($mixOrphaned || $mixStale || ($mix->applies && ($mix->mixed || $mixHasWritten || ! $mix->isComplete()))))
                         <div class="mt-2 space-y-1 rounded-md bg-violet-50 p-2 ring-1 ring-violet-600/15 dark:bg-violet-400/10 dark:ring-violet-400/20">
                             @if ($mix->mixed)
                                 <div class="font-medium text-violet-800 dark:text-violet-300">
@@ -316,17 +331,29 @@
                                 @endforeach
                             @endif
 
-                            @if ($mixWritten['cents'] > 0)
+                            @if ($mixWritten['charge_cents'] > 0)
                                 <div class="font-semibold text-violet-900 dark:text-violet-200">
-                                    {{ __('admin.orders.mixed_party.applied', ['amount' => \App\Domain\Platform\Services\Money::format($mixWritten['cents'])]) }}
+                                    {{ __('admin.orders.mixed_party.applied', ['amount' => \App\Domain\Platform\Services\Money::format($mixWritten['charge_cents'])]) }}
                                 </div>
-                            @elseif ($mix->hasSavings())
-                                {{-- ⚠️ INFORMATIVO, no dinero (`[owner, 2026-08-29]`, §14): la fiesta
-                                     saldría más barata en el régimen que le toca, pero NO se descuenta
-                                     sola. No entra en ningún total ni en «Pendiente de devolución»,
-                                     que es deuda real del parque y cuadra con `PAY-16`/`PAY-17`. --}}
+                            @endif
+                            @if ($mixWritten['credit'] !== null)
+                                {{-- T4 (§24.5): el DESCUENTO escrito, con la frase compuesta por el
+                                     dominio — la misma que leen el cliente, la hoja y la puerta. --}}
+                                <div class="font-semibold text-violet-900 dark:text-violet-200">
+                                    {{ $mixWritten['credit']['label'] }}: −{{ \App\Domain\Platform\Services\Money::format($mixWritten['credit']['cents']) }}
+                                </div>
+                            @endif
+                            @if ($mixWritten['charge_cents'] > 0 && $mixWritten['credit_cents'] > 0)
                                 <div class="text-violet-900 dark:text-violet-200">
-                                    {{ __('admin.orders.mixed_party.cheaper', ['amount' => \App\Domain\Platform\Services\Money::format($mix->savingsCents)]) }}
+                                    {{ __('admin.orders.mixed_party.net', ['amount' => ($mixWritten['cents'] < 0 ? '−' : '+').\App\Domain\Platform\Services\Money::format(abs($mixWritten['cents']))]) }}
+                                </div>
+                            @endif
+                            @if ($mixInFavour > 0)
+                                {{-- El EXCESO que la puerta no pudo absorber (§20.4): dinero A FAVOR
+                                     del cliente que se liquida EN el parque (§20.5). NO entra en
+                                     «Pendiente de devolución», que es deuda bancaria (`PAY-17`). --}}
+                                <div class="text-violet-900 dark:text-violet-200">
+                                    {{ __('admin.orders.mixed_party.in_favour', ['amount' => \App\Domain\Platform\Services\Money::format($mixInFavour)]) }}
                                 </div>
                             @endif
 
@@ -342,12 +369,14 @@
                                 <div class="text-amber-800 dark:text-amber-300">{{ __('admin.orders.mixed_party.orphaned') }}</div>
                             @elseif ($mixCarrierMissing)
                                 <div class="font-semibold text-red-700 dark:text-red-300">{{ __('admin.orders.mixed_party.missing_carrier') }}</div>
+                            @elseif ($mixCreditCarrierMissing)
+                                <div class="font-semibold text-red-700 dark:text-red-300">{{ __('admin.orders.mixed_party.missing_credit_carrier') }}</div>
                             @elseif ($mix->mixed && $mix->surchargeCents === null)
                                 <div class="text-amber-800 dark:text-amber-300">{{ __('admin.orders.mixed_party.unpriced') }}</div>
                             @elseif ($mixDrift)
                                 <div class="text-amber-800 dark:text-amber-300">
                                     {{ __('admin.orders.mixed_party.drift', [
-                                        'written' => \App\Domain\Platform\Services\Money::format($mixWritten['cents']),
+                                        'written' => \App\Domain\Platform\Services\Money::format($mixWritten['charge_cents']),
                                         'derived' => \App\Domain\Platform\Services\Money::format($mix->surchargeCents),
                                     ]) }}
                                 </div>
@@ -355,9 +384,9 @@
 
                             @if ($mix->withoutAge > 0)
                                 {{-- El dinero solo se mueve con TODAS las edades (`#285` §20.6): con
-                                     cargo escrito, lo que importa es que está CONGELADO y cuántas faltan;
-                                     sin cargo, solo que el veredicto puede cambiar. --}}
-                                @if ($mixWritten['cents'] > 0)
+                                     dinero escrito, lo que importa es que está CONGELADO y cuántas
+                                     faltan; sin nada escrito, solo que el veredicto puede cambiar. --}}
+                                @if ($mixHasWritten)
                                     <div class="text-amber-800 dark:text-amber-300">{{ trans_choice('admin.orders.mixed_party.frozen', $mix->withoutAge, ['count' => $mix->withoutAge]) }}</div>
                                 @else
                                     <div class="text-amber-800 dark:text-amber-300">{{ __('admin.orders.mixed_party.without_age', ['count' => $mix->withoutAge]) }}</div>

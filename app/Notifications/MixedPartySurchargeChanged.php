@@ -67,22 +67,45 @@ class MixedPartySurchargeChanged extends Notification implements ShouldQueue
 
         $message->line(EmailProductCard::forItem($this->item));
 
-        // Tres desenlaces y tres frases: nace, cambia de importe o desaparece. Fundirlos en «tu
-        // suplemento es ahora X» dejaría el caso de la retirada diciendo «ahora es 0,00 €», que es
-        // exactamente el tipo de línea que un cliente no sabe leer.
+        // Los desenlaces del NETO (T4: cargo − descuento, con signo) y una frase para cada uno:
+        // nace, cambia o desaparece — en la voz del suplemento o en la del descuento. Fundirlos en
+        // «tu importe es ahora X» dejaría la retirada diciendo «ahora es 0,00 €», que es
+        // exactamente el tipo de línea que un cliente no sabe leer. El cruce de signo (un cargo
+        // que pasa a descuento en una familia de tres tramos) tiene su frase propia, con cada
+        // importe rotulado — un «pasa de 5,00 € a 7,00 €» sin rótulos mentiría sobre la dirección.
+        $signed = fn (int $cents): string => $cents < 0
+            ? __('emails.mixed_party_surcharge.amount_discount', ['amount' => $amount(-$cents)])
+            : __('emails.mixed_party_surcharge.amount_surcharge', ['amount' => $amount($cents)]);
+
         if ($this->newCents === 0) {
-            $message->line(__('emails.mixed_party_surcharge.removed'));
-        } elseif ($this->oldCents === 0) {
+            $message->line(__($this->oldCents > 0
+                ? 'emails.mixed_party_surcharge.removed'
+                : 'emails.mixed_party_surcharge.credit_removed'));
+        } elseif ($this->newCents > 0 && $this->oldCents === 0) {
             $message->line(__('emails.mixed_party_surcharge.added', ['amount' => $amount($this->newCents)]));
-        } else {
+        } elseif ($this->newCents < 0 && $this->oldCents === 0) {
+            $message->line(__('emails.mixed_party_surcharge.credit_added', ['amount' => $amount(-$this->newCents)]));
+        } elseif ($this->newCents > 0 && $this->oldCents > 0) {
             $message->line(__('emails.mixed_party_surcharge.updated', [
                 'old' => $amount($this->oldCents),
                 'new' => $amount($this->newCents),
+            ]));
+        } elseif ($this->newCents < 0 && $this->oldCents < 0) {
+            $message->line(__('emails.mixed_party_surcharge.credit_updated', [
+                'old' => $amount(-$this->oldCents),
+                'new' => $amount(-$this->newCents),
+            ]));
+        } else {
+            $message->line(__('emails.mixed_party_surcharge.changed_direction', [
+                'old' => $signed($this->oldCents),
+                'new' => $signed($this->newCents),
             ]));
         }
 
         if ($this->newCents > 0) {
             $message->line(__('emails.mixed_party_surcharge.where_to_pay'));
+        } elseif ($this->newCents < 0) {
+            $message->line(__('emails.mixed_party_surcharge.where_discounted'));
         }
 
         return $message->line(__('emails.mixed_party_surcharge.editable'));

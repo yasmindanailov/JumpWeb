@@ -928,7 +928,7 @@ class Order extends Model
             }
             $key = $itemId ?? 'order';
             if (! isset($byItem[$key])) {
-                $byItem[$key] = ['amount' => 0, 'item' => $item, 'hasProductChange' => false, 'hasQuantityChange' => false, 'positives' => []];
+                $byItem[$key] = ['amount' => 0, 'item' => $item, 'hasProductChange' => false, 'hasQuantityChange' => false, 'positives' => [], 'creditAdj' => null];
             }
             $byItem[$key]['amount'] += (int) $adj->amount_cents;
             $ctx = is_array($adj->context) ? $adj->context : [];
@@ -943,10 +943,24 @@ class Order extends Model
             if ((int) $adj->amount_cents > 0) {
                 $byItem[$key]['positives'][] = $adj;
             }
+            // El ajuste gemelo de una línea de CRÉDITO (T4 de fiesta mixta): su frase sale de él.
+            if ($item?->is_credit) {
+                $byItem[$key]['creditAdj'] = $adj;
+            }
         }
 
         $lines = [];
         foreach ($byItem as $entry) {
+            // ⚠️ Las líneas de CRÉDITO se emiten EN NEGATIVO con su propia frase (T4,
+            // `specs/cumple-mixto.md` §24.5): saltarlas —lo que este filtro hacía con todo neto
+            // ≤ 0— dejaba el desglose ↳ sumando 90,00 bajo un titular de 82,00 (la identidad D del
+            // guardián lo caza). El filtro se queda para lo que siempre filtró: un ítem cuyo cargo
+            // quedó neteado a nada por sus propios créditos de edición.
+            if ($entry['creditAdj'] !== null && $entry['amount'] < 0) {
+                $lines[] = ['label' => $entry['creditAdj']->breakdownLabel(), 'amount' => $entry['amount']];
+
+                continue;
+            }
             if ($entry['amount'] <= 0) {
                 continue;
             }

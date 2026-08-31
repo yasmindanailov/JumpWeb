@@ -103,6 +103,19 @@ class OrderAdjustment extends Model
             $guests = (int) ($mixed['guests'] ?? 0);
             $target = $mixed['target_name'] ?? null;
 
+            // El DESCUENTO (T4, `specs/cumple-mixto.md` §24.5): la línea espejo del suplemento.
+            // El destino viaja en `targets` (lista: el tope puede juntar varios packs baratos en
+            // una sola línea); con uno solo se nombra, con varios se cae a la frase genérica —
+            // que sigue siendo cierta y no inventa un reparto.
+            if (($mixed['credit'] ?? false) === true) {
+                $targets = is_array($mixed['targets'] ?? null) ? $mixed['targets'] : [];
+                $creditTarget = count($targets) === 1 ? ($targets[0]['name'] ?? null) : null;
+
+                return $creditTarget !== null && $creditTarget !== ''
+                    ? trans_choice('tickets.gate_mixed_party_credit_line_named', $guests, ['count' => $guests, 'target' => $creditTarget])
+                    : trans_choice('tickets.gate_mixed_party_credit_line', $guests, ['count' => $guests]);
+            }
+
             // ⚠️ `trans_choice` y no `__`: con un solo invitado, la frase decía «Suplemento por 1
             // invitadoS». Un desglose de dinero que no concuerda en número se lee como descuidado
             // justo donde más confianza hace falta.

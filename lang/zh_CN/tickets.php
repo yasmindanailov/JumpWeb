@@ -13,6 +13,8 @@ return [
     'mixed_party_product_name' => ':name · :badge',
     'gate_mixed_party_line' => ':count 位其他年龄段来宾的补差价|:count 位其他年龄段来宾的补差价',
     'gate_mixed_party_line_named' => ':count 位来宾应属于 :target 的补差价|:count 位来宾应属于 :target 的补差价',
+    'gate_mixed_party_credit_line' => ':count 位较低价年龄段来宾的折扣|:count 位较低价年龄段来宾的折扣',
+    'gate_mixed_party_credit_line_named' => ':count 位来宾应属于 :target 的折扣|:count 位来宾应属于 :target 的折扣',
     'time_no_limit' => '无限制',
 
     // Complementos (#190): el view-model compartido `AddonResolver::viewModel` se reutiliza en el

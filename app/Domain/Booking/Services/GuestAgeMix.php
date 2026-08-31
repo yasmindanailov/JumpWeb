@@ -73,12 +73,15 @@ final class GuestAgeMix
     /**
      * ¿Hay algo que decir de que la fiesta salga MÁS BARATA en el régimen que corresponde?
      *
-     * ⚠️⚠️ **Esto NO es dinero y no puede entrar en el desglose como si lo fuera.**
-     * `[owner, 2026-08-29]`: «no se devuelve dinero automáticamente, solo avisar al operador y al
-     * cliente de que la reserva es X € más barata por ese cambio». El desglose ya tiene un canal
-     * «Pendiente de devolución» y es **deuda real** del parque, con `PAY-16`/`PAY-17` cuadrando
-     * sobre él: meter aquí una cifra informativa lo descuadraría y —peor— el cliente leería una
-     * deuda que no existe. Va como AVISO, aparte, y no suma en ningún total.
+     * ▶ **Desde la T4 (`[DECIDIDO owner]` D5, §20/§24) esto alimenta el DESCUENTO real**: el
+     * espejo del suplemento, acotado al dinero de puerta (`MixedPartySurcharge::applyCredit`). Lo
+     * que la puerta no puede absorber se enseña como «a tu favor» (`inFavourCents`) y se liquida
+     * en el parque.
+     *
+     * ⚠️⚠️ **El exceso sigue sin ser deuda bancaria**: «Pendiente de devolución» es deuda REAL con
+     * `PAY-16`/`PAY-17` cuadrando sobre él — meter ahí el «a tu favor» lo descuadraría y el
+     * cliente leería una deuda que no existe. Por eso viaja como frase propia y no suma en ningún
+     * canal.
      */
     public function hasSavings(): bool
     {

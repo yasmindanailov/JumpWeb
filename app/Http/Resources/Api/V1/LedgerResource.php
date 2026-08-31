@@ -56,6 +56,9 @@ class LedgerResource extends JsonResource
             // superficie re-derive `invoiced_cents !== value.total_cents` — la misma lección de `L1`.
             'invoiced_hint' => $l->facturadoNota,
             'gate_lines' => $l->gateLines,
+            // El «a tu favor» de fiesta mixta (T4, `specs/cumple-mixto.md` §24.4): frase compuesta
+            // por el dominio, con `null` como condición de enseñarla — el patrón de `invoiced_hint`.
+            'in_favour_hint' => $l->inFavourHint,
             'has_deposit' => $l->hasDeposit,
             // ⚠️⚠️ **Si esto es `false`, el desglose por canales NO es cierto** y el cliente no debe
             // pintarlo (`DECISIONES #132`). Se publica en vez de dejar que cada superficie recomponga

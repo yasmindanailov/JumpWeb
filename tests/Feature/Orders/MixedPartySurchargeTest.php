@@ -14,6 +14,7 @@ use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Booking\Services\MixedPartySettings;
 use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Domain\Booking\Services\OrderItemEditor;
+use App\Domain\Booking\Services\OrderLedger;
 use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
@@ -736,5 +737,264 @@ class MixedPartySurchargeTest extends TestCase
         // Quedan las fichas de 8 y 9 (dos por encima), pero NO se recalcula: sigue lo escrito.
         $this->assertSame(1400, $this->financials($item->fresh())->aCobrarPuerta, 'congelado también desde el panel');
         Notification::assertNotSentTo($item->order->user, MixedPartySurchargeChanged::class);
+    }
+
+    // ─── T4 · el −X €: el ESPEJO acotado a puerta (`specs/cumple-mixto.md` §20 y §24) ───────────
+
+    /**
+     * Una fiesta del pack CARO (Jump) con señal opcional: el escenario del descuento. El resto de
+     * la señal es la COBERTURA de puerta de la que el espejo puede restar.
+     *
+     * @param  list<int|null>  $ages
+     */
+    private function jumpParty(array $ages, int $depositRemainderCents = 0): OrderItem
+    {
+        $guests = count($ages);
+        $subtotal = 2500 * $guests;
+        $order = Order::create([
+            'user_id' => User::factory()->create()->id,
+            'code' => 'JJ-MC'.str_pad((string) ++$this->counter, 4, '0', STR_PAD_LEFT),
+            'status' => Order::STATUS_PAID, 'paid_at' => now(),
+            'subtotal' => $subtotal - $depositRemainderCents, 'tax' => 0,
+            'total' => $subtotal - $depositRemainderCents, 'currency' => 'EUR',
+        ]);
+        Payment::create([
+            'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
+            'amount' => $order->total, 'currency' => 'EUR', 'provider' => 'redsys',
+            'status' => Payment::STATUS_PAID, 'paid_at' => now(),
+            'gateway_order' => str_pad((string) (250000 + $this->counter), 10, '0', STR_PAD_LEFT),
+        ]);
+        $item = $order->items()->create([
+            'ticket_type_id' => $this->jump->id, 'slot_id' => $this->slot->id,
+            'quantity' => $guests, 'unit_price' => 2500, 'seats' => $guests,
+        ]);
+        if ($depositRemainderCents > 0) {
+            OrderAdjustment::create([
+                'order_id' => $order->id, 'order_item_id' => $item->id,
+                'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+                'amount_cents' => $depositRemainderCents, 'currency' => 'EUR',
+                'applied_by' => $order->user_id,
+            ]);
+        }
+        app(AgeFamilySealer::class)->seal($item, $this->jump, $this->slot->date);
+
+        return $this->declareAges($item->fresh(), $ages);
+    }
+
+    /** La línea de crédito VIVA de la reserva, o `null`. */
+    private function creditLine(OrderItem $item): ?OrderItem
+    {
+        return $item->children()->whereNull('cancelled_at')->where('is_credit', true)->first();
+    }
+
+    /** @return array{cents:int, charge_cents:int, credit_cents:int, guests:int, lines:array, credit:?array} */
+    private function writtenOf(OrderItem $item): array
+    {
+        return app(MixedPartySurcharge::class)->written($item->fresh(['ticketType', 'slot', 'order', 'children']));
+    }
+
+    /** PAY-16 por reserva + ningún canal negativo — el contrato que el espejo no puede romper. */
+    private function assertChannelsClose(OrderItem $item, string $label): void
+    {
+        $rf = $this->financials($item->fresh());
+        $this->assertSame(
+            $rf->valor,
+            $rf->pagadoOnline + $rf->pendienteOnline + $rf->aCobrarPuerta + $rf->cobradoPuerta + $rf->compensado,
+            "$label · PAY-16 por reserva",
+        );
+        foreach (['pagadoOnline', 'pendienteOnline', 'aCobrarPuerta', 'cobradoPuerta', 'compensado'] as $canal) {
+            $this->assertGreaterThanOrEqual(0, $rf->{$canal}, "$label · «{$canal}» negativo");
+        }
+    }
+
+    public function test_a_cheaper_guest_writes_the_mirrored_discount(): void
+    {
+        // Jump 3 × 25,00 con señal (resto 50,00 en puerta); el de 4 años corresponde a Kids
+        // (−7,00). El espejo: línea `is_credit` + `extra_due` gemelo NEGATIVO del mismo importe.
+        $item = $this->jumpParty([8, 9, 4], depositRemainderCents: 5000);
+
+        $credit = $this->creditLine($item);
+        $this->assertNotNull($credit, 'el descuento se escribe de verdad (`[DECIDIDO owner]` D5)');
+        $this->assertTrue((bool) $credit->is_credit);
+        $this->assertSame(-700, $credit->chargedSubtotalCents(), 'el subtotal RESTA');
+        $this->assertSame(0, (int) $credit->seats);
+        $this->assertNull($credit->slot_id);
+
+        $adjustment = OrderAdjustment::where('order_item_id', $credit->id)->firstOrFail();
+        $this->assertSame(OrderAdjustment::TYPE_EXTRA_DUE, $adjustment->type);
+        $this->assertSame(-700, (int) $adjustment->amount_cents);
+        $this->assertTrue($adjustment->context['mixed_party']['credit']);
+
+        $rf = $this->financials($item);
+        $this->assertSame(4300, $rf->aCobrarPuerta, '50,00 − 7,00: en la puerta le pedirán 43,00');
+        $this->assertSame(2500 * 3 - 5000, $rf->pagadoOnline, 'la señal no se toca');
+        $this->assertSame(0, $rf->pendienteReembolso, 'un descuento de puerta no es deuda bancaria');
+        $this->assertChannelsClose($item, 'descuento con señal');
+        $this->assertSame(-700, $this->writtenOf($item)['cents'], 'el neto es el descuento');
+    }
+
+    public function test_the_discount_is_capped_by_the_gate_coverage(): void
+    {
+        // CASO C (§19.4): la puerta solo tiene 3,00 € → se escriben 3,00 de los 7,00 derivados y
+        // los 4,00 restantes son el «a tu favor» — enseñado, no escrito (§20.4).
+        $item = $this->jumpParty([8, 9, 4], depositRemainderCents: 300);
+
+        $written = $this->writtenOf($item);
+        $this->assertSame(300, $written['credit_cents'], 'el tope deja escribir solo la cobertura');
+        $this->assertSame(400, app(MixedPartySurcharge::class)->inFavourCents($item->fresh(['ticketType', 'slot', 'order', 'children'])));
+        $this->assertSame(0, $this->financials($item)->aCobrarPuerta, 'la puerta queda en cero exacto, no en negativo');
+        $this->assertChannelsClose($item, 'tope de cobertura');
+    }
+
+    public function test_fully_online_writes_no_discount_and_shows_it_in_favour(): void
+    {
+        // CASO B (§20.2 fase 2): sin puerta que absorber NO se escribe nada — escribirlo dejaría
+        // la puerta en negativo y el cinturón mordería. El importe entero queda «a tu favor».
+        // Mutación obligatoria (§20.8): quitar el `min()` del tope pone esto en rojo.
+        $item = $this->jumpParty([8, 9, 4]);
+
+        $this->assertNull($this->creditLine($item), 'sin cobertura, el descuento no se escribe');
+        $this->assertSame(0, $this->writtenOf($item)['credit_cents']);
+        $this->assertSame(700, app(MixedPartySurcharge::class)->inFavourCents($item->fresh(['ticketType', 'slot', 'order', 'children'])));
+        $this->assertSame(0, $this->financials($item)->aCobrarPuerta);
+        $this->assertChannelsClose($item, '100 % online');
+    }
+
+    public function test_the_discount_follows_the_ages_back_up(): void
+    {
+        // La simetría del owner: si la edad vuelve a subir, el descuento se retira solo — el mismo
+        // camino que el cargo, con el signo cambiado.
+        $item = $this->jumpParty([8, 9, 4], depositRemainderCents: 5000);
+        $this->assertSame(700, $this->writtenOf($item)['credit_cents']);
+
+        $item = $this->declareAges($item, [8, 9, 10]);
+
+        $this->assertNull($this->creditLine($item), 'ya nadie está por debajo: el descuento se retira');
+        $this->assertSame(5000, $this->financials($item)->aCobrarPuerta, 'la puerta vuelve a su señal');
+        $this->assertChannelsClose($item, 'edades de vuelta arriba');
+    }
+
+    public function test_a_blank_age_freezes_the_discount_too(): void
+    {
+        // §20.6: UNA regla para las dos direcciones. Con una edad en blanco, el descuento escrito
+        // ni crece, ni encoge, ni se retira — y no se le anuncia nada a nadie.
+        $item = $this->jumpParty([8, 9, 4], depositRemainderCents: 5000);
+        $this->assertSame(700, $this->writtenOf($item)['credit_cents']);
+        Notification::fake();
+        AuditLog::query()->delete();
+
+        $item = $this->declareAges($item, [8, null, 4]);
+
+        $this->assertSame(700, $this->writtenOf($item)['credit_cents'], 'congelado');
+        $this->assertSame(0, AuditLog::where('action', 'orders.mixed_party_surcharge_synced')->count());
+        Notification::assertNothingSent();
+    }
+
+    public function test_silence_does_not_move_the_discount_in_either_direction(): void
+    {
+        // El silencio (sin sello) deja al CARGO crecer (`#268`), pero el CRÉDITO no se mueve en
+        // NINGUNA dirección (§24.3·7): crearlo o crecerlo en silencio regala dinero; encogerlo lo
+        // quita. Mutación: `applyCredit` sin la condición `derivationGoverns` — con el sello
+        // quitado, el veredicto «no aplica» derivaría crédito 0 y RETIRARÍA la línea.
+        $item = $this->jumpParty([8, 9, 4], depositRemainderCents: 5000);
+        $this->assertSame(700, $this->writtenOf($item)['credit_cents']);
+
+        $item->fresh()->forceFill(['age_family_seal' => null])->save(); // el silencio de «sin sello»
+        $item = $this->declareAges($item, [8, 9, 4]); // el cliente toca el formulario
+
+        $this->assertSame(700, $this->writtenOf($item)['credit_cents'], 'el silencio no lo toca');
+        $this->assertChannelsClose($item, 'silencio');
+    }
+
+    public function test_charges_feed_the_coverage_of_the_discount(): void
+    {
+        // Familia de TRES: reservado el del medio (Jump 25,00), un invitado por ENCIMA (Teens
+        // 30,00 → cargo +5,00) y otro por DEBAJO (Kids 18,00 → descuento −7,00). El cargo de la
+        // misma pasada ES cobertura: sin señal, el tope deja escribir 5,00 de los 7,00 — y los
+        // 2,00 restantes quedan «a tu favor». La puerta cierra en CERO exacto.
+        $this->pack('Cumpleaños Teens', 12, 99, 3000, RateType::firstOrFail());
+        $this->jump->forceFill(['guest_age_max' => 11])->save();
+
+        $item = $this->jumpParty([8, 13, 4]);
+
+        $written = $this->writtenOf($item);
+        $this->assertSame(500, $written['charge_cents'], 'el de 13 sube a Teens');
+        $this->assertSame(500, $written['credit_cents'], 'el de 4 descuenta hasta donde la puerta llega');
+        $this->assertSame(200, app(MixedPartySurcharge::class)->inFavourCents($item->fresh(['ticketType', 'slot', 'order', 'children'])));
+        $this->assertSame(0, $this->financials($item)->aCobrarPuerta);
+        $this->assertChannelsClose($item, 'cargo y descuento a la vez');
+    }
+
+    public function test_the_credit_context_never_carries_changes(): void
+    {
+        // La trampa MEDIDA de §16.5.bis, ahora aseverada: con un `changes.quantity_change` en el
+        // context, `itemOriginalOnlineCents` «reconstruye» un original y el eje de caja inventa un
+        // «pendiente de devolución» fantasma. Mutación: meter `changes` → la segunda aserción cae.
+        $item = $this->jumpParty([8, 9, 4], depositRemainderCents: 5000);
+
+        $adjustment = OrderAdjustment::where('order_item_id', $this->creditLine($item)->id)->firstOrFail();
+        $this->assertArrayNotHasKey('changes', $adjustment->context);
+        $this->assertSame(0, $this->financials($item)->pendienteReembolso, 'el descuento no inventa deuda bancaria');
+    }
+
+    public function test_without_the_credit_carrier_nothing_is_written(): void
+    {
+        Setting::where('key', MixedPartySettings::CREDIT_PRODUCT_KEY)->delete();
+        Setting::flushMemo();
+
+        $item = $this->jumpParty([8, 9, 4], depositRemainderCents: 5000);
+
+        $this->assertNull($this->creditLine($item), 'sin portador no se inventa una línea');
+        $this->assertSame(5000, $this->financials($item)->aCobrarPuerta, 'y lo demás queda como estaba');
+        $this->assertChannelsClose($item, 'sin portador del descuento');
+    }
+
+    public function test_the_email_speaks_with_the_discount_voice(): void
+    {
+        Notification::fake();
+        $item = $this->jumpParty([8, 9, 4], depositRemainderCents: 5000);
+
+        Notification::assertSentTo(
+            $item->order->user,
+            MixedPartySurchargeChanged::class,
+            function (MixedPartySurchargeChanged $n) use ($item): bool {
+                $mail = $n->toMail($item->order->user);
+
+                // El neto pasó de 0 a −7,00: la voz es la del DESCUENTO, no un «suplemento −7,00».
+                return $n->oldCents === 0 && $n->newCents === -700
+                    && in_array(__('emails.mixed_party_surcharge.credit_added', ['amount' => '7,00']), $mail->introLines, true)
+                    && in_array(__('emails.mixed_party_surcharge.where_discounted'), $mail->introLines, true)
+                    && ! in_array(__('emails.mixed_party_surcharge.where_to_pay'), $mail->introLines, true);
+            },
+        );
+    }
+
+    public function test_the_ledger_publishes_the_in_favour_hint_with_null_as_its_condition(): void
+    {
+        // El patrón de `invoiced_hint` (`L6`): la frase compuesta por el dominio Y su condición.
+        // Mutación (§24.7·G): publicar siempre `null` deja al cliente sin saber que tiene dinero
+        // a su favor — y este caso en rojo.
+        $with = $this->jumpParty([8, 9, 4]); // 100 % online: 7,00 € a favor, nada escrito
+        $withLedger = OrderLedger::forReservation(
+            $with->order()->with(['items.ticketType', 'items.slot', 'adjustments', 'payments.refunds'])->first(),
+            $with->fresh(['ticketType', 'slot', 'order', 'children']),
+        );
+        $this->assertSame(
+            __('tickets.ledger_in_favour', ['amount' => '7,00 €']),
+            $withLedger->inFavourHint,
+        );
+
+        // Y el agregado del pedido dice lo mismo que su única reserva.
+        $orderLedger = OrderLedger::forOrder(
+            $with->order()->with(['items.ticketType', 'items.slot', 'items.children', 'adjustments', 'payments.refunds'])->first(),
+        );
+        $this->assertSame($withLedger->inFavourHint, $orderLedger->inFavourHint);
+
+        // La condición: con el descuento ABSORBIDO entero por la puerta no hay exceso ni frase.
+        $without = $this->jumpParty([8, 9, 4], depositRemainderCents: 5000);
+        $this->assertNull(OrderLedger::forReservation(
+            $without->order()->with(['items.ticketType', 'items.slot', 'adjustments', 'payments.refunds'])->first(),
+            $without->fresh(['ticketType', 'slot', 'order', 'children']),
+        )->inFavourHint);
     }
 }

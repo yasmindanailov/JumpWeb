@@ -56,6 +56,7 @@ class OrderItem extends Model
         'quantity' => 'integer',
         'free_quantity' => 'integer',
         'unit_price' => 'integer',
+        'is_credit' => 'boolean',
         'seats' => 'integer',
         'event_data' => 'array',
         'guest_data' => 'array',
@@ -211,12 +212,19 @@ class OrderItem extends Model
      * fuente de verdad del subtotal de una línea: todas las superficies (totales del pedido, PDFs,
      * "Mis pedidos", capacidad de reembolso) deben usar este helper en vez de multiplicar
      * `quantity × unit_price`, que ignoraría las unidades gratis. Capado a 0 por defensa.
+     *
+     * ▶ **Una línea de CRÉDITO devuelve su subtotal EN NEGATIVO** (T4 de reservas mixtas,
+     * `specs/cumple-mixto.md` §24.2): el −X € del descuento es el espejo del suplemento y su línea
+     * RESTA del valor de la reserva. La columna no puede llevar el signo (`unit_price` es
+     * UNSIGNED, medido): lo pone este helper, en UN solo sitio, para que ningún consumidor decida
+     * el signo por su cuenta ni multiplique a mano.
      */
     public function chargedSubtotalCents(): int
     {
         $paidUnits = max(0, (int) $this->quantity - (int) $this->free_quantity);
+        $subtotal = $paidUnits * (int) $this->unit_price;
 
-        return $paidUnits * (int) $this->unit_price;
+        return $this->is_credit ? -$subtotal : $subtotal;
     }
 
     /**

@@ -43,9 +43,10 @@ class VerifyMixedPartySurchargeConcurrency extends Command
 {
     protected $signature = 'mixed-party:verify-concurrency
         {--workers=8 : Nº de guardados simultáneos del mismo post-form}
+        {--scenario=charge : Qué línea se disputa: charge (el suplemento) | credit (el descuento de la T4)}
         {--keep : No borrar los datos de prueba al terminar}';
 
-    protected $description = 'Verifica empíricamente (fork real + MySQL InnoDB) que N guardados simultáneos del post-form producen UNA sola línea de suplemento y un solo cargo. Solo dev/local.';
+    protected $description = 'Verifica empíricamente (fork real + MySQL InnoDB) que N guardados simultáneos del post-form producen UNA sola línea de suplemento (charge) o UNA sola de descuento (credit, T4). Solo dev/local.';
 
     public function handle(): int
     {
@@ -60,18 +61,25 @@ class VerifyMixedPartySurchargeConcurrency extends Command
             return self::FAILURE;
         }
 
+        $scenario = (string) $this->option('scenario');
+        if (! in_array($scenario, ['charge', 'credit'], true)) {
+            $this->error("Escenario desconocido «{$scenario}»: charge | credit.");
+
+            return self::FAILURE;
+        }
+
         $workers = max(2, (int) $this->option('workers'));
-        $seed = $this->seed();
+        $seed = $this->seed($scenario);
         $dir = storage_path('app/mixed-party-verify-'.Str::random(8));
         File::ensureDirectoryExists($dir);
 
-        $this->line("Reserva #{$seed['item']->id} · {$workers} guardados simultáneos del mismo post-form.");
+        $this->line("Reserva #{$seed['item']->id} · {$workers} guardados simultáneos del mismo post-form [{$scenario}].");
 
         // Todos arrancan a la vez: sin cita común, los forks se escalonan y la carrera no ocurre.
-        $this->forkWorkers($seed, $workers, microtime(true) + 1.0, $dir);
+        $this->forkWorkers($seed, $workers, microtime(true) + 1.0, $dir, $scenario);
         DB::reconnect();
 
-        $ok = $this->evaluate($seed, $workers, $dir);
+        $ok = $this->evaluate($seed, $workers, $dir, $scenario);
 
         File::deleteDirectory($dir);
         if (! $this->option('keep')) {
@@ -82,14 +90,17 @@ class VerifyMixedPartySurchargeConcurrency extends Command
     }
 
     /**
-     * Una fiesta KIDS pagada de 4 invitados en una familia de dos regímenes, SIN datos por-niño.
-     * Cada worker guardará las mismas edades, con un invitado por encima del tramo.
+     * Una fiesta pagada de 4 invitados en una familia de dos regímenes, SIN datos por-niño.
+     * `charge`: reservada KIDS, un invitado por encima → los workers se disputan el SUPLEMENTO.
+     * `credit` (T4, §24.3): reservada JUMP con resto de señal (la cobertura), un invitado por
+     * debajo → los workers se disputan la línea de DESCUENTO. Sin el lock, cada guardado escribiría
+     * la suya, igual que le pasaba al cargo.
      *
      * @return array{item:OrderItem, order:Order, zone:Zone, packs:array<int,TicketType>, user:User}
      */
-    private function seed(): array
+    private function seed(string $scenario): array
     {
-        return DB::transaction(function (): array {
+        return DB::transaction(function () use ($scenario): array {
             $rate = RateType::firstOrCreate(
                 ['key' => RateType::KEY_NORMAL],
                 ['label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0, 'is_active' => true],
@@ -134,26 +145,37 @@ class VerifyMixedPartySurchargeConcurrency extends Command
                 'email' => 'mixed-party-'.Str::lower(Str::random(8)).'@verify.local',
                 'password' => Str::random(32), 'locale' => 'es', 'marketing_opt_in' => false,
             ]);
+            $booked = $scenario === 'credit' ? $jump : $kids;
+            $unit = (int) ($scenario === 'credit' ? 2500 : 1800);
             $order = Order::create([
                 'user_id' => $user->id, 'code' => 'VF-'.Str::upper(Str::random(6)),
                 'status' => Order::STATUS_PAID, 'paid_at' => now(),
-                'subtotal' => 7200, 'total' => 7200, 'currency' => 'EUR',
+                'subtotal' => $unit * 4, 'total' => $unit * 4, 'currency' => 'EUR',
             ]);
             $item = $order->items()->create([
-                'ticket_type_id' => $kids->id, 'slot_id' => $slot->id,
-                'quantity' => 4, 'unit_price' => 1800, 'seats' => 4,
+                'ticket_type_id' => $booked->id, 'slot_id' => $slot->id,
+                'quantity' => 4, 'unit_price' => $unit, 'seats' => 4,
             ]);
+            // El escenario del DESCUENTO necesita COBERTURA de puerta (§20.1): sin resto de señal,
+            // el tope dejaría el crédito sin escribir y el verificador pasaría sin verificar nada.
+            if ($scenario === 'credit') {
+                OrderAdjustment::create([
+                    'order_id' => $order->id, 'order_item_id' => $item->id,
+                    'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+                    'amount_cents' => 5000, 'currency' => 'EUR', 'applied_by' => $user->id,
+                ]);
+            }
             // ⚠️ Sin el SELLO (`specs/cumple-mixto.md` §21) la reserva no participa —el veredicto
             // deriva del sello, no del catálogo— y ningún worker escribiría nada: el verificador
             // pasaría en verde sin verificar. En producción lo pone `OrderCreator` al nacer.
-            app(AgeFamilySealer::class)->seal($item, $kids, $slot->date);
+            app(AgeFamilySealer::class)->seal($item, $booked, $slot->date);
 
             return ['item' => $item, 'order' => $order, 'zone' => $zone, 'packs' => [$kids, $jump], 'user' => $user];
         });
     }
 
     /** @param  array{item:OrderItem}  $seed */
-    private function forkWorkers(array $seed, int $workers, float $startAt, string $dir): void
+    private function forkWorkers(array $seed, int $workers, float $startAt, string $dir, string $scenario): void
     {
         DB::disconnect(); // el socket MySQL del padre NO debe compartirse entre forks
 
@@ -174,11 +196,14 @@ class VerifyMixedPartySurchargeConcurrency extends Command
                 try {
                     $item = OrderItem::with(['ticketType', 'slot', 'order'])->findOrFail($seed['item']->getKey());
                     // Las MISMAS edades en todos: la propiedad es que solo UNO escriba la línea.
+                    // `charge` (reservada KIDS): el de 8 sube a JUMP. `credit` (reservada JUMP): el
+                    // de 4 baja a KIDS y se disputa la línea de descuento.
+                    $ages = $scenario === 'credit' ? ['8', '9', '8', '4'] : ['4', '5', '8', '6'];
                     $item->submitGuestForm([
-                        ['name' => 'A', 'edad' => '4'],
-                        ['name' => 'B', 'edad' => '5'],
-                        ['name' => 'C', 'edad' => '8'],
-                        ['name' => 'D', 'edad' => '6'],
+                        ['name' => 'A', 'edad' => $ages[0]],
+                        ['name' => 'B', 'edad' => $ages[1]],
+                        ['name' => 'C', 'edad' => $ages[2]],
+                        ['name' => 'D', 'edad' => $ages[3]],
                     ], [], 'signed_link');
                     $outcome = 'saved';
                 } catch (\Throwable $e) {
@@ -196,7 +221,7 @@ class VerifyMixedPartySurchargeConcurrency extends Command
     }
 
     /** @param  array{item:OrderItem, order:Order}  $seed */
-    private function evaluate(array $seed, int $workers, string $dir): bool
+    private function evaluate(array $seed, int $workers, string $dir, string $scenario): bool
     {
         $outcomes = collect(File::files($dir))->map(fn ($f): string => trim(File::get($f->getPathname())));
         $errors = $outcomes->reject(fn (string $o): bool => $o === 'saved');
@@ -209,9 +234,9 @@ class VerifyMixedPartySurchargeConcurrency extends Command
         $this->newLine();
         $this->line('<options=bold>Resultado de los guardados simultáneos:</>');
         $this->line('  '.$outcomes->filter(fn (string $o): bool => $o === 'saved')->count()."/{$workers} guardaron sin error");
-        $this->line('  líneas de suplemento vivas: '.$children->count());
-        $this->line('  cargos marcados `mixed_party`: '.$marked->count());
-        $this->line('  importe total del suplemento: '.number_format($marked->sum('amount_cents') / 100, 2, ',', '.').' €');
+        $this->line('  líneas de fiesta mixta vivas: '.$children->count());
+        $this->line('  ajustes marcados `mixed_party`: '.$marked->count());
+        $this->line('  importe total marcado: '.number_format($marked->sum('amount_cents') / 100, 2, ',', '.').' €');
 
         if ($errors->isNotEmpty()) {
             $this->newLine();
@@ -219,14 +244,20 @@ class VerifyMixedPartySurchargeConcurrency extends Command
             $errors->unique()->each(fn (string $e) => $this->line('  · '.$e));
         }
 
-        // El invariante: UNA línea de 7,00 € (25,00 − 18,00 por el invitado de 8), pase lo que pase.
-        $ok = $children->count() === 1 && $marked->count() === 1 && (int) $marked->sum('amount_cents') === 700;
+        // El invariante: UNA sola línea pase lo que pase — el cargo de +7,00 € (25,00 − 18,00 por
+        // el invitado de 8) o el descuento de −7,00 € (T4: el de 4 en una fiesta JUMP).
+        $expected = $scenario === 'credit' ? -700 : 700;
+        $ok = $children->count() === 1 && $marked->count() === 1
+            && (int) $marked->sum('amount_cents') === $expected
+            && ($scenario !== 'credit' || $children->every(fn (OrderItem $c): bool => (bool) $c->is_credit));
 
         $this->newLine();
         if ($ok) {
-            $this->info('✓ UNA sola línea de suplemento y un solo cargo de 7,00 €: el lock serializa.');
+            $this->info($scenario === 'credit'
+                ? '✓ UNA sola línea de descuento de −7,00 €: el lock serializa también el espejo.'
+                : '✓ UNA sola línea de suplemento y un solo cargo de 7,00 €: el lock serializa.');
         } else {
-            $this->error('✗ El suplemento se duplicó: sin serializar, cada guardado escribe el suyo.');
+            $this->error('✗ La línea se duplicó: sin serializar, cada guardado escribe la suya.');
         }
 
         return $ok;

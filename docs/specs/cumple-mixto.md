@@ -1223,7 +1223,7 @@ empieza sin el informe de §19 aprobado.
 | **T1** | **El SELLO** (D1·D2·D3): la reserva guarda tramos y precios de su familia al nacer. ▶ ✅ **EN EL ÁRBOL (2026-08-31, `#288`): diseño en §21, ejecución en §21.13.** `order_items.age_family_seal`; sello nuevo al cambiar de pack, el mismo re-preciado al cambiar de día (`[DECIDIDO owner]`, Q2); `unitFor` y el recibo desaparecen; `#283` retirado; dos huecos preexistentes cerrados de paso (día sin tarifa · cerrojo de `orphan_addons`). 13/13 mutaciones, verificadores sobre MySQL y sonda del hueco A en navegador. Queda el OJO del owner | A · B · el gemelo de la etiqueta · el huérfano | **sí** (nacimiento y edición de una reserva) |
 | **T2** | **La edad sin producto** (D6) + que deje de congelar el dinero + **el disparador pasa a «solo guardado COMPLETO»** (§20.6, cambia la conducta de `#268` para los cargos). ▶ ✅ **EN EL ÁRBOL (2026-08-31, `#289`): diseño en §22, ejecución en §22.9.** «Completo» son DOS preguntas (dinero: todas las edades declaradas · formulario: además ninguna edad sin producto); la puerta vive en `reconcile()` con la fila bloqueada y vale también para el panel (`[DECIDIDO owner]`); tres textos por instalación con respaldo y `:phone`. Cazó de paso un hueco de contrato en la API (`general` como lista). Queda el OJO del owner | C | no (toca `MixedPartySurcharge` por el disparador) |
 | **T3** | **El parque decide** (E·F·D7): la diferencia en hoja de sala y puerta, corregir la edad desde el panel auditado, y bajar del mínimo. ▶ ✅ **EN EL ÁRBOL (2026-08-31 noche, `#294`): diseño en §23, ejecución en §23.10.** Lo escrito en hoja y puerta (y la guarda de presupuesto cazó un N+1 preexistente de la puerta), la pestaña «Invitados» por la MISMA puerta que el cliente (`OrderItemGuestDataWriter` → `submitGuestForm` con `via = panel` y actor operador), el interruptor de «bajar del mínimo» con permiso propio re-exigido en el editor y audit solo cuando se usa. 17 casos nuevos, 12/12 mutaciones, los tres verificadores sobre MySQL, sonda en navegador. Queda el OJO del owner | E · F · D7 | **sí** (la edad mueve el suplemento) |
-| **T4** | **El −X €** con el diseño CERRADO de **§20** (espejo acotado a puerta; guardas y mutaciones en §20.8) | el medio flujo que falta | **sí** |
+| **T4** | **El −X €** con el diseño CERRADO de **§20** (espejo acotado a puerta). ▶ ✅ **EN EL ÁRBOL (2026-08-31 noche, `#296`): diseño fino en §24, ejecución en §24.10.** La línea `is_credit` con su `extra_due` gemelo negativo, el tope de cobertura, la asimetría del silencio, el «a tu favor» hasta «Mis pedidos» y la API (`in_favour_hint`, decidido por el owner con el coste delante), y el verificador con su escenario propio visto FALLAR sin el lock. Queda el OJO del owner | el medio flujo que falta | **sí** |
 | **T5** | **Las palabras** (D9) + anonimizar con reserva viva (D8) + ⚠️ el email de una reducción promete «procesaremos la devolución» y con la liquidación en parque promete de más (`#285`) + ❗ **hallazgo del T0, cazado por el OJO del owner** (2026-08-31): en el bloque del panel, la línea del veredicto («2 × Cumpleaños Jump · 9,00 € por invitado») **no dice que es la tarifa DE HOY** — pegada a «Suplemento aplicado: 8,00 €» se lee como contradicción hasta llegar a la frase del desfase. El owner mismo tuvo que preguntar, y esa es la prueba: el bloque no se explica solo. Arreglo: «hoy: 9,00 € por invitado» cuando difiera de lo escrito, o el aplicado primero. ⚠️ El «0,00 € por invitado» de la dirección barata NO se toca: se resuelve solo con la T4 (pasa a «Descuento: −8,00 €») | D8 · D9 | no (D9 es presentación) |
 | **T6** | **El guardián fuera del formulario** (G) | G | no |
 
@@ -1323,6 +1323,8 @@ en silencio, y justo en la configuración más común: un pack sin señal.**
 > **Esta sección SUSTITUYE a §16 como diseño vigente del descuento** y contesta las cuatro preguntas
 > que §19 dejó abiertas. §16 no se tira: pasa a ser la pieza de la **fase 3** (ver §20.2), con sus
 > condiciones de despertar escritas. Iterado entre el owner y Fable, sin código.
+> ▶ ✅ **CONSTRUIDO en la T4 (2026-08-31 noche, `#296`)**: el diseño fino contra el código está en
+> **§24** y lo ejecutado en **§24.10** — este apartado queda como el diseño de producto que lo manda.
 
 ### 20.1 · El diseño en una frase
 
@@ -2152,3 +2154,193 @@ con ello RESOLVER la ficha «sin producto» de la T2 y descongelar rellenando la
 sala y la puerta ven la diferencia por cabeza, y el mínimo del pack tiene su excepción auditada.
 Sigue la **T4** (el −X € con el diseño cerrado de §20) — núcleo de dinero, con §19 aprobado — y
 después T5 (las palabras) y T6 (el guardián fuera del formulario).
+
+---
+
+## 24. 🟦 T4 · EL −X €, DISEÑO FINO SOBRE EL CÓDIGO REAL (2026-08-31/09-01)
+
+> **El diseño de PRODUCTO es §20 y está cerrado con el owner (`#285`): aquí no se re-litiga nada.**
+> Esta sección es el §20 bajado a instrucciones, con cada supuesto RE-VERIFICADO contra el código
+> del árbol de hoy (post-T1/T2/T3) — el mismo ejercicio que §21/§22/§23 hicieron para sus tandas.
+> Una decisión de alcance se preguntó y está tomada (§24.9).
+
+### 24.1 · Lo verificado ANTES de escribir (cada afirmación, medida hoy)
+
+| Supuesto de §20 | Verificación (2026-08-31, árbol post-`#294`) |
+|---|---|
+| `order_items.unit_price` es UNSIGNED | ✅ `SHOW COLUMNS`: `int unsigned` (y `quantity` también) |
+| `order_adjustments.amount_cents` admite negativos | ✅ `int` con signo; hay 1 fila negativa en la BD local (los créditos de `applyGateCredit`) |
+| El clamp de `itemCollectedCents` NUNCA muerde en la línea espejo | ✅ `max(0, −8 − (−8) − 0) = 0` (`Order:1496`) |
+| La trampa de §16.5.bis queda DESACTIVADA sin marcador | ✅ `itemPendingRefundCents` (línea activa) = `max(0, original − devuelto − cobrado)`; `original` cae al respaldo `itemCollectedCents` = **0** (no −8, porque el clamp da 0) → pendiente 0. **CONDICIÓN: el `context` del ajuste del crédito NO puede llevar `changes.quantity_change` ni `changes.unit_price_change`** — con cualquiera de las dos, `itemOriginalOnlineCents` «reconstruye» un original y el eje de caja se rompe (guarda §24.7·K) |
+| El neteo por reserva existe | ✅ `ReservationFinancials:123`: `gateNeto += itemExtraDueCents + itemDepositRemainderCents` sobre TODOS los ítems de la reserva, con signo |
+| El agregado cierra | ✅ trazado `OrderFinancialSummary`: `extraDue += −8` (activo) · al finalizar `extraDueResolved += −8` (cobradoPuerta baja: pagó 8 menos en puerta) · `totalWithChanges = 120 − 8 = 112` |
+| La cancelación CASCADA a los hijos | ✅ `OrderItemCanceller` (children bajo lock) y `Order::cancelLiveItems` — la línea de crédito muere con su principal, y cancelada es un «voided leftover» (collected 0, refunded 0) que las superficies ya esconden |
+| El desglose ↳ pierde las líneas negativas | ⚠️ **CONFIRMADO el hueco que §16.6·3 predijo**: `pendingAtGateLines` (`Order:950`) hace `amount <= 0 → continue`, así que la identidad D del guardián (`Σ líneas == pendingAtGate`) se pone ROJA con un crédito escrito. Hay que darles su frase, no saltarlas |
+| El contrato de la API no capa el subtotal | ✅ `OrderItemAddon.charged_subtotal_cents: type integer` sin `minimum` — una línea negativa no cambia la FORMA |
+| `OrderItem` admite la columna nueva por masa | ✅ `$guarded = []` (no está en la lista SEC-10, que es de dinero/autorización a nivel Order/Payment) |
+
+### 24.2 · Las DOS migraciones
+
+1. **`order_items.is_credit`** (`boolean NOT NULL DEFAULT 0`): la marca de «esta línea RESTA»
+   (§16.6·1). Vive en la fila y no en el ajuste porque quien la consume es
+   `chargedSubtotalCents()`, llamado por ~24 consumidores que no siempre traen `adjustments`
+   cargada — leerla de la relación sería un N+1 o una consulta dentro de un helper puro.
+2. **El portador del descuento**: producto de sistema «Descuento fiesta mixta» (es/en/fr),
+   `type=addon`, `is_sellable=false`, `is_active=false`, `position=0`, puntero en
+   `mixed_party.credit_product_id` — **calcado de la migración del suplemento** (mismas trampas ya
+   pagadas: posición 0 fuera del espacio del seeder, `down()` que retira el puntero y no el
+   producto). ▶ **Por qué un SEGUNDO producto y no reutilizar el del suplemento**: el nombre de la
+   línea lo imprimen ~6 superficies de lectura (ficha, hoja, correos, API, «Mis pedidos») desde
+   `ticketType->tr('name')` — con el portador del cargo, todas dirían «Suplemento» sobre un
+   descuento y cada una necesitaría su excepción; con producto propio el nombre sale bien en todas
+   gratis, es white-label (el parque lo renombra en su catálogo) y sigue el patrón ya decidido
+   (`[DECIDIDO owner, 2026-08-29]`: el portador lo crea el sistema). Mismos motivos de §12.3: jamás
+   el pack de destino (`PackAvailability` cuenta filas de tipo pack — `AFORO-01`).
+
+### 24.3 · El reconciliador: el espejo, dentro de la MISMA pasada
+
+`MixedPartySurcharge::reconcile()` — mismo lock, misma transacción, mismo disparo:
+
+1. La puerta de la T2 sigue PRIMERA: con una edad en blanco, nada se mueve en ninguna dirección.
+2. Se aplican los CARGOS como hoy (`targetState`/`apply`).
+3. **El crédito derivado**: de `mix->upgrades`, las entradas con `diff_cents < 0`
+   (destino más barato) — unitario `−diff`, invitados `count`. Solo con el veredicto TARIFICADO
+   (`savingsCents !== null`); sin tarifa, el crédito NI SE CREA NI SE MUEVE.
+4. **La cobertura, del estado ESCRITO bajo el lock** (después de los cargos): Σ neta de
+   `extra_due` de los ítems NO-crédito de la reserva (incluye los cargos recién escritos y los de
+   ediciones) + Σ neta de `deposit_remainder` de la reserva. Ambas de `order.adjustments`, ya
+   cargada.
+5. **`crédito_escrito = min(crédito_derivado, cobertura)`** (§20.1). El exceso NO se escribe.
+6. **UNA línea de crédito por reserva** (no una por destino): `is_credit=1`, `quantity=1`,
+   `unit_price=crédito_escrito` (positivo en columna; el signo lo pone el helper), portador =
+   producto del descuento, `slot_id=null`, `seats=0` — y su gemelo `extra_due` de
+   `−crédito_escrito` con `context.mixed_party = {credit: true, guests, targets:[{name, count,
+   unit_cents}…], derived_cents}`. ⚠️ **Una sola línea porque el tope puede caer en un importe que
+   NO es múltiplo del unitario por cabeza** (cobertura 3,00 € sobre 2 invitados de 4,00 €): la
+   forma cantidad×unitario del cargo no lo representa; el desglose por destino viaja en el
+   `context` para las frases. ⚠️ El `context` JAMÁS lleva `changes.*` (§24.1, la condición de caja).
+7. **La asimetría del silencio**: el CARGO puede crecer con el veredicto en silencio (la red de
+   `#268`); el CRÉDITO **no se mueve en ninguna dirección sin `derivationGoverns`** — crearlo o
+   crecerlo en silencio regala dinero, encogerlo lo quita, y ninguna de las dos es un hecho.
+   Con `sealed: true` (pack sin condiciones) el crédito se RETIRA igual que el cargo.
+8. `totalOf`/`written()`/auditoría/correo pasan a operar con el NETO (con signo), leyendo el
+   subtotal de la línea por `chargedSubtotalCents()` — nunca `count × unit` a mano.
+9. `governedLineIds()` cubre la línea de crédito sin tocar nada (misma marca `mixed_party` del
+   ajuste): las exclusiones del panel de la T3 (repeater, huérfanos, `normalizeAddonEdits`) la
+   protegen solas.
+
+### 24.4 · El exceso «a tu favor» — derivado, nunca escrito
+
+`MixedPartySurcharge::inFavourCents(item)`: `max(0, crédito_derivado − crédito_escrito)` cuando el
+veredicto gobierna; `0` en cualquier otro caso. Es LECTURA (relaciones ya cargadas, cero consultas
+nuevas en las superficies que ya pintan el bloque mixto).
+
+**Dónde se enseña** — `[DECIDIDO owner, 2026-08-31 (T4 Q1)]`: **en todas las superficies ya**,
+incluidos «Mis pedidos» y la API (eligió la salida completa sobre la acotada): post-form del
+cliente · ficha del pedido · hoja de sala · **el ledger** — un campo nuevo
+**`in_favour_hint`** (`string|null`) en `OrderLedger`/`LedgerResource`/`openapi`, con el patrón
+EXACTO de `invoiced_hint` (`L6`, `#133`): el dominio compone la frase «8,00 € a tu favor — se te
+devuelven en el parque» Y su condición (null = no se enseña); el cajón la pinta verbatim (una
+línea en `orders.js`, cero lógica cliente).
+
+### 24.5 · Las frases (cada superficie, la suya — y las de §14 CADUCAN)
+
+- **Cliente (post-form)**: `guestform.mixed_savings` («saldría X más barata… NO se descuenta
+  solo») **CADUCA** → «Descuento por N invitados que corresponden a “Kids”: −8,00 €» (escrito) +
+  la línea del exceso. — **Ficha del pedido**: `admin.orders.mixed_party.cheaper` ídem →
+  descuento aplicado + exceso; el `drift` compara lo escrito contra lo derivado **CAPADO** (sin el
+  tope, el exceso legítimo de fase 2 parecería un desfase permanente). — **Hoja y puerta (T3)**:
+  `written()` pasa a neto con líneas firmadas; la condición del bloque pasa de `> 0` a `≠ 0` y las
+  líneas de crédito llevan su frase. — **Desglose ↳** (`pendingAtGateLines` + `breakdownLabel`):
+  la línea negativa deja de saltarse y dice «Descuento por N invitados…: −8,00 €» (identidad D). —
+  **Correo** (`MixedPartySurchargeChanged`): old/new pasan a NETO con signo y las tres frases
+  ganan la voz del descuento (nace/cambia/desaparece; un neto negativo se cuenta como descuento).
+
+### 24.6 · Lo que NO cambia (y hay que poder demostrarlo)
+
+`PAY-16`/`PAY-17` intactas (los clamps siguen de cinturón y el guardián sigue aseverando que no
+muerden) · `OrderCreator` y el checkout, intactos · la conducta del CARGO, intacta (los casos de
+`#243`→`#272` y T1–T3 son la red) · el disparo «solo al guardar completo» (T2), intacto · la
+anonimización no mueve el crédito (el veredicto queda sin edades → nada se mueve, como el cargo).
+
+### 24.7 · Guardas, con su mutación
+
+| | Guarda | Mutación |
+|---|---|---|
+| A | Guardián: caso A (señal 30/90, crédito 8) — línea a mano ANTES del reconciliador; las dos identidades y los 5 canales ≥ 0 | escribir el crédito SIN su `extra_due` gemelo (los canales descuadran) |
+| B | Guardián: caso B (100 % online, cobertura 0) — **no se escribe nada**; con el crédito forzado sin tope, el guardián cae por PAY-16 | quitar el `min()` del tope |
+| C | Guardián: caso C (cobertura parcial 3 de 8) — se escriben 3, canales positivos, identidad D suma | — (control) |
+| D | El reconciliador escribe el espejo en un guardado completo (Jump con invitados Kids): línea `is_credit`, gemelo negativo, neto correcto — y al subir la edad otra vez, se retira | desenganchar el crédito de la pasada |
+| E | Con edades en blanco el crédito NO se mueve (ni nace ni muere); con silencio (`sin sello`/`caducado`/`sin tarifa`) tampoco, **en ninguna dirección** | quitarle al crédito la condición `derivationGoverns` |
+| F | `pendingAtGateLines` emite la línea negativa con su frase y la identidad D del guardián suma | restaurar el `continue` |
+| G | El desglose del cliente (`in_favour_hint`): frase con el exceso, `null` sin él; contrato OpenAPI verde | publicar siempre `null` |
+| H | El correo con la voz del descuento (nace/cambia/desaparece, neto con signo) | — |
+| I | Superficies: post-form, ficha, hoja y puerta con el descuento y el exceso; el `drift` capado no llama desfase al exceso | — |
+| J | `mixed-party:verify-concurrency` gana el escenario del crédito: N guardados completos simultáneos → UNA línea de crédito | — (visto FALLAR sin lock) |
+| K | El `context` del crédito no lleva `changes.*` y el eje de caja no inventa un «pendiente de devolución» (la trampa §16.5.bis, aseverada) | meter `quantity_change` en el context |
+| L | Sin portador del descuento configurado: no se escribe nada y la ficha lo dice (espejo de `missing_carrier`) | — |
+
+### 24.8 · Lo que se toca, en orden de construcción (riesgo primero)
+
+1. Migraciones (§24.2) + `chargedSubtotalCents()` + `MODELO-DATOS`/`README` (89 → 91).
+2. **El guardián de once gana los casos A/B/C con líneas a mano** (la doctrina de §16.8/§20.8:
+   ANTES del reconciliador) — y con ellos cae la identidad D → `pendingAtGateLines` +
+   `breakdownLabel` aprenden la línea negativa.
+3. El reconciliador (§24.3) + `written()`/`inFavourCents()` (🔒 `CRITICAL_RE` → verificadores +
+   `VERIFY_CONC=1`).
+4. Superficies y frases (§24.5) + ledger/API/cajón (§24.4) + correo.
+5. Verificación: suite + mutaciones §24.7 + los tres verificadores MySQL (el mixto con su
+   escenario nuevo) + `npm run build` (se toca `orders.js`) + presupuestos JS + sonda headless.
+6. Doc: `PAY-19` (el espejo entra en la regla) · spec §20 (punteros a lo ejecutado) · `DECISIONES`
+   · `ESTADO` · tracker · `CLAUDE.md` · `GLOSARIO` («descuento fiesta mixta»).
+
+### 24.9 · Decisiones de esta tanda
+
+**Q1 · ¿Dónde se enseña el exceso «a tu favor» YA?** → ✅ `[DECIDIDO owner, 2026-08-31]`:
+**en todas las superficies, incluidos «Mis pedidos» y la API** (la salida completa; se le presentó
+con el coste de cada opción). — **Derivadas del patrón ya decidido, registradas sin pregunta**: el
+portador del descuento es un SEGUNDO producto de sistema (§24.2; espejo del `[DECIDIDO owner]` del
+portador del suplemento) · el correo del cambio es simétrico (un descuento que cambia lo que
+pagará en puerta se comunica igual que un cargo — «enseñar 90 sería mentirle», §20.4).
+
+### 24.10 · ✅ LO EJECUTADO (2026-08-31 noche, `DECISIONES #296`)
+
+**En el árbol.** Las dos migraciones (90 y 91: `order_items.is_credit` · el portador «Descuento
+fiesta mixta» con `mixed_party.credit_product_id`) · `chargedSubtotalCents()` negando con la marca
+(el único sitio del signo) · **el guardián de once pasó a QUINCE**: los casos A/B/C del diseño con
+la línea a mano ANTES del reconciliador (§16.8/§20.8) más el del crédito RESUELTO al finalizar — y
+la identidad D se puso ROJA exactamente donde §24.1 predijo (`pendingAtGateLines` saltaba los netos
+≤ 0), así que el desglose ↳ aprendió la línea negativa con su frase (`breakdownLabel` con rama de
+crédito) · **el reconciliador** (§24.3 al pie de la letra: `applyCredit` tras los cargos, cobertura
+FRESCA bajo el lock, UNA línea por reserva, la asimetría del silencio) · `written()` con el NETO y
+la frase del crédito compuesta UNA vez · `inFavourCents()` · `governedLineIds()` cubre el crédito
+(las exclusiones del panel de la T3 lo protegen solas) · **todas las superficies** (§24.5):
+post-form (y `mixed_savings` CADUCÓ → descuento real + «a tu favor» + `savings_pending`), ficha
+(descuento + neto + a favor + `missing_credit_carrier`; el `drift` compara el lado del CARGO),
+hoja, puerta (neto con signo + frase del crédito + a favor), correo (las voces del descuento, con
+el cruce de signo rotulado) · **el ledger** con `in_favour_hint` (patrón `L6` exacto) →
+`LedgerResource` + contrato OpenAPI + `orders.js`/`PurchaseCard.vue` (una línea, cero lógica
+cliente) · `mixed-party:verify-concurrency` con `--scenario=credit`.
+
+**Medido.** Suite PHP del árbol CONJUNTO (tras rebasar sobre el `#295` del otro carril): **3679 (24.017 aserciones)**; JS **877 → 878** ·
+**7 mutaciones de la T4 y las 7 muerden** (el gemelo quitado: 8 rojos · el tope: 4 · el espejo
+desenganchado: 10 · el silencio moviendo el crédito · el `continue` restaurado: identidad D · el
+hint siempre null · la trampa §16.5.bis con `changes` en el context: 2) · los TRES verificadores
+sobre MySQL (aforo en sus seis + redsys + el mixto en sus DOS escenarios, y el del crédito **visto
+FALLAR sin el lock: 12 líneas y −84,00 €** — el espejo exacto del fallo que tuvo el cargo) · sonda
+en navegador sobre `T4-PRB01`/`T4-PRB02` (guion `/root/e2e/t4.js`, capturas en
+`/root/e2e/t4-capturas/`): el post-form con el descuento escrito, el panel, la puerta verificando
+la aritmética en vivo (46,00 = 50,00 − 4,00), el cajón con el «a tu favor» y la hoja en PDF — y el
+contrato comprobado por la API real (`gate_lines` con la línea de −4,00 y Σ = titular).
+
+⚠️ **Semánticas que conviene saber**: `written()['cents']` es el NETO con signo desde la T4 (los
+sumandos viajan en `charge_cents`/`credit_cents`); `written()['guests']` sigue siendo los invitados
+del CARGO (los del descuento viajan en `credit.guests`); el audit `mixed_party_surcharge_synced`
+compara NETOS y gana `credit_cents`. ⚠️ Los pedidos sonda `T4-PRB01`/`T4-PRB02` quedan en la BD
+local para futuras sondas (con `T0-PRB*`), y la sonda dejó 2 correos en Mailpit para
+`probe-card@jumpweb.test` (la voz nueva del descuento) — asumido, como en el T0.
+
+**Lo que queda del plan** (§18.5): **T5** (las palabras: D9 · D8 · el email de la reducción · el
+hallazgo del T0 sobre la línea del veredicto, que la T1 disolvió a medias) · **T6** (el guardián
+de solapes fuera del formulario) · la **fase 3** de §20.2 (cobro online post-reserva) despierta a
+§16 cuando exista para cualquiera de las dos direcciones.

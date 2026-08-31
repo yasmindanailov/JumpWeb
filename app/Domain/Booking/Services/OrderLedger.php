@@ -115,6 +115,14 @@ final readonly class OrderLedger
          * y eso es regla, no presentación.
          */
         public ?string $nota,
+        /**
+         * El «A TU FAVOR» de fiesta mixta (T4, `specs/cumple-mixto.md` §24.4): el descuento
+         * derivado que la puerta no pudo absorber — se enseña y se liquida EN el parque (§20.5).
+         * Mismo patrón que `facturadoNota` (`L6`, `#133`): el dominio compone la frase con
+         * dirección e importe, y **`null` ES la condición de enseñar la línea** — ninguna
+         * superficie re-deriva la condición por su cuenta.
+         */
+        public ?string $inFavourHint = null,
     ) {}
 
     /** ¿Hay algo más que el valor plano? Si no, la columna es una sola línea. */
@@ -218,7 +226,29 @@ final readonly class OrderLedger
             hasDeposit: $s->depositRemainder > 0,
             cuadra: $cuadra,
             nota: self::noteFor($order, $s, $cuadra),
+            inFavourHint: self::inFavourHintFor(
+                $order->items->filter(fn (OrderItem $i): bool => $i->parent_item_id === null && ! $i->isCancelled())->all(),
+            ),
         );
+    }
+
+    /**
+     * La frase del «a tu favor» (T4, §24.4), o `null` — que es la condición de enseñarla (`L6`).
+     * A nivel de PEDIDO suma el exceso de todas sus reservas; por reserva, el suyo.
+     *
+     * @param  list<OrderItem>  $principals
+     */
+    private static function inFavourHintFor(array $principals): ?string
+    {
+        $service = app(MixedPartySurcharge::class);
+        $cents = 0;
+        foreach ($principals as $principal) {
+            $cents += $service->inFavourCents($principal);
+        }
+
+        return $cents > 0
+            ? __('tickets.ledger_in_favour', ['amount' => Money::format($cents)])
+            : null;
     }
 
     /**
@@ -258,6 +288,7 @@ final readonly class OrderLedger
                 fn (array $l): array => ['label' => $l['label'], 'amount_cents' => (int) $l['amount']],
                 $order->reservationGateLines($principal),
             ),
+            inFavourHint: self::inFavourHintFor([$principal]),
             hasDeposit: $principal->ticketType?->hasDeposit() ?? false,
             // ⚠️ El desglose POR RESERVA no tiene eje de caja propio, así que su identidad es la del
             // PEDIDO. Se calcula con el mismo predicado —no llamando a `forOrder()`, que volvería a

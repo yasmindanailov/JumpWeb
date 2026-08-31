@@ -84,13 +84,15 @@
                      con dinero de por medio, y eso dejaba al cliente viendo una etiqueta «MIXTA» en
                      su pedido sin una línea que la explicara — medido sobre un pedido real.
                      ⚠️ El IMPORTE sale de lo ESCRITO en su pedido; la EXPLICACIÓN, del veredicto. --}}
-                @if ($ageSurcharge['cents'] > 0)
-                    {{-- ⚠️⚠️ **Con cargo escrito, TODO sale de lo escrito**, también la explicación.
+                @if ($ageSurcharge['charge_cents'] > 0 || $ageSurcharge['credit_cents'] > 0)
+                    {{-- ⚠️⚠️ **Con dinero escrito, TODO sale de lo escrito**, también la explicación.
                          Componerla con los precios de hoy la hacía contradecir al importe en cuanto
                          el parque retocaba una tarifa —«Jump a 30,00 € en vez de Kids a 18,00 €»
                          encima de un suplemento de 7,00 €—, y el cliente que hiciera la resta
                          tendría razón. Se pinta aunque el veredicto ya no se pueda derivar (alguien
-                         retiró la familia): mientras lo deba, tiene derecho a leer por qué. --}}
+                         retiró la familia): mientras lo deba, tiene derecho a leer por qué.
+                         ▶ T4 (§24.5): el DESCUENTO es una línea más de lo escrito, con su frase
+                         compuesta por el dominio, y el total es el NETO — que puede ser a favor. --}}
                     <div class="gf-mix" role="status">
                         <p class="gf-mix__title">{{ __('guestform.mixed_title') }}</p>
                         @foreach ($ageSurcharge['lines'] as $line)
@@ -102,13 +104,26 @@
                                 ]) }}
                             </p>
                         @endforeach
+                        @if ($ageSurcharge['credit'] !== null)
+                            <p class="gf-mix__text">
+                                {{ $ageSurcharge['credit']['label'] }}: −{{ \App\Domain\Platform\Services\Money::format($ageSurcharge['credit']['cents']) }}
+                            </p>
+                        @endif
                         <p class="gf-mix__text">
-                            {{ __('guestform.mixed_surcharge', ['amount' => \App\Domain\Platform\Services\Money::format($ageSurcharge['cents'])]) }}
+                            @if ($ageSurcharge['cents'] > 0)
+                                {{ __('guestform.mixed_surcharge', ['amount' => \App\Domain\Platform\Services\Money::format($ageSurcharge['cents'])]) }}
+                            @elseif ($ageSurcharge['cents'] < 0)
+                                {{ __('guestform.mixed_discount_total', ['amount' => \App\Domain\Platform\Services\Money::format(-$ageSurcharge['cents'])]) }}
+                            @else
+                                {{ __('guestform.mixed_net_zero') }}
+                            @endif
                         </p>
+                        @if ($inFavourCents > 0)
+                            <p class="gf-mix__text">{{ __('guestform.mixed_in_favour', ['amount' => \App\Domain\Platform\Services\Money::format($inFavourCents)]) }}</p>
+                        @endif
                     </div>
                 @elseif ($ageMix->mixed)
-                    {{-- Sin cargo no hay nada comunicado que respetar, así que manda el veredicto de
-                         hoy: es información, no una deuda. --}}
+                    {{-- Sin dinero escrito manda el veredicto de hoy: es información, no una deuda. --}}
                     <div class="gf-mix" role="status">
                         <p class="gf-mix__title">{{ __('guestform.mixed_title') }}</p>
                         @foreach ($ageMix->upgrades as $up)
@@ -123,9 +138,15 @@
                             </p>
                         @endforeach
                         <p class="gf-mix__text">
-                            @if ($ageMix->hasSavings())
-                                {{-- `[owner]`: se AVISA de que saldría más barata, no se descuenta solo. --}}
-                                {{ __('guestform.mixed_savings', ['amount' => \App\Domain\Platform\Services\Money::format($ageMix->savingsCents)]) }}
+                            @if ($inFavourCents > 0)
+                                {{-- T4: sin cobertura de puerta el descuento no se ESCRIBE — pero es
+                                     suyo y se liquida en el parque (§20.4/§20.5). --}}
+                                {{ __('guestform.mixed_in_favour', ['amount' => \App\Domain\Platform\Services\Money::format($inFavourCents)]) }}
+                            @elseif ($ageMix->hasSavings())
+                                {{-- El veredicto aún no gobierna (faltan edades por declarar): se
+                                     anuncia que el descuento llegará al completar, no que «no se
+                                     descuenta solo» — eso CADUCÓ con la T4 (`[DECIDIDO owner]` D5). --}}
+                                {{ __('guestform.mixed_savings_pending', ['amount' => \App\Domain\Platform\Services\Money::format($ageMix->savingsCents)]) }}
                             @else
                                 {{ __('guestform.mixed_no_difference') }}
                             @endif

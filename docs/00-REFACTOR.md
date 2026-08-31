@@ -2291,11 +2291,20 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       `orders.edit_item_below_minimum` re-exigido en el editor y audit solo al usarse (D7).
       17 casos nuevos, 12/12 mutaciones, los tres verificadores sobre MySQL, sonda en navegador
       (`/root/e2e/t3.js`). Queda el OJO del owner.
-      ❗ **Queda, por orden del plan §18.5**: T4 el −X € (diseño cerrado en §20; el crédito deriva
-      de los precios SELLADOS y el disparador ya es «solo completo»; núcleo de dinero →
-      `CRITICAL_RE` + verificadores + `VERIFY_CONC=1`) · T5 las palabras (D9, D8, el email de la
+      ✅ **T4 · EL −X €, EN EL ÁRBOL (2026-08-31 noche, `#296`)** — el diseño de producto es §20
+      (`#285`, del owner) y el fino §24; ejecución en **§24.10**. El ESPEJO del cargo: línea
+      `is_credit` (el signo lo pone `chargedSubtotalCents()`, único sitio) + `extra_due` gemelo
+      negativo, tope `min(derivado, cobertura de puerta)` — el exceso no se escribe: es el
+      «a tu favor», hasta «Mis pedidos» y la API (`in_favour_hint`, patrón `L6`; Q1
+      `[DECIDIDO owner]` con el coste delante). Guardián 11 → 15 escenarios (la identidad D cazó
+      en rojo el `continue` de las líneas negativas, como el diseño predijo); 7/7 mutaciones;
+      `mixed-party:verify-concurrency --scenario=credit` visto FALLAR sin el lock (12 líneas y
+      −84,00 €); sonda en navegador con la aritmética verificada en vivo. Las frases de `#246`
+      («no se descuenta solo») CADUCARON. Queda el OJO del owner.
+      ❗ **Queda, por orden del plan §18.5**: T5 las palabras (D9, D8, el email de la
       devolución — el «hoy:» del desfase se disolvió con la T1) · T6 el guardián de solapes fuera
-      del formulario (con el sello ya no mueve dinero) · el **AFORO** sigue aparcado por el owner
+      del formulario (con el sello ya no mueve dinero) · la fase 3 de §20.2 (cobro online
+      post-reserva) despierta a §16 cuando exista · el **AFORO** sigue aparcado por el owner
       (zonas distintas, spec propia).
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si

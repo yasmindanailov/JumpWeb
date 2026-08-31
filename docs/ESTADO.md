@@ -3,12 +3,12 @@
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-08-31 (noche) — carril MIXTOS: T1 el SELLO
-> (`#288`), T2 la edad sin producto + el dinero solo al guardar completo (`#289`) y **T3 el parque
-> decide (`#294`) EN EL ÁRBOL**; lo siguiente es la T4 (el −X €, diseño cerrado en §20). Carril
-> IDIOMA VISUAL: T1 normas (`#292`) y T2 cinta C3 (`#293`) en el árbol.**
+> (`#288`), T2 la edad sin producto (`#289`), T3 el parque decide (`#294`) y **T4 el −X € (`#296`)
+> EN EL ÁRBOL**; lo siguiente es la T5 (las palabras, §18.5). Carril IDIOMA VISUAL: T1 normas
+> (`#292`), T2 cinta C3 (`#293`) y T3 zonas/atracciones (`#295`) en el árbol.**
 > ❗ **SI ENTRAS NUEVO A MIXTOS: `specs/cumple-mixto.md` §18 (visión) → §21 (sello) → §22 (completo son
-> dos preguntas) → §23 (la T3: diseño §23.1–§23.8, ejecución §23.10). Diseño fino antes de código y
-> preguntas numeradas al owner: es el método que las cuatro tandas han seguido.**
+> dos preguntas) → §23 (la T3) → **§20 + §24 (la T4: el descuento espejo)**. Diseño fino antes de
+> código y preguntas numeradas al owner: es el método que las cinco tandas han seguido.**
 > ⚠️ **Entorno, 2026-08-31**: el `php artisan serve` del contenedor amaneció muerto (SIGTERM 14:29) y a
 > las 16:3x el demonio de Docker Desktop dejó de responder (500 en su API; se recuperó reiniciándolo
 > desde Windows). Ninguna de las dos es del repo; si el `curl` del arranque da `000`, mira primero
@@ -17,10 +17,28 @@
 > veces (el carril del tema iba por 281 con el remoto en 285; el de mixtos escribió `#286` con el
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
-> ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1, T2 y T3 hechas → sigue la T4) ═══════════
+> ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1–T4 hechas → sigue la T5) ═══════════
+> ❗❗❗ **2026-08-31 (noche) · T4 · EL −X €, EN EL ÁRBOL** (`#296`, `specs/cumple-mixto.md` §20
+> diseño de producto · §24 diseño fino · **§24.10 ejecución**).
+> Suite **3679 en verde** (24.017 aserciones, 1 skipped a propósito; árbol CONJUNTO sobre `#295`) ·
+> JS **878** · **7/7 mutaciones muerden** · guardián de invariantes **11 → 15 escenarios** (A/B/C
+> con la línea a MANO antes del reconciliador; la identidad D cazó el `continue` en rojo, como §24.1
+> predijo) · verificadores: aforo SEIS + redsys + **el mixto en sus DOS escenarios** (`credit` visto
+> FALLAR sin el lock: 12 líneas y −84,00 €) · sonda `/root/e2e/t4.js` (postform, panel, puerta con
+> la aritmética en vivo —46,00 = 50 − 4—, cajón con el «a tu favor», hoja PDF; capturas en
+> `/root/e2e/t4-capturas/`). ▶ El ESPEJO: línea `is_credit` + `extra_due` gemelo negativo, tope
+> `min(derivado, cobertura de puerta)` con los cargos de la pasada contando como cobertura; el
+> exceso NO se escribe — es el «a tu favor», hasta «Mis pedidos» y la API (`in_favour_hint`, patrón
+> `L6`; `[DECIDIDO owner]` con el coste delante). ⚠️ La asimetría del silencio: el cargo crece en
+> silencio (`#268`), el crédito NO se mueve sin veredicto que gobierne. ⚠️ El `context` del crédito
+> JAMÁS lleva `changes.*` (la trampa §16.5.bis, aseverada). ⚠️ Las frases de `#246` («no se
+> descuenta solo») CADUCARON en las 4 superficies + correo. ⚠️ Portador PROPIO «Descuento fiesta
+> mixta» (migración 91; `mixed_party.credit_product_id`). ⚠️ Sondas `T4-PRB01/02` y 2 correos en
+> Mailpit quedan en local, asumidos. **Queda el OJO del owner; lo siguiente es la T5** (las
+> palabras: D9 · D8 · el email de la reducción).
 > ❗❗❗ **2026-08-31 (noche) · T3 · EL PARQUE DECIDE, EN EL ÁRBOL** (`#294`,
 > `specs/cumple-mixto.md` §23 diseño · **§23.10 ejecución**).
-> Suite **3664 en verde** (23.753 aserciones, 1 skipped a propósito; árbol CONJUNTO sobre `#295`) ·
+> Suite de entonces: 3664 tests / 23.753 aserciones (conjunto sobre `#295`; la VIVA, arriba) ·
 > **12/12 mutaciones muerden** (incluida la del DISPARADOR: el modal sin llamar al writer) ·
 > los TRES verificadores sobre MySQL (mixto · aforo en sus SEIS escenarios · redsys) · sonda
 > headless sobre `T0-PRB01` (guion `/root/e2e/t3.js`, 4 capturas + el PDF en

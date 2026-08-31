@@ -923,14 +923,24 @@ class ViewOrder extends ViewRecord
         }
 
         $written = app(MixedPartySurcharge::class)->written($item);
+        $hasWritten = $written['charge_cents'] > 0 || $written['credit_cents'] > 0;
 
         if ($mix->withoutAge > 0) {
-            return $written['cents'] > 0
+            return $hasWritten
                 ? trans_choice('admin.orders.mixed_party.frozen', $mix->withoutAge, ['count' => $mix->withoutAge])
                 : __('admin.orders.mixed_party.without_age', ['count' => $mix->withoutAge]);
         }
-        if ($written['cents'] > 0) {
-            return __('admin.orders.mixed_party.applied', ['amount' => Money::format($written['cents'])]);
+        // T4: el estado dice lo ESCRITO con su signo — cargo, descuento, o el neto de los dos.
+        if ($written['charge_cents'] > 0 && $written['credit_cents'] === 0) {
+            return __('admin.orders.mixed_party.applied', ['amount' => Money::format($written['charge_cents'])]);
+        }
+        if ($written['credit'] !== null && $written['charge_cents'] === 0) {
+            return $written['credit']['label'].': −'.Money::format($written['credit']['cents']);
+        }
+        if ($hasWritten) {
+            return __('admin.orders.mixed_party.net', [
+                'amount' => ($written['cents'] < 0 ? '−' : '+').Money::format(abs($written['cents'])),
+            ]);
         }
 
         return __('admin.orders.manage_item.guests_intro');

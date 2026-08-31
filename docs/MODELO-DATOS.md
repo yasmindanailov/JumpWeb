@@ -176,6 +176,7 @@ guardas `can{Edit,Cancel}Item`; la mitad `canRefundItem` se partió a Payments e
 | `slot_id` | FK cascade **nullable** (addons no tienen franja) |
 | `quantity` · `free_quantity` | `free_quantity` = unidades GRATIS (incluidas) HISTÓRICAS al crear el pedido; cobro real = `(quantity − free_quantity) × unit_price` → `chargedSubtotalCents()` |
 | `unit_price` | céntimos, con la tarifa aplicada (histórico, no se recalcula) |
+| `is_credit` | boolean default `false` (T4 de reservas mixtas, `specs/cumple-mixto.md` §24.2): la marca de **línea de CRÉDITO** — su subtotal RESTA. La columna no puede llevar el signo (`unit_price`/`quantity` son UNSIGNED, medido): lo pone `chargedSubtotalCents()`, en un solo sitio. Hoy la escribe únicamente `MixedPartySurcharge` (el −X € del descuento, una línea por reserva con su `extra_due` gemelo negativo) |
 | `seats` | plazas que ocupa (`quantity × seats_per_unit`) |
 | `event_data` | JSON respuestas del evento del pack (`{key: valor}`) |
 | `guest_data` + `guest_form_completed_at` | JSON lista por-invitado (post-form); estado FORM OK/PENDIENTE se DERIVA de `guest_data` vs `quantity` (`guestFormStatus()`); el sello es auditoría. Enlace firmado sin sesión con caducidad (evento + 14 días) |

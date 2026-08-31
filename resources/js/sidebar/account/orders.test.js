@@ -129,6 +129,9 @@ const ledger = (over = {}) => {
                 ? 'Al reservar se facturaron '+(invoiced / 100).toFixed(2).replace('.', ',')+' €. El pedido cambió después.'
                 : null),
         gate_lines: over.gate_lines ?? [],
+        // El «a tu favor» de fiesta mixta (T4): frase compuesta por el servidor; `null` ES la
+        // condición de enseñarla (el patrón de `invoiced_hint`).
+        in_favour_hint: over.in_favour_hint ?? null,
         has_deposit: over.has_deposit ?? false,
         note: over.note ?? null,
     };
@@ -673,6 +676,21 @@ describe('el bloque financiero', () => {
         assert.equal(igual.invoiced, null);
         assert.equal(distinto.invoiced.amountLabel, '133,00 €');
         assert.equal(distinto.invoiced.label, 'Importe al reservar');
+    });
+
+    /**
+     * El «a tu favor» de fiesta mixta (T4, `specs/cumple-mixto.md` §24.4): la frase llega COMPUESTA
+     * del servidor y su nulidad ES la condición de enseñarla — la zona no re-deriva nada (la
+     * lección de `L1`/`L6`). Mutación: re-derivar aquí la condición dejaría este caso ciego.
+     */
+    test('el «a tu favor» de fiesta mixta se pinta tal cual llega, y solo si llega', () => {
+        const sin = financialsOf(order(), MESSAGES);
+        const con = financialsOf(order({ ledger: ledger({
+            in_favour_hint: '14,00 € a tu favor — se te devuelven en el parque el día de la fiesta.',
+        }) }), MESSAGES);
+
+        assert.equal(sin.inFavour, null);
+        assert.equal(con.inFavour, '14,00 € a tu favor — se te devuelven en el parque el día de la fiesta.');
     });
 
     /**

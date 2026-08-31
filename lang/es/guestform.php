@@ -26,7 +26,12 @@ return [
     'mixed_line' => 'A :count invitado(s) les corresponde «:target» (:target_price por invitado) en vez de «:booked» (:booked_price).',
     'mixed_line_written' => 'A :count invitado(s) les corresponde «:target»: :unit más por invitado.',
     'mixed_surcharge' => 'Por eso se abona un suplemento de :amount en el parque, el día de la fiesta.',
-    'mixed_savings' => 'Por eso tu fiesta saldría :amount más barata. No se descuenta automáticamente: coméntalo en recepción el día de la fiesta.',
+    // ⚠️ `mixed_savings` CADUCÓ con la T4 (`specs/cumple-mixto.md` §24.5): el descuento SE APLICA
+    // solo (`[DECIDIDO owner]` D5). Quedan las frases nuevas del descuento y del «a tu favor».
+    'mixed_discount_total' => 'Por eso se te descuentan :amount de lo que pagarás en el parque el día de la fiesta.',
+    'mixed_net_zero' => 'Entre el suplemento y el descuento, tu importe en el parque no cambia por este motivo.',
+    'mixed_in_favour' => ':amount a tu favor — se te devuelven en el parque el día de la fiesta.',
+    'mixed_savings_pending' => 'Por eso tu fiesta sale :amount más barata: el descuento se aplicará al completar todas las edades.',
     'mixed_no_difference' => 'No hay diferencia de precio entre los dos: no tienes nada que abonar por este motivo.',
     'privacy' => 'Solo usamos estos datos para preparar tu evento. Los datos de los menores se tratan de forma confidencial y se eliminan según nuestra política de privacidad.',
     'readonly_notice' => 'Esta reserva ya se ha celebrado. El formulario es de solo lectura: puedes consultar los datos pero ya no editarlos.',

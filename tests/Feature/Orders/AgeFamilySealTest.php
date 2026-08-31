@@ -428,7 +428,9 @@ class AgeFamilySealTest extends TestCase
     {
         // «Solo cambia de condiciones lo que cambia de producto»: Kids → Jump es producto nuevo, así
         // que el sello es nuevo (el reservado pasa a ser Jump). Los de 4 y 5 corresponden ahora a un
-        // pack MÁS BARATO: la línea de suplemento se retira y queda el aviso del caso barato (§14).
+        // pack MÁS BARATO: la línea de suplemento se retira y — desde la T4 (§20/§24) — el
+        // DESCUENTO se escribe de verdad, absorbido por el cargo de puerta que la propia edición
+        // creó (+21,00 € del cambio a Jump). Neto de puerta: 21,00 − 14,00 = 7,00 €.
         // Mutación: `edit()` sin re-sellar → el sello sigue diciendo Kids y no casa con la fila.
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
         $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
@@ -438,7 +440,10 @@ class AgeFamilySealTest extends TestCase
         $seal = $item->fresh()->ageFamilySeal();
         $this->assertSame((int) $this->jump->id, $seal->bookedTypeId);
         $this->assertFalse($this->read($item)->staleSeal, 'el sello casa con la fila nueva');
-        $this->assertCount(0, $this->surchargeLines($item->fresh()), 'nadie está por encima de Jump');
+        $written = app(MixedPartySurcharge::class)->written($item->fresh(['ticketType', 'slot', 'order', 'children']));
+        $this->assertSame(0, $written['charge_cents'], 'nadie está por encima de Jump');
+        $this->assertSame(1400, $written['credit_cents'], 'los dos Kids se descuentan: 2 × 7,00');
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, '21,00 del cambio − 14,00 del descuento');
         $this->assertTrue($this->read($item)->hasSavings(), 'dos invitados corresponden a Kids');
     }
 
