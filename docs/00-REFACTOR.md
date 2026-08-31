@@ -2603,6 +2603,23 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > declaraciones, 53 duraciones, 20 curvas, y **200 de los 220 usos de curva eran `ease`**— y
 > después: **608 usos de token, cero literales fuera de la escala**.
 >
+> ✅ **EL HUECO DE ILUSTRACIÓN POR INSTALACIÓN, Y LA PRIMERA PASADA DEL MATERIAL DE FACHADA**
+> (2026-08-31, `#286`). El **tercer** hueco por instalación —tras el logotipo y el icono— y el
+> primero para ILUSTRACIÓN y no para marca; cierra la deuda de `#257`. Spec propia:
+> **`specs/hueco-ilustracion.md`**, que **CORRIGE tres afirmaciones de `elementos-fachada.md`**.
+> ▶ El vehículo es **`<use>` externo**, y sale de medir los cinco en navegador con control: es el
+> único **INERTE** que además da **los tres tratamientos desde una geometría**.
+> ⚠️⚠️ **La fuga de `currentColor` afecta a LOS TRES**, no solo al troquel: plano filtra 35,6 % de
+> píxeles ajenos, el contorno **sale MACIZO** y el troquel **pinta el 100 % de la caja**. Se cierra
+> fijando `color` en el `<use>`.
+> ▶ **Entra en la web**: la trama generalizada fuera del menú (refactor **neutro al píxel**), la que
+> se apaga en `/normas`, la niebla en `/contacto`, los rayos quietos en `/precios`, la tira en cuñas
+> y **las poses de zona** en las tarjetas de la portada.
+> ❗ **La regla que dejó la jornada**: *la decoración va en la PANTALLA, no en el componente que se
+> repite* — tres piezas rechazadas por el owner, y las tres por lo mismo.
+> ⚠️ **La lista de ranuras decorativas está VACÍA a propósito**: una ranura sin consumidor es lo que
+> dejó los 19 dibujos de `#257` esperando años.
+>
 > ✅ **EL CARRIL C REABRE Y HACE EL MOCKUP 1:1** (2026-08-28 tarde, `#225` → `#235`,
 > `[DECIDIDO owner]`: «lo quiero idéntico 1:1 — hero, menú, transiciones, animaciones, y lo mismo
 > en el footer y el hero del footer»). Once cortes:

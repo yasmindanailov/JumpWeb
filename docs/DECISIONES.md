@@ -16541,3 +16541,81 @@ devolución» — si la dirección es liquidar en el parque, esa frase promete d
 `compensado`, leído en `ViewOrder::executeItemRefundBatch` y `reservationCompensatedCents`. La
 validación empírica (tres casos como escenarios del guardián + mutaciones + concurrencia) queda
 especificada en §20.8 para la T4.
+
+## #286 · 2026-08-31 · El HUECO DE ILUSTRACIÓN por instalación, y la primera pasada del material de fachada
+
+**Contexto.** `#281` valoró el kit `Elementos Fachada` y dejó una decisión del owner: *se construye
+el hueco de ilustración por instalación*, que cierra la deuda de `#257` («los 19 dibujos de parque
+no están: son del cliente y **no existe mecanismo** para sustituir un dibujo por instalación»).
+
+**⚠️⚠️ Lo primero que hay que saber: `#281` se equivocaba en tres cosas, y las tres están medidas.**
+1. Su §10·1 decía que el hueco «no está diseñado». **Ya existía DOS veces** —`--deco-blob-*` como
+   máscara recoloreable y `--deco-tag` como imagen a color, `INSTALACION-CLIENTE.md` §4.d/§4.e desde
+   `#228`—. Esto era **generalizar**, no inventar.
+2. Su §4 clasificaba las manchas como arte ausente. **Dos de las seis YA VIAJABAN instaladas**:
+   verificado **byte a byte**, `--deco-blob-a` **es** `splash-1.svg` (1.304 B) y `--deco-blob-b`
+   **es** `splash-4.svg` (1.493 B), mismo sha1 normalizado y mismo `viewBox`.
+3. Su «18,6× menos» de `<use>` es cifra **CRUDA**: comprimido son **1,4×**. Y los «64 KB del
+   logotipo» son 57.780 crudos pero **12.955 gzip**. Las dos cifras que sostenían §6 y §9 cambian de
+   significado. **La ganancia de `<use>` no es la red: es el DOM, el parseo y recolorear cada copia.**
+
+**La decisión: el vehículo es `<use>` externo**, y sale de medir los cinco en Chrome real con control
+en cada celda. Es el único que junta **ser INERTE** —ni `<script>`, ni `onload`, ni baliza externa,
+ni un `new Image()` salieron; **el control en línea disparó LAS DOS**— y dar **los tres tratamientos
+desde una geometría** (plano 18,9 % · contorno 8,8 % · troquel 78,8 %; control vacío 0,0 %).
+
+**⚠️⚠️ Sus cuatro límites, todos medidos.** El `<style>` interno del cliente **GANA** al `fill` del
+producto · el `stroke-width` propio del símbolo gana al del `<use>` (21,4 % idéntico al control, vs
+46,4 % normalizado) · un `fill` clavado hace **imposible** recolorear, y **los ficheros sueltos del
+canvas lo traen (7 de 7) y el artboard NO (1 de 138)** —de ahí la regla de extracción— · no existe al
+`DOMContentLoaded`. ▶ **El primero NO es un agujero de seguridad: es una FUGA WHITE-LABEL**, y por eso
+se cierra AL INSTALAR y no al servir.
+
+**⚠️⚠️ Y la fuga de `currentColor` afecta a LOS TRES tratamientos, no solo al troquel.** Medido con un
+`color` magenta imposible de confundir: sin defensa, plano filtra **35,6 %** de píxeles ajenos, el
+contorno **sale MACIZO** (4,1 % → 37,9 %) y el troquel **pinta el 100 % de la caja** —el rectángulo
+que `site.css` documenta como peor que no tener default—. Fijando `color` en el `<use>`, los tres
+vuelven al valor **exacto** del símbolo limpio. ⚠️ **La primera medición dio el troquel por bueno POR
+SUERTE**: `color` valía la tinta oscura, que como máscara se lee casi igual que el negro. *La sonda no
+probaba el defecto: probaba un caso donde no se nota.*
+
+**Lo construido.** `IllustrationKit` (validador, todo-o-nada como `InlineSvg`) · `php artisan
+kit:build` · `<x-site.ilu>` con los tres tratamientos · `GUARDA 7` en `deploy.sh`, **el único punto
+del sistema que ve el fichero real** · las tres piezas de despliegue. Y la primera pasada del material
+que es TÉCNICA y no dibujo: la trama generalizada fuera del menú (**refactor verificado NEUTRO AL
+PÍXEL**, con control que sí ve un cambio del 10 %), la que se apaga en `/normas`, la niebla en
+`/contacto`, los rayos quietos en `/precios` y la tira en cuñas.
+
+**⚠️ Tres decisiones del owner van contra el artboard y quedan escritas donde se leen.**
+· **Las dos tiras de borde en CUÑA**, aunque su nota diga «continua para pie y cabecera». A 4 px el
+  `skewX(-12°)` desplaza 0,85 px y la cuña es invisible: van a sus 22 px.
+· **La tira de cabecera NO se pinta con el hero a pantalla completa.** Monta en `--nav-p` —la MISMA
+  señal con la que entra el armazón— y llega a 1 en el fotograma exacto del relevo. Sin JS y con
+  movimiento reducido no se ve, y es consecuencia aceptada: es una pieza de la coreografía.
+· **Las piezas repetidas por componente se RETIRAN**: cuatro tiras (su landing usa dos), una mancha
+  por tarjeta de precio, un friso de cinco figuras.
+
+**❗ LA REGLA QUE SALE DE LOS TRES RECHAZOS, y vale para todo lo que venga**: *la decoración va en la
+PANTALLA, no en el componente que se repite*. Lo que sobrevivió —trama, niebla, rayos, poses de zona—
+comparte tres cosas: **una por pantalla · integrada en su superficie · a baja opacidad**. Y su propio
+artboard lo dice dos veces sin que nadie se lo pidiera: los rayos «uno por página» y la mancha del
+precio «máximo una por pantalla».
+
+**⚠️ La lista de ranuras decorativas está VACÍA, y eso es la regla funcionando.** Llegaron a existir
+`slot-mancha-esquina` y `slot-friso-1..5`; al retirarse sus consumidores se fueron con ellos. **Una
+ranura sin pantalla que la pinte es lo que dejó los 19 dibujos de `#257` esperando años.**
+
+**⚠️⚠️ Y un defecto propio que conviene no repetir**: para meter la decoración bajo el contenido usé
+`> :not(.ilu) { position: relative }`, un martillo que **pisa a cualquier hijo colocado a propósito**.
+Se llevó **dos**: la insignia «TOP» de la tarjeta de precio —que al volverse `relative` pasó a ser
+hijo de flex y **se estiró a todo el ancho**— y el CTA de la tarjeta de zona. La forma correcta es
+**`isolation: isolate` en el contenedor + `z-index: -1` en la decoración**: dentro de un contexto de
+apilamiento pinta encima del fondo del padre y debajo de su contenido, **sin tocar a nadie**.
+⚠️ Y ese `z-index` es **colocación, no componente**: `.grain` y `.spray` se usan también en el menú y
+en el cierre, que no crean contexto propio, y allí los habría mandado detrás del fondo.
+
+**Verificación**: suite **3593 / 23.394** · Pint ✓ · `docs-check` ✓ · build N-A · **24 mutaciones
+muerden** con control verde antes y después de cada pasada · los cinco vehículos, los tres
+tratamientos, la fuga de `currentColor` y el modelo de amenaza **medidos en navegador con control** ·
+el comando ejercitado de punta a punta (sin kit → 0 · kit malo → 6 problemas nombrados y **no escribe
+nada** · kit bueno → instalado, y `git check-ignore` confirma que queda fuera del repo).

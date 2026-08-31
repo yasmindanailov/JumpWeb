@@ -2,8 +2,50 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-30 — jornada del MOVIMIENTO, la MARCA y
-> el KIT DEL MURAL: `#275` → `#281`.**
+> aquí solo se enlaza.** Última actualización: **2026-08-31 — el HUECO DE ILUSTRACIÓN y la primera
+> pasada del MATERIAL DE FACHADA (`#286`), sobre la jornada de mixtos (`#282` → `#285`).**
+>
+> ⚠️⚠️ **DOS AGENTES SOBRE `main` EL MISMO DÍA.** `#282`–`#285` son de reservas mixtas y `#286` del
+> tema; no se solapan en código, pero el número de decisión **se elige mirando el REMOTO**: en esta
+> jornada el local iba por 281 y el remoto por 285.
+>
+> ❗❗❗ **POR DÓNDE SE RETOMA EL TEMA** (lo único que hay que leer para seguir con esto):
+> **1 · EL MECANISMO ESTÁ COMPLETO Y PROBADO** — `specs/hueco-ilustracion.md`. La instalación entrega
+> **un** sprite (`client-kit.svg`) y el producto lo pinta con `<use>`, poniendo él color, tamaño y
+> tratamiento. `php artisan kit:build` valida, `GUARDA 7` de `deploy.sh` mira el fichero REAL, y hay
+> **46 casos con 24 mutaciones que muerden**.
+> **2 · ❗ LA REGLA QUE MANDA A PARTIR DE AHORA, y sale de TRES rechazos del owner en una tarde**:
+> *la decoración va en la **PANTALLA**, no en el componente que se repite*. Se retiraron cuatro tiras
+> de marca (su landing usa **dos**), una mancha por tarjeta de precio y un friso de cinco figuras.
+> Lo que SÍ sobrevivió comparte tres cosas: **una por pantalla · integrada en su superficie · a baja
+> opacidad**. Su propio artboard lo dice dos veces: rayos «uno por página», mancha del precio «máximo
+> una por pantalla». **No propongas material repetido por componente.**
+> **3 · Qué se ve hoy en la web**: trama de puntos generalizada (menú, cierre y `/normas`), niebla en
+> `/contacto`, rayos quietos en `/precios`, las dos tiras de borde **en cuña**, y **las poses de zona**
+> en las tarjetas de la portada (`zone-jump` → P1 · `zone-kids` → K1 · `zone-cumpleanos` → P5, el
+> reparto que el propio artboard escribe en `F10`).
+> **4 · Lo que NO está colocado y por qué**: las **9 poses y las 6 manchas restantes** están extraídas
+> y saneadas, pero **la lista de ranuras (`IllustrationKit::SLOTS`) está VACÍA a propósito** — una
+> ranura nace **con su consumidor en el mismo cambio**, o vuelve a pasar lo de `#257`. Para colocar
+> algo: se declara la ranura, se añade el dibujo al kit y se pinta, todo junto.
+> **5 · Falta el OJO del owner** en: la tira de cabecera que aparece al encoger el hero, y las poses
+> de zona en móvil. Y **subir a staging** todo lo del tema.
+>
+> ⚠️⚠️ **TRES TRAMPAS DE INSTRUMENTO DE ESTA JORNADA, y la primera cuesta una medición entera:**
+> · **Comparar capturas de la PORTADA no puede demostrar nada**: su suelo de ruido es del **64,45 %**
+>   (vídeo, imágenes perezosas, animaciones). Dije «90 % distintos → el dibujo pinta» y era basura.
+>   El instrumento bueno **extrae del servidor el marcado real** y lo pinta en una página quieta:
+>   suelo **0,00 %**. Está en el scratchpad como `ilu/tarjeta.py` y `ilu/foto.py`.
+> · **`asset()` emite URL ABSOLUTA**, así que una sonda en otro puerto hace el `<use>` **cross-origin**
+>   y no resuelve — con el producto sano.
+> · **Una sonda que no reproduce la condición del defecto no lo ve**: la del troquel dio «bueno»
+>   porque `color` valía tinta oscura, que como máscara se lee casi igual que el negro.
+>
+> ⚠️ **Y `elementos-fachada.md` lleva CINCO correcciones propias en su cabecera** (§12 de la spec
+> nueva): el hueco YA existía dos veces, dos manchas YA viajaban instaladas (byte a byte), el «18,6×»
+> es cifra cruda (**1,4× comprimido**), los estados vacíos SÍ existen, y el canvas ya no está caducado.
+
+
 > ❗❗❗ **2026-08-31 · LA VISIÓN DE RESERVAS MIXTAS, CERRADA CON EL OWNER** (`#284`). **Si vas a
 > construir algo de mixtos, lee `specs/cumple-mixto.md` §18 y nada más**: es la foto completa —nueve
 > decisiones, siete huecos medidos y el plan por tandas—. Sesión SIN código.
@@ -2072,6 +2114,20 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
+- Suite **3593 en verde** (23.394 aserciones, 1 skipped a propósito) · **JS 877**, medida el
+  2026-08-31 **sobre el árbol CONJUNTO**, tras rebasar `#286` (el hueco de ilustración) encima de
+  `#282`–`#285` del carril de mixtos. ▶ **+46 casos de mi lado**, en dos ficheros:
+  `IllustrationKitTest` (el contrato del kit: seguridad, atributos de presentación en raíz **y en
+  descendientes**, gramática cerrada, las tres piezas de despliegue) e `IllustrationHoleRenderTest`
+  (lo que se pinta: sin paquete no se emite nada, el troquel fija `fill` **y** `color`, el grosor
+  sale del símbolo y no de una constante, y el CSS lee un token que RESUELVE).
+  **24 mutaciones y las 24 muerden**, con control verde antes y después de cada pasada.
+  ⚠️⚠️ **Una guarda mía nació CIEGA y lo dijo la mutación, no la lectura**: pasaba en verde con
+  `color: transparent` borrado, porque **el comentario de esa misma regla CSS** contiene ese texto y
+  la aserción casaba con la prosa. Desde entonces `block()` retira los comentarios antes de aseverar.
+  ⚠️ Y **otra reventó con el producto SANO** al vaciarse la lista de ranuras: aseveraba `SLOTS[0]` y
+  «la lista no está vacía». *Una guarda atada a cuántas cosas hay hoy vigila el inventario, no la
+  regla.*
 - Suite **3547 en verde** (23.247 aserciones, 1 skipped a propósito) · **JS 877**, medida el
   2026-08-31 tras `#283` (el AVISO antes de mover un tramo). ▶ **+7 casos**: el impacto en las dos
   direcciones, la fiesta ya celebrada que no cuenta, el cambio que no mueve a nadie y no
