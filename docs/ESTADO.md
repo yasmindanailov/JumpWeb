@@ -57,9 +57,14 @@
 > CONDUCTA — el form solo dehidrata campos declarados. ⚠️ Dos usuarios de test sobre el MISMO rol
 > se roban los permisos con `sync()`: rol propio por empleado en el fichero nuevo. ⚠️ La sonda usó
 > `puerta.window_days=30` TEMPORAL (restaurado: fila borrada) y dejó filas de audit del escaneo en
-> `T0-PRB01`, asumidas. **Queda el OJO del owner** (capturas listas) y LO SIGUIENTE es la **T4**
-> (el −X €, diseño CERRADO en §20 — núcleo de dinero: `CRITICAL_RE` + verificadores +
-> `VERIFY_CONC=1`).
+> `T0-PRB01`, asumidas. **Queda el OJO del owner** (capturas listas). ~~Lo siguiente era la T4~~
+> **HECHA la misma noche (`#296`, bloque de arriba)**. ▶ **LA RETOMA REAL ES LA T5** (las palabras:
+> §18.5 — D9 «pagado en el parque» deja de afirmarse · D8 anonimizar solo sin reservas en vigor ·
+> el email de la reducción que promete de más con la liquidación en parque (`#285`) · el resto del
+> hallazgo del T0 sobre la línea del veredicto). **Sin diseño fino aún: se escribe §25 contra el
+> código ANTES de una línea, como las cinco tandas anteriores, y las ambigüedades se preguntan
+> numeradas al owner.** No toca el núcleo de dinero (D9 es presentación; D8 es RGPD → leer
+> `INVARIANTES §3` primero).
 > ❗❗❗ **2026-08-31 (tarde-noche) · T2 · UNA EDAD SIN PRODUCTO + EL DINERO SOLO AL GUARDAR
 > COMPLETO, EN EL ÁRBOL** (`#289`, `specs/cumple-mixto.md` §22 diseño · §22.9 ejecución).
 > Suite de entonces: 3639 tests / 23.658 aserciones — cifra del árbol conjunto de aquel cierre,
