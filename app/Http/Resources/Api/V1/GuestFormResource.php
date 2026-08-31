@@ -54,8 +54,13 @@ class GuestFormResource extends JsonResource
             'readonly' => $item->isFinishedInPractice(),
             'guest_fields' => $this->schema($type?->guestFields() ?? [], $type),
             'general_fields' => $this->schema($type?->eventFields(TicketType::EVENT_STAGE_POSTFORM) ?? [], $type),
-            'guests' => $item->guestData(),
-            'general' => $this->generalAnswers($item, $type),
+            // ⚠️ `(object)` a propósito: el contrato declara OBJETOS (`GuestForm.guests[]` y
+            // `GuestForm.general`), y un array PHP vacío se serializa como `[]` — una lista. Lo
+            // destapó una fiesta sin campos generales de post-form (`specs/cumple-mixto.md` §22.9):
+            // la respuesta violaba `openapi/v1.yaml` y ningún caso lo veía porque el fixture de
+            // siempre tenía un campo general. Una ficha sin respuestas es el mismo caso.
+            'guests' => array_map(static fn (array $row): object => (object) $row, $item->guestData()),
+            'general' => (object) $this->generalAnswers($item, $type),
             'save_url' => $item->guestFormApiUrls()['save'],
         ];
     }

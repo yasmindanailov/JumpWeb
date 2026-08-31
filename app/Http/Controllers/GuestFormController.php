@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestAgeMixReader;
+use App\Domain\Booking\Services\MixedPartySettings;
 use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Http\Concerns\AuthorizesGuestForm;
 use Illuminate\Http\RedirectResponse;
@@ -39,6 +40,9 @@ class GuestFormController extends Controller
         $this->authorizeGuestFormAccess($request, $reservation);
 
         $type = $reservation->ticketType;
+        $ageMix = app(GuestAgeMixReader::class)->for($reservation);
+        $ageSurcharge = app(MixedPartySurcharge::class)->written($reservation);
+        $guestRegimes = app(GuestAgeMixReader::class)->guestRegimes($reservation);
 
         return view('reservation.guests', [
             'order' => $reservation->order,
@@ -56,7 +60,7 @@ class GuestFormController extends Controller
             // lleva el suplemento, o el parque cambió una tarifa después) lo derivado sería una
             // promesa que su pedido no respalda. Prometer un importe que no está en su desglose es
             // peor que no decir nada; lo derivado es información para el OPERADOR y vive en el panel.
-            'ageSurcharge' => app(MixedPartySurcharge::class)->written($reservation),
+            'ageSurcharge' => $ageSurcharge,
             // Y el VEREDICTO derivado, que es lo que permite EXPLICAR el importe en vez de soltarlo
             // («2 invitados corresponden a Kids, 11,00 € por invitado, en vez de Jump, 15,00 €»).
             //
@@ -64,11 +68,21 @@ class GuestFormController extends Controller
             // dice— y la EXPLICACIÓN del veredicto. Antes el aviso solo miraba lo escrito, y por eso
             // **una fiesta mixta sin cargo no decía nada**: el cliente veía la etiqueta «MIXTA» en su
             // pedido y ni una línea que la interpretase (§14, medido sobre `R-BEEL3E`).
-            'ageMix' => app(GuestAgeMixReader::class)->for($reservation),
+            'ageMix' => $ageMix,
             // El régimen que le toca a CADA invitado, para el rótulo dentro de su recuadro
             // (`[owner, 2026-08-29]`, §15). Sale del mismo recorrido que el veredicto: si tuviera su
             // propia copia de la regla, una ficha podría decir «Kids» mientras el total dice otra cosa.
-            'guestRegimes' => app(GuestAgeMixReader::class)->guestRegimes($reservation),
+            'guestRegimes' => $guestRegimes,
+            // Una edad SIN PRODUCTO (`#284` D6, §22.5): las fichas afectadas —que no cuentan como
+            // completas— y UN texto por caso presente (por debajo · por encima · hueco), el del parque
+            // si lo escribió en Ajustes, con su teléfono. Se le dice que llame: lo resuelve el parque.
+            'noProductIndexes' => $reservation->guestAgesWithoutProduct(),
+            'noProductNotices' => $this->noProductNotices($guestRegimes),
+            // El dinero solo se mueve al guardar con TODAS las edades (`#285` §20.6): si hay cargo
+            // escrito y falta alguna, se le dice que está congelado y cuántas faltan.
+            'frozenMissingAges' => ($ageMix->applies && ! $ageMix->allAgesDeclared() && $ageSurcharge['cents'] > 0)
+                ? $ageMix->withoutAge
+                : 0,
             // SOLO LECTURA cuando la reserva ya se ha celebrado (su franja terminó): el post-form solo
             // sirve para PREPARAR la fiesta; pasada, se muestra pero no se edita. El enlace sigue
             // caducando a evento+14d (tope RGPD), pero la edición se cierra al terminar el evento.
@@ -111,6 +125,28 @@ class GuestFormController extends Controller
         return redirect()
             ->to($this->backUrl($request, $reservation))
             ->with('status', 'guest-form-saved');
+    }
+
+    /**
+     * Un texto por CASO presente entre las fichas sin producto, en el orden en que aparecen. Dos
+     * invitados con el mismo caso comparten frase: repetirla no añade información.
+     *
+     * @param  array<int, array{state:string, name:?string, own:bool, reason:?string}>  $regimes
+     * @return list<string>
+     */
+    private function noProductNotices(array $regimes): array
+    {
+        $reasons = [];
+        foreach ($regimes as $row) {
+            if ($row['state'] === GuestAgeMixReader::ROW_OUT_OF_RANGE && $row['reason'] !== null) {
+                $reasons[$row['reason']] = true;
+            }
+        }
+
+        return array_map(
+            static fn (string $reason): string => MixedPartySettings::noProductText($reason),
+            array_keys($reasons),
+        );
     }
 
     /** Tras guardar: "Mis pedidos" si está autenticado; si vino por enlace firmado, recarga firmada. */

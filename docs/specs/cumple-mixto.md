@@ -1219,7 +1219,7 @@ empieza sin el informe de §19 aprobado.
 |---|---|---|---|
 | **T0** | **El ojo del owner en navegador** — ▶ 🟦 **LAS CAPTURAS ESTÁN HECHAS** (2026-08-31, guion `t0.js` en `/root/e2e` del contenedor, 14 imágenes en `storage/app/t0-capturas/`): el aviso del catálogo `#283` **verificado en el ciclo real de Livewire** (avisa → re-guardar aplica → números distintos re-avisan → restaurado al dígito), el post-form (cargo 12 € → 8 €, congelado con edad borrada), los 3 correos (nace/cambia con «pasa de 12,00 € a 8,00 €»/desaparece), el desfase del panel, el huérfano y Gestionar sin la casilla. Pedidos sonda `T0-PRB01`/`T0-PRB02` (probe-card, franja 2026-09-15) y admin `e2e-panel-admin@jumpweb.test` quedan en la BD local para futuras sondas. **Queda SOLO el ojo: juzgar textos y claridad** | — | no |
 | **T1** | **El SELLO** (D1·D2·D3): la reserva guarda tramos y precios de su familia al nacer. ▶ ✅ **EN EL ÁRBOL (2026-08-31, `#288`): diseño en §21, ejecución en §21.13.** `order_items.age_family_seal`; sello nuevo al cambiar de pack, el mismo re-preciado al cambiar de día (`[DECIDIDO owner]`, Q2); `unitFor` y el recibo desaparecen; `#283` retirado; dos huecos preexistentes cerrados de paso (día sin tarifa · cerrojo de `orphan_addons`). 13/13 mutaciones, verificadores sobre MySQL y sonda del hueco A en navegador. Queda el OJO del owner | A · B · el gemelo de la etiqueta · el huérfano | **sí** (nacimiento y edición de una reserva) |
-| **T2** | **La edad sin producto** (D6) + que deje de congelar el dinero + **el disparador pasa a «solo guardado COMPLETO»** (§20.6, cambia la conducta de `#268` para los cargos) | C | no |
+| **T2** | **La edad sin producto** (D6) + que deje de congelar el dinero + **el disparador pasa a «solo guardado COMPLETO»** (§20.6, cambia la conducta de `#268` para los cargos). ▶ ✅ **EN EL ÁRBOL (2026-08-31, `#289`): diseño en §22, ejecución en §22.9.** «Completo» son DOS preguntas (dinero: todas las edades declaradas · formulario: además ninguna edad sin producto); la puerta vive en `reconcile()` con la fila bloqueada y vale también para el panel (`[DECIDIDO owner]`); tres textos por instalación con respaldo y `:phone`. Cazó de paso un hueco de contrato en la API (`general` como lista). Queda el OJO del owner | C | no (toca `MixedPartySurcharge` por el disparador) |
 | **T3** | **El parque decide** (E·F·D7): la diferencia en hoja de sala y puerta, corregir la edad desde el panel auditado, y bajar del mínimo | E · F · D7 | **sí** (la edad mueve el suplemento) |
 | **T4** | **El −X €** con el diseño CERRADO de **§20** (espejo acotado a puerta; guardas y mutaciones en §20.8) | el medio flujo que falta | **sí** |
 | **T5** | **Las palabras** (D9) + anonimizar con reserva viva (D8) + ⚠️ el email de una reducción promete «procesaremos la devolución» y con la liquidación en parque promete de más (`#285`) + ❗ **hallazgo del T0, cazado por el OJO del owner** (2026-08-31): en el bloque del panel, la línea del veredicto («2 × Cumpleaños Jump · 9,00 € por invitado») **no dice que es la tarifa DE HOY** — pegada a «Suplemento aplicado: 8,00 €» se lee como contradicción hasta llegar a la frase del desfase. El owner mismo tuvo que preguntar, y esa es la prueba: el bloque no se explica solo. Arreglo: «hoy: 9,00 € por invitado» cuando difiera de lo escrito, o el aplicado primero. ⚠️ El «0,00 € por invitado» de la dirección barata NO se toca: se resuelve solo con la T4 (pasa a «Descuento: −8,00 €») | D8 · D9 | no (D9 es presentación) |
@@ -1786,3 +1786,167 @@ salió porque bajo D2 no podía saltar nunca, y dejarlo «como red» habría sid
 
 **Verificación empírica sobre MySQL y en navegador**: ver el registro de `#288` (verificadores de
 concurrencia con su control negativo, y la sonda del hueco A en el ciclo real del post-form).
+
+---
+
+## 22. 🟦 T2 · UNA EDAD SIN PRODUCTO (D6) + EL DINERO SOLO AL GUARDAR COMPLETO (§20.6) — diseño fino (2026-08-31)
+
+> **Si vas a construir la T2, lee §18 (la visión), §21 (el sello, del que esto depende) y ESTE
+> apartado.** Contestado contra el código real; lo que es decisión de producto va en §22.8.
+
+### 22.1 · Lo que cambia, en una frase por cada mitad
+
+**Mitad A (D6)**: una edad que ningún régimen SELLADO cubre deja de ser una incógnita y pasa a ser
+un estado CONOCIDO —«no hay producto para esta edad en las condiciones de tu reserva»—: **no congela
+el dinero** (los demás invitados se tarifican con normalidad y esa edad no genera ninguna línea),
+**no deja completar el formulario** (la ficha no cuenta como lista, el estado sigue `pending`), y
+**se explica con las normas del parque**, con un texto distinto por caso —por debajo del tramo menor
+· por encima del mayor · en un hueco entre dos tramos—, configurable por instalación y con el
+teléfono del parque para llamar.
+
+**Mitad B (§20.6)**: el dinero —las DOS direcciones— solo se mueve al guardar el formulario con
+**TODAS las edades declaradas**. Un guardado con alguna edad en blanco **no mueve nada**: ni sube
+(hoy sube, `#268`) ni baja (hoy tampoco), y **lo dice** al cliente y al operador.
+
+### 22.2 · «Completo» son DOS preguntas, y hoy las contesta una sola
+
+| Pregunta | Quién la hace hoy | Con la T2 |
+|---|---|---|
+| ¿Puede el veredicto MANDAR sobre el dinero? | `GuestAgeMix::isComplete()` = sin edades en blanco **y** sin edades fuera de tramo | **`allAgesDeclared()`** = sin edades en blanco. Una edad sin producto no es una incógnita: se descarta de la cuenta (ya lo hace `rows()`: no entra en ningún `upgrade`) y el resto se tarifica |
+| ¿Está COMPLETO el formulario? (`FORM OK/PENDIENTE` del panel, «Mis pedidos», la API, `guest_form_completed_at`) | `OrderItem::isGuestFormComplete()` = todas las columnas obligatorias de todas las fichas | lo mismo **y además ninguna edad sin producto**. La ficha con esa edad no cuenta en el progreso («7 de 8») y el estado se queda en `pending` hasta que el parque lo resuelva (T3) |
+
+`isComplete()` se conserva para lo que significa —«el veredicto no tiene nada sin resolver»— y lo
+usa la presentación; el dinero pasa a mirar `allAgesDeclared()`. Medido: `isComplete()` lo leen
+`MixedPartySurcharge::derivationGoverns()`, la ficha del pedido y `GuestAgeMixTest`.
+
+### 22.3 · El disparador, y por qué se decide en el reconciliador y no en el formulario
+
+`OrderItem::submitGuestForm()` sigue llamando a `reconcile()` en cada guardado (web y API, la
+misma puerta), y es `reconcile()` quien decide **con la fila bloqueada**: si el veredicto aplica y
+**falta alguna edad**, no escribe nada —ni crea, ni actualiza, ni cancela— y devuelve `null`. Es la
+misma doctrina que el resto de la clase: nunca se acepta un veredicto calculado antes del lock.
+
+| Guardado | Hoy (`#268`) | Con la T2 |
+|---|---|---|
+| Todas las edades → cambia el importe | recalcula, arriba y abajo | igual |
+| Falta una edad, el resto sube | **sube** («declarar es un dato nuevo») | **nada**: congelado, y se dice |
+| Falta una edad, el resto baja | nada (abstención) | nada — la red de `#268` se conserva |
+| Una edad sin producto, el resto completo | **congelado** (hueco C) | **recalcula** con los demás; esa edad no cuenta |
+| Cambio de pack a uno sin familia (`sealed: true`) | retira la línea | igual: no depende de las edades |
+
+⚠️ **Los disparos del PANEL siguen la misma regla** (§22.8 Q1): si el operador baja invitados o
+mueve de día con edades en blanco, el suplemento escrito se conserva hasta que el cliente complete,
+y la ficha del pedido lo enseña (la línea de desfase ya existe). Con la T3 el operador podrá
+rellenar las edades él mismo.
+
+### 22.4 · Los tres textos por instalación, y dónde viven
+
+El caso se calcula desde el SELLO —`AgeFamilySeal::coverage()` da el mínimo y el máximo que cubre
+la familia sellada— y viaja en `guestRegimes()` como `reason` de cada ficha fuera de tramo:
+`below` · `above` · `gap`. Los textos son ajustes por idioma con el patrón que ya usa
+`registration.label.{es,en,fr}` (`Settings::MANAGED`, grupo `mixed_party`):
+`mixed_party.no_product.below.{loc}` · `.above.{loc}` · `.gap.{loc}`, con respaldo en
+`lang/*/guestform.php` si están vacíos, y el marcador `:phone` resuelto con `contact.phone`. Se
+editan en Ajustes → sección nueva «Fiestas por edad». ⚠️ Se leen con `Translated`-style de
+respaldo idioma → es → default: el post-form se sirve en el idioma del cliente.
+
+### 22.5 · Lo que ve cada uno
+
+- **Cliente (post-form)**: la ficha con edad sin producto no pasa a «Lista» (rótulo «Sin producto
+  para esta edad»), el progreso no la cuenta, y bajo el bloque de fiesta mixta aparece el texto del
+  caso con el teléfono. Con edades en blanco y suplemento escrito: «El suplemento se recalculará
+  cuando estén todas las edades» (lo que el T0 dejó anotado como «congelado silencioso»).
+- **Operador (ficha del pedido)**: `out_of_range` deja de decir «revisa los tramos en el catálogo»
+  (con el sello el catálogo no es la causa) y pasa a «N invitados con una edad sin producto en las
+  condiciones de esta reserva: el cliente tiene que llamar; se resuelve en el parque». Con edades
+  en blanco: «suplemento congelado hasta que declare las N que faltan» junto al desfase.
+- **API**: el contrato NO cambia de forma (`status` sigue `ok | pending | null`); cambia la
+  descripción de `pending` para incluir «una edad sin producto». La app no recibe la explicación:
+  `[owner]` la API queda fuera (§12.7), y se anota como deuda.
+
+### 22.6 · Lo que se toca, en orden de riesgo
+
+1. `AgeFamilySeal::coverage()` + `SealedRegime` sin cambios · `GuestAgeMixReader::rows()` añade
+   `reason` · `GuestAgeMix::allAgesDeclared()`.
+2. `MixedPartySurcharge::reconcile()`: la puerta «falta alguna edad → nada» y
+   `derivationGoverns()` sobre `allAgesDeclared()` (🔒 `CRITICAL_RE`).
+3. `OrderItem::isGuestFormComplete()` / `guestFormProgress()` con la edad sin producto
+   (`guestAgesWithoutProduct()` desde el lector); `TicketType::guestDataCompletedCount` intacto.
+4. Ajustes: 9 claves en `Settings::MANAGED` + sección; `lang/{es,en,fr}/guestform.php` con los tres
+   textos por defecto y el de «se recalculará al completar».
+5. Post-form (`guests.blade.php`, `GuestFormController`): rótulo, progreso, textos.
+6. Ficha del pedido (`items-list.blade.php`, `lang/{es,zh_CN}/admin.php`).
+7. `openapi/v1.yaml`: descripción de `pending` (sin cambio de forma; `ApiContractTest` lo fija).
+8. Doc: `PAY-19` (la abstención pasa a «falta una edad», no «sobra una»), `POSTFORM-INVITADOS.md`
+   §4.1/§7, `DEUDA` (la API sin explicación), §18.5 T2, `DECISIONES`, `ESTADO`.
+
+### 22.7 · Guardas, con su mutación
+
+| | Guarda | Mutación |
+|---|---|---|
+| A | Un guardado con una edad en blanco NO escribe nada, aunque el resto suba (revierte `test_a_partial_verdict_can_still_grow`) | quitar la puerta de `reconcile()` |
+| B | Un guardado completo tras uno parcial recalcula (arriba y abajo) | — (control) |
+| C | Una edad sin producto NO congela: `[4, 0, 8]` → 7,00 € por el de 8; el de 0 no genera línea | `derivationGoverns` sobre `isComplete()` |
+| D | La ficha con edad sin producto no cuenta como lista: `guestFormStatus() === 'pending'`, progreso «2/3», sin `guest_form_completed_at` | `isGuestFormComplete()` sin mirar edades |
+| E | `reason` correcto: 0 → `below`, 120 → `above`, 8 con Kids 1–6 y Teens 9–12 → `gap` | intercambiar los umbrales |
+| F | El texto por instalación manda sobre el respaldo y trae el teléfono; vacío → respaldo | leer siempre el respaldo |
+| G | Post-form por HTTP: el texto del caso y el rótulo en la ficha; con edades en blanco y cargo escrito, el aviso de «se recalculará» | — |
+| H | Ficha del pedido por HTTP: los dos avisos nuevos | — |
+| I | `ApiContractTest`: `status` sigue `[ok, pending, null]` y `GuestFormResource` devuelve `pending` con una edad sin producto | — |
+| J | `mixed-party:verify-concurrency` sigue en verde (la puerta no cambia el lock) | — |
+
+### 22.8 · Lo que decide el owner
+
+**Q1 · Con edades en blanco, ¿los disparos del PANEL también congelan?** Si el operador baja de 10 a
+8 invitados y faltan edades, el suplemento escrito se queda como está hasta que el cliente complete
+(y la ficha lo dice). **(a)** Una sola regla, la de §20.6, también para el panel — recomendado:
+simple, y la T3 le dará al operador el modo de completar las edades él mismo. **(b)** El panel
+recalcula siempre con lo declarado — reintroduce para el operador justo la recalculación parcial que
+§20.6 retira al cliente.
+
+Lo demás se deriva de D6/§20.6/§20.7 y no se pregunta: la ficha con edad sin producto no cuenta
+como lista; el estado COMPLETO no se bloquea; los tres textos son por instalación con respaldo.
+
+▶ ✅ **`[DECIDIDO owner, 2026-08-31]` Q1 · (a)**: una sola regla, también para el panel.
+
+### 22.9 · ✅ LO EJECUTADO (2026-08-31, `DECISIONES #289`)
+
+**En el árbol.** `AgeFamilySeal::coverage()` y `noProductReason()` (`below` · `above` · `gap`) · el
+lector publica `reason` por ficha en `guestRegimes()` · `GuestAgeMix::allAgesDeclared()` —la pregunta
+del DINERO; `isComplete()` queda para la presentación— · **la PUERTA en
+`MixedPartySurcharge::reconcile()`**: con alguna edad en blanco no se escribe nada en ninguna
+dirección, también en los disparos del panel · `derivationGoverns()` sobre `allAgesDeclared()` ·
+`OrderItem::guestAgesWithoutProduct()`, y con él `isGuestFormComplete()` (D6: la edad sin producto
+no deja completar) y `guestFormProgress()` (`TicketType::guestDataCompletedIndexes()`) ·
+`MixedPartySettings::noProductText()` con los nueve ajustes `mixed_party.no_product.{caso}.{idioma}`
+—cadena de lectura: idioma pedido → respaldo de la app → `es` → `en` → `fr` → texto por defecto,
+porque un parque que solo escribe su texto en español tiene que enseñárselo también al cliente
+francés— y la sección **«Fiestas por edad»** en Ajustes → pestaña Web · el post-form (rótulo «Sin
+producto para esta edad», un texto por caso presente con el teléfono, «faltan N edades: el
+suplemento no se recalculará…», y `data-no-product` para que el JS no dé la ficha por lista) · la
+ficha del pedido (`frozen` con cargo escrito en vez del genérico «puede cambiar»; `out_of_range`
+reescrito: es asunto del parque, no del catálogo) · el contrato de la API con la misma forma y
+`pending` documentado con el caso.
+
+**Medido.** Suite **3616 → 3629** en verde (23.584 aserciones): +2 en `GuestAgeMixTest`
+(`allAgesDeclared()` frente a `isComplete()`; los tres casos `below`/`above`/`gap`), +2 netos en
+`MixedPartySurchargeTest` (el parcial que no escribe nada en ninguna dirección —revierte el caso de
+`#268` que probaba el crecimiento—, la edad sin producto que no congela, el panel que también
+congela), +3 en `GuestFormTest` web (el formulario que no se completa y explica el caso, el texto del
+parque que manda, el congelado dicho), +2 en `MixedPartyBadgeTest`, +1 en la API, +3 en
+`MixedPartyTextsTest`. **7 mutaciones (N1–N7) y las 7 muerden.** `mixed-party:verify-concurrency`
+en verde con la puerta puesta (8 guardados simultáneos completos → una línea). Sonda headless sobre
+`T0-PRB01`: el congelado se dice («faltan 1 edades…», cargo en 8,00 €) y la edad sin producto se
+explica con el teléfono y deja la ficha sin completar (7/8) — y **ninguno de los dos guardados dejó
+fila de auditoría**, que es exactamente la regla.
+
+❗ **Un hueco de CONTRATO preexistente, cazado por el caso nuevo de la API**: `GuestFormResource`
+serializaba `general` —y cualquier ficha sin respuestas— como `[]` cuando estaba vacío, y
+`openapi/v1.yaml` declara OBJETOS. Una fiesta sin campos generales de post-form devolvía una
+respuesta que viola el contrato, y ningún caso lo veía porque el fixture de siempre lleva un campo
+general. Corregido en el recurso (`(object)`), con el caso nuevo como guarda. *Un fixture cómodo es
+un fixture que no prueba el borde.*
+
+**Lo que cambia para el plan.** La T3 es la que RESUELVE la ficha «sin producto» (el operador
+corrige la edad o ajusta) y la que descongela desde el panel (rellenando las edades que faltan).
+Queda en `DEUDA` que la app no recibe la explicación del caso (la API está fuera, `[owner]`).

@@ -12,7 +12,16 @@ return [
 
     // Fiesta MIXTA (`docs/specs/cumple-mixto.md` §9·7). ⚠️ El texto NO promete un cobro: el
     // suplemento lo aplica el operador, así que dice dónde se paga y no da nada por hecho.
-    'regime_unknown' => 'Edad fuera de tramo',
+    // Una edad SIN PRODUCTO (`#284` D6, §22.4): tres casos, y el parque puede escribir los suyos en
+    // Ajustes (`mixed_party.no_product.*`). `:phone` = teléfono de contacto de la instalación.
+    'regime_no_product' => 'Sin producto para esta edad',
+    'no_product_title' => 'Una edad sin producto',
+    'no_product_below' => 'Alguno de los invitados tiene una edad por debajo del tramo más bajo de este cumpleaños, y para esa edad no hay producto en las condiciones de tu reserva. Llámanos al :phone y lo vemos contigo; hasta entonces esa ficha no se da por completa.',
+    'no_product_above' => 'Alguno de los invitados tiene una edad por encima del tramo más alto de este cumpleaños, y para esa edad no hay producto en las condiciones de tu reserva. Llámanos al :phone y lo vemos contigo; hasta entonces esa ficha no se da por completa.',
+    'no_product_gap' => 'Alguno de los invitados tiene una edad que queda entre dos tramos de este cumpleaños, y para esa edad no hay producto en las condiciones de tu reserva. Llámanos al :phone y lo vemos contigo; hasta entonces esa ficha no se da por completa.',
+    'no_product_phone_fallback' => 'parque',
+    // El dinero solo se mueve al guardar con TODAS las edades (`#285` §20.6).
+    'frozen_missing_ages' => '{1} Falta :count edad por declarar: el suplemento no se recalculará —ni arriba ni abajo— hasta que estén todas.|[2,*] Faltan :count edades por declarar: el suplemento no se recalculará —ni arriba ni abajo— hasta que estén todas.',
     'mixed_title' => 'Fiesta mixta',
     'mixed_line' => 'A :count invitado(s) les corresponde «:target» (:target_price por invitado) en vez de «:booked» (:booked_price).',
     'mixed_line_written' => 'A :count invitado(s) les corresponde «:target»: :unit más por invitado.',

@@ -4,9 +4,12 @@ namespace Tests\Feature\Api\V1;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\Price;
+use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use Illuminate\Support\Str;
@@ -125,6 +128,87 @@ class GuestFormTest extends ApiTestCase
             'guests' => [['name' => 'Ana'], ['name' => 'Luis', 'allergy' => 'frutos secos']],
             'general' => ['adults' => '4'],
         ])->assertOk()->assertValidRequest()->assertValidResponse(200)
+            ->assertJsonPath('status', 'ok')
+            ->assertJsonPath('progress.done', 2);
+    }
+
+    /**
+     * Una fiesta de una familia por edad (Kids 1–6 · Jump 7–99), pagada, con franja y SELLADA como
+     * la deja `OrderCreator` (`specs/cumple-mixto.md` §21): es lo que hace que una edad pueda «no
+     * tener producto» en las condiciones de la reserva.
+     */
+    private function familyReservation(User $user): OrderItem
+    {
+        $rate = RateType::create([
+            'key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'],
+            'weekdays' => null, 'priority' => 0, 'is_active' => true,
+        ]);
+        $make = function (string $name, int $min, int $max, int $cents) use ($rate): TicketType {
+            $pack = TicketType::create([
+                'name' => ['es' => $name], 'type' => TicketType::TYPE_PACK,
+                'zone_id' => $this->zone->id, 'duration_min' => 120, 'min_qty' => 1, 'max_qty' => 20,
+                'deposit_type' => TicketType::DEPOSIT_NONE, 'deposit_value' => 0,
+                'seats_per_unit' => 1, 'tax_rate' => 21, 'is_sellable' => true, 'is_active' => true,
+                'position' => (int) TicketType::max('position') + 1,
+                'guest_fields' => [
+                    ['key' => 'name', 'type' => 'text', 'required' => true, 'label' => ['es' => 'Nombre']],
+                    ['key' => 'edad', 'type' => TicketType::FIELD_TYPE_AGE, 'required' => true, 'label' => ['es' => 'Edad']],
+                ],
+                'guest_age_family' => 'cumple', 'guest_age_min' => $min, 'guest_age_max' => $max,
+            ]);
+            Price::create([
+                'priceable_type' => $pack->getMorphClass(), 'priceable_id' => $pack->id,
+                'rate_type_id' => $rate->id, 'amount_cents' => $cents, 'currency' => 'EUR',
+            ]);
+
+            return $pack;
+        };
+        $kids = $make('Cumpleaños Kids', 1, 6, 1800);
+        $make('Cumpleaños Jump', 7, 99, 2500);
+
+        $slot = Slot::create([
+            'zone_id' => $this->zone->id, 'date' => now()->addDays(10)->toDateString(),
+            'start_time' => '11:00:00', 'end_time' => '13:00:00', 'capacity' => 20, 'online_capacity' => 20,
+        ]);
+        $order = Order::create([
+            'user_id' => $user->id, 'code' => 'R-'.Str::upper(Str::random(6)),
+            'status' => Order::STATUS_PAID, 'paid_at' => now(),
+        ]);
+        $item = $order->items()->create([
+            'ticket_type_id' => $kids->id, 'slot_id' => $slot->id, 'quantity' => 2,
+            'unit_price' => 1800, 'seats' => 2,
+        ]);
+        app(AgeFamilySealer::class)->seal($item, $kids, $slot->date);
+
+        return $item->fresh(['ticketType', 'slot', 'order']);
+    }
+
+    public function test_an_age_without_a_product_keeps_the_status_pending_under_the_same_contract(): void
+    {
+        // `[DECIDIDO owner]` D6 (`specs/cumple-mixto.md` §22.5): la API no cambia de FORMA —`status`
+        // sigue siendo `ok | pending | null`—; lo que cambia es que una ficha con todas sus columnas
+        // pero con una edad sin producto NO cuenta como hecha. La app no recibe la explicación
+        // (`[owner]`: la API queda fuera), y eso está anotado como deuda.
+        $user = User::factory()->create();
+        $reservation = $this->familyReservation($user);
+
+        $this->actingAs($user)
+            ->putJson($this->path($reservation), [
+                'guests' => [['name' => 'Ana', 'edad' => '4'], ['name' => 'Bebé', 'edad' => '0']],
+                'general' => ['adults' => '4'],
+            ])
+            ->assertOk()->assertValidRequest()->assertValidResponse(200)
+            ->assertJsonPath('status', 'pending')
+            ->assertJsonPath('progress.done', 1)
+            ->assertJsonPath('progress.total', 2);
+
+        // El CONTROL: con las dos edades dentro de la familia, el mismo formulario queda `ok`.
+        $this->actingAs($user)
+            ->putJson($this->path($reservation), [
+                'guests' => [['name' => 'Ana', 'edad' => '4'], ['name' => 'Bebé', 'edad' => '3']],
+                'general' => ['adults' => '4'],
+            ])
+            ->assertOk()->assertValidResponse(200)
             ->assertJsonPath('status', 'ok')
             ->assertJsonPath('progress.done', 2);
     }

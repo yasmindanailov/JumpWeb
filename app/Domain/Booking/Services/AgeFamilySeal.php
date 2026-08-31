@@ -28,6 +28,17 @@ final class AgeFamilySeal
 {
     public const VERSION = 1;
 
+    /**
+     * Por qué una edad no tiene producto en estas condiciones (`DECISIONES #284` D6, spec §22.4):
+     * por debajo del tramo más bajo de la familia, por encima del más alto, o en un HUECO entre dos
+     * tramos. Cada caso tiene su texto, configurable por instalación (`MixedPartySettings`).
+     */
+    public const NO_PRODUCT_BELOW = 'below';
+
+    public const NO_PRODUCT_ABOVE = 'above';
+
+    public const NO_PRODUCT_GAP = 'gap';
+
     /** @param  list<SealedRegime>  $members */
     public function __construct(
         public readonly ?string $family,
@@ -130,6 +141,59 @@ final class AgeFamilySeal
         }
 
         return null;
+    }
+
+    /**
+     * El rango que cubre la familia sellada, entre todos sus tramos: `[mínimo, máximo]`, con `null`
+     * en el lado que algún tramo deja abierto. Lo que hay ENTRE los dos y ningún tramo cubre es un
+     * hueco.
+     *
+     * @return array{0:?int, 1:?int}
+     */
+    public function coverage(): array
+    {
+        $min = null;
+        $max = null;
+        $openBelow = false;
+        $openAbove = false;
+
+        foreach ($this->members as $member) {
+            if ($member->ageMin === null) {
+                $openBelow = true;
+            } elseif ($min === null || $member->ageMin < $min) {
+                $min = $member->ageMin;
+            }
+            if ($member->ageMax === null) {
+                $openAbove = true;
+            } elseif ($max === null || $member->ageMax > $max) {
+                $max = $member->ageMax;
+            }
+        }
+
+        return [$openBelow ? null : $min, $openAbove ? null : $max];
+    }
+
+    /**
+     * Por qué esa edad NO tiene producto en estas condiciones, o `null` si sí lo tiene
+     * (`DECISIONES #284` D6): no es un hueco de configuración, es «no hay producto para esa edad», y
+     * se le explica al cliente con un texto distinto por caso.
+     */
+    public function noProductReason(int $age): ?string
+    {
+        if ($this->regimeFor($age) !== null) {
+            return null;
+        }
+
+        [$min, $max] = $this->coverage();
+
+        if ($min !== null && $age < $min) {
+            return self::NO_PRODUCT_BELOW;
+        }
+        if ($max !== null && $age > $max) {
+            return self::NO_PRODUCT_ABOVE;
+        }
+
+        return self::NO_PRODUCT_GAP;
     }
 
     /**

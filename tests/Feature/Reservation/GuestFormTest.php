@@ -12,6 +12,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Models\Setting;
 use App\Notifications\GuestFormRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\URL;
@@ -601,6 +602,67 @@ class GuestFormTest extends TestCase
         // pintar los dos iguales pasaría igual de verde.
         $this->assertStringContainsString('gf-fiche__regime is-other', $html);
         $this->assertStringContainsString('Cumpleaños Jump', $html);
+    }
+
+    // ─── Una edad SIN PRODUCTO (`#284` D6, §22.5) ────────────────────────────────
+
+    public function test_an_age_without_a_product_keeps_the_form_pending_and_explains_it(): void
+    {
+        // La ficha del bebé de 0 años no se da por completa (no cuenta en el progreso, el estado
+        // sigue `pending`), y el cliente lee POR QUÉ —el caso «por debajo del tramo»— con el
+        // teléfono del parque para llamar. Mutación: `isGuestFormComplete()` sin mirar las edades.
+        Setting::updateOrCreate(['key' => 'contact.phone'], ['value' => '968 22 22 22', 'group' => 'contact']);
+        $reservation = $this->mixedFamilyReservation([4, 0]);
+
+        $this->assertSame('pending', $reservation->guestFormStatus(), 'con una edad sin producto el formulario no está completo');
+        $this->assertSame(['done' => 1, 'total' => 2], $reservation->guestFormProgress());
+        $this->assertNull($reservation->guest_form_completed_at);
+
+        $html = $this->actingAs($reservation->order->user)
+            ->get(route('reservation.guests', $reservation))
+            ->assertOk()
+            ->assertSee(__('guestform.no_product_title'))
+            ->assertSee(__('guestform.no_product_below', ['phone' => '968 22 22 22']))
+            ->assertSee(__('guestform.regime_no_product'))
+            ->getContent();
+
+        $this->assertStringContainsString('data-no-product="1"', $html, 'la ficha va marcada para que el JS no la dé por lista');
+    }
+
+    public function test_the_park_can_write_its_own_text_for_each_case(): void
+    {
+        // Textos por instalación (§22.4): el del parque manda sobre el respaldo, y `:phone` se
+        // sustituye. Mutación: leer siempre el respaldo → rojo.
+        Setting::updateOrCreate(['key' => 'contact.phone'], ['value' => '600 11 22 33', 'group' => 'contact']);
+        Setting::updateOrCreate(
+            ['key' => 'mixed_party.no_product.above.es'],
+            ['value' => 'Para mayores de 12 tenemos otra fiesta: llámanos al :phone.', 'group' => 'mixed_party'],
+        );
+        Setting::flushMemo();
+        $reservation = $this->mixedFamilyReservation([4, 120]);
+
+        $this->actingAs($reservation->order->user)
+            ->get(route('reservation.guests', $reservation))
+            ->assertOk()
+            ->assertSee('Para mayores de 12 tenemos otra fiesta: llámanos al 600 11 22 33.')
+            ->assertDontSee(__('guestform.no_product_above', ['phone' => '600 11 22 33']));
+    }
+
+    public function test_blank_ages_freeze_the_surcharge_and_the_form_says_so(): void
+    {
+        // El dinero solo se mueve al guardar con TODAS las edades (`#285` §20.6). Con cargo escrito y
+        // una edad en blanco, el cliente tiene que leer que está congelado — antes el congelado era
+        // silencioso (lo cazó el T0).
+        $reservation = $this->mixedFamilyReservation([4, 8]);
+        $reservation->submitGuestForm([['name' => 'Invitado 1'], ['name' => 'Invitado 2', 'edad' => '8']], [], 'signed_link');
+
+        $this->actingAs($reservation->order->user)
+            ->get(route('reservation.guests', $reservation->fresh()))
+            ->assertOk()
+            ->assertSee(__('guestform.mixed_surcharge', ['amount' => '7,00 €']))
+            // `trans_choice` y en singular: «Falta 1 edad», no «Faltan 1 edades» (la lección de `#247`).
+            ->assertSee(trans_choice('guestform.frozen_missing_ages', 1, ['count' => 1]))
+            ->assertSee('Falta 1 edad por declarar');
     }
 
     public function test_a_pack_without_an_age_family_shows_no_regime_at_all(): void

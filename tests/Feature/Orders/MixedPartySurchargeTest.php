@@ -671,15 +671,70 @@ class MixedPartySurchargeTest extends TestCase
         $this->assertSame(0, AuditLog::where('action', 'orders.mixed_party_surcharge_synced')->count());
     }
 
-    public function test_a_partial_verdict_can_still_grow(): void
+    // ─── El dinero solo se mueve al guardar COMPLETO (`#285` §20.6, §22.3) ─────────
+
+    public function test_a_partial_save_writes_nothing_in_either_direction(): void
     {
-        // La asimetría es deliberada: DECLARAR la edad que faltaba es un dato nuevo y legítimo, así
-        // que el importe sube mientras el cliente rellena. Solo se le niega el camino de vuelta.
+        // `[DECIDIDO owner, 2026-08-31]`: hasta el 31 un guardado parcial SUBÍA el cargo (`#268`,
+        // «declarar es un dato nuevo»). Ya no: para cobrar de más basta una ficha, para devolver
+        // hacen falta todas, y descontar con la foto a medias es la puerta del abuso — así que una
+        // sola regla simétrica: con alguna edad en blanco no se escribe NADA.
+        // Mutación: quitar la puerta de `reconcile()` → 7,00 € escritos con dos edades en blanco.
         $item = $this->declareAges($this->reservation(3), [8, null, null]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
 
-        $item = $this->declareAges($item, [8, 9, null]);
+        $this->assertSame(0, $this->financials($item)->aCobrarPuerta, 'con edades en blanco no se escribe');
+        $this->assertCount(0, $this->surchargeLines($item));
+        Notification::assertNothingSent();
 
+        // El guardado COMPLETO es el que mueve el dinero — y mueve todo lo que corresponde.
+        $item = $this->declareAges($item, [8, 9, 4]);
         $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'dos invitados por encima del tramo');
+
+        // Y otro completo, a la baja, también.
+        $item = $this->declareAges($item, [8, 5, 4]);
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+    }
+
+    public function test_an_age_without_a_product_does_not_freeze_the_money(): void
+    {
+        // El hueco C de `#284` (D6): medido antes, un invitado de 0 años —que ningún pack cubre—
+        // dejaba el veredicto «incompleto» y desde `#268` eso impedía que el cargo BAJARA aunque el
+        // cliente corrigiera las demás edades. Una edad sin producto es un estado CONOCIDO: esa
+        // ficha no genera nada y las otras se tarifican, arriba y abajo.
+        // Mutación: `derivationGoverns` sobre `isComplete()` → la bajada no se escribe, rojo.
+        $item = $this->declareAges($this->reservation(3), [4, 0, 8]);
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'el de 8 sí; el de 0 no genera nada');
+
+        $item = $this->declareAges($item, [4, 0, 6]);
+        $this->assertSame(0, $this->financials($item)->aCobrarPuerta, 'el de 0 no congela la bajada');
+        $this->assertCount(0, $this->surchargeLines($item));
+    }
+
+    public function test_a_panel_edit_with_blank_ages_leaves_the_surcharge_as_written(): void
+    {
+        // `[DECIDIDO owner]` (§22.8 Q1): UNA regla también para el panel. Con edades en blanco, el
+        // operador baja invitados y lo escrito se queda como está —congelado y dicho en la ficha—
+        // hasta que el cliente complete (o el operador lo haga por él, T3).
+        $item = $this->declareAges($this->reservation(4), [8, 9, 4, 5]);
+        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta);
+
+        $item = $this->declareAges($item, [8, 9, 4, null]); // el cliente deja una en blanco: congelado
+        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta);
+
+        $staff = $this->staff();
+        Notification::fake();
+        $item = $item->fresh(['ticketType', 'slot', 'order']);
+        $outcome = app(OrderItemEditor::class)->edit(
+            $item->order, $item, '', '', false,
+            (int) $item->ticket_type_id, 2, null,
+            ['edits' => [], 'adds' => []],
+            (string) $item->updated_at->getTimestamp(),
+            $staff,
+        );
+
+        $this->assertFalse($outcome->isBlocked(), (string) $outcome->reason);
+        // Quedan las fichas de 8 y 9 (dos por encima), pero NO se recalcula: sigue lo escrito.
+        $this->assertSame(1400, $this->financials($item->fresh())->aCobrarPuerta, 'congelado también desde el panel');
+        Notification::assertNotSentTo($item->order->user, MixedPartySurchargeChanged::class);
     }
 }

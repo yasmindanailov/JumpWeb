@@ -354,7 +354,14 @@
                             @endif
 
                             @if ($mix->withoutAge > 0)
-                                <div class="text-amber-800 dark:text-amber-300">{{ __('admin.orders.mixed_party.without_age', ['count' => $mix->withoutAge]) }}</div>
+                                {{-- El dinero solo se mueve con TODAS las edades (`#285` §20.6): con
+                                     cargo escrito, lo que importa es que está CONGELADO y cuántas faltan;
+                                     sin cargo, solo que el veredicto puede cambiar. --}}
+                                @if ($mixWritten['cents'] > 0)
+                                    <div class="text-amber-800 dark:text-amber-300">{{ trans_choice('admin.orders.mixed_party.frozen', $mix->withoutAge, ['count' => $mix->withoutAge]) }}</div>
+                                @else
+                                    <div class="text-amber-800 dark:text-amber-300">{{ __('admin.orders.mixed_party.without_age', ['count' => $mix->withoutAge]) }}</div>
+                                @endif
                             @endif
                             @if ($mix->outOfRange > 0)
                                 <div class="text-amber-800 dark:text-amber-300">{{ __('admin.orders.mixed_party.out_of_range', ['count' => $mix->outOfRange]) }}</div>

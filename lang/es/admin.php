@@ -481,7 +481,8 @@ return [
             'missing_carrier' => 'No se puede aplicar el suplemento: falta el producto que lo lleva («Suplemento fiesta mixta» en el catálogo). Mientras falte, esta fiesta no cobra nada.',
             'unpriced' => 'No se puede calcular el suplemento: falta el precio de algún pack para ese día.',
             'without_age' => 'Faltan :count edades por declarar: el veredicto todavía puede cambiar.',
-            'out_of_range' => ':count invitados con una edad que no cubre ningún pack de la familia: revisa los tramos en el catálogo.',
+            'frozen' => '{1} Suplemento congelado: falta :count edad por declarar. No se recalcula —ni arriba ni abajo— hasta que el cliente la complete.|[2,*] Suplemento congelado: faltan :count edades por declarar. No se recalcula —ni arriba ni abajo— hasta que el cliente las complete todas.',
+            'out_of_range' => ':count invitados con una edad sin producto en las condiciones de esta reserva: no se cobra nada por ellos, el cliente tiene que llamar y se resuelve en el parque.',
             'orphaned' => 'Esta reserva no lleva sellada ninguna condición por edad (nació antes de que existiera el sello), así que no hay veredicto que comparar. El suplemento de arriba sigue vivo: es el que se le comunicó al cliente y es lo que se cobra en el parque.',
             'stale_seal' => 'El sello de condiciones de esta reserva no corresponde a su pack o a su fecha: se movió sin re-sellarla. Mientras no se revise no se calcula ni se mueve ningún suplemento; lo escrito, si lo hay, se conserva.',
         ],
@@ -2035,6 +2036,13 @@ return [
         'registration_subtitle' => 'Subtítulo del botón',
         'registration_description' => 'Texto informativo (confirmación)',
         'registration_description_hint' => 'Párrafo que se muestra en la pantalla de «Reserva confirmada», junto al botón de registro. Si lo dejas vacío, se usa un texto por defecto.',
+
+        'section_mixed_party' => 'Fiestas por edad (cumpleaños mixtos)',
+        'section_mixed_party_hint' => 'Lo que lee el cliente en el formulario de invitados cuando declara una edad para la que no hay producto en las condiciones de su reserva. Tres casos, editables por idioma; vacío = texto por defecto. Escribe :phone donde quieras que salga el teléfono de contacto.',
+        'mixed_party_below' => 'Edad por debajo del tramo más bajo',
+        'mixed_party_above' => 'Edad por encima del tramo más alto',
+        'mixed_party_gap' => 'Edad en un hueco entre dos tramos',
+        'mixed_party_text_hint' => 'Ej.: «Para esa edad no tenemos cumpleaños. Llámanos al :phone y lo vemos contigo.»',
 
         'theme_brand' => 'Color de marca',
         'theme_brand_hint' => 'Color principal de la marca (formato #RRGGBB). No afecta a los colores de zona, que se configuran por zona.',

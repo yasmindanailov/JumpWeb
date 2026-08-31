@@ -88,7 +88,11 @@ class GuestAgeMixReader
      * Sale del MISMO recorrido que el veredicto agregado: si esto tuviera su propia copia de la
      * regla, el rótulo de una ficha podría decir «Kids» mientras el total dice otra cosa.
      *
-     * @return array<int, array{state:string, name:?string, own:bool}> vacío si la reserva no participa
+     * Una ficha SIN producto (`ROW_OUT_OF_RANGE`) trae además su `reason` —`below` · `above` · `gap`
+     * (`AgeFamilySeal::NO_PRODUCT_*`)— para que el post-form le ponga el texto que corresponde
+     * (`DECISIONES #284` D6, spec §22.4).
+     *
+     * @return array<int, array{state:string, name:?string, own:bool, reason:?string}> vacío si la reserva no participa
      */
     public function guestRegimes(OrderItem $item): array
     {
@@ -104,6 +108,7 @@ class GuestAgeMixReader
                 'state' => $row['state'],
                 'name' => $target?->displayName(),
                 'own' => $target !== null && $target->typeId === $seal->bookedTypeId,
+                'reason' => $row['reason'],
             ];
         }
 
@@ -151,7 +156,7 @@ class GuestAgeMixReader
      * edad, todas las fichas pasan a «sin edad», el veredicto queda incompleto y el importe se
      * congela — que es la conducta correcta para «falta el dato».
      *
-     * @return array<int, array{state:string, target:?SealedRegime}>
+     * @return array<int, array{state:string, target:?SealedRegime, reason:?string}>
      */
     private function rows(OrderItem $item, AgeFamilySeal $seal): array
     {
@@ -168,15 +173,16 @@ class GuestAgeMixReader
         for ($i = 0; $i < $quantity; $i++) {
             $raw = $ageKey === null ? null : ($clean[$i][$ageKey] ?? null);
             if ($raw === null || $raw === '') {
-                $rows[$i] = ['state' => self::ROW_NO_AGE, 'target' => null];
+                $rows[$i] = ['state' => self::ROW_NO_AGE, 'target' => null, 'reason' => null];
 
                 continue;
             }
 
-            $target = $seal->regimeFor((int) $raw);
+            $age = (int) $raw;
+            $target = $seal->regimeFor($age);
             $rows[$i] = $target === null
-                ? ['state' => self::ROW_OUT_OF_RANGE, 'target' => null]
-                : ['state' => self::ROW_OK, 'target' => $target];
+                ? ['state' => self::ROW_OUT_OF_RANGE, 'target' => null, 'reason' => $seal->noProductReason($age)]
+                : ['state' => self::ROW_OK, 'target' => $target, 'reason' => null];
         }
 
         return $rows;

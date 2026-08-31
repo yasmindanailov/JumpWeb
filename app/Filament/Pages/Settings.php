@@ -121,6 +121,18 @@ class Settings extends Page
         'registration.description.es' => 'registration',
         'registration.description.en' => 'registration',
         'registration.description.fr' => 'registration',
+        // Fiestas por edad (`specs/cumple-mixto.md` §22.4, `DECISIONES #284` D6): lo que lee el cliente
+        // en el post-form cuando una edad no tiene producto en las condiciones de su reserva. Tres
+        // casos POR IDIOMA; vacío → texto por defecto de `lang/*/guestform.php`.
+        'mixed_party.no_product.below.es' => 'mixed_party',
+        'mixed_party.no_product.below.en' => 'mixed_party',
+        'mixed_party.no_product.below.fr' => 'mixed_party',
+        'mixed_party.no_product.above.es' => 'mixed_party',
+        'mixed_party.no_product.above.en' => 'mixed_party',
+        'mixed_party.no_product.above.fr' => 'mixed_party',
+        'mixed_party.no_product.gap.es' => 'mixed_party',
+        'mixed_party.no_product.gap.en' => 'mixed_party',
+        'mixed_party.no_product.gap.fr' => 'mixed_party',
         // SEO
         'seo.og_image' => 'seo',
         // Textos de la landing editables POR IDIOMA (#215): título web (SEO), eslogan del pie y la
@@ -407,6 +419,7 @@ class Settings extends Page
             ->icon(Heroicon::OutlinedPaintBrush)
             ->schema([
                 $this->landingTextsSection(),
+                $this->mixedPartySection(),
                 $this->webAppearanceSection(),
             ]);
     }
@@ -632,6 +645,46 @@ class Settings extends Page
                     $this->registrationTextTab('fr', __('admin.settings.lang_fr')),
                 ]),
             ]);
+    }
+
+    /**
+     * Fiestas por edad (`specs/cumple-mixto.md` §22.4, `DECISIONES #284` D6): los tres textos que lee
+     * el cliente en el formulario de invitados cuando declara una edad para la que no hay producto
+     * en las condiciones de su reserva — por debajo del tramo más bajo, por encima del más alto, en
+     * un hueco entre dos—. Por idioma, con respaldo en el texto por defecto y el marcador `:phone`.
+     */
+    private function mixedPartySection(): Section
+    {
+        return Section::make(__('admin.settings.section_mixed_party'))
+            ->description(__('admin.settings.section_mixed_party_hint'))
+            ->collapsible()
+            ->collapsed()
+            ->schema([
+                Tabs::make('mixed_party_texts')->tabs([
+                    $this->mixedPartyTextTab('es', __('admin.settings.lang_es')),
+                    $this->mixedPartyTextTab('en', __('admin.settings.lang_en')),
+                    $this->mixedPartyTextTab('fr', __('admin.settings.lang_fr')),
+                ]),
+            ]);
+    }
+
+    private function mixedPartyTextTab(string $loc, string $label): Tab
+    {
+        return Tab::make($label)->schema([
+            Textarea::make("mixed_party.no_product.below.{$loc}")
+                ->label(__('admin.settings.mixed_party_below'))
+                ->helperText(__('admin.settings.mixed_party_text_hint'))
+                ->rows(2)
+                ->maxLength(400),
+            Textarea::make("mixed_party.no_product.above.{$loc}")
+                ->label(__('admin.settings.mixed_party_above'))
+                ->rows(2)
+                ->maxLength(400),
+            Textarea::make("mixed_party.no_product.gap.{$loc}")
+                ->label(__('admin.settings.mixed_party_gap'))
+                ->rows(2)
+                ->maxLength(400),
+        ]);
     }
 
     private function registrationTextTab(string $loc, string $label): Tab

@@ -780,6 +780,20 @@ class TicketType extends Model
      */
     public function guestDataCompletedCount(array $rows, int $count): int
     {
+        return count($this->guestDataCompletedIndexes($rows, $count));
+    }
+
+    /**
+     * QUÉ fichas tienen rellenas todas sus columnas obligatorias (índices 0-based). Es la misma
+     * cuenta que {@see guestDataCompletedCount}, por posición: `OrderItem::guestFormProgress()` la
+     * necesita así para descontar las fichas cuya edad no tiene producto (`specs/cumple-mixto.md`
+     * §22.2), que este modelo no sabe reconocer — eso vive en el sello de cada reserva.
+     *
+     * @param  array<int,mixed>  $rows
+     * @return list<int>
+     */
+    public function guestDataCompletedIndexes(array $rows, int $count): array
+    {
         $count = max(0, $count);
         $clean = $this->sanitizeGuestData($rows, $count);
         $required = array_values(array_filter(
@@ -787,7 +801,7 @@ class TicketType extends Model
             fn (array $field): bool => $field['required'],
         ));
 
-        $done = 0;
+        $done = [];
         for ($i = 0; $i < $count; $i++) {
             $complete = true;
             foreach ($required as $field) {
@@ -797,7 +811,7 @@ class TicketType extends Model
                 }
             }
             if ($complete) {
-                $done++;
+                $done[] = $i;
             }
         }
 

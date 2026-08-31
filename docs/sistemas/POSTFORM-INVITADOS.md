@@ -254,6 +254,17 @@ Todas las superficies usan el genérico «**Formulario de reserva**» (no «dato
   `preferredLocale`.
 - **`site.css` es estático** (no Vite) → en dev hace falta hard-reload para ver cambios CSS de
   la página pública del post-form. Tras tocar Blade: `php artisan view:clear`.
+- **Una edad SIN PRODUCTO no completa el formulario** (2026-08-31, `specs/cumple-mixto.md` §22,
+  `DECISIONES #284` D6 y `#289`): `OrderItem::isGuestFormComplete()` y `guestFormProgress()`
+  descuentan las fichas de `guestAgesWithoutProduct()`, que sale del SELLO de la reserva
+  (`age_family_seal`), no del catálogo. El estado sigue `pending` con todas las columnas rellenas,
+  `guest_form_completed_at` no se pone, y la ficha va marcada (`data-no-product`) para que el JS no
+  la dé por lista. El texto que lee el cliente viene de Ajustes (`mixed_party.no_product.*`, por caso
+  e idioma, con `:phone`) y lo compone `MixedPartySettings::noProductText()`. ⚠️ La API mantiene la
+  forma del contrato (`status: pending`) y **no** recibe la explicación (`DEUDA.md`).
+- **El dinero de la fiesta mixta solo se mueve al guardar con TODAS las edades** (`#289`, `#285`
+  §20.6): un guardado con una edad en blanco no toca el suplemento en ninguna dirección; el
+  formulario lo dice («faltan N edades: el suplemento no se recalculará…») cuando hay cargo escrito.
 
 ## 8. Tests
 

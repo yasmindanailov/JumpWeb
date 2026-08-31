@@ -106,9 +106,26 @@ final class GuestAgeMix
      * ¿El veredicto se ha calculado sobre datos COMPLETOS? Con fichas sin edad, «no es mixta» solo
      * significa «todavía no consta que lo sea». La diferencia importa: es lo que separa un aviso
      * de una afirmación, y quien pinta esto no puede fingir que no existe.
+     *
+     * ⚠️ Es la pregunta de la PRESENTACIÓN («¿queda algo sin resolver?»), no la del dinero: para el
+     * dinero vale {@see allAgesDeclared}. Una edad sin producto deja esto en `false` y aquello en
+     * `true`, y las dos respuestas son correctas (spec §22.2).
      */
     public function isComplete(): bool
     {
         return $this->withoutAge === 0 && $this->outOfRange === 0;
+    }
+
+    /**
+     * ¿Están DECLARADAS todas las edades? Es la pregunta que decide si el DINERO puede moverse
+     * (`DECISIONES #284` D6 y `#285` §20.6, spec §22.2): **solo una edad que FALTA congela el
+     * importe**. Una edad sin producto es un estado CONOCIDO —«no hay producto para ella»—, no una
+     * incógnita: esa ficha no genera ninguna línea y las demás se tarifican con normalidad. Hasta el
+     * 2026-08-31 contaba como incompleto y congelaba el dinero de toda la fiesta (medido: un bebé de
+     * 0 años impedía que el cargo bajara aunque el cliente corrigiera las otras edades).
+     */
+    public function allAgesDeclared(): bool
+    {
+        return $this->withoutAge === 0;
     }
 }

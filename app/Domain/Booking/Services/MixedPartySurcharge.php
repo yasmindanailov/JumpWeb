@@ -122,6 +122,21 @@ class MixedPartySurcharge
             }
 
             $mix = $this->mix->for($item);
+
+            // ▶ `[DECIDIDO owner, 2026-08-31]` (`#285` §20.6, spec §22.3): el dinero —en las DOS
+            // direcciones— solo se mueve al guardar con TODAS las edades declaradas. Con alguna en
+            // blanco no se escribe NADA: ni crece (hasta el 31 crecía, `#268`: «declarar es un dato
+            // nuevo»), ni encoge, ni se retira. Lo escrito se congela, y el post-form y la ficha lo
+            // dicen. La razón, en una frase del diseño: *para cobrarte de más basta UNA ficha; para
+            // devolverte dinero hacen falta TODAS, y descontar con la foto a medias es la puerta del
+            // abuso (edad barata + resto en blanco = dinero)*. Vale igual para los disparos del PANEL
+            // (Q1 de §22.8): una sola regla, y la T3 le dará al operador el modo de completarlas.
+            // ⚠️ Una edad SIN PRODUCTO no es una incógnita y no frena esto (D6): esa ficha no entra
+            // en ningún `upgrade` y las demás se tarifican.
+            if ($mix->applies && ! $mix->allAgesDeclared()) {
+                return null;
+            }
+
             $target = $this->targetState($mix);
             $old = $this->totalOf($current);
 
@@ -196,7 +211,9 @@ class MixedPartySurcharge
             return $mix->sealed;
         }
 
-        return $mix->isComplete() && $mix->surchargeCents !== null;
+        // `allAgesDeclared()` y no `isComplete()` (spec §22.2): una edad SIN PRODUCTO es un estado
+        // conocido, no una ausencia. Hasta el 2026-08-31 congelaba el dinero de toda la fiesta.
+        return $mix->allAgesDeclared() && $mix->surchargeCents !== null;
     }
 
     /**

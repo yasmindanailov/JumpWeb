@@ -3546,7 +3546,11 @@ components:
           # el nulo aunque el campo se declare anulable (lo destapó el test de contrato).
           enum: [ok, pending, null]
           nullable: true
-          description: '`null` = esta línea no pide datos por invitado; así el cliente distingue «no aplica» de «pendiente».'
+          description: |
+            `null` = esta línea no pide datos por invitado; así el cliente distingue «no aplica» de
+            «pendiente». `pending` también cuando alguna edad declarada NO tiene producto en las
+            condiciones de la reserva (una fiesta por edad, `specs/cumple-mixto.md` §22): el
+            formulario no se da por completo hasta que el parque lo resuelva con el titular.
         needs_guest_form:
           type: boolean
         addons:
@@ -3877,7 +3881,11 @@ components:
           type: string
           enum: [ok, pending, null]
           nullable: true
-          description: '`null` = esta reserva no pide datos por invitado.'
+          description: |
+            `null` = esta reserva no pide datos por invitado. `pending` también con todas las fichas
+            rellenas si alguna edad declarada no tiene producto en las condiciones de la reserva
+            (`specs/cumple-mixto.md` §22): esa ficha no cuenta en `progress` hasta que el parque lo
+            resuelva con el titular.
         progress:
           type: object
           description: Fichas completas sobre el total, para el indicador «X/N».

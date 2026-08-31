@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\AgeFamilySeal;
 use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Booking\Services\GuestAgeMix;
 use App\Domain\Booking\Services\GuestAgeMixReader;
@@ -234,6 +235,48 @@ class GuestAgeMixTest extends TestCase
         $this->assertSame(2, $mix->outOfRange);
         $this->assertFalse($mix->mixed);
         $this->assertFalse($mix->isComplete());
+    }
+
+    // ─── «Completo» son DOS preguntas (§22.2) ────────────────────────────────────
+
+    public function test_an_age_without_a_product_is_a_known_state_not_a_missing_one(): void
+    {
+        // `[DECIDIDO owner]` D6: la edad sin producto NO es una incógnita. Para el DINERO la
+        // pregunta es «¿están todas las edades?» (sí), y el veredicto tarifica a los demás; para la
+        // PRESENTACIÓN queda algo sin resolver (`isComplete()` false). Las dos respuestas conviven.
+        // Antes del 2026-08-31 un bebé de 0 años congelaba el cargo de toda la fiesta.
+        $kids = $this->pack('Kids', 'cumple', 1, 6, 1800);
+        $this->pack('Jump', 'cumple', 7, 99, 2500);
+
+        $mix = $this->read($this->reservation($kids, [4, 0, 8]));
+
+        $this->assertTrue($mix->allAgesDeclared(), 'las tres edades están declaradas');
+        $this->assertFalse($mix->isComplete(), 'pero una no tiene producto');
+        $this->assertSame(1, $mix->outOfRange);
+        $this->assertSame(700, $mix->surchargeCents, 'el de 8 se tarifica; el de 0 no genera nada');
+
+        // Y una edad en BLANCO sí es una incógnita, para las dos preguntas.
+        $blank = $this->read($this->reservation($kids, [4, null, 8]));
+        $this->assertFalse($blank->allAgesDeclared());
+        $this->assertFalse($blank->isComplete());
+    }
+
+    public function test_the_reason_why_an_age_has_no_product_names_its_case(): void
+    {
+        // Tres casos, tres textos del parque (§22.4): por debajo del tramo más bajo, por encima del
+        // más alto, o en un HUECO entre dos tramos. Mutación: intercambiar los umbrales → rojo.
+        $kids = $this->pack('Kids', 'cumple', 3, 6, 1800);
+        $this->pack('Teens', 'cumple', 9, 12, 2500);
+
+        $regimes = app(GuestAgeMixReader::class)->guestRegimes(
+            $this->reservation($kids, [1, 8, 15, 5])->fresh(['ticketType', 'slot']),
+        );
+
+        $this->assertSame(AgeFamilySeal::NO_PRODUCT_BELOW, $regimes[0]['reason'], 'el de 1: por debajo de 3');
+        $this->assertSame(AgeFamilySeal::NO_PRODUCT_GAP, $regimes[1]['reason'], 'el de 8: entre 6 y 9');
+        $this->assertSame(AgeFamilySeal::NO_PRODUCT_ABOVE, $regimes[2]['reason'], 'el de 15: por encima de 12');
+        $this->assertNull($regimes[3]['reason'], 'el de 5 tiene producto');
+        $this->assertSame(GuestAgeMixReader::ROW_OK, $regimes[3]['state']);
     }
 
     public function test_without_a_price_for_that_day_the_party_is_still_mixed_but_unpriced(): void

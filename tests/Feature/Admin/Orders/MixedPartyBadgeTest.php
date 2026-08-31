@@ -197,6 +197,39 @@ class MixedPartyBadgeTest extends TestCase
             ->assertDontSee(__('admin.orders.mixed_party.applied', ['amount' => '14,00 €']));
     }
 
+    public function test_a_frozen_surcharge_is_announced_with_how_many_ages_are_missing(): void
+    {
+        // El dinero solo se mueve con TODAS las edades (`#285` §20.6): el operador tiene que ver que
+        // el cargo está congelado y cuántas faltan, no un «el veredicto puede cambiar» genérico.
+        $order = $this->paidPartyWith([4, 5, 8]);
+        $item = OrderItem::where('order_id', $order->id)->whereNull('parent_item_id')->firstOrFail();
+        $item->submitGuestForm([
+            ['name' => 'Invitado 1', 'edad' => '4'], ['name' => 'Invitado 2'], ['name' => 'Invitado 3', 'edad' => '8'],
+        ], [], 'signed_link');
+
+        $this->actingAs($this->staff())
+            ->get('/admin/orders/'.$order->code)
+            ->assertOk()
+            ->assertSee(__('admin.orders.mixed_party.applied', ['amount' => '7,00 €']))
+            ->assertSee(trans_choice('admin.orders.mixed_party.frozen', 1, ['count' => 1]))
+            ->assertSee('falta 1 edad por declarar')
+            ->assertDontSee(__('admin.orders.mixed_party.without_age', ['count' => 1]));
+    }
+
+    public function test_an_age_without_a_product_is_explained_as_a_park_matter(): void
+    {
+        // D6: no es «revisa los tramos en el catálogo» (con el sello el catálogo no es la causa):
+        // es una edad sin producto en las condiciones de ESTA reserva, que se resuelve en el parque.
+        // Y el resto de la fiesta se tarifica: el de 8 paga, el de 0 no genera nada.
+        $order = $this->paidPartyWith([4, 0, 8]);
+
+        $this->actingAs($this->staff())
+            ->get('/admin/orders/'.$order->code)
+            ->assertOk()
+            ->assertSee(__('admin.orders.mixed_party.out_of_range', ['count' => 1]))
+            ->assertSee(__('admin.orders.mixed_party.applied', ['amount' => '7,00 €']));
+    }
+
     public function test_retiring_the_family_in_the_catalogue_changes_nothing_on_screen(): void
     {
         // Hasta el 2026-08-31 este caso probaba el HUÉRFANO por catálogo: retirar la familia dejaba

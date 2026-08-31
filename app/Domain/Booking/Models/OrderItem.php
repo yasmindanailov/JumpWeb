@@ -409,7 +409,39 @@ class OrderItem extends Model
             return true;
         }
 
-        return $type->guestDataComplete($this->guestData(), (int) $this->quantity);
+        // ▶ `[DECIDIDO owner, 2026-08-31]` (`#284` D6, spec §22.2): una edad SIN PRODUCTO en las
+        // condiciones selladas de la reserva no deja completar el formulario. Se guarda lo escrito y
+        // no toca el desglose, pero la ficha no está resuelta hasta que el parque decida (T3).
+        return $type->guestDataComplete($this->guestData(), (int) $this->quantity)
+            && $this->guestAgesWithoutProduct() === [];
+    }
+
+    /**
+     * Índices de las fichas cuya EDAD no tiene producto en las condiciones SELLADAS de esta reserva
+     * (`#284` D6, spec §22.2). Vacío si la reserva no participa en una familia por edad, si no lleva
+     * sello, o si todas las edades caen en algún régimen.
+     *
+     * ⚠️ Se atajan ANTES de derivar los casos que no pueden tener ninguna: sin sello o sin familia
+     * sellada no hay nada que mirar, y esto lo llaman superficies de LISTA (`guestFormStatus()`)
+     * que no siempre traen `slot` cargada — derivar ahí sería una consulta por fila.
+     *
+     * @return list<int>
+     */
+    public function guestAgesWithoutProduct(): array
+    {
+        $seal = $this->ageFamilySeal();
+        if ($seal === null || ! $seal->participates()) {
+            return [];
+        }
+
+        $out = [];
+        foreach (app(GuestAgeMixReader::class)->guestRegimes($this) as $i => $row) {
+            if ($row['state'] === GuestAgeMixReader::ROW_OUT_OF_RANGE) {
+                $out[] = (int) $i;
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -464,8 +496,15 @@ class OrderItem extends Model
             return ['done' => 0, 'total' => 0];
         }
 
+        // Una ficha con todas sus columnas pero con una edad SIN PRODUCTO no cuenta como hecha
+        // (D6, spec §22.2): el «8 de 8» diría que no queda nada por resolver, y sí queda.
+        $done = array_diff(
+            $type->guestDataCompletedIndexes($this->guestData(), (int) $this->quantity),
+            $this->guestAgesWithoutProduct(),
+        );
+
         return [
-            'done' => $type->guestDataCompletedCount($this->guestData(), (int) $this->quantity),
+            'done' => count($done),
             'total' => (int) $this->quantity,
         ];
     }

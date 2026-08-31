@@ -9,10 +9,22 @@
 > veces (el carril del tema iba por 281 con el remoto en 285; el de mixtos escribió `#286` con el
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
-> ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1 hecha → sigue la T2) ═══════════
+> ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1 y T2 hechas → sigue la T3) ═══════════
+> ❗❗❗ **2026-08-31 (tarde-noche) · T2 · UNA EDAD SIN PRODUCTO + EL DINERO SOLO AL GUARDAR
+> COMPLETO, EN EL ÁRBOL** (`#289`, `specs/cumple-mixto.md` §22 diseño · §22.9 ejecución).
+> Suite **3629 en verde** (23.584 aserciones, 1 skipped a propósito) · **7/7 mutaciones muerden** ·
+> `mixed-party:verify-concurrency` en verde · sonda headless (2 capturas en `/root/e2e/t2-capturas/`).
+> ▶ «Completo» son DOS preguntas (dinero: todas las edades declaradas · formulario: además ninguna
+> edad sin producto). ⚠️⚠️ **La puerta vive en `reconcile()` y vale también para el panel**
+> (`[DECIDIDO owner]`): con una edad en blanco no se escribe NADA — hasta hoy crecía (`#268`). ⚠️
+> Tres textos por instalación en Ajustes → Web → «Fiestas por edad» (`:phone`; cadena pedido → app →
+> es → en → fr). ⚠️ **Hueco de contrato preexistente cazado**: `GuestFormResource` daba `general`
+> vacío como lista `[]` (el contrato dice objeto). ▶ **LO SIGUIENTE ES LA T3** (§18.5: el parque
+> decide — editar la edad desde el panel con rastro, la diferencia por cabeza en hoja/puerta, bajar
+> del mínimo D7); toca el suplemento por la edad → `CRITICAL_RE` + verificadores.
 > ❗❗❗ **2026-08-31 (tarde) · T1 · EL SELLO ESTÁ EN EL ÁRBOL** (`#288`).
-> Suite **3616 en verde** (23.514 aserciones, 1 skipped a propósito; **tras rebasar sobre `#287`**:
-> sus 3605 + los 11 de la T1, medidos) · **JS 877** (sin tocar) ·
+> Antes de la T2 la suite estaba en 3616 (23.514 aserciones; **tras rebasar sobre `#287`**: sus 3605
+> + los 11 de la T1, medidos) · **JS 877** (sin tocar) ·
 > **13/13 mutaciones muerden** · verificadores sobre MySQL con control negativo · sonda del hueco A
 > en navegador (3 capturas en
 > `/root/e2e/t1-capturas/` del contenedor, fuera del repo). **Si entras nuevo: `specs/cumple-mixto.md`
@@ -185,14 +197,16 @@
 > (`#285`, sustituye a §16). No queda NINGUNA decisión de producto abierta en mixtos.
 > ▶ ~~**LO SIGUIENTE ES LA T1 — el SELLO**~~ ✅ **HECHA el 2026-08-31 por la tarde (`#288`)**: ver el
 > bloque de arriba y `specs/cumple-mixto.md` §21.13.
-> ▶ **LO SIGUIENTE ES LA T2** (§18.5): una edad sin producto es un estado CONOCIDO (D6) —con el
-> sello, «completo» se redefine sobre `outOfRange`—, informa y no deja completar pero no congela el
-> dinero, y el disparador pasa a «solo guardado COMPLETO» en las dos direcciones (§20.6, cambia la
-> conducta de `#268` para los cargos). No toca el núcleo de dinero; sí `MixedPartySurcharge`
-> (`CRITICAL_RE`) por el disparador.
-> ⚠️ Orden del resto: T3 (el parque decide) · T4 (el −X €, tras T2; el crédito sale de los precios
-> SELLADOS) · T5 (las palabras: D9, D8, el email de la devolución — el «hoy:» se disolvió con la T1)
-> · T6 (solapes fuera del form; con el sello ya no mueve dinero).
+> ▶ ~~**LO SIGUIENTE ES LA T2**~~ ✅ **HECHA el 2026-08-31 (tarde-noche, `#289`)**: §22 y §22.9.
+> ▶ **LO SIGUIENTE ES LA T3 — el parque decide** (§18.5, E·F·D7): el operador corrige la edad desde
+> el panel con rastro PROPIO (hoy `guest_data` tiene un solo escritor y el rastro diría «el
+> cliente»), ve la diferencia por cabeza en hoja de sala y puerta (hoy cero referencias al veredicto
+> ahí), y puede bajar del mínimo del pack auditado (D7). Es la que RESUELVE la ficha «sin producto»
+> y la que descongela desde el panel rellenando las edades. Toca el suplemento por la edad →
+> `CRITICAL_RE` + verificadores + `VERIFY_CONC=1`. Diseño fino antes de código, como T1 y T2.
+> ⚠️ Orden del resto: T4 (el −X €, diseño cerrado en §20; el crédito sale de los precios SELLADOS y
+> el disparador ya es «solo completo») · T5 (las palabras: D9, D8, el email de la devolución — el
+> «hoy:» se disolvió con la T1) · T6 (solapes fuera del form; con el sello ya no mueve dinero).
 > ▶ **T0**: 14 capturas verificadas en `storage/app/t0-capturas/` (gitignoradas); el owner ya cazó
 > el primer hallazgo. Pedidos sonda `T0-PRB01`/`T0-PRB02` y `e2e-panel-admin@jumpweb.test` viven en
 > la BD local para futuras sondas; guion `t0.js` en `/root/e2e` del contenedor.

@@ -16744,3 +16744,47 @@ sobre MySQL real en verde con `mixed-party:verify-concurrency` **visto FALLAR** 
 20,00 € DESPUÉS de sellar, el cliente corrige un nombre y sigue en **8,00 €** (2 × 4,00), declara un
 tercer mayor y pasa a **12,00 €** (3 × 4,00, no 27,00), y la ficha del panel enseña veredicto y
 aplicado iguales, sin desfase. `PAY-19` reescrita. Queda el OJO del owner.
+
+## #289 · 2026-08-31 · [DECIDIDO owner] T2 · una edad sin producto es un estado CONOCIDO, y el dinero solo se mueve al guardar COMPLETO — también desde el panel
+
+La T2 de `#284` (D6) y de `#285` (§20.6), diseñada en fino antes de código (`specs/cumple-mixto.md`
+§22) y ejecutada el mismo día (§22.9), sobre el sello de `#288`.
+
+▶ **«Completo» eran una pregunta y son DOS.** Para el DINERO, completo = todas las edades
+declaradas (`GuestAgeMix::allAgesDeclared()`): una edad **sin producto** en las condiciones selladas
+no es una incógnita —esa ficha no genera línea y las demás se tarifican, arriba y abajo—, y eso
+cierra el hueco C medido en `#284` (un bebé de 0 años congelaba el cargo de toda la fiesta). Para el
+FORMULARIO, completo = además ninguna edad sin producto: la ficha no cuenta como lista, el estado
+sigue `pending`, y se le explica al cliente con un texto por caso —por debajo del tramo más bajo ·
+por encima del más alto · en un hueco entre dos— que el parque escribe en Ajustes («Fiestas por
+edad», por idioma, con `:phone`) o cae al texto por defecto.
+
+❗❗ **La puerta del disparador vive en `MixedPartySurcharge::reconcile()`, con la fila bloqueada, y
+vale también para el panel** (`[DECIDIDO owner]`, Q1 de §22.8: una sola regla). Con alguna edad en
+blanco no se escribe NADA en ninguna dirección: hasta hoy el cargo crecía con guardados parciales
+(`#268`, «declarar es un dato nuevo»); ya no. La razón está en `#285`: para cobrar de más basta una
+ficha, para devolver hacen falta todas, y descontar con la foto a medias es la puerta del abuso. Si
+el operador baja invitados o mueve de día con edades en blanco, lo escrito se conserva y la ficha lo
+dice («suplemento congelado: faltan N edades»); la T3 le dará el modo de completarlas él mismo.
+
+❗ **Un hueco de CONTRATO preexistente, cazado por el caso nuevo de la API**: `GuestFormResource`
+serializaba `general` —y cualquier ficha sin respuestas— como `[]` cuando estaba vacío, y
+`openapi/v1.yaml` declara objetos. Una fiesta sin campos generales de post-form devolvía una
+respuesta inválida, y ningún caso lo veía porque el fixture de siempre lleva un campo general.
+Corregido en el recurso; la forma del contrato no cambia, `pending` gana la descripción del caso.
+
+⚠️ La app móvil sigue sin recibir la explicación (`[owner]`: la API queda fuera de mixtos, §12.7):
+ficha en `DEUDA.md`.
+
+**Verificación**: suite **3616 → 3629** en verde (23.584 aserciones; +13: dos del lector, dos del
+reconciliador —el parcial que no escribe, la edad sin producto que no congela— más el panel que
+también congela, tres del post-form web, dos de la ficha, uno de la API y tres de los textos por
+instalación) · **7 mutaciones y las 7 muerden** (sin la puerta · `derivationGoverns` sobre
+`isComplete()` · el formulario completo con una edad sin producto · los casos intercambiados · el
+texto solo en el idioma pedido · ninguna ficha reconocida como «sin producto» · el congelado sin
+decirse) · `mixed-party:verify-concurrency` sobre MySQL en verde con la puerta puesta · sonda
+headless sobre `T0-PRB01` (dos capturas en `/root/e2e/t2-capturas/`): con una edad en blanco el
+formulario dice «faltan 1 edades: el suplemento no se recalculará…» y el cargo sigue en 8,00 €; con
+un bebé de 0 años, «Una edad sin producto» con el texto del caso y el teléfono, la ficha marcada
+«Sin producto para esta edad» y el progreso en 7/8. Ni una fila nueva de auditoría: ninguno de los
+dos guardados movió dinero, que es la regla. Queda el OJO del owner.

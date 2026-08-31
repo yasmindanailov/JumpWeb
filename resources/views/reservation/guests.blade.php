@@ -132,6 +132,28 @@
                         </p>
                     </div>
                 @endif
+
+                {{-- El dinero solo se mueve al guardar con TODAS las edades (`#285` §20.6): con cargo
+                     escrito y edades en blanco, el cliente tiene que saber que está congelado — antes
+                     el congelado era silencioso (lo cazó el T0). --}}
+                @if ($frozenMissingAges > 0)
+                    <div class="gf-mix" role="status">
+                        {{-- `trans_choice`: «Faltan 1 edades» es el «1 invitadoS» de `#247`. --}}
+                        <p class="gf-mix__text">{{ trans_choice('guestform.frozen_missing_ages', $frozenMissingAges, ['count' => $frozenMissingAges]) }}</p>
+                    </div>
+                @endif
+
+                {{-- Una edad SIN PRODUCTO (`#284` D6, §22.5): no es un hueco de configuración, es «no
+                     hay producto para esa edad en tus condiciones». Un texto por caso, el del parque
+                     si lo escribió, con su teléfono. --}}
+                @if ($noProductNotices !== [])
+                    <div class="gf-mix" role="alert">
+                        <p class="gf-mix__title">{{ __('guestform.no_product_title') }}</p>
+                        @foreach ($noProductNotices as $notice)
+                            <p class="gf-mix__text">{{ $notice }}</p>
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
             <div class="gf-perf"></div>
@@ -184,10 +206,13 @@
                     <div class="gf-fiches" id="gf-fiches">
                         @for ($i = 0; $i < $reservation->quantity; $i++)
                             @php
-                                $complete = collect($requiredKeys)->every(fn ($k) => filled($rows[$i][$k] ?? null));
+                                // Una ficha con edad SIN PRODUCTO no está completa aunque tenga todas
+                                // sus columnas (D6): el servidor manda, y el JS lo respeta por `data-no-product`.
+                                $noProduct = in_array($i, $noProductIndexes, true);
+                                $complete = ! $noProduct && collect($requiredKeys)->every(fn ($k) => filled($rows[$i][$k] ?? null));
                                 $headName = $nameKey ? trim((string) ($rows[$i][$nameKey] ?? '')) : '';
                             @endphp
-                            <div class="gf-fiche {{ $complete ? 'is-complete' : '' }}" data-i="{{ $i }}">
+                            <div class="gf-fiche {{ $complete ? 'is-complete' : '' }}" data-i="{{ $i }}" @if ($noProduct) data-no-product="1" @endif>
                                 <button type="button" class="gf-fiche__head" data-act="toggle" aria-expanded="false" aria-controls="gf-body-{{ $i }}">
                                     <span class="gf-fiche__cube">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
                                     <span class="gf-fiche__who">
@@ -204,7 +229,7 @@
                                     @if ($regime !== null && $regime['state'] === \App\Domain\Booking\Services\GuestAgeMixReader::ROW_OK)
                                         <span @class(['gf-fiche__regime', 'is-other' => ! $regime['own']])>{{ $regime['name'] }}</span>
                                     @elseif ($regime !== null && $regime['state'] === \App\Domain\Booking\Services\GuestAgeMixReader::ROW_OUT_OF_RANGE)
-                                        <span class="gf-fiche__regime is-unknown">{{ __('guestform.regime_unknown') }}</span>
+                                        <span class="gf-fiche__regime is-unknown">{{ __('guestform.regime_no_product') }}</span>
                                     @endif
                                     <span class="gf-fiche__status gf-fiche__status--pending">{{ __('guestform.status_pending') }}</span>
                                     <span class="gf-fiche__status gf-fiche__status--done">{{ __('guestform.status_done') }}</span>
@@ -306,6 +331,9 @@
             var groupCount = document.getElementById('gf-group-count');
 
             function isComplete(fiche) {
+                // Una edad SIN PRODUCTO la decide el SERVIDOR (D6): mientras esté, la ficha no se da
+                // por completa aunque tenga todas sus columnas. Se recalcula al guardar.
+                if (fiche.getAttribute('data-no-product') === '1') return false;
                 var req = fiche.querySelectorAll('[data-required]');
                 for (var i = 0; i < req.length; i++) {
                     if (req[i].value.trim() === '') return false;

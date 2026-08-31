@@ -2276,8 +2276,13 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       cambiar de pack (`orphan_addons` contaba la línea gobernada). Suite 3547 → 3558, **13/13
       mutaciones muerden**, verificadores sobre MySQL con control negativo, sonda del hueco A en
       navegador. Queda el OJO del owner.
-      ❗ **Queda, por orden del plan §18.5**: **T2** edad sin producto (D6) + disparador a «guardado
-      completo» (§20.6; con el sello, «completo» se redefine sobre `outOfRange`) · T3 el parque
+      ✅ **T2 · UNA EDAD SIN PRODUCTO + EL DINERO SOLO AL GUARDAR COMPLETO (2026-08-31 tarde,
+      `#289`)** — diseño fino en §22, ejecución en §22.9. «Completo» son DOS preguntas (dinero:
+      todas las edades declaradas · formulario: además ninguna edad sin producto); la puerta vive en
+      `reconcile()` y vale también para el panel (`[DECIDIDO owner]`, Q1); tres textos por
+      instalación en Ajustes («Fiestas por edad») con `:phone`. ⚠️ Cazó un hueco de CONTRATO
+      preexistente en la API (`general` vacío serializado como lista). Queda el OJO del owner.
+      ❗ **Queda, por orden del plan §18.5**: T3 el parque
       decide (editar edad auditado, la diferencia por cabeza en hoja/puerta, bajar del mínimo D7) ·
       T4 el −X € (diseño cerrado en §20, tras T2; el crédito deriva de los precios SELLADOS) · T5 las
       palabras (D9, D8, el email de la devolución — el «hoy:» del desfase se disolvió con la T1) ·
