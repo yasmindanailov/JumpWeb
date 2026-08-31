@@ -16847,3 +16847,26 @@ mirar el resultado.* Lo destapó la captura, no el test.
 **Verificación**: suite **3610 / 23.459** · Pint ✓ · `docs-check` ✓ · **33 etiquetas convertidas** en
 tres vistas con **cero restos** de la forma vieja y **cero `jj-block`** en la landing (medido en
 Chrome real) · las cuatro conversiones vistas en navegador · 5 mutaciones sobre `TagSystemTest`.
+
+
+## #291 · 2026-08-31 · [DECIDIDO owner] T3 · los dos permisos nuevos entran en `staff` — y el código se para hasta revisar §23
+
+La T3 de `#284` (E · F · D7, «el parque decide») quedó diseñada en fino en `specs/cumple-mixto.md`
+§23 —lo escrito del suplemento en hoja de sala y puerta; la pestaña «Invitados» del modal
+«Gestionar», que entra por la MISMA puerta que el cliente (`OrderItem::submitGuestForm`) con
+`via = panel` y el operador como actor, para que el rastro y el correo digan quién fue; y el
+interruptor de «bajar del mínimo» con permiso propio y rastro— y **el owner decidió UNA cosa y paró
+otra**.
+
+▶ **Decidido**: los dos permisos nuevos —`orders.edit_guest_data` («editar los datos por invitado
+desde el panel») y `orders.edit_item_below_minimum` («bajar un pack por debajo de su mínimo, con
+rastro»)— **entran en `staff` por defecto**, revocables por rol. Es §18.1 al pie de la letra: «en el
+parque, el operador ve las edades y los precios y decide». El admin los tiene por el `Gate::before`.
+
+▶ **Parado**: el owner pidió **no empezar el código** hasta revisar §23 (2026-08-31, noche). Nada de
+la T3 está en el árbol: ni permisos, ni pestaña, ni DTO de la puerta. El orden de construcción es el
+de §23.6 y las guardas las de §23.7; se retoma en la siguiente sesión.
+
+**Verificación**: sin código. Todo lo afirmado en §23 está medido contra el código (cero
+referencias al veredicto en hoja y puerta; un solo escritor de `guest_data`; `pack_quantity_range`
+en el editor y `minValue(min_qty)` en el modal; el presupuesto de consultas de la ficha de puerta).

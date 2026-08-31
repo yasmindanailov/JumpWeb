@@ -256,6 +256,15 @@ Todas las superficies usan el genérico «**Formulario de reserva**» (no «dato
   la página pública del post-form. Tras tocar Blade: `php artisan view:clear`.
 - **Una edad SIN PRODUCTO no completa el formulario** (2026-08-31, `specs/cumple-mixto.md` §22,
   `DECISIONES #284` D6 y `#289`): `OrderItem::isGuestFormComplete()` y `guestFormProgress()`
+  descuentan las fichas de `guestAgesWithoutProduct()` —las que declaran una edad que ningún
+  régimen del SELLO de la reserva cubre—, así que el estado deriva de `guest_data` **y** del sello,
+  no solo del esquema. La ficha lleva `data-no-product="1"` para que el JS no la dé por lista; el
+  cliente lee el texto del caso (Ajustes → Web → «Fiestas por edad», `mixed_party.no_product.*`,
+  con `:phone`) y llama. Y **el dinero solo se mueve al guardar con TODAS las edades**
+  (`#285` §20.6): un guardado con una edad en blanco congela el suplemento escrito, y el formulario
+  lo dice.
+- **Una edad SIN PRODUCTO no completa el formulario** (2026-08-31, `specs/cumple-mixto.md` §22,
+  `DECISIONES #284` D6 y `#289`): `OrderItem::isGuestFormComplete()` y `guestFormProgress()`
   descuentan las fichas de `guestAgesWithoutProduct()`, que sale del SELLO de la reserva
   (`age_family_seal`), no del catálogo. El estado sigue `pending` con todas las columnas rellenas,
   `guest_form_completed_at` no se pone, y la ficha va marcada (`data-no-product`) para que el JS no

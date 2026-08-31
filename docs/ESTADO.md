@@ -2,9 +2,18 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-31 — DOS carriles el mismo día: la T1 de
-> reservas mixtas, el SELLO (`#288`, la tarde), y la primera pasada de fachada SANEADA (`#287`)
-> sobre el hueco de ilustración (`#286`).** ⚠️⚠️ **Dos agentes sobre `main` en la misma jornada**:
+> aquí solo se enlaza.** Última actualización: **2026-08-31 (cierre, ~17:00) — carril MIXTOS: T1
+> el SELLO (`#288`) y T2 la edad sin producto + el dinero solo al guardar completo (`#289`) en el
+> árbol; T3 el parque decide DISEÑADA (§23, `#291`) y parada por el owner antes del código. Carril
+> FACHADA: la primera pasada SANEADA (`#287`) sobre el hueco de ilustración (`#286`).**
+> ❗ **SI ENTRAS NUEVO A MIXTOS: `specs/cumple-mixto.md` §18 (visión) → §21 (sello) → §22 (completo son
+> dos preguntas) → §23 (la T3, diseñada: espera el «adelante» del owner y se construye en el orden
+> de §23.6 con las guardas de §23.7). Diseño fino antes de código y preguntas numeradas al owner: es
+> el método que las tres tandas han seguido.**
+> ⚠️ **Entorno, 2026-08-31**: el `php artisan serve` del contenedor amaneció muerto (SIGTERM 14:29) y a
+> las 16:3x el demonio de Docker Desktop dejó de responder (500 en su API; se recuperó reiniciándolo
+> desde Windows). Ninguna de las dos es del repo; si el `curl` del arranque da `000`, mira primero
+> el contenedor y después el demonio. ⚠️⚠️ **Dos agentes sobre `main` en la misma jornada**:
 > el número de decisión se elige mirando el REMOTO (`git fetch` antes de numerar) — hoy chocó DOS
 > veces (el carril del tema iba por 281 con el remoto en 285; el de mixtos escribió `#286` con el
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
@@ -20,9 +29,10 @@
 > (`[DECIDIDO owner]`): con una edad en blanco no se escribe NADA — hasta hoy crecía (`#268`). ⚠️
 > Tres textos por instalación en Ajustes → Web → «Fiestas por edad» (`:phone`; cadena pedido → app →
 > es → en → fr). ⚠️ **Hueco de contrato preexistente cazado**: `GuestFormResource` daba `general`
-> vacío como lista `[]` (el contrato dice objeto). ▶ **LO SIGUIENTE ES LA T3** (§18.5: el parque
-> decide — editar la edad desde el panel con rastro, la diferencia por cabeza en hoja/puerta, bajar
-> del mínimo D7); toca el suplemento por la edad → `CRITICAL_RE` + verificadores.
+> vacío como lista `[]` (el contrato dice objeto). ▶ **LO SIGUIENTE ES LA T3 — YA DISEÑADA en §23
+> (`#291`) y PARADA por el owner antes del código** (§18.5: el parque decide — editar la edad desde
+> el panel con rastro, la diferencia por cabeza en hoja/puerta, bajar del mínimo D7); cuando dé el
+> «adelante», toca el suplemento por la edad → `CRITICAL_RE` + verificadores + `VERIFY_CONC=1`.
 > ❗❗❗ **2026-08-31 (tarde) · T1 · EL SELLO ESTÁ EN EL ÁRBOL** (`#288`).
 > Antes de la T2 la suite estaba en 3616 (23.514 aserciones; **tras rebasar sobre `#287`**: sus 3605
 > + los 11 de la T1, medidos) · **JS 877** (sin tocar) ·

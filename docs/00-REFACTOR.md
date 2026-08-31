@@ -2282,12 +2282,19 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       `reconcile()` y vale también para el panel (`[DECIDIDO owner]`, Q1); tres textos por
       instalación en Ajustes («Fiestas por edad») con `:phone`. ⚠️ Cazó un hueco de CONTRATO
       preexistente en la API (`general` vacío serializado como lista). Queda el OJO del owner.
-      ❗ **Queda, por orden del plan §18.5**: T3 el parque
-      decide (editar edad auditado, la diferencia por cabeza en hoja/puerta, bajar del mínimo D7) ·
-      T4 el −X € (diseño cerrado en §20, tras T2; el crédito deriva de los precios SELLADOS) · T5 las
-      palabras (D9, D8, el email de la devolución — el «hoy:» del desfase se disolvió con la T1) ·
-      T6 el guardián de solapes fuera del formulario (con el sello ya no mueve dinero) · el
-      **AFORO** sigue aparcado por el owner (zonas distintas, spec propia).
+      🟦 **T3 · EL PARQUE DECIDE — DISEÑADA, CÓDIGO NO EMPEZADO** (`specs/cumple-mixto.md` §23,
+      2026-08-31 noche, `#291`): lo escrito del suplemento en hoja de sala y puerta (E), la pestaña
+      «Invitados» por la MISMA puerta que el cliente con `via = panel` y actor operador (F), el
+      interruptor de «bajar del mínimo» con permiso propio y rastro (D7). Q1 decidida: los dos
+      permisos nuevos entran en `staff`. **El owner paró antes del código para revisar §23**: nada
+      de la T3 está en el árbol.
+      ❗ **Queda, por orden del plan §18.5**: **T3** (construirla cuando el owner dé el «adelante» a
+      §23; toca `OrderItemEditor` y `MixedPartySurcharge` → `CRITICAL_RE` + verificadores +
+      `VERIFY_CONC=1`) · T4 el −X € (diseño cerrado en §20; el crédito deriva de los precios SELLADOS
+      y el disparador ya es «solo completo») · T5 las palabras (D9, D8, el email de la devolución —
+      el «hoy:» del desfase se disolvió con la T1) · T6 el guardián de solapes fuera del formulario
+      (con el sello ya no mueve dinero) · el **AFORO** sigue aparcado por el owner (zonas distintas,
+      spec propia).
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de
