@@ -218,12 +218,14 @@
 > ▶ ~~**LO SIGUIENTE ES LA T1 — el SELLO**~~ ✅ **HECHA el 2026-08-31 por la tarde (`#288`)**: ver el
 > bloque de arriba y `specs/cumple-mixto.md` §21.13.
 > ▶ ~~**LO SIGUIENTE ES LA T2**~~ ✅ **HECHA el 2026-08-31 (tarde-noche, `#289`)**: §22 y §22.9.
-> ▶ **LO SIGUIENTE ES LA T3 — el parque decide** (§18.5, E·F·D7): el operador corrige la edad desde
-> el panel con rastro PROPIO (hoy `guest_data` tiene un solo escritor y el rastro diría «el
-> cliente»), ve la diferencia por cabeza en hoja de sala y puerta (hoy cero referencias al veredicto
-> ahí), y puede bajar del mínimo del pack auditado (D7). Es la que RESUELVE la ficha «sin producto»
-> y la que descongela desde el panel rellenando las edades. Toca el suplemento por la edad →
-> `CRITICAL_RE` + verificadores + `VERIFY_CONC=1`. Diseño fino antes de código, como T1 y T2.
+> ▶ **LO SIGUIENTE ES LA T3 — el parque decide** (§18.5, E·F·D7). ❗ **SU DISEÑO FINO YA ESTÁ
+> ESCRITO en `specs/cumple-mixto.md` §23 y el owner PARÓ antes del código** («todavía no»: quiere
+> revisarlo). Q1 (§23.8) ya decidida: los dos permisos nuevos (`orders.edit_guest_data` ·
+> `orders.edit_item_below_minimum`) entran en `staff`. **Nada de la T3 está en el árbol.** Cuando dé
+> el «adelante»: E (lo escrito en hoja de sala y puerta, coste cero en consultas) · F (pestaña
+> «Invitados» por la MISMA puerta que el cliente, `via = panel`, actor operador, writer como control
+> negativo del gate) · D7 (interruptor con permiso y rastro en `OrderItemEditor`, 🔒 `CRITICAL_RE`).
+> Orden en §23.6, guardas en §23.7.
 > ⚠️ Orden del resto: T4 (el −X €, diseño cerrado en §20; el crédito sale de los precios SELLADOS y
 > el disparador ya es «solo completo») · T5 (las palabras: D9, D8, el email de la devolución — el
 > «hoy:» se disolvió con la T1) · T6 (solapes fuera del form; con el sello ya no mueve dinero).

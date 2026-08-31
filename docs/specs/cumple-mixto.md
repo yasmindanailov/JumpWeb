@@ -1220,7 +1220,7 @@ empieza sin el informe de §19 aprobado.
 | **T0** | **El ojo del owner en navegador** — ▶ 🟦 **LAS CAPTURAS ESTÁN HECHAS** (2026-08-31, guion `t0.js` en `/root/e2e` del contenedor, 14 imágenes en `storage/app/t0-capturas/`): el aviso del catálogo `#283` **verificado en el ciclo real de Livewire** (avisa → re-guardar aplica → números distintos re-avisan → restaurado al dígito), el post-form (cargo 12 € → 8 €, congelado con edad borrada), los 3 correos (nace/cambia con «pasa de 12,00 € a 8,00 €»/desaparece), el desfase del panel, el huérfano y Gestionar sin la casilla. Pedidos sonda `T0-PRB01`/`T0-PRB02` (probe-card, franja 2026-09-15) y admin `e2e-panel-admin@jumpweb.test` quedan en la BD local para futuras sondas. **Queda SOLO el ojo: juzgar textos y claridad** | — | no |
 | **T1** | **El SELLO** (D1·D2·D3): la reserva guarda tramos y precios de su familia al nacer. ▶ ✅ **EN EL ÁRBOL (2026-08-31, `#288`): diseño en §21, ejecución en §21.13.** `order_items.age_family_seal`; sello nuevo al cambiar de pack, el mismo re-preciado al cambiar de día (`[DECIDIDO owner]`, Q2); `unitFor` y el recibo desaparecen; `#283` retirado; dos huecos preexistentes cerrados de paso (día sin tarifa · cerrojo de `orphan_addons`). 13/13 mutaciones, verificadores sobre MySQL y sonda del hueco A en navegador. Queda el OJO del owner | A · B · el gemelo de la etiqueta · el huérfano | **sí** (nacimiento y edición de una reserva) |
 | **T2** | **La edad sin producto** (D6) + que deje de congelar el dinero + **el disparador pasa a «solo guardado COMPLETO»** (§20.6, cambia la conducta de `#268` para los cargos). ▶ ✅ **EN EL ÁRBOL (2026-08-31, `#289`): diseño en §22, ejecución en §22.9.** «Completo» son DOS preguntas (dinero: todas las edades declaradas · formulario: además ninguna edad sin producto); la puerta vive en `reconcile()` con la fila bloqueada y vale también para el panel (`[DECIDIDO owner]`); tres textos por instalación con respaldo y `:phone`. Cazó de paso un hueco de contrato en la API (`general` como lista). Queda el OJO del owner | C | no (toca `MixedPartySurcharge` por el disparador) |
-| **T3** | **El parque decide** (E·F·D7): la diferencia en hoja de sala y puerta, corregir la edad desde el panel auditado, y bajar del mínimo | E · F · D7 | **sí** (la edad mueve el suplemento) |
+| **T3** | **El parque decide** (E·F·D7): la diferencia en hoja de sala y puerta, corregir la edad desde el panel auditado, y bajar del mínimo. ▶ 🟦 **DISEÑO FINO EN §23** (2026-08-31): lo escrito en hoja y puerta (coste cero en consultas), la pestaña «Invitados» por la MISMA puerta que el cliente con `via = panel` y actor operador, el interruptor de «bajar del mínimo» con permiso propio y rastro, y UNA pregunta (§23.8: permisos por defecto) | E · F · D7 | **sí** (la edad mueve el suplemento) |
 | **T4** | **El −X €** con el diseño CERRADO de **§20** (espejo acotado a puerta; guardas y mutaciones en §20.8) | el medio flujo que falta | **sí** |
 | **T5** | **Las palabras** (D9) + anonimizar con reserva viva (D8) + ⚠️ el email de una reducción promete «procesaremos la devolución» y con la liquidación en parque promete de más (`#285`) + ❗ **hallazgo del T0, cazado por el OJO del owner** (2026-08-31): en el bloque del panel, la línea del veredicto («2 × Cumpleaños Jump · 9,00 € por invitado») **no dice que es la tarifa DE HOY** — pegada a «Suplemento aplicado: 8,00 €» se lee como contradicción hasta llegar a la frase del desfase. El owner mismo tuvo que preguntar, y esa es la prueba: el bloque no se explica solo. Arreglo: «hoy: 9,00 € por invitado» cuando difiera de lo escrito, o el aplicado primero. ⚠️ El «0,00 € por invitado» de la dirección barata NO se toca: se resuelve solo con la T4 (pasa a «Descuento: −8,00 €») | D8 · D9 | no (D9 es presentación) |
 | **T6** | **El guardián fuera del formulario** (G) | G | no |
@@ -1950,3 +1950,131 @@ un fixture que no prueba el borde.*
 **Lo que cambia para el plan.** La T3 es la que RESUELVE la ficha «sin producto» (el operador
 corrige la edad o ajusta) y la que descongela desde el panel (rellenando las edades que faltan).
 Queda en `DEUDA` que la app no recibe la explicación del caso (la API está fuera, `[owner]`).
+
+---
+
+## 23. 🟦 T3 · EL PARQUE DECIDE (E · F · D7) — diseño fino (2026-08-31)
+
+> **Si vas a construir la T3, lee §18 (la visión), §21 (el sello), §22 (completo son dos preguntas)
+> y ESTE apartado.** Medido contra el código; lo que es decisión de producto va en §23.8.
+
+### 23.1 · Lo que cambia, en una frase por hueco
+
+- **E · La diferencia por cabeza se VE en el parque.** La hoja de sala y la pantalla de puerta
+  enseñan lo ESCRITO del suplemento —«3 × Cumpleaños Jump · 4,00 € por invitado · 12,00 €, se cobra
+  en el parque»—, el aviso del caso barato y cuántos invitados tienen una edad sin producto. Hoy
+  ninguna de las dos consulta el veredicto (medido: cero referencias), y el operador hace la cuenta
+  de memoria con el cliente delante.
+- **F · El operador corrige las edades desde el panel, con rastro PROPIO.** Una pestaña «Invitados»
+  en el modal «Gestionar», que entra por la MISMA puerta que el cliente (`OrderItem::submitGuestForm`)
+  con `via = panel` y el operador como actor: el rastro dice quién fue, el suplemento se reconcilia
+  con `reason = panel_guest_form` (el correo dice «el parque», no «has actualizado…»), y el ajuste
+  lleva `applied_by` = operador. Hoy `guest_data` tiene un solo escritor y al panel solo le llega
+  «copiar enlace»: si el operador usa el enlace del cliente, el rastro miente (`via: signed_link`).
+- **D7 · El operador puede bajar del mínimo del pack**, con un interruptor explícito que exige un
+  permiso propio y deja rastro (`orders.item_edited` con `below_pack_minimum`). «Al final él decide
+  sobre su producto» — y la excepción se registra, no se silencia. Hoy el editor rechaza con
+  `pack_quantity_range` y el modal fija `minValue(min_qty)`.
+
+### 23.2 · E · Dónde se ve y de dónde sale (medido)
+
+| Superficie | Hoy | Con la T3 |
+|---|---|---|
+| Hoja de sala (`ReservationSlip` + `pdf/reservation-slip.blade.php`) | imprime las columnas por niño —la edad ya sale— y los complementos; nada del suplemento | bloque «Fiesta mixta» tras la tabla de invitados: las líneas ESCRITAS (`MixedPartySurcharge::written()['lines']`), el total y «se cobra en el parque»; si no hay cargo y la fiesta saldría más barata, el aviso de §14; si hay edades sin producto, cuántas. Sin mezcla, el bloque no existe |
+| Puerta (`GateReservationsReader` → `GateReservation` → `GateProfile::row()` → `partials/reservation.blade.php`) | producto (con la etiqueta MIXTA en el nombre, §13), complementos y el pendiente de puerta del ledger | `GateReservation` gana `mixedPartyLines` («3 × Cumpleaños Jump · 4,00 €/invitado») y `mixedPartySurchargeCents`; la tarjeta las pinta bajo el producto, encima del pendiente. **Coste cero en consultas**: `written()` lee `order.adjustments` y `children`, que el reader ya carga; lo vigila el presupuesto de `ValidarRegistroProfileTest` |
+
+⚠️ **Se enseña lo ESCRITO, no el veredicto**: es lo que se cobra (`#270`, `PAY-19`). El veredicto
+solo aporta lo que el dinero no dice — el caso barato y las edades sin producto.
+
+### 23.3 · F · La pestaña «Invitados» y la puerta única
+
+`OrderItem::submitGuestForm(array $guests, ?array $general, string $via, ?User $by = null)`:
+`general === null` conserva los datos generales del post-form (el panel edita fichas, no lo demás);
+con `$by`, la reconciliación toma al operador como actor y `MixedPartySurcharge::REASON_PANEL_GUEST_FORM`
+como razón — `byCustomer: false` en el correo (`#272` ya distingue las dos voces). El audit
+`orders.guest_form_submitted` lleva `via: panel` y el actor lo pone la petición del panel.
+
+**`OrderItemGuestDataWriter`**, calcado de `OrderItemEventDataWriter`: permiso **`orders.edit_guest_data`**
+(nuevo) re-exigido en el punto de ejecución (`SEC-04`) · pack con `guest_fields` · token optimista ·
+si lo saneado no cambia → `unchanged()` sin rastro · PII fuera del audit (lo garantiza
+`submitGuestForm`, `RGPD-02`). **Fuera del `CRITICAL_RE`** y declarado como control negativo en
+`CriticalPathGateTest`: no toma el lock de zona/día y el dinero lo mueve `reconcile()`, que ya está
+en el gate — igual que los dos controladores del post-form.
+
+**El modal**: pestaña «Invitados» solo para un pack con `guest_fields` y con el permiso. Un
+`Repeater` FIJO de `quantity` filas (sin añadir, quitar ni reordenar), un campo por columna del
+esquema —la edad numérica acotada a `GUEST_AGE_MIN..MAX`—, y en cada ficha el régimen del veredicto
+SELLADO como rótulo («Kids» · «Jump» · «sin producto»), para que el operador vea lo que va a mover.
+Arriba, el estado: congelado (faltan N edades) o mixto con su importe. Se guarda con el mismo
+«Guardar» del modal: `executeManageItemSave` llama al writer **antes** del despacho de edición, así
+un guardado que cambia edades y cantidad a la vez sigue el orden invitados → edición (el saneo
+normaliza a la cantidad vigente en cada lectura, `sanitizeGuestData`).
+
+▶ Consecuencias: la ficha «sin producto» la resuelve el operador corrigiendo la edad (o ajustando
+la reserva); el congelado de §22 lo descongela él rellenando las edades que faltan; y el cliente
+recibe el correo de cambio de importe firmado por el parque.
+
+### 23.4 · D7 · Bajar del mínimo, con permiso y rastro
+
+`OrderItemEditor::edit(…, bool $belowMinimum = false)`: `validateItemEditTarget()` salta el mínimo
+del pack **solo** si el interruptor viene activado Y `$by` tiene **`orders.edit_item_below_minimum`**
+(nuevo); el máximo y `>= 1` siguen. El audit `orders.item_edited` gana `below_pack_minimum: true` y
+`pack_min_qty`. En el modal, un `Toggle` «Bajar del mínimo del pack (queda registrado)» visible con
+el permiso; al activarlo, la cantidad baja su `minValue` a 1 y la ayuda lo dice. La bajada de
+invitados es un HECHO: la reconciliación corre como hoy, con la puerta de §22 si faltan edades.
+⚠️ Solo el panel: `OrderCreator` (web, API y alta manual) sigue exigiendo el mínimo al vender.
+
+### 23.5 · Permisos
+
+Dos permisos nuevos, para poder revocarlos por rol sin tocar `orders.edit_item`:
+`orders.edit_guest_data` («Editar los datos por invitado desde el panel») y
+`orders.edit_item_below_minimum` («Bajar un pack por debajo de su mínimo de invitados, con
+rastro»). Por defecto en `staff` los dos (§18.1: «en el parque, el operador ve las edades y los
+precios y decide»). El admin los tiene por el `Gate::before` global. → **Q1 de §23.8**.
+
+### 23.6 · Lo que se toca, en orden de riesgo
+
+1. E: `GateReservation` (DTO) · `GateReservationsReader` · `GateProfile::row()` · el partial de la
+   puerta · `ReservationSlip::mixedParty()` · el blade del PDF · claves `admin.orders.slip.*` y
+   `admin.puerta.validar.profile.*` (es · zh_CN).
+2. F: `OrderItem::submitGuestForm` (firma) · `MixedPartySurcharge::REASON_PANEL_GUEST_FORM` (🔒 el
+   fichero está en el `CRITICAL_RE`) · `OrderItemGuestDataWriter` (nuevo, control negativo) ·
+   `PermissionSeeder` (`orders.edit_guest_data`).
+3. D7: `OrderItemEditor::edit()` y `validateItemEditTarget()` (🔒) · `PermissionSeeder`
+   (`orders.edit_item_below_minimum`).
+4. `ViewOrder`: la pestaña «Invitados» (`manageItemTabs`, `fillForm`, `executeManageItemSave`) y el
+   `Toggle` en `productAndQuantityFields`; `lang/{es,zh_CN}/admin.php`.
+5. Doc: §18.4 E/F/D7 cerrados · `PANEL-ADMIN.md` §1.bis (por dónde se llega) ·
+   `POSTFORM-INVITADOS.md` §4.2 (cara empleado: ahora escribe) · `SEGURIDAD.md`/`INVARIANTES`
+   (`PAY-19`: el operador corrige la edad con rastro propio) · la entrada de `DECISIONES` que se
+   registre al construirla (la siguiente al `#289`) · `ESTADO` · tracker · `CLAUDE.md`.
+
+### 23.7 · Guardas, con su mutación
+
+| | Guarda | Mutación |
+|---|---|---|
+| A | La hoja de sala imprime las líneas escritas, el total y «se cobra en el parque»; con edades sin producto, cuántas; sin mezcla, nada | quitar el bloque |
+| B | La puerta pinta las líneas bajo el producto, y el presupuesto de consultas de la ficha no crece | `GateReservation` sin las líneas |
+| C | El operador guarda edades desde el panel: `guest_data` cambia · audit `via: panel` con el operador de actor · reconciliación con `reason = panel_guest_form` · correo «el parque» · `applied_by` = operador | pasar `via: signed_link` / omitir `$by` |
+| D | Sin `orders.edit_guest_data` → `permission_denied` y nada escrito | quitar la comprobación |
+| E | Token rancio → `stale_version`; fichas iguales → `unchanged` y sin fila de audit | — |
+| F | Los datos generales del post-form se conservan cuando el panel edita fichas | `general` a `[]` |
+| G | Bajar del mínimo: con permiso e interruptor → guardado y audit `below_pack_minimum`; sin interruptor → `pack_quantity_range`; sin permiso → `pack_quantity_range` aunque venga el interruptor | saltar el mínimo siempre |
+| H | Tras bajar del mínimo, la reconciliación sigue la regla de §22 (completo recalcula, en blanco congela) | — |
+| I | El modal por Livewire: la pestaña «Invitados» aparece con permiso y no sin él; guardar desde ella escribe | — |
+| J | `CriticalPathGateTest`: el writer nuevo como control negativo | — |
+
+### 23.8 · Lo que decide el owner
+
+**Q1 · ¿Los dos permisos nuevos entran en `staff` por defecto?** **(a)** Sí, los dos: el operador de
+recepción corrige edades y baja del mínimo (revocable por rol) — recomendado. **(b)** Solo
+`orders.edit_guest_data` en staff; bajar del mínimo queda para admin/gerente. **(c)** Ninguno por
+defecto: se asignan a mano.
+
+▶ ✅ **`[DECIDIDO owner, 2026-08-31]` Q1 · (a)**: los dos en `staff`, revocables por rol.
+
+### 23.9 · Estado
+
+🟦 **Diseño escrito y Q1 decidida; el CÓDIGO no se ha empezado** — el owner pidió parar aquí
+(2026-08-31, noche) para revisar §23 antes de construir. Cuando dé el «adelante», el orden es el de
+§23.6 y las guardas las de §23.7. Nada de la T3 está en el árbol: ni permisos, ni pestaña, ni DTO.
