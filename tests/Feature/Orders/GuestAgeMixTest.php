@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Booking\Services\GuestAgeMix;
 use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Identity\Models\User;
@@ -25,6 +26,10 @@ use Tests\TestCase;
  * tres respuestas que NO son un importe (sin edad · fuera de rango · sin precio ese día) se
  * distinguen entre sí y de «no aplica». Un veredicto que devolviera 0 en los cuatro casos pasaría
  * una suite ingenua y mentiría en el panel.
+ *
+ * ▶ Desde el 2026-08-31 deriva del SELLO de la reserva y no del catálogo (§21): el helper sella
+ * cada reserva como lo hace `OrderCreator`, y los tres «no aplica» —sin sello, sello caducado, sello
+ * sin familia— tienen su caso porque el reconciliador los trata distinto.
  */
 class GuestAgeMixTest extends TestCase
 {
@@ -93,8 +98,12 @@ class GuestAgeMixTest extends TestCase
         return $pack;
     }
 
-    /** @param  list<int|null>  $ages  una edad por invitado (`null` = ficha sin edad declarada) */
-    private function reservation(TicketType $pack, array $ages, bool $withSlot = true): OrderItem
+    /**
+     * @param  list<int|null>  $ages  una edad por invitado (`null` = ficha sin edad declarada)
+     * @param  bool  $sealed  con el SELLO que `OrderCreator` pone al nacer (§21); `false` reproduce
+     *                        una línea anterior al sello, que para el veredicto es silencio
+     */
+    private function reservation(TicketType $pack, array $ages, bool $withSlot = true, bool $sealed = true): OrderItem
     {
         $order = Order::create([
             'user_id' => User::factory()->create()->id,
@@ -109,12 +118,20 @@ class GuestAgeMixTest extends TestCase
             ], fn ($v): bool => $v !== null);
         }
 
-        return $order->items()->create([
+        $item = $order->items()->create([
             'ticket_type_id' => $pack->id,
             'slot_id' => $withSlot ? $this->slot->id : null,
             'quantity' => count($ages), 'unit_price' => 1800, 'seats' => count($ages),
             'guest_data' => $guestData,
         ]);
+
+        if ($sealed) {
+            // Se sella para el día de la franja aunque la reserva no la tenga: así el caso «sin
+            // franja» prueba lo que hoy significa — un sello que no casa con la fila.
+            app(AgeFamilySealer::class)->seal($item, $pack, $this->slot->date);
+        }
+
+        return $item->fresh();
     }
 
     private function read(OrderItem $item): GuestAgeMix
@@ -257,15 +274,50 @@ class GuestAgeMixTest extends TestCase
         $this->assertSame(0, $mix->surchargeCents);
     }
 
-    public function test_a_reservation_without_a_slot_cannot_be_priced(): void
+    // ─── Las TRES formas de «no aplica», que no son intercambiables (§21.5) ──────
+
+    public function test_a_reservation_without_a_seal_is_silent(): void
     {
+        // Una línea anterior al sello (o una entrada, o un complemento): no se sabe con qué
+        // condiciones se vendió, así que el veredicto no afirma nada — ni etiqueta, ni importe — y
+        // deja claro que NO es un sello diciendo «sin condiciones».
+        $kids = $this->pack('Kids', 'cumple', 1, 6, 1800);
+        $this->pack('Jump', 'cumple', 7, 99, 2500);
+
+        $mix = $this->read($this->reservation($kids, [8], sealed: false));
+
+        $this->assertFalse($mix->applies);
+        $this->assertFalse($mix->mixed);
+        $this->assertFalse($mix->sealed, 'un silencio no es una afirmación');
+        $this->assertFalse($mix->staleSeal);
+    }
+
+    public function test_a_seal_that_does_not_match_the_row_is_silent_and_flagged(): void
+    {
+        // El sello se hizo para el día de la franja y la fila no tiene franja: los dos hechos del
+        // recibo (pack + día) ya no describen la fila. Derivar de él pondría precio a condiciones
+        // que no son las suyas, así que calla — y lo DICE, para que la ficha lo enseñe en rojo.
         $kids = $this->pack('Kids', 'cumple', 1, 6, 1800);
         $this->pack('Jump', 'cumple', 7, 99, 2500);
 
         $mix = $this->read($this->reservation($kids, [8], withSlot: false));
 
-        $this->assertTrue($mix->mixed);
-        $this->assertNull($mix->surchargeCents, 'sin fecha no hay tarifa del día que resolver');
+        $this->assertFalse($mix->applies);
+        $this->assertTrue($mix->staleSeal);
+        $this->assertFalse($mix->sealed);
+    }
+
+    public function test_a_seal_without_a_family_is_an_affirmation(): void
+    {
+        // Se vendió SIN condiciones por edad: «no aplica» sale del sello y por eso AFIRMA — es lo
+        // que permite retirar un suplemento cuando el operador cambia el pack a uno sin familia.
+        $solo = $this->pack('Excursión de colegio', null, null, null, 1800);
+
+        $mix = $this->read($this->reservation($solo, [4, 15]));
+
+        $this->assertFalse($mix->applies);
+        $this->assertTrue($mix->sealed, 'con sello, «no aplica» es una afirmación');
+        $this->assertFalse($mix->staleSeal);
     }
 
     // ─── El veredicto es DERIVADO: va y viene con el post-form ───────────────────

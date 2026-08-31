@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Booking\Services\MixedPartySettings;
 use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Domain\Booking\Services\OrderItemEditor;
@@ -115,10 +116,16 @@ class MixedPartySurchargeTest extends TestCase
             'gateway_order' => str_pad((string) (200000 + $this->counter), 10, '0', STR_PAD_LEFT),
         ]);
 
-        return $order->items()->create([
+        $item = $order->items()->create([
             'ticket_type_id' => $this->kids->id, 'slot_id' => $this->slot->id,
             'quantity' => $guests, 'unit_price' => 1800, 'seats' => $guests,
         ]);
+
+        // El SELLO que en producción pone `OrderCreator` al nacer (`specs/cumple-mixto.md` §21):
+        // sin él la reserva no participa y ninguno de estos casos escribiría nada.
+        app(AgeFamilySealer::class)->seal($item, $this->kids, $this->slot->date);
+
+        return $item->fresh();
     }
 
     /**
@@ -166,21 +173,6 @@ class MixedPartySurchargeTest extends TestCase
         $order = $item->order()->with(['items.ticketType', 'adjustments', 'payments'])->first();
 
         return ReservationFinancials::make($order, $order->items->firstWhere('id', $item->id));
-    }
-
-    /**
-     * El corte entre DOS PETICIONES, que en un test no existe y sin el cual estas guardas nacen
-     * ciegas.
-     *
-     * ⚠️⚠️ `GuestAgeMixReader` va en `scoped` y memoiza la familia y los precios del día para no
-     * consultarlos una vez por invitado. En producción eso vive lo que vive una petición; dentro de
-     * un test es UN proceso, así que un caso que cambia el catálogo y vuelve a guardar seguiría
-     * leyendo los valores de antes y **pasaría en verde con el defecto puesto**. Le pasó a la sonda
-     * que encontró todo esto: el precio se borró de la base y el veredicto lo seguía viendo.
-     */
-    private function nextRequest(): void
-    {
-        $this->app->forgetScopedInstances();
     }
 
     /** Un empleado con lo justo para editar una reserva desde el panel. */
@@ -405,7 +397,12 @@ class MixedPartySurchargeTest extends TestCase
         $this->assertSame(700, $this->financials($item->fresh())->aCobrarPuerta);
     }
 
-    // ─── El RECIBO: lo escrito deja de seguir al catálogo (§12.2) ────────────────
+    // ─── Lo escrito no sigue al catálogo (§12.2) — desde el 2026-08-31 por el SELLO (§21) ────
+    //
+    // Estos casos nacieron con el RECIBO de `#270` (dos hechos en el `context` del ajuste) y se
+    // conservan tal cual con el sello: lo que protegen es la conducta —el cargo no se mueve porque
+    // el parque retoque una tarifa—, no el mecanismo. El mecanismo lo prueban `AgeFamilySealTest`
+    // (nacimiento, re-sello, sello caducado) y los casos de abajo que cambian de día y de pack.
 
     public function test_the_written_amount_survives_a_catalogue_price_change(): void
     {
@@ -425,7 +422,6 @@ class MixedPartySurchargeTest extends TestCase
 
         // Y el cliente hace lo que ese formulario invita a hacer durante días: tocar un dato. Las
         // edades no cambian; el hecho es el mismo.
-        $this->nextRequest();
         $item = $this->declareAges($item, [4, 5, 8]);
 
         $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'lo escrito es lo que se le comunicó');
@@ -445,11 +441,10 @@ class MixedPartySurchargeTest extends TestCase
 
         $this->jump->prices()->update(['amount_cents' => 3000]); // derivado de hoy: 12,00 € por cabeza
 
-        $this->nextRequest();
         $item = $this->declareAges($item, [4, 9, 8]);
 
         // 2 × 7,00 € (el unitario comunicado), no 2 × 12,00 €. La CANTIDAD sigue al hecho; el
-        // UNITARIO, al recibo.
+        // UNITARIO, a las condiciones selladas — que son las que se le comunicaron.
         $this->assertSame(1400, $this->financials($item)->aCobrarPuerta);
         $this->assertSame(2, (int) $this->surchargeLines($item)->first()->quantity);
         $this->assertSame(700, (int) $this->surchargeLines($item)->first()->unit_price);
@@ -457,10 +452,11 @@ class MixedPartySurchargeTest extends TestCase
 
     public function test_moving_the_reservation_to_another_day_does_reprice(): void
     {
-        // El CONTROL de que el recibo no ha congelado de más: mover la reserva de día es un HECHO,
+        // El CONTROL de que el sello no ha congelado de más: mover la reserva de día es un HECHO,
         // y la diferencia sale del catálogo de ESE día — el mismo criterio que `PAY-18` aplica al
-        // precio de la propia reserva. Sin este caso, «no seguir al catálogo» podría implementarse
-        // congelándolo TODO y nada se pondría rojo.
+        // precio de la propia reserva (con el sello: el editor lo RE-PRECIA para el día destino,
+        // §21.4). Sin este caso, «no seguir al catálogo» podría implementarse congelándolo TODO y
+        // nada se pondría rojo.
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
         $this->jump->prices()->update(['amount_cents' => 3000]);
 
@@ -470,7 +466,6 @@ class MixedPartySurchargeTest extends TestCase
             'capacity' => 200, 'online_capacity' => 200,
         ]);
 
-        $this->nextRequest();
         $staff = $this->staff();
         $item = $item->fresh(['ticketType', 'slot', 'order']);
         $outcome = app(OrderItemEditor::class)->changeSlot(
@@ -485,46 +480,45 @@ class MixedPartySurchargeTest extends TestCase
         $this->assertSame(1200, app(MixedPartySurcharge::class)->written($item->fresh())['cents']);
     }
 
-    public function test_the_receipt_records_the_two_facts_behind_the_price(): void
+    public function test_the_two_facts_behind_the_price_live_in_the_seal_not_in_the_adjustment(): void
     {
-        // La forma del recibo es contrato: `unitFor()` decide con estas dos claves si el unitario
-        // escrito manda o si hay que volver al catálogo. Si alguien renombra una, el importe
-        // dejaría de congelarse y NADA fallaría — se limitaría a seguir al catálogo otra vez.
+        // Entre el 29 y el 31 el `context` del ajuste llevaba un RECIBO (`booked_type_id` +
+        // `priced_on`) que `unitFor()` comparaba con la fila para heredar el unitario escrito. El
+        // sello de la reserva lo SUBSUME (§21.6): los dos hechos viven ahí, una sola vez, y el
+        // contexto ya no los copia — dos fuentes de verdad para lo mismo era el defecto. Si alguien
+        // volviera a escribirlos aquí, este caso lo dice.
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
 
         $mark = OrderAdjustment::where('order_id', $item->order_id)->get()
             ->firstWhere(fn (OrderAdjustment $a) => is_array($a->context) && isset($a->context['mixed_party']))
             ->context['mixed_party'];
 
-        $this->assertSame((int) $this->kids->id, $mark['booked_type_id'], 'bajo qué pack se reservó');
-        $this->assertSame($this->slot->date->toDateString(), $mark['priced_on'], 'con el catálogo de qué día');
-        $this->assertSame(700, $mark['unit_cents']);
+        $this->assertArrayNotHasKey('booked_type_id', $mark);
+        $this->assertArrayNotHasKey('priced_on', $mark);
+        $this->assertSame(700, $mark['unit_cents'], 'lo que se le dijo al cliente sí se guarda');
+
+        $seal = $item->ageFamilySeal();
+        $this->assertNotNull($seal);
+        $this->assertSame((int) $this->kids->id, $seal->bookedTypeId, 'bajo qué pack se reservó');
+        $this->assertSame($this->slot->date->toDateString(), $seal->pricedOn, 'con el catálogo de qué día');
     }
 
-    public function test_a_line_written_before_the_receipt_is_sealed_without_moving_the_amount(): void
+    public function test_a_line_without_a_seal_is_left_alone(): void
     {
-        // Las líneas escritas antes de esta tanda no llevan recibo. Se heredan igual —preferir el
-        // catálogo de hoy para ellas movería justo el dinero que esto protege— y se sellan en su
-        // primera pasada, sin tocar un céntimo.
+        // Una reserva anterior al sello (o cuyo sello se perdió) es SILENCIO: no se sabe con qué
+        // condiciones se vendió, así que ni se le escribe un suplemento nuevo ni se le retira el
+        // que tuviera. `D3` dice que en producción no existe ninguna; esta es la red por si acaso.
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
 
-        $adjustment = OrderAdjustment::where('order_id', $item->order_id)->get()
-            ->firstWhere(fn (OrderAdjustment $a) => is_array($a->context) && isset($a->context['mixed_party']));
-        $legacy = $adjustment->context;
-        unset($legacy['mixed_party']['booked_type_id'], $legacy['mixed_party']['priced_on']);
-        $adjustment->forceFill(['context' => $legacy])->save();
+        OrderItem::whereKey($item->id)->update(['age_family_seal' => null]);
+        Notification::fake();
 
-        $this->jump->prices()->update(['amount_cents' => 3000]);
+        $item = $this->declareAges($item, [4, 5, 6]); // corregida a la baja: sin sello no se retira
 
-        $this->nextRequest();
-        $item = $this->declareAges($item, [4, 5, 8]);
-
-        $this->assertSame(700, app(MixedPartySurcharge::class)->written($item)['cents'], 'sin recibo también se hereda');
-        $this->assertSame(
-            (int) $this->kids->id,
-            $adjustment->fresh()->context['mixed_party']['booked_type_id'],
-            'y queda sellada para la próxima',
-        );
+        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'sin sello, lo escrito se conserva');
+        $this->assertCount(1, $this->surchargeLines($item));
+        Notification::assertNothingSent();
     }
 
     // ─── La línea del suplemento no la gobierna el operador (§12.4) ──────────────
@@ -541,7 +535,6 @@ class MixedPartySurchargeTest extends TestCase
         $this->assertNotNull($line);
 
         $staff = $this->staff();
-        $this->nextRequest();
         Notification::fake();
 
         $item = $item->fresh(['ticketType', 'slot', 'order']);
@@ -570,7 +563,6 @@ class MixedPartySurchargeTest extends TestCase
         Notification::fake();
 
         // El camino REAL: el operador baja los invitados desde el panel, y eso mueve el importe.
-        $this->nextRequest();
         $item = $item->fresh(['ticketType', 'slot', 'order']);
         app(OrderItemEditor::class)->edit(
             $item->order, $item, '', '', false,
@@ -607,7 +599,6 @@ class MixedPartySurchargeTest extends TestCase
 
         // El propio cliente vuelve al formulario y BORRA las edades. Es el peor de los cuatro
         // caminos: no necesita más que vaciar tres casillas, y lo dispara el interesado.
-        $this->nextRequest();
         $item = $this->declareAges($item, [null, null, null]);
 
         $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'borrar la edad no borra el cargo');
@@ -621,7 +612,6 @@ class MixedPartySurchargeTest extends TestCase
         $item = $this->declareAges($this->reservation(4), [8, 9, 4, 5]);
         $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'los de 8 y 9');
 
-        $this->nextRequest();
         $item = $this->declareAges($item, [8, null, 4, 5]);
 
         $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'vaciar una edad no rebaja el cargo');
@@ -636,7 +626,6 @@ class MixedPartySurchargeTest extends TestCase
         // contabilidad del parque sobrevive por diseño (la FK es RESTRICT, la factura sigue atada).
         OrderItem::whereKey($item->id)->update(['guest_data' => null]);
 
-        $this->nextRequest();
         app(MixedPartySurcharge::class)->reconcile($item->fresh(), $this->staff(), 'panel_item_edit');
 
         $this->assertSame(700, $this->financials($item->fresh())->aCobrarPuerta);
@@ -650,7 +639,6 @@ class MixedPartySurchargeTest extends TestCase
         // «no aplica» — que no es «no hay suplemento», es «ya no sé decirlo».
         $this->kids->forceFill(['guest_age_family' => null])->save();
 
-        $this->nextRequest();
         $item = $this->declareAges($item, [4, 5, 8]);
 
         $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
@@ -664,7 +652,6 @@ class MixedPartySurchargeTest extends TestCase
         // DE CONFIGURACIÓN, que el veredicto ya sabe contar aparte (`outOfRange`).
         $this->jump->forceFill(['guest_age_min' => 9])->save();
 
-        $this->nextRequest();
         $item = $this->declareAges($item, [4, 5, 8]);
 
         $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
@@ -676,7 +663,6 @@ class MixedPartySurchargeTest extends TestCase
         Notification::fake();
         AuditLog::query()->delete();
 
-        $this->nextRequest();
         $this->declareAges($item, [null, null, null]);
 
         // Abstenerse no es un cambio: ni correo que contradiga al anterior, ni fila de auditoría
@@ -692,7 +678,6 @@ class MixedPartySurchargeTest extends TestCase
         $item = $this->declareAges($this->reservation(3), [8, null, null]);
         $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
 
-        $this->nextRequest();
         $item = $this->declareAges($item, [8, 9, null]);
 
         $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'dos invitados por encima del tramo');

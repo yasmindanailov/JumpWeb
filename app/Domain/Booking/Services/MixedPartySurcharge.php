@@ -47,9 +47,16 @@ use Illuminate\Support\Facades\DB;
  * re-derivaba el importe entero del catálogo vigente — y el disparo siguiente es el cliente
  * corrigiendo un nombre, que ese formulario invita a hacer durante días. Medido sobre `R-BEEL3E`,
  * con las edades intactas: una subida de tarifa llevaba el cargo de 15,00 € a 30,00 €; estrechar un
- * tramo, a 0,00 €. ▶ Hoy la sostiene el RECIBO que cada línea lleva en su `context`
- * ({@see unitFor}): el unitario escrito manda mientras el pack reservado y el día de tarificación
- * sigan siendo los mismos.
+ * tramo, a 0,00 €.
+ *
+ * ▶ **Desde el 2026-08-31 la sostiene el SELLO de la reserva** (`specs/cumple-mixto.md` §21,
+ * `DECISIONES #284` D1/D2): la familia, los tramos y los precios con los que se vendió viven en
+ * `order_items.age_family_seal`, el veredicto deriva de ahí (`GuestAgeMixReader`) y el sello solo
+ * se reescribe cuando cambia el pack o el día (`AgeFamilySealer`). Así el unitario DERIVADO es el
+ * comunicado mientras no se muevan, y es el del día nuevo cuando se mueven — la distinción la hace
+ * la escritura, no la lectura. Entre el 29 y el 31 la hacía un RECIBO en el `context` del ajuste
+ * (`booked_type_id` + `priced_on`, `#270`) que heredaba el unitario escrito; el sello lo subsume y
+ * el recibo ya no se escribe: dos fuentes de verdad para lo mismo era el defecto.
  *
  * ## Una AUSENCIA no es una CORRECCIÓN
  *
@@ -115,7 +122,7 @@ class MixedPartySurcharge
             }
 
             $mix = $this->mix->for($item);
-            $target = $this->targetState($mix, $current, $item);
+            $target = $this->targetState($mix);
             $old = $this->totalOf($current);
 
             // ⚠️⚠️ **Una AUSENCIA no es una CORRECCIÓN** (§12.2.bis). Con el veredicto a medias, lo
@@ -172,10 +179,24 @@ class MixedPartySurcharge
      * ▶ **Crecer sí puede**, y es asimétrico a propósito: declarar la edad que faltaba es un dato
      * nuevo y legítimo; borrarla no lo es. Así el importe sigue apareciendo mientras el cliente
      * rellena el formulario, y deja de poder desaparecer cuando lo vacía.
+     *
+     * ▶ **Con el sello (§21.5) hay DOS matices más, y los dos son del mismo principio.**
+     *  - Un «no aplica» que sale del SELLO —la reserva se vendió, o el operador la cambió a un pack,
+     *    SIN condiciones por edad— es una AFIRMACIÓN y sí gobierna: si hay una línea de suplemento
+     *    escrita, se retira. El «no aplica» de una línea sin sello o con el sello caducado es un
+     *    silencio y no retira nada.
+     *  - Un veredicto completo pero SIN TARIFICAR (`surchargeCents === null`: algún régimen sellado
+     *    no tiene precio para ese día — medido, mover la fiesta a un día en que un pack no tiene
+     *    tarifa lo produce, y el editor no lo bloquea) tampoco gobierna. Sin esto, «no puedo
+     *    calcular la diferencia» se leía como «la diferencia es cero» y retiraba lo escrito.
      */
     private function derivationGoverns(GuestAgeMix $mix): bool
     {
-        return $mix->applies && $mix->isComplete();
+        if (! $mix->applies) {
+            return $mix->sealed;
+        }
+
+        return $mix->isComplete() && $mix->surchargeCents !== null;
     }
 
     /**
@@ -191,71 +212,34 @@ class MixedPartySurcharge
      * para decidir si ese veredicto puede mandar sobre lo escrito ({@see derivationGoverns}), y dos
      * derivaciones de la misma reserva en la misma pasada podrían no coincidir.
      *
-     * @param  array<int, array{item:OrderItem, adjustment:OrderAdjustment, count:int, unit:int, receipt:array<string,mixed>}>  $current
+     * ▶ **El unitario es el DERIVADO, siempre** — y eso es lo que el sello permite (§21.6). El
+     * veredicto sale de los precios sellados en la reserva, así que la diferencia por cabeza es la
+     * que se le COMUNICÓ mientras no cambie de pack ni de día, y es la del día nuevo cuando cambia
+     * (`PAY-18`): «14,00 €, no 24,00 €» (`[DECIDIDO owner]`, `#270`) se cumple por construcción, sin
+     * heredar nada de la línea escrita. Entre el 29 y el 31 aquí vivía `unitFor()`, que comparaba
+     * un recibo guardado en el `context` con la fila para decidir si heredar el unitario escrito;
+     * con el sello no hay nada que heredar, y mantener las dos cosas era tener dos fuentes de
+     * verdad para lo mismo.
+     *
      * @return array<int, array{count:int, unit:int, name:string}>
      */
-    private function targetState(GuestAgeMix $mix, array $current, OrderItem $item): array
+    private function targetState(GuestAgeMix $mix): array
     {
         $state = [];
         foreach ($mix->upgrades as $upgrade) {
             $typeId = (int) $upgrade['type_id'];
-            $unit = $this->unitFor($typeId, $upgrade['unit_cents'], $current, $item);
+            $unit = $upgrade['unit_cents'];
             if ($unit === null || $unit <= 0 || $upgrade['count'] <= 0) {
                 continue;
             }
             $state[$typeId] = [
                 'count' => (int) $upgrade['count'],
-                'unit' => $unit,
+                'unit' => (int) $unit,
                 'name' => (string) $upgrade['name'],
             ];
         }
 
         return $state;
-    }
-
-    /**
-     * La diferencia POR CABEZA que se cobra por un destino: la que ya se le COMUNICÓ al cliente
-     * mientras los hechos que la sostienen no se muevan, y solo entonces la del catálogo de hoy.
-     *
-     * ▶ **`[DECIDIDO owner, 2026-08-29]`, la regla que esto implementa** (§12.2): el importe sigue al
-     * HECHO —las edades, cuántos son, el pack o el día— y **nunca** a la CONFIGURACIÓN. Estaba
-     * escrita y no estaba construida: el reconciliador re-derivaba el importe entero del catálogo
-     * vigente en cada pasada, así que la regla solo aguantaba hasta el siguiente guardado. Medido
-     * sobre `R-BEEL3E`, con las edades intactas y el cliente corrigiendo un NOMBRE: una subida de
-     * tarifa llevaba su cargo de 15,00 € a 30,00 €, y estrechar un tramo lo llevaba a 0,00 €.
-     *
-     * ▶ **El RECIBO son dos hechos, y viven en el `context` del propio ajuste** —nada de columna
-     * nueva ni de migración—: bajo qué pack se reservó (`booked_type_id`) y con el catálogo de qué
-     * día se tarificó (`priced_on`). Si los dos siguen siendo los de hoy, el unitario escrito manda.
-     * Si alguno cambió, el hecho cambió y se re-tarifica desde el catálogo, que es exactamente lo
-     * que `PAY-18` ya hace con el precio de la propia reserva al moverla de día.
-     *
-     * ⚠️ **La CANTIDAD nunca se hereda, solo el UNITARIO.** Es la respuesta del owner a la única
-     * pregunta que esto abría: si el parque sube la tarifa y DESPUÉS el cliente declara otro
-     * invitado mayor, ese invitado entra al precio que se le comunicó, no al de hoy. «14,00 €, no
-     * 24,00 €.»
-     *
-     * ⚠️ **Sin recibo también se hereda**, y es deliberado: son las líneas escritas antes de esta
-     * tanda. Preferir el catálogo de hoy para ellas movería justo el dinero que esto protege. Se
-     * sellan en su primera pasada, sin tocar el importe ({@see apply}).
-     *
-     * @param  array<int, array{item:OrderItem, adjustment:OrderAdjustment, count:int, unit:int, receipt:array<string,mixed>}>  $current
-     */
-    private function unitFor(int $typeId, ?int $derived, array $current, OrderItem $item): ?int
-    {
-        $line = $current[$typeId] ?? null;
-        if ($line === null) {
-            return $derived; // destino nuevo: nunca se le comunicó nada, así que manda el catálogo.
-        }
-
-        $receipt = $line['receipt'];
-        $bookedThen = $receipt['booked_type_id'] ?? null;
-        $pricedOn = $receipt['priced_on'] ?? null;
-
-        $sameProduct = $bookedThen === null || (int) $bookedThen === (int) $item->ticket_type_id;
-        $samePricingDay = $pricedOn === null || (string) $pricedOn === (string) $item->slot?->date?->toDateString();
-
-        return ($sameProduct && $samePricingDay) ? $line['unit'] : $derived;
     }
 
     /**
@@ -267,7 +251,7 @@ class MixedPartySurcharge
      * —que es lo que contestó el CLIENTE, y que `RGPD-01` vacía al anonimizar— habría sido usar un
      * campo para lo que no es.
      *
-     * @return array<int, array{item:OrderItem, adjustment:OrderAdjustment, count:int, unit:int}>
+     * @return array<int, array{item:OrderItem, adjustment:OrderAdjustment, count:int, unit:int, mark:array<string,mixed>}>
      */
     private function currentLines(OrderItem $principal): array
     {
@@ -299,8 +283,8 @@ class MixedPartySurcharge
                 'adjustment' => $adjustment,
                 'count' => (int) $child->quantity,
                 'unit' => (int) $child->unit_price,
-                // El RECIBO de esa línea: bajo qué hechos se calculó su unitario ({@see unitFor}).
-                'receipt' => $mark,
+                // La MARCA de esa línea: lo que se le dijo al cliente (destino, nombre, unitario).
+                'mark' => $mark,
             ];
         }
 
@@ -334,15 +318,7 @@ class MixedPartySurcharge
                 $before = $line['count'] * $line['unit'];
 
                 if ($line['count'] === $want['count'] && $line['unit'] === $want['unit']) {
-                    // Nada que mover, pero puede faltar el RECIBO: es una línea escrita antes de que
-                    // existiera. Se sella aquí, en su primera pasada, para que a partir de ahora se
-                    // sepa bajo qué hechos se calculó — sin tocar un céntimo.
-                    if (! isset($line['receipt']['booked_type_id'])) {
-                        $line['adjustment']->forceFill([
-                            'context' => $this->context($typeId, $want, $want['name'] ?? null, $principal),
-                        ])->save();
-                    }
-                    $written += $before;
+                    $written += $before; // nada que mover.
 
                     continue;
                 }
@@ -359,7 +335,7 @@ class MixedPartySurcharge
                 ])->save();
                 $line['adjustment']->forceFill([
                     'amount_cents' => $amount,
-                    'context' => $this->context($typeId, $want, $want['name'] ?? null, $principal),
+                    'context' => $this->context($typeId, $want, $want['name'] ?? null),
                 ])->save();
                 $written += $amount;
 
@@ -389,7 +365,7 @@ class MixedPartySurcharge
                 // canales reparten el valor de la línea, no lo amplían (§8.3, medido).
                 'applied_by' => $actor->id,
                 'reason' => 'mixed_party_surcharge',
-                'context' => $this->context($typeId, $want, $want['name'] ?? null, $principal),
+                'context' => $this->context($typeId, $want, $want['name'] ?? null),
             ]);
             $written += $amount;
         }
@@ -439,7 +415,7 @@ class MixedPartySurcharge
             'lines' => array_values(array_map(static fn (array $l): array => [
                 // El nombre GUARDADO, no el resuelto: es el que se le dijo, y así la frase no
                 // cambia si el producto se renombra después (mismo criterio que el desglose).
-                'name' => (string) ($l['receipt']['target_name'] ?? '—'),
+                'name' => (string) ($l['mark']['target_name'] ?? '—'),
                 'count' => $l['count'],
                 'unit' => $l['unit'],
             ], $lines)),
@@ -475,10 +451,13 @@ class MixedPartySurcharge
      * El `context` del ajuste: la MARCA que identifica la línea en la siguiente pasada y, a la vez,
      * lo que el cliente lee en su desglose (`OrderAdjustment::breakdownLabel`).
      *
+     * ⚠️ Ya NO lleva `booked_type_id` ni `priced_on` (el recibo de `#270`): esos dos hechos viven
+     * en el sello de la reserva, una sola vez (§21.6). Aquí quedaría una copia que nadie lee.
+     *
      * @param  array{count:int, unit:int, name?:string}  $want
      * @return array<string, mixed>
      */
-    private function context(int $targetTypeId, array $want, ?string $targetName, OrderItem $item): array
+    private function context(int $targetTypeId, array $want, ?string $targetName): array
     {
         return ['mixed_party' => [
             'target_type_id' => $targetTypeId,
@@ -488,12 +467,6 @@ class MixedPartySurcharge
             'target_name' => $targetName,
             'guests' => $want['count'],
             'unit_cents' => $want['unit'],
-            // ─── El RECIBO ({@see unitFor}): los dos HECHOS bajo los que se calculó ese unitario.
-            // Mientras sigan siendo los de hoy, el importe escrito manda sobre el catálogo. No es
-            // una copia por si acaso: es lo único que distingue «el parque cambió una tarifa» —que
-            // no puede mover lo comunicado— de «esta reserva se movió de día», que sí.
-            'booked_type_id' => (int) $item->ticket_type_id,
-            'priced_on' => $item->slot?->date?->toDateString(),
         ]];
     }
 

@@ -2,8 +2,39 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-31 — la primera pasada de fachada SANEADA
-> (`#287`), sobre el hueco de ilustración (`#286`) y la jornada de mixtos (`#282` → `#285`).**
+> aquí solo se enlaza.** Última actualización: **2026-08-31 — DOS carriles el mismo día: la T1 de
+> reservas mixtas, el SELLO (`#288`, la tarde), y la primera pasada de fachada SANEADA (`#287`)
+> sobre el hueco de ilustración (`#286`).** ⚠️⚠️ **Dos agentes sobre `main` en la misma jornada**:
+> el número de decisión se elige mirando el REMOTO (`git fetch` antes de numerar) — hoy chocó DOS
+> veces (el carril del tema iba por 281 con el remoto en 285; el de mixtos escribió `#286` con el
+> remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
+>
+> ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1 hecha → sigue la T2) ═══════════
+> ❗❗❗ **2026-08-31 (tarde) · T1 · EL SELLO ESTÁ EN EL ÁRBOL** (`#288`).
+> Suite **3616 en verde** (23.514 aserciones, 1 skipped a propósito; **tras rebasar sobre `#287`**:
+> sus 3605 + los 11 de la T1, medidos) · **JS 877** (sin tocar) ·
+> **13/13 mutaciones muerden** · verificadores sobre MySQL con control negativo · sonda del hueco A
+> en navegador (3 capturas en
+> `/root/e2e/t1-capturas/` del contenedor, fuera del repo). **Si entras nuevo: `specs/cumple-mixto.md`
+> §18 (la visión) y §21 (el sello: diseño en §21.1–§21.12, ejecución en §21.13); lo siguiente es la
+> T2.** ▶ El owner aprobó el diseño con tres decisiones (§21.8): retirar `#283` y dejar la frase ·
+> **al mover de DÍA se conservan los tramos y solo el precio sigue al día** (su objeción corrigió mi
+> recomendación) · un hermano creado después no existe para lo vendido. ⚠️⚠️ **Dos huecos
+> PREEXISTENTES cazados de paso**: un día sin tarifa CANCELABA el suplemento, y una fiesta mixta con
+> cargo **no podía cambiar de pack** desde el panel (`orphan_addons`). ⚠️ `nextRequest()` ya no hace
+> falta (lector sin estado). ⚠️ El `php artisan serve` del contenedor estaba MUERTO al arrancar
+> (SIGTERM a las 14:29 local; `docker compose restart laravel.test` lo devuelve): si el `curl` del
+> arranque da `000`, es eso. ⚠️ Local: 6 reservas vivas re-selladas a mano (§21.12); `T0-PRB01`
+> vuelve a estar como la dejó el T0 (8,00 €) y **el precio de Jump está restaurado a 15,00 €**.
+> ⚠️ La sonda dejó, a sabiendas, **2 correos en Mailpit** para `probe-card@jumpweb.test` (el cargo
+> pasa de 8 a 12 y vuelve) y dos filas de `audit_logs` en `T0-PRB01`: es la lección del T0 —el correo
+> no es transaccional— y aquí se asumió en vez de fingir el aviso. ⚠️ **Dentro del contenedor el
+> `serve` escucha en `:80`, no en `:8081`** (el 8081 es el mapeo del host): un guion headless con
+> `localhost:8081` da `ERR_CONNECTION_REFUSED`, y un enlace firmado vale solo para el host con el que
+> se firmó (`URL::forceRootUrl('http://localhost')` antes de `signedRoute`). `t1.js` lee `BASE` del
+> entorno por eso.
+>
+> ═══════════ CARRIL 2 · TEMA / FACHADA (`#286` · `#287`) ═══════════
 >
 > ❗❗❗ **POR DÓNDE SE RETOMA EL TEMA, HOY** (esto sustituye al punto 1-5 de abajo en lo que cambia):
 > **1 · `[DECIDIDO owner, 2026-08-31]`: NO se coloca material nuevo** hasta que él vuelva a mirar el
@@ -77,8 +108,6 @@
 > ⚠️ **Y `elementos-fachada.md` lleva CINCO correcciones propias en su cabecera** (§12 de la spec
 > nueva): el hueco YA existía dos veces, dos manchas YA viajaban instaladas (byte a byte), el «18,6×»
 > es cifra cruda (**1,4× comprimido**), los estados vacíos SÍ existen, y el canvas ya no está caducado.
-
-
 > ❗❗❗ **2026-08-31 · LA VISIÓN DE RESERVAS MIXTAS, CERRADA CON EL OWNER** (`#284`). **Si vas a
 > construir algo de mixtos, lee `specs/cumple-mixto.md` §18 y nada más**: es la foto completa —nueve
 > decisiones, siete huecos medidos y el plan por tandas—. Sesión SIN código.
@@ -154,17 +183,16 @@
 > owner y ejecutó el T0. **Tu punto de entrada es UNO: `specs/cumple-mixto.md` §18** (la visión, las
 > nueve decisiones D1–D9, los huecos medidos y el plan §18.5). El −X € está diseñado en **§20**
 > (`#285`, sustituye a §16). No queda NINGUNA decisión de producto abierta en mixtos.
-> ▶ **LO SIGUIENTE ES LA T1 — el SELLO** (`#284` D1/D2): cada reserva guarda al nacer los tramos y
-> precios de su familia; el precio viejo solo existe dentro de las reservas que lo llevan. El owner
-> pidió ir «paso a paso»: **diseño fino ANTES de código**, con las tres preguntas ya identificadas —
-> dónde vive la copia (columna/JSON en `order_items` u otra cosa) · cómo RE-SELLA el cambio de fecha
-> (`PAY-18`: día nuevo = precios nuevos) y el cambio de producto · y cómo SUBSUME el recibo de `#270`
-> (`unitFor` lee el sello si existe — **dos fuentes de verdad para lo mismo es el defecto**).
-> ⚠️ La T1 toca el NACIMIENTO de una reserva (`OrderCreator`, `CRITICAL_RE`): verificadores sobre
-> MySQL real y `VERIFY_CONC=1` al empujar.
-> ⚠️ Orden del resto: T2 (edad sin producto + disparador a «guardado completo», §20.6 — cambia la
-> conducta de `#268` para los cargos) · T3 (el parque decide) · T4 (el −X €, tras T1+T2) · T5 (las
-> palabras: D9, D8, el email de la devolución y el «hoy:» del desfase) · T6 (solapes fuera del form).
+> ▶ ~~**LO SIGUIENTE ES LA T1 — el SELLO**~~ ✅ **HECHA el 2026-08-31 por la tarde (`#288`)**: ver el
+> bloque de arriba y `specs/cumple-mixto.md` §21.13.
+> ▶ **LO SIGUIENTE ES LA T2** (§18.5): una edad sin producto es un estado CONOCIDO (D6) —con el
+> sello, «completo» se redefine sobre `outOfRange`—, informa y no deja completar pero no congela el
+> dinero, y el disparador pasa a «solo guardado COMPLETO» en las dos direcciones (§20.6, cambia la
+> conducta de `#268` para los cargos). No toca el núcleo de dinero; sí `MixedPartySurcharge`
+> (`CRITICAL_RE`) por el disparador.
+> ⚠️ Orden del resto: T3 (el parque decide) · T4 (el −X €, tras T2; el crédito sale de los precios
+> SELLADOS) · T5 (las palabras: D9, D8, el email de la devolución — el «hoy:» se disolvió con la T1)
+> · T6 (solapes fuera del form; con el sello ya no mueve dinero).
 > ▶ **T0**: 14 capturas verificadas en `storage/app/t0-capturas/` (gitignoradas); el owner ya cazó
 > el primer hallazgo. Pedidos sonda `T0-PRB01`/`T0-PRB02` y `e2e-panel-admin@jumpweb.test` viven en
 > la BD local para futuras sondas; guion `t0.js` en `/root/e2e` del contenedor.

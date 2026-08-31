@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Notifications\GuestFormRequest;
@@ -499,6 +500,8 @@ class GuestFormTest extends TestCase
             'quantity' => count($ages), 'unit_price' => (int) $pack->prices()->value('amount_cents'), 'seats' => count($ages),
             'event_data' => ['celebrant' => 'Mara'],
         ]);
+        // El sello que `OrderCreator` pone al nacer (`specs/cumple-mixto.md` §21).
+        app(AgeFamilySealer::class)->seal($item, $pack, $slot->date);
 
         // Por la puerta real: el aviso enseña lo ESCRITO en el pedido, y quien lo escribe es el
         // guardado del post-form.

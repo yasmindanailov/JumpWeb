@@ -280,12 +280,16 @@
                         $mixDrift = $mix->applies
                             && $mix->surchargeCents !== null
                             && $mix->surchargeCents !== $mixWritten['cents'];
-                        // ⚠️⚠️ El pack dejó de participar en su familia —alguien la retiró en el
-                        // catálogo— y aun así hay dinero escrito que el cliente debe en el parque.
-                        // Sin esta rama el bloque entero desaparecía y el operador se encontraba un
-                        // importe en «a cobrar en el parque» SIN una sola línea que lo explicara:
-                        // medido, 7,00 € y cero explicación en pantalla.
-                        $mixOrphaned = ! $mix->applies && $mixWritten['cents'] > 0;
+                        // ⚠️⚠️ Hay dinero escrito que el cliente debe en el parque y NO hay veredicto
+                        // contra el que contrastarlo. Sin esta rama el bloque entero desaparecía y
+                        // el operador se encontraba un importe en «a cobrar en el parque» SIN una
+                        // sola línea que lo explicara: medido, 7,00 € y cero explicación. Con el
+                        // sello (`specs/cumple-mixto.md` §21.5) esto ya no lo produce un cambio de
+                        // catálogo: lo produce una reserva SIN sello (anterior a él), y se dice así.
+                        $mixOrphaned = ! $mix->applies && ! $mix->staleSeal && $mixWritten['cents'] > 0;
+                        // El sello no corresponde a la fila (pack o fecha movidos sin re-sellar):
+                        // el veredicto calla y no se mueve dinero, pero el operador tiene que verlo.
+                        $mixStale = $mix->staleSeal;
                         // El portador solo se consulta cuando su ausencia explicaría algo: cuando el
                         // veredicto pide cobrar y no hay nada escrito.
                         $mixCarrierMissing = $mix->mixed
@@ -293,7 +297,7 @@
                             && $mixWritten['cents'] === 0
                             && \App\Domain\Booking\Services\MixedPartySettings::surchargeProduct() === null;
                     @endphp
-                    @if (! $isItemCancelled && ($mixOrphaned || ($mix->applies && ($mix->mixed || $mixWritten['cents'] > 0 || ! $mix->isComplete()))))
+                    @if (! $isItemCancelled && ($mixOrphaned || $mixStale || ($mix->applies && ($mix->mixed || $mixWritten['cents'] > 0 || ! $mix->isComplete()))))
                         <div class="mt-2 space-y-1 rounded-md bg-violet-50 p-2 ring-1 ring-violet-600/15 dark:bg-violet-400/10 dark:ring-violet-400/20">
                             @if ($mix->mixed)
                                 <div class="font-medium text-violet-800 dark:text-violet-300">
@@ -326,9 +330,14 @@
                                 </div>
                             @endif
 
-                            @if ($mixOrphaned)
+                            @if ($mixStale)
+                                {{-- En ROJO y antes que nada: es un dato inconsistente, no un estado
+                                     del negocio. Ningún camino del producto lo produce; si aparece,
+                                     alguien movió la fila por fuera del sellador. --}}
+                                <div class="font-semibold text-red-700 dark:text-red-300">{{ __('admin.orders.mixed_party.stale_seal') }}</div>
+                            @elseif ($mixOrphaned)
                                 {{-- Se le dice al operador las dos cosas: que el cargo sigue vivo y
-                                     que ya no hay veredicto contra el que contrastarlo, para que no
+                                     que no hay veredicto contra el que contrastarlo, para que no
                                      lo lea como un error del sistema ni intente cuadrarlo. --}}
                                 <div class="text-amber-800 dark:text-amber-300">{{ __('admin.orders.mixed_party.orphaned') }}</div>
                             @elseif ($mixCarrierMissing)

@@ -26,7 +26,6 @@ use App\Domain\Booking\Services\CheckoutOrchestrator;
 use App\Domain\Booking\Services\CustomerOrderHistoryReader;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\GateReservationsReader;
-use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PublishableCatalogReader;
 use App\Domain\Booking\Services\ReservationAdmissionPolicy;
@@ -90,14 +89,10 @@ class BookingServiceProvider extends ServiceProvider
         // y la atadura vive donde vive la implementación.
         $this->app->bind(ReservationCheckout::class, CheckoutOrchestrator::class);
 
-        // El veredicto de fiesta MIXTA (`specs/cumple-mixto.md` §9·4) memoiza la familia del pack y
-        // los precios del día: la ficha de un pedido lo pregunta por varias reservas seguidas y
-        // todas comparten catálogo.
-        //
-        // ⚠️ **`scoped` y no `bind`**, que es lo que usa el resto de este fichero: un `bind`
-        // construye una instancia NUEVA en cada resolución, así que la memoria nacería vacía cada
-        // vez — un memo que nunca acierta. Sin contrato propio porque no cruza módulos: lo consumen
-        // el panel y la web, los dos dentro de Booking.
-        $this->app->scoped(GuestAgeMixReader::class);
+        // El veredicto de fiesta MIXTA (`specs/cumple-mixto.md` §21.5) deriva del SELLO que viaja en
+        // la fila de cada reserva, así que el lector es sin estado y se resuelve solo. Hasta el
+        // 2026-08-31 iba en `scoped` porque memoizaba la familia y los precios del catálogo — y ese
+        // memo era la trampa de §17.6·2: dentro de un test un cambio de catálogo no se veía y las
+        // guardas nacían ciegas sin `forgetScopedInstances()`. Con el sello no hay nada que memoizar.
     }
 }

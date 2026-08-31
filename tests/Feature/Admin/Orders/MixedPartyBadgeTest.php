@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -111,6 +112,8 @@ class MixedPartyBadgeTest extends TestCase
             'ticket_type_id' => ($booked ?? $this->kids)->id, 'slot_id' => $slot->id,
             'quantity' => count($ages), 'seats' => count($ages), 'unit_price' => 1800,
         ]);
+        // El sello que `OrderCreator` pone al nacer (`specs/cumple-mixto.md` §21).
+        app(AgeFamilySealer::class)->seal($item, $booked ?? $this->kids, $slot->date);
 
         // ⚠️ Por la puerta REAL y no escribiendo `guest_data` a mano: es el guardado del post-form
         // el que reconcilia el suplemento, y lo que la pantalla enseña es lo ESCRITO. Un fixture que
@@ -194,22 +197,57 @@ class MixedPartyBadgeTest extends TestCase
             ->assertDontSee(__('admin.orders.mixed_party.applied', ['amount' => '14,00 €']));
     }
 
-    public function test_a_charge_whose_family_was_retired_is_still_explained(): void
+    public function test_retiring_the_family_in_the_catalogue_changes_nothing_on_screen(): void
     {
-        // ⚠️⚠️ El bloque entero colgaba de `$mix->applies`, así que retirar la familia en el
-        // catálogo dejaba al operador con un importe en «a cobrar en el parque» y CERO explicación
-        // en pantalla. El dinero escrito manda sobre si esto se pinta: mientras el cliente lo deba,
-        // el operador tiene que poder leer de dónde sale.
+        // Hasta el 2026-08-31 este caso probaba el HUÉRFANO por catálogo: retirar la familia dejaba
+        // el cargo sin veredicto. Con el SELLO (`specs/cumple-mixto.md` §21, `DECISIONES #284` D2)
+        // el catálogo ya no manda sobre una fiesta vendida: el bloque sigue diciendo lo mismo que
+        // antes del cambio, con su veredicto y su importe — y sin ningún aviso, porque no hay nada
+        // que avisar.
         $order = $this->paidPartyWith([4, 5, 8]);
         $this->kids->forceFill(['guest_age_family' => null])->save();
 
         $this->actingAs($this->staff())
             ->get('/admin/orders/'.$order->code)
             ->assertOk()
+            ->assertSee(__('admin.orders.mixed_party.title'))
+            ->assertSee(__('admin.orders.mixed_party.applied', ['amount' => '7,00 €']))
+            ->assertDontSee(__('admin.orders.mixed_party.orphaned'))
+            ->assertDontSee(__('admin.orders.mixed_party.stale_seal'));
+    }
+
+    public function test_a_charge_on_a_reservation_without_a_seal_is_still_explained(): void
+    {
+        // ⚠️⚠️ El bloque entero colgaba de `$mix->applies`, así que un cargo sin veredicto dejaba al
+        // operador con un importe en «a cobrar en el parque» y CERO explicación en pantalla. Hoy
+        // eso solo lo produce una reserva SIN sello (anterior a él, `D3`): el dinero escrito manda
+        // sobre si esto se pinta, y se le dice de dónde sale y por qué no hay veredicto.
+        $order = $this->paidPartyWith([4, 5, 8]);
+        OrderItem::where('order_id', $order->id)->whereNull('parent_item_id')->update(['age_family_seal' => null]);
+
+        $this->actingAs($this->staff())
+            ->get('/admin/orders/'.$order->code)
+            ->assertOk()
             ->assertSee(__('admin.orders.mixed_party.applied', ['amount' => '7,00 €']))
             ->assertSee(__('admin.orders.mixed_party.orphaned'))
-            // Y sin fingir un veredicto que ya no se puede derivar: nada de «hay invitados de otro
-            // tramo», porque hoy el sistema no sabe decirlo.
+            // Y sin fingir un veredicto que no se puede derivar: nada de «hay invitados de otro
+            // tramo», porque sin sello el sistema no sabe decirlo.
+            ->assertDontSee(__('admin.orders.mixed_party.title'));
+    }
+
+    public function test_a_seal_that_does_not_match_the_row_is_shouted_in_red(): void
+    {
+        // Ningún camino del producto lo produce (el editor re-sella en la misma transacción): si
+        // aparece, alguien movió la fila por fuera. Es un dato inconsistente, no un estado del
+        // negocio, y el operador tiene que verlo ANTES de cobrar nada.
+        $order = $this->paidPartyWith([4, 5, 8]);
+        OrderItem::where('order_id', $order->id)->whereNull('parent_item_id')->update(['ticket_type_id' => $this->jump->id]);
+
+        $this->actingAs($this->staff())
+            ->get('/admin/orders/'.$order->code)
+            ->assertOk()
+            ->assertSee(__('admin.orders.mixed_party.stale_seal'))
+            ->assertDontSee(__('admin.orders.mixed_party.orphaned'))
             ->assertDontSee(__('admin.orders.mixed_party.title'));
     }
 }

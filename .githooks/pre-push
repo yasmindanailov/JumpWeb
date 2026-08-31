@@ -67,7 +67,11 @@ touched_critical=''
 # ⚠️ No entran `ItemEditPricing` ni `OrderItemEventDataWriter` (sus vecinos de la misma extracción):
 # el primero es aritmética de solo lectura y el segundo no toca ni dinero ni aforo. Son los controles
 # negativos de `CriticalPathGateTest`.
-CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator|WaiverSigner|ZoneDaySlotLock|OrderItemEditor|MixedPartySurcharge)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
+# ⚠️ `AgeFamilySealer` entra el 2026-08-31 (`specs/cumple-mixto.md` §21): no escribe dinero, escribe
+# las CONDICIONES de las que sale el dinero del suplemento —la familia, los tramos y los precios con
+# los que se vendió cada fiesta— dentro de los locks de `OrderCreator` y `OrderItemEditor`. Mismo
+# criterio que `PackAvailability`: el gate vigila a quien decide, no solo a quien llama.
+CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator|WaiverSigner|ZoneDaySlotLock|OrderItemEditor|MixedPartySurcharge|AgeFamilySealer)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
 
 while read -r _local_ref local_sha remote_ref remote_sha; do
     [[ "$remote_ref" == "refs/heads/main" ]] || continue

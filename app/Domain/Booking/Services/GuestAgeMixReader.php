@@ -3,64 +3,64 @@
 namespace App\Domain\Booking\Services;
 
 use App\Domain\Booking\Models\OrderItem;
-use App\Domain\Booking\Models\TicketType;
-use Illuminate\Support\Carbon;
 
 /**
- * Deriva el veredicto de mezcla de edades de una reserva (`docs/specs/cumple-mixto.md` §9).
+ * Deriva el veredicto de mezcla de edades de una reserva (`docs/specs/cumple-mixto.md` §9 y §21).
  *
  * **El problema que resuelve, dicho por el owner**: «el sistema no tiene conexión entre un cumple
- * KIDS y uno JUMP». Cierto y medido — `ticket_types` no tenía ninguna columna que agrupase
- * productos. `[DECIDIDO owner, 2026-08-29]` la conexión es **familia + tramo de edad**: cada
+ * KIDS y uno JUMP». `[DECIDIDO owner, 2026-08-29]` la conexión es **familia + tramo de edad**: cada
  * producto declara el tramo que cubre y una familia, y los que comparten familia son alternativos
  * entre sí. Este lector recorre las edades declaradas en el post-form y le busca a cada invitado el
- * producto de la familia que le toca; los que no caen en el reservado son la mezcla.
+ * régimen de la familia que le toca; los que no caen en el reservado son la mezcla.
  *
- * ▶ **Vale para dos regímenes o para cinco**, y no nombra a ningún cliente: la familia es un slug
- * que pone la instalación. Un producto sin familia lo apaga entero.
+ * ▶ **Desde el 2026-08-31 deriva del SELLO de la reserva, no del catálogo** (`DECISIONES #284` D1/D2,
+ * spec §21.5). La familia, los tramos y los precios del día se copian en
+ * `order_items.age_family_seal` cuando la reserva nace y solo se reescriben cuando cambia de
+ * producto o de día (`AgeFamilySealer`). Del catálogo vivo se toma únicamente lo que NO es una
+ * condición de venta: la clave del campo de edad y el saneo de las fichas, que son esquema.
+ * Consecuencia medida: un cambio de tramo o de tarifa ya no mueve una fiesta vendida en ninguna
+ * dirección, y el primer cargo sale del catálogo del día de la compra, no del día del formulario.
  *
- * **Solo lectura.** No toma locks, no escribe y no pertenece al `CRITICAL_RE` del `pre-push`: la
- * decisión de convertir esto en dinero es una acción aparte del operador (spec §9·5, `[DECIDIDO
- * owner]`), no una consecuencia de leer.
+ * ▶ **Tres formas de «no aplica», y no son intercambiables** ({@see sealOrVerdict}): sin sello
+ * (silencio), sello caducado (silencio, y se enseña en rojo) y sello que dice «sin condiciones»
+ * (afirmación, y puede retirar un suplemento). El reconciliador las distingue por `sealed`.
  *
- * ⚠️ **La aritmética del suplemento sale del CATÁLOGO, nunca de un número escrito aquí** (spec
- * §2·2): es `precio(destino, día) − precio(reservado, día)`, los dos resueltos por `RateResolver`
- * para la fecha de la franja — la misma fuente que usa la compra, así que el suplemento no puede
- * divergir de lo que cuesta el producto ese día.
+ * **Solo lectura y sin estado.** No toma locks, no escribe, no memoiza nada —todo lo que necesita
+ * viaja en la fila que ya tiene cargada— y no pertenece al `CRITICAL_RE` del `pre-push`.
+ *
+ * ⚠️ **La aritmética del suplemento sale de los precios SELLADOS, nunca de un número escrito aquí**:
+ * es `precio_sellado(destino) − precio_sellado(reservado)`, los dos resueltos por `RateResolver`
+ * para la fecha de la franja en el momento de sellar — la misma fuente que usó la compra, así que
+ * el suplemento no puede divergir de lo que costaba el producto ese día cuando se vendió.
  *
  * ⚠️ **Con suelo en 0: bajar de régimen no abona nada.** Un invitado que corresponde a un producto
  * MÁS BARATO cuenta para la etiqueta —la fiesta es mixta de verdad— pero su diferencia es 0. El
- * encargo pide cobrar la diferencia al que sube; devolver dinero al que baja sería un movimiento de
- * caja hacia el cliente que nadie ha pedido ni decidido (`INVARIANTES` §1).
+ * encargo pide cobrar la diferencia al que sube; el −X € está diseñado (§20) y es la tanda T4.
  */
 class GuestAgeMixReader
 {
-    /**
-     * Productos de una familia, ya ordenados. Memoiza por familia: la ficha de un pedido y las
-     * listas del panel piden el veredicto de varias reservas seguidas, y todas comparten catálogo.
-     *
-     * @var array<string, list<TicketType>>
-     */
-    private array $families = [];
+    /** Estados de una ficha: su edad cae en un régimen, no la ha declarado, o no la cubre ninguno. */
+    public const ROW_OK = 'ok';
 
-    /** Precios ya resueltos, por `«{typeId}|{fecha}»`. @var array<string, int|null> */
-    private array $prices = [];
+    public const ROW_NO_AGE = 'no_age';
 
-    public function __construct(private RateResolver $rates) {}
+    public const ROW_OUT_OF_RANGE = 'out_of_range';
 
     public function for(OrderItem $item): GuestAgeMix
     {
-        $walk = $this->walk($item);
-        if ($walk === null) {
-            return GuestAgeMix::notApplicable();
+        $seal = $this->sealOrVerdict($item);
+        if ($seal instanceof GuestAgeMix) {
+            return $seal;
         }
+
+        $rows = $this->rows($item, $seal);
 
         $withoutAge = 0;
         $outOfRange = 0;
         /** @var array<int, int> $counts */
         $counts = [];
 
-        foreach ($walk['rows'] as $row) {
+        foreach ($rows as $row) {
             if ($row['state'] === self::ROW_NO_AGE) {
                 $withoutAge++;
 
@@ -72,16 +72,13 @@ class GuestAgeMixReader
                 continue;
             }
             $target = $row['target'];
-            if ((int) $target->id === (int) $walk['type']->id) {
-                continue; // le toca el producto que ya tiene: nada que hacer.
+            if ($target->typeId === $seal->bookedTypeId) {
+                continue; // le toca el régimen que ya tiene: nada que hacer.
             }
-            $counts[(int) $target->id] = ($counts[(int) $target->id] ?? 0) + 1;
+            $counts[$target->typeId] = ($counts[$target->typeId] ?? 0) + 1;
         }
 
-        return $this->verdict(
-            $walk['type'], $walk['family'], $counts, $walk['date'],
-            count($walk['rows']), $withoutAge, $outOfRange,
-        );
+        return $this->verdict($seal, $counts, count($rows), $withoutAge, $outOfRange);
     }
 
     /**
@@ -91,94 +88,109 @@ class GuestAgeMixReader
      * Sale del MISMO recorrido que el veredicto agregado: si esto tuviera su propia copia de la
      * regla, el rótulo de una ficha podría decir «Kids» mientras el total dice otra cosa.
      *
-     * @return array<int, array{state:string, name:?string, own:bool}> vacío si el pack no participa
+     * @return array<int, array{state:string, name:?string, own:bool}> vacío si la reserva no participa
      */
     public function guestRegimes(OrderItem $item): array
     {
-        $walk = $this->walk($item);
-        if ($walk === null) {
+        $seal = $this->sealOrVerdict($item);
+        if ($seal instanceof GuestAgeMix) {
             return [];
         }
 
         $out = [];
-        foreach ($walk['rows'] as $i => $row) {
+        foreach ($this->rows($item, $seal) as $i => $row) {
             $target = $row['target'];
             $out[$i] = [
                 'state' => $row['state'],
-                'name' => $target?->tr('name'),
-                'own' => $target !== null && (int) $target->id === (int) $walk['type']->id,
+                'name' => $target?->displayName(),
+                'own' => $target !== null && $target->typeId === $seal->bookedTypeId,
             ];
         }
 
         return $out;
     }
 
-    /** Estados de una ficha: su edad cae en un pack, no la ha declarado, o no la cubre ninguno. */
-    public const ROW_OK = 'ok';
-
-    public const ROW_NO_AGE = 'no_age';
-
-    public const ROW_OUT_OF_RANGE = 'out_of_range';
-
     /**
-     * El recorrido ÚNICO de las fichas: a qué producto de la familia le toca cada invitado.
-     * Devuelve `null` si el pack no participa (sin familia, sin tramo o sin campo de edad).
+     * El sello que GOBIERNA esta reserva, o el veredicto «no aplica» que corresponde a no tenerlo.
      *
-     * @return array{type:TicketType, family:list<TicketType>, date:?Carbon, rows:array<int, array{state:string, target:?TicketType}>}|null
+     * Las tres salidas sin sello que gobierne significan cosas distintas, y el reconciliador las
+     * separa por `sealed` ({@see MixedPartySurcharge::derivationGoverns}):
+     *  - **sin sello** (una entrada, un complemento, o una reserva anterior al sello): SILENCIO —
+     *    no se sabe con qué condiciones se vendió, así que no se afirma nada y no se toca nada;
+     *  - **sello caducado** (no casa con el pack o la fecha de la fila): SILENCIO, y además se
+     *    enseña en rojo — alguien movió la reserva sin re-sellarla;
+     *  - **sello sin familia**: AFIRMACIÓN — se vendió sin condiciones por edad. Si un operador
+     *    cambió el pack a uno sin familia, esto es lo que deja retirar la línea de suplemento.
      */
-    private function walk(OrderItem $item): ?array
+    private function sealOrVerdict(OrderItem $item): AgeFamilySeal|GuestAgeMix
     {
         $type = $item->ticketType;
-
-        if ($type === null || ! $type->isPack() || ! $type->participatesInAgeFamily()) {
-            return null;
+        if ($type === null || ! $type->isPack()) {
+            return GuestAgeMix::notApplicable();
         }
 
-        $ageKey = $type->guestAgeFieldKey();
+        $seal = $item->ageFamilySeal();
+        if ($seal === null) {
+            return GuestAgeMix::notApplicable();
+        }
+        if (! $seal->matches($item)) {
+            return GuestAgeMix::notApplicable(staleSeal: true);
+        }
+        if (! $seal->participates()) {
+            return GuestAgeMix::notApplicable(sealed: true);
+        }
+
+        return $seal;
+    }
+
+    /**
+     * El recorrido ÚNICO de las fichas: a qué régimen SELLADO le toca cada invitado.
+     *
+     * ⚠️ La clave del campo de edad y el saneo vienen del ESQUEMA vigente del pack, no del sello: son
+     * la forma del formulario, no una condición de venta (§21.3). Si el parque retira el campo de
+     * edad, todas las fichas pasan a «sin edad», el veredicto queda incompleto y el importe se
+     * congela — que es la conducta correcta para «falta el dato».
+     *
+     * @return array<int, array{state:string, target:?SealedRegime}>
+     */
+    private function rows(OrderItem $item, AgeFamilySeal $seal): array
+    {
+        $type = $item->ticketType;
+        $ageKey = $type?->guestAgeFieldKey();
         $quantity = max(0, (int) $item->quantity);
 
         // Mismo saneo que el post-form al guardar: normaliza a EXACTAMENTE `quantity` fichas y
         // vuelve a acotar cada edad. Leer con la misma función con la que se escribe es lo que
         // impide que la pantalla y la BD discrepen sobre qué edad tiene un niño.
-        $clean = $type->sanitizeGuestData($item->guestData(), $quantity);
-        $family = $this->family($type);
+        $clean = $type?->sanitizeGuestData($item->guestData(), $quantity) ?? [];
 
         $rows = [];
         for ($i = 0; $i < $quantity; $i++) {
-            $raw = $clean[$i][$ageKey] ?? null;
+            $raw = $ageKey === null ? null : ($clean[$i][$ageKey] ?? null);
             if ($raw === null || $raw === '') {
                 $rows[$i] = ['state' => self::ROW_NO_AGE, 'target' => null];
 
                 continue;
             }
 
-            $target = $this->targetFor($family, (int) $raw);
+            $target = $seal->regimeFor((int) $raw);
             $rows[$i] = $target === null
                 ? ['state' => self::ROW_OUT_OF_RANGE, 'target' => null]
                 : ['state' => self::ROW_OK, 'target' => $target];
         }
 
-        return ['type' => $type, 'family' => $family, 'date' => $item->slot?->date, 'rows' => $rows];
+        return $rows;
     }
 
     /**
      * Compone el veredicto con la aritmética del suplemento. Se separa del recorrido porque son dos
-     * preguntas distintas —a quién le toca qué, y cuánto cuesta— y solo la segunda depende de la
-     * fecha y del catálogo de precios.
+     * preguntas distintas —a quién le toca qué, y cuánto cuesta— y solo la segunda mira los precios.
      *
-     * @param  list<TicketType>  $family
      * @param  array<int,int>  $counts
      */
-    private function verdict(
-        TicketType $type,
-        array $family,
-        array $counts,
-        ?Carbon $date,
-        int $quantity,
-        int $withoutAge,
-        int $outOfRange,
-    ): GuestAgeMix {
-        $base = $date !== null ? $this->price($type, $date) : null;
+    private function verdict(AgeFamilySeal $seal, array $counts, int $quantity, int $withoutAge, int $outOfRange): GuestAgeMix
+    {
+        $base = $seal->booked()?->priceCents;
 
         $upgrades = [];
         $total = 0;
@@ -186,8 +198,8 @@ class GuestAgeMixReader
         $priceable = $base !== null;
 
         foreach ($counts as $typeId => $count) {
-            $target = $this->fromFamily($family, $typeId);
-            $targetPrice = ($target !== null && $date !== null) ? $this->price($target, $date) : null;
+            $target = $seal->member($typeId);
+            $targetPrice = $target?->priceCents;
 
             // La diferencia CRUDA, con su signo, y la parte que se COBRA, que nunca es negativa.
             // Son dos preguntas distintas y por eso viajan las dos: el suplemento sale de la
@@ -205,7 +217,7 @@ class GuestAgeMixReader
 
             $upgrades[] = [
                 'type_id' => (int) $typeId,
-                'name' => $target?->tr('name') ?? '—',
+                'name' => $target?->displayName() ?? '—',
                 'count' => $count,
                 'unit_cents' => $unit,
                 // Lo que cuesta el pack que le TOCA, para poder explicar la aritmética al cliente
@@ -225,119 +237,7 @@ class GuestAgeMixReader
             surchargeCents: $priceable ? $total : null,
             savingsCents: $priceable ? $savings : null,
             basePriceCents: $base,
+            sealed: true,
         );
-    }
-
-    /**
-     * Pre-siembra la familia de una simulación: deriva **como si** el catálogo dijera esto.
-     *
-     * ▶ Existe para poder contestar «¿a qué fiestas ya vendidas afectaría este cambio?» ANTES de
-     * guardarlo (`MixedPartyBandImpact`). La alternativa —escribir el cambio, medir y revertir—
-     * dispararía eventos de modelo y auditoría por un cálculo que solo sirve para enseñar un número.
-     *
-     * ⚠️ **No abre un camino nuevo de derivación: siembra el memo que ya existía.** El recorrido, la
-     * aritmética y el orden de la familia siguen siendo los mismos, que es lo único que garantiza
-     * que el número del aviso y el que se escribirá después salgan de la misma regla.
-     *
-     * ⚠️ Úsalo sobre una instancia PROPIA (`new GuestAgeMixReader(...)`), nunca sobre la del
-     * contenedor: es `scoped`, y contaminar su memo dejaría al resto de la petición derivando contra
-     * un catálogo que no existe.
-     *
-     * @param  list<TicketType>  $members  la familia tal y como quedaría, ya ordenada por quien llama
-     */
-    public function pretendFamilyIs(string $familyKey, array $members): void
-    {
-        $this->families[$familyKey] = $members;
-    }
-
-    /**
-     * Los productos de la familia de `$type`, ORDENADOS por el inicio de su tramo (los abiertos por
-     * abajo, primero). El orden manda: si dos tramos se solapasen —el panel lo impide al guardar,
-     * pero un dato viejo puede— gana el de menor edad, que es determinista y explicable.
-     *
-     * ⚠️ **NO se filtra por `is_sellable` ni por `is_active`.** La familia es una CLASIFICACIÓN, no
-     * una oferta: un producto retirado de la venta sigue describiendo un régimen al que pertenecen
-     * reservas vivas. Filtrarlo convertiría a todos sus invitados en «fuera de rango» el día que
-     * alguien lo despublicase, que es exactamente cuando peor viene.
-     *
-     * ⚠️ El orden se hace **en PHP y no en SQL**: `ORDER BY` con nulos no se comporta igual en
-     * MySQL que en SQLite —donde corre la suite— y una familia son tres filas, no tres mil
-     * (`specs/panel-navegacion.md` §7.3: un test en SQLite no demuestra la conducta en MySQL).
-     *
-     * ⚠️ La comparación es de IGUALDAD EXACTA, no un `LOWER(TRIM(…))`, por lo mismo: MySQL cotejaría
-     * sin distinguir mayúsculas y SQLite sí, así que la conducta dependería del motor. El valor se
-     * normaliza al GUARDARLO (`InteractsWithCatalogForm::sanitizeGuestAgeFamily`), que además es lo
-     * único que deja usar el índice de la columna.
-     *
-     * @return list<TicketType>
-     */
-    private function family(TicketType $type): array
-    {
-        $key = (string) $type->guestAgeFamily();
-
-        if (! array_key_exists($key, $this->families)) {
-            $members = TicketType::query()
-                ->where('type', TicketType::TYPE_PACK)
-                ->where('guest_age_family', $key)
-                ->get()
-                ->all();
-
-            usort($members, function (TicketType $a, TicketType $b): int {
-                $am = $a->guest_age_min ?? -1;
-                $bm = $b->guest_age_min ?? -1;
-
-                return $am <=> $bm ?: ((int) $a->id <=> (int) $b->id);
-            });
-
-            $this->families[$key] = $members;
-        }
-
-        return $this->families[$key];
-    }
-
-    /**
-     * El producto de la familia al que corresponde esa edad, o `null` si ninguno la cubre — que no
-     * es un fallo del cliente sino un HUECO DE CONFIGURACIÓN (nadie declaró quién atiende a un niño
-     * de 14), y por eso se cuenta y se enseña en vez de tragarse.
-     *
-     * @param  list<TicketType>  $family
-     */
-    private function targetFor(array $family, int $age): ?TicketType
-    {
-        foreach ($family as $candidate) {
-            if ($candidate->coversGuestAge($age)) {
-                return $candidate;
-            }
-        }
-
-        return null;
-    }
-
-    /** @param  list<TicketType>  $family */
-    private function fromFamily(array $family, int $typeId): ?TicketType
-    {
-        foreach ($family as $member) {
-            if ((int) $member->id === $typeId) {
-                return $member;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Precio de catálogo de un producto ese día, memoizado. `null` = ese día no tiene tarifa, y es
-     * una respuesta legítima que también se memoiza: con `??=` un producto sin precio se habría
-     * vuelto a consultar en cada invitado, que es justo el caso en el que más se repite.
-     */
-    private function price(TicketType $type, Carbon $date): ?int
-    {
-        $key = $type->id.'|'.$date->toDateString();
-
-        if (! array_key_exists($key, $this->prices)) {
-            $this->prices[$key] = $this->rates->priceCents($type, $date);
-        }
-
-        return $this->prices[$key];
     }
 }

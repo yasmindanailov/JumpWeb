@@ -477,12 +477,13 @@ return [
             'line' => ':count × :name · :unit por invitado',
             'applied' => 'Suplemento aplicado: :amount · se cobra en el parque',
             'cheaper' => 'Esta fiesta saldría :amount más barata en el régimen que les corresponde. NO se descuenta solo: decides tú en recepción.',
-            'drift' => 'El suplemento escrito es :written y hoy correspondería :derived. No se recalcula solo: lo escrito es lo que se le comunicó al cliente.',
+            'drift' => 'El suplemento escrito es :written y, con las edades declaradas hoy y las condiciones de esta reserva, correspondería :derived. No se recalcula solo: lo escrito es lo que se le comunicó al cliente.',
             'missing_carrier' => 'No se puede aplicar el suplemento: falta el producto que lo lleva («Suplemento fiesta mixta» en el catálogo). Mientras falte, esta fiesta no cobra nada.',
             'unpriced' => 'No se puede calcular el suplemento: falta el precio de algún pack para ese día.',
             'without_age' => 'Faltan :count edades por declarar: el veredicto todavía puede cambiar.',
             'out_of_range' => ':count invitados con una edad que no cubre ningún pack de la familia: revisa los tramos en el catálogo.',
-            'orphaned' => 'Este pack ya no pertenece a ninguna familia por edad, así que no hay veredicto que comparar. El suplemento de arriba sigue vivo: es el que se le comunicó al cliente y es lo que se cobra en el parque.',
+            'orphaned' => 'Esta reserva no lleva sellada ninguna condición por edad (nació antes de que existiera el sello), así que no hay veredicto que comparar. El suplemento de arriba sigue vivo: es el que se le comunicó al cliente y es lo que se cobra en el parque.',
+            'stale_seal' => 'El sello de condiciones de esta reserva no corresponde a su pack o a su fecha: se movió sin re-sellarla. Mientras no se revise no se calcula ni se mueve ningún suplemento; lo escrito, si lo hay, se conserva.',
         ],
         'guest_badge_pending' => 'Pendiente',
         'guests_empty' => 'El cliente aún no ha rellenado el formulario de reserva.',
@@ -1720,7 +1721,7 @@ return [
 
         // Familia y tramo de edad (cumpleaños MIXTO, `docs/specs/cumple-mixto.md` §9).
         'field_guest_age_family' => 'Familia por edad',
-        'guest_age_family_hint' => 'Conecta este pack con los que son el MISMO servicio en otro tramo de edad (p. ej. escribe «cumple» en el infantil y en el juvenil). Solo minúsculas, números y guiones. Vacío = este producto no distingue edades y no propone suplementos.',
+        'guest_age_family_hint' => 'Conecta este pack con los que son el MISMO servicio en otro tramo de edad (p. ej. escribe «cumple» en el infantil y en el juvenil). Solo minúsculas, números y guiones. Vacío = este producto no distingue edades y no propone suplementos. Las fiestas ya vendidas conservan la familia, los tramos y los precios con los que se compraron: cambiar esto solo afecta a las siguientes.',
         'field_guest_age_min' => 'Edad mínima',
         'guest_age_min_hint' => 'Primera edad que cubre este pack, INCLUIDA. Vacío = sin tope por abajo.',
         'field_guest_age_max' => 'Edad máxima',
@@ -1728,11 +1729,6 @@ return [
         'guest_age_range_required' => 'Si el pack declara una familia por edad, tiene que declarar también su tramo (al menos la edad mínima o la máxima).',
         'guest_age_range_inverted' => 'La edad máxima no puede ser menor que la mínima.',
         'guest_age_range_overlap' => 'El tramo de edad pisa al de «:name», que está en la misma familia. Dos packs no pueden cubrir la misma edad: no habría forma de saber a cuál corresponde un invitado.',
-        'band_impact' => [
-            'title' => 'Este cambio afecta a :count fiesta(s) YA VENDIDA(S)',
-            'body' => 'Con los tramos nuevos, esas reservas pasarían a llevar :created de suplemento nuevo y se les retirarían :removed. Lo que ya se les comunicó cambiaría, y a sus titulares les llegaría un correo. Si es lo que quieres, vuelve a guardar para confirmarlo.',
-        ],
-
         'warn_sellable_no_price' => 'Producto marcado como vendible pero sin precio en la tarifa base: no se podrá vender hasta fijar su precio en Tarifas y precios (7.8).',
 
         'actions' => [

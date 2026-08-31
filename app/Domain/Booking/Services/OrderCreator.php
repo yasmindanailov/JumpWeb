@@ -54,6 +54,7 @@ class OrderCreator
         private PackAvailability $packAvailability,
         private AddonResolver $addons,
         private ZoneDaySlotLock $zoneDayLock,
+        private AgeFamilySealer $sealer,
     ) {}
 
     /** Momento hasta el que se retiene una reserva provisional pendiente de verificación. */
@@ -241,6 +242,15 @@ class OrderCreator
                     'unit_price' => $unit,
                     'seats' => $line['qty'] * (int) ($type->seats_per_unit ?? 1),
                     'event_data' => $eventData,
+                    // El SELLO de condiciones de la reserva (`specs/cumple-mixto.md` §21,
+                    // `DECISIONES #284` D1): la familia por edad del pack, sus tramos y los precios
+                    // de HOY para el día de la franja, copiados en la fila que nace. Es de lo que
+                    // deriva el veredicto de fiesta mixta desde ahora, así que un cambio de catálogo
+                    // posterior no mueve esta reserva. Se compone AQUÍ —dentro de la transacción,
+                    // con el lock tomado y con la misma fuente de precios que el `unit_price` de
+                    // arriba— y viaja en el `create()`: una fila y su sello nacen en la misma
+                    // sentencia. `null` para una entrada: solo un pack tiene veredicto.
+                    'age_family_seal' => $this->sealer->build($type, $slot->date)?->toArray(),
                 ];
 
                 // Complementos ANIDADOS de esta línea (#87): sin franja/aforo. Resueltos de forma

@@ -4,8 +4,6 @@ namespace App\Filament\Resources\Catalog\Concerns;
 
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
-use App\Domain\Booking\Services\MixedPartyBandImpact;
-use App\Domain\Platform\Services\Money;
 use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;
 
@@ -306,17 +304,17 @@ trait InteractsWithCatalogForm
      *     dato. Misma doctrina que `AFORO-07` (`seats_per_unit` forzado en el guardado del
      *     catálogo): lo que no puede ser, se bloquea al escribir.
      *
+     *  4. **Y nada de esto mueve una fiesta YA VENDIDA.** Desde el 2026-08-31 cada reserva lleva
+     *     sellados la familia, los tramos y los precios con los que se compró
+     *     (`specs/cumple-mixto.md` §21, `DECISIONES #284` D1/D2), así que cambiar aquí un tramo solo
+     *     afecta a las reservas siguientes. Entre el 30 y el 31 aquí vivía un aviso que medía a
+     *     cuántas fiestas vendidas afectaría el cambio (`#283`); con el sello la respuesta es cero
+     *     por construcción, y un aviso que no puede saltar se retiró en vez de dejarlo como red
+     *     (`[DECIDIDO owner, 2026-08-31]`). La regla se le dice al operador en la ayuda del campo.
+     *
      * @param  array<string,mixed>  $data
      * @return array<string,mixed>
      */
-    /**
-     * Firma del cambio de tramos que el operador YA ha visto avisado ({@see warnAboutSoldParties}).
-     *
-     * Pública a propósito: Livewire solo conserva las propiedades públicas entre peticiones, y esto
-     * tiene que sobrevivir del guardado que avisa al guardado que confirma.
-     */
-    public string $ackBandImpact = '';
-
     protected function normalizeGuestAgeFields(array $data, bool $isPack): array
     {
         if (! $isPack) {
@@ -346,68 +344,7 @@ trait InteractsWithCatalogForm
             $this->guardAgeRangeIsFree($data['guest_age_family'], $min, $max);
         }
 
-        // ⚠️ El aviso va DESPUÉS de las validaciones —avisar del impacto de un tramo inválido sería
-        // ruido— y se ejecuta también cuando la familia se RETIRA: dejar a un pack sin familia mueve
-        // el dinero de sus fiestas vendidas igual que estrechar su tramo.
-        $this->warnAboutSoldParties($data['guest_age_family'], $min, $max);
-
         return $data;
-    }
-
-    /**
-     * **Antes de guardar un tramo, dice a cuántas fiestas YA VENDIDAS afecta y por cuánto dinero.**
-     *
-     * `[DECIDIDO owner, 2026-08-30]` de las dos salidas al «caso espejo» —sellar el régimen en cada
-     * reserva, o avisar antes de tocar el catálogo— se hace **el aviso**: es media tanda, no toca el
-     * núcleo de dinero, y ataca el riesgo donde de verdad está, que es tocar tramos sin saber a quién
-     * se afecta (`specs/cumple-mixto.md` §17.8).
-     *
-     * ▶ **No bloquea: interrumpe una vez.** El primer guardado enseña los números y para; volver a
-     * guardar el MISMO cambio lo aplica. La firma es lo que hace que «volver a guardar» no sea un
-     * cheque en blanco: si el operador cambia los números, se le vuelve a avisar con los nuevos.
-     *
-     * ⚠️ Solo al EDITAR: un producto que aún no existe no tiene fiestas vendidas.
-     * ⚠️ Y solo si los tramos CAMBIAN, para no cobrarle una derivación completa a quien está
-     * corrigiendo el nombre del producto.
-     */
-    private function warnAboutSoldParties(?string $family, ?int $min, ?int $max): void
-    {
-        $record = $this->record ?? null;
-        if (! $record instanceof TicketType) {
-            return;
-        }
-
-        $sinCambio = $record->guestAgeFamily() === $family
-            && (int) $record->guest_age_min === (int) $min
-            && (int) $record->guest_age_max === (int) $max;
-        if ($sinCambio) {
-            return;
-        }
-
-        $firma = md5(implode('|', [(int) $record->getKey(), (string) $family, (string) $min, (string) $max]));
-        if ($this->ackBandImpact === $firma) {
-            return; // ya lo vio y ha vuelto a guardar lo mismo: es su decisión
-        }
-
-        $impacto = app(MixedPartyBandImpact::class);
-        $medido = $impacto->of($record, $family, $min, $max);
-        if (! $impacto->isWorthWarning($medido)) {
-            return;
-        }
-
-        $this->ackBandImpact = $firma;
-
-        Notification::make()
-            ->title(__('admin.catalog.band_impact.title', ['count' => $medido['reservations']]))
-            ->body(__('admin.catalog.band_impact.body', [
-                'created' => Money::format($medido['created_cents']),
-                'removed' => Money::format($medido['removed_cents']),
-            ]))
-            ->warning()
-            ->persistent()
-            ->send();
-
-        throw new Halt;
     }
 
     /**

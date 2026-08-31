@@ -179,6 +179,7 @@ guardas `can{Edit,Cancel}Item`; la mitad `canRefundItem` se partió a Payments e
 | `seats` | plazas que ocupa (`quantity × seats_per_unit`) |
 | `event_data` | JSON respuestas del evento del pack (`{key: valor}`) |
 | `guest_data` + `guest_form_completed_at` | JSON lista por-invitado (post-form); estado FORM OK/PENDIENTE se DERIVA de `guest_data` vs `quantity` (`guestFormStatus()`); el sello es auditoría. Enlace firmado sin sesión con caducidad (evento + 14 días) |
+| `age_family_seal` | JSON nullable (2026-08-31, `specs/cumple-mixto.md` §21, `DECISIONES #284` D1): el **SELLO de condiciones** de una fiesta — la familia por edad, sus tramos y los precios de cada pack **para el día de la franja**, copiados al nacer (`OrderCreator`) y reescritos solo al cambiar de pack (sello nuevo) o de día (el mismo, re-preciado) por `AgeFamilySealer`. El veredicto de fiesta MIXTA deriva de esto y no del catálogo. Lleva `booked_type_id` + `priced_on` (el recibo: si no casan con la fila, el sello está CADUCADO y no gobierna nada). Sin PII: `anonymize()` no lo toca. `null` en entradas y complementos, y en reservas anteriores al sello (silencio, no «sin condiciones»). Se lee por `OrderItem::ageFamilySeal()` (VO `AgeFamilySeal`) |
 | `cancelled_at` (index) + `cancelled_by` FK users `nullOnDelete` | **soft-cancel terminal** (no reversible); libera plaza y sale del cómputo financiero |
 
 Estado operativo calculado (NO persistido): `active` / `finished` (al pasar `slot.end_time`,

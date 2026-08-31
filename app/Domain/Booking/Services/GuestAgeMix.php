@@ -14,6 +14,10 @@ namespace App\Domain\Booking\Services;
  * ya salió, deshacerlo es un movimiento de dinero y no un `update` (spec §4). Derivándolo, la
  * corrección es gratis: la etiqueta desaparece sola.
  *
+ * ⚠️ Lo que SÍ está sellado son las CONDICIONES de las que deriva (spec §21, `DECISIONES #284` D1):
+ * la familia, los tramos y los precios viven en `order_items.age_family_seal` desde que la reserva
+ * nace, no en el catálogo vivo. El veredicto sigue siendo una lectura; lo que cambió es de qué.
+ *
  * ⚠️ **La etiqueta describe un HECHO, no un cobro.** `mixed` puede ser `true` con
  * `surchargeCents === 0` —los dos productos cuestan lo mismo ese día, que es el caso de la
  * instalación de desarrollo (spec §8.8)— o con `surchargeCents === null` —falta el precio de algún
@@ -34,6 +38,12 @@ final class GuestAgeMix
      * @param  int|null  $savingsCents  lo que la fiesta costaría MENOS si cada invitado estuviera en
      *                                  su pack — **informativo, NO es dinero** (§14)
      * @param  int|null  $basePriceCents  lo que cuesta por invitado el pack reservado ese día
+     * @param  bool  $sealed  el veredicto sale del SELLO de la reserva (§21). Importa sobre todo
+     *                        cuando `applies` es `false`: con sello, «no aplica» es una AFIRMACIÓN
+     *                        («se vendió sin condiciones por edad») y puede retirar un suplemento;
+     *                        sin sello es un SILENCIO y no puede retirar nada
+     * @param  bool  $staleSeal  la reserva lleva un sello que NO corresponde a su pack o a su fecha:
+     *                           alguien la movió sin re-sellarla. El veredicto calla y la ficha lo dice
      */
     public function __construct(
         public bool $applies,
@@ -45,12 +55,19 @@ final class GuestAgeMix
         public ?int $surchargeCents,
         public ?int $savingsCents = null,
         public ?int $basePriceCents = null,
+        public bool $sealed = false,
+        public bool $staleSeal = false,
     ) {}
 
-    /** El veredicto de una reserva que no participa: ni etiqueta, ni propuesta, ni aviso. */
-    public static function notApplicable(): self
+    /**
+     * El veredicto de una reserva que no participa: ni etiqueta, ni propuesta, ni aviso.
+     *
+     * Tres orígenes distintos, y **no significan lo mismo** (§21.5): sin sello (silencio), sello
+     * caducado (silencio, y se enseña) y sello que dice «sin condiciones» (afirmación).
+     */
+    public static function notApplicable(bool $sealed = false, bool $staleSeal = false): self
     {
-        return new self(false, false, 0, 0, 0, [], null);
+        return new self(false, false, 0, 0, 0, [], null, sealed: $sealed, staleSeal: $staleSeal);
     }
 
     /**

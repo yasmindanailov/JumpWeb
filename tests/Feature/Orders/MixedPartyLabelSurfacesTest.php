@@ -11,6 +11,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Booking\Services\DailyReservationsSummary;
 use App\Domain\Booking\Services\EmailProductCard;
 use App\Domain\Booking\Services\ReservationSlip;
@@ -114,6 +115,8 @@ class MixedPartyLabelSurfacesTest extends TestCase
             'ticket_type_id' => $this->kids->id, 'slot_id' => $this->slot->id,
             'quantity' => count($ages), 'unit_price' => 1800, 'seats' => count($ages),
         ]);
+        // El sello que `OrderCreator` pone al nacer (§21): la etiqueta deriva de él.
+        app(AgeFamilySealer::class)->seal($item, $this->kids, $this->slot->date);
 
         $rows = [];
         foreach ($ages as $i => $age) {

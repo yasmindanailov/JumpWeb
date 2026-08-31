@@ -2,6 +2,8 @@
 
 namespace App\Domain\Platform\Concerns;
 
+use App\Domain\Platform\Services\Translated;
+
 /**
  * Traducciones ligeras sin dependencias externas.
  *
@@ -22,11 +24,8 @@ trait HasTranslations
             return $value;
         }
 
-        $locale ??= app()->getLocale();
-        $fallback = config('app.fallback_locale');
-
-        return $value[$locale]
-            ?? $value[$fallback]
-            ?? (count($value) ? reset($value) : null);
+        // La cadena «idioma activo → respaldo → el primero» vive en `Translated`, que es la misma que
+        // leen los datos traducibles que viajan copiados fuera de un modelo (el sello de una reserva).
+        return Translated::pick($value, $locale);
     }
 }

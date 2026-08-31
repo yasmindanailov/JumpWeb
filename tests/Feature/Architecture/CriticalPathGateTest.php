@@ -89,6 +89,13 @@ class CriticalPathGateTest extends TestCase
         // debía haber 7,00 €). Es el mismo criterio con el que entró `WaiverSigner`. No estaba, y la
         // pieza llevaba una jornada en `main` sin gate.
         'app/Domain/Booking/Services/MixedPartySurcharge.php',
+        // El SELLO de condiciones (2026-08-31, `specs/cumple-mixto.md` §21): no escribe dinero, pero
+        // escribe la familia, los tramos y los precios de los que el suplemento se deriva, dentro de
+        // los locks de `OrderCreator` y `OrderItemEditor`. Un sello mal compuesto es un cargo mal
+        // calculado en TODAS las reservas que nazcan después, y la suite (SQLite) no ve la carrera
+        // entre sellar y reconciliar. Mismo criterio que `PackAvailability`: quien DECIDE, no solo
+        // quien llama.
+        'app/Domain/Booking/Services/AgeFamilySealer.php',
     ];
 
     /**

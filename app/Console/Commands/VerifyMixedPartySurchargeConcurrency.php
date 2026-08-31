@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Identity\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -142,6 +143,10 @@ class VerifyMixedPartySurchargeConcurrency extends Command
                 'ticket_type_id' => $kids->id, 'slot_id' => $slot->id,
                 'quantity' => 4, 'unit_price' => 1800, 'seats' => 4,
             ]);
+            // ⚠️ Sin el SELLO (`specs/cumple-mixto.md` §21) la reserva no participa —el veredicto
+            // deriva del sello, no del catálogo— y ningún worker escribiría nada: el verificador
+            // pasaría en verde sin verificar. En producción lo pone `OrderCreator` al nacer.
+            app(AgeFamilySealer::class)->seal($item, $kids, $slot->date);
 
             return ['item' => $item, 'order' => $order, 'zone' => $zone, 'packs' => [$kids, $jump], 'user' => $user];
         });

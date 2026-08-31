@@ -2266,13 +2266,23 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       ✅ **T0 en headless (2026-08-31)**: 14 capturas en `storage/app/t0-capturas/`, el aviso de
       `#283` verificado en el ciclo REAL de Livewire, y el primer hallazgo cazado por el OJO del
       owner (el «hoy:» de la línea de desfase → T5).
-      ❗ **Queda, por orden del plan §18.5**: **T1 el SELLO** (la siguiente; diseño fino antes de
-      código: dónde vive la copia, el re-sellado al cambiar fecha, y SUBSUMIR el recibo de `#270`) ·
-      T2 edad sin producto + disparador a «guardado completo» · T3 el parque decide (editar edad
-      auditado, la diferencia por cabeza en hoja/puerta, bajar del mínimo D7) · T4 el −X € (diseño
-      cerrado, tras T1+T2) · T5 las palabras (D9, D8, el email de la devolución, el «hoy:») · T6 el
-      guardián de solapes fuera del formulario · el **AFORO** sigue aparcado por el owner (zonas
-      distintas, spec propia).
+      ✅ **T1 · EL SELLO, EN EL ÁRBOL (2026-08-31 tarde, `#288`)** — diseño fino en
+      `specs/cumple-mixto.md` §21 (aprobado por el owner con tres decisiones: retirar `#283` y dejar
+      la frase · al mover de DÍA se conservan los tramos y solo el precio sigue al día · un hermano
+      creado después no existe para lo vendido) y ejecución en §21.13. `order_items.age_family_seal`
+      + `AgeFamilySeal`/`SealedRegime`/`AgeFamilySealer` (`CRITICAL_RE`); el lector deriva del
+      sello, `unitFor` y el recibo de `#270` desaparecen. ⚠️ **Dos huecos preexistentes cazados de
+      paso**: un día sin tarifa CANCELABA el suplemento, y una fiesta mixta con cargo NO PODÍA
+      cambiar de pack (`orphan_addons` contaba la línea gobernada). Suite 3547 → 3558, **13/13
+      mutaciones muerden**, verificadores sobre MySQL con control negativo, sonda del hueco A en
+      navegador. Queda el OJO del owner.
+      ❗ **Queda, por orden del plan §18.5**: **T2** edad sin producto (D6) + disparador a «guardado
+      completo» (§20.6; con el sello, «completo» se redefine sobre `outOfRange`) · T3 el parque
+      decide (editar edad auditado, la diferencia por cabeza en hoja/puerta, bajar del mínimo D7) ·
+      T4 el −X € (diseño cerrado en §20, tras T2; el crédito deriva de los precios SELLADOS) · T5 las
+      palabras (D9, D8, el email de la devolución — el «hoy:» del desfase se disolvió con la T1) ·
+      T6 el guardián de solapes fuera del formulario (con el sello ya no mueve dinero) · el
+      **AFORO** sigue aparcado por el owner (zonas distintas, spec propia).
 - [ ] **D · JumpPoints y vales** — `docs/specs/lealtad-jumppoints.md`. Ledger append-only, saldo
       derivado, vale **en especie** canjeado **en puerta**. ⚠️ **No es dinero, pero se protege como si
       lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push` y necesita su verificador de

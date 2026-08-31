@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Models;
 
+use App\Domain\Booking\Services\AgeFamilySeal;
 use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Domain\Identity\Models\User;
@@ -59,6 +60,7 @@ class OrderItem extends Model
         'event_data' => 'array',
         'guest_data' => 'array',
         'guest_form_completed_at' => 'datetime',
+        'age_family_seal' => 'array',
         'cancelled_at' => 'datetime',
     ];
 
@@ -158,6 +160,20 @@ class OrderItem extends Model
     public function isMixedParty(): bool
     {
         return $this->mixedPartyMemo ??= app(GuestAgeMixReader::class)->for($this)->mixed;
+    }
+
+    /**
+     * El SELLO de condiciones de esta reserva (`specs/cumple-mixto.md` §21, `DECISIONES #284` D1): la
+     * familia por edad, sus tramos y sus precios TAL COMO SE VENDIÓ. Lo escribe `AgeFamilySealer` al
+     * nacer y al cambiar de producto o de día; el veredicto de fiesta mixta deriva de esto y no del
+     * catálogo, así que ningún cambio de catálogo mueve una reserva vendida.
+     *
+     * `null` = la línea no lo lleva (una entrada, un complemento, o una reserva anterior al sello).
+     * Para el veredicto eso es SILENCIO, no «no aplica»: no se afirma nada y no se mueve nada.
+     */
+    public function ageFamilySeal(): ?AgeFamilySeal
+    {
+        return AgeFamilySeal::fromArray($this->age_family_seal);
     }
 
     /**

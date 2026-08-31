@@ -5,7 +5,10 @@
 > productos, el veredicto derivado, la puerta del catálogo, el suplemento —que se COBRA y se
 > recalcula solo—, la etiqueta pegada al nombre y el **caso barato**. El owner ya lo ha visto en
 > navegador (la etiqueta sale para admin y cliente); sigue 🟦 por lo declarado fuera (§12.7) ·
-> Última actualización: **2026-08-29**.
+> Última actualización: **2026-08-31** (§21: el diseño fino de la T1, el SELLO).
+>
+> ▶ ❗❗❗ **DESDE EL 2026-08-31 EL PUNTO DE ENTRADA ES §18** (la visión cerrada, `#284`) **y §21 si
+> vas a construir la T1**. Todo lo que sigue en esta cabecera es de antes.
 >
 > ▶ ❗❗ **EMPIEZA POR §14**, que es lo último y nace de lo que el owner encontró probándolo: **la
 > dirección BARATA no decía nada**. Luego §12 —que CORRIGE la forma de §9: no hay aprobación del
@@ -460,8 +463,10 @@ ayuda del campo de edad, y **después**, con el importe en pantalla y el correo.
 > siguiente disparo de hecho, porque la reconciliación re-derivaba el importe entero del catálogo
 > vigente. Y el disparo siguiente suele ser el cliente corrigiendo un nombre, que este formulario
 > invita a hacer durante días. **Medido, con las edades intactas: una subida de tarifa llevaba un cargo
-> de 15,00 € a 30,00 €; estrechar un tramo, a 0,00 €.** Hoy la sostiene el RECIBO que cada línea lleva
-> en su `context` (`MixedPartySurcharge::unitFor`). **Lee §17 antes que esta tabla.**
+> de 15,00 € a 30,00 €; estrechar un tramo, a 0,00 €.** Entre el 29 y el 31 la sostuvo el RECIBO que
+> cada línea llevaba en su `context` (`MixedPartySurcharge::unitFor`, `#270`); **desde el 2026-08-31
+> la sostiene el SELLO de la reserva (§21), que subsume al recibo**. **Lee §17 y §21 antes que esta
+> tabla.**
 
 `[DECIDIDO owner]`: se reconcilia cuando cambia el **HECHO** y nunca cuando cambia la
 **CONFIGURACIÓN**.
@@ -1001,9 +1006,11 @@ poder regalar algo?», que es una decisión propia y mucho mayor. Ficha en `DEUD
 
 1. La primera sonda cambió el `unit_price` del ítem a mano y dio «el ledger no cuadra»: el descuadre
    era **suyo**, no del subsistema.
-2. `GuestAgeMixReader` va en **`scoped`** y memoiza familia y precios, así que dentro de un mismo
-   proceso un cambio de catálogo **no se veía**. Es el mismo motivo por el que las guardas nuevas
-   necesitan `nextRequest()` (`$app->forgetScopedInstances()`): sin él **nacen ciegas**.
+2. `GuestAgeMixReader` iba en **`scoped`** y memoizaba familia y precios, así que dentro de un mismo
+   proceso un cambio de catálogo **no se veía**. Era el motivo por el que las guardas necesitaban
+   `nextRequest()` (`$app->forgetScopedInstances()`): sin él **nacían ciegas**. ▶ **Cerrado por
+   construcción con la T1 (§21.5)**: el lector deriva del sello que viaja en la fila, no memoiza nada
+   y ya no es `scoped`; `nextRequest()` se retiró de los tests.
 3. Se leyó `AuditLog->context` en vez de `->payload` y se concluyó «no hay rastro» habiendo 16 filas.
 4. Doce filas de auditoría idénticas parecían una fuga y eran el **residuo de la corrida deliberada
    sin lock** que la propia doc documenta (12 × 7,00 € = 84,00 €).
@@ -1031,7 +1038,14 @@ vigilar nada.
 **Verificación**: +4 casos · **4 mutaciones y las 4 muerden** (el modelo laxo, el panel laxo, el
 dominio estrenando un tipo sin contrato, y las dos listas fundidas).
 
-### 17.8 · ✅ El AVISO antes de mover un tramo (2026-08-30, `#283`)
+### 17.8 · ~~✅~~ El AVISO antes de mover un tramo (2026-08-30, `#283`) — **RETIRADO el 2026-08-31 con la T1**
+
+> ❗ **`[DECIDIDO owner, 2026-08-31]` (§21.8 Q1): con el SELLO en cada reserva un cambio de tramos no
+> mueve ninguna fiesta vendida, así que este aviso no tenía nada que avisar y se retiró entero
+> —`MixedPartyBandImpact`, la firma del doble guardado y sus 7 casos— en vez de dejarlo como red que
+> nunca salta. Queda la regla dicha en la ayuda del campo de familia («las fiestas ya vendidas
+> conservan la familia, los tramos y los precios con los que se compraron»). Lo de abajo es historia:
+> sirve para entender por qué el sello era la salida buena, y para la lección de método.
 
 `[DECIDIDO owner]` de las dos salidas al caso espejo —sellar el régimen en cada reserva, o avisar
 antes de tocar el catálogo— se hace **el aviso**. No cierra el agujero: **cierra la forma en que te
@@ -1073,7 +1087,8 @@ divergiendo del lector).
 
 > **Si vas a construir algo de reservas mixtas, LEE ESTE APARTADO Y NADA MÁS.** Es la foto completa
 > tras cerrar la visión con el owner: qué se decidió, qué ya es cierto, qué falta y en qué orden.
-> Lo de arriba (§1–§17) es la historia de cómo se llegó aquí.
+> Lo de arriba (§1–§17) es la historia de cómo se llegó aquí. ▶ **Si construyes la T1, después
+> de esto lee §21** (el diseño fino del sello, 2026-08-31).
 
 ### 18.1 · La visión, en las palabras del owner
 
@@ -1106,8 +1121,8 @@ los invitados y valorar cada caso.
 | Cambiar el pack → precio de hoy del nuevo | `ItemEditPricing:81` | ✅ |
 | Complemento **nuevo** → precio de hoy | `ItemEditPricing:157` | ✅ |
 | Complemento que ya tenía → su precio original | `ItemEditPricing:131` | ✅ |
-| El suplemento hereda el unitario comunicado | `unitFor()`, `#270` | ✅ |
-| Un invitado declarado después de una subida entra al precio comunicado | `#270` | ✅ **D4** |
+| El suplemento hereda el unitario comunicado | ~~`unitFor()`, `#270`~~ → el SELLO (`#288`, §21.6): el unitario derivado ES el comunicado | ✅ |
+| Un invitado declarado después de una subida entra al precio comunicado | `#270`, hoy por construcción del sello | ✅ **D4** |
 | La hoja de sala imprime las edades declaradas | `ReservationSlip` | ✅ |
 | El catálogo avisa antes de mover un tramo con fiestas vendidas | `#283` | ✅ |
 
@@ -1203,7 +1218,7 @@ empieza sin el informe de §19 aprobado.
 | | Tanda | Cierra | ¿Núcleo de dinero? |
 |---|---|---|---|
 | **T0** | **El ojo del owner en navegador** — ▶ 🟦 **LAS CAPTURAS ESTÁN HECHAS** (2026-08-31, guion `t0.js` en `/root/e2e` del contenedor, 14 imágenes en `storage/app/t0-capturas/`): el aviso del catálogo `#283` **verificado en el ciclo real de Livewire** (avisa → re-guardar aplica → números distintos re-avisan → restaurado al dígito), el post-form (cargo 12 € → 8 €, congelado con edad borrada), los 3 correos (nace/cambia con «pasa de 12,00 € a 8,00 €»/desaparece), el desfase del panel, el huérfano y Gestionar sin la casilla. Pedidos sonda `T0-PRB01`/`T0-PRB02` (probe-card, franja 2026-09-15) y admin `e2e-panel-admin@jumpweb.test` quedan en la BD local para futuras sondas. **Queda SOLO el ojo: juzgar textos y claridad** | — | no |
-| **T1** | **El SELLO** (D1·D2·D3): la reserva guarda tramos y precios de su familia al nacer | A · B · el gemelo de la etiqueta | **sí** (nacimiento y edición de una reserva) |
+| **T1** | **El SELLO** (D1·D2·D3): la reserva guarda tramos y precios de su familia al nacer. ▶ ✅ **EN EL ÁRBOL (2026-08-31, `#288`): diseño en §21, ejecución en §21.13.** `order_items.age_family_seal`; sello nuevo al cambiar de pack, el mismo re-preciado al cambiar de día (`[DECIDIDO owner]`, Q2); `unitFor` y el recibo desaparecen; `#283` retirado; dos huecos preexistentes cerrados de paso (día sin tarifa · cerrojo de `orphan_addons`). 13/13 mutaciones, verificadores sobre MySQL y sonda del hueco A en navegador. Queda el OJO del owner | A · B · el gemelo de la etiqueta · el huérfano | **sí** (nacimiento y edición de una reserva) |
 | **T2** | **La edad sin producto** (D6) + que deje de congelar el dinero + **el disparador pasa a «solo guardado COMPLETO»** (§20.6, cambia la conducta de `#268` para los cargos) | C | no |
 | **T3** | **El parque decide** (E·F·D7): la diferencia en hoja de sala y puerta, corregir la edad desde el panel auditado, y bajar del mínimo | E · F · D7 | **sí** (la edad mueve el suplemento) |
 | **T4** | **El −X €** con el diseño CERRADO de **§20** (espejo acotado a puerta; guardas y mutaciones en §20.8) | el medio flujo que falta | **sí** |
@@ -1412,7 +1427,8 @@ instante en que el dinero se da por resuelto (`#244`).
   que el guardián prohíbe) · el crédito con veredicto incompleto NO se mueve, en ninguna dirección ·
   y `mixed-party:verify-concurrency` gana el escenario del crédito (N guardados completos
   simultáneos → UNA línea).
-- ⚠️ Las guardas de esta zona nacen ciegas sin `nextRequest()` (lector `scoped`).
+- ~~⚠️ Las guardas de esta zona nacen ciegas sin `nextRequest()` (lector `scoped`).~~ **Ya no**
+  (T1, §21.5): el lector es sin estado y deriva del sello de la fila.
 
 ### 20.9 · Registro de la iteración (por qué el diseño cambió dos veces)
 
@@ -1424,3 +1440,349 @@ instante en que el dinero se da por resuelto (`#244`).
 3. **El owner la simplificó y mejoró**: una sola regla simétrica —dinero solo al guardar completo,
    para las DOS direcciones— y la hoja de ruta de tres fases que recoloca §16 como pieza de la
    fase 3 en vez de «por si acaso».
+
+---
+
+## 21. 🟦 T1 · EL SELLO — diseño fino, ANTES de una línea de código (2026-08-31)
+
+> **Si vas a construir la T1, lee §18 (la visión) y ESTE apartado.** El owner pidió ir «paso a
+> paso»: diseño fino antes de código, con las tres preguntas que dejó identificadas —dónde vive la
+> copia · cómo se RE-sella al cambiar la fecha o el producto · cómo SUBSUME el recibo de `#270`—.
+> Las tres están contestadas aquí **contra el código real** (cada afirmación cita el sitio donde se
+> midió), y lo que sí es decisión de producto va marcado `[PENDIENTE: owner]` en §21.8.
+
+### 21.1 · Lo que el sello ES, y lo que no
+
+El sello es **la copia de las condiciones de la familia por edad con las que se vendió una fiesta**:
+qué packs forman la familia, qué tramo cubre cada uno y **cuánto costaba cada uno el día de la
+fiesta**, resueltos en el momento de la venta. Es lo que D1 dice con las palabras del owner: «el
+precio viejo solo existe dentro de las reservas que lo llevan».
+
+**No es**: ni un histórico de precios (D1 lo hace innecesario), ni un veredicto (el veredicto sigue
+siendo DERIVADO en cada lectura —`GuestAgeMix` no se persiste, y su docblock explica por qué—, lo que
+cambia es **de dónde deriva**: del sello y no del catálogo vivo), ni una copia del esquema del
+post-form (§21.7 dice por qué se deja fuera).
+
+### 21.2 · Dónde vive: `order_items.age_family_seal` — y las tres alternativas, medidas
+
+| Alternativa | Por qué NO |
+|---|---|
+| `order_items.event_data` | Es lo que contestó el CLIENTE y `RGPD-01` lo vacía al anonimizar (`User::anonymize()` pone `guest_data` y `event_data` a `null`). §12.4 ya lo descartó para la marca del suplemento por lo mismo. Un sello que muere con el olvido borraría **las condiciones del parque**, no los datos del cliente |
+| `order_adjustments.context` (donde vive el recibo de `#270`) | El ajuste es 1:1 con la LÍNEA de suplemento, y esa línea **solo existe cuando ya se ha escrito dinero**. El caso espejo es exactamente una reserva **sin** línea (Jump, 8 invitados de 12 años, cero cargo) a la que un cambio de tramos le crea 40,00 €: ahí no hay ningún `context` donde haber sellado nada. El sello tiene que existir desde el NACIMIENTO, con o sin suplemento |
+| Tabla nueva 1:1 | Nada la consulta por sus columnas —se lee siempre desde su reserva y entera— y una tabla aparte añade un `JOIN` a las cinco superficies que ya cargan `ticketType`+`slot` por fila (`MixedPartyLabelSurfacesTest` vigila justo ese coste). Un documento que nace y muere con su fila es una columna JSON |
+
+▶ **Columna `age_family_seal` (`json`, `nullable`) en `order_items`**, junto a `guest_data` y
+`guest_form_completed_at`. Migración nueva (`docs-check` pasa de 88 a 89 y `README.md` lo declara).
+Sin PII: solo ids, nombres de producto, tramos y precios de catálogo — por eso `anonymize()` **no
+la toca**, y hay guarda de que la conserva (§21.10·J).
+
+### 21.3 · Qué contiene (documento v1)
+
+```json
+{
+  "v": 1,
+  "family": "cumple",
+  "booked_type_id": 12,
+  "priced_on": "2026-09-15",
+  "sealed_at": "2026-08-31T13:05:00+00:00",
+  "members": [
+    {"type_id": 11, "name": {"es": "Cumpleaños Kids", "en": "…", "fr": "…"}, "age_min": 1, "age_max": 6, "price_cents": 1100},
+    {"type_id": 12, "name": {"es": "Cumpleaños Jump", "en": "…", "fr": "…"}, "age_min": 7, "age_max": null, "price_cents": 1500}
+  ]
+}
+```
+
+- `members` son **todos** los packs de la familia (`type = pack` y misma `guest_age_family`, sin
+  filtrar por `is_sellable`/`is_active`: la familia es una clasificación, no una oferta — el criterio
+  que `GuestAgeMixReader::family()` ya aplica), con su tramo y su precio **para `priced_on`** resuelto
+  por `RateResolver::priceCents()` — la MISMA fuente con la que `OrderCreator::createPendingOrder()` fija el
+  `unit_price` de la propia reserva. `price_cents: null` es respuesta legítima («ese día no tiene
+  tarifa») y se sella como tal.
+- `name` se guarda como el array traducible entero, no resuelto: es el nombre **que se le dijo**, la
+  etiqueta por niño y la frase del cliente lo leen en su idioma, y así ni un renombrado ni un borrado
+  del producto cambian lo que ya se comunicó.
+- `family: null` es un sello VÁLIDO: «este pack se vendió SIN condiciones por edad». Se escribe
+  igual (§21.5 explica por qué esa afirmación vale dinero).
+- `booked_type_id` y `priced_on` son **el recibo de `#270`, ahora en su sitio** (§21.6): los dos
+  hechos bajo los que se calculó todo lo demás, y lo que permite detectar un sello CADUCADO.
+- No se sella el esquema del post-form (la clave del campo de edad, `guestAgeFieldKey()`): sellar
+  la clave sin sellar el esquema no compra nada, porque `sanitizeGuestData()` descarta las claves
+  que el esquema vigente no declara. Si el parque retira el campo de edad, todas las fichas pasan a
+  «sin edad», el veredicto queda incompleto y el importe se congela — que es la conducta correcta
+  para «falta el dato», no un hueco.
+
+### 21.4 · Cuándo se escribe, cuándo se RE-escribe — y cuándo NO (medido en los tres puntos)
+
+| Momento | Dónde (todo dentro de la transacción y bajo el lock que ya existe) | Sello |
+|---|---|---|
+| **Nace** (web, API y alta manual del panel: las tres pasan por `OrderCreator::createPendingOrder`, medido — la llaman `CheckoutOrchestrator` y `ManualOrderFulfiller`) | `OrderCreator::createPendingOrder()`, en el mismo `create()` de la línea principal | Familia del pack, tramos y precios **del día de la franja** |
+| **Cambia de FECHA** (`PAY-18`: el precio sigue al día) | `OrderItemEditor::changeSlot` (y `edit()` sin cambio de producto), en el MISMO `forceFill` que mueve `slot_id` | **RE-PRECIO del sello** `[DECIDIDO owner]` (Q2, §21.8): la familia y los TRAMOS de la compra se conservan; cada miembro toma el precio **del día destino**; `priced_on` pasa al día nuevo. Sin sello previo, nada (el silencio persiste) |
+| **Cambia de PRODUCTO** (y/o de fecha por el mismo modal) | `OrderItemEditor::edit`, en el MISMO `forceFill` de `ticket_type_id`/`slot_id` | **Sello NUEVO** con el pack nuevo, su familia de hoy y los precios del día efectivo («solo cambia de condiciones lo que cambia de producto»). Si el pack nuevo no participa: `family: null` |
+| Cambia la **cantidad**, las **edades** o los **complementos** | — | **No** se toca: no cambia de producto |
+| Cambia el **catálogo** (precio, tramo, familia, nombre, un hermano nuevo) | — | **No** (D2) |
+
+⚠️⚠️ **El re-sello va en la MISMA transacción que la mutación**, no en el post-commit donde viven
+las dos llamadas a `reconcile()`: si fuera después, habría una ventana en la que la reserva ya está en
+el día nuevo con el sello del día viejo — y la reconciliación post-commit, que relee la fila
+bloqueada, derivaría de un sello caducado. Con el sello dentro de la transacción, cuando
+`reconcile()` corre ya ve las condiciones nuevas.
+
+▶ **Invariante interna del sello** (la que hace detectable un sello caducado): tras cualquiera de
+los tres puntos, `seal.booked_type_id === item.ticket_type_id` y `seal.priced_on ===
+item.slot.date`. Y al NACER, además, `seal.members[booked].price_cents === item.unit_price`: los
+dos salen de `RateResolver` para el mismo día, así que si divergen es que alguien tarificó por otra
+fuente (guarda §21.10·A).
+
+### 21.5 · Cómo lee el veredicto: el lector deja de mirar el catálogo
+
+`GuestAgeMixReader::walk()` toma hoy TODO del catálogo vivo: la participación
+(`participatesInAgeFamily()`), la familia (una consulta a `ticket_types`), los tramos
+(`coversGuestAge()` sobre cada `TicketType`) y los precios (`RateResolver`, memoizados). Pasa a
+tomarlo **del sello de la reserva**, y del catálogo vivo solo lo que NO es condición de venta:
+
+| Dato | Hoy | Con el sello |
+|---|---|---|
+| ¿Participa? | `ticketType->participatesInAgeFamily()` | `seal !== null && seal.family !== null` |
+| La familia y sus tramos | consulta + `coversGuestAge()` | `seal.members`, ordenados por `age_min` y luego `type_id` (la misma regla de desempate de hoy) |
+| Precios del día | `RateResolver`, memo `«type|fecha»` | `seal.members[].price_cents` |
+| La clave del campo de edad y el saneo de fichas | `ticketType->guestAgeFieldKey()` / `sanitizeGuestData()` | **igual** (es esquema, no condición) |
+
+Tres estados del sello, y **los tres significan cosas distintas**:
+
+| Estado | Veredicto | ¿Puede RETIRAR dinero escrito? (`derivationGoverns`) |
+|---|---|---|
+| Sello con familia | derivado del sello | sí, si está completo (como hoy) |
+| Sello con `family: null` | `notApplicable(sealed: true)` — **una AFIRMACIÓN**: «se vendió sin condiciones» | **sí**: si el operador cambia el pack a uno sin familia, la línea de suplemento se cancela en la reconciliación post-commit. Hoy ese caso deja la línea HUÉRFANA (`applies=false` se lee como silencio) |
+| Sin sello (columna `null`) o sello CADUCADO (`booked_type_id`/`priced_on` ≠ los de la fila) | `notApplicable(sealed: false)` — un SILENCIO | **no** (la abstención de `#268`, intacta), y **tampoco crea**: no se escribe dinero sobre condiciones que no se conocen. El caducado se enseña en ROJO en la ficha (§21.9·6) |
+
+▶ El lector queda **sin estado**: ni familias ni precios que memoizar, porque ambos viajan en la
+fila que ya tiene cargada. Deja de ser `scoped` (`BookingServiceProvider::register()`) y **`nextRequest()`
+deja de hacer falta** en las guardas — la trampa de §17.6·2 y de §20.8 se cierra por construcción,
+no por disciplina. `pretendFamilyIs()` (solo lo usa `MixedPartyBandImpact`) se va con Q1.
+
+`GuestAgeMix` gana dos datos: `sealed` (el «no aplica» viene de un sello, así que afirma) y
+`staleSeal` (el sello no corresponde a la fila). `guestRegimes()` (la pastilla por niño de `#247`)
+lee los nombres del sello.
+
+### 21.6 · Cómo SUBSUME el recibo de `#270` — la pregunta del owner, contestada
+
+El recibo (`MixedPartySurcharge::unitFor()`) existía para una sola cosa: distinguir «el
+parque tocó una tarifa» (no puede mover lo comunicado) de «esta reserva cambió de pack o de día»
+(sí). Lo hacía guardando dos hechos en el `context` del ajuste y comparándolos con la fila en cada
+pasada, **y heredando el unitario escrito cuando coincidían**.
+
+Con el sello, esa distinción **la hace la escritura, no la lectura**: el sello solo se re-escribe
+cuando cambia el pack o el día (§21.4), así que el unitario derivado del sello **es** el comunicado
+mientras no se muevan, y es el del día nuevo cuando se mueven. No hay nada que heredar:
+
+- `unitFor()` **desaparece** — `targetState()` usa el derivado, siempre.
+- Del `context.mixed_party` del ajuste salen `booked_type_id` y `priced_on` (viven en el sello, una
+  vez); se quedan `target_type_id`, `target_name`, `guests` y `unit_cents`, que son lo que el
+  cliente lee en su desglose (`OrderAdjustment::breakdownLabel`).
+- La rama «sella en su primera pasada sin tocar un céntimo» de `apply()` se va con él.
+- **D4 («14,00 €, no 24,00 €») se cumple por construcción**: un invitado declarado después de una
+  subida entra a `precio_sellado(destino) − precio_sellado(reservado)`, que es lo que se comunicó.
+  El caso `test_a_guest_added_after_a_price_rise_pays_the_communicated_price` se queda como control.
+- **El hueco A de §18.4 se cierra por construcción**: el primer cargo sale del sello, que es del
+  día de la compra, no del catálogo del día en que se rellena el formulario.
+
+⚠️ Y esto es lo que contesta «dos fuentes de verdad para lo mismo es el defecto»: **no hay un
+`unitFor` que lea el sello si existe y el recibo si no**. Hay UNA fuente (el sello) y una regla de
+cuándo se re-escribe. Las líneas sin sello no tienen fuente y por eso no se tocan (§21.5).
+
+### 21.7 · Lo que el sello CIERRA, y lo que NO
+
+Cierra: **A** (primer cargo con catálogo de hoy) · **B** (un cambio de tramo mueve lo vendido en las
+dos direcciones, incluida la ampliación que DESTRUYE un cargo, §17.5) · el **gemelo de la etiqueta**
+(la etiqueta y el cargo salen del mismo sello) · el **huérfano por catálogo** (retirar la familia en
+el catálogo ya no deja un cargo sin veredicto: el veredicto sigue saliendo del sello) · y el
+huérfano por **cambio de producto** (§21.5, la línea se cancela).
+
+No cierra, y es scope de otras tandas: **C** (una edad sin producto congela — T2, D6) · el
+disparador «solo al guardar completo» (T2, §20.6) · **E/F/D7** (T3) · el −X € (T4) · las palabras
+(T5) · el guardián de solapes fuera del formulario (T6, y con el sello **deja de mover dinero**: un
+solape solo puede afectar a reservas que nazcan después).
+
+### 21.8 · Consecuencias que hay que decidir a sabiendas — ✅ `[DECIDIDO owner, 2026-08-31]`
+
+> **Las tres están decididas (2026-08-31, tarde), y la Q2 cambió el diseño**: el owner contestó
+> con una objeción («si compra Kids 1–6 y al día siguiente cambiamos el tramo a 1–5, su fiesta
+> cambia entera: eso no podemos hacerlo, mantenemos sus condiciones»). Ese caso es D2 y el sello lo
+> cierra sin pregunta; lo que Q2 preguntaba era el OTRO —el operador mueve la fiesta de DÍA— y la
+> respuesta fiel a su regla es **(b), no (a)**: **los TRAMOS de la compra se conservan y solo los
+> PRECIOS pasan a los del día destino**, que es lo que `PAY-18` ya hace con el precio de la propia
+> fiesta. Mi recomendación (a) leía de más «la fecha es un producto», y **(b) no son dos fuentes de
+> verdad**: es el MISMO sello con sus precios refrescados para la fecha nueva. §21.4 queda así:
+> **cambio de FECHA = re-precio del sello; cambio de PRODUCTO = sello nuevo**.
+> ▶ **Q1: (b)**, retirar el mecanismo y dejar la frase. ▶ **Q3: D2 literal**, se deja y se sabe.
+> ▶ **Y de revisar el diseño con la objeción delante salió un HUECO** (§21.10·N): mover una fiesta a
+> un día en que uno de los packs **no tiene tarifa** —el editor no lo bloquea: `validateNewSlot` no
+> mira precios y `ItemEditPricing::computeEditPricing()` conserva el unitario histórico— deja la diferencia sin
+> calcular, y la lógica de hoy **cancelaría el suplemento escrito** (destino sin precio → no llega a
+> ser línea → veredicto «completo» → retira lo que hay). Con el sello ese día queda `price_cents:
+> null` y la regla es la de `#268`: **no poder tarificar es una AUSENCIA, no una corrección** — el
+> reconciliador se abstiene (ni retira ni crea) y la ficha dice que falta el precio.
+
+**Q1 · El aviso de `#283` se queda sin nada que avisar.** `MixedPartyBandImpact` mide «cuánto
+dinero movería este cambio de tramos en fiestas ya vendidas». Con el sello la respuesta es **cero
+por construcción** (D2) — y además mide sembrando una familia inventada al lector
+(`pretendFamilyIs`), que con el sello ya no lee familias. Dejarlo «como red» (§18.5) no es posible
+sin fingir: sería un aviso que nunca salta. Salidas: **(a) retirarlo entero** —`MixedPartyBandImpact`,
+`InteractsWithCatalogForm::warnAboutSoldParties()` con su firma de doble guardado, las 2
+claves de idioma × 2 y **7 casos** de `CatalogGuestAgeFamilyTest`—, coste: cero
+funcional, 1 hora; **(b) sustituirlo por un texto fijo** bajo los tramos («las fiestas ya vendidas
+conservan sus condiciones; esto solo afecta a las siguientes»), coste: (a) + una línea. ▶
+**Recomendación: (b)**: retirar el mecanismo y dejar la frase, que es la regla de D1 dicha donde el
+operador la va a necesitar.
+
+**Q2 · Al cambiar la FECHA, ¿se re-sellan también los TRAMOS o solo los precios?** «La fecha es un
+producto» (owner, `#284`) dice que cambiarla es empezar con las condiciones de hoy — y `PAY-18` ya
+re-tarifica el propio ítem con el catálogo del día destino. Salidas: **(a) todo** (familia, tramos y
+precios de hoy, para el día destino): coherente con la regla y con `PAY-18`; consecuencia: si el
+parque bajó el corte de 6 a 5 después de la compra, una fiesta Kids con niños de 6 que cambie de
+fecha pasa a ser mixta; **(b) solo precios** (tramos de la compra, precios del día destino): un
+híbrido que ninguna regla del owner describe, y la única forma de reconstruirlo es leer el sello
+viejo al re-sellar. ▶ **Recomendación: (a).**
+
+**Q3 · Un pack HERMANO creado DESPUÉS de la venta** (p. ej. un «Teens 13–17» nuevo) **no existe para
+las fiestas ya vendidas**: su familia sellada no lo contiene, así que un invitado de 14 años en una
+fiesta Jump 7–12 vendida antes sale «sin producto» (D6: se le explica y llama; el operador decide,
+T3). Es D2 al pie de la letra. La alternativa —mezclar en la lectura los hermanos vivos que no están
+en el sello— vuelve a ser **dos fuentes de verdad**. ▶ **Recomendación: dejarlo así y saberlo.** Se
+pregunta porque es la única consecuencia de D2 que el owner no vio en la sesión del `#284`.
+
+Lo que **no** se pregunta porque se deriva de decisiones ya tomadas: que cambiar el pack a uno sin
+familia retira el suplemento (§21.5); que las reservas locales y de staging sin sello dejan de ser
+mixtas hasta que se re-sellen (D3: en producción no existe ninguna; §21.12 para las sondas).
+
+### 21.9 · Lo que se toca, en orden de riesgo
+
+1. **Migración** + accesor `OrderItem::ageFamilySeal(): ?AgeFamilySeal` (VO inmutable parseado
+   del JSON, con `members` como lista de `SealedRegime`) — puro, sin efectos.
+2. **`AgeFamilySealer`** (`Booking\Services`): `seal(OrderItem $item, Carbon $pricedOn): void`,
+   compone el documento desde `TicketType` + `RateResolver` y lo escribe en la fila. **Entra en el
+   `CRITICAL_RE` y en `CriticalPathGateTest`**: no escribe dinero, pero escribe **las condiciones que
+   deciden el dinero** dentro de los locks de `OrderCreator` y `OrderItemEditor` — el mismo motivo por
+   el que `PackAvailability` está («el gate vigilaba a quien LLAMA y no a quien CUENTA»).
+3. **`OrderCreator`** sella la línea principal de cada pack (🔒 `CRITICAL_RE`).
+4. **`GuestAgeMixReader`** deriva del sello; `GuestAgeMix` gana `sealed`/`staleSeal`; el binding
+   deja de ser `scoped`.
+5. **`MixedPartySurcharge`**: sin `unitFor`, `context` sin recibo, `derivationGoverns` con `sealed`
+   (🔒 `CRITICAL_RE`).
+6. **`OrderItemEditor`**: re-sello en `edit()` y `changeSlot()` dentro de la transacción (🔒
+   `CRITICAL_RE`). La ficha del pedido (`items-list.blade.php` + `lang/{es,zh_CN}/admin.php`): rama
+   «sello caducado» en rojo, «sin sello» en ámbar (hoy `orphaned` habla de «ya no pertenece a ninguna
+   familia», que con el sello es otra cosa), y `drift` deja de decir «hoy correspondería»: lo derivado
+   sale de las condiciones de la reserva, no de hoy — con esto el hallazgo del T0 anotado en T5 se
+   disuelve (el importe del veredicto y el aplicado salen del mismo sello y ya no se contradicen).
+7. **`#283`** según Q1.
+8. **`mixed-party:verify-concurrency`** siembra la reserva con sello en `seed()`; sin él, con el diseño
+   nuevo el escenario no escribiría nada y el verificador pasaría en verde sin verificar.
+9. **Tests**: los cinco ficheros que crean reservas a mano (`items()->create`, sin factory) sellan
+   por `AgeFamilySealer` en su helper; los casos del recibo se re-apuntan (§21.10·L); los de `#283`
+   según Q1.
+10. **Doc**: `INVARIANTES` `PAY-19` reescrita (el LÍMITE se cierra) · `MODELO-DATOS` §1 · `README`
+    (89 migraciones) · `GLOSARIO` («sello») · `DEUDA` (las dos fichas pasan a cerradas) · fila de
+    `CLAUDE.md` · `DECISIONES #288` · `ESTADO` · `00-REFACTOR`.
+
+### 21.10 · Guardas, con la mutación que las valida
+
+| | Guarda | Mutación que la pone en rojo |
+|---|---|---|
+| A | `OrderCreator` sella una fiesta de familia con miembros, tramos, precios del día y `booked_type_id`/`priced_on`; la base del sello **= `unit_price`**; una entrada o un pack sin familia nace con `family: null` | quitar el sello de `OrderCreator` |
+| B | **Hueco A**: comprar → subir el precio de Jump → rellenar el formulario → el cargo es la diferencia **del día de la compra** (5,00 €, no 10,00 €) | el lector lee el catálogo vivo |
+| C | **Caso espejo**: Jump 8×12 años, cero cargo → tramos reordenados → el cliente corrige un nombre → sigue en 0 | ídem |
+| D | **Ampliar un tramo no destruye un cargo** (§17.5·b): 40,00 € escritos → el corte baja a 3 → edición de nombre → 40,00 € | ídem |
+| E | **La etiqueta sigue al sello**: con los tramos del catálogo devueltos a su sitio, `isMixedParty()` y `guestRegimes()` dicen lo mismo que el cargo | el lector lee el catálogo vivo para la etiqueta |
+| F | **Cambiar de día RE-sella** (`PAY-18`, control de `#270` adaptado): precios del día destino → cargo nuevo, `seal.priced_on` = día destino | `changeSlot` sin re-sello |
+| G | **Cambiar de pack RE-sella**: Kids→Jump dentro de la familia (el sello cambia de `booked_type_id`); Kids→pack SIN familia **cancela** la línea de suplemento (`sealed: true` gobierna) | `edit` sin re-sello · `derivationGoverns` ignorando `sealed` |
+| H | Subir la cantidad **no** re-sella (`sealed_at` intacto) | — (control) |
+| I | **Sello caducado** (`ticket_type_id` movido por SQL a mano): veredicto silencioso, nada escrito, la ficha lo dice en rojo | quitar la comprobación de `booked_type_id`/`priced_on` |
+| J | `anonymize()` **conserva** el sello (y sigue vaciando `guest_data`/`event_data`) | `anonymize()` vacía el sello |
+| K | D4 («14, no 24»): el caso existente, sin cambios, como control | — |
+| L | Los dos casos del recibo: `…records_the_two_facts…` pasa a aseverarlos **en el sello** y que el `context` del ajuste **ya no los lleva**; `…written_before_the_receipt_is_sealed…` se retira (ya no hay «primera pasada») y lo sustituye «una línea sin sello no se toca» | — |
+| M | `CriticalPathGateTest`: `AgeFamilySealer` en `CRITICAL_FILES` y en el patrón del hook | quitarlo del hook |
+| N | **Un día sin tarifa NO retira el suplemento** (el hueco de §21.8): fiesta con 7,00 € escritos movida a un día en que Jump no tiene precio → el sello queda con `price_cents: null` → lo escrito **se conserva** y no se anuncia nada | `derivationGoverns` sin la condición «tarificable» |
+| O | **Re-precio al mover de día conserva los tramos** (Q2): el corte de Kids baja a 5 en el catálogo DESPUÉS de la compra; la fiesta (niños de 6) se mueve de día → sigue siendo Kids 1–6 (no se vuelve mixta) y la diferencia por niño mayor es la del día nuevo | re-sellar desde el catálogo al mover de día |
+
+Y las tres ausencias de `#268` (vaciar edades · anonimizar · retirar la familia) se quedan como están:
+la tercera pasa de «silencio» a «el sello sigue diciendo lo mismo» —el cargo no se mueve por otra
+razón, mejor— y el caso se conserva porque sigue protegiendo el mismo dinero.
+
+### 21.11 · Verificación empírica (antes del ✅)
+
+- Suite + Pint. ▶ `VERIFY_CONC=1` al empujar, tras `purchase:verify-oversell` (se toca
+  `OrderCreator`: los cinco escenarios), `redsys:verify-concurrency` y
+  `mixed-party:verify-concurrency` sobre MySQL real — y el último **visto FALLAR** con el sello
+  quitado de la siembra (`#283` enseñó que un verificador que no siembra la condición verifica nada).
+- Sonda en navegador del hueco A sobre el ciclo REAL (guion `t0.js` ampliado, `Notification::fake()`
+  o asumir que ensucia Mailpit — la lección del T0): comprar con 5,00 € de diferencia, subir Jump en
+  el catálogo, rellenar el post-form y leer **5,00 €** en la frase del cliente y en la ficha.
+
+### 21.12 · Las reservas que ya existen (local y staging)
+
+D3: **0 LIVE · 0 PRODUCCIÓN**, no hay nada que rellenar al desplegar y no se construye relleno. Las
+sondas locales (`T0-PRB01`/`T0-PRB02`, `R-BEEL3E`) y las de staging nacieron sin sello y con el
+diseño nuevo dejan de ser mixtas (silencio: su cargo escrito no se mueve, la ficha dice «sin
+sello»). Para seguir usándolas como sondas se re-sellan **a mano, con el catálogo de hoy**, con
+`AgeFamilySealer` desde `tinker` — es un dato de un entorno de pruebas, no un mecanismo del
+producto, y así queda dicho para que nadie lo convierta en comando. ▶ Hecho en local el
+2026-08-31: **6 reservas vivas re-selladas, 3 con familia** (`R-BEEL3E`, `T0-PRB01`, `T0-PRB02`);
+las otras tres son packs sin familia y llevan el sello «sin condiciones». Staging queda para cuando
+se despliegue (misma receta, `docs/ENTORNOS.md`).
+
+### 21.13 · ✅ LO EJECUTADO (2026-08-31, `DECISIONES #288`)
+
+**En el árbol.** La migración `2026_08_31_000100_add_age_family_seal_to_order_items` · los dos
+valores `AgeFamilySeal` y `SealedRegime` · el escritor `AgeFamilySealer` (`build` puro, `seal` para
+quien crea filas fuera de `OrderCreator`, `reprice` para el cambio de día) · `OrderItem::ageFamilySeal()`
+· `GuestAgeMixReader` reescrito para derivar del sello (sin estado, sin memo, ya no `scoped`) ·
+`GuestAgeMix` con `sealed`/`staleSeal` · `MixedPartySurcharge` sin `unitFor` ni recibo y con
+`derivationGoverns` que distingue los tres «no aplica» y se abstiene sin tarificar · `OrderCreator`
+sella en el mismo `create()` de la línea · `OrderItemEditor::sealUpdateFor()` en el mismo `forceFill`
+de `edit()` y `changeSlot()` · la ficha del pedido con la rama «sello caducado» en rojo y «sin sello»
+en ámbar, y `drift` ya no dice «hoy» · `#283` retirado entero (clase, doble guardado con firma,
+claves de idioma, 7 casos) y la regla en la ayuda del campo de familia · `mixed-party:verify-concurrency`
+siembra con sello · `AgeFamilySealer` en el `CRITICAL_RE` y en `CriticalPathGateTest` ·
+`Translated::pick()` para leer un nombre traducible fuera de un modelo (y `tr()` lo usa).
+
+**Medido.** Suite **3547 → 3558** en verde (23.336 aserciones): +14 casos en `AgeFamilySealTest`
+(las guardas A–O de §21.10), +3 en `GuestAgeMixTest` (los tres «no aplica»), +2 en
+`MixedPartyBadgeTest` (sin sello · caducado), −7 de `#283`; los dos casos del recibo re-apuntados al
+sello. **13 mutaciones y las 13 muerden** (`OrderCreator` sin sellar · `changeSlot` sin re-sello ·
+`edit` sin re-sello · el caducado sin detectar · `anonymize()` vaciando el sello · `derivationGoverns`
+ignorando `sealed` · sin la condición «tarificable» · re-sellar desde el catálogo al mover de día ·
+`orphan_addons` contando la línea gobernada · el hook sin `AgeFamilySealer` · el sellador filtrando
+por `is_sellable` · «sin familia» perdiendo la afirmación · el lector ignorando la familia sellada,
+que tira **52** casos: la red no es estrecha).
+
+❗❗ **Dos huecos PREEXISTENTES que salieron al construir, cerrados y con guarda** — ninguno estaba
+escrito en ninguna parte:
+1. **Un día sin tarifa cancelaba el suplemento** (§21.8, guarda N): mover la fiesta a un día en que
+   un pack no tiene precio no lo bloquea el editor, la diferencia no se puede calcular, y el
+   reconciliador leía «no llega a ser línea» como «la diferencia es cero» y retiraba lo escrito.
+   Ahora «no poder tarificar» es una ausencia (`#268`): ni retira ni crea.
+2. **Una fiesta mixta con cargo NO PODÍA cambiar de pack desde el panel.** Lo cazó el caso G de
+   `AgeFamilySealTest` conduciendo el editor real: `orphanAddonsForNewProduct()` contaba la línea del
+   suplemento como complemento incompatible con el pack nuevo y pedía quitarla — y quitarla es
+   justo el gesto que `#271` descarta. Un cerrojo desde el 2026-08-29 que ninguna guarda veía porque
+   ninguna cambiaba de pack con un cargo escrito. La línea gobernada queda fuera de esa cuenta: la
+   reconciliación post-commit la re-deriva bajo el sello nuevo.
+
+**Lo que cambia para el plan.** El hallazgo del T0 anotado en T5 («la línea del veredicto no dice
+que es la tarifa DE HOY») **se disuelve**: veredicto y aplicado salen del mismo sello y ya no se
+contradicen; `drift` habla de «las condiciones de esta reserva». La fase `p4` del guion `t0.js`
+(«cargo huérfano por familia retirada») **ya no reproduce nada**: retirar la familia en el catálogo no
+toca la ficha. T2 arranca con el sello puesto: «completo» se redefine sobre `outOfRange` (D6) y el
+disparador pasa a «solo guardado completo» (§20.6); T4 deriva el crédito de los precios sellados,
+como §20.8 exigía.
+
+**Lecciones.** (1) *La objeción del owner a Q2 tenía razón y mi recomendación no*: «la fecha es un
+producto» era una lectura de más; su regla —conservar los tramos, dejar que el precio siga al día—
+es la fiel a `PAY-18` y no exige ninguna segunda fuente. (2) *Un test que conduce el editor REAL
+encuentra lo que el diseño no ve*: el cerrojo de `orphan_addons` no está en ningún doc porque nadie
+había cambiado de pack con un cargo escrito. (3) *Retirar es una decisión, no un olvido*: `#283`
+salió porque bajo D2 no podía saltar nunca, y dejarlo «como red» habría sido fingir.
+
+**Verificación empírica sobre MySQL y en navegador**: ver el registro de `#288` (verificadores de
+concurrencia con su control negativo, y la sonda del hueco A en el ciclo real del post-form).

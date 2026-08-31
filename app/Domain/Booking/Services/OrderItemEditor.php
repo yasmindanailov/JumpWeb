@@ -59,6 +59,7 @@ class OrderItemEditor
         private OrderItemEventDataWriter $eventData,
         private ItemEditPricing $pricing,
         private MixedPartySurcharge $mixedParty,
+        private AgeFamilySealer $sealer,
     ) {}
 
     // ─── Operaciones ────────────────────────────────────────────────────────
@@ -159,7 +160,10 @@ class OrderItemEditor
                 return false; // → `insufficient_capacity_at_save`, decidido tras la txn.
             }
 
-            $locked->forceFill(['slot_id' => $newSlot->id])->save();
+            // El sello de condiciones se RE-PRECIA para el día nuevo en el MISMO `forceFill` que
+            // mueve la franja (`specs/cumple-mixto.md` §21.4): si fuera en el post-commit, la
+            // reconciliación —que relee la fila bloqueada— derivaría de un sello del día viejo.
+            $locked->forceFill(['slot_id' => $newSlot->id] + $this->sealUpdateFor($locked, $locked->ticketType, $newSlot))->save();
 
             return true;
         });
@@ -213,6 +217,39 @@ class OrderItemEditor
         }
 
         return ItemActionOutcome::done(['event_data_changed' => $eventDataChanged]);
+    }
+
+    /**
+     * Lo que hay que escribir en `age_family_seal` cuando una reserva cambia de pack o de día —
+     * `[DECIDIDO owner, 2026-08-31]`, `specs/cumple-mixto.md` §21.4 y §21.8 (Q2):
+     *  - **pack nuevo** → sello NUEVO desde el catálogo de hoy para el día efectivo («solo cambia
+     *    de condiciones lo que cambia de producto»);
+     *  - **solo día nuevo** → el MISMO sello re-preciado: la familia y los tramos con los que compró
+     *    se conservan y cada precio pasa al del día destino, que es lo que `PAY-18` ya hace con el
+     *    precio de la propia fiesta. Sin sello previo no se inventa uno: el silencio persiste;
+     *  - **ni uno ni otro** (cantidad, complementos, misma fecha con otra hora) → nada.
+     *
+     * Devuelve las columnas a añadir al `forceFill` de la mutación, o `[]`. Va dentro de la misma
+     * transacción y del mismo lock a propósito: es lo que impide que la reconciliación post-commit
+     * lea condiciones que ya no son las de la fila.
+     *
+     * @return array<string, mixed>
+     */
+    private function sealUpdateFor(OrderItem $locked, ?TicketType $newType, Slot $slot): array
+    {
+        if ($newType === null) {
+            return [];
+        }
+        if ((int) $newType->id !== (int) $locked->ticket_type_id) {
+            return ['age_family_seal' => $this->sealer->build($newType, $slot->date)?->toArray()];
+        }
+
+        $seal = $locked->ageFamilySeal();
+        if ($seal === null || $seal->pricedOn === $slot->date->toDateString()) {
+            return [];
+        }
+
+        return ['age_family_seal' => $this->sealer->reprice($seal, $slot->date)->toArray()];
     }
 
     /**
@@ -500,13 +537,16 @@ class OrderItemEditor
                 return false;
             }
 
+            // El sello de condiciones viaja en el MISMO `forceFill` que el pack y la franja
+            // (`specs/cumple-mixto.md` §21.4): pack nuevo → sello nuevo; solo día nuevo → el mismo
+            // sello re-preciado; ni uno ni otro → intacto. Nunca en el post-commit.
             $locked->forceFill([
                 'ticket_type_id' => $newType->id,
                 'quantity' => $newQty,
                 'unit_price' => $newUnit,
                 'seats' => $newSeats,
                 'slot_id' => $effectiveSlot->id,
-            ])->save();
+            ] + $this->sealUpdateFor($locked, $newType, $effectiveSlot))->save();
 
             // Sub-fase 7.2e.4 (#170): complementos (NEUTROS al aforo) en la misma txn. Subir
             // cantidad → forceFill; quitar (0) → markCancelled (sin refund, #170); añadir → nuevo
@@ -845,9 +885,17 @@ class OrderItemEditor
     {
         $allowedAddonIds = $newType->addons()->pluck('ticket_types.id')->all();
 
+        // ⚠️⚠️ La línea del SUPLEMENTO de fiesta mixta NO es un complemento del pack: es el reflejo
+        // de una edad que declaró el cliente, y la gobierna la reconciliación post-commit, que la
+        // re-deriva bajo el sello NUEVO (`specs/cumple-mixto.md` §21.4 y §21.8). Contarla aquí como
+        // huérfana la convertía en un cerrojo: el editor pedía quitarla para poder cambiar de pack,
+        // y quitarla es justo el gesto que `#271` descarta — medido con el caso `AgeFamilySealTest`
+        // del cambio de pack, una fiesta mixta con cargo NO PODÍA cambiar de pack desde el panel.
+        $governed = $this->mixedParty->governedLineIds($item);
+
         $orphans = [];
         foreach ($item->children as $child) {
-            if ($child->isCancelled()) {
+            if ($child->isCancelled() || in_array((int) $child->id, $governed, true)) {
                 continue;
             }
             if (! in_array((int) $child->ticket_type_id, array_map('intval', $allowedAddonIds), true)) {

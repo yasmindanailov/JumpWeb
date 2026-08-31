@@ -16694,3 +16694,53 @@ pieza hace lo que su propia descripción dice: «entra por una esquina y desapar
 **14 mutaciones muerden** (3+control en el hueco, 6 en la guarda de huérfanas, 5 en la de bucles),
 todas con verde antes y después · las tres correcciones medidas en Chrome real con control: `ilu`
 4 → 2 en la portada, `grain` 6 → 2 en `/normas`, `dots` 0 en las doce vistas.
+
+## #288 · 2026-08-31 · [DECIDIDO owner] T1 · el SELLO de condiciones vive en la reserva — construido, y tres decisiones de diseño por el camino
+
+La T1 de `#284` (D1/D2/D3), diseñada en fino ANTES de código (`specs/cumple-mixto.md` §21, como el
+owner pidió: «paso a paso») y ejecutada el mismo día (§21.13). Cada línea principal de un pack
+guarda al nacer, en `order_items.age_family_seal`, la familia por edad, los tramos y los precios de
+cada pack **para el día de la franja**; el veredicto de fiesta MIXTA y su suplemento derivan de ahí y
+no del catálogo vivo. **El precio viejo solo existe dentro de las reservas que lo llevan.**
+
+▶ **Las tres preguntas que el owner dejó identificadas, contestadas contra el código**: la copia vive
+en una columna JSON de `order_items` (no en `event_data`, que `RGPD-01` vacía; no en el `context` del
+ajuste, que solo existe cuando ya hay dinero escrito — el caso espejo es una reserva SIN línea); se
+re-sella en la MISMA transacción que mueve el pack o el día (nunca en el post-commit, donde la
+reconciliación releería un sello viejo); y **subsume el recibo de `#270`**: `unitFor()` desaparece,
+porque el unitario derivado del sello ES el comunicado mientras no cambie de pack ni de día, y es el
+del día nuevo cuando cambia — la distinción la hace la escritura, no la lectura. Dos fuentes de
+verdad para lo mismo era el defecto, y ya no hay dos.
+
+❗❗ **Q2 · Al mover una fiesta de DÍA se conservan los TRAMOS y solo el precio sigue al día.** Mi
+recomendación era re-sellar todo desde el catálogo de hoy («la fecha es un producto»); el owner
+objetó con su regla —«mantenemos sus condiciones»— y tenía razón: `PAY-18` hace seguir a la fecha el
+PRECIO, y nada dice que los tramos aceptados cambien por moverla. Es el MISMO sello re-preciado, no
+una segunda fuente. ▶ **Q1 · `#283` se retira** (clase, doble guardado con firma, 7 casos): bajo D2
+un cambio de tramos no mueve ninguna fiesta vendida, así que el aviso no podía saltar nunca, y una
+red que no salta es fingir; queda la regla en la ayuda del campo de familia. ▶ **Q3 · Un hermano
+creado después de la venta no existe para lo vendido** (D2 literal): la alternativa era volver a
+mezclar el catálogo vivo en la lectura.
+
+❗❗ **Dos huecos PREEXISTENTES cazados al construir, sin ficha en ninguna parte**: (1) mover la
+fiesta a un día en que un pack **no tiene tarifa** —el editor no lo bloquea— dejaba la diferencia
+sin calcular y el reconciliador **cancelaba** el suplemento escrito (leía «no llega a ser línea»
+como «vale cero»); ahora «no poder tarificar» es una ausencia y se abstiene. (2) Una fiesta mixta
+con cargo **no podía cambiar de pack desde el panel**: `orphanAddonsForNewProduct()` contaba la
+línea del suplemento como complemento incompatible y pedía quitarla, que es el gesto que `#271`
+descarta — un cerrojo desde el 2026-08-29 que lo cazó el caso del cambio de pack conduciendo el
+editor real.
+
+▶ Tres «no aplica» que **no son intercambiables** y el reconciliador distingue por `sealed`: sin
+sello (silencio), sello caducado —`booked_type_id`/`priced_on` ≠ la fila, en rojo en la ficha—
+(silencio), sello sin familia (afirmación: retira el suplemento). El lector queda sin estado y deja
+de ser `scoped`: la trampa de `nextRequest()` (`#268`, §17.6) se cierra por construcción.
+
+**Verificación**: suite 3547 → **3558** en verde (23.336 aserciones; **3616** tras rebasar sobre
+`#287`, sus 3605 + estos 11) · **13 mutaciones y las 13
+muerden** (la que hace al lector ignorar la familia sellada tira 52 casos) · los tres verificadores
+sobre MySQL real en verde con `mixed-party:verify-concurrency` **visto FALLAR** sembrando sin sello
+(el control negativo) · sonda en navegador del hueco A sobre `T0-PRB01`: con Jump subido de 15,00 a
+20,00 € DESPUÉS de sellar, el cliente corrige un nombre y sigue en **8,00 €** (2 × 4,00), declara un
+tercer mayor y pasa a **12,00 €** (3 × 4,00, no 27,00), y la ficha del panel enseña veredicto y
+aplicado iguales, sin desfase. `PAY-19` reescrita. Queda el OJO del owner.
