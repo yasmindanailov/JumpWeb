@@ -6208,14 +6208,10 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
     opacity: var(--trama);
 }
 
-/* La mitad inferior, densa y EN COLOR DE ZONA: es lo que su nota llama «marcar zona».
-   Sus números: 2 · 2,3 · 14×14 · al 50 % · media altura. */
-.grain--zona::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 50%;
-    background-image: radial-gradient(circle, var(--zone-1) 2px, transparent 2.3px);
-    background-size: 14px 14px;
-    opacity: 0.5;
-}
+/* ⚠️ **AQUÍ VIVÍA `.grain--zona` —la mitad densa en color de zona— Y SE RETIRÓ**: nació sin
+   consumidor y siguió sin él (`FacadeCssHasNoOrphansTest`). Sus números están en el artboard
+   (2 · 2,3 · 14×14 · al 50 % · media altura) y vuelve en cuanto haya una pantalla que la pida —
+   *una pieza nace en el MISMO cambio que su consumidor*. */
 
 /* ── A2 · TRAMA QUE SE APAGA ───────────────────────────────────────────────────────────────────
    Puntos más gordos y más juntos (2,2 · 2,5 · 15×15) que entran por una esquina y desaparecen.
@@ -6287,12 +6283,9 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
    escala de forma — y `ShapeScaleTest` lo cazó, con razón: la lista de excepciones solo encoge. */
 .brand-strip--wedge > span { transform: skewX(-12deg); }
 
-/* La punteada NO es la tira con otro traje: es otra pieza. Sus números: 3 · 3,4 · 16×10. */
-.brand-dots {
-    height: 10px; pointer-events: none;
-    background-image: radial-gradient(circle, var(--paper-fg) 3px, transparent 3.4px);
-    background-size: 16px 10px;
-}
+/* ⚠️ **Y LA PUNTEADA (`.brand-dots`) TAMBIÉN SE RETIRÓ, por lo mismo**: se escribió con sus
+   números (3 · 3,4 · 16×10) y **ninguna pantalla la pinta** — medido, `dots: 0` en las doce
+   capturas del sitio. No es la tira con otro traje, es otra pieza, y vuelve con su consumidor. */
 
 
 

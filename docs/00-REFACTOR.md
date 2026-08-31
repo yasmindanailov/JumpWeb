@@ -2620,6 +2620,25 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > ⚠️ **La lista de ranuras decorativas está VACÍA a propósito**: una ranura sin consumidor es lo que
 > dejó los 19 dibujos de `#257` esperando años.
 >
+> ✅ **Y ESA PRIMERA PASADA, SANEADA** (2026-08-31, `#287`) — sesión sin material nuevo
+> (`[DECIDIDO owner]`). Tres defectos que la suite no veía, los tres medidos en navegador:
+> ▶ **`<x-site.ilu>` emitía un `<svg>` VACÍO** cuando el kit no traía ese dibujo —solo preguntaba por
+> el fichero, no por la clave—: sin `viewBox` la caja cae a los **150 px** por defecto de un elemento
+> reemplazado, y en la portada eran **dos de 190×150** (zonas `cap` y `cap2`). ⚠️ **El caso es el
+> NORMAL**: `kit:build` no exige un dibujo por zona, y hace bien.
+> ▶ **Dos reglas nacieron MUERTAS** —`.brand-dots` y `.grain--zona`, `dots: 0` en las doce capturas—
+> y se retiran: vuelven con su consumidor.
+> ▶ **`/normas` pintaba la trama dentro del `@foreach`**: cinco copias en una pantalla, que es la
+> forma que el owner rechazó tres veces. Pasa a **una, en la cabecera**, y de paso vuelve **su**
+> parada del 74 % — estaba bajada al 30 % por el párrafo de la tarjeta, y ese párrafo ya no está.
+> *Un ajuste sobrevive a la razón que lo justificaba si nadie lo revisa cuando la pieza cambia de sitio.*
+> ▶ **Dos trinquetes nuevos**: `FacadeCssHasNoOrphansTest` (ninguna regla de fachada sin pantalla) y
+> `FacadeDecorationIsPerScreenTest` (ninguna textura dentro de un bucle, ningún dibujo del kit con
+> clave literal dentro de un bucle). Las dos nacieron **rojas con el defecto real puesto**.
+> ⚠️⚠️ **Y una clase compuesta no la ve ningún inventario**: `.ilu--plano` y `.ilu--contorno` salían
+> huérfanas con el producto sano por armarse con `'ilu--'.$trato`. Se escriben enteras — es el motivo
+> por el que el cajón arrastra ~50 reglas que *parecen* muertas y nadie puede confirmar.
+>
 > ✅ **EL CARRIL C REABRE Y HACE EL MOCKUP 1:1** (2026-08-28 tarde, `#225` → `#235`,
 > `[DECIDIDO owner]`: «lo quiero idéntico 1:1 — hero, menú, transiciones, animaciones, y lo mismo
 > en el footer y el hero del footer»). Once cortes:

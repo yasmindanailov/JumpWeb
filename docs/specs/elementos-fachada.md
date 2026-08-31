@@ -46,6 +46,34 @@
 > ▶ **Y una regla que sale de todo esto**: `#257` ya había medido que los 19 dibujos de parque *«no
 > tienen hoy ninguna pantalla que las pinte»* y llevan aparcados desde entonces. **Un dibujo nace en
 > el mismo cambio que su consumidor**, o se queda esperando.
+>
+> ---
+>
+> ## ❗❗ LO QUE `#287` CAMBIÓ DE LO YA COLOCADO (2026-08-31)
+>
+> Sesión de saneo, **sin material nuevo** (`[DECIDIDO owner]`: no se coloca nada más hasta que él
+> vuelva a mirar el canvas). Lo que se midió en navegador sobre la primera pasada:
+>
+> 1. ⚠️⚠️ **`C2` punteada (`.brand-dots`) y la trama en color de zona (`.grain--zona`) SE RETIRAN**:
+>    entraron con sus números al dígito y **ninguna pantalla las pinta** —medido, `dots: 0` en las
+>    doce capturas del sitio—. Sus números viven en el comentario que queda en su sitio de
+>    `site.css`, y **vuelven con su consumidor**. Es la misma regla de arriba aplicada a una textura
+>    en vez de a un dibujo.
+> 2. ⚠️⚠️ **`A2` en `/normas` pasa de CINCO copias a UNA** (`[DECIDIDO owner, 2026-08-31]`). Se
+>    pintaba dentro del `@foreach` de las normas, o sea **una por tarjeta** — la forma exacta que el
+>    owner rechazó tres veces en `#286`. ❗ **Aquí sus dos fuentes se contradicen**: la nota de `A2`
+>    manda la trama a «tarjetas con mucho texto» y su regla dice una por pantalla. **Manda la regla.**
+>    ▶ Y al moverla apareció un **ajuste que había sobrevivido a su razón**: la parada estaba bajada
+>    al 30 % (la suya es 74 %) porque dentro de la tarjeta los puntos caían debajo del párrafo. En la
+>    cabecera no hay párrafo → vuelve su número. *Un ajuste sobrevive a la razón que lo justificaba si
+>    nadie lo revisa cuando la pieza cambia de sitio.*
+>    ▶ ⚠️ **Y la colocación se decidió mirando**: sobre la página entera, el degradado a **115°**
+>    —casi horizontal— no llega a apagarse en una caja alta y **deja una tira de puntos bajando por
+>    el margen izquierdo hasta el pie**; con la parada en longitud (320 y 440 px) sigue igual. *Un
+>    `linear-gradient` no hace una esquina en una caja alta.* La cabecera sí.
+> 3. ▶ **Y hay trinquete**: `FacadeDecorationIsPerScreenTest` pone la suite roja si una textura de
+>    fachada se escribe dentro de un `@foreach`, y `FacadeCssHasNoOrphansTest` si una regla de
+>    fachada se queda sin pantalla. Las dos nacieron **rojas con el defecto real puesto**.
 
 ---
 

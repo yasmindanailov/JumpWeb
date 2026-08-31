@@ -2706,19 +2706,25 @@ input[type="radio"]:focus-visible,
    pinta ENCIMA del contenido en flujo. El contenido sube con `position: relative` —lo mismo que
    `.zone-intro__card` ya hacía con su nombre gigante—. Sin esa línea, la trama tapa el texto. */
 
-/* A2 · las tarjetas de `/normas`, «para tarjetas con mucho texto».
-   ⚠️ Sus dos números se BAJAN aquí, y el motivo está medido en navegador: con su `.55` y su parada
-   al 74 % los puntos llegan debajo del párrafo y la tarjeta se lee peor. Su regla 02 lo prohíbe, y
-   entre su nota y su regla manda la regla. Queda como acento de esquina, que es lo que su propia
-   descripción dice: «entran por una esquina y desaparecen». */
-/* ⚠️ El `z-index: -1` va aquí y NO en `.grain`: esa misma pieza se usa en el menú y en la tarjeta
+/* A2 · `/normas`: UNA trama por pantalla, no una por tarjeta (`[DECIDIDO owner, 2026-08-31]`).
+   ⚠️⚠️ **Antes vivía dentro de `.rule`, o sea DENTRO del `@foreach`**: en esta instalación salían
+   CINCO copias de la misma pieza en una pantalla, que es la forma exacta que el owner rechazó tres
+   veces en `#286` (cuatro tiras de marca, una mancha por tarjeta de precio, un friso de cinco
+   figuras). La regla que salió de ahí manda: *la decoración va en la PANTALLA, no en el componente
+   que se repite*, y aquí gana a la nota del artboard, que mandaba A2 a «tarjetas con mucho texto».
+   ⚠️⚠️ **Y la parada vuelve a ser la SUYA (74 %), que es el defecto de la pieza.** Se había bajado
+   al 30 % por un motivo real —dentro de la tarjeta los puntos llegaban debajo del párrafo, y su
+   regla 02 lo prohíbe—, y ese motivo **desaparece con el sujeto**: en la cabecera no hay párrafo,
+   solo el rótulo y un titular de tinta maciza. *Un ajuste sobrevive a la razón que lo justificaba
+   si nadie lo revisa cuando la pieza cambia de sitio.* La opacidad sí se queda en el 0,3 medido:
+   ahí sí hay texto pequeño encima (el rótulo).
+   ⚠️ El `z-index: -1` va aquí y NO en `.grain`: esa misma pieza se usa en el menú y en la tarjeta
    del cierre, que no crean contexto de apilamiento propio — allí bajarla la mandaría detrás del
    fondo y desaparecería. La capa es COLOCACIÓN, como el tamaño. */
-.rule .grain { z-index: -1; }
-.rule {
-  position: relative; overflow: hidden; isolation: isolate;
+.page--rules .page__head > .grain { z-index: -1; }
+.page--rules .page__head {
+  position: relative; isolation: isolate;
   --trama-fade: 0.3;
-  --trama-fade-stop: 30%;
 }
 
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Architecture;
 
+use Tests\Support\ReadsConsumerCorpus;
 use Tests\Support\ReadsSiteStylesheets;
 use Tests\TestCase;
 
@@ -37,6 +38,7 @@ use Tests\TestCase;
  */
 class ArmazonCssHasNoOrphansTest extends TestCase
 {
+    use ReadsConsumerCorpus;
     use ReadsSiteStylesheets;
 
     private const SHEETS = 'public/css/*.css';
@@ -68,14 +70,7 @@ class ArmazonCssHasNoOrphansTest extends TestCase
         // (vacía: la tanda 2c·0 retiró las once que había)
     ];
 
-    /** Dónde puede estar VIVA una clase: marcado, JS fuente, SSR y bundle compilado. */
-    private const CORPUS_DIRS = ['resources', 'storage/ssr', 'public/build', 'app'];
-
-    private const CORPUS_EXTENSIONS = ['php', 'js', 'vue', 'ts', 'json', 'html', 'css'];
-
     private ?array $sheets = null;
-
-    private ?string $corpus = null;
 
     // ─────────────────────────────────────────────────────────────────────────────────
     //  Guarda de la guarda — sin esto, todo lo de abajo puede estar verde sin mirar nada
@@ -415,64 +410,5 @@ class ArmazonCssHasNoOrphansTest extends TestCase
         }
 
         return $this->sheets = $out;
-    }
-
-    /** Todo el código donde una clase del armazón puede estar VIVA, sin comentarios. */
-    private function consumerCorpus(): string
-    {
-        if ($this->corpus !== null) {
-            return $this->corpus;
-        }
-
-        $chunks = [];
-
-        foreach (self::CORPUS_DIRS as $dir) {
-            $base = base_path($dir);
-
-            if (! is_dir($base)) {
-                continue;
-            }
-
-            /** @var \SplFileInfo $file */
-            foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($base, \FilesystemIterator::SKIP_DOTS)) as $file) {
-                if (! $file->isFile()) {
-                    continue;
-                }
-
-                $extension = strtolower($file->getExtension());
-
-                if (! in_array($extension, self::CORPUS_EXTENSIONS, true)) {
-                    continue;
-                }
-
-                // Las propias hojas del armazón no valen como consumidor: es lo que se está midiendo.
-                if (str_starts_with($file->getPathname(), base_path('public/css'))) {
-                    continue;
-                }
-
-                $chunks[] = $this->stripComments((string) file_get_contents($file->getPathname()), $extension);
-            }
-        }
-
-        return $this->corpus = implode("\n", $chunks);
-    }
-
-    /**
-     * Quita los comentarios de Blade, de bloque, de línea y de HTML.
-     *
-     * ❗ Es la corrección que este fichero documenta arriba: sin ella, una clase citada en un
-     * comentario que explica que YA NO SE USA cuenta como viva.
-     */
-    private function stripComments(string $source, string $extension): string
-    {
-        $source = (string) preg_replace('/\{\{--.*?--\}\}/s', ' ', $source);
-        $source = (string) preg_replace('/<!--.*?-->/s', ' ', $source);
-
-        if (in_array($extension, ['php', 'js', 'vue', 'ts', 'css'], true)) {
-            $source = (string) preg_replace('#/\*.*?\*/#s', ' ', $source);
-            $source = (string) preg_replace('#^\s*(//|\#)\s.*$#m', ' ', $source);
-        }
-
-        return $source;
     }
 }

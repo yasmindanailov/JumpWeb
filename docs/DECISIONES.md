@@ -16619,3 +16619,78 @@ muerden** con control verde antes y después de cada pasada · los cinco vehícu
 tratamientos, la fuga de `currentColor` y el modelo de amenaza **medidos en navegador con control** ·
 el comando ejercitado de punta a punta (sin kit → 0 · kit malo → 6 problemas nombrados y **no escribe
 nada** · kit bueno → instalado, y `git check-ignore` confirma que queda fuera del repo).
+
+## #287 · 2026-08-31 · La primera pasada de fachada, SANEADA: una por pantalla, y el material sin consumidor fuera
+
+**Contexto.** Sesión de continuación de `#286`. Antes de colocar nada nuevo se midió en navegador lo
+que la pasada anterior había dejado puesto, y salieron **tres defectos**, los tres invisibles para la
+suite. `[DECIDIDO owner]`: **no se coloca material nuevo** hasta que él vuelva a mirar el canvas; esta
+sesión es de saneo y de trinquete.
+
+**1 · `<x-site.ilu>` emitía un `<svg>` VACÍO cuando el kit no traía ese dibujo.** El componente solo
+preguntaba por el FICHERO (`version()`), no por la CLAVE. Con el kit instalado y el `<symbol>` ausente
+el `<use>` no resuelve nada y el envoltorio se queda **sin `viewBox`**: sin proporción intrínseca cae
+a los **150 px** por defecto de un elemento reemplazado. Medido en `/`: las zonas `cap` y `cap2`
+metían **dos cajas de 190×150** que no pintan nada.
+▶ **Y el caso es el NORMAL, no el raro**: la gramática admite un `zone-<slug>` por cada zona viva,
+pero una instalación dibuja las que quiere y `kit:build` **no exige** una por zona —hace bien—. O sea
+que toda instalación con más zonas que dibujos tenía el hueco. Contradecía además lo que la spec
+promete en §7 (*«no queda caja vacía»*): el `@if` cubría «no hay kit», no «hay kit y falta la clave».
+▶ Arreglado con `IllustrationKit::has()` —gratis, `meta()` ya está memoizado por `filemtime`—.
+Medido después: `ilu` pasa de **4 a 2** en la portada, y **las dos que sí tienen dibujo siguen
+pintando**, que es el control sin el cual «no emite nada» no distingue el arreglo de haberlo roto.
+
+**2 · Dos reglas de CSS nacieron MUERTAS en la pasada anterior**: `.brand-dots` —la tira punteada de
+`C2`— y `.grain--zona`. Las dos con sus números al dígito, las dos documentadas como si fueran
+decisiones de diseño, y **ninguna la pinta nadie** (medido: `dots: 0` en las doce capturas del sitio;
+cero apariciones en Blade, JS, SSR y bundle). Se retiran. **Vuelven con su consumidor**, que es la
+regla que este carril ya tenía escrita y que `#257` pagó con 19 dibujos aparcados años.
+
+**3 · `/normas` pintaba la trama DENTRO del `@foreach`**: **cinco copias** en una pantalla en esta
+instalación, y más en un parque con más normas. Es la forma exacta que el owner rechazó tres veces en
+`#286`. ⚠️ **Aquí sus dos fuentes se contradicen** —la nota de A2 manda la trama a «tarjetas con mucho
+texto», su regla dice una por pantalla—, y `[DECIDIDO owner, 2026-08-31]`: **manda la regla**.
+
+**⚠️⚠️ Y al mover la pieza apareció un ajuste que había sobrevivido a su propia razón.** La parada de
+la máscara estaba bajada al **30 %** (su valor es **74 %**) por un motivo bueno y medido: dentro de la
+tarjeta los puntos llegaban debajo del párrafo, y su regla 02 lo prohíbe. En la cabecera **no hay
+párrafo**, solo el rótulo y un titular de tinta maciza — así que el override se retira y vuelve su
+número. *Un ajuste sobrevive a la razón que lo justificaba si nadie lo revisa cuando la pieza cambia
+de sitio.* La opacidad sí se queda en el 0,3 medido: encima del rótulo sí hay texto pequeño.
+
+**⚠️ La colocación se decidió MIRANDO, no razonando.** Se probó la trama sobre la página entera y se
+ve el defecto: con una caja tan alta, el degradado a **115°** —que es casi horizontal— no llega a
+apagarse por abajo y **deja una tira de puntos bajando por el margen izquierdo hasta el pie**. Un
+`linear-gradient` no hace una esquina en una caja alta, por mucho que se mueva la parada: se comprobó
+también con la parada en longitud (320 y 440 px) y la tira sigue. La cabecera es la caja donde la
+pieza hace lo que su propia descripción dice: «entra por una esquina y desaparece».
+
+**Los dos trinquetes, que es lo que impide que esto se repita.**
+· **`FacadeCssHasNoOrphansTest`** (6 casos): ninguna clase de fachada declarada sin consumidor.
+  ⚠️ Al escribirla salieron huérfanas **`.ilu--plano` y `.ilu--contorno` con el producto sano**,
+  porque el componente las componía con `'ilu--'.$trato`. **La salida no fue una excepción: fue
+  escribir las tres clases enteras.** Una clase armada por concatenación es invisible para cualquier
+  inventario —es por lo que `DEUDA.md` arrastra ~50 reglas del cajón que *parecen* muertas y nadie
+  puede confirmar—, así que hacerla literal no es complacer a la guarda: es que el producto se pueda
+  medir.
+· **`FacadeDecorationIsPerScreenTest`** (5 casos): ninguna textura de fachada dentro de un `@foreach`,
+  y ningún dibujo del kit con clave **literal** dentro de un bucle. ⚠️ **La clave VARIABLE queda fuera
+  a propósito**: `zone-{{ $zone->slug }}` pinta un dibujo distinto por fila, que es un MARCADOR y no
+  una textura repetida.
+· El corpus de consumidores pasa a un trait único (`Tests\Support\ReadsConsumerCorpus`) que usan las
+  dos guardas: estaba escrito dos veces.
+
+**⚠️⚠️ DOS TRAMPAS DE INSTRUMENTO, y las dos habrían dado por buena una guarda ciega.**
+1. **`python3 -c "…"` entre comillas dobles y bash expandiendo `$file`**: la mutación **nunca se
+   aplicó** y el resultado fue un «no muerde» del instrumento, no de la guarda. Ahora las mutaciones
+   comprueban que el ancla existe (`assert`) antes de concluir nada.
+2. **Mutar UNA mitad de una defensa de DOS no muerde.** El corpus se protege dos veces —solo recorre
+   `public/build`, *y* además excluye `public/css`— y por separado cada mutación sale verde: quitar la
+   exclusión (el corpus no llega ahí de todos modos) y ampliar el corpus a `public/` (la exclusión lo
+   para, o sea que la defensa **funciona**). **Las dos a la vez → ROJO.** *Una mutación que no muerde
+   puede ser una mutación DÉBIL* (`panel-navegacion.md` §7.4·2).
+
+**Verificación**: suite **3605 / 23.425** (antes 3593 / 23.394) · Pint ✓ · `docs-check` ✓ ·
+**14 mutaciones muerden** (3+control en el hueco, 6 en la guarda de huérfanas, 5 en la de bucles),
+todas con verde antes y después · las tres correcciones medidas en Chrome real con control: `ilu`
+4 → 2 en la portada, `grain` 6 → 2 en `/normas`, `dots` 0 en las doce vistas.

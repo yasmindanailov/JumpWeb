@@ -13,7 +13,15 @@
 > **no puede demostrar nada** —su suelo de ruido es del **64,45 %**— y la primera medición dio una
 > conclusión falsa con un número real.
 > ⏸️ Sigue 🟦 por el OJO del owner: falta ver la tarjeta de zona con un dibujo de verdad dentro.
-> Última actualización: 2026-08-31 · Decisión asociada: **pendiente de abrir en `docs/DECISIONES.md`**.
+>
+> ❗❗ **`#287` corrige DOS cosas de este documento y van antes que el cuerpo — §16.**
+> **(1) El componente emitía un `<svg>` VACÍO cuando el kit no traía ese dibujo**, así que la promesa
+> de §7 —«no queda caja vacía»— era falsa en el caso NORMAL: medido en la portada, las zonas `cap` y
+> `cap2` metían **dos cajas de 190×150**. El `@if` cubría «no hay kit», no «hay kit y falta la clave».
+> **(2) Las clases de tratamiento se componían con `'ilu--'.$trato`**, y una clase armada por
+> concatenación **es invisible para cualquier inventario de CSS**: `.ilu--plano` y `.ilu--contorno`
+> salían huérfanas con el producto sano. Se escriben enteras.
+> Última actualización: 2026-08-31 (`#287`) · Decisión asociada: **`DECISIONES #286` y `#287`**.
 > ⚠️ Su número se elige **mirando el REMOTO**, no el local: ya colisionó una vez con otro agente.
 > Origen: `elementos-fachada.md` §10·1 (`[DECIDIDO owner, 2026-08-30]`: «se construye el hueco de
 > ilustración por instalación»), que además cierra la deuda de `#257`.
@@ -275,8 +283,13 @@ producto**, que es exactamente por donde `#257` metió 43 dibujos del artboard d
 del producto, y por donde `public/favicon.svg` conserva `#FF5B22`, el naranja del **primer** cliente
 (1 ocurrencia, confesada en `.gitignore:49-51`).
 
-⚠️⚠️ **El modo de fallo se elige y es la INVISIBILIDAD**, no un hueco roto: el `@if ($kit)` no emite
-ni el `<svg>`, así que no queda caja vacía ni rectángulo de color. Es la misma política que la
+⚠️⚠️ **El modo de fallo se elige y es la INVISIBILIDAD**, no un hueco roto: el componente no emite
+ni el `<svg>`, así que no queda caja vacía ni rectángulo de color.
+
+❗ **Y son DOS preguntas, no una** (`#287`, §16.1): *¿hay kit?* y *¿trae ESTE dibujo?*. Con solo la
+primera, una instalación con más zonas que dibujos metía un `<svg>` sin `viewBox` —o sea **150 px de
+caja vacía**— por cada clave ausente. **Ese caso es el normal**: `kit:build` no exige un dibujo por
+zona, y hace bien. Es la misma política que la
 máscara transparente de `site.css:5223`, cuyo comentario ya avisa de que *un valor por defecto que
 falla hacia «visible» es peor que no tener valor por defecto*.
 
@@ -459,6 +472,12 @@ Van aquí porque **la corrección se lee antes que el texto que corrige**.
 | **U6** | El PRIMER consumidor: la ilustración de la tarjeta de zona | el dibujo **pinta** en la página real, medido con instrumento estable, y sin kit la tarjeta queda idéntica | ✅ **hecha** (`[DECIDIDO owner, 2026-08-31]`) |
 | **U7** | Sacar las 12 poses del artboard con `<use>` (§9) | 12 símbolos, **cero** atributos de presentación, `kit:build` los acepta | ⛔ **BLOQUEADA — ver §14.2** |
 
+### 14.1.bis · ✅ U8 · el saneo de `#287`
+
+| # | unidad | criterio de aceptación | estado |
+|---|---|---|---|
+| **U8** | Los dos defectos de §16 | `has()` con su caso y sus tres mutaciones · las tres clases de tratamiento escritas enteras · `FacadeCssHasNoOrphansTest` en verde con la lista de excepciones **vacía** | ✅ **hecha** (`#287`) |
+
 ### 14.2 · ⛔ Las 12 POSES siguen bloqueadas, y el bloqueo es una CONSECUENCIA, no un descuido
 
 `[DECIDIDO owner, 2026-08-31]`: el primer consumidor es **la tarjeta de zona**, y por eso U6 se pudo
@@ -538,3 +557,49 @@ Los tres aparecieron **después** de que la suite estuviera verde y las sondas e
    ▶ **Mi recomendación**: la **tarjeta de zona**. Es la única que no exige declarar ranura nueva, la
    que tiene identificador estable, y la que convierte la deuda de `#257` en algo que sí se ve.
 
+---
+
+## 16. ❗ Lo que `#287` corrigió de este documento
+
+Salió de medir en navegador lo que la primera pasada había dejado puesto, **con la suite verde**.
+
+### 16.1 · La promesa de §7 era falsa en el caso normal
+
+`<x-site.ilu>` preguntaba por el FICHERO (`IllustrationKit::version()`) y no por la CLAVE. Con el kit
+instalado y el `<symbol>` ausente:
+
+- el `<use>` no resuelve nada —correcto—, pero **el `<svg>` se emite igual**;
+- sin `viewBox` no hay proporción intrínseca, así que `height: auto` cae a los **150 px** por defecto
+  de un elemento reemplazado.
+
+▶ **Medido en `/`**: las zonas `cap` y `cap2` metían **dos cajas de 190×150**. Hoy no se veían porque
+las dos colocaciones son `position: absolute`; en cuanto una ranura futura ponga el dibujo en flujo,
+son 150 px de agujero.
+
+▶ **Y es el caso NORMAL**: la gramática admite un `zone-<slug>` por cada zona viva, pero la
+instalación dibuja las que quiere y `kit:build` **no exige** una por zona. Toda instalación con más
+zonas que dibujos tenía esto.
+
+▶ Arreglo: `IllustrationKit::has()`, gratis porque `meta()` ya está memoizado por `filemtime`.
+**Tres mutaciones muerden**, y la tercera es el CONTROL: con `has()` devolviendo `false` siempre se
+caen seis casos, o sea que «no emite nada» no puede confundirse con haberlo roto todo.
+
+### 16.2 · Una clase compuesta no la ve ningún inventario
+
+Las tres clases de tratamiento se armaban con `'ilu--'.$trato`. Resultado: `.ilu--plano` y
+`.ilu--contorno` salen **huérfanas con el producto sano** —`.ilu--troquel` no, porque esa rama sí la
+escribía entera—.
+
+▶ **La salida no fue una excepción en la guarda: fue escribir las tres enteras** (`match` sin
+`default`, que además conserva el fallo ruidoso ante un tratamiento desconocido). Es el mismo motivo
+por el que `DEUDA.md` arrastra ~50 reglas del cajón que *parecen* muertas y que ningún `grep` puede
+confirmar: **el cajón compone sus clases**. Aquí no hacía falta.
+
+### 16.3 · El trinquete
+
+`FacadeCssHasNoOrphansTest` (6 casos) vigila que ninguna clase de fachada —`grain`, `spray`, `rays`,
+`brand-strip`, `brand-dots`, `ilu`— se declare sin que alguna pantalla la pinte, con la lista de
+excepciones **vacía**. Su hermana `FacadeDecorationIsPerScreenTest` vigila lo otro: que ninguna
+textura viva dentro de un `@foreach`, y que **ningún dibujo del kit se pida con clave LITERAL dentro
+de un bucle** — la clave variable (`zone-{{ $zone->slug }}`) queda fuera a propósito, porque eso es un
+marcador y no una textura repetida.

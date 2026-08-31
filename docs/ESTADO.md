@@ -2,8 +2,41 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-08-31 — el HUECO DE ILUSTRACIÓN y la primera
-> pasada del MATERIAL DE FACHADA (`#286`), sobre la jornada de mixtos (`#282` → `#285`).**
+> aquí solo se enlaza.** Última actualización: **2026-08-31 — la primera pasada de fachada SANEADA
+> (`#287`), sobre el hueco de ilustración (`#286`) y la jornada de mixtos (`#282` → `#285`).**
+>
+> ❗❗❗ **POR DÓNDE SE RETOMA EL TEMA, HOY** (esto sustituye al punto 1-5 de abajo en lo que cambia):
+> **1 · `[DECIDIDO owner, 2026-08-31]`: NO se coloca material nuevo** hasta que él vuelva a mirar el
+> canvas. La sesión de `#287` fue de SANEO, y lo que hay puesto está medido y con trinquete.
+> **2 · Qué se ve hoy**: trama en el menú, en la tarjeta del cierre y —**una sola**— en la cabecera de
+> `/normas`; niebla en `/contacto`; rayos quietos en `/precios`; las dos tiras en cuña; y las poses de
+> zona en las tarjetas de la portada. **`/servicios` sigue sin material propio** (medido: su única
+> trama es la del menú y su única tira, la del pie) — es el candidato natural cuando se retome.
+> **3 · Lo retirado y por qué**: `.brand-dots` (C2 punteada) y `.grain--zona` **nacieron sin
+> consumidor** y se van; sus números quedan en el comentario de `site.css` y vuelven con su pantalla.
+> **4 · Las 9 poses y las 6 manchas siguen fuera**, y `IllustrationKit::SLOTS` sigue **VACÍA**: una
+> ranura nace con su consumidor en el mismo cambio. Las 12 poses extraídas y saneadas viven en el
+> scratchpad de `#286` (`poses.json`), no en el repo.
+> **5 · Ahora hay DOS trinquetes** y conviene saberlo antes de escribir CSS de fachada:
+> `FacadeCssHasNoOrphansTest` (ninguna regla sin pantalla que la pinte) y
+> `FacadeDecorationIsPerScreenTest` (**ninguna textura dentro de un `@foreach`**, ningún dibujo del
+> kit con clave literal dentro de un bucle). Si añades material, entra con su consumidor o la suite
+> se pone roja — que es exactamente lo que se busca.
+> **6 · Falta el OJO del owner** en: la cabecera de `/normas` con una sola trama, la tira de cabecera
+> que aparece al encoger el hero, y las poses de zona en móvil. Y **subir a staging** todo lo del tema.
+>
+> ⚠️⚠️ **DOS TRAMPAS DE INSTRUMENTO DE `#287`, y las dos dan un «no muerde» falso:**
+> · **`python3 -c "…"` entre comillas dobles**: bash expande `$file` dentro del patrón de búsqueda y
+>   **la mutación no llega a aplicarse**. Se comprueba que el ancla existe antes de concluir nada.
+> · **Mutar UNA mitad de una defensa de DOS no muerde**: el corpus se protege dos veces (solo recorre
+>   `public/build` *y* además excluye `public/css`), y solo las dos mutaciones a la vez ponen la
+>   guarda roja. *Una mutación que no muerde puede ser una mutación DÉBIL.*
+>
+> ⚠️ **Para medir el sitio en navegador hace falta un puente**: `asset()` emite URL ABSOLUTA con el
+> puerto del host, así que desde el contenedor `localhost:8081` no resuelve y el `<use>` externo del
+> kit sale cross-origin **con el producto sano**. Guion: `/root/e2e/proxy8081.mjs` (8081 → 80) y el
+> utillaje común en `/root/e2e/fach.mjs`, que además inyecta la cookie de consentimiento para que el
+> banner no tape media pantalla.
 >
 > ⚠️⚠️ **DOS AGENTES SOBRE `main` EL MISMO DÍA.** `#282`–`#285` son de reservas mixtas y `#286` del
 > tema; no se solapan en código, pero el número de decisión **se elige mirando el REMOTO**: en esta
@@ -2114,9 +2147,11 @@ que sirva staging de verdad.
   ⚠️ **Y retirarlo dejó CIEGO al `pre-push`**: PHPUnit resume «Tests: N, Assertions: M…» solo cuando hay
   issues y «OK (N tests, M assertions)» cuando no; el hook solo entendía la primera forma y llevaba
   meses leyendo el contador gracias al notice. Desde este cierre lee las dos (fail-closed intacto).
-- Suite **3593 en verde** (23.394 aserciones, 1 skipped a propósito) · **JS 877**, medida el
-  2026-08-31 **sobre el árbol CONJUNTO**, tras rebasar `#286` (el hueco de ilustración) encima de
-  `#282`–`#285` del carril de mixtos. ▶ **+46 casos de mi lado**, en dos ficheros:
+- Suite **3605 en verde** (23.425 aserciones, 1 skipped a propósito) · **JS 877**, medida el
+  2026-08-31 tras `#287` (el saneo de la primera pasada de fachada). ▶ **+12 casos**: la guarda de
+  huérfanas de fachada (6), la de decoración por pantalla (5) y el caso del kit sin ese dibujo (1).
+  ▶ Antes, `#286` sobre el árbol CONJUNTO, tras rebasar el hueco de ilustración encima de
+  `#282`–`#285` del carril de mixtos: **3593 · 23.394**, con **+46 casos** en dos ficheros:
   `IllustrationKitTest` (el contrato del kit: seguridad, atributos de presentación en raíz **y en
   descendientes**, gramática cerrada, las tres piezas de despliegue) e `IllustrationHoleRenderTest`
   (lo que se pinta: sin paquete no se emite nada, el troquel fija `fill` **y** `color`, el grosor

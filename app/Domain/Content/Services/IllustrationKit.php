@@ -120,6 +120,28 @@ class IllustrationKit
     }
 
     /**
+     * **¿Trae el kit instalado este dibujo?**
+     *
+     * ⚠️⚠️ **No es lo mismo que «hay kit», y confundirlo dejaba una CAJA VACÍA en la página.** El
+     * componente solo miraba `version()`, o sea la existencia del FICHERO; con el kit instalado
+     * pero sin ese `<symbol>`, el `<use>` no resuelve nada y lo que llega al documento es un
+     * `<svg>` sin `viewBox` — que, por no tener proporción intrínseca, cae a los **150 px** por
+     * defecto de un elemento reemplazado. Medido en la portada: las zonas `cap` y `cap2` metían
+     * **dos cajas de 190×150** que no pintan nada.
+     *
+     * ▶ Y **el caso es el NORMAL, no el raro**: la gramática admite un `zone-<slug>` por cada zona
+     * viva, pero una instalación dibuja las que quiere. El contrato **no exige** una por zona, y
+     * hace bien.
+     *
+     * ▶ El modo de fallo elegido es la INVISIBILIDAD (`specs/hueco-ilustracion.md` §7), y esto es
+     * lo que lo hace cierto también para la clave que falta: sin dibujo no se emite nada.
+     */
+    public static function has(string $key): bool
+    {
+        return array_key_exists($key, self::meta());
+    }
+
+    /**
      * El mapa `clave → {viewBox, stroke}` del kit instalado.
      *
      * ⚠️ Se cachea POR PROCESO y con el `filemtime` dentro de la clave: el armazón puede pedir

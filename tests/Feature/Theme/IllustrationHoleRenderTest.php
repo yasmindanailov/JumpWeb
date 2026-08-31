@@ -119,6 +119,43 @@ class IllustrationHoleRenderTest extends TestCase
         $this->assertStringContainsString('aria-hidden="true"', $html, 'el dibujo no es decorativo');
     }
 
+    /**
+     * **CON kit pero SIN ese dibujo, tampoco se emite nada** — y esto es un defecto REAL medido en
+     * la portada, no un caso hipotético.
+     *
+     * El componente solo preguntaba por el FICHERO, así que con el kit instalado y el símbolo
+     * ausente llegaba al documento un `<svg>` sin `viewBox`. Un `<svg>` sin `viewBox` **no tiene
+     * proporción intrínseca**, así que `height: auto` cae a los **150 px** por defecto de un
+     * elemento reemplazado: medido en `/`, las zonas `cap` y `cap2` metían **dos cajas de 190×150**
+     * que no pintan nada.
+     *
+     * ⚠️⚠️ **Y el caso es el NORMAL, no el raro.** La gramática admite un `zone-<slug>` por cada
+     * zona viva, pero una instalación dibuja las que quiere y `kit:build` **no exige** una por zona
+     * —hace bien—. O sea que toda instalación con más zonas que dibujos tenía este hueco.
+     *
+     * ▶ El CONTROL va en el mismo caso y es lo que lo hace valer: la clave que SÍ está sigue
+     * pintando. Sin él, «no emite nada» no distingue el arreglo de haberlo roto todo.
+     */
+    public function test_with_a_kit_but_without_that_drawing_it_emits_nothing(): void
+    {
+        $this->instalar();
+
+        foreach (['plano', 'contorno', 'troquel'] as $trato) {
+            $this->assertSame(
+                '', trim($this->pintar($trato, 'zone-no-dibujada')),
+                "con kit instalado pero sin el símbolo, el tratamiento «{$trato}» emite marcado: ".
+                'queda un `<svg>` sin `viewBox`, o sea una caja de 150 px que no pinta nada.',
+            );
+
+            // CONTROL: la clave que sí está en ese mismo kit sigue pintando.
+            $this->assertStringContainsString(
+                '#zone-a"', $this->pintar($trato),
+                "el tratamiento «{$trato}» ha dejado de pintar la clave que SÍ está en el kit: el ".
+                'arreglo se ha llevado por delante el caso bueno.',
+            );
+        }
+    }
+
     // ══ CASO 8 · el troquel, y sus DOS defensas ═════════════════════════════════════════════════
 
     /**
