@@ -22,7 +22,8 @@
 > ❗❗❗ **2026-08-31 (noche, 2.ª sesión) · T5 · LAS PALABRAS, EN EL ÁRBOL** (`#298`,
 > `specs/cumple-mixto.md` **§25** diseño fino · **§25.10 ejecución** · §25.9 las TRES decisiones
 > del owner: «Liquidado en el parque» · la puerta de D8 en las TRES vías · el correo del manual
-> entra). Suite **3692 en verde** (24.098 aserciones, 1 skipped a propósito) · JS **878** ·
+> entra). Suite **3693 en verde** (24.100 aserciones, 1 skipped a propósito; la +1 es la guarda N
+> de la adenda) · JS **878** ·
 > **10/10 mutaciones muerden, vistas en rojo una a una** · sonda `/root/e2e/t5.js` 10/10 ✓
 > (4 capturas, las dos críticas miradas). ▶ **D9**: las TRES claves que decían «Pagado en el
 > parque» dicen «Liquidado…» (es/en/fr/zh_CN); `paid_desk` intacta (cobro REGISTRADO);
