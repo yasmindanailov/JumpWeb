@@ -22,8 +22,8 @@
 >
 > ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1–T6 hechas: el plan de `#284`, COMPLETO) ═══════════
 > ❗❗❗ **2026-09-01 · T6 · EL GUARDIÁN DE SOLAPES EN EL DOMINIO, EN EL ÁRBOL** (`#299`,
-> `specs/cumple-mixto.md` **§26** diseño fino · **§26.5 ejecución**). Suite **3704 en verde**
-> (24.120 aserciones, 1 skipped a propósito) · **2/2 mutaciones muerden** (sin el hook de
+> `specs/cumple-mixto.md` **§26** diseño fino · **§26.5 ejecución**).
+> Suite **3704 en verde** (24.120 aserciones, 1 skipped a propósito) · **2/2 mutaciones muerden** (sin el hook de
 > `saving`: 4 rojos; sin el dirty-check: cae el solape preexistente) · el verificador mixto en
 > verde en sus DOS escenarios con el guardián activo. ▶ El hueco **G** de `#284`: el guardián
 > vivía SOLO en el form del catálogo — ahora `TicketType::overlappingAgeSibling()` es la verdad
