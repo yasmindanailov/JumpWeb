@@ -2,7 +2,9 @@
 
 namespace App\Domain\Identity\Services;
 
+use App\Domain\Booking\Contracts\AuthorizableOrders;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationExistsException;
+use App\Domain\Identity\Exceptions\GuardianAuthorizationRefusedException;
 use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
@@ -39,7 +41,10 @@ use Illuminate\Support\Facades\DB;
  */
 final class GuardianAuthorizationSigner
 {
-    public function __construct(private readonly WaiverSigner $signer) {}
+    public function __construct(
+        private readonly WaiverSigner $signer,
+        private readonly AuthorizableOrders $orders,
+    ) {}
 
     /**
      * @param  User  $responsible  el titular del pedido — el RESPONSABLE, no quien firma
@@ -61,6 +66,19 @@ final class GuardianAuthorizationSigner
             // menor podrían decidir los dos que no existe.
             User::query()->whereKey($responsible->getKey())->lockForUpdate()->firstOrFail();
 
+            // ⚠️⚠️ **Las tres puertas se comprueban AQUÍ, bajo el lock, y no al pintar el formulario**
+            // (`SEC-04` aplicado al tiempo): entre que el padre abre el enlace y lo envía puede pasar
+            // la visita, cancelarse el pedido o llenarse el cupo. Y el cupo, en concreto, **solo es
+            // correcto dentro del lock**: dos envíos simultáneos con una plaza libre lo leerían los
+            // dos como disponible.
+            $order = $this->orders->find($orderId);
+            if ($order === null || ! $order->isPaid) {
+                throw GuardianAuthorizationRefusedException::notPaid($orderId);
+            }
+            if ($order->visitFinished) {
+                throw GuardianAuthorizationRefusedException::closed($orderId);
+            }
+
             $existing = GuardianAuthorization::query()
                 ->where('order_id', $orderId)
                 ->where('minor_key', $key)
@@ -81,6 +99,15 @@ final class GuardianAuthorizationSigner
                 );
 
                 return ['authorization' => $existing, 'signature' => $signature, 'created' => false];
+            }
+
+            // El TOPE. No es `SUM(quantity)`: lo cuenta el contrato sobre las líneas principales
+            // VIVAS (`AuthorizableOrdersReader`). Se mira DESPUÉS de la idempotencia a propósito —
+            // un padre que reenvía su propio formulario no consume plaza, así que un pedido lleno
+            // sigue admitiendo su reenvío.
+            $used = GuardianAuthorization::query()->where('order_id', $orderId)->count();
+            if ($used >= $order->capacity) {
+                throw GuardianAuthorizationRefusedException::full($orderId, $order->capacity);
             }
 
             $authorization = GuardianAuthorization::create([

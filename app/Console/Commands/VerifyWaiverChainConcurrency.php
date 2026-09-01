@@ -87,7 +87,7 @@ class VerifyWaiverChainConcurrency extends Command
         File::ensureDirectoryExists($resultsDir);
         File::cleanDirectory($resultsDir);
 
-        $seed = $this->seed($scenario);
+        $seed = $this->seed($scenario, $workers);
         $this->line("Escenario <fg=yellow>{$scenario}</> · titular #{$seed['user']->getKey()} · menor a cargo #{$seed['dependent']->getKey()}"
             .($seed['order_id'] !== null ? " · pedido #{$seed['order_id']}" : '')
             ." · versión firmable v{$seed['version']->version}·{$seed['version']->locale} (#{$seed['version']->getKey()}).");
@@ -139,9 +139,9 @@ class VerifyWaiverChainConcurrency extends Command
      *
      * @return array{user:User, dependent:Dependent, version:LegalDocumentVersion, created_version:bool, order_id:?int}
      */
-    private function seed(string $scenario): array
+    private function seed(string $scenario, int $workers): array
     {
-        return DB::transaction(function () use ($scenario): array {
+        return DB::transaction(function () use ($scenario, $workers): array {
             $user = User::create([
                 'name' => 'Verificador de cadena',
                 'email' => 'waiver-chain-'.Str::lower(Str::random(8)).'@verify.local',
@@ -160,9 +160,31 @@ class VerifyWaiverChainConcurrency extends Command
 
             $orderId = null;
             if ($scenario === 'guest') {
+                // ⚠️ El pedido tiene que ser LEGAL para el subsistema, no solo existir: `paid` y con
+                // una línea principal viva, porque el tope sale de ahí (`AuthorizableOrdersReader`).
+                // Un pedido vacío tendría capacidad 0 y este verificador mediría el rechazo del cupo
+                // en vez de la carrera — verde por el motivo equivocado.
+                $ticketTypeId = DB::table('ticket_types')->where('is_active', true)->value('id');
+                if ($ticketTypeId === null) {
+                    throw new \RuntimeException('No hay ningún producto activo en el catálogo: el escenario `guest` no puede montar un pedido legal.');
+                }
+
                 $orderId = (int) DB::table('orders')->insertGetId([
                     'user_id' => (int) $user->getKey(),
                     'code' => 'WVCHAIN-'.Str::upper(Str::random(8)),
+                    'status' => 'paid',
+                    'paid_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                // Sin franja: `visitFinished` es `false` cuando NINGUNA línea tiene fecha, así que la
+                // ventana está abierta y la carrera se mide sin depender del calendario.
+                DB::table('order_items')->insert([
+                    'order_id' => $orderId,
+                    'ticket_type_id' => $ticketTypeId,
+                    'quantity' => max(2, $workers),
+                    'unit_price' => 0,
+                    'seats' => max(2, $workers),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -329,6 +351,7 @@ class VerifyWaiverChainConcurrency extends Command
         DB::table('waiver_signatures')->where('user_id', $userId)->delete();
         if ($seed['order_id'] !== null) {
             DB::table('guardian_authorizations')->where('order_id', $seed['order_id'])->delete();
+            // `order_items.order_id` es CASCADE (verificado en `information_schema`): la línea cae sola.
             DB::table('orders')->where('id', $seed['order_id'])->delete();
         }
         DB::table('dependents')->where('user_id', $userId)->delete();

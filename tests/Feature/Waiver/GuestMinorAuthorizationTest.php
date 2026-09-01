@@ -3,6 +3,9 @@
 namespace Tests\Feature\Waiver;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationExistsException;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationHasSignaturesException;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationNotFoundException;
@@ -59,14 +62,41 @@ class GuestMinorAuthorizationTest extends TestCase
         return User::factory()->create(['email_verified_at' => $verified ? now() : null]);
     }
 
-    private function orderFor(User $responsible): Order
+    /**
+     * Un pedido PAGADO con una reserva REAL en el futuro.
+     *
+     * ⚠️ La línea no es decorado: desde la T2 el tope sale de las **líneas principales vivas**
+     * (`AuthorizableOrdersReader`), así que un pedido sin ellas tiene capacidad **0** y no admite ni
+     * un justificante. Los primeros fixtures de este fichero eran así — un pedido sin nada comprado
+     * al que se le autorizan invitados es un mundo que no existe. **Se legalizan, no se excepciona
+     * la regla.**
+     */
+    private function orderFor(User $responsible, int $quantity = 4): Order
     {
-        return Order::create([
+        $zone = Zone::firstOrCreate(['slug' => 'jump'], ['name' => ['es' => 'Jump'], 'position' => 1, 'is_active' => true]);
+        $type = TicketType::firstOrCreate(['zone_id' => $zone->id, 'type' => TicketType::TYPE_ENTRY], [
+            'name' => ['es' => 'Entrada'], 'duration_min' => 60, 'seats_per_unit' => 1,
+            'is_sellable' => true, 'is_active' => true, 'position' => 1,
+        ]);
+        $slot = Slot::create([
+            'zone_id' => $zone->id,
+            'date' => now()->addMonth()->toDateString(),
+            'start_time' => '10:00:00', 'end_time' => '11:00:00',
+            'capacity' => 200, 'online_capacity' => 200,
+        ]);
+
+        $order = Order::create([
             'user_id' => $responsible->id,
             'code' => 'R-'.strtoupper(substr(md5((string) mt_rand()), 0, 6)),
             'status' => Order::STATUS_PAID,
             'subtotal' => 500, 'tax' => 0, 'total' => 500, 'currency' => 'EUR', 'paid_at' => now(),
         ]);
+        $order->items()->create([
+            'ticket_type_id' => $type->id, 'slot_id' => $slot->id,
+            'quantity' => $quantity, 'unit_price' => 500, 'seats' => $quantity,
+        ]);
+
+        return $order;
     }
 
     /**

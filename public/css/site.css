@@ -2013,18 +2013,28 @@ body.no-scroll { overflow: hidden; }
 .eventfields__field { display: flex; flex-direction: column; gap: var(--sp-6); }
 .eventfields__label { font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); color: var(--fg); }
 .eventfields__req { color: var(--zone-1); }
+/* `select` entra con el justificante de un menor invitado (#328): la relación con el menor es una
+   lista CERRADA, no texto libre. Es puramente ADITIVO —medido: no había ni un `<select>` en las
+   vistas públicas— y usa los MISMOS tokens, para que un desplegable no invente una segunda forma. */
 .eventfields input,
+.eventfields select,
 .eventfields textarea {
     font-family: var(--font-body); font-size: var(--fs-15); color: var(--fg);
     background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
     padding: var(--sp-11) var(--sp-13); width: 100%; resize: vertical;
     transition: border-color var(--dur-sale) var(--ease-sale);
 }
+.eventfields select { appearance: none; resize: none; cursor: pointer; }
 .eventfields input:focus,
+.eventfields select:focus,
 .eventfields textarea:focus { outline: none; border-color: var(--fg); }
 /* Campo obligatorio sin rellenar al pulsar «Añadir» (#UX validar-al-clic): borde + halo rojo. */
 .eventfields__field.is-invalid input,
+.eventfields__field.is-invalid select,
 .eventfields__field.is-invalid textarea { border-color: var(--err); box-shadow: 0 0 0 3px color-mix(in srgb, var(--err) 13%, transparent); }
+/* Mensaje de error bajo el campo y ayuda: mismos tokens que el resto de la hoja. */
+.eventfields__help { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
+.eventfields__error { font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--err); }
 
 /* Datos del evento mostrados bajo una línea de carrito/pago/confirmación */
 .cart__event { list-style: none; margin: 8px 0 0; padding: var(--sp-8) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3); }
@@ -4421,6 +4431,28 @@ body[data-has-hero] .nav--over .nav__cta {
 }
 .guestform__progress.is-complete { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--sheet)); }
 .guestform__privacy { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
+
+/* El JUSTIFICANTE de un menor invitado (#328, `specs/waiver-por-reserva.md` §4.6). Reutiliza el
+   lenguaje de la hoja del post-form —mismos tokens, mismo molde— porque son la misma clase de
+   pantalla: enfocada, pública y sin nav. Lo único propio es el TEXTO LEGAL que hay que leer antes
+   de aceptar, que el post-form no tiene. */
+.guardian__notice {
+    background: var(--bg-soft); border: 1px solid var(--line);
+    color: var(--fg); border-radius: var(--r-md); padding: 14px 18px; font-size: 14px; margin: 0 0 18px;
+}
+/* El texto se lee EN EL PROPIO FLUJO (§4.4): con altura acotada y su propio scroll, para que un
+   waiver largo no empuje la casilla y el botón fuera de la pantalla. */
+.guardian__waiver {
+    border: 1px solid var(--line); border-radius: var(--r); background: var(--sheet);
+    padding: 18px 20px; max-height: 320px; overflow-y: auto;
+}
+.guardian__waiver-title { font-family: var(--font-display); font-size: 18px; font-weight: 800; margin: 0 0 10px; color: var(--fg); }
+.guardian__waiver-h { font-family: var(--font-body); font-size: 14px; font-weight: 700; margin: 14px 0 4px; color: var(--fg); }
+.guardian__waiver-p { font-size: 13px; line-height: 1.6; color: var(--fg); margin: 0; }
+/* Casilla SEPARADA y desmarcada por defecto: no se mezcla con privacidad ni con condiciones. */
+.guardian__accept { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; font-size: 14px; line-height: 1.5; color: var(--fg); cursor: pointer; }
+.guardian__accept input { margin-top: 3px; flex-shrink: 0; }
+.guardian__accept.is-invalid { color: var(--err); }
 .guestform__section { display: flex; flex-direction: column; gap: 14px; }
 .guestform__section-title { font-family: var(--font-display); font-size: 18px; margin: 0; }
 .guestform__general { border-left: 3px solid var(--zone-1); padding-left: 16px; }

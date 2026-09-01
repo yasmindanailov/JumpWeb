@@ -1,0 +1,81 @@
+<?php
+
+/*
+ * Phase 6 · l'AUTORISATION pour un mineur invité à une réservation
+ * (`docs/specs/waiver-por-reserva.md`, lot T2). Lue par un INCONNU : un parent sans compte, depuis un
+ * lien transmis par la personne qui a réservé. Trois langues, jamais dans `admin.*`.
+ */
+return [
+    'title' => 'Autorisation pour les mineurs',
+    'intro' => 'Remplissez ce formulaire pour autoriser la participation d’un mineur dont vous avez la charge. La personne qui a réservé l’a préparé.',
+
+    'booking' => [
+        'heading' => 'La réservation',
+        'reference' => 'Référence',
+        'date' => 'Jour de la visite',
+        'dates' => 'Jours de la visite',
+        'no_date' => 'Aucune date attribuée pour l’instant',
+    ],
+
+    'minor' => [
+        'heading' => 'Données du mineur',
+        'name' => 'Prénom',
+        'surname' => 'Nom',
+        'born_on' => 'Date de naissance',
+        'born_on_help' => 'Elle nous sert à connaître son âge le jour de la visite.',
+    ],
+
+    'guardian' => [
+        'heading' => 'Vos données',
+        'help' => 'En tant que parent ou tuteur légal du mineur.',
+        'name' => 'Prénom',
+        'surname' => 'Nom',
+        'relationship' => 'Lien avec le mineur',
+        'relationship_placeholder' => 'Choisissez une option',
+        'email' => 'Adresse e-mail',
+        'email_help' => 'Facultatif. Si vous la laissez, nous vous envoyons une copie de ce que vous signez.',
+        'phone' => 'Téléphone',
+        'phone_help' => 'Facultatif. Pour pouvoir vous joindre le jour de la visite.',
+    ],
+
+    'relationships' => [
+        'father' => 'Père',
+        'mother' => 'Mère',
+        'legal_guardian' => 'Tuteur ou tutrice légale',
+        'grandparent' => 'Grand-parent',
+        'other' => 'Autre',
+    ],
+
+    'waiver' => [
+        'heading' => 'Décharge de responsabilité',
+        'accept' => 'J’ai lu la décharge de responsabilité et je l’accepte au nom du mineur.',
+        'version' => 'Version :version, publiée le :date',
+    ],
+
+    'submit' => 'Signer l’autorisation',
+
+    'done' => [
+        'signed' => 'C’est fait : l’autorisation de :name a bien été enregistrée.',
+        'signed_generic' => 'C’est fait : l’autorisation a bien été enregistrée.',
+        'already' => ':name a déjà une autorisation signée pour cette réservation. Rien d’autre à faire.',
+        'already_generic' => 'Ce mineur a déjà une autorisation signée pour cette réservation.',
+        'stale' => 'Le texte de la décharge a été mis à jour pendant que vous remplissiez le formulaire. Relisez-le et acceptez-le à nouveau.',
+    ],
+
+    'blocked' => [
+        'heading' => 'Impossible de signer ici',
+        'not_paid' => 'Cette réservation n’est pas encore confirmée. Parlez-en à la personne qui l’a faite.',
+        'closed' => 'La visite de cette réservation a déjà eu lieu : ce formulaire est fermé.',
+        'full' => 'Cette réservation a déjà toutes ses autorisations. S’il en manque une, parlez-en à la personne qui a réservé.',
+    ],
+
+    'errors' => [
+        'accept_waiver' => 'Vous devez accepter la décharge de responsabilité pour pouvoir signer.',
+        'born_on_future' => 'La date de naissance doit être antérieure à aujourd’hui.',
+        'born_on_adult' => 'Cette date indique que la personne est déjà majeure, et une personne majeure signe pour elle-même : cette autorisation est réservée aux mineurs.',
+    ],
+
+    'notice' => 'Vous déclarez vous-même ces données et nous ne les vérifions avec aucun document. Elles sont conservées comme preuve de cette autorisation.',
+    'privacy' => 'Nous traitons ces données pour permettre l’entrée du mineur et comme preuve de votre autorisation. Vous pouvez exercer vos droits comme expliqué dans :link.',
+    'privacy_link' => 'notre politique de confidentialité',
+];

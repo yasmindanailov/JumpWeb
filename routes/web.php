@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CookieConsentController;
 use App\Http\Controllers\EventsController;
+use App\Http\Controllers\GuardianAuthorizationController;
 use App\Http\Controllers\GuestFormController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PageController;
@@ -152,6 +153,22 @@ Route::get('/reserva/{reservation}/datos-invitados', [GuestFormController::class
     ->name('reservation.guests');
 Route::post('/reserva/{reservation}/datos-invitados', [GuestFormController::class, 'store'])
     ->middleware(['throttle:30,1', 'no-store'])->name('reservation.guests.store');
+
+// El JUSTIFICANTE de un menor INVITADO a una reserva («waiver offshore», `#328`): un adulto SIN
+// cuenta autoriza a un menor que no es menor a cargo de quien reservó. Va por PEDIDO —es «el papelito
+// de la excursión», uno solo que el responsable reparte— y el acceso lo da la firma HMAC del enlace,
+// porque quien lo abre no tiene sesión.
+//
+// ⚠️ El POST es la superficie MÁS expuesta del producto: pública, sin sesión y **crea personas**.
+// Lleva `throttle` por IP además de Turnstile y del honeypot (`SEC-06`): un CAPTCHA resuelto no es una
+// barrera de volumen. El tope por pedido y la ventana temporal los impone el DOMINIO bajo el lock.
+// `no-store` (`RGPD-04`): la pantalla lleva el nombre y la fecha de nacimiento de un menor.
+Route::get('/autorizacion/{order}', [GuardianAuthorizationController::class, 'show'])
+    ->middleware('no-store')
+    ->name('reservation.authorization');
+Route::post('/autorizacion/{order}', [GuardianAuthorizationController::class, 'store'])
+    ->middleware(['throttle:10,1', 'no-store'])
+    ->name('reservation.authorization.store');
 
 // SEO: mapa del sitio para buscadores.
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');

@@ -23,6 +23,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Pedido (cesta confirmada). Nace `pending` con `expires_at` (retención de plaza);
@@ -179,6 +180,29 @@ class Order extends Model
         $base = $maxDate !== null ? Carbon::parse($maxDate)->endOfDay() : now();
 
         return $base->copy()->addDays(14);
+    }
+
+    /**
+     * Enlace FIRMADO (temporal) al JUSTIFICANTE de un menor invitado de ESTE pedido
+     * (`docs/specs/waiver-por-reserva.md` §4.6). **Fuente ÚNICA del enlace**, como
+     * {@see OrderItem::guestFormSignedUrl()} lo es del post-form.
+     *
+     * ⚠️ Va por PEDIDO y no por reserva (`[DECIDIDO owner]`): es «el papelito de la excursión», uno
+     * solo, que el responsable reparte. La firma HMAC es lo que autoriza —quien lo abre **no tiene
+     * cuenta**— y caduca con {@see guestFormLinkExpiresAt}, la misma regla que `RGPD-03` fija para el
+     * enlace del post-form: no se inventa un plazo nuevo.
+     *
+     * ⚠️⚠️ **Es una credencial portadora y NO puede publicarse en el contexto de cuenta**, que se
+     * siembra en el HTML de cada página con sesión (la prohibición que `AccountContextResource`
+     * documenta). Se sirve bajo demanda, por una acción explícita.
+     */
+    public function guardianAuthorizationSignedUrl(): string
+    {
+        return URL::temporarySignedRoute(
+            'reservation.authorization',
+            $this->guestFormLinkExpiresAt(),
+            ['order' => $this],
+        );
     }
 
     /**
