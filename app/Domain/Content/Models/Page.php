@@ -17,7 +17,7 @@ class Page extends Model
      *
      * @var list<string>
      */
-    public const REVIEWED_LEGAL_SLUGS = ['cookies', 'privacidad', 'condiciones', 'aviso-legal'];
+    public const REVIEWED_LEGAL_SLUGS = ['cookies', 'privacidad', 'condiciones', 'aviso-legal', 'waiver'];
 
     /**
      * Slugs legales que NO pueden quedar inactivos desde el panel. TODOS están enlazados de forma

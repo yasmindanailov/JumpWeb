@@ -64,5 +64,6 @@ return [
         'waiver_not_internal' => 'La décharge ne se signe pas sur ce site.',
         'waiver_document_required' => 'Pour accepter la décharge, il faut indiquer quel texte a été lu.',
         'waiver_required' => 'Pour créer le compte, il faut lire et accepter la décharge de responsabilité.',
+        'online_sales_disabled' => 'La réservation en ligne n’est pas encore disponible. Appelez-nous ou venez au parc pour réserver.',
     ],
 ];

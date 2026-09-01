@@ -41,9 +41,11 @@ class CookiePolicyContentTest extends TestCase
         // Cookies tiene contenido definitivo → NO muestra el aviso de borrador.
         $this->get('/cookies')->assertOk()->assertDontSee(__('site.legal_draft_notice'));
 
-        // Una legal aún en borrador (fuera de REVIEWED_LEGAL_SLUGS) sí lo muestra.
-        $this->assertNotContains('waiver', Page::REVIEWED_LEGAL_SLUGS);
-        $this->get('/waiver')->assertOk()->assertSee(__('site.legal_draft_notice'));
+        // Lanzamiento 2026-09-01: la descarga de responsabilidad (slug `waiver`) ya tiene texto
+        // DEFINITIVO en la instalación y entra en REVIEWED_LEGAL_SLUGS — las cinco legales son
+        // definitivas y ninguna muestra el aviso de borrador.
+        $this->assertContains('waiver', Page::REVIEWED_LEGAL_SLUGS);
+        $this->get('/waiver')->assertOk()->assertDontSee(__('site.legal_draft_notice'));
     }
 
     public function test_policy_interpolates_fiscal_data(): void

@@ -64,10 +64,17 @@
          botón de tinta a la izquierda del blanco. No es simetría: es el orden de lectura, el de
          más peso primero. Y arranca EXPANDIDA, que es la jerarquía —comprar cuesta un gesto y la
          cuenta dos—, no un valor por defecto cualquiera. --}}
-    <a href="{{ route('entradas') }}" class="cta-med {{ $s['buy'] }}"
+    {{-- Compra online CERRADA (`sales.online_enabled=0`, lanzamiento 2026-09-01): la mitad de
+         comprar pasa a ser una LLAMADA — mismo botón, mismo sitio, `tel:` en vez del cajón. --}}
+    @php $ventaCerrada = ! $site['sales_online'] && $site['has_phone']; @endphp
+    <a href="{{ $ventaCerrada ? 'tel:'.$site['phone_tel'] : route('entradas') }}" class="cta-med {{ $s['buy'] }}"
        aria-label="{{ $esBarra ? __('landing.hero.cta_buy') : __('landing.nav.reserve_tickets_aria') }}"
        :aria-label="$store.ctaPair.mode === 'buy' ? @js($esBarra ? __('landing.hero.cta_buy') : __('landing.nav.reserve_tickets_aria')) : @js(__('landing.nav.cta_switch_buy'))"
-       @click.prevent="$store.ctaPair.mode === 'buy' ? $store.purchase.open() : $store.ctaPair.show('buy')">
+       @if ($ventaCerrada)
+       @click="$store.ctaPair.mode === 'buy' || ($event.preventDefault(), $store.ctaPair.show('buy'))"
+       @else
+       @click.prevent="$store.ctaPair.mode === 'buy' ? $store.purchase.open() : $store.ctaPair.show('buy')"
+       @endif>
         {{-- ⚠️ Era `ic-e2`, la ILUSTRACIÓN de dos entradas superpuestas en lienzo 50×32 (`#259`).
              Se queda en el catálogo como marcador de producto, pero en el botón de comprar del
              armazón el sujeto es «una entrada», y el set del artboard tiene su glifo: `ui/entrada`.
@@ -78,8 +85,14 @@
              justo lo que dejó el icono a 22 px dentro de un botón de 74. --}}
         <span class="cta-med__ico"><x-icons.ticket /></span>
         <span class="cta-med__body">
+            @if ($ventaCerrada)
+                <span class="cta-med__t">{{ __('landing.pricing.call') }}</span>
+                <span class="cta-med__s">{{ $site['phone'] }}</span>
+            @else
             <span class="cta-med__t">{{ __('landing.nav.cta_buy') }}</span>
-            @if (! empty($etiquetaPrecio))
+            @endif
+            @if ($ventaCerrada)
+            @elseif (! empty($etiquetaPrecio))
                 <span class="cta-med__s">{{ __('landing.nav.cta_buy_from', ['amount' => $etiquetaPrecio]) }}</span>
             @elseif ($esBarra)
                 {{-- Sin catálogo vendible la BARRA no se queda muda: dice lo único reservable hoy.

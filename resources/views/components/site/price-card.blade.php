@@ -36,7 +36,9 @@
     {{-- CTA por card: «Reservar» abre el sidebar de compra (el catálogo arranca en «Entradas»).
          Si la entrada NO tiene venta online (`is_sellable=false`) → fallback a «Llamar» con el
          teléfono de contacto; si tampoco hay teléfono configurado, no se muestra CTA. --}}
-    @if ($ticket->is_sellable)
+    {{-- Con la compra online CERRADA (`sales.online_enabled=0`, lanzamiento) la entrada se trata
+         como no vendible: cae al mismo «Llamar» de siempre. --}}
+    @if ($ticket->is_sellable && $site['sales_online'])
         <button type="button" class="btn price__cta" @click="$store.purchase.open()">{{ __('landing.pricing.book') }}</button>
     @elseif ($site['has_phone'])
         <a href="tel:{{ $site['phone_tel'] }}" class="btn price__cta">{{ __('landing.pricing.call') }}</a>

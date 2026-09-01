@@ -5103,11 +5103,8 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .menu__item a:focus-visible { padding-left: 18px; color: var(--zone-1); }
 .menu__item a:focus-visible { outline: var(--focus-outline); outline-offset: 4px; }
 
-.menu__n {
-    flex: 0 0 auto; width: 26px;
-    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em;
-    color: var(--fg-mute);
-}
+/* `.menu__n` (los números «01…» de cada destino) RETIRADA con su consumidor
+   (`[DECIDIDO owner, 2026-09-01]`, lanzamiento). */
 .menu__t {
     font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
     font-size: clamp(30px, min(5.2vw, 9vh), 68px);

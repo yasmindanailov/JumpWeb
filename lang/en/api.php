@@ -64,5 +64,6 @@ return [
         'waiver_not_internal' => 'The waiver is not signed on this website.',
         'waiver_document_required' => 'To accept the waiver you must indicate which text you have read.',
         'waiver_required' => 'To create the account you must read and accept the liability waiver.',
+        'online_sales_disabled' => 'Online booking is not available yet. Call us or come to the park to book.',
     ],
 ];

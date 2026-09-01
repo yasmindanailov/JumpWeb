@@ -61,6 +61,21 @@ class PaymentSettings
      * variar en producción según el banco. La retención debe ser ≥ ese timeout (#62 §14.8)
      * con margen suficiente para tolerar latencias de notificación on-line (#113, C1).
      */
+    /**
+     * **¿Está abierta la compra ONLINE?** (`sales.online_enabled`, lanzamiento 2026-09-01).
+     *
+     * `[DECIDIDO owner]`: sin claves de Redsys de producción, la web sale con el CATÁLOGO visible
+     * pero la compra cerrada — «las entradas se compran en taquilla o por teléfono», que es lo que
+     * ya dice la portada. Con el interruptor en `0`, los CTA de compra pasan a `tel:` y la API de
+     * compra (presupuesto, cesta, pedido, pago) responde 503 `online_sales_disabled`: el servidor
+     * es la verdad, el Blade solo la enseña. Vacío o cualquier otra cosa = ABIERTA (la conducta de
+     * siempre), para que ninguna instalación existente cambie sin que alguien lo decida.
+     */
+    public static function onlineSalesEnabled(): bool
+    {
+        return trim((string) Setting::value('sales.online_enabled', '1')) !== '0';
+    }
+
     public static function holdMinutes(): int
     {
         $raw = Setting::value('sales.hold_minutes', (string) self::HOLD_MINUTES_DEFAULT);

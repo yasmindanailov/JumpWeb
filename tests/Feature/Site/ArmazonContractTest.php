@@ -983,17 +983,13 @@ class ArmazonContractTest extends TestCase
      */
     public function test_the_menu_numbers_are_decoration(): void
     {
+        // `[DECIDIDO owner, 2026-09-01]` (lanzamiento): los números «01…» SE RETIRARON del menú.
+        // Este caso vigilaba que fueran decoración (aria-hidden); ahora vigila que no vuelvan —
+        // un número delante de cada destino era ruido y el owner lo quiso fuera.
         $html = $this->get('/')->assertOk()->getContent();
-        $numeros = $this->nodes($html, 'menu__n');
 
-        $this->assertNotEmpty($numeros, 'el menú no numera sus destinos');
-
-        foreach ($numeros as $n) {
-            $this->assertSame(
-                'true', $n->getAttribute('aria-hidden'),
-                'un número del menú entra en el nombre accesible del enlace',
-            );
-        }
+        $this->assertSame([], $this->nodes($html, 'menu__n'), 'el menú vuelve a numerar sus destinos');
+        $this->assertNotEmpty($this->nodes($html, 'menu__t'), 'el menú no tiene destinos: el localizador se ha roto');
     }
 
     /**

@@ -56,6 +56,8 @@
             <a href="{{ $parkUrls[$i] ?? url('/') }}">{{ $link }}</a>
         @endforeach
         @foreach (__('landing.footer.links_info') as $i => $link)
+            {{-- Lanzamiento 2026-09-01: con `/servicios` en mantenimiento, su enlace no se anuncia. --}}
+            @continue(($infoUrls[$i] ?? '') === route('servicios') && \App\Domain\Platform\Services\MaintenanceSettings::pageInMaintenance('servicios'))
             <a href="{{ $infoUrls[$i] ?? url('/') }}">{{ $link }}</a>
         @endforeach
         <a href="{{ route('account') }}">{{ __('landing.footer.account_link') }}</a>

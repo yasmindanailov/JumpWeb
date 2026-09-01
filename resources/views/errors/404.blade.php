@@ -23,7 +23,11 @@
             {{-- T9: el PRIMARIO de un 404 es el que hace avanzar (reservar); «inicio» es la salida
                  secundaria. Antes iban marca+acción (dos sólidos): la acción es UNA por pantalla. --}}
             <a href="{{ url('/') }}" class="btn btn--ghost btn--lg">{{ __('site.e404_home') }}</a>
-            <button type="button" class="btn btn--lg" @click="$store.purchase.open()">{{ __('site.e404_book') }} →</button>
+            @if ($site['sales_online'])
+                <button type="button" class="btn btn--lg" @click="$store.purchase.open()">{{ __('site.e404_book') }} →</button>
+            @elseif ($site['has_phone'])
+                <a href="tel:{{ $site['phone_tel'] }}" class="btn btn--lg">{{ __('landing.pricing.call') }} · {{ $site['phone'] }}</a>
+            @endif
         </div>
 
         <nav class="e404__links" aria-label="{{ __('site.e404_popular') }}">

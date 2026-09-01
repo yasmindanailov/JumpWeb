@@ -43,6 +43,7 @@ use App\Domain\Identity\Services\CookieConsent;
 use App\Domain\Identity\Services\CustomerAccountContext;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
+use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\QrLogo;
@@ -255,6 +256,9 @@ class AppServiceProvider extends ServiceProvider
             'heroStatus' => app(HeroStatus::class)->current(),
             'site' => [
                 'name' => $get('business.name', config('app.name')),
+                // Lanzamiento 2026-09-01: con la compra online CERRADA (`sales.online_enabled=0`) los
+                // CTA de compra pasan a `tel:`; el suelo real es `EnsureOnlineSalesEnabled` en la API.
+                'sales_online' => PaymentSettings::onlineSalesEnabled(),
                 'city' => $get('business.city', ''),
                 'email' => $get('contact.email', ''),
                 'phone' => $get('contact.phone', ''),

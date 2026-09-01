@@ -288,8 +288,17 @@ guard_errors=()
 [[ "$r_debug" == "false" ]]                 || guard_errors+=("GUARDA · APP_DEBUG='$r_debug' (debe ser 'false': filtraría trazas y config)")
 [[ "$r_url" == https://* ]]                 || guard_errors+=("GUARDA 5 · APP_URL='$r_url' debe ser HTTPS (rompe a la vez emails, URLs firmadas, CORS y Sanctum)")
 [[ "$r_queue" == "database" ]]              || guard_errors+=("GUARDA 6 · QUEUE_CONNECTION='$r_queue' (debe ser 'database'; con 'sync' los 22 ShouldQueue se envían en la petición)")
-[[ "$r_mail" == "log" || "$r_mail" == "array" ]] \
-    || guard_errors+=("GUARDA 3 · MAIL_MAILER='$r_mail' — EL CORREO SALDRÍA. Los seeds llevan direcciones con pinta de reales. Usa 'log' o un buzón trampa.")
+# ⚠️ PRODUCCIÓN (`DEPLOY_PRODUCTION=1`, 2026-09-01 · playjump.es): el correo TIENE que salir
+# (el registro exige verificar el email para firmar) y el `robots.txt` del repo (permisivo) es el
+# bueno. Las guardas 3 y 4 son de STAGING —su razón es que allí los seeds llevan direcciones con
+# pinta de reales y el sitio no debe indexarse— y en producción se INVIERTEN, no se relajan.
+if [[ "${DEPLOY_PRODUCTION:-0}" == "1" ]]; then
+    [[ "$r_mail" != "log" && "$r_mail" != "array" ]] \
+        || guard_errors+=("PRODUCCIÓN · MAIL_MAILER='$r_mail' — el correo NO saldría y nadie podría verificar su cuenta ni firmar.")
+else
+    [[ "$r_mail" == "log" || "$r_mail" == "array" ]] \
+        || guard_errors+=("GUARDA 3 · MAIL_MAILER='$r_mail' — EL CORREO SALDRÍA. Los seeds llevan direcciones con pinta de reales. Usa 'log' o un buzón trampa.")
+fi
 
 if [[ ${#guard_errors[@]} -gt 0 ]]; then
     printf '\n%s✗ El .env remoto NO cumple las guardas de ENTORNOS.md §2:%s\n' "$c_red" "$c_off" >&2
@@ -444,8 +453,12 @@ step "6/9 · Reponiendo el robots.txt (guarda 4)"
 
 # El del repo dice `Disallow:` (vacío = permitir TODO) porque la instalación de un cliente
 # DEBE indexarse. Cada rsync lo pisa, así que esto no es opcional ni una sola vez.
-sshx "printf '%s\n' 'User-agent: *' 'Disallow: /' > '$REMOTE_ROOT/public/robots.txt'"
-info "robots.txt reescrito (se verifica por HTTP al final)"
+if [[ "${DEPLOY_PRODUCTION:-0}" == "1" ]]; then
+    info "PRODUCCIÓN: se conserva el robots.txt permisivo del repo (la instalación DEBE indexarse)"
+else
+    sshx "printf '%s\n' 'User-agent: *' 'Disallow: /' > '$REMOTE_ROOT/public/robots.txt'"
+    info "robots.txt reescrito (se verifica por HTTP al final)"
+fi
 
 # =============================================================================
 # 7 · DEPENDENCIAS Y BASE DE DATOS
@@ -536,8 +549,13 @@ check "GET / → $home_code (esperado 200)" "$([[ "$home_code" == "200" ]] && ec
 # ⚠️ Se compara el CONTENIDO, no el tamaño: el servido (26 B) y el permisivo del repo (25 B)
 # pesan casi igual, así que un check por tamaño daría verde con la guarda caída.
 robots=$(curl -s -m 20 "$SITE_URL/robots.txt" || echo "")
-check "GUARDA 4 · robots.txt contiene 'Disallow: /'" \
-    "$(grep -qx 'Disallow: /' <<<"$robots" && echo 0 || echo 1)"
+if [[ "${DEPLOY_PRODUCTION:-0}" == "1" ]]; then
+    check "PRODUCCIÓN · robots.txt NO contiene 'Disallow: /' (el sitio se indexa)" \
+        "$(grep -qx 'Disallow: /' <<<"$robots" && echo 1 || echo 0)"
+else
+    check "GUARDA 4 · robots.txt contiene 'Disallow: /'" \
+        "$(grep -qx 'Disallow: /' <<<"$robots" && echo 0 || echo 1)"
+fi
 
 # ── GUARDA 7 · el KIT DE ILUSTRACIÓN instalado sigue siendo servible ──────────────────────────
 # `specs/hueco-ilustracion.md` §5. ⚠️⚠️ **Este es el ÚNICO punto del sistema que ve el fichero

@@ -72,5 +72,7 @@ return [
         'waiver_not_internal' => 'El waiver no se firma en esta web.',
         'waiver_document_required' => 'Para aceptar el waiver hay que indicar qué texto se ha leído.',
         'waiver_required' => 'Para crear la cuenta hay que leer y aceptar la exención de responsabilidad (waiver).',
+        // Lanzamiento 2026-09-01: la compra online puede estar cerrada (`sales.online_enabled=0`).
+        'online_sales_disabled' => 'La compra online no está disponible por ahora. Llámanos o ven al parque para reservar.',
     ],
 ];

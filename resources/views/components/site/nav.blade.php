@@ -15,19 +15,24 @@
     // Selector «Servicios»: STATIC + DATA-DRIVEN (#256, modelo A). «Cumpleaños» (→ /cumpleanos) y
     // «Otros eventos» (→ /servicios#eventos) quedan FIJOS; los del medio salen de `LandingService`
     // (show_in_nav) memoizado en el composer (`$navServices`), enlazando a /servicios#slug.
+    // Lanzamiento 2026-09-01: con `/servicios` en MANTENIMIENTO (`maintenance.page.servicios`), sus
+    // destinos salen del menú — una página inalcanzable no se anuncia. Cumpleaños tiene página propia.
+    $serviciosAbierta = ! \App\Domain\Platform\Services\MaintenanceSettings::pageInMaintenance('servicios');
     $servicesItems = array_merge(
         [['t' => __('landing.nav.services_items.birthdays.t'), 's' => __('landing.nav.services_items.birthdays.s'), 'url' => route('cumpleanos')]],
         // ⚠️ `img` entra en `#228` para la VISTA PREVIA del menú (la columna lateral del mockup).
         // Solo los servicios del CMS tienen imagen; los ítems fijos —zonas, atracciones, info—
         // no, y ahí la tarjeta cae a su fondo rayado. Es el mismo trato que el mockup le da a lo
         // que aún no tiene foto, así que la ausencia no se ve como un hueco.
-        collect($navServices ?? [])->map(fn ($s) => [
+        $serviciosAbierta ? collect($navServices ?? [])->map(fn ($s) => [
             't' => $s->tr('title'),
             's' => $s->tr('nav_subtitle'),
             'url' => route('servicios').'#'.$s->slug,
             'img' => $s->image ? asset($s->image) : null,
-        ])->all(),
-        [['t' => __('landing.nav.services_items.events.t'), 's' => __('landing.nav.services_items.events.s'), 'url' => route('servicios').'#eventos']],
+        ])->all() : [],
+        $serviciosAbierta
+            ? [['t' => __('landing.nav.services_items.events.t'), 's' => __('landing.nav.services_items.events.s'), 'url' => route('servicios').'#eventos']]
+            : [],
     );
     $simpleLinks = [
         ['t' => __('landing.nav.events'), 'url' => route('cumpleanos')],   // Cumpleaños (destacado además del item dentro de Servicios)

@@ -91,7 +91,7 @@
      `lazy`, así que su `mount()` corre en una petición POSTERIOR a este render (medido). Si
      el layout consumiera aquí, el motor se quedaría sin nada que enseñar. Quién consume
      depende del motor, y `Http\Sidebar\SidebarEntry` lo explica en un solo sitio. --}}
-<body data-purchase-open="{{ (request()->routeIs('entradas') || \App\Http\Sidebar\AccountDoor::isDoor() || \App\Http\Sidebar\SidebarEntry::peek()->pending()) ? '1' : '' }}"
+<body data-purchase-open="{{ ((request()->routeIs('entradas') && $site['sales_online']) || \App\Http\Sidebar\AccountDoor::isDoor() || \App\Http\Sidebar\SidebarEntry::peek()->pending()) ? '1' : '' }}"
       {{-- La ZONA del área de cliente con la que abrir, cuando se ha entrado por una de las rutas
            que sobreviven a la retirada de `/mi-cuenta/…` (`AccountDoor`). Vacío = no es una puerta.
            ⚠️ Se CONSUME al abrir: si no, cerrar y reabrir el cajón devolvería al cliente a la zona

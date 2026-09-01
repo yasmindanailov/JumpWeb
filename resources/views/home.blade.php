@@ -461,8 +461,10 @@
                     <p class="rules-must__text">{{ __('landing.rules.socks_text') }}</p>
                     {{-- Los calcetines son un COMPLEMENTO de la entrada, no un producto suelto: el
                          CTA lleva a la compra, que es donde se ofrecen. --}}
+                    @if ($site['sales_online'])
                     <a class="btn btn--ghost btn--sm" href="{{ route('entradas') }}" data-tap
                        x-on:click.prevent="$store.purchase.open()">{{ __('landing.rules.socks_cta') }}</a>
+                    @endif
                 </article>
             </div>
 
@@ -610,8 +612,12 @@
                 <span class="salta__fin-acts">
                     <button type="button" class="salta__btn" @click="juega()"
                             x-text="tactil ? @js(__('landing.game.again_touch')) : @js(__('landing.game.again'))"></button>
+                    @if ($site['sales_online'])
                     <button type="button" class="salta__btn salta__btn--ghost"
                             @click="sal(); $store.purchase.open()">{{ __('landing.game.book') }}</button>
+                    @elseif ($site['has_phone'])
+                    <a class="salta__btn salta__btn--ghost" href="tel:{{ $site['phone_tel'] }}">{{ __('landing.pricing.call') }}</a>
+                    @endif
                 </span>
             </div>
 
@@ -630,7 +636,8 @@
                 </h2>
                 <p>{{ __('landing.reserve.copy') }}</p>
                 <div class="reserve__actions">
-                    <a href="{{ route('entradas') }}" @click.prevent="$store.purchase.open()" class="reserve__act">{{ __('landing.reserve.cta') }}</a>
+                    <a href="{{ $site['sales_online'] ? route('entradas') : ($site['has_phone'] ? 'tel:'.$site['phone_tel'] : route('precios')) }}"
+                       @if ($site['sales_online']) @click.prevent="$store.purchase.open()" @endif class="reserve__act">{{ __('landing.reserve.cta') }}</a>
                     @if ($site['has_phone'])
                         <a href="tel:{{ $site['phone_tel'] }}" class="reserve__act reserve__act--alt">{{ __('landing.reserve.cta2') }} {{ $site['phone'] }}</a>
                     @endif

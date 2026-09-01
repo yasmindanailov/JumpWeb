@@ -16,7 +16,11 @@
         <x-site.ticket-prices :tickets="$tickets" :zones="$zones" />
 
         <div class="page__cta">
-            <a href="{{ route('entradas') }}" @click.prevent="$store.purchase.open()" class="btn btn--lg">{{ __('landing.reserve.cta') }} →</a>
+            @if ($site['sales_online'])
+                <a href="{{ route('entradas') }}" @click.prevent="$store.purchase.open()" class="btn btn--lg">{{ __('landing.reserve.cta') }} →</a>
+            @elseif ($site['has_phone'])
+                <a href="tel:{{ $site['phone_tel'] }}" class="btn btn--lg">{{ __('landing.pricing.call') }} · {{ $site['phone'] }}</a>
+            @endif
             <a href="{{ route('cumpleanos') }}" class="btn btn--ghost btn--lg">{{ __('landing.nav.events') }}</a>
         </div>
     </main>

@@ -78,7 +78,8 @@
                                  contando algo que no es lo que el usuario está mirando. --}}
                             <a href="{{ $item['url'] }}" @click="menuOpen = false"
                                @mouseenter="mira = {{ $i }}" @focus="mira = {{ $i }}">
-                                <span class="menu__n" aria-hidden="true">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
+                                {{-- Los números «01…» de cada destino se RETIRARON (`[DECIDIDO owner, 2026-09-01]`,
+                                     lanzamiento): eran decoración y el owner los quiso fuera. --}}
                                 <span class="menu__t">{{ $item['t'] }}</span>
                                 @if (! empty($item['s']))
                                     <span class="menu__s">{{ $item['s'] }}</span>
@@ -159,10 +160,18 @@
                             {{ __('account.nav.login') }}
                         </a>
                     @else
+                        @if ($site['sales_online'])
                         <button type="button" class="menu__chip"
                                 @click="menuOpen = false; $store.purchase.open()">
                             {{ __('landing.footer.account_link') }}
                         </button>
+                        @else
+                        {{-- Compra online cerrada: el chip lleva a la cuenta (login), no al catálogo. --}}
+                        <a href="{{ route('login') }}" class="menu__chip"
+                           x-on:click="menuOpen = false; $store.purchase.openAccount($event, 'login')">
+                            {{ __('landing.footer.account_link') }}
+                        </a>
+                        @endif
                     @endguest
                 </li>
 
