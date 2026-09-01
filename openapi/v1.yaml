@@ -1357,6 +1357,36 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+
+  /me/email/resend:
+    post:
+      tags: [Cuenta]
+      operationId: resendMyVerification
+      summary: Reenviar la verificación de mi correo
+      description: |
+        El hermano AUTENTICADO de `auth/email/resend`: reenvía el enlace de verificación al correo del
+        titular que ya tiene sesión, **sin cuerpo** — la sesión dice quién es.
+
+        Existe porque **se puede iniciar sesión sin haber verificado el correo**, y en ese estado el
+        área de cuenta tiene algo que ofrecer: quien aceptó la exención de responsabilidad al darse de
+        alta la tiene retenida hasta que verifique, así que reenviarse el correo es lo único que
+        desbloquea su firma.
+
+        ⚠️ El público NO se aflojó para esto: su cuerpo es el `EmailRequest` compartido con
+        `auth/password/forgot`, y hacer el campo opcional lo habría aflojado también allí.
+
+        ⚠️ Hereda los dos cooldowns del reenvío —por IP y por buzón destinatario— y responde `204`
+        también cuando el correo ya estaba verificado: ahí es un no-op.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Reenviado (o el correo ya estaba verificado).
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         '503':
           $ref: '#/components/responses/Maintenance'
 

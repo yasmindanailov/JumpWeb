@@ -6,6 +6,7 @@ use App\Domain\Identity\Contracts\ProfileUpdateResult;
 use App\Domain\Identity\Contracts\ResendResult;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountProfile;
+use App\Domain\Identity\Services\SelfSignup;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
 use App\Http\Controllers\Controller;
@@ -95,6 +96,34 @@ class MeProfileController extends Controller
                 params: ['retry_after' => $result->retryAfter],
                 headers: ['Retry-After' => (string) $result->retryAfter],
             );
+        }
+
+        return response()->json(status: 204);
+    }
+
+    /**
+     * `#327` — **reenvía la verificación del correo del titular que YA tiene sesión.**
+     *
+     * Existe porque se puede iniciar sesión sin haber verificado (medido: el login responde 200), y
+     * en ese estado el área de cuenta tiene algo que ofrecer: quien aceptó la exención en el alta la
+     * tiene RETENIDA hasta que verifique (`#179`), y hasta ahora la pantalla le decía que no la había
+     * firmado y le ofrecía un botón de firmar que solo podía devolver 409.
+     *
+     * ⚠️ **Reutiliza `SelfSignup::resendVerification()` entero**, así que hereda sus DOS cooldowns —el
+     * de IP y el del buzón destinatario, que es el que de verdad protege— y su conducta. Aquí el
+     * correo no lo dice el cliente: sale del guard, que identifica mejor que un campo del cuerpo.
+     *
+     * ⚠️ **204 y no 202**, al revés que el público: allí el 202 es deliberadamente ambiguo para no
+     * delatar si una cuenta existe (`SEC-06`); aquí sabemos exactamente quién pregunta y pregunta por
+     * lo suyo, así que no hay nada que ocultarle. Con el correo ya verificado es un no-op silencioso.
+     */
+    public function resendVerification(Request $request, SelfSignup $signup): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        if (! $user->hasVerifiedEmail()) {
+            $signup->resendVerification((string) $user->email, (string) $request->ip());
         }
 
         return response()->json(status: 204);

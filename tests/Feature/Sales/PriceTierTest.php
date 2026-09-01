@@ -122,10 +122,63 @@ class PriceTierTest extends TestCase
         }
     }
 
-    /** Por debajo del primer tramo no hay tramo: manda el precio de siempre (y el mínimo del producto lo corta antes). */
-    public function test_below_the_first_tier_the_plain_price_wins(): void
+    /**
+     * ❗❗ **`#327` CAMBIA LA RESPUESTA DE ESTE CASO, y el caso no era comprobable cuando se escribió.**
+     *
+     * Hasta hoy decía que por debajo del primer tramo manda el precio de siempre, y su propio
+     * comentario reconocía que «el mínimo del producto lo corta antes»: 29 personas en un pack de
+     * mínimo 30 **no se podían vender**, así que la aserción describía una aritmética sin sujeto.
+     * Desde `#327` el operador SÍ puede vender por debajo del mínimo, y entonces la pregunta es de
+     * dinero real: `[DECIDIDO owner, 2026-09-01]` **se cobra el primer tramo**, no el precio base.
+     *
+     * La propiedad que lo resume, y la razón de que se asevere COMPARANDO en vez de con un literal:
+     * **vender por debajo del mínimo nunca sale más barato por cabeza que vender justo en el
+     * mínimo.** Escrito así, la guarda sigue valiendo si el cuadro de precios del cliente cambia.
+     */
+    public function test_below_the_products_minimum_the_first_tier_wins(): void
     {
-        $this->assertSame(9900, app(RateResolver::class)->priceCents($this->excursion, $this->weekday(), 29));
+        $rates = app(RateResolver::class);
+        $atMinimum = $rates->priceCents($this->excursion, $this->weekday(), 30);
+
+        $this->assertSame(1500, $atMinimum);
+
+        foreach ([1, 20, 29] as $qty) {
+            $this->assertSame($atMinimum, $rates->priceCents($this->excursion, $this->weekday(), $qty),
+                "vender {$qty} no puede salir más barato por cabeza que vender el mínimo de 30");
+        }
+
+        // Y la misma regla por el otro camino de resolución (`CartPricer` lee la relación precargada).
+        $this->assertSame($atMinimum, $this->excursion->priceCentsForRate($this->normal, 20));
+    }
+
+    /**
+     * ⚠️⚠️ **EL CONTROL, y es el que impide regalar el descuento de volumen.**
+     *
+     * El suelo de la escala es el mínimo CONTRATABLE del producto, que en una entrada vale 1. Si la
+     * regla se hubiera escrito dentro de `PriceTier::resolve()` —«si ningún tramo cubre, coge el más
+     * pequeño»— toda entrada comprada por debajo de su primer tramo pasaría a pagar el precio de
+     * volumen: aquí, 5 unidades cobrarían 8 € en vez de sus 10 €. **Nada fallaría**; solo se
+     * ingresaría menos.
+     */
+    public function test_an_entry_below_its_first_tier_still_pays_the_plain_price(): void
+    {
+        $entry = TicketType::create([
+            'name' => ['es' => 'Entrada con descuento por volumen'],
+            'zone_id' => $this->excursion->zone_id,
+            'type' => TicketType::TYPE_ENTRY,
+            'seats_per_unit' => 1,
+            'is_active' => true,
+            'is_sellable' => true,
+        ]);
+        Price::create(['priceable_type' => $entry->getMorphClass(), 'priceable_id' => $entry->id, 'rate_type_id' => $this->normal->id, 'amount_cents' => 1000]);
+        PriceTier::create(['ticket_type_id' => $entry->id, 'rate_type_id' => $this->normal->id, 'min_qty' => 10, 'amount_cents' => 800]);
+        $entry->refresh()->load('prices', 'priceTiers');
+
+        $rates = app(RateResolver::class);
+
+        $this->assertSame(1000, $rates->priceCents($entry, $this->weekday(), 5), 'por debajo de su tramo, el precio de siempre');
+        $this->assertSame(1000, $rates->priceCents($entry, $this->weekday(), 9));
+        $this->assertSame(800, $rates->priceCents($entry, $this->weekday(), 10), 'a partir de 10, el tramo');
     }
 
     // ─── 2 · presupuesto y checkout NO pueden divergir ───────────────────────────────────────────

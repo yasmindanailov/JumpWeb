@@ -976,6 +976,56 @@ class TicketType extends Model
     }
 
     /**
+     * La cantidad MÍNIMA contratable de este producto: el mínimo de invitados de un pack, 1 en
+     * cualquier otra cosa. Nunca menos de 1 (un `min_qty` a 0 o nulo no puede bajar de ahí).
+     *
+     * Vive aquí porque la misma derivación estaba escrita a mano en media docena de sitios
+     * —`CartLineValidator`, `CatalogReader`, `SlotOffer`, `OrderCreator`, `OrderItemEditor` y la
+     * página de pedido manual—, y desde `#327` además decide el SUELO de la escala de tramos: una
+     * regla de dinero repartida en seis copias es seis sitios donde puede divergir (la lección de
+     * `#320` con el estado de la exención de un menor).
+     */
+    public function contractableMinimum(): int
+    {
+        return $this->isPack() ? max(1, (int) ($this->min_qty ?? 1)) : 1;
+    }
+
+    /**
+     * El precio de TRAMO que aplica a `$quantity`, o `null` si el producto no tiene tramos que la
+     * cubran (y entonces manda el precio de siempre, `prices`).
+     *
+     * ⚠️⚠️ Los COMPLEMENTOS quedan fuera, y no es una optimización: es la regla. Un complemento (la
+     * tarta, los calcetines) no se vende por volumen — lo dice la migración de `price_tiers`, que es
+     * solo de productos principales. ▶ Y lo destapó el presupuesto de consultas, no una lectura: un
+     * addon **es una fila de `ticket_types`** con `type = addon`, así que el `instanceof` los
+     * alcanzaba y cada uno pagaba una consulta para preguntar por unos tramos que no puede tener
+     * (`ApiOverheadTest`: 10 consultas → 16). *Un `instanceof` describe la clase, no el rol, y aquí
+     * tres roles comparten clase.*
+     *
+     * ❗❗ **`#327` — LA ESCALA NO EMPIEZA POR DEBAJO DEL MÍNIMO CONTRATABLE.** La cantidad con la
+     * que se elige tramo va acotada por abajo a {@see contractableMinimum()}, y eso es lo que hace
+     * que el pedido manual por debajo del mínimo (D7 al crear) tenga un precio definido:
+     * `[DECIDIDO owner, 2026-09-01]` una excursión de 20 con la escala en 30→15 € / 70→13 € /
+     * 100→12 € se cobra a **15 €**, el primer tramo. La propiedad que lo resume, y la que vigila la
+     * guarda: **vender por debajo del mínimo nunca sale más barato por cabeza que vender justo en
+     * el mínimo.**
+     *
+     * ⚠️ **El suelo NO se puso dentro de `PriceTier::resolve()`, y la diferencia es dinero**: allí
+     * sería «si ningún tramo cubre, coge el más pequeño», y eso REGALARÍA el descuento de volumen a
+     * toda entrada comprada por debajo de su primer tramo (5 unidades de un producto con «10+ →
+     * 8 €» pasarían a pagar 8 € en vez de su precio base). El suelo es el mínimo DEL PRODUCTO, que
+     * en una entrada vale 1 y por tanto no mueve nada.
+     */
+    public function tierPriceCents(int $rateTypeId, int $quantity): ?int
+    {
+        if ($this->isAddon()) {
+            return null;
+        }
+
+        return PriceTier::resolve($this->priceTiers, $rateTypeId, max($quantity, $this->contractableMinimum()));
+    }
+
+    /**
      * Precio (céntimos) para una tarifa concreta; null si no está definido.
      * Usa la relación `prices` (cárgala con eager load para evitar N+1).
      *
@@ -989,13 +1039,8 @@ class TicketType extends Model
             return null;
         }
 
-        // ⚠️ Los COMPLEMENTOS no tienen tramos —no se venden por volumen— y preguntarlo cuesta una
-        // consulta POR complemento, porque un addon es una fila de `ticket_types` como las demás y
-        // aquí la relación no viene precargada. Lo destapó el presupuesto de consultas de la API
-        // (`ApiOverheadTest`): la ficha con 7 complementos pasó de 10 consultas a 16.
-        $tier = $this->isAddon() ? null : PriceTier::resolve($this->priceTiers, (int) $rate->id, $quantity);
-
-        return $tier ?? $this->prices->firstWhere('rate_type_id', $rate->id)?->amount_cents;
+        return $this->tierPriceCents((int) $rate->id, $quantity)
+            ?? $this->prices->firstWhere('rate_type_id', $rate->id)?->amount_cents;
     }
 
     /**

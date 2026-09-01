@@ -338,6 +338,12 @@ return [
             'quantity' => 'Cantidad',
             'guests' => 'Invitados',
             'qty_out_of_range' => 'La cantidad debe estar entre :min y :max.',
+            // `#327` — el gemelo de D7 al CREAR el pedido. La ayuda dice el precio a propósito: por
+            // debajo del mínimo la escala de tramos no baja más, y el operador tiene que saberlo
+            // ANTES de vender, no al ver el total.
+            'below_minimum_label' => 'Vender por debajo del mínimo del pack (queda registrado)',
+            'below_minimum_help' => 'El mínimo de este producto es :min. Al activarlo puedes bajar hasta 1; se cobra al precio del tramo más bajo y la excepción queda en el historial del pedido.',
+            'below_minimum_active' => 'Mínimo rebajado a 1 (el del producto es :min). Se cobra al precio del tramo de :min y queda registrado.',
             'seats' => ':n plazas',
             'addons' => 'Complementos',
             'addon' => 'Complemento',
@@ -1608,7 +1614,12 @@ return [
             'orders_edit_event_data' => 'Editar datos del evento del pedido (homenajeado, edad, notas)',
             'orders_edit_guest_data' => 'Editar los datos por invitado desde el panel',
             'orders_edit_item' => 'Editar producto del pedido (fecha, cantidad, producto, datos, complementos)',
-            'orders_edit_item_below_minimum' => 'Bajar un pack por debajo de su mínimo de invitados (queda registrado)',
+            // `#327` — la CLAVE sigue diciendo `edit_item` y el rótulo ya no, a propósito: el permiso
+            // gobierna las DOS puertas (crear un pedido manual y editar una reserva) y renombrar la
+            // clave obligaría a migrar la tabla de permisos y los roles ya asignados en la
+            // instalación del cliente, a cambio de nada que el operador vea. Lo que el operador lee
+            // es esto.
+            'orders_edit_item_below_minimum' => 'Vender o dejar un pack por debajo de su mínimo de invitados, al crear y al editar (queda registrado)',
             'orders_cancel_item' => 'Cancelar un producto suelto del pedido',
             'orders_refund_item' => 'Reembolsar un producto suelto del pedido',
             'calendar_view' => 'Ver calendario y escritorio',

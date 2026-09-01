@@ -224,6 +224,10 @@ class AuthRegistrationController extends Controller
      */
     public function resendVerification(Request $request, SelfSignup $signup): Response
     {
+        // ⚠️ **Este endpoint sigue exigiendo el correo, y no se aflojó a propósito** (`#327`): su
+        // cuerpo es el `EmailRequest` del contrato, COMPARTIDO con `auth/password/forgot`, así que
+        // hacer el campo opcional aquí lo haría opcional también allí. Quien tiene sesión usa su
+        // hermano autenticado `POST /me/email/resend`, que no necesita decir quién es.
         $data = $request->validate([
             'email' => ['required', 'string', 'email'],
         ]);

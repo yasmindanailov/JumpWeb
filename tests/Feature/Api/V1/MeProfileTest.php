@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountProfile;
 use App\Notifications\EmailChangeRequested;
 use App\Notifications\VerifyPendingEmail;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
@@ -277,6 +278,48 @@ class MeProfileTest extends ApiTestCase
         Notification::assertNothingSent();
     }
 
+    // ── `#327` · reenviar MI verificación (con sesión y sin decir el correo) ──────────────────
+
+    /**
+     * El caso que motiva el endpoint: **se puede entrar sin haber verificado**, y ahí el área de
+     * cuenta ofrece la salida. El cliente no manda cuerpo: quién es lo dice el guard.
+     */
+    public function test_an_unverified_holder_can_resend_their_own_verification(): void
+    {
+        $user = $this->holder();
+        $user->forceFill(['email_verified_at' => null])->save();
+
+        $this->actingAs($user)->postJson(self::ROOT.'/me/email/resend')
+            ->assertNoContent()
+            ->assertValidResponse(204);
+
+        Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    /** ⚠️ Con el correo ya verificado es un no-op silencioso: no hay nada que reenviar. */
+    public function test_resending_my_verification_when_already_verified_sends_nothing(): void
+    {
+        $this->actingAs($this->holder())->postJson(self::ROOT.'/me/email/resend')->assertNoContent();
+
+        Notification::assertNothingSent();
+    }
+
+    /**
+     * ⚠️⚠️ **El cooldown por buzón destinatario sigue mandando**, y es el que de verdad protege: el
+     * endpoint reutiliza `SelfSignup::resendVerification()` entero en vez de mandar el correo por su
+     * cuenta. Si alguien lo reimplementara «más simple», este caso se pondría rojo.
+     */
+    public function test_resending_my_verification_twice_only_sends_once(): void
+    {
+        $user = $this->holder();
+        $user->forceFill(['email_verified_at' => null])->save();
+
+        $this->actingAs($user)->postJson(self::ROOT.'/me/email/resend')->assertNoContent();
+        $this->actingAs($user)->postJson(self::ROOT.'/me/email/resend')->assertNoContent();
+
+        Notification::assertSentToTimes($user, VerifyEmail::class, 1);
+    }
+
     // ── Puerta ────────────────────────────────────────────────────────────────────────────────
 
     public function test_the_three_endpoints_reject_an_anonymous_request(): void
@@ -285,5 +328,6 @@ class MeProfileTest extends ApiTestCase
             ->assertStatus(401);
         $this->deleteJson(self::ROOT.'/me/pending-email')->assertStatus(401);
         $this->postJson(self::ROOT.'/me/pending-email/resend')->assertStatus(401);
+        $this->postJson(self::ROOT.'/me/email/resend')->assertStatus(401);
     }
 }

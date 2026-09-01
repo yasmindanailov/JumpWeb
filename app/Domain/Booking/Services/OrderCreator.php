@@ -86,8 +86,20 @@ class OrderCreator
      * de email / pago), `orders:expire` la libera. Reutiliza la maquinaria de retención de #62.
      *
      * @param  array<int, array{ticket_type_id:int, date:string, time:string, qty:int}>  $cart
+     * @param  bool  $allowBelowPackMinimum  `#327` — el operador usó la excepción de vender un pack
+     *                                       por debajo de su mínimo de invitados AL CREAR el pedido,
+     *                                       el gemelo de D7 en la edición (`specs/cumple-mixto.md`
+     *                                       §23.4). **Llega ya resuelto**: quien lo pasa en `true` es
+     *                                       `ManualOrderFulfiller` después de que la página haya
+     *                                       comprobado el permiso `orders.edit_item_below_minimum`;
+     *                                       este servicio no mira permisos y no tiene actor.
+     *                                       ⚠️ El default es `false`, así que **la WEB queda intacta
+     *                                       por construcción**: `CheckoutOrchestrator` no lo pasa y
+     *                                       el mínimo le sigue mandando como siempre.
+     *                                       ⚠️ Salta SOLO el mínimo: el máximo y el `>= 1` siguen,
+     *                                       igual que en la edición.
      */
-    public function createPendingOrder(User $user, array $cart, ?Carbon $hold = null): Order
+    public function createPendingOrder(User $user, array $cart, ?Carbon $hold = null, bool $allowBelowPackMinimum = false): Order
     {
         $cart = Cart::sanitize($cart);
         if ($cart === []) {
@@ -122,7 +134,7 @@ class OrderCreator
         // sin una lectura consistente previa que fije el snapshot de REPEATABLE READ (#246).
         $lockZoneIds = TicketType::whereIn('id', $ids)->whereNotNull('zone_id')->distinct()->pluck('zone_id')->all();
 
-        return DB::transaction(function () use ($user, $cart, $hold, $ids, $lockZoneIds) {
+        return DB::transaction(function () use ($user, $cart, $hold, $ids, $lockZoneIds, $allowBelowPackMinimum) {
             // PRIMERA operación de la transacción = LOCK de franjas (auditoría Fase 1, H2 + #246). La
             // ocupación se cuenta por tramo (#60): bloquear TODAS las franjas de las zonas/fechas
             // implicadas serializa dos reservas concurrentes sobre el mismo día/zona. CRUCIAL: el lock
@@ -189,8 +201,13 @@ class OrderCreator
                     // Pack (cumpleaños): aforo por CUPO en su propio pool (#82). La cantidad es el
                     // nº de invitados, que debe caer en el rango del pack y dentro del cupo libre
                     // de la franja (contando montaje/limpieza si está activo) y las demás fiestas.
-                    $min = $type->min_qty ?? 1;
-                    if ($line['qty'] < $min || ($type->max_qty !== null && $line['qty'] > $type->max_qty)) {
+                    // `#327` — con la excepción del operador el MÍNIMO no rechaza; el máximo y el
+                    // `>= 1` siguen mandando (`Cart::sanitize` garantiza el segundo). Es el mismo
+                    // reparto que hizo D7 en la edición, y por eso el suelo pasa a 1 en vez de
+                    // desaparecer: por debajo de 1 no hay reserva que crear.
+                    $min = $type->contractableMinimum();
+                    $floor = $allowBelowPackMinimum ? 1 : $min;
+                    if ($line['qty'] < $floor || ($type->max_qty !== null && $line['qty'] > $type->max_qty)) {
                         throw ReservationException::withContext('tickets.errors.pack_guests_range_line', $context + [
                             'min' => $min, 'max' => $type->max_qty ?? '∞',
                         ]);

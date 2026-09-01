@@ -95,6 +95,7 @@ return [
                 'pdf' => 'PDF',
                 'pending_notice' => 'Votre décharge de responsabilité est en attente.',
                 'pending_cta' => 'La signer',
+                'status_awaiting_verification' => 'Vous l\'avez acceptée à l\'inscription. Nous l\'enregistrerons dès que vous aurez vérifié votre e-mail.',
             ],
             'deleting' => 'Suppression…',
         ],

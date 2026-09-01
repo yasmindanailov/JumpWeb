@@ -695,8 +695,22 @@ class SidebarMountTest extends TestCase
         // a declarar a nadie — el arranque no sabe si tiene menores. Es el mismo peaje que ya pagan
         // los 122 B del paginador, y por la misma razón.
         // **9.100 deja 83 B**: la holgura estrecha de siempre.
+        //
+        // ⚠️ **9.100 → 9.200 el 2026-09-01, por FEATURE** (`#327`). Medido: **9.017 → 9.125 B**
+        // (+108), y es UNA clave: `privacy.waiver.status_awaiting_verification`, la frase del estado
+        // «la aceptaste al registrarte y falta que verifiques tu correo». Antes no existía ese estado
+        // en pantalla: se le decía al cliente que no la había firmado, con un botón de firmar que
+        // solo podía devolver 409.
+        // ▶ **La poda ya está hecha y pagó casi el doble que la clave**: el primer intento traía
+        // CUATRO rótulos (9.315 B) y tres se retiraron —dos porque la frase del estado y la del aviso
+        // decían lo mismo con otras palabras, y **los dos del botón porque `verify.resend` y
+        // `verify.resend_in` YA VIAJABAN** en este mismo montaje para la pantalla del alta—. −190 B.
+        // *El rótulo más barato es el que ya está en el payload.*
+        // ▶ Y viaja **con cualquier sesión**, aunque el correo esté verificado desde hace un año: el
+        // arranque no lo sabe. Mismo peaje que el paginador de menores, y por la misma razón.
+        // **9.200 deja 75 B**: la holgura estrecha de siempre.
         $this->assertLessThan(
-            9100, $bytes,
+            9200, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

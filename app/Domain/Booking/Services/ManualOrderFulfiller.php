@@ -51,11 +51,16 @@ class ManualOrderFulfiller
      * Crea y cobra al instante un pedido para `$customer` con el método indicado.
      *
      * @param  array<int, array{ticket_type_id:int, date:string, time:string, qty:int}>  $cart
+     * @param  bool  $allowBelowPackMinimum  `#327` — la excepción del operador para vender un pack
+     *                                       por debajo de su mínimo de invitados, YA resuelta contra
+     *                                       el permiso por la página que llama (`SEC-04`: aquí no hay
+     *                                       actor al que preguntárselo). Viaja tal cual a
+     *                                       `OrderCreator`, que es donde el mínimo manda de verdad.
      *
      * @throws ReservationException si la cesta no valida (aforo, fechas, precios…)
      * @throws InvalidArgumentException si el método no es efectivo/datáfono
      */
-    public function fulfill(User $customer, array $cart, string $method): Order
+    public function fulfill(User $customer, array $cart, string $method, bool $allowBelowPackMinimum = false): Order
     {
         if (! in_array($method, self::METHODS, true)) {
             throw new InvalidArgumentException("Unsupported manual payment method: {$method}");
@@ -63,9 +68,9 @@ class ManualOrderFulfiller
 
         $now = now();
 
-        $order = DB::transaction(function () use ($customer, $cart, $method, $now): Order {
+        $order = DB::transaction(function () use ($customer, $cart, $method, $now, $allowBelowPackMinimum): Order {
             // Re-valida y bloquea aforo. Lanza ReservationException si algo no cuadra → rollback.
-            $order = $this->orderCreator->createPendingOrder($customer, $cart, null);
+            $order = $this->orderCreator->createPendingOrder($customer, $cart, null, $allowBelowPackMinimum);
 
             Payment::create([
                 'payable_type' => (new Order)->getMorphClass(),
@@ -138,14 +143,59 @@ class ManualOrderFulfiller
             ]);
         }
 
+        // `#327` — la excepción del mínimo se registra **solo cuando de verdad se usó** (un `false`
+        // en cada pedido normal sería ruido que entierra la señal, D7) y se mide sobre lo ESCRITO
+        // —las líneas del pedido ya creado— y no sobre la intención del formulario: *el rastro dice
+        // qué se vendió, no qué se pidió*. `pack_min_qty` acompaña para que se sepa de qué mínimo se
+        // bajó sin reconstruir el catálogo de entonces.
+        //
+        // ⚠️ Las dos condiciones hacen falta y ninguna sobra: la bandera evita recorrer las líneas en
+        // cada pedido normal (coste), y el `!== []` cubre el caso en que la intención llegó marcada
+        // pero la venta acabó siendo legal — pasa si alguien BAJA el mínimo del producto en el panel
+        // mientras el operador tiene la línea en el carrito.
+        $belowMinimumLines = $allowBelowPackMinimum ? $this->linesBelowPackMinimum($order) : [];
+
         // Auditoría: quién (Auth::id() del operador), método, importe y cliente.
         AuditLogger::log('orders.created_manual', $order, [
             'order_code' => $order->code,
             'method' => $method,
             'total' => $order->total,
             'customer_id' => $customer->id,
-        ]);
+        ] + ($belowMinimumLines !== [] ? ['below_pack_minimum' => $belowMinimumLines] : []));
 
         return $order;
+    }
+
+    /**
+     * Las líneas del pedido que quedaron por debajo del mínimo de invitados de su pack (`#327`).
+     *
+     * ⚠️ Un COMPLEMENTO también es una fila de `order_items`, pero nunca es `pack`, así que el
+     * `isPack()` los deja fuera solo — la trampa de `#324`, donde un `instanceof` alcanzaba a los
+     * complementos porque comparten clase con los productos principales.
+     *
+     * @return list<array{order_item_id:int, ticket_type_id:int, quantity:int, pack_min_qty:int}>
+     */
+    private function linesBelowPackMinimum(Order $order): array
+    {
+        $order->loadMissing('items.ticketType');
+
+        $lines = [];
+        foreach ($order->items as $item) {
+            $type = $item->ticketType;
+            if ($type === null || ! $type->isPack()) {
+                continue;
+            }
+            $min = $type->contractableMinimum();
+            if ((int) $item->quantity < $min) {
+                $lines[] = [
+                    'order_item_id' => (int) $item->id,
+                    'ticket_type_id' => (int) $type->id,
+                    'quantity' => (int) $item->quantity,
+                    'pack_min_qty' => $min,
+                ];
+            }
+        }
+
+        return $lines;
     }
 }

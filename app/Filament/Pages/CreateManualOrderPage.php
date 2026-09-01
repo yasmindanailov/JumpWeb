@@ -30,6 +30,7 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -328,6 +329,10 @@ class CreateManualOrderPage extends Page
                             ->live()
                             ->afterStateUpdated(function (Get $get, callable $set): void {
                                 $set('sel_time', null);
+                                // `#327`: el interruptor del mínimo se apaga al cambiar de producto —
+                                // es una excepción sobre ESTE pack, no un modo del formulario. Va
+                                // ANTES del default de cantidad, que lee el suelo vigente.
+                                $set('sel_below_minimum', false);
                                 $set('sel_qty', $this->defaultQtyFor((int) $get('sel_product_id')));
                                 $set('event_data', []);
                                 $set('sel_dependent_ids', []);
@@ -403,6 +408,28 @@ class CreateManualOrderPage extends Page
                                 'help' => $this->timeFieldHelp(),
                             ]),
 
+                        // `#327` — el gemelo de D7 al CREAR: el interruptor solo se OFRECE con su
+                        // permiso y con un mínimo que rebajar, y va ANTES del campo de cantidad
+                        // porque es lo que decide su suelo. `live()` sin `onBlur` para que el campo
+                        // de al lado se re-evalúe en el mismo gesto.
+                        Toggle::make('sel_below_minimum')
+                            ->label(__('admin.orders.create_manual.below_minimum_label'))
+                            ->helperText(fn (): string => __('admin.orders.create_manual.below_minimum_help', [
+                                'min' => $this->selectedProduct()?->contractableMinimum() ?? 1,
+                            ]))
+                            ->default(false)
+                            ->live()
+                            ->visible(fn (): bool => $this->canGoBelowPackMinimum())
+                            // Al apagarlo, una cantidad que solo era válida con la excepción dejaría
+                            // el campo por debajo de su suelo: se sube al mínimo del pack en el mismo
+                            // gesto en vez de esperar a que el operador choque con la validación.
+                            ->afterStateUpdated(function (Get $get, callable $set): void {
+                                $min = $this->selectedMinQty();
+                                if ((int) $get('sel_qty') < $min) {
+                                    $set('sel_qty', $min);
+                                }
+                            }),
+
                         TextInput::make('sel_qty')
                             ->label(fn (): string => $this->isPackSelected()
                                 ? __('admin.orders.create_manual.guests')
@@ -410,9 +437,15 @@ class CreateManualOrderPage extends Page
                             ->numeric()
                             // Min/máx aplicados en el campo (no solo al validar): packs respetan
                             // su rango [min_qty, max_qty]; entradas mínimo 1, sin tope.
+                            // `#327`: con el interruptor puesto el suelo es 1; el tope no se mueve.
                             ->minValue(fn (): int => $this->selectedMinQty())
                             ->maxValue(fn (): ?int => $this->selectedMaxQty())
                             ->default(1)
+                            ->helperText(fn (): ?string => $this->belowMinimumActive()
+                                ? __('admin.orders.create_manual.below_minimum_active', [
+                                    'min' => $this->selectedProduct()?->contractableMinimum() ?? 1,
+                                ])
+                                : null)
                             // Reactivo: al cambiar el nº de invitados, el widget de complementos
                             // recalcula los `per_guest` (uno por invitado) y su importe.
                             ->live(onBlur: true),
@@ -550,7 +583,9 @@ class CreateManualOrderPage extends Page
         // Mismo cálculo data-driven que la landing (`depositCents` sobre el subtotal del principal).
         // NO afecta al cobro real, que lo calcula `ManualOrderFulfiller` vía `Order::onlineDueCents()`
         // de forma independiente — esto es puramente informativo para el empleado.
-        $principalSubtotal = ((int) (app(RateResolver::class)->priceCents($type, Carbon::parse($date)) ?? 0)) * $qty;
+        // ⚠️ La CANTIDAD va también aquí, por lo mismo que en `estimateLineCents()`: con tramos, la
+        // señal se calcula sobre el subtotal del principal y ese subtotal depende de cuántos son.
+        $principalSubtotal = ((int) (app(RateResolver::class)->priceCents($type, Carbon::parse($date), $qty) ?? 0)) * $qty;
         $lineDepositCents = $type->depositCents($principalSubtotal);
         $hasLineDeposit = $lineDepositCents < $principalSubtotal;
 
@@ -571,6 +606,9 @@ class CreateManualOrderPage extends Page
             // los copia) y nombres solo para el resumen del operador.
             'dependent_ids' => $dependentIds,
             'dependent_display' => $dependentDisplay,
+            // `#327`: la excepción se guarda POR LÍNEA, no como un modo del formulario — el operador
+            // la activó para ESTE pack. `create()` la vuelve a resolver contra el permiso.
+            'below_minimum' => $type->isPack() && $qty < $type->contractableMinimum(),
         ];
 
         // Resetea la selección para la siguiente línea (preserva cliente, método y paso).
@@ -578,6 +616,7 @@ class CreateManualOrderPage extends Page
         $this->data['sel_date'] = null;
         $this->data['sel_time'] = null;
         $this->data['sel_qty'] = null;
+        $this->data['sel_below_minimum'] = false;
         $this->data['event_data'] = [];
         $this->data['sel_dependent_ids'] = [];
         $this->selAddonQty = [];
@@ -1004,8 +1043,17 @@ class CreateManualOrderPage extends Page
             return;
         }
 
+        // `#327` — la excepción del mínimo se resuelve AQUÍ, en el punto de ejecución, y no en la
+        // visibilidad del interruptor: `$this->cart` es estado de un componente Livewire y viaja al
+        // navegador, así que un `below_minimum` a `true` puede llegar sin que nadie haya pulsado nada
+        // (`SEC-04`, y la misma razón por la que `OrderItemEditor::edit()` re-exige el permiso pese a
+        // que `ViewOrder` ya decide si pinta el interruptor). Sin permiso, el mínimo manda y
+        // `OrderCreator` rechaza la línea como siempre.
+        $belowMinimum = (auth()->user()?->hasPermission('orders.edit_item_below_minimum') ?? false)
+            && collect($this->cart)->contains(fn (array $line): bool => (bool) ($line['below_minimum'] ?? false));
+
         try {
-            $order = app(ManualOrderFulfiller::class)->fulfill($customer, $this->cartToOrderCart(), $method);
+            $order = app(ManualOrderFulfiller::class)->fulfill($customer, $this->cartToOrderCart(), $method, $belowMinimum);
         } catch (ReservationException $e) {
             Notification::make()
                 ->danger()
@@ -1179,16 +1227,45 @@ class CreateManualOrderPage extends Page
 
     private function defaultQtyFor(int $productId): int
     {
-        $type = TicketType::find($productId);
+        return TicketType::find($productId)?->contractableMinimum() ?? 1;
+    }
 
-        return $type && $type->isPack() ? (int) ($type->min_qty ?? 1) : 1;
+    /**
+     * `#327` — ¿se le puede OFRECER a este operador bajar del mínimo del pack al crear el pedido?
+     *
+     * Mismo trío que D7 en la edición (`ViewOrder::productAndQuantityFields()`): tiene que ser un
+     * pack, tiene que haber un mínimo que rebajar y el operador tiene que tener el permiso.
+     * ⚠️ **Esto solo decide qué se PINTA.** El permiso se re-exige en {@see create()} antes de pasar
+     * la excepción al dominio (`SEC-04`: se decide en el punto de ejecución, no en la visibilidad
+     * de un formulario que cualquiera puede manipular desde el navegador).
+     */
+    private function canGoBelowPackMinimum(): bool
+    {
+        $type = $this->selectedProduct();
+
+        return $type !== null
+            && $type->isPack()
+            && $type->contractableMinimum() > 1
+            && (auth()->user()?->hasPermission('orders.edit_item_below_minimum') ?? false);
+    }
+
+    /** ¿El interruptor está puesto Y el operador puede usarlo? (lo que de verdad rebaja el suelo). */
+    private function belowMinimumActive(): bool
+    {
+        return (bool) ($this->data['sel_below_minimum'] ?? false) && $this->canGoBelowPackMinimum();
     }
 
     private function selectedMinQty(): int
     {
         $type = $this->selectedProduct();
 
-        return $type && $type->isPack() ? (int) ($type->min_qty ?? 1) : 1;
+        if ($type === null) {
+            return 1;
+        }
+
+        // `#327`: con la excepción activa el suelo baja a 1, nunca a 0 — por debajo de 1 no hay
+        // reserva que crear. El MÁXIMO no se toca (mismo reparto que D7).
+        return $this->belowMinimumActive() ? 1 : $type->contractableMinimum();
     }
 
     private function selectedMaxQty(): ?int
@@ -1211,7 +1288,12 @@ class CreateManualOrderPage extends Page
      */
     private function timeMap(): array
     {
-        $key = (string) ($this->data['sel_product_id'] ?? '').'|'.(string) ($this->data['sel_date'] ?? '');
+        // `#327`: el interruptor del mínimo entra en la CLAVE del memo. Sin él, activarlo no
+        // recalcularía las horas y el operador seguiría viendo la lista filtrada por el mínimo — el
+        // defecto que esta tanda existe para evitar, escondido en una caché.
+        $belowMinimum = $this->belowMinimumActive();
+        $key = (string) ($this->data['sel_product_id'] ?? '').'|'.(string) ($this->data['sel_date'] ?? '')
+            .'|'.($belowMinimum ? '1' : '0');
         if ($this->timeMapKey === $key && $this->timeMapCache !== null) {
             return $this->timeMapCache;
         }
@@ -1220,7 +1302,11 @@ class CreateManualOrderPage extends Page
         $date = $this->data['sel_date'] ?? null;
         $map = (! $type || ! $type->zone_id || ! $date)
             ? []
-            : app(SlotOffer::class)->offerableTimes($type, Carbon::parse($date)->toDateString());
+            : app(SlotOffer::class)->offerableTimes(
+                $type,
+                Carbon::parse($date)->toDateString(),
+                allowBelowPackMinimum: $belowMinimum,
+            );
 
         $this->timeMapKey = $key;
         $this->timeMapCache = $map;
@@ -1447,7 +1533,15 @@ class CreateManualOrderPage extends Page
     private function estimateLineCents(TicketType $type, string $date, int $qty, array $addons): int
     {
         $rates = app(RateResolver::class);
-        $cents = ((int) ($rates->priceCents($type, Carbon::parse($date)) ?? 0)) * $qty;
+        // ⚠️⚠️ **`$qty` NO es opcional aquí, y su ausencia era dinero** (`#327`). `priceCents()`
+        // admite la cantidad desde `#324` porque con tramos de volumen el precio DEPENDE de ella, y
+        // esta llamada la omitía: en una excursión de 70 con la escala 30→15 € / 70→13 €, el
+        // operador veía un total y `OrderCreator` —que sí la pasa (`OrderCreator:251`)— cobraba
+        // otro. Medido: 140,00 € de diferencia en una sola línea.
+        // ▶ Es uno de los SEIS sitios que resuelven el precio de una línea y todos tienen que dar el
+        // mismo número (`specs/precio-por-tramo.md`); *un parámetro con valor por defecto no avisa
+        // de que hacía falta*.
+        $cents = ((int) ($rates->priceCents($type, Carbon::parse($date), $qty) ?? 0)) * $qty;
 
         // Complementos: MISMO AddonResolver que crea el pedido (incluido / por-invitado / grupo
         // excluyente + auto-inyección de obligatorios) → el total estimado coincide con lo que se

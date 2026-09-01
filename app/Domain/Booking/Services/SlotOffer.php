@@ -136,11 +136,22 @@ class SlotOffer
      * `max_quantity` se calculaba aquí desde siempre y se descartaba: lo expone Fase 3 · paso 4b
      * para que la API no tenga que recalcularlo (y con él, otra copia de la regla).
      *
+     * ❗❗ **`#327` — `$allowBelowPackMinimum` es la mitad de la excepción del operador que NO se ve
+     * fallar.** Sin ella, un operador con permiso para vender 20 invitados en un pack de mínimo 30
+     * seguiría **sin ver ofertada** una franja con 25 plazas libres, porque este filtro descarta la
+     * franja ENTERA cuando el hueco no llega al mínimo. La función habría funcionado en la franja
+     * vacía y fallado justo en la compartida, sin dar ningún error: *el mínimo se impone en cuatro
+     * sitios y solo dos de ellos avisan.* `[DECIDIDO owner, 2026-09-01]`: con el permiso activo, esas
+     * franjas se ofrecen.
+     *
+     * ⚠️ El suelo baja a 1, **no a 0**: una franja sin una sola plaza libre (cupo de fiestas lleno,
+     * franja cerrada) sigue fuera — eso es AFORO, no el mínimo del pack, y `AFORO-01` no se negocia.
+     *
      * @param  array<int, array{entry_start:string, duration_min:int|null, seats:int}>  $cartOccupants
      * @param  array<int, array{start:string, prep_before_min:int, duration_min:int|null, prep_after_min:int, guests:int}>  $cartPackOccupants
      * @return array<string, array{available:int, max_quantity:int, sellable:bool}>
      */
-    public function offerableTimes(TicketType $type, string $date, array $cartOccupants = [], array $cartPackOccupants = []): array
+    public function offerableTimes(TicketType $type, string $date, array $cartOccupants = [], array $cartPackOccupants = [], bool $allowBelowPackMinimum = false): array
     {
         $slots = $this->offeredSlots($type)
             ->filter(fn (Slot $s) => $s->date->toDateString() === $date);
@@ -148,7 +159,7 @@ class SlotOffer
         $out = [];
 
         if ($type->isPack()) {
-            $min = max(1, (int) ($type->min_qty ?? 1));
+            $min = $allowBelowPackMinimum ? 1 : $type->contractableMinimum();
             foreach ($slots as $slot) {
                 $free = $this->packAvailability->availableGuestsFor($slot, $type, $cartPackOccupants);
                 if ($free < $min) {

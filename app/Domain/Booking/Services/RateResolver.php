@@ -2,7 +2,6 @@
 
 namespace App\Domain\Booking\Services;
 
-use App\Domain\Booking\Models\PriceTier;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\SpecialDate;
 use App\Domain\Booking\Models\TicketType;
@@ -100,17 +99,13 @@ class RateResolver
     {
         $rate = $this->for($date);
 
-        // ⚠️⚠️ Los COMPLEMENTOS quedan fuera, y no es una optimización: es la regla. Un complemento
-        // (la tarta, los calcetines) no se vende por volumen — lo dice la migración de `price_tiers`,
-        // que es solo de productos principales.
-        //
-        // ▶ Y lo destapó el presupuesto de consultas, no una lectura: un addon **es una fila de
-        // `ticket_types`** con `type = addon`, así que el `instanceof` los alcanzaba y cada uno pagaba
-        // una consulta para preguntar por unos tramos que no puede tener. Tres tests de coste se
-        // pusieron rojos (16 consultas donde caben 10). *Un `instanceof` describe la clase, no el rol,
-        // y aquí tres roles comparten clase.*
-        if ($priceable instanceof TicketType && ! $priceable->isAddon()) {
-            $tier = PriceTier::resolve($priceable->priceTiers, (int) $rate->id, $quantity);
+        // ⚠️ La regla de tramos (a quién se le preguntan, y con qué cantidad) vive ENTERA en
+        // `TicketType::tierPriceCents()`: la exclusión de los complementos y el suelo de la escala
+        // en el mínimo contratable (`#327`). Estaba escrita aquí y en `priceCentsForRate()`, que son
+        // los dos caminos por los que se tarifica una línea de verdad — dos copias de una regla de
+        // dinero es un sitio donde puede divergir sin que falle nada.
+        if ($priceable instanceof TicketType) {
+            $tier = $priceable->tierPriceCents((int) $rate->id, $quantity);
             if ($tier !== null) {
                 return $tier;
             }

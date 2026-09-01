@@ -97,6 +97,9 @@ return [
                 'pdf' => 'PDF',
                 'pending_notice' => 'Tienes pendiente la exención de responsabilidad (waiver).',
                 'pending_cta' => 'Firmarla',
+                // `#327` — el estado «la aceptó al registrarse y falta verificar el correo». No dice
+                // que no la haya firmado, porque sí la aceptó: dice qué falta y ofrece la salida.
+                'status_awaiting_verification' => 'La aceptaste al registrarte. La firmaremos en cuanto verifiques tu correo.',
             ],
             'deleting' => 'Eliminando…',
         ],

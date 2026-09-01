@@ -86,6 +86,12 @@ export const useAuthStore = defineStore('auth', {
         resendSeconds: 0,
 
         /**
+         * Pestillo de {@see allowVerificationResend()} (`#327`): el área de cuenta arma el contador
+         * UNA vez. Sin él, entrar y salir del índice devolvería los reenvíos gastados.
+         */
+        resendArmed: false,
+
+        /**
          * El temporizador de la cuenta atrás.
          *
          * ⚠️ **Vive en el store y no en el componente, y no es estilo: es el techo de componentes
@@ -157,6 +163,7 @@ export const useAuthStore = defineStore('auth', {
             this.pendingEmail = '';
             this.resendsLeft = 0;
             this.resendSeconds = 0;
+            this.resendArmed = false;
         },
 
         /**
@@ -171,6 +178,29 @@ export const useAuthStore = defineStore('auth', {
             this.pendingEmail = email || '';
             this.resendsLeft = MAX_RESENDS;
             this.resendSeconds = RESEND_COOLDOWN_SECONDS;
+        },
+
+        /**
+         * `#327` — deja el reenvío listo en el ÁREA DE CUENTA, para quien entró sin verificar y tiene
+         * la exención aceptada esperando a ese correo.
+         *
+         * ⚠️ **Nace LISTO, no esperando, y ésa es la diferencia con {@see awaitVerification()}**: allí
+         * la cuenta atrás arranca llena porque el alta acaba de gastar el limitador por IP del
+         * servidor; aquí el cliente puede llegar horas después y ofrecerle un botón bloqueado 60 s
+         * sería inventarle una espera que el servidor no impone.
+         *
+         * ⚠️⚠️ **No RELLENA el cupo**: sin el pestillo, salir del índice y volver a entrar devolvería
+         * los reenvíos gastados y el tope de 4 dejaría de existir — bastaría con navegar en círculos
+         * para bombardear un buzón. El pestillo se suelta con el resto de avisos.
+         */
+        allowVerificationResend() {
+            if (this.resendArmed) {
+                return;
+            }
+
+            this.resendArmed = true;
+            this.resendsLeft = MAX_RESENDS;
+            this.resendSeconds = 0;
         },
 
         /** Descuenta un segundo de la cuenta atrás. La regla —el suelo en cero— vive en el módulo. */
@@ -387,7 +417,13 @@ export const useAuthStore = defineStore('auth', {
             this.resendSeconds = RESEND_COOLDOWN_SECONDS;
             this.startResendCountdown();
 
-            const response = await api.post('/auth/email/resend', { email: this.pendingEmail });
+            // `#327` — **dos endpoints, y los elige el hecho de tener o no el correo delante.** Tras
+            // el alta suelta no hay sesión y el correo es lo único que identifica (`pendingEmail`);
+            // desde el área de cuenta hay sesión y no hay correo — el contexto de cuenta no lo publica
+            // y no debería, así que el que sabe quién pregunta es el servidor.
+            const response = this.pendingEmail !== ''
+                ? await api.post('/auth/email/resend', { email: this.pendingEmail })
+                : await api.post('/me/email/resend', {});
 
             return { ok: response.ok === true, response };
         },

@@ -220,6 +220,18 @@ Route::name('api.v1.')->group(function (): void {
         Route::post('/me/pending-email/resend', [MeProfileController::class, 'resendPendingEmail'])
             ->name('me.pending-email.resend');
 
+        // `#327` — el hermano AUTENTICADO de `auth/email/resend`: reenvía la verificación del correo
+        // de quien ya tiene sesión, sin que tenga que decir cuál es. Existe porque **se puede entrar
+        // sin haber verificado** y ahí el área de cuenta necesita ofrecer la salida: quien aceptó la
+        // exención en el alta la tiene retenida hasta que verifique.
+        //
+        // ⚠️ **No se aflojó el público en su lugar**: su cuerpo es el `EmailRequest` del contrato,
+        // compartido con `auth/password/forgot`. Y la sesión identifica mejor que un correo escrito
+        // en el cuerpo. Es el mismo patrón que `/me/pending-email/resend`, justo encima.
+        Route::post('/me/email/resend', [MeProfileController::class, 'resendVerification'])
+            ->middleware('throttle:6,1,verification-resend')
+            ->name('me.email.resend');
+
         Route::put('/me/password', [MeCredentialsController::class, 'updatePassword'])->name('me.password.update');
         Route::post('/me/sessions/revoke-others', [MeCredentialsController::class, 'revokeOtherSessions'])
             ->name('me.sessions.revoke-others');

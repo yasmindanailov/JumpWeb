@@ -95,6 +95,7 @@ return [
                 'pdf' => 'PDF',
                 'pending_notice' => 'Your liability waiver is pending.',
                 'pending_cta' => 'Sign it',
+                'status_awaiting_verification' => 'You accepted it when you signed up. We will record your signature as soon as you verify your email.',
             ],
             'deleting' => 'Deleting…',
         ],

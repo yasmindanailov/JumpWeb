@@ -2,7 +2,10 @@
 import { useReservationsStore } from '../../stores/reservations.js';
 import { useAccountContextStore } from '../../stores/accountContext.js';
 import { HOME_ENTRIES, ZONES, titleKeyOf } from '../navigation.js';
-import { waiverPendingFrom } from '../waiver.js';
+import { WAIVER_NOTICE_VERIFY, waiverNoticeFrom } from '../waiver.js';
+import { useAuthStore } from '../../stores/auth.js';
+import { api } from '../../api.js';
+import { computed, watch } from 'vue';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 import ZoneLoading from '../ZoneLoading.vue';
 import ZoneIcon from '../ZoneIcon.vue';
@@ -34,6 +37,22 @@ store.ensure();
 // Fase 6 · waiver (§4.8): «la re-firma se pide al entrar». Lo dice el contexto de cuenta —el que se
 // repinta al conseguir sesión—, y la decisión de avisar vive en `account/waiver.js`, no aquí.
 const context = useAccountContextStore();
+
+// `#327` — el aviso son DOS y dicen cosas distintas: `sign` lleva a firmar; `verify` es «ya la
+// aceptaste, falta que verifiques tu correo» y ofrece REENVIARLO, que es lo único que desbloquea la
+// firma (`POST /me/waiver` responde 409 sin el correo verificado). Cuál toca lo decide `waiver.js`.
+const auth = useAuthStore();
+const notice = computed(() => waiverNoticeFrom(context.context));
+
+// ⚠️ El contador se arma con un `watch` inmediato y no en el `setup`: el contexto de cuenta llega
+// por red, así que al montarse la zona `notice` todavía vale `null` — armarlo una sola vez aquí
+// dejaría el botón muerto justo en el caso que existe para resolver. El store lleva su propio
+// pestillo, así que repetirlo no rellena el cupo de reenvíos.
+watch(notice, (kind) => {
+    if (kind === WAIVER_NOTICE_VERIFY) auth.allowVerificationResend();
+}, { immediate: true });
+
+const resend = () => auth.resendVerification({ api });
 </script>
 
 <template>
@@ -47,8 +66,22 @@ const context = useAccountContextStore();
         {{ store.next.date_label }}<template v-if="store.next.time_window"> · {{ store.next.time_window }}</template> · {{ store.next.product_name }}
     </p>
 
-    <!-- El aviso del waiver (Fase 6): pendiente o de una versión anterior. Lleva a firmarlo. -->
-    <p v-if="waiverPendingFrom(context.context)" class="auth__switch">
+    <!--
+      El aviso del waiver (Fase 6) — y son DOS (`#327`):
+       · `verify`: la aceptó al registrarse y falta que verifique su correo. Ofrece REENVIARLO, no
+         firmar: `POST /me/waiver` responde 409 sin el correo verificado, así que el botón de firmar
+         que había aquí solo podía dar error.
+       · `sign`: hay que firmar o re-firmar. Lleva a la tarjeta de privacidad, como siempre.
+    -->
+    <p v-if="notice === WAIVER_NOTICE_VERIFY" class="auth__switch">
+        {{ translate(account, 'account.privacy.waiver.status_awaiting_verification') }}
+        <button type="button" :disabled="auth.resendSeconds > 0 || auth.resendsLeft < 1" @click="resend">
+            <template v-if="auth.resendSeconds > 0">{{ translate(account, 'account.verify.resend_in') }} {{ auth.resendSeconds }}s</template>
+            <template v-else>{{ translate(account, 'account.verify.resend') }}</template>
+        </button>
+    </p>
+
+    <p v-else-if="notice" class="auth__switch">
         {{ translate(account, 'account.privacy.waiver.pending_notice') }}
         <button type="button" @click="emit('go', ZONES.PRIVACY)">{{ translate(account, 'account.privacy.waiver.pending_cta') }}</button>
     </p>
