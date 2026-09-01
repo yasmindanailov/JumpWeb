@@ -914,15 +914,31 @@ img { display: block; max-width: 100%; }
 .hero__stage-scrim {
   position: absolute; inset: 0; z-index: 3;
   pointer-events: none;
-  /* ⚠️ **La parada del medio sube de 15 % a 40 %, y es consecuencia directa del centrado.** El
+  /* ⚠️ **La parada del medio subió de 15 % a 40 %, y fue consecuencia directa del centrado.** El
      mockup adelgaza ahí —`.28 / .15 / .82`— porque su texto va ABAJO, donde la cortina pesa. Con el
      bloque centrado (`[DECIDIDO owner]`), el titular cae justo en el punto más fino: se leía en un
      fotograma oscuro y se perdía en uno claro. *Una cortina se calibra contra dónde está el texto,
-     no contra el gradiente del que se copió.* */
+     no contra el gradiente del que se copió.*
+
+     ▶ **`#313` la ALIGERA a 18/28/64** (`[DECIDIDO owner]`: «quita el velo del hero un poco») y el
+     margen está MEDIDO, no supuesto: a la altura del titular el alfa pasa de **40,1 % a 28,1 %** y
+     su peor contraste sobre el vídeo baja de **8,27 a 7,00** — con el mínimo de WCAG para texto
+     GRANDE en 3,0 y el de texto normal en 4,5. Se barrieron cinco niveles contra SIETE fotogramas
+     del vídeo instalado; hasta el más ligero (10/16/48) daba 5,93, así que 18/28/64 es «un poco»
+     con holgura de sobra, no el límite.
+     ⚠️⚠️ **Y esa holgura es de ESTE vídeo, que es oscuro** (media bajo el titular entre 46 y 114 de
+     255). Si algún día entra uno claro, hay que volver a medir: el número que manda no es el alfa,
+     es el contraste.
+     ⚠️⚠️ **La primera medición fue FALSA y parecía buena**: se pedía `video.currentTime = t` desde la
+     página y el elemento —`autoplay muted loop`— lo devolvía a 0, así que las cinco variantes se
+     midieron contra el MISMO fotograma. Daban números distintos entre sí (creíbles) e idénticos en
+     los siete instantes; lo delató el hash del recorte. *Un valor constante donde debería variar no
+     es un resultado: es un instrumento parado.* Se rehízo componiendo a mano sobre fotogramas
+     sacados del fichero con `ffmpeg` (`scripts/`, receta en `INSTALACION-CLIENTE.md` §4.c). */
   background: linear-gradient(180deg,
-      color-mix(in srgb, var(--paper-fg) 28%, transparent) 0%,
-      color-mix(in srgb, var(--paper-fg) 40%, transparent) 45%,
-      color-mix(in srgb, var(--paper-fg) 82%, transparent) 100%);
+      color-mix(in srgb, var(--paper-fg) 18%, transparent) 0%,
+      color-mix(in srgb, var(--paper-fg) 28%, transparent) 45%,
+      color-mix(in srgb, var(--paper-fg) 64%, transparent) 100%);
 }
 .hero__stage[data-has-video="true"] .hero__stage-placeholder { display: none; }
 

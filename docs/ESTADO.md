@@ -42,9 +42,11 @@
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
 > Suite **3760 en verde** (24.940 aserciones, 1 skipped a propósito), medida el
-> 2026-09-01 (noche) sobre el árbol CONJUNTO con la T3·3 del libro (`#312`) encima de `#311`.
-> ⚠️ **No se suma, se mide.**
-> - Antes, 3758 / 24.958 (`#311`), 3754 / 24.837 (`#310`) y 3756 / 24.766 (`#309` sobre `#308`).
+> 2026-09-01 (noche) sobre el árbol CONJUNTO con `#313` (assets) encima de `#312` (libro T3·3).
+> ⚠️ **No se suma, se mide** — y ⚠️⚠️ **tras un rebase que toque Vue hay que
+> `npm run build:ssr` ANTES de leer la suite**: sin eso salieron 35 rojos en
+> `SidebarDomContractTest` que no eran de ningún cambio.
+> - Antes, 3760 / 24.940 (`#312`), 3758 / 24.958 (`#311`) y 3756 / 24.766 (`#309`).
 >
 > ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1, T2, T3·1, T3·2 y T3·3 EN EL ÁRBOL · sigue la T3·4) ═══════════
 > ❗❗❗ **2026-09-01 (noche, 3.ª sesión) · T3·3 · LOS CORREOS PINTAN EL LIBRO; CAE EL TOPE DEL DESCUENTO**
@@ -346,6 +348,38 @@
 > entorno por eso.
 >
 > ═══════════ CARRIL 2 · TEMA / FACHADA (`#286` · `#287`) ═══════════
+>
+> ❗❗ **2026-09-01 · EL VÍDEO DEL HERO Y LAS FOTOS SON YA LAS DEL PARQUE REAL** (`#313`,
+> receta y presupuesto en `INSTALACION-CLIENTE.md` §4.c). 26 fotos + vídeo; `public/images` pasa de
+> **8,0 MB / 40 ficheros a 5,2 / 26** y **deja de tener material del PRIMER cliente**.
+> ▶ Presupuesto MEDIDO, no a ojo: fotos **WebP 1600 px `-quality 82`** (100–340 KB) y vídeo
+> **H.264 720p a 25 fps, `-crf 32` con `-an`** (2,22 MB para 12,88 s = **173 kB/s**, contra los 186
+> del anterior). ⚠️ El `-an` no es un detalle: el hero va `muted` y el AAC del original era peso
+> muerto. ⚠️ **Ni bajar de 50 a 25 fps**: para un fondo en bucle son el doble de datos sin ganancia,
+> y 25 es división exacta de 50 (sin tirón). ⚠️ El póster es el **primer fotograma del vídeo ya
+> codificado**, o se ve un salto al arrancar. ▶ Se instalaron DOS vídeos en la sesión; queda
+> `parageminiomni.mp4`, que es el que pidió el owner.
+> ▶ **Y la CORTINA del hero se aligera** (`[DECIDIDO owner]`: «quita el velo un poco»): de
+> **28/40/82 a 18/28/64**. A la altura del titular el alfa baja de 40,1 % a 28,1 % y su peor
+> contraste de **8,27 a 7,00** (WCAG pide 3,0 para texto grande). ⚠️ Esa holgura es de ESTE vídeo,
+> que es oscuro: con uno claro hay que volver a medir.
+> ⚠️⚠️ **La primera medición del velo fue FALSA pareciendo buena**: `video.currentTime = t` desde la
+> página lo devolvía a 0 —el vídeo es `autoplay muted loop`—, así que las cinco variantes se
+> midieron contra el MISMO fotograma; daban números distintos entre sí e IDÉNTICOS en los siete
+> instantes, y lo delató el hash del recorte. *Un valor constante donde debería variar no es un
+> resultado: es un instrumento parado.* Se rehízo fuera del navegador, componiendo a mano sobre
+> fotogramas sacados con `ffmpeg`.
+> ⚠️⚠️ **Los NOMBRES de fichero no se tocan**: las rutas viven en BD, en el seeder y en cuatro tests,
+> así que renombrar convertiría un cambio de CONTENIDO en uno de contrato. Cero cambios en la suite.
+> ❗ **CINCO fotos están asignadas con DUDA y hace falta el ojo del owner** —`Tirolina`,
+> `Basket Jump`, `Barredora`, `Castillo de bloques` y `Circuito High`—: los ficheros de origen se
+> llaman todos `header-NNN.png`, o sea que **el nombre no dice qué hay dentro**, y el mapeo se hizo
+> mirando. Corregir una es sustituir un fichero, no tocar código.
+> ⚠️ Se fueron **14 fotos sin consumidor** (las de la galería que retiró `#309`) y
+> `images/historia-seguridad.png`, lo que **CIERRA** esa ficha de `DEUDA.md`. ⚠️ Sigue abierta la
+> pregunta white-label: las fotos optimizadas siguen VERSIONADAS y ahora son las del 2.º cliente —
+> gitignorarlas dejaría un clon limpio con las fotos rotas, porque `attractions.image` es una ruta
+> de BD y no un hueco que falle hacia invisible.
 >
 > ❗❗❗ **2026-09-01 · CINCO SECCIONES DE LA PORTADA, EN UN ENCARGO** (`#309`,
 > `specs/idioma-visual-heredado.md` **§3.nonies**). Suite **3731 verde** (24.224 aserciones, 1

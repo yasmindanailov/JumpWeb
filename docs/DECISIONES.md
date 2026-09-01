@@ -18362,3 +18362,88 @@ que cita los nombres retirados en su propio docblock: se asevera el CUERPO de la
 `tickets.ledger.*` salvo las tres notas, el puente y `ledger-bridge.json`, sus tests), `INVARIANTES`
 `PAY-16`/`PAY-17` reescritas, `DEUDA` L4, `desglose-dinero-cliente.md` a HISTÓRICO, el guion headless
 del cajón y la receta de las 25 acciones, y el ojo del owner.
+## #313 — El vídeo del hero y las fotos, ya son las del parque real (2026-09-01)
+
+**Contexto.** El owner entrega el vídeo del hero (`video_Hero.mp4`) y **35 fotos de la inauguración**
+de Play Jump Park, editadas, en PNG a 2048×1365 (~4,7 MB cada una, **164 MB** en total). Hasta hoy la
+web se servía con material del PRIMER cliente. Receta y presupuesto en `INSTALACION-CLIENTE.md` §4.c.
+
+### 1 · Lo que se hizo, y el presupuesto MEDIDO
+
+Nada de esto se eligió a ojo: se midió lo que había y se entró por debajo.
+
+- **Vídeo**: H.264 720p, **25 fps**, `-crf 32` y **`-an`** → **2,22 MB** para 12,88 s, o sea
+  **173 kB/s** contra los 186 del anterior. ⚠️ **El `-an` no es cosmético**: el hero va `muted`, así
+  que la pista AAC del original era peso muerto. ⚠️ **Y bajar de 50 a 25 fps tampoco**: la fuente
+  venía a **50 fps y 5,58 Mbps (9,3 MB)**, y para un fondo en bucle eso es el doble de datos sin
+  ninguna ganancia — 25 es división exacta de 50, así que no hay tirón. A `-crf 30` y `-crf 32` los
+  fotogramas salen indistinguibles al tamaño en que se sirve; se elige el que entra en presupuesto.
+  ▶ ⚠️ **Se instalaron DOS vídeos en la misma sesión**: el primero (`video_Hero.mp4`, 10 s) y, a
+  petición del owner, `parageminiomni.mp4`, que es el que queda.
+- **Póster**: el **primer fotograma del vídeo YA CODIFICADO**. Si fuese otra imagen se vería un salto
+  en cuanto el vídeo arranca.
+- **Fotos**: WebP 1600 px, `-quality 82` → 100–340 KB según la escena (media ~200 KB). Las que
+  sustituyen pesaban 200–225 KB, así que el conjunto **baja de 8,0 a 5,2 MB** con 26 ficheros en vez
+  de 40.
+
+### 2 · ⚠️ Los nombres de fichero NO se tocan, y ésa es la decisión que hace esto barato
+
+Las rutas viven en **tres sitios**: `attractions.image`/`zones.image` en BD, `LandingContentSeeder`
+y cuatro tests. Renombrar habría convertido un cambio de CONTENIDO en un cambio de contrato —
+migración de datos, seeder y tests re-apuntados— sin que nadie lo pidiera. Se sustituye el fichero.
+▶ **Efecto lateral asumido**: sobreviven las erratas del import original (`kids_tobganes`,
+`jump_atina_bal`, `kids_campo_futrbol`, `jump_equilibrio_`). No las ve ningún visitante.
+▶ **Consecuencia buena**: cero cambios en la suite. 3756 verde antes y después.
+
+### 3 · El mapeo lo decidió MIRAR las fotos, y cinco quedan por confirmar
+
+Los ficheros de origen se llaman todos `header-NNN.png`: **el nombre no dice qué hay dentro**. Se
+montó una hoja de contactos de las 35 y se asignaron por contenido.
+▶ **Claros**: el foso de gomaespuma → «Salto a la nube»; el ring amarillo → «Boxing Jump»; la barra
+giratoria sobre cama hexagonal → «Barredora circular»; las dianas «COME ON» → «Atina la bola»; los
+agujeros de panal → «Bee Jump»; el mural con «PARKOUR» → «Parkour & Free Run».
+⚠️ **DUDOSOS, y se dice en vez de fingir certeza**: `Tirolina` (la foto es una estructura de cuerdas
+en altura), `Basket Jump` (una jaula con red, sin canasta visible), `Barredora`, `Castillo de
+bloques` y `Circuito High`. **El owner las corrige mirando la hoja**; cambiar una es sustituir un
+fichero, no tocar código.
+
+### 4 · Lo que se va con ello
+
+Las **14 fotos sin consumidor** —las de la galería que `#309` retiró— y
+`images/historia-seguridad.png`, la lámina del cliente ANTIGUO que aquella tanda dejó huérfana.
+Comprobado antes de borrar: ninguna aparece citada en `app/`, `resources/`, `database/` ni en el CSS.
+▶ Con esto **`public/images` deja de tener material del primer cliente**, que era una de las tres
+fichas de deuda de `hueco-ilustracion.md` §13.
+
+⚠️ **Lo que NO cambia**: las fotos optimizadas **siguen versionadas** (`.gitignore` lo dice
+explícitamente desde Fase 1). Ahora son las del SEGUNDO cliente, así que la pregunta white-label
+—«¿debería ser un paquete de instalación, como el kit y `client.css`?»— sigue abierta y es del owner:
+gitignorarlas dejaría a un clon limpio con las fotos rotas, porque `attractions.image` es una ruta de
+BD y no un hueco que falle hacia invisible.
+
+### 5 · La cortina del hero se aligera, con el margen MEDIDO
+
+`[DECIDIDO owner]`: «quita el velo del hero un poco». Pasa de **28/40/82 a 18/28/64**: a la altura
+del titular el alfa baja de **40,1 % a 28,1 %** y su peor contraste sobre el vídeo, de **8,27 a
+7,00** — con el mínimo de WCAG en 3,0 para texto GRANDE y 4,5 para normal. Barrido de cinco niveles
+contra SIETE fotogramas; hasta el más ligero (10/16/48) daba 5,93, así que esto es «un poco» con
+holgura, no el límite.
+⚠️ **La holgura es de ESTE vídeo, que es oscuro** (media bajo el titular entre 46 y 114 de 255): con
+uno claro hay que volver a medir. El número que manda es el contraste, no el alfa.
+
+⚠️⚠️ **Y la primera medición del velo fue FALSA pareciendo buena.** Se pedía `video.currentTime = t`
+desde la página y el elemento —`autoplay muted loop`— lo devolvía a 0: las cinco variantes se
+midieron contra el MISMO fotograma. Daban números distintos entre sí, o sea creíbles, e **idénticos
+en los siete instantes**; lo delató añadir un control que comparaba el hash del recorte. *Un valor
+constante donde debería variar no es un resultado: es un instrumento parado.* Se rehízo fuera del
+navegador, componiendo la cortina a mano (`C = a·C_velo + (1−a)·C_video`, que es como mezcla el
+navegador) sobre fotogramas sacados del fichero con `ffmpeg`.
+
+**Verificación**: suite **3760 verde** (24.940 aserciones, 1 skipped) sobre el árbol CONJUNTO tras
+rebasar encima de `#312` · Pint ✓ · docs-check ✓ ·
+Chrome real: **0 imágenes o vídeo con error de red**, 24 fotos de atracción cargadas, `naturalWidth`
+distinto de cero en todas · las cuatro rutas con fotos a 200.
+⚠️ **Tras rebasar el carril del libro hubo 35 rojos y NO eran del cambio**: `SidebarDomContractTest`
+compara el árbol de Vue contra el de Blade, y el bundle SSR en disco era el de antes del rebase.
+`npm run build && npm run build:ssr` y verde. *Anotado para el handoff: al integrar un carril que
+toca Vue, reconstruir antes de leer la suite.*

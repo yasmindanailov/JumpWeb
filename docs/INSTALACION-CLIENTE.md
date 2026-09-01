@@ -382,9 +382,27 @@ fuente no aparece, el slug está mal escrito (minúsculas y guiones, pesos en ce
 
 **c) Ficheros y dibujos → assets.**
 - Assets de `public/` a sustituir: `favicon.svg/.ico/-64.png` · `apple-touch-icon.png` ·
-  `og-image.jpg` · vídeo del hero (+ póster) · `images/attractions/*.webp` (27 usados por
-  el seed; 40 en disco — 4 sin referencia alguna, candidatos a borrar en Fase 1) ·
-  `images/historia-seguridad.png`.
+  `og-image.jpg` · vídeo del hero (+ póster) · `images/attractions/*.webp`.
+  ✅ **HECHO para el 2.º cliente el 2026-09-01** (`#313`): 26 fotos y el vídeo del hero son ya los
+  de Play Jump Park, y las 14 sin referencia se borraron con la sección «En directo» que las
+  usaba. `images/historia-seguridad.png` **ya no existe**: era la lámina del cliente ANTIGUO en la
+  sección de normas, que `#309` rehízo.
+- ❗ **El presupuesto de estos assets está MEDIDO, no es a ojo** — quien instale otro cliente lo
+  reproduce con `ffmpeg`, que es lo único que hace falta:
+  - **Fotos**: WebP, **1600 px de ancho**, `-quality 82` → 100–340 KB según lo detallada que sea
+    la escena (media ~200 KB, 5,2 MB las 26). Es el presupuesto que ya tenían las que sustituyen.
+  - **Vídeo del hero**: H.264 720p, **25 fps**, **`-crf 32` y `-an`** → 2,22 MB para 12,88 s
+    (**173 kB/s**; el presupuesto de referencia son 186).
+    ⚠️ **El `-an` no es un detalle**: el hero va `muted`, así que la pista de audio del original es
+    peso muerto que nadie oye. ⚠️ **Ni bajar los fps**: la fuente venía a **50 fps**, que para un
+    fondo en bucle es el doble de datos sin ganancia — 25 es división exacta y no produce tirón.
+  - **Póster**: el **PRIMER fotograma del vídeo ya codificado**, no una foto aparte. Si es otra
+    imagen, se ve un salto en cuanto el vídeo arranca.
+- ⚠️⚠️ **Los nombres de fichero NO se cambian al sustituir las fotos.** Las rutas viven en tres
+  sitios —`attractions.image`/`zones.image` en BD, `LandingContentSeeder` y cuatro tests—, así que
+  renombrar convierte un cambio de CONTENIDO en un cambio de contrato. Se sustituye el fichero.
+  ▶ Efecto lateral asumido: sobreviven las erratas del import original (`kids_tobganes`,
+  `jump_atina_bal`, `kids_campo_futrbol`, `jump_equilibrio_`). No las ve ningún visitante.
 - **El dibujo del SPINNER** se sustituye desde `client.css`, redefiniendo solo la mitad §B de
   `spinner.css`. Receta con ejemplo completo y las cuatro reglas que respetar:
   `sistemas/UI-SPINNER.md` **§3.bis**.
