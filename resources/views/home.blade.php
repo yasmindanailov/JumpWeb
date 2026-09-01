@@ -334,14 +334,33 @@
     </section>
 
     {{-- ===================== PRECIOS ===================== --}}
-    <section id="pricing" class="section wrap">
-        <div class="rides__head">
+    <section id="pricing" class="section wrap pricing-sec">
+        {{-- ▶ **EL FRISO FAMILIAR** (`slot-tarifas`, `#309`): tres poses del artboard compuestas en
+             un símbolo, con los pies en la misma línea. `[DECIDIDO owner]`: «en tarifas pon también
+             una silueta de varias personas».
+             ⚠️ Va DENTRO de la cabecera y anclada a ella —no a la sección— por lo mismo que la
+             mancha de zonas: un `top` porcentual colgado de un contenedor que cambia de alto se
+             descoloca solo cuando alguien acorta un texto (`#303`). --}}
+        <div class="rides__head pricing__head">
             <div>
                 <h2 class="rides__title">{{ __('landing.pricing.title') }}</h2>
             </div>
             <p>{{ __('landing.pricing.intro') }}</p>
+            <x-site.ilu clave="slot-tarifas" class="pricing__friso" />
         </div>
-        <x-site.ticket-prices :tickets="$tickets" :zones="$zones" />
+        {{-- ⚠️ **Sin la nota de calcetines** (`[DECIDIDO owner]`: «quita la card de calcetines
+             antideslizantes de ahí»): el dato se va a la sección de normas, con su propio CTA de
+             compra. `/precios` la CONSERVA —es la otra vista que usa este componente y allí no hay
+             sección de normas que la recoja—, así que la decisión viaja por prop y no borrando el
+             componente. --}}
+        <x-site.ticket-prices :tickets="$tickets" :zones="$zones" :socks="false" />
+
+        {{-- El puente a las normas. `[DECIDIDO owner]`: «pon un cta, conoce las reglas para venir, y
+             al darle clic baja al cliente a la sección de las reglas». Es un ancla dentro de la
+             misma página, no una ruta. --}}
+        <p class="pricing__rules">
+            <a class="btn btn--ghost" href="#rules" data-tap>{{ __('landing.pricing.rules_cta') }}</a>
+        </p>
     </section>
 
     {{-- ===================== CUMPLEAÑOS (#231) ===================== --}}
@@ -372,89 +391,98 @@
     </section>
 
     {{-- ===================== NORMAS ===================== --}}
-    {{-- ⚠️⚠️ **ESTA SECCIÓN VOLVIÓ A SU FORMA ANTERIOR** (`[DECIDIDO owner, 2026-08-31]`, `#300`):
-         la T1 del carril de idioma visual (`#292`) se revierte ENTERA a petición suya, con la
-         consecuencia delante —vuelve el pliego de doce pictogramas del cliente ANTIGUO y el
-         carrusel con todas las normas; se van las tres normas en texto, el CTA y la mancha—.
-         ▶ El diagnóstico del molde editorial NO se retira (`specs/idioma-visual-heredado.md`
-         §3.quinquies): la portada se rehará desde aquí, y ésta es la base común desde la que se
-         empieza a iterar. **No la des por buena: está pendiente de rediseño.** --}}
-    <section class="section wrap">
+    {{-- ▶ **DOS REQUISITOS PEGAJOSOS Y UN ASOMO DE NORMAS** (`[DECIDIDO owner, 2026-09-01]`,
+         `#309`, `specs/idioma-visual-heredado.md` §3.nonies). Sustituye al pliego de doce
+         pictogramas del cliente ANTIGUO y al carrusel con TODAS las normas, que era la base común
+         que `#300` había restaurado a propósito para rediseñar desde ella.
+
+         ▶ **La columna izquierda es lo que hay que HACER antes de venir** —registrarse y traer
+         calcetines—, y se queda quieta mientras la derecha se desplaza. No es un adorno: son las
+         dos únicas cosas de esta sección sobre las que el visitante puede actuar, y las dos tienen
+         su CTA.
+         ▶ **La derecha ASOMA las normas y no las agota**: cuatro y un enlace a `/normas`, que es la
+         página que las tiene todas y que ya existe.
+
+         ⚠️ **El ancla `#rules` es NUEVA y tiene consumidor**: el CTA de la sección de tarifas
+         («Conoce las reglas para venir»). Una sección sin `id` no se puede enlazar, y este ancla
+         nace con quien lo usa.
+         ⚠️⚠️ **Los CTA reutilizan el mecanismo del producto, con su suelo sin JavaScript**: el de
+         registro es `route('registro')` + `openAccount`, el de calcetines es `route('entradas')` +
+         el cajón de compra — los mismos dos que usa `<x-site.cta-pair>`. Inventar aquí un tercer
+         camino de compra habría creado una ruta que nadie más mantiene. --}}
+    <section id="rules" class="section wrap">
         <div class="rides__head">
             <div>
                 <h2 class="rides__title">{{ __('landing.rules.title') }}</h2>
             </div>
         </div>
-        <div class="rules-layout">
-            <div class="rules-layout__media">
-                <img src="{{ asset('images/historia-seguridad.png') }}"
-                     alt="{{ __('landing.rules.title') }}" loading="lazy">
+        <div class="rules-2col">
+            {{-- ── COLUMNA IZQUIERDA · lo que hay que hacer, y se queda quieta ─────────────── --}}
+            <div class="rules-must">
+                <article class="rules-must__card">
+                    <x-site.ilu clave="slot-normas-registro" class="rules-must__ilu" />
+                    <h3 class="rules-must__title">{{ __('landing.rules.register_title') }}</h3>
+                    <p class="rules-must__text">{{ __('landing.rules.register_text') }}</p>
+                    {{-- ⚠️⚠️ **LAS MISMAS TRES RAMAS QUE `<x-site.cta-pair>`, y no es celo: la primera
+                         versión de esta tarjeta ofrecía el ALTA a todo el mundo y una guarda la cazó
+                         con razón** (`HomePageTest::test_authenticated_nav_hides_ghost…` asevera que
+                         con sesión no se ofrece darse de alta). Aquí van:
+                           · registro EXTERNO configurado → su URL, que es el sistema del parque;
+                           · con sesión → la cuenta, que es donde se firma la exención;
+                           · sin sesión → el alta, con su suelo sin JS en `route('registro')`.
+                         Duplicar la lógica de `cta-pair` es feo, pero inventar aquí una cuarta
+                         conducta lo es más: sería un camino al registro que nadie más mantiene. --}}
+                    @if (! empty($site['registration_url']))
+                        <a class="btn btn--ghost btn--sm" href="{{ $site['registration_url'] }}"
+                           target="_blank" rel="noopener" data-tap>{{ __('landing.rules.register_cta') }}</a>
+                    @elseif (auth()->check())
+                        <a class="btn btn--ghost btn--sm" href="{{ route('account') }}" data-tap
+                           x-on:click.prevent="$store.purchase.openAccount($event, 'home')">{{ __('landing.rules.register_cta') }}</a>
+                    @else
+                        <a class="btn btn--ghost btn--sm" href="{{ route('registro') }}" data-tap
+                           x-on:click.prevent="$store.purchase.openAccount($event, 'register')">{{ __('landing.rules.register_cta') }}</a>
+                    @endif
+                </article>
+
+                <article class="rules-must__card">
+                    <x-site.ilu clave="slot-normas-calcetines" class="rules-must__ilu" />
+                    <h3 class="rules-must__title">{{ __('landing.rules.socks_title') }}</h3>
+                    <p class="rules-must__text">{{ __('landing.rules.socks_text') }}</p>
+                    {{-- Los calcetines son un COMPLEMENTO de la entrada, no un producto suelto: el
+                         CTA lleva a la compra, que es donde se ofrecen. --}}
+                    <a class="btn btn--ghost btn--sm" href="{{ route('entradas') }}" data-tap
+                       x-on:click.prevent="$store.purchase.open()">{{ __('landing.rules.socks_cta') }}</a>
+                </article>
             </div>
-            <div class="rules-vslider" tabindex="0" aria-label="{{ __('landing.rules.eyebrow') }}">
-                @foreach ($rules as $rule)
-                    <div class="rule">
-                        <div class="rule__icon">!</div>
-                        <span class="rule__name">{{ $rule->tr('name') }}</span>
-                        <span class="rule__desc">{{ $rule->tr('description') }}</span>
-                    </div>
+
+            {{-- ── COLUMNA DERECHA · un asomo de las normas ────────────────────────────────── --}}
+            <div class="rules-peek">
+                {{-- ⚠️ **El tope lo declara la VISTA, no el panel** (mismo criterio que `#292`): el
+                     panel decide QUÉ normas y en qué orden; cuántas caben aquí es diseño. Con más,
+                     la columna derecha crecería por encima de la izquierda y la pegajosidad
+                     dejaría de notarse, que es justo lo que la sección va a enseñar. --}}
+                @foreach ($rules->take(4) as $rule)
+                    <article class="rules-peek__item">
+                        <h3 class="rules-peek__name">{{ $rule->tr('name') }}</h3>
+                        <p class="rules-peek__desc">{{ $rule->tr('description') }}</p>
+                    </article>
                 @endforeach
+                <p class="rules-peek__more">
+                    <a class="btn btn--ghost" href="{{ route('normas') }}" data-tap>{{ __('landing.rules.all_cta') }}</a>
+                </p>
             </div>
         </div>
     </section>
 
-    {{-- ===================== GALERÍA ===================== --}}
-    @php
-        // Galería de polaroids con FOTOS REALES de la clienta (sobrantes del catálogo de
-        // atracciones + cumpleaños + plano del parque). Es el FALLBACK del feed social: si hay
-        // un embed de IG/TikTok configurado (`$site['social_feed']`), el `<x-site.consent-frame>`
-        // prioriza el feed y estas polaroids no se muestran. Los tags son hashtags de marca/zona
-        // (universales, no se traducen). file_exists evita un 404 si falta una foto.
-        $gallery = array_values(array_filter([
-            ['src' => 'images/attractions/cumplea_1.webp', 'tag' => '#cumpleaños'],
-            ['src' => 'images/attractions/jump_saltos_libre.webp', 'tag' => '#jump'],
-            ['src' => 'images/attractions/cumple_2.webp', 'tag' => '#cumpleaños'],
-            ['src' => 'images/attractions/kids_toboganes.webp', 'tag' => '#kids'],
-            ['src' => 'images/attractions/jump_circuito.webp', 'tag' => '#jump'],
-            ['src' => 'images/attractions/park_jump.webp', 'tag' => '#salta'],
-            ['src' => 'images/attractions/cumple_3.webp', 'tag' => '#cumpleaños'],
-            ['src' => 'images/attractions/kids_obstaculos.webp', 'tag' => '#kids'],
-            ['src' => 'images/attractions/jump_obstaculos.webp', 'tag' => '#jump'],
-            ['src' => 'images/attractions/cumple_4.webp', 'tag' => '#cumpleaños'],
-            ['src' => 'images/attractions/kids_toboganes_bolas.webp', 'tag' => '#kids'],
-            ['src' => 'images/attractions/jump_obstaculos2.webp', 'tag' => '#jump'],
-        ], fn (array $g): bool => file_exists(public_path($g['src']))));
-    @endphp
-    <section id="gallery" class="section wrap">
-        <div class="rides__head">
-            <div>
-                <h2 class="rides__title" style="font-size:clamp(48px, 6vw, 96px)">{{ __('landing.gallery.title') }}</h2>
-            </div>
-            <p>{{ __('landing.gallery.intro') }}</p>
-        </div>
-        {{-- Feed social (#215): widget de IG/TikTok (SnapWidget/LightWidget) con las últimas
-             publicaciones. La URL llega ya saneada y validada contra la allowlist por
-             `SocialEmbed::clean` (en el composer) → el iframe solo carga un origen permitido.
-             Bloqueo previo (#219): solo carga con consentimiento de la categoría «redes sociales»
-             (transfiere datos a su proveedor); si no, la galería estática de polaroids. --}}
-        <x-site.consent-frame category="social" :src="$site['social_feed']"
-            :title="__('landing.gallery.title')"
-            wrapper-class="social-embed"
-            frame-style="width:100%;border:0;border-radius:18px;min-height:480px"
-            referrerpolicy="no-referrer" scrolling="no" allowtransparency="true">
-            <div class="gallery-marquee">
-                <div class="gallery-marquee__track">
-                    @foreach (array_merge($gallery, $gallery) as $g)
-                        <figure class="polaroid">
-                            <div class="polaroid__img">
-                                <img src="{{ asset($g['src']) }}" alt="{{ $site['name'] }} · {{ ltrim($g['tag'], '#') }}" loading="lazy">
-                                <span class="polaroid__tag">{{ $g['tag'] }}</span>
-                            </div>
-                        </figure>
-                    @endforeach
-                </div>
-            </div>
-        </x-site.consent-frame>
-    </section>
+    {{-- ⚠️⚠️ **AQUÍ ESTABA «EN DIRECTO» Y SE HA RETIRADO** (`[DECIDIDO owner, 2026-09-01]`:
+         «la sección "en directo" quítala»), `#309`. Era la galería de polaroids con fotos del
+         catálogo, o el feed de Instagram/TikTok cuando la instalación configuraba uno.
+         ▶ Con ella se van su marcado, su CSS (`.gallery-marquee`, `.polaroid*`) y su enlace del
+         pie. **NO se retira la fontanería del feed social** —el ajuste `social.feed_embed_url`, el
+         servicio `SocialEmbed` y la categoría de cookies `social`—: el hueco que deja esta sección
+         es el que `specs/google-reviews.md` va a ocupar con las reseñas, y desmontarla ahora para
+         rehacerla después es churn. ⚠️ Eso deja el ajuste del panel **sin consumidor**, que es el
+         defecto que `#304` documentó; está dicho, con sus dos salidas, en `DEUDA.md`. --}}
 
     {{-- ===================== FAQ ===================== --}}
     <section class="section wrap">

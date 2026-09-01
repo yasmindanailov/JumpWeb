@@ -41,9 +41,10 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3752 en verde** (24.742 aserciones, 1 skipped a propósito), medida el 2026-09-01 sobre el
-> árbol CONJUNTO tras rebasar `#308` (el libro, T2) encima de `#307` (landing). ⚠️ **No se suma,
-> se mide**: `#308` por sí solo daba 3741 / 24.673 y `#307` 3727 / 24.200.
+> Suite **3756 en verde** (24.766 aserciones, 1 skipped a propósito), medida el
+> 2026-09-01 sobre el árbol CONJUNTO tras rebasar `#309` (landing) encima de `#308` (el libro,
+> T2). ⚠️ **No se suma, se mide.**
+> - Antes, 3752 / 24.742 (`#308`) y 3731 / 24.224 (`#309` por sí solo).
 >
 > ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1 y T2 EN EL ÁRBOL · sigue la T3) ═══════════
 > ❗❗❗ **2026-09-01 (madrugada, 2.ª sesión) · T2 · EL LIBRO EN EL DOMINIO, EN EL ÁRBOL**
@@ -283,6 +284,44 @@
 > entorno por eso.
 >
 > ═══════════ CARRIL 2 · TEMA / FACHADA (`#286` · `#287`) ═══════════
+>
+> ❗❗❗ **2026-09-01 · CINCO SECCIONES DE LA PORTADA, EN UN ENCARGO** (`#309`,
+> `specs/idioma-visual-heredado.md` **§3.nonies**). Suite **3731 verde** (24.224 aserciones, 1
+> skipped) · Pint ✓ · docs-check ✓ · `kit:build --check` servible con **7 símbolos** · **3/3
+> mutaciones muerden** · Chrome real 1280 y 390: 0 desborde, 0 errores de consola.
+>
+> ▶ **Zonas**: silueta 44 → **104 px** asomando por encima de la tarjeta; splash más visible.
+> ▶ **Tarifas**: friso de tres figuras, fuera la nota de calcetines (`/precios` la conserva, por
+> prop) y CTA que baja a `#rules`.
+> ▶ **Normas**: fuera la lámina del cliente antiguo; izquierda **pegajosa** con dos requisitos en
+> pegatina + mancha grande y su CTA; derecha, **cuatro** normas y enlace a `/normas`.
+> ▶ **«En directo»**: retirada con su CSS y su enlace del pie.
+> ▶ **Cumpleaños**: fuera el «foam»; toggles al ancho EXACTO de la tarjeta de precio, con icono de
+> producto; contorno de la pose sobre la banda de color.
+>
+> ❗❗ **ESTO REVISA A SABIENDAS EL PRESUPUESTO DE `#292`** («una pieza por sección, tres en la
+> portada»): ahora son **cuatro**, y normas lleva dos. Anotado en `IllustrationKit::SLOTS`. Lo que
+> NO cambia es lo que vigila `FacadeDecorationIsPerScreenTest`: ninguna pieza dentro de un bucle.
+>
+> ⚠️⚠️ **TRES DEFECTOS MÍOS que cazó la medición**: (1) **agrandar el splash rompió el criterio de
+> `#303`** —9.936 px² sobre el párrafo—; barrido de CINCO combinaciones, ninguna crece sin caer
+> sobre el texto → queda el tamaño de `#303` con la opacidad al doble: **0 px²**. *Se ve más porque
+> pinta más, no porque ocupe más.* (2) **normas no colapsaba en móvil** y el `overflow: hidden`
+> **cortaba titular y botón** a 390 px — **lo vio la captura, no la suite**: ninguna guarda mira
+> anchos. (3) la tarjeta de requisito **ofrecía el alta a quien ya tenía sesión**, y lo cazó una
+> guarda del nav.
+> ⚠️ **Y DOS PREEXISTENTES**: la tarjeta de pack **se salía 11 px de su columna** a 390 (apareció al
+> derivar el ancho de los toggles), y retirar la sección vieja **se llevó `.rules-grid`/`.rule`, que
+> los usa `/normas`** — lo cazó buscar consumidores por FICHERO y por clase EXACTA.
+>
+> ❗❗ **LO QUE QUEDA DICHO Y ES DEL OWNER**: el **`sticky` tiene 99 px de recorrido** y a 1280×900 la
+> sección cabe entera, así que no se engancha — **las dos cosas pedidas se estorban** (columna
+> pegajosa vs. tope de 3/4 normas) y la palanca es el tope. Y la **categoría de cookies `social` ya
+> no gatea nada** (ajuste, servicio y frase del banner sin consumidor), a sabiendas: el hueco es el
+> de las reseñas. Las dos, con sus salidas, en `DEUDA.md`.
+> ⚠️ Trampas: una sonda dio **20.306 px² de «friso sobre titular» y era FALSO** (medía la caja del
+> `<div>` de 920 px, no la tinta), y una mutación no mordió porque **la mala era la mutación** —el
+> bucle del pie lo manda la lista de RÓTULOS, no la de URLs—.
 >
 > ❗❗❗ **2026-09-01 · «VISÍTANOS» EN TARJETAS + LOS DATOS REALES DEL CLIENTE** (`#307`,
 > `specs/idioma-visual-heredado.md` **§3.octies**). Suite del árbol conjunto **3727 verde** (24.200

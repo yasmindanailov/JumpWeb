@@ -85,10 +85,9 @@ return [
     'pricing' => [
         'title' => 'Pricing',
         'intro' => 'Pick your zone and see the prices. For now, tickets are bought at the box office or by phone.',
+        'rules_cta' => 'What you need to know before coming',
         'from' => 'from', 'pick_zone' => 'Choose a zone', 'tab' => 'Tickets',
         'book' => 'Book', 'call' => 'Call',
-        'socks_title' => 'Non-slip socks required',
-        'socks_text' => "They're a must for safe jumping. Bring your own from home or grab a pair at the park.",
     ],
     'registration' => [
         'title' => 'Complete your registration at home',
@@ -182,7 +181,16 @@ return [
         'weekdays' => [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'],
         'address_title' => 'Location', 'parking' => 'Free parking 2h', 'directions' => 'Directions',
     ],
-    'rules' => ['eyebrow' => 'Rules', 'title' => 'Rules'],
+    'rules' => [
+        'eyebrow' => 'Rules', 'title' => 'Rules',
+        'register_title' => 'Sign-up required',
+        'register_text' => 'Everyone who jumps must sign up and accept the waiver, including children in an adult\'s care. You only do it once and it speeds up your arrival.',
+        'register_cta' => 'Sign up now',
+        'socks_title' => 'Non-slip socks required',
+        'socks_text' => "They're a must for safe jumping. Bring your own from home or add them to your ticket.",
+        'socks_cta' => 'Add them to my ticket',
+        'all_cta' => 'Read all the rules',
+    ],
     'faq' => ['title' => 'FAQ'],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
     // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.
@@ -214,7 +222,7 @@ return [
     'footer' => [
         'tag' => 'Family jump park · Murcia',
         'col_park' => 'The park', 'col_info' => 'Info', 'col_contact' => 'Contact',
-        'links_park' => ['Jump zone', 'Kids zone', 'Rides', 'Gallery'],
+        'links_park' => ['Jump zone', 'Kids zone', 'Rides'],
         'links_info' => ['Pricing', 'Birthdays', 'Groups & companies', 'Rules'],
         'rights' => 'Built for laughter.',
         'legal' => ['Legal', 'Privacy', 'Terms', 'Cookies', 'Waiver'],

@@ -107,10 +107,10 @@ return [
     'pricing' => [
         'title' => 'Tarifas',
         'intro' => 'Elige tu zona y mira los precios. Hoy las entradas se compran en taquilla o por teléfono.',
+        // Puente a la sección de normas (`#309`): lo que hay que traer y hacer ANTES de venir.
+        'rules_cta' => 'Conoce las reglas para venir',
         'from' => 'desde', 'pick_zone' => 'Elige la zona', 'tab' => 'Entradas',
         'book' => 'Reservar', 'call' => 'Llamar',
-        'socks_title' => 'Calcetines antideslizantes obligatorios',
-        'socks_text' => 'Son imprescindibles para saltar de forma segura. Puedes traerlos de casa o conseguirlos en el parque.',
     ],
     'registration' => [
         'title' => 'Completa tu registro en casa',
@@ -208,7 +208,21 @@ return [
         'weekdays' => [0 => 'Domingo', 1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado'],
         'address_title' => 'Ubicación', 'parking' => 'Parking gratis 2h', 'directions' => 'Cómo llegar',
     ],
-    'rules' => ['eyebrow' => 'Normas', 'title' => 'Normas'],
+    'rules' => [
+        'eyebrow' => 'Normas', 'title' => 'Normas',
+        // ── Los DOS requisitos que hay que cumplir ANTES de saltar (`#309`) ──────────────────
+        // ⚠️ `socks_title`/`socks_text` VIVÍAN en `pricing` y se han MOVIDO aquí, no copiado: la
+        // nota salió de la sección «Tarifas» de la portada y una clave que nombra la sección donde
+        // ya no está es una mentira que el siguiente agente se cree. `<x-site.socks-note>` —que
+        // `/precios` sigue usando— lee estas mismas.
+        'register_title' => 'Registro obligatorio',
+        'register_text' => 'Todos los que vayan a saltar tienen que registrarse y aceptar el consentimiento, también los menores a cargo de un adulto. Se hace una vez y agiliza la entrada.',
+        'register_cta' => 'Hacer el registro',
+        'socks_title' => 'Calcetines antideslizantes obligatorios',
+        'socks_text' => 'Son imprescindibles para saltar de forma segura. Puedes traerlos de casa o añadirlos a tu entrada.',
+        'socks_cta' => 'Añadirlos a mi entrada',
+        'all_cta' => 'Leer las normas',
+    ],
     'faq' => ['title' => 'Dudas'],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
     // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.
@@ -240,7 +254,7 @@ return [
     'footer' => [
         'tag' => 'Parque de saltos para toda la familia · Murcia',
         'col_park' => 'Parque', 'col_info' => 'Información', 'col_contact' => 'Contacto',
-        'links_park' => ['Zona Jump', 'Zona Kids', 'Atracciones', 'Galería'],
+        'links_park' => ['Zona Jump', 'Zona Kids', 'Atracciones'],
         'links_info' => ['Tarifas', 'Cumpleaños', 'Grupos y empresas', 'Normas'],
         'rights' => 'Hecho para reír.',
         // 5 páginas legales (orden = $legalUrls en el footer): aviso-legal, privacidad, condiciones, cookies, waiver.

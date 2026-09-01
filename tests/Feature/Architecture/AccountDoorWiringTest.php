@@ -282,18 +282,24 @@ class AccountDoorWiringTest extends TestCase
         // armazón —abajo a la derecha, con relevo al de la cabecera al bajar—, y su mitad de la
         // cuenta es una cuarta puerta al alta. El sujeto sigue sin cambiar —que TODOS los caminos
         // al alta lleguen cableados— y por eso el número sube en vez de aflojarse la aserción.
+        // ⚠️ **De CUATRO a CINCO el 2026-09-01** (`#309`): la sección de normas estrena la tarjeta
+        // «Registro obligatorio», que es una QUINTA puerta al alta. Misma regla: sube el número.
+        // ▶ Y esa tarjeta tiene TRES ramas (registro externo · con sesión · sin sesión), así que
+        // este recuento vale para la de invitado —que es la que renderiza este caso— y **cambiaría
+        // a cuatro con sesión**, que es justo lo que `HomePageTest` comprueba por el otro lado.
         $this->assertSame(
-            4, substr_count($html, "openAccount(\$event, 'register')"),
-            'Los CTA de alta son CUATRO —escritorio, primera pantalla, cajón móvil y la mitad de la '.
-            'barra de móvil— y no llegan los cuatro cableados. ⚠️ Si el fixture configurara un '.
-            'registro EXTERNO, los tres del armazón serían otro enlace: este recuento lo delata.'
+            5, substr_count($html, "openAccount(\$event, 'register')"),
+            'Los CTA de alta son CINCO —escritorio, primera pantalla, cajón móvil, la mitad de la '.
+            'barra de móvil y la tarjeta de «Registro obligatorio» de las normas— y no llegan los '.
+            'cinco cableados. ⚠️ Si el fixture configurara un registro EXTERNO, los del armazón y '.
+            'el de la tarjeta serían otro enlace: este recuento lo delata.'
         );
 
         // ⚠️ Y el `href` de los CUATRO sobrevive: es lo que responde sin JS, con el clic central y
         // al abrir en pestaña nueva. La ruta existe como PUERTA justo para eso.
         $this->assertSame(
-            4, substr_count($html, 'href="'.route('registro').'"'),
-            'Alguno de los CUATRO CTA de alta perdió su `href`: sin él, ese clic no hace NADA cuando '.
+            5, substr_count($html, 'href="'.route('registro').'"'),
+            'Alguno de los CINCO CTA de alta perdió su `href`: sin él, ese clic no hace NADA cuando '.
             'el motor todavía no ha cargado, «abrir en pestaña nueva» deja de funcionar, y en la '.
             'barra de móvil un visitante sin JS se queda sin forma de darse de alta.'
         );

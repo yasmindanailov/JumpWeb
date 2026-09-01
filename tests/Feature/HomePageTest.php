@@ -104,20 +104,31 @@ class HomePageTest extends TestCase
             ->assertSee('tel:968222222', false);      // enlace de llamada con los dígitos del teléfono
     }
 
-    public function test_socks_note_renders_under_the_price_grid(): void
+    /**
+     * **La nota de calcetines vive en `/precios` y YA NO en la portada** (`#309`).
+     *
+     * `[DECIDIDO owner, 2026-09-01]`: fuera de la sección «Tarifas» de la portada, donde el dato
+     * pasa a una tarjeta propia de la sección de normas con su CTA de compra. ⚠️ **`/precios` la
+     * conserva y eso es lo que este caso protege**: esa página no tiene sección de normas que la
+     * recoja, así que borrarla del componente compartido habría hecho desaparecer un requisito de
+     * seguridad de una página pública sin que nadie lo pidiera.
+     *
+     * ⚠️ Re-apuntado y **más fuerte que antes**: la versión anterior solo comprobaba que la nota
+     * ESTUVIERA; ésta comprueba además dónde NO está, que es la mitad que fija la decisión.
+     */
+    public function test_the_socks_note_lives_on_pricing_and_no_longer_on_the_home(): void
     {
-        // Nota general «calcetines antideslizantes obligatorios» bajo el grid de precios, con el
-        // icono de marca S1. Vive en `ticket-prices` → aparece en la landing Y en /precios.
-        $response = $this->get('/');
-
-        $response->assertOk()
+        $this->get('/precios')->assertOk()
             ->assertSee('Calcetines antideslizantes obligatorios')          // título (ES)
-            ->assertSee('Puedes traerlos de casa', false)                    // el cliente los puede traer de casa
-            ->assertSee('ic-s1', false)                                      // icono de marca S1 (animado, white-label)
+            ->assertSee('Puedes traerlos de casa', false)                    // se pueden traer de casa
+            ->assertSee('ic-s1', false)                                      // icono de marca S1 (white-label)
             ->assertSee('socks-note__title', false);                        // callout reutilizable
 
-        // La misma nota acompaña al catálogo en la página de tarifas dedicada (/precios).
-        $this->get('/precios')->assertOk()->assertSee('Calcetines antideslizantes obligatorios');
+        // En la portada el dato sigue estando —es obligatorio— pero como TARJETA de la sección de
+        // normas, no como la nota del catálogo. Se comprueban las dos mitades.
+        $this->get('/')->assertOk()
+            ->assertDontSee('socks-note__title', false)
+            ->assertSee('Calcetines antideslizantes obligatorios');
     }
 
     public function test_socks_note_is_translated(): void

@@ -36,14 +36,11 @@ class ZoneImageTest extends TestCase
        SEEDER de más abajo siguen vivos y siguen exigiendo que esas fotos existan en disco, así que
        el dato no se degrada en silencio mientras se decide qué hacer con él. */
 
-    public function test_gallery_shows_real_photos_as_fallback_when_no_social_feed(): void
-    {
-        // Sin feed social configurado (seed por defecto), la galería muestra las polaroids con
-        // las fotos reales sobrantes. `cumple_2` solo se usa en la galería (no como atracción).
-        $this->get('/')->assertOk()
-            ->assertSee('gallery-marquee', false)
-            ->assertSee('images/attractions/cumple_2.webp', false);
-    }
+    // ⚠️ **AQUÍ HABÍA `test_gallery_shows_real_photos_as_fallback_when_no_social_feed` Y SE HA
+    // RETIRADO CON SU SUJETO** (`#309`): la sección «En directo» —la marquesina de polaroids que
+    // hacía de respaldo cuando no había feed configurado— la retiró el owner. No se re-apunta
+    // contra otra pantalla porque no hay otra que muestre esas fotos: reescribirlo así vigilaría
+    // algo distinto de lo que motivó el caso.
 
     public function test_seeder_assigns_real_zone_images_and_counts(): void
     {

@@ -60,6 +60,25 @@ class IllustrationKit
         // ⚠️ `B1·01` y `B1·04` no se podían usar: **ya viajan instaladas** como `--deco-blob-a/b`
         // (verificado byte a byte en `#286`).
         'slot-zonas',
+
+        // ── `#309` · las tres ranuras del encargo del owner («elementos de fachada, en grande») ──
+        // Todas nacen CON su consumidor en el mismo cambio, que es la regla de arriba.
+        //
+        // ⚠️⚠️ **Con éstas la portada pasa de UNA pieza decorativa a CUATRO, y eso REVISA a sabiendas
+        // el presupuesto que `#292` fijó** («una por sección, tres en toda la portada»). No es un
+        // descuido: `[DECIDIDO owner, 2026-09-01]` pidió material de fachada en tarifas, en las dos
+        // tarjetas de normas y en cumpleaños. La regla que SIGUE en pie es la que vigila
+        // `FacadeDecorationIsPerScreenTest`: ninguna pieza dentro de un bucle.
+        //
+        // `slot-tarifas` es la única que NO es una mancha: es el friso familiar del artboard (`G3`),
+        // tres poses compuestas en un símbolo con `transform` y los pies en la misma línea.
+        // ⚠️ Se compone con `<g transform>` y NO con `<use href="#pose">` internos: un `<use>`
+        // interno dentro de un `<symbol>` que a su vez se referencia por `<use>` EXTERNO no resuelve
+        // igual en todos los motores, y aquí solo hay Chrome para medirlo (`hueco-ilustracion.md`
+        // §2.3). Un `transform` no tiene esa duda.
+        'slot-tarifas',
+        'slot-normas-registro',
+        'slot-normas-calcetines',
     ];
 
     /**

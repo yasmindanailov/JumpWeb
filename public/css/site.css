@@ -1083,33 +1083,11 @@
    normas—. ▶ **Sigue siendo material heredado y sigue pendiente de rediseño**
    (`specs/idioma-visual-heredado.md` §3.quinquies): es la base común desde la que se itera, no
    una forma aprobada. ⚠️ `.rule` es compartida con la página `/normas`. */
-.rules-layout {
-  display: grid; grid-template-columns: 0.72fr 1.28fr; gap: 32px;
-  align-items: start; margin-top: 40px;
-}
-.rules-layout__media {
-  background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r-lg);
-  padding: 16px; display: flex; align-items: center; justify-content: center;
-  box-shadow: none;
-}
-.rules-layout__media img {
-  width: 100%; height: auto; max-height: 620px; object-fit: contain;
-  display: block; border-radius: var(--r);
-}
-.rules-vslider {
-  display: flex; flex-direction: column; gap: 14px;
-  max-height: 620px; overflow-y: auto; scroll-snap-type: y proximity;
-  scroll-behavior: smooth; padding: 4px 10px 4px 4px;
-}
-.rules-vslider:focus-visible { outline: var(--focus-outline); outline-offset: 4px; border-radius: var(--r); }
-.rules-vslider .rule { scroll-snap-align: start; }
-.rules-vslider::-webkit-scrollbar { width: 6px; }
-.rules-vslider::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: var(--r-pill); }
-.rules-vslider::-webkit-scrollbar-track { background: transparent; }
-@media (max-width: 768px) {
-  .rules-layout { grid-template-columns: 1fr; }
-  .rules-vslider { max-height: none; overflow: visible; }
-}
+/* ⚠️ Aquí vivían `.rules-layout`, `.rules-layout__media` y `.rules-vslider`: la rejilla de dos
+   columnas con la lámina de doce pictogramas del cliente ANTIGUO y el carrusel vertical con TODAS
+   las normas. Se fueron con su único consumidor —la sección de normas de la portada— cuando pasó a
+   dos requisitos pegajosos y un asomo de cuatro (`#309`, `idioma-visual-heredado.md` §3.nonies).
+   ▶ `.rules-grid`, `.rule` y sus hijos SIGUEN VIVOS en `landing.css`: los usa `/normas`. */
 
 
 /* fila "recordar sesión" + "¿olvidaste tu contraseña?" */

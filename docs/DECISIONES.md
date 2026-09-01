@@ -18082,3 +18082,78 @@ contradice entre pedido y reserva y el libro dice lo mismo en los dos niveles) �
 forReservation` compone el pedido entero (N reservas = N composiciones, como hoy). Sigue la T3.
 - ⚠️ Es `#308` y no `#307`: el carril de la landing numeró `#307` mientras esta sesión corría (la
   colisión de `CONVENCIONES` §10; se vio al empujar y se renumeró en el rebase).
+## #309 — Cinco secciones de la portada, en un encargo (2026-09-01)
+
+**Contexto.** `[DECIDIDO owner, 2026-09-01]`, en un solo mensaje. Diseño fino y medidas en
+`specs/idioma-visual-heredado.md` **§3.nonies**.
+
+### 1 · Lo que se pidió, y lo que costó
+
+- **Zonas**: siluetas más grandes «aunque se sobresalgan de las cards» (44 → **104 px**, con margen
+  negativo) y el splash «que se vea más».
+- **Tarifas**: friso de varias personas, fuera la tarjeta de calcetines, y un CTA que baja a normas.
+- **Normas**: fuera la lámina del cliente antiguo; columna izquierda **pegajosa** con dos requisitos
+  (registro y calcetines) en tarjeta de fachada; derecha, cuatro normas y enlace a `/normas`.
+- **«En directo»**: retirada.
+- **Cumpleaños**: toggles al ancho de la tarjeta de precio, con icono y estilo de fachada; fuera el
+  «foam».
+
+### 2 · ❗ Esto REVISA a sabiendas el presupuesto de decoración de `#292`
+
+Aquella regla —«una pieza por sección, TRES en toda la portada»— salió de tres rechazos del owner.
+El encargo pide fachada en tarifas, en las DOS tarjetas de normas y en cumpleaños: la portada pasa
+de **una** pieza a **cuatro**, y una sección lleva dos. Está anotado en `IllustrationKit::SLOTS`.
+▶ **Lo que NO cambia** es lo que vigila `FacadeDecorationIsPerScreenTest`: ninguna pieza dentro de
+un bucle. Ésa era la que evitaba el defecto real y sigue en pie.
+
+### 3 · El kit pasa de 4 a 7 símbolos, extraídos con un guion
+
+`slot-tarifas` (el friso familiar `G3`, tres poses con las cajas del artboard) y dos manchas.
+⚠️ Las libres eran **tres de seis**: dos ya viajan como `--deco-blob-a/b` y una es `slot-zonas`.
+⚠️⚠️ El friso se compone con **`<g transform>` y no con `<use>` internos**: un `<use>` interno dentro
+de un símbolo referenciado por `<use>` EXTERNO no resuelve igual en todos los motores y aquí solo
+hay Chrome para medirlo. ⚠️ Una cuarta mancha se generó y se **retiró**: la banda de cumpleaños usa
+el contorno de `zone-cumpleanos`, que ya viajaba, y una ranura sin pantalla tumba su guarda.
+
+### 4 · Tres defectos MÍOS que la medición cazó
+
+1. **Agrandar el splash rompió el criterio de `#303`**: 9.936 px² de mancha sobre el párrafo, justo
+   lo que su nota prohíbe. Barrido de **cinco** combinaciones: ninguna crece sin caer sobre el texto,
+   y moverla a la izquierda lo empeora **cubriendo menos titular**. ▶ Queda el tamaño de `#303` con
+   la opacidad al doble (0,14 → 0,30): **0 px² sobre el párrafo**. *Se ve más porque pinta más, no
+   porque ocupe más.*
+2. **La sección de normas no colapsaba en móvil**: sin media query seguía en dos columnas a 390 px y
+   el `overflow: hidden` **cortaba el titular y el botón** de las dos tarjetas. **Lo vio la captura,
+   no la suite** — ninguna guarda mira anchos.
+3. **La tarjeta de requisito ofrecía el alta a quien ya tenía sesión.** Lo cazó una guarda del nav.
+   Ahora sigue las MISMAS tres ramas que `<x-site.cta-pair>`.
+
+### 5 · Y dos defectos PREEXISTENTES que salieron por el camino
+
+- **La tarjeta de pack se salía 11 px de su columna** a 390 px (pista 310, contenido 321), escondido
+  dentro del relleno de la banda. Apareció al derivar el ancho de los toggles; `min-width: 0`.
+- **Retirar la sección vieja se llevó `.rules-grid` y `.rule`, que los usa `/normas`** — la página a
+  la que lleva el CTA nuevo. Lo cazó buscar consumidores **por fichero y por clase exacta**.
+
+### 6 · Lo que queda dicho porque no se resuelve aquí
+
+- ⚠️⚠️ **El `sticky` tiene 99 px de recorrido y en pantallas de 900 px no se engancha** (la sección
+  mide 830 y cabe entera). **Las dos cosas pedidas se estorban**: la columna pegajosa solo se nota
+  con la derecha mucho más alta, y el tope de 3/4 normas la deja corta. La palanca es el tope y es
+  del owner. Medido en tres tamaños.
+- ⚠️⚠️ **La categoría de cookies `social` ya no gatea nada**, y con ella el ajuste
+  `social.feed_embed_url`, `SocialEmbed` y la línea del banner. **No se desmonta**: el hueco es el de
+  las reseñas. Ficha en `DEUDA.md`. De sus tres casos, dos se retiran con lápida y el de
+  independencia **se re-apunta por el otro lado** (consentir redes no carga el mapa).
+- ⚠️ `images/historia-seguridad.png` (93 KB, del cliente antiguo) se queda **sin consumidor**.
+
+⚠️ **Y una trampa de instrumento**: una sonda dio 20.306 px² de «friso sobre titular» y era falso —
+medía la caja del `<div>` de 920 px, no la tinta. *Un solape de cajas no es un solape visual cuando
+una de ellas es un contenedor.* ⚠️ Otra: una mutación no mordió y **la mala era la mutación** —
+devolver la URL `/#gallery` al pie no pinta nada, porque el bucle lo manda la lista de rótulos.
+
+**Verificación**: suite **3756 verde** (24.766 aserciones, 1 skipped) sobre el árbol CONJUNTO tras
+rebasar encima de `#308`; esta tanda sola daba 3731 / 24.224 · Pint ✓ (1058) · docs-check ✓
+· `kit:build --check` servible con **7 símbolos** · **3/3 mutaciones muerden** en la guarda nueva ·
+Chrome real 1280 y 390 con puntero grueso: **0 px de desborde y 0 errores de consola**, toggles con
+desfase **0** contra la tarjeta en los dos anchos, mancha **0 px²** sobre el párrafo en los dos.

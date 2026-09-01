@@ -1,4 +1,13 @@
-@props(['tickets', 'zones'])
+@props([
+    'tickets',
+    'zones',
+    // ⚠️ **La nota de calcetines es OPCIONAL desde `#309`, y el defecto que evita es real.** El owner
+    // la retiró de la sección «Tarifas» de la PORTADA, donde su contenido pasa a una tarjeta propia
+    // de la sección de normas. Pero este componente lo comparte `/precios`, que **no tiene sección
+    // de normas**: borrarla del componente habría hecho desaparecer de esa página un requisito de
+    // seguridad sin que nadie lo pidiera. Por eso es una decisión de la VISTA, no del componente.
+    'socks' => true,
+])
 
 {{-- Catálogo de entradas con switcher de zona (Fase 5.1).
      Reutiliza el switcher de zonas (.zone-tabs/.zone-tab) con label "Entradas {zona}";
@@ -67,7 +76,7 @@
 
     {{-- Nota general (no por zona): calcetines antideslizantes obligatorios. Debajo de las cards;
          solo con catálogo (acompaña al grid de precios, no aparece suelta si no hay entradas). --}}
-    @if ($tickets->isNotEmpty())
+    @if ($socks && $tickets->isNotEmpty())
         <x-site.socks-note />
     @endif
 </div>

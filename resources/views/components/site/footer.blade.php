@@ -2,7 +2,11 @@
     @php
         // Enlaces del footer (mismo orden que los textos de lang). Las páginas de
         // precios/cumpleaños/contacto llegan en 3.4.3–3.4.4; de momento van a la home.
-        $parkUrls = [url('/#zones'), url('/#zones'), url('/#rides'), url('/#gallery')];
+        // ⚠️ Eran CUATRO: el cuarto era «Galería» → `/#gallery`, y se fue con la sección «En
+        // directo» que el owner retiró en `#309`. Un ancla a una sección que ya no existe no
+        // falla —lleva a la home y no pasa nada visible—, que es justamente por lo que hay que
+        // retirarla a mano: nada la habría delatado.
+        $parkUrls = [url('/#zones'), url('/#zones'), url('/#rides')];
         // Lote 11: «Grupos y empresas» (índice 2) → /servicios (su página real), no /contacto.
         $infoUrls = [route('precios'), route('cumpleanos'), route('servicios'), route('normas')];
         // Orden = `landing.footer.legal`: aviso-legal, privacidad, condiciones, cookies, waiver (#216).

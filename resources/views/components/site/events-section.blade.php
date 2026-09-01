@@ -95,29 +95,50 @@
     {{-- ============ 01 · CUMPLEAÑOS ============ --}}
     <section class="wrap bd-sec1" id="events">
         <div class="bd-band">
-            <span class="bd-shape" style="width:42px;height:42px;top:32px;right:60px;border-radius:9px;transform:rotate(18deg)"></span>
-            <span class="bd-shape" style="width:22px;height:22px;top:110px;right:200px;border-radius:5px;transform:rotate(-14deg)"></span>
-            <span class="bd-shape" style="width:30px;height:30px;bottom:56px;left:240px;border-radius:6px;transform:rotate(-32deg)"></span>
-            <span class="bd-shape" style="width:16px;height:16px;top:220px;left:90px;border-radius:4px;transform:rotate(40deg)"></span>
+            {{-- ⚠️⚠️ **AQUÍ HABÍA CUATRO «FOAM»** —cuadrados de color girados, escritos con estilo en
+                 línea— y son el motivo del que `#293` dejó constancia: el motivo del cliente ANTIGUO
+                 copiado como GEOMETRÍA en vez de con su clase, así que **no aparecía buscando su
+                 nombre**. `[DECIDIDO owner, 2026-09-01]`: fuera, y en su sitio material de fachada.
+
+                 ▶ **La pieza es el CONTORNO de la pose de cumpleaños, y el tratamiento no es gusto
+                 mío: lo manda `F6` del artboard** — «sobre papel, silueta plana en tinta; **sobre
+                 foto o color saturado, el contorno** de la misma pose en papel». Esta banda es
+                 color saturado (`--bda`), así que va contorno.
+                 ⚠️ Reutiliza `zone-cumpleanos`, que YA viaja en el kit: es el dibujo de la zona de
+                 cumpleaños, o sea identidad, no una ranura decorativa nueva. --}}
+            <x-site.ilu clave="zone-cumpleanos" trato="contorno" class="bd-band__figura" />
 
             <div class="bd-band__head">
                 <h{{ $level }} class="bd-band__title">{{ __('landing.events.title') }}</h{{ $level }}>
-
-                @if ($packages->count() > 1)
-                    <div class="bd-tabs" role="tablist" aria-label="{{ __('landing.events.choose') }}">
-                        @foreach ($packages as $p)
-                            <button type="button" class="bd-tab" data-tap role="tab"
-                                    :class="pack === '{{ $p->id }}' && 'is-active'"
-                                    :aria-selected="pack === '{{ $p->id }}'"
-                                    @click="pack = '{{ $p->id }}'">{{ $p->tr('name') }}</button>
-                        @endforeach
-                    </div>
-                @endif
 
                 @foreach ($packages as $p)
                     <p class="bd-band__body" x-show="pack === '{{ $p->id }}'" x-cloak>{{ $p->tr('description') }}</p>
                 @endforeach
             </div>
+
+            {{-- ▶ **LOS TOGGLES, AL ANCHO DE LA TARJETA DE PRECIO** (`[DECIDIDO owner]`: «lo hacemos
+                 al mismo ancho de la card del precio del pack cumpleaños»). Por eso SALEN de
+                 `.bd-band__head`, que está acotada a 860 px: su ancho se calcula contra la columna
+                 derecha de `.bd-grid`, que es donde vive esa tarjeta.
+                 ⚠️ El icono es el del PRODUCTO (`iconKey()`, `#259`), no uno elegido aquí: hoy los
+                 dos packs traen `party` y por tanto el mismo dibujo, y eso es **dato** — el parque
+                 lo cambia desde el panel. Quemar aquí un icono por pack lo habría hecho imposible.
+                 ⚠️ `role="tablist"` sin `aria-controls` sería una promesa a medias: cada botón
+                 apunta al panel de su pack, que es el bloque `x-show` de la tarjeta. --}}
+            @if ($packages->count() > 1)
+                <div class="bd-tabs" role="tablist" aria-label="{{ __('landing.events.choose') }}">
+                    @foreach ($packages as $p)
+                        <button type="button" class="bd-tab" data-tap role="tab"
+                                id="bd-tab-{{ $p->id }}" aria-controls="bd-panel-{{ $p->id }}"
+                                :class="pack === '{{ $p->id }}' && 'is-active'"
+                                :aria-selected="pack === '{{ $p->id }}'"
+                                @click="pack = '{{ $p->id }}'">
+                            <x-dynamic-component :component="'icons.'.$p->iconKey()" class="bd-tab__ico" :width="28" :height="28" />
+                            <span class="bd-tab__t">{{ $p->tr('name') }}</span>
+                        </button>
+                    @endforeach
+                </div>
+            @endif
 
             <div class="bd-grid">
                 {{-- Polaroid con la foto de la zona cumpleaños --}}
@@ -141,7 +162,10 @@
                 <div class="bd-pack-col">
                 <div class="bd-pack">
                     @foreach ($packages as $p)
-                        <div x-show="pack === '{{ $p->id }}'" x-cloak>
+                        {{-- El panel que gobierna cada toggle. Sin `id`/`role` el `aria-controls` de
+                             la pestaña apuntaría al vacío, que es peor que no anunciarlo. --}}
+                        <div id="bd-panel-{{ $p->id }}" role="tabpanel" aria-labelledby="bd-tab-{{ $p->id }}"
+                             x-show="pack === '{{ $p->id }}'" x-cloak>
                             <div class="bd-pack__head">
                                 <span class="bd-pack__label">{{ __('landing.events.included') }}</span>
                                 <span class="bd-pack__price">

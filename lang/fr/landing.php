@@ -85,10 +85,9 @@ return [
     'pricing' => [
         'title' => 'Tarifs',
         'intro' => "Choisis ta zone et vois les prix. Pour le moment, les billets s'achètent à la billetterie ou par téléphone.",
+        'rules_cta' => 'Ce qu\'il faut savoir avant de venir',
         'from' => 'dès', 'pick_zone' => 'Choisis ta zone', 'tab' => 'Billets',
         'book' => 'Réserver', 'call' => 'Appeler',
-        'socks_title' => 'Chaussettes antidérapantes obligatoires',
-        'socks_text' => 'Indispensables pour sauter en toute sécurité. Apporte les tiennes ou prends-en une paire au parc.',
     ],
     'registration' => [
         'title' => 'Finalise ton inscription à la maison',
@@ -182,7 +181,16 @@ return [
         'weekdays' => [0 => 'Dimanche', 1 => 'Lundi', 2 => 'Mardi', 3 => 'Mercredi', 4 => 'Jeudi', 5 => 'Vendredi', 6 => 'Samedi'],
         'address_title' => 'Adresse', 'parking' => 'Parking gratuit 2h', 'directions' => 'Itinéraire',
     ],
-    'rules' => ['eyebrow' => 'Règles', 'title' => 'Règles'],
+    'rules' => [
+        'eyebrow' => 'Règles', 'title' => 'Règles',
+        'register_title' => 'Inscription obligatoire',
+        'register_text' => "Toute personne qui saute doit s'inscrire et accepter le consentement, y compris les mineurs accompagnés. C'est une seule fois et cela accélère l'entrée.",
+        'register_cta' => "S'inscrire",
+        'socks_title' => 'Chaussettes antidérapantes obligatoires',
+        'socks_text' => 'Indispensables pour sauter en toute sécurité. Apporte les tiennes ou ajoute-les à ton billet.',
+        'socks_cta' => 'Les ajouter à mon billet',
+        'all_cta' => 'Lire toutes les règles',
+    ],
     'faq' => ['title' => 'Questions'],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
     // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.
@@ -214,7 +222,7 @@ return [
     'footer' => [
         'tag' => 'Parc de sauts pour toute la famille · Murcia',
         'col_park' => 'Le parc', 'col_info' => 'Infos', 'col_contact' => 'Contact',
-        'links_park' => ['Zone Jump', 'Zone Kids', 'Attractions', 'Galerie'],
+        'links_park' => ['Zone Jump', 'Zone Kids', 'Attractions'],
         'links_info' => ['Tarifs', 'Anniversaires', 'Groupes & entreprises', 'Règles'],
         'rights' => 'Fait pour rire.',
         'legal' => ['Mentions légales', 'Confidentialité', 'Conditions', 'Cookies', 'Waiver'],

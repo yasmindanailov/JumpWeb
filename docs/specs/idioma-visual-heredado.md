@@ -697,6 +697,126 @@ del instrumento.*
 
 ---
 
+## 3.nonies · T7 · el encargo de las CINCO secciones (`#309`)
+
+`[DECIDIDO owner, 2026-09-01]`, en un solo mensaje: siluetas más grandes en zonas, el splash más
+visible, friso en tarifas, la sección de normas rehecha con dos requisitos pegajosos, «En directo»
+fuera, y los toggles de cumpleaños al ancho de la tarjeta de precio con estilo de fachada.
+
+### 3.nonies.1 · ❗ Lo primero: esto REVISA el presupuesto de decoración
+
+`#292` fijó **«una pieza de dibujo por sección, TRES en toda la portada»**, y la regla salió de tres
+rechazos suyos en una tarde. Este encargo pide material de fachada en **tarifas**, en **las dos
+tarjetas de normas** y en **cumpleaños**: con la mancha de zonas que ya había, la portada pasa de
+**una** pieza a **cuatro**, y una sección lleva **dos**.
+
+▶ **Es una revisión a sabiendas, no un descuido**, y está anotada en `IllustrationKit::SLOTS`. Lo
+que **NO cambia** es la regla que vigila `FacadeDecorationIsPerScreenTest`: ninguna pieza decorativa
+dentro de un bucle. Esa es la que evitaba el defecto real —una mancha por tarjeta de precio, cinco
+copias de la trama en `/normas`— y sigue en pie.
+
+### 3.nonies.2 · El kit crece de 4 a 7 símbolos
+
+Extraídos del artboard **con un guion**, no transcritos (la regla de `#257`).
+
+| clave | qué | de dónde |
+|---|---|---|
+| `slot-tarifas` | tres figuras, pies en la misma línea | el **friso familiar `G3`**, con las cajas del propio artboard (96×104 · 51×88 · 89×76, la tercera espejada, −8 de solape) |
+| `slot-normas-registro` | mancha | `B1`, la 1.ª de las seis |
+| `slot-normas-calcetines` | mancha | `B1`, la 3.ª |
+
+⚠️ **Las manchas libres eran TRES de seis**: la 5.ª y la 2.ª ya viajan instaladas como
+`--deco-blob-a/b` (verificado byte a byte en `#286`) y la 6.ª es `slot-zonas`.
+⚠️⚠️ **`slot-tarifas` se compone con `<g transform>`, NO con `<use href="#pose">` internos.** Un
+`<use>` interno dentro de un `<symbol>` que a su vez se referencia por `<use>` **externo** no
+resuelve igual en todos los motores, y aquí solo hay Chrome para medirlo (`hueco-ilustracion.md`
+§2.3). Un `transform` no tiene esa duda.
+⚠️ **Y una cuarta mancha se generó y se RETIRÓ**: `slot-cumple` se quedaba sin pantalla en cuanto la
+banda de cumpleaños pasó a usar el **contorno de `zone-cumpleanos`** —que ya viajaba—, y una ranura
+sin consumidor la tumba `test_every_declared_slot_is_painted_by_a_screen`.
+
+### 3.nonies.3 · Zonas: el tamaño no era la palanca
+
+La silueta de cada pestaña pasa de **44 a 104 px** con margen superior negativo: asoma por encima
+del borde de la tarjeta, que es lo que se pidió. ⚠️ **`overflow: visible` no habría bastado** —un
+`<button>` ya lo es—: lo que hacía falta era **sitio**, y ése lo da el aire propio de `.zone-pick`.
+
+⚠️⚠️ **La mancha sube de opacidad y NO de tamaño, y eso es un arreglo de algo que rompí.** El primer
+intento la subió también a 230 px y **rompió el criterio medido de `#303`**: 9.936 px² de mancha
+sobre el párrafo, justo lo que su propia nota prohíbe. Barrido de **cinco** combinaciones: ninguna
+crece sin caer sobre el texto, y desplazarla a la izquierda lo empeora (2.540 px²) **cubriendo
+además menos titular** (6.795 contra 9.381). ▶ Queda en `0,30` de opacidad y el tamaño de `#303`:
+**0 px² sobre el párrafo** en los dos anchos. *Se ve el doble porque pinta el doble, no porque ocupe
+más.*
+
+### 3.nonies.4 · Normas: dos requisitos pegajosos y un asomo
+
+Fuera el pliego de doce pictogramas del cliente ANTIGUO. Izquierda: **Registro obligatorio** y
+**Calcetines antideslizantes**, cada uno con su mancha en grande y su CTA. Derecha: **cuatro**
+normas y un enlace a `/normas`.
+
+❗❗ **LO QUE HAY QUE SABER ANTES DE TOCARLO: el `sticky` tiene 99 px de recorrido y en pantallas de
+900 px no llega a engancharse**, porque la sección entera (830 px) cabe en la ventana. Medido en
+tres tamaños. **Las dos cosas que se pidieron se estorban**: la columna pegajosa solo se nota si la
+derecha es mucho más alta, y el tope de 3/4 normas la deja corta. La palanca es el tope, y es del
+owner.
+
+⚠️ **El ancla `#rules` nace con su consumidor** (el CTA de tarifas). Un ancla a una sección que no
+existe **no falla** —lleva a la home—, que es exactamente cómo el enlace a `#gallery` sobrevivió a
+su sección durante esta misma tanda. Hay guarda con las dos mitades.
+⚠️ **Los CTA reutilizan el mecanismo del producto**: registro → las MISMAS tres ramas que
+`<x-site.cta-pair>` (externo · con sesión · sin sesión), calcetines → el cajón de compra, que es
+donde se ofrecen como complemento. La primera versión ofrecía el alta **también a quien ya tenía
+sesión** y lo cazó una guarda del nav.
+⚠️ **Faltaba la media query y el defecto se vio en la CAPTURA, no en la suite**: sin colapsar, a 390
+px la sección seguía en dos columnas y el `overflow: hidden` **cortaba el titular y el botón** de
+las dos tarjetas. Ninguna guarda mira anchos.
+
+### 3.nonies.5 · «En directo» fuera, y lo que deja detrás
+
+Se van la sección, su CSS (`.gallery-marquee*`, `.polaroid*`) y su enlace del pie.
+⚠️⚠️ **La categoría de cookies `social` se queda sin gatear NADA**, y con ella el ajuste
+`social.feed_embed_url`, el servicio `SocialEmbed` y la línea del banner que promete «contenido de
+redes sociales». **No se desmonta**: el hueco es el que van a ocupar las reseñas
+(`specs/google-reviews.md`) y rehacer la fontanería sería churn. Ficha en `DEUDA.md` con las dos
+salidas. ▶ De los tres casos del gate social, dos se retiran con lápida y
+`test_categories_are_independent` **se re-apunta por el otro lado** —consentir redes no carga el
+mapa—: misma propiedad, con el sujeto que sí existe.
+
+### 3.nonies.6 · Cumpleaños: fuera el «foam», y el ancho se DERIVA
+
+Los cuatro cuadrados girados eran el motivo del cliente antiguo **copiado como geometría**, que es
+por lo que `#293` avisó de que *un motivo copiado a mano no aparece buscando su nombre*.
+
+▶ En su sitio, el **contorno** de la pose de cumpleaños. El tratamiento no es gusto: lo manda `F6`
+del artboard —«sobre papel, silueta plana; **sobre foto o color saturado, el contorno**»—, y esta
+banda es color saturado. ⚠️ El primer intento la sacaba por el canto (26 px fuera, 597 de alto) y con
+`overflow: hidden` lo que se veía era medio contorno: **no se leía como figura, se leía como un
+garabato**.
+
+▶ **Los toggles miden lo mismo que la tarjeta de precio, y el ancho se DERIVA de la rejilla**:
+`(100% − gap) · 1.05/2`, con el `gap` en un token que leen los dos. Medido: **desfase 0 en ancho y 0
+en borde derecho**, en escritorio y en móvil. *Un `420px` a ojo habría cuadrado a un ancho y se
+habría despegado en todos los demás, sin que nada fallara.*
+⚠️ **Y eso destapó un defecto PREEXISTENTE**: a 390 px la pista medía 310 y la tarjeta **321** — se
+salía 11 px de su propia columna, escondida dentro del relleno de la banda. `min-width: 0` en las
+celdas.
+⚠️ El icono del toggle es el del **PRODUCTO** (`iconKey()`, `#259`), no uno elegido aquí: hoy los dos
+packs traen `party` y por tanto el mismo dibujo, y eso es **dato** — el parque lo cambia en el panel.
+
+### 3.nonies.7 · Dos trampas y una regla que casi rompo
+
+1. ⚠️⚠️ **Retirar la sección de normas de la portada se llevó por delante `.rules-grid` y `.rule`, que
+   los usa `/normas`** — la página a la que lleva el CTA nuevo. Lo cazó buscar consumidores **por
+   fichero y por clase exacta**, no por «esto ya no lo usa la home». Restaurados.
+2. ⚠️ **Una sonda dio 20.306 px² de «friso sobre titular» y era FALSO**: medía la caja del `<div>` de
+   920 px que envuelve al titular, no su tinta. La captura lo desmintió — el friso no toca ninguna
+   letra. *Un solape de cajas no es un solape visual cuando una de las cajas es un contenedor.*
+3. ⚠️ **Una mutación no mordió y la mala era la mutación**: devolver la URL `/#gallery` al pie no
+   pinta nada, porque el bucle lo manda la lista de RÓTULOS. Con el rótulo, muerde.
+
+---
+
 ## 4. Lo que queda, y en qué orden
 
 > ⚠️ **La base de partida cambió el 2026-08-31 (`#300`)**: el owner revirtió la T1 entera y dejó

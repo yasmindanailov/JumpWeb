@@ -131,20 +131,15 @@ class LandingTextsAndSocialTest extends TestCase
             ->assertSee('Hecho para reír.');
     }
 
-    public function test_social_feed_renders_iframe_or_falls_back_to_gallery(): void
-    {
-        // Sin feed → galería de polaroids (con fotos reales) por defecto. `#salta` es el tag
-        // de una polaroid de la galería (no aparece en ningún otro sitio de la home).
-        $this->get('/')->assertOk()->assertSee('#salta')->assertDontSee('snapwidget.com');
-
-        // Con feed → iframe del widget (y desaparece la galería de fallback).
-        Setting::updateOrCreate(['key' => 'social.feed_embed_url'], ['value' => 'https://snapwidget.com/embed/abc', 'group' => 'social']);
-
-        $this->get('/')
-            ->assertOk()
-            ->assertSee('https://snapwidget.com/embed/abc', false)
-            ->assertDontSee('#salta');
-    }
+    // ⚠️⚠️ **AQUÍ HABÍA `test_social_feed_renders_iframe_or_falls_back_to_gallery` Y SE HA RETIRADO
+    // CON SU SUJETO** (`#309`, `[DECIDIDO owner]`: «la sección "en directo" quítala»).
+    // ▶ **Lo que deja dicho, y es lo que importa**: el ajuste `social.feed_embed_url` sigue en el
+    // panel y **ya no lo lee ninguna pantalla pública**. Es exactamente el defecto que `#304`
+    // documentó —un campo que se puede rellenar y no consume nadie—, creado a sabiendas porque el
+    // hueco es el que van a ocupar las reseñas (`specs/google-reviews.md`) y desmontar la fontanería
+    // para rehacerla sería churn. Ficha en `DEUDA.md`, con las dos salidas.
+    // ⚠️ `test_csp_allows_social_widget_hosts` SIGUE: la CSP es defensa en profundidad y no depende
+    // de que hoy haya una pantalla que use el widget.
 
     public function test_csp_allows_social_widget_hosts(): void
     {

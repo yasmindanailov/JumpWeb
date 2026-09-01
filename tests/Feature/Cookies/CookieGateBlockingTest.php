@@ -71,27 +71,27 @@ class CookieGateBlockingTest extends TestCase
             ->assertSee(' src="'.self::MAP.'"', false);
     }
 
-    public function test_social_feed_blocked_without_consent(): void
-    {
-        $this->get('/')->assertOk()
-            ->assertDontSee(' src="'.self::FEED.'"', false)
-            ->assertSee('data-src="'.self::FEED.'"', false);
-    }
-
-    public function test_social_feed_loads_with_consent(): void
-    {
-        $this->consent(maps: false, social: true)->get('/')->assertOk()
-            ->assertSee(' src="'.self::FEED.'"', false);
-    }
+    // ⚠️⚠️ **AQUÍ HABÍA DOS CASOS DEL FEED SOCIAL Y SE HAN RETIRADO CON SU SUJETO** (`#309`):
+    // `test_social_feed_blocked_without_consent` y `test_social_feed_loads_with_consent`. La
+    // sección «En directo» era el ÚNICO consumidor de la categoría `social`, y el owner la retiró.
+    // ▶ **Lo que queda dicho, porque importa**: hoy la categoría `social` no gatea NADA — el
+    // ajuste `social.feed_embed_url`, el servicio `SocialEmbed` y la línea del banner que promete
+    // «contenido de redes sociales» se han quedado sin consumidor. Ficha en `DEUDA.md` con sus dos
+    // salidas: vuelve con las reseñas (`specs/google-reviews.md`) o se retira entera con su texto
+    // legal. **No se reescriben estos casos contra un consumidor inventado.**
 
     public function test_categories_are_independent(): void
     {
-        // Consentir SOLO el mapa no debe cargar el feed (granularidad por finalidad).
-        $response = $this->consent(maps: true, social: false)->get('/')->assertOk();
+        // ⚠️ **Re-apuntado, no debilitado** (`#309`). Antes probaba la independencia por el lado del
+        // feed —consentir el mapa no carga el feed—, y ese consumidor ya no existe. Se prueba por el
+        // lado que SÍ tiene sujeto: consentir SOLO las redes **no** carga el mapa. Es la misma
+        // propiedad (granularidad por finalidad, Guía AEPD) vista desde la otra categoría, y sigue
+        // fallando si alguien colapsa las dos en un único «acepto».
+        $response = $this->consent(maps: false, social: true)->get('/')->assertOk();
 
-        $response->assertSee(' src="'.self::MAP.'"', false);
-        $response->assertDontSee(' src="'.self::FEED.'"', false);
-        $response->assertSee('data-src="'.self::FEED.'"', false);
+        $response->assertDontSee(' src="'.self::MAP.'"', false);
+        $response->assertSee('data-src="'.self::MAP.'"', false);
+        $response->assertSee('consent-frame__ph', false);
     }
 
     public function test_banner_state_attributes_reflect_server(): void
