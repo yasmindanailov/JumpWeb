@@ -5,7 +5,10 @@
 > aquí solo se enlaza.** Última actualización: **2026-09-01 (cierre de la tarde) — 🚀 LA WEB DEL 2.º
 > CLIENTE ESTÁ EN PRODUCCIÓN (`https://playjump.es`, `#325`/`#326`): su bloque está en el CARRIL 4
 > (la PORTADA), que es el más reciente; antes, el 6.º (EXCURSIONES DE COLEGIO, `#322`/`#324`) bajo el
-> contador vivo y el 5.º (PANEL: rol de puerta, `#320`).** ❗ **POR DÓNDE SE RETOMA** (`[DECIDIDO
+> contador vivo y el 5.º (PANEL: rol de puerta, `#320`).** ▶ **Y el carril 6 CERRÓ sus tres tandas**
+> (`#322` horario por zona · `#324` precio por tramo · `#327` el cajón + el producto creado): **lo
+> siguiente de ESE encargo es P3, la autorización de los padres a un tercero, que no tiene spec y
+> lleva su bloqueo estructural ya medido en su carril.** ❗ **POR DÓNDE SE RETOMA** (`[DECIDIDO
 > owner]` al cerrar): (1) **imágenes en la columna derecha del menú** — «las que sean, que no esté
 > vacío» (`zones.image` no tiene consumidor desde `#302`: candidatas naturales); (2) **refrescar el
 > contexto de cuenta del cajón al volver a la pestaña** (`DEUDA.md`, Media) — toca el SPA aparcado
@@ -68,6 +71,12 @@
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
 > Suite **3796 en verde** (24.599 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
 > sobre el árbol CONJUNTO tras rebasar `#327` (el precio en el cajón) sobre `#325` y `#326`.
+> ✅ **AUDITORÍA DEL RELOJ pasada al cerrar** (`scripts/audit-clock.sh`, 10 fronteras): verde en todas
+> **tras arreglar un rojo diferido que encontró**. ⚠️ `VisitSectionTest::test_estando_abierto…` fallaba
+> a las **23:59:30 de Madrid**: abría el parque hasta las 23:59:00 y decía en su comentario que así no
+> dependía del reloj — **no era cierto**, y treinta segundos al final del día no son holgura. Ahora
+> congela el reloj en una constante documentada, que es lo que `TESTING.md` §2 pide. **Preexistente,
+> no de esta tanda**: se comprobó reproduciéndolo contra el árbol anterior a la sesión.
 > ⚠️ **Se mide tras CADA rebase, nunca se suma.** Con dos agentes en `main` el número solo vale medido
 > sobre el árbol conjunto: por separado daban cifras distintas y ninguna era la buena.
 > - Antes, 3789 / 24.564 (`#324`, el precio por tramo) · 3779 / 24.532 (`#322` con su panel sobre la
@@ -79,10 +88,30 @@
 >   dos tests de servicio del modelo viejo, −50, y sumó 18), 3758 / 24.958 (`#311`).
 >
 > ═══════════ ❗❗❗ CARRIL 6 · EXCURSIONES DE COLEGIO (2026-09-01, noche) — POR DÓNDE SE RETOMA ═══════════
-> **EN EL ÁRBOL: `#322`, la TANDA A — horario por zona.** El cliente vende excursiones de colegio (2 h
-> y 3 h, 30–100 personas, zona propia) y vienen **entre semana por la mañana**, cuando el parque puede
-> estar cerrado. Medido con sus datos (abre 10:00–21:00, martes cerrado): una excursión a las 9:00 o un
-> martes **no existía como franja**. Diseño y ejecución en `specs/horario-por-zona.md`.
+> **LAS TRES TANDAS ESTÁN EN EL ÁRBOL Y EL PRODUCTO CREADO: `#322` (horario por zona), `#324` (precio
+> por tramo), `#327` (el cajón) y los datos.** El cliente vende excursiones de colegio (2 h y 3 h,
+> 30–100 personas, zona propia) que vienen **entre semana por la mañana**. Specs:
+> `horario-por-zona.md` y `precio-por-tramo.md`.
+>
+> ❗❗❗ **LO SIGUIENTE DE ESTE ENCARGO ES P3 — LA AUTORIZACIÓN DE LOS PADRES A UN TERCERO, Y NO TIENE
+> SPEC.** `[owner, 2026-09-01]`: se aplaza a la sesión siguiente. Lo que ya está decidido y medido, y
+> que quien lo retome NO tiene que volver a averiguar:
+>   - **Se ancla al PEDIDO** (`[DECIDIDO owner]`), y el modelo mental es del propio owner: *«el
+>     papelito que el profesor reparte para que lo firme el padre»*. Los 100 niños de un colegio **NO
+>     son menores a cargo del tutor**: son nombres en una hoja firmada atada a ESA excursión. Eso
+>     descarta meterlos en `dependents` (les daría permanencia, tope por cuenta y los datos de 100
+>     menores viviendo en la cuenta del tutor).
+>   - ⚠️⚠️ **BLOQUEO ESTRUCTURAL MEDIDO**: `waiver_signatures.user_id` es **NOT NULL** con
+>     `restrictOnDelete`, y la cadena de hashes se agrupa por `(user_id, sujeto)` — **hoy no cabe
+>     físicamente la firma de un padre sin cuenta**, que es justo el caso que el owner quiere.
+>   - ⚠️ **RGPD**: el owner dijo «si el padre quiere anonimizar, no sé qué hacemos». La respuesta es la
+>     del art. 17.3.e (conservar lo necesario para defender reclamaciones) hasta que venza
+>     `waiver.retention_months` — que sigue **`[PENDIENTE: owner]`** y hará falta igual. ⚠️ Y **la firma
+>     del padre NO puede morir con la anonimización del tutor**: el parque se quedaría sin la prueba de
+>     una excursión de 100 niños que ya ocurrió, y además esos datos no son del tutor para borrarlos.
+>   - ⚠️ **`attractions` y `park_rules` no tienen `slug`** y **no existe hoy «plaza nominal»**: una
+>     línea de 100 entradas es un NÚMERO, no 100 personas. Saber «faltan 37 firmas de 100» exige
+>     construir ese concepto.
 >
 > ❗❗ **LO QUE NO HUBO QUE CONSTRUIR, Y LO DESTAPÓ EL OWNER PREGUNTANDO** («pero cumpleaños no tiene una
 > opción así? x cumpleaños por franja?»): **`zones.max_per_slot` y `max_guests_per_slot` ya existían, ya
@@ -90,6 +119,27 @@
 > `min_qty`/`max_qty` (mínimo 30 / máximo 100), `duration_min` (2 h y 3 h), `deposit_type` (la señal) y
 > las tarifas de finde. **De toda la petición, lo único que faltaba de mecanismo era el horario.**
 > ▶ *Preguntar «¿esto no lo tenemos ya?» antes de diseñar valió media tanda.*
+>
+> ❗❗ **LO QUE ES DEL OWNER Y NO SE HA HECHO** (revisar antes de tocar nada de este carril):
+>   1. **El OJO del owner** sobre las tres tandas. Ya vio la A.
+>   2. ⚠️⚠️ **LA SEÑAL DE LOS DOS PRODUCTOS (100 € fijos) ES UN NÚMERO INVENTADO POR EL AGENTE.** El
+>      owner dijo «señal x € y el resto en el parque» y no dio el importe; se puso un marcador para
+>      poder probar el flujo entero. **Hay que confirmarlo o cambiarlo** en el campo «Señal» de cada
+>      producto.
+>   3. ❗❗ **TODO LO DE LA TANDA C ES DATO LOCAL Y *NO* VIAJA EN EL COMMIT.** Con la web ya en
+>      producción (`playjump.es`), la zona `excursiones`, los dos productos, sus 12 tramos, las
+>      plantillas de franja y el cambio del viernes **existen solo en la BD de desarrollo**. Para que
+>      el cliente los tenga hay que **crearlos desde el panel de producción** (todo es configurable;
+>      no hace falta código). El guion que los creó aquí está en la transcripción de `#324`/`#327`.
+>   4. ⚠️ **El VIERNES pasó a tarifa especial para TODO el catálogo** (`[DECIDIDO owner]`; antes eran
+>      solo sábado y domingo). Se comprobó ANTES de aplicarlo que los 20 productos activos tienen
+>      precio especial, así que ninguno se quedó sin poder venderse — pero **todo el catálogo es más
+>      caro los viernes desde ahora**. Se revierte desde Ajustes → Tarifas.
+>   5. ⚠️⚠️ **CORRECCIÓN DE UNA AFIRMACIÓN DE ESTA MISMA SESIÓN**: el agente dijo repetidamente que «el
+>      parque cierra los martes» y **es FALSO** — abre los SIETE días, 10:00–21:00. Lo que se midió
+>      como martes cerrado era **una fecha especial concreta (2026-09-01)**, generalizada desde una
+>      sola medición. Para este cliente, lo que hace el trabajo de la tanda A es **la ventana de
+>      08:00** (el parque abre a las 10:00), no el día cerrado.
 >
 > ✅ **LA TANDA B ESTÁ EN EL ÁRBOL (`#324`) Y CORREGIDA EN EL CAJÓN (`#327`)**: el paso 3 pintaba el
 > precio del CALENDARIO —que no conoce la cantidad— así que con tramos enseñaba siempre el más barato

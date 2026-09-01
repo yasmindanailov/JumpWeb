@@ -3508,11 +3508,16 @@ cita en prosa **no basta**: hay que quitar el import.
 **Verificación**: suite verde (3.749 / 24.498) · Pint ✓ · docs-check ✓ · mutaciones: la de la exención
 pone ROJAS las tres superficies (4 tests) y la del rol de puerta su guarda.
 
-### EXCURSIONES DE COLEGIO 🟦 — tanda A (horario por zona) en el árbol, `#322`, 2026-09-01
+### EXCURSIONES DE COLEGIO 🟦 — A, B y C EN EL ÁRBOL (`#322`, `#324`, `#327` + los datos), 2026-09-01
 
 El cliente vende excursiones de colegio (2 h y 3 h, 30–100 personas, zona propia) y **vienen entre
 semana por la mañana**, cuando el parque puede estar cerrado. Diseño y ejecución en
-`specs/horario-por-zona.md`; el porqué, en `DECISIONES #322`.
+`specs/horario-por-zona.md` (tanda A) y `specs/precio-por-tramo.md` (tanda B); el porqué, en
+`DECISIONES #322`, `#324` y `#327`.
+
+▶ **Las tres tandas están hechas y el producto CREADO y PROBADO en navegador.** Lo único que queda de
+este carril es el OJO del owner; lo siguiente del encargo es **P3, la autorización de los padres**,
+que NO tiene spec todavía.
 
 - [x] **Tanda A · horario por zona.** Tres columnas nulables en `zones` (`null` = hereda el recinto,
       el mismo contrato que `max_per_slot`), `OperatingSchedule::effectiveForZone()` como método NUEVO
@@ -3525,9 +3530,18 @@ semana por la mañana**, cuando el parque puede estar cerrado. Diseño y ejecuci
       leen suponiendo una fila por tarifa y habrían cambiado de significado en silencio— y **un
       complemento es una fila de `ticket_types`**, así que el `instanceof` los alcanzaba y cada uno
       pagaba una consulta (10 → 16 en la ficha). Lo cazó el presupuesto de la API, no una lectura.
-- [ ] **Tanda C · el producto, que es DATO**: zona `excursiones`, dos productos como **`pack`**, los
-      tramos, la señal y el viernes en la tarifa `special` (para TODOS los productos).
-- [ ] **El OJO del owner** sobre la tanda A.
+- [x] **Tanda C · el producto, CREADO** (datos locales, no viajan en el commit): zona `excursiones`
+      (08:00–15:00, **1 grupo por franja**, opera con el parque cerrado), dos productos `pack` de 2 h
+      y 3 h con 30–100 pax y sus 12 tramos, franjas L–V a las 09:00 y **el viernes en la tarifa
+      `special`**. ⚠️ Se comprobó ANTES de tocar el viernes que **los 20 productos activos tienen
+      precio especial**: ninguno se queda sin poder venderse. ⚠️ **La señal (100 € fijos) es un
+      número INVENTADO por el agente** — el owner dijo «señal x €» sin importe; hay que confirmarlo.
+- [x] **`#327` · el cajón enseñaba el precio del CALENDARIO**, que no conoce la cantidad: con tramos
+      mostraba siempre el más barato (12 € con 30, con 69 y con 70) mientras cobraba lo correcto.
+      Lo vio el owner probándolo. La respuesta ya venía en el payload del endpoint de complementos.
+      Y la cantidad **se escribe**: con mínimo 30, el `+` pedía treinta pulsaciones.
+- [ ] **El OJO del owner** sobre las tres tandas.
+- [ ] **P3 · la autorización de los padres a un tercero** — sin spec; es el carril siguiente.
 
 ❗❗ **Lo que NO hubo que construir, y lo destapó el owner preguntando** («pero cumpleaños no tiene una
 opción así?»): `zones.max_per_slot` ya existía y ya era por zona, así que el tope de grupos por franja

@@ -4,7 +4,9 @@ namespace Tests\Feature\Landing;
 
 use App\Domain\Booking\Models\OpeningHour;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
@@ -107,9 +109,19 @@ class VisitSectionTest extends TestCase
 
     public function test_estando_abierto_la_seccion_dice_hasta_que_hora(): void
     {
-        // Ventana que cubre con holgura la hora del reloj de test, para que el caso no dependa de
-        // cuándo corre la suite. `HeroStatus` resuelve el cierre con la MISMA fuente que las
-        // reservas, y `closes_at` es el campo que `#297` echó en falta.
+        // ⚠️⚠️ **El reloj se CONGELA; la ventana abierta «con holgura» no bastaba** (`#327`, cierre).
+        //
+        // Este caso abría el parque 00:00–**23:59:00** y decía que así no dependía de cuándo corre la
+        // suite. No era cierto: `scripts/audit-clock.sh` lo puso ROJO a las **23:59:30 de Madrid**,
+        // porque a esa hora la ventana YA se cerró (23:59:00 < 23:59:30) y `HeroStatus` responde
+        // «cerrado», que es lo correcto. Un margen de treinta segundos al final del día no es holgura.
+        //
+        // ▶ La salida es la que `TESTING.md` §2 pide: **congelar el reloj en una constante
+        // documentada** en vez de estirar la ventana —estirarla solo mueve el minuto en que falla— y
+        // así el caso mide lo que dice medir: que con el parque abierto la sección dice la hora.
+        // Mediodía, lejos de los dos bordes del día y de la frontera UTC↔Madrid.
+        Carbon::setTestNow(Carbon::parse('2026-09-02 12:00:00', DisplayTime::timezone()));
+
         OpeningHour::query()->delete();
         foreach (range(0, 6) as $dia) {
             OpeningHour::create([

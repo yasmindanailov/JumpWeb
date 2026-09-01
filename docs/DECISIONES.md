@@ -19426,6 +19426,23 @@ cien para llenar el grupo. `<span class="entry__qty">` pasa a `<input type="numb
    es lo que esa regla exige; `TimeStep.vue` estrena excepción por cuatro líneas que son trabajo de
    DOM y no caben en un módulo puro.
 
+### 4 · Lo que esta sesión deja escrito como MÉTODO
+
+1. ⚠️⚠️ **«¿Esto no lo tenemos ya?» antes de diseñar.** Dos veces en la misma jornada: el owner
+   preguntó «¿cumpleaños no tiene una opción así?» y `zones.max_per_slot` YA existía y ya era por
+   zona (media tanda ahorrada, `#322`); y aquí el precio tarificado **ya viajaba en el payload** del
+   endpoint que el cajón llama en cada cambio, así que las dos salidas que se le plantearon al owner
+   —petición nueva o resolver el tramo en JS— eran ambas innecesarias.
+2. ⚠️⚠️ **Una guarda encuentra lo que una lectura no.** Tres defectos de la jornada los cazó un test
+   y no un `grep`: el tercer consumidor del horario (`#322`), el N+1 de los complementos (`#324`) y
+   el campo vacío convertido en cero (`#327`). En los tres, la intención estaba escrita en un
+   comentario y no en el código.
+3. ⚠️ **Generalizar de UNA medición.** Se afirmó cuatro veces que «el parque cierra los martes» y es
+   falso: abre los siete días, y lo medido era **una fecha especial concreta**. Nadie lo habría
+   notado leyendo el código.
+4. ⚠️ **Numerar mirando el remoto no basta** si la tanda dura más que la del otro carril: **cuatro
+   colisiones de `#` en dos días**. Hay que RE-comprobar al cerrar, no solo al empezar.
+
 **Verificación**: suite verde (**3.790 tests, 24.580 aserciones**) · Pint ✓ · docs-check ✓ · build ✓ ·
 **20 + 8 casos de `node --test`** · **navegador REAL con el producto del cliente**: tecleando
 30 → 15,00 € · 69 → 15,00 € · 70 → 13,00 € · 100 → 12,00 € · 500 → queda en 100 y el campo se repinta.
