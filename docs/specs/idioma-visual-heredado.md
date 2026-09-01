@@ -902,6 +902,7 @@ crearlas es DATO, y hacen falta nombre y edad del owner.
 | **C** | Los cubos 1-2-3 del cumple · la nota de calcetines | forma por decidir |
 | **D** | La galería de polaroids | ¿sigue el lenguaje polaroid o pasa a cinta con poses (`F11`)? |
 | **E** | **El SPA**: catálogo y badge de destacado | el owner quiere **cambiar la presentación**, no solo vestirla: es su propia spec |
+| **F** | ~~**Iconos de tarjeta y el tope de dos líneas**~~ **(hecha, `#319`)** | `[DECIDIDO owner]` con el patrón de ficha de Google Store. Iconos **con dato detrás**: categoría en «Visítanos», acción en el botón de teléfono, y en la tarifa **el marcador que el panel ya elige** (`ticket_types.icon`). El tope son **dos mecanismos** —copy reescrito + corte como red—, con asimetría deliberada: cortar solo es seguro donde el texto tiene segunda casa (`/normas`). ⛔ **Las 23 tarjetas de atracción NO reciben icono**: se probó con la EDAD —dato real, 19 de 23— y lo cazó la guarda de `#302`; `[DECIDIDO owner]` respetarla, y sin dato detrás un icono repetido 23 veces es decoración en un bucle (`#286`). ⚠️ De paso salió un defecto **preexistente** (medido con control): la unidad del precio vivía dentro de `.price__num` —80 px, `line-height 0.85`— y se partía en dos con 68 px de hueco. |
 
 ### 4.0 · ⛔ Lo que NO se hace
 

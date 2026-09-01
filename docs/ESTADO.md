@@ -2,7 +2,8 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-09-01 (mediodía) — TRES carriles a la vez.
+> aquí solo se enlaza.** Última actualización: **2026-09-01 (tarde) — CUATRO carriles; el 4.º (la
+> PORTADA, `#319`) es el más reciente y su bloque está justo bajo el contador vivo.
 > **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2
 > (`#311`), T3·3 (`#312`), T3·4 (`#315`, LA RETIRADA del modelo de dos ejes) Y LA T4 (`#317`, EL
 > MOTIVO MANDA en el reembolso · liquidación simétrica · «Descuento por cortesía») EN EL ÁRBOL, y
@@ -64,6 +65,52 @@
 > `SidebarDomContractTest` que no eran de ningún cambio.
 > - Antes, 3728 / 24.295 (`#315`, la T3·4 sobre el árbol conjunto), 3760 / 24.946 (`#314`, landing) y 3760 / 24.940 (`#313` y `#312`: la T3·4 retiró los
 >   dos tests de servicio del modelo viejo, −50, y sumó 18), 3758 / 24.958 (`#311`).
+>
+> ═══════════ ❗❗❗ CARRIL 4 · LA PORTADA (sesión del 2026-09-01, tarde) — POR DÓNDE SE RETOMA ═══════════
+> **EN EL ÁRBOL: `#319`, los ICONOS DE TARJETA y el tope de dos líneas.** Encargo del owner con el
+> patrón de ficha de Google Store: «Visítanos» estrena icono de CATEGORÍA (reloj y pin) y el botón
+> de teléfono el de la ACCIÓN; la tarjeta de tarifa pinta **el marcador que el panel YA elige**
+> (`ticket_types.icon`, `#259` — ese campo tenía **un solo consumidor, el cajón**); y las
+> descripciones quedan en dos líneas por **los dos mecanismos**: el copy reescrito y el corte como
+> red. Guarda nueva: `CardAnatomyTest` (5 casos, 7 mutaciones).
+>
+> ❗❗ **LO QUE ES DEL OWNER Y NO SE TOCÓ:**
+>   1. ⚠️⚠️ **UN SEXTO SITIO CON LA EDAD VIEJA**: la norma «Zona Jump» del panel dice **«Entrada
+>      desde los 6 años y 1,30 m»** y contradice lo fijado (**JUMP es 8+**). Vive en `venue_rules`
+>      —otra tabla— y por eso el barrido de `zones`/`ticket_types` no la alcanzó. **Es dato del panel
+>      y texto de acceso: se corrige desde el panel, no desde aquí.**
+>   2. **El OJO del owner** sobre las tarjetas en su navegador: un headless mide, no valida.
+>   3. ⚠️ La corrección de edades de la sesión (KIDS 4-7 · JUMP 8+, sin altura en Kids) **vive solo
+>      en la BD local y NO viaja en el commit**: en producción las tres entradas Kids siguen
+>      anunciando «De 4 a 7 años» con la zona descrita como «de 1 a 12».
+>
+> ⛔ **EL SPA NO SE TOCA** (`[DECIDIDO owner, 2026-09-01]`: «el SPA lo dejamos por ahora»). Se
+> construyó y se **REVIRTIÓ ENTERA** la E1a del catálogo del cajón —portada por tipo, zona ordenando
+> dentro, pegatina, y los tres campos que el servidor publica y el cajón tira (`zone`,
+> `price_varies`, `period_label`)—. **El trabajo está guardado en la etiqueta local
+> `wip/catalogo-cajon-e1a`** (no empujada) y su diseño, medido y con las diez decisiones del owner,
+> **se perdió con el revert**: si se retoma, se rehace desde la etiqueta.
+>
+> ❗❗ **Y LO QUE SE INTENTÓ Y EL OWNER RECHAZÓ, para que nadie lo reproponga**: pintar la EDAD en las
+> 23 tarjetas de atracción. El dato existe (`attractions.age`, **19 de 23** la declaran) y **no lo
+> enseña ninguna pantalla**, pero lo cazó la guarda de `#302` y `[DECIDIDO owner]` fue respetarla.
+> ▶ Consecuencia asumida: **esas 23 tarjetas no reciben icono**, porque sin dato detrás un icono
+> repetido 23 veces es decoración dentro de un bucle (`#286`).
+>
+> ❗❗ **REPARTO — DOS AGENTES, Y COMPARTEN CLON.** Medido el 2026-09-01: **ocho sesiones con el mismo
+> `cwd`** (`~/proyectos/JumpWeb`), un solo worktree. Eso rompe `CONVENCIONES §8` («dos agentes = dos
+> clones»): **no hay rebase que proteja, se comparte el árbol de trabajo**, y un `git stash`,
+> `git checkout --`, `git reset` o `git clean` de cualquiera **se lleva el trabajo sin commitear del
+> otro**. Mientras siga así: nadie corre esos cuatro, y cada uno hace `git add` **solo de sus
+> ficheros**, nunca `git add -A`.
+>   · **PANEL ADMIN** → `app/Filament/**` · `resources/css/filament/**` · `lang/*/admin.php` ·
+>     `tests/Feature/Admin/**` · `docs/{PANEL-ADMIN,specs/panel-navegacion}.md`
+>   · **PORTADA / LANDING** → `resources/views/{home.blade.php,components/site/**}` ·
+>     `public/css/landing.css` · `lang/*/landing.php` · `tests/Feature/Landing/**`
+> ⚠️⚠️ **El bloque «REPARTO VIGENTE» de más abajo (línea ~1900) está CADUCADO** —describe los
+> carriles A/B/C del 26–28 de agosto y dice «el último usado es `#214`» con el remoto en **`#319`**—:
+> se conserva por sus lecciones, **no se usa para elegir tarea ni número**. El número se fija al
+> EMPUJAR mirando `origin/main` en el mismo comando.
 >
 > ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1 → T3·4 EN EL ÁRBOL: código COMPLETO · queda el OJO del owner) ═══════════
 > ❗❗❗ **2026-09-01 (13:00 → 13:30, misma sesión) · EL LIBRO DEL PANEL VA PLEGADO DETRÁS DE UN CTA Y EL
