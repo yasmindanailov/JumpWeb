@@ -65,6 +65,20 @@
 >   dos tests de servicio del modelo viejo, −50, y sumó 18), 3758 / 24.958 (`#311`).
 >
 > ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1 → T3·4 EN EL ÁRBOL: código COMPLETO · queda el OJO del owner) ═══════════
+> ▶ **SESIÓN EN CURSO (carril 3 · el libro) desde el 2026-09-01 a las 10:10 (hora de Madrid; el
+> contenedor va en UTC, 2 h menos): la T4 de `specs/desglose-libro.md` §6.4 — el motivo manda en el
+> reembolso, la liquidación simétrica y «Descuento por cortesía».** Ficheros que toca, para el reparto
+> (`CONVENCIONES` §10·3): `app/Domain/Booking/Models/Order.php` ·
+> `app/Domain/Booking/Services/{OrderBook,Movement,MovementLabel,Settlement,OrderItemRefunder}.php` ·
+> `app/Domain/Booking/Contracts/ItemRefundRequest.php` · `app/Filament/Resources/Orders/Pages/ViewOrder.php` ·
+> `resources/views/filament/orders/partials/reservation-financials.blade.php` · `lang/{es,en,fr,zh_CN}/tickets.php`
+> (grupo `journal`) · `lang/{es,zh_CN}/admin.php` (`orders.actions.refund` · `orders.refund_item` · las listas
+> `reasons`) · `openapi/v1.yaml` (solo la descripción de `gate`) · `tests/Feature/Orders/*` y
+> `tests/Feature/Admin/Orders/*` · la doc del carril (`desglose-libro.md`, `INVARIANTES` PAY-17, `DEUDA.md`,
+> `VERIFICACION-E2E-CAJON.md` §5.sexies). ▶ **Para el agente de la LANDING** (§10·4, retíralo al leerlo):
+> no entro en `resources/css`, `resources/views/site`, `resources/js/site`, `public/` ni en tus specs; si
+> necesitas tocar alguno de los ficheros de arriba, escríbelo aquí antes y `git pull --rebase` en cuanto
+> empuje. El número de la decisión se fija al empujar mirando `origin/main` (hoy va por `#316`).
 > ❗❗❗ **2026-09-01 (noche, 4.ª sesión) · T3·4 · EL MODELO DE DOS EJES SE RETIRA; EL LIBRO ES EL ÚNICO COMPOSITOR**
 > (`DECISIONES #315` — los carriles de assets y landing tomaron `#313` y `#314` entre medias —, `specs/desglose-libro.md`
 > **§6.3.6 diseño fino y §6.3.7 lo ejecutado**; `INVARIANTES` `PAY-16`/`PAY-17` REESCRITAS como las
