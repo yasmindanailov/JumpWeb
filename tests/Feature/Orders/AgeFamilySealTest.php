@@ -15,10 +15,10 @@ use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Booking\Services\GuestAgeMix;
 use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\MixedPartySurcharge;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\PackAvailability;
-use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Booking\Services\SealedRegime;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
@@ -194,11 +194,13 @@ class AgeFamilySealTest extends TestCase
         return app(MixedPartySurcharge::class)->written($item->fresh(['ticketType', 'slot', 'order', 'children']))['cents'];
     }
 
-    private function financials(OrderItem $item): ReservationFinancials
+    /** Lo que la reserva debe EN EL PARQUE según su LIBRO (T3·4): su saldo cuando es positivo. */
+    private function gateDue(OrderItem $item): int
     {
-        $order = $item->order()->with(['items.ticketType', 'adjustments', 'payments'])->first();
+        $order = $item->order()->with(['items.ticketType', 'items.slot', 'items.children', 'adjustments', 'payments.refunds'])->first();
+        $book = OrderBook::forReservation($order, $order->items->firstWhere('id', $item->id));
 
-        return ReservationFinancials::make($order, $order->items->firstWhere('id', $item->id));
+        return max(0, $book->totalCents - $book->paidCents);
     }
 
     private function read(OrderItem $item): GuestAgeMix
@@ -327,7 +329,7 @@ class AgeFamilySealTest extends TestCase
 
         $item = $this->declareAges($item, [4, 5, 8]);
 
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'la diferencia del día de la compra');
+        $this->assertSame(700, $this->gateDue($item), 'la diferencia del día de la compra');
         $this->assertSame(700, (int) $this->surchargeLines($item)->first()->unit_price);
     }
 
@@ -348,7 +350,7 @@ class AgeFamilySealTest extends TestCase
         $item = $this->declareAges($item, [12, 12, 12, 12, 12, 12, 12, 12], 'Otro nombre ');
 
         $this->assertCount(0, $this->surchargeLines($item), 'nada se crea de la nada');
-        $this->assertSame(0, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(0, $this->gateDue($item));
         $this->assertFalse($this->read($item)->mixed, 'y la etiqueta tampoco aparece');
         Notification::assertNothingSent();
     }
@@ -360,7 +362,7 @@ class AgeFamilySealTest extends TestCase
         // dirección era la que la abstención de `#268` NO veía, porque el veredicto seguía completo.
         $item = $this->reservation(5);
         $item = $this->declareAges($item, [8, 8, 8, 8, 8]);
-        $this->assertSame(3500, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(3500, $this->gateDue($item));
 
         $this->jump->forceFill(['guest_age_min' => 9])->save();
         $this->kids->forceFill(['guest_age_max' => 8])->save();
@@ -368,7 +370,7 @@ class AgeFamilySealTest extends TestCase
 
         $item = $this->declareAges($item, [8, 8, 8, 8, 8], 'Otro nombre ');
 
-        $this->assertSame(3500, $this->financials($item)->aCobrarPuerta, 'lo comunicado se conserva');
+        $this->assertSame(3500, $this->gateDue($item), 'lo comunicado se conserva');
         $this->assertSame(5, $this->read($item)->upgradedGuests(), 'y el veredicto sigue diciendo lo mismo');
         Notification::assertNothingSent();
     }
@@ -403,7 +405,7 @@ class AgeFamilySealTest extends TestCase
         // siendo Kids… y Jump vale 30,00 € el día nuevo, así que el de 8 pasa de 7,00 a 12,00 €.
         // Mutación: re-sellar desde el catálogo al mover de día → los de 6 se vuelven Jump, rojo.
         $item = $this->declareAges($this->reservation(3), [6, 6, 8]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'solo el de 8');
+        $this->assertSame(700, $this->gateDue($item), 'solo el de 8');
 
         $this->kids->forceFill(['guest_age_max' => 5])->save();
         $this->jump->forceFill(['guest_age_min' => 6])->save();
@@ -433,7 +435,7 @@ class AgeFamilySealTest extends TestCase
         // creó (+21,00 € del cambio a Jump). Neto de puerta: 21,00 − 14,00 = 7,00 €.
         // Mutación: `edit()` sin re-sellar → el sello sigue diciendo Kids y no casa con la fila.
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item));
 
         $this->editProduct($item, $this->jump);
 
@@ -443,7 +445,7 @@ class AgeFamilySealTest extends TestCase
         $written = app(MixedPartySurcharge::class)->written($item->fresh(['ticketType', 'slot', 'order', 'children']));
         $this->assertSame(0, $written['charge_cents'], 'nadie está por encima de Jump');
         $this->assertSame(1400, $written['credit_cents'], 'los dos Kids se descuentan: 2 × 7,00');
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, '21,00 del cambio − 14,00 del descuento');
+        $this->assertSame(700, $this->gateDue($item), '21,00 del cambio − 14,00 del descuento');
         $this->assertTrue($this->read($item)->hasSavings(), 'dos invitados corresponden a Kids');
     }
 
@@ -485,7 +487,7 @@ class AgeFamilySealTest extends TestCase
         // fila, así que el veredicto CALLA, lo escrito se conserva y la ficha lo enseña en rojo.
         // Mutación: quitar la comprobación de `booked_type_id`/`priced_on` → deriva igual, rojo.
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item));
 
         OrderItem::whereKey($item->id)->update(['ticket_type_id' => $this->jump->id]);
         Notification::fake();
@@ -495,7 +497,7 @@ class AgeFamilySealTest extends TestCase
         $this->assertFalse($mix->applies);
 
         $item = $this->declareAges($item, [4, 5, 6]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'ni se retira ni se recalcula');
+        $this->assertSame(700, $this->gateDue($item), 'ni se retira ni se recalcula');
         $this->assertCount(1, $this->surchargeLines($item));
         Notification::assertNothingSent();
     }
@@ -528,7 +530,7 @@ class AgeFamilySealTest extends TestCase
         // es una AUSENCIA, no una corrección (`#268`): ni retira ni crea, y el veredicto lo dice.
         // Mutación: `derivationGoverns` sin la condición «tarificable» → la línea se cancela, rojo.
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item));
 
         Price::where('priceable_type', $this->jump->getMorphClass())->where('priceable_id', $this->jump->id)->delete();
         $otherDay = $this->slotOn(now()->addDays(27)->toDateString());

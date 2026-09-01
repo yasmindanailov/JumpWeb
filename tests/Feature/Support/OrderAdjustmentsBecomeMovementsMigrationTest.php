@@ -9,6 +9,8 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\LineFacts;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
@@ -96,7 +98,9 @@ class OrderAdjustmentsBecomeMovementsMigrationTest extends TestCase
 
         $fresh = $this->fresh($order);
         $this->assertSame(6000, $fresh->birthValueCents());
-        $this->assertSame(3500, $fresh->itemDepositRemainderCents($fresh->items->firstWhere('id', $item->id)), 'la lectura absorbe la bajada contra el resto de la señal: 50,00 − 15,00');
+        $facts = LineFacts::forItem($fresh, $fresh->items->firstWhere('id', $item->id));
+        $this->assertSame(5000, $facts->depositSplit, 'el reparto de la señal al nacer se conserva entero');
+        $this->assertSame(-1500, $facts->editDelta, 'y la bajada es un delta, no un crédito contra un cubo');
     }
 
     /** `T5-PRB01`: una bajada 100 % online que solo dejó un marcador de 0 €. */
@@ -130,7 +134,7 @@ class OrderAdjustmentsBecomeMovementsMigrationTest extends TestCase
         $this->assertSame(-4500, (int) $edit->amount_cents, '(1 − 4) × 15,00: el delta entero, no los 20,00 cubiertos');
         $fresh = $this->fresh($order);
         $this->assertSame(6000, $fresh->birthValueCents());
-        $this->assertSame(2500, $fresh->financialSummary()->pendienteDevolucion(), 'los 25,00 que la puerta no cubrió afloran');
+        $this->assertSame(2500, OrderBook::forOrder($fresh)->owedToCustomerCents(), 'los 25,00 que la puerta no cubrió afloran como saldo a devolver');
     }
 
     /** Una CADENA (bajar el precio, luego subirlo): el precio vigente en cada gestión se recorre hacia atrás. */
@@ -194,7 +198,10 @@ class OrderAdjustmentsBecomeMovementsMigrationTest extends TestCase
         $this->assertSame($item->id, (int) $courtesy->first()->order_item_id);
         $this->assertSame((int) $refund->id, (int) $courtesy->first()->context['refund_id']);
         $this->assertSame('2026-08-25 18:35:04', $courtesy->first()->created_at->format('Y-m-d H:i:s'));
-        $this->assertSame(2000, $this->fresh($order)->financialSummary()->compensado(), 'coincide con lo que el modelo viejo deriva');
+        $book = OrderBook::forOrder($this->fresh($order));
+        $this->assertTrue($book->isConsistent, 'con la cortesía como hecho, el libro cierra');
+        $this->assertSame(1000, $book->totalCents, '40,00 − 10,00 de la bajada − 20,00 de cortesía');
+        $this->assertSame(1000, $book->paidCents, '40,00 cobrados − 30,00 devueltos');
     }
 
     public function test_running_it_twice_changes_nothing_and_leaves_no_old_types(): void

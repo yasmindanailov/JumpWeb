@@ -116,7 +116,7 @@ class MixedPartySurcharge
                 ->first();
 
             // Una reserva cancelada, o de un pedido cancelado, no tiene suplemento que ajustar: sus
-            // líneas ya están fuera de todos los desgloses (`ReservationFinancials` las salta).
+            // líneas ya no valen nada en el libro (la cancelación es el movimiento que las retira).
             if ($item === null || $item->isCancelled() || $item->order?->status === Order::STATUS_CANCELLED) {
                 return null;
             }
@@ -651,7 +651,7 @@ class MixedPartySurcharge
             'credit' => $credit === null ? null : [
                 'cents' => $creditCents,
                 'guests' => (int) ($credit['mark']['guests'] ?? 0),
-                'label' => $credit['adjustment']->breakdownLabel(),
+                'label' => MovementLabel::mixed($credit['adjustment']),
             ],
         ];
     }

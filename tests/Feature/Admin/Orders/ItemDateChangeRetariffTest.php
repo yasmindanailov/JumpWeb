@@ -8,7 +8,10 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\Balance;
 use App\Domain\Booking\Services\ItemEditPricing;
+use App\Domain\Booking\Services\MovementLabel;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
@@ -111,14 +114,15 @@ class ItemDateChangeRetariffTest extends TestCase
         $item->refresh();
         $this->assertSame(2000, (int) $item->unit_price, 'la reserva tiene que pasar a la tarifa del sábado');
 
-        $summary = $this->fresh($order)->financialSummary();
-        $this->assertSame(4000, $summary->totalFinalNeto(), 'el valor pasa a 2 × 20,00');
+        $book = OrderBook::forOrder($this->fresh($order));
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(4000, $book->totalCents, 'el valor pasa a 2 × 20,00');
+        $this->assertSame(Balance::KIND_PAY_AT_PARK, $book->balance->kind);
         $this->assertSame(
-            1600, $summary->pendingAtGate(),
+            1600, $book->balance->cents,
             'la diferencia (2 × 8,00) se cobra EN EL PARQUE, como cualquier otra subida',
         );
-        $this->assertSame(2400, $summary->pagadoOnline(), 'lo pagado por web no se toca');
-        $this->assertSame(0, $summary->pendienteDevolucion());
+        $this->assertSame(2400, $book->paidCents, 'lo pagado por web no se toca');
     }
 
     public function test_moving_to_a_cheaper_day_credits_the_difference_back(): void
@@ -130,20 +134,21 @@ class ItemDateChangeRetariffTest extends TestCase
         $item->refresh();
         $this->assertSame(1200, (int) $item->unit_price, 'la reserva pasa a la tarifa del lunes');
 
-        $summary = $this->fresh($order)->financialSummary();
-        $this->assertSame(2400, $summary->totalFinalNeto(), 'el valor baja a 2 × 12,00');
+        $book = OrderBook::forOrder($this->fresh($order));
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(2400, $book->totalCents, 'el valor baja a 2 × 12,00');
+        $this->assertSame(Balance::KIND_REFUND_AT_PARK, $book->balance->kind);
         $this->assertSame(
-            1600, $summary->pendienteDevolucion(),
-            'la diferencia se le ABONA y queda pendiente de devolver, como cualquier bajada',
+            1600, $book->owedToCustomerCents(),
+            'la diferencia se le ABONA y queda como saldo a devolver, como cualquier bajada',
         );
-        $this->assertSame(0, $summary->pendingAtGate());
     }
 
     /**
      * **El ajuste que nace de mover la fecha DICE que fue la fecha** (`DECISIONES #145`).
      *
-     * ⚠️ Este caso conduce la ACCIÓN REAL del panel a propósito, y no comprueba `breakdownLabel()`
-     * sobre un ajuste montado a mano: el defecto no estaba en el helper —que ya sabía leer
+     * ⚠️ Este caso conduce la ACCIÓN REAL del panel a propósito, y no comprueba `MovementLabel::edit()`
+     * sobre un ajuste montado a mano: el defecto no estaba en el compositor —que ya sabía leer
      * `changes`— sino en **quién lo alimenta**. `executeItemEdit` filtraba el contexto a
      * `product_change` y `quantity_change`, así que un cambio de franja llegaba con
      * `context = {"changes": []}`. Un test sobre el helper suelto habría salido verde con el
@@ -179,11 +184,11 @@ class ItemDateChangeRetariffTest extends TestCase
         );
 
         $this->assertSame(
-            __('tickets.gate_change_line_slot', [
+            __('tickets.journal.slot_change', [
                 'when' => $adjustment->context['changes']['slot_change']['new'],
             ]),
-            $adjustment->breakdownLabel(),
-            'Y el desglose «A cobrar en el parque» tiene que decir que fue un cambio de fecha, '
+            MovementLabel::edit($adjustment, $item->fresh('ticketType'), 'EUR'),
+            'Y la línea del libro tiene que decir que fue un cambio de fecha, '
             .'no repetir el nombre del producto.',
         );
     }
@@ -205,10 +210,9 @@ class ItemDateChangeRetariffTest extends TestCase
         $this->moveTo($order, $item, $this->sunday);   // mismo tipo de día
 
         $this->assertSame(2000, (int) $item->fresh()->unit_price);
-        $this->assertSame(
-            200, $this->fresh($order)->financialSummary()->pendingAtGate(),
-            'se cobra la subida de catálogo, aunque no cambie el tipo de día',
-        );
+        $book = OrderBook::forOrder($this->fresh($order));
+        $this->assertSame(Balance::KIND_PAY_AT_PARK, $book->balance->kind);
+        $this->assertSame(200, $book->balance->cents, 'se cobra la subida de catálogo, aunque no cambie el tipo de día');
     }
 
     /**
@@ -232,10 +236,9 @@ class ItemDateChangeRetariffTest extends TestCase
             ->assertHasNoActionErrors();
 
         $this->assertSame(900, (int) $item->fresh()->unit_price, 'subir la cantidad no puede re-tarificar');
-        $this->assertSame(
-            900, $this->fresh($order)->financialSummary()->pendingAtGate(),
-            'la unidad extra se cobra a SU tarifa, no a la de catálogo',
-        );
+        $book = OrderBook::forOrder($this->fresh($order));
+        $this->assertSame(Balance::KIND_PAY_AT_PARK, $book->balance->kind);
+        $this->assertSame(900, $book->balance->cents, 'la unidad extra se cobra a SU tarifa, no a la de catálogo');
     }
 
     /** Control: cambiar de PRODUCTO sigue tarificando por el catálogo del día, como siempre. */

@@ -688,8 +688,8 @@ class OrderItemEditor
         //  - SUBIDA (#150): el incremento se cobra en puerta (`recordEdit` +Δ); la señal se congela.
         //  - BAJADA (#225, D8): «bajar cantidad = SOLO cancelar». Desde la T1 del libro la bajada es
         //    UN hecho con su delta entero (`recordEdit` −Δ); qué parte la absorbe la puerta y qué
-        //    parte aflora como «pendiente de devolución» (#198) lo DERIVA la lectura
-        //    (`GateBuckets`). NO se auto-reembolsa (cancelar ≠ reembolsar): el operador devuelve
+        //    parte aflora como saldo «a devolver» (#198) lo DERIVA el saldo del libro
+        //    (`OrderBook`). NO se auto-reembolsa (cancelar ≠ reembolsar): el operador devuelve
         //    APARTE con «Reembolsar». (Evita además el fallo en pedidos manuales: sin gateway_order
         //    el refund REST fallaba siempre.)
         // Context ESTRUCTURADO (no solo claves): es lo que el libro convierte en la etiqueta de la
@@ -722,9 +722,9 @@ class OrderItemEditor
         // complementos NO mueven dinero aquí (refund manual aparte). Sin red → no puede fallar.
         //
         // Cada cargo se ata a SU child (el complemento), no al principal: así, si ese complemento se
-        // cancela luego (p. ej. un cambio de menú lo sustituye), su extra_due se ANULA solo
-        // (OrderFinancialSummary lo excluye al estar el child cancelado) → no quedan cargos fantasma
-        // ni reembolsos pendientes espurios.
+        // cancela luego (p. ej. un cambio de menú lo sustituye), su cargo se ANULA solo (el libro
+        // retira el valor del child cancelado con su movimiento de cancelación) → no quedan cargos
+        // fantasma ni devoluciones espurias.
         foreach ($addonCharges as $charge) {
             $amount = (int) ($charge['amount'] ?? 0);
             if ($amount <= 0) {

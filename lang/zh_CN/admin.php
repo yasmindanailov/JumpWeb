@@ -432,8 +432,6 @@ return [
         // #225 F3:「在门店收取」明细 ↳ 的开关(默认折叠)。
         'show_breakdown' => '查看明细',
         'hide_breakdown' => '收起明细',
-        // #225:标注「定金余款」所属产品的连接词。
-        'deposit_for_product' => '（:product）',
         'guest_badge_ok' => '已完成',
         'mixed_party' => [
             'title' => '混龄派对:有来宾属于其他年龄段',
@@ -954,7 +952,6 @@ return [
             'principal' => '主产品',
             'addons' => '附加项目',
             'total' => '产品总计',
-            'deposit_remainder_line' => '定金余款',
         ],
 
         // 7.2e.1bis5(#158,反馈点 4):订单总计紧凑分组,位于摘要卡末尾。

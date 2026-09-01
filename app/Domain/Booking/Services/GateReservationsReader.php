@@ -37,7 +37,7 @@ class GateReservationsReader implements GateReservations
             // de puerta; lo vigilan los presupuestos de `GateProfileTest` y `MixedPartyParkSurfacesTest`.
             ->with([
                 'ticketType', 'slot', 'children.ticketType',
-                'order.adjustments.orderItem.ticketType', 'order.payments.refunds',
+                'order.adjustments', 'order.payments.refunds',
                 'order.items.slot', 'order.items.ticketType', 'order.items.parent.slot',
             ])
             ->get()

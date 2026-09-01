@@ -9,6 +9,8 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\LineFacts;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
@@ -112,12 +114,12 @@ class DepositRefundCoherenceTest extends TestCase
         // sale el valor de nacimiento de la línea (36,00) sin reconstruir nada.
         $order->recordEdit($item, -2400, $by, 'item_edit_reduction', ['changes' => ['quantity_change' => ['old' => 3, 'new' => 1]]]);
 
-        $order = $order->fresh(['payments.refunds', 'items.ticketType', 'adjustments']);
+        $order = $order->fresh(['payments.refunds', 'items.ticketType', 'items.slot', 'adjustments']);
 
         // online original = 3 × 12 = 36; techo = 36 − 0 = 36 (no 12). El operador puede reembolsar
         // el sobre-cobro (24) con «Reembolsar».
         $this->assertSame(3600, $order->itemRefundableRemainderCents($item->fresh()));
-        $this->assertSame(2400, $order->itemPendingRefundCents($item->fresh())); // 36 original − 12 actual
+        $this->assertSame(2400, OrderBook::forOrder($order)->owedToCustomerCents()); // 36 pagados − 12 de valor
     }
 
     public function test_per_guest_addon_child_of_deposit_pack_has_no_phantom_pending_refund(): void
@@ -145,8 +147,8 @@ class DepositRefundCoherenceTest extends TestCase
             'amount_cents' => 2000, 'currency' => 'EUR', 'reason' => 'deposit_split', 'applied_by' => $by->id,
         ]);
 
-        // Rescale por bajar 2 → 1 invitado: UNA fila `edit` con el delta entero (−10,00 €); la lectura
-        // (`GateBuckets`) la absorbe contra el reparto de señal del child, como hacía la cascada.
+        // Rescale por bajar 2 → 1 invitado: UNA fila `edit` con el delta entero (−10,00 €); el child
+        // nació con reparto = valor, así que nunca aportó nada al cobro online.
         $order = $order->fresh(['adjustments', 'items.ticketType']);
         $child = $order->items->firstWhere('id', $child->id);
         $order->recordEdit($child, -1000, $by, 'addon_per_guest_rescale_reduction',
@@ -156,8 +158,7 @@ class DepositRefundCoherenceTest extends TestCase
         $order = $order->fresh(['adjustments', 'items.ticketType', 'payments.refunds']);
         $child = $order->items->firstWhere('id', $child->id);
 
-        $this->assertSame(0, $order->itemOriginalOnlineCents($child), 'online original del child de pack con señal = 0');
-        $this->assertSame(0, $order->itemPendingRefundCents($child), 'sin «pendiente de devolución» fantasma');
+        $this->assertSame(0, LineFacts::forItem($order, $child)->onlineAtBirth(), 'online original del child de pack con señal = 0');
         $this->assertSame(0, $order->itemRefundableRemainderCents($child), 'techo de reembolso = 0 (nada cobrado online)');
     }
 
@@ -185,8 +186,8 @@ class DepositRefundCoherenceTest extends TestCase
         $order = $order->fresh(['adjustments', 'items.ticketType']);
         $child = $order->items->firstWhere('id', $child->id);
 
-        // online original = 1 × 10 € (addon deposit=none → `depositCents` = valor pleno). Sin cambios.
-        $this->assertSame(1000, $order->itemOriginalOnlineCents($child));
+        // online original = 1 × 10 € (sin reparto de señal, todo entró online). Sin cambios.
+        $this->assertSame(1000, LineFacts::forItem($order, $child)->onlineAtBirth());
     }
 
     private function makeSlot(): Slot

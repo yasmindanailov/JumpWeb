@@ -106,10 +106,11 @@ class LedgerSingleSourceTest extends TestCase
 
     /**
      * **Ninguna superficie lee ya el modelo viejo** (guarda L; T3·2 de `specs/desglose-libro.md`
-     * §6.3.2 el panel, la hoja y la puerta; T3·3 los correos — la lista de excepciones que hubo
-     * entre las dos se vació y se borró). Lo que se prohíbe es literal:
-     * las clases y los métodos del modelo de dos ejes (`#127`) que la T3·4 retira — hasta entonces
-     * siguen existiendo, y un `git grep` verde no distingue «nadie los usa» de «los usa una vista».
+     * §6.3.2 el panel, la hoja y la puerta; T3·3 los correos; T3·4 la retirada del modelo). Lo que
+     * se prohíbe es literal: las clases y los métodos del modelo de dos ejes (`#127`). Desde la
+     * T3·4 (`DECISIONES #313`) NO EXISTEN —`git grep` los da a cero en `app/`—, y esta guarda queda
+     * como TRINQUETE: un helper `financialSummary()` que alguien reescriba «para una vista» cae
+     * aquí con el nombre delante, antes de que se le parezca al que se retiró.
      */
     public function test_no_surface_reads_the_old_model(): void
     {

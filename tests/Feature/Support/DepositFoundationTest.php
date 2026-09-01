@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\LineFacts;
 use App\Domain\Identity\Models\User;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -17,18 +18,17 @@ use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
- * #225 — Cimientos de la señal/depósito (iteración 1, riesgo cero).
+ * #225 — Cimientos de la señal/depósito, leídos desde los HECHOS (T3·4 del libro).
  *
- * Verifica las piezas SIN cablear el cobro todavía:
- *  - Tipo de ajuste `deposit_remainder`.
- *  - `itemDepositRemainderCents` (espejo de `itemExtraDueCents`).
- *  - `itemCollectedCents` redefinido = valor − extra_due − deposit_remainder (LA PALANCA):
- *    legacy idéntico (sin filas deposit_remainder), y deposit-aware cuando las hay.
- *  - `onlineDueCents` = Σ collected de no cancelados (fuente única del importe online).
+ * Verifica las piezas SIN cablear el cobro:
+ *  - El hecho de nacimiento `deposit_split` (la parte del valor que NO se cobra online).
+ *  - `LineFacts::onlineAtBirth` = valor de nacimiento − reparto (LA PALANCA): sin reparto es el
+ *    valor entero; con él, la señal. Y `onlineNow` = fila − reparto, lo que el checkout cobra.
+ *  - El techo de reembolso por línea (`itemRefundableRemainderCents`) baja a la señal.
+ *  - `onlineDueCents` = Σ `onlineNow` de las líneas no canceladas (fuente única del importe online).
  *  - Columna muerta `prices.deposit_cents` eliminada.
  *
- * Como iter. 1 NO crea filas `deposit_remainder` en ningún flujo, simulamos esa fila a mano
- * para PROBAR que la palanca corrige en cascada (techo de reembolso) antes de iter. 2.
+ * El reparto se escribe a mano porque aquí se prueba la LECTURA, no `OrderCreator`.
  */
 class DepositFoundationTest extends TestCase
 {
@@ -88,41 +88,44 @@ class DepositFoundationTest extends TestCase
         );
     }
 
-    public function test_no_deposit_remainder_means_collected_equals_charged_subtotal(): void
+    public function test_no_deposit_split_means_the_line_paid_it_all_online(): void
     {
         $order = $this->makePaidOrder();
         $item = $this->attachItem($order, unitPrice: 6000, quantity: 3); // 180,00 €
         $order->load(['items', 'adjustments']);
 
-        $this->assertSame(0, $order->itemDepositRemainderCents($item));
+        $facts = LineFacts::forItem($order, $item);
+        $this->assertSame(0, $facts->depositSplit);
         $this->assertSame(18000, $item->chargedSubtotalCents());
-        // Legacy: collected == charged (sin extra_due ni deposit_remainder).
-        $this->assertSame(18000, $order->itemCollectedCents($item));
+        $this->assertSame(18000, $facts->onlineAtBirth(), 'sin reparto, todo entró online');
+        $this->assertSame(18000, $facts->onlineNow());
     }
 
-    public function test_extra_due_only_keeps_legacy_collected_formula_unchanged(): void
+    public function test_a_raise_does_not_change_what_was_charged_online(): void
     {
         $by = User::factory()->create();
         $order = $this->makePaidOrder();
         $item = $this->attachItem($order, unitPrice: 6000, quantity: 3); // 180,00 €
 
-        // Edición que sube precio (cobro en puerta): NO mueve deposit_remainder.
+        // Edición que sube cantidad (cobro en puerta): NO toca el reparto ni lo cobrado al nacer.
         $order->recordEdit($item, 6000, $by, 'cantidad 3 → 4');
+        $item->forceFill(['quantity' => 4, 'seats' => 4])->save();          // hoy vale 240,00 €
         $order->load(['items', 'adjustments']);
 
-        $this->assertSame(0, $order->itemDepositRemainderCents($item));
-        $this->assertSame(6000, $order->itemExtraDueCents($item));
-        // No-regresión: collected = charged − extra_due (idéntico al histórico).
-        $this->assertSame(12000, $order->itemCollectedCents($item));
+        $facts = LineFacts::forItem($order, $item->fresh());
+        $this->assertSame(0, $facts->depositSplit);
+        $this->assertSame(6000, $facts->editDelta);
+        $this->assertSame(18000, $facts->birthValue(), 'nació valiendo 180,00');
+        $this->assertSame(18000, $facts->onlineAtBirth(), 'y eso es lo que se cobró online: la subida es de puerta');
     }
 
-    public function test_deposit_remainder_reduces_collected_and_refund_ceiling(): void
+    public function test_deposit_split_reduces_what_entered_online_and_the_refund_ceiling(): void
     {
         $by = User::factory()->create();
         $order = $this->makePaidOrder();
         $item = $this->attachItem($order, unitPrice: 6000, quantity: 3); // valor 180,00 €
 
-        // Simula lo que hará OrderCreator en iter. 2: señal 30 € → resto 150 € a puerta.
+        // Lo que escribe OrderCreator al nacer: señal 30 € → resto 150 € a puerta.
         OrderAdjustment::create([
             'order_id' => $order->id,
             'order_item_id' => $item->id,
@@ -133,14 +136,15 @@ class DepositFoundationTest extends TestCase
         ]);
         $order->load(['items', 'adjustments', 'payments.refunds']);
 
-        $this->assertSame(15000, $order->itemDepositRemainderCents($item));
-        // LA PALANCA: cobrado online = valor − resto-señal = la señal (30,00 €).
-        $this->assertSame(3000, $order->itemCollectedCents($item));
-        // En cascada, el techo de reembolso por línea baja a la señal (no al valor).
+        $facts = LineFacts::forItem($order, $item);
+        $this->assertSame(15000, $facts->depositSplit);
+        // LA PALANCA: lo que entró online = valor − reparto = la señal (30,00 €).
+        $this->assertSame(3000, $facts->onlineAtBirth());
+        // Y el techo de reembolso por línea baja a la señal (no al valor).
         $this->assertSame(3000, $order->itemRefundableRemainderCents($item));
     }
 
-    public function test_deposit_remainder_coexists_with_extra_due(): void
+    public function test_deposit_split_coexists_with_a_raise(): void
     {
         $by = User::factory()->create();
         $order = $this->makePaidOrder();
@@ -151,18 +155,20 @@ class DepositFoundationTest extends TestCase
             'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => 15000, 'currency' => 'EUR', 'applied_by' => $by->id,
         ]);
-        // Subir cantidad tras pagar: +30 € a puerta (extra_due), señal congelada.
+        // Subir cantidad tras pagar: +60 € a puerta, señal congelada.
         $order->recordEdit($item, 6000, $by, '+1');
-        $item->forceFill(['quantity' => 4])->save(); // valor pasa a 240,00 €
+        $item->forceFill(['quantity' => 4, 'seats' => 4])->save(); // valor pasa a 240,00 €
         $order->load(['items', 'adjustments']);
 
-        $this->assertSame(15000, $order->itemDepositRemainderCents($item));
-        $this->assertSame(6000, $order->itemExtraDueCents($item));
-        // collected = 240 − 60 (extra) − 150 (resto-señal) = 30 (la señal, CONGELADA).
-        $this->assertSame(3000, $order->itemCollectedCents($item));
+        $facts = LineFacts::forItem($order, $item->fresh());
+        $this->assertSame(15000, $facts->depositSplit);
+        $this->assertSame(6000, $facts->editDelta);
+        $this->assertSame(18000, $facts->birthValue());
+        // Lo cobrado online = 180 (nacimiento) − 150 (reparto) = 30 (la señal, CONGELADA).
+        $this->assertSame(3000, $facts->onlineAtBirth());
     }
 
-    public function test_online_due_cents_sums_collected_and_excludes_cancelled(): void
+    public function test_online_due_cents_sums_the_lines_and_excludes_cancelled(): void
     {
         $by = User::factory()->create();
         $order = $this->makePaidOrder();

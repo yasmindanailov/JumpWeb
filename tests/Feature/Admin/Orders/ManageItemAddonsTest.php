@@ -9,6 +9,9 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\LineFacts;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
@@ -465,13 +468,13 @@ class ManageItemAddonsTest extends TestCase
             )
             ->assertHasNoActionErrors();
 
-        $order->refresh()->load(['adjustments.orderItem', 'items', 'payments.refunds']);
-        $s = $order->financialSummary();
+        $order->refresh()->load(['adjustments', 'items.slot', 'items.ticketType', 'items.children', 'payments.refunds']);
+        $book = OrderBook::forOrder($order);
 
-        // El cargo del Menú 2 (cancelado) queda ANULADO: ni pendiente ni en el total con cambios.
-        $this->assertSame(0, $s->pendingAtGate(), 'No debe quedar nada "a cobrar" tras netear el cambio de menú.');
-        $this->assertSame(1200, $s->totalWithChanges(), 'El total con cambios vuelve al original (1200).');
-        $this->assertSame(0, $s->extraDue, 'El extra_due del complemento cancelado se anula.');
+        // El cargo del Menú 2 (cancelado) queda ANULADO: el libro lo retira con su cancelación.
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(1200, $book->totalCents, 'El Total vuelve al original (1200).');
+        $this->assertSame(Balance::KIND_SETTLED, $book->balance->kind, 'No debe quedar nada "a cobrar" tras netear el cambio de menú.');
 
         // Nunca se cobró online → nada que reembolsar.
         $this->assertSame(0, PaymentRefund::count());
@@ -486,8 +489,9 @@ class ManageItemAddonsTest extends TestCase
         // y NO es refundable (el modal de reembolso no lo ofrece → sin dinero fantasma).
         $paidChild = $item->children()->where('ticket_type_id', $menuPaid->id)->whereNotNull('cancelled_at')->first();
         $this->assertNotNull($paidChild);
-        $this->assertSame(800, $order->itemExtraDueCents($paidChild));   // su cargo se atÓ a él
-        $this->assertSame(0, $order->itemCollectedCents($paidChild));    // pero nunca se cobró → 0
+        $facts = LineFacts::forItem($order, $paidChild);
+        $this->assertSame(800, $facts->editDelta);                      // su cargo se atÓ a él
+        $this->assertSame(0, $facts->onlineAtBirth());                   // pero nunca se cobró → 0
         $this->assertSame(0, $order->itemRefundableRemainderCents($paidChild)); // no refundable
         $this->assertTrue($order->isVoidedLeftoverItem($paidChild));     // se oculta del desglose
     }
@@ -527,16 +531,16 @@ class ManageItemAddonsTest extends TestCase
             )
             ->assertHasNoActionErrors();
 
-        $order->refresh()->load(['items.children.ticketType', 'adjustments', 'payments.refunds']);
+        $order->refresh()->load(['items.children.ticketType', 'items.slot', 'items.ticketType', 'adjustments', 'payments.refunds']);
         $paidChild->refresh();
 
         $this->assertTrue($paidChild->isCancelled());
-        // SÍ se cobró online → refundable por 800, NO oculto, y aparece como reembolso pendiente.
-        $this->assertSame(800, $order->itemCollectedCents($paidChild));
+        // SÍ se cobró online → refundable por 800, NO oculto, y el libro lo debe.
+        $this->assertSame(800, LineFacts::forItem($order, $paidChild)->onlineAtBirth());
         $this->assertSame(800, $order->itemRefundableRemainderCents($paidChild));
         $this->assertFalse($order->isVoidedLeftoverItem($paidChild));
-        // No se añadió nada de pago (el menú gratis es 0) → nada que cobrar en puerta.
-        $this->assertSame(0, $order->financialSummary()->pendingAtGate());
+        // No se añadió nada de pago (el menú gratis es 0): el saldo es lo que se le debe, sin cargo.
+        $this->assertSame(800, OrderBook::forOrder($order)->owedToCustomerCents());
     }
 
     // Nota: los bloqueos por complemento INCOMPATIBLE con el producto y por

@@ -155,70 +155,17 @@ return [
     'paid_online_confirmed' => 'Paid online',
     'pending_at_park' => 'Pending at the park',
     'subtotal' => 'Subtotal',
-    'at_gate' => 'To pay at the park',
-    'show_breakdown' => 'View breakdown',
-    'hide_breakdown' => 'Hide breakdown',
-    'deposit_for_product' => 'for :product',
-    'at_gate_caption' => 'Difference from changes to your order. Paid at reception on arrival.',
-    // #225 (deposit): the customer paid only the deposit online; the rest is collected at the park.
-    'deposit_paid_online' => 'Paid online',
-    // #225 F2: ↳ line for the deposit balance within "To pay at the park".
-    'deposit_remainder_line' => 'Remaining balance',
-    // ⚠️ A gate charge from an EDIT, when neither "+4 X" nor "Change to X" applies. It used to be the
-    // bare product name, which did not say WHY it is charged (`DECISIONES #131`).
-    'gate_change_line' => 'Difference from changes to :product',
-    // `#154`: client-facing gate-charge labels moved here from `admin.*` (ES-only) — an EN client
-    // was served the raw key in their money breakdown.
-
-    'gate_change_line_slot' => 'Date changed to :when',
-    'gate_change_line_product' => 'Changed to :name',
-    'at_gate_caption_deposit' => 'Remainder to pay at reception on arrival. The deposit has already been paid online.',
-    'pendiente_devolucion' => 'Refund pending',
-    'pendiente_devolucion_caption' => 'You overpaid because of a change to your order (a product was reduced or removed) and it is pending refund.',
-    'total_final' => 'Final total',
-    // ⚠️⚠️ LA FRASE que explica el estado del pedido (`DECISIONES #127`). Un número no explica:
-    // el encargo era que el cliente entienda su situación ante CUALQUIER situación. La compone el
-    // DOMINIO (`Booking\Services\OrderLedger`), que es quien sabe qué caso es.
-    // ⚠️⚠️ Los rótulos del DESGLOSE, en DOS BLOQUES que no se mezclan (`DECISIONES #127`):
-    // arriba lo que vale y por qué canal se paga, abajo qué ha pasado con su dinero. Hasta la
-    // tanda B, «Devuelto» y «Pendiente de devolución» se pintaban como restas dentro de la
-    // columna del valor —de la que NO restan— y por eso la columna dejaba de leerse.
-    'ledger' => [
-        'value_title' => 'What this order is worth',
-        'value_total' => 'Order value',
-        'paid_online' => 'Paid online',
-        'pending_online' => 'Left to pay online',
-        // T5 · D9: settled when the visit passes on a paid order — no collection is recorded.
-        'paid_at_gate' => 'Settled at the park',
-        'pending_at_gate' => 'Left to pay at the park',
-        'compensated' => 'Refunded as compensation',
-        'paid_desk' => 'Paid at the desk',
-        'cash_title' => 'Your money',
-        'cash_caption' => 'This is the money we have already charged you for this order. You can check it against your bank statement.',
-        'charged_online' => 'Charged online',
-        'charged_desk' => 'Charged at the desk',
-        'refunded' => 'Already refunded',
-        'pending_refund' => 'Still to be refunded to you',
-        'invoiced' => 'Amount when booked',
-        // ⚠️⚠️ DIRECCIÓN E IMPORTE, no un número mudo (`L6`, `DECISIONES #133`). Las elige el
-        // DOMINIO, y `:difference` es la DIFERENCIA, no el valor.
-        'invoiced_hint_more' => 'You were invoiced :invoiced when you booked. The order changed afterwards and is now worth :difference more.',
-        'invoiced_hint_less' => 'You were invoiced :invoiced when you booked. The order changed afterwards and is now worth :difference less.',
-    ],
+    // ▶ The two-axis labels (`ledger.*`, the gate-charge lines, «Refund pending», «Final total»…)
+    // lived here until T3·4 of the book (`DECISIONES #313`): the book uses `journal.*` instead.
+    // ⚠️⚠️ THE SENTENCE that explains the state of the order (`DECISIONES #127`): composed by the
+    // DOMAIN (`Booking\Services\OrderBook`), which is the one that knows which case it is.
     'ledger_note' => [
-        // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser
-        // cierta (`DECISIONES #132`).
+        // ⚠️⚠️ `under_review` WINS over the rest: if the book does not close, no other sentence can be
+        // true (`DECISIONES #132`). The other balance kinds carry no sentence: the book says them
+        // with their own line (`journal.balance_*`).
         'under_review' => 'We are reviewing the breakdown of this order. The amount charged to you is the one shown below; if you have any doubt, write to us and we will look at it with you.',
-        'owing' => 'We still owe you :amount.',
-        'cancelled_owing' => 'Your booking was cancelled on :date. We still owe you :amount.',
-        'cancelled_refunded' => 'Your booking was cancelled and we refunded :amount on :date.',
-        'cancelled' => 'Your booking was cancelled on :date.',
         'expired' => 'This booking expired before the payment was completed. You have not been charged.',
         'pending_payment' => 'The :amount payment has not been completed yet. Your slot is held until it expires.',
-        'compensated' => 'We refunded :amount and you keep your booking: there is nothing left to pay.',
-        'refunded_pay_in_person' => 'We refunded :amount because you will pay at reception on arrival.',
-        'refunded_still_booked' => 'We refunded :amount and your booking still stands.',
-        'pending_at_gate' => 'You have :amount left to pay at reception on arrival.',
     ],
     // The order BOOK (`specs/desglose-libro.md` §4.3, `DECISIONES #305`): one line per action, with
     // its sign and its date; the total is the sum; the balance is settled at the park. Composed by

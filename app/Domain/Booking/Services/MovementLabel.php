@@ -16,10 +16,9 @@ use App\Domain\Platform\Services\Money;
  * «Cantidad: 4 → 2» con −30,00 € se lee sola; «Bajada de cantidad» al lado de −30,00 € lo diría dos
  * veces, y una subida y una bajada que se explican con la misma frase no pueden divergir.
  *
- * ▶ La frase de fiesta mixta se sigue componiendo en {@see OrderAdjustment::breakdownLabel()}, que es
- * quien la escribió y a quien vigila `ClientMoneyLabelsAreTranslatedTest`: tener aquí una copia sería
- * el duplicado del que nació `OrderLedger`. Cuando el modelo de dos ejes se retire (T3), esa rama se
- * muda aquí y `breakdownLabel()` muere con sus otros consumidores.
+ * ▶ Desde la T3·4 (`DECISIONES #313`) la frase de fiesta MIXTA también vive aquí ({@see mixed}):
+ * llegó de `OrderAdjustment::breakdownLabel()`, que murió con el modelo de dos ejes. Sus cuatro
+ * claves `tickets.gate_mixed_party_*` son las que `ClientMoneyLabelsAreTranslatedTest` vigila.
  */
 final class MovementLabel
 {
@@ -79,7 +78,7 @@ final class MovementLabel
         if ($parts === []) {
             // Complementos añadidos o subidos («+3 Calcetines»): el contexto de `addon_edit` los
             // trae en la raíz; el de una re-escala, dentro de `changes` (ya resuelta arriba por su
-            // `quantity_change`). Es la misma lectura que `breakdownLabel()` hacía del cargo de puerta.
+            // `quantity_change`). Es la lectura que `OrderAdjustment::breakdownLabel()` hacía hasta la T3·4.
             $addon = $context['addon_change'] ?? $changes['addon_change'] ?? null;
             if (is_array($addon)) {
                 foreach ($addon['added'] ?? [] as $added) {
@@ -113,10 +112,39 @@ final class MovementLabel
         ]);
     }
 
-    /** Las dos frases de fiesta mixta de hoy (suplemento / descuento), donde ya viven. */
+    /**
+     * Las dos frases de fiesta MIXTA (`specs/cumple-mixto.md` §12 y §24.5): el SUPLEMENTO
+     * («Suplemento por 3 invitados que corresponden a Jump») y su espejo, el DESCUENTO. Leen la
+     * MARCA `mixed_party` del `context` del ajuste, con el nombre del pack destino tal y como se
+     * GUARDÓ al comunicarlo (no se resuelve al leer: así la frase no cambia si el producto se
+     * renombra después).
+     *
+     * ⚠️ `trans_choice` y no `__`: con un solo invitado la frase decía «Suplemento por 1 invitadoS».
+     * Un desglose de dinero que no concuerda en número se lee como descuidado justo donde más
+     * confianza hace falta. Los cargos escritos antes de que el contexto llevara el nombre caen a
+     * la frase sin nombre, que sigue siendo cierta; el descuento con varios destinos también (el
+     * destino viaja en `targets`, y con varios no se inventa un reparto).
+     */
     public static function mixed(OrderAdjustment $row): string
     {
-        return $row->breakdownLabel();
+        $context = is_array($row->context) ? $row->context : [];
+        $mixed = is_array($context['mixed_party'] ?? null) ? $context['mixed_party'] : [];
+        $guests = (int) ($mixed['guests'] ?? 0);
+
+        if (($mixed['credit'] ?? false) === true) {
+            $targets = is_array($mixed['targets'] ?? null) ? $mixed['targets'] : [];
+            $target = count($targets) === 1 ? ($targets[0]['name'] ?? null) : null;
+
+            return $target !== null && $target !== ''
+                ? trans_choice('tickets.gate_mixed_party_credit_line_named', $guests, ['count' => $guests, 'target' => (string) $target])
+                : trans_choice('tickets.gate_mixed_party_credit_line', $guests, ['count' => $guests]);
+        }
+
+        $target = $mixed['target_name'] ?? null;
+
+        return $target !== null && $target !== ''
+            ? trans_choice('tickets.gate_mixed_party_line_named', $guests, ['count' => $guests, 'target' => (string) $target])
+            : trans_choice('tickets.gate_mixed_party_line', $guests, ['count' => $guests]);
     }
 
     public static function courtesy(): string

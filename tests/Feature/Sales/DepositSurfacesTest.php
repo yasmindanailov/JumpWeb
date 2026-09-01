@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Booking\Services\ReservationSlip;
 use App\Domain\Identity\Models\User;
@@ -48,10 +49,9 @@ use Tests\TestCase;
  * ⚠️ **Lo que NO se movió de aquí es la regla**: `PAY-10` la vigila `DepositRefundCoherenceTest`, y
  * el canario anti doble-fuente ya se había retirado por redundante en `#91`.
  *
- * El resto de casos no tocaban el componente y se quedan tal cual: el email, el PDF, el desglose por
- * producto y los dos de sobrecobro.
- * El resto de superficies leen `OrderFinancialSummary`/`ReservationFinancials` (cubiertas en
- * sus tests) y se corrigen solas.
+ * El resto de casos no tocaban el componente y se quedan tal cual: el email, el PDF, el saldo del
+ * parque con complementos y los dos de sobrecobro — todos leídos del LIBRO (`OrderBook`, T3·4),
+ * que es lo que leen las nueve superficies.
  */
 class DepositSurfacesTest extends TestCase
 {
@@ -160,26 +160,28 @@ class DepositSurfacesTest extends TestCase
         $this->assertStringNotContainsString('Señal pagada online', $body);
     }
 
-    public function test_deposit_remainder_breakdown_by_product_includes_addon_children(): void
+    public function test_the_park_balance_includes_the_addon_children_of_a_deposit_product(): void
     {
-        // Auditoría Fase 1 (L4): el desglose por-producto del «resto de la señal» debe INCLUIR el
-        // deposit_remainder de los COMPLEMENTOS (Opción A #225: van 100 % a puerta, ATADOS al child).
-        // Antes solo sumaba el principal → el desglose no cuadraba con el titular `pendingAtGate()`.
+        // Auditoría Fase 1 (L4): el saldo «a pagar en el parque» INCLUYE el reparto de señal de los
+        // COMPLEMENTOS (Opción A #225: van 100 % a puerta, ATADOS al child). Antes el desglose solo
+        // sumaba el principal y no cuadraba con su titular; en el libro es una resta.
         $socks = $this->attachAddon('Calcetines', 2000);
         $order = $this->creator->createPendingOrder($this->user, [[
             'ticket_type_id' => $this->dep->id, 'date' => $this->date, 'time' => '10:00:00', 'qty' => 1,
             'addons' => [['ticket_type_id' => $socks->id, 'qty' => 1]],
         ]]);
         $order->forceFill(['status' => Order::STATUS_PAID, 'paid_at' => now()])->save();
-        $order->load(['items.ticketType', 'adjustments', 'payments.refunds', 'items.slot']);
+        $this->payDeposit($order, $order->onlineDueCents()); // 30,00: la señal del pack, nada del complemento
+        $order->load(['items.ticketType', 'items.children', 'adjustments', 'payments.refunds', 'items.slot']);
 
-        $byProduct = $order->depositRemainderPendingByProduct();
-        $sum = array_sum(array_column($byProduct, 'amount'));
+        $book = OrderBook::forOrder($order);
 
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(20000, $book->totalCents, '180,00 del pack + 20,00 del complemento');
+        $this->assertSame(3000, $book->paidCents);
+        $this->assertSame(Balance::KIND_PAY_AT_PARK, $book->balance->kind);
         // 150€ (resto del pack) + 20€ (complemento, antes OMITIDO) = 170€.
-        $this->assertSame(17000, $sum, 'el desglose incluye el resto-señal del complemento');
-        // Reconciliación: Σ del desglose == el resto-señal agregado del pedido (titular).
-        $this->assertSame($order->financialSummary()->depositRemainder, $sum);
+        $this->assertSame(17000, $book->balance->cents, 'el saldo incluye el resto-señal del complemento');
     }
 
     public function test_confirmation_email_does_not_invent_a_park_balance_on_a_cancelled_line_without_deposit(): void
@@ -261,15 +263,15 @@ class DepositSurfacesTest extends TestCase
         $deposit = $order->fresh(['items', 'adjustments'])->onlineDueCents(); // 30,00
         $this->payDeposit($order, $deposit);
 
-        $fresh = $order->fresh(['items', 'adjustments', 'payments.refunds']);
-        $s = $fresh->financialSummary();
+        $fresh = $order->fresh(['items.slot', 'items.ticketType', 'adjustments', 'payments.refunds']);
+        $book = OrderBook::forOrder($fresh);
 
         $this->assertSame(3000, $deposit);
-        $this->assertSame(0, $s->pendienteDevolucion());    // SIN fantasma
-        $this->assertSame(15000, $s->pendingAtGate());       // el resto, en puerta
-        $this->assertSame(18000, $s->totalFinalNeto());      // valor pleno = online + puerta
-        // Reconcilia con las cards (Σ pendiente por ítem == pendiente del pedido).
-        $this->assertSame(0, (int) $fresh->items->sum(fn ($i) => $fresh->itemPendingRefundCents($i)));
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(0, $book->owedToCustomerCents());          // SIN fantasma
+        $this->assertSame(Balance::KIND_PAY_AT_PARK, $book->balance->kind);
+        $this->assertSame(15000, $book->balance->cents);             // el resto, en el parque
+        $this->assertSame(18000, $book->totalCents);                 // valor pleno = online + puerta
     }
 
     public function test_deposit_order_surfaces_real_over_collection_below_the_deposit(): void
@@ -283,8 +285,8 @@ class DepositSurfacesTest extends TestCase
         $this->payDeposit($order, 3000);
         $item = $order->items()->whereNull('parent_item_id')->first();
         // El valor del pack cae de 180 € a 20 €: UNA bajada de −160,00 (T1 del libro: el delta
-        // entero en una fila `edit`); la lectura la absorbe contra el resto de la señal (150) y el
-        // sobrante (10) es lo que aflora como pendiente de devolución.
+        // entero en una fila `edit`); el libro no reparte nada en cubos — vale 20, se pagaron 30, y
+        // los 10 de diferencia son el saldo «a devolver».
         $item->forceFill(['unit_price' => 2000, 'quantity' => 1])->save();
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
@@ -293,9 +295,10 @@ class DepositSurfacesTest extends TestCase
             'context' => ['changes' => ['unit_price_change' => ['old' => 18000, 'new' => 2000]]],
         ]);
 
-        $s = $order->fresh(['items', 'adjustments', 'payments.refunds'])->financialSummary();
+        $book = OrderBook::forOrder($order->fresh(['items.slot', 'items.ticketType', 'adjustments', 'payments.refunds']));
 
-        $this->assertSame(1000, $s->pendienteDevolucion()); // 30 cobrado − 20 de valor = 10
-        $this->assertSame(2000, $s->totalFinalNeto());      // el producto vale 20
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(1000, $book->owedToCustomerCents()); // 30 cobrado − 20 de valor = 10
+        $this->assertSame(2000, $book->totalCents);            // el producto vale 20
     }
 }

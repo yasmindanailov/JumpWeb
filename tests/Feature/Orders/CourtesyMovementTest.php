@@ -9,6 +9,8 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\Movement;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
@@ -22,11 +24,12 @@ use Tests\TestCase;
  * **La CORTESÍA de un reembolso, escrita al ocurrir** (T1 del libro, `specs/desglose-libro.md`
  * §4.2 y §6·T1, guarda D).
  *
- * Hasta la T1 «dinero devuelto sin que desapareciera producto» se DERIVABA al leer
- * (`OrderFinancialSummary::compensado()`). Ahora cada reembolso deja, en su MISMA transacción, la
- * fila `courtesy` con la parte del importe que EXCEDE lo que se le debía al cliente en el ámbito
- * del reembolso — y el modelo de dos ejes sigue derivando el suyo hasta la T3: aquí se cruzan
- * (Σ filas `courtesy` == `compensado()`), que es la guarda puente de esta pieza.
+ * Hasta la T1 «dinero devuelto sin que desapareciera producto» se DERIVABA al leer (el
+ * `compensado` del modelo de dos ejes, retirado en la T3·4). Ahora cada reembolso deja, en su MISMA
+ * transacción, la fila `courtesy` con la parte del importe que EXCEDE lo que se le debía al cliente
+ * en el ámbito del reembolso — y «lo debido» lo dice el LIBRO (`OrderBook::owedToCustomerCents`,
+ * la misma cifra que el panel le sugiere al operador). Cada fila es un movimiento del libro, y el
+ * libro cierra con ella escrita: eso es lo que cada caso comprueba al final.
  *
  * Los reembolsos van en modo MANUAL (registro sin pasarela): es el mismo camino de dominio que el
  * REST, sin la llamada a Redsys, y es el que la T5 documentó como forma de constancia (§20.5).
@@ -68,7 +71,7 @@ class CourtesyMovementTest extends TestCase
         $this->assertSame(PaymentRefund::INTENT_COMPENSATION, $row->reason);
         $this->assertSame($by->id, (int) $row->applied_by);
 
-        $this->assertCourtesyMatchesTheOldModel($order);
+        $this->assertCourtesyIsWhatTheBookShows($order);
     }
 
     public function test_a_refund_of_exactly_what_was_owed_writes_no_courtesy(): void
@@ -84,7 +87,7 @@ class CourtesyMovementTest extends TestCase
 
         $this->assertSame(0, OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->count(),
             'devolver lo debido no es una cortesía');
-        $this->assertCourtesyMatchesTheOldModel($order);
+        $this->assertCourtesyIsWhatTheBookShows($order);
     }
 
     public function test_only_the_excess_over_what_was_owed_is_courtesy(): void
@@ -101,14 +104,13 @@ class CourtesyMovementTest extends TestCase
         $rows = OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->get();
         $this->assertCount(1, $rows);
         $this->assertSame(-1000, (int) $rows->first()->amount_cents, '30,00 devueltos − 20,00 debidos = 10,00 de cortesía');
-        $this->assertCourtesyMatchesTheOldModel($order);
+        $this->assertCourtesyIsWhatTheBookShows($order);
     }
 
     /**
      * `paid_in_person` RE-CANALIZA el dinero (el cliente lo pagará en recepción): no es una
-     * cortesía y no se escribe ninguna. ⚠️ El modelo de dos ejes lo clasificaba como
-     * «compensado» (no distinguía la intención): es la divergencia DELIBERADA de la spec §4.2, y
-     * por eso aquí no se cruza con `compensado()` — el saldo del libro (T2) lo dirá solo.
+     * cortesía y no se escribe ninguna (spec §4.2) — el saldo del libro lo dice solo: el Total no
+     * baja, lo pagado sí, y la diferencia queda «a pagar en el parque».
      */
     public function test_paid_in_person_writes_no_courtesy(): void
     {
@@ -139,7 +141,7 @@ class CourtesyMovementTest extends TestCase
         $this->assertSame(-3000, (int) $rows[$a->id]->amount_cents);
         $this->assertSame(-1000, (int) $rows[$b->id]->amount_cents);
         $this->assertSame(-4000, (int) $rows->sum('amount_cents'), 'la Σ es EXACTAMENTE la cortesía del pedido');
-        $this->assertCourtesyMatchesTheOldModel($order);
+        $this->assertCourtesyIsWhatTheBookShows($order);
     }
 
     public function test_a_total_refund_after_a_cancellation_credits_only_what_exceeds_the_debt(): void
@@ -157,7 +159,7 @@ class CourtesyMovementTest extends TestCase
         $rows = OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->get()->keyBy('order_item_id');
         $this->assertCount(1, $rows, 'la línea cancelada solo recibió lo que se le debía: sin cortesía');
         $this->assertSame(-3000, (int) $rows[$a->id]->amount_cents, '40,00 devueltos − 10,00 debidos = 30,00, todos sobre la línea viva');
-        $this->assertCourtesyMatchesTheOldModel($order);
+        $this->assertCourtesyIsWhatTheBookShows($order);
     }
 
     /**
@@ -183,7 +185,7 @@ class CourtesyMovementTest extends TestCase
         $this->assertSame(0, OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->count(),
             'se devolvió exactamente lo que la cancelación dejó a deber');
         $this->assertSame(Order::STATUS_CANCELLED, $this->fresh($order)->status);
-        $this->assertCourtesyMatchesTheOldModel($order);
+        $this->assertCourtesyIsWhatTheBookShows($order);
     }
 
     /** El mismo hecho, por línea: reembolsar una línea cancelándola en el mismo gesto. */
@@ -201,18 +203,23 @@ class CourtesyMovementTest extends TestCase
 
         $this->assertSame(0, OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->count());
         $this->assertNotNull($a->fresh()->cancelled_at);
-        $this->assertCourtesyMatchesTheOldModel($order);
+        $this->assertCourtesyIsWhatTheBookShows($order);
     }
 
-    // ─── La guarda puente: lo escrito al ocurrir == lo derivado al leer ─────────────────────
+    // ─── Lo escrito al ocurrir es lo que el libro enseña ────────────────────────────────────
 
-    private function assertCourtesyMatchesTheOldModel(Order $order): void
+    private function assertCourtesyIsWhatTheBookShows(Order $order): void
     {
         $fresh = $this->fresh($order);
-        $written = -(int) $fresh->adjustments->where('type', OrderAdjustment::TYPE_COURTESY)->sum('amount_cents');
+        $written = (int) $fresh->adjustments->where('type', OrderAdjustment::TYPE_COURTESY)->sum('amount_cents');
+        $book = OrderBook::forOrder($fresh);
 
-        $this->assertSame($fresh->financialSummary()->compensado(), $written,
-            'Σ filas `courtesy` tiene que ser lo que `OrderFinancialSummary::compensado()` deriva: hasta la T3 conviven y no pueden divergir');
+        $this->assertTrue($book->isConsistent, 'con la cortesía escrita, el libro tiene que cerrar');
+        $inBook = array_sum(array_map(
+            fn (Movement $m): int => $m->amountCents,
+            array_filter($book->movements, fn (Movement $m): bool => $m->kind === Movement::KIND_COURTESY),
+        ));
+        $this->assertSame($written, $inBook, 'cada fila `courtesy` es un movimiento del libro, con su importe');
     }
 
     // ─── Fixtures ────────────────────────────────────────────────────────────────────────────

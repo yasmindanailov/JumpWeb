@@ -145,7 +145,7 @@ class ThemeSettings
      *
      * Aquí se compone el trío que esas diez reglas re-escopaban a mano —`--zone-1`, `--zone-2` y
      * `--on-brand`— para que cada superficie lo PINTE en línea sobre su elemento, en vez de tener una
-     * regla por acento. Es la misma lección de `Booking\Services\OrderLedger`: una composición, N
+     * regla por acento. Es la misma lección de `Booking\Services\OrderBook`: una composición, N
      * superficies que la pintan.
      *
      * @param  ?string  $color  `zones.color` — el primario de ESA zona, no el de su acento

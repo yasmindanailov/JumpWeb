@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -245,11 +246,11 @@ class OrderAdminActionsTest extends TestCase
 
         $this->assertTrue($item->fresh()->isCancelled(), 'la reserva sigue viva en un pedido cancelado');
 
-        $summary = $order->fresh(['items.slot', 'payments.refunds', 'adjustments'])->financialSummary();
-        $this->assertSame(0, $summary->totalFinalNeto(), 'un pedido cancelado no tiene valor vivo');
+        $book = OrderBook::forOrder($order->fresh(['items.slot', 'items.ticketType', 'payments.refunds', 'adjustments']));
+        $this->assertSame(0, $book->totalCents, 'un pedido cancelado no tiene valor vivo');
         $this->assertSame(
-            (int) $order->total, $summary->pendienteDevolucion(),
-            'y lo cobrado tiene que aflorar como pendiente de devolver — que es lo que el cliente lee',
+            (int) $order->total, $book->owedToCustomerCents(),
+            'y lo cobrado tiene que aflorar como saldo a devolver — que es lo que el cliente lee',
         );
     }
 
@@ -271,10 +272,10 @@ class OrderAdminActionsTest extends TestCase
         $this->assertSame(Order::STATUS_CANCELLED, $order->fresh()->status);
         $this->assertTrue($item->fresh()->isCancelled(), 'la reserva sigue viva tras reembolsar y cancelar');
 
-        $summary = $order->fresh(['items.slot', 'payments.refunds', 'adjustments'])->financialSummary();
-        $this->assertSame(0, $summary->totalFinalNeto());
-        $this->assertSame(0, $summary->pendienteDevolucion(), 'se devolvió todo: no queda nada pendiente');
-        $this->assertSame(0, $summary->retenidoOnline(), 'ni el parque retiene nada');
+        $book = OrderBook::forOrder($order->fresh(['items.slot', 'items.ticketType', 'payments.refunds', 'adjustments']));
+        $this->assertSame(0, $book->totalCents);
+        $this->assertSame(0, $book->owedToCustomerCents(), 'se devolvió todo: no queda nada pendiente');
+        $this->assertSame(0, $book->paidCents, 'ni el parque retiene nada');
     }
 
     // ═══════════════════════════════════════════════════════════════════════

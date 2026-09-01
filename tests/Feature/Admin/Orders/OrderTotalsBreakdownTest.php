@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\MovementLabel;
 use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
@@ -22,10 +23,10 @@ use Tests\TestCase;
  * #171 (feedback clienta) — Sub-líneas del desglose del pedido.
  *
  * Verifica:
- *  - `OrderAdjustment::breakdownLabel()`: formato compacto delta elegido por la
- *    clienta (cambio de cantidad "+N nombre", cambio de producto "Cambio a X",
- *    complementos "+N nombre"), con fallback limpio al nombre del item para
- *    ajustes legacy (context solo con claves o null).
+ *  - `MovementLabel::edit()` (T3·4: el ÚNICO compositor de la etiqueta de una gestión, para el
+ *    panel y para el cliente): una parte por cada cosa que cambió, fiel y sin netear; los
+ *    complementos «+N nombre»; y el respaldo que explica sin inventar una cantidad para los ajustes
+ *    legacy (context solo con claves o null).
  *  - El partial `order-totals` TRANSCRIBE el LIBRO del pedido (T3·2 de `specs/desglose-libro.md`):
  *    movimientos con signo y fecha, Total, pagos y devoluciones con su estado, Pagado y el saldo
  *    con su clase — comparado contra `OrderBook`, no contra literales.
@@ -42,19 +43,19 @@ class OrderTotalsBreakdownTest extends TestCase
 
     private int $paymentCounter = 0;
 
-    // ─── breakdownLabel() ───────────────────────────────────────────────
+    // ─── MovementLabel::edit() ──────────────────────────────────────────
 
-    public function test_breakdown_label_quantity_change_shows_delta_and_name(): void
+    public function test_edit_label_quantity_change_says_old_and_new(): void
     {
         $item = $this->makeItem();
 
         $label = $this->labelFor($item, ['changes' => ['quantity_change' => ['old' => 5, 'new' => 7]]]);
 
-        $this->assertSame('+2 '.$this->jumpType->tr('name'), $label);
+        $this->assertSame(__('tickets.journal.quantity', ['old' => 5, 'new' => 7]), $label);
     }
 
     /**
-     * **Estas etiquetas las lee TAMBIÉN el CLIENTE** (`#154`): viajan en `gate_lines` del ledger,
+     * **Estas etiquetas las lee TAMBIÉN el CLIENTE** (`#154`): viajan como movimientos del libro,
      * así que viven en `tickets.*` con sus TRES idiomas. Antes vivían en `admin.*` (solo ES) y un
      * cliente EN/FR recibía la clave literal en su desglose de dinero — medido por HTTP en `#149`.
      *
@@ -62,13 +63,13 @@ class OrderTotalsBreakdownTest extends TestCase
      * falta NO se manifiesta como clave en crudo — se manifiesta como un cliente francés leyendo
      * castellano en su pantalla de dinero, que parece texto y no falla nada.
      */
-    public function test_the_gate_change_labels_exist_in_every_client_locale(): void
+    public function test_the_edit_labels_exist_in_every_client_locale(): void
     {
-        foreach (['gate_change_line', 'gate_change_line_slot', 'gate_change_line_product'] as $key) {
+        foreach (['quantity', 'slot_change', 'product_change', 'edit_fallback'] as $key) {
             foreach (['es', 'en', 'fr'] as $locale) {
                 $this->assertTrue(
-                    Lang::has('tickets.'.$key, $locale, false),
-                    "tickets.{$key} falta en «{$locale}» — el cliente leería otro idioma (o la clave en crudo)",
+                    Lang::has('tickets.journal.'.$key, $locale, false),
+                    "tickets.journal.{$key} falta en «{$locale}» — el cliente leería otro idioma (o la clave en crudo)",
                 );
             }
         }
@@ -79,22 +80,24 @@ class OrderTotalsBreakdownTest extends TestCase
         app()->setLocale('en');
         try {
             $label = $this->labelFor($item, ['changes' => ['slot_change' => ['old' => 'x', 'new' => '05/09/2026 10:00']]]);
-            $this->assertSame('Date changed to 05/09/2026 10:00', $label);
+            $this->assertSame(Lang::get('tickets.journal.slot_change', ['when' => '05/09/2026 10:00'], 'en'), $label);
+            $this->assertStringNotContainsString('tickets.', $label, 'la clave salió en crudo');
         } finally {
             app()->setLocale('es');
         }
     }
 
-    public function test_breakdown_label_product_change_shows_target_product(): void
+    public function test_edit_label_product_change_shows_target_product(): void
     {
         $item = $this->makeItem();
 
         $label = $this->labelFor($item, ['changes' => ['product_change' => ['old' => 'Pack Jump', 'new' => 'Pack Kids']]]);
 
-        $this->assertSame(__('tickets.gate_change_line_product', ['name' => 'Pack Kids']), $label);
+        $this->assertSame(__('tickets.journal.product_change', ['name' => 'Pack Kids']), $label);
     }
 
-    public function test_breakdown_label_product_change_takes_priority_over_quantity(): void
+    /** Fiel y sin netear: una gestión que cambió producto Y cantidad lo dice entero. */
+    public function test_edit_label_says_every_change_of_the_same_edit(): void
     {
         $item = $this->makeItem();
 
@@ -103,10 +106,13 @@ class OrderTotalsBreakdownTest extends TestCase
             'quantity_change' => ['old' => 1, 'new' => 2],
         ]]);
 
-        $this->assertSame(__('tickets.gate_change_line_product', ['name' => 'Pack Kids']), $label);
+        $this->assertSame(
+            __('tickets.journal.product_change', ['name' => 'Pack Kids']).' · '.__('tickets.journal.quantity', ['old' => 1, 'new' => 2]),
+            $label,
+        );
     }
 
-    public function test_breakdown_label_addon_added_shows_qty_and_name(): void
+    public function test_edit_label_addon_added_shows_qty_and_name(): void
     {
         $item = $this->makeItem();
 
@@ -118,7 +124,7 @@ class OrderTotalsBreakdownTest extends TestCase
         $this->assertSame('+3 Calcetines', $label);
     }
 
-    public function test_breakdown_label_addon_updated_shows_positive_delta(): void
+    public function test_edit_label_addon_updated_shows_positive_delta(): void
     {
         $item = $this->makeItem();
 
@@ -130,7 +136,7 @@ class OrderTotalsBreakdownTest extends TestCase
         $this->assertSame('+3 Gorro', $label);
     }
 
-    public function test_breakdown_label_multiple_addons_joined(): void
+    public function test_edit_label_multiple_addons_joined(): void
     {
         $item = $this->makeItem();
 
@@ -140,7 +146,7 @@ class OrderTotalsBreakdownTest extends TestCase
             'updated' => [['name' => 'Gorro', 'old' => 0, 'new' => 1]],
         ]]);
 
-        $this->assertSame('+2 Calcetines, +1 Gorro', $label);
+        $this->assertSame('+2 Calcetines · +1 Gorro', $label);
     }
 
     /**
@@ -155,34 +161,37 @@ class OrderTotalsBreakdownTest extends TestCase
      * —que guarda `context = {"changes": []}`, con lo que ninguna rama de arriba puede decir nada—.
      * Es decir: **es la etiqueta que sale en producción**, no la excepción.
      */
-    public function test_breakdown_label_legacy_keys_only_explains_the_change(): void
+    public function test_edit_label_legacy_keys_only_explains_the_change(): void
     {
         $item = $this->makeItem();
 
         // Formato legacy: context guardaba solo las CLAVES (lista de strings).
         $label = $this->labelFor($item, ['changes' => ['quantity_change']]);
 
-        $this->assertSame(__('tickets.gate_change_line', ['product' => $this->jumpType->tr('name')]), $label);
+        $this->assertSame(__('tickets.journal.edit_fallback', ['product' => $this->jumpType->tr('name')]), $label);
         $this->assertNotSame($this->jumpType->tr('name'), $label, 'la etiqueta vuelve a ser el nombre pelado');
     }
 
-    public function test_breakdown_label_null_context_explains_the_change(): void
+    public function test_edit_label_null_context_explains_the_change(): void
     {
         $item = $this->makeItem();
 
         $label = $this->labelFor($item, null);
 
-        $this->assertSame(__('tickets.gate_change_line', ['product' => $this->jumpType->tr('name')]), $label);
+        $this->assertSame(__('tickets.journal.edit_fallback', ['product' => $this->jumpType->tr('name')]), $label);
     }
 
-    /** ⚠️ Y el respaldo NO se come las tres ramas que sí saben describir el cambio. */
+    /** ⚠️ Y el respaldo NO se come las ramas que sí saben describir el cambio. */
     public function test_the_explanatory_fallback_does_not_swallow_the_precise_labels(): void
     {
         $item = $this->makeItem();
 
-        $this->assertStringStartsWith('+2 ', $this->labelFor($item, ['changes' => ['quantity_change' => ['old' => 1, 'new' => 3]]]));
         $this->assertSame(
-            __('tickets.gate_change_line_product', ['name' => 'Pack Kids']),
+            __('tickets.journal.quantity', ['old' => 1, 'new' => 3]),
+            $this->labelFor($item, ['changes' => ['quantity_change' => ['old' => 1, 'new' => 3]]]),
+        );
+        $this->assertSame(
+            __('tickets.journal.product_change', ['name' => 'Pack Kids']),
             $this->labelFor($item, ['changes' => ['product_change' => ['new' => 'Pack Kids']]])
         );
     }
@@ -438,9 +447,8 @@ class OrderTotalsBreakdownTest extends TestCase
     {
         $adj = new OrderAdjustment;
         $adj->context = $context;
-        $adj->setRelation('orderItem', $item);
 
-        return $adj->breakdownLabel();
+        return MovementLabel::edit($adj, $item->loadMissing('ticketType'), 'EUR');
     }
 
     private function makeItem(): OrderItem

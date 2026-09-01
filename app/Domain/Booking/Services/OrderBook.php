@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\Log;
  * ## La aritmética (spec §4.1) — por línea → por reserva → por pedido
  *
  *     fila(i)        = chargedSubtotalCents()            (con signo: una línea de crédito resta)
- *     Δ(i)           = Σ hechos `edit` + `mixed` de i     (GateBuckets::editDelta)
- *     nac(i)         = fila(i) − Δ(i)                     (GateBuckets::birthValue — un HECHO)
+ *     Δ(i)           = Σ hechos `edit` + `mixed` de i     (LineFacts::editDelta)
+ *     nac(i)         = fila(i) − Δ(i)                     (LineFacts::birthValue — un HECHO)
  *     online_nac(i)  = nac(i) − reparto(i)  si el pedido se cobró, si no 0   («sin cobro no hay cobro»)
  *     dev(i)         = reembolsos con éxito atribuidos a i (Order::itemRefundedCents, la prorrata del total)
  *     cortesía(i)    = Σ hechos `courtesy` de i           (≤ 0)
@@ -53,14 +53,12 @@ use Illuminate\Support\Facades\Log;
  * - **No nombra `Payments\Models`** (`ModuleBoundariesTest`): los pagos y reembolsos llegan como
  *   HECHOS ya traducidos por {@see Order::collectedPaymentFacts} y {@see Order::refundFacts}.
  * - **Avisa al log cuando no cuadra** (`ledger.no_cuadra`, T3·1): el parque tiene que ENTERARSE
- *   (`#132`), y desde que la API sirve el libro `OrderLedger` ya no pasa por ese camino. Va como
- *   `warning` y no como excepción porque el libro se compone al PINTAR: reventar dejaría al cliente
- *   sin pantalla por un dato que ya está mal. (Mientras el panel siga leyendo `OrderLedger`, hasta la
- *   T3·2, un pedido roto puede avisar por los dos: es transitorio y se retira con él.)
+ *   (`#132`). Va como `warning` y no como excepción porque el libro se compone al PINTAR: reventar
+ *   dejaría al cliente sin pantalla por un dato que ya está mal.
  *
- * ⚠️ Mientras el modelo de dos ejes siga pintando alguna superficie (hasta la T3·4), la guarda
- * PUENTE de `OrderFinancialInvariantsTest` lo cruza con este libro en los 15 escenarios: es §1.4 de
- * la spec convertido en test.
+ * ▶ Desde la T3·4 (`DECISIONES #313`) es el ÚNICO modelo: el de dos ejes (`OrderLedger`,
+ * `OrderFinancialSummary`, `ReservationFinancials`, `GateBuckets`) se retiró, y las identidades de
+ * arriba son las que `OrderFinancialInvariantsTest` vigila en sus 13 escenarios (`PAY-16`/`PAY-17`).
  */
 final readonly class OrderBook
 {
@@ -159,8 +157,8 @@ final readonly class OrderBook
      * El libro de UNA reserva (principal + sus complementos), acotado a sus líneas: el nacimiento es
      * `nac(r)`, y el cobro y las devoluciones viajan ATRIBUIDOS (`online_nac`, `dev`).
      *
-     * ⚠️ La consistencia es la del PEDIDO (las identidades son del pedido, como en `OrderLedger`):
-     * se compone el pedido entero para evaluarla. Es lectura pura, sin consultas.
+     * ⚠️ La consistencia es la del PEDIDO (las identidades son del pedido): se compone el pedido
+     * entero para evaluarla. Es lectura pura, sin consultas.
      */
     public static function forReservation(Order $order, OrderItem $principal): self
     {
@@ -396,7 +394,7 @@ final readonly class OrderBook
 
         foreach ($lines as $line) {
             $lineIds[] = (int) $line->id;
-            $buckets = GateBuckets::forItem($order, $line);
+            $facts = LineFacts::forItem($order, $line);
             // Un complemento HEREDA la cancelación de su principal (el editor los cancela en cascada;
             // esto lo hace cierto también sobre filas anteriores a la cascada).
             $cancelled = $line->isCancelled() || $principalCancelled;
@@ -446,11 +444,11 @@ final readonly class OrderBook
                 );
             } else {
                 $total += $fila + $courtesy;
-                $onlineDue += $order->itemCollectedCents($line);
+                $onlineDue += $facts->onlineNow();
             }
 
-            $nac += $buckets->birthValue();
-            $onlineNac += $collected ? $buckets->onlineAtBirth() : 0;
+            $nac += $facts->birthValue();
+            $onlineNac += $collected ? $facts->onlineAtBirth() : 0;
             $dev += $order->itemRefundedCents($line);
         }
 
@@ -477,9 +475,9 @@ final readonly class OrderBook
     }
 
     /**
-     * Las filas de hechos POR LÍNEA, en el orden en que ocurrieron (`created_at`, `id`): el mismo
-     * que replica `GateBuckets` — dos gestiones pueden caer en el mismo segundo y el orden de una
-     * relación sin `orderBy` no es un contrato.
+     * Las filas de hechos POR LÍNEA, en el orden en que ocurrieron (`created_at`, `id`): dos
+     * gestiones pueden caer en el mismo segundo y el orden de una relación sin `orderBy` no es un
+     * contrato.
      *
      * @return array<int, list<OrderAdjustment>>
      */

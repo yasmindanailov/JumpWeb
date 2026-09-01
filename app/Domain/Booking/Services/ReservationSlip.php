@@ -3,7 +3,6 @@
 namespace App\Domain\Booking\Services;
 
 use App\Domain\Booking\Models\Order;
-use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Platform\Services\Duration;
 use App\Domain\Platform\Services\Money;
@@ -49,16 +48,12 @@ final class ReservationSlip
             'ticketType.zone',
             'slot',
             'children.ticketType',
-            // `*.orderItem.ticketType` evita el N+1 de `OrderAdjustment::breakdownLabel()`
-            // (lee `orderItem->ticketType->tr('name')`) al desglosar "a cobrar en puerta".
-            'adjustments.orderItem.ticketType',
-            'children.adjustments.orderItem.ticketType',
         ]);
 
-        // `payments.refunds` para el desglose "Totales del producto" (línea Devuelto):
-        // `Order::itemRefundedCents()` recorre los reembolsos confirmados.
-        // `adjustments` para el bloque «Fiesta mixta» ({@see mixedParty()}): las líneas escritas
-        // del suplemento se reconocen por la marca del ajuste (`MixedPartySurcharge::written()`).
+        // `payments.refunds` y `adjustments` para el LIBRO de la reserva ({@see book()}): los
+        // cobros y devoluciones son sus liquidaciones y los hechos de sus líneas, sus movimientos.
+        // `adjustments` también para el bloque «Fiesta mixta» ({@see mixedParty()}): las líneas
+        // escritas del suplemento se reconocen por la marca del ajuste (`MixedPartySurcharge::written()`).
         $order->loadMissing(['user', 'payments.refunds', 'adjustments']);
 
         return new self($order, $item);

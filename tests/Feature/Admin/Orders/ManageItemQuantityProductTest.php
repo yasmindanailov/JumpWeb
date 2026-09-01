@@ -10,6 +10,9 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\ItemEditPricing;
+use App\Domain\Booking\Services\LineFacts;
+use App\Domain\Booking\Services\MovementLabel;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\SlotAvailability;
@@ -184,11 +187,10 @@ class ManageItemQuantityProductTest extends TestCase
         $this->assertNotNull($adj);
         $this->assertSame(2400, (int) $adj->amount_cents); // 2 unidades extra × 12.00
 
-        // #171: el context del ajuste guarda el cambio ESTRUCTURADO (old/new),
-        // no solo la clave — así el desglose "A cobrar en el parque" pinta el
-        // delta exacto vía breakdownLabel().
+        // #171: el context del ajuste guarda el cambio ESTRUCTURADO (old/new), no solo la clave —
+        // así la línea del libro dice «Cantidad: 2 → 4» (`MovementLabel::edit`).
         $this->assertSame(['old' => 2, 'new' => 4], $adj->context['changes']['quantity_change'] ?? null);
-        $this->assertStringStartsWith('+2 ', $adj->breakdownLabel());
+        $this->assertSame(__('tickets.journal.quantity', ['old' => 2, 'new' => 4]), MovementLabel::edit($adj, $item, 'EUR'));
 
         $this->assertNotNull(AuditLog::where('action', 'orders.item_edited')->first());
         // T3·3 del libro: el cargo ya no viaja como un céntimo suelto — es la línea «+24,00» del bloque.
@@ -221,13 +223,13 @@ class ManageItemQuantityProductTest extends TestCase
         // NO hay reembolso automático ni llamada a Redsys.
         $this->assertSame(0, PaymentRefund::where('order_item_id', $item->id)->count());
         Http::assertNothingSent();
-        $order->refresh()->load('adjustments', 'items.ticketType', 'payments.refunds');
+        $order->refresh()->load('adjustments', 'items.ticketType', 'items.slot', 'payments.refunds');
         $this->assertSame(0, (int) $order->refund_amount_cents);
 
-        // El sobre-cobro (2 uds × 12 = 24.00) aflora como «pendiente de devolución»: a nivel pedido
-        // (total inmutable − valor actual) y a nivel item (reconstrucción vía el marcador #225/D8).
-        $this->assertSame(2400, $order->financialSummary()->pendienteDevolucion());
-        $this->assertSame(2400, $order->itemPendingRefundCents($item));
+        // El sobre-cobro (2 uds × 12 = 24.00) aflora en el libro como saldo «a devolver»: se pagaron
+        // 36,00 y el pedido vale 12,00.
+        $this->assertSame(2400, OrderBook::forOrder($order)->owedToCustomerCents());
+        $this->assertSame(3600, LineFacts::forItem($order, $item)->birthValue());
 
         // T3·3 del libro: el correo cuenta la bajada como línea «−» y el saldo «a devolver».
         Notification::assertSentTo($order->user, OrderItemModified::class,
@@ -251,9 +253,9 @@ class ManageItemQuantityProductTest extends TestCase
             ->assertHasNoActionErrors();
 
         $item->refresh();
-        $this->assertSame(2400, $order->fresh()->load('adjustments')->itemExtraDueCents($item));
+        $this->assertSame(2400, LineFacts::forItem($order->fresh()->load('adjustments'), $item)->editDelta);
 
-        // Bajar 3 → 1: crédito de puerta −24.00 (netea el cargo), sin reembolso online.
+        // Bajar 3 → 1: la bajada −24.00 deja la línea donde nació, sin reembolso online.
         Livewire::actingAs($staff)
             ->test(ViewOrder::class, ['record' => $order->code])
             ->callAction('manageItem', data: $this->editData($item->fresh('slot'), ['quantity' => 1]), arguments: ['item' => $item->id])
@@ -263,9 +265,8 @@ class ManageItemQuantityProductTest extends TestCase
         $order->refresh()->load('adjustments', 'items.ticketType', 'payments.refunds');
 
         $this->assertSame(1, (int) $item->quantity);
-        $this->assertSame(0, $order->itemExtraDueCents($item));            // neto 0, sin fantasma
-        $this->assertSame(0, $order->financialSummary()->pendingAtGate());
-        $this->assertSame([], $order->pendingAtGateLines());               // sin renglón fantasma
+        $this->assertSame(0, LineFacts::forItem($order, $item)->editDelta);   // neto 0, sin fantasma
+        $this->assertSame(1200, OrderBook::forOrder($order->load('items.slot'))->totalCents, 'el Total vuelve al de nacimiento');
         $this->assertSame(0, PaymentRefund::where('order_item_id', $item->id)->count()); // no se reembolsó online
         $this->assertTrue($order->adjustments->contains(fn (OrderAdjustment $a): bool => (int) $a->amount_cents < 0)); // hay crédito
     }
@@ -297,11 +298,10 @@ class ManageItemQuantityProductTest extends TestCase
         $order->refresh()->load('adjustments', 'items.ticketType', 'payments.refunds');
 
         $this->assertSame(1, (int) $item->quantity);
-        $this->assertSame(0, $order->itemExtraDueCents($item));            // cargo de puerta neteado a 0
-        $this->assertSame(0, $order->financialSummary()->pendingAtGate());
+        $this->assertSame(3600, LineFacts::forItem($order, $item)->birthValue()); // +12 y −36: nació en 36,00
         $this->assertSame(0, PaymentRefund::where('order_item_id', $item->id)->count()); // SIN auto-refund
-        // El remanente online (24.00, las 2 uds por debajo de lo cobrado) queda pendiente de devolver.
-        $this->assertSame(2400, $order->itemPendingRefundCents($item));
+        // El remanente online (24.00, las 2 uds por debajo de lo cobrado) es el saldo «a devolver».
+        $this->assertSame(2400, OrderBook::forOrder($order->load('items.slot'))->owedToCustomerCents());
     }
 
     public function test_quantity_increase_beyond_capacity_blocked(): void
@@ -414,9 +414,9 @@ class ManageItemQuantityProductTest extends TestCase
 
         $this->assertSame(0, PaymentRefund::where('order_item_id', $item->id)->count());
         Http::assertNothingSent();
-        $order->refresh()->load('adjustments', 'items.ticketType', 'payments.refunds');
+        $order->refresh()->load('adjustments', 'items.ticketType', 'items.slot', 'payments.refunds');
         $this->assertSame(0, (int) $order->refund_amount_cents);
-        $this->assertSame(400, $order->financialSummary()->pendienteDevolucion()); // 12.00 − 8.00, pendiente
+        $this->assertSame(400, OrderBook::forOrder($order)->owedToCustomerCents()); // 12.00 − 8.00, a devolver
     }
 
     public function test_product_change_same_price_no_money_just_update(): void
@@ -576,9 +576,8 @@ class ManageItemQuantityProductTest extends TestCase
     /**
      * T1 del libro (`specs/desglose-libro.md` §4.2): una BAJADA es UN hecho con su delta entero,
      * también cuando la señal la absorbe. Hasta la T1 se escribía como crédito contra el resto de la
-     * señal (y un marcador de 0 € solo si ningún cubo la absorbía); ahora la fila lleva −Δ y qué
-     * parte absorbe la puerta lo deriva la lectura (`GateBuckets`), que aquí deja el resto de la
-     * señal en 120,00 €.
+     * señal (y un marcador de 0 € solo si ningún cubo la absorbía); ahora la fila lleva −Δ, el
+     * reparto de la señal no se toca, y qué parte absorbe la puerta lo dice el SALDO del libro.
      */
     public function test_reduction_absorbed_by_the_deposit_is_one_edit_row_with_the_whole_delta(): void
     {
@@ -609,8 +608,10 @@ class ManageItemQuantityProductTest extends TestCase
             'el reparto de la señal al nacer no se toca: es un hecho de nacimiento',
         );
         $fresh = $order->fresh(['adjustments', 'items']);
-        $this->assertSame(12000, $fresh->itemDepositRemainderCents($item->fresh()), 'la lectura absorbe la bajada contra el resto de la señal: 150,00 − 30,00');
-        $this->assertSame(0, $fresh->itemExtraDueCents($item->fresh()), 'y nada queda en el cubo de ediciones');
+        $facts = LineFacts::forItem($fresh, $item->fresh());
+        $this->assertSame(15000, $facts->depositSplit, 'el reparto de la señal al nacer, intacto');
+        $this->assertSame(-3000, $facts->editDelta, 'y la bajada entera como delta');
+        $this->assertSame(15000, $facts->birthValue());
     }
 
     public function test_pack_quantity_increase_rescales_per_guest_paid_addon_and_charges_delta(): void
@@ -659,9 +660,12 @@ class ManageItemQuantityProductTest extends TestCase
             ->assertHasNoActionErrors();
 
         $this->assertSame(8, (int) $child->fresh()->quantity);
-        // El sobre-cobro del complemento (4 × 5,00 = 20,00 €) aflora como pendiente de devolución del child.
+        // El sobre-cobro del complemento (4 × 5,00 = 20,00 €): nació en 60,00 y hoy vale 40,00.
         $order->refresh()->load('adjustments', 'items.ticketType', 'payments.refunds');
-        $this->assertSame(2000, (int) $order->itemPendingRefundCents($child->fresh()));
+        $facts = LineFacts::forItem($order, $child->fresh());
+        $this->assertSame(-2000, $facts->editDelta);
+        $this->assertSame(6000, $facts->birthValue());
+        $this->assertSame(4000, $facts->charged);
     }
 
     public function test_validate_target_blocks_pack_guests_above_max(): void

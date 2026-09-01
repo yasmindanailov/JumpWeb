@@ -14,9 +14,9 @@ use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Booking\Services\Balance;
 use App\Domain\Booking\Services\MixedPartySettings;
 use App\Domain\Booking\Services\MixedPartySurcharge;
+use App\Domain\Booking\Services\Movement;
 use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\OrderItemEditor;
-use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -170,11 +170,20 @@ class MixedPartySurchargeTest extends TestCase
         return $item->children()->whereNull('cancelled_at')->whereIn('id', $marked)->get();
     }
 
-    private function financials(OrderItem $item): ReservationFinancials
+    /** El LIBRO de la reserva (T3·4): lo que valen sus líneas, lo pagado y el saldo. */
+    private function book(OrderItem $item): OrderBook
     {
-        $order = $item->order()->with(['items.ticketType', 'adjustments', 'payments'])->first();
+        $order = $item->order()->with(['items.ticketType', 'items.slot', 'items.children', 'adjustments', 'payments.refunds'])->first();
 
-        return ReservationFinancials::make($order, $order->items->firstWhere('id', $item->id));
+        return OrderBook::forReservation($order, $order->items->firstWhere('id', $item->id));
+    }
+
+    /** Lo que la reserva debe EN EL PARQUE: su saldo cuando es positivo (0 si no debe nada). */
+    private function gateDue(OrderItem $item): int
+    {
+        $book = $this->book($item);
+
+        return max(0, $book->totalCents - $book->paidCents);
     }
 
     /** Un empleado con lo justo para editar una reserva desde el panel. */
@@ -197,19 +206,20 @@ class MixedPartySurchargeTest extends TestCase
     public function test_a_guest_above_the_range_adds_value_and_is_due_at_the_park(): void
     {
         $item = $this->reservation(3);
-        $before = $this->financials($item);
+        $before = $this->book($item);
+        $dueBefore = $this->gateDue($item);
 
         $item = $this->declareAges($item, [4, 5, 8]);
-        $after = $this->financials($item);
+        $after = $this->book($item);
 
         // 25,00 − 18,00 = 7,00 € por el invitado de 8.
-        $this->assertSame(700, $after->valor - $before->valor, 'la fiesta vale 7,00 € más');
-        $this->assertSame(0, $after->pagadoOnline - $before->pagadoOnline, 'no se cobró nada nuevo online');
-        $this->assertSame(700, $after->aCobrarPuerta - $before->aCobrarPuerta, 'se debe en el parque');
+        $this->assertSame(700, $after->totalCents - $before->totalCents, 'la fiesta vale 7,00 € más');
+        $this->assertSame(0, $after->paidCents - $before->paidCents, 'no se cobró nada nuevo online');
+        $this->assertSame(700, $this->gateDue($item) - $dueBefore, 'se debe en el parque');
         // ⚠️ Y NO abre capacidad de reembolso: de esta línea no se cobró nunca nada online, así que
         // no puede aparecer como dinero que devolver. Sin esta aserción, una línea mal construida
         // inflaría el techo de reembolso del pedido sin que nada más se pusiera rojo.
-        $this->assertSame(0, $after->pendienteReembolso - $before->pendienteReembolso);
+        $this->assertSame(0, $after->owedToCustomerCents() - $before->owedToCustomerCents());
     }
 
     public function test_the_surcharge_is_one_line_with_its_gate_charge(): void
@@ -235,9 +245,8 @@ class MixedPartySurchargeTest extends TestCase
     public function test_the_client_reads_a_line_that_explains_itself(): void
     {
         $item = $this->declareAges($this->reservation(4), [4, 8, 9, 5]);
-        $order = $item->order()->with(['items.ticketType', 'adjustments'])->first();
 
-        $labels = array_column($order->pendingAtGateLines(), 'label');
+        $labels = array_map(fn (Movement $m): string => $m->label, $this->book($item)->movements);
 
         // Sin su rama propia caería al respaldo, que dice el nombre del producto portador sin
         // explicar de dónde sale el cargo — el defecto que `#131` corrigió en la otra rama muda.
@@ -258,7 +267,7 @@ class MixedPartySurchargeTest extends TestCase
         $item = $this->declareAges($item, [4, 5, 8]);
 
         $this->assertCount(1, $this->surchargeLines($item));
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item));
     }
 
     public function test_more_guests_above_the_range_update_the_same_line(): void
@@ -269,19 +278,19 @@ class MixedPartySurchargeTest extends TestCase
         $lines = $this->surchargeLines($item);
         $this->assertCount(1, $lines, 'se ACTUALIZA la línea, no se añade otra');
         $this->assertSame(2, (int) $lines[0]->quantity);
-        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(1400, $this->gateDue($item));
     }
 
     public function test_correcting_the_age_takes_the_surcharge_back_to_zero(): void
     {
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item));
 
         $item = $this->declareAges($item, [4, 5, 6]);
 
         $this->assertCount(0, $this->surchargeLines($item), 'la línea se retira');
-        $this->assertSame(0, $this->financials($item)->aCobrarPuerta);
-        $this->assertSame(0, $this->financials($item)->valor - 3 * 1800, 'el valor vuelve al del pack');
+        $this->assertSame(0, $this->gateDue($item));
+        $this->assertSame(0, $this->book($item)->totalCents - 3 * 1800, 'el valor vuelve al del pack');
     }
 
     // ─── El aviso al titular ─────────────────────────────────────────────────────
@@ -340,7 +349,7 @@ class MixedPartySurchargeTest extends TestCase
         // No se inventa una línea sin producto — y el panel lo grita en rojo (§12): un cobro que
         // deja de aplicarse en silencio es el modo de fallo que había que evitar.
         $this->assertCount(0, $this->surchargeLines($item));
-        $this->assertSame(0, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(0, $this->gateDue($item));
     }
 
     public function test_two_packs_at_the_same_price_write_nothing(): void
@@ -381,7 +390,7 @@ class MixedPartySurchargeTest extends TestCase
         // conserva las N PRIMERAS. Con los dos mayores al principio, bajar a 2 no quitaría a
         // ninguno y el caso no probaría nada.
         $item = $this->declareAges($this->reservation(4), [8, 4, 5, 9]);
-        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'los de 8 y 9');
+        $this->assertSame(1400, $this->gateDue($item), 'los de 8 y 9');
 
         $staff = $this->staff();
 
@@ -395,8 +404,10 @@ class MixedPartySurchargeTest extends TestCase
         );
 
         $this->assertFalse($outcome->isBlocked(), (string) $outcome->reason);
-        // Quedan las fichas de 8 y 4: un solo invitado por encima del tramo.
-        $this->assertSame(700, $this->financials($item->fresh())->aCobrarPuerta);
+        // Quedan las fichas de 8 y 4: un solo invitado por encima del tramo. Se lee lo ESCRITO, no el
+        // saldo: la bajada 4 → 2 deja la reserva pagada de más y el libro netea el suplemento
+        // contra lo que devuelve (un saldo, `DECISIONES #305`) — lo que este caso protege es la línea.
+        $this->assertSame(700, $this->writtenOf($item->fresh())['cents']);
     }
 
     // ─── Lo escrito no sigue al catálogo (§12.2) — desde el 2026-08-31 por el SELLO (§21) ────
@@ -415,7 +426,7 @@ class MixedPartySurchargeTest extends TestCase
         // corrigiendo un NOMBRE se llevaba su cargo de 7,00 € a 12,00 €. La guarda pasaba en verde
         // con el fallo puesto y por eso llegó a `main`.
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item));
 
         // El parque sube el precio de JUMP: CONFIGURACIÓN, no hecho.
         $this->jump->prices()->update(['amount_cents' => 3000]);
@@ -426,7 +437,7 @@ class MixedPartySurchargeTest extends TestCase
         // edades no cambian; el hecho es el mismo.
         $item = $this->declareAges($item, [4, 5, 8]);
 
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'lo escrito es lo que se le comunicó');
+        $this->assertSame(700, $this->gateDue($item), 'lo escrito es lo que se le comunicó');
         $this->assertSame(700, app(MixedPartySurcharge::class)->written($item)['cents']);
         // Y si el importe no se mueve, tampoco hay nada que anunciarle ni que auditar.
         Notification::assertNothingSent();
@@ -439,7 +450,7 @@ class MixedPartySurchargeTest extends TestCase
         // la tarifa y DESPUÉS el cliente declara otro invitado mayor, ese invitado entra al precio
         // que se le comunicó. «14,00 €, no 24,00 €.»
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item));
 
         $this->jump->prices()->update(['amount_cents' => 3000]); // derivado de hoy: 12,00 € por cabeza
 
@@ -447,7 +458,7 @@ class MixedPartySurchargeTest extends TestCase
 
         // 2 × 7,00 € (el unitario comunicado), no 2 × 12,00 €. La CANTIDAD sigue al hecho; el
         // UNITARIO, a las condiciones selladas — que son las que se le comunicaron.
-        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(1400, $this->gateDue($item));
         $this->assertSame(2, (int) $this->surchargeLines($item)->first()->quantity);
         $this->assertSame(700, (int) $this->surchargeLines($item)->first()->unit_price);
     }
@@ -511,14 +522,14 @@ class MixedPartySurchargeTest extends TestCase
         // condiciones se vendió, así que ni se le escribe un suplemento nuevo ni se le retira el
         // que tuviera. `D3` dice que en producción no existe ninguna; esta es la red por si acaso.
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item));
 
         OrderItem::whereKey($item->id)->update(['age_family_seal' => null]);
         Notification::fake();
 
         $item = $this->declareAges($item, [4, 5, 6]); // corregida a la baja: sin sello no se retira
 
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'sin sello, lo escrito se conserva');
+        $this->assertSame(700, $this->gateDue($item), 'sin sello, lo escrito se conserva');
         $this->assertCount(1, $this->surchargeLines($item));
         Notification::assertNothingSent();
     }
@@ -549,7 +560,7 @@ class MixedPartySurchargeTest extends TestCase
         );
 
         $this->assertFalse($outcome->isBlocked(), (string) $outcome->reason);
-        $this->assertSame(700, $this->financials($item->fresh())->aCobrarPuerta, 'la línea sigue en pie');
+        $this->assertSame(700, $this->gateDue($item->fresh()), 'la línea sigue en pie');
         $this->assertSame($line->id, $this->surchargeLines($item->fresh())->first()?->id, 'y es LA MISMA, no una resucitada');
         // Y sin el correo que anunciaba el cargo recién perdonado.
         Notification::assertNotSentTo($item->order->user, MixedPartySurchargeChanged::class);
@@ -597,13 +608,13 @@ class MixedPartySurchargeTest extends TestCase
     public function test_blanking_the_ages_does_not_erase_the_charge(): void
     {
         $item = $this->declareAges($this->reservation(3), [4, 5, 8]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item));
 
         // El propio cliente vuelve al formulario y BORRA las edades. Es el peor de los cuatro
         // caminos: no necesita más que vaciar tres casillas, y lo dispara el interesado.
         $item = $this->declareAges($item, [null, null, null]);
 
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'borrar la edad no borra el cargo');
+        $this->assertSame(700, $this->gateDue($item), 'borrar la edad no borra el cargo');
         $this->assertCount(1, $this->surchargeLines($item));
     }
 
@@ -612,11 +623,11 @@ class MixedPartySurchargeTest extends TestCase
         // ⚠️ La mitad que la retirada no cubre: aquí la línea NO desaparece, ENCOGE. Es además el
         // abuso realista —se vacía UNA casilla, no las cuatro— y por importe es la misma pérdida.
         $item = $this->declareAges($this->reservation(4), [8, 9, 4, 5]);
-        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'los de 8 y 9');
+        $this->assertSame(1400, $this->gateDue($item), 'los de 8 y 9');
 
         $item = $this->declareAges($item, [8, null, 4, 5]);
 
-        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'vaciar una edad no rebaja el cargo');
+        $this->assertSame(1400, $this->gateDue($item), 'vaciar una edad no rebaja el cargo');
         $this->assertSame(2, (int) $this->surchargeLines($item)->first()->quantity);
     }
 
@@ -630,7 +641,7 @@ class MixedPartySurchargeTest extends TestCase
 
         app(MixedPartySurcharge::class)->reconcile($item->fresh(), $this->staff(), 'panel_item_edit');
 
-        $this->assertSame(700, $this->financials($item->fresh())->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item->fresh()));
     }
 
     public function test_retiring_the_age_family_does_not_erase_the_charge(): void
@@ -643,7 +654,7 @@ class MixedPartySurchargeTest extends TestCase
 
         $item = $this->declareAges($item, [4, 5, 8]);
 
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item));
     }
 
     public function test_narrowing_a_band_does_not_erase_the_charge(): void
@@ -656,7 +667,7 @@ class MixedPartySurchargeTest extends TestCase
 
         $item = $this->declareAges($item, [4, 5, 8]);
 
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item));
     }
 
     public function test_an_incomplete_verdict_is_silent_towards_the_customer(): void
@@ -684,17 +695,17 @@ class MixedPartySurchargeTest extends TestCase
         // Mutación: quitar la puerta de `reconcile()` → 7,00 € escritos con dos edades en blanco.
         $item = $this->declareAges($this->reservation(3), [8, null, null]);
 
-        $this->assertSame(0, $this->financials($item)->aCobrarPuerta, 'con edades en blanco no se escribe');
+        $this->assertSame(0, $this->gateDue($item), 'con edades en blanco no se escribe');
         $this->assertCount(0, $this->surchargeLines($item));
         Notification::assertNothingSent();
 
         // El guardado COMPLETO es el que mueve el dinero — y mueve todo lo que corresponde.
         $item = $this->declareAges($item, [8, 9, 4]);
-        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta, 'dos invitados por encima del tramo');
+        $this->assertSame(1400, $this->gateDue($item), 'dos invitados por encima del tramo');
 
         // Y otro completo, a la baja, también.
         $item = $this->declareAges($item, [8, 5, 4]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(700, $this->gateDue($item));
     }
 
     public function test_an_age_without_a_product_does_not_freeze_the_money(): void
@@ -705,10 +716,10 @@ class MixedPartySurchargeTest extends TestCase
         // ficha no genera nada y las otras se tarifican, arriba y abajo.
         // Mutación: `derivationGoverns` sobre `isComplete()` → la bajada no se escribe, rojo.
         $item = $this->declareAges($this->reservation(3), [4, 0, 8]);
-        $this->assertSame(700, $this->financials($item)->aCobrarPuerta, 'el de 8 sí; el de 0 no genera nada');
+        $this->assertSame(700, $this->gateDue($item), 'el de 8 sí; el de 0 no genera nada');
 
         $item = $this->declareAges($item, [4, 0, 6]);
-        $this->assertSame(0, $this->financials($item)->aCobrarPuerta, 'el de 0 no congela la bajada');
+        $this->assertSame(0, $this->gateDue($item), 'el de 0 no congela la bajada');
         $this->assertCount(0, $this->surchargeLines($item));
     }
 
@@ -718,10 +729,10 @@ class MixedPartySurchargeTest extends TestCase
         // operador baja invitados y lo escrito se queda como está —congelado y dicho en la ficha—
         // hasta que el cliente complete (o el operador lo haga por él, T3).
         $item = $this->declareAges($this->reservation(4), [8, 9, 4, 5]);
-        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(1400, $this->gateDue($item));
 
         $item = $this->declareAges($item, [8, 9, 4, null]); // el cliente deja una en blanco: congelado
-        $this->assertSame(1400, $this->financials($item)->aCobrarPuerta);
+        $this->assertSame(1400, $this->gateDue($item));
 
         $staff = $this->staff();
         Notification::fake();
@@ -735,8 +746,9 @@ class MixedPartySurchargeTest extends TestCase
         );
 
         $this->assertFalse($outcome->isBlocked(), (string) $outcome->reason);
-        // Quedan las fichas de 8 y 9 (dos por encima), pero NO se recalcula: sigue lo escrito.
-        $this->assertSame(1400, $this->financials($item->fresh())->aCobrarPuerta, 'congelado también desde el panel');
+        // Quedan las fichas de 8 y 9 (dos por encima), pero NO se recalcula: sigue lo escrito (la
+        // línea, no el saldo: la bajada 4 → 2 la netea el libro contra lo que devuelve).
+        $this->assertSame(1400, $this->writtenOf($item->fresh())['cents'], 'congelado también desde el panel');
         Notification::assertNotSentTo($item->order->user, MixedPartySurchargeChanged::class);
     }
 
@@ -798,32 +810,18 @@ class MixedPartySurchargeTest extends TestCase
 
     /**
      * Las identidades del LIBRO por reserva (T3·3 de `specs/desglose-libro.md`): el libro cierra y
-     * Σ líneas de valor == Total. Sustituye a `assertChannelsClose` en los casos donde el modelo
-     * viejo ya no puede cerrar a propósito (un crédito por encima de la cobertura de puerta).
+     * Σ líneas de valor == Total. Es el contrato que el espejo no puede romper — y desde la T3·4 el
+     * único, porque el modelo de dos ejes (`assertChannelsClose`) se retiró con sus canales.
      */
     private function assertBookCloses(OrderItem $item, string $label): OrderBook
     {
-        $order = $item->order()->with(['items.ticketType', 'items.slot', 'adjustments', 'payments.refunds'])->first();
-        $book = OrderBook::forReservation($order, $order->items->firstWhere('id', $item->id));
+        $book = $this->book($item->fresh());
 
         $this->assertTrue($book->isConsistent, "$label · el libro cierra (I1–I4)");
         $this->assertSame($book->totalCents, $book->movementsSumCents(), "$label · I3 por reserva");
+        $this->assertGreaterThanOrEqual(0, $book->paidCents, "$label · lo pagado no puede ser negativo");
 
         return $book;
-    }
-
-    /** PAY-16 por reserva + ningún canal negativo — el contrato que el espejo no puede romper. */
-    private function assertChannelsClose(OrderItem $item, string $label): void
-    {
-        $rf = $this->financials($item->fresh());
-        $this->assertSame(
-            $rf->valor,
-            $rf->pagadoOnline + $rf->pendienteOnline + $rf->aCobrarPuerta + $rf->cobradoPuerta + $rf->compensado,
-            "$label · PAY-16 por reserva",
-        );
-        foreach (['pagadoOnline', 'pendienteOnline', 'aCobrarPuerta', 'cobradoPuerta', 'compensado'] as $canal) {
-            $this->assertGreaterThanOrEqual(0, $rf->{$canal}, "$label · «{$canal}» negativo");
-        }
     }
 
     public function test_a_cheaper_guest_writes_the_mirrored_discount(): void
@@ -844,11 +842,11 @@ class MixedPartySurchargeTest extends TestCase
         $this->assertSame(-700, (int) $adjustment->amount_cents);
         $this->assertTrue($adjustment->context['mixed_party']['credit']);
 
-        $rf = $this->financials($item);
-        $this->assertSame(4300, $rf->aCobrarPuerta, '50,00 − 7,00: en la puerta le pedirán 43,00');
-        $this->assertSame(2500 * 3 - 5000, $rf->pagadoOnline, 'la señal no se toca');
-        $this->assertSame(0, $rf->pendienteReembolso, 'un descuento de puerta no es deuda bancaria');
-        $this->assertChannelsClose($item, 'descuento con señal');
+        $rb = $this->book($item);
+        $this->assertSame(4300, $this->gateDue($item), '50,00 − 7,00: en la puerta le pedirán 43,00');
+        $this->assertSame(2500 * 3 - 5000, $rb->paidCents, 'la señal no se toca');
+        $this->assertSame(0, $rb->owedToCustomerCents(), 'un descuento de puerta no es deuda bancaria');
+        $this->assertBookCloses($item, 'descuento con señal');
         $this->assertSame(-700, $this->writtenOf($item)['cents'], 'el neto es el descuento');
     }
 
@@ -893,8 +891,8 @@ class MixedPartySurchargeTest extends TestCase
         $item = $this->declareAges($item, [8, 9, 10]);
 
         $this->assertNull($this->creditLine($item), 'ya nadie está por debajo: el descuento se retira');
-        $this->assertSame(5000, $this->financials($item)->aCobrarPuerta, 'la puerta vuelve a su señal');
-        $this->assertChannelsClose($item, 'edades de vuelta arriba');
+        $this->assertSame(5000, $this->gateDue($item), 'la puerta vuelve a su señal');
+        $this->assertBookCloses($item, 'edades de vuelta arriba');
     }
 
     public function test_a_blank_age_freezes_the_discount_too(): void
@@ -926,7 +924,7 @@ class MixedPartySurchargeTest extends TestCase
         $item = $this->declareAges($item, [8, 9, 4]); // el cliente toca el formulario
 
         $this->assertSame(700, $this->writtenOf($item)['credit_cents'], 'el silencio no lo toca');
-        $this->assertChannelsClose($item, 'silencio');
+        $this->assertBookCloses($item, 'silencio');
     }
 
     public function test_a_charge_and_a_discount_in_the_same_pass_are_both_written_entire(): void
@@ -953,14 +951,14 @@ class MixedPartySurchargeTest extends TestCase
 
     public function test_the_credit_context_never_carries_changes(): void
     {
-        // La trampa MEDIDA de §16.5.bis, ahora aseverada: con un `changes.quantity_change` en el
-        // context, `itemOriginalOnlineCents` «reconstruye» un original y el eje de caja inventa un
-        // «pendiente de devolución» fantasma. Mutación: meter `changes` → la segunda aserción cae.
+        // La trampa MEDIDA de §16.5.bis, ahora aseverada: un `changes.quantity_change` en el context
+        // convertiría la marca en una GESTIÓN a ojos de la etiqueta del libro, y la línea diría
+        // «Cantidad: … → …» en vez de explicar el descuento. Mutación: meter `changes` → cae.
         $item = $this->jumpParty([8, 9, 4], depositRemainderCents: 5000);
 
         $adjustment = OrderAdjustment::where('order_item_id', $this->creditLine($item)->id)->firstOrFail();
         $this->assertArrayNotHasKey('changes', $adjustment->context);
-        $this->assertSame(0, $this->financials($item)->pendienteReembolso, 'el descuento no inventa deuda bancaria');
+        $this->assertSame(0, $this->book($item)->owedToCustomerCents(), 'el descuento no inventa deuda bancaria');
     }
 
     public function test_without_the_credit_carrier_nothing_is_written(): void
@@ -971,8 +969,8 @@ class MixedPartySurchargeTest extends TestCase
         $item = $this->jumpParty([8, 9, 4], depositRemainderCents: 5000);
 
         $this->assertNull($this->creditLine($item), 'sin portador no se inventa una línea');
-        $this->assertSame(5000, $this->financials($item)->aCobrarPuerta, 'y lo demás queda como estaba');
-        $this->assertChannelsClose($item, 'sin portador del descuento');
+        $this->assertSame(5000, $this->gateDue($item), 'y lo demás queda como estaba');
+        $this->assertBookCloses($item, 'sin portador del descuento');
     }
 
     public function test_the_email_speaks_with_the_discount_voice(): void

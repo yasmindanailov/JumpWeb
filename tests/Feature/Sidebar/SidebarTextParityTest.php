@@ -174,9 +174,9 @@ class SidebarTextParityTest extends TestCase
     private const PLURALISED_BY_SERVER = [
         'entries_count', 'units_count',
         // Las líneas del suplemento —y desde la T4, las del DESCUENTO— de fiesta mixta
-        // (`specs/cumple-mixto.md` §15 y §24.5): las compone `OrderAdjustment::breakdownLabel()`
-        // con `trans_choice` y viajan YA RESUELTAS dentro de `gate_lines` del ledger. El cajón no
-        // las nombra — y esta guarda lo comprueba en la línea de abajo en vez de creérselo.
+        // (`specs/cumple-mixto.md` §15 y §24.5): las compone `MovementLabel::mixed()` con
+        // `trans_choice` y viajan YA RESUELTAS como movimientos del libro. El cajón no las nombra —
+        // y esta guarda lo comprueba en la línea de abajo en vez de creérselo.
         'gate_mixed_party_line', 'gate_mixed_party_line_named',
         'gate_mixed_party_credit_line', 'gate_mixed_party_credit_line_named',
     ];

@@ -149,10 +149,6 @@ class ModuleBoundariesTest extends TestCase
         ],
         'Booking/Models/OrderItem.php' => ['App\Domain\Payments\Models\PaymentRefund'],
         'Booking/Services/ManualOrderFulfiller.php' => ['App\Domain\Payments\Models\Payment'],
-        'Booking/Services/OrderFinancialSummary.php' => [
-            'App\Domain\Payments\Models\Payment',
-            'App\Domain\Payments\Models\PaymentRefund',
-        ],
         // `PaymentSettings` guarda la VENTANA DE RETENCIÓN del pedido: config de pago que la
         // oferta y el aforo necesitan para fijar `expires_at`. Candidata a contrato — es la
         // única de estas flechas que no es una relación ni un trait, sino una lectura de config.

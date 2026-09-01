@@ -325,7 +325,7 @@ class OrderCreator
      * Registra el REPARTO DE LA SEÑAL (#225 del origen; T1 del libro, `specs/desglose-libro.md`
      * §4.2) de una línea: la parte de su valor que NO se cobra online y se paga en el parque, como
      * fila `deposit_split`. Es un HECHO de nacimiento —no un movimiento—: de él sale, sin consultar
-     * el catálogo, lo que la línea aportó al cobro online (`GateBuckets::onlineAtBirth`). Atado al
+     * el catálogo, lo que la línea aportó al cobro online (`LineFacts::onlineAtBirth`). Atado al
      * item para que cancelarlo lo anule. `applied_by` = el cliente del pedido: en la compra no hay
      * operador y el FK `applied_by` no admite null; registra de forma fidedigna quién originó el cargo.
      */

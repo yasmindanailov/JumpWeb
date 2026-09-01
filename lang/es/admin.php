@@ -475,8 +475,6 @@ return [
         // #225 F3: toggle del desglose ↳ de «A cobrar en el parque» (oculto por defecto).
         'show_breakdown' => 'Ver desglose',
         'hide_breakdown' => 'Ocultar desglose',
-        // #225 (feedback clienta): conector que nombra el producto de un «Resto de la señal».
-        'deposit_for_product' => 'de :product',
         // Badge corto junto al título «Formulario de reserva» (sin duplicarlo); icono ✓/! coherente.
         'guest_badge_ok' => 'Completado',
         // Fiesta MIXTA (`docs/specs/cumple-mixto.md` §12). El suplemento se recalcula SOLO con las
@@ -1240,7 +1238,6 @@ return [
             'principal' => 'Producto principal',
             'addons' => 'Complementos',
             'total' => 'Total del producto',
-            'deposit_remainder_line' => 'Resto de la señal',
         ],
 
         // Sub-fase 7.2e.1bis5 (decisión #158, punto 4 feedback): bloque

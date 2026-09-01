@@ -957,9 +957,80 @@ reduction_gate_credit}`; `where_discounted` y `mixed_discount_total` con las dos
 sin la nota; `DEUDA` L4; `desglose-dinero-cliente.md` a HISTÓRICO; el guion headless
 (`VERIFICACION-E2E-CAJON.md`) y la receta de las 25 acciones sobre el corpus; el ojo del owner.
 
-## 7. Revisión y decisión
+### 6.3.6 · Diseño fino de la T3·4 (2026-09-01) — la retirada del modelo de dos ejes
 
-- 2026-09-01 · **Agente**: análisis empírico (§1.2–§1.4), prototipo de lectura y este diseño. Dos
+**Medido antes de diseñar** (sobre `8478277`): fuera de sus cuatro clases, el modelo viejo solo lo
+cita ya `Order` (42 citas: sus propios métodos de §4.7), `OrderBook` (7: `GateBuckets` para
+`birthValue`/`onlineAtBirth`) y comentarios en seis ficheros. De los 32 métodos de `Order` que §4.7
+lista, **21 no tienen ningún consumidor fuera del modelo viejo** y 8 sí (`onlineDueCents` 10 ·
+`isVoidedLeftoverItem` 10 · `itemRefundableRemainderCents` 8 · `refundableCapacityCents` 6 ·
+`itemRefundedCents` 4 · `birthValueCents` 2 · `unattributedRefundShareFor` 1 · `itemCollectedCents`
+1 = `OrderBook`). En tests, **25 ficheros** citan el modelo viejo o sus métodos (48 citas en
+`OrderFinancialInvariantsTest`, 27 en `EditMovementTest`, 25 + 25 en los dos tests de servicio,
+18 en `ItemPriceChangeReconstructionTest`, 14 en `ManageItemQuantityProductTest`…). Claves: el
+grupo `tickets.ledger.*` (23), `ledger_note.*` menos tres, `gate_change_line*` (3, solo las leía
+`breakdownLabel`), cuatro sueltas sin consumidor (`at_gate_caption_deposit`, `pendiente_devolucion`
+×2, `total_final`), `tickets.deposit_remainder_line` y las dos de `admin.*` que leía
+`Order::reservationGateLines`.
+
+**El diseño.**
+- **`LineFacts` sustituye a `GateBuckets`** —sin cascada—: por línea, `charged`, `depositSplit`
+  (Σ `deposit_split`), `editDelta` (Σ `edit` + `mixed`, con signo), `courtesy` (Σ `courtesy`);
+  `birthValue = charged − editDelta`, `onlineAtBirth = max(0, birthValue − depositSplit)` y
+  `onlineNow = max(0, charged − depositSplit)` (lo que la línea cobraría online HOY: es lo que
+  `onlineDueCents` suma). Los cubos `extraDue`/`depositRemainder`/`uncovered` mueren: eran el reparto
+  del modelo de dos ejes, y el libro deriva la liquidación del SALDO (§4.1).
+- **`Order` conserva ocho métodos y los reescribe sobre `LineFacts`**: `onlineDueCents` (Σ líneas
+  vivas `onlineNow`), `birthValueCents` (Σ `birthValue`, canceladas incluidas), `isVoidedLeftoverItem`
+  (cancelada ∧ `onlineAtBirth == 0` ∧ nada devuelto), `itemRefundableRemainderCents`
+  (`max(0, onlineAtBirth − devuelto)`, `PAY-09`), `unattributedRefundShareFor` (prorrata por
+  `onlineAtBirth`: es de donde salió el dinero devuelto), `itemRefundedCents`,
+  `refundableCapacityCents`, `collectedPaymentFacts`/`refundFacts`/`chargeMethod`. **Mueren** los 21
+  sin consumidor —incluidos `itemGateResolved`/`itemFinishedInPractice` (la regla D9 vive en
+  `OrderBook::reservation()` sobre `OrderItem::isFinishedInPractice()`; conservar un privado sin
+  consumidor sería código muerto, y §4.7 lo listaba entre lo conservado por si algo lo pedía)— y
+  `collectedPayment()`, que solo leía el modelo viejo.
+- **`OrderAdjustment::breakdownLabel()` muere entero**: su rama de edición ya vive en
+  `MovementLabel::edit` (`tickets.journal.*`) y su rama MIXTA se muda a `MovementLabel::mixed` con
+  las cuatro claves `tickets.gate_mixed_party_*` (que se quedan: son las frases del suplemento y
+  del descuento). `MixedPartySurcharge::written()['credit']['label']` la pide a `MovementLabel`.
+- **Mueren** `OrderLedger`, `OrderFinancialSummary`, `ReservationFinancials`, `GateBuckets`, sus dos
+  tests de servicio, el puente (`assertLedgerBridge`/`assertBookBridge`/`ledgerSnapshot`) y
+  `tests/Fixtures/ledger-bridge.json`; las claves de arriba en es/en/fr (+ `admin.*` en es/zh_CN);
+  la excepción de `OrderFinancialSummary` en `ModuleBoundariesTest`.
+- **`OrderFinancialInvariantsTest` pasa a ser la guarda de las identidades del LIBRO** sobre sus 13
+  escenarios (`assertBookCloses`: I1–I4 · I3 por reserva · H `Σ Saldo(r) == Saldo` · la columna de
+  reembolso == Σ filas), con cada escenario aseverando el Total, lo Pagado y el saldo del libro en
+  vez de los canales. `EditMovementTest` asevera `LineFacts` y el saldo; `ItemPriceChangeReconstructionTest`
+  asevera `onlineAtBirth` como HECHO y el saldo; los demás re-apuntan sus cifras al libro.
+- **`INVARIANTES`**: `PAY-16` y `PAY-17` se REESCRIBEN como las identidades del libro (I1–I3 y
+  I2/I4 + «un pedido cancelado no tiene valor vivo» + la prorrata sin fuga), `PAY-19` pierde la nota
+  transitoria y `PAY-10` deja de citar `itemOriginalOnlineCents`. `desglose-dinero-cliente.md` pasa
+  a HISTÓRICO con cabecera que apunta aquí (su `L4` —«compensación como única línea del valor»— es
+  la cortesía como movimiento del libro: cerrado por construcción).
+
+**Decisiones derivadas** (el owner puede vetar cualquiera):
+- **D-T3·23** `onlineDueCents` = Σ líneas vivas `max(0, fila − reparto)`. Difiere del viejo (que
+  restaba también el cubo de ediciones) SOLO en un pedido sin cobrar con una edición posterior —
+  un estado que el panel no produce (editar exige un pedido pagado)— y es lo que el checkout
+  cobra al nacer, que es su único uso real.
+- **D-T3·24** La prorrata de un reembolso sin línea se hace por `onlineAtBirth` (lo que cada línea
+  APORTÓ al cobro), no por «lo cobrado ahora» tras las bajadas: el dinero devuelto salió del cobro,
+  y una línea reducida no aportó menos por reducirse. Determinista y sin fuga, como antes.
+- **D-T3·25** `itemGateResolved` no sobrevive como privado sin consumidor: la regla D9 tiene UN
+  sitio (`OrderBook::reservation()`), y ésa es la que `OrderBookTest` vigila.
+
+**Guardas y mutaciones previstas** (se ejecutan en §6.3.7):
+
+| Guarda | Mutación |
+|---|---|
+| `LineFactsTest` (nuevo): `birthValue`, `onlineAtBirth`, `onlineNow`, con y sin reparto, con edición y mixto, sin cascada | `birthValue` ignora `editDelta` · `onlineAtBirth` ignora `depositSplit` |
+| `OrderFinancialInvariantsTest` → `assertBookCloses` en los 13 escenarios | romper I3 en el compositor (saltar una cortesía) |
+| `EditMovementTest` (A · B · C sobre `LineFacts` + el saldo) | escribir la bajada a medias |
+| `Order` conservados: `isVoidedLeftoverItem` sobre `onlineAtBirth`; `itemRefundableRemainderCents`; la prorrata (`OrderBookTest`/`OrderFinancialInvariantsTest`: el reembolso total atribuido sin fuga) | invertir el predicado · repartir a partes iguales |
+| Arquitectura: `git grep` de las cuatro clases y de los 21 métodos en `app/` → 0 (`LedgerSingleSourceTest::$viejo` sigue vigilando las superficies) | — |
+
+
   preguntas al owner —el descuento mixto en el saldo · el reembolso manual se queda— contestadas
   con *«no quiero dejar deuda, profesional sin ambigüedades»* → D4 y D5.
 - 2026-09-01 · **Owner**: *«Perfecto, validado, procede con T1»* → diseño ✅.

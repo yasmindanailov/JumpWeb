@@ -3,11 +3,14 @@
 namespace Tests\Feature\Admin\Orders;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -110,8 +113,7 @@ class RefundItemCustomAmountTest extends TestCase
         [$order, $item] = $this->paidOrderOn($this->saturday);   // 40,00 cobrados
 
         $this->moveTo($order, $item, $this->monday);             // re-tarifica a 30,00
-        $summary = $this->fresh($order)->financialSummary();
-        $this->assertSame(1000, $summary->pendienteDevolucion(), 'fixture: la bajada deja 10,00 a devolver');
+        $this->assertSame(1000, OrderBook::forOrder($this->fresh($order))->owedToCustomerCents(), 'fixture: la bajada deja 10,00 a devolver');
 
         $payment = $order->payments()->firstOrFail();
         Http::fake([
@@ -146,12 +148,14 @@ class RefundItemCustomAmountTest extends TestCase
         $this->assertSame(1000, (int) $refund->amount_cents, 'se devuelve el importe ELEGIDO');
         $this->assertFalse($item->fresh()->isCancelled(), 'reembolsar no cancela (decisión #157)');
 
-        // El ledger queda LIMPIO: se devolvió la deuda exacta, ni pendiente ni regalo.
-        $summary = $this->fresh($order)->financialSummary();
-        $this->assertSame(3000, $summary->totalFinalNeto());
-        $this->assertSame(0, $summary->pendienteDevolucion(), 'la deuda quedó saldada');
-        $this->assertSame(0, $summary->compensado(), 'y NO se regaló nada — el defecto D5 era exactamente esto');
-        $this->assertSame(1000, $summary->effectiveRefunded());
+        // El libro queda LIMPIO: se devolvió la deuda exacta, ni pendiente ni regalo.
+        $book = OrderBook::forOrder($this->fresh($order));
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(3000, $book->totalCents);
+        $this->assertSame(3000, $book->paidCents, '40,00 cobrados − 10,00 devueltos');
+        $this->assertSame(Balance::KIND_SETTLED, $book->balance->kind, 'la deuda quedó saldada');
+        $this->assertSame(0, OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->count(),
+            'y NO se regaló nada — el defecto D5 era exactamente esto');
 
         Notification::assertSentTo(
             $order->user,

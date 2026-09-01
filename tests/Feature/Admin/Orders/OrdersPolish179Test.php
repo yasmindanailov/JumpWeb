@@ -8,6 +8,8 @@ use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -22,7 +24,7 @@ use Tests\TestCase;
 
 /**
  * Pulidos #179 sobre la lista/detalle de pedidos:
- *  - #4 «Pagado» real: `Order::amountCollectedCents()` + agregado de la tabla.
+ *  - #4 «Pagado» real: lo dice el LIBRO (`OrderBook::paidCents`, T3·4) + agregado de la tabla.
  *  - #3 fila clicable al detalle (recordUrl) + columna «Pagado» en la lista.
  *  - #1 icono de calendario en la card del producto → día de la reserva, y la
  *    página del calendario respeta `?date=`.
@@ -100,48 +102,58 @@ class OrdersPolish179Test extends TestCase
         ]);
     }
 
-    // ─── #4: amountCollectedCents (por pedido) ────────────────────────────
+    // ─── #4: lo PAGADO del pedido, dicho por el libro (T3·4: `OrderBook::paidCents`) ────────
+    //
+    // (El «nunca negativo» del helper retirado no tiene caso aquí: devolver más de lo cobrado no lo
+    // produce ningún flujo —`PAY-09` lo impide— y un clamp que lo tapara escondería un dato roto.)
 
-    public function test_collected_is_full_amount_for_paid(): void
+    private function book(Order $order): OrderBook
     {
-        $order = $this->order('JJ-COL01');
-        $this->payment($order, 1000);
-
-        $this->assertSame(1000, $order->fresh()->load('payments.refunds')->amountCollectedCents());
+        return OrderBook::forOrder($order->fresh()->load('payments.refunds', 'adjustments', 'items.slot', 'items.ticketType'));
     }
 
-    public function test_collected_is_net_of_succeeded_refunds(): void
+    public function test_paid_is_the_full_amount_for_a_paid_order(): void
+    {
+        $order = $this->order('JJ-COL01');
+        $this->itemWithSlot($order, now()->addDays(5)->toDateString());
+        $this->payment($order, 1000);
+
+        $book = $this->book($order);
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(1000, $book->paidCents);
+    }
+
+    public function test_paid_is_net_of_succeeded_refunds(): void
     {
         $order = $this->order('JJ-COL02');
+        $this->itemWithSlot($order, now()->addDays(5)->toDateString());
         $payment = $this->payment($order, 1000);
         $this->refund($payment, 300); // succeeded
         $this->refund($payment, 999, PaymentRefund::STATUS_FAILED); // no cuenta
+        $order->forceFill(['refund_amount_cents' => 300, 'refunded_at' => now()])->save(); // I4: la columna == Σ con éxito
 
-        $this->assertSame(700, $order->fresh()->load('payments.refunds')->amountCollectedCents());
+        $book = $this->book($order);
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(700, $book->paidCents);
     }
 
-    public function test_collected_is_zero_without_successful_payment(): void
+    public function test_paid_is_zero_without_a_successful_payment(): void
     {
         $order = $this->order('JJ-COL03', Order::STATUS_PENDING);
+        $this->itemWithSlot($order, now()->addDays(5)->toDateString());
         $this->payment($order, 1000, Payment::STATUS_PENDING); // no pagado
 
-        $this->assertSame(0, $order->fresh()->load('payments.refunds')->amountCollectedCents());
+        $book = $this->book($order);
+        $this->assertSame(0, $book->paidCents);
+        $this->assertSame(Balance::KIND_PAY_ONLINE, $book->balance->kind);
     }
 
-    public function test_collected_never_negative(): void
-    {
-        $order = $this->order('JJ-COL04');
-        $payment = $this->payment($order, 1000);
-        $this->refund($payment, 5000); // refund absurdo > cobrado
+    // ─── #2 (pulido): el Total de la lista es el Total del libro ──────────
 
-        $this->assertSame(0, $order->fresh()->load('payments.refunds')->amountCollectedCents());
-    }
-
-    // ─── #2 (pulido): el Total refleja el "Total con cambios" ─────────────
-
-    public function test_total_with_changes_includes_extra_due_and_refunds(): void
+    public function test_the_total_of_the_book_includes_the_gate_charge(): void
     {
         $order = $this->order('JJ-TWC1', Order::STATUS_PAID, 33380); // 333,80 €
+        $this->payment($order, 33380);
         $principal = $this->itemWithSlot($order, now()->addDays(5)->toDateString());
         // Complemento añadido en gestión, a cobrar en puerta (+40,00). ⚠️ Atado a SU línea, como
         // hace el editor: un hecho de dinero sin línea no existe en el producto (T1 del libro).
@@ -157,8 +169,11 @@ class OrdersPolish179Test extends TestCase
             'applied_by' => User::factory()->create()->id,
         ]);
 
-        // 33380 + 4000 − 0 = 37380.
-        $this->assertSame(37380, $order->fresh()->load('adjustments', 'items')->totalWithChangesCents());
+        // 33380 + 4000 = 37380; pagados, 33380.
+        $book = $this->book($order);
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(37380, $book->totalCents);
+        $this->assertSame(33380, $book->paidCents);
     }
 
     // ─── #2 + #3: la lista muestra el Total REAL y enlaza al detalle ───────

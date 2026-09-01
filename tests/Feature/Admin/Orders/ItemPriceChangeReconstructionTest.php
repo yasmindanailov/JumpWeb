@@ -9,6 +9,9 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\LineFacts;
+use App\Domain\Booking\Services\Movement;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -33,7 +36,8 @@ use Tests\TestCase;
  * (`DECISIONES #150`).
  *
  * ⚠️⚠️ El tronco: `PAY-18` hizo que mover la fecha RE-TARIFIQUE, y la reconstrucción de lo cobrado
- * original (`itemOriginalOnlineCents`) solo sabía hacerlo por CANTIDAD — multiplicando además por
+ * original (entonces `itemOriginalOnlineCents`; hoy un HECHO, `LineFacts::onlineAtBirth`, desde la
+ * T1 del libro) solo sabía hacerlo por CANTIDAD — multiplicando además por
  * el `unit_price` ACTUAL, que la re-tarificación ya había sobrescrito. Medido en `#149` con los
  * números del owner: pagó 40,00 → movida a día de 30,00 → cancelada; se le debían 40,00, el tope
  * por línea decía 30,00 y **10,00 quedaban ATRAPADOS sin ninguna vía de panel** (el reembolso del
@@ -136,13 +140,12 @@ class ItemPriceChangeReconstructionTest extends TestCase
 
         // D4: lo que se COBRÓ sale de los HECHOS (fila − delta), no del catálogo vivo.
         $fresh = $this->fresh($order);
-        $this->assertSame(4000, $fresh->itemOriginalOnlineCents($item->fresh()), 'se cobraron 40,00 online');
+        $this->assertSame(4000, LineFacts::forItem($fresh, $item->fresh())->onlineAtBirth(), 'se cobraron 40,00 online');
         $this->assertSame(4000, $fresh->itemRefundableRemainderCents($item->fresh()), 'y ese es el tope de la línea');
         $this->assertSame(
-            1600, $fresh->itemPendingRefundCents($item->fresh()),
-            'el sobre-cobro de la línea AFLORA: 40,00 cobrados − 24,00 de valor vivo',
+            1600, OrderBook::forOrder($fresh)->owedToCustomerCents(),
+            'el sobre-cobro AFLORA en el libro: 40,00 cobrados − 24,00 de valor vivo',
         );
-        $this->assertSame(1600, $fresh->financialSummary()->pendienteDevolucion());
     }
 
     /** CAMINO «bajar cantidad» (regresión): la conducta de siempre no se mueve. */
@@ -161,8 +164,8 @@ class ItemPriceChangeReconstructionTest extends TestCase
         $this->assertArrayNotHasKey('unit_price_change', $changes, 'sin re-tarificación no hay cambio de precio');
 
         $fresh = $this->fresh($order);
-        $this->assertSame(4000, $fresh->itemOriginalOnlineCents($item->fresh()));
-        $this->assertSame(2000, $fresh->itemPendingRefundCents($item->fresh()));
+        $this->assertSame(4000, LineFacts::forItem($fresh, $item->fresh())->onlineAtBirth());
+        $this->assertSame(2000, OrderBook::forOrder($fresh)->owedToCustomerCents());
     }
 
     /** CAMINO «las dos a la vez»: bajar cantidad Y moverse a un día más barato en UNA edición. */
@@ -173,13 +176,13 @@ class ItemPriceChangeReconstructionTest extends TestCase
         $this->moveTo($order, $item, $this->monday, qty: 1);             // 1 × 12,00 = 12,00 de valor
 
         $fresh = $this->fresh($order);
-        $this->assertSame(1200, $fresh->financialSummary()->totalFinalNeto());
+        $book = OrderBook::forOrder($fresh);
+        $this->assertSame(1200, $book->totalCents);
         $this->assertSame(
-            4000, $fresh->itemOriginalOnlineCents($item->fresh()),
+            4000, LineFacts::forItem($fresh, $item->fresh())->onlineAtBirth(),
             'cantidad original (2) × precio original (20,00) — ni el qty nuevo ni el precio nuevo',
         );
-        $this->assertSame(2800, $fresh->itemPendingRefundCents($item->fresh()));
-        $this->assertSame(2800, $fresh->financialSummary()->pendienteDevolucion());
+        $this->assertSame(2800, $book->owedToCustomerCents());
     }
 
     /**
@@ -200,8 +203,8 @@ class ItemPriceChangeReconstructionTest extends TestCase
 
         $fresh = $this->fresh($order);
         $this->assertSame(
-            4000, $fresh->itemOriginalOnlineCents($item->fresh()),
-            'el original es el PRIMER `old` de su clase: 2 × 20,00',
+            4000, LineFacts::forItem($fresh, $item->fresh())->onlineAtBirth(),
+            'la fila (40,00) menos los dos deltas (−16,00 y +16,00): 2 × 20,00, sin elegir ningún `old`',
         );
     }
 
@@ -225,7 +228,7 @@ class ItemPriceChangeReconstructionTest extends TestCase
             ->callAction('cancelItem', data: [], arguments: ['item' => $item->id])
             ->assertHasNoActionErrors();
         $fresh = $this->fresh($order);
-        $this->assertSame(4000, $fresh->financialSummary()->pendienteDevolucion(), 'cancelada la reserva: se debe TODO lo cobrado');
+        $this->assertSame(4000, OrderBook::forOrder($fresh)->owedToCustomerCents(), 'cancelada la reserva: se debe TODO lo cobrado');
         $this->assertSame(
             4000, $fresh->itemRefundableRemainderCents($item->fresh()),
             'y el tope de la línea ALCANZA — antes se quedaba en el precio re-tarificado',
@@ -252,7 +255,7 @@ class ItemPriceChangeReconstructionTest extends TestCase
         $this->assertSame(PaymentRefund::STATUS_SUCCEEDED, $refund->status);
         $this->assertSame(4000, (int) $refund->amount_cents, 'sale TODO el dinero del cliente, no una parte');
         $this->assertSame(
-            0, $this->fresh($order)->financialSummary()->pendienteDevolucion(),
+            0, OrderBook::forOrder($this->fresh($order))->owedToCustomerCents(),
             'y no queda NADA atrapado — el callejón está cerrado',
         );
     }
@@ -277,7 +280,7 @@ class ItemPriceChangeReconstructionTest extends TestCase
             ->callAction('cancel');
         $fresh = $this->fresh($order);
         $this->assertSame(Order::STATUS_CANCELLED, $fresh->status);
-        $this->assertSame(4000, $fresh->financialSummary()->pendienteDevolucion());
+        $this->assertSame(4000, OrderBook::forOrder($fresh)->owedToCustomerCents());
 
         // La LÍNEA se abre; el TOTAL sigue vetado (devolvería el pago entero sin preguntar).
         $this->assertNull($fresh->refundItemBlockedReason($item->fresh()));
@@ -303,8 +306,8 @@ class ItemPriceChangeReconstructionTest extends TestCase
         $refund = PaymentRefund::where('order_item_id', $item->id)->latest()->firstOrFail();
         $this->assertSame(PaymentRefund::STATUS_SUCCEEDED, $refund->status);
         $this->assertSame(4000, (int) $refund->amount_cents, 'sale TODO el dinero del cliente');
-        $this->assertSame(0, $this->fresh($order)->financialSummary()->pendienteDevolucion(),
-            'y el «pendiente de devolverte» del cliente queda a CERO');
+        $this->assertSame(0, OrderBook::forOrder($this->fresh($order))->owedToCustomerCents(),
+            'y el saldo «a devolver» del cliente queda a CERO');
     }
 
     /** Y el candado que la apertura NO afloja: un cancelado SIN deuda sigue sin ofrecer nada. */
@@ -326,7 +329,7 @@ class ItemPriceChangeReconstructionTest extends TestCase
 
         $fresh = $this->fresh($order);
         $this->assertSame(Order::STATUS_CANCELLED, $fresh->status);
-        $this->assertSame(0, $fresh->financialSummary()->pendienteDevolucion());
+        $this->assertSame(0, OrderBook::forOrder($fresh)->owedToCustomerCents());
         $this->assertSame('already_fully_refunded', $fresh->refundItemBlockedReason($item->fresh()));
     }
 
@@ -341,29 +344,38 @@ class ItemPriceChangeReconstructionTest extends TestCase
 
         $this->moveTo($order, $item, $this->saturday);                   // +5 × 8,00 = 40,00 (múltiplo de 20,00)
 
-        $lines = $this->fresh($order)->gateBreakdownLines();
-        $this->assertCount(1, $lines);
-        $this->assertSame(4000, (int) $lines[0]['amount']);
+        $edits = $this->editMovements($order);
+        $this->assertCount(1, $edits);
+        $this->assertSame(4000, $edits[0]->amountCents);
         $adj = $this->fresh($order)->adjustments()->where('amount_cents', '>', 0)->latest('id')->firstOrFail();
         $this->assertSame(
-            __('tickets.gate_change_line_slot', [
+            __('tickets.journal.slot_change', [
                 'when' => $adj->context['changes']['slot_change']['new'],
             ]),
-            $lines[0]['label'],
+            $edits[0]->label,
             'era «+2 producto» — cantidad INVENTADA por divisibilidad — y la leía el cliente',
         );
     }
 
-    /** Control del sexto sitio: una subida REAL de cantidad conserva su «+N producto». */
+    /** Control del sexto sitio: una subida REAL de cantidad se narra como cantidad. */
     public function test_a_real_quantity_increase_still_labels_as_quantity(): void
     {
         [$order, $item] = $this->paidOrderOn($this->monday, qty: 1);
 
         $this->editQty($order, $item, 3);                                // +2 × 12,00 en puerta
 
-        $lines = $this->fresh($order)->gateBreakdownLines();
-        $this->assertCount(1, $lines);
-        $this->assertSame('+2 Jump 1h', $lines[0]['label']);
+        $edits = $this->editMovements($order);
+        $this->assertCount(1, $edits);
+        $this->assertSame(__('tickets.journal.quantity', ['old' => 1, 'new' => 3]), $edits[0]->label);
+    }
+
+    /** @return list<Movement> las líneas de GESTIÓN del libro del pedido, en su orden */
+    private function editMovements(Order $order): array
+    {
+        return array_values(array_filter(
+            OrderBook::forOrder($this->fresh($order))->movements,
+            fn (Movement $m): bool => $m->kind === Movement::KIND_EDIT,
+        ));
     }
 
     /** D2: el toast de una bajada por FECHA ya no dice «unidades canceladas». */

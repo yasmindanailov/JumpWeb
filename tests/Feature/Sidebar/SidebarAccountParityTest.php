@@ -494,10 +494,10 @@ class SidebarAccountParityTest extends TestCase
             'quantity' => 2, 'unit_price' => 400, 'seats' => 0,
         ]);
 
-        // ⚠️ **La señal NO es un campo del pedido: es un AJUSTE `deposit_remainder` por línea.** Lo
-        // que queda por cobrar en puerta se conoce desde la creación (`#225`) y vive ahí, de modo que
-        // `ReservationFinancials` pueda restarlo de lo cobrado online. Montarlo de otra forma daría
-        // un pedido que en producción no existe, y la paridad probaría un caso imaginario.
+        // ⚠️ **La señal NO es un campo del pedido: es un HECHO `deposit_split` por línea.** Lo que
+        // queda por cobrar en el parque se conoce desde la creación (`#225`) y vive ahí, de modo que
+        // el libro (`LineFacts::onlineAtBirth`) pueda restarlo de lo cobrado online. Montarlo de otra
+        // forma daría un pedido que en producción no existe, y la paridad probaría un caso imaginario.
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $line->id,
             'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,

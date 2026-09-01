@@ -112,7 +112,7 @@ class ItemEditPricing
         $addQuantities = [];
         $addFreeQuantities = [];
         // Cargos por complemento, cada uno ATADO a su child (no al principal): así, al
-        // cancelar un complemento, su extra_due se anula solo (OrderFinancialSummary).
+        // cancelar un complemento, su cargo se anula solo (el libro retira el valor del child).
         $charges = [];
 
         foreach ($edits as $edit) {

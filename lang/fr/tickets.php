@@ -155,69 +155,18 @@ return [
     'paid_online_confirmed' => 'Payé en ligne',
     'pending_at_park' => 'En attente au parc',
     'subtotal' => 'Sous-total',
-    'at_gate' => 'À régler au parc',
-    'show_breakdown' => 'Voir le détail',
-    'hide_breakdown' => 'Masquer le détail',
-    'deposit_for_product' => 'pour :product',
-    'at_gate_caption' => 'Différence due aux changements de la commande. À régler à l’accueil à l’arrivée.',
-    // #225 (acompte) : le client n’a payé que l’acompte en ligne ; le reste est réglé au parc.
-    'deposit_paid_online' => 'Payé en ligne',
-    // #225 F2 : ligne ↳ du solde de l’acompte dans « À régler au parc ».
-    'deposit_remainder_line' => 'Solde restant',
-    // ⚠️ Frais à l'accueil issus d'une MODIFICATION, quand ni « +4 X » ni « Changement vers X » ne
-    // s'appliquent. C'était le nom du produit tout seul, qui ne disait pas POURQUOI (`#131`).
-    'gate_change_line' => 'Différence liée aux changements sur :product',
-    // `#154` : les libellés spécifiques des frais à l'accueil vivaient dans `admin.*` (ES
-    // uniquement) alors que le CLIENT les consomme — un client FR recevait la clé brute.
-    'gate_change_line_slot' => 'Nouvelle date : :when',
-    'gate_change_line_product' => 'Remplacé par :name',
-    'at_gate_caption_deposit' => 'Solde à régler à l’accueil à l’arrivée. L’acompte a déjà été réglé en ligne.',
-    'pendiente_devolucion' => 'Remboursement en attente',
-    'pendiente_devolucion_caption' => 'Vous avez trop payé suite à un changement de la commande (un produit a été réduit ou retiré) ; le remboursement est en attente.',
-    'total_final' => 'Total final',
-    // ⚠️⚠️ LA FRASE que explica el estado del pedido (`DECISIONES #127`). Un número no explica:
-    // el encargo era que el cliente entienda su situación ante CUALQUIER situación. La compone el
-    // DOMINIO (`Booking\Services\OrderLedger`), que es quien sabe qué caso es.
-    // ⚠️⚠️ Los rótulos del DESGLOSE, en DOS BLOQUES que no se mezclan (`DECISIONES #127`):
-    // arriba lo que vale y por qué canal se paga, abajo qué ha pasado con su dinero. Hasta la
-    // tanda B, «Devuelto» y «Pendiente de devolución» se pintaban como restas dentro de la
-    // columna del valor —de la que NO restan— y por eso la columna dejaba de leerse.
-    'ledger' => [
-        'value_title' => 'Ce que vaut cette commande',
-        'value_total' => 'Valeur de la commande',
-        'paid_online' => 'Payé en ligne',
-        'pending_online' => 'Reste à payer en ligne',
-        // T5 · D9 : le compte est soldé quand la visite passe — aucun encaissement n'est enregistré.
-        'paid_at_gate' => 'Réglé au parc',
-        'pending_at_gate' => 'Reste à payer au parc',
-        'compensated' => 'Remboursé en geste commercial',
-        'paid_desk' => "Payé à l'accueil",
-        'cash_title' => 'Votre argent',
-        'cash_caption' => "C'est l'argent que nous vous avons déjà encaissé pour cette commande. Vous pouvez le comparer avec votre relevé bancaire.",
-        'charged_online' => 'Encaissé en ligne',
-        'charged_desk' => "Encaissé à l'accueil",
-        'refunded' => 'Déjà remboursé',
-        'pending_refund' => 'Reste à vous rembourser',
-        'invoiced' => 'Montant à la réservation',
-        // ⚠️⚠️ DIRECCIÓN E IMPORTE, no un número mudo (`L6`, `DECISIONES #133`). Las elige el
-        // DOMINIO, y `:difference` es la DIFERENCIA, no el valor.
-        'invoiced_hint_more' => 'Au moment de la réservation, le montant facturé était de :invoiced. La commande a changé ensuite et vaut désormais :difference de plus.',
-        'invoiced_hint_less' => 'Au moment de la réservation, le montant facturé était de :invoiced. La commande a changé ensuite et vaut désormais :difference de moins.',
-    ],
+    // ▶ Les libellés du modèle à deux axes (`ledger.*`, les lignes de frais à l'accueil,
+    // « Remboursement en attente », « Total final »…) vivaient ici jusqu'à la T3·4 du livre
+    // (`DECISIONES #313`) : le livre utilise `journal.*` à la place.
+    // ⚠️⚠️ LA PHRASE qui explique l'état de la commande (`DECISIONES #127`) : composée par le
+    // DOMAINE (`Booking\Services\OrderBook`), qui est le seul à savoir de quel cas il s'agit.
     'ledger_note' => [
-        // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser
-        // cierta (`DECISIONES #132`).
+        // ⚠️⚠️ `under_review` PRIME sur le reste : si le livre ne ferme pas, aucune autre phrase ne
+        // peut être vraie (`DECISIONES #132`). Les autres classes de solde n'ont pas de phrase : le
+        // livre les dit avec leur propre ligne (`journal.balance_*`).
         'under_review' => "Nous vérifions le détail de cette commande. Le montant qui t'a été encaissé est celui indiqué ci-dessous ; en cas de doute, écris-nous et nous le regarderons ensemble.",
-        'owing' => 'Nous devons encore vous rembourser :amount.',
-        'cancelled_owing' => 'Votre réservation a été annulée le :date. Nous devons encore vous rembourser :amount.',
-        'cancelled_refunded' => 'Votre réservation a été annulée et nous vous avons remboursé :amount le :date.',
-        'cancelled' => 'Votre réservation a été annulée le :date.',
         'expired' => 'Cette réservation a expiré avant la fin du paiement. Aucun montant ne vous a été prélevé.',
         'pending_payment' => "Le paiement de :amount n'est pas encore terminé. Votre place est retenue jusqu'à expiration.",
-        'compensated' => 'Nous vous avons remboursé :amount et vous gardez votre réservation : il ne reste rien à payer.',
-        'refunded_pay_in_person' => "Nous vous avons remboursé :amount car vous réglerez à l'accueil à votre arrivée.",
-        'refunded_still_booked' => 'Nous vous avons remboursé :amount et votre réservation reste valable.',
-        'pending_at_gate' => "Il vous reste :amount à régler à l'accueil à votre arrivée.",
     ],
     // Le LIVRE de la commande (`specs/desglose-libro.md` §4.3, `DECISIONES #305`) : une ligne par
     // action, avec son signe et sa date ; le total est la somme ; le solde se règle au parc. Composé

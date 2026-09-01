@@ -25,10 +25,12 @@ use Tests\TestCase;
  *  4. **El barrido ANCHO**: toda clave `tickets.*` que cite el dominio, no solo las tres de hoy. Es
  *     lo que cazará la PRÓXIMA fuga.
  *
- * ▶ **De dónde viene todo esto** (`#156`): `OrderAdjustment::breakdownLabel()` lo comparten el panel
- * (`Order::reservationGateLines()`) y el CLIENTE (`Order::gateBreakdownLines()`, «Mis pedidos»), y
- * traducía dos de sus ramas desde `admin.*`. El fichero `admin.php` **solo existe en español**, así
- * que un cliente EN/FR recibía la clave literal en su desglose de dinero. Lo arregló `#154`.
+ * ▶ **De dónde viene todo esto** (`#156`): la etiqueta de un cargo de puerta la compartían el panel
+ * y el CLIENTE («Mis pedidos»), y su compositor traducía dos ramas desde `admin.*`. El fichero
+ * `admin.php` **solo existe en español**, así que un cliente EN/FR recibía la clave literal en su
+ * desglose de dinero. Lo arregló `#154`. Desde la T3·4 del libro (`DECISIONES #313`) el compositor
+ * único es `Booking\Services\MovementLabel` —una etiqueta por gestión, para las nueve superficies—
+ * y es a él a quien se le mira aquí.
  * ⚠️ Y la razón de que `Lang::has()` lleve `fallback: false` es que **sin apagarlo, `en` y `fr`
  * heredan el español y la comprobación diría que todo está bien**.
  */
@@ -37,15 +39,20 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
     /** Los tres idiomas que sirve la web pública. El panel es ES y no entra aquí. */
     private const CLIENT_LOCALES = ['es', 'en', 'fr'];
 
-    /** Las etiquetas del cargo de puerta que el CLIENTE lee en su desglose. */
-    private const GATE_LABELS = [
-        'tickets.gate_change_line',
-        'tickets.gate_change_line_slot',
-        'tickets.gate_change_line_product',
+    /**
+     * Las frases de fiesta MIXTA que el CLIENTE lee en su libro (`MovementLabel::mixed`): el
+     * suplemento y el descuento, con y sin el nombre del pack destino. Son `trans_choice`, y la
+     * plantilla plural entera es lo que tiene que decir cosas distintas por idioma.
+     */
+    private const MIXED_PARTY_LABELS = [
+        'tickets.gate_mixed_party_line',
+        'tickets.gate_mixed_party_line_named',
+        'tickets.gate_mixed_party_credit_line',
+        'tickets.gate_mixed_party_credit_line_named',
     ];
 
     /** El fichero que comparten panel y cliente. Su contenido no puede citar `admin.*`. */
-    private const SHARED_LABEL_SOURCE = 'app/Domain/Booking/Models/OrderAdjustment.php';
+    private const SHARED_LABEL_SOURCE = 'app/Domain/Booking/Services/MovementLabel.php';
 
     /**
      * Las etiquetas del LIBRO (`specs/desglose-libro.md` §4.3, T2 · guarda I): las compone
@@ -109,8 +116,8 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
             );
 
             $this->assertTrue(
-                Lang::has('tickets.gate_change_line', $locale, false),
-                "`tickets.gate_change_line` no existe en «{$locale}» — o el instrumento no ve nada."
+                Lang::has('tickets.journal.booking', $locale, false),
+                "`tickets.journal.booking` no existe en «{$locale}» — o el instrumento no ve nada."
             );
         }
     }
@@ -123,7 +130,7 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
      */
     public function test_each_locale_says_something_different(): void
     {
-        foreach (self::GATE_LABELS as $key) {
+        foreach (self::MIXED_PARTY_LABELS as $key) {
             $rendered = [];
 
             foreach (self::CLIENT_LOCALES as $locale) {
@@ -182,16 +189,16 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
         $path = base_path(self::SHARED_LABEL_SOURCE);
 
         $this->assertFileExists($path,
-            'Se movió `OrderAdjustment`: actualiza `SHARED_LABEL_SOURCE` o esta guarda deja de mirar nada.');
+            'Se movió `MovementLabel`: actualiza `SHARED_LABEL_SOURCE` o esta guarda deja de mirar nada.');
 
         $source = (string) file_get_contents($path);
 
-        $this->assertMatchesRegularExpression("/__\(\s*['\"]tickets\./", $source,
-            'El helper compartido ya no traduce desde `tickets.*`: o cambió de espacio, o esta guarda quedó ciega.');
+        $this->assertMatchesRegularExpression("/(?:__|trans_choice)\(\s*['\"]tickets\./", $source,
+            'El compositor compartido ya no traduce desde `tickets.*`: o cambió de espacio, o esta guarda quedó ciega.');
 
-        $this->assertDoesNotMatchRegularExpression("/__\(\s*['\"]admin\./", $source,
+        $this->assertDoesNotMatchRegularExpression("/(?:__|trans_choice)\(\s*['\"]admin\./", $source,
             self::SHARED_LABEL_SOURCE.' vuelve a traducir desde `admin.*`, que solo existe en español. '
-            .'Lo lee también el CLIENTE (`Order::gateBreakdownLines()`), así que en EN/FR saldría la clave en crudo.');
+            .'Lo lee también el CLIENTE (el libro de «Mis pedidos» y la API), así que en EN/FR saldría la clave en crudo.');
     }
 
     /**
@@ -277,12 +284,8 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
     public function test_the_settled_gate_labels_do_not_claim_an_unrecorded_payment(): void
     {
         $labels = [
-            ['tickets.ledger.paid_at_gate', 'es', ['Pagado', 'Cobrado']],
-            ['tickets.ledger.paid_at_gate', 'en', ['Paid', 'Collected']],
-            ['tickets.ledger.paid_at_gate', 'fr', ['Payé']],
-            // (Las dos claves del panel que decían «Liquidado» murieron con la T3·2: el panel pinta
-            // `tickets.journal.gate`, vigilada arriba.)
-            // T2 del libro: la línea `gate` hereda la regla — y la conserva cuando `ledger.*` se retire (T3).
+            // (`tickets.ledger.paid_at_gate` y las dos claves del panel que decían «Liquidado» murieron
+            // con el modelo de dos ejes —T3·2 y T3·4—: la línea del libro hereda la regla.)
             ['tickets.journal.gate', 'es', ['Pagado', 'Cobrado']],
             ['tickets.journal.gate', 'en', ['Paid', 'Collected']],
             ['tickets.journal.gate', 'fr', ['Payé']],

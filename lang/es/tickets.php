@@ -182,87 +182,19 @@ return [
     'pending_at_park' => 'Pendiente en el parque',
     // Robustez del desglose (#196/#198): desglose detallado en "Mis pedidos".
     'subtotal' => 'Subtotal',
-    'at_gate' => 'A cobrar en el parque',
-    // #225 F3: toggle del desglose ↳ (oculto por defecto) en «Mis pedidos».
-    'show_breakdown' => 'Ver desglose',
-    'hide_breakdown' => 'Ocultar desglose',
-    // #225 (feedback clienta): nombra el producto de cada «Resto de la señal» (desglose por producto).
-    'deposit_for_product' => 'de :product',
-    'at_gate_caption' => 'Diferencia por cambios en el pedido. Se cobra en recepción al llegar.',
-    // #225 (señal/depósito): el cliente pagó solo la señal online; el resto se cobra en el parque.
-    // #225 F3: etiqueta NEUTRA del agregado online (señal(es) + productos de pago completo); la
-    // señal por-producto se nombra en la card de cada producto, no aquí (engañaba en cestas mixtas).
-    'deposit_paid_online' => 'Pagado online',
-    // #225 F2: línea ↳ del resto de la señal dentro de "A cobrar en el parque".
-    'deposit_remainder_line' => 'Resto de la señal',
-    // ⚠️ El cargo de puerta por una EDICIÓN, cuando no se puede decir «+4 X» ni «Cambio a X»
-    // (`DECISIONES #131`). Antes salía el nombre pelado del producto y no decía por qué se cobra,
-    // mientras su línea hermana —el resto de la señal— sí se explicaba sola.
-    'gate_change_line' => 'Diferencia por cambios en :product',
-    // `#154`: las etiquetas ESPECÍFICAS del cargo de puerta vivían en `admin.*` (solo ES) y el
-    // CLIENTE las consume — medido por HTTP: un cliente en inglés recibía la clave literal
-    // `admin.orders.order_financial.breakdown.slot_change` en su desglose de dinero. Etiqueta que
-    // lee el cliente ⇒ espacio del cliente, en sus tres idiomas.
-    'gate_change_line_slot' => 'Cambio de fecha a :when',
-    'gate_change_line_product' => 'Cambio a :name',
-    'at_gate_caption_deposit' => 'Resto a pagar en recepción al llegar. La señal ya quedó pagada online.',
-    'pendiente_devolucion' => 'Pendiente de devolución',
-    'pendiente_devolucion_caption' => 'Pagaste de más por un cambio en el pedido (se redujo o quitó un producto) y está pendiente de devolvértelo.',
-    'total_final' => 'Total final',
+    // ▶ Hasta la T3·4 del libro (`DECISIONES #313`) aquí vivían los rótulos del modelo de DOS EJES
+    // (`ledger.*`, «Resto de la señal», «Pendiente de devolución», «Total final», las etiquetas del
+    // cargo de puerta…). El libro los sustituye por `journal.*` (abajo) y por su saldo con clase.
     // ⚠️⚠️ LA FRASE que explica el estado del pedido (`DECISIONES #127`). Un número no explica:
     // el encargo era que el cliente entienda su situación ante CUALQUIER situación. La compone el
-    // DOMINIO (`Booking\Services\OrderLedger`), que es quien sabe qué caso es.
-    // ⚠️⚠️ Los rótulos del DESGLOSE, en DOS BLOQUES que no se mezclan (`DECISIONES #127`):
-    // arriba lo que vale y por qué canal se paga, abajo qué ha pasado con su dinero. Hasta la
-    // tanda B, «Devuelto» y «Pendiente de devolución» se pintaban como restas dentro de la
-    // columna del valor —de la que NO restan— y por eso la columna dejaba de leerse.
-    'ledger' => [
-        'value_title' => 'Qué vale este pedido',
-        'value_total' => 'Valor del pedido',
-        'paid_online' => 'Pagado por web',
-        'pending_online' => 'Pendiente de pagar por web',
-        // T5 · D9 (`cumple-mixto.md` §25.3, `[DECIDIDO owner]` §25.9 Q1): la cuenta se LIQUIDA al
-        // pasar la visita de un pedido pagado — pero nadie registra el cobro (el hueco reservado es
-        // `TYPE_COLLECTED_IN_PERSON`, sin un solo uso), así que «Pagado» afirmaba lo que el sistema
-        // no sabe. ⚠️ `paid_desk` («Pagado en recepción») NO cambia: ése es un cobro REGISTRADO.
-        'paid_at_gate' => 'Liquidado en el parque',
-        'pending_at_gate' => 'Pendiente de pagar en el parque',
-        'compensated' => 'Compensación devuelta',
-        // ⚠️ El MÉTODO manda en el rótulo (`DECISIONES #128`): el eje de caja suma todos los pagos
-        // cobrados, y en un pedido de taquilla «por web» sería falso. El panel ya lo distinguía.
-        'paid_desk' => 'Pagado en recepción',
-        'cash_title' => 'Tu dinero',
-        'cash_caption' => 'Es el dinero que ya te hemos cobrado por este pedido. Puedes cotejarlo con tu extracto bancario.',
-        'charged_online' => 'Cobrado por web',
-        'charged_desk' => 'Cobrado en recepción',
-        'refunded' => 'Ya devuelto',
-        'pending_refund' => 'Pendiente de devolverte',
-        'invoiced' => 'Importe al reservar',
-        // ⚠️⚠️ DIRECCIÓN E IMPORTE, no un número mudo (`L6`, `DECISIONES #133`). La frase anterior
-        // era una sola y fija —«…es porque el pedido cambió después»—: decía QUE el pedido cambió y
-        // no en qué sentido ni cuánto, que es justo lo que quiere saber quien ve 180,00 € donde
-        // espera 120,00 €. Una BAJADA no dejaba más rastro que ese número.
-        // ⚠️ Las elige el DOMINIO (`Booking\Services\OrderLedger`), como la frase de estado.
-        // ⚠️ `:difference` es la DIFERENCIA, no el valor: el valor ya está dos líneas más arriba.
-        'invoiced_hint_more' => 'Al reservar se facturaron :invoiced. El pedido cambió después y ahora vale :difference más.',
-        'invoiced_hint_less' => 'Al reservar se facturaron :invoiced. El pedido cambió después y ahora vale :difference menos.',
-    ],
-    // T4 (`specs/cumple-mixto.md` §24.4): el «a tu favor» de fiesta mixta — el descuento que la
-    // puerta no pudo absorber; se liquida en el parque. `null` = no se enseña (patrón `L6`).
+    // DOMINIO (`Booking\Services\OrderBook`), que es quien sabe qué caso es.
     'ledger_note' => [
-        // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser
-        // cierta (`DECISIONES #132`).
+        // ⚠️⚠️ La clase `under_review` MANDA sobre las demás: si el libro no cuadra, ninguna otra
+        // frase puede ser cierta (`DECISIONES #132`). Las otras clases del saldo no llevan frase:
+        // el libro las dice con su línea (`journal.balance_*`).
         'under_review' => 'Estamos revisando el detalle de este pedido. El importe que te hemos cobrado es el que ves abajo; si tienes cualquier duda, escríbenos y lo miramos contigo.',
-        'owing' => 'Tenemos pendiente devolverte :amount.',
-        'cancelled_owing' => 'Tu reserva se canceló el :date. Tenemos pendiente devolverte :amount.',
-        'cancelled_refunded' => 'Tu reserva se canceló y te devolvimos :amount el :date.',
-        'cancelled' => 'Tu reserva se canceló el :date.',
         'expired' => 'Esta reserva caducó sin completarse el pago. No se te ha cobrado nada.',
         'pending_payment' => 'Todavía no se ha completado el pago de :amount. Tu plaza sigue reservada hasta que caduque.',
-        'compensated' => 'Te devolvimos :amount y conservas tu reserva: no tienes que pagar nada más.',
-        'refunded_pay_in_person' => 'Te devolvimos :amount porque abonarás el importe en recepción al llegar.',
-        'refunded_still_booked' => 'Te devolvimos :amount y tu reserva sigue en pie.',
-        'pending_at_gate' => 'Te quedan :amount por pagar en recepción al llegar.',
     ],
     // ⚠️⚠️ EL LIBRO del pedido (`specs/desglose-libro.md` §4.3, `DECISIONES #305` `[DECIDIDO owner]`):
     // cada gestión es una línea con su signo y su fecha, el total es la suma y el saldo se liquida

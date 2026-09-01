@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\LineFacts;
 use App\Domain\Booking\Services\ManualOrderFulfiller;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Identity\Models\User;
@@ -95,7 +96,7 @@ class DepositChargeTest extends TestCase
         // Importe ONLINE = la señal (no el total).
         $this->assertSame(3000, $order->onlineDueCents());
         $principal = $order->items->firstWhere('parent_item_id', null);
-        $this->assertSame(3000, $order->itemCollectedCents($principal));
+        $this->assertSame(3000, LineFacts::forItem($order, $principal)->onlineAtBirth());
     }
 
     public function test_mixed_cart_online_due_is_deposit_plus_full_line(): void
@@ -127,9 +128,9 @@ class DepositChargeTest extends TestCase
         ]);
         $order->load(['items', 'adjustments']);
 
-        // onlineDue == Σ itemCollectedCents (sin descuadre global-vs-línea: el pago y la ida
-        // usan la MISMA suma por-línea, por eso el canario nunca diverge).
-        $sumCollected = $order->items->sum(fn (OrderItem $i) => $order->itemCollectedCents($i));
+        // onlineDue == Σ de lo que cada línea cobra online (sin descuadre global-vs-línea: el pago
+        // y la ida usan la MISMA suma por-línea, por eso el canario nunca diverge).
+        $sumCollected = $order->items->sum(fn (OrderItem $i) => LineFacts::forItem($order, $i)->onlineNow());
         $this->assertSame($sumCollected, $order->onlineDueCents());
         $this->assertSame(600, $order->onlineDueCents());
         $this->assertSame(1998, (int) $order->total);
@@ -162,9 +163,10 @@ class DepositChargeTest extends TestCase
         $this->assertNotNull($addonItem);
         $this->assertSame(2000, $addonItem->chargedSubtotalCents());
 
-        // El complemento tiene resto-señal = su valor íntegro → cobrado online 0.
-        $this->assertSame(2000, $order->itemDepositRemainderCents($addonItem));
-        $this->assertSame(0, $order->itemCollectedCents($addonItem));
+        // El complemento tiene reparto de señal = su valor íntegro → cobrado online 0.
+        $facts = LineFacts::forItem($order, $addonItem);
+        $this->assertSame(2000, $facts->depositSplit);
+        $this->assertSame(0, $facts->onlineAtBirth());
 
         // Online del pedido = SOLO la señal del principal (ni el resto del pack ni el complemento).
         $this->assertSame(3000, $order->onlineDueCents());
