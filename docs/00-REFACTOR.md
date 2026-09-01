@@ -3643,6 +3643,24 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **Monitor y menús servidos** en la hoja impresa — aparcado por el owner hasta que vea el PDF
 - [ ] **El producto de EXCURSIONES en producción**: el mecanismo está desplegado (`#322` horario por zona · `#324` precio por tramo), pero **la zona y los productos NO existen en la BD del cliente** — es DATO, no código
 
+### OPERACIÓN, día 2 · el 500 de la puerta, el vocabulario y el cajón 🟦 — `#338` → `#341` (2026-09-02)
+- [x] **El gesto de la puerta reventaba con la firma ya escrita** (`#338`): TRES defectos en una línea de `#336`, los tres en producción. ⚠️ **La firma se escribe ANTES del 500**, así que lo declarado está firmado de verdad. Ninguno de los 7 casos del fichero pasaba por la pantalla — *que el dominio haga lo correcto no es que la pantalla sepa pedírselo*. **Desplegado acotado** (`8af8d52`)
+- [x] **Un solo nombre para el documento que se firma** (`#339`): eran CINCO formas y tres las veía el cliente. 91 cadenas en tres idiomas; el CÓDIGO sigue diciendo `waiver` (contrato de la API + `CRITICAL_RE`) y el mapeo va al `GLOSARIO`. Guarda con tres mutaciones. **Desplegado acotado** (`a393bd2`)
+- [x] **El cajón relee su contexto al volver a la pestaña** (`#340`): cierra la ficha del lanzamiento. Lo que faltaba era el disparador, no el mecanismo
+- [x] **La columna del menú deja de estar vacía y sus zonas salen de la BD** (`#341`): de paso salen del producto «Zona Kids» y «Murcia», que eran el catálogo de un cliente dentro del repo
+- [ ] **El OJO del owner** sobre las cuatro, y **subir su `client-menu.webp`**
+- [ ] ⚠️ **Producción NO lleva `#340` ni `#341`**, y el siguiente despliegue desde `main` **estrena la T3 del justificante** (`#337`): no es un despliegue de rutina
+
+### GOOGLE AUTH ⬜ — spec diseñada y revisada, CERO código (2026-09-02)
+- [x] **Spec** `docs/specs/auth-con-google.md`, con la decisión del owner que la ordena: **pantalla intermedia y exención al 100 %** (§4)
+- [x] **Revisión adversarial de cinco lentes: OCHO bloqueantes**, dos de ellos agujeros de seguridad, aplicados con marcas ✱
+- [x] **Nueve de once preguntas cerradas** con `[DECIDIDO owner]`
+- [ ] **T1 · el mecanismo** — DESBLOQUEADA: tabla `user_identities`, la raíz de confianza (§6.3), el servicio de vinculación con sus guardas, la purga por BORRADO y las acciones de auditoría
+- [ ] **T2 · el alta** — con la medición del presupuesto del cajón ANTES de escribir (quedan ~51 B)
+- [ ] **T3 · lo irreversible y el marketing** — ⚠️ **dependencia DURA con la T2**: sin ella se crean cuentas sin autoservicio para las cuatro acciones que exigen contraseña
+- [ ] **T4 · el OJO del owner**
+- [ ] Del owner: su ✅, el cliente de OAuth (**§10.1**) y la política de privacidad al terminar
+
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no
 le despliega nada. Mejoras de JumpWeb aplicables allí se portan **solo por decisión explícita**,

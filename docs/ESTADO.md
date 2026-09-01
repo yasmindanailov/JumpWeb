@@ -1,5 +1,38 @@
 # Estado del proyecto — foto viva
 
+⬜ **GOOGLE AUTH · SPEC DISEÑADA Y REVISADA, CERO CÓDIGO** (2026-09-02,
+`docs/specs/auth-con-google.md`). Encargo del owner: *«0 fricción para el cliente a la hora de
+registrarse»*. **La T1 está desbloqueada**: nueve de once preguntas cerradas.
+▶ ❗❗❗ **LA DECISIÓN QUE MANDA (§4) ES DEL OWNER Y VA CONTRA MI RECOMENDACIÓN INICIAL**: yo diseñé
+cero pantallas y él pidió **pantalla intermedia con la exención al 100 %**, porque *«los clientes que
+van al parque inician sesión con Google, no aceptan nada, y van directos a la tablet: el empleado
+acepta su descargo»*. ▶ **La lección: la fricción no desaparece, se muda al empleado** — y sin
+aceptación previa el operador de `#336` deja de **confirmar** para **acreditar**, que es menos prueba.
+▶ ⚠️⚠️ **LA REVISIÓN ADVERSARIAL (cinco lentes) ENCONTRÓ OCHO BLOQUEANTES, Y VARIOS ESTABAN EN MI
+PROPIA SECCIÓN DE «HECHOS MEDIDOS»** — que abría afirmando que todo se había comprobado contra el
+código. Las marcas **✱** de la spec dicen qué decía antes cada cosa. **Léelas antes que el texto.**
+▶ Los dos peores, los dos de seguridad y los dos míos: **(1)** la spec no decía en 494 líneas **cómo
+se comprueba que lo que dice Google es verdad** — la forma ingenua permite fabricar un token que
+afirme cualquier correo; **(2)** la vinculación automática **dejaba heredar la cuenta que un tercero
+hubiera creado con tu correo**: `SelfSignup` crea cuentas sin verificar, `/mi-cuenta` solo exige
+sesión, y mi guarda miraba el `email_verified` **de Google** y nunca el de la cuenta DESTINO.
+▶ **Lo que decidió el owner sobre eso** (Q2): se vincula, se promueve **y se expulsa al ocupante**
+(`revokeAllAccess()` + contraseña invalidada). Rechazar era su respuesta literal, pero `users.email`
+es UNIQUE —no cabe una segunda cuenta— y **6 de 48 cuentas de producción están sin verificar**: uno
+de cada ocho clientes chocaría con un muro.
+▶ ⚠️ **`AdminPanelProvider` no declara `authGuard`**, o sea que la sesión de Google **es la del
+panel**: dejar esa pregunta «abierta» era contestarla que sí. El owner decidió que el equipo **sí**
+puede vincular, y eso hace **obligatorio** el aviso por correo de la Q3.
+▶ ⚠️ **Retiré mi propia corrección a este documento**: dije que las claves iban a `settings` y no al
+`.env` «como Turnstile», y resultó que el repo escribe que un secreto en `settings` **se vuelca en
+cada backup**. El owner eligió `settings` igualmente, con ese coste asumido y escrito.
+▶ **Destapa DOS incumplimientos PREEXISTENTES** que la T3 cierra: las acciones que exigen contraseña
+son **CUATRO** y una cuenta de Google no puede ninguna (art. 12.2), y el consentimiento de marketing
+**no se puede retirar** ni deja constancia — `consents` no tiene columna de revocación (art. 7.3).
+▶ **QUEDA DEL OWNER**: su ✅ final, dejar el cliente de OAuth listo (**§10.1**, y ojo a la URI de
+redirección: la ruta completa `/auth/google/callback`, no el origen), y las dos preguntas de la T2
+(presupuesto del cajón y texto del botón).
+
 ✅ **LA COLUMNA DEL MENÚ YA NO ESTÁ VACÍA — Y SUS ZONAS SALEN DE LA BD** (2026-09-02,
 `DECISIONES #341`, `[DECIDIDO owner]`: «las que sean, que no esté vacío»). Medido: con `/servicios`
 en mantenimiento **ninguno** de los siete destinos traía foto, así que la vista previa caía al fondo
@@ -195,15 +228,25 @@ aquí lo que no se podaría son datos de menores de terceros.
 > y verificado en `https://playjump.es` (commit `9d01dae`).**
 >
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.**
->   1. **GOOGLE AUTH** — es lo siguiente, `[DECIDIDO owner]` y con chat propio. Él ya está
->      verificado en Google Cloud; falta **diseñarlo**. Lo que hay que configurar está en `#336` del
->      chat y se le pasó: pantalla de consentimiento externa, ámbitos SOLO `email`/`profile`/`openid`
->      (cualquier ámbito sensible dispara una verificación de semanas), orígenes y URI de redirección,
->      y `CLIENT_ID`/`SECRET` al `.env` del cliente — **la quinta pieza de su paquete**, nunca al repo.
->      ⚠️ **Dos cosas que decidir ANTES de escribir código**: (a) Google entrega el correo YA
->      verificado, así que la aceptación de la exención se convierte en firma sola en el alta — hay que
->      mapear `email_verified_at` desde el proveedor de forma honesta; (b) **qué pasa con una cuenta
->      que YA existe con ese correo y contraseña**: ¿se vinculan, y con qué prueba?
+>   1. ✅ **GOOGLE AUTH YA TIENE SPEC, DISEÑADA Y REVISADA: `docs/specs/auth-con-google.md`**
+>      (2026-09-02). **Lo siguiente es la T1, y está DESBLOQUEADA** — nueve de las once preguntas
+>      cerradas con `[DECIDIDO owner]`. **Empieza por su §4** (la decisión que manda) y **por las
+>      marcas ✱**, que corrigen afirmaciones que la primera versión daba por medidas y eran falsas.
+>      ⚠️⚠️ **La revisión adversarial encontró OCHO bloqueantes y DOS eran agujeros de seguridad**:
+>      la raíz de confianza no estaba escrita (cómo se valida lo que Google afirma y dónde vive el
+>      perfil entre las dos peticiones), y la vinculación automática **dejaba heredar la cuenta que
+>      un tercero había creado con tu correo**. Los dos están cerrados en §6.3 y §5.2.
+>      ⚠️ **`AdminPanelProvider` no declara `authGuard`**: la sesión de Google **es** la del panel.
+>      El owner decidió que el equipo SÍ puede vincular, y eso hace **obligatorio** el aviso por
+>      correo (§6.6).
+>      ⚠️ **`ESTADO.md` decía `.env` para las claves; van a `settings`** (`[DECIDIDO owner]` Q10),
+>      con el argumento descartado escrito al lado: un secreto ahí se vuelca en cada backup.
+>      ▶ **§10.1 es lo que el owner tiene que dejar listo en Google Cloud Console**, incluida la
+>      trampa que falla en el primer intento: la URI de redirección es
+>      **`https://playjump.es/auth/google/callback`**, la ruta completa, no el origen a secas.
+>      ▶ **Destapa dos incumplimientos PREEXISTENTES** que la T3 cierra: una cuenta de Google no
+>      podría usar **ninguna** de las cuatro acciones que exigen contraseña (art. 12.2), y el
+>      consentimiento de marketing **no se puede retirar** ni deja constancia (art. 7.3).
 >   2. **EL PRODUCTO DE EXCURSIONES NO EXISTE EN PRODUCCIÓN**, y era la tarea con la que se abrió la
 >      sesión. El MECANISMO sí está desplegado (`#322` horario por zona · `#324` precio por tramo),
 >      pero **la BD del cliente no tiene ni la zona ni los productos** — medido: `zones.slug =
@@ -211,9 +254,12 @@ aquí lo que no se podaría son datos de menores de terceros.
 >      con su horario propio y su tope de un grupo por franja; los dos productos como **`pack`**
 >      (2 h y 3 h, mín. 30, máx. 100); sus tramos 30→15/17 · 70→13/15 · 100→12/14; y la señal.
 >      ▶ **El viernes YA está en la tarifa `special`** (`weekdays = [5,6,0]`): eso no hay que tocarlo.
->   3. Lo del owner que sigue abierto: **monitor y menús servidos** en la hoja impresa (aparcado hasta
->      que vea el PDF), los **menores** en la declaración de puerta, las **imágenes del menú**, el
->      refresco del contexto al volver a la pestaña y el OJO sobre los TPV.
+>   3. Lo del owner que sigue abierto: **monitor y menús servidos** en la hoja impresa —diagnosticado
+>      el 2026-09-02, ver el bloque de `#338`: los menús ya tienen su contenido en `ticket_types.features`
+>      y el «monitor» **no existe en ninguna parte**, así que va como hueco en blanco `[DECIDIDO owner]`—,
+>      los **menores** en la declaración de puerta (con las tres sondas ya medidas, ver `DEUDA.md`),
+>      y el OJO sobre los TPV. ✅ **Las imágenes del menú (`#341`) y el refresco del contexto (`#340`)
+>      YA ESTÁN**; de las primeras queda que subas tu foto como `client-menu.webp`.
 >
 > ⚠️⚠️ **CUATRO COLISIONES DE NUMERACIÓN EN UNA JORNADA, y la regla actual NO BASTA.** Se numeraba
 > mirando el remoto al ABRIR la tanda; las cuatro se produjeron al CERRARLA, con el otro agente
