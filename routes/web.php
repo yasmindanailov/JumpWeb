@@ -52,9 +52,25 @@ Route::post('/logout', LogoutController::class)->middleware('auth')->name('logou
 // ▶ Y no es cosmética: **8 notificaciones ya entregadas** apuntan a `account.orders` —un correo
 // enviado no se puede editar— y **11 redirecciones del servidor** aterrizan en `account` con un
 // `->with('status', …)` que el layout pinta. Borrar las rutas las convertiría en 404 para siempre.
-// ▶ El middleware se conserva TAL CUAL: la puerta sigue siendo zona privada, así que un invitado va
-// al login y uno sin verificar, al aviso de verificación.
-Route::middleware(['auth', 'verified'])->group(function () {
+// ▶ El middleware se conserva casi tal cual: la puerta sigue siendo zona privada, así que un
+// invitado va al login.
+//
+// ❗❗ **`#331` — `verified` SALE, y no es una relajación: es lo que la decisión de `#330` exige.**
+// Desde que el alta suelta abre sesión, quien acaba de registrarse llega aquí SIN verificar — y esta
+// es **la puerta que le trae** (`account/after-auth.js` navega a `urls.account` porque los textos del
+// área solo viajan con sesión). Con `verified` puesto, el alta terminaba rebotando a
+// `/email/verificar`: **una pantalla web fuera del cajón**, que es justo el callejón que `#330`
+// vino a cerrar. Y sin llegar a su cuenta no hay QR, que es lo que le identifica en la puerta del
+// parque (`[DECIDIDO owner]`: «no quiero que se haga cola esperando que verifiquen sus correos»).
+//
+// ▶ **Lo que falta se le pide DENTRO**, con su botón de reenviar y sus límites: el índice del área
+// pinta el aviso (`account/waiver.js::accountNoticeFrom()`).
+//
+// ⚠️ **La EXPORTACIÓN RGPD entra en el mismo trato a sabiendas**: es el derecho del titular sobre lo
+// suyo, y una cuenta sin verificar solo contiene lo que esa misma persona acaba de teclear — no hay
+// datos de un tercero que puedan salir por aquí, porque el alta con el correo de otro crea una cuenta
+// NUEVA y vacía, no abre la suya.
+Route::middleware('auth')->group(function () {
     Route::get('/mi-cuenta', HomeController::class)->name('account');
     Route::get('/mi-cuenta/pedidos', HomeController::class)->name('account.orders');
     // `no-store` (auditoría Fase 1, Sistema 5): el JSON de portabilidad RGPD lleva el perfil

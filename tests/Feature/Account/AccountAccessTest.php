@@ -25,13 +25,26 @@ class AccountAccessTest extends TestCase
         $this->get('/mi-cuenta')->assertRedirect(route('login'));
     }
 
-    public function test_unverified_users_are_redirected_to_verification_notice(): void
+    /**
+     * ❗❗ **`#331` DA LA VUELTA A ESTE CASO, y la vuelta es la decisión.**
+     *
+     * Decía que un titular sin verificar rebota a `/email/verificar`. Desde `#330` el alta suelta abre
+     * sesión, y **ésta es la puerta que le trae** (`account/after-auth.js` navega aquí porque los
+     * textos del área solo viajan con sesión): con el rebote puesto, registrarse terminaba en una
+     * pantalla web FUERA del cajón — el callejón que `#330` vino a cerrar—, y sin llegar a su cuenta
+     * no hay QR, que es lo que le identifica en la puerta del parque.
+     *
+     * ⚠️ **Lo que NO cambia**: sigue siendo zona privada (el caso de arriba), y lo que le falta se le
+     * pide DENTRO, con su botón de reenviar y sus límites.
+     */
+    public function test_an_unverified_holder_reaches_their_account(): void
     {
         $user = User::factory()->unverified()->create();
 
-        $this->actingAs($user)
-            ->get('/mi-cuenta')
-            ->assertRedirect(route('verification.notice'));
+        $html = (string) $this->actingAs($user)->get('/mi-cuenta')->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-purchase-open="1"', $html, 'no abre el cajón');
+        $this->assertStringContainsString('data-account-zone="home"', $html, 'no abre en su cuenta');
     }
 
     /**

@@ -546,8 +546,22 @@ class SidebarBundleBudgetTest extends TestCase
      * `verify.resend_in`, que ya viajaban en el montaje (−190 B de payload, `SidebarMountTest`). *El
      * rótulo más barato es el que ya está.*
      * ⚠️ **Se sube a 261 y no a 265.** Queda **0,68 KiB**: la misma estrechez de siempre.
+     *
+     * ▶ **262 (`#330`/`#331`).** Medido con las dos ramas por separado: **260,47 → 261,12 KiB
+     * (+0,65)**. Lo que compra, y las tres cosas son capacidad que antes no existía:
+     *  · el aviso de verificar el correo **dentro del cajón**, con su cuenta atrás, sus reenvíos
+     *    restantes y su aviso de límite — la misma puerta que la pantalla del alta (`resendGate`), no
+     *    un `disabled` escrito a mano;
+     *  · el estado `email_verified` en la decisión del aviso, que es lo que permite que sea UNO en vez
+     *    de dos apilados;
+     *  · **el cierre de sesión desde el índice de la cuenta**, que faltaba de verdad: el botón del
+     *    bloque `.acct` existe pero **se colapsa dentro de esta sección** (modo `account`, altura 0
+     *    medida en `VERIFICACION-E2E-CAJON` V4), así que el cliente entraba y se quedaba sin salida a
+     *    la vista. Reutiliza `account/sign-out.js` entero.
+     * ⚠️ **Se sube a 262 y no a 270.** Queda **0,88 KiB**: lo siguiente que entre vuelve a tener que
+     * justificarse o podar.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 261;
+    private const SIDEBAR_CHUNK_MAX_KB = 262;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

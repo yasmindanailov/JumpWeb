@@ -263,7 +263,7 @@ return [
         'sent_to' => 'We have sent a confirmation email to :email. Open it to activate your account.',
         'spam_hint' => 'Cannot find it? Check your spam or promotions folder.',
         'resend' => 'Resend email',
-        'pending_notice' => 'You still need to verify your email address.',
+        'pending_notice' => 'You must verify your email address.',
         'resend_in' => 'Resend in',
         'resending' => 'Resending…',
         'resends_left' => ':n resends left.',

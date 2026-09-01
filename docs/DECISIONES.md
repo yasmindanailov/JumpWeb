@@ -19855,3 +19855,70 @@ enlace.
 
 ▶ **Y después, Google auth** (`[owner]`), que vacía el caso para la mayoría: el proveedor entrega el
 correo ya verificado, así que la aceptación se convierte en firma sola en el instante del alta.
+
+## #331 · 2026-09-01 · El aviso de verificar vive DENTRO del cajón, y de «Mi cuenta» se puede salir
+
+Tres correcciones del owner sobre `#330`, probándolo en el navegador.
+
+### 1 · El alta terminaba en `/email/verificar`, fuera del cajón
+
+`[owner]`: *«mi idea era abrir el SPA al registrarse con la sesión iniciada; actualmente me lleva a
+`/email/verificar`».*
+
+**Defecto que introdujo `#330`, y la causa no estaba donde parecía.** El cajón hace bien su trabajo:
+`account/after-auth.js` **navega** a `urls.account` a propósito —los textos del área solo viajan en el
+HTML con sesión, así que sin recargar el índice saldría con el título y las seis entradas EN BLANCO—.
+Lo que fallaba es que esa puerta, `/mi-cuenta`, llevaba `middleware(['auth', 'verified'])`: el titular
+recién creado no ha verificado, así que rebotaba.
+
+▶ **`verified` sale del grupo**, y no es una relajación: es lo que `#330` exige. Sin llegar a su cuenta
+no hay QR, y el QR es lo que identifica al cliente en la puerta del parque.
+
+⚠️ **La exportación RGPD entra en el mismo trato a sabiendas**: es el derecho del titular sobre lo
+suyo, y una cuenta sin verificar solo contiene lo que esa misma persona acaba de teclear — darse de
+alta con el correo de otro crea una cuenta NUEVA y vacía, no abre la suya.
+
+### 2 · El aviso, con su hardening, y el waiver debajo
+
+`[owner]`: *«Debes verificar tu correo. Volver a enviar. Con sus límites. Y abajo el texto del
+waiver.»* — que **corrige mi lectura de «un mensaje»** en `#330`: no era una frase, era **un bloque**.
+
+Queda: el mensaje, el botón con su cuenta atrás, **cuántos reenvíos quedan** y el aviso de límite
+alcanzado; y debajo, solo si hay una esperando, la línea de la exención.
+
+⚠️ La puerta del botón es **`resendGate()`, el mismo módulo que usa la pantalla del alta**, no un
+`disabled` escrito a mano: cuántos quedan y cuándo se puede volver a pulsar es UNA regla con sus
+`node --test`. Escribirla otra vez aquí es cómo el botón acaba ofreciéndose cuando el servidor ya lo
+está descartando en silencio (el defecto que `SelfSignup` documenta al detalle).
+
+### 3 · De «Mi cuenta» no se podía salir
+
+`[owner]`: *«en "mi cuenta" debemos añadir un card, un CTA o algo para cerrar sesión desde ahí».*
+
+**Tenía razón y la causa estaba medida en la propia doc**: el botón de salir existe en el bloque
+`.acct`, pero **dentro de esta sección ese bloque se COLAPSA** —lo hace el modo `account`, altura 0
+medida en `VERIFICACION-E2E-CAJON` V4—. Así que el cliente entraba a su cuenta y se quedaba sin salida
+a la vista.
+
+⚠️ Va **debajo de las tarjetas y como acción de texto, no como una tarjeta más**: las de arriba son
+sitios a los que se va, y esto no lleva a ninguna parte. Una tarjeta idéntica invitaría a pulsarla
+mirando el icono.
+
+⚠️ Reutiliza **`account/sign-out.js` entero** —el mismo que el bloque—, no un `<form>` con `@csrf`: el
+`_token` de la página está caducado en cuanto alguien pasa por el paso 5, y daría 419.
+
+### Una guarda cambia de premisa, y se reescribe
+
+`AccountAccessTest::test_unverified_users_are_redirected_to_verification_notice` **afirmaba justo el
+rebote que causaba el defecto**. Se reescribe conservando lo que sigue siendo cierto —sigue siendo
+zona privada, y el caso del invitado no se toca— y cambiando lo que la decisión cambió.
+
+### Presupuestos
+
+El techo del chunk sube **261 → 262** (medido con las dos ramas por separado: **260,47 → 261,12**,
++0,65), con las tres cosas que compra escritas en el propio test. Queda 0,88 KiB de holgura.
+
+▶ **Verificado en el producto servido**: `/mi-cuenta` con un titular sin verificar responde **200**
+—antes 302 a `/email/verificar`—, abre el cajón en `data-account-zone="home"` y sirve los cuatro
+rótulos: «Debes verificar tu correo electrónico», «Reenviar correo», la línea de la exención y
+«Cerrar sesión». Suite **3822 · 24.672**.

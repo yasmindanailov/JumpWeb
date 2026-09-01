@@ -126,6 +126,7 @@ const signIn = () => store.go(ZONES.LOGIN);
             :account="account"
             :messages="messages"
             :ui="ui"
+            :urls="urls"
             @go="store.go" />
 
         <ProfileZone

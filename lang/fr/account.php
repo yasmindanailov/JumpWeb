@@ -264,7 +264,7 @@ return [
         'sent_to' => 'Nous avons envoyé un e-mail de confirmation à :email. Ouvrez-le pour activer votre compte.',
         'spam_hint' => 'Introuvable ? Vérifiez votre dossier spam ou promotions.',
         'resend' => "Renvoyer l'e-mail",
-        'pending_notice' => 'Il vous reste à vérifier votre adresse e-mail.',
+        'pending_notice' => 'Vous devez vérifier votre adresse e-mail.',
         'resend_in' => 'Renvoyer dans',
         'resending' => 'Envoi…',
         'resends_left' => ':n renvois restants.',

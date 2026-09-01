@@ -286,7 +286,7 @@ return [
         'sent_to' => 'Te hemos enviado un correo de confirmación a :email. Ábrelo para activar tu cuenta.',
         'spam_hint' => '¿No lo ves? Revisa la carpeta de spam o promociones.',
         'resend' => 'Reenviar correo',
-        'pending_notice' => 'Te falta verificar tu correo electrónico.',
+        'pending_notice' => 'Debes verificar tu correo electrónico.',
         'resend_in' => 'Reenviar en',
         'resending' => 'Reenviando…',
         'resends_left' => 'Te quedan :n reenvíos.',

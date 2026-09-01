@@ -26,8 +26,14 @@ aquí lo que no se podaría son datos de menores de terceros.
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — CUATRO PUNTOS DE PRODUCCIÓN
-> CERRADOS (`#328` · `#329` · `#330`)**:
+> aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — CINCO PUNTOS DE PRODUCCIÓN
+> CERRADOS (`#328` · `#329` · `#330` · `#331`)**:
+>   000. **El alta abre el SPA en la cuenta, con el aviso completo dentro** (`#331`, tres correcciones
+>      del owner probándolo en navegador): `verified` **salió** de las rutas del área —con él puesto,
+>      registrarse rebotaba a `/email/verificar`, fuera del cajón—; el aviso es un **bloque** (mensaje
+>      + botón + reenvíos restantes + límite, y **debajo** la exención); y **de «Mi cuenta» ya se puede
+>      salir** (el botón del bloque `.acct` se colapsa ahí dentro: altura 0, medido en V4).
+>   0''. …y los cuatro de antes:
 >   00. **El alta suelta ENTRA a la cuenta** (`#330`, `[DECIDIDO owner]`) y ahí le espera **UN solo
 >      aviso con los dos estados**: verifica tu correo (+ «tu exención quedará firmada cuando lo
 >      hagas» si la aceptó), con el botón de reenviar. ❗ El motivo no es estético: **sin sesión no
@@ -140,6 +146,10 @@ aquí lo que no se podaría son datos de menores de terceros.
 > Suite **3822 en verde** (24.671 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
 > sobre el árbol CONJUNTO con `#328`, `#329` y `#330` encima de `#327`. Antes, 3821 / 24.665 y
 > 3813 / 24.652. ⚠️ **Medida DESPUÉS del rebase y con
+> Suite **3822 en verde** (24.672 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> sobre el árbol CONJUNTO con `#328`→`#331` encima de `#327`. Antes, 3822 / 24.671, 3821 / 24.665 y
+> 3813 / 24.652. ⚠️ El techo del chunk del cajón va por **262** (medido atribuyendo cada subida a su
+> rama: 259,34 → 260,32 → 261,12). ⚠️ **Medida DESPUÉS del rebase y con
 > `npm run build` delante, no sumada**: por separado daban 3796 / 24.599 (`#327` solo). Y el rebase
 > destapó el techo del chunk del cajón —**259,34 → 260,32 KiB**, atribuido midiendo las dos ramas por
 > separado, subido a 261 por FEATURE con su justificación en el propio test—.
