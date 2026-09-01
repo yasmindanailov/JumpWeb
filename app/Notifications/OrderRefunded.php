@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Services\EmailBookBlock;
 use App\Domain\Booking\Services\EmailProductCard;
 use App\Domain\Payments\Models\Payment;
 use Illuminate\Bus\Queueable;
@@ -78,6 +79,11 @@ class OrderRefunded extends Notification implements ShouldQueue
         if ($this->alsoCancelled) {
             $message->line(__('emails.order_refunded.also_cancelled'));
         }
+
+        // EL LIBRO del pedido tras la devolución (T3·3 del libro, D-T3·19): la devolución es una línea
+        // más, con su fecha, y el saldo dice si queda algo que pagar o devolver — el importe de arriba
+        // ya no va suelto, está en su sitio.
+        $message->line(EmailBookBlock::forOrder($this->order));
 
         // La línea del CANAL sigue al modo real del registro (T5 §25.5): la de tarjeta solo cuando
         // el reembolso fue por la pasarela.

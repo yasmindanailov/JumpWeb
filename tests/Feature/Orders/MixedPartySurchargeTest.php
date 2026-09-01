@@ -11,10 +11,11 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AgeFamilySealer;
+use App\Domain\Booking\Services\Balance;
 use App\Domain\Booking\Services\MixedPartySettings;
 use App\Domain\Booking\Services\MixedPartySurcharge;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\OrderItemEditor;
-use App\Domain\Booking\Services\OrderLedger;
 use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
@@ -755,12 +756,14 @@ class MixedPartySurchargeTest extends TestCase
             'user_id' => User::factory()->create()->id,
             'code' => 'JJ-MC'.str_pad((string) ++$this->counter, 4, '0', STR_PAD_LEFT),
             'status' => Order::STATUS_PAID, 'paid_at' => now(),
-            'subtotal' => $subtotal - $depositRemainderCents, 'tax' => 0,
-            'total' => $subtotal - $depositRemainderCents, 'currency' => 'EUR',
+            // Lo FACTURADO son las líneas (`OrderCreator` guarda el subtotal; T1 del libro, I1); lo
+            // que se cobra por web es la parte online (el total menos el resto de la señal).
+            'subtotal' => $subtotal, 'tax' => 0,
+            'total' => $subtotal, 'currency' => 'EUR',
         ]);
         Payment::create([
             'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
-            'amount' => $order->total, 'currency' => 'EUR', 'provider' => 'redsys',
+            'amount' => $subtotal - $depositRemainderCents, 'currency' => 'EUR', 'provider' => 'redsys',
             'status' => Payment::STATUS_PAID, 'paid_at' => now(),
             'gateway_order' => str_pad((string) (250000 + $this->counter), 10, '0', STR_PAD_LEFT),
         ]);
@@ -791,6 +794,22 @@ class MixedPartySurchargeTest extends TestCase
     private function writtenOf(OrderItem $item): array
     {
         return app(MixedPartySurcharge::class)->written($item->fresh(['ticketType', 'slot', 'order', 'children']));
+    }
+
+    /**
+     * Las identidades del LIBRO por reserva (T3·3 de `specs/desglose-libro.md`): el libro cierra y
+     * Σ líneas de valor == Total. Sustituye a `assertChannelsClose` en los casos donde el modelo
+     * viejo ya no puede cerrar a propósito (un crédito por encima de la cobertura de puerta).
+     */
+    private function assertBookCloses(OrderItem $item, string $label): OrderBook
+    {
+        $order = $item->order()->with(['items.ticketType', 'items.slot', 'adjustments', 'payments.refunds'])->first();
+        $book = OrderBook::forReservation($order, $order->items->firstWhere('id', $item->id));
+
+        $this->assertTrue($book->isConsistent, "$label · el libro cierra (I1–I4)");
+        $this->assertSame($book->totalCents, $book->movementsSumCents(), "$label · I3 por reserva");
+
+        return $book;
     }
 
     /** PAY-16 por reserva + ningún canal negativo — el contrato que el espejo no puede romper. */
@@ -833,31 +852,35 @@ class MixedPartySurchargeTest extends TestCase
         $this->assertSame(-700, $this->writtenOf($item)['cents'], 'el neto es el descuento');
     }
 
-    public function test_the_discount_is_capped_by_the_gate_coverage(): void
+    public function test_the_discount_is_written_entire_even_beyond_the_gate_coverage(): void
     {
-        // CASO C (§19.4): la puerta solo tiene 3,00 € → se escriben 3,00 de los 7,00 derivados y
-        // los 4,00 restantes son el «a tu favor» — enseñado, no escrito (§20.4).
+        // Hasta la T3·3 del LIBRO (`DECISIONES #305` D4 · `#312`) el tope de cobertura (§20.1) dejaba
+        // escribir 3,00 de los 7,00 derivados y los 4,00 restantes eran el «a tu favor». Ahora se
+        // escribe ENTERO: la fiesta vale 7,00 menos, y como solo quedaban 3,00 por pagar en la puerta,
+        // el libro de la reserva debe 4,00 «a devolver en el parque». Mutación: restaurar el `min()`.
         $item = $this->jumpParty([8, 9, 4], depositRemainderCents: 300);
 
-        $written = $this->writtenOf($item);
-        $this->assertSame(300, $written['credit_cents'], 'el tope deja escribir solo la cobertura');
-        $this->assertSame(400, app(MixedPartySurcharge::class)->inFavourCents($item->fresh(['ticketType', 'slot', 'order', 'children'])));
-        $this->assertSame(0, $this->financials($item)->aCobrarPuerta, 'la puerta queda en cero exacto, no en negativo');
-        $this->assertChannelsClose($item, 'tope de cobertura');
+        $this->assertSame(700, $this->writtenOf($item)['credit_cents'], 'el crédito derivado, entero');
+        $book = $this->assertBookCloses($item, 'crédito por encima de la cobertura');
+        $this->assertSame(Balance::KIND_REFUND_AT_PARK, $book->balance->kind);
+        $this->assertSame(-400, $book->balance->cents, '3,00 de resto − 7,00 de descuento: se le devuelven 4,00 en el parque');
     }
 
-    public function test_fully_online_writes_no_discount_and_shows_it_in_favour(): void
+    public function test_fully_online_writes_the_discount_and_the_book_owes_it_at_the_park(): void
     {
-        // CASO B (§20.2 fase 2): sin puerta que absorber NO se escribe nada — escribirlo dejaría
-        // la puerta en negativo y el cinturón mordería. El importe entero queda «a tu favor».
-        // Mutación obligatoria (§20.8): quitar el `min()` del tope pone esto en rojo.
+        // CASO B (§20.2): pagado 100 % online. Hasta la T3·3 no se escribía nada y el importe quedaba
+        // «a tu favor»; ahora la línea existe (el cliente compró con unas condiciones y tiene un
+        // invitado más barato) y el libro dice «a devolver en el parque: 7,00» — el mismo circuito
+        // del parque de §20.5, sin una promesa aparte. Mutación obligatoria: restaurar el tope deja
+        // esto sin línea y en rojo.
         $item = $this->jumpParty([8, 9, 4]);
 
-        $this->assertNull($this->creditLine($item), 'sin cobertura, el descuento no se escribe');
-        $this->assertSame(0, $this->writtenOf($item)['credit_cents']);
-        $this->assertSame(700, app(MixedPartySurcharge::class)->inFavourCents($item->fresh(['ticketType', 'slot', 'order', 'children'])));
-        $this->assertSame(0, $this->financials($item)->aCobrarPuerta);
-        $this->assertChannelsClose($item, '100 % online');
+        $this->assertNotNull($this->creditLine($item), 'sin cobertura también se escribe');
+        $this->assertSame(700, $this->writtenOf($item)['credit_cents']);
+        $book = $this->assertBookCloses($item, '100 % online');
+        $this->assertSame(7500 - 700, $book->totalCents, 'el Total baja con el descuento');
+        $this->assertSame(Balance::KIND_REFUND_AT_PARK, $book->balance->kind, 'hay visita por delante: se devuelve EN el parque');
+        $this->assertSame(-700, $book->balance->cents);
     }
 
     public function test_the_discount_follows_the_ages_back_up(): void
@@ -906,12 +929,11 @@ class MixedPartySurchargeTest extends TestCase
         $this->assertChannelsClose($item, 'silencio');
     }
 
-    public function test_charges_feed_the_coverage_of_the_discount(): void
+    public function test_a_charge_and_a_discount_in_the_same_pass_are_both_written_entire(): void
     {
         // Familia de TRES: reservado el del medio (Jump 25,00), un invitado por ENCIMA (Teens
-        // 30,00 → cargo +5,00) y otro por DEBAJO (Kids 18,00 → descuento −7,00). El cargo de la
-        // misma pasada ES cobertura: sin señal, el tope deja escribir 5,00 de los 7,00 — y los
-        // 2,00 restantes quedan «a tu favor». La puerta cierra en CERO exacto.
+        // 30,00 → cargo +5,00) y otro por DEBAJO (Kids 18,00 → descuento −7,00). Sin tope (T3·3 del
+        // libro) se escriben los dos enteros: el neto es −2,00 y el libro lo debe en el parque.
         // T6: PRIMERO se encoge Jump y DESPUÉS nace Teens — al revés había un solape transitorio
         // (Teens 12–99 sobre Jump 7–99) que el guardián de dominio prohíbe con razón (§26).
         $this->jump->forceFill(['guest_age_max' => 11])->save();
@@ -921,10 +943,12 @@ class MixedPartySurchargeTest extends TestCase
 
         $written = $this->writtenOf($item);
         $this->assertSame(500, $written['charge_cents'], 'el de 13 sube a Teens');
-        $this->assertSame(500, $written['credit_cents'], 'el de 4 descuenta hasta donde la puerta llega');
-        $this->assertSame(200, app(MixedPartySurcharge::class)->inFavourCents($item->fresh(['ticketType', 'slot', 'order', 'children'])));
-        $this->assertSame(0, $this->financials($item)->aCobrarPuerta);
-        $this->assertChannelsClose($item, 'cargo y descuento a la vez');
+        $this->assertSame(700, $written['credit_cents'], 'el de 4 descuenta entero');
+        $this->assertSame(-200, $written['cents'], 'el neto');
+        $book = $this->assertBookCloses($item, 'cargo y descuento a la vez');
+        $this->assertSame(7500 + 500 - 700, $book->totalCents);
+        $this->assertSame(Balance::KIND_REFUND_AT_PARK, $book->balance->kind);
+        $this->assertSame(-200, $book->balance->cents);
     }
 
     public function test_the_credit_context_never_carries_changes(): void
@@ -969,34 +993,5 @@ class MixedPartySurchargeTest extends TestCase
                     && ! in_array(__('emails.mixed_party_surcharge.where_to_pay'), $mail->introLines, true);
             },
         );
-    }
-
-    public function test_the_ledger_publishes_the_in_favour_hint_with_null_as_its_condition(): void
-    {
-        // El patrón de `invoiced_hint` (`L6`): la frase compuesta por el dominio Y su condición.
-        // Mutación (§24.7·G): publicar siempre `null` deja al cliente sin saber que tiene dinero
-        // a su favor — y este caso en rojo.
-        $with = $this->jumpParty([8, 9, 4]); // 100 % online: 7,00 € a favor, nada escrito
-        $withLedger = OrderLedger::forReservation(
-            $with->order()->with(['items.ticketType', 'items.slot', 'adjustments', 'payments.refunds'])->first(),
-            $with->fresh(['ticketType', 'slot', 'order', 'children']),
-        );
-        $this->assertSame(
-            __('tickets.ledger_in_favour', ['amount' => '7,00 €']),
-            $withLedger->inFavourHint,
-        );
-
-        // Y el agregado del pedido dice lo mismo que su única reserva.
-        $orderLedger = OrderLedger::forOrder(
-            $with->order()->with(['items.ticketType', 'items.slot', 'items.children', 'adjustments', 'payments.refunds'])->first(),
-        );
-        $this->assertSame($withLedger->inFavourHint, $orderLedger->inFavourHint);
-
-        // La condición: con el descuento ABSORBIDO entero por la puerta no hay exceso ni frase.
-        $without = $this->jumpParty([8, 9, 4], depositRemainderCents: 5000);
-        $this->assertNull(OrderLedger::forReservation(
-            $without->order()->with(['items.ticketType', 'items.slot', 'adjustments', 'payments.refunds'])->first(),
-            $without->fresh(['ticketType', 'slot', 'order', 'children']),
-        )->inFavourHint);
     }
 }

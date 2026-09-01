@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Services\EmailBookBlock;
 use App\Domain\Booking\Services\EmailProductCard;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -107,6 +108,10 @@ class MixedPartySurchargeChanged extends Notification implements ShouldQueue
         } elseif ($this->newCents < 0) {
             $message->line(__('emails.mixed_party_surcharge.where_discounted'));
         }
+
+        // EL LIBRO del pedido a día de hoy (T3·3 del libro, D-T3·22): el neto del suplemento es una
+        // línea más, y el saldo dice lo que se paga o se devuelve en el parque.
+        $message->line(EmailBookBlock::forOrder($this->item->order));
 
         return $message->line(__('emails.mixed_party_surcharge.editable'));
     }

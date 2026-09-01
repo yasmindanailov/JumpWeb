@@ -204,7 +204,6 @@ return [
         'invoiced_hint_more' => 'Au moment de la réservation, le montant facturé était de :invoiced. La commande a changé ensuite et vaut désormais :difference de plus.',
         'invoiced_hint_less' => 'Au moment de la réservation, le montant facturé était de :invoiced. La commande a changé ensuite et vaut désormais :difference de moins.',
     ],
-    'ledger_in_favour' => ':amount en votre faveur — remboursés au parc le jour de la fête.',
     'ledger_note' => [
         // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser
         // cierta (`DECISIONES #132`).
@@ -253,6 +252,10 @@ return [
         'balance_refund_pending' => 'Remboursement en attente',
         'balance_pay_online' => 'Reste à payer en ligne',
         'balance_rest_at_park' => 'et :amount au parc',
+        'email_title' => 'Votre commande, à ce jour',
+        'balance_settled' => 'Rien en attente',
+        'balance_expired' => 'Expirée sans paiement',
+        'balance_under_review' => 'Montant en cours de vérification',
     ],
     'errors' => [
         'choose_one' => 'Choisis au moins un billet pour continuer.',

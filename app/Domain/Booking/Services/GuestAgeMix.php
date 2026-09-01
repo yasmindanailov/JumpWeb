@@ -77,8 +77,8 @@ final class GuestAgeMix
      * ¿Hay algo que decir de que la fiesta salga MÁS BARATA en el régimen que corresponde?
      *
      * ▶ **Desde la T4 (`[DECIDIDO owner]` D5, §20/§24) esto alimenta el DESCUENTO real**: el
-     * espejo del suplemento, acotado al dinero de puerta (`MixedPartySurcharge::applyCredit`). Lo
-     * que la puerta no puede absorber se enseña como «a tu favor» (`inFavourCents`) y se liquida
+     * espejo del suplemento, escrito ENTERO desde la T3·3 del libro (`MixedPartySurcharge::applyCredit`,
+     * D4 de `DECISIONES #305`). Lo que la puerta no absorbe es saldo «a devolver en el parque»
      * en el parque.
      *
      * ⚠️⚠️ **El exceso sigue sin ser deuda bancaria**: «Pendiente de devolución» es deuda REAL con

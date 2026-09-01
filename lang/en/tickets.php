@@ -205,7 +205,6 @@ return [
         'invoiced_hint_more' => 'You were invoiced :invoiced when you booked. The order changed afterwards and is now worth :difference more.',
         'invoiced_hint_less' => 'You were invoiced :invoiced when you booked. The order changed afterwards and is now worth :difference less.',
     ],
-    'ledger_in_favour' => ':amount in your favour — refunded to you at the park on the day of the party.',
     'ledger_note' => [
         // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser
         // cierta (`DECISIONES #132`).
@@ -253,6 +252,10 @@ return [
         'balance_refund_pending' => 'Refund pending',
         'balance_pay_online' => 'Left to pay online',
         'balance_rest_at_park' => 'and :amount at the park',
+        'email_title' => 'Your order, as of today',
+        'balance_settled' => 'Nothing outstanding',
+        'balance_expired' => 'Expired without payment',
+        'balance_under_review' => 'Amount under review',
     ],
     'errors' => [
         'choose_one' => 'Choose at least one ticket to continue.',

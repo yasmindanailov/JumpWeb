@@ -191,8 +191,9 @@ class ManageItemQuantityProductTest extends TestCase
         $this->assertStringStartsWith('+2 ', $adj->breakdownLabel());
 
         $this->assertNotNull(AuditLog::where('action', 'orders.item_edited')->first());
+        // T3·3 del libro: el cargo ya no viaja como un céntimo suelto — es la línea «+24,00» del bloque.
         Notification::assertSentTo($order->user, OrderItemModified::class, function (OrderItemModified $n): bool {
-            return ($n->extraDueCents === 2400)
+            return str_contains($this->mailBody($n), '+24,00')
                 && isset($n->changes['quantity_change'])
                 && $n->changes['quantity_change']['new'] === 4;
         });
@@ -228,9 +229,10 @@ class ManageItemQuantityProductTest extends TestCase
         $this->assertSame(2400, $order->financialSummary()->pendienteDevolucion());
         $this->assertSame(2400, $order->itemPendingRefundCents($item));
 
-        // (T5 §25.5: el `refundedCents` que este cierre comprobaba se RETIRÓ — iba cableado a null.)
+        // T3·3 del libro: el correo cuenta la bajada como línea «−» y el saldo «a devolver».
         Notification::assertSentTo($order->user, OrderItemModified::class,
-            fn (OrderItemModified $n): bool => $n->extraDueCents === null);
+            fn (OrderItemModified $n): bool => str_contains($this->mailBody($n), '−24,00')
+                && str_contains($this->mailBody($n), __('tickets.journal.balance_refund_at_park')));
     }
 
     public function test_increase_then_decrease_credits_gate_without_phantom_or_online_refund(): void
@@ -387,7 +389,7 @@ class ManageItemQuantityProductTest extends TestCase
         $this->assertNotNull($adj);
         $this->assertSame(800, (int) $adj->amount_cents); // 20.00 − 12.00
         Notification::assertSentTo($order->user, OrderItemModified::class,
-            fn (OrderItemModified $n): bool => isset($n->changes['product_change']) && $n->extraDueCents === 800);
+            fn (OrderItemModified $n): bool => isset($n->changes['product_change']) && str_contains($this->mailBody($n), '+8,00'));
     }
 
     public function test_product_change_cheaper_is_cancel_only_no_auto_refund(): void
@@ -435,7 +437,7 @@ class ManageItemQuantityProductTest extends TestCase
         $this->assertNull(OrderAdjustment::where('order_item_id', $item->id)->first());
         $this->assertNull(PaymentRefund::where('order_item_id', $item->id)->first());
         Notification::assertSentTo($order->user, OrderItemModified::class,
-            fn (OrderItemModified $n): bool => $n->extraDueCents === null
+            fn (OrderItemModified $n): bool => ! str_contains($this->mailBody($n), 'data-book-movement="edit"')
                 && isset($n->changes['product_change']));
     }
 
@@ -1427,5 +1429,11 @@ class ManageItemQuantityProductTest extends TestCase
 
         $this->assertFalse($outcome->isBlocked(), (string) $outcome->reason);
         $this->assertSame(9, (int) $item->fresh()->quantity);
+    }
+
+    /** El cuerpo del correo de modificación, con el bloque del LIBRO dentro (T3·3, D-T3·5). */
+    private function mailBody(OrderItemModified $n): string
+    {
+        return collect($n->toMail($n->order->user)->introLines)->map(fn ($l) => (string) $l)->implode(' ');
     }
 }

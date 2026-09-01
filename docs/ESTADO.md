@@ -3,9 +3,9 @@
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-09-01 — TRES carriles a la vez.
-> **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 (`#306`, los hechos), T2 (`#308`, el libro
-> en el DOMINIO), T3·1 (`#310`, el contrato `Ledger`, la API y el CAJÓN) y T3·2 (`#311`, PANEL +
-> HOJA + PUERTA) EN EL ÁRBOL; sigue la T3·3 —correos, post-form, el tope—** — carril 3, abajo.
+> **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2
+> (`#311`) y T3·3 (`#312`, CORREOS + POST-FORM + EL TOPE) EN EL ÁRBOL; sigue la T3·4 —la retirada
+> del modelo viejo—** — carril 3, abajo.
 > **MIXTOS**: T1→T5 en el árbol (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL
 > GUARDIÁN DE SOLAPES EN EL ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** —
 > siguen fuera por diseño la fase 3 de §20.2 y el AFORO (owner); la ficha del fantasma de la señal
@@ -41,12 +41,47 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3758 en verde** (24.958 aserciones, 1 skipped a propósito), medida el
-> 2026-09-01 (noche) sobre el árbol CONJUNTO con la T3·2 del libro (`#311`) encima de `#310`.
+> Suite **3760 en verde** (24.940 aserciones, 1 skipped a propósito), medida el
+> 2026-09-01 (noche) sobre el árbol CONJUNTO con la T3·3 del libro (`#312`) encima de `#311`.
 > ⚠️ **No se suma, se mide.**
-> - Antes, 3754 / 24.837 (`#310`), 3756 / 24.766 (`#309` sobre `#308`) y 3752 / 24.742 (`#308`).
+> - Antes, 3758 / 24.958 (`#311`), 3754 / 24.837 (`#310`) y 3756 / 24.766 (`#309` sobre `#308`).
 >
-> ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1, T2, T3·1 y T3·2 EN EL ÁRBOL · sigue la T3·3) ═══════════
+> ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1, T2, T3·1, T3·2 y T3·3 EN EL ÁRBOL · sigue la T3·4) ═══════════
+> ❗❗❗ **2026-09-01 (noche, 3.ª sesión) · T3·3 · LOS CORREOS PINTAN EL LIBRO; CAE EL TOPE DEL DESCUENTO**
+> (`DECISIONES #312`, `specs/desglose-libro.md` **§6.3.4 diseño fino y §6.3.5 lo ejecutado**;
+> `cumple-mixto.md` §20 con la corrección; `INVARIANTES` `PAY-16`/`PAY-17`/`PAY-19` con la nota).
+> Suite: el CONTADOR de arriba · Pint · docs-check · **6 mutaciones (una pasó en verde por la
+> tarjeta de producto → acotada a la fila `<tr data-book-total>`)** · **los cuatro verificadores
+> sobre MySQL verdes** (`mixed-party` ×2 · `redsys` · `purchase`) · `audit-clock` sobre los tests
+> tocados · `VERIFY_CONC=1`. ▶ `MixedPartySurcharge::applyCredit` **sin tope**: el descuento se
+> escribe ENTERO y lo que la puerta no absorbe es saldo «a devolver en el parque» — mueren
+> `gateCoverageCents`, `inFavourCents`, `OrderLedger::inFavourHint` (a `null` hasta la T3·4) y el
+> «a tu favor» en seis superficies y cinco claves · `EmailBookBlock` + `emails.partials.book`: los
+> cinco correos de dinero pintan el libro AL ENVIAR (guarda P: el reenvío tras una edición dice el
+> saldo nuevo) · `OrderItemModified` solo con `changes`; `OrderItemEditor::creditReduction` retirado
+> (la bajada es `recordEdit(−Δ)`; las dos cifras del OUTCOME siguen para la notificación del
+> operador) · B/C del tope INVERTIDOS al libro y fuera del puente (`ledger-bridge.json` en 13) ·
+> `LedgerSingleSourceTest` sin lista de excepciones. ⚠️⚠️ **El modelo viejo deja de cerrar para un
+> crédito sin cobertura A PROPÓSITO**: no restaures el `min()`. ⚠️ `jumpParty` facturaba «total =
+> la parte online» (ilegal para I1): legalizado. ⚠️ Trampa: un corte por índice de `"    }\n"` casó
+> dentro de una llave más sangrada → dos `}` → la suite en paralelo lo enseña como un fatal del
+> `ExceptionHandler` sin línea; `php -l` lo dice.
+> ▶ **RETOMAR (siguiente sesión): la T3·4 — la retirada de §4.7** (spec §6.3 fila 4 y «Lo que la
+> T3·4 hereda» en §6.3.5): `Order` pierde §4.7 y gana `LineFacts` (`nac`/`online_nac`/reparto/cortesía
+> por línea, SIN cascada: sustituye a `GateBuckets`); `itemRefundableRemainderCents`,
+> `isVoidedLeftoverItem` y la prorrata de `unattributedRefundShareFor` sobre `online_nac`;
+> `onlineDueCents` = Σ líneas vivas (fila − reparto); la rama mixta de `breakdownLabel()` al libro;
+> mueren `OrderLedger` · `OrderFinancialSummary` · `ReservationFinancials` · `GateBuckets` ·
+> `OrderAdjustment::breakdownLabel` · `tickets.ledger.*` (salvo las tres notas) · `assertBookBridge` +
+> `ledger-bridge.json` · `ReservationFinancialsTest`, `OrderFinancialSummaryTest`, `OrderGateCreditTest`,
+> `ItemPriceChangeReconstructionTest` (→ hechos); `INVARIANTES` `PAY-16`/`PAY-17` reescritas sobre
+> I1–I4 y `PAY-19` sin la nota; `DEUDA` L4 cerrada; `desglose-dinero-cliente.md` a HISTÓRICO con
+> cabecera; el guion headless del cajón (`VERIFICACION-E2E-CAJON.md`, apartado del libro: pedido con
+> señal, 100 % online con bajada, cancelado, mixto con descuento) y la receta de las 25 acciones
+> sobre el corpus (`specs/desglose-dinero-cliente.md` §4.quater) ANTES del ojo del owner; y la spec
+> a ✅ con §7. `Order` está en la costura pero `OrderItemEditor`/`MixedPartySurcharge` en el
+> `CRITICAL_RE`: `VERIFY_CONC=1` y los verificadores otra vez. Numera `DECISIONES` mirando el
+> remoto (`git fetch`): la siguiente libre es la que siga a la última del remoto.
 > ❗❗❗ **2026-09-01 (tarde-noche, 3.ª sesión) · T3·2 · EL PANEL, LA HOJA Y LA PUERTA PINTAN EL LIBRO**
 > (`DECISIONES #311`, `specs/desglose-libro.md` **§6.3.2 diseño fino y §6.3.3 lo ejecutado**;
 > `identidad-qr-puerta.md` A·3 corregido). Suite: el CONTADOR de arriba · Pint · docs-check · build
@@ -67,17 +102,6 @@
 > puerta sin cambio de valor, devoluciones sin fila): legalizados todos, ninguna identidad
 > excepcionada. ⚠️ El «a tu favor» sigue en `items-list`, hoja y puerta hasta la T3·3 (el tope).
 > ⚠️ Sin `VERIFY_CONC`: ningún fichero del `CRITICAL_RE` cambió.
-> ▶ **RETOMAR (siguiente sesión): la T3·3 — correos + post-form + el tope** (§6.3, fila 3):
-> `OrderConfirmation` · `OrderItemModified` (pierde sus tres céntimos) · `OrderItemRefunded` ·
-> `OrderRefunded` · `MixedPartySurchargeChanged` pintan el libro del pedido AL ENVIAR (D-T3·5) ·
-> `reduction_pending_refund` → «se te devolverán en el parque» (D2) · `GuestFormController`/
-> `guests.blade` sin «a tu favor» · **`MixedPartySurcharge::applyCredit` escribe el crédito DERIVADO
-> entero** (D4): mueren `gateCoverageCents`, `inFavourCents` y su línea en `items-list`, hoja y
-> puerta (`mixedPartyInFavourCents`) · `mixed-party:verify-concurrency` en sus DOS escenarios y
-> `VERIFY_CONC=1` · los 3 casos del tope en `OrderFinancialInvariantsTest` se INVIERTEN (guarda N)
-> · `STILL_ON_THE_OLD_MODEL` se vacía y se borra con su test. Después la T3·4 (la retirada de
-> §4.7, `INVARIANTES`, `DEUDA`, guion headless, receta de las 25 acciones, ojo del owner). Numera
-> `DECISIONES` mirando el remoto (`git fetch`): la siguiente libre es la que siga a la última del remoto.
 > ❗❗❗ **2026-09-01 (tarde, 3.ª sesión) · T3·1 · EL CONTRATO, LA API Y EL CAJÓN PINTAN EL LIBRO**
 > (`DECISIONES #310` — el carril de la landing tomó `#309` entre medias —, `specs/desglose-libro.md`
 > §6.3 el diseño fino de la T3 en CUATRO sub-tandas y **§6.3.1 lo ejecutado**; `specs/api-v1.md`

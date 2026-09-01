@@ -1320,6 +1320,13 @@ en silencio, y justo en la configuración más común: un pack sin señal.**
 
 ## 20. ✅ EL −X €, DISEÑADO Y CERRADO CON EL OWNER (2026-08-31, `DECISIONES #285`)
 
+> ⚠️⚠️ **CORREGIDO por la T3·3 del LIBRO (`specs/desglose-libro.md` §6.3.4, `DECISIONES #305` D4 ·
+> `#312`, 2026-09-01) y la corrección va antes que el texto**: el **tope de cobertura** de §20.1 y el
+> **«a tu favor»** de §20.4/§20.5 **ya no existen**. El descuento se escribe ENTERO, y lo que la
+> puerta no absorbe es el SALDO «a devolver en el parque» del libro de la reserva —el mismo circuito
+> del parque (§20.5), sin una línea aparte ni un canal que pudiera quedar en negativo—. §20.6 y §20.7
+> (cuándo se mueve el dinero; el completo no se bloquea) siguen vigentes tal cual.
+
 > **Esta sección SUSTITUYE a §16 como diseño vigente del descuento** y contesta las cuatro preguntas
 > que §19 dejó abiertas. §16 no se tira: pasa a ser la pieza de la **fase 3** (ver §20.2), con sus
 > condiciones de despertar escritas. Iterado entre el owner y Fable, sin código.

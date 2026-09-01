@@ -300,17 +300,15 @@ final class ReservationSlip
      * ⚠️ El dinero sale de lo ESCRITO, nunca del veredicto derivado. Del veredicto solo salen los
      * dos datos que el dinero no dice: el exceso a favor y las edades sin producto.
      *
-     * @return array{lines: list<array{name:string, count:int, unit:int}>, chargeCents:int, creditLabel:?string, creditCents:int, netCents:int, inFavourCents:int, withoutProduct:int}|null
+     * @return array{lines: list<array{name:string, count:int, unit:int}>, chargeCents:int, creditLabel:?string, creditCents:int, netCents:int, withoutProduct:int}|null
      */
     public function mixedParty(): ?array
     {
         $service = app(MixedPartySurcharge::class);
         $written = $service->written($this->item);
         $withoutProduct = count($this->item->guestAgesWithoutProduct());
-        $inFavour = $service->inFavourCents($this->item);
 
-        if ($written['charge_cents'] === 0 && $written['credit_cents'] === 0
-            && $inFavour === 0 && $withoutProduct === 0) {
+        if ($written['charge_cents'] === 0 && $written['credit_cents'] === 0 && $withoutProduct === 0) {
             return null;
         }
 
@@ -320,7 +318,6 @@ final class ReservationSlip
             'creditLabel' => $written['credit']['label'] ?? null,
             'creditCents' => $written['credit_cents'],
             'netCents' => $written['cents'],
-            'inFavourCents' => $inFavour,
             'withoutProduct' => $withoutProduct,
         ];
     }

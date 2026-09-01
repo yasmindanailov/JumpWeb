@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Services\EmailBookBlock;
 use App\Domain\Booking\Services\EmailProductCard;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -25,11 +26,12 @@ use Illuminate\Notifications\Notification;
  *  - `$changes['event_data_change']`   → true (booleano simple; el detalle no se cita)
  *  - `$changes['addon_change']`        → ['added' => [...], 'removed' => [...], 'updated' => [...]]
  *
- * `$extraDueCents` opcional: si la edición generó cobro extra en puerta, se incluye una línea
- * explícita. Evita la sorpresa al cliente al llegar. (El `$refundedCents` que hubo aquí se RETIRÓ
- * en la T5 —`cumple-mixto.md` §25.5—: llevaba cableado a `null` desde que la edición dejó de
- * auto-reembolsar (D8 del desglose) y su línea prometía la tarjeta. Un reembolso real manda su
- * propio correo, `OrderItemRefunded`.)
+ * ▶ Desde la T3·3 del LIBRO (`specs/desglose-libro.md` §6.3.4, D-T3·21) este correo NO lleva ningún
+ * importe suelto: el bloque del libro (`EmailBookBlock`) dice cada línea con su signo, el Total, lo
+ * pagado y el saldo con su clase, compuesto AL ENVIAR. Los tres céntimos que le pasaba el editor
+ * eran una segunda composición del mismo dinero —calculada con la cascada de créditos— y murieron
+ * con ella. (Antes, en la T5 de `cumple-mixto.md` §25.5, se había retirado ya el importe del
+ * reembolso: un reembolso real manda su propio correo, `OrderItemRefunded`.)
  *
  * Defensivo: si `$changes` está vacío y no hay importes, no debería enviarse
  * (el orquestador comprueba antes de notify). Para defensa en profundidad, el
@@ -51,14 +53,6 @@ class OrderItemModified extends Notification implements ShouldQueue
         public Order $order,
         public OrderItem $item,
         public array $changes = [],
-        public ?int $extraDueCents = null,
-        // ⚠️⚠️ **La BAJADA también es dinero, y este email no la contaba** (`#155`; medido en
-        // `#149`: tras mover la fecha a un día más barato, el cliente al que se le debían 10,00 €
-        // recibía un email sin un solo importe). Dos términos porque una bajada tiene dos destinos
-        // (`#150`): lo que se le debe (aflora como «pendiente de devolución») y lo que se absorbe
-        // contra lo que iba a pagar en el parque (packs con señal).
-        public ?int $pendingRefundCents = null,
-        public ?int $gateCreditedCents = null,
     ) {}
 
     /**
@@ -111,28 +105,10 @@ class OrderItemModified extends Notification implements ShouldQueue
             $message->line(__('emails.order_item_modified.addon_change'));
         }
 
-        // Líneas financieras condicionales. Mantienen al cliente informado de lo
-        // que verá al llegar a puerta o en el extracto.
-        if ($this->extraDueCents !== null && $this->extraDueCents > 0) {
-            $message->line(__('emails.order_item_modified.extra_due', [
-                'amount' => number_format($this->extraDueCents / 100, 2, ',', '.'),
-            ]));
-        }
-        // `#155`: la bajada, contada — el mismo vocabulario que la pantalla («pendiente de
-        // devolverte»). T5 (§25.5): la frase describe el estado y las DOS salidas (tarjeta o
-        // parque) SIN prometer canal ni correo — el registro del reembolso manual es OPCIONAL
-        // (§20.5), y prometer un aviso que puede no existir era la sobre-promesa de `#285`. El
-        // puntero de pantalla es «Mis pedidos»: «Mis reservas» no enseña importes desde `#130`.
-        if ($this->pendingRefundCents !== null && $this->pendingRefundCents > 0) {
-            $message->line(__('emails.order_item_modified.reduction_pending_refund', [
-                'amount' => number_format($this->pendingRefundCents / 100, 2, ',', '.'),
-            ]));
-        }
-        if ($this->gateCreditedCents !== null && $this->gateCreditedCents > 0) {
-            $message->line(__('emails.order_item_modified.reduction_gate_credit', [
-                'amount' => number_format($this->gateCreditedCents / 100, 2, ',', '.'),
-            ]));
-        }
+        // EL LIBRO del pedido a día de hoy (D-T3·5): la subida como línea «+», la bajada como línea
+        // «−» —la BAJADA también es dinero (`#155`), y aquí la cuenta el mismo bloque que todo lo
+        // demás— y el saldo con su clase: «a pagar en el parque» o «a devolver en el parque» (D2).
+        $message->line(EmailBookBlock::forOrder($this->order));
 
         return $message
             ->action(__('emails.order_item_modified.action'), route('account.orders'))

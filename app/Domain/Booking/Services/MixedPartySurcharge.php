@@ -474,10 +474,15 @@ class MixedPartySurcharge
     }
 
     /**
-     * El ESPEJO del suplemento (T4, spec §24.3): deja escrito
-     * `min(crédito_derivado, cobertura de puerta)` — el patrón exacto de la línea de cargo con el
-     * signo cambiado, y el EXCESO sin escribir (se enseña como «a tu favor», §20.4). Devuelve el
-     * crédito que queda ESCRITO tras la pasada, en positivo.
+     * El ESPEJO del suplemento (T4, spec §24.3): deja escrito el crédito DERIVADO entero — el patrón
+     * exacto de la línea de cargo con el signo cambiado. Devuelve el crédito que queda ESCRITO tras
+     * la pasada, en positivo.
+     *
+     * ▶ **Desde la T3·3 del LIBRO (`DECISIONES #305` D4, `#312`) ya NO lleva tope.** Hasta entonces
+     * escribía `min(derivado, cobertura de puerta)` y el exceso se enseñaba como «a tu favor» y se
+     * liquidaba en mano (§20.4/§20.5): el tope existía para que ningún canal del modelo de dos ejes
+     * quedara en negativo. Con el libro no hay canales: lo que la puerta no absorbe es saldo «a
+     * devolver en el parque» (`specs/desglose-libro.md` §4.4), y el circuito del parque es el mismo.
      *
      * ⚠️⚠️ **La asimetría del silencio es distinta a la del cargo, a propósito** (§24.3·7): el
      * cargo puede CRECER con el veredicto en silencio (declarar la edad que faltaba es un dato
@@ -502,12 +507,10 @@ class MixedPartySurcharge
             $derived += $t['count'] * $t['unit_cents'];
         }
 
-        // El TOPE de cobertura (§20.1): el crédito solo puede absorber dinero de puerta que exista.
-        // Se mide del estado ESCRITO bajo el lock, DESPUÉS de los cargos de esta misma pasada (que
-        // suman a la cobertura). Sin el tope, una reserva pagada 100 % online quedaría con la
-        // puerta en negativo y el cinturón `max(0,…)` mordería — el guardián de invariantes lo
-        // prohíbe expresamente.
-        $want = min($derived, $this->gateCoverageCents($principal));
+        // Sin tope (T3·3 del libro, D4): se escribe lo derivado entero. Lo que la puerta no absorba
+        // aflora como saldo «a devolver en el parque» en el libro de la reserva, no como un canal
+        // en negativo ni como una promesa aparte.
+        $want = $derived;
 
         if ($want === $written) {
             return $written;
@@ -602,62 +605,6 @@ class MixedPartySurcharge
         }
 
         return $targets;
-    }
-
-    /**
-     * La COBERTURA de puerta de la reserva (§24.3·4): la suma neta de sus dos cubos —`extra_due`
-     * de las líneas NO-crédito (los cargos de fiesta mixta recién escritos y los de ediciones) y
-     * `deposit_remainder`— que es el dinero del que un descuento puede restar sin dejar ningún
-     * canal en negativo.
-     *
-     * ⚠️ Consulta FRESCA bajo el lock, no las relaciones: `apply()` acaba de crear o mover cargos
-     * en esta misma transacción y las colecciones cargadas antes no los ven.
-     */
-    private function gateCoverageCents(OrderItem $principal): int
-    {
-        $items = collect([$principal])->merge($principal->children()->get())
-            ->reject(fn (OrderItem $i): bool => $i->isCancelled());
-        $allIds = $items->map(fn (OrderItem $i): int => (int) $i->id)->all();
-
-        // T1 del libro: los cubos se DERIVAN de los hechos frescos de cada línea con la cascada de
-        // siempre (`GateBuckets`), no se suman filas por tipo — desde la T1 una bajada lleva su
-        // delta entero y la parte que la señal absorbió vive en el replay, no en una fila aparte.
-        $rows = OrderAdjustment::query()->where('order_id', $principal->order_id)->whereIn('order_item_id', $allIds)->get();
-
-        $coverage = 0;
-        foreach ($items as $line) {
-            $buckets = GateBuckets::fromRows($rows, $line);
-            if (! $line->is_credit) {
-                $coverage += $buckets->extraDue;
-            }
-            $coverage += $buckets->depositRemainder;
-        }
-
-        return max(0, $coverage);
-    }
-
-    /**
-     * El EXCESO «a tu favor» (T4, §20.4 y §24.4): la parte del descuento derivado que la puerta no
-     * pudo absorber y por eso NO está escrita — se enseña y se liquida en el parque (§20.5).
-     * `0` sin veredicto que gobierne: el exceso es una promesa, y una promesa no se hace sobre un
-     * silencio. Lectura pura sobre relaciones ya cargadas.
-     */
-    public function inFavourCents(OrderItem $principal): int
-    {
-        $mix = $this->mix->for($principal);
-        if (! $this->derivationGoverns($mix)) {
-            return 0;
-        }
-
-        $derived = 0;
-        foreach ($this->creditTargets($mix) as $t) {
-            $derived += $t['count'] * $t['unit_cents'];
-        }
-        if ($derived === 0) {
-            return 0;
-        }
-
-        return max(0, $derived - ($this->currentCredit($principal)['cents'] ?? 0));
     }
 
     /**

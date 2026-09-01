@@ -350,7 +350,7 @@ class OrderItemEditor
      *     PROPIA transacción corta en `Order`, y los buckets leen estado
      *     committed entre ellas: el audit de éxito; por SIGNO del diff de
      *     Tab 1, SUBIDA → `recordEdit` con delta positivo (cobro en puerta, sin Redsys) o
-     *     BAJADA → el waterfall de créditos (`creditReduction`, UNA pieza:
+     *     BAJADA → `recordEdit(−Δ)` (T1 del libro: UNA fila con su delta entero;
      *     `#225` D8 «bajar = solo cancelar», sin auto-reembolso; lo que queda
      *     por debajo de lo cobrado online aflora como pendiente de
      *     devolución); el cobro de cada complemento añadido/subido ATADO a
@@ -692,13 +692,12 @@ class OrderItemEditor
         //    (`GateBuckets`). NO se auto-reembolsa (cancelar ≠ reembolsar): el operador devuelve
         //    APARTE con «Reembolsar». (Evita además el fallo en pedidos manuales: sin gateway_order
         //    el refund REST fallaba siempre.)
-        // Context ESTRUCTURADO (no solo claves) para el desglose "A cobrar en el parque" (#171).
+        // Context ESTRUCTURADO (no solo claves): es lo que el libro convierte en la etiqueta de la
+        // línea de valor («Cantidad: 2 → 3», «Cambio de fecha a …»).
+        // Las dos cifras del OUTCOME (lo que subió / lo que bajó) alimentan la notificación del
+        // OPERADOR en el panel; el correo del cliente ya no las recibe (T3·3 del libro: pinta el libro).
         $extraDueCents = null;
         $reducedCents = null;
-        // `#155`: el REPARTO de una bajada, para que el email lo cuente — lo absorbido en puerta
-        // (créditos) y lo que aflora como «pendiente de devolución».
-        $gateCreditedCents = null;
-        $pendingRefundCents = null;
         // ⚠️⚠️ **`slot_change` ENTRA aquí desde `DECISIONES #145`, y su ausencia era un defecto con
         // fecha.** El filtro es del commit fundacional (2026-08-12), cuando mover la fecha NO
         // re-tarificaba: un cambio de franja no podía generar diferencia de precio, así que no había
@@ -707,15 +706,15 @@ class OrderItemEditor
         // `"changes": ["slot_change"]` con los precios de origen y destino.
         $itemEditContext = array_intersect_key($changes, array_flip(['product_change', 'quantity_change', 'slot_change', 'unit_price_change']));
         $fresh = $item->fresh();
+        // Una SUBIDA y una BAJADA son el MISMO hecho con su delta entero y su signo (T1 del libro,
+        // `specs/desglose-libro.md` §4.2). Qué parte absorbe la puerta y qué parte se devuelve lo
+        // dice el LIBRO al leer (el saldo de la reserva), no una cascada al escribir.
         if ($diff > 0) {
             $order->recordEdit($fresh, $diff, $by, 'item_edit', ['changes' => $itemEditContext]);
             $extraDueCents = $diff;
         } elseif ($diff < 0) {
-            $reduction = -$diff;
-            $credited = $this->creditReduction($order, $fresh, $reduction, $by, 'item_edit_reduction', ['changes' => $itemEditContext]);
-            $reducedCents = $reduction;
-            $gateCreditedCents = $credited['gate_credited'];
-            $pendingRefundCents = $credited['pending_refund'];
+            $order->recordEdit($fresh, $diff, $by, 'item_edit_reduction', ['changes' => $itemEditContext]);
+            $reducedCents = -$diff;
         }
 
         // Sub-fase 7.2e.4 (#170): el upcharge de COMPLEMENTOS es un MOVIMIENTO SEPARADO (decisión
@@ -764,11 +763,9 @@ class OrderItemEditor
                 ]],
             ]];
 
+            $order->recordEdit($child, $delta, $by, $delta > 0 ? 'addon_per_guest_rescale' : 'addon_per_guest_rescale_reduction', $ctx);
             if ($delta > 0) {
-                $order->recordEdit($child, $delta, $by, 'addon_per_guest_rescale', $ctx);
                 $extraDueCents = ($extraDueCents ?? 0) + $delta;
-            } else {
-                $this->creditReduction($order, $child, -$delta, $by, 'addon_per_guest_rescale_reduction', $ctx);
             }
         }
 
@@ -778,16 +775,13 @@ class OrderItemEditor
             $changes['event_data_change'] = true;
         }
 
-        // Un solo email consolidado. Una bajada (D8) ya NO auto-reembolsa — pero desde `#155` SÍ
-        // se cuenta: cuánto queda pendiente de devolverle y cuánto pagará de menos en el parque.
-        // (El `refundedCents: null` que iba aquí se retiró con su parámetro en la T5, §25.5.)
+        // Un solo email consolidado: qué cambió, y el LIBRO del pedido a día de hoy (T3·3 del libro,
+        // D-T3·5): los importes —con su signo y su saldo— los dice el bloque compartido, no tres
+        // céntimos calculados aquí (los de `#155` murieron con la cascada).
         $order->notifyCustomer(new OrderItemModified(
             order: $order->fresh(),
             item: $item->fresh(),
             changes: $changes,
-            extraDueCents: $extraDueCents,
-            pendingRefundCents: $pendingRefundCents,
-            gateCreditedCents: $gateCreditedCents,
         ));
 
         // ⚠️⚠️ **Sin esto, la línea del suplemento se queda MINTIENDO.** Si el operador baja los
@@ -804,38 +798,6 @@ class OrderItemEditor
             'reduced_cents' => $reducedCents,
             'item_edit_context' => $itemEditContext,
         ]);
-    }
-
-    /**
-     * **Una BAJADA es UN hecho: su delta entero, en una fila** (T1 del libro,
-     * `specs/desglose-libro.md` §4.2).
-     *
-     * ⚠️⚠️ Hasta la T1 esto era una CASCADA de escritura: un crédito contra el cubo de ediciones,
-     * otro contra el resto de la señal, y un marcador de 0 € cuando ninguno absorbía nada — con lo
-     * que el importe de una bajada 100 % online **no estaba en ninguna fila** y el resto de una
-     * bajada cubierta a medias **no se persistía**. Los dos huecos son la raíz del fantasma de la
-     * señal (`DEUDA.md`, 2026-09-01). Ahora la fila lleva el delta con signo y el reparto entre
-     * cubos lo replica la LECTURA (`GateBuckets`), en el mismo orden en que ocurrió.
-     *
-     * Lo que se devuelve sigue siendo lo que el correo cuenta (`#155`): cuánto absorbió la puerta
-     * —lo que pagará de menos en el parque— y cuánto aflora como pendiente de devolución. Se
-     * calcula con los cubos FRESCOS de la línea, que es lo que la cascada consultaba al escribir.
-     *
-     * @param  array{changes: array<string,mixed>}  $ctx
-     * @return array{gate_credited:int, pending_refund:int}
-     */
-    private function creditReduction(Order $order, OrderItem $target, int $reduction, ?User $by, string $reason, array $ctx): array
-    {
-        $order->load('adjustments');
-        $coverage = GateBuckets::forItem($order, $target)->coverage();
-        $gateCredited = max(0, min($reduction, $coverage));
-
-        $order->recordEdit($target, -$reduction, $by, $reason, $ctx);
-
-        return [
-            'gate_credited' => $gateCredited,
-            'pending_refund' => max(0, $reduction - $gateCredited),
-        ];
     }
 
     // ─── Producto y cantidad ────────────────────────────────────────────────

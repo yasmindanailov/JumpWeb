@@ -78,9 +78,6 @@ class GuestFormController extends Controller
             // si lo escribió en Ajustes, con su teléfono. Se le dice que llame: lo resuelve el parque.
             'noProductIndexes' => $reservation->guestAgesWithoutProduct(),
             'noProductNotices' => $this->noProductNotices($guestRegimes),
-            // El EXCESO «a tu favor» (T4, §20.4): la parte del descuento que la puerta no pudo
-            // absorber. Derivado, nunca escrito; 0 sin veredicto que gobierne.
-            'inFavourCents' => app(MixedPartySurcharge::class)->inFavourCents($reservation),
             // El dinero solo se mueve al guardar con TODAS las edades (`#285` §20.6): si hay dinero
             // escrito —cargo O descuento— y falta alguna, se le dice que está congelado y cuántas.
             'frozenMissingAges' => ($ageMix->applies && ! $ageMix->allAgesDeclared()

@@ -11,6 +11,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AgeFamilySealer;
+use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Domain\Booking\Services\ReservationSlip;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\GateProfile;
@@ -208,28 +209,34 @@ class MixedPartyParkSurfacesTest extends TestCase
         );
     }
 
-    public function test_the_priced_slip_shows_the_cheap_case_as_money_in_favour(): void
+    public function test_the_priced_slip_shows_the_cheap_case_as_a_written_discount_owed_at_the_park(): void
     {
-        // Invitado de 3 años en una fiesta Jump pagada 100 % online: el descuento no tiene puerta
-        // que lo absorba (T4, §20.4) → no se escribe y la hoja CON precios dice el «a tu favor»,
-        // que es lo que el operador liquida en mano (§20.5).
-        $html = $this->renderedSlipWithPrices($this->jumpParty([8, 3]));
+        // Invitado de 3 años en una fiesta Jump pagada 100 % online: desde la T3·3 del LIBRO (D4) el
+        // descuento se escribe ENTERO (−7,00) y la caja de saldo de la hoja dice «a devolver en el
+        // parque» — ya no hay «a tu favor» (§20.4 murió con el tope).
+        $item = $this->jumpParty([8, 3]);
+        $written = app(MixedPartySurcharge::class)->written($item->fresh(['ticketType', 'slot', 'order', 'children']));
+        $this->assertSame(700, $written['credit_cents'], 'guarda del escenario: el descuento está escrito');
 
-        $this->assertStringContainsString(
-            __('admin.orders.mixed_party.in_favour', ['amount' => ReservationSlip::money(700)]),
-            $html,
-        );
+        $html = $this->renderedSlipWithPrices($item);
+
+        $this->assertStringContainsString($written['credit']['label'].': −'.ReservationSlip::money(700), $html);
+        $this->assertStringContainsString('data-book-balance="refund_at_park"', $html);
+        $this->assertStringContainsString(__('admin.orders.book.balance_refund_at_park'), $html);
         // Y NO imprime un total aplicado: no hay nada escrito que cobrar.
         $this->assertStringNotContainsString(__('admin.orders.mixed_party.applied', ['amount' => ReservationSlip::money(0)]), $html);
     }
 
-    /** En la operativa, el mismo caso es un AVISO sin cifra: hay que liquidar, el cuánto está en la de precios. */
-    public function test_the_operational_slip_flags_the_in_favour_without_the_amount(): void
+    /** En la operativa, el mismo caso es la frase del descuento SIN cifra: el cuánto está en la de precios. */
+    public function test_the_operational_slip_names_the_discount_without_the_amount(): void
     {
-        $html = $this->renderedSlip($this->jumpParty([8, 3]));
+        $item = $this->jumpParty([8, 3]);
+        $written = app(MixedPartySurcharge::class)->written($item->fresh(['ticketType', 'slot', 'order', 'children']));
 
-        $this->assertStringContainsString(__('admin.orders.slip.mixed_party_in_favour_fact'), $html);
-        $this->assertStringNotContainsString('7,00', $html, 'el importe a favor no puede salir en la operativa');
+        $html = $this->renderedSlip($item);
+
+        $this->assertStringContainsString($written['credit']['label'], $html);
+        $this->assertStringNotContainsString('7,00', $html, 'el importe del descuento no puede salir en la operativa');
     }
 
     public function test_without_a_mix_the_slip_has_no_block(): void

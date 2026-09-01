@@ -28,9 +28,8 @@ return [
     'mixed_surcharge' => 'Por eso se abona un suplemento de :amount en el parque, el día de la fiesta.',
     // ⚠️ `mixed_savings` CADUCÓ con la T4 (`specs/cumple-mixto.md` §24.5): el descuento SE APLICA
     // solo (`[DECIDIDO owner]` D5). Quedan las frases nuevas del descuento y del «a tu favor».
-    'mixed_discount_total' => 'Por eso se te descuentan :amount de lo que pagarás en el parque el día de la fiesta.',
+    'mixed_discount_total' => 'Por eso se te descuentan :amount. Si te queda algo por pagar en el parque, se descuenta de ahí; si ya lo tenías todo pagado, se te devuelven en el parque el día de la fiesta.',
     'mixed_net_zero' => 'Entre el suplemento y el descuento, tu importe en el parque no cambia por este motivo.',
-    'mixed_in_favour' => ':amount a tu favor — se te devuelven en el parque el día de la fiesta.',
     'mixed_savings_pending' => 'Por eso tu fiesta sale :amount más barata: el descuento se aplicará al completar todas las edades.',
     'mixed_no_difference' => 'No hay diferencia de precio entre los dos: no tienes nada que abonar por este motivo.',
     'privacy' => 'Solo usamos estos datos para preparar tu evento. Los datos de los menores se tratan de forma confidencial y se eliminan según nuestra política de privacidad.',

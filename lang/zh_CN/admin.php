@@ -87,7 +87,6 @@ return [
                 'mixed_party_line' => ':count × :name · 每位来宾 :unit €',
                 'mixed_party_total' => '混龄派对附加费：:amount €',
                 'mixed_party_discount_total' => '混龄派对折扣：−:amount €',
-                'mixed_party_in_favour' => ':amount € 归客户所有 — 在园区现场退还',
                 'booked_on' => '预订于 :when',
                 'paid_on' => '付款于 :when',
                 'method_desk' => '柜台',
@@ -423,7 +422,6 @@ return [
             // 混龄派对（T3 · E）：区块标题；行与提示复用 `admin.orders.mixed_party.*`。
             'mixed_party_heading' => '混龄派对',
             'mixed_party_fact_line' => ':count × :name',
-            'mixed_party_in_favour_fact' => '有一笔应退给客户的金额,将于派对当天在园区结算(金额见含价格版预订单)。',
         ],
 
         // Datos del evento por item (#86, sub-fase 7.2a).
@@ -444,7 +442,6 @@ return [
             'applied' => '已计入补差价::amount · 在园区收取',
             // T4:折扣已真实生效;行的措辞由领域层(`breakdownLabel`)统一生成。
             'net' => '按年龄净额::amount · 在园区结算',
-            'in_favour' => ':amount 归客户所有 — 派对当天在园区退还(不属于待处理的银行退款)',
             'missing_credit_carrier' => '无法计入折扣:缺少承载它的产品(产品目录中的「混龄派对折扣」)。在此期间该金额归客户所有,在园区结算。',
             'drift' => '已记录的补差价为 :written,按当前申报的年龄和本预订的条件应为 :derived。系统不会自动重算:已记录的金额就是告知客户的金额。',
             'missing_carrier' => '无法计入补差价:缺少承载它的产品(产品目录中的「混龄派对补差价」)。在此期间本场派对不会收取任何费用。',

@@ -3,8 +3,8 @@
 namespace App\Notifications;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Services\EmailBookBlock;
 use App\Domain\Booking\Services\EmailProductCard;
-use App\Domain\Booking\Services\OrderLedger;
 use App\Domain\Identity\Services\CustomerCards;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\DisplayTime;
@@ -52,33 +52,12 @@ class OrderConfirmation extends Notification implements ShouldQueue
         // invitados + complementos + precio). Cortesía visual; NO altera la lógica de textos de abajo.
         $message->line(EmailProductCard::forOrder($this->order));
 
-        // #225: si el pedido cobra SEÑAL (existen ajustes `deposit_remainder` vivos), el email
-        // dice «Señal pagada online: X» + «Pendiente en el parque: Y» en vez de «Total pagado».
-        // Predicado canónico `depositRemainder > 0` (NO `online < total`, que se encendería por
-        // una línea cancelada en un pedido sin señal). El pendiente sale de `pendingAtGate()`
-        // (robusto a ediciones/cancelaciones en un reenvío), no de `total − online`.
-        $this->order->loadMissing(['items.ticketType', 'items.slot', 'adjustments', 'payments.refunds']);
-        $summary = $this->order->financialSummary();
-        // ⚠️ Los importes salen del LEDGER, no de `onlineDueCents()` ni de `Order.total`
-        // (`DECISIONES #127`). Es el mismo motivo por el que lo pendiente ya salía de
-        // `pendingAtGate()`: **este correo se REENVÍA desde el panel**, y para entonces el pedido
-        // puede haber cambiado. `onlineDueCents()` es «lo que se cobraría al pagar ahora» y
-        // `Order.total` es lo facturado: los dos envejecen mal en un reenvío. `pagadoOnline` es lo
-        // realmente pagado que respalda producto, y `valor` lo que vale hoy.
-        $ledger = OrderLedger::forOrder($this->order);
-        if ($summary->depositRemainder > 0) {
-            $message
-                ->line(__('emails.order_confirmation.deposit_paid', [
-                    'amount' => number_format($ledger->pagadoOnline / 100, 2, ',', '.'),
-                ]))
-                ->line(__('emails.order_confirmation.pending_at_park', [
-                    'amount' => number_format($ledger->pendientePuerta / 100, 2, ',', '.'),
-                ]));
-        } else {
-            $message->line(__('emails.order_confirmation.total', [
-                'amount' => number_format($ledger->valor / 100, 2, ',', '.'),
-            ]));
-        }
+        // EL LIBRO del pedido (T3·3 de `specs/desglose-libro.md`, D-T3·5): lo que vale, lo cobrado y el
+        // saldo con su clase —con señal, «a pagar en el parque» el resto; sin ella, «nada pendiente»—
+        // compuesto AL ENVIAR: este correo se REENVÍA desde el panel, y para entonces el pedido puede
+        // haber cambiado. Sustituye a las tres líneas de canal («Total pagado» / «Señal pagada online» /
+        // «Pendiente de pago en el parque»), que eran una segunda composición del mismo dinero.
+        $message->line(EmailBookBlock::forOrder($this->order));
 
         // Audit #114 G8 — Fecha y hora del cobro (en la TZ de presentación, #111). Solo
         // cuando `paid_at` existe (rama Authorized del handler; en `IdempotentPaid` también

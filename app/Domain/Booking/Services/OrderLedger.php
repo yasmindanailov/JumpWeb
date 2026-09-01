@@ -237,22 +237,15 @@ final readonly class OrderLedger
     }
 
     /**
-     * La frase del «a tu favor» (T4, §24.4), o `null` — que es la condición de enseñarla (`L6`).
-     * A nivel de PEDIDO suma el exceso de todas sus reservas; por reserva, el suyo.
+     * El «a tu favor» MURIÓ con el tope (T3·3 del libro, `DECISIONES #305` D4 · `#312`): el descuento
+     * mixto se escribe entero y lo que la puerta no absorbe es saldo «a devolver en el parque». El
+     * campo `inFavourHint` queda a `null` hasta que esta clase se retire en la T3·4.
      *
      * @param  list<OrderItem>  $principals
      */
     private static function inFavourHintFor(array $principals): ?string
     {
-        $service = app(MixedPartySurcharge::class);
-        $cents = 0;
-        foreach ($principals as $principal) {
-            $cents += $service->inFavourCents($principal);
-        }
-
-        return $cents > 0
-            ? __('tickets.ledger_in_favour', ['amount' => Money::format($cents)])
-            : null;
+        return null;
     }
 
     /**

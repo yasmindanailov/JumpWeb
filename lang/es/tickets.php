@@ -249,7 +249,6 @@ return [
     ],
     // T4 (`specs/cumple-mixto.md` §24.4): el «a tu favor» de fiesta mixta — el descuento que la
     // puerta no pudo absorber; se liquida en el parque. `null` = no se enseña (patrón `L6`).
-    'ledger_in_favour' => ':amount a tu favor — se te devuelven en el parque el día de la fiesta.',
     'ledger_note' => [
         // ⚠️⚠️ Va PRIMERO en `noteFor()`: si el desglose no cuadra, ninguna otra frase puede ser
         // cierta (`DECISIONES #132`).
@@ -303,6 +302,11 @@ return [
         'balance_refund_pending' => 'Pendiente de devolución',
         'balance_pay_online' => 'Pendiente de pagar por web',
         'balance_rest_at_park' => 'y :amount en el parque',
+        // El bloque del libro en los CORREOS (T3·3, D-T3·5): título y las tres clases sin línea en el cajón.
+        'email_title' => 'Tu pedido, a día de hoy',
+        'balance_settled' => 'Nada pendiente',
+        'balance_expired' => 'Caducado sin cobro',
+        'balance_under_review' => 'Importe en revisión',
     ],
     'errors' => [
         'choose_one' => 'Elige al menos una entrada para continuar.',

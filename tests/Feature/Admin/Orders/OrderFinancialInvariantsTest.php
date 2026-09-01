@@ -288,43 +288,46 @@ class OrderFinancialInvariantsTest extends TestCase
         $this->assertSame(0, $summary->pendienteDevolucion(), 'un descuento de puerta no es deuda bancaria');
     }
 
-    public function test_mixed_party_credit_fully_online_writes_nothing(): void
+    public function test_mixed_party_credit_fully_online_is_written_entire_and_owed_at_the_park(): void
     {
-        // CASO B (§20.2 fase 2): pagado 100 % online → cobertura de puerta CERO → el descuento NO
-        // se escribe (el tope de §20.1); el exceso se ENSEÑA como «a tu favor» y se liquida en el
-        // parque (§20.5). Este escenario documenta la decisión: no hay línea que construir, y por
-        // eso los totales quedan INTACTOS — escribir aquí el crédito dejaría la puerta de la
-        // reserva en negativo y el cinturón `max(0,…)` mordería, que este guardián prohíbe.
-        // (La mutación de quitar el tope muerde en el caso B del reconciliador,
-        // `MixedPartySurchargeTest`.)
+        // CASO B, INVERTIDO por la T3·3 del LIBRO (`DECISIONES #305` D4 · `#312`): pagado 100 % online,
+        // el descuento se escribe ENTERO (8,00) y el libro debe 8,00 «a devolver en el parque». El
+        // modelo viejo no cierra aquí A PROPÓSITO —su eje de puerta se clava en cero (`max(0,…)`)—,
+        // así que este caso ya no pasa por `assertReconciles` ni por el puente (`ledger-bridge.json`
+        // perdió su foto). La línea se construye a mano: lo que se prueba es la CONTABILIDAD del
+        // libro; el mecanismo que la escribe (y su mutación: restaurar el tope) vive en
+        // `MixedPartySurchargeTest`.
         $order = $this->makePaidOrder();
-        $this->attachActiveItem($order, quantity: 8, unitPrice: 1500);
+        $item = $this->attachActiveItem($order, quantity: 8, unitPrice: 1500);
+        $this->attachCreditLine($order, $item, 800, guests: 2, unitCents: 400);
         $this->syncTotalToOnline($order);
 
-        $this->assertReconciles($order, 'T4·B pagado 100 % online (el tope no deja escribir)');
-
-        $summary = $this->freshOrder($order)->financialSummary();
-        $this->assertSame(12000, $summary->totalFinalNeto(), 'sin cobertura, los totales no se mueven');
-        $this->assertSame(12000, $summary->pagadoOnline());
-        $this->assertSame(0, $summary->pendingAtGate());
+        $book = OrderBook::forOrder($this->freshOrder($order));
+        $this->assertTrue($book->isConsistent, 'I1–I4 cierran con el descuento entero');
+        $this->assertSame($book->totalCents, $book->movementsSumCents(), 'I3');
+        $this->assertSame(11200, $book->totalCents, '120,00 − 8,00');
+        $this->assertSame(12000, $book->paidCents, 'todo se cobró online');
+        $this->assertSame(Balance::KIND_REFUND_AT_PARK, $book->balance->kind, 'hay visita por delante');
+        $this->assertSame(-800, $book->balance->cents);
     }
 
-    public function test_mixed_party_credit_with_partial_coverage_reconciles(): void
+    public function test_mixed_party_credit_with_partial_coverage_is_written_entire(): void
     {
-        // CASO C (§19.4): señal grande (117,00 online, 3,00 en puerta) → el tope deja escribir
-        // SOLO 3,00 de los 8,00 derivados; los 5,00 restantes son el «a tu favor» (no escrito).
+        // CASO C, INVERTIDO: señal grande (117,00 online, 3,00 en puerta) y descuento de 8,00. Hasta la
+        // T3·3 el tope dejaba escribir SOLO 3,00 y los 5,00 restantes eran el «a tu favor»; ahora se
+        // escriben los 8,00, el Total baja a 112,00 y el libro debe 5,00 en el parque.
         $order = $this->makePaidOrder();
         $item = $this->attachActiveItem($order, quantity: 8, unitPrice: 1500);
         $this->attachDepositRemainder($order, $item, 300);
-        $this->attachCreditLine($order, $item, 300, guests: 2, unitCents: 400);
+        $this->attachCreditLine($order, $item, 800, guests: 2, unitCents: 400);
         $this->syncTotalToOnline($order);
 
-        $this->assertReconciles($order, 'T4·C cobertura parcial (3,00 de 8,00)');
-
-        $summary = $this->freshOrder($order)->financialSummary();
-        $this->assertSame(11700, $summary->totalFinalNeto());
-        $this->assertSame(0, $summary->pendingAtGate(), 'la puerta queda exactamente en cero, no en negativo');
-        $this->assertSame(11700, $summary->pagadoOnline());
+        $book = OrderBook::forOrder($this->freshOrder($order));
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(11200, $book->totalCents);
+        $this->assertSame(11700, $book->paidCents, 'la señal grande');
+        $this->assertSame(Balance::KIND_REFUND_AT_PARK, $book->balance->kind);
+        $this->assertSame(-500, $book->balance->cents, '3,00 de resto − 8,00 de descuento');
     }
 
     public function test_mixed_party_credit_resolves_with_the_finished_reservation(): void

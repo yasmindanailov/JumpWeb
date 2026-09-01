@@ -118,9 +118,6 @@
                                 {{ __('guestform.mixed_net_zero') }}
                             @endif
                         </p>
-                        @if ($inFavourCents > 0)
-                            <p class="gf-mix__text">{{ __('guestform.mixed_in_favour', ['amount' => \App\Domain\Platform\Services\Money::format($inFavourCents)]) }}</p>
-                        @endif
                     </div>
                 @elseif ($ageMix->mixed)
                     {{-- Sin dinero escrito manda el veredicto de hoy: es información, no una deuda. --}}
@@ -138,11 +135,7 @@
                             </p>
                         @endforeach
                         <p class="gf-mix__text">
-                            @if ($inFavourCents > 0)
-                                {{-- T4: sin cobertura de puerta el descuento no se ESCRIBE — pero es
-                                     suyo y se liquida en el parque (§20.4/§20.5). --}}
-                                {{ __('guestform.mixed_in_favour', ['amount' => \App\Domain\Platform\Services\Money::format($inFavourCents)]) }}
-                            @elseif ($ageMix->hasSavings())
+                            @if ($ageMix->hasSavings())
                                 {{-- El veredicto aún no gobierna (faltan edades por declarar): se
                                      anuncia que el descuento llegará al completar, no que «no se
                                      descuenta solo» — eso CADUCÓ con la T4 (`[DECIDIDO owner]` D5). --}}

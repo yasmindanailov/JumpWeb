@@ -61,5 +61,9 @@ return [
         'balance_refund_pending' => '待退款',
         'balance_pay_online' => '待在线支付',
         'balance_rest_at_park' => '另有 :amount 在园区支付',
+        'email_title' => '您的订单（截至今日）',
+        'balance_settled' => '无待处理款项',
+        'balance_expired' => '已过期，未付款',
+        'balance_under_review' => '金额审核中',
     ],
 ];

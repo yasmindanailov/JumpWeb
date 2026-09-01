@@ -401,34 +401,18 @@ class ItemPriceChangeReconstructionTest extends TestCase
             OrderItemModified::class,
             function (OrderItemModified $n) use ($order): bool {
                 $lines = collect($n->toMail($order->user)->introLines)->map(fn ($l) => (string) $l);
+                $body = $lines->implode(' ');
 
-                // T5 (§25.5, guarda F): la frase describe el estado y las DOS salidas sin prometer
-                // canal ni correo — «procesemos la devolución» prometía de más con la liquidación
-                // en parque (`#285`), y «Mis reservas» no enseña importes desde `#130`.
-                return $n->pendingRefundCents === 1600
-                    && $lines->contains(__('emails.order_item_modified.reduction_pending_refund', ['amount' => '16,00']))
+                // T3·3 del LIBRO (D-T3·5, D2): la bajada es una línea «−» del bloque del libro y el
+                // saldo dice «a devolver en el parque» — sin prometer canal ni correo (la guarda F
+                // de la T5), y sin un importe suelto que el editor tuviera que calcular (D-T3·21).
+                return ! property_exists($n, 'pendingRefundCents')
+                    && str_contains($body, 'data-book-movement="edit"')
+                    && str_contains($body, '−16,00')
+                    && str_contains($body, __('tickets.journal.balance_refund_at_park'))
                     && $lines->every(fn (string $l): bool => ! str_contains($l, 'procesemos la devolución')
                         && ! str_contains($l, '«Mis reservas»'));
             },
-        );
-    }
-
-    /**
-     * La otra mitad de una bajada (`#150`): la parte ABSORBIDA contra lo que iba a pagar en el
-     * parque (packs con señal) se cuenta como lo que es — «pagarás X € menos al llegar».
-     */
-    public function test_the_absorbed_reduction_email_says_you_will_pay_less_at_the_park(): void
-    {
-        [$order, $item] = $this->paidOrderOn($this->saturday, qty: 2);
-
-        $n = new OrderItemModified(
-            order: $order, item: $item, changes: [], gateCreditedCents: 1000,
-        );
-        $lines = collect($n->toMail($order->user)->introLines)->map(fn ($l) => (string) $l);
-
-        $this->assertTrue(
-            $lines->contains(__('emails.order_item_modified.reduction_gate_credit', ['amount' => '10,00'])),
-            'la bajada absorbida en puerta tiene que contarse en el email',
         );
     }
 
@@ -438,11 +422,12 @@ class ItemPriceChangeReconstructionTest extends TestCase
      */
     public function test_the_reduction_email_lines_exist_in_every_client_locale(): void
     {
-        foreach (['reduction_pending_refund', 'reduction_gate_credit'] as $key) {
+        // T3·3 del libro: las líneas de dinero del correo son las del bloque del libro (`tickets.journal.*`).
+        foreach (['email_title', 'balance_pay_at_park', 'balance_refund_at_park', 'balance_refund_pending', 'balance_settled'] as $key) {
             foreach (['es', 'en', 'fr'] as $locale) {
                 $this->assertTrue(
-                    Lang::has('emails.order_item_modified.'.$key, $locale, false),
-                    "emails.order_item_modified.{$key} falta en «{$locale}»",
+                    Lang::has('tickets.journal.'.$key, $locale, false),
+                    "tickets.journal.{$key} falta en «{$locale}»",
                 );
             }
         }

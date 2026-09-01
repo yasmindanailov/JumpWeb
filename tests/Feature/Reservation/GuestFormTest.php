@@ -553,25 +553,23 @@ class GuestFormTest extends TestCase
             ->assertDontSee('30,00 €');
     }
 
-    public function test_the_form_shows_the_cheaper_direction_as_money_in_your_favour(): void
+    public function test_the_form_shows_the_cheaper_direction_as_a_written_discount(): void
     {
         // ⚠️⚠️ **El caso que el owner encontró en un pedido real** (`#246`): reservó el pack CARO y
-        // dos invitados corresponden al barato. Hasta la T4 esto era solo un AVISO («no se
-        // descuenta solo»); desde el espejo (`[DECIDIDO owner]` D5, §20/§24) el descuento es real —
-        // y en este pedido, pagado 100 % online, la puerta no puede absorberlo: el importe entero
-        // queda «a tu favor», enseñado y liquidado en el parque (§20.4/§20.5).
+        // dos invitados corresponden al barato. Desde el espejo (`[DECIDIDO owner]` D5, §20/§24) el
+        // descuento es real, y desde la T3·3 del LIBRO (D4 de `DECISIONES #305`) se escribe ENTERO
+        // también en un pedido pagado 100 % online: ya no existe el «a tu favor» — es una línea de
+        // descuento con su importe y, en el libro del pedido, saldo «a devolver en el parque».
         $reservation = $this->mixedFamilyReservation([9, 4, 3], booked: 'jump');
 
         $this->actingAs($reservation->order->user)
             ->get(route('reservation.guests', $reservation))
             ->assertOk()
             ->assertSee(__('guestform.mixed_title'))
-            ->assertSee(__('guestform.mixed_line', [
-                'count' => 2, 'target' => 'Cumpleaños Kids', 'target_price' => '18,00 €',
-                'booked' => 'Cumpleaños Jump', 'booked_price' => '25,00 €',
-            ]))
-            // 2 × (25,00 − 18,00) = 14,00 € — a su favor, no una deuda bancaria ni un cargo.
-            ->assertSee(__('guestform.mixed_in_favour', ['amount' => '14,00 €']))
+            // 2 × (25,00 − 18,00) = 14,00 €, ESCRITOS: la línea del descuento con su importe…
+            ->assertSee('−14,00 €', escape: false)
+            // …y las DOS salidas (se descuenta de lo que pagarás; si ya estaba todo pagado, se devuelve en el parque).
+            ->assertSee(__('guestform.mixed_discount_total', ['amount' => '14,00 €']))
             // Y NUNCA la frase del cargo: aquí no se debe nada.
             ->assertDontSee(__('guestform.mixed_surcharge', ['amount' => '14,00 €']));
     }

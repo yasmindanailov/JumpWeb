@@ -45,10 +45,7 @@ return [
         'subject' => 'Your :park booking confirmed (no. :code)',
         'greeting' => 'Hi!',
         'intro' => 'Payment received and booking confirmed! You’re all set for your visit. Your order number is :code — keep it, you will be asked for it at the park.',
-        'total' => 'Total paid: :amount €',
         // #225 (deposit): when only the birthday deposit is charged online.
-        'deposit_paid' => 'Deposit paid online: :amount €',
-        'pending_at_park' => 'To pay at the park on the day of your booking: :amount € (you can pay in cash or by card).',
         'paid_at' => 'Charged on: :when',
         'card_attached' => 'Your QR is attached (carne-qr.png): show it at the entrance and we will help you right away. It is personal and does not expire; if you lose it, you can renew it from your account.',
         'action' => 'See my bookings',
@@ -148,7 +145,7 @@ return [
         'amount_surcharge' => ':amount € supplement',
         'amount_discount' => ':amount € discount',
         'where_to_pay' => 'It is paid at the park on the day of the party, together with anything else outstanding.',
-        'where_discounted' => 'It is already taken off what you will pay at the park on the day of the party.',
+        'where_discounted' => 'It comes off what you will pay at the park on the day of the party; if you had already paid everything, it is refunded to you there that day.',
         'editable' => 'You can keep editing the guest details until the day of the event; if the ages change, this amount adjusts on its own.',
     ],
 
@@ -161,12 +158,9 @@ return [
         'product_change' => 'Product: :old → :new',
         'event_data_change' => 'Event details updated.',
         'addon_change' => 'Add-ons updated.',
-        'extra_due' => 'Still to pay when you arrive at the park: :amount €',
         // `#155`: a price reduction is money too — same vocabulary as the screen. T5 (§25.5):
         // no channel or email promise — the money may come back via the bank or be settled at
         // the park, and the manual-refund record is optional.
-        'reduction_pending_refund' => 'This change leaves :amount € pending refund to you. You can track it in “My orders”; we will return it to your card or at the park on the day of your visit.',
-        'reduction_gate_credit' => 'With the new price you will pay :amount € less on arrival at the park.',
         'action' => 'See my bookings',
         'contact' => 'If you have any questions, write to us with the order number.',
         'product_fallback' => 'product :id',

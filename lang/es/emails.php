@@ -45,10 +45,6 @@ return [
         'subject' => 'Tu reserva confirmada en :park (nº :code)',
         'greeting' => '¡Hola!',
         'intro' => '¡Pago recibido y reserva confirmada! Ya está todo listo para tu visita. Tu nº de pedido es :code — guárdalo, te lo pedirán en el parque.',
-        'total' => 'Total pagado: :amount €',
-        // #225 (señal/depósito): cuando online se cobra solo la señal del cumpleaños.
-        'deposit_paid' => 'Señal pagada online: :amount €',
-        'pending_at_park' => 'Pendiente de pago en el parque el día de tu reserva: :amount € (puedes pagarlo en efectivo o con tarjeta).',
         'paid_at' => 'Fecha del cobro: :when',
         // Fase 6 · subsistema A: el QR del cliente va adjunto (PNG).
         'card_attached' => 'Adjuntamos tu QR (carne-qr.png): enséñalo en la entrada y te atenderemos al momento. Es personal y no caduca; si lo pierdes, puedes renovarlo desde tu cuenta.',
@@ -173,7 +169,7 @@ return [
         'amount_surcharge' => ':amount € de suplemento',
         'amount_discount' => ':amount € de descuento',
         'where_to_pay' => 'Se abona en el parque el día de la fiesta, junto con el resto pendiente.',
-        'where_discounted' => 'Ya está descontado de lo que pagarás en el parque el día de la fiesta.',
+        'where_discounted' => 'Se descuenta de lo que pagarás en el parque el día de la fiesta; si ya lo tenías todo pagado, se te devuelve allí ese día.',
         'editable' => 'Puedes seguir editando los datos de los invitados hasta el día del evento; si cambian las edades, este importe se ajusta solo.',
     ],
 
@@ -186,13 +182,10 @@ return [
         'product_change' => 'Producto: :old → :new',
         'event_data_change' => 'Datos del evento actualizados.',
         'addon_change' => 'Complementos actualizados.',
-        'extra_due' => 'Pendiente de pago al llegar al parque: :amount €',
         // `#155`: la BAJADA también es dinero — mismo vocabulario que la pantalla («pendiente de
         // devolverte»). T5 (`cumple-mixto.md` §25.5): sin prometer canal ni correo — el importe
         // puede volver por banco o liquidarse en el parque (§20.5), y el registro del manual es
         // opcional. El puntero es «Mis pedidos»: «Mis reservas» no enseña importes desde `#130`.
-        'reduction_pending_refund' => 'Este cambio deja :amount € pendientes de devolverte. Verás su estado en «Mis pedidos»; te los devolveremos a tu tarjeta o en el parque el día de tu visita.',
-        'reduction_gate_credit' => 'Con el nuevo precio pagarás :amount € menos al llegar al parque.',
         'action' => 'Ver mis reservas',
         'contact' => 'Si tienes cualquier duda, escríbenos con el número de pedido.',
         'product_fallback' => 'producto :id',

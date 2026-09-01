@@ -119,7 +119,6 @@ return [
                 'mixed_party_line' => ':count × :name · :unit € por invitado',
                 'mixed_party_total' => 'Suplemento fiesta mixta: :amount €',
                 'mixed_party_discount_total' => 'Descuento fiesta mixta: −:amount €',
-                'mixed_party_in_favour' => ':amount € a favor del cliente — se le devuelven aquí, en el parque',
                 'booked_on' => 'Reservado el :when',
                 'paid_on' => 'pagado el :when',
                 'method_desk' => 'mostrador',
@@ -466,7 +465,6 @@ return [
             // T5 adenda 3 (`[DECIDIDO owner]`): la hoja OPERATIVA lleva los HECHOS de la mezcla y
             // ni un euro — los importes, solo en «Con precios y desglose».
             'mixed_party_fact_line' => ':count × :name',
-            'mixed_party_in_favour_fact' => 'Hay un importe a favor del cliente que se liquida en el parque el día de la fiesta (el importe, en la hoja con precios).',
         ],
 
         // Datos del evento por item (#86, sub-fase 7.2a).
@@ -498,7 +496,6 @@ return [
             // T4 (`specs/cumple-mixto.md` §24.5): el descuento es REAL — la frase de la línea la
             // compone el dominio (`breakdownLabel`); estas tres acompañan al importe.
             'net' => 'Neto por edades: :amount · se liquida en el parque',
-            'in_favour' => ':amount a favor del cliente — se le devuelven en el parque el día de la fiesta (no es una devolución bancaria pendiente)',
             'missing_credit_carrier' => 'No se puede aplicar el descuento: falta el producto que lo lleva («Descuento fiesta mixta» en el catálogo). Mientras falte, el importe queda a favor del cliente y se liquida en el parque.',
             'drift' => 'El suplemento escrito es :written y, con las edades declaradas hoy y las condiciones de esta reserva, correspondería :derived. No se recalcula solo: lo escrito es lo que se le comunicó al cliente.',
             'missing_carrier' => 'No se puede aplicar el suplemento: falta el producto que lo lleva («Suplemento fiesta mixta» en el catálogo). Mientras falte, esta fiesta no cobra nada.',

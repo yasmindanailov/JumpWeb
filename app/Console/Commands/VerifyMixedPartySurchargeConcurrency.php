@@ -156,8 +156,10 @@ class VerifyMixedPartySurchargeConcurrency extends Command
                 'ticket_type_id' => $booked->id, 'slot_id' => $slot->id,
                 'quantity' => 4, 'unit_price' => $unit, 'seats' => 4,
             ]);
-            // El escenario del DESCUENTO necesita COBERTURA de puerta (§20.1): sin resto de señal,
-            // el tope dejaría el crédito sin escribir y el verificador pasaría sin verificar nada.
+            // El escenario del DESCUENTO nació con un resto de señal porque el tope de cobertura (§20.1)
+            // no dejaba escribir el crédito sin él. Desde la T3·3 del libro (`DECISIONES #312`, D4) el
+            // crédito se escribe ENTERO también sin cobertura; el resto se conserva porque no cambia lo
+            // que se disputa (UNA línea de −7,00 €) y mantiene el escenario comparable con el histórico.
             if ($scenario === 'credit') {
                 OrderAdjustment::create([
                     'order_id' => $order->id, 'order_item_id' => $item->id,

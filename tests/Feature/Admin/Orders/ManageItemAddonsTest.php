@@ -143,8 +143,9 @@ class ManageItemAddonsTest extends TestCase
         $this->assertSame(0, PaymentRefund::count());
 
         $this->assertSame(1, AuditLog::where('action', 'orders.item_edited')->count());
+        // T3·3 del libro: el cargo del complemento es la línea «+6,00» del bloque del libro.
         Notification::assertSentTo($order->user, OrderItemModified::class,
-            fn (OrderItemModified $n): bool => $n->extraDueCents === 600 && ! empty($n->changes['addon_change']));
+            fn (OrderItemModified $n): bool => str_contains($this->mailBody($n), '+6,00') && ! empty($n->changes['addon_change']));
     }
 
     public function test_adding_an_included_addon_via_panel_respects_free_quantity(): void
@@ -646,7 +647,7 @@ class ManageItemAddonsTest extends TestCase
         $this->assertSame(1, AuditLog::where('action', 'orders.item_edited')->count());
         // (T5 §25.5: el `refundedCents` que este cierre comprobaba se RETIRÓ — iba cableado a null.)
         Notification::assertSentTo($order->user, OrderItemModified::class,
-            fn (OrderItemModified $n): bool => $n->extraDueCents === null
+            fn (OrderItemModified $n): bool => ! str_contains($this->mailBody($n), 'data-book-movement="edit"')
                 && ! empty($n->changes['addon_change']['removed']));
     }
 
@@ -1116,5 +1117,11 @@ class ManageItemAddonsTest extends TestCase
             'addon_edits' => [],
             'addon_adds' => [],
         ], $overrides);
+    }
+
+    /** El cuerpo del correo de modificación, con el bloque del LIBRO dentro (T3·3, D-T3·5). */
+    private function mailBody(OrderItemModified $n): string
+    {
+        return collect($n->toMail($n->order->user)->introLines)->map(fn ($l) => (string) $l)->implode(' ');
     }
 }

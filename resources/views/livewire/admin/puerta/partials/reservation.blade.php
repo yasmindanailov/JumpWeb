@@ -30,14 +30,14 @@
          cobra (`PAY-19`), y ya está sumado dentro de «pendiente de cobrar en puerta». --}}
     {{-- `?? 0`: la fila viaja en el ESTADO Livewire del componente, y un snapshot abierto antes de
          un despliegue puede traer filas sin estas claves — un 500 en la cara del operador no es el
-         precio correcto de esa ventana. Desde la T4 el total es el NETO (con signo), el descuento
-         lleva su frase compuesta por el dominio y el «a tu favor» se liquida en mano (§20.5). --}}
+         precio correcto de esa ventana. Desde la T4 el total es el NETO (con signo) y el descuento
+         lleva su frase compuesta por el dominio; lo que la puerta no absorbe lo dice el SALDO de
+         abajo (T3·3 del libro: murió el «a tu favor» con el tope). --}}
     @php
         $mixNet = (int) ($r['mixed_party_surcharge_cents'] ?? 0);
         $mixCredit = $r['mixed_party_credit'] ?? null;
-        $mixFavour = (int) ($r['mixed_party_in_favour_cents'] ?? 0);
     @endphp
-    @if ($mixNet !== 0 || $mixCredit !== null || $mixFavour > 0)
+    @if ($mixNet !== 0 || $mixCredit !== null)
         <div class="gate-res__mixed" data-gate-mixed-party>
             @foreach ($r['mixed_party_lines'] ?? [] as $line)
                 <p class="gate-res__mixed-line">{{ __('admin.puerta.validar.profile.mixed_party_line', ['count' => (int) $line['count'], 'name' => $line['name'], 'unit' => Money::amount((int) $line['unit_cents'])]) }}</p>
@@ -49,9 +49,6 @@
                 <p class="gate-res__mixed-total">{{ __('admin.puerta.validar.profile.mixed_party_total', ['amount' => Money::amount($mixNet)]) }}</p>
             @elseif ($mixNet < 0)
                 <p class="gate-res__mixed-total">{{ __('admin.puerta.validar.profile.mixed_party_discount_total', ['amount' => Money::amount(-$mixNet)]) }}</p>
-            @endif
-            @if ($mixFavour > 0)
-                <p class="gate-res__mixed-total" data-gate-mixed-favour>{{ __('admin.puerta.validar.profile.mixed_party_in_favour', ['amount' => Money::amount($mixFavour)]) }}</p>
             @endif
         </div>
     @endif

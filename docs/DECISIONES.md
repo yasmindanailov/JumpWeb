@@ -18295,3 +18295,70 @@ solo encoge. `Order::reservationGateLines` / `pendingAtGateLines` /
 `onlineBackingProductsCents` / `totalWithChangesCents` / `amountCollectedCents` se quedan sin
 consumidor de superficie: la T3·4 los retira. `identidad-qr-puerta.md` A·3 lleva la corrección del
 DTO. Sigue la **T3·3** (correos + post-form + el tope; `VERIFY_CONC=1`).
+
+## #312 · 2026-09-01 · T3·3 del libro: los correos pintan el LIBRO al enviar; cae el tope del descuento mixto y con él el «a tu favor»
+
+**Contexto.** Tras `#311` el cliente, el panel, la hoja y la puerta pintaban el libro; los cinco
+correos de dinero seguían componiendo cada uno lo suyo (`OrderConfirmation` con tres claves de
+canal sobre `OrderFinancialSummary` + `OrderLedger`; `OrderItemModified` con **tres céntimos que le
+pasaba el editor** vía `creditReduction` + `GateBuckets`; los de devolución con el importe suelto;
+`MixedPartySurchargeChanged` con el neto), y el descuento de fiesta mixta seguía **acotado al dinero
+de puerta** (`min(derivado, cobertura)`, el tope de `#296`) con su exceso enseñado como «a tu favor»
+en SEIS sitios y publicado por `OrderLedger::inFavourHint`.
+
+**Decisión.**
+1. **Cae el tope** (`[DECIDIDO owner]` D4 de `#305`): `MixedPartySurcharge::applyCredit` escribe el
+   crédito DERIVADO entero. El tope existía para que ningún canal del modelo de dos ejes quedara en
+   negativo; con el libro no hay canales: lo que la puerta no absorbe es saldo «a devolver en el
+   parque» (spec §4.4), y el circuito del parque (§20.5 de `cumple-mixto.md`) es el mismo. Mueren
+   `gateCoverageCents()`, `inFavourCents()`, `OrderLedger::inFavourHint` (a `null` hasta la T3·4),
+   `GateReservation::mixedPartyInFavourCents`, la línea «a tu favor» en `items-list`, la hoja ×2, la
+   puerta y el post-form ×2, y sus cinco claves en cuatro ficheros de idioma. La asimetría del
+   silencio del crédito (§24.3·7) se conserva; `mixed-party:verify-concurrency` espera lo mismo.
+2. **Los correos pintan el libro AL ENVIAR** (D-T3·5): `Booking\Services\EmailBookBlock::forOrder()`
+   → `emails.partials.book` (tabla con estilos en línea, como la tarjeta de producto; DEFENSIVO como
+   ella, D-T3·20), con `tickets.journal.email_title`, los movimientos con signo y fecha, el Total,
+   los pagos y devoluciones, lo Pagado y el saldo con su clase (`tickets.journal.balance_*`, que
+   gana `settled`/`expired`/`under_review`). Los cinco correos conservan su narrativa y añaden el
+   bloque (D-T3·19, D-T3·22); `OrderConfirmation` pierde sus tres líneas de canal;
+   `OrderItemModified` pierde sus tres céntimos (D-T3·21) y `OrderItemEditor::creditReduction` se
+   reduce a `recordEdit(−Δ)` — lo único que hacía además del hecho era el reparto para ese correo.
+3. **D2** ya no es una frase: es la línea «A devolver en el parque» del bloque. Mueren
+   `reduction_pending_refund`, `reduction_gate_credit` y `extra_due` (es · en · fr);
+   `mixed_party_surcharge.where_discounted` y `guestform.mixed_discount_total` dicen las DOS salidas.
+4. **El modelo viejo deja de cerrar para el crédito sin cobertura**, a propósito: los tres casos
+   del tope de `OrderFinancialInvariantsTest` se INVIERTEN al libro (B y C salen del puente —
+   `ledger-bridge.json` pierde sus dos fotos—), `MixedPartySurchargeTest` asevera las identidades
+   del libro donde el viejo ya no puede, y `INVARIANTES` `PAY-16`/`PAY-17`/`PAY-19` llevan la nota
+   hasta que la T3·4 las reescriba. `LedgerSingleSourceTest::STILL_ON_THE_OLD_MODEL` se vació y se
+   borró; los correos y el bloque entran en `SURFACES`.
+
+**Lo que se midió.**
+- **Seis mutaciones** sobre árbol commiteado: M1 vuelve un tope al crédito → **8 rojos** · M2 el
+  bloque devuelve vacío → **5** · M4 el correo de modificación recupera un céntimo → **1** · M5 un
+  correo pierde el bloque → **1** · M6 un correo vuelve a `financialSummary()` → **1** (guarda L).
+  ⚠️⚠️ **M3 —el bloque imprime lo Pagado como Total— pasó en VERDE**: la guarda buscaba «30,00 €» en
+  el cuerpo entero y **la tarjeta de producto del mismo correo lo imprime** (3 × 10,00). Acotada a la
+  FILA `<tr data-book-total>` del bloque (y lo Pagado a la suya): ahora muerde. *Acota al elemento
+  antes de creerte un test verde* — la quinta vez en este carril.
+- **Los cuatro verificadores sobre MySQL**, todos verdes: `mixed-party:verify-concurrency` en sus dos
+  escenarios (UNA línea de +7,00 y UNA de −7,00 con 12 guardados simultáneos: el lock serializa
+  igual sin el tope), `redsys:verify-concurrency` (16) y `purchase:verify-oversell` (16).
+- **Guarda P nueva** (`EmailBookBlockTest`): los cinco correos llevan el bloque; **al REENVIAR tras una
+  edición dice el saldo nuevo** (compuesto al enviar, no al gestionar); el correo de modificación no
+  tiene ningún parámetro de céntimos (por reflexión); el bloque es defensivo.
+- **`jumpParty` de `MixedPartySurchargeTest` facturaba «total = la parte online»**: el fixture del
+  modelo viejo, ilegal para I1 (`Order.total` es lo facturado, T1). Legalizado como `syncTotalToOnline`
+  ya hacía en el otro fichero. Y `MixedPartyBadgeTest`, `GuestFormTest` y `MixedPartyParkSurfacesTest`
+  pasan de «a tu favor» a «el descuento está ESCRITO y el libro lo debe en el parque».
+
+**Trampas pagadas.** Un corte por índice de `"    }\n"` casó DENTRO de una llave de 8 espacios y dejó
+dos `}` seguidas: la suite en paralelo lo enseña como un fatal del `ExceptionHandler` sin la línea
+—`php -l` sobre los ficheros tocados lo dice en un segundo— · un `assert` sobre el fichero entero
+que cita los nombres retirados en su propio docblock: se asevera el CUERPO de la clase.
+
+**Consecuencias.** Queda la **T3·4**: la retirada de §4.7 (`OrderLedger`, `OrderFinancialSummary`,
+`ReservationFinancials`, `GateBuckets` → `LineFacts`, la rama mixta de `breakdownLabel()`,
+`tickets.ledger.*` salvo las tres notas, el puente y `ledger-bridge.json`, sus tests), `INVARIANTES`
+`PAY-16`/`PAY-17` reescritas, `DEUDA` L4, `desglose-dinero-cliente.md` a HISTÓRICO, el guion headless
+del cajón y la receta de las 25 acciones, y el ojo del owner.

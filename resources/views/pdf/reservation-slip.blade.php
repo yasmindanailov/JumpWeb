@@ -368,10 +368,6 @@
                 @elseif ($mixedParty['chargeCents'] > 0)
                     <div class="mixed-total">{{ __('admin.orders.mixed_party.applied', ['amount' => $fmt($mixedParty['chargeCents'])]) }}</div>
                 @endif
-                @if ($mixedParty['inFavourCents'] > 0)
-                    {{-- El EXCESO a favor del cliente (§20.4): el operador lo liquida en mano (§20.5). --}}
-                    <div class="mixed-note">{{ __('admin.orders.mixed_party.in_favour', ['amount' => $fmt($mixedParty['inFavourCents'])]) }}</div>
-                @endif
             @else
                 @foreach ($mixedParty['lines'] as $line)
                     <div class="mixed-line">{{ __('admin.orders.slip.mixed_party_fact_line', ['count' => $line['count'], 'name' => $line['name']]) }}</div>
@@ -379,9 +375,6 @@
                 @if ($mixedParty['creditLabel'] !== null)
                     {{-- La frase del descuento SIN su importe: nombra a quiénes y hacia qué pack. --}}
                     <div class="mixed-line">{{ $mixedParty['creditLabel'] }}</div>
-                @endif
-                @if ($mixedParty['inFavourCents'] > 0)
-                    <div class="mixed-note">{{ __('admin.orders.slip.mixed_party_in_favour_fact') }}</div>
                 @endif
             @endif
             @if ($mixedParty['withoutProduct'] > 0)

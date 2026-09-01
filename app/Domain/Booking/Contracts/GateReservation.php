@@ -61,10 +61,5 @@ final readonly class GateReservation
          * @var array{label:string, cents:int}|null
          */
         public ?array $mixedPartyCredit = null,
-        /**
-         * El EXCESO «a tu favor» (T4, §20.4): descuento derivado que la puerta no pudo absorber.
-         * El operador lo LIQUIDA en mano (§20.5) — por eso viaja hasta su pantalla.
-         */
-        public int $mixedPartyInFavourCents = 0,
     ) {}
 }

@@ -81,6 +81,11 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
         'tickets.journal.balance_refund_pending',
         'tickets.journal.balance_pay_online',
         'tickets.journal.balance_rest_at_park',
+        // T3·3: el bloque del libro en los correos (título y las tres clases sin línea en el cajón).
+        'tickets.journal.email_title',
+        'tickets.journal.balance_settled',
+        'tickets.journal.balance_expired',
+        'tickets.journal.balance_under_review',
     ];
 
     /**

@@ -45,10 +45,7 @@ return [
         'subject' => 'Ta réservation confirmée chez :park (n° :code)',
         'greeting' => 'Bonjour !',
         'intro' => 'Paiement reçu et réservation confirmée ! Tout est prêt pour ta visite. Ton n° de commande est :code — garde-le, il te sera demandé au parc.',
-        'total' => 'Total payé : :amount €',
         // #225 (acompte) : quand seul l’acompte de l’anniversaire est encaissé en ligne.
-        'deposit_paid' => 'Acompte payé en ligne : :amount €',
-        'pending_at_park' => 'À régler au parc le jour de ta réservation : :amount € (en espèces ou par carte).',
         'paid_at' => 'Date du paiement : :when',
         'card_attached' => 'Votre QR est en pièce jointe (carne-qr.png) : présentez-le à l’entrée et nous vous accueillerons aussitôt. Il est personnel et n’expire pas ; en cas de perte, vous pouvez le renouveler depuis votre compte.',
         'action' => 'Voir mes réservations',
@@ -148,7 +145,7 @@ return [
         'amount_surcharge' => ':amount € de supplément',
         'amount_discount' => ':amount € de remise',
         'where_to_pay' => 'Il se règle au parc le jour de la fête, avec le reste éventuel.',
-        'where_discounted' => 'Elle est déjà déduite de ce que vous réglerez au parc le jour de la fête.',
+        'where_discounted' => 'Elle est déduite de ce que vous réglerez au parc le jour de la fête ; si tout était déjà payé, elle vous est remboursée sur place ce jour-là.',
         'editable' => 'Vous pouvez continuer à modifier les informations des invités jusqu’au jour de l’événement ; si les âges changent, ce montant s’ajuste tout seul.',
     ],
 
@@ -161,12 +158,9 @@ return [
         'product_change' => 'Produit : :old → :new',
         'event_data_change' => 'Informations de l’événement mises à jour.',
         'addon_change' => 'Compléments mis à jour.',
-        'extra_due' => 'À régler à l’arrivée au parc : :amount €',
         // `#155` : une baisse de prix, c'est aussi de l'argent — même vocabulaire que l'écran.
         // T5 (§25.5) : sans promettre de canal ni d'e-mail — l'argent peut revenir par la banque
         // ou être réglé au parc.
-        'reduction_gate_credit' => 'Avec le nouveau prix, tu paieras :amount € de moins à ton arrivée au parc.',
-        'reduction_pending_refund' => 'Ce changement laisse :amount € à te rembourser. Tu en verras l’état dans « Mes commandes » ; nous te les rendrons sur ta carte ou au parc le jour de ta visite.',
 
         'action' => 'Voir mes réservations',
         'contact' => 'Si tu as des questions, écris-nous avec le numéro de commande.',

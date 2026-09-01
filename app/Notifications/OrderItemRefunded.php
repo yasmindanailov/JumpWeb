@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Services\EmailBookBlock;
 use App\Domain\Booking\Services\EmailProductCard;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -78,6 +79,11 @@ class OrderItemRefunded extends Notification implements ShouldQueue
                 'product' => $productName,
             ]));
         }
+
+        // EL LIBRO del pedido tras la devolución (T3·3 del libro, D-T3·19): la devolución es una línea
+        // más, con su fecha, y el saldo dice si queda algo que pagar o devolver — el importe de arriba
+        // ya no va suelto, está en su sitio.
+        $message->line(EmailBookBlock::forOrder($this->order));
 
         // La línea del CANAL sigue al modo real del registro: prometer la tarjeta por dinero
         // devuelto en el parque era la sobre-promesa nº 2 de la T5 (§25.2).

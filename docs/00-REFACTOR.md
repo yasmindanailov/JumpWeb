@@ -2505,7 +2505,7 @@ inalcanzable por código** (se retira), y **el modelo decidido cierra sus dos id
 pedidos reales, disparando su estado imposible solo sobre los 19 de datos sucios. El riesgo NO estaba
 solo en la proyección: había cuatro defectos en el dominio que ninguna auditoría anterior construyó.
 
-### El LIBRO del pedido 🟦 — **spec ✅ del owner (`specs/desglose-libro.md`, `DECISIONES #305`) · T1 (`#306`), T2 (`#308`), T3·1 (`#310`) y T3·2 (`#311`) EN EL ÁRBOL**
+### El LIBRO del pedido 🟦 — **spec ✅ del owner (`specs/desglose-libro.md`, `DECISIONES #305`) · T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2 (`#311`) y T3·3 (`#312`) EN EL ÁRBOL**
 > **Sustituye al DESGLOSE de dos ejes de arriba en cuanto se ejecute.** `[DECIDIDO owner,
 > 2026-09-01]`: cada gestión con su línea + o − y su fecha, un Total y un SALDO que se liquida EN EL
 > PARQUE; nada se cobra ni se devuelve online post-reserva; el descuento mixto entra en el saldo; el
@@ -2554,7 +2554,15 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
         muerden a la primera. ⚠️ DIEZ ficheros de tests con fixtures que el libro rechaza (pagados
         sin cobro, totales ≠ líneas, ajustes sin cambio de valor): legalizados. Claves viejas del
         panel/hoja retiradas (es · zh_CN). El «a tu favor» sigue hasta la T3·3.
-  - [ ] **T3·3 · correos + post-form + el tope** (§6.3, fila 3; `VERIFY_CONC=1`).
+  - [x] **T3·3 · correos + post-form + el tope — EJECUTADA el 2026-09-01** (spec §6.3.4 diseño ·
+        §6.3.5 ejecución · `DECISIONES #312`): cae el tope del descuento mixto (se escribe ENTERO;
+        lo que la puerta no absorbe es saldo «a devolver en el parque») y con él el «a tu favor» en
+        seis superficies y cinco claves; los cinco correos de dinero pintan el libro AL ENVIAR con
+        `EmailBookBlock` (guarda P: el reenvío tras una edición dice el saldo nuevo);
+        `OrderItemModified` sin céntimos y `creditReduction` retirado; B/C del tope invertidos y
+        fuera del puente; `LedgerSingleSourceTest` sin lista de excepciones. 6 mutaciones (una pasó
+        en verde por la tarjeta de producto → acotada a la fila) · los cuatro verificadores sobre
+        MySQL verdes · `VERIFY_CONC=1`.
   - [ ] **T3·4 · la retirada** de §4.7, `INVARIANTES` `PAY-16`/`PAY-17` reescritas, dos fichas de
         `DEUDA.md` cerradas, guion headless, la receta de las 25 acciones, ojo del owner.
 

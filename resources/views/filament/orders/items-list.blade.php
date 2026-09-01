@@ -286,12 +286,10 @@
                         // cosas puestas (T4: un cargo cubierto entero por el descuento) y eso sigue
                         // siendo dinero escrito que explicar.
                         $mixHasWritten = $mixWritten['charge_cents'] > 0 || $mixWritten['credit_cents'] > 0;
-                        // El EXCESO «a tu favor» (T4, §20.4): descuento derivado que la puerta no
-                        // pudo absorber. Derivado, no escrito; 0 sin veredicto que gobierne.
-                        $mixInFavour = $mixService->inFavourCents($item);
                         // El desfase se mira por el lado del CARGO (su propósito de siempre: lo
-                        // escrito no sigue al catálogo). El lado del descuento no «drifta»: su tope
-                        // es la cobertura y su resto legítimo ya tiene línea propia («a tu favor»).
+                        // escrito no sigue al catálogo). El lado del descuento se escribe ENTERO
+                        // desde la T3·3 del libro (D4): lo que la puerta no absorbe es saldo «a
+                        // devolver en el parque», que el libro de la reserva dice más abajo.
                         $mixDrift = $mix->applies
                             && $mix->surchargeCents !== null
                             && $mix->surchargeCents !== $mixWritten['charge_cents'];
@@ -313,7 +311,6 @@
                             && \App\Domain\Booking\Services\MixedPartySettings::surchargeProduct() === null;
                         $mixCreditCarrierMissing = ($mix->savingsCents ?? 0) > 0
                             && $mixWritten['credit_cents'] === 0
-                            && $mixInFavour > 0
                             && \App\Domain\Booking\Services\MixedPartySettings::creditProduct() === null;
                     @endphp
                     @if (! $isItemCancelled && ($mixOrphaned || $mixStale || ($mix->applies && ($mix->mixed || $mixHasWritten || ! $mix->isComplete()))))
@@ -341,14 +338,6 @@
                                     {{ __('admin.orders.mixed_party.net', ['amount' => ($mixWritten['cents'] < 0 ? '−' : '+').\App\Domain\Platform\Services\Money::format(abs($mixWritten['cents']))]) }}
                                 </div>
                             @endif
-                            @if ($mixInFavour > 0)
-                                {{-- El EXCESO que la puerta no pudo absorber (§20.4): dinero A FAVOR
-                                     del cliente que se liquida EN el parque (§20.5). NO entra en
-                                     «Pendiente de devolución», que es deuda bancaria (`PAY-17`). --}}
-                                <div class="text-violet-900 dark:text-violet-200">
-                                    {{ __('admin.orders.mixed_party.in_favour', ['amount' => \App\Domain\Platform\Services\Money::format($mixInFavour)]) }}
-                                </div>
-                            @endif
 
                             {{-- T5 (§25.6·1, el hallazgo del T0): las CONDICIONES van DESPUÉS de lo
                                  escrito —«el aplicado primero», el arreglo que dio el owner— y con
@@ -356,7 +345,7 @@
                                  «Suplemento aplicado: 8,00 €» se lee como contradicción hasta llegar
                                  a la frase del desfase (el owner mismo tuvo que preguntar). La
                                  dirección barata no pinta su «0,00 €» ({@see GuestAgeMix::visibleUpgrades}):
-                                 su historia la cuentan el descuento y el «a tu favor» de arriba. --}}
+                                 su historia la cuenta el descuento de arriba y el saldo del libro. --}}
                             @if ($mix->mixed)
                                 @foreach ($mix->visibleUpgrades() as $upgrade)
                                     <div class="text-violet-800/90 dark:text-violet-300/90">

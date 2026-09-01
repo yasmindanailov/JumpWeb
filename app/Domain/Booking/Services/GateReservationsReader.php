@@ -84,7 +84,6 @@ class GateReservationsReader implements GateReservations
                         'label' => $written['credit']['label'],
                         'cents' => $written['credit']['cents'],
                     ],
-                    mixedPartyInFavourCents: $this->mixedParty->inFavourCents($item),
                 );
             })
             ->all();

@@ -186,25 +186,26 @@ class MixedPartyBadgeTest extends TestCase
             ->assertSee(__('admin.orders.mixed_party.without_age', ['count' => 2]));
     }
 
-    public function test_the_panel_shows_the_cheaper_direction_as_money_in_favour(): void
+    public function test_the_panel_shows_the_cheaper_direction_as_a_written_discount_owed_at_the_park(): void
     {
-        // El pack CARO con dos invitados que corresponden al barato, pagado 100 % online: desde la
-        // T4 (`[DECIDIDO owner]` D5, §20/§24) el descuento es real, pero sin puerta que lo absorba
-        // NO se escribe — el operador ve el «a favor del cliente», que es lo que liquida en mano.
+        // El pack CARO con dos invitados que corresponden al barato, pagado 100 % online. Desde la
+        // T3·3 del LIBRO (D4 de `DECISIONES #305`) el descuento se escribe ENTERO (−14,00) aunque no
+        // haya puerta que lo absorba, y el libro de la reserva dice «a devolver en el parque: 14,00»
+        // — que es lo que el operador liquida en mano. Ya no hay «a favor del cliente».
         $order = $this->paidPartyWith([9, 4, 3], $this->jump);
 
         $this->actingAs($this->staff())
             ->get('/admin/orders/'.$order->code)
             ->assertOk()
             ->assertSee(__('tickets.mixed_party_badge'))
-            // 2 × (25,00 − 18,00) = 14,00 €.
-            ->assertSee(__('admin.orders.mixed_party.in_favour', ['amount' => '14,00 €']))
+            // 2 × (25,00 − 18,00) = 14,00 €, escritos.
+            ->assertSee('−14,00 €', escape: false)
+            ->assertSee('data-book-balance="refund_at_park"', escape: false)
+            ->assertSee(__('admin.orders.book.balance_refund_at_park'))
             // ⚠️ Y NUNCA como cargo: si esto apareciera, el operador cobraría lo que no se debe.
             ->assertDontSee(__('admin.orders.mixed_party.applied', ['amount' => '14,00 €']))
-            // T5 (§25.6·2, guarda H): la dirección barata ya no pinta su «0,00 € por invitado» —
-            // pegado al «14,00 € a favor» era la contradicción del T0 con el signo cambiado, y su
-            // historia la cuentan el descuento y el «a tu favor». Mutación: quitar el filtro de
-            // `visibleUpgrades()` (o pintar `upgrades` entero) vuelve a enseñarlo.
+            // T5 (§25.6·2, guarda H): la dirección barata ya no pinta su «0,00 € por invitado».
+            // Mutación: quitar el filtro de `visibleUpgrades()` vuelve a enseñarlo.
             ->assertDontSee('0,00 € por invitado');
     }
 
