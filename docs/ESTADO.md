@@ -28,6 +28,12 @@ aquí lo que no se podaría son datos de menores de terceros.
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — CINCO PUNTOS DE PRODUCCIÓN
 > CERRADOS (`#328` · `#329` · `#330` · `#331`)**:
+>   0000. ⚠️⚠️ **`#332` — UN TEXTO QUE NO LLEGA NO FALLA, SE QUEDA MUDO.** El prop `account` **ES YA**
+>      el grupo `account`, así que la clave se pide `verify.resend`, **NO** `account.verify.resend`;
+>      `t()` devuelve `''` sin avisar y el aviso salió vacío y el botón sin rótulo. ❗ **Mi
+>      comprobación de `#331` miró el PAYLOAD y no el RENDER** — *que el texto llegue no es que se
+>      pinte*. Guarda nueva `SidebarTranslationKeysExistTest`, contra el payload REAL (caza también
+>      que la poda del montaje deje una clave fuera) y nacida roja con los dos fallos.
 >   000. **El alta abre el SPA en la cuenta, con el aviso completo dentro** (`#331`, tres correcciones
 >      del owner probándolo en navegador): `verified` **salió** de las rutas del área —con él puesto,
 >      registrarse rebotaba a `/email/verificar`, fuera del cajón—; el aviso es un **bloque** (mensaje
@@ -147,6 +153,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > sobre el árbol CONJUNTO con `#328`, `#329` y `#330` encima de `#327`. Antes, 3821 / 24.665 y
 > 3813 / 24.652. ⚠️ **Medida DESPUÉS del rebase y con
 > Suite **3822 en verde** (24.672 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> Suite **3824 en verde** (24.676 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
 > sobre el árbol CONJUNTO con `#328`→`#331` encima de `#327`. Antes, 3822 / 24.671, 3821 / 24.665 y
 > 3813 / 24.652. ⚠️ El techo del chunk del cajón va por **262** (medido atribuyendo cada subida a su
 > rama: 259,34 → 260,32 → 261,12). ⚠️ **Medida DESPUÉS del rebase y con

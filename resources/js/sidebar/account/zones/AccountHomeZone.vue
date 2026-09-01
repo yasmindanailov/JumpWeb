@@ -105,15 +105,15 @@ const leave = async () => {
     -->
     <template v-if="notice?.kind === WAIVER_NOTICE_VERIFY">
         <p class="auth__switch" role="status">
-            {{ translate(account, 'account.verify.pending_notice') }}
+            {{ translate(account, 'verify.pending_notice') }}
             <button type="button" :disabled="! gate.canResend" @click="resend">
-                <template v-if="gate.waiting">{{ translate(account, 'account.verify.resend_in') }} {{ auth.resendSeconds }}s</template>
-                <template v-else>{{ translate(account, 'account.verify.resend') }}</template>
+                <template v-if="gate.waiting">{{ translate(account, 'verify.resend_in') }} {{ auth.resendSeconds }}s</template>
+                <template v-else>{{ translate(account, 'verify.resend') }}</template>
             </button>
         </p>
 
-        <p v-if="gate.exhausted" class="auth__sub">{{ translate(account, 'account.verify.resend_limit') }}</p>
-        <p v-else class="form__hint">{{ translateWith(account, 'account.verify.resends_left', { n: auth.resendsLeft }) }}</p>
+        <p v-if="gate.exhausted" class="auth__sub">{{ translate(account, 'verify.resend_limit') }}</p>
+        <p v-else class="form__hint">{{ translateWith(account, 'verify.resends_left', { n: auth.resendsLeft }) }}</p>
 
         <p v-if="notice.withWaiver" class="auth__sub">{{ translate(account, 'account.privacy.waiver.status_awaiting_verification') }}</p>
     </template>
@@ -175,7 +175,7 @@ const leave = async () => {
     -->
     <p class="auth__switch">
         <button type="button" :disabled="leaving" @click="leave()">
-            {{ translate(account, 'account.nav.sign_out') }}
+            {{ translate(account, 'nav.sign_out') }}
         </button>
     </p>
 </template>

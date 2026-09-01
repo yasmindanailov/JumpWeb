@@ -19922,3 +19922,65 @@ El techo del chunk sube **261 → 262** (medido con las dos ramas por separado: 
 —antes 302 a `/email/verificar`—, abre el cajón en `data-account-zone="home"` y sirve los cuatro
 rótulos: «Debes verificar tu correo electrónico», «Reenviar correo», la línea de la exención y
 «Cerrar sesión». Suite **3822 · 24.672**.
+
+## #332 · 2026-09-01 · Un texto que no llega no falla: se queda MUDO — y ahora hay guarda
+
+**Contexto.** El owner probó `#331` en el navegador: *«lo de cerrar sesión no lo veo en el SPA en "mi
+cuenta", solo en el catálogo. Y al registrarme no me salió nada de que verifique mi email, solo de la
+exención de responsabilidad».*
+
+**Los dos síntomas son el MISMO defecto, y es mío.** El prop `account` que reciben las zonas **ES YA**
+el grupo `account`, así que la ruta de una clave se escribe sin ese prefijo. Yo pedí
+`account.verify.pending_notice` y `account.nav.sign_out`. Medido:
+
+```
+data_get(__('account'), 'verify.pending_notice')          → 'Debes verificar tu correo electrónico.'
+data_get(__('account'), 'account.verify.pending_notice')  → NULL
+data_get(__('account'), 'nav.sign_out')                   → 'Cerrar sesión'
+data_get(__('account'), 'account.nav.sign_out')           → NULL
+```
+
+`i18n.js::t()` devuelve `''` cuando la clave no está —**a propósito**, para que en producción un texto
+ausente no pueda tumbar el cajón—, así que el párrafo se pintó VACÍO y el botón salió SIN RÓTULO. De
+ahí «no lo veo» y «no me salió nada»: **la línea de la exención sí tenía la ruta buena, y por eso era
+lo único que se leía.**
+
+### ⚠️⚠️ Y mi comprobación de `#331` no podía cazarlo
+
+Verifiqué por HTTP que los cuatro rótulos estaban **en el HTML servido**. Estaban — el montaje los
+manda. Lo que no comprobé es que la PANTALLA los encontrara. *Que el texto llegue no es que se pinte*,
+que es la misma familia de `#266` («que una animación exista y compute no es que el dibujo se mueva»)
+y de `#263` («que la pieza llegue al documento no es que se mueva»).
+
+▶ **Esta vez se comprobó RENDERIZANDO** el componente con Vue en servidor, y ahí sí se lee el defecto
+o su ausencia. Con el arreglo puesto, el árbol emite las cuatro piezas con texto:
+
+```html
+<p class="auth__switch" role="status">Debes verificar tu correo electrónico. <button>Reenviar correo</button></p>
+<p class="form__hint">Te quedan 4 reenvíos.</p>
+<p class="auth__sub">Tu exención de responsabilidad quedará firmada en cuanto verifiques tu correo.</p>
+…
+<p class="auth__switch"><button>Cerrar sesión</button></p>
+```
+
+### La guarda: `SidebarTranslationKeysExistTest`
+
+Toda clave LITERAL que una zona pide sobre el prop `account` tiene que resolver **en el payload que el
+servidor manda de verdad** (extraído del `data-boot` de una página con sesión).
+
+⚠️ **Contra el payload y no contra `lang/`, porque hay DOS formas de quedarse mudo** y solo una se ve
+leyendo los ficheros de idioma:
+ 1. la clave no existe o la ruta está mal — el fallo de hoy;
+ 2. **la clave existe pero la poda del montaje la deja fuera.** El cajón recibe subgrupos recortados
+    clave a clave para no pagar bytes en cada página, así que añadir un rótulo nuevo y olvidarse de
+    la poda produce exactamente el mismo silencio. Ningún `grep` en `lang/` lo ve.
+
+▶ **Nace ROJA con los dos fallos REALES**, no con uno inventado: se reintrodujo la ruta con prefijo
+(nombra las dos claves) y se retiró `pending_notice` de la poda (nombra la que falta). Lleva además
+**caso de CONTROL** sobre el propio localizador: si dejara de encontrar llamadas, la lista saldría
+vacía y el test pasaría en verde sobre un cajón entero roto.
+
+⚠️ **Alcance declarado en el docblock**: solo claves literales sobre `account`. Las computadas
+(`titleKeyOf(zone)`, ternarios) quedan fuera — fingir que las cubre sería peor que no cubrirlas.
+
+Suite **3824 · 24.676**.
