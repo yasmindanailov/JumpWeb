@@ -2,7 +2,9 @@
 
 > Estado: ✅ **diseño aprobado por el owner** (2026-09-01) · ✅ **CÓDIGO COMPLETO — T1 (§6.1), T2
 > (§6.2), T3·1 (§6.3.1), T3·2 (§6.3.3), T3·3 (§6.3.5) y T3·4 (§6.3.7: la RETIRADA del modelo de dos
-> ejes) EN EL ÁRBOL** · 🟦 solo por el OJO del owner (§6.3.7, T3·4b) · Última actualización:
+> ejes) EN EL ÁRBOL** · 🟦 solo por el OJO del owner (§6.3.7, T3·4b) · ⬜ **T4 DISEÑADA, SIN
+> CÓDIGO (§6.4, `#316`: el motivo manda en el reembolso · liquidación simétrica · «Descuento por
+> cortesía») — espera el ✅ del owner** · Última actualización:
 > 2026-09-01 · Decisiones: `DECISIONES #305` (la decisión de PRODUCTO), `#306` (T1), `#308` (T2),
 > `#310` (T3·1), `#311` (T3·2), `#312` (T3·3) y **`#315` (T3·4)** · **Sustituyó** al modelo de DOS
 > EJES de `specs/desglose-dinero-cliente.md` §10 (`DECISIONES #127`), que es 📜 HISTÓRICO: sus
@@ -204,6 +206,10 @@ Tipos:
   exceso sobre lo debido es cortesía. ▶ Es la regla que `compensado()` aplica hoy **al leer**,
   escrita **al ocurrir**; y resuelve `L4` (`#133`, aparcado): «Compensación devuelta» deja de ser
   un canal opaco y es una línea «−» con fecha.
+  ⚠️ **CORRECCIÓN (T4, `DECISIONES #316`, §6.4 — diseñada, sin código)**: la cortesía se escribe
+  **SOLO con `compensation`** y con motivo obligatorio; `value_returned` **no puede exceder lo
+  debido** (el modal lo capa y el dominio lo bloquea). Con esta regla `LB-ORDEN` (§6.3.7) era
+  posible; con la de §6.4, no. La línea se llama «Descuento por cortesía».
 - **El tope de la T4 cae** (D4): `MixedPartySurcharge::applyCredit()` escribe el crédito
   **derivado entero** (`min(derivado, cobertura)` → `derivado`); `gateCoverageCents()` e
   `inFavourCents()` se retiran. Un pedido 100 % online con −8,00 € de descuento queda con
@@ -253,6 +259,12 @@ línea de valor lleva delante el nombre de su reserva.
 ⚠️ Un reembolso **en curso** o **fallido** sale como línea de `settlements` con su estado y **no
 entra en `paid_cents`**: el saldo sigue diciendo «a devolver X» mientras el dinero no ha vuelto, y
 `PAY-09` (la capacidad cuenta los pendientes) impide devolverlo dos veces. Visible para los dos.
+
+⚠️ **CORRECCIÓN (T4, `DECISIONES #316`, §6.4 — diseñada, sin código)**: la liquidación implícita de
+D9 pasa a ser **simétrica**. Con la visita pasada, el pedido cobrado y el principal vivo, un
+`Saldo < 0` se da por **devuelto en recepción** (liquidación `gate` negativa, «Devuelto en el parque»)
+y el saldo queda `settled`; `refund_pending` queda solo para lo que NO tuvo visita (pedido o principal
+cancelados). La inferencia cede ante los hechos: un reembolso posterior la reduce en su importe.
 
 ### 4.5 El contrato (`openapi/v1.yaml` → `Ledger`, **primero**, como manda `specs/api-v1.md`)
 
@@ -1142,6 +1154,117 @@ pinta (`settled` · `under_review`).
 ▶ **T3·4b (pendiente, del owner)**: el OJO sobre el panel, la hoja, la puerta y los correos
 (§5.sexies V18–V21) con el modelo viejo fuera.
 
+### 6.4 · Diseño fino de la T4 (2026-09-01) — «el motivo manda» en el reembolso, y la liquidación simétrica
+
+> ⬜ **Diseñada, SIN código.** Nace de la primera lectura del owner sobre los once pedidos `LB-*`
+> (`VERIFICACION-E2E-CAJON.md` §5.sexies) y de sus cinco decisiones (`DECISIONES #316`). Espera su ✅.
+
+**Lo que el owner decidió** (2026-09-01, con los pedidos delante):
+
+| # | Decisión `[DECIDIDO owner]` | Consecuencia |
+|---|---|---|
+| 1 | **El motivo manda en el reembolso**: la cortesía solo se escribe si el operador la ELIGE, y con motivo obligatorio | Cierra `LB-ORDEN` (§6.3.7, hueco 4): «devolver lo debido» no puede exceder lo debido, así que devolver antes de registrar la bajada ya no fabrica una cortesía |
+| 2 | **La liquidación en el parque es SIMÉTRICA**: un saldo «a devolver» con la visita pasada se da por devuelto en recepción, como el «a pagar» se da por cobrado (D9) | Cierra el «pendiente de devolución» eterno de una bajada cuya visita ya pasó; el operador no tiene que hacer nada |
+| 3 | **Cancelación**: se deja como está («pendiente de devolución», acción del operador) y **en producción se verá** qué política hace falta | Ficha en `DEUDA.md` |
+| 4 | **«Regularizar»** (el asiento correctivo para un libro que no cuadra): **aparcado** | Ficha en `DEUDA.md`; el aviso rojo se conserva como detector |
+| 5 | La línea se llama **«Descuento por cortesía»** | `tickets.journal.courtesy` en cuatro idiomas |
+
+**Medido antes de diseñar** (sobre `a224308`):
+- El modal de reembolso **por línea** (`ViewOrder::refundItem`, línea 2473) ya tiene MOTIVO (`intent`:
+  `value_returned` · `compensation` · `paid_in_person`), modo, líneas e importe (`remainder`/`custom`,
+  con lo debido sugerido, D5). El **total** (`refund`, 277) solo pregunta el motivo cuando NO se cancela
+  (`compensation` | `paid_in_person`); con «también cancelar» el motivo es `value_returned` implícito y
+  el importe es el pago entero (`#153`). Ningún modal admite hoy un texto de motivo.
+- `payment_refunds.reason` **existe** desde la migración fundacional («motivo libre del operador»,
+  nullable) y **no lo rellena ningún modal**: `grep` en `ViewOrder` da cero escrituras. No hace falta
+  migración para guardar el motivo.
+- La regla de §4.2: `cortesía = max(0, importe − debido)` para `compensation`, `value_returned` **o sin
+  motivo**, y solo `paid_in_person` la evita. Es la que convirtió los 19,80 de `LB-ORDEN` en cortesía
+  con el operador diciendo «devuelvo lo que se le debe».
+- D9 (`OrderBook::reservation()`, línea 458): `liquidado = max(0, total − (online_nac − dev))` — «lo
+  que quede por pagar se dio por liquidado; lo que quede por devolver, no» (§4.4, `refund_pending`).
+- `refundItemBlockedReason` **no bloquea** una línea con la visita pasada (docblock: «un reembolso de
+  cortesía tras el servicio es un caso legítimo»); lo que la fecha bloquea es editar y cancelar
+  (`item_finished`). Así que un reembolso por tarjeta después de la visita sigue siendo posible, y el
+  diseño tiene que decir qué pasa con la liquidación inferida cuando llega.
+- `Movement` (el DTO del libro) no tiene ningún campo para un motivo: la etiqueta es UNA para cliente
+  y panel (`MovementLabel::courtesy()` → `tickets.journal.courtesy`, sin argumentos).
+
+**El diseño.**
+- **Los tres motivos, con su regla cada uno** (por línea y total):
+  - `value_returned` («Devolver lo que se le debe»): **el importe no puede superar lo debido** en el
+    ámbito del reembolso —`OrderBook::forReservation(...)->owedToCustomerCents()` para la línea,
+    `forOrder(...)` para el total—, medido como hoy (tras aplicar «también cancelar», que es parte del
+    hecho). El modal enseña «se le deben X» y **capa el importe a X**; si X = 0 la opción queda
+    deshabilitada con la frase «No se le debe nada: registra antes la bajada o la cancelación, o elige
+    compensación». **Nunca escribe cortesía.** El dominio re-valida bajo lock (`SEC-04`, defensa en
+    profundidad como el `mode` y el `also_cancel`): `value_returned ∧ importe > debido` →
+    `['ok' => false, 'reason' => 'exceeds_owed']` con `orders.refund_item_blocked`/`orders.refund_blocked`.
+  - `compensation` («Es una compensación»): **motivo en texto obligatorio** (5–200 caracteres) y la
+    cortesía es **el EXCESO sobre lo debido** (D-T4·2): devolver 29,70 debiendo 19,80 = 19,80 que
+    devuelven lo debido + 9,90 de descuento. El modal lo enseña en vivo («de estos 29,70, 19,80 devuelven
+    lo que se le debe y 9,90 son un descuento por cortesía»). El motivo se guarda en
+    `payment_refunds.reason` y se copia al `context.note` de la fila `courtesy` (su `reason` sigue
+    siendo el intento). Si el importe no excede lo debido, no hay fila de cortesía, pero el motivo se
+    guarda igual en el reembolso.
+  - `paid_in_person`: sin cambios (D-T4·3); motivo opcional.
+  - «También cancelar» (total y por línea) sigue implicando `value_returned` **sin tope explícito**: lo
+    debido tras cancelar es todo lo cobrado no devuelto, así que el pago entero cabe (D-T4·5). Si algún
+    día cupiera menos —una línea cancelada ya devuelta en parte— el tope del dominio lo dice.
+- **La etiqueta** pasa a «Descuento por cortesía» (`tickets.journal.courtesy`, es/en/fr/zh_CN). **El
+  motivo es INTERNO** (D-T4·1, vetable): lo lee el operador en el bloque del panel y en «Ver historial»;
+  el cliente lee solo la etiqueta. Un texto que el operador escribe para sí no es un texto para el
+  cliente, y publicarlo por la API sería una fuga de tono. Técnicamente: `Movement` gana `note`
+  (nullable) que **no viaja por el contrato** (`LedgerResource` no la transcribe) y que solo pinta
+  `reservation-financials.blade.php`; `BookSurfacesParityTest` (guarda M) compara etiquetas y no cambia.
+- **La liquidación simétrica (D9 bis)**: en `OrderBook::reservation()`, con la visita pasada, el pedido
+  cobrado y el principal vivo, `liquidado = total − (online_nac − dev)` **con signo**. Negativo →
+  liquidación `gate` con importe negativo y rótulo nuevo «Devuelto en el parque»
+  (`tickets.journal.gate_refund`); `Pagado` lo suma con signo; el saldo queda `settled`;
+  `owedToCustomerCents()` vuelve 0 y el modal ya no ofrece «devolver lo debido» (solo compensación).
+  `refund_pending` queda para lo que NO tuvo visita: pedido cancelado, principal cancelado, reservas
+  sin liquidar (decisión 3). ⚠️ **Consecuencias dichas**: (a) un cliente que NO vino y al que se le
+  debía dinero leerá «Devuelto en el parque» — es exactamente la aceptación de D9 en la otra
+  dirección, y el owner la ha tomado con la consecuencia delante; (b) **la inferencia cede ante los
+  hechos** (D-T4·4): si después de la visita el operador devuelve por tarjeta o a mano, `dev` crece y lo
+  inferido se reduce en la misma cantidad hasta desaparecer — el libro no cuenta el dinero dos veces,
+  y si la recepción YA lo había entregado, el segundo pago es un regalo que el libro no puede ver, como
+  no ve hoy un cobro doble en la otra dirección.
+- **`LB-ORDEN` después de esto**: por `value_returned` es imposible (el modal y el dominio paran en
+  «no se le debe nada»); por `compensation` deliberada con motivo sigue siendo posible y es
+  CONTRADICTORIA con una bajada posterior — se deja fuera con ficha (`DEUDA.md`, Baja): el editor podría
+  avisar al bajar una línea que ya tiene un descuento por cortesía posterior.
+
+**Decisiones derivadas** (vetables): D-T4·1 motivo interno · D-T4·2 cortesía = exceso · D-T4·3
+`paid_in_person` intacto · D-T4·4 la inferencia cede ante los hechos · D-T4·5 «también cancelar» sin
+tope explícito.
+
+**Lo que toca**: `ViewOrder` (los dos modales: capar el importe, deshabilitar la opción con lo debido a
+0, `Textarea` de motivo obligatorio con `compensation`, la frase en vivo del exceso) ·
+`Order::executePartialRefund`/`executeFullRefund`/`recordCourtesyForRefund` (el tope por motivo, el
+motivo en el reembolso y en el `context` de la cortesía; **la cortesía solo con `compensation`**) ·
+`OrderBook::reservation()` (D9 bis) + `Movement.note` + `MovementLabel::gateRefund()` ·
+`reservation-financials.blade.php` (el motivo bajo la línea, solo panel) · `lang` (la etiqueta en cuatro
+idiomas, el rótulo nuevo de la liquidación negativa, los textos del modal en es/zh_CN) · `INVARIANTES`
+`PAY-17` (la cortesía solo con motivo; D9 simétrica) · §4.2 y §4.4 de esta spec (corrección delante del
+texto) · `DEUDA.md` (tres fichas). ⚠️ `Order.php` no está en el `CRITICAL_RE`; `VERIFY_CONC` no hace
+falta salvo que la tanda toque `MixedPartySurcharge`/`OrderItemEditor`, que no toca.
+
+**Guardas y mutaciones previstas** (se ejecutan al hacerla):
+
+| Guarda | Mutación |
+|---|---|
+| `RefundIntentGovernsTest` (nuevo): `value_returned` por encima de lo debido → bloqueado en el dominio (`exceeds_owed`) y en el modal (importe capado, opción deshabilitada con 0) · `compensation` sin motivo → error de validación · la cortesía es el exceso y lleva el motivo en `context.note` · con `value_returned` NUNCA hay fila `courtesy` · el motivo no viaja por la API | escribir cortesía con `value_returned` · quitar el tope del dominio · motivo opcional · transcribir `note` en `LedgerResource` |
+| `OrderBookTest` +2: saldo negativo con visita pasada → «Devuelto en el parque», `settled`, `owedToCustomerCents() == 0` · un reembolso posterior reduce lo inferido en la misma cantidad | restaurar el `max(0, …)` de D9 · no restar `dev` de lo inferido |
+| `CourtesyMovementTest`: sus siete casos, con motivo explícito; el de `LB-ORDEN` (devolver antes de bajar con `value_returned`) pasa a ESPERAR el bloqueo | dejar pasar el reembolso |
+| Los que ya reembolsan con `compensation` (`RefundItemCustomAmountTest`, `ItemPriceChangeReconstructionTest`, `OrderFinancialInvariantsTest`, `OrderAdminActionsTest`) ganan el motivo en sus datos | — |
+| `ClientMoneyLabelsAreTranslatedTest::JOURNAL_LABELS` gana `gate_refund` (cuatro idiomas, tres distintos) | borrar una traducción |
+| Sonda §5.sexies sobre `LB-BAJADA` movida a ayer y sobre un `LB-ORDEN` nuevo (que tiene que ser IMPOSIBLE) | — |
+
+**Fuera de la T4, dicho**: la política de cancelación (decisión 3, producción) · «Regularizar»
+(decisión 4, aparcado) · el aviso al bajar una línea con cortesía posterior · plegar «Pagos y
+devoluciones» cuando solo hay un cobro (pregunta abierta al owner, de presentación).
+
 ## 7. Revisión y decisión
 
 - 2026-09-01 · **Agente**: análisis empírico (§1.2–§1.4), prototipo de lectura y este diseño. Dos
@@ -1160,5 +1283,11 @@ pinta (`settled` · `under_review`).
   `#315` y no `#313`: el carril de la landing numeró `#313` el mismo día, la colisión de
   `CONVENCIONES` §10 por tercera vez en este carril): el modelo de dos ejes se RETIRA y el libro es
   el único compositor. **Con ella la spec queda ✅ en código**; sigue 🟦 solo por el OJO del owner.
+- 2026-09-01 · **Owner**, tras leer los once pedidos `LB-*` en el panel y el cajón (§5.sexies de
+  `VERIFICACION-E2E-CAJON.md`): *«el resto todo me gusta más, es más claro y mejor»*, y cinco
+  decisiones sobre lo que le chirriaba → `DECISIONES #316` y el diseño fino de la **T4** en §6.4
+  (el motivo manda en el reembolso · liquidación simétrica · «Descuento por cortesía»; cancelación y
+  regularización, aparcadas). **Espera su ✅ antes de escribir código.**
 - Entradas: `DECISIONES #305` (la decisión de producto) · `#306` (la T1) · `#308` (la T2) · `#310`
-  (la T3·1) · `#311` (la T3·2) · `#312` (la T3·3) · **`#315` (la T3·4)**.
+  (la T3·1) · `#311` (la T3·2) · `#312` (la T3·3) · **`#315` (la T3·4)** · `#316` (las decisiones
+  del owner tras los `LB-*`; la T4).

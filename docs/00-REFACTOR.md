@@ -2577,7 +2577,14 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
   - [ ] **T3·4b · el ojo del owner** sobre el panel, la hoja, la puerta y los correos con el modelo
         viejo fuera (`VERIFICACION-E2E-CAJON.md` §5.sexies V18–V21). Ya medido: el corpus local leído
         solo con el libro (40 pedidos, 37 cierran, 3 en revisión — los mismos que con el oráculo) y el
-        guion headless del cajón (cuatro pedidos sembrados por `OrderCreator`, 17/17 ✓).
+        guion headless del cajón (cuatro pedidos sembrados por `OrderCreator`, 17/17 ✓; ampliado a
+        once pedidos con los siete de demostración, 54/54 ✓). ▶ **El owner ya los leyó** (`#316`).
+  - [ ] **T4 · el motivo manda en el reembolso + la liquidación simétrica + «Descuento por cortesía»
+        — DISEÑADA (spec §6.4, `DECISIONES #316`), SIN código: espera el ✅ del owner.** Cierra
+        `LB-ORDEN` (la cortesía solo con `compensation` y con motivo; `value_returned` capado a lo
+        debido, en el modal y bajo lock) y el «pendiente de devolución» eterno de una bajada con la
+        visita pasada (D9 simétrica). Seis guardas con sus mutaciones previstas. Fuera, con ficha:
+        cancelación (producción) · «Regularizar» (aparcado) · el aviso al bajar tras una cortesía.
 
 ### El CAMBIO DE PRECIO ✅ — la línea `#145`→`#155`, CERRADA el 2026-08-25
 

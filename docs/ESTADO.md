@@ -5,7 +5,8 @@
 > aquí solo se enlaza.** Última actualización: **2026-09-01 — TRES carriles a la vez.
 > **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2
 > (`#311`), T3·3 (`#312`) y T3·4 (`#315`, LA RETIRADA del modelo de dos ejes) EN EL ÁRBOL: CÓDIGO
-> COMPLETO; queda el OJO del owner (T3·4b)** — carril 3, abajo.
+> COMPLETO; el owner lo leyó con once pedidos delante y decidió la T4 (`#316`), DISEÑADA en §6.4 y a
+> la espera de su ✅** — carril 3, abajo.
 > **MIXTOS**: T1→T5 en el árbol (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL
 > GUARDIÁN DE SOLAPES EN EL ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** —
 > siguen fuera por diseño la fase 3 de §20.2 y el AFORO (owner); la ficha del fantasma de la señal
@@ -94,11 +95,19 @@
 > `probe-card@jumpweb.test`** —cuatro del sistema, cuatro de demostración y TRES que enseñan los
 > huecos (`LB-ORDEN` Total −9,90 con el libro cerrando · `LB-PUERTA` liquidación inferida ·
 > `LB-REVISION` «no cuadra» sin acción)— para que el owner los mire en el panel y en el cajón; se
-> borran con `Order::where('code','like','LB-%')`. ⚠️ Tres decisiones del owner ABIERTAS tras su
-> primera lectura: el nombre de la línea «Compensación» (propuesta: «Descuento por cortesía»),
-> plegar «Pagos y devoluciones» cuando solo hay un cobro, y si el AJUSTE MANUAL (hueco 2) se diseña
-> como tanda. Y dos cosas que NO son del libro pero quedaron escritas: la pregunta white-label de las
-> fotos (`#313`) y el AFORO del horizonte de franjas (`#307`).
+> borran con `Order::where('code','like','LB-%')`.
+> ❗❗ **EL OWNER YA LOS LEYÓ y decidió (`DECISIONES #316`, 2026-09-01 por la mañana): la T4 del
+> libro está DISEÑADA en `specs/desglose-libro.md` §6.4 y ESPERA SU ✅ antes de escribir código**
+> — el MOTIVO manda en el reembolso («devolver lo debido» no puede exceder lo debido; «compensación»
+> con motivo obligatorio y la cortesía es el exceso; con `value_returned` NUNCA hay cortesía: cierra
+> `LB-ORDEN`) · la liquidación en el parque SIMÉTRICA (un «a devolver» con la visita pasada se da por
+> devuelto en recepción; la inferencia cede ante un reembolso posterior) · la línea se llama
+> «Descuento por cortesía» · cancelación: se verá en producción · «Regularizar»: aparcado (fichas en
+> `DEUDA.md`). ⚠️ Sigue ABIERTA una pregunta de presentación: plegar «Pagos y devoluciones» cuando
+> solo hay un cobro. ▶ Al retomar: si el owner da el ✅ a §6.4, la T4 se hace con sus seis guardas y
+> mutaciones; si veta alguna decisión derivada (D-T4·1…5), se corrige §6.4 antes. Y dos cosas que NO
+> son del libro pero quedaron escritas: la pregunta white-label de las fotos (`#313`) y el AFORO del
+> horizonte de franjas (`#307`).
 > ❗❗❗ **2026-09-01 (noche, 3.ª sesión) · T3·3 · LOS CORREOS PINTAN EL LIBRO; CAE EL TOPE DEL DESCUENTO**
 > (`DECISIONES #312`, `specs/desglose-libro.md` **§6.3.4 diseño fino y §6.3.5 lo ejecutado**;
 > `cumple-mixto.md` §20 con la corrección; `INVARIANTES` `PAY-16`/`PAY-17`/`PAY-19` con la nota).

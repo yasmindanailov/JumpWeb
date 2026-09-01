@@ -18574,3 +18574,65 @@ T2— y cero divergencias por reserva.
 del libro en el cajón recorrido** (`VERIFICACION-E2E-CAJON.md` §5.sexies: cuatro pedidos sembrados
 por `OrderCreator`, 17/17 ✓ contra la API). Queda **T3·4b**: el ojo del owner sobre panel, hoja,
 puerta y correos (V18–V21).
+
+## #316 · 2026-09-01 · El owner lee el libro con once pedidos delante: el MOTIVO manda en el reembolso, la liquidación en el parque es simétrica y la cortesía se llama «Descuento por cortesía»; cancelación y regularización, aparcadas
+
+**Contexto.** Con la T3·4 en el árbol (`#315`) se sembraron para el owner once pedidos `LB-*`
+(`VERIFICACION-E2E-CAJON.md` §5.sexies): cuatro del sistema, cuatro de demostración y tres que
+ENSEÑAN los huecos que `specs/desglose-libro.md` §6.3.7 dejó escritos. Los miró en el panel y en el
+cajón. Su veredicto: *«el resto todo me gusta más, es más claro y mejor»*, y tres cosas que le
+chirriaban, que se convirtieron en cinco decisiones. Lo que había detrás de cada una, medido:
+
+- **«No entiendo la compensación»** (`LB-CORTESIA`, `LB-ORDEN`). La línea «Compensación −9,90» es la
+  parte de un reembolso que **no devuelve ningún valor quitado**: en `LB-CORTESIA` se le debían 19,80 por
+  bajar de 4 a 2 y se le devolvieron 29,70. No es un reembolso —el reembolso está abajo, «Devuelto
+  −29,70»—, es el perdón de deuda que un reembolso de más genera; sin ella el libro le pediría 9,90 en
+  el parque. ⚠️ Y en `LB-ORDEN` se escribió **sin que el operador la quisiera**: eligió «devolver lo que
+  se le debe» antes de registrar la bajada, no se debía nada todavía, y la regla de §4.2 (`cortesía =
+  exceso sobre lo debido`, con cualquier motivo) convirtió los 19,80 en cortesía; la bajada posterior
+  volvió a restar 19,80 → **Total −9,90 con las cuatro identidades cerrando**.
+- **«Pendiente de devolución obliga al operador a actuar cuando la visita ya pasó»**: cierto por
+  diseño — D9 (`OrderBook::reservation()` línea 458) solo daba por liquidado lo que quedaba por
+  PAGAR, «lo que quede por devolver, no». Y una creencia suya que se comprobó falsa: reembolsar una
+  reserva ya pasada **sí** está permitido por línea (`refundItemBlockedReason` lo admite a propósito);
+  lo que la fecha bloquea es editar y cancelar.
+- **`LB-PUERTA`** («Liquidado en el parque» inferido sin registro): el owner lo da por bueno —*«no hay
+  manera de que lo sepamos; no podemos obligar al operador»*— así que deja de contarse como hueco: es
+  D9, una decisión.
+
+**Decisión** (`[DECIDIDO owner, 2026-09-01]`, las cinco elegidas con el coste delante):
+1. **El motivo manda en el reembolso.** «Devolver lo que se le debe» **no puede exceder lo debido**
+   (el modal lo capa y, con 0 debido, deshabilita la opción diciendo por qué; el dominio lo bloquea
+   bajo lock); «compensación» exige **motivo en texto** y la cortesía es el exceso sobre lo debido,
+   con el motivo guardado (`payment_refunds.reason`, que existía y nadie rellenaba) y copiado a la
+   fila; «lo pagará en recepción» no cambia. **Con `value_returned` nunca hay cortesía.**
+2. **La liquidación en el parque es simétrica**: un saldo «a devolver» con la visita pasada se da por
+   devuelto en recepción («Devuelto en el parque»), como el «a pagar» se da por cobrado. La
+   inferencia cede ante los hechos: un reembolso posterior la reduce en su importe. `refund_pending`
+   queda para lo que no tuvo visita.
+3. **Cancelación**: se queda como está (pendiente de devolución, acción del operador) — *«veremos en
+   prod qué solución necesitaría el operador»*.
+4. **«Regularizar»** (asiento correctivo para un libro que no cuadra): **aparcado**; el aviso rojo se
+   conserva como detector, y las tres sondas locales que lo disparan se borran.
+5. La línea se llama **«Descuento por cortesía»**.
+
+**Lo hecho.** Solo diseño (el owner: «no escribas código todavía»): §6.4 de la spec con la regla por
+motivo, D9 bis con sus dos consecuencias dichas (el no-show con dinero a devolver leerá «devuelto»;
+la inferencia cede ante un reembolso posterior), cinco decisiones derivadas vetables (el motivo es
+INTERNO al panel · la cortesía es el exceso · `paid_in_person` intacto · «también cancelar» sin tope
+explícito), la lista de lo que toca, seis guardas con sus mutaciones; correcciones delante de §4.2 y
+§4.4; tres fichas en `DEUDA.md`.
+
+**Lecciones.**
+- ⚠️⚠️ **Una regla contable correcta puede escribir una línea que el operador no quiso.** La cortesía
+  «= exceso sobre lo debido, con cualquier motivo» era exacta en aritmética y falsa en intención: el
+  motivo que el operador declara tiene que gobernar lo que se escribe, y lo que no cuadre con el
+  motivo se bloquea, no se reinterpreta.
+- ⚠️ **Una asimetría deliberada envejece**: D9 se escribió para el cobro (T5 de mixtos) y dejó la
+  devolución en «pendiente para siempre»; enseñársela al owner con un pedido real la cerró en una
+  frase. *Los huecos se enseñan con pedidos, no con párrafos.*
+- El nombre importa: «Compensación» se leía como un reembolso; «Descuento por cortesía» dice que es
+  una rebaja del Total.
+
+**Verificación**: ninguna de código (no lo hay). Doc coherente (`docs-check`). Sigue: el ✅ del owner
+sobre §6.4 y, con él, la T4.
