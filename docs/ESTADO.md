@@ -10,22 +10,36 @@
 > GUARDIÁN DE SOLAPES EN EL ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** —
 > siguen fuera por diseño la fase 3 de §20.2 y el AFORO (owner); la ficha del fantasma de la señal
 > en `DEUDA.md` **quedó RETIRADA por la T1 del libro** (`#306`); queda el OJO del owner sobre T5+T6.
-> **IDIOMA VISUAL / LANDING**: en el árbol la tanda A (etiquetas), la T2 (cinta C3, `#293`), **la
-> T4: zonas y juegos con UN solo selector (`#302`)** y **la T5: titular a una línea sin etiqueta +
-> tarjeta pegatina (`#303`) — la PRIMERA pieza del molde de `#297` ejecutada**; ⛔ **la T1 de normas
-> (`#292`) está REVERTIDA ENTERA (`#300`) y la T3 de zonas (`#295`) REVERTIDA EN SU ESTRUCTURA
-> (`#301`)**, las dos `[DECIDIDO owner]`. **La portada arranca con normas, horarios y zonas en su
-> forma heredada**: es la base común desde la que se va a rediseñar, no una forma aprobada. El
-> diagnóstico del molde (`#297`) sigue vivo. ❗ **De la T3 SÍ se conserva el arreglo de identidad**
-> (`slug`, no `accent`), con guarda propia. ▶ **Y los DATOS REALES de Play Jump Park ya están en la
-> BD local** (`#304` el catálogo · **`#307` los legales, de contacto y de ubicación** — **no
-> versionados**: los volcados viven en el scratchpad de cada sesión).
-> ❗❗ **`#307` cierra la tanda B′: «Visítanos» pasa a TRES TARJETAS** (`[DECIDIDO owner]`, la pegatina
-> de `#303`) y con ella cae el caso EXTREMO del molde: 4 encabezados → **1**. **Quedan por rehacer
-> normas (A′) y zonas (C′)**, las dos revertidas a su forma heredada a propósito.
-> ⚠️ **Y los datos reales destaparon tres defectos**, dos arreglados y uno con ficha: el pie servía
-> enlaces muertos · `legal.jurisdiction` no se puede rellenar desde el panel · **las franjas no
-> cubren el horizonte** (el sábado 05-09 ofrece CERO horas) — eso último es AFORO y NO se tocó.**
+> **IDIOMA VISUAL / LANDING** — el carril **más movido de la jornada**: en el árbol la tanda A, la
+> T2 (`#293`), T4 (`#302`), T5 (`#303`), **T6 «Visítanos» en tarjetas (`#307`)**, **T7 las cinco
+> secciones (`#309`)**, **los assets del parque real (`#313`)** y **T8 el orden y el ritmo (`#314`)**.
+>
+> ❗❗❗ **POR DÓNDE SE RETOMA ESTE CARRIL — LEE ESTO Y NADA MÁS.** La portada ya NO es la base
+> heredada: hoy sirve **entradas → cumpleaños → el parque → ubicación → normas → dudas**, con las
+> fotos y el vídeo REALES, aire uniforme (240 escritorio / 160 móvil) y todas las secciones tocadas
+> salvo dudas y el cierre. **Lo que queda es del OWNER, no una tanda que empezar:**
+>   1. **Las CINCO fotos con duda** (Tirolina · Basket Jump · Barredora · Castillo de bloques ·
+>      Circuito High) y **las NUEVE sin asignar**. Hoja de revisión publicada como artefacto en la
+>      sesión del 01-09; el mapeo vive en `scripts/`+`DECISIONES #313`. Cambiar una es **sustituir un
+>      fichero**: ni código, ni BD, ni migración. ⚠️ Y hay **26 huecos para 35 fotos** — varias libres
+>      son cosas que el parque TIENE sin dar de alta (arenero, correpasillos, cubo de Rubik, aro):
+>      crearlas es DATO y hacen falta nombre y edad.
+>   2. **El `sticky` de normas tiene 99 px de recorrido** y a 1280×900 la sección cabe entera, así que
+>      no se engancha. **Las dos cosas que pidió se estorban** (columna pegajosa vs. tope de 3/4
+>      normas): la palanca es subir el tope.
+>   3. **`legal.jurisdiction` no se puede rellenar desde el panel** (sale `[pendiente]` en aviso legal
+>      y condiciones) y **falta su VALOR**, que es suyo. Ficha en `DEUDA.md`.
+>   4. **Las franjas no cubren el horizonte**: el sábado 05-09 ofrece CERO horas. Es AFORO, **NO se
+>      tocó**, y la ficha lleva el comando.
+>   5. La **categoría de cookies `social` ya no gatea nada** desde que se retiró «En directo»: vuelve
+>      con las reseñas o se retira entera **con su frase del banner**, que es texto legal.
+> ▶ **Lo que sigue vivo como criterio**: el diagnóstico del molde de `#297` (cada sección adopta la
+> forma de lo que ES) y `FacadeDecorationIsPerScreenTest` (ninguna pieza decorativa dentro de un
+> bucle). ⚠️ **El presupuesto de decoración de `#292` está REVISADO a sabiendas** por `#309`: la
+> portada gasta CUATRO piezas, no tres.
+> ▶ **Los DATOS REALES viven solo en la BD local** (`#304` catálogo · `#307` legales/contacto) y **no
+> viajan en el commit**; los assets sí (`#313`). ⚠️ **`client-kit.svg` está gitignorado**: quien clone
+> tiene que rehacerlo con `python3 scripts/kit-fachada.py`, que necesita `mockup_playjumppark/`.
 > ❗ **SI ENTRAS NUEVO A MIXTOS: `specs/cumple-mixto.md` §18 (visión) → §21 (sello) → §22 (completo son
 > dos preguntas) → §23 (la T3) → §20 + §24 (la T4: el descuento espejo) → §25 (la T5: las
 > palabras) → **§26 (la T6: el guardián en el dominio)**. Diseño fino antes de código y preguntas

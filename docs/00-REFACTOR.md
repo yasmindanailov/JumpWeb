@@ -2767,7 +2767,60 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > ❗ **Sin construir**: la HORA EXTRA (4 productos, alarga a 180 min → toca AFORO) y «mostrar sin
 > vender» para complementos. Fichas en `DEUDA.md`.
 >
-> ✅ **IDIOMA VISUAL · T5: TITULAR A UNA LÍNEA, SIN ETIQUETA, Y LA TARJETA COMO PEGATINA**
+> ✅ **IDIOMA VISUAL · T8: EL ORDEN DE LA PORTADA Y EL RITMO** (2026-09-01, `#314`,
+> `[DECIDIDO owner]`, §3.decies). **entradas → cumpleaños → el parque → ubicación → normas → dudas**;
+> en código, mover UN bloque. Los anclas y `--hero-air` (que cuelga de `.hero + .section`) se mudan
+> solos.
+> ▶ Aire **240 px en escritorio y 160 en móvil, uniforme**. ⚠️ **El número no era el problema**: la
+> banda de cumpleaños **no es un `.section`**, llevaba relleno inferior CERO y tenía la mitad de aire
+> que las demás (96 y 110 contra 193, medido) — y con cumpleaños en 2.ª posición el salto quedó
+> donde más se ve. ⚠️ **`.bd-page` tiene DOS hijos en la portada**: manda el segundo.
+> ⚠️⚠️ **Las reglas de móvil NO hacían nada por estar mal colocadas**: en el `@media` de 768 que vive
+> ~100 líneas ANTES de las bases, y a igual especificidad gana la última del fichero. *El fallo de
+> cascada más caro de diagnosticar: no hay nada que leer que parezca mal.*
+> ❗❗ **Una guarda dependía del ORDEN y falló con el producto SANO**: `ZonesSectionTest` recortaba
+> «desde `id="zones"` hasta `id="pricing"`» y al adelantar tarifas contó cuatro `<h2>`. *Un
+> localizador que depende de qué sección viene después no acota una sección: acota un tramo de
+> página.* Re-apuntada al ELEMENTO.
+> ▶ **Las 35 fotos, subidas**; las 9 sin hueco como `pjp-NNN.webp`. ⚠️ **26 huecos para 35 fotos**:
+> varias de las libres son cosas que el parque TIENE sin dar de alta — crearlas es DATO.
+> ⚠️⚠️ **TRES trampas de instrumento en una tanda**: la sonda de aire contaba **la caja de un
+> contenedor** como tinta (38 px donde hay 240) · antes metía a `.bd-page` y a su hijo en la misma
+> lista y el aire salía **negativo** · y la captura de página completa enseña las fotos del carrusel
+> como TRAMA — son 23 `loading="lazy"` en un carril horizontal y solo cargan las 3 visibles.
+>
+> ✅ **LOS ASSETS DEL PARQUE REAL** (2026-09-01, `#313`). 26 fotos y el vídeo del hero son ya los de
+> Play Jump Park; `public/images` pasa de **8,0 MB / 40 ficheros a 5,2 / 26** y **deja de tener
+> material del PRIMER cliente** (cierra una ficha de `DEUDA.md`).
+> ▶ Presupuesto MEDIDO y escrito en `INSTALACION-CLIENTE.md` §4.c: fotos **WebP 1600 px `-q 82`**;
+> vídeo **H.264 720p 25 fps `-crf 32` con `-an`** (173 kB/s contra los 186 del anterior). ⚠️ El `-an`
+> no es un detalle —el hero va `muted`— ni bajar de 50 a 25 fps. ⚠️ El póster es el **primer
+> fotograma del vídeo ya codificado**, o se ve un salto al arrancar.
+> ▶ **La CORTINA del hero se aligera** a 18/28/64: el alfa bajo el titular pasa de 40,1 % a 28,1 % y
+> su peor contraste de **8,27 a 7,00** (WCAG pide 3,0 para texto grande), barrido sobre 7 fotogramas.
+> ⚠️⚠️ **La primera medición fue FALSA pareciendo buena**: `video.currentTime` desde la página lo
+> devolvía a 0 —`autoplay muted loop`— y las 5 variantes se midieron contra el MISMO fotograma;
+> números distintos entre sí e IDÉNTICOS en los 7 instantes. *Un valor constante donde debería variar
+> no es un resultado: es un instrumento parado.*
+> ⚠️ **Los NOMBRES de fichero no se tocan**: las rutas viven en BD, seeder y cuatro tests, así que
+> renombrar convierte un cambio de CONTENIDO en uno de contrato. Cero cambios en la suite.
+>
+> ✅ **IDIOMA VISUAL · T7: CINCO SECCIONES EN UN ENCARGO** (2026-09-01, `#309`, `[DECIDIDO owner]`,
+> §3.nonies). Siluetas de zona **44 → 104 px** asomando de la tarjeta · friso familiar en tarifas ·
+> normas rehecha (dos requisitos pegajosos + cuatro normas y CTA) · **«En directo» retirada** ·
+> cumpleaños sin «foam», con contorno de pose y toggles al ancho EXACTO de la tarjeta de precio.
+> ❗❗ **REVISA a sabiendas el presupuesto de `#292`**: la portada pasa de UNA pieza decorativa a
+> CUATRO. Lo que NO cambia es `FacadeDecorationIsPerScreenTest`: ninguna pieza dentro de un bucle.
+> ▶ El kit pasa de 4 a **7 símbolos**, extraídos con un guion (`scripts/kit-fachada.py`).
+> ⚠️⚠️ **Agrandar el splash rompió el criterio medido de `#303`** (9.936 px² sobre el párrafo):
+> barrido de cinco combinaciones, ninguna crece sin caer sobre el texto → queda el tamaño de `#303`
+> con la opacidad al doble. *Se ve más porque pinta más, no porque ocupe más.*
+> ⚠️⚠️ **Normas no colapsaba en móvil** y el `overflow: hidden` cortaba titular y botón: **lo vio la
+> captura, no la suite** — ninguna guarda mira anchos.
+> ⚠️ **Dos defectos PREEXISTENTES**: la tarjeta de pack se salía 11 px de su columna, y retirar la
+> sección vieja **se llevó `.rules-grid`/`.rule`, que los usa `/normas`**.
+>
+> > ✅ **IDIOMA VISUAL · T5: TITULAR A UNA LÍNEA, SIN ETIQUETA, Y LA TARJETA COMO PEGATINA**
 > (2026-08-31, `#303`, `[DECIDIDO owner]`). **Primera pieza del molde de `#297` ejecutada.**
 > ▶ Titulares de una palabra, **sin punto y en tinta** (**Dos zonas · Tarifas · Cumpleaños ·
 > Visítanos · Normas · En directo · Dudas**, ×3 idiomas) y **fuera la etiqueta** de toda vista

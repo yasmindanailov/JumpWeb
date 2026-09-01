@@ -18362,7 +18362,7 @@ que cita los nombres retirados en su propio docblock: se asevera el CUERPO de la
 `tickets.ledger.*` salvo las tres notas, el puente y `ledger-bridge.json`, sus tests), `INVARIANTES`
 `PAY-16`/`PAY-17` reescritas, `DEUDA` L4, `desglose-dinero-cliente.md` a HISTÓRICO, el guion headless
 del cajón y la receta de las 25 acciones, y el ojo del owner.
-## #313 — El vídeo del hero y las fotos, ya son las del parque real (2026-09-01)
+## #313 · 2026-09-01 · El vídeo del hero y las fotos ya son las del parque real
 
 **Contexto.** El owner entrega el vídeo del hero (`video_Hero.mp4`) y **35 fotos de la inauguración**
 de Play Jump Park, editadas, en PNG a 2048×1365 (~4,7 MB cada una, **164 MB** en total). Hasta hoy la
@@ -18448,7 +18448,7 @@ compara el árbol de Vue contra el de Blade, y el bundle SSR en disco era el de 
 `npm run build && npm run build:ssr` y verde. *Anotado para el handoff: al integrar un carril que
 toca Vue, reconstruir antes de leer la suite.*
 
-## #314 — La portada se reordena, el ritmo se iguala y entran las 35 fotos (2026-09-01)
+## #314 · 2026-09-01 · La portada se reordena, el ritmo se iguala y entran las 35 fotos
 
 `[DECIDIDO owner, 2026-09-01]`, tres cosas en un mensaje.
 
