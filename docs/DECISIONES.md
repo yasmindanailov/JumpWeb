@@ -18447,3 +18447,63 @@ distinto de cero en todas · las cuatro rutas con fotos a 200.
 compara el árbol de Vue contra el de Blade, y el bundle SSR en disco era el de antes del rebase.
 `npm run build && npm run build:ssr` y verde. *Anotado para el handoff: al integrar un carril que
 toca Vue, reconstruir antes de leer la suite.*
+
+## #314 — La portada se reordena, el ritmo se iguala y entran las 35 fotos (2026-09-01)
+
+`[DECIDIDO owner, 2026-09-01]`, tres cosas en un mensaje.
+
+### 1 · El orden de secciones
+
+**Entradas → cumpleaños → el parque → ubicación → normas → dudas.** En código es mover UN bloque:
+`#zones` pasa de ir la primera bajo el hero a ir detrás de cumpleaños. Nada más cambia — los anclas
+(`#zones`, `#rides`, `#pricing`, `#info`, `#rules`) los siguen usando el pie y el menú, y el CTA de
+tarifas sigue apuntando a una sección que va debajo.
+▶ `--hero-air` no hubo que tocarlo: cuelga de `.hero + .section`, así que el aire extra se muda solo
+a la sección que quede primera.
+
+### 2 · El aire, que estaba desigual y ahora está MEDIDO
+
+`.section` sube de 96 a **120 px** (80 en móvil). Pero el arreglo de verdad era otro: **la banda de
+cumpleaños no es un `.section`** y llevaba `64px 0 0` —relleno inferior **CERO**—, así que a su
+alrededor había la mitad de aire que entre las demás. Con cumpleaños en segunda posición, ese salto
+quedaba justo donde más se ve.
+▶ Y `.bd-page` tiene **DOS** hijos en la portada (`bd-sec1` y el «paso a paso» de `bd-sec3`), no uno:
+quien manda en el aire de salida es el segundo. Los dos siguen ahora la escala.
+▶ Resultado: **240 px uniformes en escritorio y 160 en móvil**, en todas las fronteras.
+
+⚠️⚠️ **Y las reglas de móvil no hacían NADA por estar mal colocadas.** Se escribieron en el `@media`
+de 768 que vive ~100 líneas ANTES de las bases de `.bd-sec1`/`.bd-sec3`: a igual especificidad gana
+la última del fichero, así que la base pisaba al media query. *El síntoma era el peor posible — el
+CSS se lee correcto y el número no se mueve.* Van ahora detrás de sus bases.
+
+### 3 · Las 35 fotos, subidas
+
+Las 9 que faltaban entran como `pjp-NNN.webp`. **No se renombraron las 26 ya asignadas**, y es una
+decisión: sus nombres describen la ATRACCIÓN (`jump_saltos_libres`), no al cliente. Pasarlas a
+`pjp-NNN` metería la numeración de este parque dentro del producto —peor para white-label— y tocaría
+el seeder y cuatro tests para no ganar nada.
+⚠️ **Hay 26 huecos para 35 fotos** (23 atracciones + 3 zonas): nueve se quedan servidas y sin
+asignar. Varias son cosas que el parque TIENE y que no están dadas de alta —arenero de bebés,
+correpasillos, cubo de Rubik, aro luminoso—: si el owner las quiere, son atracciones nuevas, o sea
+DATO, y hacen falta nombre y edad.
+
+### 4 · Una guarda que dependía del ORDEN, y tres trampas de instrumento
+
+❗ **`ZonesSectionTest::seccion()` recortaba «desde `id="zones"` hasta `id="pricing"`».** Al pasar
+tarifas delante, el recorte se comió el resto de la portada y el caso del encabezado único contó
+**cuatro `<h2>`**: **la guarda falló con el producto sano**. ▶ *Un localizador que depende de qué
+sección viene después no acota una sección, acota un tramo de página.* Re-apuntada al ELEMENTO, que
+es lo único que no cambia al reordenar — y queda más fuerte que antes.
+
+⚠️ **Tres veces midió mal el instrumento en esta tanda, y las tres con cifras creíbles:**
+1. La sonda de aire contaba **la caja de un contenedor** (`section.bd-sec3`) como si fuera tinta, y
+   daba 38 px de aire donde hay 240. *Un contenedor no es tinta.*
+2. Su primera versión metía a `.bd-page` **y a su hijo** en la misma lista de secciones, con lo que
+   el «aire» entre ellos salía negativo. *Un contenedor y su contenido no son dos secciones.*
+3. La captura de página completa enseña las fotos del carrusel como TRAMA. No es un defecto:
+   son 23 `loading="lazy"` dentro de un carril horizontal y solo cargan **3**, las visibles.
+   Comprobado desplazándose de verdad antes de «arreglar» nada.
+
+**Verificación**: suite **3760 verde** (24.946 aserciones, 1 skipped) · Pint ✓ · docs-check ✓ ·
+Chrome real 1280 y 390: aire **240/160 uniforme** medido de los rellenos computados, orden correcto
+en la captura de página completa, 0 errores de consola.

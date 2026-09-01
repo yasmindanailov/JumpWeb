@@ -176,6 +176,43 @@
         <div class="hero__sentinel" aria-hidden="true"></div>
     </header>
 
+
+    {{-- ===================== PRECIOS ===================== --}}
+    <section id="pricing" class="section wrap pricing-sec">
+        {{-- ▶ **EL FRISO FAMILIAR** (`slot-tarifas`, `#309`): tres poses del artboard compuestas en
+             un símbolo, con los pies en la misma línea. `[DECIDIDO owner]`: «en tarifas pon también
+             una silueta de varias personas».
+             ⚠️ Va DENTRO de la cabecera y anclada a ella —no a la sección— por lo mismo que la
+             mancha de zonas: un `top` porcentual colgado de un contenedor que cambia de alto se
+             descoloca solo cuando alguien acorta un texto (`#303`). --}}
+        <div class="rides__head pricing__head">
+            <div>
+                <h2 class="rides__title">{{ __('landing.pricing.title') }}</h2>
+            </div>
+            <p>{{ __('landing.pricing.intro') }}</p>
+            <x-site.ilu clave="slot-tarifas" class="pricing__friso" />
+        </div>
+        {{-- ⚠️ **Sin la nota de calcetines** (`[DECIDIDO owner]`: «quita la card de calcetines
+             antideslizantes de ahí»): el dato se va a la sección de normas, con su propio CTA de
+             compra. `/precios` la CONSERVA —es la otra vista que usa este componente y allí no hay
+             sección de normas que la recoja—, así que la decisión viaja por prop y no borrando el
+             componente. --}}
+        <x-site.ticket-prices :tickets="$tickets" :zones="$zones" :socks="false" />
+
+        {{-- El puente a las normas. `[DECIDIDO owner]`: «pon un cta, conoce las reglas para venir, y
+             al darle clic baja al cliente a la sección de las reglas». Es un ancla dentro de la
+             misma página, no una ruta. --}}
+        <p class="pricing__rules">
+            <a class="btn btn--ghost" href="#rules" data-tap>{{ __('landing.pricing.rules_cta') }}</a>
+        </p>
+    </section>
+
+    {{-- ===================== CUMPLEAÑOS (#231) ===================== --}}
+    {{-- El componente pinta sus propias secciones con `.wrap` (no envolver en otro). En la
+         landing SIN tarjeta de invitación (showInvite=false): solo un enlace sutil a /cumpleanos. --}}
+    @if ($packages->isNotEmpty())
+        <x-site.events-section :packages="$packages" :show-invite="false" :level="2" />
+    @endif
     {{-- ============ ZONAS Y SUS JUEGOS (una sola sección) ============ --}}
     {{-- **`[DECIDIDO owner, 2026-08-31]` (`#302`): las tarjetas de zona y la tira de cifras, fuera.**
          Aquí había DOS secciones —`#zones`, con una tarjeta grande por zona cuyo CTA saltaba a la
@@ -333,42 +370,6 @@
         </div>
     </section>
 
-    {{-- ===================== PRECIOS ===================== --}}
-    <section id="pricing" class="section wrap pricing-sec">
-        {{-- ▶ **EL FRISO FAMILIAR** (`slot-tarifas`, `#309`): tres poses del artboard compuestas en
-             un símbolo, con los pies en la misma línea. `[DECIDIDO owner]`: «en tarifas pon también
-             una silueta de varias personas».
-             ⚠️ Va DENTRO de la cabecera y anclada a ella —no a la sección— por lo mismo que la
-             mancha de zonas: un `top` porcentual colgado de un contenedor que cambia de alto se
-             descoloca solo cuando alguien acorta un texto (`#303`). --}}
-        <div class="rides__head pricing__head">
-            <div>
-                <h2 class="rides__title">{{ __('landing.pricing.title') }}</h2>
-            </div>
-            <p>{{ __('landing.pricing.intro') }}</p>
-            <x-site.ilu clave="slot-tarifas" class="pricing__friso" />
-        </div>
-        {{-- ⚠️ **Sin la nota de calcetines** (`[DECIDIDO owner]`: «quita la card de calcetines
-             antideslizantes de ahí»): el dato se va a la sección de normas, con su propio CTA de
-             compra. `/precios` la CONSERVA —es la otra vista que usa este componente y allí no hay
-             sección de normas que la recoja—, así que la decisión viaja por prop y no borrando el
-             componente. --}}
-        <x-site.ticket-prices :tickets="$tickets" :zones="$zones" :socks="false" />
-
-        {{-- El puente a las normas. `[DECIDIDO owner]`: «pon un cta, conoce las reglas para venir, y
-             al darle clic baja al cliente a la sección de las reglas». Es un ancla dentro de la
-             misma página, no una ruta. --}}
-        <p class="pricing__rules">
-            <a class="btn btn--ghost" href="#rules" data-tap>{{ __('landing.pricing.rules_cta') }}</a>
-        </p>
-    </section>
-
-    {{-- ===================== CUMPLEAÑOS (#231) ===================== --}}
-    {{-- El componente pinta sus propias secciones con `.wrap` (no envolver en otro). En la
-         landing SIN tarjeta de invitación (showInvite=false): solo un enlace sutil a /cumpleanos. --}}
-    @if ($packages->isNotEmpty())
-        <x-site.events-section :packages="$packages" :show-invite="false" :level="2" />
-    @endif
 
     {{-- ===================== VISÍTANOS (horarios y ubicación) ===================== --}}
     {{-- ▶ **TRES TARJETAS** (`[DECIDIDO owner, 2026-09-01]`: «quiero un diseño de cards, todo en

@@ -479,7 +479,13 @@ img { display: block; max-width: 100%; }
    por `@media`**: tenía dos, con cortes distintos (768 y 420), y eran una tercera escala de
    sangrado compitiendo con las otras dos. */
 .wrap { width: min(var(--col-max), 100% - var(--col-gutter) * 2); margin-inline: auto; }
-.section { padding: 96px 0; position: relative; }
+/* ⚠️ **El ritmo sube de 96 a 120 px** (`[DECIDIDO owner, 2026-09-01]`: «deja un espacio sano entre
+   cada sección, que haya aire»), y con él el de la banda de cumpleaños, que iba por libre.
+   ▶ **Medido antes de tocarlo**, tinta a tinta y en escritorio: entre secciones normales había
+   **193 px**, pero alrededor de cumpleaños **96 y 110** — porque `.bd-sec1` no es un `.section`,
+   llevaba `64px 0 0` y su relleno inferior era CERO. Al pasar cumpleaños a segunda posición ese
+   salto quedaba justo donde más se ve. */
+.section { padding: 120px 0; position: relative; }
 .section + .section { border-top: 1px solid var(--line); }
 
 /* ⚠️⚠️ **EL AIRE QUE PERDIÓ LA PRIMERA SECCIÓN AL RETIRAR LA ETIQUETA** (`[DECIDIDO owner]`: «añade
@@ -496,7 +502,7 @@ img { display: block; max-width: 100%; }
    ⚠️ **El selector cuelga del HERO** (`.hero + .section`), así que la corrección solo existe en las
    páginas que tienen hero — que son las que tenían el problema. Una página sin hero no gana aire de
    la nada. */
-.hero + .section { padding-top: calc(96px + var(--hero-air)); }
+.hero + .section { padding-top: calc(120px + var(--hero-air)); }
 
 /* ---------- nav ---------- */
 /* **LA BARRA SE DISUELVE EN DOS RACIMOS** (armazón · tanda 2c·2).
@@ -2266,8 +2272,9 @@ input[type="radio"]:focus-visible,
 }
 
 @media (max-width: 768px) {
-  .section { padding: 64px 0; }
-  .hero + .section { padding-top: calc(64px + var(--hero-air)); }
+  .section { padding: 80px 0; }
+  .hero + .section { padding-top: calc(80px + var(--hero-air)); }
+
   .nav__brand { font-size: 18px; }
   /* hero */
   .hero { padding: 92px 0 40px; min-height: auto; }
@@ -2377,7 +2384,10 @@ input[type="radio"]:focus-visible,
 .bd-page { --bda: var(--zone-1); }
 
 /* ---- 01 · CUMPLEAÑOS — banda ---- */
-.bd-sec1 { padding: 64px 0 0; }
+/* ⚠️⚠️ **El mismo ritmo que `.section`, y su relleno inferior YA NO ES CERO.** Esta banda no es un
+   `.section` —tiene fondo propio— así que quedaba fuera de la escala: con `64px 0 0` el aire a su
+   alrededor era la MITAD que entre las demás (96 y 110 contra 193, medido). */
+.bd-sec1 { padding: 120px 0; }
 /* En /cumpleanos la sección es el primer contenido bajo el nav FIJO → despeje superior
    (mismo que `.page`). En la landing va a mitad de página y conserva los 64px. */
 .bd-standalone .bd-sec1 { padding-top: clamp(108px, 14vh, 156px); }
@@ -2721,7 +2731,20 @@ input[type="radio"]:focus-visible,
 .bd-card__ps { font-size: 12.5px; color: var(--fg-mute); margin: 14px 0 0; font-style: italic; }
 
 /* ---- 03 · PROCESO ---- */
-.bd-sec3 { padding: 88px 0 96px; }
+/* ⚠️ El relleno inferior sube a 120 para cerrar el bloque de cumpleaños con el MISMO aire que
+   separa a las demás secciones. `.bd-page` tiene DOS hijos en la portada —`bd-sec1` y este
+   «paso a paso»—, así que quien manda en el aire de salida es éste, no la banda de arriba. */
+.bd-sec3 { padding: 88px 0 120px; }
+
+/* ⚠️⚠️ **Estas dos van AQUÍ y no en el bloque de 768 de más arriba, y no es colocación: es
+   CASCADA.** Se escribieron allí primero y no hicieron nada — a igual especificidad gana la última
+   regla del fichero, y las bases de `.bd-sec1`/`.bd-sec3` viven ~100 líneas MÁS ABAJO que aquel
+   `@media`. El síntoma era el peor posible: el aire de móvil seguía en 200 contra 160 y el CSS
+   parecía correcto al leerlo. */
+@media (max-width: 768px) {
+  .bd-sec1 { padding: 80px 0; }
+  .bd-sec3 { padding: 64px 0 80px; }
+}
 .bd-sec3__top { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--line); padding-bottom: 28px; }
 .bd-sec3__top .eyebrow { display: block; margin-bottom: 14px; }
 .bd-sec3__title { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: clamp(38px, 4.6vw, 72px); line-height: 0.88; letter-spacing: -0.035em; margin: 0; }

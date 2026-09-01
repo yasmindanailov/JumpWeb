@@ -817,6 +817,75 @@ packs traen `party` y por tanto el mismo dibujo, y eso es **dato** — el parque
 
 ---
 
+## 3.decies · T8 · el orden de la portada y el ritmo entre secciones (`#314`)
+
+`[DECIDIDO owner, 2026-09-01]`: *«la sección de entradas la ponemos la primera, después cumpleaños,
+después el parque, después ubicación, normas y dudas»* y *«deja un espacio sano entre cada sección,
+que haya aire»*.
+
+### 3.decies.1 · El orden
+
+**hero → tarifas → cumpleaños → zonas → visítanos → normas → dudas → cierre.** En el marcado es
+mover UN bloque: `#zones` deja de ir primero y pasa detrás de cumpleaños.
+▶ **Lo que NO hubo que tocar, y conviene saber por qué**: los anclas (`#zones`, `#rides`,
+`#pricing`, `#info`, `#rules`) no dependen de la posición, y `--hero-air` cuelga de
+`.hero + .section`, así que el aire extra de la primera sección se muda solo.
+
+### 3.decies.2 · El aire: el número no era el problema
+
+`.section` sube de 96 a **120 px** (80 en móvil). Pero lo que se veía mal no era la escala: era que
+**la banda de cumpleaños no es un `.section`**. Llevaba `64px 0 0` —relleno inferior **CERO**— y a su
+alrededor había la mitad de aire que entre las demás. Medido antes de tocar nada, tinta a tinta:
+**96 y 110 px alrededor de cumpleaños contra 193 en el resto**. Con cumpleaños en segunda posición,
+ese salto pasó a estar donde más se nota.
+
+⚠️ **Y `.bd-page` tiene DOS hijos en la portada**, no uno: `bd-sec1` (la banda) y `bd-sec3` (el «paso
+a paso»). Quien manda en el aire de SALIDA del bloque es el segundo — asumir que era el primero fue
+un error que costó una vuelta.
+
+▶ Queda **240 px uniformes en escritorio y 160 en móvil** en todas las fronteras.
+
+⚠️⚠️ **Las reglas de móvil no hacían NADA, y el CSS se leía correcto.** Se escribieron en el `@media
+(max-width: 768px)` que vive ~100 líneas ANTES de las bases de `.bd-sec1`/`.bd-sec3`: a igual
+especificidad gana la última regla del fichero, así que la base pisaba al media query. *Es el fallo
+de cascada más caro de diagnosticar, porque no hay nada que leer que parezca mal.* Van ahora
+inmediatamente detrás de sus bases.
+
+### 3.decies.3 · Una guarda que dependía del ORDEN
+
+❗ `ZonesSectionTest::seccion()` recortaba la sección **«desde `id="zones"` hasta `id="pricing"`»**.
+Al adelantar tarifas, el recorte se comió el resto de la portada y el caso del encabezado único
+contó **cuatro `<h2>`**: la guarda **falló con el producto sano**.
+
+▶ *Un localizador que depende de qué sección viene DESPUÉS no está acotando una sección: está
+acotando un tramo de página.* Re-apuntada al ELEMENTO (`<section id="zones">…</section>`), que es lo
+único que no cambia al reordenar — y queda más fuerte que la que sustituye.
+
+### 3.decies.4 · Tres trampas de instrumento en una sola tanda
+
+Las tres dieron cifras creíbles, y por eso están escritas:
+
+1. **La sonda de aire contaba la CAJA de un contenedor como tinta.** `section.bd-sec3` es el último
+   descendiente y su caja llega al borde, así que «el aire después de cumpleaños» salía **38 px**
+   donde hay **240**. *Un contenedor no es tinta.*
+2. **Su primera versión metía a `.bd-page` y a su hijo en la misma lista de secciones**, con lo que
+   el aire entre ellos salía **negativo**. *Un contenedor y su contenido no son dos secciones.*
+3. **La captura de página completa enseña las fotos del carrusel como TRAMA** y parece que no
+   cargan. No es un defecto: son **23 `loading="lazy"` en un carril horizontal** y solo cargan las
+   **3** visibles. Comprobado desplazándose de verdad antes de tocar nada.
+
+### 3.decies.5 · Las 35 fotos
+
+Las nueve que faltaban entran como `pjp-NNN.webp`. **Las 26 ya asignadas NO se renombran**: sus
+nombres describen la ATRACCIÓN (`jump_saltos_libres`), no al cliente, y pasarlas a `pjp-NNN` metería
+la numeración de este parque dentro del producto —peor para white-label— y tocaría el seeder y
+cuatro tests sin ganar nada.
+⚠️ **26 huecos para 35 fotos**: nueve quedan servidas y sin asignar. Varias son cosas que el parque
+tiene sin dar de alta como atracción (arenero de bebés, correpasillos, cubo de Rubik, aro luminoso):
+crearlas es DATO, y hacen falta nombre y edad del owner.
+
+---
+
 ## 4. Lo que queda, y en qué orden
 
 > ⚠️ **La base de partida cambió el 2026-08-31 (`#300`)**: el owner revirtió la T1 entera y dejó

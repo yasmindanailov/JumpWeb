@@ -88,16 +88,27 @@ class ZonesSectionTest extends TestCase
     }
 
     /** El trozo de la portada que va de la sección de zonas a la siguiente. */
+    /**
+     * El subárbol de `<section id="zones">`, aislado del resto del documento.
+     *
+     * ⚠️⚠️ **Antes recortaba «desde `id="zones"` hasta `id="pricing"`», y eso ataba la guarda al
+     * ORDEN de las secciones.** Al pasar tarifas delante de zonas (`#314`) el recorte se comió el
+     * resto de la portada y el caso del encabezado único contó **cuatro `<h2>`**: la guarda fallaba
+     * con el producto sano. ▶ *Un localizador que depende de qué sección viene después no está
+     * acotando una sección, está acotando un tramo de página.* Ahora se acota al ELEMENTO, que es
+     * lo único que no cambia al reordenar.
+     */
     private function seccion(): string
     {
         $html = $this->home();
-        $i = strpos($html, 'id="zones"');
-        $j = strpos($html, 'id="pricing"');
 
-        $this->assertNotFalse($i, 'la portada ya no tiene la sección `#zones`');
-        $this->assertNotFalse($j, 'no encuentro dónde acaba la sección: ha cambiado el marcado');
+        $this->assertStringContainsString('<section id="zones"', $html, 'la portada ya no tiene la sección `#zones`');
 
-        return substr($html, $i, $j - $i);
+        preg_match('#<section id="zones".*?</section>#s', $html, $m);
+
+        $this->assertNotEmpty($m, 'no encuentro dónde acaba la sección: ha cambiado el marcado');
+
+        return $m[0];
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────

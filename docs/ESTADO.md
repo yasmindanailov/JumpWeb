@@ -41,7 +41,7 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3760 en verde** (24.940 aserciones, 1 skipped a propósito), medida el
+> Suite **3760 en verde** (24.946 aserciones, 1 skipped a propósito), medida el
 > 2026-09-01 (noche) sobre el árbol CONJUNTO con `#313` (assets) encima de `#312` (libro T3·3).
 > ⚠️ **No se suma, se mide** — y ⚠️⚠️ **tras un rebase que toque Vue hay que
 > `npm run build:ssr` ANTES de leer la suite**: sin eso salieron 35 rojos en
@@ -348,6 +348,34 @@
 > entorno por eso.
 >
 > ═══════════ CARRIL 2 · TEMA / FACHADA (`#286` · `#287`) ═══════════
+>
+> ❗❗ **2026-09-01 · LA PORTADA SE REORDENA Y EL RITMO SE IGUALA** (`#314`,
+> `specs/idioma-visual-heredado.md` §3.decies). `[DECIDIDO owner]`, tres cosas en un mensaje.
+> ▶ **Orden**: entradas → cumpleaños → el parque → ubicación → normas → dudas. En código es mover
+> UN bloque (`#zones` detrás de cumpleaños); los anclas y `--hero-air` se mudan solos.
+> ▶ **Aire**: `.section` de 96 a **120 px** (80 en móvil). Pero el arreglo real era otro: **la banda
+> de cumpleaños no es un `.section`**, llevaba relleno inferior **CERO** y tenía la mitad de aire que
+> las demás — y con cumpleaños en segunda posición ese salto quedaba donde más se ve. ⚠️ `.bd-page`
+> tiene **DOS** hijos en la portada (`bd-sec1` y el «paso a paso»), no uno: manda el segundo.
+> Queda **240 px uniforme en escritorio y 160 en móvil**, medido de los rellenos computados.
+> ⚠️⚠️ **Y las reglas de móvil no hacían NADA por estar mal colocadas**: se escribieron en el
+> `@media` de 768 que vive ~100 líneas ANTES de las bases, y a igual especificidad gana la última
+> del fichero. *El síntoma era el peor: el CSS se lee correcto y el número no se mueve.*
+> ▶ **Las 35 fotos, subidas**; las 9 que faltaban como `pjp-NNN.webp`. ⚠️ **Las 26 asignadas NO se
+> renombraron**: sus nombres describen la ATRACCIÓN, no al cliente, y pasarlas a `pjp-NNN` metería
+> la numeración de este parque en el producto y tocaría el seeder y cuatro tests para nada.
+> ❗ **Hay 26 huecos para 35 fotos**: nueve quedan servidas y sin asignar, y varias son cosas que el
+> parque TIENE sin dar de alta (arenero, correpasillos, cubo de Rubik, aro) — serían atracciones
+> nuevas, o sea DATO. **Hoja de revisión publicada como artefacto para el owner.**
+> ❗❗ **UNA GUARDA DEPENDÍA DEL ORDEN Y FALLÓ CON EL PRODUCTO SANO**: `ZonesSectionTest::seccion()`
+> recortaba «desde `id="zones"` hasta `id="pricing"`», así que al adelantar tarifas se comió media
+> portada y contó cuatro `<h2>`. *Un localizador que depende de qué sección viene después no acota
+> una sección, acota un tramo de página.* Re-apuntada al ELEMENTO y más fuerte.
+> ⚠️⚠️ **TRES veces midió mal el instrumento, y las tres con cifras creíbles**: la sonda de aire
+> contaba **la caja de un contenedor** como tinta (38 px donde hay 240); antes metía a `.bd-page` y a
+> su hijo en la misma lista y el aire salía NEGATIVO; y la captura de página completa enseña las
+> fotos del carrusel como trama — son 23 `loading="lazy"` en un carril horizontal y solo cargan las
+> 3 visibles. *Comprobado desplazándose de verdad antes de «arreglar» nada.*
 >
 > ❗❗ **2026-09-01 · EL VÍDEO DEL HERO Y LAS FOTOS SON YA LAS DEL PARQUE REAL** (`#313`,
 > receta y presupuesto en `INSTALACION-CLIENTE.md` §4.c). 26 fotos + vídeo; `public/images` pasa de
