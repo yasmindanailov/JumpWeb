@@ -43,9 +43,9 @@ return [
         'order_not_retryable' => 'Esa reserva ya no se puede pagar.',
         'payment_unavailable' => 'No hemos podido abrir la pasarela de pago. Inténtalo de nuevo.',
         'guest_form_closed' => 'Esa reserva ya se ha celebrado: sus datos se pueden consultar, pero ya no se editan.',
-        'waiver_not_internal' => 'El waiver no se firma en esta web.',
-        'waiver_document_stale' => 'El texto del waiver ha cambiado. Vuelve a leerlo y acéptalo de nuevo.',
-        'waiver_email_unverified' => 'Para firmar el waiver primero hay que verificar el correo.',
+        'waiver_not_internal' => 'El descargo de responsabilidad no se firma en esta web.',
+        'waiver_document_stale' => 'El texto del descargo de responsabilidad ha cambiado. Vuelve a leerlo y acéptalo de nuevo.',
+        'waiver_email_unverified' => 'Para firmar el descargo de responsabilidad primero hay que verificar el correo.',
         'dependent_not_minor' => 'La persona a cargo tiene que ser menor de edad.',
         'dependents_limit_reached' => 'Ya has llegado al máximo de menores a cargo de tu cuenta (:max).',
         // T5 · D8: con una reserva por celebrar la cuenta no se puede borrar (`cumple-mixto.md` §25.4).
@@ -58,7 +58,7 @@ return [
     'dependents' => [
         'not_yours' => 'Ese menor no está en tu cuenta.',
         'not_minor_on_date' => 'Ese día ya tendrá 18 años: compra su entrada como adulto.',
-        'waiver_unsigned' => 'Falta su exención firmada: fírmala en «Menores a cargo» antes de asignarle una entrada.',
+        'waiver_unsigned' => 'Falta su descargo firmado: fírmalo en «Menores a cargo» antes de asignarle una entrada.',
         'too_many' => 'Has elegido más menores que entradas.',
         'entries_only' => 'Los menores solo se asignan a entradas: un pack ya pide a sus invitados.',
     ],
@@ -68,10 +68,10 @@ return [
     // página (`SidebarMountTest` mide su presupuesto), y un texto que el cliente nunca pinta por su
     // cuenta no tiene por qué pagar ese peaje.
     'register' => [
-        'waiver_stale' => 'El texto del waiver ha cambiado. Vuelve a leerlo y acéptalo de nuevo.',
-        'waiver_not_internal' => 'El waiver no se firma en esta web.',
-        'waiver_document_required' => 'Para aceptar el waiver hay que indicar qué texto se ha leído.',
-        'waiver_required' => 'Para crear la cuenta hay que leer y aceptar la exención de responsabilidad (waiver).',
+        'waiver_stale' => 'El texto del descargo de responsabilidad ha cambiado. Vuelve a leerlo y acéptalo de nuevo.',
+        'waiver_not_internal' => 'El descargo de responsabilidad no se firma en esta web.',
+        'waiver_document_required' => 'Para aceptar el descargo hay que indicar qué texto se ha leído.',
+        'waiver_required' => 'Para crear la cuenta hay que leer y aceptar el descargo de responsabilidad.',
         // Lanzamiento 2026-09-01: la compra online puede estar cerrada (`sales.online_enabled=0`).
         'online_sales_disabled' => 'La compra online no está disponible por ahora. Llámanos o ven al parque para reservar.',
     ],

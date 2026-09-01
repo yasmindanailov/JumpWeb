@@ -221,7 +221,7 @@ class AssignDependentsActionTest extends TestCase
         $this->assertSame([$lucas->id => 'Lior · 9 años', $vera->id => 'Vilma · 6 años'], $list->getOptions());
         $this->assertFalse($list->isOptionDisabled($lucas->id, 'Lior · 9 años'));
         $this->assertTrue($list->isOptionDisabled($vera->id, 'Vilma · 6 años'), 'sin firma no se puede MARCAR');
-        $this->assertSame('sin exención firmada y vigente', (string) $list->getDescription($vera->id));
+        $this->assertSame('sin descargo firmado y vigente', (string) $list->getDescription($vera->id));
         $this->assertNull($list->getDescription($lucas->id));
     }
 

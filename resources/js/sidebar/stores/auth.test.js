@@ -537,8 +537,8 @@ describe('el alta cuyo texto del waiver caducó', () => {
     test('un 422 sobre waiver_document_id desmarca la casilla y RELEE el texto', async () => {
         const a = store();
         const waiver = useWaiverStore();
-        const v2 = { mode: 'interno', document: { id: 7, version: 2, locale: 'es', title: 'Exención', sections: [{ h: 'Riesgo', p: 'v2' }], published_at: null } };
-        const v3 = { mode: 'interno', document: { id: 9, version: 3, locale: 'es', title: 'Exención', sections: [{ h: 'Riesgo', p: 'v3' }], published_at: null } };
+        const v2 = { mode: 'interno', document: { id: 7, version: 2, locale: 'es', title: 'Descargo de responsabilidad', sections: [{ h: 'Riesgo', p: 'v2' }], published_at: null } };
+        const v3 = { mode: 'interno', document: { id: 9, version: 3, locale: 'es', title: 'Descargo de responsabilidad', sections: [{ h: 'Riesgo', p: 'v3' }], published_at: null } };
         const legal = [v2, v3];
         const api = fakeApi({
             '/auth/register': { ok: false, status: 422, data: null, error: { code: 'validation_failed', message: 'Revisa', fields: { waiver_document_id: ['El texto del waiver ha cambiado. Vuelve a leerlo y acéptalo de nuevo.'] } } },
@@ -561,9 +561,9 @@ describe('el alta cuyo texto del waiver caducó', () => {
     test('un 422 sobre accept_waiver relee el texto aunque el cacheado fuera document: null', async () => {
         const a = store();
         const waiver = useWaiverStore();
-        const legal = [{ mode: 'interno', document: null }, { mode: 'interno', document: { id: 7, version: 1, locale: 'es', title: 'Exención', sections: [{ h: 'Riesgo', p: 'v1' }], published_at: null } }];
+        const legal = [{ mode: 'interno', document: null }, { mode: 'interno', document: { id: 7, version: 1, locale: 'es', title: 'Descargo de responsabilidad', sections: [{ h: 'Riesgo', p: 'v1' }], published_at: null } }];
         const api = fakeApi({
-            '/auth/register': { ok: false, status: 422, data: null, error: { code: 'validation_failed', message: 'Revisa', fields: { accept_waiver: ['Para crear la cuenta hay que leer y aceptar la exención de responsabilidad (waiver).'] } } },
+            '/auth/register': { ok: false, status: 422, data: null, error: { code: 'validation_failed', message: 'Revisa', fields: { accept_waiver: ['Para crear la cuenta hay que leer y aceptar el descargo de responsabilidad.'] } } },
         });
         api.get = async (url) => { api.llamadas.push({ url }); return url === '/legal/waiver' ? { ok: true, status: 200, data: legal.shift() ?? legal[0] } : { ok: false, status: 500, data: null }; };
 
@@ -581,7 +581,7 @@ describe('el alta cuyo texto del waiver caducó', () => {
         const a = store();
         const waiver = useWaiverStore();
         const api = fakeApi({
-            '/legal/waiver': { ok: true, status: 200, data: { mode: 'interno', document: { id: 7, version: 2, locale: 'es', title: 'Exención', sections: [], published_at: null } } },
+            '/legal/waiver': { ok: true, status: 200, data: { mode: 'interno', document: { id: 7, version: 2, locale: 'es', title: 'Descargo de responsabilidad', sections: [], published_at: null } } },
             '/auth/register': { ok: false, status: 422, data: null, error: { code: 'validation_failed', message: 'Revisa', fields: { email: ['Ya existe'] } } },
         });
 

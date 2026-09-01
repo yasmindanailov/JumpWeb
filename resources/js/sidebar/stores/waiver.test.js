@@ -14,7 +14,7 @@ import { useWaiverStore } from './waiver.js';
 const MESSAGES = { errors: { try_later: 'Espera un minuto.' } };
 const AUTH = { throttle: 'Espera :seconds segundos.' };
 
-const LEGAL = { mode: 'interno', document: { id: 7, version: 2, locale: 'es', title: 'Exención', sections: [{ h: 'Riesgo', p: 'Saltar implica riesgos.' }], published_at: null } };
+const LEGAL = { mode: 'interno', document: { id: 7, version: 2, locale: 'es', title: 'Descargo de responsabilidad', sections: [{ h: 'Riesgo', p: 'Saltar implica riesgos.' }], published_at: null } };
 const UNSIGNED = { mode: 'interno', signed: false, outdated: false, accepted_at: null, accepted_label: null, version: null, current_document_id: 7, signatures: [] };
 const SIGNED = { ...UNSIGNED, signed: true, version: 2, signatures: [{ id: 3, version_label: 'v2·es', accepted_at: 'x', accepted_label: '26/08/2026', channel: 'web', declared: false, subject: 'holder', pdf_url: '/api/v1/me/waiver/3/pdf' }] };
 

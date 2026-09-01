@@ -159,14 +159,14 @@ describe('la puerta 2: volver al carrito tras identificarse', () => {
 describe('el 422 del checkout aplicado a la cesta', () => {
     const fields = {
         'items.1.dependent_ids.0': ['Ese menor no está en tu cuenta.'],
-        'items.1.dependent_ids.1': ['Falta su exención firmada.'],
+        'items.1.dependent_ids.1': ['Falta su descargo firmado.'],
         'items.3.dependent_ids': ['Has elegido más menores que entradas.'],
         'items.0.quantity': ['otro campo que no es de aquí'],
     };
 
     test('los rechazos se agrupan por línea y se ignora lo que no es de la asignación', () => {
         assert.deepEqual(assignmentRejections(fields), {
-            1: ['Ese menor no está en tu cuenta.', 'Falta su exención firmada.'],
+            1: ['Ese menor no está en tu cuenta.', 'Falta su descargo firmado.'],
             3: ['Has elegido más menores que entradas.'],
         });
         assert.deepEqual(assignmentRejections(undefined), {});

@@ -8,7 +8,7 @@
  */
 return [
     'proof' => [
-        'title' => 'Registro de aceptación del waiver',
+        'title' => 'Registro de aceptación del descargo de responsabilidad',
         'published_at' => 'Versión publicada el :date',
         'signed_text' => 'Texto aceptado (íntegro, tal y como se presentó)',
         'holder' => 'Firmante',

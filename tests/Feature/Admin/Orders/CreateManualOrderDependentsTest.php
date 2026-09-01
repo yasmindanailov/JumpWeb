@@ -145,7 +145,7 @@ class CreateManualOrderDependentsTest extends TestCase
         $page->assertSee('¿Para quién son estas entradas?')
             ->assertSee("Lior · {$age} años")
             ->assertSee('Vilma · ')
-            ->assertSee('sin exención firmada y vigente');
+            ->assertSee('sin descargo firmado y vigente');
 
         // Un pack no lleva menores; sin cliente tampoco hay selector.
         $page->set('data.sel_product_id', $this->pack->id)->assertDontSee('¿Para quién son estas entradas?');

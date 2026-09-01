@@ -301,7 +301,7 @@ return [
         // `#242`, `[OWNER]`: al menor ya asignado, de forma sutil. Es «1» siempre —una entrada por
         // menor—, así que el rótulo es literal y no lleva contador.
         'assigned' => '1 entrada asignada',
-        'unsigned' => 'exención sin firmar: fírmala en «Menores a cargo»',
+        'unsigned' => 'descargo sin firmar: fírmalo en «Menores a cargo»',
         'outdated' => 'firmaste una versión anterior: acepta la nueva en «Menores a cargo»',
         'notice' => 'Tienes menores a cargo: indica para quién es cada entrada antes de pagar (o déjalas como adultos).',
         'for' => 'Para:',

@@ -258,7 +258,7 @@ return [
         'links_info' => ['Tarifas', 'Cumpleaños', 'Grupos y empresas', 'Normas'],
         'rights' => 'Hecho para reír.',
         // 5 páginas legales (orden = $legalUrls en el footer): aviso-legal, privacidad, condiciones, cookies, waiver.
-        'legal' => ['Aviso legal', 'Privacidad', 'Condiciones', 'Cookies', 'Waiver'],
+        'legal' => ['Aviso legal', 'Privacidad', 'Condiciones', 'Cookies', 'Descargo de responsabilidad'],
         'contact_link' => 'Contacto',
         'account_link' => 'Mi cuenta',
         'register_link' => 'Registro de acceso',

@@ -1,5 +1,32 @@
 # Estado del proyecto — foto viva
 
+❗❗❗ **UN SOLO NOMBRE: «DESCARGO DE RESPONSABILIDAD» EN TODA LA INTERFAZ** (2026-09-02,
+`DECISIONES #339`, `[DECIDIDO owner]`). No eran dos formas, eran **CINCO** —«exención de
+responsabilidad (waiver)» · «Descargo de responsabilidad (waiver)» · «Desc**a**rga de
+responsabilidad» · «waiver» a pelo · un enlace legal del pie titulado «Waiver»— y **tres le llegaban
+al cliente**. 91 cadenas reescritas (61 es · 27 en · 2 fr), medidas sobre los VALORES de `lang/`: un
+`grep` crudo daba 108 en español porque contaba las CLAVES.
+▶ **Cada idioma con su término**: es «descargo de responsabilidad» · en «liability waiver» (ahí
+«waiver» ES la palabra natural) · fr «décharge de responsabilité».
+▶ ⚠️⚠️ **EL CÓDIGO NO SE RENOMBRA Y ESO ES LA DECISIÓN, NO UN ATAJO**: `waiver` es el vocabulario del
+dominio —tabla, servicios, slug, claves de i18n y sobre todo los **códigos de error de la API, que son
+CONTRATO**—, y `WaiverSigner` está en el `CRITICAL_RE`. El mapeo vive en **`GLOSARIO.md`**, que es
+para lo que existe.
+▶ ⚠️ **La trampa que descartó el `sed`**: «exención» es femenino y «descargo» masculino — un
+reemplazo ciego deja «la descargo firmada». Se reescribieron con la concordancia a mano.
+▶ **Guarda `WaiverWordingIsOneTermTest`** (valores, nunca claves), con **tres mutaciones**. ⚠️⚠️ La
+segunda **no mordió y el débil era el instrumento**: muté dos ficheros de francés y el término vive en
+cuatro. *Antes de aflojar una guarda, comprueba si tu mutación era completa.*
+▶ ❗ **EL TÍTULO DEL DOCUMENTO PUBLICADO NO SE TOCA TODAVÍA, Y ESTÁ DECIDIDO CON EL DATO DELANTE**:
+`body_hash` incluye el título, así que corregirlo obliga a publicar versión nueva y deja `outdated`
+las firmas hechas — medido en producción: **54 firmas · 48 clientes · 6 aceptaciones retenidas**. Y al
+medirlo apareció lo que cambió la decisión: **los cuerpos EN y FR son el texto español literal** (11
+secciones idénticas; solo los títulos están traducidos), así que la traducción pendiente exigirá su
+propia republicación. `[DECIDIDO owner]`: **una sola vez, con la traducción**. Se hace **desde el
+panel** (`EditPage` ya publica versiones legales): editar la página `waiver` y pulsar publicar.
+▶ ⚠️ **Riesgo anotado, no tarea**: hoy un cliente extranjero firma un documento titulado «Liability
+release» cuyo contenido está en español.
+
 ❗❗❗ **PRODUCCIÓN · EL GESTO DE LA PUERTA DABA 500, Y ERAN TRES DEFECTOS EN UNA LÍNEA** (2026-09-02,
 `DECISIONES #338`). Lo encontró el owner probando la pantalla. `ValidarRegistro::declareWaiver()`
 recomponía la ficha con `GateProfile::for($customer)` —**un argumento de tres**—, y detrás había otros
@@ -15,6 +42,17 @@ casos de `DeclareWaiverAtGateTest` conducen el SERVICIO; ninguno pasaba por el c
 *Que el dominio haga lo correcto no es que la pantalla sepa pedírselo* — el gemelo de `#333` y `#263`.
 ▶ Arreglado con fuente única (`composeProfile()`), dos guardas nacidas rojas y **mutación con control**.
 De paso se retira `TmpProbeTest.php`, sonda de `#217` que llevaba cinco días en la suite sin probar nada.
+▶ ❗❗❗ **DESPLEGADO EL 2026-09-02, PERO ACOTADO — Y PRODUCCIÓN CORRE UN COMMIT QUE NO ESTÁ EN `main`:**
+**`8af8d52`** = `9d01dae` (lo que ya corría) **+ solo este arreglo**, desde la rama `deploy/fix-338`.
+`[DECIDIDO owner]` con el alcance delante: desplegar `main` habría subido además **la T3 entera de
+`#337`** (seis superficies, 100 entradas en el `rsync`) a un parque con clientes reales **antes de que
+su autor la verifique en navegador**. Un 500 en la puerta no espera; una feature sin revisar sí.
+▶ **Comprobado con el dry-run, no supuesto**: de las 95 entradas solo **DOS** cambiaban de contenido
+—`ValidarRegistro.php` y un CSS recién compilado—; el resto eran diferencias de marca de tiempo. Sin
+migraciones de por medio (`Nothing to migrate`), así que el esquema no diverge.
+▶ **LO QUE ESTO OBLIGA**: el siguiente `deploy.sh` desde `main` sube la T3 igualmente. **Quien
+despliegue después tiene que saber que va a estrenar `#337` en producción** — no es un despliegue de
+rutina. La rama `deploy/fix-338` se puede borrar en cuanto eso ocurra.
 
 ▶ ❗❗ **LO MEDIDO PARA QUIEN SIGA CON LA PUERTA O LA HOJA DE SALA** (2026-09-02, no lo repitas):
   1. **Los MENORES en la puerta: la ficha de `DEUDA.md` parte de una premisa FALSA.** Dice que «un
@@ -251,10 +289,14 @@ aquí lo que no se podaría son datos de menores de terceros.
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3901 en verde** (25.023 aserciones, 1 skipped a propósito), medida el 2026-09-02
-> sobre el árbol CONJUNTO: el arreglo del 500 de la puerta (`#338`) rebasado sobre la **T3** del
-> justificante (`#337`). ⚠️ El neto de `#338` es **+1**: suma dos guardas y retira `TmpProbeTest`.
-> Antes, 3900 / 25.015 (`#337` sobre `#336`).
+> Suite **3904 en verde** (25.033 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> sobre el árbol CONJUNTO: el vocabulario del descargo (`#339`) sobre el arreglo del 500 de la puerta
+> (`#338`), rebasado a su vez sobre la **T3** del justificante (`#337`).
+> ⚠️ El neto de `#338` es **+1** (dos guardas y fuera `TmpProbeTest`) y el de `#339` **+3**.
+> ⚠️⚠️ **La primera medición de `#339` dio 41.012 aserciones y era un DEFECTO de la guarda nueva**, no
+> una mejora: aseveraba dentro del bucle, así que metía ~16.000 aserciones por un solo caso **y moría
+> en la primera violación** en vez de listarlas. Acumula y asevera una vez: 10.
+> Antes, 3901 / 25.023 (`#338`) · 3900 / 25.015 (`#337` sobre `#336`).
 > ⚠️⚠️ **Medida DESPUÉS del rebase y con `npm run build` + `build:ssr` delante, NUNCA sumada**: por
 > separado daban 3893 / 24.999 (la T3 sola) y 3884 / 24.932 (el árbol anterior), y ninguna es la
 > buena. Antes: 3884 / 24.932 (`#336` sobre `#335`) · 3877 / 24.916 (la T2 sola).

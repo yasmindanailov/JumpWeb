@@ -225,7 +225,7 @@ return [
         'links_park' => ['Zone Jump', 'Zone Kids', 'Attractions'],
         'links_info' => ['Tarifs', 'Anniversaires', 'Groupes & entreprises', 'Règles'],
         'rights' => 'Fait pour rire.',
-        'legal' => ['Mentions légales', 'Confidentialité', 'Conditions', 'Cookies', 'Waiver'],
+        'legal' => ['Mentions légales', 'Confidentialité', 'Conditions', 'Cookies', 'Décharge de responsabilité'],
         'contact_link' => 'Contact',
         'account_link' => 'Mon compte',
         'register_link' => "Inscription d'accès",

@@ -134,11 +134,11 @@ describe('el store de la cesta', () => {
         const c = store();
         c.setLines([LINEA({ dependent_ids: [12] }), LINEA({ product_id: 4, dependent_ids: [15] })]);
 
-        const changed = c.applyAssignmentRejections({ 'items.1.dependent_ids.0': ['Falta su exención firmada.'] });
+        const changed = c.applyAssignmentRejections({ 'items.1.dependent_ids.0': ['Falta su descargo firmado.'] });
 
         assert.equal(changed, true);
         assert.deepEqual(c.lines.map((l) => l.dependent_ids), [[12], []]);
-        assert.equal(c.error, 'Falta su exención firmada.');
+        assert.equal(c.error, 'Falta su descargo firmado.');
         assert.equal(c.applyAssignmentRejections(undefined), false);
     });
 

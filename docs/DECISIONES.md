@@ -20342,3 +20342,93 @@ ficheros en `/tmp`, volcaba 4 KB de HTML a STDERR y terminaba en `assertTrue(tru
 
 **Verificación**: suite **3901 · 25.023** (1 skipped a propósito) sobre el árbol CONJUNTO, medida
 **después** de rebasar sobre `#337` y de reconstruir los assets — nunca sumada. Pint ✓ · docs-check ✓.
+
+---
+
+## #339 · 2026-09-02 · Un solo nombre para el documento que la gente firma: «descargo de responsabilidad» en la interfaz, `waiver` en el código
+
+**Encargo del owner**, literal: *«todo se llama “exención” no “waiver”, que en todos los sitios ponga
+lo mismo o comienza la confusión. O le decimos “descargo de responsabilidad”, según tu valoración
+profesional, en español, pero que sea coherente en todos los sitios.»*
+
+### Lo medido: no eran dos formas, eran CINCO — y tres las veía el CLIENTE
+
+| Dónde | Qué decía |
+|---|---|
+| Alta y cuenta | «exención de responsabilidad **(waiver)**» |
+| Consentimientos (cliente y panel) | «Descargo de responsabilidad **(waiver)**» |
+| Pantalla pública del menor invitado (`#335`) | «Desc**a**rga de responsabilidad» |
+| Errores de API que lee el cliente | «Para firmar el **waiver** primero hay que verificar el correo» |
+| Pie de la web, enlace legal | «**Waiver**» |
+
+**91 cadenas** con el término (61 es · 27 en · 2 fr · 1 zh_CN), contadas sobre los **VALORES** de
+`lang/`, no sobre el fichero: un `grep` crudo daba 108 en español porque contaba las CLAVES.
+
+### La decisión, y por qué esa palabra
+
+**«Descargo de responsabilidad»** (`[DECIDIDO owner]`, sobre tres opciones con su coste delante):
+
+ 1. **«Descarga» es un calco y en una web engaña**: se lee como *bajar un fichero*. Y era justo lo
+    que producción tenía publicado.
+ 2. «Descargo» y «exención» son los dos correctos; el primero es el que un lector español reconoce en
+    un pie legal.
+ 3. Está **a una letra** de lo publicado, así que el desajuste con el documento firmado, mientras no
+    se republique, es mínimo.
+
+**Cada idioma con su propio término**: en inglés «liability waiver» —ahí «waiver» ES la palabra
+natural y prohibirla sería absurdo—, en francés «décharge de responsabilité».
+
+### ⚠️⚠️ Lo que NO se renombra, y no es pereza
+
+`waiver` sigue siendo el vocabulario del **dominio**: la tabla `waiver_signatures`, `WaiverSigner`, el
+slug del documento, las CLAVES de los propios ficheros de idioma y —lo que zanja la discusión— los
+**códigos de error de la API**, que son **contrato**: `waiver_email_unverified` lo consume un cliente
+que no controlamos. Además `WaiverSigner` está en el `CRITICAL_RE` y el otro agente tenía una tanda
+abierta encima. Renombrarlo no arregla nada que se vea y rompe cosas que sí. El mapeo término ↔ código
+vive donde tiene que vivir: **`GLOSARIO.md`**.
+
+### ⚠️ La trampa que descartó el reemplazo automático
+
+**«Exención» es femenino y «descargo» masculino.** Un `sed` habría dejado «la descargo firmada», «tu
+exención ya no le cubre» → «tu descargo ya no le cubre», «darla por firmada» → «darlo por firmado». Las
+61 cadenas se reescribieron **con la concordancia resuelta a mano**, y el guion que las aplicó
+**declara en voz alta cada patrón que no encuentra** — un reemplazo que no casa y calla es un cambio a
+medias que nadie ve.
+
+### La guarda: `WaiverWordingIsOneTermTest`, y las TRES mutaciones
+
+Un vocabulario no se rompe de golpe: **se erosiona**. Nadie va a volver a poner las cinco formas;
+alguien va a escribir UNA cadena nueva que diga «waiver» porque es como se llama en el código. Tres
+casos, sobre los VALORES cargados de `lang/` (nunca las claves):
+
+ - ninguna cadena visible usa una forma retirada, **por idioma** (lo retirado en `en` no es lo mismo
+   que en `es`);
+ - el término elegido **está realmente en uso** — sin esto, borrar las cadenas en vez de reescribirlas
+   pasaría en verde;
+ - **la guarda de la guarda**: el escáner ve de verdad los ficheros.
+
+⚠️⚠️ **Y la segunda mutación NO mordió a la primera** — parecía una guarda laxa y **el débil era el
+instrumento**: muté solo dos ficheros de francés y el término vive en **cuatro**, así que quedaban
+usos de sobra por encima del umbral. Repetida entera, muerde. *Una mutación que no muerde puede ser
+una mutación débil, y hay que descartar eso antes de tocar la guarda.*
+
+### El TÍTULO del documento publicado queda como está, y eso está decidido con el dato delante
+
+`LegalDocumentVersion::verifyHash()` mete el **título** dentro de `body_hash`, y cada firma guarda ese
+hash: **corregir el título obliga a publicar versión nueva**, lo que deja las firmas anteriores en
+`outdated`. Medido en producción: **54 firmas · 48 clientes · 6 aceptaciones retenidas**.
+
+▶ Y midiendo el documento apareció lo que cambió la decisión: **los cuerpos en inglés y francés son el
+texto español literal** —mismas 11 secciones, mismo contenido; solo los títulos están traducidos—. O
+sea que la traducción pendiente **va a exigir su propia republicación**. `[DECIDIDO owner]` con eso
+delante: **una sola vez**. El título se corrige cuando llegue la traducción, en la misma publicación,
+y las firmas caducan una vez en lugar de dos.
+▶ **No hace falta ningún guion**: `EditPage` del panel ya publica versiones legales
+(`LegalDocumentPublisher`), así que es editar la página `waiver` —título y cuerpo por idioma— y pulsar
+publicar. Es dato del cliente, y el sitio donde se toca el dato es el panel.
+▶ ⚠️ **Queda dicho como riesgo, no como tarea mía**: hoy un cliente extranjero firma un documento
+titulado «Liability release» cuyo contenido está en español. Yo no redacto texto legal vinculante.
+
+**Verificación**: suite **3904 · 25.033** · `node --test` **891 en verde** · Pint ✓ · docs-check ✓ ·
+tres mutaciones con control. ⚠️ Cuatro tests aseveraban los textos viejos y **la suite los cazó**:
+se actualizaron con su concordancia, no se relajaron.

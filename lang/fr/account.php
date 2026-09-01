@@ -73,7 +73,7 @@ return [
             'consent_types' => [
                 'privacy' => 'Politique de confidentialité',
                 'terms' => 'Conditions générales',
-                'waiver' => 'Décharge de responsabilité (waiver)',
+                'waiver' => 'Décharge de responsabilité',
                 'marketing' => 'Communications commerciales',
             ],
             'export_btn' => 'Télécharger mes données',

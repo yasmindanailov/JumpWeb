@@ -47,8 +47,8 @@ return [
     ],
 
     'waiver' => [
-        'heading' => 'Waiver of liability',
-        'accept' => 'I have read the waiver of liability and accept it on behalf of the minor.',
+        'heading' => 'Liability waiver',
+        'accept' => 'I have read the liability waiver and accept it on behalf of the minor.',
         'version' => 'Version :version, published on :date',
     ],
 
@@ -71,7 +71,7 @@ return [
     ],
 
     'errors' => [
-        'accept_waiver' => 'You need to accept the waiver of liability before signing.',
+        'accept_waiver' => 'You need to accept the liability waiver before signing.',
         'born_on_future' => 'The date of birth has to be before today.',
         'born_on_adult' => 'That date says this person is already an adult, and adults sign for themselves: this authorisation is only for minors.',
     ],

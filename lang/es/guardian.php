@@ -51,8 +51,8 @@ return [
     ],
 
     'waiver' => [
-        'heading' => 'Descarga de responsabilidad',
-        'accept' => 'He leído la descarga de responsabilidad y la acepto en nombre del menor.',
+        'heading' => 'Descargo de responsabilidad',
+        'accept' => 'He leído el descargo de responsabilidad y lo acepto en nombre del menor.',
         'version' => 'Versión :version, publicada el :date',
     ],
 
@@ -63,7 +63,7 @@ return [
         'signed_generic' => 'Listo: la autorización ha quedado registrada.',
         'already' => ':name ya tiene su autorización firmada para esta reserva. No hace falta hacer nada más.',
         'already_generic' => 'Ese menor ya tiene su autorización firmada para esta reserva.',
-        'stale' => 'El texto de la descarga de responsabilidad se ha actualizado mientras rellenabas. Vuelve a leerlo y acéptalo de nuevo.',
+        'stale' => 'El texto del descargo de responsabilidad se ha actualizado mientras rellenabas. Vuelve a leerlo y acéptalo de nuevo.',
         'antibot' => 'No hemos podido comprobar que no eres un robot, así que NO hemos registrado nada. Vuelve a intentarlo; si sigue sin funcionar, avisa a la persona que hizo la reserva.',
     ],
 
@@ -75,7 +75,7 @@ return [
     ],
 
     'errors' => [
-        'accept_waiver' => 'Para poder firmar tienes que aceptar la descarga de responsabilidad.',
+        'accept_waiver' => 'Para poder firmar tienes que aceptar el descargo de responsabilidad.',
         'born_on_future' => 'La fecha de nacimiento tiene que ser anterior a hoy.',
         'born_on_adult' => 'Esa fecha dice que la persona ya es mayor de edad, y entonces firma por sí misma: esta autorización es solo para menores.',
     ],

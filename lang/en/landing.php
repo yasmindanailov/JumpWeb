@@ -225,7 +225,7 @@ return [
         'links_park' => ['Jump zone', 'Kids zone', 'Rides'],
         'links_info' => ['Pricing', 'Birthdays', 'Groups & companies', 'Rules'],
         'rights' => 'Built for laughter.',
-        'legal' => ['Legal', 'Privacy', 'Terms', 'Cookies', 'Waiver'],
+        'legal' => ['Legal', 'Privacy', 'Terms', 'Cookies', 'Liability waiver'],
         'contact_link' => 'Contact',
         'account_link' => 'My account',
         'register_link' => 'Access registration',

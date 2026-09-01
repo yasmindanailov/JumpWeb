@@ -61,7 +61,7 @@ return [
         'nav_label' => 'Puerta',
         'validar' => [
             'title' => 'Validar registro',
-            'intro' => 'Introduce el email o el teléfono del cliente para comprobar si está registrado y si ha firmado el waiver.',
+            'intro' => 'Introduce el email o el teléfono del cliente para comprobar si está registrado y si ha firmado el descargo.',
             'back_to_panel' => 'Volver al panel',
             'input_placeholder' => 'Email o teléfono',
             'button' => 'Verificar',
@@ -72,9 +72,9 @@ return [
             // Resultados (3 estados, decisión #126). El estado 2-en-1 `registered` se usa cuando la
             // comprobación de waiver está DESACTIVADA (#216): solo importa si tiene cuenta o no.
             'registered_with_waiver' => 'Registrado',
-            'waiver_date' => 'Waiver aceptado el :date.',
-            'registered_no_waiver' => 'Registrado, falta firmar waiver',
-            'registered_no_waiver_cta' => 'Pásale la tablet al cliente para que firme el waiver antes de saltar.',
+            'waiver_date' => 'Descargo aceptado el :date.',
+            'registered_no_waiver' => 'Registrado, falta firmar el descargo',
+            'registered_no_waiver_cta' => 'Pásale la tablet al cliente para que firme el descargo antes de saltar.',
             'registered' => 'Cliente registrado',
             'registered_sub' => 'Tiene cuenta en el sistema.',
             'not_registered' => 'No registrado',
@@ -98,13 +98,13 @@ return [
             'lookup_limited' => 'Demasiadas búsquedas tecleadas en una hora. El escaneo sigue funcionando; para buscar por email o teléfono espera o avisa a un responsable.',
             'profile' => [
                 'title' => 'Ficha de puerta',
-                'waiver_signed' => 'Exención firmada el :date',
+                'waiver_signed' => 'Descargo firmado el :date',
                 'waiver_outdated' => 'versión anterior — deja pasar',
-                'waiver_missing' => 'Sin exención firmada',
-                'waiver_pending_hint' => 'Aceptó la exención al registrarse y solo le falta verificar su correo. Puedes darla por firmada con la persona delante.',
+                'waiver_missing' => 'Sin descargo firmado',
+                'waiver_pending_hint' => 'Aceptó el descargo al registrarse y solo le falta verificar su correo. Puedes darlo por firmado con la persona delante.',
                 'waiver_declare' => 'Dar por firmada',
-                'waiver_declare_confirm' => '¿:name está delante y te dice que ha leído y acepta la exención de responsabilidad? Quedará firmada y con tu nombre como quien da fe.',
-                'waiver_declare_stale' => 'El texto de la exención ha cambiado desde que lo aceptó: hay que pasarle la tablet para que lea y firme el nuevo.',
+                'waiver_declare_confirm' => '¿:name está delante y te dice que ha leído y acepta el descargo de responsabilidad? Quedará firmado y con tu nombre como quien da fe.',
+                'waiver_declare_stale' => 'El texto del descargo ha cambiado desde que lo aceptó: hay que pasarle la tablet para que lea y firme el nuevo.',
                 'card_active' => 'QR activo',
                 'card_revoked' => 'QR revocado',
                 'card_none' => 'Sin QR',
@@ -144,9 +144,9 @@ return [
                 // dinámicamente (`'minor_waiver_'.$estado`), así que si algún día vuelve a pasar
                 // `current` —otra superficie, o el owner revirtiendo— sin fila se pintaría el
                 // identificador en crudo en la pantalla de puerta. Es el suelo de un `__()` dinámico.
-                'minor_waiver_current' => 'exención ✓',
-                'minor_waiver_outdated' => 'exención de versión anterior',
-                'minor_waiver_missing' => 'sin exención',
+                'minor_waiver_current' => 'descargo ✓',
+                'minor_waiver_outdated' => 'descargo de versión anterior',
+                'minor_waiver_missing' => 'sin descargo',
                 'visit_register' => 'Registrar visita',
                 'visit_registered' => 'Visita registrada hoy',
                 'visit_hint' => 'Es lo que acredita que ha venido (JumpPoints). Una vez por día; volver a pulsar no suma.',
@@ -156,12 +156,12 @@ return [
                 // Las CABECERAS de las tarjetas de la ficha y cómo se abrió (rediseño del 2026-08-28,
                 // `identidad-qr-puerta.md` §9.7 C·5). Cortas a propósito: son títulos de tarjeta, y con
                 // la clave en crudo se salían del marco.
-                'waiver_section' => 'Exención',
+                'waiver_section' => 'Descargo',
                 'card_section' => 'QR del cliente',
                 'visit_section' => 'Visita',
                 'via_card' => 'Abierta por QR',
                 'via_lookup' => 'Abierta por búsqueda',
-                'waiver_disabled' => 'Esta instalación no comprueba la exención en la puerta.',
+                'waiver_disabled' => 'Esta instalación no comprueba el descargo en la puerta.',
             ],
         ],
     ],
@@ -307,8 +307,8 @@ return [
             'register_phone' => 'Teléfono del cliente',
             'register_privacy' => 'He informado al cliente de la política de privacidad y crea su cuenta con su consentimiento.',
             'register_privacy_required' => 'Debes confirmar que has informado al cliente de la política de privacidad.',
-            'register_waiver' => 'Le he enseñado al cliente la exención de responsabilidad (waiver) vigente y declara que la acepta.',
-            'register_waiver_text' => 'Texto vigente de la exención de responsabilidad (v:version) — enséñaselo al cliente',
+            'register_waiver' => 'Le he enseñado al cliente el descargo de responsabilidad vigente y declara que lo acepta.',
+            'register_waiver_text' => 'Texto vigente del descargo de responsabilidad (v:version) — enséñaselo al cliente',
             'register_waiver_help' => 'Solo en modo interno con versión publicada. Sin marcarla NO se registra ninguna firma: el cliente firmará desde su cuenta, y la puerta le pedirá la tablet mientras tanto.',
             'register_submit' => 'Crear cuenta',
             'register_done' => 'Cuenta creada para :email y seleccionada. Le hemos enviado su contraseña por correo.',
@@ -546,9 +546,9 @@ return [
             // ⚠️ `#320`: `waiver_current` YA NO SE PINTA (ni aquí ni en la ficha del titular, que
             // reusa estas claves) y se conserva por lo mismo que su gemela de la puerta: la clave se
             // compone dinámicamente y sin fila se pintaría el identificador en crudo.
-            'waiver_current' => 'exención ✓',
-            'waiver_outdated' => 'exención de una versión anterior',
-            'waiver_missing' => 'sin exención firmada',
+            'waiver_current' => 'descargo ✓',
+            'waiver_outdated' => 'descargo de una versión anterior',
+            'waiver_missing' => 'sin descargo firmado',
             'removed' => 'retirado de la cuenta',
             // La acción «Asignar menores» de la línea (P3).
             'btn_aria' => 'Asignar menores a :name',
@@ -570,12 +570,12 @@ return [
             'reasons' => [
                 'not_yours' => 'un menor no es de este cliente',
                 'not_minor_on_date' => 'ya tiene 18 años el día de la visita',
-                'waiver_unsigned' => 'sin exención firmada y vigente',
+                'waiver_unsigned' => 'sin descargo firmado y vigente',
                 'too_many' => 'más menores que entradas',
                 'entries_only' => 'los menores solo se asignan a entradas',
             ],
             // El alta manual (P4).
-            'manual_hint' => 'Solo se pueden marcar los menores con exención firmada; el resto de unidades son adultos.',
+            'manual_hint' => 'Solo se pueden marcar los menores con el descargo firmado; el resto de unidades son adultos.',
             'manual_too_many' => 'Has marcado más menores que entradas: quita alguno o sube la cantidad.',
             'manual_check_failed' => 'No se ha creado ni cobrado nada: :reasons.',
             'manual_assign_failed' => 'El pedido se ha creado y cobrado, pero :count menor(es) no se pudieron asignar. Asígnalos desde la ficha del pedido.',
@@ -599,7 +599,7 @@ return [
             'en' => 'English',
             'fr' => 'Français',
         ],
-        'customer_waiver' => 'Waiver',
+        'customer_waiver' => 'Descargo',
         'customer_waiver_missing' => 'No firmado',
         'customer_waiver_outdated' => 'versión anterior',
 
@@ -1501,7 +1501,7 @@ return [
             // ⚠️ Tras anonimizar, las filas que conservan una exención firmada SOBREVIVEN desvinculadas
             // bajo el régimen restringido de `RGPD-01`: su sitio es la acción «Registro del waiver»
             // (con permiso propio y cada consulta auditada), no una lista de la ficha.
-            'anonymized' => 'Cuenta anonimizada: los menores que conserven una exención firmada siguen en régimen restringido y solo se consultan desde «Registro del waiver».',
+            'anonymized' => 'Cuenta anonimizada: los menores que conserven un descargo firmado siguen en régimen restringido y solo se consultan desde «Registro del descargo».',
             'col_name' => 'Nombre',
             'col_relationship' => 'Relación',
             'relationship_father' => 'Padre',
@@ -1510,7 +1510,7 @@ return [
             'relationship_grandparent' => 'Abuelo/a',
             'relationship_other' => 'Otra',
             'col_age' => 'Edad',
-            'col_waiver' => 'Exención',
+            'col_waiver' => 'Descargo',
             'col_since' => 'Declarado',
             'col_removed' => 'Retirado',
             // ⚠️ «(hoy)» no es adorno: en la ficha del PEDIDO la edad es la del día de la visita, y sin
@@ -1524,7 +1524,7 @@ return [
             'types' => [
                 'privacy' => 'Política de privacidad',
                 'terms' => 'Términos y condiciones',
-                'waiver' => 'Descargo de responsabilidad (waiver)',
+                'waiver' => 'Descargo de responsabilidad',
                 'marketing' => 'Comunicaciones comerciales',
             ],
         ],
@@ -1627,7 +1627,7 @@ return [
         ],
 
         'permissions' => [
-            'registrations_validate' => 'Validar registro/waiver en puerta',
+            'registrations_validate' => 'Validar registro/descargo en puerta',
             'puerta_profile' => 'Ver la ficha de puerta del cliente y registrar su visita',
             'orders_view' => 'Ver pedidos',
             'orders_create_manual' => 'Crear pedido manual (back-office)',
@@ -1654,7 +1654,7 @@ return [
             'users_manage' => 'Gestionar usuarios (ficha, anonimizar, contraseña)',
             'users_anonymize' => 'Anonimizar usuario (RGPD)',
             'consents_view' => 'Ver consentimientos de usuario',
-            'waiver_view' => 'Ver el registro probatorio del waiver (firmas y PDF)',
+            'waiver_view' => 'Ver el registro probatorio del descargo (firmas y PDF)',
             'reports_view' => 'Ver informes y exportaciones',
             'audit_view' => 'Ver registro de auditoría',
             'access_manage' => 'Gestionar roles y permisos',
@@ -2137,7 +2137,7 @@ return [
         'landing_footer_rights_hint' => 'Texto tras «© AÑO NOMBRE —» en el pie. Ej.: «Hecho para reír.».',
 
         'section_registration' => 'Registro (sistema externo)',
-        'section_registration_hint' => 'El botón «Registro» del header de la web lleva a vuestro sistema externo de registro/waiver. Etiqueta y subtítulo editables por idioma; si la URL queda vacía, el botón abre el registro interno de reservas.',
+        'section_registration_hint' => 'El botón «Registro» del header de la web lleva a vuestro sistema externo de registro/descargo. Etiqueta y subtítulo editables por idioma; si la URL queda vacía, el botón abre el registro interno de reservas.',
         'registration_url' => 'URL del registro externo',
         'registration_url_hint' => 'Dirección completa (https://…) del sistema de registro. Se abre en una pestaña nueva. Vacío = se usa el registro interno.',
         'registration_label' => 'Etiqueta del botón',
@@ -2191,8 +2191,8 @@ return [
         'puerta_profile_ttl_hint' => 'La ficha se cierra sola en el SERVIDOR pasado este tiempo, aunque la pestaña siga abierta. Cualquier interacción reinicia el reloj.',
         'puerta_window_days' => 'Ventana de reservas (± días)',
         'puerta_window_days_hint' => 'Además de las de hoy, la ficha enseña en segundo plano las reservas de estos días alrededor (el que llega un día antes o después). 0 = solo hoy.',
-        'puerta_waiver_check' => 'Comprobar el waiver en la puerta',
-        'puerta_waiver_check_hint' => 'Activado: la puerta muestra si el cliente firmó el waiver (3 estados). Desactivado: solo muestra si está registrado (2 estados), útil si el waiver lo gestiona vuestro sistema externo.',
+        'puerta_waiver_check' => 'Comprobar el descargo en la puerta',
+        'puerta_waiver_check_hint' => 'Activado: la puerta muestra si el cliente firmó el descargo (3 estados). Desactivado: solo muestra si está registrado (2 estados), útil si el descargo lo gestiona vuestro sistema externo.',
         'tax_rate' => 'IVA por defecto (%)',
         'tax_rate_hint' => 'Porcentaje de IVA por defecto (informativo).',
         'packs_max_per_slot' => 'Cumpleaños por franja (máx.)',
@@ -2763,7 +2763,7 @@ return [
 
     // ─── Fase 6 · waiver con valor probatorio (`specs/waiver-probatorio.md`) ───────────────────
     'waiver' => [
-        'settings_mode' => 'Gestión del waiver',
+        'settings_mode' => 'Gestión del descargo de responsabilidad',
         'settings_mode_hint' => 'Externo: lo gestiona vuestro sistema y aquí solo se guarda el sello (como hasta ahora). Interno: el cliente lo firma en esta web y queda el registro probatorio; exige publicar una versión del texto desde «Páginas». Desactivado: la puerta no lo comprueba.',
         'modes' => [
             'externo' => 'Externo (sistema propio del parque)',
@@ -2774,7 +2774,7 @@ return [
         'settings_retention_hint' => 'Cuántos meses se conserva cada firma del titular desde su fecha, también después de borrar la cuenta (conservación con tratamiento restringido). Vacío = no se purga nada hasta que se fije el plazo.',
         'settings_dependent_retention' => 'Conservación de la firma de un MENOR a cargo (meses tras cumplir 18)',
         'settings_dependent_retention_hint' => 'Cuántos meses se conserva la firma hecha en nombre de un menor DESPUÉS de que cumpla 18 años (un niño de 3 puede implicar conservarla 15 años). Vacío = no se purga ninguna firma de menor hasta que se fije el plazo.',
-        'gate_outdated' => 'Su waiver es de una versión anterior del texto: puede pasar. Se le pedirá la firma nueva en su próxima compra o inicio de sesión, no en el mostrador.',
+        'gate_outdated' => 'Su descargo es de una versión anterior del texto: puede pasar. Se le pedirá la firma nueva en su próxima compra o inicio de sesión, no en el mostrador.',
         'publish' => [
             'label' => 'Publicar versión firmable',
             'heading' => 'Publicar el texto guardado como versión :next',
@@ -2787,12 +2787,12 @@ return [
         ],
         // El registro probatorio en la ficha del usuario (tanda 2): acción con permiso propio y auditada.
         'proof' => [
-            'action' => 'Registro del waiver',
-            'heading' => 'Registro probatorio del waiver · :name',
+            'action' => 'Registro del descargo',
+            'heading' => 'Registro probatorio del descargo · :name',
             'description' => 'Régimen restringido: esta consulta queda registrada en la auditoría. Cada firma enlaza con la anterior de la misma persona; el PDF se compone del texto exacto que aceptó, no del texto actual de la página.',
             'close' => 'Cerrar',
             'status_label' => 'Estado',
-            'status_unsigned' => 'sin waiver firmado en este sistema',
+            'status_unsigned' => 'sin descargo firmado en este sistema',
             'status_current' => 'firmado, versión vigente (v:version)',
             'status_outdated' => 'firmado en una versión ANTERIOR (v:version): puede pasar; se le pedirá la firma nueva en su próxima compra o inicio de sesión',
             'empty' => 'Esta persona no tiene ninguna firma registrada en este sistema.',

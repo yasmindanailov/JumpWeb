@@ -73,7 +73,7 @@ return [
             'consent_types' => [
                 'privacy' => 'Política de privacidad',
                 'terms' => 'Términos y condiciones',
-                'waiver' => 'Descargo de responsabilidad (waiver)',
+                'waiver' => 'Descargo de responsabilidad',
                 'marketing' => 'Comunicaciones comerciales',
             ],
             'export_btn' => 'Descargar mis datos',
@@ -85,7 +85,7 @@ return [
             // Fase 6 · waiver (`specs/waiver-probatorio.md` §4.5, §4.8): la tarjeta del waiver en esta
             // zona y el aviso del índice. Viajan solo con sesión (poda de `layout.blade.php`).
             'waiver' => [
-                'title' => 'Exención de responsabilidad (waiver)',
+                'title' => 'Descargo de responsabilidad',
                 'status_external' => 'La gestiona el parque fuera de esta web.',
                 'status_unsigned' => 'Todavía no la has firmado.',
                 'status_current' => 'Firmada, versión vigente (v:version).',
@@ -95,11 +95,11 @@ return [
                 'signed_ok' => 'Firma registrada ✓',
                 'declared' => 'declarada en mostrador',
                 'pdf' => 'PDF',
-                'pending_notice' => 'Tienes pendiente la exención de responsabilidad (waiver).',
+                'pending_notice' => 'Tienes pendiente el descargo de responsabilidad.',
                 'pending_cta' => 'Firmarla',
                 // `#329` — el estado «la aceptó al registrarse y falta verificar el correo». No dice
                 // que no la haya firmado, porque sí la aceptó: dice qué falta y ofrece la salida.
-                'status_awaiting_verification' => 'Tu exención de responsabilidad quedará firmada en cuanto verifiques tu correo.',
+                'status_awaiting_verification' => 'Tu descargo de responsabilidad quedará firmado en cuanto verifiques tu correo.',
             ],
             'deleting' => 'Eliminando…',
         ],
@@ -108,7 +108,7 @@ return [
         // «Firmando…», «Firma registrada» y «PDF» se REUTILIZAN de `register.*` y `privacy.waiver.*`.
         'dependents' => [
             'title' => 'Menores a cargo',
-            'intro' => 'Declara a los menores de los que te haces responsable y firma la exención en nombre de cada uno. En la puerta solo se ve su edad y si tiene la exención al día, nunca su nombre.',
+            'intro' => 'Declara a los menores de los que te haces responsable y firma el descargo en nombre de cada uno. En la puerta solo se ve su edad y si tiene el descargo al día, nunca su nombre.',
             'empty' => 'Todavía no has declarado ningún menor.',
             'add_title' => 'Añadir un menor',
             'name' => 'Nombre',
@@ -118,7 +118,7 @@ return [
             'surname' => 'Apellidos',
             'relationship' => '¿Qué eres suyo?',
             'relationship_choose' => 'Elige una opción',
-            'relationship_hint' => 'Nos hace falta para poder aceptar que firmes la exención en su nombre.',
+            'relationship_hint' => 'Nos hace falta para poder aceptar que firmes el descargo en su nombre.',
             'relationship_father' => 'Padre',
             'relationship_mother' => 'Madre',
             'relationship_legal_guardian' => 'Tutor o tutora legal',
@@ -134,12 +134,12 @@ return [
             // tecleado.
             'add_cancel' => 'Cancelar',
             'age' => ':age años',
-            'adult' => 'Ya tiene 18 años: tu exención ya no le cubre.',
+            'adult' => 'Ya tiene 18 años: tu descargo ya no le cubre.',
             'remove' => 'Quitar',
             'removing' => 'Quitando…',
-            'remove_confirm' => '¿Quitar a :name de tu cuenta? Si firmaste la exención en su nombre, ese registro se conserva.',
-            'waiver_unsigned' => 'Exención sin firmar en su nombre.',
-            'waiver_current' => 'Exención firmada en su nombre, versión vigente (v:version).',
+            'remove_confirm' => '¿Quitar a :name de tu cuenta? Si firmaste el descargo en su nombre, ese registro se conserva.',
+            'waiver_unsigned' => 'Descargo sin firmar en su nombre.',
+            'waiver_current' => 'Descargo firmado en su nombre, versión vigente (v:version).',
             'waiver_outdated' => 'versión anterior',
             // La asignación de ENTRADAS a menores en el embudo (tanda 4, `specs/menores-a-cargo.md`
             // §9.9.3 D9/D10): el selector de los pasos 3 y 4, el aviso de la puerta 2, la fila del
@@ -239,7 +239,7 @@ return [
         'password' => 'Contraseña',
         'password_hint' => 'Mínimo 8 caracteres. Evita contraseñas comunes o filtradas.',
         'must_accept' => 'Debes aceptar esta condición para continuar.',
-        'accept_waiver' => 'He leído y acepto la exención de responsabilidad (waiver).',
+        'accept_waiver' => 'He leído y acepto el descargo de responsabilidad.',
         'waiver_read' => 'Leer el texto completo',
         'accept_privacy' => 'He leído y acepto la <a href=":url" target="_blank" rel="noopener">política de privacidad</a>.',
         'accept_terms' => 'Acepto los <a href=":url" target="_blank" rel="noopener">términos y condiciones</a>.',

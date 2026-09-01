@@ -32,7 +32,7 @@ use Tests\TestCase;
 
 /**
  * Fase 6 · menores a cargo, tanda 5 (el PANEL, spec §9.10.2 D14·1) — la ficha del pedido dice PARA QUIÉN
- * es cada entrada: nombre, edad EN LA FECHA DE LA VISITA y estado de la exención (solo en interno).
+ * es cada entrada: nombre, edad EN LA FECHA DE LA VISITA y estado del descargo (solo en interno).
  */
 class ItemsListDependentsTest extends TestCase
 {
@@ -152,7 +152,7 @@ class ItemsListDependentsTest extends TestCase
     public function test_the_order_sheet_says_for_whom_each_entry_is_with_the_age_on_the_visit_date_and_the_waiver_state(): void
     {
         // Se asigna en EXTERNO (sin firma que exigir) y la instalación pasa a INTERNO después: es el único
-        // camino por el que una entrada asignada puede decir «sin exención firmada» — en interno el
+        // camino por el que una entrada asignada puede decir «sin descargo firmado» — en interno el
         // asignador no escribe a un menor sin firma (`#202`·2).
         $this->mode('externo');
         $holder = $this->customer();
@@ -167,10 +167,10 @@ class ItemsListDependentsTest extends TestCase
 
         // `#320`: Lucas está firmado y vigente y por eso NO lleva rótulo —la firma es condición para
         // estar asignado, anunciarla en cada fila es repetir lo que el sistema ya garantiza—; Vera sí,
-        // porque «sin exención» es una excepción que el operador tiene que ver.
+        // porque «sin descargo» es una excepción que el operador tiene que ver.
         $page->assertSee('Para:')
             ->assertSee('Lucas (9 años),')
-            ->assertSee('Vera (6 años · sin exención firmada)')
+            ->assertSee('Vera (6 años · sin descargo firmado)')
             ->assertDontSee(__('admin.orders.dependents.waiver_current'));
         $this->assertSame(1, substr_count($page->html(), 'data-dependents-for="'), 'solo la línea de ENTRADA lleva el «Para:»; el pack nunca');
         $this->assertStringContainsString('data-dependents-for="'.$entryItem->id.'"', $page->html());
@@ -216,8 +216,8 @@ class ItemsListDependentsTest extends TestCase
         app(DependentRegistry::class)->remove($holder, $vera->id);   // Vera, desvinculada (tiene firma y entrada detrás)
 
         Livewire::actingAs($this->admin())->test(ViewOrder::class, ['record' => $order->code])
-            ->assertSee('Lucas (9 años · exención de una versión anterior),')
-            ->assertSee('Vera (6 años · exención de una versión anterior · retirado de la cuenta)');
+            ->assertSee('Lucas (9 años · descargo de una versión anterior),')
+            ->assertSee('Vera (6 años · descargo de una versión anterior · retirado de la cuenta)');
     }
 
     /** Fuera del modo interno no hay firma que enseñar: nombre y edad, nada más. */
@@ -231,7 +231,7 @@ class ItemsListDependentsTest extends TestCase
 
         Livewire::actingAs($this->admin())->test(ViewOrder::class, ['record' => $order->code])
             ->assertSee('Lucas (9 años)')
-            ->assertDontSee('exención');
+            ->assertDontSee('descargo');
     }
 
     public function test_nothing_is_shown_when_no_entry_has_a_dependent(): void
