@@ -233,7 +233,27 @@
     <table>
         <tr>
             <td style="width: 55%;">
-                <div class="wordmark">{{ \Illuminate\Support\Str::upper((string) (\App\Domain\Platform\Models\Setting::value('business.name') ?: config('app.name'))) }}<span class="dot">.</span></div>
+                {{-- ⚠️⚠️ **El logotipo entra en PNG y NO en SVG, y no es pereza.** El del cliente trae 26 pasos
+                     de extrusión por palabra, dos degradados y `background-clip: text` (`DECISIONES #275`):
+                     dompdf soporta un subconjunto pequeño de SVG y eso **no falla con un error, sale mal
+                     impreso** — que en una hoja que se lleva a una fiesta es peor. El PNG a 4x lo pinta igual
+                     en cualquier motor, y el paquete de instalación ya trae las dos formas.
+                
+                     ⚠️ **Se referencia por RUTA DE DISCO, no por URL**: dompdf corre sin red
+                     (`enable_remote` desactivado por defecto) y `public_path()` cae dentro de su `chroot`.
+                     Una URL saldría como hueco en blanco.
+                
+                     ⚠️ **El suelo es el wordmark de siempre**: sin logotipo instalado la hoja se sigue
+                     imprimiendo con el nombre del negocio, que es lo que el producto sabe pintar. --}}
+                {{-- ⚠️ Forma de BLOQUE y no `@php(…)`: este fichero usa la de bloque, y MEZCLARLAS rompe el
+                     compilador — Blade emparejó el `@php(` de aquí con el `@endphp` de 66 líneas más abajo
+                     y se tragó media plantilla (`$resRows` indefinida). Es la trampa de `#298` al revés. --}}
+                @php $slipLogo = public_path('img/client-logo@4x.png'); @endphp
+                @if (is_file($slipLogo))
+                    <img src="{{ $slipLogo }}" alt="" style="height: 34px; width: auto;" />
+                @else
+                    <div class="wordmark">{{ \Illuminate\Support\Str::upper((string) (\App\Domain\Platform\Models\Setting::value('business.name') ?: config('app.name'))) }}<span class="dot">.</span></div>
+                @endif
                 <div class="doc-title">{{ __('admin.orders.slip.title') }}</div>
             </td>
             <td style="width: 45%; text-align: right;">

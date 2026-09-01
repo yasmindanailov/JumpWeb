@@ -676,4 +676,46 @@ class GuestFormTest extends TestCase
             ->assertOk()
             ->assertDontSee('gf-fiche__regime');
     }
+
+    /**
+     * **La marca del parte: el logotipo de la instalación, o el nombre en texto** (`#334`).
+     *
+     * ⚠️⚠️ **Con `public/` TEMPORAL**: `client-logo.svg` es del CLIENTE y está gitignorado, así que
+     * aseverar contra el `public/` real da un test que **pasa en un clon limpio y falla en la máquina
+     * de quien tiene el paquete instalado** (la lección de `#302`).
+     *
+     * ⚠️ Aquí el logotipo va como `<img>` y NO en línea, al revés que el armazón: aquello se incrusta
+     * para poder ANIMAR una pieza del dibujo (`#254`), y esta página no tiene coreografía — serían
+     * ~64 KB de marcado por una imagen quieta.
+     */
+    public function test_the_sheet_shows_the_installation_logo_and_falls_back_to_the_name(): void
+    {
+        $order = $this->paidOrder(User::factory()->create(), $this->pack());
+        $item = $this->reservation($order);
+
+        $dir = sys_get_temp_dir().'/jw-gf-'.getmypid().'-'.uniqid();
+        mkdir($dir.'/img', 0o777, true);
+        @symlink(base_path('public/build'), $dir.'/build');
+        $this->app->usePublicPath($dir);
+
+        try {
+            $url = URL::temporarySignedRoute('reservation.guests', now()->addHour(), ['reservation' => $item->id]);
+
+            // (1) SIN logotipo: el suelo es el nombre del sitio en la fuente de rótulo.
+            $sinLogo = (string) $this->get($url)->assertOk()->getContent();
+            $this->assertStringContainsString('gf-mark__brand', $sinLogo, 'sin logotipo tiene que quedar el nombre');
+            $this->assertStringNotContainsString('gf-mark__logo', $sinLogo);
+
+            // (2) CON logotipo: manda la imagen y el texto se retira — son alternativas.
+            file_put_contents($dir.'/img/client-logo.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"></svg>');
+            $conLogo = (string) $this->get($url)->assertOk()->getContent();
+            $this->assertStringContainsString('gf-mark__logo', $conLogo, 'el logotipo de la instalación no llega al parte');
+            $this->assertStringNotContainsString('gf-mark__brand', $conLogo, 'se pintan el logotipo Y el texto: son alternativas');
+        } finally {
+            @unlink($dir.'/img/client-logo.svg');
+            @unlink($dir.'/build');
+            @rmdir($dir.'/img');
+            @rmdir($dir);
+        }
+    }
 }

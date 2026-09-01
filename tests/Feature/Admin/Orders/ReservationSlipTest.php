@@ -405,6 +405,52 @@ class ReservationSlipTest extends TestCase
         $this->assertSame('es', App::getLocale());
     }
 
+    /**
+     * **La cabecera de la hoja: logotipo de la instalación, o el wordmark del producto** (`#334`).
+     *
+     * ⚠️⚠️ **Con `public/` TEMPORAL, y sin eso el caso no vale nada**: `client-logo@4x.png` es un
+     * asset del CLIENTE y está gitignorado, así que aseverar contra el `public/` real da un test que
+     * **pasa en un clon limpio y falla en la máquina de quien tiene el paquete instalado** — o al
+     * revés. Es la lección de `#302`, y el patrón es el de `Theme\ClientThemePackageTest`.
+     *
+     * ⚠️ **El logotipo va en PNG y no en SVG a propósito**: dompdf soporta un subconjunto pequeño de
+     * SVG, y el del cliente lleva 26 pasos de extrusión y dos degradados (`#275`) — no fallaría, se
+     * imprimiría mal, que en una hoja que se lleva a una fiesta es peor.
+     */
+    public function test_the_header_uses_the_installation_logo_and_falls_back_to_the_wordmark(): void
+    {
+        [$order, $item] = $this->fullPaidReservation();
+
+        $dir = sys_get_temp_dir().'/jw-slip-'.getmypid().'-'.uniqid();
+        mkdir($dir.'/img', 0o777, true);
+        $this->app->usePublicPath($dir);
+
+        try {
+            $render = fn (): string => view('pdf.reservation-slip', [
+                'slip' => ReservationSlip::make($order->fresh(), $item->fresh()),
+                'showPrices' => true,
+            ])->render();
+
+            // (1) SIN logotipo instalado: el suelo del producto es el wordmark del negocio.
+            $sinLogo = $render();
+            $this->assertStringContainsString(Str::upper(config('app.name')), $sinLogo,
+                'sin logotipo, la hoja tiene que seguir identificando el negocio');
+            $this->assertStringNotContainsString('client-logo@4x.png', $sinLogo);
+
+            // (2) CON logotipo: manda la imagen y el wordmark se retira — son alternativas.
+            file_put_contents($dir.'/img/client-logo@4x.png', 'no-es-un-png-de-verdad');
+            $conLogo = $render();
+            $this->assertStringContainsString('client-logo@4x.png', $conLogo,
+                'el logotipo de la instalación no llega a la hoja');
+            $this->assertStringNotContainsString(Str::upper(config('app.name')), $conLogo,
+                'se pintan el logotipo Y el wordmark: son alternativas, no una pareja');
+        } finally {
+            @unlink($dir.'/img/client-logo@4x.png');
+            @rmdir($dir.'/img');
+            @rmdir($dir);
+        }
+    }
+
     // ─── Contenido operativo + ausencia de PII de cobro ──────────────────────
 
     public function test_view_renders_operative_data_in_spanish(): void
@@ -421,8 +467,6 @@ class ReservationSlipTest extends TestCase
         // Identificación + cabecera.
         $this->assertStringContainsString('Hoja de reserva', $html);
         $this->assertStringContainsString($order->code, $html);
-        // Wordmark data-driven (Fase 1): sin `business.name` sembrado cae al nombre de producto.
-        $this->assertStringContainsString(Str::upper(config('app.name')), $html);
         // Producto (el nombre ya incluye la zona; el chip de zona se quitó).
         $this->assertStringContainsString('Cumpleaños Jump', $html);
         // Datos de la reserva: cumpleañero + padre/tutor (cliente) + teléfono.

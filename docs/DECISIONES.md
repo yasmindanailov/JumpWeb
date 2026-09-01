@@ -19984,3 +19984,52 @@ vacía y el test pasaría en verde sobre un cajón entero roto.
 (`titleKeyOf(zone)`, ternarios) quedan fuera — fingir que las cubre sería peor que no cubrirlas.
 
 Suite **3824 · 24.676**.
+
+## #334 · 2026-09-01 · El logotipo de la instalación en el parte de celebración y en su hoja impresa
+
+**Encargo del owner**: *«en la página de parte de celebración quiero el logotipo de PlayJumpPark
+oficial, y en el PDF generado también».*
+
+Entra por **el mismo hueco que la marca del armazón** (`DECISIONES #143`): el fichero es del cliente,
+no se versiona, `deploy.sh` lo excluye del `rsync --delete` — y **si no está, el suelo del producto
+sigue en pie** (el nombre del sitio en la página, el wordmark del negocio en la hoja). Un logotipo es
+marca, y la marca no vive en este repo.
+
+### Dos superficies, dos formatos, y el motivo no es capricho
+
+| | Formato | Por qué |
+|---|---|---|
+| Parte (web) | `client-logo.svg` en un `<img>` | Vale el SVG; **no se incrusta en línea** como el armazón porque aquello se inlina para poder ANIMAR una pieza del dibujo (`#254`) y aquí no hay coreografía: serían ~64 KB de marcado por una imagen quieta |
+| Hoja (PDF) | `client-logo@4x.png` por ruta de disco | **dompdf soporta un subconjunto pequeño de SVG**, y el de este cliente lleva 26 pasos de extrusión por palabra y dos degradados (`#275`): no fallaría, **saldría mal impreso** — peor en una hoja que se lleva a una fiesta |
+
+⚠️ En el PDF se referencia por **ruta de disco y no por URL**: dompdf corre sin red y `public_path()`
+cae dentro de su `chroot`. Una URL saldría como hueco en blanco. Medido con CONTROL: la hoja pasa de
+**864 KB a 1009 KB** y el PDF contiene un objeto de imagen de **1200×441** — las dimensiones exactas
+del logotipo.
+
+### Dos trampas de Blade, las dos ya documentadas, y caí en las dos
+
+ 1. **`@php(…)` con paréntesis en un fichero que además usa `@php…@endphp` de bloque**: el compilador
+    empareja mi apertura con el cierre del bloque que hay 200 líneas más abajo y **deja de compilar
+    todo lo de en medio**. El error señala a otra línea (`$resRows` indefinida en el PDF; un `endfor`
+    inesperado en la página). Es `#298`, y la regla completa es: *la forma con paréntesis solo es
+    segura DESPUÉS del último bloque del fichero*.
+ 2. **Un nombre de componente escrito LITERAL en un comentario de Blade se compila igual**: puse
+    `x-site.brand` entre ángulos en la prosa y abrió un componente que nadie cierra. Es `#307`, donde
+    ya quedó escrito que *el propio comentario redactado para advertirlo volvió a caer en ella*.
+
+### Las guardas, y por qué van con `public/` temporal
+
+Las dos superficies tienen caso, y los dos montan un **`public/` temporal** (`usePublicPath`, el
+patrón de `Theme\ClientThemePackageTest`). ⚠️⚠️ **Sin eso el test no vale nada**: el logotipo está
+gitignorado, así que aseverar contra el `public/` real da una guarda que **pasa en un clon limpio y
+falla en la máquina de quien tiene el paquete instalado** — la lección de `#302`.
+
+⚠️ Y cada caso comprueba **las dos ramas**: con logotipo manda la imagen y el suelo se retira; sin él,
+el suelo sigue identificando al negocio. Son alternativas, no una pareja.
+
+⚠️ La guarda existente `ReservationSlipTest::test_view_renders_operative_data_in_spanish` aseveraba el
+wordmark contra el `public/` real: **habría empezado a fallar sola** en cuanto alguien instalara el
+paquete. Su aserción se mueve al caso nuevo, que sí acota el entorno.
+
+Suite **3853 · 24.818**.

@@ -145,8 +145,8 @@ aquí lo que no se podaría son datos de menores de terceros.
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3851 en verde** (24.807 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
-> sobre el árbol CONJUNTO: `#329`→`#333` rebasados sobre la T1 del justificante por reserva (`#328`).
+> Suite **3853 en verde** (24.818 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> sobre el árbol CONJUNTO: `#329`→`#334` rebasados sobre la T1 del justificante por reserva (`#328`).
 > ⚠️⚠️ **Medida DESPUÉS del rebase y con `npm run build` delante, NUNCA sumada**: por separado daban
 > 3823 / 24.730 (su T1 sola) y 3824 / 24.676 (`#329`→`#333` solas), y ninguna de las dos es la buena.
 > ⚠️ El techo del chunk del cajón va por **262**, atribuido midiendo cada subida a su rama

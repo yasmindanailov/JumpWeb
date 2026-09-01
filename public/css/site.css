@@ -4700,6 +4700,10 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 }
 
 .gf-mark { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: clamp(20px, 3vw, 30px); text-align: center; }
+/* El logotipo de la instalación en el parte (`#334`). Alto acotado y ancho libre: los logotipos
+   de cliente no comparten proporción, así que fijar el ANCHO deformaría unos y dejaría enanos otros.
+   El suelo de texto (`.gf-mark__brand`) sigue debajo para quien no instale logotipo. */
+.gf-mark__logo { display: block; height: 48px; width: auto; max-width: min(280px, 70vw); }
 .gf-mark__brand { font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.04em; color: var(--fg); }
 .gf-mark__sub { font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.22em; color: var(--fg-mute); }
 

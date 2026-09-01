@@ -24,9 +24,38 @@
 @endphp
 <x-focused-layout :title="__('guestform.title')">
     <div class="gf-page">
-        {{-- Marca pequeña (no es un nav). --}}
+        {{-- Marca pequeña (no es un nav).
+
+             ⚠️ **El logotipo entra por el MISMO hueco que el del armazón** (el componente
+             `site.brand`,
+             `DECISIONES #143`): el fichero es del cliente, no se versiona, y si no está **el suelo
+             sigue siendo el nombre en la fuente de rótulo**. Un logotipo es marca, y la marca no
+             vive en este repo.
+
+             ⚠️ Aquí va como `<img>` y NO en línea, al revés que el armazón: aquello se inlina para
+             poder ANIMAR una pieza concreta del dibujo (`#254`), y esta página no tiene coreografía
+             — pagar ~64 KB de marcado por una imagen quieta sería el coste sin la razón.
+
+             ⚠️⚠️ **Ni el nombre de un componente ni una directiva se escriben LITERALES en un
+             comentario de Blade**: se compilan igual. Un `x-site.brand` entre ángulos aquí abre un
+             componente que nadie cierra y la plantilla muere con un error que señala a otra línea —
+             es la trampa de `DECISIONES #307`, en la que ya cayó el comentario escrito para
+             advertirla.
+
+             ⚠️⚠️ **Y la forma de BLOQUE no es estilo: es lo único que funciona AQUÍ.** Este fichero
+             tiene un `@php…@endphp` más abajo, y la forma con paréntesis se empareja con ESE cierre
+             —**200 líneas sin compilar**, con el error señalando a otra línea (`#298`)—. La de
+             paréntesis solo es segura después del último bloque, que es donde ya se usa.
+
+             ⚠️ `filemtime` con arroba resuelve existencia y cache-busting en una sola llamada. --}}
+        @php $clientLogo = @filemtime(public_path('img/client-logo.svg')); @endphp
         <div class="gf-mark">
-            <span class="gf-mark__brand">{{ $site['name'] ?? config('app.name') }}</span>
+            @if ($clientLogo)
+                <img class="gf-mark__logo" src="{{ asset('img/client-logo.svg') }}?v={{ $clientLogo }}"
+                     alt="{{ $site['name'] ?? config('app.name') }}" />
+            @else
+                <span class="gf-mark__brand">{{ $site['name'] ?? config('app.name') }}</span>
+            @endif
             <span class="gf-mark__sub">{{ __('guestform.eyebrow') }}</span>
         </div>
 
