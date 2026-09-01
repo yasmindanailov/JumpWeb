@@ -17,7 +17,6 @@ use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 /**
@@ -89,66 +88,10 @@ class GuestMinorIsolationTest extends TestCase
         $this->assertSame($responsible->id, $signature->user_id);
     }
 
-    // ─── `GET /me/waiver` no las publica ──────────────────────────────────────
-
-    public function test_the_api_does_not_publish_the_guest_minor_signatures_to_the_responsible(): void
-    {
-        ['responsible' => $responsible] = $this->scenario();
-        Sanctum::actingAs($responsible);
-
-        $response = $this->getJson('/api/v1/me/waiver');
-
-        $response->assertOk();
-        $response->assertJsonPath('signatures', []);
-        // Aserción sobre el CUERPO, no sobre la intención: ni el nombre del menor ni el del adulto.
-        $body = $response->getContent();
-        $this->assertStringNotContainsString('Luis', $body);
-        $this->assertStringNotContainsString('Pérez Soto', $body);
-        $this->assertStringNotContainsString('carlos@example.com', $body);
-        $this->assertStringNotContainsString('guest_minor', $body);
-    }
-
-    public function test_the_api_still_publishes_the_holders_own_signature(): void
-    {
-        // El CONTROL: sin esto, un filtro que lo tapara TODO también pasaría este fichero en verde.
-        ['responsible' => $responsible] = $this->scenario();
-        app(WaiverSigner::class)->sign(
-            $responsible,
-            LegalDocumentVersion::query()->latest('id')->first(),
-            WaiverSignatureRequest::web('10.0.0.1', 'UA'),
-        );
-        Sanctum::actingAs($responsible);
-
-        $response = $this->getJson('/api/v1/me/waiver');
-
-        $response->assertOk();
-        $response->assertJsonCount(1, 'signatures');
-        $response->assertJsonPath('signatures.0.subject', WaiverSignature::SUBJECT_HOLDER);
-    }
-
-    // ─── El PDF llega por RUTA: la relación no lo alcanza ─────────────────────
-
-    public function test_the_responsible_cannot_download_the_pdf_of_a_guest_minor_signature(): void
-    {
-        ['responsible' => $responsible, 'signature' => $signature] = $this->scenario();
-        Sanctum::actingAs($responsible);
-
-        $this->getJson("/api/v1/me/waiver/{$signature->id}/pdf")->assertNotFound();
-    }
-
-    public function test_the_responsible_can_still_download_the_pdf_of_his_own_signature(): void
-    {
-        // El CONTROL de la condición anterior.
-        ['responsible' => $responsible] = $this->scenario();
-        $own = app(WaiverSigner::class)->sign(
-            $responsible,
-            LegalDocumentVersion::query()->latest('id')->first(),
-            WaiverSignatureRequest::web('10.0.0.1', 'UA'),
-        );
-        Sanctum::actingAs($responsible);
-
-        $this->get("/api/v1/me/waiver/{$own->id}/pdf")->assertOk();
-    }
+    // ⚠️ Los tres casos de la API (`GET /me/waiver` y su PDF) viven en
+    // `tests/Feature/Api/V1/MeWaiverGuestMinorTest.php`, que hereda de `ApiTestCase` y por tanto
+    // valida cada respuesta contra `openapi/v1.yaml`. Aquí pasarían igual de verdes **sin ejercer
+    // esa guarda**, que es justo la que la spec (§4.5) dice estar usando.
 
     // ─── El panel: la ficha del titular y su contador ─────────────────────────
 
