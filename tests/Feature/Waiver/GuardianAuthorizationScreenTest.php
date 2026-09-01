@@ -262,6 +262,43 @@ class GuardianAuthorizationScreenTest extends TestCase
         $this->assertSame(0, GuardianAuthorization::count());
     }
 
+    /**
+     * ⚠️ Este caso lo pidió el ARNÉS, no el diseño: la mutación que quitaba el `isNotEmpty()` de
+     * `visitFinished` **no mordía**, porque todos los demás pedidos de este fichero tienen franja.
+     * Era una guarda defensiva sin sujeto.
+     *
+     * Lo que protege: `every()` sobre una colección VACÍA devuelve `true`, así que un pedido sin
+     * ninguna línea fechada —una compra sin franja asignada todavía— se habría dado por «visita
+     * terminada» y el formulario habría nacido **cerrado, en silencio**, el mismo día de crearse.
+     */
+    public function test_an_order_with_no_dated_line_is_not_treated_as_a_finished_visit(): void
+    {
+        $responsible = $this->responsible();
+        $zone = Zone::firstOrCreate(['slug' => 'jump'], ['name' => ['es' => 'Jump'], 'position' => 1, 'is_active' => true]);
+        $type = TicketType::firstOrCreate(['zone_id' => $zone->id, 'type' => TicketType::TYPE_ENTRY], [
+            'name' => ['es' => 'Entrada'], 'duration_min' => 60, 'seats_per_unit' => 1,
+            'is_sellable' => true, 'is_active' => true, 'position' => 1,
+        ]);
+        $order = Order::create([
+            'user_id' => $responsible->id,
+            'code' => 'R-'.strtoupper(substr(md5((string) mt_rand()), 0, 6)),
+            'status' => Order::STATUS_PAID,
+            'subtotal' => 500, 'tax' => 0, 'total' => 500, 'currency' => 'EUR', 'paid_at' => now(),
+        ]);
+        // SIN `slot_id`: la línea existe y está viva, pero no tiene día.
+        $order->items()->create(['ticket_type_id' => $type->id, 'quantity' => 2, 'unit_price' => 500, 'seats' => 2]);
+        $version = $this->version();
+
+        $this->get($order->guardianAuthorizationSignedUrl())
+            ->assertOk()
+            ->assertDontSee(__('guardian.blocked.closed'))
+            ->assertSee(__('guardian.booking.no_date'));
+
+        $this->post($this->signedStoreUrl($order), $this->payload($version))
+            ->assertSessionHas('guardian_status', 'signed');
+        $this->assertSame(1, GuardianAuthorization::count());
+    }
+
     public function test_the_cap_is_the_live_principal_lines_and_the_extra_one_is_refused(): void
     {
         $responsible = $this->responsible();
