@@ -83,7 +83,8 @@ class MeDependentWaiverTest extends ApiTestCase
         $this->assertSame($user->id, $signature->user_id);
         $this->assertSame('Lior', $signature->subject_name);
         $this->assertSame('2017-03-12', $signature->subject_born_on->toDateString());
-        $this->assertSame(3, $signature->canonical_version);
+        $this->assertSame(4, $signature->canonical_version);
+        $this->assertNull($signature->subject_authorization_id, 'un menor A CARGO no cuelga de una autorización de reserva');
         $this->assertNull($signature->prev_hash, 'su propia cadena empieza aquí');
         $this->assertSame('web', $signature->channel);
         $this->assertTrue($signature->verifyHash());

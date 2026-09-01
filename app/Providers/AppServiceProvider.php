@@ -34,6 +34,7 @@ use App\Domain\Identity\Models\CustomerCard;
 use App\Domain\Identity\Models\CustomerVisit;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\DependentAssignment;
+use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
@@ -121,6 +122,7 @@ class AppServiceProvider extends ServiceProvider
             'dependent' => Dependent::class,
             'dependent_assignment' => DependentAssignment::class,
             'faq' => Faq::class,
+            'guardian_authorization' => GuardianAuthorization::class,
             'landing_service' => LandingService::class,
             'legal_document_version' => LegalDocumentVersion::class,
             'offer' => Offer::class,
