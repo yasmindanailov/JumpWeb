@@ -2728,6 +2728,9 @@ auditoría enterrada» —: el acceso «Ver historial completo» sale ahora TAMB
 (bloque del pedido y card del producto), solo cuando hay CONSECUENCIAS que explicar (líneas de
 puerta, devuelto, pendiente o compensado — ⚠️ `hasActivity()` NO vale de condición: es verdad en
 cualquier pedido pagado, y el control fija que el caso simple no gana ruido). Guarda Q.
+⚠️ **REVERTIDA por el owner el 2026-09-01 (`DECISIONES #318`)**: con el libro en el árbol pidió
+quitar ese atajo y plegar el desglose detrás de UN CTA; el historial sigue a un clic, pero solo en
+«Detalles». La guarda Q (`OrderAuditReadabilityTest`) está re-apuntada a UNA puerta.
 **(2)** ⚠️⚠️ **el «Pendiente de devolución −20,00 €» de su card era un FANTASMA**, medido:
 `itemOriginalOnlineCents()` reconstruye el online original con `depositCents()` de la config
 **VIVA** (señal hoy 30,00 fija; el pedido nació con 10,00) → la card decía −20,00 con el eje del

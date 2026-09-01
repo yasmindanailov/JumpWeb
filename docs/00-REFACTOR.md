@@ -2595,6 +2595,11 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
         devolución» eterno (`LB-BAJADA` con la visita de ayer: saldado). Fuera, con ficha: cancelación
         (producción) · «Regularizar» (aparcado) · el aviso al bajar tras una cortesía. Queda el OJO
         del owner (T3·4b + esto).
+  - [x] **El libro PLEGADO en el panel — 2026-09-01** (`DECISIONES #318`, `[DECIDIDO owner]` con la
+        T4 delante): de un vistazo Total · Pagado · saldo y UN CTA («Ver el desglose» / «Cerrar el
+        desglose») abre el detalle; el atajo «Ver historial completo» bajo el libro se retira (queda
+        la puerta de «Detalles»). Revierte D-T3·1 y la adenda 4 de la T5; guardas O y Q re-apuntadas;
+        sonda en el panel real 17/17 con capturas.
 
 ### El CAMBIO DE PRECIO ✅ — la línea `#145`→`#155`, CERRADA el 2026-08-25
 

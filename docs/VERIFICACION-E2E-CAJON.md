@@ -2095,3 +2095,15 @@ precede a la visita.
 Queda para el OJO del owner (V22): el modal «Reembolsar» de `LB-BAJADA` (ofrece «devolver lo que se le
 debe» hasta 19,80 y explica que el libro lo da por devuelto en recepción), el de `LB-ORDEN` sin bajada
 registrada (la opción deshabilitada con la frase), y `LB-CORTESIA` en la ficha (el motivo bajo la línea).
+
+### El libro PLEGADO en el panel (2026-09-01, `DECISIONES #318`)
+
+`panel-fold-probe.js` (scratchpad) entra UNA vez al panel (`admin@jumpingjump.test`; el login tiene
+limitador) y mide el bloque «Totales del pedido» de `LB-CORTESIA` con capturas: **17/17 ✓**. Plegado:
+0 líneas de valor y 0 liquidaciones visibles, la nota del motivo oculta, «Total 9,90 €», «Pagado
+9,90 €», «Nada pendiente» y el CTA «Ver el desglose» (`aria-expanded=false`), con las 3 + 2 líneas
+presentes en el HTML; abierto: las tres líneas de valor («Descuento por cortesía» incluida), las dos
+liquidaciones, «Motivo: …» y «Cerrar el desglose»; vuelve a plegarse; «Ver historial completo» UNA
+vez en la página (la tarjeta «Detalles»). ⚠️ Trampa de sonda: `/admin/login` casa con
+`/\/admin(\/|$)/` — la señal de haber entrado es SALIR del login, no «estar en /admin».
+Queda para el OJO del owner (V23): el pliegue en la tarjeta de cada reserva y en el modal del calendario.

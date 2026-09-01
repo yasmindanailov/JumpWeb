@@ -5,8 +5,9 @@
 > aquí solo se enlaza.** Última actualización: **2026-09-01 (mediodía) — TRES carriles a la vez.
 > **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2
 > (`#311`), T3·3 (`#312`), T3·4 (`#315`, LA RETIRADA del modelo de dos ejes) Y LA T4 (`#317`, EL
-> MOTIVO MANDA en el reembolso · liquidación simétrica · «Descuento por cortesía») EN EL ÁRBOL:
-> CÓDIGO COMPLETO; queda el OJO del owner (V18–V22) y sus vetos a D-T4·6/D-T4·7** — carril 3, abajo.
+> MOTIVO MANDA en el reembolso · liquidación simétrica · «Descuento por cortesía») EN EL ÁRBOL, y
+> el libro del panel PLEGADO detrás de un CTA (`#318`): CÓDIGO COMPLETO; queda el OJO del owner
+> (V18–V23) y sus vetos a D-T4·6/D-T4·7** — carril 3, abajo.
 > **MIXTOS**: T1→T5 en el árbol (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL
 > GUARDIÁN DE SOLAPES EN EL ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** —
 > siguen fuera por diseño la fase 3 de §20.2 y el AFORO (owner); la ficha del fantasma de la señal
@@ -56,8 +57,8 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3744 en verde** (24.465 aserciones, 1 skipped a propósito), medida el
-> 2026-09-01 (mediodía) sobre el árbol con la T4 del libro (`#317`) encima de `1060dbc`.
+> Suite **3744 en verde** (24.475 aserciones, 1 skipped a propósito), medida el
+> 2026-09-01 (13:30) sobre el árbol con la T4 del libro (`#317`) y el libro plegado (`#318`).
 > ⚠️ **No se suma, se mide** — y ⚠️⚠️ **tras un rebase que toque Vue hay que
 > `npm run build:ssr` ANTES de leer la suite**: sin eso salieron 35 rojos en
 > `SidebarDomContractTest` que no eran de ningún cambio.
@@ -65,6 +66,22 @@
 >   dos tests de servicio del modelo viejo, −50, y sumó 18), 3758 / 24.958 (`#311`).
 >
 > ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1 → T3·4 EN EL ÁRBOL: código COMPLETO · queda el OJO del owner) ═══════════
+> ❗❗❗ **2026-09-01 (13:00 → 13:30, misma sesión) · EL LIBRO DEL PANEL VA PLEGADO DETRÁS DE UN CTA Y EL
+> ATAJO «VER HISTORIAL COMPLETO» BAJO EL LIBRO SE RETIRA** (`DECISIONES #318`, `[DECIDIDO owner]` con
+> la T4 delante: *«de un vistazo todo claro; le dan al CTA y se muestra todo con detalle»*). Suite: el
+> CONTADOR de arriba · Pint · docs-check · **4/4 mutaciones con control** (quitar un `x-show` · devolver
+> el atajo, vistas por las guardas O y Q · meter el Total en el pliegue) · **sonda en el panel real
+> 17/17** (`LB-CORTESIA`, un solo login por el limitador; capturas plegado/abierto). ▶ Un solo partial
+> (`reservation-financials`) en sus tres sitios: plegado enseña Total · Pagado · saldo; «Ver el
+> desglose» / «Cerrar el desglose» (Alpine, `aria-expanded`) abre movimientos y pagos con la nota del
+> motivo; el HTML lleva SIEMPRE todas las líneas (guarda M) — ⚠️ `x-data` va ANTES de `data-book`
+> porque la guarda cuenta `data-book>`. Revierte D-T3·1 y la adenda 4 de la T5 (`hasHistoryToExplain()`
+> murió con su consumidor; guardas O y Q re-apuntadas). ⚠️ **Asunción explícita**: «Ver historial
+> completo» aparecía en TRES sitios; se retiraron los dos bajo el desglose y se conservó la puerta de la
+> tarjeta «Detalles» — si también sobra, es una línea. ⚠️ Trampa de sonda: `/admin/login` casa con
+> `/\/admin(\/|$)/`; la señal de haber entrado es SALIR del login. Cierra la pregunta de presentación
+> (plegar «Pagos y devoluciones»): se pliega todo. **V23 para el OJO del owner**: el pliegue en la
+> tarjeta de cada reserva y en el modal del calendario.
 > ❗❗❗ **2026-09-01 (mañana, 5.ª sesión: 10:10 → 12:40, hora de Madrid) · T4 · EL MOTIVO MANDA EN EL REEMBOLSO,
 > LA LIQUIDACIÓN SIMÉTRICA Y «DESCUENTO POR CORTESÍA» — EN EL ÁRBOL** (`DECISIONES #317`;
 > `specs/desglose-libro.md` **§6.4 diseño · §6.4.1 lo ejecutado**; `INVARIANTES` `PAY-17`; `MODELO-DATOS`

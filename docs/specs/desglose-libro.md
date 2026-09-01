@@ -607,9 +607,14 @@ que convive **solo hasta la T3·4**.
 | **T3·4 · la retirada** | `Order` pierde §4.7 y gana `LineFacts` (`nac`/`online_nac`/reparto/cortesía por línea, SIN cascada: sustituye a `GateBuckets`); `itemRefundableRemainderCents`, `isVoidedLeftoverItem` y la prorrata de `unattributedRefundShareFor` pasan a `online_nac`; `onlineDueCents` = Σ líneas vivas (fila − reparto); el aviso `ledger.no_cuadra` y la rama mixta de `breakdownLabel()` se mudan al libro; `INVARIANTES` `PAY-16`/`PAY-17` reescritas y `PAY-19` sin tope; `DEUDA` (L4 cerrada); `desglose-dinero-cliente.md` a HISTÓRICO; guion headless (`VERIFICACION-E2E-CAJON.md`, apartado del libro) y la receta de las 25 acciones sobre el corpus; el ojo del owner | `OrderLedger` · `OrderFinancialSummary` · `ReservationFinancials` · `GateBuckets` · `OrderAdjustment::breakdownLabel` · `tickets.ledger.*` (salvo las tres notas) · `assertBookBridge` + `ledger-bridge.json` · `ReservationFinancialsTest`, `ItemPriceChangeReconstructionTest` (→ hechos), `OrderGateCreditTest`… |
 
 **Decisiones derivadas de la T3** (tomadas aquí; el owner puede vetar cualquiera):
-- **D-T3·1** El libro se enseña ENTERO en cuanto la tarjeta/el bloque está abierto: sin un segundo
+- ~~**D-T3·1** El libro se enseña ENTERO en cuanto la tarjeta/el bloque está abierto: sin un segundo
   «ver más» sobre los movimientos (D1: «es una suma / resta sencilla de varias líneas»; una lista
-  plegada obliga a razonar otra vez). El botón «Ver historial» del panel se queda al lado (T5·4).
+  plegada obliga a razonar otra vez). El botón «Ver historial» del panel se queda al lado (T5·4).~~
+  ⚠️ **REVERTIDA por el owner el 2026-09-01 (`DECISIONES #318`)**: en el PANEL el libro va PLEGADO
+  —de un vistazo Total · Pagado · saldo— y UN CTA («Ver el desglose» / «Cerrar el desglose») abre el
+  detalle entero; el atajo «Ver historial completo» bajo el libro se retira (la puerta al historial
+  sigue en «Detalles»). El cajón ya iba plegado (`.orders__gate-toggle`); la hoja y los correos no
+  pliegan. El pliegue es Alpine: el HTML lleva siempre todas las líneas (guarda M intacta).
 - **D-T3·2** Cada línea de valor lleva su signo delante (`+60,00 €` · `−30,00 €`), también el
   nacimiento; los pagos en positivo, las devoluciones en negativo; el Total y lo Pagado sin signo.
 - **D-T3·3** Con `settled` no se pinta línea de saldo (spec §4.4); con `pay_online` la línea dice
@@ -783,8 +788,11 @@ Siete lectores, cinco fórmulas. Con el libro son **un pintor** y **un value obj
 - **D-T3·15** El importe sugerido al reembolsar y el del aviso del pedido cancelado son
   `owedToCustomerCents()`: el saldo del libro cuando es de devolución. Con `settled` o «a pagar»
   el sugerido es 0 (el operador teclea lo que devuelve) — nada se re-deriva de canales.
-- **D-T3·16** El atajo «Ver historial» lo condiciona el libro (`hasHistoryToExplain()`), en el
-  bloque del pedido y en la tarjeta de la reserva con la MISMA regla.
+- ~~**D-T3·16** El atajo «Ver historial» lo condiciona el libro (`hasHistoryToExplain()`), en el
+  bloque del pedido y en la tarjeta de la reserva con la MISMA regla.~~ ⚠️ **Sin objeto desde `#318`**:
+  el atajo se retiró (el owner puso en su lugar el CTA del pliegue) y `hasHistoryToExplain()` murió
+  con su único consumidor. D-T3·14 (el libro entero también en el caso simple) sigue en pie: el
+  detalle plegado es el mismo para todos los pedidos.
 - **D-T3·17** Las claves `admin.orders.order_financial.*` e `item_financial.*` se retiran salvo
   `heading`, `no_cuadra_*`, `principal`, `addons` y `total`; `slip.pending_at_gate`,
   `slip.pending_refund(_caption)` y `slip.deposit_remainder_line` mueren con las cajas;
@@ -1434,6 +1442,10 @@ casos de `OrderBookTest`, con el coste del dinero contado dos veces delante.
   afirmaciones de §6.4 resultaron falsas al medirlas (la columna `reason` no existía; «tras la
   visita, solo compensación» contaba el dinero dos veces → D-T4·6). 11/12 mutaciones, sonda 53/53.
   **Sigue 🟦 solo por el OJO del owner** (V18–V22) y por sus vetos a D-T4·6/D-T4·7.
+- 2026-09-01 · **Owner, con la T4 delante** (`DECISIONES #318`): el libro del panel va PLEGADO detrás
+  de un CTA («de un vistazo todo claro») y el atajo «Ver historial completo» bajo el libro se retira —
+  revierte D-T3·1 y la adenda 4 de la T5; cierra la pregunta de presentación (plegar «Pagos y
+  devoluciones»): se pliega todo. Sonda en el panel real 17/17.
 - Entradas: `DECISIONES #305` (la decisión de producto) · `#306` (la T1) · `#308` (la T2) · `#310`
   (la T3·1) · `#311` (la T3·2) · `#312` (la T3·3) · **`#315` (la T3·4)** · `#316` (las decisiones
-  del owner tras los `LB-*`; la T4) · **`#317` (la T4 ejecutada)**.
+  del owner tras los `LB-*`; la T4) · **`#317` (la T4 ejecutada)** · `#318` (el libro plegado).
