@@ -19074,8 +19074,22 @@ desde el contexto y no se perdió nada, pero es exactamente lo que `#181` dejó 
 local ANTES de mutar**. El arnés definitivo hace `git stash` sobre un commit de guardado, no
 `checkout` sobre el vacío.
 
-**Verificación**: suite verde (**3.766 tests, 24.557 aserciones**) · Pint ✓ · docs-check ✓ ·
-**4 mutaciones, las 4 muerden** (la del generador tumba 4 casos) **con pasada de CONTROL** que
+### 5 · ⚠️⚠️ Dos cosas que solo aparecieron al preguntar «¿cómo lo reviso en el navegador?»
+
+1. **La tanda estuvo a punto de entregarse SIN PANEL.** Las tres columnas existían, el dominio las
+   leía y el formulario de zonas **no las exponía**: solo se podían tocar por SQL. Rompe el primer
+   principio del proyecto —«todo configurable desde el panel»— y **una feature que el cliente no
+   puede activar no está hecha**. Entra `Section` propia en `ZoneForm` con sus rótulos es/zh_CN.
+2. **Y al ponerla apareció un defecto de BORDE.** `OperatingSchedule` compara estas horas con las del
+   recinto **como CADENAS**, y `opening_hours` las guarda con segundos; el `TimePicker` con
+   `seconds(false)` escribía `'15:00'`. Como `'15:00:00' > '15:00'` es **verdadero** —misma cabecera,
+   más larga—, **una franja que acabara exactamente a la hora de cierre de la zona quedaba fuera**.
+   Se normaliza a `H:i:s` en el MODELO (no en el campo del panel) para que ninguna otra superficie
+   pueda reintroducir el formato corto. ▶ *Un `TimePicker` no escribe «una hora»: escribe el formato
+   que le pidas, y aquí el formato es parte del contrato de comparación.*
+
+**Verificación**: suite verde · Pint ✓ · docs-check ✓ ·
+**5 mutaciones, las 5 muerden** (la del generador tumba 4 casos) **con pasada de CONTROL** que
 confirma el árbol restaurado · **`VERIFY_CONC=1`: `purchase:verify-oversell` en los SEIS escenarios
 (`entry`, `pack`, `pack-guests`, `pack-prep`, `mixed`, `panel-edit`) y `redsys:verify-concurrency`,
 todos sobre InnoDB real** · queda el OJO del owner y la tanda B.

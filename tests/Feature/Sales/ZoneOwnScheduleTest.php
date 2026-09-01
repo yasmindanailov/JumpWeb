@@ -172,6 +172,34 @@ class ZoneOwnScheduleTest extends TestCase
         );
     }
 
+    /**
+     * ⚠️⚠️ El caso de BORDE que destapó un defecto real (`#322`): las horas se comparan como CADENAS
+     * contra las del recinto, que llevan segundos. El `TimePicker` del panel escribía `'15:00'`, y
+     * `'15:00:00' > '15:00'` es **verdadero** —misma cabecera, más larga— así que una franja que
+     * acababa EXACTAMENTE a la hora de cierre de la zona quedaba fuera. Se normaliza en el modelo.
+     */
+    public function test_a_slot_ending_exactly_at_the_zone_closing_time_is_generated(): void
+    {
+        // Se escribe SIN segundos a propósito: es lo que guardaba el panel.
+        $this->excursiones->update([
+            'opens_at' => '09:00',
+            'closes_at' => '11:00',
+            'ignores_venue_closure' => true,
+        ]);
+        $this->morningTemplates();   // 09:00 + 120 min → acaba a las 11:00 CLAVADAS
+
+        $this->assertSame('09:00:00', $this->excursiones->fresh()->opens_at, 'se guarda normalizada');
+        $this->assertSame('11:00:00', $this->excursiones->fresh()->closes_at);
+
+        $this->generate($this->nextClosedDay());
+
+        $this->assertSame(
+            [$this->excursiones->id],
+            Slot::pluck('zone_id')->all(),
+            'la franja que acaba justo al cierre SÍ se genera',
+        );
+    }
+
     // ─── 3 · la web no se entera ─────────────────────────────────────────────────────────────────
 
     public function test_the_public_calendar_still_reports_the_venue_and_never_a_zone(): void

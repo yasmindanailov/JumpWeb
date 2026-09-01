@@ -275,3 +275,14 @@ muerden** (la del generador tumba 4 casos) con pasada de CONTROL · `VERIFY_CONC
 3. **Lo que NO hubo que construir lo destapó el owner preguntando**: `zones.max_per_slot` ya existía
    y ya era por zona, así que el tope de grupos por franja es configuración. Esta tanda iba a ser el
    doble de grande.
+4. ⚠️⚠️ **La tanda estuvo a punto de entregarse SIN PANEL.** Las tres columnas se crearon, el dominio
+   las leía y el formulario de zonas **no las exponía**: solo se podían tocar por SQL. Eso rompe el
+   primer principio del proyecto —«todo configurable desde el panel»— y una feature que el cliente no
+   puede activar **no está hecha**. Lo detectó la pregunta «¿cómo lo reviso en el navegador?».
+   ▶ Guarda: `ZoneResourceTest::test_create_with_per_zone_schedule_override` + su gemela de herencia.
+5. ⚠️⚠️ **Y al ponerlo en el panel apareció un defecto de BORDE**: `OperatingSchedule` compara estas
+   horas con las del recinto **como CADENAS**, y `opening_hours` las guarda con segundos. El
+   `TimePicker` con `seconds(false)` escribía `'15:00'`, y `'15:00:00' > '15:00'` es **verdadero**
+   (misma cabecera, más larga), así que **una franja que acababa exactamente a la hora de cierre
+   quedaba fuera**. Se normaliza a `H:i:s` en el MODELO —no en el campo— para que ninguna superficie
+   pueda reintroducir el formato corto. Guarda con su mutación.

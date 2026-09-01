@@ -4,6 +4,8 @@ namespace App\Domain\Booking\Models;
 
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Platform\Concerns\HasTranslations;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -32,6 +34,41 @@ class Zone extends Model
         // y la comparación dejaría de ser la misma en los dos lados.
         'ignores_venue_closure' => 'boolean',
     ];
+
+    /**
+     * `#322` — las horas propias de la zona se normalizan a `H:i:s` AL ESCRIBIR, venga el valor de
+     * donde venga (panel, seeder, importación).
+     *
+     * ⚠️⚠️ **No es cosmético, es un defecto de borde real.** `OperatingSchedule` compara estas horas
+     * con las del recinto **como CADENAS** (`$endStr > $hours['close']`), y `opening_hours` las
+     * guarda con segundos. El `TimePicker` del panel, con `seconds(false)`, escribía `'15:00'`: en la
+     * comparación `'15:00:00' > '15:00'` es **verdadero** —una cadena más larga con el mismo prefijo
+     * es mayor—, así que una franja que acaba EXACTAMENTE a la hora de cierre quedaba fuera. Lo
+     * destapó la guarda del formulario, no una lectura.
+     *
+     * Se normaliza en el MODELO y no en el campo del panel para que ninguna otra superficie pueda
+     * reintroducir el formato corto por su cuenta.
+     */
+    protected function opensAt(): Attribute
+    {
+        return self::normalizedTime();
+    }
+
+    protected function closesAt(): Attribute
+    {
+        return self::normalizedTime();
+    }
+
+    private static function normalizedTime(): Attribute
+    {
+        return Attribute::make(
+            set: function (mixed $value): ?string {
+                $raw = trim((string) ($value ?? ''));
+
+                return $raw === '' ? null : CarbonImmutable::parse($raw)->format('H:i:s');
+            },
+        );
+    }
 
     public function attractions(): HasMany
     {

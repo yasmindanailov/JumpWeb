@@ -120,6 +120,47 @@ class ZoneResourceTest extends TestCase
         $this->assertFalse($zone->prep_blocks_cupo);
     }
 
+    /**
+     * `#322` — el HORARIO PROPIO de la zona se edita DESDE EL PANEL (`specs/horario-por-zona.md`).
+     *
+     * ⚠️ Esta guarda existe porque la tanda estuvo a punto de entregarse sin ella: las tres columnas
+     * se crearon, el dominio las leía y el formulario **no las exponía**, así que solo se podían
+     * tocar por SQL. Es exactamente lo que el principio data-driven del proyecto prohíbe («todo
+     * configurable desde el panel»), y una feature que el cliente no puede activar no está hecha.
+     */
+    public function test_create_with_per_zone_schedule_override(): void
+    {
+        Livewire::actingAs($this->admin())
+            ->test(CreateZone::class)
+            ->fillForm($this->validForm([
+                'opens_at' => '08:00',
+                'closes_at' => '15:00',
+                'ignores_venue_closure' => true,
+            ]))
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $zone = Zone::where('slug', 'eventos')->firstOrFail();
+        $this->assertSame('08:00:00', $zone->opens_at);
+        $this->assertSame('15:00:00', $zone->closes_at);
+        $this->assertTrue($zone->ignores_venue_closure);
+    }
+
+    /** Y sin tocarlos nace heredando: `null` = el horario del recinto (el mismo contrato del cupo). */
+    public function test_a_new_zone_inherits_the_venue_schedule(): void
+    {
+        Livewire::actingAs($this->admin())
+            ->test(CreateZone::class)
+            ->fillForm($this->validForm())
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $zone = Zone::where('slug', 'eventos')->firstOrFail();
+        $this->assertNull($zone->opens_at);
+        $this->assertNull($zone->closes_at);
+        $this->assertFalse($zone->ignores_venue_closure);
+    }
+
     public function test_create_persists_image_path(): void
     {
         Livewire::actingAs($this->admin())

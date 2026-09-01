@@ -59,9 +59,11 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3776 en verde** (24.517 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche,
-> 2.ª parte) sobre el árbol CONJUNTO: `#323` (T10, la tarjeta pegatina) rebasado sobre `#322`
-> (horario por zona). Antes, 3771 / 24.506 (`#322` sobre `#321` y `#320`).
+> Suite **3779 en verde** (24.532 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche,
+> 2.ª parte) sobre el árbol CONJUNTO: el panel del horario por zona (`#322`) sobre `#323` (T10, la
+> tarjeta pegatina), `#321` y `#320`.
+> ⚠️ **Se mide tras cada rebase, no se suma**: antes 3776 / 24.517 (`#323`) y 3774 / 24.521 (`#322`
+> con su panel, sin la T10). Con dos agentes en `main` el número solo vale medido sobre el conjunto.
 > ⚠️ **Medida DESPUÉS del rebase, no sumada**: por separado daban 3766 / 24.557 (horario por zona
 > sobre `#320`) y 3761 / 24.483 (la T9 sobre `#320`). **Solo la conjunta vale** — y las aserciones
 > BAJAN respecto a una de las ramas porque la T9 retiró casos al unificar botones.

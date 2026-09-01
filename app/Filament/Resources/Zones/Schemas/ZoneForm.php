@@ -6,6 +6,7 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
@@ -124,6 +125,28 @@ class ZoneForm
                             ])
                             ->default('')
                             ->selectablePlaceholder(false)
+                            ->columnSpanFull(),
+                    ]),
+
+                // `#322` — HORARIO PROPIO de la zona (`specs/horario-por-zona.md`). Mismo contrato
+                // que el cupo de arriba: vacío = hereda el del recinto. Sin esta sección las tres
+                // columnas existirían y solo se podrían tocar por SQL, que es justo lo que el
+                // principio data-driven del proyecto prohíbe.
+                Section::make(__('admin.zones.section_schedule'))
+                    ->description(__('admin.zones.section_schedule_hint'))
+                    ->columns(2)
+                    ->schema([
+                        TimePicker::make('opens_at')
+                            ->label(__('admin.zones.field_opens_at'))
+                            ->helperText(__('admin.zones.field_schedule_hint'))
+                            ->seconds(false),
+                        TimePicker::make('closes_at')
+                            ->label(__('admin.zones.field_closes_at'))
+                            ->helperText(__('admin.zones.field_schedule_hint'))
+                            ->seconds(false),
+                        Toggle::make('ignores_venue_closure')
+                            ->label(__('admin.zones.field_ignores_venue_closure'))
+                            ->helperText(__('admin.zones.field_ignores_venue_closure_hint'))
                             ->columnSpanFull(),
                     ]),
             ]);
