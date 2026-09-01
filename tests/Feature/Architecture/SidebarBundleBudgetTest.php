@@ -561,7 +561,7 @@ class SidebarBundleBudgetTest extends TestCase
      * ⚠️ **Se sube a 262 y no a 270.** Queda **0,88 KiB**: lo siguiente que entre vuelve a tener que
      * justificarse o podar.
      *
-     * ▶ **263 (`#336`, la T3 del justificante de un menor invitado).** Medido con la rama sola:
+     * ▶ **263 (`#337`, la T3 del justificante de un menor invitado).** Medido con la rama sola:
      * **261,08 → 262,53 KiB (+1,45)**. Lo que compra es **la ÚNICA pantalla que el responsable de la
      * reserva tiene** de esta feature: quién ha firmado ya el justificante de cada menor invitado y
      * **el enlace para repartir a los padres que faltan**. Sin ella, el que reserva —el profesor de

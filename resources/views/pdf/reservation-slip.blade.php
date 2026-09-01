@@ -363,7 +363,7 @@
         </div>
     @endif
 
-    {{-- Menores INVITADOS con justificante (`specs/waiver-por-reserva.md` §4.12, `#336`): niños que
+    {{-- Menores INVITADOS con justificante (`specs/waiver-por-reserva.md` §4.12, `#337`): niños que
          NO son menores a cargo de quien reservó y por los que un adulto sin cuenta firmó la descarga
          de responsabilidad. La sala necesita saber quién viene cubierto y quién no.
          ⚠️ SIN correo ni teléfono de ningún adulto: la forma del operador no los lleva

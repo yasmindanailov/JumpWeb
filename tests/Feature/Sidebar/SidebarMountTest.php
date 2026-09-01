@@ -476,7 +476,7 @@ class SidebarMountTest extends TestCase
         // clave sería mantenimiento sin ahorro. Que esté en esta lista es lo que impide que crezca
         // en silencio hasta ser el `__('account.orders')` de conveniencia que esta guarda persigue.
         $this->assertSame(['login', 'register', 'forgot', 'nav', 'sidecart', 'account', 'verify', 'orders', 'purchases'], array_keys($boot['account'] ?? []));
-        // ⚠️ `guest_minors` entra con la T3 del justificante (`#336`) y **la pantalla lo pinta**:
+        // ⚠️ `guest_minors` entra con la T3 del justificante (`#337`) y **la pantalla lo pinta**:
         // `GuestMinorsPanel.vue` usa sus cinco rótulos —el contador, la capacidad, los dos estados de
         // excepción y la frase del enlace—. Esta guarda es justo la que obliga a comprobarlo: crecer
         // aquí sin pintar sería pagar bytes en cada página con sesión para nada.
@@ -718,7 +718,7 @@ class SidebarMountTest extends TestCase
         // arranque no lo sabe. Mismo peaje que el paginador de menores, y por la misma razón.
         // **9.200 deja 75 B**: la holgura estrecha de siempre.
         //
-        // ⚠️ **9.200 → 9.400 el 2026-09-01, por FEATURE** (`#336`, la T3 del justificante de un menor
+        // ⚠️ **9.200 → 9.400 el 2026-09-01, por FEATURE** (`#337`, la T3 del justificante de un menor
         // invitado). Medido: **9.125 → 9.365 B (+240)**, y son CUATRO rótulos del panel que el
         // responsable de una reserva usa para ver quién ha firmado ya y repartir el enlace: el
         // contador, los dos estados de excepción y la frase que le dice que el enlace se puede

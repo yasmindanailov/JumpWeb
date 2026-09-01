@@ -319,7 +319,7 @@
                             </x-filament::section>
 
                             {{-- Los menores INVITADOS de las reservas de HOY
-                                 (`specs/waiver-por-reserva.md` §4.11, `#336`): niños que NO son
+                                 (`specs/waiver-por-reserva.md` §4.11, `#337`): niños que NO son
                                  menores a cargo de este titular y a los que un adulto sin cuenta
                                  autorizó desde el enlace del pedido.
                                  ⚠️ Sección APARTE de la de menores a cargo, y no es cosmética: son

@@ -1,7 +1,8 @@
 # [SPEC] El justificante de un menor invitado a una reserva («waiver offshore»)
 
-> Estado: 🟦 **REVISADA, CORREGIDA y con T1 + T2 EN EL ÁRBOL** (2026-09-01, `DECISIONES #328` y
-> `#335`) — el dominio (§8.1) y la pantalla pública (§8.2); quedan T3 y T4. Pendiente del ✅ del owner.
+> Estado: 🟦 **T1 + T2 + T3 EN EL ÁRBOL** (2026-09-01, `DECISIONES #328`, `#335` y `#337`) — el
+> dominio (§8.1), la pantalla pública (§8.2) y las seis superficies (§8.3). **Queda la T4**: el guion
+> de navegador con el anti-bot encendido y el OJO del owner.
 > Carril **P3** de `ESTADO.md` — **con el alcance ampliado por el owner**: ver §1.2.
 > Subsistema padre: `docs/specs/waiver-probatorio.md`. Entidad hermana: `docs/specs/menores-a-cargo.md`.
 >
@@ -748,6 +749,51 @@ autocompletado `url` del navegador y un gestor de contraseñas puede rellenárse
 
 ⚠️ **Lo que la T2 NO cierra**: quien firma **todavía no recibe copia** —§4.15 la promete y su PDF es
 de la T3—, y el responsable aún no tiene por dónde repartir el enlace fuera de generarlo a mano.
+
+### 8.3 T3 · EJECUTADA (2026-09-01, `DECISIONES #337`)
+
+**Las seis superficies, en el árbol.** La decisión que ordena la tanda: **`GuardianRoster` tiene DOS
+formas y no una con un filtro** —`forOperator()` y `forResponsible()`—, así que la regla de §7·4 la
+impone el TIPO y no la disciplina de cada plantilla. Ninguna de las dos lleva el correo ni el teléfono
+de ningún adulto.
+
+| Superficie | Dónde | Lo que decidió |
+|---|---|---|
+| Puerta | `GateProfile` + `GateProfileData.guestMinors` + su sección en `validar.blade.php` | **Sección APARTE** de los menores a cargo, y **al nivel de la ficha**: la autorización cuelga del PEDIDO, así que dentro de cada fila se repetiría. **Dos consultas**, sean uno o veinte |
+| Hoja de sala | `Admin\ReservationSlipController` + `pdf.reservation-slip` | Se compone en el CONTROLADOR: `ReservationSlip` vive en Booking, que **no puede mirar a Identity** |
+| Ficha del pedido | `OrderInfolist::guestMinorsSection()` + `partials/guest-minors` + `copyGuardianLinkAction` | `visible()` y no un `@if` dentro: en un pedido normal la sección **no existe** |
+| PDF probatorio | `WaiverProof` + `pdf.waiver-proof` | Las TRES personas, y **nota propia**: aquí lo declara un DESCONOCIDO |
+| Correo de copia | `GuardianAuthorizationSigned` | **PDF ADJUNTO, no enlazado** —un enlace sería una ruta pública a la prueba de un tercero—, **fuera de la transacción** y solo con buzón |
+| Cuenta del responsable | `GET /orders/{code}/guest-minors` + `GuestMinorsPanel.vue` + el store | Ruta propia por las razones de `event-data` **y una tercera**: el enlace es una credencial portadora |
+
+#### ❗❗ Tres guardas de arquitectura cazaron tres defectos míos
+
+1. **Un componente no habla con la API** (`CE-6`) — regla que yo mismo cité en el docblock de al lado.
+2. **Todo modificador que el cajón emite tiene que tener regla CSS** (`#253`): mis clases nacieron sin
+   ninguna y eso **no falla, se pinta desnudo**.
+3. **La lista exacta de claves del montaje**: crecer ahí sin pintar es pagar bytes en cada página.
+
+#### Los dos presupuestos, podados ANTES de subirlos
+
+Chunk **262 → 263 KiB** (+1,45 medido, −0,46 de poda) · textos del montaje **9.200 → 9.400 B** (+240,
+−110 de poda). ⚠️⚠️ **Y se dice lo que cuesta mal**: los textos los paga cada página con sesión para
+una feature que aparece en poquísimos pedidos; la salida, si hay que recuperarlos, es mandarlos en la
+respuesta del endpoint —que ya se pide bajo demanda—, a cambio de sacarlos del alcance de
+`SidebarTranslationKeysExistTest`.
+
+#### Dos afirmaciones de esta spec, corregidas al medirlas
+
+- ⚠️ **§4.11 decía que `GateReservation` «lleva `orderCode`, no `order_id`»: es FALSO**, lleva los dos.
+  No hizo falta tocar el contrato.
+- ⚠️ La edad sale de `Dependent::ageBetween()`, no de un `diffInYears()` propio: aquél devuelve un
+  **float** —el DTO declara `int`— y trata el caso de una fecha posterior al día.
+
+⚠️⚠️ **Y una frontera respetada a mano**: un `DB::table('orders')` dentro de Identity habría
+funcionado y `ModuleBoundariesTest` **no lo habría visto** (escanea clases, no cadenas SQL). Va por
+`Booking\Contracts\AuthorizableOrders`.
+
+⚠️ **Lo que la T3 NO cierra**: la T4 —el guion de navegador con el anti-bot encendido y el OJO del
+owner— y el plazo de conservación, que sigue `[PENDIENTE: owner]`.
 
 ---
 

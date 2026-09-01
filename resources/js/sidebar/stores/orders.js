@@ -87,7 +87,7 @@ export const useOrdersStore = defineStore('orders', {
          * ⚠️ Y como todo lo demás de esta zona, **vive en memoria**: nada de `localStorage`.
          */
         eventData: {},
-        // Los JUSTIFICANTES de menores invitados por código de pedido (`#336`). Como `eventData`:
+        // Los JUSTIFICANTES de menores invitados por código de pedido (`#337`). Como `eventData`:
         // se pide al desplegar y se cachea, porque el enlace que trae es una credencial portadora y
         // no puede viajar en el contexto sembrado.
         guestMinors: {},

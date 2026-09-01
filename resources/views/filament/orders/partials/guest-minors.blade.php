@@ -1,7 +1,7 @@
 @php
     /**
      * Los menores INVITADOS de un pedido, vistos por el OPERADOR
-     * (`docs/specs/waiver-por-reserva.md` §4.12, `#336`).
+     * (`docs/specs/waiver-por-reserva.md` §4.12, `#337`).
      *
      * ⚠️ Es la forma `forOperator()` del roster: lleva el adulto que firmó y su relación —que es lo
      * que sostiene que pudiera firmar por ese niño— y **NO lleva su correo ni su teléfono**. Quien

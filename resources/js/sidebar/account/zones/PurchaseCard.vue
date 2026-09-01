@@ -131,7 +131,7 @@ defineEmits(['toggle', 'retry']);
         </div>
 
         <!--
-          Los JUSTIFICANTES de menores invitados (`specs/waiver-por-reserva.md` §4.10, `#336`).
+          Los JUSTIFICANTES de menores invitados (`specs/waiver-por-reserva.md` §4.10, `#337`).
           ⚠️ Va DENTRO del desplegable a propósito: el enlace que trae es una credencial portadora, y
           pedirlo al abrir el pedido es la «acción explícita» que §4.10 exige — nunca se siembra en el
           contexto de cuenta que viaja en el HTML de cada página con sesión.

@@ -3575,7 +3575,14 @@ de este carril**: es del waiver, no de las excursiones (§1.2 de la spec).
       ⚠️⚠️ **Su defecto real lo encontró la sonda de navegador, no la suite**: copiar el silencio
       anti-bot de `/contacto` hacía que la pantalla dijera «Listo» **sin escribir nada**. Honeypot
       calla / Turnstile lo dice, con caso propio.
-      ▶ **Quedan T3 (superficies de dentro: cuenta, panel, puerta, PDF, correo) y T4 (el OJO).**
+      ▶ ✅ **T3 (las seis superficies) EJECUTADA** (`#337`, spec §8.3): puerta, hoja de sala, ficha
+      del pedido, PDF probatorio, correo de copia con el PDF ADJUNTO y la cuenta del responsable en el
+      cajón, con `GET /orders/{code}/guest-minors` contra el contrato. **15 de 15 mutaciones.**
+      ⚠️ **La decisión de fondo**: `GuardianRoster` tiene DOS formas y no una con un filtro — «el
+      responsable no ve a los otros padres» lo impone el TIPO.
+      ⚠️⚠️ **Tres guardas de arquitectura cazaron tres defectos míos**: un componente hablando con la
+      API (`CE-6`), clases de CSS sin regla (`#253`) y la lista exacta de claves del montaje.
+      ▶ **Queda la T4**: el guion de navegador con el anti-bot encendido y el OJO del owner.
       ▶ Pendiente del owner: el ✅ a la spec y el plazo de conservación (medido: hoy vale `NULL` y no
       se poda nada).
 

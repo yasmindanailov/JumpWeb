@@ -86,7 +86,7 @@
         <table class="kv">
             <tr><td class="k">{{ $t('holder_name') }}</td><td class="v">{{ $proof->holderName() }}</td></tr>
             <tr><td class="k">{{ $t('holder_email') }}</td><td class="v">{{ $proof->holderEmail() }}</td></tr>
-            {{-- TRES clases de sujeto (`specs/waiver-por-reserva.md` §4.13, `#336`). La tercera es la
+            {{-- TRES clases de sujeto (`specs/waiver-por-reserva.md` §4.13, `#337`). La tercera es la
                  única en la que el titular de la cuenta NO es quien firma: es el RESPONSABLE de la
                  reserva, y quien acepta es un adulto SIN cuenta. Decirlo es la mitad del valor
                  probatorio de este documento. --}}

@@ -1,7 +1,16 @@
 # Estado del proyecto — foto viva
 
-✅ **CARRIL P3 · EL JUSTIFICANTE DE UN MENOR INVITADO («waiver offshore») — SPEC + T1 + T2 EN EL
-ÁRBOL** (2026-09-01, `DECISIONES #328` y `#335`). Spec: **`docs/specs/waiver-por-reserva.md`**
+✅ **CARRIL P3 · EL JUSTIFICANTE DE UN MENOR INVITADO («waiver offshore») — SPEC + T1 + T2 + T3 EN
+EL ÁRBOL** (2026-09-01, `DECISIONES #328`, `#335` y `#337`). ▶ **La T3 pone las SEIS superficies**:
+puerta, hoja de sala, ficha del pedido, PDF, correo de copia con el PDF adjunto, y la cuenta del
+responsable en el cajón. **Queda solo la T4**: el guion de navegador con el anti-bot encendido y tu
+ojo. ⚠️ **Su decisión de fondo**: `GuardianRoster` tiene **DOS formas y no una con un filtro**, así
+que «el responsable no ve a los otros padres» lo impone el TIPO, no la disciplina de cada plantilla.
+⚠️⚠️ **Tres guardas de arquitectura cazaron tres defectos míos** —un componente hablando con la API
+(`CE-6`, regla que yo mismo había citado), clases de CSS sin regla y la lista de claves del montaje—
+y **los dos presupuestos del cajón se podaron ANTES de subirlos** (chunk 262 → 263 KiB, textos
+9.200 → 9.400 B), con la nota de que esos bytes los paga cada página con sesión para una feature
+rara. Spec: **`docs/specs/waiver-por-reserva.md`**
 (revisada de forma adversarial, nueve `[DECIDIDO owner]`). **T1 (el dominio) y T2 (la pantalla
 pública) ejecutadas y verificadas en navegador real**; quedan **T3** (cuenta del responsable,
 `ViewOrder`, hoja de sala, puerta, PDF y el correo de copia) y **T4** (el OJO del owner).
@@ -202,11 +211,14 @@ aquí lo que no se podaría son datos de menores de terceros.
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3884 en verde** (24.932 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
-> sobre el árbol CONJUNTO: `#336` (la puerta firma) rebasado sobre la T2 del justificante (`#335`).
-> ⚠️⚠️ **Medida DESPUÉS del rebase, NUNCA sumada**: por separado daban 3877 / 24.916 (su T2 sola) y
-> 3860 / 24.834 (`#336` sola), y ninguna de las dos es la buena.
-> ⚠️ El techo del chunk del cajón va por **262**, atribuido midiendo cada subida a su rama.
+> Suite **3900 en verde** (25.015 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> sobre el árbol CONJUNTO: la **T3** del justificante (`#337`) rebasada sobre `#336`.
+> ⚠️⚠️ **Medida DESPUÉS del rebase y con `npm run build` + `build:ssr` delante, NUNCA sumada**: por
+> separado daban 3893 / 24.999 (la T3 sola) y 3884 / 24.932 (el árbol anterior), y ninguna es la
+> buena. Antes: 3884 / 24.932 (`#336` sobre `#335`) · 3877 / 24.916 (la T2 sola).
+> ⚠️ El techo del chunk del cajón va por **263** (`#337`: 262 → 263, podado antes de subirlo), y el
+> de los textos del montaje por **9.400 B** (9.200 → 9.400). Los dos, atribuidos midiendo cada
+> subida a su rama.
 > ▶ Los DOS verificadores de concurrencia, en verde sobre InnoDB real.
 > ⚠️⚠️ **TERCERA colisión de numeración con el otro agente, y la peor**: mis entradas nacieron
 > como `#327` (código) y `#328` (documento) y las dos eran suyas. **Renumeradas a `#329`→`#333`**,

@@ -191,7 +191,7 @@ class OrderInfolist
     }
 
     /**
-     * Los menores INVITADOS de este pedido (`specs/waiver-por-reserva.md` §4.12, `#336`): quién
+     * Los menores INVITADOS de este pedido (`specs/waiver-por-reserva.md` §4.12, `#337`): quién
      * viene con justificante, quién lo firmó y en qué estado, más el enlace para repartir.
      *
      * ⚠️ **`visible()` y no un `@if` dentro**: en un pedido normal —que son casi todos— esta sección

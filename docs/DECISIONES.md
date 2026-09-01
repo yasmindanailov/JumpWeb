@@ -20178,3 +20178,89 @@ cambiaron a propósito: la del catálogo de auditoría (`puerta.waiver_declared`
 de la forma del perfil de puerta, que exige declarar cada campo nuevo.
 
 Suite **3860 · 24.834**.
+
+---
+
+## #337 · 2026-09-01 · Las superficies de dentro del justificante: el responsable ve quién falta y NUNCA a los otros padres, y la regla la impone el TIPO (T3)
+
+Tanda **T3** de `docs/specs/waiver-por-reserva.md` (§4.10–§4.15), sobre la T1 (`#328`) y la T2
+(`#335`). Con ella, el justificante de un menor invitado **se ve** desde las seis superficies que lo
+necesitan: la puerta, la hoja de sala, la ficha del pedido, el PDF probatorio, el correo de copia y
+la cuenta del responsable.
+
+### La decisión que ordena la tanda
+
+**`GuardianRoster` tiene DOS formas y no una con un filtro.** `[DECIDIDO owner]` §7·4: el responsable
+ve *«los nombres de los menores autorizados y quién falta»* y **nunca los datos de los otros padres**.
+
+▶ Con un solo método que devolviera todo, esa regla dependería de que cada plantilla se acordara de
+no pintar dos campos — y las plantillas cambian. Con dos formas, **la del responsable no puede
+filtrar lo que no lleva**: `forOperator()` (panel y hoja de sala) y `forResponsible()` (su cuenta).
+⚠️ **Ninguna de las dos lleva el correo ni el teléfono** de ningún adulto: eso vive en la fila y en la
+prueba, y quien de verdad lo necesite abre el registro probatorio, que tiene permiso propio y
+consulta auditada.
+
+▶ **Y el CONTRATO es la segunda guarda**: el esquema del endpoint declara `additionalProperties:
+false` con solo `minor` y `waiver`, así que si alguien añadiera al otro padre, Spectator rechazaría
+la respuesta aunque nadie hubiera escrito una aserción.
+
+### Lo demás que entra, con lo que decidió cada pieza
+
+- **La puerta** lista los menores invitados de las reservas de HOY, en **sección aparte** de los
+  menores a cargo: son personas distintas con un régimen distinto, y mezclarlas haría creer al
+  operador que ese adulto responde por todas. ⚠️ **Van al nivel de la ficha y no dentro de cada fila**
+  porque la autorización cuelga del PEDIDO: dentro, un pedido con tres líneas repetiría la lista tres
+  veces. Nombre y edad; **los apellidos no tienen campo** (`#236`). **Dos consultas, sean uno o
+  veinte**, con caso propio que lo mide.
+- **La hoja de sala** los imprime, y **se compone en el CONTROLADOR**: `ReservationSlip` vive en
+  Booking y **Booking no puede mirar a Identity**. La capa de entrega es la que ve los dos módulos.
+- **El PDF** nombra a las TRES personas —el menor, quien firmó y el responsable— y lleva **su propia
+  nota**: aquí lo declara un DESCONOCIDO, no alguien con cuenta y correo verificado.
+- **El correo de copia** va con el **PDF ADJUNTO, no enlazado**: un enlace exigiría una ruta pública
+  que sirviera la prueba de un tercero. Sale **fuera de la transacción** —un fallo del correo no puede
+  tumbar una firma ya escrita— y solo si el padre dejó buzón.
+- **El endpoint del responsable** (`GET /orders/{code}/guest-minors`) es su propia ruta por la misma
+  razón que `event-data` —son datos de menores de otras familias y no pueden viajar en cada página de
+  `me/orders`— **y una tercera propia: el enlace es una credencial portadora**, y esa es la
+  prohibición que `AccountContextResource` ya tenía escrita para su gemelo del post-form.
+
+### ❗❗ Tres guardas de arquitectura cazaron tres defectos MÍOS
+
+1. **Un componente no habla con la API** (`CE-6`) — y la regla está citada en el docblock de la
+   tarjeta de al lado. Mi panel llamaba a `api.get` directo; la llamada se movió al store.
+2. **Todo modificador que el cajón emite tiene que tener regla CSS** (`#253`): mis cinco clases
+   `orders__guests*` nacieron sin ninguna, y eso **no falla, se pinta desnudo**.
+3. **Las claves del montaje se podan una a una y la guarda fija la lista exacta**: crecer ahí sin
+   pintar sería pagar bytes en cada página con sesión para nada.
+
+### Los DOS presupuestos, podados antes de subirlos
+
+- **Chunk del cajón 262 → 263 KiB.** La rama sola: **261,08 → 262,53 (+1,45)**. Poda medida antes:
+  fuera el botón de portapapeles con su respaldo y sus dos rótulos —el `input` ya se autoselecciona—
+  y dos refs fundidas en una. **−0,46 KiB.**
+- **Textos del montaje 9.200 → 9.400 B.** Medido: **9.125 → 9.365 (+240)**. Poda antes: fuera
+  `capacity` y los otros cuatro rótulos acortados, **−110 B**.
+  ⚠️⚠️ **Y hay que decir lo que esto cuesta mal**: esos bytes los paga **cada página que abre
+  cualquier cliente con sesión**, y el panel solo aparece en los poquísimos pedidos con menores
+  invitados. La salida buena, si hay que recuperarlos, es mandar los rótulos en la RESPUESTA del
+  endpoint —que ya se pide bajo demanda—; no se hizo porque los sacaría del alcance de
+  `SidebarTranslationKeysExistTest`, que es lo que impide que un rótulo se quede MUDO.
+
+### Dos afirmaciones corregidas y una frontera respetada a mano
+
+- ⚠️ **La spec decía que `GateReservation` «lleva `orderCode`, no `order_id`» y es FALSO**: ya lleva
+  los dos. No hizo falta tocar el contrato.
+- ⚠️ **La edad la calcula `Dependent::ageBetween()`**, no un `diffInYears()` propio: aquél devuelve un
+  **float** —el DTO declara `int`— y además trata el caso de una fecha posterior al día.
+- ⚠️⚠️ **Un `DB::table('orders')` dentro de Identity habría funcionado y `ModuleBoundariesTest` NO lo
+  habría visto** —escanea referencias a CLASES con el tokenizador, no cadenas SQL—. Se cambió por
+  `Booking\Contracts\AuthorizableOrders`. *La frontera se respeta a mano donde el guardián no llega.*
+
+### Estado
+
+**T3 EN EL ÁRBOL.** Queda **T4**: el guion de navegador con el anti-bot encendido y el OJO del owner.
+`[PENDIENTE: owner]` sigue el **plazo de conservación** (hoy `NULL`: no se poda nada).
+
+**Verificación**: suite verde · Pint ✓ · docs-check ✓ · **15 de 15 mutaciones muerden con control por
+mutación** (10 de las superficies + 5 del endpoint) · los dos presupuestos del cajón medidos rama a
+rama antes de subirlos.
