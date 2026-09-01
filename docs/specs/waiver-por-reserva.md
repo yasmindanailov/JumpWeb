@@ -792,6 +792,24 @@ respuesta del endpoint —que ya se pide bajo demanda—, a cambio de sacarlos d
 funcionado y `ModuleBoundariesTest` **no lo habría visto** (escanea clases, no cadenas SQL). Va por
 `Booking\Contracts\AuthorizableOrders`.
 
+#### ⚠️⚠️ La auditoría del reloj cazó DIEZ rojos de esta tanda, y no los veía nadie
+
+`GuestMinorSurfacesTest` siembra una franja de **HOY** —la puerta solo enseña las reservas del día—
+que termina a las 23:00. **Cerca de medianoche esa visita ya ha pasado**, el dominio se niega a
+autorizar sobre una visita terminada, y **diez de los once casos se ponen rojos**. Medido: verdes a
+cualquier hora normal, rojos a las **21:59:30 de Madrid** y a las **23:59:30 UTC**.
+
+▶ Arreglado congelando el reloj con una constante documentada (`FROZEN_NOW = '2026-06-15 09:00:00'`,
+mediodía en Madrid: catorce horas de margen y el mismo día natural en las dos zonas), que es
+literalmente lo que `TESTING.md` §2 manda. **Verificado con CONTROL**: sin el congelado, 10 de 11
+rojos a las 23:59:30; con él, los 11 verdes en las dos fronteras.
+
+⚠️⚠️ **Y la trampa de instrumento que casi lo entierra**: la auditoría se lanzó con `| tail -8`, que
+**cortó justo la tabla de fronteras** y dejó a la vista solo dos filas en verde bajo un veredicto ✗.
+Peor: **el `exit 0` que se leyó era el de `tail`**, no el de la auditoría. *Un filtro de salida puede
+esconder exactamente la evidencia que se estaba buscando, y un código de salida detrás de una tubería
+no es el del comando que importa.*
+
 ⚠️ **Lo que la T3 NO cierra**: la T4 —el guion de navegador con el anti-bot encendido y el OJO del
 owner— y el plazo de conservación, que sigue `[PENDIENTE: owner]`.
 

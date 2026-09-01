@@ -2107,3 +2107,104 @@ liquidaciones, «Motivo: …» y «Cerrar el desglose»; vuelve a plegarse; «Ve
 vez en la página (la tarjeta «Detalles»). ⚠️ Trampa de sonda: `/admin/login` casa con
 `/\/admin(\/|$)/` — la señal de haber entrado es SALIR del login, no «estar en /admin».
 Queda para el OJO del owner (V23): el pliegue en la tarjeta de cada reserva y en el modal del calendario.
+
+---
+
+## 5.septies · EL JUSTIFICANTE DE UN MENOR INVITADO — guion del OJO del owner (T4 de `specs/waiver-por-reserva.md`; `DECISIONES #328`, `#335`, `#337`)
+
+> **Qué se está probando**: un adulto **sin cuenta** autoriza a un menor que no es menor a cargo de
+> quien reservó, desde un enlace que el responsable le pasa. Es el «papelito de la excursión»,
+> digital y atado al pedido.
+
+### Antes de empezar — lo medido de este entorno (2026-09-01, 20:57 hora del parque)
+
+| | Estado | Por qué importa |
+|---|---|---|
+| Modo del waiver | **`interno`** | Fuera de él la pantalla **no existe** (404): no hay texto que firmar aquí |
+| Versión publicada | **v11·es** | Sin versión publicada, también 404 |
+| Turnstile | **ACTIVO, con las claves de PRUEBA de Cloudflare** (`1x00…`) | ⚠️ Son las que **siempre pasan**, así que el anti-bot **no bloquea en local** — verificado en navegador: el widget renderiza y produce token. Con claves REALES habría que tener `localhost` entre los dominios permitidos |
+| Cola | **`sync`** | El correo sale **al instante**; no hace falta `queue:work` |
+| Correo | Mailpit en **`localhost:8028`** | Ahí llega la copia con el PDF adjunto |
+
+### El escenario, ya sembrado
+
+```
+Cliente responsable : colegio-prueba@jumpweb.test  ·  contraseña: prueba1234
+PRUEBA-WAIVER  · visita FUTURA · 6 plazas · 1 justificante firmado  → el formulario, el panel, la cuenta
+PRUEBA-PUERTA  · visita HOY    · 4 plazas · 2 justificantes         → la puerta
+```
+
+⚠️ **Son DOS pedidos y no uno por una razón**: la puerta solo enseña los justificantes de las
+reservas **de HOY**, y el formulario público se **cierra** cuando la visita ya pasó. Con un solo
+pedido no se pueden ver las dos cosas.
+
+⚠️ Los justificantes de `PRUEBA-PUERTA` se firmaron **antes** de mover su visita a hoy: es la
+secuencia real —se firma antes, la visita ocurre después— y el dominio no deja autorizar sobre una
+visita pasada.
+
+### 1 · La pantalla pública (lo que ve un padre)
+
+Abre el enlace firmado del pedido (se saca con el guion de siembra; caduca a la fecha de la visita
++ 14 días). Lo que hay que ver:
+
+- [ ] Abre **sin sesión**, con el nombre del parque y la referencia del pedido.
+- [ ] El texto de la descarga de responsabilidad **se lee en la propia página**, con su versión.
+- [ ] La casilla de aceptar nace **DESMARCADA**.
+- [ ] El desplegable de «Relación con el menor» se ve **igual que los demás campos**.
+- [ ] **No aparece NI UN dato** de los justificantes ya firmados: es una hoja en blanco, y eso es
+      lo que hace que este enlace se pueda repartir a veinte padres.
+- [ ] Rellena y firma → *«Listo: la autorización de … ha quedado registrada»*.
+- [ ] **Vuelve a firmar con el MISMO menor y otro adulto** → *«… ya tiene su autorización firmada»*
+      («un niño, un papel»).
+- [ ] Prueba una fecha de nacimiento de **adulto** → la rechaza con su frase propia.
+
+### 2 · El correo (Mailpit, `localhost:8028`)
+
+- [ ] Llega **«Tu justificante para …»** al correo que el padre declaró.
+- [ ] Lleva **el PDF adjunto** (no un enlace: un enlace sería una ruta pública a la prueba de un tercero).
+- [ ] El PDF nombra a las **tres** personas —el menor, quien firmó y el responsable— y dice que
+      **nada de eso está verificado**.
+
+### 3 · El panel (`/admin/pedidos/PRUEBA-WAIVER`, como admin)
+
+- [ ] Aparece la sección **«Menores invitados con justificante»** con el menor, quién autoriza y su
+      relación. ⚠️ **NO** su correo ni su teléfono.
+- [ ] El botón **«Copiar enlace para los padres»** abre el modal con el enlace.
+- [ ] En un pedido NORMAL la sección **no existe** (no está vacía: no está).
+
+### 4 · La hoja de sala (`/admin/pedidos/{code}/items/{item}/imprimir`)
+
+- [ ] Sale la tabla **«Menores invitados con justificante»** con menor, quién autoriza y el estado.
+- [ ] Sin correo ni teléfono de nadie.
+
+### 5 · La puerta (`/admin/puerta`, busca `colegio-prueba@jumpweb.test`)
+
+- [ ] Sección **«Menores INVITADOS (justificante)»**, **separada** de «Menores a cargo».
+- [ ] Cada uno con **nombre de pila y edad** — ⚠️ **nunca apellidos**: el DTO no tiene campo.
+- [ ] Solo se marca la EXCEPCIÓN: un justificante vigente no lleva pastilla.
+
+### 6 · La cuenta del responsable (entra como el cliente y abre «Mis pedidos»)
+
+- [ ] Al desplegar el pedido aparece **«N firmados»** y la lista de menores.
+- [ ] Está el **enlace** para repartir (se autoselecciona al pincharlo).
+- [ ] ⚠️ **No aparece ningún dato de los otros padres**: ni nombre, ni relación, ni contacto.
+
+### Limpieza cuando termines
+
+```bash
+docker compose exec -u sail laravel.test php artisan tinker --execute="
+use Illuminate\Support\Facades\DB;
+\$ids = DB::table('orders')->where('code','like','PRUEBA-%')->pluck('id');
+\$aut = DB::table('guardian_authorizations')->whereIn('order_id',\$ids)->pluck('id');
+DB::table('waiver_signatures')->whereIn('subject_authorization_id',\$aut)->delete();
+DB::table('guardian_authorizations')->whereIn('id',\$aut)->delete();
+DB::table('orders')->whereIn('id',\$ids)->delete();
+DB::table('users')->where('email','colegio-prueba@jumpweb.test')->delete();
+echo 'limpio'.PHP_EOL;"
+```
+
+### Lo que este guion NO cubre
+
+- **El plazo de conservación** sigue `[PENDIENTE: owner]`: hoy vale `NULL` y **no se poda nada**.
+- **El texto definitivo del waiver**: la v11 publicada es la de pruebas de este entorno.
+- **Claves REALES de Turnstile**: con ellas hay que comprobar que el dominio está permitido.

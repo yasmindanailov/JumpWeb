@@ -24,6 +24,7 @@ use App\Notifications\GuardianAuthorizationSigned;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
@@ -47,12 +48,34 @@ class GuestMinorSurfacesTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * ❗❗ **El reloj va CONGELADO, y lo pidió la auditoría** (`scripts/audit-clock.sh`, `TESTING.md`
+     * §2). Este fichero siembra una franja de **HOY** —la puerta solo enseña las reservas del día— que
+     * termina a las 23:00, y **cerca de medianoche esa visita ya ha pasado**: el dominio se niega a
+     * autorizar sobre una visita terminada y los DIEZ casos se ponían rojos. Medido: verdes a
+     * cualquier hora normal y rojos a las 21:59:30 de Madrid y a las 23:59:30 UTC.
+     *
+     * ▶ *Un test que solo falla ciertas noches está rojo y aún no lo sabes.* La hora elegida —09:00
+     * UTC, mediodía en Madrid— deja la franja abierta con catorce horas de margen y cae en el mismo
+     * día natural en las dos zonas, que es la otra frontera que la auditoría barre.
+     */
+    private const FROZEN_NOW = '2026-06-15 09:00:00';
+
     protected function setUp(): void
     {
         parent::setUp();
 
+        Carbon::setTestNow(self::FROZEN_NOW);
+
         Setting::query()->updateOrCreate(['key' => WaiverSettings::KEY_MODE], ['value' => WaiverSettings::MODE_INTERNAL]);
         Setting::flushMemo();
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
     }
 
     private function version(): LegalDocumentVersion

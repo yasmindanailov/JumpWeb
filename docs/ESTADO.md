@@ -103,8 +103,27 @@ rutina. La rama `deploy/fix-338` se puede borrar en cuanto eso ocurra.
 ✅ **CARRIL P3 · EL JUSTIFICANTE DE UN MENOR INVITADO («waiver offshore») — SPEC + T1 + T2 + T3 EN
 EL ÁRBOL** (2026-09-01, `DECISIONES #328`, `#335` y `#337`). ▶ **La T3 pone las SEIS superficies**:
 puerta, hoja de sala, ficha del pedido, PDF, correo de copia con el PDF adjunto, y la cuenta del
-responsable en el cajón. **Queda solo la T4**: el guion de navegador con el anti-bot encendido y tu
-ojo. ⚠️ **Su decisión de fondo**: `GuardianRoster` tiene **DOS formas y no una con un filtro**, así
+responsable en el cajón. ▶ **LA T4 YA TIENE GUION ESCRITO Y EL ESCENARIO SEMBRADO**:
+`VERIFICACION-E2E-CAJON.md` **§5.septies** — seis bloques con sus casillas, los dos pedidos de prueba
+(`PRUEBA-WAIVER` para el formulario/panel/cuenta y `PRUEBA-PUERTA` para la puerta), el cliente
+`colegio-prueba@jumpweb.test` / `prueba1234` y el comando de limpieza. **Queda solo el OJO del
+owner.**
+⚠️⚠️ **LA AUDITORÍA DEL RELOJ CAZÓ DIEZ ROJOS DE ESTA TANDA AL CERRAR, y no los veía nadie**:
+`GuestMinorSurfacesTest` siembra una franja de HOY que acaba a las 23:00, y **cerca de medianoche esa
+visita ya ha pasado** —el dominio se niega a autorizar sobre una visita terminada—. Verdes a
+cualquier hora normal, **rojos a las 21:59:30 de Madrid y a las 23:59:30 UTC**. Arreglado congelando
+el reloj (`FROZEN_NOW`), **con control**: sin congelar, 10 de 11 rojos; con él, 11 verdes en las dos
+fronteras. ▶ *`audit-clock.sh` NO está en el pre-push: si no se corre al cerrar, esto se va a `main`.*
+⚠️⚠️ **Y la trampa que casi lo entierra**: la auditoría se lanzó con `| tail -8`, que **cortó la tabla
+de fronteras** y dejó solo dos filas verdes bajo un veredicto ✗ — y el `exit 0` que se leyó era **el
+de `tail`**. *Un filtro de salida puede esconder justo la evidencia que buscas.*
+
+⚠️⚠️ **Tres cosas de ese entorno, MEDIDAS, que hay que saber antes de probar**: Turnstile está activo
+**con las claves de PRUEBA de Cloudflare** (`1x00…`, las que siempre pasan) así que **no bloquea en
+local** —verificado en navegador: el widget produce token y la firma entra—; la cola es `sync`, así
+que el correo sale al instante a Mailpit (`:8028`) **con el PDF adjunto**; y **hacen falta DOS
+pedidos** porque la puerta solo enseña las reservas de HOY y el formulario se CIERRA cuando la visita
+ya pasó. ⚠️ **Su decisión de fondo**: `GuardianRoster` tiene **DOS formas y no una con un filtro**, así
 que «el responsable no ve a los otros padres» lo impone el TIPO, no la disciplina de cada plantilla.
 ⚠️⚠️ **Tres guardas de arquitectura cazaron tres defectos míos** —un componente hablando con la API
 (`CE-6`, regla que yo mismo había citado), clases de CSS sin regla y la lista de claves del montaje—

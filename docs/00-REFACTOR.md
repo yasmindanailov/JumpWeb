@@ -3582,7 +3582,11 @@ de este carril**: es del waiver, no de las excursiones (§1.2 de la spec).
       responsable no ve a los otros padres» lo impone el TIPO.
       ⚠️⚠️ **Tres guardas de arquitectura cazaron tres defectos míos**: un componente hablando con la
       API (`CE-6`), clases de CSS sin regla (`#253`) y la lista exacta de claves del montaje.
-      ▶ **Queda la T4**: el guion de navegador con el anti-bot encendido y el OJO del owner.
+      ▶ **La T4 tiene GUION y ESCENARIO**: `VERIFICACION-E2E-CAJON.md` §5.septies, con dos pedidos
+      sembrados (`PRUEBA-WAIVER` y `PRUEBA-PUERTA`) y su comando de limpieza. **Queda el OJO del owner.**
+      ⚠️ Medido de ese entorno: Turnstile activo **con las claves de PRUEBA** (`1x00…`, siempre pasan)
+      → no bloquea en local; cola `sync` → el correo sale al instante con el PDF adjunto; y hacen
+      falta DOS pedidos porque la puerta solo mira HOY y el formulario se cierra pasada la visita.
       ▶ Pendiente del owner: el ✅ a la spec y el plazo de conservación (medido: hoy vale `NULL` y no
       se poda nada).
 
