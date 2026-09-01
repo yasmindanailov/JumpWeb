@@ -20033,3 +20033,88 @@ wordmark contra el `public/` real: **habría empezado a fallar sola** en cuanto 
 paquete. Su aserción se mueve al caso nuevo, que sí acota el entorno.
 
 Suite **3853 · 24.818**.
+
+---
+
+## #335 · 2026-09-01 · La PANTALLA PÚBLICA del justificante: una hoja en blanco que no filtra nada — y el anti-bot que mentía a las personas (T2)
+
+Tanda **T2** de `docs/specs/waiver-por-reserva.md` (§4.6, §4.7), sobre la T1 de `#328`. Un adulto
+**sin cuenta** abre un enlace firmado, rellena sus datos y los del menor, acepta el texto vigente del
+waiver y queda registrada su firma. Sin sesión, sin registro y **sin ver nada de lo que han escrito
+los demás**.
+
+### La propiedad que define la pantalla
+
+**Es una HOJA EN BLANCO, y eso no es una carencia: es la razón por la que este enlace se puede
+repartir.** No lista ni un dato de los justificantes ya firmados —ni nombres, ni adultos, ni el
+contador—, así que dárselo a veinte padres no es una fuga. El del post-form sí lo sería: enseña los
+datos de **todos** los invitados, alergias incluidas.
+
+### ❗❗ El defecto REAL que encontró la sonda de navegador, y que ningún test veía
+
+Copié el patrón anti-bot de `/contacto` y del alta: token ausente o inválido → se descarta en
+silencio y se responde como si todo fuera bien. **En navegador salió que el widget no llega a
+producir token** (extensión, red, JS) y la pantalla decía **«Listo: la autorización ha quedado
+registrada»** con **cero filas escritas**.
+
+▶ *En un formulario de contacto eso cuesta un mensaje. Aquí un padre cree tener firmada la
+autorización de su hijo y **se entera en la puerta del parque**.* Es la misma forma del bloqueante
+que la revisión de `#328` encontró en la idempotencia: **fallar en silencio diciendo que todo fue
+bien**.
+
+**La asimetría que queda, y es deliberada:**
+- **Honeypot → calla.** Un campo invisible relleno es señal de bot y de nada más, así que el silencio
+  no engaña a ninguna persona. ⚠️ Pero **no se llama `website`** como en `/contacto`: ese nombre mapea
+  al tipo de autocompletado `url` y un gestor de contraseñas puede rellenárselo a alguien real.
+- **Turnstile → lo dice.** Falla también a personas, así que el mensaje es explícito: *«NO hemos
+  registrado nada, vuelve a intentarlo»*.
+
+### Lo demás que entra
+
+- **Contrato nuevo `Booking\Contracts\AuthorizableOrders`**: un pedido visto por quien tiene su
+  enlace y **no tiene cuenta**. ⚠️ **No recibe titular, a diferencia de `CheckoutLines`**, y por eso
+  no devuelve nada que ese desconocido no pueda ver: ni importes, ni productos, ni nombres.
+- **Las TRES puertas viven en el DOMINIO, bajo el lock** (`SEC-04` aplicado al tiempo): pedido pagado,
+  visita no pasada y cupo libre. La pantalla las consulta **solo para pintar**; un `POST` forjado
+  desde una pestaña vieja es el caso real, y el cupo **solo es correcto dentro del lock**.
+- **El tope NO es `SUM(quantity)`**: cuenta líneas **principales vivas**. Medido: esa suma incluye
+  complementos, portadores de fiesta mixta y líneas canceladas, y un pedido íntegramente cancelado
+  admitiría dos autorizaciones.
+- **Un pedido con SEÑAL sigue siendo `paid`** y por tanto admite justificantes — medido antes de
+  escribir la puerta (30,00 € cobrados de 88,00 € de valor, estado `paid`). Exigir «pagado» **no**
+  deja fuera a las excursiones, que es justo el caso de uso.
+- **Se rechaza una fecha de nacimiento de ADULTO**, con su propia frase: un adulto firma por sí mismo
+  y este documento no es el suyo. Mismo criterio que `WaiverSigner` con un menor a cargo.
+- Ruta `/autorizacion/{order}` (**no** `/reserva/…`: en este repo «reserva» es un `OrderItem`),
+  `<x-focused-layout>`, i18n propia en es/en/fr, `no-store`, y el **deber de información del art. 13**
+  con la política enlazada.
+- `select` entra en `.eventfields` con los MISMOS tokens. Medido antes: **cero `<select>` en vistas
+  públicas**, así que es puramente aditivo.
+
+### Cuatro trampas de instrumento, todas mías
+
+1. ⚠️⚠️ **El arnés de mutación dijo «14 de 14» siendo 13.** Su `git checkout -- .` se llevó un caso
+   **sin commitear** (la regla de `#181`, pagada otra vez) y el filtro dejó de casar con ningún test:
+   PHPUnit salió con código ≠ 0 y el arnés lo contó como MORDISCO. ▶ **Ahora hay CONTROL POR
+   MUTACIÓN**: si el test no va VERDE antes de mutar, no cuenta. *«Rojo después» no significa nada si
+   no se ha visto verde antes.*
+2. **La primera captura salió sin una sola letra** y parecía un defecto grave. Era la captura: se tomó
+   al `domcontentloaded`, antes de que cargaran las fuentes (FOIT). Con el CONTROL —la landing en el
+   mismo navegador— y una espera, la pantalla se ve entera.
+3. **`waitUntil: 'networkidle'` nunca llega** en este contenedor: la página pide fuentes externas que
+   no alcanza. Se espera al DOM.
+4. **`Setting::value()` memoiza la tabla entera**: al restaurar las claves de Turnstile en el mismo
+   proceso, el script informó «VACÍA» con las claves ya escritas. Se comprobó contra la BD.
+
+### Estado
+
+**T2 EN EL ÁRBOL.** Quedan **T3** (las superficies de dentro: cuenta del responsable, `ViewOrder`,
+hoja de sala, puerta, PDF y el correo de copia) y **T4** (el OJO del owner). ⚠️ **Hasta la T3, quien
+firma NO recibe copia**: §4.15 la promete y su PDF es de esa tanda.
+
+**Verificación**: suite verde (**3.847 tests, 24.828 aserciones**) · Pint ✓ · docs-check ✓ ·
+**14 de 14 mutaciones muerden con control por mutación** · **navegador REAL a 390×844**: el texto
+legal presente, la casilla DESMARCADA por defecto, el `select` idéntico a los inputs, el mensaje con
+el nombre del menor y **«un niño, un papel» funcionando** —el segundo adulto ve «Ana Gómez Ruiz ya
+tiene su autorización firmada»—, sin errores de JS ni de red. BD de desarrollo devuelta a su estado
+(32 usuarios · 24 firmas · 0 autorizaciones · todas verificando).

@@ -383,8 +383,9 @@ class GuardianAuthorizationScreenTest extends TestCase
         $order = $this->orderFor($this->responsible());
         $version = $this->version();
 
-        // Se responde como si todo fuera bien: al bot no se le dice qué le delató.
-        $this->post($this->signedStoreUrl($order), $this->payload($version, ['website' => 'http://spam.example']))
+        // Se responde como si todo fuera bien: al bot no se le dice qué le delató. Aquí callar es
+        // correcto porque un campo INVISIBLE relleno es señal de bot y de nada más.
+        $this->post($this->signedStoreUrl($order), $this->payload($version, ['contact_ref' => 'http://spam.example']))
             ->assertSessionHas('guardian_status', 'signed');
 
         $this->assertSame(0, GuardianAuthorization::count(), 'el honeypot no puede escribir nada');
@@ -400,8 +401,32 @@ class GuardianAuthorizationScreenTest extends TestCase
         $order = $this->orderFor($this->responsible());
         $version = $this->version();
 
+        // ⚠️⚠️ **Y NO se le dice «Listo»**: éste es el defecto REAL que encontró la sonda de navegador
+        // de esta tanda. Copiando el patrón de `/contacto`, un token ausente —widget bloqueado por una
+        // extensión, red inestable, JS caído— **no escribía nada y anunciaba éxito**. Un mensaje de
+        // contacto perdido es barato; un padre que cree tener firmada la autorización de su hijo se
+        // entera en la puerta del parque. Turnstile falla a PERSONAS, así que su fallo se dice.
         $this->post($this->signedStoreUrl($order), $this->payload($version))
+            ->assertSessionHas('guardian_status', 'antibot');
+
+        $this->assertSame(0, GuardianAuthorization::count());
+    }
+
+    public function test_the_honeypot_stays_silent_but_turnstile_does_not(): void
+    {
+        // La ASIMETRÍA, en un solo caso, para que nadie la «unifique» al pasar por aquí.
+        $order = $this->orderFor($this->responsible());
+        $version = $this->version();
+
+        Setting::query()->updateOrCreate(['key' => 'security.turnstile_site_key'], ['value' => 'site-key']);
+        Setting::query()->updateOrCreate(['key' => 'security.turnstile_secret'], ['value' => 'secret-key']);
+        Setting::flushMemo();
+        Turnstile::flushCache();
+
+        $this->post($this->signedStoreUrl($order), $this->payload($version, ['contact_ref' => 'x']))
             ->assertSessionHas('guardian_status', 'signed');
+        $this->post($this->signedStoreUrl($order), $this->payload($version))
+            ->assertSessionHas('guardian_status', 'antibot');
 
         $this->assertSame(0, GuardianAuthorization::count());
     }
@@ -440,6 +465,28 @@ class GuardianAuthorizationScreenTest extends TestCase
         $this->actingAs($stranger)
             ->get(route('reservation.authorization', ['order' => $order]))
             ->assertForbidden();
+    }
+
+    // ─── Deber de información del art. 13 ────────────────────────────────────
+
+    /**
+     * Quien rellena esto es un TERCERO que no ha aceptado nada antes y está entregando datos de un
+     * menor: la política de privacidad se enlaza, no se resume.
+     *
+     * ⚠️ El párrafo se pinta con `{!! !!}` porque lleva un `<a>` dentro de la frase, y eso es un sink
+     * que `SEC-07` vigila. Es seguro por construcción y no por suerte: la frase es i18n **del
+     * desarrollador** (no contenido de CMS) y **las dos interpolaciones pasan por `e()`** —la URL y el
+     * rótulo—. Este caso existe para que quien mueva el enlace vea la condición.
+     */
+    public function test_the_public_form_links_the_privacy_policy(): void
+    {
+        $order = $this->orderFor($this->responsible());
+        $this->version();
+
+        $this->get($order->guardianAuthorizationSignedUrl())
+            ->assertOk()
+            ->assertSee(route('legal.privacidad'), false)
+            ->assertSee(__('guardian.privacy_link'));
     }
 
     // ─── `no-store`: la pantalla lleva datos de un menor (`RGPD-04`) ──────────

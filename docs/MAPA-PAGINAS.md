@@ -68,6 +68,7 @@ de datos.
 | `/pago/redsys/retorno-ok` · `/pago/redsys/retorno-ko` | Retorno del banco (GET\|POST). El paso «Resultado» se muestra **reabriendo el sidebar** (la `/compra/confirmacion` de la v1 no existe). ⚠️ SIN middleware `auth` a propósito: la vuelta del banco puede llegar sin cookie de sesión (POST cross-site); la autenticidad la da `Ds_Signature`. Añadir `auth` rompería la vuelta. | 🌐 (vuelta del banco) · 📄 |
 | `/pago/redsys/notificacion` | Notificación server-to-server de Redsys (POST; idempotente). | Redsys · 📄 |
 | `/reserva/{reservation}/datos-invitados` | **Post-form de invitados** (GET/POST, URL firmada con caducidad — ver `sistemas/POSTFORM-INVITADOS.md`). | enlace firmado · 📄 |
+| `/autorizacion/{order}` | **Justificante de un menor INVITADO** (GET/POST, URL firmada con la MISMA caducidad — `specs/waiver-por-reserva.md`). Lo abre un adulto **SIN cuenta** y es una **HOJA EN BLANCO**: no enseña ni un dato de los justificantes ya firmados, que es por lo que este enlace se puede repartir y el del post-form no. `throttle:10,1` + Turnstile + honeypot. | enlace firmado · 📄 |
 | `POST /cookies/consentimiento` | Persistencia del consentimiento de cookies (art. 7.1). | 🌐 |
 
 ## C. Cuenta de usuario 🔑

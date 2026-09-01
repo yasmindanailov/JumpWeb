@@ -1,9 +1,16 @@
 # Estado del proyecto — foto viva
 
-✅ **CARRIL P3 · EL JUSTIFICANTE DE UN MENOR INVITADO («waiver offshore») — SPEC + T1 EN EL ÁRBOL**
-(2026-09-01, `DECISIONES #328`). Spec: **`docs/specs/waiver-por-reserva.md`** (revisada de forma
-adversarial, nueve `[DECIDIDO owner]`). **La T1 (el dominio) está ejecutada y verificada**; quedan
-**T2** (la pantalla pública), **T3** (las superficies) y **T4** (verificación + el OJO del owner).
+✅ **CARRIL P3 · EL JUSTIFICANTE DE UN MENOR INVITADO («waiver offshore») — SPEC + T1 + T2 EN EL
+ÁRBOL** (2026-09-01, `DECISIONES #328` y `#335`). Spec: **`docs/specs/waiver-por-reserva.md`**
+(revisada de forma adversarial, nueve `[DECIDIDO owner]`). **T1 (el dominio) y T2 (la pantalla
+pública) ejecutadas y verificadas en navegador real**; quedan **T3** (cuenta del responsable,
+`ViewOrder`, hoja de sala, puerta, PDF y el correo de copia) y **T4** (el OJO del owner).
+▶ ❗❗ **EL DEFECTO DE LA T2, por si alguien toca un anti-bot**: copié el silencio de `/contacto` y la
+pantalla **decía «Listo» sin escribir nada** cuando Turnstile no producía token —lo destapó la sonda
+de NAVEGADOR, no la suite—. Un padre creía tener firmada la autorización de su hijo y se enteraba en
+la puerta. **Ahora el honeypot calla y Turnstile lo DICE**, y la asimetría tiene caso propio.
+▶ ⚠️ **Hasta la T3, quien firma NO recibe copia** (§4.15 la promete y su PDF es de esa tanda) y el
+responsable no tiene por dónde repartir el enlace salvo generándolo a mano.
 ▶ **Si trabajas en otra máquina, no toques `WaiverSignature`, `WaiverSigner`, `WaiverChain`,
 `GuardianAuthorization`, `waiver_signatures`, `guardian_authorizations` ni `PurgeCustomerData` sin
 avisar aquí.** El resto del repo (landing, panel, libro, mixtos) está libre.
@@ -145,7 +152,10 @@ aquí lo que no se podaría son datos de menores de terceros.
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3853 en verde** (24.818 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> Suite **3877 en verde** (24.916 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche) sobre el árbol CONJUNTO tras rebasar la
+> **T2** del justificante por reserva (`#335`) sobre `#329`→`#334`.
+> ⚠️⚠️ **Se mide tras CADA rebase, nunca se suma**: por separado daban 3847 / 24.828 (la T2 sola) y
+> 3853 / 24.818 (su árbol), y ninguna de las dos es la buena.
 > sobre el árbol CONJUNTO: `#329`→`#334` rebasados sobre la T1 del justificante por reserva (`#328`).
 > ⚠️⚠️ **Medida DESPUÉS del rebase y con `npm run build` delante, NUNCA sumada**: por separado daban
 > 3823 / 24.730 (su T1 sola) y 3824 / 24.676 (`#329`→`#333` solas), y ninguna de las dos es la buena.
@@ -165,7 +175,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > no de esta tanda**: se comprobó reproduciéndolo contra el árbol anterior a la sesión.
 > ⚠️ **Se mide tras CADA rebase, nunca se suma.** Con dos agentes en `main` el número solo vale medido
 > sobre el árbol conjunto: por separado daban cifras distintas y ninguna era la buena.
-> - Antes, 3796 / 24.599 (`#327`) · 3789 / 24.564 (`#324`, el precio por tramo) · 3779 / 24.532 (`#322` con su panel sobre la
+> - Antes, 3823 / 24.730 (`#328`) · 3796 / 24.599 (`#327`) · 3789 / 24.564 (`#324`, el precio por tramo) · 3779 / 24.532 (`#322` con su panel sobre la
 >   T10) · 3756 / 24.534 (`#320` sobre `#319`).
 > ⚠️ **No se suma, se mide** — y ⚠️⚠️ **tras un rebase que toque Vue hay que
 > `npm run build:ssr` ANTES de leer la suite**: sin eso salieron 35 rojos en

@@ -36,6 +36,9 @@
                     </p>
                 @elseif ($status === 'stale')
                     <p class="guardian__notice" role="alert">{{ __('guardian.done.stale') }}</p>
+                @elseif ($status === 'antibot')
+                    {{-- Turnstile falla también a personas: se le DICE, no se le miente. --}}
+                    <p class="guardian__notice" role="alert">{{ __('guardian.done.antibot') }}</p>
                 @elseif (in_array($status, ['not_paid', 'closed', 'full'], true))
                     {{-- El dominio rechazó bajo el lock lo que la pantalla creía posible: entre pintar
                          y enviar cambió el mundo. Se dice con la misma frase que el estado bloqueado. --}}
@@ -76,11 +79,14 @@
                         @csrf
                         <input type="hidden" name="document_id" value="{{ $document->getKey() }}">
 
-                        {{-- Honeypot: un campo que ninguna persona ve y que un bot rellena. Mismo
-                             patrón que `/contacto` y el alta. --}}
+                        {{-- Honeypot: un campo que ninguna persona ve y que un bot rellena.
+                             ⚠️ NO se llama `website` (como en `/contacto`): ese nombre mapea al tipo de
+                             autocompletado `url` y un gestor de contraseñas puede rellenárselo a una
+                             persona real — aquí eso costaría una prueba legal que su firmante cree
+                             tener. --}}
                         <div class="gf-sr-only" aria-hidden="true">
-                            <label for="website">Web</label>
-                            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+                            <label for="contact_ref">Ref</label>
+                            <input type="text" id="contact_ref" name="contact_ref" tabindex="-1" autocomplete="off">
                         </div>
 
                         {{-- ───── El menor ───── --}}
@@ -206,6 +212,14 @@
 
                         <div class="gf-savebar">
                             <p class="guestform__privacy">{{ __('guardian.notice') }}</p>
+                            {{-- Deber de información (art. 13): quien rellena esto es un tercero que
+                                 no ha aceptado nada antes y está entregando datos de un MENOR. La
+                                 política se enlaza, no se resume. --}}
+                            <p class="guestform__privacy">
+                                {!! __('guardian.privacy', [
+                                    'link' => '<a href="'.e(route('legal.privacidad')).'">'.e(__('guardian.privacy_link')).'</a>',
+                                ]) !!}
+                            </p>
 
                             @if (\App\Domain\Platform\Services\Turnstile::enabled())
                                 <div class="cf-turnstile" data-sitekey="{{ \App\Domain\Platform\Services\Turnstile::siteKey() }}"></div>

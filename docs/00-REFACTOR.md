@@ -3568,7 +3568,14 @@ de este carril**: es del waiver, no de las excursiones (§1.2 de la spec).
       ⚠️ Tres cosas que la ejecución añadió al plan: **todo modelo necesita alias de morfo**
       (`MorphMapTest` lo puso rojo), dos tests hermanos fijaban `canonical_version` como literal (se
       actualizan **a propósito**), y la FK `subject_id → dependents` **sobrevive al `change()`**.
-      ▶ **Quedan T2 (pantalla pública), T3 (superficies) y T4 (verificación).**
+      ▶ ✅ **T2 (la pantalla pública) EJECUTADA** (`#335`, spec §8.2): ruta `/autorizacion/{order}`,
+      contrato `AuthorizableOrders`, las TRES puertas bajo el lock, la escalada 403→410→404, Turnstile
+      + honeypot + `throttle:10,1`, i18n en tres idiomas y el art. 13 enlazado. **14 de 14 mutaciones
+      con control por mutación** y verificada en NAVEGADOR real a 390×844.
+      ⚠️⚠️ **Su defecto real lo encontró la sonda de navegador, no la suite**: copiar el silencio
+      anti-bot de `/contacto` hacía que la pantalla dijera «Listo» **sin escribir nada**. Honeypot
+      calla / Turnstile lo dice, con caso propio.
+      ▶ **Quedan T3 (superficies de dentro: cuenta, panel, puerta, PDF, correo) y T4 (el OJO).**
       ▶ Pendiente del owner: el ✅ a la spec y el plazo de conservación (medido: hoy vale `NULL` y no
       se poda nada).
 

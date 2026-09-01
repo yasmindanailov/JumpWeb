@@ -1,7 +1,7 @@
 # [SPEC] El justificante de un menor invitado a una reserva («waiver offshore»)
 
-> Estado: 🟦 **REVISADA, CORREGIDA y con la T1 EN EL ÁRBOL** (2026-09-01, `DECISIONES #328`) —
-> el dominio ejecutado (§8.1); quedan T2, T3 y T4. Pendiente del ✅ del owner.
+> Estado: 🟦 **REVISADA, CORREGIDA y con T1 + T2 EN EL ÁRBOL** (2026-09-01, `DECISIONES #328` y
+> `#335`) — el dominio (§8.1) y la pantalla pública (§8.2); quedan T3 y T4. Pendiente del ✅ del owner.
 > Carril **P3** de `ESTADO.md` — **con el alcance ampliado por el owner**: ver §1.2.
 > Subsistema padre: `docs/specs/waiver-probatorio.md`. Entidad hermana: `docs/specs/menores-a-cargo.md`.
 >
@@ -675,6 +675,79 @@ enseñó y el diseño no había previsto.
 ▶ **Lo que la T1 NO cierra y queda para la T2/T3**: la pantalla pública, el anti-abuso (Turnstile,
 límite por IP, tope), el cierre por fecha, las superficies del responsable, la puerta, el PDF y el
 correo de copia. El **tope de §4.7·3** todavía no tiene código: nace con el controlador.
+
+### 8.2 T2 · EJECUTADA (2026-09-01, `DECISIONES #335`)
+
+**La pantalla pública, en el árbol y verificada en navegador real.**
+
+| Pieza | Dónde |
+|---|---|
+| Contrato: un pedido visto por quien tiene el enlace y **no tiene cuenta** | `Booking\Contracts\AuthorizableOrder(s)` + `Booking\Services\AuthorizableOrdersReader` |
+| Las TRES puertas, **dentro de la transacción y bajo el lock** | `Identity\Services\GuardianAuthorizationSigner` + `GuardianAuthorizationRefusedException` |
+| La escalada **403 → 410 → 404** y su orden | `Http\Concerns\AuthorizesGuardianAuthorization` |
+| Rutas, validación, anti-abuso y desenlaces | `Http\Controllers\GuardianAuthorizationController` · `routes/web.php` |
+| La hoja: `<x-focused-layout>`, el texto legal en el flujo, la casilla separada | `resources/views/reservation/authorization.blade.php` |
+| Rótulos en es/en/fr | `lang/{es,en,fr}/guardian.php` |
+| La fuente ÚNICA del enlace | `Order::guardianAuthorizationSignedUrl()` |
+
+#### ❗❗ El defecto REAL de esta tanda: el anti-bot MENTÍA a las personas
+
+Copié el patrón de `/contacto`: token de Turnstile ausente o inválido → se descarta en silencio y se
+responde como si todo hubiera ido bien. **La sonda de navegador lo destapó**: el widget no llega a
+producir token (extensión, red, JS caído) y la pantalla decía *«Listo: la autorización ha quedado
+registrada»* con **cero filas escritas**.
+
+▶ *En un formulario de contacto eso cuesta un mensaje. Aquí un padre cree tener firmada la
+autorización de su hijo y se entera **en la puerta del parque**.* Es la misma forma del bloqueante
+que la revisión encontró en la idempotencia (§11·B1): **fallar en silencio anunciando éxito**.
+
+**La asimetría que queda es deliberada y hay caso propio que la fija:**
+
+| | Qué hace | Por qué |
+|---|---|---|
+| **Honeypot** | calla y no escribe | un campo invisible relleno es señal de bot **y de nada más**: el silencio no engaña a ninguna persona |
+| **Turnstile** | **lo dice** | falla también a personas, y aquí el precio de callar es una prueba legal que su firmante cree tener |
+
+⚠️ Y el honeypot **no se llama `website`** (como en `/contacto`): ese nombre mapea al tipo de
+autocompletado `url` del navegador y un gestor de contraseñas puede rellenárselo a alguien real.
+
+#### Lo que la ejecución añadió al plan
+
+1. **Un pedido con SEÑAL sigue siendo `paid`** — medido ANTES de escribir la puerta (30,00 € cobrados
+   de 88,00 € de valor, estado `paid`). Exigir «pagado» **no** deja fuera a las excursiones, que es el
+   caso de uso; era el agujero que se temía y no existe.
+2. **`Order` se resuelve por `code`, no por id** (`getRouteKeyName()`), así que la URL pública queda
+   `/autorizacion/PROBE-AB12CD`.
+3. **`select` no estaba estilado** en `.eventfields`. Se amplía con los MISMOS tokens; medido antes:
+   **cero `<select>` en vistas públicas**, o sea puramente aditivo.
+4. **Se rechaza una fecha de nacimiento de ADULTO** con frase propia. Un adulto firma por sí mismo, y
+   el criterio es el que `WaiverSigner` ya aplica a un menor a cargo: la edad de HOY.
+5. **El deber de información del art. 13**: quien rellena es un tercero que no ha aceptado nada antes
+   y entrega datos de un menor. La política se **enlaza**, con las dos interpolaciones por `e()`.
+
+#### Verificación
+
+- **14 de 14 mutaciones muerden**, con **control por mutación**.
+- **Navegador real a 390×844**: texto legal presente, casilla **desmarcada** por defecto, `select`
+  idéntico a los inputs, mensaje con el nombre del menor y **«un niño, un papel» funcionando** (el
+  segundo adulto ve *«Ana Gómez Ruiz ya tiene su autorización firmada»*). Sin errores de JS ni de red.
+- BD de desarrollo devuelta a su estado exacto tras las sondas.
+
+#### Cuatro trampas de instrumento, todas propias
+
+1. ⚠️⚠️ **El arnés dijo «14 de 14» siendo 13.** Su `git checkout -- .` se llevó un caso **sin
+   commitear** (la regla de `#181`, otra vez) y el filtro dejó de casar con ningún test: PHPUnit salió
+   con código ≠ 0 y eso se contó como mordisco. ▶ **Ahora el arnés exige VERDE antes de mutar**.
+   *«Rojo después» no significa nada si no se ha visto verde antes.*
+2. **La primera captura salió sin una sola letra.** Era la captura: tomada al `domcontentloaded`,
+   antes de que cargaran las fuentes. El CONTROL —la landing en el mismo navegador— lo zanjó.
+3. **`waitUntil: 'networkidle'` nunca llega** en el contenedor: la página pide fuentes externas que no
+   alcanza.
+4. **`Setting::value()` memoiza la tabla entera**: al restaurar las claves de Turnstile en el mismo
+   proceso, el script informó «VACÍA» con las claves ya escritas.
+
+⚠️ **Lo que la T2 NO cierra**: quien firma **todavía no recibe copia** —§4.15 la promete y su PDF es
+de la T3—, y el responsable aún no tiene por dónde repartir el enlace fuera de generarlo a mano.
 
 ---
 

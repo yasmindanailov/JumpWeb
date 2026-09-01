@@ -89,16 +89,29 @@ class GuardianAuthorizationController extends Controller
         $context = app(AuthorizableOrders::class)->find((int) $order->getKey());
         abort_if($context === null, 404);
 
-        // Anti-spam: honeypot. Si el campo oculto viene relleno, es un bot — se responde como si todo
-        // fuera bien y no se escribe nada. Mismo patrón que `/contacto` y el alta.
-        if (filled($request->input('website'))) {
+        // Anti-spam: HONEYPOT. Un campo oculto que una persona no ve y que un bot rellena. Aquí sí se
+        // responde como si todo fuera bien y no se escribe nada: **un campo invisible relleno es señal
+        // de bot y de nada más**, así que callar no engaña a ninguna persona y no le dice al bot qué
+        // le delató.
+        //
+        // ⚠️ El campo NO se llama `website` —como en `/contacto`— a propósito: `website` mapea al tipo
+        // de autocompletado `url` del navegador, y un gestor de contraseñas puede rellenarlo a una
+        // persona real. En un formulario de contacto eso cuesta un mensaje; aquí costaría una prueba
+        // legal que su firmante cree tener.
+        if (filled($request->input('contact_ref'))) {
             return $this->back($request, $order, 'signed');
         }
 
-        // Anti-bot Turnstile (`SEC-06`): no-op sin claves configuradas. Un token ausente o inválido se
-        // descarta como el honeypot: al bot no se le dice qué le delató.
+        // Anti-bot TURNSTILE (`SEC-06`): no-op sin claves configuradas.
+        //
+        // ⚠️⚠️ **Y aquí NO se calla, a diferencia de `/contacto` y del alta.** Copiar aquel patrón fue
+        // un defecto REAL de esta tanda, encontrado en navegador: sin token —widget bloqueado por una
+        // extensión, red inestable, JS caído— el formulario **no escribía nada y decía «Listo»**. Un
+        // mensaje de contacto perdido es barato; un padre que cree tener firmada la autorización de su
+        // hijo y no la tiene se entera **en la puerta del parque**. Turnstile falla a personas, no solo
+        // a bots, y por eso su fallo se DICE. La asimetría con el honeypot es deliberada.
         if (! Turnstile::verify((string) $request->input('cf-turnstile-response'), (string) $request->ip())) {
-            return $this->back($request, $order, 'signed');
+            return $this->back($request, $order, 'antibot');
         }
 
         $validator = Validator::make($request->all(), $this->rules(), $this->messages());

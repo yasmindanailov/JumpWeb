@@ -60,6 +60,7 @@ return [
         'already' => ':name a déjà une autorisation signée pour cette réservation. Rien d’autre à faire.',
         'already_generic' => 'Ce mineur a déjà une autorisation signée pour cette réservation.',
         'stale' => 'Le texte de la décharge a été mis à jour pendant que vous remplissiez le formulaire. Relisez-le et acceptez-le à nouveau.',
+        'antibot' => 'Nous n’avons pas pu vérifier que vous n’êtes pas un robot : rien n’a été enregistré. Réessayez ; si cela ne fonctionne toujours pas, prévenez la personne qui a réservé.',
     ],
 
     'blocked' => [

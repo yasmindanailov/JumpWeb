@@ -60,6 +60,7 @@ return [
         'already' => ':name already has an authorisation signed for this booking. Nothing else to do.',
         'already_generic' => 'That minor already has an authorisation signed for this booking.',
         'stale' => 'The waiver text was updated while you were filling this in. Please read it again and accept it.',
+        'antibot' => 'We could not verify that you are not a robot, so NOTHING was registered. Please try again; if it keeps failing, let the person who made the booking know.',
     ],
 
     'blocked' => [

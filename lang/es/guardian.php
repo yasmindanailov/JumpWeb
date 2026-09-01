@@ -64,6 +64,7 @@ return [
         'already' => ':name ya tiene su autorización firmada para esta reserva. No hace falta hacer nada más.',
         'already_generic' => 'Ese menor ya tiene su autorización firmada para esta reserva.',
         'stale' => 'El texto de la descarga de responsabilidad se ha actualizado mientras rellenabas. Vuelve a leerlo y acéptalo de nuevo.',
+        'antibot' => 'No hemos podido comprobar que no eres un robot, así que NO hemos registrado nada. Vuelve a intentarlo; si sigue sin funcionar, avisa a la persona que hizo la reserva.',
     ],
 
     'blocked' => [
