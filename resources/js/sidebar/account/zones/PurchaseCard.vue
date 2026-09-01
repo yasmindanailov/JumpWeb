@@ -10,6 +10,8 @@
  * **Pinta y no decide.** Qué se enseña lo compone `account/orders.js::orderRow()`; el libro,
  * `financialsOf()`. Aquí no hay ninguna regla y no se habla con la API (`CE-6`).
  */
+import GuestMinorsPanel from './GuestMinorsPanel.vue';
+
 defineProps({
     /** El pedido ya compuesto por `orderRow()`. */
     row: { type: Object, required: true },
@@ -127,6 +129,16 @@ defineEmits(['toggle', 'retry']);
             <!-- ⚠️ **La FRASE, no un número.** La compone el servidor, que es quien sabe qué caso es. -->
             <p v-if="row.financials.note" class="orders__ledger-note">{{ row.financials.note }}</p>
         </div>
+
+        <!--
+          Los JUSTIFICANTES de menores invitados (`specs/waiver-por-reserva.md` §4.10, `#336`).
+          ⚠️ Va DENTRO del desplegable a propósito: el enlace que trae es una credencial portadora, y
+          pedirlo al abrir el pedido es la «acción explícita» que §4.10 exige — nunca se siembra en el
+          contexto de cuenta que viaja en el HTML de cada página con sesión.
+          ⚠️ El componente se pinta solo si ese pedido TIENE justificantes o enlace: en un pedido
+          normal no aparece nada.
+        -->
+        <GuestMinorsPanel v-if="open && row.code" :code="row.code" :account="account" />
 
         <!--
           ⚠️ El reintento va FUERA del desplegable, igual que en la tarjeta de la reserva: un pedido a

@@ -155,7 +155,7 @@ return [
             'alt' => 'Ton QR',
             'token_label' => 'Si la caméra ne lit pas, dicte ce code :',
             'download' => 'Télécharger (PNG)',
-            'hint' => 'C’est le même QR que tu reçois avec chaque confirmation de réservation.',
+            'hint' => 'Partagez ce lien avec les parents. Chacun remplit SES données.',
             'unavailable' => 'Ce QR ne peut plus être affiché. Renouvelle-le et tu en auras un nouveau immédiatement.',
             'rotate' => 'Renouveler mon QR',
             'rotating' => 'Renouvellement…',
@@ -327,6 +327,12 @@ return [
      * et une réservation n'en est pas l'unité. ⚠️ Attention au nom : le groupe `orders` ci-dessus est
      * « Mes réservations » (sa route web est `/mi-cuenta/pedidos`). */
     'purchases' => [
+        'guest_minors' => [
+            'count' => ':count signées',
+            'waiver_outdated' => 'version précédente',
+            'waiver_missing' => 'signature manquante',
+            'hint' => 'Partagez ce lien avec les parents ou tuteurs. Chacun remplit SES données et ne voit pas celles des autres.',
+        ],
         'title' => 'Mes commandes',
         'empty' => "Tu n'as encore aucune commande.",
         'ref' => 'Commande :code',

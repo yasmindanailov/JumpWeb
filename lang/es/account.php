@@ -140,7 +140,7 @@ return [
             'remove_confirm' => '¿Quitar a :name de tu cuenta? Si firmaste la exención en su nombre, ese registro se conserva.',
             'waiver_unsigned' => 'Exención sin firmar en su nombre.',
             'waiver_current' => 'Exención firmada en su nombre, versión vigente (v:version).',
-            'waiver_outdated' => 'Firmaste en su nombre una versión anterior del texto: acepta la nueva.',
+            'waiver_outdated' => 'versión anterior',
             // La asignación de ENTRADAS a menores en el embudo (tanda 4, `specs/menores-a-cargo.md`
             // §9.9.3 D9/D10): el selector de los pasos 3 y 4, el aviso de la puerta 2, la fila del
             // resumen y la tarjeta de «Mis reservas». Solo con sesión, como el resto del subgrupo.
@@ -175,7 +175,7 @@ return [
             'alt' => 'Tu QR',
             'token_label' => 'Si la cámara falla, dicta este código:',
             'download' => 'Descargar (PNG)',
-            'hint' => 'Es el mismo QR que recibes en cada confirmación de reserva.',
+            'hint' => 'Comparte este enlace con los padres. Cada uno rellena SUS datos.',
             'unavailable' => 'Este QR ya no se puede mostrar. Renuévalo y tendrás uno nuevo al instante.',
             'rotate' => 'Renovar mi QR',
             'rotating' => 'Renovando…',
@@ -363,6 +363,12 @@ return [
      * tiene que llamarse de otra forma. Lo mismo pasa con la zona del cajón (`ZONES.PURCHASES`).
      */
     'purchases' => [
+        'guest_minors' => [
+            'count' => ':count firmados',
+            'waiver_outdated' => 'versión anterior',
+            'waiver_missing' => 'falta la firma',
+            'hint' => 'Comparte este enlace con los padres o tutores. Cada uno rellena SUS datos y no ve los de los demás.',
+        ],
         'title' => 'Mis pedidos',
         'empty' => 'Todavía no tienes ningún pedido.',
         'ref' => 'Pedido :code',

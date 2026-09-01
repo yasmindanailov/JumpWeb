@@ -2940,6 +2940,21 @@ body[data-has-hero].nav--live .hero__pair-slot {
 /* Toggle "Ver desglose" del desglose ↳ (#227 F3): link sobrio, sin fondo de botón. */
 .orders__gate-toggle { margin: 2px 0 0; padding: 0; background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--warn); text-decoration: underline; }
 .orders__gate-toggle:hover { color: var(--warn-hover); }
+
+/* Los JUSTIFICANTES de menores invitados de un pedido (#336, `specs/waiver-por-reserva.md` §4.10):
+   quién ha firmado ya y el enlace para repartir. Mismos TOKENS que el resto del bloque de pedidos —
+   ni un literal nuevo— porque es un apartado más de la misma tarjeta, no otra pieza. */
+.orders__guests { margin-top: var(--sp-10); padding-top: var(--sp-10); border-top: 1px dashed var(--line); }
+.orders__guests-count { margin: 0; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg); }
+.orders__guests-list { list-style: none; margin: var(--sp-6) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
+.orders__guests-item { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
+/* Solo la EXCEPCIÓN se marca (#320): un justificante vigente es la condición para estar en la lista. */
+.orders__guests-item em { font-style: normal; font-weight: var(--fw-semibold); color: var(--warn); }
+.orders__guests-hint { margin: var(--sp-8) 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); line-height: 1.45; }
+/* El enlace se autoselecciona al enfocarlo: es lo que sustituye al botón de copiar que la poda del
+   presupuesto del chunk se llevó (`SidebarBundleBudgetTest`, la subida a 263). */
+.orders__guests-link { width: 100%; font-family: var(--font-mono); font-size: var(--fs-11); color: var(--fg); background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn); padding: var(--sp-8) var(--sp-10); }
+.orders__guests-link:focus { outline: none; border-color: var(--fg); }
 .orders__gate-caption { margin: 2px 0 0; font-family: var(--font-body); font-size: 12px; line-height: 1.4; color: var(--fg-mute); }
 .orders__final { display: flex; justify-content: space-between; margin-top: 6px; padding-top: 8px; border-top: 1px dashed var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
 /* ⚠️⚠️ LOS DOS BLOQUES del desglose (`DECISIONES #127`). Arriba lo que vale y por qué canal se

@@ -476,8 +476,12 @@ class SidebarMountTest extends TestCase
         // clave sería mantenimiento sin ahorro. Que esté en esta lista es lo que impide que crezca
         // en silencio hasta ser el `__('account.orders')` de conveniencia que esta guarda persigue.
         $this->assertSame(['login', 'register', 'forgot', 'nav', 'sidecart', 'account', 'verify', 'orders', 'purchases'], array_keys($boot['account'] ?? []));
+        // ⚠️ `guest_minors` entra con la T3 del justificante (`#336`) y **la pantalla lo pinta**:
+        // `GuestMinorsPanel.vue` usa sus cinco rótulos —el contador, la capacidad, los dos estados de
+        // excepción y la frase del enlace—. Esta guarda es justo la que obliga a comprobarlo: crecer
+        // aquí sin pintar sería pagar bytes en cada página con sesión para nada.
         $this->assertSame(
-            ['title', 'empty', 'ref', 'show', 'hide', 'reservations', 'pagination'],
+            ['guest_minors', 'title', 'empty', 'ref', 'show', 'hide', 'reservations', 'pagination'],
             array_keys($boot['account']['purchases'] ?? []),
             'el grupo de «Mis pedidos» ha crecido: si la pantalla no pinta lo nuevo, hay que podarlo'
         );
@@ -713,8 +717,25 @@ class SidebarMountTest extends TestCase
         // ▶ Y viaja **con cualquier sesión**, aunque el correo esté verificado desde hace un año: el
         // arranque no lo sabe. Mismo peaje que el paginador de menores, y por la misma razón.
         // **9.200 deja 75 B**: la holgura estrecha de siempre.
+        //
+        // ⚠️ **9.200 → 9.400 el 2026-09-01, por FEATURE** (`#336`, la T3 del justificante de un menor
+        // invitado). Medido: **9.125 → 9.365 B (+240)**, y son CUATRO rótulos del panel que el
+        // responsable de una reserva usa para ver quién ha firmado ya y repartir el enlace: el
+        // contador, los dos estados de excepción y la frase que le dice que el enlace se puede
+        // compartir.
+        // ▶ **La poda se hizo ANTES y está medida**: el primer intento traía CINCO y pesaba 9.475 B.
+        // Se retiró `capacity` —«la reserva es de :count personas»: el contador solo ya es honesto, y
+        // el denominador inventado estaba prohibido de todas formas— y se acortaron los otros cuatro.
+        // **−110 B.**
+        // ⚠️⚠️ **Y hay que decir lo que esto cuesta mal**: estos bytes los paga **cada página que
+        // abre cualquier cliente con sesión**, y el panel solo aparece en los poquísimos pedidos que
+        // traen menores invitados. *La salida buena, si algún día hay que recuperarlos, es mandar
+        // estos cuatro rótulos en la RESPUESTA del endpoint —que ya se pide bajo demanda— en vez de
+        // en el montaje; no se hizo ahora porque sacaría estas claves del alcance de
+        // `SidebarTranslationKeysExistTest`, que es lo que impide que un rótulo se quede MUDO.*
+        // **9.400 deja 35 B**: más estrecho que nunca.
         $this->assertLessThan(
-            9200, $bytes,
+            9400, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

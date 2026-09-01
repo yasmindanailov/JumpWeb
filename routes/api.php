@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\MeReservationEligibilityController;
 use App\Http\Controllers\Api\V1\MeReservationsController;
 use App\Http\Controllers\Api\V1\MeWaiverController;
 use App\Http\Controllers\Api\V1\OrderEventDataController;
+use App\Http\Controllers\Api\V1\OrderGuestMinorsController;
 use App\Http\Controllers\Api\V1\OrderPaymentController;
 use App\Http\Controllers\Api\V1\OrderPaymentStatusController;
 use App\Http\Controllers\Api\V1\OrdersController;
@@ -348,6 +349,12 @@ Route::name('api.v1.')->group(function (): void {
         // explícito del cliente, no el efecto de listar el historial.
         Route::get('/orders/{code}/event-data', OrderEventDataController::class)
             ->name('orders.event-data.show');
+        // Los JUSTIFICANTES de menores invitados de un pedido, vistos por su RESPONSABLE
+        // (`specs/waiver-por-reserva.md` §4.10, `#336`). APARTE del pedido por las mismas dos razones
+        // que `event-data`, y una tercera propia: **el enlace es una credencial portadora** y no
+        // puede viajar en nada que se siembre en el HTML de cada página con sesión.
+        Route::get('/orders/{code}/guest-minors', OrderGuestMinorsController::class)
+            ->name('orders.guest-minors.show');
         Route::post('/orders/{code}/payment', [OrderPaymentController::class, 'store'])
             ->middleware(['throttle:6,1', EnsureOnlineSalesEnabled::class])
             ->name('orders.payment.store');

@@ -129,7 +129,7 @@ return [
             'remove_confirm' => 'Remove :name from your account? If you signed the waiver on their behalf, that record is kept.',
             'waiver_unsigned' => 'Waiver not signed on their behalf.',
             'waiver_current' => 'Waiver signed on their behalf, current version (v:version).',
-            'waiver_outdated' => 'You signed an earlier version of the text on their behalf: please accept the new one.',
+            'waiver_outdated' => 'earlier version',
             // Assigning TICKETS to minors in the funnel (batch 4): the picker in steps 3 and 4, the
             // notice after signing in, the summary row and the reservation card.
             'for_label' => 'For:',
@@ -154,7 +154,7 @@ return [
             'alt' => 'Your QR',
             'token_label' => 'If the camera fails, read out this code:',
             'download' => 'Download (PNG)',
-            'hint' => 'It is the same QR you receive with every booking confirmation.',
+            'hint' => 'Share this link with the parents. Each fills in THEIR details.',
             'unavailable' => 'This QR can no longer be shown. Renew it and you will have a new one right away.',
             'rotate' => 'Renew my QR',
             'rotating' => 'Renewing…',
@@ -326,6 +326,12 @@ return [
      * booking is not its unit. ⚠️ Mind the name: the `orders` group above is «My bookings» (its web
      * route is `/mi-cuenta/pedidos`), so this screen's group has to be called something else. */
     'purchases' => [
+        'guest_minors' => [
+            'count' => ':count signed',
+            'waiver_outdated' => 'earlier version',
+            'waiver_missing' => 'signature missing',
+            'hint' => 'Share this link with the parents or guardians. Each of them fills in THEIR details and cannot see anyone else’s.',
+        ],
         'title' => 'My orders',
         'empty' => 'You do not have any orders yet.',
         'ref' => 'Order :code',

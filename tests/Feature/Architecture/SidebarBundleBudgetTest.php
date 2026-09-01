@@ -560,8 +560,25 @@ class SidebarBundleBudgetTest extends TestCase
      *    la vista. Reutiliza `account/sign-out.js` entero.
      * ⚠️ **Se sube a 262 y no a 270.** Queda **0,88 KiB**: lo siguiente que entre vuelve a tener que
      * justificarse o podar.
+     *
+     * ▶ **263 (`#336`, la T3 del justificante de un menor invitado).** Medido con la rama sola:
+     * **261,08 → 262,53 KiB (+1,45)**. Lo que compra es **la ÚNICA pantalla que el responsable de la
+     * reserva tiene** de esta feature: quién ha firmado ya el justificante de cada menor invitado y
+     * **el enlace para repartir a los padres que faltan**. Sin ella, el que reserva —el profesor de
+     * una excursión de cien niños— depende de llamar al parque para conseguir el enlace de su propia
+     * reserva.
+     *
+     * ⚠️ **El enlace no podía viajar en el contexto de cuenta**, que es lo que habría salido gratis:
+     * es una credencial portadora y esa respuesta se siembra en el HTML de cada página con sesión
+     * (la prohibición que `AccountContextResource` documenta). De ahí que haya un componente que lo
+     * pide bajo demanda, y de ahí el coste.
+     *
+     * ⚠️ **La poda se hizo ANTES de subir el techo, y se midió**: fuera el botón de portapapeles con
+     * su respaldo y sus dos rótulos de estado —el `input` de solo lectura ya se autoselecciona al
+     * enfocarlo—, y dos refs de estado fundidas en una. **−0,46 KiB**, de 262,99 a 262,53.
+     * ⚠️ **Se sube a 263 y no a 268.** Queda **0,47 KiB**: la estrechez de siempre.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 262;
+    private const SIDEBAR_CHUNK_MAX_KB = 263;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

@@ -907,6 +907,64 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /orders/{code}/guest-minors:
+    get:
+      tags: [Compra]
+      operationId: getOrderGuestMinors
+      summary: Los justificantes de menores invitados de un pedido
+      description: |
+        Quién ha firmado ya la autorización de un **menor invitado** a esta reserva, y **el enlace**
+        para repartir a los padres que faltan.
+
+        Un menor invitado es un niño que **no es menor a cargo** de quien reservó: el amigo del hijo,
+        o los cien niños de una excursión de colegio. Un adulto sin cuenta lo autoriza desde una
+        pantalla pública, y quien reservó es el **responsable**.
+
+        ### Por qué es un endpoint y no un campo del pedido
+
+        Dos razones, y la segunda es propia:
+
+        - **Son datos de menores de OTRAS familias.** Mismo principio que `event-data`: como campo
+          irían en cada página de `me/orders`, que se pide para ver el historial.
+        - **El `link` es una credencial portadora.** Quien lo tenga puede abrir la pantalla de firma
+          sin sesión. No puede viajar en nada que se siembre en el HTML de cada página: por eso vive
+          aquí, donde se pide a propósito.
+
+        ### Qué NO devuelve
+
+        - **Nada de los otros padres.** Ni su nombre, ni su relación con el menor, ni su correo o
+          teléfono. El responsable ve **quién viene y si está firmado**, y nada más.
+        - **Un denominador inventado.** Se devuelve `capacity` —lo que se compró— y no «3 de 100»:
+          no se puede saber cuántos de los comprados son menores, y esa cifra sería falsa.
+
+        `link` es `null` cuando el pedido no está pagado o la visita ya pasó: repartirlo entonces
+        sería mandar a un padre a una pantalla que le dirá que no.
+
+        ⚠️ La respuesta va con `Cache-Control: no-store`. Un código que no es de quien pregunta
+        responde **404**, igual que uno inexistente.
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Código visible del pedido.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Los justificantes del pedido y su enlace.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderGuestMinors'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /orders/{code}/payment:
     post:
       tags: [Compra]
@@ -3658,6 +3716,48 @@ components:
             principal (`OrderItem.quantity_label`): el complemento sufría el MISMO defecto `L2`
             —`· 2×` pegado al importe de la línea—, y arreglar solo el principal habría dejado la
             ambigüedad viva una fila más abajo.
+
+    OrderGuestMinors:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [minors, capacity, link]
+          properties:
+            minors:
+              type: array
+              description: Los menores invitados con justificante firmado, en el orden en que se firmaron.
+              items:
+                type: object
+                additionalProperties: false
+                required: [minor, waiver]
+                properties:
+                  minor:
+                    type: string
+                    description: Nombre y apellidos del menor, tal y como los declaró quien firmó.
+                  waiver:
+                    type: string
+                    nullable: true
+                    enum: [current, outdated, missing]
+                    description: |
+                      Estado del justificante. `null` cuando la instalación no gestiona el waiver
+                      aquí. `outdated` significa que se firmó una versión anterior del texto: se
+                      señala y se deja pasar.
+            capacity:
+              type: integer
+              description: |
+                Cuánta gente se compró en el pedido (líneas principales vivas). Es el TOPE de
+                justificantes, no el número de menores esperados.
+            link:
+              type: string
+              nullable: true
+              format: uri
+              description: |
+                Enlace firmado para repartir a los padres. `null` si el pedido no está pagado o la
+                visita ya pasó. ⚠️ Es una credencial portadora: quien lo tenga puede firmar.
 
     OrderEventData:
       type: object

@@ -87,6 +87,10 @@ export const useOrdersStore = defineStore('orders', {
          * ⚠️ Y como todo lo demás de esta zona, **vive en memoria**: nada de `localStorage`.
          */
         eventData: {},
+        // Los JUSTIFICANTES de menores invitados por código de pedido (`#336`). Como `eventData`:
+        // se pide al desplegar y se cachea, porque el enlace que trae es una credencial portadora y
+        // no puede viajar en el contexto sembrado.
+        guestMinors: {},
     }),
 
     getters: {
@@ -196,6 +200,25 @@ export const useOrdersStore = defineStore('orders', {
             const response = await api.get('/orders/' + encodeURIComponent(code) + '/event-data');
 
             if (response.ok) this.eventData = { ...this.eventData, [code]: response.data };
+        },
+
+        /**
+         * Los JUSTIFICANTES de menores invitados de un pedido (`specs/waiver-por-reserva.md` §4.10).
+         *
+         * ⚠️ **Vive AQUÍ y no en el componente** (`CE-6`): una zona pinta y no habla con la API, y
+         * `SidebarComponentBudgetTest` lo impone. La primera versión de `GuestMinorsPanel.vue`
+         * llamaba a `api.get` directamente y la guarda la cazó — con la regla citada en el docblock
+         * de la tarjeta de al lado.
+         *
+         * ⚠️ Un fallo NO se anuncia: es un despliegue que el cliente ha pedido, no el contenido de la
+         * pantalla. Que no se pueda leer este bloque no puede teñir de error la lista de pedidos.
+         */
+        async ensureGuestMinors(code, { api = httpClient } = {}) {
+            if (! code || this.guestMinors[code]) return;
+
+            const response = await api.get('/orders/' + encodeURIComponent(code) + '/guest-minors');
+
+            if (response.ok) this.guestMinors = { ...this.guestMinors, [code]: response.data };
         },
 
         async load(scope, page = 1, { api = httpClient } = {}) {
