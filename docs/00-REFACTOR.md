@@ -2505,7 +2505,7 @@ inalcanzable por código** (se retira), y **el modelo decidido cierra sus dos id
 pedidos reales, disparando su estado imposible solo sobre los 19 de datos sucios. El riesgo NO estaba
 solo en la proyección: había cuatro defectos en el dominio que ninguna auditoría anterior construyó.
 
-### El LIBRO del pedido 🟦 — **spec ✅ del owner (`specs/desglose-libro.md`, `DECISIONES #305`) · T1 EN EL ÁRBOL (`#306`)**
+### El LIBRO del pedido 🟦 — **spec ✅ del owner (`specs/desglose-libro.md`, `DECISIONES #305`) · T1 (`#306`) y T2 (`#308`) EN EL ÁRBOL**
 > **Sustituye al DESGLOSE de dos ejes de arriba en cuanto se ejecute.** `[DECIDIDO owner,
 > 2026-09-01]`: cada gestión con su línea + o − y su fecha, un Total y un SALDO que se liquida EN EL
 > PARQUE; nada se cobra ni se devuelve online post-reserva; el descuento mixto entra en el saldo; el
@@ -2521,8 +2521,16 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       cambió**: la foto puente de `78265ec` idéntica en los 15 escenarios. La identidad de
       NACIMIENTO (`I1`) entra en `OrderLedger::cierra` y el fantasma de la señal se cierra (ficha de
       `DEUDA.md` retirada). Retirados los dos repairs legacy y sus migraciones neutralizadas.
-- [ ] **T2 · el LIBRO en el dominio** (§6·T2): `OrderBook` + etiquetas + identidades I1–I4 en
-      ejecución; guarda puente contra el modelo viejo (escenarios + corpus por HTTP). Sin superficies.
+- [x] **T2 · el LIBRO en el dominio — EJECUTADA el 2026-09-01** (spec §6·T2 y §6.2 · `DECISIONES
+      #308`): `Booking\Services\OrderBook` (+ `Movement` · `Settlement` · `Balance` ·
+      `MovementLabel`), por pedido y por reserva, lectura pura sin catálogo ni consultas; I1–I4 en
+      ejecución (I2 ampliada); 17 etiquetas `tickets.journal.*` en cuatro idiomas; guardas G–K
+      (`OrderBookTest`) y la guarda PUENTE en `OrderFinancialInvariantsTest` (15 escenarios × pedido y
+      reserva, idénticos — los del tope incluidos). Corpus local 37/40 (2 en revisión en los dos
+      modelos, 1 donde el viejo se contradice). **Sin superficies ni contrato.** ⚠️ De paso: la T1
+      escribía una cortesía FALSA con «también cancelar» (flujo real del panel) — corregido en los
+      dos reembolsos; dos fixtures más legalizados; `has_deposit` por reserva era catálogo en el
+      modelo viejo.
 - [ ] **T3 · superficies, tope y retirada** (§6·T3): contrato primero, las nueve superficies + correos,
       cae el tope de la T4, se retira todo §4.7, `INVARIANTES` `PAY-16`/`PAY-17` reescritas, dos
       fichas de `DEUDA.md` cerradas, guion headless, ojo del owner.

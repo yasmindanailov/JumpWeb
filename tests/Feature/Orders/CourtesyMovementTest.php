@@ -160,6 +160,50 @@ class CourtesyMovementTest extends TestCase
         $this->assertCourtesyMatchesTheOldModel($order);
     }
 
+    /**
+     * **«También cancelar» devuelve el valor que la cancelación retira: no es una cortesía.**
+     *
+     * ⚠️⚠️ Defecto de la T1 cazado por la guarda del libro (T2, `OrderBookTest`): lo debido se medía
+     * ANTES de aplicar la cancelación que viaja con el reembolso, así que con la línea todavía viva
+     * nada se debía y los 40,00 € salían ENTEROS como cortesía sobre un pedido cancelado. Es el
+     * flujo REAL del panel (`ViewOrder`, «Reembolsar» + «también cancelar», intent `value_returned`).
+     * Mutación que muerde: volver a medir lo debido antes de `cancelLiveItems()`.
+     */
+    public function test_a_total_refund_that_also_cancels_returns_the_value_and_writes_no_courtesy(): void
+    {
+        $by = User::factory()->create();
+        $order = $this->makePaidOrder(4000);
+        $this->attachItem($order, qty: 1, unit: 4000);
+        $this->attachPaidPayment($order, 4000);
+
+        $result = $this->fresh($order)->executeFullRefund($by, PaymentRefund::MODE_MANUAL, true, PaymentRefund::INTENT_VALUE_RETURNED);
+        $this->assertTrue($result['ok'], json_encode($result));
+        $this->assertTrue($result['also_cancelled']);
+
+        $this->assertSame(0, OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->count(),
+            'se devolvió exactamente lo que la cancelación dejó a deber');
+        $this->assertSame(Order::STATUS_CANCELLED, $this->fresh($order)->status);
+        $this->assertCourtesyMatchesTheOldModel($order);
+    }
+
+    /** El mismo hecho, por línea: reembolsar una línea cancelándola en el mismo gesto. */
+    public function test_a_partial_refund_that_also_cancels_the_line_writes_no_courtesy(): void
+    {
+        $by = User::factory()->create();
+        $order = $this->makePaidOrder(4000);
+        $a = $this->attachItem($order, qty: 1, unit: 3000);
+        $this->attachItem($order, qty: 1, unit: 1000);
+        $this->attachPaidPayment($order, 4000);
+
+        $result = $this->fresh($order)->executePartialRefund($a, 3000, $by, PaymentRefund::MODE_MANUAL, true, [], PaymentRefund::INTENT_VALUE_RETURNED);
+        $this->assertTrue($result['ok'], json_encode($result));
+        $this->assertTrue($result['also_cancelled_item']);
+
+        $this->assertSame(0, OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->count());
+        $this->assertNotNull($a->fresh()->cancelled_at);
+        $this->assertCourtesyMatchesTheOldModel($order);
+    }
+
     // ─── La guarda puente: lo escrito al ocurrir == lo derivado al leer ─────────────────────
 
     private function assertCourtesyMatchesTheOldModel(Order $order): void

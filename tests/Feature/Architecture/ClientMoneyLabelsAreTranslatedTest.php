@@ -48,6 +48,35 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
     private const SHARED_LABEL_SOURCE = 'app/Domain/Booking/Models/OrderAdjustment.php';
 
     /**
+     * Las etiquetas del LIBRO (`specs/desglose-libro.md` §4.3, T2 · guarda I): las compone
+     * `Booking\Services\MovementLabel` con UN diccionario para cliente y panel. La lista es CERRADA
+     * y se cruza con el fichero: una clave nueva en `lang/es` que no entre aquí pone esto en rojo,
+     * y una que se borre en `fr`, también (`Lang::has(…, false)`: sin respaldo, la lección de `#134`).
+     */
+    private const JOURNAL_LABELS = [
+        'tickets.journal.booking',
+        'tickets.journal.quantity',
+        'tickets.journal.addon_quantity',
+        'tickets.journal.product_change',
+        'tickets.journal.slot_change',
+        'tickets.journal.price_change',
+        'tickets.journal.edit_fallback',
+        'tickets.journal.cancel',
+        'tickets.journal.courtesy',
+        'tickets.journal.paid_online',
+        'tickets.journal.paid_desk',
+        'tickets.journal.refund_card',
+        'tickets.journal.refund_manual',
+        'tickets.journal.refund_pending',
+        'tickets.journal.refund_failed',
+        'tickets.journal.gate',
+        'tickets.journal.with_reservation',
+    ];
+
+    /** Plantillas SIN palabras (`:name: :old → :new`): iguales entre idiomas a propósito, no por copia. */
+    private const JOURNAL_TEMPLATES = ['tickets.journal.addon_quantity', 'tickets.journal.with_reservation'];
+
+    /**
      * ⚠️ **La guarda de la guarda.** Sin este caso, un `Lang::has()` que dijera `true` siempre
      * dejaría verdes los demás sin mirar nada — que es el modo de fallo que este fichero existe para
      * impedir. Aquí se comprueba que el instrumento **sabe decir que NO**, y que también sabe decir
@@ -83,6 +112,38 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
                 $rendered[$locale] = Lang::get($key, [], $locale);
             }
 
+            $this->assertSame(
+                count($rendered),
+                count(array_unique($rendered)),
+                "`{$key}` repite el mismo texto en dos idiomas — alguien tapó el hueco copiando: "
+                .json_encode($rendered, JSON_UNESCAPED_UNICODE)
+            );
+        }
+    }
+
+    /**
+     * **Las etiquetas del LIBRO existen en los tres idiomas SIN respaldo y dicen cosas distintas**
+     * (T2 del libro, guarda I). Mutaciones que muerden: borrar una clave en `fr` · tapar el hueco
+     * copiando el castellano en `en` · añadir una clave al grupo sin declararla aquí.
+     */
+    public function test_the_journal_labels_are_translated_in_the_three_locales(): void
+    {
+        // La lista de arriba ES el grupo: ni una clave más ni una menos que en `lang/es`.
+        $declared = array_map(fn (string $k): string => 'tickets.journal.'.$k, array_keys((array) Lang::get('tickets.journal', [], 'es')));
+        sort($declared);
+        $listed = self::JOURNAL_LABELS;
+        sort($listed);
+        $this->assertSame($listed, $declared, 'el grupo `tickets.journal` de `lang/es` y `JOURNAL_LABELS` han divergido: declara la clave nueva (o retira la muerta)');
+
+        foreach (self::JOURNAL_LABELS as $key) {
+            $rendered = [];
+            foreach (self::CLIENT_LOCALES as $locale) {
+                $this->assertTrue(Lang::has($key, $locale, false), "`{$key}` no existe en «{$locale}» (sin respaldo)");
+                $rendered[$locale] = Lang::get($key, [], $locale);
+            }
+            if (in_array($key, self::JOURNAL_TEMPLATES, true)) {
+                continue;
+            }
             $this->assertSame(
                 count($rendered),
                 count(array_unique($rendered)),
@@ -205,6 +266,11 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
             ['admin.orders.item_financial.collected_at_gate', 'zh_CN', ['收取', '支付']],
             ['admin.orders.order_financial.pagado_puerta', 'es', ['Pagado', 'Cobrado']],
             ['admin.orders.order_financial.pagado_puerta', 'zh_CN', ['收取', '支付']],
+            // T2 del libro: la línea `gate` hereda la regla — y la conserva cuando `ledger.*` se retire (T3).
+            ['tickets.journal.gate', 'es', ['Pagado', 'Cobrado']],
+            ['tickets.journal.gate', 'en', ['Paid', 'Collected']],
+            ['tickets.journal.gate', 'fr', ['Payé']],
+            ['tickets.journal.gate', 'zh_CN', ['收取', '支付']],
         ];
 
         foreach ($labels as [$key, $locale, $forbidden]) {

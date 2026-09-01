@@ -265,6 +265,32 @@ return [
         'refunded_still_booked' => 'Te devolvimos :amount y tu reserva sigue en pie.',
         'pending_at_gate' => 'Te quedan :amount por pagar en recepción al llegar.',
     ],
+    // ⚠️⚠️ EL LIBRO del pedido (`specs/desglose-libro.md` §4.3, `DECISIONES #305` `[DECIDIDO owner]`):
+    // cada gestión es una línea con su signo y su fecha, el total es la suma y el saldo se liquida
+    // en el parque. Las compone el DOMINIO (`Booking\Services\MovementLabel`) y son NEUTRAS DE VOZ
+    // —sin «tu» ni «el cliente»— porque el mismo diccionario sirve al cliente y al panel (D1).
+    // ⚠️ Cada etiqueta dice QUÉ pasó y no en qué dirección: la dirección la pone el signo del importe.
+    // ⚠️ `addon_quantity` y `with_reservation` son plantillas sin palabras, iguales en los idiomas.
+    'journal' => [
+        'booking' => 'Reserva realizada',
+        'quantity' => 'Cantidad: :old → :new',
+        'addon_quantity' => ':name: :old → :new',
+        'product_change' => 'Cambio a :name',
+        'slot_change' => 'Cambio de fecha a :when',
+        'price_change' => 'Precio del día: :old → :new',
+        'edit_fallback' => 'Cambios en :product',
+        'cancel' => 'Cancelado: :name · :quantity',
+        'courtesy' => 'Compensación',
+        'paid_online' => 'Pagado online',
+        'paid_desk' => 'Pagado en recepción',
+        'refund_card' => 'Devuelto a la tarjeta',
+        'refund_manual' => 'Devuelto en el parque (registrado)',
+        'refund_pending' => 'Devolución en curso',
+        'refund_failed' => 'Devolución fallida',
+        // D9 de la T5 de mixtos: nadie registra el cobro en puerta, así que «Liquidado» y no «Pagado».
+        'gate' => 'Liquidado en el parque',
+        'with_reservation' => ':reservation · :label',
+    ],
     'errors' => [
         'choose_one' => 'Elige al menos una entrada para continuar.',
         'cart_empty' => 'Añade al menos una visita para continuar.',

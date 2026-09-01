@@ -28,4 +28,28 @@ return [
     'addon_included_extra' => '已包含 · 加购 :price/份',
     'addon_per_unit' => ':price/每位',
     'addon_per_guest_qty' => ':count(每位一份)',
+
+    // El LIBRO del pedido (`specs/desglose-libro.md` §4.3, T2): sus etiquetas las compone el dominio
+    // (`Booking\Services\MovementLabel`) con UN diccionario para cliente y panel (D1), así que el
+    // panel en chino las necesita aquí — sin ellas caería al inglés, como `gate_mixed_party_line`.
+    'journal' => [
+        'booking' => '已完成预订',
+        'quantity' => '数量：:old → :new',
+        'addon_quantity' => ':name：:old → :new',
+        'product_change' => '更改为 :name',
+        'slot_change' => '日期更改为 :when',
+        'price_change' => '当日价格：:old → :new',
+        'edit_fallback' => ':product 的变更',
+        'cancel' => '已取消：:name · :quantity',
+        'courtesy' => '补偿',
+        'paid_online' => '已在线支付',
+        'paid_desk' => '已在前台支付',
+        'refund_card' => '已退回至银行卡',
+        'refund_manual' => '已在园区退款（已登记）',
+        'refund_pending' => '退款处理中',
+        'refund_failed' => '退款失败',
+        // T5 · D9: 前台并未登记收款，因此是「结清」而非「已支付」。
+        'gate' => '已在园区结清',
+        'with_reservation' => ':reservation · :label',
+    ],
 ];

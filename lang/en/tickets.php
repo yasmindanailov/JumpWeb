@@ -221,6 +221,29 @@ return [
         'refunded_still_booked' => 'We refunded :amount and your booking still stands.',
         'pending_at_gate' => 'You have :amount left to pay at reception on arrival.',
     ],
+    // The order BOOK (`specs/desglose-libro.md` §4.3, `DECISIONES #305`): one line per action, with
+    // its sign and its date; the total is the sum; the balance is settled at the park. Composed by
+    // the domain (`Booking\Services\MovementLabel`), voice-neutral: one dictionary for customer and panel.
+    'journal' => [
+        'booking' => 'Booking placed',
+        'quantity' => 'Quantity: :old → :new',
+        'addon_quantity' => ':name: :old → :new',
+        'product_change' => 'Changed to :name',
+        'slot_change' => 'Date changed to :when',
+        'price_change' => 'Price of the day: :old → :new',
+        'edit_fallback' => 'Changes to :product',
+        'cancel' => 'Cancelled: :name · :quantity',
+        'courtesy' => 'Compensation',
+        'paid_online' => 'Paid online',
+        'paid_desk' => 'Paid at the desk',
+        'refund_card' => 'Refunded to the card',
+        'refund_manual' => 'Refunded at the park (recorded)',
+        'refund_pending' => 'Refund in progress',
+        'refund_failed' => 'Refund failed',
+        // T5 · D9: no collection is recorded at the gate, so "settled", never "paid".
+        'gate' => 'Settled at the park',
+        'with_reservation' => ':reservation · :label',
+    ],
     'errors' => [
         'choose_one' => 'Choose at least one ticket to continue.',
         'cart_empty' => 'Add at least one visit to continue.',

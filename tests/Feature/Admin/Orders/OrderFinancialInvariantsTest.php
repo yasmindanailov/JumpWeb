@@ -9,6 +9,8 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\OrderFinancialSummary;
 use App\Domain\Booking\Services\OrderLedger;
 use App\Domain\Booking\Services\ReservationFinancials;
@@ -125,10 +127,14 @@ class OrderFinancialInvariantsTest extends TestCase
     public function test_partial_per_item_refund_reconciles(): void
     {
         $order = $this->makePaidOrder();
-        $payment = $this->attachPaidPayment($order);
+        $this->attachPaidPayment($order);
         $item = $this->attachActiveItem($order, unitPrice: 1000);
         $this->syncTotalToOnline($order);
-        $this->attachSucceededRefund($payment, 400, $item->id);   // reembolso parcial de cortesía
+        // Reembolso parcial de CORTESÍA, por el flujo real: desde la T1 del libro escribe su hecho
+        // (`courtesy`) en la misma transacción, y una fila de reembolso puesta a mano sin él es un
+        // mundo que no existe (la lección de los tres fixtures ilegales, spec §6.1).
+        $result = $this->freshOrder($order)->executePartialRefund($item, 400, User::factory()->create(), PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_COMPENSATION);
+        $this->assertTrue($result['ok'], json_encode($result));
 
         $this->assertReconciles($order, 'reembolso parcial por ítem (producto activo)');
 
@@ -207,9 +213,10 @@ class OrderFinancialInvariantsTest extends TestCase
         $order = $this->makePaidOrder();
         $item = $this->attachActiveItem($order, unitPrice: 1000);
         $this->syncTotalToOnline($order);
-        $payment = $this->freshOrder($order)->payments->firstWhere('status', Payment::STATUS_PAID);
         // Un reembolso TOTAL se escribe SIN atar a ninguna línea: es la operación sobre el `Payment`.
-        $this->attachSucceededRefund($payment, 1000, null);
+        // Por el flujo real (modo manual), que además deja su cortesía: no se le debía nada.
+        $result = $this->freshOrder($order)->executeFullRefund(User::factory()->create(), PaymentRefund::MODE_MANUAL, false, PaymentRefund::INTENT_COMPENSATION);
+        $this->assertTrue($result['ok'], json_encode($result));
 
         $this->assertReconciles($order, 'reembolso TOTAL, sin atar a línea');
 
@@ -439,6 +446,91 @@ class OrderFinancialInvariantsTest extends TestCase
         );
 
         $this->assertLedgerBridge($order, $label);
+        $this->assertBookBridge($order, $label);
+    }
+
+    // ─── EL PUENTE ENTRE EL LIBRO Y EL MODELO DE DOS EJES (`specs/desglose-libro.md` §6·T2) ───
+    //
+    // ⚠️⚠️ **El modelo viejo es el ORÁCULO del libro hasta la T3**: es §1.4 de la spec —19 de 22
+    // pedidos idénticos a mano— convertido en test, escenario a escenario. Se BORRA en la T3 con el
+    // oráculo; mientras tanto, cualquier cambio en la composición del libro que mueva un céntimo
+    // respecto de lo que hoy se pinta cae aquí con el escenario y la cifra delante.
+    //
+    // Las equivalencias (spec §6·T2):
+    //   · `Total == valor − compensado`         (la cortesía baja el Total del libro; el valor viejo no la resta)
+    //   · `Saldo == pendientePuerta + pendienteOnline − pendienteDevolución`
+    //   · `Pagado == cobradoOnline − devuelto + cobradoPuerta`
+    //   · `Liquidado == cobradoPuerta` · `Σ online_nac == cobradoOnline` (dentro de I2)
+    //   · por reserva, lo mismo; y `Σ Saldo(r) == Saldo` (guarda H)
+    // ▶ Y diverge A PROPÓSITO con `intent = paid_in_person`: el modelo viejo cuenta ese reembolso como
+    //   `compensado` (no distingue la intención) y el libro NO escribe cortesía —re-canaliza el dinero
+    //   al parque—; ahí el puente compara `Total` con `valor` y `Saldo` con `… + compensado`.
+
+    private function assertBookBridge(Order $order, string $label): void
+    {
+        $order = $this->freshOrder($order);
+        $ledger = OrderLedger::forOrder($order);
+        $book = OrderBook::forOrder($order);
+        $paidInPerson = $this->refundedWithIntent($order, PaymentRefund::INTENT_PAID_IN_PERSON);
+
+        $this->assertSame($ledger->cuadra, $book->isConsistent, "$label · puente: los dos modelos dicen lo mismo sobre si el pedido cuadra");
+        $this->assertBookMatchesLedger($book, $ledger, $paidInPerson, "$label · puente (pedido)");
+        // `has_deposit` solo se cruza a nivel de PEDIDO: ahí el modelo viejo mira el resto de la señal
+        // (un hecho); por RESERVA mira `ticketType->hasDeposit()` —la configuración VIVA del catálogo,
+        // justo la derivación que el libro retira— y en estos fixtures el producto no la declara.
+        $this->assertSame($ledger->hasDeposit, $book->hasDeposit, "$label · puente (pedido) · has_deposit");
+        $this->assertSame($book->totalCents, $book->movementsSumCents(), "$label · I3 · Σ líneas de valor == Total");
+
+        $sumSaldo = 0;
+        foreach ($order->items->whereNull('parent_item_id')->sortBy('id') as $principal) {
+            $rb = OrderBook::forReservation($order, $principal);
+            $rl = OrderLedger::forReservation($order, $principal);
+            $this->assertBookMatchesLedger($rb, $rl, $paidInPerson, "$label · puente (reserva #{$principal->id})");
+            $this->assertSame($rb->totalCents, $rb->movementsSumCents(), "$label · I3 por reserva");
+            $sumSaldo += $rb->totalCents - $rb->paidCents;
+        }
+        $this->assertSame($book->totalCents - $book->paidCents, $sumSaldo, "$label · H · Σ Saldo(r) == Saldo");
+
+        // La CLASE del saldo, cruzada con lo que el modelo viejo pinta (spec §4.4).
+        $saldo = $book->totalCents - $book->paidCents;
+        $expected = match (true) {
+            ! $ledger->cuadra => [Balance::KIND_UNDER_REVIEW],
+            $ledger->pendienteOnline > 0 => [Balance::KIND_PAY_ONLINE],
+            $saldo > 0 => [Balance::KIND_PAY_AT_PARK],
+            $saldo < 0 => [Balance::KIND_REFUND_AT_PARK, Balance::KIND_REFUND_PENDING],
+            default => [Balance::KIND_SETTLED],
+        };
+        $this->assertContains($book->balance->kind, $expected, "$label · puente: la clase del saldo");
+        if ($ledger->cuadra && $ledger->pendienteOnline > 0) {
+            $this->assertSame($ledger->pendienteOnline, $book->balance->cents, "$label · puente: lo que falta por cobrar por web");
+        } elseif ($ledger->cuadra) {
+            $this->assertSame($saldo, $book->balance->cents, "$label · puente: el saldo con signo");
+        }
+    }
+
+    private function assertBookMatchesLedger(OrderBook $book, OrderLedger $ledger, bool $paidInPerson, string $label): void
+    {
+        $courtesy = $paidInPerson ? 0 : $ledger->compensado;
+        $this->assertSame($ledger->valor - $courtesy, $book->totalCents, "$label · Total == valor − compensado");
+        $this->assertSame(
+            $ledger->pendientePuerta + $ledger->pendienteOnline - $ledger->pendienteDevolucion + ($paidInPerson ? $ledger->compensado : 0),
+            $book->totalCents - $book->paidCents,
+            "$label · Saldo == pendientePuerta + pendienteOnline − pendienteDevolución",
+        );
+        $this->assertSame($ledger->pagadoPuerta, $book->settledAtGateCents(), "$label · Liquidado == cobradoPuerta");
+    }
+
+    private function refundedWithIntent(Order $order, string $intent): bool
+    {
+        foreach ($order->payments as $payment) {
+            foreach ($payment->refunds as $refund) {
+                if ($refund->status === PaymentRefund::STATUS_SUCCEEDED && $refund->intent === $intent) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     // ─── La FOTO PUENTE del libro (`specs/desglose-libro.md` §6·T1 guarda F) ──────────
@@ -617,37 +709,6 @@ class OrderFinancialInvariantsTest extends TestCase
             'paid_at' => now(),
             'gateway_order' => str_pad((string) (++$this->paymentCounter + 100000), 10, '0', STR_PAD_LEFT),
         ]);
-    }
-
-    /**
-     * ⚠️ Crea la fila **y actualiza la columna agregada**, que es lo que hace el flujo real: los dos
-     * únicos escritores (`executeFullRefund`, `executePartialRefund`) derivan
-     * `Order.refund_amount_cents` de `totalRefundedCents()` en la misma transacción. Un fixture que
-     * escriba solo la fila fabrica una divergencia que ningún reembolso puede producir.
-     */
-    private function attachSucceededRefund(Payment $payment, int $amount, ?int $itemId = null): PaymentRefund
-    {
-        $row = PaymentRefund::create([
-            'payment_id' => $payment->id,
-            'order_item_id' => $itemId,
-            'amount_cents' => $amount,
-            'currency' => 'EUR',
-            'status' => PaymentRefund::STATUS_SUCCEEDED,
-            'mode' => PaymentRefund::MODE_REST,
-            'gateway_order' => $payment->gateway_order,
-            'gateway_response_code' => PaymentRefund::REDSYS_REFUND_SUCCESS_CODE,
-            'requested_by' => User::factory()->create()->id,
-            'requested_at' => now(),
-            'processed_at' => now(),
-        ]);
-
-        $order = Order::with('payments.refunds')->findOrFail($payment->payable_id);
-        $order->forceFill([
-            'refunded_at' => now(),
-            'refund_amount_cents' => $order->totalRefundedCents(),
-        ])->save();
-
-        return $row;
     }
 
     private function attachActiveItem(Order $order, int $quantity = 1, int $unitPrice = 1000): OrderItem

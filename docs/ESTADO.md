@@ -3,8 +3,9 @@
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-09-01 — TRES carriles a la vez.
-> **LIBRO DEL PEDIDO** (madrugada): spec ✅ del owner (`#305`) y **T1 EN EL ÁRBOL (`#306`, los
-> hechos; sigue la T2)** — carril 3, abajo.
+> **LIBRO DEL PEDIDO** (madrugada): spec ✅ del owner (`#305`), **T1 EN EL ÁRBOL (`#306`, los
+> hechos) y T2 EN EL ÁRBOL (`#308`, el libro en el DOMINIO, sin superficies; sigue la T3)** —
+> carril 3, abajo.
 > **MIXTOS**: T1→T5 en el árbol (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL
 > GUARDIÁN DE SOLAPES EN EL ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** —
 > siguen fuera por diseño la fase 3 de §20.2 y el AFORO (owner); la ficha del fantasma de la señal
@@ -40,11 +41,47 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3727 en verde** (24.200 aserciones, 1 skipped a propósito), medida el 2026-09-01 sobre el
-> árbol CONJUNTO tras rebasar `#307` (landing) encima de `#305`/`#306` (el libro). ⚠️ **No se suma,
-> se mide**: `#307` por sí solo daba 3720 / 24.106 y el libro 3716 / 24.131.
+> Suite **3752 en verde** (24.742 aserciones, 1 skipped a propósito), medida el 2026-09-01 sobre el
+> árbol CONJUNTO tras rebasar `#308` (el libro, T2) encima de `#307` (landing). ⚠️ **No se suma,
+> se mide**: `#308` por sí solo daba 3741 / 24.673 y `#307` 3727 / 24.200.
 >
-> ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1 EN EL ÁRBOL · sigue la T2) ═══════════
+> ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1 y T2 EN EL ÁRBOL · sigue la T3) ═══════════
+> ❗❗❗ **2026-09-01 (madrugada, 2.ª sesión) · T2 · EL LIBRO EN EL DOMINIO, EN EL ÁRBOL**
+> (`DECISIONES #308` — el carril de la landing tomó `#307` mientras corría esta sesión —,
+> `specs/desglose-libro.md` §6·T2 y **§6.2 lo ejecutado**). Suite de esta tanda sola: 3741 /
+> 24.673 (la cifra VIVA es el CONTADOR de arriba) · Pint · docs-check · **7
+> mutaciones muerden** · `audit-clock` sobre los tres tests con calendario · **puente IDÉNTICO en
+> los 15 escenarios** (pedido y reserva, los del tope incluidos) · **corpus local 37/40** (2 en
+> revisión en los DOS modelos, y `R-REM7YW`, donde el modelo viejo se contradice entre pedido y
+> reserva y el libro dice lo mismo en los dos niveles). ▶ `Booking\Services\OrderBook` (+
+> `Movement` · `Settlement` · `Balance` · `MovementLabel`): por pedido y por reserva, lectura pura,
+> sin catálogo, sin consultas, sin nombrar `Payments\Models` (`Order::collectedPaymentFacts()` /
+> `refundFacts()` traducen en la costura); I1–I4 en ejecución; 17 etiquetas `tickets.journal.*`
+> en es/en/fr/zh_CN; guardas G–K. **Ninguna superficie ni el contrato se tocaron: `OrderLedger`
+> sigue siendo la pantalla.** ⚠️⚠️ **La T1 escribía una CORTESÍA FALSA con «también cancelar»**
+> (el flujo real del panel): lo debido se medía ANTES de aplicar la cancelación que viaja con el
+> reembolso → 40,00 € enteros como «Compensación» sobre un pedido cancelado. Lo cazó la guarda del
+> libro; corregido en `executeFullRefund` y `executePartialRefund` (+ 2 casos con puente).
+> ⚠️ Dos fixtures más legalizados (reembolso sin su cortesía → flujo real) · `has_deposit` por
+> reserva era CATÁLOGO en el modelo viejo (el libro: hecho, D-T2·1) · el arnés de mutación nació
+> ciego por el color ANSI delante de «Tests:». ⚠️ Sin `VERIFY_CONC`: ningún fichero del
+> `CRITICAL_RE` cambió (lo de `Order` es lectura y el orden de dos pasos bajo un lock ya tomado).
+> ▶ **RETOMAR (siguiente sesión): la T3 — las superficies, el tope y la retirada** (§6·T3, 2
+> sesiones): **contrato PRIMERO** (`openapi/v1.yaml` → `Ledger` de §4.5, cambio incompatible
+> asumido: único consumidor el cajón), las nueve superficies de §4.6 + `outcome.js` + los correos
+> compuestos desde el libro AL ENVIAR, el tope de la T4 cae (D4; `mixed-party:verify-concurrency`
+> en sus DOS escenarios), y se retira TODO §4.7 (`OrderLedger`, `OrderFinancialSummary`,
+> `ReservationFinancials`, `GateBuckets`, los cubos de `Order`…). Lee §6.2 «Lo que la T3 hereda»
+> (mover `ledger.no_cuadra` y la rama mixta de `breakdownLabel()` al libro; borrar
+> `assertBookBridge` y `ledger-bridge.json` con el oráculo; la prorrata pasa a `online_nac`) y las
+> decisiones derivadas D-T2·1…9 (vetables). Guardas L–R de §6·T3; `INVARIANTES` `PAY-16`/`PAY-17`
+> reescritas; dos fichas de `DEUDA` cerradas; guion headless del cajón ANTES del ojo del owner.
+> ⚠️ `T4-PRB01` seguirá «en revisión» también con el libro pintado, y es correcto (total
+> fabricado por una sonda, I1). Base: el HEAD de `main` al cierre de esta sesión (commit
+> «feat(libro): T2 …»). Cada tanda que toque el `CRITICAL_RE`: `VERIFY_CONC=1` y los tres
+> verificadores; `audit-clock` si añade fixtures con calendario. Numera `DECISIONES` mirando el
+> remoto (`git fetch`): la siguiente libre es la que siga a la última del remoto, no `#309` por
+> inercia — esta misma sesión escribió `#307` y tuvo que renumerar a `#308` al empujar.
 > ❗❗❗ **2026-09-01 (madrugada) · T1 · LOS HECHOS, EN EL ÁRBOL** (`DECISIONES #306`,
 > `specs/desglose-libro.md` §6·T1 y **§6.1 lo ejecutado**).
 > - Antes, suite 3716 (24.131 aserciones,
@@ -61,15 +98,11 @@
 > ⚠️ Tres fixtures resultaron ILEGALES (un `Order.total` = la parte online; un pack cancelado
 > «pagado» que ningún cobro incluía; una bajada 3→1 escrita como −12,00): se legalizaron.
 > ⚠️ Dos repairs legacy retirados y sus migraciones neutralizadas.
-> ▶ **RETOMAR (siguiente sesión): la T2 — el libro en el DOMINIO, sin tocar superficies.** Lee
-> `specs/desglose-libro.md` en este orden: §4.1 (la aritmética; `Total(r)` suma solo líneas
-> VIVAS) → §4.2 (los hechos, tal como quedaron: `type` único) → §4.3 (qué publica `OrderBook`)
-> → §4.4 (los siete casos del saldo) → **§6·T2 con su bloque «lo que la T1 dejó dicho»**
-> (reutilizar `GateBuckets::birthValue/onlineAtBirth`; el puente diverge a propósito con
-> `paid_in_person`; los fixtures obedecen I1) → §6.1 (lo medido). Base: `85f4252`. Cada tanda:
-> `VERIFY_CONC=1`, los tres verificadores y `audit-clock` si añade fixtures con calendario.
-> Numera `DECISIONES` mirando el remoto (`git fetch`): la siguiente libre es la que siga a la
-> última del remoto, no `#307` por inercia.
+> ▶ ~~RETOMAR: la T2~~ **HECHA** (bloque de arriba, `#308`): se retoma por la **T3**.
+> ▶ **Para el agente de la LANDING** (§10·4, retíralo al leerlo): la cabecera de tu entrada `#307`
+> iba como «## #307 — … (fecha)» y `docs-check` resuelve las citas con `^## #N ·`, así que cualquier
+> línea que cite `#307` junto a la palabra de las decisiones rompía el gate; al rebasar el libro
+> encima la puse en el formato canónico «## #307 · 2026-09-01 · …» sin tocar el contenido.
 > ❗❗❗ **2026-09-01 (noche) · EL DESGLOSE PASA A SER UN LIBRO — `DECISIONES #305`,
 > `specs/desglose-libro.md`.** El owner: el balance de dos ejes «exige razonar»; quiere cada gestión
 > como una línea + o − con su fecha, un Total y un SALDO que se liquida EN EL PARQUE (`[DECIDIDO

@@ -1,8 +1,9 @@
 # [SPEC] El LIBRO del pedido — cada gestión con su línea (+/−), un total y un saldo que se liquida en el parque
 
-> Estado: ✅ **diseño aprobado por el owner** (2026-09-01) · 🟦 **T1 EN EL ÁRBOL** (§6.1) · sigue la
-> T2 · Última actualización: 2026-09-01 · Decisiones: `DECISIONES #305` (la decisión de PRODUCTO)
-> y `#306` (la T1) · Sustituye, cuando se ejecute entera, al modelo de DOS EJES de
+> Estado: ✅ **diseño aprobado por el owner** (2026-09-01) · 🟦 **T1 EN EL ÁRBOL** (§6.1) · 🟦 **T2 EN
+> EL ÁRBOL** (§6.2: el libro en el dominio, sin superficies) · sigue la T3 · Última actualización:
+> 2026-09-01 · Decisiones: `DECISIONES #305` (la decisión de PRODUCTO), `#306` (la T1) y `#308`
+> (la T2) · Sustituye, cuando se ejecute entera, al modelo de DOS EJES de
 > `specs/desglose-dinero-cliente.md` §10 (`DECISIONES #127`), que pasa a HISTÓRICO.
 >
 > **Base medida**: commit `78265ec` (main, 2026-09-01), BD local con 22 pedidos pagados/cancelados,
@@ -459,6 +460,108 @@ en `DEUDA.md` RETIRADA.
 | J · `balance.kind` en los siete casos de §4.4, con `refund_pending` en un cancelado y `refund_at_park` en uno vivo | invertir la condición de visita |
 | K · un reembolso `pending`/`failed` sale en `settlements` y NO en `paid_cents` | sumarlo |
 
+### 6.2 · ✅ T2 EJECUTADA (2026-09-01, `DECISIONES #308`)
+
+**En el árbol.** `Booking\Services\OrderBook` (+ `Movement`, `Settlement`, `Balance`,
+`MovementLabel`): value object inmutable, compuesto UNA vez por pedido (`forOrder`) o por reserva
+(`forReservation`), **lectura pura** sobre las relaciones cargadas (`items.slot`, `items.ticketType`,
+`adjustments`, `payments.refunds`), sin catálogo, sin consultas y **sin nombrar `Payments\Models`**
+—`Order`, que sí está en la costura, traduce pagos y reembolsos al vocabulario de `Settlement`
+(`Order::collectedPaymentFacts()` · `Order::refundFacts()`; `unattributedRefundShareFor` pasa a
+pública para que la reserva atribuya con la MISMA prorrata las devoluciones sin línea, también las
+en curso)— · las **17 claves `tickets.journal.*`** en es/en/fr y en zh_CN (el panel) · **I1–I4 en
+ejecución** (`is_consistent`), con I2 ampliada: un pedido `paid` sin `paid_at` no cuadra · las
+guardas **G · H · I · J · K**: `OrderBookTest` (22 casos), `ClientMoneyLabelsAreTranslatedTest`
+(la lista CERRADA de etiquetas, cruzada con `lang/es`, sin respaldo, distinta por idioma; y la
+línea `gate` bajo la regla D9) y **la guarda PUENTE** en `OrderFinancialInvariantsTest`
+(`assertBookBridge`: los 15 escenarios × pedido + reserva — `Total == valor − compensado`,
+`Saldo == pendientePuerta + pendienteOnline − pendienteDevolución`, `Pagado == cobrado − devuelto +
+cobradoPuerta`, `Liquidado == cobradoPuerta`, la clase del saldo, I3 y H; con la excepción de
+`paid_in_person` de §6·T2) · **ninguna superficie ni el contrato se tocan**: `OrderLedger` sigue
+siendo la pantalla hasta la T3.
+
+**Medido.**
+- **Puente idéntico en los 15 escenarios**, pedido y reserva — **incluidos los 3 del tope**: en la T2
+  el tope sigue mandando la ESCRITURA de la línea de crédito, así que el libro lee lo mismo que el
+  modelo viejo; la T3 lo invierte y borra el puente. La foto de `78265ec` no se movió.
+- **Corpus local, 40 pedidos** (19 pagados · 3 cancelados · 18 caducados; los 22 de §1.4 más los
+  caducados): **37/40 idénticos** en total, saldo, pagado, liquidado, `has_deposit`, I3, por reserva y H.
+  Los 3 restantes: `R-IBX8B1`/`R-D3AN8Q` **en revisión en los DOS modelos** (I2: `paid_at` con un
+  pago no pagado; sin identidad de caja no hay saldo que comparar) y `R-REM7YW` ↓. Distribución:
+  18 `expired` · 14 `settled` · 3 `pay_at_park` · 1 `refund_at_park` · 1 `refund_pending` · 3
+  `under_review`. (Guion en el scratchpad de la sesión, como el prototipo de §1.4; «por HTTP» es la
+  guarda M de la T3, cuando el libro tenga endpoint.)
+- Suite **3741** en verde (24.673 aserciones, 1 skipped a propósito) · Pint · docs-check ·
+  **7 mutaciones muerden** (omitir la cancelación del compositor → I3 · contar un reembolso en curso
+  como devuelto → K · invertir la condición de visita → J · fechar la línea mixta con `created_at` ·
+  borrar `journal.gate` en `fr` → I · atribuir un reembolso total a UNA línea → H · medir lo debido
+  antes de la cancelación → el defecto de la T1, abajo), control 51/51 · `audit-clock` sobre los
+  tres tests con calendario.
+- ⚠️ Sin `VERIFY_CONC`: la T2 **no toca ningún fichero del `CRITICAL_RE`** (`OrderCreator`,
+  `OrderItemEditor`, `MixedPartySurcharge` intactos); lo que cambió en `Order` es lectura y el ORDEN
+  de dos pasos dentro de una transacción que ya iba bajo `lockForUpdate`. Los tres verificadores no
+  ejercitan reembolsos, así que no medirían este cambio.
+
+**Lo que la ejecución enseñó.**
+- ⚠️⚠️ **La T1 escribía una CORTESÍA FALSA con «también cancelar»** — y es el flujo REAL del panel
+  («Reembolsar» + «también cancelar», intent `value_returned`, `ViewOrder`). `executeFullRefund`
+  medía «lo debido antes» ANTES de aplicar la cancelación que viaja con el reembolso: con la línea
+  todavía viva nada se debía, y los 40,00 € salían ENTEROS como cortesía; el libro contaba
+  «Compensación −40,00 · Cancelado 0,00» sobre un pedido cancelado (las cifras cerraban: Total 0,
+  saldo 0 — la historia no). Lo cazó `OrderBookTest` al primer intento; `CourtesyMovementTest` no
+  tenía el caso y `Σ courtesy == compensado()` tampoco lo cruzaba porque ningún fixture cancelaba.
+  Corregido en los dos reembolsos (la cancelación se aplica ANTES de medir lo debido: es parte del
+  hecho) + 2 casos con el puente. *Una guarda que compone la HISTORIA ve lo que una que solo suma no ve.*
+- ⚠️ **Dos fixtures más resultaron ILEGALES** (los 4.º y 5.º de este carril): `attachSucceededRefund`
+  de `OrderFinancialInvariantsTest` creaba la fila del reembolso SIN su cortesía. Pasan por el flujo
+  real en modo manual (`executePartialRefund` / `executeFullRefund`); la foto puente no se movió
+  porque el modelo viejo no lee `courtesy`.
+- ⚠️ **`has_deposit` por RESERVA era CATÁLOGO en el modelo viejo** (`ticketType->hasDeposit()`, la
+  configuración viva — justo la derivación que este carril retira) y por eso los cuatro escenarios
+  con señal salieron rojos en el puente por reserva: el puente lo cruza solo a nivel de pedido, donde
+  el viejo mira el resto de la señal. El libro lo define como HECHO (D-T2·1).
+- ⚠️ **`R-REM7YW`: el modelo viejo se contradice a sí mismo** — bajada de precio 40→30 (100 % online)
+  + reembolso de 30 + cancelación: el PEDIDO dice «pendiente de devolver 10,00» y su única RESERVA
+  dice 0 (`itemPendingRefundCents` de una línea cancelada olvida la bajada anterior: mira lo cobrado
+  ACTUAL, no lo original). El libro dice −10,00 en los dos niveles (H). Divergencia a favor del
+  libro; el defecto muere con el modelo viejo en la T3 y no se arregla en él.
+- ⚠️ **El arnés de mutación nació CIEGO**: filtraba `^\s*Tests:` y la línea del resumen lleva el
+  color ANSI DELANTE —siete «vacíos» con las restauraciones en verde—. *Quitar el color antes de
+  filtrar*: la undécima variante del instrumento como primer sospechoso.
+- ⚠️ **`audit-clock` cazó dos aserciones en UTC**: comparaban `now()->format('d/m/Y')` con
+  `occurred_label`, que va en la ZONA del parque — a las 23:59:30 UTC («fin de mes», «fin de año»,
+  «medianoche UTC») en Madrid ya es mañana y el test se ponía rojo sin que nadie tocara nada. La
+  expectativa correcta es `DisplayTime::format(now(), 'd/m/Y')`. El producto estaba bien; el
+  test esperaba en la zona equivocada.
+
+**Decisiones derivadas** (tomadas aquí; el owner puede vetar cualquiera):
+- **D-T2·1** `has_deposit` = alguna línea VIVA nació con `deposit_split > 0`. Un hecho: no cambia
+  cuando una bajada absorbe el resto entero, ni depende del catálogo.
+- **D-T2·2** `balance.cents` va CON SIGNO (contrato §4.5); en `pay_online` es lo que falta POR WEB y
+  `rest_at_park_cents` publica el resto — ninguna superficie lo deriva restando.
+- **D-T2·3** La línea `mixed` se fecha con su ÚLTIMO importe (`updated_at`): es una línea viva y eso
+  es «lo que hoy vale y desde cuándo»; su historia sigue en «Ver historial».
+- **D-T2·4** I2 incluye «un pedido `paid` tiene cobro» (`status = paid ∧ paid_at = null` → en
+  revisión): caja que no cierra, aunque las sumas den 0 = 0.
+- **D-T2·5** Las etiquetas viajan también en zh_CN: D1 exige UN diccionario para cliente y panel,
+  y el panel se sirve en chino (precedente: `gate_mixed_party_line`).
+- **D-T2·6** El aviso `ledger.no_cuadra` sigue en `OrderLedger` mientras convivan (dos avisos por
+  pedido serían ruido); se muda al libro en la T3.
+- **D-T2·7** La frase de fiesta mixta la sigue componiendo `OrderAdjustment::breakdownLabel()`
+  (`MovementLabel::mixed` delega): una copia sería el duplicado del que nació el ledger. Se muda en la T3.
+- **D-T2·8** En un pedido con varias reservas cada línea de VALOR lleva delante el nombre de su
+  reserva (`journal.with_reservation`); el nacimiento del pedido, no.
+- **D-T2·9** Orden: cronológico ascendente; en el mismo instante, nacimiento → hechos por `id` →
+  cancelación (un reembolso «con también cancelar» escribe la cortesía y la cancelación en el mismo
+  segundo, y la cancelación se lee después de lo que se lleva).
+
+**Lo que la T3 hereda de aquí** (además de §4.7): mover el aviso `no_cuadra` y la rama mixta de
+`breakdownLabel()` al libro · borrar `assertBookBridge` con el oráculo · la prorrata de
+`unattributedRefundShareFor` pesa por `itemCollectedCents`, que pasa por `GateBuckets` (muere):
+en la T3 pesa por `online_nac` · `OrderBook::forReservation` compone el pedido entero para
+evaluar la consistencia (como `OrderLedger::forReservation` con `financialSummary()`): una lista
+de N reservas son N composiciones — si una superficie lo nota, `forOrder` una vez y repartir.
+
 ### T3 · Las superficies, el tope y la retirada (2 sesiones)
 - Contrato primero (§4.5); las nueve superficies (§4.6) + `outcome.js`; correos; el tope de la T4
   cae (D4) y `mixed-party:verify-concurrency` se re-corre en sus dos escenarios; **se retira** todo
@@ -488,4 +591,8 @@ la receta de `specs/desglose-dinero-cliente.md` §4.quater re-corrida sobre el c
   con *«no quiero dejar deuda, profesional sin ambigüedades»* → D4 y D5.
 - 2026-09-01 · **Owner**: *«Perfecto, validado, procede con T1»* → diseño ✅.
 - 2026-09-01 · **T1 ejecutada** (§6.1, `DECISIONES #306`). Sigue la T2.
-- Entradas: `DECISIONES #305` (la decisión de producto) · `#306` (la T1).
+- 2026-09-01 · **T2 ejecutada** (§6.2, `DECISIONES #308`): el libro en el dominio, puente idéntico
+  en los 15 escenarios y 37/40 en el corpus; de paso cayó una cortesía falsa de la T1 («también
+  cancelar»). Sigue la T3. (⚠️ Es `#308` y no `#307`: el carril de la landing numeró `#307` el mismo
+  día — la colisión de `CONVENCIONES` §10, otra vez.)
+- Entradas: `DECISIONES #305` (la decisión de producto) · `#306` (la T1) · `#308` (la T2).

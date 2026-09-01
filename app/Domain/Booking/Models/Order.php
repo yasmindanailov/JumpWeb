@@ -7,6 +7,7 @@ use App\Domain\Booking\Concerns\OrderOperativeStatus;
 use App\Domain\Booking\Services\GateBuckets;
 use App\Domain\Booking\Services\OrderFinancialSummary;
 use App\Domain\Booking\Services\ReservationFinancials;
+use App\Domain\Booking\Services\Settlement;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Concerns\GuardsItemRefunds;
 use App\Domain\Payments\Concerns\OrderRefundFlags;
@@ -794,6 +795,26 @@ class Order extends Model
                 ];
             }
 
+            $previousStatus = $order->status;
+            $alsoCancelApplied = $alsoCancel && $order->canBeCancelled();
+
+            // ⚠️⚠️ **Cancelar el PEDIDO cancela sus RESERVAS** (`DECISIONES #127`). Sin esto el
+            // pedido queda cancelado pero sus líneas vivas, así que `productsValue` las sigue
+            // sumando y el cliente lee «Total 19,80 €» sobre un pedido cancelado cuyo dinero el
+            // parque retiene. La conducta correcta ya existía un nivel más abajo —cancelar la
+            // RESERVA sí deja el desglose correcto—; esto la sube al nivel del pedido.
+            //
+            // ⚠️⚠️ **Y va ANTES de medir lo debido** (T2 del libro, `specs/desglose-libro.md` §6.2):
+            // un reembolso «con también cancelar» devuelve el valor que la cancelación retira. Medido
+            // con la línea todavía VIVA, nada se debía y los 40,00 € salían ENTEROS como cortesía
+            // sobre un pedido cancelado — el defecto de la T1 que cazó la guarda del libro
+            // (`OrderBookTest`). La cancelación es parte del hecho, así que lo debido se mide con ella.
+            if ($alsoCancelApplied) {
+                $order->status = self::STATUS_CANCELLED;
+                $order->save();
+                $order->cancelLiveItems($by);
+            }
+
             // T1 del libro: lo que se le DEBÍA al cliente ANTES de contar este reembolso, por pedido y
             // por línea — la cortesía es lo que se devuelve por encima de eso, y se escribe en esta
             // misma transacción ({@see recordCourtesyForRefund}). Se mide con las relaciones frescas
@@ -815,9 +836,6 @@ class Order extends Model
                 'raw_response' => $restResult?->rawResponse,
             ]);
 
-            $previousStatus = $order->status;
-            $alsoCancelApplied = $alsoCancel && $order->canBeCancelled();
-
             $order->refunded_at = $now;
             // Agregado de TODOS los succeeded (igual que el reembolso parcial, Order.php ~1574), no la
             // sobreescritura cruda con `payment->amount` (auditoría Fase 1, M5 p.3). Un full solo es
@@ -825,19 +843,7 @@ class Order extends Model
             // equivalente; el agregado lo blinda si esa precondición cambiara.
             $order->load(['payments.refunds']);
             $order->refund_amount_cents = $order->totalRefundedCents();
-            if ($alsoCancelApplied) {
-                $order->status = self::STATUS_CANCELLED;
-            }
             $order->save();
-
-            // ⚠️⚠️ **Cancelar el PEDIDO cancela sus RESERVAS** (`DECISIONES #127`). Sin esto el
-            // pedido queda cancelado pero sus líneas vivas, así que `productsValue` las sigue
-            // sumando y el cliente lee «Total 19,80 €» sobre un pedido cancelado cuyo dinero el
-            // parque retiene. La conducta correcta ya existía un nivel más abajo —cancelar la
-            // RESERVA sí deja el desglose correcto—; esto la sube al nivel del pedido.
-            if ($alsoCancelApplied) {
-                $order->cancelLiveItems($by);
-            }
 
             $order->recordCourtesyForRefund($refund->refresh(), null, $owedBefore, $owedBeforeByItem);
 
@@ -1289,7 +1295,87 @@ class Order extends Model
             return null;
         }
 
-        return $pago->provider === Payment::PROVIDER_REDSYS ? 'web' : 'desk';
+        return self::paymentMethodOf($pago);
+    }
+
+    /**
+     * El CANAL de un cobro en el vocabulario del libro: `web` si pasó por la pasarela, `desk` en
+     * cualquier otro caso (los proveedores de taquilla los escribe `ManualOrderFulfiller`).
+     * Un solo sitio para el mapeo: lo leen {@see chargeMethod()} y {@see collectedPaymentFacts()}.
+     */
+    private static function paymentMethodOf(Payment $payment): string
+    {
+        return $payment->provider === Payment::PROVIDER_REDSYS ? Settlement::METHOD_WEB : Settlement::METHOD_DESK;
+    }
+
+    /**
+     * **Los COBROS con éxito de este pedido, como HECHOS** para el libro (`specs/desglose-libro.md`
+     * §4.3, T2): importe, canal y cuándo. Cronológicos.
+     *
+     * ⚠️ Existe por la frontera de módulos, como {@see chargeMethod()} y {@see lastRefundIntent()}:
+     * `Booking\Services\OrderBook` no puede nombrar `Payments\Models\Payment`, y `Order` —que está en
+     * la costura— traduce aquí los estados y proveedores del pago al vocabulario de
+     * {@see Settlement}. Lectura pura sobre `payments` ya cargada.
+     *
+     * @return list<array{id:int, amount_cents:int, method:string, occurred_at:\DateTimeInterface}>
+     */
+    public function collectedPaymentFacts(): array
+    {
+        $facts = [];
+        foreach ($this->payments as $payment) {
+            if ($payment->status !== Payment::STATUS_PAID) {
+                continue;
+            }
+            $facts[] = [
+                'id' => (int) $payment->id,
+                'amount_cents' => (int) $payment->amount,
+                'method' => self::paymentMethodOf($payment),
+                // El sello del cobro; el pago de taquilla histórico que no lo trajera cae a su alta.
+                'occurred_at' => $payment->paid_at ?? $payment->created_at,
+            ];
+        }
+        usort($facts, static fn (array $a, array $b): int => $a['occurred_at'] <=> $b['occurred_at'] ?: $a['id'] <=> $b['id']);
+
+        return $facts;
+    }
+
+    /**
+     * **Los intentos de DEVOLUCIÓN de este pedido, como HECHOS** para el libro (T2): todos, con su
+     * estado —solo lo `succeeded` es dinero que volvió; lo `pending` y lo `failed` se LISTA y no se
+     * cuenta (spec §4.4)—, su canal, a qué línea se ató (`null` = el pedido entero: un reembolso
+     * total) y cuándo. Cronológicos.
+     *
+     * Misma razón de existir que {@see collectedPaymentFacts()}: la traducción de `PaymentRefund` al
+     * vocabulario de {@see Settlement} vive en la costura, no en `Booking\Services`.
+     *
+     * ⚠️ El `match` de estado es CERRADO a propósito: los tres valores son los únicos que escriben
+     * `executeFullRefund`/`executePartialRefund`; un cuarto sería un cambio de código que tiene que
+     * pasar por aquí, no un dato que se clasifique a ojo.
+     *
+     * @return list<array{id:int, amount_cents:int, status:string, method:string, order_item_id:?int, occurred_at:\DateTimeInterface}>
+     */
+    public function refundFacts(): array
+    {
+        $facts = [];
+        foreach ($this->payments as $payment) {
+            foreach ($payment->refunds as $refund) {
+                $facts[] = [
+                    'id' => (int) $refund->id,
+                    'amount_cents' => (int) $refund->amount_cents,
+                    'status' => match ($refund->status) {
+                        PaymentRefund::STATUS_SUCCEEDED => Settlement::STATUS_SUCCEEDED,
+                        PaymentRefund::STATUS_PENDING => Settlement::STATUS_PENDING,
+                        PaymentRefund::STATUS_FAILED => Settlement::STATUS_FAILED,
+                    },
+                    'method' => $refund->mode === PaymentRefund::MODE_MANUAL ? Settlement::METHOD_MANUAL : Settlement::METHOD_CARD,
+                    'order_item_id' => $refund->order_item_id === null ? null : (int) $refund->order_item_id,
+                    'occurred_at' => $refund->processed_at ?? $refund->requested_at ?? $refund->created_at,
+                ];
+            }
+        }
+        usort($facts, static fn (array $a, array $b): int => $a['occurred_at'] <=> $b['occurred_at'] ?: $a['id'] <=> $b['id']);
+
+        return $facts;
     }
 
     /**
@@ -1450,8 +1536,13 @@ class Order extends Model
      * ({@see itemRefundableRemainderCents}), el pendiente por línea, la sub-card, el PDF y el
      * cliente leen la MISMA atribución. Como efecto colateral corrige el tope, que tras un reembolso
      * total seguía diciendo que quedaba todo por devolver.
+     *
+     * ▶ Pública desde la T2 del libro: `OrderBook::forReservation` atribuye con ESTA prorrata las
+     * devoluciones sin línea —también las que siguen en curso o fallaron, que no cuentan en lo
+     * pagado pero sí se enseñan—, para que la tarjeta de la reserva y el pedido cuenten la misma
+     * historia. Es lectura pura: no muta nada.
      */
-    private function unattributedRefundShareFor(OrderItem $item, int $unattributed): int
+    public function unattributedRefundShareFor(OrderItem $item, int $unattributed): int
     {
         if ($unattributed <= 0) {
             return 0;
@@ -2026,6 +2117,15 @@ class Order extends Model
                 ];
             }
 
+            // Cancelar el item si se pidió Y aún no estaba cancelado. ⚠️ ANTES de medir lo debido (T2
+            // del libro): la cancelación que viaja con el reembolso es parte del hecho, y medida con
+            // la línea viva el importe entero saldría como cortesía (el mismo defecto que en el total).
+            $alsoCancelApplied = false;
+            if ($alsoCancelItem && ! $itemLocked->isCancelled()) {
+                $itemLocked->markCancelled($by);
+                $alsoCancelApplied = true;
+            }
+
             // T1 del libro: lo que se le DEBÍA al cliente por ESTA reserva antes de contar el reembolso
             // (el ámbito de un reembolso atado a línea es su reserva, spec §4.2). Con la fila todavía
             // `pending`, que no cuenta como devuelto.
@@ -2046,13 +2146,6 @@ class Order extends Model
                     : PaymentRefund::MANUAL_RESPONSE_MARKER,
                 'raw_response' => $restResult?->rawResponse,
             ]);
-
-            // Cancelar el item si se pidió Y aún no estaba cancelado.
-            $alsoCancelApplied = false;
-            if ($alsoCancelItem && ! $itemLocked->isCancelled()) {
-                $itemLocked->markCancelled($by);
-                $alsoCancelApplied = true;
-            }
 
             // Actualizar agregados a nivel Order: refunded_at + refund_amount_cents
             // agregado (suma de todos los succeeded). Mantiene `hasAnyRefund` +

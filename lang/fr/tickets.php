@@ -220,6 +220,30 @@ return [
         'refunded_still_booked' => 'Nous vous avons remboursé :amount et votre réservation reste valable.',
         'pending_at_gate' => "Il vous reste :amount à régler à l'accueil à votre arrivée.",
     ],
+    // Le LIVRE de la commande (`specs/desglose-libro.md` §4.3, `DECISIONES #305`) : une ligne par
+    // action, avec son signe et sa date ; le total est la somme ; le solde se règle au parc. Composé
+    // par le domaine (`Booking\Services\MovementLabel`), sans voix : un seul dictionnaire pour le
+    // client et le panneau.
+    'journal' => [
+        'booking' => 'Réservation effectuée',
+        'quantity' => 'Quantité : :old → :new',
+        'addon_quantity' => ':name : :old → :new',
+        'product_change' => 'Remplacé par :name',
+        'slot_change' => 'Nouvelle date : :when',
+        'price_change' => 'Prix du jour : :old → :new',
+        'edit_fallback' => 'Modifications de :product',
+        'cancel' => 'Annulé : :name · :quantity',
+        'courtesy' => 'Geste commercial',
+        'paid_online' => 'Payé en ligne',
+        'paid_desk' => "Payé à l'accueil",
+        'refund_card' => 'Remboursé sur la carte',
+        'refund_manual' => 'Remboursé au parc (enregistré)',
+        'refund_pending' => 'Remboursement en cours',
+        'refund_failed' => 'Remboursement échoué',
+        // T5 · D9 : aucun encaissement n'est enregistré à l'accueil, donc « réglé », jamais « payé ».
+        'gate' => 'Réglé au parc',
+        'with_reservation' => ':reservation · :label',
+    ],
     'errors' => [
         'choose_one' => 'Choisis au moins un billet pour continuer.',
         'cart_empty' => 'Ajoute au moins une visite pour continuer.',

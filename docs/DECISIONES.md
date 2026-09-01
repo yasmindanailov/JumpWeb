@@ -17956,7 +17956,7 @@ card pasa de «pendiente 20,00 · online 30,00» a 0,00 / 10,00** — el fantasm
   tiene cero ajustes y su hecho solo vive en el rastro. Lo cazó su propio test.
 - ⚠️ El remoto numeró `#301` en la misma jornada (carril landing): esta entrada es `#306`, elegida
   mirando el remoto antes de escribirla.
-## #307 — «Visítanos» en TARJETAS, los datos reales del cliente, y tres defectos que salieron con ellos (2026-09-01)
+## #307 · 2026-09-01 · «Visítanos» en TARJETAS, los datos reales del cliente, y tres defectos que salieron con ellos
 
 **Contexto.** Sesión del carril de la LANDING (el otro carril iba por el libro/desglose). El owner
 entrega los datos legales, de contacto y de ubicación de **Play Jump Park S.L.** y pide seguir con
@@ -18044,3 +18044,41 @@ efectiva 105×44 y 130×44 con la receta de `VERIFICACION-E2E-CAJON.md` §5.duov
 ⚠️ **Dos instrumentos propios dieron números creíbles y falsos**: el área táctil (39 px: medía la
 caja del `<a>` y no el pseudo de `[data-tap]` — lo delató que acusaba también a la forma ya
 verificada en `#264`) y el sondeo del mapa fuera de un `<iframe>`.
+
+## #308 · 2026-09-01 · T2 del libro: el libro en el DOMINIO, con el modelo viejo de oráculo — y una cortesía falsa de la T1 que solo vio quien compone la historia entera
+
+**Contexto.** Segunda tanda del plan de `#305` (`specs/desglose-libro.md` §6·T2 y **§6.2 lo
+ejecutado**): componer el libro desde los hechos que la T1 dejó, con sus identidades evaluadas en
+ejecución, **sin tocar ninguna superficie ni el contrato** — `OrderLedger` sigue siendo la pantalla y
+hace de ORÁCULO hasta la T3.
+
+**Lo hecho.**
+- `Booking\Services\OrderBook` (+ `Movement`, `Settlement`, `Balance`, `MovementLabel`): inmutable,
+  por pedido o por reserva, lectura pura, sin catálogo ni consultas, y sin nombrar `Payments\Models`:
+  `Order` —en la costura— traduce pagos y reembolsos a HECHOS con el vocabulario de `Settlement`.
+- La aritmética de §4.1 tal cual (`Total` = Σ líneas vivas con su cortesía · `Pagado` = cobrado −
+  devuelto + liquidado · `Saldo` con signo), las siete clases del saldo de §4.4 y **I1–I4 en
+  ejecución** (I2 ampliada: un `paid` sin `paid_at` no cuadra).
+- 17 etiquetas `tickets.journal.*` neutras de voz, en es/en/fr y zh_CN; la línea `gate` bajo D9.
+- Guardas G · H · I · J · K (`OrderBookTest`, 22 casos) y la **guarda puente** en
+  `OrderFinancialInvariantsTest`: 15 escenarios × pedido y reserva.
+
+**Medido.** Puente **idéntico en los 15** (los 3 del tope incluidos: en la T2 el tope sigue mandando
+la escritura) · corpus local **37/40** (2 en revisión en los DOS modelos; `R-REM7YW`, donde el viejo se
+contradice entre pedido y reserva y el libro dice lo mismo en los dos niveles) · suite 3741 / 24.673
+· 7 mutaciones muerden · foto puente de `78265ec` intacta.
+
+**Lo que enseñó.**
+- ⚠️⚠️ **La T1 escribía una cortesía FALSA con «también cancelar»** (flujo real del panel): lo debido
+  se medía antes de aplicar la cancelación que viaja con el reembolso, y los 40,00 € salían enteros
+  como «Compensación» sobre un pedido cancelado. Las cifras cerraban; la historia no. Lo cazó la
+  guarda del libro al primer intento. Corregido en los dos reembolsos, con caso y puente.
+- ⚠️ Dos fixtures más eran ilegales (reembolso sin su cortesía) → flujo real; `has_deposit` por
+  reserva era CATÁLOGO en el modelo viejo → el libro lo define como hecho (D-T2·1); el arnés de
+  mutación nació ciego por un color ANSI delante de «Tests:».
+- Nueve decisiones derivadas en §6.2 (D-T2·1…9), vetables por el owner.
+
+**Coste declarado**: `Order` gana dos lectores de hechos y una prorrata pública; `OrderBook::
+forReservation` compone el pedido entero (N reservas = N composiciones, como hoy). Sigue la T3.
+- ⚠️ Es `#308` y no `#307`: el carril de la landing numeró `#307` mientras esta sesión corría (la
+  colisión de `CONVENCIONES` §10; se vio al empujar y se renumeró en el rebase).
