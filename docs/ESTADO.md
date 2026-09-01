@@ -59,9 +59,12 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3793 en verde** (24.564 aserciones, 1 skipped a propósito), medida el 2026-09-01 (tarde)
-> sobre el árbol CONJUNTO: el LANZAMIENTO (`#325`) rebasado sobre el precio por tramo (`#324`),
-> `#323`, `#322`, `#321` y `#320`. Antes, 3789 / 24.564 (`#324` sobre `#323`).
+> Suite **3795 en verde** (24.574 aserciones, 1 skipped a propósito), medida el 2026-09-01 (tarde)
+> sobre el árbol del lanzamiento completo: `#326` (CTA por sesión) y la marca en correos/panel
+> sobre `#325`, `#324`, `#323`, `#322`, `#321` y `#320`. Antes, 3793 / 24.564 (`#325` sobre `#324`).
+> ⚠️ Una pasada intermedia dio **2 fallos que no existían**: coincidió con otra suite parcial
+> corriendo a la vez en el mismo contenedor — *dos suites en paralelo sobre la misma BD de test no
+> miden nada*; se repitió sola y en limpio.
 > ⚠️ **Se mide tras cada rebase, no se suma**: antes 3776 / 24.517 (`#323`) y 3774 / 24.521 (`#322`
 > con su panel, sin la T10). Con dos agentes en `main` el número solo vale medido sobre el conjunto.
 > ⚠️ **Medida DESPUÉS del rebase, no sumada**: por separado daban 3766 / 24.557 (horario por zona

@@ -3505,10 +3505,26 @@ body[data-has-hero].nav--live .hero__pair-slot {
 }
 .cta-pair--invita .cta-pair__alt > .cta-ghost { animation: cta-asoma var(--dur-invite) ease-in-out infinite; }
 .cta-pair--invita .cta-pair__alt-ring { animation: cta-aro var(--dur-invite) ease-out infinite; }
+/* `#326` (`[DECIDIDO owner]`): la invitación es para la mitad PLEGADA. En modo cuenta (sin sesión)
+   la plegada es COMPRAR, así que el asomo y el aro se mudan a `.cta-med` y la cuenta descansa.
+   ⚠️ `.cta-med` lleva `overflow: hidden` (es lo que pliega su rótulo), así que el aro no puede vivir
+   fuera de la caja como el de la cuenta: se dibuja DENTRO del puck (`inset: 3px`) con las MISMAS
+   fases (`cta-aro`, `--dur-invite`). Solo transform y opacidad, como el resto de la pieza. */
+.cta-pair--account.cta-pair--invita .cta-pair__alt > .cta-ghost,
+.cta-pair--account.cta-pair--invita .cta-pair__alt-ring { animation: none; }
+.cta-pair--account.cta-pair--invita > .cta-med { position: relative; animation: cta-asoma var(--dur-invite) ease-in-out infinite; }
+.cta-pair--account.cta-pair--invita > .cta-med::after {
+    content: ""; position: absolute; inset: 3px;
+    border: 2px solid var(--zone-1); border-radius: var(--r-btn);
+    opacity: 0; pointer-events: none;
+    animation: cta-aro var(--dur-invite) ease-out infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
     .cta-pair--invita .cta-pair__alt > .cta-ghost,
-    .cta-pair--invita .cta-pair__alt-ring { animation: none; }
+    .cta-pair--invita .cta-pair__alt-ring,
+    .cta-pair--account.cta-pair--invita > .cta-med,
+    .cta-pair--account.cta-pair--invita > .cta-med::after { animation: none; }
     /* ⚠️⚠️ **Movimiento reducido NO es «sin transición»** (`#277`, norma del artboard
        `Microanimaciones PJP`): «desaparecen los desplazamientos y las escalas, pero **se mantienen
        los cambios de opacidad**, porque quitar también el fundido deja la interfaz saltando de

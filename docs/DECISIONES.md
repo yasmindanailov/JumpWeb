@@ -19337,3 +19337,18 @@ en ese modo (clase estática `cta-pair--account` sin sesión) para que no haya s
 que él añadió y la estática se quedaría pegada al pulsar «Reservar». Guarda: caso nuevo en
 `ArmazonContractTest` (body + clase, sin y con sesión). Los dos sitios del par (cabecera y barra de
 móvil) heredan el cambio porque es el mismo store.
+
+**Adenda (misma tarde) · la INVITACIÓN sigue a la mitad plegada.** `[DECIDIDO owner]`: *«el efecto de
+invitar a presionar el botón se pasa al botón que está oculto: sin sesión, la invitación es para
+Reservar»*. En modo cuenta, el asomo y el aro se mudan a `.cta-med` y la cuenta descansa
+(`.cta-pair--account.cta-pair--invita`). ⚠️ `.cta-med` lleva `overflow: hidden` —es lo que pliega su
+rótulo—, así que su aro no puede vivir fuera de la caja como el de la cuenta: se dibuja DENTRO del
+puck (`::after`, `inset: 3px`) con las mismas fases (`cta-aro`, `--dur-invite`); solo transform y
+opacidad, y el bloque de movimiento reducido lo apaga igual. Con sesión (modo comprar) todo sigue como
+en `#8`.
+
+**Y una deuda que destapó el owner probando**: tras verificar el correo en OTRA pestaña, el cajón de
+la pestaña original seguía mostrando «tienes pendiente la exención» — el servidor ya decía
+`signed=true · pending=false` (medido con `WaiverStatus::for` y `CustomerAccountContext`). Es estado
+del cliente sin refrescar, no una firma perdida: el contexto de cuenta debería releerse al volver a la
+pestaña (`visibilitychange`/`focus`). Ficha en `DEUDA.md`.
