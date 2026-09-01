@@ -131,7 +131,7 @@ class OrderFinancialInvariantsTest extends TestCase
         // Reembolso parcial de CORTESÍA, por el flujo real: desde la T1 del libro escribe su hecho
         // (`courtesy`) en la misma transacción, y una fila de reembolso puesta a mano sin él es un
         // mundo que no existe (la lección de los tres fixtures ilegales, spec §6.1).
-        $result = $this->freshOrder($order)->executePartialRefund($item, 400, User::factory()->create(), PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_COMPENSATION);
+        $result = $this->freshOrder($order)->executePartialRefund($item, 400, User::factory()->create(), PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_COMPENSATION, 'Motivo de prueba (T4 del libro)');
         $this->assertTrue($result['ok'], json_encode($result));
 
         $book = $this->assertBookCloses($order, 'reembolso parcial por ítem (producto activo)');
@@ -212,7 +212,7 @@ class OrderFinancialInvariantsTest extends TestCase
         $this->syncTotalToOnline($order);
         // Un reembolso TOTAL se escribe SIN atar a ninguna línea: es la operación sobre el `Payment`.
         // Por el flujo real (modo manual), que además deja su cortesía: no se le debía nada.
-        $result = $this->freshOrder($order)->executeFullRefund(User::factory()->create(), PaymentRefund::MODE_MANUAL, false, PaymentRefund::INTENT_COMPENSATION);
+        $result = $this->freshOrder($order)->executeFullRefund(User::factory()->create(), PaymentRefund::MODE_MANUAL, false, PaymentRefund::INTENT_COMPENSATION, 'Motivo de prueba (T4 del libro)');
         $this->assertTrue($result['ok'], json_encode($result));
 
         $this->assertBookCloses($order, 'reembolso TOTAL, sin atar a línea');

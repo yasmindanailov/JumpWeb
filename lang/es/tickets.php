@@ -211,7 +211,8 @@ return [
         'price_change' => 'Precio del día: :old → :new',
         'edit_fallback' => 'Cambios en :product',
         'cancel' => 'Cancelado: :name · :quantity',
-        'courtesy' => 'Compensación',
+        // T4 del libro (`DECISIONES #316`, decisión 5): «Compensación» se leía como un reembolso.
+        'courtesy' => 'Descuento por cortesía',
         'paid_online' => 'Pagado online',
         'paid_desk' => 'Pagado en recepción',
         'refund_card' => 'Devuelto a la tarjeta',
@@ -220,6 +221,8 @@ return [
         'refund_failed' => 'Devolución fallida',
         // D9 de la T5 de mixtos: nadie registra el cobro en puerta, así que «Liquidado» y no «Pagado».
         'gate' => 'Liquidado en el parque',
+        // D9 bis (T4): con la visita pasada, lo que quedaba por devolver se da por entregado en recepción.
+        'gate_refund' => 'Devuelto en el parque',
         'with_reservation' => ':reservation · :label',
         // T3·1 (`specs/desglose-libro.md` §6.3): los TÍTULOS del libro y los rótulos del SALDO (§4.4),
         // uno por clase — la clase la decide el servidor (`balance.kind`), el rótulo lo pone quien

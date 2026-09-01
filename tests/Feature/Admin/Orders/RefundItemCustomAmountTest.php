@@ -129,6 +129,7 @@ class RefundItemCustomAmountTest extends TestCase
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
                     'intent' => PaymentRefund::INTENT_COMPENSATION,
+                    'refund_note' => 'Motivo de prueba (T4 del libro)',
                     'items_to_refund' => [$item->id],
                     'amount_mode' => 'custom',
                     'custom_amount' => '10.00',
@@ -176,6 +177,7 @@ class RefundItemCustomAmountTest extends TestCase
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
                     'intent' => PaymentRefund::INTENT_COMPENSATION,
+                    'refund_note' => 'Motivo de prueba (T4 del libro)',
                     'items_to_refund' => [$item->id],
                     'amount_mode' => 'custom',
                     'custom_amount' => '50.00',
@@ -208,6 +210,7 @@ class RefundItemCustomAmountTest extends TestCase
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
                     'intent' => PaymentRefund::INTENT_COMPENSATION,
+                    'refund_note' => 'Motivo de prueba (T4 del libro)',
                     'items_to_refund' => [$item->id, $addon->id],
                     'amount_mode' => 'custom',
                     'custom_amount' => '10.00',
@@ -238,6 +241,7 @@ class RefundItemCustomAmountTest extends TestCase
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
                     'intent' => PaymentRefund::INTENT_COMPENSATION,
+                    'refund_note' => 'Motivo de prueba (T4 del libro)',
                     'items_to_refund' => [$item->id],
                     'amount_mode' => 'custom',
                     'custom_amount' => '0',
@@ -260,6 +264,7 @@ class RefundItemCustomAmountTest extends TestCase
             mode: PaymentRefund::MODE_MANUAL,
             alsoCancelItems: false,
             intent: PaymentRefund::INTENT_COMPENSATION,
+            note: 'Motivo de prueba (T4 del libro)',
             amountCentsOverride: 0,
         );
 
@@ -289,6 +294,7 @@ class RefundItemCustomAmountTest extends TestCase
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
                     'intent' => PaymentRefund::INTENT_COMPENSATION,
+                    'refund_note' => 'Motivo de prueba (T4 del libro)',
                     'items_to_refund' => [$item->id],
                 ],
                 arguments: ['item' => $item->id])
@@ -314,6 +320,7 @@ class RefundItemCustomAmountTest extends TestCase
             mode: PaymentRefund::MODE_MANUAL,
             alsoCancelItems: false,
             intent: PaymentRefund::INTENT_COMPENSATION,
+            note: 'Motivo de prueba (T4 del libro)',
             amountCentsOverride: 1000,
         );
 
@@ -346,6 +353,7 @@ class RefundItemCustomAmountTest extends TestCase
             mode: PaymentRefund::MODE_MANUAL,
             alsoCancelItems: false,
             intent: PaymentRefund::INTENT_COMPENSATION,
+            note: 'Motivo de prueba (T4 del libro)',
             amountCentsOverride: 4200,                           // > línea (40,00) · < capacidad (45,00)
         );
 

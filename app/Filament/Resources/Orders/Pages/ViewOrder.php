@@ -274,18 +274,51 @@ class ViewOrder extends ViewRecord
                 // producto— y preguntarlo sería ruido. Si NO se cancela, el cliente conserva su
                 // reserva y el dinero vuelve: sin esta respuesta, su desglose no puede decirle lo
                 // único que necesita saber, **si sigue debiendo ese importe**.
+                // ▶ T4 del libro (`DECISIONES #316`, `[DECIDIDO owner]`): EL MOTIVO MANDA. «Devolver lo
+                // que se le debe» no puede exceder lo debido — y esta acción devuelve el pago ENTERO
+                // (`#153`), así que solo cabe si lo debido lo cubre; si no, la opción se deshabilita y
+                // dice dónde se hace (por línea, eligiendo importe). La compensación exige un motivo
+                // escrito y lo que exceda lo debido es «Descuento por cortesía», con la frase del exceso
+                // en vivo. El dominio lo re-valida bajo lock (`exceeds_owed` · `compensation_without_note`).
                 Radio::make('intent')
                     ->label(__('admin.orders.actions.refund.intent_label'))
                     ->options([
+                        PaymentRefund::INTENT_VALUE_RETURNED => __('admin.orders.actions.refund.intent_value_returned'),
                         PaymentRefund::INTENT_COMPENSATION => __('admin.orders.actions.refund.intent_compensation'),
                         PaymentRefund::INTENT_PAID_IN_PERSON => __('admin.orders.actions.refund.intent_paid_in_person'),
                     ])
-                    ->descriptions([
+                    ->descriptions(fn (Order $record): array => [
+                        PaymentRefund::INTENT_VALUE_RETURNED => $this->fullRefundValueReturnedDescription($record),
                         PaymentRefund::INTENT_COMPENSATION => __('admin.orders.actions.refund.intent_compensation_desc'),
                         PaymentRefund::INTENT_PAID_IN_PERSON => __('admin.orders.actions.refund.intent_paid_in_person_desc'),
                     ])
+                    ->disableOptionWhen(fn (string $value, Order $record): bool => $value === PaymentRefund::INTENT_VALUE_RETURNED
+                        && $this->owedForOrder($record) < $this->fullRefundAmountCents($record))
+                    // ⚠️ `validationMessages()` solo admite un ARRAY; lo que se evalúa es cada VALOR.
+                    ->validationMessages([
+                        'in' => fn (Order $record): string => __('admin.orders.actions.refund.intent_value_returned_over_owed', [
+                            'amount' => $this->eurosFromCents($this->fullRefundAmountCents($record)),
+                            'owed' => $this->eurosFromCents($this->owedForOrder($record)),
+                        ]),
+                    ])
+                    ->live()
                     ->visible(fn (Get $get): bool => ! (bool) $get('also_cancel'))
                     ->required(fn (Get $get): bool => ! (bool) $get('also_cancel')),
+                Textarea::make('refund_note')
+                    ->label(__('admin.orders.actions.refund.note_label'))
+                    ->helperText(fn (Get $get): string => __($get('intent') === PaymentRefund::INTENT_COMPENSATION
+                        ? 'admin.orders.actions.refund.note_help_compensation'
+                        : 'admin.orders.actions.refund.note_help'))
+                    ->rows(2)
+                    ->minLength(fn (Get $get): ?int => $get('intent') === PaymentRefund::INTENT_COMPENSATION ? 5 : null)
+                    ->maxLength(Order::REFUND_NOTE_MAX_LENGTH)
+                    ->visible(fn (Get $get): bool => ! (bool) $get('also_cancel'))
+                    ->required(fn (Get $get): bool => ! (bool) $get('also_cancel') && $get('intent') === PaymentRefund::INTENT_COMPENSATION),
+                // La frase EN VIVO del exceso (spec §6.4): cuánto devuelve lo debido y cuánto es descuento.
+                Placeholder::make('courtesy_hint')
+                    ->hiddenLabel()
+                    ->content(fn (Order $record): string => $this->courtesyHint('admin.orders.actions.refund', $this->fullRefundAmountCents($record), $this->owedForOrder($record)))
+                    ->visible(fn (Get $get): bool => ! (bool) $get('also_cancel') && $get('intent') === PaymentRefund::INTENT_COMPENSATION),
             ])
             ->action(function (Order $record, array $data): void {
                 $record = $record->fresh();
@@ -320,12 +353,15 @@ class ViewOrder extends ViewRecord
                 if (! in_array($intent, PaymentRefund::intents(), true)) {
                     $intent = null;
                 }
+                // El MOTIVO (T4): solo se pregunta cuando no se cancela; el dominio lo exige con «compensación».
+                $note = $alsoCancelRequested ? null : (isset($data['refund_note']) ? (string) $data['refund_note'] : null);
 
                 $result = $record->executeFullRefund(
                     by: auth()->user(),
                     mode: $mode,
                     alsoCancel: $alsoCancelRequested,
                     intent: $intent,
+                    note: $note,
                 );
 
                 if (! ($result['ok'] ?? false)) {
@@ -1125,6 +1161,89 @@ class ViewOrder extends ViewRecord
     private function eurosFromCents(int $cents): string
     {
         return number_format($cents / 100, 2, ',', '.');
+    }
+
+    // ─── T4 del libro (`DECISIONES #316`): lo debido, el importe previsto y la frase del exceso ───
+
+    /** Lo que el libro del PEDIDO dice que se le debe: el tope de «devolver lo que se le debe» en el reembolso total. */
+    private function owedForOrder(Order $order): int
+    {
+        return OrderBook::forOrder($order)->owedToCustomerCents();
+    }
+
+    /**
+     * Lo debido en el ámbito de UNA línea es su RESERVA (spec §4.2): la misma cifra con la que el
+     * dominio capa bajo lock (`Order::executePartialRefund`). Con una sola reserva coincide con la
+     * del pedido; con dos, no — y por eso el modal no puede leer la del pedido.
+     */
+    private function owedForItem(Order $order, OrderItem $item): int
+    {
+        $principal = $order->items->firstWhere('id', $item->parent_item_id ?? $item->id);
+
+        return $principal === null ? 0 : OrderBook::forReservation($order, $principal)->owedToCustomerCents();
+    }
+
+    /** El reembolso TOTAL devuelve el pago entero (`#153`): ese es su importe, y no se elige. */
+    private function fullRefundAmountCents(Order $order): int
+    {
+        return (int) ($order->paidPayment()?->amount ?? 0);
+    }
+
+    /** «Devolver lo que se le debe» en el reembolso total: la descripción dice si lo debido cubre el pago entero, y si no, dónde se hace. */
+    private function fullRefundValueReturnedDescription(Order $order): string
+    {
+        $owed = $this->owedForOrder($order);
+        $amount = $this->fullRefundAmountCents($order);
+        $args = ['owed' => $this->eurosFromCents($owed), 'amount' => $this->eurosFromCents($amount)];
+
+        return match (true) {
+            $owed === 0 => __('admin.orders.actions.refund.intent_value_returned_nothing_owed'),
+            $owed < $amount => __('admin.orders.actions.refund.intent_value_returned_partial', $args),
+            default => __('admin.orders.actions.refund.intent_value_returned_desc', $args),
+        };
+    }
+
+    /**
+     * Lo que el modal «Reembolsar producto» va a devolver con lo que el operador tiene marcado: el
+     * importe a medida, o la Σ de remanentes de las líneas marcadas — con los complementos que
+     * `OrderItemRefunder` auto-marca al marcar el principal, para que la cifra sea la que se ejecutará.
+     */
+    private function plannedRefundCents(Order $order, OrderItem $primary, Get $get): int
+    {
+        if ($get('amount_mode') === 'custom') {
+            return (int) round(((float) ($get('custom_amount') ?? 0)) * 100);
+        }
+
+        $selected = array_map('intval', (array) ($get('items_to_refund') ?? []));
+        if (in_array((int) $primary->id, $selected, true)) {
+            foreach ($primary->children as $child) {
+                if ($order->itemRefundableRemainderCents($child) > 0) {
+                    $selected[] = (int) $child->id;
+                }
+            }
+        }
+
+        $sum = 0;
+        foreach (array_unique($selected) as $id) {
+            $line = $order->items->firstWhere('id', $id);
+            if ($line !== null) {
+                $sum += $order->itemRefundableRemainderCents($line);
+            }
+        }
+
+        return $sum;
+    }
+
+    /** La frase EN VIVO de una compensación: cuánto devuelve lo debido y cuánto es descuento por cortesía. */
+    private function courtesyHint(string $group, int $amountCents, int $owedCents): string
+    {
+        $excess = max(0, $amountCents - $owedCents);
+
+        return __($group.($excess > 0 ? '.excess_hint' : '.excess_hint_none'), [
+            'amount' => $this->eurosFromCents($amountCents),
+            'owed' => $this->eurosFromCents($owedCents),
+            'excess' => $this->eurosFromCents($excess),
+        ]);
     }
 
     /**
@@ -2386,7 +2505,9 @@ class ViewOrder extends ViewRecord
                 // remanente de la línea. Es el caso que este campo existe para resolver: una bajada
                 // de precio (p. ej. por cambio de fecha) deja «pendiente de devolución» y el botón
                 // devolvía la línea entera (medido: se debían 10,00 € y devolvía 30,00 €).
-                $pendingCents = OrderBook::forOrder($order)->owedToCustomerCents();
+                // ▶ T4: lo debido se mide en el ámbito de ESTA línea —su RESERVA (spec §4.2)—, que es
+                // la misma cifra con la que el dominio capa «devolver lo que se le debe» bajo lock.
+                $pendingCents = $item !== null ? $this->owedForItem($order, $item) : 0;
 
                 return [
                     'item_id' => (int) ($arguments['item'] ?? 0),
@@ -2401,6 +2522,13 @@ class ViewOrder extends ViewRecord
                 ];
             })
             ->schema(function (array $arguments): array {
+                $primary = $this->resolveItem($arguments);
+                // T4 del libro (`DECISIONES #316`): lo debido en el ámbito de esta línea es su RESERVA
+                // (spec §4.2) — la misma cifra con la que el dominio capa bajo lock—, y el importe que el
+                // modal va a devolver con lo que hay marcado. Los dos se leen al evaluar (no al montar).
+                $owed = fn (): int => $primary === null ? 0 : $this->owedForItem($this->record, $primary);
+                $planned = fn (Get $get): int => $primary === null ? 0 : $this->plannedRefundCents($this->record, $primary, $get);
+
                 return [
                     Hidden::make('item_id'),
                     Hidden::make('optimistic_token'),
@@ -2428,6 +2556,7 @@ class ViewOrder extends ViewRecord
                         ->options($this->buildRefundItemsOptions($arguments))
                         ->required()
                         ->bulkToggleable()
+                        ->live()
                         ->columns(1),
                     // ⚠️⚠️ **CUÁNTO se devuelve** (`#146`/D5). Sin esta elección, el botón devolvía
                     // SIEMPRE el remanente entero de la línea — y tras una bajada de precio eso
@@ -2449,10 +2578,8 @@ class ViewOrder extends ViewRecord
                         ->required(),
                     TextInput::make('custom_amount')
                         ->label(__('admin.orders.refund_item.custom_amount_label'))
-                        ->helperText(function (): string {
-                            /** @var Order $order */
-                            $order = $this->record;
-                            $pending = OrderBook::forOrder($order)->owedToCustomerCents();
+                        ->helperText(function () use ($owed): string {
+                            $pending = $owed();
 
                             return $pending > 0
                                 ? __('admin.orders.refund_item.custom_amount_help_pending', [
@@ -2463,24 +2590,70 @@ class ViewOrder extends ViewRecord
                         ->suffix('€')
                         ->numeric()
                         ->minValue(0.01)
+                        // T4: con «devolver lo que se le debe» el importe queda CAPADO a lo debido; el
+                        // dominio lo re-valida bajo lock (`exceeds_owed`), esto es la primera capa.
+                        ->maxValue(fn (Get $get) => $get('intent') === PaymentRefund::INTENT_VALUE_RETURNED ? $owed() / 100 : null)
                         ->step(0.01)
+                        ->live(debounce: 500)
                         ->visible(fn (Get $get): bool => $get('amount_mode') === 'custom')
                         ->required(fn (Get $get): bool => $get('amount_mode') === 'custom'),
                     // ⚠️⚠️ **Por qué se devuelve** (`DECISIONES #127(c)`). Aquí es SIEMPRE obligatorio:
                     // este camino no cancela la reserva, así que el cliente se queda con ella y con su
                     // dinero de vuelta — y sin esta respuesta su desglose no puede decirle lo único
                     // que necesita saber, si sigue debiendo ese importe.
+                    // ▶ T4 del libro (`DECISIONES #316`, `[DECIDIDO owner]`): EL MOTIVO MANDA. «Devolver lo
+                    // que se le debe» se capa a lo que el libro de ESTA reserva dice que se le debe (con
+                    // 0 la opción se deshabilita y dice por qué; con «todo lo que queda» la Σ de
+                    // remanentes tiene que caber); la compensación exige motivo escrito y lo que exceda
+                    // lo debido es «Descuento por cortesía», con la frase del exceso EN VIVO. El dominio
+                    // lo re-valida bajo lock, línea a línea (`exceeds_owed` · `compensation_without_note`).
                     Radio::make('intent')
                         ->label(__('admin.orders.refund_item.intent_label'))
                         ->options([
+                            PaymentRefund::INTENT_VALUE_RETURNED => __('admin.orders.refund_item.intent_value_returned'),
                             PaymentRefund::INTENT_COMPENSATION => __('admin.orders.refund_item.intent_compensation'),
                             PaymentRefund::INTENT_PAID_IN_PERSON => __('admin.orders.refund_item.intent_paid_in_person'),
                         ])
-                        ->descriptions([
+                        ->descriptions(fn (): array => [
+                            PaymentRefund::INTENT_VALUE_RETURNED => $owed() > 0
+                                ? __('admin.orders.refund_item.intent_value_returned_desc', ['owed' => $this->eurosFromCents($owed())])
+                                : __('admin.orders.refund_item.intent_value_returned_nothing_owed'),
                             PaymentRefund::INTENT_COMPENSATION => __('admin.orders.refund_item.intent_compensation_desc'),
                             PaymentRefund::INTENT_PAID_IN_PERSON => __('admin.orders.refund_item.intent_paid_in_person_desc'),
                         ])
+                        ->disableOptionWhen(fn (string $value): bool => $value === PaymentRefund::INTENT_VALUE_RETURNED && $owed() === 0)
+                        ->validationMessages(['in' => __('admin.orders.refund_item.intent_value_returned_nothing_owed')])
+                        ->rules([
+                            fn (Get $get): \Closure => function (string $attribute, mixed $value, \Closure $fail) use ($get, $owed, $planned): void {
+                                if ($value !== PaymentRefund::INTENT_VALUE_RETURNED) {
+                                    return;
+                                }
+                                $amount = $planned($get);
+                                $debt = $owed();
+                                if ($amount > $debt) {
+                                    $fail(__('admin.orders.refund_item.intent_value_returned_over_owed', [
+                                        'owed' => $this->eurosFromCents($debt),
+                                        'amount' => $this->eurosFromCents($amount),
+                                    ]));
+                                }
+                            },
+                        ])
+                        ->live()
                         ->required(),
+                    Textarea::make('refund_note')
+                        ->label(__('admin.orders.refund_item.note_label'))
+                        ->helperText(fn (Get $get): string => __($get('intent') === PaymentRefund::INTENT_COMPENSATION
+                            ? 'admin.orders.refund_item.note_help_compensation'
+                            : 'admin.orders.refund_item.note_help'))
+                        ->rows(2)
+                        ->minLength(fn (Get $get): ?int => $get('intent') === PaymentRefund::INTENT_COMPENSATION ? 5 : null)
+                        ->maxLength(Order::REFUND_NOTE_MAX_LENGTH)
+                        ->required(fn (Get $get): bool => $get('intent') === PaymentRefund::INTENT_COMPENSATION),
+                    // La frase EN VIVO del exceso (spec §6.4): cuánto devuelve lo debido y cuánto es descuento.
+                    Placeholder::make('courtesy_hint')
+                        ->hiddenLabel()
+                        ->content(fn (Get $get): string => $this->courtesyHint('admin.orders.refund_item', $planned($get), $owed()))
+                        ->visible(fn (Get $get): bool => $get('intent') === PaymentRefund::INTENT_COMPENSATION),
                 ];
             })
             ->action(function (array $data): void {
@@ -2599,6 +2772,8 @@ class ViewOrder extends ViewRecord
             intent: $intent,
             amountMode: (string) ($data['amount_mode'] ?? 'remainder'),
             customAmount: $data['custom_amount'] ?? null,
+            // El MOTIVO (T4): el dominio lo exige con «compensación» y lo guarda con el reembolso.
+            note: isset($data['refund_note']) ? (string) $data['refund_note'] : null,
         ), auth()->user());
 
         if ($outcome->isBlocked()) {

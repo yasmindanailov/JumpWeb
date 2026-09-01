@@ -213,7 +213,12 @@ por línea) · `amount_cents` · `currency` · `status` `pending|succeeded|faile
 idempotencia REST; NO unique aquí) · `requested_by` FK restrict · `requested_at`/`processed_at`
 · `raw_response` JSON · `failure_reason` (`transport_error_check_portal|gateway_denied|unknown`)
 + `failure_message` · index `(payment_id, status)`. Éxito Redsys = `Ds_Response 0900`.
-Suma de `succeeded` por payment = total devuelto.
+Suma de `succeeded` por payment = total devuelto. · `intent` nullable (`#127(c)`:
+`value_returned|compensation|paid_in_person`, POR QUÉ se devuelve) · `reason` string(200) nullable
+(T4 del libro, `DECISIONES #316`, migración `2026_09_01_120000`): el MOTIVO que escribe el operador —
+obligatorio con `compensation`, opcional con el resto; el dominio lo copia al `context.note` de la
+fila `courtesy` y solo lo pinta el panel—. ⚠️ No confundir con `failure_reason`, que es del gateway:
+la spec §6.4 dio `reason` por existente y no existía.
 
 ### `order_adjustments` — los HECHOS de dinero de una línea (OrderAdjustment)
 Desde la T1 del libro (`specs/desglose-libro.md` §4.2, `DECISIONES #305`, 2026-09-01) cada fila es
@@ -227,8 +232,10 @@ un hecho y `type` es el ÚNICO discriminador. `order_id` FK cascade · `order_it
   desde 2026-06-06). Una fila por gestión y por línea afectada; el `context` lleva el diff.
 - `mixed` — el gemelo de la línea de fiesta mixta (suplemento + / descuento −), reconciliado EN
   EL SITIO por `MixedPartySurcharge` (línea viva, no un apunte por guardado).
-- `courtesy` — la compensación: dinero devuelto SIN que desapareciera producto, escrita al
-  reembolsar (≤ 0, `context.refund_id`).
+- `courtesy` — el «Descuento por cortesía»: dinero devuelto SIN que desapareciera producto, escrita
+  al reembolsar (≤ 0, `context.refund_id`). Desde la T4 (`DECISIONES #316`) SOLO la escribe un
+  reembolso con `intent = compensation`, como el exceso sobre lo debido, y lleva el MOTIVO del
+  operador en `context.note` (copiado de `payment_refunds.reason`; interno, solo lo pinta el panel).
 ⚠️ Hasta la T1 los tipos eran `extra_due` / `deposit_remainder` (y un `collected_in_person`
 reservado y nunca usado): una bajada se escribía en CASCADA de créditos con un marcador de 0 €,
 y el importe se reconstruía al leer con la señal del catálogo vivo (el fantasma de la señal). La

@@ -33,6 +33,11 @@ use Tests\TestCase;
  *
  * Los reembolsos van en modo MANUAL (registro sin pasarela): es el mismo camino de dominio que el
  * REST, sin la llamada a Redsys, y es el que la T5 documentó como forma de constancia (§20.5).
+ *
+ * ▶ Desde la T4 (`DECISIONES #316`) **el motivo manda**: solo `compensation` escribe cortesía —con
+ * motivo escrito, que aquí viaja en cada caso— y `value_returned` no puede exceder lo debido, así que
+ * devolver «lo debido» antes de registrar la bajada se BLOQUEA en vez de convertirse en cortesía (el
+ * último caso). El resto de la regla por motivo vive en `RefundIntentGovernsTest`.
  */
 class CourtesyMovementTest extends TestCase
 {
@@ -59,7 +64,7 @@ class CourtesyMovementTest extends TestCase
         $item = $this->attachItem($order, qty: 1, unit: 4000);
         $this->attachPaidPayment($order, 4000);
 
-        $result = $this->fresh($order)->executePartialRefund($item, 2000, $by, PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_COMPENSATION);
+        $result = $this->fresh($order)->executePartialRefund($item, 2000, $by, PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_COMPENSATION, 'Motivo de prueba (T4 del libro)');
         $this->assertTrue($result['ok'], json_encode($result));
 
         $rows = OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->get();
@@ -98,7 +103,7 @@ class CourtesyMovementTest extends TestCase
         $this->attachPaidPayment($order, 4000);
         $this->reduce($order, $item, by: $by, toQty: 1);   // se le deben 20,00
 
-        $result = $this->fresh($order)->executePartialRefund($item->fresh(), 3000, $by, PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_COMPENSATION);
+        $result = $this->fresh($order)->executePartialRefund($item->fresh(), 3000, $by, PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_COMPENSATION, 'Motivo de prueba (T4 del libro)');
         $this->assertTrue($result['ok'], json_encode($result));
 
         $rows = OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->get();
@@ -133,7 +138,7 @@ class CourtesyMovementTest extends TestCase
         $b = $this->attachItem($order, qty: 1, unit: 1000);
         $this->attachPaidPayment($order, 4000);
 
-        $result = $this->fresh($order)->executeFullRefund($by, PaymentRefund::MODE_MANUAL, false, PaymentRefund::INTENT_COMPENSATION);
+        $result = $this->fresh($order)->executeFullRefund($by, PaymentRefund::MODE_MANUAL, false, PaymentRefund::INTENT_COMPENSATION, 'Motivo de prueba (T4 del libro)');
         $this->assertTrue($result['ok'], json_encode($result));
 
         $rows = OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->get()->keyBy('order_item_id');
@@ -153,7 +158,7 @@ class CourtesyMovementTest extends TestCase
         $this->attachPaidPayment($order, 4000);
         $b->markCancelled($by);   // se le deben 10,00 por la línea B
 
-        $result = $this->fresh($order)->executeFullRefund($by, PaymentRefund::MODE_MANUAL, false, PaymentRefund::INTENT_COMPENSATION);
+        $result = $this->fresh($order)->executeFullRefund($by, PaymentRefund::MODE_MANUAL, false, PaymentRefund::INTENT_COMPENSATION, 'Motivo de prueba (T4 del libro)');
         $this->assertTrue($result['ok'], json_encode($result));
 
         $rows = OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->get()->keyBy('order_item_id');
@@ -222,7 +227,7 @@ class CourtesyMovementTest extends TestCase
         $this->attachPaidPayment($order, 7000);
         $this->reduce($order, $b, by: $by, toQty: 1);   // por B se le deben 20,00; por A, nada
 
-        $result = $this->fresh($order)->executePartialRefund($a, 2000, $by, PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_COMPENSATION);
+        $result = $this->fresh($order)->executePartialRefund($a, 2000, $by, PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_COMPENSATION, 'Motivo de prueba (T4 del libro)');
         $this->assertTrue($result['ok'], json_encode($result));
 
         $rows = OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->get();
@@ -232,6 +237,27 @@ class CourtesyMovementTest extends TestCase
         $this->assertCourtesyIsWhatTheBookShows($order);
         // Y la deuda de B sigue ahí, intacta: el libro del pedido debe 20,00 − 0 de la cortesía.
         $this->assertSame(2000, OrderBook::forReservation($this->fresh($order), $this->fresh($order)->items->firstWhere('id', $b->id))->owedToCustomerCents());
+    }
+
+    /**
+     * `LB-ORDEN` (spec §6.3.7 hueco 4), cerrado por la T4: «devolver lo que se le debe» ANTES de
+     * registrar la bajada ya no fabrica una cortesía que el operador no quiso — se bloquea
+     * (`exceeds_owed`) porque todavía no se debe nada, y nada queda escrito. Mutación que muerde:
+     * dejar pasar el reembolso (quitar el tope).
+     */
+    public function test_returning_what_is_owed_before_the_reduction_is_blocked_instead_of_becoming_courtesy(): void
+    {
+        $by = User::factory()->create();
+        $order = $this->makePaidOrder(2970);
+        $item = $this->attachItem($order, qty: 3, unit: 990);
+        $this->attachPaidPayment($order, 2970);
+
+        $result = $this->fresh($order)->executePartialRefund($item, 1980, $by, PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_VALUE_RETURNED);
+
+        $this->assertSame(['ok' => false, 'reason' => 'exceeds_owed'], $result);
+        $this->assertSame(0, OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->count());
+        $this->assertSame(0, PaymentRefund::count(), 'ni siquiera la fila `pending`: el tope va antes de la pasarela');
+        $this->assertCourtesyIsWhatTheBookShows($order);
     }
 
     // ─── Lo escrito al ocurrir es lo que el libro enseña ────────────────────────────────────

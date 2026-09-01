@@ -586,6 +586,17 @@ return [
                 'mode_rest_desc' => '将款项退到客户的银行卡。银行确认后更新订单并发送邮件。若出现问题，订单保持不变，并会告知具体原因。',
                 'mode_manual' => '仅登记（已在外部退款）',
                 'mode_manual_desc' => '仅在已经通过其他途径完成退款时使用（例如已在银行门户处理）。这里只是登记并通知客户。',
+                // 账本 T4（`DECISIONES #316`）：退款原因决定一切。
+                'intent_value_returned' => '退还应退款项',
+                'intent_value_returned_desc' => '应退 :owed €，本操作退还全部付款（:amount €），正是该金额。不是折扣：合计不变。',
+                'intent_value_returned_nothing_owed' => '无应退款项：请先登记减少或取消，或选择补偿。',
+                'intent_value_returned_partial' => '应退 :owed €，而本操作退还全部付款（:amount €）。请在产品的「管理」中按行退款（可选择金额），或选择补偿。',
+                'intent_value_returned_over_owed' => '本操作退还全部付款（:amount €），但仅应退 :owed €：请按行退款，或选择补偿。',
+                'note_label' => '原因',
+                'note_help' => '可选。记录在订单历史中；客户不可见。',
+                'note_help_compensation' => '补偿时必填（5–200 字）：这是礼遇折扣的依据。记录在历史中；客户不可见。',
+                'excess_hint' => '这 :amount € 中，:owed € 为应退款项，:excess € 为礼遇折扣（减少合计）。',
+                'excess_hint_none' => ':amount € 未超过应退款项（:owed €）：不会产生礼遇折扣。',
 
                 'also_cancel' => '同时取消订单',
                 'also_cancel_help' => '勾选则同时取消订单。若与客户约定保留服务（例如：现场换取实体票），请取消勾选。',
@@ -627,6 +638,9 @@ return [
                 'expired' => '订单未付款已过期',
                 'not_paid' => '订单未付款',
                 'already_finished' => '订单的所有产品均已结束（服务已完成）',
+                'exceeds_owed' => '金额超过应退给客户的款项——「退还应退款项」不能超过应退额；请先登记减少或取消，或选择补偿',
+                'compensation_without_note' => '补偿需要填写原因',
+                'note_too_long' => '原因超过 200 字',
             ],
         ],
 
@@ -928,6 +942,16 @@ return [
             'mode_rest_desc' => '将款项退至客户银行卡。如果出错,通知你并不修改其余项目。',
             'mode_manual' => '仅记录(已在外部退款)',
             'mode_manual_desc' => '只留下记录(适用于你已在其他渠道完成退款时)。',
+            // 账本 T4（`DECISIONES #316`）：退款原因决定一切。
+            'intent_value_returned' => '退还应退款项',
+            'intent_value_returned_desc' => '此预订应退 :owed €。金额不能超过该数；不是折扣：合计不变。',
+            'intent_value_returned_nothing_owed' => '此预订无应退款项：请先登记减少或取消，或选择补偿。',
+            'intent_value_returned_over_owed' => '「退还应退款项」最多 :owed €（你要退 :amount €）：请用「其他金额」降低，或选择补偿。',
+            'note_label' => '原因',
+            'note_help' => '可选。记录在订单历史中；客户不可见。',
+            'note_help_compensation' => '补偿时必填（5–200 字）：这是礼遇折扣的依据。记录在历史中；客户不可见。',
+            'excess_hint' => '这 :amount € 中，:owed € 为应退款项，:excess € 为礼遇折扣（减少合计）。',
+            'excess_hint_none' => ':amount € 未超过应退款项（:owed €）：不会产生礼遇折扣。',
 
             'items_label' => '要退款的产品',
             'items_help' => '只列出仍有待退款金额的产品。已完全退款的产品不会出现。',
@@ -958,6 +982,7 @@ return [
         // 订单账本（`DECISIONES #305`，T3·2）：后台、预订单和门口显示 `OrderBook`。每行的文字由领域层在
         // `tickets.journal.*` 中生成（与客户所见相同）；此处仅有标题和余额说明。
         'book' => [
+            'movement_note' => '原因：:note',
             'movements' => '变动明细',
             'settlements' => '付款与退款',
             'total' => '合计',
@@ -1003,6 +1028,9 @@ return [
                 'capacity_changed' => '当你打开模态框时订单可退款金额已变化;请关闭后重试',
                 'no_items_selected' => '你尚未勾选任何要退款的产品',
                 'invalid_item_selection' => '所选退款产品无效;请关闭后重试',
+                'exceeds_owed' => '金额超过该预订的应退款项——「退还应退款项」不能超过应退额；请先登记减少、降低金额或选择补偿',
+                'compensation_without_note' => '补偿需要填写原因',
+                'note_too_long' => '原因超过 200 字',
 
                 // 7.2e.2(#159):管理日期/时间相关阻拦原因。
                 'invalid_slot_selection' => '所选日期和时间在系统中不存在',

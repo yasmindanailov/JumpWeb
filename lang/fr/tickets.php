@@ -181,7 +181,7 @@ return [
         'price_change' => 'Prix du jour : :old → :new',
         'edit_fallback' => 'Modifications de :product',
         'cancel' => 'Annulé : :name · :quantity',
-        'courtesy' => 'Geste commercial',
+        'courtesy' => 'Remise commerciale',
         'paid_online' => 'Payé en ligne',
         'paid_desk' => "Payé à l'accueil",
         'refund_card' => 'Remboursé sur la carte',
@@ -190,6 +190,7 @@ return [
         'refund_failed' => 'Remboursement échoué',
         // T5 · D9 : aucun encaissement n'est enregistré à l'accueil, donc « réglé », jamais « payé ».
         'gate' => 'Réglé au parc',
+        'gate_refund' => 'Remboursé au parc',
         'with_reservation' => ':reservation · :label',
         // T3·1 : les titres du livre et les libellés du solde (un par `balance.kind` ; `settled` n'en a pas).
         'movements_title' => 'Mouvements',

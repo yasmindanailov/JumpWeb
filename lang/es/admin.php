@@ -714,9 +714,22 @@ return [
                 'mode_manual_desc' => 'Usa esta opción solo si ya devolviste el dinero por otro sitio (por ejemplo desde el portal del banco). Aquí solo lo dejamos apuntado y mandamos el email al cliente.',
                 'intent_label' => '¿Por qué se le devuelve el dinero?',
                 'intent_compensation' => 'Es una compensación: no nos debe nada',
-                'intent_compensation_desc' => 'Le devolvemos el dinero y conserva su reserva sin tener que pagar nada más. Es lo que verá en su desglose.',
+                'intent_compensation_desc' => 'Le devolvemos el dinero y conserva su reserva. Lo que exceda lo que se le debe queda en su desglose como «Descuento por cortesía»; tu motivo se guarda en el historial y el cliente no lo ve.',
                 'intent_paid_in_person' => 'Lo pagará en persona, en recepción',
                 'intent_paid_in_person_desc' => 'Le devolvemos lo que pagó por la web porque abonará el importe al llegar. En su desglose aparecerá como pendiente de pagar en el parque.',
+                // T4 del libro (`DECISIONES #316`): el MOTIVO manda. «Devolver lo que se le debe» no puede
+                // exceder lo debido; esta acción devuelve el pago ENTERO, así que solo cabe cuando lo
+                // debido lo cubre — si no, la opción se deshabilita y dice por qué.
+                'intent_value_returned' => 'Devolver lo que se le debe',
+                'intent_value_returned_desc' => 'Se le deben :owed €, y esta acción devuelve el pago entero (:amount €): exactamente eso. No es un descuento: el Total no cambia.',
+                'intent_value_returned_nothing_owed' => 'No se le debe nada: registra antes la bajada o la cancelación, o elige compensación.',
+                'intent_value_returned_partial' => 'Se le deben :owed € y esta acción devuelve el pago entero (:amount €). Devuélvelo por línea desde «Gestionar» del producto —allí eliges el importe—, o elige compensación.',
+                'intent_value_returned_over_owed' => 'Esta acción devuelve el pago entero (:amount €) y solo se le deben :owed €: devuélvelo por línea desde «Gestionar», o elige compensación.',
+                'note_label' => 'Motivo',
+                'note_help' => 'Opcional. Queda en el historial del pedido; el cliente no lo ve.',
+                'note_help_compensation' => 'Obligatorio con una compensación (5–200 caracteres): es lo que justifica el descuento por cortesía. Queda en el historial; el cliente no lo ve.',
+                'excess_hint' => 'De estos :amount €, :owed € devuelven lo que se le debe y :excess € son un descuento por cortesía (bajan el Total).',
+                'excess_hint_none' => 'Los :amount € no superan lo que se le debe (:owed €): no habrá descuento por cortesía.',
 
                 'also_cancel' => 'También cancelar el pedido',
                 'also_cancel_help' => 'Si lo dejas activo, el pedido también queda cancelado. Desactívalo solo si quedasteis con el cliente en que se quedaba con el servicio (por ejemplo, canje en persona por entradas físicas).',
@@ -763,6 +776,10 @@ return [
                 'expired' => 'el pedido caducó sin pago',
                 'not_paid' => 'el pedido no está pagado',
                 'already_finished' => 'todos los productos del pedido ya finalizaron (servicio prestado)',
+                // T4 del libro (`DECISIONES #316`): el motivo manda, y el dominio lo hace valer bajo lock.
+                'exceeds_owed' => 'el importe supera lo que se le debe al cliente — «devolver lo que se le debe» no puede exceder lo debido; registra antes la bajada o la cancelación, o elige compensación',
+                'compensation_without_note' => 'una compensación necesita un motivo escrito',
+                'note_too_long' => 'el motivo supera los 200 caracteres',
             ],
         ],
 
@@ -1190,9 +1207,21 @@ return [
             'mode_manual_desc' => 'Solo lo dejamos apuntado (úsalo si ya devolviste el dinero por otro sitio: portal del banco, efectivo, etc.).',
             'intent_label' => '¿Por qué se le devuelve el dinero?',
             'intent_compensation' => 'Es una compensación: no nos debe nada',
-            'intent_compensation_desc' => 'Le devolvemos el dinero y conserva su reserva sin tener que pagar nada más. Es lo que verá en su desglose.',
+            'intent_compensation_desc' => 'Le devolvemos el dinero y conserva su reserva. Lo que exceda lo que se le debe queda en su desglose como «Descuento por cortesía»; tu motivo se guarda en el historial y el cliente no lo ve.',
             'intent_paid_in_person' => 'Lo pagará en persona, en recepción',
             'intent_paid_in_person_desc' => 'Le devolvemos lo que pagó por la web porque abonará el importe al llegar. En su desglose aparecerá como pendiente de pagar en el parque.',
+            // T4 del libro (`DECISIONES #316`): el MOTIVO manda. «Devolver lo que se le debe» se capa a lo
+            // que el libro de ESTA reserva dice que se le debe (el modal lo capa, el dominio lo bloquea);
+            // con 0 debido la opción se deshabilita y dice por qué. La compensación exige motivo escrito.
+            'intent_value_returned' => 'Devolver lo que se le debe',
+            'intent_value_returned_desc' => 'Se le deben :owed € por esta reserva. El importe no puede superar esa cifra; no es un descuento: el Total no cambia.',
+            'intent_value_returned_nothing_owed' => 'No se le debe nada por esta reserva: registra antes la bajada o la cancelación, o elige compensación.',
+            'intent_value_returned_over_owed' => 'Con «devolver lo que se le debe» no puede devolverse más de :owed € (vas a devolver :amount €): baja el importe con «Otro importe», o elige compensación.',
+            'note_label' => 'Motivo',
+            'note_help' => 'Opcional. Queda en el historial del pedido; el cliente no lo ve.',
+            'note_help_compensation' => 'Obligatorio con una compensación (5–200 caracteres): es lo que justifica el descuento por cortesía. Queda en el historial; el cliente no lo ve.',
+            'excess_hint' => 'De estos :amount €, :owed € devuelven lo que se le debe y :excess € son un descuento por cortesía (bajan el Total).',
+            'excess_hint_none' => 'Los :amount € no superan lo que se le debe (:owed €): no habrá descuento por cortesía.',
 
             'items_label' => 'Productos a reembolsar',
             'items_help' => 'Solo aparecen los productos que aún tienen importe pendiente de devolver. Si un producto ya se ha reembolsado completamente, no se lista.',
@@ -1205,8 +1234,8 @@ return [
             'amount_mode_custom' => 'Otro importe (solo con UNA línea marcada)',
             'amount_mode_custom_desc' => 'Escribe el importe exacto — por ejemplo, la diferencia que se le debe tras cambiar a una fecha más barata. Nunca puede superar el remanente de la línea.',
             'custom_amount_label' => 'Importe a devolver',
-            'custom_amount_help_pending' => 'Este pedido tiene :pending € pendiente de devolución: eso es lo que se le debe al cliente.',
-            'custom_amount_help' => 'Este pedido no tiene nada pendiente de devolución: lo que devuelvas será una compensación.',
+            'custom_amount_help_pending' => 'Se le deben :pending € por esta reserva: es lo que el libro dice, y el tope de «devolver lo que se le debe».',
+            'custom_amount_help' => 'No se le debe nada por esta reserva: lo que devuelvas solo puede ser una compensación (con motivo) o «lo pagará en recepción».',
 
             // Resultados — todos OK
             'success_all_rest' => '✓ Devueltos :count producto(s) al cliente · Total :amount €. Le hemos avisado por email.',
@@ -1249,6 +1278,8 @@ return [
         // mismas que lee el cliente—; aquí viven solo los títulos y los rótulos del SALDO, en
         // tercera persona, que es la voz del operador.
         'book' => [
+            // T4 del libro (D-T4·1): el MOTIVO de un descuento por cortesía, solo en el panel.
+            'movement_note' => 'Motivo: :note',
             'movements' => 'Movimientos',
             'settlements' => 'Pagos y devoluciones',
             'total' => 'Total',
@@ -1311,6 +1342,10 @@ return [
                 'custom_amount_requires_single_item' => 'para elegir el importe marca UNA sola línea (con varias no sabríamos a cuál atribuir la devolución)',
                 'invalid_custom_amount' => 'el importe a devolver tiene que ser mayor que cero',
                 'exceeds_item_refundable' => 'el importe supera lo que queda por devolver de esa línea',
+                // T4 del libro (`DECISIONES #316`): el motivo manda, y el dominio lo hace valer bajo lock.
+                'exceeds_owed' => 'el importe supera lo que se le debe por esa reserva — «devolver lo que se le debe» no puede exceder lo debido; registra antes la bajada, baja el importe o elige compensación',
+                'compensation_without_note' => 'una compensación necesita un motivo escrito',
+                'note_too_long' => 'el motivo supera los 200 caracteres',
 
                 // Sub-fase 7.2e.2 (decisión #159): razones específicas del
                 // cambio fecha/hora (manageItemAction). Reusan la convención

@@ -46,6 +46,12 @@
             <span class="min-w-0 text-gray-700 dark:text-gray-300">{{ $m->label }} <span class="whitespace-nowrap text-gray-400 dark:text-gray-500">· {{ $m->occurredLabel }}</span></span>
             <span @class(['whitespace-nowrap', 'text-amber-700 dark:text-amber-300' => $m->amountCents < 0, 'text-gray-800 dark:text-gray-200' => $m->amountCents >= 0])>{{ $signed($m->amountCents) }}</span>
         </div>
+        {{-- El MOTIVO de un descuento por cortesía (T4 del libro, D-T4·1 `[DECIDIDO owner]`): INTERNO.
+             Solo lo pinta el panel; no viaja por la API ni llega al cajón ni a los correos. Va FUERA de
+             la línea (`data-book-movement`) para que la etiqueta que lee el cliente siga siendo la misma. --}}
+        @if ($m->note !== null)
+            <div class="pl-6 text-[11px] italic text-gray-500 dark:text-gray-400" data-book-note>{{ __('admin.orders.book.movement_note', ['note' => $m->note]) }}</div>
+        @endif
     @endforeach
     <div class="flex items-center justify-between gap-3 border-t border-gray-200 pt-1 text-sm font-semibold dark:border-white/10" data-book-total>
         <span @class(['text-gray-800 dark:text-gray-200', 'line-through' => $struck])>{{ __('admin.orders.book.total') }}</span>

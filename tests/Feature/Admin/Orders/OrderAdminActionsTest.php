@@ -786,6 +786,7 @@ class OrderAdminActionsTest extends TestCase
                 // Sin cancelar, el motivo es OBLIGATORIO (`DECISIONES #127(c)`): el cliente conserva
                 // su reserva y su desglose tiene que poder decirle si sigue debiendo el importe.
                 'intent' => PaymentRefund::INTENT_COMPENSATION,
+                'refund_note' => 'Motivo de prueba (T4 del libro)',
             ])
             ->assertHasNoActionErrors();
 

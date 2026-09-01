@@ -11,8 +11,11 @@ namespace App\Domain\Booking\Services;
  *
  *  - `pay_at_park`    · pedido cobrado, `Saldo > 0` → «A pagar en el parque»;
  *  - `refund_at_park` · cobrado, `Saldo < 0` y hay una reserva viva sin finalizar → «A devolver en el parque»;
- *  - `refund_pending` · cobrado, `Saldo < 0` y NO habrá visita (pedido cancelado, o todas sus reservas
- *                       finalizadas o canceladas) → «Pendiente de devolución» (el operador decide el canal, D5);
+ *  - `refund_pending` · cobrado, `Saldo < 0` y NO habrá visita (pedido cancelado, o el principal
+ *                       cancelado) → «Pendiente de devolución» (el operador decide el canal, D5).
+ *                       ⚠️ Una reserva cuya visita PASÓ ya no cae aquí: la liquidación en el parque es
+ *                       simétrica (D9 bis, T4 del libro, `DECISIONES #316`) y lo que quedaba por
+ *                       devolver se da por entregado en recepción → `settled`;
  *  - `settled`        · cobrado y `Saldo = 0`;
  *  - `pay_online`     · sin cobrar y aún pagable → «Pendiente de pagar por web», con lo que falta por
  *                       cobrar POR WEB en `cents` y el resto —la señal— en `rest_at_park_cents`;

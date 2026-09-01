@@ -139,6 +139,9 @@ class OrderItemRefunder
         // Sub-fase 7.2e.1bis4 (decisión #157): `alsoCancelItems=false` explícito. Refund y
         // cancellation son dimensiones independientes: el operador refunda dinero sin que se
         // cancele el servicio; si quiere cancelar, usa el botón 🗑️ por separado.
+        // T4 del libro (`DECISIONES #316`): el MOTIVO manda. El dominio, bajo lock y línea a línea,
+        // exige el texto con `compensation` (`compensation_without_note`) y capa «devolver lo debido»
+        // a lo que el libro de la reserva dice que se debe (`exceeds_owed`); aquí solo se transporta.
         $batchResult = $order->executePartialRefundBatch(
             itemIds: $selectedIds,
             by: $by,
@@ -146,6 +149,7 @@ class OrderItemRefunder
             alsoCancelItems: false,
             intent: $request->intent,
             amountCentsOverride: $amountOverrideCents,
+            note: $request->note,
         );
 
         return ItemActionOutcome::done(['batch' => $batchResult, 'mode' => $request->mode]);

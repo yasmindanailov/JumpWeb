@@ -179,7 +179,7 @@ return [
         'price_change' => 'Price of the day: :old → :new',
         'edit_fallback' => 'Changes to :product',
         'cancel' => 'Cancelled: :name · :quantity',
-        'courtesy' => 'Compensation',
+        'courtesy' => 'Courtesy discount',
         'paid_online' => 'Paid online',
         'paid_desk' => 'Paid at the desk',
         'refund_card' => 'Refunded to the card',
@@ -188,6 +188,7 @@ return [
         'refund_failed' => 'Refund failed',
         // T5 · D9: no collection is recorded at the gate, so "settled", never "paid".
         'gate' => 'Settled at the park',
+        'gate_refund' => 'Refunded at the park',
         'with_reservation' => ':reservation · :label',
         // T3·1: the book's titles and the balance labels (one per `balance.kind`; `settled` has none).
         'movements_title' => 'Movements',

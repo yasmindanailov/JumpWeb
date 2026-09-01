@@ -13,8 +13,11 @@ use App\Domain\Booking\Models\Order;
  *  - `payment` · un cobro con éxito (+), por `web` (la pasarela) o en el `desk` (la taquilla);
  *  - `refund`  · una devolución (−), a la tarjeta (`card`, REST) o registrada a mano (`manual`),
  *                con su estado: `succeeded` · `pending` (en curso) · `failed`;
- *  - `gate`    · lo LIQUIDADO en el parque (+): la regla de liquidación implícita —franja pasada y
- *                pedido cobrado, `[DECIDIDO owner]` D9 de la T5 de mixtos—, fechada al fin de la franja.
+ *  - `gate`    · lo LIQUIDADO en el parque, CON SIGNO: la regla de liquidación implícita —franja
+ *                pasada y pedido cobrado, `[DECIDIDO owner]` D9 de la T5 de mixtos—, fechada al fin
+ *                de la franja. Positivo, «Liquidado en el parque» (lo que quedaba por pagar se dio por
+ *                cobrado); negativo, «Devuelto en el parque» (lo que quedaba por devolver se dio por
+ *                entregado en recepción: D9 bis, T4 del libro, `DECISIONES #316`).
  *
  * ⚠️ **Solo lo `succeeded` cuenta en `paid_cents`** (spec §4.4): un reembolso en curso o fallido se
  * LISTA —cliente y operador lo ven— pero el saldo sigue diciendo «a devolver X» mientras el dinero
@@ -65,7 +68,7 @@ final readonly class Settlement
         public string $kind,
         /** Compuesta por el dominio ({@see MovementLabel}), neutra de voz. */
         public string $label,
-        /** Con signo: + cobros y liquidación · − devoluciones. */
+        /** Con signo: + cobros y liquidación a favor del parque · − devoluciones y liquidación a favor del cliente. */
         public int $amountCents,
         /** ISO-8601. */
         public string $occurredAt,

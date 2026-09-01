@@ -26,6 +26,9 @@ final readonly class ItemRefundRequest
      * @param  list<int>  $selectedIds  los `item_id` marcados en la lista de casillas
      * @param  'remainder'|'custom'  $amountMode
      * @param  string|float|int|null  $customAmount  el importe tecleado en EUROS (solo con `custom`)
+     * @param  ?string  $note  el MOTIVO que el operador escribió (T4 del libro, `DECISIONES #316`):
+     *                         obligatorio con `compensation` —lo exige el dominio—, opcional con el
+     *                         resto; se guarda en `payment_refunds.reason` y viaja a la cortesía
      */
     public function __construct(
         public array $selectedIds,
@@ -35,5 +38,6 @@ final readonly class ItemRefundRequest
         public ?string $intent,
         public string $amountMode = 'remainder',
         public string|float|int|null $customAmount = null,
+        public ?string $note = null,
     ) {}
 }

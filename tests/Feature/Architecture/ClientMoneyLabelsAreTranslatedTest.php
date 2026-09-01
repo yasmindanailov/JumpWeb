@@ -77,6 +77,8 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
         'tickets.journal.refund_pending',
         'tickets.journal.refund_failed',
         'tickets.journal.gate',
+        // T4 del libro (D9 bis, `DECISIONES #316`): la liquidación negativa, «Devuelto en el parque».
+        'tickets.journal.gate_refund',
         'tickets.journal.with_reservation',
         // T3·1: los títulos del libro y los rótulos del saldo, que también lee el cajón.
         'tickets.journal.movements_title',

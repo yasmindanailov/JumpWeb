@@ -3397,13 +3397,13 @@ components:
         kind:
           type: string
           enum: [payment, refund, gate]
-          description: '`payment` (un cobro) · `refund` (una devolución, con su estado) · `gate` (lo liquidado en el parque al pasar la visita).'
+          description: '`payment` (un cobro) · `refund` (una devolución, con su estado) · `gate` (lo liquidado en el parque al pasar la visita, CON SIGNO: + lo que quedaba por pagar se dio por cobrado en recepción, «Liquidado en el parque»; − lo que quedaba por devolver se dio por entregado allí, «Devuelto en el parque» — la liquidación es simétrica, `DECISIONES #316`).'
         label:
           type: string
           description: Ya compuesta y traducida («Pagado online», «Devuelto a la tarjeta», «Devolución en curso», «Liquidado en el parque»…).
         amount_cents:
           type: integer
-          description: 'Con signo: + cobros y liquidación, − devoluciones.'
+          description: 'Con signo: + cobros y liquidación a favor del parque; − devoluciones y liquidación a favor del cliente.'
         occurred_at:
           type: string
           format: date-time

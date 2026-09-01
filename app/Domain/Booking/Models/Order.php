@@ -610,6 +610,15 @@ class Order extends Model
      *    audit log. Si REST falló, Order intacto.
      *  - Email POST-commit (responsabilidad del caller — devolvemos los datos).
      *
+     * **El MOTIVO manda** (T4 del libro, `DECISIONES #316` `[DECIDIDO owner]`), y se hace valer en la
+     * txn 1 —ANTES de la llamada a la pasarela, que ya no se puede deshacer—:
+     *  - `value_returned` sin «también cancelar» no puede exceder lo que el libro dice que se le debe
+     *    (`OrderBook::owedToCustomerCents`, el pedido entero) → `exceeds_owed`. Con «también
+     *    cancelar» no hay tope explícito (D-T4·5): lo debido tras cancelar es todo lo cobrado no
+     *    devuelto, y `refundBlockedReason` ya impide un total con devoluciones previas.
+     *  - `compensation` exige el MOTIVO en texto (`$note`, → `payment_refunds.reason`) →
+     *    `compensation_without_note`; y solo ella escribe cortesía ({@see recordCourtesyForRefund}).
+     *
      * @return array{
      *   ok:bool,
      *   reason?:string,
@@ -621,17 +630,22 @@ class Order extends Model
      *   failure_message?:?string,
      * }
      */
-    public function executeFullRefund(User $by, string $mode, bool $alsoCancel, ?string $intent = null): array
+    public function executeFullRefund(User $by, string $mode, bool $alsoCancel, ?string $intent = null, ?string $note = null): array
     {
         $payment = $this->paidPayment();
         if ($payment === null) {
             return ['ok' => false, 'reason' => 'no_paid_payment'];
         }
 
+        $note = self::normalizeRefundNote($note);
+        if ($noteReason = self::refundNoteBlockedReason($intent, $note)) {
+            return ['ok' => false, 'reason' => $noteReason];
+        }
+
         // Txn 1: lock + revalidate + create pending row. Serializa contra clicks
         // concurrentes y materializa la "intención" antes de la REST call.
         try {
-            $refund = DB::transaction(function () use ($by, $mode, $intent, $payment) {
+            $refund = DB::transaction(function () use ($by, $mode, $alsoCancel, $intent, $note, $payment) {
                 /** @var Order $locked */
                 $locked = self::query()->lockForUpdate()->find($this->id);
 
@@ -648,6 +662,16 @@ class Order extends Model
                     throw new \DomainException('inflight_refund');
                 }
 
+                // «Devolver lo que se le debe» no puede exceder lo debido (T4): el pago ENTERO contra
+                // el saldo del libro del pedido, bajo lock y antes de la pasarela (`SEC-04`). Con
+                // «también cancelar» no aplica (D-T4·5): lo debido tras cancelar es todo lo cobrado.
+                if ($intent === PaymentRefund::INTENT_VALUE_RETURNED && ! $alsoCancel) {
+                    $locked->load(['payments.refunds', 'adjustments', 'items.children', 'items.slot', 'items.ticketType']);
+                    if ((int) $payment->amount > OrderBook::forOrder($locked)->owedToCustomerCents()) {
+                        throw new \DomainException('blocked:exceeds_owed');
+                    }
+                }
+
                 return PaymentRefund::create([
                     'payment_id' => $payment->id,
                     'order_item_id' => null,
@@ -659,6 +683,8 @@ class Order extends Model
                     // su reserva solo se le puede decir «te devolvimos X €», sin lo único que
                     // necesita saber — si sigue debiendo ese dinero.
                     'intent' => $intent,
+                    // El MOTIVO del operador (T4): obligatorio con `compensation`, opcional con el resto.
+                    'reason' => $note,
                     'gateway_order' => $payment->gateway_order,
                     'requested_by' => $by->id,
                     'requested_at' => now(),
@@ -1255,14 +1281,24 @@ class Order extends Model
      * la T3·4 retiró); ahora es una fila `courtesy` (≤ 0), atribuida a línea y fechada, y el libro
      * la pinta como un movimiento más.
      *
-     * ▶ La regla, cerrada en la spec:
-     *  - `cortesía = max(0, importe − debido_antes)`, con `debido_antes` = el saldo «a devolver» del
-     *    LIBRO en el ÁMBITO del reembolso ANTES de contarlo (la reserva si va atado a línea; el
+     * ▶ La regla, cerrada en la spec y CORREGIDA por la T4 (`DECISIONES #316` `[DECIDIDO owner]`:
+     * **el motivo manda**):
+     *  - **Solo `compensation` escribe cortesía**, y es el EXCESO sobre lo debido (D-T4·2):
+     *    `cortesía = max(0, importe − debido_antes)`, con `debido_antes` = lo que el LIBRO dice que se
+     *    le debe en el ÁMBITO del reembolso ANTES de contarlo (la reserva si va atado a línea; el
      *    pedido si es total): {@see OrderBook::owedToCustomerCents}, la misma cifra que el panel le
      *    sugiere al operador. Un pedido «en revisión» no debe nada que el libro pueda afirmar, así
-     *    que ahí todo lo devuelto es cortesía — y el libro lo enseña, no lo esconde.
-     *  - Con `intent = paid_in_person` NO hay cortesía: ese reembolso re-canaliza el dinero (el
-     *    cliente lo pagará en recepción), y el saldo del libro lo dirá solo.
+     *    que ahí todo lo devuelto es cortesía — y el libro lo enseña, no lo esconde. El MOTIVO del
+     *    operador (`payment_refunds.reason`) viaja a la fila como `context.note`.
+     *  - Con `value_returned` NUNCA hay cortesía: el importe no puede exceder lo debido (el tope
+     *    `exceeds_owed` de la txn 1), y lo que devuelve lo debido no es un descuento. ⚠️ Hasta la T4
+     *    la regla era «el exceso con cualquier motivo», exacta en aritmética y falsa en intención:
+     *    devolver «lo debido» ANTES de registrar la bajada que lo justificaba fabricaba una cortesía
+     *    que el operador no quiso, y la bajada posterior volvía a restar (`LB-ORDEN`, Total −9,90 con
+     *    las cuatro identidades cerrando).
+     *  - Con `paid_in_person` tampoco (D-T4·3): ese reembolso re-canaliza el dinero (el cliente lo
+     *    pagará en recepción), y el saldo del libro lo dirá solo. Ni sin intención (`null`, filas
+     *    viejas o un cliente programático): una cortesía es una decisión, no un residuo.
      *  - Un reembolso TOTAL se reparte entre las RESERVAS a prorrata de su «exceso» (lo que cada una
      *    recibió por encima de lo que se le debía), por resto mayor y desempate por `id`, y se
      *    atribuye a su principal: la Σ de las filas es EXACTAMENTE la cortesía del pedido, sin fugas
@@ -1277,7 +1313,7 @@ class Order extends Model
      */
     private function recordCourtesyForRefund(PaymentRefund $refund, ?OrderItem $item, int $owedBefore, array $owedBeforeByReservation = []): array
     {
-        if ($refund->intent === PaymentRefund::INTENT_PAID_IN_PERSON) {
+        if ($refund->intent !== PaymentRefund::INTENT_COMPENSATION) {
             return [];
         }
         $excess = max(0, (int) $refund->amount_cents - $owedBefore);
@@ -1285,14 +1321,15 @@ class Order extends Model
             return [];
         }
 
+        $note = is_string($refund->reason) && $refund->reason !== '' ? $refund->reason : null;
         $row = fn (int $itemId, int $cents): OrderAdjustment => OrderAdjustment::create([
             'order_id' => $this->id,
             'order_item_id' => $itemId,
             'type' => OrderAdjustment::TYPE_COURTESY,
             'amount_cents' => -$cents,
             'currency' => $this->currency ?? 'EUR',
-            'reason' => $refund->intent ?? 'refund',
-            'context' => ['refund_id' => (int) $refund->id],
+            'reason' => $refund->intent,
+            'context' => ['refund_id' => (int) $refund->id] + ($note === null ? [] : ['note' => $note]),
             'applied_by' => $refund->requested_by,
         ]);
 
@@ -1324,6 +1361,35 @@ class Order extends Model
         }
 
         return $rows;
+    }
+
+    /** Techo del motivo de un reembolso: `payment_refunds.reason` es `string(255)` y el modal pide 5–200. */
+    public const REFUND_NOTE_MAX_LENGTH = 200;
+
+    /** El motivo, recortado; `null` si está en blanco (un espacio no es un motivo). */
+    private static function normalizeRefundNote(?string $note): ?string
+    {
+        $note = trim((string) $note);
+
+        return $note === '' ? null : $note;
+    }
+
+    /**
+     * Por qué el MOTIVO no vale para este reembolso (T4 del libro, `DECISIONES #316`), o `null`:
+     * con `compensation` el texto es obligatorio (`compensation_without_note`) —una cortesía es una
+     * decisión y el operador la firma con su porqué—, y con cualquier intención no puede exceder la
+     * columna (`note_too_long`). Se comprueba ANTES de la txn 1: no hace falta lock para leer un texto.
+     */
+    private static function refundNoteBlockedReason(?string $intent, ?string $note): ?string
+    {
+        if ($intent === PaymentRefund::INTENT_COMPENSATION && $note === null) {
+            return 'compensation_without_note';
+        }
+        if ($note !== null && mb_strlen($note) > self::REFUND_NOTE_MAX_LENGTH) {
+            return 'note_too_long';
+        }
+
+        return null;
     }
 
     /**
@@ -1408,6 +1474,7 @@ class Order extends Model
         bool $alsoCancelItem,
         array $context = [],
         ?string $intent = null,
+        ?string $note = null,
     ): array {
         if ($amountCents <= 0) {
             return ['ok' => false, 'reason' => 'invalid_amount'];
@@ -1421,10 +1488,15 @@ class Order extends Model
             return ['ok' => false, 'reason' => 'no_paid_payment'];
         }
 
+        $note = self::normalizeRefundNote($note);
+        if ($noteReason = self::refundNoteBlockedReason($intent, $note)) {
+            return ['ok' => false, 'reason' => $noteReason];
+        }
+
         // Txn 1: lock + revalidate + create pending row. Serializa contra clicks
         // concurrentes y materializa la intención antes de la REST call.
         try {
-            $refund = DB::transaction(function () use ($item, $amountCents, $by, $mode, $intent, $payment) {
+            $refund = DB::transaction(function () use ($item, $amountCents, $by, $mode, $alsoCancelItem, $intent, $note, $payment) {
                 /** @var Order $locked */
                 $locked = self::query()->lockForUpdate()->find($this->id);
 
@@ -1442,7 +1514,7 @@ class Order extends Model
                 // soportar el batch de refund de pack+complementos.
 
                 // Capacidad agregada: no se puede devolver más de lo cobrado (cuenta succeeded + pending).
-                $locked->load(['payments.refunds', 'adjustments']);
+                $locked->load(['payments.refunds', 'adjustments', 'items.children', 'items.slot', 'items.ticketType']);
                 $remaining = $locked->refundableCapacityCents();
                 if ($amountCents > $remaining) {
                     throw new \DomainException('blocked:exceeds_refundable_capacity');
@@ -1455,6 +1527,25 @@ class Order extends Model
                 // batch (`itemRefundableRemainderCents`), así que no rechaza un batch legítimo.
                 if ($amountCents > $locked->itemRefundableRemainderCents($itemFresh)) {
                     throw new \DomainException('blocked:exceeds_item_refundable');
+                }
+
+                // «Devolver lo que se le debe» no puede exceder lo debido (T4 del libro, `DECISIONES
+                // #316`): el ámbito de un reembolso atado a línea es SU reserva, y lo dice el libro
+                // (`OrderBook::owedToCustomerCents`, la misma cifra que el modal sugiere) — bajo lock y
+                // ANTES de la pasarela, que ya no se puede deshacer. Con «también cancelar» no aplica
+                // (D-T4·5): lo debido tras cancelar la línea es lo que aportó y no ha vuelto, y eso ya
+                // lo acota el remanente de arriba. Es lo que hace IMPOSIBLE «devolver lo debido» antes
+                // de registrar la bajada que lo genera (`LB-ORDEN`, spec §6.3.7 hueco 4).
+                if ($intent === PaymentRefund::INTENT_VALUE_RETURNED && ! $alsoCancelItem) {
+                    $principal = $itemFresh->parent_item_id === null
+                        ? $locked->items->firstWhere('id', $itemFresh->id)
+                        : $locked->items->firstWhere('id', $itemFresh->parent_item_id);
+                    $owed = $principal === null
+                        ? OrderBook::forOrder($locked)->owedToCustomerCents()
+                        : OrderBook::forReservation($locked, $principal)->owedToCustomerCents();
+                    if ($amountCents > $owed) {
+                        throw new \DomainException('blocked:exceeds_owed');
+                    }
                 }
 
                 // Mutex anti-doble-click PER ITEM (no per Order). Refunds parciales
@@ -1480,6 +1571,8 @@ class Order extends Model
                     // POR QUÉ se devuelve (`DECISIONES #127(c)`), para que el desglose pueda explicar
                     // en vez de adivinar. `null` = no consta, que es la verdad de las filas viejas.
                     'intent' => $intent,
+                    // El MOTIVO del operador (T4): obligatorio con `compensation`, opcional con el resto.
+                    'reason' => $note,
                     'gateway_order' => $payment->gateway_order,
                     'requested_by' => $by->id,
                     'requested_at' => now(),
@@ -1661,6 +1754,7 @@ class Order extends Model
         bool $alsoCancelItems = false,
         ?string $intent = null,
         ?int $amountCentsOverride = null,
+        ?string $note = null,
     ): array {
         $succeeded = [];
         $failed = [];
@@ -1755,6 +1849,7 @@ class Order extends Model
                 mode: $mode,
                 alsoCancelItem: $alsoCancelItems,
                 intent: $intent,
+                note: $note,
             );
 
             if (! ($result['ok'] ?? false)) {

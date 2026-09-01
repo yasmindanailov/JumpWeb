@@ -246,6 +246,7 @@ class ItemPriceChangeReconstructionTest extends TestCase
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
                     'intent' => PaymentRefund::INTENT_COMPENSATION,
+                    'refund_note' => 'Motivo de prueba (T4 del libro)',
                     'items_to_refund' => [$item->id],
                 ],
                 arguments: ['item' => $item->id])
@@ -298,6 +299,7 @@ class ItemPriceChangeReconstructionTest extends TestCase
                 data: [
                     'mode' => PaymentRefund::MODE_REST,
                     'intent' => PaymentRefund::INTENT_COMPENSATION,
+                    'refund_note' => 'Motivo de prueba (T4 del libro)',
                     'items_to_refund' => [$item->id],
                 ],
                 arguments: ['item' => $item->id])

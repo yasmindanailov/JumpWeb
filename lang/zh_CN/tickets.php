@@ -41,7 +41,7 @@ return [
         'price_change' => '当日价格：:old → :new',
         'edit_fallback' => ':product 的变更',
         'cancel' => '已取消：:name · :quantity',
-        'courtesy' => '补偿',
+        'courtesy' => '礼遇折扣',
         'paid_online' => '已在线支付',
         'paid_desk' => '已在前台支付',
         'refund_card' => '已退回至银行卡',
@@ -50,6 +50,7 @@ return [
         'refund_failed' => '退款失败',
         // T5 · D9: 前台并未登记收款，因此是「结清」而非「已支付」。
         'gate' => '已在园区结清',
+        'gate_refund' => '已在园区退还',
         'with_reservation' => ':reservation · :label',
         // T3·1：账簿的标题与余额的标签（每个 `balance.kind` 一条；`settled` 无标签）。
         'movements_title' => '变动明细',

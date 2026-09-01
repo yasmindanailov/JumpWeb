@@ -154,6 +154,76 @@ class OrderBookTest extends TestCase
         $this->assertSame(Balance::KIND_SETTLED, $book->balance->kind);
     }
 
+    /**
+     * D9 bis (T4 del libro, `DECISIONES #316` decisión 2): la liquidación es SIMÉTRICA. Con la visita
+     * pasada, lo que quedaba por DEVOLVER se da por entregado en recepción —«Devuelto en el parque»,
+     * en negativo— y el saldo queda saldado; hasta la T4 quedaba «pendiente de devolución» para
+     * siempre, exigiendo una acción del operador. (Mutación: restaurar el `max(0, …)`.)
+     */
+    public function test_a_finished_visit_gives_what_was_owed_back_at_the_gate(): void
+    {
+        $by = User::factory()->create();
+        $order = $this->makePaidOrder(2000);
+        $item = $this->attachItem($order, qty: 2, unit: 1000, past: true);
+        $this->attachPaidPayment($order, 2000);
+        $this->reduce($order, $item, $by, toQty: 1);   // se le deben 10,00… y la visita ya pasó
+
+        $book = OrderBook::forOrder($this->fresh($order));
+
+        $this->assertBookCloses($book);
+        $this->assertSame(1000, $book->totalCents);
+        $gate = array_values(array_filter($book->settlements, fn (Settlement $s): bool => $s->kind === Settlement::KIND_GATE));
+        $this->assertCount(1, $gate);
+        $this->assertSame(-1000, $gate[0]->amountCents, 'lo que quedaba por devolver, con signo negativo');
+        $this->assertSame('Devuelto en el parque', $gate[0]->label);
+        $this->assertSame('01/01/2000', $gate[0]->occurredLabel);
+        $this->assertSame(1000, $book->paidCents, 'cobrado 20,00 − devuelto en el parque 10,00');
+        $this->assertSame(Balance::KIND_SETTLED, $book->balance->kind, 'nada pendiente: se dio por entregado en recepción');
+        $this->assertSame(-1000, $book->settledAtGateCents());
+        // Y lo que se le DEBE en dinero sigue siendo 10,00 (D-T4·6): la devolución en recepción es una
+        // inferencia, y si el operador la devuelve después por tarjeta tiene que poder hacerlo como
+        // «lo debido» — no como una cortesía falsa encima de una devolución que nunca ocurrió.
+        $this->assertSame(1000, $book->owedToCustomerCents());
+        $this->assertSame(1000, OrderBook::forReservation($this->fresh($order), $item)->owedToCustomerCents());
+    }
+
+    /**
+     * D-T4·4: la inferencia CEDE ante los hechos. Un reembolso registrado DESPUÉS de la visita hace
+     * crecer lo devuelto y reduce lo inferido en la misma cantidad hasta desaparecer: el libro no
+     * cuenta el dinero dos veces. (Mutación: no restar `dev` de lo inferido.)
+     */
+    public function test_a_refund_after_the_visit_reduces_what_was_inferred(): void
+    {
+        $by = User::factory()->create();
+        $order = $this->makePaidOrder(2000);
+        $item = $this->attachItem($order, qty: 2, unit: 1000, past: true);
+        $this->attachPaidPayment($order, 2000);
+        $this->reduce($order, $item, $by, toQty: 1);
+
+        // La recepción no lo devolvió: el operador devuelve 6,00 como «lo que se le debe» (cabe: se le deben 10,00).
+        $result = $this->fresh($order)->executePartialRefund($item->fresh(), 600, $by, PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_VALUE_RETURNED);
+        $this->assertTrue($result['ok'], json_encode($result));
+
+        $book = OrderBook::forOrder($this->fresh($order));
+        $this->assertBookCloses($book);
+        $gate = array_values(array_filter($book->settlements, fn (Settlement $s): bool => $s->kind === Settlement::KIND_GATE));
+        $this->assertSame(-400, $gate[0]->amountCents, 'lo inferido baja en lo devuelto: 10,00 − 6,00');
+        $this->assertSame(1000, $book->paidCents, '20,00 − 6,00 devueltos − 4,00 en recepción');
+        $this->assertSame(Balance::KIND_SETTLED, $book->balance->kind);
+        $this->assertSame(400, $book->owedToCustomerCents());
+        $this->assertSame(0, OrderAdjustment::where('type', OrderAdjustment::TYPE_COURTESY)->count(), 'devolver lo debido no es una cortesía');
+
+        // Y con el resto devuelto, lo inferido desaparece.
+        $result = $this->fresh($order)->executePartialRefund($item->fresh(), 400, $by, PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_VALUE_RETURNED);
+        $this->assertTrue($result['ok'], json_encode($result));
+        $book = OrderBook::forOrder($this->fresh($order));
+        $this->assertBookCloses($book);
+        $this->assertSame([], array_filter($book->settlements, fn (Settlement $s): bool => $s->kind === Settlement::KIND_GATE), 'ya no queda nada que inferir');
+        $this->assertSame(1000, $book->paidCents);
+        $this->assertSame(Balance::KIND_SETTLED, $book->balance->kind);
+        $this->assertSame(0, $book->owedToCustomerCents());
+    }
+
     public function test_a_pack_with_a_deposit_has_it_as_a_fact_and_pays_the_rest_at_the_park(): void
     {
         $by = User::factory()->create();
@@ -188,7 +258,7 @@ class OrderBookTest extends TestCase
         $item = $this->attachItem($order, qty: 1, unit: 4000);
         $this->attachPaidPayment($order, 4000);
 
-        $result = $this->fresh($order)->executePartialRefund($item, 1000, $by, PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_COMPENSATION);
+        $result = $this->fresh($order)->executePartialRefund($item, 1000, $by, PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_COMPENSATION, 'Motivo de prueba (T4 del libro)');
         $this->assertTrue($result['ok'], json_encode($result));
         $this->travel(1)->seconds();
         $item->fresh()->markCancelled($by);
@@ -199,7 +269,7 @@ class OrderBookTest extends TestCase
         $this->assertSame(['booking', 'courtesy', 'cancel'], array_column($book->movements, 'kind'));
         $this->assertSame([4000, -1000, -3000], array_column($book->movements, 'amountCents'),
             'la cancelación retira la línea CON su cortesía: −(40,00 − 10,00)');
-        $this->assertSame('Compensación', $book->movements[1]->label);
+        $this->assertSame('Descuento por cortesía', $book->movements[1]->label, 'T4 (`#316`): «Compensación» se leía como un reembolso');
         $this->assertSame('Cancelado: Jump 1h · 1 entrada', $book->movements[2]->label);
         $this->assertSame(0, $book->totalCents, 'un pedido sin líneas vivas no vale nada');
         $this->assertSame(3000, $book->paidCents, '40,00 cobrados − 10,00 devueltos');
@@ -518,7 +588,7 @@ class OrderBookTest extends TestCase
         $b = $this->attachItem($order, qty: 1, unit: 1000);
         $this->attachPaidPayment($order, 4000);
 
-        $result = $this->fresh($order)->executeFullRefund($by, PaymentRefund::MODE_MANUAL, false, PaymentRefund::INTENT_COMPENSATION);
+        $result = $this->fresh($order)->executeFullRefund($by, PaymentRefund::MODE_MANUAL, false, PaymentRefund::INTENT_COMPENSATION, 'Motivo de prueba (T4 del libro)');
         $this->assertTrue($result['ok'], json_encode($result));
 
         $fresh = $this->fresh($order);

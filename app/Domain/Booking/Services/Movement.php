@@ -16,7 +16,8 @@ namespace App\Domain\Booking\Services;
  *                 `MixedPartySurcharge` reconcilia en el sitio; su fecha es la de su ÚLTIMO importe;
  *  - `cancel`   · lo que una cancelación retira: `−(fila + cortesía)` de la línea en ese momento —
  *                 la cortesía de una línea cancelada se extingue con ella (spec §4.1);
- *  - `courtesy` · dinero devuelto SIN que desapareciera producto (≤ 0), escrito al reembolsar.
+ *  - `courtesy` · dinero devuelto SIN que desapareciera producto (≤ 0): el «Descuento por
+ *                 cortesía» que escribe un reembolso con motivo `compensation` (T4, `DECISIONES #316`).
  *
  * `Σ amount_cents` de las líneas de valor tiene que ser el Total del libro: es la identidad `I3`,
  * y {@see OrderBook} la evalúa en ejecución. Un compositor que olvide una clase deja el pedido
@@ -24,6 +25,11 @@ namespace App\Domain\Booking\Services;
  *
  * `occurred_at` es un instante (ISO-8601, UTC); `occurred_label` es ese instante en la zona del
  * parque como `d/m/Y` — la hora vive en el historial, no aquí (spec §4.9).
+ *
+ * `note` es el MOTIVO que el operador escribió al conceder una cortesía (D-T4·1, `[DECIDIDO
+ * owner]`): es INTERNO. Lo pinta solo el panel; **no viaja por el contrato** (`LedgerResource` no lo
+ * transcribe) ni llega al cajón ni a los correos — un texto que el operador escribe para sí no es un
+ * texto para el cliente, y publicarlo sería una fuga de tono.
  */
 final readonly class Movement
 {
@@ -58,5 +64,7 @@ final readonly class Movement
         public string $occurredLabel,
         /** El principal de la reserva a la que pertenece; `null` en el nacimiento del PEDIDO. */
         public ?int $reservationId,
+        /** Solo en `courtesy`: el motivo del operador. INTERNO — no sale del panel. */
+        public ?string $note = null,
     ) {}
 }

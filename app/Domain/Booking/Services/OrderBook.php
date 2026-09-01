@@ -31,8 +31,14 @@ use Illuminate\Support\Facades\Log;
  *
  *     Total(r)     = Σ_{líneas VIVAS} (fila + cortesía)   (la cortesía de una línea cancelada se extingue con ella)
  *     Pagado(r)    = Σ online_nac − Σ dev
- *     Liquidado(r) = max(0, Total(r) − Pagado(r))   si la franja pasó y el pedido se cobró, si no 0
+ *     Liquidado(r) = Total(r) − Pagado(r), CON SIGNO   si la franja pasó, el pedido se cobró y el principal vive; si no 0
  *     Saldo(r)     = Total(r) − Pagado(r) − Liquidado(r)
+ *
+ * La liquidación es SIMÉTRICA (D9 bis, T4 del libro, `DECISIONES #316` `[DECIDIDO owner]`): al pasar
+ * la visita, lo que quedaba por pagar se dio por cobrado en recepción («Liquidado en el parque») y lo
+ * que quedaba por devolver se dio por entregado allí («Devuelto en el parque»). La inferencia CEDE
+ * ante los hechos: un reembolso registrado después hace crecer `dev` y lo inferido se reduce en la
+ * misma cantidad hasta desaparecer — el libro no cuenta el dinero dos veces.
  *
  * ## Las identidades, evaluadas EN EJECUCIÓN (spec §4.1)
  *
@@ -130,7 +136,7 @@ final readonly class OrderBook
             $settlements[] = self::refundSettlement($f, $f['amount_cents']);
         }
         foreach ($c['reservations'] as $r) {
-            if ($r['liquidado'] > 0) {
+            if ($r['liquidado'] !== 0) {
                 $settlements[] = self::gateSettlement($r);
             }
         }
@@ -205,7 +211,7 @@ final readonly class OrderBook
                 $settlements[] = self::refundSettlement($f, $share);
             }
         }
-        if ($r['liquidado'] > 0) {
+        if ($r['liquidado'] !== 0) {
             $settlements[] = self::gateSettlement($r);
         }
 
@@ -248,15 +254,30 @@ final readonly class OrderBook
     }
 
     /**
-     * Lo que se le DEBE al cliente, en positivo: el saldo cuando su clase es de devolución
-     * (`refund_at_park` · `refund_pending`); 0 en cualquier otra. Es el importe que el panel sugiere
-     * al reembolsar (D5 de `#146`) y el que nombra el aviso del pedido cancelado (D-T3·15).
+     * Lo que se le DEBE al cliente EN DINERO, en positivo: lo cobrado y no devuelto por encima de lo
+     * que hoy vale, `max(0, Pagado_sin_liquidar − Total)`, con `Pagado_sin_liquidar = cobrado −
+     * devuelto` (lo que de verdad entró y no ha vuelto, sin la liquidación INFERIDA). Es el importe
+     * que el panel sugiere al reembolsar (D5 de `#146`), el TOPE de «devolver lo que se le debe» y la
+     * base sobre la que se mide la cortesía (T4, `DECISIONES #316`), y el que nombra el aviso del
+     * pedido cancelado (D-T3·15). 0 si el libro no cierra: un pedido «en revisión» no debe nada que
+     * el libro pueda afirmar.
+     *
+     * ⚠️ NO es «el saldo cuando es de devolución» (lo fue hasta la T4), y la diferencia es D9 bis:
+     * con la visita pasada el saldo queda `settled` porque lo debido se da por ENTREGADO en recepción
+     * («Devuelto en el parque»), pero eso es una inferencia, y si el operador lo devuelve DESPUÉS por
+     * tarjeta es porque la recepción no lo hizo — ese reembolso tiene que poder ser «devolver lo
+     * debido» (sin cortesía) y hacer desaparecer lo inferido (D-T4·4: la inferencia cede ante los
+     * hechos). Medido con el saldo, aquí valdría 0, el modal solo ofrecería «compensación» y el libro
+     * escribiría una cortesía falsa encima de una devolución inferida que nunca ocurrió: el dinero
+     * contado dos veces (D-T4·6, `specs/desglose-libro.md` §6.4.1).
      */
     public function owedToCustomerCents(): int
     {
-        return in_array($this->balance->kind, [Balance::KIND_REFUND_AT_PARK, Balance::KIND_REFUND_PENDING], true)
-            ? -$this->balance->cents
-            : 0;
+        if (! $this->isConsistent) {
+            return 0;
+        }
+
+        return max(0, ($this->paidCents - $this->settledAtGateCents()) - $this->totalCents);
     }
 
     /**
@@ -281,7 +302,7 @@ final readonly class OrderBook
         return array_sum(array_map(static fn (Movement $m): int => $m->amountCents, $this->movements));
     }
 
-    /** Lo liquidado en el parque: la Σ de las líneas `gate`. */
+    /** Lo liquidado en el parque, CON SIGNO: la Σ de las líneas `gate` (+ cobrado allí · − devuelto allí, D9 bis). */
     public function settledAtGateCents(): int
     {
         $sum = 0;
@@ -414,7 +435,10 @@ final readonly class OrderBook
                 }
                 if ($row->isCourtesy()) {
                     $courtesy += $amount;
-                    $movements[] = self::movement(Movement::KIND_COURTESY, MovementLabel::courtesy(), $amount, $row->created_at, (int) $principal->id, rank: 1, seq: (int) $row->id);
+                    // El MOTIVO viaja en la línea solo para el panel (D-T4·1): `LedgerResource` no lo transcribe.
+                    $context = is_array($row->context) ? $row->context : [];
+                    $note = is_string($context['note'] ?? null) && $context['note'] !== '' ? $context['note'] : null;
+                    $movements[] = self::movement(Movement::KIND_COURTESY, MovementLabel::courtesy(), $amount, $row->created_at, (int) $principal->id, rank: 1, seq: (int) $row->id, note: $note);
                 } elseif ($row->isMixed()) {
                     // La línea VIVA: su fecha es la del último importe que se le escribió, no la del
                     // primero — es lo que hoy vale y desde cuándo (su historia, en «Ver historial»).
@@ -452,10 +476,14 @@ final readonly class OrderBook
             $dev += $order->itemRefundedCents($line);
         }
 
-        // La liquidación implícita (D9 de la T5): franja pasada Y pedido cobrado. Lo que quede por
-        // pagar al terminar la visita se dio por liquidado; lo que quede por devolver, no.
+        // La liquidación implícita, SIMÉTRICA (D9 de la T5 + D9 bis de la T4 del libro, `DECISIONES
+        // #316`): franja pasada, pedido cobrado y principal vivo. Lo que quedara por pagar al terminar la
+        // visita se dio por cobrado en recepción; lo que quedara por devolver, por entregado allí. Con
+        // signo: positivo «Liquidado», negativo «Devuelto» en el parque. ⚠️ Hasta la T4 iba con
+        // `max(0, …)` y una bajada cuya visita ya pasó quedaba «pendiente de devolución» para siempre,
+        // exigiendo una acción del operador que el owner no quiere exigir.
         $resolved = $collected && ! $principalCancelled && $finished;
-        $liquidado = $resolved ? max(0, $total - ($onlineNac - $dev)) : 0;
+        $liquidado = $resolved ? $total - ($onlineNac - $dev) : 0;
 
         return [
             'principal' => $principal,
@@ -567,7 +595,7 @@ final readonly class OrderBook
     // ─── Constructores de líneas y orden ───────────────────────────────────────────────────
 
     /** @return array<string,mixed> una línea de valor todavía sin ordenar */
-    private static function movement(string $kind, string $label, int $amountCents, DateTimeInterface|string|null $at, ?int $reservationId, int $rank, int $seq): array
+    private static function movement(string $kind, string $label, int $amountCents, DateTimeInterface|string|null $at, ?int $reservationId, int $rank, int $seq, ?string $note = null): array
     {
         $when = self::instant($at);
 
@@ -579,6 +607,7 @@ final readonly class OrderBook
             'reservation_id' => $reservationId,
             'rank' => $rank,
             'seq' => $seq,
+            'note' => $note,
         ];
     }
 
@@ -603,6 +632,7 @@ final readonly class OrderBook
             occurredAt: $m['at']->toIso8601String(),
             occurredLabel: DisplayTime::format($m['at'], 'd/m/Y'),
             reservationId: $m['reservation_id'],
+            note: $m['note'] ?? null,
         ), $rows);
     }
 
@@ -633,8 +663,10 @@ final readonly class OrderBook
     }
 
     /**
-     * La liquidación, fechada al FIN de la franja del principal. La etiqueta es la fecha CIVIL de la
-     * franja: convertir un día de calendario a la zona del parque lo desplazaría (`DisplayTime::dayLabel`).
+     * La liquidación, fechada al FIN de la franja del principal, con el rótulo de su SIGNO: lo que
+     * quedaba por pagar, «Liquidado en el parque»; lo que quedaba por devolver, «Devuelto en el
+     * parque» (D9 bis). La etiqueta de fecha es la fecha CIVIL de la franja: convertir un día de
+     * calendario a la zona del parque lo desplazaría (`DisplayTime::dayLabel`).
      *
      * @param  array<string,mixed>  $r
      * @return array<string,mixed>
@@ -645,8 +677,9 @@ final readonly class OrderBook
         $principal = $r['principal'];
         $slot = $principal->slot;
         $end = CarbonImmutable::parse($slot->date->format('Y-m-d').' '.$slot->end_time);
+        $label = $r['liquidado'] < 0 ? MovementLabel::gateRefund() : MovementLabel::gate();
 
-        return self::settlement(Settlement::KIND_GATE, MovementLabel::gate(), $r['liquidado'], $end, Settlement::STATUS_SUCCEEDED, null, (int) $principal->id, $slot->date->format('d/m/Y'));
+        return self::settlement(Settlement::KIND_GATE, $label, $r['liquidado'], $end, Settlement::STATUS_SUCCEEDED, null, (int) $principal->id, $slot->date->format('d/m/Y'));
     }
 
     /**

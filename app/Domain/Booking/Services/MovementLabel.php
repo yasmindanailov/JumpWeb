@@ -147,6 +147,11 @@ final class MovementLabel
             : trans_choice('tickets.gate_mixed_party_line', $guests, ['count' => $guests]);
     }
 
+    /**
+     * «Descuento por cortesía» (`[DECIDIDO owner]`, `DECISIONES #316` decisión 5): se leía
+     * «Compensación» y el owner la tomó por un reembolso; el nombre nuevo dice lo que es — una rebaja
+     * del Total. El MOTIVO del operador no forma parte de la etiqueta: es interno ({@see Movement::$note}).
+     */
     public static function courtesy(): string
     {
         return __('tickets.journal.courtesy');
@@ -181,6 +186,17 @@ final class MovementLabel
     public static function gate(): string
     {
         return __('tickets.journal.gate');
+    }
+
+    /**
+     * «Devuelto en el parque»: la otra mitad de D9 (D9 bis, T4 del libro, `DECISIONES #316`
+     * decisión 2). Con la visita pasada, lo que quedaba por DEVOLVER se da por entregado en recepción
+     * igual que lo que quedaba por pagar se da por cobrado — y como nadie lo registra, tampoco dice
+     * «registrado» (esa es {@see refund} en modo manual).
+     */
+    public static function gateRefund(): string
+    {
+        return __('tickets.journal.gate_refund');
     }
 
     /** En un pedido con más de una reserva, cada línea de valor lleva delante la suya (spec §4.3). */
