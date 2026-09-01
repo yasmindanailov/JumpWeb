@@ -25,6 +25,13 @@ use Carbon\CarbonInterface;
  */
 final class WaiverStatus
 {
+    /** Los tres estados de la exención de un MENOR tal como los nombran las superficies del operador. */
+    public const MINOR_CURRENT = 'current';
+
+    public const MINOR_OUTDATED = 'outdated';
+
+    public const MINOR_MISSING = 'missing';
+
     public function __construct(
         public readonly string $mode,
         public readonly bool $signed,
@@ -156,5 +163,57 @@ final class WaiverStatus
     public function isOutdated(): bool
     {
         return $this->signed && ! $this->isCurrent;
+    }
+
+    /**
+     * El estado de la exención de un menor a cargo, en la forma que consumen la ficha del pedido, la
+     * del titular y la puerta.
+     *
+     * Vive AQUÍ y no en cada superficie porque hasta `#320` el mismo trío se derivaba por triplicado
+     * —`AssignedDependents::waiverState()`, `HolderDependents::waiverState()` y un ternario dentro de
+     * `GateProfile::minor()`—, y tres copias de la misma regla son tres sitios donde puede divergir.
+     *
+     * `null` cuando el modo NO responde por menores (`externo` y `desactivado`: el sistema del parque
+     * no sabe de dependientes, §4.3). Es distinto de «firmada y vigente»: aquello es una respuesta,
+     * esto es que no hay pregunta — y por eso el dato viaja al DOM aunque no se pinte
+     * ({@see minorStateIsNoteworthy()}).
+     *
+     * @return self::MINOR_*|null
+     */
+    public function minorState(): ?string
+    {
+        if ($this->mode !== WaiverSettings::MODE_INTERNAL) {
+            return null;
+        }
+
+        if (! $this->signed) {
+            return self::MINOR_MISSING;
+        }
+
+        return $this->isOutdated() ? self::MINOR_OUTDATED : self::MINOR_CURRENT;
+    }
+
+    /**
+     * ¿Este estado lleva RÓTULO en pantalla? (`#320`, `[DECIDIDO owner]`)
+     *
+     * **Solo se pinta la EXCEPCIÓN.** La firma vigente no se anuncia: es la condición para que el
+     * menor esté asignado —`DependentAssigner::hasCurrentWaiver()` no deja asignar sin ella en modo
+     * interno—, así que rotular «exención ✓» junto a cada menor es repetir en cada fila algo que el
+     * sistema ya garantiza. Silencio = todo bien.
+     *
+     * ⚠️ **Y por eso `outdated` y `missing` SIGUEN pintándose**: el argumento de arriba cubre el
+     * instante de la asignación y nada más. Una firma vigente **caduca sola** cuando se publica una
+     * versión nueva del documento (`isOutdated()`), sin que nadie toque la reserva; y fuera del
+     * embudo hay vías —el modo de la instalación puede cambiar— que dejan menores sin firma vigente.
+     * Ocultar también la excepción cegaría al operador ante una deriva que él no provocó, que es
+     * justo lo que la puerta necesita ver: `admin.puerta.validar.profile.minor_waiver_outdated` no
+     * es un adorno, dice literalmente «versión anterior — deja pasar».
+     *
+     * Recibe el estado ya derivado (y no `self`) para que la puerta pueda preguntarlo sobre el valor
+     * que ya lleva en su read-model, sin rehacer el `WaiverStatus`.
+     */
+    public static function minorStateIsNoteworthy(?string $state): bool
+    {
+        return $state !== null && $state !== self::MINOR_CURRENT;
     }
 }

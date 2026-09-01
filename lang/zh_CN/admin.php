@@ -43,6 +43,8 @@ return [
             'park_rules' => ['label' => '园区规则', 'description' => '网站上发布的园区规则。'],
             'pages' => ['label' => '法律页面', 'description' => '法律声明、隐私、Cookie 与条款。'],
             'settings' => ['label' => '设置', 'description' => '企业与税务资料、销售、门口与支付。'],
+            // `#320`：门口从侧边菜单移到这里。
+            'puerta' => ['label' => '门口', 'description' => '验证入园：扫描会员码并查看客户资料。'],
             'team' => ['label' => '团队', 'description' => '在此工作并可进入后台的账号。'],
             'roles' => ['label' => '角色与权限', 'description' => '各角色在后台可以做什么。'],
             'audit' => ['label' => '事件', 'description' => '关键操作与系统告警的记录。'],

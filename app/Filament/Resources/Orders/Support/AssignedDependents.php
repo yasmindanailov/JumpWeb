@@ -29,11 +29,12 @@ use Carbon\CarbonImmutable;
  */
 final class AssignedDependents
 {
-    public const WAIVER_CURRENT = 'current';
+    /** Alias del trío que define `WaiverStatus` (`#320`): un solo literal para los tres estados. */
+    public const WAIVER_CURRENT = WaiverStatus::MINOR_CURRENT;
 
-    public const WAIVER_OUTDATED = 'outdated';
+    public const WAIVER_OUTDATED = WaiverStatus::MINOR_OUTDATED;
 
-    public const WAIVER_MISSING = 'missing';
+    public const WAIVER_MISSING = WaiverStatus::MINOR_MISSING;
 
     /**
      * @return array<int, list<array{id:int, name:string, age:int, waiver:?string, removed:bool}>> por `order_item_id`; solo ítems con algo asignado
@@ -77,7 +78,7 @@ final class AssignedDependents
                     // `#236`: nombre COMPLETO en el panel; la pantalla de puerta se queda con el de pila.
                     'name' => $dependent->fullName(),
                     'age' => $dependent->ageOn($day),
-                    'waiver' => $status === null ? null : self::waiverState($status),
+                    'waiver' => $status?->minorState(),
                     'removed' => $dependent->isRemoved(),
                 ];
                 $row['label'] = self::label($row);
@@ -98,7 +99,10 @@ final class AssignedDependents
     public static function label(array $row): string
     {
         $parts = [__('admin.orders.dependents.age', ['age' => $row['age']])];
-        if ($row['waiver'] !== null) {
+        // `#320`: solo la EXCEPCIÓN lleva rótulo. La firma vigente es condición para estar asignado
+        // (`DependentAssigner`), así que anunciarla en cada fila es repetir lo que el sistema ya
+        // garantiza; `outdated` y `missing` sí se pintan, porque aparecen SOLOS después de asignar.
+        if (WaiverStatus::minorStateIsNoteworthy($row['waiver'])) {
             $parts[] = __('admin.orders.dependents.waiver_'.$row['waiver']);
         }
         if ($row['removed']) {
@@ -106,14 +110,5 @@ final class AssignedDependents
         }
 
         return $row['name'].' ('.implode(' · ', $parts).')';
-    }
-
-    private static function waiverState(WaiverStatus $status): string
-    {
-        if (! $status->signed) {
-            return self::WAIVER_MISSING;
-        }
-
-        return $status->isOutdated() ? self::WAIVER_OUTDATED : self::WAIVER_CURRENT;
     }
 }

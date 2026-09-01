@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
- * Fase 7.0 — Middleware `staff_or_admin` y gate `User::canAccessPanel()`.
+ * Fase 7.0 — Middleware `panel_role` y gate `User::canAccessPanel()`.
  *
  * Cubre defense in depth: ambos checks (middleware + canAccessPanel) deben
  * cerrar a un customer y abrir a admin/staff. Ver `docs/PLAN-FASE-7-PANEL.md` §1.3.
@@ -19,7 +19,7 @@ use Tests\TestCase;
  * El rol `staff` se siembra en este test ad-hoc; la sub-fase del PermissionSeeder
  * lo hará oficial y los tests reales del panel lo asumirán sembrado por defecto.
  */
-class RequiresStaffOrAdminTest extends TestCase
+class RequiresPanelRoleTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -31,7 +31,7 @@ class RequiresStaffOrAdminTest extends TestCase
 
         // Ruta de prueba protegida: el behavior real del middleware no depende
         // del panel concreto, solo de la combinación auth + rol.
-        Route::middleware(['web', 'auth', 'staff_or_admin'])
+        Route::middleware(['web', 'auth', 'panel_role'])
             ->get('/test-staff-area', fn () => response('ok'));
     }
 

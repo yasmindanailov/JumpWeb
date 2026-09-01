@@ -81,7 +81,15 @@ class AdminSettingsHub extends Page
      *  - `page`  → (opcional, solo recursos) página del recurso a la que apunta,
      *  - `query` → (opcional) parámetros de la URL, p. ej. la pestaña activa.
      *
-     * @return array<string, array<int, array{key: string, class: class-string, page?: string, query?: array<string, string>}>>
+     * ▶ `#320` — y una entrada puede NO ser de Filament. La puerta es una página Livewire que vive
+     * fuera del shell (`#119`), así que no tiene `canAccess()` ni `getUrl()` que preguntar: se
+     * declara con `route` + `permission` + `icon`. Hizo falta porque el ítem «Puerta» salió del menú
+     * lateral y **el buscador global saca sus pantallas de la navegación** ({@see
+     * \App\Filament\Support\PanelGlobalSearchProvider}): sin colocarla aquí, retirarla del menú la
+     * dejaba alcanzable solo tecleando la URL, y sin que ninguna guarda lo notara —la de pantallas
+     * huérfanas solo mira las REGISTRADAS en Filament, y ésta no lo está—.
+     *
+     * @return array<string, array<int, array{key: string, class?: class-string, page?: string, query?: array<string, string>, route?: string, permission?: string, icon?: string|BackedEnum}>>
      */
     public static function areas(): array
     {
@@ -108,6 +116,19 @@ class AdminSettingsHub extends Page
             ],
             'system' => [
                 ['key' => 'settings', 'class' => Settings::class],
+                // `#320`: la PUERTA, y esta tarjeta es el ESPEJO EXACTO del ítem de menú. Al admin se
+                // le retiró del menú (`[DECIDIDO owner]`: no atiende por ahí, atiende por el buscador)
+                // y aparece aquí; a quien sí lo tiene en el menú —el empleado— no se le repite, o
+                // «Ajustes» pasaría a enseñarle una sola tarjeta con un enlace que ya tiene, y esta
+                // página dejaría de significar «puesta en marcha». Entre las dos reglas, todo el que
+                // tenga el permiso llega por exactamente UN camino.
+                [
+                    'key' => 'puerta',
+                    'route' => 'admin.puerta.validar',
+                    'permission' => 'registrations.validate',
+                    'roles' => ['admin'],
+                    'icon' => Heroicon::OutlinedShieldCheck,
+                ],
                 // Misma pantalla que «Clientes» del menú, otra pestaña: el equipo se
                 // gestiona aquí (se hace una vez), los clientes en el día a día.
                 ['key' => 'team', 'class' => UserResource::class, 'query' => ['tab' => ListUsers::TAB_TEAM]],
@@ -132,10 +153,7 @@ class AdminSettingsHub extends Page
             $items = [];
 
             foreach ($entries as $entry) {
-                /** @var class-string $class */
-                $class = $entry['class'];
-
-                if (! $class::canAccess()) {
+                if (! static::entryIsVisible($entry)) {
                     continue;
                 }
 
@@ -143,7 +161,7 @@ class AdminSettingsHub extends Page
                     'label' => __('admin.hub.items.'.$entry['key'].'.label'),
                     'description' => __('admin.hub.items.'.$entry['key'].'.description'),
                     'url' => static::urlFor($entry),
-                    'icon' => $class::getNavigationIcon(),
+                    'icon' => static::iconFor($entry),
                 ];
             }
 
@@ -162,14 +180,55 @@ class AdminSettingsHub extends Page
     }
 
     /**
+     * ¿Este usuario puede abrir la entrada? La autoridad sigue siendo de la pantalla: una de
+     * Filament responde por su `canAccess()`; una de fuera (`route`) por su permiso declarado, que es
+     * el MISMO que exige su ruta — si divergieran, esta página ofrecería un enlace a un 403.
+     *
+     * `roles` acota además a una lista de roles, para la tarjeta que solo existe porque a ESE rol le
+     * falta el enlace en otro sitio. Es un filtro que solo puede QUITAR: nunca concede nada que el
+     * permiso no diera ya.
+     *
+     * @param  array{class?: class-string, permission?: string, roles?: array<int, string>}  $entry
+     */
+    private static function entryIsVisible(array $entry): bool
+    {
+        if (isset($entry['class'])) {
+            return $entry['class']::canAccess();
+        }
+
+        $user = auth()->user();
+        if ($user === null || ! $user->hasPermission($entry['permission'])) {
+            return false;
+        }
+
+        foreach ($entry['roles'] ?? [] as $role) {
+            if ($user->hasRole($role)) {
+                return true;
+            }
+        }
+
+        return ! isset($entry['roles']);
+    }
+
+    /** @param array{class?: class-string, icon?: string|BackedEnum} $entry */
+    private static function iconFor(array $entry): string|BackedEnum|null
+    {
+        return isset($entry['class']) ? $entry['class']::getNavigationIcon() : ($entry['icon'] ?? null);
+    }
+
+    /**
      * URL de una entrada. `Resource::getUrl()` recibe el nombre de la página como primer
      * argumento y `Page::getUrl()` recibe directamente los parámetros: son firmas
      * distintas, y confundirlas pasa el análisis estático pero rompe en ejecución.
      *
-     * @param  array{key: string, class: class-string, page?: string, query?: array<string, string>}  $entry
+     * @param  array{key: string, class?: class-string, page?: string, query?: array<string, string>, route?: string}  $entry
      */
     private static function urlFor(array $entry): string
     {
+        if (! isset($entry['class'])) {
+            return route($entry['route']);
+        }
+
         /** @var class-string $class */
         $class = $entry['class'];
         $query = $entry['query'] ?? [];
@@ -195,10 +254,7 @@ class AdminSettingsHub extends Page
     {
         foreach (static::areas() as $entries) {
             foreach ($entries as $entry) {
-                /** @var class-string $class */
-                $class = $entry['class'];
-
-                if ($class::canAccess()) {
+                if (static::entryIsVisible($entry)) {
                     return true;
                 }
             }

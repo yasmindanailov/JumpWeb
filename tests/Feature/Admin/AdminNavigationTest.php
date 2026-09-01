@@ -10,6 +10,7 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\UserResource;
+use App\Http\Middleware\RestrictsPuertaRole;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Filament\Facades\Filament;
@@ -17,7 +18,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * #223 — La FORMA del panel: menú plano de cinco sitios + «Ajustes» fuera del camino.
+ * #223 — La FORMA del panel: menú plano + «Ajustes» fuera del camino.
+ *
+ * ▶ `#320` — el menú del ADMIN pasa a CUATRO sitios: «Puerta» deja de salirle (no atiende por ahí, y
+ * la tiene en «Ajustes → Sistema» y en el buscador). Al EMPLEADO le sigue saliendo, porque él sí
+ * atiende. Y nace un tercer rol de equipo, `puerta`, que no navega el panel en absoluto: entra por el
+ * mismo login y aterriza en su pantalla ({@see RestrictsPuertaRole}).
  *
  * Esta guarda no existía. Hasta el 2026-08-28 la navegación del panel —24 entradas en 6
  * grupos— no la miraba ni un solo test, y por eso se había desordenado sola: entradas
@@ -41,9 +47,9 @@ class AdminNavigationTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Los CINCO sitios del día a día, en su orden. La sexta entrada del menú, «Puerta», es
-     * un `NavigationItem` suelto (su página vive fuera del shell de Filament, #119) y por eso
-     * no tiene clase que listar aquí; se comprueba por su rótulo.
+     * Los sitios del día a día que son CLASE, en su orden. «Puerta» no está aquí porque su página
+     * vive fuera del shell de Filament (#119) y entra como `NavigationItem` suelto: se comprueba por
+     * su rótulo, y desde `#320` solo le sale a quien atiende ahí — al admin no.
      *
      * @var array<int, class-string>
      */
@@ -104,10 +110,12 @@ class AdminNavigationTest extends TestCase
         return $labels;
     }
 
-    public function test_admin_menu_is_flat_and_has_the_five_daily_places_in_order(): void
+    public function test_admin_menu_is_flat_and_has_the_four_daily_places_in_order(): void
     {
+        // `#320` (`[DECIDIDO owner]`): «Puerta» sale del menú — el gerente no atiende por ella, y la
+        // conserva en «Ajustes → Sistema» (y por tanto en el buscador). El menú vuelve a CUATRO.
         $this->assertSame(
-            ['Hoy', 'Calendario', 'Pedidos', 'Clientes', 'Puerta'],
+            ['Hoy', 'Calendario', 'Pedidos', 'Clientes'],
             $this->menuLabelsFor($this->userWithRole('admin')),
         );
     }
@@ -116,10 +124,79 @@ class AdminNavigationTest extends TestCase
     {
         // El empleado tiene `calendar.view`, `orders.view` y `registrations.validate`, pero
         // NO `users.manage`: su menú son cuatro sitios, no cinco. No es una omisión.
+        //
+        // `#320`: conserva «Puerta» —él sí atiende ahí— y por eso su menú NO encoge con esta tanda.
         $this->assertSame(
             ['Hoy', 'Calendario', 'Pedidos', 'Puerta'],
             $this->menuLabelsFor($this->userWithRole('staff')),
         );
+    }
+
+    /**
+     * `#320` (`[DECIDIDO owner]`) — el rol `puerta` NO navega el panel: cualquier ruta suya lo
+     * devuelve a su pantalla ({@see RestrictsPuertaRole}). Es el puesto de la entrada, y con el mismo
+     * login que el resto del equipo.
+     */
+    public function test_the_puerta_role_never_reaches_the_panel_and_lands_at_its_screen(): void
+    {
+        $puerta = $this->userWithRole('puerta');
+
+        foreach ([Dashboard::getUrl(), CalendarPage::getUrl(), OrderResource::getUrl('index'), AdminSettingsHub::getUrl()] as $url) {
+            $this->actingAs($puerta)
+                ->get($url)
+                ->assertRedirect(route('admin.puerta.validar'));
+        }
+
+        // Y su sitio SÍ le abre: lo que se le cierra es el panel, no su puesto de trabajo.
+        $this->actingAs($puerta)->get(route('admin.puerta.validar'))->assertOk();
+    }
+
+    /**
+     * `#320` — el rol de puerta trae SOLO sus dos permisos. Las dos hojas imprimibles de sala son de
+     * `staff`, y aquí se comprueba que no se le regalan de rebote: `RequiresPanelRole` lo deja pasar
+     * (es equipo) y quien lo frena es el permiso, que es donde vive la autorización.
+     */
+    public function test_the_puerta_role_does_not_get_the_printable_sheets(): void
+    {
+        $this->assertSame(
+            ['registrations.validate', 'puerta.profile'],
+            PermissionSeeder::PUERTA_DEFAULT_PERMISSIONS,
+        );
+
+        $puerta = $this->userWithRole('puerta');
+        $this->assertFalse($puerta->hasPermission('orders.view'), 'la hoja de reserva imprimible no es suya');
+        $this->assertFalse($puerta->hasPermission('calendar.view'), 'el resumen del día tampoco');
+    }
+
+    /** Ni al empleado ni al encargado los desvía nadie; y un rol de más alcance gana al acumularse. */
+    public function test_staff_and_admin_are_not_sent_to_the_gate(): void
+    {
+        $this->actingAs($this->userWithRole('admin'))->get(Dashboard::getUrl())->assertOk();
+        $this->actingAs($this->userWithRole('staff'))->get(Dashboard::getUrl())->assertOk();
+
+        $both = $this->userWithRole('staff');
+        $both->roles()->attach(Role::where('name', 'puerta')->value('id'));
+        $this->actingAs($both)->get(Dashboard::getUrl())->assertOk();
+    }
+
+    /**
+     * `#320` — la puerta se alcanza desde «Ajustes», que es lo que hace barato haberla sacado del
+     * menú. ⚠️ Y no es un detalle de comodidad: el buscador global saca sus pantallas de la
+     * navegación y de `visibleAreas()`, así que sin esta tarjeta la puerta desaparecía también del
+     * buscador y quedaba accesible SOLO tecleando la URL.
+     */
+    public function test_the_gate_is_reachable_from_settings_for_the_admin(): void
+    {
+        $this->actingAs($this->userWithRole('admin'));
+
+        $urls = [];
+        foreach ((new AdminSettingsHub)->visibleAreas() as $area) {
+            foreach ($area['items'] as $item) {
+                $urls[] = $item['url'];
+            }
+        }
+
+        $this->assertContains(route('admin.puerta.validar'), $urls);
     }
 
     /**
@@ -134,7 +211,11 @@ class AdminNavigationTest extends TestCase
 
         foreach (AdminSettingsHub::areas() as $entries) {
             foreach ($entries as $entry) {
-                $inHub[] = $entry['class'];
+                // `#320`: una entrada puede no ser de Filament (la puerta vive fuera del shell, y por
+                // eso tampoco aparece entre las REGISTRADAS que esta guarda recorre).
+                if (isset($entry['class'])) {
+                    $inHub[] = $entry['class'];
+                }
             }
         }
 
@@ -168,6 +249,17 @@ class AdminNavigationTest extends TestCase
 
         foreach (AdminSettingsHub::areas() as $area => $entries) {
             foreach ($entries as $entry) {
+                // `#320`: la entrada que NO es de Filament se comprueba contra el enrutador — el
+                // fallo equivalente es apuntar a una ruta que ya no existe.
+                if (! isset($entry['class'])) {
+                    $this->assertNotNull(
+                        app('router')->getRoutes()->getByName($entry['route']),
+                        "La tarjeta «{$entry['key']}» de «{$area}» apunta a la ruta «{$entry['route']}», que ya no existe.",
+                    );
+
+                    continue;
+                }
+
                 $this->assertContains(
                     $entry['class'],
                     $registered,
@@ -233,8 +325,14 @@ class AdminNavigationTest extends TestCase
     }
 
     /**
-     * Esconder NO es autorizar. Ajustes no tiene permiso propio: pregunta a cada pantalla,
-     * así que a un empleado ni le sale la entrada ni le abre la página.
+     * Esconder NO es autorizar. Ajustes no tiene permiso propio: pregunta a cada pantalla, así que no
+     * puede abrir nada que su usuario no pudiera abrir ya por la URL directa.
+     *
+     * ⚠️ `#320` añadió al hub una tarjeta que NO es de Filament (la puerta) y estuvo a punto de
+     * abrirle esta página al empleado: él tiene `registrations.validate`, así que la tarjeta le
+     * respondía que sí y `canAccess()` pasaba a ser verdadera para alguien que no abriría ninguna de
+     * las 19. No era una fuga —el enlace ya lo tenía en su menú— pero convertía «Ajustes» en una
+     * página de una sola tarjeta redundante. Por eso esa tarjeta se acota al admin.
      */
     public function test_hub_grants_nothing_the_user_did_not_already_have(): void
     {
@@ -265,9 +363,9 @@ class AdminNavigationTest extends TestCase
 
         $this->assertCount(4, $areas);
         $this->assertSame(
-            19,
+            20,
             array_sum(array_map(fn (array $a): int => count($a['items']), $areas)),
-            'El admin debe ver las 19 tarjetas de Ajustes.',
+            'El admin debe ver las 20 tarjetas de Ajustes (19 + la puerta, que bajó del menú en `#320`).',
         );
 
         // La tarjeta «Equipo» lleva a la MISMA pantalla que «Clientes», en su otra pestaña.

@@ -44,6 +44,10 @@ return [
             'park_rules' => ['label' => 'Normas', 'description' => 'Las normas del recinto que se publican en la web.'],
             'pages' => ['label' => 'Páginas legales', 'description' => 'Aviso legal, privacidad, cookies y condiciones.'],
             'settings' => ['label' => 'Configuración', 'description' => 'Datos del negocio, fiscales, venta, puerta y pagos.'],
+            // `#320`: la puerta sale del menú lateral y su puerta de entrada pasa a ser ésta. La
+            // descripción menciona «entrada», «validar» y «escanear» porque el buscador global busca
+            // también dentro de la descripción, y nadie recuerda cómo se llama una pantalla.
+            'puerta' => ['label' => 'Puerta', 'description' => 'Validar la entrada al parque: escanear el carné y ver la ficha del cliente.'],
             'team' => ['label' => 'Equipo', 'description' => 'Las cuentas de quien trabaja aquí y entra al panel.'],
             'roles' => ['label' => 'Roles y permisos', 'description' => 'Qué puede hacer cada rol dentro del panel.'],
             'audit' => ['label' => 'Incidencias', 'description' => 'Registro de acciones críticas y avisos del sistema.'],
@@ -130,6 +134,11 @@ return [
                 'minors' => 'Menores a cargo',
                 'minors_empty' => 'Sin menores declarados.',
                 'minor' => ':age años',
+                // ⚠️ `#320`: `minor_waiver_current` YA NO SE PINTA (solo se rotula la excepción,
+                // `WaiverStatus::minorStateIsNoteworthy()`) y aun así SE CONSERVA: la clave se compone
+                // dinámicamente (`'minor_waiver_'.$estado`), así que si algún día vuelve a pasar
+                // `current` —otra superficie, o el owner revirtiendo— sin fila se pintaría el
+                // identificador en crudo en la pantalla de puerta. Es el suelo de un `__()` dinámico.
                 'minor_waiver_current' => 'exención ✓',
                 'minor_waiver_outdated' => 'exención de versión anterior',
                 'minor_waiver_missing' => 'sin exención',
@@ -516,6 +525,9 @@ return [
         'dependents' => [
             'for' => 'Para:',
             'age' => ':age años',
+            // ⚠️ `#320`: `waiver_current` YA NO SE PINTA (ni aquí ni en la ficha del titular, que
+            // reusa estas claves) y se conserva por lo mismo que su gemela de la puerta: la clave se
+            // compone dinámicamente y sin fila se pintaría el identificador en crudo.
             'waiver_current' => 'exención ✓',
             'waiver_outdated' => 'exención de una versión anterior',
             'waiver_missing' => 'sin exención firmada',

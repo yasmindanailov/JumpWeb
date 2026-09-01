@@ -283,8 +283,10 @@
                                                      trae—, así que esta plantilla no puede ser el sitio por donde entren. --}}
                                                 <span class="gate-minor__name">{{ $m['name'] ?? '' }}</span>
                                                 <span class="gate-minor__age">{{ __('admin.puerta.validar.profile.minor', ['age' => (int) $m['age']]) }}</span>
-                                                @if ($m['waiver'] !== null)
-                                                    <x-filament::badge size="xs" :color="$m['waiver'] === 'current' ? 'success' : ($m['waiver'] === 'outdated' ? 'warning' : 'danger')">
+                                                {{-- `#320`: solo la EXCEPCIÓN lleva pastilla (ver el gemelo
+                                                     en `partials/reservation.blade.php`). --}}
+                                                @if (\App\Domain\Identity\Services\WaiverStatus::minorStateIsNoteworthy($m['waiver']))
+                                                    <x-filament::badge size="xs" :color="$m['waiver'] === 'outdated' ? 'warning' : 'danger'">
                                                         {{ __('admin.puerta.validar.profile.minor_waiver_'.$m['waiver']) }}
                                                     </x-filament::badge>
                                                 @endif

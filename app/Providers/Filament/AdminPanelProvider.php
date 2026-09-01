@@ -8,7 +8,8 @@ use App\Filament\Pages\AdminSettingsHub;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Support\InitialsAvatarProvider;
 use App\Filament\Support\PanelGlobalSearchProvider;
-use App\Http\Middleware\RequiresStaffOrAdmin;
+use App\Http\Middleware\RequiresPanelRole;
+use App\Http\Middleware\RestrictsPuertaRole;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetAdminLocale;
 use Filament\Http\Middleware\Authenticate;
@@ -45,7 +46,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
  *
  * Defense in depth en autorización:
  *  - `authMiddleware` ejecuta primero `Authenticate` (sesión) y luego
- *    `RequiresStaffOrAdmin` (rol). Ambos middleware deben pasar.
+ *    `RequiresPanelRole` (rol). Ambos middleware deben pasar.
  *  - El gate canónico `User::canAccessPanel()` cierra a nivel Filament aunque
  *    se olvide el middleware en una ruta.
  */
@@ -162,19 +163,29 @@ class AdminPanelProvider extends PanelProvider
             // clienta — el escritorio es puramente operativo (#179).
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->navigationItems([
-                // Fase 7.1a: atajo de "Puerta" en la sidebar del panel rico para el admin/staff
-                // que entra al panel sin recordar la URL directa. La página dedicada vive fuera
-                // del shell Filament (decisión #119).
+                // Fase 7.1a: atajo de «Puerta» para quien entra al panel sin recordar la URL directa.
+                // La página dedicada vive fuera del shell de Filament (decisión #119).
                 //
-                // #223: sin grupo (el menú es plano) y ÚLTIMA de las cinco (sort 50). El rótulo
-                // pasa a ser «Puerta» —el término del glosario— en vez de «Validar registro»:
-                // en un menú de una palabra por línea, el sitio se nombra por el sitio.
+                // `#320` (`[DECIDIDO owner]`) — **al ADMIN ya no le sale**: «al rol de administrador
+                // no se le muestra en el menú "puerta", es innecesario, él puede ver todos los
+                // detalles de cualquier cliente directamente con el buscador». Sigue saliéndole al
+                // empleado de mostrador, que sí atiende ahí. Y el rol `puerta` no necesita el enlace:
+                // aterriza en esa pantalla y no navega el panel.
+                //
+                // ⚠️ Retirarlo del menú NO bastaba, y por eso además baja a `AdminSettingsHub`: el
+                // buscador global saca sus pantallas de la propia navegación
+                // (`PanelGlobalSearchProvider::screens()`), así que quitarlo de aquí lo quitaba
+                // TAMBIÉN del buscador —justo la vía que el owner da por buena— y dejaba la puerta
+                // alcanzable solo tecleando la URL. Sin que nada se pusiera rojo, encima: la guarda
+                // de pantallas huérfanas solo mira las registradas en Filament, y ésta no lo está.
                 NavigationItem::make('puerta-validar')
                     ->label(fn () => __('admin.puerta.nav_label'))
                     ->icon(Heroicon::OutlinedShieldCheck)
                     ->url(fn () => route('admin.puerta.validar'))
                     ->openUrlInNewTab(false)
-                    ->visible(fn () => auth()->user()?->hasPermission('registrations.validate') ?? false)
+                    ->visible(fn (): bool => ($u = auth()->user()) !== null
+                        && ! $u->hasRole('admin')
+                        && $u->hasPermission('registrations.validate'))
                     ->sort(50),
             ])
             // #223 — la puerta a las 19 pantallas de puesta en marcha: DENTRO del menú del
@@ -212,7 +223,12 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                RequiresStaffOrAdmin::class,
+                RequiresPanelRole::class,
+                // `#320`: el rol `puerta` no navega el panel — cualquier ruta suya lo devuelve a su
+                // pantalla. Va en `authMiddleware` (no en el stack general) porque `/admin/login`
+                // tiene que seguir abierto: es por donde entra. La puerta es una ruta `web` fuera del
+                // panel, así que la redirección no puede realimentarse.
+                RestrictsPuertaRole::class,
             ]);
     }
 }

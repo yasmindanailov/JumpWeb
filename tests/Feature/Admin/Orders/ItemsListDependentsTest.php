@@ -165,11 +165,40 @@ class ItemsListDependentsTest extends TestCase
 
         $page = Livewire::actingAs($this->admin())->test(ViewOrder::class, ['record' => $order->code]);
 
+        // `#320`: Lucas está firmado y vigente y por eso NO lleva rótulo —la firma es condición para
+        // estar asignado, anunciarla en cada fila es repetir lo que el sistema ya garantiza—; Vera sí,
+        // porque «sin exención» es una excepción que el operador tiene que ver.
         $page->assertSee('Para:')
-            ->assertSee('Lucas (9 años · exención ✓),')
-            ->assertSee('Vera (6 años · sin exención firmada)');
+            ->assertSee('Lucas (9 años),')
+            ->assertSee('Vera (6 años · sin exención firmada)')
+            ->assertDontSee(__('admin.orders.dependents.waiver_current'));
         $this->assertSame(1, substr_count($page->html(), 'data-dependents-for="'), 'solo la línea de ENTRADA lleva el «Para:»; el pack nunca');
         $this->assertStringContainsString('data-dependents-for="'.$entryItem->id.'"', $page->html());
+    }
+
+    /**
+     * `#320` · el estado SIGUE existiendo aunque no se pinte: ocultar el rótulo de «firmada y vigente»
+     * es una decisión de PRESENTACIÓN, no una amputación del read-model. Si esto se rompiera, el panel
+     * y la puerta perderían la diferencia entre «firmada» y «el modo no responde por menores», que es
+     * la que hace falta para diagnosticar por qué una fila no dice nada.
+     */
+    public function test_the_current_state_still_travels_in_the_read_model_even_though_it_is_not_painted(): void
+    {
+        $this->mode('interno');
+        $holder = $this->customer();
+        $lucas = $this->add($holder, 'Lucas', '2017-03-12');
+        $this->signFor($holder, $lucas);
+        [$order] = $this->paidOrder($holder, [[$this->entry, 1]]);
+        $this->assign($holder, $order, [[$this->entry, 1, [$lucas->id]]]);
+
+        $read = AssignedDependents::forOrder($order->load('items.ticketType', 'items.slot'));
+
+        $this->assertSame(
+            [AssignedDependents::WAIVER_CURRENT],
+            array_column($read[$order->items[0]->id], 'waiver'),
+            'el estado se compone igual; lo que cambia es que `label()` no lo rotula',
+        );
+        $this->assertSame('Lucas (9 años)', $read[$order->items[0]->id][0]['label']);
     }
 
     /** Una firma de una versión anterior se SEÑALA; un menor retirado de la cuenta sigue saliendo, marcado. */

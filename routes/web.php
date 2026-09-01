@@ -158,7 +158,7 @@ Route::get('/lang/{locale}', function (string $locale) {
 // Panel admin (Fase 7.0): cambio de idioma del panel — separado del de la web pública.
 // Soporta solo `es` y `zh_CN` (decisión #123). Persistido en `users.panel_locale`.
 Route::post('/admin/lang/{locale}', PanelLocaleController::class)
-    ->middleware(['web', 'auth', 'staff_or_admin'])
+    ->middleware(['web', 'auth', 'panel_role'])
     ->name('admin.lang.switch');
 
 // Panel admin — Fase 7.1a (decisiones #119, #126): validar registro en puerta.
@@ -166,7 +166,7 @@ Route::post('/admin/lang/{locale}', PanelLocaleController::class)
 // tablet/PC dedicado en la entrada del parque. Aplica el locale del panel
 // (ES/ZH_CN) para coherencia con el resto del entorno admin.
 Route::get('/admin/puerta/validar', ValidarRegistro::class)
-    ->middleware(['web', 'auth', 'staff_or_admin', SetAdminLocale::class])
+    ->middleware(['web', 'auth', 'panel_role', SetAdminLocale::class])
     ->name('admin.puerta.validar');
 
 // Panel admin — Hoja de reserva imprimible (PDF A4, decisión #183): un OrderItem
@@ -174,7 +174,7 @@ Route::get('/admin/puerta/validar', ValidarRegistro::class)
 // se fuerza en español en el controlador (documento del personal del parque).
 // `throttle:30,1` acota el abuso de ancho de banda (generación de PDF).
 Route::get('/admin/pedidos/{order}/items/{item}/imprimir', ReservationSlipController::class)
-    ->middleware(['web', 'auth', 'staff_or_admin', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
+    ->middleware(['web', 'auth', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
     ->name('admin.orders.items.slip'); // L1: la hoja imprime nombres+alergias de menores (art. 9).
 
 // Panel admin — Fase 6 · waiver: PDF del REGISTRO probatorio de una firma (`specs/waiver-probatorio.md`
@@ -182,7 +182,7 @@ Route::get('/admin/pedidos/{order}/items/{item}/imprimir', ReservationSlipContro
 // usuario de la URL) + auditoría de cada consulta. `no-store` (`RGPD-04`): lleva nombre, email, ip y
 // user-agent del firmante. Se sirve en el idioma del texto firmado.
 Route::get('/admin/usuarios/{user}/waiver/{signature}/pdf', WaiverProofController::class)
-    ->middleware(['web', 'auth', 'staff_or_admin', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
+    ->middleware(['web', 'auth', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
     ->name('admin.users.waiver.proof');
 
 // Panel admin — Fase 7.4 (decisión #14): feed JSON del calendario unificado.
@@ -193,7 +193,7 @@ Route::get('/admin/usuarios/{user}/waiver/{signature}/pdf', WaiverProofControlle
 // (no Livewire) → Symfony solo pone `no-cache, private`; se fuerza `no-store` como en sus hermanas
 // con PII (slip y resumen-día), evitando la persistencia en disco de tablets compartidas de puerta.
 Route::get('/admin/calendario/eventos', CalendarEventsController::class)
-    ->middleware(['web', 'auth', 'staff_or_admin', SetAdminLocale::class, 'no-store'])
+    ->middleware(['web', 'auth', 'panel_role', SetAdminLocale::class, 'no-store'])
     ->name('admin.calendario.eventos');
 
 // Panel admin — Resumen del día imprimible (PDF A4 horizontal, decisión #184):
@@ -201,5 +201,5 @@ Route::get('/admin/calendario/eventos', CalendarEventsController::class)
 // Botón "Imprimir resumen" en Calendario y Escritorio. Permiso `calendar.view`;
 // la hoja se fuerza en español en el controlador. `throttle` por ancho de banda.
 Route::get('/admin/calendario/resumen-dia', DailySummaryController::class)
-    ->middleware(['web', 'auth', 'staff_or_admin', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
+    ->middleware(['web', 'auth', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
     ->name('admin.calendario.resumen-dia'); // L1: el resumen lista clientes/teléfonos/cumpleañeros (PII).

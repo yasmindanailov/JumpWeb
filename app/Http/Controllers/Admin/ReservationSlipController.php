@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
  * GET /admin/pedidos/{order}/items/{item}/imprimir
  *
  * Defense in depth (patrón estándar de los endpoints del panel):
- *  1. Middleware `web+auth+staff_or_admin` (acceso al panel).
+ *  1. Middleware `web+auth+panel_role` (acceso al panel).
  *  2. Permiso `orders.view` (consulta read-only → no requiere capacidad de edición).
  *  3. IDOR: el item DEBE pertenecer al order del URL (anti cross-pedido).
  *  4. Solo items PRINCIPALES — los complementos se imprimen DENTRO de la hoja de

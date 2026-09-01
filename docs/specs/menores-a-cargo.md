@@ -1447,3 +1447,58 @@ en la revisión de `#217`). Bajar el ruido no puede volverse bajar la claridad d
 puede marcar.
 
 ▶ Va **con la tanda del cajón en móvil** (`#237` y siguientes), que es cuando se toca ese paso.
+
+---
+
+## 13. La exención de un menor solo se ROTULA cuando es una excepción (`#320`)
+
+`[DECIDIDO owner, 2026-09-01]`: *«quitar "exención" firmada sobre los menores a cargo, es obvio
+porque es obligatorio, al mostrar un menor asignado a un adulto»*.
+
+**Lo que se retira**: el rótulo del estado `current` («exención ✓») en las tres superficies del
+OPERADOR — ficha del pedido (`AssignedDependents::label()`), ficha del titular
+(`HolderDependents`, campo `waiver_label`) y pantalla de puerta (las dos plantillas con
+`data-gate-minor`).
+
+**Lo que NO se retira, y es la mitad importante de la decisión**: `outdated` y `missing` siguen
+pintándose. La premisa del owner está MEDIDA y es cierta solo para el estado vigente —
+`DependentAssigner::hasCurrentWaiver()` no deja asignar sin firma vigente (§4.9, `#202`·2) — pero eso
+cubre **el instante de la asignación y nada más**:
+
+- ⚠️ **una firma vigente CADUCA SOLA** cuando se publica una versión nueva del documento
+  (`WaiverStatus::isOutdated()`), sin que nadie toque la reserva; el menor queda `outdated` sin que
+  ninguna acción lo provoque;
+- ⚠️ **la regla solo aplica en modo `interno`**: fuera de él `hasCurrentWaiver()` devuelve `true` sin
+  comprobar nada (no hay firma que comprobar), así que una instalación que cambie de modo puede tener
+  menores asignados sin firma vigente.
+
+▶ *Silencio = todo bien.* Ocultar también la excepción cegaría al operador ante una deriva que él no
+provocó — y en la puerta el rótulo de `outdated` dice literalmente **«versión anterior — deja pasar»**:
+es una instrucción de trabajo, no un adorno.
+
+### 13.1 Dónde vive la regla, y la duplicación que mató
+
+`WaiverStatus::minorStateIsNoteworthy()`. Y al colocarla ahí muere una duplicación **que ya existía**:
+el trío `current|outdated|missing` se derivaba **por triplicado** —`AssignedDependents::waiverState()`,
+`HolderDependents::waiverState()` y un ternario dentro de `GateProfile::minor()`— y ahora es
+`WaiverStatus::minorState()`, que además devuelve `null` cuando el modo no responde por menores.
+
+⚠️ **El docblock de `HolderDependents` lo había predicho**: «si algún día hace falta un tercer
+consumidor, la extracción natural es subir este método a `WaiverStatus`».
+
+### 13.2 Lo que queda FUERA a propósito
+
+- ⚠️ **La exención del CLIENTE (el adulto) en la puerta.** Es una sección propia, con su fecha y su
+  CTA de firma, y **no se toca**: ahí el estado es lo que la puerta va a DECIDIR —el adulto puede
+  llegar sin firmar y firmar en el momento—. La del menor venía garantizada por el asignador; la del
+  adulto no.
+- ⚠️ **El CAJÓN** (`DependentCard.vue`). Es donde el cliente FIRMA; quitarle el «exención vigente»
+  sería quitarle la confirmación de la acción que acaba de hacer.
+
+### 13.3 El estado sigue viajando; lo que se retira es el rótulo
+
+Los `data-*` de las tres superficies (`data-dependent-waiver`, `data-gate-minor-waiver`) siguen
+llevando `current`. Es diagnóstico y es lo que aseveran las guardas: **se retira la presentación, no
+el dato**. Por lo mismo se CONSERVAN las claves i18n `*_current` — la clave se compone dinámicamente
+(`'waiver_'.$estado`) y sin fila se pintaría el identificador en crudo en pantalla; queda la nota en
+`lang/es/admin.php`.

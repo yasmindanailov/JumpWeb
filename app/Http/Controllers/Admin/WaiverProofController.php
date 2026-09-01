@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
  * GET /admin/usuarios/{user}/waiver/{signature}/pdf
  *
  * Defensa en profundidad (patrón de `ReservationSlipController`):
- *  1. Middleware `web+auth+staff_or_admin` (acceso al panel) + `throttle` + `no-store` (`RGPD-04`:
+ *  1. Middleware `web+auth+panel_role` (acceso al panel) + `throttle` + `no-store` (`RGPD-04`:
  *     el documento lleva nombre, email, ip y user-agent del firmante).
  *  2. Permiso PROPIO `waiver.view` (§4.6): el registro está fuera de toda superficie normal.
  *  3. IDOR: la firma DEBE pertenecer al usuario de la URL.

@@ -23,6 +23,10 @@ class RoleSeeder extends Seeder
             ['name' => 'admin', 'label' => 'Administrador'],
             ['name' => 'customer', 'label' => 'Cliente'],
             ['name' => 'staff', 'label' => 'Empleado'],
+            // `#320` (`[DECIDIDO owner]`): el puesto de PUERTA, que no es el mostrador. Entra por el
+            // mismo login y aterriza en la pantalla de validar; el panel no lo admite
+            // ({@see \App\Http\Middleware\RestrictsPuertaRole}).
+            ['name' => 'puerta', 'label' => 'Puerta'],
         ];
 
         foreach ($roles as $role) {

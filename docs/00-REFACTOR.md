@@ -3473,6 +3473,41 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       de base ya estaba, lo nuevo es el REPERTORIO, y lo que decide si entra o no es **el hueco de
       ilustración por instalación** que `#257` dejó anotado. ⏸️ Pendiente del owner.
 
+### El PANEL: la exención del menor y el ROL DE PUERTA ✅ código — `#320`, 2026-09-01
+
+Dos encargos de PRESENTACIÓN del owner en la misma sesión que resultaron ser uno: **separar lo que la
+puerta necesita ver de lo que ya está garantizado, y separar el puesto de la entrada del empleado de
+mostrador.** Detalle en `DECISIONES #320`, `specs/menores-a-cargo.md` §13 y `specs/panel-navegacion.md` §12.
+
+- [x] **La exención de un menor solo se ROTULA cuando es EXCEPCIÓN.** Fuera «exención ✓» en las tres
+      superficies del operador; `outdated` y `missing` siguen. ⚠️ La premisa «es obligatorio» vale
+      **solo en el instante de asignar**: una firma vigente **caduca sola** al publicar versión nueva,
+      y la regla del asignador **solo aplica en modo `interno`**. Regla en UN sitio
+      (`WaiverStatus::minorStateIsNoteworthy()`), que de paso mata una derivación **por triplicado**
+      que ya existía. ⚠️ Fuera a propósito: la exención del ADULTO en la puerta (ahí el estado es lo
+      que la puerta DECIDE) y el CAJÓN (ahí el cliente FIRMA).
+- [x] **Nace el rol `puerta`**, con dos permisos, mismo login y sin navegar el panel
+      (`RestrictsPuertaRole`). **`staff` NO se tocó.** ⚠️⚠️ Se descartó un diseño **ya implementado**
+      —recortarle diez permisos a `staff` y sacarlo del panel—: rompía 116 tests, pero el motivo fue
+      que revisaba el `[DECIDIDO owner]` Q1·a de `#294` y **dejaba la matriz de 22 permisos SIN
+      SUJETO** (admin se salta todo por `Gate::before`).
+- [x] **«Puerta» sale del menú del ADMIN** y baja a «Ajustes → Sistema», que **hubo que extender**
+      para admitir una entrada que no es de Filament. ⚠️⚠️ **Retirarla del menú la borraba también del
+      BUSCADOR** —saca sus pantallas de la propia navegación— **y ninguna guarda lo veía**, porque la
+      de pantallas huérfanas solo mira las registradas en Filament y ésta vive fuera del shell.
+- [x] **`RequiresStaffOrAdmin` → `RequiresPanelRole`** (alias `panel_role`): el nombre pasaba a mentir
+      con el tercer rol, en código de autorización, y su comprobación era una **segunda copia** de la
+      lista que el gate canónico ya recorría.
+- [ ] **El OJO del owner** en navegador (panel y puerta). Es lo único que separa esto de ✅.
+
+⚠️⚠️ **Trampa que paga esta tanda y sirve para todo el repo**: **un docblock puede crear una flecha de
+arquitectura**. Citar el middleware con `{@see \App\Http\Middleware\…}` en `User.php` hizo que Pint
+**añadiera el `use`** al acortar el FQN — Identity→HTTP, que `ModuleBoundariesTest` cazó. Reescribir la
+cita en prosa **no basta**: hay que quitar el import.
+
+**Verificación**: suite verde (3.749 / 24.498) · Pint ✓ · docs-check ✓ · mutaciones: la de la exención
+pone ROJAS las tres superficies (4 tests) y la del rol de puerta su guarda.
+
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no
 le despliega nada. Mejoras de JumpWeb aplicables allí se portan **solo por decisión explícita**,

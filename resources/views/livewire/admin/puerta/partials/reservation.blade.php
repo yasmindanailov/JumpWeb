@@ -92,8 +92,11 @@
                 <li class="gate-minor" data-gate-minor data-gate-minor-name="{{ $m['name'] ?? '' }}" data-gate-minor-age="{{ (int) $m['age'] }}" data-gate-minor-waiver="{{ $m['waiver'] ?? 'unknown' }}">
                     <span class="gate-minor__name">{{ $m['name'] ?? '' }}</span>
                     <span class="gate-minor__age">{{ __('admin.puerta.validar.profile.minor', ['age' => (int) $m['age']]) }}</span>
-                    @if ($m['waiver'] !== null)
-                        <x-filament::badge size="xs" :color="$m['waiver'] === 'current' ? 'success' : ($m['waiver'] === 'outdated' ? 'warning' : 'danger')">
+                    {{-- `#320`: solo la EXCEPCIÓN lleva pastilla. La firma vigente es condición para
+                         estar asignado, así que no se anuncia; `outdated` («versión anterior — deja
+                         pasar») y `missing` sí, que es lo que el operador necesita decidir. --}}
+                    @if (\App\Domain\Identity\Services\WaiverStatus::minorStateIsNoteworthy($m['waiver']))
+                        <x-filament::badge size="xs" :color="$m['waiver'] === 'outdated' ? 'warning' : 'danger'">
                             {{ __('admin.puerta.validar.profile.minor_waiver_'.$m['waiver']) }}
                         </x-filament::badge>
                     @endif

@@ -132,14 +132,18 @@ class UserDependentsInfolistTest extends TestCase
         $this->assertSame([9, 6, 11], $this->attributes($html, 'data-dependent-age'));
 
         // El ESTADO de la exención: firmada vigente, sin firmar, firmada de una versión anterior.
+        // ⚠️ El estado viaja ENTERO en el `data-`, incluido `current`: `#320` retira el RÓTULO, no el dato.
         $this->assertSame(
             [AssignedDependents::WAIVER_CURRENT, AssignedDependents::WAIVER_MISSING, AssignedDependents::WAIVER_OUTDATED],
             $this->strings($html, 'data-dependent-waiver'),
         );
-        // Y sus rótulos son los MISMOS que enseña la ficha del pedido (no un vocabulario paralelo).
-        $this->assertStringContainsString(__('admin.orders.dependents.waiver_current'), $html);
+        // Y sus rótulos son los MISMOS que enseña la ficha del pedido (no un vocabulario paralelo)…
         $this->assertStringContainsString(__('admin.orders.dependents.waiver_missing'), $html);
         $this->assertStringContainsString(__('admin.orders.dependents.waiver_outdated'), $html);
+        // …salvo el de «firmada y vigente», que `#320` deja de pintar: es la condición para estar
+        // asignado, así que rotularlo en cada fila repite lo que el sistema ya garantiza. Solo se
+        // pinta la EXCEPCIÓN, que es la que el operador tiene que ver.
+        $this->assertStringNotContainsString(__('admin.orders.dependents.waiver_current'), $html);
 
         // Nadie está retirado → la columna de la retirada ni se pinta.
         $this->assertStringNotContainsString('data-dependent-removed', $html);

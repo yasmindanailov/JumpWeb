@@ -18,7 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * GET /admin/calendario/resumen-dia?date=YYYY-MM-DD&type=all|pack|entry
  *
- * Defensa: middleware `web+auth+staff_or_admin` + permiso **`calendar.view`** (el
+ * Defensa: middleware `web+auth+panel_role` + permiso **`calendar.view`** (el
  * mismo que ve el calendario y los widgets de reservas). Parámetros validados de
  * forma no destructiva (fecha inválida → HOY; tipo inválido → todas). Se fuerza
  * español (documento del personal). NO expone datos de cobro sensibles.

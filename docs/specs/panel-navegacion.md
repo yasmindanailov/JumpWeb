@@ -621,3 +621,85 @@ muerden** · sonda `pago.mjs` **8/8** en iPad horizontal, con cero controles baj
 
 ▶ **Si el owner aprueba, el orden natural es U3 y luego U4**: son las dos mitades de «todo está
 separado» que el menú, por sí solo, no puede cerrar.
+
+---
+
+## 12. Tanda 5 — el ROL DE PUERTA y el menú del admin sin «Puerta» (`#320`)
+
+`[DECIDIDO owner, 2026-09-01]`. Dos encargos que resultaron ser el mismo: **separar el puesto de la
+entrada del empleado de mostrador.**
+
+### 12.1 Lo decidido
+
+1. **Nace el rol `puerta`** — «crear un rol solo para la puerta, más simple, y que solo entre a la
+   página de la puerta con el mismo login». Trae **solo dos permisos**
+   (`PermissionSeeder::PUERTA_DEFAULT_PERMISSIONS`: `registrations.validate` y `puerta.profile`) y no
+   navega el panel: `RestrictsPuertaRole`, en el `authMiddleware`, lo devuelve a su pantalla.
+2. **`staff` NO se toca.** Sigue siendo el empleado de mostrador con sus trece permisos y su menú de
+   cuatro sitios, «Puerta» incluida.
+3. **Al ADMIN se le retira «Puerta» del menú** («es innecesario, él puede ver todos los detalles de
+   cualquier cliente directamente con el buscador») y baja a **«Ajustes → Sistema»**.
+
+### 12.2 ⚠️ El diseño que se descartó, y por qué importa saberlo
+
+La primera lectura fue **recortarle a `staff` diez permisos y sacarlo del panel**. Se implementó y se
+midió: **116 tests en rojo**, casi todos de `Admin/Orders/*`, o sea que la suite modelaba al empleado
+como el operador de pedidos. Pero el tamaño no fue el motivo de descartarlo:
+
+- habría revisado el `[DECIDIDO owner]` **Q1·a de `#294`** («en el parque, el operador ve las edades
+  y los precios y decide»), tomado el día anterior;
+- y ⚠️⚠️ **dejaba la matriz de 22 permisos SIN SUJETO**: `Gate::before()` le concede todo al admin y
+  `canAccessPanel()` va por nombre de rol, así que sin `staff` dentro del panel no queda ningún
+  usuario a quien los permisos gobiernen. La pantalla «Roles y permisos» habría seguido existiendo
+  sin gobernar nada.
+
+*El rol nuevo no sustituye al empleado: se le pone al lado* — y eso además deja sitio a más puestos
+(«más adelante puede que haya más personas en el parque, no quiero cerrar esa puerta»).
+
+### 12.3 ❗❗ Si retiras un ítem del menú, comprueba el BUSCADOR
+
+**Retirar «Puerta» del menú la borraba también del buscador global** — justo la vía que el argumento
+del owner da por buena. `PanelGlobalSearchProvider::screens()` saca sus pantallas **de la propia
+navegación** (§7), así que el ítem era su única fuente.
+
+Y **no había red**: `AdminNavigationTest::test_every_registered_screen_is_reachable` solo mira las
+pantallas **registradas en Filament**, y ésta vive fuera del shell (`#119`). Habría quedado alcanzable
+solo tecleando la URL, con la suite en verde. ▶ *Esconder algo solo sale barato si el buscador lo
+encuentra, y el buscador solo encuentra lo que está colocado.*
+
+Por eso `AdminSettingsHub::areas()` **hubo que extenderlo**: admite una entrada que no es de Filament
+(`route` + `permission` + `roles` + `icon`), porque la puerta no tiene `canAccess()` ni `getUrl()` que
+preguntar. La guarda de tarjetas huérfanas comprueba esas contra el **enrutador**.
+
+### 12.4 ⚠️ Por qué `puerta` está en `PANEL_ROLES` si no navega el panel
+
+Parece una contradicción y no lo es: esa lista responde a **«¿puede autenticarse en `/admin/login`?»**,
+no a «¿puede navegar?». La página de login de Filament comprueba `canAccessPanel()` **dentro de
+`authenticate()`** y, si es falsa, hace `logout()` y falla la validación con «estas credenciales no
+coinciden». Cerrarle el panel por ahí le cierra **el LOGIN**, y el encargo dice «con el mismo login».
+Como EQUIPO (pestaña «Equipo» vs «Clientes») también es correcto: quien valida en la entrada trabaja
+aquí.
+
+### 12.5 La tarjeta del hub es el ESPEJO del ítem de menú
+
+La tarjeta de «Puerta» en Ajustes lleva `roles: ['admin']`. Sin ese acotado, el EMPLEADO —que tiene
+`registrations.validate`— hacía verdadera `AdminSettingsHub::canAccess()` y se le abría una página de
+**una sola tarjeta redundante**, con un enlace que ya tiene en su menú. No era una fuga (no concede
+nada nuevo), pero rompía lo que «Ajustes» significa. ▶ Menú: a quien NO es admin y tiene el permiso.
+Hub: al admin. **Entre las dos, todo el que tenga el permiso llega por exactamente un camino.**
+
+### 12.6 `RequiresStaffOrAdmin` → `RequiresPanelRole`
+
+El nombre enumeraba los dos roles que había, así que al nacer el tercero pasaba a **mentir sobre su
+propia cobertura** — y es código de autorización: quien leyera `staff_or_admin` en la ruta de la hoja
+de sala concluiría que el rol de puerta no llega, cuando quien lo frena ahí es su falta de permiso.
+Renombrado (alias `staff_or_admin` → `panel_role`) y su comprobación pasa a leer `User::PANEL_ROLES`
+en vez de dos nombres a mano: era una **segunda copia** de la lista que el gate canónico ya recorría.
+
+### 12.7 ⚠️⚠️ Un docblock puede crear una flecha de arquitectura
+
+Citar el middleware con `{@see \App\Http\Middleware\RestrictsPuertaRole}` en el docblock de
+`User.php` hizo que **Pint añadiera el `use`** al acortar el FQN — una dependencia real de Identity
+hacia la capa HTTP, que `ModuleBoundariesTest` cazó. Reescribir la cita en prosa **no bastó**: el
+import seguía ahí. Se cita en prosa **y sin import**, como ya hace `CartPricing` con su
+implementación.

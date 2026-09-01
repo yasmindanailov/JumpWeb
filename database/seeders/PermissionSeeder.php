@@ -45,6 +45,26 @@ class PermissionSeeder extends Seeder
     ];
 
     /**
+     * `#320` (`[DECIDIDO owner]`) — los permisos del rol `puerta`: **solo su puesto**.
+     *
+     * «Crear un rol solo para la puerta, y que solo entre a la página de la puerta con el mismo
+     * login.» Es el operario que valida la entrada y nada más: ni pedidos, ni calendario, ni la hoja
+     * de sala. Si un parque quiere que además imprima la hoja de reserva o el resumen del día, se le
+     * conceden `orders.view` / `calendar.view` **desde la matriz de roles del panel** — que para eso
+     * existe: esto es lo que trae el rol de fábrica, no lo que es posible.
+     *
+     * ⚠️ **Y por eso NO se tocó `staff`**: el empleado de mostrador sigue operando el panel con sus
+     * trece permisos. Un rol nuevo no revisa la decisión de `#294` («en el parque, el operador ve las
+     * edades y los precios y decide»); le pone al lado un puesto distinto.
+     *
+     * @var array<int,string>
+     */
+    public const PUERTA_DEFAULT_PERMISSIONS = [
+        'registrations.validate',
+        'puerta.profile',
+    ];
+
+    /**
      * Matriz completa de permisos del panel (etiquetas para el panel cuando se
      * entregue la gestión de roles). El admin pasa por encima de todos.
      *
@@ -94,12 +114,23 @@ class PermissionSeeder extends Seeder
             Permission::firstOrCreate(['name' => $name], ['label' => $label]);
         }
 
-        // 2) Asignar a `staff` los de operativa diaria. El admin no necesita asignación
-        //    (Gate::before global). El customer no entra al panel.
-        $staff = Role::where('name', 'staff')->first();
-        if ($staff) {
-            $ids = Permission::whereIn('name', self::STAFF_DEFAULT_PERMISSIONS)->pluck('id');
-            $staff->permissions()->syncWithoutDetaching($ids);
+        // 2) Asignar a `staff` los de operativa diaria y a `puerta` los suyos. El admin no necesita
+        //    asignación (Gate::before global). El customer no entra al panel.
+        //
+        //    `syncWithoutDetaching` y no `sync`: este seeder corre también sobre instalaciones vivas,
+        //    y un `sync` borraría lo que el parque haya concedido a mano desde la matriz de roles.
+        $defaults = [
+            'staff' => self::STAFF_DEFAULT_PERMISSIONS,
+            'puerta' => self::PUERTA_DEFAULT_PERMISSIONS,
+        ];
+
+        foreach ($defaults as $name => $permissions) {
+            $role = Role::where('name', $name)->first();
+            if ($role) {
+                $role->permissions()->syncWithoutDetaching(
+                    Permission::whereIn('name', $permissions)->pluck('id'),
+                );
+            }
         }
     }
 }

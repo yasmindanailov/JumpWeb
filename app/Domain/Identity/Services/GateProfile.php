@@ -187,7 +187,7 @@ final class GateProfile
         return [
             'name' => (string) $dependent->name,
             'age' => $dependent->ageOn($on),
-            'waiver' => $status === null ? null : (! $status->signed ? 'missing' : ($status->isOutdated() ? 'outdated' : 'current')),
+            'waiver' => $status?->minorState(),
         ];
     }
 

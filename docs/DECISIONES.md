@@ -18821,3 +18821,110 @@ aquí**. ▶ Los cinco sitios corregidos vivían en `zones` y en `ticket_types`;
 
 **Verificación**: suite verde · Pint ✓ · docs-check ✓ · build ✓ · **7 mutaciones, las 7 muerden** ·
 navegador a 1280×900 y 390×844 con capturas y con CONTROL para el defecto preexistente.
+
+---
+
+## #320 · 2026-09-01 · La exención firmada deja de rotularse junto a un menor asignado, y el puesto de PUERTA se separa del empleado de mostrador con un rol propio
+
+**Contexto.** Dos encargos del owner en la misma sesión, los dos de PRESENTACIÓN del panel: *«quitar
+"exención" firmada sobre los menores a cargo, es obvio porque es obligatorio, al mostrar un menor
+asignado a un adulto»* y *«el empleado directamente entra a la puerta (…) al rol de administrador no
+se le muestra en el menú "puerta", es innecesario, él puede ver todos los detalles de cualquier
+cliente directamente con el buscador»*.
+
+### 1 · Solo se pinta la EXCEPCIÓN de la exención de un menor
+
+**Decisión** (`[DECIDIDO owner, 2026-09-01]`): el rótulo «exención ✓» se retira de las tres
+superficies del operador (ficha del pedido, ficha del titular y puerta); **`outdated` y `missing`
+siguen pintándose**.
+
+**Por qué no se retiran los tres.** La premisa del owner —«es obligatorio»— está MEDIDA y es cierta
+solo para el estado vigente: `DependentAssigner::hasCurrentWaiver()` no deja asignar a un menor sin
+firma vigente. Pero eso cubre **el instante de la asignación y nada más**:
+
+- ⚠️ **una firma vigente CADUCA SOLA** cuando se publica una versión nueva del documento
+  (`WaiverStatus::isOutdated()`), sin que nadie toque la reserva;
+- ⚠️ **la regla solo aplica en modo `interno`**: fuera de él `hasCurrentWaiver()` devuelve `true` sin
+  comprobar nada, porque no hay firma que comprobar.
+
+Ocultar también la excepción cegaría al operador ante una deriva que él no provocó — y en la puerta
+el rótulo de `outdated` dice literalmente **«versión anterior — deja pasar»**: es una instrucción, no
+un adorno.
+
+⚠️ **La exención del CLIENTE (el adulto) en la puerta NO se toca**: es una sección propia con su
+fecha y su CTA de firma, y ahí el estado sí es lo que la puerta va a decidir —puede llegar sin firmar
+y firmar en el momento—. La del menor venía garantizada por el asignador; la del adulto no.
+
+⚠️ **El CAJÓN queda fuera a propósito**: es donde el cliente FIRMA, y quitarle el «exención vigente»
+sería quitarle la confirmación de la acción que acaba de hacer.
+
+**Lo hecho.** La regla vive en UN sitio, `WaiverStatus::minorStateIsNoteworthy()`, y de paso muere
+una duplicación que ya existía: el trío `current|outdated|missing` se derivaba **por triplicado**
+(`AssignedDependents::waiverState()`, `HolderDependents::waiverState()` y un ternario dentro de
+`GateProfile::minor()`) y ahora es `WaiverStatus::minorState()`. El estado **sigue viajando entero**
+en los `data-*` de las tres superficies: se retira el RÓTULO, no el dato. Las claves i18n de
+`*_current` se CONSERVAN a propósito —la clave se compone dinámicamente (`'waiver_'.$estado`) y sin
+fila se pintaría el identificador en crudo—, con la nota puesta en `lang/es/admin.php`.
+
+### 2 · El puesto de PUERTA es un ROL PROPIO, no el empleado recortado
+
+**Decisión** (`[DECIDIDO owner, 2026-09-01]`): nace el rol **`puerta`** —«crear un rol solo para la
+puerta, más simple, y que solo entre a la página de la puerta con el mismo login»—, con **solo sus
+dos permisos** (`registrations.validate`, `puerta.profile`). **`staff` no se toca.** Y «Puerta» sale
+del menú **del admin**, que la conserva en «Ajustes → Sistema» y en el buscador; al empleado le sigue
+saliendo, porque él sí atiende ahí.
+
+⚠️ **Esto sustituye a un diseño anterior de la misma sesión que se llegó a implementar y se
+descartó**: recortarle a `staff` diez permisos y sacarlo del panel. Se midió y **rompía 116 tests**,
+pero el motivo de descartarlo no fue el tamaño: (a) habría revisado el `[DECIDIDO owner]` Q1·a de
+`#294` («en el parque, el operador ve las edades y los precios y decide»), y (b) **dejaba la matriz
+de 22 permisos sin sujeto** — `Gate::before()` le concede todo al admin y `canAccessPanel()` va por
+nombre de rol, así que sin `staff` dentro del panel no queda ningún usuario a quien los permisos
+gobiernen. El rol nuevo no sustituye al empleado: **se le pone al lado**, y el owner lo pidió
+explícitamente para no cerrar la puerta a más puestos («más adelante puede que haya más personas en
+el parque, no quiero cerrar esa puerta»).
+
+**Lo hecho.**
+1. **`RestrictsPuertaRole`** en el `authMiddleware` del panel: cualquier ruta del panel devuelve al
+   rol `puerta` a su pantalla. Es REDIRECCIÓN y no 403 —un 403 en la tablet de la entrada, con cola,
+   no le dice nada al operario— y un rol de más alcance (admin, staff) gana al acumularse.
+2. ⚠️ **`puerta` ENTRA en `User::PANEL_ROLES` aunque no navegue el panel, y no es una contradicción**:
+   esa lista responde a «¿puede autenticarse en `/admin/login`?». La página de login de Filament
+   comprueba `canAccessPanel()` **dentro de `authenticate()`** y, si es falsa, hace `logout()` y falla
+   la validación con «estas credenciales no coinciden» — o sea que cerrarle el panel por ahí le cierra
+   el LOGIN, y el encargo dice «con el mismo login». Como EQUIPO también es correcto.
+3. **«Puerta» sale del menú del admin** y baja a `AdminSettingsHub::areas()`, que **hubo que extender**
+   para admitir una entrada que no es de Filament (`route` + `permission` + `roles` + `icon`): la
+   pantalla vive fuera del shell (`#119`) y no tiene `canAccess()` ni `getUrl()` que preguntar.
+4. **`RequiresStaffOrAdmin` → `RequiresPanelRole`** (alias `staff_or_admin` → `panel_role`), y su
+   comprobación pasa a leer `User::PANEL_ROLES` en vez de dos nombres escritos a mano.
+
+### 3 · Lo que solo apareció midiendo
+
+1. ❗❗ **Retirar «Puerta» del menú la borraba TAMBIÉN del buscador global**, que es justo la vía que
+   el argumento del owner da por buena. `PanelGlobalSearchProvider::screens()` saca sus pantallas **de
+   la propia navegación**, así que el ítem era su única fuente. Y no había red: la guarda de pantallas
+   huérfanas (`AdminNavigationTest`) solo mira las **registradas en Filament**, y ésta vive fuera del
+   shell — habría quedado alcanzable solo tecleando la URL, en verde. *Esconder algo solo sale barato
+   si el buscador lo encuentra, y el buscador solo encuentra lo que está colocado.*
+2. ⚠️ **El nombre `RequiresStaffOrAdmin` pasaba a MENTIR** al nacer el tercer rol, en código de
+   autorización: quien leyera `staff_or_admin` en la ruta de la hoja de sala concluiría que el rol de
+   puerta no llega, cuando quien lo frena ahí es su falta de permiso, no el middleware.
+3. ⚠️⚠️ **Pint metió una dependencia REAL de dominio→HTTP y la prosa parecía arreglada**: al acortar
+   un `{@see \App\Http\Middleware\RestrictsPuertaRole}` escrito en el docblock de `User.php`, añadió el
+   `use` correspondiente. Reescribir la cita en prosa **no bastó** —el import seguía—, y
+   `ModuleBoundariesTest` lo cazó. *Un docblock puede crear una flecha de arquitectura si un linter lo
+   convierte en import.* Se cita en prosa Y sin import, como ya hace `CartPricing`.
+4. ⚠️ **La tarjeta de la puerta en «Ajustes» estuvo a punto de abrirle esa página al EMPLEADO**: él
+   tiene `registrations.validate`, así que `canAccess()` pasaba a ser verdadera para alguien que no
+   abriría ninguna de las 19. No era una fuga —el enlace ya lo tenía en su menú— pero convertía
+   «Ajustes» en una página de una sola tarjeta redundante. La tarjeta se acota con `roles: ['admin']`
+   y es el **espejo exacto** del ítem de menú: entre las dos reglas, todo el que tenga el permiso
+   llega por exactamente UN camino.
+5. ⚠️ **El docblock de `HolderDependents` había PREDICHO la extracción**: «si algún día hace falta un
+   tercer consumidor, la extracción natural es subir este método a `WaiverStatus`». Lo hizo falta y se
+   hizo.
+
+**Verificación**: suite verde (**3.749 tests, 24.498 aserciones**) · Pint ✓ · **mutaciones: la de la
+exención pone ROJAS las tres superficies (4 tests) y la del rol de puerta su guarda** · queda 🟦 a
+falta del OJO del owner en navegador (panel y puerta).

@@ -55,9 +55,19 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
      * «Equipo» del panel no puedan desviarse del gate de acceso: la lista estaba escrita a
      * mano en un solo sitio y una segunda copia habría envejecido en silencio.
      *
+     * ▶ `#320` añade `puerta`, y conviene saber por qué entra AQUÍ si justamente no navega el panel:
+     * esta lista responde a «¿puede autenticarse en `/admin/login`?», no a «¿puede navegar?». La
+     * página de login de Filament comprueba `canAccessPanel()` DENTRO de `authenticate()` y, si es
+     * falsa, hace `logout()` y falla la validación con «estas credenciales no coinciden» — o sea que
+     * dejar el rol fuera de aquí le cierra el LOGIN y se queda sin poder entrar ni a su propia
+     * pantalla. Quien lo saca del panel es el middleware `RestrictsPuertaRole`, un paso después — se
+     * nombra en prosa y NO con `{@see}` porque una anotación resoluble sería una flecha de Identity
+     * hacia la capa HTTP, y `ModuleBoundariesTest` la caza (lo hizo). Y como EQUIPO también es
+     * correcto: quien valida en la entrada trabaja aquí.
+     *
      * @var array<int, string>
      */
-    public const PANEL_ROLES = ['admin', 'staff'];
+    public const PANEL_ROLES = ['admin', 'staff', 'puerta'];
 
     /**
      * Get the attributes that should be cast.
@@ -454,7 +464,7 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
     /**
      * Gate canónico de Filament: ¿puede este usuario entrar a este panel?
      *
-     * Defense in depth: el middleware `RequiresStaffOrAdmin` ya cierra en `/admin/*`,
+     * Defense in depth: el middleware `RequiresPanelRole` ya cierra en `/admin/*`,
      * y este hook lo cierra a nivel de aplicación de Filament. Si por error de
      * configuración el middleware no se aplica a una ruta concreta, Filament sigue
      * negando el acceso aquí. Ver `docs/PLAN-FASE-7-PANEL.md` §1.3.

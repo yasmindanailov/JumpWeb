@@ -74,7 +74,7 @@ final class HolderDependents
 
         return $rows->map(function (Dependent $dependent) use ($statuses): array {
             $status = $statuses[(int) $dependent->getKey()] ?? null;
-            $state = $status === null ? null : self::waiverState($status);
+            $state = $status?->minorState();
             $years = $dependent->age();
 
             return [
@@ -97,7 +97,11 @@ final class HolderDependents
                 'waiver' => $state,
                 // Mismos rótulos que la ficha del pedido (`admin.orders.dependents.waiver_*`): el
                 // operador no debería tener que traducir dos vocabularios entre dos pantallas.
-                'waiver_label' => $state === null ? null : (string) __('admin.orders.dependents.waiver_'.$state),
+                // `#320`: y la misma regla —solo la EXCEPCIÓN lleva rótulo—. El estado sigue viajando
+                // entero en `waiver` (el `data-` de la celda), aunque `current` ya no se pinte.
+                'waiver_label' => WaiverStatus::minorStateIsNoteworthy($state)
+                    ? (string) __('admin.orders.dependents.waiver_'.$state)
+                    : null,
                 'since' => DisplayTime::format($dependent->created_at, 'd/m/Y'),
                 'removed' => $dependent->isRemoved()
                     ? (string) __('admin.users.dependents.removed_on', [
@@ -107,24 +111,5 @@ final class HolderDependents
                 'is_removed' => $dependent->isRemoved(),
             ];
         })->all();
-    }
-
-    /**
-     * El estado de la exención de un menor, en el vocabulario de {@see AssignedDependents}.
-     *
-     * ⚠️ La correspondencia está escrita dos veces (allí es privada) pero las CONSTANTES son una
-     * sola: renombrar un estado rompe la compilación de las dos pantallas a la vez, que es lo que
-     * importa. Su test recorre los tres estados; si algún día hace falta un tercer consumidor, la
-     * extracción natural es subir este método a `WaiverStatus`.
-     */
-    private static function waiverState(WaiverStatus $status): string
-    {
-        if (! $status->signed) {
-            return AssignedDependents::WAIVER_MISSING;
-        }
-
-        return $status->isOutdated()
-            ? AssignedDependents::WAIVER_OUTDATED
-            : AssignedDependents::WAIVER_CURRENT;
     }
 }

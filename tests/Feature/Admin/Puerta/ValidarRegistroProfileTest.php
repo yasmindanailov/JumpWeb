@@ -173,6 +173,11 @@ class ValidarRegistroProfileTest extends TestCase
             // separador, así que el test caía al cambiar la puntuación y NO caía si el dato era otro.
             ->assertSee('data-gate-minor-name="Lucas" data-gate-minor-age="9" data-gate-minor-waiver="current"', false)
             ->assertSee('data-gate-minor-name="Vilma" data-gate-minor-age="6" data-gate-minor-waiver="missing"', false)
+            // `#320`: en la PASTILLA solo entra la excepción. A Vilma le falta la firma y el operador
+            // tiene que verlo; la de Lucas está vigente y no se anuncia. El dato sigue en el `data-`
+            // de arriba, así que esto es presentación y no una pérdida de información.
+            ->assertDontSee(__('admin.puerta.validar.profile.minor_waiver_current'))
+            ->assertSee(__('admin.puerta.validar.profile.minor_waiver_missing'))
             // `#236`: el NOMBRE se ve —es lo que resuelve «¿a cuál le falta la firma?»— y los
             // APELLIDOS no llegan a la pantalla.
             ->assertSee('Lucas')

@@ -8,7 +8,7 @@ use App\Http\Middleware\Api\NoStoreWhenAuthenticated;
 use App\Http\Middleware\EnsureSiteAvailable;
 use App\Http\Middleware\NoStore;
 use App\Http\Middleware\NoStoreWebResponses;
-use App\Http\Middleware\RequiresStaffOrAdmin;
+use App\Http\Middleware\RequiresPanelRole;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -110,7 +110,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Defense in depth junto a `User::canAccessPanel()` (gate de Filament).
         // Ver `docs/PLAN-FASE-7-PANEL.md` §1.3.
         $middleware->alias([
-            'staff_or_admin' => RequiresStaffOrAdmin::class,
+            'panel_role' => RequiresPanelRole::class,
             // `no-store` para respuestas con PII de menores (PDFs operativos + post-form, L1).
             'no-store' => NoStore::class,
         ]);

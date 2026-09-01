@@ -2,8 +2,9 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-09-01 (tarde) — CUATRO carriles; el 4.º (la
-> PORTADA, `#319`) es el más reciente y su bloque está justo bajo el contador vivo.
+> aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — CINCO carriles; el 5.º (PANEL:
+> la exención de un menor y el ROL DE PUERTA, `#320`) es el más reciente y su bloque está justo bajo
+> el contador vivo, seguido del 4.º (la PORTADA, `#319`).
 > **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2
 > (`#311`), T3·3 (`#312`), T3·4 (`#315`, LA RETIRADA del modelo de dos ejes) Y LA T4 (`#317`, EL
 > MOTIVO MANDA en el reembolso · liquidación simétrica · «Descuento por cortesía») EN EL ÁRBOL, y
@@ -58,13 +59,61 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3751 en verde** (24.511 aserciones, 1 skipped a propósito), medida el 2026-09-01 sobre
-> el árbol con los ICONOS DE TARJETA de la portada (`#319`) encima del libro plegado (`#318`).
+> Suite **3756 en verde** (24.534 aserciones, 1 skipped a propósito), medida el 2026-09-01 sobre
+> el árbol CONJUNTO: `#320` (rol de puerta + exención del menor) rebasado sobre `#319` (portada).
+> ⚠️ **Medida DESPUÉS del rebase, no sumada**: sobre la rama sola daba 3749 / 24.498; los 7 tests y
+> 36 aserciones de diferencia son de `#319`, que llegó del otro carril mientras esto se escribía.
 > ⚠️ **No se suma, se mide** — y ⚠️⚠️ **tras un rebase que toque Vue hay que
 > `npm run build:ssr` ANTES de leer la suite**: sin eso salieron 35 rojos en
 > `SidebarDomContractTest` que no eran de ningún cambio.
 > - Antes, 3728 / 24.295 (`#315`, la T3·4 sobre el árbol conjunto), 3760 / 24.946 (`#314`, landing) y 3760 / 24.940 (`#313` y `#312`: la T3·4 retiró los
 >   dos tests de servicio del modelo viejo, −50, y sumó 18), 3758 / 24.958 (`#311`).
+>
+> ═══════════ ❗❗❗ CARRIL 5 · PANEL: LA EXENCIÓN DEL MENOR Y EL ROL DE PUERTA (2026-09-01, noche) ═══════════
+> **EN EL ÁRBOL: `#320`.** Dos encargos de presentación del owner que resultaron ser uno solo.
+>
+> **1 · La exención de un menor solo se ROTULA cuando es una excepción** (`menores-a-cargo.md` §13).
+> Se retira «exención ✓» de las tres superficies del operador (ficha de pedido, ficha de titular,
+> puerta) y **siguen pintándose `outdated` y `missing`**. ⚠️ La premisa «es obligatorio» está medida
+> y es cierta **solo en el instante de asignar**: una firma vigente CADUCA SOLA al publicar versión
+> nueva, y la regla del asignador **solo aplica en modo `interno`**. Regla en UN sitio
+> (`WaiverStatus::minorStateIsNoteworthy()`), que de paso mató una derivación **por triplicado** que
+> ya existía. ⚠️ **La exención del ADULTO en la puerta NO se tocó** (ahí el estado es lo que la
+> puerta decide) ni el CAJÓN (ahí el cliente firma).
+>
+> **2 · Nace el rol `puerta`** (`panel-navegacion.md` §12), con solo dos permisos, que entra por el
+> mismo login y **no navega el panel** (`RestrictsPuertaRole`). **`staff` NO se tocó.** Y al ADMIN se
+> le retira «Puerta» del menú, que baja a «Ajustes → Sistema».
+> ⚠️⚠️ **Se descartó un diseño ya implementado** —recortarle diez permisos a `staff` y sacarlo del
+> panel—: rompía 116 tests, pero el motivo fue que revisaba el `[DECIDIDO owner]` Q1·a de `#294` y
+> **dejaba la matriz de 22 permisos SIN SUJETO** (admin se salta todo por `Gate::before`).
+>
+> ❗❗ **LAS TRES TRAMPAS QUE PAGÓ ESTA TANDA, por si tocas algo de aquí:**
+>   1. **Retirar un ítem del menú lo borra TAMBIÉN del buscador global** (saca sus pantallas de la
+>      navegación) **y ninguna guarda lo ve** si la pantalla vive fuera del shell de Filament.
+>   2. **Un docblock puede crear una flecha de arquitectura**: Pint convirtió un `{@see}` en `use` y
+>      metió Identity→HTTP. Reescribir la cita en prosa NO basta; hay que quitar el import.
+>   3. **`RequiresStaffOrAdmin` pasaba a MENTIR** con el tercer rol → `RequiresPanelRole`, leyendo
+>      `User::PANEL_ROLES` en vez de una segunda copia a mano.
+>
+> ▶ **QUEDA: el OJO del owner** en navegador (panel y puerta) — es lo único que lo separa de ✅.
+> ▶ **LO SIGUIENTE ACORDADO con el owner** (orden suyo): **P2, la spec de DESCUENTOS**, y después
+> **P3, la spec de AUTORIZACIÓN DE UN PADRE A UN TERCERO**. Las dos son spec ANTES que código.
+>   - **P2** son DOS mecanismos, no uno: **promos con CÓDIGO promocional** (% sobre una entrada o
+>     sobre la segunda) y **tramos por cantidad** para excursiones. ⚠️ El owner aparcó el 2x1 y «la
+>     tercera 10 € más barata». ⚠️ **Dato suyo que manda**: *el tramo también acota cuánto se puede
+>     vender, ni más ni menos* — no es solo precio, es validación de línea. ⚠️ El AFORO va aparte
+>     (las excursiones tendrán su propia zona). ⚠️ Medido: **no existe HOY nada de descuentos**
+>     (`Content\Offer` es marketing, «sin lógica de dinero»); `unit_price` es UNSIGNED y el
+>     precedente de línea negativa es `is_credit` (T4 del libro); `free_quantity` YA existe y es el
+>     mecanismo natural del 2x1, pero su semántica actual dice «incluido en el pack».
+>   - **P3**: `[owner]` la exención se ancla **al PEDIDO** y el modelo mental es *«el papelito que el
+>     profesor reparte para que lo firme el padre»* — los 100 niños **NO son menores a cargo del
+>     tutor**. ⚠️⚠️ **Bloqueo estructural MEDIDO**: `waiver_signatures.user_id` es **NOT NULL** con
+>     `restrictOnDelete` y la cadena de hashes se agrupa por `(user_id, sujeto)` — **hoy no cabe la
+>     firma de un padre sin cuenta**. ⚠️ El owner dijo «si el padre quiere anonimizar, no sé qué
+>     hacemos»: la respuesta es la del art. 17.3.e (conservar para defender reclamaciones) hasta
+>     `waiver.retention_months`, que sigue **`[PENDIENTE: owner]`** y hará falta igual.
 >
 > ═══════════ ❗❗❗ CARRIL 4 · LA PORTADA (sesión del 2026-09-01, tarde) — POR DÓNDE SE RETOMA ═══════════
 > **EN EL ÁRBOL: `#319`, los ICONOS DE TARJETA y el tope de dos líneas.** Encargo del owner con el
