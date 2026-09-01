@@ -59,9 +59,9 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3789 en verde** (24.564 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche,
-> 2.ª parte) sobre el árbol CONJUNTO: el panel del horario por zona (`#322`) sobre `#323` (T10, la
-> tarjeta pegatina), `#321` y `#320`.
+> Suite **3793 en verde** (24.564 aserciones, 1 skipped a propósito), medida el 2026-09-01 (tarde)
+> sobre el árbol CONJUNTO: el LANZAMIENTO (`#325`) rebasado sobre el precio por tramo (`#324`),
+> `#323`, `#322`, `#321` y `#320`. Antes, 3789 / 24.564 (`#324` sobre `#323`).
 > ⚠️ **Se mide tras cada rebase, no se suma**: antes 3776 / 24.517 (`#323`) y 3774 / 24.521 (`#322`
 > con su panel, sin la T10). Con dos agentes en `main` el número solo vale medido sobre el conjunto.
 > ⚠️ **Medida DESPUÉS del rebase, no sumada**: por separado daban 3766 / 24.557 (horario por zona
@@ -175,6 +175,23 @@
 >     `waiver.retention_months`, que sigue **`[PENDIENTE: owner]`** y hará falta igual.
 >
 > ═══════════ ❗❗❗ CARRIL 4 · LA PORTADA (sesión del 2026-09-01, tarde) — POR DÓNDE SE RETOMA ═══════════
+> ❗❗❗❗ **2026-09-01 (tarde) · LANZAMIENTO: https://playjump.es ESTÁ EN PRODUCCIÓN (`#325`).**
+> Enhance (el mismo panel que staging; `ENTORNOS.md` §6 tiene la máquina medida). Salió con la
+> **compra online CERRADA y el catálogo visible** (`sales.online_enabled=0` → API 503 + CTA `tel:`),
+> `/servicios` en mantenimiento y fuera del menú/pie, menú sin números, **descarga de responsabilidad
+> v1 PUBLICADA** (es/en/fr; EN/FR con el texto en español, traducción pendiente), legales sin
+> `[PENDIENTE]`, Turnstile activo, `admin@playjump.es` + `tpv1..4@playjump.es` (rol `puerta`), datos
+> limpios (solo catálogo/config del local). ❗ **LO QUE ES DEL OWNER y sigue abierto**: (1) el
+> document root del panel → `public_html/public` (hoy funciona por un puente `.htaccess`); (2) las
+> DOS líneas de cron en el panel (scheduler + `queue:work --stop-when-empty`: **sin la segunda no
+> salen los correos del registro**); (3) añadir el usuario `playjump2_main` a la BD (la app corre con
+> el usuario del panel, que Enhance rota). ⚠️ **El commit de lanzamiento (`350e0a0`) NO incluye el
+> `#324` del otro carril** (precio por tramo): producción lleva el árbol anterior al rebase; el
+> siguiente `deploy.sh` lo subirá. ▶ Después de abrir: imágenes del menú, correos, traducción del
+> documento, Redsys real. ⚠️ Trampas pagadas (todas en `#325`): document root, `settings` no vacía
+> tras migrar (→ `REPLACE INTO`), `roles` vacía con `create-admin` callado, `psysh --execute` +
+> `require`.
+>
 > ❗❗❗ **2026-09-01 (noche, 2.ª parte) · T10 EN EL ÁRBOL (`#323`): LA TARJETA ES PEGATINA Y HAY DOS
 > NIVELES.** Tanda B de la auditoría, `[DECIDIDO owner]` **opción A** con las dos pieles renderizadas
 > sobre `/precios` real (hoja-artefacto «La piel de la tarjeta», 1440 y 390, fuentes verificadas):

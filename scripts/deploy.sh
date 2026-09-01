@@ -332,6 +332,7 @@ RSYNC_EXCLUDES=(
     --exclude='/openapi/'            # solo lo leen los tests (config/api.php → tests/)
     --exclude='/storage/'            # logs y cachés DEL SERVIDOR + basura de test + storage/ssr
     --exclude='/public/hot'          # si llega, Vite sirve todo desde localhost:5274 y la web queda muda
+    --exclude='/.htaccess'           # PRODUCCIÓN (#325): puente public_html → public/ mientras el panel no apunte al docroot bueno; no está en el repo y el --delete lo tumbaría
     --exclude='/public/uploads/'     # subidas del panel: excluirlas las salva del --delete
     --exclude='/public/css/client.css'  # paquete de tema DEL CLIENTE (#143): gitignorado, vive solo
                                         # en el servidor. Sin esta línea el --delete se lo lleva en el

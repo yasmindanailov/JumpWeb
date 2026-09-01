@@ -19244,3 +19244,80 @@ tiene guarda propia por conducta.
 **5 mutaciones, las 5 muerden**, con pasada de CONTROL · **`VERIFY_CONC=1`: los SEIS escenarios de
 `purchase:verify-oversell` y `redsys:verify-concurrency`, sobre InnoDB real** · queda el OJO del owner
 y la tanda C (el producto, que es dato).
+
+## #325 · 2026-09-01 · LANZAMIENTO de playjump.es: producción en Enhance, compra online CERRADA con catálogo visible, `/servicios` oculto, descarga de responsabilidad v1 publicada, y el rol de puerta como «TPV»
+
+**Contexto.** El owner pidió salir a producción **el mismo día, con dos horas**: el parque abría a las
+16:30 y necesitaba al menos el panel, el registro y la puerta. Doce puntos, triados en «antes de
+abrir» y «después». Sin claves de Redsys de producción y sin SMTP externo.
+
+**`[DECIDIDO owner]`** (todo del 2026-09-01, con las consecuencias delante):
+1. **Compra online CERRADA, catálogo visible**: nace `sales.online_enabled`
+   (`PaymentSettings::onlineSalesEnabled()`). Con `0`, la API de compra (presupuesto, validar línea,
+   crear pedido, abrir pago) responde **503 `online_sales_disabled`** vía `EnsureOnlineSalesEnabled`
+   —el servidor es la verdad— y los CTA de compra pasan a `tel:` (tarifa, `/precios`, 404, cierre,
+   juego, chip del menú y el CTA doble del armazón); `/entradas` deja de abrir el cajón. Vacío o `1` =
+   la conducta de siempre. Guarda: `OnlineSalesSwitchTest` (API 503 con `0`, 422 con `1` o ausente,
+   `/precios` con `tel:` y sin `purchase.open()`).
+2. **El rol «TPV» ES `puerta`** (`#320`): cuatro usuarios `tpv1..4@playjump.es` con ese rol, creados
+   con `app:create-admin --role=staff` y cambiados a `puerta` (el comando no admite ese rol); admin
+   `admin@playjump.es`. Contraseña común elegida por el owner, avisado de que el panel está en URL
+   pública.
+3. **`/servicios` inalcanzable**: `maintenance.page.servicios=1` (503 «en mantenimiento»), y sus
+   destinos **salen del menú y del pie** (`nav.blade`/`footer.blade` leen
+   `MaintenanceSettings::pageInMaintenance`). Una página inalcanzable no se anuncia.
+4. **Menú sin los números «01…»**: `menu__n` retirada (blade + CSS + su guarda en
+   `ArmazonContractTest`, que ahora vigila que no vuelvan).
+5. **«Descarga de responsabilidad», no «waiver»**: texto definitivo redactado (11 secciones: riesgo,
+   salud, zonas Kids 4–7 / Jump 8+ y 1,30 m, calcetines, normas de uso, menores, objetos, admisión,
+   responsabilidad, aceptación) a partir de la referencia que dio el owner y de las normas reales del
+   parque; **v1 publicada en producción en es/en/fr** (EN/FR llevan hoy el texto en español: la
+   traducción queda pendiente). `waiver.mode=interno`. `Page::REVIEWED_LEGAL_SLUGS` incluye ya
+   `waiver` (`CookiePolicyContentTest` re-apuntada: las cinco legales son definitivas).
+6. **Legales cerrados**: cero `[PENDIENTE]` en es/en (plazo fiscal 6 años, baja de marketing,
+   proveedores y transferencias con hosting en la UE; sin muro social), `legal.jurisdiction=Murcia`,
+   `business.domain=playjump.es`, `redsys_merchant_name` de «SaltoPark» a «Play Jump Park».
+7. **Datos limpios**: producción arranca con `migrate` + importación de SOLO las tablas de catálogo y
+   configuración del local (settings · zones · ticket_types · prices · addons · rate_types · rooms ·
+   opening_hours · seasons · special_dates · slot_templates · attractions · faqs · park_rules · pages ·
+   landing_services · roles · permissions · permission_role). Sin usuarios, pedidos, consentimientos,
+   logs ni `slots` (los genera el scheduler).
+
+**Producción, MEDIDO** (`ENTORNOS.md` §6): Enhance —el mismo panel que staging—, `playjump2@51.68.7.199`,
+HOME `/var/www/9dcee356-…`, PHP 8.5.1, MariaDB por socket, Redis 127.0.0.1:6379 (PONG), phpredis,
+**sendmail funciona** (dos pruebas recibidas en Gmail sin spam: una cruda y otra desde la app con
+`MAIL_SENDMAIL_PATH="/usr/sbin/sendmail -t -i"`), `deploy.sh` en **modo producción**
+(`DEPLOY_PRODUCTION=1` invierte las guardas 3 y 4 de staging: el correo TIENE que salir y el
+`robots.txt` permisivo es el bueno). Turnstile activo con las claves del owner.
+
+⚠️⚠️ **Cuatro trampas pagadas, todas con salida creíble:**
+- **El document root del sitio nacía en `public_html`** (la misma de `#102` en staging): `/` y `/up`
+  daban 404 mientras `/public/index.php` daba 200. Puente temporal: `.htaccess` en `public_html` que
+  reescribe a `public/`; el arreglo bueno es el ajuste del panel, que es del owner.
+- **`settings` NO estaba vacía tras migrar**: dos migraciones siembran (los dos portadores de fiesta
+  mixta en `ticket_types` + sus dos ajustes, y seis permisos), así que el `INSERT` del volcado
+  chocaba por clave. Se importó con **`REPLACE INTO`**, y los dos portadores sembrados quedaron
+  HUÉRFANOS (los ajustes apuntan a los ids del local): borrados tras comprobar 0 referencias.
+- **`roles` sí estaba vacía y `app:create-admin` falló sin decirlo** (su `| tail -1` tragó la
+  salida): `RoleSeeder` + `PermissionSeeder` son idempotentes y son el camino.
+- **`mysqldump` de MySQL 8 → MariaDB 11**: solo datos (`--no-create-info`), sin colaciones `0900`.
+- Y **`psysh --execute` con `require` de un fichero** revienta con «unexpected '/'» aunque el fichero
+  pase `php -l`: se arranca Laravel con `php -r` + `bootstrap/app.php` y se hace `require` ahí.
+
+**El usuario de BD**: `playjump2_main` existe pero **sin permisos sobre `playjump2_main`** (1044); la
+app corre con el usuario del panel (`playjump2`, que Enhance puede rotar) **hasta que el owner
+añada el usuario dedicado en el panel**. ⚠️ **El crontab del usuario probablemente NO se ejecuta**
+(como en staging): las dos líneas del scheduler y de `queue:work --stop-when-empty` van en el cron
+del panel — **sin la segunda, los correos del registro no salen** (van por cola).
+
+**Después de abrir** (fuera del alcance de hoy): imágenes en la columna derecha del menú, rediseño
+fino de los correos, traducción EN/FR de la descarga de responsabilidad, el precio por tramo del
+otro carril (`#324`, no desplegado aún), y el cambio a Redsys real cuando haya claves.
+
+**Verificación** (todo por HTTP contra `https://playjump.es`): portada, `/precios`, `/cumpleanos`,
+`/normas`, `/contacto`, `/registro` y los cinco legales → 200 · `/servicios` → 503 · `/precios` sin
+`purchase.open()` y con `tel:+34641995714` · `POST /api/v1/orders/quote` → 503 · `robots.txt`
+permisivo · `/api/v1/config` publica la `turnstile_site_key` · cero rastros ajenos en la portada ·
+menú sin `menu__n` y sin enlaces a `/servicios` · recuento en BD: 53 ajustes · 19 productos ·
+5 páginas · 5 usuarios · 3 versiones del documento. Suite local completa en verde antes del
+despliegue (`OnlineSalesSwitchTest` + `CookiePolicyContentTest` re-apuntada).

@@ -357,3 +357,31 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
   que ya demostró que sirve.
 - **Lo que el owner tiene que hacer se documenta igual**, aunque lo ejecute un agente: este repo es
   agent-first y el siguiente agente no puede adivinar qué se tocó en un panel.
+
+## 6 · PRODUCCIÓN · playjump.es, MEDIDO (2026-09-01, `DECISIONES #325`)
+
+El mismo panel que staging (**Enhance**), así que `deploy.sh` vale con dos variables y una bandera:
+
+```bash
+DEPLOY_PRODUCTION=1 DEPLOY_SSH_HOST=jumpweb-prod DEPLOY_URL=https://playjump.es scripts/deploy.sh --go
+```
+
+`jumpweb-prod` es un alias de `~/.ssh/config` (`HostName 51.68.7.199 · User playjump2 · Port 22`,
+clave `jumpweb_staging_ed25519` — la misma que staging, registrada en el panel como «jumpweb-prod»).
+`DEPLOY_PRODUCTION=1` **invierte** las guardas 3 y 4 de §2: el correo tiene que salir y el
+`robots.txt` permisivo del repo es el bueno.
+
+| | Producción | Nota |
+|---|---|---|
+| Usuario / HOME | `playjump2` · `/var/www/9dcee356-e579-46a8-9f3a-1c4a8d999e52` | rutas con UUID |
+| PHP | **8.5.1** (`/opt/ecp-php85/bin/php`; también 8.4.16) | elegido en el panel |
+| BD | `playjump2_main`, MariaDB por **socket** (`DB_HOST=localhost`) | ⚠️ el usuario dedicado `playjump2_main` nació **sin permisos** (1044): la app usa `playjump2` (el de `~/.my.cnf`, que el panel rota) hasta que el owner lo añada |
+| Redis | `127.0.0.1:6379`, sin contraseña, PONG; phpredis | `CACHE_STORE=redis` · `SESSION_DRIVER=redis` |
+| Correo | **`sendmail` funciona** (`MAIL_MAILER=sendmail`, `MAIL_SENDMAIL_PATH="/usr/sbin/sendmail -t -i"`) | dos pruebas recibidas en Gmail, sin spam |
+| Cola | `QUEUE_CONNECTION=database` | ⚠️ **hace falta `queue:work --stop-when-empty` en el cron del panel** o los correos del registro no salen |
+| Cron | crontab del usuario escribible; **sonda instalada** (`cron-test.log`) para medir si corre | en staging NO corría: dar las dos líneas al panel |
+| Document root | ⚠️ nació en `public_html` (404 en `/`); **puente `.htaccess` → `public/`** hasta que el panel apunte a `public_html/public` | el mismo `#102` de staging |
+| Paquete del cliente | `client.css` + `client-*` **no viajan por rsync** (excluidos y protegidos del `--delete`): se suben por `scp` a `public/css` y `public/img` | hecho el 01-09 |
+| Datos | `migrate` + `REPLACE INTO` de las tablas de catálogo/config del local (`~/prod-datos-catalogo.replace.sql`) | dos migraciones siembran filas: por eso `REPLACE`, no `INSERT` |
+| Post-despliegue | `~/post-deploy.sh` (import si `zones` vacía · Turnstile · usuarios · `post-deploy.php`: roles de puerta + publicar la descarga v1 · cachés · `up`) | idempotente |
+| Redsys | `redsys_environment=test`, comercio de pruebas | **compra online cerrada** (`sales.online_enabled=0`) hasta tener claves reales |
