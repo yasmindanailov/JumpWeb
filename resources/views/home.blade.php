@@ -351,66 +351,24 @@
         <x-site.events-section :packages="$packages" :show-invite="false" :level="2" />
     @endif
 
-    {{-- ===================== INFO ===================== --}}
+    {{-- ===================== VISÍTANOS (horarios y ubicación) ===================== --}}
+    {{-- ▶ **TRES TARJETAS** (`[DECIDIDO owner, 2026-09-01]`: «quiero un diseño de cards, todo en
+         cards en la medida de lo posible; lo siento más organizado y limpio»),
+         `specs/idioma-visual-heredado.md` §3.octies.
+         Era el caso EXTREMO del molde editorial heredado que diagnosticó `#297`: cuatro
+         encabezados —«Visítanos», «Horarios», «Fechas especiales», «Ubicación»— para cuatro
+         líneas de dato. Ahora la sección conserva UNO, su `<h2>`, y el resto son las tarjetas.
+         ⚠️ El marcado heredado (`.info__grid` + dos `.info-card` simétricas + `.map-card` con una
+         caja blanca encima) se retiró AQUÍ con su CSS. `.map-card`/`.map-pin` siguen vivas porque
+         las usa `/contacto`; `.info__grid`, `.info-card` y `.hours` se fueron con su único
+         consumidor, que era esta sección. --}}
     <section id="info" class="section wrap">
         <div class="rides__head">
             <div>
                 <h2 class="rides__title">{{ __('landing.info.title') }}</h2>
             </div>
         </div>
-        <div class="info__grid">
-            <div class="info-card">
-                <h3>{{ __('landing.info.hours_title') }}</h3>
-                <div class="hours">
-                    @forelse ($schedule->weeklyRows() as $row)
-                        <span class="day {{ $row['is_today'] ? 'today' : '' }}">{{ $row['is_today'] ? '→ ' : '' }}{{ $row['label'] }}</span>
-                        <span class="time {{ $row['is_today'] ? 'today' : '' }}">{{ $row['time'] }}</span>
-                    @empty
-                        <span class="day">{{ __('landing.info.hours_tbd') }}</span>
-                        <span class="time">—</span>
-                    @endforelse
-                    @foreach ($schedule->seasons() as $season)
-                        <span class="day {{ $season['is_current'] ? 'today' : '' }}">{{ $season['is_current'] ? '→ ' : '' }}{{ $season['name'] }} <small style="color:var(--fg-mute); font-weight:400">({{ $season['range'] }})</small></span>
-                        <span class="time {{ $season['is_current'] ? 'today' : '' }}">{{ $season['time'] }}</span>
-                    @endforeach
-                </div>
-
-                @php $specialDates = $schedule->upcomingSpecialDates(); @endphp
-                @if (! empty($specialDates))
-                    <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line)">
-                        <h4 style="font-size:14px; font-weight:700; margin:0 0 10px">{{ __('landing.info.special_dates_title') }}</h4>
-                        <div class="hours">
-                            @foreach ($specialDates as $sd)
-                                <span class="day">{{ $sd['date'] }}</span>
-                                <span class="time" style="{{ $sd['is_closed'] ? 'color:var(--zone-1)' : '' }}">{{ $sd['detail'] }}</span>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            <div class="map-card">
-                {{-- Mapa de Google embebido si está configurado (Configuración → URL de inserción); si no,
-                     el pin decorativo. Bloqueo previo (#219): el iframe solo carga con consentimiento de
-                     la categoría «mapa»; si no, placeholder con botón «Cargar mapa». --}}
-                <x-site.consent-frame category="maps" :src="$site['maps_embed']"
-                    :title="__('landing.info.address_title')"
-                    wrapper-style="position:absolute; inset:0"
-                    frame-style="width:100%; height:100%; border:0"
-                    referrerpolicy="no-referrer-when-downgrade" allowfullscreen>
-                    <span class="map-pin"></span>
-                </x-site.consent-frame>
-                <div style="position:relative; z-index:1; background:var(--bg-card); padding:20px 24px; border-radius:var(--r); border:1px solid var(--line); max-width:340px">
-                    <h3 style="margin:0; font-family:var(--font-display); font-size:32px; letter-spacing:-0.03em; font-weight:800">{{ __('landing.info.address_title') }}</h3>
-                    <p style="margin:10px 0 16px; color:var(--fg-mute); font-size:14px; line-height:1.6">
-                        {{ $site['address1'] ?? '' }}<br />
-                        {{ $site['address2'] ?? '' }}<br />
-                        {{ __('landing.info.parking') }}
-                    </p>
-                    <a href="{{ $site['maps'] ?? '#' }}" class="btn btn--ghost btn--sm" data-tap>{{ __('landing.info.directions') }}</a>
-                </div>
-            </div>
-        </div>
+        <x-site.visit :schedule="$schedule" />
     </section>
 
     {{-- ===================== NORMAS ===================== --}}

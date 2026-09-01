@@ -17956,3 +17956,91 @@ card pasa de «pendiente 20,00 · online 30,00» a 0,00 / 10,00** — el fantasm
   tiene cero ajustes y su hecho solo vive en el rastro. Lo cazó su propio test.
 - ⚠️ El remoto numeró `#301` en la misma jornada (carril landing): esta entrada es `#306`, elegida
   mirando el remoto antes de escribirla.
+## #307 — «Visítanos» en TARJETAS, los datos reales del cliente, y tres defectos que salieron con ellos (2026-09-01)
+
+**Contexto.** Sesión del carril de la LANDING (el otro carril iba por el libro/desglose). El owner
+entrega los datos legales, de contacto y de ubicación de **Play Jump Park S.L.** y pide seguir con
+el diseño. `#304` ya había metido el catálogo real; faltaba todo lo demás.
+
+### 1 · Los datos, y las tres decisiones que llevaban dentro
+
+14 ajustes escritos y **releídos por el MODELO**, no por la consulta recién escrita — que es donde
+`#304` se estrelló con el alias de morph. Viven **solo en la BD local y no viajan en el commit**
+(`DECISIONES #1`: este repo es el producto sin marca de cliente).
+
+❗ **El producto ya separaba dos direcciones y hay que respetarlo**: `business.address` es el
+**domicilio SOCIAL** (Ceutí) y solo alimenta los textos legales; `address.line1/2` es la dirección
+del **PARQUE** (Lorca) y alimenta la landing, el mapa y el `PostalAddress` de schema.org. Por eso
+`business.city` es **Lorca** y no Ceutí: lo lee `addressLocality` y el pin del menú.
+
+- **El teléfono entra con `+34`**: la landing se sirve en ES/EN/FR y el `tel:` sale de ahí.
+- **`business.domain` se deja VACÍO a propósito**: `LegalIdentity::siteDomain()` cae al host de la
+  petición, que en producción ES el dominio real. Fijarlo sería inventarlo desde el email.
+- **Instagram y TikTok se VACÍAN**: apuntaban a cuentas de demostración.
+
+⚠️ **El enlace de Maps que da el owner es de COMPARTIR, no de INSERCIÓN.** Se construyó la URL de
+inserción y **se verificó con CONTROL** (la misma con un identificador de ficha falso): el control
+sale sin ficha y sin chincheta, la real trae «Play Jump Park — Ctra. de Granada, 30813 Lorca». *Un
+mapa que se pinta no demuestra que sea TU mapa; lo demuestra que el control no lo pinte.*
+⚠️ Y el primer intento midió su propio error: la Embed API responde «must be used in an iframe», y
+las **dos** URLs decían lo mismo. *Cuando el control y el sujeto dan idéntico, no estás midiendo.*
+
+### 2 · «Visítanos» en tarjetas — `[DECIDIDO owner]`
+
+Diseño y medición en `specs/idioma-visual-heredado.md` **§3.octies**. Era el caso EXTREMO del molde
+editorial de `#297` (4 encabezados para 4 líneas de dato) y llevaba **tres formas rechazadas** más
+dos tandas revertidas en el mismo carril.
+
+▶ **No se propuso una cuarta forma suelta**: se montaron DOS en la web real (`?visitanos=a|b`, eje
+«quién abre la sección» — el único que A/B/C no tocaron), se midieron y se le enseñaron. Las
+descartó y pidió **cards**: *«lo siento más organizado y limpio»*. La respuesta llegó en un mensaje
+en vez de en una tanda revertida.
+
+Quedan **tres tarjetas y UN encabezado**: cuándo (estado en vivo + excepción pegada + calendario) ·
+dónde (dirección + «Cómo llegar» + teléfono) · el mapa.
+❗ **La tarjeta es la PEGATINA de `#303`**, con los valores de `.ride-card` — no un cuarto
+tratamiento. ⚠️ **Sin `:hover`**: éstas no llevan a ninguna parte, y una afordancia sin consumidor
+es el defecto de `#295`. ⚠️ **Sin títulos dentro**: §3.quinquies.4 mandó retirar los `h3` internos, y
+ponerlos «porque una tarjeta necesita cabecera» sería rehacer el molde desde dentro.
+
+▶ **Entra `closes_at`** (el hallazgo de §3.quinquies.5·1: `HeroStatus` lo calculaba y lo tiraba).
+⚠️⚠️ **No se deduce de `weeklyRows()`**: su `is_today` se apaga cuando manda una temporada o una
+fecha especial. Medido en vivo: con una activa, las dos filas semanales iban en `false`.
+▶ **Sale «Parking gratis 2h»** (`[DECIDIDO owner]` pendiente desde `#297`) y se retira el marcado
+heredado **con su CSS y sus dos `@media`**. ⚠️ `.map-card`/`.map-pin` se quedan: las usa `/contacto`,
+comprobado **por clase exacta y por fichero** (un `grep "hours"` casa con `visit__hours`).
+
+⚠️ **En móvil la sección CRECE 45 px y se dice**: tres pegatinas cuestan ~100 px de chrome. Se
+recuperaron 52 (un `margin-bottom` que se sumaba al `gap`, y el mapa apilado de 240 a 200); el resto
+es el precio de la forma elegida. Contra lo que el owner vio al empezar son **54 menos**.
+
+### 3 · Tres defectos que los datos reales destaparon
+
+1. **El pie servía DOS ENLACES MUERTOS** — `<a href="#">Instagram</a>` y lo mismo TikTok — en toda
+   instalación sin redes. El menú y el `sameAs` de schema.org ya comprobaban el centinela `'#'`; el
+   pie era **el único de los TRES consumidores** que no. ⚠️ Y el mismo caso con el teléfono: leía
+   `phone` con un `preg_replace` propio, saltándose el `has_phone`/`phone_tel` que el Lote 11
+   centralizó — con el ajuste sin rellenar emitía `tel:[PENDIENTE]`. **Arreglado, con guarda
+   (`FooterContactLinksTest`) y 2/2 mutaciones vistas en rojo.** `[DECIDIDO owner]`.
+2. **`legal.jurisdiction` se LEE y no se puede ESCRIBIR** — sale en el aviso legal y en las
+   condiciones («*se someten a los juzgados y tribunales de \[pendiente]*») y **no está en la lista
+   `MANAGED` del panel**. Es el gemelo invertido de los tres campos de `#304`: aquéllos se podían
+   rellenar y no los leía nadie. **Ficha en `DEUDA.md`** — falta además el valor, que es del owner.
+3. **Dos `special_dates` de la demo** hacían que la portada dijera CERRADO hoy. `[DECIDIDO owner]`
+   quitarlas y regenerar. ⚠️ **Y eso destapó algo mayor**: las franjas cubren 486 filas del 24-06 al
+   02-10 pero **solo 15 días tienen más de 5**, así que con el catálogo real **no hay disponibilidad
+   más allá de unos días** (medido: el sábado 05-09 ofrece CERO horas). **No se tocó** —es AFORO y no
+   estaba en el encargo—; ficha en `DEUDA.md` con el comando que lo arregla.
+
+⚠️ **Una hipótesis mía SALIÓ FALSA al medirla**, y conviene que conste: deduje que las franjas
+rancias (10:00–21:00, del horario de demo) se estarían VENDIENDO con el parque cerrado. Se preguntó
+al dominio y ofrece 17:00–20:00. *El filtro existía; lo que no existe es cobertura.*
+
+**Verificación**: suite **3727 verde** (24.200 aserciones, 1 skipped) sobre el árbol CONJUNTO tras
+rebasar encima de `#305`/`#306`; esta tanda sola daba 3720 / 24.106 · Pint ✓ (1057) · docs-check ✓
+· **5/5 mutaciones muerden**, vistas en rojo una a una · Chrome real 1280 y 390 con puntero grueso ·
+**0 px de desborde, 0 restos de demo y 0 errores de consola en las 9 rutas públicas** · área táctil
+efectiva 105×44 y 130×44 con la receta de `VERIFICACION-E2E-CAJON.md` §5.duovicies.
+⚠️ **Dos instrumentos propios dieron números creíbles y falsos**: el área táctil (39 px: medía la
+caja del `<a>` y no el pseudo de `[data-tap]` — lo delató que acusaba también a la forma ya
+verificada en `#264`) y el sondeo del mapa fuera de un `<iframe>`.

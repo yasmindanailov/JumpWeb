@@ -17,7 +17,14 @@
 > forma heredada**: es la base común desde la que se va a rediseñar, no una forma aprobada. El
 > diagnóstico del molde (`#297`) sigue vivo. ❗ **De la T3 SÍ se conserva el arreglo de identidad**
 > (`slug`, no `accent`), con guarda propia. ▶ **Y los DATOS REALES de Play Jump Park ya están en la
-> BD local** (`#304`, **no versionados**: el volcado vive en el scratchpad de esa sesión).**
+> BD local** (`#304` el catálogo · **`#307` los legales, de contacto y de ubicación** — **no
+> versionados**: los volcados viven en el scratchpad de cada sesión).
+> ❗❗ **`#307` cierra la tanda B′: «Visítanos» pasa a TRES TARJETAS** (`[DECIDIDO owner]`, la pegatina
+> de `#303`) y con ella cae el caso EXTREMO del molde: 4 encabezados → **1**. **Quedan por rehacer
+> normas (A′) y zonas (C′)**, las dos revertidas a su forma heredada a propósito.
+> ⚠️ **Y los datos reales destaparon tres defectos**, dos arreglados y uno con ficha: el pie servía
+> enlaces muertos · `legal.jurisdiction` no se puede rellenar desde el panel · **las franjas no
+> cubren el horizonte** (el sábado 05-09 ofrece CERO horas) — eso último es AFORO y NO se tocó.**
 > ❗ **SI ENTRAS NUEVO A MIXTOS: `specs/cumple-mixto.md` §18 (visión) → §21 (sello) → §22 (completo son
 > dos preguntas) → §23 (la T3) → §20 + §24 (la T4: el descuento espejo) → §25 (la T5: las
 > palabras) → **§26 (la T6: el guardián en el dominio)**. Diseño fino antes de código y preguntas
@@ -32,10 +39,16 @@
 > veces (el carril del tema iba por 281 con el remoto en 285; el de mixtos escribió `#286` con el
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
+> ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
+> Suite **3727 en verde** (24.200 aserciones, 1 skipped a propósito), medida el 2026-09-01 sobre el
+> árbol CONJUNTO tras rebasar `#307` (landing) encima de `#305`/`#306` (el libro). ⚠️ **No se suma,
+> se mide**: `#307` por sí solo daba 3720 / 24.106 y el libro 3716 / 24.131.
+>
 > ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1 EN EL ÁRBOL · sigue la T2) ═══════════
 > ❗❗❗ **2026-09-01 (madrugada) · T1 · LOS HECHOS, EN EL ÁRBOL** (`DECISIONES #306`,
-> `specs/desglose-libro.md` §6·T1 y **§6.1 lo ejecutado**). Suite **3716 en verde** (24.131 aserciones,
-> 1 skipped a propósito — la cifra VIVA, medida por el `pre-push` sobre el árbol CONJUNTO tras
+> `specs/desglose-libro.md` §6·T1 y **§6.1 lo ejecutado**).
+> - Antes, suite 3716 (24.131 aserciones,
+> 1 skipped a propósito) — medida por el `pre-push` sobre el árbol CONJUNTO tras
 > integrar `#300`–`#304` de la landing; el carril del libro por sí solo daba 3711 / 24.214) · Pint ·
 > docs-check · `audit-clock` **verde en las 12 fronteras** · foto puente de `78265ec` **idéntica en 15/15 escenarios** (lo que se pinta no se
 > movió un céntimo) · migración corrida sobre la BD local (36 filas → 43 en cuatro tipos, cero
@@ -77,7 +90,7 @@
 > ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1–T6 hechas: el plan de `#284`, COMPLETO) ═══════════
 > ❗❗❗ **2026-09-01 · T6 · EL GUARDIÁN DE SOLAPES EN EL DOMINIO, EN EL ÁRBOL** (`#299`,
 > `specs/cumple-mixto.md` **§26** diseño fino · **§26.5 ejecución**).
-> Suite 3709 en verde entonces (24.037 aserciones, 1 skipped a propósito; **la cifra VIVA está en el carril 3**, arriba) — cifra del árbol CONJUNTO
+> - Antes, suite 3709 (24.037 aserciones, 1 skipped) — cifra del árbol CONJUNTO
 > tras rebasar el carril de la landing (`#300`→`#304`) encima; la de esta tanda sola era 3704 /
 > 24.120. ⚠️ **Las aserciones BAJAN aunque los tests suban**: el otro carril retiró guardas cuyo
 > sujeto desapareció. · **`audit-clock` verde en
@@ -237,6 +250,58 @@
 > entorno por eso.
 >
 > ═══════════ CARRIL 2 · TEMA / FACHADA (`#286` · `#287`) ═══════════
+>
+> ❗❗❗ **2026-09-01 · «VISÍTANOS» EN TARJETAS + LOS DATOS REALES DEL CLIENTE** (`#307`,
+> `specs/idioma-visual-heredado.md` **§3.octies**). Suite del árbol conjunto **3727 verde** (24.200
+> aserciones, 1 skipped); esta tanda sola daba 3720 / 24.106 · Pint ✓ · docs-check ✓ · **5/5 mutaciones muerden** · Chrome real 1280 y 390 con puntero
+> grueso: **0 desborde, 0 restos de demo, 0 errores de consola en las 9 rutas públicas**.
+>
+> ▶ **LOS DATOS DE PLAY JUMP PARK, COMPLETOS** (14 ajustes; **solo en la BD local**, como `#304`).
+> ❗ **El producto separa DOS direcciones y hay que respetarlo**: `business.address` es el domicilio
+> SOCIAL (Ceutí) y solo alimenta los textos legales; `address.line1/2` es el PARQUE (Lorca) y alimenta
+> landing, mapa y el `PostalAddress` de schema.org — por eso `business.city` es **Lorca**.
+> ⚠️ **`business.domain` se deja VACÍO a propósito**: el servicio cae al host de la petición, que en
+> producción ES el dominio real; fijarlo sería inventarlo desde el email.
+> ⚠️⚠️ **El enlace de Maps del owner es de COMPARTIR, no de INSERCIÓN**: la URL de inserción se
+> construyó y **se verificó CON CONTROL** (misma URL con ficha falsa → sin ficha y sin chincheta).
+> *Un mapa que se pinta no demuestra que sea TU mapa; lo demuestra que el control no lo pinte.*
+> ⚠️ Y el primer intento **midió su propio error** (la Embed API exige `<iframe>` y las dos URLs
+> decían lo mismo): *cuando el control y el sujeto dan idéntico, no estás midiendo*.
+>
+> ▶ **«Visítanos» pasa a TRES TARJETAS y UN encabezado** (`[DECIDIDO owner]`: «todo en cards, lo
+> siento más organizado y limpio»). Era el caso EXTREMO del molde de `#297` — 4 encabezados para 4
+> líneas de dato — y llevaba **tres formas rechazadas** más dos tandas revertidas.
+> ❗ **No se propuso una cuarta forma suelta**: se montaron DOS en la web real (`?visitanos=a|b`), se
+> midieron y se le enseñaron; las descartó y pidió tarjetas. *La respuesta llegó en un mensaje en vez
+> de en una tanda revertida.*
+> ❗ **La tarjeta es la PEGATINA de `#303`**, con los valores de `.ride-card` — no un cuarto
+> tratamiento. ⚠️ **Sin `:hover`** (no llevan a ninguna parte: afordancia sin consumidor, `#295`) y
+> **sin títulos dentro** (ponerlos sería rehacer el molde desde dentro).
+> ▶ Entra **`closes_at`** —`HeroStatus` lo calculaba y lo tiraba— y ⚠️⚠️ **no se deduce de
+> `weeklyRows()`**: su `is_today` se apaga cuando manda una temporada o una fecha especial (medido en
+> vivo: las dos filas en `false`). Sale **«Parking gratis 2h»** y se retira el marcado heredado **con
+> su CSS y sus dos `@media`**; ⚠️ `.map-card`/`.map-pin` se quedan porque las usa `/contacto`
+> (comprobado por clase EXACTA: un `grep "hours"` casa con `visit__hours`).
+> ⚠️ **En móvil CRECE 45 px y se dice**: tres pegatinas cuestan ~100 px de chrome; se recuperaron 52
+> (un `margin-bottom` sumándose al `gap`, y el mapa apilado 240→200). Escritorio **679 → 659**.
+>
+> ▶ **TRES DEFECTOS que los datos reales destaparon.** (1) El pie servía **dos enlaces muertos**
+> (`href="#"` a Instagram y TikTok) y un `tel:` a un placeholder: era **el único de los tres
+> consumidores** que no comprobaba el centinela. **Arreglado + `FooterContactLinksTest`, 2/2
+> mutaciones en rojo.** (2) **`legal.jurisdiction` se lee y no se puede escribir** — sale en aviso
+> legal y condiciones y **no está en el panel**; ficha en `DEUDA.md`, y falta el valor, que es del
+> owner. (3) Dos `special_dates` de demo decían CERRADO hoy → quitadas y franjas regeneradas
+> (`[DECIDIDO owner]`), **y eso destapó algo mayor**: 486 franjas del 24-06 al 02-10 pero **solo 15
+> días con más de 5**, así que **no hay disponibilidad más allá de unos días** (el sábado 05-09
+> ofrece CERO horas). **NO se tocó**: es AFORO y no estaba en el encargo; ficha con el comando.
+> ⚠️ **Una hipótesis mía salió FALSA al medirla**: deduje que se vendían franjas rancias con el parque
+> cerrado y el dominio ofrece 17:00–20:00. *El filtro existía; lo que no existe es cobertura.*
+> ⚠️⚠️ **Dos instrumentos propios dieron cifras creíbles y falsas**: el área táctil (39 px — medía la
+> caja del `<a>` y no el pseudo de `[data-tap]`; lo delató que acusaba también a la forma ya
+> verificada en `#264`; la efectiva es **105×44 y 130×44**) y el sondeo del mapa fuera de un iframe.
+> ⚠️ Y **Blade compila las directivas dentro de un comentario**: citar `@php` en prosa reventó la
+> plantilla con un error señalando el final del fichero — y volvió a caer el comentario escrito para
+> advertirlo.
 >
 > ▶ ✅ **T2 hecha — la cinta `C3` sustituye a la marquesina de `/servicios`** (`#293`): banda de
 > tinta a sangre, girada −2,4°, con punto de color entre títulos y bucle lento con token propio.

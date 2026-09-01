@@ -59,10 +59,22 @@
             <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener">{{ $site['registration_label'] }}</a>
         @endif
         <a href="{{ route('contacto') }}">{{ __('landing.footer.contact_link') }}</a>
-        @if (! empty($site['phone']))<a href="tel:{{ preg_replace('/\s+/', '', $site['phone']) }}">{{ $site['phone'] }}</a>@endif
+        {{-- ⚠️ El teléfono va por `has_phone`/`phone_tel`, NO por `phone` con un `preg_replace`
+             propio: ese saneo a mano es justo lo que el Lote 11 centralizó en el composer, y con
+             el ajuste sin rellenar («[PENDIENTE]») emitía `tel:[PENDIENTE]` — un enlace roto que
+             `has_phone` existe para no pintar. Era el único sitio que se lo saltaba. --}}
+        @if (! empty($site['has_phone']))<a href="tel:{{ $site['phone_tel'] }}">{{ $site['phone'] }}</a>@endif
         @if (! empty($site['email']))<a href="mailto:{{ $site['email'] }}">{{ $site['email'] }}</a>@endif
-        <a href="{{ $site['instagram'] ?? '#' }}">Instagram</a>
-        <a href="{{ $site['tiktok'] ?? '#' }}">TikTok</a>
+        {{-- ⚠️⚠️ Las redes SOLO se pintan si la instalación las tiene. El composer mapea «sin
+             configurar» a `'#'` (`SEC-07`: la URL llega ya saneada, el marcado no decide), así que
+             ese valor NO pinta enlace. Sin esta condición el pie servía `<a href="#">Instagram</a>`
+             y lo mismo TikTok en TODA instalación sin redes — el menú y el `sameAs` de schema.org
+             ya lo comprobaban; este era el único de los tres que no. --}}
+        @foreach (['instagram' => 'Instagram', 'tiktok' => 'TikTok'] as $red => $etiqueta)
+            @if (! empty($site[$red]) && $site[$red] !== '#')
+                <a href="{{ $site[$red] }}" target="_blank" rel="noopener noreferrer">{{ $etiqueta }}</a>
+            @endif
+        @endforeach
     </nav>
     </div>
 

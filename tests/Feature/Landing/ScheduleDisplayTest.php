@@ -139,11 +139,25 @@ class ScheduleDisplayTest extends TestCase
         }
         SpecialDate::create(['date' => Carbon::tomorrow()->toDateString(), 'is_closed' => true]);
 
-        $response = $this->get('/');
+        $html = $this->get('/')->assertOk()->getContent();
 
-        $response->assertOk();
-        $response->assertSee('Lunes a viernes');   // horario data-driven agrupado
-        $response->assertSee('Fechas especiales');  // bloque de próximas fechas especiales
+        // ⚠️ Acotado a `<section id="info">`: «Lunes a viernes» sale también en otras vistas y una
+        // aserción sobre el documento entero pasaría en verde con la sección borrada (`#295`).
+        preg_match('#<section id="info".*?</section>#s', $html, $m);
+        $seccion = $m[0] ?? '';
+        $this->assertNotSame('', $seccion, 'La portada ya no trae `<section id="info">`.');
+
+        $this->assertStringContainsString('Lunes a viernes', $seccion);   // horario data-driven agrupado
+
+        // ⚠️⚠️ **Antes esto aseveraba el titular «Fechas especiales», y ese `h4` ya NO existe**
+        // (`#307`, §3.octies: la excepción va PEGADA al estado, no bajo un encabezado propio). La
+        // guarda se re-apunta al DATO en vez de al rótulo, y al hacerlo queda MÁS FUERTE: el
+        // titular se pintaba aunque la lista viniera vacía, así que aquella aserción no
+        // demostraba que la fecha especial llegara a la página. Ésta sí.
+        $especial = collect(app(ScheduleDisplay::class)->upcomingSpecialDates())->first();
+        $this->assertNotNull($especial, 'El caso se quedó sin fecha especial que comprobar.');
+        $this->assertStringContainsString($especial['date'], $seccion);
+        $this->assertStringContainsString($especial['detail'], $seccion);
     }
 
     public function test_special_date_without_own_hours_shows_the_weekly_hours(): void

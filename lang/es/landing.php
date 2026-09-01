@@ -200,6 +200,11 @@ return [
         'open_generic' => 'Abierto',
         'day_range' => ':from a :to',
         'special_dates_title' => 'Fechas especiales',
+        // Cola del estado en vivo cuando el parque está abierto AHORA («Abierto ahora · hasta las
+        // 21:30»). La hora sale de `HeroStatus::current()['closes_at']`, que resuelve la ventana
+        // efectiva del día; NO se deduce de la fila semanal, cuyo `is_today` se apaga cuando manda
+        // una temporada o una fecha especial (`idioma-visual-heredado.md` §3.quinquies.5·1).
+        'until' => '· hasta las :time',
         'weekdays' => [0 => 'Domingo', 1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado'],
         'address_title' => 'Ubicación', 'parking' => 'Parking gratis 2h', 'directions' => 'Cómo llegar',
     ],

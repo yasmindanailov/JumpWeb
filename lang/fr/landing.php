@@ -178,6 +178,7 @@ return [
         'open_generic' => 'Ouvert',
         'day_range' => ':from à :to',
         'special_dates_title' => 'Dates spéciales',
+        'until' => '· jusqu\'à :time',
         'weekdays' => [0 => 'Dimanche', 1 => 'Lundi', 2 => 'Mardi', 3 => 'Mercredi', 4 => 'Jeudi', 5 => 'Vendredi', 6 => 'Samedi'],
         'address_title' => 'Adresse', 'parking' => 'Parking gratuit 2h', 'directions' => 'Itinéraire',
     ],

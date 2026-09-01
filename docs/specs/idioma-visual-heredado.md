@@ -591,6 +591,112 @@ etiqueta (16 de alto + 16 de margen), igual a 1280 y a 390—, como `--hero-air`
 
 ---
 
+## 3.octies · T6 · «Visítanos» en TARJETAS (`#307`)
+
+`[DECIDIDO owner, 2026-09-01]`: *«quiero un diseño de cards, ¿cómo se llama? todo en cards, en la
+medida de lo posible. lo siento más organizado y limpio»*. Es la respuesta a la tanda **B′** de §4,
+y cierra el caso EXTREMO del molde editorial que §3.quinquies diagnosticó.
+
+### 3.octies.1 · Cómo se llegó aquí, y por qué NO se propuso otra forma suelta
+
+Esta sección llevaba **tres formas rechazadas** (`#297`) y dos tandas revertidas en el mismo carril
+(`#300`, `#301`). Antes de construir nada se montaron **dos** propuestas nuevas en la web real,
+conmutables por `?visitanos=a|b`, y se le enseñaron **medidas**:
+
+| | encabezados | escritorio | móvil |
+|---|---|---|---|
+| heredada | 4 | 679 | 752 |
+| **a** · los datos abren | 1 | 659 | 697 |
+| **b** · el mapa abre | 1 | **658** (era 698 hasta bajar la banda de 260 a 220) | 697 |
+
+Su eje era **quién abre la sección**, el único que A/B/C de `#297` dejaron sin tocar. Las descartó
+las dos y pidió **tarjetas**. ▶ *El valor de esa vuelta no fue acertar: fue que la respuesta llegó
+en un mensaje en vez de en una tanda revertida* — el patrón que `queja-visual-repetida` ya describía.
+
+### 3.octies.2 · La forma
+
+**Tres tarjetas y un solo encabezado** (el `<h2>` de la sección):
+
+1. **CUÁNDO** — el estado en vivo (`● Abierto ahora · hasta las 21:30`), la excepción **pegada** a
+   él y, tras un filete, el calendario semanal.
+2. **DÓNDE** — la dirección, «Cómo llegar» y el **teléfono**, que la sección no tenía.
+3. **EL MAPA** — la misma tarjeta sin relleno, para que la imagen llegue al borde.
+
+Escritorio: las dos primeras apiladas en una columna de 380 px, el mapa a su derecha. Móvil: las
+tres apiladas, en el mismo punto de ruptura en que se partía `.info__grid` (1080 px).
+
+❗ **La tarjeta es la PEGATINA de `#303`, no una tarjeta nueva**: borde de tinta (`--paper-fg`),
+radio `--r-lg`, relleno `--sp-16` y sombra dura por **ROL** `--shadow-float` — los mismos valores
+que `.ride-card`. Inventar aquí un cuarto tratamiento de tarjeta habría sido repetir el hallazgo de
+`#196` con las sombras y el de la tanda A con los badges: *el sistema no muere porque alguien lo
+rompa, muere porque alguien añade «una variante más».*
+
+⚠️ **Sin `:hover`, y es una decisión.** `.ride-card` responde al puntero porque lleva un CTA dentro;
+éstas no llevan a ninguna parte. Dar respuesta de puntero a una tarjeta inerte es exactamente el
+defecto que `#295` encontró (`cursor: pointer` sobre un `<article>` sin enlace). Hay aserción.
+
+⚠️ **Ninguna tarjeta lleva título dentro.** §3.quinquies.4 dio por decidido retirar los dos `h3`
+internos y el `h4` de fechas especiales, y meterlos «porque una tarjeta necesita cabecera» sería
+reconstruir el molde desde dentro. Un punto verde junto a «Abierto ahora» no necesita que nadie lo
+presente.
+
+### 3.octies.3 · Lo que entra, lo que sale y lo que costó
+
+▶ **Entra `closes_at`**, el hallazgo técnico de §3.quinquies.5·1: `HeroStatus` calculaba la ventana
+del día y **la tiraba**. Es un campo AÑADIDO al array (`null` salvo con el parque abierto), así que
+ningún consumidor cambia de conducta.
+⚠️⚠️ **No se deduce de `weeklyRows()`** y por eso viaja aquí: su `is_today` se APAGA cuando el día
+lo gobierna una temporada o una fecha especial — *se acertaría casi siempre y se fallaría los días
+raros, que son justo los días en que el visitante necesita el dato*. Medido en vivo: con una fecha
+especial activa, las dos filas semanales tenían `is_today = false`.
+
+▶ **Sale «Parking gratis 2h»** (`[DECIDIDO owner]` de §3.quinquies.5·2): era un dato de negocio
+escrito en el código y no en el panel. Hay aserción contra el TEXTO renderizado, no contra la clave
+—la clave sigue en `lang/*`, retirarla es otra decisión—.
+
+▶ **Se va el marcado heredado CON SU CSS**: `.info__grid`, `.info-card`, `.info-card h3` y `.hours`
+(con sus **dos** reglas de `@media`, que es donde `#295` se dejó tres detrás).
+⚠️ **`.map-card` y `.map-pin` NO se van**: las usa `/contacto`. Se comprobó **por clase exacta y por
+fichero**, no por subcadena — `grep "hours"` casa con `visit__hours` y habría dicho que el
+componente nuevo consume la regla vieja.
+
+### 3.octies.4 · Medido
+
+| | heredada | tarjetas |
+|---|---|---|
+| encabezados | 4 | **1** |
+| escritorio (1280) | 679 | **659** |
+| móvil (390) | 653 | **698** |
+| teléfono | no | **sí** |
+
+⚠️ **En móvil CRECE 45 px y se dice**: tres pegatinas cuestan ~100 px de chrome (borde + relleno ×3).
+Se recuperaron 52 quitando un `margin-bottom` que se sumaba al `gap` de la rejilla —*un margen
+heredado dentro de un contenedor con `gap` se paga dos veces*— y bajando el mapa apilado de 240 a
+200. Los 45 restantes son el precio de la forma que el owner eligió, no un descuido.
+▶ Contra lo que él vio al empezar la sesión (752 px, con una fecha especial de DEMO que decía
+«cerrado») son **54 menos**.
+
+Verificación: suite verde · Pint ✓ · docs-check ✓ · Chrome real 1280 y 390 con puntero grueso ·
+**0 px de desborde y 0 errores de consola en las 9 rutas públicas** · área táctil efectiva **105×44
+y 130×44** (medida con la receta de `VERIFICACION-E2E-CAJON.md` §5.duovicies).
+⚠️⚠️ **La primera cifra de área fue FALSA y plausible**: mi sonda leía la caja del `<a>` (39 px) y no
+el pseudo-elemento de `[data-tap]` con su `transform`. Lo delató que la forma heredada —verificada
+en `#264`— daba el mismo 39. *Si tu instrumento acusa también a lo que ya estaba bien, el defecto es
+del instrumento.*
+
+### 3.octies.5 · Dos trampas pagadas
+
+1. **Blade compila las directivas AUNQUE ESTÉN DENTRO DE UN COMENTARIO.** Citar `@php` o `@if` en
+   prosa dentro de `{{-- --}}` abre un bloque que se traga media plantilla; el error sale como
+   «unexpected endif» **al final del fichero**, lejos de la causa. Es el mismo escalón que `#298`
+   pagó en `items-list`. ▶ *Y volvió a caer en él el comentario escrito para advertirlo.*
+2. **`ArmazonCssHasNoOrphansTest` puso la suite en rojo con razón**: el componente emitía
+   `visit__grp--now/--hours/--place` y `visit-card--when/--where` sin una sola regla de CSS. La
+   guarda de `#253` («ningún modificador que un componente emite puede quedarse sin regla») hizo
+   exactamente su trabajo. Se retiraron los modificadores, no la guarda.
+
+---
+
 ## 4. Lo que queda, y en qué orden
 
 > ⚠️ **La base de partida cambió el 2026-08-31 (`#300`)**: el owner revirtió la T1 entera y dejó
@@ -601,7 +707,7 @@ etiqueta (16 de alto + 16 de margen), igual a 1280 y a 390—, como `--hero-air`
 | # | tanda | qué |
 |---|---|---|
 | **A′** | **Normas de la portada, otra vez** | Revertida por `#300`. Su decisión original —«sin imagen, texto simple y un CTA»— **no la retiró el owner**: lo que rechazó fue la ejecución. Se rehace dentro del rediseño del molde, no suelta |
-| **B′** | **Horarios y ubicación** | El caso extremo del molde (§3.quinquies): 5 encabezados para 4 líneas de dato. ⛔ Con las formas A, B y C ya descartadas, y con el ESCRITORIO como requisito, no solo el móvil |
+| **B′** | ~~**Horarios y ubicación**~~ **(hecha, `#307` → §3.octies)** | Era el caso extremo del molde: 4 encabezados para 4 líneas de dato. `[DECIDIDO owner]` **tarjetas**, tras descartar también las dos formas nuevas de §3.octies.1. Queda en 1 encabezado, con el teléfono dentro y sin «Parking gratis 2h» |
 | **C′** | **Zonas y atracciones, otra vez** | Revertida por `#301`. La unificación **no la retiró el owner como criterio**: pidió volver a la base para rediseñar desde ahí. ⚠️ **Al rehacerla, la identidad es `slug`** — el defecto ya está cerrado y con guarda (`ZoneIdentityIsUniqueTest`) |
 | **B** | ~~La marquesina de `/servicios` → **cinta `C3`**~~ **(hecha, `#293`)** | `[DECIDIDO owner]` quitar la de palabras. ⚠️ **Choca con `#252`**, que retiró la marquesina de la portada por espacio: la cinta vuelve, pero en `/servicios`, no en la portada |
 | **C** | Los cubos 1-2-3 del cumple · la nota de calcetines | forma por decidir |
