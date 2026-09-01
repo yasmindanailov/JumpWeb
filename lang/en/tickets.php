@@ -265,4 +265,12 @@ return [
         'for' => 'For:',
         'age' => ':age years old',
     ],
+    /*
+     * The GUARDIAN AUTHORIZATION for an invited minor (`specs/waiver-por-reserva.md` §12.2).
+     * ⚠️ The wording names the CASE, never our vocabulary: whoever buys does not know what a
+     * «waiver offshore» is, and «a minor who is not in your care» is what they recognise.
+     */
+    'guardian_optional' => 'A minor who is not in my care is coming',
+    'guardian_optional_help' => 'Their parent or legal guardian will have to sign an authorization. When you finish the purchase we send you the link to pass on.',
+    'guardian_required' => 'Every minor on this booking needs a signed authorization from their parent or legal guardian. When you finish the purchase we send you the link to share.',
 ];

@@ -1321,23 +1321,35 @@ class OrderAdminActionsTest extends TestCase
     // Modelo: contrato de availableResendEmailTypes
     // ═══════════════════════════════════════════════════════════════════════
 
-    public function test_available_resend_email_types_for_paid_order_only_lists_confirmation(): void
+    /**
+     * ⚠️ **Este caso se llamaba `..._only_lists_confirmation` y su nombre pasó a MENTIR** con la T7
+     * del justificante (`specs/waiver-por-reserva.md` §12.3): todo pedido PAGADO ofrece además el
+     * enlace del justificante de menores invitados.
+     *
+     * ▶ **Y que no mire la marca es la decisión, no un descuido**: el caso que lo exige es el del
+     * owner —*«un cliente que ha comprado tres entradas […] pero no sabía que se necesita
+     * justificante»*—, o sea un pedido que nadie marcó al comprar. Atarlo a `guardian_authorization`
+     * dejaría al operador sin la única salida que ese caso tiene.
+     */
+    public function test_available_resend_email_types_for_paid_order_lists_confirmation_and_the_guardian_link(): void
     {
         $order = $this->makePaidOrder();
 
         $this->assertSame(
-            [Order::RESEND_TYPE_CONFIRMATION],
+            [Order::RESEND_TYPE_CONFIRMATION, Order::RESEND_TYPE_GUARDIAN],
             $order->availableResendEmailTypes(),
         );
     }
 
-    public function test_available_resend_email_types_for_paid_and_refunded_lists_both(): void
+    public function test_available_resend_email_types_for_paid_and_refunded_lists_refund_too(): void
     {
         $order = $this->makePaidOrder();
         $order->update(['refunded_at' => now(), 'refund_amount_cents' => $order->total]);
 
+        // El ORDEN importa y por eso se asevera con `assertSame`: es el que ve el operador en el
+        // `Select`, y el justificante va el último porque es el menos frecuente de los tres.
         $this->assertSame(
-            [Order::RESEND_TYPE_CONFIRMATION, Order::RESEND_TYPE_REFUND],
+            [Order::RESEND_TYPE_CONFIRMATION, Order::RESEND_TYPE_REFUND, Order::RESEND_TYPE_GUARDIAN],
             $order->fresh()->availableResendEmailTypes(),
         );
     }

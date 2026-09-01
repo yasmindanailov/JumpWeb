@@ -7,7 +7,11 @@
  */
 return [
     'title' => 'Authorisation for minors',
-    'intro' => 'Fill in this form to authorise a minor in your care to take part. The person who made the booking set it up.',
+    'stub' => [
+        'badge' => 'Entry authorization',
+        'heading' => 'Authorize your child',
+        'lede' => 'Someone has booked a visit to the park and your child is coming with the group. For them to come in we need your written authorization. It takes two minutes and no account is needed.',
+    ],
 
     'booking' => [
         'heading' => 'The booking',
@@ -15,6 +19,7 @@ return [
         'date' => 'Day of the visit',
         'dates' => 'Days of the visit',
         'no_date' => 'No date assigned yet',
+        'responsible' => 'Going with',
     ],
 
     'minor' => [
@@ -23,6 +28,9 @@ return [
         'surname' => 'Surname',
         'born_on' => 'Date of birth',
         'born_on_help' => 'We use it to know their age on the day of the visit.',
+        'pick' => 'Choose your child',
+        'pick_manual' => 'Type the details by hand',
+        'pick_help' => 'These are the minors declared in your account. Picking one fills in their details; you can correct them.',
     ],
 
     'guardian' => [
@@ -67,7 +75,7 @@ return [
         'heading' => 'This form is not open',
         'not_paid' => 'This booking is not confirmed yet. Please talk to the person who made it.',
         'closed' => 'The visit for this booking has already taken place, so this form is closed.',
-        'full' => 'This booking already has all of its authorisations. If you think one is missing, please talk to the person who made the booking.',
+        'full' => 'This booking cannot take more authorisations: there are already as many signed as there are places bought. If one is missing, please talk to the person who made the booking.',
     ],
 
     'errors' => [

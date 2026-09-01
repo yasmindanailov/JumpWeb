@@ -20818,3 +20818,123 @@ verde · Pint ✓ · docs-check ✓ · `npm run test:js` 921 ✓ · build y buil
 ▶ **Con esto las tres tandas de código están hechas.** Queda **tu OJO** (`VERIFICACION-E2E-CAJON.md`
 §5.octies) y, como requisito de salida de la Q7, **la política de privacidad**: no se anuncia el
 botón a clientes reales sin que el documento describa el tratamiento (art. 13/14).
+---
+
+## #344 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
+
+**Encontrado por el owner probando lo construido**, con la suite verde y las cuatro tandas anteriores
+cerradas: *«En el panel del cliente no me sale nada del enlace. Ni de los que han firmado o no.»*
+
+### Lo medido antes de tocar nada
+
+El enlace del justificante tenía **tres consumidores en todo el repo** y **ninguno lo OFRECÍA**:
+
+ 1. ❗❗ **Un huevo y una gallina en el panel.** La sección de la ficha del pedido era
+    `->visible(countFor(...) > 0)` **con el botón «Copiar enlace para los padres» DENTRO**. O sea: el
+    enlace solo aparecía cuando ya había un justificante firmado, y para que hubiera uno hacía falta
+    el enlace. En un pedido nuevo el operador **no tenía por dónde empezar**.
+    ▶ *El razonamiento de esa condición era bueno para una sección de LECTURA —«en un pedido normal
+    no existe, en vez de existir vacía»— y no vio que dentro estaba la única ACCIÓN del subsistema.*
+    **Una condición de visibilidad escrita para lo que se lee acaba escondiendo lo que se hace.**
+ 2. **En la cuenta del cliente el enlace se apaga con la visita, y eso está BIEN.** Medido sobre el
+    pedido real del owner: `R-TMOP6H · paid · visitFinished=SÍ → link=NULL`. Lo que faltaba no era el
+    enlace: era que algo, en alguna parte, dijera que esta feature existe.
+ 3. **Y está enterrado**: el panel del cliente vive dentro de «Ver el desglose» de «Mis pedidos».
+
+⚠️ **El endpoint se comprobó ANTES de acusar a nadie** y estaba sano (`GET /orders/{code}/guest-minors`
+devuelve menor, capacidad y enlace firmado): el defecto estaba en quién lo pinta y cuándo.
+
+### La decisión del owner: lo decide el PRODUCTO, con tres estados
+
+`[DECIDIDO owner, 2026-09-01]`, y es mejor que lo que este agente proponía porque es **data-driven**,
+que es el principio nº 1 del proyecto:
+
+| `ticket_types.guardian_authorization` | Qué pasa | Para qué |
+|---|---|---|
+| `none` *(defecto)* | nada | la entrada normal |
+| `optional` | una **casilla** junto al selector de menores a cargo | el amigo del hijo |
+| `required` | **sin casilla**: una nota, y el correo sale siempre | la excursión de colegio |
+
+Y el hecho se guarda en `order_items.guardian_authorization`: es un HECHO como el sello de
+`cumple-mixto.md`, **cambiar el producto mañana no reescribe lo que un cliente compró ayer**.
+
+⚠️⚠️ **`required` lo marca el SERVIDOR, no el navegador.** Si saliera de la casilla, una excursión se
+compraría sin justificantes quitando un `input` del DOM.
+
+⚠️⚠️ **«Se ofrece» NO es «se permite».** Quien tenga el enlace de un pedido pagado puede firmar
+SIEMPRE, marcado o no — porque el caso 2 del propio owner es *«un cliente que no sabía que se
+necesita justificante»*, y cerrar esa puerta mataría justo ese caso. La marca gobierna a quién se lo
+enseñamos por nuestra cuenta.
+
+### El «caso 3» del owner NO se construye, y la razón es que la premisa no se cumple
+
+Pedía un justificante **sin reserva**, para la venta en persona. Medido: `CreateManualOrderPage`
+**exige cliente** (`customer_id` es la condición de su paso, y crea la cuenta con `CustomerRegistrar`
+si no existe), así que **toda venta de mostrador registrada en JumpWeb ya produce un pedido con
+responsable**. El caso 3 **es el caso 2**.
+
+▶ Y lo que habría costado igualmente, para que nadie lo reabra a la ligera: `order_id` a nullable
+sobre una FK; **la puerta no lo encontraría** (compone los justificantes desde las reservas de HOY); y
+la caducidad del enlace y el plazo de conservación, que hoy cuelgan del pedido, se quedarían sin ancla.
+*Solo vuelve a la mesa si el parque vende en una taquilla que no es JumpWeb.*
+
+### «¿50 justificantes y bajo las entradas a 40?» — medido, con rollback
+
+```
+ANTES  : capacidad=4  justificantes=2
+DESPUÉS: capacidad=1  justificantes=2      ← siguen los 2, y nadie decía nada
+```
+
+No se borra ninguno **y es correcto**: son firmas con valor probatorio, no cupos. Lo que faltaba era
+decirlo: el panel y la hoja de sala pintan ahora **«N justificantes · M plazas»** con aviso cuando
+`N > M`, y el mensaje que el padre leía —*«ya tiene todas sus autorizaciones»*— **mentía** cuando lo
+que pasaba era que ya no quedaban plazas. *Entre un fallo mudo y uno que habla, el que habla* — que es
+el mismo criterio con el que se eligió `minor_key` en §4.8.
+
+⚠️ **El TOPE no se toca**: es una puerta de `SEC-04` con su razonamiento medido, y cambiarla metería
+esta tanda en el `CRITICAL_RE`.
+
+### La pantalla, rehecha (§12.4/§12.5)
+
+- **Cabecera de resguardo** (`.gf-stub`, el mismo molde que el post-form) con la referencia, el día y
+  **con quién va el niño**: nombre y **teléfono** de quien reservó. ⚠️ **El correo NO**
+  (`[DECIDIDO owner]`): ese enlace lo reparte él por WhatsApp a desconocidos.
+  ⚠️ **«Apellidos del responsable» no existe**: `users` tiene UNA columna `name`, y partirla por el
+  primer espacio sería fabricar un dato en una pantalla que acompaña a una prueba legal.
+- **Con sesión, el menor se ELIGE**: `Dependent` tiene exactamente los cuatro campos que el bloque
+  pide, relación incluida. Es una COMODIDAD detrás de `html.js` —sin JS los campos se teclean— y **no
+  enlaza la cuenta con la firma** (§4.3 lo prohíbe: un `ON DELETE SET NULL` no entra en un hash).
+- ⛔ **NO hay enlace «inicia sesión y vuelve»**, y está medido: `/login` es el cajón de la portada y
+  **no hay cadena `intended` en toda la app**. Un enlace ahí dejaría al padre en la home con la URL
+  firmada perdida — peor que no ofrecerlo.
+
+### Lo que la ejecución enseñó
+
+1. ⚠️⚠️ **`OrderCreator::create()` pasa la cesta por `Cart::sanitize()`, que es una LISTA BLANCA.** El
+   campo se habría caído ahí **en silencio**: casilla marcada, línea sin marcar y nada fallando. Tiene
+   caso propio porque los casos que pasan por `OrderCreator` **no distinguen** ese fallo de uno suyo.
+   Y hay una segunda costura igual en el pedido manual (`cartToOrderCart()`), con su caso.
+2. ⚠️ **Al FUNDIR dos líneas la marca es un O**, no «gana la existente»: si en la segunda tanda venía
+   el amigo del hijo, viene. La otra dirección perdía el aviso en silencio.
+3. ⚠️ **Dos tests del panel aseveraban la lista EXACTA de reenvíos y su nombre pasó a mentir**
+   (`..._only_lists_confirmation`). Renombrados con el porqué.
+4. ⚠️ **Los dos presupuestos del cajón, con la poda MEDIDA antes de subirlos**: chunk 262,95 → 264,53
+   KiB (techo 263 → 265) y las excepciones de líneas (431 → 433, 44 → 46). La única poda disponible
+   ahorraba **0,10 KiB** empeorando el diseño; sí se aplicó la que valía (tres props → uno).
+5. ⚠️⚠️ **Dos defectos que solo vio la CAPTURA**: el `guardian.intro` sobrevivía bajo el `lede`
+   diciendo lo mismo —y con «un menor **a tu cargo**», que es justo lo que este menor NO es— y el
+   titular del paso 3 se estrangulaba a tres líneas. *Ninguna guarda mira anchos.*
+6. ⚠️⚠️ **Y la trampa de `#335` volvió a caer**: una captura salió **sin una sola letra**. El control
+   lo zanjó —el texto estaba en el árbol y `document.fonts` tenía **cero** familias cargadas—: FOIT,
+   la fuente externa no se alcanza desde el contenedor. *El instrumento es el primer sospechoso.*
+
+### Verificación
+
+**9 de 9 mutaciones muerden** (T5+T6), con CONTROL verde antes y después; el arnés **exige verde antes
+de mutar** y mide por código de salida (`#335`, `#317`). **+25 casos**: suite **3.937 / 25.200**, Pint
+y `docs-check` verdes. **En navegador real** a 390×844 y 1280×900, con el selector de menores probado
+con sesión de verdad: solo sale el menor, rellena los cuatro campos y volver a «a mano» vacía; cero
+errores de JS y cero desbordes. BD de desarrollo devuelta a su estado exacto.
+
+**Queda**: el OJO del owner y la casilla en el paso de CESTA (hoy se marca al elegir la hora; cambiar
+de idea obliga a rehacer la línea). Spec: `docs/specs/waiver-por-reserva.md` §12.

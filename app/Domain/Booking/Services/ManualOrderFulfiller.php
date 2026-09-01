@@ -8,6 +8,7 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\AuditLogger;
+use App\Notifications\GuardianAuthorizationRequest;
 use App\Notifications\GuestFormRequest;
 use App\Notifications\OrderConfirmation;
 use Illuminate\Support\Facades\DB;
@@ -132,6 +133,24 @@ class ManualOrderFulfiller
                 }
             } catch (Throwable $e) {
                 Log::warning('manual_order.guest_form_mail_failed', [
+                    'order_id' => $order->id,
+                    'order_code' => $order->code,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            // El enlace del JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.3).
+            //
+            // ❗ **Esta rama es el «caso 3» del owner entero**: una venta EN PERSONA. Y por eso no
+            // hizo falta inventar un justificante sin reserva — `CreateManualOrderPage` exige cliente
+            // y crea la cuenta si no existe, así que una venta de mostrador **ya produce un pedido
+            // con responsable** y vale el mismo enlace (§12.3).
+            try {
+                if ($order->needsGuardianAuthorization()) {
+                    $order->user->notify(new GuardianAuthorizationRequest($order));
+                }
+            } catch (Throwable $e) {
+                Log::warning('manual_order.guardian_mail_failed', [
                     'order_id' => $order->id,
                     'order_code' => $order->code,
                     'error' => $e->getMessage(),

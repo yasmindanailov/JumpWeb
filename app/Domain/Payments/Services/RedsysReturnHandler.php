@@ -8,6 +8,7 @@ use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Mail\PaymentIncidentMail;
+use App\Notifications\GuardianAuthorizationRequest;
 use App\Notifications\GuestFormRequest;
 use App\Notifications\OrderConfirmation;
 use App\Notifications\OrderPaymentDeclined;
@@ -415,6 +416,26 @@ class RedsysReturnHandler
                 }
             } catch (Throwable $e) {
                 Log::warning('redsys.return.guest_form_mail_failed', [
+                    'source' => $source,
+                    'order_id' => $orderFor->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            // El enlace del JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.3,
+            // T7): UNO por pedido —es «el papelito de la excursión»— y solo si el pedido nació con la
+            // marca, o sea si el cliente marcó la casilla o el producto la exige. Un pedido normal no
+            // recibe nada.
+            //
+            // ⚠️ **En su propio try/catch, como su hermano de arriba**: un fallo del correo no puede
+            // tumbar el cierre de un cobro que el banco ya autorizó. La reserva existe; el acuse es
+            // una cortesía que la cola reintenta.
+            try {
+                if ($orderFor->needsGuardianAuthorization()) {
+                    $orderFor->user->notify(new GuardianAuthorizationRequest($orderFor));
+                }
+            } catch (Throwable $e) {
+                Log::warning('redsys.return.guardian_mail_failed', [
                     'source' => $source,
                     'order_id' => $orderFor->id,
                     'error' => $e->getMessage(),

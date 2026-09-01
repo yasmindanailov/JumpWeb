@@ -431,6 +431,30 @@ class CreateManualOrderPage extends Page
                                 }
                             }),
 
+                        // El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2,
+                        // T6). Es la MISMA pregunta que el cajón le hace al cliente, en la boca del
+                        // operador: *«¿viene algún menor que no sea hijo de quien reserva?»*.
+                        //
+                        // ⚠️ **Solo con `optional`.** Con `required` el servidor marca la línea igual
+                        // (`OrderCreator`), y ofrecer aquí un interruptor que no decide nada invita a
+                        // apagarlo y a creer que se ha apagado algo.
+                        //
+                        // ⚠️ **Y esto es el «caso 3» del owner por dentro**: el mostrador crea un
+                        // pedido con responsable, así que la venta en persona entra por la misma
+                        // puerta que la web y recibe el mismo correo con el enlace (§12.3).
+                        Toggle::make('sel_guardian_authorization')
+                            ->label(__('admin.orders.create_manual.guardian_label'))
+                            ->helperText(__('admin.orders.create_manual.guardian_help'))
+                            ->default(false)
+                            ->visible(fn (): bool => $this->selectedProduct()?->offersGuardianAuthorization() ?? false),
+
+                        // Con `required` no hay nada que preguntar: se INFORMA, para que el operador
+                        // sepa decírselo al cliente que tiene delante.
+                        Placeholder::make('sel_guardian_required')
+                            ->hiddenLabel()
+                            ->content(__('admin.orders.create_manual.guardian_required'))
+                            ->visible(fn (): bool => $this->selectedProduct()?->requiresGuardianAuthorization() ?? false),
+
                         TextInput::make('sel_qty')
                             ->label(fn (): string => $this->isPackSelected()
                                 ? __('admin.orders.create_manual.guests')
@@ -610,6 +634,10 @@ class CreateManualOrderPage extends Page
             // `#329`: la excepción se guarda POR LÍNEA, no como un modo del formulario — el operador
             // la activó para ESTE pack. `create()` la vuelve a resolver contra el permiso.
             'below_minimum' => $type->isPack() && $qty < $type->contractableMinimum(),
+            // El JUSTIFICANTE (`specs/waiver-por-reserva.md` §12.2). Va POR LÍNEA como la excepción de
+            // arriba: el operador lo marcó para ESTE producto. `OrderCreator` lo vuelve a resolver
+            // contra el catálogo, así que con `required` la línea nace marcada aunque esto sea `false`.
+            'guardian_authorization' => (bool) ($this->data['sel_guardian_authorization'] ?? false),
         ];
 
         // Resetea la selección para la siguiente línea (preserva cliente, método y paso).
@@ -618,6 +646,7 @@ class CreateManualOrderPage extends Page
         $this->data['sel_time'] = null;
         $this->data['sel_qty'] = null;
         $this->data['sel_below_minimum'] = false;
+        $this->data['sel_guardian_authorization'] = false;
         $this->data['event_data'] = [];
         $this->data['sel_dependent_ids'] = [];
         $this->selAddonQty = [];
@@ -1575,6 +1604,10 @@ class CreateManualOrderPage extends Page
             'qty' => $line['qty'],
             'event_data' => $line['event_data'] ?? [],
             'addons' => $line['addons'] ?? [],
+            // ⚠️ **Esto SÍ cruza a Booking**, a diferencia de `dependent_ids`: es una propiedad de la
+            // línea, no una persona de Identity. Si no se copiara aquí, el operador marcaría la
+            // casilla y la reserva nacería sin marca — sin que nada fallara.
+            'guardian_authorization' => $line['guardian_authorization'] ?? false,
         ], $this->cart);
     }
 

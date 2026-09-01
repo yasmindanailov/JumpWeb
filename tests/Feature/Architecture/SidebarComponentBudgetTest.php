@@ -120,7 +120,15 @@ class SidebarComponentBudgetTest extends TestCase
         // que un componente sí hace. Y **se retiró `changeQuantity()`**: `+`, `−` y lo tecleado son
         // ahora UNA función, porque tener el acotado dos veces es cómo un camino admite lo que el
         // otro rechaza.
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 431, 'api' => 2],
+        // ⚠️ **431 → 433 el 2026-09-01 (la T6 del justificante, `specs/waiver-por-reserva.md` §12.2):
+        // SUBE DOS, y van con su porqué.** Son el modo del producto (`guardianMode`) y la línea que
+        // lo lleva al candidato de la cesta. No hay regla que extraer: el modo lo SANEA el servidor
+        // (`TicketType::guardianMode()`) y quien decide qué se guarda es `OrderCreator` — aquí solo
+        // se lee lo que el catálogo publica y se pasa.
+        // ▶ **Subió a 434 y se bajó a 433 antes de commitear**, que es la mitad de la regla que casi
+        // nunca se cumple: la primera versión resolvía DOS booleanos (`guardianOffered`/
+        // `guardianRequired`) para pasárselos al paso 3, y eso era traducir un enum dos veces.
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 433, 'api' => 2],
 
         // ⚠️ **`TimeStep.vue` estrena excepción el 2026-09-01 (`#327`): 44 sobre un techo de 40.**
         // Son cuatro líneas y son TRABAJO DE DOM, que es justo lo que un módulo plano no puede hacer:
@@ -131,7 +139,16 @@ class SidebarComponentBudgetTest extends TestCase
         // hasta entonces la prop aún tiene el valor viejo.
         // ▶ La REGLA (qué cantidad adoptar) no está aquí: está en `quantity.js`. Aquí está solo el
         // efecto sobre el elemento, que es del componente por definición.
-        'sidebar/steps/TimeStep.vue' => ['code' => 44, 'api' => 0],
+        // ⚠️ **44 → 46 el 2026-09-01 (la T6 del justificante, §12.2): SUBE DOS**, y son dos PROPS —el
+        // modo del producto y lo que el cliente lleva marcado—, no lógica. Con ellas el paso 3 pinta
+        // la casilla «viene un menor que no está a mi cargo» o la nota de un producto que la exige,
+        // que es **la puerta por la que se entra a toda la feature** (§12.1: hasta hoy el enlace
+        // tenía tres consumidores en el repo y ninguno lo ofrecía).
+        // ▶ **Subió a 47 y se bajó a 46 antes de commitear**: la primera versión recibía TRES props
+        // (dos booleanos resueltos + el marcado) y pasó a recibir el modo. Elegir cuál de tres
+        // pantallas se pinta leyendo un enum que el servidor ya sanea no es decidir una regla — es lo
+        // mismo que hace `v-if="isPack"` en este fichero desde el primer día.
+        'sidebar/steps/TimeStep.vue' => ['code' => 46, 'api' => 0],
     ];
 
     /**

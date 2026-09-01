@@ -3,6 +3,12 @@
 > Estado: 🟦 **T1 + T2 + T3 EN EL ÁRBOL** (2026-09-01, `DECISIONES #328`, `#335` y `#337`) — el
 > dominio (§8.1), la pantalla pública (§8.2) y las seis superficies (§8.3). **Queda la T4**: el guion
 > de navegador con el anti-bot encendido y el OJO del owner.
+>
+> ❗❗❗ **Y desde el 2026-09-01 por la noche, §12: LA ACTIVACIÓN — T5 → T8 EN EL ÁRBOL** (`#342`).
+> El owner probó lo construido y encontró que **no había puerta por la que entrar**: *«En el panel del
+> cliente no me sale nada del enlace. Ni de los que han firmado o no.»* §12.1 tiene los tres defectos
+> medidos —el peor, un huevo-y-gallina: el botón del enlace vivía DENTRO de una sección que solo
+> aparecía cuando ya había un justificante firmado—. **Si vas a tocar esta feature, EMPIEZA POR §12.**
 > Carril **P3** de `ESTADO.md` — **con el alcance ampliado por el owner**: ver §1.2.
 > Subsistema padre: `docs/specs/waiver-probatorio.md`. Entidad hermana: `docs/specs/menores-a-cargo.md`.
 >
@@ -934,3 +940,211 @@ por sujeto: están limpias** · no toca `PAY-*`/`AFORO-*` · el censo de `users`
 Revisada, corregida y con **la T1 ejecutada** (§8.1, `DECISIONES #328`): los dos bloqueantes y la
 fuga están cerrados **y verificados por mutación**. **Pendiente del ✅ del owner** y de su decisión
 sobre el plazo de conservación —medido: hoy vale `NULL` y no se poda nada—.
+
+---
+
+## 12. LA ACTIVACIÓN — cómo entra esto en la vida del parque (2026-09-01, encargo del owner)
+
+> Las T1–T3 construyeron el mecanismo y **ninguna construyó la puerta por la que se entra**. El owner
+> lo encontró probándolo: *«En el panel del cliente no me sale nada del enlace. Ni de los que han
+> firmado o no.»* Esta sección es el diseño de la activación, con lo que se midió al diagnosticarlo.
+
+### 12.1 Los TRES defectos medidos, y solo uno es una decisión de diseño
+
+**(a) El huevo y la gallina del panel — es un DEFECTO, no una elección.**
+`OrderInfolist::guestMinorsSection()` es `->visible(countFor(...) > 0)`, y **el botón «Copiar enlace
+para los padres» vive DENTRO de esa sección**. O sea: el enlace solo aparece cuando ya hay un
+justificante firmado, y para que haya uno hace falta el enlace. **En un pedido nuevo el operador no
+tiene por dónde empezar.**
+
+▶ El comentario de esa línea dice *«en un pedido normal —que son casi todos— esta sección no existe,
+en vez de existir vacía»*, y el razonamiento era bueno para una sección de LECTURA. Lo que no vio es
+que dentro había la única ACCIÓN del subsistema. *Una condición de visibilidad escrita para lo que se
+lee acaba escondiendo lo que se hace.*
+
+**(b) En la cuenta del cliente, el enlace se apaga con la visita — y eso está BIEN.** Medido sobre el
+pedido real del owner: `R-TMOP6H · paid · visitFinished=SÍ → link=NULL · roster=[]`, así que el panel
+no se pinta. Repartir un enlace que va a decir «cerrado» sería peor. Lo que falta no es el enlace: es
+que **nada en toda la web dice que esta feature existe**.
+
+**(c) Y está enterrado.** `<GuestMinorsPanel v-if="open && row.code">` vive **dentro de «Ver el
+desglose»** de «Mis pedidos». Sin desplegar el pedido, no existe.
+
+⚠️ **El endpoint está sano y se comprobó antes de acusar a nadie** —`GET /api/v1/orders/PRUEBA-WAIVER/guest-minors`
+devuelve el menor, la capacidad y el enlace firmado—: el defecto está en quién lo pinta y cuándo, no
+en el dominio.
+
+### 12.2 El diseño del owner: el justificante es una propiedad del PRODUCTO
+
+`[DECIDIDO owner, 2026-09-01]`, y es mejor que lo que este agente proponía porque es **data-driven**,
+que es el principio nº 1 del proyecto:
+
+> *«Un producto puedes añadir justificante OPCIONAL […] O puedes añadir justificante OBLIGATORIO como
+> el caso de las excursiones de colegio. O no puedes añadir justificante y no sale nada.»*
+
+| Estado de `ticket_types.guardian_authorization` | Qué pasa en el embudo | Para qué es |
+|---|---|---|
+| `none` *(defecto)* | **nada**: ni casilla, ni aviso, ni correo | la entrada normal, que son casi todas |
+| `optional` | una **casilla** junto al selector de menores a cargo: *«viene un menor que no está a mi cargo»* | el amigo del hijo — el caso que originó la feature |
+| `required` | **sin casilla**: una nota que dice que hará falta, y el correo sale siempre | la excursión de colegio |
+
+Y el hecho se guarda en la línea: **`order_items.guardian_authorization`** (booleano). Es un HECHO
+como `age_family_seal` —lo que se acordó al comprar—, no una consulta al catálogo, y por eso
+**cambiar el producto después no reescribe lo que el cliente marcó**.
+
+⚠️ **Un producto `required` marca la línea SIEMPRE**, aunque el cliente no pida nada: la marca la
+pone el servidor al crear el pedido, no el navegador. Lo contrario haría que un cliente pudiera
+comprar una excursión sin justificantes quitando una casilla del DOM.
+
+⚠️⚠️ **El enlace SIGUE FUNCIONANDO en cualquier pedido pagado, marcado o no, y es deliberado.** La
+marca gobierna a quién se le **OFRECE**, nunca quién puede firmar — porque el caso 2 del propio owner
+es *«un cliente que no sabía que se necesita justificante»*, y cerrar la puerta a los pedidos sin
+marcar mataría justo ese caso. *Un interruptor de oferta no es un interruptor de permiso.*
+
+### 12.3 Las tres puertas de entrada, y por qué la tercera no existe
+
+| Caso del owner | Qué se construye |
+|---|---|
+| **1 · Al comprar, sutil** | La casilla del §12.2 y, al quedar pagado, un correo con el enlace. Precedente exacto ya montado: `GuestFormRequest` manda un enlace firmado desde `RedsysReturnHandler` y `ManualOrderFulfiller` |
+| **2 · El operador lo genera desde la reserva** | Arreglar (a) + un icono de enlace **por línea**, gemelo del de `copyGuestFormLink` en `filament/orders/items-list.blade.php`, y el reenvío por `RESEND_TYPE_*` |
+| **3 · Venta en persona sin reserva** | ⚠️⚠️ **NO SE CONSTRUYE, y la razón es que la premisa no se cumple** (`[DECIDIDO owner]`, con el coste delante) |
+
+▶ **Medido**: `CreateManualOrderPage` **exige cliente** (`customer_id` es la condición de su paso, y
+crea la cuenta con `CustomerRegistrar` si no existe), así que **toda venta de mostrador registrada en
+JumpWeb ya produce un pedido con responsable**. El caso 3 **es el caso 2**.
+
+▶ Y lo que habría costado hacerlo de todos modos, para que nadie lo reabra a la ligera: `order_id`
+pasaría a nullable sobre una FK; **la puerta no lo encontraría** —`GateProfile` compone los
+justificantes desde las **reservas de HOY** (`GateProfile::guestMinors()`)—; y la caducidad del enlace y el
+plazo de conservación, que hoy cuelgan del pedido, se quedarían **sin ancla**. *Solo vuelve a la mesa
+si el parque vende en una taquilla que no es JumpWeb.*
+
+### 12.4 Lo que ve el padre: la reserva y QUIÉN responde de su hijo
+
+`[DECIDIDO owner, 2026-09-01]`. Hoy la pantalla resuelve la reserva con **un párrafo** mientras el
+post-form —su hermana— tiene una cabecera de resguardo (`.gf-stub`) con badge, titular y tres celdas.
+La autorización pasa a hablar el mismo idioma, y la cabecera dice **las dos cosas que un padre
+necesita antes de firmar**: a qué visita va su hijo, y con quién.
+
+- **Del que reservó**: **nombre y teléfono**. ⚠️ **El correo NO** —`[DECIDIDO owner]` sobre la
+  recomendación de este agente—: ese enlace lo reparte él por WhatsApp a desconocidos, y su buzón no
+  tiene por qué viajar con él. El teléfono sí, porque es lo que permite localizarle el día de la visita.
+- ⚠️⚠️ **«Apellidos del responsable» NO EXISTE y no es una omisión de la pantalla**: `users` tiene
+  **una sola columna `name`** (verificado sobre el esquema). Lo que se enseña es el nombre tal como
+  está en su cuenta. Inventar un apellido partiendo la cadena por el primer espacio sería fabricar un
+  dato en una pantalla que acompaña a una prueba legal.
+
+### 12.5 Iniciar sesión: elegir al menor en vez de teclearlo
+
+`Dependent` tiene **exactamente** los cuatro campos que este formulario pide —`name`, `surname`,
+`born_on` y `relationship`—, así que un padre registrado elige a su hijo de una lista y se rellena el
+bloque entero, **su relación incluida**.
+
+⚠️ **Sigue sin enlazar la cuenta**: §4.3 prohíbe `signer_user_id` porque una columna `ON DELETE SET
+NULL` no puede estar dentro de un hash que se verifica (§10, medido dos veces). Lo que se hace es
+**copiar el dato**, exactamente como hoy con el prellenado del adulto. Iniciar sesión ahorra tecleo y
+no cambia ni el valor probatorio ni la puntualidad del justificante.
+
+⚠️ **Y arregla un defecto vivo**: `GuardianAuthorizationController::show()` prellena `guardian_name`
+con `$user->name`, que es el nombre **completo**, y deja «Apellidos» vacío. El campo del formulario
+está partido en dos y la cuenta no lo está.
+
+### 12.6 «¿50 justificantes y bajo las entradas a 40?» — medido, con rollback
+
+Sobre `PRUEBA-PUERTA`, bajando una línea de 4 a 1 con 2 justificantes firmados:
+
+```
+ANTES  : capacidad=4  justificantes=2
+DESPUÉS: capacidad=1  justificantes=2      ← siguen los 2, y nadie dice nada
+```
+
+- **No se borra ninguno, y es correcto**: son firmas con valor probatorio, no cupos.
+- **El tope solo mira hacia delante**: `if ($used >= $order->capacity)` impide firmar más; no revisa
+  lo firmado. **No se toca** — es una puerta de `SEC-04` con su razonamiento medido en §4.7·3.
+- ⚠️⚠️ **Y NADIE AVISA**: el roster no lleva la capacidad, así que ni el panel, ni la hoja de sala, ni
+  la puerta, ni la cuenta del cliente dicen que hay más papeles que plazas. **La hoja imprime los 50
+  tan tranquila.**
+- ⚠️ Y hay un mensaje que **miente**: con la capacidad por debajo de lo firmado, el padre que abra el
+  enlace lee *«Esta reserva ya tiene todas sus autorizaciones»* cuando la verdad es que **ya no tiene
+  plazas**. Dos causas distintas con la misma frase.
+
+▶ **La salida es decirlo, no borrar nada**: el roster gana la capacidad, las tres superficies del
+operador pintan **«N justificantes · M plazas»** y una pastilla de aviso cuando `N > M`, y el bloqueo
+por cupo gana frase propia. *Entre un fallo mudo y uno que habla, se elige el que habla* — que es
+literalmente el criterio con el que se eligió `minor_key` en §4.8.
+
+### 12.7 Plan — cinco tandas
+
+| Tanda | Qué entra |
+|---|---|
+| **T5 · El interruptor** | `ticket_types.guardian_authorization` (3 estados) · `order_items.guardian_authorization` · el selector en `CatalogForm` · `Order::needsGuardianAuthorization()` |
+| **T6 · El embudo** | La casilla en el cajón (`TimeStep`/`CartStep`), `CartPayload`, `OrderCreator` **forzando `required`**, el contrato, y la misma casilla en el pedido manual |
+| **T7 · La entrega** | El correo al pagar · el reenvío · la sección del panel **siempre visible** · el icono por línea · **el aviso de §12.6 en panel, hoja y puerta** |
+| **T8 · La pantalla** | La cabecera con la reserva y quien reserva (§12.4) · login → elegir menor a cargo (§12.5) · el prellenado partido · organización y textos |
+| **T9 · Verificación** | Mutaciones por tanda · guion de navegador con el anti-bot encendido · el OJO del owner |
+
+⚠️ **Ninguna toca `WaiverSigner` ni la cadena**, así que —a diferencia de la T1— **no entran en el
+`CRITICAL_RE`**. Lo que sí lo hace es cualquier cambio en el tope, y por eso §12.6 **no lo cambia**.
+
+### 12.8 T5 → T8 · EJECUTADAS (2026-09-01)
+
+| Pieza | Dónde |
+|---|---|
+| **T5** · el interruptor (3 estados) + el hecho de la línea | migración `2026_09_02_010000_add_guardian_authorization_to_products_and_items` · `TicketType::GUARDIAN_*` + `guardianMode()` · `OrderItem` cast · `Order::needsGuardianAuthorization()` · `CatalogForm` |
+| **T6** · el embudo | `OrderCreator` (**las tres ramas**) · `Cart::sanitize()` · `CartPayload` · `openapi/v1.yaml` (`CartLine` + `CatalogProductDetail`) · `CatalogReader` · `TimeStep.vue` + `PurchaseSection.vue` + `stores/selection.js` + `cart.js` |
+| **T7** · la entrega | `OrderInfolist` (**el huevo-y-gallina**) · `partials/guest-minors` (estado vacío + aviso) · `ViewOrder::sendGuardianLinkAction()` · `Order::RESEND_TYPE_GUARDIAN` · `GuardianAuthorizationRequest` en `RedsysReturnHandler` y `ManualOrderFulfiller` · `items-list` (icono por línea) · hoja de sala |
+| **T8** · la pantalla | `reservation/authorization.blade.php` (resguardo `.gf-stub` + pasos numerados + selector de menores) · `GuardianAuthorizationController` (`responsible`, `dependents`) · `guardian.php` en es/en/fr |
+
+▶ **Lo que la ejecución enseñó y el diseño no había previsto:**
+
+1. ⚠️⚠️ **`OrderCreator::create()` pasa la cesta por `Cart::sanitize()`, que es una LISTA BLANCA.** El
+   campo se habría caído ahí **en silencio**: la casilla marcada, la línea sin marcar y nada fallando.
+   Es la gemela exacta de la lista blanca de `cart.js::save()` que `menores-a-cargo.md` §8.1 documenta,
+   y tiene caso propio (`test_the_session_cart_whitelist_lets_the_mark_through`) precisamente porque
+   los casos que pasan por `OrderCreator` **no distinguen** ese fallo de uno del propio creador.
+2. ⚠️ **La marca al FUNDIR dos líneas es un O, no «gana la existente»**: si en la segunda tanda venía
+   el amigo del hijo, viene. La otra dirección perdía el aviso en silencio.
+3. ⚠️ **Dos tests del panel aseveraban la lista EXACTA de tipos de reenvío** y su nombre pasó a mentir
+   (`..._only_lists_confirmation`). Se renombraron: todo pedido pagado ofrece ahora el enlace del
+   justificante, **sin mirar la marca**, que es la única salida del caso «el cliente no sabía».
+4. ⚠️ **`ApiContractTest` exige que todo campo del contrato sea `required` salvo declaración expresa**.
+   `CartLine.guardian_authorization` entra en `OPTIONAL_BY_DESIGN` con su porqué: ausente ya significa
+   «no», y exigirlo metería `false` en cada línea de cada presupuesto.
+5. ⚠️ **Los dos presupuestos del cajón**, con la poda MEDIDA antes de subirlos: chunk **262,95 →
+   264,53 KiB** (techo 263 → 265) y las dos excepciones de líneas de componente (431 → 433, 44 → 46).
+   La única poda disponible ahorraba **0,10 KiB** a cambio de empeorar el diseño — *una poda que no
+   llega al 7 % de lo que ahorra el techo no es una poda*. Sí se aplicó la que sí valía: tres props
+   resueltos pasaron a uno.
+
+▶ **Verificación:** **9 de 9 mutaciones muerden** entre T5 y T6, con CONTROL verde antes y después
+(el arnés exige verde antes de mutar y mide por código de salida, las reglas de `#335` y `#317`).
+**29 casos** en la pantalla pública y **8** en la entrega. Suite completa verde.
+
+▶ **En NAVEGADOR real** (390×844 y 1280×900): resguardo con referencia, día y «Va con», tres pasos
+numerados, casilla desmarcada, cero desbordes horizontales y cero errores de JS o de red. **El
+selector de menores probado con sesión de verdad**: solo aparece el menor (el de 22 años queda
+filtrado), rellena los cuatro campos y volver a «a mano» **vacía**.
+
+⚠️⚠️ **Dos defectos que solo vio la CAPTURA, y ninguna guarda mira anchos**: el `guardian.intro`
+sobrevivía debajo del `lede` diciendo lo mismo —y con «un menor **a tu cargo**», que es justo lo que
+este menor NO es— y el titular del paso 3 se estrangulaba a tres líneas contra el rótulo de la
+versión. La clave muerta se retiró de `lang/` tras comprobar que no tenía otro consumidor.
+
+⚠️ **Y la trampa de `#335` volvió a caer**: una captura salió **sin una sola letra**. El control lo
+zanjó —el texto estaba en el árbol y `document.fonts` tenía **cero** familias cargadas—: es FOIT, la
+fuente externa no se alcanza desde el contenedor. *El instrumento es el primer sospechoso.* La sonda
+captura ahora forzando la familia de respaldo.
+
+### 12.9 Lo que NO se hizo, y por qué
+
+- **Un enlace «inicia sesión y vuelve» en la pantalla pública.** ⚠️ Medido: `/login` en este proyecto
+  es **el cajón de la portada** (`Route::get('/login', HomeController::class)`) y **no hay cadena
+  `intended`** en toda la app (cero apariciones). Un enlace ahí dejaría al padre en la home con el
+  cajón abierto y **la URL firmada perdida** — peor que no ofrecerlo. El atajo sigue existiendo para
+  quien ya tenga sesión, que es lo que §4.6 prometía.
+- **El aviso de §12.6 en la PUERTA.** El presupuesto de consultas de la ficha de puerta es una
+  restricción de diseño (techo 28, y ya cazó un N+1 en `#294`); el desfase papeles-vs-plazas es un
+  asunto de trastienda que el panel y la hoja de sala ya dicen. Ficha en `DEUDA.md` si algún día la
+  puerta lo pide.
+- **Tocar el TOPE.** §12.6 lo deja intacto a propósito: es una puerta de `SEC-04` con su razonamiento
+  medido en §4.7·3, y cambiarla metería esta tanda en el `CRITICAL_RE`.

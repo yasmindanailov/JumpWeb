@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Booking\Contracts\AuthorizableOrders;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\ReservationSlip;
@@ -81,10 +82,21 @@ class ReservationSlipController extends Controller
         // la sala no los necesita para recibir a un niño.
         $guestMinors = app(GuardianRoster::class)->forOperator((int) $order->getKey());
 
+        // §12.6 — MÁS JUSTIFICANTES QUE PLAZAS. Bajar la cantidad de una línea no borra ninguno (son
+        // firmas con valor probatorio, no cupos), así que un pedido puede acabar con cincuenta papeles
+        // y cuarenta entradas. Medido con rollback: capacidad 4 → 1 con dos justificantes, y **ninguna
+        // superficie lo decía**; la hoja imprimía los dos tan tranquila.
+        //
+        // ⚠️ La capacidad viene de Booking por CONTRATO, como el roster viene de Identity: es la capa
+        // de entrega la que junta los dos módulos.
+        $capacity = app(AuthorizableOrders::class)->find((int) $order->getKey())?->capacity ?? 0;
+
         $pdf = Pdf::loadView('pdf.reservation-slip', [
             'slip' => $slip,
             'showPrices' => $showPrices,
             'guestMinors' => $guestMinors,
+            'guestMinorsCapacity' => $capacity,
+            'guestMinorsOverflow' => count($guestMinors) > $capacity,
         ])->setPaper('a4');
 
         // `stream` (disposición inline) → el navegador abre el PDF en la pestaña

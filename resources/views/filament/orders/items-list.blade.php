@@ -625,6 +625,28 @@
                     />
                 @endif
 
+                {{-- El enlace del JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md`
+                     §12.3, T7). Gemelo del de arriba y en el mismo sitio: es lo que el owner pidió
+                     —«como el botón de completar formulario post reserva»—.
+
+                     ⚠️⚠️ **El enlace es del PEDIDO y esto se pinta por LÍNEA**, así que la condición
+                     no puede ser «pedido pagado»: en un pedido de tres reservas saldrían tres iconos
+                     que abren exactamente el mismo modal. Se pinta solo en la línea que **nació
+                     marcada**, que es la que trae menores de otras familias — normalmente una.
+
+                     ⚠️ Y para el caso del cliente que NO sabía que hacía falta —el que no marcó
+                     nada—, la salida no es este icono: es «Reenviar email → enlace del justificante»,
+                     que se ofrece en TODO pedido pagado (`Order::RESEND_TYPE_GUARDIAN`). --}}
+                @if ($record->status === \App\Domain\Booking\Models\Order::STATUS_PAID && $item->guardian_authorization && $item->parent_item_id === null)
+                    <x-filament::icon-button
+                        wire:click="mountAction('copyGuardianLink')"
+                        icon="heroicon-o-shield-check"
+                        color="gray"
+                        size="lg"
+                        :label="__('admin.orders.guest_minors.btn_aria')"
+                    />
+                @endif
+
                 {{-- Menores a cargo (tanda 5, D14·4/D14·6): «Asignar menores» — solo en ENTRADAS de un
                      titular con menores, para quien puede editar la línea y mientras la línea admite
                      cambios. El handler lo revalida TODO (defensa en profundidad, como Gestionar). --}}

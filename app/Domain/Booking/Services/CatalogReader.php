@@ -78,6 +78,10 @@ class CatalogReader implements ProductCatalog
             maxQuantity: $product->max_qty !== null ? (int) $product->max_qty : null,
             eventFields: $this->eventFields($product),
             addons: $this->addons($product),
+            // SANEADO por el modelo, nunca la columna a pelo: un valor corrupto tiene que llegar al
+            // cliente como `none` —el estado que no pinta nada— y no como una cadena desconocida que
+            // el contrato rechaza y la pantalla no sabe interpretar.
+            guardianAuthorization: $product->guardianMode(),
         );
     }
 

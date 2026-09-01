@@ -46,6 +46,10 @@ class CatalogProductDetailResource extends JsonResource
                 fn ($addon): array => (new CatalogAddonResource($addon))->toArray($request),
                 $this->resource->addons,
             ),
+            // `specs/waiver-por-reserva.md` §12.2 — qué hace este producto con el justificante de un
+            // menor invitado. La pantalla decide con esto si pinta una CASILLA (`optional`), una NOTA
+            // (`required`) o nada (`none`).
+            'guardian_authorization' => $this->resource->guardianAuthorization,
         ];
     }
 }

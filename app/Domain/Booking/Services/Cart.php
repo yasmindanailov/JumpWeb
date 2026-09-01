@@ -43,6 +43,11 @@ class Cart
                     'qty' => max(1, (int) $line['qty']),
                     // Respuestas del evento (solo packs, #86); se saneará contra el esquema del pack.
                     'event_data' => isset($line['event_data']) && is_array($line['event_data']) ? $line['event_data'] : [],
+                    // ⚠️ El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2).
+                    // **Esto es una LISTA BLANCA**: una clave que no se nombre aquí se cae en silencio
+                    // camino de `OrderCreator`, y el cliente vería su casilla marcada y su reserva sin
+                    // marcar. Es el mismo mecanismo que `cart.js::save()` documenta en el cajón.
+                    'guardian_authorization' => filter_var($line['guardian_authorization'] ?? false, FILTER_VALIDATE_BOOLEAN),
                     'addons' => $addons,
                 ];
             }

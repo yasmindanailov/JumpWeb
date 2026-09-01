@@ -7,7 +7,11 @@
  */
 return [
     'title' => 'Autorisation pour les mineurs',
-    'intro' => 'Remplissez ce formulaire pour autoriser la participation d’un mineur dont vous avez la charge. La personne qui a réservé l’a préparé.',
+    'stub' => [
+        'badge' => "Autorisation d'entrée",
+        'heading' => 'Autorisez votre enfant',
+        'lede' => "Quelqu'un a réservé une visite au parc et votre enfant vient avec le groupe. Pour qu'il puisse entrer, nous avons besoin de votre autorisation écrite. Cela prend deux minutes et aucun compte n'est nécessaire.",
+    ],
 
     'booking' => [
         'heading' => 'La réservation',
@@ -15,6 +19,7 @@ return [
         'date' => 'Jour de la visite',
         'dates' => 'Jours de la visite',
         'no_date' => 'Aucune date attribuée pour l’instant',
+        'responsible' => 'Accompagné par',
     ],
 
     'minor' => [
@@ -23,6 +28,9 @@ return [
         'surname' => 'Nom',
         'born_on' => 'Date de naissance',
         'born_on_help' => 'Elle nous sert à connaître son âge le jour de la visite.',
+        'pick' => 'Choisissez votre enfant',
+        'pick_manual' => 'Saisir les données à la main',
+        'pick_help' => 'Ce sont les mineurs déclarés dans votre compte. En choisir un remplit ses données ; vous pouvez les corriger.',
     ],
 
     'guardian' => [
@@ -67,7 +75,7 @@ return [
         'heading' => 'Impossible de signer ici',
         'not_paid' => 'Cette réservation n’est pas encore confirmée. Parlez-en à la personne qui l’a faite.',
         'closed' => 'La visite de cette réservation a déjà eu lieu : ce formulaire est fermé.',
-        'full' => 'Cette réservation a déjà toutes ses autorisations. S’il en manque une, parlez-en à la personne qui a réservé.',
+        'full' => "Cette réservation n'accepte plus d'autorisations : il y en a déjà autant de signées que de places achetées. S'il en manque une, parlez-en à la personne qui a réservé.",
     ],
 
     'errors' => [

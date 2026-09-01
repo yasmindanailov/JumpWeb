@@ -235,8 +235,30 @@ describe('el saneador de líneas restauradas', () => {
     test('una línea buena sobrevive y sale con la hora canónica', () => {
         assert.deepEqual(
             sanitizeLine({ product_id: 1, date: '2026-09-05', time: '10:00', quantity: 2 }),
-            { product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2, event_data: {}, addons: [], dependent_ids: [] }
+            { product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2, event_data: {}, addons: [], dependent_ids: [], guardian_authorization: false }
         );
+    });
+
+    /**
+     * El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2).
+     *
+     * ⚠️ A diferencia de `dependent_ids`, un valor raro **no descarta la línea**: se trata como «no».
+     * El criterio no es incoherente, es el mismo de siempre aplicado a lo que cada campo significa —
+     * un id corrupto es una compra que no se sabe para quién, y esto es una pregunta de sí o no cuya
+     * peor lectura es la de siempre—.
+     */
+    test('el justificante se restaura como booleano y nunca descarta la línea', () => {
+        const base = { product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2 };
+
+        assert.equal(sanitizeLine({ ...base, guardian_authorization: true }).guardian_authorization, true);
+
+        for (const raro of [undefined, false, 'true', 1, null, {}, []]) {
+            assert.equal(
+                sanitizeLine({ ...base, guardian_authorization: raro }).guardian_authorization,
+                false,
+                `guardian_authorization ${JSON.stringify(raro)}`
+            );
+        }
     });
 
     /**
@@ -564,7 +586,24 @@ describe('guardar', () => {
             product_id: 1, date: '2026-09-05', time: '10:00:00', quantity: 2,
             addons: [{ product_id: 4, quantity: 2 }],
             dependent_ids: [12, 15],
+            guardian_authorization: false,
         });
+    });
+
+    /**
+     * El JUSTIFICANTE sobrevive a una recarga (`specs/waiver-por-reserva.md` §12.2).
+     *
+     * ⚠️ **Lo que guarda `save()` es una LISTA BLANCA**: una clave que no se nombre allí no se
+     * escribe, y la casilla saldría desmarcada al volver **sin que nada falle**. El cliente no se
+     * enteraría de que se le olvidó hasta la puerta del parque, que es el mismo daño que el defecto
+     * del anti-bot de la T2.
+     */
+    test('el justificante marcado sobrevive al guardado', () => {
+        const storage = fakeStorage();
+
+        save(storage, { owner: 7, lines: [line({ guardian_authorization: true })] });
+
+        assert.equal(JSON.parse(storage.raw('jw.cart.v1')).lines[0].guardian_authorization, true);
     });
 
     /**

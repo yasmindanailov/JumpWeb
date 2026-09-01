@@ -199,4 +199,21 @@ return [
         'contact' => 'Si tienes cualquier duda, escríbenos con el número de pedido.',
         'product_fallback' => 'producto :id',
     ],
+    /*
+     * El enlace del JUSTIFICANTE de un menor invitado, al que RESERVÓ
+     * (`specs/waiver-por-reserva.md` §12.3, T7).
+     *
+     * ⚠️ El texto tiene que decir **que el enlace es para REPARTIR** y que quien lo abre no ve lo que
+     * han escrito los demás. Sin esa frase, un responsable prudente no lo reenvía —parece su enlace
+     * privado— y la feature se queda parada en su bandeja.
+     */
+    'guardian_request' => [
+        'subject' => 'Autorización para los menores invitados de tu reserva · :code',
+        'greeting' => '¡Hola!',
+        'intro' => 'En tu reserva :code viene algún menor que no está a tu cargo. Para que pueda entrar, su padre, madre o tutor tiene que firmar una autorización.',
+        'body' => 'Es un momento: rellena sus datos, los del menor, acepta el descargo de responsabilidad y listo. No hace falta tener cuenta.',
+        'action' => 'Abrir la autorización',
+        'share' => 'Pásales este enlace a los padres o tutores. Vale para todos: cada uno rellena SUS datos y no ve los de los demás.',
+        'outro' => 'El enlace caduca poco después de la visita. Si necesitas otro, dínoslo.',
+    ],
 ];

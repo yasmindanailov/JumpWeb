@@ -33,5 +33,17 @@ final readonly class CatalogProductDetail
         public array $eventFields,
         /** @var list<CatalogAddon> */
         public array $addons,
+        /**
+         * El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2):
+         * `none` · `optional` · `required`.
+         *
+         * ⚠️ Va en el DETALLE y no en el resumen de lista a propósito: la casilla se pinta al elegir
+         * la franja y la cantidad de UN producto, no al recorrer el catálogo — y el catálogo entero
+         * se sirve en la primera pantalla del flujo, donde cada campo se paga en todas las filas.
+         *
+         * ⚠️⚠️ Es informativo para pintar. **Lo que se guarda lo decide `OrderCreator`** con el
+         * catálogo delante: un cliente que mienta aquí no cambia nada.
+         */
+        public string $guardianAuthorization,
     ) {}
 }

@@ -476,6 +476,67 @@ class TicketType extends Model
         return self::resolveFieldLabel($field);
     }
 
+    // ─── El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2) ───
+
+    /**
+     * ¿Este producto necesita el justificante firmado del padre o la madre de un menor que **no es
+     * menor a cargo** de quien reserva? `[DECIDIDO owner, 2026-09-01]`, tres estados y no un booleano.
+     *
+     * ⚠️ **`optional` y `required` no son «el mismo interruptor con más fuerza»**: en el primero lo
+     * declara el CLIENTE (viene un amigo de su hijo, y solo él lo sabe); en el segundo lo sabe el
+     * PRODUCTO (una excursión de colegio son cien menores ajenos por definición) y no hay nada que
+     * preguntar. Por eso uno pinta una casilla y el otro una nota.
+     */
+    public const GUARDIAN_NONE = 'none';
+
+    public const GUARDIAN_OPTIONAL = 'optional';
+
+    public const GUARDIAN_REQUIRED = 'required';
+
+    /** @var list<string> */
+    public const GUARDIAN_MODES = [
+        self::GUARDIAN_NONE,
+        self::GUARDIAN_OPTIONAL,
+        self::GUARDIAN_REQUIRED,
+    ];
+
+    /**
+     * El modo, SANEADO. Nunca se lee la columna a pelo: un valor que no esté en la lista —de una
+     * importación, de un seeder viejo o de un `update()` a mano— tiene que degradar a `none`, que es
+     * el estado que no hace nada. La regla 12 del proyecto aplicada a una columna de texto libre.
+     */
+    public function guardianMode(): string
+    {
+        $mode = (string) ($this->guardian_authorization ?? self::GUARDIAN_NONE);
+
+        return in_array($mode, self::GUARDIAN_MODES, true) ? $mode : self::GUARDIAN_NONE;
+    }
+
+    /**
+     * ¿Se le PREGUNTA al cliente? Solo en `optional`: en `required` no hay pregunta que hacer, y
+     * pintarla como una casilla marcada e inerte invita a intentar desmarcarla.
+     */
+    public function offersGuardianAuthorization(): bool
+    {
+        return $this->guardianMode() === self::GUARDIAN_OPTIONAL;
+    }
+
+    /**
+     * ¿La línea nace marcada pase lo que pase? **Lo decide el servidor, nunca el navegador**: si esto
+     * dependiera de la casilla, un cliente compraría una excursión sin justificantes quitando un
+     * `input` del DOM.
+     */
+    public function requiresGuardianAuthorization(): bool
+    {
+        return $this->guardianMode() === self::GUARDIAN_REQUIRED;
+    }
+
+    /** ¿Este producto tiene algo que ver con justificantes? (`optional` o `required`). */
+    public function usesGuardianAuthorization(): bool
+    {
+        return $this->guardianMode() !== self::GUARDIAN_NONE;
+    }
+
     // ─── Familia y tramo de edad (cumpleaños MIXTO, `specs/cumple-mixto.md` §9) ───────
 
     /**

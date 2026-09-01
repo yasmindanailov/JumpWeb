@@ -206,6 +206,30 @@ class Order extends Model
     }
 
     /**
+     * ¿A este pedido se le OFRECE el justificante? (`specs/waiver-por-reserva.md` §12.2, T5).
+     *
+     * Es la suma de lo que sus líneas guardaron al nacer: alguna principal viva con la marca puesta,
+     * porque el producto lo exigía o porque el cliente marcó la casilla.
+     *
+     * ⚠️⚠️ **«Se ofrece» NO es «se permite», y confundirlos rompe el caso del propio owner**: quien
+     * tenga el enlace firmado de un pedido pagado puede firmar SIEMPRE, esté marcado o no. El caso
+     * que lo exige es literalmente suyo — *«un cliente que no sabía que se necesita justificante»*, y
+     * entonces el operador se lo manda—. Lo que esta bandera gobierna es a quién se lo enseñamos por
+     * nuestra cuenta: el correo al pagar, la nota en su cuenta y el relieve en la ficha del panel.
+     *
+     * ⚠️ **Solo líneas PRINCIPALES VIVAS**, la misma cuenta que `AuthorizableOrdersReader::capacity`:
+     * un complemento no trae menores, y una línea cancelada ya no trae a nadie.
+     */
+    public function needsGuardianAuthorization(): bool
+    {
+        return $this->items()
+            ->whereNull('parent_item_id')
+            ->whereNull('cancelled_at')
+            ->where('guardian_authorization', true)
+            ->exists();
+    }
+
+    /**
      * @return HasMany<Ticket, $this>
      */
     public function tickets(): HasMany
@@ -532,6 +556,18 @@ class Order extends Model
     public const RESEND_TYPE_GUEST_FORM = 'guest_form';
 
     /**
+     * Reenvío del enlace del JUSTIFICANTE de un menor invitado
+     * (`specs/waiver-por-reserva.md` §12.3, T7).
+     *
+     * ⚠️⚠️ **Su condición NO es `needsGuardianAuthorization()`, y es deliberado**: basta con que el
+     * pedido esté PAGADO. El caso 2 del owner es *«un cliente que no sabía que se necesita
+     * justificante»* —o sea, un pedido que nadie marcó al comprar—, y atarlo a la marca dejaría al
+     * operador sin la única salida que ese caso tiene. La marca decide a quién se lo mandamos
+     * NOSOTROS al pagar; esto es el operador decidiendo, con el cliente al teléfono.
+     */
+    public const RESEND_TYPE_GUARDIAN = 'guardian';
+
+    /**
      * @return list<string> subconjunto de RESEND_TYPE_* aplicables al estado actual.
      */
     public function availableResendEmailTypes(): array
@@ -566,6 +602,13 @@ class Order extends Model
         // (relleno o no — el operador puede reenviar el enlace si el cliente perdió el email).
         if ($this->status === self::STATUS_PAID && $this->hasGuestForm()) {
             $types[] = self::RESEND_TYPE_GUEST_FORM;
+        }
+
+        // El enlace del JUSTIFICANTE (§12.3). Solo pagado —el enlace público exige pedido pagado, así
+        // que ofrecerlo antes mandaría al cliente a una pantalla que le dice que no— y sin mirar la
+        // marca, por el motivo escrito en la constante.
+        if ($this->status === self::STATUS_PAID) {
+            $types[] = self::RESEND_TYPE_GUARDIAN;
         }
 
         return $types;

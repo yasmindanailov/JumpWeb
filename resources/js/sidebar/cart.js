@@ -60,12 +60,23 @@ export function addLine(cart, line, verdict) {
                     ...existing,
                     quantity: existing.quantity + quantity,
                     dependent_ids: [...new Set([...(existing.dependent_ids ?? []).map(Number), ...requested.slice(0, quantity)])],
+                    // El JUSTIFICANTE al FUNDIR es un O y no «gana la existente»
+                    // (`specs/waiver-por-reserva.md` §12.2): dos entradas que el servidor funde son
+                    // las mismas plazas, y si en la segunda tanda venía el amigo del hijo, viene. La
+                    // otra dirección perdería el aviso **en silencio**, que es el daño que esta
+                    // feature existe para evitar.
+                    guardian_authorization: existing.guardian_authorization === true || line.guardian_authorization === true,
                 }
                 : existing
         ));
     }
 
-    return [...cart, { ...line, quantity, dependent_ids: requested.slice(0, quantity) }];
+    return [...cart, {
+        ...line,
+        quantity,
+        dependent_ids: requested.slice(0, quantity),
+        guardian_authorization: line.guardian_authorization === true,
+    }];
 }
 
 /**
@@ -117,8 +128,15 @@ export function toApiItems(cart) {
 export function toCheckoutItems(cart) {
     return toApiItems(cart).map((item, index) => {
         const ids = Array.isArray(cart[index]?.dependent_ids) ? cart[index].dependent_ids.map(Number) : [];
+        const withIds = ids.length > 0 ? { ...item, dependent_ids: ids } : item;
 
-        return ids.length > 0 ? { ...item, dependent_ids: ids } : item;
+        // El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2). Viaja SOLO
+        // aquí, por lo mismo que los menores: los otros tres endpoints comparten esta forma y no lo
+        // leen. Y solo cuando es `true` — mandar `false` en cada línea de cada petición es ruido en
+        // la ruta de más tráfico, y el servidor ya trata la ausencia como «no».
+        return cart[index]?.guardian_authorization === true
+            ? { ...withIds, guardian_authorization: true }
+            : withIds;
     });
 }
 
@@ -258,7 +276,7 @@ const STORAGE_VERSION = 1;
  *
  * @type {ReadonlyArray<string>}
  */
-export const SANITISED_FIELDS = ['product_id', 'date', 'time', 'quantity', 'event_data', 'addons', 'dependent_ids'];
+export const SANITISED_FIELDS = ['product_id', 'date', 'time', 'quantity', 'event_data', 'addons', 'dependent_ids', 'guardian_authorization'];
 
 /**
  * Entero al estilo de la regla `integer` de Laravel, que **no es estricta**: acepta la cadena `'3'`.
@@ -378,7 +396,22 @@ export function sanitizeLine(raw) {
 
     // ⚠️ `event_data` NO se restaura NUNCA: no se persiste (`DECISIONES #38(d)`, art. 9 del RGPD).
     // Se deja el objeto vacío para que la forma en memoria sea siempre la misma.
-    return { product_id: productId, date, time, quantity, event_data: {}, addons, dependent_ids: dependentIds };
+    //
+    // ⚠️ El JUSTIFICANTE (`specs/waiver-por-reserva.md` §12.2) SÍ se restaura, y no es PII: es un
+    // booleano que dice «viene alguien de otra familia», sin decir quién. Perderlo al recargar
+    // costaría que un cliente tuviera que acordarse de volver a marcarlo, y **no se enteraría de que
+    // se le olvidó** hasta la puerta del parque. Un valor que no sea booleano se trata como `false`:
+    // la línea sigue siendo comprable, que es lo que hace el saneador con un complemento roto.
+    return {
+        product_id: productId,
+        date,
+        time,
+        quantity,
+        event_data: {},
+        addons,
+        dependent_ids: dependentIds,
+        guardian_authorization: raw.guardian_authorization === true,
+    };
 }
 
 /**
@@ -581,6 +614,10 @@ export function save(storage, { owner = null, lines = [] } = {}) {
             // Solo los IDS de los menores (`menores-a-cargo.md` §4.8, §9.9.3 D8): un puntero opaco que
             // solo la sesión de su dueño resuelve. El nombre no puede llegar aquí por construcción.
             dependent_ids: (line.dependent_ids ?? []).map((id) => Number(id)),
+            // El JUSTIFICANTE (`specs/waiver-por-reserva.md` §12.2). ⚠️ **Esto es una lista blanca**:
+            // una clave que no se nombre aquí **no se guarda**, y al recargar la casilla saldría
+            // desmarcada sin que nada falle. No lleva PII —dice que viene alguien, no quién—.
+            guardian_authorization: line.guardian_authorization === true,
         })),
     };
 

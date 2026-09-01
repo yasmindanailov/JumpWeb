@@ -102,6 +102,13 @@
         .v-sub { font-size: 10px; color: #6b7280; font-weight: normal; }
 
         .sec { margin-top: 14px; }
+        /* Aviso impreso (§12.6 de `waiver-por-reserva.md`): más justificantes que plazas. Va en
+           tinta oscura sobre gris y NO en color: esta hoja se imprime en blanco y negro. */
+        .warn {
+            font-size: 9.5px; font-weight: bold; color: #111827;
+            background: #f3f4f6; border: 1px solid #9ca3af;
+            padding: 5px 7px; margin-bottom: 6px;
+        }
         .sec-title {
             font-size: 10px; font-weight: bold; color: #374151;
             text-transform: uppercase; letter-spacing: .8px;
@@ -374,6 +381,16 @@
     @if (($guestMinors ?? []) !== [])
         <div class="sec">
             <div class="sec-title">{{ __('admin.orders.slip.guest_minors_heading') }}</div>
+            {{-- §12.6: bajar la cantidad NO borra justificantes —son firmas con valor probatorio— así
+                 que la hoja puede acabar listando más menores que plazas tiene el pedido. Antes lo
+                 imprimía sin decir nada. Se avisa AQUÍ porque esta hoja es la que la sala tiene en la
+                 mano cuando llegan los niños. --}}
+            @if (($guestMinorsOverflow ?? false))
+                <div class="warn">{{ __('admin.orders.slip.guest_minors_overflow', [
+                    'count' => count($guestMinors),
+                    'capacity' => $guestMinorsCapacity ?? 0,
+                ]) }}</div>
+            @endif
             <table class="guests">
                 <thead>
                     <tr>

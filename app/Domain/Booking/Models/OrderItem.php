@@ -61,6 +61,10 @@ class OrderItem extends Model
         'event_data' => 'array',
         'guest_data' => 'array',
         'guest_form_completed_at' => 'datetime',
+        // El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2): lo que se
+        // acordó AL COMPRAR. Es un hecho de la línea y no una consulta al catálogo — cambiar el
+        // interruptor del producto mañana no reescribe lo que este cliente marcó ayer.
+        'guardian_authorization' => 'boolean',
         'age_family_seal' => 'array',
         'cancelled_at' => 'datetime',
     ];

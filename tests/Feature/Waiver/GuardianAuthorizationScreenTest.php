@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
@@ -465,6 +466,115 @@ class GuardianAuthorizationScreenTest extends TestCase
         $this->actingAs($stranger)
             ->get(route('reservation.authorization', ['order' => $order]))
             ->assertForbidden();
+    }
+
+    // ─── T8 · lo que la pantalla DICE de la reserva y de quien responde (§12.4) ─
+
+    public function test_the_sheet_says_which_visit_and_who_the_child_is_going_with(): void
+    {
+        // ❗ Un padre está confiando a su hijo a un adulto que no es él. Hasta la T8 esta pantalla
+        // resolvía la reserva con un párrafo y **no decía ni quién era**.
+        $responsible = $this->responsible();
+        $responsible->forceFill(['name' => 'Lucía Fernández', 'phone' => '600111222'])->save();
+        $order = $this->orderFor($responsible);
+        $this->version();
+
+        $this->get($order->guardianAuthorizationSignedUrl())
+            ->assertOk()
+            ->assertSee($order->code)
+            ->assertSee('Lucía Fernández')
+            ->assertSee('600111222');
+    }
+
+    public function test_the_sheet_never_shows_the_email_of_the_person_who_booked(): void
+    {
+        // ⚠️⚠️ `[DECIDIDO owner]` §12.4: nombre y teléfono SÍ, correo NO. Este enlace lo reparte el
+        // propio responsable por WhatsApp a gente que no conocemos, y su buzón no viaja con él.
+        //
+        // ⚠️ **Se comprueba SIN sesión a propósito**: con la suya iniciada su correo aparece de todos
+        // modos en el prellenado del bloque del adulto —es su propio dato— y el caso no distinguiría
+        // nada. Es la trampa de `#295`: acotar al sujeto antes de creerse un test verde.
+        $responsible = $this->responsible();
+        $responsible->forceFill(['email' => 'quien-reservo@example.test'])->save();
+        $order = $this->orderFor($responsible);
+        $this->version();
+
+        $this->get($order->guardianAuthorizationSignedUrl())
+            ->assertOk()
+            ->assertDontSee('quien-reservo@example.test');
+    }
+
+    // ─── T8 · elegir al menor a cargo con sesión (§12.5) ─────────────────────
+
+    public function test_a_signed_in_parent_can_pick_one_of_their_own_minors(): void
+    {
+        $responsible = $this->responsible();
+        $order = $this->orderFor($responsible);
+        $this->version();
+
+        // El que firma es OTRO adulto con cuenta —el padre del amigo—, no quien reservó.
+        $signer = User::factory()->create(['email_verified_at' => now()]);
+        $child = Dependent::create([
+            'user_id' => $signer->id, 'name' => 'Ana', 'surname' => 'Gómez Ruiz',
+            'born_on' => now()->subYears(9)->toDateString(), 'relationship' => 'mother',
+        ]);
+        $adult = Dependent::create([
+            'user_id' => $signer->id, 'name' => 'Marcos', 'surname' => 'Gómez Ruiz',
+            'born_on' => now()->subYears(22)->toDateString(), 'relationship' => 'mother',
+        ]);
+
+        $html = $this->actingAs($signer)
+            ->get($order->guardianAuthorizationSignedUrl())
+            ->assertOk()
+            ->assertSee(__('guardian.minor.pick'))
+            // ⚠️ Se asevera el `data-` del OPCIÓN y no solo el nombre: el nombre podría estar en la
+            // página por cualquier otro motivo, y lo que hace útil al selector es que lleve la fecha
+            // de nacimiento y la relación con las que rellena los campos.
+            ->assertSee('data-born-on="'.$child->born_on->toDateString().'"', false)
+            ->assertSee('data-relationship="mother"', false)
+            ->getContent();
+
+        // ⚠️ **El mayor de edad NO se ofrece**: un adulto firma por sí mismo, y ofrecerlo aquí
+        // llevaría a un rechazo del validador con el nombre ya puesto. Control del filtro.
+        $this->assertStringNotContainsString('Marcos', $html);
+        $this->assertStringContainsString('Ana', $html);
+        // Y el bloqueo del propio `$adult` se comprueba por su id, no por su nombre: dos hermanos
+        // pueden compartir apellido y una aserción por subcadena sería una moneda al aire (`#337`).
+        $this->assertStringNotContainsString('value="'.$adult->id.'" data-name', $html);
+    }
+
+    public function test_without_a_session_there_is_no_picker_at_all(): void
+    {
+        // Control del caso de arriba, y la propiedad que de verdad importa: la hoja sigue siendo una
+        // HOJA EN BLANCO para un desconocido. Un selector con los menores de alguien sería justo lo
+        // contrario de lo que esta pantalla existe para ser.
+        $order = $this->orderFor($this->responsible());
+        $this->version();
+
+        $this->get($order->guardianAuthorizationSignedUrl())
+            ->assertOk()
+            ->assertDontSee(__('guardian.minor.pick'))
+            ->assertDontSee('data-guardian-pick-select', false);
+    }
+
+    public function test_a_signed_in_parent_does_not_see_the_minors_of_anyone_else(): void
+    {
+        $responsible = $this->responsible();
+        $order = $this->orderFor($responsible);
+        $this->version();
+
+        // El menor a cargo lo tiene el RESPONSABLE, no quien abre el enlace.
+        Dependent::create([
+            'user_id' => $responsible->id, 'name' => 'Nora', 'surname' => 'Blanco Díaz',
+            'born_on' => now()->subYears(7)->toDateString(), 'relationship' => 'father',
+        ]);
+
+        $signer = User::factory()->create(['email_verified_at' => now()]);
+
+        $this->actingAs($signer)
+            ->get($order->guardianAuthorizationSignedUrl())
+            ->assertOk()
+            ->assertDontSee('Nora');
     }
 
     // ─── Deber de información del art. 13 ────────────────────────────────────

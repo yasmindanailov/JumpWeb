@@ -2189,6 +2189,41 @@ Abre el enlace firmado del pedido (se saca con el guion de siembra; caduca a la 
 - [ ] Está el **enlace** para repartir (se autoselecciona al pincharlo).
 - [ ] ⚠️ **No aparece ningún dato de los otros padres**: ni nombre, ni relación, ni contacto.
 
+### 7 · LA ACTIVACIÓN (`#342`) — lo que antes no existía
+
+> ❗ **Este bloque es el que responde a lo que encontraste**: *«no me sale nada del enlace»*. Antes de
+> recorrerlo hay que **encender el interruptor en un producto**, que es donde ahora vive la decisión.
+
+**Preparación** — en `/admin/ajustes` → Catálogo, abre una ENTRADA y en «Operativa» pon
+**«Justificante para menores invitados»** en *Opcional*. Abre otra (o un pack) y ponla en
+*Obligatorio*.
+
+- [ ] **El embudo, en el cajón**: elige el producto *Opcional*, fecha y hora. ▶ Bajo la cantidad
+      aparece la casilla **«Viene un menor que no está a mi cargo»**, con su explicación.
+- [ ] Con el producto *Obligatorio*: **no hay casilla**, hay una **nota** que dice que hará falta.
+      ⚠️ Si sale casilla, alguien ha confundido los dos estados: en `required` no hay nada que decidir.
+- [ ] Con un producto **normal**: no aparece nada de nada.
+- [ ] Marca la casilla, **recarga la página** y vuelve al carrito. ▶ Sigue marcada (se persiste).
+- [ ] Termina la compra. ▶ Llega a Mailpit **«Autorización para los menores invitados de tu reserva»**
+      con el botón del enlace. ⚠️ Un pedido sin marcar **no** recibe ese correo.
+- [ ] **El panel, en un pedido recién comprado y SIN NINGUNA FIRMA**: la ficha tiene la sección
+      «Menores invitados con justificante», dice **«Todavía no ha firmado ningún padre o tutor»** y
+      lleva **«Copiar enlace para los padres»** y **«Enviárselo al cliente»**.
+      ❗ *Esto es exactamente lo que antes salía en blanco.*
+- [ ] En un pedido **normal** la sección **sigue sin existir** (no vacía: no está).
+- [ ] **La salida del caso «no lo sabía»**: en un pedido pagado que nadie marcó, «Reenviar email» →
+      **«Enlace del justificante de menores invitados»** está en la lista.
+- [ ] **La hoja pública, con el enlace**: cabecera oscura con **Referencia · Día · «Va con»** (nombre y
+      teléfono de quien reservó). ⚠️ **Su CORREO no puede aparecer**.
+- [ ] Los tres bloques van **numerados 1 · 2 · 3**.
+- [ ] **Con sesión de un cliente que tenga menores a cargo declarados**: sale «Elige a tu hijo o hija».
+      Elige uno → se rellenan nombre, apellidos, fecha y la relación. Vuelve a «Escribir los datos a
+      mano» → **se vacía** (no pueden quedar datos de otro niño).
+      ⚠️ Un menor a cargo que **ya tenga 18** no puede salir en la lista.
+- [ ] **Más papeles que plazas**: en un pedido con un justificante firmado, baja la cantidad de su
+      línea a 0 o cancélala. ▶ El panel avisa: *«Ojo: hay N justificantes firmados y el pedido tiene M
+      plazas»*. La hoja de sala imprime el mismo aviso.
+
 ### Limpieza cuando termines
 
 ```bash

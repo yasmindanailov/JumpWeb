@@ -33,6 +33,15 @@ export const useSelectionStore = defineStore('selection', {
          */
         dependentIds: [],
 
+        /**
+         * «Viene un menor que NO está a mi cargo» (`specs/waiver-por-reserva.md` §12.2).
+         *
+         * ⚠️ Es lo ÚNICO de esta línea que el catálogo no puede saber: el parque sabe si su producto
+         * admite justificantes, y solo el cliente sabe si esta vez viene el amigo de su hijo. Por eso
+         * se pregunta y no se deduce — y por eso en un producto `required` no se pregunta nada.
+         */
+        guardianAuthorization: false,
+
         /** La línea ya resuelta que devuelve el servidor al validar, o `null`. */
         line: null,
 
@@ -50,6 +59,11 @@ export const useSelectionStore = defineStore('selection', {
         /** Marca o desmarca un menor para estas entradas. El tope es la cantidad (`assignment.js`). */
         toggleDependent(id) {
             this.dependentIds = toggleDependent(this.dependentIds, id, this.quantity);
+        },
+
+        /** «Viene un menor que no está a mi cargo». Sin reglas: es una pregunta de sí o no. */
+        setGuardianAuthorization(value) {
+            this.guardianAuthorization = value === true;
         },
 
         setAddons(addons) {
@@ -123,6 +137,7 @@ export const useSelectionStore = defineStore('selection', {
             this.quantities = [];
             this.eventData = {};
             this.dependentIds = [];
+            this.guardianAuthorization = false;
             this.line = null;
             this.resolved = [];
         },

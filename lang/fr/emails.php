@@ -175,4 +175,13 @@ return [
         'contact' => 'Si tu as des questions, écris-nous avec le numéro de commande.',
         'product_fallback' => 'produit :id',
     ],
+    'guardian_request' => [
+        'subject' => 'Autorisation pour les mineurs invités de votre réservation · :code',
+        'greeting' => 'Bonjour !',
+        'intro' => "Votre réservation :code comprend un mineur qui n'est pas à votre charge. Pour qu'il puisse entrer, son père, sa mère ou son tuteur doit signer une autorisation.",
+        'body' => "C'est l'affaire d'un instant : ses coordonnées, celles du mineur, accepter la décharge et c'est fait. Aucun compte n'est nécessaire.",
+        'action' => "Ouvrir l'autorisation",
+        'share' => 'Transmettez ce lien aux parents ou tuteurs. Il vaut pour tous : chacun remplit SES données et ne voit pas celles des autres.',
+        'outro' => "Le lien expire peu après la visite. Si vous en avez besoin d'un autre, dites-le-nous.",
+    ],
 ];

@@ -4739,6 +4739,20 @@ components:
             type: integer
             format: int64
             minimum: 1
+        guardian_authorization:
+          type: boolean
+          default: false
+          description: |
+            «Viene un menor que NO está a cargo de quien reserva» — el amigo del hijo, un alumno de
+            una excursión. Su padre, madre o tutor tendrá que firmar el justificante desde un enlace,
+            sin cuenta (`specs/waiver-por-reserva.md` §12.2).
+
+            **Es una INTENCIÓN y el servidor la resuelve contra el producto**: si el producto declara
+            `guardian_authorization: required` la línea nace marcada aunque aquí venga `false`; si
+            declara `none`, lo que llegue aquí se ignora. Solo con `optional` manda este campo — es lo
+            único que el cliente sabe y el catálogo no. Lo publica el detalle del producto
+            (`GET /catalog/products/{id}`), y **solo `POST /orders` lo persiste**: disponibilidad,
+            validación de línea y presupuesto aceptan el mismo cuerpo y lo ignoran.
 
     CartLineAddon:
       type: object
@@ -4910,6 +4924,7 @@ components:
         - max_quantity
         - event_fields
         - addons
+        - guardian_authorization
       additionalProperties: false
       properties:
         id:
@@ -4982,6 +4997,18 @@ components:
           description: Complementos que ESTE producto ofrece, en el orden configurado.
           items:
             $ref: '#/components/schemas/CatalogAddon'
+        guardian_authorization:
+          type: string
+          enum: [none, optional, required]
+          description: |
+            Qué hace este producto con el JUSTIFICANTE de un menor invitado —un menor que no está a
+            cargo de quien reserva— (`specs/waiver-por-reserva.md` §12.2).
+
+            · `none` — no se ofrece. Es el defecto y lo que son casi todas las entradas.
+            · `optional` — se pregunta: la pantalla pinta una casilla y lo que se marque viaja en
+              `CartLine.guardian_authorization`.
+            · `required` — hace falta siempre (una excursión de colegio). **No se pregunta**: la
+              pantalla informa, y el servidor marca la línea llegue lo que llegue en el cuerpo.
 
     CatalogEventField:
       type: object

@@ -239,8 +239,33 @@ rutina. La rama `deploy/fix-338` se puede borrar en cuanto eso ocurra.
      columna. `[DECIDIDO owner, 2026-09-02]`: **es un HUECO EN BLANCO en la hoja para escribirlo a
      mano**, el mismo criterio que las filas de niños sin datos. Ni BD ni panel.
 
-✅ **CARRIL P3 · EL JUSTIFICANTE DE UN MENOR INVITADO («waiver offshore») — SPEC + T1 + T2 + T3 EN
-EL ÁRBOL** (2026-09-01, `DECISIONES #328`, `#335` y `#337`). ▶ **La T3 pone las SEIS superficies**:
+✅ **CARRIL P3 · EL JUSTIFICANTE DE UN MENOR INVITADO («waiver offshore») — SPEC + T1 + T2 + T3 +
+LA ACTIVACIÓN (T5→T8) EN EL ÁRBOL** (2026-09-01, `DECISIONES #328`, `#335`, `#337` y **`#342`**).
+❗❗❗ **`#342` — EL OWNER PROBÓ LO CONSTRUIDO Y NO HABÍA PUERTA POR LA QUE ENTRAR**: *«En el panel del
+cliente no me sale nada del enlace. Ni de los que han firmado o no.»* El enlace tenía **tres
+consumidores en todo el repo y ninguno lo OFRECÍA**, y el peor era un **huevo y una gallina**: el
+botón «Copiar enlace» vivía DENTRO de una sección `visible(countFor > 0)`, así que solo aparecía
+cuando ya había un justificante firmado — y para que hubiera uno hacía falta el enlace. *Una condición
+de visibilidad escrita para lo que se LEE acabó escondiendo lo que se HACE.*
+▶ **La activación la decide ahora el PRODUCTO** (`[DECIDIDO owner]`, data-driven): `none` ·
+`optional` (casilla en el paso de la hora, junto al selector de menores a cargo) · `required` (la
+excursión de colegio: sin casilla, y **lo marca el SERVIDOR** — si saliera del navegador se compraría
+sin justificantes quitando un `input` del DOM). Al pagar sale un correo con el enlace, y el panel gana
+la sección **siempre visible**, un icono por línea y «Enviárselo al cliente».
+⚠️⚠️ **«Se ofrece» NO es «se permite»**: quien tenga el enlace de un pedido pagado puede firmar
+SIEMPRE, marcado o no — el caso 2 del owner es *«un cliente que no sabía que se necesita
+justificante»*, y cerrar esa puerta lo mataría.
+⚠️⚠️ **El «caso 3» (justificante sin reserva) NO se construye porque la premisa no se cumple**:
+`CreateManualOrderPage` **exige cliente**, así que toda venta de mostrador ya produce un pedido con
+responsable. Reabrirlo costaría `order_id` nullable, **la puerta no lo encontraría** (compone desde
+las reservas de HOY) y la caducidad se quedaría sin ancla.
+⚠️ **«¿50 justificantes y 40 entradas?» medido con rollback**: no se borra ninguno (son firmas) y
+**nadie lo decía**. Ahora el panel y la hoja pintan «N justificantes · M plazas» con aviso, y el
+mensaje que mentía al padre está corregido. **El TOPE no se toca** (`SEC-04`).
+⚠️⚠️ **La trampa que casi lo entierra**: `Cart::sanitize()` es una LISTA BLANCA y el campo se habría
+caído ahí **en silencio** camino de `OrderCreator`. Tiene caso propio, y hay una segunda costura igual
+en el pedido manual.
+▶ **Queda: el OJO del owner** y la casilla en el paso de CESTA (hoy se marca al elegir la hora). ▶ **La T3 pone las SEIS superficies**:
 puerta, hoja de sala, ficha del pedido, PDF, correo de copia con el PDF adjunto, y la cuenta del
 responsable en el cajón. ▶ **LA T4 YA TIENE GUION ESCRITO Y EL ESCENARIO SEMBRADO**:
 `VERIFICACION-E2E-CAJON.md` **§5.septies** — seis bloques con sus casillas, los dos pedidos de prueba

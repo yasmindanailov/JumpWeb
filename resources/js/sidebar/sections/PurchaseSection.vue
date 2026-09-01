@@ -426,6 +426,18 @@ async function refreshAddons() {
 const unitPriceCents = computed(() => unitPriceToShow(selectionStore.line, dateStore.priceCents));
 
 /**
+ * El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2): qué hace ESTE producto.
+ *
+ * ⚠️ Son DOS estados y no un booleano con más fuerza: `optional` pinta una CASILLA —lo único que el
+ * cliente sabe y el catálogo no— y `required` pinta una NOTA, porque ahí no hay nada que preguntar y
+ * una casilla marcada e inerte invita a intentar desmarcarla.
+ *
+ * ⚠️ Un valor desconocido cae en «ninguno de los dos», que es el estado que no pinta nada: el
+ * servidor ya lo sanea, y repetir aquí ese saneo sería una segunda regla que puede divergir.
+ */
+const guardianMode = computed(() => catalogStore.product?.guardian_authorization ?? 'none');
+
+/**
  * Adopta una cantidad nueva, venga de `+`/`−` o del campo escrito. `null` = no cambia nada, y
  * entonces se ahorra la consulta. La regla y los extremos —los MISMOS para los dos caminos— viven en
  * `quantity.js`; aquí solo se aplica y se refrescan los complementos, cuyo precio por-invitado
@@ -1029,6 +1041,10 @@ async function addToCart() {
         addons: selectionStore.resolved,
         // Los menores marcados en el paso 3 (tanda 4): solo ids; `addLine` los funde y recorta.
         dependent_ids: selectionStore.dependentIds,
+        // El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2). ⚠️ Se manda
+        // también cuando el producto lo EXIGE, y no porque haga falta —el servidor marca la línea
+        // igual— sino para que la cesta pinte el aviso sin volver a consultar el catálogo.
+        guardian_authorization: guardianMode.value === 'required' || selectionStore.guardianAuthorization,
     };
 
     const response = await tracked(cartStore.validateLine({ api, line: candidate }));
@@ -1167,7 +1183,10 @@ function goBack() {
             :messages="messages"
             :dependent-options="dependentsStore.optionsFor(messages)"
             :dependent-ids="selectionStore.dependentIds"
+            :guardian-mode="guardianMode"
+            :guardian-checked="selectionStore.guardianAuthorization"
             @select-time="selectTime"
+            @toggle-guardian="selectionStore.setGuardianAuthorization"
             @inc="applyQuantity({ delta: 1 })"
             @dec="applyQuantity({ delta: -1 })"
             @set-qty="(raw) => applyQuantity({ raw })"

@@ -610,6 +610,19 @@ class SidebarBundleBudgetTest extends TestCase
      * cuatro copias— y su botón reutiliza `forgot.title`, que ya viajaba. El interruptor de marketing
      * se metió DENTRO de la tarjeta de consentimientos, que ya existía, en vez de estrenar una.
      * ⚠️ **Se sube a 269 y no a 272**: queda **0,74 KiB**.
+     * ▶ **265 (la T6 del justificante, `specs/waiver-por-reserva.md` §12.2).** Medido con la rama
+     * sola: **262,95 → 264,53 KiB (+1,58)**. Lo que compra es **la PUERTA por la que se entra a la
+     * feature**, que hasta ahora no existía: la casilla «viene un menor que no está a mi cargo» en el
+     * paso de la cantidad —y la nota equivalente en un producto que lo exige, como una excursión de
+     * colegio—. Sin ella, el subsistema entero seguía sin que nadie pudiera activarlo: el enlace tenía
+     * tres consumidores en todo el repo y ninguno lo OFRECÍA (§12.1).
+     *
+     * ⚠️ **Aquí NO hubo poda que valiera, y se midió antes de decirlo.** La única disponible dentro de
+     * la rama era pasar el modo como una cadena en vez de dos booleanos resueltos: **270,88 → 270,78
+     * kB, o sea 0,10 KiB**, a cambio de meter en el componente la lectura del enum que hoy resuelve
+     * quien tiene el catálogo delante. *Una poda que no llega al 7 % de lo que ahorra el techo no es
+     * una poda: es empeorar el diseño y seguir necesitando el techo.*
+     * ⚠️ **Se sube a 265 y no a 270.** Queda **0,47 KiB**: la misma estrechez, a propósito.
      */
     private const SIDEBAR_CHUNK_MAX_KB = 269;
 

@@ -68,9 +68,24 @@ const props = defineProps({
     dependentOptions: { type: Array, default: () => [] },
     /** Los ids ya marcados para esta línea en construcción. */
     dependentIds: { type: Array, default: () => [] },
+    /**
+     * El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2): el modo del
+     * producto (`none` · `optional` · `required`) y lo que el cliente lleva marcado.
+     *
+     * ⚠️ **Llega el MODO y no dos booleanos resueltos, y la primera versión hacía lo contrario.**
+     * Se cambió al medirlo contra `SidebarComponentBudgetTest`: tres props costaban una línea más de
+     * la excepción declarada y 0,10 KiB de chunk, a cambio de nada. Elegir cuál de tres pantallas se
+     * pinta leyendo un enum que el servidor ya sanea **no es decidir una regla** (`CE-4`) — es lo
+     * mismo que hace `v-if="isPack"` tres bloques más abajo.
+     *
+     * ⚠️ Un modo desconocido no pinta nada, que es el estado correcto: las dos ramas comparan contra
+     * un literal y no hay `v-else`.
+     */
+    guardianMode: { type: String, default: 'none' },
+    guardianChecked: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['select-time', 'inc', 'dec', 'set-qty', 'update-field', 'choose-addon', 'toggle-addon', 'inc-addon', 'dec-addon', 'toggle-dependent']);
+const emit = defineEmits(['select-time', 'inc', 'dec', 'set-qty', 'update-field', 'choose-addon', 'toggle-addon', 'inc-addon', 'dec-addon', 'toggle-dependent', 'toggle-guardian']);
 
 const t = (key) => translate(props.messages, key);
 const tp = (key, params) => translateWith(props.messages, key, params);
@@ -207,6 +222,32 @@ const toggleInfo = (id) => {
         <DependentPicker v-if="! isPack && dependentOptions.length"
                          :options="dependentOptions" :selected="dependentIds" :quantity="quantity" :messages="messages"
                          @toggle="$emit('toggle-dependent', $event)" />
+
+        <!--
+          El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2,
+          `[DECIDIDO owner, 2026-09-01]`). Va justo DEBAJO del selector de menores a cargo porque es
+          la misma pregunta vista del otro lado: ahí se dice quiénes de los que vienen son tuyos, y
+          aquí que viene alguien que no lo es.
+
+          ⚠️ **Dos formas y no una casilla con texto distinto**: `optional` PREGUNTA (el cliente es el
+          único que lo sabe) y `required` INFORMA (el producto ya lo sabe, y no hay nada que decidir).
+          Pintar `required` como una casilla marcada e inerte invita a intentar desmarcarla.
+
+          ⚠️ **Se pinta también sin sesión y sin menores declarados**, a diferencia del selector de
+          arriba: el caso que originó esta feature es el amigo del hijo, y quien lo trae puede no
+          tener ningún menor a cargo dado de alta (`specs/waiver-por-reserva.md` §1.5).
+        -->
+        <div v-if="guardianMode === 'required'" class="guardnote" data-guardian-note>
+            <p class="guardnote__text">{{ t('guardian_required') }}</p>
+        </div>
+        <label v-else-if="guardianMode === 'optional'" class="guardnote guardnote--ask" data-guardian-ask>
+            <input type="checkbox" class="guardnote__box" :checked="guardianChecked"
+                   @change="$emit('toggle-guardian', $event.target.checked)">
+            <span class="guardnote__body">
+                <span class="guardnote__label">{{ t('guardian_optional') }}</span>
+                <span class="guardnote__help">{{ t('guardian_optional_help') }}</span>
+            </span>
+        </label>
 
         <!-- Campos del evento del pack: data-driven por instalación, así que el esquema llega del
              servidor y aquí solo se pinta el control que cada tipo pide. -->

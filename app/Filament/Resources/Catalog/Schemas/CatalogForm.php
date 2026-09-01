@@ -255,6 +255,23 @@ class CatalogForm
                             TicketType::UNIT_HOURS => __('admin.catalog.min_advance_units.hours'),
                         ]),
                 ]),
+
+                // EL JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2,
+                // `[DECIDIDO owner, 2026-09-01]`). Vive AQUÍ y no en la sección del pack a propósito:
+                // el caso que originó la feature —el amigo del hijo— son ENTRADAS sueltas, y la
+                // sección del pack solo se ve en packs (§1.5: «no puede apoyarse en nada que solo
+                // tengan los packs»).
+                Select::make('guardian_authorization')
+                    ->label(__('admin.catalog.field_guardian_authorization'))
+                    ->helperText(__('admin.catalog.guardian_authorization_hint'))
+                    ->native(false)
+                    ->selectablePlaceholder(false)
+                    ->default(TicketType::GUARDIAN_NONE)
+                    // Derivadas de la constante y no escritas a mano: es la lección de
+                    // `fieldTypeOptions()` de aquí al lado, donde dos listas copiadas divergieron.
+                    ->options(collect(TicketType::GUARDIAN_MODES)
+                        ->mapWithKeys(fn (string $mode): array => [$mode => __('admin.catalog.guardian_modes.'.$mode)])
+                        ->all()),
             ]);
     }
 

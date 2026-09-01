@@ -307,4 +307,17 @@ return [
         'for' => 'Para:',
         'age' => ':age años',
     ],
+
+    /*
+     * El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2).
+     *
+     * ⚠️ El texto NO dice «waiver» ni «justificante offshore»: dice el CASO. Quien compra no conoce
+     * nuestro vocabulario, y «un menor que no está a tu cargo» es lo que reconoce en su vida.
+     *
+     * ⚠️ Y no promete que se firme AHORA: se dice cuándo llega el enlace, porque el correo sale al
+     * quedar pagado y prometerlo antes deja al cliente esperando algo que no ha pasado.
+     */
+    'guardian_optional' => 'Viene un menor que no está a mi cargo',
+    'guardian_optional_help' => 'Su padre, madre o tutor tendrá que firmar una autorización. Al terminar la compra te enviamos el enlace para pasárselo.',
+    'guardian_required' => 'Cada menor de esta reserva necesita la autorización firmada de su padre, madre o tutor. Al terminar la compra te enviamos el enlace para repartirlo.',
 ];

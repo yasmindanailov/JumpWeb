@@ -4462,6 +4462,29 @@ body[data-has-hero] .nav--over .nav__cta {
     background: var(--bg-soft); border: 1px solid var(--line);
     color: var(--fg); border-radius: var(--r-md); padding: 14px 18px; font-size: 14px; margin: 0 0 18px;
 }
+/* T8 — el desenlace se DISTINGUE. Antes los cinco estados salían con el mismo gris: «tu autorización
+   ha quedado registrada» y «no hemos podido comprobar que no eres un robot, así que NO hemos
+   registrado nada» se leían idénticos, y el segundo es el que la T2 arregló precisamente para que se
+   viera. ⚠️ El color va con el BORDE y no solo con el fondo: es lo que se sigue distinguiendo con un
+   filtro de daltonismo y en una pantalla al sol. */
+.guardian__notice--ok { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 10%, transparent); }
+.guardian__notice--bad { border-color: var(--err); background: color-mix(in srgb, var(--err) 10%, transparent); }
+/* El ordinal del paso. Es un `<span>` DENTRO del `<h2>` y no un `::before` con `content`: un contador
+   de CSS no llega al árbol de accesibilidad, y aquí el número es parte de lo que se lee («1 · datos
+   del menor»), no decoración. */
+.gf-group__num {
+    display: inline-grid; place-items: center;
+    width: 26px; height: 26px; margin-right: 8px; vertical-align: 2px;
+    border-radius: 50%; background: var(--fg); color: var(--bg);
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0;
+}
+/* El selector de menores a cargo (§12.5). Va SEPARADO de los campos que rellena —caja propia sobre
+   el segundo tono— porque no es un dato que se envíe: es un atajo. Confundirlo con un campo del
+   formulario haría pensar que hay que elegir algo. */
+.guardian__pick {
+    margin-bottom: 16px; padding: 14px 16px;
+    border: 1px dashed var(--line-strong); border-radius: var(--r); background: var(--bg-soft);
+}
 /* El texto se lee EN EL PROPIO FLUJO (§4.4): con altura acotada y su propio scroll, para que un
    waiver largo no empuje la casilla y el botón fuera de la pantalla. */
 .guardian__waiver {
@@ -4815,7 +4838,11 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 
 .gf-group { padding: 30px 0; border-top: 1px dashed var(--line-strong); }
 .gf-group:first-of-type { border-top: none; padding-top: 26px; }
-.gf-group__head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+/* ⚠️ **`flex-wrap` lo pidió una CAPTURA, no un test** (T8 del justificante): con un titular largo
+   —«Descargo de responsabilidad»— y la versión del documento a su derecha, en un teléfono el título
+   se estrangulaba a tres líneas rotas («Descargo / de / responsabilidad») mientras el rótulo de la
+   versión ocupaba su columna. Ninguna guarda mira anchos; esto solo se ve mirando. */
+.gf-group__head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
 .gf-group__title { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: 24px; letter-spacing: -0.02em; line-height: 1; margin: 0; }
 .gf-group__opt { font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); margin-left: auto; align-self: center; }
 
@@ -5674,6 +5701,33 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     font-family: var(--font-body); font-size: var(--fs-10); font-weight: 500;
     color: var(--fg-mute);
 }
+
+/* ── El JUSTIFICANTE de un menor invitado, en el paso de la cantidad ────────────────────────
+   (`specs/waiver-por-reserva.md` §12.2, `[DECIDIDO owner, 2026-09-01]`).
+
+   Va debajo de `.dep-pick` y **repite su forma a propósito**: son la misma pregunta por sus dos
+   caras —quiénes de los que vienen son tuyos, y que viene alguien que no lo es—, así que inventar
+   aquí una tarjeta distinta las separaría visualmente sin motivo. Es literalmente cómo murió el
+   sistema de sombras de `#196`: una forma nueva por cada sitio.
+
+   ⚠️ **`--ask` es la que se PUEDE pulsar y la otra no**, y por eso solo aquélla lleva `cursor` y
+   `:hover`: una afordancia sin consumidor es el defecto de `#295`. La nota de `required` informa. */
+.guardnote {
+    margin-top: var(--sp-10);
+    padding: var(--sp-10) var(--sp-12);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    background: var(--bg-soft);
+}
+.guardnote--ask { display: flex; align-items: flex-start; gap: var(--sp-10); background: var(--bg-card); cursor: pointer; }
+.guardnote--ask:hover { border-color: var(--line-strong); }
+/* El área táctil de 44 la da el propio bloque, que es alto: la casilla no la necesita aparte
+   (`#264`). `margin-top` la alinea con la primera línea del rótulo, no con el centro del bloque. */
+.guardnote__box { margin-top: 2px; flex-shrink: 0; }
+.guardnote__body { display: flex; flex-direction: column; gap: var(--sp-4); }
+.guardnote__label { font-family: var(--font-body); font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); }
+.guardnote__help { font-family: var(--font-body); font-size: var(--fs-12); line-height: 1.4; color: var(--fg-mute); }
+.guardnote__text { margin: 0; font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.45; color: var(--fg); }
 
 /* ── El QR de puerta, presentado como CREDENCIAL ────────────────────────────────────────────
    (encargo del owner, 2026-08-28: «esa presentación del QR la quiero más profesional, mejor

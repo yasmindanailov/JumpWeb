@@ -201,7 +201,26 @@ class OrderInfolist
     {
         return Section::make(__('admin.orders.guest_minors.section'))
             ->collapsible()
-            ->visible(fn (Order $record): bool => app(GuardianRoster::class)->countFor((int) $record->getKey()) > 0)
+            // ❗❗ **ESTO ERA UN HUEVO Y UNA GALLINA, y lo encontró el owner probándolo**
+            // (`specs/waiver-por-reserva.md` §12.1·a). La condición era `countFor(...) > 0`, con el
+            // botón «Copiar enlace para los padres» DENTRO: la sección solo aparecía cuando ya había
+            // un justificante firmado, y para que hubiera uno hacía falta el enlace. En un pedido
+            // nuevo el operador **no tenía por dónde empezar**.
+            //
+            // ▶ *El razonamiento de la condición vieja era bueno para una sección de LECTURA —«en un
+            // pedido normal no existe, en vez de existir vacía»— y no vio que dentro había la única
+            // ACCIÓN del subsistema.* Una condición de visibilidad escrita para lo que se lee acaba
+            // escondiendo lo que se hace.
+            //
+            // ⚠️ **Y la puerta nueva NO es «siempre»**: la sección existe si el pedido tiene
+            // justificantes (hay algo que leer) **o** si se compró con la marca puesta (hay algo que
+            // repartir). Un pedido normal sigue sin ella, que era la parte buena de la regla vieja.
+            //
+            // ⚠️ Que el operador pueda copiar el enlace de un pedido SIN marcar es el caso 2 del
+            // propio owner —«un cliente que no sabía que se necesita justificante»— y se resuelve en
+            // la lista de líneas, no aquí: allí el icono aparece en toda reserva de un pedido pagado.
+            ->visible(fn (Order $record): bool => app(GuardianRoster::class)->countFor((int) $record->getKey()) > 0
+                || $record->needsGuardianAuthorization())
             ->schema([
                 View::make('filament.orders.partials.guest-minors'),
             ]);

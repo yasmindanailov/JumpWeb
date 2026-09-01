@@ -275,6 +275,16 @@ class OrderCreator
                     // arriba— y viaja en el `create()`: una fila y su sello nacen en la misma
                     // sentencia. `null` para una entrada: solo un pack tiene veredicto.
                     'age_family_seal' => $this->sealer->build($type, $slot->date)?->toArray(),
+                    // El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2, T6).
+                    //
+                    // ⚠️⚠️ **Las TRES ramas las decide el SERVIDOR y ninguna se cree la cesta sin más**
+                    // (regla 12): `required` marca la línea aunque el cliente no pida nada —si esto
+                    // saliera de la casilla, una excursión de colegio se compraría sin justificantes
+                    // quitando un `input` del DOM—; `optional` es lo único donde manda el cliente,
+                    // porque es lo único que solo él sabe (viene un amigo de su hijo); y con `none`
+                    // lo que llegue se IGNORA, que es la respuesta correcta a un campo manipulado.
+                    'guardian_authorization' => $type->requiresGuardianAuthorization()
+                        || ($type->offersGuardianAuthorization() && (bool) ($line['guardian_authorization'] ?? false)),
                 ];
 
                 // Complementos ANIDADOS de esta línea (#87): sin franja/aforo. Resueltos de forma

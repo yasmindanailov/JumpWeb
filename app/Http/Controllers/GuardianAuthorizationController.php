@@ -9,6 +9,7 @@ use App\Domain\Identity\Exceptions\GuardianAuthorizationExistsException;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationRefusedException;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\GuardianAuthorization;
+use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\GuardianAuthorizationSigner;
 use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\WaiverAcceptance;
@@ -69,13 +70,62 @@ class GuardianAuthorizationController extends Controller
             // que manda está en el dominio, bajo el lock.
             'blocked' => $this->blockedReason($context),
             'relationships' => Dependent::RELATIONSHIPS,
+            // §12.4 (`[DECIDIDO owner, 2026-09-01]`) — **QUIÉN RESPONDE del menor durante la visita**.
+            // Un padre que firma esto está confiando a su hijo a un adulto que no es él, y hasta ahora
+            // la pantalla no decía ni quién era.
+            //
+            // ⚠️⚠️ **Nombre y TELÉFONO, nunca el correo.** El enlace lo reparte el propio responsable
+            // por WhatsApp a gente que no conocemos: su buzón no tiene por qué viajar con él. El
+            // teléfono sí, porque es lo que permite localizarle el día de la visita — que es
+            // exactamente para lo que un padre lo quiere.
+            //
+            // ⚠️ **«Apellidos del responsable» NO EXISTE y no es una omisión de esta pantalla**:
+            // `users` tiene UNA sola columna `name` (verificado sobre el esquema). Partirla por el
+            // primer espacio sería fabricar un apellido en una pantalla que acompaña a una prueba
+            // legal.
+            'responsible' => [
+                'name' => (string) ($order->user?->name ?? ''),
+                'phone' => (string) ($order->user?->phone ?? ''),
+            ],
             // §4.6: con sesión, los datos del adulto vienen rellenos. ⚠️ Iniciar sesión no cambia nada
             // más: no verifica, no enlaza la cuenta y el justificante sigue siendo puntual.
+            //
+            // ⚠️ **`guardian_name` recibe el nombre COMPLETO de la cuenta y el apellido queda vacío, y
+            // eso es un DEFECTO ASUMIDO, no un descuido**: el formulario parte nombre y apellidos en
+            // dos campos y la cuenta no los tiene partidos. Rellenar los dos partiendo por el primer
+            // espacio acertaría con «Ana López» y fallaría con «María del Carmen Ruiz Gil» — y quien
+            // firma no suele revisar lo que ya viene puesto. Se prellena lo que se sabe y se deja el
+            // resto a la persona.
             'prefill' => [
                 'guardian_name' => $user?->name,
                 'guardian_email' => $user?->email,
                 'guardian_phone' => $user?->phone,
             ],
+            // §12.5 — **con sesión, el menor se ELIGE en vez de teclearse.** `Dependent` tiene
+            // exactamente los cuatro campos que este formulario pide (nombre, apellidos, fecha de
+            // nacimiento y la relación con quien firma), así que un padre registrado rellena el bloque
+            // entero de un clic.
+            //
+            // ⚠️ **Esto NO enlaza la cuenta con la firma** (§4.3 lo prohíbe: una columna `ON DELETE
+            // SET NULL` no puede estar dentro de un hash que se verifica). Lo que se hace es COPIAR el
+            // dato, exactamente como el prellenado del adulto de aquí arriba. El justificante sigue
+            // siendo puntual y la prueba, la misma.
+            //
+            // ⚠️ Solo los que HOY son menores: un mayor de edad firma por sí mismo, y ofrecerlo aquí
+            // llevaría a un rechazo del validador con el nombre ya puesto.
+            'dependents' => $user === null ? [] : app(DependentRegistry::class)
+                ->activeFor($user)
+                ->filter(fn (Dependent $d): bool => $d->isMinor())
+                ->map(fn (Dependent $d): array => [
+                    'id' => (int) $d->getKey(),
+                    'name' => (string) $d->name,
+                    'surname' => (string) $d->surname,
+                    'born_on' => $d->born_on?->toDateString(),
+                    'relationship' => (string) $d->relationship,
+                    'label' => $d->fullName(),
+                ])
+                ->values()
+                ->all(),
             'formAction' => URL::temporarySignedRoute(
                 'reservation.authorization.store',
                 $context->linkExpiresAt,

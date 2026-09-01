@@ -24,6 +24,7 @@ use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Orders\Pages\Concerns\AssignsDependents;
 use App\Filament\Resources\Orders\Pages\Concerns\ManagesItemCalendar;
 use App\Filament\Resources\Orders\Pages\Concerns\PresentsOrderActions;
+use App\Notifications\GuardianAuthorizationRequest;
 use App\Notifications\GuestFormRequest;
 use App\Notifications\OrderCancelled;
 use App\Notifications\OrderConfirmation;
@@ -531,6 +532,9 @@ class ViewOrder extends ViewRecord
             // post-form (relleno o no — el operador puede reenviarlo si el cliente perdió el email).
             Order::RESEND_TYPE_GUEST_FORM => $record->guestFormItems()
                 ->each(fn (OrderItem $reservation) => $user->notify(new GuestFormRequest($reservation))),
+            // El enlace del JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.3).
+            // UNO por pedido —es «el papelito de la excursión»— y al titular, que es quien lo reparte.
+            Order::RESEND_TYPE_GUARDIAN => $user->notify(new GuardianAuthorizationRequest($record)),
         };
     }
 
@@ -1040,6 +1044,59 @@ class ViewOrder extends ViewRecord
      * ⚠️ Va por PEDIDO y no por línea, a diferencia del post-form: es «el papelito de la excursión»,
      * uno solo.
      */
+    /**
+     * **Mandarle al cliente el enlace del justificante, desde su propia reserva** (la T7 de
+     * `specs/waiver-por-reserva.md` §12.3). Es el caso 2 del owner con sus palabras: *«el operador
+     * puede desde la página de esa reserva generar enlace de justificante, se lo envía al cliente y
+     * que el cliente se lo envíe al padre de ese menor»*.
+     *
+     * ⚠️ **No es una acción nueva de envío: reutiliza `dispatchResend()`**, y con ella el permiso, el
+     * rastro en `audit_logs` y la revalidación de `canResend()`. Un segundo camino que mandara correos
+     * sin pasar por ahí sería un correo sin registro — y el registro es lo que permite responder a
+     * «¿se le mandó?» seis meses después.
+     *
+     * ⚠️ Pide confirmación: manda un correo de verdad a una persona de verdad.
+     */
+    public function sendGuardianLinkAction(): Action
+    {
+        return Action::make('sendGuardianLink')
+            ->requiresConfirmation()
+            ->modalHeading(__('admin.orders.guest_minors.send_heading'))
+            ->modalDescription(fn (): string => __('admin.orders.guest_minors.send_description', [
+                'email' => (string) ($this->record->user?->email ?? ''),
+            ]))
+            ->action(function (): void {
+                $record = $this->record->fresh();
+
+                // La MISMA puerta que el reenvío genérico (defensa en profundidad, patrón `#128`):
+                // entre pintar el botón y pulsarlo, el pedido puede haberse cancelado.
+                if (! $record->canResend(Order::RESEND_TYPE_GUARDIAN)) {
+                    $this->logBlocked('orders.email_resent_blocked', $record, 'event_did_not_happen');
+                    Notification::make()->danger()->title(__('admin.orders.actions.resend.blocked'))->send();
+
+                    return;
+                }
+
+                $this->dispatchResend($record, Order::RESEND_TYPE_GUARDIAN);
+
+                // Sin el correo del cliente en el payload (minimización RGPD): el `target` ya traza al
+                // destinatario mientras la cuenta exista, y deja de hacerlo al anonimizarla.
+                AuditLogger::log(
+                    action: 'orders.email_resent',
+                    target: $record,
+                    payload: ['order_code' => $record->code, 'type' => Order::RESEND_TYPE_GUARDIAN],
+                );
+
+                Notification::make()
+                    ->success()
+                    ->title(__('admin.orders.actions.resend.success', [
+                        'email' => $record->user?->email ?? '',
+                        'type' => __('admin.orders.actions.resend.types.'.Order::RESEND_TYPE_GUARDIAN),
+                    ]))
+                    ->send();
+            });
+    }
+
     public function copyGuardianLinkAction(): Action
     {
         return Action::make('copyGuardianLink')

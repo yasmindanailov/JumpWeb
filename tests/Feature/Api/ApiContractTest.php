@@ -82,7 +82,13 @@ class ApiContractTest extends TestCase
         // Y desde Fase 6 · menores a cargo (tanda 4) los menores para los que son las entradas: la
         // línea sin menores es la normal, y exigir el campo obligaría a mandar `dependent_ids: []` en
         // cada línea de cada presupuesto. Solo `POST /orders` lo lee; los demás lo validan e ignoran.
-        'CartLine' => ['event_data', 'addons', 'dependent_ids'],
+        // Y desde la T6 del justificante (`specs/waiver-por-reserva.md` §12.2) el
+        // `guardian_authorization`, por lo mismo y con un motivo propio: la línea SIN menores
+        // invitados es la abrumadora mayoría —exigirlo metería `false` en cada línea de cada
+        // presupuesto— y **ausente ya significa «no» en el servidor**, que es la lectura que hace
+        // todo cliente que no conozca el campo. Lo que sigue mordiendo es `additionalProperties:
+        // false`, que impide colar una variante mal escrita que el servidor ignoraría en silencio.
+        'CartLine' => ['event_data', 'addons', 'dependent_ids', 'guardian_authorization'],
         // Y otro cuerpo de PETICIÓN: en la disponibilidad la cesta es opcional de verdad —la
         // primera compra empieza sin nada elegido— y ausente equivale a vacía. Exigirla obligaría a
         // todo cliente a mandar `items: []` para preguntar por unas horas.

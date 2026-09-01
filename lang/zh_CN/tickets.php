@@ -69,4 +69,12 @@ return [
         'balance_expired' => '已过期，未付款',
         'balance_under_review' => '金额审核中',
     ],
+    /*
+     * 受邀未成年人的授权书(`specs/waiver-por-reserva.md` §12.2)。
+     * ⚠️ 文案只讲情境,不讲我们的术语:购买者不知道什么是「waiver offshore」,
+     * 但他认得「不在我监护之下的未成年人」。
+     */
+    'guardian_optional' => '有不在我监护之下的未成年人同行',
+    'guardian_optional_help' => '其父母或法定监护人需要签署一份授权书。购买完成后,我们会把链接发给您转交。',
+    'guardian_required' => '本预订中的每位未成年人都需要其父母或法定监护人签署的授权书。购买完成后,我们会把链接发给您分发。',
 ];

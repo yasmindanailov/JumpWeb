@@ -347,6 +347,9 @@ return [
             // debajo del mínimo la escala de tramos no baja más, y el operador tiene que saberlo
             // ANTES de vender, no al ver el total.
             'below_minimum_label' => 'Vender por debajo del mínimo del pack (queda registrado)',
+            'guardian_label' => 'Viene algún menor que no está a cargo del cliente',
+            'guardian_help' => 'Su padre, madre o tutor tendrá que firmar una autorización. Al cobrar le mandamos al cliente el enlace para pasárselo.',
+            'guardian_required' => 'Este producto necesita SIEMPRE la autorización firmada del padre, madre o tutor de cada menor. Al cobrar le mandamos el enlace al cliente.',
             'below_minimum_help' => 'El mínimo de este producto es :min. Al activarlo puedes bajar hasta 1; se cobra al precio del tramo más bajo y la excepción queda en el historial del pedido.',
             'below_minimum_active' => 'Mínimo rebajado a 1 (el del producto es :min). Se cobra al precio del tramo de :min y queda registrado.',
             'seats' => ':n plazas',
@@ -476,6 +479,7 @@ return [
             'guest_minor' => 'Menor',
             'guest_minor_guardian' => 'Autoriza',
             'guest_minor_state' => 'Justificante',
+            'guest_minors_overflow' => 'OJO: :count justificantes firmados para :capacity plazas del pedido. Revísalo con el responsable del grupo.',
             'guest_minor_waiver_current' => 'Firmado',
             'guest_minor_waiver_outdated' => 'Versión anterior — deja pasar',
             'guest_minor_waiver_missing' => 'FALTA',
@@ -798,6 +802,9 @@ return [
                     'cancellation' => 'Notificación de cancelación',
                     'payment_retry' => 'Recordatorio para completar el pago',
                     'guest_form' => 'Enlace del formulario de reserva',
+                    // ⚠️ Se ofrece en TODO pedido pagado, marcado o no: es la única salida del caso
+                    // «el cliente no sabía que hacía falta» (`specs/waiver-por-reserva.md` §12.3).
+                    'guardian' => 'Enlace del justificante de menores invitados',
                 ],
             ],
             'reasons' => [
@@ -1058,6 +1065,25 @@ return [
             'copy_link' => 'Copiar enlace para los padres',
             'modal_heading' => 'Enlace del justificante',
             'modal_description' => 'Compártelo con los padres o tutores de los menores invitados. Cada uno rellena SUS datos y no ve los de los demás.',
+            'btn_aria' => 'Enlace del justificante de menores invitados',
+            /*
+             * La T7 (`specs/waiver-por-reserva.md` §12.1, §12.6).
+             *
+             * ⚠️ `empty` existe porque la sección ya NO se oculta cuando no hay justificantes: antes
+             * se ocultaba **con el botón del enlace dentro**, así que en un pedido nuevo el operador
+             * no tenía por dónde empezar. Un estado vacío que dice qué hacer es la mitad útil de esta
+             * sección hasta que alguien firma.
+             *
+             * ⚠️ `overflow` es el aviso de §12.6: bajar la cantidad NO borra justificantes —son
+             * firmas con valor probatorio— así que un pedido puede acabar con más papeles que plazas.
+             * Antes no lo decía nadie y la hoja de sala imprimía los cincuenta tan tranquila.
+             */
+            'capacity' => '{1}:count plaza en el pedido|[2,*]:count plazas en el pedido',
+            'empty' => 'Todavía no ha firmado ningún padre o tutor. Cópiale el enlace al cliente o envíaselo para que lo reparta.',
+            'overflow' => 'Ojo: hay :count justificantes firmados y el pedido tiene :capacity plazas. No se borra ninguno (son firmas), pero conviene revisarlo antes de la visita.',
+            'send_link' => 'Enviárselo al cliente',
+            'send_heading' => 'Enviar el enlace del justificante',
+            'send_description' => 'Se le manda a :email un correo con el enlace para que lo reparta entre los padres de los menores invitados.',
         ],
         'copy_guest_form' => [
             'btn_aria' => 'Enlace del formulario de invitados',
@@ -1780,6 +1806,19 @@ return [
         'min_advance_units' => [
             'days' => 'días (no el mismo día)',
             'hours' => 'horas (antes de la franja)',
+        ],
+
+        /*
+         * El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2).
+         * Los rótulos hablan del CASO, no del mecanismo: quien configura un producto no tiene por qué
+         * saber qué es un «waiver offshore», pero sí sabe lo que es el amigo de su hijo.
+         */
+        'field_guardian_authorization' => 'Justificante para menores invitados',
+        'guardian_authorization_hint' => 'Para menores que NO son menores a cargo de quien reserva (el amigo del hijo, una excursión de colegio). Su padre, madre o tutor firma el descargo desde un enlace, sin necesitar cuenta.',
+        'guardian_modes' => [
+            'none' => 'No se ofrece',
+            'optional' => 'Opcional: el cliente marca si viene alguno',
+            'required' => 'Obligatorio: este producto siempre lo necesita',
         ],
 
         'field_min_qty' => 'Mín. invitados',

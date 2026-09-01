@@ -99,6 +99,11 @@ final class CartPayload
             // e ignoran, y `toCart()` no se lo pasa a Booking (§4.6: Booking no conoce a los menores).
             $prefix.'.dependent_ids' => ['sometimes', 'array', 'max:'.self::MAX_LINES],
             $prefix.'.dependent_ids.*' => ['integer', 'min:1', 'distinct'],
+            // El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2): «viene un
+            // menor que NO está a mi cargo». Es FORMA —un booleano— y nada más: si el producto lo
+            // ofrece, si lo exige, o si esto se ignora por completo lo decide `OrderCreator` con el
+            // catálogo delante. Es el mismo reparto que `dependent_ids`.
+            $prefix.'.guardian_authorization' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -158,8 +163,12 @@ final class CartPayload
     /**
      * Una línea validada → la forma canónica del dominio.
      *
+     * ⚠️ `guardian_authorization` SÍ cruza a Booking, a diferencia de `dependent_ids`: aquello son
+     * personas de Identity —que Booking no conoce— y esto es una propiedad de la propia línea, como
+     * `event_data`. Lo que llega es lo que el cliente DIJO; lo que se guarda lo decide `OrderCreator`.
+     *
      * @param  array<string, mixed>  $item
-     * @return array{ticket_type_id:int, date:string, time:string, qty:int, event_data:array<string,mixed>, addons:array<int, array{ticket_type_id:int, qty:int}>}
+     * @return array{ticket_type_id:int, date:string, time:string, qty:int, event_data:array<string,mixed>, guardian_authorization:bool, addons:array<int, array{ticket_type_id:int, qty:int}>}
      */
     public static function toLine(array $item): array
     {
@@ -169,6 +178,7 @@ final class CartPayload
             'time' => self::normalizeTime((string) $item['time']),
             'qty' => (int) $item['quantity'],
             'event_data' => is_array($item['event_data'] ?? null) ? $item['event_data'] : [],
+            'guardian_authorization' => filter_var($item['guardian_authorization'] ?? false, FILTER_VALIDATE_BOOLEAN),
             'addons' => array_values(array_map(static fn (array $addon): array => [
                 'ticket_type_id' => (int) $addon['product_id'],
                 'qty' => (int) $addon['quantity'],

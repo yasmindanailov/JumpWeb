@@ -11,7 +11,16 @@
  */
 return [
     'title' => 'Autorización para menores',
-    'intro' => 'Rellena este formulario para autorizar la entrada de un menor a tu cargo. Lo ha preparado la persona que hizo la reserva.',
+
+    /*
+     * El RESGUARDO de la cabecera (T8, §12.4). Dice las dos cosas que un padre necesita saber antes
+     * de firmar: a qué visita va su hijo y CON QUIÉN.
+     */
+    'stub' => [
+        'badge' => 'Autorización de entrada',
+        'heading' => 'Autoriza a tu hijo o hija',
+        'lede' => 'Alguien ha reservado una visita al parque y tu hijo o hija va con el grupo. Para que pueda entrar necesitamos que lo autorices por escrito. Son dos minutos y no hace falta tener cuenta.',
+    ],
 
     'booking' => [
         'heading' => 'La reserva',
@@ -19,6 +28,9 @@ return [
         'date' => 'Día de la visita',
         'dates' => 'Días de la visita',
         'no_date' => 'Sin fecha asignada todavía',
+        // ⚠️ Se enseña el NOMBRE y el TELÉFONO de quien reservó, nunca su correo (§12.4,
+        // `[DECIDIDO owner]`): este enlace lo reparte él a gente que no conocemos.
+        'responsible' => 'Va con',
     ],
 
     'minor' => [
@@ -27,6 +39,10 @@ return [
         'surname' => 'Apellidos',
         'born_on' => 'Fecha de nacimiento',
         'born_on_help' => 'La usamos para saber su edad el día de la visita.',
+        // El selector de menores a cargo (§12.5), solo con sesión iniciada.
+        'pick' => 'Elige a tu hijo o hija',
+        'pick_manual' => 'Escribir los datos a mano',
+        'pick_help' => 'Son los menores que tienes declarados en tu cuenta. Al elegir uno se rellenan sus datos; puedes corregirlos.',
     ],
 
     'guardian' => [
@@ -71,7 +87,7 @@ return [
         'heading' => 'Por aquí no se puede firmar',
         'not_paid' => 'Esta reserva todavía no está confirmada. Habla con la persona que la hizo.',
         'closed' => 'La visita de esta reserva ya ha pasado, así que este formulario está cerrado.',
-        'full' => 'Esta reserva ya tiene todas sus autorizaciones. Si crees que falta la de tu hijo o hija, habla con la persona que hizo la reserva.',
+        'full' => 'Esta reserva no admite más autorizaciones: ya hay tantas firmadas como plazas compradas. Si falta la de tu hijo o hija, habla con la persona que hizo la reserva.',
     ],
 
     'errors' => [

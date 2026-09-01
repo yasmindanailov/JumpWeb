@@ -267,4 +267,12 @@ return [
         'for' => 'Pour :',
         'age' => ':age ans',
     ],
+    /*
+     * Le JUSTIFICATIF d'un mineur invité (`specs/waiver-por-reserva.md` §12.2).
+     * ⚠️ Le texte nomme le CAS et jamais notre vocabulaire : la personne qui achète ne sait pas ce
+     * qu'est un « waiver offshore », mais elle reconnaît « un mineur qui n'est pas à ma charge ».
+     */
+    'guardian_optional' => "Un mineur qui n'est pas à ma charge vient",
+    'guardian_optional_help' => "Son père, sa mère ou son tuteur devra signer une autorisation. À la fin de l'achat, nous vous envoyons le lien à lui transmettre.",
+    'guardian_required' => "Chaque mineur de cette réservation a besoin de l'autorisation signée de son père, sa mère ou son tuteur. À la fin de l'achat, nous vous envoyons le lien à partager.",
 ];

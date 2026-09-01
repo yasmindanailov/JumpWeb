@@ -313,6 +313,9 @@ return [
             'guests' => '人数',
             'qty_out_of_range' => '数量必须在 :min 到 :max 之间。',
             'below_minimum_label' => '低于套餐最低人数销售(留有记录)',
+            'guardian_label' => '有并非客户监护的未成年人同行',
+            'guardian_help' => '其父母或法定监护人需要签署一份授权书。收款后我们会把链接发给客户转交。',
+            'guardian_required' => '本产品始终需要每位未成年人的父母或法定监护人签署授权书。收款后我们会把链接发给客户。',
             'below_minimum_help' => '本产品的最低人数为 :min。启用后最低可降至 1;按最低档价格计费,该例外会记入订单历史。',
             'below_minimum_active' => '最低人数已降至 1(本产品为 :min)。按 :min 档价格计费并留有记录。',
             'seats' => ':n 个空位',
@@ -427,6 +430,7 @@ return [
             'guest_minor' => '未成年人',
             'guest_minor_guardian' => '授权人',
             'guest_minor_state' => '授权书',
+            'guest_minors_overflow' => '注意:已签授权书 :count 份,而订单只有 :capacity 个名额。请与团队负责人核对。',
             'guest_minor_waiver_current' => '已签署',
             'guest_minor_waiver_outdated' => '旧版本 — 可放行',
             'guest_minor_waiver_missing' => '缺失',
@@ -647,6 +651,7 @@ return [
                     'cancellation' => '取消通知邮件',
                     'payment_retry' => '完成付款提醒邮件',
                     'guest_form' => '预订表单链接',
+                    'guardian' => '受邀未成年人授权书链接',
                 ],
             ],
             'reasons' => [
@@ -809,6 +814,15 @@ return [
             'copy_link' => '复制给家长的链接',
             'modal_heading' => '授权书链接',
             'modal_description' => '分享给受邀未成年人的家长或监护人。每人只填写自己的资料，看不到他人的。',
+            'btn_aria' => '受邀未成年人授权书链接',
+            // T7(`specs/waiver-por-reserva.md` §12.1、§12.6):空状态告诉操作员该做什么,
+            // 溢出提示则是因为下调数量不会删除已签授权书——那是有证据效力的签名。
+            'capacity' => '{1}订单共 :count 个名额|[2,*]订单共 :count 个名额',
+            'empty' => '还没有任何家长或监护人签署。把链接复制给客户,或直接发给他去分发。',
+            'overflow' => '注意:已签授权书 :count 份,而订单只有 :capacity 个名额。不会删除任何一份(它们是签名),但请在参观前核对。',
+            'send_link' => '发送给客户',
+            'send_heading' => '发送授权书链接',
+            'send_description' => '将向 :email 发送一封含链接的邮件,由他分发给受邀未成年人的家长。',
         ],
         'copy_guest_form' => [
             'btn_aria' => '宾客表单链接',
@@ -1387,6 +1401,19 @@ return [
         'min_advance_units' => [
             'days' => '天(当天不可)',
             'hours' => '小时(时段开始前)',
+        ],
+
+        /*
+         * 受邀未成年人的授权书(`specs/waiver-por-reserva.md` §12.2)。
+         * ⚠️ 这里必须有:`fallback_locale` 是 `en`,而 `lang/en/admin.php` 并不存在,
+         * 所以缺失的键会原样显示键名,而不是回退到西班牙语。
+         */
+        'field_guardian_authorization' => '受邀未成年人授权书',
+        'guardian_authorization_hint' => '适用于并非预订人监护子女的未成年人(孩子的朋友、学校郊游)。其父母或法定监护人通过链接签署免责声明,无需注册账户。',
+        'guardian_modes' => [
+            'none' => '不提供',
+            'optional' => '可选:由客户勾选是否有此类未成年人',
+            'required' => '必须:本产品始终需要',
         ],
 
         'field_min_qty' => '最少人数',
