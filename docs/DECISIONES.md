@@ -19321,3 +19321,19 @@ permisivo · `/api/v1/config` publica la `turnstile_site_key` · cero rastros aj
 menú sin `menu__n` y sin enlaces a `/servicios` · recuento en BD: 53 ajustes · 19 productos ·
 5 páginas · 5 usuarios · 3 versiones del documento. Suite local completa en verde antes del
 despliegue (`OnlineSalesSwitchTest` + `CookiePolicyContentTest` re-apuntada).
+
+## #326 · 2026-09-01 · El CTA doble arranca con la CUENTA expandida sin sesión y con COMPRAR con sesión
+
+**`[DECIDIDO owner]`** (día del lanzamiento): *«sin sesión, el botón abierto es Registro y el cerrado
+Reservar; con sesión, el abierto es Reservar — para que los clientes se registren rápido y ya»*.
+Cambia el arranque fijado en `#8` («arranca EXPANDIDA en comprar»): aquel criterio era la jerarquía
+de compra; hoy, con la compra online cerrada (`#325`) y el registro como puerta del parque, lo que
+un cliente nuevo necesita al llegar es la cuenta.
+
+**Cómo**: el servidor dice el modo inicial en `<body data-cta-mode="account|buy">` (sesión → `buy`) y
+`$store.ctaPair.mode` lo lee al arrancar (sin atributo, `buy`, como siempre). El par sale ya pintado
+en ese modo (clase estática `cta-pair--account` sin sesión) para que no haya salto antes de Alpine.
+⚠️ **El `:class` del par pasa a sintaxis de OBJETO**: con la de array, Alpine solo retira las clases
+que él añadió y la estática se quedaría pegada al pulsar «Reservar». Guarda: caso nuevo en
+`ArmazonContractTest` (body + clase, sin y con sesión). Los dos sitios del par (cabecera y barra de
+móvil) heredan el cambio porque es el mismo store.

@@ -187,8 +187,14 @@
 > salen los correos del registro**); (3) añadir el usuario `playjump2_main` a la BD (la app corre con
 > el usuario del panel, que Enhance rota). ⚠️ **El commit de lanzamiento (`350e0a0`) NO incluye el
 > `#324` del otro carril** (precio por tramo): producción lleva el árbol anterior al rebase; el
-> siguiente `deploy.sh` lo subirá. ▶ Después de abrir: imágenes del menú, correos, traducción del
-> documento, Redsys real. ⚠️ Trampas pagadas (todas en `#325`): document root, `settings` no vacía
+> siguiente `deploy.sh` lo subirá. ▶ **Segundo despliegue (tarde, `684074a`)**: entra el `#324`, el
+> LOGOTIPO en correos/panel/pestaña del panel (`#325`) y **`#326`: el CTA doble arranca con la
+> CUENTA sin sesión y con COMPRAR con sesión** (`<body data-cta-mode>` → `$store.ctaPair`; `:class`
+> en sintaxis de objeto). Verificado: el registro de prueba del owner terminó de punta a punta
+> (correo verificado por el cron del panel, 1 firma). `THEME_FONTS` faltaba en el `.env` de
+> producción (fuentes del producto): corregido; las franjas se generaron a mano (3120) porque el
+> despliegue las generó con la BD aún vacía. ▶ Después de abrir: imágenes del menú, correos,
+> traducción del documento, Redsys real. ⚠️ Trampas pagadas (todas en `#325`): document root, `settings` no vacía
 > tras migrar (→ `REPLACE INTO`), `roles` vacía con `create-admin` callado, `psysh --execute` +
 > `require`.
 >

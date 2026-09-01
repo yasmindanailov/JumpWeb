@@ -1610,3 +1610,14 @@ así que retirarlo pide su propia pasada con la auditoría de `CONVENCIONES §3.
 - ⚠️ **Y una comprobación propia dio un falso negativo**: `alcanzable: false`, porque medía la
   posición del último ítem **sin desplazar** en vez de si la lista puede desplazarse. La lista sí
   tenía scroll. *Preguntar «¿está a la vista?» no es preguntar «¿se puede llegar?».*
+
+## 13 · El arranque del par depende de la SESIÓN (`#326`, 2026-09-01)
+
+`[DECIDIDO owner]` el día del lanzamiento, y **cambia el arranque de §8** («arranca EXPANDIDA en
+comprar»): **sin sesión el par arranca con la CUENTA expandida** —registrarse es lo primero que un
+cliente nuevo tiene que hacer para entrar al parque— y **con sesión, con comprar**. El modo lo dice el
+servidor (`<body data-cta-mode="account|buy">`), `$store.ctaPair` lo lee al arrancar, y el primer
+pintado ya sale en ese modo (clase estática `cta-pair--account` sin sesión). ⚠️ El `:class` del par
+va en **sintaxis de objeto**: con la de array Alpine no retira una clase estática y el par se quedaría
+pegado en cuenta al pulsar «Reservar». Los dos sitios (cabecera y barra de móvil) comparten el store,
+así que cambian a la vez. Guarda: `ArmazonContractTest::test_the_pair_starts_on_account_for_guests_and_on_buy_with_session`.

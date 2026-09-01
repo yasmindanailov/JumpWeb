@@ -1464,8 +1464,13 @@ document.addEventListener('alpine:init', () => {
      * de ser una invitación y pasa a ser ruido.
      */
     window.Alpine.store('ctaPair', {
-        /** `'buy'` (comprar expandido, el arranque) | `'account'` (la cuenta expandida). */
-        mode: 'buy',
+        /**
+         * `'buy'` (comprar expandido) | `'account'` (la cuenta expandida).
+         * El ARRANQUE lo dice el servidor (`<body data-cta-mode>`, 2026-09-01, `[DECIDIDO owner]`):
+         * sin sesión, `account` —registrarse es lo primero—; con sesión, `buy`. Sin el atributo
+         * (una plantilla que no lo emita), comprar, como siempre.
+         */
+        mode: (document.body && document.body.dataset && document.body.dataset.ctaMode === 'account') ? 'account' : 'buy',
         /** ¿Ha interactuado ya alguien con el par? Mientras sea `false`, la otra mitad invita. */
         touched: false,
         /** Expande una mitad. Cualquier uso del par apaga la invitación, se expanda lo que se expanda. */

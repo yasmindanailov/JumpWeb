@@ -55,9 +55,15 @@
     $etiquetaPrecio = $ctaMinPriceLabel ?? null;
 @endphp
 
-<div class="cta-pair {{ $s['racimo'] }}"
-     :class="[$store.ctaPair.mode === 'account' && 'cta-pair--account',
-              ! $store.ctaPair.touched && 'cta-pair--invita']">
+{{-- `[DECIDIDO owner, 2026-09-01]` (lanzamiento): SIN sesión el par arranca con la CUENTA
+     expandida —lo que un cliente nuevo necesita al llegar es registrarse— y CON sesión, con
+     comprar. El modo inicial lo dice el servidor (`<body data-cta-mode>` → `$store.ctaPair`), y
+     el primer pintado ya sale en ese modo (la clase estática) para que no haya salto antes de
+     Alpine. ⚠️ `:class` va en sintaxis de OBJETO a propósito: con la de array Alpine solo retira
+     las clases que él añadió, y la estática se quedaría pegada al pasar a comprar. --}}
+<div class="cta-pair {{ $s['racimo'] }}{{ auth()->check() ? '' : ' cta-pair--account' }}"
+     :class="{ 'cta-pair--account': $store.ctaPair.mode === 'account',
+               'cta-pair--invita': ! $store.ctaPair.touched }">
 
     {{-- ── MITAD A · COMPRAR. Va PRIMERA, y eso es del mockup ───────────────────────────────────
          Medido en `Landing PJP Modos`: su racimo es `[Reservar] [Registrarse] [Menú]`, con el

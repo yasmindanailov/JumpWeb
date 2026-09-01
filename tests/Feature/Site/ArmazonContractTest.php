@@ -1613,6 +1613,31 @@ class ArmazonContractTest extends TestCase
      *
      * @return list<\DOMElement>
      */
+    /**
+     * **El par ARRANCA con la cuenta expandida SIN sesión, y con comprar CON sesión**
+     * (`[DECIDIDO owner, 2026-09-01]`, `DECISIONES #326`; cambia el arranque de `#8`).
+     *
+     * Lo que un cliente nuevo necesita al llegar es registrarse, así que esa mitad es la ancha
+     * hasta que tiene cuenta. El modo lo dice el SERVIDOR en `<body data-cta-mode>` —el store lo
+     * lee al arrancar— y el primer pintado ya sale en ese modo (clase estática `cta-pair--account`
+     * en el par), para que no haya salto antes de que Alpine despierte.
+     *
+     * ⚠️ Se asevera el atributo del `<body>` Y la clase estática: con solo la clase, el JS podría
+     * arrancar en comprar y devolver el par al modo viejo un instante después de pintarse.
+     */
+    public function test_the_pair_starts_on_account_for_guests_and_on_buy_with_session(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        $this->assertStringContainsString('data-cta-mode="account"', $html, 'sin sesión el body no anuncia el modo cuenta');
+        $this->assertStringContainsString('cta-pair--account', $this->nodes($html, 'nav__pair')[0]->getAttribute('class'), 'sin sesión el par de la cabecera no arranca con la cuenta expandida');
+        $this->assertStringContainsString('cta-pair--account', $this->nodes($html, 'hero__pair')[0]->getAttribute('class'), 'sin sesión el par del hero no arranca con la cuenta expandida');
+
+        $user = User::factory()->create(['email_verified_at' => now()]);
+        $conSesion = $this->actingAs($user)->get('/')->assertOk()->getContent();
+        $this->assertStringContainsString('data-cta-mode="buy"', $conSesion, 'con sesión el body no anuncia el modo comprar');
+        $this->assertStringNotContainsString('cta-pair--account', $this->nodes($conSesion, 'nav__pair')[0]->getAttribute('class'), 'con sesión el par sigue arrancando con la cuenta expandida');
+    }
+
     private function nodes(string $html, string $class): array
     {
         $out = [];
