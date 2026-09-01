@@ -5,8 +5,8 @@
 > aquí solo se enlaza.** Última actualización: **2026-09-01 — TRES carriles a la vez.
 > **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2
 > (`#311`), T3·3 (`#312`) y T3·4 (`#315`, LA RETIRADA del modelo de dos ejes) EN EL ÁRBOL: CÓDIGO
-> COMPLETO; el owner lo leyó con once pedidos delante y decidió la T4 (`#316`), DISEÑADA en §6.4 y a
-> la espera de su ✅** — carril 3, abajo.
+> COMPLETO; el owner lo leyó con once pedidos delante y decidió la T4 (`#316`), DISEÑADA en §6.4 y
+> ✅ APROBADA: LA SIGUIENTE SESIÓN LA EJECUTA** — carril 3, abajo.
 > **MIXTOS**: T1→T5 en el árbol (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL
 > GUARDIÁN DE SOLAPES EN EL ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** —
 > siguen fuera por diseño la fase 3 de §20.2 y el AFORO (owner); la ficha del fantasma de la señal
@@ -96,16 +96,26 @@
 > huecos (`LB-ORDEN` Total −9,90 con el libro cerrando · `LB-PUERTA` liquidación inferida ·
 > `LB-REVISION` «no cuadra» sin acción)— para que el owner los mire en el panel y en el cajón; se
 > borran con `Order::where('code','like','LB-%')`.
-> ❗❗ **EL OWNER YA LOS LEYÓ y decidió (`DECISIONES #316`, 2026-09-01 por la mañana): la T4 del
-> libro está DISEÑADA en `specs/desglose-libro.md` §6.4 y ESPERA SU ✅ antes de escribir código**
+> ❗❗❗ **EL OWNER YA LOS LEYÓ y decidió (`DECISIONES #316`, 2026-09-01 por la mañana): la T4 del
+> libro está DISEÑADA en `specs/desglose-libro.md` §6.4 y APROBADA (*«SÍ, PROCEDEREMOS así»*,
+> D-T4·1 confirmado: el motivo es INTERNO). RETOMAR = EJECUTAR LA T4 tal como §6.4 la escribe**
 > — el MOTIVO manda en el reembolso («devolver lo debido» no puede exceder lo debido; «compensación»
 > con motivo obligatorio y la cortesía es el exceso; con `value_returned` NUNCA hay cortesía: cierra
 > `LB-ORDEN`) · la liquidación en el parque SIMÉTRICA (un «a devolver» con la visita pasada se da por
 > devuelto en recepción; la inferencia cede ante un reembolso posterior) · la línea se llama
 > «Descuento por cortesía» · cancelación: se verá en producción · «Regularizar»: aparcado (fichas en
 > `DEUDA.md`). ⚠️ Sigue ABIERTA una pregunta de presentación: plegar «Pagos y devoluciones» cuando
-> solo hay un cobro. ▶ Al retomar: si el owner da el ✅ a §6.4, la T4 se hace con sus seis guardas y
-> mutaciones; si veta alguna decisión derivada (D-T4·1…5), se corrige §6.4 antes. Y dos cosas que NO
+> solo hay un cobro. ▶ **Al retomar: hacer la T4** —los dos modales de `ViewOrder` (importe capado a
+> lo debido, opción deshabilitada con 0, `Textarea` de motivo obligatorio con «compensación», la
+> frase en vivo del exceso), el tope por motivo en `Order::executePartialRefund`/`executeFullRefund`
+> bajo lock (`exceeds_owed`), la cortesía SOLO con `compensation` y con el motivo en
+> `payment_refunds.reason` + `context.note`, D9 bis en `OrderBook::reservation()` («Devuelto en el
+> parque», `tickets.journal.gate_refund`), `Movement.note` interno (NO viaja por la API), la etiqueta
+> «Descuento por cortesía» en cuatro idiomas, `PAY-17`— con las SEIS guardas y mutaciones de §6.4;
+> después re-sembrar `LB-ORDEN` (tiene que ser IMPOSIBLE) y `LB-BAJADA` con la visita pasada, pasar
+> la sonda §5.sexies y borrar las tres sondas viejas (`T4-PRB01`, `R-IBX8B1`, `R-D3AN8Q`). `Order.php`
+> no está en el `CRITICAL_RE`: sin `VERIFY_CONC` salvo que se toque `MixedPartySurcharge`/
+> `OrderItemEditor`. Numera la decisión mirando el remoto: hoy chocó DOS veces. Y dos cosas que NO
 > son del libro pero quedaron escritas: la pregunta white-label de las fotos (`#313`) y el AFORO del
 > horizonte de franjas (`#307`).
 > ❗❗❗ **2026-09-01 (noche, 3.ª sesión) · T3·3 · LOS CORREOS PINTAN EL LIBRO; CAE EL TOPE DEL DESCUENTO**

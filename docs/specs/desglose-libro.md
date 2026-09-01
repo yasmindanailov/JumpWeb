@@ -2,9 +2,9 @@
 
 > Estado: ✅ **diseño aprobado por el owner** (2026-09-01) · ✅ **CÓDIGO COMPLETO — T1 (§6.1), T2
 > (§6.2), T3·1 (§6.3.1), T3·2 (§6.3.3), T3·3 (§6.3.5) y T3·4 (§6.3.7: la RETIRADA del modelo de dos
-> ejes) EN EL ÁRBOL** · 🟦 solo por el OJO del owner (§6.3.7, T3·4b) · ⬜ **T4 DISEÑADA, SIN
-> CÓDIGO (§6.4, `#316`: el motivo manda en el reembolso · liquidación simétrica · «Descuento por
-> cortesía») — espera el ✅ del owner** · Última actualización:
+> ejes) EN EL ÁRBOL** · 🟦 solo por el OJO del owner (§6.3.7, T3·4b) · ✅ **T4 DISEÑADA Y APROBADA
+> por el owner (2026-09-01), SIN CÓDIGO (§6.4, `#316`: el motivo manda en el reembolso · liquidación
+> simétrica · «Descuento por cortesía») — la siguiente sesión la ejecuta** · Última actualización:
 > 2026-09-01 · Decisiones: `DECISIONES #305` (la decisión de PRODUCTO), `#306` (T1), `#308` (T2),
 > `#310` (T3·1), `#311` (T3·2), `#312` (T3·3) y **`#315` (T3·4)** · **Sustituyó** al modelo de DOS
 > EJES de `specs/desglose-dinero-cliente.md` §10 (`DECISIONES #127`), que es 📜 HISTÓRICO: sus
@@ -1156,8 +1156,11 @@ pinta (`settled` · `under_review`).
 
 ### 6.4 · Diseño fino de la T4 (2026-09-01) — «el motivo manda» en el reembolso, y la liquidación simétrica
 
-> ⬜ **Diseñada, SIN código.** Nace de la primera lectura del owner sobre los once pedidos `LB-*`
-> (`VERIFICACION-E2E-CAJON.md` §5.sexies) y de sus cinco decisiones (`DECISIONES #316`). Espera su ✅.
+> ✅ **Diseño APROBADO por el owner el 2026-09-01** (*«SÍ, PROCEDEREMOS así»*), con **D-T4·1
+> confirmado explícitamente: el motivo es interno, el cliente NO lee el texto**. **SIN código
+> todavía**: la siguiente sesión la ejecuta tal como está escrita aquí, guardas y mutaciones incluidas.
+> Nace de la primera lectura del owner sobre los once pedidos `LB-*` (`VERIFICACION-E2E-CAJON.md`
+> §5.sexies) y de sus cinco decisiones (`DECISIONES #316`).
 
 **Lo que el owner decidió** (2026-09-01, con los pedidos delante):
 
@@ -1288,6 +1291,8 @@ devoluciones» cuando solo hay un cobro (pregunta abierta al owner, de presentac
   decisiones sobre lo que le chirriaba → `DECISIONES #316` y el diseño fino de la **T4** en §6.4
   (el motivo manda en el reembolso · liquidación simétrica · «Descuento por cortesía»; cancelación y
   regularización, aparcadas). **Espera su ✅ antes de escribir código.**
+- 2026-09-01 · **Owner**: *«SÍ, PROCEDEREMOS así»* — diseño de la T4 ✅, con D-T4·1 confirmado
+  (el motivo es interno). Sesión cerrada ahí: **la siguiente ejecuta la T4.**
 - Entradas: `DECISIONES #305` (la decisión de producto) · `#306` (la T1) · `#308` (la T2) · `#310`
   (la T3·1) · `#311` (la T3·2) · `#312` (la T3·3) · **`#315` (la T3·4)** · `#316` (las decisiones
   del owner tras los `LB-*`; la T4).

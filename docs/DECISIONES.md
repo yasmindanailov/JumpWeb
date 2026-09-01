@@ -18634,5 +18634,7 @@ explícito), la lista de lo que toca, seis guardas con sus mutaciones; correccio
 - El nombre importa: «Compensación» se leía como un reembolso; «Descuento por cortesía» dice que es
   una rebaja del Total.
 
-**Verificación**: ninguna de código (no lo hay). Doc coherente (`docs-check`). Sigue: el ✅ del owner
-sobre §6.4 y, con él, la T4.
+**Verificación**: ninguna de código (no lo hay). Doc coherente (`docs-check`).
+▶ **2026-09-01 (la misma mañana) · Owner: «SÍ, PROCEDEREMOS así»**, con D-T4·1 confirmado
+explícitamente —*«el motivo es interno, no se le enseña al cliente el texto»*— → **§6.4 ✅**. La
+sesión se cierra ahí; **la siguiente ejecuta la T4** tal como §6.4 la escribe.

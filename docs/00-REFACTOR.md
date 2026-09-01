@@ -2580,7 +2580,8 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
         guion headless del cajón (cuatro pedidos sembrados por `OrderCreator`, 17/17 ✓; ampliado a
         once pedidos con los siete de demostración, 54/54 ✓). ▶ **El owner ya los leyó** (`#316`).
   - [ ] **T4 · el motivo manda en el reembolso + la liquidación simétrica + «Descuento por cortesía»
-        — DISEÑADA (spec §6.4, `DECISIONES #316`), SIN código: espera el ✅ del owner.** Cierra
+        — DISEÑADA (spec §6.4, `DECISIONES #316`) y ✅ APROBADA por el owner el 2026-09-01 (D-T4·1
+        confirmado: el motivo es interno), SIN código: la siguiente sesión la ejecuta.** Cierra
         `LB-ORDEN` (la cortesía solo con `compensation` y con motivo; `value_returned` capado a lo
         debido, en el modal y bajo lock) y el «pendiente de devolución» eterno de una bajada con la
         visita pasada (D9 simétrica). Seis guardas con sus mutaciones previstas. Fuera, con ficha:
