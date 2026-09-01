@@ -3516,8 +3516,9 @@ semana por la mañana**, cuando el parque puede estar cerrado. Diseño y ejecuci
 `DECISIONES #322`, `#324` y `#327`.
 
 ▶ **Las tres tandas están hechas y el producto CREADO y PROBADO en navegador.** Lo único que queda de
-este carril es el OJO del owner; lo siguiente del encargo es **P3, la autorización de los padres**,
-que NO tiene spec todavía.
+este carril es el OJO del owner; lo siguiente del encargo es **P3, el justificante de un menor
+invitado**, que **YA TIENE SPEC** (`specs/waiver-por-reserva.md`, 2026-09-01) y que **resultó no ser
+de este carril**: es del waiver, no de las excursiones (§1.2 de la spec).
 
 - [x] **Tanda A · horario por zona.** Tres columnas nulables en `zones` (`null` = hereda el recinto,
       el mismo contrato que `max_per_slot`), `OperatingSchedule::effectiveForZone()` como método NUEVO
@@ -3541,7 +3542,23 @@ que NO tiene spec todavía.
       Lo vio el owner probándolo. La respuesta ya venía en el payload del endpoint de complementos.
       Y la cantidad **se escribe**: con mínimo 30, el `+` pedía treinta pulsaciones.
 - [ ] **El OJO del owner** sobre las tres tandas.
-- [ ] **P3 · la autorización de los padres a un tercero** — sin spec; es el carril siguiente.
+- [ ] **P3 · el justificante de un menor INVITADO a una reserva** («waiver offshore») — ⬜ **YA TIENE
+      SPEC**: `specs/waiver-por-reserva.md` (2026-09-01), diseño cerrado con **siete `[DECIDIDO owner]`**
+      y **cero código**. ❗ **§1.2 amplía el alcance que este tracker daba por hecho**: no es una feature
+      de excursiones de colegio, es del waiver — vale para cualquier reserva con un menor que no es
+      menor a cargo de quien reserva. ❗❗ **Aparece un SEGUNDO bloqueo estructural que no estaba medido**
+      (§1.4·b): `waiver_signatures.subject_id` tiene FK dura a `dependents`, así que un tercer sujeto no
+      puede reutilizarla. Y **el primero se disuelve** (§4.1): el `user_id` es *el que reserva* —el
+      responsable, decisión del owner—, así que la columna sigue `NOT NULL` y no hay migración
+      destructiva. ▶ **REVISADA de forma adversarial y CORREGIDA (§11)**: DOS BLOQUEANTES —la clave
+      de sujeto está cableada a `subject_id` en TRES sitios y con `NULL` los tres se cruzan, así que
+      **el segundo padre recibiría la firma del primero y su hijo se quedaría sin justificante, en
+      silencio**, y `WaiverChain` declararía ROTA una cadena sana— **y una afirmación central del
+      diseño que era FALSA** («no cambia una línea del mecanismo»). Más una FUGA: las firmas del
+      responsable salían en `GET /me/waiver` con el nombre del hijo de otro y su PDF servido. Todo
+      corregido; nueve `[DECIDIDO owner]`. ▶ Cuatro tandas en §8; la T1 (el dominio) va primero, **y
+      el acotado de las lecturas va DENTRO de ella** porque la fuga nacería con el dominio.
+      ▶ Pendiente: el ✅ del owner y el plazo de conservación (medido: hoy vale `NULL` y no se poda nada).
 
 ❗❗ **Lo que NO hubo que construir, y lo destapó el owner preguntando** («pero cumpleaños no tiene una
 opción así?»): `zones.max_per_slot` ya existía y ya era por zona, así que el tope de grupos por franja

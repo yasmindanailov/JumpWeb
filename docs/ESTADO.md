@@ -1,5 +1,24 @@
 # Estado del proyecto — foto viva
 
+🚧 **EN CURSO (2026-09-01, noche) — CARRIL P3 · EL JUSTIFICANTE DE UN MENOR INVITADO («waiver
+offshore»).** Sesión abierta por el owner en la máquina de sobremesa. ▶ **La SPEC está escrita,
+REVISADA de forma adversarial y CORREGIDA: `docs/specs/waiver-por-reserva.md`** (nueve `[DECIDIDO
+owner]`, cuatro tandas, **cero código**; pendiente solo del ✅ del owner). **Cuando pase a código
+toca**: `app/Domain/Identity/{Models,Services}`, una migración, `PurgeCustomerData`, `routes/console.php`
+y una ruta pública. **Si trabajas en otra máquina, no toques `WaiverSignature`, `WaiverSigner`,
+`WaiverChain`, `WaiverStatus`, `waiver_signatures` ni `PurgeCustomerData` sin avisar aquí.** El resto
+del repo (landing, panel, libro, mixtos) está libre.
+▶ ❗❗ **LA REVISIÓN ENCONTRÓ DOS BLOQUEANTES DEL DISEÑO Y UNA AFIRMACIÓN MÍA QUE ERA FALSA** («no
+cambia una línea del mecanismo existente»): la clave de sujeto está **cableada a `subject_id` en TRES
+sitios** y con `NULL` los tres se cruzan — la idempotencia de `WaiverSigner` devolvería la firma de
+OTRO menor (**el segundo padre se queda sin justificante, mudo**) y `WaiverChain` declararía ROTA una
+cadena sana. Todo corregido en la spec (§11).
+▶ **Y salen TRES fichas de `DEUDA.md` que NO son de esta feature**: (1) `declared_by_user_id` es
+`nullOnDelete` **y está dentro del hash** → borrar al operador pone `verifyHash()` en `false` sobre
+una firma que nadie tocó (Media, medido dos veces); (2) **`subject_name` es `varchar(120)` y el
+firmador corta a 255** → `1406` en MySQL y **verde en SQLite**, vivo hoy para menores a cargo (Media);
+(3) la IP/UA de un tercero bajo el `target` del titular en `audit_logs` (Baja).
+
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-09-01 (cierre de la tarde) — 🚀 LA WEB DEL 2.º
@@ -93,9 +112,22 @@
 > 30–100 personas, zona propia) que vienen **entre semana por la mañana**. Specs:
 > `horario-por-zona.md` y `precio-por-tramo.md`.
 >
-> ❗❗❗ **LO SIGUIENTE DE ESTE ENCARGO ES P3 — LA AUTORIZACIÓN DE LOS PADRES A UN TERCERO, Y NO TIENE
-> SPEC.** `[owner, 2026-09-01]`: se aplaza a la sesión siguiente. Lo que ya está decidido y medido, y
-> que quien lo retome NO tiene que volver a averiguar:
+> ✅ **P3 YA TIENE SPEC — Y RESULTÓ NO SER DE ESTE CARRIL**: `docs/specs/waiver-por-reserva.md`
+> (2026-09-01, siete `[DECIDIDO owner]`, cuatro tandas, **cero código**). ❗ **Su §1.2 corrige lo que
+> decían estas líneas**: no es una feature de excursiones de colegio, es del **WAIVER** — vale para
+> cualquier reserva con un menor que no es menor a cargo de quien reserva (el caso del owner: *«el
+> amigo de su hijo»*). Lo de abajo se conserva porque **sigue siendo cierto y la spec lo usa**, con
+> DOS correcciones que van DELANTE del texto:
+>   - ⚠️⚠️ **El bloqueo (a) SE DISUELVE, no se salva**: el `user_id` de la firma es **el que reserva**
+>     —el RESPONSABLE, que es lo que el owner decidió—, así que la columna sigue `NOT NULL`, la cadena
+>     sigue agrupando igual y **no hay migración destructiva** sobre una tabla con firmas en producción.
+>   - ⚠️⚠️ **Y aparece un SEGUNDO bloqueo que nadie había medido, que es el que de verdad decide el
+>     diseño**: `waiver_signatures.subject_id` tiene **FK dura a `dependents.id`**, así que un tercer
+>     tipo de sujeto **no puede reutilizar esa columna** — y quitarla sería regresar un endurecimiento.
+>     Va **columna propia**.
+>
+> ❗❗❗ **LO QUE ESTA SESIÓN DABA POR PENDIENTE DE P3** (`[owner, 2026-09-01]`, antes de la spec). Lo que
+> ya estaba decidido y medido, y que quien lo retome NO tiene que volver a averiguar:
 >   - **Se ancla al PEDIDO** (`[DECIDIDO owner]`), y el modelo mental es del propio owner: *«el
 >     papelito que el profesor reparte para que lo firme el padre»*. Los 100 niños de un colegio **NO
 >     son menores a cargo del tutor**: son nombres en una hoja firmada atada a ESA excursión. Eso
