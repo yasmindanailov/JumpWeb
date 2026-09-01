@@ -88,7 +88,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       REQUISITOS · MAPA-PAGINAS · OPERATIVA-SECTOR-ORIGEN · 8 docs de `sistemas/` ·
       **`MODELO-DATOS.md` regenerado desde el código** (30 modelos y las 71 migraciones de
       entonces; el recuento vivo lo verifica `docs-check`) ·
-      **`INVARIANTES.md`** destilado (54 entonces; hoy **59 invariantes de no-regresión**, el
+      **`INVARIANTES.md`** destilado (54 entonces; hoy **60 invariantes de no-regresión**, el
       recuento vivo lo verifica `docs-check`). Sin datos del cliente
       (verificado); cabecera «base heredada, verificar contra código» en todos. Índice en
       `docs/README.md` + tabla de enrutado en `CLAUDE.md`.
@@ -3507,6 +3507,33 @@ cita en prosa **no basta**: hay que quitar el import.
 
 **Verificación**: suite verde (3.749 / 24.498) · Pint ✓ · docs-check ✓ · mutaciones: la de la exención
 pone ROJAS las tres superficies (4 tests) y la del rol de puerta su guarda.
+
+### EXCURSIONES DE COLEGIO 🟦 — tanda A (horario por zona) en el árbol, `#322`, 2026-09-01
+
+El cliente vende excursiones de colegio (2 h y 3 h, 30–100 personas, zona propia) y **vienen entre
+semana por la mañana**, cuando el parque puede estar cerrado. Diseño y ejecución en
+`specs/horario-por-zona.md`; el porqué, en `DECISIONES #322`.
+
+- [x] **Tanda A · horario por zona.** Tres columnas nulables en `zones` (`null` = hereda el recinto,
+      el mismo contrato que `max_per_slot`), `OperatingSchedule::effectiveForZone()` como método NUEVO
+      —`effectiveFor()` sigue siendo la cara pública que ve la web— y tres consumidores re-apuntados.
+      `VERIFY_CONC=1` con los seis escenarios + Redsys.
+- [ ] **Tanda B · precio por TRAMO de cantidad.** Es DINERO: spec propia, `CRITICAL_RE`, `PAY-16/17`.
+      Uniforme (`[DECIDIDO owner]`: 70 a 13 € = 910 €, no escalonado). ⏸️ El 2x1 y «la tercera más
+      barata» quedan APARCADOS por el owner.
+- [ ] **Tanda C · el producto, que es DATO**: zona `excursiones`, dos productos como **`pack`**, los
+      tramos, la señal y el viernes en la tarifa `special` (para TODOS los productos).
+- [ ] **El OJO del owner** sobre la tanda A.
+
+❗❗ **Lo que NO hubo que construir, y lo destapó el owner preguntando** («pero cumpleaños no tiene una
+opción así?»): `zones.max_per_slot` ya existía y ya era por zona, así que el tope de grupos por franja
+es **configuración**. Igual `min_qty`/`max_qty`, `duration_min`, la señal y las tarifas de finde. *De
+toda la petición, lo único que faltaba de mecanismo era el horario.*
+
+⚠️⚠️ **Dos trampas pagadas**: (1) la spec afirmaba —medido y MAL— que los consumidores del horario
+eran DOS, y son TRES (`ProductAvailability::allowsStart()`, por donde pasan la oferta, el checkout,
+las ediciones y la re-programación); **lo cazó una GUARDA, no una lectura**. (2) `git checkout` para
+deshacer una mutación **con el trabajo sin commitear se lleva el trabajo** — la regla de `#181`.
 
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no

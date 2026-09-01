@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\SlotTemplate;
 use App\Domain\Booking\Models\Ticket;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\DisplayTime;
 use Carbon\Carbon;
@@ -19,6 +20,17 @@ use Illuminate\Support\Facades\DB;
  * `special_dates` → temporada → semanal). Fuente ÚNICA compartida por el comando CLI
  * `slots:generate` y el botón «Regenerar franjas» del panel (Fase 7.7 iter.3) — así la
  * lógica de generación no diverge entre la consola y la UI.
+ *
+ * ▶ **`#322` — el horario efectivo se resuelve POR ZONA** ({@see OperatingSchedule::effectiveForZone()},
+ * `specs/horario-por-zona.md`): una zona puede declarar su propia ventana y operar con el recinto
+ * cerrado, que es lo que las excursiones de colegio necesitan.
+ *
+ * ⚠️⚠️ **GENERAR Y PODAR TIENEN QUE LEER LA MISMA RESOLUCIÓN, y por eso `$wanted` se construye
+ * dentro del mismo bucle que genera.** Si divergieran, el generador crearía la franja de las 9:00 y
+ * `pruneDay()` la neutralizaría en la MISMA pasada por «no caber en el horario» — y con ventas
+ * dentro no la borraría sino que la CERRARÍA (`AFORO-04`), dejando una excursión vendida en una
+ * franja cerrada. No hay dos comprobaciones que sincronizar: hay una, y la poda consume su
+ * resultado.
  *
  * Es idempotente (clave única `zone_id+date+start_time`). Dos opciones gobiernan la
  * robustez frente a ediciones del operador:
@@ -57,36 +69,52 @@ class SlotGenerator
         $deleted = 0;
         $closed = 0;
 
+        // `#322`: el horario se resuelve POR ZONA, así que se memoiza por zona dentro del día —una
+        // plantilla por zona basta para pagarlo una vez— y las zonas se cargan de una sola consulta.
+        $zones = $templates->pluck('zone_id')->unique()->pipe(
+            fn ($ids) => $ids->isEmpty() ? collect() : Zone::whereIn('id', $ids)->get()->keyBy('id')
+        );
+
         foreach (CarbonPeriod::create($from, $to) as $day) {
-            $hours = $this->schedule->effectiveFor($day);
+            /** @var array<int, array{is_open: bool, open: string|null, close: string|null}> $hoursByZone */
+            $hoursByZone = [];
 
             /** @var array<string,true> $wanted claves "zone_id|start_time" que SÍ deben existir este día */
             $wanted = [];
 
-            if ($hours['is_open']) {
-                foreach ($templates->where('weekday', $day->dayOfWeek) as $template) {
-                    $start = Carbon::parse($template->start_time);
-                    $startStr = $start->format('H:i:s');
-                    $endStr = $start->copy()->addMinutes($template->duration_min)->format('H:i:s');
+            foreach ($templates->where('weekday', $day->dayOfWeek) as $template) {
+                // ⚠️⚠️ El horario se resuelve DENTRO del bucle porque cada zona puede tener el suyo
+                // (`#322`). Antes se resolvía una vez por día, fuera, y con `is_open` a false se
+                // saltaba el bucle entero: eso era exactamente lo que dejaba a las excursiones sin
+                // ni una franja el martes que el parque descansa.
+                $zoneId = (int) $template->zone_id;
+                $hours = $hoursByZone[$zoneId] ??= $this->schedule->effectiveForZone($day, $zones->get($zoneId));
 
-                    // Franja inválida que cruza medianoche (fin ≤ inicio): no se genera (el parque
-                    // no opera pasada la medianoche y un end_time < start_time rompería cálculos).
-                    if ($endStr <= $startStr) {
-                        continue;
-                    }
-
-                    // La franja debe caber dentro de la ventana del día (si está definida).
-                    if ($hours['open'] !== null && $startStr < $hours['open']) {
-                        continue;
-                    }
-                    if ($hours['close'] !== null && $endStr > $hours['close']) {
-                        continue;
-                    }
-
-                    $this->upsertSlot($template, $day->toDateString(), $startStr, $endStr, $preserveOverrides);
-                    $generated++;
-                    $wanted[$template->zone_id.'|'.$startStr] = true;
+                if (! $hours['is_open']) {
+                    continue;
                 }
+
+                $start = Carbon::parse($template->start_time);
+                $startStr = $start->format('H:i:s');
+                $endStr = $start->copy()->addMinutes($template->duration_min)->format('H:i:s');
+
+                // Franja inválida que cruza medianoche (fin ≤ inicio): no se genera (el parque
+                // no opera pasada la medianoche y un end_time < start_time rompería cálculos).
+                if ($endStr <= $startStr) {
+                    continue;
+                }
+
+                // La franja debe caber dentro de la ventana del día (si está definida).
+                if ($hours['open'] !== null && $startStr < $hours['open']) {
+                    continue;
+                }
+                if ($hours['close'] !== null && $endStr > $hours['close']) {
+                    continue;
+                }
+
+                $this->upsertSlot($template, $day->toDateString(), $startStr, $endStr, $preserveOverrides);
+                $generated++;
+                $wanted[$template->zone_id.'|'.$startStr] = true;
             }
 
             // La poda solo actúa de hoy en adelante (nunca reescribe el histórico).

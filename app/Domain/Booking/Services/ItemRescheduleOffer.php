@@ -102,10 +102,15 @@ class ItemRescheduleOffer
             ->orderBy('start_time')
             ->get();
 
+        // `#322`: la pregunta es si opera LA ZONA del ítem, no el recinto. Sin esto, las franjas de
+        // una zona con horario propio (las excursiones, que operan con el parque cerrado) EXISTEN y
+        // no se pueden usar para mover una reserva — el fallo que no rompe nada y no lo ve nadie.
+        $zone = $ticketType->zone;
+
         $valid = [];
         foreach ($slots->groupBy(fn (Slot $s) => $s->date->toDateString()) as $dateStr => $daySlots) {
             $dateCarbon = Carbon::parse($dateStr);
-            if (! $this->schedule->isOpenOn($dateCarbon)) {
+            if (! $this->schedule->isOpenOnForZone($dateCarbon, $zone)) {
                 continue;
             }
             $anyOperable = $daySlots->contains(
@@ -143,7 +148,9 @@ class ItemRescheduleOffer
         }
 
         $dateCarbon = Carbon::parse($date);
-        $isParkOpen = $this->schedule->isOpenOn($dateCarbon);
+        // `#322`: por ZONA, igual que en `selectableDates()`. Las dos preguntas tienen que dar la
+        // misma respuesta o el calendario ofrecería un día cuyas horas luego salen vacías.
+        $isParkOpen = $this->schedule->isOpenOnForZone($dateCarbon, $ticketType->zone);
         $currentSlot = $item->slot;
 
         $slots = Slot::query()

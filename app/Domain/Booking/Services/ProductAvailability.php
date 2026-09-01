@@ -31,7 +31,17 @@ class ProductAvailability
     /** ¿Se puede comprar/entrar $product en una franja que empieza a $startTime ('H:i:s') el día $date? */
     public function allowsStart(TicketType $product, CarbonInterface $date, string $startTime): bool
     {
-        $hours = $this->schedule->effectiveFor($date);
+        // ⚠️⚠️ `#322` — la ventana es la de LA ZONA DEL PRODUCTO, no la del recinto
+        // (`specs/horario-por-zona.md`). **Éste es el punto de estrangulamiento del horario en toda
+        // la venta**: por aquí pasan `SlotOffer` (la oferta pública), `OrderCreator` (el checkout),
+        // `OrderItemEditor` (las ediciones del panel) e `ItemRescheduleOffer`. Arreglarlo aquí los
+        // cubre a los cuatro; parchearlos uno a uno habría dejado tres caminos con el horario viejo.
+        //
+        // ▶ Lo destapó una GUARDA, no una lectura: la spec afirmaba —medido y mal— que los
+        // consumidores del horario eran DOS y que «`SlotOffer` y el checkout no lo consultan». Lo
+        // consultan, transitivamente, por aquí. Un `grep` de `OperatingSchedule` no encuentra a quien
+        // pregunta a través de un tercero.
+        $hours = $this->schedule->effectiveForZone($date, $product->zone);
         if (! $hours['is_open']) {
             return false;
         }

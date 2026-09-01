@@ -2,9 +2,9 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — CINCO carriles; el 5.º (PANEL:
-> la exención de un menor y el ROL DE PUERTA, `#320`) es el más reciente y su bloque está justo bajo
-> el contador vivo, seguido del 4.º (la PORTADA, `#319`).
+> aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — SEIS carriles; el 6.º
+> (EXCURSIONES DE COLEGIO, `#322`) es el más reciente y su bloque está justo bajo el contador vivo,
+> seguido del 5.º (PANEL: exención del menor y rol de puerta, `#320`) y el 4.º (la PORTADA, `#319`).
 > **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2
 > (`#311`), T3·3 (`#312`), T3·4 (`#315`, LA RETIRADA del modelo de dos ejes) Y LA T4 (`#317`, EL
 > MOTIVO MANDA en el reembolso · liquidación simétrica · «Descuento por cortesía») EN EL ÁRBOL, y
@@ -59,16 +59,63 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3761 en verde** (24.483 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
-> sobre el árbol CONJUNTO: `#321` (T9, un solo botón) rebasado sobre `#320` (rol de puerta).
-> ⚠️ **Medida DESPUÉS del rebase, no sumada**: la T9 sola sobre `#319` daba 3756 / 24.460 y el
-> árbol de `#320` sin la T9, 3756 / 24.534 — solo la medida conjunta vale.
+> Suite **3771 en verde** (24.506 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> sobre el árbol CONJUNTO: `#322` (horario por zona) rebasado sobre `#321` (T9, un solo botón) y `#320`.
+> ⚠️ **Medida DESPUÉS del rebase, no sumada**: por separado daban 3766 / 24.557 (horario por zona
+> sobre `#320`) y 3761 / 24.483 (la T9 sobre `#320`). **Solo la conjunta vale** — y las aserciones
+> BAJAN respecto a una de las ramas porque la T9 retiró casos al unificar botones.
 > - Antes, 3756 / 24.534 (`#320` sobre `#319`).
 > ⚠️ **No se suma, se mide** — y ⚠️⚠️ **tras un rebase que toque Vue hay que
 > `npm run build:ssr` ANTES de leer la suite**: sin eso salieron 35 rojos en
 > `SidebarDomContractTest` que no eran de ningún cambio.
 > - Antes, 3728 / 24.295 (`#315`, la T3·4 sobre el árbol conjunto), 3760 / 24.946 (`#314`, landing) y 3760 / 24.940 (`#313` y `#312`: la T3·4 retiró los
 >   dos tests de servicio del modelo viejo, −50, y sumó 18), 3758 / 24.958 (`#311`).
+>
+> ═══════════ ❗❗❗ CARRIL 6 · EXCURSIONES DE COLEGIO (2026-09-01, noche) — POR DÓNDE SE RETOMA ═══════════
+> **EN EL ÁRBOL: `#322`, la TANDA A — horario por zona.** El cliente vende excursiones de colegio (2 h
+> y 3 h, 30–100 personas, zona propia) y vienen **entre semana por la mañana**, cuando el parque puede
+> estar cerrado. Medido con sus datos (abre 10:00–21:00, martes cerrado): una excursión a las 9:00 o un
+> martes **no existía como franja**. Diseño y ejecución en `specs/horario-por-zona.md`.
+>
+> ❗❗ **LO QUE NO HUBO QUE CONSTRUIR, Y LO DESTAPÓ EL OWNER PREGUNTANDO** («pero cumpleaños no tiene una
+> opción así? x cumpleaños por franja?»): **`zones.max_per_slot` y `max_guests_per_slot` ya existían, ya
+> eran por zona y ya corrían bajo lock**. El tope «1 excursión por franja» es CONFIGURACIÓN. Y lo mismo
+> `min_qty`/`max_qty` (mínimo 30 / máximo 100), `duration_min` (2 h y 3 h), `deposit_type` (la señal) y
+> las tarifas de finde. **De toda la petición, lo único que faltaba de mecanismo era el horario.**
+> ▶ *Preguntar «¿esto no lo tenemos ya?» antes de diseñar valió media tanda.*
+>
+> ▶ **LO SIGUIENTE ES LA TANDA B: el PRECIO POR TRAMO DE CANTIDAD.** Es DINERO (`CRITICAL_RE`,
+> `PAY-16`/`PAY-17`, el libro del pedido) y va en spec propia. Lo decidido y medido para arrancarla:
+>   - **Precio UNIFORME, no escalonado** (`[DECIDIDO owner]`, con los dos números delante): 70 niños a
+>     13 € = **910 €**, no 30×15 + 40×13 = 970 €.
+>   - **Tramos del cliente** (2 h / 3 h × L-J / finde-festivo): 30 → 15/17 y 18/20 · 70 → 13/15 y 16/18
+>     · 100 → 12/14 y 15/16. **Es un RANGO y a la vez el MÍNIMO FACTURABLE**, configurable por producto.
+>   - **Por debajo de 30 y por encima de 100 NO se vende**: «ya toca llamar y preguntar».
+>   - ⚠️ **No existe HOY nada de descuentos**: `Content\Offer` es marketing («sin lógica de dinero»).
+>     El precio es hoy función de `(producto, tarifa-del-día)` — la cantidad **no es una dimensión**.
+>   - ⚠️ `order_items.unit_price` es **UNSIGNED**; el precedente de línea negativa es `is_credit` (T4).
+>   - ⏸️ **APARCADOS por el owner**: el 2x1 y «la tercera 10 € más barata». ⚠️ Medido: `free_quantity`
+>     YA existe y es el mecanismo natural del 2x1, pero hoy significa «incluido en el pack» de cara al
+>     cliente (`addonBadgeKey()`), así que reusarlo exige separar *cuántas gratis* de *por qué*.
+>
+> ▶ **Y LA TANDA C es DATO, sin código**: crear la zona `excursiones` (con `opens_at`,
+> `ignores_venue_closure` y `max_per_slot`), los dos productos como **`pack`** (`[DECIDIDO owner]`:
+> `min_qty` y el cupo de grupos SOLO funcionan siendo pack) y meter **el viernes en la tarifa
+> `special`** — que hoy son solo sábado y domingo, y el owner decidió que pasa a especial **para todos
+> los productos**, no solo excursiones.
+>
+> ⚠️ **QUEDA EL OJO DEL OWNER** sobre la tanda A (crear la zona en el panel y ver que el martes ofrece
+> franjas de excursión y ninguna de jump/kids).
+>
+> ❗❗ **DOS TRAMPAS QUE PAGÓ ESTA TANDA:**
+>   1. **Mi propia spec afirmaba, medido y MAL, que los consumidores del horario eran DOS.** Son TRES:
+>      `ProductAvailability::allowsStart()` lo consulta, y por él pasan `SlotOffer` (oferta pública),
+>      `OrderCreator` (checkout), `OrderItemEditor` e `ItemRescheduleOffer`. **Lo cazó una GUARDA, no
+>      una lectura**: el test se escribió, se ejecutó y falló con el producto ya «arreglado».
+>      ▶ *Un `grep` del servicio da los consumidores DIRECTOS y deja fuera a quien pregunta por un tercero.*
+>   2. ⚠️ **`git checkout <fichero>` para deshacer una mutación, con el trabajo sin commitear, se lleva
+>      el trabajo** (la regla de `#181`, pagada otra vez en pequeño). El arnés hace `git stash` sobre un
+>      commit de guardado.
 >
 > ═══════════ ❗❗❗ CARRIL 5 · PANEL: LA EXENCIÓN DEL MENOR Y EL ROL DE PUERTA (2026-09-01, noche) ═══════════
 > **EN EL ÁRBOL: `#320`.** Dos encargos de presentación del owner que resultaron ser uno solo.
@@ -117,13 +164,13 @@
 >     `waiver.retention_months`, que sigue **`[PENDIENTE: owner]`** y hará falta igual.
 >
 > ═══════════ ❗❗❗ CARRIL 4 · LA PORTADA (sesión del 2026-09-01, tarde) — POR DÓNDE SE RETOMA ═══════════
-> ❗❗❗ **2026-09-01 (noche) · LA AUDITORÍA DE DISEÑO Y SU PRIMERA TANDA (T9) EN EL ÁRBOL (`#321`).**
+> ❗❗❗ **2026-09-01 (noche) · LA AUDITORÍA DE DISEÑO Y SU PRIMERA TANDA (T9) EN EL ÁRBOL (`#322`).**
 > El owner pidió auditar el diseño con la skill `hallmark` (instalada en `~/.claude/skills/hallmark`;
 > el `npx` de Windows falla con EPERM, se instala clonando el repo) SIN workflow —⚠️ tercera vez que
 > lo pide: solitario por defecto—. El informe vive como ARTEFACTO «Un solo idioma» (3 críticos ·
 > 8 mayores · 6 menores, con temas T1–T7 y plan de tandas A–F): la tesis medida es que el «ruido»
 > NO viene de la decoración (la portada cumple su presupuesto) sino de DOS GENERACIONES del sistema
-> conviviendo. ▶ **T9 = tanda A del informe, HECHA** (`#321`, spec §3.undecies): un solo botón,
+> conviviendo. ▶ **T9 = tanda A del informe, HECHA** (`#322`, spec §3.undecies): un solo botón,
 > acción `--action` en toda la web `[DECIDIDO owner]`, hover sin salto, `bd-btn` absorbida, bloque
 > muerto `.invite-*` retirado (4 excepciones de guardas encogen), toggles con guion de diccionario.
 > Guarda `SingleButtonFamilyTest` (5/5 mutaciones muerden). ⚠️ `btn--zone` SIGUE en CSS a propósito:

@@ -10,6 +10,7 @@ use App\Domain\Booking\Contracts\WeeklyOpening;
 use App\Domain\Booking\Models\OpeningHour;
 use App\Domain\Booking\Models\Season;
 use App\Domain\Booking\Models\SpecialDate;
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Platform\Services\DisplayTime;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -24,6 +25,12 @@ use Illuminate\Support\Collection;
  * Fallback no destructivo: si no hay NADA configurado para un día, se considera abierto y
  * sin restricción de ventana (open/close = null), para no bloquear cuando el parque aún no
  * ha definido sus horarios reales [PENDIENTE]. El precio del día lo resuelve RateResolver.
+ *
+ * ▶ **Y desde `#322` responde también POR ZONA** ({@see effectiveForZone()}, `specs/horario-por-zona.md`):
+ * una zona puede declarar su propia ventana y operar con el recinto cerrado. **Son dos preguntas
+ * distintas y se sirven por métodos distintos a propósito**: `effectiveFor()` —y con él todo el
+ * contrato `OperatingCalendar`— es LA CARA PÚBLICA, lo que la web dice de los horarios del parque;
+ * la variante por zona solo la consumen el generador de franjas y la oferta de re-programación.
  */
 class OperatingSchedule implements OperatingCalendar
 {
@@ -84,6 +91,57 @@ class OperatingSchedule implements OperatingCalendar
     public function isOpenOn(CarbonInterface $date): bool
     {
         return $this->effectiveFor($date)['is_open'];
+    }
+
+    /**
+     * Horario efectivo de un día **PARA UNA ZONA** (`#322`, `specs/horario-por-zona.md` §4.3).
+     *
+     * Una zona puede declarar su propia ventana y operar en días en que el recinto está cerrado. El
+     * caso que lo motiva son las excursiones de colegio: vienen por la mañana entre semana, que es
+     * cuando hay colegio, y a esa hora el parque puede estar cerrado.
+     *
+     * El contrato es el de `zones.max_per_slot`: **`null` = hereda el recinto**, y cada extremo por
+     * separado (una zona puede abrir antes y cerrar a la vez que el parque).
+     *
+     * ⚠️⚠️ **NO se implementa como `effectiveFor($date, ?Zone $zone = null)`, y la duplicación de las
+     * dos primeras líneas es DELIBERADA.** Son dos preguntas distintas —«¿qué dice el parque?», que
+     * es lo que ve la web pública por {@see windowFor()}, y «¿qué puede hacer esta zona?», que solo
+     * mira la venta— y fundirlas en una firma con parámetro opcional es exactamente cómo un día
+     * alguien pasa una zona por el camino público y la landing anuncia que el parque abre a las 8:00.
+     *
+     * @return array{is_open: bool, open: string|null, close: string|null}
+     */
+    public function effectiveForZone(CarbonInterface $date, ?Zone $zone): array
+    {
+        $venue = $this->effectiveFor($date);
+
+        if ($zone === null) {
+            return $venue;
+        }
+
+        if (! $venue['is_open'] && ! $zone->ignores_venue_closure) {
+            return $venue;
+        }
+
+        $open = $zone->opens_at ?? $venue['open'];
+        $close = $zone->closes_at ?? $venue['close'];
+
+        // ⚠️ Con el recinto CERRADO no hay ventana que heredar (`open`/`close` valen null), así que
+        // una zona que ignora el cierre y no declara la suya caería en el fallback histórico de
+        // `effectiveFor()` —«abierto sin restricción»— y generaría TODAS sus plantillas del día. Es
+        // un caso real en cuanto alguien marque el interruptor sin poner horas: sin ventana propia
+        // en un día cerrado, la zona NO abre. Declararlo es lo que lo convierte en decisión.
+        if (! $venue['is_open'] && ($open === null || $close === null)) {
+            return ['is_open' => false, 'open' => null, 'close' => null];
+        }
+
+        return ['is_open' => true, 'open' => $open, 'close' => $close];
+    }
+
+    /** ¿Puede esta zona operar ese día? {@see effectiveForZone()}. */
+    public function isOpenOnForZone(CarbonInterface $date, ?Zone $zone): bool
+    {
+        return $this->effectiveForZone($date, $zone)['is_open'];
     }
 
     /** @return Collection<int, OpeningHour> */

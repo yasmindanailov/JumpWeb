@@ -18976,3 +18976,106 @@ el submit de contacto pasó de cian a `#F2711C` con hover `#D56319` (**el par ex
 los toggles con el guion de diccionario («CUM-PLEAÑOS»). ⚠️ El `#320` lo tomó el carril del panel
 mientras esta tanda estaba en obra: el número se eligió mirando el REMOTO tras `git fetch`, que es
 la regla que ya nos costó dos choques el 2026-08-31.
+
+---
+
+---
+
+## #322 · 2026-09-01 · Una ZONA puede tener su propio horario y operar con el recinto cerrado (tanda A de las excursiones de colegio)
+
+> ⚠️ Esta entrada nació como `#321` y se renumeró a `#322` al integrar: el carril del idioma visual
+> tomó el 321 mientras esto estaba en obra. **Tercera colisión de número en dos días** — el `git fetch`
+> antes de numerar no basta si la tanda dura más que la del otro carril; hay que RE-comprobar al cerrar.
+
+**Contexto.** El cliente quiere vender **excursiones de colegio** (dos productos de 2 h y 3 h, zona
+propia, grupos de 30 a 100). El owner preguntó: *«también debo añadir es fuera de horario y no sé
+cómo lo haríamos, las franjas van con el horario normal ¿no?»*.
+
+**Van con el horario normal, sí, y por eso no se podía.** Medido: `OperatingSchedule::effectiveFor()`
+recibe **una fecha y nada más** —el horario es del RECINTO, no de la zona— y `SlotGenerator` descarta
+toda plantilla que no quepa en esa ventana, sin generar NADA en día cerrado. Con los datos reales del
+cliente (abre 10:00–21:00, martes cerrado) una excursión a las 9:00 o un martes **no existía como
+franja**, así que no se podía ni vender.
+
+Diseño en `docs/specs/horario-por-zona.md`. **Tanda A**; la B (precio por tramo de cantidad) es
+dinero y va aparte.
+
+**Decisión** (`[DECIDIDO owner, 2026-09-01]`, tres preguntas con su coste delante):
+1. **Horario POR ZONA**, con el patrón que la tabla `zones` YA usa tres veces (`max_per_slot`,
+   `max_guests_per_slot`, `prep_blocks_cupo`): tres columnas nulables donde **`null` = hereda el
+   recinto**. Se descartó ampliar el horario del recinto porque **la web mentiría** —`HeroStatus`,
+   «Abierto ahora» y los horarios publicados salen del mismo sitio—.
+2. **La excursión SÍ puede caer en festivo**: la zona ignora el cierre del recinto ENTERO, por eso el
+   interruptor se llama `ignores_venue_closure`. ⚠️ Consecuencia declarada: un cierre por obras no
+   cerrará la zona solo; la salida es cerrar esas franjas a mano, que el generador **respeta para
+   siempre**.
+3. **La excursión es un producto `pack`.** Medido: `min_qty` **solo se aplica a los packs**
+   (`CartLineValidator::minimumQuantity()` devuelve 1 para una entrada) y `PackAvailability` **solo
+   cuenta filas `pack`**, así que el mínimo de 30 y el tope de grupos por franja **solo funcionan
+   siendo pack**. Trae además el bloque propio y el post-formulario de invitados, que es donde P3
+   colgará las autorizaciones de los padres.
+
+**Lo hecho.** Migración con las tres columnas; `OperatingSchedule::effectiveForZone()` /
+`isOpenOnForZone()` **como métodos NUEVOS, sin tocar `effectiveFor()`**; `SlotGenerator` resolviendo
+por zona dentro del bucle; `ItemRescheduleOffer` por zona en sus dos preguntas; y
+`ProductAvailability::allowsStart()` por zona. Guarda: `ZoneOwnScheduleTest`, 10 casos.
+
+### 1 · ❗❗ Lo que NO había que construir, y lo destapó el owner
+
+Este trabajo iba a ser el doble. La pregunta del owner —*«pero cumpleaños no tiene una opción así? x
+cumpleaños por franja?»*— lo partió por la mitad: **`zones.max_per_slot` y `max_guests_per_slot` ya
+existen, ya son por zona y ya corren bajo `lockForUpdate`**. O sea que «1 excursión por franja, como
+mucho 2» es **configuración**, no código — y yo lo había estimado como «mecanismo nuevo dentro del
+aforo, la zona más peligrosa del sistema».
+
+Y lo mismo con el resto: `min_qty`/`max_qty`, `duration_min`, `deposit_type`/`deposit_value` y las
+tarifas de finde (`RateType` `special`, donde entra el viernes **para todo el parque**,
+`[DECIDIDO owner]`) **ya existían**. De toda la petición, lo único que faltaba de mecanismo era el
+horario por zona. ▶ *Preguntar «¿esto no lo tenemos ya?» antes de diseñar vale más que diseñar bien.*
+
+### 2 · ⚠️⚠️ La afirmación de MI PROPIA SPEC que resultó FALSA, y la cazó una guarda
+
+La spec decía, medido y mal: **«los DOS consumidores que cambian, y por qué son exactamente dos»**, y
+afirmaba que **«`SlotOffer` y el checkout no consultan el horario»**.
+
+**Son TRES, y el tercero es el que importa.** `ProductAvailability::allowsStart()` resuelve
+`effectiveFor($fecha)`, y por ahí pasan **cuatro** superficies: `SlotOffer` (la oferta pública,
+`AFORO-02`), `OrderCreator` (el checkout), `OrderItemEditor` y `ItemRescheduleOffer`.
+
+▶ **No lo encontró una lectura: lo encontró el test de re-programación**, que se escribió, se ejecutó
+y **falló con el producto ya «arreglado»** — las franjas se generaban y la oferta seguía sin
+admitirlas. ▶ La lección: **un `grep` de `OperatingSchedule` da los consumidores DIRECTOS y deja
+fuera a quien pregunta a través de un tercero.** Arreglarlo en el punto de estrangulamiento cubre a
+los cuatro; parchearlos uno a uno habría dejado tres caminos con el horario viejo.
+
+### 3 · Los dos sitios donde esto se rompe en silencio (y sus guardas)
+
+1. **Generar y podar tienen que leer la MISMA resolución.** `pruneDay()` neutraliza «lo que no cabe
+   en el horario»: si generar mirara la zona y podar el recinto, el generador crearía la franja de
+   las 9:00 y la poda **la cerraría en la misma pasada** — y con ventas dentro la CERRARÍA en vez de
+   borrarla (`AFORO-04`), dejando una excursión vendida en una franja cerrada. No hay dos
+   comprobaciones que sincronizar: `$wanted` se construye dentro del bucle que genera.
+2. **Ignorar el cierre SIN declarar horas no puede abrir.** Con el recinto cerrado no hay ventana que
+   heredar (`open`/`close` valen `null`), así que la zona caería en el fallback histórico de
+   `effectiveFor()` —«abierto sin restricción»— y generaría TODAS sus plantillas del día. Es un caso
+   real en cuanto alguien marque el interruptor sin poner horas.
+
+⚠️ **`effectiveFor()` NO delega en `effectiveForZone($fecha, null)`**: la duplicación de sus dos
+primeras líneas es deliberada y va comentada. Son dos preguntas —«¿qué dice el parque?», que es lo
+que ve la web, y «¿qué puede hacer esta zona?»— y fundirlas en una firma con parámetro opcional es
+cómo un día alguien pasa una zona por el camino público y la landing anuncia que el parque abre a
+las 8:00.
+
+### 4 · ⚠️ La regla de `#181` pagada OTRA VEZ, en pequeño
+
+Al montar el arnés de mutación usé `git checkout <fichero>` para deshacer cada mutación **con el
+trabajo sin commitear**, y me llevé por delante los tres consumidores recién escritos. Se rehicieron
+desde el contexto y no se perdió nada, pero es exactamente lo que `#181` dejó anotado: **commitear en
+local ANTES de mutar**. El arnés definitivo hace `git stash` sobre un commit de guardado, no
+`checkout` sobre el vacío.
+
+**Verificación**: suite verde (**3.766 tests, 24.557 aserciones**) · Pint ✓ · docs-check ✓ ·
+**4 mutaciones, las 4 muerden** (la del generador tumba 4 casos) **con pasada de CONTROL** que
+confirma el árbol restaurado · **`VERIFY_CONC=1`: `purchase:verify-oversell` en los SEIS escenarios
+(`entry`, `pack`, `pack-guests`, `pack-prep`, `mixed`, `panel-edit`) y `redsys:verify-concurrency`,
+todos sobre InnoDB real** · queda el OJO del owner y la tanda B.

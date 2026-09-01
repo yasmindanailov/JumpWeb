@@ -45,6 +45,7 @@
 | `name`,`subtitle`,`description`,`age_label`,`age_range` | JSON i18n |
 | `area_sqm`,`rides_count` | uint nullable (display) |
 | `max_per_slot`,`max_guests_per_slot`,`prep_blocks_cupo` | **override por zona del cupo de packs**; `null` = usa settings globales `packs.*` (resuelve `App\Domain\Booking\Services\PackAvailability`) |
+| `opens_at`,`closes_at`,`ignores_venue_closure` | **override por zona del HORARIO** (`#322`, `specs/horario-por-zona.md`); `null` = hereda el del recinto — el MISMO contrato que la fila de arriba. Lo resuelve `OperatingSchedule::effectiveForZone()`, y por él pasan el generador de franjas, `ProductAvailability` (y con él la oferta, el checkout y las ediciones) y la re-programación. ⚠️ **La cara pública (`OperatingCalendar` → landing, «Abierto ahora», horarios publicados) sigue siendo el RECINTO**: si la zona se colara ahí, la web anunciaría horarios que el parque no tiene. ⚠️ `ignores_venue_closure` ignora el cierre ENTERO, también el de `special_dates` (`[DECIDIDO owner]`); cerrar un día concreto se hace cerrando esas franjas a mano, que el generador respeta para siempre |
 | `image` | ruta relativa a `public/` nullable |
 | `accent` | string default `jump` — **agrupación semántica, NO el color** (`DECISIONES #138`) · `color` char(7) hex nullable = el PRIMARIO de esta zona · `color_secondary` char(7) hex nullable = el acompañante; vacío ⇒ se usa el primario, **nunca el de otra zona** |
 | `is_active` | la zona OPERA (vende) · `show_in_landing` = se muestra en la landing (flags desacoplados) |
