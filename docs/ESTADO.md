@@ -71,7 +71,10 @@
 > §2; `api-v1.md` punto 97; `VERIFICACION-E2E-CAJON.md` §5.sexies «La T4 sobre los mismos pedidos»).
 > Suite: el CONTADOR de arriba · Pint · docs-check · **11/12 mutaciones con arnés de CONTROL** (la que
 > no muerde es a sabiendas: segunda capa) · **sonda headless 53/53** sobre los 11 `LB-*` · migración
-> corrida en local. Sin `VERIFY_CONC`: ningún fichero del `CRITICAL_RE` cambió.
+> corrida en local · build N/A (`pl-6` e `italic` ya estaban en el tema compilado; `public/build` no se
+> versiona) · `audit-clock` NO corrido a propósito (los fixtures nuevos son relativos, como sus vecinos,
+> o fijos en 2000-01-01; ninguno asevera un día concreto). Sin `VERIFY_CONC`: ningún fichero del
+> `CRITICAL_RE` cambió.
 > ▶ `value_returned` capado a lo debido (modal: `maxValue`, opción deshabilitada, la Σ de remanentes
 > tiene que caber; dominio: `exceeds_owed` bajo lock y ANTES de la pasarela, sin dejar ni la fila
 > `pending`) · `compensation` con motivo obligatorio (`payment_refunds.reason`, 5–200;
