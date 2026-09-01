@@ -52,13 +52,13 @@ class ManualOrderFulfiller
      * Crea y cobra al instante un pedido para `$customer` con el método indicado.
      *
      * @param  array<int, array{ticket_type_id:int, date:string, time:string, qty:int}>  $cart
-     * @param  bool  $allowBelowPackMinimum  `#328` — la excepción del operador para vender un pack
+     * @param  bool  $allowBelowPackMinimum  `#329` — la excepción del operador para vender un pack
      *                                       por debajo de su mínimo de invitados, YA resuelta contra
      *                                       el permiso por la página que llama (`SEC-04`: aquí no hay
      *                                       actor al que preguntárselo).
      *                                       ▶ Aquí se compone el {@see CounterSale} que baja al
      *                                       dominio: **este servicio ES el mostrador**, así que la
-     *                                       antelación mínima no ata (`#329`) sin que nadie tenga que
+     *                                       antelación mínima no ata (`#330`) sin que nadie tenga que
      *                                       pedirlo — quien llama no puede elegir eso, y es a
      *                                       propósito.
      *
@@ -148,7 +148,7 @@ class ManualOrderFulfiller
             ]);
         }
 
-        // `#327` — la excepción del mínimo se registra **solo cuando de verdad se usó** (un `false`
+        // `#329` — la excepción del mínimo se registra **solo cuando de verdad se usó** (un `false`
         // en cada pedido normal sería ruido que entierra la señal, D7) y se mide sobre lo ESCRITO
         // —las líneas del pedido ya creado— y no sobre la intención del formulario: *el rastro dice
         // qué se vendió, no qué se pidió*. `pack_min_qty` acompaña para que se sepa de qué mínimo se
@@ -172,7 +172,7 @@ class ManualOrderFulfiller
     }
 
     /**
-     * Las líneas del pedido que quedaron por debajo del mínimo de invitados de su pack (`#327`).
+     * Las líneas del pedido que quedaron por debajo del mínimo de invitados de su pack (`#329`).
      *
      * ⚠️ Un COMPLEMENTO también es una fila de `order_items`, pero nunca es `pack`, así que el
      * `isPack()` los deja fuera solo — la trampa de `#324`, donde un `instanceof` alcanzaba a los

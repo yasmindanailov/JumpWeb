@@ -268,7 +268,7 @@ class SlotOfferTest extends TestCase
     }
 
     /**
-     * ❗❗ **`#329` DA LA VUELTA A ESTE CASO, y la vuelta es la decisión, no un ajuste.**
+     * ❗❗ **`#330` DA LA VUELTA A ESTE CASO, y la vuelta es la decisión, no un ajuste.**
      *
      * Decía que con antelación mínima de 7 días el calendario del panel debe EMPEZAR después de la
      * ventana, dejándola bloqueada en gris. `[DECIDIDO owner, 2026-09-01]`: **la antelación mínima no

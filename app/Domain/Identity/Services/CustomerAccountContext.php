@@ -50,7 +50,7 @@ class CustomerAccountContext
      * `waiver.required` (modo interno y sin firma), `waiver.outdated` (firmado en una versión
      * anterior) y `waiver.documentId` (el vigente en el idioma de la petición, para `POST /me/waiver`).
      *
-     * ▶ **`#330` — y si el correo está VERIFICADO**, porque desde esa tanda el alta suelta abre sesión
+     * ▶ **`#331` — y si el correo está VERIFICADO**, porque desde esa tanda el alta suelta abre sesión
      * y el área de cuenta es donde se le pide al cliente que lo verifique. Antes no hacía falta: quien
      * llegaba aquí venía de una compra pagada (que verifica sola) o de pulsar el enlace del correo.
      *

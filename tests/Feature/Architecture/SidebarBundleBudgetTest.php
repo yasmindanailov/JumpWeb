@@ -529,7 +529,7 @@ class SidebarBundleBudgetTest extends TestCase
      * ⚠️ **Se sube a 260 y no a 265.** Queda **0,36 kB** de holgura, que es la misma estrechez que
      * tenía antes: lo siguiente que entre vuelve a tener que justificarse o podar.
      *
-     * ▶ **261 (`#328`), y esta es su justificación.** El área de cuenta gana el estado «aceptaste la
+     * ▶ **261 (`#329`), y esta es su justificación.** El área de cuenta gana el estado «aceptaste la
      * exención al registrarte y falta que verifiques tu correo», que antes NO existía en pantalla: se
      * le decía al cliente que no la había firmado y se le ofrecía un botón de firmar que solo podía
      * devolver 409 (`waiver_email_unverified`).
@@ -547,7 +547,7 @@ class SidebarBundleBudgetTest extends TestCase
      * rótulo más barato es el que ya está.*
      * ⚠️ **Se sube a 261 y no a 265.** Queda **0,68 KiB**: la misma estrechez de siempre.
      *
-     * ▶ **262 (`#330`/`#331`).** Medido con las dos ramas por separado: **260,47 → 261,12 KiB
+     * ▶ **262 (`#331`/`#332`).** Medido con las dos ramas por separado: **260,47 → 261,12 KiB
      * (+0,65)**. Lo que compra, y las tres cosas son capacidad que antes no existía:
      *  · el aviso de verificar el correo **dentro del cajón**, con su cuenta atrás, sus reenvíos
      *    restantes y su aviso de límite — la misma puerta que la pantalla del alta (`resendGate`), no

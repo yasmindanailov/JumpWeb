@@ -338,7 +338,7 @@ return [
             'quantity' => 'Cantidad',
             'guests' => 'Invitados',
             'qty_out_of_range' => 'La cantidad debe estar entre :min y :max.',
-            // `#327` — el gemelo de D7 al CREAR el pedido. La ayuda dice el precio a propósito: por
+            // `#329` — el gemelo de D7 al CREAR el pedido. La ayuda dice el precio a propósito: por
             // debajo del mínimo la escala de tramos no baja más, y el operador tiene que saberlo
             // ANTES de vender, no al ver el total.
             'below_minimum_label' => 'Vender por debajo del mínimo del pack (queda registrado)',
@@ -1614,7 +1614,7 @@ return [
             'orders_edit_event_data' => 'Editar datos del evento del pedido (homenajeado, edad, notas)',
             'orders_edit_guest_data' => 'Editar los datos por invitado desde el panel',
             'orders_edit_item' => 'Editar producto del pedido (fecha, cantidad, producto, datos, complementos)',
-            // `#327` — la CLAVE sigue diciendo `edit_item` y el rótulo ya no, a propósito: el permiso
+            // `#329` — la CLAVE sigue diciendo `edit_item` y el rótulo ya no, a propósito: el permiso
             // gobierna las DOS puertas (crear un pedido manual y editar una reserva) y renombrar la
             // clave obligaría a migrar la tabla de permisos y los roles ya asignados en la
             // instalación del cliente, a cambio de nada que el operador vea. Lo que el operador lee

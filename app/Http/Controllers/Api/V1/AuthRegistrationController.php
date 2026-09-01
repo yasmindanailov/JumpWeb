@@ -199,7 +199,7 @@ class AuthRegistrationController extends Controller
         // La cuenta recién creada ENTRA. Iniciar sesión es efecto del llamante, no del servicio
         // (spec §4.6.3), y solo se hace si hubo cuenta de verdad — un honeypot no identifica a nadie.
         //
-        // ▶ **`#330` — también en el alta SUELTA** (`[DECIDIDO owner, 2026-09-01]`: «al registrarse,
+        // ▶ **`#331` — también en el alta SUELTA** (`[DECIDIDO owner, 2026-09-01]`: «al registrarse,
         // directamente el usuario entra a su cuenta»). Antes solo entraba dentro de la compra, y el
         // alta suelta terminaba en una pantalla de «revisa tu correo» que es un callejón: sin sesión
         // no hay QR, y el QR es lo que identifica al cliente en la puerta. Lo que falta —verificar el
@@ -238,7 +238,7 @@ class AuthRegistrationController extends Controller
      */
     public function resendVerification(Request $request, SelfSignup $signup): Response
     {
-        // ⚠️ **Este endpoint sigue exigiendo el correo, y no se aflojó a propósito** (`#327`): su
+        // ⚠️ **Este endpoint sigue exigiendo el correo, y no se aflojó a propósito** (`#329`): su
         // cuerpo es el `EmailRequest` del contrato, COMPARTIDO con `auth/password/forgot`, así que
         // hacer el campo opcional aquí lo haría opcional también allí. Quien tiene sesión usa su
         // hermano autenticado `POST /me/email/resend`, que no necesita decir quién es.

@@ -100,7 +100,7 @@ class MeAccountContextTest extends ApiTestCase
             ->assertValidResponse(200)
             ->assertExactJson([
                 'first_name' => 'Grace',
-                // `#330`: el contexto dice si falta verificar el correo — desde que el alta suelta
+                // `#331`: el contexto dice si falta verificar el correo — desde que el alta suelta
                 // abre sesión, el área de cuenta es donde se le pide al cliente.
                 'email_verified' => true,
                 'upcoming_count' => 0,

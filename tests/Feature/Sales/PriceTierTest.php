@@ -123,12 +123,12 @@ class PriceTierTest extends TestCase
     }
 
     /**
-     * ❗❗ **`#327` CAMBIA LA RESPUESTA DE ESTE CASO, y el caso no era comprobable cuando se escribió.**
+     * ❗❗ **`#329` CAMBIA LA RESPUESTA DE ESTE CASO, y el caso no era comprobable cuando se escribió.**
      *
      * Hasta hoy decía que por debajo del primer tramo manda el precio de siempre, y su propio
      * comentario reconocía que «el mínimo del producto lo corta antes»: 29 personas en un pack de
      * mínimo 30 **no se podían vender**, así que la aserción describía una aritmética sin sujeto.
-     * Desde `#327` el operador SÍ puede vender por debajo del mínimo, y entonces la pregunta es de
+     * Desde `#329` el operador SÍ puede vender por debajo del mínimo, y entonces la pregunta es de
      * dinero real: `[DECIDIDO owner, 2026-09-01]` **se cobra el primer tramo**, no el precio base.
      *
      * La propiedad que lo resume, y la razón de que se asevere COMPARANDO en vez de con un literal:

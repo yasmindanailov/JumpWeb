@@ -334,7 +334,7 @@ class AuthRegistrationTest extends ApiTestCase
     // ── Contexto del alta ─────────────────────────────────────────────────────────────────────
 
     /**
-     * ❗❗ **`#330` DA LA VUELTA A ESTE CASO** (`[DECIDIDO owner, 2026-09-01]`: «al registrarse,
+     * ❗❗ **`#331` DA LA VUELTA A ESTE CASO** (`[DECIDIDO owner, 2026-09-01]`: «al registrarse,
      * directamente el usuario entra a su cuenta»).
      *
      * Decía que el alta suelta **no** abre sesión, y ese era el problema: terminaba en una pantalla

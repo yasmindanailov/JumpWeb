@@ -7,12 +7,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * **Toda clave de texto que una zona del cajón pide TIENE que llegarle** (`#332`).
+ * **Toda clave de texto que una zona del cajón pide TIENE que llegarle** (`#333`).
  *
  * ❗❗ **Por qué existe, y es un defecto que llegó al navegador del owner.** `i18n.js::t()` devuelve
  * `''` cuando la clave no está — a propósito: en producción un texto ausente no puede tumbar el
  * cajón. El precio es que **una clave equivocada no falla, se queda muda**, y eso salió a la calle en
- * `#331`: el aviso de «Debes verificar tu correo» y el botón de «Cerrar sesión» se pidieron como
+ * `#332`: el aviso de «Debes verificar tu correo» y el botón de «Cerrar sesión» se pidieron como
  * `account.verify.*` y `account.nav.*` cuando el prop `account` **ES YA** el grupo `account`, así que
  * la ruta buena era `verify.*` y `nav.*`. Medido: `data_get(__('account'), 'account.verify.pending_notice')`
  * devuelve **NULL**. El párrafo se pintó vacío y el botón sin rótulo.
@@ -20,7 +20,7 @@ use Tests\TestCase;
  * ⚠️⚠️ **Y lo que hace esta guarda distinta de mirar el fichero de idioma**: comprueba contra **el
  * payload que el servidor MANDA de verdad**, extraído del `data-boot` de una página con sesión. Hay
  * dos formas de quedarse mudo y solo una se ve leyendo `lang/`:
- *  1. la clave no existe (el fallo de `#331`);
+ *  1. la clave no existe (el fallo de `#332`);
  *  2. la clave existe **pero la poda del montaje la deja fuera** — el cajón recibe subgrupos
  *     recortados clave a clave (`layout.blade.php`) precisamente para no pagar bytes en cada página.
  * La segunda no la ve ningún `grep` en `lang/`, y es la que muerde al añadir un rótulo nuevo.
@@ -68,7 +68,7 @@ class SidebarTranslationKeysExistTest extends TestCase
                 '',
                 '▶ Dos causas posibles, y conviene distinguirlas antes de tocar nada:',
                 '  · la ruta está mal — el prop `account` ES YA el grupo `account`, así que se pide',
-                '    «verify.resend», NO «account.verify.resend» (el fallo de `#331`);',
+                '    «verify.resend», NO «account.verify.resend» (el fallo de `#332`);',
                 '  · la clave existe pero la PODA del montaje la deja fuera: mírala en',
                 '    `resources/views/components/layout.blade.php` y añádela ahí a propósito.',
             ],

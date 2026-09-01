@@ -364,7 +364,7 @@ class SidebarMountTest extends TestCase
 
         // ⚠️ **Y `verify` va podado clave a clave**, al revés que `login`, `register` y `forgot`: sus
         // 14 rótulos incluyen los de la PÁGINA de verificación de la web, que el cajón no pinta.
-        // ▶ **`pending_notice` entró a propósito el 2026-09-01** (`#330`): es el aviso del ÍNDICE DE
+        // ▶ **`pending_notice` entró a propósito el 2026-09-01** (`#331`): es el aviso del ÍNDICE DE
         // LA CUENTA para quien entró sin verificar, que desde esa tanda es todo el mundo que acaba de
         // registrarse. Va en `verify` y no en `privacy.waiver` porque el aviso es del CORREO — la
         // exención solo cambia la frase cuando además hay una esperando.
@@ -700,7 +700,7 @@ class SidebarMountTest extends TestCase
         // los 122 B del paginador, y por la misma razón.
         // **9.100 deja 83 B**: la holgura estrecha de siempre.
         //
-        // ⚠️ **9.100 → 9.200 el 2026-09-01, por FEATURE** (`#327`). Medido: **9.017 → 9.125 B**
+        // ⚠️ **9.100 → 9.200 el 2026-09-01, por FEATURE** (`#329`). Medido: **9.017 → 9.125 B**
         // (+108), y es UNA clave: `privacy.waiver.status_awaiting_verification`, la frase del estado
         // «la aceptaste al registrarte y falta que verifiques tu correo». Antes no existía ese estado
         // en pantalla: se le decía al cliente que no la había firmado, con un botón de firmar que
@@ -943,7 +943,7 @@ class SidebarMountTest extends TestCase
         // (1) Lo ESTRUCTURAL, que es lo que discrimina de verdad.
         // `waiver` entró a propósito el 2026-08-26 (`DECISIONES #163`, spec del waiver §4.8): cuatro
         // campos cortos, y el endpoint lo publica igual (`MeAccountContextTest`, contrato).
-        // ▶ **`email_verified` entró a propósito el 2026-09-01** (`#330`): desde esa tanda el alta
+        // ▶ **`email_verified` entró a propósito el 2026-09-01** (`#331`): desde esa tanda el alta
         // suelta ABRE SESIÓN, así que el área de cuenta es donde se le pide al cliente que verifique
         // su correo — y para pedírselo hay que saber si le falta. Es un booleano; el aviso que
         // sostiene le ahorra al cliente la pantalla sin salida en la que terminaba el alta.

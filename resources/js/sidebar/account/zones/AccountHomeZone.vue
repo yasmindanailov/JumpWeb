@@ -28,7 +28,7 @@ const props = defineProps({
     /** El grupo `ui`: el rótulo del spinner mientras la zona trae sus datos. */
     ui: { type: Object, default: () => ({}) },
     messages: { type: Object, default: () => ({}) },
-    /** `#331`: las rutas del servidor. Solo para el cierre de sesión, que navega a la home. */
+    /** `#332`: las rutas del servidor. Solo para el cierre de sesión, que navega a la home. */
     urls: { type: Object, default: () => ({}) },
 });
 
@@ -42,7 +42,7 @@ store.ensure();
 // repinta al conseguir sesión—, y la decisión de avisar vive en `account/waiver.js`, no aquí.
 const context = useAccountContextStore();
 
-// `#328`/`#330` — el aviso son DOS y dicen cosas distintas: `sign` lleva a firmar; `verify` es «te
+// `#329`/`#331` — el aviso son DOS y dicen cosas distintas: `sign` lleva a firmar; `verify` es «te
 // falta verificar el correo» y ofrece REENVIARLO, que es lo único que desbloquea la firma
 // (`POST /me/waiver` responde 409 sin el correo verificado). Cuál toca lo decide `waiver.js`.
 const auth = useAuthStore();
@@ -63,7 +63,7 @@ watch(notice, (n) => {
 
 const resend = () => auth.resendVerification({ api });
 
-// `#331` — **cerrar sesión DESDE aquí** (`[DECIDIDO owner]`). El botón del bloque `.acct` existe, pero
+// `#332` — **cerrar sesión DESDE aquí** (`[DECIDIDO owner]`). El botón del bloque `.acct` existe, pero
 // **dentro de esta sección ese bloque se colapsa** (modo `account`, medido en `VERIFICACION-E2E-CAJON`
 // V4: altura 0), así que el cliente entraba a su cuenta y se quedaba sin salida a la vista.
 // ⚠️ Se reutiliza `account/sign-out.js` ENTERO —el mismo que el bloque— y no un `<form>` con `@csrf`:
@@ -89,14 +89,14 @@ const leave = async () => {
     </p>
 
     <!--
-      El aviso del waiver (Fase 6) — y son DOS (`#327`):
+      El aviso del waiver (Fase 6) — y son DOS (`#329`):
        · `verify`: la aceptó al registrarse y falta que verifique su correo. Ofrece REENVIARLO, no
          firmar: `POST /me/waiver` responde 409 sin el correo verificado, así que el botón de firmar
          que había aquí solo podía dar error.
        · `sign`: hay que firmar o re-firmar. Lleva a la tarjeta de privacidad, como siempre.
     -->
     <!--
-      `#331` — **el aviso de verificar, DENTRO del cajón y con su hardening** (`[DECIDIDO owner]`):
+      `#332` — **el aviso de verificar, DENTRO del cajón y con su hardening** (`[DECIDIDO owner]`):
       el mensaje, el botón de reenviar con su cuenta atrás, cuántos reenvíos quedan y el aviso de
       límite alcanzado. Es la misma puerta que la pantalla del alta (`account/verify.js`), no un
       `disabled` escrito a mano.
@@ -169,7 +169,7 @@ const leave = async () => {
     </div>
 
     <!--
-      `#331` — la salida. Va DEBAJO de las tarjetas y como acción de texto, no como una tarjeta más:
+      `#332` — la salida. Va DEBAJO de las tarjetas y como acción de texto, no como una tarjeta más:
       las de arriba son sitios a los que se va, y esto no lleva a ninguna parte — es lo último que se
       hace, y una tarjeta idéntica a las otras invitaría a pulsarla mirando el icono.
     -->

@@ -101,7 +101,7 @@ class RateResolver
 
         // ⚠️ La regla de tramos (a quién se le preguntan, y con qué cantidad) vive ENTERA en
         // `TicketType::tierPriceCents()`: la exclusión de los complementos y el suelo de la escala
-        // en el mínimo contratable (`#327`). Estaba escrita aquí y en `priceCentsForRate()`, que son
+        // en el mínimo contratable (`#329`). Estaba escrita aquí y en `priceCentsForRate()`, que son
         // los dos caminos por los que se tarifica una línea de verdad — dos copias de una regla de
         // dinero es un sitio donde puede divergir sin que falle nada.
         if ($priceable instanceof TicketType) {

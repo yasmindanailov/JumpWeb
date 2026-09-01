@@ -330,7 +330,7 @@ class CreateManualOrderPage extends Page
                             ->live()
                             ->afterStateUpdated(function (Get $get, callable $set): void {
                                 $set('sel_time', null);
-                                // `#327`: el interruptor del mínimo se apaga al cambiar de producto —
+                                // `#329`: el interruptor del mínimo se apaga al cambiar de producto —
                                 // es una excepción sobre ESTE pack, no un modo del formulario. Va
                                 // ANTES del default de cantidad, que lee el suelo vigente.
                                 $set('sel_below_minimum', false);
@@ -409,7 +409,7 @@ class CreateManualOrderPage extends Page
                                 'help' => $this->timeFieldHelp(),
                             ]),
 
-                        // `#327` — el gemelo de D7 al CREAR: el interruptor solo se OFRECE con su
+                        // `#329` — el gemelo de D7 al CREAR: el interruptor solo se OFRECE con su
                         // permiso y con un mínimo que rebajar, y va ANTES del campo de cantidad
                         // porque es lo que decide su suelo. `live()` sin `onBlur` para que el campo
                         // de al lado se re-evalúe en el mismo gesto.
@@ -438,7 +438,7 @@ class CreateManualOrderPage extends Page
                             ->numeric()
                             // Min/máx aplicados en el campo (no solo al validar): packs respetan
                             // su rango [min_qty, max_qty]; entradas mínimo 1, sin tope.
-                            // `#327`: con el interruptor puesto el suelo es 1; el tope no se mueve.
+                            // `#329`: con el interruptor puesto el suelo es 1; el tope no se mueve.
                             ->minValue(fn (): int => $this->selectedMinQty())
                             ->maxValue(fn (): ?int => $this->selectedMaxQty())
                             ->default(1)
@@ -607,7 +607,7 @@ class CreateManualOrderPage extends Page
             // los copia) y nombres solo para el resumen del operador.
             'dependent_ids' => $dependentIds,
             'dependent_display' => $dependentDisplay,
-            // `#327`: la excepción se guarda POR LÍNEA, no como un modo del formulario — el operador
+            // `#329`: la excepción se guarda POR LÍNEA, no como un modo del formulario — el operador
             // la activó para ESTE pack. `create()` la vuelve a resolver contra el permiso.
             'below_minimum' => $type->isPack() && $qty < $type->contractableMinimum(),
         ];
@@ -1044,7 +1044,7 @@ class CreateManualOrderPage extends Page
             return;
         }
 
-        // `#327` — la excepción del mínimo se resuelve AQUÍ, en el punto de ejecución, y no en la
+        // `#329` — la excepción del mínimo se resuelve AQUÍ, en el punto de ejecución, y no en la
         // visibilidad del interruptor: `$this->cart` es estado de un componente Livewire y viaja al
         // navegador, así que un `below_minimum` a `true` puede llegar sin que nadie haya pulsado nada
         // (`SEC-04`, y la misma razón por la que `OrderItemEditor::edit()` re-exige el permiso pese a
@@ -1232,7 +1232,7 @@ class CreateManualOrderPage extends Page
     }
 
     /**
-     * `#327` — ¿se le puede OFRECER a este operador bajar del mínimo del pack al crear el pedido?
+     * `#329` — ¿se le puede OFRECER a este operador bajar del mínimo del pack al crear el pedido?
      *
      * Mismo trío que D7 en la edición (`ViewOrder::productAndQuantityFields()`): tiene que ser un
      * pack, tiene que haber un mínimo que rebajar y el operador tiene que tener el permiso.
@@ -1264,7 +1264,7 @@ class CreateManualOrderPage extends Page
             return 1;
         }
 
-        // `#327`: con la excepción activa el suelo baja a 1, nunca a 0 — por debajo de 1 no hay
+        // `#329`: con la excepción activa el suelo baja a 1, nunca a 0 — por debajo de 1 no hay
         // reserva que crear. El MÁXIMO no se toca (mismo reparto que D7).
         return $this->belowMinimumActive() ? 1 : $type->contractableMinimum();
     }
@@ -1289,7 +1289,7 @@ class CreateManualOrderPage extends Page
      */
     private function timeMap(): array
     {
-        // `#327`: el interruptor del mínimo entra en la CLAVE del memo. Sin él, activarlo no
+        // `#329`: el interruptor del mínimo entra en la CLAVE del memo. Sin él, activarlo no
         // recalcularía las horas y el operador seguiría viendo la lista filtrada por el mínimo — el
         // defecto que esta tanda existe para evitar, escondido en una caché.
         $belowMinimum = $this->belowMinimumActive();
@@ -1462,7 +1462,7 @@ class CreateManualOrderPage extends Page
 
         $this->offerableDatesFor = $id;
 
-        // `#329` — el mostrador ve TODOS los días con franja, incluidos los que la antelación
+        // `#330` — el mostrador ve TODOS los días con franja, incluidos los que la antelación
         // mínima del producto reserva al autoservicio. ⚠️ Esto es además el SUELO del calendario
         // (`minOfferableDate()`): sin pasarlo aquí, el operador podría elegir la hora pero no llegar
         // al día — la mitad de la función, y sin ningún error.
@@ -1540,7 +1540,7 @@ class CreateManualOrderPage extends Page
     private function estimateLineCents(TicketType $type, string $date, int $qty, array $addons): int
     {
         $rates = app(RateResolver::class);
-        // ⚠️⚠️ **`$qty` NO es opcional aquí, y su ausencia era dinero** (`#327`). `priceCents()`
+        // ⚠️⚠️ **`$qty` NO es opcional aquí, y su ausencia era dinero** (`#329`). `priceCents()`
         // admite la cantidad desde `#324` porque con tramos de volumen el precio DEPENDE de ella, y
         // esta llamada la omitía: en una excursión de 70 con la escala 30→15 € / 70→13 €, el
         // operador veía un total y `OrderCreator` —que sí la pasa (`OrderCreator:251`)— cobraba

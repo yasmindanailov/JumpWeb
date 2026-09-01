@@ -55,11 +55,11 @@ Route::post('/logout', LogoutController::class)->middleware('auth')->name('logou
 // ▶ El middleware se conserva casi tal cual: la puerta sigue siendo zona privada, así que un
 // invitado va al login.
 //
-// ❗❗ **`#331` — `verified` SALE, y no es una relajación: es lo que la decisión de `#330` exige.**
+// ❗❗ **`#332` — `verified` SALE, y no es una relajación: es lo que la decisión de `#331` exige.**
 // Desde que el alta suelta abre sesión, quien acaba de registrarse llega aquí SIN verificar — y esta
 // es **la puerta que le trae** (`account/after-auth.js` navega a `urls.account` porque los textos del
 // área solo viajan con sesión). Con `verified` puesto, el alta terminaba rebotando a
-// `/email/verificar`: **una pantalla web fuera del cajón**, que es justo el callejón que `#330`
+// `/email/verificar`: **una pantalla web fuera del cajón**, que es justo el callejón que `#331`
 // vino a cerrar. Y sin llegar a su cuenta no hay QR, que es lo que le identifica en la puerta del
 // parque (`[DECIDIDO owner]`: «no quiero que se haga cola esperando que verifiquen sus correos»).
 //

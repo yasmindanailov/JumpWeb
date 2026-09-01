@@ -11,7 +11,7 @@ import {
 
 /**
  * `account/waiver.js` — lo que el cajón DEDUCE del estado que publica el servidor, y nada más.
- * Fase 6 · waiver (`specs/waiver-probatorio.md` §9.9) y `#327`.
+ * Fase 6 · waiver (`specs/waiver-probatorio.md` §9.9) y `#329`.
  */
 describe('la frase de estado', () => {
     test('sin estado no hay frase: un fallo de lectura no se anuncia', () => {
@@ -32,7 +32,7 @@ describe('la frase de estado', () => {
     });
 
     /**
-     * `#327` — el caso que faltaba: la aceptó al registrarse y todavía no ha verificado el correo.
+     * `#329` — el caso que faltaba: la aceptó al registrarse y todavía no ha verificado el correo.
      * Decirle «todavía no la has firmado» es acusarle de no hacer algo que sí hizo.
      */
     test('aceptada y sin verificar tiene frase PROPIA, no la de «sin firmar»', () => {
@@ -77,7 +77,7 @@ describe('cuándo se ofrece la firma', () => {
     });
 
     /**
-     * ⚠️⚠️ **El caso que motivó `#327`.** Con la aceptación en espera el botón existía y llevaba a un
+     * ⚠️⚠️ **El caso que motivó `#329`.** Con la aceptación en espera el botón existía y llevaba a un
      * 409 (`waiver_email_unverified`): no se puede firmar sin el correo verificado. Un botón que solo
      * puede fallar es peor que ninguno.
      */
@@ -87,7 +87,7 @@ describe('cuándo se ofrece la firma', () => {
 });
 
 describe('el aviso ÚNICO del índice, desde el contexto de cuenta', () => {
-    /** `#330` — quien acaba de registrarse llega con sesión y sin verificar: ése es el aviso. */
+    /** `#331` — quien acaba de registrarse llega con sesión y sin verificar: ése es el aviso. */
     test('pide VERIFICAR el correo, y dice si la exención viaja con él', () => {
         assert.deepEqual(
             accountNoticeFrom({ email_verified: false, waiver: { mode: 'interno', required: true, pending: true } }),
@@ -108,7 +108,7 @@ describe('el aviso ÚNICO del índice, desde el contexto de cuenta', () => {
     });
 
     /**
-     * ⚠️⚠️ **El ORDEN, y es la regla que `#328` dejó escrita**: con el correo sin verificar NO se pide
+     * ⚠️⚠️ **El ORDEN, y es la regla que `#329` dejó escrita**: con el correo sin verificar NO se pide
      * firmar, aunque el waiver «haga falta» — ese botón lleva a un 409.
      */
     test('con el correo sin verificar nunca se pide firmar', () => {

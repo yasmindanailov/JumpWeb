@@ -102,7 +102,7 @@ class MeProfileController extends Controller
     }
 
     /**
-     * `#327` — **reenvía la verificación del correo del titular que YA tiene sesión.**
+     * `#329` — **reenvía la verificación del correo del titular que YA tiene sesión.**
      *
      * Existe porque se puede iniciar sesión sin haber verificado (medido: el login responde 200), y
      * en ese estado el área de cuenta tiene algo que ofrecer: quien aceptó la exención en el alta la

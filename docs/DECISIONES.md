@@ -19572,7 +19572,7 @@ la regla de `#317`) · `waiver:verify-chain` sobre **MySQL real** en sus DOS esc
 FALLAR sin el lock**: `holder` bifurca la cadena (2 filas, `prev_hash` repetido, exit=1) y `guest`
 estrella **7 de 8** procesos contra el `UNIQUE` con `1062 Duplicate entry` · las **24 firmas reales**
 de la BD local siguen verificando tras subir el esquema canónico a **v4**.
-## #328 · 2026-09-01 · El operador vende por debajo del mínimo AL CREAR, y el aviso de la exención deja de mentir
+## #329 · 2026-09-01 · El operador vende por debajo del mínimo AL CREAR, y el aviso de la exención deja de mentir
 
 Dos encargos del owner sobre la web en producción, sin relación entre sí salvo que los dos son
 defectos que **el producto sabía y no decía**.
@@ -19714,10 +19714,10 @@ real (la intención marcada que acaba siendo legal) y se le dio caso.
 ▶ **9/9 mutaciones muerden.** Suite **3813 · 24.652**. Los dos verificadores de concurrencia, en
 verde sobre InnoDB real (`OrderCreator` y `SlotOffer` están en el `CRITICAL_RE`).
 
-⚠️ **Colisión de numeración evitada mirando el REMOTO**: esta entrada nació como `#327` y el otro
+⚠️ **Colisión de numeración evitada mirando el REMOTO**: esta entrada nació como `#329` y el otro
 agente ya lo había empujado. Tercera vez que pasa; la regla funciona.
 
-## #329 · 2026-09-01 · La antelación mínima es una regla del AUTOSERVICIO: no ata al mostrador
+## #330 · 2026-09-01 · La antelación mínima es una regla del AUTOSERVICIO: no ata al mostrador
 
 **Contexto.** `[owner]`: *«vamos a hacer que el operador no tenga límites para crear el pedido no
 respetando los X días de antelación para la reserva.»*
@@ -19728,7 +19728,7 @@ piden con tres días» protege a una cocina que no puede responder a un aviso de
 Cuando quien vende es un operador con el cliente al teléfono, **esa premisa no se cumple** — él sabe
 si llega. Por eso aquí **no hay interruptor ni permiso**: es una regla que simplemente no le aplica.
 
-⚠️ Y esa es la diferencia con el mínimo de invitados de `#328`, que sí sigue atando hasta que el
+⚠️ Y esa es la diferencia con el mínimo de invitados de `#329`, que sí sigue atando hasta que el
 operador lo levanta a propósito, con permiso y rastro: allí no se salta una regla de autoservicio, se
 vende por debajo de lo que el negocio declaró rentable, y eso es una decisión con consecuencias que
 alguien tiene que poder auditar.
@@ -19745,7 +19745,7 @@ pregunta: quien lo lee en `SlotOffer` no tiene que saber que la antelación es c
 
 ### Se imponía en DOS sitios y el segundo no avisa
 
-Misma forma que `#328`, y por eso se buscó antes de escribir:
+Misma forma que `#329`, y por eso se buscó antes de escribir:
  1. `OrderCreator` — rechaza la línea, con su error;
  2. **`SlotOffer::offeredSlots()`** — descarta la franja de la oferta. Y de ahí sale también
     `offerableDates()`, que es **el suelo del calendario del panel** (`minOfferableDate()`): sin
@@ -19780,7 +19780,7 @@ al día. *Que el dominio pueda hacerlo no es que la pantalla lo haga* — es la 
 ▶ **13/13 mutaciones muerden.** Suite **3821 · 24.665**. Los dos verificadores de concurrencia en
 verde sobre InnoDB real (`OrderCreator` y `SlotOffer` están en el `CRITICAL_RE`).
 
-## #330 · 2026-09-01 · El alta suelta ENTRA a la cuenta, y el aviso que le espera es UNO
+## #331 · 2026-09-01 · El alta suelta ENTRA a la cuenta, y el aviso que le espera es UNO
 
 **Contexto.** `[owner]`: *«quiero que al registrarse, directamente el usuario entre a su cuenta, le
 salga ahí el mensaje de verifica tu correo electrónico con el CTA de reenviar. Y el mensaje
@@ -19813,7 +19813,7 @@ dirían dos veces «abre tu correo».
 
 `accountNoticeFrom()` (en `account/waiver.js`, con sus `node --test`) devuelve `null` o
 `{kind, withWaiver}`. ⚠️ **El orden no es arbitrario**: si falta verificar, ése es el aviso aunque el
-waiver también «haga falta» — ofrecer «Firmar» a quien no puede firmar es el callejón que `#328`
+waiver también «haga falta» — ofrecer «Firmar» a quien no puede firmar es el callejón que `#329`
 cerró, y hay caso que lo fija.
 
 ▶ **Y el mejor texto resultó ser el más barato.** Con la exención esperando, *«Tu exención de
@@ -19856,22 +19856,22 @@ enlace.
 ▶ **Y después, Google auth** (`[owner]`), que vacía el caso para la mayoría: el proveedor entrega el
 correo ya verificado, así que la aceptación se convierte en firma sola en el instante del alta.
 
-## #331 · 2026-09-01 · El aviso de verificar vive DENTRO del cajón, y de «Mi cuenta» se puede salir
+## #332 · 2026-09-01 · El aviso de verificar vive DENTRO del cajón, y de «Mi cuenta» se puede salir
 
-Tres correcciones del owner sobre `#330`, probándolo en el navegador.
+Tres correcciones del owner sobre `#331`, probándolo en el navegador.
 
 ### 1 · El alta terminaba en `/email/verificar`, fuera del cajón
 
 `[owner]`: *«mi idea era abrir el SPA al registrarse con la sesión iniciada; actualmente me lleva a
 `/email/verificar`».*
 
-**Defecto que introdujo `#330`, y la causa no estaba donde parecía.** El cajón hace bien su trabajo:
+**Defecto que introdujo `#331`, y la causa no estaba donde parecía.** El cajón hace bien su trabajo:
 `account/after-auth.js` **navega** a `urls.account` a propósito —los textos del área solo viajan en el
 HTML con sesión, así que sin recargar el índice saldría con el título y las seis entradas EN BLANCO—.
 Lo que fallaba es que esa puerta, `/mi-cuenta`, llevaba `middleware(['auth', 'verified'])`: el titular
 recién creado no ha verificado, así que rebotaba.
 
-▶ **`verified` sale del grupo**, y no es una relajación: es lo que `#330` exige. Sin llegar a su cuenta
+▶ **`verified` sale del grupo**, y no es una relajación: es lo que `#331` exige. Sin llegar a su cuenta
 no hay QR, y el QR es lo que identifica al cliente en la puerta del parque.
 
 ⚠️ **La exportación RGPD entra en el mismo trato a sabiendas**: es el derecho del titular sobre lo
@@ -19881,7 +19881,7 @@ alta con el correo de otro crea una cuenta NUEVA y vacía, no abre la suya.
 ### 2 · El aviso, con su hardening, y el waiver debajo
 
 `[owner]`: *«Debes verificar tu correo. Volver a enviar. Con sus límites. Y abajo el texto del
-waiver.»* — que **corrige mi lectura de «un mensaje»** en `#330`: no era una frase, era **un bloque**.
+waiver.»* — que **corrige mi lectura de «un mensaje»** en `#331`: no era una frase, era **un bloque**.
 
 Queda: el mensaje, el botón con su cuenta atrás, **cuántos reenvíos quedan** y el aviso de límite
 alcanzado; y debajo, solo si hay una esperando, la línea de la exención.
@@ -19923,9 +19923,9 @@ El techo del chunk sube **261 → 262** (medido con las dos ramas por separado: 
 rótulos: «Debes verificar tu correo electrónico», «Reenviar correo», la línea de la exención y
 «Cerrar sesión». Suite **3822 · 24.672**.
 
-## #332 · 2026-09-01 · Un texto que no llega no falla: se queda MUDO — y ahora hay guarda
+## #333 · 2026-09-01 · Un texto que no llega no falla: se queda MUDO — y ahora hay guarda
 
-**Contexto.** El owner probó `#331` en el navegador: *«lo de cerrar sesión no lo veo en el SPA en "mi
+**Contexto.** El owner probó `#332` en el navegador: *«lo de cerrar sesión no lo veo en el SPA en "mi
 cuenta", solo en el catálogo. Y al registrarme no me salió nada de que verifique mi email, solo de la
 exención de responsabilidad».*
 
@@ -19945,7 +19945,7 @@ ausente no pueda tumbar el cajón—, así que el párrafo se pintó VACÍO y el
 ahí «no lo veo» y «no me salió nada»: **la línea de la exención sí tenía la ruta buena, y por eso era
 lo único que se leía.**
 
-### ⚠️⚠️ Y mi comprobación de `#331` no podía cazarlo
+### ⚠️⚠️ Y mi comprobación de `#332` no podía cazarlo
 
 Verifiqué por HTTP que los cuatro rótulos estaban **en el HTML servido**. Estaban — el montaje los
 manda. Lo que no comprobé es que la PANTALLA los encontrara. *Que el texto llegue no es que se pinte*,

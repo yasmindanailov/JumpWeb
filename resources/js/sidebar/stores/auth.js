@@ -86,7 +86,7 @@ export const useAuthStore = defineStore('auth', {
         resendSeconds: 0,
 
         /**
-         * Pestillo de {@see allowVerificationResend()} (`#327`): el área de cuenta arma el contador
+         * Pestillo de {@see allowVerificationResend()} (`#329`): el área de cuenta arma el contador
          * UNA vez. Sin él, entrar y salir del índice devolvería los reenvíos gastados.
          */
         resendArmed: false,
@@ -181,7 +181,7 @@ export const useAuthStore = defineStore('auth', {
         },
 
         /**
-         * `#327` — deja el reenvío listo en el ÁREA DE CUENTA, para quien entró sin verificar y tiene
+         * `#329` — deja el reenvío listo en el ÁREA DE CUENTA, para quien entró sin verificar y tiene
          * la exención aceptada esperando a ese correo.
          *
          * ⚠️ **Nace LISTO, no esperando, y ésa es la diferencia con {@see awaitVerification()}**: allí
@@ -417,7 +417,7 @@ export const useAuthStore = defineStore('auth', {
             this.resendSeconds = RESEND_COOLDOWN_SECONDS;
             this.startResendCountdown();
 
-            // `#327` — **dos endpoints, y los elige el hecho de tener o no el correo delante.** Tras
+            // `#329` — **dos endpoints, y los elige el hecho de tener o no el correo delante.** Tras
             // el alta suelta no hay sesión y el correo es lo único que identifica (`pendingEmail`);
             // desde el área de cuenta hay sesión y no hay correo — el contexto de cuenta no lo publica
             // y no debería, así que el que sabe quién pregunta es el servidor.

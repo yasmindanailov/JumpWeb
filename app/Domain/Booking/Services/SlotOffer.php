@@ -92,7 +92,7 @@ class SlotOffer
 
             // Ventana viva del día (special_dates/horario) + ANTELACIÓN MÍNIMA de reserva del
             // producto (días de calendario u horas rodantes). Ambas comparten esta única fuente.
-            // `#329` — la ANTELACIÓN MÍNIMA no ata al mostrador: es una regla para quien compra solo.
+            // `#330` — la ANTELACIÓN MÍNIMA no ata al mostrador: es una regla para quien compra solo.
             // ⚠️ La ventana de horario del producto SÍ sigue mandando, y el corte intra-día de arriba
             // también: aquello es el parque y esto es el tiempo, ninguna de las dos las decide quien
             // vende.
@@ -143,7 +143,7 @@ class SlotOffer
      * `max_quantity` se calculaba aquí desde siempre y se descartaba: lo expone Fase 3 · paso 4b
      * para que la API no tenga que recalcularlo (y con él, otra copia de la regla).
      *
-     * ❗❗ **`#327` — `$allowBelowPackMinimum` es la mitad de la excepción del operador que NO se ve
+     * ❗❗ **`#329` — `$allowBelowPackMinimum` es la mitad de la excepción del operador que NO se ve
      * fallar.** Sin ella, un operador con permiso para vender 20 invitados en un pack de mínimo 30
      * seguiría **sin ver ofertada** una franja con 25 plazas libres, porque este filtro descarta la
      * franja ENTERA cuando el hueco no llega al mínimo. La función habría funcionado en la franja

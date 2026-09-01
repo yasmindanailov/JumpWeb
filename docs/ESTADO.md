@@ -27,20 +27,20 @@ aquí lo que no se podaría son datos de menores de terceros.
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — CINCO PUNTOS DE PRODUCCIÓN
-> CERRADOS (`#328` · `#329` · `#330` · `#331`)**:
->   0000. ⚠️⚠️ **`#332` — UN TEXTO QUE NO LLEGA NO FALLA, SE QUEDA MUDO.** El prop `account` **ES YA**
+> CERRADOS (`#329` → `#333`)**:
+>   0000. ⚠️⚠️ **`#333` — UN TEXTO QUE NO LLEGA NO FALLA, SE QUEDA MUDO.** El prop `account` **ES YA**
 >      el grupo `account`, así que la clave se pide `verify.resend`, **NO** `account.verify.resend`;
 >      `t()` devuelve `''` sin avisar y el aviso salió vacío y el botón sin rótulo. ❗ **Mi
->      comprobación de `#331` miró el PAYLOAD y no el RENDER** — *que el texto llegue no es que se
+>      comprobación de `#332` miró el PAYLOAD y no el RENDER** — *que el texto llegue no es que se
 >      pinte*. Guarda nueva `SidebarTranslationKeysExistTest`, contra el payload REAL (caza también
 >      que la poda del montaje deje una clave fuera) y nacida roja con los dos fallos.
->   000. **El alta abre el SPA en la cuenta, con el aviso completo dentro** (`#331`, tres correcciones
+>   000. **El alta abre el SPA en la cuenta, con el aviso completo dentro** (`#332`, tres correcciones
 >      del owner probándolo en navegador): `verified` **salió** de las rutas del área —con él puesto,
 >      registrarse rebotaba a `/email/verificar`, fuera del cajón—; el aviso es un **bloque** (mensaje
 >      + botón + reenvíos restantes + límite, y **debajo** la exención); y **de «Mi cuenta» ya se puede
 >      salir** (el botón del bloque `.acct` se colapsa ahí dentro: altura 0, medido en V4).
 >   0''. …y los cuatro de antes:
->   00. **El alta suelta ENTRA a la cuenta** (`#330`, `[DECIDIDO owner]`) y ahí le espera **UN solo
+>   00. **El alta suelta ENTRA a la cuenta** (`#331`, `[DECIDIDO owner]`) y ahí le espera **UN solo
 >      aviso con los dos estados**: verifica tu correo (+ «tu exención quedará firmada cuando lo
 >      hagas» si la aceptó), con el botón de reenviar. ❗ El motivo no es estético: **sin sesión no
 >      hay QR, y el QR identifica en la puerta**. ⚠️ Entrar no es verificar. ▶ **LO SIGUIENTE DE ESTE
@@ -49,13 +49,13 @@ aquí lo que no se podaría son datos de menores de terceros.
 >      vector de robo de cuenta vía recuperación de contraseña). Después, **Google auth**, que vacía el
 >      caso para la mayoría.
 >   0'. …y los tres de antes:
->   0. **La antelación mínima ya no ata al mostrador** (`#329`, `[DECIDIDO owner]`): es una regla del
+>   0. **La antelación mínima ya no ata al mostrador** (`#330`, `[DECIDIDO owner]`): es una regla del
 >      AUTOSERVICIO, para quien compra sin nadie que juzgue el caso. Sin interruptor ni permiso, al
 >      revés que el mínimo del pack. ▶ Nace **`Booking\Contracts\CounterSale`**, que dice QUIÉN vende
 >      y viaja de la página a `OrderCreator` **y** `SlotOffer`: ya iban dos excepciones de la misma
 >      familia en una tanda. ⚠️ Se imponía en DOS sitios y el segundo es **el suelo del calendario del
 >      panel**: sin él, el operador elegía la hora y no llegaba al día.
->   … y los dos primeros (`#328`), los dos «el producto lo sabía y no lo decía»:
+>   … y los dos primeros (`#329`), los dos «el producto lo sabía y no lo decía»:
 >   1. **El operador ya puede vender un pack por debajo de su mínimo AL CREAR** un pedido manual (el
 >      gemelo de D7, que solo cubría la edición). ❗ El mínimo se imponía en **CUATRO** sitios y el
 >      cuarto —`SlotOffer`, que descarta la franja entera si el hueco no llega al mínimo— **no avisa
@@ -73,8 +73,10 @@ aquí lo que no se podaría son datos de menores de terceros.
 > firma»; (b) su ✅ en navegador sobre el interruptor del pedido manual. ▶ **Y sigue en pie lo de
 > antes**: imágenes en la columna derecha del menú, el refresco del contexto al volver a la pestaña,
 > y el OJO sobre los TPV.
-> ⚠️ **Cuarta colisión de numeración evitada mirando el REMOTO**: `#328` nació como `#327`, que el
-> otro agente ya había empujado. Sus cambios y los de aquí **no se solapan en un solo fichero PHP**.
+> ⚠️⚠️ **TERCERA colisión de numeración con el otro agente, y la peor de las tres**: estas cinco
+> entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
+> Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
+> ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
 >
 > Antes: **2026-09-01 (cierre de la tarde) — 🚀 LA WEB DEL 2.º
 > CLIENTE ESTÁ EN PRODUCCIÓN (`https://playjump.es`, `#325`/`#326`): su bloque está en el CARRIL 4
@@ -143,25 +145,18 @@ aquí lo que no se podaría son datos de menores de terceros.
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3823 en verde** (24.730 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
-> tras la T1 del justificante por reserva (`#328`).
-> Suite **3813 en verde** (24.652 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
-> sobre el árbol CONJUNTO tras rebasar `#328` sobre `#327`. ⚠️ **Medida DESPUÉS del rebase y con
-> Suite **3821 en verde** (24.665 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
-> sobre el árbol CONJUNTO con `#328` y `#329` encima de `#327`. Antes, 3813 / 24.652 (`#328` solo). ⚠️ **Medida DESPUÉS del rebase y con
-> Suite **3822 en verde** (24.671 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
-> sobre el árbol CONJUNTO con `#328`, `#329` y `#330` encima de `#327`. Antes, 3821 / 24.665 y
-> 3813 / 24.652. ⚠️ **Medida DESPUÉS del rebase y con
-> Suite **3822 en verde** (24.672 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
-> Suite **3824 en verde** (24.676 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
-> sobre el árbol CONJUNTO con `#328`→`#331` encima de `#327`. Antes, 3822 / 24.671, 3821 / 24.665 y
-> 3813 / 24.652. ⚠️ El techo del chunk del cajón va por **262** (medido atribuyendo cada subida a su
-> rama: 259,34 → 260,32 → 261,12). ⚠️ **Medida DESPUÉS del rebase y con
-> `npm run build` delante, no sumada**: por separado daban 3796 / 24.599 (`#327` solo). Y el rebase
-> destapó el techo del chunk del cajón —**259,34 → 260,32 KiB**, atribuido midiendo las dos ramas por
-> separado, subido a 261 por FEATURE con su justificación en el propio test—.
-> ▶ Los DOS verificadores de concurrencia, en verde sobre InnoDB real: `#328` toca `OrderCreator` y
-> `SlotOffer`, que están en el `CRITICAL_RE`.
+> Suite **3851 en verde** (24.807 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> sobre el árbol CONJUNTO: `#329`→`#333` rebasados sobre la T1 del justificante por reserva (`#328`).
+> ⚠️⚠️ **Medida DESPUÉS del rebase y con `npm run build` delante, NUNCA sumada**: por separado daban
+> 3823 / 24.730 (su T1 sola) y 3824 / 24.676 (`#329`→`#333` solas), y ninguna de las dos es la buena.
+> ⚠️ El techo del chunk del cajón va por **262**, atribuido midiendo cada subida a su rama
+> (259,34 → 260,32 → 261,12 KiB).
+> ▶ Los DOS verificadores de concurrencia, en verde sobre InnoDB real: `#329`/`#330` tocan
+> `OrderCreator` y `SlotOffer`, que están en el `CRITICAL_RE`.
+> ⚠️⚠️ **TERCERA colisión de numeración con el otro agente, y la peor**: mis entradas nacieron
+> como `#327` (código) y `#328` (documento) y las dos eran suyas. **Renumeradas a `#329`→`#333`**,
+> 82 referencias en código y 15 en el documento, con mapa explícito para no tocar las suyas.
+> ▶ *La regla ya no basta con mirar el remoto al ABRIR: hay que volver a mirarlo al CERRAR.*
 > ✅ **AUDITORÍA DEL RELOJ pasada al cerrar** (`scripts/audit-clock.sh`, 10 fronteras): verde en todas
 > **tras arreglar un rojo diferido que encontró**. ⚠️ `VisitSectionTest::test_estando_abierto…` fallaba
 > a las **23:59:30 de Madrid**: abría el parque hasta las 23:59:00 y decía en su comentario que así no

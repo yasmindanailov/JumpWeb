@@ -2970,7 +2970,7 @@ components:
           description: |
             ¿El titular ha verificado su correo?
 
-            Desde `#330` el alta suelta **abre sesión**, así que el área de cuenta es donde se le pide
+            Desde `#331` el alta suelta **abre sesión**, así que el área de cuenta es donde se le pide
             que lo verifique — y para pedírselo hay que saber si le falta. Junto con `waiver.pending`
             forma el aviso ÚNICO del índice: «verifica tu correo» y, si además dejó la exención
             aceptada, «con él quedará firmada».

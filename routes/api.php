@@ -220,7 +220,7 @@ Route::name('api.v1.')->group(function (): void {
         Route::post('/me/pending-email/resend', [MeProfileController::class, 'resendPendingEmail'])
             ->name('me.pending-email.resend');
 
-        // `#327` — el hermano AUTENTICADO de `auth/email/resend`: reenvía la verificación del correo
+        // `#329` — el hermano AUTENTICADO de `auth/email/resend`: reenvía la verificación del correo
         // de quien ya tiene sesión, sin que tenga que decir cuál es. Existe porque **se puede entrar
         // sin haber verificado** y ahí el área de cuenta necesita ofrecer la salida: quien aceptó la
         // exención en el alta la tiene retenida hasta que verifique.

@@ -278,7 +278,7 @@ class MeProfileTest extends ApiTestCase
         Notification::assertNothingSent();
     }
 
-    // ── `#327` · reenviar MI verificación (con sesión y sin decir el correo) ──────────────────
+    // ── `#329` · reenviar MI verificación (con sesión y sin decir el correo) ──────────────────
 
     /**
      * El caso que motiva el endpoint: **se puede entrar sin haber verificado**, y ahí el área de

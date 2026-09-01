@@ -981,7 +981,7 @@ class TicketType extends Model
      *
      * Vive aquí porque la misma derivación estaba escrita a mano en media docena de sitios
      * —`CartLineValidator`, `CatalogReader`, `SlotOffer`, `OrderCreator`, `OrderItemEditor` y la
-     * página de pedido manual—, y desde `#327` además decide el SUELO de la escala de tramos: una
+     * página de pedido manual—, y desde `#329` además decide el SUELO de la escala de tramos: una
      * regla de dinero repartida en seis copias es seis sitios donde puede divergir (la lección de
      * `#320` con el estado de la exención de un menor).
      */
@@ -1002,7 +1002,7 @@ class TicketType extends Model
      * (`ApiOverheadTest`: 10 consultas → 16). *Un `instanceof` describe la clase, no el rol, y aquí
      * tres roles comparten clase.*
      *
-     * ❗❗ **`#327` — LA ESCALA NO EMPIEZA POR DEBAJO DEL MÍNIMO CONTRATABLE.** La cantidad con la
+     * ❗❗ **`#329` — LA ESCALA NO EMPIEZA POR DEBAJO DEL MÍNIMO CONTRATABLE.** La cantidad con la
      * que se elige tramo va acotada por abajo a {@see contractableMinimum()}, y eso es lo que hace
      * que el pedido manual por debajo del mínimo (D7 al crear) tenga un precio definido:
      * `[DECIDIDO owner, 2026-09-01]` una excursión de 20 con la escala en 30→15 € / 70→13 € /

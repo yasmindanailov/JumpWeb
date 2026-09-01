@@ -22,7 +22,7 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * `#329` — **LA ANTELACIÓN MÍNIMA NO ATA AL MOSTRADOR** (`[DECIDIDO owner, 2026-09-01]`: «el operador
+ * `#330` — **LA ANTELACIÓN MÍNIMA NO ATA AL MOSTRADOR** (`[DECIDIDO owner, 2026-09-01]`: «el operador
  * no tenga límites para crear el pedido no respetando los X días de antelación»).
  *
  * El encuadre que ordena la tanda, y que es lo que hay que conservar si esto se toca: **`min_advance`

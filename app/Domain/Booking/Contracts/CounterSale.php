@@ -3,7 +3,7 @@
 namespace App\Domain\Booking\Contracts;
 
 /**
- * **Las reglas del AUTOSERVICIO que no atan al mostrador** (`#329`).
+ * **Las reglas del AUTOSERVICIO que no atan al mostrador** (`#330`).
  *
  * Hay reglas de venta que existen para gobernar a un cliente que compra SOLO, sin nadie delante que
  * pueda juzgar el caso: la antelación mínima de un producto («las fiestas se piden con tres días»)

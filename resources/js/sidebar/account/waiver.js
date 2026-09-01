@@ -12,7 +12,7 @@
  */
 
 /**
- * ❗❗ **`#327` — «ACEPTADA, ESPERANDO A QUE VERIFIQUE EL CORREO» ES UN ESTADO PROPIO, y no mirarlo
+ * ❗❗ **`#329` — «ACEPTADA, ESPERANDO A QUE VERIFIQUE EL CORREO» ES UN ESTADO PROPIO, y no mirarlo
  * era mentirle al cliente.**
  *
  * El alta NO firma: guarda la aceptación en espera y la convierte en firma al verificar el correo
@@ -35,7 +35,7 @@ export const WAIVER_NOTICE_VERIFY = 'verify';
  * La clave de `account.privacy.waiver.*` que describe el estado.
  *
  *  · `externo` → «lo gestiona el parque» (aquí solo hay sello, no hay nada que firmar);
- *  · `interno` aceptada y sin verificar → «la firmaremos al verificar tu correo» (`#327`);
+ *  · `interno` aceptada y sin verificar → «la firmaremos al verificar tu correo» (`#329`);
  *  · `interno` sin firma → «pendiente»; firmado en una versión anterior → «anterior»; vigente → «vigente».
  *
  * Sin estado (aún no se pidió, o falló) devuelve `''`, que `i18n.js` pinta como nada — el mismo
@@ -88,7 +88,7 @@ export function waiverNeedsSignature(status) {
 }
 
 /**
- * **El aviso ÚNICO del índice de la cuenta** (`#330`), a partir del contexto de cuenta.
+ * **El aviso ÚNICO del índice de la cuenta** (`#331`), a partir del contexto de cuenta.
  *
  * `[DECIDIDO owner, 2026-09-01]`: *«mejor 1 mensaje con los dos estados, para no saturar»*. Desde que
  * el alta suelta abre sesión, quien acaba de registrarse llega aquí con **dos cosas pendientes que en
@@ -102,7 +102,7 @@ export function waiverNeedsSignature(status) {
  *    nueva del texto caduca una firma sin que nadie toque nada).
  *
  * ⚠️ **El orden importa y no es arbitrario**: si falta verificar, ése es el aviso — aunque el waiver
- * también «haga falta». Ofrecer «Firmar» a quien no puede firmar es el callejón que `#328` cerró.
+ * también «haga falta». Ofrecer «Firmar» a quien no puede firmar es el callejón que `#329` cerró.
  *
  * ⚠️ **`email_verified` en snake_case**: las dos vías del contexto —la semilla del montaje y
  * `GET /me/account-context`— las compone el MISMO `AccountContextResource`, así que aquí llega la

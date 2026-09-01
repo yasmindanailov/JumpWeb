@@ -54,7 +54,7 @@ class AccountContextResource extends JsonResource
 
         return [
             'first_name' => (string) $context['firstName'],
-            // `#330`: desde que el alta suelta abre sesión, el área de cuenta es donde se le pide al
+            // `#331`: desde que el alta suelta abre sesión, el área de cuenta es donde se le pide al
             // cliente que verifique su correo — y para pedírselo hay que saber si le falta.
             'email_verified' => (bool) ($context['emailVerified'] ?? true),
             'upcoming_count' => (int) $context['upcomingCount'],

@@ -87,7 +87,7 @@ class OrderCreator
      * de email / pago), `orders:expire` la libera. Reutiliza la maquinaria de retención de #62.
      *
      * @param  array<int, array{ticket_type_id:int, date:string, time:string, qty:int}>  $cart
-     * @param  CounterSale|null  $sale  **QUIÉN vende** (`#328`/`#329`): las reglas pensadas para quien
+     * @param  CounterSale|null  $sale  **QUIÉN vende** (`#329`/`#330`): las reglas pensadas para quien
      *                                  compra SOLO —la antelación mínima del producto y el mínimo de
      *                                  invitados de un pack— no atan igual a un operador con el
      *                                  cliente delante. Llega ya resuelto contra el permiso; este
@@ -191,7 +191,7 @@ class OrderCreator
                 }
                 // Antelación mínima de reserva del producto (auditoría Fase 1): backstop del checkout
                 // (la oferta ya la aplica; esto blinda contra peticiones forjadas/obsoletas).
-                // `#329` — la antelación mínima es una regla del AUTOSERVICIO: no ata al mostrador.
+                // `#330` — la antelación mínima es una regla del AUTOSERVICIO: no ata al mostrador.
                 // El corte intra-día de arriba SÍ sigue aplicando a todos, porque eso no es antelación:
                 // es que la franja ya empezó.
                 if (! $sale->ignoresMinAdvance()
@@ -205,7 +205,7 @@ class OrderCreator
                     // Pack (cumpleaños): aforo por CUPO en su propio pool (#82). La cantidad es el
                     // nº de invitados, que debe caer en el rango del pack y dentro del cupo libre
                     // de la franja (contando montaje/limpieza si está activo) y las demás fiestas.
-                    // `#327` — con la excepción del operador el MÍNIMO no rechaza; el máximo y el
+                    // `#329` — con la excepción del operador el MÍNIMO no rechaza; el máximo y el
                     // `>= 1` siguen mandando (`Cart::sanitize` garantiza el segundo). Es el mismo
                     // reparto que hizo D7 en la edición, y por eso el suelo pasa a 1 en vez de
                     // desaparecer: por debajo de 1 no hay reserva que crear.

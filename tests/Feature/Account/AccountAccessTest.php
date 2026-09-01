@@ -26,12 +26,12 @@ class AccountAccessTest extends TestCase
     }
 
     /**
-     * ❗❗ **`#331` DA LA VUELTA A ESTE CASO, y la vuelta es la decisión.**
+     * ❗❗ **`#332` DA LA VUELTA A ESTE CASO, y la vuelta es la decisión.**
      *
-     * Decía que un titular sin verificar rebota a `/email/verificar`. Desde `#330` el alta suelta abre
+     * Decía que un titular sin verificar rebota a `/email/verificar`. Desde `#331` el alta suelta abre
      * sesión, y **ésta es la puerta que le trae** (`account/after-auth.js` navega aquí porque los
      * textos del área solo viajan con sesión): con el rebote puesto, registrarse terminaba en una
-     * pantalla web FUERA del cajón — el callejón que `#330` vino a cerrar—, y sin llegar a su cuenta
+     * pantalla web FUERA del cajón — el callejón que `#331` vino a cerrar—, y sin llegar a su cuenta
      * no hay QR, que es lo que le identifica en la puerta del parque.
      *
      * ⚠️ **Lo que NO cambia**: sigue siendo zona privada (el caso de arriba), y lo que le falta se le

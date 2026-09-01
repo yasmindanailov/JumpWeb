@@ -25,7 +25,7 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * `#327` — **EL OPERADOR PUEDE VENDER UN PACK POR DEBAJO DE SU MÍNIMO AL CREAR EL PEDIDO.**
+ * `#329` — **EL OPERADOR PUEDE VENDER UN PACK POR DEBAJO DE SU MÍNIMO AL CREAR EL PEDIDO.**
  *
  * Es el gemelo de D7 (`specs/cumple-mixto.md` §23.4), que dio esa excepción a la EDICIÓN y dejó
  * escrito en su propio docblock que *«solo el panel: `OrderCreator` sigue exigiendo el mínimo al
@@ -215,7 +215,7 @@ class ManualOrderBelowPackMinimumTest extends TestCase
 
     /**
      * `[DECIDIDO owner]`: 20 personas en una escala que empieza en 30 se cobran a **15 €**, el primer
-     * tramo — no a los 99 € del precio base, que es lo que salía antes de `#327`.
+     * tramo — no a los 99 € del precio base, que es lo que salía antes de `#329`.
      */
     public function test_below_the_minimum_the_order_is_priced_at_the_first_tier(): void
     {
