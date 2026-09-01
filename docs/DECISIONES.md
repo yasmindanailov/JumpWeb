@@ -19572,3 +19572,148 @@ la regla de `#317`) · `waiver:verify-chain` sobre **MySQL real** en sus DOS esc
 FALLAR sin el lock**: `holder` bifurca la cadena (2 filas, `prev_hash` repetido, exit=1) y `guest`
 estrella **7 de 8** procesos contra el `UNIQUE` con `1062 Duplicate entry` · las **24 firmas reales**
 de la BD local siguen verificando tras subir el esquema canónico a **v4**.
+## #328 · 2026-09-01 · El operador vende por debajo del mínimo AL CREAR, y el aviso de la exención deja de mentir
+
+Dos encargos del owner sobre la web en producción, sin relación entre sí salvo que los dos son
+defectos que **el producto sabía y no decía**.
+
+---
+
+### 1 · El pedido manual puede bajar del mínimo del pack
+
+**Contexto.** *«Al crear un pedido el operador debe poder seleccionar un número de invitados menor a
+la configurada, es lo mismo que cuando un operador edita una reserva.»* El caso real es la excursión
+de colegio que llama con 24 niños sobre un producto que empieza en 30 — justo la llamada que el
+propio owner describió en `#324` como «ya toca llamar y preguntar».
+
+D7 (`cumple-mixto.md` §23.4) dio esa excepción a la EDICIÓN y dejó escrito en su docblock que
+**«solo el panel: `OrderCreator` sigue exigiendo el mínimo al vender»**. Esto es su gemelo al crear.
+
+❗❗ **Lo que hace esta tanda distinta de un permiso: el mínimo se impone en CUATRO sitios y solo dos
+avisan cuando rechazan.**
+
+| Dónde | Qué hace | ¿Avisa? |
+|---|---|---|
+| `CreateManualOrderPage::selectedMinQty()` | el `minValue` del campo | sí |
+| `addLineToCart()` | rango al añadir | sí |
+| **`OrderCreator`** | la defensa real | sí |
+| **`SlotOffer::offerableTimes()`** | descarta la franja ENTERA si el hueco libre no llega al mínimo | **NO** |
+
+⚠️⚠️ **El cuarto se habría llevado la feature por delante en silencio.** Con el permiso activo, un
+grupo de 20 seguiría sin ver ofertada una franja con 25 plazas libres: la función habría funcionado
+en la franja vacía —donde se prueba— y fallado en la compartida —donde se usa—, sin un solo error.
+`[DECIDIDO owner]`: con el permiso, esas franjas se ofrecen. ⚠️ El suelo baja a **1, no a 0**: una
+franja sin una sola plaza sigue fuera, porque eso es AFORO (`AFORO-01`) y no el mínimo del pack.
+
+**Cómo viaja.** `createPendingOrder(..., bool $allowBelowPackMinimum = false)`, y **el default es la
+web por construcción**: `CheckoutOrchestrator` no lo pasa. El permiso se re-exige en la página, en el
+punto de EJECUCIÓN (`SEC-04`) — `$this->cart` es estado de Livewire y viaja al navegador, así que una
+línea marcada puede llegar sin que nadie haya pulsado el interruptor.
+
+⚠️ **El permiso se REUTILIZA** (`orders.edit_item_below_minimum`) `[DECIDIDO owner]`: es la misma
+regla de negocio y un operador con uno y sin el otro no significa nada operativamente. Lo que cambia
+es el RÓTULO, que ya no dice solo «editar». **La clave no se renombra**: obligaría a migrar la tabla
+de permisos y los roles ya asignados en la instalación del cliente a cambio de nada que se vea.
+
+**El rastro.** Se audita **solo cuando de verdad se usó** (D7: un `false` en cada pedido normal es
+ruido que entierra la señal) y se mide sobre lo ESCRITO, no sobre la intención del formulario: *el
+rastro dice qué se vendió, no qué se pidió*. Las dos condiciones hacen falta — la segunda cubre que
+alguien BAJE el mínimo del producto mientras el operador tiene la línea en el carrito.
+
+### 2 · ¿A qué precio se vende por debajo de la escala? — `[DECIDIDO owner]`
+
+Con los tramos de `#324`, 20 personas en una escala que empieza en 30 **no tienen tramo**, y el
+código caía al precio base. El owner eligió, con los dos números delante: **manda el PRIMER tramo**
+(30 → 15 €), no el precio base ni el más barato de la tabla.
+
+La regla queda escrita como una propiedad comprobable: **vender por debajo del mínimo nunca sale más
+barato por cabeza que vender justo en el mínimo.** Se implementa acotando por abajo la cantidad con
+la que se elige tramo, al mínimo CONTRATABLE del producto (`TicketType::contractableMinimum()`).
+
+⚠️⚠️ **El suelo NO va dentro de `PriceTier::resolve()`, y la diferencia es dinero.** Allí sería «si
+ningún tramo cubre, coge el más pequeño», y eso **regalaría el descuento de volumen a toda entrada
+comprada por debajo de su primer tramo** (5 unidades de un producto con «10+ → 8 €» pasarían de 10 a
+8 €). Nada fallaría; solo se ingresaría menos. Hay caso de CONTROL, y la mutación que mueve la regla
+a `resolve()` lo pone rojo.
+
+⚠️ La regla vivía en DOS sitios —`RateResolver::priceCents()` y `TicketType::priceCentsForRate()`,
+los dos caminos por los que se tarifica una línea de verdad— y pasa a uno solo
+(`TicketType::tierPriceCents()`), que se lleva también la exclusión de los complementos.
+
+▶ **Y un defecto de dinero PREEXISTENTE que destapó esto**: `CreateManualOrderPage` presupuestaba
+llamando a `priceCents()` **sin la cantidad**, opcional desde `#324` precisamente porque con tramos
+el precio depende de ella. Medido: en una excursión de 70, el operador veía un total y `OrderCreator`
+cobraba otro — **140,00 € en una sola línea**. *Un parámetro con valor por defecto no avisa de que
+hacía falta.*
+
+⚠️ Una guarda del propio `PriceTierTest` (`below_the_first_tier_the_plain_price_wins`) afirmaba lo
+contrario, y **su propio comentario reconocía que el caso no era alcanzable** («el mínimo del
+producto lo corta antes»). Se reescribe, no se «arregla»: la decisión del owner le da sujeto por
+primera vez.
+
+### 3 · La exención decía que no la habías firmado cuando sí
+
+**Contexto.** *«Había una notificación de que tengo que firmar la exención cuando me había registrado
+firmándola.»* Reproducido en local replicando producción, y encaja al segundo con su cuenta real:
+alta **13:27:13** → verificación **13:28:49**.
+
+**El mecanismo NO estaba roto.** El alta no firma a propósito (`#179`): guarda la aceptación en
+espera y la convierte en firma al verificar el correo, porque una firma sobre un buzón sin demostrar
+no prueba nada. Lo roto era **lo que la pantalla decía mientras tanto**.
+
+El servidor publica los dos datos que lo distinguen —`pending` («la aceptó») y `required` («aún no
+hay firma»)— y **ningún cliente leía el primero**. Resultado medido:
+
+```
+GET /me/account-context → {"mode":"interno","required":true,"pending":true,...}
+pantalla               → «Tienes pendiente la exención de responsabilidad» [Firmarla]
+POST /me/waiver        → 409 waiver_email_unverified
+```
+
+Es decir: **se le acusaba de no haber hecho algo que sí hizo, y se le ofrecía una salida tapiada.**
+
+⚠️ **Y no es una ventana de dos minutos**: medido, **el login responde 200 sin el correo verificado**,
+así que quien no abre el correo ve ese aviso falso cada vez que entra en su cuenta, indefinidamente.
+
+**La forma** (`[DECIDIDO owner]`, elegida sobre tres): el aviso se queda, dice la verdad y **ofrece
+reenviar la verificación**, que es lo único que desbloquea la firma. El botón de firmar desaparece de
+ese estado.
+
+⚠️⚠️ **También se midió que el área de cuenta perdió una puerta al mudarse al cajón**: las rutas web
+viejas (`/mi-cuenta`, `/mi-cuenta/pedidos`) llevan `middleware(['auth','verified'])` y el cajón corre
+sobre `/api/v1` con `auth:sanctum` y **cero `verified`**. No se cerró, y es deliberado: `[owner]` *«no
+quiero que se haga cola esperando que los usuarios verifiquen sus correos»* — sin entrar no hay QR, y
+sin QR no hay identificación en la puerta. Ficha en `DEUDA.md` con la salida propuesta.
+
+**El endpoint.** `POST /me/email/resend`, el hermano AUTENTICADO de `auth/email/resend`, sin cuerpo.
+⚠️ **El público NO se aflojó**: su cuerpo es el `EmailRequest` del contrato, **compartido con
+`auth/password/forgot`**, así que hacer el campo opcional lo habría aflojado también allí. Y la sesión
+identifica mejor que un correo escrito en el cuerpo. Reutiliza `SelfSignup::resendVerification()`
+entero, así que hereda sus dos cooldowns.
+
+⚠️ El contador de reenvíos nace **LISTO** aquí y esperando tras el alta: allí la espera existe porque
+el alta acaba de gastar el limitador por IP, y quien entra a su cuenta horas después no. Con
+**pestillo**, porque sin él entrar y salir del índice devolvería los reenvíos gastados.
+
+**Verificado de punta a punta en local**: registro con la casilla → aviso nuevo → reenvío (204, correo
+recibido en Mailpit) → enlace pulsado → firma creada y aviso desaparecido.
+
+### Lo que enseñó (método)
+
+⚠️⚠️ **Dos guardas mías nacieron DÉBILES y las cazó el arnés de mutación, no una lectura:**
+ 1. la del presupuesto rellenaba el carrito a mano, así que `estimateLineCents()` **no llegaba a
+    ejecutarse** y quitarle la cantidad pasaba en verde. *Una guarda que no ejercita el disparador
+    vigila el reposo, no la regla.*
+ 2. la del máximo solo exigía «que lance», y al retirar el tope del rango la excepción llegaba igual
+    **por el aforo**. *Dos defensas que lanzan la misma clase se confunden si solo miras la clase.*
+
+⚠️ Y una mutación no mordió por ser **débil, no por guarda ciega**: caía sobre un `array_filter`
+defensivo que hoy no puede cambiar la conducta. Se reescribió la condición para que sí describa algo
+real (la intención marcada que acaba siendo legal) y se le dio caso.
+
+▶ **9/9 mutaciones muerden.** Suite **3813 · 24.652**. Los dos verificadores de concurrencia, en
+verde sobre InnoDB real (`OrderCreator` y `SlotOffer` están en el `CRITICAL_RE`).
+
+⚠️ **Colisión de numeración evitada mirando el REMOTO**: esta entrada nació como `#327` y el otro
+agente ya lo había empujado. Tercera vez que pasa; la regla funciona.
+

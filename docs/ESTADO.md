@@ -26,7 +26,29 @@ aquí lo que no se podaría son datos de menores de terceros.
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-09-01 (cierre de la tarde) — 🚀 LA WEB DEL 2.º
+> aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — DOS PUNTOS DE PRODUCCIÓN
+> CERRADOS (`#328`)**, los dos «el producto lo sabía y no lo decía»:
+>   1. **El operador ya puede vender un pack por debajo de su mínimo AL CREAR** un pedido manual (el
+>      gemelo de D7, que solo cubría la edición). ❗ El mínimo se imponía en **CUATRO** sitios y el
+>      cuarto —`SlotOffer`, que descarta la franja entera si el hueco no llega al mínimo— **no avisa
+>      al fallar**: habría funcionado en la franja vacía y fallado en la compartida. Precio por debajo
+>      de la escala: **el primer tramo** (`[DECIDIDO owner]`). Y de paso, un defecto de dinero
+>      PREEXISTENTE: la previsualización del panel presupuestaba **sin la cantidad** (140,00 € de
+>      desfase en una línea de 70).
+>   2. **El aviso de la exención dejó de mentir.** Entre aceptar la casilla en el alta y verificar el
+>      correo, el cajón decía «tienes pendiente la exención» con un botón que solo podía devolver 409.
+>      Ahora dice la verdad y **ofrece reenviar la verificación** (`POST /me/email/resend`).
+>      ⛔ **NO se cerró el área a los no verificados** (`[owner]`: sin entrar no hay QR, y sin QR no
+>      hay identificación en la puerta) — ficha en `DEUDA.md` con la salida propuesta: **que la PUERTA
+>      firme**, como tercer suceso junto al enlace y el pago.
+> ▶ **Lo que sigue pendiente del owner de esta tanda**: (a) decidir si se construye lo de «la puerta
+> firma»; (b) su ✅ en navegador sobre el interruptor del pedido manual. ▶ **Y sigue en pie lo de
+> antes**: imágenes en la columna derecha del menú, el refresco del contexto al volver a la pestaña,
+> y el OJO sobre los TPV.
+> ⚠️ **Cuarta colisión de numeración evitada mirando el REMOTO**: `#328` nació como `#327`, que el
+> otro agente ya había empujado. Sus cambios y los de aquí **no se solapan en un solo fichero PHP**.
+>
+> Antes: **2026-09-01 (cierre de la tarde) — 🚀 LA WEB DEL 2.º
 > CLIENTE ESTÁ EN PRODUCCIÓN (`https://playjump.es`, `#325`/`#326`): su bloque está en el CARRIL 4
 > (la PORTADA), que es el más reciente; antes, el 6.º (EXCURSIONES DE COLEGIO, `#322`/`#324`) bajo el
 > contador vivo y el 5.º (PANEL: rol de puerta, `#320`).** ▶ **Y el carril 6 CERRÓ sus tres tandas**
@@ -95,6 +117,13 @@ aquí lo que no se podaría son datos de menores de terceros.
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
 > Suite **3823 en verde** (24.730 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
 > tras la T1 del justificante por reserva (`#328`).
+> Suite **3813 en verde** (24.652 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> sobre el árbol CONJUNTO tras rebasar `#328` sobre `#327`. ⚠️ **Medida DESPUÉS del rebase y con
+> `npm run build` delante, no sumada**: por separado daban 3796 / 24.599 (`#327` solo). Y el rebase
+> destapó el techo del chunk del cajón —**259,34 → 260,32 KiB**, atribuido midiendo las dos ramas por
+> separado, subido a 261 por FEATURE con su justificación en el propio test—.
+> ▶ Los DOS verificadores de concurrencia, en verde sobre InnoDB real: `#328` toca `OrderCreator` y
+> `SlotOffer`, que están en el `CRITICAL_RE`.
 > ✅ **AUDITORÍA DEL RELOJ pasada al cerrar** (`scripts/audit-clock.sh`, 10 fronteras): verde en todas
 > **tras arreglar un rojo diferido que encontró**. ⚠️ `VisitSectionTest::test_estando_abierto…` fallaba
 > a las **23:59:30 de Madrid**: abría el parque hasta las 23:59:00 y decía en su comentario que así no

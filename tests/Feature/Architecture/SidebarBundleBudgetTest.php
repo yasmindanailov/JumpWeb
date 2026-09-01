@@ -528,8 +528,26 @@ class SidebarBundleBudgetTest extends TestCase
      * `ProductIconSingleSourceTest`, que exige una rama por clave ofrecida—.
      * ⚠️ **Se sube a 260 y no a 265.** Queda **0,36 kB** de holgura, que es la misma estrechez que
      * tenía antes: lo siguiente que entre vuelve a tener que justificarse o podar.
+     *
+     * ▶ **261 (`#328`), y esta es su justificación.** El área de cuenta gana el estado «aceptaste la
+     * exención al registrarte y falta que verifiques tu correo», que antes NO existía en pantalla: se
+     * le decía al cliente que no la había firmado y se le ofrecía un botón de firmar que solo podía
+     * devolver 409 (`waiver_email_unverified`).
+     *
+     * **Medido con las dos ramas del árbol por separado**, que es lo que permite atribuirlo: sobre el
+     * árbol del otro agente el chunk pesa **259,34 KiB** y con esto **260,32 (+0,98)**. Lo que compra:
+     *  · la decisión del aviso en `account/waiver.js` —dos estados donde había un booleano, porque los
+     *    dos avisos dicen cosas distintas y ofrecen botones distintos—;
+     *  · el ARMADO del reenvío en el store, con su pestillo: sin él, entrar y salir del índice
+     *    devolvería los reenvíos gastados y el tope de 4 dejaría de existir;
+     *  · y la rama del índice con su cuenta atrás.
+     *
+     * ⚠️ **La poda ya se hizo, y fue en los RÓTULOS, no aquí**: el botón reutiliza `verify.resend` y
+     * `verify.resend_in`, que ya viajaban en el montaje (−190 B de payload, `SidebarMountTest`). *El
+     * rótulo más barato es el que ya está.*
+     * ⚠️ **Se sube a 261 y no a 265.** Queda **0,68 KiB**: la misma estrechez de siempre.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 260;
+    private const SIDEBAR_CHUNK_MAX_KB = 261;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un
