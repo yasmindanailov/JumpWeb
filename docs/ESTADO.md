@@ -2,9 +2,16 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — SEIS carriles; el 6.º
-> (EXCURSIONES DE COLEGIO, `#322`) es el más reciente y su bloque está justo bajo el contador vivo,
-> seguido del 5.º (PANEL: exención del menor y rol de puerta, `#320`) y el 4.º (la PORTADA, `#319`).
+> aquí solo se enlaza.** Última actualización: **2026-09-01 (cierre de la tarde) — 🚀 LA WEB DEL 2.º
+> CLIENTE ESTÁ EN PRODUCCIÓN (`https://playjump.es`, `#325`/`#326`): su bloque está en el CARRIL 4
+> (la PORTADA), que es el más reciente; antes, el 6.º (EXCURSIONES DE COLEGIO, `#322`/`#324`) bajo el
+> contador vivo y el 5.º (PANEL: rol de puerta, `#320`).** ❗ **POR DÓNDE SE RETOMA** (`[DECIDIDO
+> owner]` al cerrar): (1) **imágenes en la columna derecha del menú** — «las que sean, que no esté
+> vacío» (`zones.image` no tiene consumidor desde `#302`: candidatas naturales); (2) **refrescar el
+> contexto de cuenta del cajón al volver a la pestaña** (`DEUDA.md`, Media) — toca el SPA aparcado
+> con permiso del owner para ese cambio; (3) el OJO del owner sobre los TPV. ⚠️ **DISTANCIA SANA**:
+> la instalación es un cliente aparte del producto — lo suyo vive en su BD, su `.env` y ficheros
+> gitignorados; al repo solo entran mecanismos (`#325`, adenda de cierre).
 > **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2
 > (`#311`), T3·3 (`#312`), T3·4 (`#315`, LA RETIRADA del modelo de dos ejes) Y LA T4 (`#317`, EL
 > MOTIVO MANDA en el reembolso · liquidación simétrica · «Descuento por cortesía») EN EL ÁRBOL, y
@@ -197,8 +204,12 @@
 > en sintaxis de objeto). Verificado: el registro de prueba del owner terminó de punta a punta
 > (correo verificado por el cron del panel, 1 firma). `THEME_FONTS` faltaba en el `.env` de
 > producción (fuentes del producto): corregido; las franjas se generaron a mano (3120) porque el
-> despliegue las generó con la BD aún vacía. ▶ Después de abrir: imágenes del menú, correos,
-> traducción del documento, Redsys real. ⚠️ Trampas pagadas (todas en `#325`): document root, `settings` no vacía
+> despliegue las generó con la BD aún vacía. ▶ **Tercer despliegue (`1b128bb`+`045419c`)**: el CTA
+> por sesión en producción y la invitación sobre la mitad plegada (subida en caliente por `scp`, sin
+> parada). El «pendiente de exención» que vio el owner era estado del cajón sin refrescar (el
+> servidor daba `signed=true`): ficha en `DEUDA.md`. El modo mantenimiento de las 15:22 lo activó él.
+> ▶ Después de abrir: imágenes del menú (`[DECIDIDO owner]`, cualquiera), refresco del contexto,
+> traducción del documento, correos, Redsys real. ⚠️ Trampas pagadas (todas en `#325`): document root, `settings` no vacía
 > tras migrar (→ `REPLACE INTO`), `roles` vacía con `create-admin` callado, `psysh --execute` +
 > `require`.
 >

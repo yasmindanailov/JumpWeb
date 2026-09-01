@@ -3539,6 +3539,27 @@ eran DOS, y son TRES (`ProductAvailability::allowsStart()`, por donde pasan la o
 las ediciones y la re-programación); **lo cazó una GUARDA, no una lectura**. (2) `git checkout` para
 deshacer una mutación **con el trabajo sin commitear se lleva el trabajo** — la regla de `#181`.
 
+### LANZAMIENTO del 2.º cliente 🟦 — en PRODUCCIÓN y verificada (`#325` · `#326`, 2026-09-01); quedan el OJO del owner sobre los TPV y lo decidido para después
+
+La primera instalación real del producto sale a producción **el mismo día, con dos horas** (el
+parque abría a las 16:30). Todo lo específico del cliente vive FUERA del repo —su base de datos,
+su `.env`, sus ficheros gitignorados (`client.css`, `client-*`, el kit), su servidor— y en el
+repo solo entraron MECANISMOS genéricos. El detalle: `DECISIONES #325` (decisiones, trampas y
+verificación), `ENTORNOS.md` §6 (la máquina medida y la receta), `#326` (el CTA por sesión).
+
+- [x] `deploy.sh` en modo producción (`DEPLOY_PRODUCTION=1`: invierte las guardas 3 y 4 de staging) — verificado con tres despliegues reales
+- [x] Compra online CERRADA con catálogo visible: `sales.online_enabled` + `EnsureOnlineSalesEnabled` (API 503) + CTA `tel:` — `OnlineSalesSwitchTest`, y medido por HTTP en producción
+- [x] `/servicios` en mantenimiento y fuera de menú y pie; menú sin los números «01…» (guarda re-apuntada)
+- [x] Legales definitivos (cero `[PENDIENTE]` es/en) y **descarga de responsabilidad v1 PUBLICADA** en producción (es/en/fr; EN/FR con el texto en español)
+- [x] Marca de la instalación en correos (PNG), panel (SVG) y pestaña del panel — `MailThemeTest` con `public/` temporal
+- [x] CTA doble por sesión (sin sesión, la cuenta; con sesión, comprar) y la invitación sobre la mitad plegada — caso en `ArmazonContractTest`
+- [x] Producción: datos solo de catálogo/config (`REPLACE INTO`), 5 usuarios (admin + 4 `puerta`), Turnstile, `THEME_FONTS`, franjas (3120), cola por cron del panel, usuario de BD dedicado, puente `.htaccess`
+- [x] Verificación empírica del OWNER: registro real de punta a punta (verificación por correo + firma del titular y de un menor), correos recibidos en Gmail, admin operativo
+- [ ] El OJO del owner sobre los TPV (rol `puerta`) — pendiente de su prueba
+- [ ] Imágenes en la columna derecha del menú — `[DECIDIDO owner]`: «las que sean, que no esté vacío»
+- [ ] Refrescar el contexto de cuenta al volver a la pestaña (deuda destapada por el owner; toca el SPA aparcado, con su permiso explícito para ESTE cambio)
+- [ ] Traducción EN/FR de la descarga de responsabilidad · rediseño fino de los correos · Redsys real (cuando haya claves) · el usuario del panel puede rotar (ya en el dedicado)
+
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no
 le despliega nada. Mejoras de JumpWeb aplicables allí se portan **solo por decisión explícita**,

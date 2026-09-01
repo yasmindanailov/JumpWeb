@@ -19352,3 +19352,13 @@ la pestaña original seguía mostrando «tienes pendiente la exención» — el 
 `signed=true · pending=false` (medido con `WaiverStatus::for` y `CustomerAccountContext`). Es estado
 del cliente sin refrescar, no una firma perdida: el contexto de cuenta debería releerse al volver a la
 pestaña (`visibilitychange`/`focus`). Ficha en `DEUDA.md`.
+
+**Adenda de cierre (misma tarde, `[DECIDIDO owner]`):** (1) el modo mantenimiento de las 15:22 lo
+activó el owner desde el panel, probando — no hubo ningún proceso que lo pusiera; (2) **la columna
+derecha del menú lleva IMÁGENES**: «las que sean, que no esté vacío» — es lo siguiente del carril de
+la landing; (3) **después, refrescar el contexto de cuenta al volver a la pestaña** (la deuda de
+arriba): toca el SPA aparcado, y el owner lo autoriza para ese cambio concreto; (4) los TPV los
+prueba él. ▶ **Y la regla que el owner subrayó al cerrar: la instalación del cliente tiene que
+mantener una DISTANCIA SANA del producto** — lo suyo (textos, documento, usuarios, claves, fuentes,
+puente del servidor) vive en su BD, su `.env` o ficheros gitignorados; el repo solo lleva
+mecanismos. Así se hizo, y así se vigila desde ahora.
