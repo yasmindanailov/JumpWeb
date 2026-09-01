@@ -255,8 +255,8 @@ de la cuenta del atacante**, con los pedidos y los menores de otro.
    imposible**, y por eso se dice aquí en vez de descubrirlo el día que pase.
    ⚠️ Decirle a esa persona que existía una cuenta con su correo **no viola `SEC-06`**: solo llega
    ahí quien acaba de demostrar que el buzón es suyo, así que no hay enumeración posible.
-2. **Aviso por correo al titular en cada vinculación.** Es la única forma de que se entere, y es la
-   doctrina que el producto ya aplica en el cambio de correo (`AccountProfile:135-141`: *«al VIEJO,
+2. ✅ **`[DECIDIDO owner, 2026-09-02]` (Q3): aviso por correo al titular en CADA vinculación.** Es la
+   única forma de que se entere, y es la doctrina que el producto ya aplica en el cambio de correo (`AccountProfile:135-141`: *«al VIEJO,
    para que el dueño se entere si esto no lo ha pedido él»*) y en `SelfSignup::handleExisting()`.
 3. **Desvincular sube a la T3** — ✅ `[DECIDIDO owner, 2026-09-02]` (Q4). Antes era «cuando alguien
    lo pida»; con un vínculo irreversible eso deja al titular sin salida, y es justo la salida que
@@ -358,9 +358,19 @@ La versión anterior decía «encaja en el modelo que ya existe». Es cierto per
 `web` — **la sesión que abriría el retorno de Google es la misma que autentica `/admin`**, sin pasar
 por `/admin/login`. Y `canAccessPanel()` recorre `User::PANEL_ROLES` (admin, staff, puerta).
 
-⇒ Dejar la Q1 «abierta» **era contestarla que sí por omisión.** En la v1 el **servicio de
-vinculación rechaza** cuentas con cualquier rol de `PANEL_ROLES`; el owner puede levantarlo (Q5).
-⚠️ La restricción vive **en el servicio, no en la interfaz**: no pintar el botón no impide nada.
+✅ **`[DECIDIDO owner, 2026-09-02]` (Q5): el equipo SÍ puede vincular y entrar con su Google.**
+El párrafo de arriba se conserva porque describe **la consecuencia que hay que aceptar a sabiendas**:
+la sesión que abre el retorno de Google **es la del panel**, sin pasar por `/admin/login`.
+
+▶ **Y es defendible por la misma equivalencia que el resto del diseño**: quien comprometa el Gmail de
+un empleado ya podía pedir un reset de contraseña y entrar igual. Google **no abre una puerta nueva**
+—y encima aporta su propio 2FA, que el panel no tiene (`DEUDA.md`: «2FA de admin inexistente»)—.
+
+⚠️⚠️ **Lo que esto convierte en OBLIGATORIO es el aviso de la Q3**: para una cuenta de equipo, una
+vinculación silenciosa sería la única señal de que alguien ha entrado por una puerta nueva. Con el
+correo, el empleado se entera.
+⚠️ Y sube el valor de la ficha de `DEUDA.md` sobre el 2FA del panel: hoy la defensa del panel es una
+contraseña, y a partir de aquí también una cuenta de Google.
 
 ---
 
@@ -371,16 +381,29 @@ vinculación rechaza** cuentas con cualquier rol de `PANEL_ROLES`; el owner pued
 | Nombre | relleno por Google, editable | Evita el «Ana G.» que a veces devuelve |
 | Correo | fijo, mostrado | Es la identidad verificada |
 | **Teléfono** | **obligatorio** | `[owner]` *«imprescindible para las reservas»* |
-| **Exención** ☐ | **obligatoria — ✱ solo en modo `interno` y con versión publicada** | En `externo`/`desactivado` **no se pinta**, y §4 se queda sin sujeto (Q6) |
+| **Exención** ☐ | **obligatoria — solo en modo `interno` y con versión publicada** | ✅ Q6 abajo |
 | **Condiciones** ☐ | **obligatoria** | Aceptación contractual |
 | Privacidad | **enlace visible**, no casilla | §7.1 |
-| Marketing ☐ | opcional | Q2 (§15) |
+| ~~Marketing~~ | ✅ **NO va** (`[DECIDIDO owner]` Q9) | Solo el interruptor de la cuenta (§9). *«Ya valoraremos el marketing cuando toque pensar todo el sistema»* |
 
 ✱ **La pantalla sirve y devuelve `waiver_document_id`** (§3.1).
 ✱ *(La versión anterior citaba `RegisterForm.vue:76` como evidencia de que las condiciones son
 aceptación contractual. **La cita estaba mal**: ese docblock es de `acceptWaiver`, no de
 `acceptTerms` — y es además la evidencia de que la casilla del waiver solo existe con texto
 publicado.)*
+
+✅ **`[DECIDIDO owner, 2026-09-02]` (Q6): en modo `externo` o `desactivado`, o sin versión publicada,
+NO HAY PANTALLA — entran directamente.** Sin exención que pedir, §4 se queda sin sujeto y la pantalla
+pierde su razón de ser.
+
+⚠️⚠️ **La consecuencia, dicha para que nadie la descubra en producción**: esas instalaciones crean
+cuentas **sin teléfono y sin aceptación de condiciones registrada**, porque las dos viajaban en esa
+pantalla. Es un estado que el producto ya admite —`CustomerRegistrar` crea cuentas sin teléfono y sin
+`terms_accepted_at`— pero por una puerta distinta.
+▶ **Hoy no muerde**: `playjump.es` está en modo `interno` con versión publicada (medido: 54 firmas),
+así que la pantalla se pinta siempre. Muerde el día que exista una instalación con waiver externo.
+▶ **La salida, si algún día se quiere**: pintar la pantalla con teléfono y condiciones aunque no haya
+exención. Queda escrito, no construido.
 
 ### 7.1 · Por qué la privacidad deja de ser casilla
 
@@ -469,6 +492,42 @@ seguiría mostrando «aceptado el …» encima del interruptor apagado. ⇒ La T
 ⚠️ ✱ El ámbito `profile` trae además `picture`, `given_name` y `locale`: **se descartan
 explícitamente** (art. 5.1.c, minimización).
 
+### 10.1 · Lo que hay que dejar preparado en Google Cloud Console
+
+**Una instalación = un proyecto de Google = un ID de cliente.** Esto es del cliente, no del producto.
+
+| | |
+|---|---|
+| Tipo de aplicación | **Aplicación web** |
+| Orígenes autorizados de JavaScript | ⚠️ **No hacen falta.** Solo los usa el botón JS de Google / One Tap, y este diseño redirige desde el SERVIDOR (§6.4). Dejarlos puestos no molesta |
+| **URI de redireccionamiento** | ⚠️⚠️ **`https://playjump.es/auth/google/callback`** — la RUTA COMPLETA |
+
+⚠️⚠️ **El error que se comete aquí y falla en el primer intento**: poner el origen a secas
+(`https://playjump.es`). Google exige que la URI de redirección **coincida EXACTAMENTE** con la que
+la aplicación envía; con el origen pelado, el primer inicio de sesión devuelve
+`Error 400: redirect_uri_mismatch` y no hay nada que depurar en nuestro lado.
+
+▶ **Segundo cliente para desarrollo**, en el mismo proyecto y llamado por ejemplo `..._dev`, con
+`http://localhost:8081/auth/google/callback`. Google admite `http://localhost` con puerto.
+⚠️ **Separado del de producción a propósito**: meter localhost en el cliente de producción obliga a
+tener el secreto de producción en la máquina de desarrollo.
+
+**Pantalla de consentimiento**
+
+- **Externa** (usuarios fuera de la organización).
+- **Ámbitos: solo `openid`, `email` y `profile`.** Cualquier ámbito sensible dispara una verificación
+  de semanas, y no necesitamos ninguno.
+- ⚠️ **No subas logotipo todavía**: subir el logo a la pantalla de consentimiento dispara la
+  verificación de marca de Google. Se puede añadir después, cuando la feature esté viva.
+- ⚠️⚠️ **Y hay que PUBLICARLA**: en estado «Testing» solo pueden entrar los usuarios de prueba que se
+  añadan a mano. Con estos tres ámbitos, pasar a producción **no requiere verificación de Google**.
+
+**Las dos claves**
+
+`CLIENT_ID` y `CLIENT_SECRET` van a `settings` con `app:set-setting` (§10).
+⚠️ **El secreto no se pega en un chat, ni en el repo, ni en un documento.** Va del navegador del
+owner al servidor, y nada más.
+
 ---
 
 ## 11 · Impacto en invariantes
@@ -543,16 +602,16 @@ explícitamente** (art. 5.1.c, minimización).
    en el acto, y es lo contrario de lo que decidiste en `#336` — con la diferencia de que aquí quien
    acredita es Google y no un empleado. **Sin esta respuesta la T2 no arranca.**
 2. ✅ **RESUELTA** (Q2): se vincula, se promueve y **se expulsa al ocupante**. Ver §5.2.
-3. **✱ ¿Aviso por correo al titular en cada vinculación?** Es lo único que le permite enterarse.
+3. ✅ **RESUELTA** (Q3): sí, en cada vinculación.
 4. **✱ ¿Desvincular sube a la T3?** Hoy un vínculo no deseado no se puede quitar salvo borrando la cuenta.
-5. **¿Cuentas de equipo?** ✱ Por defecto esta spec ahora dice **no** (§6.6).
-6. **✱ ¿Qué pinta la pantalla con el waiver en `externo` o sin texto publicado?** Ahí no hay casilla
-   obligatoria y §4 se queda sin sujeto.
-7. **✱ ¿La política de privacidad se actualiza antes de la T2?** Es texto en la BD de cada instalación.
+5. ✅ **RESUELTA** (Q5): **sí pueden**. Ver §6.6 y lo que eso hace obligatorio.
+6. ✅ **RESUELTA** (Q6): no hay pantalla, entran directamente. Con su consecuencia escrita en §7.
+7. ✅ **RESUELTA** (Q7): se actualiza **cuando la feature esté terminada**, no antes. ⚠️ Queda como
+   requisito de salida: **no se anuncia el botón a clientes reales sin ese texto**, porque el
+   cumplimiento del art. 13 descansa en que el documento enlazado describa el tratamiento.
 8. **✱ El cajón no tiene sitio: quedan ~51 B de chunk y 91/35 B de payload** `[MEDIDO]`.
    ¿Ampliamos el techo o parte de la pantalla va en carga diferida?
-9. **¿Marketing en la pantalla, o solo el interruptor?** ✱ Dato nuevo: el alta de hoy tiene **cuatro**
-   casillas, y la nueva quedaría en tres si el marketing entra.
+9. ✅ **RESUELTA** (Q9): **solo el interruptor** de la cuenta.
 10. **Q3 · `settings` o `.env`** — ✱ ya sin recomendación mía: §3.8 y §10.
 11. **Texto del botón**: «Continuar con Google».
 
@@ -582,15 +641,17 @@ poda ninguna**.
 ## 17 · Revisión y decisión
 
 - [x] Revisión adversarial de cinco lentes (2026-09-02) — **8 bloqueantes, aplicados en esta versión**
-- [ ] ✅ del owner
-- [ ] Q1 · dar por verificado el correo · **bloquea la T2**
-- [ ] Q2 · vincular cuentas sin verificar
-- [ ] Q3 · aviso por correo al vincular
-- [ ] Q4 · desvincular en la T3
-- [ ] Q5 · cuentas de equipo
-- [ ] Q6 · waiver en modo `externo`
-- [ ] Q7 · política de privacidad
-- [ ] Q8 · presupuesto del cajón
-- [ ] Q9 · marketing en la pantalla
-- [ ] Q10 · `settings` vs `.env`
-- [ ] Q11 · texto del botón
+- [x] Q1 · el correo se da por verificado
+- [x] Q2 · cuenta sin verificar: se vincula, se promueve y **se expulsa al ocupante**
+- [x] Q3 · aviso por correo en cada vinculación
+- [x] Q4 · desvincular sube a la T3
+- [x] Q5 · el equipo **sí** puede vincular
+- [x] Q6 · sin waiver que pedir, **no hay pantalla**
+- [x] Q7 · la política se actualiza **al terminar**, y es requisito de salida
+- [x] Q9 · marketing **solo** en el interruptor de la cuenta
+- [x] Q10 · las claves en `settings`
+- [ ] **Q8 · el presupuesto del cajón** — se mide al empezar la T2, no antes
+- [ ] **Q11 · texto del botón** — «Continuar con Google» salvo que digas otra cosa
+- [ ] ✅ final del owner a la spec
+
+▶ **Con esto la T1 está DESBLOQUEADA.** Lo único abierto es de la T2 y se resuelve al llegar.
