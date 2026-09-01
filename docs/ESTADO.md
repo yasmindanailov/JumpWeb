@@ -59,8 +59,9 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3771 en verde** (24.506 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
-> sobre el árbol CONJUNTO: `#322` (horario por zona) rebasado sobre `#321` (T9, un solo botón) y `#320`.
+> Suite **3776 en verde** (24.517 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche,
+> 2.ª parte) sobre el árbol CONJUNTO: `#323` (T10, la tarjeta pegatina) rebasado sobre `#322`
+> (horario por zona). Antes, 3771 / 24.506 (`#322` sobre `#321` y `#320`).
 > ⚠️ **Medida DESPUÉS del rebase, no sumada**: por separado daban 3766 / 24.557 (horario por zona
 > sobre `#320`) y 3761 / 24.483 (la T9 sobre `#320`). **Solo la conjunta vale** — y las aserciones
 > BAJAN respecto a una de las ramas porque la T9 retiró casos al unificar botones.
@@ -164,13 +165,30 @@
 >     `waiver.retention_months`, que sigue **`[PENDIENTE: owner]`** y hará falta igual.
 >
 > ═══════════ ❗❗❗ CARRIL 4 · LA PORTADA (sesión del 2026-09-01, tarde) — POR DÓNDE SE RETOMA ═══════════
-> ❗❗❗ **2026-09-01 (noche) · LA AUDITORÍA DE DISEÑO Y SU PRIMERA TANDA (T9) EN EL ÁRBOL (`#322`).**
+> ❗❗❗ **2026-09-01 (noche, 2.ª parte) · T10 EN EL ÁRBOL (`#323`): LA TARJETA ES PEGATINA Y HAY DOS
+> NIVELES.** Tanda B de la auditoría, `[DECIDIDO owner]` **opción A** con las dos pieles renderizadas
+> sobre `/precios` real (hoja-artefacto «La piel de la tarjeta», 1440 y 390, fuentes verificadas):
+> `.price` y `.rule` (`/normas`) pasan a la receta de la pegatina, **fuera sus hovers** (levitaban
+> con `--shadow-lift` y borde CIAN), la destacada conserva el contorno, el icono de `/normas` pasa al
+> hueco de `#319`. Nace la regla **pegatina = lo que se elige; sin sombra = apoyo** y la vigila
+> `CardSkinTest`. Medido: geometría idéntica antes/después (cero reflujo). ⚠️ **Trampa pagada**: la
+> primera hoja de opciones salió con la fuente de RESPALDO (webfonts externas) y se descartó — la
+> sonda espera `fonts.check()` de Bungee/Hanken antes de capturar. ⚠️⚠️ **Numeración**: el `#322`
+> lo tomó aforo en mitad de la tanda, y su commit **renumeró mi `#321` a `#322` en la fila de
+> `CLAUDE.md` y en este carril** (en `DECISIONES` seguía bien): corregido al integrar. *El número se
+> COPIA del `DECISIONES.md` remoto, no se deduce.* ▶ **Lo que sigue de la auditoría** (por orden del
+> informe): T3 el cian sin rol (FAQ, `/normas`) · T4 arquitectura (interiores que duplican portada) ·
+> islas heredadas (widget de ofertas, bucles `jj-*`) · la escala `--fs-*` esquivada · la capa de
+> sorpresa (F). Y tres flecos del owner en la spec §4.1: `.bd-pack` sobre magenta, el glifo «!», y
+> el hover de `.ride-card`.
+>
+> ❗❗❗ **2026-09-01 (noche) · LA AUDITORÍA DE DISEÑO Y SU PRIMERA TANDA (T9) EN EL ÁRBOL (`#321`).**
 > El owner pidió auditar el diseño con la skill `hallmark` (instalada en `~/.claude/skills/hallmark`;
 > el `npx` de Windows falla con EPERM, se instala clonando el repo) SIN workflow —⚠️ tercera vez que
 > lo pide: solitario por defecto—. El informe vive como ARTEFACTO «Un solo idioma» (3 críticos ·
 > 8 mayores · 6 menores, con temas T1–T7 y plan de tandas A–F): la tesis medida es que el «ruido»
 > NO viene de la decoración (la portada cumple su presupuesto) sino de DOS GENERACIONES del sistema
-> conviviendo. ▶ **T9 = tanda A del informe, HECHA** (`#322`, spec §3.undecies): un solo botón,
+> conviviendo. ▶ **T9 = tanda A del informe, HECHA** (`#321`, spec §3.undecies): un solo botón,
 > acción `--action` en toda la web `[DECIDIDO owner]`, hover sin salto, `bd-btn` absorbida, bloque
 > muerto `.invite-*` retirado (4 excepciones de guardas encogen), toggles con guion de diccionario.
 > Guarda `SingleButtonFamilyTest` (5/5 mutaciones muerden). ⚠️ `btn--zone` SIGUE en CSS a propósito:

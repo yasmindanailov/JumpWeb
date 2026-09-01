@@ -932,6 +932,65 @@ los 7 sólidos de `/precios` comparten relleno; el par del editor responde como 
 el FAQ (`.faq__q` hover/open) y en piezas de `/normas` — es el tema T3 del informe («el cian sin
 rol») y se decide con el owner, no de tapadillo en una tanda de botones.
 
+## 3.duodecies · T10 · LA TARJETA: pegatina en la tarifa y regla de DOS NIVELES (`#323`, 2026-09-01)
+
+**La tanda B de la auditoría** (informe «Un solo idioma», hallazgo T2: dos lenguajes de tarjeta sin
+regla). `[DECIDIDO owner]` con las dos pieles **renderizadas sobre `/precios` real** a 1440 y 390 (hoja
+«La piel de la tarjeta», artefacto): **opción A — pegatina en la tarjeta de tarifa, regla de dos
+niveles, y `/normas` entra**. Se descartó la B (blanda declarada como tarjeta de compra) porque
+obliga a explicar una excepción cada vez que alguien añade una tarjeta; la A no necesita explicación.
+
+**La regla, que antes no existía y ahora vigila `CardSkinTest`:**
+- **Primer nivel — lo que se elige o se compra — PEGATINA** (borde `1px solid var(--paper-fg)` +
+  `--r-lg` + `--shadow-float`): `.price` (tarifa, en portada y `/precios`) · `.ride-card` (`#303`) ·
+  `.visit-card` (`#307`) · `.rules-must__card` (`#309`) · `.rule` (`/normas`).
+- **Segundo nivel — apoyo — SIN la sombra dura**: `.socks-note` (la nota de calcetines, hairline) y
+  `.rules-peek__item` (el adelanto de normas de la portada: borde de tinta sin sombra, que `#309` ya
+  había dejado así a propósito — el segundo nivel existía de facto, solo faltaba nombrarlo).
+- **Ninguna pegatina LEVITA**: responde con la sombra (`.ride-card`, `#303`) o no responde; la que no
+  es enlace, no responde (`#307`/`#295`).
+
+**Lo ejecutado, y el porqué:**
+1. `.price`: borde `--line` → `--paper-fg`, entra `--shadow-float`, **fuera el hover** — levitaba 6 px
+   con `--shadow-lift` y borde CIAN (`--zone-1`): tres cosas que el sistema ya había retirado por
+   separado (`#303`, `#196`, el «cian sin rol» del informe) y que sobrevivían juntas justo en la
+   tarjeta donde se decide la compra. Fuera también su `transition`, que ya no transiciona nada.
+2. `.price--feat` (la destacada, fondo de zona) **conserva el borde de tinta**: `border-color:
+   transparent` era el único sitio donde una pegatina perdía su contorno; el toggle activo de
+   cumpleaños ya hacía tinta-sobre-color.
+3. `/normas` (`.rule`): pegatina con la misma receta, **fuera el hover** (levitaba 3 px) y **el icono
+   pasa al hueco de icono de `#319`** (`.price__ico`: cuadrado suave `--bg-soft`, glifo en tinta) en
+   vez del círculo cian relleno — el *icon-tile* de manual que el informe nombró. ⚠️ El glifo «!» se
+   queda: sustituirlo por un dibujo del set es otra decisión (§4.1). Sus dos `font-size` en px pasan
+   a `--fs-18`/`--fs-13` (mismo píxel, y ahora obedecen al mando por instalación).
+4. `.rules-grid`: `gap: 12px` → `--sp-16`, el aire de la otra rejilla de pegatinas (`.visit__col`):
+   con 12 px la sombra de 5 px se comía casi la mitad del hueco.
+
+**Verificación empírica** (sondas `tb-metrica.mjs` y `tb-despues.mjs`, Chrome real, con
+`document.fonts.ready` y `fonts.check()` de Bungee/Hanken ANTES de medir): la geometría del
+ANTES y del DESPUÉS es **idéntica** —1440: tarjeta 541×282 y «Más info» a 403 px en una línea de
+20; 390: 498×358 y 385/20— y solo cambian el borde (`1px rgb(16,20,24)`) y la sombra
+(`5px 5px 0`). **Cero reflujo**, como prometía la hoja.
+
+⚠️⚠️ **Dos trampas de instrumento pagadas en esta tanda**, las dos con capturas creíbles:
+- **La primera captura de opciones salió con la fuente de RESPALDO** (las webfonts son externas,
+  `fonts.bunny.net`, y `networkidle` llegó antes que ellas): titular de precio en sans genérica,
+  etiqueta punteada recortando «festivos», viñetas descolgadas — defectos que NO existen. Se
+  descartó y la sonda espera a `document.fonts.ready` + `fonts.check()`; *una captura sin fuentes
+  no enseña la tarjeta, enseña otra tarjeta.*
+- **La maqueta de la hoja usó un borde de 2 px y «Más info» saltó de línea**; la receta real es de
+  1 px —el mismo grosor que el hairline de antes— y no refluye nada. Lo que se enseña al owner
+  tiene que ser la receta que se va a implementar, o se decide sobre un efecto que no ocurrirá.
+- Y una tercera, ya conocida: a 390 la captura de ELEMENTO recorta la sombra dura y, si el
+  elemento es más alto que la ventana, **cose la barra fija de móvil** encima (`#303`); se captura
+  la primera tarjeta sola.
+
+**Lo que esto NO toca, dicho**: `.ride-card:hover { box-shadow: none }` (la única pegatina con
+respuesta al cursor, `#303`, y tiene CTA dentro igual que la tarifa — queda como excepción
+enumerable, no se unificó hacia ningún lado) · la tarjeta blanca del pack dentro de la banda de
+cumpleaños (`.bd-pack`: por la regla sería primer nivel, pero vive sobre magenta y el owner no la
+ha visto renderizada — §4.1) · el glifo «!» de `/normas`.
+
 ## 4. Lo que queda, y en qué orden
 
 > ⚠️ **La base de partida cambió el 2026-08-31 (`#300`)**: el owner revirtió la T1 entera y dejó

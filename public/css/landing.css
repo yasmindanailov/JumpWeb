@@ -1487,22 +1487,23 @@ img { display: block; max-width: 100%; }
 }
 .price__ico svg { max-width: 26px; max-height: 26px; }
 
+/* T10 (#323): la tarjeta de tarifa es PEGATINA — la misma receta que `.ride-card`, `.visit-card` y
+   `.rules-must__card` (borde de tinta 1 px + `--shadow-float`), `[DECIDIDO owner]` con las dos
+   pieles renderizadas delante. Regla de DOS NIVELES que nace aquí y vigila `CardSkinTest`:
+   pegatina = lo que se elige o se compra; sin sombra = apoyo (`.socks-note`, `.rules-peek__item`).
+   ⚠️ Sin hover: la tarjeta no es un enlace (`#307`/`#295`) — aquí levitaba 6 px con sombra difusa y
+   borde CIAN, tres cosas que el sistema ya había retirado por separado. El borde sigue midiendo
+   1 px, así que el texto no refluye: medido, «Más info» queda en la misma línea. */
 .price {
-  border: 1px solid var(--line); border-radius: var(--r-lg);
+  border: 1px solid var(--paper-fg); border-radius: var(--r-lg);
   padding: 32px 28px;
   background: var(--bg-card);
+  box-shadow: var(--shadow-float);
   display: flex; flex-direction: column; gap: 16px;
-  transition:
-    transform var(--dur-entra) var(--ease-sale),
-    border-color var(--dur-estado) var(--ease-sale), box-shadow var(--dur-entra) var(--ease-sale);
   position: relative; overflow: hidden;
 }
-.price:hover {
-  border-color: var(--zone-1);
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-lift);
-}
-.price--feat { background: var(--zone-1); color: var(--on-brand); border-color: transparent; }
+/* La destacada conserva el borde de tinta SOBRE el color de zona, como el toggle activo de cumpleaños. */
+.price--feat { background: var(--zone-1); color: var(--on-brand); }
 /* Contraste en card DESTACADA (fondo = color de zona, #232): los textos atenuados (--fg-mute)
    se leen mal sobre el color → se oscurecen «desde», «Complementos disponibles», los nombres,
    el «+», el precio y el «ver más» de los complementos; el separador punteado también. */
@@ -1957,31 +1958,30 @@ img { display: block; max-width: 100%; }
    consumidores **por fichero**, no por «esto ya no lo usa la home».
    ▶ Lo que SÍ se fue por no tener más consumidor: `.rules-layout`, `.rules-layout__media` y
    `.rules-vslider` (en `site.css`). */
+/* T10: el mismo aire que la otra rejilla de pegatinas (`.visit__col`, `--sp-16`) — con 12 px la
+   sombra dura de 5 px se comía casi la mitad del hueco entre tarjetas. */
 .rules-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 40px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-16); margin-top: 40px;
 }
+/* T10 (#323): las normas de `/normas` son PEGATINA, como la tarifa — era la página huérfana del
+   sistema (rejilla icono-título-texto blanda, con un círculo CIAN relleno por icono, y un hover que
+   levitaba). El icono pasa al HUECO de icono que `#319` aprobó para las tarjetas (`.price__ico`:
+   cuadrado suave, glifo en tinta); el glifo «!» se queda tal cual — cambiarlo por un dibujo del set
+   es otra decisión. Sin hover: la tarjeta no es un enlace. */
 .rule {
-  border: 1px solid var(--line); border-radius: var(--r); padding: 24px;
+  border: 1px solid var(--paper-fg); border-radius: var(--r-lg); padding: 24px;
   background: var(--bg-card);
+  box-shadow: var(--shadow-float);
   display: flex; flex-direction: column; gap: 10px;
-  transition:
-    transform var(--dur-entra) var(--ease-sale),
-    border-color var(--dur-estado) var(--ease-sale),
-    box-shadow var(--dur-entra) var(--ease-sale);
-}
-.rule:hover {
-  border-color: var(--zone-1);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lift);
 }
 .rule__icon {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--zone-1); color: var(--on-brand);
+  width: 40px; height: 40px; border-radius: var(--r-sm);
+  background: var(--bg-soft); color: var(--paper-fg);
   display: grid; place-items: center; margin-bottom: 6px;
-  font-family: var(--font-display); font-weight: 800; font-size: 16px;
+  font-family: var(--font-display); font-weight: 800; font-size: var(--fs-16);
 }
-.rule__name { font-size: 18px; font-weight: 600; line-height: 1.2; }
-.rule__desc { font-size: 13px; color: var(--fg-mute); line-height: 1.5; }
+.rule__name { font-size: var(--fs-18); font-weight: 600; line-height: 1.2; }
+.rule__desc { font-size: var(--fs-13); color: var(--fg-mute); line-height: 1.5; }
 
 /* ══ NORMAS · dos requisitos PEGAJOSOS y un asomo de normas (`#309`) ═══════════════════════════
    `[DECIDIDO owner, 2026-09-01]`. Sustituye a `.rules-layout` + `.rules-vslider` + `.rule`, que eran

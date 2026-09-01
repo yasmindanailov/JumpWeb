@@ -19079,3 +19079,60 @@ local ANTES de mutar**. El arnés definitivo hace `git stash` sobre un commit de
 confirma el árbol restaurado · **`VERIFY_CONC=1`: `purchase:verify-oversell` en los SEIS escenarios
 (`entry`, `pack`, `pack-guests`, `pack-prep`, `mixed`, `panel-edit`) y `redsys:verify-concurrency`,
 todos sobre InnoDB real** · queda el OJO del owner y la tanda B.
+
+## #323 · 2026-09-01 · LA TARJETA ES PEGATINA: tarifa y `/normas` en el primer nivel, regla de DOS NIVELES, y ninguna tarjeta levita (T10 del idioma visual · tanda B de la auditoría)
+
+**Contexto.** Segunda tanda ejecutada de la auditoría de diseño (hallazgo T2: dos lenguajes de
+tarjeta sin regla — pegatina en atracciones, Visítanos y requisitos; BLANDA justo en la tarifa, la
+superficie donde se decide la compra, y en `/normas`). Flujo acordado: **opciones renderizadas
+antes de tocar código** — hoja «La piel de la tarjeta» (artefacto) con las dos pieles sobre
+`/precios` REAL a 1440 y 390, con las fuentes del cliente cargadas y verificadas.
+
+**`[DECIDIDO owner]`: opción A** — pegatina en la tarjeta de tarifa, regla de dos niveles, y
+`/normas` entra. Se descartó la B (declarar la blanda como tarjeta de compra): obliga a explicar
+una excepción cada vez que alguien añade una tarjeta; la A no necesita explicación.
+
+**La regla, que nace aquí** (`docs/specs/idioma-visual-heredado.md` §3.duodecies; guarda
+`CardSkinTest`, 5 casos):
+- Primer nivel — **lo que se elige o se compra** — PEGATINA (borde `1px var(--paper-fg)` + `--r-lg`
+  + `--shadow-float`): `.price` · `.ride-card` · `.visit-card` · `.rules-must__card` · `.rule`.
+- Segundo nivel — **apoyo** — sin la sombra dura: `.socks-note` y `.rules-peek__item` (el adelanto
+  de normas de la portada ya era «borde de tinta sin sombra» por `#309`: el segundo nivel existía
+  de facto, faltaba nombrarlo).
+- Ninguna pegatina levita: responde con la sombra (`.ride-card`, `#303`) o no responde; la que no
+  es enlace, no tiene hover (`#307`/`#295`).
+
+**Qué cambió**: `.price` deja el hairline y el hover que **levitaba 6 px con `--shadow-lift` y borde
+CIAN** (tres cosas que el sistema ya había retirado por separado y sobrevivían juntas en la
+tarjeta de compra); la destacada `.price--feat` conserva el borde de tinta sobre el color de zona
+(era el único sitio donde una pegatina borraba su contorno); `.rule` en `/normas` pasa a la
+receta, pierde su hover (3 px) y su icono deja el círculo cian relleno por **el hueco de icono
+de `#319`** (el glifo «!» se queda: cambiarlo por un dibujo del set es otra decisión); `.rules-grid`
+respira como la rejilla de Visítanos (`--sp-16`: con 12 px la sombra de 5 se comía medio hueco).
+
+**Verificación**: geometría del ANTES y del DESPUÉS **idéntica**, medida con `fonts.check()` de
+Bungee/Hanken antes de leer — 1440: tarjeta 541×282 y «Más info» a 403 px en una línea de 20;
+390: 498×358 y 385/20 — solo cambian borde (`1px rgb(16,20,24)`) y sombra (`5px 5px 0`): **cero
+reflujo** · capturas del después en `/precios` (1440 y 390), `/normas` (1440 y 390) y la portada ·
+suite verde (**3.776 tests, 24.517 aserciones**, medida sobre el árbol conjunto tras el rebase) ·
+Pint ✓ · docs-check ✓ · **5/5 mutaciones de `CardSkinTest` muerden** (sin sombra en `.price` · hover
+que levita · sombra dura en la nota de calcetines · destacada sin contorno · `/normas` a hairline),
+con control verde antes y después, por código de salida.
+
+⚠️⚠️ **Tres trampas de instrumento, todas con capturas creíbles**: (1) la primera hoja de opciones
+salió con la **fuente de RESPALDO** (webfonts externas, `fonts.bunny.net`; `networkidle` llegó
+antes) — titular en sans genérica, etiqueta punteada recortada, viñetas descolgadas: *una captura
+sin fuentes enseña otra tarjeta*, y se descartó; (2) la maqueta usó **2 px** de borde y «Más
+info» saltó de línea — la receta real es de 1 px, el mismo grosor que el hairline, y no refluye:
+*lo que se enseña al owner tiene que ser la receta que se va a implementar*; (3) a 390 la captura
+de elemento cose la barra fija (`#303`) → se captura la primera tarjeta sola.
+
+⚠️ **Numeración**: el `#322` lo tomó el carril de aforo mientras esto estaba en obra (segunda vez
+hoy), y su commit **renumeró por error mi `#321` a `#322` dentro de la fila de `CLAUDE.md`**
+(en `DECISIONES` el `#321` seguía intacto). El conflicto del rebase se resolvió con la fila
+correcta; *un número de decisión se copia del `DECISIONES.md` REMOTO, nunca se deduce*.
+
+**Queda para el owner (§4.1)**: la tarjeta blanca del pack en la banda de cumpleaños (`.bd-pack`:
+por la regla sería primer nivel, pero vive sobre magenta y no está renderizada) · el glifo «!» de
+`/normas` frente a un icono del set · si `.ride-card:hover` (la única pegatina que responde) debe
+unificarse con las demás.
