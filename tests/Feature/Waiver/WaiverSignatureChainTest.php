@@ -82,8 +82,12 @@ class WaiverSignatureChainTest extends TestCase
         // `#161` (owner): la identidad del firmante viaja EN la firma, tal y como está al firmar.
         $this->assertSame($holder->name, $signature->holder_name);
         $this->assertSame($holder->email, $signature->holder_email);
-        $this->assertSame(3, $signature->fresh()->canonical_version);
+        // El literal es deliberado: subir la versión canónica tiene que traer a alguien AQUÍ a
+        // confirmarlo, porque de eso depende que lo ya firmado siga verificando.
+        $this->assertSame(4, $signature->fresh()->canonical_version);
         $this->assertNull($signature->subject_name, 'en la firma del titular la identidad del sujeto va a null (v3)');
+        $this->assertNull($signature->subject_authorization_id, 'y el sujeto del justificante tampoco (v4)');
+        $this->assertNull($signature->signer_name, 'el titular firma por sí mismo: no hay firmante aparte');
         $this->assertNull($signature->subject_born_on);
         $this->assertTrue($signature->fresh()->verifyHash());
 
@@ -214,7 +218,8 @@ class WaiverSignatureChainTest extends TestCase
         $this->assertSame('Lucas', $signature->subject_name);
         $this->assertSame('2017-03-12', $signature->fresh()->subject_born_on->toDateString());
         $this->assertSame('Lucas', $signature->subjectName());
-        $this->assertSame(3, $signature->fresh()->canonical_version);
+        $this->assertSame(4, $signature->fresh()->canonical_version);
+        $this->assertNull($signature->subject_authorization_id, 'un menor A CARGO no cuelga de una autorización');
         $this->assertTrue($signature->fresh()->verifyHash());
         $this->assertNull($holder->fresh()->waiver_accepted_at);
         $this->assertSame(0, $holder->consents()->count());
@@ -346,10 +351,59 @@ class WaiverSignatureChainTest extends TestCase
         $forMinor['subject_born_on'] = now()->setDate(2017, 3, 12);
         $this->assertSame($expectedMinor, WaiverSignature::canonical($forMinor));
 
-        // Sin `canonical_version` se usa la vigente (v3); v1, v2 y v3 no pueden dar el mismo texto.
-        unset($v3['canonical_version']);
-        $this->assertSame($expectedV3, WaiverSignature::canonical($v3));
-        $this->assertSame(3, WaiverSignature::CANONICAL_VERSION);
+        // v4 (`specs/waiver-por-reserva.md` §4.3): + el sujeto MENOR INVITADO
+        // (`subject_authorization_id`, que va justo detrás de `subject_id`) y la identidad de QUIEN
+        // FIRMA, que en un justificante no es el titular de la cuenta.
+        $commonV4 = str_replace(
+            '"subject_id":null,"legal_document_version_id":3',
+            '"subject_id":null,"subject_authorization_id":null,"legal_document_version_id":3',
+            $common,
+        );
+        $v4 = $v3;
+        $v4['canonical_version'] = 4;
+        $v4['subject_authorization_id'] = null;
+        $v4['signer_name'] = null;
+        $v4['signer_email'] = null;
+        $v4['signer_phone'] = null;
+        $v4['signer_relationship'] = null;
+        $expectedV4 = '{"v":4,'.$commonV4.',"holder_name":"Ana Pérez","holder_email":"ana@example.com",'
+            .'"subject_name":null,"subject_born_on":null,"signer_name":null,"signer_email":null,'
+            .'"signer_phone":null,"signer_relationship":null}';
+        $this->assertSame($expectedV4, WaiverSignature::canonical($v4));
+        $this->assertSame(hash('sha256', $expectedV4), WaiverSignature::computeHash($v4));
+
+        // Y un justificante REAL: el sujeto no tiene `subject_id` —lo tiene la autorización— y quien
+        // firma no es el titular. Los ids llegan como cadena desde la BD y salen como entero.
+        $guest = $v4;
+        $guest['subject_type'] = 'guest_minor';
+        $guest['subject_authorization_id'] = '42';
+        $guest['subject_name'] = 'Ana Gómez Ruiz';
+        $guest['subject_born_on'] = '2018-05-04';
+        $guest['signer_name'] = 'Marta Ruiz Díaz';
+        $guest['signer_email'] = 'marta@example.com';
+        $guest['signer_phone'] = '600111222';
+        $guest['signer_relationship'] = 'mother';
+        $commonGuest = str_replace(
+            '"subject_type":"holder","subject_id":null,"subject_authorization_id":null',
+            '"subject_type":"guest_minor","subject_id":null,"subject_authorization_id":42',
+            $commonV4,
+        );
+        $expectedGuest = '{"v":4,'.$commonGuest.',"holder_name":"Ana Pérez","holder_email":"ana@example.com",'
+            .'"subject_name":"Ana Gómez Ruiz","subject_born_on":"2018-05-04","signer_name":"Marta Ruiz Díaz",'
+            .'"signer_email":"marta@example.com","signer_phone":"600111222","signer_relationship":"mother"}';
+        $this->assertSame($expectedGuest, WaiverSignature::canonical($guest));
+
+        // Sin `canonical_version` se usa la vigente (v4); ninguna versión puede dar el mismo texto que
+        // otra — es lo que garantiza que subirla NO invalide lo ya firmado.
+        $withoutVersion = $v4;
+        unset($withoutVersion['canonical_version']);
+        $this->assertSame($expectedV4, WaiverSignature::canonical($withoutVersion));
+        $this->assertSame(4, WaiverSignature::CANONICAL_VERSION);
+        $this->assertSame(
+            4,
+            collect([$expectedV1, $expectedV2, $expectedV3, $expectedV4])->unique()->count(),
+            'dos versiones canónicas que serialicen igual harían indistinguibles dos pruebas distintas',
+        );
 
         $asBuilt = $v1;
         $asBuilt['user_id'] = 7;

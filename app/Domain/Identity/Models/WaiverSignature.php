@@ -22,10 +22,12 @@ use Illuminate\Support\Carbon;
  *    `pruning()` autoriza fila a fila (`Prunable`), y la limpieza de go-live por `DB::table`.
  *  - **Hash canónico + cadena POR (TITULAR, SUJETO)** (§4.7, §8.5; `DECISIONES #197`): `hash` cubre
  *    todos los campos de la prueba en un orden fijo; `prev_hash` enlaza con la firma anterior del
- *    MISMO sujeto —el titular, o cada menor a su cargo—, así que la poda de un sujeto nunca deja
- *    agujeros en la cadena de otro. La serialización la pone `WaiverSigner` (lock de la fila del
- *    titular). Que dos firmas simultáneas del mismo sujeto den UNA fila lo mide `waiver:verify-chain`
- *    sobre MySQL real.
+ *    MISMO sujeto —el titular, cada menor a su cargo, o cada menor invitado autorizado—, así que la
+ *    poda de un sujeto nunca deja agujeros en la cadena de otro. **Qué sujeto es cada fila lo dice
+ *    {@see chainKey()}, que es el ÚNICO sitio donde vive esa regla** (§4.4 de
+ *    `specs/waiver-por-reserva.md`: estaba escrita a mano en tres y los tres se cruzaban con el
+ *    sujeto nuevo). La serialización la pone `WaiverSigner` (lock de la fila del titular). Que dos
+ *    firmas simultáneas del mismo sujeto den UNA fila lo mide `waiver:verify-chain` sobre MySQL real.
  *  - **La identidad del SUJETO viaja en la firma**: `holder_name`/`holder_email` (v2, `#161`) y, para
  *    un menor a cargo, `subject_name`/`subject_born_on` (v3, `#197`), copiados al firmar y dentro del
  *    hash. `subject_id` es FK RESTRICT a `dependents` (`menores-a-cargo.md` §4.4).
@@ -45,6 +47,28 @@ class WaiverSignature extends Model
 
     public const SUBJECT_DEPENDENT = 'dependent';
 
+    /**
+     * Fase 6 · el JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §4.1): un menor que
+     * **no es menor a cargo** de quien reservó, autorizado por un adulto SIN cuenta desde un enlace.
+     *
+     * ⚠️ En estas filas `user_id` **no es quien firma**: es el RESPONSABLE, el que hizo la reserva
+     * (`[DECIDIDO owner]`). Quien firma viaja en `signer_*`. Es lo que permite que `user_id` siga
+     * `NOT NULL` y que la cadena siga anclada a una cuenta.
+     */
+    public const SUBJECT_GUEST_MINOR = 'guest_minor';
+
+    /**
+     * Los sujetos que son **de la propia cuenta**: el titular y sus menores a cargo.
+     *
+     * ❗ **Es la lista que evita una fuga, no una comodidad.** Con el responsable en `user_id`, las
+     * firmas de menores invitados también apuntan a su cuenta — pero **no son suyas**: llevan el
+     * nombre del hijo de otra familia y los datos de otro adulto. Todo lo que signifique «las firmas
+     * de este titular» tiene que acotarse con esto (`User::waiverSignatures()` ya lo hace).
+     *
+     * @var list<string>
+     */
+    public const SUBJECTS_OF_HOLDER = [self::SUBJECT_HOLDER, self::SUBJECT_DEPENDENT];
+
     public const CHANNEL_WEB = 'web';
 
     public const CHANNEL_API = 'api';
@@ -59,7 +83,7 @@ class WaiverSignature extends Model
      * (spec §4.7): solo añade una entrada a `HASHED_FIELDS_BY_VERSION`. Nunca se edita una entrada
      * existente.
      */
-    public const CANONICAL_VERSION = 3;
+    public const CANONICAL_VERSION = 4;
 
     /**
      * Campos que entran en el hash, EN ESTE ORDEN, por versión del esquema.
@@ -69,6 +93,16 @@ class WaiverSignature extends Model
      *    de `User::anonymize()`.
      *  - v3 (2026-08-27, `DECISIONES #197`): + la IDENTIDAD del SUJETO cuando es un menor a cargo
      *    (`subject_name`, `subject_born_on`; `null` en las firmas del titular), por la misma razón.
+     *  - v4 (2026-09-01, `specs/waiver-por-reserva.md` §4.3): + el SUJETO nuevo
+     *    (`subject_authorization_id`) y la IDENTIDAD DE QUIEN FIRMA (`signer_*`), que en un
+     *    justificante de menor invitado **no es el titular de la cuenta**. `subject_name` y
+     *    `subject_born_on` se reutilizan tal cual: significan lo mismo —el menor— en las dos clases.
+     *
+     * ⚠️ **No entra `signer_user_id`, y no es un olvido**: una columna con `ON DELETE SET NULL` no
+     * puede vivir dentro de un hash que se verifica. Está MEDIDO en este mismo repo con
+     * `declared_by_user_id` —borrar la fila del operador lo pone a `NULL` y `verifyHash()` pasa de
+     * `true` a `false` sobre una firma que nadie tocó (`DEUDA.md`)—. El vínculo con la cuenta del
+     * firmante, si algún día hace falta, va FUERA del hash o no va.
      *
      * @var array<int, list<string>>
      */
@@ -87,6 +121,12 @@ class WaiverSignature extends Model
             'accepted_at', 'accepted_tz', 'ip', 'user_agent', 'channel', 'declared_by_user_id', 'prev_hash',
             'holder_name', 'holder_email', 'subject_name', 'subject_born_on',
         ],
+        4 => [
+            'user_id', 'subject_type', 'subject_id', 'subject_authorization_id', 'legal_document_version_id',
+            'document_hash', 'accepted_at', 'accepted_tz', 'ip', 'user_agent', 'channel',
+            'declared_by_user_id', 'prev_hash', 'holder_name', 'holder_email', 'subject_name',
+            'subject_born_on', 'signer_name', 'signer_email', 'signer_phone', 'signer_relationship',
+        ],
     ];
 
     /**
@@ -102,6 +142,7 @@ class WaiverSignature extends Model
         'accepted_at' => 'datetime',
         'subject_born_on' => 'immutable_date',
         'subject_id' => 'integer',
+        'subject_authorization_id' => 'integer',
         'declared_by_user_id' => 'integer',
         'canonical_version' => 'integer',
     ];
@@ -158,6 +199,18 @@ class WaiverSignature extends Model
         return $this->belongsTo(Dependent::class, 'subject_id');
     }
 
+    /**
+     * La autorización del menor INVITADO que esta firma prueba (`null` en las otras dos clases). La
+     * fila existe mientras exista la firma (FK RESTRICT); su identidad de entonces está copiada en la
+     * propia fila, igual que la del titular y la del menor a cargo.
+     *
+     * @return BelongsTo<GuardianAuthorization, $this>
+     */
+    public function authorization(): BelongsTo
+    {
+        return $this->belongsTo(GuardianAuthorization::class, 'subject_authorization_id');
+    }
+
     public function isDeclaredByOperator(): bool
     {
         return $this->declared_by_user_id !== null;
@@ -166,6 +219,68 @@ class WaiverSignature extends Model
     public function isForHolder(): bool
     {
         return $this->subject_type === self::SUBJECT_HOLDER;
+    }
+
+    /** ¿Es el justificante de un menor INVITADO, o sea una firma que NO es del titular de la cuenta? */
+    public function isForGuestMinor(): bool
+    {
+        return $this->subject_type === self::SUBJECT_GUEST_MINOR;
+    }
+
+    // ─── La CLAVE DE CADENA — un solo sitio (§4.4) ────────────────────────────
+
+    /**
+     * La clave que identifica **a qué cadena pertenece** esta firma.
+     *
+     * ❗❗ **Existe porque hasta esta tanda estaba escrita a mano en tres sitios** —`WaiverSigner`,
+     * `WaiverChain` y `VerifyWaiverChainConcurrency`, los dos últimos con el literal duplicado— **y
+     * los tres se cruzaban con el sujeto nuevo**, que no usa `subject_id`:
+     *
+     *  - `WaiverSigner` buscaba la firma anterior con `where('subject_id', $id)`; con `null` Laravel
+     *    genera `is null`, así que **todas** las autorizaciones del mismo responsable compartían
+     *    búsqueda y la idempotencia por versión devolvía **la firma de OTRO menor**: el segundo padre
+     *    veía la pantalla de «hecho», recibía su correo y **su hijo se quedaba sin justificante**, sin
+     *    fallo y sin aviso.
+     *  - `WaiverChain` agrupaba por `subject_type.':'.($subject_id ?? '')`, así que todos los menores
+     *    invitados caían en `guest_minor:` y el verificador declaraba **ROTA una cadena sana**.
+     *
+     * ▶ *Que un mecanismo admita un caso nuevo no es que lo admita: hay que mirar de qué columna
+     * cuelga cada decisión que ya toma.*
+     *
+     * El formato de `holder` y `dependent` **no cambia** a propósito: la salida de los verificadores
+     * sigue siendo la misma cadena de texto que antes.
+     */
+    public function chainKey(): string
+    {
+        return self::chainKeyFor($this->subject_type, $this->subject_id, $this->subject_authorization_id);
+    }
+
+    public static function chainKeyFor(string $subjectType, ?int $subjectId, ?int $authorizationId): string
+    {
+        return $subjectType === self::SUBJECT_GUEST_MINOR
+            ? self::SUBJECT_GUEST_MINOR.':a'.(int) $authorizationId
+            : $subjectType.':'.($subjectId ?? '');
+    }
+
+    /**
+     * El lado CONSULTA de {@see chainKey()}: acota a las firmas de ESA cadena.
+     *
+     * Va aquí, junto a la clave, porque separar «cómo se agrupa» de «cómo se busca» es exactamente
+     * cómo se produjo el defecto de arriba: eran la misma regla escrita dos veces.
+     *
+     * @param  Builder<WaiverSignature>  $query
+     */
+    public function scopeInChain(Builder $query, string $subjectType, ?int $subjectId, ?int $authorizationId): void
+    {
+        $query->where('subject_type', $subjectType);
+
+        if ($subjectType === self::SUBJECT_GUEST_MINOR) {
+            $query->where('subject_authorization_id', $authorizationId);
+
+            return;
+        }
+
+        $query->where('subject_id', $subjectId);
     }
 
     /** El nombre del firmante TAL Y COMO ESTABA al firmar (v2); las filas v1 caen a la cuenta. */
@@ -186,7 +301,19 @@ class WaiverSignature extends Model
             return null;
         }
 
+        // Un justificante de menor invitado SIEMPRE nace con el nombre copiado (v4): no hay respaldo
+        // que buscar, y buscarlo en `dependents` con `subject_id = null` daría siempre `null`.
+        if ($this->isForGuestMinor()) {
+            return $this->subject_name;
+        }
+
         return $this->subject_name ?? $this->dependent?->name;
+    }
+
+    /** Quién FIRMÓ, cuando no es el titular de la cuenta (v4): el padre, la madre o el tutor. */
+    public function signerName(): ?string
+    {
+        return $this->signer_name;
     }
 
     // ─── Hash canónico ────────────────────────────────────────────────────────
@@ -229,7 +356,7 @@ class WaiverSignature extends Model
                 // Una fecha SIN hora: la fila leída de SQLite trae «Y-m-d 00:00:00», la de MySQL «Y-m-d» y
                 // la recién construida un Carbon o la cadena; las tres tienen que dar «Y-m-d».
                 $field === 'subject_born_on' => $value instanceof \DateTimeInterface ? $value->format('Y-m-d') : mb_substr((string) $value, 0, 10),
-                in_array($field, ['user_id', 'subject_id', 'legal_document_version_id', 'declared_by_user_id'], true) => (int) $value,
+                in_array($field, ['user_id', 'subject_id', 'subject_authorization_id', 'legal_document_version_id', 'declared_by_user_id'], true) => (int) $value,
                 default => (string) $value,
             };
         }
@@ -267,8 +394,12 @@ class WaiverSignature extends Model
             }
             if ($dependentMonths !== null) {
                 $cutoffBornOn = DisplayTime::today()->subYears(Dependent::ADULT_AGE)->subMonths($dependentMonths)->toDateString();
-                $query->orWhere(fn (Builder $dependent) => $dependent
-                    ->where('subject_type', self::SUBJECT_DEPENDENT)
+                // ⚠️ Las DOS clases de menor comparten plazo, y no es pereza: la razón jurídica es la
+                // misma —el sujeto es un menor, así que se cuenta desde sus 18— y un segundo ajuste
+                // sería un valor más que el owner tendría que decidir para obtener el mismo resultado.
+                // Como la cadena es por sujeto, podar una clase nunca deja agujeros en la otra.
+                $query->orWhere(fn (Builder $minor) => $minor
+                    ->whereIn('subject_type', [self::SUBJECT_DEPENDENT, self::SUBJECT_GUEST_MINOR])
                     ->whereNotNull('subject_born_on')
                     ->where('subject_born_on', '<=', $cutoffBornOn));
             }

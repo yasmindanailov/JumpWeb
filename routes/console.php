@@ -2,6 +2,7 @@
 
 use App\Domain\Identity\Models\CookieConsentLog;
 use App\Domain\Identity\Models\Dependent;
+use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\WaiverSignature;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -52,7 +53,7 @@ Schedule::command('orders:expire')->everyFiveMinutes()->withoutOverlapping();
  * que los justifique. Las activas no se podan nunca (son del titular); las desvinculadas con firma,
  * tampoco (`Dependent::prunable()` las excluye antes de que la guarda de `deleting` lance).
  */
-Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, Dependent::class]])
+Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class]])
     ->daily()
     ->withoutOverlapping();
 

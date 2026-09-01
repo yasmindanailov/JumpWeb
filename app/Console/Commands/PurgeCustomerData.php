@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use Illuminate\Console\Command;
@@ -105,6 +106,20 @@ class PurgeCustomerData extends Command
             PaymentRefund::whereIn('payment_id', $paymentIds)->delete();
             // 2. Pagos (morph: sin cascada al borrar el pedido).
             Payment::whereIn('id', $paymentIds)->delete();
+            // 2.bis Fase 6 · el JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md`
+            //    §4.2.1). Va ANTES de los pedidos porque las DOS claves foráneas del camino son
+            //    RESTRICT: `waiver_signatures.subject_authorization_id → guardian_authorizations` y
+            //    `guardian_authorizations.order_id → orders`. Con CASCADE en la segunda tampoco
+            //    valdría: el cascade se estrellaría contra la primera un peldaño más allá.
+            //
+            //    ⚠️⚠️ Esto borra firmas de cuentas que la purga CONSERVA, y es correcto: aquí se
+            //    borran TODOS los pedidos, y la prueba de que un adulto autorizó la entrada de un
+            //    menor a una visita cuyo pedido ya no existe no prueba nada. Es la única excepción a
+            //    «solo se tocan los datos de los usuarios purgados», y va escrita para que no se lea
+            //    como un descuido. Por `DB::table`: los dos modelos rechazan `delete()`.
+            DB::table('waiver_signatures')->where('subject_type', WaiverSignature::SUBJECT_GUEST_MINOR)->delete();
+            DB::table('guardian_authorizations')->delete();
+
             // 3. Pedidos → cascada order_items, tickets, order_adjustments.
             Order::query()->delete();
             // 4. Adyacentes de usuario SIN FK: tokens de reset (por email), sesiones y tokens de API.

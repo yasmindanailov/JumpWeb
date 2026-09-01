@@ -4,9 +4,11 @@ namespace App\Domain\Identity\Services;
 
 use App\Domain\Identity\Exceptions\DependentNotFoundException;
 use App\Domain\Identity\Exceptions\DependentNotMinorException;
+use App\Domain\Identity\Exceptions\GuardianAuthorizationNotFoundException;
 use App\Domain\Identity\Exceptions\WaiverDocumentStaleException;
 use App\Domain\Identity\Exceptions\WaiverEmailUnverifiedException;
 use App\Domain\Identity\Models\Dependent;
+use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
@@ -32,7 +34,16 @@ use LogicException;
  *  3. si el sujeto es un MENOR a cargo (`menores-a-cargo.md` §4.3): la pertenencia se comprueba AQUÍ,
  *     bajo el lock —suyo, activo y menor— porque el `subject_id` llega del cliente (§4.9), y su
  *     identidad de ese momento se copia en la fila (v3), como la del titular desde `#161`.
- *  4. el rastro de auditoría, sin PII: `waiver.signed` o, si la declara un operador, `waiver.declared`.
+ *  4. si el sujeto es un MENOR INVITADO (`specs/waiver-por-reserva.md` §4.1): la identidad del menor
+ *     **y la de quien firma** se copian de su autorización (v4). ⚠️ Aquí `$holder` **no es quien
+ *     firma**: es el RESPONSABLE de la reserva. Quien firma es un adulto sin cuenta, y por eso esta
+ *     rama no exige correo verificado (§7·8).
+ *  5. el rastro de auditoría, sin PII: `waiver.signed` o, si la declara un operador, `waiver.declared`.
+ *
+ * ⚠️⚠️ **La cadena a la que pertenece cada firma la decide `WaiverSignature::chainKey()`/`inChain()`,
+ * nunca una condición escrita aquí.** Hasta la T1 del justificante por reserva esta clase acotaba con
+ * `where('subject_id', …)` y un sujeto sin `subject_id` habría hecho que la idempotencia devolviera
+ * la firma de otro menor, en silencio (`waiver-por-reserva.md` §11·B1).
  */
 final class WaiverSigner
 {
@@ -46,6 +57,9 @@ final class WaiverSigner
         }
         if ($request->subjectType === WaiverSignature::SUBJECT_DEPENDENT && $request->subjectId === null) {
             throw new InvalidArgumentException('La firma en nombre de un menor a cargo necesita su identificador.');
+        }
+        if ($request->subjectType === WaiverSignature::SUBJECT_GUEST_MINOR && $request->authorizationId === null) {
+            throw new InvalidArgumentException('El justificante de un menor invitado necesita su autorización.');
         }
         if ($holder->isAnonymized()) {
             throw new LogicException('Una cuenta anonimizada no puede firmar el waiver.');
@@ -63,7 +77,18 @@ final class WaiverSigner
             // verificado — es lo que prueba que quien acepta es dueño del buzón que la firma copia.
             // La firma DECLARADA en mostrador (§8.4) queda fuera: ahí la identidad la asegura el
             // operador, y el cliente de agenda puede no tener correo. Sobre la fila BLOQUEADA.
-            if ($request->declaredBy === null && $locked->email_verified_at === null) {
+            //
+            // ⚠️⚠️ Y el JUSTIFICANTE de un menor invitado también queda fuera
+            // (`[DECIDIDO owner, 2026-09-01]`, `specs/waiver-por-reserva.md` §7·8): **aquí el buzón
+            // del titular no es el de quien acepta**. Quien firma es un adulto sin cuenta y su
+            // correo, que tampoco está verificado, viaja en `signer_email` con el PDF diciéndolo.
+            // Exigirlo mataría el caso principal: un colegio se da de alta POR TELÉFONO y
+            // `CustomerRegistrar` deja `email_verified_at` en `null` a propósito, así que ningún
+            // padre podría firmar. Esto MATIZA la decisión del 26-08, no la contradice: aquélla es
+            // sobre la firma del propio titular.
+            $needsVerifiedEmail = $request->declaredBy === null
+                && $request->subjectType !== WaiverSignature::SUBJECT_GUEST_MINOR;
+            if ($needsVerifiedEmail && $locked->email_verified_at === null) {
                 throw new WaiverEmailUnverifiedException;
             }
 
@@ -77,6 +102,32 @@ final class WaiverSigner
             // El SUJETO menor a cargo: suyo, activo y menor — decidido bajo el lock, y su identidad
             // copiada tal y como está ahora (`menores-a-cargo.md` §4.2, §4.9; `DECISIONES #197`).
             $subjectIdentity = ['subject_name' => null, 'subject_born_on' => null];
+            $signerIdentity = ['signer_name' => null, 'signer_email' => null, 'signer_phone' => null, 'signer_relationship' => null];
+
+            // El SUJETO menor INVITADO (`specs/waiver-por-reserva.md` §4.1): su identidad y la de quien
+            // firma se copian de la autorización, que `GuardianAuthorizationSigner` acaba de crear (o
+            // encontrar) DENTRO de esta misma transacción y bajo este mismo lock.
+            //
+            // ⚠️ Se comprueba AQUÍ, como la pertenencia de un menor a cargo, porque el identificador
+            // llega de fuera: una autorización que no exista no puede firmarse.
+            if ($request->subjectType === WaiverSignature::SUBJECT_GUEST_MINOR) {
+                $authorization = GuardianAuthorization::query()->whereKey($request->authorizationId)->first();
+                if ($authorization === null) {
+                    throw new GuardianAuthorizationNotFoundException;
+                }
+
+                $subjectIdentity = [
+                    'subject_name' => mb_substr($authorization->minorFullName(), 0, 255),
+                    'subject_born_on' => $authorization->minor_born_on->toDateString(),
+                ];
+                $signerIdentity = [
+                    'signer_name' => mb_substr($authorization->guardianFullName(), 0, 255),
+                    'signer_email' => $authorization->guardian_email !== null ? mb_substr((string) $authorization->guardian_email, 0, 255) : null,
+                    'signer_phone' => $authorization->guardian_phone !== null ? mb_substr((string) $authorization->guardian_phone, 0, 32) : null,
+                    'signer_relationship' => (string) $authorization->guardian_relationship,
+                ];
+            }
+
             if ($request->subjectType === WaiverSignature::SUBJECT_DEPENDENT) {
                 $dependent = Dependent::query()
                     ->whereKey($request->subjectId)
@@ -112,10 +163,16 @@ final class WaiverSigner
             // una segunda fila ni un segundo consentimiento: se devuelve la que hay. Va DENTRO del lock
             // a propósito: dos envíos simultáneos del mismo `document_id` pasan los dos la comprobación
             // de vigencia, y solo el lock de la fila del titular los pone en fila.
+            // ⚠️⚠️ La cadena se acota con `inChain()`, NO con `where('subject_id', …)`. Hasta la T1 del
+            // justificante por reserva esto estaba escrito a mano aquí, y con un sujeto cuyo
+            // `subject_id` es `null` Laravel lo convierte en `is null`: **todas** las autorizaciones
+            // del mismo responsable habrían compartido esta búsqueda y la idempotencia de abajo
+            // habría devuelto la firma de OTRO menor —el segundo padre veía «hecho», recibía su
+            // correo y su hijo se quedaba sin justificante—. La regla vive en `WaiverSignature`
+            // (`chainKey()`/`scopeInChain()`) y la comparten el firmador y los dos verificadores.
             $previous = WaiverSignature::query()
                 ->where('user_id', $locked->getKey())
-                ->where('subject_type', $request->subjectType)
-                ->where('subject_id', $request->subjectId)
+                ->inChain($request->subjectType, $request->subjectId, $request->authorizationId)
                 ->with('version')
                 ->orderByDesc('id')
                 ->first();
@@ -129,6 +186,7 @@ final class WaiverSigner
                 'user_id' => (int) $locked->getKey(),
                 'subject_type' => $request->subjectType,
                 'subject_id' => $request->subjectId,
+                'subject_authorization_id' => $request->authorizationId,
                 'legal_document_version_id' => (int) $version->getKey(),
                 'document_hash' => (string) $version->body_hash,
                 'accepted_at' => $now,
@@ -143,9 +201,16 @@ final class WaiverSigner
                 // «Cliente eliminado» no prueba quién firmó. Entra en el hash (esquema v2).
                 'holder_name' => $locked->name !== null ? mb_substr((string) $locked->name, 0, 255) : null,
                 'holder_email' => $locked->email !== null ? mb_substr((string) $locked->email, 0, 255) : null,
-                // Y la del SUJETO menor a cargo, por la misma razón (esquema v3, `#197`).
+                // Y la del SUJETO menor —a cargo o invitado—, por la misma razón (v3, `#197`).
                 'subject_name' => $subjectIdentity['subject_name'],
                 'subject_born_on' => $subjectIdentity['subject_born_on'],
+                // Y la de QUIEN FIRMA cuando no es el titular (v4): en un justificante de menor
+                // invitado, `holder_*` es el RESPONSABLE de la reserva y `signer_*` el padre o tutor.
+                // Las TRES personas de la prueba viajan en la fila y sobreviven a `anonymize()`.
+                'signer_name' => $signerIdentity['signer_name'],
+                'signer_email' => $signerIdentity['signer_email'],
+                'signer_phone' => $signerIdentity['signer_phone'],
+                'signer_relationship' => $signerIdentity['signer_relationship'],
                 'canonical_version' => WaiverSignature::CANONICAL_VERSION,
             ];
             $attributes['hash'] = WaiverSignature::computeHash($attributes);
@@ -168,6 +233,7 @@ final class WaiverSigner
                 'locale' => $version->locale,
                 'subject_type' => $request->subjectType,
                 'subject_id' => $request->subjectId,
+                'authorization_id' => $request->authorizationId,
                 'channel' => $request->channel,
                 'declared_by_user_id' => $request->declaredBy?->getKey(),
             ]);

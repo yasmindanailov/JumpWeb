@@ -76,7 +76,18 @@ class MeWaiverController extends Controller
         $user = $request->user();
 
         // Scoping por el guard: una firma ajena no existe para este titular.
-        abort_unless((int) $signature->user_id === (int) $user->getKey(), 404);
+        //
+        // ⚠️⚠️ Son DOS condiciones y la segunda no es redundante. Desde el justificante de un menor
+        // invitado (`specs/waiver-por-reserva.md` §4.5) hay firmas con **este mismo `user_id`** que
+        // NO son de este titular: él es el responsable de la reserva, pero el sujeto es el hijo de
+        // otra familia y quien firmó es otro adulto. Con solo la primera, el responsable se
+        // descargaba un PDF con el nombre, el teléfono y el correo de ese padre. Aquí la firma llega
+        // por la ruta, así que el filtro de `User::waiverSignatures()` no la alcanza.
+        abort_unless(
+            (int) $signature->user_id === (int) $user->getKey()
+                && in_array($signature->subject_type, WaiverSignature::SUBJECTS_OF_HOLDER, true),
+            404,
+        );
 
         $proof = WaiverProof::make($signature);
         App::setLocale($proof->locale());

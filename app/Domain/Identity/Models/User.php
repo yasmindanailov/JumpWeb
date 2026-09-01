@@ -364,16 +364,50 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
     }
 
     /**
-     * Fase 6 · waiver — el registro PROBATORIO de las firmas del titular (y, en su nombre, de sus
-     * menores a cargo): `specs/waiver-probatorio.md` §4.3. Append-only y **sobrevive a
-     * `anonymize()`** bajo régimen restringido: NO se lista en ninguna superficie normal (bloque de
-     * cuenta, `GET /me/consents`, export del art. 20). Lo que el titular VE es `consents()`.
+     * Fase 6 · waiver — el registro PROBATORIO de las firmas **DE ESTE TITULAR**: las suyas y las que
+     * hizo en nombre de sus menores a cargo (`specs/waiver-probatorio.md` §4.3). Append-only y
+     * **sobrevive a `anonymize()`** bajo régimen restringido: NO se lista en ninguna superficie normal
+     * (bloque de cuenta, `GET /me/consents`, export del art. 20). Lo que el titular VE es `consents()`.
+     *
+     * ❗❗ **Acotada a `SUBJECTS_OF_HOLDER`, y eso EVITA UNA FUGA, no es una optimización.** Desde el
+     * justificante de menor invitado (`specs/waiver-por-reserva.md` §4.5) hay filas con este
+     * `user_id` que **no son de este titular**: él es el RESPONSABLE de la reserva, pero quien firma
+     * es otro adulto y el sujeto es el hijo de otra familia. Sin este filtro, todo lo que signifique
+     * «las firmas de este usuario» las publicaría — medido antes de acotarlo: `GET /me/waiver`
+     * devolvía el nombre del menor con `dependent_id: 0` **y servía su PDF**, que lleva el nombre,
+     * el teléfono y el correo del otro padre.
+     *
+     * ▶ **La relación es fail-closed a propósito**: lo ancho hay que pedirlo por su nombre
+     * ({@see guardianSignatures()}), no al revés. Un consumidor nuevo que no sepa nada de esto
+     * hereda la conducta segura.
+     *
+     * ⚠️ Quien necesita TODAS las filas ancladas a esta cuenta —`WaiverChain`, `WaiverSigner`— consulta
+     * el modelo directamente, no esta relación.
      *
      * @return HasMany<WaiverSignature, $this>
      */
     public function waiverSignatures(): HasMany
     {
-        return $this->hasMany(WaiverSignature::class);
+        return $this->hasMany(WaiverSignature::class)
+            ->whereIn('subject_type', WaiverSignature::SUBJECTS_OF_HOLDER);
+    }
+
+    /**
+     * Fase 6 · los JUSTIFICANTES que este titular ANCLA como responsable de sus reservas, y que **NO
+     * son suyos** (`specs/waiver-por-reserva.md` §4.1, §4.5): cada uno lo firmó un adulto sin cuenta
+     * por un menor invitado.
+     *
+     * ⚠️ **No es lo mismo que `waiverSignatures()` y no se pueden mezclar.** Lo que el responsable
+     * puede ver de aquí está acotado por `[DECIDIDO owner]` §7·4: **el nombre del menor y si está
+     * firmado — nunca los datos de contacto del adulto que firmó**. Su superficie es la del pedido
+     * (T3), no la de «mis firmas».
+     *
+     * @return HasMany<WaiverSignature, $this>
+     */
+    public function guardianSignatures(): HasMany
+    {
+        return $this->hasMany(WaiverSignature::class)
+            ->where('subject_type', WaiverSignature::SUBJECT_GUEST_MINOR);
     }
 
     /**

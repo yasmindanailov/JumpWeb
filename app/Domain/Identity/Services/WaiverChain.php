@@ -7,10 +7,14 @@ use App\Domain\Identity\Models\WaiverSignature;
 
 /**
  * Fase 6 · waiver — verificación de las cadenas de un titular (`specs/waiver-probatorio.md` §4.7,
- * §8.5; `DECISIONES #197`): hay UNA cadena por sujeto —la del titular y la de cada menor a su
- * cargo—, y en cada una toda fila tiene que dar su propio hash, enlazar con la anterior DE SU SUJETO
- * y apuntar al texto que dice apuntar. Es lo que un auditor pide («enséñame la cadena de esta
+ * §8.5; `DECISIONES #197`): hay UNA cadena por sujeto —la del titular, la de cada menor a su cargo y,
+ * desde `specs/waiver-por-reserva.md`, la de cada menor INVITADO autorizado en uno de sus pedidos—,
+ * y en cada una toda fila tiene que dar su propio hash, enlazar con la anterior DE SU SUJETO y
+ * apuntar al texto que dice apuntar. Es lo que un auditor pide («enséñame la cadena de esta
  * persona», «la de este menor») y lo que el verificador de concurrencia comprueba.
+ *
+ * ⚠️ **Qué sujeto es cada fila lo dice `WaiverSignature::chainKey()`, que es el único sitio con esa
+ * regla.** Componerla aquí a mano es lo que hizo que el sujeto nuevo rompiera este verificador.
  *
  * ⚠️ El enlace de la PRIMERA fila que queda de cada cadena no se comprueba: cuando la poda por plazo
  * se lleva la firma más antigua de un sujeto, la siguiente sigue apuntando a un hash que ya no
@@ -35,7 +39,12 @@ final class WaiverChain
         /** @var array<string, string> $heads la cabeza (último hash) de cada cadena, por sujeto */
         $heads = [];
         foreach ($rows as $row) {
-            $subject = $row->subject_type.':'.($row->subject_id ?? '');
+            // ⚠️⚠️ La clave sale de `WaiverSignature::chainKey()` y NO se compone aquí. Hasta la T1 del
+            // justificante por reserva este fichero escribía `subject_type.':'.($subject_id ?? '')` a
+            // mano —y el verificador de concurrencia lo tenía DUPLICADO—, así que un sujeto sin
+            // `subject_id` metía a todos los menores invitados de un responsable en la MISMA cadena y
+            // este método declaraba **ROTA una cadena sana** (medido: `count=2 · chains=1 · ok=false`).
+            $subject = $row->chainKey();
             if (array_key_exists($subject, $heads) && $row->prev_hash !== $heads[$subject]) {
                 $problems[] = "#{$row->getKey()}: prev_hash no enlaza con la firma anterior de su sujeto ({$subject})";
             }

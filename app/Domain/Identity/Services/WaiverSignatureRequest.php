@@ -19,6 +19,12 @@ final class WaiverSignatureRequest
         public readonly string $subjectType = WaiverSignature::SUBJECT_HOLDER,
         public readonly ?int $subjectId = null,
         public readonly ?User $declaredBy = null,
+        /**
+         * El menor INVITADO por el que se firma (`specs/waiver-por-reserva.md` §4.1). Va en su propio
+         * campo y no en `$subjectId` porque `waiver_signatures.subject_id` tiene **FK dura a
+         * `dependents`** —medido: un id ajeno da `1452`— y quitarla regresaría un endurecimiento.
+         */
+        public readonly ?int $authorizationId = null,
     ) {}
 
     public static function web(?string $ip, ?string $userAgent): self
@@ -42,6 +48,24 @@ final class WaiverSignatureRequest
     public function forDependent(int $dependentId): self
     {
         return new self($this->channel, $this->ip, $this->userAgent, WaiverSignature::SUBJECT_DEPENDENT, $dependentId, $this->declaredBy);
+    }
+
+    /**
+     * La misma petición, pero por un menor INVITADO a una reserva
+     * (`specs/waiver-por-reserva.md` §4.1): el canal, la ip y el user-agent son los del **adulto que
+     * firma**, que no tiene cuenta; el titular de la fila sigue siendo el RESPONSABLE de la reserva.
+     */
+    public function forGuestMinor(int $authorizationId): self
+    {
+        return new self(
+            $this->channel,
+            $this->ip,
+            $this->userAgent,
+            WaiverSignature::SUBJECT_GUEST_MINOR,
+            null,
+            $this->declaredBy,
+            $authorizationId,
+        );
     }
 
     public static function declaredAtCounter(User $operator, ?string $ip, ?string $userAgent = null): self
