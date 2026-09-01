@@ -1,23 +1,28 @@
 # Estado del proyecto — foto viva
 
-🚧 **EN CURSO (2026-09-01, noche) — CARRIL P3 · EL JUSTIFICANTE DE UN MENOR INVITADO («waiver
-offshore»).** Sesión abierta por el owner en la máquina de sobremesa. ▶ **La SPEC está escrita,
-REVISADA de forma adversarial y CORREGIDA: `docs/specs/waiver-por-reserva.md`** (nueve `[DECIDIDO
-owner]`, cuatro tandas, **cero código**; pendiente solo del ✅ del owner). **Cuando pase a código
-toca**: `app/Domain/Identity/{Models,Services}`, una migración, `PurgeCustomerData`, `routes/console.php`
-y una ruta pública. **Si trabajas en otra máquina, no toques `WaiverSignature`, `WaiverSigner`,
-`WaiverChain`, `WaiverStatus`, `waiver_signatures` ni `PurgeCustomerData` sin avisar aquí.** El resto
-del repo (landing, panel, libro, mixtos) está libre.
-▶ ❗❗ **LA REVISIÓN ENCONTRÓ DOS BLOQUEANTES DEL DISEÑO Y UNA AFIRMACIÓN MÍA QUE ERA FALSA** («no
-cambia una línea del mecanismo existente»): la clave de sujeto está **cableada a `subject_id` en TRES
-sitios** y con `NULL` los tres se cruzan — la idempotencia de `WaiverSigner` devolvería la firma de
-OTRO menor (**el segundo padre se queda sin justificante, mudo**) y `WaiverChain` declararía ROTA una
-cadena sana. Todo corregido en la spec (§11).
-▶ **Y salen TRES fichas de `DEUDA.md` que NO son de esta feature**: (1) `declared_by_user_id` es
-`nullOnDelete` **y está dentro del hash** → borrar al operador pone `verifyHash()` en `false` sobre
-una firma que nadie tocó (Media, medido dos veces); (2) **`subject_name` es `varchar(120)` y el
-firmador corta a 255** → `1406` en MySQL y **verde en SQLite**, vivo hoy para menores a cargo (Media);
+✅ **CARRIL P3 · EL JUSTIFICANTE DE UN MENOR INVITADO («waiver offshore») — SPEC + T1 EN EL ÁRBOL**
+(2026-09-01, `DECISIONES #328`). Spec: **`docs/specs/waiver-por-reserva.md`** (revisada de forma
+adversarial, nueve `[DECIDIDO owner]`). **La T1 (el dominio) está ejecutada y verificada**; quedan
+**T2** (la pantalla pública), **T3** (las superficies) y **T4** (verificación + el OJO del owner).
+▶ **Si trabajas en otra máquina, no toques `WaiverSignature`, `WaiverSigner`, `WaiverChain`,
+`GuardianAuthorization`, `waiver_signatures`, `guardian_authorizations` ni `PurgeCustomerData` sin
+avisar aquí.** El resto del repo (landing, panel, libro, mixtos) está libre.
+▶ ❗❗ **La revisión encontró DOS BLOQUEANTES y una afirmación del diseño que era FALSA** («no cambia
+una línea del mecanismo»): la clave de sujeto estaba **cableada a `subject_id` en TRES sitios** y con
+`NULL` los tres se cruzaban — la idempotencia de `WaiverSigner` devolvía la firma de OTRO menor (**el
+segundo padre se quedaba sin justificante, mudo**) y `WaiverChain` declaraba ROTA una cadena sana. Hoy
+la clave vive en UN sitio (`WaiverSignature::chainKey()`), y las dos guardas se escribieron **viéndolas
+fallar**.
+▶ ❗ **Y una FUGA cerrada**: con el responsable en `user_id`, `GET /me/waiver` devolvía el nombre del
+hijo de otra familia **y servía su PDF**. `User::waiverSignatures()` es ahora **fail-closed**.
+▶ **TRES fichas de `DEUDA.md` que NO son de esta feature**: (1) `declared_by_user_id` es `nullOnDelete`
+**y está dentro del hash** → borrar al operador pone `verifyHash()` en `false` sobre una firma que
+nadie tocó (Media, medido dos veces); (2) **`subject_name` era `varchar(120)` con el firmador cortando
+a 255** → `1406` en MySQL y **verde en SQLite**, vivo desde `#198` (la migración lo sube a 255);
 (3) la IP/UA de un tercero bajo el `target` del titular en `audit_logs` (Baja).
+▶ ❗ **LO QUE ES DEL OWNER**: el ✅ a la spec y **el plazo de conservación** — medido, hoy
+`waiver.retention_months` y `dependent_retention_months` valen `NULL`, así que **no se poda nada**, y
+aquí lo que no se podaría son datos de menores de terceros.
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
@@ -88,8 +93,8 @@ firmador corta a 255** → `1406` en MySQL y **verde en SQLite**, vivo hoy para 
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3796 en verde** (24.599 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
-> sobre el árbol CONJUNTO tras rebasar `#327` (el precio en el cajón) sobre `#325` y `#326`.
+> Suite **3823 en verde** (24.730 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> tras la T1 del justificante por reserva (`#328`).
 > ✅ **AUDITORÍA DEL RELOJ pasada al cerrar** (`scripts/audit-clock.sh`, 10 fronteras): verde en todas
 > **tras arreglar un rojo diferido que encontró**. ⚠️ `VisitSectionTest::test_estando_abierto…` fallaba
 > a las **23:59:30 de Madrid**: abría el parque hasta las 23:59:00 y decía en su comentario que así no
@@ -98,7 +103,7 @@ firmador corta a 255** → `1406` en MySQL y **verde en SQLite**, vivo hoy para 
 > no de esta tanda**: se comprobó reproduciéndolo contra el árbol anterior a la sesión.
 > ⚠️ **Se mide tras CADA rebase, nunca se suma.** Con dos agentes en `main` el número solo vale medido
 > sobre el árbol conjunto: por separado daban cifras distintas y ninguna era la buena.
-> - Antes, 3789 / 24.564 (`#324`, el precio por tramo) · 3779 / 24.532 (`#322` con su panel sobre la
+> - Antes, 3796 / 24.599 (`#327`) · 3789 / 24.564 (`#324`, el precio por tramo) · 3779 / 24.532 (`#322` con su panel sobre la
 >   T10) · 3756 / 24.534 (`#320` sobre `#319`).
 > ⚠️ **No se suma, se mide** — y ⚠️⚠️ **tras un rebase que toque Vue hay que
 > `npm run build:ssr` ANTES de leer la suite**: sin eso salieron 35 rojos en

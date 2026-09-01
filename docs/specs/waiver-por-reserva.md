@@ -1,7 +1,7 @@
 # [SPEC] El justificante de un menor invitado a una reserva («waiver offshore»)
 
-> Estado: 🟦 **REVISADA de forma adversarial y CORREGIDA** (2026-09-01) — diseño cerrado, **cero
-> código**. Pendiente del ✅ del owner. · Decisión asociada: DECISIONES «#N» al aprobarse.
+> Estado: 🟦 **REVISADA, CORREGIDA y con la T1 EN EL ÁRBOL** (2026-09-01, `DECISIONES #328`) —
+> el dominio ejecutado (§8.1); quedan T2, T3 y T4. Pendiente del ✅ del owner.
 > Carril **P3** de `ESTADO.md` — **con el alcance ampliado por el owner**: ver §1.2.
 > Subsistema padre: `docs/specs/waiver-probatorio.md`. Entidad hermana: `docs/specs/menores-a-cargo.md`.
 >
@@ -616,6 +616,66 @@ Cada una termina con la suite verde, Pint, `docs-check` y sus mutaciones. ⚠️
 ⚠️ **La T1 no se salta.** La tentación es empezar por la pantalla, que es lo que se ve — y entonces el
 modelo de la prueba lo acaba decidiendo un formulario.
 
+### 8.1 T1 · EJECUTADA (2026-09-01, `DECISIONES #328`)
+
+**En el árbol y con la suite verde (3.823 / 24.730).** Lo que entró, y las tres cosas que la ejecución
+enseñó y el diseño no había previsto.
+
+| Pieza | Dónde |
+|---|---|
+| Migración: `guardian_authorizations` + 5 columnas + `subject_name` 120 → **255** | `database/migrations/2026_09_01_235500_create_guardian_authorizations.php` |
+| La entidad, con `keyFor()`, la guarda de borrado y `prunable()` | `app/Domain/Identity/Models/GuardianAuthorization.php` |
+| **La clave de cadena en UN sitio** (`chainKey()` + `scopeInChain()`), `SUBJECT_GUEST_MINOR`, canónico **v4**, la poda | `app/Domain/Identity/Models/WaiverSignature.php` |
+| La rama del sujeto nuevo y la puerta de correo de §7·8 | `app/Domain/Identity/Services/WaiverSigner.php` |
+| La puerta ÚNICA: transacción + lock + busca-o-crea + firma | `app/Domain/Identity/Services/GuardianAuthorizationSigner.php` |
+| El acotado de §4.5 (fail-closed) y `guardianSignatures()` | `app/Domain/Identity/Models/User.php` |
+| La condición propia del PDF | `app/Http/Controllers/Api/V1/MeWaiverController.php` |
+| Los dos verificadores y la purga | `WaiverChain` · `VerifyWaiverChainConcurrency` (**`--scenario=holder|guest`**) · `PurgeCustomerData` · `routes/console.php` |
+
+▶ **Lo que la ejecución añadió al plan:**
+
+1. ⚠️ **Todo modelo Eloquent necesita alias de morfo** y lo exige `MorphMapTest`: `guardian_authorization`
+   en `AppServiceProvider`. No estaba en la spec y la suite lo puso rojo — la guarda hizo su trabajo.
+2. ⚠️ **Dos tests hermanos fijaban `canonical_version` como literal** (`WaiverSignatureChainTest`,
+   `MeDependentWaiverTest`). Se actualizan a 4 y **el literal se conserva a propósito**: subir la
+   versión canónica tiene que traer a alguien a confirmarlo. `test_the_canonical_serialisation_is_fixed_per_version`
+   gana el bloque de v4 con un justificante REAL, y una aserción de que **ninguna versión serializa
+   igual que otra** — que es lo que garantiza que subirla no invalide lo firmado.
+3. ⚠️ **La FK `subject_id → dependents` SOBREVIVE al `change()` de `subject_name`**, comprobado en
+   MySQL tras migrar (era el riesgo de recrear la tabla). Y **las 24 firmas reales de la BD local
+   siguen verificando** con el canónico en v4.
+
+▶ **Verificación** (§6, lo que la T1 podía cerrar):
+
+- **14 de 14 mutaciones muerden**, con **CONTROL verde** en los tres ficheros de guarda. El arnés mide
+  por **código de salida**, no buscando texto en la salida (la regla de `#317`).
+- **`waiver:verify-chain` sobre MySQL real, en sus DOS escenarios y VISTO FALLAR sin el lock**:
+  `holder` bifurca la cadena (2 filas, `prev_hash` repetido, `exit=1`); `guest` estrella **7 de 8**
+  procesos contra el `UNIQUE` con `1062 Duplicate entry` — que es exactamente el 500 que §4.9 predijo.
+- **El CONTRATO es la segunda guarda de la fuga, verificado**: con `User::waiverSignatures()` sin
+  acotar, Spectator rechaza la respuesta de `GET /me/waiver` con *«The data should match one item from
+  enum»*. Por eso esos casos viven en `tests/Feature/Api/V1/MeWaiverGuestMinorTest.php`, que hereda de
+  `ApiTestCase`. ⚠️ **La primera versión heredaba de `Tests\TestCase` y no validaba nada**: heredar de
+  la clase equivocada convierte un test de contrato en un test de texto.
+
+▶ **Cuatro trampas pagadas, todas con su lección:**
+
+1. **Pint convirtió un `{@see}` en `use`** y metió Modelo → Servicio hacia la clase que ya depende del
+   modelo. Es la trampa de `#320` otra vez: **reescribir la cita en prosa NO basta, hay que quitar el
+   import**.
+2. **Un `assertDontSee` sobre `/admin/users/{id}` pasaba en VACÍO**: el registro probatorio vive en un
+   **modal** de Filament y esa página no lo pinta nunca (el escalón de `#161`). Re-apuntado a renderizar
+   el partial, **con control** de que sí pinta la firma propia.
+3. **`Sanctum::actingAs()` deja una instancia OBSOLETA** en el contenedor: tras firmar, `signed` salía
+   `false` **con el producto sano**. El test mentía, no el código.
+4. **`echo "exit=$?"` después de una tubería mide el código de `tail`**, no el del comando. El
+   veredicto bueno salió corriéndolo sin tubería — *el instrumento es el primer sospechoso, también
+   cuando el instrumento es una línea de shell*.
+
+▶ **Lo que la T1 NO cierra y queda para la T2/T3**: la pantalla pública, el anti-abuso (Turnstile,
+límite por IP, tope), el cierre por fecha, las superficies del responsable, la puerta, el PDF y el
+correo de copia. El **tope de §4.7·3** todavía no tiene código: nace con el controlador.
+
 ---
 
 ## 9. Lo que NO se cierra, y va a `DEUDA.md`
@@ -722,4 +782,6 @@ por sujeto: están limpias** · no toca `PAY-*`/`AFORO-*` · el censo de `users`
 
 ### 11.5 Estado
 
-Revisada y corregida. **Pendiente del ✅ del owner** y de su decisión sobre el plazo de conservación.
+Revisada, corregida y con **la T1 ejecutada** (§8.1, `DECISIONES #328`): los dos bloqueantes y la
+fuga están cerrados **y verificados por mutación**. **Pendiente del ✅ del owner** y de su decisión
+sobre el plazo de conservación —medido: hoy vale `NULL` y no se poda nada—.

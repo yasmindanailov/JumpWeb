@@ -321,24 +321,54 @@ porque es «lo que el titular aceptó» e Identity no puede mirar a Content. Un 
 `[PENDIENTE…]` no se publica. Lectura: `LegalDocuments::current(slug, locale)` (respaldo → `es`).
 
 ### `waiver_signatures` (WaiverSignature, **append-only + Prunable**) — Fase 6 · waiver
-`user_id` FK **RESTRICT** (la prueba sobrevive al titular) · `subject_type` (`holder|dependent`) +
-`subject_id` nullable, **FK RESTRICT a `dependents`** (`#198`: una fila de menor con firma detrás no se
-borra ni por SQL) · **`holder_name` · `holder_email`** (la identidad del firmante TAL Y COMO
+`user_id` FK **RESTRICT** (la prueba sobrevive al titular) · `subject_type`
+(`holder|dependent|guest_minor`) + `subject_id` nullable, **FK RESTRICT a `dependents`** (`#198`: una
+fila de menor con firma detrás no se borra ni por SQL) · **`subject_authorization_id`** nullable, FK
+RESTRICT a `guardian_authorizations` (`#328`: ⚠️ **columna PROPIA y no `subject_id`** — esa FK es dura
+y rechaza cualquier id que no sea de `dependents`, medido `1452`) · **`holder_name` · `holder_email`** (la identidad del firmante TAL Y COMO
 ESTABA al firmar, `[DECIDIDO owner, 2026-08-26]`; es lo que sigue identificándole tras `anonymize()`)
 · **`subject_name` · `subject_born_on`** (la del MENOR en cuyo nombre se firmó, `#198`; `null` en las
-del titular) · `legal_document_version_id` FK restrict · `document_hash` (copia del de la versión) · `accepted_at`
+del titular) · **`signer_name` · `signer_email` · `signer_phone` · `signer_relationship`** (la identidad de QUIEN
+FIRMA cuando no es el titular: en un justificante de menor invitado el `user_id` es el RESPONSABLE de
+la reserva y quien acepta es un adulto sin cuenta, `#328`) · `legal_document_version_id` FK restrict ·
+`document_hash` (copia del de la versión) · `accepted_at`
 + `accepted_tz` · `ip` · `user_agent`(512) · `channel` (`web|api|panel`) · `declared_by_user_id` FK
 users nullOnDelete (alta presencial: firma DECLARADA por el operador) · `prev_hash` · `hash` unique ·
 **`canonical_version`** (con qué esquema se calculó el hash: v1 sin identidad, v2 con la del titular, v3
-con la del menor; cada fila se verifica con el suyo) · `created_at`. `hash` = sha256 del JSON canónico de
+con la del menor, **v4 con el sujeto invitado y quien firma**; cada fila se verifica con el suyo, así que
+subirla NO invalida lo firmado —verificado sobre las 24 firmas reales al subir a v4—) · `created_at`. `hash` = sha256 del JSON canónico de
 `WaiverSignature::HASHED_FIELDS_BY_VERSION[v]` en ese orden; `prev_hash` encadena POR (TITULAR, SUJETO)
-(`#197`/`#198`: el titular tiene su cadena y cada menor a su cargo la suya), serializado con el
+(`#197`/`#198`: el titular tiene su cadena, cada menor a su cargo la suya y cada menor INVITADO la suya;
+⚠️ **qué sujeto es cada fila lo dice `WaiverSignature::chainKey()`, ÚNICO sitio con esa regla** — hasta
+`#328` estaba escrita a mano en tres y con un sujeto sin `subject_id` los tres se cruzaban), serializado con el
 `lockForUpdate()` de su fila de `users` en `WaiverSigner` (único escritor); `waiver:verify-chain` mide
 sobre MySQL que N firmas simultáneas del mismo sujeto dan UNA fila. **Sobrevive a `anonymize()`.** Poda
 con DOS plazos por clase de sujeto: `waiver.retention_months` (titular, desde la firma) y
-`waiver.dependent_retention_months` (menor, desde su 18.º cumpleaños, sobre `subject_born_on`); sin
+`waiver.dependent_retention_months` (**las DOS clases de menor**, a cargo e invitado, desde su 18.º cumpleaños, sobre `subject_born_on`); sin
 valor → no se poda esa clase; podar una nunca rompe la cadena de la otra. Vía el mismo `model:prune` diario. Fuera de la poda solo
 borran `PurgeCustomerData` (go-live) y el verificador, por `DB::table`.
+
+### `guardian_authorizations` (GuardianAuthorization, **Prunable**) — Fase 6 · el justificante de un menor INVITADO
+Una AUTORIZACIÓN puntual (`specs/waiver-por-reserva.md` §4.2, `DECISIONES #328`): un menor que **no es
+menor a cargo** de quien reservó, el adulto que responde por él y el pedido al que va.
+`order_id` **sin relación Eloquent**, FK **RESTRICT** a `orders` (Booking no mira a Identity: la flecha
+va al revés, el patrón de `dependent_assignments` — pero la política de borrado es la de una PRUEBA, no
+la de una asignación) · `minor_name`(120) · `minor_surname`(120) · **`minor_key`**(255) ·
+`minor_born_on` · `guardian_name`(120) · `guardian_surname`(120) · `guardian_relationship`(16, la lista
+CERRADA `Dependent::RELATIONSHIPS`) · `guardian_email` · `guardian_phone` · `created_at` (**sin
+`updated_at`: la fila no se edita**). **`unique (order_id, minor_key)`** = «un niño, un papel».
+⚠️⚠️ **La unicidad NO va sobre los nombres crudos**: todas las tablas son `utf8mb4_unicode_ci`, donde
+`'Perez' = 'Pérez'` y `'ana' = 'Ana'` dan **1**, y en SQLite —donde corre la suite— dan **0**. `minor_key`
+se normaliza en PHP (`keyFor()`: minúsculas, sin tildes, espacios colapsados, con respaldo para
+alfabetos no latinos) y es **determinista en los dos motores**.
+⚠️ **Nace SIEMPRE con su firma, en la misma transacción y bajo el lock del responsable**
+(`GuardianAuthorizationSigner`): sin eso, dos envíos simultáneos del mismo menor chocan contra el
+`UNIQUE` con un 500 —visto: **7 de 8** procesos, `1062`— y un envío que falle al firmar dejaría PII de
+un menor sin prueba detrás. `deleting` LANZA con una firma detrás; solo la retira `prunable()` cuando
+se quedó huérfana, y **hay que registrarla en la lista EXPLÍCITA de `model:prune` de
+`routes/console.php`, después de `WaiverSignature`** (la FK es RESTRICT).
+⚠️ `PurgeCustomerData` la borra ANTES que los pedidos, **incluidas las de cuentas que conserva**: la
+limpieza de go-live se lleva TODOS los pedidos y una prueba sin su pedido no prueba nada.
 
 ### `dependents` (Dependent, **Prunable**) — Fase 6 · menores a cargo
 Las PERSONAS A CARGO que un titular declara (`specs/menores-a-cargo.md` §4.1–§4.5, `DECISIONES #191`):

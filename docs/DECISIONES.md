@@ -19446,3 +19446,129 @@ cien para llenar el grupo. `<span class="entry__qty">` pasa a `<input type="numb
 **Verificación**: suite verde (**3.790 tests, 24.580 aserciones**) · Pint ✓ · docs-check ✓ · build ✓ ·
 **20 + 8 casos de `node --test`** · **navegador REAL con el producto del cliente**: tecleando
 30 → 15,00 € · 69 → 15,00 € · 70 → 13,00 € · 100 → 12,00 € · 500 → queda en 100 y el campo se repinta.
+
+---
+
+## #328 · 2026-09-01 · El JUSTIFICANTE de un menor INVITADO a una reserva («waiver offshore»): el responsable es la clave de la cadena, y el mecanismo que «no cambiaba» cambiaba en tres sitios
+
+**Encargo del owner**: *«el papelito que el profesor reparte para que lo firme el padre»*, pero
+digital y atado a la reserva — y su caso general, que es más ancho: *«un adulto reserva para su hijo,
+que es su menor a cargo, y para el amigo de su hijo; el amigo tendría que tener ese justificante»*.
+Un enlace a una pantalla limpia, sin registro, atado a la reserva; **el responsable es quien reserva**.
+
+Diseño en **`docs/specs/waiver-por-reserva.md`** (revisada de forma adversarial, `CONVENCIONES` §5).
+Esta entrada recoge lo DECIDIDO y la ejecución de la **T1 · el dominio**.
+
+### Lo que corrige del mapa que había
+
+**No es una feature de excursiones de colegio.** `ESTADO.md` y `00-REFACTOR.md` describían P3 dentro
+de ese carril; es del **waiver**, y vale para cualquier reserva con un menor que no es menor a cargo
+de quien reserva. Consecuencia que decide el diseño: **no puede apoyarse en nada que solo tengan los
+packs** — medido, `OrderItem::guestFormStatus()` es `null` fuera de un pack, así que el caso normal
+(entradas sueltas) tiene **cero fichas por persona**.
+
+### Las nueve decisiones del owner, planteadas con su coste delante
+
+1. **El correo del firmante NO se verifica**, y la prueba lo dice.
+2. **UN enlace por reserva, hoja en blanco**: cada padre crea el suyo y no ve los de los demás.
+3. **En la puerta se señala y el operador decide.** No se firma en la tablet.
+4. **El responsable ve los nombres y quién falta**, nunca los datos de contacto de los otros padres.
+5. Al firmante se le piden nombre, apellidos, relación, teléfono y correo. **Sin DNI.**
+6. Del menor: nombre, apellidos y fecha de nacimiento. **Sin alergias** (datos de salud por un
+   formulario público sin sesión).
+7. **Copia por correo** al firmante si lo deja.
+8. 🆕 **La rama se salta la puerta de `email_verified_at` del responsable.** Medido: un colegio se da
+   de alta POR TELÉFONO y `CustomerRegistrar` deja ese campo en `null` a propósito — con la puerta
+   puesta, **ningún padre podría firmar y el caso principal quedaría muerto**. ⚠️ Esto MATIZA el
+   `[DECIDIDO owner, 2026-08-26]` de `#179`, no lo contradice: aquél es sobre la firma del PROPIO
+   titular, cuyo buzón la firma copia.
+9. 🆕 **Un niño, un papel.** El segundo progenitor del mismo menor ve que ya está firmado y no se
+   escribe nada; admitirlo haría que la puerta y la hoja de sala enseñaran al niño dos veces.
+
+### La decisión técnica que lo hace encajar
+
+**El `user_id` de la firma es EL QUE RESERVA — el responsable.** Eso no es producto: **es la clave de
+la cadena**. Con él, la columna sigue `NOT NULL`, el punto de serialización sigue siendo el lock de su
+fila de `users` y **no hay migración destructiva sobre una tabla con firmas en producción**.
+
+⚠️⚠️ **El bloqueo que la doc daba por el problema no lo era, y el real no estaba medido.**
+`waiver_signatures.subject_id` tiene **FK dura a `dependents`** y rechaza de verdad (`1452` medido;
+SQLite la ejerce igual), así que un tercer sujeto **no puede reutilizar esa columna**. Va columna
+propia (`subject_authorization_id`), y quitar la FK habría regresado un endurecimiento de `#198`.
+
+⚠️⚠️ **Se descartó meter al menor invitado en `dependents` con una columna de «ámbito»**: es la trampa
+de `prices` de `#324`. La spec dijo «seis consumidores» y la revisión midió **~14**.
+
+### ❗❗ La revisión adversarial: DOS bloqueantes y una afirmación mía que era FALSA
+
+Escribí que el mecanismo **«no cambia una línea»**. Cambia — y en los tres sitios donde la clave de
+sujeto estaba cableada a `subject_id`:
+
+1. **`WaiverSigner`** acotaba con `where('subject_id', $id)`, que con `null` Laravel convierte en
+   `is null` (verificado: `… and subject_id is null`). **Todas** las autorizaciones de un responsable
+   compartían búsqueda y la idempotencia por versión devolvía **la firma de OTRO menor**: el segundo
+   padre veía la pantalla de «hecho», recibía su correo y **su hijo se quedaba sin justificante, sin
+   fallo y sin aviso** (medido: `firma1 = firma2 = 318`, una sola fila).
+2. **`WaiverChain`** agrupaba por `subject_type.':'.($subject_id ?? '')`: todos caían en
+   `guest_minor:` y el verificador declaraba **ROTA una cadena sana** (`count=2 · chains=1 ·
+   ok=false`), con el defecto **duplicado** en `VerifyWaiverChainConcurrency`.
+
+▶ **La clave vive ahora en UN solo sitio**: `WaiverSignature::chainKey()` / `scopeInChain()`.
+▶ *Que un mecanismo admita un caso nuevo no es que lo admita: hay que mirar de qué columna cuelga
+cada decisión que ya toma.*
+
+### ❗ Y una FUGA: las firmas del responsable no eran suyas
+
+Con él en `user_id`, todo lo que lista «las firmas de este usuario» las publicaba. Medido antes de
+acotarlo: `GET /me/waiver` devolvía el nombre del hijo de otra familia con `dependent_id: 0` **y
+servía su PDF**, porque autorizaba solo por `user_id`.
+
+▶ **`User::waiverSignatures()` es ahora fail-closed** (acotada a `SUBJECTS_OF_HOLDER`); lo ancho se
+pide por su nombre (`guardianSignatures()`). ⚠️ **El PDF necesita su propia condición**: llega por
+RUTA y una relación no lo alcanza. ✅ Verificado que **el contrato es la segunda guarda**: con el
+filtro retirado, Spectator rechaza la respuesta (*«The data should match one item from enum»*).
+
+### Lo demás que la revisión cambió del diseño
+
+`order_id` **RESTRICT rompe `PurgeCustomerData`** —borra TODOS los pedidos y solo las firmas de los
+purgados— **y CASCADE tampoco lo arregla** (la FK de la firma es RESTRICT): la purga aprende dos pasos
+y **borra firmas de cuentas que conserva, a propósito** · el `UNIQUE` sobre nombres crudos es
+insensible a tildes en `utf8mb4_unicode_ci` y sensible en SQLite → columna **`minor_key`** normalizada
+en PHP · un `Prunable` fuera de la lista EXPLÍCITA de `routes/console.php` **no se poda nunca** ·
+el escenario de concurrencia obvio **no muerde** (N padres distintos son N cadenas de una fila): el que
+muerde es **N envíos de la MISMA autorización** · `subject_name` era `varchar(120)` con el firmador
+cortando a **255** → `1406` en MySQL y **verde en SQLite** (defecto VIVO desde `#198`; la migración lo
+sube a 255 y queda ficha en `DEUDA.md`).
+
+### Hallazgo colateral, medido DOS veces, que NO es de esta feature
+
+`waiver_signatures.declared_by_user_id` es `nullOnDelete` **y está dentro del hash**: borrar la fila
+del operador lo pone a `NULL` y `verifyHash()` pasa de `true` a `false` **sobre una firma que nadie
+tocó**. Ficha en `DEUDA.md` con las dos salidas, que son del owner. ▶ De ahí sale la regla aplicada
+aquí: **ninguna columna con `ON DELETE SET NULL` entra en un hash que se verifica** — por eso el
+justificante **no** guarda `signer_user_id`.
+
+### Cuatro trampas que pagó esta tanda
+
+1. **Pint convirtió un `{@see}` en `use`** y metió Modelo → Servicio hacia la clase que ya depende del
+   modelo. Es la trampa de `#320`, otra vez: reescribir la cita en prosa **no basta**, hay que quitar
+   el import.
+2. **Un `assertDontSee` sobre `/admin/users/{id}` pasaba en VACÍO**: el registro probatorio vive en un
+   modal de Filament, así que esa página no lo pinta nunca. Re-apuntado al partial, **con control**.
+3. **Heredar de la clase equivocada convierte un test de contrato en un test de texto**: los casos de
+   API nacieron en `Tests\TestCase` y no validaban nada de `openapi/v1.yaml`. Mudados a `ApiTestCase`.
+4. **`Sanctum::actingAs()` deja una instancia OBSOLETA** en el contenedor: tras firmar, `signed` salía
+   `false` con el producto sano. El test mentía, no el código.
+
+### Estado
+
+**T1 (el dominio) EN EL ÁRBOL. Quedan T2 (pantalla pública), T3 (superficies) y T4 (verificación).**
+`[PENDIENTE: owner]`: el ✅ a la spec y **el plazo de conservación** — medido, hoy
+`waiver.retention_months` y `dependent_retention_months` valen `NULL`, así que **no se poda nada**.
+
+**Verificación**: suite verde (**3.823 tests, 24.730 aserciones**) · Pint ✓ · docs-check ✓ ·
+**14 de 14 mutaciones muerden, con CONTROL verde en los tres ficheros** (arnés por código de salida,
+la regla de `#317`) · `waiver:verify-chain` sobre **MySQL real** en sus DOS escenarios y **visto
+FALLAR sin el lock**: `holder` bifurca la cadena (2 filas, `prev_hash` repetido, exit=1) y `guest`
+estrella **7 de 8** procesos contra el `UNIQUE` con `1062 Duplicate entry` · las **24 firmas reales**
+de la BD local siguen verificando tras subir el esquema canónico a **v4**.

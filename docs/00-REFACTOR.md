@@ -3558,7 +3558,19 @@ de este carril**: es del waiver, no de las excursiones (§1.2 de la spec).
       responsable salían en `GET /me/waiver` con el nombre del hijo de otro y su PDF servido. Todo
       corregido; nueve `[DECIDIDO owner]`. ▶ Cuatro tandas en §8; la T1 (el dominio) va primero, **y
       el acotado de las lecturas va DENTRO de ella** porque la fuga nacería con el dominio.
-      ▶ Pendiente: el ✅ del owner y el plazo de conservación (medido: hoy vale `NULL` y no se poda nada).
+      ▶ ✅ **T1 (el dominio) EJECUTADA** (`#328`, spec §8.1): migración, `GuardianAuthorization`,
+      canónico **v4**, la clave de cadena en UN sitio (`WaiverSignature::chainKey()`), la rama de
+      `WaiverSigner` con la puerta de correo de §7·8, `GuardianAuthorizationSigner`, la poda, la purga
+      de go-live y **el acotado de las cuatro lecturas** que evitaban la fuga.
+      ⚠️⚠️ **Los dos bloqueantes se cerraron viendo FALLAR sus guardas**, y `waiver:verify-chain` se
+      vio fallar sin el lock en sus DOS escenarios (`holder` bifurca; `guest` estrella 7 de 8 contra el
+      `UNIQUE`). **14 de 14 mutaciones muerden con control verde.**
+      ⚠️ Tres cosas que la ejecución añadió al plan: **todo modelo necesita alias de morfo**
+      (`MorphMapTest` lo puso rojo), dos tests hermanos fijaban `canonical_version` como literal (se
+      actualizan **a propósito**), y la FK `subject_id → dependents` **sobrevive al `change()`**.
+      ▶ **Quedan T2 (pantalla pública), T3 (superficies) y T4 (verificación).**
+      ▶ Pendiente del owner: el ✅ a la spec y el plazo de conservación (medido: hoy vale `NULL` y no
+      se poda nada).
 
 ❗❗ **Lo que NO hubo que construir, y lo destapó el owner preguntando** («pero cumpleaños no tiene una
 opción así?»): `zones.max_per_slot` ya existía y ya era por zona, así que el tope de grupos por franja
