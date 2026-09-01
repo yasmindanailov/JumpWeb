@@ -26,8 +26,17 @@ aquí lo que no se podaría son datos de menores de terceros.
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — TRES PUNTOS DE PRODUCCIÓN
-> CERRADOS (`#328` · `#329`)**:
+> aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — CUATRO PUNTOS DE PRODUCCIÓN
+> CERRADOS (`#328` · `#329` · `#330`)**:
+>   00. **El alta suelta ENTRA a la cuenta** (`#330`, `[DECIDIDO owner]`) y ahí le espera **UN solo
+>      aviso con los dos estados**: verifica tu correo (+ «tu exención quedará firmada cuando lo
+>      hagas» si la aceptó), con el botón de reenviar. ❗ El motivo no es estético: **sin sesión no
+>      hay QR, y el QR identifica en la puerta**. ⚠️ Entrar no es verificar. ▶ **LO SIGUIENTE DE ESTE
+>      CARRIL: que la PUERTA cierre la firma** — y la corrección que hay que respetar al construirlo
+>      es que **el operador acredita a la PERSONA, no al BUZÓN** (marcar el correo verificado sería un
+>      vector de robo de cuenta vía recuperación de contraseña). Después, **Google auth**, que vacía el
+>      caso para la mayoría.
+>   0'. …y los tres de antes:
 >   0. **La antelación mínima ya no ata al mostrador** (`#329`, `[DECIDIDO owner]`): es una regla del
 >      AUTOSERVICIO, para quien compra sin nadie que juzgue el caso. Sin interruptor ni permiso, al
 >      revés que el mínimo del pack. ▶ Nace **`Booking\Contracts\CounterSale`**, que dice QUIÉN vende
@@ -128,6 +137,9 @@ aquí lo que no se podaría son datos de menores de terceros.
 > sobre el árbol CONJUNTO tras rebasar `#328` sobre `#327`. ⚠️ **Medida DESPUÉS del rebase y con
 > Suite **3821 en verde** (24.665 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
 > sobre el árbol CONJUNTO con `#328` y `#329` encima de `#327`. Antes, 3813 / 24.652 (`#328` solo). ⚠️ **Medida DESPUÉS del rebase y con
+> Suite **3822 en verde** (24.671 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> sobre el árbol CONJUNTO con `#328`, `#329` y `#330` encima de `#327`. Antes, 3821 / 24.665 y
+> 3813 / 24.652. ⚠️ **Medida DESPUÉS del rebase y con
 > `npm run build` delante, no sumada**: por separado daban 3796 / 24.599 (`#327` solo). Y el rebase
 > destapó el techo del chunk del cajón —**259,34 → 260,32 KiB**, atribuido midiendo las dos ramas por
 > separado, subido a 261 por FEATURE con su justificación en el propio test—.

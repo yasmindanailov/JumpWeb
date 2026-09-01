@@ -364,9 +364,13 @@ class SidebarMountTest extends TestCase
 
         // ⚠️ **Y `verify` va podado clave a clave**, al revés que `login`, `register` y `forgot`: sus
         // 14 rótulos incluyen los de la PÁGINA de verificación de la web, que el cajón no pinta.
+        // ▶ **`pending_notice` entró a propósito el 2026-09-01** (`#330`): es el aviso del ÍNDICE DE
+        // LA CUENTA para quien entró sin verificar, que desde esa tanda es todo el mundo que acaba de
+        // registrarse. Va en `verify` y no en `privacy.waiver` porque el aviso es del CORREO — la
+        // exención solo cambia la frase cuando además hay una esperando.
         $this->assertSame(
             [
-                'eyebrow', 'title', 'sent_to', 'spam_hint', 'resend',
+                'eyebrow', 'title', 'sent_to', 'spam_hint', 'resend', 'pending_notice',
                 'resend_in', 'resends_left', 'resend_limit', 'already_have_account',
             ],
             array_keys($boot['account']['verify'] ?? []),
@@ -939,8 +943,12 @@ class SidebarMountTest extends TestCase
         // (1) Lo ESTRUCTURAL, que es lo que discrimina de verdad.
         // `waiver` entró a propósito el 2026-08-26 (`DECISIONES #163`, spec del waiver §4.8): cuatro
         // campos cortos, y el endpoint lo publica igual (`MeAccountContextTest`, contrato).
+        // ▶ **`email_verified` entró a propósito el 2026-09-01** (`#330`): desde esa tanda el alta
+        // suelta ABRE SESIÓN, así que el área de cuenta es donde se le pide al cliente que verifique
+        // su correo — y para pedírselo hay que saber si le falta. Es un booleano; el aviso que
+        // sostiene le ahorra al cliente la pantalla sin salida en la que terminaba el alta.
         $this->assertSame(
-            ['first_name', 'upcoming_count', 'next_reservation', 'pending_forms', 'pending_forms_count', 'waiver'],
+            ['first_name', 'email_verified', 'upcoming_count', 'next_reservation', 'pending_forms', 'pending_forms_count', 'waiver'],
             array_keys($seed),
             'La semilla ha cambiado de forma. Cada campo nuevo viaja en el HTML de TODA página con '.
             'sesión: si hace falta, que entre a propósito — y comprueba antes que el endpoint lo '.

@@ -328,6 +328,10 @@
                             'verify' => \Illuminate\Support\Arr::only(__('account.verify'), [
                                 'eyebrow', 'title', 'sent_to', 'spam_hint', 'resend',
                                 'resend_in', 'resends_left', 'resend_limit', 'already_have_account',
+                                // `#330`: el aviso del índice de la cuenta para quien entró sin
+                                // verificar. Va en `verify` y no en `privacy.waiver` porque el aviso
+                                // es del CORREO — la exención solo le añade una frase cuando la hay.
+                                'pending_notice',
                             ]),
                             // ⚠️ El ÁREA DE CLIENTE (`specs/area-cliente.md`) entra con **una sola
                             // clave**, no con el subgrupo `account.account` entero: ahí viven además

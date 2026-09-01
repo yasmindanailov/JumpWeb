@@ -2,7 +2,7 @@
 import { useReservationsStore } from '../../stores/reservations.js';
 import { useAccountContextStore } from '../../stores/accountContext.js';
 import { HOME_ENTRIES, ZONES, titleKeyOf } from '../navigation.js';
-import { WAIVER_NOTICE_VERIFY, waiverNoticeFrom } from '../waiver.js';
+import { WAIVER_NOTICE_VERIFY, accountNoticeFrom } from '../waiver.js';
 import { useAuthStore } from '../../stores/auth.js';
 import { api } from '../../api.js';
 import { computed, watch } from 'vue';
@@ -42,14 +42,14 @@ const context = useAccountContextStore();
 // aceptaste, falta que verifiques tu correo» y ofrece REENVIARLO, que es lo único que desbloquea la
 // firma (`POST /me/waiver` responde 409 sin el correo verificado). Cuál toca lo decide `waiver.js`.
 const auth = useAuthStore();
-const notice = computed(() => waiverNoticeFrom(context.context));
+const notice = computed(() => accountNoticeFrom(context.context));
 
 // ⚠️ El contador se arma con un `watch` inmediato y no en el `setup`: el contexto de cuenta llega
 // por red, así que al montarse la zona `notice` todavía vale `null` — armarlo una sola vez aquí
 // dejaría el botón muerto justo en el caso que existe para resolver. El store lleva su propio
 // pestillo, así que repetirlo no rellena el cupo de reenvíos.
-watch(notice, (kind) => {
-    if (kind === WAIVER_NOTICE_VERIFY) auth.allowVerificationResend();
+watch(notice, (n) => {
+    if (n?.kind === WAIVER_NOTICE_VERIFY) auth.allowVerificationResend();
 }, { immediate: true });
 
 const resend = () => auth.resendVerification({ api });
@@ -73,8 +73,12 @@ const resend = () => auth.resendVerification({ api });
          que había aquí solo podía dar error.
        · `sign`: hay que firmar o re-firmar. Lleva a la tarjeta de privacidad, como siempre.
     -->
-    <p v-if="notice === WAIVER_NOTICE_VERIFY" class="auth__switch">
-        {{ translate(account, 'account.privacy.waiver.status_awaiting_verification') }}
+    <p v-if="notice?.kind === WAIVER_NOTICE_VERIFY" class="auth__switch" role="status">
+        <!-- ⚠️ **UNA frase, no dos.** Con la exención esperando, «quedará firmada en cuanto
+             verifiques tu correo» ya dice las dos cosas y el botón hace obvia la acción; encadenar
+             «verifica tu correo» delante repetiría la mitad del mensaje. Y es además el rótulo que
+             usa la tarjeta de privacidad para lo mismo: un texto, dos sitios. -->
+        {{ translate(account, notice.withWaiver ? 'account.privacy.waiver.status_awaiting_verification' : 'account.verify.pending_notice') }}
         <button type="button" :disabled="auth.resendSeconds > 0 || auth.resendsLeft < 1" @click="resend">
             <template v-if="auth.resendSeconds > 0">{{ translate(account, 'account.verify.resend_in') }} {{ auth.resendSeconds }}s</template>
             <template v-else>{{ translate(account, 'account.verify.resend') }}</template>

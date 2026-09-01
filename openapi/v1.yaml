@@ -2957,7 +2957,7 @@ components:
       description: |
         El contexto de cuenta del titular: saludo, próxima reserva, cuántas quedan y qué formularios
         de invitados están pendientes.
-      required: [first_name, upcoming_count, next_reservation, pending_forms, pending_forms_count, waiver]
+      required: [first_name, email_verified, upcoming_count, next_reservation, pending_forms, pending_forms_count, waiver]
       additionalProperties: false
       properties:
         first_name:
@@ -2965,6 +2965,15 @@ components:
           description: |
             El nombre de pila, ya recortado. **Puede ser cadena vacía** —un titular cuyo nombre son
             solo espacios—, y el cliente debe tratarlo: es lo que evita saludar con «Hola,   ».
+        email_verified:
+          type: boolean
+          description: |
+            ¿El titular ha verificado su correo?
+
+            Desde `#330` el alta suelta **abre sesión**, así que el área de cuenta es donde se le pide
+            que lo verifique — y para pedírselo hay que saber si le falta. Junto con `waiver.pending`
+            forma el aviso ÚNICO del índice: «verifica tu correo» y, si además dejó la exención
+            aceptada, «con él quedará firmada».
         upcoming_count:
           type: integer
           minimum: 0

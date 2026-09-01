@@ -50,7 +50,11 @@ class CustomerAccountContext
      * `waiver.required` (modo interno y sin firma), `waiver.outdated` (firmado en una versión
      * anterior) y `waiver.documentId` (el vigente en el idioma de la petición, para `POST /me/waiver`).
      *
-     * @return array{firstName: string, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, waiver: array{mode: string, required: bool, pending: bool, outdated: bool, documentId: ?int}}
+     * ▶ **`#330` — y si el correo está VERIFICADO**, porque desde esa tanda el alta suelta abre sesión
+     * y el área de cuenta es donde se le pide al cliente que lo verifique. Antes no hacía falta: quien
+     * llegaba aquí venía de una compra pagada (que verifica sola) o de pulsar el enlace del correo.
+     *
+     * @return array{firstName: string, emailVerified: bool, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, waiver: array{mode: string, required: bool, pending: bool, outdated: bool, documentId: ?int}}
      */
     public function for(User $user): array
     {
@@ -62,6 +66,9 @@ class CustomerAccountContext
     {
         $context = [
             'firstName' => $user->firstName(),
+            // Fuera del `try`: es un campo del propio usuario, no una consulta que pueda fallar, y el
+            // contexto de respaldo tiene que decir la verdad sobre él aunque el resto se caiga.
+            'emailVerified' => $user->hasVerifiedEmail(),
             'upcomingCount' => 0,
             'nextReservation' => null,
             'pendingForms' => [],

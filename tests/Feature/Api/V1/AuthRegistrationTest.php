@@ -333,13 +333,40 @@ class AuthRegistrationTest extends ApiTestCase
 
     // ── Contexto del alta ─────────────────────────────────────────────────────────────────────
 
-    /** Alta suelta: no se inicia sesión y se envía la verificación. */
-    public function test_a_standalone_signup_does_not_open_a_session(): void
+    /**
+     * ❗❗ **`#330` DA LA VUELTA A ESTE CASO** (`[DECIDIDO owner, 2026-09-01]`: «al registrarse,
+     * directamente el usuario entra a su cuenta»).
+     *
+     * Decía que el alta suelta **no** abre sesión, y ese era el problema: terminaba en una pantalla
+     * de «revisa tu correo» que es un callejón. Sin sesión no hay QR, y el QR es lo que identifica al
+     * cliente en la puerta — así que quien se registra en el móvil delante del mostrador se quedaba
+     * sin lo único que había ido a buscar.
+     *
+     * ▶ **Lo que NO cambia, y por eso el caso sobrevive**: la verificación se sigue enviando, y el
+     * correo sigue SIN verificar. Lo que se le pide ahora se le pide DENTRO de su cuenta, con el
+     * botón de reenviar al lado (`account.verify.pending_notice`).
+     */
+    public function test_a_standalone_signup_opens_a_session_and_still_sends_the_verification(): void
     {
         $this->register()->assertCreated();
 
+        $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertNull($user->email_verified_at, 'entrar no es verificar: el buzón sigue sin demostrarse');
+        Notification::assertSentTo($user, VerifyEmail::class);
+    }
+
+    /**
+     * ⚠️⚠️ **EL CONTROL: un HONEYPOT no identifica a nadie.** La sesión se abre porque hubo cuenta, no
+     * porque llegara una petición — si el señuelo pudiera dejar sesión, sería una cuenta gratis.
+     */
+    public function test_a_honeypot_signup_leaves_no_session(): void
+    {
+        $this->register(['website' => 'soy-un-bot'])->assertCreated();
+
         $this->assertGuest();
-        Notification::assertSentTo(User::where('email', 'nuevo@jumpweb.test')->firstOrFail(), VerifyEmail::class);
+        $this->assertNull(User::where('email', 'nuevo@jumpweb.test')->first(), 'el señuelo no crea cuenta');
     }
 
     /**

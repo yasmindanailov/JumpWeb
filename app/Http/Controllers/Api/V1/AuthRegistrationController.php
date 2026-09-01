@@ -196,10 +196,24 @@ class AuthRegistrationController extends Controller
             return $this->denial($result);
         }
 
-        // Pay-first: la cuenta recién creada entra directamente, para poder seguir al pago sin
-        // pedir las credenciales otra vez. Iniciar sesión es efecto del llamante, no del servicio
+        // La cuenta recién creada ENTRA. Iniciar sesión es efecto del llamante, no del servicio
         // (spec §4.6.3), y solo se hace si hubo cuenta de verdad — un honeypot no identifica a nadie.
-        if ($inPurchase && $result->user !== null) {
+        //
+        // ▶ **`#330` — también en el alta SUELTA** (`[DECIDIDO owner, 2026-09-01]`: «al registrarse,
+        // directamente el usuario entra a su cuenta»). Antes solo entraba dentro de la compra, y el
+        // alta suelta terminaba en una pantalla de «revisa tu correo» que es un callejón: sin sesión
+        // no hay QR, y el QR es lo que identifica al cliente en la puerta. Lo que falta —verificar el
+        // buzón— se le dice DENTRO de su cuenta, con el botón de reenviar al lado.
+        //
+        // ⚠️ **Solo con SESIÓN, y por eso se pregunta en vez de asumirlo**: el alta suelta funciona a
+        // propósito sin origen *stateful* (la app nativa la usa así, `requireSession()` solo se exige
+        // en la compra). Sin sesión no hay dónde iniciarla y el cliente nativo sigue igual que antes.
+        //
+        // ⚠️ **El desenlace de la respuesta NO cambia: 201 sin cuerpo, siempre.** Un honeypot y un
+        // alta real siguen contestando lo mismo; lo que cambia es que una de las dos deja cookie.
+        // Eso el bot ya podía deducirlo pidiendo `GET /me`, y **no le da ninguna cuenta que no
+        // tuviera**: el señuelo sigue haciendo su trabajo, que es no crearla.
+        if ($result->user !== null && $request->hasSession()) {
             Auth::login($result->user);
             $request->session()->regenerate();
         }

@@ -88,22 +88,41 @@ export function waiverNeedsSignature(status) {
 }
 
 /**
- * Qué AVISO enseña el índice de la cuenta, a partir del contexto (`GET /me/account-context` →
- * `waiver`): `verify` (aceptada, falta verificar el correo), `sign` (hay que firmar o re-firmar) o
- * `null` (nada que decir).
+ * **El aviso ÚNICO del índice de la cuenta** (`#330`), a partir del contexto de cuenta.
  *
- * ⚠️ Devuelve el TIPO y no un booleano a propósito: los dos avisos dicen cosas distintas y ofrecen
- * botones distintos, y con un booleano la pantalla tendría que volver a decidir cuál — que es la
- * duplicación por la que este módulo existe.
+ * `[DECIDIDO owner, 2026-09-01]`: *«mejor 1 mensaje con los dos estados, para no saturar»*. Desde que
+ * el alta suelta abre sesión, quien acaba de registrarse llega aquí con **dos cosas pendientes que en
+ * realidad son una sola acción suya**: verificar el correo, y —si dejó la exención aceptada— que esa
+ * verificación la convierta en firma. Dos avisos apilados dirían dos veces «abre tu correo».
  *
- * @param {{waiver?: {mode?: string, required?: boolean, outdated?: boolean, pending?: boolean}}|null} context
- * @returns {'sign'|'verify'|null}
+ * Devuelve `null` o `{ kind, withWaiver }`:
+ *  · `verify` → falta verificar el correo. `withWaiver` dice si además hay una exención esperando a
+ *    ese mismo clic, que es lo único que cambia en la frase;
+ *  · `sign` → el correo está verificado y lo que falta es firmar o RE-firmar la exención (una versión
+ *    nueva del texto caduca una firma sin que nadie toque nada).
+ *
+ * ⚠️ **El orden importa y no es arbitrario**: si falta verificar, ése es el aviso — aunque el waiver
+ * también «haga falta». Ofrecer «Firmar» a quien no puede firmar es el callejón que `#328` cerró.
+ *
+ * ⚠️ **`email_verified` en snake_case**: las dos vías del contexto —la semilla del montaje y
+ * `GET /me/account-context`— las compone el MISMO `AccountContextResource`, así que aquí llega la
+ * forma de la API y no la del array de PHP.
+ *
+ * @param {{email_verified?: boolean, waiver?: {mode?: string, required?: boolean, outdated?: boolean, pending?: boolean}}|null} context
+ * @returns {{kind: 'sign'|'verify', withWaiver: boolean}|null}
  */
-export function waiverNoticeFrom(context) {
-    const waiver = context?.waiver;
+export function accountNoticeFrom(context) {
+    if (! context) return null;
+
+    const waiver = context.waiver;
+
+    if (context.email_verified === false) {
+        return { kind: WAIVER_NOTICE_VERIFY, withWaiver: waiver?.mode === 'interno' && waiver.pending === true };
+    }
 
     if (waiver?.mode !== 'interno') return null;
-    if (waiver.required === true && waiver.pending === true) return WAIVER_NOTICE_VERIFY;
 
-    return (waiver.required === true || waiver.outdated === true) ? WAIVER_NOTICE_SIGN : null;
+    return (waiver.required === true || waiver.outdated === true)
+        ? { kind: WAIVER_NOTICE_SIGN, withWaiver: true }
+        : null;
 }

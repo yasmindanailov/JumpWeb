@@ -5,7 +5,7 @@ import {
     WAIVER_NOTICE_VERIFY,
     waiverAwaitsVerification,
     waiverNeedsSignature,
-    waiverNoticeFrom,
+    accountNoticeFrom,
     waiverStatusKey,
 } from './waiver.js';
 
@@ -86,36 +86,60 @@ describe('cuándo se ofrece la firma', () => {
     });
 });
 
-describe('el aviso del índice, desde el contexto de cuenta', () => {
-    test('pide FIRMAR cuando el servidor dice que hace falta o que está anticuado', () => {
-        assert.equal(waiverNoticeFrom({ waiver: { mode: 'interno', required: true, outdated: false } }), WAIVER_NOTICE_SIGN);
-        assert.equal(waiverNoticeFrom({ waiver: { mode: 'interno', required: false, outdated: true } }), WAIVER_NOTICE_SIGN);
-    });
-
-    /**
-     * `#327` — con la aceptación retenida el aviso cambia de contenido Y de botón: lo que falta es
-     * verificar el correo, no firmar. Es el mismo estado del servidor (`required: true`) leído con el
-     * dato que lo explica.
-     */
-    test('pide VERIFICAR cuando la aceptación está retenida', () => {
-        assert.equal(
-            waiverNoticeFrom({ waiver: { mode: 'interno', required: true, pending: true } }),
-            WAIVER_NOTICE_VERIFY,
+describe('el aviso ÚNICO del índice, desde el contexto de cuenta', () => {
+    /** `#330` — quien acaba de registrarse llega con sesión y sin verificar: ése es el aviso. */
+    test('pide VERIFICAR el correo, y dice si la exención viaja con él', () => {
+        assert.deepEqual(
+            accountNoticeFrom({ email_verified: false, waiver: { mode: 'interno', required: true, pending: true } }),
+            { kind: 'verify', withWaiver: true },
+        );
+        assert.deepEqual(
+            accountNoticeFrom({ email_verified: false, waiver: { mode: 'interno', required: true, pending: false } }),
+            { kind: 'verify', withWaiver: false },
         );
     });
 
-    /** ⚠️ Una re-firma (versión anterior) NO es verificación aunque quede una aceptación colgada. */
-    test('con firma anterior se pide firmar, no verificar', () => {
-        assert.equal(
-            waiverNoticeFrom({ waiver: { mode: 'interno', required: false, outdated: true, pending: true } }),
-            WAIVER_NOTICE_SIGN,
+    /** ⚠️ Sin waiver interno el aviso SIGUE saliendo: lo que falta es el correo, no la exención. */
+    test('sin exención que firmar, el aviso de verificar se queda', () => {
+        assert.deepEqual(
+            accountNoticeFrom({ email_verified: false, waiver: { mode: 'externo' } }),
+            { kind: 'verify', withWaiver: false },
+        );
+    });
+
+    /**
+     * ⚠️⚠️ **El ORDEN, y es la regla que `#328` dejó escrita**: con el correo sin verificar NO se pide
+     * firmar, aunque el waiver «haga falta» — ese botón lleva a un 409.
+     */
+    test('con el correo sin verificar nunca se pide firmar', () => {
+        const notice = accountNoticeFrom({ email_verified: false, waiver: { mode: 'interno', required: true, outdated: false, pending: true } });
+
+        assert.equal(notice.kind, 'verify');
+    });
+
+    test('con el correo verificado, pide FIRMAR si falta o está anticuada', () => {
+        assert.deepEqual(
+            accountNoticeFrom({ email_verified: true, waiver: { mode: 'interno', required: true } }),
+            { kind: 'sign', withWaiver: true },
+        );
+        assert.deepEqual(
+            accountNoticeFrom({ email_verified: true, waiver: { mode: 'interno', required: false, outdated: true } }),
+            { kind: 'sign', withWaiver: true },
         );
     });
 
     test('y calla en el resto de casos, incluido un contexto sin waiver', () => {
-        assert.equal(waiverNoticeFrom({ waiver: { mode: 'interno', required: false, outdated: false } }), null);
-        assert.equal(waiverNoticeFrom({ waiver: { mode: 'externo', required: true } }), null);
-        assert.equal(waiverNoticeFrom({}), null);
-        assert.equal(waiverNoticeFrom(null), null);
+        assert.equal(accountNoticeFrom({ email_verified: true, waiver: { mode: 'interno', required: false, outdated: false } }), null);
+        assert.equal(accountNoticeFrom({ email_verified: true, waiver: { mode: 'externo', required: true } }), null);
+        assert.equal(accountNoticeFrom({ email_verified: true }), null);
+        assert.equal(accountNoticeFrom(null), null);
+    });
+
+    /**
+     * ⚠️ **Un contexto SIN el campo no inventa un aviso.** La semilla de una página cacheada puede no
+     * traerlo todavía; `undefined` no es `false`.
+     */
+    test('sin el dato de verificación no se supone que falte', () => {
+        assert.equal(accountNoticeFrom({ waiver: { mode: 'interno', required: false, outdated: false } }), null);
     });
 });

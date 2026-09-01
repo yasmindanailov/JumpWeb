@@ -19779,3 +19779,79 @@ al día. *Que el dominio pueda hacerlo no es que la pantalla lo haga* — es la 
 
 ▶ **13/13 mutaciones muerden.** Suite **3821 · 24.665**. Los dos verificadores de concurrencia en
 verde sobre InnoDB real (`OrderCreator` y `SlotOffer` están en el `CRITICAL_RE`).
+
+## #330 · 2026-09-01 · El alta suelta ENTRA a la cuenta, y el aviso que le espera es UNO
+
+**Contexto.** `[owner]`: *«quiero que al registrarse, directamente el usuario entre a su cuenta, le
+salga ahí el mensaje de verifica tu correo electrónico con el CTA de reenviar. Y el mensaje
+acompañado del waiver, mejor 1 mensaje con los dos estados, para no saturar.»*
+
+### 1 · El alta suelta abre sesión
+
+Hasta hoy solo entraba quien se daba de alta DENTRO de la compra; el alta suelta terminaba en una
+pantalla de «revisa tu correo». **Eso es un callejón**, y el motivo es operativo, no estético: sin
+sesión no hay QR, y **el QR es lo que identifica al cliente en la puerta**. Quien se registra en el
+móvil delante del mostrador se quedaba justo sin lo que había ido a buscar.
+
+⚠️ **Solo con SESIÓN, y se pregunta en vez de asumirse**: el alta suelta funciona a propósito sin
+origen *stateful* —así la usa la app nativa, y `requireSession()` solo se exige en la compra—. Sin
+sesión no hay dónde iniciarla, y ese cliente no cambia.
+
+⚠️ **La respuesta no cambia: 201 sin cuerpo, siempre.** Un honeypot y un alta real siguen contestando
+lo mismo; lo que cambia es que una de las dos deja cookie. El bot ya podía deducirlo pidiendo
+`GET /me`, y **no le da ninguna cuenta que no tuviera** — el señuelo sigue haciendo su único trabajo,
+que es no crearla. Hay caso de control que lo afirma.
+
+⚠️ **Entrar no es verificar**: `email_verified_at` sigue nulo y la verificación se manda igual. Lo que
+cambia es DÓNDE se le pide.
+
+### 2 · Un solo aviso con los dos estados
+
+Quien acaba de registrarse llega con **dos cosas pendientes que son una sola acción suya**: verificar
+el correo y —si aceptó la exención— que esa verificación la convierta en firma. Dos avisos apilados
+dirían dos veces «abre tu correo».
+
+`accountNoticeFrom()` (en `account/waiver.js`, con sus `node --test`) devuelve `null` o
+`{kind, withWaiver}`. ⚠️ **El orden no es arbitrario**: si falta verificar, ése es el aviso aunque el
+waiver también «haga falta» — ofrecer «Firmar» a quien no puede firmar es el callejón que `#328`
+cerró, y hay caso que lo fija.
+
+▶ **Y el mejor texto resultó ser el más barato.** Con la exención esperando, *«Tu exención de
+responsabilidad quedará firmada en cuanto verifiques tu correo»* dice **las dos cosas en una frase** y
+el botón hace obvia la acción; encadenar «verifica tu correo» delante repetiría la mitad. Ese rótulo
+es además el que ya usa la tarjeta de privacidad para lo mismo: **un texto, dos sitios**. Solo entra
+uno nuevo (`verify.pending_notice`), para el caso sin exención.
+
+### 3 · El contexto de cuenta dice si falta verificar
+
+`email_verified` entra en `CustomerAccountContext`, en el recurso y en el contrato. Antes no hacía
+falta: quien llegaba al área venía de una compra pagada —que verifica sola— o de pulsar el enlace.
+
+⚠️ **Va FUERA del `try`** del contexto: es un campo del propio usuario, no una consulta que pueda
+fallar, y el contexto de respaldo tiene que decir la verdad sobre él aunque el resto se caiga.
+
+### Dos guardas cambian de premisa, y se reescriben
+
+ 1. `AuthRegistrationTest::test_a_standalone_signup_does_not_open_a_session` **afirmaba justo lo
+    contrario**. Se reescribe conservando lo que sigue siendo cierto —se manda la verificación y el
+    correo sigue sin verificar— y se le añade el control del honeypot.
+ 2. `SidebarMountTest` paró el campo nuevo con su propio mensaje: *«cada campo nuevo viaja en el HTML
+    de TODA página con sesión: si hace falta, que entre a propósito»*. Entra a propósito, y queda
+    escrito por qué. Lo mismo con `pending_notice` en la poda del subgrupo `verify`.
+
+▶ **Verificado de punta a punta**: alta suelta con la casilla → `201` + sesión → `GET /me` responde
+→ el contexto dice `email_verified: false` y `waiver.pending: true` → el índice pinta **un** aviso con
+su botón de reenviar. Suite **3822 · 24.671**.
+
+### Lo que queda de este carril
+
+▶ **Lo siguiente es que la PUERTA cierre la firma** (`DEUDA.md`): el operador, al identificar por QR,
+convierte la aceptación retenida en firma con él de testigo. ⚠️⚠️ **Y la corrección que hay que
+respetar al construirlo**: el operador **acredita a la PERSONA, no al BUZÓN**. Si marcara el correo
+como verificado estaríamos afirmando que ese buzón es suyo sin prueba, y el correo verificado es lo
+que sostiene la recuperación de contraseña — sería un vector de robo de cuenta creado sin querer. Lo
+que el operador escribe es la FIRMA; el correo sigue sin verificar hasta que el cliente pulse su
+enlace.
+
+▶ **Y después, Google auth** (`[owner]`), que vacía el caso para la mayoría: el proveedor entrega el
+correo ya verificado, así que la aceptación se convierte en firma sola en el instante del alta.

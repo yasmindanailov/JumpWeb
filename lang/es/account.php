@@ -99,7 +99,7 @@ return [
                 'pending_cta' => 'Firmarla',
                 // `#327` — el estado «la aceptó al registrarse y falta verificar el correo». No dice
                 // que no la haya firmado, porque sí la aceptó: dice qué falta y ofrece la salida.
-                'status_awaiting_verification' => 'La aceptaste al registrarte. La firmaremos en cuanto verifiques tu correo.',
+                'status_awaiting_verification' => 'Tu exención de responsabilidad quedará firmada en cuanto verifiques tu correo.',
             ],
             'deleting' => 'Eliminando…',
         ],
@@ -286,6 +286,7 @@ return [
         'sent_to' => 'Te hemos enviado un correo de confirmación a :email. Ábrelo para activar tu cuenta.',
         'spam_hint' => '¿No lo ves? Revisa la carpeta de spam o promociones.',
         'resend' => 'Reenviar correo',
+        'pending_notice' => 'Te falta verificar tu correo electrónico.',
         'resend_in' => 'Reenviar en',
         'resending' => 'Reenviando…',
         'resends_left' => 'Te quedan :n reenvíos.',
