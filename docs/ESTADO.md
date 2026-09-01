@@ -59,7 +59,7 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3779 en verde** (24.532 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche,
+> Suite **3789 en verde** (24.564 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche,
 > 2.ª parte) sobre el árbol CONJUNTO: el panel del horario por zona (`#322`) sobre `#323` (T10, la
 > tarjeta pegatina), `#321` y `#320`.
 > ⚠️ **Se mide tras cada rebase, no se suma**: antes 3776 / 24.517 (`#323`) y 3774 / 24.521 (`#322`
@@ -87,7 +87,15 @@
 > las tarifas de finde. **De toda la petición, lo único que faltaba de mecanismo era el horario.**
 > ▶ *Preguntar «¿esto no lo tenemos ya?» antes de diseñar valió media tanda.*
 >
-> ▶ **LO SIGUIENTE ES LA TANDA B: el PRECIO POR TRAMO DE CANTIDAD.** Es DINERO (`CRITICAL_RE`,
+> ✅ **LA TANDA B ESTÁ EN EL ÁRBOL (`#324`)**: `price_tiers` propia, precio UNIFORME, panel incluido y
+> la puerta cerrada al cruce con el sello de edades (guarda en las DOS direcciones). ⚠️ Dos hallazgos
+> que valen para todo el repo: **añadir una dimensión a una tabla compartida cambia el significado de
+> los agregados que la leen** (por eso NO se metió `min_qty` en `prices`), y **un complemento es una
+> fila de `ticket_types`**, así que un `instanceof` los alcanza — cada uno pagaba una consulta por unos
+> tramos que no puede tener, y lo cazó el presupuesto de la API, no una lectura.
+> ▶ **QUEDA LA TANDA C, que es DATO y no código** (abajo), y el OJO del owner.
+>
+> ▶ **Lo que la tanda B decidió** (por si hay que retomarlo): Es DINERO (`CRITICAL_RE`,
 > `PAY-16`/`PAY-17`, el libro del pedido) y va en spec propia. Lo decidido y medido para arrancarla:
 >   - **Precio UNIFORME, no escalonado** (`[DECIDIDO owner]`, con los dos números delante): 70 niños a
 >     13 € = **910 €**, no 30×15 + 40×13 = 970 €.
@@ -2187,8 +2195,10 @@
 >   por `GateProfile` (23 consultas constantes, sin campo para el nombre de un menor), la pantalla con el
 >   carné por el MISMO input + dos limitadores + caducidad EN SERVIDOR + «Registrar visita», el PNG en el
 >   correo y `GET|POST /me/card`. **5/5 mutaciones · headless 15/15 con capturas.** Queda el OJO del
->   owner (pantalla, correo en Gmail/Outlook, **lector real**). ⚠️ `docs-check`: **36 modelos · 85
->   migraciones**. **SESIÓN CERRADA el 2026-08-28 a las 06:20 (hora de Madrid; el contenedor va en UTC,
+>   owner (pantalla, correo en Gmail/Outlook, **lector real**). ⚠️ `docs-check` de aquel día: **36
+>   modelos y 85 migraciones** (cifra HISTÓRICA; se escribe con «y» y no con «·» a propósito, porque
+>   `docs-check` verifica toda aparición de «N modelos ·» contra el árbol de HOY y una nota del pasado
+>   lo pondría rojo sin que nada esté mal). **SESIÓN CERRADA el 2026-08-28 a las 06:20 (hora de Madrid; el contenedor va en UTC,
 >   2 h menos; el código se cerró a las 00:40 y el último corte es solo doc)** con todo empujado y el
 >   gate en verde: suite **3213 / 20.935** · Pint ✓ · docs-check ✓ · build ✓ ·
 >   `audit-clock` NO corrido a propósito (los fixtures nuevos van con `travelTo` fijo o con las

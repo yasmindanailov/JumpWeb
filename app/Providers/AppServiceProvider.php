@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Price;
+use App\Domain\Booking\Models\PriceTier;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Room;
@@ -132,6 +133,7 @@ class AppServiceProvider extends ServiceProvider
             'payment_refund' => PaymentRefund::class,
             'permission' => Permission::class,
             'price' => Price::class,
+            'price_tier' => PriceTier::class,
             'product_addon' => ProductAddon::class,
             'rate_type' => RateType::class,
             'role' => Role::class,

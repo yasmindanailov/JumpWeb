@@ -2,8 +2,10 @@
 
 namespace App\Domain\Booking\Services;
 
+use App\Domain\Booking\Models\PriceTier;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\SpecialDate;
+use App\Domain\Booking\Models\TicketType;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -82,9 +84,37 @@ class RateResolver
      * definido para la tarifa aplicable. El producto debe exponer la relación `prices`
      * (p. ej. `TicketType`).
      */
-    public function priceCents(Model $priceable, CarbonInterface $date): ?int
+    /**
+     * Precio unitario del producto ese día, en céntimos.
+     *
+     * ▶ `#324` — admite la CANTIDAD (`docs/specs/precio-por-tramo.md`). Si el producto declara tramos
+     * de volumen y alguno cubre esa cantidad, manda el tramo; si no, el precio de siempre. El default
+     * a 1 deja idéntica la conducta de todo llamante que no la pase, que es lo que permitió
+     * convertirlos uno a uno con su caso en vez de en un solo commit a ciegas.
+     *
+     * ⚠️ Los tramos son de `TicketType` y no de cualquier `priceable`: un complemento no se vende por
+     * volumen. Preguntarlo por `instanceof` y no por la relación evita que un `Attraction` o un
+     * `ProductAddon` acabe con una tabla de tramos que nadie diseñó.
+     */
+    public function priceCents(Model $priceable, CarbonInterface $date, int $quantity = 1): ?int
     {
         $rate = $this->for($date);
+
+        // ⚠️⚠️ Los COMPLEMENTOS quedan fuera, y no es una optimización: es la regla. Un complemento
+        // (la tarta, los calcetines) no se vende por volumen — lo dice la migración de `price_tiers`,
+        // que es solo de productos principales.
+        //
+        // ▶ Y lo destapó el presupuesto de consultas, no una lectura: un addon **es una fila de
+        // `ticket_types`** con `type = addon`, así que el `instanceof` los alcanzaba y cada uno pagaba
+        // una consulta para preguntar por unos tramos que no puede tener. Tres tests de coste se
+        // pusieron rojos (16 consultas donde caben 10). *Un `instanceof` describe la clase, no el rol,
+        // y aquí tres roles comparten clase.*
+        if ($priceable instanceof TicketType && ! $priceable->isAddon()) {
+            $tier = PriceTier::resolve($priceable->priceTiers, (int) $rate->id, $quantity);
+            if ($tier !== null) {
+                return $tier;
+            }
+        }
 
         /** @var int|null $cents */
         $cents = $priceable->prices()

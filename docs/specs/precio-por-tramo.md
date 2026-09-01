@@ -1,6 +1,6 @@
 # [SPEC] Precio por TRAMO DE CANTIDAD — cuantos más vienen, menos cuesta cada uno
 
-> Estado: ⬜ **BORRADOR, pendiente del owner** (2026-09-01)
+> Estado: 🟦 **DISEÑO CERRADO** (2026-09-01) — las tres decisiones del owner, tomadas (§7)
 > Caso que lo motiva: **excursiones de colegio**. Tanda **B** de `P2`; la **A** (horario por zona) ya
 > está en el árbol (`#322`, `specs/horario-por-zona.md`).
 > ⚠️ **Esto es DINERO**: `CRITICAL_RE`, `PAY-16`/`PAY-17`, el libro del pedido y `VERIFY_CONC=1`.
@@ -150,17 +150,26 @@ respuesta honesta es **el precio del tramo mínimo vendible** (`min_qty` del pro
 porque es el que un cliente puede pagar de verdad; el más barato (12 €) sería un reclamo que solo
 alcanzan los grupos de 100.
 
-▶ **Decisión pendiente del owner** (§7·2).
+▶ **`[DECIDIDO owner]`: el MÁS BARATO** — «desde 12 €» (§7·2). El párrafo de arriba propone lo
+contrario y **queda como el razonamiento descartado**, no como lo vigente.
 
-### 4.4 Editar la cantidad RE-TARIFICA la línea
+### 4.4 Editar la cantidad RE-TARIFICA la línea — pero solo con tramos
 
-Si un colegio pasa de 70 a 100 niños, el unitario baja de 13 € a 12 € **y la línea entera se
-re-precia**. Es coherente con `PAY-18` («mover el día o cambiar el pack SÍ re-tarifican») y con el
-sello de `#288`: lo que congela el sello es la FAMILIA de edades, no el precio por volumen.
+⚠️⚠️ **CORRECCIÓN: este apartado daba por hecho que la cantidad re-tarifica, y HOY NO LO HACE.**
+`ItemEditPricing::computeEditPricing()` documenta lo contrario, y es una regla decidida
+(`#127(d)`): *«una subida de cantidad sin mover el día sigue conservando la tarifa histórica del
+ítem»*. Se escribió cuando el precio no dependía de la cantidad, y protege al cliente de que le
+re-tarifiquen una reserva ya pagada.
 
-⚠️ Y eso hay que decirlo en el panel: el operador que sube 70 → 100 tiene que ver que el total baja
-**por unidad**, no solo que hay más gente. El libro (`#315`) ya sabe expresarlo — `recordEdit(±Δ)` con
-su movimiento— pero la **frase** es nueva.
+▶ **La salida es una EXCEPCIÓN ESTRECHA, no cambiar la regla**: se re-tarifica **solo si el producto
+declara tramos**. En un producto cuyo precio está *declarado como función de la cantidad*, conservar
+la tarifa vieja contradice al propio producto — un colegio que pasa de 70 a 100 niños seguiría
+pagando el tramo de 70 y **no recibiría el descuento que su propia tabla le promete**. Sin tramos, la
+conducta es exactamente la de siempre, y eso es lo que hace segura la excepción.
+
+⚠️ Y hay que decirlo en el panel: el operador que sube 70 → 100 tiene que ver que baja el precio
+**por unidad**, no solo que hay más gente. El libro (`#315`) ya sabe expresarlo con `recordEdit(±Δ)`;
+la **frase** es nueva.
 
 ---
 
@@ -192,23 +201,22 @@ su movimiento— pero la **frase** es nueva.
 
 ---
 
-## 7. Lo que necesito del owner
+## 7. Las tres decisiones del owner — TOMADAS (`[DECIDIDO owner, 2026-09-01]`)
 
-1. **¿El tramo es por producto o compartido?** El cuadro tiene los mismos cortes (30/70/100) para 2 h
-   y 3 h. ¿Se declaran dos veces (simple, y pueden divergir a propósito) o una sola compartida
-   (menos tecleo, pero un cambio afecta a los dos)? **Recomiendo por producto**: es lo que ya hace
-   `prices` y lo que permite que un producto futuro tenga otros cortes.
-2. **El «desde X €» de la web** (§4.3): ¿el precio del tramo mínimo (**15 €**, el que de verdad se
-   puede pagar) o el más barato (**12 €**, solo para grupos de 100)? Recomiendo el mínimo vendible:
-   anunciar 12 € y cobrar 15 € es la clase de sorpresa que genera una llamada.
-3. **El SELLO de cumpleaños mixto y los tramos** (§5): hoy `AgeFamilySealer` congela el precio de cada
-   tramo de edad al vender. Si un pack mixto tuviera además tramos de cantidad, **¿qué cantidad se
-   sella?** ⚠️ Hoy **no se cruzan** —las excursiones no son fiestas mixtas— así que la salida barata y
-   honesta es **declarar que un producto no puede tener las dos cosas**, con guarda que lo impida.
-   Es mi recomendación: cerrar la puerta ahora cuesta una guarda; abrirla mal cuesta un cobro erróneo.
+1. **Los tramos se declaran POR PRODUCTO.** Aunque el cuadro tenga los mismos cortes en 2 h y 3 h, se
+   teclean dos veces: es lo que ya hace `prices` y deja que un producto futuro tenga otros cortes.
+2. **El «desde X €» de la web es el MÁS BARATO** — «desde 12 €», el del tramo de 100.
+   ⚠️ **Esto REVIERTE la recomendación de §4.3**, que proponía el tramo mínimo vendible (15 €) para
+   que nadie viera 12 y pagara 15. El owner elige el más barato, y es defendible: «desde» señala
+   variabilidad y es lo que anuncia el precio real más bajo que existe. **Queda escrito para que
+   nadie lo «corrija» de vuelta creyendo que es un descuido.**
+3. **Un producto NO puede tener tramos de cantidad Y familia de edades a la vez**, y lo impide una
+   guarda. Hoy no se cruzan (una excursión no es una fiesta mixta) y cerrar la puerta ahora cuesta
+   una guarda; abrirla mal cuesta un cobro erróneo. ▶ Con eso, la pregunta «¿qué cantidad se sella?»
+   **deja de existir** en vez de contestarse a medias.
 
 ---
 
 ## 8. Estado
 
-⬜ **Pendiente del ✅ del owner** y de las tres respuestas de §7.
+🟦 **Diseño cerrado; pasa a ejecución.**

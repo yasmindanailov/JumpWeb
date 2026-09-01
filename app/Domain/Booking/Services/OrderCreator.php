@@ -228,7 +228,10 @@ class OrderCreator
                 // del día (null), el producto no es vendible ese día → no creamos un pedido a 0 €.
                 // Un 0 explícito SÍ es válido (producto gratuito intencionado), por eso se distingue
                 // null de 0.
-                $unit = $this->rates->priceCents($type, Carbon::parse($line['date']));
+                // `#324`: la CANTIDAD entra en el precio (tramos de volumen). Tiene que dar el MISMO
+                // número que `CartPricer` para la misma cesta, o lo presupuestado deja de ser lo
+                // cobrado; su paridad la fija una guarda propia.
+                $unit = $this->rates->priceCents($type, Carbon::parse($line['date']), (int) $line['qty']);
                 if ($unit === null) {
                     throw new ReservationException('tickets.errors.unavailable');
                 }

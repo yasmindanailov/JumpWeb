@@ -52,7 +52,10 @@ class AvailabilityReader implements AvailabilityOffer
         foreach ($offerable as $date) {
             $dates[] = new OfferedDate(
                 date: $date,
-                priceCents: $product->priceCentsForRate($rates[$date]),
+                // `#324`: este calendario NO conoce la cantidad (`dates()` recibe un producto y
+                // nada más), así que con tramos enseña el MÁS BARATO de esa tarifa — la misma regla
+                // que el «desde X €». Inventarle una cantidad aquí sería inventar un precio.
+                priceCents: $product->displayPriceCentsForRate($rates[$date]),
                 rateKey: (string) $rates[$date]->key,
             );
         }

@@ -1312,6 +1312,14 @@ return [
         'price_section_hint' => '当日价格由适用费率决定。留空某费率的金额,则该费率适用的日期不销售此商品。',
         'price_rate_normal_hint' => '平日价格。',
         'price_rate_special_hint' => '节假日、周末及前夜的价格。',
+        'section_price_tiers' => '按数量分档价格',
+        'price_tiers_hint' => '可选。「从 N 份起，每份 X」——本档一直延续到下一档开始，因此无需上限。价格为统一价：若 70 份档为 13 €，70 人团付 70 × 13 €。未设分档时，以上方价格为准。',
+        'price_tiers_blocked' => '该产品已声明年龄family（混合派对），因此不能设置按数量分档：预订时会锁定各年龄的价格，而分档会在之后改变它。',
+        'price_tier_add' => '新增分档',
+        'price_tier_rate' => '费率',
+        'price_tier_min_qty' => '起始数量',
+        'price_tier_min_qty_hint' => '含本数。',
+        'price_tier_amount' => '单价',
         'price_no_rates' => '没有启用的费率。请先配置费率才能设置价格。',
 
         'lang' => [

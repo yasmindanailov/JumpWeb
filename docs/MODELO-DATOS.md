@@ -38,6 +38,28 @@
 
 ## 1. Dominio CATÁLOGO Y AFORO
 
+### `price_tiers` — precio por TRAMO DE CANTIDAD (PriceTier) · `#324`
+| Campo | Tipo/Notas |
+|---|---|
+| `ticket_type_id` | FK cascade. **Solo productos principales**: un complemento no se vende por volumen (y preguntárselo costaba una consulta por complemento — ver `DECISIONES #324` §4) |
+| `rate_type_id` | FK cascade — el tramo es POR TARIFA: el cuadro del cliente tiene precio distinto L-J y finde |
+| `min_qty` | uint — desde cuántas unidades aplica, **inclusive** |
+| `amount_cents` | uint — precio POR UNIDAD en ese tramo. **UNIFORME, no escalonado** (`[DECIDIDO owner]`): 70 personas a 13 € son 910 €, no 30×15 + 40×13 |
+| único | `(ticket_type_id, rate_type_id, min_qty)` |
+
+⚠️ **NO hay `max_qty`**: el tramo llega hasta que empieza el siguiente, así que **no puede haber
+huecos ni solapes por construcción** — la familia de defectos que `#299` tuvo que cerrar con un
+guardián de dominio para los tramos de EDAD.
+
+⚠️⚠️ **Tabla propia y NO filas extra en `prices`, a propósito** (`specs/precio-por-tramo.md` §3):
+media docena de agregados leen `prices` suponiendo **una fila por tarifa**, y meterle filas cambiaría
+lo que miden sin que falle nada — `displayPriceCents()` haría `first()` sobre tres filas (no
+determinista) y `priceVaries()`, que significa «varía según el DÍA», pasaría a ser cierto por variar
+según la cantidad. Con tabla propia, **un producto sin tramos no tiene filas** y nada cambia.
+
+⚠️ **Un producto NO puede tener tramos Y `guest_age_family`**, y lo impiden dos guardas (una en cada
+modelo): el sello de `#288` congela el precio por edad al vender y un tramo lo movería después.
+
 ### `zones` — zona del recinto (Zone)
 | Campo | Tipo/Notas |
 |---|---|

@@ -87,7 +87,10 @@ class CartPricer implements CartPricing
             // —misma tarifa, misma columna— pero sin su consulta por llamada: la trampa que el spec
             // §10.ter 17 destapó en el read-model de catálogo. Diez líneas del mismo día resuelven
             // una tarifa, no diez.
-            $unitPrice = $type->priceCentsForRate($rates[$priceDate]);
+            // `#324`: la CANTIDAD entra en el precio (tramos de volumen). Va aquí y no en un cálculo
+            // aparte porque el presupuesto y el checkout tienen que dar el MISMO número — es la
+            // segunda fuente de verdad que `CartPricing` existe para evitar.
+            $unitPrice = $type->priceCentsForRate($rates[$priceDate], $quantity);
             $subtotal = $quantity * (int) $unitPrice;
 
             $addons = $this->resolveAddons($type, $quantity, $line['addons']);
@@ -159,7 +162,10 @@ class CartPricer implements CartPricing
             // pivote) porque `AddonResolver` recorre esa relación entera en cada línea. NO se carga
             // `addons.prices`: el resolutor pide el precio de cada complemento por consulta —usa el
             // *query builder* de la relación, no la colección— así que precargarla no ahorra nada.
-            ->with(['prices', 'addons'])
+            // `#324`: `priceTiers` viaja con el resto para que el tramo se resuelva sobre la relación
+            // ya cargada, igual que `prices` — la razón entera de que este lector no llame a
+            // `RateResolver` es no consultar por línea.
+            ->with(['prices', 'priceTiers', 'addons'])
             ->get()
             ->keyBy('id');
     }

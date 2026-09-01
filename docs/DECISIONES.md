@@ -19150,3 +19150,97 @@ correcta; *un número de decisión se copia del `DECISIONES.md` REMOTO, nunca se
 por la regla sería primer nivel, pero vive sobre magenta y no está renderizada) · el glifo «!» de
 `/normas` frente a un icono del set · si `.ride-card:hover` (la única pegatina que responde) debe
 unificarse con las demás.
+
+---
+
+## #324 · 2026-09-01 · Precio por TRAMO DE CANTIDAD: cuantos más vienen, menos cuesta cada uno (tanda B de las excursiones)
+
+**Contexto.** El cliente vende excursiones de colegio con un cuadro de precios **por persona** que
+baja con el volumen: 30 → 15 €, 70 → 13 €, 100 → 12 € entre semana, y 17/15/14 en finde y festivos.
+La mitad de ese cuadro **ya existía** (las columnas de día son `RateType`); la dimensión nueva es la
+CANTIDAD, que hoy no estaba: el precio era función de `(producto, tarifa-del-día)` y nada más.
+
+Diseño en `docs/specs/precio-por-tramo.md`. Tanda **B**; la **A** (horario por zona) es `#322`.
+
+**Decisión** (`[DECIDIDO owner, 2026-09-01]`):
+1. **Precio UNIFORME, no escalonado**, preguntado con los dos números delante: 70 personas a 13 € son
+   **910 €**, no 30×15 + 40×13 = 970 €.
+2. **Tabla propia `price_tiers`**, no una columna más en `prices` (ver §2).
+3. **Los tramos se declaran POR PRODUCTO**, aunque 2 h y 3 h compartan los cortes.
+4. **El «desde X €» de la web es el MÁS BARATO** — «desde 12 €». ⚠️ **Revierte la recomendación de la
+   spec §4.3**, que proponía el tramo mínimo vendible (15 €) para que nadie viera 12 y pagara 15. El
+   owner elige el más barato y es defendible: «desde» señala variabilidad. **Queda escrito para que
+   nadie lo «corrija» de vuelta creyendo que es un descuido**, y hay guarda.
+5. **Un producto NO puede tener tramos de cantidad Y familia de edades**, con guarda **en las dos
+   direcciones**. El sello de `#288` congela el precio de cada tramo de EDAD al vender y un tramo de
+   CANTIDAD lo movería después; «¿qué cantidad se sella?» no tiene respuesta buena, así que la
+   pregunta **deja de existir** en vez de contestarse a medias.
+
+### 1 · ⚠️ El riesgo central, medido: SEIS sitios resuelven el precio unitario
+
+`CartPricer` (presupuesto) · `OrderCreator` (checkout) · `AvailabilityReader` (calendario) ·
+`CreateManualOrderPage` (pedido manual) · `ItemEditPricing` (ediciones) · `AgeFamilySealer` (sello).
+**Todos tienen que dar el mismo número** o lo mostrado deja de ser lo cobrado, así que la regla vive
+dentro de lo que ya comparten (`RateResolver::priceCents()` y `TicketType::priceCentsForRate()`, las
+dos con `$quantity = 1` por defecto) y cada llamante solo pasa su cantidad. La paridad
+presupuesto↔checkout tiene guarda propia.
+
+### 2 · ⚠️⚠️ Por qué se DESCARTÓ el diseño elegante
+
+Lo natural era meter `min_qty` en `prices` —*es* el precio de ese producto en esa tarifa para esa
+cantidad— y repetir el movimiento que funcionó en `#322`. **Se descarta por lo que rompe en
+silencio**: media docena de agregados leen `prices` suponiendo **una fila por tarifa**.
+
+- `TicketType::displayPriceCents()` hace `first()` sobre las filas de tarifa normal: con tres tramos
+  el «desde X €» de la landing pasaría a depender del **orden de la consulta**.
+- `priceVaries()` compara `max` contra `min` y hoy significa **«el precio varía según el DÍA»** — es
+  lo que decide que la web diga «desde». Con tramos sería cierto por variar según la CANTIDAD.
+
+▶ *Añadir una dimensión a una tabla compartida cambia el significado de todos los agregados que ya se
+calculan sobre ella*, y ninguno habría fallado. Con tabla propia, **un producto sin tramos no tiene
+filas** y nada existente cambia — la misma propiedad que hizo segura la tanda A.
+
+⚠️ **`price_tiers` no tiene `max_qty`**: el tramo llega hasta que empieza el siguiente. Un máximo
+explícito permite huecos y solapes, que es la familia de defectos que `#299` tuvo que cerrar con un
+guardián para los tramos de EDAD. Aquí no puede existir por construcción.
+
+### 3 · ⚠️ La regla existente que mi propia spec contradecía
+
+La spec afirmaba que «editar la cantidad re-tarifica». **Hoy NO lo hace**, y es una regla decidida
+(`#127(d)`): *«una subida de cantidad sin mover el día conserva la tarifa histórica del ítem»*, que
+protege al cliente de que le re-tarifiquen lo ya pagado.
+
+▶ La salida es una **excepción ESTRECHA**: se re-tarifica **solo si el producto declara tramos**. En
+un producto cuyo precio está *declarado como función de la cantidad*, conservar la tarifa vieja
+contradice al propio producto — un colegio que pasa de 70 a 100 niños seguiría pagando el tramo de 70
+y **no recibiría el descuento que su propia tabla le promete**. Sin tramos, la conducta es
+exactamente la de siempre, y eso es lo que hace segura la excepción.
+
+### 4 · ⚠️⚠️ Lo que destapó el PRESUPUESTO DE CONSULTAS, no una lectura
+
+**Un complemento es una fila de `ticket_types`** con `type = addon`. El `instanceof TicketType` que
+decidía si mirar tramos los alcanzaba, y cada complemento pagaba **una consulta** para preguntar por
+unos tramos que no puede tener: la ficha de producto con 7 complementos pasó de **10 consultas a 16**
+y tres tests de coste se pusieron rojos. ▶ *Un `instanceof` describe la CLASE, no el ROL, y aquí tres
+roles comparten clase.* Los complementos quedan fuera en los dos resolutores, y no como optimización
+sino como regla: no se venden por volumen.
+
+⚠️ Y **se comprobó contra la línea base antes de arreglarlo**: con el árbol anterior a la tanda esos
+siete casos pasaban, así que el defecto era mío y no preexistente. *Descartar «ya estaba roto» cuesta
+un `git checkout` de dos directorios y evita arreglar lo que no toca.*
+
+### 5 · El panel, que esta vez SÍ entra en la tanda
+
+Sección «Precio por cantidad (tramos)» en el catálogo, con repeater sobre la relación y los importes
+en euros (la columna sigue siendo céntimos, única fuente de verdad como `prices`). **Se oculta en un
+producto con familia de edades**, con su aviso: el form no re-implementa la regla, la enseña y deja
+que el guardián del modelo sea la autoridad — el mismo reparto que `#299`.
+
+▶ Es la lección de `#322`, donde la tanda estuvo a punto de entregarse con las columnas creadas y sin
+formulario que las expusiera. **Una feature que el cliente no puede activar no está hecha**, y ahora
+tiene guarda propia por conducta.
+
+**Verificación**: suite verde (**3.789 tests, 24.564 aserciones**) · Pint ✓ · docs-check ✓ ·
+**5 mutaciones, las 5 muerden**, con pasada de CONTROL · **`VERIFY_CONC=1`: los SEIS escenarios de
+`purchase:verify-oversell` y `redsys:verify-concurrency`, sobre InnoDB real** · queda el OJO del owner
+y la tanda C (el producto, que es dato).

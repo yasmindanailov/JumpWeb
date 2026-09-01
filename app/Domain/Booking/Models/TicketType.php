@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
@@ -229,6 +230,19 @@ class TicketType extends Model
     public function prices(): MorphMany
     {
         return $this->morphMany(Price::class, 'priceable');
+    }
+
+    /**
+     * `#324` — los TRAMOS de precio por cantidad (`docs/specs/precio-por-tramo.md`). Un producto sin
+     * tramos no tiene filas y se comporta exactamente como antes: por eso esto es una tabla propia y
+     * no filas extra en `prices`, que habrían cambiado el significado de `displayPriceCents()` y
+     * `priceVaries()` sin que fallara nada.
+     *
+     * @return HasMany<PriceTier, $this>
+     */
+    public function priceTiers(): HasMany
+    {
+        return $this->hasMany(PriceTier::class);
     }
 
     /** Entrada sin límite de tiempo (duration_min vacío = ilimitada). */
@@ -599,6 +613,21 @@ class TicketType extends Model
             if ($sibling !== null) {
                 throw new OverlappingAgeRangeException($sibling);
             }
+
+            // `#324` (`[DECIDIDO owner]`, spec `precio-por-tramo.md` §7·3): **un producto no puede
+            // tener familia de edades Y tramos de cantidad a la vez.**
+            //
+            // El sello de `#288` congela al vender el precio de cada tramo de EDAD; un tramo de
+            // CANTIDAD lo movería después, y «¿qué cantidad se sella?» no tiene respuesta buena — el
+            // grupo entero y el subgrupo de esa edad son números distintos y los dos son defendibles.
+            // Hoy no se cruzan (una excursión no es una fiesta mixta), así que la puerta se cierra
+            // ANTES de que se abra mal: cuesta esta guarda, y abrirla mal cuesta un cobro erróneo.
+            if ($type->exists && $type->priceTiers()->exists()) {
+                throw new \InvalidArgumentException(
+                    'Un producto con tramos de precio por cantidad no puede declarar familia de edades: '
+                    .'el sello congelaría un precio que el tramo movería después.'
+                );
+            }
         });
     }
 
@@ -949,22 +978,66 @@ class TicketType extends Model
     /**
      * Precio (céntimos) para una tarifa concreta; null si no está definido.
      * Usa la relación `prices` (cárgala con eager load para evitar N+1).
+     *
+     * ▶ `#324` — admite la CANTIDAD: si el producto declara tramos de volumen y alguno cubre esa
+     * cantidad, manda el tramo; si no, el precio de siempre (`docs/specs/precio-por-tramo.md`). El
+     * default a 1 mantiene idéntica la conducta de todo llamante que no la pase.
      */
-    public function priceCentsForRate(?RateType $rate): ?int
+    public function priceCentsForRate(?RateType $rate, int $quantity = 1): ?int
     {
         if (! $rate) {
             return null;
         }
 
-        return $this->prices->firstWhere('rate_type_id', $rate->id)?->amount_cents;
+        // ⚠️ Los COMPLEMENTOS no tienen tramos —no se venden por volumen— y preguntarlo cuesta una
+        // consulta POR complemento, porque un addon es una fila de `ticket_types` como las demás y
+        // aquí la relación no viene precargada. Lo destapó el presupuesto de consultas de la API
+        // (`ApiOverheadTest`): la ficha con 7 complementos pasó de 10 consultas a 16.
+        $tier = $this->isAddon() ? null : PriceTier::resolve($this->priceTiers, (int) $rate->id, $quantity);
+
+        return $tier ?? $this->prices->firstWhere('rate_type_id', $rate->id)?->amount_cents;
+    }
+
+    /**
+     * `#324` — precio a ENSEÑAR para una tarifa cuando **todavía no se sabe la cantidad**: es la
+     * pregunta del calendario de disponibilidad, que pinta un precio por día antes de que el cliente
+     * elija cuántos (`AvailabilityReader::dates()` recibe un producto y ninguna cantidad).
+     *
+     * Con tramos devuelve **el más barato de esa tarifa**, que es la misma regla que
+     * {@see displayPriceCents()} y el `[DECIDIDO owner]` del «desde 12 €». Se separa de
+     * {@see priceCentsForRate()} en vez de inventarle una cantidad porque son dos preguntas
+     * distintas —«¿cuánto cuesta esto?» y «¿cuánto cuesta COMPRAR N?»— y una cantidad fingida en la
+     * primera acabaría cobrándose en la segunda.
+     */
+    public function displayPriceCentsForRate(?RateType $rate): ?int
+    {
+        if (! $rate) {
+            return null;
+        }
+
+        $tiers = $this->priceTiers->where('rate_type_id', $rate->id);
+
+        return $tiers->isNotEmpty()
+            ? (int) $tiers->min('amount_cents')
+            : $this->prices->firstWhere('rate_type_id', $rate->id)?->amount_cents;
     }
 
     /**
      * Precio de referencia para la landing: el de la tarifa `normal` (o, si falta,
      * el más bajo). El precio del día se aplica en el panel de compra (RateResolver).
+     *
+     * ▶ `#324` — con tramos de volumen, el de referencia es **el MÁS BARATO** de todos ellos
+     * (`[DECIDIDO owner]`: «desde 12 €», el del tramo de 100). ⚠️ Se preguntó con la alternativa
+     * delante —el del tramo mínimo vendible, 15 €, para que nadie vea 12 y pague 15— y el owner
+     * eligió el más barato: «desde» señala variabilidad y anuncia el precio real más bajo que
+     * existe. **No lo «corrijas» creyendo que es un descuido**; está en la spec §7·2.
      */
     public function displayPriceCents(): int
     {
+        if ($this->priceTiers->isNotEmpty()) {
+            return (int) $this->priceTiers->min('amount_cents');
+        }
+
         $normal = $this->prices->first(
             fn (Price $price) => optional($price->rateType)->key === RateType::KEY_NORMAL
         );

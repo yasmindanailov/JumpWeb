@@ -1686,6 +1686,14 @@ return [
         'price_section_hint' => 'El precio del día se decide por la tarifa aplicable. Deja un importe vacío para no vender ese producto los días de esa tarifa.',
         'price_rate_normal_hint' => 'Precio para los días normales.',
         'price_rate_special_hint' => 'Precio para festivos, fines de semana y vísperas.',
+        'section_price_tiers' => 'Precio por cantidad (tramos)',
+        'price_tiers_hint' => 'Opcional. «Desde N unidades, cada una cuesta X» — el tramo llega hasta que empieza el siguiente, así que no hace falta un máximo. El precio es UNIFORME: si el tramo de 70 son 13 €, un grupo de 70 paga 70 × 13 €. Sin tramos, manda el precio de arriba.',
+        'price_tiers_blocked' => 'Este producto declara una familia de edades (fiesta mixta), así que no puede tener tramos por cantidad: la reserva congela el precio de cada edad al venderse y un tramo lo movería después.',
+        'price_tier_add' => 'Añadir tramo',
+        'price_tier_rate' => 'Tarifa',
+        'price_tier_min_qty' => 'Desde (unidades)',
+        'price_tier_min_qty_hint' => 'Inclusive.',
+        'price_tier_amount' => 'Precio por unidad',
         'price_no_rates' => 'No hay tarifas activas. Configúralas para poder fijar precios.',
 
         'lang' => [

@@ -88,7 +88,7 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
       REQUISITOS · MAPA-PAGINAS · OPERATIVA-SECTOR-ORIGEN · 8 docs de `sistemas/` ·
       **`MODELO-DATOS.md` regenerado desde el código** (30 modelos y las 71 migraciones de
       entonces; el recuento vivo lo verifica `docs-check`) ·
-      **`INVARIANTES.md`** destilado (54 entonces; hoy **60 invariantes de no-regresión**, el
+      **`INVARIANTES.md`** destilado (54 entonces; hoy **61 invariantes de no-regresión**, el
       recuento vivo lo verifica `docs-check`). Sin datos del cliente
       (verificado); cabecera «base heredada, verificar contra código» en todos. Índice en
       `docs/README.md` + tabla de enrutado en `CLAUDE.md`.
@@ -3518,9 +3518,13 @@ semana por la mañana**, cuando el parque puede estar cerrado. Diseño y ejecuci
       el mismo contrato que `max_per_slot`), `OperatingSchedule::effectiveForZone()` como método NUEVO
       —`effectiveFor()` sigue siendo la cara pública que ve la web— y tres consumidores re-apuntados.
       `VERIFY_CONC=1` con los seis escenarios + Redsys.
-- [ ] **Tanda B · precio por TRAMO de cantidad.** Es DINERO: spec propia, `CRITICAL_RE`, `PAY-16/17`.
-      Uniforme (`[DECIDIDO owner]`: 70 a 13 € = 910 €, no escalonado). ⏸️ El 2x1 y «la tercera más
-      barata» quedan APARCADOS por el owner.
+- [x] **Tanda B · precio por TRAMO de cantidad** (`#324`). Tabla propia `price_tiers`, uniforme, con
+      panel y con la puerta cerrada al cruce con el sello de edades (guarda en las dos direcciones).
+      ⏸️ El 2x1 y «la tercera más barata» quedan APARCADOS por el owner.
+      ⚠️⚠️ Dos hallazgos: **se descartó meter la cantidad en `prices`** —media docena de agregados la
+      leen suponiendo una fila por tarifa y habrían cambiado de significado en silencio— y **un
+      complemento es una fila de `ticket_types`**, así que el `instanceof` los alcanzaba y cada uno
+      pagaba una consulta (10 → 16 en la ficha). Lo cazó el presupuesto de la API, no una lectura.
 - [ ] **Tanda C · el producto, que es DATO**: zona `excursiones`, dos productos como **`pack`**, los
       tramos, la señal y el viernes en la tarifa `special` (para TODOS los productos).
 - [ ] **El OJO del owner** sobre la tanda A.

@@ -75,10 +75,35 @@ class ItemEditPricing
                 && $item->slot?->date?->toDateString() !== $dateStr;
 
             $unit = ($movedDay && $catalogo !== null) ? $catalogo : (int) $item->unit_price;
+
+            // ⚠️⚠️ `#324` — EXCEPCIÓN para los productos con TRAMOS DE CANTIDAD, y es la única forma
+            // coherente (`docs/specs/precio-por-tramo.md`).
+            //
+            // La regla de arriba —«subir la cantidad sin mover el día conserva la tarifa histórica»—
+            // se escribió cuando el precio NO dependía de la cantidad. En un producto cuyo precio
+            // está DECLARADO como función de la cantidad, conservarla contradice al propio producto:
+            // un colegio que pasa de 70 a 100 niños seguiría pagando el tramo de 70 y **no recibiría
+            // el descuento que su propia tabla de precios le promete**.
+            //
+            // ▶ El límite es estricto: solo se re-tarifica si el producto declara tramos. Sin ellos,
+            // la conducta es EXACTAMENTE la de siempre — que es lo que hace segura esta excepción.
+            if ($item->ticketType?->priceTiers()->exists()) {
+                $tierDate = $movedDay || $dateStr === null || $dateStr === ''
+                    ? ($dateStr ?: $item->slot?->date?->toDateString())
+                    : $dateStr;
+                $tiered = $tierDate !== null
+                    ? $this->rates->priceCents($item->ticketType, Carbon::parse($tierDate), $newQty)
+                    : null;
+                if ($tiered !== null) {
+                    $unit = (int) $tiered;
+                }
+            }
         } else {
             $newType = TicketType::find($newTypeId);
             $date = $dateStr !== null && $dateStr !== '' ? Carbon::parse($dateStr) : Carbon::today();
-            $resolved = $newType !== null ? $this->rates->priceCents($newType, $date) : null;
+            // `#324`: al CAMBIAR de producto se tarifica el nuevo con la cantidad nueva, que es lo
+            // que el catálogo del destino dice que cuesta comprar esa cantidad.
+            $resolved = $newType !== null ? $this->rates->priceCents($newType, $date, $newQty) : null;
             if ($resolved === null) {
                 return ['old' => $oldTotal, 'unit' => 0, 'new' => null, 'diff' => null];
             }

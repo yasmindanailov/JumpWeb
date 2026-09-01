@@ -55,6 +55,7 @@ class CatalogForm
                 self::operationalSection(),
                 self::packSection(),
                 self::priceSection(),
+                self::priceTiersSection(),
             ]);
     }
 
@@ -502,6 +503,68 @@ class CatalogForm
         return Section::make(__('admin.catalog.section_price'))
             ->description(__('admin.catalog.price_section_hint'))
             ->schema(fn (): array => self::priceFields());
+    }
+
+    /**
+     * `#324` — los TRAMOS de precio por cantidad (`docs/specs/precio-por-tramo.md`).
+     *
+     * «Desde N unidades, cada una cuesta X.» El tramo llega hasta que empieza el siguiente: **no hay
+     * máximo**, y por eso no puede haber huecos ni solapes. El precio es UNIFORME
+     * (`[DECIDIDO owner]`): 70 personas a 13 € son 910 €, no 30×15 + 40×13.
+     *
+     * ⚠️ **La sección se OCULTA en un producto con familia de edades**, porque el dominio lo prohíbe
+     * (el sello congelaría un precio que el tramo movería después). El form no re-implementa la
+     * regla: enseña el aviso y deja que el guardián del modelo sea la autoridad — el mismo reparto
+     * que `#299` con los solapes de edad.
+     */
+    private static function priceTiersSection(): Section
+    {
+        return Section::make(__('admin.catalog.section_price_tiers'))
+            ->description(__('admin.catalog.price_tiers_hint'))
+            ->schema([
+                Placeholder::make('price_tiers_blocked')
+                    ->hiddenLabel()
+                    ->content(__('admin.catalog.price_tiers_blocked'))
+                    ->visible(fn (Get $get): bool => trim((string) $get('guest_age_family')) !== ''),
+
+                Repeater::make('priceTiers')
+                    ->relationship()
+                    ->hiddenLabel()
+                    ->visible(fn (Get $get): bool => trim((string) $get('guest_age_family')) === '')
+                    ->addActionLabel(__('admin.catalog.price_tier_add'))
+                    ->defaultItems(0)
+                    ->schema([
+                        Grid::make(['default' => 1, 'sm' => 3])->schema([
+                            Select::make('rate_type_id')
+                                ->label(__('admin.catalog.price_tier_rate'))
+                                ->options(fn (): array => RateType::where('is_active', true)
+                                    ->orderBy('priority')
+                                    ->get()
+                                    ->mapWithKeys(fn (RateType $r): array => [$r->id => (string) ($r->tr('label') ?? $r->key)])
+                                    ->all())
+                                ->required(),
+                            TextInput::make('min_qty')
+                                ->label(__('admin.catalog.price_tier_min_qty'))
+                                ->helperText(__('admin.catalog.price_tier_min_qty_hint'))
+                                ->numeric()
+                                ->minValue(1)
+                                ->required(),
+                            TextInput::make('amount_cents')
+                                ->label(__('admin.catalog.price_tier_amount'))
+                                ->numeric()
+                                ->minValue(0)
+                                ->maxValue(99999.99)
+                                ->step('0.01')
+                                ->prefix('€')
+                                ->required()
+                                // La columna es CÉNTIMOS (única fuente de verdad, como `prices`);
+                                // el operador teclea euros. La conversión vive aquí y no en el
+                                // modelo para que la BD no tenga dos formatos según quién escriba.
+                                ->formatStateUsing(fn (?int $state): ?string => $state === null ? null : number_format($state / 100, 2, '.', ''))
+                                ->dehydrateStateUsing(fn (?string $state): int => (int) round(((float) $state) * 100)),
+                        ]),
+                    ]),
+            ]);
     }
 
     /**
