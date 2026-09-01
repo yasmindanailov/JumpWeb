@@ -55,7 +55,11 @@ class GuestMinorIsolationTest extends TestCase
     /** @return array{responsible: User, authorization: GuardianAuthorization, signature: WaiverSignature} */
     private function scenario(): array
     {
-        $responsible = User::factory()->create(['email_verified_at' => now()]);
+        // ⚠️ El nombre va FIJADO y no lo pone la factoría, y lo pidió la auditoría del reloj: en uno
+        // de sus diez pases `User::factory()` generó un nombre que **contenía «Carlos»**, y este
+        // fichero asevera que esa cadena NO está en el HTML del panel. *Un nombre aleatorio
+        // enfrentado a una aserción por SUBCADENA es una moneda al aire disfrazada de test.*
+        $responsible = User::factory()->create(['email_verified_at' => now(), 'name' => 'Titular Responsable']);
         // ⚠️ Con una reserva REAL: desde la T2 el tope sale de las líneas principales vivas, así que
         // un pedido sin ellas tiene capacidad 0 y no admite ni un justificante.
         $zone = Zone::firstOrCreate(['slug' => 'jump'], ['name' => ['es' => 'Jump'], 'position' => 1, 'is_active' => true]);
@@ -134,11 +138,12 @@ class GuestMinorIsolationTest extends TestCase
         $html = view('filament.users.partials.waiver-proof', ['record' => $responsible->fresh()])->render();
 
         // CONTROL: el partial está pintando de verdad las firmas del titular.
-        $this->assertStringContainsString($responsible->name, $html);
+        $this->assertStringContainsString('Titular Responsable', $html);
         // Y NO las del hijo de otra familia, que además rotularía como «menor a cargo» — mentir en
         // una pantalla probatoria es peor que no enseñarlo.
         $this->assertStringNotContainsString('Pérez Soto', $html);
-        $this->assertStringNotContainsString('Carlos', $html);
+        // Por NOMBRE COMPLETO, no por el de pila: «Carlos» a secas lo puede traer cualquier otro dato.
+        $this->assertStringNotContainsString('Carlos Pérez Gil', $html);
     }
 
     /** El contador que `ViewUser` audita al abrir el registro sale de la MISMA relación acotada. */
