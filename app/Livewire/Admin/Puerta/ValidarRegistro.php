@@ -299,20 +299,40 @@ class ValidarRegistro extends Component
             return;
         }
 
-        $ttl = PuertaSettings::profileTtlMinutes();
-        $data = app(GateProfile::class)->for($user, DisplayTime::today(), PuertaSettings::windowDays());
-
         $this->profileUserId = (int) $user->getKey();
-        $this->profileExpiresAt = now()->addMinutes($ttl)->timestamp;
+        $this->profileExpiresAt = now()->addMinutes(PuertaSettings::profileTtlMinutes())->timestamp;
+        $this->profile = $this->composeProfile($user, $via);
 
-        $this->profile = $data->toArray() + [
-            'via' => $via,
-            // ⚠️ Copia para la VISTA (el velo y el reloj de Alpine la leen). La decisión la toma
-            // `$profileExpiresAt`, que el navegador no puede tocar.
-            'expires_at' => $this->profileExpiresAt,
-            'ttl_minutes' => $ttl,
-        ];
         AuditLogger::log('puerta.profile_viewed', $user, ['via' => $via]);
+    }
+
+    /**
+     * La ficha ENTERA: lo que compone el DOMINIO más las tres claves de PRESENTACIÓN que solo
+     * existen en esta pantalla — `via` (de dónde salió la ficha: escaneo o búsqueda, y la vista lo
+     * pinta como distintivo), `expires_at` y `ttl_minutes` (el velo de privacidad y el reloj que la
+     * cierra sola).
+     *
+     * ⚠️⚠️ **Es fuente única a propósito, y nació de un defecto de producción** (2026-09-02). La
+     * ficha se compone en DOS momentos —al abrirla y al recomponerla tras una acción del operador— y
+     * el segundo lo hacía por su cuenta con un `toArray()` a secas: perdía las tres claves, y **una
+     * clave ausente en Blade no falla, se pinta vacía**. El `ArgumentCountError` que se llevó el
+     * operador tapaba ese segundo defecto, que no habría dado ningún error.
+     *
+     * ⚠️ `expires_at` es una COPIA para la vista; la decisión la toma `$profileExpiresAt`, que el
+     * navegador no puede tocar (`SEC-04`). Quien llama fija la ventana antes —al abrir— o la reabre
+     * después con {@see touchProfileWindow}.
+     *
+     * @return array<string, mixed>
+     */
+    private function composeProfile(User $user, string $via): array
+    {
+        return app(GateProfile::class)
+            ->for($user, DisplayTime::today(), PuertaSettings::windowDays())
+            ->toArray() + [
+                'via' => $via,
+                'expires_at' => $this->profileExpiresAt,
+                'ttl_minutes' => PuertaSettings::profileTtlMinutes(),
+            ];
     }
 
     /**
@@ -403,7 +423,22 @@ class ValidarRegistro extends Component
         if ($firmada) {
             // La ficha se recompone desde el dominio: componer el estado a mano aquí sería una
             // segunda opinión sobre lo que `WaiverStatus` ya sabe, y es como divergen.
-            $this->profile = app(GateProfile::class)->for($customer)->toArray();
+            //
+            // ⚠️ Por el MISMO compositor que al abrirla ({@see composeProfile}), y `via` se conserva:
+            // la ficha no ha cambiado de origen por haber firmado. Recomponer aquí por libre fue el
+            // defecto de `#336` — dos argumentos de menos (500 en la puerta, con la firma ya escrita)
+            // y las tres claves de presentación perdidas.
+            //
+            // ⚠️⚠️ **Y el `refresh()` no es precaución, es necesario**: `WaiverCounterDeclaration`
+            // limpia la aceptación retenida sobre una fila que carga y BLOQUEA aparte —tiene que
+            // hacerlo, el lock es su punto de serialización—, así que este `$customer` conserva en
+            // memoria el `waiver_pending_document_id` de antes. `GateProfile` lo lee del modelo, no
+            // de la BD, de modo que sin esto la ficha recompuesta seguiría diciendo «tiene una
+            // aceptación retenida» y la pantalla volvería a ofrecer el botón de declarar sobre algo
+            // que acaba de firmarse. No falla nada: solo miente.
+            $customer->refresh();
+
+            $this->profile = $this->composeProfile($customer, (string) $this->profile['via']);
             $this->result = $this->stateFor($customer, (string) ($this->result['query'] ?? ''));
         }
 

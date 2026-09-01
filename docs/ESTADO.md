@@ -1,5 +1,45 @@
 # Estado del proyecto — foto viva
 
+❗❗❗ **PRODUCCIÓN · EL GESTO DE LA PUERTA DABA 500, Y ERAN TRES DEFECTOS EN UNA LÍNEA** (2026-09-02,
+`DECISIONES #338`). Lo encontró el owner probando la pantalla. `ValidarRegistro::declareWaiver()`
+recomponía la ficha con `GateProfile::for($customer)` —**un argumento de tres**—, y detrás había otros
+dos que el 500 tapaba: la ficha perdía sus tres claves de PRESENTACIÓN (`via`, `expires_at`,
+`ttl_minutes`; **eso no falla, se pinta vacío**) y seguía diciendo que había aceptación RETENIDA tras
+firmarla, porque el servicio limpia esas columnas sobre una fila que **bloquea aparte** y el modelo del
+componente se queda obsoleto.
+▶ ❗ **DATO OPERATIVO: la firma se escribe ANTES del 500.** Toda exención declarada en la puerta antes
+de este arreglo **está firmada de verdad** aunque el operador viera un error — se comprueban en
+`audit_logs` con `action = 'puerta.waiver_declared'`.
+▶ **Por qué no lo vio la suite**: `grep -rn "declareWaiver" tests/` no devolvía **nada**. Los siete
+casos de `DeclareWaiverAtGateTest` conducen el SERVICIO; ninguno pasaba por el componente.
+*Que el dominio haga lo correcto no es que la pantalla sepa pedírselo* — el gemelo de `#333` y `#263`.
+▶ Arreglado con fuente única (`composeProfile()`), dos guardas nacidas rojas y **mutación con control**.
+De paso se retira `TmpProbeTest.php`, sonda de `#217` que llevaba cinco días en la suite sin probar nada.
+
+▶ ❗❗ **LO MEDIDO PARA QUIEN SIGA CON LA PUERTA O LA HOJA DE SALA** (2026-09-02, no lo repitas):
+  1. **Los MENORES en la puerta: la ficha de `DEUDA.md` parte de una premisa FALSA.** Dice que «un
+     titular con menores declarados tiene una aceptación retenida por cada uno»: **no existe tal cosa**
+     — `dependents` no tiene ninguna columna `waiver_pending_*`; la aceptación retenida vive **solo** en
+     `users`. Y su escape («ésas siguen pidiendo la tablet») **tampoco funciona**: la tablet es el mismo
+     `POST /me/dependents/{id}/waiver` desde la misma cuenta, y devuelve el mismo 409.
+     ▶ **Tres sondas sobre la BD real, con control**: titular sin verificar firmando por su menor →
+     `WaiverEmailUnverifiedException`; **control** con el correo verificado → firma; **control** sin
+     verificar pero con `declaredBy` = operador → **firma**. O sea que **el dominio YA lo permite**
+     (`WaiverSigner:89-90`): lo que falta no es mecanismo, es la superficie y la decisión de producto.
+     ▶ **El hueco real, dicho con precisión**: un padre sin el correo verificado **no puede ni aceptar**
+     por sus hijos. Desde `#336` su propia exención sí se cierra en la puerta → **pasa él y no pasan sus
+     hijos, con él delante**. `[owner]`: *«el cliente no le pasa la tablet, solo le avisa; ya la ha
+     leído y aceptado — lo único que no podemos verificar es que sea una persona»*.
+  2. **Los MENÚS en la hoja impresa: el dato ya existe y está bien guardado.** El contenido de cada menú
+     vive en `ticket_types.features` (i18n, y es donde `#327` dijo que debía ir); la hoja imprime solo
+     `{cantidad} × {nombre}` (`reservation-slip.blade.php`, el bloque de complementos) porque
+     `ReservationSlip::addons()` no lo devuelve. El patrón de lectura ya está en dos sitios
+     (`AddonResolver`, `LandingAddonPresenter`): un tercero pide subirlo a `TicketType`.
+  3. **El «MONITOR» no existe en ninguna parte** — ni producto del catálogo (los 18 medidos: hay Tarta,
+     Menús, Combos, Cubos, Calcetines; **no hay Monitor**), ni campo de `event_fields`/`guest_fields`, ni
+     columna. `[DECIDIDO owner, 2026-09-02]`: **es un HUECO EN BLANCO en la hoja para escribirlo a
+     mano**, el mismo criterio que las filas de niños sin datos. Ni BD ni panel.
+
 ✅ **CARRIL P3 · EL JUSTIFICANTE DE UN MENOR INVITADO («waiver offshore») — SPEC + T1 + T2 + T3 EN
 EL ÁRBOL** (2026-09-01, `DECISIONES #328`, `#335` y `#337`). ▶ **La T3 pone las SEIS superficies**:
 puerta, hoja de sala, ficha del pedido, PDF, correo de copia con el PDF adjunto, y la cuenta del
@@ -211,8 +251,10 @@ aquí lo que no se podaría son datos de menores de terceros.
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3900 en verde** (25.015 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
-> sobre el árbol CONJUNTO: la **T3** del justificante (`#337`) rebasada sobre `#336`.
+> Suite **3901 en verde** (25.023 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> sobre el árbol CONJUNTO: el arreglo del 500 de la puerta (`#338`) rebasado sobre la **T3** del
+> justificante (`#337`). ⚠️ El neto de `#338` es **+1**: suma dos guardas y retira `TmpProbeTest`.
+> Antes, 3900 / 25.015 (`#337` sobre `#336`).
 > ⚠️⚠️ **Medida DESPUÉS del rebase y con `npm run build` + `build:ssr` delante, NUNCA sumada**: por
 > separado daban 3893 / 24.999 (la T3 sola) y 3884 / 24.932 (el árbol anterior), y ninguna es la
 > buena. Antes: 3884 / 24.932 (`#336` sobre `#335`) · 3877 / 24.916 (la T2 sola).

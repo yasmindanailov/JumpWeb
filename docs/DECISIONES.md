@@ -20264,3 +20264,81 @@ la respuesta aunque nadie hubiera escrito una aserción.
 **Verificación**: suite verde · Pint ✓ · docs-check ✓ · **15 de 15 mutaciones muerden con control por
 mutación** (10 de las superficies + 5 del endpoint) · los dos presupuestos del cajón medidos rama a
 rama antes de subirlos.
+
+---
+
+## #338 · 2026-09-02 · Que el dominio haga lo correcto no es que la pantalla sepa pedírselo: el gesto de la puerta reventaba con la firma ya escrita
+
+**Encontrado por el owner probando la pantalla de puerta**, el día siguiente al despliegue de `#336`.
+Al pulsar «dar por firmada» salía un **500**:
+
+```
+ArgumentCountError: Too few arguments to function GateProfile::for(),
+1 passed in ValidarRegistro.php on line 406 and exactly 3 expected
+```
+
+### Son TRES defectos en una línea, no uno — y los tres estaban en producción
+
+La línea vive en `9d01dae`, el commit que `ENTORNOS.md` §6 acredita desplegado en `playjump.es`.
+
+ 1. **`ArgumentCountError` → 500.** `GateProfile::for(User, CarbonInterface, int)` recibía un solo
+    argumento. Es el que se ve.
+ 2. **La ficha perdía sus tres claves de PRESENTACIÓN.** `openProfile()` envuelve lo que compone el
+    dominio con `via`, `expires_at` y `ttl_minutes` —el distintivo de origen, el velo de privacidad y
+    el reloj que cierra la ficha sola—, y la recomposición lo hacía con un `toArray()` a secas.
+    ⚠️⚠️ **Este no habría dado ningún error**: una clave ausente en Blade se pinta vacía. El 500 lo
+    tapaba, así que el arreglo del primero habría destapado un segundo defecto mudo.
+ 3. **Tras firmar, la ficha seguía afirmando que había una aceptación RETENIDA.**
+    `WaiverCounterDeclaration` limpia esas columnas sobre una fila que carga y **bloquea aparte**
+    —tiene que hacerlo: el lock es su punto de serialización—, así que el `$customer` del componente
+    conserva en memoria el valor anterior, y `GateProfile` lo lee **del modelo**, no de la BD. La
+    pantalla volvía a ofrecer el botón de declarar sobre algo recién firmado. **Lo destapó la guarda
+    nueva, no la lectura.**
+
+### ❗ El dato operativo: la firma SE ESCRIBE antes del 500
+
+`declare()` completa, escribe la firma **y su registro de auditoría**, y solo después revienta la
+línea 406. O sea que **toda exención declarada en la puerta antes de este arreglo está firmada de
+verdad**, aunque el operador viera un error: se comprueban por `audit_logs` con
+`action = 'puerta.waiver_declared'`. Un fallo que ocurre DESPUÉS del efecto no es un fallo que lo
+impida, y decírselo al parque cambia lo que tiene que hacer con esos clientes.
+
+### Por qué la suite no lo vio, que es la lección
+
+`grep -rn "declareWaiver" tests/` no devolvía **nada**. Los siete casos de `DeclareWaiverAtGateTest`
+conducen el **servicio**; ninguno pasaba por el componente. El dominio estaba bien probado y **el
+cable entre el botón y el dominio no lo miraba nadie**.
+
+▶ *Que el dominio haga lo correcto no es que la pantalla sepa pedírselo.* Es el gemelo exacto de
+`#333` («que el texto llegue no es que se pinte») y de `#263` («que la pieza llegue no es que se
+mueva»): tres veces la misma forma de agujero —una capa verificada y su costura sin nadie mirando—.
+
+### El arreglo: fuente ÚNICA, porque componer dos veces es de donde salió el defecto 2
+
+Nace `ValidarRegistro::composeProfile(User, string $via)`: los datos del dominio **más** las tres
+claves de presentación, en un solo sitio. Lo usan las dos veces que la ficha se compone —al abrirla y
+al recomponerla tras una acción del operador—. Y un `refresh()` explícito del modelo antes de
+recomponer, con su porqué escrito al lado: no es precaución, es la consecuencia de que el servicio
+mute la fila por su cuenta.
+
+### Las guardas, nacidas rojas y verificadas por MUTACIÓN
+
+Dos casos nuevos en `DeclareWaiverAtGateTest`, los primeros del fichero que tocan la pantalla:
+
+ - `test_the_gate_screen_signs_and_repaints_the_card` — el gesto entero por Livewire. Nació con el
+   `ArgumentCountError` exacto de producción, y **destapó el defecto 3** (`pending_acceptance` seguía
+   en `true`), que yo no había visto leyendo.
+ - `test_the_repainted_card_keeps_its_presentation_keys` — las tres claves sobreviven y `via` no
+   cambia por haber firmado.
+
+⚠️ **Mutación con su control**: quitado el envoltorio de presentación (dejando la aridad arreglada),
+**las dos se ponen rojas** — la segunda por su propio motivo, no de rebote. Sin esa comprobación no
+habría sabido si la guarda del envoltorio servía: hasta entonces solo la había visto fallar por el 500.
+
+### De paso: `TmpProbeTest.php` RETIRADO
+
+Sonda temporal de `#217` (2026-08-28) que llevaba **cinco días corriendo en cada suite**: escribía dos
+ficheros en `/tmp`, volcaba 4 KB de HTML a STDERR y terminaba en `assertTrue(true)`. No probaba nada.
+
+**Verificación**: suite **3901 · 25.023** (1 skipped a propósito) sobre el árbol CONJUNTO, medida
+**después** de rebasar sobre `#337` y de reconstruir los assets — nunca sumada. Pint ✓ · docs-check ✓.

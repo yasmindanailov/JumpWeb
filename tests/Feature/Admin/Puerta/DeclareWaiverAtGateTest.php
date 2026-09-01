@@ -12,9 +12,11 @@ use App\Domain\Identity\Services\WaiverCounterDeclaration;
 use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
+use App\Livewire\Admin\Puerta\ValidarRegistro;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -169,5 +171,62 @@ class DeclareWaiverAtGateTest extends TestCase
         app(WaiverCounterDeclaration::class)->declare($cliente, $this->operador());
 
         $this->assertSame(1, AuditLog::where('action', 'puerta.waiver_declared')->count());
+    }
+
+    /**
+     * ❗❗ **EL GESTO DEL OPERADOR, POR LA PANTALLA — y es el caso que faltaba** (2026-09-02).
+     *
+     * Los siete casos de arriba conducen el SERVICIO. Ninguno pasaba por el componente, así que el
+     * cableado entre el botón y el dominio no lo miraba nadie: `declareWaiver()` recomponía la ficha
+     * con `GateProfile::for($customer)` —**un argumento de tres**— y el operador se llevaba un
+     * `ArgumentCountError` 500 **justo después** de que la firma se hubiera escrito. Salió en
+     * producción, en la puerta, el día siguiente al despliegue.
+     *
+     * ▶ *Que el dominio haga lo correcto no es que la pantalla sepa pedírselo.*
+     */
+    public function test_the_gate_screen_signs_and_repaints_the_card(): void
+    {
+        $cliente = $this->conAceptacionRetenida();
+
+        Livewire::actingAs($this->operador())
+            ->test(ValidarRegistro::class)
+            ->set('input', $cliente->email)
+            ->call('search')
+            ->call('declareWaiver')
+            ->assertOk()
+            ->assertSet('profile.waiver.signed', true)
+            ->assertSet('profile.waiver.pending_acceptance', false);
+
+        $this->assertSame(1, WaiverSignature::where('user_id', $cliente->getKey())->count());
+    }
+
+    /**
+     * ⚠️⚠️ **La ficha recompuesta tiene que seguir siendo una FICHA.**
+     *
+     * `openProfile()` envuelve los datos del dominio con tres claves de PRESENTACIÓN —`via`,
+     * `expires_at` y `ttl_minutes`— que la vista lee para el distintivo de origen, el velo de
+     * privacidad y el reloj de cierre. Recomponer con un `toArray()` a secas las tira: el
+     * `ArgumentCountError` tapaba un segundo defecto que habría dejado la tarjeta a medias **sin
+     * que nada fallara**, porque una clave ausente en Blade es una cadena vacía.
+     */
+    public function test_the_repainted_card_keeps_its_presentation_keys(): void
+    {
+        $cliente = $this->conAceptacionRetenida();
+
+        $componente = Livewire::actingAs($this->operador())
+            ->test(ValidarRegistro::class)
+            ->set('input', $cliente->email)
+            ->call('search');
+
+        $antes = $componente->get('profile');
+        $componente->call('declareWaiver');
+        $despues = $componente->get('profile');
+
+        foreach (['via', 'expires_at', 'ttl_minutes'] as $clave) {
+            $this->assertArrayHasKey($clave, $despues, "la ficha recompuesta perdió «{$clave}»");
+        }
+
+        $this->assertSame($antes['via'], $despues['via'], 'el origen de la ficha no cambia al firmar');
+        $this->assertSame($antes['ttl_minutes'], $despues['ttl_minutes']);
     }
 }
