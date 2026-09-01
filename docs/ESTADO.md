@@ -57,8 +57,8 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3744 en verde** (24.475 aserciones, 1 skipped a propósito), medida el
-> 2026-09-01 (13:30) sobre el árbol con la T4 del libro (`#317`) y el libro plegado (`#318`).
+> Suite **3751 en verde** (24.511 aserciones, 1 skipped a propósito), medida el 2026-09-01 sobre
+> el árbol con los ICONOS DE TARJETA de la portada (`#319`) encima del libro plegado (`#318`).
 > ⚠️ **No se suma, se mide** — y ⚠️⚠️ **tras un rebase que toque Vue hay que
 > `npm run build:ssr` ANTES de leer la suite**: sin eso salieron 35 rojos en
 > `SidebarDomContractTest` que no eran de ningún cambio.

@@ -39,8 +39,17 @@
 <div class="visit">
     <div class="visit__col">
 
-        {{-- TARJETA 1 · CUÁNDO — la respuesta primero, el calendario después. --}}
+        {{-- TARJETA 1 · CUÁNDO — la respuesta primero, el calendario después.
+
+             ⚠️⚠️ **El icono hace de encabezado SIN gastar una línea de texto, y eso no contradice a
+             `#307`**: aquella tanda retiró los `h3` internos de estas tres tarjetas a propósito
+             —«ponerlos porque una tarjeta necesita cabecera rehace el molde desde dentro»— y lo que
+             sobraba era el RÓTULO, no la señal de qué es cada tarjeta. Un reloj dice «esto es el
+             horario» en 24×24 px; un `<h3>` gastaba una línea para decir lo mismo.
+             ⚠️ Va `aria-hidden`: el significado lo pone el contenido, y un icono que se anunciara
+             duplicaría el nombre accesible de la tarjeta. --}}
         <div class="visit-card">
+            <span class="visit-card__ico" aria-hidden="true"><x-icons.clock :width="22" :height="22" /></span>
             @if (! empty($heroStatus))
                 <p class="visit__now @if ($heroStatus['open_now']) is-open @endif">
                     <span class="visit__dot" aria-hidden="true"></span>
@@ -74,13 +83,16 @@
 
         {{-- TARJETA 2 · DÓNDE — la dirección y lo que se hace con ella. --}}
         <div class="visit-card">
+            <span class="visit-card__ico" aria-hidden="true"><x-icons.pin :width="22" :height="22" /></span>
             @if ($hasAddress)
                 <p class="visit__addr">{{ $site['address1'] }}<br />{{ $site['address2'] }}</p>
             @endif
             <div class="visit__actions">
                 <a class="btn btn--ghost btn--sm" href="{{ $site['maps'] ?? '#' }}" data-tap>{{ __('landing.info.directions') }}</a>
                 @if (! empty($site['has_phone']))
-                    <a class="btn btn--ghost btn--sm" href="tel:{{ $site['phone_tel'] }}" data-tap>{{ $site['phone'] }}</a>
+                    {{-- ⚠️ Aquí el icono NO es categoría, es la acción: un teléfono junto a un número
+                         dice «esto llama», que es lo que el rótulo no puede decir sin alargarse. --}}
+                    <a class="btn btn--ghost btn--sm" href="tel:{{ $site['phone_tel'] }}" data-tap><x-icons.phone :width="18" :height="18" /> {{ $site['phone'] }}</a>
                 @endif
             </div>
         </div>

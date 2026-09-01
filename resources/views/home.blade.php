@@ -322,6 +322,16 @@
                                  color a la derecha». Es un pseudo-elemento, no marcado. --}}
                             <h3 class="ride-card__name">{{ $ride->tr('name') }}</h3>
 
+                            {{-- ⚠️⚠️ **AQUÍ SE PROBÓ A PINTAR LA EDAD Y EL OWNER LO RECHAZÓ**
+                                 (2026-09-01): `attractions.age` está en la BD —**19 de las 23** la
+                                 declaran— y esta tarjeta no la enseña. **No es un olvido: es `#302`**,
+                                 que la dejó en «foto + título + tag», y lo guarda
+                                 `ZonesSectionTest::test_the_ride_card_shows_neither_description_nor_age`.
+                                 ▶ Y por eso esta tarjeta **no recibe icono**: sin un dato detrás, un
+                                 icono repetido 23 veces es decoración dentro de un bucle — lo que el
+                                 owner ya rechazó en `#286` con la mancha por tarjeta de precio.
+                                 Si alguna vez se retoma, el sitio es éste y el dato ya está. --}}
+
                             {{-- **EL PIE DE LA TARJETA: siempre hay CTA** (`[DECIDIDO owner]`, `#303`:
                                  «añade un CTA a las cards para que el usuario sepa que tiene que
                                  clicarlo»).

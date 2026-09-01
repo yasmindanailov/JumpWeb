@@ -128,4 +128,45 @@ class VisitSectionTest extends TestCase
             'Con el parque abierto, la sección tiene que decir hasta qué hora.',
         );
     }
+
+    // ── Los iconos de categoría (2026-09-01) ─────────────────────────────────────────────────
+
+    /**
+     * **Cada tarjeta de dato lleva su icono de CATEGORÍA, y son los del set.**
+     *
+     * ⚠️⚠️ **Esto NO reabre los `h3` internos que §3.quinquies.4 mandó retirar**, y la distinción es
+     * la que sostiene el diseño de la sección: lo que aquella decisión quitó fue el RÓTULO —«ponerlos
+     * porque una tarjeta necesita cabecera rehace el molde desde dentro»—, no la orientación. Un
+     * reloj dice «esto es el horario» en 34 px y sin una palabra; un `<h3>` gastaba una línea entera
+     * para decir lo mismo.
+     *
+     * ⚠️ **La tarjeta del MAPA no lleva**: su contenido ya es la imagen del sitio, y un pin encima de
+     * un mapa es el icono diciendo lo que la imagen grita.
+     */
+    public function test_cada_tarjeta_de_dato_lleva_su_icono_de_categoria(): void
+    {
+        $seccion = $this->seccion();
+
+        $this->assertSame(
+            2, substr_count($seccion, 'visit-card__ico'),
+            'las tarjetas de CUÁNDO y DÓNDE tienen que llevar icono de categoría, y el mapa no: '.
+            'su contenido ya dice lo que es.',
+        );
+    }
+
+    /**
+     * **El teléfono lleva su icono DENTRO del botón, que es donde significa algo.**
+     *
+     * ⚠️ Ahí el icono no es categoría, es la ACCIÓN: un teléfono junto a un número dice «esto llama»,
+     * que es lo que el rótulo no puede decir sin alargarse.
+     */
+    public function test_el_boton_de_telefono_lleva_el_icono_de_la_accion(): void
+    {
+        Setting::updateOrCreate(['key' => 'contact.phone'], ['value' => '+34 968 00 00 00', 'group' => 'contact']);
+
+        $this->assertMatchesRegularExpression(
+            '/<a[^>]*href="tel:[^"]*"[^>]*>\s*<svg/', $this->seccion(),
+            'el botón de llamar perdió su icono, o el icono dejó de ir dentro del enlace.',
+        );
+    }
 }

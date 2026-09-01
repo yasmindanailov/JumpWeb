@@ -184,7 +184,7 @@ return [
     'rules' => [
         'eyebrow' => 'Règles', 'title' => 'Règles',
         'register_title' => 'Inscription obligatoire',
-        'register_text' => "Toute personne qui saute doit s'inscrire et accepter le consentement, y compris les mineurs accompagnés. C'est une seule fois et cela accélère l'entrée.",
+        'register_text' => "Toute personne qui saute doit s'inscrire et accepter le consentement, mineurs inclus. Une seule fois.",
         'register_cta' => "S'inscrire",
         'socks_title' => 'Chaussettes antidérapantes obligatoires',
         'socks_text' => 'Indispensables pour sauter en toute sécurité. Apporte les tiennes ou ajoute-les à ton billet.',

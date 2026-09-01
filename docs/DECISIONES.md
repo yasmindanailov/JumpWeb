@@ -18740,3 +18740,84 @@ UNA vez en la página—, con capturas.
 
 **Verificación**: suite entera en verde (el contador de `ESTADO`) · Pint · docs-check · sonda 17/17 ·
 mutaciones de la guarda O (devolver el atajo · quitar un `x-show`) en `ESTADO`.
+
+## #319 · 2026-09-01 · Iconos en las tarjetas de la portada y las descripciones a dos líneas — con el patrón de ficha de Google Store
+
+Encargo del owner: *«añadir más iconos a cada card, en tamaño correcto, y limpiamos un poco los
+textos, descripción máximo 2 líneas; me quiero guiar por el UI/UX de Google en su Store»*.
+
+### 1 · Lo medido antes de tocar (inventario en navegador, 1280×900)
+
+| tarjeta | cuántas | iconos | descripción |
+|---|---|---|---|
+| `visit-card` | 3 | **0** | — |
+| `rules-must__card` | 2 | 1 (mancha del kit) | **3 y 2 líneas** |
+| `rules-peek__desc` | 4 | 0 | **224, 36, 166 y 156 caracteres** |
+| `ride-card` | 23 | 1 (el del CTA) | no tiene |
+| `price` (tarifas) | 5 | **0** | no tiene |
+
+### 2 · Lo hecho
+
+**Iconos con DATO detrás, nunca decorativos.** «Visítanos» estrena icono de CATEGORÍA (reloj y pin,
+en su cuadro) y el botón de teléfono el de la ACCIÓN; la tarjeta de tarifa pinta **el marcador del
+producto que el panel ya elige** (`ticket_types.icon`, `#259`), resuelto con el MISMO puente que la
+banda de cumpleaños (`iconKey()`).
+
+⚠️ **El icono de «Visítanos» NO reabre los `h3` que `#307` retiró**, y la distinción sostiene el
+diseño de la sección: lo que aquella tanda quitó fue el RÓTULO, no la orientación. Un reloj dice
+«esto es el horario» en 34 px; un `<h3>` gastaba una línea para lo mismo.
+
+⚠️ **`ticket_types.icon` tenía UN SOLO consumidor, el cajón.** Con éste gana el segundo — y con él
+una razón para que el operador lo rellene: medido, usaba **2 claves de las 11**.
+
+**El tope de dos líneas son DOS mecanismos** (`[DECIDIDO owner]`): el copy se reescribió para que
+quepa **y** el corte se dejó puesto como red. Solo reescribir deja la tarjeta a merced del siguiente
+que edite el texto —y las normas las edita el PANEL—; solo cortar esconde texto que alguien decidió
+escribir. ⚠️ **Y hay una asimetría deliberada**: en `rules-peek` cortar es seguro porque son un
+ADELANTO y su CTA lleva a `/normas`, donde están enteras; en `rules-must` no hay segunda casa, y por
+eso ahí el texto se recortó de verdad.
+
+### 3 · ❗ Lo que el owner decidió NO hacer, y por qué queda escrito
+
+**Las 23 tarjetas de atracción se quedan como estaban.** Se probó a pintarles la EDAD —dato que está
+en la BD, **19 de 23 la declaran**, y que ninguna pantalla enseña— y **lo cazó la guarda de `#302`**
+(`ZonesSectionTest::test_the_ride_card_shows_neither_description_nor_age`), que existe justo para
+eso. Preguntado con la consecuencia delante, `[DECIDIDO owner]`: **se respeta `#302`**.
+
+▶ **Consecuencia asumida y anotada en la vista**: esas 23 tarjetas **no reciben icono**. Sin un dato
+detrás, un icono repetido 23 veces es decoración dentro de un bucle — que es exactamente lo que el
+owner rechazó en `#286` con la mancha por tarjeta de precio.
+
+### 4 · Un defecto PREEXISTENTE que salió al mirar la sección
+
+**La unidad del precio vivía DENTRO de `.price__num`**, que va a **80 px con `line-height: 0.85`**:
+«POR PERSONA» heredaba esa caja, **se partía en dos con 68 px de hueco** y el símbolo del euro
+montaba sobre los céntimos. **Medido con CONTROL**: idéntico antes de esta tanda, así que es
+anterior. Sale como hermano con interlineado propio, y la tarjeta baja de ~1.100 a ~830 px.
+
+⚠️ El comentario del CSS decía «`margin-left` porque aquí no hay flex-gap» — **describía el marcado
+que ERA el defecto**. *Una nota que justifica un apaño envejece peor que el apaño.*
+
+### 5 · Lo que enseñaron las guardas nuevas
+
+1. ⚠️⚠️ **La guarda del tope nació LAXA y lo dijo la mutación**: aseveraba la subcadena `-webkit-box`,
+   **que la cumple `-webkit-box-orient`** aunque el `display` cambie. Mutada a `display: block` pasó
+   en VERDE con el tope muerto. Es la misma trampa por subcadena de `.nav-cta-med` dentro de
+   `.nav-cta-med-NO` y de `width` dentro de `stroke-width`.
+2. ⚠️ **Su guarda-de-la-guarda salió ROJA con el producto sano**: exigía más de 1000 bloques en la
+   hoja y son **656**. Un umbral inventado a ojo convierte la red en ruido.
+3. ⚠️ **Escribir `lang/` con comodín dentro de un docblock lo CIERRA** y el fichero deja de parsear:
+   el `*/` de la ruta es el fin del comentario. Pasó al escribir la advertencia.
+4. ⚠️ El fichero nació como `CardTextIsCappedTest` y se renombró a `CardAnatomyTest` al cubrir
+   también los iconos: **un nombre que describe la mitad de lo que vigila** es la forma más barata de
+   que la otra mitad se pierda.
+
+### 6 · ⚠️ Y un SEXTO sitio con la edad vieja, que es del owner
+
+La norma «Zona Jump» del panel dice **«Entrada desde los 6 años y 1,30 m»**, y contradice lo que se
+fijó al corregir las edades: **JUMP es 8+**. Es dato del panel y texto de acceso: **no se toca desde
+aquí**. ▶ Los cinco sitios corregidos vivían en `zones` y en `ticket_types`; éste está en
+`venue_rules`, que es otra tabla — y por eso el barrido no lo alcanzó.
+
+**Verificación**: suite verde · Pint ✓ · docs-check ✓ · build ✓ · **7 mutaciones, las 7 muerden** ·
+navegador a 1280×900 y 390×844 con capturas y con CONTROL para el defecto preexistente.

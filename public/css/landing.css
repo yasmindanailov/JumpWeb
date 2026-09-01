@@ -1466,6 +1466,20 @@ img { display: block; max-width: 100%; }
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
   margin-top: 48px;
 }
+/* **EL MARCADOR DEL PRODUCTO** (`ticket_types.icon`, el que elige el panel desde `#259`).
+   ⚠️ Mismo cuadro que el de «Visítanos» y el del catálogo del cajón: **una sola forma de presentar
+   un icono dentro de una tarjeta**, que es lo que evita la quinta variante — el defecto que la tanda
+   A del idioma visual midió con las etiquetas.
+   ⚠️ Las seis claves ORIGINALES son ilustraciones con su propia escala (40×40 · 50×32 · 60×36) y las
+   cinco del artboard van en rejilla 24: el cuadro las encaja a todas porque acota por la CAJA, no
+   por el dibujo. */
+.price__ico {
+  width: 40px; height: 40px; border-radius: var(--r-sm);
+  display: inline-grid; place-items: center;
+  background: var(--bg-soft); color: var(--paper-fg);
+}
+.price__ico svg { max-width: 26px; max-height: 26px; }
+
 .price {
   border: 1px solid var(--line); border-radius: var(--r-lg);
   padding: 32px 28px;
@@ -1517,9 +1531,14 @@ img { display: block; max-width: 100%; }
 }
 .price__num .cents { font-size: 32px; vertical-align: super; }
 .price__num .eur { font-size: 28px; margin-left: 4px; vertical-align: top; opacity: 0.6; }
-/* Unidad «POR PERSONA» pegada al precio: MISMO css/texto que el «POR NIÑO» del pack (#267);
-   comparte la regla visual con `.bd-pack__price .per`. `margin-left` porque aquí no hay flex-gap. */
-.price__per { margin-left: 8px; }
+/* Unidad «POR PERSONA» bajo el precio: MISMO css/texto que el «POR NIÑO» del pack (#267); comparte
+   la regla visual con `.bd-pack__price .per`.
+   ⚠️⚠️ **Aquí ponía `margin-left: 8px` «porque aquí no hay flex-gap», y esa nota describía un
+   marcado que ERA el defecto**: la unidad vivía DENTRO de `.price__num` —80 px, `line-height: 0.85`—
+   y heredaba su caja, así que se partía en dos con 68 px de hueco en medio. Ahora es hermana y la
+   separa el `gap` de `.price`, que sí existe. Necesita interlineado propio: sin él seguiría
+   arrastrando el del número. */
+.price__per { line-height: 1.4; margin-top: calc(var(--sp-12) * -1); }
 /* SOLO la lista de VENTAJAS de la entrada (hija directa de `.price`). Scopeado con `>` para que
    NO se filtre a la lista de complementos anidada (`.addons-mini__list`), que tiene su propio
    estilo y NO debe llevar el bullet `::before` (revisión #232 — origen de los «puntos»). */
@@ -1863,6 +1882,18 @@ img { display: block; max-width: 100%; }
   display: grid; gap: var(--sp-12); align-content: start;
 }
 
+/* **EL ICONO DE CATEGORÍA** — dice qué es la tarjeta sin gastar una línea de texto.
+   ⚠️ Esto NO reabre los `h3` internos que `#307` retiró: lo que aquella tanda quitó fue el RÓTULO
+   («todo en cards, y ponerles cabecera rehace el molde desde dentro»), y un reloj de 22 px cumple la
+   misma función de orientación en la mitad del alto y sin una palabra.
+   ⚠️ Va en un cuadro de superficie apagada, no suelto: sobre papel un icono de línea solo se lee si
+   tiene fondo propio — es el mismo tratamiento que el marcador del catálogo del cajón. */
+.visit-card__ico {
+  width: 34px; height: 34px; border-radius: var(--r-sm);
+  display: inline-grid; place-items: center;
+  background: var(--bg-soft); color: var(--paper-fg);
+}
+
 /* El mapa es una tarjeta MÁS: misma pegatina, sin relleno para que la imagen llegue al borde.
    La trama de 45° es la reserva de siempre — lo que se ve mientras el iframe carga, o si la
    instalación no ha configurado inserción. */
@@ -1992,7 +2023,21 @@ img { display: block; max-width: 100%; }
   font-size: var(--fs-22); line-height: 1.05; letter-spacing: -0.02em;
   text-transform: uppercase; margin: 0;
 }
-.rules-must__text { margin: 0; font-size: 15px; line-height: 1.55; color: var(--fg-mute); }
+/* ⚠️⚠️ **TOPE DE DOS LÍNEAS, y son DOS mecanismos a propósito** (`[DECIDIDO owner, 2026-09-01]`):
+   el texto se ha reescrito para que QUEPA en dos —medido: `register_text` iba a tres— y además el
+   corte se deja puesto como RED, para que un texto más largo en el futuro no descuadre la fila de
+   tarjetas.
+   ▶ **Los dos, y no uno**: solo reescribir deja la tarjeta a merced del siguiente que edite el
+   copy; solo cortar **esconde texto que alguien decidió poner**, y en una norma de seguridad eso
+   puede ser justo la mitad que importa. Con los dos, lo que se lee es lo que se escribió.
+   ⚠️ `-webkit-box` no es un prefijo olvidado: es el único mecanismo con soporte universal para
+   `line-clamp`, y así lo sigue exigiendo la propia especificación mientras `line-clamp` a secas se
+   estabiliza. */
+.rules-must__text {
+  margin: 0; font-size: 15px; line-height: 1.55; color: var(--fg-mute);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+  overflow: hidden;
+}
 
 /* El ASOMO de normas. Tarjeta también —el owner las quiere todas en tarjeta— pero SIN sombra: la
    elevación es lo que separa lo accionable de lo que solo se lee, y estas no llevan a ninguna
@@ -2006,7 +2051,16 @@ img { display: block; max-width: 100%; }
 .rules-peek__name {
   margin: 0; font-size: var(--fs-18); font-weight: 700; line-height: 1.2;
 }
-.rules-peek__desc { margin: 0; font-size: 14px; line-height: 1.5; color: var(--fg-mute); }
+/* ⚠️ **Tope de dos líneas, y aquí cortar es SEGURO**: estas cuatro normas son un ADELANTO —el CTA
+   de al lado lleva a `/normas`, donde están enteras y sin recortar—. Es la diferencia con una
+   descripción que no tiene segunda casa: ahí esconder texto sí perdería información.
+   ⚠️ Medido el 2026-09-01 con las normas reales: **224, 36, 166 y 156** caracteres, o sea una de una
+   línea al lado de tres de tres. El adelanto dejaba de parecer una lista. */
+.rules-peek__desc {
+  margin: 0; font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+  overflow: hidden;
+}
 .rules-peek__more { margin: var(--sp-4) 0 0; }
 
 /* ⚠️ Aquí vivían `.gallery-marquee*` y `.polaroid*`: la marquesina de la sección «En directo», que

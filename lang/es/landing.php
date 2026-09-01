@@ -216,7 +216,7 @@ return [
         // ya no está es una mentira que el siguiente agente se cree. `<x-site.socks-note>` —que
         // `/precios` sigue usando— lee estas mismas.
         'register_title' => 'Registro obligatorio',
-        'register_text' => 'Todos los que vayan a saltar tienen que registrarse y aceptar el consentimiento, también los menores a cargo de un adulto. Se hace una vez y agiliza la entrada.',
+        'register_text' => 'Todos los que salten tienen que registrarse y aceptar el consentimiento, menores incluidos. Se hace una sola vez.',
         'register_cta' => 'Hacer el registro',
         'socks_title' => 'Calcetines antideslizantes obligatorios',
         'socks_text' => 'Son imprescindibles para saltar de forma segura. Puedes traerlos de casa o añadirlos a tu entrada.',

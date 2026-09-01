@@ -184,7 +184,7 @@ return [
     'rules' => [
         'eyebrow' => 'Rules', 'title' => 'Rules',
         'register_title' => 'Sign-up required',
-        'register_text' => 'Everyone who jumps must sign up and accept the waiver, including children in an adult\'s care. You only do it once and it speeds up your arrival.',
+        'register_text' => 'Everyone who jumps must sign up and accept the waiver, children included. You only do it once.',
         'register_cta' => 'Sign up now',
         'socks_title' => 'Non-slip socks required',
         'socks_text' => "They're a must for safe jumping. Bring your own from home or add them to your ticket.",
