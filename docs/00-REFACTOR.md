@@ -3610,6 +3610,28 @@ verificación), `ENTORNOS.md` §6 (la máquina medida y la receta), `#326` (el C
 - [ ] Refrescar el contexto de cuenta al volver a la pestaña (deuda destapada por el owner; toca el SPA aparcado, con su permiso explícito para ESTE cambio)
 - [ ] Traducción EN/FR de la descarga de responsabilidad · rediseño fino de los correos · Redsys real (cuando haya claves) · el usuario del panel puede rotar (ya en el dedicado)
 
+### OPERACIÓN sobre la instalación en producción 🟦 — `#329` → `#336` (2026-09-01, tarde y noche)
+
+La primera jornada de **operación real**: el parque abrió, entraron 19 clientes en cinco horas y
+todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, decisión a decisión, en
+`DECISIONES #329`→`#336`.
+
+- [x] El operador vende un pack **por debajo del mínimo** al CREAR (`#329`, gemelo de D7) — ⚠️ el mínimo se impone en CUATRO sitios y el cuarto (`SlotOffer`) **no avisa al fallar**
+- [x] Precio por debajo de la escala de tramos = **el primer tramo** (`[DECIDIDO owner]`), con el suelo en el mínimo CONTRATABLE y control de que una entrada no regala su descuento de volumen
+- [x] Defecto de dinero PREEXISTENTE: la previsualización del pedido manual tarificaba **sin la cantidad** (140,00 € de desfase en una línea de 70)
+- [x] La **antelación mínima no ata al mostrador** (`#330`): es una regla del AUTOSERVICIO. Nace `Booking\Contracts\CounterSale`, que dice QUIÉN vende y llega a `OrderCreator` **y** `SlotOffer`
+- [x] El alta suelta **abre sesión** y el aviso que espera dentro es UNO (`#331`) — sin sesión no hay QR, y el QR identifica en la puerta
+- [x] Ese aviso, **dentro del cajón** con reenvío y sus límites; `verified` sale de las rutas del área; **cerrar sesión** en «Mi cuenta» (`#332`)
+- [x] Guarda de claves de texto del cajón (`#333`): una ruta mal escrita **no falla, se queda muda** — nació roja con los dos fallos reales
+- [x] **Logotipo de la instalación** en el parte de celebración y en su hoja impresa (`#334`), cada uno en su formato y por su motivo
+- [x] **La puerta cierra la firma** (`#336`): el operador da fe de una aceptación retenida — ⚠️ acredita a la PERSONA, **nunca al buzón**
+- [x] DATOS de producción: los dos packs de cumpleaños con sus esquemas de campos (reserva y por niño, **edad obligatoria**), que faltaban desde que se crearon
+- [x] Incidente de correo diagnosticado: **límite por hora y por sitio de Enhance**, no la aplicación (cola de Laravel vacía y sin fallos). Lo levantó el owner
+- [ ] **Trazabilidad de los correos que salen del panel** — reconocida por el owner, ficha en `DEUDA.md`
+- [ ] Los **menores** en la declaración de puerta — `[DECIDIDO owner]`: «solo el titular, por ahora»
+- [ ] **Monitor y menús servidos** en la hoja impresa — aparcado por el owner hasta que vea el PDF
+- [ ] **El producto de EXCURSIONES en producción**: el mecanismo está desplegado (`#322` horario por zona · `#324` precio por tramo), pero **la zona y los productos NO existen en la BD del cliente** — es DATO, no código
+
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no
 le despliega nada. Mejoras de JumpWeb aplicables allí se portan **solo por decisión explícita**,

@@ -33,6 +33,56 @@ aquí lo que no se podaría son datos de menores de terceros.
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
+> aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — LA PRIMERA JORNADA DE
+> OPERACIÓN REAL del 2.º cliente, con 19 clientes dentro. `#329`→`#334` y `#336`, todo DESPLEGADO
+> y verificado en `https://playjump.es` (commit `9d01dae`).**
+>
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.**
+>   1. **GOOGLE AUTH** — es lo siguiente, `[DECIDIDO owner]` y con chat propio. Él ya está
+>      verificado en Google Cloud; falta **diseñarlo**. Lo que hay que configurar está en `#336` del
+>      chat y se le pasó: pantalla de consentimiento externa, ámbitos SOLO `email`/`profile`/`openid`
+>      (cualquier ámbito sensible dispara una verificación de semanas), orígenes y URI de redirección,
+>      y `CLIENT_ID`/`SECRET` al `.env` del cliente — **la quinta pieza de su paquete**, nunca al repo.
+>      ⚠️ **Dos cosas que decidir ANTES de escribir código**: (a) Google entrega el correo YA
+>      verificado, así que la aceptación de la exención se convierte en firma sola en el alta — hay que
+>      mapear `email_verified_at` desde el proveedor de forma honesta; (b) **qué pasa con una cuenta
+>      que YA existe con ese correo y contraseña**: ¿se vinculan, y con qué prueba?
+>   2. **EL PRODUCTO DE EXCURSIONES NO EXISTE EN PRODUCCIÓN**, y era la tarea con la que se abrió la
+>      sesión. El MECANISMO sí está desplegado (`#322` horario por zona · `#324` precio por tramo),
+>      pero **la BD del cliente no tiene ni la zona ni los productos** — medido: `zones.slug =
+>      'excursiones'` no existe y hay **CERO** productos con tramos. Es **DATO, no código**: la zona
+>      con su horario propio y su tope de un grupo por franja; los dos productos como **`pack`**
+>      (2 h y 3 h, mín. 30, máx. 100); sus tramos 30→15/17 · 70→13/15 · 100→12/14; y la señal.
+>      ▶ **El viernes YA está en la tarifa `special`** (`weekdays = [5,6,0]`): eso no hay que tocarlo.
+>   3. Lo del owner que sigue abierto: **monitor y menús servidos** en la hoja impresa (aparcado hasta
+>      que vea el PDF), los **menores** en la declaración de puerta, las **imágenes del menú**, el
+>      refresco del contexto al volver a la pestaña y el OJO sobre los TPV.
+>
+> ⚠️⚠️ **CUATRO COLISIONES DE NUMERACIÓN EN UNA JORNADA, y la regla actual NO BASTA.** Se numeraba
+> mirando el remoto al ABRIR la tanda; las cuatro se produjeron al CERRARLA, con el otro agente
+> empujando entre medias. La peor dejó **46 citas de código apuntando a una decisión ajena**, porque
+> una renumeración anterior tocó el documento y olvidó los comentarios.
+> ▶ **La regla completa: mirar el remoto al numerar Y VOLVER A MIRARLO AL CERRAR**, y si hay que
+> renumerar, hacerlo con **mapa explícito** — nunca un desplazamiento mecánico, que arrastra las citas
+> del otro agente. Sus carriles y los de aquí **no se han solapado en un solo fichero PHP**.
+>
+> ⚠️ **DOS INCIDENTES DE PRODUCCIÓN de la jornada, los dos cerrados:**
+>   · **El correo saliente se atascó** (17 mensajes, clientes sin poder verificarse). **No era la
+>     aplicación** —cola de Laravel vacía y sin fallos—: era el **límite por hora y por sitio de
+>     Enhance**. Lo levantó el owner y la cola drenó entera. ▶ Si vuelve a pasar, el primer sitio a
+>     mirar es `mailq` en el servidor, no el código.
+>   · **Los dos packs de cumpleaños no tenían esquemas de campos** (`event_fields` y `guest_fields`
+>     vacíos desde que se crearon a mano), así que dos fiestas ya pagadas no pidieron el parte y el
+>     suplemento de fiesta mixta estaba INERTE — la edad se localiza por el TIPO de campo, y los
+>     valores por defecto del producto no traen ninguno. Corregido en producción con la edad
+>     OBLIGATORIA. ⚠️ Las dos reservas ya pagadas quedaron protegidas por su **sello sin familia**: no
+>     se les puede mover el dinero, que es justo para lo que el sello existe.
+>
+> ⚠️ **DISTANCIA SANA** (sigue vigente, `#325`): la instalación es un cliente aparte del producto —
+> lo suyo vive en su BD, su `.env` y ficheros gitignorados; al repo solo entran mecanismos.
+>
+> Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
+> **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — CINCO PUNTOS DE PRODUCCIÓN
 > CERRADOS (`#329` → `#334` y `#336`)**:
 >   0000. ⚠️⚠️ **`#333` — UN TEXTO QUE NO LLEGA NO FALLA, SE QUEDA MUDO.** El prop `account` **ES YA**
