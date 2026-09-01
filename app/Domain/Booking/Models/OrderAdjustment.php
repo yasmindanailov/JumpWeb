@@ -119,7 +119,7 @@ class OrderAdjustment extends Model
         return in_array($this->type, self::VALUE_DELTA_TYPES, true);
     }
 
-    // ▶ `breakdownLabel()` vivió aquí hasta la T3·4 del libro (`DECISIONES #313`): la etiqueta de
+    // ▶ `breakdownLabel()` vivió aquí hasta la T3·4 del libro (`DECISIONES #315`): la etiqueta de
     // una gestión la compone `Booking\Services\MovementLabel` (`edit` desde el `context`
     // estructurado; `mixed` desde la marca `mixed_party`) — UNA vez, para las nueve superficies.
 }

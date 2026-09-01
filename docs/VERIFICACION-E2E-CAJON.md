@@ -1976,3 +1976,74 @@ sus partes*: hay que **unir las muestras de varias paradas**.
 ⬜ **Pendiente del OJO del owner**: un headless mide, no valida (`CONVENCIONES §3.bis`). Lo que hay
 que mirar es que los tres saltos se lean como una invitación y no como un tic, y que el último
 asiente sin respingo.
+
+---
+
+## 5.sexies · EL LIBRO EN EL CAJÓN (2026-09-01) — guion de la T3·4 del libro (`DECISIONES #314`)
+
+> **Por qué existe este bloque.** Con la T3·4 el modelo de dos ejes ya no está en el árbol: lo que
+> «Mis pedidos» pinta sale de `OrderBook` por la API (`GET /api/v1/me/orders` → `ledger`) y lo
+> transcribe `PurchaseCard.vue`. La paridad cajón ↔ API la vigila un test de Vue con datos FALSOS;
+> lo que ningún test del repo ve es **el recorrido entero por HTTP real con pedidos que nacieron por
+> `OrderCreator`** —las cuatro puertas de `desglose-dinero-cliente.md` §4.quater incluidas— y que el
+> libro que llega al navegador es el mismo que el dominio compone. Eso es lo que aquí se mide.
+>
+> ✅ **Recorrido en headless el 2026-09-01: 17 comprobaciones, 17 ✓, 0 ✗.** Queda el OJO del owner
+> (V18–V21, abajo).
+
+### Los cuatro pedidos (sembrados por el dominio, para `probe-card@jumpweb.test`)
+
+`seed-libro.php` (scratchpad de la sesión; se corre con `tinker --execute='require "/tmp/seed-libro.php";'`
+tras `docker compose cp`) borra los `LB-*` anteriores y crea, con `OrderCreator::createPendingOrder`
+sobre la primera franja abierta que el creador acepte (≥ 7 días, zona del producto), cobrando por
+`Payment` el `onlineDueCents()` del pedido:
+
+| Código | Qué es | Libro que compone el dominio |
+|---|---|---|
+| `LB-SENAL` | Cumpleaños Kids × 8 (señal 30,00) | Total 88,00 · Pagado 30,00 · **a pagar en el parque 58,00** |
+| `LB-BAJADA` | Jump · 1 hora × 3 pagadas, reducidas a 1 (`recordEdit(−19,80)`) | Total 9,90 · Pagado 29,70 · **a devolver en el parque 19,80** |
+| `LB-CANCEL` | Jump · 1 hora × 2 pagadas y el pedido cancelado (`cancelLiveItems`) | Total 0,00 · Pagado 19,80 · **pendiente de devolución 19,80** |
+| `LB-MIXTA` | Cumpleaños Jump × 8 (señal 30,00); edades `8·9·9·9·9·9·9·4` por `submitGuestForm` → un invitado corresponde a Kids | Total 116,00 · Pagado 30,00 · **a pagar en el parque 86,00** (descuento −4,00 como línea) |
+
+Los cuatro cierran (I1–I4) al sembrarlos; el propio guion lo imprime.
+
+### La sonda (`/root/e2e/libro-probe.js` del contenedor, `BASE=http://localhost`)
+
+1. Entra por `/mi-cuenta/pedidos` con el cliente de prueba. ⚠️ Tras el login el cajón puede quedarse
+   en la zona de pedidos (la señal de la URL) **o en el índice de la cuenta**: la sonda espera a
+   cualquiera de los dos y, si es el índice, pulsa la tarjeta «Mis pedidos». La primera versión
+   esperaba solo `.orders__item` y abortó por *timeout* con el producto sano — el instrumento, otra vez.
+2. Lee `GET /api/v1/me/orders` con la sesión del navegador.
+3. Por cada `LB-*`: abre su desglose (`.orders__gate-toggle`) y recoge **movimientos**
+   (`.orders__mov` del bloque de valor), **liquidaciones** (`.orders__ledger--cash .orders__mov`),
+   **Total/Pagado** (`.orders__final`) y **el saldo con su clase** (`.orders__balance--<kind>`).
+4. Comprueba: que el pedido aparece; que hay tantos movimientos pintados como en `ledger.movements`;
+   que **cada etiqueta** de la API está pintada; y que la clase del saldo es `ledger.balance.kind`.
+
+### Lo que pintó el cajón (literal)
+
+| Pedido | Movimientos | Liquidaciones | Total · Pagado | Saldo |
+|---|---|---|---|---|
+| `LB-SENAL` | Reserva realizada · 01/09/2026 **+88,00 €** | Pagado online · 01/09/2026 +30,00 € | 88,00 · 30,00 | `pay_at_park` · «A pagar en el parque 58,00 €» |
+| `LB-BAJADA` | Reserva realizada +29,70 € · **Cantidad: 3 → 1 −19,80 €** | Pagado online +29,70 € | 9,90 · 29,70 | `refund_at_park` · «A devolver en el parque 19,80 €» |
+| `LB-CANCEL` | Reserva realizada +19,80 € · **Cancelado: Jump · 1 hora · 2 entradas −19,80 €** | Pagado online +19,80 € | 0,00 · 19,80 | `refund_pending` · «Pendiente de devolución 19,80 €» |
+| `LB-MIXTA` | Reserva realizada +120,00 € · **Descuento por 1 invitado que corresponde a Cumpleaños Kids −4,00 €** | Pagado online +30,00 € | 116,00 · 30,00 | `pay_at_park` · «A pagar en el parque 86,00 €» |
+
+▶ Es el libro de `#305` tal cual: una línea por gestión con su fecha y su signo, un Total, lo Pagado y
+UN saldo con su clase — sin «pendiente de devolución» y «a cobrar en puerta» conviviendo, sin «a tu
+favor», sin canales. La frase del descuento mixto es la de `MovementLabel::mixed` (con el nombre del
+pack destino), y la de la cancelación lleva el sustantivo (`2 entradas`).
+
+### Lo que este guion NO cubre → el OJO del owner (T3·4b)
+
+- **V18 · el panel**: `ViewOrder` de `LB-MIXTA` (bloque «Totales del pedido», la tarjeta de la reserva,
+  el modal del calendario) y la lista de pedidos con Total/Pagado del libro. La sonda no entra en
+  `/admin` a propósito: el login del panel tiene limitador y una sesión que lo agota mide la pantalla
+  de LOGIN creyendo medir el pedido.
+- **V19 · la hoja PDF** con precios de `LB-SENAL` (líneas + libro + UNA caja de saldo) y **V20 · la
+  puerta** con `LB-BAJADA` (la tarjeta «a devolver» con la misma alerta que «a cobrar»).
+- **V21 · los correos** en Mailpit (`:8028`): reenviar la confirmación de `LB-SENAL` y de `LB-CANCEL`
+  desde el panel y leer el bloque del libro en Gmail/Outlook (la tabla `data-book-*`).
+- Los pedidos `LB-*` **quedan vivos en local** (retienen aforo real de franjas abiertas y llevan
+  `event_data`/edades ficticios marcados como tal); se borran con
+  `Order::where('code','like','LB-%')->get()->each->delete()`.

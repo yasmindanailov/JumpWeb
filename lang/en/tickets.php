@@ -156,7 +156,7 @@ return [
     'pending_at_park' => 'Pending at the park',
     'subtotal' => 'Subtotal',
     // ▶ The two-axis labels (`ledger.*`, the gate-charge lines, «Refund pending», «Final total»…)
-    // lived here until T3·4 of the book (`DECISIONES #313`): the book uses `journal.*` instead.
+    // lived here until T3·4 of the book (`DECISIONES #315`): the book uses `journal.*` instead.
     // ⚠️⚠️ THE SENTENCE that explains the state of the order (`DECISIONES #127`): composed by the
     // DOMAIN (`Booking\Services\OrderBook`), which is the one that knows which case it is.
     'ledger_note' => [

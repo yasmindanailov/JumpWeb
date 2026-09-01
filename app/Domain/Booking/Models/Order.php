@@ -804,7 +804,7 @@ class Order extends Model
     // fresca + `*BlockedReason()`, y el orquestador toma `lockForUpdate` y vuelve
     // a comprobar dentro de la transacción.
 
-    // ▶ Hasta la T3·4 del libro (`DECISIONES #313`) aquí vivía el modelo de DOS EJES —
+    // ▶ Hasta la T3·4 del libro (`DECISIONES #315`) aquí vivía el modelo de DOS EJES —
     // `financialSummary()`, `reservationFinancialsByPrincipal()`, `pendingAtGateLines()`,
     // `reservationGateLines()`, `gateBreakdownLines()`, `depositRemainderPendingByProduct()`,
     // `lastRefundIntent()` y sus privados—. El libro (`Booking\Services\OrderBook`) los sustituye

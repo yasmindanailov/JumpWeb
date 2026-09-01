@@ -28,7 +28,7 @@ use Tests\TestCase;
  * ▶ **De dónde viene todo esto** (`#156`): la etiqueta de un cargo de puerta la compartían el panel
  * y el CLIENTE («Mis pedidos»), y su compositor traducía dos ramas desde `admin.*`. El fichero
  * `admin.php` **solo existe en español**, así que un cliente EN/FR recibía la clave literal en su
- * desglose de dinero. Lo arregló `#154`. Desde la T3·4 del libro (`DECISIONES #313`) el compositor
+ * desglose de dinero. Lo arregló `#154`. Desde la T3·4 del libro (`DECISIONES #315`) el compositor
  * único es `Booking\Services\MovementLabel` —una etiqueta por gestión, para las nueve superficies—
  * y es a él a quien se le mira aquí.
  * ⚠️ Y la razón de que `Lang::has()` lleve `fallback: false` es que **sin apagarlo, `en` y `fr`

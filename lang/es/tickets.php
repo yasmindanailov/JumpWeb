@@ -182,7 +182,7 @@ return [
     'pending_at_park' => 'Pendiente en el parque',
     // Robustez del desglose (#196/#198): desglose detallado en "Mis pedidos".
     'subtotal' => 'Subtotal',
-    // ▶ Hasta la T3·4 del libro (`DECISIONES #313`) aquí vivían los rótulos del modelo de DOS EJES
+    // ▶ Hasta la T3·4 del libro (`DECISIONES #315`) aquí vivían los rótulos del modelo de DOS EJES
     // (`ledger.*`, «Resto de la señal», «Pendiente de devolución», «Total final», las etiquetas del
     // cargo de puerta…). El libro los sustituye por `journal.*` (abajo) y por su saldo con clase.
     // ⚠️⚠️ LA FRASE que explica el estado del pedido (`DECISIONES #127`). Un número no explica:

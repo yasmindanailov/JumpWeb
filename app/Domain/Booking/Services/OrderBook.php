@@ -56,7 +56,7 @@ use Illuminate\Support\Facades\Log;
  *   (`#132`). Va como `warning` y no como excepción porque el libro se compone al PINTAR: reventar
  *   dejaría al cliente sin pantalla por un dato que ya está mal.
  *
- * ▶ Desde la T3·4 (`DECISIONES #313`) es el ÚNICO modelo: el de dos ejes (`OrderLedger`,
+ * ▶ Desde la T3·4 (`DECISIONES #315`) es el ÚNICO modelo: el de dos ejes (`OrderLedger`,
  * `OrderFinancialSummary`, `ReservationFinancials`, `GateBuckets`) se retiró, y las identidades de
  * arriba son las que `OrderFinancialInvariantsTest` vigila en sus 13 escenarios (`PAY-16`/`PAY-17`).
  */

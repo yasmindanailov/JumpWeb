@@ -1,10 +1,12 @@
 # [SPEC] El LIBRO del pedido — cada gestión con su línea (+/−), un total y un saldo que se liquida en el parque
 
-> Estado: ✅ **diseño aprobado por el owner** (2026-09-01) · 🟦 **T1 EN EL ÁRBOL** (§6.1) · 🟦 **T2 EN
-> EL ÁRBOL** (§6.2: el libro en el dominio, sin superficies) · sigue la T3 · Última actualización:
-> 2026-09-01 · Decisiones: `DECISIONES #305` (la decisión de PRODUCTO), `#306` (la T1) y `#308`
-> (la T2) · Sustituye, cuando se ejecute entera, al modelo de DOS EJES de
-> `specs/desglose-dinero-cliente.md` §10 (`DECISIONES #127`), que pasa a HISTÓRICO.
+> Estado: ✅ **diseño aprobado por el owner** (2026-09-01) · ✅ **CÓDIGO COMPLETO — T1 (§6.1), T2
+> (§6.2), T3·1 (§6.3.1), T3·2 (§6.3.3), T3·3 (§6.3.5) y T3·4 (§6.3.7: la RETIRADA del modelo de dos
+> ejes) EN EL ÁRBOL** · 🟦 solo por el OJO del owner (§6.3.7, T3·4b) · Última actualización:
+> 2026-09-01 · Decisiones: `DECISIONES #305` (la decisión de PRODUCTO), `#306` (T1), `#308` (T2),
+> `#310` (T3·1), `#311` (T3·2), `#312` (T3·3) y **`#315` (T3·4)** · **Sustituyó** al modelo de DOS
+> EJES de `specs/desglose-dinero-cliente.md` §10 (`DECISIONES #127`), que es 📜 HISTÓRICO: sus
+> cuatro clases ya no están en el árbol.
 >
 > **Base medida**: commit `78265ec` (main, 2026-09-01), BD local con 22 pedidos pagados/cancelados,
 > `ENTORNOS`: **0 pedidos en producción**.
@@ -1030,7 +1032,113 @@ grupo `tickets.ledger.*` (23), `ledger_note.*` menos tres, `gate_change_line*` (
 | `Order` conservados: `isVoidedLeftoverItem` sobre `onlineAtBirth`; `itemRefundableRemainderCents`; la prorrata (`OrderBookTest`/`OrderFinancialInvariantsTest`: el reembolso total atribuido sin fuga) | invertir el predicado · repartir a partes iguales |
 | Arquitectura: `git grep` de las cuatro clases y de los 21 métodos en `app/` → 0 (`LedgerSingleSourceTest::$viejo` sigue vigilando las superficies) | — |
 
+### 6.3.7 · ✅ T3·4 EJECUTADA (2026-09-01, `DECISIONES #315`) — la retirada del modelo de dos ejes
 
+**Lo que entró.**
+- **`Booking\Services\LineFacts`** (nuevo, lectura pura sobre `adjustments` ya cargada): por línea
+  `charged · depositSplit · editDelta · courtesy` → `birthValue()`, `onlineAtBirth()`, `onlineNow()`.
+  Sin cascada: qué parte de una bajada absorbe la puerta y cuál se devuelve es el SALDO del libro.
+- **`Order`**: `onlineDueCents` (Σ `onlineNow` de las vivas), `birthValueCents`, `isVoidedLeftoverItem`
+  (`onlineAtBirth == 0`), `itemRefundableRemainderCents` (`onlineAtBirth − devuelto`) y la prorrata de
+  `unattributedRefundShareFor` (por `onlineAtBirth`) reescritos sobre `LineFacts`; **mueren** los 21 de
+  §4.7 y `reservationRefundedCents` (0 consumidores). ⚠️ **`collectedPayment()` NO murió**: §6.3.6 lo
+  dio por consumido solo por el modelo viejo y lo leen `chargeMethod()` y `chargedAtLabel()` —la
+  costura con `Payments`—; el inventario contó los consumidores del modelo y no los de la costura.
+- **La cortesía mide lo debido con el LIBRO** (`OrderBook::owedToCustomerCents`): la reserva si el
+  reembolso va atado a línea, el pedido si es total; y **el reembolso total se prorratea entre
+  RESERVAS** (Σ de las partes de sus líneas − lo debido por la reserva) y **se atribuye al principal**
+  — antes, por línea con el «pendiente por línea» del modelo viejo (**D-T3·26**, vetable).
+- **`MovementLabel::mixed`** hereda la rama MIXTA de `breakdownLabel()` (las cuatro claves
+  `tickets.gate_mixed_party_*` se quedan) y `MixedPartySurcharge::written()` la pide ahí;
+  `breakdownLabel()` muere entero.
+- **Mueren** `OrderLedger`, `OrderFinancialSummary`, `ReservationFinancials`, `GateBuckets`,
+  `OrderFinancialSummaryTest`, `ReservationFinancialsTest`, el puente (`assertLedgerBridge` ·
+  `assertBookBridge` · `ledgerSnapshot`) y `tests/Fixtures/ledger-bridge.json`, la excepción de
+  `OrderFinancialSummary` en `ModuleBoundariesTest`, y los eager `adjustments.orderItem.ticketType`
+  de `ReservationSlip`/`GateReservationsReader` (existían para el N+1 de `breakdownLabel`).
+- **Claves** retiradas en es/en/fr: `tickets.ledger.*` (23), `ledger_note.*` menos `under_review` ·
+  `expired` · `pending_payment` (las únicas que el libro compone), `gate_change_line*` (3),
+  `deposit_remainder_line`, `at_gate`, `at_gate_caption`, `at_gate_caption_deposit`,
+  `deposit_paid_online`, `show_breakdown`/`hide_breakdown`, `deposit_for_product`,
+  `pendiente_devolucion(_caption)`, `total_final`; en `admin.*` (es/zh_CN) `orders.deposit_for_product`
+  y `item_financial.deposit_remainder_line`. Cada una con `grep` de consumidores a cero antes.
+- **Tests**: 25 ficheros re-apuntados al libro. `LineFactsTest` (nuevo, 6 casos);
+  `OrderFinancialInvariantsTest` = `assertBookCloses` (I1 · I2 si hubo cobro · I3 por pedido y por
+  reserva · H · I4 · la clase del saldo sigue al signo) sobre **16** escenarios —los 15 de antes menos
+  los dos del tope ya invertidos, más «la prorrata entre DOS reservas»—; `EditMovementTest` sobre
+  `LineFacts` + el saldo; `CourtesyMovementTest` +1 («el ámbito de un reembolso atado a línea es SU
+  reserva»); `OrderTotalsBreakdownTest` sobre `MovementLabel::edit`; `ClientMoneyLabelsAreTranslatedTest`
+  mira a `MovementLabel` y a las cuatro frases mixtas; `DepositFoundationTest`/`DepositChargeTest`
+  sobre `LineFacts`; los de panel (`ManageItem*`, `ItemDateChangeRetariff`, `ItemPriceChange*`,
+  `OrderAdminActions`, `RefundItemCustomAmount`, `DepositRefundCoherence`, `OrdersPolish179`,
+  `DepositSurfaces`, la migración) sobre `OrderBook`/`LineFacts`; `MixedPartySurchargeTest` y
+  `AgeFamilySealTest` con `book()`/`gateDue()` (saldo positivo de la reserva) en vez de
+  `ReservationFinancials::aCobrarPuerta`.
+- **Docs**: `INVARIANTES` `PAY-16`/`PAY-17` reescritas como I1·I3 / I2·I4, `PAY-10` y `PAY-19` sin las
+  notas del modelo viejo; `desglose-dinero-cliente.md` a 📜 HISTÓRICO; `DEPOSITO.md` §11;
+  `CLAUDE.md`; el tracker. ⚠️ `DEUDA.md` **no tenía ficha abierta** del modelo viejo (su «L4» vivía
+  solo en `desglose-dinero-cliente.md` §22 y quedó cerrado por construcción): verificado con `grep`.
+
+**Medido.**
+- `git grep` de las cuatro clases y de los métodos retirados en `app/`, `resources/`, `routes/`,
+  `config/` → **0** (quedan ocho lápidas en comentarios que los nombran como historia, a propósito).
+- Suite **3728 / 24.295** en verde (desde 3760: −50 de los dos tests de servicio, +18 nuevos o
+  desdoblados) · Pint · docs-check · `audit-clock` sobre los ocho ficheros tocados (77 tests × 4
+  fronteras) · **los cuatro verificadores sobre MySQL** (`redsys` 16 · `purchase` 16 ·
+  `mixed-party` charge y credit ×12) · `VERIFY_CONC=1`.
+- **El corpus local, leído SOLO con el libro** (sin oráculo, `corpus-libro.php` en el scratchpad de la
+  sesión): **40 pedidos, 37 cierran, 3 en revisión** — `R-IBX8B1` y `R-D3AN8Q` («pagados» sin ningún
+  cobro: I2) y `T4-PRB01` (fabricado con `total` = la señal: I1, y además I3) —, la misma cifra que la
+  T2 dio con el oráculo. Clases: 18 `expired` · 14 `settled` · 2 `pay_at_park` · 2 `refund_at_park` ·
+  1 `refund_pending` · 3 `under_review`. Por reserva, cero divergencias de consistencia, I3 ni H.
+
+**Mutaciones** (siete, todas muerden a la primera; aplicadas con el árbol ya commiteado y revertidas
+por edición, no por `checkout`, porque el mismo fichero llevaba ya la renumeración a `#315`):
+
+| # | Mutación | Quién la caza |
+|---|---|---|
+| M1 | `LineFacts::birthValue` ignora `editDelta` | `LineFactsTest` (2), `EditMovementTest` (6), `OrderFinancialInvariantsTest` (7: I1 en todo escenario con gestión) |
+| M2 | `LineFacts::onlineAtBirth` ignora `depositSplit` | `LineFactsTest` (2), `DepositFoundationTest` (2), `DepositChargeTest` (2), `OrderFinancialInvariantsTest` (5: I2 con señal) |
+| M3 | `isVoidedLeftoverItem` sin la condición `onlineAtBirth == 0` | `ManageItemAddonsTest::test_paid_group_addon_swapped_to_free_is_refundable` |
+| M4 | la prorrata del reembolso total a partes iguales | `OrderFinancialInvariantsTest::test_a_full_refund_is_prorated_by_what_each_reservation_paid` |
+| M6 | `MovementLabel::mixed` siempre sin el nombre del pack | `MixedPartySurchargeTest::test_the_client_reads_a_line_that_explains_itself` |
+| M7 | lo debido de un reembolso atado a línea medido en el PEDIDO | `CourtesyMovementTest::test_a_line_refund_measures_what_is_owed_in_its_own_reservation` — ⚠️ con UNA reserva las dos cifras coinciden: el caso necesita dos, y se escribió para esta mutación |
+| M5 | (I3 en el compositor) | ya cubierta por las guardas G–K de `OrderBookTest` (T2): no se repitió |
+
+**Lo que se aprendió.**
+- ⚠️⚠️ **Dos casos de `MixedPartySurchargeTest` aseveraban `aCobrarPuerta == 700` tras bajar
+  invitados desde el panel y en realidad leían el CUBO**: la bajada 4 → 2 deja la reserva pagada de
+  más, y el libro netea el suplemento contra lo que devuelve en UN saldo (`#305`) — con el saldo ese
+  700 es 0. Lo que esos casos protegen es la línea ESCRITA (`written()['cents']`), y ahí se
+  re-apuntaron. *Cuando un test cambia de modelo, pregúntate qué protegía: la cifra de un cubo o el
+  hecho.*
+- ⚠️ **Un fixture que registra `recordEdit(+400)` sin subir la fila hace NACER la línea en 6,00**
+  (`nac = fila − delta`): el escenario «cargo de puerta liquidado» dio Total 10,00 donde se esperaba
+  14,00. Se legaliza la fila (`unit_price` 14,00), no la aserción.
+- ⚠️ **El inventario de consumidores de §6.3.6 miró el modelo viejo y no la costura**:
+  `collectedPayment()` lo leen `chargeMethod()`/`chargedAtLabel()`. Borrarlo puso dos métodos en
+  `Call to undefined method`; lo cazó `php -l`… no: lo cazó la primera pasada de tests, porque `php -l`
+  no ve métodos. *Un privado «sin consumidor» se comprueba con `grep` del nombre, no con la lista de
+  la spec.*
+- ⚠️ El carril de los assets tomó **`#313`** entre el diseño y la ejecución: la decisión es `#315` y
+  hubo que renumerar diez ficheros (spec, código, lang, tests). *Numera al escribir la entrada, no al
+  diseñar.*
+- `Model::preventLazyLoading` **no está activo** en este proyecto: los `fresh()` de los tests que no
+  cargaban `items.slot` no fallaron con el libro (que camina la franja para D9); se añadió donde el
+  libro se compone, por presupuesto, no por necesidad.
+
+▶ **El guion headless del libro en el cajón está RECORRIDO** (`VERIFICACION-E2E-CAJON.md` §5.sexies):
+cuatro pedidos sembrados por `OrderCreator` para el cliente de prueba —señal · bajada 100 % online ·
+cancelado · mixta con descuento— leídos por HTTP real en «Mis pedidos» y comparados movimiento a
+movimiento con `GET /api/v1/me/orders`: **17 comprobaciones, 17 ✓**. ⚠️ La primera pasada abortó por
+*timeout* con el producto sano: tras el login el cajón puede quedarse en el índice de la cuenta en
+vez de en la zona de pedidos, y la sonda solo esperaba la zona.
+▶ **T3·4b (pendiente, del owner)**: el OJO sobre el panel, la hoja, la puerta y los correos
+(§5.sexies V18–V21) con el modelo viejo fuera.
+
+## 7. Revisión y decisión
+
+- 2026-09-01 · **Agente**: análisis empírico (§1.2–§1.4), prototipo de lectura y este diseño. Dos
   preguntas al owner —el descuento mixto en el saldo · el reembolso manual se queda— contestadas
   con *«no quiero dejar deuda, profesional sin ambigüedades»* → D4 y D5.
 - 2026-09-01 · **Owner**: *«Perfecto, validado, procede con T1»* → diseño ✅.
@@ -1039,4 +1147,12 @@ grupo `tickets.ledger.*` (23), `ledger_note.*` menos tres, `gate_change_line*` (
   en los 15 escenarios y 37/40 en el corpus; de paso cayó una cortesía falsa de la T1 («también
   cancelar»). Sigue la T3. (⚠️ Es `#308` y no `#307`: el carril de la landing numeró `#307` el mismo
   día — la colisión de `CONVENCIONES` §10, otra vez.)
-- Entradas: `DECISIONES #305` (la decisión de producto) · `#306` (la T1) · `#308` (la T2).
+- 2026-09-01 · **T3·1, T3·2 y T3·3 ejecutadas** (§6.3.1 · §6.3.3 · §6.3.5; `DECISIONES #310`, `#311`,
+  `#312`): el libro en el contrato, la API y el cajón; en el panel, la hoja y la puerta; en los
+  correos y el post-form — y cae el tope del descuento mixto.
+- 2026-09-01 · **T3·4 ejecutada** (§6.3.6 diseño · §6.3.7 ejecución; `DECISIONES #315` — ⚠️ es
+  `#315` y no `#313`: el carril de la landing numeró `#313` el mismo día, la colisión de
+  `CONVENCIONES` §10 por tercera vez en este carril): el modelo de dos ejes se RETIRA y el libro es
+  el único compositor. **Con ella la spec queda ✅ en código**; sigue 🟦 solo por el OJO del owner.
+- Entradas: `DECISIONES #305` (la decisión de producto) · `#306` (la T1) · `#308` (la T2) · `#310`
+  (la T3·1) · `#311` (la T3·2) · `#312` (la T3·3) · **`#315` (la T3·4)**.

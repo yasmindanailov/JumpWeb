@@ -428,12 +428,14 @@ o quedarse el depósito según T&C.
 `app/Domain/Booking/Services/OrderCreator.php` (creación + `deposit_remainder`) · `app/Domain/Payments/Services/Redsys.php`
 (`:302` ida, `:354-358` guard `gateway_order`, `:376` REST refund) ·
 `app/Domain/Booking/Models/TicketType.php` (`depositCents`/`hasDeposit`/`depositLabel`) ·
-`app/Domain/Booking/Models/Order.php` (`itemCollectedCents` — palanca; `itemExtraDueCents`;
-`itemDepositRemainderCents`; `onlineDueCents`; `applyDepositRemainderCredit`;
-`recordReductionMarker`; `isRedsysRefundable`; `itemOriginalOnlineCents` deposit-aware;
-`itemRefundableRemainderCents`; `pendingAtGateLines`/`gateLineLabel`;
-`reservationGateLines`; `depositRemainderPendingByProduct`; `itemFinishedInPractice`) ·
-`app/Domain/Booking/Services/OrderFinancialSummary.php` · `app/Domain/Booking/Services/ReservationFinancials.php` ·
+`app/Domain/Booking/Services/LineFacts.php` (T3·4 del libro, `DECISIONES #315`: el reparto de la
+señal es el hecho `deposit_split`, y `onlineAtBirth = nac − reparto` es la palanca —lo que la línea
+aportó al cobro online—; `onlineNow = fila − reparto` es lo que el checkout cobra) ·
+`app/Domain/Booking/Models/Order.php` (`onlineDueCents` = Σ `onlineNow` de las líneas vivas;
+`birthValueCents`; `isVoidedLeftoverItem`; `itemRefundableRemainderCents` sobre `onlineAtBirth`;
+`unattributedRefundShareFor`; `isRedsysRefundable`) ·
+`app/Domain/Booking/Services/OrderBook.php` (el LIBRO: el resto de la señal es el saldo «a pagar en
+el parque» de la reserva, no un cubo) ·
 `app/Filament/Resources/Orders/Pages/ViewOrder.php` (rama de bajada; acciones Reembolsar +
 selector de modo) · `app/Domain/Payments/Concerns/GuardsItemRefunds.php` ·
 `app/Domain/Booking/Services/ManualOrderFulfiller.php` ·

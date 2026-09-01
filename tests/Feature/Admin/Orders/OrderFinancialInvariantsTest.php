@@ -26,7 +26,7 @@ use Tests\TestCase;
  *
  * Nació como la red del modelo de DOS EJES (`DECISIONES #127`): tres compositores del mismo dinero
  * —por ítem, por reserva y por pedido— que coincidían «por disciplina + tests». Desde la T3·4 del
- * libro (`#313`) hay UN compositor, `OrderBook`, y lo que este fichero ancla son sus cuatro
+ * libro (`#315`) hay UN compositor, `OrderBook`, y lo que este fichero ancla son sus cuatro
  * identidades sobre pedidos VARIADOS (sin actividad, cargo de puerta pendiente y liquidado,
  * cancelación, reembolso parcial y total, señal, descuento de fiesta mixta):
  *

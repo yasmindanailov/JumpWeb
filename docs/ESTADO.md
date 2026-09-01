@@ -4,8 +4,8 @@
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-09-01 — TRES carriles a la vez.
 > **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2
-> (`#311`) y T3·3 (`#312`, CORREOS + POST-FORM + EL TOPE) EN EL ÁRBOL; sigue la T3·4 —la retirada
-> del modelo viejo—** — carril 3, abajo.
+> (`#311`), T3·3 (`#312`) y T3·4 (`#315`, LA RETIRADA del modelo de dos ejes) EN EL ÁRBOL: CÓDIGO
+> COMPLETO; queda el OJO del owner (T3·4b)** — carril 3, abajo.
 > **MIXTOS**: T1→T5 en el árbol (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL
 > GUARDIÁN DE SOLAPES EN EL ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** —
 > siguen fuera por diseño la fase 3 de §20.2 y el AFORO (owner); la ficha del fantasma de la señal
@@ -55,14 +55,43 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3760 en verde** (24.946 aserciones, 1 skipped a propósito), medida el
-> 2026-09-01 (noche) sobre el árbol CONJUNTO con `#313` (assets) encima de `#312` (libro T3·3).
+> Suite **3728 en verde** (24.295 aserciones, 1 skipped a propósito), medida el
+> 2026-09-01 (noche) sobre el árbol CONJUNTO con la T3·4 del libro (`#315`) encima de `#314` (landing).
 > ⚠️ **No se suma, se mide** — y ⚠️⚠️ **tras un rebase que toque Vue hay que
 > `npm run build:ssr` ANTES de leer la suite**: sin eso salieron 35 rojos en
 > `SidebarDomContractTest` que no eran de ningún cambio.
-> - Antes, 3760 / 24.940 (`#312`), 3758 / 24.958 (`#311`) y 3756 / 24.766 (`#309`).
+> - Antes, 3760 / 24.946 (`#314`, landing) y 3760 / 24.940 (`#313` y `#312`: la T3·4 retiró los
+>   dos tests de servicio del modelo viejo, −50, y sumó 18), 3758 / 24.958 (`#311`).
 >
-> ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1, T2, T3·1, T3·2 y T3·3 EN EL ÁRBOL · sigue la T3·4) ═══════════
+> ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1 → T3·4 EN EL ÁRBOL: código COMPLETO · queda el OJO del owner) ═══════════
+> ❗❗❗ **2026-09-01 (noche, 4.ª sesión) · T3·4 · EL MODELO DE DOS EJES SE RETIRA; EL LIBRO ES EL ÚNICO COMPOSITOR**
+> (`DECISIONES #315` — los carriles de assets y landing tomaron `#313` y `#314` entre medias —, `specs/desglose-libro.md`
+> **§6.3.6 diseño fino y §6.3.7 lo ejecutado**; `INVARIANTES` `PAY-16`/`PAY-17` REESCRITAS como las
+> identidades I1·I3 / I2·I4 del libro, `PAY-10`/`PAY-19` sin las notas transitorias;
+> `desglose-dinero-cliente.md` a 📜 HISTÓRICO; `DEPOSITO.md` §11 al libro). Suite: el CONTADOR de
+> arriba · Pint · docs-check · **mutaciones de §6.3.7, todas muerden** · **los cuatro verificadores
+> sobre MySQL verdes** (`redsys` · `purchase` · `mixed-party` charge y credit) · `audit-clock` sobre
+> los tests tocados · `VERIFY_CONC=1`. ▶ **Mueren** `OrderLedger`, `OrderFinancialSummary`,
+> `ReservationFinancials`, `GateBuckets`, `OrderAdjustment::breakdownLabel()`, 21 métodos de
+> `Order` (§4.7), el puente y `ledger-bridge.json`, los dos tests de servicio, `tickets.ledger.*` y
+> las claves del cargo de puerta (es/en/fr) + dos de `admin.*` (es/zh) · **nace `LineFacts`**
+> (`charged · depositSplit · editDelta · courtesy` → `birthValue` · `onlineAtBirth` · `onlineNow`,
+> SIN cascada) · `MovementLabel::mixed` hereda la frase del suplemento/descuento · **la cortesía
+> mide lo debido con el LIBRO** (`OrderBook::owedToCustomerCents`, reserva o pedido según el
+> ámbito) y **el reembolso total se prorratea entre RESERVAS por `onlineAtBirth`** (D-T3·24) ·
+> `onlineDueCents` = Σ `onlineNow` de las líneas vivas (D-T3·23) · 25 tests re-apuntados,
+> `LineFactsTest` nuevo, `OrderFinancialInvariantsTest` = las identidades del libro en 16
+> escenarios (+ la prorrata entre dos reservas) · `git grep` del modelo viejo en `app/` → **0**.
+> ⚠️⚠️ **Dos tests aseveraban `aCobrarPuerta` tras una bajada desde el panel y leían el CUBO**: el
+> libro netea la bajada contra el suplemento en UN saldo — lo que protegen es la línea ESCRITA.
+> ⚠️ **Un fixture con `recordEdit(+400)` sin subir la fila hace nacer la línea en 6,00** (nac = fila
+> − delta): se legaliza la fila. ⚠️ **Y `ledger_note` quedó en TRES frases** (`under_review` ·
+> `expired` · `pending_payment`): el resto eran del modelo viejo y nadie las leía.
+> ▶ **RETOMAR (siguiente sesión): la T3·4b — el OJO del owner** sobre las nueve superficies con el
+> modelo viejo fuera (cajón «Mis pedidos», panel: bloque + tarjeta + calendario, hoja PDF, puerta,
+> los cinco correos, post-form), con el guion headless de `VERIFICACION-E2E-CAJON.md` (apartado del
+> libro) recorrido antes; y dos cosas que NO son del libro pero quedaron escritas: la pregunta
+> white-label de las fotos (`#313`) y el AFORO del horizonte de franjas (`#307`).
 > ❗❗❗ **2026-09-01 (noche, 3.ª sesión) · T3·3 · LOS CORREOS PINTAN EL LIBRO; CAE EL TOPE DEL DESCUENTO**
 > (`DECISIONES #312`, `specs/desglose-libro.md` **§6.3.4 diseño fino y §6.3.5 lo ejecutado**;
 > `cumple-mixto.md` §20 con la corrección; `INVARIANTES` `PAY-16`/`PAY-17`/`PAY-19` con la nota).
@@ -82,22 +111,7 @@
 > la parte online» (ilegal para I1): legalizado. ⚠️ Trampa: un corte por índice de `"    }\n"` casó
 > dentro de una llave más sangrada → dos `}` → la suite en paralelo lo enseña como un fatal del
 > `ExceptionHandler` sin línea; `php -l` lo dice.
-> ▶ **RETOMAR (siguiente sesión): la T3·4 — la retirada de §4.7** (spec §6.3 fila 4 y «Lo que la
-> T3·4 hereda» en §6.3.5): `Order` pierde §4.7 y gana `LineFacts` (`nac`/`online_nac`/reparto/cortesía
-> por línea, SIN cascada: sustituye a `GateBuckets`); `itemRefundableRemainderCents`,
-> `isVoidedLeftoverItem` y la prorrata de `unattributedRefundShareFor` sobre `online_nac`;
-> `onlineDueCents` = Σ líneas vivas (fila − reparto); la rama mixta de `breakdownLabel()` al libro;
-> mueren `OrderLedger` · `OrderFinancialSummary` · `ReservationFinancials` · `GateBuckets` ·
-> `OrderAdjustment::breakdownLabel` · `tickets.ledger.*` (salvo las tres notas) · `assertBookBridge` +
-> `ledger-bridge.json` · `ReservationFinancialsTest`, `OrderFinancialSummaryTest`, `OrderGateCreditTest`,
-> `ItemPriceChangeReconstructionTest` (→ hechos); `INVARIANTES` `PAY-16`/`PAY-17` reescritas sobre
-> I1–I4 y `PAY-19` sin la nota; `DEUDA` L4 cerrada; `desglose-dinero-cliente.md` a HISTÓRICO con
-> cabecera; el guion headless del cajón (`VERIFICACION-E2E-CAJON.md`, apartado del libro: pedido con
-> señal, 100 % online con bajada, cancelado, mixto con descuento) y la receta de las 25 acciones
-> sobre el corpus (`specs/desglose-dinero-cliente.md` §4.quater) ANTES del ojo del owner; y la spec
-> a ✅ con §7. `Order` está en la costura pero `OrderItemEditor`/`MixedPartySurcharge` en el
-> `CRITICAL_RE`: `VERIFY_CONC=1` y los verificadores otra vez. Numera `DECISIONES` mirando el
-> remoto (`git fetch`): la siguiente libre es la que siga a la última del remoto.
+> ▶ (La T3·4 que aquí se dejaba anotada está HECHA: el bloque de arriba.)
 > ❗❗❗ **2026-09-01 (tarde-noche, 3.ª sesión) · T3·2 · EL PANEL, LA HOJA Y LA PUERTA PINTAN EL LIBRO**
 > (`DECISIONES #311`, `specs/desglose-libro.md` **§6.3.2 diseño fino y §6.3.3 lo ejecutado**;
 > `identidad-qr-puerta.md` A·3 corregido). Suite: el CONTADOR de arriba · Pint · docs-check · build

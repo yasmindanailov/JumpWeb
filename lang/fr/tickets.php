@@ -157,7 +157,7 @@ return [
     'subtotal' => 'Sous-total',
     // ▶ Les libellés du modèle à deux axes (`ledger.*`, les lignes de frais à l'accueil,
     // « Remboursement en attente », « Total final »…) vivaient ici jusqu'à la T3·4 du livre
-    // (`DECISIONES #313`) : le livre utilise `journal.*` à la place.
+    // (`DECISIONES #315`) : le livre utilise `journal.*` à la place.
     // ⚠️⚠️ LA PHRASE qui explique l'état de la commande (`DECISIONES #127`) : composée par le
     // DOMAINE (`Booking\Services\OrderBook`), qui est le seul à savoir de quel cas il s'agit.
     'ledger_note' => [

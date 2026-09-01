@@ -1,7 +1,19 @@
 # [SPEC] El DESGLOSE de dinero que ve el cliente — auditoría y marco
 
-> Estado: **✅ EJECUTADA** (auditoría CERRADA · marco COMPLETO, §10 · **las tres tandas y los cinco
-> defectos de lectura, hechos**) · Última actualización: 2026-08-24 ·
+> Estado: **📜 HISTÓRICO** desde el 2026-09-01 (`DECISIONES #315`, T3·4 de **`specs/desglose-libro.md`**):
+> el modelo de DOS EJES que esta spec diseñó y ejecutó —`OrderLedger`, `OrderFinancialSummary`,
+> `ReservationFinancials` y los canales `pagadoOnline · pendienteOnline · aCobrarPuerta ·
+> cobradoPuerta · compensado`— **se retiró del árbol**. Lo que el cliente y el operador ven hoy es el
+> LIBRO (`Booking\Services\OrderBook`: movimientos con fecha, Total, Pagado y UN saldo con signo,
+> `#305`); sus identidades viven en `INVARIANTES` `PAY-16`/`PAY-17` reescritas. **Lo que sigue
+> vigente de aquí**: los CUATRO defectos de dominio de §9.2 (arreglados y con guarda), la receta de las
+> 25 acciones de §4.quater (la T3·4 la volvió a correr sobre el libro, `desglose-libro.md` §6.3.7) y
+> el método de §9.4. Su `L4` («la compensación como única línea del valor») quedó cerrado por
+> construcción: la cortesía es un movimiento del libro. **No construyas sobre este texto: es cómo se
+> llegó al libro, no cómo funciona.**
+>
+> Estado anterior: **✅ EJECUTADA** (auditoría CERRADA · marco COMPLETO, §10 · **las tres tandas y los
+> cinco defectos de lectura, hechos**) · Última actualización: 2026-08-24 ·
 > Decisiones asociadas: `DECISIONES #127` → **`#134`**.
 >
 > ✅ **TANDAS A, B y C EJECUTADAS** (§15, §16, §19) y ✅ **los defectos de LECTURA, también**: `L1`,

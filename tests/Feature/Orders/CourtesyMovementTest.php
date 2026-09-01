@@ -206,6 +206,34 @@ class CourtesyMovementTest extends TestCase
         $this->assertCourtesyIsWhatTheBookShows($order);
     }
 
+    /**
+     * **El ÁMBITO de un reembolso atado a línea es SU reserva, no el pedido** (spec §4.2). Con dos
+     * reservas y una deuda en la OTRA, devolver sobre la sana es cortesía ENTERA: lo que se le debe
+     * por B no descuenta lo que se le regala por A. Mutación que muerde: medir lo debido con el
+     * libro del PEDIDO (`OrderBook::forOrder`) en el reembolso parcial — con una sola reserva las
+     * dos cifras coinciden, y por eso este caso necesita dos.
+     */
+    public function test_a_line_refund_measures_what_is_owed_in_its_own_reservation(): void
+    {
+        $by = User::factory()->create();
+        $order = $this->makePaidOrder(7000);
+        $a = $this->attachItem($order, qty: 1, unit: 3000);
+        $b = $this->attachItem($order, qty: 2, unit: 2000);
+        $this->attachPaidPayment($order, 7000);
+        $this->reduce($order, $b, by: $by, toQty: 1);   // por B se le deben 20,00; por A, nada
+
+        $result = $this->fresh($order)->executePartialRefund($a, 2000, $by, PaymentRefund::MODE_MANUAL, false, [], PaymentRefund::INTENT_COMPENSATION);
+        $this->assertTrue($result['ok'], json_encode($result));
+
+        $rows = OrderAdjustment::where('order_id', $order->id)->where('type', OrderAdjustment::TYPE_COURTESY)->get();
+        $this->assertCount(1, $rows);
+        $this->assertSame(-2000, (int) $rows->first()->amount_cents, 'por A no se debía nada: los 20,00 son cortesía enteros');
+        $this->assertSame($a->id, (int) $rows->first()->order_item_id);
+        $this->assertCourtesyIsWhatTheBookShows($order);
+        // Y la deuda de B sigue ahí, intacta: el libro del pedido debe 20,00 − 0 de la cortesía.
+        $this->assertSame(2000, OrderBook::forReservation($this->fresh($order), $this->fresh($order)->items->firstWhere('id', $b->id))->owedToCustomerCents());
+    }
+
     // ─── Lo escrito al ocurrir es lo que el libro enseña ────────────────────────────────────
 
     private function assertCourtesyIsWhatTheBookShows(Order $order): void

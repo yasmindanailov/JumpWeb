@@ -18507,3 +18507,70 @@ es lo único que no cambia al reordenar — y queda más fuerte que antes.
 **Verificación**: suite **3760 verde** (24.946 aserciones, 1 skipped) · Pint ✓ · docs-check ✓ ·
 Chrome real 1280 y 390: aire **240/160 uniforme** medido de los rellenos computados, orden correcto
 en la captura de página completa, 0 errores de consola.
+## #315 · 2026-09-01 · T3·4 del libro: el modelo de DOS EJES se retira del árbol — el LIBRO es el único compositor del dinero de un pedido
+
+**Contexto.** Desde la T2 (`#308`) el libro (`Booking\Services\OrderBook`) convivía con el modelo de
+dos ejes (`OrderLedger` · `OrderFinancialSummary` · `ReservationFinancials` · `GateBuckets`,
+`DECISIONES #127`) como ORÁCULO: la guarda puente los cruzaba en 15 escenarios y las superficies
+fueron pasando al libro en T3·1–T3·3. Con la T3·3 el modelo viejo **dejó de cerrar a propósito** para
+un descuento mixto sin cobertura de puerta, así que ya no podía ser oráculo de nada. Quedaba retirarlo:
+`Order` cargaba 42 citas de sus propios métodos (§4.7), 25 ficheros de tests lo aseveraban y 23 claves
+`tickets.ledger.*` seguían en tres idiomas sin nadie que las leyera. Diseño fino en
+`specs/desglose-libro.md` §6.3.6; ejecución en §6.3.7.
+
+**Decisión.**
+1. **`LineFacts` sustituye a `GateBuckets` y NO replica ninguna cascada**: por línea, `charged`,
+   `depositSplit`, `editDelta` (con signo), `courtesy`; de ahí `birthValue = charged − editDelta`,
+   `onlineAtBirth = max(0, birthValue − depositSplit)` y `onlineNow = max(0, charged − depositSplit)`.
+   Qué parte de una bajada absorbe la puerta y cuál se devuelve **lo dice el saldo del libro**, no un
+   cubo (`#305`).
+2. **`onlineDueCents` = Σ `onlineNow` de las líneas vivas** (D-T3·23): su único uso real es el
+   nacimiento (`Payment.amount`, la ida a Redsys, el reintento, el pedido manual).
+3. **La prorrata de un reembolso sin línea se hace por `onlineAtBirth`** (D-T3·24): el dinero devuelto
+   salió del cobro, y una línea reducida no aportó menos por reducirse.
+4. **La cortesía mide «lo debido» con el libro** (`OrderBook::owedToCustomerCents()`: la reserva si el
+   reembolso va atado a línea, el pedido si es total — la misma cifra que el panel sugiere al
+   operador), y **el reembolso total se prorratea entre RESERVAS y se atribuye a su principal**
+   (D-T3·26). Un pedido «en revisión» no debe nada que el libro pueda afirmar: ahí todo lo devuelto es
+   cortesía, y el libro lo enseña.
+5. **`itemGateResolved`/`itemFinishedInPractice` no sobreviven** (D-T3·25): la regla D9 tiene UN sitio,
+   `OrderBook::reservation()`. `collectedPayment()` SÍ sobrevive: lo leen `chargeMethod()` y
+   `chargedAtLabel()` (la costura con `Payments`), y el diseño lo había dado por muerto.
+6. **`OrderAdjustment::breakdownLabel()` muere entero**: la rama de edición ya era
+   `MovementLabel::edit` y la MIXTA pasa a `MovementLabel::mixed` (mismas cuatro claves
+   `tickets.gate_mixed_party_*`).
+7. **`INVARIANTES` `PAY-16`/`PAY-17` son ya las identidades del libro** (I1·I3 y I2·I4), y
+   `desglose-dinero-cliente.md` pasa a 📜 HISTÓRICO con cabecera que lo dice.
+
+**Lo hecho y lo medido.** `git grep` del modelo viejo en `app/`, `resources/`, `routes/` y `config/`
+→ **0** (quedan ocho lápidas en comentarios). 25 tests re-apuntados; `LineFactsTest` nuevo;
+`OrderFinancialInvariantsTest` = `assertBookCloses` en **16** escenarios (nuevo: la prorrata entre dos
+reservas); `CourtesyMovementTest` +1 (el ámbito de la reserva, escrito para la mutación M7). Claves
+retiradas en es/en/fr y en `admin.*` es/zh_CN, cada una con `grep` de consumidores a cero. **Siete
+mutaciones, todas muerden a la primera** (tabla en §6.3.7). Suite **3728 / 24.295** · Pint ·
+docs-check · `audit-clock` sobre los ficheros tocados · **los cuatro verificadores sobre MySQL**
+verdes (`redsys` · `purchase` · `mixed-party` charge y credit) · `VERIFY_CONC=1`. **El corpus local,
+leído solo con el libro: 40 pedidos, 37 cierran, 3 en revisión** —los mismos que con el oráculo en la
+T2— y cero divergencias por reserva.
+
+**Lecciones.**
+- ⚠️⚠️ **Dos tests de fiesta mixta aseveraban un cubo y creían aseverar un hecho**: tras bajar
+  invitados desde el panel, `aCobrarPuerta == 700` era el cubo de ediciones; con el saldo del libro esa
+  reserva está pagada de más y el suplemento se netea contra lo que se devuelve. Lo que protegían era
+  la línea ESCRITA, y ahí se re-apuntaron. *Al cambiar de modelo, pregunta qué protegía cada test.*
+- ⚠️ **Un fixture que registra un `recordEdit(+400)` sin subir la fila hace nacer la línea en 6,00**:
+  con `nac = fila − delta`, el hecho y la fila tienen que contar la misma historia. Se legaliza la
+  fila, no la aserción.
+- ⚠️ **El inventario de consumidores del diseño miró el modelo viejo y no la costura**: un privado
+  «sin consumidor» se comprueba con `grep` del nombre en el momento de borrarlo, no con la lista de la
+  spec.
+- ⚠️ **La colisión de numeración, por tercera y CUARTA vez en este carril, en la misma noche**: el
+  carril de los assets tomó `#313` entre el diseño (que la citaba) y la ejecución, y el de la landing
+  tomó `#314` entre la ejecución y el push; renumerar costó diez ficheros cada vez. *La entrada se
+  numera al escribirla —`git fetch` justo antes—, y el diseño la cita como «la siguiente».*
+
+**Verificación**: suite 3728 / 24.295 en verde · Pint ✓ · docs-check ✓ · 7 mutaciones que muerden ·
+4 verificadores MySQL ✓ · audit-clock (filtrado) ✓ · corpus local 37/40 sin oráculo · **guion headless
+del libro en el cajón recorrido** (`VERIFICACION-E2E-CAJON.md` §5.sexies: cuatro pedidos sembrados
+por `OrderCreator`, 17/17 ✓ contra la API). Queda **T3·4b**: el ojo del owner sobre panel, hoja,
+puerta y correos (V18–V21).

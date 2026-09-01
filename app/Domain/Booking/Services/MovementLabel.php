@@ -16,7 +16,7 @@ use App\Domain\Platform\Services\Money;
  * «Cantidad: 4 → 2» con −30,00 € se lee sola; «Bajada de cantidad» al lado de −30,00 € lo diría dos
  * veces, y una subida y una bajada que se explican con la misma frase no pueden divergir.
  *
- * ▶ Desde la T3·4 (`DECISIONES #313`) la frase de fiesta MIXTA también vive aquí ({@see mixed}):
+ * ▶ Desde la T3·4 (`DECISIONES #315`) la frase de fiesta MIXTA también vive aquí ({@see mixed}):
  * llegó de `OrderAdjustment::breakdownLabel()`, que murió con el modelo de dos ejes. Sus cuatro
  * claves `tickets.gate_mixed_party_*` son las que `ClientMoneyLabelsAreTranslatedTest` vigila.
  */

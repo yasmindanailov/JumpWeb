@@ -2357,7 +2357,7 @@ de si un reembolso devuelve el precio con descuento o sin él. Y «hasta gastars
 carrera. Es un proyecto de dinero. ▶ **Los REFERIDOS son la excepción**: son lealtad pura y caben en el
 ledger de puntos de **D**.
 
-### El DESGLOSE de dinero que ve el cliente ✅ — **CERRADO: las tres tandas y los CUATRO defectos de lectura**
+### El DESGLOSE de dinero que ve el cliente ✅ (📜 su modelo de DOS EJES, RETIRADO en la T3·4 del libro, `#315`) — **CERRADO: las tres tandas y los CUATRO defectos de lectura**
 > Spec: `docs/specs/desglose-dinero-cliente.md` · Decisiones: `DECISIONES #127` y sus apartados
 > `(b)`–`(f)`. **Va ANTES de Fase 5.**
 > ✅ **Tandas A y B EJECUTADAS el 2026-08-24**: el dominio dice la verdad y el desglose se entiende.
@@ -2505,8 +2505,8 @@ inalcanzable por código** (se retira), y **el modelo decidido cierra sus dos id
 pedidos reales, disparando su estado imposible solo sobre los 19 de datos sucios. El riesgo NO estaba
 solo en la proyección: había cuatro defectos en el dominio que ninguna auditoría anterior construyó.
 
-### El LIBRO del pedido 🟦 — **spec ✅ del owner (`specs/desglose-libro.md`, `DECISIONES #305`) · T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2 (`#311`) y T3·3 (`#312`) EN EL ÁRBOL**
-> **Sustituye al DESGLOSE de dos ejes de arriba en cuanto se ejecute.** `[DECIDIDO owner,
+### El LIBRO del pedido 🟦 — **spec ✅ del owner (`specs/desglose-libro.md`, `DECISIONES #305`) · T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2 (`#311`), T3·3 (`#312`) y T3·4 (`#315`) EN EL ÁRBOL: CÓDIGO COMPLETO, queda el OJO del owner**
+> **Sustituyó al DESGLOSE de dos ejes de arriba (T3·4, `#315`: el modelo viejo ya no está en el árbol).** `[DECIDIDO owner,
 > 2026-09-01]`: cada gestión con su línea + o − y su fecha, un Total y un SALDO que se liquida EN EL
 > PARQUE; nada se cobra ni se devuelve online post-reserva; el descuento mixto entra en el saldo; el
 > reembolso manual se queda; el modelo viejo se RETIRA. Medido antes de diseñar: el libro coincide
@@ -2531,8 +2531,8 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       escribía una cortesía FALSA con «también cancelar» (flujo real del panel) — corregido en los
       dos reembolsos; dos fixtures más legalizados; `has_deposit` por reserva era catálogo en el
       modelo viejo.
-- [ ] **T3 · superficies, tope y retirada** (§6·T3, diseño fino en §6.3: CUATRO sub-tandas, el árbol
-      verde en cada una; el modelo viejo convive solo hasta la T3·4):
+- [x] **T3 · superficies, tope y retirada — COMPLETA el 2026-09-01** (§6·T3, diseño fino en §6.3:
+      CUATRO sub-tandas, el árbol verde en cada una; el modelo viejo convivió hasta la T3·4):
   - [x] **T3·1 · contrato + API + cajón — EJECUTADA el 2026-09-01** (spec §6.3.1 · `DECISIONES
         #310`): `openapi/v1.yaml` → `Ledger` del libro (incompatible a propósito: 0 LIVE, un solo
         consumidor que cambia en el mismo commit), `LedgerResource` TRANSCRIBE `OrderBook`,
@@ -2563,8 +2563,21 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
         fuera del puente; `LedgerSingleSourceTest` sin lista de excepciones. 6 mutaciones (una pasó
         en verde por la tarjeta de producto → acotada a la fila) · los cuatro verificadores sobre
         MySQL verdes · `VERIFY_CONC=1`.
-  - [ ] **T3·4 · la retirada** de §4.7, `INVARIANTES` `PAY-16`/`PAY-17` reescritas, dos fichas de
-        `DEUDA.md` cerradas, guion headless, la receta de las 25 acciones, ojo del owner.
+  - [x] **T3·4 · la retirada — EJECUTADA el 2026-09-01** (spec §6.3.6 diseño · §6.3.7 ejecución ·
+        `DECISIONES #315`): mueren `OrderLedger`, `OrderFinancialSummary`, `ReservationFinancials`,
+        `GateBuckets` (→ `LineFacts`, sin cascada), `OrderAdjustment::breakdownLabel()` (la rama
+        mixta en `MovementLabel::mixed`), 21 métodos de `Order`, el puente y `ledger-bridge.json`,
+        `tickets.ledger.*` y las claves del cargo de puerta (es/en/fr) + dos de `admin.*` (es/zh);
+        la cortesía mide lo debido con `OrderBook::owedToCustomerCents` y el reembolso total se
+        prorratea entre reservas por `onlineAtBirth`. 25 tests re-apuntados al libro,
+        `LineFactsTest` nuevo, `OrderFinancialInvariantsTest` = las identidades del libro en 16
+        escenarios. `INVARIANTES` `PAY-16`/`PAY-17` reescritas; `desglose-dinero-cliente.md` a
+        📜 HISTÓRICO. `git grep` del modelo viejo en `app/` → 0. Los tres verificadores sobre
+        MySQL verdes (+ `mixed-party --scenario=credit`) · `VERIFY_CONC=1`.
+  - [ ] **T3·4b · el ojo del owner** sobre el panel, la hoja, la puerta y los correos con el modelo
+        viejo fuera (`VERIFICACION-E2E-CAJON.md` §5.sexies V18–V21). Ya medido: el corpus local leído
+        solo con el libro (40 pedidos, 37 cierran, 3 en revisión — los mismos que con el oráculo) y el
+        guion headless del cajón (cuatro pedidos sembrados por `OrderCreator`, 17/17 ✓).
 
 ### El CAMBIO DE PRECIO ✅ — la línea `#145`→`#155`, CERRADA el 2026-08-25
 
