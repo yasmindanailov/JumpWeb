@@ -331,7 +331,14 @@ class GateProfileTest extends TestCase
         $holder = $this->holder();
         $this->signFor($holder);
         $profile = $this->profile($holder);
-        $this->assertSame(['enabled' => true, 'signed' => true, 'accepted_on' => self::TODAY, 'outdated' => false], $profile->waiver);
+        // ▶ `pending_acceptance` entró a propósito en `#336`: es lo único que separa «no ha firmado»
+        // de «leyó el texto, lo aceptó y solo le falta verificar el correo», y de esa distinción
+        // depende que la puerta ofrezca DAR FE o pase la tablet. Aquí es `false` porque este
+        // titular ya tiene firma.
+        $this->assertSame(
+            ['enabled' => true, 'signed' => true, 'accepted_on' => self::TODAY, 'outdated' => false, 'pending_acceptance' => false],
+            $profile->waiver,
+        );
         $this->assertFalse($profile->visitRegisteredToday);
 
         $this->publish();

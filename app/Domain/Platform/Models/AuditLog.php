@@ -200,6 +200,11 @@ class AuditLog extends Model
         'puerta.card_scanned',              // SENSIBLE: payload_hash = sha256 del token; target = el titular si el carné existe
         'puerta.profile_viewed',            // la DIVULGACIÓN de la ficha (§4.6·3), distinta de la búsqueda; payload: via (`card` | `lookup`)
         'puerta.visit_registered',          // la visita acreditada (§8.3); payload: visited_on; user_id = el operador
+        // `#336` — el operador DA FE de una aceptación retenida, con la persona delante: la firma
+        // queda con su nombre en `declared_by_user_id`. ⚠️ Acredita a la PERSONA, nunca al BUZÓN:
+        // `email_verified_at` no se toca. Payload: signature_id, legal_document_version_id y el
+        // canal por el que se aceptó.
+        'puerta.waiver_declared',
         'puerta.lookup_rate_limited',       // crítica: el limitador de la búsqueda tecleada; payload: limit
 
         // ── Waiver probatorio y textos legales versionados (Fase 6) ────────────────────────

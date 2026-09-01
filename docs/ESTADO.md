@@ -34,7 +34,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — CINCO PUNTOS DE PRODUCCIÓN
-> CERRADOS (`#329` → `#333`)**:
+> CERRADOS (`#329` → `#334` y `#336`)**:
 >   0000. ⚠️⚠️ **`#333` — UN TEXTO QUE NO LLEGA NO FALLA, SE QUEDA MUDO.** El prop `account` **ES YA**
 >      el grupo `account`, así que la clave se pide `verify.resend`, **NO** `account.verify.resend`;
 >      `t()` devuelve `''` sin avisar y el aviso salió vacío y el botón sin rótulo. ❗ **Mi
@@ -152,17 +152,12 @@ aquí lo que no se podaría son datos de menores de terceros.
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3877 en verde** (24.916 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche) sobre el árbol CONJUNTO tras rebasar la
-> **T2** del justificante por reserva (`#335`) sobre `#329`→`#334`.
-> ⚠️⚠️ **Se mide tras CADA rebase, nunca se suma**: por separado daban 3847 / 24.828 (la T2 sola) y
-> 3853 / 24.818 (su árbol), y ninguna de las dos es la buena.
-> sobre el árbol CONJUNTO: `#329`→`#334` rebasados sobre la T1 del justificante por reserva (`#328`).
-> ⚠️⚠️ **Medida DESPUÉS del rebase y con `npm run build` delante, NUNCA sumada**: por separado daban
-> 3823 / 24.730 (su T1 sola) y 3824 / 24.676 (`#329`→`#333` solas), y ninguna de las dos es la buena.
-> ⚠️ El techo del chunk del cajón va por **262**, atribuido midiendo cada subida a su rama
-> (259,34 → 260,32 → 261,12 KiB).
-> ▶ Los DOS verificadores de concurrencia, en verde sobre InnoDB real: `#329`/`#330` tocan
-> `OrderCreator` y `SlotOffer`, que están en el `CRITICAL_RE`.
+> Suite **3884 en verde** (24.932 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> sobre el árbol CONJUNTO: `#336` (la puerta firma) rebasado sobre la T2 del justificante (`#335`).
+> ⚠️⚠️ **Medida DESPUÉS del rebase, NUNCA sumada**: por separado daban 3877 / 24.916 (su T2 sola) y
+> 3860 / 24.834 (`#336` sola), y ninguna de las dos es la buena.
+> ⚠️ El techo del chunk del cajón va por **262**, atribuido midiendo cada subida a su rama.
+> ▶ Los DOS verificadores de concurrencia, en verde sobre InnoDB real.
 > ⚠️⚠️ **TERCERA colisión de numeración con el otro agente, y la peor**: mis entradas nacieron
 > como `#327` (código) y `#328` (documento) y las dos eran suyas. **Renumeradas a `#329`→`#333`**,
 > 82 referencias en código y 15 en el documento, con mapa explícito para no tocar las suyas.

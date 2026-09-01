@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Admin\Puerta;
 
+use App\Domain\Identity\Exceptions\WaiverDocumentStaleException;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\CardToken;
 use App\Domain\Identity\Services\CustomerCards;
 use App\Domain\Identity\Services\GateProfile;
 use App\Domain\Identity\Services\GateVisits;
 use App\Domain\Identity\Services\PuertaSettings;
+use App\Domain\Identity\Services\WaiverCounterDeclaration;
 use App\Domain\Identity\Services\WaiverStatus;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
@@ -355,6 +357,66 @@ class ValidarRegistro extends Component
         $this->profile['visit_registered_today'] = true;
         $this->profileExpiresAt = now()->addMinutes(PuertaSettings::profileTtlMinutes())->timestamp;
         $this->profile['expires_at'] = $this->profileExpiresAt;
+    }
+
+    /**
+     * **DAR POR FIRMADA la exención, con la persona delante** (`#336`, `[DECIDIDO owner]`).
+     *
+     * Solo aparece con **aceptación RETENIDA** —el cliente leyó el texto y marcó la casilla, y lo que
+     * falta es que verifique su correo—, así que el operador confirma algo que EXISTE, no lo inventa.
+     * Sin aceptación previa, el flujo sigue siendo el de siempre: pásale la tablet.
+     *
+     * ⚠️ **El permiso es el de validar** (`[DECIDIDO owner]`: quien valida en la puerta, da fe), y por
+     * eso no hay comprobación nueva: `authorizeAccess()` ya lo exige para estar en esta pantalla.
+     *
+     * ⚠️⚠️ **NO se toca `email_verified_at`.** El operador acredita a la PERSONA, no al BUZÓN:
+     * marcarlo verificado afirmaría sin prueba que esa dirección es suya, y de ahí cuelga la
+     * recuperación de contraseña. El cliente sigue viendo su aviso de verificar, que es verdad.
+     */
+    public function declareWaiver(): void
+    {
+        $this->authorizeAccess();
+        abort_unless($this->canViewProfile(), 403);
+        $this->ensureFresh();
+
+        if ($this->profile === null) {
+            return;
+        }
+
+        $customer = User::find((int) ($this->profileUserId ?? 0));
+        if ($customer === null) {
+            $this->clear();
+
+            return;
+        }
+
+        try {
+            $firmada = app(WaiverCounterDeclaration::class)->declare($customer, Auth::user()) !== null;
+        } catch (WaiverDocumentStaleException) {
+            // El texto cambió entre la aceptación y hoy: NO se firma el viejo. Ahí sí toca la tablet.
+            $this->profile['waiver_declare_stale'] = true;
+            $this->touchProfileWindow();
+
+            return;
+        }
+
+        if ($firmada) {
+            // La ficha se recompone desde el dominio: componer el estado a mano aquí sería una
+            // segunda opinión sobre lo que `WaiverStatus` ya sabe, y es como divergen.
+            $this->profile = app(GateProfile::class)->for($customer)->toArray();
+            $this->result = $this->stateFor($customer, (string) ($this->result['query'] ?? ''));
+        }
+
+        $this->touchProfileWindow();
+    }
+
+    /** Reabre la ventana de caducidad de la ficha tras una acción del operador (`SEC-04`: en servidor). */
+    private function touchProfileWindow(): void
+    {
+        $this->profileExpiresAt = now()->addMinutes(PuertaSettings::profileTtlMinutes())->timestamp;
+        if (is_array($this->profile)) {
+            $this->profile['expires_at'] = $this->profileExpiresAt;
+        }
     }
 
     public function clear(): void

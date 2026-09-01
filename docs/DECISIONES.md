@@ -20118,3 +20118,63 @@ legal presente, la casilla DESMARCADA por defecto, el `select` idéntico a los i
 el nombre del menor y **«un niño, un papel» funcionando** —el segundo adulto ve «Ana Gómez Ruiz ya
 tiene su autorización firmada»—, sin errores de JS ni de red. BD de desarrollo devuelta a su estado
 (32 usuarios · 24 firmas · 0 autorizaciones · todas verificando).
+## #336 · 2026-09-01 · LA PUERTA CIERRA LA FIRMA: el operador da fe de una aceptación retenida
+
+`[DECIDIDO owner, 2026-09-01]`, con las tres decisiones tomadas sobre opciones renderizadas.
+
+**El problema es operativo y el owner lo dijo con números**: *«no quiero que se haga cola esperando
+que los usuarios verifiquen sus correos… imagínate 100 personas, 5 filas»*. El alta no firma —guarda
+la aceptación EN ESPERA y la convierte en firma al verificar el correo (`#179`)—, así que quien no
+abre el buzón llega al parque sin exención y hay que pasarle la tablet uno a uno.
+
+▶ **La salida es un TERCER SUCESO**, junto a los dos que ya existían: el enlace del correo y **el
+pago** (`autoVerifyBuyer`, «un pago real demuestra que el titular es una persona»). El tercero es
+**el operador, con la persona delante** — y eso es *más* prueba que un enlace, no menos: el enlace
+demuestra el buzón, el operador ve a quien tiene enfrente. **No hay que revertir `#179`.**
+
+### ⚠️⚠️ La corrección que ordena todo el diseño
+
+**El operador acredita a la PERSONA, NUNCA al BUZÓN.** El owner lo planteó como «marcar verificado», y
+eso abriría un agujero: `email_verified_at` es lo que sostiene la **recuperación de contraseña**, así
+que quien se registrase con el correo de otro y pasara por la puerta se llevaría de regalo el control
+de esa dirección.
+
+Lo que el operador escribe es **la FIRMA**. `email_verified_at` no se toca, y el cliente sigue viendo
+su aviso de verificar — que es verdad. Hay caso propio, y es el que más protege del fichero.
+
+### Las tres decisiones
+
+| | Elegido | Nota |
+|---|---|---|
+| Permiso | **el de validar** (`registrations.validate`) | «quien valida en la puerta, da fe». Sin interruptor nuevo |
+| Confirmación | **diálogo con el nombre** | Lo que el owner describió —«¿ha leído la exención? — sí — da fe»— es exactamente eso. ⚠️ Rechazó que el cliente lo lea EN LA TABLET, que es el flujo de hoy y la cola que se quiere evitar |
+| Menores | **solo el titular, por ahora** | Los menores siguen con la tablet |
+
+⚠️ **La confirmación NO lleva fecha de aceptación**: no hay columna que la guarde, y derivarla del
+`created_at` del titular sería afirmar como hecho algo deducido.
+
+### Lo que lo hace legítimo, y lo que no relaja
+
+⚠️ **Solo con aceptación RETENIDA.** El operador confirma una aceptación que EXISTE —la persona leyó
+el texto y marcó la casilla—, nunca la inventa. Sin aceptación previa, el flujo sigue siendo la
+tablet, y la pantalla lo distingue por `pending_acceptance`, que `GateProfile` pasa a publicar.
+
+⚠️⚠️ **Si el texto CAMBIÓ, no se firma el viejo**: la aceptación caducada se descarta y la puerta
+vuelve a ofrecer la tablet. Es la misma regla que aplica la firma por verificación (`#179`: «en ningún
+caso se firma algo que no se ha leído»), y tiene caso.
+
+⚠️ **La firma conserva la IP y el navegador de la ACEPTACIÓN**, no los del mostrador — mismo criterio
+que `SignPendingWaiverOnVerification`: ese rastro es el del momento en que la persona leyó el texto.
+Lo que aporta el operador va en `declared_by_user_id`. La prueba resultante dice las dos cosas:
+aceptada online el día X, identidad confirmada en persona por Y el día Z.
+
+⚠️ **La pendiente se limpia BAJO LOCK y antes de firmar**, por lo mismo que el listener: dos
+operadores a la vez —o un doble clic— no pueden firmar dos veces ni dejar la aceptación colgada.
+
+### Guardas
+
+Siete casos, y el que más protege es **que declarar NO verifica el correo**. Dos guardas de forma
+cambiaron a propósito: la del catálogo de auditoría (`puerta.waiver_declared` entra en `ACTIONS`) y la
+de la forma del perfil de puerta, que exige declarar cada campo nuevo.
+
+Suite **3860 · 24.834**.

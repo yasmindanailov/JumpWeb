@@ -28,7 +28,7 @@ final readonly class GateProfileData
     public const CARD_REVOKED = 'revoked';
 
     /**
-     * @param  array{enabled: bool, signed: bool, accepted_on: ?string, outdated: bool}  $waiver
+     * @param  array{enabled: bool, signed: bool, accepted_on: ?string, outdated: bool, pending_acceptance: bool}  $waiver
      * @param  list<array{order_code: string, order_item_id: int, date: string, time_window: ?string, product: string, is_entry: bool, quantity: int, addons: list<string>, paid_cents: int, balance_kind: string, balance_cents: int, charge_method: ?string, paid_at: ?string, created_at: string, minors: list<array{name: string, age: int, waiver: ?string}>}>  $today
      * @param  list<array<string, mixed>>  $window  mismo esquema que `$today`, sin el día de hoy
      * @param  list<array{name: string, age: int, waiver: ?string}>  $dependents  los ACTIVOS a cargo: NOMBRE de pila (nunca apellidos), edad HOY y estado de su exención (`current` · `outdated` · `missing` · `null` fuera de interno)

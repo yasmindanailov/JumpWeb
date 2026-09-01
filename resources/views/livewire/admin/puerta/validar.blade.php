@@ -251,7 +251,29 @@
                                     <p class="gate-fact" data-gate-waiver="missing">
                                         <x-filament::badge color="warning" size="lg">{{ __('admin.puerta.validar.profile.waiver_missing') }}</x-filament::badge>
                                     </p>
-                                    <p class="gate-hint">{{ __('admin.puerta.validar.registered_no_waiver_cta') }}</p>
+                                    {{-- `#336` — **DOS caminos, y los separa que haya ACEPTACIÓN RETENIDA.**
+                                         · La aceptó al registrarse y solo le falta verificar el correo → el
+                                           operador puede DAR FE con la persona delante, en un gesto.
+                                         · No aceptó nada → el flujo de siempre: pásale la tablet. El operador
+                                           confirma una aceptación que existe; nunca la inventa. --}}
+                                    @if ($profile['waiver']['pending_acceptance'] ?? false)
+                                        <p class="gate-hint">{{ __('admin.puerta.validar.profile.waiver_pending_hint') }}</p>
+                                        @if ($profile['waiver_declare_stale'] ?? false)
+                                            <p class="gate-hint" data-gate-waiver-stale>{{ __('admin.puerta.validar.profile.waiver_declare_stale') }}</p>
+                                        @endif
+                                        <x-filament::button
+                                            wire:click="declareWaiver"
+                                            {{-- ⚠️ Sin fecha de aceptación: NO hay columna que la guarde, y ponerla
+                                                 desde `created_at` del titular sería afirmar como hecho algo
+                                                 derivado. Se nombra a la persona, que es lo que el operador
+                                                 tiene delante. --}}
+                                            wire:confirm="{{ __('admin.puerta.validar.profile.waiver_declare_confirm', ['name' => $profile['holder_name'] ?? '']) }}"
+                                            size="lg" color="warning" data-gate-declare-waiver>
+                                            {{ __('admin.puerta.validar.profile.waiver_declare') }}
+                                        </x-filament::button>
+                                    @else
+                                        <p class="gate-hint">{{ __('admin.puerta.validar.registered_no_waiver_cta') }}</p>
+                                    @endif
                                 @endif
                             </x-filament::section>
 

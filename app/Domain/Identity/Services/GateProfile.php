@@ -61,6 +61,11 @@ final class GateProfile
                 'signed' => $waiver->signed,
                 'accepted_on' => $waiver->acceptedAt?->toDateString(),
                 'outdated' => $waiver->isOutdated(),
+                // `#336` — ¿hay una ACEPTACIÓN RETENIDA que el operador pueda dar por firmada con la
+                // persona delante? Es lo único que separa «no ha firmado» de «leyó el texto, lo
+                // aceptó y solo le falta verificar el correo», y de esa distinción depende que la
+                // puerta ofrezca un gesto o pase la tablet.
+                'pending_acceptance' => $holder->waiver_pending_document_id !== null,
             ],
             card: $this->cardState($holder),
             today_reservations: $todayRows,
