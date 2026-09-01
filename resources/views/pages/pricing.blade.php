@@ -16,7 +16,7 @@
         <x-site.ticket-prices :tickets="$tickets" :zones="$zones" />
 
         <div class="page__cta">
-            <a href="{{ route('entradas') }}" @click.prevent="$store.purchase.open()" class="btn btn--zone btn--lg">{{ __('landing.reserve.cta') }} →</a>
+            <a href="{{ route('entradas') }}" @click.prevent="$store.purchase.open()" class="btn btn--lg">{{ __('landing.reserve.cta') }} →</a>
             <a href="{{ route('cumpleanos') }}" class="btn btn--ghost btn--lg">{{ __('landing.nav.events') }}</a>
         </div>
     </main>

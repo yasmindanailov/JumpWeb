@@ -10,7 +10,7 @@
             <div class="page__body">
                 <p>{{ __('landing.events.coming_soon') }}</p>
             </div>
-            <a href="{{ route('contacto') }}" class="btn btn--zone">{{ __('landing.events.coming_soon_cta') }}</a>
+            <a href="{{ route('contacto') }}" class="btn">{{ __('landing.events.coming_soon_cta') }}</a>
         </main>
     @else
         {{-- El componente trae sus propias secciones `.wrap`; `.bd-standalone` solo añade el

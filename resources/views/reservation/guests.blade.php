@@ -273,7 +273,7 @@
                                                     <button type="button" class="btn btn--ghost btn--sm gf-nav-prev" data-act="prev" @if ($i === 0) disabled @endif>
                                                         <x-icons.arrow-left :width="13" :height="13" />{{ __('guestform.nav_prev') }}
                                                     </button>
-                                                    <button type="button" class="btn btn--zone btn--sm" data-act="next" @if ($i === $reservation->quantity - 1) disabled @endif>
+                                                    <button type="button" class="btn btn--sm" data-act="next" @if ($i === $reservation->quantity - 1) disabled @endif>
                                                         {{ $i === $reservation->quantity - 1 ? __('guestform.nav_last') : __('guestform.nav_next') }}<x-icons.arrow-right :width="13" :height="13" />
                                                     </button>
                                                 </div>
@@ -297,7 +297,7 @@
                              «Guardar» con todas sus letras, así que el icono no informaba: decoraba.
                              ▶ Si el owner lo quiere de vuelta, es una línea y un glifo del
                              diseñador. --}}
-                        <button type="submit" class="btn btn--zone btn--lg">
+                        <button type="submit" class="btn btn--lg">
                             {{ __('guestform.submit') }}
                         </button>
                         <p class="gf-savebar__help">{{ __('guestform.hint') }}</p>

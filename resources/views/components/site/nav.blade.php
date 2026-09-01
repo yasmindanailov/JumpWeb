@@ -219,12 +219,12 @@
         @guest
             <div class="mob-menu__foot">
                 @if (! empty($site['registration_url']))
-                    <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener" class="btn btn--zone" @click="menuOpen = false">{{ $site['registration_label'] }}<x-icons.arrow-right :width="15" :height="15" /></a>
+                    <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener" class="btn" @click="menuOpen = false">{{ $site['registration_label'] }}<x-icons.arrow-right :width="15" :height="15" /></a>
                 @else
                     {{-- Mismo cambio que el CTA de escritorio, y aquí el `href` importa aún más: en
                          móvil el «abrir en pestaña nueva» es un gesto habitual. Se cierra el cajón de
                          navegación ANTES de abrir el de la cuenta, o quedarían dos superpuestos. --}}
-                    <a href="{{ route('registro') }}" class="btn btn--zone"
+                    <a href="{{ route('registro') }}" class="btn"
                        x-on:click="menuOpen = false; $store.purchase.openAccount($event, 'register')">{{ __('landing.nav.reserve') }}<x-icons.arrow-right :width="15" :height="15" /></a>
                 @endif
             </div>

@@ -304,11 +304,11 @@
                         </div>
                     </div>
                     <div class="bd-editor__actions">
-                        <button type="button" class="bd-btn bd-btn--solid" @click="download()" :disabled="busy">
+                        <button type="button" class="btn" @click="download()" :disabled="busy">
                             <x-icons.download :width="14" :height="14" />
                             {{ __('landing.events.invite.download') }}
                         </button>
-                        <button type="button" class="bd-btn bd-btn--ghost" @click="share()" :disabled="busy">
+                        <button type="button" class="btn btn--ghost" @click="share()" :disabled="busy">
                             <x-icons.share :width="14" :height="14" />
                             {{ __('landing.events.invite.share') }}
                         </button>

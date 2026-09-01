@@ -45,10 +45,12 @@
                     <span class="maint__contact-label">{{ __('site.maintenance.contact') }}</span>
                     <div class="maint__contact-row">
                         @if ($phoneTel !== '')
-                            <a href="tel:{{ $phoneTel }}" class="btn btn--zone btn--lg">{{ $phone }}</a>
+                            <a href="tel:{{ $phoneTel }}" class="btn btn--lg">{{ $phone }}</a>
                         @endif
+                        {{-- T9: el teléfono es el canal primario (acción); el correo, el secundario
+                             en fantasma — antes eran marca+acción, dos sólidos compitiendo. --}}
                         @if ($email !== '')
-                            <a href="mailto:{{ $email }}" class="btn btn--lg">{{ $email }}</a>
+                            <a href="mailto:{{ $email }}" class="btn btn--ghost btn--lg">{{ $email }}</a>
                         @endif
                     </div>
                 </div>

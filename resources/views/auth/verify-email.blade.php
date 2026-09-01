@@ -22,7 +22,7 @@
                     <p>{{ __('account.verify.notice_resend_hint') }}</p>
                     <form method="POST" action="{{ route('verification.send') }}" class="verify__resend">
                         @csrf
-                        <button type="submit" class="btn btn--zone">{{ __('account.verify.notice_resend_button') }}</button>
+                        <button type="submit" class="btn">{{ __('account.verify.notice_resend_button') }}</button>
                     </form>
                 @endunless
             @else

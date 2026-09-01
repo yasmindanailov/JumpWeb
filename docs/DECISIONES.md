@@ -18928,3 +18928,51 @@ el parque, no quiero cerrar esa puerta»).
 **Verificación**: suite verde (**3.749 tests, 24.498 aserciones**) · Pint ✓ · **mutaciones: la de la
 exención pone ROJAS las tres superficies (4 tests) y la del rol de puerta su guarda** · queda 🟦 a
 falta del OJO del owner en navegador (panel y puerta).
+
+## #321 · 2026-09-01 · UN SOLO BOTÓN: la acción es `--action` en toda la web, el hover no salta, y `bd-btn`/`btn--zone` salen del Blade (T9 del idioma visual)
+
+**Contexto.** Primera tanda ejecutada de la **auditoría de diseño** del mismo día (informe «Un solo
+idioma», artefacto; método: `hallmark audit` + 150 capturas a 3 anchos + inventario con números).
+Lo medido: la misma función se dibujaba de **tres** maneras —`.btn` en ~15 superficies, `.cta-*`
+en el armazón, `.bd-btn` en el editor de invitaciones— y con **dos** rellenos de acción: en
+`/precios` convivían en la misma pantalla un CTA cian (`.btn--zone`, que es MARCA) y dos naranjas.
+La sospecha del owner («los botones no son del sistema, creo yo») era **media verdad exacta**: los
+VALORES eran del sistema (tokens), el LENGUAJE no.
+
+**`[DECIDIDO owner]`**: la acción es `--action` en toda la web y la familia del contenido es UNA
+(`.btn`). La PIEL (¿plana o pegatina?) NO se decide aquí: va con las opciones renderizadas de la
+tanda B (la tarjeta). Flujo acordado en la auditoría: informe → owner decide → se implementa.
+
+**Qué cambió** (`docs/specs/idioma-visual-heredado.md` §3.undecies, el detalle):
+1. `btn--zone` fuera de los 14 usos Blade (12 vistas). ⚠️ **Sigue declarada en CSS a propósito**:
+   el cajón Vue la emite (su contrato la asevera) y el SPA está aparcado — se irá con su rediseño.
+2. El hover **ya no salta** (fuera `translateY(-3px) scale(1.02)` + `--shadow-lift`; la física de
+   `#217` §9.4 y `#303`) y **su texto sigue al rol** (`--on-action-hover`) → encoge
+   `ActionFillTest::EXCEPTIONS` (2→1) y **se retira su ficha de `DEUDA.md`**. Queda la pisada
+   (`:active` → `translateY(1px)`), heredada de `.bd-btn`.
+3. `.bd-btn` **absorbida** (el par del editor pasa a `.btn`/`.btn--ghost`); la lista de
+   `ActionFillTest` encoge con `.bd-btn--solid`.
+4. **Jerarquía** donde competían dos sólidos («un relleno de acción por pantalla», regla del
+   propio cliente): 404 → primario Reservar, «inicio» fantasma; mantenimiento → primario teléfono,
+   correo fantasma.
+5. El bloque **`.invite-*` de site.css estaba MUERTO** (el editor ANTERIOR a `bd-editor`; 0
+   consumidores, medido con control positivo) y se retiró entero: con él, la única sombra literal
+   de la hoja, un foco pintado con color de ZONA, y **cuatro excepciones de guardas**
+   (`ShapeScaleTest` ×2 · `RawColourIsNotATokenTest` ×2, que queda VACÍA).
+6. Los toggles de pack ya no parten «CUMPLEAÑOS» sin guion a 390: `hyphens: auto` +
+   `break-word` (el nombre lo escribe el panel: no hay regla de longitud posible).
+
+**Guarda nueva**: `SingleButtonFamilyTest` (5 casos; desnuda comentarios Blade y CSS antes de
+escanear — el banner de cookies CITA `btn--zone` en un comentario legal verdadero).
+
+**Lo que esto NO toca, dicho**: el cian de `--zone-1` como acento del FAQ y `/normas` (tema T3 del
+informe, del owner) · la piel del botón (tanda B) · la excepción del hover que INVIERTE en
+`.price--feat .price__cta` (patrón propio, enumerado).
+
+**Verificación**: suite **3.756 en verde (24.460 aserciones)** · Pint ✓ · **5/5 mutaciones muerden**
+(con control verde antes y después, por código de salida) · sonda `t9-boton.mjs` en Chrome real:
+el submit de contacto pasó de cian a `#F2711C` con hover `#D56319` (**el par exacto que deriva
+`actionHover()`**) y `transform: none`; los 7 sólidos de `/precios` comparten relleno; captura de
+los toggles con el guion de diccionario («CUM-PLEAÑOS»). ⚠️ El `#320` lo tomó el carril del panel
+mientras esta tanda estaba en obra: el número se eligió mirando el REMOTO tras `git fetch`, que es
+la regla que ya nos costó dos choques el 2026-08-31.

@@ -61,9 +61,10 @@ class RawColourIsNotATokenTest extends TestCase
      * @var array<string,string>
      */
     private const ALLOWED_SELECTORS = [
-        '.invite-card' => 'la tarjeta de invitación la captura html2canvas y su regla exige estilos '.
-            'SÓLIDOS y autocontenidos (site.css §Cumpleaños): un `color-mix` ahí no rasteriza',
-        '.invite-field' => 'ídem — es parte del objetivo de captura',
+        // ⚠️ `.invite-card` y `.invite-field` vivían aquí (los literales del objetivo de captura
+        // de html2canvas) y SE RETIRARON (T9): el bloque `.invite-*` era el editor ANTERIOR a
+        // `bd-editor` y llevaba muerto desde aquel rediseño. La lista queda VACÍA — encogió hasta
+        // el final, que es exactamente lo que prometía.
     ];
 
     /**
@@ -265,6 +266,15 @@ class RawColourIsNotATokenTest extends TestCase
                 'Una excepción sin sujeto es un permiso que ya no protege nada.',
             );
         }
+
+        // T9: la lista llegó a VACIARSE (las dos entradas `.invite-*` se fueron con su bloque
+        // muerto). El caso se queda por si vuelve a crecer; mientras tanto, esta aserción evita
+        // que el runner lo marque «risky» por no aseverar nada.
+        $this->assertLessThanOrEqual(
+            2, count(self::ALLOWED_SELECTORS),
+            'la lista de literales permitidos ha CRECIDO por encima de donde llegó a estar: cada '.
+            'entrada nueva es una instalación que pierde ese color, y hay que justificarla aquí.',
+        );
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────────────────

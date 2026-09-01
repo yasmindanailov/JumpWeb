@@ -23,7 +23,7 @@
                 <input type="hidden" name="Ds_MerchantParameters" value="{{ $redsysFormData['params'] }}">
                 <input type="hidden" name="Ds_Signature" value="{{ $redsysFormData['signature'] }}">
                 <noscript>
-                    <button type="submit" class="btn btn--zone btn--lg purchase__cta">
+                    <button type="submit" class="btn btn--lg purchase__cta">
                         {{ __('tickets.pay_proceed_manual') }}
                     </button>
                 </noscript>

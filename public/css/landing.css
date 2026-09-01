@@ -816,7 +816,13 @@ img { display: block; max-width: 100%; }
    — el selector real es `.lang-dd` (footer + móvil, Lote 8). Se podan también sus overrides
    dispersos (:active y los de los media queries). */
 
-/* ---------- buttons ---------- */
+/* ---------- buttons ----------
+   T9: UNA familia para todo el contenido. El hover NO salta — la física la fijaron el CTA del
+   armazón (#217 §9.4) y la pegatina (#303): responde el color, no la posición — y su texto SIGUE
+   AL ROL (`--on-action-hover`), lo que retira la excepción que `ActionFillTest` enumeraba y su
+   ficha de `DEUDA.md`. ⚠️ `.btn--zone` ya NO se usa en ningún Blade (acción ≠ marca): se queda
+   SOLO porque el cajón Vue la emite (`SidebarDomContractTest`) y el SPA está aparcado — cuando el
+   cajón se rediseñe, se va con él. `SingleButtonFamilyTest` vigila las dos cosas. */
 .btn {
   display: inline-flex; align-items: center; gap: var(--sp-10);
   padding: var(--sp-12) var(--sp-20);
@@ -824,17 +830,16 @@ img { display: block; max-width: 100%; }
   border-radius: var(--r-btn);
   font-weight: 600; font-size: var(--fs-14);
   transition:
-    transform var(--dur-entra) var(--ease-entra),
-    background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale),
-    box-shadow var(--dur-estado) var(--ease-sale);
+    transform var(--dur-toque) var(--ease-sale),
+    background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
   white-space: nowrap;
 }
 .btn:hover {
-  transform: translateY(-3px) scale(1.02);
   background: var(--action-hover);
-  color: var(--fg);
-  box-shadow: var(--shadow-lift);
+  color: var(--on-action-hover);
 }
+/* La pisada: el único transform del botón, y es al PULSAR, no al pasar. */
+.btn:active:not(:disabled):not([aria-disabled="true"]) { transform: translateY(1px); }
 .btn svg { transition: transform var(--dur-entra) var(--ease-entra); }
 .btn:hover svg { transform: translateX(5px); }
 .btn--zone { background: var(--zone-1); color: var(--on-brand); }
@@ -842,14 +847,16 @@ img { display: block; max-width: 100%; }
 .btn--ghost { background: transparent; color: var(--fg); border: 1px solid var(--line-strong); }
 .btn--ghost:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .btn--lg { padding: var(--sp-18) var(--sp-28); font-size: var(--fs-16); }
-.btn--sm { padding: 10px 16px; font-size: 13px; }
+.btn--sm { padding: var(--sp-10) var(--sp-16); font-size: var(--fs-13); }
 /* Estado deshabilitado del sistema (antes inexistente: los botones con
    `wire:loading.attr="disabled"` conservaban el hover pleno). Atenúa y congela el
    hover por variante para que el botón "no responda" mientras carga. */
 .btn:disabled,
-.btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+.btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
 .btn:disabled:hover,
-.btn[aria-disabled="true"]:hover { transform: none; box-shadow: none; background: var(--action); color: var(--on-action); }
+.btn[aria-disabled="true"]:hover { transform: none; background: var(--action); color: var(--on-action); }
+.btn:disabled:hover svg,
+.btn[aria-disabled="true"]:hover svg { transform: none; }
 .btn--zone:disabled:hover,
 .btn--zone[aria-disabled="true"]:hover { background: var(--zone-1); color: var(--on-brand); }
 .btn--ghost:disabled:hover,
@@ -2516,7 +2523,10 @@ input[type="radio"]:focus-visible,
 }
 /* El icono del PRODUCTO, no un adorno: sale de `iconKey()` y el parque lo cambia en el panel. */
 .bd-tab__ico { flex: none; }
-.bd-tab__t { min-width: 0; overflow-wrap: anywhere; }
+/* T9: `anywhere` partía «CUMPLEAÑOS» sin guion a 390 (el nombre del pack lo escribe el PANEL, así
+   que no hay regla de longitud posible). `hyphens` parte por diccionario (CUM-PLE-AÑOS) y
+   `break-word` queda de red para un nombre sin puntos de guion. */
+.bd-tab__t { min-width: 0; hyphens: auto; overflow-wrap: break-word; }
 /* La sombra RESPONDE, la tarjeta no se levanta — la misma decisión que `.ride-card` en `#303`. */
 .bd-tab:hover { box-shadow: none; }
 .bd-tab.is-active { background: var(--paper-fg); color: var(--paper-bg-card); box-shadow: none; }
@@ -2690,14 +2700,9 @@ input[type="radio"]:focus-visible,
 .bd-swatch .dot { background: var(--zone-1); }
 .bd-swatch.is-active { border-color: var(--fg); background: var(--fg); color: var(--bg); }
 .bd-editor__actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: auto; }
-.bd-btn { display: inline-flex; align-items: center; gap: 9px; border-radius: var(--r-btn); padding: 13px 18px; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform var(--dur-estado) var(--ease-sale), background-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale); }
-.bd-btn:hover { transform: translateY(-2px); }
-.bd-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
-.bd-btn--solid { background: var(--action); color: var(--on-action); }
-.bd-btn--solid:hover { background: var(--action-hover); color: var(--on-action-hover); }
-.bd-btn--ghost { border: 1px solid var(--line-strong); color: var(--fg); background: transparent; }
-.bd-btn--ghost:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
-.bd-btn:active:not(:disabled) { transform: translateY(0) scale(0.97); transition: transform var(--dur-toque) var(--ease-sale); }
+/* T9: `.bd-btn` RETIRADA — el par del editor de invitaciones usa `.btn`/`.btn--ghost`, la familia
+   única del contenido. No pierde nada al absorberse: la pisada (`:active`) y el texto-sigue-al-rol
+   que estrenó aquí viven ahora en la base `.btn`. */
 .bd-editor__hint { font-size: 11.5px; color: var(--fg-mute); margin: 0; }
 .bd-stage { background: var(--bg-soft); border-radius: var(--r-lg); border: 1px solid var(--line); display: grid; place-items: center; padding: clamp(32px, 4vw, 56px); position: relative; overflow: hidden; }
 .bd-stage__shape { position: absolute; pointer-events: none; background: var(--zone-1); transition: background-color var(--dur-cae) var(--ease-sale); }

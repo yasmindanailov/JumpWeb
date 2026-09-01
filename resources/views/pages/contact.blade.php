@@ -27,7 +27,7 @@
                         <a href="tel:{{ $site['phone_tel'] }}" class="btn btn--ghost">{{ __('site.contact_call') }} · {{ $site['phone'] }}</a>
                     @endif
                     @if (! empty($site['whatsapp']))
-                        <a href="https://wa.me/{{ $site['whatsapp'] }}" target="_blank" rel="noopener" class="btn btn--zone">{{ __('site.contact_whatsapp') }} →</a>
+                        <a href="https://wa.me/{{ $site['whatsapp'] }}" target="_blank" rel="noopener" class="btn">{{ __('site.contact_whatsapp') }} →</a>
                     @endif
                 </div>
             </div>
@@ -77,7 +77,7 @@
                     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
                 @endif
 
-                <button type="submit" class="btn btn--zone btn--lg">{{ __('site.contact_send') }} →</button>
+                <button type="submit" class="btn btn--lg">{{ __('site.contact_send') }} →</button>
             </form>
         @endif
         </div>{{-- /.contact-layout__main --}}

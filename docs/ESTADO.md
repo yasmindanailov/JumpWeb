@@ -59,10 +59,11 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3756 en verde** (24.534 aserciones, 1 skipped a propósito), medida el 2026-09-01 sobre
-> el árbol CONJUNTO: `#320` (rol de puerta + exención del menor) rebasado sobre `#319` (portada).
-> ⚠️ **Medida DESPUÉS del rebase, no sumada**: sobre la rama sola daba 3749 / 24.498; los 7 tests y
-> 36 aserciones de diferencia son de `#319`, que llegó del otro carril mientras esto se escribía.
+> Suite **3761 en verde** (24.483 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> sobre el árbol CONJUNTO: `#321` (T9, un solo botón) rebasado sobre `#320` (rol de puerta).
+> ⚠️ **Medida DESPUÉS del rebase, no sumada**: la T9 sola sobre `#319` daba 3756 / 24.460 y el
+> árbol de `#320` sin la T9, 3756 / 24.534 — solo la medida conjunta vale.
+> - Antes, 3756 / 24.534 (`#320` sobre `#319`).
 > ⚠️ **No se suma, se mide** — y ⚠️⚠️ **tras un rebase que toque Vue hay que
 > `npm run build:ssr` ANTES de leer la suite**: sin eso salieron 35 rojos en
 > `SidebarDomContractTest` que no eran de ningún cambio.
@@ -116,7 +117,28 @@
 >     `waiver.retention_months`, que sigue **`[PENDIENTE: owner]`** y hará falta igual.
 >
 > ═══════════ ❗❗❗ CARRIL 4 · LA PORTADA (sesión del 2026-09-01, tarde) — POR DÓNDE SE RETOMA ═══════════
-> **EN EL ÁRBOL: `#319`, los ICONOS DE TARJETA y el tope de dos líneas.** Encargo del owner con el
+> ❗❗❗ **2026-09-01 (noche) · LA AUDITORÍA DE DISEÑO Y SU PRIMERA TANDA (T9) EN EL ÁRBOL (`#321`).**
+> El owner pidió auditar el diseño con la skill `hallmark` (instalada en `~/.claude/skills/hallmark`;
+> el `npx` de Windows falla con EPERM, se instala clonando el repo) SIN workflow —⚠️ tercera vez que
+> lo pide: solitario por defecto—. El informe vive como ARTEFACTO «Un solo idioma» (3 críticos ·
+> 8 mayores · 6 menores, con temas T1–T7 y plan de tandas A–F): la tesis medida es que el «ruido»
+> NO viene de la decoración (la portada cumple su presupuesto) sino de DOS GENERACIONES del sistema
+> conviviendo. ▶ **T9 = tanda A del informe, HECHA** (`#321`, spec §3.undecies): un solo botón,
+> acción `--action` en toda la web `[DECIDIDO owner]`, hover sin salto, `bd-btn` absorbida, bloque
+> muerto `.invite-*` retirado (4 excepciones de guardas encogen), toggles con guion de diccionario.
+> Guarda `SingleButtonFamilyTest` (5/5 mutaciones muerden). ⚠️ `btn--zone` SIGUE en CSS a propósito:
+> el cajón Vue la emite y el SPA está aparcado. ▶ **LO QUE SIGUE de la auditoría** (flujo acordado:
+> informe → owner decide → implementar; opciones RENDERIZADAS donde haya gusto): **tanda B** (la
+> tarjeta: ¿pegatina también en precio/normas? — el owner espera ver las dos opciones sobre página
+> real) · T3 el cian sin rol (FAQ, /normas) · T4 arquitectura (interiores que duplican portada;
+> /entradas ES la portada con cajón) · islas heredadas (widget de ofertas con paleta del 1.er
+> cliente y fallback `#FF5B22`, bucles `jj-*` vs presupuesto `#279`) · escala `--fs-*` esquivada
+> por ~277 px literales. ▶ El PÚBLICO y la dirección (madres/familias/jóvenes; «sorpresa en los
+> momentos, calma en el camino del dinero»; 6 referencias Framer del owner) están en el informe y
+> en la memoria del agente. ⚠️ El `#320` se lo llevó el carril del panel en mitad de la tanda: el
+> número se fijó tras `git fetch`, la regla de siempre.
+>
+> **EN EL ÁRBOL (tarde): `#319`, los ICONOS DE TARJETA y el tope de dos líneas.** Encargo del owner con el
 > patrón de ficha de Google Store: «Visítanos» estrena icono de CATEGORÍA (reloj y pin) y el botón
 > de teléfono el de la ACCIÓN; la tarjeta de tarifa pinta **el marcador que el panel YA elige**
 > (`ticket_types.icon`, `#259` — ese campo tenía **un solo consumidor, el cajón**); y las

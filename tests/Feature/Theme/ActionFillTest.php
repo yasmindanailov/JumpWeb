@@ -60,7 +60,9 @@ class ActionFillTest extends TestCase
         // llevaba a donde ya estabas. La lista de acción **solo encoge**, que es la regla.
         '.price--feat .price__cta' => 'el CTA de la tarifa destacada',
         '.bd-pack__cta' => '«Reservar este cumple»',
-        '.bd-btn--solid' => 'el primario del par del editor de invitaciones',
+        // ⚠️ `.bd-btn--solid` vivía aquí y SE FUE CON SU SUJETO (T9): el par del editor de
+        // invitaciones usa ahora `.btn`/`.btn--ghost`, la familia única del contenido — que ya
+        // está en esta lista. La lista solo encoge, que es la regla.
         // site.css
         // ⚠️ **Entra en la 2c·8** (`#216`): el hero recupera sus dos botones y el primero es el que
         // hace avanzar la compra, o sea acción de manual. El segundo (`.hero__act--alt`) NO entra:
@@ -90,18 +92,18 @@ class ActionFillTest extends TestCase
     ];
 
     /**
-     * **Las tres excepciones, y por qué NO son deuda escondida.**
+     * **Las excepciones que quedan, y por qué NO son deuda escondida.**
      *
-     * Las tres se dejaron a propósito para que la tanda no moviera un píxel: convertirlas cambiaría
-     * un color de verdad y eso es una decisión de diseño, no un mecanismo. **La lista solo puede
+     * Se dejaron a propósito para que la tanda no moviera un píxel: convertirlas cambiaría un
+     * color de verdad y eso es una decisión de diseño, no un mecanismo. **La lista solo puede
      * encoger** — igual que las de `ShapeScaleTest`.
+     *
+     * ⚠️ `.btn:hover` vivía aquí («pinta su texto con `--fg` donde las otras diez usan
+     * `--on-brand`») y SE CONVIRTIÓ en la T9, con el OK del owner a «un solo botón»: su texto es
+     * ya `var(--on-action-hover)` y sigue al rol como todas. Su ficha de `DEUDA.md` se retira con
+     * ella. De dos excepciones queda UNA — la lista encogió sola, que es lo que prometía.
      */
     private const EXCEPTIONS = [
-        // `.btn:hover` pinta su texto con `var(--fg)` y no con `--on-brand`, que es lo que usan las
-        // otras diez reglas del mismo estado. Es una incoherencia PREVIA del producto: el mismo
-        // fondo (`--zone-1`) recibe dos colores de texto distintos en la misma hoja. Convertirla
-        // volvería el texto blanco al pasar el cursor. Ficha en `DEUDA.md`.
-        '.btn:hover' => 'color',
         // El CTA de la tarifa destacada INVIERTE al pasar el cursor (fondo de tarjeta + texto de
         // tinta) en vez de oscurecerse. Es otro patrón de hover, no el del rol.
         '.price--feat .price__cta:hover' => 'background+color',

@@ -888,70 +888,12 @@
   color: var(--fg); opacity: 0.85;
 }
 
-/* ── Cumpleaños: tarjeta de invitación editable (#8 · 2026-06-01) ──────────────
-   Reemplaza la antigua foto-polaroid. `.invite-card` es el objetivo de captura de
-   html2canvas → estilos SÓLIDOS y autocontenidos (sin color-mix/gradientes en la
-   tarjeta, que no rasterizan bien). Hereda --zone-1/--zone-2 del pack activo. */
-.invite { display: flex; flex-direction: column; gap: 16px; align-self: start; }
-.invite-card {
-  position: relative; overflow: hidden;
-  background: #fff; color: var(--fg);
-  border: 1px solid var(--line); border-top: 6px solid var(--zone-1);
-  border-radius: var(--r-lg); padding: 30px 28px 24px;
-  box-shadow: 0 18px 44px -26px rgba(20, 19, 15, 0.45);
-}
-.invite-card__deco { position: absolute; border-radius: 6px; }
-.invite-card__deco--a { width: 26px; height: 26px; top: 18px; right: 22px; background: var(--zone-1); transform: rotate(16deg); }
-.invite-card__deco--b { width: 16px; height: 16px; top: 52px; right: 52px; background: var(--zone-2); transform: rotate(-10deg); }
-.invite-card__eyebrow {
-  display: inline-block; font-family: var(--font-body); font-weight: 700;
-  font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--zone-1);
-}
-.invite-card__lead { margin: 8px 0 2px; font-family: var(--font-body); font-size: 14px; font-weight: 600; color: var(--fg-mute); }
-.invite-card__name {
-  margin: 2px 0 0; font-family: var(--font-display); font-stretch: 75%;
-  font-size: 40px; line-height: 0.92; font-weight: 800; letter-spacing: -0.02em;
-  color: var(--fg); word-break: break-word;
-}
-.invite-card__age {
-  display: inline-block; margin: 14px 0 0; padding: 5px 14px;
-  background: var(--zone-1); color: var(--on-brand); border-radius: var(--r-pill);
-  font-family: var(--font-body); font-weight: 700; font-size: 13px;
-}
-.invite-card__meta { margin: 20px 0 0; display: grid; gap: 11px; }
-.invite-card__meta div { display: grid; grid-template-columns: 78px 1fr; align-items: baseline; gap: 10px; }
-.invite-card__meta dt {
-  font-family: var(--font-body); font-weight: 700; font-size: 11px;
-  text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-mute);
-}
-.invite-card__meta dd { margin: 0; font-size: 15px; font-weight: 600; color: var(--fg); }
-.invite-card__meta dd[x-text] { text-transform: capitalize; }
-.invite-card__brand {
-  display: block; margin: 22px 0 0; padding-top: 16px; border-top: 1px dashed var(--line);
-  font-family: var(--font-display); font-stretch: 75%; font-weight: 800; font-size: 16px;
-  color: var(--zone-1);
-}
-/* Formulario de edición (NO entra en la captura). */
-.invite-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.invite-field { display: flex; flex-direction: column; gap: 5px; }
-.invite-field__label { font-family: var(--font-body); font-weight: 600; font-size: 12px; color: var(--fg-mute); }
-.invite-field input {
-  width: 100%; font-family: var(--font-body); font-size: 14px; color: var(--fg);
-  padding: 10px 12px; background: #fff; border: 1px solid var(--line); border-radius: var(--r-btn);
-  transition: border-color var(--dur-toque) var(--ease-sale), box-shadow var(--dur-toque) var(--ease-sale);
-}
-.invite-field input:focus-visible {
-  outline: none; border-color: var(--zone-1);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--zone-1) 28%, transparent);
-}
-.invite-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.invite-btn { font-size: 14px; }
-.invite-btn[disabled] { opacity: 0.6; cursor: progress; }
-.invite-hint { margin: 0; font-size: 12px; line-height: 1.45; color: var(--fg-mute); }
-@media (max-width: 540px) {
-  .invite-card__name { font-size: 32px; }
-  .invite-form { grid-template-columns: 1fr 1fr; }
-}
+/* T9: el bloque `.invite-*` (la tarjeta de invitación ANTERIOR al editor `bd-editor`/`bd-inv` de
+   `events-section`, objetivo de html2canvas en su día) llevaba MUERTO desde aquel rediseño:
+   0 consumidores en blades, Vue y JS — medido con control positivo. Se retira ENTERO, y con él
+   la única sombra literal de esta hoja y el foco pintado con color de ZONA; encogen además las
+   cuatro excepciones que lo citaban (`ShapeScaleTest` ×2, `RawColourIsNotATokenTest` ×2) — para
+   eso existen las listas que «solo encogen». */
 
 /* Nota general «calcetines antideslizantes obligatorios» bajo el grid de precios (reactiva #6,
    ahora como callout con el icono de marca S1). Aplica a TODAS las entradas → vive con el

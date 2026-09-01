@@ -96,7 +96,9 @@ class ShapeScaleTest extends TestCase
         '.cal__dot' => 'muestra de color de la leyenda del calendario: su radio es la forma del swatch, '.
             'no el canto de un contenedor. Con lado 12 y radio 4 su ratio es 3,00 y no cumple la ley '.
             'del motivo; tokenizarlo a `--r-xs` lo movería +1px, así que se deja y se anota',
-        '.invite-card__deco' => 'adorno de la invitación, que se captura con `html2canvas`',
+        // ⚠️ `.invite-card__deco` vivía aquí y SE RETIRÓ (T9): el bloque `.invite-*` era el editor
+        // de invitación ANTERIOR a `bd-editor` y llevaba muerto desde aquel rediseño — 0
+        // consumidores, medido. La excepción se va con su sujeto, que es para lo que está la lista.
         '.bd-card__conf' => 'confeti del diseñador de invitaciones: dibujo',
         '.hero__chip:focus-visible' => 'anillo de foco sobre el vídeo del hero (ver el bloque de foco)',
         '.hero--full .hero__stage' => 'RESET: anula un radio heredado',
@@ -122,7 +124,9 @@ class ShapeScaleTest extends TestCase
         // RETIRÓ el 2026-08-27 (armazón · tanda 2c·4): el selector de idioma salió del pie y con
         // él su variante. **De seis excepciones de elevación quedan cinco**, y la lista encogió
         // sola, que es exactamente lo que `#196` prometió que pasaría.
-        '.invite-card' => 'ARTEFACTO IMPRIMIBLE: se captura con `html2canvas` y su sombra es parte de la tarjeta que el visitante se descarga',
+        // ⚠️ `.invite-card` vivía aquí (sombra propia del «artefacto imprimible») y SE RETIRÓ (T9)
+        // con el bloque `.invite-*` entero, muerto desde el rediseño del editor. **De cinco
+        // excepciones de elevación quedan cuatro** — la lista encogió sola, otra vez.
         '.ck-tgl::after' => 'el PULGAR de un interruptor: 1 px de sombra lo hace parecer una pieza física, no elevación',
         '.offw-badge' => 'lee `--offw-accent`, color de marca del widget, no una sombra de elevación',
     ];

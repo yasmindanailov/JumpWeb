@@ -20,7 +20,9 @@
         </div>
 
         <div class="e404__cta">
-            <a href="{{ url('/') }}" class="btn btn--zone btn--lg">{{ __('site.e404_home') }}</a>
+            {{-- T9: el PRIMARIO de un 404 es el que hace avanzar (reservar); «inicio» es la salida
+                 secundaria. Antes iban marca+acción (dos sólidos): la acción es UNA por pantalla. --}}
+            <a href="{{ url('/') }}" class="btn btn--ghost btn--lg">{{ __('site.e404_home') }}</a>
             <button type="button" class="btn btn--lg" @click="$store.purchase.open()">{{ __('site.e404_book') }} →</button>
         </div>
 

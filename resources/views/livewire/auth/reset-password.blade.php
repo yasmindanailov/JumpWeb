@@ -18,7 +18,7 @@
             <x-ui.password-input id="reset-password-confirmation" model="password_confirmation" autocomplete="new-password" />
         </div>
 
-        <button type="submit" class="btn btn--zone auth__submit" wire:loading.attr="disabled" wire:target="resetPassword">
+        <button type="submit" class="btn auth__submit" wire:loading.attr="disabled" wire:target="resetPassword">
             <span wire:loading.remove.delay wire:target="resetPassword">{{ __('account.reset.submit') }}</span>
             <span class="btn__loading" wire:loading.delay wire:target="resetPassword">
                 <x-ui.spinner size="xs" :decorative="true" /> {{ __('account.reset.submitting') }}

@@ -18,7 +18,7 @@
         <p class="page__body" style="max-width:60ch; margin-bottom:32px">{{ __('site.page_maintenance.body') }}</p>
 
         <div class="contact-quick__row">
-            <a href="{{ url('/') }}" class="btn btn--zone btn--lg">{{ __('site.e404_home') }}</a>
+            <a href="{{ url('/') }}" class="btn btn--lg">{{ __('site.e404_home') }}</a>
         </div>
     </main>
 

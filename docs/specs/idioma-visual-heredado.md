@@ -886,6 +886,52 @@ crearlas es DATO, y hacen falta nombre y edad del owner.
 
 ---
 
+## 3.undecies · T9 · UN SOLO BOTÓN (`#321`, 2026-09-01)
+
+**La primera tanda de la auditoría de diseño** (artefacto «Un solo idioma», mismo día): la misma
+función se dibujaba de TRES maneras —`.btn` en ~15 superficies · `.cta-*` en el armazón ·
+`.bd-btn` en el editor de invitaciones— y con DOS rellenos de acción: en `/precios` convivían en
+la misma pantalla un CTA cian (`.btn--zone`, que es MARCA) y dos naranjas. `[DECIDIDO owner]`:
+**la acción es `--action` en toda la web y la familia del contenido es UNA, `.btn`**. La PIEL del
+botón (¿plana o pegatina?) NO se tocó: es decisión de gusto y va con las opciones renderizadas de
+la tanda B (la tarjeta).
+
+Lo ejecutado, y el porqué de cada pieza:
+
+1. **`btn--zone` fuera de todo Blade** (14 líneas en 12 vistas). ⚠️ **La variante SIGUE DECLARADA
+   en el CSS a propósito**: el cajón Vue la emite (`SidebarDomContractTest` la asevera, 10 citas
+   en su manifest) y el SPA está aparcado `[DECIDIDO owner, 2026-09-01]` — se irá con su rediseño.
+   La frontera exacta la vigila `SingleButtonFamilyTest`: cero en `*.blade.php`, Vue exento.
+2. **El hover ya no salta** (`translateY(-3px) scale(1.02)` + `--shadow-lift` retirados): la
+   física la habían fijado `#217` §9.4 (el CTA del armazón no salta) y `#303` (la pegatina
+   responde con el color). Queda la **pisada** al pulsar (`:active` → `translateY(1px)`), que es
+   el tacto que `.bd-btn` había estrenado. Y **el texto del hover sigue al rol**
+   (`--on-action-hover`): eso RETIRA la excepción que `ActionFillTest::EXCEPTIONS` enumeraba y su
+   ficha de `DEUDA.md` (con marca oscura, el `--fg` de antes era tinta sobre tinta).
+3. **`.bd-btn` absorbida** (su par pasa a `.btn`/`.btn--ghost`): la lista de `ActionFillTest`
+   **encogió** con `.bd-btn--solid`, que es su regla.
+4. **Jerarquía donde había dos sólidos compitiendo** (la regla del propio sistema del cliente:
+   *un relleno de acción por pantalla*): en el 404 el primario es **Reservar** y «inicio» pasa a
+   fantasma; en mantenimiento el primario es el **teléfono** y el correo pasa a fantasma.
+5. **El bloque `.invite-*` de site.css estaba MUERTO** (el editor de invitación ANTERIOR a
+   `bd-editor`; 0 consumidores, medido con control) y se retiró ENTERO — con él se fueron la
+   única sombra literal de la hoja, el foco pintado con color de ZONA, y **cuatro excepciones**
+   de guardas (`ShapeScaleTest` ×2 · `RawColourIsNotATokenTest` ×2, que queda VACÍA).
+6. **`.bd-tab__t` ya no parte «CUMPLEAÑOS» sin guion a 390**: `overflow-wrap: anywhere` →
+   `hyphens: auto` + `break-word`. El nombre del pack lo escribe el PANEL: no hay regla de
+   longitud posible, así que parte por diccionario (medido: «CUM-PLEAÑOS», con guion).
+7. `.btn--sm` deja sus dos literales (`10px 16px`/`13px`) por `--sp-*`/`--fs-13`: ese texto ahora
+   obedece al mando tipográfico por instalación.
+
+**Verificación empírica** (sonda `t9-boton.mjs`, computed styles en Chrome real): el submit de
+contacto pasó de cian a `rgb(242,113,28)` (#F2711C, el naranja del cliente) con hover
+`rgb(213,99,25)` (#D56319 — **el par exacto que deriva `actionHover()`**) y `transform: none`;
+los 7 sólidos de `/precios` comparten relleno; el par del editor responde como `btn`/`btn--ghost`.
+
+⚠️ **Trampa conocida que esto NO resuelve**: el cian de `--zone-1` sigue de acento interactivo en
+el FAQ (`.faq__q` hover/open) y en piezas de `/normas` — es el tema T3 del informe («el cian sin
+rol») y se decide con el owner, no de tapadillo en una tanda de botones.
+
 ## 4. Lo que queda, y en qué orden
 
 > ⚠️ **La base de partida cambió el 2026-08-31 (`#300`)**: el owner revirtió la T1 entera y dejó
