@@ -1,0 +1,574 @@
+# [SPEC] Entrar y registrarse con Google
+
+> Estado: ⬜ **BORRADOR — pendiente del ✅ del owner.** · Abierta: 2026-09-02 · Autor: agente
+> **Cero código hasta el ✅.** Las decisiones `[DECIDIDO owner]` se tomaron en la conversación de
+> diseño del 2026-09-02 y se citan con la frase del owner cuando la hay.
+>
+> ⚠️ **Esta spec ha pasado una revisión adversarial de cinco lentes (2026-09-02) y la revisión
+> encontró OCHO bloqueantes, incluidos varios en la propia sección de «hechos medidos».** Todo lo
+> corregido lleva la marca ✱ y dice qué decía antes. **Léelo: la versión anterior afirmaba cosas
+> falsas con seguridad.**
+>
+> ▶ **Convención de esta spec**: `[MEDIDO]` = abierto y comprobado contra el código · `[LEÍDO]` = lo
+> dice un documento y **no** lo he verificado · `[RAZONADO]` = deducción, no observación.
+
+---
+
+## 1 · El problema, y por qué no es «poner un botón»
+
+**El encargo del owner**: *«Quiero 0 fricción para el cliente a la hora de registrarse. Que el
+cliente pueda registrarse con Google, o vincular una cuenta registrada con Google y poder ingresar
+tanto con Google como con su cuenta.»*
+
+El alta de hoy pide **cuatro campos** (nombre, correo, teléfono, contraseña) y **cuatro casillas**
+—privacidad, condiciones, exención y marketing— ✱ *(antes decía «tres»: el marketing también está)*,
+pasa por Turnstile y después **manda salir de la web a abrir el buzón**.
+
+Ese último paso no es teórico: el primer día de operación real **se atascó el correo saliente** y
+hubo clientes sin poder verificarse (`ESTADO.md`, incidentes del 2026-09-01). ✱ **Corrección**: la
+causa fue el límite por hora del hosting, que afecta a **todo** el correo, no solo a la verificación.
+Lo que Google elimina entero es **el síntoma para quien entra por ahí**, no el modo de fallo.
+*(Antes esta spec decía «el 100 % de ese fallo». Era retórica mal calibrada.)*
+
+Google entrega **el correo ya verificado**, el nombre y un identificador estable (`sub`). Desaparecen
+**la contraseña y el correo de verificación**. Lo que Google **no** da: teléfono y las aceptaciones.
+
+---
+
+## 2 · Objetivo
+
+1. **Un solo gesto para quien ya tiene cuenta.**
+2. **Una sola pantalla para quien no la tiene.**
+3. **Vinculación**: quien se registró con contraseña entra con Google y sigue entrando con su contraseña.
+4. **Que nadie llegue al parque sin la exención firmada por él mismo.**
+
+⚠️ El punto 4 **manda sobre el 1**. Ver §4.
+
+---
+
+## 3 · Lo medido
+
+⚠️ ✱ **La cabecera anterior decía «todo se comprobó contra el código, no se leyó en la doc», y esa
+frase era FALSA**: al menos una celda (§3.8) era un dato leído en `ENTORNOS.md` presentado como
+medido. Cada afirmación lleva ahora su marca.
+
+### 3.1 · Qué exige el alta que Google no puede dar `[MEDIDO]`
+
+`Api\V1\AuthRegistrationController::rules()` (58-89) declara **doce** reglas ✱ *(antes esta tabla
+listaba ocho y se dejaba fuera justo la que más importa)*:
+
+| Campo | Regla | ¿Lo da Google? |
+|---|---|---|
+| `name` | `required` | **Sí** |
+| `email` | `required, email:rfc` | **Sí, y verificado** |
+| `phone` | `required` | No |
+| `password` | `PasswordPolicy::rules()` | No |
+| `accept_privacy` | `accepted` | No |
+| `accept_terms` | `accepted` | No |
+| `accept_waiver` | `accepted` **solo si `isInternal()` Y hay versión publicada** (`:113-117`) | No |
+| **`waiver_document_id`** | `required_if_accepted:accept_waiver` (`:87`) | **No, y es del SERVIDOR** |
+| `marketing` | opcional | No |
+| `context` · `website` · `turnstile_token` | del flujo/anti-bot | — |
+
+⚠️ **`waiver_document_id` no es un detalle**: el servidor **solo emite la aceptación con el
+identificador que él mismo sirvió** (`:83-87`). La pantalla de §7 tiene que **servirlo y devolverlo**.
+
+⚠️ **El modo por defecto del waiver es `externo`, no `interno`** `[MEDIDO]`:
+`WaiverSettings` (50-62) cae a `MODE_EXTERNAL` sin fila válida — el estado de una instalación recién
+montada. Consecuencia en §7.
+
+### 3.2 · El esquema `[MEDIDO]` — *confirmado por la revisión*
+
+| | |
+|---|---|
+| `users.email` | `varchar(255)` **NULL permitido** + índice **UNIQUE** (`#263`) |
+| `users.password` | **NOT NULL** |
+| `users.phone` | NULL permitido |
+| `users.email_verified_at` | NULL permitido, y **NO es `fillable`** — se escribe con `forceFill` (`CustomerRegistrar:97-100`) |
+
+▶ **Ahorra una migración**: la cuenta de Google lleva contraseña **aleatoria inservible**, como ya
+hace el alta de mostrador. **`password` no se toca.**
+
+### 3.3 · La exención: la condición es la COLUMNA, no lo que Google diga `[MEDIDO]`
+
+`WaiverSigner` **89-93** ✱ *(antes decía 89-91: el `if` cierra en la 93)*:
+
+```php
+$needsVerifiedEmail = $request->declaredBy === null
+    && $request->subjectType !== WaiverSignature::SUBJECT_GUEST_MINOR;
+if ($needsVerifiedEmail && $locked->email_verified_at === null) {
+    throw new WaiverEmailUnverifiedException;
+}
+```
+
+⚠️⚠️ **Lee `$locked->email_verified_at`, la COLUMNA de la fila bloqueada — no la afirmación de
+Google.** De ahí sale el bloqueante B2 (§5.3): si el alta no escribe esa columna, **la transacción se
+cae en el caso normal**.
+
+✱ Y el método exige **tres cosas más** que la versión anterior no citaba: cuenta no anonimizada
+(`:64`), slug correcto (`:52`) y **la versión re-comprobada BAJO EL LOCK** (`:98-100`,
+`WaiverDocumentStaleException`) — ésta muerde en §5.3.
+
+▶ El aviso de la cuenta ya hace lo correcto para el estado resultante `[MEDIDO]`: sin firma y **sin**
+aceptación retenida, `account/waiver.js` devuelve «pendiente» **y ofrece firmar**, y ahí el 409
+`waiver_email_unverified` no puede dispararse.
+
+### 3.4 · Las acciones que exigen contraseña son CUATRO `[MEDIDO]`
+
+✱ *(antes esta sección medía UNA y sacaba de ella una conclusión demasiado ancha)*
+
+| Superficie | Dónde |
+|---|---|
+| Cambiar contraseña | `MeCredentialsController:42` |
+| **Cerrar las demás sesiones** | `MeCredentialsController:62` |
+| **Cambiar el correo** | `MeProfileController:43` (y `AccountProfile:102-104` la verifica) |
+| Borrar/anonimizar | `MePrivacyController` → `AccountPrivacy::anonymize()` |
+
+Una cuenta nacida con Google no puede hacer **ninguna de las cuatro** — incluida *cerrar las demás
+sesiones*, que es la palanca de «me han entrado».
+
+✱ **Y la conclusión anterior era exagerada.** Decía «no podría ejercer su derecho de supresión». La
+revisión midió que el panel anonimiza **sin contraseña** (`ViewUser:395`) y queda el canal escrito.
+Lo que se rompe es el **autoservicio**: es un obstáculo al **art. 12.2**, no una negación del art. 17.
+▶ La dependencia T2→T3 **se sostiene igual** con ese argumento más honesto.
+
+### 3.5 · El marketing no se puede retirar `[MEDIDO]` — *confirmado por cuatro vías*
+
+Ninguna ruta actualiza `marketing_opt_in`, `AccountProfile` no lo toca, y sus consumidores son
+`UserResource`, el export, la ficha del panel y `anonymize()`. Se escribe una vez en el alta.
+⇒ Se da con un clic y **no se puede retirar**; el art. 7.3 exige lo contrario. Preexistente. §9.
+
+⚠️ ✱ **Y falta la mitad del problema**: `consents` **no tiene columna de revocación** `[MEDIDO]`
+(migración `2026_05_23_000005`: `type`, `accepted_at`, `ip`, `version` y nada más). Un booleano que
+se apaga **no deja constancia de cuándo se retiró**, y `GET /me/consents` seguiría enseñando
+«marketing, aceptado el …» encima de un interruptor apagado.
+
+### 3.6 · La versión de los consentimientos no la lee nadie `[MEDIDO]` — *confirmado*
+
+`Consent::CURRENT_VERSION` se escribe y **ningún camino la lee** para re-preguntar. El mecanismo que
+su docblock promete **no existe**. No es de esta feature: ficha en `DEUDA.md`.
+
+### 3.7 · Las condiciones se aceptan SOLO en el alta `[MEDIDO]` — *confirmado*
+
+### 3.8 · Dónde viven hoy los secretos por instalación
+
+✱ **Esta sección tenía TRES afirmaciones falsas y son las que más pesaban en mi recomendación.**
+
+| Antes decía | La verdad |
+|---|---|
+| «`REDSYS_SECRET_KEY`, **y solo ése**» en el `.env` | **Falso** `[MEDIDO]`: `config/theme.php` lee `THEME_FONTS` del `.env` (clave `theme.fonts`), y **no es un secreto** — es configuración por instalación que debe sobrevivir a `config:cache` |
+| Turnstile se escribe «con `app:set-setting **--force**`» | **Falso** `[MEDIDO]`: `SetSetting::PROTECTED_KEYS` (45-49) son **tres claves y las tres de Redsys**; Turnstile no exige `--force` |
+| «el `post-deploy.sh` **ya ejecuta** `app:set-setting` para Turnstile» | **No verificado** `[LEÍDO]`: `find . -name "*post-deploy*"` y `grep -rn "set-setting" scripts/` están **vacíos** — el guion no está en el repo. La única fuente es `ENTORNOS.md:387` |
+| Turnstile es «el gemelo exacto» porque «la mitad pública tiene que llegar al navegador» | **Media verdad**: con el flujo servidor-a-servidor de §6.4 el `client_id` **no viaja al navegador**; al cliente le basta un booleano. La analogía se sostiene por el aprovisionamiento, no por esto |
+
+⚠️⚠️ **Y hay un argumento EN CONTRA de `settings` que yo no vi y está escrito en el propio repo**
+`[MEDIDO]`: `SetSetting::PROTECTED_KEYS` dice de la clave de Redsys *«vive en el vault/`.env`, no en BD:
+escribirla aquí la deja en una tabla que se vuelca en cada backup»*, y `Filament\Pages\Settings:44-45`
+declara que los secretos «viven en el vault/`.env`».
+
+⇒ **El precedente de Turnstile no es doctrina: es una desviación tolerada.** La intuición de
+`ESTADO.md` —mandar las claves al `.env`— tiene detrás el razonamiento escrito del proyecto.
+**Retiro mi recomendación anterior**: pasa a ser la pregunta Q3 con los dos argumentos delante (§15).
+
+### 3.9 · El contrato obliga en las dos direcciones `[MEDIDO]` — *confirmado*
+
+`ApiContractTest::test_every_registered_route_is_declared_in_the_contract` y su inverso.
+⇒ **Las rutas de OAuth van en `web`** (§6.4).
+
+### 3.10 · Lo que no existe todavía `[MEDIDO]`
+
+- Ni Socialite ni ningún proveedor externo en `composer.json`.
+- ✱ `POST /auth/tokens` **se menciona en la PROSA del contrato** (líneas 26 y 2259) pero **no está
+  declarado como operación** — si lo estuviera, la guarda de §3.9 estaría en rojo. *(Antes decía
+  «documentado en el contrato», lo que sugería una operación declarada.)* La conclusión no cambia:
+  **no hay app nativa**.
+- Ninguna columna, tabla ni concepto de proveedor de identidad.
+
+---
+
+## 4 · La decisión que manda: **hay pantalla intermedia**
+
+`[DECIDIDO owner, 2026-09-02]`:
+
+> *«No quiero el caso de que el usuario entre con Google y nadie acepte el descargo de
+> responsabilidad y todo sea vía tablet en persona. Me preocupa más la operativa en el parque físico
+> que online. […] Ese será el 90 % de los casos. Prefiero hacer la pantalla intermedia y se pide COMO
+> MÍNIMO el waiver 100 %.»*
+
+▶ **La lección**: *la fricción no desaparece, se muda al empleado.* Un toque ahorrado online son
+treinta segundos de un empleado por persona en hora punta — y cambia una firma **del cliente** por
+una **declarada por el operador**.
+
+⚠️ Y `#336` se construyó para **convertir una aceptación que ya existe**. Sin aceptación, el operador
+no confirma: **acredita**. Eso convierte la excepción en el caso normal.
+
+⇒ Se descarta el diseño de cero pantallas, y con él mover las condiciones al checkout y pedir el
+teléfono en la reserva. **El checkout no se toca** (§13).
+
+---
+
+## 5 · Las tres puertas
+
+### 5.1 · Entrar (vínculo existente) — cero pantallas
+
+Se busca por `(provider, provider_id)`. ✱ **Y se comprueba `isAnonymized()`**: sin eso, el camino del
+`sub` no tiene la defensa que el del correo sí tiene (hueco H4 de la revisión).
+
+### 5.2 · Vincular una cuenta existente — automática, **con tres contrapesos**
+
+`[DECIDIDO owner]`: **automática**.
+
+**La premisa sigue en pie** `[MEDIDO]`: `PasswordRecovery::requestLink()` (41-53) **no** mira
+`email_verified_at`, así que quien controla el buzón ya podía apoderarse de la cuenta con un reset.
+
+⚠️⚠️ ✱ **Pero la conclusión que saqué era FALSA.** Escribí que vincular «no abre ninguna puerta que
+no estuviera abierta». La revisión midió cuatro diferencias:
+
+| | Reset de contraseña | Vínculo con Google (como estaba diseñado) |
+|---|---|---|
+| **Duración** | Token de 60 min, un solo uso (`config/auth.php`, `passwords.users.expire`) | **No caduca nunca** |
+| **Expulsión** | `PasswordRecovery:91` llama a `revokeAllAccess()`: la víctima expulsa al atacante | **El vínculo sobrevivía** |
+| **Reversibilidad** | — | **No se podía deshacer** (desvincular exige contraseña, y no la tiene) |
+| **Detección** | La contraseña cambia: se nota | **Silencioso** |
+
+⚠️⚠️ **Y hay un ataque que el reset NO permite y el diseño anterior sí** `[MEDIDO]`: el atacante se
+registra **primero** con el correo de la víctima. `SelfSignup` crea esa cuenta **sin verificar** y es
+plenamente usable, porque `/mi-cuenta*` solo exige `auth` y no `verified` (grupo del área en `routes/web.php`, con
+el porqué de `#332`). Cuando la víctima entra con Google, la única guarda mira el `email_verified`
+**de Google** y nunca el `email_verified_at` **de la cuenta destino** ⇒ **la víctima aterriza dentro
+de la cuenta del atacante**, con los pedidos y los menores de otro.
+
+**Los tres contrapesos, que ahora son parte del diseño:**
+
+1. **La cuenta destino tiene que estar verificada.** Si no lo está, **no se vincula en silencio**: se
+   trata como alta (§5.3) o se le exige verificar. → Q2 del owner (§15).
+2. **Aviso por correo al titular en cada vinculación.** Es la única forma de que se entere, y es la
+   doctrina que el producto ya aplica en el cambio de correo (`AccountProfile:135-141`: *«al VIEJO,
+   para que el dueño se entere si esto no lo ha pedido él»*) y en `SelfSignup::handleExisting()`.
+3. **Desvincular sube a la T3.** ✱ Antes era «cuando alguien lo pida»; con un vínculo irreversible,
+   eso deja al titular sin salida.
+
+⚠️ **Y la guarda dura sigue siendo `email_verified` de Google**: si viene `false` —ocurre en algunos
+dominios de Workspace—, **no se vincula ni se crea nada**. Nunca se degrada a «el correo coincide».
+
+⚠️ La contraseña no se toca: «entrar con las dos» sale solo.
+
+### 5.3 · Registrarse — una pantalla
+
+Retorno de Google → **no se crea nada** → pantalla (§7) → al enviarla, **en una transacción**:
+
+1. `User` con contraseña aleatoria inservible, `locale`, rol **`customer`**;
+2. ✱ **`email_verified_at = now()` con `forceFill`** (no es `fillable`) — ver B2 abajo;
+3. `privacy_accepted_at`, `terms_accepted_at` y **una fila de `Consent` por tipo** — ✱ *(la versión
+   anterior decía «cuenta, identidad y firma» y se dejaba fuera todo lo que `SelfSignup:210-236`
+   escribe: sin esto los clientes de Google saldrían distintos en el panel y en el export)*;
+4. la fila de `user_identities`;
+5. la **firma** de la exención con el `waiver_document_id` que sirvió la pantalla.
+
+⚠️⚠️ **B2 · Escribir `email_verified_at` es una DECISIÓN, no un detalle.** Es lo que sostiene la
+recuperación de contraseña, y `#336` decidió expresamente **no** dejársela tocar al operador de
+puerta («acredita a la PERSONA, nunca al BUZÓN»). Aquí quien acredita es **Google**, no un empleado,
+y su afirmación es exactamente «esta persona controla este buzón». **Aun así es del owner: Q1 (§15).**
+Sin esa decisión, la transacción **no puede firmar la exención** y esta tanda no arranca.
+
+⚠️ **La carrera del texto legal**: `WaiverSigner:98-100` re-comprueba la versión **bajo el lock**. Si
+el texto se republica entre pintar la pantalla y enviarla, lanza `WaiverDocumentStaleException` ⇒ se
+**re-pinta la pantalla con el texto nuevo, sin perder lo tecleado**. No es un 500.
+
+⚠️ **Doble envío y concurrencia**: el alta se serializa y la violación de unicidad se **captura y se
+traduce**, no se deja subir como 500 — el patrón que `AccountProfile:123-133` ya usa.
+
+⚠️ No crear la cuenta hasta enviar la pantalla evita el estado «existes y no puedes hacer nada».
+
+---
+
+## 6 · El mecanismo
+
+### 6.1 · La clave es el `sub`, nunca el correo — *confirmado por la revisión*
+
+El correo se guarda como **copia** (`email_at_link`), como prueba de con qué dirección se vinculó.
+
+### 6.2 · `user_identities`, tabla propia
+
+`[DECIDIDO owner]`: *«como lo valores más profesional y robusto»*.
+
+`user_id` · `provider` · `provider_id` (el `sub`) · **UNIQUE(provider, provider_id)** ·
+`email_at_link` · `linked_at` · `linked_via` (`signup`·`login`·`account`).
+
+Razones que la revisión confirma: guarda **rastro** (prueba si alguien reclama) y deja la puerta
+abierta a **Apple**. ✱ **La tercera razón que di —«no toca el censo»— era un espejismo**: ver §11.
+
+### 6.3 · ✱ La RAÍZ DE CONFIANZA — sección NUEVA, y era el bloqueante nº 1
+
+⚠️⚠️ **La versión anterior de esta spec no decía en ninguna de sus 494 líneas cómo se comprueba que
+lo que dice Google es verdad.** Solo hablaba del `state`. Quien implementara la forma ingenua
+—descodificar el `id_token` sin verificar nada— permitiría **fabricar un token que afirme cualquier
+correo con `email_verified: true`**, y con §5.2 eso es entrar en la cuenta que se quiera.
+
+1. **Flujo**: *Authorization Code* con intercambio **servidor-a-servidor**. El navegador nunca
+   maneja un token. Si en algún momento se aceptara un `id_token` del cliente, hay que **verificar
+   firma contra las claves de Google, `aud` = nuestro `client_id`, `iss` y expiración** — y decirlo
+   aquí.
+2. **`state`**: aleatorio, en sesión, comparado al volver, **de un solo uso**. Sin `state` válido el
+   retorno **no hace nada**.
+3. **Custodia entre las dos peticiones**: el perfil (`sub`, correo, `email_verified`, nombre) vive
+   **en la sesión del servidor**, de un solo uso y **con caducidad explícita**. **Jamás en campos del
+   formulario**: si viajaran ahí, cualquiera crearía una cuenta con la identidad verificada de otro
+   — y a esa cuenta se le firma una exención probatoria. Es la doctrina que
+   `AuthRegistrationController:83-87` ya escribe para el `waiver_document_id`: *«el servidor solo
+   emite la aceptación con el identificador que él sirvió»*.
+4. El envío de la pantalla **re-lee el perfil de la sesión y lo consume**.
+
+### 6.4 · Rutas en `web`, no en la API — *confirmado*
+
+Dos rutas de navegador. No tocan el contrato ni sus dos guardas.
+⚠️ **El destino de vuelta va en sesión y se valida contra el MISMO host** (`SEC-08`).
+
+### 6.5 · ✱ Lo que el retorno tiene que hacer y yo no había escrito
+
+La versión anterior decía «encaja en el modelo que ya existe». Es cierto pero **insuficiente**: el
+único login que existe hace **dos cosas más** que el retorno de Google también debe hacer `[MEDIDO]`:
+
+- **`session()->regenerate()`** (`AuthSessionController:76`) — cierra la fijación de sesión. Aquí
+  importa **doble**, porque el `state` de §6.3 vive en esa misma sesión.
+- **`SidebarEntry::clear()` si el titular anterior era otro** (`:96`), con el daño escrito en su
+  comentario: en un dispositivo compartido, «Bob se encontraría el cajón abierto con el *pago
+  denegado* de Alice y su código de pedido». Ese servicio tiene **un único llamador** hoy.
+
+### 6.6 · ✱ Las cuentas de EQUIPO se rechazan por defecto
+
+⚠️⚠️ `[MEDIDO]`: `AdminPanelProvider` **no declara `authGuard`**, así que Filament usa el guard
+`web` — **la sesión que abriría el retorno de Google es la misma que autentica `/admin`**, sin pasar
+por `/admin/login`. Y `canAccessPanel()` recorre `User::PANEL_ROLES` (admin, staff, puerta).
+
+⇒ Dejar la Q1 «abierta» **era contestarla que sí por omisión.** En la v1 el **servicio de
+vinculación rechaza** cuentas con cualquier rol de `PANEL_ROLES`; el owner puede levantarlo (Q5).
+⚠️ La restricción vive **en el servicio, no en la interfaz**: no pintar el botón no impide nada.
+
+---
+
+## 7 · La pantalla de completar
+
+| | | |
+|---|---|---|
+| Nombre | relleno por Google, editable | Evita el «Ana G.» que a veces devuelve |
+| Correo | fijo, mostrado | Es la identidad verificada |
+| **Teléfono** | **obligatorio** | `[owner]` *«imprescindible para las reservas»* |
+| **Exención** ☐ | **obligatoria — ✱ solo en modo `interno` y con versión publicada** | En `externo`/`desactivado` **no se pinta**, y §4 se queda sin sujeto (Q6) |
+| **Condiciones** ☐ | **obligatoria** | Aceptación contractual |
+| Privacidad | **enlace visible**, no casilla | §7.1 |
+| Marketing ☐ | opcional | Q2 (§15) |
+
+✱ **La pantalla sirve y devuelve `waiver_document_id`** (§3.1).
+✱ *(La versión anterior citaba `RegisterForm.vue:76` como evidencia de que las condiciones son
+aceptación contractual. **La cita estaba mal**: ese docblock es de `acceptWaiver`, no de
+`acceptTerms` — y es además la evidencia de que la casilla del waiver solo existe con texto
+publicado.)*
+
+### 7.1 · Por qué la privacidad deja de ser casilla
+
+El RGPD no pide que se «acepte» una política de privacidad: pide **informar** (art. 13), y la base
+legal de una reserva es el **contrato** (art. 6.1.b). `[DECIDIDO owner]`: *«nos ahorramos un
+checkbox»*.
+
+⚠️ ✱ **Pero quitar la casilla no puede dejar un hueco**: `SelfSignup:210-236` escribe
+`privacy_accepted_at` **y una fila de `Consent`**, que es la prueba del art. 5.2. El alta con Google
+**registra igualmente la INFORMACIÓN** (fecha, versión del documento servido, IP). Lo que desaparece
+es la casilla, no el rastro.
+
+⚠️ El aviso legal (LSSI art. 10) no es una tercera cosa que aceptar.
+
+⚠️⚠️ ✱ **Y falta un trabajo que ninguna tanda planificaba**: la política de privacidad **no menciona
+el login con Google** `[MEDIDO]` (los nueve aciertos de «google» en `LegalContent` son Maps y redes).
+Si el cumplimiento del art. 13 descansa en «el enlace es visible ahí», el documento tiene que
+describir el tratamiento y el origen de los datos (art. 14). El texto vive **en la BD de cada
+instalación** ⇒ en `playjump.es` es un paso **manual**. Q7 (§15).
+
+### 7.2 · Anti-bot
+
+**No lleva Turnstile**: quien llega ya pasó por Google. El limitador por IP sí se mantiene sobre la
+ruta de salida.
+
+---
+
+## 8 · ✱ Las acciones irreversibles — reescrita entera
+
+`[DECIDIDO owner]`: **re-autenticación con Google**.
+
+Son **cuatro** superficies (§3.4), no una. La regla no es «tener contraseña» sino **demostrar que
+sigues siendo tú**.
+
+⚠️⚠️ **El mecanismo que había escrito («la re-autenticación se haya hecho en esta petición») NO ES
+CONSTRUIBLE** `[MEDIDO]`: `DELETE /me` es un XHR JSON cuyo cuerpo es `PasswordConfirmation`, con
+`required: [current_password]` y `additionalProperties: false` (`openapi/v1.yaml:2659-2668`). Dentro
+de esa petición **no cabe un viaje de ida y vuelta a Google**.
+
+⚠️⚠️ **Y aflojar ese esquema tocaría a otro endpoint**: lo comparten `DELETE /me` (`:1312`) y
+`POST /me/sessions/revoke-others` (`:1508`). Es literalmente la lección de `#329` con el
+`EmailRequest` compartido.
+
+▶ **El mecanismo real**: un **ticket de re-autenticación de un solo uso y con caducidad**, emitido
+por el retorno de Google y consumido por la acción. Esquema **nuevo** (`Reauthentication`) en el
+contrato — **nunca** aflojando `PasswordConfirmation`.
+
+⚠️ **Desvincular sigue exigiendo contraseña** (`[DECIDIDO owner]`): es lo que impide quedarse fuera.
+▶ Y una cuenta de Google gana contraseña con «he olvidado mi contraseña», sin mecanismo nuevo.
+
+---
+
+## 9 · El marketing
+
+| Dónde | Qué |
+|---|---|
+| **Mi cuenta → Privacidad** | **Interruptor**, en los dos sentidos. Pieza nueva, obligatoria por el art. 7.3 |
+| Pantalla de completar | Casilla opcional (Q2) |
+| Alta con contraseña | Sin cambios |
+
+⚠️ **No va junto a las condiciones en una pantalla de pago** (art. 7.4: no empaquetado).
+
+⚠️⚠️ ✱ **Y el interruptor solo no cierra el 7.3**: `consents` **no tiene columna de revocación**
+(§3.5), así que apagar un booleano no deja constancia de **cuándo** se retiró, y `GET /me/consents`
+seguiría mostrando «aceptado el …» encima del interruptor apagado. ⇒ La T3 incluye **fila de retirada
+(o `revoked_at`) + el endpoint en el contrato**.
+
+---
+
+## 10 · Configuración por instalación
+
+`auth.google_client_id` y `auth.google_client_secret`. **Nunca en el repo.**
+
+- `GoogleAuth::enabled()` exige **las DOS** claves — la lección de `PublicConfigResource:76-83`.
+- Sin claves, el hueco **falla hacia invisible**, como el logotipo, el icono, el kit y la foto del menú.
+- ✱ **Dónde viven es la Q3 y ya NO tengo recomendación fuerte**: ver §3.8. El proyecto tiene escrito
+  que un secreto en `settings` **se vuelca en cada backup**, y la intuición de `ESTADO.md` (`.env`)
+  tiene ese argumento detrás.
+
+▶ **Consola de Google**: pantalla de consentimiento **externa**, ámbitos **solo `openid`, `email`,
+`profile`**, y el origen y la URI de redirección de la instalación.
+⚠️ ✱ El ámbito `profile` trae además `picture`, `given_name` y `locale`: **se descartan
+explícitamente** (art. 5.1.c, minimización).
+
+---
+
+## 11 · Impacto en invariantes
+
+| Invariante | Impacto |
+|---|---|
+| **`RGPD-01`** | ⚠️⚠️ ✱ **El `cascadeOnDelete` de §6.2 NO SE DISPARA NUNCA**: `anonymize()` **no borra la fila de `users`** (`INVARIANTES.md:73`, la FK de pedidos es RESTRICT). Purgar tiene que ser **explícito y por BORRADO**, no redacción: si se redacta, el `UNIQUE(provider, provider_id)` deja el `sub` ocupado y **esa persona no podría volver a registrarse con su Google nunca más**. Con caso propio |
+| **`RGPD-06`** | ✱ **La versión anterior decía «NO desvincula» sin distinguir, y citaba mal el carné.** `INVARIANTES.md:74`: el carné **CAE** en `revokeAllAccess()` y **sobrevive** en `revokeOtherAccess()`. El vínculo sigue el mismo criterio: **cae** con el reset y la anonimización (que es la palanca de «me han entrado»), **sobrevive** al cambio voluntario de contraseña |
+| **Art. 20 (export)** | ⚠️ ✱ `AccountPrivacy::exportFor()` **enumera claves a mano** (122-158) y no hay censo que obligue: `user_identities` **quedaría fuera en silencio**. Y `AccountExport` es `additionalProperties:false` con todo en `required` (`openapi/v1.yaml:2735-2746`) ⇒ **toca el contrato** |
+| **`SEC-06`** | No se afloja. Camino nuevo, no relajación de los existentes |
+| **`SEC-04`** | La re-autenticación de §8 es este principio aplicado a la identidad |
+| **`SEC-08`** | Destino de vuelta validado por host |
+| **`PAY-*` / `AFORO-*`** | Ninguno: el checkout no se toca |
+
+⚠️ **`CRITICAL_RE`**: `WaiverSigner` está en la lista; la feature **lo invoca y no lo modifica**.
+
+---
+
+## 12 · Los peligros
+
+| # | Peligro | Cierre |
+|---|---|---|
+| **P11** ✱ | **Token de Google no verificado** → cualquiera afirma cualquier correo | §6.3, con caso de mutación |
+| **P12** ✱ | **El atacante registró antes la cuenta** con el correo de la víctima | §5.2, contrapeso 1 |
+| P1 | `email_verified=false` y vinculamos | Guarda dura, con caso propio |
+| P2 | Clave por correo en vez de `sub` | §6.1 |
+| P3 | Cuenta anonimizada vinculable | ✱ `isAnonymized()` **en los DOS caminos**, también el del `sub` (§5.1) |
+| P4 | `state` ausente o reutilizado | Un solo uso |
+| P5 | Open-redirect | Mismo host |
+| P6 | Cuenta de Google sin autoservicio para lo irreversible | §8 |
+| P7 | El vínculo sobrevive a la anonimización | §11, **borrado explícito** |
+| P8 | Botón sin que el servidor pueda verificar nada | §10 |
+| **P13** ✱ | **Doble envío, dos pestañas, `state` consumido, cancelación en Google** | §5.3 y §6.3 |
+| P9 | Cuenta de equipo vinculada | ✱ **Rechazada por defecto** (§6.6) |
+| P10 | Cuenta de Google compartida | El `UNIQUE` lo resuelve; se eleva al owner porque aquí una cuenta lleva menores y firmas |
+
+---
+
+## 13 · Lo que NO se construye
+
+- **El checkout no se toca** (§4). Mover las condiciones al momento del contrato sigue siendo una
+  mejora real, pero es **decisión independiente**: ficha en `DEUDA.md`.
+- El mecanismo de re-preguntar consentimientos al subir de versión (§3.6): ficha.
+- PKCE / app nativa (§3.10). El `sub` y la tabla valen igual el día que exista.
+- Otros proveedores.
+- ⚠️ ✱ **La FUSIÓN de cuentas** (hueco H1): una persona con cuenta de mostrador **sin correo**
+  (`CustomerRegistrar:88`, el colegio que reserva por teléfono) no se encuentra ni por `sub` ni por
+  correo ⇒ se le crea una **segunda cuenta**, y sus pedidos, su carné, sus menores y su firma se
+  quedan en la primera. **No hay fusión en el producto y esta spec no la construye**: queda dicho con
+  su consecuencia, y la salida operativa es que el operador vincule desde el panel (futuro).
+
+---
+
+## 14 · Plan de verificación empírica
+
+1. Navegador real, los tres caminos.
+2. **La exención queda FIRMADA** al completar el alta, comprobado en `waiver_signatures` y en la puerta.
+3. **`email_verified=false`** forzado en un doble: no se crea ni se vincula nada.
+4. ✱ **P12**: cuenta creada por un tercero sin verificar + entrada con Google ⇒ **no se hereda**.
+5. **Art. 12.2 de punta a punta**: cuenta de Google → borrarla con el ticket de re-autenticación →
+   `user_identities` **borrada**.
+6. Sin claves: el botón no aparece en las doce vistas y la ruta responde 404.
+7. **Mutación** de cada guarda nueva, con control.
+
+---
+
+## 15 · Preguntas para el owner
+
+1. **✱ ¿Damos por verificado el correo al entrar con Google?** Es lo que permite firmar la exención
+   en el acto, y es lo contrario de lo que decidiste en `#336` — con la diferencia de que aquí quien
+   acredita es Google y no un empleado. **Sin esta respuesta la T2 no arranca.**
+2. **✱ ¿Vinculamos una cuenta cuyo correo nunca se verificó?** Si sí, quien entre hereda la cuenta
+   que otro creó con su dirección (P12). Si no, esa persona no puede entrar con Google hasta verificar.
+3. **✱ ¿Aviso por correo al titular en cada vinculación?** Es lo único que le permite enterarse.
+4. **✱ ¿Desvincular sube a la T3?** Hoy un vínculo no deseado no se puede quitar salvo borrando la cuenta.
+5. **¿Cuentas de equipo?** ✱ Por defecto esta spec ahora dice **no** (§6.6).
+6. **✱ ¿Qué pinta la pantalla con el waiver en `externo` o sin texto publicado?** Ahí no hay casilla
+   obligatoria y §4 se queda sin sujeto.
+7. **✱ ¿La política de privacidad se actualiza antes de la T2?** Es texto en la BD de cada instalación.
+8. **✱ El cajón no tiene sitio: quedan ~51 B de chunk y 91/35 B de payload** `[MEDIDO]`.
+   ¿Ampliamos el techo o parte de la pantalla va en carga diferida?
+9. **¿Marketing en la pantalla, o solo el interruptor?** ✱ Dato nuevo: el alta de hoy tiene **cuatro**
+   casillas, y la nueva quedaría en tres si el marketing entra.
+10. **Q3 · `settings` o `.env`** — ✱ ya sin recomendación mía: §3.8 y §10.
+11. **Texto del botón**: «Continuar con Google».
+
+---
+
+## 16 · Las tandas
+
+| | Qué | |
+|---|---|---|
+| **T1 · El mecanismo** | Migración `user_identities` · `GoogleAuth` · **la raíz de confianza de §6.3** · las rutas web con `state` · el servicio de vinculación (guarda de `email_verified`, cuenta destino verificada, **rechazo de `PANEL_ROLES`**, `isAnonymized()` en los dos caminos) · **la purga por BORRADO en `anonymize()` con su caso** · ✱ **`user_identities` en el export del art. 20 + su cambio de contrato** · ✱ **acciones de auditoría (`identities.linked`, `identities.unlinked`) declaradas en `AuditLog::ACTIONS`** —si no, `AuditLogger` lanza `LogicException`— | La prueba primero |
+| **T2 · El alta** | La pantalla, el alta que nace de ella (con **todo** lo de §5.3), el aviso de vinculación por correo, y el botón · ✱ **la medición del presupuesto del cajón ANTES de escribir**, y la partida en carga diferida si no cabe · ✱ **la CSP no admite hoy `accounts.google.com`** si se usara One Tap · ✱ el icono tetracolor de Google **choca con `IconSetAnatomyTest`** («ningún glifo teclea un color») | El caso del 90 % |
+| **T3 · Lo irreversible y el marketing** | Ticket de re-autenticación (esquema **nuevo**) para las **cuatro** superficies · **desvincular** · interruptor de marketing **+ su registro de retirada** y el endpoint | Cierra los huecos legales |
+| **T4 · El OJO del owner** | Guion de navegador con los tres caminos y con P12 | |
+
+⚠️ **T2→T3 es dependencia dura**: cada día que la T2 esté sin la T3 crea cuentas sin autoservicio
+para las cuatro acciones (art. 12.2).
+
+✱ **Menores anotados por la revisión, uno por línea**: el camino de Google no sella `last_login_at`
+ni escribe `Log::info('auth.login')`, que tienen dos consumidores (panel y export) · el correo de
+Google se normaliza con `Str::lower(trim())` como las dos puertas existentes, o el caso pasa verde en
+SQLite y se comporta distinto en MySQL · firmar en el acto multiplica firmas de un texto que
+`waiver-probatorio.md` declara **borrador**, y `retentionMonths()` devuelve `null`, o sea que **no se
+poda ninguna**.
+
+---
+
+## 17 · Revisión y decisión
+
+- [x] Revisión adversarial de cinco lentes (2026-09-02) — **8 bloqueantes, aplicados en esta versión**
+- [ ] ✅ del owner
+- [ ] Q1 · dar por verificado el correo · **bloquea la T2**
+- [ ] Q2 · vincular cuentas sin verificar
+- [ ] Q3 · aviso por correo al vincular
+- [ ] Q4 · desvincular en la T3
+- [ ] Q5 · cuentas de equipo
+- [ ] Q6 · waiver en modo `externo`
+- [ ] Q7 · política de privacidad
+- [ ] Q8 · presupuesto del cajón
+- [ ] Q9 · marketing en la pantalla
+- [ ] Q10 · `settings` vs `.env`
+- [ ] Q11 · texto del botón
