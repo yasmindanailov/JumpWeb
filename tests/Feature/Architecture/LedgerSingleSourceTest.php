@@ -40,6 +40,27 @@ class LedgerSingleSourceTest extends TestCase
         'app/Notifications/OrderConfirmation.php',
         // Fase 6 · subsistema A: la PUERTA pasa a ser una superficie del ledger (`identidad-qr-puerta.md` §4.7).
         'app/Domain/Booking/Services/GateReservationsReader.php',
+        'resources/views/livewire/admin/puerta/partials/reservation.blade.php',
+        // T3·2 del LIBRO (`specs/desglose-libro.md` §6.3.2): los lectores del panel que componían
+        // por su cuenta —tres fórmulas para el mismo dinero— pasan a pedirle el libro a `OrderBook`.
+        'resources/views/filament/orders/items-list.blade.php',
+        'resources/views/filament/admin/calendar/item-detail.blade.php',
+        'app/Filament/Pages/CalendarPage.php',
+        'app/Filament/Resources/Orders/Tables/OrdersTable.php',
+        'app/Filament/Resources/Users/RelationManagers/OrdersRelationManager.php',
+        'app/Filament/Resources/Orders/Pages/ViewOrder.php',
+        'app/Domain/Booking/Services/ReservationSlip.php',
+    ];
+
+    /**
+     * Las superficies que AÚN pueden leer el modelo viejo (`OrderLedger` · `financialSummary()` ·
+     * `ReservationFinancials` · los cubos de puerta de `Order`). **Solo encoge**: la T3·3 vacía los
+     * correos y la T3·4 retira el modelo; entonces esta lista desaparece con su test.
+     *
+     * @var list<string>
+     */
+    private const STILL_ON_THE_OLD_MODEL = [
+        'app/Notifications/OrderConfirmation.php',
     ];
 
     /**
@@ -81,10 +102,47 @@ class LedgerSingleSourceTest extends TestCase
         $this->assertSame([], $hallazgos, implode("\n", array_merge(
             ['Una superficie está componiendo el desglose por su cuenta:'],
             $hallazgos,
-            ['', '▶ Pídeselo a `Booking\Services\OrderLedger`. Ocho superficies enseñan este dinero y',
+            ['', '▶ Pídeselo a `Booking\Services\OrderBook`. Nueve superficies enseñan este dinero y',
                 '  la última vez que cada una lo compuso, 18 de 23 gestiones del panel dejaron la',
                 '  columna del cliente ilegible (`DECISIONES #127`).'],
         )));
+    }
+
+    /**
+     * **Ninguna superficie lee ya el modelo viejo** (T3·2 de `specs/desglose-libro.md` §6.3.2, guarda
+     * L): el panel, la hoja y la puerta piden el libro a `OrderBook`. Lo que se prohíbe es literal:
+     * las clases y los métodos del modelo de dos ejes (`#127`) que la T3·4 retira — hasta entonces
+     * siguen existiendo, y un `git grep` verde no distingue «nadie los usa» de «los usa una vista».
+     */
+    public function test_no_surface_reads_the_old_model(): void
+    {
+        $viejo = '/OrderLedger|OrderFinancialSummary|financialSummary\(|ReservationFinancials'
+            .'|reservationFinancialsByPrincipal|reservationGateLines|pendingAtGateLines|depositRemainderPendingByProduct'
+            .'|onlineBackingProductsCents|totalWithChangesCents|amountCollectedCents|totalFinalNeto/';
+
+        $hallazgos = [];
+        foreach (self::SURFACES as $rel) {
+            if (in_array($rel, self::STILL_ON_THE_OLD_MODEL, true)) {
+                continue;
+            }
+            if (preg_match($viejo, (string) file_get_contents(base_path($rel)), $m)) {
+                $hallazgos[] = "$rel · lee el modelo viejo: «{$m[0]}»";
+            }
+        }
+
+        $this->assertSame([], $hallazgos, implode("\n", array_merge(
+            ['Una superficie ha vuelto al modelo de dos ejes:'], $hallazgos,
+            ['', '▶ El libro es `Booking\Services\OrderBook` (`forOrder` / `forReservation`), y cada',
+                '  superficie lo TRANSCRIBE. Tres compositores del mismo dinero es como el panel y el',
+                '  cliente divergieron (`DECISIONES #127`); el libro existe para que no vuelva a pasar.'],
+        )));
+
+        // La lista de excepciones solo encoge: cada entrada tiene que seguir existiendo y seguir
+        // leyendo el modelo viejo — si dejó de hacerlo, se borra de la lista (no se deja «por si acaso»).
+        foreach (self::STILL_ON_THE_OLD_MODEL as $rel) {
+            $this->assertContains($rel, self::SURFACES, "$rel no es una superficie: no puede estar en la lista de excepciones");
+            $this->assertMatchesRegularExpression($viejo, (string) file_get_contents(base_path($rel)), "$rel ya no lee el modelo viejo: bórralo de STILL_ON_THE_OLD_MODEL");
+        }
     }
 
     /**

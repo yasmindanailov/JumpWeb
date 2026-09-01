@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\Balance;
 use App\Domain\Booking\Services\ReservationSlip;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
@@ -169,6 +170,9 @@ class ReservationSlipTest extends TestCase
             'ticket_type_id' => $this->addon->id, 'slot_id' => null,
             'quantity' => 16, 'seats' => 0, 'unit_price' => 200,
         ]);
+        // Lo facturado = las líneas (16 × 180,00 + 16 × 2,00): desde el libro (T3·2) un pedido cuyo
+        // total no es la suma de lo que nació responde «en revisión» (identidad I1), con razón.
+        $order->forceFill(['subtotal' => 291200, 'total' => 291200])->save();
         $this->attachPaidPayment($order);
 
         return [$order, $item];
@@ -364,7 +368,9 @@ class ReservationSlipTest extends TestCase
             'showPrices' => true,
         ])->render();
 
-        $this->assertStringContainsString('Total del producto', $html); // etiqueta de la línea de total
+        // El libro de la reserva con su caja de saldo (T3·2): todo pagado y visita por delante → saldado.
+        $this->assertStringContainsString('data-book-balance="settled"', $html);
+        $this->assertStringContainsString(__('admin.orders.book.balance_settled'), $html);
         $this->assertStringContainsString('€', $html);                  // sí hay importes
     }
 
@@ -534,13 +540,14 @@ class ReservationSlipTest extends TestCase
             'ticket_type_id' => $this->addon->id, 'slot_id' => null,
             'quantity' => 2, 'seats' => 0, 'unit_price' => 200,    // 2 × 2,00 € = 4,00 €
         ]);
+        $order->forceFill(['subtotal' => 14800, 'total' => 14800])->save(); // lo facturado = las líneas
+        $payment = $this->attachPaidPayment($order);                       // 148,00 por web
 
-        // Reembolso confirmado de 50,00 € sobre el principal.
-        $payment = $this->attachPaidPayment($order);
+        // Devolución confirmada de 5,00 € sobre el principal, con sus columnas (identidad I4).
         PaymentRefund::create([
             'payment_id' => $payment->id,
             'order_item_id' => $item->id,
-            'amount_cents' => 5000,
+            'amount_cents' => 500,
             'currency' => 'EUR',
             'status' => PaymentRefund::STATUS_SUCCEEDED,
             'mode' => PaymentRefund::MODE_REST,
@@ -548,15 +555,21 @@ class ReservationSlipTest extends TestCase
             'requested_at' => now(),
             'processed_at' => now(),
         ]);
+        $order->forceFill(['refund_amount_cents' => 500, 'refunded_at' => now()])->save();
 
         $slip = ReservationSlip::make($order->fresh(), $item->fresh());
 
-        // Agregados.
+        // Agregados de las LÍNEAS (qué se compró).
         $this->assertSame(14400, $slip->principalTotalCents());
         $this->assertSame(400, $slip->addonsTotalCents());
         $this->assertSame(14800, $slip->grandTotalCents());
-        $this->assertSame(5000, $slip->refundedCents());
-        $this->assertSame(0, $slip->pendingRefundCents());
+
+        // EL LIBRO de la reserva (T3·2): el Total, la devolución como liquidación y lo pagado.
+        $book = $slip->book();
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(14800, $book->totalCents);
+        $this->assertSame(-500, collect($book->settlements)->firstWhere('kind', 'refund')?->amountCents);
+        $this->assertSame(14300, $book->paidCents, '148,00 cobrados − 5,00 devueltos');
 
         // Desglose del principal: "8 invitados × 18,00 €".
         $pb = $slip->principalBreakdown();
@@ -573,18 +586,23 @@ class ReservationSlipTest extends TestCase
         $this->assertSame(200, $ab[0]['unitPriceCents']);
         $this->assertSame(400, $ab[0]['totalCents']);
 
-        // El render CON precios muestra el desglose por línea.
+        // El render CON precios muestra el desglose por línea y el libro.
         App::setLocale('es');
         $html = view('pdf.reservation-slip', ['slip' => $slip, 'showPrices' => true])->render();
         $this->assertStringContainsString('Totales del producto', $html);
         $this->assertStringContainsString('8 invitados × 18,00 €', $html);
         $this->assertStringContainsString('144,00 €', $html);
         $this->assertStringContainsString('2 × 2,00 €', $html);
+        $this->assertStringContainsString(__('tickets.journal.refund_card'), $html);
+        $this->assertStringContainsString('−5,00 €', $html);
 
-        // Cancelar el complemento (sin reembolsar) → pendiente de reembolso = su importe.
+        // Cancelar el complemento (sin reembolsar) → una línea NEGATIVA en el libro y el Total baja.
         $child->markCancelled($this->staff());
-        $slip = ReservationSlip::make($order->fresh(), $item->fresh());
-        $this->assertSame(400, $slip->pendingRefundCents());
+        $book = ReservationSlip::make($order->fresh(), $item->fresh())->book();
+        $cancel = collect($book->movements)->firstWhere('kind', 'cancel');
+        $this->assertNotNull($cancel);
+        $this->assertSame(-400, $cancel->amountCents);
+        $this->assertSame(14400, $book->totalCents);
     }
 
     public function test_pdf_shows_prominent_pending_refund_box_when_owed(): void
@@ -594,20 +612,22 @@ class ReservationSlipTest extends TestCase
         App::setLocale('es');
         [$order, $item] = $this->fullPaidReservation();
 
-        // Sin devolución pendiente → la caja NO aparece (incluso CON precios; el título solo sale
-        // en la caja renderizada; ya no hay línea de pendiente en la tabla de totales).
+        // Sin nada que devolver → la caja de saldo es la neutra («nada pendiente»), nunca la roja.
         $clean = view('pdf.reservation-slip', ['slip' => ReservationSlip::make($order->fresh(), $item->fresh()), 'showPrices' => true])->render();
-        $this->assertStringNotContainsString(__('admin.orders.slip.pending_refund'), $clean);
+        $this->assertStringContainsString('data-book-balance="settled"', $clean);
+        $this->assertStringNotContainsString('class="refund-box"', $clean);
 
-        // Cancelar el complemento cobrado online → queda pendiente de devolución.
+        // Cancelar el complemento cobrado online → el libro debe 32,00 y hay visita por delante (2099):
+        // «a devolver en el parque», en la caja roja (D-T3·7, D-T3·8).
         $item->children()->first()->markCancelled($this->staff());
         $slip = ReservationSlip::make($order->fresh(), $item->fresh());
-        $this->assertGreaterThan(0, $slip->pendingRefundCents());
+        $this->assertSame(Balance::KIND_REFUND_AT_PARK, $slip->book()->balance->kind);
+        $this->assertSame(-3200, $slip->book()->balance->cents);
 
         $html = view('pdf.reservation-slip', ['slip' => $slip, 'showPrices' => true])->render();
-        $this->assertStringContainsString('class="refund-box"', $html);                   // caja prominente
-        $this->assertStringContainsString(__('admin.orders.slip.pending_refund'), $html); // "Pendiente de devolución"
-        $this->assertStringContainsString('32,00', $html);                                // importe (16 × 2,00 €)
+        $this->assertStringContainsString('class="refund-box"', $html);                          // caja prominente
+        $this->assertStringContainsString(__('admin.orders.book.balance_refund_at_park'), $html);
+        $this->assertStringContainsString('32,00', $html);                                       // importe (16 × 2,00 €)
     }
 
     public function test_real_pdf_with_pending_refund_box_renders_without_error(): void
@@ -644,44 +664,55 @@ class ReservationSlipTest extends TestCase
         $this->assertStringNotContainsString('Redsys', $html);
     }
 
-    // ─── Presenter: "a cobrar en puerta" por reserva ─────────────────────────
+    // ─── El libro: el saldo de la reserva en la hoja ─────────────────────────
 
-    public function test_pending_at_gate_sums_extra_due_for_open_items(): void
+    public function test_a_gate_charge_on_an_open_visit_is_money_to_pay_at_the_park(): void
     {
         $order = $this->makeOrder();
-        $item = $this->makeItem($order, $this->pack, $this->makeSlot('2099-06-20', '16:00:00'), [
-            'quantity' => 16, 'seats' => 16,
-        ]);
+        $item = $this->makeItem($order, $this->pack, $this->makeSlot('2099-06-20', '16:00:00'));
+        $this->attachPaidPayment($order);                                  // 180,00 por web
+        // Una subida de precio de 24,00 desde el panel: el valor sube y el ajuste lo explica.
+        $item->update(['unit_price' => 20400]);
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
             'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => 2400, 'currency' => 'EUR',
+            'context' => ['changes' => ['unit_price_change' => ['old' => 18000, 'new' => 20400]]],
             'applied_by' => $this->staff()->id,
         ]);
 
         $slip = ReservationSlip::make($order->fresh(), $item->fresh());
+        $book = $slip->book();
 
-        $this->assertTrue($slip->hasPendingAtGate());
-        $this->assertSame(2400, $slip->pendingAtGateCents());
-        $this->assertSame('24,00 €', ReservationSlip::money($slip->pendingAtGateCents()));
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(Balance::KIND_PAY_AT_PARK, $book->balance->kind);
+        $this->assertSame(2400, $book->balance->cents);
+
+        App::setLocale('es');
+        $html = view('pdf.reservation-slip', ['slip' => $slip, 'showPrices' => true])->render();
+        $this->assertStringContainsString('class="gate-box"', $html);
+        $this->assertStringContainsString(__('admin.orders.book.balance_pay_at_park'), $html);
+        $this->assertStringContainsString('24,00 €', $html);
     }
 
-    public function test_pending_at_gate_excludes_finished_items(): void
+    public function test_a_gate_charge_on_a_finished_visit_is_settled_at_the_park(): void
     {
         $order = $this->makeOrder();
-        // Slot en el pasado → item finalizado → su extra_due se da por resuelto.
-        $item = $this->makeItem($order, $this->pack, $this->makeSlot('2000-01-01', '16:00:00'), [
-            'quantity' => 16, 'seats' => 16,
-        ]);
+        // Franja en el pasado → visita hecha → el cargo consta LIQUIDADO en el parque.
+        $item = $this->makeItem($order, $this->pack, $this->makeSlot('2000-01-01', '16:00:00'));
+        $this->attachPaidPayment($order);
+        $item->update(['unit_price' => 20400]);
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
             'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => 2400, 'currency' => 'EUR',
+            'context' => ['changes' => ['unit_price_change' => ['old' => 18000, 'new' => 20400]]],
             'applied_by' => $this->staff()->id,
         ]);
 
-        $slip = ReservationSlip::make($order->fresh(), $item->fresh());
+        $book = ReservationSlip::make($order->fresh(), $item->fresh())->book();
 
-        $this->assertFalse($slip->hasPendingAtGate());
-        $this->assertSame(0, $slip->pendingAtGateCents());
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(Balance::KIND_SETTLED, $book->balance->kind);
+        $this->assertSame(2400, collect($book->settlements)->firstWhere('kind', 'gate')?->amountCents, 'liquidado en el parque, con su fecha');
     }
 
     // ─── Presenter: datos del evento y complementos ──────────────────────────

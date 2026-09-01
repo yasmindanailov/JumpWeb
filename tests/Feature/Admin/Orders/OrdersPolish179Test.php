@@ -194,22 +194,26 @@ class OrdersPolish179Test extends TestCase
 
     public function test_list_total_pagado_match_value_first_breakdown(): void
     {
-        // Ejemplo REAL de la clienta: pagó 288,00 € online; valor final 216,00 € =
-        // 144,00 € online + 72,00 € a cobrar en el parque; 144,00 € pendientes de
-        // devolución. La lista debe ser fidedigna con el bloque del detalle:
-        // Total = 216,00 (valor final), Pagado = 144,00 (online que respalda productos).
+        // Ejemplo REAL de la clienta, contado como LIBRO (T3·2): pagó 288,00 € por 16 invitados,
+        // bajó a 8 (−144,00) y subió a 12 (+72,00). Vale 216,00; pagó 288,00; se le devuelven
+        // 72,00. La lista dice las DOS cifras del libro —Total y Pagado— y su resta es el saldo
+        // del detalle (D-T3·6). Antes decía «144,00 pagado» (lo online «que respaldaba producto»).
         $order = $this->order('JJ-VF1', Order::STATUS_PAID, 28800);
         $this->payment($order, 28800);
         $item = $this->itemWithSlot($order, now()->addDays(6)->toDateString());
-        $item->forceFill(['unit_price' => 1800, 'quantity' => 12])->save(); // charged 21600 = 216,00
+        $item->forceFill(['unit_price' => 1800, 'quantity' => 16, 'seats' => 16])->save(); // 16 × 18,00 = 288,00 al nacer
+        $item->forceFill(['quantity' => 8, 'seats' => 8])->save();
+        $order->recordEdit($item->fresh(), -14400, $this->staff(), 'item_edit',
+            ['changes' => ['quantity_change' => ['old' => 16, 'new' => 8]]]);
+        $item->forceFill(['quantity' => 12, 'seats' => 12])->save();     // charged 21600 = 216,00
         $order->recordEdit($item->fresh(), 7200, $this->staff(), 'item_edit',
-            ['changes' => ['quantity_change' => ['old' => 8, 'new' => 12]]]); // +72,00 a cobrar
+            ['changes' => ['quantity_change' => ['old' => 8, 'new' => 12]]]);
 
         $this->actingAs($this->staff())
             ->get('/admin/orders')
             ->assertOk()
-            ->assertSee('216,00')        // Total = Valor final
-            ->assertSee('144,00')        // Pagado = online que respalda productos
+            ->assertSee('216,00')        // Total del libro
+            ->assertSee('288,00')        // Pagado del libro
             ->assertDontSee('360,00');   // ya NO el "Total con cambios" bruto
     }
 

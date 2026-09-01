@@ -109,6 +109,10 @@ return [
                 'pending_gate' => 'Pendiente de cobrar en puerta: :amount €',
                 'paid' => 'Pagado: :amount € (:method)',
                 'nothing_pending' => 'Nada pendiente de cobrar',
+                // El LIBRO (T3·2): el saldo de la RESERVA por clase. «A devolver» es dinero que el
+                // empleado tiene que devolver y lleva la MISMA alerta que «a cobrar» (D-T3·8).
+                'refund_at_gate' => 'Pendiente de devolver en puerta: :amount €',
+                'under_review' => 'Dinero en revisión: el libro de este pedido no cuadra. Consúltalo en el panel antes de cobrar o devolver.',
                 // Fiesta MIXTA (T3 · E, `specs/cumple-mixto.md` §23.2): lo ESCRITO del suplemento —
                 // es lo que se cobra (`PAY-19`) y ya está sumado dentro de `pending_gate`. Desde la
                 // T4, también el DESCUENTO (neto con signo) y el «a tu favor», que se liquida en mano.
@@ -452,13 +456,9 @@ return [
             'guardian_label' => 'Padre/madre o tutor legal',
             'client_label' => 'Nombre del cliente',
             'prepared_check' => 'Preparado',
-            'pending_at_gate' => 'A cobrar en puerta',
             // #225: el resto de la señal (no cobrado online) en el breakdown de la caja.
-            'deposit_remainder_line' => 'Resto de la señal',
             // Caja prominente de devolución pendiente (#200), simétrica a la de
             // "A cobrar en puerta" — solo si queda algo por devolver.
-            'pending_refund' => 'Pendiente de devolución',
-            'pending_refund_caption' => 'Importe pagado de más (por una reducción, una cancelación o un cambio a un precio menor), pendiente de devolver al cliente.',
             'cancelled_notice' => 'Reserva cancelada',
             // Fiesta MIXTA (T3 · E): la cabecera del bloque; las líneas y avisos reutilizan
             // `admin.orders.mixed_party.*` para que la hoja y la ficha no puedan divergir.
@@ -1236,75 +1236,46 @@ return [
         // necesita ver SIEMPRE el desglose principal + complementos + total
         // del producto, en una sección agregada abajo (separada de inventario).
         'item_financial' => [
-            // Sub-fase 7.2e.1bis5 (decisión #158, punto 4 feedback): título
-            // explícito del bloque para diferenciar de "Totales del pedido".
+            // T3·2 del LIBRO: las LÍNEAS de producto (qué se compró) siguen aquí; el dinero movido lo
+            // pintan las claves `book.*`. `deposit_remainder_line` la lee aún `Order::reservationGateLines`
+            // (el modelo viejo, oráculo hasta la T3·4).
             'heading' => 'Totales del producto',
             'principal' => 'Producto principal',
             'addons' => 'Complementos',
             'total' => 'Total del producto',
-            // Robustez del desglose (#196): desglose detallado y consistente del
-            // "Total del producto" → pagado online + lo de puerta (pendiente o cobrado).
-            'paid_online' => 'Pagado online',
-            'at_gate' => 'Falta por cobrar',
-            // #225 F2: línea ↳ del resto de la señal dentro de "A cobrar en el parque"
-            // (la card del producto, espejo del bloque del pedido order_financial).
             'deposit_remainder_line' => 'Resto de la señal',
-            // Unificado con el bloque del pedido (order_financial.pagado_puerta). T5 · D9
-            // (`cumple-mixto.md` §25.3): «Liquidado» y no «Pagado» — el cargo se da por resuelto al
-            // pasar la visita, pero nadie registra el cobro y el rótulo no puede afirmarlo.
-            'collected_at_gate' => 'Liquidado en el parque',
-            'refunded_label' => 'Devuelto',
-            'pending_refund_label' => 'Pendiente de devolución',
-            // Robustez del desglose (#198): explica el PORQUÉ del pendiente en la card.
-            'pending_refund_caption' => 'El cliente pagó de más por un cambio en este producto (una reducción de cantidad, una cancelación o un cambio a un precio menor) y está pendiente de devolvérselo.',
-
-            // Claves legacy de 7.2e.1bis (badges sueltos arriba); se conservan
-            // por compat retro si algún partial las usa todavía.
-            'refunded' => '↩ Devuelto: −:amount €',
-            'pending_refund' => '⚠ Pendiente reembolso: :amount €',
         ],
 
         // Sub-fase 7.2e.1bis5 (decisión #158, punto 4 feedback): bloque
         // compacto de totales DEL PEDIDO al final de la card Resumen,
         // diferenciado del "item_financial" del sub-card de cada producto.
+        // EL LIBRO del pedido (`DECISIONES #305`; T3·2 de `specs/desglose-libro.md` §6.3.2): el
+        // panel, la hoja y la puerta pintan `Booking\Services\OrderBook`. Las ETIQUETAS de cada
+        // línea (movimientos y liquidaciones) las compone el dominio en `tickets.journal.*` —las
+        // mismas que lee el cliente—; aquí viven solo los títulos y los rótulos del SALDO, en
+        // tercera persona, que es la voz del operador.
+        'book' => [
+            'movements' => 'Movimientos',
+            'settlements' => 'Pagos y devoluciones',
+            'total' => 'Total',
+            'paid' => 'Pagado',
+            // El saldo por CLASE (spec §4.4): la clase la decide el libro; el rótulo la nombra.
+            'balance_pay_at_park' => 'A pagar en el parque',
+            'balance_refund_at_park' => 'A devolver en el parque',
+            'balance_refund_pending' => 'Pendiente de devolución',
+            'balance_pay_online' => 'Pendiente de pagar por web',
+            'balance_rest_at_park' => '+ :amount en el parque',
+            'balance_settled' => 'Nada pendiente',
+            'balance_expired' => 'Caducado sin cobro',
+            'balance_under_review' => 'En revisión: el libro no cuadra',
+        ],
+
         'order_financial' => [
+            // T3·2 del LIBRO (`specs/desglose-libro.md` §6.3.2): el bloque «Totales del pedido» pinta
+            // `OrderBook` con las claves `book.*`; de los canales de dos ejes quedan el título y el aviso.
             'heading' => 'Totales del pedido',
-            // ⚠️⚠️ El desglose NO CIERRA (`DECISIONES #132`). Al operador se le ENSEÑA —es quien
-            // puede arreglarlo—; al cliente se le oculta la descomposición y se le da una frase
-            // honesta. Hasta esa decisión no se enteraba ninguno de los dos.
             'no_cuadra_title' => 'Este desglose no cuadra.',
             'no_cuadra_body' => 'Las cifras de abajo no cierran entre sí, así que alguna es falsa: revisa los pagos, los reembolsos y los ajustes de este pedido antes de fiarte de ellas. El cliente NO ve este desglose: ve el importe que se le cobró y un aviso de que lo estamos revisando.',
-            // 7.2e.3 (pulido #168): diferencia pendiente de cobrar en el parque
-            // por una edición del producto que subió el importe.
-            'pending_at_gate' => 'Falta por cobrar',
-            'pending_at_gate_caption' => 'Importe a cobrar en recepción al llegar (resto de la señal y/o diferencias por cambios en los productos).',
-            // #225: el resto de la señal (lo no cobrado online) como línea ↳ del «A cobrar en el parque».
-            'deposit_remainder_line' => 'Resto de la señal',
-            // Robustez del desglose (#196): devolución debida aún no procesada
-            // (reducción/cancelación con reembolso fallido o pendiente) + total
-            // final neto = lo que el cliente acaba pagando (= valor de productos).
-            'pendiente_devolucion' => 'Pendiente de devolución',
-            'pendiente_devolucion_caption' => 'El cliente pagó de más por un cambio en el pedido (una reducción de cantidad, una cancelación o un cambio a un precio menor) y está pendiente de devolvérselo.',
-            // Rediseño valor-primero (sesión 2026-06-06): el bloque del pedido pasa a
-            // ser la SUMA de las cards de producto, con el MISMO vocabulario →
-            // Valor final = Pagado online + A cobrar en el parque + Liquidado en el parque.
-            'valor_final' => 'Valor final del pedido',
-            'pagado_online' => 'Pagado online',
-            // P1/P10: si el cobro fue manual (efectivo/datáfono) y no por la web, no se dice «online».
-            'cobrado_manual' => 'Cobrado (efectivo/datáfono)',
-            // ⚠️ Los tres conceptos que la tanda B añade (`DECISIONES #127`). MISMOS conceptos que
-            // ve el cliente, en tercera persona — que es la voz del operador y no se toca.
-            'pendiente_online' => 'Pendiente de cobro online',
-            'compensado' => 'Compensación devuelta',
-            'cobrado_web' => 'Cobrado por web (extracto)',
-            // T5 · D9: «Liquidado», no «Pagado» — mismo motivo que item_financial.collected_at_gate.
-            'pagado_puerta' => 'Liquidado en el parque',
-            // Ancla del importe bruto pagado por web (conciliación con el banco),
-            // en el detalle de "Pendiente de devolución".
-            'pendiente_devolucion_caption_web' => 'El cliente pagó :total por web; tras una reducción, una cancelación o una bajada de precio se le devuelven :pendiente.',
-            // #171→`#154`: las etiquetas compactas de las sub-líneas del desglose VIAJAN AL CLIENTE
-            // (gate_lines del ledger), así que viven en `tickets.*` con sus tres idiomas — aquí solo
-            // había español y un cliente EN/FR recibía la clave en crudo (medido por HTTP).
         ],
 
         // Razones de bloqueo per-item (compartidas entre cancel_item y refund_item).

@@ -827,8 +827,8 @@ class ModuleContractsTest extends TestCase
 
                 return [new GateReservation(
                     orderId: 1, orderCode: 'R-DOBLE', orderItemId: 99, date: '2026-07-15', timeWindow: '10:00–11:00',
-                    productName: 'Doble', isEntry: true, quantity: 2, addons: ['1 × Calcetines'], paidOnlineCents: 1234,
-                    pendingGateCents: 56, chargeMethod: 'redsys', paidAt: null, createdAt: '2026-07-01T10:00:00+00:00',
+                    productName: 'Doble', isEntry: true, quantity: 2, addons: ['1 × Calcetines'], paidCents: 1234,
+                    balanceKind: 'pay_at_park', balanceCents: 56, chargeMethod: 'redsys', paidAt: null, createdAt: '2026-07-01T10:00:00+00:00',
                 )];
             }
         };
@@ -839,8 +839,9 @@ class ModuleContractsTest extends TestCase
         $this->assertSame(1, $reservations->calls, 'la ficha tiene que pedirle las reservas a Booking por el contrato');
         $this->assertSame([$holder->id, '2026-07-13', '2026-07-17'], $reservations->args, 'la ventana ±N la calcula Identity y viaja por el contrato');
         $this->assertSame('R-DOBLE', $profile->today_reservations[0]['order_code']);
-        $this->assertSame(1234, $profile->today_reservations[0]['paid_online_cents']);
-        $this->assertSame(56, $profile->today_reservations[0]['pending_gate_cents']);
+        $this->assertSame(1234, $profile->today_reservations[0]['paid_cents']);
+        $this->assertSame('pay_at_park', $profile->today_reservations[0]['balance_kind'], 'la CLASE del saldo viaja por el contrato: la puerta pinta por clase');
+        $this->assertSame(56, $profile->today_reservations[0]['balance_cents']);
         $this->assertSame([], $profile->today_reservations[0]['minors'], 'un ítem que no existe no tiene menores asignados');
         $this->assertSame([], $profile->window);
     }

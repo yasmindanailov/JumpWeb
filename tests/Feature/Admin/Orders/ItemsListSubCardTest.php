@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -112,9 +113,10 @@ class ItemsListSubCardTest extends TestCase
         //  - SIN toggle preparado.
         //  - CON botón Gestionar (consulta histórica + reembolso en su pie, #171).
         $admin = $this->admin();
-        $order = $this->makePaidOrder();
-        $this->attachPaidPayment($order);
-        $item = $this->attachActiveItem($order);
+        $order = $this->makePaidOrder();            // 24,00 facturados…
+        $item = $this->attachActiveItem($order);    // …dos líneas de 12,00 (el libro exige que cuadre)
+        $this->attachActiveItem($order);
+        $this->attachPaidPayment($order);           // 24,00 cobrados por web
         $item->markCancelled($admin);
 
         $response = $this->actingAs($admin)
@@ -135,9 +137,11 @@ class ItemsListSubCardTest extends TestCase
         $response->assertSee(__('admin.orders.item_detail.btn_open'));
         // Visual tachado.
         $response->assertSee('line-through', escape: false);
-        // Línea "Pendiente de devolución" presente (importe del item entero pendiente).
-        // #198: la etiqueta se unificó a "Pendiente de devolución".
-        $response->assertSee(__('admin.orders.item_financial.pending_refund_label'));
+        // El LIBRO de la reserva cancelada (T3·2): la cancelación como línea negativa y el saldo de clase
+        // «pendiente de devolución» —esta reserva ya no tiene visita: el operador decide el canal—.
+        $response->assertSee('data-book-balance="refund_pending"', escape: false);
+        $response->assertSee(__('admin.orders.book.balance_refund_pending'));
+        $response->assertSee('−12,00 €', escape: false);
     }
 
     public function test_banner_appears_for_non_operational_order(): void
@@ -145,18 +149,24 @@ class ItemsListSubCardTest extends TestCase
         // Order cancelled CON deuda → banner de coherencia (`#152`): ya NO dice «reembolsar no
         // aplica» — dice CUÁNTO se debe y que se devuelve POR LÍNEA. Cancelar sí sigue bloqueado.
         $order = $this->makePaidOrder();
+        $item = $this->attachActiveItem($order);
+        $this->attachActiveItem($order);           // 2 × 12,00 = los 24,00 facturados
+        $this->attachPaidPayment($order);          // 24,00 cobrados por web
+        // Cancelado COMO lo cancela el panel: el estado Y sus líneas.
         $order->status = Order::STATUS_CANCELLED;
         $order->save();
-        $this->attachPaidPayment($order);
-        $item = $this->attachActiveItem($order);
+        $order->cancelLiveItems($this->admin());
 
         $response = $this->actingAs($this->staffWithFullItemPermissions())
             ->get('/admin/orders/'.$order->code)
             ->assertOk();
 
         // Banner de deuda, con el importe delante (`#152`). El texto viejo («reembolsar ya no
-        // aplica») era el cartel del callejón que `#150` midió.
-        $pendiente = number_format($order->fresh()->financialSummary()->pendienteDevolucion() / 100, 2, ',', '.').' €';
+        // aplica») era el cartel del callejón que `#150` midió. El importe lo dice el LIBRO (T3·2):
+        // el saldo del pedido, de clase devolución.
+        $owed = OrderBook::forOrder($order->fresh(['payments.refunds', 'adjustments', 'items.slot', 'items.ticketType']))->owedToCustomerCents();
+        $this->assertSame(2400, $owed, 'guarda del escenario: se cobraron 24,00 y no queda producto');
+        $pendiente = number_format($owed / 100, 2, ',', '.').' €';
         $response->assertSee(__('admin.orders.item_actions.banner.order_cancelled_with_debt', ['pendiente' => $pendiente]));
         $response->assertDontSee(__('admin.orders.item_actions.banner.order_cancelled'));
 
@@ -171,10 +181,13 @@ class ItemsListSubCardTest extends TestCase
         // Cancelado y TODO devuelto → el banner viejo sigue siendo verdad: no queda nada que
         // devolver y ninguna acción individual aplica.
         $order = $this->makePaidOrder();
+        $item = $this->attachActiveItem($order);
+        $this->attachActiveItem($order);           // 2 × 12,00 = los 24,00 facturados
+        $payment = $this->attachPaidPayment($order);
         $order->status = Order::STATUS_CANCELLED;
         $order->save();
-        $payment = $this->attachPaidPayment($order);
-        $item = $this->attachActiveItem($order);
+        $order->cancelLiveItems($this->admin());
+        $order->forceFill(['refund_amount_cents' => (int) $payment->amount, 'refunded_at' => now()])->save();
         PaymentRefund::create([
             'payment_id' => $payment->id,
             'order_item_id' => $item->id,
@@ -203,16 +216,18 @@ class ItemsListSubCardTest extends TestCase
         // badges financieros agregados (refunded + pending_refund).
         $admin = $this->admin();
         $order = $this->makePaidOrder();
-        $payment = $this->attachPaidPayment($order);
-        $pack = $this->attachActiveItem($order);                          // 1200 €
-        $addonA = $this->attachAddon($order, $pack);                       // 200 €
-        $addonB = $this->attachAddon($order, $pack);                       // 200 €
+        $pack = $this->attachActiveItem($order);                          // 12,00
+        $addonA = $this->attachAddon($order, $pack);                       // 2,00
+        $addonB = $this->attachAddon($order, $pack);                       // 2,00
+        $order->forceFill(['subtotal' => 1600, 'total' => 1600])->save(); // lo facturado = las líneas
+        $payment = $this->attachPaidPayment($order);                      // 16,00 por web
 
-        // Refund parcial del pack (50€) para que aparezca "Devuelto".
+        // Devolución parcial sobre el pack (5,00) para que aparezca la línea de devolución.
+        $order->forceFill(['refund_amount_cents' => 500, 'refunded_at' => now()])->save();
         PaymentRefund::create([
             'payment_id' => $payment->id,
             'order_item_id' => $pack->id,
-            'amount_cents' => 5000,
+            'amount_cents' => 500,
             'currency' => 'EUR',
             'status' => PaymentRefund::STATUS_SUCCEEDED,
             'mode' => PaymentRefund::MODE_REST,
@@ -228,18 +243,18 @@ class ItemsListSubCardTest extends TestCase
             ->assertOk();
 
         // Bloque de totales DESGLOSADO por línea (principal + cada complemento con su precio
-        // unitario "cantidad × precio") + total.
+        // unitario "cantidad × precio") y debajo EL LIBRO de la reserva (T3·2): su Total.
         $response->assertSee(__('admin.orders.item_financial.principal'));
-        $response->assertSee(__('admin.orders.item_financial.total'));
+        $response->assertSee(__('admin.orders.book.total'));
 
-        // Importes: principal=12,00 €; cada complemento 1 × 2,00 € = 2,00 €; total=16,00 €.
+        // Importes: principal=12,00 €; cada complemento 1 × 2,00 € = 2,00 €; Total=16,00 €.
         $response->assertSee('12,00 €');
         $response->assertSee('2,00 €');
         $response->assertSee('16,00 €');
 
-        // Badge "Devuelto" con el importe (50€ = 50,00 €).
-        $response->assertSee(__('admin.orders.item_financial.refunded_label'));
-        $response->assertSee('−50,00 €', escape: false);
+        // La devolución es una LÍNEA del libro, con la etiqueta que compone el dominio y su signo.
+        $response->assertSee(__('tickets.journal.refund_card'));
+        $response->assertSee('−5,00 €', escape: false);
     }
 
     public function test_totals_section_shows_online_and_gate_split_for_gate_charge(): void
@@ -248,17 +263,21 @@ class ItemsListSubCardTest extends TestCase
         // el "Total del producto" se desglosa en pagado online + a cobrar en el parque.
         $admin = $this->admin();
         $order = $this->makePaidOrder();
-        $this->attachPaidPayment($order);
         $item = $this->attachActiveItem($order);          // 1 × 12,00
-        $item->forceFill(['quantity' => 2])->save();      // ahora vale 24,00
+        $order->forceFill(['subtotal' => 1200, 'total' => 1200])->save();
+        $this->attachPaidPayment($order);                 // 12,00 por web
+        $item->forceFill(['quantity' => 2, 'seats' => 2])->save();      // ahora vale 24,00
         $order->recordEdit($item->fresh(), 1200, $admin, 'item_edit', ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
 
         $response = $this->actingAs($admin)->get('/admin/orders/'.$order->code)->assertOk();
 
-        $response->assertSee(__('admin.orders.item_financial.paid_online'));
-        $response->assertSee(__('admin.orders.item_financial.at_gate'));
-        $response->assertSee('24,00 €'); // total del producto
-        $response->assertSee('+12,00 €', escape: false); // a cobrar en el parque
+        // El libro de la reserva: la subida como línea de valor con su signo, el cobro, y el saldo
+        // de clase «a pagar en el parque» (ya no un canal «falta por cobrar»).
+        $response->assertSee(__('tickets.journal.paid_online'));
+        $response->assertSee('+12,00 €', escape: false);          // la subida
+        $response->assertSee('24,00 €');                          // Total
+        $response->assertSee('data-book-balance="pay_at_park"', escape: false);
+        $response->assertSee(__('admin.orders.book.balance_pay_at_park'));
     }
 
     public function test_totals_section_shows_deposit_remainder_breakdown_line(): void
@@ -267,23 +286,31 @@ class ItemsListSubCardTest extends TestCase
         // reserva de la que solo se cobró la señal online muestra la línea «Resto de la señal».
         $admin = $this->admin();
         $order = $this->makePaidOrder();
-        $order->forceFill(['subtotal' => 1200, 'total' => 1200])->save(); // = valor del item (sin pendiente devolución)
-        $this->attachPaidPayment($order);
+        $order->forceFill(['subtotal' => 1200, 'total' => 1200])->save(); // = valor del item
         $item = $this->attachActiveItem($order);                          // valor 12,00
-        // Señal de 2,00 cobrada online → 10,00 de resto a cobrar en el parque.
+        // Señal de 2,00 cobrada online → 10,00 de resto a pagar en el parque.
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
             'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => 1000, 'currency' => 'EUR', 'applied_by' => $admin->id,
         ]);
+        // El cobro es la SEÑAL (lo que la línea aporta online), no el total: si no, el libro no cuadra.
+        Payment::create([
+            'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
+            'amount' => 200, 'currency' => 'EUR', 'provider' => 'redsys',
+            'status' => Payment::STATUS_PAID, 'paid_at' => now(),
+            'gateway_order' => str_pad((string) (++$this->paymentCounter + 100000), 10, '0', STR_PAD_LEFT),
+        ]);
 
         $response = $this->actingAs($admin)->get('/admin/orders/'.$order->code)->assertOk();
 
-        $response->assertSee(__('admin.orders.item_financial.at_gate'));               // agregado
-        $response->assertSee(__('admin.orders.item_financial.deposit_remainder_line')); // ↳
-        $response->assertSee(__('admin.orders.item_financial.paid_online'));            // señal cobrada
-        $response->assertSee('+10,00 €', escape: false);                                // resto a puerta
-        $response->assertSee('2,00 €');                                                 // señal online
+        // El libro de la reserva: la señal cobrada como cobro, y el resto como saldo «a pagar en el
+        // parque» — ya no una sub-línea «Resto de la señal» bajo un canal.
+        $response->assertSee(__('tickets.journal.paid_online'));                       // la señal cobrada
+        $response->assertSee('+2,00 €', escape: false);
+        $response->assertSee('data-book-balance="pay_at_park"', escape: false);
+        $response->assertSee(__('admin.orders.book.balance_pay_at_park'));
+        $response->assertSee('10,00 €');                                                // el resto
     }
 
     public function test_addon_item_does_not_render_action_icons(): void

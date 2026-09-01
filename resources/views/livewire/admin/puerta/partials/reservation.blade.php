@@ -56,19 +56,32 @@
         </div>
     @endif
 
-    {{-- El dinero SALE del ledger (`OrderLedger`), nunca se recompone aquí (§4.7). Y «pendiente de
-         cobrar en puerta» no es opcional: con sistema de señal, si el empleado no lo ve, el negocio
-         no cobra. Por eso es la única línea de la tarjeta con tratamiento de ALERTA. --}}
-    @if ((int) $r['pending_gate_cents'] > 0)
+    {{-- El dinero SALE del LIBRO de la reserva (`OrderBook`, `DECISIONES #305`; T3·2), nunca se
+         recompone aquí, y se pinta por CLASE (D-T3·8): «pendiente de cobrar» no es opcional —con
+         sistema de señal, si el empleado no lo ve, el negocio no cobra— y «pendiente de devolver» es
+         dinero que el empleado tiene que devolver: las dos llevan tratamiento de ALERTA. Y un libro
+         que no cuadra NUNCA dice «nada pendiente». `?? …` por los snapshots Livewire de antes de un
+         despliegue (ver arriba). --}}
+    @php
+        $balanceKind = (string) ($r['balance_kind'] ?? 'under_review');
+        $balanceCents = (int) ($r['balance_cents'] ?? 0);
+    @endphp
+    @if ($balanceKind === 'pay_at_park')
         <p class="gate-res__pending" data-gate-pending>
-            {{ __('admin.puerta.validar.profile.pending_gate', ['amount' => Money::amount((int) $r['pending_gate_cents'])]) }}
+            {{ __('admin.puerta.validar.profile.pending_gate', ['amount' => Money::amount($balanceCents)]) }}
         </p>
-    @else
+    @elseif ($balanceKind === 'refund_at_park' || $balanceKind === 'refund_pending')
+        <p class="gate-res__pending" data-gate-refund>
+            {{ __('admin.puerta.validar.profile.refund_at_gate', ['amount' => Money::amount(-$balanceCents)]) }}
+        </p>
+    @elseif ($balanceKind === 'settled')
         <p class="gate-res__settled">{{ __('admin.puerta.validar.profile.nothing_pending') }}</p>
+    @else
+        <p class="gate-res__pending" data-gate-under-review>{{ __('admin.puerta.validar.profile.under_review') }}</p>
     @endif
 
     <p class="gate-res__paid">
-        {{ __('admin.puerta.validar.profile.paid', ['amount' => Money::amount((int) $r['paid_online_cents']), 'method' => $method]) }}
+        {{ __('admin.puerta.validar.profile.paid', ['amount' => Money::amount((int) ($r['paid_cents'] ?? 0)), 'method' => $method]) }}
         <span class="gate-res__sep" aria-hidden="true"></span>{{ __('admin.puerta.validar.profile.booked_on', ['when' => DisplayTime::format($r['created_at'], 'd/m/Y H:i')]) }}@if ($r['paid_at'])<span class="gate-res__sep" aria-hidden="true"></span>{{ __('admin.puerta.validar.profile.paid_on', ['when' => DisplayTime::format($r['paid_at'], 'd/m/Y H:i')]) }}@endif
     </p>
 

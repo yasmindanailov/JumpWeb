@@ -275,10 +275,8 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
             ['tickets.ledger.paid_at_gate', 'es', ['Pagado', 'Cobrado']],
             ['tickets.ledger.paid_at_gate', 'en', ['Paid', 'Collected']],
             ['tickets.ledger.paid_at_gate', 'fr', ['Payé']],
-            ['admin.orders.item_financial.collected_at_gate', 'es', ['Pagado', 'Cobrado']],
-            ['admin.orders.item_financial.collected_at_gate', 'zh_CN', ['收取', '支付']],
-            ['admin.orders.order_financial.pagado_puerta', 'es', ['Pagado', 'Cobrado']],
-            ['admin.orders.order_financial.pagado_puerta', 'zh_CN', ['收取', '支付']],
+            // (Las dos claves del panel que decían «Liquidado» murieron con la T3·2: el panel pinta
+            // `tickets.journal.gate`, vigilada arriba.)
             // T2 del libro: la línea `gate` hereda la regla — y la conserva cuando `ledger.*` se retire (T3).
             ['tickets.journal.gate', 'es', ['Pagado', 'Cobrado']],
             ['tickets.journal.gate', 'en', ['Paid', 'Collected']],

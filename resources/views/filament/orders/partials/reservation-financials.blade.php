@@ -1,109 +1,84 @@
 @php
     /**
-     * Desglose financiero DETALLADO de una reserva (Totales del producto), fuente
-     * de render compartida por la sub-card del pedido y el modal del calendario
-     * (panel). Recibe un value object {@see \App\Domain\Booking\Services\ReservationFinancials} →
-     * mismos números en todas las superficies.
+     * EL LIBRO, pintado (`DECISIONES #305`; T3·2 de `specs/desglose-libro.md` §6.3.2).
      *
-     * @var \App\Domain\Booking\Services\ReservationFinancials $rf
-     * @var bool $struck  tachar el total (item principal cancelado)
-     * @var list<array{label:string, amount:int}> $gateLines  desglose ↳ de «A cobrar en el
-     *      parque» de la reserva (#225 F2): cargos de edición + «Resto de la señal». Su Σ ==
-     *      `$rf->aCobrarPuerta` (ver {@see \App\Domain\Booking\Models\Order::reservationGateLines()}). Vacío =
-     *      sin desglose (degrada a solo el agregado).
+     * Un solo pintor para las tres superficies del panel: el bloque «Totales del pedido» (el libro
+     * del PEDIDO), la sub-tarjeta de cada reserva y el modal del calendario (el libro de la
+     * RESERVA). Recibe un {@see \App\Domain\Booking\Services\OrderBook} ya resuelto y lo TRANSCRIBE:
+     * movimientos (cada uno con su signo y su fecha) → Total → pagos y devoluciones → Pagado → el
+     * saldo con su clase. **No compone ni decide un importe** (D1: las nueve superficies enseñan el
+     * MISMO libro; `LedgerSingleSourceTest`). Las etiquetas de cada línea las trae el libro
+     * (`tickets.journal.*`, las mismas que lee el cliente); aquí viven solo los títulos y los
+     * rótulos del saldo (`admin.orders.book.*`).
+     *
+     * D-T3·1: el libro se enseña ENTERO en cuanto el bloque está a la vista, sin un segundo «ver
+     * más» — una suma o resta sencilla de varias líneas no se pliega. D-T3·2: cada línea con su
+     * signo; el Total y lo Pagado, sin signo. D-T3·3: con «saldado» no hay importe.
+     *
+     * Fue el value object de cinco cubos (`#196` → `#127`): el mismo dinero contado como canales
+     * que había que volver a relacionar.
+     *
+     * @var \App\Domain\Booking\Services\OrderBook $book
+     * @var bool $struck  tachar el Total (reserva cancelada)
      */
+    use App\Domain\Booking\Services\Balance;
+    use App\Domain\Booking\Services\Settlement;
+    use App\Domain\Platform\Services\Money;
+
     $struck = $struck ?? false;
-    $gateLines = $gateLines ?? [];
-    $fmt = fn (int $cents) => \App\Domain\Platform\Services\Money::format($cents);
+    $fmt = fn (int $cents): string => Money::format($cents, $book->currency);
+    $signed = fn (int $cents): string => ($cents < 0 ? '−' : '+').Money::format(abs($cents), $book->currency);
+    $kind = $book->balance->kind;
+    // El color es por ROL (D-T3·12): lo que se paga, en el naranja de «falta por cobrar»; lo que se
+    // devuelve, en el ámbar de «devuelto»; un libro que no cuadra, en peligro.
+    $balanceClass = match ($kind) {
+        Balance::KIND_PAY_AT_PARK, Balance::KIND_PAY_ONLINE => 'text-orange-600 dark:text-orange-400',
+        Balance::KIND_REFUND_AT_PARK, Balance::KIND_REFUND_PENDING => 'text-amber-700 dark:text-amber-300',
+        Balance::KIND_UNDER_REVIEW => 'text-danger-700 dark:text-danger-300',
+        default => 'text-gray-500 dark:text-gray-400',
+    };
 @endphp
 
-<div class="space-y-1">
-    <div class="flex items-center justify-between gap-3 font-semibold">
-        <span @class(['text-gray-800 dark:text-gray-200', 'line-through' => $struck])>{{ __('admin.orders.item_financial.total') }}</span>
-        <span @class(['text-gray-900 dark:text-gray-100', 'line-through' => $struck])>{{ $fmt($rf->valor) }}</span>
+<div class="space-y-1 text-xs" data-book>
+    <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.orders.book.movements') }}</div>
+    @foreach ($book->movements as $m)
+        <div class="flex items-start justify-between gap-3 pl-3" data-book-movement="{{ $m->kind }}">
+            <span class="min-w-0 text-gray-700 dark:text-gray-300">{{ $m->label }} <span class="whitespace-nowrap text-gray-400 dark:text-gray-500">· {{ $m->occurredLabel }}</span></span>
+            <span @class(['whitespace-nowrap', 'text-amber-700 dark:text-amber-300' => $m->amountCents < 0, 'text-gray-800 dark:text-gray-200' => $m->amountCents >= 0])>{{ $signed($m->amountCents) }}</span>
+        </div>
+    @endforeach
+    <div class="flex items-center justify-between gap-3 border-t border-gray-200 pt-1 text-sm font-semibold dark:border-white/10" data-book-total>
+        <span @class(['text-gray-800 dark:text-gray-200', 'line-through' => $struck])>{{ __('admin.orders.book.total') }}</span>
+        <span @class(['text-gray-900 dark:text-gray-100', 'line-through' => $struck])>{{ $fmt($book->totalCents) }}</span>
     </div>
 
-    {{-- Split del total en pagado online + lo de puerta (solo si hay actividad,
-         para no recargar un producto pagado 100% online). --}}
-    @if ($rf->hasActivity())
-        {{-- ⚠️ Solo si hay algo cobrado: un pedido SIN pagar tiene su importe en «pendiente», no
-             aquí. Publicarlo en un solo campo hacía que se leyera en pasado (`DECISIONES #127`). --}}
-        @if ($rf->pagadoOnline > 0)
-            <div class="flex items-center justify-between gap-3 pl-3 text-xs text-gray-500 dark:text-gray-400">
-                <span>{{ __('admin.orders.item_financial.paid_online') }}</span>
-                <span>{{ $fmt($rf->pagadoOnline) }}</span>
+    @if ($book->settlements !== [])
+        <div class="pt-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ __('admin.orders.book.settlements') }}</div>
+        @foreach ($book->settlements as $s)
+            @php($effective = $s->status === Settlement::STATUS_SUCCEEDED)
+            {{-- Una devolución EN CURSO o FALLIDA se lista (su etiqueta ya lo dice: la compone el libro)
+                 atenuada, y no cuenta como pagado (spec §4.4): el saldo sigue diciendo «a devolver»
+                 mientras el dinero no ha vuelto. --}}
+            <div @class(['flex items-start justify-between gap-3 pl-3', 'opacity-70' => ! $effective]) data-book-settlement="{{ $s->kind }}" data-book-settlement-status="{{ $s->status }}">
+                <span class="min-w-0 text-gray-700 dark:text-gray-300">{{ $s->label }} <span class="whitespace-nowrap text-gray-400 dark:text-gray-500">· {{ $s->occurredLabel }}</span></span>
+                <span @class(['whitespace-nowrap', 'text-amber-700 dark:text-amber-300' => $s->amountCents < 0, 'text-gray-800 dark:text-gray-200' => $s->amountCents >= 0])>{{ $signed($s->amountCents) }}</span>
             </div>
-        @endif
-        {{-- El canal que faltaba: lo que TODAVÍA no se ha cobrado online. --}}
-        @if ($rf->pendienteOnline > 0)
-            <div class="flex items-center justify-between gap-3 pl-3 text-xs font-medium text-amber-700 dark:text-amber-300">
-                <span>{{ __('admin.orders.order_financial.pendiente_online') }}</span>
-                <span>{{ $fmt($rf->pendienteOnline) }}</span>
-            </div>
-        @endif
-        {{-- Compensación: devuelto sin que desapareciera producto. Ni canal de cobro ni bajada. --}}
-        @if ($rf->compensado > 0)
-            <div class="flex items-center justify-between gap-3 pl-3 text-xs text-gray-500 dark:text-gray-400">
-                <span>{{ __('admin.orders.order_financial.compensado') }}</span>
-                <span>{{ $fmt($rf->compensado) }}</span>
-            </div>
-        @endif
-        @if ($rf->aCobrarPuerta > 0)
-            {{-- Desglose ↳ de los componentes del cargo de puerta (#225 F2): cargos de edición
-                 ("+N producto") + «Resto de la señal». Σ == aCobrarPuerta (cuadra por construcción,
-                 ver Order::reservationGateLines). #225 F3: OCULTO por defecto tras «Ver desglose»
-                 (Alpine); solo si hay líneas que mostrar. --}}
-            <div @if (count($gateLines)) x-data="{ open: false }" @endif>
-                <div class="flex items-center justify-between gap-3 pl-3 text-xs font-medium text-orange-600 dark:text-orange-400">
-                    <span>{{ __('admin.orders.item_financial.at_gate') }}</span>
-                    <span>+{{ $fmt($rf->aCobrarPuerta) }}</span>
-                </div>
-                @if (count($gateLines))
-                    <button type="button" x-on:click="open = ! open" :aria-expanded="open ? 'true' : 'false'"
-                            class="pl-3 inline-flex items-center gap-1 text-[11px] font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
-                        {{-- P2: misma etiqueta «ver más/ver menos» que el bloque del pedido (coherencia). --}}
-                        <span x-show="! open">{{ __('admin.orders.show_more') }}</span>
-                        <span x-show="open" x-cloak>{{ __('admin.orders.show_less') }}</span>
-                    </button>
-                    <div x-show="open" x-cloak class="mt-0.5 space-y-0.5">
-                        @foreach ($gateLines as $line)
-                            <div class="flex items-center justify-between gap-3 pl-6 text-[11px] text-orange-600/90 dark:text-orange-400/80">
-                                <span class="truncate">↳ {{ $line['label'] }}</span>
-                                {{-- T5 (§25.6·7): signo CONSCIENTE — el «+» clavado era de cuando toda
-                                     línea de puerta era un cargo; desde la T4 el descuento es negativa
-                                     y salía «+-4,00 €». El «−» tipográfico es el de «Devuelto». --}}
-                                <span class="whitespace-nowrap">{{ $line['amount'] < 0 ? '−' : '+' }}{{ $fmt(abs($line['amount'])) }}</span>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-        @endif
-        @if ($rf->cobradoPuerta > 0)
-            <div class="flex items-center justify-between gap-3 pl-3 text-xs text-gray-500 dark:text-gray-400">
-                <span>{{ __('admin.orders.item_financial.collected_at_gate') }}</span>
-                <span>{{ $fmt($rf->cobradoPuerta) }}</span>
-            </div>
-        @endif
+        @endforeach
     @endif
+    <div class="flex items-center justify-between gap-3 border-t border-gray-200 pt-1 text-sm font-semibold dark:border-white/10" data-book-paid>
+        <span class="text-gray-800 dark:text-gray-200">{{ __('admin.orders.book.paid') }}</span>
+        <span class="text-gray-900 dark:text-gray-100">{{ $fmt($book->paidCents) }}</span>
+    </div>
 
-    @if ($rf->devuelto > 0)
-        <div class="flex items-center justify-between gap-3 text-xs text-amber-700 dark:text-amber-300">
-            <span>{{ __('admin.orders.item_financial.refunded_label') }}</span>
-            <span>−{{ $fmt($rf->devuelto) }}</span>
-        </div>
-    @endif
-
-    @if ($rf->pendienteReembolso > 0)
-        <div class="flex items-center justify-between gap-3 text-xs font-semibold text-amber-700 dark:text-amber-300">
-            <span>{{ __('admin.orders.item_financial.pending_refund_label') }}</span>
-            {{-- T5 (`[DECIDIDO owner]`, sonda de §25.10): con «−», como el «Devuelto» de esta misma
-                 card y el bloque del pedido de al lado — era la única de las tres que iba sin signo
-                 y la misma pantalla decía −30,00 y 30,00 para el mismo concepto. --}}
-            <span>−{{ $fmt($rf->pendienteReembolso) }}</span>
-        </div>
-        <p class="text-[11px] leading-snug text-gray-500 dark:text-gray-400">
-            {{ __('admin.orders.item_financial.pending_refund_caption') }}
-        </p>
+    {{-- El SALDO, por clase (spec §4.4): la clase la decide el libro y el rótulo la nombra; el signo
+         va con la clase (a devolver, en negativo). Con «saldado» no hay importe (D-T3·3). --}}
+    <div class="flex items-center justify-between gap-3 text-sm font-semibold {{ $balanceClass }}" data-book-balance="{{ $kind }}">
+        <span>{{ __('admin.orders.book.balance_'.$kind) }}</span>
+        @if ($book->balance->cents !== 0)
+            <span class="whitespace-nowrap">{{ $book->balance->cents < 0 ? '−' : '' }}{{ $fmt(abs($book->balance->cents)) }}</span>
+        @endif
+    </div>
+    @if ($kind === Balance::KIND_PAY_ONLINE && $book->balance->restAtParkCents > 0)
+        <p class="pl-3 text-[11px] text-gray-500 dark:text-gray-400">{{ __('admin.orders.book.balance_rest_at_park', ['amount' => $fmt($book->balance->restAtParkCents)]) }}</p>
     @endif
 </div>

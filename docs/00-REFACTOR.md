@@ -2505,7 +2505,7 @@ inalcanzable por código** (se retira), y **el modelo decidido cierra sus dos id
 pedidos reales, disparando su estado imposible solo sobre los 19 de datos sucios. El riesgo NO estaba
 solo en la proyección: había cuatro defectos en el dominio que ninguna auditoría anterior construyó.
 
-### El LIBRO del pedido 🟦 — **spec ✅ del owner (`specs/desglose-libro.md`, `DECISIONES #305`) · T1 (`#306`), T2 (`#308`) y T3·1 (`#310`) EN EL ÁRBOL**
+### El LIBRO del pedido 🟦 — **spec ✅ del owner (`specs/desglose-libro.md`, `DECISIONES #305`) · T1 (`#306`), T2 (`#308`), T3·1 (`#310`) y T3·2 (`#311`) EN EL ÁRBOL**
 > **Sustituye al DESGLOSE de dos ejes de arriba en cuanto se ejecute.** `[DECIDIDO owner,
 > 2026-09-01]`: cada gestión con su línea + o − y su fecha, un Total y un SALDO que se liquida EN EL
 > PARQUE; nada se cobra ni se devuelve online post-reserva; el descuento mixto entra en el saldo; el
@@ -2544,7 +2544,16 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
         primera y la de `shows_deposit_note` sin la clase del saldo pasó en VERDE → dos casos
         nuevos. Cuatro fixtures ILEGALES legalizados (tres «pagados» sin `Payment`).
         `specs/api-v1.md` §10.octodecies (puntos 94–96).
-  - [ ] **T3·2 · panel + hoja + puerta** (§6.3, fila 2).
+  - [x] **T3·2 · panel + hoja + puerta — EJECUTADA el 2026-09-01** (spec §6.3.2 diseño · §6.3.3
+        ejecución · `DECISIONES #311`): UN pintor (`reservation-financials`) para el bloque del
+        pedido, la tarjeta de cada reserva y el calendario; las tablas con Total/Pagado del libro;
+        `ViewOrder` con `owedToCustomerCents()`; la hoja con precios = líneas + libro + UNA caja de
+        saldo; la puerta pinta por CLASE (`paidCents` + `balanceKind` + `balanceCents`). Guarda M
+        nueva (`BookSurfacesParityTest`: cuatro superficies = la lista de la API) y guarda L (nadie
+        lee el modelo viejo salvo `OrderConfirmation`, lista que solo encoge). 6 mutaciones, todas
+        muerden a la primera. ⚠️ DIEZ ficheros de tests con fixtures que el libro rechaza (pagados
+        sin cobro, totales ≠ líneas, ajustes sin cambio de valor): legalizados. Claves viejas del
+        panel/hoja retiradas (es · zh_CN). El «a tu favor» sigue hasta la T3·3.
   - [ ] **T3·3 · correos + post-form + el tope** (§6.3, fila 3; `VERIFY_CONC=1`).
   - [ ] **T3·4 · la retirada** de §4.7, `INVARIANTES` `PAY-16`/`PAY-17` reescritas, dos fichas de
         `DEUDA.md` cerradas, guion headless, la receta de las 25 acciones, ojo del owner.

@@ -8,7 +8,8 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
-use App\Domain\Booking\Services\OrderLedger;
+use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Identity\Contracts\GateProfileData;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\LegalDocumentVersion;
@@ -184,7 +185,7 @@ class GateProfileTest extends TestCase
 
     // ─── El dinero sale del LEDGER (§4.7) ─────────────────────────────────────
 
-    public function test_money_comes_from_the_ledger_per_reservation(): void
+    public function test_money_comes_from_the_book_per_reservation(): void
     {
         $holder = $this->holder();
         [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 2, self::TODAY]]);
@@ -192,28 +193,85 @@ class GateProfileTest extends TestCase
             'order_id' => $order->id, 'parent_item_id' => $item->id, 'ticket_type_id' => $this->addon->id,
             'quantity' => 2, 'unit_price' => 0, 'seats' => 0,
         ]);
-        // Un cargo pendiente en puerta sobre la línea (un cambio hecho desde el panel).
+        // Un cargo pendiente en puerta sobre la línea (un cambio hecho desde el panel): la fecha nueva
+        // vale 2,50 más por entrada, y el ajuste lo explica. Desde el libro, un ajuste sin cambio de
+        // valor no cuadra (I1) y responde «en revisión»: el fixture tiene que ser un pedido que exista.
+        $item->update(['unit_price' => 1250]);
         $order->adjustments()->create([
             'order_item_id' => $item->id, 'type' => 'edit', 'amount_cents' => 500, 'currency' => 'EUR',
             'reason' => 'gate_change_line_slot', 'applied_by' => User::factory()->create()->id,
         ]);
 
         $row = $this->profile($holder)->today_reservations[0];
-        // La puerta PINTA lo que el ledger dice; no se recompone aquí ni en el test (`LedgerSingleSourceTest`).
+        // La puerta PINTA lo que el LIBRO de la reserva dice (T3·2 de `specs/desglose-libro.md`); no se
+        // recompone aquí ni en el test (`LedgerSingleSourceTest`).
         $order->refresh()->load('adjustments', 'items.ticketType', 'items.slot', 'payments.refunds');
-        $ledger = OrderLedger::forReservation($order, $order->items->firstWhere('id', $item->id));
+        $book = OrderBook::forReservation($order, $order->items->firstWhere('id', $item->id));
 
         $this->assertSame('R-GATE001', $row['order_code']);
         $this->assertSame($item->id, $row['order_item_id']);
-        $this->assertSame($ledger->pagadoOnline, $row['paid_online_cents'], 'lo pagado que respalda la reserva, según el ledger');
-        $this->assertGreaterThan(0, $row['paid_online_cents']);
-        $this->assertSame($ledger->pendientePuerta, $row['pending_gate_cents']);
-        $this->assertSame(500, $row['pending_gate_cents'], 'lo pendiente EN PUERTA: si el empleado no lo ve, el negocio no cobra');
-        $this->assertSame($ledger->cobroMetodo, $row['charge_method'], 'el método con la palabra del ledger («desk» para efectivo/datáfono)');
+        $this->assertSame($book->paidCents, $row['paid_cents'], 'lo pagado de la reserva, según su libro');
+        $this->assertGreaterThan(0, $row['paid_cents']);
+        $this->assertSame($book->balance->kind, $row['balance_kind'], 'la CLASE del saldo la decide el libro, nunca el signo');
+        $this->assertSame(Balance::KIND_PAY_AT_PARK, $row['balance_kind']);
+        $this->assertSame($book->balance->cents, $row['balance_cents']);
+        $this->assertSame(500, $row['balance_cents'], 'lo pendiente EN PUERTA: si el empleado no lo ve, el negocio no cobra');
+        $this->assertSame($book->paymentMethod(), $row['charge_method'], 'el método con la palabra del libro («desk» para efectivo/datáfono)');
         $this->assertSame('desk', $row['charge_method']);
         $this->assertSame(['2 × Calcetines'], $row['addons']);
         $this->assertNotNull($row['paid_at']);
         $this->assertSame('10:00–11:00', $row['time_window']);
+    }
+
+    /**
+     * **Guarda N/Q de la T3·2**: una reserva a la que se le DEBE dinero se pinta como «pendiente de
+     * devolver en puerta», con la MISMA alerta que «pendiente de cobrar» — y nunca como «nada
+     * pendiente». Antes del libro la puerta solo conocía un sentido del dinero: lo que faltaba por
+     * cobrar; una bajada de cantidad la dejaba diciendo «nada pendiente» a un cliente al que había
+     * que devolverle 10,00 €. Mutación: quitar la rama de devolución de la tarjeta.
+     */
+    public function test_money_owed_to_the_customer_is_told_as_a_refund_at_the_gate_never_as_nothing_pending(): void
+    {
+        $holder = $this->holder();
+        [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 2, self::TODAY]]);
+        // Bajada de 2 a 1 desde el panel: el pedido vale 10,00 y se cobraron 20,00.
+        $item->forceFill(['quantity' => 1, 'seats' => 1])->save();
+        $order->recordEdit($item->fresh(), -1000, User::factory()->create(), 'item_edit',
+            ['changes' => ['quantity_change' => ['old' => 2, 'new' => 1]]]);
+
+        $row = $this->profile($holder)->today_reservations[0];
+
+        $this->assertSame(Balance::KIND_REFUND_AT_PARK, $row['balance_kind'], 'hay visita por delante: se devuelve EN el parque');
+        $this->assertSame(-1000, $row['balance_cents'], 'el saldo viaja con su signo');
+
+        $html = view('livewire.admin.puerta.partials.reservation', ['r' => $row])->render();
+
+        $this->assertStringContainsString('data-gate-refund', $html);
+        $this->assertStringContainsString(__('admin.puerta.validar.profile.refund_at_gate', ['amount' => '10,00']), $html);
+        $this->assertStringNotContainsString(__('admin.puerta.validar.profile.nothing_pending'), $html);
+        $this->assertStringNotContainsString('data-gate-pending', $html, 'no es dinero a COBRAR');
+    }
+
+    /**
+     * Y un libro que NO cuadra es una ALERTA en la puerta, no «nada pendiente»: el empleado tiene que
+     * saber que no puede fiarse del importe antes de cobrar o devolver (D-T3·8; la asimetría de
+     * `#132` es para el cliente, no para el operador).
+     */
+    public function test_a_book_that_does_not_close_is_an_alert_at_the_gate_not_nothing_pending(): void
+    {
+        $holder = $this->holder();
+        [$order] = $this->paidOrder($holder, [[$this->entry, 2, self::TODAY]]);
+        // El cobro registrado no coincide con lo que las líneas aportaron: la identidad de caja falla.
+        $order->payments()->first()->forceFill(['amount' => 1500])->save();
+
+        $row = $this->profile($holder)->today_reservations[0];
+        $this->assertSame(Balance::KIND_UNDER_REVIEW, $row['balance_kind']);
+
+        $html = view('livewire.admin.puerta.partials.reservation', ['r' => $row])->render();
+
+        $this->assertStringContainsString('data-gate-under-review', $html);
+        $this->assertStringContainsString(__('admin.puerta.validar.profile.under_review'), $html);
+        $this->assertStringNotContainsString(__('admin.puerta.validar.profile.nothing_pending'), $html);
     }
 
     // ─── Menores: NOMBRE de pila, edad y exención — JAMÁS los apellidos (§4.6, A·7 · `#236`) ──

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\RelationManagers;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\Orders\OrderResource;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -35,9 +36,9 @@ class OrdersRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            // Eager-load para "Total con cambios" (adjustments + items, para anular el
-            // extra_due de items cancelados) y "Pagado" (payments.refunds).
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['payments.refunds', 'adjustments', 'items']))
+            // Eager-load de lo que el LIBRO lee por fila (`OrderBook::forOrder`, T3·2): Total y
+            // Pagado son los del libro, las mismas cifras que la lista de pedidos (D-T3·6).
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['payments.refunds', 'adjustments', 'items.slot', 'items.ticketType']))
             ->columns([
                 TextColumn::make('code')
                     ->label(__('admin.orders.col_code'))
@@ -57,12 +58,12 @@ class OrdersRelationManager extends RelationManager
 
                 TextColumn::make('total')
                     ->label(__('admin.orders.col_total'))
-                    ->state(fn (Order $record): string => self::euros($record->totalWithChangesCents()))
+                    ->state(fn (Order $record): string => self::euros(OrderBook::forOrder($record)->totalCents))
                     ->alignEnd(),
 
                 TextColumn::make('amount_collected')
                     ->label(__('admin.orders.col_collected'))
-                    ->state(fn (Order $record): string => self::euros($record->amountCollectedCents()))
+                    ->state(fn (Order $record): string => self::euros(OrderBook::forOrder($record)->paidCents))
                     ->alignEnd(),
 
                 TextColumn::make('created_at')

@@ -1046,6 +1046,21 @@ class OrderInfolistEnrichedTest extends TestCase
         // valor lo da ahora "Valor final del pedido".
         $customer = User::factory()->create();
         $order = $this->makeOrderForCustomer($customer);
+        $this->attachItemWorth($order, (int) $order->total);
+        // Desde el libro (T3·2) una devolución es un HECHO con fila: el cobro y su devolución, y las
+        // columnas del pedido cuadran con ella (identidad I4). Las columnas solas eran el registro legacy.
+        $payment = Payment::create([
+            'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
+            'amount' => (int) $order->total, 'currency' => 'EUR', 'provider' => 'redsys',
+            'status' => Payment::STATUS_PAID, 'paid_at' => now(), 'gateway_order' => '0000181500',
+        ]);
+        PaymentRefund::create([
+            'payment_id' => $payment->id, 'order_item_id' => null,
+            'amount_cents' => (int) $order->total, 'currency' => 'EUR',
+            'status' => PaymentRefund::STATUS_SUCCEEDED, 'mode' => PaymentRefund::MODE_REST,
+            'gateway_order' => $payment->gateway_order, 'gateway_response_code' => PaymentRefund::REDSYS_REFUND_SUCCESS_CODE,
+            'requested_by' => $this->staff()->id, 'requested_at' => now(), 'processed_at' => now(),
+        ]);
         $order->update([
             'refunded_at' => now(),
             'refund_amount_cents' => $order->total,
@@ -1054,7 +1069,7 @@ class OrderInfolistEnrichedTest extends TestCase
         $this->actingAs($this->staff())
             ->get('/admin/orders/JJ-DETAIL1')
             ->assertOk()
-            ->assertSee(__('admin.orders.amount_refunded'))
+            ->assertSee(__('tickets.journal.refund_card')) // la línea de devolución del LIBRO
             ->assertSee('−18,15'); // Devuelto: −18,15 €
     }
 
@@ -1066,7 +1081,7 @@ class OrderInfolistEnrichedTest extends TestCase
         $this->actingAs($this->staff())
             ->get('/admin/orders/JJ-DETAIL1')
             ->assertOk()
-            ->assertDontSee(__('admin.orders.amount_refunded'));
+            ->assertDontSee(__('tickets.journal.refund_card'));
     }
 
     public function test_payments_card_renders_refund_as_sibling_event_with_type_badge(): void

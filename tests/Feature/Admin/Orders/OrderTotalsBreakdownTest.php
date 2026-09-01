@@ -9,7 +9,8 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
-use App\Domain\Booking\Services\OrderLedger;
+use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
@@ -25,10 +26,9 @@ use Tests\TestCase;
  *    clienta (cambio de cantidad "+N nombre", cambio de producto "Cambio a X",
  *    complementos "+N nombre"), con fallback limpio al nombre del item para
  *    ajustes legacy (context solo con claves o null).
- *  - El partial `order-totals` pinta:
- *      · "A cobrar en el parque" → un renglón por ajuste extra_due PENDIENTE.
- *      · "Devuelto" → un renglón por reembolso CON éxito ligado a un item
- *        (los del pedido completo / legacy no detallan renglón).
+ *  - El partial `order-totals` TRANSCRIBE el LIBRO del pedido (T3·2 de `specs/desglose-libro.md`):
+ *    movimientos con signo y fecha, Total, pagos y devoluciones con su estado, Pagado y el saldo
+ *    con su clase — comparado contra `OrderBook`, no contra literales.
  */
 class OrderTotalsBreakdownTest extends TestCase
 {
@@ -187,308 +187,251 @@ class OrderTotalsBreakdownTest extends TestCase
         );
     }
 
-    // ─── Render del partial: "A cobrar en el parque" ────────────────────
+    // ─── Render del partial: EL LIBRO del pedido (T3·2 de `specs/desglose-libro.md` §6.3.2) ──────
 
-    public function test_gate_breakdown_subline_renders_for_pending_adjustment(): void
+    /**
+     * El bloque «Totales del pedido» TRANSCRIBE el libro: cada línea de valor con su signo y su fecha,
+     * el Total, los cobros, lo Pagado y el saldo con su clase. Se compara contra
+     * `OrderBook::forOrder` —etiqueta a etiqueta— y no contra literales del panel: el blade no
+     * compone nada (`LedgerSingleSourceTest`), y lo que imprime es lo que el cliente lee en «Mis
+     * pedidos» (guarda M, `BookSurfacesParityTest`).
+     */
+    public function test_the_block_prints_the_book_of_the_order_line_by_line(): void
     {
-        $order = $this->makePaidOrder();
-        $item = $this->attachActiveItem($order); // slot futuro → no finalizado
-        OrderAdjustment::create([
-            'order_id' => $order->id,
-            'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_EDIT,
-            'amount_cents' => 2400,
-            'currency' => 'EUR',
-            'reason' => 'item_edit',
-            'context' => ['changes' => ['quantity_change' => ['old' => 1, 'new' => 3]]],
-            'applied_by' => User::factory()->create()->id,
-        ]);
+        $order = $this->lawfulPaidOrder(); // 2 × 10,00 facturados y cobrados por web
+        $a = $order->items->first();
+        $a->forceFill(['quantity' => 3, 'seats' => 3])->save();
+        $order->recordEdit($a->fresh(), 2000, User::factory()->create(), 'item_edit',
+            ['changes' => ['quantity_change' => ['old' => 1, 'new' => 3]]]);
 
+        $order = $this->reload($order);
+        $book = OrderBook::forOrder($order);
         $html = $this->renderTotals($order);
 
-        $this->assertStringContainsString('+2 '.$this->jumpType->tr('name'), $html);
-        $this->assertStringContainsString('24,00', $html);
+        $this->assertTrue($book->isConsistent, 'guarda del escenario: el fixture tiene que cuadrar');
+        $this->assertCount(2, $book->movements, 'el nacimiento y la subida');
+        foreach ($book->movements as $m) {
+            $this->assertStringContainsString($m->label, $html);
+            $this->assertStringContainsString($m->occurredLabel, $html);
+        }
+        $this->assertSame(2, substr_count($html, 'data-book-movement='));
+        $this->assertStringContainsString('+20,00', $html);                 // Reserva
+        $this->assertStringContainsString('40,00', $html);                  // Total = 20 + 20
+        $this->assertStringContainsString(__('tickets.journal.paid_online'), $html);
+        $this->assertStringContainsString('data-book-balance="pay_at_park"', $html);
+        $this->assertStringContainsString(__('admin.orders.book.balance_pay_at_park'), $html);
+        // Ya no hay CANALES: ni «Falta por cobrar» ni «Valor final del pedido».
+        $this->assertStringNotContainsString('Falta por cobrar', $html);
+        $this->assertStringNotContainsString('Valor final', $html);
     }
 
     /**
-     * **La causa del ajuste llega al desglose cuando fue un cambio de FECHA** (`DECISIONES #145`).
-     *
-     * Antes caía al texto de respaldo y tres líneas seguidas repetían la misma frase muda, porque
-     * `executeItemEdit` filtraba `slot_change` fuera del contexto (medido en `R-S9XDYB`).
+     * **La causa del cargo llega al libro cuando fue un cambio de FECHA** (`DECISIONES #145`): la
+     * etiqueta de la línea la compone el dominio desde el contexto del ajuste, y el panel la imprime
+     * tal cual — no cae a un texto de respaldo mudo.
      */
-    public function test_gate_breakdown_subline_says_it_was_a_date_change(): void
+    public function test_a_date_change_charge_says_it_was_a_date_change(): void
     {
-        $order = $this->makePaidOrder();
-        $item = $this->attachActiveItem($order);
+        $order = $this->lawfulPaidOrder();
+        $item = $order->items->first();
+        $item->forceFill(['unit_price' => 3400])->save(); // la fecha nueva es más cara: +24,00
         OrderAdjustment::create([
-            'order_id' => $order->id,
-            'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_EDIT,
-            'amount_cents' => 2400,
-            'currency' => 'EUR',
+            'order_id' => $order->id, 'order_item_id' => $item->id,
+            'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => 2400, 'currency' => 'EUR',
             'reason' => 'item_edit',
             'context' => ['changes' => ['slot_change' => ['old' => 'sáb 5 sep 18:00', 'new' => 'mié 2 sep 19:00']]],
             'applied_by' => User::factory()->create()->id,
         ]);
 
+        $order = $this->reload($order);
+        $book = OrderBook::forOrder($order);
         $html = $this->renderTotals($order);
 
-        $this->assertStringContainsString(
-            __('tickets.gate_change_line_slot', ['when' => 'mié 2 sep 19:00']),
-            $html,
-            'El desglose tiene que decir que el cargo viene de mover la fecha, y a cuándo.',
-        );
+        $this->assertTrue($book->isConsistent);
+        $this->assertStringContainsString('mié 2 sep 19:00', $book->movements[1]->label, 'el libro dice a cuándo se movió');
+        $this->assertStringContainsString($book->movements[1]->label, $html);
+        $this->assertStringContainsString('+24,00', $html);
     }
 
     /**
-     * **«Al reservar se facturaron X; ahora vale Y menos» también en el PANEL** (`DECISIONES #145`).
-     *
-     * El cliente ya leía esta frase en «Mis pedidos» y el operador —que es quien la tiene que
-     * explicar con el cliente delante— no tenía nada equivalente.
-     *
-     * ⚠️ Se asevera contra `OrderLedger::facturadoNota`, **no contra un literal ni contra una
-     * comparación de importes**: la frase la compone el dominio y su `null` ES la condición de
-     * enseñarla (`#134`/`L6`). Re-derivarla aquí repetiría el defecto que aquel punto cerró.
+     * «Al reservar se facturaron X» ya no es una NOTA aparte (`DECISIONES #145`): es la PRIMERA línea
+     * del libro, y lo que cambió después son las siguientes, con su signo. Con dos reservas en el
+     * pedido, la cancelación lleva delante el nombre de la suya (spec §4.3).
      */
-    public function test_the_panel_shows_the_invoiced_note_when_the_order_changed_after_booking(): void
+    public function test_what_was_invoiced_is_the_birth_line_and_a_cancellation_is_a_negative_line(): void
     {
-        $order = $this->makePaidOrder();
-        $item = $this->attachActiveItem($order);
-        $item->markCancelled(User::factory()->create());
+        $order = $this->lawfulPaidOrder();
+        $order->items->first()->markCancelled(User::factory()->create());
 
-        $ledger = OrderLedger::forOrder($order->fresh());
+        $order = $this->reload($order);
+        $book = OrderBook::forOrder($order);
+        $html = $this->renderTotals($order);
 
-        $this->assertNotNull(
-            $ledger->facturadoNota,
-            'Guarda del escenario: si el montaje no produce la nota, este caso pasaría sin comprobar nada.',
-        );
-
-        $this->assertStringContainsString($ledger->facturadoNota, $this->renderTotals($order->fresh()));
+        $this->assertStringContainsString(__('tickets.journal.booking'), $html);
+        $this->assertStringContainsString('+20,00', $html);
+        $this->assertStringContainsString('−10,00', $html);
+        $this->assertSame(Balance::KIND_REFUND_AT_PARK, $book->balance->kind, 'la otra línea sigue viva: se devuelve EN el parque');
+        $this->assertStringContainsString('data-book-balance="refund_at_park"', $html);
+        $this->assertStringContainsString(__('admin.orders.book.balance_refund_at_park'), $html);
+        $this->assertStringNotContainsString('Pendiente de devolución', $html, 'hay visita por delante: no es una devolución pendiente de canal');
     }
 
-    /**
-     * Control negativo: sin cambios no hay nota, y el panel no se inventa una.
-     *
-     * ⚠️ **Dos ítems, no uno, y el motivo importa**: `makePaidOrder()` factura 20,00 € y
-     * `attachActiveItem()` añade 10,00 €, así que con un solo ítem el pedido nace DESCUADRADO y la
-     * nota aparece con razón. Sería un rojo del fixture leído como un defecto del código — la
-     * trampa que este proyecto ya pagó cuatro veces (`specs/desglose-dinero-cliente.md`): *un
-     * fixture que no reproduce el flujo real inventa defectos tan bien como los oculta*.
-     */
-    public function test_the_panel_shows_no_invoiced_note_on_an_untouched_order(): void
+    /** Un cargo sobre una visita ya HECHA consta liquidado en el parque, y el saldo queda saldado. */
+    public function test_a_charge_on_a_finished_visit_is_settled_at_the_park(): void
     {
-        $order = $this->makePaidOrder();
-        $this->attachActiveItem($order);
-        $this->attachActiveItem($order); // 2 × 10,00 € = los 20,00 € facturados
-
-        $ledger = OrderLedger::forOrder($order->fresh());
-
-        $this->assertNull($ledger->facturadoNota, 'Un pedido intacto no tiene nada que contar.');
-        $this->assertStringNotContainsString(
-            __('tickets.ledger.invoiced_hint_less', ['invoiced' => '', 'difference' => '']),
-            $this->renderTotals($order->fresh()),
-        );
-    }
-
-    public function test_gate_breakdown_subline_hidden_when_item_finished(): void
-    {
-        $order = $this->makePaidOrder();
-        $item = $this->attachActiveItem($order);
-        // Mover el item a un slot pasado → finalizado en la práctica → resuelto.
+        $order = $this->lawfulPaidOrder();
+        $item = $order->items->first();
         $past = Slot::create([
             'zone_id' => $this->zone->id,
             'date' => now()->subDays(2)->format('Y-m-d'),
             'start_time' => '10:00:00', 'end_time' => '10:59:00',
             'capacity' => 10, 'online_capacity' => 10,
         ]);
-        $item->update(['slot_id' => $past->id]);
-        OrderAdjustment::create([
-            'order_id' => $order->id, 'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => 2400,
-            'currency' => 'EUR', 'reason' => 'item_edit',
-            'context' => ['changes' => ['quantity_change' => ['old' => 1, 'new' => 3]]],
-            'applied_by' => User::factory()->create()->id,
-        ]);
+        $item->update(['slot_id' => $past->id, 'quantity' => 3, 'seats' => 3]);
+        $order->recordEdit($item->fresh(), 2000, User::factory()->create(), 'item_edit',
+            ['changes' => ['quantity_change' => ['old' => 1, 'new' => 3]]]);
 
+        $order = $this->reload($order);
+        $book = OrderBook::forOrder($order);
         $html = $this->renderTotals($order);
 
-        // Ni el bloque "A cobrar en el parque" ni su sub-línea aparecen.
-        $this->assertStringNotContainsString(__('admin.orders.order_financial.pending_at_gate'), $html);
-        $this->assertStringNotContainsString('+2 '.$this->jumpType->tr('name'), $html);
+        $this->assertTrue($book->isConsistent);
+        $this->assertStringContainsString(__('tickets.journal.gate'), $html); // «Liquidado en el parque»
+        $this->assertStringContainsString('data-book-settlement="gate"', $html);
+        $this->assertStringContainsString('data-book-balance="settled"', $html);
+        $this->assertStringContainsString(__('admin.orders.book.balance_settled'), $html);
+        $this->assertStringNotContainsString(__('admin.orders.book.balance_pay_at_park'), $html);
     }
 
-    // ─── Render del partial: "Devuelto" ─────────────────────────────────
-
-    public function test_refund_breakdown_subline_renders_for_per_item_refund(): void
+    /**
+     * Las devoluciones se listan con su ESTADO y solo las efectivas cuentan como pagado (spec §4.4):
+     * una en curso sigue en la lista, no resta, y el saldo la ignora hasta que el dinero vuelve.
+     */
+    public function test_refunds_are_listed_with_their_status_and_only_the_effective_ones_count(): void
     {
-        $order = $this->makePaidOrder();
-        $item = $this->attachActiveItem($order);
-        $payment = $this->attachPaidPayment($order);
+        $order = $this->lawfulPaidOrder();
+        $item = $order->items->first();
+        $payment = $order->payments->first();
         $this->attachSucceededRefund($payment, 400, $item->id);
-        // El total "Devuelto" se lee del agregado legacy-safe del Order.
-        $order->update(['refund_amount_cents' => 400, 'refunded_at' => now()]);
+        $order->update(['refund_amount_cents' => 400, 'refunded_at' => now()]); // I4: la columna == Σ con éxito
+        PaymentRefund::create([
+            'payment_id' => $payment->id, 'order_item_id' => $item->id,
+            'amount_cents' => 300, 'currency' => 'EUR',
+            'status' => PaymentRefund::STATUS_PENDING, 'mode' => PaymentRefund::MODE_REST,
+            'gateway_order' => $payment->gateway_order,
+            'requested_by' => User::factory()->create()->id, 'requested_at' => now(),
+        ]);
 
-        $html = $this->renderTotals($order->fresh());
+        $order = $this->reload($order);
+        $book = OrderBook::forOrder($order);
+        $html = $this->renderTotals($order);
 
-        $this->assertStringContainsString(__('admin.orders.amount_refunded'), $html);
-        $this->assertStringContainsString('↳ '.$this->jumpType->tr('name'), $html);
-        $this->assertStringContainsString('4,00', $html);
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(2, substr_count($html, 'data-book-settlement="refund"'));
+        $this->assertStringContainsString('−4,00', $html);
+        $this->assertStringContainsString('−3,00', $html);
+        $this->assertStringContainsString(__('tickets.journal.refund_pending'), $html, 'la etiqueta de la devolución en curso la compone el libro');
+        $this->assertSame(1600, $book->paidCents, 'Pagado = 20,00 − 4,00: la devolución en curso no cuenta');
+        $this->assertStringContainsString('16,00', $html);
+        // Y devolver dinero SIN bajar el valor deja saldo a pagar: el libro lo dice, no lo esconde.
+        $this->assertStringContainsString('data-book-balance="pay_at_park"', $html);
     }
 
-    public function test_refund_breakdown_no_subline_for_full_order_refund(): void
+    /**
+     * **Guarda O**: el atajo «Ver historial» aparece solo cuando hay algo que explicar — lo decide el
+     * libro (`hasHistoryToExplain()`, D-T3·16). Mutación: invertirlo.
+     */
+    public function test_the_history_shortcut_appears_only_when_there_is_something_to_explain(): void
     {
-        $order = $this->makePaidOrder();
-        $this->attachActiveItem($order);
-        $payment = $this->attachPaidPayment($order);
-        // Reembolso del pedido COMPLETO → order_item_id null → sin renglón.
-        $this->attachSucceededRefund($payment, 2000, null);
-        $order->update(['refund_amount_cents' => 2000, 'refunded_at' => now()]);
+        $order = $this->lawfulPaidOrder();
+        $this->assertStringNotContainsString("mountAction('viewOrderHistory')", $this->renderTotals($order), 'el caso simple no gana ruido');
 
-        $html = $this->renderTotals($order->fresh());
+        $item = $order->items->first();
+        $item->forceFill(['quantity' => 2, 'seats' => 2])->save();
+        $order->recordEdit($item->fresh(), 1000, User::factory()->create(), 'item_edit',
+            ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
 
-        $this->assertStringContainsString(__('admin.orders.amount_refunded'), $html);
-        $this->assertStringNotContainsString('↳ ', $html);
+        $this->assertStringContainsString("mountAction('viewOrderHistory')", $this->renderTotals($this->reload($order)));
     }
 
-    public function test_refund_breakdown_no_subline_for_legacy_refund_without_payment_refund(): void
+    /**
+     * Un libro que NO cuadra se le enseña ENTERO al operador con el aviso rojo (D-T3·4, la asimetría
+     * de `#132`): es quien puede arreglarlo. El cliente, en cambio, no ve las líneas ni el saldo.
+     */
+    public function test_a_book_that_does_not_close_is_shown_to_the_operator_with_the_alert(): void
     {
-        // Refund legacy pre-#142: solo agregado en el Order, sin fila
-        // payment_refunds → total visible, sin renglón de detalle.
-        $order = $this->makePaidOrder();
+        $order = $this->makePaidOrder(); // «pagado» sin cobro registrado: la identidad de caja no cierra
         $this->attachActiveItem($order);
-        $this->attachPaidPayment($order);
-        $order->update(['refund_amount_cents' => 1000, 'refunded_at' => now()]);
+        $this->attachActiveItem($order);
 
-        $html = $this->renderTotals($order->fresh());
+        $html = $this->renderTotals($this->reload($order));
 
-        $this->assertStringContainsString(__('admin.orders.amount_refunded'), $html);
-        $this->assertStringNotContainsString('↳ ', $html);
+        $this->assertStringContainsString(__('admin.orders.order_financial.no_cuadra_title'), $html);
+        $this->assertStringContainsString('data-book-balance="under_review"', $html);
+        $this->assertStringContainsString(__('admin.orders.book.balance_under_review'), $html);
+        $this->assertStringContainsString('data-book-movement="booking"', $html, 'el libro se enseña entero');
+    }
+
+    /**
+     * El ejemplo REAL de la clienta, contado como LIBRO: pagó 288,00 € por 16 invitados; bajó a 8
+     * (−144,00) y luego subió a 12 (+72,00). Vale 216,00; pagó 288,00; se le devuelven 72,00 en el
+     * parque. Antes eran cuatro canales que había que relacionar («valor final 216 = 144 online + 72
+     * en el parque, y 144 pendientes de devolución»); ahora es una resta.
+     */
+    public function test_the_user_example_reads_as_a_book(): void
+    {
+        $order = $this->makePaidOrder();
+        $order->forceFill(['subtotal' => 28800, 'total' => 28800])->save();
+        $item = $this->attachActiveItem($order);
+        $item->forceFill(['unit_price' => 1800, 'quantity' => 16, 'seats' => 16])->save();
+        $this->attachPaidPayment($order);                                   // 288,00 por web
+        $by = User::factory()->create();
+        $item->forceFill(['quantity' => 8, 'seats' => 8])->save();
+        $order->recordEdit($item->fresh(), -14400, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 16, 'new' => 8]]]);
+        $item->forceFill(['quantity' => 12, 'seats' => 12])->save();
+        $order->recordEdit($item->fresh(), 7200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 8, 'new' => 12]]]);
+
+        $order = $this->reload($order);
+        $book = OrderBook::forOrder($order);
+        $html = $this->renderTotals($order);
+
+        $this->assertTrue($book->isConsistent);
+        $this->assertSame(3, substr_count($html, 'data-book-movement='));
+        $this->assertStringContainsString('+288,00', $html);
+        $this->assertStringContainsString('−144,00', $html);
+        $this->assertStringContainsString('+72,00', $html);
+        $this->assertStringContainsString('216,00', $html);   // Total
+        $this->assertStringContainsString('288,00', $html);   // Pagado
+        $this->assertStringContainsString('data-book-balance="refund_at_park"', $html);
+        $this->assertStringContainsString('−72,00', $html);   // A devolver en el parque
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────
 
-    public function test_pendiente_devolucion_and_valor_final_render_for_owed_back(): void
-    {
-        // El pedido facturó online 20,00 (2 uds) pero el item está a 1 ud (10,00):
-        // se deben 10,00 aún no devueltos → "Pendiente de devolución" bajo el headline
-        // "Valor final del pedido" (rediseño valor-primero #199). El caption ancla el
-        // bruto pagado por web (20,00) para conciliar con el banco.
-        $order = $this->makePaidOrder();      // total 2000
-        $this->attachPaidPayment($order);     // pagó 20,00 online — ancla de caja de «pendiente» (#225)
-        $this->attachActiveItem($order);      // charged 1000 (estado reducido)
-
-        $html = $this->renderTotals($order->fresh(['payments.refunds', 'adjustments', 'items.slot', 'items.ticketType']));
-
-        $this->assertStringContainsString(__('admin.orders.order_financial.valor_final'), $html);
-        $this->assertStringContainsString(__('admin.orders.order_financial.pendiente_devolucion'), $html);
-        $this->assertStringContainsString('−10,00', $html); // pendiente de devolución
-        $this->assertStringContainsString('20,00', $html);  // bruto pagado por web (caption)
-    }
-
-    public function test_no_breakdown_when_products_back_the_total(): void
-    {
-        // total == valor de productos → sin cambios ni devoluciones → caso SIMPLE:
-        // solo "Total" (sin headline "Valor final" ni "Pendiente de devolución").
-        $order = $this->makePaidOrder();
-        $order->forceFill(['total' => 1000])->save(); // = charged del item
-        $this->attachActiveItem($order);              // charged 1000
-
-        $html = $this->renderTotals($order->fresh(['payments.refunds', 'adjustments', 'items.slot', 'items.ticketType']));
-
-        $this->assertStringNotContainsString(__('admin.orders.order_financial.pendiente_devolucion'), $html);
-        $this->assertStringNotContainsString(__('admin.orders.order_financial.valor_final'), $html);
-        $this->assertStringContainsString(__('admin.orders.amount_total'), $html);
-    }
-
-    public function test_order_block_value_first_split_paid_online_plus_gate(): void
-    {
-        // Rediseño valor-primero (#199): Valor final = Pagado online + A cobrar en el
-        // parque. Pagado 1 ud (10,00) online + subida a 2 uds con +10,00 a cobrar en
-        // puerta → valor 20,00 = 10,00 online + 10,00 en el parque (reconcilia exacto).
-        $order = $this->makePaidOrder();
-        $order->forceFill(['total' => 1000])->save();   // pagó 1 ud online
-        $item = $this->attachActiveItem($order);          // 1 ud @ 10,00
-        $item->forceFill(['quantity' => 2])->save();      // ahora 2 uds → charged 20,00
-        $order->recordEdit($item->fresh(), 1000, User::factory()->create(), 'item_edit',
-            ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
-
-        $html = $this->renderTotals($order->fresh(['payments.refunds', 'adjustments', 'items.slot', 'items.ticketType', 'items.children.ticketType']));
-
-        $this->assertStringContainsString(__('admin.orders.order_financial.valor_final'), $html);
-        $this->assertStringContainsString(__('admin.orders.order_financial.pagado_online'), $html);
-        $this->assertStringContainsString(__('admin.orders.order_financial.pending_at_gate'), $html);
-        $this->assertStringContainsString('20,00', $html);   // valor final
-        $this->assertStringContainsString('+10,00', $html);  // a cobrar en el parque
-        // Lo pagado online respalda exactamente su parte → sin devolución pendiente.
-        $this->assertStringNotContainsString(__('admin.orders.order_financial.pendiente_devolucion'), $html);
-    }
-
-    public function test_multi_reservation_shows_per_reservation_detail_lines(): void
-    {
-        // Detalle ↳ por reserva (elección de la clienta): con 2+ reservas, "Pagado
-        // online" despliega un renglón por reserva. Fixture coherente: A pagó 1 ud
-        // online y subió a 2 (10,00 online + 10,00 a cobrar en puerta); B pagó 1 ud.
-        $order = $this->makePaidOrder();
-        $order->forceFill(['total' => 2000])->save();   // 10,00 (A, 1 ud) + 10,00 (B)
-        $a = $this->attachActiveItem($order);            // "Pulsera Jump" 1 ud @ 10,00
-        $a->forceFill(['quantity' => 2])->save();        // sube a 2 uds → charged 20,00
-        $order->recordEdit($a->fresh(), 1000, User::factory()->create(), 'item_edit',
-            ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
-
-        $kids = TicketType::create([
-            'name' => ['es' => 'Pulsera Kids'], 'zone_id' => $this->zone->id,
-            'duration_min' => 60, 'is_sellable' => true, 'is_active' => true,
-            'seats_per_unit' => 1, 'position' => 2,
-        ]);
-        $slot = Slot::create([
-            'zone_id' => $this->zone->id, 'date' => now()->addDays(9)->format('Y-m-d'),
-            'start_time' => '12:00:00', 'end_time' => '12:59:00',
-            'capacity' => 10, 'online_capacity' => 5,
-        ]);
-        OrderItem::create([
-            'order_id' => $order->id, 'parent_item_id' => null,
-            'ticket_type_id' => $kids->id, 'slot_id' => $slot->id,
-            'quantity' => 1, 'seats' => 1, 'unit_price' => 1000,
-        ]);
-
-        $html = $this->renderTotals($order->fresh(['payments.refunds', 'adjustments', 'items.slot', 'items.ticketType', 'items.children.ticketType']));
-
-        // ↳ por reserva bajo "Pagado online" (mismas cifras que las cards).
-        $this->assertStringContainsString('↳ '.$this->jumpType->tr('name'), $html);
-        $this->assertStringContainsString('↳ Pulsera Kids', $html);
-        // Y el detalle delta del cargo de puerta de la reserva A.
-        $this->assertStringContainsString('+1 '.$this->jumpType->tr('name'), $html);
-    }
-
-    public function test_user_example_reconciles_value_first(): void
-    {
-        // Reproduce el ejemplo REAL de la clienta: pagó 288,00 € online; el valor final
-        // es 216,00 € = 144,00 € pagado online + 72,00 € a cobrar en el parque (un +4
-        // Cumpleaños Jump); y quedan 144,00 € pendientes de devolución (= 288 − 144). El
-        // bloque valor-primero CUADRA: Valor final = Pagado online + A cobrar en el parque.
-        $order = $this->makePaidOrder();
-        $order->forceFill(['total' => 28800])->save();                       // pagó 288,00 € online
-        $this->attachPaidPayment($order);                                    // pago real por web (ancla #225)
-        $item = $this->attachActiveItem($order);
-        $item->forceFill(['unit_price' => 1800, 'quantity' => 12])->save();  // 12 × 18 = 216,00 €
-        $order->recordEdit($item->fresh(), 7200, User::factory()->create(), 'item_edit',
-            ['changes' => ['quantity_change' => ['old' => 8, 'new' => 12]]]); // +4 → +72,00 a cobrar
-
-        $html = $this->renderTotals($order->fresh(['payments.refunds', 'adjustments', 'items.slot', 'items.ticketType', 'items.children.ticketType']));
-
-        $this->assertStringContainsString(__('admin.orders.order_financial.valor_final'), $html);
-        $this->assertStringContainsString('216,00', $html);   // valor final
-        $this->assertStringContainsString(__('admin.orders.order_financial.pagado_online'), $html);
-        $this->assertStringContainsString('144,00', $html);   // pagado online (288 − 144 pendiente)
-        $this->assertStringContainsString('+72,00', $html);   // a cobrar en el parque
-        $this->assertStringContainsString(__('admin.orders.order_financial.pendiente_devolucion'), $html);
-        $this->assertStringContainsString('−144,00', $html);  // pendiente de devolución
-        $this->assertStringContainsString('288,00', $html);   // bruto pagado por web (caption)
-    }
-
     private function renderTotals(Order $order): string
     {
         return view('filament.orders.partials.order-totals', ['record' => $order])->render();
+    }
+
+    /**
+     * Un pedido que CUADRA: 2 × 10,00 facturados, dos líneas de 10,00 y un cobro de 20,00 por web.
+     * ⚠️ `makePaidOrder()` solo factura 20,00 y NO cobra: con un ítem, o sin `attachPaidPayment()`, el
+     * pedido nace DESCUADRADO y el libro dice «en revisión» con razón — un rojo del fixture que se
+     * leería como un defecto del código (la trampa que este proyecto ya pagó cuatro veces).
+     */
+    private function lawfulPaidOrder(): Order
+    {
+        $order = $this->makePaidOrder();
+        $this->attachActiveItem($order);
+        $this->attachActiveItem($order);
+        $this->attachPaidPayment($order);
+
+        return $this->reload($order);
+    }
+
+    private function reload(Order $order): Order
+    {
+        return $order->fresh(['payments.refunds', 'adjustments', 'items.slot', 'items.ticketType', 'items.children.ticketType']);
     }
 
     private function labelFor(OrderItem $item, ?array $context): string

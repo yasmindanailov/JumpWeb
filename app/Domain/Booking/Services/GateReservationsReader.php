@@ -10,7 +10,8 @@ use App\Domain\Booking\Models\TicketType;
 
 /**
  * Fase 6 · subsistema A — la implementación de `GateReservations` (`docs/specs/identidad-qr-puerta.md`
- * §9.2 A·3): una consulta DIRIGIDA por fecha y los importes por **`OrderLedger::forReservation()`**.
+ * §9.2 A·3): una consulta DIRIGIDA por fecha y el dinero por **el LIBRO de la reserva**
+ * (`OrderBook::forReservation()`, `DECISIONES #305`; T3·2): lo pagado y el saldo con su clase.
  *
  * ⚠️ Es una SUPERFICIE del desglose (`LedgerSingleSourceTest::SURFACES`): pinta lo que el ledger dice,
  * no deriva ningún canal restando otros. Y el aviso de §4.7 vale aquí más que en ningún sitio: un
@@ -29,13 +30,11 @@ class GateReservationsReader implements GateReservations
             ->whereNotNull('slot_id')
             ->whereHas('order', fn ($q) => $q->where('user_id', $userId)->where('status', Order::STATUS_PAID))
             ->whereHas('slot', fn ($q) => $q->whereDate('date', '>=', $fromDate)->whereDate('date', '<=', $toDate))
-            // ⚠️ Los eager anidados de `order.*` no son adorno: el resumen financiero recorre los
-            // ítems del pedido que tienen ajustes (`OrderFinancialSummary`: `isFinishedInPractice()`
-            // camina `slot`, y en una línea HIJA camina `parent->slot`) y las etiquetas del desglose
-            // caminan `adjustment->orderItem->ticketType` (`OrderAdjustment::breakdownLabel`, el
-            // mismo N+1 que la hoja de reserva ya corta con este eager). Sin ellos, cada ajuste de
-            // puerta —el suplemento de fiesta mixta el primero— costaba consultas POR FILA en la
-            // pantalla de puerta; lo vigila el presupuesto de `MixedPartyParkSurfacesTest`.
+            // ⚠️ Los eager anidados de `order.*` no son adorno: el libro recorre TODAS las líneas del
+            // pedido (`OrderBook::compose`: `isFinishedInPractice()` camina `slot`, y en una línea
+            // HIJA `parent->slot`; las etiquetas caminan `ticketType`; las devoluciones,
+            // `payments.refunds`). Sin ellos, cada fila costaba consultas POR FILA en la pantalla
+            // de puerta; lo vigilan los presupuestos de `GateProfileTest` y `MixedPartyParkSurfacesTest`.
             ->with([
                 'ticketType', 'slot', 'children.ticketType',
                 'order.adjustments.orderItem.ticketType', 'order.payments.refunds',
@@ -47,7 +46,7 @@ class GateReservationsReader implements GateReservations
             ->map(function (OrderItem $item): GateReservation {
                 /** @var Order $order */
                 $order = $item->order;
-                $ledger = OrderLedger::forReservation($order, $item);
+                $book = OrderBook::forReservation($order, $item);
 
                 // T3 · E (`specs/cumple-mixto.md` §23.2): lo ESCRITO del suplemento de fiesta mixta,
                 // para que el empleado vea la diferencia por cabeza con el cliente delante en vez de
@@ -69,9 +68,10 @@ class GateReservationsReader implements GateReservations
                         ->map(fn (OrderItem $child): string => $child->quantity.' × '.($child->ticketType?->tr('name') ?? ''))
                         ->values()
                         ->all(),
-                    paidOnlineCents: (int) $ledger->pagadoOnline,
-                    pendingGateCents: (int) $ledger->pendientePuerta,
-                    chargeMethod: $ledger->cobroMetodo,
+                    paidCents: $book->paidCents,
+                    balanceKind: $book->balance->kind,
+                    balanceCents: $book->balance->cents,
+                    chargeMethod: $book->paymentMethod(),
                     paidAt: $order->paid_at?->toIso8601String(),
                     createdAt: (string) $order->created_at?->toIso8601String(),
                     mixedPartyLines: array_map(static fn (array $l): array => [

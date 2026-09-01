@@ -81,6 +81,8 @@ return [
                 'pending_gate' => '门口待付：:amount €',
                 'paid' => '已付：:amount €（:method）',
                 'nothing_pending' => '无待付款项',
+                'refund_at_gate' => '门口待退：:amount €',
+                'under_review' => '款项审核中：该订单账目不平，收款或退款前请先在后台核对。',
                 // 混龄派对（T3 · E）：已写入的附加费 — 金额已计入 `pending_gate`。
                 'mixed_party_line' => ':count × :name · 每位来宾 :unit €',
                 'mixed_party_total' => '混龄派对附加费：:amount €',
@@ -415,12 +417,8 @@ return [
             'guardian_label' => '父母或法定监护人',
             'client_label' => '客户姓名',
             'prepared_check' => '已准备',
-            'pending_at_gate' => '到场支付',
             // #225：定金余款（未在线收取的部分）。
-            'deposit_remainder_line' => '定金余款',
             // #200: 待退还款项的醒目方框(与「到场支付」对称)。
-            'pending_refund' => '待退还',
-            'pending_refund_caption' => '因减少数量或取消而多付的款项,尚待退还给客户。',
             'cancelled_notice' => '预订已取消',
             // 混龄派对（T3 · E）：区块标题；行与提示复用 `admin.orders.mixed_party.*`。
             'mixed_party_heading' => '混龄派对',
@@ -954,49 +952,35 @@ return [
         ],
 
         'item_financial' => [
-            // 7.2e.1bis5(#158,反馈点 4):标题用以与“订单总计”区分。
+            // T3·2 账本：仅保留商品行；`deposit_remainder_line` 在 T3·4 之前仍由旧模型读取。
             'heading' => '产品总计',
             'principal' => '主产品',
             'addons' => '附加项目',
             'total' => '产品总计',
-            // 分项明细的稳健性(#196):产品总计拆分为线上已付 + 门店部分(待收或已收)。
-            'paid_online' => '线上已付',
-            'at_gate' => '在门店收取',
-            // #225 F2:产品卡内「在门店收取」的定金余款明细行。
             'deposit_remainder_line' => '定金余款',
-            'collected_at_gate' => '已在门店结清',
-            'refunded_label' => '已退款',
-            'pending_refund_label' => '待退还',
-            'pending_refund_caption' => '客户因该产品的变更（减少数量或取消）多付了款,尚待退还。',
-
-            // 兼容 legacy。
-            'refunded' => '↩ 已退款::amount €',
-            'pending_refund' => '⚠ 待退款::amount €',
         ],
 
         // 7.2e.1bis5(#158,反馈点 4):订单总计紧凑分组,位于摘要卡末尾。
+        // 订单账本（`DECISIONES #305`，T3·2）：后台、预订单和门口显示 `OrderBook`。每行的文字由领域层在
+        // `tickets.journal.*` 中生成（与客户所见相同）；此处仅有标题和余额说明。
+        'book' => [
+            'movements' => '变动明细',
+            'settlements' => '付款与退款',
+            'total' => '合计',
+            'paid' => '已付',
+            'balance_pay_at_park' => '园区待付',
+            'balance_refund_at_park' => '园区待退',
+            'balance_refund_pending' => '待退款',
+            'balance_pay_online' => '待线上支付',
+            'balance_rest_at_park' => '+ :amount 园区支付',
+            'balance_settled' => '无待处理款项',
+            'balance_expired' => '已过期，未付款',
+            'balance_under_review' => '审核中：账目不平',
+        ],
+
         'order_financial' => [
+            // T3·2 账本：订单合计区块显示 `OrderBook`（`book.*` 键）；旧的双轴渠道仅保留标题。
             'heading' => '订单总计',
-            // 7.2e.3(润色 #168):因编辑产品导致金额上调、尚需在门店收取的差额。
-            'pending_at_gate' => '在门店收取',
-            'pending_at_gate_caption' => '客户到场时在前台收取的金额（定金余款及/或因产品变更产生的差额）。',
-            // #225：定金余款（未在线收取的部分），作为「在门店收取」的明细行。
-            'deposit_remainder_line' => '定金余款',
-            // 分项明细的稳健性(#196):尚未处理的应退款项 + 最终净额(= 产品价值)。
-            'pendiente_devolucion' => '待退还',
-            'pendiente_devolucion_caption' => '客户因订单变更(减少数量或取消)多付了款,尚待退还。',
-            // 价值优先重构(2026-06-06):订单区块改为各产品卡片之和,使用相同词汇 →
-            // 最终价值 = 线上已付 + 在门店收取 + 已在门店收取。
-            'valor_final' => '订单最终价值',
-            'pagado_online' => '线上已付',
-            // P1/P10：若为现金/POS 手动收款（非网站），不写「线上」。
-            'cobrado_manual' => '现金/POS 已收款',
-            'pagado_puerta' => '已在门店结清',
-            'pendiente_devolucion_caption_web' => '客户通过网站支付了 :total;因减少数量或取消,将退还 :pendiente。',
-            // #171:明细子行的紧凑标签。
-            'breakdown' => [
-                'product_change' => '改为 :name',
-            ],
         ],
 
         'item_actions' => [

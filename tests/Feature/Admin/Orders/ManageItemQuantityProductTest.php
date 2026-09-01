@@ -969,7 +969,11 @@ class ManageItemQuantityProductTest extends TestCase
     {
         // Un cargo extra por edición (item activo) aparece como "A cobrar en el
         // parque" en la card Resumen del pedido.
-        [$order, $item] = $this->makePaidEntryOrder(seats: 2);
+        // Con COBRO real y un cambio de valor que explica el ajuste (+8,00 = 2 × 4,00 de subida de
+        // precio): desde el libro, un pedido «pagado» sin cobro o un ajuste sin cambio de valor
+        // no cuadra y responde «en revisión» — el fixture tiene que ser un pedido que exista.
+        [$order, $item] = $this->makePaidEntryOrderWithPayment(seats: 2);
+        $item->update(['unit_price' => 1600]);
         OrderAdjustment::create([
             'order_id' => $order->id,
             'order_item_id' => $item->id,
@@ -977,16 +981,17 @@ class ManageItemQuantityProductTest extends TestCase
             'amount_cents' => 800,
             'currency' => 'EUR',
             'reason' => 'item_edit',
+            'context' => ['changes' => ['unit_price_change' => ['old' => 1200, 'new' => 1600]]],
             'applied_by' => $this->staffWithEdit()->id,
         ]);
 
         Livewire::actingAs($this->staffWithEdit())
             ->test(ViewOrder::class, ['record' => $order->code])
-            ->assertSee(__('admin.orders.order_financial.pending_at_gate'))
-            ->assertSee('8,00')
-            // Rediseño valor-primero (#199): el headline es "Valor final del pedido"
-            // (antes "Total con cambios", que se eliminó del layout).
-            ->assertSee(__('admin.orders.order_financial.valor_final'));
+            // T3·2 del libro: el cargo es una LÍNEA DE VALOR con su signo y su fecha, y el saldo
+            // dice su clase («a pagar en el parque»); ya no hay un canal «falta por cobrar».
+            ->assertSee(__('admin.orders.book.movements'))
+            ->assertSee('+8,00')
+            ->assertSee(__('admin.orders.book.balance_pay_at_park'));
     }
 
     public function test_order_totals_hide_pending_at_gate_when_item_finished(): void
@@ -1000,17 +1005,20 @@ class ManageItemQuantityProductTest extends TestCase
             'capacity' => 10, 'online_capacity' => 10,
             'online_sales_open' => true, 'status' => Slot::STATUS_OPEN,
         ]);
-        [$order, $item] = $this->makePaidEntryOrder(seats: 2);
-        $item->update(['slot_id' => $past->id]); // item finalizado en la práctica
+        [$order, $item] = $this->makePaidEntryOrderWithPayment(seats: 2);
+        $item->update(['slot_id' => $past->id, 'unit_price' => 1600]); // item finalizado en la práctica
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
             'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => 800,
             'currency' => 'EUR', 'reason' => 'item_edit', 'applied_by' => $this->staffWithEdit()->id,
+            'context' => ['changes' => ['unit_price_change' => ['old' => 1200, 'new' => 1600]]],
         ]);
 
         Livewire::actingAs($this->staffWithEdit())
             ->test(ViewOrder::class, ['record' => $order->code])
-            ->assertDontSee(__('admin.orders.order_financial.pending_at_gate'));
+            // La visita pasó: el cargo consta LIQUIDADO en el parque y el saldo no es «a pagar».
+            ->assertSee(__('tickets.journal.gate'))
+            ->assertDontSee(__('admin.orders.book.balance_pay_at_park'));
     }
 
     // ─── #171: botón "Reembolsar" al pie del modal Gestionar ──────────────

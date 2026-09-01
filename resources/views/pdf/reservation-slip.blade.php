@@ -173,6 +173,18 @@
         .refund-amount { font-size: 15px; font-weight: bold; color: #991b1b; }
         .refund-detail { font-size: 10px; color: #991b1b; }
 
+        /* T3·2 del LIBRO: la caja neutra de «nada pendiente» y el detalle de cada línea del libro. */
+        .settled-box {
+            margin-top: 12px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 8px 11px;
+        }
+        .settled-title { font-size: 11px; font-weight: bold; color: #374151; }
+        .totals .t-date { color: #6b7280; font-weight: normal; font-size: 10px; }
+        .totals .t-neg { color: #92400e; }
+
         .cancel-banner {
             margin-bottom: 12px;
             border: 1px solid #fecaca;
@@ -399,17 +411,30 @@
         </div>
     @endif
 
-    {{-- Desglose ECONÓMICO (totales · a cobrar en puerta · pendiente de devolución). Solo en la
-         hoja CON precios (`?precios=1`); la hoja operativa de sala lo omite por completo (decisión
-         clienta 2026-06-14). Los complementos contratados ya se listan arriba, sin importes. --}}
+    {{-- Desglose ECONÓMICO: las líneas de producto y EL LIBRO de la reserva con UNA caja de saldo
+         (`DECISIONES #305`; T3·2, D-T3·7). Solo en la hoja CON precios (`?precios=1`); la hoja
+         operativa de sala lo omite por completo (decisión clienta 2026-06-14; guarda R de la T5:
+         ni un euro). Los complementos contratados ya se listan arriba, sin importes. --}}
     @if ($showPrices)
     {{-- HOJA A4 APARTE: el wrapper `.desglose-page` fuerza un salto de página, así los importes
          van solos en su hoja, separados de los datos operativos de arriba (petición clienta). --}}
     <div class="desglose-page">
-    {{-- Totales del producto (espejo de la sub-card del pedido) DESGLOSADO:
-         cada línea = "cantidad × precio unitario" → importe de la línea
-         (principal y cada complemento), luego total + devuelto + pendiente. --}}
-    @php $pb = $slip->principalBreakdown(); @endphp
+    {{-- Las LÍNEAS de producto (qué se compró: cantidad × unitario, principal y complementos) y
+         debajo EL LIBRO de la reserva: movimientos con su fecha, Total, pagos y devoluciones,
+         Pagado — las mismas líneas que ve el cliente en «Mis pedidos» y el operador en la ficha.
+         Lo compone `OrderBook` (`$slip->book()`); la hoja no suma nada. El Total es el del LIBRO
+         (con una cortesía, la suma de las líneas ya no es lo que vale). --}}
+    @php
+        $pb = $slip->principalBreakdown();
+        $book = $slip->book();
+        $signed = fn (int $cents): string => ($cents < 0 ? '−' : '+').$fmt(abs($cents));
+        $kind = $book->balance->kind;
+        [$box, $boxTitle, $boxAmount] = match ($kind) {
+            \App\Domain\Booking\Services\Balance::KIND_PAY_AT_PARK, \App\Domain\Booking\Services\Balance::KIND_PAY_ONLINE => ['gate-box', 'gate-title', 'gate-amount'],
+            \App\Domain\Booking\Services\Balance::KIND_REFUND_AT_PARK, \App\Domain\Booking\Services\Balance::KIND_REFUND_PENDING, \App\Domain\Booking\Services\Balance::KIND_UNDER_REVIEW => ['refund-box', 'refund-title', 'refund-amount'],
+            default => ['settled-box', 'settled-title', 'gate-amount'],
+        };
+    @endphp
     <div class="sec totals">
         <div class="sec-title">{{ __('admin.orders.item_financial.heading') }}</div>
         <table>
@@ -426,97 +451,61 @@
                     <td class="t-value {{ $ab['cancelled'] ? 'struck' : '' }}">{{ $fmt($ab['totalCents']) }}</td>
                 </tr>
             @endforeach
-            <tr class="t-total">
-                <td class="t-label {{ $cancelled ? 'struck' : '' }}">{{ __('admin.orders.item_financial.total') }}</td>
-                <td class="t-value {{ $cancelled ? 'struck' : '' }}">{{ $fmt($slip->grandTotalCents()) }}</td>
-            </tr>
-            {{-- Split del total (#196): pagado online + lo de puerta. Lo PENDIENTE a
-                 cobrar en puerta se destaca aparte en la caja inferior; aquí solo
-                 explicitamos lo ya pagado online (y lo cobrado en puerta si finalizó). --}}
-            @php $rf = $slip->financials(); @endphp
-            {{-- ⚠️ Los DOS canales nuevos entran en la condición (`DECISIONES #127`): sin ellos, una
-                 reserva SIN cobrar o con una compensación no abría desglose y la hoja enseñaba solo
-                 el total — que es justo el caso en que hace falta explicarlo. --}}
-            @if ($rf->aCobrarPuerta > 0 || $rf->cobradoPuerta > 0 || $rf->devuelto > 0 || $rf->pendienteReembolso > 0 || $rf->pendienteOnline > 0 || $rf->compensado > 0)
-                @if ($rf->pagadoOnline > 0)
-                    <tr>
-                        <td class="t-label">{{ __('admin.orders.item_financial.paid_online') }}</td>
-                        <td class="t-value">{{ $fmt($rf->pagadoOnline) }}</td>
-                    </tr>
-                @endif
-                {{-- ⚠️ Lo que TODAVÍA no se ha cobrado online. Ir en la misma línea que lo pagado
-                     hacía que una reserva sin cobrar anunciara «Pagado online» en la hoja que se
-                     entrega en recepción — el peor sitio para decirlo mal. --}}
-                @if ($rf->pendienteOnline > 0)
-                    <tr>
-                        <td class="t-label">{{ __('admin.orders.order_financial.pendiente_online') }}</td>
-                        <td class="t-value">{{ $fmt($rf->pendienteOnline) }}</td>
-                    </tr>
-                @endif
-                @if ($rf->cobradoPuerta > 0)
-                    <tr>
-                        <td class="t-label">{{ __('admin.orders.item_financial.collected_at_gate') }}</td>
-                        <td class="t-value">{{ $fmt($rf->cobradoPuerta) }}</td>
-                    </tr>
-                @endif
-                @if ($rf->compensado > 0)
-                    <tr>
-                        <td class="t-label">{{ __('admin.orders.order_financial.compensado') }}</td>
-                        <td class="t-value">{{ $fmt($rf->compensado) }}</td>
-                    </tr>
-                @endif
-            @endif
-            {{-- "Devuelto" (ya reembolsado) permanece en la tabla, como "Cobrado en
-                 puerta". Lo PENDIENTE de devolver se destaca aparte en su propia caja
-                 (simétrico a "A cobrar en puerta"). --}}
-            @if ($slip->refundedCents() > 0)
-                <tr class="t-refund">
-                    <td class="t-label">{{ __('admin.orders.item_financial.refunded_label') }}</td>
-                    <td class="t-value">−{{ $fmt($slip->refundedCents()) }}</td>
-                </tr>
-            @endif
         </table>
     </div>
 
-    {{-- A cobrar en puerta (ajustes pendientes de esta reserva). --}}
-    @if ($slip->hasPendingAtGate())
-        <div class="gate-box">
-            <table>
-                <tr>
-                    <td style="width: 60%;">
-                        <div class="gate-title">{{ __('admin.orders.slip.pending_at_gate') }}</div>
-                        @php $breakdown = $slip->pendingAtGateBreakdown(); @endphp
-                        @if (count($breakdown) > 0)
-                            <div class="gate-detail">{{ implode(' · ', $breakdown) }}</div>
-                        @endif
-                    </td>
-                    <td style="width: 40%; text-align: right;">
-                        <span class="gate-amount">{{ $fmt($slip->pendingAtGateCents()) }}</span>
-                    </td>
+    <div class="sec totals" data-book>
+        <div class="sec-title">{{ __('admin.orders.book.movements') }}</div>
+        <table>
+            @foreach ($book->movements as $m)
+                <tr data-book-movement="{{ $m->kind }}">
+                    <td class="t-label">{{ $m->label }} <span class="t-date">· {{ $m->occurredLabel }}</span></td>
+                    <td class="t-value {{ $m->amountCents < 0 ? 't-neg' : '' }}">{{ $signed($m->amountCents) }}</td>
                 </tr>
-            </table>
-        </div>
-    @endif
+            @endforeach
+            <tr class="t-total" data-book-total>
+                <td class="t-label {{ $cancelled ? 'struck' : '' }}">{{ __('admin.orders.book.total') }}</td>
+                <td class="t-value {{ $cancelled ? 'struck' : '' }}">{{ $fmt($book->totalCents) }}</td>
+            </tr>
+        </table>
+    </div>
 
-    {{-- Pendiente de devolución (importe pagado de más aún no devuelto). Misma
-         prominencia que "A cobrar en puerta", en su propia caja (tono rojo: dinero
-         que vuelve al cliente). Solo si queda algo por devolver (si ya se devolvió,
-         aparece como "Devuelto" en la tabla de arriba). --}}
-    @if ($slip->pendingRefundCents() > 0)
-        <div class="refund-box">
-            <table>
-                <tr>
-                    <td style="width: 60%;">
-                        <div class="refund-title">{{ __('admin.orders.slip.pending_refund') }}</div>
-                        <div class="refund-detail">{{ __('admin.orders.slip.pending_refund_caption') }}</div>
-                    </td>
-                    <td style="width: 40%; text-align: right;">
-                        <span class="refund-amount">−{{ $fmt($slip->pendingRefundCents()) }}</span>
-                    </td>
+    <div class="sec totals">
+        <div class="sec-title">{{ __('admin.orders.book.settlements') }}</div>
+        <table>
+            @foreach ($book->settlements as $s)
+                <tr data-book-settlement="{{ $s->kind }}" class="{{ $s->amountCents < 0 ? 't-refund' : '' }}">
+                    <td class="t-label">{{ $s->label }} <span class="t-date">· {{ $s->occurredLabel }}</span></td>
+                    <td class="t-value">{{ $signed($s->amountCents) }}</td>
                 </tr>
-            </table>
-        </div>
-    @endif
+            @endforeach
+            <tr class="t-total" data-book-paid>
+                <td class="t-label">{{ __('admin.orders.book.paid') }}</td>
+                <td class="t-value">{{ $fmt($book->paidCents) }}</td>
+            </tr>
+        </table>
+    </div>
+
+    {{-- UNA caja de saldo, por clase (spec §4.4; D-T3·7): lo que se cobra o se devuelve en el parque
+         con la reserva delante, o «nada pendiente». La clase la decide el libro; aquí solo se elige
+         el color de la caja. --}}
+    <div class="{{ $box }}" data-book-balance="{{ $kind }}">
+        <table>
+            <tr>
+                <td style="width: 60%;">
+                    <div class="{{ $boxTitle }}">{{ __('admin.orders.book.balance_'.$kind) }}</div>
+                    @if ($kind === \App\Domain\Booking\Services\Balance::KIND_PAY_ONLINE && $book->balance->restAtParkCents > 0)
+                        <div class="gate-detail">{{ __('admin.orders.book.balance_rest_at_park', ['amount' => $fmt($book->balance->restAtParkCents)]) }}</div>
+                    @endif
+                </td>
+                <td style="width: 40%; text-align: right;">
+                    @if ($book->balance->cents !== 0)
+                        <span class="{{ $boxAmount }}">{{ $book->balance->cents < 0 ? '−' : '' }}{{ $fmt(abs($book->balance->cents)) }}</span>
+                    @endif
+                </td>
+            </tr>
+        </table>
+    </div>
     </div>{{-- .desglose-page --}}
     @endif {{-- $showPrices --}}
 

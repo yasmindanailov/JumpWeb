@@ -9,6 +9,8 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
@@ -179,10 +181,19 @@ class ReservationFinancialsTest extends TestCase
         $order->recordEdit($item, 1200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 3]]]);
         $order->recordEdit($item->fresh(), -2400, $by, 'item_edit_reduction', ['changes' => ['quantity_change' => ['old' => 3, 'new' => 1]]]);
 
-        $rf = ReservationFinancials::make($order->fresh(['items', 'adjustments', 'payments.refunds']), $item->fresh());
-        $html = view('filament.orders.partials.reservation-financials', ['rf' => $rf])->render();
+        // Desde la T3·2 del libro la card pinta `OrderBook::forReservation` (el modelo viejo de este
+        // fichero ya no llega al partial), y el libro exige que el pedido CUADRE: el cobro de lo facturado.
+        Payment::create([
+            'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
+            'amount' => 2400, 'currency' => 'EUR', 'provider' => 'redsys',
+            'status' => Payment::STATUS_PAID, 'paid_at' => now(), 'gateway_order' => '0000770001',
+        ]);
+        $order = $order->fresh(['items.slot', 'items.ticketType', 'adjustments', 'payments.refunds']);
+        $book = OrderBook::forReservation($order, $order->items->firstWhere('id', $item->id));
+        $this->assertSame(Balance::KIND_REFUND_AT_PARK, $book->balance->kind, 'guarda del escenario: se debe dinero y hay visita por delante');
+        $html = view('filament.orders.partials.reservation-financials', ['book' => $book])->render();
 
-        $this->assertStringContainsString(__('admin.orders.item_financial.pending_refund_label'), $html);
+        $this->assertStringContainsString(__('admin.orders.book.balance_refund_at_park'), $html);
         $this->assertStringContainsString('−12,00', $html, 'la deuda con el cliente lleva su signo en la card');
     }
 

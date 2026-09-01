@@ -18222,3 +18222,76 @@ mutaciones JS salió MUDA y pareció verde.
 **Consecuencias.** Hasta la T3·4 el modelo viejo sigue alimentando panel, hoja, puerta y correos
 (`GateBuckets` temporal, sin consumidores nuevos) y el puente de `OrderFinancialInvariantsTest` sigue
 verde. `specs/api-v1.md` §10.octodecies (puntos 94–96). Sigue la **T3·2** (§6.3, fila 2).
+
+## #311 · 2026-09-01 · T3·2 del libro: el panel, la hoja y la puerta pintan el LIBRO — un solo pintor para lo que eran tres compositores
+
+**Contexto.** Tras `#310` el cliente ya leía el libro y el parque seguía leyendo el modelo de dos ejes
+con **tres compositores** distintos del mismo dinero (medido, `specs/desglose-libro.md` §6.3.2):
+`order-totals` (352 líneas: `OrderLedger` + `OrderFinancialSummary` + tres métodos de `Order`),
+`reservation-financials` (`ReservationFinancials` + `reservationGateLines`) y la hoja
+(`ReservationSlip::financials/pendingAtGate*/pendingRefundCents/refundedCents`), más la puerta
+(`OrderLedger::forReservation`), dos tablas con **dos parejas de fórmulas** para las mismas dos
+columnas (`totalFinalNeto`/`onlineBackingProductsCents` en una, `totalWithChangesCents`/
+`amountCollectedCents` en la otra) y `ViewOrder` (`pendienteDevolucion` ×2). Siete lectores, cinco
+fórmulas.
+
+**Decisión.**
+1. **UN PINTOR.** `reservation-financials.blade.php` recibe un `OrderBook` (del pedido o de la
+   reserva) y lo TRANSCRIBE: movimientos con signo y fecha → Total → pagos y devoluciones → Pagado →
+   el saldo con su clase (rótulo `admin.orders.book.balance_<kind>`, color por rol). `order-totals` lo
+   incluye con `forOrder` y añade solo lo que va alrededor (el aviso `!is_consistent`, el atajo al
+   historial); `items-list` y el modal del calendario, con `forReservation`. Las etiquetas de cada
+   línea son las del CLIENTE (`tickets.journal.*`): el panel no reescribe ninguna; solo pone títulos
+   y rótulos de saldo (`admin.orders.book.*`, es · zh_CN). Muere el «caso SIMPLE» del bloque
+   (D-T3·14): el libro se enseña entero, también con un nacimiento y un cobro.
+2. **El libro gana tres preguntas** que antes contestaba cada superficie a su manera:
+   `hasHistoryToExplain()` (el atajo «Ver historial», D-T3·16), `owedToCustomerCents()` (lo que se
+   le debe: el sugerido al reembolsar y el aviso del pedido cancelado, D-T3·15) y `paymentMethod()`.
+3. **Las dos tablas** dicen Total y Pagado del libro (D-T3·6), con eager-load de lo que el libro lee.
+4. **La hoja «con precios»** (D-T3·7): las líneas de producto (qué se compró) + el libro de la
+   reserva + UNA caja de saldo por clase. `ReservationSlip::book()` sustituye a seis lecturas de
+   cubos. La hoja operativa sigue sin un euro (guarda R, intacta).
+5. **La puerta** (D-T3·8, D-T3·18): `GateReservation{paidCents, balanceKind, balanceCents}` y la
+   fila `paid_cents`/`balance_kind`/`balance_cents`; la tarjeta pinta por CLASE — «pendiente de
+   devolver» con la MISMA alerta que «pendiente de cobrar», y un libro que no cuadra es una alerta,
+   nunca «nada pendiente». Las líneas mixtas siguen como explicación y **el «a tu favor» se queda
+   hasta la T3·3**: mientras el tope exista, el exceso no está en el libro.
+6. **Claves viejas retiradas** (D-T3·17): `order_financial.*` salvo `heading`/`no_cuadra_*`,
+   `item_financial.*` salvo `heading`/`principal`/`addons`/`total`/`deposit_remainder_line` (la lee
+   `Order::reservationGateLines`, oráculo hasta la T3·4), `slip.pending_*` y
+   `slip.deposit_remainder_line`. En es y zh_CN.
+
+**Lo que se midió.**
+- **Seis mutaciones**, todas a la primera: M1 el pintor imprime `kind` en vez de `label` → **5
+  rojos** · M2 la hoja imprime `kind` → **1** · M3 `financialSummary()` de vuelta en un blade → **1**
+  (guarda L) · M4 la puerta pierde la rama «a devolver» → **1** (guarda N/Q) · M5
+  `hasHistoryToExplain()` invertido → **2** (guarda O) · M6 `owedToCustomerCents()` con cualquier
+  clase → **1** (guarda P).
+- **Guarda M nueva** (`BookSurfacesParityTest`): sobre un pedido con de todo —dos reservas, señal,
+  subida, cancelación, devolución—, el bloque del pedido, la tarjeta de cada reserva, la hoja con
+  precios y la fila de la puerta imprimen EXACTAMENTE la lista (etiqueta, fecha, importe con signo)
+  que la API publica: ni una línea de más ni de menos, y la misma clase de saldo.
+- ⚠️⚠️ **Fixtures ilegales, en DIEZ ficheros.** Pedidos «pagados» sin `Payment`, totales que no eran la
+  suma de sus líneas, ajustes de puerta escritos SIN cambiar el valor de la línea (`amount_cents`
+  2400 «porque sí»), devoluciones que eran solo dos columnas del pedido. Con los dos ejes pasaban;
+  con las identidades I1/I2/I4 el libro responde «en revisión» y el test se pone rojo POR EL
+  FIXTURE. Se legalizaron todos (cobro real por lo que aportan las líneas; total = Σ líneas al
+  nacer; un ajuste explica un cambio de valor; una devolución tiene fila), no se excepcionó ninguna
+  identidad. *Un fixture que no reproduce el flujo real inventa defectos tan bien como los oculta*
+  — el docblock de `OrderTotalsBreakdownTest` lo decía de la nota facturada, y la T3·2 lo encontró
+  en otros nueve ficheros. `ReservationFinancialsTest` (el modelo viejo) también renderizaba el
+  partial: ese caso pinta ya el libro; el resto del fichero sigue como oráculo hasta la T3·4.
+- **Tema del panel**: `opacity-70` no estaba en el tema compilado (0 apariciones; las clases de un
+  blade solo existen si se compila después de escribirlas) — `npm run build` lo trae y el
+  `pre-push` lo hace por sistema. `text-danger-600` no se usa: solo la escala 700/300 está declarada
+  con seguridad (`panel-navegacion.md` §4.5).
+- Presupuestos de consultas de la puerta (`GateProfileTest` ≤ 28, `MixedPartyParkSurfacesTest`
+  constante con las filas): intactos — el libro lee las relaciones que el reader ya cargaba.
+
+**Consecuencias.** Los siete lectores del panel/hoja/puerta están en `LedgerSingleSourceTest::SURFACES`
+y la lista de los que AÚN leen el modelo viejo tiene UNA entrada (`OrderConfirmation`, T3·3) que
+solo encoge. `Order::reservationGateLines` / `pendingAtGateLines` /
+`depositRemainderPendingByProduct` / `reservationFinancialsByPrincipal` /
+`onlineBackingProductsCents` / `totalWithChangesCents` / `amountCollectedCents` se quedan sin
+consumidor de superficie: la T3·4 los retira. `identidad-qr-puerta.md` A·3 lleva la corrección del
+DTO. Sigue la **T3·3** (correos + post-form + el tope; `VERIFY_CONC=1`).

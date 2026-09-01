@@ -46,7 +46,7 @@
     $customer = $item->order?->user;
     $userUrl = $userUrl ?? null;
     $slipUrl = $slipUrl ?? null;
-    $rf = $rf ?? null; // App\Domain\Booking\Services\ReservationFinancials — desglose detallado (#196)
+    $book = $book ?? null; // App\Domain\Booking\Services\OrderBook — el libro de la reserva (T3·2)
 @endphp
 
 <div class="space-y-5">
@@ -178,8 +178,8 @@
         </div>
     @endif
 
-    {{-- Totales del producto: desglose DETALLADO (#196) vía fuente única ReservationFinancials →
-         mismas cifras que la sub-card del pedido y el PDF. SIN CAMBIOS. --}}
+    {{-- Totales del producto: las líneas (principal y complementos) y EL LIBRO de la reserva
+         (`OrderBook`, T3·2): las mismas líneas y el mismo saldo que la sub-tarjeta del pedido y la hoja. --}}
     <div class="rounded-lg bg-gray-50 p-3 text-sm dark:bg-white/5">
         <h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
             {{ __('admin.orders.item_financial.heading') }}
@@ -196,8 +196,8 @@
                 </div>
             </div>
         @endif
-        @if ($rf)
-            @include('filament.orders.partials.reservation-financials', ['rf' => $rf, 'gateLines' => $item->order->reservationGateLines($item)])
+        @if ($book)
+            @include('filament.orders.partials.reservation-financials', ['book' => $book])
         @else
             <div class="flex items-center justify-between gap-3 border-t border-gray-200 pt-1 font-semibold dark:border-white/10">
                 <span class="text-gray-800 dark:text-gray-200">{{ __('admin.orders.item_financial.total') }}</span>

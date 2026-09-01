@@ -3,7 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Domain\Booking\Models\OrderItem;
-use App\Domain\Booking\Services\ReservationFinancials;
+use App\Domain\Booking\Services\OrderBook;
 use App\Filament\Concerns\PrintsDaySummary;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Users\UserResource;
@@ -110,16 +110,15 @@ class CalendarPage extends Page
 
         if ($item === null) {
             return ['item' => null, 'orderUrl' => null, 'userUrl' => null, 'slipUrl' => null,
-                'principalCents' => 0, 'addonsCents' => 0, 'totalCents' => 0, 'rf' => null];
+                'principalCents' => 0, 'addonsCents' => 0, 'totalCents' => 0, 'book' => null];
         }
 
         $children = $item->children->filter(fn (OrderItem $c) => ! $c->isCancelled());
         $principalCents = $item->chargedSubtotalCents();
         $addonsCents = $children->sum(fn (OrderItem $c) => $c->chargedSubtotalCents());
-        // Robustez del desglose (#196): fuente ÚNICA del "Totales del producto"
-        // (pagado online / a cobrar en puerta / devuelto / pendiente) — mismas
-        // cifras que la sub-card del pedido y el PDF.
-        $rf = $item->order ? ReservationFinancials::make($item->order, $item) : null;
+        // EL LIBRO de la reserva (`DECISIONES #305`; T3·2): las mismas líneas y el mismo saldo que
+        // la sub-tarjeta del pedido, la hoja y la puerta — lo compone `OrderBook`, no esta página.
+        $book = $item->order ? OrderBook::forReservation($item->order, $item) : null;
 
         return [
             'item' => $item,
@@ -141,7 +140,7 @@ class CalendarPage extends Page
             'principalCents' => $principalCents,
             'addonsCents' => $addonsCents,
             'totalCents' => $principalCents + $addonsCents,
-            'rf' => $rf,
+            'book' => $book,
         ];
     }
 
@@ -161,15 +160,14 @@ class CalendarPage extends Page
         // regla que emite el feed (CalendarEventsController). Sin el scope, un id
         // forjado por Livewire (mountAction) de un item cancelado se renderizaría
         // a precio completo. Conserva los eager-loads de presentación + los de
-        // ReservationFinancials (#196).
+        // el libro de la reserva (`OrderBook::forReservation`).
         return OrderItem::query()
             ->paidScheduledPrincipal()
             ->with([
                 'ticketType.zone', 'slot', 'order.user', 'children.ticketType',
-                // Para ReservationFinancials del modal (desglose detallado #196) y el desglose
-                // ↳ de puerta (#225 F2): `Order::reservationGateLines` resuelve item+ticketType
-                // de cada cargo de edición vía `Order::items`, y el estado «finalizado» del
-                // principal vía `items.slot` → eager-load ambos para evitar N+1.
+                // Para el libro de la reserva del modal (`OrderBook::forReservation`): compone las
+                // etiquetas con `items.ticketType` y el estado «finalizado» con `items.slot` →
+                // eager-load ambos para evitar N+1.
                 'order.adjustments', 'order.payments.refunds', 'order.items.ticketType', 'order.items.slot',
             ])->find($id);
     }

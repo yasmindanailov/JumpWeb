@@ -8,9 +8,9 @@ namespace App\Domain\Booking\Contracts;
  *
  * A diferencia de `UpcomingReservation` (tres datos para el saludo del cajón), aquí viajan la cantidad,
  * los complementos, el ítem y el pedido —para cruzar con Identity los menores asignados a ESA línea— y
- * el DINERO, que sale de `Booking\Services\OrderLedger::forReservation()` y nunca se recompone (§4.7:
- * la puerta pasa a ser una superficie más del ledger). Fechas `Y-m-d` e importes en céntimos: quien
- * pinta formatea.
+ * el DINERO, que sale del LIBRO de la reserva (`Booking\Services\OrderBook::forReservation()`,
+ * `DECISIONES #305`; T3·2) y nunca se recompone (§4.7: la puerta es una superficie más del libro):
+ * lo pagado y el SALDO con su clase. Fechas `Y-m-d` e importes en céntimos: quien pinta formatea.
  */
 final readonly class GateReservation
 {
@@ -29,10 +29,12 @@ final readonly class GateReservation
         public bool $isEntry,
         public int $quantity,
         public array $addons,
-        /** Pagado por web que respalda ESTA reserva (`OrderLedger::pagadoOnline`). */
-        public int $paidOnlineCents,
-        /** Pendiente de cobrar EN PUERTA por esta reserva (`OrderLedger::pendientePuerta`). */
-        public int $pendingGateCents,
+        /** Lo PAGADO de esta reserva según su libro (`OrderBook::paidCents`: cobrado − devuelto + liquidado). */
+        public int $paidCents,
+        /** La CLASE del saldo de la reserva (`Balance::KIND_*`): la puerta pinta por clase, nunca por signo. */
+        public string $balanceKind,
+        /** El saldo CON SIGNO (`Balance::cents`): positivo se cobra, negativo se devuelve, 0 nada pendiente. */
+        public int $balanceCents,
         /** `cash` · `datafono` · `redsys`… lo que el pedido diga; `null` sin cobro. */
         public ?string $chargeMethod,
         /** ISO-8601 o `null`. */

@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\ItemEditPricing;
 use App\Domain\Booking\Services\MixedPartySurcharge;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\OrderItemCanceller;
 use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\OrderItemEventDataWriter;
@@ -2385,7 +2386,7 @@ class ViewOrder extends ViewRecord
                 // remanente de la línea. Es el caso que este campo existe para resolver: una bajada
                 // de precio (p. ej. por cambio de fecha) deja «pendiente de devolución» y el botón
                 // devolvía la línea entera (medido: se debían 10,00 € y devolvía 30,00 €).
-                $pendingCents = $order->financialSummary()->pendienteDevolucion();
+                $pendingCents = OrderBook::forOrder($order)->owedToCustomerCents();
 
                 return [
                     'item_id' => (int) ($arguments['item'] ?? 0),
@@ -2451,7 +2452,7 @@ class ViewOrder extends ViewRecord
                         ->helperText(function (): string {
                             /** @var Order $order */
                             $order = $this->record;
-                            $pending = $order->financialSummary()->pendienteDevolucion();
+                            $pending = OrderBook::forOrder($order)->owedToCustomerCents();
 
                             return $pending > 0
                                 ? __('admin.orders.refund_item.custom_amount_help_pending', [

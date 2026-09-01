@@ -8,7 +8,6 @@ use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Platform\Services\Duration;
 use App\Domain\Platform\Services\Money;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 
 /**
  * Presenter de la "Hoja de reserva" (PDF A4 imprimible para la operativa física
@@ -31,6 +30,8 @@ final class ReservationSlip
 {
     /** Fallback gris para zonas sin color (coincide con `.zone-card` e items-list). */
     public const ZONE_COLOR_FALLBACK = '#9CA3AF';
+
+    private ?OrderBook $book = null;
 
     private function __construct(
         public readonly Order $order,
@@ -464,120 +465,18 @@ final class ReservationSlip
     }
 
     /**
-     * Desglose financiero de la reserva desde la fuente ÚNICA compartida (#196):
-     * pagado online / a cobrar en puerta / cobrado en puerta / devuelto / pendiente.
-     * Mismas cifras que la sub-card del pedido y el modal del calendario.
-     */
-    public function financials(): ReservationFinancials
-    {
-        return ReservationFinancials::make($this->order, $this->item);
-    }
-
-    /** Total devuelto sobre esta reserva (principal + complementos). */
-    public function refundedCents(): int
-    {
-        $sum = $this->order->itemRefundedCents($this->item);
-        foreach ($this->item->children as $child) {
-            $sum += $this->order->itemRefundedCents($child);
-        }
-
-        return $sum;
-    }
-
-    /**
-     * Importe cancelado aún NO reembolsado (principal o complementos cancelados):
-     * recordatorio operativo de que queda cerrar el reembolso. Misma fórmula que
-     * la sub-card del pedido (items-list.blade.php).
-     */
-    public function pendingRefundCents(): int
-    {
-        // Fuente ÚNICA (robustez #198): incluye tanto los CANCELADOS (todo su cobrado
-        // online no devuelto) como las REDUCCIONES de cantidad por debajo de lo pagado
-        // online. Igual que la card del panel y "Mis pedidos".
-        return $this->financials()->pendienteReembolso;
-    }
-
-    // ─── A cobrar en puerta (por reserva) ─────────────────────────────────────
-
-    /**
-     * Importe pendiente de cobrar en puerta por ESTA reserva (principal + sus
-     * complementos): suma de ajustes `extra_due` cuyos items NO están cerrados
-     * (ni finalizados ni cancelados). Misma semántica que
-     * {@see OrderFinancialSummary::pendingAtGate()} pero acotada a la reserva.
-     */
-    public function pendingAtGateCents(): int
-    {
-        // T1 del libro: los dos cubos de puerta de cada línea abierta, DERIVADOS de sus hechos
-        // (`Order::itemExtraDueCents` + `itemDepositRemainderCents`, vía `GateBuckets`).
-        return $this->pendingItems()
-            ->sum(fn (OrderItem $i) => $this->order->itemExtraDueCents($i) + $this->order->itemDepositRemainderCents($i));
-    }
-
-    public function hasPendingAtGate(): bool
-    {
-        return $this->pendingAtGateCents() > 0;
-    }
-
-    /**
-     * Etiquetas compactas NETAS del cargo de puerta de ESTA reserva (principal +
-     * sus complementos), p. ej. "+2 Calcetines". Delega en
-     * {@see Order::pendingAtGateLines()} acotado a los items de la reserva: los
-     * créditos de una bajada netean los cargos de una subida → sin renglones
-     * fantasma al subir y bajar la misma cantidad (bug JJ-WIMWJW). El total que
-     * pinta el PDF ({@see pendingAtGateCents}) cuadra con la Σ de estas líneas.
+     * EL LIBRO de la reserva (`DECISIONES #305`; T3·2 de `specs/desglose-libro.md` §6.3.2):
+     * movimientos con su fecha, Total, pagos y devoluciones, Pagado y el SALDO con su clase — las
+     * mismas líneas que la ficha del pedido y «Mis pedidos». Lo compone `OrderBook`; la hoja no suma
+     * nada. Memoizado: la vista lo pide varias veces en un render.
      *
-     * @return list<string>
+     * Sustituye a `financials()` (el value object de cinco cubos), `refundedCents()`, `pendingRefundCents()`,
+     * `pendingAtGateCents()`, `hasPendingAtGate()` y `pendingAtGateBreakdown()`: cinco lecturas de
+     * cubos que la hoja tenía que volver a relacionar (D-T3·7).
      */
-    public function pendingAtGateBreakdown(): array
+    public function book(): OrderBook
     {
-        $itemIds = collect([$this->item->id])
-            ->merge($this->item->children->pluck('id'))
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        $labels = array_map(
-            fn (array $line) => $line['label'],
-            $this->order->pendingAtGateLines($itemIds),
-        );
-
-        // #225: el resto de la señal pendiente NO sale en pendingAtGateLines (que solo netea
-        // extra_due de ediciones); se añade como una entrada propia para que la lista de
-        // etiquetas cuadre con el total `pendingAtGateCents()`.
-        $depositRemainder = $this->pendingItems()
-            ->sum(fn (OrderItem $i) => $this->order->itemDepositRemainderCents($i));
-        if ($depositRemainder > 0) {
-            // #225 (feedback clienta): la línea «Resto de la señal» nombra su producto («de X»).
-            // La hoja es de una reserva → el producto es el principal.
-            $labels[] = __('admin.orders.slip.deposit_remainder_line')
-                .' '.__('admin.orders.deposit_for_product', ['product' => $this->productName()]);
-        }
-
-        return $labels;
-    }
-
-    /**
-     * Las líneas de esta reserva (principal + complementos) que siguen ABIERTAS en puerta: ni
-     * finalizadas ni canceladas. Una línea cerrada tiene sus cubos resueltos (cobrados en puerta)
-     * o anulados — coherente con la regla del resumen financiero del pedido.
-     *
-     * @return Collection<int,OrderItem>
-     */
-    private function pendingItems(): Collection
-    {
-        // Los complementos HEREDAN el estado "finalizado" del principal: lo
-        // calculamos UNA vez aquí en lugar de llamar `isFinishedInPractice()`
-        // sobre cada child (que haría un lazy-load de su `parent` + `slot`).
-        $principalFinished = $this->item->isFinishedInPractice();
-
-        return collect([$this->item])->merge($this->item->children)
-            ->reject(function (OrderItem $i) use ($principalFinished) {
-                $finished = $i->parent_item_id === null
-                    ? $i->isFinishedInPractice()
-                    : $principalFinished;
-
-                return $finished || $i->isCancelled();
-            })
-            ->values();
+        return $this->book ??= OrderBook::forReservation($this->order, $this->item);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────

@@ -703,6 +703,142 @@ no existen aún; `OrderTotalsBreakdownTest`, `ItemsListSubCardTest`, `GateProfil
 `MixedPartyParkSurfacesTest` (lo de dinero) se re-apuntan allí. El puente de
 `OrderFinancialInvariantsTest` sigue verde y sigue siendo el oráculo hasta la T3·4.
 
+### 6.3.2 · Diseño fino de la T3·2 (2026-09-01) — panel + hoja + puerta pintan el libro
+
+**Medido antes de diseñar** (sobre `cf29ca4`): el panel tenía **tres** compositores distintos del
+mismo dinero —`order-totals` (`OrderLedger::forOrder` + `OrderFinancialSummary` +
+`reservationFinancialsByPrincipal` + `pendingAtGateLines` + `depositRemainderPendingByProduct`, 352
+líneas), `reservation-financials` (`ReservationFinancials` + `reservationGateLines`, 109) y la hoja
+(`ReservationSlip::financials/pendingAtGate*/pendingRefundCents/refundedCents`, 130 líneas de
+blade)—, más la puerta (`OrderLedger::forReservation`), las dos tablas (`totalFinalNeto` /
+`onlineBackingProductsCents` en una, `totalWithChangesCents` / `amountCollectedCents` en la otra:
+**dos parejas de fórmulas para las mismas dos columnas**) y `ViewOrder` (`pendienteDevolucion` ×2).
+Siete lectores, cinco fórmulas. Con el libro son **un pintor** y **un value object**.
+
+**El diseño.**
+- **Un solo PINTOR** para el panel: `reservation-financials.blade.php` pasa a recibir un
+  `OrderBook` (del pedido o de la reserva) y transcribe movimientos (signo + fecha) → Total → pagos
+  y devoluciones (con su estado si no son efectivas) → Pagado → el saldo con su clase (rótulo
+  `admin.orders.book.balance_<kind>`, color por rol). `order-totals` lo incluye con
+  `forOrder` y añade solo lo que va alrededor (el aviso `!is_consistent`, el atajo al historial);
+  `items-list` y el modal del calendario lo incluyen con `forReservation`. **Cero importes se
+  derivan en un blade** (`LedgerSingleSourceTest`, que gana los siete lectores en su lista).
+- **Las etiquetas de las líneas son las del cliente** (`tickets.journal.*`): el panel no reescribe
+  ninguna. Es lo que hace la guarda M (paridad cliente↔panel) trivial de escribir y difícil de
+  romper: la MISMA lista de (etiqueta, importe) en `order-totals` y en `GET /me/orders`.
+- **El libro gana tres preguntas** que antes contestaba cada superficie a su manera:
+  `hasHistoryToExplain()` (el atajo «Ver historial»: una línea que no sea el nacimiento, o una
+  devolución), `owedToCustomerCents()` (lo que se le debe: el saldo en clase de devolución, en
+  positivo — el importe sugerido al reembolsar y el del aviso del pedido cancelado) y
+  `paymentMethod()` (el de la primera liquidación de clase «cobro»; la puerta lo dice).
+- **Las dos tablas** (`OrdersTable`, `OrdersRelationManager`): Total = `totalCents`, Pagado =
+  `paidCents` (D-T3·6). Eager-load de lo que el libro lee (`items.slot`, `items.ticketType`,
+  `adjustments`, `payments.refunds`) para que componerlo por fila no dispare consultas.
+- **La hoja «con precios»** (D-T3·7): conserva las líneas de producto (cantidad × unitario: qué se
+  compró) y sustituye la tabla de canales + las dos cajas por el libro de la reserva (movimientos
+  · Total · pagos y devoluciones · Pagado) y **UNA caja de saldo** por clase. `ReservationSlip`
+  gana `book()` y pierde `financials()`, `refundedCents()`, `pendingRefundCents()`,
+  `pendingAtGateCents()`, `hasPendingAtGate()`, `pendingAtGateBreakdown()` y `grandTotalCents()`
+  del render (el Total es el del libro: con una cortesía, la suma de las líneas ya no es lo que
+  vale). La hoja OPERATIVA sigue sin un euro (guarda R, intacta: todo va dentro de `$showPrices`).
+- **La puerta** (D-T3·8): `GateReservation` cambia `paidOnlineCents`/`pendingGateCents` por
+  `paidCents` + `balanceKind` + `balanceCents` (con signo), y la fila de `GateProfile` por
+  `paid_cents` + `balance_kind` + `balance_cents`. La tarjeta pinta por clase: `pay_at_park` →
+  alerta «Pendiente de cobrar en puerta: X» (`data-gate-pending`, como hoy); `refund_at_park` /
+  `refund_pending` → alerta «Pendiente de devolver en puerta: X» (`data-gate-refund`);
+  `settled` → «Nada pendiente de cobrar»; `under_review` → alerta «Dinero en revisión» (nunca
+  «nada pendiente» sobre un libro que no cuadra). **Las líneas mixtas siguen como explicación**
+  (§4.6·9) y **el «a tu favor» se queda hasta la T3·3**: mientras el tope exista, el exceso no
+  está en el libro y retirarlo aquí dejaría al operador sin el importe que liquida en mano.
+- **Lo que NO se toca**: correos, post-form, `MixedPartySurcharge` (T3·3); el modelo viejo y sus
+  tests de servicio (`OrderFinancialSummaryTest`, `ReservationFinancialsTest`, …) siguen hasta la
+  T3·4 como oráculo; `Order::reservationGateLines` / `pendingAtGateLines` /
+  `depositRemainderPendingByProduct` se quedan sin consumidor de superficie y mueren en la T3·4.
+
+**Decisiones derivadas** (además de D-T3·1…13; el owner puede vetar cualquiera):
+- **D-T3·14** El panel pinta el libro ENTERO también en el caso simple (nacimiento + cobro): muere
+  el «caso SIMPLE» de `order-totals` (solo «Total» + cómo se pagó). Un bloque con dos formas
+  según el pedido era una tercera fuente de divergencia; y lo que ve el operador es lo que ve el
+  cliente (guarda M).
+- **D-T3·15** El importe sugerido al reembolsar y el del aviso del pedido cancelado son
+  `owedToCustomerCents()`: el saldo del libro cuando es de devolución. Con `settled` o «a pagar»
+  el sugerido es 0 (el operador teclea lo que devuelve) — nada se re-deriva de canales.
+- **D-T3·16** El atajo «Ver historial» lo condiciona el libro (`hasHistoryToExplain()`), en el
+  bloque del pedido y en la tarjeta de la reserva con la MISMA regla.
+- **D-T3·17** Las claves `admin.orders.order_financial.*` e `item_financial.*` se retiran salvo
+  `heading`, `no_cuadra_*`, `principal`, `addons` y `total`; `slip.pending_at_gate`,
+  `slip.pending_refund(_caption)` y `slip.deposit_remainder_line` mueren con las cajas;
+  `item_financial.deposit_remainder_line` y `deposit_for_product` se quedan hasta la T3·4 (los
+  lee `Order::reservationGateLines`, aún vivo para el oráculo).
+- **D-T3·18** La puerta llama `paid_cents` a lo pagado (no `paid_online_cents`): el libro cuenta
+  también un cobro en mostrador y una liquidación ya hecha; el nombre viejo afirmaba un canal.
+
+**Guardas y mutaciones previstas** (se ejecutan en §6.3.3):
+
+| Guarda | Mutación |
+|---|---|
+| M · `BookSurfacesParityTest`: `order-totals` imprime EXACTAMENTE la lista (etiqueta, importe) del libro que publica `GET /me/orders`; la tarjeta de la reserva, la hoja con precios y la fila de la puerta, el de SU reserva | el pintor imprime `kind` en vez de `label` · la hoja lee `grandTotalCents()` |
+| L · `LedgerSingleSourceTest`: los siete lectores del panel/hoja/puerta no citan `OrderLedger` / `financialSummary(` / `ReservationFinancials`; la lista de los que AÚN pueden (`OrderConfirmation`) solo encoge | reintroducir `financialSummary()` en un blade |
+| N · el saldo por clase en la puerta (Q): `refund_at_park` se pinta como «a devolver» y nunca como «nada pendiente»; `under_review` es alerta | quitar la rama de devolución |
+| O · el atajo al historial: aparece con una edición o una devolución; no en el caso simple | invertir `hasHistoryToExplain()` |
+| P · el importe sugerido al reembolsar es lo debido (D-T3·15) | devolver `abs(cents)` con cualquier clase |
+| R · la hoja operativa sin un euro (`MixedPartyParkSurfacesTest`, intacta) | — |
+| Presupuesto · `GateProfileTest` (≤ 28) y `MixedPartyParkSurfacesTest` (constante con las filas) | — |
+
+### 6.3.3 · ✅ T3·2 EJECUTADA (2026-09-01, `DECISIONES #311`) — panel + hoja + puerta
+
+**Lo que entró**: exactamente el diseño de §6.3.2. Un pintor (`reservation-financials.blade.php`,
+`book` + `struck`) para el bloque del pedido, la tarjeta de cada reserva y el modal del calendario;
+`order-totals` reducido a lo que va alrededor; `items-list` y `CalendarPage` con `forReservation`;
+`OrdersTable` y `OrdersRelationManager` con Total/Pagado del libro; `ViewOrder` con
+`owedToCustomerCents()`; `ReservationSlip::book()` y la hoja con precios (líneas + libro + UNA caja
+de saldo, con `.settled-box` para «nada pendiente»); `GateReservation`/`GateReservationsReader`/
+`GateProfile`/`GateProfileData` con `paidCents` + `balanceKind` + `balanceCents` y la tarjeta por
+clase (`data-gate-pending` · `data-gate-refund` · `data-gate-under-review`); claves
+`admin.orders.book.*` y `puerta.validar.profile.refund_at_gate`/`under_review` (es · zh_CN); las
+claves viejas retiradas (D-T3·17). `OrderBook` gana `hasHistoryToExplain()`, `owedToCustomerCents()`
+y `paymentMethod()`.
+
+**Guardas ejecutadas y sus mutaciones** (sobre árbol commiteado, restaurando con `git checkout`):
+
+| # | Guarda | Mutación | Resultado |
+|---|---|---|---|
+| M | `BookSurfacesParityTest` (nuevo): bloque del pedido, tarjeta de cada reserva, hoja con precios y fila de la puerta = la lista de la API | el pintor imprime `kind` en vez de `label` | **5 rojos** |
+| M | ídem, la hoja | la hoja imprime `kind` | **1 rojo** |
+| L | `LedgerSingleSourceTest::test_no_surface_reads_the_old_model` (nuevo; `STILL_ON_THE_OLD_MODEL` solo encoge) | `financialSummary()` de vuelta en `order-totals` | **1 rojo** |
+| N/Q | `GateProfileTest` (+2): «a devolver» con alerta, nunca «nada pendiente»; «en revisión» es alerta | la tarjeta pierde la rama de devolución | **1 rojo** |
+| O | `OrderTotalsBreakdownTest::…history_shortcut…` | `hasHistoryToExplain()` invertido | **2 rojos** |
+| P | `BookSurfacesParityTest::…fixture…` (`owedToCustomerCents() === 0` con «a pagar») + `ItemsListSubCardTest` (banner con deuda) | `owedToCustomerCents()` devuelve `abs` con cualquier clase | **1 rojo** |
+| R | la hoja operativa sin un euro (`MixedPartyParkSurfacesTest`, intacta) | — | verde |
+| Presupuesto | `GateProfileTest` ≤ 28 · `MixedPartyParkSurfacesTest` constante | — | verde |
+
+**Lo que se aprendió.**
+- ⚠️⚠️ **Diez ficheros de tests tenían fixtures que el libro rechaza** (`OrderTotalsBreakdownTest`,
+  `ItemsListSubCardTest`, `ReservationSlipTest`, `DepositSurfacesTest`, `GateProfileTest`,
+  `ManageItemQuantityProductTest`, `OrderInfolistEnrichedTest`, `Polish7e1bis5Test`,
+  `OrdersPolish179Test`, `ReservationFinancialsTest`): «pagados» sin `Payment`, totales que no eran
+  la suma de las líneas al nacer, ajustes de puerta sin cambio de valor, devoluciones que eran dos
+  columnas. Con los dos ejes pasaban —nadie cruzaba cobro con estado ni ajuste con valor—; con
+  I1/I2/I4 responden «en revisión». Se LEGALIZARON todos; ninguna identidad se excepcionó. El
+  patrón que se repite: *el fixture añade un ajuste de 2400 «porque sí» y el test asevera que se
+  pinta 24,00* — el libro obliga a que el ajuste explique un cambio de valor real.
+- **El ejemplo de la clienta, contado como libro, es la historia verdadera**: 16 invitados
+  (288,00), baja a 8 (−144,00), sube a 12 (+72,00); vale 216,00, pagó 288,00, se le devuelven
+  72,00 en el parque. El fixture viejo (item a 12 con un +72 y «144 pendientes de devolución») no
+  cuadraba con nada: era la aritmética de canales, no lo que pasó.
+- **`tickets.journal.refund_pending` ya dice «en curso»**: un sufijo de estado en el pintor lo
+  duplicaba; fuera, y con él dos claves que nacieron muertas (`book.status_*`).
+- **Tema del panel**: `opacity-70` no estaba compilado (0 apariciones). Las utilidades de un blade
+  nuevo no existen hasta `npm run build`; el `pre-push` construye antes de la suite.
+- `has_deposit` por reserva cuenta solo líneas VIVAS (T2): el caso «cancelada con señal» de la
+  T3·1 lo dejó escrito, y aquí la puerta lo hereda sin sorpresa.
+
+**Lo que la T3·3 hereda**: los correos (`OrderConfirmation`, `OrderItemModified`, `OrderItemRefunded`,
+`OrderRefunded`, `MixedPartySurchargeChanged`) y el post-form siguen en el modelo viejo —
+`STILL_ON_THE_OLD_MODEL` tiene UNA entrada—; el «a tu favor» sigue en `items-list`, la hoja y la
+puerta hasta que `MixedPartySurcharge::applyCredit` escriba el crédito entero (D4) y muera
+`inFavourCents`; `mixed-party:verify-concurrency` en sus dos escenarios con `VERIFY_CONC=1`.
+
 ## 7. Revisión y decisión
 
 - 2026-09-01 · **Agente**: análisis empírico (§1.2–§1.4), prototipo de lectura y este diseño. Dos

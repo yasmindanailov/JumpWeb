@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Orders\Tables;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\Orders\OrderResource;
@@ -22,22 +23,20 @@ use Illuminate\Database\Eloquent\Builder;
  * (multi-badge), eliminando la columna propia; (b) la columna "Ver" se retira —
  * la fila entera enlaza al detalle (`recordUrl`). Sin fila-resumen al pie.
  *
- * #200 (fidedigno con el bloque valor-primero del detalle): la columna **Total**
- * = **Valor final del pedido** (`OrderFinancialSummary::totalFinalNeto`, lo que el
- * cliente acaba pagando) y **Pagado** = **Pagado online que respalda productos**
- * (`Order::onlineBackingProductsCents`). Así la lista cuadra con el detalle:
- * `Total − Pagado` = lo que queda a cobrar en el parque.
+ * T3·2 del LIBRO (`DECISIONES #305`): la columna **Total** es el Total del libro del pedido y
+ * **Pagado** lo Pagado del libro (cobrado − devuelto + liquidado en el parque), las mismas dos
+ * cifras que encabezan «Totales del pedido»: `Total − Pagado` es el saldo (D-T3·6: sin columna
+ * «Saldo» aparte). Antes (`#200`) eran el «valor final» y el «pagado online que respalda
+ * productos» de un modelo de dos ejes.
  */
 class OrdersTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            // Eager-load para las columnas "Total" (`OrderFinancialSummary::totalFinalNeto`
-            // → items.slot + adjustments) y "Pagado" (`Order::onlineBackingProductsCents`
-            // → payments.refunds + adjustments + items.slot). Sin N+1 al construir el
-            // resumen por fila (#200: las columnas reflejan el bloque valor-primero).
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['payments.refunds', 'adjustments', 'items.slot']))
+            // Eager-load de lo que el LIBRO lee por fila (`OrderBook::forOrder`: las líneas con su
+            // franja y su producto, los ajustes, los cobros con sus devoluciones). Sin N+1 por fila.
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['payments.refunds', 'adjustments', 'items.slot', 'items.ticketType']))
             ->columns([
                 TextColumn::make('code')
                     ->label(__('admin.orders.col_code'))
@@ -90,22 +89,18 @@ class OrdersTable
                         default => 'warning',
                     }),
 
-                // "Total" = **Valor final del pedido** (#200): lo que el cliente acaba
-                // pagando = valor de los productos actuales (`totalFinalNeto`), igual
-                // que el headline del bloque del detalle. NO el "Total con cambios"
-                // bruto (que no descontaba la devolución debida → divergía del detalle).
+                // "Total" = el Total del LIBRO del pedido: lo que valen hoy sus líneas vivas, la
+                // misma cifra que encabeza «Totales del pedido» (T3·2).
                 TextColumn::make('total')
                     ->label(__('admin.orders.col_total'))
-                    ->state(fn (Order $record): string => self::euros($record->financialSummary()->totalFinalNeto()))
+                    ->state(fn (Order $record): string => self::euros(OrderBook::forOrder($record)->totalCents))
                     ->alignEnd(),
 
-                // "Pagado" = lo cobrado online que RESPALDA los productos (#200):
-                // `onlineBackingProductsCents` = "Pagado online" del bloque del detalle
-                // (caja real − pendiente de devolución; 0 si no hay cobro). Fidedigno
-                // con el detalle: Total − Pagado = lo que queda a cobrar en el parque.
+                // "Pagado" = lo Pagado del libro (cobrado − devuelto + liquidado en el parque):
+                // Total − Pagado es el saldo que el detalle nombra con su clase (D-T3·6).
                 TextColumn::make('amount_collected')
                     ->label(__('admin.orders.col_collected'))
-                    ->state(fn (Order $record): string => self::euros($record->onlineBackingProductsCents()))
+                    ->state(fn (Order $record): string => self::euros(OrderBook::forOrder($record)->paidCents))
                     ->alignEnd(),
 
                 // Sub-fase 7.2a: la columna del listado usa `created_at` (todos los

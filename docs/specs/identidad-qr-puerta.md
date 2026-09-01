@@ -498,6 +498,14 @@ commit.
   quantity, addons, paidOnlineCents, pendingGateCents, paidAt, createdAt}`; lo implementa
   `Booking\Services\GateReservationsReader` con `OrderLedger::forReservation()`, y entra en
   `LedgerSingleSourceTest::SURFACES`. Identity → `Booking\Contracts` está en `ALLOWED`: cero flechas.
+  ⚠️ **Corregido por la T3·2 del LIBRO (`DECISIONES #311`, 2026-09-01; `specs/desglose-libro.md`
+  §6.3.2)**: el dinero del DTO ya no son dos canales. `GateReservation` lleva **`paidCents` +
+  `balanceKind` + `balanceCents`** (con signo), de **`OrderBook::forReservation()`**, y la fila de la
+  ficha `paid_cents` + `balance_kind` + `balance_cents`; la tarjeta de la puerta pinta **por CLASE**
+  —«pendiente de cobrar» (`data-gate-pending`) · «pendiente de devolver» (`data-gate-refund`, la
+  misma alerta) · «nada pendiente» · «dinero en revisión» (`data-gate-under-review`, nunca «nada
+  pendiente» sobre un libro que no cuadra)—. `paidOnlineCents`/`pendingGateCents` y
+  `OrderLedger::forReservation()` de las líneas de arriba son historia.
 - **A·4 · La visita es un HECHO con tabla**: `customer_visits` (`user_id` FK CASCADE · `visited_on` DATE
   · `registered_by` FK `users` nullOnDelete · `created_at`; ÚNICO `(user_id, visited_on)`). Es el hecho
   observable que `lealtad-jumppoints.md` §8.1 no tenía. `Identity\Services\GateVisits::register(User

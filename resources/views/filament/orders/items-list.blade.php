@@ -53,7 +53,8 @@
     $showCoherenceBanner = $orderCancelled || $orderFullyRefunded;
     // `#152`: un pedido cancelado CON deuda ya no bloquea el reembolso por línea — el banner
     // deja de afirmar «ya no aplican» y pasa a decir cuánto se debe y por dónde se devuelve.
-    $cancelledDebtCents = $orderCancelled ? $record->financialSummary()->pendienteDevolucion() : 0;
+    // T3·2 del libro: lo que se le debe al cliente lo dice el SALDO del libro (clase de devolución).
+    $cancelledDebtCents = $orderCancelled ? \App\Domain\Booking\Services\OrderBook::forOrder($record)->owedToCustomerCents() : 0;
 @endphp
 
 @if ($showCoherenceBanner)
@@ -518,13 +519,11 @@
                  Separado visualmente con border-top sutil para diferenciar
                  inventario (arriba) de cálculos (abajo). --}}
             @php
-                // Robustez del desglose (#196): el bloque "Totales del producto" usa la
-                // fuente ÚNICA `ReservationFinancials` (mismas cifras en TODAS las
-                // superficies). Resuelve además F10 (los agregados ya no iteran $children
-                // crudo a mano). Las líneas por producto/complemento siguen mostrando su
-                // subtotal individual; el TOTAL y el split (online/puerta/devuelto) los
-                // pinta el partial compartido `reservation-financials`.
-                $rf = \App\Domain\Booking\Services\ReservationFinancials::make($record, $item);
+                // EL LIBRO de la reserva (`DECISIONES #305`; T3·2): las líneas por producto y
+                // complemento siguen diciendo QUÉ se compró (cantidad × unitario); el dinero movido
+                // —movimientos, Total, pagos, saldo— lo compone `OrderBook` y lo pinta el partial
+                // compartido `reservation-financials`, el mismo del bloque del pedido y del calendario.
+                $book = \App\Domain\Booking\Services\OrderBook::forReservation($record, $item);
                 $fmt = fn (int $cents) => \App\Domain\Platform\Services\Money::format($cents);
             @endphp
 
@@ -561,18 +560,17 @@
                          de Blade casa desde el PRIMER uso con paréntesis de arriba hasta el primer
                          CIERRE de bloque que encuentre — introducir aquí un bloque con cierre dejó
                          media pantalla sin compilar, con el error señalando el final del fichero. --}}
-                    @php($itemGateLines = $record->reservationGateLines($item))
-                    @include('filament.orders.partials.reservation-financials', ['rf' => $rf, 'struck' => $isItemCancelled, 'gateLines' => $itemGateLines])
+                    @include('filament.orders.partials.reservation-financials', ['book' => $book, 'struck' => $isItemCancelled])
 
                     {{-- T5 adenda 4 (`[DECIDIDO owner]`, §25.10): el HISTORIAL a un clic desde el
                          desglose del producto — la foto no lista los cambios, y el «Pendiente de
                          devolución» de aquí arriba se explica en el historial. Va FUERA del partial
                          compartido a propósito: `reservation-financials` lo renderiza también el
                          modal del calendario, donde `viewOrderHistory` no existe. Solo cuando hay
-                         CONSECUENCIAS que explicar (líneas de puerta, devuelto, pendiente o
-                         compensado) — `hasActivity()` NO vale de condición: es verdad en cualquier
-                         pedido pagado, y el caso simple no debe ganar ruido (el control lo fija). --}}
-                    @if (count($itemGateLines) > 0 || $rf->devuelto > 0 || $rf->pendienteReembolso > 0 || $rf->compensado > 0)
+                         CONSECUENCIAS que explicar, y lo decide el LIBRO (`hasHistoryToExplain()`:
+                         una línea de valor que no sea el nacimiento, o una devolución) — el caso
+                         simple no debe ganar ruido (el control lo fija). --}}
+                    @if ($book->hasHistoryToExplain())
                         <button type="button" wire:click="mountAction('viewOrderHistory')"
                                 class="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
                             {{ __('admin.orders.audit_cta.button') }}

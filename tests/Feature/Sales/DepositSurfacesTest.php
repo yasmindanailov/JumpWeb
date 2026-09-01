@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\Balance;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Booking\Services\ReservationSlip;
 use App\Domain\Identity\Models\User;
@@ -197,26 +198,36 @@ class DepositSurfacesTest extends TestCase
         $this->assertStringNotContainsString('Señal pagada online', $body);
     }
 
-    public function test_reservation_slip_gate_box_includes_the_deposit_remainder(): void
+    /**
+     * La caja de saldo de la hoja «con precios» es la del LIBRO de la reserva (T3·2 de
+     * `specs/desglose-libro.md`): con señal, el resto va «a pagar en el parque», con su importe —
+     * sustituye a la caja «A cobrar en puerta» con su ↳ «Resto de la señal» (#225).
+     */
+    public function test_reservation_slip_balance_box_says_the_deposit_rest_is_paid_at_the_park(): void
     {
         App::setLocale('es');
         $order = $this->creator->createPendingOrder($this->user, [
             ['ticket_type_id' => $this->dep->id, 'date' => $this->date, 'time' => '10:00:00', 'qty' => 1],
         ]);
         $order->forceFill(['status' => Order::STATUS_PAID, 'paid_at' => now()])->save();
+        // Cobrado COMO lo cobra el canal real: sin el `Payment` de la señal el libro dice «en revisión».
+        $this->payDeposit($order, $order->onlineDueCents());
         $principal = $order->items()->whereNull('parent_item_id')->first();
 
         $slip = ReservationSlip::make(
-            $order->fresh(['items.children', 'adjustments', 'payments.refunds']),
+            $order->fresh(['items.children', 'items.slot', 'items.ticketType', 'adjustments', 'payments.refunds']),
             $principal->fresh(['children', 'adjustments']),
         );
 
-        // La caja «A cobrar en puerta» incluye el resto de la señal (no solo extra_due), nombrando
-        // su producto («Resto de la señal de Con señal»), #225 feedback clienta.
-        $this->assertSame(15000, $slip->pendingAtGateCents());
-        $breakdown = implode(' | ', $slip->pendingAtGateBreakdown());
-        $this->assertStringContainsString(__('admin.orders.slip.deposit_remainder_line'), $breakdown);
-        $this->assertStringContainsString($slip->productName(), $breakdown);
+        $book = $slip->book();
+        $this->assertTrue($book->hasDeposit);
+        $this->assertSame(Balance::KIND_PAY_AT_PARK, $book->balance->kind);
+        $this->assertSame(15000, $book->balance->cents, 'el resto de la señal, a pagar en el parque');
+
+        $html = view('pdf.reservation-slip', ['slip' => $slip, 'showPrices' => true])->render();
+        $this->assertStringContainsString('data-book-balance="pay_at_park"', $html);
+        $this->assertStringContainsString(__('admin.orders.book.balance_pay_at_park'), $html);
+        $this->assertStringContainsString('150,00', $html);
     }
 
     private function payDeposit(Order $order, int $amountCents): Payment

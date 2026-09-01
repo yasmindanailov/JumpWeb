@@ -3,9 +3,9 @@
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-09-01 — TRES carriles a la vez.
-> **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 EN EL ÁRBOL (`#306`, los hechos), T2 EN EL
-> ÁRBOL (`#308`, el libro en el DOMINIO) y T3·1 EN EL ÁRBOL (`#310`, tarde: el contrato `Ledger`,
-> la API y el CAJÓN pintan el libro; sigue la T3·2 —panel, hoja, puerta—)** — carril 3, abajo.
+> **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 (`#306`, los hechos), T2 (`#308`, el libro
+> en el DOMINIO), T3·1 (`#310`, el contrato `Ledger`, la API y el CAJÓN) y T3·2 (`#311`, PANEL +
+> HOJA + PUERTA) EN EL ÁRBOL; sigue la T3·3 —correos, post-form, el tope—** — carril 3, abajo.
 > **MIXTOS**: T1→T5 en el árbol (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL
 > GUARDIÁN DE SOLAPES EN EL ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** —
 > siguen fuera por diseño la fase 3 de §20.2 y el AFORO (owner); la ficha del fantasma de la señal
@@ -41,12 +41,43 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3754 en verde** (24.837 aserciones, 1 skipped a propósito), medida el
-> 2026-09-01 (tarde) sobre el árbol CONJUNTO con la T3·1 del libro (`#310`) encima de `#309`
-> (landing), con los DOS bundles reconstruidos antes. ⚠️ **No se suma, se mide.**
-> - Antes, 3756 / 24.766 (`#309` sobre `#308`), 3752 / 24.742 (`#308`) y 3731 / 24.224 (`#309` solo).
+> Suite **3758 en verde** (24.958 aserciones, 1 skipped a propósito), medida el
+> 2026-09-01 (noche) sobre el árbol CONJUNTO con la T3·2 del libro (`#311`) encima de `#310`.
+> ⚠️ **No se suma, se mide.**
+> - Antes, 3754 / 24.837 (`#310`), 3756 / 24.766 (`#309` sobre `#308`) y 3752 / 24.742 (`#308`).
 >
-> ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1, T2 y T3·1 EN EL ÁRBOL · sigue la T3·2) ═══════════
+> ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1, T2, T3·1 y T3·2 EN EL ÁRBOL · sigue la T3·3) ═══════════
+> ❗❗❗ **2026-09-01 (tarde-noche, 3.ª sesión) · T3·2 · EL PANEL, LA HOJA Y LA PUERTA PINTAN EL LIBRO**
+> (`DECISIONES #311`, `specs/desglose-libro.md` **§6.3.2 diseño fino y §6.3.3 lo ejecutado**;
+> `identidad-qr-puerta.md` A·3 corregido). Suite: el CONTADOR de arriba · Pint · docs-check · build
+> (el tema del panel: `opacity-70` no estaba compilado) · **6 mutaciones, todas muerden a la
+> primera** (M ×2 · L · N/Q · O · P) · presupuestos de la puerta intactos · `audit-clock` sobre los
+> ficheros tocados. ▶ **UN PINTOR** (`reservation-financials.blade.php`, recibe un `OrderBook`)
+> para el bloque «Totales del pedido», la tarjeta de cada reserva y el modal del calendario —
+> `order-totals` solo pone el aviso `!is_consistent` y el atajo al historial— · las dos tablas con
+> Total/Pagado del libro · `ViewOrder` sugiere `owedToCustomerCents()` · la hoja con precios =
+> líneas de producto + libro + UNA caja de saldo por clase · la puerta con `paidCents` +
+> `balanceKind` + `balanceCents` y la tarjeta por CLASE («a devolver» con la misma alerta que «a
+> cobrar»; «en revisión» nunca dice «nada pendiente») · claves `admin.orders.book.*` (es · zh_CN) y
+> las viejas retiradas · `OrderBook` gana `hasHistoryToExplain()`, `owedToCustomerCents()`,
+> `paymentMethod()`. Guarda M nueva (`BookSurfacesParityTest`: cuatro superficies = la lista de la
+> API, ni una línea de más ni de menos) y guarda L (`LedgerSingleSourceTest`: nadie lee el modelo
+> viejo; `STILL_ON_THE_OLD_MODEL` = `OrderConfirmation`, solo encoge). ⚠️⚠️ **DIEZ ficheros de tests
+> tenían fixtures que el libro rechaza** («pagados» sin `Payment`, totales ≠ Σ líneas, ajustes de
+> puerta sin cambio de valor, devoluciones sin fila): legalizados todos, ninguna identidad
+> excepcionada. ⚠️ El «a tu favor» sigue en `items-list`, hoja y puerta hasta la T3·3 (el tope).
+> ⚠️ Sin `VERIFY_CONC`: ningún fichero del `CRITICAL_RE` cambió.
+> ▶ **RETOMAR (siguiente sesión): la T3·3 — correos + post-form + el tope** (§6.3, fila 3):
+> `OrderConfirmation` · `OrderItemModified` (pierde sus tres céntimos) · `OrderItemRefunded` ·
+> `OrderRefunded` · `MixedPartySurchargeChanged` pintan el libro del pedido AL ENVIAR (D-T3·5) ·
+> `reduction_pending_refund` → «se te devolverán en el parque» (D2) · `GuestFormController`/
+> `guests.blade` sin «a tu favor» · **`MixedPartySurcharge::applyCredit` escribe el crédito DERIVADO
+> entero** (D4): mueren `gateCoverageCents`, `inFavourCents` y su línea en `items-list`, hoja y
+> puerta (`mixedPartyInFavourCents`) · `mixed-party:verify-concurrency` en sus DOS escenarios y
+> `VERIFY_CONC=1` · los 3 casos del tope en `OrderFinancialInvariantsTest` se INVIERTEN (guarda N)
+> · `STILL_ON_THE_OLD_MODEL` se vacía y se borra con su test. Después la T3·4 (la retirada de
+> §4.7, `INVARIANTES`, `DEUDA`, guion headless, receta de las 25 acciones, ojo del owner). Numera
+> `DECISIONES` mirando el remoto (`git fetch`): la siguiente libre es la que siga a la última del remoto.
 > ❗❗❗ **2026-09-01 (tarde, 3.ª sesión) · T3·1 · EL CONTRATO, LA API Y EL CAJÓN PINTAN EL LIBRO**
 > (`DECISIONES #310` — el carril de la landing tomó `#309` entre medias —, `specs/desglose-libro.md`
 > §6.3 el diseño fino de la T3 en CUATRO sub-tandas y **§6.3.1 lo ejecutado**; `specs/api-v1.md`
@@ -70,20 +101,6 @@
 > grep-eada con `# pass` sale MUDA. ⚠️ La cabecera de `#309` (landing) venía como «## #309 — …» y
 > docs-check exige «## #N ·»: normalizada, como con `#307`. `audit-clock` ✓ 10/10 fronteras sobre los
 > 7 tests con calendario de la tanda. ⚠️ Sin `VERIFY_CONC`: ningún fichero del `CRITICAL_RE` cambió.
-> ▶ **RETOMAR (siguiente sesión): la T3·2 — panel + hoja + puerta** (§6.3, fila 2): `order-totals`
-> (movimientos · Total · liquidaciones · saldo · aviso `!is_consistent` · «Ver historial»),
-> `reservation-financials` (el libro de la reserva), `items-list`, `item-detail` + `CalendarPage`,
-> `OrdersTable` (Total = `total_cents` · Pagado = `paid_cents`), `OrdersRelationManager`, `ViewOrder`
-> (`pendienteDevolucion()` ×2 → el saldo de clase reembolso), `ReservationSlip` + su blade (líneas
-> de producto + el libro + UNA caja de saldo), la puerta (`GateReservation` / `GateReservationsReader`
-> / `GateProfile` / `reservation.blade`: «A cobrar X» · «A devolver X» · «Nada pendiente»), claves
-> `admin.orders.book.*` (es · zh_CN); se re-apuntan `OrderTotalsBreakdownTest`, `ItemsListSubCardTest`,
-> `GateProfileTest`, `MixedPartyParkSurfacesTest`. Guardas M (paridad cliente↔panel: la MISMA lista
-> en `order-totals` y en `GET /me/orders`, 15 escenarios), Q y R de §6·T3. Después la T3·3 (correos +
-> tope, `VERIFY_CONC=1`) y la T3·4 (la retirada de §4.7, `INVARIANTES`, `DEUDA`, guion headless,
-> ojo del owner). ⚠️ `T4-PRB01` seguirá «en revisión» también con el libro pintado, y es correcto.
-> Numera `DECISIONES` mirando el remoto (`git fetch`): la siguiente libre es la que siga a la última
-> del remoto — esta sesión escribió `#310` porque la landing ya había tomado `#309`.
 > ❗❗❗ **2026-09-01 (madrugada, 2.ª sesión) · T2 · EL LIBRO EN EL DOMINIO, EN EL ÁRBOL**
 > (`DECISIONES #308` — el carril de la landing tomó `#307` mientras corría esta sesión —,
 > `specs/desglose-libro.md` §6·T2 y **§6.2 lo ejecutado**). Suite de esta tanda sola: 3741 /

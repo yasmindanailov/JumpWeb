@@ -419,15 +419,23 @@ class Polish7e1bis5Test extends TestCase
         // muestra la línea "Devuelto" con su importe (la antigua línea "Neto cobrado"
         // se eliminó: el valor lo da ahora "Valor final del pedido").
         $order = $this->makePaidOrder(total: 1200);
-        $this->attachPaidPayment($order);
-        $this->attachActiveItem($order);
+        $payment = $this->attachPaidPayment($order);
+        $item = $this->attachActiveItem($order);
+        // Desde el libro (T3·2) la devolución es un HECHO con fila; las columnas cuadran con ella (I4).
+        PaymentRefund::create([
+            'payment_id' => $payment->id, 'order_item_id' => $item->id,
+            'amount_cents' => 500, 'currency' => 'EUR',
+            'status' => PaymentRefund::STATUS_SUCCEEDED, 'mode' => PaymentRefund::MODE_REST,
+            'gateway_order' => $payment->gateway_order, 'gateway_response_code' => PaymentRefund::REDSYS_REFUND_SUCCESS_CODE,
+            'requested_by' => $this->staffWithFullItemPermissions()->id, 'requested_at' => now(), 'processed_at' => now(),
+        ]);
         $order->update(['refunded_at' => now(), 'refund_amount_cents' => 500]);
 
         $response = $this->actingAs($this->staffWithFullItemPermissions())
             ->get('/admin/orders/'.$order->code)
             ->assertOk();
 
-        $response->assertSee(__('admin.orders.amount_refunded'));   // "Devuelto"
+        $response->assertSee(__('tickets.journal.refund_card'));    // la línea de devolución del LIBRO
         $response->assertSee('−5,00 €', escape: false);            // importe devuelto
     }
 

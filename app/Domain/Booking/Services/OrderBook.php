@@ -227,6 +227,56 @@ final readonly class OrderBook
         );
     }
 
+    /**
+     * ¿Hay HISTORIA que explicar? El atajo «Ver historial» del panel (T5 adenda 4, `[DECIDIDO owner]`)
+     * se ofrece solo cuando hay consecuencias —una línea de valor que no sea el nacimiento, o una
+     * devolución—: el caso simple no gana ruido. Lo decide el libro para que el bloque del pedido y
+     * la tarjeta de cada reserva no tengan cada uno su condición (D-T3·14 de `specs/desglose-libro.md`).
+     */
+    public function hasHistoryToExplain(): bool
+    {
+        foreach ($this->movements as $m) {
+            if ($m->kind !== Movement::KIND_BOOKING) {
+                return true;
+            }
+        }
+        foreach ($this->settlements as $s) {
+            if ($s->kind === Settlement::KIND_REFUND) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Lo que se le DEBE al cliente, en positivo: el saldo cuando su clase es de devolución
+     * (`refund_at_park` · `refund_pending`); 0 en cualquier otra. Es el importe que el panel sugiere
+     * al reembolsar (D5 de `#146`) y el que nombra el aviso del pedido cancelado (D-T3·15).
+     */
+    public function owedToCustomerCents(): int
+    {
+        return in_array($this->balance->kind, [Balance::KIND_REFUND_AT_PARK, Balance::KIND_REFUND_PENDING], true)
+            ? -$this->balance->cents
+            : 0;
+    }
+
+    /**
+     * El MÉTODO del cobro (`web` · `desk` · `card` · `manual`), o `null` sin cobro: el de la primera
+     * liquidación de clase «cobro» (hay UN cobro por pedido, `PAY-01`). La puerta lo dice junto a lo
+     * pagado; nadie lo vuelve a deducir del proveedor (`DECISIONES #128`).
+     */
+    public function paymentMethod(): ?string
+    {
+        foreach ($this->settlements as $s) {
+            if ($s->kind === Settlement::KIND_PAYMENT) {
+                return $s->method;
+            }
+        }
+
+        return null;
+    }
+
     /** `Σ amount_cents` de las líneas de valor: la mitad izquierda de `I3`. */
     public function movementsSumCents(): int
     {

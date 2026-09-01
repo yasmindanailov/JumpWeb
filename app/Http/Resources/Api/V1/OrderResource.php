@@ -90,7 +90,7 @@ class OrderResource extends JsonResource
             'items' => $order->items->whereNull('parent_item_id')
                 ->reject(fn ($item) => $order->isVoidedLeftoverItem($item))
                 ->values()
-                // El pedido baja a cada línea: `ReservationFinancials` lo necesita y navegarlo desde
+                // El pedido baja a cada línea: `OrderBook::forReservation` lo necesita y navegarlo desde
                 // la línea sería una consulta por línea (Fase 4 · paso 4.0b).
                 ->map(fn ($item) => (new OrderItemResource($item))->within($order)->resolve($request))
                 ->all(),

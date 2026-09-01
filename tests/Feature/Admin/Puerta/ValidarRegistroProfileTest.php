@@ -531,7 +531,7 @@ class ValidarRegistroProfileTest extends TestCase
         $page->set('profile.window', [[
             'order_code' => 'R-MANANA1', 'order_item_id' => 99, 'date' => '2026-09-06', 'time_window' => '11:00–12:00',
             'product' => 'Entrada 1h', 'is_entry' => true, 'quantity' => 2, 'addons' => ['Calcetines'],
-            'paid_online_cents' => 500, 'pending_gate_cents' => 1500, 'charge_method' => 'redsys',
+            'paid_cents' => 500, 'balance_kind' => 'pay_at_park', 'balance_cents' => 1500, 'charge_method' => 'redsys',
             'paid_at' => null, 'created_at' => '2026-09-01 09:00:00', 'minors' => [],
         ]]);
 

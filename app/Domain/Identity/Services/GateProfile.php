@@ -86,8 +86,10 @@ final class GateProfile
             'is_entry' => $r->isEntry,
             'quantity' => $r->quantity,
             'addons' => $r->addons,
-            'paid_online_cents' => $r->paidOnlineCents,
-            'pending_gate_cents' => $r->pendingGateCents,
+            // El libro de la reserva (T3·2): lo pagado y el SALDO con su clase y su signo.
+            'paid_cents' => $r->paidCents,
+            'balance_kind' => $r->balanceKind,
+            'balance_cents' => $r->balanceCents,
             'charge_method' => $r->chargeMethod,
             'paid_at' => $r->paidAt,
             'created_at' => $r->createdAt,
