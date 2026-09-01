@@ -243,6 +243,16 @@ return [
         // T5 · D9 : aucun encaissement n'est enregistré à l'accueil, donc « réglé », jamais « payé ».
         'gate' => 'Réglé au parc',
         'with_reservation' => ':reservation · :label',
+        // T3·1 : les titres du livre et les libellés du solde (un par `balance.kind` ; `settled` n'en a pas).
+        'movements_title' => 'Mouvements',
+        'settlements_title' => 'Paiements et remboursements',
+        'total' => 'Total',
+        'paid' => 'Payé',
+        'balance_pay_at_park' => 'À régler au parc',
+        'balance_refund_at_park' => 'À vous rembourser au parc',
+        'balance_refund_pending' => 'Remboursement en attente',
+        'balance_pay_online' => 'Reste à payer en ligne',
+        'balance_rest_at_park' => 'et :amount au parc',
     ],
     'errors' => [
         'choose_one' => 'Choisis au moins un billet pour continuer.',

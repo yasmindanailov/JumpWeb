@@ -18082,7 +18082,7 @@ contradice entre pedido y reserva y el libro dice lo mismo en los dos niveles) �
 forReservation` compone el pedido entero (N reservas = N composiciones, como hoy). Sigue la T3.
 - ⚠️ Es `#308` y no `#307`: el carril de la landing numeró `#307` mientras esta sesión corría (la
   colisión de `CONVENCIONES` §10; se vio al empujar y se renumeró en el rebase).
-## #309 — Cinco secciones de la portada, en un encargo (2026-09-01)
+## #309 · 2026-09-01 · Cinco secciones de la portada, en un encargo
 
 **Contexto.** `[DECIDIDO owner, 2026-09-01]`, en un solo mensaje. Diseño fino y medidas en
 `specs/idioma-visual-heredado.md` **§3.nonies**.
@@ -18157,3 +18157,68 @@ rebasar encima de `#308`; esta tanda sola daba 3731 / 24.224 · Pint ✓ (1058) 
 · `kit:build --check` servible con **7 símbolos** · **3/3 mutaciones muerden** en la guarda nueva ·
 Chrome real 1280 y 390 con puntero grueso: **0 px de desborde y 0 errores de consola**, toggles con
 desfase **0** contra la tarjeta en los dos anchos, mancha **0 px²** sobre el párrafo en los dos.
+
+## #310 · 2026-09-01 · T3·1 del libro: el contrato `Ledger` y el cajón pintan el LIBRO — y el modelo viejo deja de viajar por la API
+
+**Contexto.** `#308` dejó `Booking\Services\OrderBook` en el dominio SIN superficies: la API y el
+cajón seguían publicando los dos ejes (`invoiced_cents` · `deposit_cents` · `gate_remainder_cents` ·
+`refund_pending_cents` · `gate_lines[]` · `in_favour_hint`). La T3 de `specs/desglose-libro.md`
+(§6·T3) se partió por SUPERFICIE en cuatro sub-tandas (§6.3) para que el árbol quede verde en cada
+corte —medido: 40 consumidores y 25 tests citan el modelo viejo—; ésta es la primera.
+
+**Decisión.**
+1. **El contrato primero** (`openapi/v1.yaml`): `Ledger` = `total_cents` · `paid_cents` ·
+   `balance{kind, cents, rest_at_park_cents}` · `movements[]` · `settlements[]` · `has_deposit` ·
+   `is_consistent` · `note` (+ `LedgerBalance`, `LedgerMovement`, `LedgerSettlement`, con `required`
+   completo y `additionalProperties: false`). **Incompatible sin versión nueva**, a propósito: 0 LIVE
+   / 0 PRODUCCIÓN, el único consumidor —el cajón— cambia en el mismo commit y la app móvil no existe.
+2. **`LedgerResource` TRANSCRIBE `OrderBook`** y no compone nada; `OrderResource` (`forOrder`) y
+   `OrderItemResource` (`forReservation`); `shows_deposit_note` se DERIVA del libro: pedido cobrado ∧
+   `has_deposit` ∧ `balance.kind = pay_at_park`.
+3. **El cajón pinta el libro entero** (`orders.js::financialsOf` + `PurchaseCard.vue`; D-T3·1…4):
+   movimientos con signo y fecha, Total, liquidaciones, Pagado, saldo por CLASE con color por ROL
+   (`--warn` lo que se paga, `--refund` lo que se devuelve; pendientes al 70 %); con
+   `is_consistent = false`: Total, cobros y la frase de revisión (la asimetría de `#132`).
+   `outcome.js` saca la confirmación del libro (`paid_cents`; `park_cents` = el saldo `pay_at_park`).
+4. **`OrderBook::forOrder` deja rastro cuando no cuadra** (`ledger.no_cuadra`, `warning`, con las
+   cifras de las cuatro identidades): el «el parque se entera por log» de `#132` se muda al libro, por
+   pedido y no por reserva (una vez, no N). Y **una línea fantasma cancelada a 0 € no genera
+   movimiento**: una línea de 0 no dice nada, y nombrarla enseñaba un producto que ninguna otra
+   superficie enseña (`Order::isVoidedLeftoverItem`).
+
+**Lo que se midió.**
+- **Seis mutaciones** (4 PHP + 2 JS), cada una aplicada, corrida y restaurada sobre árbol commiteado
+  (la regla de `#181`): M1 `paid_cents` publica el total → **4 rojos** · M3 el libro omite TODA
+  cancelación → **12 rojos + 1 error** · M4 `warning` → `debug` → **1 error** · M5 (JS) la puerta de
+  `is_consistent` nunca se abre → **1 rojo** · M6 (JS) el saldo se toma sin mirar su clase → **1
+  rojo**. ⚠️⚠️ **M2 —`shows_deposit_note` SIN la clase del saldo— pasó en VERDE**: ningún caso tenía
+  un pack con señal cuyo saldo ya no fuera «a pagar en el parque», que es el estado NORMAL de una
+  fiesta después de celebrarse. Dos casos nuevos en `OrderSummaryFieldsTest` (resto liquidado en
+  puerta → `settled`, sin nota; reserva cancelada → `refund_pending`, sin nota) y ahora muerde.
+  ⚠️ El segundo NO discrimina M2 y está dicho en el caso: `has_deposit` del libro cuenta solo
+  repartos de líneas VIVAS (T2, la definición que puentea con el modelo viejo a nivel de pedido),
+  así que la reserva cancelada dice `has_deposit = false` y la nota cae antes de mirar la clase.
+- **Cuatro fixtures resultaron ILEGALES al medirlos contra el libro**: tres pedidos «pagados» sin
+  `Payment` (`OrderSummaryFieldsTest` ×2, `SidebarDomContractTest::setUpConfirmedOrder`) —con el
+  modelo viejo nadie cruzaba el cobro con el estado; con la identidad I2 (cobrado == Σ online al
+  nacer) responden «en revisión» y el saldo es 0— y `MeOrdersTest::makeOrder`, sin líneas y
+  facturando 1.000. Se LEGALIZARON (el cobro se registra como lo hace `RedsysReturnHandler`, por
+  `onlineDueCents()`; el pedido sin líneas publica lo que VALE, 0, y el caso lo dice) — no se
+  excepcionó la identidad.
+- Con DOS reservas en un pedido **cada línea de valor lleva delante el nombre de la suya** (spec
+  §4.3; el nacimiento, que es del pedido, no): dos expectativas de `SidebarAccountParityTest` no lo
+  llevaban. Y **dos cancelaciones en el mismo segundo** (la del pack, en el fixture; la del
+  complemento, en el caso) las ordena el desempate del libro (`rank`, `seq`): la guarda localiza la
+  línea por etiqueta, no por posición.
+
+**Trampas pagadas.** `SidebarDomContractTest::assertBundleIsNotStale` hizo su trabajo —tocar
+`outcome.js` sin `npm run build:ssr` puso los once casos en rojo con `['resources/js/sidebar/outcome.js']`,
+y ése es el verde que miente que la guarda existe para impedir— · un `export` sin consumidor en
+`outcome.js` (`balanceCentsOf`, «para los tests») no hacía falta: se prueba por conducta · en el
+YAML del contrato una descripción con `: ` sin comillas rompe el parser (`ParseException`, línea 3376)
+· el reporter de `node --test` resume con `ℹ pass/fail`, no con `# pass`: la primera pasada de las
+mutaciones JS salió MUDA y pareció verde.
+
+**Consecuencias.** Hasta la T3·4 el modelo viejo sigue alimentando panel, hoja, puerta y correos
+(`GateBuckets` temporal, sin consumidores nuevos) y el puente de `OrderFinancialInvariantsTest` sigue
+verde. `specs/api-v1.md` §10.octodecies (puntos 94–96). Sigue la **T3·2** (§6.3, fila 2).

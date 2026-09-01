@@ -2994,6 +2994,23 @@ body[data-has-hero].nav--live .hero__pair-slot {
 /* Trazabilidad: lo facturado al reservar. Atenuado y al pie porque NO es un canal — pintarlo
    arriba, como hacía el «Subtotal», apilaba dos bases distintas sin decirlo. */
 .orders__ledger-invoiced { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); opacity: 0.85; }
+/* EL LIBRO (T3·1 de `specs/desglose-libro.md`, `DECISIONES #305`): una línea por movimiento y por
+   liquidación, con su signo delante y su fecha en mudo; el Total y lo Pagado como `.orders__final`.
+   Lo negativo (bajadas, cortesías, devoluciones) toma el color de devolución; una devolución en
+   curso o fallida se atenúa. El SALDO cierra el bloque y toma el color de su clase: ámbar lo que se
+   paga, el de devolución lo que se devuelve. */
+.orders__mov { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; font-family: var(--font-body); font-size: 13px; color: var(--fg); }
+.orders__mov-label { color: var(--fg-mute); }
+.orders__mov-date { font-size: 12px; white-space: nowrap; }
+.orders__mov strong { font-weight: 700; color: var(--fg); white-space: nowrap; }
+.orders__mov--neg strong { color: var(--refund); }
+.orders__mov--pending { opacity: 0.7; }
+.orders__balance { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
+.orders__balance--pay_at_park strong,
+.orders__balance--pay_online strong { color: var(--warn); }
+.orders__balance--refund_at_park strong,
+.orders__balance--refund_pending strong { color: var(--refund); }
+.orders__balance .orders__gate-caption { flex-basis: 100%; font-weight: 400; }
 /* Badge "Finalizado" en Mis pedidos (Fase 7.1b, #127). Sutil para no competir
    con el resto del row; gris/atenuado porque para el cliente "finished" no
    es ni positivo ni negativo, simplemente "ya pasó". */

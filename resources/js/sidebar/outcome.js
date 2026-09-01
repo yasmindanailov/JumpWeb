@@ -69,6 +69,20 @@ export function dependentsByReservation(eventData) {
 }
 
 /**
+ * Lo que un saldo del libro dice PARA una clase concreta, o `0` si es otra clase
+ * (`specs/desglose-libro.md` §4.4). `pay_at_park` es lo que queda por pagar en el parque.
+ *
+ * ⚠️ Se mira la CLASE y no el signo: un saldo negativo «a devolver» también es un número, y leerlo
+ * como «pendiente en el parque» diría lo contrario de lo que es.
+ *
+ * @param {{kind?: string, cents?: number}|null|undefined} balance
+ * @param {string} kind
+ */
+function balanceCentsOf(balance, kind) {
+    return balance?.kind === kind ? Number(balance.cents ?? 0) : 0;
+}
+
+/**
  * Una línea del pedido traducida a la FILA que pinta el resumen.
  *
  * ⚠️ **La forma de destino es la del presupuesto, no una nueva**, y es la decisión que permite que la
@@ -78,8 +92,15 @@ export function dependentsByReservation(eventData) {
  *
  * ⚠️ **Los tres campos de dinero salen de la LÍNEA, no del pedido** (#225 F3): en una cesta mixta
  * entrada+pack el agregado del pedido no sirve para etiquetar una reserva, y `shows_deposit_note` son
- * TRES condiciones ya compuestas por el servidor —está pagado, el producto usa señal y queda algo en
- * puerta—. Recomponerlas aquí es como divergen las cuatro superficies que pintan este bloque.
+ * TRES condiciones ya compuestas por el servidor —está cobrado, la reserva nació con señal y queda
+ * algo en el parque—. Recomponerlas aquí es como divergen las cuatro superficies que pintan este bloque.
+ *
+ * ⚠️⚠️ **Los dos importes de la señal salen del LIBRO de la reserva** (T3·1 de
+ * `specs/desglose-libro.md`): lo pagado (`ledger.paid_cents`) y lo que queda en el parque
+ * (`ledger.balance` de clase `pay_at_park`). Hasta la T3·1 se leían de `paid_online_cents` y
+ * `gate_remainder_cents` de la línea, **que la API no publicaba**: el aviso de señal de la reserva
+ * recién creada decía «Señal 0,00 €» — medido en `outcome.test.js`, cuyo fixture inventaba los dos
+ * campos y por eso no lo vio.
  *
  * @param {object} item  una línea de `GET orders/{code}`
  * @param {Array<{key: string, label: string, value: string}>} answers
@@ -101,8 +122,8 @@ export function confirmationLine(item, answers = [], dependents = []) {
         time: item?.start_time ?? null,
         subtotal_cents: Number(item?.charged_subtotal_cents ?? 0),
         has_deposit: item?.shows_deposit_note === true,
-        deposit_cents: Number(item?.paid_online_cents ?? 0),
-        gate_remainder_cents: Number(item?.gate_remainder_cents ?? 0),
+        deposit_cents: Number(item?.ledger?.paid_cents ?? 0),
+        gate_remainder_cents: balanceCentsOf(item?.ledger?.balance, 'pay_at_park'),
         addons: (Array.isArray(item?.addons) ? item.addons : []).map((addon) => ({
             product_name: String(addon?.product_name ?? ''),
             quantity: Number(addon?.quantity ?? 0),
@@ -132,15 +153,15 @@ export function buildConfirmation(order, eventData = {}) {
     return {
         code: String(order?.code ?? ''),
         status: String(order?.status ?? ''),
-        // ⚠️ Del LEDGER, que es el único sitio donde vive el desglose desde la tanda B
-        // (`DECISIONES #127`). Aquí se enseña lo que la reserva VALE, no lo facturado: en el paso 6
-        // los dos coinciden —el pedido acaba de nacer— pero leer el campo correcto es lo que hace
-        // que siga siendo cierto cuando el pedido cambie después.
-        total_cents: Number(order?.ledger?.value?.total_cents ?? 0),
+        // ⚠️ Del LIBRO, que es el único sitio donde vive el dinero (`DECISIONES #305`). Aquí se
+        // enseña lo que el pedido VALE, no lo facturado: en el paso 6 los dos coinciden —el pedido
+        // acaba de nacer— pero leer el campo correcto es lo que hace que siga siendo cierto cuando
+        // el pedido cambie después.
+        total_cents: Number(order?.ledger?.total_cents ?? 0),
         online_cents: Number(order?.online_amount_cents ?? 0),
-        // Lo que queda por cobrar EN PUERTA. **No se resta de nada**: el servidor lo publica compuesto
-        // y `total − online` no es lo mismo (hay ajustes que no viven en ninguno de los dos).
-        park_cents: Number(order?.ledger?.value?.pending_at_gate_cents ?? 0),
+        // Lo que queda por pagar EN EL PARQUE: el SALDO del libro cuando es de esa clase. **No se
+        // resta de nada**: el servidor lo publica compuesto y `total − online` no es lo mismo.
+        park_cents: balanceCentsOf(order?.ledger?.balance, 'pay_at_park'),
         has_guest_form: order?.guest_form_pending === true,
         lines: items.map((item) => confirmationLine(item, answers[String(item?.id)] ?? [], dependents[String(item?.id)] ?? [])),
     };

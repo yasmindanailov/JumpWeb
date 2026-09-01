@@ -243,6 +243,16 @@ return [
         // T5 · D9: no collection is recorded at the gate, so "settled", never "paid".
         'gate' => 'Settled at the park',
         'with_reservation' => ':reservation · :label',
+        // T3·1: the book's titles and the balance labels (one per `balance.kind`; `settled` has none).
+        'movements_title' => 'Movements',
+        'settlements_title' => 'Payments and refunds',
+        'total' => 'Total',
+        'paid' => 'Paid',
+        'balance_pay_at_park' => 'To pay at the park',
+        'balance_refund_at_park' => 'To be refunded at the park',
+        'balance_refund_pending' => 'Refund pending',
+        'balance_pay_online' => 'Left to pay online',
+        'balance_rest_at_park' => 'and :amount at the park',
     ],
     'errors' => [
         'choose_one' => 'Choose at least one ticket to continue.',

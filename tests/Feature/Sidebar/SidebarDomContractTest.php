@@ -801,7 +801,7 @@ class SidebarDomContractTest extends TestCase
 
         $this->assertSame(Order::STATUS_PAID, $order->status, 'el caso necesita el pedido PAGADO, o no hay desglose');
         $this->assertGreaterThan(
-            0, (int) ($this->confirmedApiPayload()['order']['ledger']['value']['pending_at_gate_cents'] ?? 0),
+            0, (int) ($this->confirmedApiPayload()['order']['ledger']['balance']['cents'] ?? 0),
             'y algo pendiente en el parque, o no hay desglose que comparar'
         );
         $this->assertNotNull(RegistrationLink::current(), 'y el enlace de registro configurado');
@@ -906,7 +906,16 @@ class SidebarDomContractTest extends TestCase
         $code = $this->confirmedOrderCode();
 
         if ($paid) {
-            Order::where('code', $code)->update(['status' => Order::STATUS_PAID, 'paid_at' => now()]);
+            // Cobrado COMO lo cobra el canal real: estado + `paid_at` + el cobro de lo que las líneas
+            // aportan online. Un pedido `paid` sin `Payment` no lo produce nadie, y desde la T2 del
+            // libro el saldo lo sabe (identidad I2) y contestaría «en revisión», sin desglose.
+            $order = Order::where('code', $code)->firstOrFail();
+            Payment::create([
+                'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
+                'amount' => $order->onlineDueCents(), 'currency' => 'EUR', 'provider' => 'redsys',
+                'status' => Payment::STATUS_PAID, 'paid_at' => now(), 'gateway_order' => sprintf('%010d', $order->id),
+            ]);
+            $order->forceFill(['status' => Order::STATUS_PAID, 'paid_at' => now()])->save();
         }
 
         return $code;

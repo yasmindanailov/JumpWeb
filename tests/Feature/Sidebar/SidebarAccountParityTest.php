@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Services\DisplayTime;
@@ -130,36 +131,47 @@ class SidebarAccountParityTest extends TestCase
             $this->actingAs($user)->getJson(self::ROOT.'/orders/'.$order->code)->assertOk()->json()
         );
 
-        // El importe de cabecera es lo que el pedido VALE hoy (`ledger.value.total_cents`: el pack
-        // vivo + los calcetines = 98,00), no lo que se facturó al nacer (188,00, con el pack que
-        // después se canceló). Hasta la T1 del libro los dos coincidían en este fixture por accidente.
-        $this->assertSame(Money::format($order->fresh(['items', 'adjustments', 'payments.refunds'])->financialSummary()->totalFinalNeto()), $ledger['totalLabel']);
+        // El importe de cabecera es lo que el pedido VALE hoy (`ledger.total_cents`: el pack vivo +
+        // los calcetines = 98,00), no lo que se facturó al nacer (188,00, con el pack que después se
+        // canceló). Hasta la T1 del libro los dos coincidían en este fixture por accidente.
+        $fresh = $order->fresh(['items.slot', 'items.ticketType', 'adjustments', 'payments.refunds']);
+        $this->assertSame(Money::format(OrderBook::forOrder($fresh)->totalCents), $ledger['totalLabel']);
         $this->assertSame(Money::format(9800), $ledger['totalLabel']);
         $this->assertNull($ledger['refund'], 'sin reembolso no hay bloque de reembolso');
         $this->assertSame(__('tickets.statuses.paid'), $ledger['statusLabel']);
 
-        // ⚠️⚠️ **LA FECHA VA DONDE EL IMPORTE ES EL QUE SE COBRÓ** (`DECISIONES #130` y `#131`). Este
-        // pedido tiene un pack CANCELADO cuya señal (60,00) sigue en la caja del parque, así que lo
-        // cobrado (128,00) no coincide con lo que respalda producto (68,00): el bloque «Tu dinero»
-        // aparece —dice algo que la columna del valor no dice: que se le deben 60,00— y la fecha se
-        // pega al importe que SÍ se cobró ese día (`#131`: en 7 pedidos reales, 6 sanos, la fecha
-        // se pegaba a un importe que no se cobró). Arriba, la línea del canal va sin fecha.
-        // (El pedido CORRIENTE, sin nada que devolver, tiene su propia guarda:
-        // `MeOrdersFinancialsTest::test_the_cash_axis_stays_quiet_when_it_would_only_repeat_the_value_row`.)
+        // ⚠️⚠️ **EL LIBRO, línea a línea** (`DECISIONES #305`, T3·1): el nacimiento (188,00, lo que se
+        // facturó), la cancelación del segundo pack (−90,00, con su fecha) y el Total; el cobro real
+        // (128,00 el día que se pagó) y el SALDO. Este pedido tiene un pack CANCELADO cuya señal
+        // (60,00) sigue en la caja del parque y un pack vivo al que le quedan 30,00 por pagar allí:
+        // el libro NETEA los dos —Total 98,00 − Pagado 128,00 = −30,00— y lo dice como lo que es,
+        // «a devolver en el parque», porque hay una visita por delante (D1/D2 del owner). Hasta la
+        // T3·1 la pantalla decía «pendiente de devolverte 60,00» y «a pagar en el parque 30,00» en
+        // dos bloques que el cliente tenía que restar de cabeza.
+        // ⚠️ Este pedido tiene DOS reservas (el pack vivo y el cancelado), así que cada línea de
+        // valor lleva delante el nombre de la suya (spec §4.3); el nacimiento, que es del pedido, no.
+        $f = $ledger['financials'];
+        $cancelLabel = __('tickets.journal.with_reservation', [
+            'reservation' => 'Cumple Jump',
+            'label' => __('tickets.journal.cancel', ['name' => 'Cumple Jump', 'quantity' => __('tickets.guests_count', ['count' => 1])]),
+        ]);
         $this->assertSame(
-            __('tickets.ledger.paid_online'),
-            $ledger['financials']['value']['rows'][0]['label'],
-            'con dinero que devolver, la fecha no puede ir pegada a un importe que no es el cobrado'
+            [[__('tickets.journal.booking'), '+'.Money::format(18800)], [$cancelLabel, '−'.Money::format(9000)]],
+            array_map(fn (array $m): array => [$m['label'], $m['amountLabel']], $f['movements']),
+            'las líneas de valor no son las del dominio, o no llevan su signo'
         );
-        $this->assertNotNull($ledger['financials']['cash'], 'se le deben 60,00 €: el eje de caja tiene algo que decir');
+        $this->assertSame(DisplayTime::format($order->created_at, 'd/m/Y'), $f['movements'][0]['dateLabel'], 'cada línea lleva su fecha, compuesta por el servidor');
+        $this->assertSame(Money::format(9800), $f['total']['amountLabel']);
         $this->assertSame(
-            __('tickets.ledger.charged_online').' · '.DisplayTime::format($order->paid_at, 'd/m/Y'),
-            $ledger['financials']['cash']['rows'][0]['label'],
-            'el ancla de caja ha perdido la fecha: el importe deja de ser conciliable'
+            [[__('tickets.journal.paid_online'), DisplayTime::format($order->paid_at, 'd/m/Y'), '+'.Money::format(12800)]],
+            array_map(fn (array $s): array => [$s['label'], $s['dateLabel'], $s['amountLabel']], $f['settlements']),
+            'el cobro ha perdido su fecha o su importe: deja de ser conciliable con el extracto'
         );
-        $this->assertSame(Money::format(12800), $ledger['financials']['cash']['rows'][0]['amountLabel']);
-        $this->assertSame(__('tickets.ledger.pending_refund'), $ledger['financials']['cash']['rows'][1]['label']);
-        $this->assertSame(Money::format(6000), $ledger['financials']['cash']['rows'][1]['amountLabel'], 'la señal del pack cancelado');
+        $this->assertSame(Money::format(12800), $f['paid']['amountLabel']);
+        $this->assertSame('refund_at_park', $f['balance']['kind']);
+        $this->assertSame(__('tickets.journal.balance_refund_at_park'), $f['balance']['label']);
+        $this->assertSame(Money::format(3000), $f['balance']['amountLabel'], 'el saldo neto: 60,00 que se le deben menos 30,00 que pagará');
+        $this->assertNull($f['note'], 'con todo dicho por las líneas no hay frase que añadir');
     }
 
     /**
@@ -187,7 +199,7 @@ class SidebarAccountParityTest extends TestCase
         $this->assertSame(__('tickets.statuses.paid'), $fila['statusLabel']);
         $this->assertSame(DisplayTime::format($order->created_at), $fila['createdLabel']);
         // Lo que VALE hoy (98,00), no lo facturado al nacer (188,00): ver la paridad de arriba.
-        $this->assertSame(Money::format($order->fresh(['items', 'adjustments', 'payments.refunds'])->financialSummary()->totalFinalNeto()), $fila['totalLabel']);
+        $this->assertSame(Money::format(OrderBook::forOrder($order->fresh(['items.slot', 'items.ticketType', 'adjustments', 'payments.refunds']))->totalCents), $fila['totalLabel']);
 
         // Las reservas del pedido, con su cantidad ya compuesta (`L2`). Son DOS: el pack vivo y la
         // línea cancelada — al revés que «Mis reservas», que las reparte en dos pantallas, aquí el
@@ -213,69 +225,72 @@ class SidebarAccountParityTest extends TestCase
             'la lista de pedidos y el pedido suelto componen el dinero de forma distinta'
         );
 
-        // ⚠️⚠️ **Lo VERIFICABLE llega con la lista** (`DECISIONES #130` y `#131`): este pedido tiene
-        // un pack cancelado cuya señal (60,00) sigue en caja, así que el bloque «Tu dinero» aparece
-        // —se le deben 60,00— y la FECHA va pegada al importe que sí se cobró ese día (128,00), en
-        // el ancla de caja; la línea del canal (68,00: lo que respalda producto) va sin fecha.
-        $this->assertSame(__('tickets.ledger.paid_online'), $fila['financials']['value']['rows'][0]['label']);
-        $this->assertSame(Money::format(6800), $fila['financials']['value']['rows'][0]['amountLabel']);
-        $this->assertSame(
-            __('tickets.ledger.charged_online').' · '.DisplayTime::format($order->paid_at, 'd/m/Y'),
-            $fila['financials']['cash']['rows'][0]['label'],
-            'la fecha del cobro tiene que llegar con la lista, pegada al importe cobrado'
-        );
-        $this->assertSame(Money::format(6000), $fila['financials']['cash']['rows'][1]['amountLabel'], 'pendiente de devolverte: la señal del pack cancelado');
+        // ⚠️⚠️ **Lo VERIFICABLE llega con la lista**: el cobro con su FECHA (128,00 el día que se
+        // pagó) y el saldo con su clase — el mismo libro que se ve al abrir el pedido suelto.
+        $this->assertSame(__('tickets.journal.paid_online'), $fila['financials']['settlements'][0]['label']);
+        $this->assertSame(DisplayTime::format($order->paid_at, 'd/m/Y'), $fila['financials']['settlements'][0]['dateLabel'], 'la fecha del cobro tiene que llegar con la lista');
+        $this->assertSame('+'.Money::format(12800), $fila['financials']['settlements'][0]['amountLabel']);
+        $this->assertSame(__('tickets.journal.balance_refund_at_park'), $fila['financials']['balance']['label']);
     }
 
     /**
-     * ⚠️⚠️ **`L6` EXTREMO A EXTREMO: la frase de «Importe al reservar» la compone el DOMINIO y la
-     * pantalla solo la transporta** (`DECISIONES #133`, `specs/desglose-dinero-cliente.md` §22.2).
+     * ⚠️⚠️ **EL LIBRO EXTREMO A EXTREMO: las etiquetas y la CLASE del saldo las compone el DOMINIO y
+     * la pantalla solo las transporta** (`DECISIONES #305`, T3·1; la lección de `L6`/`#133` aplicada
+     * al libro).
      *
-     * Era una cadena FIJA del diccionario del cajón —«…es porque el pedido cambió después»—: decía
-     * *que* el pedido había cambiado y **no en qué dirección ni cuánto**, que es justo lo que quiere
-     * saber quien ve un número distinto del que esperaba. Una BAJADA no dejaba más rastro que ese
-     * número mudo.
-     *
-     * ⚠️ **Y la CONDICIÓN viaja con ella**: la línea se enseña exactamente cuando el servidor manda
-     * frase. Que la pantalla vuelva a comparar `invoiced_cents` con `total_cents` por su cuenta es la
-     * misma forma de divergencia que dejó al cliente sin el ancla de caja (`L1`) — y esa recaída no
-     * la ve la composición en JavaScript, porque allí los dos importes también están.
+     * Una gestión deja su línea con su etiqueta —«Cancelado: Calcetines · 2 unidades»— compuesta por
+     * `MovementLabel` en el idioma negociado; la pantalla no tiene diccionario propio para eso. Y la
+     * clase del saldo («a devolver en el parque» frente a «pendiente de devolución») depende de si
+     * habrá visita, que no está en el número: si la pantalla la dedujera del signo, este caso —una
+     * clase que no casa con el signo— la delataría.
      */
-    public function test_the_invoiced_hint_travels_from_the_domain_to_the_screen(): void
+    public function test_the_movement_labels_and_the_balance_kind_travel_from_the_domain_to_the_screen(): void
     {
         [$user, $order] = $this->richOrder();
 
-        // Cancelar el complemento: el pedido pasa a valer 90,00 (el pack vivo) frente a los 188,00
-        // que se facturaron (el pack cancelado también nació con el pedido). Es la forma real de
-        // una bajada, y deja los tres importes distintos (188,00 · 90,00 · 98,00).
+        // Cancelar el complemento: una gestión más en el libro, con su propia línea.
         $addon = $order->items()->whereNotNull('parent_item_id')->first();
         $addon->forceFill(['cancelled_at' => Carbon::now()])->save();
 
         $respuesta = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json();
         $publicado = $respuesta['data'][0]['ledger'];
 
-        $this->assertSame(
-            __('tickets.ledger.invoiced_hint_less', ['invoiced' => '188,00 €', 'difference' => '98,00 €']),
-            $publicado['invoiced_hint'],
-            'el dominio ha dejado de decir la dirección y el importe del cambio',
+        $cancelaciones = array_values(array_filter($publicado['movements'], fn (array $m): bool => $m['kind'] === 'cancel'));
+        $this->assertCount(2, $cancelaciones, 'el pack cancelado y el complemento recién cancelado');
+        // Con dos reservas en el pedido, la línea lleva delante el nombre de la suya (spec §4.3).
+        $this->assertContains(
+            __('tickets.journal.with_reservation', [
+                'reservation' => 'Cumple Jump',
+                'label' => __('tickets.journal.cancel', ['name' => 'Calcetines', 'quantity' => trans_choice('tickets.units_count', 2, ['count' => 2])]),
+            ]),
+            array_column($cancelaciones, 'label'),
+            'el dominio ha dejado de etiquetar la cancelación con su producto y su cantidad',
         );
 
         $fila = $this->purchasesInNode($respuesta)[0];
 
         $this->assertSame(
-            $publicado['invoiced_hint'], $fila['financials']['invoiced']['hint'],
-            'la pantalla compone la frase por su cuenta en vez de transportar la del servidor',
+            array_column($publicado['movements'], 'label'),
+            array_column($fila['financials']['movements'], 'label'),
+            'la pantalla compone las etiquetas por su cuenta en vez de transportar las del servidor',
         );
-        $this->assertSame(Money::format(18800), $fila['financials']['invoiced']['amountLabel']);
+        // El importe viaja con su signo. Se localiza la línea por su etiqueta y no por posición: la
+        // cancelación del pack (fixture) y la del complemento (este caso) caen en el MISMO segundo y
+        // el orden entre ellas lo decide el desempate del libro, que no es lo que se vigila aquí.
+        $calcetines = array_values(array_filter(
+            $fila['financials']['movements'],
+            fn (array $m): bool => str_contains($m['label'], 'Calcetines'),
+        ));
+        $this->assertCount(1, $calcetines, 'la cancelación del complemento tiene que salir UNA vez');
+        $this->assertSame('−'.Money::format(800), $calcetines[0]['amountLabel']);
 
-        // ⚠️ La guarda de la guarda: **sin frase no hay línea**. Es lo que distingue obedecer al
-        // servidor de re-derivar la comparación — los dos importes siguen viajando en el mismo
-        // objeto, así que una recaída daría exactamente el mismo resultado en el caso de arriba.
-        $respuesta['data'][0]['ledger']['invoiced_hint'] = null;
+        // ⚠️ La guarda de la guarda: **la clase manda sobre el signo**. Con el mismo importe pero la
+        // clase «saldado», no hay línea de saldo — obedecer al servidor es exactamente esto.
+        $respuesta['data'][0]['ledger']['balance']['kind'] = 'settled';
 
         $this->assertNull(
-            $this->purchasesInNode($respuesta)[0]['financials']['invoiced'],
-            'la pantalla re-deriva la condición en vez de obedecer al servidor',
+            $this->purchasesInNode($respuesta)[0]['financials']['balance'],
+            'la pantalla deduce la clase del saldo por su cuenta en vez de obedecer al servidor',
         );
     }
 

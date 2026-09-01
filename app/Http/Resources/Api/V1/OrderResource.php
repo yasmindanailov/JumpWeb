@@ -3,7 +3,7 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Booking\Models\Order;
-use App\Domain\Booking\Services\OrderLedger;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -56,11 +56,11 @@ class OrderResource extends JsonResource
             // online 11,90 €» (`specs/desglose-dinero-cliente.md` §4.ter.2). Para eso está
             // `ledger.value.pending_online_cents`, que es el mismo dinero dicho en el tiempo correcto.
             'online_amount_cents' => $order->onlineDueCents(),
-            // ⚠️⚠️ **EL DESGLOSE, y es el único sitio donde vive.** Antes eran seis campos sueltos en
-            // esta raíz y cada superficie componía el suyo: así divergieron. Lo compone
-            // `Booking\Services\OrderLedger`, que es la MISMA composición que leen el panel, la
-            // sub-card, el calendario, la lista, la taquilla, el PDF y los correos.
-            'ledger' => LedgerResource::make(OrderLedger::forOrder($order))->resolve($request),
+            // ⚠️⚠️ **EL LIBRO, y es el único sitio donde vive** (`DECISIONES #305`, T3·1). Antes eran
+            // seis campos sueltos en esta raíz y cada superficie componía el suyo: así divergieron. Lo
+            // compone `Booking\Services\OrderBook`, que es la MISMA composición que leen el panel, la
+            // sub-card, el calendario, la lista, el PDF, la puerta y los correos.
+            'ledger' => LedgerResource::make(OrderBook::forOrder($order))->resolve($request),
             // ⚠️ CUÁNDO fue el reembolso y si fue total. **El importe vive en
             // `ledger.cash.refunded_cents`**: un número, un sitio.
             'refund' => [

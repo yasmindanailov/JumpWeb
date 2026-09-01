@@ -4,9 +4,9 @@ namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
-use App\Domain\Booking\Services\OrderLedger;
+use App\Domain\Booking\Services\Balance;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\ProductIcon;
-use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -56,7 +56,9 @@ class OrderItemResource extends JsonResource
         $order = $this->order;
         assert($order !== null, OrderItemResource::class.' necesita su Order: usa ->within($order)');
 
-        $financials = ReservationFinancials::make($order, $item);
+        // El libro de ESTA reserva (T3·1 de `specs/desglose-libro.md`): nacimiento, gestiones, cobro
+        // y devoluciones ATRIBUIDOS, y su propio saldo — la puerta y la hoja de sala leen el mismo.
+        $book = OrderBook::forReservation($order, $item);
 
         return [
             'id' => $item->id,
@@ -98,15 +100,19 @@ class OrderItemResource extends JsonResource
             // («10:00–11:00»); un cliente que necesite la hora sola tendría que partirlo, que es
             // exactamente la clase de parseo frágil que un contrato existe para evitar.
             'start_time' => $item->slot?->start_time,
-            // Desglose de la RESERVA (principal + sus complementos), no del pedido: en una cesta
+            // El libro de la RESERVA (principal + sus complementos), no del pedido: en una cesta
             // mixta entrada+pack, etiquetar el agregado como «señal pagada» engaña (#225 F3).
             // ⚠️ Misma forma que el del pedido y compuesto por el MISMO value object: si la reserva
             // publicara su propia selección de campos, volveríamos a tener dos desgloses.
-            'ledger' => LedgerResource::make(OrderLedger::forReservation($order, $item))->resolve($request),
-            // Y si procede enseñar «señal pagada · resto en el parque». Son TRES condiciones
-            // compuestas en el dominio (`ReservationFinancials::showsDepositNote`): publicar solo
-            // los números obligaría al cliente a recomponerlas, y es como divergen.
-            'shows_deposit_note' => $financials->showsDepositNote($order, $item),
+            'ledger' => LedgerResource::make($book)->resolve($request),
+            // Y si procede enseñar «señal pagada · resto en el parque». Son TRES condiciones y se
+            // publican COMPUESTAS —el pedido está cobrado, la reserva nació con señal (un HECHO del
+            // libro, no el catálogo) y queda algo que pagar en el parque—: publicar solo los
+            // números obligaría al cliente a recomponerlas, y es como divergen las cuatro
+            // superficies que pintan este bloque.
+            'shows_deposit_note' => $order->paid_at !== null
+                && $book->hasDeposit
+                && $book->balance->kind === Balance::KIND_PAY_AT_PARK,
             // ⚠️ **La cantidad, ya compuesta con su sustantivo** («8 invitados», «2 entradas»), por el
             // mismo criterio que `date_label` y `time_window`. Sin ella el cliente pintaba `quantity`
             // pegado al importe de la línea —`8×216,00 €`— y eso se lee como 8 × 216 = 1.728 €

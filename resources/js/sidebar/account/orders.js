@@ -7,14 +7,14 @@
  *
  * ⚠️⚠️ **Ninguna regla de negocio vive aquí** (`CE-4`), y en esta zona la tentación es grande porque
  * la página de la que se copia SÍ las tiene: si un pedido se puede reintentar, cuánto queda por
- * cobrar en puerta, si procede el aviso de señal y si una reserva admite post-form lo decide el
- * SERVIDOR y llega resuelto (`can_be_retried`, `gate_remainder_cents`, `shows_deposit_note`,
+ * pagar en el parque, si procede el aviso de señal y si una reserva admite post-form lo decide el
+ * SERVIDOR y llega resuelto (`can_be_retried`, `ledger.balance`, `shows_deposit_note`,
  * `guest_form_url`). Recomponer cualquiera de esas cuatro aquí sería la quinta superficie que
  * diverge — que es exactamente lo que `openapi/v1.yaml` avisa para `shows_deposit_note`.
  *
- * ⚠️ Y **las fechas tampoco se componen**: llegan como `date_label` / `created_label` porque `Intl`
- * no reproduce lo que compone Carbon en español y porque la del pedido lleva la zona horaria de la
- * instalación, que el navegador no conoce (`DECISIONES #120(j)`).
+ * ⚠️ Y **las fechas tampoco se componen**: llegan como `date_label` / `created_label` / `occurred_label`
+ * porque `Intl` no reproduce lo que compone Carbon en español y porque la del pedido lleva la zona
+ * horaria de la instalación, que el navegador no conoce (`DECISIONES #120(j)`).
  */
 
 import { t, tp } from '../i18n.js';
@@ -70,170 +70,106 @@ export function lineBadgeOf(item, account) {
 }
 
 /**
- * **EL ANCLA DE CAJA**: la fila «cobrado», con su método y su fecha — o `null` si no se cobró nada.
- *
- * ⚠️ **La fecha es la mitad de lo que la hace conciliable**: «cobrado 30,00 €» no se busca en un
- * extracto bancario; «30,00 € · 24/08/2026» sí. La compone el servidor (`charged_at_label`), como
- * todas las fechas de esta zona. El separador es el mismo «·» que ya usa la línea de la reserva.
- *
- * ⚠️⚠️ **`anchor` no es decoración: el bloque entero heredaba el color de REEMBOLSO.** Mientras solo
- * se pintaba cuando había devoluciones eso pasaba desapercibido; en cuanto el ancla se enseña en todo
- * pedido cobrado, un cargo corriente se leería en ámbar **como si algo se hubiera devuelto** — el
- * mismo error de fondo que la tanda B quitó del eje del valor. La marca deja que la hoja lo pinte
- * neutro sin tocar las dos filas que sí son de devolución.
+ * Un importe CON su signo delante, como pide el libro (`DECISIONES #305`, D1: «"+" y "−" y un
+ * total»). El menos es el tipográfico (U+2212), el mismo que el panel usa en «Devuelto»; `money()`
+ * emite el guion ASCII para negativos y aquí el signo se pone sobre la magnitud.
  */
-function chargedLine(messages, cash, desk) {
-    if (cash.charged_online_cents <= 0) return null;
+function signed(cents) {
+    return (cents < 0 ? '−' : '+') + money(Math.abs(Number(cents) || 0));
+}
 
-    const label = t(messages, desk ? 'ledger.charged_desk' : 'ledger.charged_online');
+/** Los rótulos del saldo, uno por clase (`balance.kind`). `settled`, `expired` y `under_review` no llevan línea. */
+const BALANCE_LABELS = {
+    pay_at_park: 'journal.balance_pay_at_park',
+    refund_at_park: 'journal.balance_refund_at_park',
+    refund_pending: 'journal.balance_refund_pending',
+    pay_online: 'journal.balance_pay_online',
+};
 
-    return {
-        label: cash.charged_at_label ? label + ' · ' + cash.charged_at_label : label,
-        amountLabel: money(cash.charged_online_cents),
-        anchor: true,
-    };
+/**
+ * La línea del SALDO, o `null` cuando no hay nada que saldar.
+ *
+ * ⚠️⚠️ **La CLASE la decide el servidor** (`balance.kind`) y aquí solo se elige el rótulo. Deducirla
+ * del signo de `cents` sería re-derivar una regla del dominio —«¿habrá visita?» decide entre «a
+ * devolver en el parque» y «pendiente de devolución», y eso no está en el número—, que es la forma
+ * de divergencia que dejó al cliente sin ver el ancla de caja durante toda la vida del producto (`L1`).
+ */
+function balanceOf(balance, messages) {
+    const key = BALANCE_LABELS[balance?.kind];
+
+    if (! key) return null;
+
+    const line = { kind: balance.kind, label: t(messages, key), amountLabel: money(Math.abs(Number(balance.cents) || 0)) };
+
+    // Con señal, lo que falta por web va acompañado de lo que además se pagará en el parque: viene
+    // PUBLICADO (`rest_at_park_cents`), no restado del total aquí.
+    if (balance.kind === 'pay_online' && Number(balance.rest_at_park_cents) > 0) {
+        line.rest = tp(messages, 'journal.balance_rest_at_park', { amount: money(balance.rest_at_park_cents) });
+    }
+
+    return line;
 }
 
 /**
- * **El desglose de un pedido, en DOS BLOQUES** (`DECISIONES #127`, spec §10.3).
+ * **EL LIBRO de un pedido, tal como la tarjeta lo pinta** (`DECISIONES #305`,
+ * `specs/desglose-libro.md` §4.3 · T3·1).
  *
- * ⚠️⚠️ **Ni un solo importe se calcula aquí, y ahora tampoco se DECIDE cuál es cuál.** El servidor
- * publica el ledger entero en `order.ledger`, compuesto por `Booking\Services\OrderLedger` — la
- * MISMA composición que leen el panel, la sub-card, el PDF y los correos. Aquí solo se elige qué
- * líneas tienen algo que enseñar.
+ * ⚠️⚠️ **Ni un solo importe se calcula aquí, y tampoco se DECIDE qué línea es cuál.** El servidor
+ * publica el libro entero en `order.ledger`, compuesto por `Booking\Services\OrderBook` — la MISMA
+ * composición que leen el panel, la hoja de sala, la puerta y los correos (D1: cliente y operador ven
+ * lo mismo). Aquí solo se formatean los importes con su signo y se eligen los rótulos del saldo.
  *
- * ⚠️⚠️ **Los dos bloques NO se mezclan, y ésa es la corrección de fondo.** Arriba, el EJE VALOR:
- * cinco canales que suman el valor, siempre. Abajo, el EJE CAJA: qué ha pasado con su dinero. Hasta
- * ahora «Devuelto» y «Pendiente de devolución» se pintaban como restas dentro de la columna del
- * valor —de la que **no restan**— y por eso la columna dejaba de leerse: medido, 18 de 23 gestiones
- * del panel la dejaban ilegible.
+ * Tres bloques: los MOVIMIENTOS (cada gestión con su signo y su fecha, hasta el Total), los PAGOS Y
+ * DEVOLUCIONES (lo que de verdad entró y salió, hasta lo Pagado) y el SALDO, que se liquida en el
+ * parque — positivo se paga, negativo se devuelve.
  *
- * ⚠️ **«Importe al reservar» sale de la columna** y va al pie, solo si difiere: era el «Subtotal»,
- * que apilaba dos bases distintas sin decirlo.
- * ⚠️ Y **«Pagado por web» ya no se oculta** cuando el producto no lleva señal — se ocultaba, y el
- * cliente no veía cuánto había pagado.
+ * ⚠️⚠️ **Si el libro NO CIERRA, no se pinta** (`DECISIONES #132`): cuando las identidades del dominio
+ * fallan, ninguna línea es cierta. Lo que sigue siendo un hecho es el Total y lo que se COBRÓ, así
+ * que eso se queda — y la frase explica el resto. La condición la decide el SERVIDOR (`is_consistent`).
  */
 export function financialsOf(order, messages) {
-    const l = order.ledger;
-    const v = l.value;
-    const c = l.cash;
-    const line = (key, cents) => (cents > 0 ? { label: t(messages, 'ledger.' + key), amountLabel: money(cents) } : null);
-    /**
-     * ⚠️⚠️ **La fecha va donde el importe ES el que se cobró, y en ningún otro sitio**
-     * (`DECISIONES #131`).
-     *
-     * `#130` la pegó a la línea del canal para que el importe se pudiera buscar en un extracto
-     * —«30,00 €» no se busca; «30,00 € el 24/08/2026» sí—. Pero `paid_online` es el canal del VALOR
-     * («lo cobrado por web que respalda producto vivo, neto de compensación»), y en cuanto hay una
-     * devolución **deja de ser lo que se cobró ese día**. Medido sobre los 58 pedidos: en **7** la
-     * pantalla afirmaba «Pagado por web · 24/08/2026 — 9,90 €» cuando ese día se cobraron 19,80 € —
-     * y **6 de los 7 eran pedidos SANOS**. Justo lo contrario de conciliable.
-     *
-     * ▶ La regla: la fecha solo acompaña al importe **cuando coinciden**, que es exactamente cuando
-     * el bloque «Tu dinero» no se pinta (`!has_cash` ⟹ `charged_online === paid_online`, porque ese
-     * término es uno de los tres del predicado). Cuando difieren, la fecha va abajo, pegada al
-     * importe que sí se cobró. **Un solo predicado del dominio gobierna las dos mitades.**
-     */
-    const paidLine = (key, cents) => {
-        const fila = line(key, cents);
+    const l = order.ledger ?? {};
+    const movement = (m) => ({
+        label: m.label,
+        dateLabel: m.occurred_label ?? '',
+        amountLabel: signed(m.amount_cents),
+        negative: Number(m.amount_cents) < 0,
+    });
+    const settlement = (s) => ({
+        label: s.label,
+        dateLabel: s.occurred_label ?? '',
+        amountLabel: signed(s.amount_cents),
+        negative: Number(s.amount_cents) < 0,
+        // Un reembolso en curso o fallido se LISTA y no cuenta: la tarjeta lo atenúa.
+        effective: s.status === 'succeeded',
+    });
+    const settlements = Array.isArray(l.settlements) ? l.settlements : [];
+    const total = { label: t(messages, 'journal.total'), amountLabel: money(l.total_cents ?? 0) };
 
-        if (fila && ! c.has_cash && c.charged_at_label) fila.label += ' · ' + c.charged_at_label;
-
-        return fila;
-    };
-    // ⚠️ El MÉTODO decide el rótulo de los DOS canales de cobro adelantado (`DECISIONES #128`). El
-    // eje de caja suma todo lo cobrado sin mirar el `provider`, así que el importe es correcto y el
-    // nombre no puede quemarse: un pedido de taquilla que dijera «por web» mentiría. El panel ya lo
-    // distinguía desde `P1/P10` y el cliente no — ésa era la divergencia.
-    const desk = c.charged_method === 'desk';
-
-    const gate = v.pending_at_gate_cents > 0
-        ? {
-            label: t(messages, 'ledger.pending_at_gate'),
-            amountLabel: money(v.pending_at_gate_cents),
-            showLabel: t(messages, 'show_breakdown'),
-            hideLabel: t(messages, 'hide_breakdown'),
-            caption: t(messages, l.has_deposit ? 'at_gate_caption_deposit' : 'at_gate_caption'),
-            // Las etiquetas llegan compuestas por el dominio, en el orden que la página usa.
-            lines: (l.gate_lines ?? []).map((gl) => ({ label: gl.label, amountLabel: money(gl.amount_cents) })),
-        }
-        : null;
-
-    // ⚠️⚠️ **Si el desglose NO CIERRA, no se descompone** (`DECISIONES #132`). Cuando las identidades
-    // del dominio fallan, ninguna de las líneas por canal es cierta: enseñarlas es poner delante del
-    // cliente dos importes que se contradicen sin decirle nada. Lo que SÍ sigue siendo un hecho es lo
-    // que vale el pedido y lo que se le cobró, así que eso se queda — y la frase explica el resto.
-    // La condición la decide el SERVIDOR (`is_consistent`); derivarla aquí sería la novena vez.
     if (l.is_consistent === false) {
         return {
-            value: {
-                title: t(messages, 'ledger.value_title'),
-                rows: [],
-                gate: null,
-                total: { label: t(messages, 'ledger.value_total'), amountLabel: money(v.total_cents) },
-            },
-            cash: chargedLine(messages, c, desk)
-                ? { title: t(messages, 'ledger.cash_title'), caption: t(messages, 'ledger.cash_caption'), rows: [chargedLine(messages, c, desk)] }
-                : null,
+            movementsTitle: t(messages, 'journal.movements_title'),
+            movements: [],
+            total,
+            settlementsTitle: t(messages, 'journal.settlements_title'),
+            settlements: settlements.filter((s) => s.kind === 'payment').map(settlement),
+            paid: null,
+            balance: null,
             note: l.note ?? null,
-            invoiced: null,
         };
     }
 
     return {
-        value: {
-            title: t(messages, 'ledger.value_title'),
-            rows: [
-                paidLine(desk ? 'paid_desk' : 'paid_online', v.paid_online_cents),
-                line('pending_online', v.pending_online_cents),
-                line('paid_at_gate', v.paid_at_gate_cents),
-                line('compensated', v.compensated_cents),
-            ].filter(Boolean),
-            gate,
-            total: { label: t(messages, 'ledger.value_total'), amountLabel: money(v.total_cents) },
-        },
-        // ⚠️⚠️ **El eje de caja se enseña en cuanto el parque ha cobrado algo, y ése era el defecto
-        // `L1`** (`DECISIONES #128`, `specs/desglose-dinero-cliente.md` §17.1). Esta condición se
-        // derivaba AQUÍ y le faltaba justo el ancla, así que en un pedido normal —sin devoluciones—
-        // el cliente **nunca veía cuánto había salido de su banco**: lo único que puede cotejar con
-        // su extracto, y lo que convierte el desglose en algo VERIFICABLE en vez de solo legible.
-        // Medido el 2026-08-24: el panel lo enseñaba en 28 de 38 pedidos sanos y el cliente en 9.
-        //
-        // ⚠️ Ahora la condición **la decide el dominio** (`OrderLedger::hasCash()`) y llega
-        // publicada. Re-derivarla aquí es lo que la hizo divergir la primera vez.
-        cash: c.has_cash
-            ? {
-                title: t(messages, 'ledger.cash_title'),
-                caption: t(messages, 'ledger.cash_caption'),
-                rows: [
-                    chargedLine(messages, c, desk),
-                    line('refunded', c.refunded_cents),
-                    line('pending_refund', c.pending_refund_cents),
-                ].filter(Boolean),
-            }
-            : null,
-        // La FRASE que explica el estado. La compone el servidor: decidir qué caso es, es regla.
+        movementsTitle: t(messages, 'journal.movements_title'),
+        movements: (Array.isArray(l.movements) ? l.movements : []).map(movement),
+        total,
+        settlementsTitle: t(messages, 'journal.settlements_title'),
+        settlements: settlements.map(settlement),
+        paid: { label: t(messages, 'journal.paid'), amountLabel: money(l.paid_cents ?? 0) },
+        balance: balanceOf(l.balance, messages),
+        // La FRASE que explica el estado —tres casos: en revisión, caducó, pendiente de pago—. La
+        // compone el servidor: decidir qué caso es, es regla.
         note: l.note ?? null,
-        // ⚠️⚠️ **Trazabilidad, y su frase la compone el SERVIDOR** (`L6`, `DECISIONES #133`). Era
-        // una cadena fija del diccionario —«…es porque el pedido cambió después»— que decía QUE el
-        // pedido había cambiado y **no en qué dirección ni cuánto**: una bajada de 12 a 8 invitados
-        // no dejaba más rastro que un número mudo al pie. Elegir entre «vale X más» y «vale X menos»
-        // es decidir qué caso es, y eso es regla de dominio, igual que la frase de estado.
-        //
-        // ⚠️ **Y la CONDICIÓN también llega publicada**: `invoiced_hint` es `null` exactamente cuando
-        // lo facturado coincide con el valor. Comparar aquí los dos importes sería re-derivar una
-        // condición del dominio, que es lo que dejó al cliente sin ver el ancla de caja (`L1`).
-        invoiced: l.invoiced_hint
-            ? {
-                label: t(messages, 'ledger.invoiced'),
-                amountLabel: money(l.invoiced_cents),
-                hint: l.invoiced_hint,
-            }
-            : null,
-        // El «a tu favor» de fiesta mixta (T4, `specs/cumple-mixto.md` §24.4): la parte del
-        // descuento que la puerta del pedido no pudo absorber, liquidada EN el parque. La frase
-        // llega compuesta y `null` ES la condición de enseñarla — el patrón de `invoiced_hint`.
-        inFavour: l.in_favour_hint ?? null,
     };
 }
 
@@ -286,11 +222,12 @@ export function orderRow(order, ctx) {
         status: order.status,
         statusLabel: t(ctx.messages, 'statuses.' + order.status),
         createdLabel: order.created_label,
-        totalLabel: money(order.ledger.value.total_cents),
+        // Lo que el pedido VALE hoy (`ledger.total_cents`), no lo facturado al nacer.
+        totalLabel: money(order.ledger?.total_cents ?? 0),
         canRetry: order.can_be_retried === true,
         // El reembolso es un eje INDEPENDIENTE del estado: un pedido puede estar pagado y
         // parcialmente reembolsado a la vez (`openapi/v1.yaml`).
-        // ⚠️ CUÁNDO se devolvió. **El importe vive en el bloque de caja del ledger**: tenerlo en dos
+        // ⚠️ CUÁNDO se devolvió. **El importe vive en las liquidaciones del libro**: tenerlo en dos
         // sitios era la clase de duplicado del que nacen las divergencias.
         refund: order.refund?.refunded_at ? { label: order.refund.refunded_label } : null,
         guestFormPending: order.guest_form_pending === true,
@@ -298,7 +235,7 @@ export function orderRow(order, ctx) {
         // entonces se ofrece el despliegue. Cuáles son no se sabe hasta pedirlas: no viajan en la
         // lista a propósito (art. 9), que es justo lo que hace que haya que preguntar.
         hasPack: (order.items ?? []).some((item) => item.is_pack === true),
-        // El ledger entero (tanda 3 · paso 10): qué líneas se enseñan y con qué rótulo.
+        // El libro entero: qué líneas se enseñan y con qué rótulo.
         financials: financialsOf(order, ctx.messages),
         lines: (order.items ?? []).map((item) => lineRow(order, item, ctx)),
     };
@@ -312,7 +249,7 @@ export function orderRow(order, ctx) {
  * reserva pintada dentro de su pedido son **la misma cosa**: el mismo nombre, la misma ventana
  * horaria, el mismo distintivo, el mismo aviso de señal, el mismo post-form y los mismos
  * complementos. Escribir una segunda composición «porque ahora la tarjeta es de la reserva» habría
- * creado dos sitios donde arreglar el mismo fallo — y este fichero ya lleva escrito, para el ledger,
+ * creado dos sitios donde arreglar el mismo fallo — y este fichero ya lleva escrito, para el libro,
  * por qué eso no se hace.
  *
  * ⚠️ **El estado del PEDIDO llega resuelto** (`order.status` es el de HECHO, no la columna) y aquí

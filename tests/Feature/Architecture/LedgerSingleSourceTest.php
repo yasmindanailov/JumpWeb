@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Architecture;
 
-use App\Domain\Booking\Services\OrderLedger;
+use App\Domain\Booking\Services\OrderBook;
 use Tests\TestCase;
 
 /**
@@ -112,22 +112,22 @@ class LedgerSingleSourceTest extends TestCase
     }
 
     /**
-     * **El value object es la fuente, y los seis canales existen todos.**
+     * **El value object es la fuente, y publica el libro ENTERO** (T3·1 de
+     * `specs/desglose-libro.md`): las líneas de valor, las de dinero, el Total, lo pagado, el saldo
+     * con su clase, la señal, si cierra y la frase.
      *
-     * ⚠️ Si alguien retirara un canal «porque siempre vale 0», la identidad seguiría cerrando y el
-     * desglose volvería a mentir en el caso que ese canal explicaba — que es literalmente lo que
-     * pasaba con «Pagado en el parque», ausente durante toda la vida del producto.
+     * ⚠️ Si alguien retirara un campo «porque siempre vale lo mismo», alguna superficie volvería a
+     * derivarlo por su cuenta — que es literalmente cómo nació la divergencia de `#127`.
      */
-    public function test_the_ledger_exposes_every_channel(): void
+    public function test_the_book_exposes_every_field(): void
     {
-        $canales = ['valor', 'pagadoOnline', 'pendienteOnline', 'pagadoPuerta', 'pendientePuerta',
-            'compensado', 'cobradoOnline', 'devuelto', 'retenido', 'pendienteDevolucion',
-            'facturado', 'facturadoNota', 'gateLines', 'hasDeposit', 'nota'];
+        $campos = ['currency', 'movements', 'settlements', 'totalCents', 'paidCents', 'balance',
+            'hasDeposit', 'isConsistent', 'note'];
 
-        $ref = new \ReflectionClass(OrderLedger::class);
+        $ref = new \ReflectionClass(OrderBook::class);
         $presentes = array_map(fn ($p) => $p->getName(), $ref->getProperties());
 
-        $this->assertSame([], array_diff($canales, $presentes), 'falta un canal del desglose');
+        $this->assertSame([], array_diff($campos, $presentes), 'falta un campo del libro');
     }
 
     /**
@@ -171,8 +171,11 @@ class LedgerSingleSourceTest extends TestCase
         // composición mira `purchaseRows()`, que sí compone los complementos, así que un `v-for` que
         // dejara de recorrerlos la deja verde. Medido por mutación el 2026-08-24 — y el síntoma sería
         // el de `R-UPFQAB`: la reserva pone 120,00 € y el total 124,00 €, sin nada que lo explique.
-        foreach (['financials.value.total', 'financials.cash', 'financials.note', 'financials.invoiced',
-            'priceLabel', 'line.addons'] as $obligatorio) {
+        // ▶ Desde la T3·1 del libro (guarda O, `specs/desglose-libro.md` §6·T3): los MOVIMIENTOS, las
+        // LIQUIDACIONES, el Total, lo pagado, el saldo y la frase — un `v-for` sobre `[]` deja verde
+        // la composición y vacía la pantalla.
+        foreach (['financials.movements', 'financials.settlements', 'financials.total', 'financials.paid',
+            'financials.balance', 'financials.note', 'priceLabel', 'line.addons'] as $obligatorio) {
             $this->assertStringContainsString(
                 $obligatorio, $marcado,
                 "`PurchaseCard.vue` ha dejado de pintar `{$obligatorio}`: el cliente se queda sin esa ".

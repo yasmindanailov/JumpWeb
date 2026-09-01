@@ -9,6 +9,7 @@ use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
+use Illuminate\Support\Facades\Log;
 
 /**
  * **EL LIBRO DEL PEDIDO** (`specs/desglose-libro.md` §4, `DECISIONES #305` `[DECIDIDO owner]`).
@@ -51,13 +52,15 @@ use DateTimeInterface;
  *   `ticketType`), `adjustments`, `payments.refunds`. Un consumidor que las olvide paga N+1.
  * - **No nombra `Payments\Models`** (`ModuleBoundariesTest`): los pagos y reembolsos llegan como
  *   HECHOS ya traducidos por {@see Order::collectedPaymentFacts} y {@see Order::refundFacts}.
- * - **No avisa al log cuando no cuadra** mientras conviva con `OrderLedger`, que ya lo hace
- *   (`ledger.no_cuadra`): dos avisos por pedido serían ruido. Cuando el modelo de dos ejes se retire
- *   (T3), el aviso se muda aquí.
+ * - **Avisa al log cuando no cuadra** (`ledger.no_cuadra`, T3·1): el parque tiene que ENTERARSE
+ *   (`#132`), y desde que la API sirve el libro `OrderLedger` ya no pasa por ese camino. Va como
+ *   `warning` y no como excepción porque el libro se compone al PINTAR: reventar dejaría al cliente
+ *   sin pantalla por un dato que ya está mal. (Mientras el panel siga leyendo `OrderLedger`, hasta la
+ *   T3·2, un pedido roto puede avisar por los dos: es transitorio y se retira con él.)
  *
- * ⚠️ Mientras el modelo de dos ejes siga siendo la pantalla (hasta la T3), este libro NO se pinta:
- * lo vigila la guarda PUENTE de `OrderFinancialInvariantsTest` contra `OrderLedger` en los 15
- * escenarios, que es §1.4 de la spec convertido en test.
+ * ⚠️ Mientras el modelo de dos ejes siga pintando alguna superficie (hasta la T3·4), la guarda
+ * PUENTE de `OrderFinancialInvariantsTest` lo cruza con este libro en los 15 escenarios: es §1.4 de
+ * la spec convertido en test.
  */
 final readonly class OrderBook
 {
@@ -86,6 +89,22 @@ final readonly class OrderBook
     public static function forOrder(Order $order): self
     {
         $c = self::compose($order);
+
+        if (! $c['consistent']) {
+            Log::warning('ledger.no_cuadra', [
+                'order' => $order->code,
+                'facturado' => (int) $order->total,
+                'nacimiento' => $order->birthValueCents(),
+                'cobrado' => $c['cobrado'],
+                'online_al_nacer' => array_sum(array_column($c['reservations'], 'online_nac')),
+                'total' => array_sum(array_column($c['reservations'], 'total')),
+                'lineas_de_valor' => $c['value_lines'],
+                'columna_reembolso' => (int) ($order->refund_amount_cents ?? 0),
+                'devuelto' => $c['devuelto'],
+                'status' => $order->status,
+                'cobrado_en' => $order->paid_at?->toIso8601String(),
+            ]);
+        }
 
         $movements = [self::movement(
             Movement::KIND_BOOKING,
@@ -296,6 +315,7 @@ final readonly class OrderBook
             'consistent' => $consistent,
             'cobrado' => $cobrado,
             'devuelto' => $devuelto,
+            'value_lines' => $valueLines,
             'payments' => $payments,
             'refunds' => $refunds,
             'reservations' => $reservations,
@@ -357,7 +377,11 @@ final readonly class OrderBook
             }
 
             $fila = $line->chargedSubtotalCents();
-            if ($cancelled) {
+            if ($cancelled && $fila + $courtesy === 0) {
+                // Una línea fantasma (cancelada sin valor: el complemento a 0 € de un cambio de menú)
+                // no retira nada, y una línea de 0 no dice nada — nombrarla solo enseña un producto
+                // que ninguna otra superficie enseña (`Order::isVoidedLeftoverItem`).
+            } elseif ($cancelled) {
                 // Lo que la cancelación retira: la línea CON su cortesía, que se extingue con ella. La
                 // fecha es la de la cancelación de la línea; si un pedido cancelado dejó una línea sin
                 // la suya (filas anteriores a la cascada), la del pedido.

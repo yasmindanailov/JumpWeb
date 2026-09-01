@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Identity\Models\User;
+use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\Setting;
 use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
@@ -102,6 +103,24 @@ class OrderSummaryFieldsTest extends ApiTestCase
     }
 
     /** @param array<int, array<string, mixed>> $cart */
+    /**
+     * Cobra el pedido COMO lo hace el canal real: estado + `paid_at` (el predicado de «este pedido se
+     * cobró», `DECISIONES #127`) + el cobro de lo que sus líneas aportan online. Un pedido `paid`
+     * sin `Payment` no lo produce nadie, y desde la T2 del libro el saldo lo sabe —la identidad I2
+     * (cobrado == Σ online al nacer) no cierra— y respondería «en revisión» en vez de la clase de
+     * saldo que el caso quiere ejercitar.
+     */
+    private function markPaid(Order $order): void
+    {
+        Payment::create([
+            'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
+            'amount' => $order->onlineDueCents(), 'currency' => 'EUR', 'provider' => 'redsys',
+            'status' => Payment::STATUS_PAID, 'paid_at' => Carbon::now(),
+            'gateway_order' => sprintf('%010d', $order->id),
+        ]);
+        $order->forceFill(['status' => Order::STATUS_PAID, 'paid_at' => now()])->save();
+    }
+
     private function order(array $cart): Order
     {
         return app(OrderCreator::class)->createPendingOrder($this->user, $cart, OrderCreator::checkoutHoldUntil());
@@ -158,19 +177,19 @@ class OrderSummaryFieldsTest extends ApiTestCase
     public function test_the_deposit_breakdown_is_per_reservation_in_a_mixed_cart(): void
     {
         $order = $this->order([$this->entryLine(), $this->packLine()]);
-        // ⚠️ `paid_at` va CON el estado: es el predicado de «este pedido se cobró» (`DECISIONES #127`)
-        // y lo escriben los dos canales reales. Un pedido `paid` sin `paid_at` no lo produce nadie.
-        $order->forceFill(['status' => Order::STATUS_PAID, 'paid_at' => now()])->save();
+        $this->markPaid($order);
 
         $items = collect($this->show($order)->json('items'))->keyBy('product_name');
 
-        // La entrada: pagada entera, nada en puerta, sin aviso de señal.
-        $this->assertSame(0, $items['Entrada · 1 hora']['ledger']['value']['pending_at_gate_cents']);
+        // La entrada: pagada entera, nada en el parque, sin aviso de señal. (Desde la T3·1 del libro
+        // el desglose de la reserva es SU libro: el saldo dice de qué clase es, no un canal.)
+        $this->assertSame('settled', $items['Entrada · 1 hora']['ledger']['balance']['kind']);
         $this->assertFalse($items['Entrada · 1 hora']['shows_deposit_note']);
 
-        // El pack: parte online y parte en puerta, con su aviso.
-        $this->assertGreaterThan(0, $items['Cumpleaños']['ledger']['value']['pending_at_gate_cents']);
-        $this->assertGreaterThan(0, $items['Cumpleaños']['ledger']['value']['paid_online_cents']);
+        // El pack: parte online y parte en el parque, con su aviso.
+        $this->assertSame('pay_at_park', $items['Cumpleaños']['ledger']['balance']['kind']);
+        $this->assertGreaterThan(0, $items['Cumpleaños']['ledger']['balance']['cents']);
+        $this->assertGreaterThan(0, $items['Cumpleaños']['ledger']['paid_cents']);
         $this->assertTrue($items['Cumpleaños']['shows_deposit_note']);
     }
 
@@ -186,19 +205,65 @@ class OrderSummaryFieldsTest extends ApiTestCase
 
         $this->assertSame(Order::STATUS_PENDING, $order->fresh()->status);
         $this->assertFalse($items['Cumpleaños']['shows_deposit_note']);
-        // Los NÚMEROS sí viajan: es el aviso lo que no procede, no el desglose.
-        $this->assertGreaterThan(0, $items['Cumpleaños']['ledger']['value']['pending_at_gate_cents']);
+        // Los NÚMEROS sí viajan: es el aviso lo que no procede, no el libro. Sin cobrar, el saldo es
+        // «pendiente de pagar por web» y lleva aparte lo que además se pagará en el parque.
+        $this->assertSame('pay_online', $items['Cumpleaños']['ledger']['balance']['kind']);
+        $this->assertGreaterThan(0, $items['Cumpleaños']['ledger']['balance']['rest_at_park_cents']);
     }
 
     /** Un producto sin señal nunca lo enseña, por pagado que esté el pedido. */
     public function test_a_product_without_deposit_never_shows_the_note(): void
     {
         $order = $this->order([$this->entryLine()]);
-        // ⚠️ `paid_at` va CON el estado: es el predicado de «este pedido se cobró» (`DECISIONES #127`)
-        // y lo escriben los dos canales reales. Un pedido `paid` sin `paid_at` no lo produce nadie.
-        $order->forceFill(['status' => Order::STATUS_PAID, 'paid_at' => now()])->save();
+        $this->markPaid($order);
 
         $this->show($order)->assertJsonPath('items.0.shows_deposit_note', false);
+    }
+
+    /**
+     * ⚠️ **La mutación que motivó este caso**: `shows_deposit_note` SIN la clase del saldo (solo
+     * «cobrado ∧ hay señal») pasaba en VERDE — ningún caso tenía un pack con señal cuyo saldo ya no
+     * fuera «a pagar en el parque». Y ése es el estado NORMAL de una fiesta después de celebrarse: el
+     * resto se liquidó en la puerta y el libro dice `settled`, con la liquidación fechada al fin de
+     * la franja. Avisar ahí «el resto se paga en el parque» sería anunciar una deuda que no existe.
+     */
+    public function test_the_note_goes_away_once_the_rest_was_settled_at_the_park(): void
+    {
+        $order = $this->order([$this->packLine()]);
+        $this->markPaid($order);
+
+        // La visita ya pasó: la franja de la reserva, a ayer.
+        $order->items()->whereNull('parent_item_id')->firstOrFail()->slot
+            ->forceFill(['date' => Carbon::yesterday()->toDateString()])->save();
+
+        $item = $this->show($order)->json('items.0');
+
+        $this->assertTrue($item['ledger']['has_deposit'], 'la señal es un HECHO del libro: no se borra al liquidar');
+        $this->assertSame('settled', $item['ledger']['balance']['kind']);
+        $this->assertNotNull(collect($item['ledger']['settlements'])->firstWhere('kind', 'gate'), 'el resto consta como liquidado en el parque');
+        $this->assertFalse($item['shows_deposit_note']);
+    }
+
+    /**
+     * Y una reserva CANCELADA con señal tampoco: lo que hay es dinero que devolver, no resto que pagar.
+     *
+     * ⚠️ Aquí `has_deposit` es FALSE a propósito: el libro cuenta el reparto de las líneas VIVAS (T2,
+     * la definición que puentea con el modelo viejo a nivel de pedido), así que la nota cae por la
+     * segunda condición y no por la clase — este caso NO discrimina la mutación de la clase; el de
+     * arriba sí. Está para que «cancelada con señal» tenga su respuesta escrita, no deducida.
+     */
+    public function test_a_cancelled_reservation_with_a_deposit_shows_no_note(): void
+    {
+        $order = $this->order([$this->packLine()]);
+        $this->markPaid($order);
+        $order->items()->whereNull('parent_item_id')->firstOrFail()->forceFill(['cancelled_at' => now()])->save();
+
+        $item = $this->show($order)->json('items.0');
+
+        $this->assertFalse($item['ledger']['has_deposit'], 'el reparto de una línea cancelada ya no es «señal» del libro');
+        $this->assertSame('refund_pending', $item['ledger']['balance']['kind']);
+        $this->assertLessThan(0, $item['ledger']['balance']['cents'], 'la señal cobrada ya no respalda producto');
+        $this->assertFalse($item['shows_deposit_note']);
     }
 
     // ── Complementos ──────────────────────────────────────────────────────────────────────────

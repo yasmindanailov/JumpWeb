@@ -3,9 +3,9 @@
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
 > aquí solo se enlaza.** Última actualización: **2026-09-01 — TRES carriles a la vez.
-> **LIBRO DEL PEDIDO** (madrugada): spec ✅ del owner (`#305`), **T1 EN EL ÁRBOL (`#306`, los
-> hechos) y T2 EN EL ÁRBOL (`#308`, el libro en el DOMINIO, sin superficies; sigue la T3)** —
-> carril 3, abajo.
+> **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 EN EL ÁRBOL (`#306`, los hechos), T2 EN EL
+> ÁRBOL (`#308`, el libro en el DOMINIO) y T3·1 EN EL ÁRBOL (`#310`, tarde: el contrato `Ledger`,
+> la API y el CAJÓN pintan el libro; sigue la T3·2 —panel, hoja, puerta—)** — carril 3, abajo.
 > **MIXTOS**: T1→T5 en el árbol (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL
 > GUARDIÁN DE SOLAPES EN EL ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** —
 > siguen fuera por diseño la fase 3 de §20.2 y el AFORO (owner); la ficha del fantasma de la señal
@@ -41,12 +41,49 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3756 en verde** (24.766 aserciones, 1 skipped a propósito), medida el
-> 2026-09-01 sobre el árbol CONJUNTO tras rebasar `#309` (landing) encima de `#308` (el libro,
-> T2). ⚠️ **No se suma, se mide.**
-> - Antes, 3752 / 24.742 (`#308`) y 3731 / 24.224 (`#309` por sí solo).
+> Suite **3754 en verde** (24.837 aserciones, 1 skipped a propósito), medida el
+> 2026-09-01 (tarde) sobre el árbol CONJUNTO con la T3·1 del libro (`#310`) encima de `#309`
+> (landing), con los DOS bundles reconstruidos antes. ⚠️ **No se suma, se mide.**
+> - Antes, 3756 / 24.766 (`#309` sobre `#308`), 3752 / 24.742 (`#308`) y 3731 / 24.224 (`#309` solo).
 >
-> ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1 y T2 EN EL ÁRBOL · sigue la T3) ═══════════
+> ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1, T2 y T3·1 EN EL ÁRBOL · sigue la T3·2) ═══════════
+> ❗❗❗ **2026-09-01 (tarde, 3.ª sesión) · T3·1 · EL CONTRATO, LA API Y EL CAJÓN PINTAN EL LIBRO**
+> (`DECISIONES #310` — el carril de la landing tomó `#309` entre medias —, `specs/desglose-libro.md`
+> §6.3 el diseño fino de la T3 en CUATRO sub-tandas y **§6.3.1 lo ejecutado**; `specs/api-v1.md`
+> §10.octodecies, puntos 94–96). Suite: el CONTADOR de arriba · Pint · docs-check · build + build:ssr
+> · **6 mutaciones (4 PHP + 2 JS): 5 mordieron a la primera y la de `shows_deposit_note` sin la
+> clase del saldo pasó en VERDE → dos casos nuevos, ahora muerde** · el puente de la T2 sigue
+> idéntico. ▶ `openapi/v1.yaml` → `Ledger` del libro (incompatible a propósito: 0 LIVE y el único
+> consumidor cambia en el mismo commit) · `LedgerResource` TRANSCRIBE `OrderBook` · `OrderResource`
+> / `OrderItemResource` por pedido y por reserva (`shows_deposit_note` = cobrado ∧ `has_deposit` ∧
+> `pay_at_park`) · el cajón (`orders.js` + `PurchaseCard.vue`) pinta movimientos · Total ·
+> liquidaciones · Pagado · saldo por clase, y con `is_consistent=false` Total, cobros y la frase
+> (`#132`) · `outcome.js` saca la confirmación del libro · `ledger.no_cuadra` en el log (por pedido)
+> · una línea fantasma a 0 € no genera movimiento. ⚠️⚠️ **Cuatro fixtures ILEGALES legalizados**:
+> tres «pagados» SIN `Payment` (`OrderSummaryFieldsTest` ×2, `SidebarDomContractTest`) —con I2
+> responden «en revisión»— y uno sin líneas facturando 1.000. ⚠️ Con DOS reservas, cada línea de
+> valor lleva delante el nombre de la suya; dos cancelaciones del mismo segundo las ordena el
+> desempate del libro (localiza por etiqueta). ⚠️ **Trampa de la sesión**: restaurar una mutación de
+> JS con `git checkout` deja la fuente MÁS NUEVA que el bundle SSR y `assertBundleIsNotStale` pone
+> 35 rojos en la suite completa — no es un fallo, es la guarda: `npm run build && npm run build:ssr`
+> antes de la suite final. ⚠️ El reporter de `node --test` resume con `ℹ pass/fail`: una mutación
+> grep-eada con `# pass` sale MUDA. ⚠️ La cabecera de `#309` (landing) venía como «## #309 — …» y
+> docs-check exige «## #N ·»: normalizada, como con `#307`. `audit-clock` ✓ 10/10 fronteras sobre los
+> 7 tests con calendario de la tanda. ⚠️ Sin `VERIFY_CONC`: ningún fichero del `CRITICAL_RE` cambió.
+> ▶ **RETOMAR (siguiente sesión): la T3·2 — panel + hoja + puerta** (§6.3, fila 2): `order-totals`
+> (movimientos · Total · liquidaciones · saldo · aviso `!is_consistent` · «Ver historial»),
+> `reservation-financials` (el libro de la reserva), `items-list`, `item-detail` + `CalendarPage`,
+> `OrdersTable` (Total = `total_cents` · Pagado = `paid_cents`), `OrdersRelationManager`, `ViewOrder`
+> (`pendienteDevolucion()` ×2 → el saldo de clase reembolso), `ReservationSlip` + su blade (líneas
+> de producto + el libro + UNA caja de saldo), la puerta (`GateReservation` / `GateReservationsReader`
+> / `GateProfile` / `reservation.blade`: «A cobrar X» · «A devolver X» · «Nada pendiente»), claves
+> `admin.orders.book.*` (es · zh_CN); se re-apuntan `OrderTotalsBreakdownTest`, `ItemsListSubCardTest`,
+> `GateProfileTest`, `MixedPartyParkSurfacesTest`. Guardas M (paridad cliente↔panel: la MISMA lista
+> en `order-totals` y en `GET /me/orders`, 15 escenarios), Q y R de §6·T3. Después la T3·3 (correos +
+> tope, `VERIFY_CONC=1`) y la T3·4 (la retirada de §4.7, `INVARIANTES`, `DEUDA`, guion headless,
+> ojo del owner). ⚠️ `T4-PRB01` seguirá «en revisión» también con el libro pintado, y es correcto.
+> Numera `DECISIONES` mirando el remoto (`git fetch`): la siguiente libre es la que siga a la última
+> del remoto — esta sesión escribió `#310` porque la landing ya había tomado `#309`.
 > ❗❗❗ **2026-09-01 (madrugada, 2.ª sesión) · T2 · EL LIBRO EN EL DOMINIO, EN EL ÁRBOL**
 > (`DECISIONES #308` — el carril de la landing tomó `#307` mientras corría esta sesión —,
 > `specs/desglose-libro.md` §6·T2 y **§6.2 lo ejecutado**). Suite de esta tanda sola: 3741 /
@@ -67,22 +104,6 @@
 > reserva era CATÁLOGO en el modelo viejo (el libro: hecho, D-T2·1) · el arnés de mutación nació
 > ciego por el color ANSI delante de «Tests:». ⚠️ Sin `VERIFY_CONC`: ningún fichero del
 > `CRITICAL_RE` cambió (lo de `Order` es lectura y el orden de dos pasos bajo un lock ya tomado).
-> ▶ **RETOMAR (siguiente sesión): la T3 — las superficies, el tope y la retirada** (§6·T3, 2
-> sesiones): **contrato PRIMERO** (`openapi/v1.yaml` → `Ledger` de §4.5, cambio incompatible
-> asumido: único consumidor el cajón), las nueve superficies de §4.6 + `outcome.js` + los correos
-> compuestos desde el libro AL ENVIAR, el tope de la T4 cae (D4; `mixed-party:verify-concurrency`
-> en sus DOS escenarios), y se retira TODO §4.7 (`OrderLedger`, `OrderFinancialSummary`,
-> `ReservationFinancials`, `GateBuckets`, los cubos de `Order`…). Lee §6.2 «Lo que la T3 hereda»
-> (mover `ledger.no_cuadra` y la rama mixta de `breakdownLabel()` al libro; borrar
-> `assertBookBridge` y `ledger-bridge.json` con el oráculo; la prorrata pasa a `online_nac`) y las
-> decisiones derivadas D-T2·1…9 (vetables). Guardas L–R de §6·T3; `INVARIANTES` `PAY-16`/`PAY-17`
-> reescritas; dos fichas de `DEUDA` cerradas; guion headless del cajón ANTES del ojo del owner.
-> ⚠️ `T4-PRB01` seguirá «en revisión» también con el libro pintado, y es correcto (total
-> fabricado por una sonda, I1). Base: el HEAD de `main` al cierre de esta sesión (commit
-> «feat(libro): T2 …»). Cada tanda que toque el `CRITICAL_RE`: `VERIFY_CONC=1` y los tres
-> verificadores; `audit-clock` si añade fixtures con calendario. Numera `DECISIONES` mirando el
-> remoto (`git fetch`): la siguiente libre es la que siga a la última del remoto, no `#309` por
-> inercia — esta misma sesión escribió `#307` y tuvo que renumerar a `#308` al empujar.
 > ❗❗❗ **2026-09-01 (madrugada) · T1 · LOS HECHOS, EN EL ÁRBOL** (`DECISIONES #306`,
 > `specs/desglose-libro.md` §6·T1 y **§6.1 lo ejecutado**).
 > - Antes, suite 3716 (24.131 aserciones,

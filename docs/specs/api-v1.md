@@ -1120,3 +1120,38 @@ de la web, y eso lo decide el `Origin` (`ApiOrigin`) — es el diseño del canal
 `#183` la firma que nace de la aceptación pendiente lleva **la IP y el navegador del momento de marcar la
 casilla** (`waiver_pending_ip`/`_user_agent`), no los de la petición que verifica —que en pay-first es el
 cobro, y puede ser la notificación S2S de Redsys— y se registra **tras el commit** de quien emitió `Verified`.
+### 10.octodecies Lo que el código enseñó — el LIBRO por la API (2026-09-01, `DECISIONES #310`)
+
+**94. `Ledger` cambia de FORMA, es incompatible a propósito, y publica HECHOS con fecha en vez de
+canales ya sumados.** Hasta la T3·1 del libro (`specs/desglose-libro.md` §6.3) el esquema `Ledger` eran
+dos ejes —`invoiced_cents` · `deposit_cents` · `gate_remainder_cents` · `refund_pending_cents` ·
+`gate_lines[]` · `in_favour_hint`—: números que el cliente tenía que volver a relacionar para saber
+qué había pasado. Desde la T3·1 es el libro de `DECISIONES #305`: `total_cents` + `paid_cents` +
+`balance{kind, cents, rest_at_park_cents}` + `movements[]` (nacimiento · cambios · mixto · cancelación
+· cortesía, cada uno con su signo y su fecha) + `settlements[]` (cobros · devoluciones · liquidado en el
+parque, con `status` y `method`) + `has_deposit` + `is_consistent` + `note`. Se rompe el contrato **sin
+versión nueva** por tres hechos: 0 LIVE / 0 PRODUCCIÓN, el único consumidor (el cajón) cambia en el
+mismo commit, y la app móvil no existe todavía. ⚠️ `LedgerResource` **no compone nada**: transcribe
+`Booking\Services\OrderBook` campo a campo, y `MeOrdersFinancialsTest` lo asevera comparando la
+respuesta con el dominio en cada escenario — la mutación que publica el total como «pagado» tumba
+cuatro casos.
+
+**95. `balance.kind` lo decide el SERVIDOR, y `cents` lleva el signo de la clase.** `pay_at_park` y
+`pay_online` positivos; `refund_at_park` y `refund_pending` negativos; `settled`, `expired` y
+`under_review` a 0. Un cliente que dedujera la clase del signo confundiría «a devolver en el parque» con
+«pendiente de devolución» (el mismo número, según haya visita por delante o no). Y `is_consistent =
+false` **no es un error de la API**: los movimientos y las liquidaciones viajan igual —son hechos—, lo
+que cambia es lo que se pinta (el cajón enseña el Total, los cobros y `note`; la asimetría de `#132`),
+y el servidor deja rastro (`ledger.no_cuadra`, con las cifras de las cuatro identidades).
+
+**96. `OrderItem.shows_deposit_note` sigue existiendo pero se DERIVA del libro de la reserva**
+(pedido cobrado ∧ `has_deposit` ∧ `balance.kind = pay_at_park`), y la tercera condición no la vigilaba
+nadie: la mutación que la quita pasó en VERDE porque ningún caso tenía un pack con señal cuyo saldo
+ya no fuera «a pagar en el parque» — que es el estado NORMAL de una fiesta después de celebrarse.
+Dos casos nuevos en `OrderSummaryFieldsTest` (resto liquidado en puerta → `settled`; reserva cancelada
+→ `refund_pending`), y ahora muerde. ⚠️ **Tres fixtures «pagados» sin `Payment` salieron a la luz con
+el libro** (`OrderSummaryFieldsTest` ×2, `SidebarDomContractTest`): con el modelo viejo pasaban porque
+nadie cruzaba el cobro con el estado; con la identidad I2 (cobrado == Σ online al nacer) responden «en
+revisión». Se LEGALIZARON —el cobro se registra como lo hace `RedsysReturnHandler`, por
+`onlineDueCents()`—, no se excepcionó la identidad.
+

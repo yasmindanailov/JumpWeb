@@ -53,7 +53,10 @@ class MeOrdersTest extends ApiTestCase
             ->assertJsonPath('data.0.code', 'R-AAA111')
             ->assertJsonPath('data.0.status', 'paid')
             ->assertJsonPath('data.0.currency', 'EUR')
-            ->assertJsonPath('data.0.ledger.invoiced_cents', 1000)
+            // El libro viaja con el pedido (`DECISIONES #305`). Este fixture no tiene líneas, así que
+            // lo que VALE es 0 — lo que se facturó (1000) es otro hecho y no se publica suelto. Qué
+            // publica el libro y si cuadra lo vigila `MeOrdersFinancialsTest`, con un pedido entero.
+            ->assertJsonPath('data.0.ledger.total_cents', 0)
             ->assertJsonPath('meta.total', 1);
     }
 

@@ -7,9 +7,14 @@ use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\Balance;
 use App\Domain\Booking\Services\ManualOrderFulfiller;
+use App\Domain\Booking\Services\Movement;
+use App\Domain\Booking\Services\OrderBook;
+use App\Domain\Booking\Services\Settlement;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Services\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -18,25 +23,19 @@ use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
- * **El desglose financiero de un pedido: la API publica exactamente lo que calcula el dominio.**
+ * **El LIBRO de un pedido: la API publica exactamente lo que compone el dominio** (T3·1 de
+ * `specs/desglose-libro.md` §6.3, `DECISIONES #305`).
  *
- * ## De dónde viene, en dos relevos
+ * ## De dónde viene, en tres relevos
  *
- * 1. `AccountPageCaptureTest` inventarió lo que `/mi-cuenta/pedidos` enseñaba y la API **no**
- *    publicaba. Su lista de huecos —los cuatro del desglose— quedó vacía en el paso 9 y el fichero
- *    se borró, como pedía su propia aserción.
- * 2. `AccountFinancialParityTest` lo relevó con la otra mitad: mientras la página siguiera viva
- *    había **dos superficies enseñando el mismo dinero**, y nada garantizaba que dijeran lo mismo.
- *    Con la página retirada esa comparación se quedó sin un lado, y lo que sobrevive es esto.
+ * 1. `AccountPageCaptureTest` inventarió lo que `/mi-cuenta/pedidos` enseñaba y la API no publicaba.
+ * 2. `AccountFinancialParityTest` lo relevó comparando las dos superficies mientras la página vivía.
+ * 3. Este fichero vigiló el CABLEADO del desglose de dos ejes (`#127`); desde la T3·1 vigila el del
+ *    libro: que cada campo de `ledger` sea el que `Booking\Services\OrderBook` compone, que lo
+ *    publicado SUME entre sí, y que la clase del saldo la decida el servidor.
  *
- * ▶ Lo que queda vigilado es el **cableado del recurso**: seis importes que se parecen mucho entre
- * sí y que, cruzados, invierten el mensaje para el cliente —`total_cents` es lo FACTURADO y
- * `total_final_cents` lo que acaba pagando; `refund` es lo YA devuelto y `pending_refund_cents` lo
- * que aún se le debe—.
- *
- * ⚠️ **La guarda de la guarda va primero**: un fixture que no ejercitara el desglose dejaría todo
- * esto comparando ceros contra ceros y pasando para siempre. Es la lección de `DECISIONES #63`, y
- * aquí es fácil de pisar: **cuatro de los seis importes valen 0 en un pedido normal**.
+ * ⚠️ **La guarda de la guarda va primero**: un fixture que no ejercitara el libro dejaría todo esto
+ * comparando un nacimiento contra un nacimiento y pasando para siempre (`DECISIONES #63`).
  */
 class MeOrdersFinancialsTest extends TestCase
 {
@@ -61,481 +60,255 @@ class MeOrdersFinancialsTest extends TestCase
     }
 
     /**
-     * **La guarda de la guarda: el fixture ejercita de verdad los seis importes.**
-     *
-     * ⚠️ Sin este caso, un fixture que dejara de producir ajustes —o de cancelar la línea— haría que
-     * todo lo de abajo comparara **0 contra 0** y pasara solo. Cuatro de los seis valen 0 en un pedido
-     * corriente, así que aquí no basta con que el test exista: hay que comprobar que mide.
+     * **La guarda de la guarda: el fixture ejercita de verdad el libro.** Sin este caso, un fixture
+     * que dejara de producir gestiones —o de cancelar la línea— haría que todo lo de abajo comparara
+     * un solo movimiento y pasara solo.
      */
-    public function test_the_fixture_actually_exercises_every_figure(): void
+    public function test_the_fixture_actually_exercises_the_book(): void
     {
         [, $order] = $this->orderWithEverything();
-        $summary = $order->financialSummary();
+        $book = OrderBook::forOrder($order);
 
-        $this->assertGreaterThan(0, $summary->pendingAtGate(), 'nada pendiente en puerta: el desglose iría vacío');
-        $this->assertGreaterThan(0, $summary->pendienteDevolucion(), 'sin devolución pendiente, ese campo se compara con 0');
-        $this->assertTrue($summary->depositRemainder > 0, 'el pedido ya no lleva señal');
-
-        $this->assertNotSame(
-            (int) $order->total, $summary->totalFinalNeto(),
-            'el total final coincide con el facturado: la sonda no distingue los dos campos'
-        );
-
-        $lines = $order->gateBreakdownLines();
-
-        $this->assertGreaterThanOrEqual(2, count($lines), 'el desglose tiene una sola línea: no prueba el orden');
-        $this->assertSame(
-            $summary->pendingAtGate(), array_sum(array_column($lines, 'amount')),
-            'el desglose no suma el agregado que la API publica'
-        );
+        $kinds = array_map(fn (Movement $m): string => $m->kind, $book->movements);
+        $this->assertContains(Movement::KIND_BOOKING, $kinds);
+        $this->assertContains(Movement::KIND_EDIT, $kinds, 'sin una gestión el libro es solo el nacimiento');
+        $this->assertContains(Movement::KIND_CANCEL, $kinds, 'sin una cancelación no hay línea que reste');
+        $this->assertNotEmpty($book->settlements, 'sin un cobro no hay nada que cotejar');
+        $this->assertTrue($book->hasDeposit, 'el pedido ya no lleva señal');
+        $this->assertSame(Balance::KIND_PAY_AT_PARK, $book->balance->kind, 'el saldo tiene que ser positivo: es el caso que mezcla lo que se debe y lo que se paga');
+        $this->assertNotSame((int) $order->total, $book->totalCents, 'el Total coincide con lo facturado: la sonda no distingue los dos');
     }
 
     /**
-     * **Cada importe de la API es el que calcula el dominio**, que es el que la página pinta.
-     *
-     * ⚠️ Comparar contra el DOMINIO y no contra un número escrito a mano es lo que hace que esta
-     * guarda siga valiendo cuando cambie una tarifa del fixture: lo que vigila es el cableado del
-     * recurso, no una foto de importes.
+     * **Cada campo publicado es el que compone el dominio.** Comparar contra el DOMINIO y no contra un
+     * número escrito a mano es lo que hace que esta guarda siga valiendo cuando cambie una tarifa del
+     * fixture: lo que vigila es el cableado del recurso, no una foto de importes.
      */
-    public function test_the_api_publishes_exactly_what_the_domain_calculates(): void
+    public function test_the_api_publishes_exactly_what_the_domain_composes(): void
     {
         [$user, $order] = $this->orderWithEverything();
-        $summary = $order->financialSummary();
+        $book = OrderBook::forOrder($order);
 
         $json = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0');
+        $ledger = $json['ledger'];
 
-        $v = $json['ledger']['value'];
-        $c = $json['ledger']['cash'];
+        $this->assertSame($book->totalCents, $ledger['total_cents'], 'lo que vale hoy');
+        $this->assertSame($book->paidCents, $ledger['paid_cents'], 'lo ya saldado');
+        $this->assertSame([
+            'kind' => $book->balance->kind,
+            'cents' => $book->balance->cents,
+            'rest_at_park_cents' => $book->balance->restAtParkCents,
+        ], $ledger['balance'], 'el saldo y su clase');
+        $this->assertSame(array_map(fn (Movement $m): array => [
+            'kind' => $m->kind, 'label' => $m->label, 'amount_cents' => $m->amountCents,
+            'occurred_at' => $m->occurredAt, 'occurred_label' => $m->occurredLabel, 'reservation_id' => $m->reservationId,
+        ], $book->movements), $ledger['movements'], 'las líneas de valor, con sus etiquetas y su orden');
+        $this->assertSame(array_map(fn (Settlement $s): array => [
+            'kind' => $s->kind, 'label' => $s->label, 'amount_cents' => $s->amountCents,
+            'occurred_at' => $s->occurredAt, 'occurred_label' => $s->occurredLabel, 'status' => $s->status, 'method' => $s->method,
+        ], $book->settlements), $ledger['settlements'], 'las líneas de dinero');
+        $this->assertSame($book->hasDeposit, $ledger['has_deposit']);
+        $this->assertSame($book->isConsistent, $ledger['is_consistent']);
+        $this->assertSame($book->note, $ledger['note']);
 
-        $this->assertSame($summary->totalFinalNeto(), $v['total_cents'], 'el valor de lo que sigue vivo');
-        $this->assertSame($summary->pagadoOnline(), $v['paid_online_cents'], 'lo ya pagado por web');
-        $this->assertSame($summary->pendienteOnline(), $v['pending_online_cents'], 'lo que falta por pagar por web');
-        $this->assertSame($summary->cobradoPuerta(), $v['paid_at_gate_cents'], 'lo ya pagado en recepción');
-        $this->assertSame($summary->pendingAtGate(), $v['pending_at_gate_cents'], 'lo que queda en recepción');
-        $this->assertSame($summary->compensado(), $v['compensated_cents'], 'lo devuelto sin quitar producto');
-
-        $this->assertSame($summary->grossPaidOnline, $c['charged_online_cents'], 'el ancla de caja');
-        $this->assertSame($summary->effectiveRefunded(), $c['refunded_cents'], 'lo ya devuelto');
-        $this->assertSame($summary->retenidoOnline(), $c['held_cents'], 'lo que el parque retiene');
-        $this->assertSame($summary->pendienteDevolucion(), $c['pending_refund_cents'], 'lo que aún se debe devolver');
-        $this->assertSame($order->chargeMethod(), $c['charged_method'], 'cómo se cobró');
-        $this->assertSame($order->chargedAtLabel(), $c['charged_at_label'], 'cuándo se cobró');
-
-        $this->assertSame((int) $order->total, $json['ledger']['invoiced_cents'], 'lo facturado al reservar');
-        $this->assertSame($order->onlineDueCents(), $json['online_amount_cents'], 'lo que se cobraría al pagar ahora');
-        $this->assertSame($summary->depositRemainder > 0, $json['ledger']['has_deposit'], 'si el pedido llevaba señal');
-
-        // ⚠️ Los dos campos que más fácil sería cruzar, y cruzarlos invierte el significado para el
-        // cliente: lo facturado es INMUTABLE y lo devuelto NO es lo que se debe devolver.
-        $this->assertNotSame($json['ledger']['invoiced_cents'], $v['total_cents']);
-        $this->assertNotSame($c['refunded_cents'], $c['pending_refund_cents']);
+        $this->assertSame($order->onlineDueCents(), $json['online_amount_cents'], 'lo que se cobraría al pagar ahora sigue fuera del libro');
     }
 
     /**
-     * ⚠️⚠️ **LA GUARDA QUE FALTABA: lo que se PUBLICA tiene que sumar.**
-     *
-     * Hasta la tanda B ninguna aserción miraba lo que la PANTALLA puede pintar: se verificaba que
-     * cada cifra coincidía con el dominio —cableado— pero no que las cifras publicadas cerraran entre
-     * sí. Y no cerraban: la API publicaba 2 de las 6 dimensiones, así que la columna del cliente
-     * **no podía** sumar, y de hecho no sumaba en el 100 % de los pedidos con algo cobrado en puerta.
-     *
-     * Se recorre sobre los escenarios que el dominio sabe distinguir, no sobre un pedido: el hueco
-     * de la versión anterior no estaba en la aserción, estaba en el fixture.
+     * ⚠️⚠️ **LO QUE SE PUBLICA TIENE QUE SUMAR.** Es la identidad del libro (I3) vista desde la
+     * pantalla: el Total es la Σ de las líneas de valor, el saldo es Total − Pagado, y lo pagado es lo
+     * que las liquidaciones CON ÉXITO suman. Se recorre sobre escenarios distintos: el hueco de la
+     * versión anterior no estaba en la aserción, estaba en el fixture.
      */
     public function test_what_is_published_adds_up_in_every_scenario(): void
     {
         $escenarios = [
-            'con señal, cambios y una cancelación' => fn () => $this->orderWithEverything(),
-            'con la señal ya cobrada en recepción' => fn () => $this->orderWithSettledDeposit(),
+            'con señal, una gestión y una cancelación' => fn () => $this->orderWithEverything(),
+            'con la señal ya liquidada en el parque' => fn () => $this->orderWithSettledDeposit(),
         ];
 
         foreach ($escenarios as $nombre => $montar) {
             [$user, $order] = $montar();
-            $json = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0');
-            $v = $json['ledger']['value'];
-            $c = $json['ledger']['cash'];
+            $l = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
 
-            // PAY-16 · el eje del VALOR cierra con lo publicado.
+            $this->assertTrue($l['is_consistent'], "$nombre · el fixture no cierra: el caso no mide lo que dice");
             $this->assertSame(
-                $v['total_cents'],
-                $v['paid_online_cents'] + $v['pending_online_cents'] + $v['paid_at_gate_cents']
-                    + $v['pending_at_gate_cents'] + $v['compensated_cents'],
-                "$nombre · los cinco canales publicados no suman el valor",
-            );
-            // PAY-17 · el eje de CAJA cierra con lo publicado.
-            $this->assertSame(
-                $c['held_cents'], $c['charged_online_cents'] - $c['refunded_cents'],
-                "$nombre · lo retenido no es lo cobrado menos lo devuelto",
+                $l['total_cents'], array_sum(array_column($l['movements'], 'amount_cents')),
+                "$nombre · I3 · las líneas de valor publicadas no suman el Total",
             );
             $this->assertSame(
-                $c['held_cents'], $v['paid_online_cents'] + $c['pending_refund_cents'],
-                "$nombre · lo retenido ni respalda producto ni se debe devolver",
+                $l['paid_cents'],
+                array_sum(array_map(fn (array $s): int => $s['status'] === 'succeeded' ? $s['amount_cents'] : 0, $l['settlements'])),
+                "$nombre · lo pagado no es la Σ de las liquidaciones con éxito",
             );
-            // Los dos canales web son excluyentes: publicar el mismo importe en los dos sería
-            // exactamente el defecto que separarlos vino a arreglar.
-            $this->assertTrue(
-                $v['paid_online_cents'] === 0 || $v['pending_online_cents'] === 0,
-                "$nombre · «pagado por web» y «pendiente de pagar por web» a la vez",
-            );
-            // Y el desglose ↳ suma su titular.
             $this->assertSame(
-                $v['pending_at_gate_cents'],
-                array_sum(array_column($json['ledger']['gate_lines'], 'amount_cents')),
-                "$nombre · el desglose de puerta no suma su titular",
+                $l['total_cents'] - $l['paid_cents'], $l['balance']['cents'],
+                "$nombre · el saldo no es Total − Pagado",
             );
-
-            // ⚠️ La guarda de la guarda: que el escenario EJERCITE los canales, o compararía ceros.
-            $this->assertGreaterThan(0, $v['paid_online_cents'] + $v['paid_at_gate_cents'],
-                "$nombre · el fixture no ejercita ningún canal cobrado");
+            // ⚠️ La guarda de la guarda: que el escenario EJERCITE el libro, o compararía un solo renglón.
+            $this->assertGreaterThanOrEqual(1, count($l['settlements']), "$nombre · el fixture no cobra nada");
         }
     }
 
     /**
-     * **La FRASE de estado la compone el servidor**, y dice lo que el número no dice.
-     *
-     * ⚠️ Es el encargo del owner: «trazabilidad y explicación ante cualquier situación». Un pedido
-     * con dinero pendiente de devolver tiene que DECIRLO, no dejar que el cliente lo deduzca de una
-     * línea negativa.
+     * ⚠️⚠️ **La CLASE del saldo la decide el servidor**, y no se deduce del signo: «a devolver en el
+     * parque» y «pendiente de devolución» son el mismo número con distinta salida —según haya visita
+     * o no—, y con la señal ya liquidada el saldo es CERO aunque el pedido tenga movimientos.
      */
-    public function test_the_ledger_explains_the_state_in_words(): void
-    {
-        [$user, $order] = $this->orderWithEverything();
-        $json = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0');
-
-        $this->assertGreaterThan(0, $json['ledger']['cash']['pending_refund_cents'], 'el fixture no debe dinero');
-        $this->assertNotNull($json['ledger']['note'], 'un pedido con dinero pendiente de devolver no lo dice');
-        $this->assertStringContainsString(
-            Money::amount($json['ledger']['cash']['pending_refund_cents']),
-            $json['ledger']['note'],
-            'la frase no nombra el importe que se le debe',
-        );
-    }
-
-    /**
-     * ⚠️⚠️ **`L6` — «Importe al reservar» dice EN QUÉ DIRECCIÓN y CUÁNTO** (`DECISIONES #133`,
-     * `specs/desglose-dinero-cliente.md` §22.2).
-     *
-     * La frase era FIJA y decía *que* el pedido había cambiado: «si no coincide con el valor de
-     * arriba es porque el pedido cambió después». Quien ve 180,00 € donde espera 120,00 € no
-     * necesita saber que cambió —ya lo está viendo—, necesita saber **hacia dónde y cuánto**. Una
-     * BAJADA no dejaba más rastro que ese número mudo.
-     *
-     * ⚠️ **Lo que se compara es la DIFERENCIA, no el valor**, y por eso el fixture exige que los tres
-     * importes sean distintos entre sí: publicar `valor` daría una frase que suena bien y repite el
-     * número que el cliente ya tiene dos líneas más arriba. Con `facturado`, `valor` y su diferencia
-     * confundibles, esa mutación pasaría inadvertida.
-     */
-    public function test_the_invoiced_line_says_which_way_the_order_moved_and_by_how_much(): void
-    {
-        [$user, $order] = $this->orderWithEverything();
-
-        $facturado = (int) $order->total;
-        $valor = $order->financialSummary()->totalFinalNeto();
-        $diferencia = abs($valor - $facturado);
-
-        // La guarda de la guarda: sin tres importes DISTINTOS, publicar el valor en vez de la
-        // diferencia dejaría este caso en verde.
-        $this->assertLessThan($facturado, $valor, 'el fixture no ejercita una BAJADA');
-        $this->assertNotSame($diferencia, $valor, 'diferencia y valor coinciden: la mutación no se vería');
-        $this->assertNotSame($diferencia, $facturado, 'diferencia y facturado coinciden: la mutación no se vería');
-
-        $ledger = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
-
-        $this->assertSame(
-            __('tickets.ledger.invoiced_hint_less', [
-                'invoiced' => Money::amount($facturado).' €',
-                'difference' => Money::amount($diferencia).' €',
-            ]),
-            $ledger['invoiced_hint'],
-            'la frase no dice la dirección y el importe del cambio',
-        );
-
-        // ── Y AL REVÉS: un pedido que vale MÁS de lo facturado cambia de frase ────────────────
-        //
-        // ⚠️ La forma de una SUBIDA es la que deja el panel al subir invitados: **el precio de la
-        // línea sube** y el delta se cobra en puerta con un `extra_due`. Un `extra_due` suelto NO
-        // vale como fixture —no toca el valor, solo el bucket de puerta—, y montarlo así habría
-        // probado un pedido que ningún flujo produce.
-        [$otro, $subido] = $this->orderWithSettledDeposit();
-        $linea = $subido->items->first();
-
-        $linea->forceFill(['unit_price' => (int) $linea->unit_price + 2500])->save();
-        OrderAdjustment::create([
-            'order_id' => $subido->id, 'order_item_id' => $linea->id,
-            'type' => OrderAdjustment::TYPE_EDIT,
-            'amount_cents' => 2500, 'currency' => 'EUR', 'applied_by' => $otro->id,
-            'reason' => 'Dos invitados más',
-        ]);
-
-        $subido = $subido->fresh()->load('items.ticketType', 'items.children', 'items.slot', 'adjustments', 'payments.refunds');
-        $facturadoArriba = (int) $subido->total;
-        $valorArriba = $subido->financialSummary()->totalFinalNeto();
-
-        $this->assertGreaterThan($facturadoArriba, $valorArriba, 'el fixture no ejercita una SUBIDA');
-        $this->assertNotSame($valorArriba - $facturadoArriba, $facturadoArriba, 'diferencia y facturado coinciden');
-        $this->assertNotSame($valorArriba - $facturadoArriba, $valorArriba, 'diferencia y valor coinciden');
-
-        $arriba = $this->actingAs($otro)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
-
-        // ⚠️ Y el pedido de la subida tiene que CUADRAR: sobre un desglose roto el cliente ni siquiera
-        // vería esta línea (`#132`), así que el caso estaría midiendo otra cosa.
-        $this->assertTrue($arriba['is_consistent'], 'el fixture de la subida no cierra: el caso no mide lo que dice');
-
-        $this->assertSame(
-            __('tickets.ledger.invoiced_hint_more', [
-                'invoiced' => Money::amount($facturadoArriba).' €',
-                'difference' => Money::amount($valorArriba - $facturadoArriba).' €',
-            ]),
-            $arriba['invoiced_hint'],
-            'un pedido que vale MÁS se explica con la frase de una bajada',
-        );
-
-        // ⚠️ Y las dos frases tienen que ser DISTINTAS: una sola clave para los dos sentidos volvería
-        // a dejar al cliente sin saber hacia dónde se movió su pedido.
-        $this->assertNotSame($ledger['invoiced_hint'], $arriba['invoiced_hint'],
-            'subir y bajar se explican con la misma frase');
-    }
-
-    /**
-     * ⚠️⚠️ **`null` NO es un hueco: ES la condición de enseñar la línea** (`L6`, `DECISIONES #133`).
-     *
-     * Se publica en vez de dejar que cada superficie compare `invoiced_cents` con `total_cents`,
-     * porque una condición re-derivada es una divergencia con retraso — es literalmente lo que dejó
-     * al cliente sin ver el ancla de caja durante toda la vida del producto (`L1`, `#128`).
-     */
-    public function test_the_invoiced_hint_is_null_when_there_is_nothing_to_trace(): void
+    public function test_the_balance_kind_is_decided_by_the_server(): void
     {
         [$user, $order] = $this->orderWithSettledDeposit();
+        $l = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
 
-        $this->assertSame(
-            (int) $order->total, $order->financialSummary()->totalFinalNeto(),
-            'el fixture ya no vale: en él lo facturado difiere del valor',
-        );
+        $this->assertSame(Balance::KIND_SETTLED, $l['balance']['kind']);
+        $this->assertSame(0, $l['balance']['cents']);
+        $this->assertSame($l['total_cents'], $l['paid_cents'], 'todo saldado: pagado == total');
 
-        $ledger = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+        // Y la liquidación en el parque es una LÍNEA con su fecha, no un canal mudo.
+        $gate = collect($l['settlements'])->firstWhere('kind', 'gate');
+        $this->assertNotNull($gate, 'la visita pasó y el resto se dio por liquidado: tiene que verse');
+        $this->assertSame(3100, $gate['amount_cents'], 'el resto de la señal');
+        $this->assertSame(__('tickets.journal.gate'), $gate['label']);
+        $this->assertSame('20/05/2026', $gate['occurred_label'], 'fechada al fin de la franja, con su fecha civil');
 
-        $this->assertNull($ledger['invoiced_hint'], 'se explica un cambio que no ha habido');
-        $this->assertSame((int) $order->total, $ledger['invoiced_cents'], 'y el importe sigue viajando');
+        // Un pedido cancelado sin visita por delante NO dice «en el parque»: el operador decide el canal.
+        $order->update(['status' => Order::STATUS_CANCELLED]);
+        $order->cancelLiveItems($user);
+        $l = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+
+        $this->assertSame(Balance::KIND_REFUND_PENDING, $l['balance']['kind']);
+        $this->assertSame(-6000, $l['balance']['cents'], 'la señal cobrada, a devolver; con signo');
     }
 
     /**
-     * **Las dos direcciones existen en los TRES idiomas, y las dos llevan sus dos huecos.**
-     *
-     * ⚠️⚠️ **`Lang::has(…, false)` y no `__()`, y la diferencia es la que hace que esta guarda
-     * exista.** Medido por mutación al escribirla: borrando `invoiced_hint_more` de `lang/fr`, la
-     * versión que comparaba el resultado de `__()` **seguía verde** — porque Laravel cae al idioma de
-     * respaldo y devolvía la frase en CASTELLANO. Una clave que falta no se manifiesta como una clave
-     * en crudo: se manifiesta como un cliente francés leyendo español en su pantalla de dinero, que
-     * es un fallo más silencioso todavía. El tercer argumento `false` es el que apaga ese respaldo.
-     *
-     * ⚠️ Y si a una clave le faltara un hueco, la frase se quedaría sin el importe —que es justo lo
-     * que `L6` vino a poner— sin que nada más lo notara.
+     * **Sin cobrar, el saldo es «pendiente de pagar por web»** y lleva aparte lo que además se pagará
+     * en el parque — publicado, no restado. Y la FRASE lo dice con palabras.
      */
-    public function test_both_directions_exist_in_every_locale(): void
-    {
-        foreach (['es', 'en', 'fr'] as $locale) {
-            foreach (['invoiced_hint_more', 'invoiced_hint_less'] as $clave) {
-                $this->assertTrue(
-                    Lang::has('tickets.ledger.'.$clave, $locale, false),
-                    "[$locale] falta la clave `$clave`: ese idioma serviría la frase del locale de respaldo",
-                );
-
-                $frase = __('tickets.ledger.'.$clave, [], $locale);
-
-                foreach ([':invoiced', ':difference'] as $hueco) {
-                    $this->assertStringContainsString($hueco, $frase,
-                        "[$locale] `$clave` no lleva `$hueco`: la frase pierde el importe que `L6` vino a poner");
-                }
-            }
-
-            $this->assertNotSame(
-                __('tickets.ledger.invoiced_hint_more', [], $locale),
-                __('tickets.ledger.invoiced_hint_less', [], $locale),
-                "[$locale] las dos direcciones dicen lo mismo",
-            );
-        }
-    }
-
-    /**
-     * **El desglose de puerta: las líneas del dominio, con sus etiquetas y en su ORDEN.**
-     *
-     * ⚠️ El orden no es cosmético: primero los cargos por cambios y después el resto de la señal, que
-     * es como lo enseñó la web durante años. Pintarlo al revés cambia el desglose que el cliente
-     * reconoce.
-     * ⚠️ **La suma tiene que cuadrar con el agregado que se publica al lado**: un desglose que no
-     * sume `pending_at_gate_cents` deja al cliente con dos cifras que se contradicen.
-     */
-    public function test_the_gate_breakdown_is_the_one_the_domain_composes(): void
-    {
-        [$user, $order] = $this->orderWithEverything();
-
-        $json = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0');
-
-        $expected = array_map(
-            fn (array $line): array => ['label' => $line['label'], 'amount_cents' => (int) $line['amount']],
-            $order->gateBreakdownLines(),
-        );
-
-        $this->assertSame($expected, $json['ledger']['gate_lines'], 'el desglose publicado no es el del dominio');
-        $this->assertSame(
-            $json['ledger']['value']['pending_at_gate_cents'],
-            array_sum(array_column($json['ledger']['gate_lines'], 'amount_cents')),
-            'el desglose no suma el agregado que se publica al lado'
-        );
-
-    }
-
-    /**
-     * ⚠️⚠️ **`has_deposit` NO es «hay algo pendiente en puerta», y este caso es el único que los
-     * distingue.**
-     *
-     * En el pedido de arriba los dos son ciertos a la vez, así que publicando `pending_at_gate_cents
-     * > 0` en su lugar el resto de la suite seguiría verde. El caso frontera se elige por el
-     * MECANISMO del fallo (`DECISIONES #68`): un pedido con señal **cuya franja ya pasó** tiene el
-     * resto cobrado en recepción —nada pendiente— y **sigue siendo** un pedido con señal. Si el
-     * cliente dedujera el uno del otro, ese pedido dejaría de enseñar «Pagado online» y cambiaría de
-     * leyenda justo cuando el titular consulta qué pagó.
-     */
-    public function test_has_deposit_is_not_the_same_as_having_something_pending(): void
-    {
-        [$user, $order] = $this->orderWithSettledDeposit();
-        $summary = $order->financialSummary();
-
-        $this->assertSame(0, $summary->pendingAtGate(), 'el fixture no tiene el resto ya cobrado');
-        $this->assertTrue($summary->depositRemainder > 0, 'el fixture no lleva señal');
-
-        $json = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0');
-
-        $this->assertTrue($json['ledger']['has_deposit'], 'un pedido con señal ya saldada ha dejado de declararse con señal');
-        $this->assertSame(0, $json['ledger']['value']['pending_at_gate_cents']);
-        $this->assertSame([], $json['ledger']['gate_lines'], 'sin nada pendiente, el desglose va vacío');
-    }
-
-    /**
-     * ⚠️⚠️ **EL EJE DE CAJA SOLO SE PUBLICA CUANDO DICE ALGO QUE EL DEL VALOR NO DIGA YA**
-     * (`DECISIONES #130`, `specs/desglose-dinero-cliente.md` §20).
-     *
-     * `#128` lo puso en «siempre que haya habido un cobro», y el owner leyó la pantalla y no la
-     * entendió: en un pedido corriente el MISMO importe salía dos veces, como «Pagado por web» y como
-     * «Cobrado por web». Un bloque que repite lo de arriba no se lee como reconciliación: enseña a
-     * saltarse el bloque que sí importa.
-     *
-     * ▶ Lo que hacía falta conservar —que el importe se pueda cotejar con el banco— no era el bloque,
-     * era la **fecha**, y ahora va en la línea del canal. Lo que `#128` vino a arreglar sigue entero
-     * en el otro caso: cuando lo cobrado NO coincide con lo pagado.
-     */
-    public function test_the_cash_axis_stays_quiet_when_it_would_only_repeat_the_value_row(): void
-    {
-        [$user, $order] = $this->orderWithSettledDeposit();
-        $summary = $order->financialSummary();
-
-        $this->assertSame(0, $summary->effectiveRefunded(), 'el fixture tiene devoluciones: no mide lo que dice medir');
-        $this->assertSame(0, $summary->pendienteDevolucion(), 'el fixture debe dinero: no mide lo que dice medir');
-        $this->assertSame($summary->grossPaidOnline, $summary->pagadoOnline(), 'el fixture no es un pedido sano');
-
-        $ledger = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
-
-        $this->assertFalse($ledger['cash']['has_cash'], 'el eje de caja repite el importe que el del valor ya dice');
-        // ⚠️ Pero los DATOS siguen publicados: es la interfaz la que decide no pintar el bloque, y la
-        // fecha —que es lo verificable— viaja igual para la línea del canal.
-        $this->assertSame($summary->grossPaidOnline, $ledger['cash']['charged_online_cents']);
-        $this->assertSame('web', $ledger['cash']['charged_method']);
-        $this->assertNotNull($ledger['cash']['charged_at_label'], 'un importe sin fecha no se busca en un extracto bancario');
-    }
-
-    /**
-     * ⚠️⚠️ **Y LO QUE `#128` VINO A ARREGLAR SIGUE ENTERO**: si lo cobrado no coincide con lo pagado,
-     * el eje de caja aparece y la contradicción se ve.
-     *
-     * En un pedido sano los dos importes coinciden **por construcción** (`PAY-17`), así que solo
-     * difieren cuando el dato está roto — que es el caso `R-L6UTIA`: 30,00 € cobrados de verdad
-     * contra 114,00 € que el desglose llama «pagados». Sin este término esa pantalla volvería a
-     * leerse como si no pasara nada.
-     */
-    public function test_the_cash_axis_appears_when_what_was_charged_does_not_match_what_was_paid(): void
-    {
-        [$user, $order] = $this->orderWithSettledDeposit();
-
-        // Un cobro MAYOR que lo que respalda producto: la forma que tiene un dato roto de delatarse.
-        $order->payments()->update(['amount' => 999]);
-
-        $ledger = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
-
-        $this->assertNotSame(
-            $ledger['value']['paid_online_cents'], $ledger['cash']['charged_online_cents'],
-            'el fixture no llega a descuadrar: el caso no mide lo que dice medir'
-        );
-        $this->assertTrue($ledger['cash']['has_cash'], 'el dato roto vuelve a pasar desapercibido');
-    }
-
-    /** Sin ningún cobro no hay ancla: el eje de caja no tiene nada que contar. */
-    public function test_an_order_never_charged_publishes_no_cash_axis(): void
+    public function test_an_uncollected_order_owes_its_money_online_and_says_so(): void
     {
         [$user, $order] = $this->orderWithSettledDeposit();
         $order->payments()->delete();
         $order->forceFill(['status' => Order::STATUS_PENDING, 'paid_at' => null])->save();
 
-        $c = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger.cash');
+        $l = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
 
-        $this->assertFalse($c['has_cash']);
-        $this->assertNull($c['charged_method'], 'sin cobro no hay método que rotular');
-        $this->assertNull($c['charged_at_label']);
+        $this->assertSame(Balance::KIND_PAY_ONLINE, $l['balance']['kind']);
+        $this->assertSame(6000, $l['balance']['cents'], 'lo que falta por cobrar POR WEB: la señal');
+        $this->assertSame(3100, $l['balance']['rest_at_park_cents'], 'y el resto, publicado');
+        $this->assertSame(0, $l['paid_cents'], 'sin cobro no hay cobro');
+        $this->assertSame([], $l['settlements']);
+        $this->assertSame(__('tickets.ledger_note.pending_payment', ['amount' => Money::format(6000)]), $l['note']);
     }
 
     /**
-     * ⚠️⚠️ **El MÉTODO no se puede quemar en la interfaz.** El eje de caja suma TODOS los pagos
-     * cobrados sin mirar el `provider` —eso es correcto: mide dinero movido, no medios—, así que un
-     * pedido cobrado en TAQUILLA (efectivo o datáfono) publica el mismo importe. Si el rótulo
-     * asumiera «web», ese pedido le diría al cliente que pagó por internet un dinero que entregó en
-     * mano. El panel ya distinguía el método desde `P1/P10`; el cliente no, y con el ancla siempre
-     * visible esa divergencia pasaba a ser una afirmación falsa en pantalla.
+     * **Las etiquetas viajan traducidas al idioma negociado**, y son las del dominio: un cliente en
+     * inglés no puede leer castellano en su pantalla de dinero (la lección de `#154`/`#134`).
      */
-    public function test_an_order_charged_at_the_desk_does_not_claim_it_was_charged_online(): void
+    public function test_the_labels_are_translated_to_the_negotiated_locale(): void
+    {
+        [$user] = $this->orderWithEverything();
+
+        $es = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+        $en = $this->actingAs($user)->withHeader('Accept-Language', 'en')->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+
+        $this->assertSame(Lang::get('tickets.journal.booking', [], 'es'), $es['movements'][0]['label']);
+        $this->assertSame(Lang::get('tickets.journal.booking', [], 'en'), $en['movements'][0]['label']);
+        $this->assertNotSame($es['movements'][0]['label'], $en['movements'][0]['label'], 'los dos idiomas dicen lo mismo');
+        $this->assertSame(Lang::get('tickets.journal.paid_online', [], 'en'), $en['settlements'][0]['label']);
+    }
+
+    /**
+     * ⚠️⚠️ **El MÉTODO no se puede quemar en la interfaz.** Un pedido cobrado en TAQUILLA publica su
+     * cobro como `desk` y su etiqueta dice «en recepción»: si el rótulo asumiera «web», le diría al
+     * cliente que pagó por internet un dinero que entregó en mano.
+     */
+    public function test_an_order_charged_at_the_desk_says_so_in_its_settlement(): void
     {
         [$user, $order] = $this->orderWithSettledDeposit();
         $order->payments()->update(['provider' => ManualOrderFulfiller::METHOD_DATAFONO]);
 
-        $c = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger.cash');
+        $payment = collect($this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger.settlements'))
+            ->firstWhere('kind', 'payment');
 
-        $this->assertSame('desk', $c['charged_method']);
-        $this->assertSame($order->financialSummary()->grossPaidOnline, $c['charged_online_cents'],
-            'el dinero se cobró igual: lo que cambia es cómo se llama');
+        $this->assertSame('desk', $payment['method']);
+        $this->assertSame(__('tickets.journal.paid_desk'), $payment['label']);
+        $this->assertSame(6000, $payment['amount_cents'], 'el dinero se cobró igual: lo que cambia es cómo se llama');
     }
 
     /**
-     * ⚠️⚠️ **UN DESGLOSE QUE NO CIERRA NO SE DESCOMPONE, Y SE AVISA** (`DECISIONES #132`).
-     *
-     * `PAY-16` y `PAY-17` eran guardas de TEST: decían que el CÓDIGO está bien hoy, no que ESTE
-     * pedido esté bien ahora. Un pedido con el dato corrupto se servía al cliente como si nada —dos
-     * importes que se contradicen, sin aviso, y una frase que hablaba de otra cosa—, y el parque no
-     * se enteraba: ni log, ni campo en el contrato, ni nada.
+     * **Un reembolso EN CURSO se lista y NO se cuenta** (guarda K): el cliente ve que hay una
+     * devolución en camino, y el saldo sigue diciendo lo que aún no ha vuelto.
      */
-    public function test_a_ledger_that_does_not_close_is_published_as_inconsistent_and_logged(): void
+    public function test_a_pending_refund_is_listed_but_not_counted(): void
     {
         [$user, $order] = $this->orderWithSettledDeposit();
+        PaymentRefund::create([
+            'payment_id' => $order->payments()->first()->id,
+            'order_item_id' => null,
+            'amount_cents' => 1500,
+            'currency' => 'EUR',
+            'status' => PaymentRefund::STATUS_PENDING,
+            'mode' => PaymentRefund::MODE_REST,
+            'requested_by' => $user->id,
+            'requested_at' => Carbon::now(),
+        ]);
 
-        // Un cobro que no respalda nada: la forma que tiene un dato roto de romper la identidad.
+        $l = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+
+        $refund = collect($l['settlements'])->firstWhere('kind', 'refund');
+        $this->assertSame('pending', $refund['status']);
+        $this->assertSame(-1500, $refund['amount_cents']);
+        $this->assertSame(__('tickets.journal.refund_pending'), $refund['label']);
+        $this->assertSame($l['total_cents'], $l['paid_cents'], 'lo pagado no baja hasta que el dinero vuelve');
+        $this->assertSame(Balance::KIND_SETTLED, $l['balance']['kind']);
+    }
+
+    /**
+     * ⚠️⚠️ **`has_deposit` es un HECHO del pedido, no «queda algo pendiente».** Un pedido con señal
+     * cuya visita ya pasó tiene el saldo a cero y **sigue siendo** un pedido con señal.
+     */
+    public function test_has_deposit_is_a_fact_not_a_pending_amount(): void
+    {
+        [$user] = $this->orderWithSettledDeposit();
+
+        $l = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+
+        $this->assertTrue($l['has_deposit'], 'un pedido con señal ya liquidada ha dejado de declararse con señal');
+        $this->assertSame(0, $l['balance']['cents']);
+    }
+
+    /**
+     * ⚠️⚠️ **UN LIBRO QUE NO CIERRA SE PUBLICA COMO TAL, Y SE AVISA** (`DECISIONES #132`). Las
+     * identidades se evalúan sobre ESTE pedido y AHORA; un cobro que no respalda lo que las líneas
+     * dicen que nació rompe la de caja (I2). Los movimientos siguen viajando —son hechos—; decidir no
+     * pintarlos es de quien pinta, y `is_consistent` es la señal.
+     */
+    public function test_a_book_that_does_not_close_is_published_as_inconsistent_and_logged(): void
+    {
+        [$user, $order] = $this->orderWithSettledDeposit();
         $order->payments()->update(['amount' => 999]);
 
         Log::shouldReceive('warning')->atLeast()->once()
-            ->with('ledger.no_cuadra', \Mockery::on(fn (array $ctx): bool => $ctx['order'] === $order->code));
+            ->with('ledger.no_cuadra', \Mockery::on(fn (array $ctx): bool => $ctx['order'] === $order->code && $ctx['cobrado'] === 999));
 
-        $ledger = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+        $l = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
 
-        $this->assertFalse($ledger['is_consistent'], 'el desglose roto se publica como si cerrara');
-        $this->assertSame(__('tickets.ledger_note.under_review'), $ledger['note'],
-            'la frase sigue hablando de otra cosa sobre un desglose que no cuadra');
+        $this->assertFalse($l['is_consistent'], 'el libro roto se publica como si cerrara');
+        $this->assertSame(Balance::KIND_UNDER_REVIEW, $l['balance']['kind']);
+        $this->assertSame(0, $l['balance']['cents'], 'no se afirma ningún saldo');
+        $this->assertSame(__('tickets.ledger_note.under_review'), $l['note']);
+        $this->assertNotEmpty($l['movements'], 'los hechos siguen publicados: es la pantalla la que decide no pintarlos');
     }
 
     /** Y el caso normal sigue diciendo que cuadra: sin esto, lo de arriba pasaría con todo roto. */
-    public function test_a_healthy_ledger_is_published_as_consistent(): void
+    public function test_a_healthy_book_is_published_as_consistent(): void
     {
         [$user] = $this->orderWithEverything();
 
-        $ledger = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
+        $l = $this->actingAs($user)->getJson(self::ROOT.'/me/orders')->assertOk()->json('data.0.ledger');
 
-        $this->assertTrue($ledger['is_consistent']);
-        $this->assertNotSame(__('tickets.ledger_note.under_review'), $ledger['note']);
+        $this->assertTrue($l['is_consistent']);
+        $this->assertNull($l['note'], 'con todo dicho por las líneas, no hay frase que añadir');
     }
 
     /**
@@ -590,13 +363,9 @@ class MeOrdersFinancialsTest extends TestCase
     }
 
     /**
-     * Un pedido que ejercita **los seis importes a la vez**, con valores que no se repiten.
-     *
-     * Hereda el fixture de `AccountPageCaptureTest` —una línea con señal y extras, una cancelada y
-     * una segunda viva— y le añade **el pago online**, que aquél no necesitaba: sin una fila de
-     * `payments` pagada, `pendienteDevolucion()` vale 0 contra cualquier pedido, que es exactamente
-     * por lo que aquel test lo declaraba «no sondeable». Con el pago delante sí se puede: el dinero
-     * de la línea cancelada sigue retenido y aún no se ha devuelto.
+     * Un pedido que ejercita el libro entero: un pack con señal que subió en gestión, una entrada
+     * cancelada sin devolver y una segunda viva; el cobro real es lo que las líneas aportaron al
+     * nacer (identidad I2), así que el dinero de la cancelada sigue en la caja del parque.
      *
      * @return array{0: User, 1: Order}
      */
@@ -625,10 +394,8 @@ class MeOrdersFinancialsTest extends TestCase
             'is_sellable' => true, 'is_active' => true, 'position' => 2,
         ]);
 
-        // ⚠️ `Order.total` es lo que NACIÓ (T1 del libro, identidad I1): el pack a 74,00 (los 17,00
-        // del extra se añadieron DESPUÉS, en gestión) + la entrada cancelada (23,00) + la entrada
-        // viva (19,00) = 116,00. Hasta la T1 este fixture decía 133,00, que contaba el extra como si
-        // hubiera nacido con el pedido — un pedido que ningún alta produce.
+        // ⚠️ `Order.total` es lo que NACIÓ (identidad I1): el pack a 74,00 (los 17,00 del extra se
+        // añadieron DESPUÉS, en gestión) + la entrada cancelada (23,00) + la entrada viva (19,00).
         $order = Order::create([
             'user_id' => $user->id, 'code' => 'R-PARITY',
             'status' => Order::STATUS_PAID,
@@ -641,24 +408,20 @@ class MeOrdersFinancialsTest extends TestCase
             'quantity' => 1, 'unit_price' => 9100, 'seats' => 1,
         ]);
 
-        // ⚠️ **Una línea CANCELADA, y es la que hace medibles DOS campos**: sin ella
-        // `totalFinalNeto()` coincidiría con `total_cents` —que la API ya publicaba— y
-        // `pendienteDevolucion()` valdría 0. Es además el caso donde los dos importan.
+        // Una línea CANCELADA sin devolver: su dinero sigue en caja y el libro lo dice.
         $order->items()->create([
             'ticket_type_id' => $entry->id, 'slot_id' => $slot->id,
             'quantity' => 1, 'unit_price' => 2300, 'seats' => 1,
             'cancelled_at' => Carbon::now(),
         ]);
 
-        // Una SEGUNDA línea viva: con una sola, el total final coincide con su propio subtotal y la
-        // comparación no distingue dos campos distintos.
+        // Una SEGUNDA línea viva: con una sola, el Total coincide con su propio subtotal.
         $order->items()->create([
             'ticket_type_id' => $entry->id, 'slot_id' => $slot->id,
             'quantity' => 1, 'unit_price' => 1900, 'seats' => 1,
         ]);
 
-        // El resto de la señal y un extra añadido en gestión, con importes distintos entre sí y del
-        // total: son las dos familias del desglose de puerta.
+        // El reparto de la señal al nacer y una gestión que subió el pack: dos hechos distintos.
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $line->id,
             'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
@@ -668,13 +431,11 @@ class MeOrdersFinancialsTest extends TestCase
             'order_id' => $order->id, 'order_item_id' => $line->id,
             'type' => OrderAdjustment::TYPE_EDIT,
             'amount_cents' => 1700, 'currency' => 'EUR', 'applied_by' => $user->id,
-            'reason' => 'Extra de gestión',
+            'reason' => 'item_edit', 'context' => ['changes' => ['unit_price_change' => ['old' => 7400, 'new' => 9100]]],
         ]);
 
-        // ⚠️ **El pago online**, que es lo que hace medible «pendiente de devolución». 8.500 = lo que
-        // respaldan las líneas vivas (4.300 del pack con señal + 1.900 de la entrada) MÁS los 2.300
-        // de la que se canceló después: dinero cobrado por web que ya no tiene producto detrás y que
-        // todavía no se ha devuelto.
+        // ⚠️ El cobro: lo que las líneas aportaron al nacer (4.300 del pack con señal + 2.300 de la
+        // que se canceló después + 1.900 de la viva). Con menos, la identidad de caja no cierra.
         Payment::create([
             'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
             'amount' => 8500, 'currency' => 'EUR', 'provider' => 'redsys',
@@ -686,8 +447,8 @@ class MeOrdersFinancialsTest extends TestCase
     }
 
     /**
-     * Un pedido con señal **cuya franja ya pasó**: el resto se cobró en recepción, así que no queda
-     * nada pendiente en puerta y el pedido sigue siendo un pedido con señal.
+     * Un pedido con señal **cuya franja ya pasó**: el resto se liquidó en el parque, así que el saldo
+     * es cero y el pedido sigue siendo un pedido con señal.
      *
      * @return array{0: User, 1: Order}
      */
@@ -698,7 +459,7 @@ class MeOrdersFinancialsTest extends TestCase
             'slug' => 'cumples-pasados', 'name' => ['es' => 'Cumpleaños'], 'accent' => 'kids',
             'color' => '#FF5B22', 'position' => 1, 'is_active' => true,
         ]);
-        // ⚠️ Franja ANTERIOR al reloj congelado: es lo que hace que el ajuste cuente como resuelto.
+        // ⚠️ Franja ANTERIOR al reloj congelado: es lo que hace que la visita cuente como pasada.
         $slot = Slot::create([
             'zone_id' => $zone->id, 'date' => '2026-05-20',
             'start_time' => '10:00:00', 'end_time' => '11:00:00',
@@ -726,9 +487,7 @@ class MeOrdersFinancialsTest extends TestCase
             'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => 3100, 'currency' => 'EUR', 'applied_by' => $user->id,
         ]);
-        // ⚠️ El cobro de la SEÑAL, que es lo que este pedido tuvo de verdad: 60,00 € por web y el
-        // resto en recepción. Un pedido `paid` sin ninguna fila `Payment` no lo produce ningún cobro
-        // real, y hace que el eje de caja (`PAY-17`) compare contra un cobro de 0,00 €.
+        // El cobro de la SEÑAL, que es lo que este pedido tuvo de verdad: 60,00 € por web.
         Payment::create([
             'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
             'amount' => 6000, 'currency' => 'EUR', 'provider' => 'redsys',

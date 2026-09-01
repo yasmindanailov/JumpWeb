@@ -290,6 +290,19 @@ return [
         // D9 de la T5 de mixtos: nadie registra el cobro en puerta, así que «Liquidado» y no «Pagado».
         'gate' => 'Liquidado en el parque',
         'with_reservation' => ':reservation · :label',
+        // T3·1 (`specs/desglose-libro.md` §6.3): los TÍTULOS del libro y los rótulos del SALDO (§4.4),
+        // uno por clase — la clase la decide el servidor (`balance.kind`), el rótulo lo pone quien
+        // pinta desde aquí. `settled` no lleva línea. `balance_rest_at_park` acompaña a `pay_online`
+        // cuando hay señal: lo que además se pagará en el parque.
+        'movements_title' => 'Movimientos',
+        'settlements_title' => 'Pagos y devoluciones',
+        'total' => 'Total',
+        'paid' => 'Pagado',
+        'balance_pay_at_park' => 'A pagar en el parque',
+        'balance_refund_at_park' => 'A devolver en el parque',
+        'balance_refund_pending' => 'Pendiente de devolución',
+        'balance_pay_online' => 'Pendiente de pagar por web',
+        'balance_rest_at_park' => 'y :amount en el parque',
     ],
     'errors' => [
         'choose_one' => 'Elige al menos una entrada para continuar.',

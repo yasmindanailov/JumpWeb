@@ -51,5 +51,15 @@ return [
         // T5 · D9: 前台并未登记收款，因此是「结清」而非「已支付」。
         'gate' => '已在园区结清',
         'with_reservation' => ':reservation · :label',
+        // T3·1：账簿的标题与余额的标签（每个 `balance.kind` 一条；`settled` 无标签）。
+        'movements_title' => '变动明细',
+        'settlements_title' => '付款与退款',
+        'total' => '合计',
+        'paid' => '已付',
+        'balance_pay_at_park' => '待在园区支付',
+        'balance_refund_at_park' => '待在园区退还',
+        'balance_refund_pending' => '待退款',
+        'balance_pay_online' => '待在线支付',
+        'balance_rest_at_park' => '另有 :amount 在园区支付',
     ],
 ];

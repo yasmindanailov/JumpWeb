@@ -32,10 +32,26 @@ const item = (over = {}) => ({
     // ⚠️ El servidor manda el icono resuelto (`DECISIONES #140`); el doble lo refleja. Un fixture
     // sin él probaría un sobre que la API ya no emite.
     icon: 'ic-b1',
-    paid_online_cents: 3000,
-    gate_remainder_cents: 27000,
+    // El LIBRO de la reserva (`DECISIONES #305`, T3·1): de aquí salen la señal pagada y el resto.
+    ledger: ledger(),
     shows_deposit_note: true,
     ...over,
+});
+
+/**
+ * El libro que publica el servidor (`openapi/v1.yaml` → `Ledger`), mínimo: lo que este módulo lee
+ * es el Total, lo pagado y el SALDO con su clase. Fábrica única, como en `orders.test.js`.
+ */
+const ledger = (over = {}) => ({
+    total_cents: 30000,
+    paid_cents: 3000,
+    balance: { kind: 'pay_at_park', cents: 27000, rest_at_park_cents: 0, ...(over.balance ?? {}) },
+    movements: [],
+    settlements: [],
+    has_deposit: true,
+    is_consistent: true,
+    note: null,
+    ...Object.fromEntries(Object.entries(over).filter(([k]) => k !== 'balance')),
 });
 
 const order = (over = {}) => ({
@@ -43,15 +59,8 @@ const order = (over = {}) => ({
     status: 'paid',
     currency: 'EUR',
     online_amount_cents: 3000,
-    // El LEDGER, que desde la tanda B es el único sitio donde vive el desglose (`DECISIONES #127`).
-    ledger: {
-        value: {
-            total_cents: 30000, paid_online_cents: 3000, pending_online_cents: 0,
-            paid_at_gate_cents: 0, pending_at_gate_cents: 27000, compensated_cents: 0,
-        },
-        cash: { charged_online_cents: 3000, refunded_cents: 0, held_cents: 3000, pending_refund_cents: 0 },
-        invoiced_cents: 30000, gate_lines: [], has_deposit: true, note: null,
-    },
+    // El LIBRO, que es el único sitio donde vive el dinero (`DECISIONES #305`).
+    ledger: ledger(),
     refund: { refunded_at: null, fully_refunded: false },
     can_be_retried: false,
     created_at: null,
@@ -148,26 +157,45 @@ test('⚠️ el icono se TRANSPORTA, no se deduce de is_pack', () => {
 });
 
 test('la nota de señal sale del campo COMPUESTO por el servidor, no de los importes', () => {
-    // Son tres condiciones (`ReservationFinancials::showsDepositNote`) y recomponerlas en el cliente
-    // es como divergen las cuatro superficies que pintan este bloque.
-    const line = confirmationLine(item({ shows_deposit_note: false, gate_remainder_cents: 27000 }));
+    // Son tres condiciones (cobrado · nació con señal · queda algo en el parque) compuestas en el
+    // servidor, y recomponerlas en el cliente es como divergen las cuatro superficies que pintan
+    // este bloque: con el saldo diciendo 270,00 € en el parque, el aviso sigue OBEDECIENDO al campo.
+    const line = confirmationLine(item({ shows_deposit_note: false }));
 
     assert.equal(line.has_deposit, false);
+    assert.equal(line.gate_remainder_cents, 27000, 'los importes siguen viajando: es el aviso lo que no procede');
 });
 
-test('el pendiente en puerta se PINTA, no se resta del total', () => {
-    // `total − online` no es `pending_at_gate`: hay ajustes que no viven en ninguno de los dos.
+test('⚠️ la señal y el resto salen del LIBRO de la reserva, y por su CLASE de saldo', () => {
+    // Hasta la T3·1 se leían `paid_online_cents` y `gate_remainder_cents` de la línea, campos que la
+    // API NO publicaba: el aviso de la reserva recién creada decía «Señal 0,00 €» y este fixture,
+    // que los inventaba, no lo veía. Ahora salen del libro: lo pagado y el saldo «a pagar en el parque».
+    const line = confirmationLine(item({ ledger: ledger({ paid_cents: 5000, balance: { kind: 'pay_at_park', cents: 25000 } }) }));
+
+    assert.equal(line.deposit_cents, 5000);
+    assert.equal(line.gate_remainder_cents, 25000);
+
+    // ⚠️ Y un saldo NEGATIVO no es «pendiente en el parque»: se mira la clase, no el signo. Una
+    // reserva a la que se le debe dinero pinta 0 aquí — decir lo contrario invertiría el mensaje.
+    const owed = confirmationLine(item({ ledger: ledger({ balance: { kind: 'refund_at_park', cents: -2500 } }) }));
+
+    assert.equal(owed.gate_remainder_cents, 0);
+});
+
+test('el pendiente en el parque se PINTA, no se resta del total', () => {
+    // `total − online` no es el saldo: hay gestiones que no viven en ninguno de los dos. Y el saldo
+    // del pedido llega con su clase: solo `pay_at_park` es «pendiente en el parque».
     const built = buildConfirmation(order({
         online_amount_cents: 3000,
-        ledger: {
-            value: { total_cents: 30000, paid_online_cents: 5000, pending_online_cents: 0,
-                paid_at_gate_cents: 0, pending_at_gate_cents: 25000, compensated_cents: 0 },
-            cash: { charged_online_cents: 5000, refunded_cents: 0, held_cents: 5000, pending_refund_cents: 0 },
-            invoiced_cents: 30000, gate_lines: [], has_deposit: true, note: null,
-        },
+        ledger: ledger({ total_cents: 30000, paid_cents: 5000, balance: { kind: 'pay_at_park', cents: 25000 } }),
     }));
 
     assert.equal(built.park_cents, 25000);
+    assert.equal(built.total_cents, 30000, 'lo que el pedido VALE, del libro');
+
+    const settled = buildConfirmation(order({ ledger: ledger({ paid_cents: 30000, balance: { kind: 'settled', cents: 0 } }) }));
+
+    assert.equal(settled.park_cents, 0);
 });
 
 test('el estado del pedido viaja tal cual, y es lo que separa «pagado» de «pendiente»', () => {

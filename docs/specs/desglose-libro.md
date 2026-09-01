@@ -569,6 +569,52 @@ de N reservas son N composiciones — si una superficie lo nota, `forOrder` una 
   de `VERIFICACION-E2E-CAJON.md` gana el apartado del libro (pedido con señal, pedido 100 % online
   con bajada, pedido cancelado, mixto con descuento) **antes** del ojo del owner.
 
+### 6.3 · Diseño fino de la T3 (2026-09-01) — cuatro sub-tandas, el árbol verde en cada una
+
+**Medido antes de diseñar** (`git grep` sobre el árbol en `9c7dad7`): el modelo viejo tiene **40
+consumidores** fuera de sus propias clases —9 superficies de §4.6 más `ReservationSlipController`,
+`OrdersRelationManager`, `GuestFormController` + `reservation/guests.blade`, `item-summary-flat`,
+`GateProfile` (Identity), `outcome.js`— y **25 tests** que lo citan. Ninguno de los dos números cabe
+en una sesión sin dejar el árbol rojo a medias, así que la T3 se parte por **superficie**, no por
+capa, y cada corte deja verde: mientras un consumidor no se re-apunta, sigue leyendo el modelo viejo,
+que convive **solo hasta la T3·4**.
+
+| Sub-tanda | Qué se re-apunta al libro | Lo que cae con ella |
+|---|---|---|
+| **T3·1 · contrato + API + cajón** | `openapi/v1.yaml` → `Ledger` de §4.5 (**primero**, y `ApiContractTest` exige `required` completo + `additionalProperties: false` en cada esquema nuevo) · `LedgerResource` transcribe `OrderBook` · `OrderResource` (`forOrder`) · `OrderItemResource` (`forReservation`; `shows_deposit_note` = pedido cobrado ∧ `has_deposit` ∧ `balance.kind = pay_at_park`) · `orders.js::financialsOf` + `PurchaseCard.vue` · `outcome.js` (`park_cents` = el saldo `pay_at_park` del pedido; por línea, `deposit_cents`/`gate_remainder_cents` del libro de SU reserva) · claves del cliente `tickets.journal.*` (títulos y rótulos del saldo) | `LedgerValue`, `LedgerCash`, `OrderGateLine`, `gate_lines`, `invoiced_*`, `in_favour_hint` del contrato; `financialsOf` de dos ejes; `orders.test.js` (bloque financiero), `outcome.test.js`, `MeOrdersFinancialsTest`, `SidebarAccountParityTest` (3 casos), `OrderSummaryFieldsTest`, `MeReservationsPageTest`, `LedgerSingleSourceTest` (los seis canales → los campos del libro; guarda O al marcado nuevo) |
+| **T3·2 · panel + hoja + puerta** | `order-totals.blade` (movimientos · Total · liquidaciones · saldo · aviso `!is_consistent` · «Ver historial») · `reservation-financials.blade` (el libro de la reserva) · `items-list.blade` · `item-detail.blade` + `CalendarPage` · `OrdersTable` (Total = `total_cents` · Pagado = `paid_cents`) · `OrdersRelationManager` · `ViewOrder` (`pendienteDevolucion()` ×2 → `balance` de clase reembolso) · `ReservationSlip` + `reservation-slip.blade` (líneas de producto como hoy + el libro + UNA caja de saldo) · `GateReservation`/`GateReservationsReader`/`GateProfile`/`reservation.blade` («A cobrar X» · «A devolver X» · «Nada pendiente») · claves `admin.orders.book.*` (es · zh_CN) | `OrderTotalsBreakdownTest`, `ItemsListSubCardTest`, `GateProfileTest`, `MixedPartyParkSurfacesTest` (lo de dinero), `admin.orders.order_financial.*`/`item_financial.*` salvo `heading`/`total`/`principal`/`addons`/`no_cuadra_*` |
+| **T3·3 · correos + post-form + el tope** | `OrderConfirmation` · `OrderItemModified` (pierde sus tres céntimos: el libro los dice) · `OrderItemRefunded` · `OrderRefunded` · `MixedPartySurchargeChanged`: **todos** pintan el libro del pedido al ENVIAR (movimientos + Total + pagos + saldo) · `reduction_pending_refund` → «se te devolverán en el parque» (D2) · `GuestFormController`/`guests.blade` sin «a tu favor» · **`MixedPartySurcharge::applyCredit` escribe el crédito DERIVADO entero** (D4): mueren `gateCoverageCents` e `inFavourCents`; `mixed-party:verify-concurrency` en sus DOS escenarios y `VERIFY_CONC=1` | `OrderItemEditor::creditReduction` (su reparto para el correo), `emails.*` del reparto, `guestform.mixed_in_favour`; los 3 casos del tope en `OrderFinancialInvariantsTest` se INVIERTEN (guarda N) y los de `MixedPartySurchargeTest` |
+| **T3·4 · la retirada** | `Order` pierde §4.7 y gana `LineFacts` (`nac`/`online_nac`/reparto/cortesía por línea, SIN cascada: sustituye a `GateBuckets`); `itemRefundableRemainderCents`, `isVoidedLeftoverItem` y la prorrata de `unattributedRefundShareFor` pasan a `online_nac`; `onlineDueCents` = Σ líneas vivas (fila − reparto); el aviso `ledger.no_cuadra` y la rama mixta de `breakdownLabel()` se mudan al libro; `INVARIANTES` `PAY-16`/`PAY-17` reescritas y `PAY-19` sin tope; `DEUDA` (L4 cerrada); `desglose-dinero-cliente.md` a HISTÓRICO; guion headless (`VERIFICACION-E2E-CAJON.md`, apartado del libro) y la receta de las 25 acciones sobre el corpus; el ojo del owner | `OrderLedger` · `OrderFinancialSummary` · `ReservationFinancials` · `GateBuckets` · `OrderAdjustment::breakdownLabel` · `tickets.ledger.*` (salvo las tres notas) · `assertBookBridge` + `ledger-bridge.json` · `ReservationFinancialsTest`, `ItemPriceChangeReconstructionTest` (→ hechos), `OrderGateCreditTest`… |
+
+**Decisiones derivadas de la T3** (tomadas aquí; el owner puede vetar cualquiera):
+- **D-T3·1** El libro se enseña ENTERO en cuanto la tarjeta/el bloque está abierto: sin un segundo
+  «ver más» sobre los movimientos (D1: «es una suma / resta sencilla de varias líneas»; una lista
+  plegada obliga a razonar otra vez). El botón «Ver historial» del panel se queda al lado (T5·4).
+- **D-T3·2** Cada línea de valor lleva su signo delante (`+60,00 €` · `−30,00 €`), también el
+  nacimiento; los pagos en positivo, las devoluciones en negativo; el Total y lo Pagado sin signo.
+- **D-T3·3** Con `settled` no se pinta línea de saldo (spec §4.4); con `pay_online` la línea dice
+  lo que falta por web y, si hay señal, «+ X en el parque» (`rest_at_park_cents`).
+- **D-T3·4** Con `is_consistent = false` el CLIENTE ve el Total, los cobros (`settlements` de clase
+  `payment`) y la frase «en revisión»; el panel ve el libro entero y el aviso rojo (la asimetría
+  de `#132`). La API publica movimientos y liquidaciones igual: son hechos; decidir qué se pinta
+  es de quien pinta.
+- **D-T3·5** Los CORREOS de dinero pintan el libro ENTERO del pedido al enviar. La spec dice «la(s)
+  línea(s) de la gestión + Total + saldo»; al REENVIAR desde el panel «la gestión» ya no existe, y
+  el libro entero es un superconjunto siempre cierto. Un correo de gestión pasa a ser el estado
+  de la cuenta ese día.
+- **D-T3·6** La lista de pedidos conserva DOS columnas de dinero: Total (`total_cents`) y Pagado
+  (`paid_cents`, que incluye lo liquidado en el parque): `Total − Pagado` es el saldo. No se añade
+  una columna «Saldo» (no está en la spec; el detalle está a un clic).
+- **D-T3·7** La hoja «con precios» conserva las líneas de producto (cantidad × unitario: eso no es
+  dinero movido, es qué se compró) y sustituye el reparto viejo + las dos cajas por el libro de la
+  reserva y UNA caja de saldo.
+- **D-T3·8** La puerta enseña el saldo de la RESERVA con su clase: `pay_at_park` en alerta (como
+  hoy «pendiente de cobrar»), `refund_at_park`/`refund_pending` en alerta también (es dinero que
+  el empleado tiene que devolver), `settled` «nada pendiente»; y las líneas mixtas siguen como
+  explicación (§4.6·9).
+- **D-T3·9** `LineFacts` sustituye a `GateBuckets` en la T3·4 y no antes: mientras el modelo viejo
+  pinte, el replay de la cascada sigue siendo lo que alimenta sus cubos.
+
 | Guarda | Mutación |
 |---|---|
 | L · `LedgerSingleSourceTest`: ninguna superficie resta canales ni cita `OrderLedger`/`financialSummary`; los patrones nuevos se auto-verifican | reintroducir `total −` en un blade |
@@ -583,6 +629,79 @@ de N reservas son N composiciones — si una superficie lo nota, `forOrder` una 
 la receta de `specs/desglose-dinero-cliente.md` §4.quater re-corrida sobre el corpus (25 acciones →
 25/25 `cuadra` y 25/25 «lo que se pinta suma») · el guion headless · y el **ojo del owner** sobre
 `T5-PRB01`, `T4-PRB01` (que verá «en revisión», y es correcto), `R-MOTEHE` y `R-BEEL3E`.
+
+### 6.3.1 · ✅ T3·1 EJECUTADA (2026-09-01, `DECISIONES #310`) — contrato + API + cajón
+
+**Lo que entró** (la fila 1 de la tabla de §6.3, entera):
+- `openapi/v1.yaml`: `Ledger` de §4.5 (+ `LedgerBalance` · `LedgerMovement` · `LedgerSettlement`),
+  con `required` completo y `additionalProperties: false`; las descripciones de `Order.ledger` y
+  `OrderItem.ledger` reescritas. Mueren `LedgerValue`, `LedgerCash`, `OrderGateLine`, `gate_lines`,
+  `invoiced_*`, `in_favour_hint`. Incompatible sin versión: 0 LIVE, un consumidor, sin app.
+- `LedgerResource` transcribe `OrderBook`; `OrderResource` (`forOrder`) y `OrderItemResource`
+  (`forReservation`; `shows_deposit_note` = cobrado ∧ `has_deposit` ∧ `pay_at_park`).
+- `orders.js::financialsOf` + `PurchaseCard.vue`: movimientos (signo + fecha), Total,
+  liquidaciones (las pendientes al 70 %), Pagado, saldo por clase (`orders__balance--{kind}`, color
+  por rol: `--warn` / `--refund`) y la nota; con `is_consistent = false`, D-T3·4. `outcome.js`:
+  `deposit_cents`/`gate_remainder_cents` por línea y `total_cents`/`park_cents` por pedido, del libro.
+- `tickets.journal.*` gana los títulos y los rótulos del saldo (es · en · fr · zh_CN).
+- `OrderBook`: `ledger.no_cuadra` (`warning`, por pedido, con las cifras de I1–I4) y **una línea
+  fantasma cancelada a 0 € no genera movimiento** (una línea de 0 no dice nada; D-T3·10).
+- Tests re-apuntados: `MeOrdersFinancialsTest` (reescrito: API == dominio campo a campo, suma en
+  cada escenario, la clase la decide el servidor, etiquetas por `Accept-Language`, `desk`, reembolso
+  pendiente listado y no contado, `has_deposit` hecho, no-cuadra + log, sano, sustantivo de la
+  cantidad, los datos del formulario fuera), `orders.test.js`, `outcome.test.js`,
+  `SidebarAccountParityTest` (3), `OrderSummaryFieldsTest` (+2), `LedgerSingleSourceTest` (los
+  campos del libro; guarda O al marcado nuevo), `OrdersTest`, `MeOrdersTest`, `SidebarDomContractTest`,
+  `ClientMoneyLabelsAreTranslatedTest`.
+
+**Decisiones derivadas de la ejecución** (además de D-T3·1…9):
+- **D-T3·10** Una línea cancelada cuyo valor (fila + cortesía) es 0 no genera movimiento de
+  cancelación. Es la traducción al libro de `Order::isVoidedLeftoverItem` (el complemento a 0 € que
+  deja un cambio de menú): ninguna otra superficie la nombra y el libro tampoco.
+- **D-T3·11** `ledger.no_cuadra` se registra UNA vez por pedido (en `forOrder`), no por reserva:
+  `forReservation` compone el mismo libro y registrarlo ahí lo duplicaría por línea.
+- **D-T3·12** El color del saldo y de los movimientos negativos es por ROL (`--warn` lo que se
+  paga, `--refund` lo que se devuelve), nunca por literal: sale con la paleta de cada cliente.
+- **D-T3·13** `balanceCentsOf` de `outcome.js` es privada: se prueba por la conducta de
+  `confirmationLine`/`buildConfirmation`, no exportando «para los tests».
+
+**Mutaciones** (sobre árbol commiteado, restaurando con `git checkout` — la regla de `#181`):
+
+| # | Mutación | Resultado |
+|---|---|---|
+| M1 | `LedgerResource`: `paid_cents` publica `totalCents` | **4 rojos** (`MeOrdersFinancialsTest` ×3, `SidebarAccountParityTest`) |
+| M2 | `OrderItemResource`: `shows_deposit_note` sin la clase del saldo | ⚠️ **VERDE** → dos casos nuevos en `OrderSummaryFieldsTest`; ahora **1 rojo** (el del resto liquidado) |
+| M3 | `OrderBook`: omitir TODA cancelación | **12 rojos + 1 error** |
+| M4 | `OrderBook`: `warning` → `debug` | **1 error** (`…inconsistent_and_logged`) |
+| M5 | `orders.js`: la puerta de `is_consistent` nunca se abre | **1 rojo** (42/1; control 43/0) |
+| M6 | `outcome.js`: el saldo sin mirar su clase | **1 rojo** (29/1; control 30/0) |
+
+⚠️ **M2 es la lección de la tanda**: la tercera condición de la nota no la vigilaba nadie porque
+ningún caso tenía un pack con señal en su estado NORMAL después de la fiesta (resto liquidado en
+puerta → `settled`). El caso hermano (reserva cancelada → `refund_pending`) **no discrimina M2** y lo
+dice en su docblock: `has_deposit` del libro cuenta solo repartos de líneas VIVAS (T2), así que la
+nota cae por la segunda condición.
+
+**Cuatro fixtures ILEGALES, legalizados** (no se excepcionó ninguna identidad): tres pedidos
+«pagados» sin `Payment` —`OrderSummaryFieldsTest` ×2 y `SidebarDomContractTest::setUpConfirmedOrder`;
+con el modelo viejo nadie cruzaba cobro con estado, con I2 responden «en revisión» y saldo 0— y
+`MeOrdersTest::makeOrder`, sin líneas y facturando 1.000 (el libro publica lo que VALE: 0). El cobro
+se registra como lo hace `RedsysReturnHandler`: `Payment` pagado por `onlineDueCents()`.
+
+**Dos cosas que la paridad enseñó**: con DOS reservas cada línea de valor lleva delante el nombre de
+la suya (§4.3; el nacimiento no), y dos cancelaciones del MISMO segundo las ordena el desempate del
+libro (`rank`, `seq`) — la guarda localiza por etiqueta, no por posición.
+
+**Trampas de instrumento**: el bundle SSR rancio (`assertBundleIsNotStale` puso en rojo los once
+casos de `SidebarDomContractTest` al tocar `outcome.js` sin `build:ssr` — funcionó) · el YAML con
+una descripción con `: ` sin comillas · el reporter de `node --test` resume con `ℹ pass/fail` y una
+mutación grep-eada con `# pass` salió MUDA (pareció verde hasta repetirla).
+
+**Lo que la T3·2 hereda**: el panel, la hoja y la puerta siguen leyendo `OrderLedger` /
+`OrderFinancialSummary` / `ReservationFinancials` (fila 2 de §6.3); las claves `admin.orders.book.*`
+no existen aún; `OrderTotalsBreakdownTest`, `ItemsListSubCardTest`, `GateProfileTest` y
+`MixedPartyParkSurfacesTest` (lo de dinero) se re-apuntan allí. El puente de
+`OrderFinancialInvariantsTest` sigue verde y sigue siendo el oráculo hasta la T3·4.
 
 ## 7. Revisión y decisión
 

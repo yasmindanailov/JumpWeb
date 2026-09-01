@@ -2,19 +2,26 @@
 
 namespace App\Http\Resources\Api\V1;
 
-use App\Domain\Booking\Services\OrderLedger;
+use App\Domain\Booking\Services\Movement;
+use App\Domain\Booking\Services\OrderBook;
+use App\Domain\Booking\Services\Settlement;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * **El desglose de dinero, publicado en DOS EJES** (`DECISIONES #127`, `openapi/v1.yaml` → `Ledger`).
+ * **EL LIBRO, publicado** (`DECISIONES #305`, `openapi/v1.yaml` → `Ledger`; T3·1 de
+ * `specs/desglose-libro.md` §6.3).
  *
- * Este serializador **no compone nada**: recibe un {@see OrderLedger} ya resuelto y lo transcribe.
- * Toda la regla —qué canales hay, cómo se reparte la compensación, qué frase explica el estado— vive
- * en el dominio, que es lo que hace que las ocho superficies enseñen lo mismo. Recomponer aquí una
- * sola de esas decisiones sería la novena.
+ * Este serializador **no compone nada**: recibe un {@see OrderBook} ya resuelto y lo transcribe.
+ * Toda la regla —qué líneas hay, con qué etiqueta, qué clase de saldo es, si el libro cierra— vive
+ * en el dominio, que es lo que hace que las nueve superficies enseñen lo mismo (D1). Recomponer
+ * aquí una sola de esas decisiones sería la décima.
  *
- * @property-read OrderLedger $resource
+ * ⚠️ Los movimientos y las liquidaciones se publican también cuando el libro NO cierra: son
+ * HECHOS. Decidir no pintarlos (la asimetría de `#132`: el cliente ve el Total, los cobros y la
+ * frase de revisión) es de quien pinta, y `is_consistent` es la señal.
+ *
+ * @property-read OrderBook $resource
  */
 class LedgerResource extends JsonResource
 {
@@ -23,48 +30,36 @@ class LedgerResource extends JsonResource
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        $l = $this->resource;
+        $book = $this->resource;
 
         return [
-            // EJE VALOR — los cinco canales cierran `total_cents`, siempre (`PAY-16`).
-            'value' => [
-                'total_cents' => $l->valor,
-                'paid_online_cents' => $l->pagadoOnline,
-                'pending_online_cents' => $l->pendienteOnline,
-                'paid_at_gate_cents' => $l->pagadoPuerta,
-                'pending_at_gate_cents' => $l->pendientePuerta,
-                'compensated_cents' => $l->compensado,
+            'total_cents' => $book->totalCents,
+            'paid_cents' => $book->paidCents,
+            'balance' => [
+                'kind' => $book->balance->kind,
+                'cents' => $book->balance->cents,
+                'rest_at_park_cents' => $book->balance->restAtParkCents,
             ],
-            // EJE CAJA — `held = paid_online + pending_refund` (`PAY-17`). NO resta del valor.
-            //
-            // ⚠️ `has_cash` viaja publicado y no derivado (`DECISIONES #128`): la condición de
-            // enseñar el ancla la decide el dominio. Derivarla en la interfaz es lo que dejó al
-            // cliente sin ver, en un pedido normal, cuánto había salido de su banco.
-            'cash' => [
-                'charged_online_cents' => $l->cobradoOnline,
-                'refunded_cents' => $l->devuelto,
-                'held_cents' => $l->retenido,
-                'pending_refund_cents' => $l->pendienteDevolucion,
-                'has_cash' => $l->hasCash(),
-                'charged_method' => $l->cobroMetodo,
-                'charged_at_label' => $l->cobroFecha,
-            ],
-            // Trazabilidad: lo facturado al reservar. FUERA de la suma, a propósito.
-            'invoiced_cents' => $l->facturado,
-            // ⚠️ Y su frase, con DIRECCIÓN E IMPORTE (`L6`, `DECISIONES #133`). `null` cuando no hay
-            // diferencia: **es la condición de enseñar la línea**, publicada en vez de dejar que cada
-            // superficie re-derive `invoiced_cents !== value.total_cents` — la misma lección de `L1`.
-            'invoiced_hint' => $l->facturadoNota,
-            'gate_lines' => $l->gateLines,
-            // El «a tu favor» de fiesta mixta (T4, `specs/cumple-mixto.md` §24.4): frase compuesta
-            // por el dominio, con `null` como condición de enseñarla — el patrón de `invoiced_hint`.
-            'in_favour_hint' => $l->inFavourHint,
-            'has_deposit' => $l->hasDeposit,
-            // ⚠️⚠️ **Si esto es `false`, el desglose por canales NO es cierto** y el cliente no debe
-            // pintarlo (`DECISIONES #132`). Se publica en vez de dejar que cada superficie recomponga
-            // las identidades: son dos y ya se escribían en un solo sitio.
-            'is_consistent' => $l->cuadra,
-            'note' => $l->nota,
+            'movements' => array_map(static fn (Movement $m): array => [
+                'kind' => $m->kind,
+                'label' => $m->label,
+                'amount_cents' => $m->amountCents,
+                'occurred_at' => $m->occurredAt,
+                'occurred_label' => $m->occurredLabel,
+                'reservation_id' => $m->reservationId,
+            ], $book->movements),
+            'settlements' => array_map(static fn (Settlement $s): array => [
+                'kind' => $s->kind,
+                'label' => $s->label,
+                'amount_cents' => $s->amountCents,
+                'occurred_at' => $s->occurredAt,
+                'occurred_label' => $s->occurredLabel,
+                'status' => $s->status,
+                'method' => $s->method,
+            ], $book->settlements),
+            'has_deposit' => $book->hasDeposit,
+            'is_consistent' => $book->isConsistent,
+            'note' => $book->note,
         ];
     }
 }

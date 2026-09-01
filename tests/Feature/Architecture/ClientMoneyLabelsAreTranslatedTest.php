@@ -71,10 +71,23 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
         'tickets.journal.refund_failed',
         'tickets.journal.gate',
         'tickets.journal.with_reservation',
+        // T3·1: los títulos del libro y los rótulos del saldo, que también lee el cajón.
+        'tickets.journal.movements_title',
+        'tickets.journal.settlements_title',
+        'tickets.journal.total',
+        'tickets.journal.paid',
+        'tickets.journal.balance_pay_at_park',
+        'tickets.journal.balance_refund_at_park',
+        'tickets.journal.balance_refund_pending',
+        'tickets.journal.balance_pay_online',
+        'tickets.journal.balance_rest_at_park',
     ];
 
-    /** Plantillas SIN palabras (`:name: :old → :new`): iguales entre idiomas a propósito, no por copia. */
-    private const JOURNAL_TEMPLATES = ['tickets.journal.addon_quantity', 'tickets.journal.with_reservation'];
+    /**
+     * Plantillas SIN palabras (`:name: :old → :new`): iguales entre idiomas a propósito, no por copia.
+     * Y «Total», que es la misma palabra en los tres idiomas del cliente.
+     */
+    private const JOURNAL_TEMPLATES = ['tickets.journal.addon_quantity', 'tickets.journal.with_reservation', 'tickets.journal.total'];
 
     /**
      * ⚠️ **La guarda de la guarda.** Sin este caso, un `Lang::has()` que dijera `true` siempre

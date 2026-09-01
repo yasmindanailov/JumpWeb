@@ -2505,7 +2505,7 @@ inalcanzable por código** (se retira), y **el modelo decidido cierra sus dos id
 pedidos reales, disparando su estado imposible solo sobre los 19 de datos sucios. El riesgo NO estaba
 solo en la proyección: había cuatro defectos en el dominio que ninguna auditoría anterior construyó.
 
-### El LIBRO del pedido 🟦 — **spec ✅ del owner (`specs/desglose-libro.md`, `DECISIONES #305`) · T1 (`#306`) y T2 (`#308`) EN EL ÁRBOL**
+### El LIBRO del pedido 🟦 — **spec ✅ del owner (`specs/desglose-libro.md`, `DECISIONES #305`) · T1 (`#306`), T2 (`#308`) y T3·1 (`#310`) EN EL ÁRBOL**
 > **Sustituye al DESGLOSE de dos ejes de arriba en cuanto se ejecute.** `[DECIDIDO owner,
 > 2026-09-01]`: cada gestión con su línea + o − y su fecha, un Total y un SALDO que se liquida EN EL
 > PARQUE; nada se cobra ni se devuelve online post-reserva; el descuento mixto entra en el saldo; el
@@ -2531,9 +2531,23 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
       escribía una cortesía FALSA con «también cancelar» (flujo real del panel) — corregido en los
       dos reembolsos; dos fixtures más legalizados; `has_deposit` por reserva era catálogo en el
       modelo viejo.
-- [ ] **T3 · superficies, tope y retirada** (§6·T3): contrato primero, las nueve superficies + correos,
-      cae el tope de la T4, se retira todo §4.7, `INVARIANTES` `PAY-16`/`PAY-17` reescritas, dos
-      fichas de `DEUDA.md` cerradas, guion headless, ojo del owner.
+- [ ] **T3 · superficies, tope y retirada** (§6·T3, diseño fino en §6.3: CUATRO sub-tandas, el árbol
+      verde en cada una; el modelo viejo convive solo hasta la T3·4):
+  - [x] **T3·1 · contrato + API + cajón — EJECUTADA el 2026-09-01** (spec §6.3.1 · `DECISIONES
+        #310`): `openapi/v1.yaml` → `Ledger` del libro (incompatible a propósito: 0 LIVE, un solo
+        consumidor que cambia en el mismo commit), `LedgerResource` TRANSCRIBE `OrderBook`,
+        `OrderResource`/`OrderItemResource` por pedido y por reserva (`shows_deposit_note` derivada
+        del libro), el cajón (`orders.js` + `PurchaseCard.vue`) pinta movimientos · Total ·
+        liquidaciones · Pagado · saldo por clase (con `is_consistent=false`: Total, cobros y la
+        frase), `outcome.js` saca la confirmación del libro; `ledger.no_cuadra` en el log; una
+        línea fantasma a 0 € no genera movimiento. 6 mutaciones (4 PHP + 2 JS): 5 mordieron a la
+        primera y la de `shows_deposit_note` sin la clase del saldo pasó en VERDE → dos casos
+        nuevos. Cuatro fixtures ILEGALES legalizados (tres «pagados» sin `Payment`).
+        `specs/api-v1.md` §10.octodecies (puntos 94–96).
+  - [ ] **T3·2 · panel + hoja + puerta** (§6.3, fila 2).
+  - [ ] **T3·3 · correos + post-form + el tope** (§6.3, fila 3; `VERIFY_CONC=1`).
+  - [ ] **T3·4 · la retirada** de §4.7, `INVARIANTES` `PAY-16`/`PAY-17` reescritas, dos fichas de
+        `DEUDA.md` cerradas, guion headless, la receta de las 25 acciones, ojo del owner.
 
 ### El CAMBIO DE PRECIO ✅ — la línea `#145`→`#155`, CERRADA el 2026-08-25
 
