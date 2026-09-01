@@ -1341,7 +1341,17 @@ body.no-scroll { overflow: hidden; }
 .entry__stepper button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font-size: var(--fs-17); line-height: 1; cursor: pointer; transition: border-color var(--dur-toque) var(--ease-sale); }
 .entry__stepper button:hover:not(:disabled) { border-color: var(--fg); }
 .entry__stepper button:disabled { opacity: 0.4; cursor: not-allowed; }
-.entry__qty { min-width: 16px; text-align: center; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); }
+/* `#327` — el contador pasó de `<span>` a `<input>`: la cantidad SE ESCRIBE (con un mínimo de 30
+   invitados, el `+` pedía treinta pulsaciones antes de poder comprar). Un input NO hereda tipografía
+   ni fondo, así que lo que antes bastaba con tres declaraciones ahora tiene que RESETEAR lo que el
+   navegador impone; sin esto el número sale con la fuente del sistema y una caja gris entre dos
+   botones redondos. ⚠️ Y las flechas nativas (`spin buttons`) se retiran: al lado de un `+` y un `−`
+   de 32 px son un tercer control que hace lo mismo y en móvil roban la mitad del ancho. */
+.entry__qty { min-width: 3ch; text-align: center; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); color: var(--fg); background: transparent; border: 0; padding: 0 var(--sp-4); border-radius: var(--r-5); }
+.entry__qty::-webkit-outer-spin-button,
+.entry__qty::-webkit-inner-spin-button { appearance: none; margin: 0; }
+.entry__qty[type="number"] { appearance: textfield; }
+.entry__qty:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 
 .purchase__foot { margin-top: 18px; padding-top: var(--sp-16); border-top: 1px solid var(--line); }
 /* Sidebar v2: variante «solo informativa» (el CTA y el total prominentes viven en `.bk-foot`).

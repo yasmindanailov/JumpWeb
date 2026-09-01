@@ -34,6 +34,8 @@ return [
     // panel en chino las necesita aquí — sin ellas caería al inglés, como `gate_mixed_party_line`.
     'journal' => [
         'booking' => '已完成预订',
+        'qty_less' => '减少一个',
+        'qty_more' => '增加一个',
         'quantity' => '数量：:old → :new',
         'addon_quantity' => ':name：:old → :new',
         'product_change' => '更改为 :name',

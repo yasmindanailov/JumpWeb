@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { dayPriceCents, initialQuantity, isAlmostFull, maxQuantityFor, minQuantityFor, timeAt, isSoldOut } from './offer.js';
+import { clampQuantity, dayPriceCents, initialQuantity, isAlmostFull, maxQuantityFor, minQuantityFor, timeAt, isSoldOut } from './offer.js';
 
 /**
  * Lo que la oferta dice del paso 3 (Fase 4 · paso 4.7·2b·2·B).
@@ -177,4 +177,43 @@ test('una hora sin el campo sigue siendo vendible', () => {
     assert.equal(isSoldOut({ time: '10:00:00', available: 4, max_quantity: 4 }), false);
     assert.equal(isSoldOut(null), false);
     assert.equal(isSoldOut(undefined), false);
+});
+
+/**
+ * `#327` — el acotado de la cantidad TECLEADA. Nace con el campo escribible: con un mínimo de 30
+ * (una excursión de colegio) el `+` obligaba a treinta pulsaciones antes de poder comprar.
+ */
+test('clampQuantity pega al extremo en vez de descartar', () => {
+    const range = { floor: 30, ceiling: 100, current: 30 };
+
+    assert.equal(clampQuantity('70', range), 70, 'un valor dentro del rango pasa tal cual');
+    assert.equal(clampQuantity('500', range), 100, 'por encima del techo se pega al techo');
+    assert.equal(clampQuantity('5', range), 30, 'por debajo del suelo se pega al suelo');
+    assert.equal(clampQuantity('30', range), 30);
+    assert.equal(clampQuantity('100', range), 100);
+});
+
+test('clampQuantity conserva lo vigente si no hay número utilizable', () => {
+    const range = { floor: 30, ceiling: 100, current: 45 };
+
+    // Un `<input type=number>` emite cadena vacía mientras se borra para reescribir: convertirlo en
+    // 0 vaciaría el carrito a mitad de tecleo.
+    assert.equal(clampQuantity('', range), 45);
+    assert.equal(clampQuantity('abc', range), 45);
+    assert.equal(clampQuantity(null, range), 45, 'null NO es 0 aquí, aunque Number(null) lo sea');
+    assert.equal(clampQuantity(undefined, range), 45);
+    assert.equal(clampQuantity(Infinity, range), 45);
+});
+
+test('clampQuantity trunca decimales, no los redondea', () => {
+    const range = { floor: 1, ceiling: 100, current: 1 };
+
+    // Redondear convertiría un `0.6` tecleado por error en una unidad que nadie pidió.
+    assert.equal(clampQuantity('3.7', range), 3);
+    assert.equal(clampQuantity('0.6', range), 1, 'y el suelo sigue mandando después de truncar');
+});
+
+/** Con suelo y techo cruzados (una franja que ya no admite el mínimo) manda el SUELO. */
+test('clampQuantity no baja del minimo del producto aunque el techo sea menor', () => {
+    assert.equal(clampQuantity('5', { floor: 30, ceiling: 10, current: 30 }), 30);
 });

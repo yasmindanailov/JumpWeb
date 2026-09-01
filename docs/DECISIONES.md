@@ -19362,3 +19362,70 @@ prueba él. ▶ **Y la regla que el owner subrayó al cerrar: la instalación de
 mantener una DISTANCIA SANA del producto** — lo suyo (textos, documento, usuarios, claves, fuentes,
 puente del servidor) vive en su BD, su `.env` o ficheros gitignorados; el repo solo lleva
 mecanismos. Así se hizo, y así se vigila desde ahora.
+
+---
+
+---
+
+## #327 · 2026-09-01 · El precio del paso 3 sigue a la CANTIDAD, y la cantidad se ESCRIBE
+
+**Contexto.** El owner probó los tramos de `#324` en el cajón y vio dos cosas: *«con 70 invitados
+muestra 12,00 € por niño; con 69 muestra 12,00 € por niño — el precio no cambia»* y *«seleccionar
+cantidad debe poder escribirla directamente, genera fricción tener que dar 100 veces clic»*.
+
+**Las dos tenían razón, y la primera es un defecto que introdujo `#324`.**
+
+### 1 · El precio mostrado dejaba de ser el cobrado
+
+El paso 3 pintaba `dateStore.priceCents` — **el precio del CALENDARIO, que no conoce la cantidad**.
+Con los tramos, ese número pasó a ser el más barato del día («desde 12 €», `[DECIDIDO owner]`), así
+que un grupo de 30 leía **12 €** y se le cobraban **15**. Lo cobrado siempre fue correcto; lo roto
+era lo que se enseñaba, que es peor: el cliente decide con un número y paga otro.
+
+▶ **La respuesta correcta YA VENÍA en el payload y no se estaba usando.** `POST
+catalog/products/{id}/addons` —que el cajón llama en **cada** cambio de cantidad, para recalcular los
+complementos por-invitado— tarifica la línea con `CartPricing`, la MISMA implementación que cobra el
+checkout, y publica `line.unit_price_cents`.
+
+⚠️ Eso convierte en innecesarias las dos salidas que se habían planteado al owner: **ni una petición
+nueva** (opción A) **ni resolver el tramo en JavaScript** (opción B, que habría sido una segunda
+implementación de una regla de dinero). Aquí solo se PINTA lo que el servidor calculó (`PAY-12`,
+`CE-4`). *Antes de diseñar el camino nuevo convenía mirar qué traía el que ya se recorre.*
+
+### 2 · La cantidad se escribe
+
+Con `min_qty = 30` (una excursión) el `+` obligaba a **treinta pulsaciones antes de poder comprar** y
+cien para llenar el grupo. `<span class="entry__qty">` pasa a `<input type="number">`.
+
+- **La regla del acotado vive en `offer.js::clampQuantity()`** con casos de `node --test`, y la
+  comparten `+`/`−` y lo tecleado: tenerla dos veces es cómo un camino admite lo que el otro rechaza.
+- **Lo tecleado se PEGA al extremo** (500 en un pack de 100 → 100): quien teclea 500 quiere el
+  máximo, y devolverle su 500 solo consigue que el checkout lo rechace después.
+- ⚠️⚠️ **`Number('')` y `Number(null)` son 0, no `NaN`**, así que preguntar solo por `isFinite`
+  convertía un campo VACÍO en un cero y lo pegaba al suelo: el carrito saltaba a 30 en cuanto el
+  cliente borraba para reescribir. **Lo cazó el caso de `node --test`, no la lectura** — la intención
+  estaba escrita en el comentario y no en el código.
+- ⚠️⚠️ **Y el campo hay que REPINTARLO desde la prop.** Si se teclea 500 con la cantidad ya en 100, el
+  padre acota a 100, la prop no cambia, Vue no re-renderiza y **el `<input>` se queda enseñando 500**:
+  el cajón cree 100 y la pantalla dice otra cosa. Va en `nextTick`, porque hasta entonces la prop
+  todavía tiene el valor viejo.
+
+### 3 · Lo que exigieron las guardas de arquitectura
+
+1. **El contrato de ÁRBOL** (`SidebarDomContractTest`) se puso rojo, que es su trabajo: cambiar
+   `<span>` por `<input>` es un cambio del contrato visual —90 de los 292 selectores del cajón son
+   estructurales—. Manifiesto regenerado a propósito (`MANIFEST_REFRESH=1`). ⚠️ El diff confirma que
+   el cambio es QUIRÚRGICO: los steppers de COMPLEMENTOS conservan su `<span class=entry__qty>`.
+2. **El CSS**, porque un `<input>` no hereda tipografía ni fondo: sin reset, el número salía con la
+   fuente del sistema y una caja gris entre dos botones redondos. Se retiran además las flechas
+   nativas —al lado de un `+` y un `−` de 32 px son un tercer control que hace lo mismo—.
+   ⚠️ Me inventé un token `--focus` que no existe; el de la hoja es `--focus-outline`.
+3. **El presupuesto de componentes** (`CE-6`) obligó a sacar la lógica a un módulo plano
+   (`quantity.js`, 8 casos) en vez de dejarla en el `.vue`, y a **retirar `changeQuantity()`**: `+`,
+   `−` y lo tecleado son ahora UNA función. La subida que queda va **declarada con su párrafo**, que
+   es lo que esa regla exige; `TimeStep.vue` estrena excepción por cuatro líneas que son trabajo de
+   DOM y no caben en un módulo puro.
+
+**Verificación**: suite verde (**3.790 tests, 24.580 aserciones**) · Pint ✓ · docs-check ✓ · build ✓ ·
+**20 + 8 casos de `node --test`** · **navegador REAL con el producto del cliente**: tecleando
+30 → 15,00 € · 69 → 15,00 € · 70 → 13,00 € · 100 → 12,00 € · 500 → queda en 100 y el campo se repinta.

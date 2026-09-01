@@ -15,6 +15,7 @@ import { STEPS, isOutcome } from '../machine.js';
 import { api } from '../api.js';
 import { searchIsEnabled, sectionsFrom } from '../catalog.js';
 import { initialQuantity, minQuantityFor } from '../offer.js';
+import { nextQuantity, unitPriceToShow } from '../quantity.js';
 import { buildProgress } from '../progress.js';
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { buildFooter } from '../foot.js';
@@ -421,12 +422,24 @@ async function refreshAddons() {
     }));
 }
 
-function changeQuantity(delta) {
-    const next = selectionStore.quantity + delta;
-    if (next < catalogStore.minQuantity || next > timeStore.maxQuantity) return;
+/** El precio unitario a enseñar. La regla y su porqué, en `quantity.js` (`CE-6`). */
+const unitPriceCents = computed(() => unitPriceToShow(selectionStore.line, dateStore.priceCents));
 
+/**
+ * Adopta una cantidad nueva, venga de `+`/`−` o del campo escrito. `null` = no cambia nada, y
+ * entonces se ahorra la consulta. La regla y los extremos —los MISMOS para los dos caminos— viven en
+ * `quantity.js`; aquí solo se aplica y se refrescan los complementos, cuyo precio por-invitado
+ * depende de la cantidad.
+ */
+function applyQuantity(change) {
+    const next = nextQuantity(change, {
+        floor: catalogStore.minQuantity,
+        ceiling: timeStore.maxQuantity,
+        current: selectionStore.quantity,
+    });
+
+    if (next === null) return;
     selectionStore.setQuantity(next);
-    // La cantidad cambia lo que cuestan los complementos por-invitado: hay que volver a resolver.
     refreshAddons();
 }
 
@@ -1146,7 +1159,7 @@ function goBack() {
             :min-quantity="catalogStore.minQuantity"
             :max-quantity="timeStore.maxQuantity"
             :is-pack="catalogStore.isPack"
-            :day-price-cents="dateStore.priceCents"
+            :day-price-cents="unitPriceCents"
             :event-fields="catalogStore.product?.event_fields ?? []"
             :period-label="catalogStore.product?.period_label ?? ''"
             :addons="selectionStore.addons"
@@ -1155,8 +1168,9 @@ function goBack() {
             :dependent-options="dependentsStore.optionsFor(messages)"
             :dependent-ids="selectionStore.dependentIds"
             @select-time="selectTime"
-            @inc="changeQuantity(1)"
-            @dec="changeQuantity(-1)"
+            @inc="applyQuantity({ delta: 1 })"
+            @dec="applyQuantity({ delta: -1 })"
+            @set-qty="(raw) => applyQuantity({ raw })"
             @update-field="selectionStore.answer"
             @toggle-dependent="selectionStore.toggleDependent"
             @choose-addon="chooseAddon"

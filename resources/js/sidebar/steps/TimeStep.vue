@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
 import { isAlmostFull, isSoldOut } from '../offer.js';
@@ -70,7 +70,7 @@ const props = defineProps({
     dependentIds: { type: Array, default: () => [] },
 });
 
-defineEmits(['select-time', 'inc', 'dec', 'update-field', 'choose-addon', 'toggle-addon', 'inc-addon', 'dec-addon', 'toggle-dependent']);
+const emit = defineEmits(['select-time', 'inc', 'dec', 'set-qty', 'update-field', 'choose-addon', 'toggle-addon', 'inc-addon', 'dec-addon', 'toggle-dependent']);
 
 const t = (key) => translate(props.messages, key);
 const tp = (key, params) => translateWith(props.messages, key, params);
@@ -91,6 +91,19 @@ const soldOut = (offered) => isSoldOut(offered);
 const { track, nav, move } = useStrip();
 
 const hasAddons = computed(() => props.addons.groups.length > 0 || props.addons.singles.length > 0);
+
+/**
+ * `#327` — la cantidad tecleada sale, y el campo se REPINTA desde la prop.
+ *
+ * ⚠️⚠️ El repintado no es cosmético: si el cliente teclea 500 en un pack de máximo 100, el padre
+ * acota a 100 y —como la cantidad vigente YA era 100— la prop no cambia, así que Vue no re-renderiza
+ * y **el `<input>` se queda enseñando 500**. El cajón cree 100 y la pantalla dice 500. Se restaura
+ * en el `nextTick` porque hasta entonces la prop todavía tiene el valor viejo.
+ */
+function onQuantityTyped(event) {
+    emit('set-qty', event.target.value);
+    nextTick(() => { event.target.value = props.quantity; });
+}
 
 const canDecrease = computed(() => props.quantity > (props.isPack ? props.minQuantity : 0));
 const canIncrease = computed(() => props.quantity < props.maxQuantity);
@@ -166,10 +179,20 @@ const toggleInfo = (id) => {
         <div class="qtybox">
             <div class="qtybox__row">
                 <span class="qtybox__label">{{ isPack ? t('guests') : t('quantity') }}</span>
+                <!-- `#327`: la cantidad SE ESCRIBE, no solo se pulsa. Con un mínimo de 30 (una
+                     excursión de colegio) el `+` obligaba a treinta clics antes de poder comprar, y
+                     cien para llenar el grupo. El acotado NO se hace aquí: se emite el número
+                     tecleado y lo acota el mismo sitio que ya acota `+`/`−`, o serían dos reglas. -->
                 <div class="entry__stepper">
-                    <button type="button" :disabled="! canDecrease" @click="$emit('dec')">&minus;</button>
-                    <span class="entry__qty">{{ quantity }}</span>
-                    <button type="button" :disabled="! canIncrease" @click="$emit('inc')">+</button>
+                    <button type="button" :disabled="! canDecrease" :aria-label="t('qty_less')" @click="$emit('dec')">&minus;</button>
+                    <input class="entry__qty" type="number" inputmode="numeric"
+                           :value="quantity"
+                           :min="isPack ? minQuantity : 1"
+                           :max="maxQuantity"
+                           :aria-label="isPack ? t('guests') : t('quantity')"
+                           @change="onQuantityTyped"
+                           @keydown.enter.prevent="$event.target.blur()">
+                    <button type="button" :disabled="! canIncrease" :aria-label="t('qty_more')" @click="$emit('inc')">+</button>
                 </div>
             </div>
             <p class="qtybox__avail">

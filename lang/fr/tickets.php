@@ -59,6 +59,8 @@ return [
     'addon_per_guest_add' => 'Ajouter · un par invité',
     'addon_requires' => 'Nécessite : :name',
     'from' => 'à partir de',
+    'qty_less' => 'Retirer un',
+    'qty_more' => 'Ajouter un',
     'quantity' => 'Quantité',
     'no_dates' => 'Aucun jour disponible pour le moment. Réessaie plus tard.',
     'zone' => 'Zone',

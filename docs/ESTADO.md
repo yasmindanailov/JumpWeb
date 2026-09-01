@@ -66,19 +66,12 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3795 en verde** (24.583 aserciones, 1 skipped a propósito), medida el 2026-09-01 (tarde)
-> por el propio hook sobre el árbol del lanzamiento completo: `#326` (CTA por sesión + invitación) y
-> la marca en correos/panel sobre `#325`, `#324`, `#323`, `#322`, `#321` y `#320`. Antes, 3795 /
-> 24.574 (una pasada anterior al caso del par) y 3793 / 24.564 (`#325` sobre `#324`).
-> ⚠️ Una pasada intermedia dio **2 fallos que no existían**: coincidió con otra suite parcial
-> corriendo a la vez en el mismo contenedor — *dos suites en paralelo sobre la misma BD de test no
-> miden nada*; se repitió sola y en limpio.
-> ⚠️ **Se mide tras cada rebase, no se suma**: antes 3776 / 24.517 (`#323`) y 3774 / 24.521 (`#322`
-> con su panel, sin la T10). Con dos agentes en `main` el número solo vale medido sobre el conjunto.
-> ⚠️ **Medida DESPUÉS del rebase, no sumada**: por separado daban 3766 / 24.557 (horario por zona
-> sobre `#320`) y 3761 / 24.483 (la T9 sobre `#320`). **Solo la conjunta vale** — y las aserciones
-> BAJAN respecto a una de las ramas porque la T9 retiró casos al unificar botones.
-> - Antes, 3756 / 24.534 (`#320` sobre `#319`).
+> Suite **3796 en verde** (24.599 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> sobre el árbol CONJUNTO tras rebasar `#327` (el precio en el cajón) sobre `#325` y `#326`.
+> ⚠️ **Se mide tras CADA rebase, nunca se suma.** Con dos agentes en `main` el número solo vale medido
+> sobre el árbol conjunto: por separado daban cifras distintas y ninguna era la buena.
+> - Antes, 3789 / 24.564 (`#324`, el precio por tramo) · 3779 / 24.532 (`#322` con su panel sobre la
+>   T10) · 3756 / 24.534 (`#320` sobre `#319`).
 > ⚠️ **No se suma, se mide** — y ⚠️⚠️ **tras un rebase que toque Vue hay que
 > `npm run build:ssr` ANTES de leer la suite**: sin eso salieron 35 rojos en
 > `SidebarDomContractTest` que no eran de ningún cambio.
@@ -98,7 +91,14 @@
 > las tarifas de finde. **De toda la petición, lo único que faltaba de mecanismo era el horario.**
 > ▶ *Preguntar «¿esto no lo tenemos ya?» antes de diseñar valió media tanda.*
 >
-> ✅ **LA TANDA B ESTÁ EN EL ÁRBOL (`#324`)**: `price_tiers` propia, precio UNIFORME, panel incluido y
+> ✅ **LA TANDA B ESTÁ EN EL ÁRBOL (`#324`) Y CORREGIDA EN EL CAJÓN (`#327`)**: el paso 3 pintaba el
+> precio del CALENDARIO —que no conoce la cantidad— así que con tramos enseñaba siempre el más barato
+> («12 € por niño» con 30, con 69 y con 70) mientras cobraba lo correcto. Lo vio el owner probándolo.
+> ▶ **La respuesta ya venía en el payload**: el endpoint de complementos, que el cajón llama en CADA
+> cambio de cantidad, tarifica la línea con `CartPricing` y publica `line.unit_price_cents`. Ni
+> petición nueva ni resolver el tramo en JS. Y la cantidad **se escribe** (con mínimo 30, el `+` pedía
+> treinta pulsaciones). Verificado en navegador REAL: 30→15 € · 69→15 € · 70→13 € · 100→12 € · 500→100.
+> ▶ **Lo demás de la tanda B (`#324`)**: `price_tiers` propia, precio UNIFORME, panel incluido y
 > la puerta cerrada al cruce con el sello de edades (guarda en las DOS direcciones). ⚠️ Dos hallazgos
 > que valen para todo el repo: **añadir una dimensión a una tabla compartida cambia el significado de
 > los agregados que la leen** (por eso NO se metió `min_qty` en `prices`), y **un complemento es una

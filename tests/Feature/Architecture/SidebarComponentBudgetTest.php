@@ -112,7 +112,26 @@ class SidebarComponentBudgetTest extends TestCase
         // observador que no observa nada es ruido que el siguiente agente tiene que descartar.
         // ⚠️ La baseline se aprieta EN EL MISMO COMMIT, que es lo que este test exige: dejarla en 429
         // regalaría cuatro líneas de crecimiento futuro sin que nadie se enterara.
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 425, 'api' => 2],
+        // ⚠️ **425 → 431 el 2026-09-01 (`#327`): SUBE, y va con su porqué porque la regla lo exige.**
+        // El paso 3 gana el campo de cantidad ESCRIBIBLE y el precio unitario TARIFICADO. Lo que se
+        // pudo sacar, se sacó: el acotado y la elección del precio viven en `quantity.js` y
+        // `offer.js::clampQuantity()`, los dos con casos de `node --test`; aquí queda solo el
+        // cableado —leer los extremos de tres stores y refrescar complementos—, que es exactamente lo
+        // que un componente sí hace. Y **se retiró `changeQuantity()`**: `+`, `−` y lo tecleado son
+        // ahora UNA función, porque tener el acotado dos veces es cómo un camino admite lo que el
+        // otro rechaza.
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 431, 'api' => 2],
+
+        // ⚠️ **`TimeStep.vue` estrena excepción el 2026-09-01 (`#327`): 44 sobre un techo de 40.**
+        // Son cuatro líneas y son TRABAJO DE DOM, que es justo lo que un módulo plano no puede hacer:
+        // tras emitir la cantidad tecleada hay que **repintar el `<input>` desde la prop**. Si el
+        // cliente teclea 500 en un pack de máximo 100, el padre acota a 100 y —como la cantidad
+        // vigente ya era 100— la prop no cambia, Vue no re-renderiza y el campo se queda enseñando
+        // 500: el cajón cree 100 y la pantalla dice otra cosa. El `nextTick` es obligatorio porque
+        // hasta entonces la prop aún tiene el valor viejo.
+        // ▶ La REGLA (qué cantidad adoptar) no está aquí: está en `quantity.js`. Aquí está solo el
+        // efecto sobre el elemento, que es del componente por definición.
+        'sidebar/steps/TimeStep.vue' => ['code' => 44, 'api' => 0],
     ];
 
     /**

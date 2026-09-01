@@ -66,6 +66,46 @@ export function initialQuantity(product, offeredTimes, time) {
 }
 
 /**
+ * `#327` — la cantidad TECLEADA en el selector, acotada al rango vendible.
+ *
+ * Nace con el campo escribible: con un mínimo de 30 (una excursión de colegio) el `+` obligaba a
+ * treinta pulsaciones antes de poder comprar y cien para llenar el grupo.
+ *
+ * ⚠️ **Un valor fuera de rango se PEGA al extremo, no se descarta.** Quien teclea 500 en un pack de
+ * máximo 100 quiere el máximo; devolverle su 500 solo consigue que el checkout lo rechace después,
+ * y descartarlo en silencio deja el campo mintiendo sobre lo que el cajón cree.
+ *
+ * ⚠️ Lo que NO es un número utilizable —campo vacío, letras, `Infinity`— **conserva el valor
+ * vigente**: un `<input type=number>` emite cadena vacía mientras se borra para reescribir, y
+ * convertir eso en un 0 vaciaría el carrito a mitad de tecleo.
+ *
+ * Los decimales se truncan (`3.7` → `3`): no existe media entrada, y `Math.round` convertiría un
+ * `0.6` tecleado por error en una unidad que nadie pidió.
+ *
+ * @param  {unknown} raw      lo que emite el campo, sin sanear
+ * @param  {{floor:number, ceiling:number, current:number}} range
+ * @return {number} la cantidad que el cajón debe adoptar
+ */
+export function clampQuantity(raw, { floor, ceiling, current }) {
+    // ⚠️⚠️ **`Number('')` y `Number(null)` son 0, no `NaN`**, así que preguntar solo por `isFinite`
+    // convertía un campo VACÍO en un cero y lo pegaba al suelo — el carrito saltaba a 30 en cuanto el
+    // cliente borraba para reescribir. Lo cazó el caso de `node --test`, no la lectura: la intención
+    // estaba escrita en el comentario y no en el código. Un `'0'` TECLEADO sí es un número y sí se
+    // acota; lo que se descarta es la AUSENCIA de número.
+    const text = typeof raw === 'string' ? raw.trim() : raw;
+    if (text === '' || text === null || text === undefined) return current;
+
+    const parsed = Math.trunc(Number(text));
+
+    if (! Number.isFinite(parsed)) return current;
+
+    // El suelo manda sobre el techo si se cruzan (una franja que ya no admite el mínimo): así el
+    // resultado nunca queda por debajo de lo que el producto exige, y el checkout dirá que no cabe
+    // —que es la verdad— en vez de que faltan invitados.
+    return Math.max(Math.min(parsed, ceiling), floor);
+}
+
+/**
  * El precio del DÍA elegido, tal y como lo publica la oferta de días.
  *
  * ⚠️ **No se deriva del «desde» del catálogo**: aquel es el mínimo de todas las tarifas del producto y

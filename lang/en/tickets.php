@@ -59,6 +59,8 @@ return [
     'addon_per_guest_add' => 'Add · one per guest',
     'addon_requires' => 'Requires: :name',
     'from' => 'from',
+    'qty_less' => 'Remove one',
+    'qty_more' => 'Add one',
     'quantity' => 'Quantity',
     'no_dates' => 'No days available right now. Please try again later.',
     'zone' => 'Zone',
