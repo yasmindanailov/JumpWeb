@@ -190,10 +190,10 @@ Route::post('/reserva/{reservation}/datos-invitados', [GuestFormController::clas
 // Lleva `throttle` por IP además de Turnstile y del honeypot (`SEC-06`): un CAPTCHA resuelto no es una
 // barrera de volumen. El tope por pedido y la ventana temporal los impone el DOMINIO bajo el lock.
 // `no-store` (`RGPD-04`): la pantalla lleva el nombre y la fecha de nacimiento de un menor.
-Route::get('/autorizacion/{order}', [GuardianAuthorizationController::class, 'show'])
+Route::get('/autorizacion/{reservation}', [GuardianAuthorizationController::class, 'show'])
     ->middleware('no-store')
     ->name('reservation.authorization');
-Route::post('/autorizacion/{order}', [GuardianAuthorizationController::class, 'store'])
+Route::post('/autorizacion/{reservation}', [GuardianAuthorizationController::class, 'store'])
     ->middleware(['throttle:10,1', 'no-store'])
     ->name('reservation.authorization.store');
 

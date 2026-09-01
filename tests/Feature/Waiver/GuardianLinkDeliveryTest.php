@@ -130,11 +130,14 @@ class GuardianLinkDeliveryTest extends TestCase
 
         $order = $this->sellAtCounter($this->product(TicketType::GUARDIAN_OPTIONAL), said: true);
 
+        $reservation = $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail();
+
         Notification::assertSentTo(
             $order->user,
             GuardianAuthorizationRequest::class,
-            // UNO por pedido, no uno por línea: es «el papelito de la excursión».
-            fn (GuardianAuthorizationRequest $n): bool => (int) $n->order->id === (int) $order->id,
+            // ⚠️ **UNO por RESERVA desde `#343`**, no uno por pedido: cada visita tiene su enlace y su
+            // fecha. Se asevera CUÁL, no solo que llegó uno.
+            fn (GuardianAuthorizationRequest $n): bool => (int) $n->reservation->id === (int) $reservation->id,
         );
         Notification::assertSentToTimes($order->user, GuardianAuthorizationRequest::class, 1);
     }
@@ -241,7 +244,9 @@ class GuardianLinkDeliveryTest extends TestCase
 
         Livewire::actingAs($this->admin())
             ->test(ViewOrder::class, ['record' => $order->code])
-            ->callAction('sendGuardianLink');
+            ->callAction('sendGuardianLink', arguments: [
+                'item' => $order->items()->whereNull('parent_item_id')->orderBy('id')->value('id'),
+            ]);
 
         Notification::assertSentTo($order->user, GuardianAuthorizationRequest::class);
     }
@@ -256,7 +261,7 @@ class GuardianLinkDeliveryTest extends TestCase
         // ARITMÉTICA de la pantalla, no el firmador —que tiene sus propias guardas y arrastraría todo
         // el aparato del documento legal a un caso que no habla de él—.
         GuardianAuthorization::create([
-            'order_id' => $order->id,
+            'order_item_id' => $order->items()->whereNull('parent_item_id')->orderBy('id')->value('id'),
             'minor_name' => 'Ana', 'minor_surname' => 'Gómez Ruiz',
             'minor_key' => GuardianAuthorization::keyFor('Ana', 'Gómez Ruiz'),
             'minor_born_on' => '2016-04-02',
@@ -271,10 +276,15 @@ class GuardianLinkDeliveryTest extends TestCase
             ->assertSee(trans_choice('admin.orders.guest_minors.capacity', 3, ['count' => 3]))
             ->assertDontSee(__('admin.orders.guest_minors.overflow', ['count' => 1, 'capacity' => 0]));
 
-        // Y ahora el caso real: el operador CANCELA la línea después de que el padre firmara. El
-        // justificante NO se borra —es una firma con valor probatorio, no un cupo— así que el pedido
-        // queda con un papel y cero plazas. Antes esto no lo decía nadie.
-        $order->items()->whereNull('parent_item_id')->first()->update(['cancelled_at' => now()]);
+        // Y ahora el caso REAL del owner, con sus palabras: *«¿qué pasa si hay 50 justificantes y bajo
+        // la cantidad de entradas a 40?»*. Se baja la línea por debajo de lo firmado. El justificante
+        // NO se borra —es una firma con valor probatorio, no un cupo— así que la reserva queda con un
+        // papel y cero plazas. Antes esto no lo decía nadie y la hoja de sala lo imprimía tan tranquila.
+        //
+        // ⚠️ Se baja la CANTIDAD y no se cancela la línea: una reserva cancelada deja de ser una
+        // visita, así que sale de esta sección entera (§13.4). Lo que aquí se prueba es la reserva
+        // VIVA que se quedó pequeña.
+        $order->items()->whereNull('parent_item_id')->first()->update(['quantity' => 0]);
 
         Livewire::actingAs($this->admin())
             ->test(ViewOrder::class, ['record' => $order->code])

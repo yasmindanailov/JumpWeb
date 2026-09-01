@@ -3,6 +3,7 @@
 namespace Tests\Feature\Waiver;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
@@ -65,6 +66,8 @@ class GuardianAuthorizationScreenTest extends TestCase
 
     private function orderFor(User $responsible, int $quantity = 4, ?string $date = null, string $status = Order::STATUS_PAID): Order
     {
+        // Devuelve el PEDIDO por compatibilidad con los casos que hablan de él; la RESERVA —que es el
+        // sujeto desde `#343`— se saca con `reservationOf()`.
         $zone = Zone::firstOrCreate(['slug' => 'jump'], ['name' => ['es' => 'Jump'], 'position' => 1, 'is_active' => true]);
         $type = TicketType::firstOrCreate(['zone_id' => $zone->id, 'type' => TicketType::TYPE_ENTRY], [
             'name' => ['es' => 'Entrada'], 'duration_min' => 60, 'seats_per_unit' => 1,
@@ -108,13 +111,25 @@ class GuardianAuthorizationScreenTest extends TestCase
         ], $overrides);
     }
 
+    /** La reserva del pedido: el JUSTIFICANTE cuelga de la VISITA desde `#343`, no de la compra. */
+    private function reservationOf(Order $order): OrderItem
+    {
+        return $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail();
+    }
+
     private function signedStoreUrl(Order $order): string
     {
         return URL::temporarySignedRoute(
             'reservation.authorization.store',
             now()->addDays(14),
-            ['order' => $order],
+            ['reservation' => $this->reservationOf($order)],
         );
+    }
+
+    /** El enlace público de la primera reserva del pedido. */
+    private function signedShowUrl(Order $order): string
+    {
+        return $this->reservationOf($order)->guardianAuthorizationSignedUrl();
     }
 
     // ─── El camino feliz ──────────────────────────────────────────────────────
@@ -125,7 +140,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $order = $this->orderFor($responsible);
         $version = $this->version();
 
-        $this->get($order->guardianAuthorizationSignedUrl())
+        $this->get($this->signedShowUrl($order))
             ->assertOk()
             ->assertSee('Exención de responsabilidad')
             ->assertSee('Saltar en camas elásticas implica riesgos.')
@@ -154,14 +169,14 @@ class GuardianAuthorizationScreenTest extends TestCase
         // Dos padres ya han firmado.
         foreach ([['Luis', 'Pérez Soto', 'Carlos', 'Pérez Gil', 'carlos@example.com'],
             ['Nora', 'Blanco Díaz', 'Elena', 'Blanco Sanz', 'elena@example.com']] as $row) {
-            app(GuardianAuthorizationSigner::class)->sign($responsible, (int) $order->id, $version, [
+            app(GuardianAuthorizationSigner::class)->sign($responsible, (int) $this->reservationOf($order)->id, $version, [
                 'minor_name' => $row[0], 'minor_surname' => $row[1], 'minor_born_on' => '2016-01-01',
                 'guardian_name' => $row[2], 'guardian_surname' => $row[3], 'guardian_relationship' => 'father',
                 'guardian_email' => $row[4], 'guardian_phone' => '600000000',
             ], WaiverSignatureRequest::web('10.0.0.1', 'UA'));
         }
 
-        $body = $this->get($order->guardianAuthorizationSignedUrl())->assertOk()->getContent();
+        $body = $this->get($this->signedShowUrl($order))->assertOk()->getContent();
 
         // Ni un byte de ninguno de los dos: ni menores, ni adultos, ni correos.
         foreach (['Luis', 'Pérez Soto', 'Carlos', 'carlos@example.com', 'Nora', 'Blanco Díaz', 'Elena', 'elena@example.com'] as $leak) {
@@ -178,8 +193,8 @@ class GuardianAuthorizationScreenTest extends TestCase
         $order = $this->orderFor($this->responsible());
         $this->version();
 
-        $this->get(route('reservation.authorization', ['order' => $order]))->assertForbidden();
-        $this->post(route('reservation.authorization.store', ['order' => $order]), [])->assertForbidden();
+        $this->get(route('reservation.authorization', ['reservation' => $this->reservationOf($order)]))->assertForbidden();
+        $this->post(route('reservation.authorization.store', ['reservation' => $this->reservationOf($order)]), [])->assertForbidden();
     }
 
     public function test_an_anonymised_holder_closes_the_channel_with_410(): void
@@ -187,7 +202,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $responsible = $this->responsible();
         $order = $this->orderFor($responsible);
         $this->version();
-        $url = $order->guardianAuthorizationSignedUrl();
+        $url = $this->signedShowUrl($order);
 
         $responsible->anonymize();
 
@@ -208,7 +223,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $this->version();
         $responsible->anonymize();
 
-        $this->get(route('reservation.authorization', ['order' => $order]))->assertForbidden();
+        $this->get(route('reservation.authorization', ['reservation' => $this->reservationOf($order)]))->assertForbidden();
     }
 
     public function test_outside_internal_mode_the_screen_does_not_exist(): void
@@ -220,14 +235,14 @@ class GuardianAuthorizationScreenTest extends TestCase
         $this->version();
 
         // 404: no hay texto que firmar aquí. Y solo lo ve quien ya demostró acceso con la firma.
-        $this->get($order->guardianAuthorizationSignedUrl())->assertNotFound();
+        $this->get($this->signedShowUrl($order))->assertNotFound();
     }
 
     public function test_without_a_published_version_there_is_nothing_to_sign(): void
     {
         $order = $this->orderFor($this->responsible());
 
-        $this->get($order->guardianAuthorizationSignedUrl())->assertNotFound();
+        $this->get($this->signedShowUrl($order))->assertNotFound();
     }
 
     // ─── 3 · Las tres puertas ─────────────────────────────────────────────────
@@ -237,7 +252,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $order = $this->orderFor($this->responsible(), status: Order::STATUS_PENDING);
         $version = $this->version();
 
-        $this->get($order->guardianAuthorizationSignedUrl())
+        $this->get($this->signedShowUrl($order))
             ->assertOk()
             ->assertSee(__('guardian.blocked.not_paid'))
             ->assertDontSee('name="minor_name"', false);
@@ -253,7 +268,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $order = $this->orderFor($this->responsible(), date: now()->subDays(2)->toDateString());
         $version = $this->version();
 
-        $this->get($order->guardianAuthorizationSignedUrl())
+        $this->get($this->signedShowUrl($order))
             ->assertOk()
             ->assertSee(__('guardian.blocked.closed'));
 
@@ -290,7 +305,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $order->items()->create(['ticket_type_id' => $type->id, 'quantity' => 2, 'unit_price' => 500, 'seats' => 2]);
         $version = $this->version();
 
-        $this->get($order->guardianAuthorizationSignedUrl())
+        $this->get($this->signedShowUrl($order))
             ->assertOk()
             ->assertDontSee(__('guardian.blocked.closed'))
             ->assertSee(__('guardian.booking.no_date'));
@@ -452,7 +467,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $this->version();
 
         $this->actingAs($responsible)
-            ->get(route('reservation.authorization', ['order' => $order]))
+            ->get(route('reservation.authorization', ['reservation' => $this->reservationOf($order)]))
             ->assertOk()
             ->assertSee($responsible->email, false);
     }
@@ -464,7 +479,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $stranger = User::factory()->create(['email_verified_at' => now()]);
 
         $this->actingAs($stranger)
-            ->get(route('reservation.authorization', ['order' => $order]))
+            ->get(route('reservation.authorization', ['reservation' => $this->reservationOf($order)]))
             ->assertForbidden();
     }
 
@@ -479,7 +494,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $order = $this->orderFor($responsible);
         $this->version();
 
-        $this->get($order->guardianAuthorizationSignedUrl())
+        $this->get($this->signedShowUrl($order))
             ->assertOk()
             ->assertSee($order->code)
             ->assertSee('Lucía Fernández')
@@ -499,7 +514,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $order = $this->orderFor($responsible);
         $this->version();
 
-        $this->get($order->guardianAuthorizationSignedUrl())
+        $this->get($this->signedShowUrl($order))
             ->assertOk()
             ->assertDontSee('quien-reservo@example.test');
     }
@@ -524,7 +539,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         ]);
 
         $html = $this->actingAs($signer)
-            ->get($order->guardianAuthorizationSignedUrl())
+            ->get($this->signedShowUrl($order))
             ->assertOk()
             ->assertSee(__('guardian.minor.pick'))
             // ⚠️ Se asevera el `data-` del OPCIÓN y no solo el nombre: el nombre podría estar en la
@@ -551,7 +566,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $order = $this->orderFor($this->responsible());
         $this->version();
 
-        $this->get($order->guardianAuthorizationSignedUrl())
+        $this->get($this->signedShowUrl($order))
             ->assertOk()
             ->assertDontSee(__('guardian.minor.pick'))
             ->assertDontSee('data-guardian-pick-select', false);
@@ -572,7 +587,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $signer = User::factory()->create(['email_verified_at' => now()]);
 
         $this->actingAs($signer)
-            ->get($order->guardianAuthorizationSignedUrl())
+            ->get($this->signedShowUrl($order))
             ->assertOk()
             ->assertDontSee('Nora');
     }
@@ -593,7 +608,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $order = $this->orderFor($this->responsible());
         $this->version();
 
-        $this->get($order->guardianAuthorizationSignedUrl())
+        $this->get($this->signedShowUrl($order))
             ->assertOk()
             ->assertSee(route('legal.privacidad'), false)
             ->assertSee(__('guardian.privacy_link'));
@@ -606,7 +621,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         $order = $this->orderFor($this->responsible());
         $this->version();
 
-        $response = $this->get($order->guardianAuthorizationSignedUrl())->assertOk();
+        $response = $this->get($this->signedShowUrl($order))->assertOk();
 
         // ⚠️ Se asevera `no-store`, NO la cadena exacta: es la convención razonada en
         // `NoStoreWebResponsesTest`, porque el resto de la cabecera lo componen otras capas.

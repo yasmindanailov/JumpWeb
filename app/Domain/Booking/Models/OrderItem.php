@@ -550,6 +550,33 @@ class OrderItem extends Model
     }
 
     /**
+     * Enlace FIRMADO (temporal) al JUSTIFICANTE de un menor invitado **de ESTA reserva**
+     * (`docs/specs/waiver-por-reserva.md` §13). **Fuente ÚNICA del enlace**, como
+     * {@see guestFormSignedUrl()} lo es del post-form — y ahora, por fin, su gemelo exacto.
+     *
+     * ⚠️⚠️ **Vivía en `Order` hasta `#343` y lo cazó el owner con datos reales**: un pedido con dos
+     * visitas en días distintos daba UN enlace, y la hoja que firmaba el padre decía *«Días de la
+     * visita: 03/09/2026 · 07/09/2026»* sin decir a cuál iba su hijo. *Un padre no autoriza un
+     * pedido: autoriza que su hijo entre a una visita concreta.*
+     *
+     * ⚠️ **La caducidad sigue saliendo del PEDIDO** (`guestFormLinkExpiresAt()`, la última franja +
+     * 14 días): la fija `RGPD-03` y dos enlaces de la misma compra con plazos distintos serían dos
+     * reglas.
+     *
+     * ⚠️⚠️ **Es una credencial portadora y NO puede publicarse en el contexto de cuenta**, que se
+     * siembra en el HTML de cada página con sesión (la prohibición que `AccountContextResource`
+     * documenta). Se sirve bajo demanda, por una acción explícita.
+     */
+    public function guardianAuthorizationSignedUrl(): string
+    {
+        return URL::temporarySignedRoute(
+            'reservation.authorization',
+            $this->guestFormLinkExpiresAt(),
+            ['reservation' => $this],
+        );
+    }
+
+    /**
      * Enlaces FIRMADOS a la API del post-form de esta reserva (Fase 3 · paso 5). **Este es el
      * canje** que el spec §4.6.5 dejó pendiente.
      *

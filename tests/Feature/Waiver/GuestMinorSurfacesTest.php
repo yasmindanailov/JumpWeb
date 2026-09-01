@@ -115,7 +115,9 @@ class GuestMinorSurfacesTest extends TestCase
     {
         return app(GuardianAuthorizationSigner::class)->sign(
             $responsible,
-            (int) $order->id,
+            // ⚠️ El sujeto es la RESERVA desde `#343`, no el pedido: un pedido puede tener dos
+            // visitas y el padre autoriza una.
+            (int) $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail()->id,
             LegalDocumentVersion::query()->latest('id')->first() ?? $this->version(),
             [
                 'minor_name' => $minor, 'minor_surname' => 'Pérez Soto',
@@ -295,7 +297,7 @@ class GuestMinorSurfacesTest extends TestCase
         $order = $this->orderFor($responsible);
         $version = $this->version();
 
-        $this->post(URL::temporarySignedRoute('reservation.authorization.store', now()->addDays(14), ['order' => $order]), [
+        $this->post(URL::temporarySignedRoute('reservation.authorization.store', now()->addDays(14), ['reservation' => $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail()]), [
             'document_id' => $version->getKey(), 'accept_waiver' => '1',
             'minor_name' => 'Luis', 'minor_surname' => 'Pérez Soto',
             'minor_born_on' => now()->subYears(9)->toDateString(),
@@ -317,7 +319,7 @@ class GuestMinorSurfacesTest extends TestCase
         $order = $this->orderFor($responsible);
         $version = $this->version();
 
-        $this->post(URL::temporarySignedRoute('reservation.authorization.store', now()->addDays(14), ['order' => $order]), [
+        $this->post(URL::temporarySignedRoute('reservation.authorization.store', now()->addDays(14), ['reservation' => $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail()]), [
             'document_id' => $version->getKey(), 'accept_waiver' => '1',
             'minor_name' => 'Luis', 'minor_surname' => 'Pérez Soto',
             'minor_born_on' => now()->subYears(9)->toDateString(),
@@ -345,7 +347,7 @@ class GuestMinorSurfacesTest extends TestCase
             'guardian_name' => 'Carlos', 'guardian_surname' => 'Pérez Gil',
             'guardian_relationship' => 'father', 'guardian_email' => 'carlos@example.com',
         ];
-        $url = fn (): string => URL::temporarySignedRoute('reservation.authorization.store', now()->addDays(14), ['order' => $order]);
+        $url = fn (): string => URL::temporarySignedRoute('reservation.authorization.store', now()->addDays(14), ['reservation' => $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail()]);
 
         $this->post($url(), $payload);
         $this->post($url(), $payload);

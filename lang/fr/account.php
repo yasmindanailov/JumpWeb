@@ -371,6 +371,7 @@ return [
             'waiver_outdated' => 'version précédente',
             'waiver_missing' => 'signature manquante',
             'hint' => 'Partagez ce lien avec les parents ou tuteurs. Chacun remplit SES données et ne voit pas celles des autres.',
+            'places' => 'places libres : :count',
         ],
         'title' => 'Mes commandes',
         'empty' => "Tu n'as encore aucune commande.",

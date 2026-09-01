@@ -2952,7 +2952,13 @@ body[data-has-hero].nav--live .hero__pair-slot {
    quién ha firmado ya y el enlace para repartir. Mismos TOKENS que el resto del bloque de pedidos —
    ni un literal nuevo— porque es un apartado más de la misma tarjeta, no otra pieza. */
 .orders__guests { margin-top: var(--sp-10); padding-top: var(--sp-10); border-top: 1px dashed var(--line); }
+/* A QUÉ visita pertenecen estos justificantes (`#343`). Solo se pinta en «Mis pedidos», donde se
+   listan VARIAS reservas; en la tarjeta de una reserva el nombre ya está tres líneas más arriba. */
+.orders__guests-what { margin: 0 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg); }
 .orders__guests-count { margin: 0; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg); }
+/* Las plazas LIBRES, junto al contador y en tinta atenuada: es contexto del número de al lado, no un
+   dato con el mismo peso. */
+.orders__guests-free { font-weight: var(--fw-normal); color: var(--fg-mute); }
 .orders__guests-list { list-style: none; margin: var(--sp-6) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
 .orders__guests-item { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
 /* Solo la EXCEPCIÓN se marca (#320): un justificante vigente es la condición para estar en la lista. */
@@ -4478,6 +4484,19 @@ body[data-has-hero] .nav--over .nav__cta {
     border-radius: 50%; background: var(--fg); color: var(--bg);
     font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0;
 }
+/* A QUÉ visita autoriza el padre (`#343`). Va DENTRO del resguardo oscuro, así que su color se deriva
+   de `--bg` como el de sus vecinos y nunca de `--fg`: ahí `--fg` es el fondo (la lección de `.gf-mix`). */
+.guardian__what {
+    margin: 14px 0 0;
+    padding: 11px 14px;
+    border: 1px solid color-mix(in srgb, var(--bg) 26%, transparent);
+    border-radius: var(--r-md);
+    background: color-mix(in srgb, var(--bg) 8%, transparent);
+    font-family: var(--font-body); font-size: 14px; line-height: 1.45;
+    color: color-mix(in srgb, var(--bg) 88%, transparent);
+}
+.guardian__what strong { color: var(--bg); }
+
 /* El selector de menores a cargo (§12.5). Va SEPARADO de los campos que rellena —caja propia sobre
    el segundo tono— porque no es un dato que se envíe: es un atajo. Confundirlo con un campo del
    formulario haría pensar que hay que elegir algo. */
@@ -5702,6 +5721,45 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     color: var(--fg-mute);
 }
 
+/* ── «¿Quiénes vienen?»: el bloque PLEGADO de menores y justificantes ───────────────────────
+   (`[DECIDIDO owner, 2026-09-02]`: *«esa parte de menores a cargo y justificantes de manera más
+   sutil, es demasiado centrada en el proceso»*).
+
+   ⚠️ Es un `<details>` NATIVO: se abre y se cierra sin una línea de JavaScript, así que no puede
+   quedarse roto si el motor falla — la lección que la T2 pagó con el anti-bot. El marcador propio
+   sustituye al triángulo del navegador, que no es estilable de forma portable. */
+.whoblock {
+    margin-top: var(--sp-14);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    background: var(--bg-card);
+    overflow: hidden;
+}
+.whoblock__head {
+    display: flex; align-items: baseline; gap: var(--sp-8); flex-wrap: wrap;
+    /* 44 px de área táctil por relleno REAL y no con un pseudo (`#264`): un `<summary>` dentro de un
+       carril con scroll recortaría el pseudo, que es la trampa que documenta la tira del pie. */
+    padding: var(--sp-12) var(--sp-14);
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-body);
+}
+.whoblock__head::-webkit-details-marker { display: none; }
+.whoblock__head:hover { background: var(--bg-soft); }
+.whoblock__head:focus-visible { outline: var(--focus-outline); outline-offset: -2px; }
+.whoblock__title { font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); }
+.whoblock__title::before {
+    content: "";
+    display: inline-block; width: 0; height: 0; margin-right: var(--sp-8);
+    border-left: 5px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+    transition: transform var(--dur-entra) var(--ease-sale);
+}
+.whoblock[open] .whoblock__title::before { transform: rotate(90deg); }
+.whoblock__hint { font-size: var(--fs-12); color: var(--fg-mute); margin-left: auto; }
+.whoblock__body { padding: 0 var(--sp-14) var(--sp-14); }
+/* Dentro del bloque, el selector de menores pierde su separador de arriba: ya lo da el desplegable. */
+.whoblock__body .dep-pick { padding-top: 0; border-top: none; }
+
 /* ── El JUSTIFICANTE de un menor invitado, en el paso de la cantidad ────────────────────────
    (`specs/waiver-por-reserva.md` §12.2, `[DECIDIDO owner, 2026-09-01]`).
 
@@ -5721,6 +5779,12 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
 }
 .guardnote--ask { display: flex; align-items: flex-start; gap: var(--sp-10); background: var(--bg-card); cursor: pointer; }
 .guardnote--ask:hover { border-color: var(--line-strong); }
+/* Sin plazas libres (`#343`): apagada y SIN cursor de clic — una afordancia sin consumidor es el
+   defecto de `#295`. El motivo va dentro, en `__help`: apagar en silencio deja al cliente sin poder
+   atar «he asignado todas mis entradas» con «ya no puedo marcar esto». */
+.guardnote--off { background: var(--bg-soft); cursor: not-allowed; }
+.guardnote--off:hover { border-color: var(--line); }
+.guardnote--off .guardnote__label { color: var(--fg-mute); }
 /* El área táctil de 44 la da el propio bloque, que es alto: la casilla no la necesita aparte
    (`#264`). `margin-top` la alinea con la primera línea del rótulo, no con el centro del bloque. */
 .guardnote__box { margin-top: 2px; flex-shrink: 0; }

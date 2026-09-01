@@ -21,8 +21,16 @@
     $minorName = session('guardian_minor');
     $errors ??= new \Illuminate\Support\ViewErrorBag;
 
-    $dates = collect($context->visitDates)
-        ->map(fn (string $d): string => \App\Domain\Platform\Services\DisplayTime::format(\Illuminate\Support\Carbon::parse($d), 'd/m/Y'));
+    // ⚠️⚠️ **UNA visita, no las del pedido** (`#343`). Antes esto pintaba `visitDates` —las fechas de
+    // TODAS las líneas del pedido— y con una excursión el lunes y una entrada el miércoles la hoja
+    // decía «Días de la visita: 03/09/2026 · 07/09/2026» sin decir a cuál iba el niño. Lo cazó el
+    // owner con un pedido real delante.
+    $dayLabel = $context->date === null
+        ? __('guardian.booking.no_date')
+        : \App\Domain\Platform\Services\DisplayTime::dayLabel(\Illuminate\Support\Carbon::parse($context->date));
+    $timeLabel = $context->startTime === null
+        ? null
+        : mb_substr((string) $context->startTime, 0, 5).($context->endTime ? ' – '.mb_substr((string) $context->endTime, 0, 5) : '');
 @endphp
 <x-focused-layout :title="__('guardian.title')">
     <div class="gf-page">
@@ -44,14 +52,26 @@
                 <h1 class="gf-stub__title">{{ __('guardian.stub.heading') }}</h1>
                 <p class="gf-stub__lede">{{ __('guardian.stub.lede') }}</p>
 
+                {{-- ⚠️ **A QUÉ va el menor**, que es lo que faltaba y lo primero que un padre mira.
+                     La hoja decía la referencia del pedido y las fechas de todas sus líneas; ahora
+                     dice el producto, el día y la hora de ESTA visita. --}}
+                {{-- ⚠️ Solo el PRODUCTO: el día y la hora viven en su celda de abajo, y la captura
+                     enseñó que decirlos aquí también los repetía dos veces en cuatro centímetros. --}}
+                <p class="guardian__what" data-guardian-what>
+                    <strong>{{ $context->productName }}</strong>
+                </p>
+
                 <div class="gf-stub__meta">
                     <div class="gf-stub__cell">
                         <span class="k">{{ __('guardian.booking.reference') }}</span>
-                        <span class="v mono">{{ $context->code }}</span>
+                        <span class="v mono">{{ $context->orderCode }}</span>
                     </div>
                     <div class="gf-stub__cell">
-                        <span class="k">{{ $dates->count() > 1 ? __('guardian.booking.dates') : __('guardian.booking.date') }}</span>
-                        <span class="v">{{ $dates->isEmpty() ? __('guardian.booking.no_date') : $dates->implode(' · ') }}</span>
+                        <span class="k">{{ __('guardian.booking.date') }}</span>
+                        <span class="v">{{ $dayLabel }}</span>
+                        @if ($timeLabel)
+                            <span class="v mono">{{ $timeLabel }}</span>
+                        @endif
                     </div>
                     {{-- §12.4, `[DECIDIDO owner]`: **quién responde del menor durante la visita**. Un
                          padre está confiando a su hijo a un adulto que no es él, y hasta la T8 esta

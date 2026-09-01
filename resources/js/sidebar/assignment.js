@@ -234,3 +234,38 @@ export function applyRejections(lines, fields) {
 
     return { lines: next, changed: true, message: rejections[indexes[0]][0] ?? '' };
 }
+
+/**
+ * **El rótulo del bloque plegado «¿quiénes vienen?»** (`specs/waiver-por-reserva.md` §13.5).
+ *
+ * ⚠️ Vive AQUÍ y no en el componente porque es una REGLA —cuál de cuatro rótulos toca— y una regla
+ * dentro de un `.vue` pierde su red: los componentes se comparan por su árbol, y un árbol no dice qué
+ * rama se eligió. Lo pidió `SidebarComponentBudgetTest` y tiene razón.
+ *
+ * ⚠️ Devuelve la CLAVE y no el texto: quien traduce es quien tiene el diccionario, y devolver texto
+ * desde aquí obligaría a pasarle los mensajes a un módulo que no los necesita.
+ *
+ * @param {{dependents: number, guardian: boolean}} state
+ * @returns {'who_block.both'|'who_block.some'|'who_block.guardian'|'who_block.none'}
+ */
+export function whoSummaryKey({ dependents = 0, guardian = false } = {}) {
+    const marcados = Number.isFinite(dependents) && dependents > 0 ? dependents : 0;
+
+    if (marcados > 0 && guardian) return 'who_block.both';
+    if (marcados > 0) return 'who_block.some';
+    if (guardian) return 'who_block.guardian';
+
+    return 'who_block.none';
+}
+
+/**
+ * ¿Se puede marcar «viene un menor que no está a mi cargo»? **No si la línea ya está llena**: una
+ * plaza es una persona, y el owner pudo comprar UNA entrada, asignarla a su hija y pedir además un
+ * justificante que la puerta iba a rechazar.
+ *
+ * ⚠️ **Ya marcado se deja desmarcar**, aunque no queden plazas: si no, quien se equivoca queda
+ * atrapado con una casilla que no puede apagar.
+ */
+export function guardianIsBlocked({ quantity = 0, dependents = 0, checked = false } = {}) {
+    return ! checked && Math.max(0, quantity - dependents) < 1;
+}

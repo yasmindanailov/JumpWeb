@@ -437,6 +437,7 @@ const unitPriceCents = computed(() => unitPriceToShow(selectionStore.line, dateS
  */
 const guardianMode = computed(() => catalogStore.product?.guardian_authorization ?? 'none');
 
+
 /**
  * Adopta una cantidad nueva, venga de `+`/`−` o del campo escrito. `null` = no cambia nada, y
  * entonces se ahorra la consulta. La regla y los extremos —los MISMOS para los dos caminos— viven en

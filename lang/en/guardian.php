@@ -17,7 +17,6 @@ return [
         'heading' => 'The booking',
         'reference' => 'Reference',
         'date' => 'Day of the visit',
-        'dates' => 'Days of the visit',
         'no_date' => 'No date assigned yet',
         'responsible' => 'Going with',
     ],

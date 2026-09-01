@@ -623,6 +623,19 @@ class SidebarBundleBudgetTest extends TestCase
      * quien tiene el catálogo delante. *Una poda que no llega al 7 % de lo que ahorra el techo no es
      * una poda: es empeorar el diseño y seguir necesitando el techo.*
      * ⚠️ **Se sube a 265 y no a 270.** Queda **0,47 KiB**: la misma estrechez, a propósito.
+     *
+     * ▶ **267 (`#343`, el justificante cuelga de la RESERVA).** Medido con la rama sola: **264,40 →
+     * 265,87 KiB (+1,47)**. Lo que compra son las TRES cosas que el owner echó en falta probándolo:
+     *  · el enlace **en «Mis reservas»**, que es donde lo buscó —*«sigo sin ver el enlace para copiar
+     *    en mis reservas, ni en ningún lado»*— y donde tiene sentido desde que cuelga de la visita;
+     *  · el bloque «¿quiénes vienen?» **plegado** (`[DECIDIDO owner]`: *«de manera más sutil, es
+     *    demasiado centrada en el proceso»*), con su rótulo diciendo lo que hay dentro;
+     *  · **la casilla que ya no se puede marcar sin plazas libres** — compró una entrada, se la asignó
+     *    a su hija y aun así pudo pedir un justificante que la puerta iba a rechazar.
+     *
+     * ⚠️ **El desplegable NO trae JavaScript**: es un `<details>` nativo. Lo que pesa es el bloque de
+     * plazas libres, el filtro por reserva del panel y los rótulos del resumen.
+     * ⚠️ **Se sube a 267 y no a 275.** Queda **1,13 KiB**: lo siguiente que entre vuelve a justificarse.
      */
     private const SIDEBAR_CHUNK_MAX_KB = 269;
 

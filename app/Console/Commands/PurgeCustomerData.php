@@ -109,7 +109,7 @@ class PurgeCustomerData extends Command
             // 2.bis Fase 6 · el JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md`
             //    §4.2.1). Va ANTES de los pedidos porque las DOS claves foráneas del camino son
             //    RESTRICT: `waiver_signatures.subject_authorization_id → guardian_authorizations` y
-            //    `guardian_authorizations.order_id → orders`. Con CASCADE en la segunda tampoco
+            //    `guardian_authorizations.order_item_id → order_items`. Con CASCADE en la segunda tampoco
             //    valdría: el cascade se estrellaría contra la primera un peldaño más allá.
             //
             //    ⚠️⚠️ Esto borra firmas de cuentas que la purga CONSERVA, y es correcto: aquí se

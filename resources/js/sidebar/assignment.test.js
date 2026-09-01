@@ -1,10 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-    REASON_ADULT, REASON_OUTDATED, REASON_UNSIGNED,
-    applyRejections, assignableIds, assignableOptions, assignmentRejections, dependentsById,
-    needsAssignment, reconcileAssignments, toggleDependent, trimToQuantity,
-} from './assignment.js';
+import { REASON_ADULT, REASON_OUTDATED, REASON_UNSIGNED, applyRejections, assignableIds, assignableOptions, assignmentRejections, dependentsById, guardianIsBlocked, needsAssignment, reconcileAssignments, toggleDependent, trimToQuantity, whoSummaryKey } from './assignment.js';
 
 /**
  * La red de `assignment.js` (Fase 6 · tanda 4, `docs/specs/menores-a-cargo.md` §9.9.3 D8/D9): a quién
@@ -184,4 +180,31 @@ describe('el 422 del checkout aplicado a la cesta', () => {
         assert.equal(message, 'Ese menor no está en tu cuenta.');
         assert.deepEqual(applyRejections(lines, { 'items.0.quantity': ['x'] }), { lines, changed: false, message: '' });
     });
+});
+
+/**
+ * **El rótulo del bloque plegado y la casilla que no se puede marcar** (`#343`).
+ *
+ * Las dos reglas salieron del componente porque `SidebarComponentBudgetTest` lo pidió, y aquí es
+ * donde ganan la red que un árbol no puede darles: un árbol dice qué se pintó, no qué rama se eligió.
+ */
+test('el rótulo del bloque dice lo que hay dentro, en sus cuatro casos', () => {
+    assert.equal(whoSummaryKey({ dependents: 0, guardian: false }), 'who_block.none');
+    assert.equal(whoSummaryKey({ dependents: 2, guardian: false }), 'who_block.some');
+    assert.equal(whoSummaryKey({ dependents: 0, guardian: true }), 'who_block.guardian');
+    assert.equal(whoSummaryKey({ dependents: 2, guardian: true }), 'who_block.both');
+    // Sin argumentos: el caso que se pinta antes de elegir nada.
+    assert.equal(whoSummaryKey(), 'who_block.none');
+});
+
+test('el justificante no se puede marcar sin plazas libres, y sí se puede DESmarcar', () => {
+    // ❗ El caso del owner: una entrada, asignada a su hija. No queda plaza para un invitado.
+    assert.equal(guardianIsBlocked({ quantity: 1, dependents: 1, checked: false }), true);
+    // Con una plaza libre, se puede.
+    assert.equal(guardianIsBlocked({ quantity: 2, dependents: 1, checked: false }), false);
+    // ⚠️ Ya marcado NO se bloquea aunque no queden plazas: si no, quien se equivoca se queda
+    // atrapado con una casilla que no puede apagar.
+    assert.equal(guardianIsBlocked({ quantity: 1, dependents: 1, checked: true }), false);
+    // Sin menores asignados nunca estorba.
+    assert.equal(guardianIsBlocked({ quantity: 1, dependents: 0, checked: false }), false);
 });

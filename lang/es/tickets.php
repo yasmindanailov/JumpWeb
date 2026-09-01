@@ -317,6 +317,18 @@ return [
      * ⚠️ Y no promete que se firme AHORA: se dice cuándo llega el enlace, porque el correo sale al
      * quedar pagado y prometerlo antes deja al cliente esperando algo que no ha pasado.
      */
+    /*
+     * El bloque PLEGADO de «¿quiénes vienen?» (`[DECIDIDO owner, 2026-09-02]`: más sutil, menos
+     * centrado en el proceso). El rótulo dice lo que hay dentro SIN obligar a abrirlo.
+     */
+    'who_block' => [
+        'title' => '¿Quiénes vienen?',
+        'none' => 'Menores a cargo y justificantes',
+        'some' => 'Menores a tu cargo: :count',
+        'guardian' => 'Con justificante de un menor invitado',
+        'both' => 'Menores a tu cargo: :count · y un justificante',
+    ],
+    'guardian_no_places' => 'No quedan plazas libres en esta reserva: ya has asignado todas a menores a tu cargo. Añade una entrada más o quita una asignación.',
     'guardian_optional' => 'Viene un menor que no está a mi cargo',
     'guardian_optional_help' => 'Su padre, madre o tutor tendrá que firmar una autorización. Al terminar la compra te enviamos el enlace para pasárselo.',
     'guardian_required' => 'Cada menor de esta reserva necesita la autorización firmada de su padre, madre o tutor. Al terminar la compra te enviamos el enlace para repartirlo.',

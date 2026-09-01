@@ -370,6 +370,7 @@ return [
             'waiver_outdated' => 'earlier version',
             'waiver_missing' => 'signature missing',
             'hint' => 'Share this link with the parents or guardians. Each of them fills in THEIR details and cannot see anyone else’s.',
+            'places' => 'free places: :count',
         ],
         'title' => 'My orders',
         'empty' => 'You do not have any orders yet.',

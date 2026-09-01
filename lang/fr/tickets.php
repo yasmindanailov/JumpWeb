@@ -272,6 +272,14 @@ return [
      * ⚠️ Le texte nomme le CAS et jamais notre vocabulaire : la personne qui achète ne sait pas ce
      * qu'est un « waiver offshore », mais elle reconnaît « un mineur qui n'est pas à ma charge ».
      */
+    'who_block' => [
+        'title' => 'Qui vient ?',
+        'none' => 'Mineurs à votre charge et autorisations',
+        'some' => 'Mineurs à votre charge : :count',
+        'guardian' => "Avec l'autorisation d'un mineur invité",
+        'both' => 'Mineurs à votre charge : :count · et une autorisation',
+    ],
+    'guardian_no_places' => 'Il ne reste plus de places libres sur cette réservation : vous les avez toutes attribuées à des mineurs à votre charge. Ajoutez un billet ou retirez une attribution.',
     'guardian_optional' => "Un mineur qui n'est pas à ma charge vient",
     'guardian_optional_help' => "Son père, sa mère ou son tuteur devra signer une autorisation. À la fin de l'achat, nous vous envoyons le lien à lui transmettre.",
     'guardian_required' => "Chaque mineur de cette réservation a besoin de l'autorisation signée de son père, sa mère ou son tuteur. À la fin de l'achat, nous vous envoyons le lien à partager.",

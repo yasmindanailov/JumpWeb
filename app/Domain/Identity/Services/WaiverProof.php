@@ -2,11 +2,12 @@
 
 namespace App\Domain\Identity\Services;
 
-use App\Domain\Booking\Contracts\AuthorizableOrders;
+use App\Domain\Booking\Contracts\AuthorizableReservations;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -142,19 +143,45 @@ final class WaiverProof
     /**
      * La referencia del pedido al que va atado el justificante, si es de un menor invitado.
      *
-     * ⚠️ Sale de `Booking\Contracts\AuthorizableOrders`, **no de un `DB::table('orders')`**. Un
+     * ⚠️ Sale de `Booking\Contracts\AuthorizableReservations`, **no de un `DB::table('orders')`**. Un
      * `DB::table()` habría funcionado y `ModuleBoundariesTest` **no lo habría visto** —escanea
      * referencias a CLASES con el tokenizador, no cadenas SQL—, que es exactamente la razón por la
      * que la frontera se respeta a mano cuando el guardián no llega.
      */
     public function orderCode(): ?string
     {
-        $orderId = $this->signature->authorization?->order_id;
-        if ($orderId === null) {
+        $reservationId = $this->signature->authorization?->order_item_id;
+        if ($reservationId === null) {
             return null;
         }
 
-        return $this->orderCode ??= app(AuthorizableOrders::class)->find((int) $orderId)?->code;
+        return $this->orderCode ??= app(AuthorizableReservations::class)->find((int) $reservationId)?->orderCode;
+    }
+
+    /**
+     * A QUÉ visita autoriza esta prueba (`#343`): el producto y el día.
+     *
+     * ⚠️ **Faltaba, y en un documento probatorio importa**: el PDF decía la referencia del pedido y
+     * un pedido puede tener dos visitas. Quien lea esta prueba dentro de dos años tiene que poder
+     * decir a cuál de las dos autorizó el padre.
+     */
+    public function reservationLabel(): ?string
+    {
+        $reservationId = $this->signature->authorization?->order_item_id;
+        if ($reservationId === null) {
+            return null;
+        }
+
+        $reservation = app(AuthorizableReservations::class)->find((int) $reservationId);
+        if ($reservation === null) {
+            return null;
+        }
+
+        return $reservation->date === null
+            ? $reservation->productName
+            : $reservation->productName.' · '.DisplayTime::format(
+                Carbon::parse($reservation->date), 'd/m/Y',
+            );
     }
 
     private ?string $orderCode = null;

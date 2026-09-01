@@ -431,8 +431,12 @@ class RedsysReturnHandler
             // tumbar el cierre de un cobro que el banco ya autorizó. La reserva existe; el acuse es
             // una cortesía que la cola reintenta.
             try {
-                if ($orderFor->needsGuardianAuthorization()) {
-                    $orderFor->user->notify(new GuardianAuthorizationRequest($orderFor));
+                // ⚠️ **UNO POR RESERVA marcada desde `#343`, no uno por pedido.** Lo cazó el owner:
+                // compró una excursión y una entrada, las dos con menores invitados, y recibió UN
+                // correo con UN enlace que decía dos fechas. Es exactamente la forma de su hermano
+                // `GuestFormRequest`, dos bloques más arriba.
+                foreach ($orderFor->guardianReservations() as $reservation) {
+                    $orderFor->user->notify(new GuardianAuthorizationRequest($reservation));
                 }
             } catch (Throwable $e) {
                 Log::warning('redsys.return.guardian_mail_failed', [

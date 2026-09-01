@@ -146,8 +146,10 @@ class ManualOrderFulfiller
             // y crea la cuenta si no existe, así que una venta de mostrador **ya produce un pedido
             // con responsable** y vale el mismo enlace (§12.3).
             try {
-                if ($order->needsGuardianAuthorization()) {
-                    $order->user->notify(new GuardianAuthorizationRequest($order));
+                // UNO POR RESERVA marcada (`#343`), como el post-form de aquí arriba: un pedido con
+                // dos visitas necesita dos enlaces, y cada padre tiene que saber a cuál va su hijo.
+                foreach ($order->guardianReservations() as $reservation) {
+                    $order->user->notify(new GuardianAuthorizationRequest($reservation));
                 }
             } catch (Throwable $e) {
                 Log::warning('manual_order.guardian_mail_failed', [

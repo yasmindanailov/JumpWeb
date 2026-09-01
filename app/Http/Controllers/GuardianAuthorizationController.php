@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\Booking\Contracts\AuthorizableOrder;
-use App\Domain\Booking\Contracts\AuthorizableOrders;
-use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Contracts\AuthorizableReservation;
+use App\Domain\Booking\Contracts\AuthorizableReservations;
+use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationExistsException;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationRefusedException;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\GuardianAuthorizationSigner;
+use App\Domain\Identity\Services\GuardianPlaces;
 use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\WaiverAcceptance;
 use App\Domain\Identity\Services\WaiverSettings;
@@ -48,11 +49,11 @@ class GuardianAuthorizationController extends Controller
 {
     use AuthorizesGuardianAuthorization;
 
-    public function show(Request $request, Order $order): View
+    public function show(Request $request, OrderItem $reservation): View
     {
-        $this->authorizeGuardianAccess($request, $order);
+        $this->authorizeGuardianAccess($request, $reservation);
 
-        $context = app(AuthorizableOrders::class)->find((int) $order->getKey());
+        $context = app(AuthorizableReservations::class)->find((int) $reservation->getKey());
         abort_if($context === null, 404);
 
         // El texto que se va a firmar, en el idioma de quien lo lee. Sin versión publicada no hay nada
@@ -63,7 +64,7 @@ class GuardianAuthorizationController extends Controller
         $user = $request->user();
 
         return view('reservation.authorization', [
-            'order' => $order,
+            'reservation' => $reservation,
             'context' => $context,
             'document' => $document,
             // Por qué NO se puede firmar, si es el caso. Se decide aquí solo para PINTAR: la puerta
@@ -84,8 +85,8 @@ class GuardianAuthorizationController extends Controller
             // primer espacio sería fabricar un apellido en una pantalla que acompaña a una prueba
             // legal.
             'responsible' => [
-                'name' => (string) ($order->user?->name ?? ''),
-                'phone' => (string) ($order->user?->phone ?? ''),
+                'name' => (string) ($reservation->order?->user?->name ?? ''),
+                'phone' => (string) ($reservation->order?->user?->phone ?? ''),
             ],
             // §4.6: con sesión, los datos del adulto vienen rellenos. ⚠️ Iniciar sesión no cambia nada
             // más: no verifica, no enlaza la cuenta y el justificante sigue siendo puntual.
@@ -129,16 +130,16 @@ class GuardianAuthorizationController extends Controller
             'formAction' => URL::temporarySignedRoute(
                 'reservation.authorization.store',
                 $context->linkExpiresAt,
-                ['order' => $order],
+                ['reservation' => $reservation],
             ),
         ]);
     }
 
-    public function store(Request $request, Order $order): RedirectResponse
+    public function store(Request $request, OrderItem $reservation): RedirectResponse
     {
-        $this->authorizeGuardianAccess($request, $order);
+        $this->authorizeGuardianAccess($request, $reservation);
 
-        $context = app(AuthorizableOrders::class)->find((int) $order->getKey());
+        $context = app(AuthorizableReservations::class)->find((int) $reservation->getKey());
         abort_if($context === null, 404);
 
         // Anti-spam: HONEYPOT. Un campo oculto que una persona no ve y que un bot rellena. Aquí sí se
@@ -151,7 +152,7 @@ class GuardianAuthorizationController extends Controller
         // persona real. En un formulario de contacto eso cuesta un mensaje; aquí costaría una prueba
         // legal que su firmante cree tener.
         if (filled($request->input('contact_ref'))) {
-            return $this->back($request, $order, 'signed');
+            return $this->back($request, $reservation, 'signed');
         }
 
         // Anti-bot TURNSTILE (`SEC-06`): no-op sin claves configuradas.
@@ -163,12 +164,12 @@ class GuardianAuthorizationController extends Controller
         // hijo y no la tiene se entera **en la puerta del parque**. Turnstile falla a personas, no solo
         // a bots, y por eso su fallo se DICE. La asimetría con el honeypot es deliberada.
         if (! Turnstile::verify((string) $request->input('cf-turnstile-response'), (string) $request->ip())) {
-            return $this->back($request, $order, 'antibot');
+            return $this->back($request, $reservation, 'antibot');
         }
 
         $validator = Validator::make($request->all(), $this->rules(), $this->messages());
         if ($validator->fails()) {
-            return redirect()->to($this->backUrl($request, $order))
+            return redirect()->to($this->backUrl($request, $reservation))
                 ->withErrors($validator)
                 ->withInput();
         }
@@ -178,15 +179,15 @@ class GuardianAuthorizationController extends Controller
         // texto se publicó de nuevo entre servirlo y aceptarlo, se rechaza para que vuelva a leerlo.
         $document = WaiverAcceptance::currentDocument((int) $request->input('document_id'));
         if ($document === null || ! WaiverSettings::isInternal()) {
-            return $this->back($request, $order, 'stale');
+            return $this->back($request, $reservation, 'stale');
         }
 
         $data = $validator->validated();
 
         try {
             $result = app(GuardianAuthorizationSigner::class)->sign(
-                $order->user,
-                (int) $order->getKey(),
+                $reservation->order->user,
+                (int) $reservation->getKey(),
                 $document,
                 [
                     'minor_name' => $data['minor_name'],
@@ -203,9 +204,9 @@ class GuardianAuthorizationController extends Controller
         } catch (GuardianAuthorizationExistsException $e) {
             // «Un niño, un papel» (§7·9): el otro progenitor ve el nombre del menor y nada más — ni
             // quién lo firmó ni cómo contactarle.
-            return $this->back($request, $order, 'already', $e->minorName);
+            return $this->back($request, $reservation, 'already', $e->minorName);
         } catch (GuardianAuthorizationRefusedException $e) {
-            return $this->back($request, $order, $e->reason);
+            return $this->back($request, $reservation, $e->reason);
         }
 
         // La COPIA para quien firma (§4.15, `[DECIDIDO owner]` §7·7), **fuera de la transacción y
@@ -220,7 +221,7 @@ class GuardianAuthorizationController extends Controller
                 ->notify(new GuardianAuthorizationSigned($result['signature']));
         }
 
-        return $this->back($request, $order, 'signed', $result['authorization']->minorFullName());
+        return $this->back($request, $reservation, 'signed', $result['authorization']->minorFullName());
     }
 
     /**
@@ -268,7 +269,7 @@ class GuardianAuthorizationController extends Controller
     }
 
     /** Por qué no se puede firmar, para PINTARLO. La puerta que manda vive en el dominio. */
-    private function blockedReason(AuthorizableOrder $context): ?string
+    private function blockedReason(AuthorizableReservation $context): ?string
     {
         if (! $context->isPaid) {
             return GuardianAuthorizationRefusedException::REASON_NOT_PAID;
@@ -276,16 +277,19 @@ class GuardianAuthorizationController extends Controller
         if ($context->visitFinished) {
             return GuardianAuthorizationRefusedException::REASON_CLOSED;
         }
-        if (GuardianAuthorization::query()->where('order_id', $context->orderId)->count() >= $context->capacity) {
+        // Las plazas LIBRES, no la cantidad: descuenta los menores a cargo ya asignados y los
+        // justificantes ya firmados (`GuardianPlaces`). El owner compró UNA entrada, se la asignó a
+        // su hija y la pantalla seguía ofreciendo firmar.
+        if (app(GuardianPlaces::class)->freeIn($context) < 1) {
             return GuardianAuthorizationRefusedException::REASON_FULL;
         }
 
         return null;
     }
 
-    private function back(Request $request, Order $order, string $status, ?string $minorName = null): RedirectResponse
+    private function back(Request $request, OrderItem $reservation, string $status, ?string $minorName = null): RedirectResponse
     {
-        return redirect()->to($this->backUrl($request, $order))
+        return redirect()->to($this->backUrl($request, $reservation))
             ->with('guardian_status', $status)
             ->with('guardian_minor', $minorName);
     }
@@ -294,12 +298,12 @@ class GuardianAuthorizationController extends Controller
      * A dónde se vuelve: **una URL firmada de nuevo**. Quien rellena no tiene sesión, así que un
      * `back()` a secas le dejaría en un 403 con lo que acaba de escribir perdido.
      */
-    private function backUrl(Request $request, Order $order): string
+    private function backUrl(Request $request, OrderItem $reservation): string
     {
-        if ($this->ownsOrder($request, $order)) {
-            return route('reservation.authorization', ['order' => $order]);
+        if ($this->ownsOrder($request, $reservation)) {
+            return route('reservation.authorization', ['reservation' => $reservation]);
         }
 
-        return $order->guardianAuthorizationSignedUrl();
+        return $reservation->guardianAuthorizationSignedUrl();
     }
 }

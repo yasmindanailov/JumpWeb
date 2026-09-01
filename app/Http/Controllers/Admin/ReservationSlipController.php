@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Domain\Booking\Contracts\AuthorizableOrders;
+use App\Domain\Booking\Contracts\AuthorizableReservations;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\ReservationSlip;
+use App\Domain\Identity\Services\GuardianPlaces;
 use App\Domain\Identity\Services\GuardianRoster;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Http\Controllers\Controller;
@@ -80,7 +81,10 @@ class ReservationSlipController extends Controller
         //
         // ⚠️ Va la forma del OPERADOR, que **no lleva el correo ni el teléfono** de ningún adulto:
         // la sala no los necesita para recibir a un niño.
-        $guestMinors = app(GuardianRoster::class)->forOperator((int) $order->getKey());
+        // ⚠️⚠️ **Los de ESTA reserva, no los del pedido** (`#343`). Antes la hoja de la excursión del
+        // lunes imprimía también a los menores de la entrada del miércoles: el justificante cuelga de
+        // la visita, y esta hoja es la de UNA visita.
+        $guestMinors = app(GuardianRoster::class)->forOperator((int) $item->getKey());
 
         // §12.6 — MÁS JUSTIFICANTES QUE PLAZAS. Bajar la cantidad de una línea no borra ninguno (son
         // firmas con valor probatorio, no cupos), así que un pedido puede acabar con cincuenta papeles
@@ -89,7 +93,8 @@ class ReservationSlipController extends Controller
         //
         // ⚠️ La capacidad viene de Booking por CONTRATO, como el roster viene de Identity: es la capa
         // de entrega la que junta los dos módulos.
-        $capacity = app(AuthorizableOrders::class)->find((int) $order->getKey())?->capacity ?? 0;
+        $reservation = app(AuthorizableReservations::class)->find((int) $item->getKey());
+        $capacity = $reservation === null ? 0 : $reservation->quantity - app(GuardianPlaces::class)->assignedDependents((int) $item->getKey());
 
         $pdf = Pdf::loadView('pdf.reservation-slip', [
             'slip' => $slip,

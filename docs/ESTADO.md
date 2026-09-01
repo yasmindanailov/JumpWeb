@@ -265,7 +265,27 @@ mensaje que mentía al padre está corregido. **El TOPE no se toca** (`SEC-04`).
 ⚠️⚠️ **La trampa que casi lo entierra**: `Cart::sanitize()` es una LISTA BLANCA y el campo se habría
 caído ahí **en silencio** camino de `OrderCreator`. Tiene caso propio, y hay una segunda costura igual
 en el pedido manual.
-▶ **Queda: el OJO del owner** y la casilla en el paso de CESTA (hoy se marca al elegir la hora). ▶ **La T3 pone las SEIS superficies**:
+❗❗❗ **`#343` (2026-09-02) — Y PROBÁNDOLO ENCONTRÓ EL FALLO DE FONDO: el justificante colgaba del
+PEDIDO y **un pedido puede tener dos visitas**. Su frase: *«1 justificante es por reserva no por
+pedido, creo que ahí tenemos el fallo»*. Medido sobre `R-LUKFD2` (excursión el 07/09 + entrada el
+03/09): la hoja del padre decía **«Días de la visita 03/09 · 07/09»**, llegaba **un solo correo**, la
+capacidad sumaba las dos líneas (**81 plazas**) y «un niño, un papel» impedía autorizar al mismo niño
+para dos visitas del mismo pedido. **Cuatro síntomas, una raíz.**
+▶ `order_id` → **`order_item_id`**, ruta `/autorizacion/{reservation}`, contrato
+`AuthorizableReservation(s)` con **producto, día y hora**, **un correo por reserva marcada**, y el
+enlace **en «Mis reservas»** — que es donde el owner lo buscó (*«sigo sin ver el enlace para copiar en
+mis reservas»*).
+⚠️⚠️ **Las PLAZAS LIBRES** (`GuardianPlaces`) = cantidad − menores a cargo asignados − firmados. **No
+contradice a §4.10**: aquélla prohíbe inventar «3 de 100»; una plaza asignada a un menor a cargo **ya
+tiene dueño**. Los adultos no se restan (cota superior a propósito).
+⚠️ **El embudo, más sutil** (`[DECIDIDO owner]`): «¿Quiénes vienen?» es un `<details>` **nativo**
+plegado, y la casilla **no se puede marcar sin plazas libres** — el caso que él encontró comprando una
+entrada y asignándosela a su hija.
+⚠️ **Una premisa suya NO se cumplía**: la excursión que creía «obligatorio» tenía
+`guardian_authorization = none`. *Antes de arreglar un síntoma, comprobar que la configuración que se
+le supone existe de verdad.*
+▶ **CINCO ESCENARIOS SEMBRADOS en su cuenta** (`PRUEBA-J1`…`J5`, guion en `VERIFICACION-E2E-CAJON.md`
+§5.septies bloque 8) y **queda su OJO**. También sigue pendiente la casilla en el paso de CESTA. ▶ **La T3 pone las SEIS superficies**:
 puerta, hoja de sala, ficha del pedido, PDF, correo de copia con el PDF adjunto, y la cuenta del
 responsable en el cajón. ▶ **LA T4 YA TIENE GUION ESCRITO Y EL ESCENARIO SEMBRADO**:
 `VERIFICACION-E2E-CAJON.md` **§5.septies** — seis bloques con sus casillas, los dos pedidos de prueba

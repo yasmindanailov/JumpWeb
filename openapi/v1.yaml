@@ -1038,8 +1038,15 @@ paths:
 
         - **Nada de los otros padres.** Ni su nombre, ni su relación con el menor, ni su correo o
           teléfono. El responsable ve **quién viene y si está firmado**, y nada más.
-        - **Un denominador inventado.** Se devuelve `capacity` —lo que se compró— y no «3 de 100»:
-          no se puede saber cuántos de los comprados son menores, y esa cifra sería falsa.
+        - **Un denominador inventado.** No se dice «3 de 100»: no se puede saber cuántos de los
+          comprados son menores. Lo que sí se dice es `places` —las plazas de esa reserva que
+          todavía no tienen dueño—, que es un hecho y no una estimación.
+
+        ### Una entrada por RESERVA
+
+        El justificante cuelga de la **visita**, no de la compra: un pedido con una excursión el
+        lunes y una entrada el miércoles devuelve **dos** entradas, cada una con su enlace, su día y
+        su cupo. Un padre autoriza que su hijo entre a una visita concreta.
 
         `link` es `null` cuando el pedido no está pagado o la visita ya pasó: repartirlo entonces
         sería mandar a un padre a una pantalla que le dirá que no.
@@ -4011,39 +4018,70 @@ components:
         data:
           type: object
           additionalProperties: false
-          required: [minors, capacity, link]
+          required: [reservations]
           properties:
-            minors:
+            reservations:
               type: array
-              description: Los menores invitados con justificante firmado, en el orden en que se firmaron.
+              description: |
+                Una entrada **por RESERVA**, en el orden de la compra: las que se compraron marcadas
+                más las que ya tienen justificantes firmados.
+
+                ⚠️ Devolvía UNA cosa por pedido hasta que el justificante pasó a colgar de la visita.
+                Un pedido con una excursión el lunes y una entrada el miércoles tiene **dos** enlaces,
+                dos cupos y dos listas: un padre autoriza que su hijo entre a UNA visita.
               items:
                 type: object
                 additionalProperties: false
-                required: [minor, waiver]
+                required: [reservation_id, product_name, date, minors, places, link]
                 properties:
-                  minor:
+                  reservation_id:
+                    type: integer
+                    format: int64
+                    description: La línea del pedido a la que pertenece este justificante.
+                  product_name:
                     type: string
-                    description: Nombre y apellidos del menor, tal y como los declaró quien firmó.
-                  waiver:
+                    description: A qué va el menor, con la etiqueta de fiesta mixta si la lleva.
+                  date:
+                    type: string
+                    format: date
+                    nullable: true
+                    description: Día de la visita, o `null` si la reserva aún no tiene franja.
+                  minors:
+                    type: array
+                    description: Los menores invitados con justificante firmado, en el orden en que se firmaron.
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required: [minor, waiver]
+                      properties:
+                        minor:
+                          type: string
+                          description: Nombre y apellidos del menor, tal y como los declaró quien firmó.
+                        waiver:
+                          type: string
+                          nullable: true
+                          enum: [current, outdated, missing]
+                          description: |
+                            Estado del justificante. `null` cuando la instalación no gestiona el
+                            waiver aquí. `outdated` significa que se firmó una versión anterior del
+                            texto: se señala y se deja pasar.
+                  places:
+                    type: integer
+                    description: |
+                      Plazas de ESTA reserva que todavía pueden recibir un menor invitado: su
+                      cantidad menos los menores a cargo ya asignados y los justificantes ya firmados.
+
+                      ⚠️ **No es un denominador inventado.** No se puede saber cuántos de los
+                      comprados son menores —por eso no se dice «3 de 100»—, pero una plaza asignada
+                      a un menor a cargo **ya tiene dueño**, y eso es un hecho.
+                  link:
                     type: string
                     nullable: true
-                    enum: [current, outdated, missing]
+                    format: uri
                     description: |
-                      Estado del justificante. `null` cuando la instalación no gestiona el waiver
-                      aquí. `outdated` significa que se firmó una versión anterior del texto: se
-                      señala y se deja pasar.
-            capacity:
-              type: integer
-              description: |
-                Cuánta gente se compró en el pedido (líneas principales vivas). Es el TOPE de
-                justificantes, no el número de menores esperados.
-            link:
-              type: string
-              nullable: true
-              format: uri
-              description: |
-                Enlace firmado para repartir a los padres. `null` si el pedido no está pagado o la
-                visita ya pasó. ⚠️ Es una credencial portadora: quien lo tenga puede firmar.
+                      Enlace firmado de ESTA reserva, para repartir a los padres. `null` si el pedido
+                      no está pagado o la visita ya pasó. ⚠️ Es una credencial portadora: quien lo
+                      tenga puede firmar.
 
     OrderEventData:
       type: object

@@ -107,7 +107,9 @@ class GuestMinorAuthorizationTest extends TestCase
     {
         return app(GuardianAuthorizationSigner::class)->sign(
             $responsible,
-            (int) $order->id,
+            // ⚠️ El sujeto es la RESERVA desde `#343`, no el pedido: un pedido puede tener dos
+            // visitas y el padre autoriza una.
+            (int) $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail()->id,
             $version,
             array_merge([
                 'minor_name' => 'Ana',
@@ -151,7 +153,7 @@ class GuestMinorAuthorizationTest extends TestCase
         );
         $this->assertNotSame($first['authorization']->id, $second['authorization']->id);
         $this->assertSame(2, WaiverSignature::where('subject_type', WaiverSignature::SUBJECT_GUEST_MINOR)->count());
-        $this->assertSame(2, GuardianAuthorization::where('order_id', $order->id)->count());
+        $this->assertSame(2, GuardianAuthorization::where('order_item_id', $order->items()->whereNull('parent_item_id')->orderBy('id')->value('id'))->count());
 
         // Cada uno lleva SU menor y SU adulto, no los del otro.
         $this->assertSame('Ana Gómez Ruiz', $first['signature']->subject_name);

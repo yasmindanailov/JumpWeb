@@ -270,6 +270,14 @@ return [
      * ⚠️ The wording names the CASE, never our vocabulary: whoever buys does not know what a
      * «waiver offshore» is, and «a minor who is not in your care» is what they recognise.
      */
+    'who_block' => [
+        'title' => 'Who is coming?',
+        'none' => 'Minors in your care and authorizations',
+        'some' => 'Minors in your care: :count',
+        'guardian' => 'With an invited minor’s authorization',
+        'both' => 'Minors in your care: :count · and an authorization',
+    ],
+    'guardian_no_places' => 'There are no free places left on this booking: you have already assigned them all to minors in your care. Add another ticket or remove an assignment.',
     'guardian_optional' => 'A minor who is not in my care is coming',
     'guardian_optional_help' => 'Their parent or legal guardian will have to sign an authorization. When you finish the purchase we send you the link to pass on.',
     'guardian_required' => 'Every minor on this booking needs a signed authorization from their parent or legal guardian. When you finish the purchase we send you the link to share.',

@@ -4,6 +4,7 @@ import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
 import { isAlmostFull, isSoldOut } from '../offer.js';
 import { useStrip } from '../useStrip.js';
+import { guardianIsBlocked, whoSummaryKey } from '../assignment.js';
 import DependentPicker from './DependentPicker.vue';
 
 /**
@@ -106,6 +107,11 @@ const soldOut = (offered) => isSoldOut(offered);
 const { track, nav, move } = useStrip();
 
 const hasAddons = computed(() => props.addons.groups.length > 0 || props.addons.singles.length > 0);
+
+// Las dos REGLAS del bloque viven en `assignment.js`, con sus casos de `node --test` (`CE-6`): cuál
+// de los cuatro rótulos toca y si la casilla se puede marcar. Aquí solo se pinta.
+const guardianBlocked = computed(() => guardianIsBlocked({ quantity: props.quantity, dependents: props.dependentIds.length, checked: props.guardianChecked }));
+const whoSummary = computed(() => tp(whoSummaryKey({ dependents: props.dependentIds.length, guardian: props.guardianMode === 'required' || props.guardianChecked }), { count: props.dependentIds.length }));
 
 /**
  * `#327` — la cantidad tecleada sale, y el campo se REPINTA desde la prop.
@@ -217,11 +223,37 @@ const toggleInfo = (id) => {
             </p>
         </div>
 
-        <!-- ¿Para quién son estas entradas? (Fase 6 · tanda 4, `menores-a-cargo.md` §4.7): solo en
-             ENTRADAS, solo con sesión y menores declarados. Un pack ya pide a sus invitados abajo. -->
-        <DependentPicker v-if="! isPack && dependentOptions.length"
-                         :options="dependentOptions" :selected="dependentIds" :quantity="quantity" :messages="messages"
-                         @toggle="$emit('toggle-dependent', $event)" />
+        <!--
+          ¿QUIÉNES vienen? — los menores a cargo y el justificante de un menor invitado, juntos y
+          **PLEGADOS** (`[DECIDIDO owner, 2026-09-02]`: *«esa parte de menores a cargo y justificantes
+          de manera más sutil, es demasiado centrada en el proceso»*).
+
+          ⚠️⚠️ **Es un `<details>` nativo y no un acordeón de JS**, y no es pereza: este paso ya es el
+          más denso del embudo, y una pieza que se abre y se cierra sin una línea de JavaScript no
+          puede quedarse rota si el motor falla — que es justo lo que la T2 pagó con el anti-bot.
+          Sin JS se abre igual.
+
+          ⚠️ **Nace CERRADO porque no es un paso obligatorio**: la mayoría compra sin menores de nadie.
+          Pero el rótulo dice lo que hay dentro **y cuántos van marcados**, para que quien SÍ tenga que
+          entrar no tenga que abrirlo para descubrirlo.
+
+          ⚠️ Se pinta si hay algo que ofrecer: menores a cargo declarados **o** un producto que admite
+          justificante. Ni una cosa ni otra → el bloque no existe (no vacío: no está).
+        -->
+        <details v-if="(! isPack && dependentOptions.length) || guardianMode !== 'none'"
+                 class="whoblock" data-who-block>
+            <summary class="whoblock__head">
+                <span class="whoblock__title">{{ t('who_block.title') }}</span>
+                <span class="whoblock__hint">{{ whoSummary }}</span>
+            </summary>
+
+            <div class="whoblock__body">
+                <!-- ¿Para quién son estas entradas? (Fase 6 · tanda 4, `menores-a-cargo.md` §4.7): solo
+                     en ENTRADAS, solo con sesión y menores declarados. Un pack pide a sus invitados
+                     abajo. -->
+                <DependentPicker v-if="! isPack && dependentOptions.length"
+                                 :options="dependentOptions" :selected="dependentIds" :quantity="quantity" :messages="messages"
+                                 @toggle="$emit('toggle-dependent', $event)" />
 
         <!--
           El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2,
@@ -237,17 +269,25 @@ const toggleInfo = (id) => {
           arriba: el caso que originó esta feature es el amigo del hijo, y quien lo trae puede no
           tener ningún menor a cargo dado de alta (`specs/waiver-por-reserva.md` §1.5).
         -->
-        <div v-if="guardianMode === 'required'" class="guardnote" data-guardian-note>
-            <p class="guardnote__text">{{ t('guardian_required') }}</p>
-        </div>
-        <label v-else-if="guardianMode === 'optional'" class="guardnote guardnote--ask" data-guardian-ask>
-            <input type="checkbox" class="guardnote__box" :checked="guardianChecked"
-                   @change="$emit('toggle-guardian', $event.target.checked)">
-            <span class="guardnote__body">
-                <span class="guardnote__label">{{ t('guardian_optional') }}</span>
-                <span class="guardnote__help">{{ t('guardian_optional_help') }}</span>
-            </span>
-        </label>
+                <div v-if="guardianMode === 'required'" class="guardnote" data-guardian-note>
+                    <p class="guardnote__text">{{ t('guardian_required') }}</p>
+                </div>
+                <label v-else-if="guardianMode === 'optional'" class="guardnote guardnote--ask"
+                       :class="guardianBlocked ? 'guardnote--off' : ''" data-guardian-ask>
+                    <input type="checkbox" class="guardnote__box" :checked="guardianChecked"
+                           :disabled="guardianBlocked"
+                           :aria-describedby="guardianBlocked ? 'guardian-why' : null"
+                           @change="$emit('toggle-guardian', $event.target.checked)">
+                    <span class="guardnote__body">
+                        <span class="guardnote__label">{{ t('guardian_optional') }}</span>
+                        <!-- ⚠️ Con la línea llena se dice POR QUÉ, no se apaga en silencio: el cliente
+                             acaba de asignar todas sus plazas y tiene que poder atar los dos hechos. -->
+                        <span v-if="guardianBlocked" id="guardian-why" class="guardnote__help">{{ t('guardian_no_places') }}</span>
+                        <span v-else class="guardnote__help">{{ t('guardian_optional_help') }}</span>
+                    </span>
+                </label>
+            </div>
+        </details>
 
         <!-- Campos del evento del pack: data-driven por instalación, así que el esquema llega del
              servidor y aquí solo se pinta el control que cada tipo pide. -->

@@ -2,7 +2,7 @@
 
 namespace App\Domain\Identity\Services;
 
-use App\Domain\Booking\Contracts\AuthorizableOrders;
+use App\Domain\Booking\Contracts\AuthorizableReservations;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationExistsException;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationRefusedException;
 use App\Domain\Identity\Models\GuardianAuthorization;
@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
  * Un adulto sin cuenta rellena el formulario de un enlace y esto escribe, **en una sola transacción y
  * bajo el lock de la fila del RESPONSABLE**:
  *
- *  1. la autorización (la persona + su ancla al pedido), si no existía ya;
+ *  1. la autorización (la persona + su ancla a la RESERVA), si no existía ya;
  *  2. la firma probatoria, delegando en {@see WaiverSigner} — que es el único escritor de
  *     `waiver_signatures` y sigue siéndolo.
  *
@@ -34,33 +34,41 @@ use Illuminate\Support\Facades\DB;
  * ⚠️ El lock se toma aquí y `WaiverSigner` lo vuelve a tomar dentro: sobre la misma fila y la misma
  * transacción es un no-op, y así el firmador sigue siendo correcto llamándolo por su cuenta.
  *
- * ⚠️ **«Un niño, un papel»** (`[DECIDIDO owner]` §7·9): si ese menor ya tiene justificante en este
- * pedido y lo firmó **otro adulto**, esto **no escribe nada** y lanza — el segundo progenitor ve que
+ * ⚠️ **«Un niño, un papel»** (`[DECIDIDO owner]` §7·9): si ese menor ya tiene justificante en esta
+ * RESERVA y lo firmó **otro adulto**, esto **no escribe nada** y lanza — el segundo progenitor ve que
  * ya está firmado. Si es el MISMO adulto reenviando, se comporta como la idempotencia de siempre:
  * misma versión → la firma que hay; versión nueva → una firma más, encadenada.
+ *
+ * ⚠️⚠️ **«Un papel» es por VISITA desde `#343`, no por pedido**, y el cambio da MÁS de lo que quita: el
+ * mismo niño que va a dos días distintos del mismo pedido necesita **dos** autorizaciones, y con la
+ * clave por pedido la segunda se rechazaba diciendo que ya estaba firmada.
  */
 final class GuardianAuthorizationSigner
 {
     public function __construct(
         private readonly WaiverSigner $signer,
-        private readonly AuthorizableOrders $orders,
+        private readonly AuthorizableReservations $reservations,
+        private readonly GuardianPlaces $places,
     ) {}
 
     /**
      * @param  User  $responsible  el titular del pedido — el RESPONSABLE, no quien firma
+     * @param  int  $reservationId  la LÍNEA a la que va el menor (`order_items.id`), no el pedido:
+     *                              un pedido puede tener dos visitas en días distintos y el padre
+     *                              autoriza una (§13)
      * @param  array{minor_name:string, minor_surname:string, minor_born_on:string, guardian_name:string, guardian_surname:string, guardian_relationship:string, guardian_email:?string, guardian_phone:?string}  $data
      * @return array{authorization: GuardianAuthorization, signature: WaiverSignature, created: bool}
      */
     public function sign(
         User $responsible,
-        int $orderId,
+        int $reservationId,
         LegalDocumentVersion $version,
         array $data,
         WaiverSignatureRequest $request,
     ): array {
         $key = GuardianAuthorization::keyFor($data['minor_name'], $data['minor_surname']);
 
-        return DB::transaction(function () use ($responsible, $orderId, $version, $data, $request, $key): array {
+        return DB::transaction(function () use ($responsible, $reservationId, $version, $data, $request, $key): array {
             // El MISMO punto de serialización que usa el firmador (§4.4). Va primero, antes de leer
             // nada: si se buscara la autorización fuera del lock, dos envíos simultáneos del mismo
             // menor podrían decidir los dos que no existe.
@@ -71,16 +79,16 @@ final class GuardianAuthorizationSigner
             // la visita, cancelarse el pedido o llenarse el cupo. Y el cupo, en concreto, **solo es
             // correcto dentro del lock**: dos envíos simultáneos con una plaza libre lo leerían los
             // dos como disponible.
-            $order = $this->orders->find($orderId);
-            if ($order === null || ! $order->isPaid) {
-                throw GuardianAuthorizationRefusedException::notPaid($orderId);
+            $reservation = $this->reservations->find($reservationId);
+            if ($reservation === null || ! $reservation->isPaid) {
+                throw GuardianAuthorizationRefusedException::notPaid($reservationId);
             }
-            if ($order->visitFinished) {
-                throw GuardianAuthorizationRefusedException::closed($orderId);
+            if ($reservation->visitFinished) {
+                throw GuardianAuthorizationRefusedException::closed($reservationId);
             }
 
             $existing = GuardianAuthorization::query()
-                ->where('order_id', $orderId)
+                ->where('order_item_id', $reservationId)
                 ->where('minor_key', $key)
                 ->first();
 
@@ -101,17 +109,19 @@ final class GuardianAuthorizationSigner
                 return ['authorization' => $existing, 'signature' => $signature, 'created' => false];
             }
 
-            // El TOPE. No es `SUM(quantity)`: lo cuenta el contrato sobre las líneas principales
-            // VIVAS (`AuthorizableOrdersReader`). Se mira DESPUÉS de la idempotencia a propósito —
-            // un padre que reenvía su propio formulario no consume plaza, así que un pedido lleno
-            // sigue admitiendo su reenvío.
-            $used = GuardianAuthorization::query()->where('order_id', $orderId)->count();
-            if ($used >= $order->capacity) {
-                throw GuardianAuthorizationRefusedException::full($orderId, $order->capacity);
+            // El TOPE, y desde `#343` es el de ESTA reserva y descuenta lo que ya tiene dueño
+            // (`GuardianPlaces`): la cantidad de la línea menos los menores a cargo ya asignados
+            // menos los justificantes ya firmados. Antes sumaba las líneas del pedido entero, así que
+            // una entrada suelta comprada junto a una excursión de 80 ofrecía 81 plazas.
+            //
+            // ⚠️ Se mira DESPUÉS de la idempotencia a propósito: un padre que reenvía su propio
+            // formulario no consume plaza, así que una reserva llena sigue admitiendo su reenvío.
+            if ($this->places->freeIn($reservation) < 1) {
+                throw GuardianAuthorizationRefusedException::full($reservationId, $reservation->quantity);
             }
 
             $authorization = GuardianAuthorization::create([
-                'order_id' => $orderId,
+                'order_item_id' => $reservationId,
                 'minor_name' => mb_substr(trim($data['minor_name']), 0, GuardianAuthorization::NAME_MAX),
                 'minor_surname' => mb_substr(trim($data['minor_surname']), 0, GuardianAuthorization::SURNAME_MAX),
                 'minor_key' => $key,

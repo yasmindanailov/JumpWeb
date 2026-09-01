@@ -175,9 +175,9 @@ return [
         'product_fallback' => 'product :id',
     ],
     'guardian_request' => [
-        'subject' => 'Authorization for the invited minors on your booking · :code',
+        'subject' => 'Authorization for the invited minors on “:product” · :code',
         'greeting' => 'Hi there!',
-        'intro' => 'Your booking :code includes a minor who is not in your care. For them to come in, their parent or legal guardian has to sign an authorization.',
+        'intro' => 'Your booking “:product” (no. :code) includes a minor who is not in your care. For them to come in, their parent or legal guardian has to sign an authorization.',
         'body' => 'It only takes a moment: their details, the minor’s details, accept the waiver and done. No account needed.',
         'action' => 'Open the authorization',
         'share' => 'Pass this link on to the parents or guardians. It works for all of them: each one fills in THEIR details and cannot see anyone else’s.',

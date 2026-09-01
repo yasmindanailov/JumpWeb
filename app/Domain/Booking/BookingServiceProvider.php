@@ -3,7 +3,7 @@
 namespace App\Domain\Booking;
 
 use App\Domain\Booking\Contracts\AddonOffer;
-use App\Domain\Booking\Contracts\AuthorizableOrders;
+use App\Domain\Booking\Contracts\AuthorizableReservations;
 use App\Domain\Booking\Contracts\AvailabilityOffer;
 use App\Domain\Booking\Contracts\CartLineValidation;
 use App\Domain\Booking\Contracts\CartPricing;
@@ -18,7 +18,7 @@ use App\Domain\Booking\Contracts\ReservationAdmission;
 use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Contracts\ZonePalette;
 use App\Domain\Booking\Services\AddonOfferReader;
-use App\Domain\Booking\Services\AuthorizableOrdersReader;
+use App\Domain\Booking\Services\AuthorizableReservationsReader;
 use App\Domain\Booking\Services\AvailabilityReader;
 use App\Domain\Booking\Services\CartLineValidator;
 use App\Domain\Booking\Services\CartPricer;
@@ -55,11 +55,13 @@ class BookingServiceProvider extends ServiceProvider
         // a cargo, tanda 4). Lo consume `Identity\Services\DependentAssigner` para atar cada asignación
         // a SU ítem sin importar `OrderItem`: la promesa del orden es de Booking, y aquí se cumple.
         $this->app->bind(CheckoutLines::class, CheckoutLinesReader::class);
-        // Fase 6 · el JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §4.6/§4.7): un
-        // pedido visto por quien tiene su enlace y NO tiene cuenta. Lo consume
+        // Fase 6 · el JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §13): la
+        // RESERVA vista por quien tiene su enlace y NO tiene cuenta. Lo consume
         // `Identity\Services\GuardianAuthorizationSigner` para decidir si la autorización cabe.
-        // ⚠️ No devuelve NADA que ese desconocido no pueda ver: ni importes, ni productos, ni nombres.
-        $this->app->bind(AuthorizableOrders::class, AuthorizableOrdersReader::class);
+        // ⚠️ Colgaba del PEDIDO hasta `#343` y lo cazó el owner con datos reales: un pedido con dos
+        // visitas hacía que la hoja del padre dijera dos fechas y ofreciera las plazas de las dos.
+        // ⚠️ No devuelve NADA que ese desconocido no pueda ver: ni importes, ni nombres de nadie.
+        $this->app->bind(AuthorizableReservations::class, AuthorizableReservationsReader::class);
         // Fase 6 · subsistema A: la ficha de puerta (Identity) pide las reservas y su dinero por aquí.
         $this->app->bind(GateReservations::class, GateReservationsReader::class);
         $this->app->bind(PublishableCatalog::class, PublishableCatalogReader::class);

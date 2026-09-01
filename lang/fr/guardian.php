@@ -17,7 +17,6 @@ return [
         'heading' => 'La réservation',
         'reference' => 'Référence',
         'date' => 'Jour de la visite',
-        'dates' => 'Jours de la visite',
         'no_date' => 'Aucune date attribuée pour l’instant',
         'responsible' => 'Accompagné par',
     ],

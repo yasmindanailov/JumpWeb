@@ -6,8 +6,12 @@ use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Platform\Services\DisplayTime;
 
 /**
- * Fase 6 · el JUSTIFICANTE de un menor invitado — **quién viene autorizado en un pedido**
- * (`docs/specs/waiver-por-reserva.md` §4.10, §4.12), para las superficies que lo enseñan.
+ * Fase 6 · el JUSTIFICANTE de un menor invitado — **quién viene autorizado en una RESERVA**
+ * (`docs/specs/waiver-por-reserva.md` §4.10, §4.12, §13), para las superficies que lo enseñan.
+ *
+ * ⚠️⚠️ **Recibe RESERVAS y no un pedido desde `#343`.** Colgaba del pedido, y con dos visitas en la
+ * misma compra la hoja de sala de una imprimía los menores de la otra. Quien necesite el pedido
+ * entero le pasa la lista de sus líneas: agrupar es de quien pinta, no de quien lee.
  *
  * ❗❗ **Son DOS formas y no una con un filtro, a propósito.** `[DECIDIDO owner]` §7·4: el
  * RESPONSABLE ve *«los nombres de los menores autorizados y quién falta»* y **nunca los datos de
@@ -18,15 +22,15 @@ use App\Domain\Platform\Services\DisplayTime;
  * | | La ve | Lleva |
  * |---|---|---|
  * | {@see forOperator()} | panel y hoja de sala | menor, adulto que firmó, su relación, cuándo y el estado |
- * | {@see forResponsible()} | «Mis pedidos» del que reservó | **solo** el menor y el estado |
+ * | {@see forResponsible()} | «Mis reservas» del que reservó | **solo** el menor y el estado |
  *
  * ⚠️ Ninguna de las dos lleva el **correo ni el teléfono** del adulto. Están en la fila y en la
  * prueba, y ahí se quedan: la puerta no los necesita para dejar pasar, y el operador que de verdad
  * los necesite abre el registro probatorio, que tiene permiso propio y consulta auditada.
  *
- * ⚠️ **Vive en Identity y recibe un `int $orderId`**: `ReservationSlip` está en Booking, que **no
- * puede mirar a Identity**, así que la composición no puede vivir allí. La capa de entrega —que ve
- * los dos módulos— es quien las junta.
+ * ⚠️ **Vive en Identity y recibe IDS DE LÍNEA**: `ReservationSlip` está en Booking, que **no puede
+ * mirar a Identity**, así que la composición no puede vivir allí. La capa de entrega —que ve los dos
+ * módulos— es quien las junta.
  */
 final class GuardianRoster
 {
@@ -35,9 +39,9 @@ final class GuardianRoster
      *
      * @return list<array{minor: string, born_on: ?string, guardian: string, relationship: string, signed_on: ?string, waiver: ?string}>
      */
-    public function forOperator(int $orderId): array
+    public function forOperator(int|array $reservationIds): array
     {
-        return $this->rows($orderId, static fn (GuardianAuthorization $a, ?WaiverStatus $status): array => [
+        return $this->rows($reservationIds, static fn (GuardianAuthorization $a, ?WaiverStatus $status): array => [
             'minor' => $a->minorFullName(),
             'born_on' => $a->minor_born_on?->toDateString(),
             'guardian' => $a->guardianFullName(),
@@ -56,18 +60,18 @@ final class GuardianRoster
      *
      * @return list<array{minor: string, waiver: ?string}>
      */
-    public function forResponsible(int $orderId): array
+    public function forResponsible(int|array $reservationIds): array
     {
-        return $this->rows($orderId, static fn (GuardianAuthorization $a, ?WaiverStatus $status): array => [
+        return $this->rows($reservationIds, static fn (GuardianAuthorization $a, ?WaiverStatus $status): array => [
             'minor' => $a->minorFullName(),
             'waiver' => $status?->minorState(),
         ]);
     }
 
-    /** Cuántos justificantes tiene el pedido. Sin denominador: ver {@see forResponsible()} y §4.10. */
-    public function countFor(int $orderId): int
+    /** Cuántos justificantes tienen esas reservas. */
+    public function countFor(int|array $reservationIds): int
     {
-        return GuardianAuthorization::query()->where('order_id', $orderId)->count();
+        return GuardianAuthorization::query()->whereIn('order_item_id', (array) $reservationIds)->count();
     }
 
     /**
@@ -75,13 +79,19 @@ final class GuardianRoster
      * (`WaiverStatus::forGuestMinors`). El presupuesto de la puerta lo vigila `GateProfileTest`, y la
      * ficha del pedido no puede permitirse una consulta por fila.
      *
+     * @param  int|list<int>  $reservationIds
      * @param  callable(GuardianAuthorization, ?WaiverStatus): array<string, mixed>  $shape
      * @return list<array<string, mixed>>
      */
-    private function rows(int $orderId, callable $shape): array
+    private function rows(int|array $reservationIds, callable $shape): array
     {
+        $ids = (array) $reservationIds;
+        if ($ids === []) {
+            return [];
+        }
+
         $authorizations = GuardianAuthorization::query()
-            ->where('order_id', $orderId)
+            ->whereIn('order_item_id', $ids)
             ->orderBy('id')
             ->get();
         if ($authorizations->isEmpty()) {

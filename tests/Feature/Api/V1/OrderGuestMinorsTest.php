@@ -52,24 +52,35 @@ class OrderGuestMinorsTest extends ApiTestCase
             'status' => Order::STATUS_PAID, 'subtotal' => 500, 'tax' => 0, 'total' => 500,
             'currency' => 'EUR', 'paid_at' => now(),
         ]);
-        $order->items()->create(['ticket_type_id' => $type->id, 'slot_id' => $slot->id, 'quantity' => 7, 'unit_price' => 500, 'seats' => 7]);
+        // ⚠️ La línea nace MARCADA: desde `#343` el endpoint devuelve una entrada por RESERVA
+        // marcada, así que una línea sin marca no tiene enlace que ofrecer — y es lo correcto: a un
+        // pedido normal no se le reparte nada.
+        $order->items()->create([
+            'ticket_type_id' => $type->id, 'slot_id' => $slot->id,
+            'quantity' => 7, 'unit_price' => 500, 'seats' => 7,
+            'guardian_authorization' => true,
+        ]);
 
         $version = app(LegalDocumentPublisher::class)->publish(WaiverSettings::SLUG, [
             'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
         ])->first();
 
         if ($withAuthorization) {
-            app(GuardianAuthorizationSigner::class)->sign($responsible, (int) $order->id, $version, [
-                'minor_name' => 'Luis', 'minor_surname' => 'Pérez Soto', 'minor_born_on' => '2016-11-20',
-                'guardian_name' => 'Carlos', 'guardian_surname' => 'Pérez Gil', 'guardian_relationship' => 'father',
-                'guardian_email' => 'carlos@example.com', 'guardian_phone' => '600333444',
-            ], WaiverSignatureRequest::web('10.0.0.1', 'UA'));
+            app(GuardianAuthorizationSigner::class)->sign(
+                $responsible,
+                // ⚠️ El sujeto es la RESERVA desde `#343`, no el pedido.
+                (int) $order->items()->whereNull('parent_item_id')->orderBy('id')->value('id'),
+                $version, [
+                    'minor_name' => 'Luis', 'minor_surname' => 'Pérez Soto', 'minor_born_on' => '2016-11-20',
+                    'guardian_name' => 'Carlos', 'guardian_surname' => 'Pérez Gil', 'guardian_relationship' => 'father',
+                    'guardian_email' => 'carlos@example.com', 'guardian_phone' => '600333444',
+                ], WaiverSignatureRequest::web('10.0.0.1', 'UA'));
         }
 
         return [$responsible, $order];
     }
 
-    public function test_the_responsible_gets_the_roster_the_capacity_and_the_link(): void
+    public function test_the_responsible_gets_one_entry_per_reservation_with_its_own_link(): void
     {
         [$responsible, $order] = $this->scenario();
         Sanctum::actingAs($responsible);
@@ -77,11 +88,15 @@ class OrderGuestMinorsTest extends ApiTestCase
         $response = $this->getJson(self::ROOT."/orders/{$order->code}/guest-minors");
 
         $response->assertValidResponse(200);
-        $response->assertJsonPath('data.minors.0.minor', 'Luis Pérez Soto');
-        $response->assertJsonPath('data.minors.0.waiver', 'current');
-        // La CAPACIDAD, que es el tope de justificantes y no el número de menores esperados.
-        $response->assertJsonPath('data.capacity', 7);
-        $this->assertStringContainsString('/autorizacion/', (string) $response->json('data.link'));
+        // ⚠️ **Una entrada por RESERVA desde `#343`**: el justificante cuelga de la visita, no de la
+        // compra. Un pedido con dos visitas trae dos enlaces y dos fechas.
+        $response->assertJsonCount(1, 'data.reservations');
+        $response->assertJsonPath('data.reservations.0.minors.0.minor', 'Luis Pérez Soto');
+        $response->assertJsonPath('data.reservations.0.minors.0.waiver', 'current');
+        // Las plazas LIBRES de esa reserva: sus 7 unidades menos el justificante ya firmado.
+        $response->assertJsonPath('data.reservations.0.places', 6);
+        $response->assertJsonPath('data.reservations.0.product_name', 'Entrada');
+        $this->assertStringContainsString('/autorizacion/', (string) $response->json('data.reservations.0.link'));
     }
 
     public function test_it_never_carries_anything_of_the_other_parents(): void
@@ -113,9 +128,9 @@ class OrderGuestMinorsTest extends ApiTestCase
         $response = $this->getJson(self::ROOT."/orders/{$order->code}/guest-minors");
 
         $response->assertValidResponse(200);
-        $response->assertJsonPath('data.link', null);
+        $response->assertJsonPath('data.reservations.0.link', null);
         // CONTROL: los justificantes ya firmados SIGUEN saliendo — la visita pasada no los borra.
-        $response->assertJsonCount(1, 'data.minors');
+        $response->assertJsonCount(1, 'data.reservations.0.minors');
     }
 
     public function test_an_order_of_someone_else_is_a_404_not_a_403(): void
@@ -138,7 +153,7 @@ class OrderGuestMinorsTest extends ApiTestCase
         $response = $this->getJson(self::ROOT."/orders/{$order->code}/guest-minors");
 
         $response->assertValidResponse(200);
-        $response->assertJsonPath('data.minors', []);
-        $this->assertNotNull($response->json('data.link'));
+        $response->assertJsonPath('data.reservations.0.minors', []);
+        $this->assertNotNull($response->json('data.reservations.0.link'));
     }
 }

@@ -2224,6 +2224,37 @@ Abre el enlace firmado del pedido (se saca con el guion de siembra; caduca a la 
       línea a 0 o cancélala. ▶ El panel avisa: *«Ojo: hay N justificantes firmados y el pedido tiene M
       plazas»*. La hoja de sala imprime el mismo aviso.
 
+### 8 · LOS CINCO ESCENARIOS SEMBRADOS (`#343`) — el justificante cuelga de la RESERVA
+
+> **Entra en tu cuenta de cliente** (`admin@jumpweb.test`) y abre **«Mis reservas»**: ahí es donde
+> ahora vive el enlace. Cada pedido aísla UNA cosa.
+
+Sembrado con `docker compose exec -T -u sail laravel.test php artisan tinker --execute="require '/tmp/sembrar.php';"`
+(el guion es idempotente: se puede repetir). Deja `Cumpleaños Jump` en **obligatorio** y
+`Jump · 1 hora` en **opcional**.
+
+| Pedido | Qué aísla | Qué tiene que verse |
+|---|---|---|
+| `PRUEBA-J1` | Excursión OBLIGATORIA, **nadie ha firmado** | El enlace **ya está** (era el huevo-y-gallina) y dice «40 plazas libres» |
+| `PRUEBA-J2` | 3 plazas − 1 menor a cargo − 1 firmado | **1 plaza libre**, no 3 |
+| `PRUEBA-J3` | **1 entrada asignada a tu hija** | **0 plazas libres**; abriendo el enlace, «no admite más autorizaciones» |
+| `PRUEBA-J4` | **DOS reservas en días distintos** | **DOS bloques, DOS enlaces**, cada uno con su producto y su día |
+| `PRUEBA-J5` | 2 firmados y la línea bajada a 1 | En el panel, el aviso de **más justificantes que plazas** |
+
+- [ ] **«Mis reservas»**: cada tarjeta con justificantes enseña los suyos y **su** enlace. ⚠️ El de
+      `PRUEBA-J4` tiene que dar **dos enlaces distintos**, uno por tarjeta.
+- [ ] **La hoja pública** de cada uno: dice **el producto**, el día y la hora de ESA visita — nunca
+      dos fechas.
+- [ ] **El embudo**: elige `Jump · 1 hora`, fecha y hora. ▶ Sale **«¿Quiénes vienen?» plegado**.
+      Ábrelo, marca a un menor a cargo hasta llenar la línea → **la casilla del justificante se apaga
+      y dice por qué**.
+- [ ] **El panel** (`/admin/pedidos/PRUEBA-J4`): **dos bloques**, uno por reserva, cada uno con su
+      producto, su día, su cupo y sus dos botones.
+- [ ] **La hoja de sala** de una reserva de `PRUEBA-J4`: solo los menores de ESA reserva.
+
+⚠️ **Limpieza**: los cinco se borran con el bloque de abajo (el patrón `PRUEBA-%` los alcanza), y el
+guion de siembra los borra él mismo al repetirse.
+
 ### Limpieza cuando termines
 
 ```bash

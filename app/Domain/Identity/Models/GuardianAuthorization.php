@@ -14,7 +14,8 @@ use Illuminate\Support\Str;
  * Fase 6 · el JUSTIFICANTE de un menor invitado a una reserva — «waiver offshore»
  * (`docs/specs/waiver-por-reserva.md` §4.2).
  *
- * Una fila = **una autorización**: un menor, el adulto que responde por él y el pedido al que va.
+ * Una fila = **una autorización**: un menor, el adulto que responde por él y **la RESERVA a la que
+ * va** — no el pedido.
  * Es la hermana PUNTUAL de {@see Dependent}: aquélla es una persona permanente de una cuenta; ésta
  * nace con una reserva y se agota con ella. Por eso son dos tablas y no una con una columna de
  * «ámbito» (§1.3, la lección de `prices` de `#324`).
@@ -27,12 +28,18 @@ use Illuminate\Support\Str;
  *    cuando ya no le queda ninguna firma.
  *  - **La identifica `minor_key`, no el nombre crudo.** Ver {@see keyFor()}.
  *
- * ⚠️ **`order_id` es un id ENTERO sin relación Eloquent**: Booking no puede mirar a Identity, así que
- * la flecha va al revés y por contrato (`ModuleBoundariesTest`). Es el patrón de
- * {@see DependentAssignment}.
+ * ⚠️ **`order_item_id` es un id ENTERO sin relación Eloquent**: Booking no puede mirar a Identity, así
+ * que la flecha va al revés y por contrato (`ModuleBoundariesTest`). Es el patrón de
+ * {@see DependentAssignment}, que cuelga de la misma columna y por la misma razón.
+ *
+ * ⚠️⚠️ **Colgaba del PEDIDO hasta `#343`, y lo encontró el owner con datos reales** (§13): un pedido
+ * con dos reservas en días distintos hacía que la hoja del padre dijera «Días de la visita: 03/09 ·
+ * 07/09». *Un padre no autoriza un pedido: autoriza que su hijo entre a una visita concreta.* De esa
+ * sola raíz salían la capacidad sumada de las dos líneas, el correo único para dos reservas marcadas
+ * y un «un niño, un papel» que impedía autorizar al mismo niño para dos visitas del mismo pedido.
  */
 #[Fillable([
-    'order_id',
+    'order_item_id',
     'minor_name', 'minor_surname', 'minor_key', 'minor_born_on',
     'guardian_name', 'guardian_surname', 'guardian_relationship', 'guardian_email', 'guardian_phone',
 ])]
@@ -61,7 +68,7 @@ class GuardianAuthorization extends Model
     public const RELATIONSHIPS = Dependent::RELATIONSHIPS;
 
     protected $casts = [
-        'order_id' => 'integer',
+        'order_item_id' => 'integer',
         'minor_born_on' => 'immutable_date',
     ];
 

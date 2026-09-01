@@ -26,7 +26,6 @@ return [
         'heading' => 'La reserva',
         'reference' => 'Referencia',
         'date' => 'Día de la visita',
-        'dates' => 'Días de la visita',
         'no_date' => 'Sin fecha asignada todavía',
         // ⚠️ Se enseña el NOMBRE y el TELÉFONO de quien reservó, nunca su correo (§12.4,
         // `[DECIDIDO owner]`): este enlace lo reparte él a gente que no conocemos.

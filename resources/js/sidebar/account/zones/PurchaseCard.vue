@@ -132,13 +132,14 @@ defineEmits(['toggle', 'retry']);
 
         <!--
           Los JUSTIFICANTES de menores invitados (`specs/waiver-por-reserva.md` §4.10, `#337`).
-          ⚠️ Va DENTRO del desplegable a propósito: el enlace que trae es una credencial portadora, y
-          pedirlo al abrir el pedido es la «acción explícita» que §4.10 exige — nunca se siembra en el
-          contexto de cuenta que viaja en el HTML de cada página con sesión.
+          ⚠️⚠️ **Ya NO va dentro del desplegable** (`#343`): estaba tras «Ver el desglose» y el owner
+          no lo encontró —*«no me sale nada del enlace»*—. La «acción explícita» que §4.10 exige la
+          sigue cumpliendo la PETICIÓN, que se hace al montar esta tarjeta y no se siembra en el
+          contexto de cuenta; esconderlo además tras un clic no protegía nada, solo lo ocultaba.
           ⚠️ El componente se pinta solo si ese pedido TIENE justificantes o enlace: en un pedido
           normal no aparece nada.
         -->
-        <GuestMinorsPanel v-if="open && row.code" :code="row.code" :account="account" />
+        <GuestMinorsPanel v-if="row.code" :code="row.code" :account="account" />
 
         <!--
           ⚠️ El reintento va FUERA del desplegable, igual que en la tarjeta de la reserva: un pedido a

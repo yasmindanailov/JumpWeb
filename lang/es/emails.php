@@ -208,9 +208,9 @@ return [
      * privado— y la feature se queda parada en su bandeja.
      */
     'guardian_request' => [
-        'subject' => 'Autorización para los menores invitados de tu reserva · :code',
+        'subject' => 'Autorización para los menores invitados de «:product» · :code',
         'greeting' => '¡Hola!',
-        'intro' => 'En tu reserva :code viene algún menor que no está a tu cargo. Para que pueda entrar, su padre, madre o tutor tiene que firmar una autorización.',
+        'intro' => 'En tu reserva «:product» (nº :code) viene algún menor que no está a tu cargo. Para que pueda entrar, su padre, madre o tutor tiene que firmar una autorización.',
         'body' => 'Es un momento: rellena sus datos, los del menor, acepta el descargo de responsabilidad y listo. No hace falta tener cuenta.',
         'action' => 'Abrir la autorización',
         'share' => 'Pásales este enlace a los padres o tutores. Vale para todos: cada uno rellena SUS datos y no ve los de los demás.',

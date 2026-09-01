@@ -420,6 +420,10 @@ return [
             'waiver_outdated' => 'versión anterior',
             'waiver_missing' => 'falta la firma',
             'hint' => 'Comparte este enlace con los padres o tutores. Cada uno rellena SUS datos y no ve los de los demás.',
+            // ⚠️ Plazas LIBRES de la reserva, no su cantidad: descuenta los menores a tu cargo que ya
+            // tienen entrada y los justificantes ya firmados (`#343`). Es un HECHO, no el
+            // denominador inventado que §4.10 prohíbe.
+            'places' => 'plazas libres: :count',
         ],
         'title' => 'Mis pedidos',
         'empty' => 'Todavía no tienes ningún pedido.',

@@ -1148,3 +1148,122 @@ captura ahora forzando la familia de respaldo.
   puerta lo pide.
 - **Tocar el TOPE.** §12.6 lo deja intacto a propósito: es una puerta de `SEC-04` con su razonamiento
   medido en §4.7·3, y cambiarla metería esta tanda en el `CRITICAL_RE`.
+
+---
+
+## 13. EL JUSTIFICANTE CUELGA DE LA RESERVA, NO DEL PEDIDO (2026-09-02, `DECISIONES #343`)
+
+> **Lo encontró el owner probando `#342` con un pedido real** (`R-LUKFD2`). Su frase: *«y 1
+> justificante es por reserva no por pedido, creo que ahí tenemos el fallo»*. Tenía razón, y esa sola
+> raíz explicaba cuatro síntomas que parecían independientes.
+
+### 13.1 Lo medido, con el pedido delante
+
+```
+PEDIDO R-LUKFD2  paid  user=admin@jumpweb.test
+  item 450  Excursión 2 h (pack)   qty=80  slot=2026-09-07 09:00  justif=no
+  item 451  Jump · 1 hora (entry)  qty=1   slot=2026-09-03 12:00  justif=SÍ
+  capacidad=81   fechas=2026-09-03, 2026-09-07
+```
+
+| Síntoma que vio el owner | De dónde salía |
+|---|---|
+| *«pone Días de la visita 03/09 · 07/09, ¿por qué dos fechas?»* | El enlace era del PEDIDO y el pedido tiene **dos visitas**. |
+| *«solo 1 justificante y yo puse dos productos»* | El correo era **uno por pedido**, no uno por reserva. |
+| *«falta explicar el tipo de reserva»* | La hoja no podía decirlo: con dos líneas, **no había UN producto que nombrar**. |
+| *«0 justificantes · 3 plazas cuando 1 entrada ya está asignada a un menor»* | La capacidad sumaba las líneas **y no descontaba** los menores a cargo ya asignados. |
+
+⚠️ **Y una premisa suya NO se cumplía, medida antes de tocar nada**: *«aparte de la excursión que es
+obligatorio»* — `Excursión 2 h` (id 163) tenía `guardian_authorization = none`. El único producto
+configurado era `Jump · 1 hora` (`optional`). Por eso solo se marcó esa línea. *Antes de arreglar un
+síntoma, comprobar que la configuración que se le supone existe de verdad.*
+
+### 13.2 El cambio: el sujeto es la VISITA
+
+**`guardian_authorizations.order_id` → `order_item_id`** (migración
+`2026_09_02_120000`, con relleno a la primera línea principal viva; medido: 3 filas en local, 0 en
+producción, todas de pedidos de una sola línea, así que el relleno es exacto).
+
+Y con él, en cadena:
+
+| Pieza | Antes | Ahora |
+|---|---|---|
+| Contrato | `AuthorizableOrder(s)` | **`AuthorizableReservation(s)`** — con `productName`, `date`, `startTime`/`endTime` |
+| Ruta | `/autorizacion/{order}` | **`/autorizacion/{reservation}`**, gemela de `/reserva/{reservation}/datos-invitados` |
+| Enlace | `Order::guardianAuthorizationSignedUrl()` | **`OrderItem::…`**, gemela exacta de `guestFormSignedUrl()` |
+| Correo | uno por pedido | **uno por reserva marcada**, con su tarjeta de producto |
+| «Un niño, un papel» | `unique(order_id, minor_key)` | **`unique(order_item_id, minor_key)`** |
+| Puerta | filtraba por pedido del día | filtra por **reserva** del día |
+| Hoja de sala | los del pedido | **los de ESA reserva** |
+| Cuenta del cliente | «Mis pedidos», dentro del desglose | **«Mis reservas»**, en la tarjeta de cada reserva |
+
+▶ **«Un niño, un papel» GANA con el cambio**: el mismo menor que va a dos visitas del mismo pedido
+necesita **dos** autorizaciones, y con la clave por pedido la segunda se rechazaba diciendo que ya
+estaba firmada.
+
+### 13.3 Las plazas LIBRES — y por qué esto no contradice a §4.10
+
+`Identity\Services\GuardianPlaces`:
+
+```
+libres = cantidad de la línea − menores a cargo YA asignados − justificantes YA firmados
+```
+
+⚠️⚠️ **Vive en Identity y no en el contrato de Booking**: la cantidad la sabe Booking y los menores a
+cargo los sabe Identity, y **Booking no puede mirar a Identity**. El único sitio donde las dos cifras
+coexisten es ahí.
+
+⚠️ **§4.10 prohíbe el denominador inventado y esto no lo es.** Aquélla dice que no se puede saber
+cuántos de los comprados son menores —cierto, y por eso no se dice «3 de 100»—. Pero **una plaza
+asignada a un menor a cargo ya tiene dueño**, y eso es un HECHO. El owner lo vio antes que nadie:
+compró una entrada, se la asignó a su hija, y la pantalla seguía ofreciendo firmar.
+
+⚠️ **Los adultos NO se restan**: una entrada sin asignar puede ser un adulto o un menor invitado, y
+suponer lo primero cerraría la puerta a quien tiene derecho a firmar. **La cota es superior a
+propósito**: el tope existe para que nadie autorice a más gente de la que se compró, no para adivinar
+la composición del grupo.
+
+### 13.4 Lo que el cambio se lleva por delante, dicho
+
+**Una reserva CANCELADA sale de la ficha del pedido y de la cuenta del cliente**, aunque tenga
+justificantes firmados: deja de ser una visita, y `AuthorizableReservations::find()` filtra las
+canceladas porque para AUTORIZAR es lo correcto. Las firmas siguen en la base de datos y en el
+registro probatorio —no se pierde ninguna prueba—, pero el operador deja de verlas ahí. Queda escrito
+para que nadie lo descubra como un hallazgo.
+
+### 13.5 El embudo: más sutil, y la casilla que ya no miente
+
+`[DECIDIDO owner, 2026-09-02]`: *«quiero esa parte de menores a cargo y justificantes de manera más
+sutil, es demasiado centrada en el proceso, hazla tal vez con un desplegable»*.
+
+- El bloque **«¿Quiénes vienen?»** es un `<details>` **nativo** —cero JavaScript, así que no puede
+  quedarse roto si el motor falla, que es lo que la T2 pagó con el anti-bot— y **nace cerrado**. El
+  rótulo dice lo que hay dentro y cuántos van marcados, para que quien SÍ tenga que entrar no tenga
+  que abrirlo para descubrirlo.
+- **La casilla no se puede marcar sin plazas libres**, y se dice POR QUÉ: apagarla en silencio dejaría
+  al cliente sin poder atar «he asignado todas mis entradas» con «ya no puedo marcar esto».
+  ⚠️ **Ya marcada SÍ se puede desmarcar** aunque no queden plazas: si no, quien se equivoca queda
+  atrapado con una casilla que no puede apagar.
+- Las dos reglas viven en `assignment.js` con sus casos de `node --test`, no en el componente: lo
+  pidió `SidebarComponentBudgetTest` y tiene razón — *un árbol dice qué se pintó, no qué rama se
+  eligió*.
+
+### 13.6 Lo que enseñó la ejecución
+
+1. ⚠️⚠️ **El orden de los `ALTER` lo impone MySQL y solo se ve al pisarlo**: con el `UNIQUE` ya
+   retirado, el índice simple es el único que respalda la FK y **no se puede soltar antes que ella**
+   (*«Cannot drop index …: needed in a foreign key constraint»*). La FK primero.
+2. ⚠️ **La migración quedó a medias en la primera pasada** —columna añadida y rellenada, `UNIQUE`
+   fuera, el resto no— y como no llegó a registrarse, el reintento se estrelló con *«Duplicate column
+   name»*. **Una migración de varios `ALTER` tiene que ser idempotente**: el estado intermedio existe.
+3. ⚠️ **`SHOW INDEX` es de MySQL y la suite corre en SQLite**: una migración que solo sabe hablar con
+   un motor rompe los 3.900 casos en el primer `RefreshDatabase`. Es `Schema::getIndexes()`.
+4. ⚠️⚠️ **Un `str_replace` que no casa NO FALLA**: uno de los reemplazos de la plantilla buscaba
+   `guardianRequired` cuando el fichero ya decía `guardianMode === 'required'`, y el resultado fue un
+   `<details>` sin cerrar que solo cazó el compilador de Vue. *Un guion de edición sin `assert` es un
+   guion que puede no hacer nada y decir que sí.*
+5. ⚠️ **El cajón solo resuelve `singular|plural` y ni siquiera eso sin `tc()`**: el rótulo del
+   desplegable pasó a no llevar plural (`Menores a tu cargo: 2`), que es lo que `SidebarTextParityTest`
+   admite sin arrastrar el locale hasta el paso 3.
+6. ⚠️ El manifiesto congelado del árbol del cajón **se regenera a propósito** (`MANIFEST_REFRESH=1`) y
+   se dice en el commit: el `<details>` es un cambio deliberado del contrato visual.

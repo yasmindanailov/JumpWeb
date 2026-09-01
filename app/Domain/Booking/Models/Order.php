@@ -183,29 +183,6 @@ class Order extends Model
     }
 
     /**
-     * Enlace FIRMADO (temporal) al JUSTIFICANTE de un menor invitado de ESTE pedido
-     * (`docs/specs/waiver-por-reserva.md` §4.6). **Fuente ÚNICA del enlace**, como
-     * {@see OrderItem::guestFormSignedUrl()} lo es del post-form.
-     *
-     * ⚠️ Va por PEDIDO y no por reserva (`[DECIDIDO owner]`): es «el papelito de la excursión», uno
-     * solo, que el responsable reparte. La firma HMAC es lo que autoriza —quien lo abre **no tiene
-     * cuenta**— y caduca con {@see guestFormLinkExpiresAt}, la misma regla que `RGPD-03` fija para el
-     * enlace del post-form: no se inventa un plazo nuevo.
-     *
-     * ⚠️⚠️ **Es una credencial portadora y NO puede publicarse en el contexto de cuenta**, que se
-     * siembra en el HTML de cada página con sesión (la prohibición que `AccountContextResource`
-     * documenta). Se sirve bajo demanda, por una acción explícita.
-     */
-    public function guardianAuthorizationSignedUrl(): string
-    {
-        return URL::temporarySignedRoute(
-            'reservation.authorization',
-            $this->guestFormLinkExpiresAt(),
-            ['order' => $this],
-        );
-    }
-
-    /**
      * ¿A este pedido se le OFRECE el justificante? (`specs/waiver-por-reserva.md` §12.2, T5).
      *
      * Es la suma de lo que sus líneas guardaron al nacer: alguna principal viva con la marca puesta,
@@ -217,16 +194,31 @@ class Order extends Model
      * entonces el operador se lo manda—. Lo que esta bandera gobierna es a quién se lo enseñamos por
      * nuestra cuenta: el correo al pagar, la nota en su cuenta y el relieve en la ficha del panel.
      *
-     * ⚠️ **Solo líneas PRINCIPALES VIVAS**, la misma cuenta que `AuthorizableOrdersReader::capacity`:
-     * un complemento no trae menores, y una línea cancelada ya no trae a nadie.
+     * ⚠️ **Solo líneas PRINCIPALES VIVAS**: un complemento no trae menores, y una línea cancelada ya
+     * no trae a nadie.
      */
     public function needsGuardianAuthorization(): bool
+    {
+        return $this->guardianReservations()->isNotEmpty();
+    }
+
+    /**
+     * Las RESERVAS de este pedido que nacieron marcadas (`specs/waiver-por-reserva.md` §13).
+     *
+     * ❗ **Es lo que sustituye a «el pedido necesita justificante»**: cada una tiene su propio enlace,
+     * su propia fecha y su propio cupo, porque cada una es una VISITA. Un pedido con una excursión el
+     * lunes y una entrada el miércoles reparte **dos** enlaces, no uno que diga las dos fechas.
+     *
+     * @return Collection<int, OrderItem>
+     */
+    public function guardianReservations(): Collection
     {
         return $this->items()
             ->whereNull('parent_item_id')
             ->whereNull('cancelled_at')
             ->where('guardian_authorization', true)
-            ->exists();
+            ->orderBy('id')
+            ->get();
     }
 
     /**

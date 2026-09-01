@@ -219,8 +219,11 @@ class OrderInfolist
             // ⚠️ Que el operador pueda copiar el enlace de un pedido SIN marcar es el caso 2 del
             // propio owner —«un cliente que no sabía que se necesita justificante»— y se resuelve en
             // la lista de líneas, no aquí: allí el icono aparece en toda reserva de un pedido pagado.
-            ->visible(fn (Order $record): bool => app(GuardianRoster::class)->countFor((int) $record->getKey()) > 0
-                || $record->needsGuardianAuthorization())
+            // ⚠️ La cuenta va por LÍNEAS desde `#343`: el justificante cuelga de la reserva, así que
+            // «cuántos tiene este pedido» es la suma de las suyas. Agrupar es de quien pinta.
+            ->visible(fn (Order $record): bool => app(GuardianRoster::class)->countFor(
+                $record->items()->whereNull('parent_item_id')->pluck('id')->all(),
+            ) > 0 || $record->needsGuardianAuthorization())
             ->schema([
                 View::make('filament.orders.partials.guest-minors'),
             ]);

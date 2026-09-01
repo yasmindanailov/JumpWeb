@@ -164,11 +164,11 @@ final class GateProfile
     }
 
     /**
-     * Los menores INVITADOS autorizados en los PEDIDOS de las reservas de HOY, con su edad EN LA
+     * Los menores INVITADOS autorizados en las RESERVAS de HOY, con su edad EN LA
      * FECHA DE LA VISITA (la misma regla D13 que los menores a cargo) y el estado de su
      * justificante.
      *
-     * ⚠️ **Presupuesto**: DOS consultas como mucho —las autorizaciones de los pedidos del día y sus
+     * ⚠️ **Presupuesto**: DOS consultas como mucho —las autorizaciones de las reservas del día y sus
      * firmas por lotes—, sean uno o veinte menores. `GateProfileTest` fija el techo en 28 y ya cazó
      * un N+1 en `#294`; si esto creciera por fila, lo cazaría otra vez.
      *
@@ -185,13 +185,17 @@ final class GateProfile
             return [];
         }
 
-        $codeByOrder = [];
+        // ⚠️ **Por LÍNEA desde `#343`, no por pedido.** El justificante cuelga de la visita, así que
+        // un pedido con una excursión hoy y una entrada el jueves ya no arrastra a la puerta los
+        // menores de la otra fecha. La clave sigue siendo el CÓDIGO del pedido porque es lo que el
+        // operador reconoce en pantalla, pero el filtro es la reserva.
+        $codeByItem = [];
         foreach ($today as $r) {
-            $codeByOrder[$r->orderId] = $r->orderCode;
+            $codeByItem[$r->orderItemId] = $r->orderCode;
         }
 
         $authorizations = GuardianAuthorization::query()
-            ->whereIn('order_id', array_keys($codeByOrder))
+            ->whereIn('order_item_id', array_keys($codeByItem))
             ->orderBy('id')
             ->get();
         if ($authorizations->isEmpty()) {
@@ -202,7 +206,7 @@ final class GateProfile
 
         return $authorizations
             ->map(fn (GuardianAuthorization $a): array => [
-                'order_code' => $codeByOrder[(int) $a->order_id] ?? '',
+                'order_code' => $codeByItem[(int) $a->order_item_id] ?? '',
                 // NOMBRE de pila y edad, como los menores a cargo. ⚠️ Los APELLIDOS no llegan aquí y
                 // es estructural (`#236`): distinguir a un niño de otro en un mostrador no los
                 // necesita, y esta plantilla no puede ser la puerta por la que entren.

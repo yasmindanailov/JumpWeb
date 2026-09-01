@@ -20938,3 +20938,91 @@ errores de JS y cero desbordes. BD de desarrollo devuelta a su estado exacto.
 
 **Queda**: el OJO del owner y la casilla en el paso de CESTA (hoy se marca al elegir la hora; cambiar
 de idea obliga a rehacer la línea). Spec: `docs/specs/waiver-por-reserva.md` §12.
+
+---
+
+## #343 · 2026-09-02 · Un padre no autoriza un PEDIDO: autoriza que su hijo entre a una visita
+
+**Encontrado por el owner probando `#342`** con un pedido real (`R-LUKFD2`), y dicho por él en una
+frase: *«y 1 justificante es por reserva no por pedido, creo que ahí tenemos el fallo»*.
+
+### Lo medido, con el pedido delante
+
+```
+R-LUKFD2  paid
+  item 450  Excursión 2 h (pack)   qty=80  slot=2026-09-07  justif=no
+  item 451  Jump · 1 hora (entry)  qty=1   slot=2026-09-03  justif=SÍ
+  capacidad=81   fechas=2026-09-03, 2026-09-07
+```
+
+**Cuatro síntomas que parecían independientes salían de UNA raíz**: el justificante colgaba del
+PEDIDO y un pedido puede tener dos visitas.
+
+- *«pone Días de la visita 03/09 · 07/09, ¿por qué dos fechas?»* → el enlace era del pedido.
+- *«solo 1 justificante y puse dos productos»* → el correo era uno por pedido.
+- *«falta explicar el tipo de reserva»* → con dos líneas **no había UN producto que nombrar**.
+- *«0 justificantes · 3 plazas cuando 1 entrada ya está asignada a un menor»* → la capacidad sumaba
+  las líneas y no descontaba los menores a cargo ya asignados.
+
+⚠️ **Y una premisa suya NO se cumplía**: *«aparte de la excursión que es obligatorio»* — medido,
+`Excursión 2 h` tenía `guardian_authorization = none`; el único producto configurado era la entrada.
+*Antes de arreglar un síntoma, comprobar que la configuración que se le supone existe de verdad.*
+
+### La decisión: el sujeto es la RESERVA
+
+`guardian_authorizations.order_id` → **`order_item_id`**, y con él la ruta
+(`/autorizacion/{reservation}`, gemela del post-form), el contrato (`AuthorizableReservation(s)`, con
+producto, día y hora), el enlace (`OrderItem::guardianAuthorizationSignedUrl()`), **un correo por
+reserva marcada**, la puerta, la hoja de sala y la ficha del panel.
+
+▶ **«Un niño, un papel» GANA con el cambio**: el mismo menor que va a dos visitas del mismo pedido
+necesita **dos** autorizaciones, y con la clave por pedido la segunda se rechazaba diciendo que ya
+estaba firmada.
+
+▶ **El enlace se muda a «Mis RESERVAS»**, que es donde el owner lo buscó —*«sigo sin ver el enlace
+para copiar en mis reservas, ni en ningún lado»*—: estaba en «Mis pedidos» y **dentro del
+desplegable del desglose**.
+
+### Las plazas LIBRES, y por qué no contradicen a §4.10
+
+`libres = cantidad de la línea − menores a cargo asignados − justificantes firmados`
+(`Identity\Services\GuardianPlaces`; vive en Identity porque **Booking no puede mirar a Identity** y
+es el único sitio donde las dos cifras coexisten).
+
+⚠️ §4.10 prohíbe el denominador inventado —no se sabe cuántos de los comprados son menores— y esto
+**no lo es**: una plaza asignada a un menor a cargo **ya tiene dueño**. ⚠️ Los adultos **no** se
+restan: una entrada sin asignar puede ser un adulto o un invitado, y suponer lo primero cerraría la
+puerta a quien tiene derecho a firmar.
+
+### El embudo, más sutil
+
+`[DECIDIDO owner]`: *«esa parte de menores a cargo y justificantes de manera más sutil, es demasiado
+centrada en el proceso, hazla tal vez con un desplegable»*. Es un `<details>` **nativo** —cero JS, no
+puede quedarse roto si el motor falla— que nace cerrado y cuyo rótulo dice lo que hay dentro. Y **la
+casilla ya no se puede marcar sin plazas libres**, diciendo por qué; ya marcada sí se desmarca, o
+quien se equivoca queda atrapado.
+
+### Lo que la ejecución enseñó
+
+1. ⚠️⚠️ **El orden de los `ALTER` lo impone MySQL**: con el `UNIQUE` retirado, el índice simple es el
+   único que respalda la FK y **no se puede soltar antes que ella**. La FK primero.
+2. ⚠️ **La migración quedó a medias y el reintento se estrelló**: una migración de varios `ALTER`
+   tiene que ser **idempotente** — el estado intermedio existe.
+3. ⚠️ **`SHOW INDEX` es de MySQL y la suite corre en SQLite**: es `Schema::getIndexes()`.
+4. ⚠️⚠️ **Un `str_replace` que no casa NO FALLA**: un reemplazo buscaba `guardianRequired` cuando el
+   fichero ya decía `guardianMode === 'required'`, y dejó un `<details>` sin cerrar que solo cazó el
+   compilador de Vue. *Un guion de edición sin `assert` puede no hacer nada y decir que sí.*
+5. ⚠️ **El cajón no resuelve plurales sin `tc()`**, que necesita el locale: el rótulo del desplegable
+   pasó a no llevar plural (`Menores a tu cargo: 2`).
+6. ⚠️ **Los tres presupuestos del cajón, con la poda ANTES del techo**: chunk 264,40 → 265,87 KiB
+   (techo 265 → 267), `TimeStep.vue` 46 → **49** tras sacar sus dos REGLAS a `assignment.js` con
+   `node --test` (subió a 57 y se bajó), y el payload del montaje se podó para no subir su techo.
+7. El manifiesto congelado del árbol se regenera a propósito: el `<details>` es un cambio deliberado
+   del contrato visual.
+
+### Verificación
+
+Suite completa verde. Escenarios sembrados en la cuenta del owner (`PRUEBA-J1`…`J5`), uno por caso:
+excursión obligatoria sin firmas · plazas libres con menor a cargo y firma · **la entrada única ya
+asignada** · **dos reservas en días distintos** · **más justificantes que plazas**. Guion en
+`VERIFICACION-E2E-CAJON.md` §5.septies. Spec: `docs/specs/waiver-por-reserva.md` §13.

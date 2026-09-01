@@ -148,7 +148,16 @@ class SidebarComponentBudgetTest extends TestCase
         // (dos booleanos resueltos + el marcado) y pasó a recibir el modo. Elegir cuál de tres
         // pantallas se pinta leyendo un enum que el servidor ya sanea no es decidir una regla — es lo
         // mismo que hace `v-if="isPack"` en este fichero desde el primer día.
-        'sidebar/steps/TimeStep.vue' => ['code' => 46, 'api' => 0],
+        // ⚠️ **46 → 49 el 2026-09-02 (`#343`): SUBE TRES**, y son el `import`, la prop del modo y la
+        // del marcado más los dos computados que TRADUCEN. Con ellas el paso 3 pinta el bloque
+        // plegado «¿quiénes vienen?» y la casilla que **no se puede marcar sin plazas libres** — el
+        // caso que el owner encontró comprando una entrada, asignándosela a su hija y pudiendo pedir
+        // además un justificante que la puerta iba a rechazar.
+        // ▶ **Subió a 57 y se bajó a 49 antes de commitear**, y la mitad de esa bajada es lo que esta
+        // regla existe para provocar: **las dos REGLAS se fueron a `assignment.js`** —cuál de los
+        // cuatro rótulos toca y si la casilla se puede marcar— con sus casos de `node --test`. Aquí
+        // queda el cableado, que es lo que un componente sí hace.
+        'sidebar/steps/TimeStep.vue' => ['code' => 49, 'api' => 0],
     ];
 
     /**

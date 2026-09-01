@@ -22,6 +22,8 @@
  * ámbitos, que vive en SQL. El distintivo «cancelada»/«disfrutada» sí es de la reserva y viene ya
  * compuesto en `row.badge`.
  */
+import GuestMinorsPanel from './GuestMinorsPanel.vue';
+
 defineProps({
     /** La fila ya compuesta por `cardRow()`. */
     row: { type: Object, required: true },
@@ -126,6 +128,15 @@ defineEmits(['open-order', 'toggle-event', 'toggle-dependents', 'retry']);
         <button type="button" class="orders__gate-toggle" @click="$emit('open-order')">
             {{ account?.orders?.order_show }}
         </button>
+
+        <!--
+          Los JUSTIFICANTES de menores invitados de ESTA reserva (`specs/waiver-por-reserva.md` §13).
+          ❗ **Aquí es donde el owner lo buscó** —*«sigo sin ver el enlace para copiar en mis reservas»*—
+          y donde tiene sentido desde que el justificante cuelga de la VISITA y no del pedido.
+          ⚠️ El componente se pinta solo si esta reserva TIENE justificantes o enlace: en una reserva
+          normal no aparece nada.
+        -->
+        <GuestMinorsPanel v-if="row.orderCode" :code="row.orderCode" :reservation-id="row.id" :account="account" />
 
         <!--
           ⚠️ El reintento va FUERA del desplegable: un pedido a medio pagar es lo más urgente de la

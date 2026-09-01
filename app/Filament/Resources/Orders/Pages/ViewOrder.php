@@ -532,9 +532,14 @@ class ViewOrder extends ViewRecord
             // post-form (relleno o no — el operador puede reenviarlo si el cliente perdió el email).
             Order::RESEND_TYPE_GUEST_FORM => $record->guestFormItems()
                 ->each(fn (OrderItem $reservation) => $user->notify(new GuestFormRequest($reservation))),
-            // El enlace del JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.3).
-            // UNO por pedido —es «el papelito de la excursión»— y al titular, que es quien lo reparte.
-            Order::RESEND_TYPE_GUARDIAN => $user->notify(new GuardianAuthorizationRequest($record)),
+            // El enlace del JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §13).
+            // **UNO POR RESERVA marcada**, como el post-form: cada visita tiene su enlace.
+            // ⚠️ Si NINGUNA nació marcada, se manda el de la primera línea viva — es el caso «el
+            // cliente no sabía que hacía falta», y ahí el operador está eligiendo mandarlo.
+            Order::RESEND_TYPE_GUARDIAN => ($record->guardianReservations()->isNotEmpty()
+                ? $record->guardianReservations()
+                : $record->items()->whereNull('parent_item_id')->whereNull('cancelled_at')->orderBy('id')->limit(1)->get())
+                ->each(fn (OrderItem $reservation) => $user->notify(new GuardianAuthorizationRequest($reservation))),
         };
     }
 
@@ -1065,26 +1070,31 @@ class ViewOrder extends ViewRecord
             ->modalDescription(fn (): string => __('admin.orders.guest_minors.send_description', [
                 'email' => (string) ($this->record->user?->email ?? ''),
             ]))
-            ->action(function (): void {
+            ->action(function (array $arguments): void {
                 $record = $this->record->fresh();
+                $item = $this->resolveItem($arguments);
 
                 // La MISMA puerta que el reenvío genérico (defensa en profundidad, patrón `#128`):
                 // entre pintar el botón y pulsarlo, el pedido puede haberse cancelado.
-                if (! $record->canResend(Order::RESEND_TYPE_GUARDIAN)) {
+                if ($item === null || ! $record->canResend(Order::RESEND_TYPE_GUARDIAN)) {
                     $this->logBlocked('orders.email_resent_blocked', $record, 'event_did_not_happen');
                     Notification::make()->danger()->title(__('admin.orders.actions.resend.blocked'))->send();
 
                     return;
                 }
 
-                $this->dispatchResend($record, Order::RESEND_TYPE_GUARDIAN);
+                $record->user?->notify(new GuardianAuthorizationRequest($item));
 
                 // Sin el correo del cliente en el payload (minimización RGPD): el `target` ya traza al
                 // destinatario mientras la cuenta exista, y deja de hacerlo al anonimizarla.
                 AuditLogger::log(
                     action: 'orders.email_resent',
                     target: $record,
-                    payload: ['order_code' => $record->code, 'type' => Order::RESEND_TYPE_GUARDIAN],
+                    payload: [
+                        'order_code' => $record->code,
+                        'type' => Order::RESEND_TYPE_GUARDIAN,
+                        'order_item_id' => (int) $item->getKey(),
+                    ],
                 );
 
                 Notification::make()
@@ -1105,9 +1115,16 @@ class ViewOrder extends ViewRecord
             ->modalIcon(Heroicon::OutlinedLink)
             ->modalSubmitAction(false)
             ->modalCancelActionLabel(__('admin.orders.copy_guest_form.close'))
-            ->modalContent(fn (): View => view('filament.orders.partials.guest-form-link', [
-                'url' => $this->record->guardianAuthorizationSignedUrl(),
-            ]));
+            ->modalContent(function (array $arguments): ?View {
+                // ⚠️ **Por LÍNEA desde `#343`**: el enlace es de la VISITA. Con `resolveItem()` va
+                // además la defensa IDOR que ya usa su gemelo del post-form — el ítem tiene que ser
+                // de ESTE pedido aunque se fuerce el id por `mountAction`.
+                $item = $this->resolveItem($arguments);
+
+                return $item === null ? null : view('filament.orders.partials.guest-form-link', [
+                    'url' => $item->guardianAuthorizationSignedUrl(),
+                ]);
+            });
     }
 
     public function copyGuestFormLinkAction(): Action

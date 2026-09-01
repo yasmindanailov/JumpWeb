@@ -36,7 +36,7 @@ use Illuminate\Support\Str;
  *  - **`guest`**: N envíos del MISMO justificante de menor invitado
  *    (`specs/waiver-por-reserva.md` §6·5) — mismo pedido, mismo menor, por
  *    `GuardianAuthorizationSigner`. Fuerza DOS cosas a la vez: la idempotencia de la firma **y** la
- *    carrera contra el `UNIQUE (order_id, minor_key)` de la autorización, que sin el lock daría un
+ *    carrera contra el `UNIQUE (order_item_id, minor_key)` de la autorización, que sin el lock daría un
  *    error de clave duplicada en vez de encontrar la fila.
  *
  * ⚠️⚠️ **El escenario obvio para el sujeto nuevo NO MUERDE, y es la trampa que este fichero ya
@@ -89,7 +89,7 @@ class VerifyWaiverChainConcurrency extends Command
 
         $seed = $this->seed($scenario, $workers);
         $this->line("Escenario <fg=yellow>{$scenario}</> · titular #{$seed['user']->getKey()} · menor a cargo #{$seed['dependent']->getKey()}"
-            .($seed['order_id'] !== null ? " · pedido #{$seed['order_id']}" : '')
+            .($seed['order_item_id'] !== null ? " · reserva #{$seed['order_item_id']}" : '')
             ." · versión firmable v{$seed['version']->version}·{$seed['version']->locale} (#{$seed['version']->getKey()}).");
 
         // La guarda del instrumento: una firma EN SERIE tiene que funcionar. Si no, lo que fallara
@@ -137,7 +137,7 @@ class VerifyWaiverChainConcurrency extends Command
      * FK RESTRICT de `guardian_authorizations`, y construir un pedido de verdad metería aquí aforo,
      * catálogo y dinero, que no es lo que este instrumento mide.
      *
-     * @return array{user:User, dependent:Dependent, version:LegalDocumentVersion, created_version:bool, order_id:?int}
+     * @return array{user:User, dependent:Dependent, version:LegalDocumentVersion, created_version:bool, order_item_id:?int}
      */
     private function seed(string $scenario, int $workers): array
     {
@@ -158,12 +158,13 @@ class VerifyWaiverChainConcurrency extends Command
                 'born_on' => now()->subYears(9)->toDateString(),
             ]);
 
-            $orderId = null;
+            $reservationId = null;
             if ($scenario === 'guest') {
-                // ⚠️ El pedido tiene que ser LEGAL para el subsistema, no solo existir: `paid` y con
-                // una línea principal viva, porque el tope sale de ahí (`AuthorizableOrdersReader`).
-                // Un pedido vacío tendría capacidad 0 y este verificador mediría el rechazo del cupo
-                // en vez de la carrera — verde por el motivo equivocado.
+                // ⚠️ La RESERVA tiene que ser LEGAL para el subsistema, no solo existir: su pedido
+                // `paid` y ella principal y viva, porque el tope sale de ahí
+                // (`AuthorizableReservationsReader`). Una línea de cantidad 0 daría cero plazas y este
+                // verificador mediría el rechazo del cupo en vez de la carrera — verde por el motivo
+                // equivocado.
                 $ticketTypeId = DB::table('ticket_types')->where('is_active', true)->value('id');
                 if ($ticketTypeId === null) {
                     throw new \RuntimeException('No hay ningún producto activo en el catálogo: el escenario `guest` no puede montar un pedido legal.');
@@ -179,7 +180,7 @@ class VerifyWaiverChainConcurrency extends Command
                 ]);
                 // Sin franja: `visitFinished` es `false` cuando NINGUNA línea tiene fecha, así que la
                 // ventana está abierta y la carrera se mide sin depender del calendario.
-                DB::table('order_items')->insert([
+                $reservationId = (int) DB::table('order_items')->insertGetId([
                     'order_id' => $orderId,
                     'ticket_type_id' => $ticketTypeId,
                     'quantity' => max(2, $workers),
@@ -202,12 +203,12 @@ class VerifyWaiverChainConcurrency extends Command
                 $created = true;
             }
 
-            return ['user' => $user, 'dependent' => $dependent, 'version' => $version, 'created_version' => $created, 'order_id' => $orderId];
+            return ['user' => $user, 'dependent' => $dependent, 'version' => $version, 'created_version' => $created, 'order_item_id' => $reservationId];
         });
     }
 
     /**
-     * @param  array{user:User, version:LegalDocumentVersion, order_id:?int}  $seed
+     * @param  array{user:User, version:LegalDocumentVersion, order_item_id:?int}  $seed
      */
     private function forkWorkers(array $seed, string $scenario, int $workers, float $startAt, string $resultsDir): void
     {
@@ -239,7 +240,7 @@ class VerifyWaiverChainConcurrency extends Command
                         // estrellan contra el UNIQUE y otros bifurcan la cadena.
                         $result = app(GuardianAuthorizationSigner::class)->sign(
                             $holder,
-                            (int) $seed['order_id'],
+                            (int) $seed['order_item_id'],
                             $version,
                             [
                                 'minor_name' => 'Ana',
@@ -274,7 +275,7 @@ class VerifyWaiverChainConcurrency extends Command
     }
 
     /**
-     * @param  array{user:User, dependent:Dependent, version:LegalDocumentVersion, order_id:?int}  $seed
+     * @param  array{user:User, dependent:Dependent, version:LegalDocumentVersion, order_item_id:?int}  $seed
      */
     private function evaluate(array $seed, string $scenario, int $workers, string $resultsDir): bool
     {
@@ -301,7 +302,7 @@ class VerifyWaiverChainConcurrency extends Command
         // escenario nuevo mediría otra cosa sin que nadie lo notara.
         $expectedChains = 2;
         $authorizations = $scenario === 'guest'
-            ? GuardianAuthorization::query()->where('order_id', $seed['order_id'])->count()
+            ? GuardianAuthorization::query()->where('order_item_id', $seed['order_item_id'])->count()
             : null;
 
         $this->newLine();
@@ -343,16 +344,21 @@ class VerifyWaiverChainConcurrency extends Command
      *
      * ⚠️ El orden lo mandan las FK RESTRICT: firmas → autorizaciones → pedido → menor → titular.
      *
-     * @param  array{user:User, dependent:Dependent, version:LegalDocumentVersion, created_version:bool, order_id:?int}  $seed
+     * @param  array{user:User, dependent:Dependent, version:LegalDocumentVersion, created_version:bool, order_item_id:?int}  $seed
      */
     private function cleanup(array $seed, string $resultsDir): void
     {
         $userId = $seed['user']->getKey();
         DB::table('waiver_signatures')->where('user_id', $userId)->delete();
-        if ($seed['order_id'] !== null) {
-            DB::table('guardian_authorizations')->where('order_id', $seed['order_id'])->delete();
+        if ($seed['order_item_id'] !== null) {
+            DB::table('guardian_authorizations')->where('order_item_id', $seed['order_item_id'])->delete();
+            // ⚠️ El PEDIDO se resuelve desde la línea: el `seed` guarda la reserva desde `#343`, y
+            // borrar `orders.id = <id de línea>` habría borrado el pedido EQUIVOCADO (o ninguno).
+            $orderId = DB::table('order_items')->where('id', $seed['order_item_id'])->value('order_id');
             // `order_items.order_id` es CASCADE (verificado en `information_schema`): la línea cae sola.
-            DB::table('orders')->where('id', $seed['order_id'])->delete();
+            if ($orderId !== null) {
+                DB::table('orders')->where('id', $orderId)->delete();
+            }
         }
         DB::table('dependents')->where('user_id', $userId)->delete();
         DB::table('consents')->where('user_id', $userId)->delete();

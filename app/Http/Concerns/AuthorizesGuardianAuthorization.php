@@ -2,7 +2,7 @@
 
 namespace App\Http\Concerns;
 
-use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Identity\Services\WaiverSettings;
 use Illuminate\Http\Request;
 
@@ -37,26 +37,27 @@ use Illuminate\Http\Request;
 trait AuthorizesGuardianAuthorization
 {
     /**
-     * @param  Order|null  $order  `null` cuando el identificador no resuelve a ningún pedido; se
-     *                             trata como el peldaño 3 y NO como un 404 temprano, para no
-     *                             responder distinto a un desconocido según exista o no el id.
+     * @param  OrderItem|null  $reservation  `null` cuando el identificador no resuelve a ninguna
+     *                                       reserva; se trata como el peldaño 3 y NO como un 404
+     *                                       temprano, para no responder distinto a un desconocido
+     *                                       según exista o no el id.
      */
-    protected function authorizeGuardianAccess(Request $request, ?Order $order): void
+    protected function authorizeGuardianAccess(Request $request, ?OrderItem $reservation): void
     {
-        abort_unless($request->hasValidSignature() || $this->ownsOrder($request, $order), 403);
+        abort_unless($request->hasValidSignature() || $this->ownsOrder($request, $reservation), 403);
 
-        abort_if($order?->user?->isAnonymized() ?? false, 410);
+        abort_if($reservation?->order?->user?->isAnonymized() ?? false, 410);
 
-        abort_unless($order !== null && WaiverSettings::isInternal(), 404);
+        abort_unless($reservation !== null && WaiverSettings::isInternal(), 404);
     }
 
     /** ¿Quien pregunta es el titular del pedido? (el RESPONSABLE, que también puede abrir el enlace) */
-    protected function ownsOrder(Request $request, ?Order $order): bool
+    protected function ownsOrder(Request $request, ?OrderItem $reservation): bool
     {
         $user = $request->user();
 
         return $user !== null
-            && (int) ($order?->user_id ?? 0) === (int) $user->getAuthIdentifier();
+            && (int) ($reservation?->order?->user_id ?? 0) === (int) $user->getAuthIdentifier();
     }
 
     /**
