@@ -218,6 +218,9 @@ class AppServiceProvider extends ServiceProvider
         $data = [
             'cookieConsent' => CookieConsent::state(request()),
             'navServices' => $this->navServices(),
+            // Las ZONAS del menú (`#341`): mismo criterio que las pestañas de la portada, memoizado
+            // con el resto del payload (1 consulta por petición, no una por subvista).
+            'navZones' => $this->navZones(),
             // Ofertas activas para el widget «caja de regalo» (#270): site-wide, memoizado con el
             // resto del payload (1 query/petición). El widget solo se pinta si hay alguna.
             'offers' => $this->activeOffers(),
@@ -317,6 +320,38 @@ class AppServiceProvider extends ServiceProvider
         // active() ADEMÁS de inNav(): un servicio oculto de /servicios (is_active=false) NO debe
         // salir en el menú (enlazaría a /servicios#slug a una sección que no se pinta = anchor roto).
         return LandingService::active()->inNav()->ordered()->get(['id', 'slug', 'title', 'nav_subtitle']);
+    }
+
+    /**
+     * Las ZONAS que el menú ofrece como destino (`#341`). Data-driven por el MISMO criterio que las
+     * pestañas de la portada —`is_active` + `show_in_landing`, ordenadas—, para que el menú y la
+     * sección no puedan discrepar sobre qué zonas existe.
+     *
+     * ⚠️⚠️ **Antes eran DOS entradas escritas a mano en los `landing.php` de `lang/`** —«Zona Kids» y
+     * «Zona Jump», con sus edades—, o sea el catálogo de un cliente dentro de los ficheros del
+     * PRODUCTO. (Y no, la ruta con comodín no se escribe aquí: la secuencia que forma cerraría este
+     * mismo bloque de comentario y el fichero deja de compilar — pagado al escribirlo.)
+     * Es la misma fuga que `#302` cerró en el JS (`zone: 'jump'`) y `#325` describió como distancia
+     * sana: una instalación con otras zonas veía en su menú las de otro parque. Aquí no se traduce
+     * nada porque el texto lo escribe el panel.
+     *
+     * ⚠️ Se piden las columnas que el menú usa Y `image`, que es lo que llena la vista previa de la
+     * columna lateral: sin ella el destino cae al fondo rayado. `zones.image` se había quedado **sin
+     * ningún consumidor** desde `#302`; éste es el que lo devuelve al producto.
+     *
+     * @return Collection<int, Zone>
+     */
+    private function navZones(): Collection
+    {
+        if (! $this->tableExists('zones')) {
+            return collect();
+        }
+
+        return Zone::query()
+            ->where('is_active', true)
+            ->where('show_in_landing', true)
+            ->orderBy('position')
+            ->get(['id', 'slug', 'name', 'subtitle', 'age_range', 'image']);
     }
 
     /**

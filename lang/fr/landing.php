@@ -31,8 +31,6 @@ return [
         'slider_prev' => 'Précédent',
         'slider_next' => 'Suivant',
         'park_items' => [
-            'kids' => ['t' => 'Zone Kids', 's' => '1 à 12 ans · jeu sécurisé'],
-            'jump' => ['t' => 'Zone Jump', 's' => 'Dès 6 ans · sauts sans freins'],
             'rides' => ['t' => 'Attractions', 's' => 'Trampolines, foam, tyrolienne'],
             'info' => ['t' => 'Adresse et horaires', 's' => 'Murcia · accès'],
         ],

@@ -1,5 +1,30 @@
 # Estado del proyecto — foto viva
 
+✅ **LA COLUMNA DEL MENÚ YA NO ESTÁ VACÍA — Y SUS ZONAS SALEN DE LA BD** (2026-09-02,
+`DECISIONES #341`, `[DECIDIDO owner]`: «las que sean, que no esté vacío»). Medido: con `/servicios`
+en mantenimiento **ninguno** de los siete destinos traía foto, así que la vista previa caía al fondo
+rayado en todos.
+▶ ❗❗ **Y midiendo apareció algo más gordo que las imágenes**: los ítems «fijos» del menú decían
+**«Zona Kids»**, **«Zona Jump»**, **«Trampolines, foam, tirolinas»** y **«Murcia · cómo llegar»**,
+escritos a mano en los ficheros de idioma del **PRODUCTO**. Una instalación con otras zonas veía en
+su menú **las de otro parque**: la misma fuga que `#302` y `#325`.
+▶ **Dos caminos y hacen falta los dos**: las ZONAS salen de la BD (`navZones()`, mismo criterio que
+las pestañas de la portada) — con eso **`zones.image` recupera un consumidor**, que lo había perdido
+en `#302` —; y un **RESPALDO por instalación** (`public/img/client-menu.webp`, el CUARTO hueco tras
+logotipo, icono y kit) para Entradas, Cumpleaños, Atracciones y Ubicación, que **no tienen ninguna
+imagen suya en el modelo** y asociarles una habría deshecho lo anterior.
+▶ ⚠️ **Sin fichero no se pinta nada** (el hueco falla hacia invisible) y **la foto propia gana al
+respaldo**, con caso para las dos cosas. `INSTALACION-CLIENTE.md` §4.f.
+▶ ⚠️⚠️ **Una guarda existente FIJABA la fuga**: `ArmazonContractTest` aseveraba los literales «Zona
+Kids»/«Zona Jump». Re-apuntada a la BD y **no más débil que la que sustituye** (`#295`): ahora fija
+las zonas **en el orden que manda su `position`**, que antes no lo miraba nadie.
+▶ ⚠️ **Dos trampas pagadas**: `lang/*/landing.php` dentro de un docblock **lo CIERRA** (el `*/` del
+comodín) y tumbó la home con un 500 que señalaba a otra línea; y **lo que `@js()` emite no es JSON**
+—comillas como `"` y barras con dos capas de escapado—, así que el localizador del test devolvía
+`null` y **todos los casos habrían aseverado sobre una lista vacía**: lo cazó su control.
+▶ **QUEDA TU OJO, y el fichero es TUYO**: para probarlo en local se instaló `pjp-149.webp` como
+respaldo — elige la foto que quieras y súbela como `client-menu.webp`.
+
 ✅ **EL CAJÓN RELEE SU CONTEXTO AL VOLVER A LA PESTAÑA** (2026-09-02, `DECISIONES #340`; cierra la
 ficha de `DEUDA.md` que abrió el owner el día del lanzamiento). Verificar el correo en otra pestaña y
 volver ya no deja el aviso viejo. ▶ **Lo que faltaba no era el mecanismo: era el disparador.**
@@ -340,10 +365,11 @@ aquí lo que no se podaría son datos de menores de terceros.
 > ⚠️ **RE-MEDIDA tras rebasar encima los DOS arreglos del reloj de la T3** (con `npm run build` +
 > `build:ssr` delante, porque `#340` toca Vue): **sale el MISMO número**, que es lo que había que
 > comprobar — los dos arreglan FIXTURES y no añaden casos. *Coincidir no se supone: se mide.*
-> Suite **3904 en verde** (25.033 aserciones, 1 skipped a propósito), medida el 2026-09-02
-> sobre el árbol CONJUNTO: el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo
-> (`#339`) sobre el arreglo del 500 de la puerta (`#338`), rebasado a su vez sobre la **T3** del
-> justificante (`#337`). ⚠️ `#340` **no suma tests PHP**: los suyos son 12 de `node --test`
+> Suite **3912 en verde** (25.084 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> sobre el árbol CONJUNTO: la columna del menú (`#341`, **+8**) sobre el refresco al volver a la
+> pestaña (`#340`) y el vocabulario del descargo (`#339`), encima del arreglo del 500 de la puerta
+> (`#338`) y de la **T3** del justificante (`#337`) con sus arreglos del reloj.
+> ⚠️ `#340` **no suma tests PHP**: los suyos son 12 de `node --test`
 > (891 → **903**), y el presupuesto del cajón quedó en verde **sin subir el techo**.
 > ⚠️ El neto de `#338` es **+1** (dos guardas y fuera `TmpProbeTest`) y el de `#339` **+3**.
 > ⚠️⚠️ **La primera medición de `#339` dio 41.012 aserciones y era un DEFECTO de la guarda nueva**, no

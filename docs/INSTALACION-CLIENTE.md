@@ -459,6 +459,35 @@ sincronizar en el despliegue (`.gitignore` + orden de carga + exclusión del `rs
 estas siluetas pesan poco más de 1 KB cada una. Las mismas tres reglas del logotipo aplican al
 dibujo: sin texto, sin nada externo y con `viewBox` (§4.a.quinquies).
 
+### 4.f · La FOTO de respaldo del menú (`#341`, 2026-09-02)
+
+`public/img/client-menu.webp`
+
+La columna derecha del menú a pantalla completa enseña una **vista previa** del destino que el ratón
+señala: su foto, su nombre y su subtítulo. Esta imagen es la que se usa cuando ese destino **no tiene
+foto propia**.
+
+▶ **Quién tiene foto propia y quién no**, medido: las **zonas** la traen de `zones.image`, que se
+edita en el panel (Zonas → la zona → Imagen); los **servicios** del CMS, de la suya. **Entradas,
+Cumpleaños, Atracciones y Ubicación no tienen ninguna imagen que sea suya en el modelo**, y
+asociarles una a la fuerza habría sido escribir el catálogo de un cliente dentro del producto — la
+fuga que esta misma tanda cerró en el menú. De ahí el respaldo.
+
+| | |
+|---|---|
+| Fichero | `public/img/client-menu.webp` |
+| Formato | WebP (es una foto; el resto del sitio ya sirve WebP) |
+| Proporción | La tarjeta la recorta con `object-fit`, así que **no hay medida obligatoria**; una foto apaisada de ~1200 px de ancho va sobrada |
+| **Si falta** | **No se pinta nada**: los destinos sin foto propia caen al fondo rayado, que es el suelo del producto y lo que el mockup usa donde aún no hay foto |
+
+Se sube por `scp` como el resto del paquete, y **lleva sus tres piezas** igual que el logotipo, el
+icono y el kit: entrada en `.gitignore`, exclusión en el `rsync --delete` de `deploy.sh`, y esta
+ficha. Sin las dos primeras, el primer despliegue se lo lleva **en silencio**.
+
+⚠️ La URL lleva `?v=` con la marca de tiempo del fichero: **sustituirlo en el servidor se ve al
+instante**, sin esperar a que caduque la caché del navegador. Si cambias la foto y no la ves, mira
+antes si de verdad se subió — no es la caché.
+
 ---
 
 ## 5 · Auth y primer admin

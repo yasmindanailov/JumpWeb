@@ -46,6 +46,13 @@
 # Es el TERCER hueco por instalación tras el logotipo y el icono, y el PRIMERO para ilustración y no
 # para marca. Mismas tres piezas que el resto del paquete; sin fichero no se pinta nada.
 /public/img/client-kit.svg
+# El RESPALDO de la vista previa del menú (`#341`): la foto que usa todo destino del menú que no
+# tenga una suya. Es el CUARTO hueco por instalación. Medido: con `/servicios` en mantenimiento
+# ninguno de los siete destinos traía foto, así que la columna caía entera al fondo rayado — y a
+# Entradas, Cumpleaños, Atracciones o Ubicación no se les puede asociar una imagen del modelo sin
+# quemar el catálogo de un cliente en el producto. Mismas tres piezas; sin fichero no se pinta nada
+# y la columna se comporta como antes.
+/public/img/client-menu.webp
 # Y su respaldo RASTER (`#216`): correos y Open Graph no renderizan SVG. `@4x` de los 54 px a los
 # que la barra pinta el logotipo.
 /public/img/client-logo@4x.png

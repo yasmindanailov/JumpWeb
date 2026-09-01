@@ -368,6 +368,10 @@ RSYNC_EXCLUDES=(
     # instalación se queda sin ilustración en cada vista, EN SILENCIO (el hueco falla hacia
     # invisible a propósito: no hay caja rota que delate la pérdida).
     --exclude='/public/img/client-kit.svg'
+    # El RESPALDO de la vista previa del MENÚ (#341): la foto que usa todo destino sin una suya.
+    # Mismo motivo exacto; sin esta línea el --delete se lo lleva y la columna del menú vuelve a
+    # quedarse rayada entera, también en silencio.
+    --exclude='/public/img/client-menu.webp'
     --exclude='/bootstrap/cache/*'   # llevaría la config local horneada; se regenera allí
     --exclude='/.phpunit.result.cache'
     --exclude='/compose.yaml'

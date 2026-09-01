@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Site;
 
+use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
@@ -352,7 +353,7 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
-     * **El menú conserva los cuatro destinos del parque, en su orden y con sus anclas.**
+     * **El menú conserva los destinos del parque, en su orden y con sus anclas.**
      *
      * ⚠️ **Se MUDÓ desde `HomePageTest::nav_renders_park_dropdown_with_anchor_items`** al retirar
      * la 2c·1 el desplegable de la barra. El sujeto viejo —el desplegable— murió; lo que
@@ -360,14 +361,33 @@ class ArmazonContractTest extends TestCase
      * fijaba. Retirar el test en vez de mudarlo habría perdido la cobertura del orden.
      *
      * ▶ Y aquí se lee **acotado al elemento**: la versión anterior aseveraba sobre la página
-     * entera, donde «Zona Kids» lo pinta también la sección de zonas.
+     * entera, donde el nombre de una zona lo pinta también la sección de zonas.
+     *
+     * ⚠️⚠️ **RE-APUNTADO en `#341`, y el motivo importa**: hasta entonces esta guarda aseveraba los
+     * literales `'Zona Kids'` y `'Zona Jump'` — o sea que **fijaba en su sitio el catálogo de un
+     * cliente dentro del producto**, que es justo la fuga que `#341` cierra. Ahora las dos primeras
+     * salen de la BD.
+     * ▶ Y **no queda más débil que la que sustituye** (la regla de `#295`): antes fijaba cuatro
+     * etiquetas y su orden; ahora fija **las zonas de la instalación en el orden que manda su
+     * `position`**, seguidas de los dos destinos fijos — o sea que además caza que el menú y el panel
+     * discrepen sobre el orden de las zonas, que antes no miraba nadie.
      */
     public function test_the_menu_keeps_the_park_items_in_order(): void
     {
         $html = $this->get('/')->assertOk()->getContent();
 
+        $zonas = Zone::query()
+            ->where('is_active', true)
+            ->where('show_in_landing', true)
+            ->orderBy('position')
+            ->get()
+            ->map(fn (Zone $z): string => (string) $z->tr('name'))
+            ->all();
+
+        $this->assertNotEmpty($zonas, 'sin zonas en la landing este caso no vigila nada: el fixture perdió su sujeto');
+
         $titles = $this->menuTitles($html);
-        $parque = ['Zona Kids', 'Zona Jump', 'Atracciones', 'Ubicación y horario'];
+        $parque = [...$zonas, 'Atracciones', 'Ubicación y horario'];
 
         $this->assertSame(
             $parque,

@@ -6,12 +6,31 @@
     // ES/EN/FR via `landing.nav.{park_items,services_items}`.
     // Cada item lleva título (`t`) y descripción corta (`s`) — `s` se renderiza
     // debajo del título en el panel del dropdown para dar contexto antes del clic.
-    $parkItems = [
-        ['t' => __('landing.nav.park_items.kids.t'), 's' => __('landing.nav.park_items.kids.s'), 'url' => url('/#zones')],
-        ['t' => __('landing.nav.park_items.jump.t'), 's' => __('landing.nav.park_items.jump.s'), 'url' => url('/#zones')],
+    // ⚠️⚠️ **Las ZONAS salen de la BD, y eso ARREGLA una fuga** (`#341`): hasta hoy eran dos entradas
+    // escritas a mano en `lang/*/landing.php` —«Zona Kids» y «Zona Jump», con sus edades—, o sea el
+    // catálogo de UN cliente dentro de los ficheros del PRODUCTO. Una instalación con otras zonas
+    // veía en su menú las de otro parque. Es la misma fuga que `#302` cerró en el JS (`zone: 'jump'`).
+    //
+    // El criterio es el MISMO que el de las pestañas de la portada (`is_active` + `show_in_landing`),
+    // para que menú y sección no puedan discrepar sobre qué zonas existen; lo resuelve `navZones` en
+    // el composer, memoizado con el resto del payload.
+    //
+    // ⚠️ El subtítulo prefiere la EDAD y cae al subtítulo de la zona: en un menú, «+8 años · +1,30 m»
+    // le dice a un padre si esa zona es para su hijo y «Para los que ya saltan» no. Las zonas sin
+    // edad —una sala de cumpleaños— usan el suyo, que para eso está.
+    $zoneItems = collect($navZones ?? [])->map(fn ($z): array => [
+        't' => $z->tr('name'),
+        's' => $z->tr('age_range') ?: $z->tr('subtitle'),
+        'url' => url('/#zones'),
+        // La foto de la zona llena la VISTA PREVIA de la columna lateral del menú. `zones.image` se
+        // había quedado sin ningún consumidor desde `#302`; éste lo devuelve.
+        'img' => $z->image ? asset($z->image) : null,
+    ])->all();
+
+    $parkItems = array_merge($zoneItems, [
         ['t' => __('landing.nav.park_items.rides.t'), 's' => __('landing.nav.park_items.rides.s'), 'url' => url('/#rides')],
         ['t' => __('landing.nav.park_items.info.t'), 's' => __('landing.nav.park_items.info.s'), 'url' => url('/#info')],
-    ];
+    ]);
     // Selector «Servicios»: STATIC + DATA-DRIVEN (#256, modelo A). «Cumpleaños» (→ /cumpleanos) y
     // «Otros eventos» (→ /servicios#eventos) quedan FIJOS; los del medio salen de `LandingService`
     // (show_in_nav) memoizado en el composer (`$navServices`), enlazando a /servicios#slug.

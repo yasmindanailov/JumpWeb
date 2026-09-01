@@ -31,8 +31,6 @@ return [
         'slider_prev' => 'Previous',
         'slider_next' => 'Next',
         'park_items' => [
-            'kids' => ['t' => 'Kids zone', 's' => 'Ages 1–12 · safe play'],
-            'jump' => ['t' => 'Jump zone', 's' => 'From age 6 · no brakes'],
             'rides' => ['t' => 'Rides', 's' => 'Trampolines, foam pit, zipline'],
             'info' => ['t' => 'Location & hours', 's' => 'Murcia · how to get there'],
         ],

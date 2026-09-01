@@ -46,8 +46,6 @@ return [
         'slider_next' => 'Siguiente',
         // Cada item: `t` título, `s` descripción corta (≤ ~30 chars).
         'park_items' => [
-            'kids' => ['t' => 'Zona Kids', 's' => '1 a 12 años · juego seguro'],
-            'jump' => ['t' => 'Zona Jump', 's' => 'Desde 6 años · saltos sin frenos'],
             'rides' => ['t' => 'Atracciones', 's' => 'Trampolines, foam, tirolinas'],
             'info' => ['t' => 'Ubicación y horario', 's' => 'Murcia · cómo llegar'],
         ],

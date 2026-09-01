@@ -20490,3 +20490,86 @@ Añadido, y **mutado**: forzar `hidden: false` en el cableado lo pone rojo.
 **Verificación**: suite **3904 · 25.033** · `node --test` **903 en verde** (12 nuevos) · Pint ✓ ·
 docs-check ✓ · presupuesto del cajón en verde sin subir el techo. **Queda el OJO del owner**: verificar
 el correo en otra pestaña y volver a la primera.
+
+---
+
+## #341 · 2026-09-02 · La columna del menú deja de estar vacía, y sus zonas dejan de estar escritas en el producto
+
+**Encargo del owner**, de los que sobreviven desde el lanzamiento: *«imágenes en la columna derecha
+del menú — las que sean, que no esté vacío»*.
+
+### Lo medido antes de tocar nada
+
+La vista previa de la columna lateral se alimenta de `img`, y **`img` solo lo tenían los servicios
+del CMS**. Con `/servicios` en mantenimiento desde el lanzamiento, `$servicesItems` se queda en un
+solo ítem sin foto, así que **los siete destinos caían al fondo rayado**. No era un descuido: la
+plantilla lo documenta como el trato que el mockup da a lo que aún no tiene foto. Pero el owner lo
+seguía viendo vacío, y ahí la respuesta no es medir otra vez — es enseñar opciones (`#273`).
+
+### ❗❗ Y midiendo apareció algo más gordo que las imágenes
+
+Los ítems «fijos» del menú **no son genéricos**: decían **«Zona Kids»**, **«Zona Jump»**,
+**«Trampolines, foam, tirolinas»** y **«Murcia · cómo llegar»**, escritos a mano en los ficheros de
+idioma del **PRODUCTO**. Es el catálogo y la ciudad de un cliente dentro del repo: la misma fuga que
+`#302` cerró en el JS (`zone: 'jump'`) y que `#325` llamó distancia sana. Una instalación con otras
+zonas veía en su menú **las de otro parque**.
+
+### La decisión: DOS caminos, y hacen falta los dos
+
+`[DECIDIDO owner]` sobre tres opciones con su alcance medido delante (a: respaldo por instalación ·
+b: foto por destino desde lo que ya hay · c: retirar la tarjeta cuando no hay foto):
+
+ 1. **Las ZONAS salen de la BD** (`AppServiceProvider::navZones()`), por el MISMO criterio que las
+    pestañas de la portada —`is_active` + `show_in_landing`, ordenadas por `position`— para que menú
+    y sección no puedan discrepar sobre qué zonas existen. Nombre, edad y **foto** salen del panel.
+    ▶ Con eso `zones.image` **recupera un consumidor**: lo había perdido en `#302`, y tenía ficha de
+    deuda con tres salidas. Ésta es una de ellas.
+    ⚠️ El subtítulo prefiere la EDAD y cae al subtítulo de la zona: en un menú, «+8 años · +1,30 m»
+    le dice a un padre si esa zona es para su hijo y «Para los que ya saltan» no.
+ 2. **Un RESPALDO por instalación** (`public/img/client-menu.webp`, `INSTALACION-CLIENTE.md` §4.f),
+    el **cuarto hueco** tras el logotipo, el icono y el kit. Cubre Entradas, Cumpleaños, Atracciones
+    y Ubicación, que **no tienen ninguna imagen que sea suya en el modelo** — y asociarles una a la
+    fuerza habría sido volver a escribir el catálogo de un cliente en el producto, o sea deshacer lo
+    que el punto 1 acaba de arreglar.
+    ▶ Mismas tres piezas: `.gitignore`, exclusión del `rsync --delete` y su ficha. **Sin fichero no
+    se pinta nada** y la columna se comporta como antes: el hueco falla hacia invisible.
+    ⚠️ El respaldo es RESPALDO: la foto propia de una zona le gana, y hay caso para eso — resolverlo
+    al revés pasaría en verde y la columna enseñaría la misma imagen en los seis destinos.
+
+Verificado en la web local: los **6 destinos** llegan con imagen (dos con la suya, cuatro con el
+respaldo y su `?v=`).
+
+### La guarda que hubo que RE-APUNTAR, y por qué es la parte interesante
+
+`ArmazonContractTest::test_the_menu_keeps_the_park_items_in_order` aseveraba los literales
+`'Zona Kids'` y `'Zona Jump'`: **fijaba en su sitio justo la fuga que esta tanda cierra**. Re-apuntada
+a las zonas de la BD y **no queda más débil que la que sustituye** (la regla de `#295`): antes fijaba
+cuatro etiquetas y su orden; ahora fija las zonas de la instalación **en el orden que manda su
+`position`**, así que además caza que menú y panel discrepen — que antes no lo miraba nadie. Con su
+comprobación de que el fixture tiene sujeto.
+
+### `MenuPreviewImagesTest`: ocho casos, tres mutaciones
+
+⚠️⚠️ **El `public/` es TEMPORAL**, como en `ZonesSectionTest`: `client-menu.webp` está gitignorado, así
+que aseverar contra el `public/` real da una guarda que **pasa en la máquina que tiene el paquete y
+falla en un clon limpio** (`#302`). Casos: las zonas salen de la BD · **y su control**, una zona fuera
+de la landing no se ofrece · la foto propia se pinta · **sin fichero no se pinta nada** · con fichero
+**ningún** destino se queda sin imagen · la propia gana al respaldo · el `?v=` viaja.
+▶ Mutaciones, todas con control: sin respaldo (2 rojos) · respaldo pisando a la propia (6) ·
+`navZones` ignorando `show_in_landing` (1).
+
+### ⚠️ Dos trampas pagadas al escribirlo
+
+ 1. **`lang/*/landing.php` dentro de un docblock CIERRA el docblock.** La secuencia `*/` de la ruta
+    con comodín termina el comentario y el fichero deja de compilar: la home devolvió **500** con un
+    «syntax error, unexpected identifier "landing"» que señala a una línea que no tiene nada raro.
+ 2. **Lo que `@js()` emite NO es JSON**: las comillas viajan como `"` y las barras llevan DOS
+    capas de escapado (JSON y JS). `json_decode` devolvía `null` y **todos los casos habrían
+    aseverado sobre una lista vacía** — lo cazó el control del localizador, que estaba puesto justo
+    para eso. Las barras se colapsan con un patrón en vez de contarlas: contar barras invertidas a
+    través de PHP, JSON y JavaScript es exactamente donde esto se rompe sin avisar.
+
+**Verificación**: suite **3912 · 25.084** (1 skipped a propósito) sobre el árbol conjunto, medida tras
+rebasar · Pint ✓ · docs-check ✓ · 8 casos nuevos y 3 mutaciones con control.
+▶ **Queda tu OJO** y **el fichero es tuyo**: para probarlo en local se instaló `pjp-149.webp` como
+respaldo; elige la foto que quieras y súbela con ese nombre.
