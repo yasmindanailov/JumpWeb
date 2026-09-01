@@ -101,7 +101,10 @@ class AdminPanelProvider extends PanelProvider
             // Avatar LOCAL (data-URI) en vez del ui-avatars.com externo, que la CSP bloquea.
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
             // Mismo icono de marca que la web pública (favicon «J» sobre naranja).
-            ->favicon(asset('favicon.svg'))
+            // Lanzamiento 2026-09-01 (`#325`): el icono de pestaña del panel es el de la INSTALACIÓN
+            // cuando existe (`img/client-favicon.svg`, el mismo hueco que la web); el del producto
+            // solo como suelo. Antes el panel enseñaba la «J» naranja del producto en cada cliente.
+            ->favicon(file_exists(public_path('img/client-favicon.svg')) ? asset('img/client-favicon.svg') : asset('favicon.svg'))
             ->brandName(fn () => (string) (Setting::value('business.name') ?: config('app.name')))
             // «Panel de Control» bajo el wordmark (#215): el brand del sidebar pasa de texto plano
             // a una vista propia (nombre + subtítulo). Filament la oculta al colapsar el sidebar.

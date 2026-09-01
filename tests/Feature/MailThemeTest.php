@@ -24,8 +24,28 @@ class MailThemeTest extends TestCase
         $this->assertSame('brand', config('mail.markdown.theme'));
     }
 
+    /**
+     * Un `public/` TEMPORAL para que el caso no dependa de lo que haya instalado en la máquina:
+     * `client-logo@4x.png` está gitignorado (es del cliente), y con él presente la cabecera cambia
+     * de rama. La trampa de `#302`: un test que lee un fichero gitignorado pasa aquí y falla en un
+     * clon limpio — o al revés.
+     */
+    private function publicDir(bool $withClientLogo): string
+    {
+        $dir = sys_get_temp_dir().'/mail-theme-'.uniqid();
+        mkdir($dir.'/img', 0777, true);
+        if ($withClientLogo) {
+            file_put_contents($dir.'/img/client-logo@4x.png', 'png-falso');
+        }
+        $this->app->usePublicPath($dir);
+
+        return $dir;
+    }
+
     public function test_brand_tokens_render_in_order_confirmation_email(): void
     {
+        $this->publicDir(withClientLogo: false);
+
         // Wordmark data-driven (Fase 1): el header lee `business.name` de BD, no config.
         Setting::create(['key' => 'business.name', 'value' => 'Negocio Demo', 'group' => 'business']);
         Setting::flushMemo();
@@ -57,8 +77,35 @@ class MailThemeTest extends TestCase
         $this->assertStringContainsString('color: #FFFFFF', $html);
     }
 
+    /**
+     * **Con el LOGOTIPO de la instalación presente, la cabecera lo enseña** (lanzamiento 2026-09-01,
+     * `#325`): `<img>` al PNG con el nombre del negocio como `alt` — quien bloquea imágenes sigue
+     * viendo el wordmark — y ya no se pinta el punto de marca del texto.
+     */
+    public function test_email_header_uses_the_client_logo_when_the_installation_has_it(): void
+    {
+        $this->publicDir(withClientLogo: true);
+        Setting::create(['key' => 'business.name', 'value' => 'Negocio Demo', 'group' => 'business']);
+        Setting::flushMemo();
+
+        $user = User::factory()->create(['locale' => 'es']);
+        $order = Order::create([
+            'user_id' => $user->id, 'code' => 'R-MAIL03',
+            'status' => Order::STATUS_PENDING,
+            'subtotal' => 1500, 'total' => 1500, 'currency' => 'EUR',
+        ]);
+
+        $html = (new OrderConfirmation($order))->toMail($user)->render();
+
+        $this->assertStringContainsString('img/client-logo@4x.png', $html);
+        $this->assertStringContainsString('alt="Negocio Demo"', $html);
+        $this->assertStringNotContainsString('brand-dot', $html);
+    }
+
     public function test_email_wordmark_falls_back_to_app_name_without_business_name(): void
     {
+        $this->publicDir(withClientLogo: false);
+
         // Instalación recién migrada sin settings: el header no puede quedar vacío.
         $user = User::factory()->create(['locale' => 'es']);
         $order = Order::create([
