@@ -363,6 +363,40 @@
         </div>
     @endif
 
+    {{-- Menores INVITADOS con justificante (`specs/waiver-por-reserva.md` §4.12, `#336`): niños que
+         NO son menores a cargo de quien reservó y por los que un adulto sin cuenta firmó la descarga
+         de responsabilidad. La sala necesita saber quién viene cubierto y quién no.
+         ⚠️ SIN correo ni teléfono de ningún adulto: la forma del operador no los lleva
+         (`GuardianRoster`). Quien necesite la prueba completa abre el registro probatorio, que tiene
+         permiso propio y consulta auditada.
+         ⚠️ Se pinta solo si hay alguno: en una reserva normal esta sección sería ruido en una hoja
+         que se imprime en papel. --}}
+    @if (($guestMinors ?? []) !== [])
+        <div class="sec">
+            <div class="sec-title">{{ __('admin.orders.slip.guest_minors_heading') }}</div>
+            <table class="guests">
+                <thead>
+                    <tr>
+                        <th class="g-num">#</th>
+                        <th>{{ __('admin.orders.slip.guest_minor') }}</th>
+                        <th>{{ __('admin.orders.slip.guest_minor_guardian') }}</th>
+                        <th>{{ __('admin.orders.slip.guest_minor_state') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($guestMinors as $i => $g)
+                        <tr>
+                            <td class="g-num">{{ $i + 1 }}</td>
+                            <td>{{ $g['minor'] }}</td>
+                            <td>{{ $g['guardian'] }} ({{ __('guardian.relationships.'.$g['relationship']) }})</td>
+                            <td>{{ $g['waiver'] === null ? '—' : __('admin.orders.slip.guest_minor_waiver_'.$g['waiver']) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+
     {{-- Fiesta MIXTA (T3 · E, `specs/cumple-mixto.md` §23.2): lo ESCRITO del suplemento — la
          diferencia por cabeza que el operador hacía de memoria con el cliente delante. Se imprime
          lo escrito y NUNCA el veredicto derivado: es lo que se cobra (`PAY-19`); del veredicto solo

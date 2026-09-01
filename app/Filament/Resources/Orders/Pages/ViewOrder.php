@@ -1027,6 +1027,32 @@ class ViewOrder extends ViewRecord
      * aparece siempre (un campo `->default()` dentro de un modal con `fillForm` se quedaba vacío).
      * Defensa: solo entrega el enlace si el item es una reserva con post-form de un pedido PAGADO.
      */
+    /**
+     * El enlace del JUSTIFICANTE de menores invitados de ESTE pedido
+     * (`specs/waiver-por-reserva.md` §4.10, §4.12): lo que el responsable —o el operador por él—
+     * reparte a los padres.
+     *
+     * ⚠️ Es una **credencial portadora**: se sirve bajo demanda en un modal server-rendered y **no
+     * se siembra en el HTML de la página**. Reutiliza el partial del post-form porque el problema es
+     * el mismo (un input de solo lectura y un botón de copiar), y un segundo partial idéntico sería
+     * un sitio más donde divergir.
+     *
+     * ⚠️ Va por PEDIDO y no por línea, a diferencia del post-form: es «el papelito de la excursión»,
+     * uno solo.
+     */
+    public function copyGuardianLinkAction(): Action
+    {
+        return Action::make('copyGuardianLink')
+            ->modalHeading(__('admin.orders.guest_minors.modal_heading'))
+            ->modalDescription(__('admin.orders.guest_minors.modal_description'))
+            ->modalIcon(Heroicon::OutlinedLink)
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel(__('admin.orders.copy_guest_form.close'))
+            ->modalContent(fn (): View => view('filament.orders.partials.guest-form-link', [
+                'url' => $this->record->guardianAuthorizationSignedUrl(),
+            ]));
+    }
+
     public function copyGuestFormLinkAction(): Action
     {
         return Action::make('copyGuestFormLink')

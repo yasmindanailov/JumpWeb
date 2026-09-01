@@ -3,6 +3,7 @@
 namespace App\Domain\Identity\Services;
 
 use App\Domain\Identity\Models\Dependent;
+use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
 use Carbon\CarbonInterface;
@@ -126,6 +127,54 @@ final class WaiverStatus
             $last = $signatures->first(fn (WaiverSignature $s): bool => (int) $s->subject_id === (int) $dependent->getKey()
                 && (int) $s->user_id === (int) $dependent->user_id);
             $out[(int) $dependent->getKey()] = self::build($mode, $last, $latest);
+        }
+
+        return $out;
+    }
+
+    /**
+     * La misma pregunta que {@see forDependents()} para MENORES INVITADOS a una reserva
+     * (`specs/waiver-por-reserva.md` §4.11): una consulta de firmas para todos, más la versión
+     * vigente una vez.
+     *
+     * ⚠️ Aquí `missing` **no debería ocurrir nunca**: una autorización nace con su firma en la misma
+     * transacción (`GuardianAuthorizationSigner`). Se deriva igual y no se da por imposible: si
+     * alguna vez apareciera una fila sin firma, la puerta tiene que ENSEÑARLO, no callarlo.
+     *
+     * @param  iterable<GuardianAuthorization>  $authorizations
+     * @return array<int, self> por id de autorización
+     */
+    public static function forGuestMinors(iterable $authorizations): array
+    {
+        $list = collect($authorizations)->values();
+        if ($list->isEmpty()) {
+            return [];
+        }
+
+        $mode = WaiverSettings::mode();
+        $out = [];
+
+        if ($mode !== WaiverSettings::MODE_INTERNAL) {
+            foreach ($list as $authorization) {
+                $out[(int) $authorization->getKey()] = new self($mode, false, null, null, null, false);
+            }
+
+            return $out;
+        }
+
+        $signatures = WaiverSignature::query()
+            ->where('subject_type', WaiverSignature::SUBJECT_GUEST_MINOR)
+            ->whereIn('subject_authorization_id', $list->map(fn (GuardianAuthorization $a): int => (int) $a->getKey())->all())
+            ->with('version')
+            ->orderByDesc('id')
+            ->get();
+        $latest = LegalDocuments::latestVersionNumber(WaiverSettings::SLUG);
+
+        foreach ($list as $authorization) {
+            $last = $signatures->first(
+                fn (WaiverSignature $s): bool => (int) $s->subject_authorization_id === (int) $authorization->getKey(),
+            );
+            $out[(int) $authorization->getKey()] = self::build($mode, $last, $latest);
         }
 
         return $out;

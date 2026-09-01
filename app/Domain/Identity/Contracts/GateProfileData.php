@@ -45,6 +45,16 @@ final readonly class GateProfileData
         public array $window,
         public int $windowDays,
         public array $dependents,
+        /**
+         * Los menores INVITADOS autorizados en los pedidos de las reservas de HOY
+         * (`specs/waiver-por-reserva.md` §4.11): nombre de pila, edad en la fecha de la visita y
+         * estado del justificante. ⚠️ Llevan `order_code` porque cuelgan del PEDIDO, no de la línea
+         * —de ahí que vivan aquí y no dentro de cada reserva—; y **tampoco tienen apellidos**, por
+         * la misma regla estructural que los menores a cargo.
+         *
+         * @var list<array{order_code: string, name: string, age: int, waiver: ?string}>
+         */
+        public array $guestMinors,
         public bool $visitRegisteredToday,
     ) {}
 
@@ -61,6 +71,7 @@ final readonly class GateProfileData
             'window' => $this->window,
             'window_days' => $this->windowDays,
             'dependents' => $this->dependents,
+            'guest_minors' => $this->guestMinors,
             'visit_registered_today' => $this->visitRegisteredToday,
         ];
     }

@@ -53,6 +53,15 @@ return [
         'paid_confirmation_guest_form' => 'We’ll see you on the date and time you chose. We’ll soon email you to collect the guests’ details; you can also fill them in any time from "My bookings".',
         'outro' => 'Any questions before your visit? Write to us, we’re happy to help.',
     ],
+    'guardian_authorization' => [
+        'subject' => 'Your authorisation for :name',
+        'greeting' => 'Hello,',
+        'intro' => 'You have just signed the authorisation for :name. Here is your copy.',
+        'booking' => 'Booking: :code.',
+        'attached' => 'The attached document is the full record of what you accepted, with the complete text, the date and the time.',
+        'not_verified' => 'You declared these details yourself and we have not checked them against any document. If you spot a mistake, let the person who made the booking know.',
+        'salutation' => 'Thank you.',
+    ],
     'guest_form' => [
         'subject' => 'Complete the guest details for your :product booking · :code',
         'greeting' => 'Hi!',

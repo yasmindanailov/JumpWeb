@@ -2,11 +2,13 @@
 
 namespace App\Domain\Identity\Services;
 
+use App\Domain\Booking\Contracts\AuthorizableOrders;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Platform\Models\Setting;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Fase 6 · waiver — presentador del REGISTRO probatorio de una firma para su PDF
@@ -29,7 +31,7 @@ final class WaiverProof
 
     public static function make(WaiverSignature $signature): self
     {
-        $signature->loadMissing(['version', 'user', 'declaredBy', 'dependent']);
+        $signature->loadMissing(['version', 'user', 'declaredBy', 'dependent', 'authorization']);
 
         return new self($signature, $signature->version);
     }
@@ -105,6 +107,57 @@ final class WaiverProof
     {
         return $this->signature->subject_born_on?->format('d/m/Y');
     }
+
+    /**
+     * ¿Es el justificante de un menor INVITADO a una reserva
+     * (`specs/waiver-por-reserva.md` §4.13)? Entonces **el titular de la cuenta NO es quien firma**:
+     * es el RESPONSABLE de la reserva, y quien acepta es un adulto sin cuenta cuyos datos viven en
+     * `signer_*`.
+     */
+    public function isForGuestMinor(): bool
+    {
+        return $this->signature->isForGuestMinor();
+    }
+
+    public function signerName(): ?string
+    {
+        return $this->signature->signer_name;
+    }
+
+    public function signerRelationship(): ?string
+    {
+        return $this->signature->signer_relationship;
+    }
+
+    public function signerEmail(): ?string
+    {
+        return $this->signature->signer_email;
+    }
+
+    public function signerPhone(): ?string
+    {
+        return $this->signature->signer_phone;
+    }
+
+    /**
+     * La referencia del pedido al que va atado el justificante, si es de un menor invitado.
+     *
+     * ⚠️ Sale de `Booking\Contracts\AuthorizableOrders`, **no de un `DB::table('orders')`**. Un
+     * `DB::table()` habría funcionado y `ModuleBoundariesTest` **no lo habría visto** —escanea
+     * referencias a CLASES con el tokenizador, no cadenas SQL—, que es exactamente la razón por la
+     * que la frontera se respeta a mano cuando el guardián no llega.
+     */
+    public function orderCode(): ?string
+    {
+        $orderId = $this->signature->authorization?->order_id;
+        if ($orderId === null) {
+            return null;
+        }
+
+        return $this->orderCode ??= app(AuthorizableOrders::class)->find((int) $orderId)?->code;
+    }
+
+    private ?string $orderCode = null;
 
     // ─── La aceptación ───────────────────────────────────────────────────────
 

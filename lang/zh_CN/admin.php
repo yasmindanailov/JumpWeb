@@ -99,6 +99,7 @@ return [
                 'method_redsys' => '网上',
                 'minors_on_line_label' => '本行的未成年人',
                 'minors' => '监护的未成年人',
+                'guest_minors' => '受邀未成年人（授权书）',
                 'minors_empty' => '未登记任何未成年人。',
                 'minor' => ':age 岁',
                 'minor_waiver_current' => '免责声明 ✓',
@@ -422,6 +423,13 @@ return [
             'reservation_data_heading' => '预订信息',
             'guests_heading' => '预订表单',
             'guests_pending' => '待办：客户尚未填写表单。请手动补充。',
+            'guest_minors_heading' => '持授权书的受邀未成年人',
+            'guest_minor' => '未成年人',
+            'guest_minor_guardian' => '授权人',
+            'guest_minor_state' => '授权书',
+            'guest_minor_waiver_current' => '已签署',
+            'guest_minor_waiver_outdated' => '旧版本 — 可放行',
+            'guest_minor_waiver_missing' => '缺失',
             'guardian_label' => '父母或法定监护人',
             'client_label' => '客户姓名',
             'prepared_check' => '已准备',
@@ -792,6 +800,16 @@ return [
 
         // #263 —「宾客表单链接」模态框：由每个带表单预订的链接图标打开（产品列表）。显示已签名链接，
         // 便于复制并通过 WhatsApp/短信发送（客户无邮箱时尤其有用）。
+        'guest_minors' => [
+            'section' => '持授权书的受邀未成年人',
+            'count' => '{1}:count 份已签授权书|[2,*]:count 份已签授权书',
+            'signed_by' => '由 :name 授权（:relationship）',
+            'waiver_outdated' => '旧版本 — 可放行',
+            'waiver_missing' => '缺少签署',
+            'copy_link' => '复制给家长的链接',
+            'modal_heading' => '授权书链接',
+            'modal_description' => '分享给受邀未成年人的家长或监护人。每人只填写自己的资料，看不到他人的。',
+        ],
         'copy_guest_form' => [
             'btn_aria' => '宾客表单链接',
             'modal_heading' => '宾客表单链接',

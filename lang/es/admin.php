@@ -136,6 +136,7 @@ return [
                 // su `data-gate-minor-*`. Lo que queda es solo el rótulo.
                 'minors_on_line_label' => 'Menores en esta línea',
                 'minors' => 'Menores a cargo',
+                'guest_minors' => 'Menores INVITADOS (justificante)',
                 'minors_empty' => 'Sin menores declarados.',
                 'minor' => ':age años',
                 // ⚠️ `#320`: `minor_waiver_current` YA NO SE PINTA (solo se rotula la excepción,
@@ -471,6 +472,13 @@ return [
             'reservation_data_heading' => 'Datos de la reserva',
             'guests_heading' => 'Formulario de reserva',
             'guests_pending' => 'PENDIENTE: el cliente aún no ha rellenado el formulario. Complétalo a mano.',
+            'guest_minors_heading' => 'Menores invitados con justificante',
+            'guest_minor' => 'Menor',
+            'guest_minor_guardian' => 'Autoriza',
+            'guest_minor_state' => 'Justificante',
+            'guest_minor_waiver_current' => 'Firmado',
+            'guest_minor_waiver_outdated' => 'Versión anterior — deja pasar',
+            'guest_minor_waiver_missing' => 'FALTA',
             'guardian_label' => 'Padre/madre o tutor legal',
             'client_label' => 'Nombre del cliente',
             'prepared_check' => 'Preparado',
@@ -1041,6 +1049,16 @@ return [
         // #263 — Modal «Enlace del formulario de invitados»: lo abre el icono de enlace de cada
         // reserva con post-form (lista de productos). Muestra el enlace firmado para copiarlo y
         // enviarlo por WhatsApp/SMS (útil sobre todo si el cliente no tiene email).
+        'guest_minors' => [
+            'section' => 'Menores invitados con justificante',
+            'count' => '{1}:count justificante firmado|[2,*]:count justificantes firmados',
+            'signed_by' => 'Autoriza :name (:relationship)',
+            'waiver_outdated' => 'Versión anterior — deja pasar',
+            'waiver_missing' => 'Falta la firma',
+            'copy_link' => 'Copiar enlace para los padres',
+            'modal_heading' => 'Enlace del justificante',
+            'modal_description' => 'Compártelo con los padres o tutores de los menores invitados. Cada uno rellena SUS datos y no ve los de los demás.',
+        ],
         'copy_guest_form' => [
             'btn_aria' => 'Enlace del formulario de invitados',
             'modal_heading' => 'Enlace del formulario de invitados',

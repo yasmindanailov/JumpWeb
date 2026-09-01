@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Orders\Schemas;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Identity\Services\GuardianRoster;
 use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Identity\Services\WaiverStatus;
 use App\Domain\Platform\Services\DisplayTime;
@@ -60,6 +61,7 @@ class OrderInfolist
                         self::summarySection()->extraAttributes(['data-mobile-order' => '1']),
                         self::detailsSection()->extraAttributes(['data-mobile-order' => '3']),
                         self::paymentsSection()->extraAttributes(['data-mobile-order' => '4']),
+                        self::guestMinorsSection()->extraAttributes(['data-mobile-order' => '5']),
                     ])->extraAttributes(['data-stack' => 'left']),
 
                     self::itemsSection()->extraAttributes(['data-mobile-order' => '2']),
@@ -185,6 +187,23 @@ class OrderInfolist
             ->collapsed()
             ->schema([
                 View::make('filament.orders.payments-list'),
+            ]);
+    }
+
+    /**
+     * Los menores INVITADOS de este pedido (`specs/waiver-por-reserva.md` §4.12, `#336`): quién
+     * viene con justificante, quién lo firmó y en qué estado, más el enlace para repartir.
+     *
+     * ⚠️ **`visible()` y no un `@if` dentro**: en un pedido normal —que son casi todos— esta sección
+     * no existe, en vez de existir vacía. La ficha del pedido ya es larga.
+     */
+    private static function guestMinorsSection(): Section
+    {
+        return Section::make(__('admin.orders.guest_minors.section'))
+            ->collapsible()
+            ->visible(fn (Order $record): bool => app(GuardianRoster::class)->countFor((int) $record->getKey()) > 0)
+            ->schema([
+                View::make('filament.orders.partials.guest-minors'),
             ]);
     }
 

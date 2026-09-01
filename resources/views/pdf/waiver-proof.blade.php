@@ -86,12 +86,31 @@
         <table class="kv">
             <tr><td class="k">{{ $t('holder_name') }}</td><td class="v">{{ $proof->holderName() }}</td></tr>
             <tr><td class="k">{{ $t('holder_email') }}</td><td class="v">{{ $proof->holderEmail() }}</td></tr>
-            <tr><td class="k">{{ $t('subject') }}</td><td class="v">{{ $proof->isForHolder() ? $t('subject_holder') : $t('subject_dependent', ['name' => $proof->subjectName() ?? '—', 'born_on' => $proof->subjectBornOnLabel() ?? '—']) }}</td></tr>
+            {{-- TRES clases de sujeto (`specs/waiver-por-reserva.md` §4.13, `#336`). La tercera es la
+                 única en la que el titular de la cuenta NO es quien firma: es el RESPONSABLE de la
+                 reserva, y quien acepta es un adulto SIN cuenta. Decirlo es la mitad del valor
+                 probatorio de este documento. --}}
+            <tr><td class="k">{{ $t('subject') }}</td><td class="v">@if ($proof->isForHolder()){{ $t('subject_holder') }}@elseif ($proof->isForGuestMinor()){{ $t('subject_guest_minor', ['name' => $proof->subjectName() ?? '—', 'born_on' => $proof->subjectBornOnLabel() ?? '—']) }}@else{{ $t('subject_dependent', ['name' => $proof->subjectName() ?? '—', 'born_on' => $proof->subjectBornOnLabel() ?? '—']) }}@endif</td></tr>
+            @if ($proof->isForGuestMinor())
+                <tr><td class="k">{{ $t('signer') }}</td><td class="v">{{ $proof->signerName() ?? '—' }}@if ($proof->signerRelationship()) ({{ __('guardian.relationships.'.$proof->signerRelationship()) }})@endif</td></tr>
+                <tr><td class="k">{{ $t('signer_contact') }}</td><td class="v">{{ $proof->signerEmail() ?? '—' }}@if ($proof->signerPhone()) · {{ $proof->signerPhone() }}@endif</td></tr>
+                <tr><td class="k">{{ $t('responsible') }}</td><td class="v">{{ $proof->holderName() }} · {{ $proof->holderEmail() }}</td></tr>
+                @if ($proof->orderCode())
+                    <tr><td class="k">{{ $t('booking') }}</td><td class="v">{{ $proof->orderCode() }}</td></tr>
+                @endif
+            @endif
         </table>
         {{-- §10.6 (WAI-07): en una firma de mostrador los datos los tecleó el operador — se dice. --}}
         <p class="note">{{ $t($proof->isDeclared() ? 'holder_note_declared' : 'holder_note') }}</p>
         {{-- `menores-a-cargo.md` §4.2: los datos del menor los declaró el titular y no están verificados — se dice. --}}
-        @if (! $proof->isForHolder())
+        @if ($proof->isForGuestMinor())
+            {{-- ⚠️⚠️ Aquí NADA está verificado, y el documento lo dice con todas las letras: ni la
+                 identidad de quien firma, ni la del menor, ni el correo del responsable. Es más
+                 grave que en las otras dos clases —allí lo declaraba alguien con cuenta y correo
+                 verificado— y por eso lleva su propia nota. «Fingir lo contrario es peor que
+                 decirlo» (`waiver-probatorio.md` §4.5). --}}
+            <p class="note">{{ $t('subject_guest_minor_note') }}</p>
+        @elseif (! $proof->isForHolder())
             <p class="note">{{ $t('subject_dependent_note') }}</p>
         @endif
         @if ($proof->holderIsAnonymised())

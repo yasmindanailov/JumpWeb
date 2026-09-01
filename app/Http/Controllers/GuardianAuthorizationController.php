@@ -16,8 +16,10 @@ use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Identity\Services\WaiverSignatureRequest;
 use App\Domain\Platform\Services\Turnstile;
 use App\Http\Concerns\AuthorizesGuardianAuthorization;
+use App\Notifications\GuardianAuthorizationSigned;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
@@ -154,6 +156,18 @@ class GuardianAuthorizationController extends Controller
             return $this->back($request, $order, 'already', $e->minorName);
         } catch (GuardianAuthorizationRefusedException $e) {
             return $this->back($request, $order, $e->reason);
+        }
+
+        // La COPIA para quien firma (§4.15, `[DECIDIDO owner]` §7·7), **fuera de la transacción y
+        // solo si dejó correo**. Va aquí y no dentro del firmador a propósito: un fallo del correo
+        // no puede tumbar una firma YA ESCRITA — la prueba existe, el acuse es una cortesía. La cola
+        // se encarga del reintento.
+        //
+        // ⚠️ Solo cuando la autorización se ACABA de crear: un reenvío del mismo padre no vuelve a
+        // mandarle el PDF, y el segundo progenitor nunca llega aquí (se para en «un niño, un papel»).
+        if ($result['created'] && $result['authorization']->guardian_email !== null) {
+            Notification::route('mail', $result['authorization']->guardian_email)
+                ->notify(new GuardianAuthorizationSigned($result['signature']));
         }
 
         return $this->back($request, $order, 'signed', $result['authorization']->minorFullName());

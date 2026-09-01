@@ -53,6 +53,15 @@ return [
         'paid_confirmation_guest_form' => 'On t’attend à la date et l’heure que tu as choisies. On te demandera bientôt par e-mail les infos des invités ; tu peux aussi les compléter quand tu veux depuis « Mes réservations ».',
         'outro' => 'Une question avant ta visite ? Écris-nous, on est ravis de t’aider.',
     ],
+    'guardian_authorization' => [
+        'subject' => 'Votre autorisation pour :name',
+        'greeting' => 'Bonjour,',
+        'intro' => 'Vous venez de signer l’autorisation de :name. Voici votre copie.',
+        'booking' => 'Réservation : :code.',
+        'attached' => 'Le document joint est l’enregistrement complet de ce que vous avez accepté, avec le texte intégral, la date et l’heure.',
+        'not_verified' => 'Vous avez déclaré ces données vous-même et nous ne les avons vérifiées avec aucun document. Si vous voyez une erreur, prévenez la personne qui a réservé.',
+        'salutation' => 'Merci.',
+    ],
     'guest_form' => [
         'subject' => 'Complète les infos de ta réservation « :product » · :code',
         'greeting' => 'Bonjour !',

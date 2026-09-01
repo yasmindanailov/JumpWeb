@@ -318,6 +318,42 @@
                                 @endif
                             </x-filament::section>
 
+                            {{-- Los menores INVITADOS de las reservas de HOY
+                                 (`specs/waiver-por-reserva.md` §4.11, `#336`): niños que NO son
+                                 menores a cargo de este titular y a los que un adulto sin cuenta
+                                 autorizó desde el enlace del pedido.
+                                 ⚠️ Sección APARTE de la de menores a cargo, y no es cosmética: son
+                                 personas distintas con un régimen distinto —éstas son puntuales,
+                                 cuelgan del PEDIDO y su firmante no es el titular—, y mezclarlas
+                                 haría creer al operador que este adulto responde por todas.
+                                 ⚠️ Se pinta SOLO si hay alguno: una sección vacía en la ficha de un
+                                 cliente normal sería ruido en la pantalla que más se mira.
+                                 ▶ Apellidos fuera, como en la de arriba: el DTO no los trae. --}}
+                            @if (($profile['guest_minors'] ?? []) !== [])
+                                <x-filament::section
+                                    :heading="__('admin.puerta.validar.profile.guest_minors')"
+                                    :icon="Heroicon::OutlinedTicket"
+                                    icon-color="gray"
+                                    compact
+                                >
+                                    <ul class="gate-minors" data-gate-guest-minors>
+                                        @foreach ($profile['guest_minors'] as $g)
+                                            <li class="gate-minor" data-gate-guest-minor data-gate-guest-minor-name="{{ $g['name'] ?? '' }}" data-gate-guest-minor-age="{{ (int) $g['age'] }}" data-gate-guest-minor-waiver="{{ $g['waiver'] ?? 'unknown' }}">
+                                                <span class="gate-minor__name">{{ $g['name'] ?? '' }}</span>
+                                                <span class="gate-minor__age">{{ __('admin.puerta.validar.profile.minor', ['age' => (int) $g['age']]) }}</span>
+                                                <span class="gate-minor__age">{{ $g['order_code'] ?? '' }}</span>
+                                                {{-- `#320`: solo la EXCEPCIÓN lleva pastilla. --}}
+                                                @if (\App\Domain\Identity\Services\WaiverStatus::minorStateIsNoteworthy($g['waiver']))
+                                                    <x-filament::badge size="xs" :color="$g['waiver'] === 'outdated' ? 'warning' : 'danger'">
+                                                        {{ __('admin.puerta.validar.profile.minor_waiver_'.$g['waiver']) }}
+                                                    </x-filament::badge>
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </x-filament::section>
+                            @endif
+
                             {{-- ⚠️ AQUÍ IBA LA TARJETA DE «VISITA» (#234, `[DECIDIDO owner]`): se retira
                                  HASTA QUE EXISTA JUMPPOINTS, que es lo único que da sentido a acreditar
                                  una visita, y entonces se decide bien dónde y cómo va.

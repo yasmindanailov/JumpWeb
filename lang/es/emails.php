@@ -53,6 +53,15 @@ return [
         'paid_confirmation_guest_form' => 'Te esperamos en la fecha y hora que elegiste. En breve te pediremos por email los datos de los invitados; también puedes completarlos cuando quieras desde «Mis reservas», en tu cuenta.',
         'outro' => '¿Alguna duda antes de tu visita? Escríbenos, estamos encantados de ayudarte.',
     ],
+    'guardian_authorization' => [
+        'subject' => 'Tu justificante para :name',
+        'greeting' => 'Hola,',
+        'intro' => 'Acabas de firmar la autorización de :name. Aquí tienes tu copia.',
+        'booking' => 'Reserva: :code.',
+        'attached' => 'El documento adjunto es el registro completo de lo que aceptaste, con el texto íntegro, la fecha y la hora.',
+        'not_verified' => 'Los datos que escribiste los declaraste tú y no los hemos comprobado con ningún documento. Si ves algún error, avisa a la persona que hizo la reserva.',
+        'salutation' => 'Gracias.',
+    ],
     'guest_form' => [
         'subject' => 'Completa los datos de tu reserva «:product» · :code',
         'greeting' => '¡Hola!',

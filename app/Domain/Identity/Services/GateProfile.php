@@ -7,6 +7,7 @@ use App\Domain\Booking\Contracts\GateReservations;
 use App\Domain\Identity\Contracts\GateProfileData;
 use App\Domain\Identity\Models\CustomerCard;
 use App\Domain\Identity\Models\Dependent;
+use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\User;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -50,6 +51,13 @@ final class GateProfile
         $todayRows = array_values(array_filter($rows, fn (array $row): bool => $row['date'] === $day->toDateString()));
         $windowRows = array_values(array_filter($rows, fn (array $row): bool => $row['date'] !== $day->toDateString()));
 
+        // Los menores INVITADOS (`specs/waiver-por-reserva.md` §4.11) de las reservas de HOY.
+        //
+        // ⚠️⚠️ Van al NIVEL de la ficha y no dentro de cada fila, y no es estética: la autorización
+        // cuelga del PEDIDO, así que un pedido con tres líneas hoy repetiría la misma lista tres
+        // veces. Se agrupa aquí, en la COMPOSICIÓN — decidirlo en el Blade es como nacen los N+1.
+        $guestMinors = $this->guestMinors($reservations, $day);
+
         $waiver = WaiverStatus::for($holder);
 
         return new GateProfileData(
@@ -72,6 +80,7 @@ final class GateProfile
             window: $windowRows,
             windowDays: max(0, $windowDays),
             dependents: $this->dependents($holder, $day),
+            guestMinors: $guestMinors,
             visitRegisteredToday: $this->visits->registeredOn($holder, $day),
         );
     }
@@ -152,6 +161,57 @@ final class GateProfile
         }
 
         return $out;
+    }
+
+    /**
+     * Los menores INVITADOS autorizados en los PEDIDOS de las reservas de HOY, con su edad EN LA
+     * FECHA DE LA VISITA (la misma regla D13 que los menores a cargo) y el estado de su
+     * justificante.
+     *
+     * ⚠️ **Presupuesto**: DOS consultas como mucho —las autorizaciones de los pedidos del día y sus
+     * firmas por lotes—, sean uno o veinte menores. `GateProfileTest` fija el techo en 28 y ya cazó
+     * un N+1 en `#294`; si esto creciera por fila, lo cazaría otra vez.
+     *
+     * ⚠️ Se acota a HOY a propósito: la ventana de ±N días es contexto, y los justificantes son para
+     * dejar entrar a alguien que está delante.
+     *
+     * @param  list<GateReservation>  $reservations
+     * @return list<array{order_code: string, name: string, age: int, waiver: ?string}>
+     */
+    private function guestMinors(array $reservations, CarbonImmutable $day): array
+    {
+        $today = array_values(array_filter($reservations, fn (GateReservation $r): bool => $r->date === $day->toDateString()));
+        if ($today === []) {
+            return [];
+        }
+
+        $codeByOrder = [];
+        foreach ($today as $r) {
+            $codeByOrder[$r->orderId] = $r->orderCode;
+        }
+
+        $authorizations = GuardianAuthorization::query()
+            ->whereIn('order_id', array_keys($codeByOrder))
+            ->orderBy('id')
+            ->get();
+        if ($authorizations->isEmpty()) {
+            return [];
+        }
+
+        $statuses = WaiverStatus::forGuestMinors($authorizations);
+
+        return $authorizations
+            ->map(fn (GuardianAuthorization $a): array => [
+                'order_code' => $codeByOrder[(int) $a->order_id] ?? '',
+                // NOMBRE de pila y edad, como los menores a cargo. ⚠️ Los APELLIDOS no llegan aquí y
+                // es estructural (`#236`): distinguir a un niño de otro en un mostrador no los
+                // necesita, y esta plantilla no puede ser la puerta por la que entren.
+                'name' => (string) $a->minor_name,
+                'age' => $a->minor_born_on->diffInYears($day),
+                'waiver' => $statuses[(int) $a->getKey()]?->minorState(),
+            ])
+            ->values()
+            ->all();
     }
 
     /**

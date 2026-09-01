@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\ReservationSlip;
+use App\Domain\Identity\Services\GuardianRoster;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -69,7 +70,22 @@ class ReservationSlipController extends Controller
 
         $slip = ReservationSlip::make($order, $item);
 
-        $pdf = Pdf::loadView('pdf.reservation-slip', ['slip' => $slip, 'showPrices' => $showPrices])->setPaper('a4');
+        // Los menores INVITADOS del PEDIDO (`specs/waiver-por-reserva.md` §4.12): quién viene con
+        // justificante y en qué estado, que es lo que la sala necesita saber al recibirlos.
+        //
+        // ⚠️ **Se compone AQUÍ y no en `ReservationSlip`**, que por lo demás es el sitio de toda la
+        // lógica de esta hoja: el presentador vive en Booking y **Booking no puede mirar a
+        // Identity** (`ModuleBoundariesTest`). La capa de entrega es la que ve los dos módulos.
+        //
+        // ⚠️ Va la forma del OPERADOR, que **no lleva el correo ni el teléfono** de ningún adulto:
+        // la sala no los necesita para recibir a un niño.
+        $guestMinors = app(GuardianRoster::class)->forOperator((int) $order->getKey());
+
+        $pdf = Pdf::loadView('pdf.reservation-slip', [
+            'slip' => $slip,
+            'showPrices' => $showPrices,
+            'guestMinors' => $guestMinors,
+        ])->setPaper('a4');
 
         // `stream` (disposición inline) → el navegador abre el PDF en la pestaña
         // nueva, listo para imprimir directamente (decisión clienta 2026-06-05).
