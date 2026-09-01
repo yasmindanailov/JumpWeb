@@ -19717,3 +19717,65 @@ verde sobre InnoDB real (`OrderCreator` y `SlotOffer` están en el `CRITICAL_RE`
 ⚠️ **Colisión de numeración evitada mirando el REMOTO**: esta entrada nació como `#327` y el otro
 agente ya lo había empujado. Tercera vez que pasa; la regla funciona.
 
+## #329 · 2026-09-01 · La antelación mínima es una regla del AUTOSERVICIO: no ata al mostrador
+
+**Contexto.** `[owner]`: *«vamos a hacer que el operador no tenga límites para crear el pedido no
+respetando los X días de antelación para la reserva.»*
+
+**El encuadre, que es lo que hay que conservar si esto se toca.** `min_advance_value` existe para
+gobernar a alguien que compra **solo**, sin nadie delante que pueda juzgar el caso: «las fiestas se
+piden con tres días» protege a una cocina que no puede responder a un aviso de hoy para mañana.
+Cuando quien vende es un operador con el cliente al teléfono, **esa premisa no se cumple** — él sabe
+si llega. Por eso aquí **no hay interruptor ni permiso**: es una regla que simplemente no le aplica.
+
+⚠️ Y esa es la diferencia con el mínimo de invitados de `#328`, que sí sigue atando hasta que el
+operador lo levanta a propósito, con permiso y rastro: allí no se salta una regla de autoservicio, se
+vende por debajo de lo que el negocio declaró rentable, y eso es una decisión con consecuencias que
+alguien tiene que poder auditar.
+
+### `CounterSale`, porque ya iban dos
+
+Las dos excepciones viajaban como booleanos sueltos por método y en una sola tanda ya eran dos.
+`Booking\Contracts\CounterSale` les da nombre y viaja **desde la página hasta `OrderCreator` y
+`SlotOffer`**, que es lo que garantiza que la OFERTA y el COBRO respondan lo mismo. `null` = la venta
+de siempre, así que **la web queda intacta por construcción**.
+
+⚠️ Se pregunta `$sale->ignoresMinAdvance()` y no `$sale->byOperator` para que el porqué viaje con la
+pregunta: quien lo lee en `SlotOffer` no tiene que saber que la antelación es cosa del autoservicio.
+
+### Se imponía en DOS sitios y el segundo no avisa
+
+Misma forma que `#328`, y por eso se buscó antes de escribir:
+ 1. `OrderCreator` — rechaza la línea, con su error;
+ 2. **`SlotOffer::offeredSlots()`** — descarta la franja de la oferta. Y de ahí sale también
+    `offerableDates()`, que es **el suelo del calendario del panel** (`minOfferableDate()`): sin
+    tocarlo, el operador habría podido elegir la hora y **no llegar nunca al día**.
+
+⚠️⚠️ **Lo que NO se relajó, y cada cosa tiene su caso de control**: el corte intra-día —una franja de
+hoy cuya hora ya pasó **no es antelación, es el pasado**, y eso no lo decide quien vende sino el
+reloj—, el aforo, el máximo, el `>= 1`, la ventana de horario del producto y el estado de la franja
+(cerrada o retirada de la venta online).
+
+▶ **Y queda una pregunta anotada, sin cambiar**: `online_sales_open = false` significa «no se vende
+ONLINE», así que un operador podría argumentar que él sí debería poder venderla. **No estaba en el
+encargo**, así que se deja como está — con un caso que lo afirma explícitamente, para que el día que
+se decida sea consciente y no un test que se rompe.
+
+### Una guarda existente cambia de premisa, y se reescribe
+
+`SlotOfferTest::test_panel_calendar_blocks_lead_time_window_via_min_date` **afirmaba justo lo
+contrario**: que el calendario del panel debe empezar DESPUÉS de la ventana, dejándola en gris. La
+decisión del owner la invierte. Se reescribe conservando lo que sigue siendo cierto —el calendario
+empieza en la primera fecha OFRECIBLE— y cambiando lo que cambió: **qué significa «ofrecible» cuando
+pregunta el panel**. *No se «arregla» cambiando el número esperado.*
+
+### Lo que enseñó
+
+⚠️⚠️ **Una mutación destapó que mis guardas probaban el SERVICIO y no la PANTALLA**: devolver la
+página al `offerableDates($type)` de la web pasaba en verde, con el operador otra vez sin poder llegar
+al día. *Que el dominio pueda hacerlo no es que la pantalla lo haga* — es la hermana de la lección de
+`#266` («que una animación exista y compute no es que el dibujo se mueva»). Caso nuevo sobre
+`quickDays()`.
+
+▶ **13/13 mutaciones muerden.** Suite **3821 · 24.665**. Los dos verificadores de concurrencia en
+verde sobre InnoDB real (`OrderCreator` y `SlotOffer` están en el `CRITICAL_RE`).

@@ -267,22 +267,35 @@ class SlotOfferTest extends TestCase
         $this->assertContains('15:00:00', $times, 'y la que queda por delante sí');
     }
 
-    public function test_panel_calendar_blocks_lead_time_window_via_min_date(): void
+    /**
+     * ❗❗ **`#329` DA LA VUELTA A ESTE CASO, y la vuelta es la decisión, no un ajuste.**
+     *
+     * Decía que con antelación mínima de 7 días el calendario del panel debe EMPEZAR después de la
+     * ventana, dejándola bloqueada en gris. `[DECIDIDO owner, 2026-09-01]`: **la antelación mínima no
+     * ata al mostrador** —es una regla del autoservicio, para quien compra sin nadie que juzgue el
+     * caso—, así que el operador tiene que poder llegar a esos días.
+     *
+     * ▶ **Lo que NO cambia, y por eso el caso sobrevive en vez de borrarse**: el calendario sigue
+     * empezando en la primera fecha OFRECIBLE, no en una fecha inventada. Lo que cambió es qué
+     * significa «ofrecible» cuando pregunta el panel.
+     *
+     * ⚠️ La otra mitad —que la WEB sí sigue bloqueada— vive en
+     * `Admin\Orders\ManualOrderIgnoresMinAdvanceTest`, junto al resto de la decisión.
+     */
+    public function test_panel_calendar_reaches_into_the_lead_time_window(): void
     {
-        // UX: con antelación mínima 7 días, el calendario del panel debe EMPEZAR en la primera fecha
-        // ofrecible → la ventana de antelación queda BLOQUEADA (gris), no clicable-sin-horas.
         $this->entry->update(['min_advance_value' => 7, 'min_advance_unit' => TicketType::UNIT_DAYS]);
-        $this->slot($this->today->copy()->addDay()->toDateString(), '10:00:00');    // dentro de la ventana → bloqueada
-        $this->slot($this->today->copy()->addDays(8)->toDateString(), '10:00:00');  // ofrecible (primera)
-        $this->slot($this->today->copy()->addDays(10)->toDateString(), '11:00:00'); // ofrecible
+        $this->slot($this->today->copy()->addDay()->toDateString(), '10:00:00');    // dentro de la ventana
+        $this->slot($this->today->copy()->addDays(8)->toDateString(), '10:00:00');
+        $this->slot($this->today->copy()->addDays(10)->toDateString(), '11:00:00');
 
         $page = new CreateManualOrderPage;
         $page->data = ['sel_product_id' => $this->entry->id];
 
         $this->assertSame(
-            $this->today->copy()->addDays(8)->toDateString(),
+            $this->today->copy()->addDay()->toDateString(),
             $this->invoke($page, 'minOfferableDate')?->toDateString(),
-            'el calendario del panel empieza en la primera fecha ofrecible'
+            'el mostrador tiene que poder llegar al día que la antelación reserva al autoservicio'
         );
     }
 

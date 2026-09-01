@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Services;
 
+use App\Domain\Booking\Contracts\CounterSale;
 use App\Domain\Booking\Exceptions\ReservationException;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
@@ -51,11 +52,15 @@ class ManualOrderFulfiller
      * Crea y cobra al instante un pedido para `$customer` con el método indicado.
      *
      * @param  array<int, array{ticket_type_id:int, date:string, time:string, qty:int}>  $cart
-     * @param  bool  $allowBelowPackMinimum  `#327` — la excepción del operador para vender un pack
+     * @param  bool  $allowBelowPackMinimum  `#328` — la excepción del operador para vender un pack
      *                                       por debajo de su mínimo de invitados, YA resuelta contra
      *                                       el permiso por la página que llama (`SEC-04`: aquí no hay
-     *                                       actor al que preguntárselo). Viaja tal cual a
-     *                                       `OrderCreator`, que es donde el mínimo manda de verdad.
+     *                                       actor al que preguntárselo).
+     *                                       ▶ Aquí se compone el {@see CounterSale} que baja al
+     *                                       dominio: **este servicio ES el mostrador**, así que la
+     *                                       antelación mínima no ata (`#329`) sin que nadie tenga que
+     *                                       pedirlo — quien llama no puede elegir eso, y es a
+     *                                       propósito.
      *
      * @throws ReservationException si la cesta no valida (aforo, fechas, precios…)
      * @throws InvalidArgumentException si el método no es efectivo/datáfono
@@ -70,7 +75,7 @@ class ManualOrderFulfiller
 
         $order = DB::transaction(function () use ($customer, $cart, $method, $now, $allowBelowPackMinimum): Order {
             // Re-valida y bloquea aforo. Lanza ReservationException si algo no cuadra → rollback.
-            $order = $this->orderCreator->createPendingOrder($customer, $cart, null, $allowBelowPackMinimum);
+            $order = $this->orderCreator->createPendingOrder($customer, $cart, null, CounterSale::byOperator($allowBelowPackMinimum));
 
             Payment::create([
                 'payable_type' => (new Order)->getMorphClass(),

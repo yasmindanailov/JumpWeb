@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Services;
 
+use App\Domain\Booking\Contracts\CounterSale;
 use App\Domain\Booking\Exceptions\ReservationException;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderAdjustment;
@@ -86,21 +87,20 @@ class OrderCreator
      * de email / pago), `orders:expire` la libera. Reutiliza la maquinaria de retención de #62.
      *
      * @param  array<int, array{ticket_type_id:int, date:string, time:string, qty:int}>  $cart
-     * @param  bool  $allowBelowPackMinimum  `#327` — el operador usó la excepción de vender un pack
-     *                                       por debajo de su mínimo de invitados AL CREAR el pedido,
-     *                                       el gemelo de D7 en la edición (`specs/cumple-mixto.md`
-     *                                       §23.4). **Llega ya resuelto**: quien lo pasa en `true` es
-     *                                       `ManualOrderFulfiller` después de que la página haya
-     *                                       comprobado el permiso `orders.edit_item_below_minimum`;
-     *                                       este servicio no mira permisos y no tiene actor.
-     *                                       ⚠️ El default es `false`, así que **la WEB queda intacta
-     *                                       por construcción**: `CheckoutOrchestrator` no lo pasa y
-     *                                       el mínimo le sigue mandando como siempre.
-     *                                       ⚠️ Salta SOLO el mínimo: el máximo y el `>= 1` siguen,
-     *                                       igual que en la edición.
+     * @param  CounterSale|null  $sale  **QUIÉN vende** (`#328`/`#329`): las reglas pensadas para quien
+     *                                  compra SOLO —la antelación mínima del producto y el mínimo de
+     *                                  invitados de un pack— no atan igual a un operador con el
+     *                                  cliente delante. Llega ya resuelto contra el permiso; este
+     *                                  servicio no mira permisos y no tiene actor.
+     *                                  ⚠️ **`null` = la venta de siempre**, así que la WEB queda
+     *                                  intacta por construcción: `CheckoutOrchestrator` no lo pasa.
+     *                                  ⚠️ Lo que NO relaja: aforo, máximo, `>= 1`, ventana de horario
+     *                                  y corte intra-día.
      */
-    public function createPendingOrder(User $user, array $cart, ?Carbon $hold = null, bool $allowBelowPackMinimum = false): Order
+    public function createPendingOrder(User $user, array $cart, ?Carbon $hold = null, ?CounterSale $sale = null): Order
     {
+        $sale ??= CounterSale::no();
+
         $cart = Cart::sanitize($cart);
         if ($cart === []) {
             throw new ReservationException('tickets.errors.cart_empty');
@@ -134,7 +134,7 @@ class OrderCreator
         // sin una lectura consistente previa que fije el snapshot de REPEATABLE READ (#246).
         $lockZoneIds = TicketType::whereIn('id', $ids)->whereNotNull('zone_id')->distinct()->pluck('zone_id')->all();
 
-        return DB::transaction(function () use ($user, $cart, $hold, $ids, $lockZoneIds, $allowBelowPackMinimum) {
+        return DB::transaction(function () use ($user, $cart, $hold, $ids, $lockZoneIds, $sale) {
             // PRIMERA operación de la transacción = LOCK de franjas (auditoría Fase 1, H2 + #246). La
             // ocupación se cuenta por tramo (#60): bloquear TODAS las franjas de las zonas/fechas
             // implicadas serializa dos reservas concurrentes sobre el mismo día/zona. CRUCIAL: el lock
@@ -191,7 +191,11 @@ class OrderCreator
                 }
                 // Antelación mínima de reserva del producto (auditoría Fase 1): backstop del checkout
                 // (la oferta ya la aplica; esto blinda contra peticiones forjadas/obsoletas).
-                if (! $type->meetsMinAdvance($line['date'], $line['time'], DisplayTime::now())) {
+                // `#329` — la antelación mínima es una regla del AUTOSERVICIO: no ata al mostrador.
+                // El corte intra-día de arriba SÍ sigue aplicando a todos, porque eso no es antelación:
+                // es que la franja ya empezó.
+                if (! $sale->ignoresMinAdvance()
+                    && ! $type->meetsMinAdvance($line['date'], $line['time'], DisplayTime::now())) {
                     throw ReservationException::withContext('tickets.errors.too_soon_line', $context);
                 }
 
@@ -206,7 +210,7 @@ class OrderCreator
                     // reparto que hizo D7 en la edición, y por eso el suelo pasa a 1 en vez de
                     // desaparecer: por debajo de 1 no hay reserva que crear.
                     $min = $type->contractableMinimum();
-                    $floor = $allowBelowPackMinimum ? 1 : $min;
+                    $floor = $sale->allowsBelowPackMinimum() ? 1 : $min;
                     if ($line['qty'] < $floor || ($type->max_qty !== null && $line['qty'] > $type->max_qty)) {
                         throw ReservationException::withContext('tickets.errors.pack_guests_range_line', $context + [
                             'min' => $min, 'max' => $type->max_qty ?? '∞',

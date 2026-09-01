@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin\Orders;
 
+use App\Domain\Booking\Contracts\CounterSale;
 use App\Domain\Booking\Exceptions\ReservationException;
 use App\Domain\Booking\Models\PriceTier;
 use App\Domain\Booking\Models\RateType;
@@ -167,7 +168,7 @@ class ManualOrderBelowPackMinimumTest extends TestCase
 
     public function test_the_domain_accepts_it_with_the_operators_exception(): void
     {
-        $order = app(OrderCreator::class)->createPendingOrder($this->customer(), $this->cart(20), null, true);
+        $order = app(OrderCreator::class)->createPendingOrder($this->customer(), $this->cart(20), null, CounterSale::byOperator(true));
 
         $this->assertCount(1, $order->items);
         $this->assertSame(20, (int) $order->items->first()->quantity);
@@ -186,7 +187,7 @@ class ManualOrderBelowPackMinimumTest extends TestCase
         // llegaba igual por otra puerta. Lo cazó el arnés de mutación.
         // *Dos defensas distintas que lanzan la misma clase se confunden si solo miras la clase.*
         try {
-            app(OrderCreator::class)->createPendingOrder($this->customer(), $this->cart(101), null, true);
+            app(OrderCreator::class)->createPendingOrder($this->customer(), $this->cart(101), null, CounterSale::byOperator(true));
             $this->fail('101 invitados en un pack de máximo 100 tienen que rechazarse');
         } catch (ReservationException $e) {
             $this->assertSame('tickets.errors.pack_guests_range_line', $e->getMessage(),
@@ -205,7 +206,7 @@ class ManualOrderBelowPackMinimumTest extends TestCase
      */
     public function test_the_exception_can_never_produce_a_zero_quantity_line(): void
     {
-        $order = app(OrderCreator::class)->createPendingOrder($this->customer(), $this->cart(0), null, true);
+        $order = app(OrderCreator::class)->createPendingOrder($this->customer(), $this->cart(0), null, CounterSale::byOperator(true));
 
         $this->assertSame(1, (int) $order->items->first()->quantity);
     }
@@ -218,7 +219,7 @@ class ManualOrderBelowPackMinimumTest extends TestCase
      */
     public function test_below_the_minimum_the_order_is_priced_at_the_first_tier(): void
     {
-        $order = app(OrderCreator::class)->createPendingOrder($this->customer(), $this->cart(20), null, true);
+        $order = app(OrderCreator::class)->createPendingOrder($this->customer(), $this->cart(20), null, CounterSale::byOperator(true));
         $item = $order->items->first();
 
         $this->assertSame(1500, (int) $item->unit_price, 'el primer tramo, no el precio base');
@@ -268,7 +269,7 @@ class ManualOrderBelowPackMinimumTest extends TestCase
                 'qty' => $qty,
                 'event_data' => [],
                 'addons' => [],
-            ]], null, true);
+            ]], null, CounterSale::byOperator(true));
 
             $this->assertSame(
                 (int) $order->total,
@@ -302,7 +303,7 @@ class ManualOrderBelowPackMinimumTest extends TestCase
         $this->assertArrayNotHasKey('09:00:00', $offer->offerableTimes($this->excursion, $this->date),
             'sin la excepción, una franja con 25 libres y mínimo 30 no se ofrece');
 
-        $withException = $offer->offerableTimes($this->excursion, $this->date, allowBelowPackMinimum: true);
+        $withException = $offer->offerableTimes($this->excursion, $this->date, sale: CounterSale::byOperator(true));
         $this->assertArrayHasKey('09:00:00', $withException,
             'con la excepción, esa misma franja tiene que ofrecerse');
         $this->assertSame(25, $withException['09:00:00']['max_quantity']);
@@ -326,7 +327,7 @@ class ManualOrderBelowPackMinimumTest extends TestCase
 
         $this->assertArrayNotHasKey(
             '09:00:00',
-            app(SlotOffer::class)->offerableTimes($this->excursion, $this->date, allowBelowPackMinimum: true),
+            app(SlotOffer::class)->offerableTimes($this->excursion, $this->date, sale: CounterSale::byOperator(true)),
         );
     }
 

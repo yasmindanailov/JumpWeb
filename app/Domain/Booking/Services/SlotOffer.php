@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Services;
 
+use App\Domain\Booking\Contracts\CounterSale;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Payments\Services\PaymentSettings;
@@ -58,8 +59,10 @@ class SlotOffer
      *
      * @return Collection<int, Slot>
      */
-    public function offeredSlots(?TicketType $type): Collection
+    public function offeredSlots(?TicketType $type, ?CounterSale $sale = null): Collection
     {
+        $sale ??= CounterSale::no();
+
         $now = DisplayTime::now();
         $todayStr = $now->toDateString();
         $to = $now->copy()->addMonths(PaymentSettings::purchaseHorizonMonths())->toDateString();
@@ -75,7 +78,7 @@ class SlotOffer
             $query->where('zone_id', $type->zone_id);
         }
 
-        return $query->get()->filter(function (Slot $s) use ($type, $now) {
+        return $query->get()->filter(function (Slot $s) use ($type, $now, $sale) {
             // Corte intra-día (floor, auditoría Fase 1): una franja de HOY cuya hora de inicio YA
             // pasó no se ofrece (p. ej. las 10:00 cuando son las 10:31). Aplica siempre. Fuente ÚNICA
             // (`passesIntradayFloor`) compartida con el backstop del checkout (`OrderCreator`).
@@ -89,8 +92,12 @@ class SlotOffer
 
             // Ventana viva del día (special_dates/horario) + ANTELACIÓN MÍNIMA de reserva del
             // producto (días de calendario u horas rodantes). Ambas comparten esta única fuente.
+            // `#329` — la ANTELACIÓN MÍNIMA no ata al mostrador: es una regla para quien compra solo.
+            // ⚠️ La ventana de horario del producto SÍ sigue mandando, y el corte intra-día de arriba
+            // también: aquello es el parque y esto es el tiempo, ninguna de las dos las decide quien
+            // vende.
             return $this->productWindow->allowsStart($type, $s->date, $s->start_time)
-                && $type->meetsMinAdvance($s->date->toDateString(), $s->start_time, $now);
+                && ($sale->ignoresMinAdvance() || $type->meetsMinAdvance($s->date->toDateString(), $s->start_time, $now));
         })->values();
     }
 
@@ -116,9 +123,9 @@ class SlotOffer
      *
      * @return array<int, string>
      */
-    public function offerableDates(TicketType $type): array
+    public function offerableDates(TicketType $type, ?CounterSale $sale = null): array
     {
-        return $this->offeredSlots($type)
+        return $this->offeredSlots($type, $sale)
             ->map(fn (Slot $s) => $s->date->toDateString())
             ->unique()->values()->all();
     }
@@ -151,15 +158,17 @@ class SlotOffer
      * @param  array<int, array{start:string, prep_before_min:int, duration_min:int|null, prep_after_min:int, guests:int}>  $cartPackOccupants
      * @return array<string, array{available:int, max_quantity:int, sellable:bool}>
      */
-    public function offerableTimes(TicketType $type, string $date, array $cartOccupants = [], array $cartPackOccupants = [], bool $allowBelowPackMinimum = false): array
+    public function offerableTimes(TicketType $type, string $date, array $cartOccupants = [], array $cartPackOccupants = [], ?CounterSale $sale = null): array
     {
-        $slots = $this->offeredSlots($type)
+        $sale ??= CounterSale::no();
+
+        $slots = $this->offeredSlots($type, $sale)
             ->filter(fn (Slot $s) => $s->date->toDateString() === $date);
 
         $out = [];
 
         if ($type->isPack()) {
-            $min = $allowBelowPackMinimum ? 1 : $type->contractableMinimum();
+            $min = $sale->allowsBelowPackMinimum() ? 1 : $type->contractableMinimum();
             foreach ($slots as $slot) {
                 $free = $this->packAvailability->availableGuestsFor($slot, $type, $cartPackOccupants);
                 if ($free < $min) {

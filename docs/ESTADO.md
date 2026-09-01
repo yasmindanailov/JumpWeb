@@ -26,8 +26,15 @@ aquí lo que no se podaría son datos de menores de terceros.
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — DOS PUNTOS DE PRODUCCIÓN
-> CERRADOS (`#328`)**, los dos «el producto lo sabía y no lo decía»:
+> aquí solo se enlaza.** Última actualización: **2026-09-01 (noche) — TRES PUNTOS DE PRODUCCIÓN
+> CERRADOS (`#328` · `#329`)**:
+>   0. **La antelación mínima ya no ata al mostrador** (`#329`, `[DECIDIDO owner]`): es una regla del
+>      AUTOSERVICIO, para quien compra sin nadie que juzgue el caso. Sin interruptor ni permiso, al
+>      revés que el mínimo del pack. ▶ Nace **`Booking\Contracts\CounterSale`**, que dice QUIÉN vende
+>      y viaja de la página a `OrderCreator` **y** `SlotOffer`: ya iban dos excepciones de la misma
+>      familia en una tanda. ⚠️ Se imponía en DOS sitios y el segundo es **el suelo del calendario del
+>      panel**: sin él, el operador elegía la hora y no llegaba al día.
+>   … y los dos primeros (`#328`), los dos «el producto lo sabía y no lo decía»:
 >   1. **El operador ya puede vender un pack por debajo de su mínimo AL CREAR** un pedido manual (el
 >      gemelo de D7, que solo cubría la edición). ❗ El mínimo se imponía en **CUATRO** sitios y el
 >      cuarto —`SlotOffer`, que descarta la franja entera si el hueco no llega al mínimo— **no avisa
@@ -119,6 +126,8 @@ aquí lo que no se podaría son datos de menores de terceros.
 > tras la T1 del justificante por reserva (`#328`).
 > Suite **3813 en verde** (24.652 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
 > sobre el árbol CONJUNTO tras rebasar `#328` sobre `#327`. ⚠️ **Medida DESPUÉS del rebase y con
+> Suite **3821 en verde** (24.665 aserciones, 1 skipped a propósito), medida el 2026-09-01 (noche)
+> sobre el árbol CONJUNTO con `#328` y `#329` encima de `#327`. Antes, 3813 / 24.652 (`#328` solo). ⚠️ **Medida DESPUÉS del rebase y con
 > `npm run build` delante, no sumada**: por separado daban 3796 / 24.599 (`#327` solo). Y el rebase
 > destapó el techo del chunk del cajón —**259,34 → 260,32 KiB**, atribuido midiendo las dos ramas por
 > separado, subido a 261 por FEATURE con su justificación en el propio test—.

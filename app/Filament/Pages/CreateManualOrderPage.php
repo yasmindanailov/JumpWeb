@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Booking\Contracts\CounterSale;
 use App\Domain\Booking\Exceptions\ReservationException;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\AddonResolver;
@@ -1305,7 +1306,7 @@ class CreateManualOrderPage extends Page
             : app(SlotOffer::class)->offerableTimes(
                 $type,
                 Carbon::parse($date)->toDateString(),
-                allowBelowPackMinimum: $belowMinimum,
+                sale: CounterSale::byOperator($belowMinimum),
             );
 
         $this->timeMapKey = $key;
@@ -1461,7 +1462,13 @@ class CreateManualOrderPage extends Page
 
         $this->offerableDatesFor = $id;
 
-        return $this->offerableDatesCache = $type ? app(SlotOffer::class)->offerableDates($type) : [];
+        // `#329` — el mostrador ve TODOS los días con franja, incluidos los que la antelación
+        // mínima del producto reserva al autoservicio. ⚠️ Esto es además el SUELO del calendario
+        // (`minOfferableDate()`): sin pasarlo aquí, el operador podría elegir la hora pero no llegar
+        // al día — la mitad de la función, y sin ningún error.
+        return $this->offerableDatesCache = $type
+            ? app(SlotOffer::class)->offerableDates($type, CounterSale::byOperator())
+            : [];
     }
 
     /**
