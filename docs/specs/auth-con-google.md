@@ -240,13 +240,27 @@ de la cuenta del atacante**, con los pedidos y los menores de otro.
 
 **Los tres contrapesos, que ahora son parte del diseño:**
 
-1. **La cuenta destino tiene que estar verificada.** Si no lo está, **no se vincula en silencio**: se
-   trata como alta (§5.3) o se le exige verificar. → Q2 del owner (§15).
+1. ✅ **`[DECIDIDO owner, 2026-09-02]` (Q2): si la cuenta destino NO está verificada, se vincula y
+   se EXPULSA a quien la tuviera.** Es decir: se promueve a verificada **y** se llama a
+   `revokeAllAccess()` **y** se invalida la contraseña existente.
+   ▶ **Por qué así y no rechazando** (que era la respuesta literal del owner, revisada con el dato
+   delante): `users.email` es **UNIQUE** `[MEDIDO]`, así que «tratarlo como alta nueva» no tiene
+   dónde aterrizar — no caben dos cuentas con ese correo. Y rechazar tiene un coste medido:
+   **6 de 48 cuentas de producción están sin verificar (12,5 %)**, o sea que uno de cada ocho
+   clientes chocaría con un muro en su primer intento.
+   ▶ **Por qué es seguro**: quien conociera esa contraseña queda fuera, y para recuperarla necesita
+   el buzón — que no controla. Nadie conserva acceso a una cuenta que no ha demostrado.
+   ⚠️ **Residuo asumido, dicho**: si el ocupante hubiera dejado datos dentro, el recién llegado los
+   vería. En la práctica esa cuenta está vacía —dejar reservas exige pagarlas— pero **no es
+   imposible**, y por eso se dice aquí en vez de descubrirlo el día que pase.
+   ⚠️ Decirle a esa persona que existía una cuenta con su correo **no viola `SEC-06`**: solo llega
+   ahí quien acaba de demostrar que el buzón es suyo, así que no hay enumeración posible.
 2. **Aviso por correo al titular en cada vinculación.** Es la única forma de que se entere, y es la
    doctrina que el producto ya aplica en el cambio de correo (`AccountProfile:135-141`: *«al VIEJO,
    para que el dueño se entere si esto no lo ha pedido él»*) y en `SelfSignup::handleExisting()`.
-3. **Desvincular sube a la T3.** ✱ Antes era «cuando alguien lo pida»; con un vínculo irreversible,
-   eso deja al titular sin salida.
+3. **Desvincular sube a la T3** — ✅ `[DECIDIDO owner, 2026-09-02]` (Q4). Antes era «cuando alguien
+   lo pida»; con un vínculo irreversible eso deja al titular sin salida, y es justo la salida que
+   necesita quien recibe el aviso del contrapeso 2 y no lo ha pedido.
 
 ⚠️ **Y la guarda dura sigue siendo `email_verified` de Google**: si viene `false` —ocurre en algunos
 dominios de Workspace—, **no se vincula ni se crea nada**. Nunca se degrada a «el correo coincide».
@@ -264,6 +278,9 @@ Retorno de Google → **no se crea nada** → pantalla (§7) → al enviarla, **
    escribe: sin esto los clientes de Google saldrían distintos en el panel y en el export)*;
 4. la fila de `user_identities`;
 5. la **firma** de la exención con el `waiver_document_id` que sirvió la pantalla.
+
+✅ **`[DECIDIDO owner, 2026-09-02]` (Q1): SÍ se escribe `email_verified_at`.** Google acredita el
+buzón, y su afirmación es exactamente «esta persona controla esta dirección».
 
 ⚠️⚠️ **B2 · Escribir `email_verified_at` es una DECISIÓN, no un detalle.** Es lo que sostiene la
 recuperación de contraseña, y `#336` decidió expresamente **no** dejársela tocar al operador de
@@ -439,9 +456,13 @@ seguiría mostrando «aceptado el …» encima del interruptor apagado. ⇒ La T
 
 - `GoogleAuth::enabled()` exige **las DOS** claves — la lección de `PublicConfigResource:76-83`.
 - Sin claves, el hueco **falla hacia invisible**, como el logotipo, el icono, el kit y la foto del menú.
-- ✱ **Dónde viven es la Q3 y ya NO tengo recomendación fuerte**: ver §3.8. El proyecto tiene escrito
-  que un secreto en `settings` **se vuelca en cada backup**, y la intuición de `ESTADO.md` (`.env`)
-  tiene ese argumento detrás.
+- ✅ **`[DECIDIDO owner, 2026-09-02]` (Q10): en `settings`, como Turnstile**, con `app:set-setting`.
+  ⚠️⚠️ **Y queda escrito el argumento que se descarta al elegirlo**, para que nadie lo redescubra
+  como si fuera nuevo: `SetSetting::PROTECTED_KEYS` dice de la clave de Redsys que ponerla en esa
+  tabla «la deja en una tabla que se vuelca en cada backup», y `Filament\Pages\Settings` declara que
+  los secretos «viven en el vault/`.env`». El owner asume ese coste a cambio del aprovisionamiento
+  sin tocar el `.env`. ▶ **Se añaden a `PROTECTED_KEYS`** (exigir `--force`), que hoy solo tiene las
+  tres de Redsys: es el mecanismo que el repo ya usa para decir «esto cuesta caro tocarlo a ciegas».
 
 ▶ **Consola de Google**: pantalla de consentimiento **externa**, ámbitos **solo `openid`, `email`,
 `profile`**, y el origen y la URI de redirección de la instalación.
@@ -471,7 +492,7 @@ explícitamente** (art. 5.1.c, minimización).
 | # | Peligro | Cierre |
 |---|---|---|
 | **P11** ✱ | **Token de Google no verificado** → cualquiera afirma cualquier correo | §6.3, con caso de mutación |
-| **P12** ✱ | **El atacante registró antes la cuenta** con el correo de la víctima | §5.2, contrapeso 1 |
+| **P12** ✱ | **El atacante registró antes la cuenta** con el correo de la víctima, sin verificar, y conserva la contraseña | §5.2 contrapeso 1: se vincula, se promueve, **`revokeAllAccess()` y la contraseña se invalida** — el ocupante queda fuera y no puede recuperarla sin el buzón |
 | P1 | `email_verified=false` y vinculamos | Guarda dura, con caso propio |
 | P2 | Clave por correo en vez de `sub` | §6.1 |
 | P3 | Cuenta anonimizada vinculable | ✱ `isAnonymized()` **en los DOS caminos**, también el del `sub` (§5.1) |
@@ -506,7 +527,9 @@ explícitamente** (art. 5.1.c, minimización).
 1. Navegador real, los tres caminos.
 2. **La exención queda FIRMADA** al completar el alta, comprobado en `waiver_signatures` y en la puerta.
 3. **`email_verified=false`** forzado en un doble: no se crea ni se vincula nada.
-4. ✱ **P12**: cuenta creada por un tercero sin verificar + entrada con Google ⇒ **no se hereda**.
+4. ✱ **P12**: cuenta creada por un tercero sin verificar + entrada con Google ⇒ el recién llegado
+   entra, y **la contraseña anterior deja de servir y las sesiones anteriores mueren** (las tres
+   cosas aseveradas, no solo la primera).
 5. **Art. 12.2 de punta a punta**: cuenta de Google → borrarla con el ticket de re-autenticación →
    `user_identities` **borrada**.
 6. Sin claves: el botón no aparece en las doce vistas y la ruta responde 404.
@@ -519,8 +542,7 @@ explícitamente** (art. 5.1.c, minimización).
 1. **✱ ¿Damos por verificado el correo al entrar con Google?** Es lo que permite firmar la exención
    en el acto, y es lo contrario de lo que decidiste en `#336` — con la diferencia de que aquí quien
    acredita es Google y no un empleado. **Sin esta respuesta la T2 no arranca.**
-2. **✱ ¿Vinculamos una cuenta cuyo correo nunca se verificó?** Si sí, quien entre hereda la cuenta
-   que otro creó con su dirección (P12). Si no, esa persona no puede entrar con Google hasta verificar.
+2. ✅ **RESUELTA** (Q2): se vincula, se promueve y **se expulsa al ocupante**. Ver §5.2.
 3. **✱ ¿Aviso por correo al titular en cada vinculación?** Es lo único que le permite enterarse.
 4. **✱ ¿Desvincular sube a la T3?** Hoy un vínculo no deseado no se puede quitar salvo borrando la cuenta.
 5. **¿Cuentas de equipo?** ✱ Por defecto esta spec ahora dice **no** (§6.6).
