@@ -804,11 +804,23 @@ mediodía en Madrid: catorce horas de margen y el mismo día natural en las dos 
 literalmente lo que `TESTING.md` §2 manda. **Verificado con CONTROL**: sin el congelado, 10 de 11
 rojos a las 23:59:30; con él, los 11 verdes en las dos fronteras.
 
-⚠️⚠️ **Y la trampa de instrumento que casi lo entierra**: la auditoría se lanzó con `| tail -8`, que
-**cortó justo la tabla de fronteras** y dejó a la vista solo dos filas en verde bajo un veredicto ✗.
-Peor: **el `exit 0` que se leyó era el de `tail`**, no el de la auditoría. *Un filtro de salida puede
-esconder exactamente la evidencia que se estaba buscando, y un código de salida detrás de una tubería
-no es el del comando que importa.*
+▶ **Y un ONCEAVO rojo que la auditoría destapó de rebote y NO era del reloj**:
+`GuestMinorIsolationTest` asevera que la cadena `'Carlos'` **no** está en el HTML del panel — contra
+un HTML que lleva el nombre que pone `User::factory()`. En uno de los diez pases la factoría generó
+un nombre **con «Carlos» dentro**. *Un nombre aleatorio enfrentado a una aserción por SUBCADENA es
+una moneda al aire disfrazada de test*, y solo se ve corriendo la suite muchas veces. Nombre fijado
+y aserción por nombre COMPLETO.
+
+⚠️⚠️ **Y DOS trampas de instrumento que casi lo entierran todo**: la auditoría se lanzó con
+`| tail -8`, que **cortó justo la tabla de fronteras** y dejó a la vista solo dos filas en verde bajo
+un veredicto ✗ —y **el `exit 0` que se leyó era el de `tail`**, no el de la auditoría—; y la segunda
+pasada se lanzó **antes de un rebase que ocurrió a mitad**, así que sus pases vieron árboles
+distintos y hubo que tirarla. *Un filtro de salida puede esconder exactamente la evidencia que se
+busca, un código de salida detrás de una tubería no es el del comando que importa, y una medición
+larga no vale si el sujeto cambia mientras se mide.*
+
+✅ **La tercera pasada, sobre el árbol estable, salió verde en las diez fronteras** (`EXIT=0` de la
+auditoría, ya no el de un `tail`).
 
 ⚠️ **Lo que la T3 NO cierra**: la T4 —el guion de navegador con el anti-bot encendido y el OJO del
 owner— y el plazo de conservación, que sigue `[PENDIENTE: owner]`.

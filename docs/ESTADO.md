@@ -113,7 +113,11 @@ owner.**
 visita ya ha pasado** —el dominio se niega a autorizar sobre una visita terminada—. Verdes a
 cualquier hora normal, **rojos a las 21:59:30 de Madrid y a las 23:59:30 UTC**. Arreglado congelando
 el reloj (`FROZEN_NOW`), **con control**: sin congelar, 10 de 11 rojos; con él, 11 verdes en las dos
-fronteras. ▶ *`audit-clock.sh` NO está en el pre-push: si no se corre al cerrar, esto se va a `main`.*
+fronteras. ▶ **Y un ONCEAVO rojo que NO era del reloj**: `GuestMinorIsolationTest` aseveraba que la
+cadena `'Carlos'` no está en el HTML del panel, contra un HTML que lleva un nombre de
+`User::factory()` — y en uno de los diez pases la factoría sacó uno **con «Carlos» dentro**. *Un
+nombre aleatorio enfrentado a una aserción por SUBCADENA es una moneda al aire disfrazada de test.*
+Nombre fijado y aserción por nombre COMPLETO. ✅ **La auditoría acabó verde en las diez fronteras.** ▶ *`audit-clock.sh` NO está en el pre-push: si no se corre al cerrar, esto se va a `main`.*
 ⚠️⚠️ **Y la trampa que casi lo entierra**: la auditoría se lanzó con `| tail -8`, que **cortó la tabla
 de fronteras** y dejó solo dos filas verdes bajo un veredicto ✗ — y el `exit 0` que se leyó era **el
 de `tail`**. *Un filtro de salida puede esconder justo la evidencia que buscas.*
@@ -330,6 +334,12 @@ aquí lo que no se podaría son datos de menores de terceros.
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
+> ✅ **AUDITORÍA DEL RELOJ EN VERDE EN LAS DIEZ FRONTERAS** (2026-09-02, tras arreglar los ONCE rojos
+> que encontró; ver el bloque del justificante más abajo). ⚠️ `audit-clock.sh` **no está en el
+> pre-push**: si no se corre al cerrar, un test que solo falla ciertas noches se va a `main`.
+> ⚠️ **RE-MEDIDA tras rebasar encima los DOS arreglos del reloj de la T3** (con `npm run build` +
+> `build:ssr` delante, porque `#340` toca Vue): **sale el MISMO número**, que es lo que había que
+> comprobar — los dos arreglan FIXTURES y no añaden casos. *Coincidir no se supone: se mide.*
 > Suite **3904 en verde** (25.033 aserciones, 1 skipped a propósito), medida el 2026-09-02
 > sobre el árbol CONJUNTO: el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo
 > (`#339`) sobre el arreglo del 500 de la puerta (`#338`), rebasado a su vez sobre la **T3** del
