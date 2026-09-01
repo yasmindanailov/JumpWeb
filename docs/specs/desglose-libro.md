@@ -142,7 +142,7 @@ Por **línea** `i` (`order_items`; principal o complemento; una línea de crédi
 
 Por **reserva** `r` (principal + sus complementos):
 
-    Total(r)       = Σ vivo(i) + Σ cortesía(i)
+    Total(r)       = Σ_{líneas VIVAS} ( fila(i) + cortesía(i) )     (la cortesía de una línea cancelada se extingue con ella)
     Pagado(r)      = Σ online_nac(i) − Σ dev(i)
     Liquidado(r)   = max(0, Total(r) − Pagado(r))   si resuelta(r) (franja pasada ∧ pedido cobrado), si no 0
     Saldo(r)       = Total(r) − Pagado(r) − Liquidado(r)
@@ -434,6 +434,22 @@ en `DEUDA.md` RETIRADA.
   invierte) y sobre el corpus local por HTTP, `OrderBook.total == valor − compensado`,
   `OrderBook.balance == pendientePuerta − pendienteDevolución`, `Σ online_nac == cobradoOnline`.
   Es §1.4 convertido en test, y se **borra** en la T3 con el oráculo.
+- ⚠️ **Lo que la T1 dejó dicho para esta tanda** (§6.1):
+  - `nac(i)` y `online_nac(i)` **ya existen** como hechos en `GateBuckets::birthValue()` /
+    `onlineAtBirth()`: el libro los reutiliza, no los reimplementa (dos fórmulas del mismo número
+    es la divergencia de la que nació `OrderLedger`).
+  - **El puente diverge A PROPÓSITO con `intent = paid_in_person`**: el modelo viejo cuenta ese
+    reembolso como `compensado` (no distingue la intención) y el libro **no escribe cortesía** (§4.2:
+    re-canaliza el dinero → «a pagar en el parque»). En ese caso el puente compara `Total` con
+    `valor` (no con `valor − compensado`) y `Saldo` con `pendientePuerta − pendienteDevolución +
+    compensado`. `CourtesyMovementTest::test_paid_in_person_writes_no_courtesy` lo fija.
+  - **`Total(r)` suma solo líneas VIVAS**, cortesía incluida (§4.1): la cortesía de una línea que
+    después se cancela se extingue con ella, o un pedido cancelado tras una cortesía daría un total
+    negativo. La línea `cancel` del libro vale `−(fila + cortesía)` de la línea en ese momento.
+  - **Los fixtures obedecen `I1`** (`Order.total == Σ nac`): uno que no lo haga es un mundo que no
+    existe y se LEGALIZA (los tres de la T1, en §6.1), nunca se excepciona la identidad.
+  - La foto puente `tests/Fixtures/ledger-bridge.json` sigue vigilando el modelo viejo hasta la
+    T3; la T2 NO la regenera (se regenera solo con una decisión escrita aquí).
 
 | Guarda | Mutación |
 |---|---|

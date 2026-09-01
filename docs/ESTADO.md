@@ -47,7 +47,16 @@
 > escribe al reembolsar; `GateBuckets` replica la cascada EN LECTURA y **muere en la T3**.
 > ⚠️ Tres fixtures resultaron ILEGALES (un `Order.total` = la parte online; un pack cancelado
 > «pagado» que ningún cobro incluía; una bajada 3→1 escrita como −12,00): se legalizaron.
-> ⚠️ Dos repairs legacy retirados y sus migraciones neutralizadas. **Sigue la T2** (§6·T2).
+> ⚠️ Dos repairs legacy retirados y sus migraciones neutralizadas.
+> ▶ **RETOMAR (siguiente sesión): la T2 — el libro en el DOMINIO, sin tocar superficies.** Lee
+> `specs/desglose-libro.md` en este orden: §4.1 (la aritmética; `Total(r)` suma solo líneas
+> VIVAS) → §4.2 (los hechos, tal como quedaron: `type` único) → §4.3 (qué publica `OrderBook`)
+> → §4.4 (los siete casos del saldo) → **§6·T2 con su bloque «lo que la T1 dejó dicho»**
+> (reutilizar `GateBuckets::birthValue/onlineAtBirth`; el puente diverge a propósito con
+> `paid_in_person`; los fixtures obedecen I1) → §6.1 (lo medido). Base: `85f4252`. Cada tanda:
+> `VERIFY_CONC=1`, los tres verificadores y `audit-clock` si añade fixtures con calendario.
+> Numera `DECISIONES` mirando el remoto (`git fetch`): la siguiente libre es la que siga a la
+> última del remoto, no `#307` por inercia.
 > ❗❗❗ **2026-09-01 (noche) · EL DESGLOSE PASA A SER UN LIBRO — `DECISIONES #305`,
 > `specs/desglose-libro.md`.** El owner: el balance de dos ejes «exige razonar»; quiere cada gestión
 > como una línea + o − con su fecha, un Total y un SALDO que se liquida EN EL PARQUE (`[DECIDIDO
