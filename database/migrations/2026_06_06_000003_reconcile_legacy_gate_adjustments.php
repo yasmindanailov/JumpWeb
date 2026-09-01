@@ -1,32 +1,27 @@
 <?php
 
-use App\Domain\Booking\Services\LegacyGateAdjustmentReconciliation;
 use Illuminate\Database\Migrations\Migration;
 
 /**
- * Robustez del desglose — reparación de datos: NETEA los cargos de puerta
- * `extra_due` fantasma que el código previo dejaba al subir y bajar la cantidad
- * de un item (cada subida creaba una fila append-only; las bajadas reembolsaban
- * online en vez de acreditar el cargo → "A cobrar en el parque" inflado; bug
- * JJ-WIMWJW). Ver {@see LegacyGateAdjustmentReconciliation}.
+ * NEUTRALIZADA en la T1 del libro (`specs/desglose-libro.md` §4.7, `DECISIONES #305`).
  *
- * Repair de datos, no de esquema: en una BD sin pedidos editados con este patrón
- * es un no-op. Idempotente. Irreversible por naturaleza (el crédito appendeado
- * es histórico); `down()` es un no-op intencionado.
- *
- * Debe correr DESPUÉS de hacer `amount_cents` SIGNED (migración hermana
- * `..._000002_make_order_adjustment_amount_signed`).
+ * Reparaba datos del repo ORIGEN (bug JJ-WIMWJW de allí): neteaba los cargos de puerta
+ * `extra_due` fantasma que el código previo dejaba al subir y bajar cantidad.
+ * `LegacyGateAdjustmentReconciliation` era su único cuerpo y **no tenía ningún otro llamador**;
+ * JumpWeb solo instala limpio (`DECISIONES #127`) y no hay pedidos en producción, así que sobre
+ * toda base que este repo haya creado era un no-op. Con la T1 una bajada escribe su delta
+ * entero como hecho (`edit`) y no existe la cascada de créditos que este servicio reparaba; se
+ * retiró, y esta migración se queda como fila del historial de `migrations`.
  */
 return new class extends Migration
 {
     public function up(): void
     {
-        LegacyGateAdjustmentReconciliation::run();
+        // Sin efecto: ver docblock.
     }
 
     public function down(): void
     {
-        // Reparación de datos one-way: no se revierte (eliminar los créditos
-        // reintroduciría los cargos fantasma).
+        // Sin efecto.
     }
 };

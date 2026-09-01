@@ -88,7 +88,7 @@ class DepositChargeTest extends TestCase
         $this->assertSame(18000, (int) $order->total);
 
         // Resto-señal registrado en el principal: 180 − 30 = 150.
-        $remainders = $order->adjustments->where('type', OrderAdjustment::TYPE_DEPOSIT_REMAINDER);
+        $remainders = $order->adjustments->where('type', OrderAdjustment::TYPE_DEPOSIT_SPLIT);
         $this->assertCount(1, $remainders);
         $this->assertSame(15000, (int) $remainders->first()->amount_cents);
 
@@ -111,7 +111,7 @@ class DepositChargeTest extends TestCase
         $this->assertSame(7000, $order->onlineDueCents());         // 30 (señal) + 40 (entrada full)
 
         // Solo el producto con señal genera resto; la entrada NO.
-        $remainders = $order->adjustments->where('type', OrderAdjustment::TYPE_DEPOSIT_REMAINDER);
+        $remainders = $order->adjustments->where('type', OrderAdjustment::TYPE_DEPOSIT_SPLIT);
         $this->assertCount(1, $remainders);
         $this->assertSame(15000, (int) $remainders->first()->amount_cents);
     }
@@ -143,7 +143,7 @@ class DepositChargeTest extends TestCase
         $order->load(['items', 'adjustments']);
 
         // No-regresión: sin señal NO hay filas deposit_remainder y online == total.
-        $this->assertCount(0, $order->adjustments->where('type', OrderAdjustment::TYPE_DEPOSIT_REMAINDER));
+        $this->assertCount(0, $order->adjustments->where('type', OrderAdjustment::TYPE_DEPOSIT_SPLIT));
         $this->assertSame(8000, (int) $order->total);
         $this->assertSame(8000, $order->onlineDueCents());
     }
@@ -181,7 +181,7 @@ class DepositChargeTest extends TestCase
         ]);
         $order->load(['items', 'adjustments']);
 
-        $this->assertCount(0, $order->adjustments->where('type', OrderAdjustment::TYPE_DEPOSIT_REMAINDER));
+        $this->assertCount(0, $order->adjustments->where('type', OrderAdjustment::TYPE_DEPOSIT_SPLIT));
         $this->assertSame(6000, $order->onlineDueCents()); // 40 + 20, todo online
         $this->assertSame(6000, (int) $order->total);
     }
@@ -207,7 +207,7 @@ class DepositChargeTest extends TestCase
         $this->assertSame(3000, $order->onlineDueCents());
         // El resto queda a cobrar en el parque (resto-señal registrado).
         $this->assertSame(15000, (int) $order->adjustments
-            ->where('type', OrderAdjustment::TYPE_DEPOSIT_REMAINDER)->sum('amount_cents'));
+            ->where('type', OrderAdjustment::TYPE_DEPOSIT_SPLIT)->sum('amount_cents'));
     }
 
     public function test_redsys_ida_amount_equals_payment_amount_not_order_total(): void

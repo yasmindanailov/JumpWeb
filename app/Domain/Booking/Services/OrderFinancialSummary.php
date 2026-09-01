@@ -3,7 +3,6 @@
 namespace App\Domain\Booking\Services;
 
 use App\Domain\Booking\Models\Order;
-use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 
@@ -55,8 +54,8 @@ final readonly class OrderFinancialSummary
      *                             LEGACY-SAFE del reembolso). Hay refunds pre-#142 que
      *                             solo viven aquí (sin fila `payment_refunds`); se usa
      *                             para que el reembolso efectivo no se pierda.
-     * @param  int  $depositRemainder  céntimos (#225) — Σ neta de `TYPE_DEPOSIT_REMAINDER`
-     *                                 de items NO cancelados: el RESTO DE LA SEÑAL a cobrar en
+     * @param  int  $depositRemainder  céntimos (#225) — el cubo del RESTO DE LA SEÑAL, derivado por
+     *                                 línea (`GateBuckets`) de items NO cancelados: a cobrar en
      *                                 el parque, conocido desde la creación. Es parte del VALOR
      *                                 (ya dentro de `Order.total`/`productsValue`), NO un delta
      *                                 de ediciones → suma a `pendingAtGate` pero NUNCA a
@@ -115,32 +114,24 @@ final readonly class OrderFinancialSummary
         $extraDueResolved = 0;
         $depositRemainder = 0;          // #225: resto de la señal a cobrar en puerta
         $depositRemainderResolved = 0;
-        foreach ($order->adjustments as $adj) {
-            $isExtraDue = $adj->type === OrderAdjustment::TYPE_EXTRA_DUE;
-            $isDepositRemainder = $adj->type === OrderAdjustment::TYPE_DEPOSIT_REMAINDER;
-            if (! $isExtraDue && ! $isDepositRemainder) {
+        // T1 del libro: los dos cubos de puerta se DERIVAN por línea desde sus hechos
+        // (`GateBuckets` replica la cascada que hasta la T1 se escribía), no se suman de filas por
+        // tipo. Mismas cifras; lo que cambia es que el hecho es ahora el delta entero.
+        foreach ($order->items as $item) {
+            // Item CANCELADO → sus cubos quedan ANULADOS (mismo criterio para AMBOS buckets de
+            // puerta). El cargo era por algo que se quitó ANTES de cobrarlo (p. ej. un complemento
+            // añadido en una edición y luego sustituido en un cambio de menú, o el resto de la señal
+            // de una línea cancelada): nunca llegó a cobrarse en puerta, así que NO cuenta ni en el
+            // total con cambios ni en lo pendiente. Distinto de un item FINALIZADO (abajo), que sí
+            // se asume cobrado.
+            if ($item->isCancelled() || $orderCancelled) {
                 continue;
             }
 
-            $item = $adj->order_item_id !== null
-                ? $order->items->firstWhere('id', $adj->order_item_id)
-                : null;
+            $buckets = GateBuckets::forItem($order, $item);
 
-            // Item CANCELADO → ajuste ANULADO (mismo criterio para AMBOS buckets de puerta).
-            // El cargo era por algo que se quitó ANTES de cobrarlo (p. ej. un complemento
-            // añadido por extra_due y luego sustituido en un cambio de menú, o el resto de la
-            // señal de una línea cancelada): nunca llegó a cobrarse en puerta, así que NO
-            // cuenta ni en el total con cambios ni en lo pendiente. Distinto de un item
-            // FINALIZADO (abajo), que sí se asume cobrado. Requiere que el ajuste se ate a SU
-            // item (no al principal) para que cancelarlo lo anule.
-            if (($item !== null && $item->isCancelled()) || $orderCancelled) {
-                continue;
-            }
-
-            $cents = (int) $adj->amount_cents;
             // Item FINALIZADO (pasó su franja) → cobrado en puerta implícitamente
             // (decisión clienta): cuenta en el total con cambios, pero ya NO en lo pendiente.
-            // Si el ajuste no tiene item asociado (caso teórico v2) se deja siempre pendiente.
             //
             // ⚠️⚠️ **Y el pedido tiene que haberse COBRADO** (`DECISIONES #127`): que la franja haya
             // pasado no cobra nada en el parque si nadie llegó a pagar el pedido. Sin esta condición
@@ -148,21 +139,16 @@ final readonly class OrderFinancialSummary
             // no existe — medido en staging (`R-VYXKRD`) y reproducido en local con `orders:expire`.
             // Es la MISMA condición que {@see ReservationFinancials::showsDepositNote} ya aplicaba
             // tres líneas más abajo en la misma clase hermana.
-            $resolved = $item !== null && $item->isFinishedInPractice() && $orderCollected;
+            $resolved = $item->isFinishedInPractice() && $orderCollected;
 
-            if ($isExtraDue) {
-                // Delta de EDICIONES (sube `totalWithChanges`).
-                $extraDue += $cents;
-                if ($resolved) {
-                    $extraDueResolved += $cents;
-                }
-            } else {
-                // Resto de la SEÑAL (#225): parte del VALOR base no cobrada online. Suma al
-                // bucket de puerta, pero NO a `extraDue` (no infla `totalWithChanges`).
-                $depositRemainder += $cents;
-                if ($resolved) {
-                    $depositRemainderResolved += $cents;
-                }
+            // Delta de EDICIONES (sube `totalWithChanges`).
+            $extraDue += $buckets->extraDue;
+            // Resto de la SEÑAL (#225): parte del VALOR base no cobrada online. Suma al bucket de
+            // puerta, pero NO a `extraDue` (no infla `totalWithChanges`).
+            $depositRemainder += $buckets->depositRemainder;
+            if ($resolved) {
+                $extraDueResolved += $buckets->extraDue;
+                $depositRemainderResolved += $buckets->depositRemainder;
             }
         }
 

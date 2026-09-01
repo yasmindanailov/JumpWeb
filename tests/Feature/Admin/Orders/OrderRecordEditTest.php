@@ -17,16 +17,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Sub-fase 7.2e cimientos — Order::applyExtraDue.
+ * **`Order::recordEdit` — el hecho de una gestión** (T1 del libro, `specs/desglose-libro.md` §4.2).
  *
- * Verifica el orquestador del "extra pendiente de cobrar en puerta":
- *  - Crea fila `order_adjustments` con type `extra_due`, importe, contexto,
- *    autor y currency correctos.
- *  - Audit log `orders.extra_due_applied` con payload estructurado.
- *  - Multiple llamadas acumulan (histórico inmutable, no upsert).
- *  - Bloqueos: amount ≤ 0 → InvalidArgumentException; item ajeno → DomainException.
+ * Nació como `OrderApplyExtraDueTest` (sub-fase 7.2e del origen): entonces solo existía la
+ * SUBIDA, y una bajada se escribía en cascada por otros dos métodos. Desde la T1 los dos sentidos
+ * son la misma escritura con el signo del delta, y aquí se verifica el contrato del hecho:
+ *  - fila `order_adjustments` de tipo `edit` con importe (con signo), contexto, autor y moneda;
+ *  - audit `orders.extra_due_applied` (subida) / `orders.value_reduction_applied` (bajada);
+ *  - las gestiones ACUMULAN (histórico inmutable, no upsert);
+ *  - bloqueos: delta 0 → InvalidArgumentException; item ajeno → DomainException.
+ * La LECTURA de esos hechos (los cubos de puerta, el nacimiento) vive en `EditMovementTest`.
  */
-class OrderApplyExtraDueTest extends TestCase
+class OrderRecordEditTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -43,15 +45,15 @@ class OrderApplyExtraDueTest extends TestCase
         $this->seed(PermissionSeeder::class);
     }
 
-    public function test_apply_extra_due_creates_adjustment_with_correct_fields(): void
+    public function test_a_raise_creates_an_edit_row_with_correct_fields(): void
     {
         $by = User::factory()->create();
         $order = $this->makePaidOrder();
         $item = $this->attachActiveItem($order);
 
-        $adjustment = $order->applyExtraDue(
+        $adjustment = $order->recordEdit(
             item: $item,
-            amountCents: 1200,
+            deltaCents: 1200,
             by: $by,
             reason: 'cantidad 3 → 5',
             context: ['quantity_change' => ['old' => 3, 'new' => 5]],
@@ -60,7 +62,7 @@ class OrderApplyExtraDueTest extends TestCase
         $this->assertInstanceOf(OrderAdjustment::class, $adjustment);
         $this->assertSame($order->id, (int) $adjustment->order_id);
         $this->assertSame($item->id, (int) $adjustment->order_item_id);
-        $this->assertSame(OrderAdjustment::TYPE_EXTRA_DUE, $adjustment->type);
+        $this->assertSame(OrderAdjustment::TYPE_EDIT, $adjustment->type);
         $this->assertSame(1200, (int) $adjustment->amount_cents);
         $this->assertSame('EUR', $adjustment->currency);
         $this->assertSame('cantidad 3 → 5', $adjustment->reason);
@@ -68,13 +70,13 @@ class OrderApplyExtraDueTest extends TestCase
         $this->assertSame($by->id, (int) $adjustment->applied_by);
     }
 
-    public function test_apply_extra_due_writes_audit_log(): void
+    public function test_a_raise_writes_the_charge_audit_entry(): void
     {
         $by = User::factory()->create();
         $order = $this->makePaidOrder();
         $item = $this->attachActiveItem($order);
 
-        $adjustment = $order->applyExtraDue($item, 800, $by, 'addon nuevo');
+        $adjustment = $order->recordEdit($item, 800, $by, 'addon nuevo');
 
         $log = AuditLog::where('action', 'orders.extra_due_applied')->latest()->first();
         $this->assertNotNull($log);
@@ -83,43 +85,57 @@ class OrderApplyExtraDueTest extends TestCase
         $this->assertSame(800, $log->payload['amount_cents']);
         $this->assertSame('addon nuevo', $log->payload['reason']);
         $this->assertSame($adjustment->id, $log->payload['adjustment_id']);
+        $this->assertNull(AuditLog::where('action', 'orders.value_reduction_applied')->first());
     }
 
-    public function test_multiple_extras_accumulate_as_immutable_history(): void
+    /**
+     * Una BAJADA es el mismo hecho con el signo cambiado: una fila `edit` NEGATIVA con su delta
+     * entero, y su propia entrada de historial. (Hasta la T1 un delta negativo se rechazaba aquí y
+     * la bajada se repartía en créditos por otros dos métodos.)
+     */
+    public function test_a_reduction_is_the_same_fact_with_a_negative_delta_and_its_own_audit_entry(): void
     {
         $by = User::factory()->create();
         $order = $this->makePaidOrder();
         $item = $this->attachActiveItem($order);
 
-        $order->applyExtraDue($item, 500, $by, 'cambio 1');
-        $order->applyExtraDue($item, 700, $by, 'cambio 2');
-        $order->applyExtraDue($item, 300, $by, 'cambio 3');
+        $adjustment = $order->recordEdit($item, -400, $by, 'item_edit_reduction', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 1]]]);
 
-        $this->assertSame(3, $order->adjustments()->count());
-        $this->assertSame(1500, (int) $order->adjustments()->sum('amount_cents'));
+        $this->assertSame(OrderAdjustment::TYPE_EDIT, $adjustment->type);
+        $this->assertSame(-400, (int) $adjustment->amount_cents, 'se persiste CON signo, sin negar ni marcar');
+
+        $log = AuditLog::where('action', 'orders.value_reduction_applied')->latest()->first();
+        $this->assertNotNull($log, 'la bajada tiene su propia acción de historial');
+        $this->assertSame(-400, $log->payload['amount_cents']);
+        $this->assertSame($adjustment->id, $log->payload['adjustment_id']);
+        $this->assertNull(AuditLog::where('action', 'orders.extra_due_applied')->first(), 'y no la del cargo');
     }
 
-    public function test_apply_extra_due_rejects_zero_amount(): void
+    public function test_multiple_edits_accumulate_as_immutable_history(): void
+    {
+        $by = User::factory()->create();
+        $order = $this->makePaidOrder();
+        $item = $this->attachActiveItem($order);
+
+        $order->recordEdit($item, 500, $by, 'cambio 1');
+        $order->recordEdit($item, 700, $by, 'cambio 2');
+        $order->recordEdit($item, -300, $by, 'cambio 3');
+
+        $this->assertSame(3, $order->adjustments()->count(), 'tres gestiones, tres hechos: nada se sobrescribe');
+        $this->assertSame(900, (int) $order->adjustments()->sum('amount_cents'));
+    }
+
+    public function test_a_zero_delta_is_rejected(): void
     {
         $by = User::factory()->create();
         $order = $this->makePaidOrder();
         $item = $this->attachActiveItem($order);
 
         $this->expectException(\InvalidArgumentException::class);
-        $order->applyExtraDue($item, 0, $by);
+        $order->recordEdit($item, 0, $by);
     }
 
-    public function test_apply_extra_due_rejects_negative_amount(): void
-    {
-        $by = User::factory()->create();
-        $order = $this->makePaidOrder();
-        $item = $this->attachActiveItem($order);
-
-        $this->expectException(\InvalidArgumentException::class);
-        $order->applyExtraDue($item, -100, $by);
-    }
-
-    public function test_apply_extra_due_rejects_item_from_another_order(): void
+    public function test_an_item_from_another_order_is_rejected(): void
     {
         $by = User::factory()->create();
         $orderA = $this->makePaidOrder('JJ-OWN0001');
@@ -128,16 +144,16 @@ class OrderApplyExtraDueTest extends TestCase
 
         $this->expectException(\DomainException::class);
         // Anti-IDOR: el orquestador rechaza items que no pertenecen al Order.
-        $orderA->applyExtraDue($itemOfB, 500, $by);
+        $orderA->recordEdit($itemOfB, 500, $by);
     }
 
-    public function test_apply_extra_due_persists_null_context_when_empty_array(): void
+    public function test_an_empty_context_is_persisted_as_null(): void
     {
         $by = User::factory()->create();
         $order = $this->makePaidOrder();
         $item = $this->attachActiveItem($order);
 
-        $adjustment = $order->applyExtraDue($item, 200, $by, 'sin contexto', []);
+        $adjustment = $order->recordEdit($item, 200, $by, 'sin contexto', []);
 
         // context vacío se persiste como null (la columna admite null, evita
         // serializaciones JSON "[]" inútiles que confundirían lecturas).

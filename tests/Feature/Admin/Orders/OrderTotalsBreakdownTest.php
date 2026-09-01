@@ -196,7 +196,7 @@ class OrderTotalsBreakdownTest extends TestCase
         OrderAdjustment::create([
             'order_id' => $order->id,
             'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE,
+            'type' => OrderAdjustment::TYPE_EDIT,
             'amount_cents' => 2400,
             'currency' => 'EUR',
             'reason' => 'item_edit',
@@ -223,7 +223,7 @@ class OrderTotalsBreakdownTest extends TestCase
         OrderAdjustment::create([
             'order_id' => $order->id,
             'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE,
+            'type' => OrderAdjustment::TYPE_EDIT,
             'amount_cents' => 2400,
             'currency' => 'EUR',
             'reason' => 'item_edit',
@@ -304,7 +304,7 @@ class OrderTotalsBreakdownTest extends TestCase
         $item->update(['slot_id' => $past->id]);
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE, 'amount_cents' => 2400,
+            'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => 2400,
             'currency' => 'EUR', 'reason' => 'item_edit',
             'context' => ['changes' => ['quantity_change' => ['old' => 1, 'new' => 3]]],
             'applied_by' => User::factory()->create()->id,
@@ -409,7 +409,7 @@ class OrderTotalsBreakdownTest extends TestCase
         $order->forceFill(['total' => 1000])->save();   // pagó 1 ud online
         $item = $this->attachActiveItem($order);          // 1 ud @ 10,00
         $item->forceFill(['quantity' => 2])->save();      // ahora 2 uds → charged 20,00
-        $order->applyExtraDue($item->fresh(), 1000, User::factory()->create(), 'item_edit',
+        $order->recordEdit($item->fresh(), 1000, User::factory()->create(), 'item_edit',
             ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
 
         $html = $this->renderTotals($order->fresh(['payments.refunds', 'adjustments', 'items.slot', 'items.ticketType', 'items.children.ticketType']));
@@ -432,7 +432,7 @@ class OrderTotalsBreakdownTest extends TestCase
         $order->forceFill(['total' => 2000])->save();   // 10,00 (A, 1 ud) + 10,00 (B)
         $a = $this->attachActiveItem($order);            // "Pulsera Jump" 1 ud @ 10,00
         $a->forceFill(['quantity' => 2])->save();        // sube a 2 uds → charged 20,00
-        $order->applyExtraDue($a->fresh(), 1000, User::factory()->create(), 'item_edit',
+        $order->recordEdit($a->fresh(), 1000, User::factory()->create(), 'item_edit',
             ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
 
         $kids = TicketType::create([
@@ -471,7 +471,7 @@ class OrderTotalsBreakdownTest extends TestCase
         $this->attachPaidPayment($order);                                    // pago real por web (ancla #225)
         $item = $this->attachActiveItem($order);
         $item->forceFill(['unit_price' => 1800, 'quantity' => 12])->save();  // 12 × 18 = 216,00 €
-        $order->applyExtraDue($item->fresh(), 7200, User::factory()->create(), 'item_edit',
+        $order->recordEdit($item->fresh(), 7200, User::factory()->create(), 'item_edit',
             ['changes' => ['quantity_change' => ['old' => 8, 'new' => 12]]]); // +4 → +72,00 a cobrar
 
         $html = $this->renderTotals($order->fresh(['payments.refunds', 'adjustments', 'items.slot', 'items.ticketType', 'items.children.ticketType']));

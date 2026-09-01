@@ -226,7 +226,7 @@ class MixedPartySurchargeTest extends TestCase
         $this->assertNull($lines[0]->slot_id);
 
         $adjustment = OrderAdjustment::where('order_item_id', $lines[0]->id)->firstOrFail();
-        $this->assertSame(OrderAdjustment::TYPE_EXTRA_DUE, $adjustment->type);
+        $this->assertSame(OrderAdjustment::TYPE_MIXED, $adjustment->type);
         $this->assertSame(700, (int) $adjustment->amount_cents);
         $this->assertSame($this->jump->id, (int) $adjustment->context['mixed_party']['target_type_id']);
     }
@@ -771,7 +771,7 @@ class MixedPartySurchargeTest extends TestCase
         if ($depositRemainderCents > 0) {
             OrderAdjustment::create([
                 'order_id' => $order->id, 'order_item_id' => $item->id,
-                'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+                'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
                 'amount_cents' => $depositRemainderCents, 'currency' => 'EUR',
                 'applied_by' => $order->user_id,
             ]);
@@ -821,7 +821,7 @@ class MixedPartySurchargeTest extends TestCase
         $this->assertNull($credit->slot_id);
 
         $adjustment = OrderAdjustment::where('order_item_id', $credit->id)->firstOrFail();
-        $this->assertSame(OrderAdjustment::TYPE_EXTRA_DUE, $adjustment->type);
+        $this->assertSame(OrderAdjustment::TYPE_MIXED, $adjustment->type);
         $this->assertSame(-700, (int) $adjustment->amount_cents);
         $this->assertTrue($adjustment->context['mixed_party']['credit']);
 

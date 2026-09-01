@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin\Orders;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
@@ -116,14 +117,16 @@ class ItemPriceChangeReconstructionTest extends TestCase
 
         $this->moveTo($order, $item, $this->monday);                     // re-tarifica a 2 × 12,00
 
-        // D3: el marcador EXISTE y porta la causa entera.
-        $marker = $this->fresh($order)->adjustments()
-            ->where('order_item_id', $item->id)
-            ->where('reason', 'reduction_marker')
-            ->first();
-        $this->assertNotNull($marker, 'la bajada por fecha tiene que dejar su marcador (D3)');
-        $this->assertSame(0, (int) $marker->amount_cents);
-        $changes = $marker->context['changes'] ?? [];
+        // T1 del libro: la bajada por fecha es UN hecho con su delta ENTERO (2 × (12,00 − 20,00) =
+        // −16,00), no un marcador de 0 € — y porta la causa entera. (Mutación que muerde: volver a
+        // escribir 0 € y dejar que la lectura reconstruya desde el catálogo.)
+        $rows = $this->fresh($order)->adjustments()->where('order_item_id', $item->id)->get();
+        $this->assertCount(1, $rows, 'una gestión, un hecho');
+        $movement = $rows->first();
+        $this->assertSame(OrderAdjustment::TYPE_EDIT, $movement->type);
+        $this->assertSame(-1600, (int) $movement->amount_cents, 'el delta entero de la bajada, con signo');
+        $this->assertSame('item_edit_reduction', $movement->reason);
+        $changes = $movement->context['changes'] ?? [];
         $this->assertArrayHasKey('slot_change', $changes);
         $this->assertSame(
             ['old' => 2000, 'new' => 1200],
@@ -131,7 +134,7 @@ class ItemPriceChangeReconstructionTest extends TestCase
             'el cambio de precio viaja estructurado, con el precio ORIGINAL en `old`',
         );
 
-        // D4: la reconstrucción dice lo que se COBRÓ, no lo que vale ahora.
+        // D4: lo que se COBRÓ sale de los HECHOS (fila − delta), no del catálogo vivo.
         $fresh = $this->fresh($order);
         $this->assertSame(4000, $fresh->itemOriginalOnlineCents($item->fresh()), 'se cobraron 40,00 online');
         $this->assertSame(4000, $fresh->itemRefundableRemainderCents($item->fresh()), 'y ese es el tope de la línea');
@@ -149,10 +152,11 @@ class ItemPriceChangeReconstructionTest extends TestCase
 
         $this->editQty($order, $item, 1);                                // 2 → 1, mismo día
 
-        $marker = $this->fresh($order)->adjustments()
-            ->where('order_item_id', $item->id)->where('reason', 'reduction_marker')->first();
-        $this->assertNotNull($marker);
-        $changes = $marker->context['changes'] ?? [];
+        $movement = $this->fresh($order)->adjustments()
+            ->where('order_item_id', $item->id)->where('type', OrderAdjustment::TYPE_EDIT)->first();
+        $this->assertNotNull($movement);
+        $this->assertSame(-2000, (int) $movement->amount_cents, '1 × 20,00 menos: el delta entero');
+        $changes = $movement->context['changes'] ?? [];
         $this->assertArrayHasKey('quantity_change', $changes);
         $this->assertArrayNotHasKey('unit_price_change', $changes, 'sin re-tarificación no hay cambio de precio');
 

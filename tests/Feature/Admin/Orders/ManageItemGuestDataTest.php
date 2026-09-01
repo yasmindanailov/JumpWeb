@@ -182,7 +182,7 @@ class ManageItemGuestDataTest extends TestCase
     {
         return (int) OrderAdjustment::query()
             ->where('order_id', $item->order_id)
-            ->where('type', OrderAdjustment::TYPE_EXTRA_DUE)
+            ->where('type', OrderAdjustment::TYPE_MIXED)
             ->get()
             ->filter(fn (OrderAdjustment $a): bool => is_array($a->context) && isset($a->context['mixed_party']))
             ->filter(fn (OrderAdjustment $a): bool => ! OrderItem::find($a->order_item_id)?->isCancelled())

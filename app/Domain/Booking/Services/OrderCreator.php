@@ -322,19 +322,21 @@ class OrderCreator
     }
 
     /**
-     * Registra el «resto de la señal» (#225) de un item como ajuste `deposit_remainder`
-     * (a cobrar presencialmente). Atado al item para que cancelarlo lo anule (mismo criterio
-     * que `extra_due`). `applied_by` = el cliente del pedido: en la compra no hay operador y el
-     * FK `applied_by` no admite null; registra de forma fidedigna quién originó el cargo.
+     * Registra el REPARTO DE LA SEÑAL (#225 del origen; T1 del libro, `specs/desglose-libro.md`
+     * §4.2) de una línea: la parte de su valor que NO se cobra online y se paga en el parque, como
+     * fila `deposit_split`. Es un HECHO de nacimiento —no un movimiento—: de él sale, sin consultar
+     * el catálogo, lo que la línea aportó al cobro online (`GateBuckets::onlineAtBirth`). Atado al
+     * item para que cancelarlo lo anule. `applied_by` = el cliente del pedido: en la compra no hay
+     * operador y el FK `applied_by` no admite null; registra de forma fidedigna quién originó el cargo.
      */
     private function recordDepositRemainder(Order $order, OrderItem $item, int $cents, User $user): void
     {
         $order->adjustments()->create([
             'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => $cents,
             'currency' => $order->currency ?? 'EUR',
-            'reason' => 'deposit_remainder',
+            'reason' => 'deposit_split',
             'applied_by' => $user->id,
         ]);
     }

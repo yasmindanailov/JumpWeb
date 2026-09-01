@@ -119,7 +119,7 @@ class OrderFinancialSummaryTest extends TestCase
         $order = $this->makePaidOrder(2400);
         $by = User::factory()->create();
         $item = $this->attachActiveItem($order);
-        $order->applyExtraDue($item, 1200, $by, 'cambio cantidad');
+        $order->recordEdit($item, 1200, $by, 'cambio cantidad');
 
         $summary = OrderFinancialSummary::fromOrder($order->fresh(['payments.refunds', 'adjustments', 'items.slot']));
 
@@ -137,7 +137,7 @@ class OrderFinancialSummaryTest extends TestCase
         $order = $this->makePaidOrder(2400);
         $by = User::factory()->create();
         $item = $this->attachItemWithPastSlot($order);
-        $order->applyExtraDue($item, 1200, $by, 'cambio cantidad pre-sesión');
+        $order->recordEdit($item, 1200, $by, 'cambio cantidad pre-sesión');
 
         $summary = OrderFinancialSummary::fromOrder($order->fresh(['payments.refunds', 'adjustments', 'items.slot']));
 
@@ -154,7 +154,7 @@ class OrderFinancialSummaryTest extends TestCase
         $order = $this->makePaidOrder(2400);
         $by = User::factory()->create();
         $item = $this->attachActiveItem($order);
-        $order->applyExtraDue($item, 800, $by, 'edición previa al cancelar');
+        $order->recordEdit($item, 800, $by, 'edición previa al cancelar');
         $item->markCancelled($by);
 
         $summary = OrderFinancialSummary::fromOrder($order->fresh(['payments.refunds', 'adjustments', 'items.slot']));
@@ -185,7 +185,7 @@ class OrderFinancialSummaryTest extends TestCase
 
         // 2) Extra de 1800 sobre item activo (no finalizado).
         $item = $this->attachActiveItem($order);
-        $order->applyExtraDue($item, 1800, $by, 'cambio mixto');
+        $order->recordEdit($item, 1800, $by, 'cambio mixto');
 
         $summary = OrderFinancialSummary::fromOrder($order->fresh(['payments.refunds', 'adjustments', 'items.slot']));
 
@@ -210,8 +210,8 @@ class OrderFinancialSummaryTest extends TestCase
         $past = $this->attachItemWithPastSlot($order);   // finalizado
         $future = $this->attachActiveItem($order);       // activo
 
-        $order->applyExtraDue($past, 500, $by);   // se considera saldado
-        $order->applyExtraDue($future, 700, $by); // sigue pendiente
+        $order->recordEdit($past, 500, $by);   // se considera saldado
+        $order->recordEdit($future, 700, $by); // sigue pendiente
 
         $summary = OrderFinancialSummary::fromOrder($order->fresh(['payments.refunds', 'adjustments', 'items.slot']));
 
@@ -308,7 +308,7 @@ class OrderFinancialSummaryTest extends TestCase
         $by = User::factory()->create();
         $item = $this->attachActiveItem($order);
         $item->forceFill(['quantity' => 2])->save(); // ahora charged 2000
-        $order->applyExtraDue($item->fresh(), 1000, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
+        $order->recordEdit($item->fresh(), 1000, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
 
         $summary = OrderFinancialSummary::fromOrder($order->fresh(['payments.refunds', 'adjustments', 'items.slot']));
 
@@ -421,7 +421,7 @@ class OrderFinancialSummaryTest extends TestCase
     {
         return OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => $cents, 'currency' => 'EUR',
             'applied_by' => $order->user_id,
         ]);

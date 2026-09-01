@@ -142,15 +142,23 @@ class OrdersPolish179Test extends TestCase
     public function test_total_with_changes_includes_extra_due_and_refunds(): void
     {
         $order = $this->order('JJ-TWC1', Order::STATUS_PAID, 33380); // 333,80 €
-        OrderAdjustment::create([ // complemento añadido, a cobrar en puerta (+40,00)
-            'order_id' => $order->id, 'order_item_id' => null,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE, 'amount_cents' => 4000,
+        $principal = $this->itemWithSlot($order, now()->addDays(5)->toDateString());
+        // Complemento añadido en gestión, a cobrar en puerta (+40,00). ⚠️ Atado a SU línea, como
+        // hace el editor: un hecho de dinero sin línea no existe en el producto (T1 del libro).
+        $addon = OrderItem::create([
+            'order_id' => $order->id, 'parent_item_id' => $principal->id,
+            'ticket_type_id' => $this->entry->id, 'slot_id' => null,
+            'quantity' => 1, 'seats' => 0, 'unit_price' => 4000,
+        ]);
+        OrderAdjustment::create([
+            'order_id' => $order->id, 'order_item_id' => $addon->id,
+            'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => 4000,
             'currency' => 'EUR', 'reason' => 'item_edit', 'context' => [],
             'applied_by' => User::factory()->create()->id,
         ]);
 
         // 33380 + 4000 − 0 = 37380.
-        $this->assertSame(37380, $order->fresh()->load('adjustments')->totalWithChangesCents());
+        $this->assertSame(37380, $order->fresh()->load('adjustments', 'items')->totalWithChangesCents());
     }
 
     // ─── #2 + #3: la lista muestra el Total REAL y enlaza al detalle ───────
@@ -170,7 +178,7 @@ class OrdersPolish179Test extends TestCase
         ]);
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $addon->id,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE, 'amount_cents' => 4000,
+            'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => 4000,
             'currency' => 'EUR', 'reason' => 'item_edit', 'context' => [],
             'applied_by' => User::factory()->create()->id,
         ]);
@@ -194,7 +202,7 @@ class OrdersPolish179Test extends TestCase
         $this->payment($order, 28800);
         $item = $this->itemWithSlot($order, now()->addDays(6)->toDateString());
         $item->forceFill(['unit_price' => 1800, 'quantity' => 12])->save(); // charged 21600 = 216,00
-        $order->applyExtraDue($item->fresh(), 7200, $this->staff(), 'item_edit',
+        $order->recordEdit($item->fresh(), 7200, $this->staff(), 'item_edit',
             ['changes' => ['quantity_change' => ['old' => 8, 'new' => 12]]]); // +72,00 a cobrar
 
         $this->actingAs($this->staff())

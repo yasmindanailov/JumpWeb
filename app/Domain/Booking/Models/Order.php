@@ -4,6 +4,7 @@ namespace App\Domain\Booking\Models;
 
 use App\Domain\Booking\Concerns\HasItemActionGuards;
 use App\Domain\Booking\Concerns\OrderOperativeStatus;
+use App\Domain\Booking\Services\GateBuckets;
 use App\Domain\Booking\Services\OrderFinancialSummary;
 use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Identity\Models\User;
@@ -451,18 +452,39 @@ class Order extends Model
      */
     public function totalWithChangesCents(): int
     {
-        $cancelledItemIds = $this->items
-            ->filter(fn (OrderItem $i) => $i->isCancelled())
-            ->map(fn (OrderItem $i) => (int) $i->id)
-            ->all();
-
-        $extraDue = (int) $this->adjustments
-            ->where('type', OrderAdjustment::TYPE_EXTRA_DUE)
-            ->reject(fn (OrderAdjustment $adj) => $adj->order_item_id !== null
-                && in_array((int) $adj->order_item_id, $cancelledItemIds, true))
-            ->sum('amount_cents');
+        // T1 del libro: el cubo de ediciones se DERIVA de los hechos por línea (`GateBuckets`), ya no
+        // se suma de filas `extra_due`. Mismas cifras que antes, por construcción del replay.
+        $extraDue = 0;
+        foreach ($this->items as $item) {
+            if ($item->isCancelled()) {
+                continue;
+            }
+            $extraDue += GateBuckets::forItem($this, $item)->extraDue;
+        }
 
         return (int) $this->total + $extraDue - (int) ($this->refund_amount_cents ?? 0);
+    }
+
+    /**
+     * **El valor con el que NACIÓ el pedido, reconstruido desde los HECHOS de sus líneas**
+     * (`specs/desglose-libro.md` §4.1: `Σ_i nac(i)`, con `nac(i) = fila(i) − Δ(i)`).
+     *
+     * Es la mitad de la identidad de NACIMIENTO (`I1`): tiene que coincidir con `Order.total`, que
+     * es lo que `OrderCreator` guardó al crear. Si no coincide, o falta un hecho (una gestión que no
+     * dejó su fila) o el pedido se fabricó a mano con un total que no existe — en los dos casos el
+     * desglose no puede fiarse y `OrderLedger` lo marca «en revisión».
+     *
+     * ⚠️ Cuenta TODAS las líneas, canceladas incluidas: cancelar no cambia con qué nació la línea.
+     * Lectura sin N+1: eager-load `items` + `adjustments`.
+     */
+    public function birthValueCents(): int
+    {
+        $sum = 0;
+        foreach ($this->items as $item) {
+            $sum += GateBuckets::forItem($this, $item)->birthValue();
+        }
+
+        return $sum;
     }
 
     /**
@@ -772,6 +794,17 @@ class Order extends Model
                 ];
             }
 
+            // T1 del libro: lo que se le DEBÍA al cliente ANTES de contar este reembolso, por pedido y
+            // por línea — la cortesía es lo que se devuelve por encima de eso, y se escribe en esta
+            // misma transacción ({@see recordCourtesyForRefund}). Se mide con las relaciones frescas
+            // y con la fila del reembolso todavía `pending` (no cuenta como devuelto).
+            $order->load(['payments.refunds', 'adjustments', 'items.children', 'items.slot', 'items.ticketType']);
+            $owedBefore = $order->financialSummary()->pendienteDevolucion();
+            $owedBeforeByItem = [];
+            foreach ($order->items as $line) {
+                $owedBeforeByItem[(int) $line->id] = $order->itemPendingRefundCents($line);
+            }
+
             // Rama éxito (REST 0900 o modo manual): marca fila succeeded, transita Order.
             $refund->update([
                 'status' => PaymentRefund::STATUS_SUCCEEDED,
@@ -805,6 +838,8 @@ class Order extends Model
             if ($alsoCancelApplied) {
                 $order->cancelLiveItems($by);
             }
+
+            $order->recordCourtesyForRefund($refund->refresh(), null, $owedBefore, $owedBeforeByItem);
 
             AuditLogger::log(
                 action: 'orders.refunded',
@@ -882,9 +917,9 @@ class Order extends Model
     /**
      * Líneas NETAS del desglose "A cobrar en el parque", AGRUPADAS por item.
      *
-     * Cada item suma sus `extra_due` CON SIGNO: el crédito de una bajada
-     * ({@see applyGateCredit}) netea contra el cargo de una subida
-     * ({@see applyExtraDue}), de modo que subir y bajar la misma cantidad deja
+     * Cada item lleva su cubo de ediciones NETO (T1 del libro: derivado de sus hechos por
+     * `GateBuckets`, con la cascada de antes): la bajada netea contra el cargo de una subida
+     * (los dos, {@see recordEdit} con signo), de modo que subir y bajar la misma cantidad deja
      * neto 0 y NO aparece. Reemplaza el listado fila-por-ajuste, que pintaba un
      * renglón por cada subida histórica → cargos fantasma al subir y bajar
      * (bug JJ-WIMWJW: "↳ +1 Jump" ×3 cuando el neto real era 0). Los items
@@ -911,26 +946,33 @@ class Order extends Model
     {
         $byItem = [];
         foreach ($this->adjustments as $adj) {
-            if ($adj->type !== OrderAdjustment::TYPE_EXTRA_DUE) {
+            // T1 del libro: las líneas de puerta salen de los hechos que mueven el valor (`edit` y
+            // `mixed`); el reparto de señal tiene su propia línea y la cortesía no es de puerta.
+            if (! $adj->isValueDelta()) {
                 continue;
             }
             $itemId = $adj->order_item_id;
-            if ($onlyItemIds !== null && ($itemId === null || ! in_array((int) $itemId, $onlyItemIds, true))) {
+            if ($itemId === null) {
                 continue;
             }
-            $item = $itemId !== null ? $this->items->firstWhere('id', $itemId) : null;
-            // Item cerrado (finalizado/cancelado) → su extra_due ya está resuelto
-            // o anulado: no pendiente. Mismo criterio que pendingAtGate(). Usamos el
-            // resolvedor SIN N+1 (el parent de un complemento se busca en `items`, ya
-            // cargada, no vía la relación perezosa `parent`).
-            if ($item !== null && ($this->itemGateResolved($item) || $item->isCancelled())) {
+            if ($onlyItemIds !== null && ! in_array((int) $itemId, $onlyItemIds, true)) {
                 continue;
             }
-            $key = $itemId ?? 'order';
+            $item = $this->items->firstWhere('id', $itemId);
+            // Item cerrado (finalizado/cancelado) → su cargo ya está resuelto o anulado: no
+            // pendiente. Mismo criterio que pendingAtGate(). Usamos el resolvedor SIN N+1 (el
+            // parent de un complemento se busca en `items`, ya cargada, no vía la relación
+            // perezosa `parent`).
+            if ($item === null || $this->itemGateResolved($item) || $item->isCancelled()) {
+                continue;
+            }
+            $key = (int) $itemId;
             if (! isset($byItem[$key])) {
-                $byItem[$key] = ['amount' => 0, 'item' => $item, 'hasProductChange' => false, 'hasQuantityChange' => false, 'positives' => [], 'creditAdj' => null];
+                // ⚠️ El IMPORTE de la línea es el cubo de ediciones NETO de la línea, derivado con la
+                // cascada (`GateBuckets`) — no la suma cruda de sus filas: desde la T1 una bajada
+                // lleva su delta ENTERO y la parte que la señal absorbió no está en este cubo.
+                $byItem[$key] = ['amount' => GateBuckets::forItem($this, $item)->extraDue, 'item' => $item, 'hasProductChange' => false, 'hasQuantityChange' => false, 'positives' => [], 'creditAdj' => null];
             }
-            $byItem[$key]['amount'] += (int) $adj->amount_cents;
             $ctx = is_array($adj->context) ? $adj->context : [];
             if (isset($ctx['changes']['product_change'])) {
                 $byItem[$key]['hasProductChange'] = true;
@@ -1455,45 +1497,32 @@ class Order extends Model
     }
 
     /**
-     * Suma NETA (con signo) de `extra_due` atados a ESTE item — su cargo de puerta
-     * PENDIENTE. Incluye los CRÉDITOS negativos de {@see applyGateCredit}: subir y
-     * bajar la misma cantidad netea a 0 (no queda cargo fantasma). Es la parte de su
-     * importe que NO se cobró online, sino pendiente de cobro presencial (o anulada al
-     * cancelar el item). Los cargos de complementos se atan a su propio child (no al
-     * principal), así que esto es exacto por línea. Por el invariante de
-     * {@see applyGateCredit}, nunca es negativo.
+     * El cubo de EDICIONES de ESTE item — su cargo de puerta PENDIENTE, neto: las bajadas
+     * ({@see recordEdit} con delta negativo) netean contra las subidas, así que subir y bajar la
+     * misma cantidad deja 0 (no queda cargo fantasma). Es la parte de su importe que NO se cobró
+     * online, sino pendiente de cobro presencial (o anulada al cancelar el item). Los cargos de
+     * complementos se atan a su propio child (no al principal), así que esto es exacto por línea.
+     * Nunca es negativo salvo en la línea de CRÉDITO mixta, cuyo gemelo lo es a propósito.
      */
     public function itemExtraDueCents(OrderItem $item): int
     {
-        $sum = 0;
-        foreach ($this->adjustments as $adj) {
-            if ($adj->type === OrderAdjustment::TYPE_EXTRA_DUE
-                && (int) $adj->order_item_id === (int) $item->id) {
-                $sum += (int) $adj->amount_cents;
-            }
-        }
-
-        return $sum;
+        // T1 del libro: DERIVADO de los hechos con la cascada de antes (`GateBuckets`), no sumado de
+        // filas `extra_due`. Mismas cifras; el hecho es ahora el delta entero de cada gestión.
+        return GateBuckets::forItem($this, $item)->extraDue;
     }
 
     /**
-     * Suma NETA (con signo) de los ajustes `deposit_remainder` atados a ESTE item — la parte
-     * del valor base que NO se cobró online por pagar solo la SEÑAL (#225), pendiente de cobro
-     * presencial. Espejo de {@see itemExtraDueCents} para el otro "bucket de puerta". Admite
-     * créditos negativos (al bajar cantidad, §5.8 del plan). En pedidos sin señal NO existen
-     * estas filas → devuelve 0 (cálculo legacy idéntico).
+     * El cubo del RESTO DE LA SEÑAL de ESTE item — la parte del valor base que NO se cobró online
+     * por pagar solo la SEÑAL (#225 del origen), pendiente de cobro presencial: el reparto de
+     * nacimiento (`deposit_split`) menos lo que las bajadas absorbieron de él. Espejo de
+     * {@see itemExtraDueCents} para el otro "bucket de puerta". En pedidos sin señal no hay
+     * reparto → devuelve 0.
      */
     public function itemDepositRemainderCents(OrderItem $item): int
     {
-        $sum = 0;
-        foreach ($this->adjustments as $adj) {
-            if ($adj->type === OrderAdjustment::TYPE_DEPOSIT_REMAINDER
-                && (int) $adj->order_item_id === (int) $item->id) {
-                $sum += (int) $adj->amount_cents;
-            }
-        }
-
-        return $sum;
+        // T1 del libro: el reparto de señal al nacer (`deposit_split`) menos lo que las bajadas
+        // absorbieron de él, replicado en lectura por `GateBuckets`.
+        return GateBuckets::forItem($this, $item)->depositRemainder;
     }
 
     /**
@@ -1591,113 +1620,26 @@ class Order extends Model
     }
 
     /**
-     * Importe ORIGINAL pagado ONLINE por este item (lo que aportó al `Order.total`),
-     * reconstruido (robustez del desglose #198) para poder atribuir la "pendiente de
-     * devolución" a la línea concreta cuando se REDUJO la cantidad — tras un `forceFill`
-     * el item ya no guarda su cantidad original.
+     * **Lo que esta línea aportó al COBRO ONLINE al nacer — un HECHO, no una reconstrucción**
+     * (T1 del libro, `specs/desglose-libro.md` §4.1: `online_nac(i) = nac(i) − reparto(i)`).
      *
-     * Reglas (deterministas, sin tocar BD si `adjustments` está eager-loaded):
-     *  - Si tiene cambios de CANTIDAD o de PRECIO UNITARIO en su histórico →
-     *    `cantidad_original × precio_unitario_original`, donde cada término sale del PRIMER
-     *    cambio de su clase (el `old` más antiguo es el valor pre-edición). EXACTO para
-     *    subir/bajar cantidad, y —desde `#150` (D4 de `#146`)— también para la
-     *    RE-TARIFICACIÓN de `PAY-18` (fecha/producto): antes solo reconstruía la cantidad y
-     *    multiplicaba por el `unit_price` ACTUAL, que la re-tarificación ya había
-     *    sobrescrito — el tope de reembolso caía al precio nuevo y, cancelado el pedido,
-     *    la diferencia quedaba ATRAPADA sin vía de panel (medido en `#149`: 40/30/10).
-     *  - En otro caso → `itemCollectedCents` (lo cobrado online ACTUAL): correcto para una
-     *    línea sin editar (= su importe) y para un complemento añadido en puerta (= 0, su
-     *    `collected` es 0). Así un addon de puerta nunca cuenta como "pendiente de
-     *    devolución". (Queda aproximado el cambio de PRODUCTO anterior a `#150`, cuyo
-     *    contexto no llevaba el precio.)
+     * ⚠️⚠️ **Hasta la T1 esto se RECONSTRUÍA**: leía el `quantity_change`/`unit_price_change` más
+     * antiguo del historial de la línea y pasaba su producto por `TicketType::depositCents()` —
+     * **la señal del catálogo VIVO**. Medido sobre `T4-PRB01` (`DEUDA.md`, 2026-09-01): el
+     * producto declaraba HOY señal fija de 30,00 € cuando al nacer se cobraron 10,00, y la card
+     * de la reserva decía «pendiente de devolución 20,00 €» sobre dinero que nunca entró — el
+     * fantasma de la señal. Ahora sale de dos hechos que no consultan el catálogo: el valor con el
+     * que nació la línea (su fila menos los deltas de sus gestiones) y el reparto de señal que
+     * `OrderCreator` escribió al crearla (`deposit_split`). Un complemento cobrado íntegro en
+     * puerta (Opción A del origen) tiene reparto = valor → 0, sin caso especial.
+     *
+     * Sin `deposit_split` (línea pagada entera online) es el valor de nacimiento; una línea creada
+     * por una edición (complemento añadido, línea mixta) nace con 0. Lectura pura sobre las
+     * relaciones cargadas.
      */
     public function itemOriginalOnlineCents(OrderItem $item): int
     {
-        // «Primero» con desempate por id: dos ediciones pueden caer en el MISMO segundo y el orden
-        // de una relación sin `orderBy` no es un contrato — sin el id, el «primer cambio» sería el
-        // azar del driver.
-        $isEarlier = function ($adj, $bestAt, $bestId): bool {
-            return $bestAt === null
-                || $adj->created_at < $bestAt
-                || ($adj->created_at == $bestAt && (int) $adj->id < $bestId);
-        };
-        $earliestQtyAt = null;
-        $earliestQtyId = 0;
-        $originalQty = null;
-        $earliestUnitAt = null;
-        $earliestUnitId = 0;
-        $originalUnit = null;
-        foreach ($this->adjustments as $adj) {
-            // Los cambios de una edición los porta el ajuste que la registró: el cargo o crédito de
-            // puerta (`extra_due`), el crédito del resto-señal (`deposit_remainder`, #225/D8) o el
-            // marcador de reconstrucción de una bajada puramente-online ({@see recordReductionMarker}).
-            $isGateBucket = $adj->type === OrderAdjustment::TYPE_EXTRA_DUE
-                || $adj->type === OrderAdjustment::TYPE_DEPOSIT_REMAINDER;
-            if (! $isGateBucket || (int) $adj->order_item_id !== (int) $item->id) {
-                continue;
-            }
-            $ctx = is_array($adj->context) ? $adj->context : [];
-            $old = $ctx['changes']['quantity_change']['old'] ?? null;
-            if ($old !== null && $isEarlier($adj, $earliestQtyAt, $earliestQtyId)) {
-                $earliestQtyAt = $adj->created_at;
-                $earliestQtyId = (int) $adj->id;
-                $originalQty = (int) $old;
-            }
-            // ⚠️ El PRIMER cambio de precio lleva en su `old` el precio ORIGINAL — cada término se
-            // rastrea por separado: una edición puede tocar solo la cantidad y la siguiente solo el
-            // precio, y el original es el par (primer qty.old, primer unit.old), no el de una fila.
-            $oldUnit = $ctx['changes']['unit_price_change']['old'] ?? null;
-            if ($oldUnit !== null && $isEarlier($adj, $earliestUnitAt, $earliestUnitId)) {
-                $earliestUnitAt = $adj->created_at;
-                $earliestUnitId = (int) $adj->id;
-                $originalUnit = (int) $oldUnit;
-            }
-        }
-
-        if ($originalQty !== null || $originalUnit !== null) {
-            $originalValue = ($originalQty ?? (int) $item->quantity) * ($originalUnit ?? (int) $item->unit_price);
-
-            // #225 (auditoría Fase 1 · P1): un COMPLEMENTO de un pack CON señal se cobró ÍNTEGRO en
-            // PUERTA (Opción A, {@see OrderCreator}: se le creó un `deposit_remainder` por su importe
-            // completo) → su online original es **0**, NO `depositCents()` del propio addon (cuyo
-            // `deposit_type=none` devolvería el valor pleno → «pendiente de devolución» FANTASMA en
-            // la card/PDF/«Mis pedidos» + techo de reembolso inflado contra una línea nunca cobrada
-            // online). El fix #225-F1 cubrió el PRINCIPAL pero no estos children. Detecta la huella
-            // real (tiene fila `deposit_remainder`), robusto aun si el depósito del pack ≥ su valor
-            // (ahí `has_deposit` es false y el child SÍ se cobró online → cae al cálculo de abajo).
-            if ($item->parent_item_id !== null && $this->itemChargedAtGateAsDeposit($item)) {
-                return 0;
-            }
-
-            // #225: lo cobrado ONLINE originalmente fue la SEÑAL del valor original, NO el valor
-            // pleno. `depositCents` es data-driven (sin señal → valor completo, legacy idéntico).
-            // Sin esto, subir la cantidad de un pack con señal hacía aflorar un «Pendiente de
-            // devolución» FANTASMA en la card del producto (originalValor − señal actual).
-            return $item->ticketType?->depositCents($originalValue) ?? $originalValue;
-        }
-
-        return $this->itemCollectedCents($item);
-    }
-
-    /**
-     * ¿Este item se cobró ÍNTEGRO en PUERTA como parte de la señal (#225, Opción A)? Es cierto
-     * cuando {@see OrderCreator} le creó un ajuste `deposit_remainder` POSITIVO en la creación —
-     * el principal de un pack con señal y CADA complemento de pago de ese pack. Un crédito por
-     * bajada (fila negativa) NO lo desmiente: la huella original persiste. Lo usa
-     * {@see itemOriginalOnlineCents} para que el «online original» de un COMPLEMENTO de pack con
-     * señal sea 0 (nunca se cobró online), no su valor pleno.
-     */
-    private function itemChargedAtGateAsDeposit(OrderItem $item): bool
-    {
-        foreach ($this->adjustments as $adj) {
-            if ($adj->type === OrderAdjustment::TYPE_DEPOSIT_REMAINDER
-                && (int) $adj->order_item_id === (int) $item->id
-                && (int) $adj->amount_cents > 0) {
-                return true;
-            }
-        }
-
-        return false;
+        return GateBuckets::forItem($this, $item)->onlineAtBirth();
     }
 
     /**
@@ -1750,30 +1692,30 @@ class Order extends Model
      * @param  array<string,mixed>  $context  Diff estructurado opcional
      *                                        (slot_change/quantity_change/etc.).
      */
-    public function applyExtraDue(
+    public function recordEdit(
         OrderItem $item,
-        int $amountCents,
+        int $deltaCents,
         User $by,
         ?string $reason = null,
         array $context = [],
     ): OrderAdjustment {
-        if ($amountCents <= 0) {
-            throw new \InvalidArgumentException('Extra due amount must be positive (got '.$amountCents.').');
+        if ($deltaCents === 0) {
+            throw new \InvalidArgumentException('An edit movement must move the value (got 0).');
         }
 
         if ((int) $item->order_id !== (int) $this->id) {
             throw new \DomainException('Item does not belong to this order.');
         }
 
-        $adjustment = DB::transaction(function () use ($item, $amountCents, $by, $reason, $context): OrderAdjustment {
+        $adjustment = DB::transaction(function () use ($item, $deltaCents, $by, $reason, $context): OrderAdjustment {
             // Lock the Order para serializar contra edits concurrentes.
             self::query()->lockForUpdate()->find($this->id);
 
             return OrderAdjustment::create([
                 'order_id' => $this->id,
                 'order_item_id' => $item->id,
-                'type' => OrderAdjustment::TYPE_EXTRA_DUE,
-                'amount_cents' => $amountCents,
+                'type' => OrderAdjustment::TYPE_EDIT,
+                'amount_cents' => $deltaCents,
                 'currency' => $this->currency ?? 'EUR',
                 'reason' => $reason,
                 'context' => $context !== [] ? $context : null,
@@ -1781,13 +1723,16 @@ class Order extends Model
             ]);
         });
 
+        // Dos acciones y no una: el operador tiene que poder leer en el historial si aquello fue
+        // un cargo o una bajada sin abrir el importe. Las etiquetas viven en
+        // `admin.orders.audit_modal.actions.orders.*` (`AuditActionCatalogTest` las empareja).
         AuditLogger::log(
-            action: 'orders.extra_due_applied',
+            action: $deltaCents > 0 ? 'orders.extra_due_applied' : 'orders.value_reduction_applied',
             target: $this,
             payload: [
                 'order_code' => $this->code,
                 'order_item_id' => $item->id,
-                'amount_cents' => $amountCents,
+                'amount_cents' => $deltaCents,
                 'reason' => $reason,
                 'adjustment_id' => $adjustment->id,
             ],
@@ -1797,165 +1742,115 @@ class Order extends Model
     }
 
     /**
-     * Aplica un CRÉDITO de puerta: una fila `extra_due` con `amount_cents`
-     * NEGATIVO que ANULA (total o parcialmente) un cargo de puerta PENDIENTE del
-     * mismo item cuando una edición BAJA su cantidad/importe.
+     * **La CORTESÍA de un reembolso, escrita al ocurrir** (T1 del libro, `specs/desglose-libro.md`
+     * §4.2): la parte de lo devuelto que EXCEDE lo que se le debía al cliente en el ámbito del
+     * reembolso, o sea dinero devuelto SIN que desapareciera producto. Hasta la T1 ese importe se
+     * DERIVABA al leer (`OrderFinancialSummary::compensado`, «reembolsado − lo que ya no respalda
+     * producto»); ahora es una fila `courtesy` (≤ 0), atribuida a línea y fechada, y el modelo de
+     * dos ejes sigue derivando el suyo hasta que el libro lo sustituya (la T2 los cruza).
      *
-     * Por qué firmado y no un reembolso: el cargo que se deshace era dinero a
-     * cobrar EN PUERTA (presencial, NUNCA cobrado online), así que deshacerlo no
-     * es una devolución bancaria — es "ya no lo debes". El crédito netea contra
-     * los cargos previos del MISMO item ({@see itemExtraDueCents} suma con signo):
-     * subir y bajar la misma cantidad deja neto 0, sin cargos fantasma (bug
-     * JJ-WIMWJW). Solo la parte de la bajada que cae POR DEBAJO de lo pagado
-     * online se reembolsa de verdad — responsabilidad del caller, que llama a
-     * {@see executePartialRefund} con el remanente.
+     * ▶ La regla, cerrada en la spec:
+     *  - `cortesía = max(0, importe − debido_antes)`, con `debido_antes` = lo pendiente de devolver
+     *    en el ÁMBITO del reembolso ANTES de contarlo (la reserva si va atado a línea; el pedido si
+     *    es total). Se mide con el modelo vigente, que es el que define «debido» hoy.
+     *  - Con `intent = paid_in_person` NO hay cortesía: ese reembolso re-canaliza el dinero (el
+     *    cliente lo pagará en recepción), y el saldo del libro lo dirá solo.
+     *  - Un reembolso TOTAL se reparte entre las líneas a prorrata de su «exceso» (lo que cada una
+     *    recibió por encima de lo que se le debía), por resto mayor y desempate por `id`: la Σ de
+     *    las filas es EXACTAMENTE la cortesía del pedido, sin fugas de céntimos.
      *
-     * **Invariante que el caller DEBE respetar:** `amountCents ≤ itemExtraDueCents(item)`
-     * (el crédito nunca supera el cargo pendiente del item), de modo que el neto
-     * por item nunca baja de 0. Con eso, `Σ pendingAtGateLines == pendingAtGate()`.
+     * Va en la MISMA transacción que la fila del reembolso: la cortesía es parte del hecho.
      *
-     * **No toca Redsys** ni `Order.total`. Audit: `orders.gate_credit_applied`.
-     *
-     * @param  int  $amountCents  importe POSITIVO a acreditar (se persiste negado)
-     * @param  array<string,mixed>  $context  diff estructurado opcional
+     * @param  array<int,int>  $owedBeforeByItem  lo pendiente de devolver de cada línea ANTES del
+     *                                            reembolso, indexado por `order_items.id` (solo
+     *                                            se usa en el reembolso total)
+     * @return list<OrderAdjustment>
      */
-    public function applyGateCredit(
-        OrderItem $item,
-        int $amountCents,
-        User $by,
-        ?string $reason = null,
-        array $context = [],
-    ): OrderAdjustment {
-        if ($amountCents <= 0) {
-            throw new \InvalidArgumentException('Gate credit amount must be positive (got '.$amountCents.').');
-        }
-
-        if ((int) $item->order_id !== (int) $this->id) {
-            throw new \DomainException('Item does not belong to this order.');
-        }
-
-        $adjustment = DB::transaction(function () use ($item, $amountCents, $by, $reason, $context): OrderAdjustment {
-            self::query()->lockForUpdate()->find($this->id);
-
-            return OrderAdjustment::create([
-                'order_id' => $this->id,
-                'order_item_id' => $item->id,
-                'type' => OrderAdjustment::TYPE_EXTRA_DUE,
-                'amount_cents' => -$amountCents,
-                'currency' => $this->currency ?? 'EUR',
-                'reason' => $reason,
-                'context' => $context !== [] ? $context : null,
-                'applied_by' => $by->id,
-            ]);
-        });
-
-        AuditLogger::log(
-            action: 'orders.gate_credit_applied',
-            target: $this,
-            payload: [
-                'order_code' => $this->code,
-                'order_item_id' => $item->id,
-                'amount_cents' => -$amountCents,
-                'reason' => $reason,
-                'adjustment_id' => $adjustment->id,
-            ],
-        );
-
-        return $adjustment;
-    }
-
-    /**
-     * Aplica un CRÉDITO sobre el RESTO DE LA SEÑAL (#225, D8): una fila `deposit_remainder` con
-     * `amount_cents` NEGATIVO que reduce el resto-señal pendiente del mismo item cuando una BAJADA
-     * de cantidad encoge la reserva. Espejo exacto de {@see applyGateCredit} para el otro bucket de
-     * puerta — el `deposit_remainder` se cobra presencialmente, así que reducirlo es «ya no lo
-     * debes», NO una devolución bancaria.
-     *
-     * **Invariante que el caller DEBE respetar:** `amountCents ≤ itemDepositRemainderCents(item)`
-     * (el crédito nunca supera el resto-señal pendiente del item) → el neto por item nunca < 0.
-     * **No toca Redsys** ni `Order.total`. Audit: `orders.deposit_remainder_credit_applied`.
-     *
-     * @param  int  $amountCents  importe POSITIVO a acreditar (se persiste negado)
-     * @param  array<string,mixed>  $context  diff estructurado opcional
-     */
-    public function applyDepositRemainderCredit(
-        OrderItem $item,
-        int $amountCents,
-        User $by,
-        ?string $reason = null,
-        array $context = [],
-    ): OrderAdjustment {
-        if ($amountCents <= 0) {
-            throw new \InvalidArgumentException('Deposit remainder credit amount must be positive (got '.$amountCents.').');
-        }
-
-        if ((int) $item->order_id !== (int) $this->id) {
-            throw new \DomainException('Item does not belong to this order.');
-        }
-
-        $adjustment = DB::transaction(function () use ($item, $amountCents, $by, $reason, $context): OrderAdjustment {
-            self::query()->lockForUpdate()->find($this->id);
-
-            return OrderAdjustment::create([
-                'order_id' => $this->id,
-                'order_item_id' => $item->id,
-                'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
-                'amount_cents' => -$amountCents,
-                'currency' => $this->currency ?? 'EUR',
-                'reason' => $reason,
-                'context' => $context !== [] ? $context : null,
-                'applied_by' => $by->id,
-            ]);
-        });
-
-        AuditLogger::log(
-            action: 'orders.deposit_remainder_credit_applied',
-            target: $this,
-            payload: [
-                'order_code' => $this->code,
-                'order_item_id' => $item->id,
-                'amount_cents' => -$amountCents,
-                'reason' => $reason,
-                'adjustment_id' => $adjustment->id,
-            ],
-        );
-
-        return $adjustment;
-    }
-
-    /**
-     * Marcador de reconstrucción de una BAJADA (#225 D8 · ampliado en `#150` para D3 de `#146`).
-     * Una bajada de un producto pagado ÍNTEGRO online (sin señal ni cargos de puerta que crediten)
-     * no deja ninguna fila que porte el cambio. Sin ese dato, {@see itemOriginalOnlineCents} no
-     * puede reconstruir lo cobrado ORIGINAL y el sobre-cobro (cobrado online sin producto detrás)
-     * quedaría INVISIBLE en vez de aflorar como «pendiente de devolución» (cancelar ≠ reembolsar:
-     * el operador lo devuelve aparte). Registramos un ajuste de **0 €** que SOLO porta el contexto:
-     * amount 0 → no afecta a `extraDue`/`pendingAtGate`/líneas de puerta ni a ningún total.
-     * ⚠️ La bajada puede venir de CANTIDAD o de PRECIO (re-tarificación por fecha/producto,
-     * `PAY-18`): el contexto porta `quantity_change` y/o `unit_price_change`.
-     *
-     * @param  array<string,mixed>  $context  diff estructurado (`changes.quantity_change` y/o `changes.unit_price_change`)
-     */
-    public function recordReductionMarker(OrderItem $item, User $by, array $context = []): OrderAdjustment
+    private function recordCourtesyForRefund(PaymentRefund $refund, ?OrderItem $item, int $owedBefore, array $owedBeforeByItem = []): array
     {
-        if ((int) $item->order_id !== (int) $this->id) {
-            throw new \DomainException('Item does not belong to this order.');
+        if ($refund->intent === PaymentRefund::INTENT_PAID_IN_PERSON) {
+            return [];
+        }
+        $excess = max(0, (int) $refund->amount_cents - $owedBefore);
+        if ($excess === 0) {
+            return [];
         }
 
-        return DB::transaction(function () use ($item, $by, $context): OrderAdjustment {
-            self::query()->lockForUpdate()->find($this->id);
+        $row = fn (int $itemId, int $cents): OrderAdjustment => OrderAdjustment::create([
+            'order_id' => $this->id,
+            'order_item_id' => $itemId,
+            'type' => OrderAdjustment::TYPE_COURTESY,
+            'amount_cents' => -$cents,
+            'currency' => $this->currency ?? 'EUR',
+            'reason' => $refund->intent ?? 'refund',
+            'context' => ['refund_id' => (int) $refund->id],
+            'applied_by' => $refund->requested_by,
+        ]);
 
-            return OrderAdjustment::create([
-                'order_id' => $this->id,
-                'order_item_id' => $item->id,
-                'type' => OrderAdjustment::TYPE_EXTRA_DUE,
-                'amount_cents' => 0,
-                'currency' => $this->currency ?? 'EUR',
-                'reason' => 'reduction_marker',
-                'context' => $context !== [] ? $context : null,
-                'applied_by' => $by->id,
-            ]);
-        });
+        if ($item !== null) {
+            return [$row((int) $item->id, $excess)];
+        }
+
+        // Reembolso TOTAL: el exceso se reparte por lo que cada línea recibió por encima de lo que
+        // se le debía. Los pesos salen de la MISMA prorrata con la que el propio reembolso se
+        // atribuye a las líneas ({@see unattributedRefundShareFor}), así los dos repartos cuentan
+        // la misma historia.
+        $weights = [];
+        foreach ($this->items as $line) {
+            $share = $this->unattributedRefundShareFor($line, (int) $refund->amount_cents);
+            $headroom = $share - ($owedBeforeByItem[(int) $line->id] ?? 0);
+            if ($headroom > 0) {
+                $weights[(int) $line->id] = $headroom;
+            }
+        }
+        $rows = [];
+        foreach ($this->allocateByWeights($excess, $weights) as $itemId => $cents) {
+            if ($cents > 0) {
+                $rows[] = $row($itemId, $cents);
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Reparte `$total` entre claves a prorrata de sus pesos, por RESTO MAYOR y con desempate por
+     * clave: la Σ de las partes es exactamente `$total`. Sin pesos, todo va a la primera línea del
+     * pedido (no puede perderse dinero por falta de a quién dárselo).
+     *
+     * @param  array<int,int>  $weights
+     * @return array<int,int>
+     */
+    private function allocateByWeights(int $total, array $weights): array
+    {
+        $base = array_sum($weights);
+        if ($total <= 0) {
+            return [];
+        }
+        if ($base <= 0) {
+            $first = $this->items->sortBy('id')->first();
+
+            return $first === null ? [] : [(int) $first->id => $total];
+        }
+
+        $shares = [];
+        $remainders = [];
+        $assigned = 0;
+        foreach ($weights as $id => $w) {
+            $shares[$id] = intdiv($total * $w, $base);
+            $remainders[$id] = ($total * $w) % $base;
+            $assigned += $shares[$id];
+        }
+        uksort($remainders, static fn (int $a, int $b): int => $remainders[$b] <=> $remainders[$a] ?: $a <=> $b);
+        foreach (array_keys($remainders) as $id) {
+            if ($assigned >= $total) {
+                break;
+            }
+            $shares[$id]++;
+            $assigned++;
+        }
+
+        return $shares;
     }
 
     /**
@@ -2131,6 +2026,17 @@ class Order extends Model
                 ];
             }
 
+            // T1 del libro: lo que se le DEBÍA al cliente por ESTA reserva antes de contar el reembolso
+            // (el ámbito de un reembolso atado a línea es su reserva, spec §4.2). Con la fila todavía
+            // `pending`, que no cuenta como devuelto.
+            $order->load(['payments.refunds', 'adjustments', 'items.children', 'items.slot', 'items.ticketType']);
+            $principal = $itemLocked->parent_item_id === null
+                ? $order->items->firstWhere('id', $itemLocked->id)
+                : $order->items->firstWhere('id', $itemLocked->parent_item_id);
+            $owedBefore = $principal === null
+                ? $order->itemPendingRefundCents($itemLocked)
+                : ReservationFinancials::make($order, $principal)->pendienteReembolso;
+
             // Rama éxito (REST 0900 o modo manual).
             $refund->update([
                 'status' => PaymentRefund::STATUS_SUCCEEDED,
@@ -2158,6 +2064,8 @@ class Order extends Model
             }
             $order->refund_amount_cents = $aggregateRefunded;
             $order->save();
+
+            $order->recordCourtesyForRefund($refund->refresh(), $itemLocked, $owedBefore);
 
             AuditLogger::log(
                 action: 'orders.item_refunded',

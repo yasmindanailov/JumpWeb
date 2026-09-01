@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\OrderFinancialSummary;
+use App\Domain\Booking\Services\OrderLedger;
 use App\Domain\Booking\Services\ReservationFinancials;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
@@ -80,7 +81,7 @@ class OrderFinancialInvariantsTest extends TestCase
         $order = $this->makePaidOrder();
         // El producto vale 1500 hoy (subió en gestión); de eso 500 se cobra en puerta.
         $item = $this->attachActiveItem($order, unitPrice: 1500);
-        $order->applyExtraDue($item, 500, $by);
+        $order->recordEdit($item, 500, $by);
         $this->syncTotalToOnline($order);
 
         $this->assertReconciles($order, 'cargo de puerta PENDIENTE (ítem activo)');
@@ -95,7 +96,7 @@ class OrderFinancialInvariantsTest extends TestCase
         $by = User::factory()->create();
         $order = $this->makePaidOrder();
         $item = $this->attachItemWithPastSlot($order);   // qty1 × 1000, slot pasado → finalizado
-        $order->applyExtraDue($item, 400, $by);
+        $order->recordEdit($item, 400, $by);
         $this->syncTotalToOnline($order);
 
         $this->assertReconciles($order, 'cargo de puerta COBRADO (ítem finalizado)');
@@ -186,7 +187,7 @@ class OrderFinancialInvariantsTest extends TestCase
     {
         $order = $this->makePaidOrder();
         $item = $this->attachItemWithPastSlot($order);          // franja PASADA
-        $order->applyExtraDue($item, 400, User::factory()->create());
+        $order->recordEdit($item, 400, User::factory()->create());
         $this->syncTotalToOnline($order);
         // Nadie llegó a pagarlo: ni `paid_at` ni pago cobrado. Es el checkout abandonado cuya
         // franja pasa — el caso que destapó STAGING.
@@ -436,6 +437,99 @@ class OrderFinancialInvariantsTest extends TestCase
             $summary->refundColumnDivergesFromRows(),
             "$label · la columna `refund_amount_cents` diverge de Σ payment_refunds",
         );
+
+        $this->assertLedgerBridge($order, $label);
+    }
+
+    // ─── La FOTO PUENTE del libro (`specs/desglose-libro.md` §6·T1 guarda F) ──────────
+    //
+    // ⚠️⚠️ **Existe para que la T1 pueda cambiar CÓMO se escriben los hechos sin mover NINGUNA cifra
+    // de las que se pintan.** La foto se tomó con el código de `78265ec` (el modelo de dos ejes con
+    // su cascada de créditos y su marcador de 0 €); desde entonces cada escenario se compara contra
+    // ella. Si un refactor del dominio cambia un céntimo —o una etiqueta del desglose de puerta—,
+    // esto lo dice con el escenario y el campo delante, que es exactamente lo que un test de
+    // «reconcilia» no puede ver: las dos identidades cierran igual con cifras DISTINTAS.
+    //
+    // ▶ Se regenera SOLO a propósito: `LEDGER_BRIDGE_WRITE=1 php artisan test --filter
+    // OrderFinancialInvariantsTest` (sin `--parallel`: los procesos pisarían el fichero). Regenerar
+    // es una decisión, no un arreglo — si la foto tiene que cambiar, la spec dice por qué.
+    //
+    // Fuera de la foto, a propósito: las FRASES (llevan fechas de `now()`) y el método/fecha de
+    // cobro. Dentro: todo lo numérico de los tres niveles (pedido · reserva · línea).
+
+    private const BRIDGE_PATH = 'tests/Fixtures/ledger-bridge.json';
+
+    private function assertLedgerBridge(Order $order, string $label): void
+    {
+        $snapshot = $this->ledgerSnapshot($this->freshOrder($order));
+        $path = base_path(self::BRIDGE_PATH);
+        $all = is_file($path) ? (array) json_decode((string) file_get_contents($path), true) : [];
+
+        if (getenv('LEDGER_BRIDGE_WRITE') === '1') {
+            $all[$label] = $snapshot;
+            ksort($all);
+            file_put_contents($path, json_encode($all, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)."\n");
+
+            return;
+        }
+
+        $this->assertArrayHasKey($label, $all,
+            "$label · sin foto puente: genera con LEDGER_BRIDGE_WRITE=1 (y explica en la spec por qué hay un escenario nuevo)");
+        $this->assertSame($all[$label], $snapshot,
+            "$label · el desglose cambió de cifras respecto de la foto de `78265ec` (".self::BRIDGE_PATH.')');
+    }
+
+    /** @return array<string,mixed> */
+    private function ledgerSnapshot(Order $order): array
+    {
+        $ledgerRow = static fn (OrderLedger $l): array => [
+            'valor' => $l->valor,
+            'pagadoOnline' => $l->pagadoOnline,
+            'pendienteOnline' => $l->pendienteOnline,
+            'pagadoPuerta' => $l->pagadoPuerta,
+            'pendientePuerta' => $l->pendientePuerta,
+            'compensado' => $l->compensado,
+            'cobradoOnline' => $l->cobradoOnline,
+            'devuelto' => $l->devuelto,
+            'retenido' => $l->retenido,
+            'pendienteDevolucion' => $l->pendienteDevolucion,
+            'facturado' => $l->facturado,
+            'hasDeposit' => $l->hasDeposit,
+            'cuadra' => $l->cuadra,
+            'hasCash' => $l->hasCash(),
+            'hasBreakdown' => $l->hasBreakdown(),
+            'gateLines' => $l->gateLines,
+        ];
+
+        $summary = $order->financialSummary();
+        $reservations = [];
+        foreach ($order->items->whereNull('parent_item_id')->sortBy('id') as $principal) {
+            $reservations[] = $ledgerRow(OrderLedger::forReservation($order, $principal));
+        }
+        $items = [];
+        foreach ($order->items->sortBy('id') as $item) {
+            $items[] = [
+                'charged' => $item->chargedSubtotalCents(),
+                'collected' => $order->itemCollectedCents($item),
+                'extraDue' => $order->itemExtraDueCents($item),
+                'depositRemainder' => $order->itemDepositRemainderCents($item),
+                'originalOnline' => $order->itemOriginalOnlineCents($item),
+                'pendingRefund' => $order->itemPendingRefundCents($item),
+                'refunded' => $order->itemRefundedCents($item),
+                'refundableRemainder' => $order->itemRefundableRemainderCents($item),
+                'voidedLeftover' => $order->isVoidedLeftoverItem($item),
+            ];
+        }
+
+        return [
+            'order' => $ledgerRow(OrderLedger::forOrder($order)) + [
+                'totalWithChanges' => $summary->totalWithChanges(),
+                'extraDue' => $summary->extraDue,
+                'depositRemainder' => $summary->depositRemainder,
+            ],
+            'reservations' => $reservations,
+            'items' => $items,
+        ];
     }
 
     // ─── Fixtures (patrón de OrderPerItemHelpersTest) ──────────────────────
@@ -446,12 +540,28 @@ class OrderFinancialInvariantsTest extends TestCase
             ->findOrFail($order->id);
     }
 
-    /** Ajusta `Order.total` a lo realmente cobrado online (Σ itemCollectedCents): invariante de alta. */
+    /**
+     * Deja el pedido como lo deja un ALTA REAL: `Order.total` = el valor con el que NACIÓ (lo que
+     * `OrderCreator` guarda: el subtotal completo, señal incluida) y el pago cobrado = lo que entró
+     * ONLINE (Σ itemCollectedCents).
+     *
+     * ⚠️⚠️ **Hasta la T1 del libro (`specs/desglose-libro.md`) este fixture ponía `Order.total` = la
+     * parte ONLINE**, y en los cuatro escenarios con señal eso fabricaba un pedido que ningún alta
+     * produce: `OrderCreator` guarda `'total' => $subtotal` (el valor entero), así que un pack de
+     * 120,00 € con señal de 30,00 nace con `total = 12000`, no `3000`. El fixture irreal hacía
+     * además que el desglose enseñara «al reservar se facturaron 30,00 €… ahora vale 90,00 € más»
+     * sobre un pedido sin tocar. *Un fixture que necesita un estado que el dominio no produce
+     * prueba un mundo que no existe* (la lección de la T6 de mixtos): se LEGALIZA, no se excepciona.
+     *
+     * El valor de nacimiento se reconstruye como lo hará el libro: lo que la línea vale hoy MENOS
+     * los deltas de edición que llevan sus ajustes (los de reparto de señal no son deltas).
+     */
     private function syncTotalToOnline(Order $order): void
     {
         $order->refresh()->load(['items', 'adjustments']);
         $online = (int) $order->items->sum(fn (OrderItem $i) => $order->itemCollectedCents($i));
-        $order->update(['subtotal' => $online, 'total' => $online]);
+        $birth = $order->birthValueCents();
+        $order->update(['subtotal' => $birth, 'total' => $birth]);
         // #225: «pendiente de devolución» se ancla al dinero REALMENTE cobrado por web (no a
         // `Order.total` como proxy). El pago se crea ANTES de añadir items en estos fixtures, así
         // que aquí lo sincronizamos a lo cobrado online tras montarlos — como en un pedido real.
@@ -599,7 +709,7 @@ class OrderFinancialInvariantsTest extends TestCase
         OrderAdjustment::create([
             'order_id' => $order->id,
             'order_item_id' => $credit->id,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE,
+            'type' => OrderAdjustment::TYPE_MIXED,
             'amount_cents' => -$writtenCents,
             'currency' => 'EUR',
             'applied_by' => User::factory()->create()->id,
@@ -621,7 +731,7 @@ class OrderFinancialInvariantsTest extends TestCase
         OrderAdjustment::create([
             'order_id' => $order->id,
             'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => $cents,
             'currency' => 'EUR',
             'applied_by' => User::factory()->create()->id,

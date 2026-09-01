@@ -262,7 +262,7 @@ class MeOrdersFinancialsTest extends TestCase
         $linea->forceFill(['unit_price' => (int) $linea->unit_price + 2500])->save();
         OrderAdjustment::create([
             'order_id' => $subido->id, 'order_item_id' => $linea->id,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE,
+            'type' => OrderAdjustment::TYPE_EDIT,
             'amount_cents' => 2500, 'currency' => 'EUR', 'applied_by' => $otro->id,
             'reason' => 'Dos invitados más',
         ]);
@@ -625,10 +625,14 @@ class MeOrdersFinancialsTest extends TestCase
             'is_sellable' => true, 'is_active' => true, 'position' => 2,
         ]);
 
+        // ⚠️ `Order.total` es lo que NACIÓ (T1 del libro, identidad I1): el pack a 74,00 (los 17,00
+        // del extra se añadieron DESPUÉS, en gestión) + la entrada cancelada (23,00) + la entrada
+        // viva (19,00) = 116,00. Hasta la T1 este fixture decía 133,00, que contaba el extra como si
+        // hubiera nacido con el pedido — un pedido que ningún alta produce.
         $order = Order::create([
             'user_id' => $user->id, 'code' => 'R-PARITY',
             'status' => Order::STATUS_PAID,
-            'subtotal' => 13300, 'tax' => 0, 'total' => 13300,
+            'subtotal' => 11600, 'tax' => 0, 'total' => 11600,
             'currency' => 'EUR', 'paid_at' => Carbon::now(),
         ]);
 
@@ -657,12 +661,12 @@ class MeOrdersFinancialsTest extends TestCase
         // total: son las dos familias del desglose de puerta.
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $line->id,
-            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => 3100, 'currency' => 'EUR', 'applied_by' => $user->id,
         ]);
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $line->id,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE,
+            'type' => OrderAdjustment::TYPE_EDIT,
             'amount_cents' => 1700, 'currency' => 'EUR', 'applied_by' => $user->id,
             'reason' => 'Extra de gestión',
         ]);
@@ -719,7 +723,7 @@ class MeOrdersFinancialsTest extends TestCase
         ]);
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $line->id,
-            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => 3100, 'currency' => 'EUR', 'applied_by' => $user->id,
         ]);
         // ⚠️ El cobro de la SEÑAL, que es lo que este pedido tuvo de verdad: 60,00 € por web y el

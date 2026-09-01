@@ -49,7 +49,7 @@ class DepositFoundationTest extends TestCase
 
     public function test_deposit_remainder_type_constant_exists(): void
     {
-        $this->assertSame('deposit_remainder', OrderAdjustment::TYPE_DEPOSIT_REMAINDER);
+        $this->assertSame('deposit_split', OrderAdjustment::TYPE_DEPOSIT_SPLIT);
     }
 
     public function test_deposit_cents_with_zero_value_charges_full_total_not_zero(): void
@@ -107,7 +107,7 @@ class DepositFoundationTest extends TestCase
         $item = $this->attachItem($order, unitPrice: 6000, quantity: 3); // 180,00 €
 
         // Edición que sube precio (cobro en puerta): NO mueve deposit_remainder.
-        $order->applyExtraDue($item, 6000, $by, 'cantidad 3 → 4');
+        $order->recordEdit($item, 6000, $by, 'cantidad 3 → 4');
         $order->load(['items', 'adjustments']);
 
         $this->assertSame(0, $order->itemDepositRemainderCents($item));
@@ -126,7 +126,7 @@ class DepositFoundationTest extends TestCase
         OrderAdjustment::create([
             'order_id' => $order->id,
             'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => 15000,
             'currency' => 'EUR',
             'applied_by' => $by->id,
@@ -148,11 +148,11 @@ class DepositFoundationTest extends TestCase
 
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => 15000, 'currency' => 'EUR', 'applied_by' => $by->id,
         ]);
         // Subir cantidad tras pagar: +30 € a puerta (extra_due), señal congelada.
-        $order->applyExtraDue($item, 6000, $by, '+1');
+        $order->recordEdit($item, 6000, $by, '+1');
         $item->forceFill(['quantity' => 4])->save(); // valor pasa a 240,00 €
         $order->load(['items', 'adjustments']);
 
@@ -176,7 +176,7 @@ class DepositFoundationTest extends TestCase
         // Señal del pack (resto 150) → onlineDue baja a 40 + 30 = 70.
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $pack->id,
-            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => 15000, 'currency' => 'EUR', 'applied_by' => $by->id,
         ]);
         $order->load(['items', 'adjustments']);

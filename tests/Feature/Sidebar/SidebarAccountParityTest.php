@@ -130,28 +130,36 @@ class SidebarAccountParityTest extends TestCase
             $this->actingAs($user)->getJson(self::ROOT.'/orders/'.$order->code)->assertOk()->json()
         );
 
-        $this->assertSame(Money::format((int) $order->total), $ledger['totalLabel']);
+        // El importe de cabecera es lo que el pedido VALE hoy (`ledger.value.total_cents`: el pack
+        // vivo + los calcetines = 98,00), no lo que se facturó al nacer (188,00, con el pack que
+        // después se canceló). Hasta la T1 del libro los dos coincidían en este fixture por accidente.
+        $this->assertSame(Money::format($order->fresh(['items', 'adjustments', 'payments.refunds'])->financialSummary()->totalFinalNeto()), $ledger['totalLabel']);
+        $this->assertSame(Money::format(9800), $ledger['totalLabel']);
         $this->assertNull($ledger['refund'], 'sin reembolso no hay bloque de reembolso');
         $this->assertSame(__('tickets.statuses.paid'), $ledger['statusLabel']);
 
-        // ⚠️⚠️ **LO VERIFICABLE VA EN LA LÍNEA DEL CANAL** (`DECISIONES #130`). `#128` lo puso en un
-        // bloque aparte que se enseñaba siempre que hubiera habido un cobro, y el owner leyó la
-        // pantalla y no la entendió: el mismo importe salía dos veces, arriba como «Pagado por web» y
-        // abajo como «Cobrado por web». Lo que hacía falta conservar no era el bloque, era la FECHA
-        // — «30,00 €» no se busca en un extracto bancario; «30,00 € el 24/08/2026», sí—.
+        // ⚠️⚠️ **LA FECHA VA DONDE EL IMPORTE ES EL QUE SE COBRÓ** (`DECISIONES #130` y `#131`). Este
+        // pedido tiene un pack CANCELADO cuya señal (60,00) sigue en la caja del parque, así que lo
+        // cobrado (128,00) no coincide con lo que respalda producto (68,00): el bloque «Tu dinero»
+        // aparece —dice algo que la columna del valor no dice: que se le deben 60,00— y la fecha se
+        // pega al importe que SÍ se cobró ese día (`#131`: en 7 pedidos reales, 6 sanos, la fecha
+        // se pegaba a un importe que no se cobró). Arriba, la línea del canal va sin fecha.
+        // (El pedido CORRIENTE, sin nada que devolver, tiene su propia guarda:
+        // `MeOrdersFinancialsTest::test_the_cash_axis_stays_quiet_when_it_would_only_repeat_the_value_row`.)
         $this->assertSame(
-            __('tickets.ledger.paid_online').' · '.DisplayTime::format($order->paid_at, 'd/m/Y'),
+            __('tickets.ledger.paid_online'),
             $ledger['financials']['value']['rows'][0]['label'],
-            'la línea del canal ha perdido la fecha: el importe deja de ser conciliable'
+            'con dinero que devolver, la fecha no puede ir pegada a un importe que no es el cobrado'
         );
-
-        // ⚠️ Y el bloque «Tu dinero» NO aparece en un pedido corriente, porque no diría nada nuevo.
-        // Lo que `#128` vino a arreglar sigue entero: aparece en cuanto lo cobrado no coincide con lo
-        // pagado —que en un pedido sano no puede pasar (`PAY-17`) y en uno con el dato roto sí—.
-        $this->assertNull(
-            $ledger['financials']['cash'],
-            'el eje de caja vuelve a repetir el importe que la línea de arriba ya dice'
+        $this->assertNotNull($ledger['financials']['cash'], 'se le deben 60,00 €: el eje de caja tiene algo que decir');
+        $this->assertSame(
+            __('tickets.ledger.charged_online').' · '.DisplayTime::format($order->paid_at, 'd/m/Y'),
+            $ledger['financials']['cash']['rows'][0]['label'],
+            'el ancla de caja ha perdido la fecha: el importe deja de ser conciliable'
         );
+        $this->assertSame(Money::format(12800), $ledger['financials']['cash']['rows'][0]['amountLabel']);
+        $this->assertSame(__('tickets.ledger.pending_refund'), $ledger['financials']['cash']['rows'][1]['label']);
+        $this->assertSame(Money::format(6000), $ledger['financials']['cash']['rows'][1]['amountLabel'], 'la señal del pack cancelado');
     }
 
     /**
@@ -178,7 +186,8 @@ class SidebarAccountParityTest extends TestCase
         $this->assertSame($order->code, $fila['code']);
         $this->assertSame(__('tickets.statuses.paid'), $fila['statusLabel']);
         $this->assertSame(DisplayTime::format($order->created_at), $fila['createdLabel']);
-        $this->assertSame(Money::format((int) $order->total), $fila['totalLabel']);
+        // Lo que VALE hoy (98,00), no lo facturado al nacer (188,00): ver la paridad de arriba.
+        $this->assertSame(Money::format($order->fresh(['items', 'adjustments', 'payments.refunds'])->financialSummary()->totalFinalNeto()), $fila['totalLabel']);
 
         // Las reservas del pedido, con su cantidad ya compuesta (`L2`). Son DOS: el pack vivo y la
         // línea cancelada — al revés que «Mis reservas», que las reparte en dos pantallas, aquí el
@@ -204,16 +213,18 @@ class SidebarAccountParityTest extends TestCase
             'la lista de pedidos y el pedido suelto componen el dinero de forma distinta'
         );
 
-        // ⚠️⚠️ **Lo VERIFICABLE llega con la lista, y va en la línea del canal** (`DECISIONES #130`):
-        // el importe con la FECHA del cobro, que es lo que se busca en un extracto bancario. El
-        // bloque «Tu dinero» **no aparece** en un pedido corriente porque no diría nada que esta
-        // línea no diga ya — repetirlo enseñaba a saltarse el bloque que sí importa.
-        $this->assertSame(
-            __('tickets.ledger.paid_online').' · '.DisplayTime::format($order->paid_at, 'd/m/Y'),
-            $fila['financials']['value']['rows'][0]['label']
-        );
+        // ⚠️⚠️ **Lo VERIFICABLE llega con la lista** (`DECISIONES #130` y `#131`): este pedido tiene
+        // un pack cancelado cuya señal (60,00) sigue en caja, así que el bloque «Tu dinero» aparece
+        // —se le deben 60,00— y la FECHA va pegada al importe que sí se cobró ese día (128,00), en
+        // el ancla de caja; la línea del canal (68,00: lo que respalda producto) va sin fecha.
+        $this->assertSame(__('tickets.ledger.paid_online'), $fila['financials']['value']['rows'][0]['label']);
         $this->assertSame(Money::format(6800), $fila['financials']['value']['rows'][0]['amountLabel']);
-        $this->assertNull($fila['financials']['cash'], 'el eje de caja repite lo que la línea de arriba ya dice');
+        $this->assertSame(
+            __('tickets.ledger.charged_online').' · '.DisplayTime::format($order->paid_at, 'd/m/Y'),
+            $fila['financials']['cash']['rows'][0]['label'],
+            'la fecha del cobro tiene que llegar con la lista, pegada al importe cobrado'
+        );
+        $this->assertSame(Money::format(6000), $fila['financials']['cash']['rows'][1]['amountLabel'], 'pendiente de devolverte: la señal del pack cancelado');
     }
 
     /**
@@ -234,8 +245,9 @@ class SidebarAccountParityTest extends TestCase
     {
         [$user, $order] = $this->richOrder();
 
-        // Cancelar el complemento: el pedido pasa a valer 8,00 € menos de lo que se facturó. Es la
-        // forma real de una bajada, y deja los tres importes distintos (98,00 · 90,00 · 8,00).
+        // Cancelar el complemento: el pedido pasa a valer 90,00 (el pack vivo) frente a los 188,00
+        // que se facturaron (el pack cancelado también nació con el pedido). Es la forma real de
+        // una bajada, y deja los tres importes distintos (188,00 · 90,00 · 98,00).
         $addon = $order->items()->whereNotNull('parent_item_id')->first();
         $addon->forceFill(['cancelled_at' => Carbon::now()])->save();
 
@@ -243,7 +255,7 @@ class SidebarAccountParityTest extends TestCase
         $publicado = $respuesta['data'][0]['ledger'];
 
         $this->assertSame(
-            __('tickets.ledger.invoiced_hint_less', ['invoiced' => '98,00 €', 'difference' => '8,00 €']),
+            __('tickets.ledger.invoiced_hint_less', ['invoiced' => '188,00 €', 'difference' => '98,00 €']),
             $publicado['invoiced_hint'],
             'el dominio ha dejado de decir la dirección y el importe del cambio',
         );
@@ -254,7 +266,7 @@ class SidebarAccountParityTest extends TestCase
             $publicado['invoiced_hint'], $fila['financials']['invoiced']['hint'],
             'la pantalla compone la frase por su cuenta en vez de transportar la del servidor',
         );
-        $this->assertSame(Money::format(9800), $fila['financials']['invoiced']['amountLabel']);
+        $this->assertSame(Money::format(18800), $fila['financials']['invoiced']['amountLabel']);
 
         // ⚠️ La guarda de la guarda: **sin frase no hay línea**. Es lo que distingue obedecer al
         // servidor de re-derivar la comparación — los dos importes siguen viajando en el mismo
@@ -452,7 +464,11 @@ class SidebarAccountParityTest extends TestCase
             'is_sellable' => true, 'is_active' => true, 'position' => 2,
         ]);
 
-        $order = $this->order($user);
+        // ⚠️ `Order.total` es lo que NACIÓ (T1 del libro, identidad I1): el pack (90,00) + los
+        // calcetines (8,00) + el pack que después se canceló (90,00) = 188,00. Hasta la T1 el fixture
+        // decía 98,00 —dejaba fuera la línea cancelada, que también se compró— y con la identidad de
+        // nacimiento el desglose salía «en revisión» y la zona no pintaba ninguna fila.
+        $order = $this->order($user, ['subtotal' => 18800, 'total' => 18800]);
 
         $line = $order->items()->create([
             'ticket_type_id' => $pack->id, 'slot_id' => $slot->id,
@@ -469,13 +485,20 @@ class SidebarAccountParityTest extends TestCase
         // un pedido que en producción no existe, y la paridad probaría un caso imaginario.
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $line->id,
-            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => 3000, 'currency' => 'EUR', 'applied_by' => $user->id,
         ]);
-        $order->items()->create([
+        $cancelled = $order->items()->create([
             'ticket_type_id' => $pack->id, 'slot_id' => $slot->id,
             'quantity' => 1, 'unit_price' => 9000, 'seats' => 1,
             'cancelled_at' => Carbon::now(),
+        ]);
+        // El pack cancelado se compró como el vivo: señal de 60,00 online y 30,00 en el parque. Al
+        // cancelarse, esos 60,00 cobrados ya no respaldan producto → «pendiente de devolverte».
+        OrderAdjustment::create([
+            'order_id' => $order->id, 'order_item_id' => $cancelled->id,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
+            'amount_cents' => 3000, 'currency' => 'EUR', 'applied_by' => $user->id,
         ]);
 
         // ⚠️⚠️ **El COBRO REAL, que este fixture no tenía** (`DECISIONES #128`). Sin fila `Payment`
@@ -483,10 +506,13 @@ class SidebarAccountParityTest extends TestCase
         // pagado—, que el flujo real **no puede producir** y que `PAY-17` marca como imposible. Con
         // esa forma el ancla de caja vale 0 y este caso no podía ejercitarla: un fixture irreal
         // oculta defectos tan bien como los inventa (`specs/desglose-dinero-cliente.md` §16.5).
-        // 6.800 = la señal del pack (6.000) + los calcetines (800), que es lo que se cobra online.
+        // 12.800 = la señal de los DOS packs (6.000 + 6.000) + los calcetines (800): lo que se cobró
+        // online al nacer. ⚠️ Hasta la T1 del libro este fixture cobraba 6.800 —solo el pack vivo—
+        // mientras contaba el pack cancelado como pagado: un pedido que ningún cobro produce, y que
+        // escondía que a este cliente se le deben 60,00 € (la señal del pack que canceló).
         Payment::create([
             'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
-            'provider' => Payment::PROVIDER_REDSYS, 'amount' => 6800, 'currency' => 'EUR',
+            'provider' => Payment::PROVIDER_REDSYS, 'amount' => 12800, 'currency' => 'EUR',
             'status' => Payment::STATUS_PAID, 'paid_at' => Carbon::now(),
         ]);
 
@@ -514,7 +540,8 @@ class SidebarAccountParityTest extends TestCase
             'event_fields' => [['key' => 'name', 'label' => 'Nombre', 'required' => true]],
         ]);
 
-        $order = $this->order($user);
+        // `Order.total` = lo que nació: el único pack, 90,00 (identidad I1 del libro).
+        $order = $this->order($user, ['subtotal' => 9000, 'total' => 9000]);
         $item = $order->items()->create([
             'ticket_type_id' => $pack->id, 'slot_id' => $slot->id,
             'quantity' => 1, 'unit_price' => 9000, 'seats' => 1,

@@ -17874,3 +17874,85 @@ anexa. *Es el mismo cuño que la guarda del cajón cazándose a sí misma por ci
 **Verificación**: suite **3684 verde** (23.934 aserciones, 1 skipped) · Pint ✓ · `docs-check` ✓ ·
 `npm run build` y `build:ssr` ✓ · rejilla semanal de precios comprobada producto a producto ·
 `/`, `/precios`, `/cumpleanos` y `/entradas` a 200 con los textos nuevos servidos.
+
+## #305 · 2026-09-01 · [DECIDIDO owner] El desglose pasa a ser un LIBRO: cada gestión con su línea (+/−), un total y un saldo que se liquida en el parque
+
+**Contexto.** El owner, sobre el desglose de dos ejes (`#127`, `#130`, `#133`/`#134`): *«no me
+gusta, no lo entiendo fácilmente, exige razonar»*. Quiere *«"+" y "−" y un total X»*: cada gestión
+con su línea, la fecha de cuándo se cobró o devolvió, y el saldo. Su primer planteamiento pedía
+además reembolso automático a la baja y cobro online post-reserva a la alza en pedidos 100 %
+online; **lo rectificó en la misma sesión**: *«no se hacen cobros post reserva pagada, ni se hacen
+reembolsos automáticos. El total es lo que haces cuando llegas a las instalaciones, o pagas lo que
+falta por pagar o te pagan a ti lo que te falta»*. Y sobre las dos preguntas del agente (el
+descuento de fiesta mixta en el saldo · el reembolso manual del panel): *«no quiero dejar deuda,
+quiero que sea profesional sin ambigüedades»*.
+
+**Decidido** (el detalle en `specs/desglose-libro.md` §1.1):
+1. **Cliente y operador ven lo MISMO**: una línea por gestión con signo y fecha, un Total, lo pagado
+   y el saldo — «a pagar en el parque» si es positivo, «a devolver en el parque» si es negativo.
+2. **Nada se cobra ni se devuelve online después de la reserva** salvo por acción manual del
+   operador. `#244` sigue en pie; la fase 3 de `specs/cumple-mixto.md` §20.2 no se abre.
+3. **Sin regímenes**: señal y pago completo siguen la misma regla (la señal solo hace que el saldo
+   nazca positivo).
+4. **El descuento de fiesta mixta es una línea más y entra en el saldo**: cae el tope de cobertura
+   de la T4 (`#296`) y la línea aparte «a tu favor».
+5. **El reembolso manual del panel se queda** (es el único canal cuando no hay visita: pedido
+   cancelado) y sale como línea «Devuelto».
+6. **El modelo de dos ejes se RETIRA, no convive**: `PAY-16` y `PAY-17` se reescriben (spec §5)
+   cuando se ejecute la T3; `L4` (`#133`, aparcado) queda resuelto por la línea de cortesía.
+
+**Lo medido antes de decidir el diseño** (spec §1.2–§1.4): en `T4-PRB01` el cliente lee «+7» sobre
+una reserva que pasó de 4 a 9 invitados y dos bajadas de −15,00 € sin línea; en `T5-PRB01` la
+bajada de −30,00 € no existe como hecho con importe (se guarda un ajuste de **0 €** y el pendiente
+se reconstruye con la señal del catálogo VIVO — la raíz del fantasma de `DEUDA.md`). Un prototipo
+de lectura con las fórmulas del libro coincide con `OrderLedger` en **19 de 22** pedidos locales;
+los 3 restantes son datos sucios que los dos modelos marcan.
+
+**Coste declarado**: tres tandas (~4 sesiones) sobre `OrderCreator`, `OrderItemEditor`,
+`MixedPartySurcharge` y `Order` (`VERIFY_CONC=1` en cada una), un cambio incompatible del
+contrato `Ledger` de `openapi/v1.yaml` (único consumidor: el cajón) y la retirada de ~3.400 líneas
+de derivación. ✅ **El owner aprobó el diseño el 2026-09-01** («Perfecto, validado, procede con
+T1»); la T1 es `#306`.
+
+## #306 · 2026-09-01 · T1 del libro: cada gestión deja su HECHO con el importe entero — y tres fixtures que eran un mundo que no existe
+
+**Contexto.** Primera tanda del plan de `#305` (`specs/desglose-libro.md` §6·T1 y **§6.1 lo
+ejecutado**). Objetivo: que cada gestión escriba su delta ENTERO como fila, que la cortesía se
+escriba al reembolsar y que ningún importe se reconstruya desde el catálogo — **sin mover una cifra
+de las que se pintan**, porque el modelo de dos ejes sigue siendo la pantalla hasta la T3.
+
+**Lo hecho.**
+- `order_adjustments.type` es el ÚNICO discriminador: `deposit_split` · `edit` · `mixed` ·
+  `courtesy`. ▶ **Derivación**: la spec esbozaba una columna `kind`; no hizo falta — dos columnas
+  para una clasificación son ambigüedad, y `type` con cuatro valores cerrados basta.
+- `Order::recordEdit(item, Δ)` es la única escritura de una gestión, con signo (audit
+  `orders.extra_due_applied` / **`orders.value_reduction_applied`**). Caen `applyExtraDue`,
+  `applyGateCredit`, `applyDepositRemainderCredit` y el marcador de 0 € (`recordReductionMarker`).
+- **La cortesía se escribe al reembolsar**, en la misma transacción (`Order::recordCourtesyForRefund`):
+  `max(0, importe − debido_antes)` en el ámbito del reembolso; `paid_in_person` no la genera; un
+  reembolso total se reparte por resto mayor sobre lo que cada línea recibió por encima de lo debido.
+- **`Booking\Services\GateBuckets`**: el replay TEMPORAL de la cascada, en LECTURA. De él salen
+  ahora los cubos de puerta, `itemOriginalOnlineCents` (= `onlineAtBirth`, un hecho: fila − Σ deltas
+  − reparto) y la cobertura del tope de la T4. **Muere en la T3.**
+- La identidad de NACIMIENTO **I1** (`Order.total == Σ nac`) entra en `OrderLedger::cierra`.
+- La migración de hechos, autocontenida e idempotente (seis pasos, §4.8); los dos repairs legacy
+  del origen retirados y sus migraciones neutralizadas.
+
+**Medido.** La foto puente de `78265ec` (`tests/Fixtures/ledger-bridge.json`) **idéntica en los
+15 escenarios**. BD local migrada: 36 filas → 43 en cuatro tipos, cero tipos viejos; `T5-PRB01`,
+`R-DWFRDP`, `R-MOTEHE`, `R-P4NA2I` con el ledger idéntico y sus hechos escritos; **`T4-PRB01`: la
+card pasa de «pendiente 20,00 · online 30,00» a 0,00 / 10,00** — el fantasma de la señal
+(`DEUDA.md`, ficha RETIRADA) — y su total fabricado queda «en revisión» por I1. Suite 3711 en verde
+(24.214 aserciones) · Pint · docs-check · los tres verificadores de concurrencia.
+
+**Lo que enseñó.**
+- ⚠️⚠️ **Tres fixtures eran ILEGALES y solo lo dijo la identidad de nacimiento**: el guardián ponía
+  `Order.total` = la parte online (un pack con señal «nacía» con `total = 3000` y el desglose decía
+  «vale 90,00 € más» sobre un pedido sin tocar); la paridad del cajón tenía un pack cancelado
+  «pagado» que el cobro no incluía; y una bajada 3→1 estaba escrita como −12,00, la mitad que la
+  cascada guardaba. Se LEGALIZARON (la regla de la T6 de mixtos). El fixture legal de la paridad
+  destapó además que a ese cliente se le debían 60,00 € que ninguna aserción enseñaba.
+- ⚠️ La migración no puede atajar por «tabla vacía»: un pedido 100 % online editado antes de `#150`
+  tiene cero ajustes y su hecho solo vive en el rastro. Lo cazó su propio test.
+- ⚠️ El remoto numeró `#301` en la misma jornada (carril landing): esta entrada es `#306`, elegida
+  mirando el remoto antes de escribirla.

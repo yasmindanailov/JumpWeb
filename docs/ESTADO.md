@@ -2,11 +2,13 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-09-01 — DOS carriles a la vez.
+> aquí solo se enlaza.** Última actualización: **2026-09-01 — TRES carriles a la vez.
+> **LIBRO DEL PEDIDO** (madrugada): spec ✅ del owner (`#305`) y **T1 EN EL ÁRBOL (`#306`, los
+> hechos; sigue la T2)** — carril 3, abajo.
 > **MIXTOS**: T1→T5 en el árbol (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL
 > GUARDIÁN DE SOLAPES EN EL ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** —
-> siguen fuera por diseño la fase 3 de §20.2, el AFORO (owner) y la ficha del fantasma de la señal
-> en `DEUDA.md`; queda el OJO del owner sobre T5+T6.
+> siguen fuera por diseño la fase 3 de §20.2 y el AFORO (owner); la ficha del fantasma de la señal
+> en `DEUDA.md` **quedó RETIRADA por la T1 del libro** (`#306`); queda el OJO del owner sobre T5+T6.
 > **IDIOMA VISUAL / LANDING**: en el árbol la tanda A (etiquetas), la T2 (cinta C3, `#293`), **la
 > T4: zonas y juegos con UN solo selector (`#302`)** y **la T5: titular a una línea sin etiqueta +
 > tarjeta pegatina (`#303`) — la PRIMERA pieza del molde de `#297` ejecutada**; ⛔ **la T1 de normas
@@ -21,7 +23,7 @@
 > palabras) → **§26 (la T6: el guardián en el dominio)**. Diseño fino antes de código y preguntas
 > numeradas al owner: es el método que las seis tandas han seguido. ▶ **La retoma de este carril
 > ya NO es una tanda**: es el OJO del owner sobre T5+T6, y las piezas aparcadas por diseño (la
-> fase 3 de §20.2 · el AFORO · la ficha del fantasma de la señal en `DEUDA.md`).**
+> fase 3 de §20.2 · el AFORO; el fantasma de la señal ya lo cerró la T1 del libro, `#306`).**
 > ⚠️ **Entorno, 2026-08-31**: el `php artisan serve` del contenedor amaneció muerto (SIGTERM 14:29) y a
 > las 16:3x el demonio de Docker Desktop dejó de responder (500 en su API; se recuperó reiniciándolo
 > desde Windows). Ninguna de las dos es del repo; si el `curl` del arranque da `000`, mira primero
@@ -30,10 +32,43 @@
 > veces (el carril del tema iba por 281 con el remoto en 285; el de mixtos escribió `#286` con el
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
+> ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1 EN EL ÁRBOL · sigue la T2) ═══════════
+> ❗❗❗ **2026-09-01 (madrugada) · T1 · LOS HECHOS, EN EL ÁRBOL** (`DECISIONES #306`,
+> `specs/desglose-libro.md` §6·T1 y **§6.1 lo ejecutado**). Suite **3716 en verde** (24.131 aserciones,
+> 1 skipped a propósito — la cifra VIVA, medida por el `pre-push` sobre el árbol CONJUNTO tras
+> integrar `#300`–`#304` de la landing; el carril del libro por sí solo daba 3711 / 24.214) · Pint ·
+> docs-check · `audit-clock` **verde en las 12 fronteras** · foto puente de `78265ec` **idéntica en 15/15 escenarios** (lo que se pinta no se
+> movió un céntimo) · migración corrida sobre la BD local (36 filas → 43 en cuatro tipos, cero
+> tipos viejos) · **el fantasma de la señal, cerrado**: `T4-PRB01` pasa de «20,00 € pendiente /
+> 30,00 € cobrados» a **0,00 / 10,00** en la card, y su total fabricado queda «en revisión» (I1).
+> ▶ `order_adjustments.type` es el ÚNICO discriminador (`deposit_split` · `edit` · `mixed` ·
+> `courtesy`; la columna `kind` de la spec no hizo falta); `Order::recordEdit` escribe cada gestión
+> como UNA fila con su delta entero (muere la cascada y el marcador de 0 €); la cortesía se
+> escribe al reembolsar; `GateBuckets` replica la cascada EN LECTURA y **muere en la T3**.
+> ⚠️ Tres fixtures resultaron ILEGALES (un `Order.total` = la parte online; un pack cancelado
+> «pagado» que ningún cobro incluía; una bajada 3→1 escrita como −12,00): se legalizaron.
+> ⚠️ Dos repairs legacy retirados y sus migraciones neutralizadas. **Sigue la T2** (§6·T2).
+> ❗❗❗ **2026-09-01 (noche) · EL DESGLOSE PASA A SER UN LIBRO — `DECISIONES #305`,
+> `specs/desglose-libro.md`.** El owner: el balance de dos ejes «exige razonar»; quiere cada gestión
+> como una línea + o − con su fecha, un Total y un SALDO que se liquida EN EL PARQUE (`[DECIDIDO
+> owner]`: **nada se cobra ni se devuelve online post-reserva** —rectificó su primer planteamiento—;
+> sin regímenes señal/sin señal; el descuento mixto entra en el saldo, así que cae el tope de la T4;
+> el reembolso manual del panel se queda como línea «Devuelto»). ▶ **Medido antes de diseñar**: un
+> prototipo de lectura con las fórmulas de la spec §4.1 coincide con `OrderLedger` en **19/22**
+> pedidos locales (total, saldo, cobro y nacimiento); los 3 restantes son datos SUCIOS que las
+> identidades nuevas marcan (`R-IBX8B1`/`R-D3AN8Q` pagados sin pago; `T4-PRB01` fabricado con
+> `Order.total` = la señal). ⚠️⚠️ **Tres hechos faltan hoy y son la raíz del fantasma de la señal**
+> (spec §1.3): el marcador de 0 € de la bajada online, el resto de una bajada parcialmente cubierta,
+> y la compensación derivada al leer. ▶ Plan §6: **T1** hechos (sin cambiar lo que se pinta) ·
+> **T2** el libro en el dominio con el modelo viejo de ORÁCULO (guarda puente) · **T3** las nueve
+> superficies + el tope + la retirada entera (§4.7). Cada tanda con `VERIFY_CONC=1`.
+> **El owner dio el ✅ en la misma sesión y la T1 se ejecutó a continuación (bloque de arriba).**
+> ⚠️ Los prototipos de medición viven en el scratchpad de la sesión, no en el repo.
+>
 > ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1–T6 hechas: el plan de `#284`, COMPLETO) ═══════════
 > ❗❗❗ **2026-09-01 · T6 · EL GUARDIÁN DE SOLAPES EN EL DOMINIO, EN EL ÁRBOL** (`#299`,
 > `specs/cumple-mixto.md` **§26** diseño fino · **§26.5 ejecución**).
-> Suite **3709 en verde** (24.037 aserciones, 1 skipped a propósito) — cifra del árbol CONJUNTO
+> Suite 3709 en verde entonces (24.037 aserciones, 1 skipped a propósito; **la cifra VIVA está en el carril 3**, arriba) — cifra del árbol CONJUNTO
 > tras rebasar el carril de la landing (`#300`→`#304`) encima; la de esta tanda sola era 3704 /
 > 24.120. ⚠️ **Las aserciones BAJAN aunque los tests suban**: el otro carril retiró guardas cuyo
 > sujeto desapareció. · **`audit-clock` verde en

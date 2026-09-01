@@ -108,8 +108,9 @@ class DepositRefundCoherenceTest extends TestCase
         $order = $this->makePaidOrder(3600);
         $item = $this->attachItem($order, qty: 1, unit: 1200); // estado tras bajar 3 → 1 (charged 12)
         $this->attachPayment($order, 3600, 'redsys', gateway: '1234567890');
-        // Marcador de la bajada 3 → 1 (porta el quantity_change para reconstruir el original).
-        $order->recordReductionMarker($item, $by, ['changes' => ['quantity_change' => ['old' => 3, 'new' => 1]]]);
+        // La bajada 3 → 1, como UN hecho con su delta entero (T1 del libro): −2 × 12,00 €. De ella
+        // sale el valor de nacimiento de la línea (36,00) sin reconstruir nada.
+        $order->recordEdit($item, -2400, $by, 'item_edit_reduction', ['changes' => ['quantity_change' => ['old' => 3, 'new' => 1]]]);
 
         $order = $order->fresh(['payments.refunds', 'items.ticketType', 'adjustments']);
 
@@ -140,14 +141,15 @@ class DepositRefundCoherenceTest extends TestCase
             'slot_id' => null, 'quantity' => 2, 'free_quantity' => 0, 'seats' => 0, 'unit_price' => 1000,
         ]);
         $order->adjustments()->create([
-            'order_item_id' => $child->id, 'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
-            'amount_cents' => 2000, 'currency' => 'EUR', 'reason' => 'deposit_remainder', 'applied_by' => $by->id,
+            'order_item_id' => $child->id, 'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
+            'amount_cents' => 2000, 'currency' => 'EUR', 'reason' => 'deposit_split', 'applied_by' => $by->id,
         ]);
 
-        // Rescale por bajar 2 → 1 invitado: credita el deposit_remainder del child y porta el quantity_change.
+        // Rescale por bajar 2 → 1 invitado: UNA fila `edit` con el delta entero (−10,00 €); la lectura
+        // (`GateBuckets`) la absorbe contra el reparto de señal del child, como hacía la cascada.
         $order = $order->fresh(['adjustments', 'items.ticketType']);
         $child = $order->items->firstWhere('id', $child->id);
-        $order->applyDepositRemainderCredit($child, 1000, $by, 'addon_per_guest_rescale_reduction',
+        $order->recordEdit($child, -1000, $by, 'addon_per_guest_rescale_reduction',
             ['changes' => ['quantity_change' => ['old' => 2, 'new' => 1]]]);
         $child->forceFill(['quantity' => 1])->save();
 
@@ -176,7 +178,7 @@ class DepositRefundCoherenceTest extends TestCase
         ]);
         $order = $order->fresh(['adjustments', 'items.ticketType']);
         $child = $order->items->firstWhere('id', $child->id);
-        $order->applyExtraDue($child, 1000, $by, 'addon_per_guest_rescale',
+        $order->recordEdit($child, 1000, $by, 'addon_per_guest_rescale',
             ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
         $child->forceFill(['quantity' => 2])->save();
 

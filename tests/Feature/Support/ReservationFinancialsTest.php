@@ -77,7 +77,7 @@ class ReservationFinancialsTest extends TestCase
         $order = $this->makeOrder(2400);
         $by = User::factory()->create();
         $item = $this->makeItem($order, qty: 3, unit: 1200); // estado tras subir
-        $order->applyExtraDue($item, 1200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 3]]]);
+        $order->recordEdit($item, 1200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 3]]]);
 
         $f = ReservationFinancials::make($order->fresh(['items', 'adjustments', 'payments.refunds']), $item->fresh());
 
@@ -94,7 +94,7 @@ class ReservationFinancialsTest extends TestCase
         $order = $this->makeOrder(2400);
         $by = User::factory()->create();
         $item = $this->makeItem($order, qty: 3, unit: 1200, past: true); // slot pasado → finalizado
-        $order->applyExtraDue($item, 1200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 3]]]);
+        $order->recordEdit($item, 1200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 3]]]);
 
         $f = ReservationFinancials::make($order->fresh(['items', 'adjustments', 'payments.refunds']), $item->fresh());
 
@@ -146,14 +146,16 @@ class ReservationFinancialsTest extends TestCase
 
     public function test_reduced_active_item_surfaces_pending_refund_via_reconstruction(): void
     {
-        // Patrón JJ-WIMWJW: el item se subió y bajó (deja `quantity_change` con old=2)
-        // y acabó en qty 1 con extra_due neto 0; el cliente pagó 2 online → se le debe 1.
+        // Patrón JJ-WIMWJW: el item se subió (2 → 3, +12,00) y bajó (3 → 1, −24,00) y acabó en
+        // qty 1; el cliente pagó 2 online → se le debe 1. T1 del libro: la bajada es su delta
+        // ENTERO (−24,00); la lectura netea 12,00 contra la subida y los otros 12,00 afloran.
+        // (El fixture anterior escribía −12,00, que era la mitad que la cascada guardaba.)
         // Robustez #198: el "Pendiente de devolución" sale también en la card del producto.
         $order = $this->makeOrder(2400);
         $by = User::factory()->create();
         $item = $this->makeItem($order, qty: 1, unit: 1200);
-        $order->applyExtraDue($item, 1200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 3]]]);
-        $order->applyGateCredit($item->fresh(), 1200, $by, 'item_edit_reduction', ['changes' => ['quantity_change' => ['old' => 3, 'new' => 1]]]);
+        $order->recordEdit($item, 1200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 3]]]);
+        $order->recordEdit($item->fresh(), -2400, $by, 'item_edit_reduction', ['changes' => ['quantity_change' => ['old' => 3, 'new' => 1]]]);
 
         $f = ReservationFinancials::make($order->fresh(['items', 'adjustments', 'payments.refunds']), $item->fresh());
 
@@ -174,8 +176,8 @@ class ReservationFinancialsTest extends TestCase
         $order = $this->makeOrder(2400);
         $by = User::factory()->create();
         $item = $this->makeItem($order, qty: 1, unit: 1200);
-        $order->applyExtraDue($item, 1200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 3]]]);
-        $order->applyGateCredit($item->fresh(), 1200, $by, 'item_edit_reduction', ['changes' => ['quantity_change' => ['old' => 3, 'new' => 1]]]);
+        $order->recordEdit($item, 1200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 3]]]);
+        $order->recordEdit($item->fresh(), -2400, $by, 'item_edit_reduction', ['changes' => ['quantity_change' => ['old' => 3, 'new' => 1]]]);
 
         $rf = ReservationFinancials::make($order->fresh(['items', 'adjustments', 'payments.refunds']), $item->fresh());
         $html = view('filament.orders.partials.reservation-financials', ['rf' => $rf])->render();
@@ -238,7 +240,7 @@ class ReservationFinancialsTest extends TestCase
         ]);
         // Resto-señal del valor ORIGINAL (qty 10 → 180 − 30 = 150) + subida 10→11 (+18 a puerta).
         $this->makeDepositRemainder($order, $item, 15000);
-        $order->applyExtraDue($item, 1800, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 10, 'new' => 11]]]);
+        $order->recordEdit($item, 1800, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 10, 'new' => 11]]]);
 
         $f = ReservationFinancials::make($order->fresh(['items', 'adjustments', 'payments.refunds']), $item->fresh());
 
@@ -282,7 +284,7 @@ class ReservationFinancialsTest extends TestCase
         $order = $this->makeOrder(19800);
         $item = $this->makeItem($order, qty: 11, unit: 1800);
         $this->makeDepositRemainder($order, $item, 15000);
-        $order->applyExtraDue($item, 1800, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 10, 'new' => 11]]]);
+        $order->recordEdit($item, 1800, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 10, 'new' => 11]]]);
 
         $fresh = $order->fresh(['items.children', 'adjustments']);
         $principal = $fresh->items->firstWhere('id', $item->id);
@@ -318,7 +320,7 @@ class ReservationFinancialsTest extends TestCase
         $by = User::factory()->create();
         $order = $this->makeOrder(2400);
         $item = $this->makeItem($order, qty: 3, unit: 1200);
-        $order->applyExtraDue($item, 1200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 3]]]);
+        $order->recordEdit($item, 1200, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 2, 'new' => 3]]]);
 
         $fresh = $order->fresh(['items.children', 'adjustments']);
         $principal = $fresh->items->firstWhere('id', $item->id);
@@ -384,7 +386,7 @@ class ReservationFinancialsTest extends TestCase
             'quantity' => 2, 'seats' => 0, 'unit_price' => 500,
         ]);
         // Subida del complemento 1→2 → +5,00 a cobrar en puerta, atado al CHILD.
-        $order->applyExtraDue($child, 500, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
+        $order->recordEdit($child, 500, $by, 'item_edit', ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
 
         // Eager-load EXACTO de la superficie del panel (items-list.blade).
         $fresh = $order->fresh(['items.ticketType', 'items.slot', 'items.children.ticketType', 'adjustments']);
@@ -411,7 +413,7 @@ class ReservationFinancialsTest extends TestCase
     {
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => $cents, 'currency' => 'EUR',
             'applied_by' => $order->user_id,
         ]);

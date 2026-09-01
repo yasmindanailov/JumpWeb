@@ -1,0 +1,982 @@
+{
+    "T4 crédito con la reserva FINALIZADA": {
+        "order": {
+            "valor": 11200,
+            "pagadoOnline": 3000,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 8200,
+            "pendientePuerta": 0,
+            "compensado": 0,
+            "cobradoOnline": 3000,
+            "devuelto": 0,
+            "retenido": 3000,
+            "pendienteDevolucion": 0,
+            "facturado": 12000,
+            "hasDeposit": true,
+            "cuadra": true,
+            "hasCash": false,
+            "hasBreakdown": true,
+            "gateLines": [],
+            "totalWithChanges": 11200,
+            "extraDue": -800,
+            "depositRemainder": 9000
+        },
+        "reservations": [
+            {
+                "valor": 11200,
+                "pagadoOnline": 3000,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 8200,
+                "pendientePuerta": 0,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 11200,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": true,
+                "gateLines": []
+            }
+        ],
+        "items": [
+            {
+                "charged": 12000,
+                "collected": 3000,
+                "extraDue": 0,
+                "depositRemainder": 9000,
+                "originalOnline": 3000,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 3000,
+                "voidedLeftover": false
+            },
+            {
+                "charged": -800,
+                "collected": 0,
+                "extraDue": -800,
+                "depositRemainder": 0,
+                "originalOnline": 0,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 0,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "T4·A crédito con señal (la puerta absorbe)": {
+        "order": {
+            "valor": 11200,
+            "pagadoOnline": 3000,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 0,
+            "pendientePuerta": 8200,
+            "compensado": 0,
+            "cobradoOnline": 3000,
+            "devuelto": 0,
+            "retenido": 3000,
+            "pendienteDevolucion": 0,
+            "facturado": 12000,
+            "hasDeposit": true,
+            "cuadra": true,
+            "hasCash": false,
+            "hasBreakdown": true,
+            "gateLines": [
+                {
+                    "label": "Descuento por 2 invitados que corresponden a Kids",
+                    "amount_cents": -800
+                },
+                {
+                    "label": "Resto de la señal de Jump 1h",
+                    "amount_cents": 9000
+                }
+            ],
+            "totalWithChanges": 11200,
+            "extraDue": -800,
+            "depositRemainder": 9000
+        },
+        "reservations": [
+            {
+                "valor": 11200,
+                "pagadoOnline": 3000,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 8200,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 11200,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": true,
+                "gateLines": [
+                    {
+                        "label": "Descuento por 2 invitados que corresponden a Kids",
+                        "amount_cents": -800
+                    },
+                    {
+                        "label": "Resto de la señal de Jump 1h",
+                        "amount_cents": 9000
+                    }
+                ]
+            }
+        ],
+        "items": [
+            {
+                "charged": 12000,
+                "collected": 3000,
+                "extraDue": 0,
+                "depositRemainder": 9000,
+                "originalOnline": 3000,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 3000,
+                "voidedLeftover": false
+            },
+            {
+                "charged": -800,
+                "collected": 0,
+                "extraDue": -800,
+                "depositRemainder": 0,
+                "originalOnline": 0,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 0,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "T4·B pagado 100 % online (el tope no deja escribir)": {
+        "order": {
+            "valor": 12000,
+            "pagadoOnline": 12000,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 0,
+            "pendientePuerta": 0,
+            "compensado": 0,
+            "cobradoOnline": 12000,
+            "devuelto": 0,
+            "retenido": 12000,
+            "pendienteDevolucion": 0,
+            "facturado": 12000,
+            "hasDeposit": false,
+            "cuadra": true,
+            "hasCash": false,
+            "hasBreakdown": false,
+            "gateLines": [],
+            "totalWithChanges": 12000,
+            "extraDue": 0,
+            "depositRemainder": 0
+        },
+        "reservations": [
+            {
+                "valor": 12000,
+                "pagadoOnline": 12000,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 0,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 12000,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": false,
+                "gateLines": []
+            }
+        ],
+        "items": [
+            {
+                "charged": 12000,
+                "collected": 12000,
+                "extraDue": 0,
+                "depositRemainder": 0,
+                "originalOnline": 12000,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 12000,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "T4·C cobertura parcial (3,00 de 8,00)": {
+        "order": {
+            "valor": 11700,
+            "pagadoOnline": 11700,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 0,
+            "pendientePuerta": 0,
+            "compensado": 0,
+            "cobradoOnline": 11700,
+            "devuelto": 0,
+            "retenido": 11700,
+            "pendienteDevolucion": 0,
+            "facturado": 12000,
+            "hasDeposit": true,
+            "cuadra": true,
+            "hasCash": false,
+            "hasBreakdown": true,
+            "gateLines": [
+                {
+                    "label": "Descuento por 2 invitados que corresponden a Kids",
+                    "amount_cents": -300
+                },
+                {
+                    "label": "Resto de la señal de Jump 1h",
+                    "amount_cents": 300
+                }
+            ],
+            "totalWithChanges": 11700,
+            "extraDue": -300,
+            "depositRemainder": 300
+        },
+        "reservations": [
+            {
+                "valor": 11700,
+                "pagadoOnline": 11700,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 0,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 11700,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": false,
+                "gateLines": [
+                    {
+                        "label": "Descuento por 2 invitados que corresponden a Kids",
+                        "amount_cents": -300
+                    },
+                    {
+                        "label": "Resto de la señal de Jump 1h",
+                        "amount_cents": 300
+                    }
+                ]
+            }
+        ],
+        "items": [
+            {
+                "charged": 12000,
+                "collected": 11700,
+                "extraDue": 0,
+                "depositRemainder": 300,
+                "originalOnline": 11700,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 11700,
+                "voidedLeftover": false
+            },
+            {
+                "charged": -300,
+                "collected": 0,
+                "extraDue": -300,
+                "depositRemainder": 0,
+                "originalOnline": 0,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 0,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "cancelación con reembolso pendiente": {
+        "order": {
+            "valor": 0,
+            "pagadoOnline": 0,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 0,
+            "pendientePuerta": 0,
+            "compensado": 0,
+            "cobradoOnline": 1000,
+            "devuelto": 0,
+            "retenido": 1000,
+            "pendienteDevolucion": 1000,
+            "facturado": 1000,
+            "hasDeposit": false,
+            "cuadra": true,
+            "hasCash": true,
+            "hasBreakdown": true,
+            "gateLines": [],
+            "totalWithChanges": 1000,
+            "extraDue": 0,
+            "depositRemainder": 0
+        },
+        "reservations": [
+            {
+                "valor": 0,
+                "pagadoOnline": 0,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 0,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 1000,
+                "facturado": 0,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": true,
+                "gateLines": []
+            }
+        ],
+        "items": [
+            {
+                "charged": 1000,
+                "collected": 1000,
+                "extraDue": 0,
+                "depositRemainder": 0,
+                "originalOnline": 1000,
+                "pendingRefund": 1000,
+                "refunded": 0,
+                "refundableRemainder": 1000,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "cargo de puerta COBRADO (ítem finalizado)": {
+        "order": {
+            "valor": 1000,
+            "pagadoOnline": 600,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 400,
+            "pendientePuerta": 0,
+            "compensado": 0,
+            "cobradoOnline": 600,
+            "devuelto": 0,
+            "retenido": 600,
+            "pendienteDevolucion": 0,
+            "facturado": 600,
+            "hasDeposit": false,
+            "cuadra": true,
+            "hasCash": false,
+            "hasBreakdown": true,
+            "gateLines": [],
+            "totalWithChanges": 1000,
+            "extraDue": 400,
+            "depositRemainder": 0
+        },
+        "reservations": [
+            {
+                "valor": 1000,
+                "pagadoOnline": 600,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 400,
+                "pendientePuerta": 0,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 1000,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": true,
+                "gateLines": []
+            }
+        ],
+        "items": [
+            {
+                "charged": 1000,
+                "collected": 600,
+                "extraDue": 400,
+                "depositRemainder": 0,
+                "originalOnline": 600,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 600,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "cargo de puerta PENDIENTE (ítem activo)": {
+        "order": {
+            "valor": 1500,
+            "pagadoOnline": 1000,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 0,
+            "pendientePuerta": 500,
+            "compensado": 0,
+            "cobradoOnline": 1000,
+            "devuelto": 0,
+            "retenido": 1000,
+            "pendienteDevolucion": 0,
+            "facturado": 1000,
+            "hasDeposit": false,
+            "cuadra": true,
+            "hasCash": false,
+            "hasBreakdown": true,
+            "gateLines": [
+                {
+                    "label": "Diferencia por cambios en Jump 1h",
+                    "amount_cents": 500
+                }
+            ],
+            "totalWithChanges": 1500,
+            "extraDue": 500,
+            "depositRemainder": 0
+        },
+        "reservations": [
+            {
+                "valor": 1500,
+                "pagadoOnline": 1000,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 500,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 1500,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": true,
+                "gateLines": [
+                    {
+                        "label": "Diferencia por cambios en Jump 1h",
+                        "amount_cents": 500
+                    }
+                ]
+            }
+        ],
+        "items": [
+            {
+                "charged": 1500,
+                "collected": 1000,
+                "extraDue": 500,
+                "depositRemainder": 0,
+                "originalOnline": 1000,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 1000,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "combo: activo+complemento y principal cancelado": {
+        "order": {
+            "valor": 1300,
+            "pagadoOnline": 1300,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 0,
+            "pendientePuerta": 0,
+            "compensado": 0,
+            "cobradoOnline": 2100,
+            "devuelto": 0,
+            "retenido": 2100,
+            "pendienteDevolucion": 800,
+            "facturado": 2100,
+            "hasDeposit": false,
+            "cuadra": true,
+            "hasCash": true,
+            "hasBreakdown": true,
+            "gateLines": [],
+            "totalWithChanges": 2100,
+            "extraDue": 0,
+            "depositRemainder": 0
+        },
+        "reservations": [
+            {
+                "valor": 1300,
+                "pagadoOnline": 1300,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 0,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 1300,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": false,
+                "gateLines": []
+            },
+            {
+                "valor": 0,
+                "pagadoOnline": 0,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 0,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 800,
+                "facturado": 0,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": true,
+                "gateLines": []
+            }
+        ],
+        "items": [
+            {
+                "charged": 1000,
+                "collected": 1000,
+                "extraDue": 0,
+                "depositRemainder": 0,
+                "originalOnline": 1000,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 1000,
+                "voidedLeftover": false
+            },
+            {
+                "charged": 300,
+                "collected": 300,
+                "extraDue": 0,
+                "depositRemainder": 0,
+                "originalOnline": 300,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 300,
+                "voidedLeftover": false
+            },
+            {
+                "charged": 800,
+                "collected": 800,
+                "extraDue": 0,
+                "depositRemainder": 0,
+                "originalOnline": 800,
+                "pendingRefund": 800,
+                "refunded": 0,
+                "refundableRemainder": 800,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "pack con señal cuya franja YA PASÓ": {
+        "order": {
+            "valor": 1000,
+            "pagadoOnline": 300,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 700,
+            "pendientePuerta": 0,
+            "compensado": 0,
+            "cobradoOnline": 300,
+            "devuelto": 0,
+            "retenido": 300,
+            "pendienteDevolucion": 0,
+            "facturado": 1000,
+            "hasDeposit": true,
+            "cuadra": true,
+            "hasCash": false,
+            "hasBreakdown": true,
+            "gateLines": [],
+            "totalWithChanges": 1000,
+            "extraDue": 0,
+            "depositRemainder": 700
+        },
+        "reservations": [
+            {
+                "valor": 1000,
+                "pagadoOnline": 300,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 700,
+                "pendientePuerta": 0,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 1000,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": true,
+                "gateLines": []
+            }
+        ],
+        "items": [
+            {
+                "charged": 1000,
+                "collected": 300,
+                "extraDue": 0,
+                "depositRemainder": 700,
+                "originalOnline": 300,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 300,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "pedido CANCELADO sin reembolsar": {
+        "order": {
+            "valor": 0,
+            "pagadoOnline": 0,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 0,
+            "pendientePuerta": 0,
+            "compensado": 0,
+            "cobradoOnline": 1000,
+            "devuelto": 0,
+            "retenido": 1000,
+            "pendienteDevolucion": 1000,
+            "facturado": 1000,
+            "hasDeposit": false,
+            "cuadra": true,
+            "hasCash": true,
+            "hasBreakdown": true,
+            "gateLines": [],
+            "totalWithChanges": 1000,
+            "extraDue": 0,
+            "depositRemainder": 0
+        },
+        "reservations": [
+            {
+                "valor": 0,
+                "pagadoOnline": 0,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 0,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 1000,
+                "facturado": 0,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": true,
+                "gateLines": []
+            }
+        ],
+        "items": [
+            {
+                "charged": 1000,
+                "collected": 1000,
+                "extraDue": 0,
+                "depositRemainder": 0,
+                "originalOnline": 1000,
+                "pendingRefund": 1000,
+                "refunded": 0,
+                "refundableRemainder": 1000,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "pedido NUNCA cobrado con la franja ya pasada": {
+        "order": {
+            "valor": 1000,
+            "pagadoOnline": 0,
+            "pendienteOnline": 600,
+            "pagadoPuerta": 0,
+            "pendientePuerta": 400,
+            "compensado": 0,
+            "cobradoOnline": 0,
+            "devuelto": 0,
+            "retenido": 0,
+            "pendienteDevolucion": 0,
+            "facturado": 600,
+            "hasDeposit": false,
+            "cuadra": true,
+            "hasCash": false,
+            "hasBreakdown": true,
+            "gateLines": [
+                {
+                    "label": "Diferencia por cambios en Jump 1h",
+                    "amount_cents": 400
+                }
+            ],
+            "totalWithChanges": 1000,
+            "extraDue": 400,
+            "depositRemainder": 0
+        },
+        "reservations": [
+            {
+                "valor": 1000,
+                "pagadoOnline": 0,
+                "pendienteOnline": 600,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 400,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 1000,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": false,
+                "hasBreakdown": true,
+                "gateLines": [
+                    {
+                        "label": "Diferencia por cambios en Jump 1h",
+                        "amount_cents": 400
+                    }
+                ]
+            }
+        ],
+        "items": [
+            {
+                "charged": 1000,
+                "collected": 600,
+                "extraDue": 400,
+                "depositRemainder": 0,
+                "originalOnline": 600,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 600,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "pedido PENDIENTE, todavía sin cobrar": {
+        "order": {
+            "valor": 1000,
+            "pagadoOnline": 0,
+            "pendienteOnline": 1000,
+            "pagadoPuerta": 0,
+            "pendientePuerta": 0,
+            "compensado": 0,
+            "cobradoOnline": 0,
+            "devuelto": 0,
+            "retenido": 0,
+            "pendienteDevolucion": 0,
+            "facturado": 1000,
+            "hasDeposit": false,
+            "cuadra": true,
+            "hasCash": false,
+            "hasBreakdown": true,
+            "gateLines": [],
+            "totalWithChanges": 1000,
+            "extraDue": 0,
+            "depositRemainder": 0
+        },
+        "reservations": [
+            {
+                "valor": 1000,
+                "pagadoOnline": 0,
+                "pendienteOnline": 1000,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 0,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 1000,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": false,
+                "hasBreakdown": true,
+                "gateLines": []
+            }
+        ],
+        "items": [
+            {
+                "charged": 1000,
+                "collected": 1000,
+                "extraDue": 0,
+                "depositRemainder": 0,
+                "originalOnline": 1000,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 1000,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "reembolso TOTAL, sin atar a línea": {
+        "order": {
+            "valor": 1000,
+            "pagadoOnline": 0,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 0,
+            "pendientePuerta": 0,
+            "compensado": 1000,
+            "cobradoOnline": 1000,
+            "devuelto": 1000,
+            "retenido": 0,
+            "pendienteDevolucion": 0,
+            "facturado": 1000,
+            "hasDeposit": false,
+            "cuadra": true,
+            "hasCash": true,
+            "hasBreakdown": true,
+            "gateLines": [],
+            "totalWithChanges": 0,
+            "extraDue": 0,
+            "depositRemainder": 0
+        },
+        "reservations": [
+            {
+                "valor": 1000,
+                "pagadoOnline": 0,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 0,
+                "compensado": 1000,
+                "cobradoOnline": 0,
+                "devuelto": 1000,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 1000,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": true,
+                "gateLines": []
+            }
+        ],
+        "items": [
+            {
+                "charged": 1000,
+                "collected": 1000,
+                "extraDue": 0,
+                "depositRemainder": 0,
+                "originalOnline": 1000,
+                "pendingRefund": 0,
+                "refunded": 1000,
+                "refundableRemainder": 0,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "reembolso parcial por ítem (producto activo)": {
+        "order": {
+            "valor": 1000,
+            "pagadoOnline": 600,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 0,
+            "pendientePuerta": 0,
+            "compensado": 400,
+            "cobradoOnline": 1000,
+            "devuelto": 400,
+            "retenido": 600,
+            "pendienteDevolucion": 0,
+            "facturado": 1000,
+            "hasDeposit": false,
+            "cuadra": true,
+            "hasCash": true,
+            "hasBreakdown": true,
+            "gateLines": [],
+            "totalWithChanges": 600,
+            "extraDue": 0,
+            "depositRemainder": 0
+        },
+        "reservations": [
+            {
+                "valor": 1000,
+                "pagadoOnline": 600,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 0,
+                "compensado": 400,
+                "cobradoOnline": 0,
+                "devuelto": 400,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 1000,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": true,
+                "gateLines": []
+            }
+        ],
+        "items": [
+            {
+                "charged": 1000,
+                "collected": 1000,
+                "extraDue": 0,
+                "depositRemainder": 0,
+                "originalOnline": 1000,
+                "pendingRefund": 0,
+                "refunded": 400,
+                "refundableRemainder": 600,
+                "voidedLeftover": false
+            }
+        ]
+    },
+    "sin actividad (principal + complemento)": {
+        "order": {
+            "valor": 1300,
+            "pagadoOnline": 1300,
+            "pendienteOnline": 0,
+            "pagadoPuerta": 0,
+            "pendientePuerta": 0,
+            "compensado": 0,
+            "cobradoOnline": 1300,
+            "devuelto": 0,
+            "retenido": 1300,
+            "pendienteDevolucion": 0,
+            "facturado": 1300,
+            "hasDeposit": false,
+            "cuadra": true,
+            "hasCash": false,
+            "hasBreakdown": false,
+            "gateLines": [],
+            "totalWithChanges": 1300,
+            "extraDue": 0,
+            "depositRemainder": 0
+        },
+        "reservations": [
+            {
+                "valor": 1300,
+                "pagadoOnline": 1300,
+                "pendienteOnline": 0,
+                "pagadoPuerta": 0,
+                "pendientePuerta": 0,
+                "compensado": 0,
+                "cobradoOnline": 0,
+                "devuelto": 0,
+                "retenido": 0,
+                "pendienteDevolucion": 0,
+                "facturado": 1300,
+                "hasDeposit": false,
+                "cuadra": true,
+                "hasCash": true,
+                "hasBreakdown": false,
+                "gateLines": []
+            }
+        ],
+        "items": [
+            {
+                "charged": 1000,
+                "collected": 1000,
+                "extraDue": 0,
+                "depositRemainder": 0,
+                "originalOnline": 1000,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 1000,
+                "voidedLeftover": false
+            },
+            {
+                "charged": 300,
+                "collected": 300,
+                "extraDue": 0,
+                "depositRemainder": 0,
+                "originalOnline": 300,
+                "pendingRefund": 0,
+                "refunded": 0,
+                "refundableRemainder": 300,
+                "voidedLeftover": false
+            }
+        ]
+    }
+}

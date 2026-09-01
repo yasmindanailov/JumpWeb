@@ -165,7 +165,9 @@ persistido), `OrderRefundFlags` y `GuardsItemRefunds` (Payments), `HasItemAction
 guardas `can{Edit,Cancel}Item`; la mitad `canRefundItem` se partió a Payments en Fase 2 paso 5) +
 `*BlockedReason`). Métodos financieros clave: `financialSummary()`
 (`App\Domain\Booking\Services\OrderFinancialSummary`), `executeFullRefund`, `executePartialRefund[Batch]`,
-`applyExtraDue`/`applyGateCredit`/`applyDepositRemainderCredit`, `pendingAtGateLines`,
+`recordEdit` (T1 del libro: el hecho de una gestión, con signo; sustituye a
+`applyExtraDue`/`applyGateCredit`/`applyDepositRemainderCredit`/`recordReductionMarker`),
+`birthValueCents` (la identidad de nacimiento I1), `pendingAtGateLines`,
 `notifyCustomer()` (no notifica a clientes de agenda sin email).
 
 ### `order_items` — línea de pedido (OrderItem)
@@ -213,15 +215,24 @@ idempotencia REST; NO unique aquí) · `requested_by` FK restrict · `requested_
 + `failure_message` · index `(payment_id, status)`. Éxito Redsys = `Ds_Response 0900`.
 Suma de `succeeded` por payment = total devuelto.
 
-### `order_adjustments` — dinero fuera de pasarela (OrderAdjustment)
-Dimensión ORTOGONAL a `payment_refunds`: aquí dinero cliente→negocio cobrado EN PERSONA.
-`order_id` FK cascade · `order_item_id` FK nullable `nullOnDelete` · `type`:
-- `extra_due` — ediciones del pedido que SUBEN importe (se cobra en puerta). Admite filas
-  **negativas** (créditos que netean subidas previas) → `amount_cents` es **SIGNED** (solo
-  se alteró en MySQL; SQLite ya era dinámico).
-- `deposit_remainder` — resto de la señal (`valor_base − señal`), conocido desde la creación;
-  NO se suma a `extra_due` (buckets separados en el desglose).
-- `collected_in_person` — reservado v2, sin uso.
+### `order_adjustments` — los HECHOS de dinero de una línea (OrderAdjustment)
+Desde la T1 del libro (`specs/desglose-libro.md` §4.2, `DECISIONES #305`, 2026-09-01) cada fila es
+un hecho y `type` es el ÚNICO discriminador. `order_id` FK cascade · `order_item_id` FK nullable
+`nullOnDelete` (en la práctica siempre atado a línea) · `type`:
+- `deposit_split` — el reparto de la SEÑAL al nacer: la parte del valor de la línea que NO se
+  cobró online (`valor − señal`; lo escribe `OrderCreator`, ≥ 0, contexto nulo). No es un
+  movimiento: de él sale lo que la línea aportó al cobro online sin consultar el catálogo.
+- `edit` — el DELTA ENTERO de una gestión sobre la línea (cantidad · producto · fecha con
+  re-tarifa · complemento · re-escala per-invitado), **con signo** (`amount_cents` es SIGNED
+  desde 2026-06-06). Una fila por gestión y por línea afectada; el `context` lleva el diff.
+- `mixed` — el gemelo de la línea de fiesta mixta (suplemento + / descuento −), reconciliado EN
+  EL SITIO por `MixedPartySurcharge` (línea viva, no un apunte por guardado).
+- `courtesy` — la compensación: dinero devuelto SIN que desapareciera producto, escrita al
+  reembolsar (≤ 0, `context.refund_id`).
+⚠️ Hasta la T1 los tipos eran `extra_due` / `deposit_remainder` (y un `collected_in_person`
+reservado y nunca usado): una bajada se escribía en CASCADA de créditos con un marcador de 0 €,
+y el importe se reconstruía al leer con la señal del catálogo vivo (el fantasma de la señal). La
+migración `2026_09_01_000100_order_adjustments_become_movements` convirtió las filas.
 
 `currency` · `reason` · `context` JSON (diff estructurado del cambio; `breakdownLabel()` lo
 pinta) · `applied_by` FK restrict · índices `(order_id,type)`, `(order_item_id,type)`.
@@ -442,10 +453,17 @@ revisión del spec destapó está cerrado.
 7. **morphMap forzado desde Fase 2** (ver §0): alias estables en los morphs; deuda retirada.
 8. **`$guarded = []`** en la mayoría de modelos (ver §0); **7** con allowlist (`User` vía atributo `#[Fillable]`).
 9. **Migraciones con lógica de datos del origen:** backfills/repairs quirúrgicos
-   (`ServicePriceTableBackfill`, `SpecialRateLabelBackfill`, `LegacyAddonAdjustmentRepair`,
-   `LegacyGateAdjustmentReconciliation`) y seeds idempotentes de zonas (`color`, `image` con
-   slugs `jump`/`kids`). No-op en instalación limpia, pero son contenido/decisiones del
-   sector origen incrustadas en `database/migrations/`.
+   (`ServicePriceTableBackfill`, `SpecialRateLabelBackfill`) y seeds idempotentes de zonas
+   (`color`, `image` con slugs `jump`/`kids`). No-op en instalación limpia, pero son
+   contenido/decisiones del sector origen incrustadas en `database/migrations/`.
+   ⚠️ Los dos repairs de ajustes del origen (`LegacyAddonAdjustmentRepair`,
+   `LegacyGateAdjustmentReconciliation`) **se RETIRARON en la T1 del libro**
+   (`specs/desglose-libro.md` §4.7, 2026-09-01): reparaban una cascada de créditos que ya no
+   existe y no tenían más llamador que sus dos migraciones de 2026-06-06, que quedan
+   neutralizadas (filas del historial de `migrations`, sin efecto).
+   ▶ Y la migración de HECHOS del libro (`2026_09_01_000100_order_adjustments_become_movements`)
+   es la única con lógica de datos PROPIA del producto: convierte `order_adjustments` a los
+   cuatro tipos de §2 y es idempotente (su test la corre dos veces).
 10. **`event_packages` ya no existe** (absorbida por `ticket_types.type='pack'`);
     `contact_messages` tampoco (el formulario de contacto solo envía email). Si algún doc
     antiguo las menciona, está desfasado.

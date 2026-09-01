@@ -326,7 +326,7 @@ class MixedPartyBadgeTest extends TestCase
         // Cobertura de puerta REAL (un cargo de edición) y re-guardado completo: el reconciliador
         // escribe el descuento —min(14,00, cobertura)— con su `extra_due` gemelo NEGATIVO, que es
         // la línea ↳ que hasta hoy salía «+-14,00 €».
-        $order->applyExtraDue($item, 5000, $this->staff(), 'ajuste de sonda');
+        $order->recordEdit($item, 5000, $this->staff(), 'ajuste de sonda');
         $item->refresh()->submitGuestForm([
             ['name' => 'Invitado 1', 'edad' => '9'],
             ['name' => 'Invitado 2', 'edad' => '4'],

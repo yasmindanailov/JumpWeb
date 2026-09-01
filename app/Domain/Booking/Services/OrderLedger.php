@@ -187,7 +187,7 @@ final readonly class OrderLedger
         // ⚠️ Las dos identidades, evaluadas AQUÍ y no en un test. Se calculan antes de construir
         // porque la FRASE depende de ellas: un pedido que no cuadra no puede explicarse con la frase
         // de un pedido normal.
-        $cuadra = self::cierra($s);
+        $cuadra = self::cierra($order, $s);
 
         if (! $cuadra) {
             // ⚠️⚠️ **El parque tiene que ENTERARSE.** Hasta `#132` no se enteraba nadie: ni un log, ni
@@ -196,6 +196,10 @@ final readonly class OrderLedger
             // ya está mal, y el objetivo es lo contrario — que se vea y se pueda arreglar.
             Log::warning('ledger.no_cuadra', [
                 'order' => $order->code,
+                // I1 · nacimiento (T1 del libro): lo facturado tiene que ser lo que las líneas dicen
+                // que nació — si no, falta un hecho o el pedido se fabricó a mano.
+                'facturado' => $s->totalOriginal,
+                'nacimiento' => $order->birthValueCents(),
                 'valor' => $s->totalFinalNeto(),
                 'canales' => $s->pagadoOnline() + $s->pendienteOnline() + $s->cobradoPuerta() + $s->pendingAtGate() + $s->compensado(),
                 'retenido' => $s->retenidoOnline(),
@@ -293,21 +297,30 @@ final readonly class OrderLedger
             // ⚠️ El desglose POR RESERVA no tiene eje de caja propio, así que su identidad es la del
             // PEDIDO. Se calcula con el mismo predicado —no llamando a `forOrder()`, que volvería a
             // avisar por cada tarjeta de la lista y convertiría un aviso en ruido—.
-            cuadra: self::cierra($order->financialSummary()),
+            cuadra: self::cierra($order, $order->financialSummary()),
             nota: null,
         );
     }
 
     /**
-     * **Las DOS identidades, en una sola expresión y en un solo sitio** (`PAY-16` + `PAY-17`, más la
-     * guarda de construcción de la columna de reembolso).
+     * **Las identidades del dinero, en una sola expresión y en un solo sitio** (`PAY-16` + `PAY-17`,
+     * la guarda de construcción de la columna de reembolso, y —desde la T1 del libro,
+     * `specs/desglose-libro.md` §4.1— la identidad de NACIMIENTO `I1`).
+     *
+     * `I1`: `Order.total` —lo que `OrderCreator` facturó— tiene que ser exactamente lo que las
+     * líneas dicen que nació (`fila − Σ deltas`, sin consultar el catálogo). Si no coincide, o falta
+     * un HECHO (una gestión que no dejó su fila) o el pedido se fabricó a mano con un total que no
+     * existe; en los dos casos ninguna descomposición es cierta y el pedido queda «en revisión».
+     * Medido antes de escribirla (spec §1.4): caza `T4-PRB01` (una sonda que nació con
+     * `Order.total` = la señal) y ningún pedido creado por un flujo real.
      *
      * Escribirla dos veces —una por superficie— sería exactamente la clase de duplicado del que este
      * módulo nació para librarse.
      */
-    private static function cierra(OrderFinancialSummary $s): bool
+    private static function cierra(Order $order, OrderFinancialSummary $s): bool
     {
-        return $s->totalFinalNeto() === $s->pagadoOnline() + $s->pendienteOnline() + $s->cobradoPuerta() + $s->pendingAtGate() + $s->compensado()
+        return (int) $order->total === $order->birthValueCents()
+            && $s->totalFinalNeto() === $s->pagadoOnline() + $s->pendienteOnline() + $s->cobradoPuerta() + $s->pendingAtGate() + $s->compensado()
             && $s->retenidoOnline() === $s->pagadoOnline() + $s->pendienteDevolucion()
             && ! $s->refundColumnDivergesFromRows();
     }

@@ -29,7 +29,7 @@ use Tests\TestCase;
  * la CONSULTA y ciega a la PRESENTACIÓN, y por eso convivió durante semanas con un registro que
  * enseñaba esto y nada más:
  *
- *     orders.gate_credit_applied
+ *     orders.value_reduction_applied
  *     Motivo: item_edit_reduction
  *
  * Es la misma familia de hueco que `#113` (veinte iconos servidos vacíos) y `#119(f)` (los botones
@@ -80,7 +80,7 @@ class OrderAuditReadabilityTest extends TestCase
 
     /**
      * ⚠️ **La entrada se registra sobre el PEDIDO**, que es como lo hace el código real
-     * (`Order::applyGateCredit` pasa `target: $this`). Verificado contra staging: las seis entradas
+     * (`Order::recordEdit` pasa `target: $this`). Verificado contra staging: las seis entradas
      * de `R-S9XDYB` tienen `target_type = order`.
      */
     private function renderAuditFor(Order $order): string
@@ -98,7 +98,7 @@ class OrderAuditReadabilityTest extends TestCase
     public function test_an_order_level_entry_is_badged_as_order_not_as_product(): void
     {
         $order = $this->makeOrder();
-        AuditLogger::log('orders.gate_credit_applied', $order, [
+        AuditLogger::log('orders.value_reduction_applied', $order, [
             'order_code' => $order->code, 'amount_cents' => -2400, 'reason' => 'item_edit_reduction',
         ]);
 
@@ -115,14 +115,14 @@ class OrderAuditReadabilityTest extends TestCase
     public function test_the_action_is_shown_translated_and_never_as_a_raw_key(): void
     {
         $order = $this->makeOrder();
-        AuditLogger::log('orders.gate_credit_applied', $order, [
+        AuditLogger::log('orders.value_reduction_applied', $order, [
             'order_code' => $order->code, 'amount_cents' => -2400, 'reason' => 'item_edit_reduction',
         ]);
 
         $html = $this->renderAuditFor($order);
 
-        $this->assertStringContainsString(__('admin.orders.audit_modal.actions.orders.gate_credit_applied'), $html);
-        $this->assertStringNotContainsString('orders.gate_credit_applied', $html,
+        $this->assertStringContainsString(__('admin.orders.audit_modal.actions.orders.value_reduction_applied'), $html);
+        $this->assertStringNotContainsString('orders.value_reduction_applied', $html,
             'La clave cruda de la acción no puede llegar al HTML: es literalmente lo que el owner encontró.');
     }
 
@@ -130,7 +130,7 @@ class OrderAuditReadabilityTest extends TestCase
     public function test_a_gate_adjustment_shows_its_amount_and_a_readable_reason(): void
     {
         $order = $this->makeOrder();
-        AuditLogger::log('orders.gate_credit_applied', $order, [
+        AuditLogger::log('orders.value_reduction_applied', $order, [
             'order_code' => $order->code, 'amount_cents' => -2400, 'reason' => 'item_edit_reduction',
         ]);
 
@@ -230,7 +230,7 @@ class OrderAuditReadabilityTest extends TestCase
     {
         $order = $this->makeOrder();
         $item = $order->items->first();
-        $order->applyExtraDue($item, 1500, User::factory()->create(), 'item_edit', ['changes' => ['quantity_change' => ['old' => 7, 'new' => 8]]]);
+        $order->recordEdit($item, 1500, User::factory()->create(), 'item_edit', ['changes' => ['quantity_change' => ['old' => 7, 'new' => 8]]]);
 
         $html = Livewire::actingAs($this->staff())
             ->test(ViewOrder::class, ['record' => $order->code])

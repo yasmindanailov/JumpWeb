@@ -507,8 +507,10 @@ final class ReservationSlip
      */
     public function pendingAtGateCents(): int
     {
-        return $this->pendingAdjustments()
-            ->sum(fn (OrderAdjustment $adj) => (int) $adj->amount_cents);
+        // T1 del libro: los dos cubos de puerta de cada línea abierta, DERIVADOS de sus hechos
+        // (`Order::itemExtraDueCents` + `itemDepositRemainderCents`, vía `GateBuckets`).
+        return $this->pendingItems()
+            ->sum(fn (OrderItem $i) => $this->order->itemExtraDueCents($i) + $this->order->itemDepositRemainderCents($i));
     }
 
     public function hasPendingAtGate(): bool
@@ -541,9 +543,8 @@ final class ReservationSlip
         // #225: el resto de la señal pendiente NO sale en pendingAtGateLines (que solo netea
         // extra_due de ediciones); se añade como una entrada propia para que la lista de
         // etiquetas cuadre con el total `pendingAtGateCents()`.
-        $depositRemainder = $this->pendingAdjustments()
-            ->where('type', OrderAdjustment::TYPE_DEPOSIT_REMAINDER)
-            ->sum(fn (OrderAdjustment $adj) => (int) $adj->amount_cents);
+        $depositRemainder = $this->pendingItems()
+            ->sum(fn (OrderItem $i) => $this->order->itemDepositRemainderCents($i));
         if ($depositRemainder > 0) {
             // #225 (feedback clienta): la línea «Resto de la señal» nombra su producto («de X»).
             // La hoja es de una reserva → el producto es el principal.
@@ -554,20 +555,21 @@ final class ReservationSlip
         return $labels;
     }
 
-    /** @return Collection<int,OrderAdjustment> */
-    private function pendingAdjustments(): Collection
+    /**
+     * Las líneas de esta reserva (principal + complementos) que siguen ABIERTAS en puerta: ni
+     * finalizadas ni canceladas. Una línea cerrada tiene sus cubos resueltos (cobrados en puerta)
+     * o anulados — coherente con la regla del resumen financiero del pedido.
+     *
+     * @return Collection<int,OrderItem>
+     */
+    private function pendingItems(): Collection
     {
         // Los complementos HEREDAN el estado "finalizado" del principal: lo
         // calculamos UNA vez aquí en lugar de llamar `isFinishedInPractice()`
         // sobre cada child (que haría un lazy-load de su `parent` + `slot`).
         $principalFinished = $this->item->isFinishedInPractice();
 
-        $reservationItems = collect([$this->item])->merge($this->item->children);
-
-        return $reservationItems
-            // Item cerrado (finalizado o cancelado) → su extra_due se da por
-            // resuelto (cobrado en puerta o anulado). Coherente con la regla
-            // del resumen financiero del pedido.
+        return collect([$this->item])->merge($this->item->children)
             ->reject(function (OrderItem $i) use ($principalFinished) {
                 $finished = $i->parent_item_id === null
                     ? $i->isFinishedInPractice()
@@ -575,9 +577,6 @@ final class ReservationSlip
 
                 return $finished || $i->isCancelled();
             })
-            ->flatMap(fn (OrderItem $i) => $i->adjustments
-                // #225: ambos buckets de puerta — extra_due de ediciones + resto de la señal.
-                ->whereIn('type', [OrderAdjustment::TYPE_EXTRA_DUE, OrderAdjustment::TYPE_DEPOSIT_REMAINDER]))
             ->values();
     }
 

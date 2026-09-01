@@ -654,7 +654,7 @@ class ReservationSlipTest extends TestCase
         ]);
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE, 'amount_cents' => 2400, 'currency' => 'EUR',
+            'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => 2400, 'currency' => 'EUR',
             'applied_by' => $this->staff()->id,
         ]);
 
@@ -674,7 +674,7 @@ class ReservationSlipTest extends TestCase
         ]);
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE, 'amount_cents' => 2400, 'currency' => 'EUR',
+            'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => 2400, 'currency' => 'EUR',
             'applied_by' => $this->staff()->id,
         ]);
 

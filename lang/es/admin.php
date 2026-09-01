@@ -963,11 +963,13 @@ return [
                     'payment_init_failed' => 'No se pudo iniciar el cobro',
                     'slip_printed' => 'Hoja de reserva impresa',
 
-                    // Dinero de puerta. Los tres mueven «A cobrar en el parque» y son los que el
-                    // operador tiene que poder explicar con el cliente delante.
+                    // Dinero de una gestión (T1 del libro, `specs/desglose-libro.md` §4.2): cada
+                    // edición deja UN hecho con su delta entero, y el historial dice si fue un cargo
+                    // o una bajada — son los que el operador tiene que poder explicar con el cliente
+                    // delante. (Hasta la T1 una bajada se auditaba como uno o dos «abonos» sobre
+                    // cubos de puerta, `gate_credit_applied` / `deposit_remainder_credit_applied`.)
                     'extra_due_applied' => 'Cargo añadido a cobrar en el parque',
-                    'gate_credit_applied' => 'Abono sobre lo pendiente en el parque',
-                    'deposit_remainder_credit_applied' => 'Abono sobre el resto de la señal',
+                    'value_reduction_applied' => 'Bajada del importe registrada',
                     // El suplemento de fiesta mixta se recalcula solo con las edades declaradas; este
                     // rastro es lo ÚNICO que deja ver «declaró 8 el día 3 y lo bajó a 6 el día 20».
                     'mixed_party_surcharge_synced' => 'Suplemento de fiesta mixta recalculado',
@@ -998,7 +1000,7 @@ return [
                 'addon_edit' => 'cambio de complementos',
                 'addon_per_guest_rescale' => 'reajuste de complementos por invitado',
                 'addon_per_guest_rescale_reduction' => 'bajada por reajuste de complementos por invitado',
-                'deposit_remainder' => 'resto de la señal, a pagar en el parque',
+                'deposit_split' => 'reparto de la señal al nacer: el resto se paga en el parque',
             ],
         ],
 

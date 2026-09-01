@@ -7,43 +7,60 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Ajuste financiero del pedido FUERA de Redsys (sub-fase 7.2e cimientos).
+ * **Un HECHO de dinero de una línea del pedido** (`specs/desglose-libro.md` §4.2, `DECISIONES #305`).
  *
- * Modela dinero que el CLIENTE DEBE AL PARQUE por una edición que subió el
- * importe del pedido. Se cobra en persona al llegar al parque — el cobro
- * presencial es implícito (al pasar el slot del item, se asume cobrado;
- * decisión clienta sesión 7.2e).
+ * Desde la T1 del libro cada fila es una de estas cuatro cosas, y `type` es el ÚNICO discriminador:
  *
- * Dimensión ortogonal a `PaymentRefund`: aquí dinero `cliente → parque` (en
- * efectivo/datáfono presencial), allí dinero `parque → cliente` (Redsys o
- * reconocido manualmente). Cero solape conceptual.
+ * | `type`          | Qué es                                                                   | Importe |
+ * |-----------------|--------------------------------------------------------------------------|---------|
+ * | `deposit_split` | El reparto de la SEÑAL al nacer: la parte del valor de la línea que NO se cobró online (la escribe `OrderCreator`; principal y, en la Opción A del origen, cada complemento de pago de un pack con señal) | ≥ 0 |
+ * | `edit`          | El DELTA ENTERO de una gestión sobre la línea (cantidad · producto · fecha con re-tarifa · complemento añadido/subido · re-escala per-invitado). Una fila por gestión y por línea afectada, con signo | ≠ 0 |
+ * | `mixed`         | El suplemento o el descuento de fiesta mixta: la línea VIVA que `MixedPartySurcharge` reconcilia en el sitio (su gemelo de la línea hija) | con signo |
+ * | `courtesy`      | La compensación: dinero devuelto SIN que desapareciera producto, escrito al reembolsar (`Order::executePartialRefund` / `executeFullRefund`) | ≤ 0 |
  *
- * `type` enum extensible. En v1 solo `extra_due`. Si se necesita registrar
- * explícitamente "cobrado en puerta" en una v2 (trazabilidad fina), se añade
- * `collected_in_person` sin migración.
+ * ⚠️⚠️ **Hasta la T1 aquí vivían `extra_due` y `deposit_remainder`, y una bajada se escribía en
+ * CASCADA** —un crédito contra el cubo de ediciones, otro contra el resto de la señal, y **un
+ * marcador de 0 €** cuando ninguno la absorbía—, de modo que el importe de una bajada 100 % online
+ * **no existía en ninguna fila** y se RECONSTRUÍA al leer con la señal del catálogo VIVO. Ésa era
+ * la raíz del fantasma de la señal (`DEUDA.md`, 2026-09-01). Ahora el hecho es la fila: `edit`
+ * lleva el delta completo y **la liquidación se DERIVA** (`Booking\Services\GateBuckets` mientras
+ * el modelo de dos ejes siga leyendo; el libro de la T2 después).
+ *
+ * ⚠️ `deposit_split` NO es un movimiento: no cambia lo que vale la línea, dice cómo se repartió al
+ * nacer. Por eso no entra en `Δ(i)` y sí en «lo que esta línea aportó al cobro online»
+ * (`nac − reparto`).
+ *
+ * ⚠️ La columna `amount_cents` es SIGNED desde la migración `2026_06_06_000002`.
  */
 class OrderAdjustment extends Model
 {
-    public const TYPE_EXTRA_DUE = 'extra_due';
+    /** El reparto de la señal al nacer (≥ 0, contexto nulo). */
+    public const TYPE_DEPOSIT_SPLIT = 'deposit_split';
+
+    /** El delta entero de una gestión sobre la línea (con signo, ≠ 0). */
+    public const TYPE_EDIT = 'edit';
+
+    /** El suplemento (+) o descuento (−) de fiesta mixta: línea viva, reconciliada en el sitio. */
+    public const TYPE_MIXED = 'mixed';
+
+    /** La compensación: dinero devuelto sin que desapareciera producto (≤ 0). */
+    public const TYPE_COURTESY = 'courtesy';
+
+    /** @var list<string> */
+    public const TYPES = [
+        self::TYPE_DEPOSIT_SPLIT,
+        self::TYPE_EDIT,
+        self::TYPE_MIXED,
+        self::TYPE_COURTESY,
+    ];
 
     /**
-     * Resto de la SEÑAL/DEPÓSITO a cobrar presencialmente (#225). Cuando un producto
-     * cobra online solo una señal, la parte del valor base NO cobrada online
-     * (`valor_base − señal`) se registra como un ajuste de este tipo, atado a la línea,
-     * conocido DESDE LA CREACIÓN del pedido. Vive en el mismo "bucket de puerta" que
-     * `extra_due` pero SEPARADO: `extra_due` nace de ediciones posteriores (delta SOBRE
-     * el valor) y alimenta `totalWithChanges`; el resto-señal es parte del valor base y
-     * NO debe sumarse a `extra_due` (rompería `gateLineLabel`/`totalWithChanges`). Lo
-     * consume {@see Order::itemDepositRemainderCents} → {@see Order::itemCollectedCents}.
+     * Los tipos que MUEVEN el valor de la línea respecto de su nacimiento (`Δ(i)` en la spec §4.1).
+     * `deposit_split` reparte, no mueve; `courtesy` no toca la fila (es una línea de valor aparte).
+     *
+     * @var list<string>
      */
-    public const TYPE_DEPOSIT_REMAINDER = 'deposit_remainder';
-
-    /**
-     * Tipo polivalente reservado para v2 (cuando el negocio pida trazabilidad
-     * fina del cobro presencial). Documentado aquí para que cualquier helper
-     * que aplique filtros sobre `type` sepa que la familia es extensible.
-     */
-    public const TYPE_COLLECTED_IN_PERSON = 'collected_in_person';
+    public const VALUE_DELTA_TYPES = [self::TYPE_EDIT, self::TYPE_MIXED];
 
     protected $guarded = [];
 
@@ -74,6 +91,32 @@ class OrderAdjustment extends Model
     public function appliedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'applied_by');
+    }
+
+    public function isDepositSplit(): bool
+    {
+        return $this->type === self::TYPE_DEPOSIT_SPLIT;
+    }
+
+    public function isEdit(): bool
+    {
+        return $this->type === self::TYPE_EDIT;
+    }
+
+    public function isMixed(): bool
+    {
+        return $this->type === self::TYPE_MIXED;
+    }
+
+    public function isCourtesy(): bool
+    {
+        return $this->type === self::TYPE_COURTESY;
+    }
+
+    /** ¿Mueve el valor de la línea respecto de su nacimiento? (`edit` o `mixed`). */
+    public function isValueDelta(): bool
+    {
+        return in_array($this->type, self::VALUE_DELTA_TYPES, true);
     }
 
     /**

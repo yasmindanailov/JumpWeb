@@ -194,7 +194,7 @@ class GateProfileTest extends TestCase
         ]);
         // Un cargo pendiente en puerta sobre la línea (un cambio hecho desde el panel).
         $order->adjustments()->create([
-            'order_item_id' => $item->id, 'type' => 'extra_due', 'amount_cents' => 500, 'currency' => 'EUR',
+            'order_item_id' => $item->id, 'type' => 'edit', 'amount_cents' => 500, 'currency' => 'EUR',
             'reason' => 'gate_change_line_slot', 'applied_by' => User::factory()->create()->id,
         ]);
 

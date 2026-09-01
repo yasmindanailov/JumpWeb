@@ -35,7 +35,7 @@ use Tests\TestCase;
 
 /**
  * Sub-fase 7.2e.3 (decisión #167) — Modal "Gestionar producto" Tab 1: cambio
- * de CANTIDAD + PRODUCTO con la dimensión financiera real (`applyExtraDue`
+ * de CANTIDAD + PRODUCTO con la dimensión financiera real (`recordEdit`
  * para subidas, `executePartialRefund` REST para bajadas).
  *
  * Alcance acotado (decisión clienta 2026-06-01):
@@ -572,18 +572,19 @@ class ManageItemQuantityProductTest extends TestCase
     }
 
     /**
-     * D8/D3 (`#146`): en una BAJADA, el marcador 0 € que porta el cambio SOLO se deja cuando ningún
-     * crédito de puerta lo porta ya. Si la señal absorbe la bajada, hay crédito y NO marcador — un
-     * marcador de más duplicaría el contexto con el que se reconstruye lo cobrado. Ganó su test en
-     * la extracción 4b: la mutación «marcador aunque haya crédito» salía VERDE.
+     * T1 del libro (`specs/desglose-libro.md` §4.2): una BAJADA es UN hecho con su delta entero,
+     * también cuando la señal la absorbe. Hasta la T1 se escribía como crédito contra el resto de la
+     * señal (y un marcador de 0 € solo si ningún cubo la absorbía); ahora la fila lleva −Δ y qué
+     * parte absorbe la puerta lo deriva la lectura (`GateBuckets`), que aquí deja el resto de la
+     * señal en 120,00 €.
      */
-    public function test_reduction_absorbed_by_the_deposit_leaves_a_credit_and_no_marker(): void
+    public function test_reduction_absorbed_by_the_deposit_is_one_edit_row_with_the_whole_delta(): void
     {
         [$order, $item] = $this->makePaidPackOrder(guests: 10);
         // El pack tiene señal: el resto (10 × 15,00 € = 150,00 €) está pendiente de cobro en puerta.
         $order->adjustments()->create([
-            'order_item_id' => $item->id, 'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
-            'amount_cents' => 15000, 'currency' => 'EUR', 'reason' => 'deposit_remainder',
+            'order_item_id' => $item->id, 'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
+            'amount_cents' => 15000, 'currency' => 'EUR', 'reason' => 'deposit_split',
             'applied_by' => $this->staffWithEdit()->id,
         ]);
 
@@ -594,16 +595,20 @@ class ManageItemQuantityProductTest extends TestCase
             ->assertHasNoActionErrors();
 
         $adjustments = OrderAdjustment::where('order_item_id', $item->id)->get();
+        $edits = $adjustments->where('type', OrderAdjustment::TYPE_EDIT);
+        $this->assertCount(1, $edits, 'una gestión, un hecho');
+        $this->assertSame(-3000, (int) $edits->first()->amount_cents, 'la bajada entera: 2 × 15,00 €');
         $this->assertSame(
-            1,
-            $adjustments->where('type', OrderAdjustment::TYPE_DEPOSIT_REMAINDER)->where('amount_cents', '<', 0)->count(),
-            'la bajada (2 × 15,00 €) se acredita contra el resto de la señal',
+            0, $adjustments->where('amount_cents', 0)->count(),
+            'ninguna fila de 0 €: el importe es el hecho, no un marcador que reconstruir',
         );
         $this->assertSame(
-            0,
-            $adjustments->where('type', OrderAdjustment::TYPE_EXTRA_DUE)->where('amount_cents', 0)->count(),
-            'con crédito de puerta, SIN marcador 0 €',
+            15000, (int) $adjustments->where('type', OrderAdjustment::TYPE_DEPOSIT_SPLIT)->sum('amount_cents'),
+            'el reparto de la señal al nacer no se toca: es un hecho de nacimiento',
         );
+        $fresh = $order->fresh(['adjustments', 'items']);
+        $this->assertSame(12000, $fresh->itemDepositRemainderCents($item->fresh()), 'la lectura absorbe la bajada contra el resto de la señal: 150,00 − 30,00');
+        $this->assertSame(0, $fresh->itemExtraDueCents($item->fresh()), 'y nada queda en el cubo de ediciones');
     }
 
     public function test_pack_quantity_increase_rescales_per_guest_paid_addon_and_charges_delta(): void
@@ -628,7 +633,7 @@ class ManageItemQuantityProductTest extends TestCase
         $this->assertSame(12, (int) $child->fresh()->quantity, 'el complemento per-invitado sigue al nuevo nº de invitados');
 
         $childAdj = OrderAdjustment::where('order_item_id', $child->id)
-            ->where('type', OrderAdjustment::TYPE_EXTRA_DUE)->first();
+            ->where('type', OrderAdjustment::TYPE_EDIT)->first();
         $this->assertNotNull($childAdj, 'el delta del complemento per-invitado se cobra en puerta');
         $this->assertSame(2000, (int) $childAdj->amount_cents); // (12−8) × 5,00 €
     }
@@ -968,7 +973,7 @@ class ManageItemQuantityProductTest extends TestCase
         OrderAdjustment::create([
             'order_id' => $order->id,
             'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE,
+            'type' => OrderAdjustment::TYPE_EDIT,
             'amount_cents' => 800,
             'currency' => 'EUR',
             'reason' => 'item_edit',
@@ -999,7 +1004,7 @@ class ManageItemQuantityProductTest extends TestCase
         $item->update(['slot_id' => $past->id]); // item finalizado en la práctica
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE, 'amount_cents' => 800,
+            'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => 800,
             'currency' => 'EUR', 'reason' => 'item_edit', 'applied_by' => $this->staffWithEdit()->id,
         ]);
 

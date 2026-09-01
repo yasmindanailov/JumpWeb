@@ -2505,6 +2505,28 @@ inalcanzable por código** (se retira), y **el modelo decidido cierra sus dos id
 pedidos reales, disparando su estado imposible solo sobre los 19 de datos sucios. El riesgo NO estaba
 solo en la proyección: había cuatro defectos en el dominio que ninguna auditoría anterior construyó.
 
+### El LIBRO del pedido 🟦 — **spec ✅ del owner (`specs/desglose-libro.md`, `DECISIONES #305`) · T1 EN EL ÁRBOL (`#306`)**
+> **Sustituye al DESGLOSE de dos ejes de arriba en cuanto se ejecute.** `[DECIDIDO owner,
+> 2026-09-01]`: cada gestión con su línea + o − y su fecha, un Total y un SALDO que se liquida EN EL
+> PARQUE; nada se cobra ni se devuelve online post-reserva; el descuento mixto entra en el saldo; el
+> reembolso manual se queda; el modelo viejo se RETIRA. Medido antes de diseñar: el libro coincide
+> con `OrderLedger` en 19/22 pedidos locales (los 3 restantes, datos sucios).
+
+- [x] **T1 · los HECHOS — EJECUTADA el 2026-09-01** (spec §6·T1 y §6.1 · `DECISIONES #306`):
+      `order_adjustments.type` es el ÚNICO discriminador (`deposit_split` · `edit` · `mixed` ·
+      `courtesy`; sin columna `kind`), cada bajada escribe su delta ENTERO en una fila (`recordEdit`;
+      muere la cascada de créditos y el marcador de 0 €), la cortesía se escribe al reembolsar en la
+      misma transacción, migración de hechos idempotente (probada dos veces en la suite y corrida
+      sobre la BD local: 36 filas → 43 en cuatro tipos, cero tipos viejos). **Lo que se pinta NO
+      cambió**: la foto puente de `78265ec` idéntica en los 15 escenarios. La identidad de
+      NACIMIENTO (`I1`) entra en `OrderLedger::cierra` y el fantasma de la señal se cierra (ficha de
+      `DEUDA.md` retirada). Retirados los dos repairs legacy y sus migraciones neutralizadas.
+- [ ] **T2 · el LIBRO en el dominio** (§6·T2): `OrderBook` + etiquetas + identidades I1–I4 en
+      ejecución; guarda puente contra el modelo viejo (escenarios + corpus por HTTP). Sin superficies.
+- [ ] **T3 · superficies, tope y retirada** (§6·T3): contrato primero, las nueve superficies + correos,
+      cae el tope de la T4, se retira todo §4.7, `INVARIANTES` `PAY-16`/`PAY-17` reescritas, dos
+      fichas de `DEUDA.md` cerradas, guion headless, ojo del owner.
+
 ### El CAMBIO DE PRECIO ✅ — la línea `#145`→`#155`, CERRADA el 2026-08-25
 
 > El tronco: `PAY-18` (`#131`) hizo que mover la fecha RE-TARIFIQUE y **seis sitios** seguían

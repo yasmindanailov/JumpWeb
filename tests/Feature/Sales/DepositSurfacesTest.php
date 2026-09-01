@@ -262,12 +262,15 @@ class DepositSurfacesTest extends TestCase
         $order->forceFill(['status' => Order::STATUS_PAID, 'paid_at' => now()])->save();
         $this->payDeposit($order, 3000);
         $item = $order->items()->whereNull('parent_item_id')->first();
-        // El valor del pack cae a 20 € y el resto de la señal (150) se credita a 0 (bajada honda).
+        // El valor del pack cae de 180 € a 20 €: UNA bajada de −160,00 (T1 del libro: el delta
+        // entero en una fila `edit`); la lectura la absorbe contra el resto de la señal (150) y el
+        // sobrante (10) es lo que aflora como pendiente de devolución.
         $item->forceFill(['unit_price' => 2000, 'quantity' => 1])->save();
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER, 'amount_cents' => -15000,
+            'type' => OrderAdjustment::TYPE_EDIT, 'amount_cents' => -16000,
             'currency' => 'EUR', 'reason' => 'item_edit_reduction', 'applied_by' => $this->user->id,
+            'context' => ['changes' => ['unit_price_change' => ['old' => 18000, 'new' => 2000]]],
         ]);
 
         $s = $order->fresh(['items', 'adjustments', 'payments.refunds'])->financialSummary();

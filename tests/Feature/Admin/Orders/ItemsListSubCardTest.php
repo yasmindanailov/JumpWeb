@@ -251,7 +251,7 @@ class ItemsListSubCardTest extends TestCase
         $this->attachPaidPayment($order);
         $item = $this->attachActiveItem($order);          // 1 × 12,00
         $item->forceFill(['quantity' => 2])->save();      // ahora vale 24,00
-        $order->applyExtraDue($item->fresh(), 1200, $admin, 'item_edit', ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
+        $order->recordEdit($item->fresh(), 1200, $admin, 'item_edit', ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
 
         $response = $this->actingAs($admin)->get('/admin/orders/'.$order->code)->assertOk();
 
@@ -273,7 +273,7 @@ class ItemsListSubCardTest extends TestCase
         // Señal de 2,00 cobrada online → 10,00 de resto a cobrar en el parque.
         OrderAdjustment::create([
             'order_id' => $order->id, 'order_item_id' => $item->id,
-            'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+            'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
             'amount_cents' => 1000, 'currency' => 'EUR', 'applied_by' => $admin->id,
         ]);
 

@@ -9,6 +9,22 @@
 > derivado. Ver también `MODELO-DATOS.md`, `FLUJOS.md` y el doc de integración Redsys en
 > `docs/sistemas/`.
 
+> ⚠️⚠️ **T1 DEL LIBRO (2026-09-01, `specs/desglose-libro.md` §4.2 · `DECISIONES #305` y `#306`): la
+> ESCRITURA de los ajustes cambió y este doc describe el mecanismo HEREDADO.** Léelo con esta tabla:
+>
+> | Aquí dice | Hoy es |
+> |---|---|
+> | `deposit_remainder` (resto de la señal, fila de creación) | `deposit_split` — el reparto de la señal al nacer, un hecho de nacimiento (≥ 0) |
+> | `extra_due` positivo (subida) | `edit` con delta positivo (`Order::recordEdit`) |
+> | crédito `extra_due` / `deposit_remainder` negativo (bajada en CASCADA) | **UNA** fila `edit` con el delta ENTERO de la bajada; qué parte absorbe la puerta lo DERIVA la lectura (`Booking\Services\GateBuckets`, que replica la cascada hasta la T3) |
+> | marcador de 0 € (`recordReductionMarker`) | **no existe**: el importe está en la fila |
+> | `applyExtraDue` / `applyGateCredit` / `applyDepositRemainderCredit` | `recordEdit` (un método, con signo) |
+> | `itemOriginalOnlineCents` «deposit-aware» (reconstruye con `depositCents()` del catálogo) | un HECHO: `fila − Σ deltas − reparto deposit_split` (`GateBuckets::onlineAtBirth`), sin consultar el catálogo — era el fantasma de la señal |
+> | `compensado` derivado al leer | además, fila `courtesy` escrita al reembolsar (el modelo de dos ejes sigue derivando el suyo hasta la T3; `CourtesyMovementTest` los cruza) |
+>
+> Los importes y los invariantes (`PAY-10`, `PAY-16`, `PAY-17`) no cambiaron en la T1: la foto
+> puente de `OrderFinancialInvariantsTest` fija que las cifras son las mismas.
+
 ---
 
 ## 0. Resumen
@@ -434,7 +450,8 @@ heredado).
 `DepositFoundationTest` · `DepositChargeTest` (señal, manual, mixto, percent, canario ida) ·
 `DepositSurfacesTest` (sin pendiente fantasma / sobre-cobro E4) · `DepositRefundCoherenceTest`
 (gating D7, techo, cancelar tras full-refund) · `ManageItemQuantityProductTest` (reescrita a
-cancel-only + pendiente) · `OrderGateCreditTest` · `OrderApplyExtraDueTest` ·
+cancel-only + pendiente) · `EditMovementTest` y `OrderRecordEditTest` (T1 del libro: sustituyen a
+`OrderGateCreditTest` y `OrderApplyExtraDueTest`, que aseveraban la cascada de créditos) ·
 `RefundItemActionTest` · `OrderAdminActionsTest` · casos en `ReservationFinancialsTest`
 (incl. `test_no_phantom_pending_refund_when_increasing_quantity_of_a_deposit_pack`, N+1 0
 consultas) y `OrderFinancialSummaryTest`.

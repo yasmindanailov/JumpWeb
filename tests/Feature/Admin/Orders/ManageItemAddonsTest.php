@@ -32,7 +32,7 @@ use Tests\TestCase;
  * handler unificado `executeItemEdit`.
  *
  * Modelo financiero (decisión #170, 2 preguntas a la clienta):
- *  - Añadir / subir cantidad → `applyExtraDue` (cobro en puerta, sin Redsys),
+ *  - Añadir / subir cantidad → `recordEdit` con delta positivo (cobro en puerta, sin Redsys),
  *    MOVIMIENTO SEPARADO del diff de Tab 1 (no se netea).
  *  - Quitar (cantidad 0) → solo `markCancelled` (SIN auto-refund; el operador
  *    reembolsa aparte con `refundItem`).
@@ -137,7 +137,7 @@ class ManageItemAddonsTest extends TestCase
         // Cobro en puerta = 2 × 3.00 = 6.00; sin Redsys. El ajuste se ata al CHILD
         // (el complemento), no al principal, para poder anularlo si se cancela luego.
         $adj = OrderAdjustment::where('order_item_id', $child->id)
-            ->where('type', OrderAdjustment::TYPE_EXTRA_DUE)->first();
+            ->where('type', OrderAdjustment::TYPE_EDIT)->first();
         $this->assertNotNull($adj);
         $this->assertSame(600, (int) $adj->amount_cents);
         $this->assertSame(0, PaymentRefund::count());
@@ -176,7 +176,7 @@ class ManageItemAddonsTest extends TestCase
 
         // El cobro en puerta refleja SOLO la unidad de pago, no las 2. Ajuste atado al child.
         $adj = OrderAdjustment::where('order_item_id', $child->id)
-            ->where('type', OrderAdjustment::TYPE_EXTRA_DUE)->latest('id')->first();
+            ->where('type', OrderAdjustment::TYPE_EDIT)->latest('id')->first();
         $this->assertNotNull($adj);
         $this->assertSame(1500, (int) $adj->amount_cents);
     }
@@ -583,7 +583,7 @@ class ManageItemAddonsTest extends TestCase
 
         // Ajuste atado al CHILD (socks), no al principal.
         $adj = OrderAdjustment::where('order_item_id', $socks->id)
-            ->where('type', OrderAdjustment::TYPE_EXTRA_DUE)->first();
+            ->where('type', OrderAdjustment::TYPE_EDIT)->first();
         $this->assertNotNull($adj);
         $this->assertSame(400, (int) $adj->amount_cents); // 2 extra × 2.00
         $this->assertSame(0, PaymentRefund::count());
@@ -808,7 +808,7 @@ class ManageItemAddonsTest extends TestCase
         $this->assertSame(1, AuditLog::where('action', 'orders.item_edited')->count());
         // Un solo audit + un solo email, PERO un apunte de cobro POR complemento (atado a su
         // child): bebida añadida (3.00) + calcetines subidos (2.00) = 5.00 en total.
-        $adjs = OrderAdjustment::where('type', OrderAdjustment::TYPE_EXTRA_DUE)->get();
+        $adjs = OrderAdjustment::where('type', OrderAdjustment::TYPE_EDIT)->get();
         $this->assertCount(2, $adjs);
         $this->assertSame(500, (int) $adjs->sum('amount_cents'));
         $drinkChild = $item->children()->where('ticket_type_id', $this->addonDrink->id)->first();

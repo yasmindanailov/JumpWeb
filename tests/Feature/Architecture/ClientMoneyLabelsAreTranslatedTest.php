@@ -186,7 +186,7 @@ class ClientMoneyLabelsAreTranslatedTest extends TestCase
      * **T5 · D9 (`cumple-mixto.md` §25.3, `#284`): las etiquetas del canal de puerta RESUELTO no
      * afirman un cobro que nadie registró.** El cargo se da por resuelto al pasar la visita de un
      * pedido pagado —decisión 7.2e—, pero el registro real del cobro no existe (el hueco reservado
-     * es `OrderAdjustment::TYPE_COLLECTED_IN_PERSON`, sin un solo uso): «Pagado en el parque»
+     * era `OrderAdjustment::TYPE_COLLECTED_IN_PERSON`, sin un solo uso y RETIRADO en la T1 del libro): «Pagado en el parque»
      * contaba como hecho lo que el sistema no sabe. La regla se asevera por PALABRAS PROHIBIDAS y
      * no por texto exacto, para no atar la guarda a una implementación (`#251`).
      *

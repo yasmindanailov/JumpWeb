@@ -304,7 +304,7 @@ class MixedPartySurcharge
         $children = $principal->children->reject(fn (OrderItem $c): bool => $c->isCancelled())->keyBy('id');
 
         $lines = [];
-        foreach ($order->adjustments->where('type', OrderAdjustment::TYPE_EXTRA_DUE) as $adjustment) {
+        foreach ($order->adjustments->where('type', OrderAdjustment::TYPE_MIXED) as $adjustment) {
             $context = is_array($adjustment->context) ? $adjustment->context : [];
             $mark = $context['mixed_party'] ?? null;
             if (! is_array($mark) || $adjustment->order_item_id === null) {
@@ -400,7 +400,9 @@ class MixedPartySurcharge
             OrderAdjustment::create([
                 'order_id' => $principal->order_id,
                 'order_item_id' => $child->id,
-                'type' => OrderAdjustment::TYPE_EXTRA_DUE,
+                // T1 del libro: la línea mixta tiene su tipo propio (`mixed`) — es un hecho VIVO que
+                // esta clase reconcilia en el sitio, no una gestión con fecha como `edit`.
+                'type' => OrderAdjustment::TYPE_MIXED,
                 'amount_cents' => $amount,
                 'currency' => 'EUR',
                 // Sin el ajuste, la línea diría que el cliente pagó ese importe ONLINE: los dos
@@ -447,7 +449,7 @@ class MixedPartySurcharge
 
         $children = $principal->children->reject(fn (OrderItem $c): bool => $c->isCancelled())->keyBy('id');
 
-        foreach ($order->adjustments->where('type', OrderAdjustment::TYPE_EXTRA_DUE) as $adjustment) {
+        foreach ($order->adjustments->where('type', OrderAdjustment::TYPE_MIXED) as $adjustment) {
             $context = is_array($adjustment->context) ? $adjustment->context : [];
             $mark = $context['mixed_party'] ?? null;
             if (! is_array($mark) || ($mark['credit'] ?? false) !== true || $adjustment->order_item_id === null) {
@@ -567,7 +569,7 @@ class MixedPartySurcharge
         OrderAdjustment::create([
             'order_id' => $principal->order_id,
             'order_item_id' => $child->id,
-            'type' => OrderAdjustment::TYPE_EXTRA_DUE,
+            'type' => OrderAdjustment::TYPE_MIXED,
             'amount_cents' => -$want,
             'currency' => 'EUR',
             'applied_by' => $actor->id,
@@ -615,18 +617,20 @@ class MixedPartySurcharge
     {
         $items = collect([$principal])->merge($principal->children()->get())
             ->reject(fn (OrderItem $i): bool => $i->isCancelled());
-        $nonCreditIds = $items->reject(fn (OrderItem $i): bool => (bool) $i->is_credit)
-            ->map(fn (OrderItem $i): int => (int) $i->id)->all();
         $allIds = $items->map(fn (OrderItem $i): int => (int) $i->id)->all();
 
+        // T1 del libro: los cubos se DERIVAN de los hechos frescos de cada línea con la cascada de
+        // siempre (`GateBuckets`), no se suman filas por tipo — desde la T1 una bajada lleva su
+        // delta entero y la parte que la señal absorbió vive en el replay, no en una fila aparte.
+        $rows = OrderAdjustment::query()->where('order_id', $principal->order_id)->whereIn('order_item_id', $allIds)->get();
+
         $coverage = 0;
-        foreach (OrderAdjustment::query()->where('order_id', $principal->order_id)->whereIn('order_item_id', $allIds)->get() as $adj) {
-            if ($adj->type === OrderAdjustment::TYPE_EXTRA_DUE && in_array((int) $adj->order_item_id, $nonCreditIds, true)) {
-                $coverage += (int) $adj->amount_cents;
+        foreach ($items as $line) {
+            $buckets = GateBuckets::fromRows($rows, $line);
+            if (! $line->is_credit) {
+                $coverage += $buckets->extraDue;
             }
-            if ($adj->type === OrderAdjustment::TYPE_DEPOSIT_REMAINDER) {
-                $coverage += (int) $adj->amount_cents;
-            }
+            $coverage += $buckets->depositRemainder;
         }
 
         return max(0, $coverage);

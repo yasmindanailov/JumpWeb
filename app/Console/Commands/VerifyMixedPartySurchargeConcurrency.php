@@ -161,7 +161,7 @@ class VerifyMixedPartySurchargeConcurrency extends Command
             if ($scenario === 'credit') {
                 OrderAdjustment::create([
                     'order_id' => $order->id, 'order_item_id' => $item->id,
-                    'type' => OrderAdjustment::TYPE_DEPOSIT_REMAINDER,
+                    'type' => OrderAdjustment::TYPE_DEPOSIT_SPLIT,
                     'amount_cents' => 5000, 'currency' => 'EUR', 'applied_by' => $user->id,
                 ]);
             }

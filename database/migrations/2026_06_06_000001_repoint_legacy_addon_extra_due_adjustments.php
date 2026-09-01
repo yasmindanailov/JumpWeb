@@ -1,27 +1,27 @@
 <?php
 
-use App\Domain\Booking\Services\LegacyAddonAdjustmentRepair;
 use Illuminate\Database\Migrations\Migration;
 
 /**
- * #193 — Reparación de datos: re-atribuye al COMPLEMENTO (child) los ajustes `extra_due`
- * de complementos que el código previo ataba al producto PRINCIPAL, para que cancelar el
- * complemento anule su cargo (coherencia financiera; caso real JJ-KDKD1W).
+ * NEUTRALIZADA en la T1 del libro (`specs/desglose-libro.md` §4.7, `DECISIONES #305`).
  *
- * Es un repair de datos, no de esquema: en una BD sin pedidos editados pre-#193 (p. ej.
- * producción limpia) es un no-op. Irreversible por naturaleza (no se guarda el principal
- * anterior); `down()` es un no-op intencionado.
+ * Reparaba datos del repo ORIGEN (#193 de allí): re-atribuía al complemento los ajustes
+ * `extra_due` que el código previo ataba al principal. `LegacyAddonAdjustmentRepair` era su único
+ * cuerpo y **no tenía ningún otro llamador**; JumpWeb solo instala limpio (`DECISIONES #127`) y
+ * no hay pedidos en producción, así que sobre toda base que este repo haya creado era un no-op.
+ * Con los tipos de ajuste nuevos (`deposit_split` · `edit` · `mixed` · `courtesy`) el servicio
+ * dejó de tener sentido y se retiró; esta migración se queda como fila del historial de
+ * `migrations` (borrarla haría fallar `migrate` en toda base que ya la corrió).
  */
 return new class extends Migration
 {
     public function up(): void
     {
-        LegacyAddonAdjustmentRepair::run();
+        // Sin efecto: ver docblock.
     }
 
     public function down(): void
     {
-        // Reparación de datos one-way: no se revierte (re-apuntar al principal reintroduciría
-        // el bug y no hay registro del principal anterior).
+        // Sin efecto.
     }
 };

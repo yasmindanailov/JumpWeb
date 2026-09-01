@@ -100,7 +100,7 @@ class PurgeCustomerDataTest extends TestCase
         ]);
         // Ajuste RESTRICT (applied_by = conservado) sobre un pedido borrado → cae por cascada del pedido.
         DB::table('order_adjustments')->insert([
-            'order_id' => $o2->id, 'order_item_id' => null, 'type' => 'extra_due', 'amount_cents' => 300,
+            'order_id' => $o2->id, 'order_item_id' => null, 'type' => 'edit', 'amount_cents' => 300,
             'currency' => 'EUR', 'applied_by' => $adminKept->id, 'created_at' => now(), 'updated_at' => now(),
         ]);
 

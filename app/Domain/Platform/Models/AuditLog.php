@@ -124,11 +124,9 @@ class AuditLog extends Model
         'orders.cancelled',
         'orders.created_manual',
         'orders.customer_registered',
-        'orders.deposit_remainder_credit_applied',
         'orders.email_resent',
         'orders.email_resent_blocked',
         'orders.extra_due_applied',
-        'orders.gate_credit_applied',
         'orders.guest_form_submitted',
         'orders.item_cancel_blocked',   // ⚠️ construida: 'orders.item_'.$actionKey.'_blocked'
         'orders.item_cancelled',
@@ -144,6 +142,7 @@ class AuditLog extends Model
         'orders.refund_failed',
         'orders.refunded',
         'orders.slip_printed',
+        'orders.value_reduction_applied',   // T1 del libro: la bajada de una gestión, como UN hecho
 
         // ── Panel ──────────────────────────────────────────────────────────────────────────
         'panel.locale_changed',
