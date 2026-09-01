@@ -18694,3 +18694,49 @@ sonda (§5.sexies): `LB-ORDEN` IMPOSIBLE por `value_returned` y saldado por el c
 **Verificación**: suite entera en verde (el contador de `ESTADO`) · Pint · docs-check · 11/12
 mutaciones con control · sonda headless 53/53 · migración corrida en local. Sin `VERIFY_CONC`: ningún
 fichero del `CRITICAL_RE` cambió.
+
+## #318 · 2026-09-01 · El libro del panel va PLEGADO detrás de UN CTA («Ver el desglose» / «Cerrar el desglose») y el atajo «Ver historial completo» bajo el libro se retira
+
+**Contexto.** Con la T4 en el árbol (`#317`), el owner mira la ficha del pedido y pide: *«quitamos
+"Ver historial completo" y ponemos un CTA para cerrar el desglose y dejarlo todo limpio, de un vistazo
+todo claro; le dan al CTA y se muestra todo con detalle como está ahora»*. Es la corrección de dos
+decisiones anteriores suyas: **D-T3·1** («el libro se enseña ENTERO, sin un segundo "ver más"»,
+`specs/desglose-libro.md` §6.3) y la **adenda 4 de la T5 de mixtos** («el historial a un clic desde el
+dinero», `cumple-mixto.md` §25.10, guarda Q) con sus derivadas D-T3·14/D-T3·16. Y cierra la pregunta
+de presentación que quedaba abierta (plegar «Pagos y devoluciones» con un solo cobro): se pliega todo.
+
+**Decisión** (`[DECIDIDO owner, 2026-09-01]`):
+1. **El libro del panel se pinta PLEGADO**: de un vistazo, Total · Pagado · saldo (con su clase).
+   **UN CTA** al pie —«Ver el desglose»— abre el detalle entero (movimientos y pagos/devoluciones,
+   con la nota del motivo de una cortesía) tal como se pintaba; abierto, dice «Cerrar el desglose».
+   Es el MISMO partial (`reservation-financials`) en sus tres sitios: bloque del pedido, tarjeta de
+   cada reserva y modal del calendario.
+2. **El atajo «Ver historial completo» bajo el libro se retira** (bloque del pedido y tarjeta). El
+   historial sigue a un clic en la tarjeta «Detalles» (`#151`) — única puerta. ⚠️ Asunción hecha
+   explícita: el owner nombró el rótulo, que aparecía en TRES sitios; se retiran los dos que iban
+   bajo el desglose (donde va el CTA nuevo) y se conserva la puerta de «Detalles»; si también sobra,
+   es una línea. `OrderBook::hasHistoryToExplain()` muere con su único consumidor.
+
+**Lo hecho.** `reservation-financials.blade.php` con Alpine (`x-data`, dos contenedores
+`data-book-detail` con `x-show`, el CTA `data-book-toggle` con `aria-expanded`; el filete del Total y
+de Pagado solo cuando el detalle está abierto) — **el HTML lleva SIEMPRE todas las líneas** (las guardas
+de paridad leen el marcado; sin JS se ve todo); ⚠️ `x-data` va ANTES de `data-book` porque
+`BookSurfacesParityTest` cuenta el literal `data-book>`. `order-totals` e `items-list` sin el atajo.
+Claves `admin.orders.book.expand`/`collapse` (es · zh_CN). Guarda O de `OrderTotalsBreakdownTest`
+rehecha (sin atajo; UN CTA; los dos pliegues con `x-show` y los tres finales fuera) y guarda Q de
+`OrderAuditReadabilityTest` re-apuntada (una sola puerta al historial, con y sin dinero que explicar).
+Sonda headless en el panel real sobre `LB-CORTESIA` (`panel-fold-probe.js`, scratchpad): **17/17 ✓**
+—plegado: 0 líneas visibles, Total/Pagado/saldo y «Ver el desglose»; abierto: 3 movimientos, 2
+liquidaciones, la nota del motivo y «Cerrar el desglose»; vuelve a plegarse; «Ver historial completo»
+UNA vez en la página—, con capturas.
+
+**Lecciones.**
+- ⚠️ Una decisión `[DECIDIDO owner]` también se revierte por el owner: se anota encima de la anterior
+  (D-T3·1, T5·4) y las guardas que la fijaban se re-apuntan, no se borran.
+- ⚠️ El pliegue es de PRESENTACIÓN y no de servidor a propósito: plegar en servidor habría roto la
+  paridad (guarda M) y dejado el detalle fuera del HTML que leen el PDF y los correos.
+- ⚠️ Trampa de sonda: `/admin/login` casa con `/\/admin(\/|$)/`, así que «esperar a entrar» pasaba al
+  instante y la ficha se pedía sin sesión — la señal de haber entrado es SALIR del login.
+
+**Verificación**: suite entera en verde (el contador de `ESTADO`) · Pint · docs-check · sonda 17/17 ·
+mutaciones de la guarda O (devolver el atajo · quitar un `x-show`) en `ESTADO`.

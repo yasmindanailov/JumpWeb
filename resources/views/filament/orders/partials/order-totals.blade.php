@@ -45,16 +45,8 @@
         </div>
     @endunless
 
+    {{-- El libro va PLEGADO con su propio CTA (`#318`). ⚠️ Aquí iba el atajo «Ver historial completo»
+         (T5 adenda 4, `hasHistoryToExplain()`): el owner lo retiró en `#318` — el historial sigue a
+         un clic en la tarjeta «Detalles». --}}
     @include('filament.orders.partials.reservation-financials', ['book' => $book])
-
-    {{-- T5 adenda 4 (`[DECIDIDO owner]`, `cumple-mixto.md` §25.10): el HISTORIAL a un clic desde
-         el DINERO — la foto no lista los cambios (los reescribe): la historia se abre desde donde
-         se pregunta. Solo cuando hay algo que explicar (`hasHistoryToExplain()`, que lo decide el
-         libro: el caso simple no gana ruido). --}}
-    @if ($book->hasHistoryToExplain())
-        <button type="button" wire:click="mountAction('viewOrderHistory')"
-                class="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
-            {{ __('admin.orders.audit_cta.button') }}
-        </button>
-    @endif
 </div>

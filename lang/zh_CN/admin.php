@@ -983,6 +983,8 @@ return [
         // `tickets.journal.*` 中生成（与客户所见相同）；此处仅有标题和余额说明。
         'book' => [
             'movement_note' => '原因：:note',
+            'expand' => '展开明细',
+            'collapse' => '收起明细',
             'movements' => '变动明细',
             'settlements' => '付款与退款',
             'total' => '合计',

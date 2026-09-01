@@ -347,20 +347,37 @@ class OrderTotalsBreakdownTest extends TestCase
     }
 
     /**
-     * **Guarda O**: el atajo «Ver historial» aparece solo cuando hay algo que explicar — lo decide el
-     * libro (`hasHistoryToExplain()`, D-T3·16). Mutación: invertirlo.
+     * **Guarda O (rehecha en `DECISIONES #318`, `[DECIDIDO owner]`)**: el atajo «Ver historial» bajo el
+     * libro se RETIRÓ (revierte la adenda 4 de la T5) y el libro va PLEGADO — de un vistazo Total,
+     * Pagado y saldo — con UN CTA que abre el detalle. El detalle (líneas de valor y de dinero) viaja
+     * SIEMPRE en el HTML, dentro de contenedores `data-book-detail` plegados por Alpine; los tres
+     * finales, fuera del pliegue. Mutaciones: devolver el atajo · quitar el `x-show` de un contenedor
+     * · meter el Total dentro del pliegue.
      */
-    public function test_the_history_shortcut_appears_only_when_there_is_something_to_explain(): void
+    public function test_the_book_is_folded_behind_one_cta_and_the_history_shortcut_is_gone(): void
     {
         $order = $this->lawfulPaidOrder();
-        $this->assertStringNotContainsString("mountAction('viewOrderHistory')", $this->renderTotals($order), 'el caso simple no gana ruido');
-
         $item = $order->items->first();
         $item->forceFill(['quantity' => 2, 'seats' => 2])->save();
         $order->recordEdit($item->fresh(), 1000, User::factory()->create(), 'item_edit',
             ['changes' => ['quantity_change' => ['old' => 1, 'new' => 2]]]);
+        $html = $this->renderTotals($this->reload($order));
 
-        $this->assertStringContainsString("mountAction('viewOrderHistory')", $this->renderTotals($this->reload($order)));
+        $this->assertStringNotContainsString("mountAction('viewOrderHistory')", $html, 'el atajo al historial ya no va bajo el libro (#318)');
+        $this->assertStringNotContainsString(__('admin.orders.audit_cta.button'), $html);
+        $this->assertSame(1, substr_count($html, 'data-book-toggle'), 'UN CTA, y siempre');
+        $this->assertStringContainsString(__('admin.orders.book.expand'), $html);
+        $this->assertStringContainsString(__('admin.orders.book.collapse'), $html);
+
+        // El detalle está en el HTML, plegado: las líneas de valor y de dinero dentro de sus contenedores.
+        $this->assertSame(2, preg_match_all('/<div[^>]*x-show="open"[^>]*data-book-detail="(movements|settlements)"/', $html), 'los dos pliegues');
+        $this->assertStringContainsString('data-book-movement="edit"', $html);
+        $this->assertStringContainsString('data-book-settlement="payment"', $html);
+
+        // Y los tres finales, FUERA del pliegue: ninguno lleva `x-show`.
+        foreach (['data-book-total', 'data-book-paid', 'data-book-balance="'] as $marker) {
+            $this->assertMatchesRegularExpression('/<div(?![^>]*x-show)[^>]*'.preg_quote($marker, '/').'/', $html, "$marker fuera del pliegue");
+        }
     }
 
     /**

@@ -1280,6 +1280,9 @@ return [
         'book' => [
             // T4 del libro (D-T4·1): el MOTIVO de un descuento por cortesía, solo en el panel.
             'movement_note' => 'Motivo: :note',
+            // `#318` (`[DECIDIDO owner]`): el libro va PLEGADO —Total · Pagado · saldo de un vistazo— y UN CTA abre el detalle.
+            'expand' => 'Ver el desglose',
+            'collapse' => 'Cerrar el desglose',
             'movements' => 'Movimientos',
             'settlements' => 'Pagos y devoluciones',
             'total' => 'Total',

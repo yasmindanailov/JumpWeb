@@ -70,7 +70,6 @@ class BookSurfacesParityTest extends ApiTestCase
         $this->assertEqualsCanonicalizing(['payment', 'refund'], array_map(fn ($s) => $s->kind, $book->settlements));
         $this->assertSame(Balance::KIND_PAY_AT_PARK, $book->balance->kind);
         $this->assertSame(1000, $book->balance->cents, 'vale 30,00 (la entrada subida), pagó 20,00 (30,00 − 10,00 devueltos)');
-        $this->assertTrue($book->hasHistoryToExplain());
         // Guarda P (D-T3·15): «a pagar» no es «se le debe» — el sugerido al reembolsar es 0 aquí.
         $this->assertSame(0, $book->owedToCustomerCents());
     }

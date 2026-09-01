@@ -231,27 +231,9 @@ final readonly class OrderBook
         );
     }
 
-    /**
-     * ¿Hay HISTORIA que explicar? El atajo «Ver historial» del panel (T5 adenda 4, `[DECIDIDO owner]`)
-     * se ofrece solo cuando hay consecuencias —una línea de valor que no sea el nacimiento, o una
-     * devolución—: el caso simple no gana ruido. Lo decide el libro para que el bloque del pedido y
-     * la tarjeta de cada reserva no tengan cada uno su condición (D-T3·14 de `specs/desglose-libro.md`).
-     */
-    public function hasHistoryToExplain(): bool
-    {
-        foreach ($this->movements as $m) {
-            if ($m->kind !== Movement::KIND_BOOKING) {
-                return true;
-            }
-        }
-        foreach ($this->settlements as $s) {
-            if ($s->kind === Settlement::KIND_REFUND) {
-                return true;
-            }
-        }
-
-        return false;
-    }
+    // ▶ Hasta `#318` aquí vivía `hasHistoryToExplain()`: la condición del atajo «Ver historial» bajo el
+    // libro (T5 adenda 4, D-T3·14/16). El owner retiró el atajo —el libro va plegado con su propio
+    // CTA— y con él murió la condición: sin consumidor, no se conserva.
 
     /**
      * Lo que se le DEBE al cliente EN DINERO, en positivo: lo cobrado y no devuelto por encima de lo

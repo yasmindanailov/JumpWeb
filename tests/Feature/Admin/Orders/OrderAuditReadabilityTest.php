@@ -219,14 +219,14 @@ class OrderAuditReadabilityTest extends TestCase
     }
 
     /**
-     * T5 adenda 4 (`[DECIDIDO owner]`, `cumple-mixto.md` §25.10): el historial se abre A UN CLIC
-     * DESDE EL DINERO — el bloque del pedido y la card del producto ganan su acceso además del CTA
-     * del final de «Detalles». La foto no lista los cambios (los reescribe), así que un «Pendiente
-     * de devolución» sin historia al lado obliga al operador a buscarla enterrada. El control de
-     * abajo fija la otra mitad: un pedido SIN nada que explicar no gana ruido.
-     * Mutación: quitar cualquiera de los dos accesos nuevos.
+     * ~~T5 adenda 4: el historial se abre A UN CLIC DESDE EL DINERO — el bloque del pedido y la card
+     * del producto ganan su acceso además del CTA del final de «Detalles».~~ **REVERTIDA por el owner
+     * (`DECISIONES #318`, 2026-09-01)**: bajo el libro ya no va el atajo al historial sino el CTA que
+     * abre/cierra el desglose («de un vistazo todo claro»); el historial sigue A UN CLIC, pero en
+     * «Detalles» y solo ahí — con dinero que explicar igual que sin él. El control de abajo fija que
+     * el caso simple tampoco gana ninguno. Mutación: devolver el atajo bajo el libro.
      */
-    public function test_the_history_is_one_click_away_from_the_money(): void
+    public function test_the_history_has_a_single_entry_point_and_the_book_folds_behind_its_cta(): void
     {
         $order = $this->makeOrder();
         $item = $order->items->first();
@@ -239,11 +239,14 @@ class OrderAuditReadabilityTest extends TestCase
         // ⚠️ La aguja es `wire:click=...`, no la llamada a secas: UN solo botón de Filament
         // emite la cadena 4 veces (wire:click + wire:target del botón y de su spinner) y contar
         // llamadas convertía este recuento en ruido — el instrumento primero.
-        $this->assertGreaterThanOrEqual(
-            3,
+        $this->assertSame(
+            1,
             substr_count($html, 'wire:click="mountAction(\'viewOrderHistory\')"'),
-            'con dinero que explicar: el CTA de «Detalles» + el del bloque del pedido + el de la card',
+            'con dinero que explicar, el historial sigue teniendo UNA puerta: el CTA de «Detalles» (#318)',
         );
+        // Y el libro, plegado con su CTA: el bloque del pedido y la tarjeta de la reserva, cada uno con el suyo.
+        $this->assertGreaterThanOrEqual(2, substr_count($html, 'data-book-toggle'), 'el CTA del pliegue en el bloque y en la card');
+        $this->assertStringContainsString(__('admin.orders.book.expand'), $html);
     }
 
     public function test_a_simple_order_keeps_a_single_history_entry_point(): void
@@ -280,7 +283,7 @@ class OrderAuditReadabilityTest extends TestCase
         $this->assertSame(
             1,
             substr_count($html, 'wire:click="mountAction(\'viewOrderHistory\')"'),
-            'sin nada que explicar, solo el CTA de «Detalles»: el caso simple no gana ruido',
+            'sin nada que explicar, solo el CTA de «Detalles» — desde #318, también con algo que explicar',
         );
     }
 
