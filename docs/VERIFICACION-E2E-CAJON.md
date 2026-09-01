@@ -1988,8 +1988,9 @@ asiente sin respingo.
 > `OrderCreator`** —las cuatro puertas de `desglose-dinero-cliente.md` §4.quater incluidas— y que el
 > libro que llega al navegador es el mismo que el dominio compone. Eso es lo que aquí se mide.
 >
-> ✅ **Recorrido en headless el 2026-09-01: 17 comprobaciones, 17 ✓, 0 ✗.** Queda el OJO del owner
-> (V18–V21, abajo).
+> ✅ **Recorrido en headless el 2026-09-01: 17 comprobaciones, 17 ✓, 0 ✗** — y ampliado la misma
+> mañana a **11 pedidos en cuatro páginas, 54 ✓, 0 ✗** (los siete de demostración, abajo). Queda el
+> OJO del owner (V18–V21, al final).
 
 ### Los cuatro pedidos (sembrados por el dominio, para `probe-card@jumpweb.test`)
 
@@ -2033,6 +2034,30 @@ Los cuatro cierran (I1–I4) al sembrarlos; el propio guion lo imprime.
 UN saldo con su clase — sin «pendiente de devolución» y «a cobrar en puerta» conviviendo, sin «a tu
 favor», sin canales. La frase del descuento mixto es la de `MovementLabel::mixed` (con el nombre del
 pack destino), y la de la cancelación lleva el sustantivo (`2 entradas`).
+
+### Los pedidos de DEMOSTRACIÓN para el owner (2026-09-01, misma sesión)
+
+A petición del owner —«crea pedidos de prueba para que vea los huecos y cómo funciona el sistema»—
+`seed-libro-2.php` (scratchpad) añade SIETE más al mismo cliente, cuatro del sistema funcionando y
+tres de los huecos que `specs/desglose-libro.md` §6.3.7 y `DECISIONES #315` dejan escritos:
+
+| Código | Qué enseña | Libro |
+|---|---|---|
+| `LB-DEVUELTO` | Se devuelve EXACTAMENTE lo debido (3 → 1, se devuelven 19,80 en modo manual): sin cortesía | Reserva +29,70 · Cantidad 3 → 1 −19,80 · **Devuelto en el parque (registrado) −19,80** · Total 9,90 = Pagado 9,90 · saldado |
+| `LB-CORTESIA` | Se devuelve MÁS de lo debido (4 → 2, debidos 19,80, devueltos 29,70) | … · **Compensación −9,90** · Total 9,90 = Pagado 9,90 · saldado |
+| `LB-SUPLEMENTO` | Fiesta Kids × 8 con un invitado de 8 años | **Suplemento por 1 invitado que corresponde a Cumpleaños Jump +4,00** · a pagar en el parque 62,00 |
+| `LB-COMPLEMENTO` | 2 entradas pagadas + 2 pares de calcetines añadidos desde el panel | **+2 Calcetines antideslizantes +4,00** · a pagar en el parque 4,00 |
+| `LB-ORDEN` ⚠️ hueco 4 | El operador **devuelve ANTES** de registrar la bajada: con la línea aún en 3 no se debe nada, los 19,80 salen como «Compensación», y la bajada posterior vuelve a restar 19,80 | **Total −9,90** · Pagado 9,90 · «a devolver en el parque 19,80» de dinero YA devuelto. **El libro cierra (I1–I4) y aun así miente**: el orden de las gestiones importa y nadie avisa |
+| `LB-PUERTA` ⚠️ hueco 1 | Visita de AYER, pedido pagado con señal | **«Liquidado en el parque 58,00»** sin que nadie registrara lo que cobró la recepción: es inferido |
+| `LB-REVISION` ⚠️ huecos 2 y 3 | `Order.total` fabricado (9,90 con dos entradas de 9,90) | «Este desglose no cuadra» en el panel; el cliente ve solo lo cobrado y la frase de revisión; **no hay acción para corregirlo** |
+
+✅ **Sonda ampliada a los 11 `LB-*`, recorriendo las CUATRO páginas de «Mis pedidos»: 0 fallos** (54
+comprobaciones). ⚠️ Dos lecciones del instrumento: (1) «Mis pedidos» pagina de **5 en 5** — la sonda
+que solo leía la primera página dio seis «no aparece» con el producto sano; (2) `settled`, `expired` y
+`under_review` **no llevan línea de saldo en el cajón** (por diseño, `orders.js`) y un pedido en
+revisión **no pinta movimientos** (T3·1: Total, cobros y la frase): la sonda que esperaba línea y
+movimientos en esos dos casos daba tres ✗ falsos. ⚠️ Cosmética de la siembra: pago y devolución en
+el MISMO segundo salen con la devolución primero (empate en `occurred_at`); en producción median días.
 
 ### Lo que este guion NO cubre → el OJO del owner (T3·4b)
 

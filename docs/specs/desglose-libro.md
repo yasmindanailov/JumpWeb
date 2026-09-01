@@ -1130,9 +1130,15 @@ por edición, no por `checkout`, porque el mismo fichero llevaba ya la renumerac
 ▶ **El guion headless del libro en el cajón está RECORRIDO** (`VERIFICACION-E2E-CAJON.md` §5.sexies):
 cuatro pedidos sembrados por `OrderCreator` para el cliente de prueba —señal · bajada 100 % online ·
 cancelado · mixta con descuento— leídos por HTTP real en «Mis pedidos» y comparados movimiento a
-movimiento con `GET /api/v1/me/orders`: **17 comprobaciones, 17 ✓**. ⚠️ La primera pasada abortó por
+movimiento con `GET /api/v1/me/orders`: **17 comprobaciones, 17 ✓**; ampliado después a **11 pedidos
+(54 ✓)** con siete de DEMOSTRACIÓN para el owner —cuatro del sistema (`LB-DEVUELTO`, `LB-CORTESIA`,
+`LB-SUPLEMENTO`, `LB-COMPLEMENTO`) y tres que ENSEÑAN los huecos de arriba (`LB-ORDEN`: devolver
+antes de registrar la bajada deja un Total de **−9,90** con el libro cerrando; `LB-PUERTA`: la
+liquidación inferida; `LB-REVISION`: el «no cuadra» sin acción)—. ⚠️ La primera pasada abortó por
 *timeout* con el producto sano: tras el login el cajón puede quedarse en el índice de la cuenta en
-vez de en la zona de pedidos, y la sonda solo esperaba la zona.
+vez de en la zona de pedidos, y la sonda solo esperaba la zona; la segunda dio seis «no aparece» por
+no paginar (5 por página) y tres ✗ por esperar saldo y movimientos donde el cajón, por diseño, no los
+pinta (`settled` · `under_review`).
 ▶ **T3·4b (pendiente, del owner)**: el OJO sobre el panel, la hoja, la puerta y los correos
 (§5.sexies V18–V21) con el modelo viejo fuera.
 

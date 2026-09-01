@@ -89,9 +89,16 @@
 > `expired` · `pending_payment`): el resto eran del modelo viejo y nadie las leía.
 > ▶ **RETOMAR (siguiente sesión): la T3·4b — el OJO del owner** sobre las nueve superficies con el
 > modelo viejo fuera (cajón «Mis pedidos», panel: bloque + tarjeta + calendario, hoja PDF, puerta,
-> los cinco correos, post-form), con el guion headless de `VERIFICACION-E2E-CAJON.md` (apartado del
-> libro) recorrido antes; y dos cosas que NO son del libro pero quedaron escritas: la pregunta
-> white-label de las fotos (`#313`) y el AFORO del horizonte de franjas (`#307`).
+> los cinco correos, post-form), con el guion headless de `VERIFICACION-E2E-CAJON.md` §5.sexies
+> recorrido (11 pedidos, 54 ✓). **En la BD local viven ONCE pedidos `LB-*` del cliente
+> `probe-card@jumpweb.test`** —cuatro del sistema, cuatro de demostración y TRES que enseñan los
+> huecos (`LB-ORDEN` Total −9,90 con el libro cerrando · `LB-PUERTA` liquidación inferida ·
+> `LB-REVISION` «no cuadra» sin acción)— para que el owner los mire en el panel y en el cajón; se
+> borran con `Order::where('code','like','LB-%')`. ⚠️ Tres decisiones del owner ABIERTAS tras su
+> primera lectura: el nombre de la línea «Compensación» (propuesta: «Descuento por cortesía»),
+> plegar «Pagos y devoluciones» cuando solo hay un cobro, y si el AJUSTE MANUAL (hueco 2) se diseña
+> como tanda. Y dos cosas que NO son del libro pero quedaron escritas: la pregunta white-label de las
+> fotos (`#313`) y el AFORO del horizonte de franjas (`#307`).
 > ❗❗❗ **2026-09-01 (noche, 3.ª sesión) · T3·3 · LOS CORREOS PINTAN EL LIBRO; CAE EL TOPE DEL DESCUENTO**
 > (`DECISIONES #312`, `specs/desglose-libro.md` **§6.3.4 diseño fino y §6.3.5 lo ejecutado**;
 > `cumple-mixto.md` §20 con la corrección; `INVARIANTES` `PAY-16`/`PAY-17`/`PAY-19` con la nota).
