@@ -20432,3 +20432,61 @@ titulado «Liability release» cuyo contenido está en español. Yo no redacto t
 **Verificación**: suite **3904 · 25.033** · `node --test` **891 en verde** · Pint ✓ · docs-check ✓ ·
 tres mutaciones con control. ⚠️ Cuatro tests aseveraban los textos viejos y **la suite los cazó**:
 se actualizaron con su concordancia, no se relajaron.
+
+---
+
+## #340 · 2026-09-02 · El cajón relee su contexto al volver a la pestaña: lo que faltaba no era el mecanismo, era el disparador
+
+**Ficha de `DEUDA.md` abierta el día del lanzamiento** (`#326`, adenda) y vivida por el owner: verificó
+su correo en **otra pestaña** y la original siguió diciéndole «tienes pendiente la exención». El
+servidor ya contestaba bien —medido entonces: `signed=true · pending=false`—; lo que pasaba es que el
+cajón había cargado su contexto **antes** de la verificación y no lo volvía a pedir nunca.
+
+### Lo que había que construir era sorprendentemente poco
+
+`stores/accountContext.js::refresh()` **ya existía y ya estaba endurecido**: guarda de concurrencia
+(`loading`), un 401 vacía el contexto en vez de dejar el del anterior, y un fallo no se anuncia porque
+esto es cortesía de interfaz. Lo único que no tenía era **quién lo llamara** al volver: sus dos
+consumidores eran el login sin recarga (`account/session-gained.js`) y la zona de privacidad.
+
+▶ Y se comprobó ANTES de escribir nada que refrescar **repinta de verdad**: el aviso es
+`computed(() => accountNoticeFrom(context.context))` en `AccountHomeZone.vue`, o sea reactivo sobre el
+store. Sin esa comprobación esto habría sido el defecto de `#333` otra vez —*que el dato llegue no es
+que se pinte*—, y se habría descubierto en el navegador del owner.
+
+### Las tres decisiones del módulo, y ninguna es de estilo
+
+ 1. **Solo con sesión.** Sin la puerta de `identified`, **todo visitante anónimo** pediría
+    `/me/account-context` cada vez que cambia de pestaña para que el servidor le conteste `null`: se
+    convierte cada página pública en un sondeo. El caso del owner ocurre **con** sesión, así que la
+    puerta no le quita nada. ⚠️ Lo que NO cubre, dicho a propósito: *conseguir* sesión en otra
+    pestaña — esa pestaña es anónima y seguiría siéndolo; cubrirlo exigiría sondear a los anónimos, y
+    además `#331`/`#332` ya decidieron que conseguir sesión **navega**.
+ 2. **`visibilitychange` Y `focus`.** Ninguno cubre solo todos los casos —cambiar de ventana sin
+    ocultar la pestaña no siempre dispara el primero; volver de otra aplicación no siempre dispara el
+    segundo—. Que salten los dos no duplica la petición porque **el sello de tiempo se pone ANTES de
+    pedir**, y hay caso propio para eso.
+ 3. **Intervalo mínimo de 10 s.** Alternar de pestaña es un gesto barato y frecuente; sin él, veinte
+    idas y venidas en un minuto son veinte peticiones a un endpoint que compone reservas, formularios
+    pendientes y estado del descargo. Diez segundos no le quitan nada al caso real —ir al correo,
+    abrir el enlace y volver no baja de ahí—.
+
+La DECISIÓN va aparte del cableado (`shouldRefresh()`, pura, sin red ni DOM) siguiendo `CE-6`, con el
+`window` por parámetro: 12 casos de `node --test` sin navegador.
+
+### ⚠️ El presupuesto del cajón mordió por 50 BYTES, y la poda tenía argumento propio
+
+El chunk salió en **263,05 kB contra un techo de 263**. La regla de la casa es podar antes que subir el
+techo, y aquí la poda no fue arbitraria: `watchTabReturn()` devolvía una función para **desconectar**
+que **no tenía ningún consumidor** —el motor del cajón se monta una vez por carga de página y no se
+desmonta—. Es la regla de `#287`: *una pieza nace en el MISMO cambio que su consumidor*. Retirarla
+bastó, y el techo **no se toca**.
+
+⚠️ Y al retirar el caso de la desconexión se vio que faltaba cubrir una rama real: **un `focus` con la
+pestaña todavía oculta** —una ventana emergente que se cierra—. `shouldRefresh` recibe `hidden`, pero
+quien lo LEE del `document` es el cableado, así que sin ese caso ese `doc.hidden` no lo miraba nadie.
+Añadido, y **mutado**: forzar `hidden: false` en el cableado lo pone rojo.
+
+**Verificación**: suite **3904 · 25.033** · `node --test` **903 en verde** (12 nuevos) · Pint ✓ ·
+docs-check ✓ · presupuesto del cajón en verde sin subir el techo. **Queda el OJO del owner**: verificar
+el correo en otra pestaña y volver a la primera.

@@ -1,5 +1,21 @@
 # Estado del proyecto — foto viva
 
+✅ **EL CAJÓN RELEE SU CONTEXTO AL VOLVER A LA PESTAÑA** (2026-09-02, `DECISIONES #340`; cierra la
+ficha de `DEUDA.md` que abrió el owner el día del lanzamiento). Verificar el correo en otra pestaña y
+volver ya no deja el aviso viejo. ▶ **Lo que faltaba no era el mecanismo: era el disparador.**
+`accountContext.refresh()` ya existía y ya estaba endurecido (guarda de concurrencia, 401 que vacía);
+solo lo llamaban el login sin recarga y la zona de privacidad.
+▶ Tres decisiones, ninguna de estilo: **solo con sesión** (sin esa puerta, cada visitante anónimo
+sondearía `/me/account-context` en cada cambio de pestaña) · **`visibilitychange` Y `focus`**, porque
+ninguno cubre solo todos los casos · **intervalo mínimo de 10 s**, porque alternar de pestaña es
+barato y el endpoint no.
+▶ ⚠️ **Se comprobó ANTES de escribir nada que refrescar REPINTA**: el aviso es un `computed` sobre el
+store. Sin eso habría sido `#333` otra vez.
+▶ ⚠️⚠️ **El presupuesto del cajón mordió por 50 BYTES** y se podó en vez de subir el techo: el
+`stop()` que devolvía el módulo **no tenía consumidor** (el motor no se desmonta) — la regla de `#287`.
+Al retirarlo apareció una rama sin cubrir (`focus` con la pestaña aún oculta), añadida y mutada.
+▶ **Queda tu OJO**: verificar el correo en otra pestaña y volver a la primera.
+
 ❗❗❗ **UN SOLO NOMBRE: «DESCARGO DE RESPONSABILIDAD» EN TODA LA INTERFAZ** (2026-09-02,
 `DECISIONES #339`, `[DECIDIDO owner]`). No eran dos formas, eran **CINCO** —«exención de
 responsabilidad (waiver)» · «Descargo de responsabilidad (waiver)» · «Desc**a**rga de
@@ -26,6 +42,12 @@ propia republicación. `[DECIDIDO owner]`: **una sola vez, con la traducción**.
 panel** (`EditPage` ya publica versiones legales): editar la página `waiver` y pulsar publicar.
 ▶ ⚠️ **Riesgo anotado, no tarea**: hoy un cliente extranjero firma un documento titulado «Liability
 release» cuyo contenido está en español.
+▶ ✅ **DESPLEGADO Y VERIFICADO EN LA WEB REAL** (`a393bd2`, acotado igual que `#338`): el dry-run dijo
+que solo cambiaban **los 11 ficheros de idioma**, y `curl https://playjump.es/` confirma el pie legal
+en «Descargo de responsabilidad». ⚠️ Quedan **3** apariciones de «waiver» en el HTML de la portada y
+**son correctas**: es la CLAVE `accept_waiver` dentro del payload del cajón, cuyo valor ya dice
+«He leído y acepto el descargo de responsabilidad». *Un `grep` de «waiver» sobre el HTML no distingue
+la clave del texto: hay que mirar qué es cada una.*
 
 ❗❗❗ **PRODUCCIÓN · EL GESTO DE LA PUERTA DABA 500, Y ERAN TRES DEFECTOS EN UNA LÍNEA** (2026-09-02,
 `DECISIONES #338`). Lo encontró el owner probando la pantalla. `ValidarRegistro::declareWaiver()`
@@ -290,8 +312,10 @@ aquí lo que no se podaría son datos de menores de terceros.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
 > Suite **3904 en verde** (25.033 aserciones, 1 skipped a propósito), medida el 2026-09-02
-> sobre el árbol CONJUNTO: el vocabulario del descargo (`#339`) sobre el arreglo del 500 de la puerta
-> (`#338`), rebasado a su vez sobre la **T3** del justificante (`#337`).
+> sobre el árbol CONJUNTO: el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo
+> (`#339`) sobre el arreglo del 500 de la puerta (`#338`), rebasado a su vez sobre la **T3** del
+> justificante (`#337`). ⚠️ `#340` **no suma tests PHP**: los suyos son 12 de `node --test`
+> (891 → **903**), y el presupuesto del cajón quedó en verde **sin subir el techo**.
 > ⚠️ El neto de `#338` es **+1** (dos guardas y fuera `TmpProbeTest`) y el de `#339` **+3**.
 > ⚠️⚠️ **La primera medición de `#339` dio 41.012 aserciones y era un DEFECTO de la guarda nueva**, no
 > una mejora: aseveraba dentro del bucle, así que metía ~16.000 aserciones por un solo caso **y moría

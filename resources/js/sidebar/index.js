@@ -8,6 +8,7 @@ import { useSectionStore } from './stores/section.js';
 import { useAccountStore } from './stores/account.js';
 import { createNavigation } from './account/navigation.js';
 import { useAccountContextStore } from './stores/accountContext.js';
+import { watchTabReturn } from './account/tab-return.js';
 import { useCartStore } from './stores/cart.js';
 import { takeOver } from '../ui/account-host.js';
 
@@ -114,7 +115,18 @@ export function mount(el, boot = {}) {
     // El contexto que pinta el bloque de cuenta del panel. Llega SEMBRADO por el servidor
     // (`Http\Sidebar\AccountContextSeed`), así que el bloque se pinta sin pedirle nada a nadie; solo
     // se refresca cuando el cajón consigue sesión SIN recargar (`specs/account-context-vue.md` §4.3).
-    useAccountContextStore(pinia).seed(boot.accountContext ?? null);
+    const accountContextStore = useAccountContextStore(pinia);
+    accountContextStore.seed(boot.accountContext ?? null);
+
+    // …y al VOLVER A LA PESTAÑA (`#340`). El contexto se siembra una vez por carga de página, así que
+    // quien verifica su correo —o firma— en otra pestaña volvía a ésta y seguía leyendo el estado de
+    // antes: se lo encontró el owner el día del lanzamiento, con el servidor contestando ya lo
+    // correcto. El disparador vive fuera (`account/tab-return.js`), con su decisión pura probada por
+    // `node --test`; aquí solo se le da el store y el `window`.
+    //
+    // ⚠️ No se guarda la función de desconectar: el motor se monta UNA vez por carga de página y no
+    // se desmonta —lo dice el propio `handle` de abajo—, así que los oyentes viven lo que la página.
+    watchTabReturn({ context: accountContextStore });
 
     // ⚠️⚠️ **El DUEÑO de la cesta se siembra desde el HTML, aquí y ANTES de montar** — y esta línea
     // faltó desde que la identidad se mudó al store (2026-08-22) hasta el 2026-08-27, cuando una sonda
