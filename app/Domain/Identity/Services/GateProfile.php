@@ -207,7 +207,11 @@ final class GateProfile
                 // es estructural (`#236`): distinguir a un niño de otro en un mostrador no los
                 // necesita, y esta plantilla no puede ser la puerta por la que entren.
                 'name' => (string) $a->minor_name,
-                'age' => $a->minor_born_on->diffInYears($day),
+                // ⚠️ La edad la calcula `Dependent::ageBetween()`, que es el ÚNICO sitio con esa
+                // regla: `diffInYears()` devuelve un FLOAT —el DTO declara `int`— y además no trata
+                // el caso de una fecha posterior al día. Un menor invitado no es un `Dependent`,
+                // pero la aritmética de la edad sí es la misma.
+                'age' => Dependent::ageBetween($a->minor_born_on->toDateString(), $day),
                 'waiver' => $statuses[(int) $a->getKey()]?->minorState(),
             ])
             ->values()
