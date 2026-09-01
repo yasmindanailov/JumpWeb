@@ -300,21 +300,41 @@ class IllustrationHoleRenderTest extends TestCase
         );
     }
 
-    /** Y el consumidor —la tarjeta de zona— sí lo dimensiona y le da su color de superficie. */
-    public function test_the_zone_card_sizes_and_recolours_its_illustration(): void
+    /**
+     * Y el consumidor —el SELECTOR de zona— sí lo dimensiona y resuelve su color.
+     *
+     * ⚠️⚠️ **Este caso se RE-APUNTÓ, no se retiró** (`#302`). Vigilaba la tarjeta de zona
+     * (`.zone-intro__ilu` / `.zone-intro__card`), que se fue con `[DECIDIDO owner]`; el dibujo
+     * `zone-<slug>` no desapareció, **se mudó a la pestaña del selector**. Una guarda cuyo sujeto se
+     * muda se muda con él: retirarla habría dejado el mecanismo sin red justo donde sigue vivo.
+     *
+     * ▶ **Y no queda más débil, queda más fuerte.** La tarjeta redefinía `--ilu-fg` a mano por cada
+     * superficie; la pestaña lo ata a `currentColor`, así que el dibujo sigue al texto solo. Para
+     * que eso valga hacen falta las DOS mitades —el `currentColor` y el `color` que la pestaña
+     * activa cambia al posarse sobre el color de la zona—, y las dos se aseveran: con una sola, el
+     * icono se quedaría en tinta oscura sobre el fondo de marca.
+     */
+    public function test_the_zone_picker_sizes_and_recolours_its_illustration(): void
     {
         $landing = (string) file_get_contents(base_path('public/css/landing.css'));
 
         $this->assertMatchesRegularExpression(
-            '/(?<![-\w])width\s*:/', (string) $this->block($landing, '.zone-intro__ilu'),
-            'la tarjeta de zona no dimensiona su ilustración: se quedaría con el tamaño por defecto',
+            '/(?<![-\w])width\s*:/', (string) $this->block($landing, '.zone-pick__ilu'),
+            'la pestaña de zona no dimensiona su ilustración: se quedaría con el tamaño por defecto',
         );
 
         $this->assertMatchesRegularExpression(
-            '/--ilu-fg\s*:/', (string) $this->block($landing, '.zone-intro__card'),
-            "la tarjeta de zona no redefine `--ilu-fg`.\n".
-            '▶ Es una superficie del COLOR DE LA ZONA (`background: var(--zone-1)`), no papel: sin '.
-            'redefinirlo el dibujo se pintaría con la tinta del papel sobre el color de la marca.',
+            '/--ilu-fg\s*:\s*currentColor/i', (string) $this->block($landing, '.zone-pick__ilu'),
+            "la pestaña no ata `--ilu-fg` a `currentColor`.\n".
+            '▶ Sin eso el dibujo se pinta con la tinta del papel, y la pestaña ACTIVA es una '.
+            'superficie del color de la zona: el icono quedaría oscuro sobre el color de marca.',
+        );
+
+        $this->assertMatchesRegularExpression(
+            '/(?<![-\w])color\s*:/', (string) $this->block($landing, '.zone-pick__tab.active'),
+            "la pestaña activa no cambia su `color`.\n".
+            '▶ Es la otra mitad del mecanismo: `--ilu-fg: currentColor` no sirve de nada si el texto '.
+            'no se aclara al posarse sobre el color de la zona.',
         );
     }
 

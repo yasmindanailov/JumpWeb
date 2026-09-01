@@ -14,7 +14,6 @@
 
     <main id="main" class="page wrap">
         <div class="page__head">
-            <div class="eyebrow">{{ __('site.legal_eyebrow') }}</div>
             <h1 class="page__title">{{ $page->tr('title') }}</h1>
         </div>
 

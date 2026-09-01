@@ -101,8 +101,7 @@
             <span class="bd-shape" style="width:16px;height:16px;top:220px;left:90px;border-radius:4px;transform:rotate(40deg)"></span>
 
             <div class="bd-band__head">
-                <span class="bd-band__eyebrow"><x-icons.ic-b1 :size="20" /> {{ __('landing.events.eyebrow') }}</span>
-                <h{{ $level }} class="bd-band__title">{{ __('landing.events.title') }}<br />{{ __('landing.events.title_em') }}</h{{ $level }}>
+                <h{{ $level }} class="bd-band__title">{{ __('landing.events.title') }}</h{{ $level }}>
 
                 @if ($packages->count() > 1)
                     <div class="bd-tabs" role="tablist" aria-label="{{ __('landing.events.choose') }}">
@@ -197,8 +196,7 @@
     <section class="wrap bd-sec3" x-data="birthdayProcess(@js($processSteps), {{ $processDeposit }})" x-init="init()">
         <div class="bd-sec3__top">
             <div>
-                <span class="eyebrow">{{ __('landing.events.process_eyebrow') }}</span>
-                <h2 class="bd-sec3__title">{{ __('landing.events.process_title') }} <em>{{ __('landing.events.process_title_em') }}</em></h2>
+                <h2 class="bd-sec3__title">{{ __('landing.events.process_title') }}</h2>
             </div>
         </div>
 
@@ -242,8 +240,7 @@
     @if ($showInvite)
         <section class="wrap bd-sec2" id="tarjeta-invitacion" x-data="birthdayInvite(@js($inviteCfg))">
             <div class="bd-sec2__head">
-                <span class="eyebrow">{{ __('landing.events.invite.eyebrow') }}</span>
-                <h2 class="bd-sec2__title">{{ __('landing.events.invite.title') }} <em>{{ __('landing.events.invite.title_em') }}</em></h2>
+                <h2 class="bd-sec2__title">{{ __('landing.events.invite.title') }}</h2>
                 <p class="bd-sec2__intro">{{ __('landing.events.invite.intro') }}</p>
             </div>
 

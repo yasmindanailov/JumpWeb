@@ -73,16 +73,17 @@ return [
         ],
     ],
     'zones' => [
-        'eyebrow' => 'Les deux zones', 'title' => 'Un parc,', 'title_em' => 'deux zones.',
+        'title' => 'Deux zones',
         'intro' => 'On a conçu deux univers différents — un pour ceux qui sautent déjà sans freins, un pour ceux qui apprennent. Choisis le tien.',
-        'surface' => 'Surface', 'rides' => 'Attractions',
-        'total_labels' => ['m² au total', 'attractions', 'zones par âge'],
     ],
     'rides' => [
-        'eyebrow' => 'Attractions', 'buy' => 'Acheter',
+        'eyebrow' => 'Attractions',
+        'zone_tab' => 'Zone',
+        'book_zone' => 'Réserver :zone',
+        'buy' => 'Acheter',
     ],
     'pricing' => [
-        'eyebrow' => 'Tarifs', 'title' => 'Tarifs clairs,', 'title_em' => 'sans surprise.',
+        'title' => 'Tarifs',
         'intro' => "Choisis ta zone et vois les prix. Pour le moment, les billets s'achètent à la billetterie ou par téléphone.",
         'from' => 'dès', 'pick_zone' => 'Choisis ta zone', 'tab' => 'Billets',
         'book' => 'Réserver', 'call' => 'Appeler',
@@ -100,7 +101,7 @@ return [
         'label' => 'Compléments disponibles',
     ],
     'events' => [
-        'eyebrow' => 'Anniversaires', 'title' => "L'anniversaire", 'title_em' => "le plus haut de l'année.",
+        'eyebrow' => 'Anniversaires', 'title' => 'Anniversaires',
         'included' => 'Inclus dans le pack', 'from' => 'Dès',
         'choose' => 'Choisis ton anniversaire',
         'reserve_terms' => 'De :min à :max enfants · Acompte de :deposit € pour réserver',
@@ -111,7 +112,7 @@ return [
         'bd_ticket_sub' => 'invités',
         'invite_link' => 'Tu veux créer ton invitation personnalisée ?',
         'process_eyebrow' => 'Comment réserver',
-        'process_title' => 'Du clic', 'process_title_em' => 'à la fête.',
+        'process_title' => 'Pas à pas',
         'process_step' => 'Étape', 'process_of' => 'sur',
         'process_prev' => 'Étape précédente', 'process_next' => 'Étape suivante',
         'process' => [
@@ -123,7 +124,7 @@ return [
         ],
         'invite' => [
             'eyebrow' => 'Invitation',
-            'title' => 'Ton invitation,', 'title_em' => 'prête en une minute.',
+            'title' => 'Ton invitation',
             'intro' => 'Remplis les infos, choisis la couleur de la zone et partage la carte avec les invités. Elle se met à jour à l’instant.',
             'editor_title' => 'Éditeur — les changements se sauvegardent seuls',
             'color_label' => 'Couleur',
@@ -166,11 +167,11 @@ return [
         ],
     ],
     'gallery' => [
-        'eyebrow' => 'Galerie', 'title' => 'Suivez-nous', 'title_em' => 'en direct',
+        'title' => 'En direct',
         'intro' => 'Ce qui se passe au parc, en temps réel.',
     ],
     'info' => [
-        'eyebrow' => 'Nous visiter', 'title' => 'Horaires', 'title_em' => '& adresse',
+        'title' => 'Nous visiter',
         'hours_title' => 'Horaires',
         'hours_tbd' => 'Horaires à confirmer',
         'closed' => 'Fermé',
@@ -180,8 +181,8 @@ return [
         'weekdays' => [0 => 'Dimanche', 1 => 'Lundi', 2 => 'Mardi', 3 => 'Mercredi', 4 => 'Jeudi', 5 => 'Vendredi', 6 => 'Samedi'],
         'address_title' => 'Adresse', 'parking' => 'Parking gratuit 2h', 'directions' => 'Itinéraire',
     ],
-    'rules' => ['eyebrow' => 'Règles', 'title' => 'Sauter en sécurité,', 'title_em' => 'sauter heureux.', 'intro' => 'Le strict nécessaire pour ne pas perdre de temps à l\'entrée. Le reste est sur la page des règles.', 'cta' => 'Voir toutes les règles'],
-    'faq' => ['eyebrow' => 'FAQ', 'title' => 'Questions', 'title_em' => 'fréquentes'],
+    'rules' => ['eyebrow' => 'Règles', 'title' => 'Règles'],
+    'faq' => ['title' => 'Questions'],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
     // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven

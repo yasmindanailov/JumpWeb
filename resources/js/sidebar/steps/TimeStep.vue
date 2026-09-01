@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
 import { isAlmostFull, isSoldOut } from '../offer.js';
@@ -94,6 +94,32 @@ const hasAddons = computed(() => props.addons.groups.length > 0 || props.addons.
 
 const canDecrease = computed(() => props.quantity > (props.isPack ? props.minQuantity : 0));
 const canIncrease = computed(() => props.quantity < props.maxQuantity);
+
+/**
+ * **«Más info» de un complemento: qué ventajas están DESPLEGADAS.**
+ *
+ * ⚠️⚠️ **Esto faltaba, y el botón llevaba puesto desde el principio sin hacer nada.** El
+ * `<button class="addons__moreinfo">` se emitía **sin `@click`** y la lista `.addons__features` se
+ * pintaba **sin condición de estado**; en CSS tampoco había `display: none` que la ocultara. O sea:
+ * la ficha salía siempre abierta y el botón era decoración. Lo vio el owner usando el cajón.
+ *
+ * ⚠️ **Y el comentario de `addon-chip.blade.php` afirmaba lo contrario**: decía que la landing usaba
+ * «el mismo patrón que el sidebar de compra … + toggle Alpine». La landing SÍ lo tenía; el cajón no.
+ * *Un comentario que describe la paridad con otra pantalla no es prueba de que esa pantalla la
+ * cumpla* — aquí llevaba meses citando una conducta que nunca existió.
+ *
+ * ▶ Se guarda por `product_id` en un `Set`: un complemento aparece o como opción de un grupo o como
+ * suelto, nunca en los dos sitios, así que la clave no colisiona. Nace vacío —todo plegado—, que es
+ * lo que el botón promete.
+ */
+const expanded = ref(new Set());
+const isExpanded = (id) => expanded.value.has(id);
+const toggleInfo = (id) => {
+    // Un `Set` mutado en sitio no dispara la reactividad de Vue: se reemplaza.
+    const next = new Set(expanded.value);
+    next.has(id) ? next.delete(id) : next.add(id);
+    expanded.value = next;
+};
 </script>
 
 <template>
@@ -197,8 +223,10 @@ const canIncrease = computed(() => props.quantity < props.maxQuantity);
                         </span>
                     </label>
                     <template v-if="opt.features.length">
-                        <button type="button" class="addons__moreinfo">{{ t('addon_more_info') }} <span aria-hidden="true"></span></button>
-                        <ul class="addons__features">
+                        <button type="button" class="addons__moreinfo"
+                                :aria-expanded="isExpanded(opt.product_id) ? 'true' : 'false'"
+                                @click="toggleInfo(opt.product_id)">{{ t('addon_more_info') }} <span aria-hidden="true"></span></button>
+                        <ul v-if="isExpanded(opt.product_id)" class="addons__features">
                             <li v-for="(f, i) in opt.features" :key="i">{{ f }}</li>
                         </ul>
                     </template>
@@ -211,7 +239,9 @@ const canIncrease = computed(() => props.quantity < props.maxQuantity);
                     <span class="addons__name">{{ opt.product_name }}<span v-if="opt.badge" class="addons__badge" :class="'addons__badge--' + opt.badge">{{ t('addon_badge_' + opt.badge) }}</span></span>
                     <span class="addons__price">{{ opt.note }}</span>
                     <span v-if="! opt.available && opt.requires_name" class="addons__requires">{{ tp('addon_requires', { name: opt.requires_name }) }}</span>
-                    <button v-if="opt.features.length" type="button" class="addons__moreinfo">{{ t('addon_more_info') }} <span aria-hidden="true"></span></button>
+                    <button v-if="opt.features.length" type="button" class="addons__moreinfo"
+                            :aria-expanded="isExpanded(opt.product_id) ? 'true' : 'false'"
+                            @click="toggleInfo(opt.product_id)">{{ t('addon_more_info') }} <span aria-hidden="true"></span></button>
                 </span>
 
                 <!-- Dependiente bloqueado: stepper INERTE, no ausente. Que el control esté ahí y no
@@ -232,7 +262,7 @@ const canIncrease = computed(() => props.quantity < props.maxQuantity);
                     <button type="button" :disabled="! opt.can_increase" @click="$emit('inc-addon', opt.product_id)">+</button>
                 </div>
 
-                <ul v-if="opt.features.length" class="addons__features addons__features--single">
+                <ul v-if="opt.features.length && isExpanded(opt.product_id)" class="addons__features addons__features--single">
                     <li v-for="(f, i) in opt.features" :key="i">{{ f }}</li>
                 </ul>
             </div>

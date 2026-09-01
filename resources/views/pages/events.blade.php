@@ -5,7 +5,6 @@
     @if ($packages->isEmpty())
         <main id="main" class="page wrap">
             <div class="page__head">
-                <div class="eyebrow">{{ __('landing.events.eyebrow') }}</div>
                 <h1 class="page__title">{{ __('landing.events.title') }}</h1>
             </div>
             <div class="page__body">

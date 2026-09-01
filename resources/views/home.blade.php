@@ -6,10 +6,9 @@
     // Horario del parque data-driven (#207): misma fuente que las reservas (opening_hours +
     // temporadas + fechas especiales), agrupado para mostrar.
     $schedule = app(\App\Domain\Content\Services\ScheduleDisplay::class);
-    $totalSqm = number_format($zones->sum('area_sqm'), 0, ',', '.');
-    $totalRides = $zones->sum('rides_count');
-    $totalZones = $zones->count();
-    $totalLabels = __('landing.zones.total_labels');
+    // ⚠️ Aquí se calculaban `$totalSqm`, `$totalRides`, `$totalZones` y `$totalLabels`, la tira de
+    // cifras de la sección de zonas. `[DECIDIDO owner, 2026-08-31]` (`#302`): **las tarjetas de zona
+    // y las cifras, fuera**. Se van con su consumidor, igual que sus claves de idioma y su CSS.
 @endphp
 
 <div x-data="landing">
@@ -177,166 +176,160 @@
         <div class="hero__sentinel" aria-hidden="true"></div>
     </header>
 
-    {{-- ===================== ZONAS ===================== --}}
+    {{-- ============ ZONAS Y SUS JUEGOS (una sola sección) ============ --}}
+    {{-- **`[DECIDIDO owner, 2026-08-31]` (`#302`): las tarjetas de zona y la tira de cifras, fuera.**
+         Aquí había DOS secciones —`#zones`, con una tarjeta grande por zona cuyo CTA saltaba a la
+         otra, y `#rides`, con una barra de pestañas que hacía exactamente la misma elección—. O sea
+         **dos selectores de zona en la misma página**, y el de arriba costaba 1.011 px en escritorio
+         y 1.831 en móvil (medido).
+
+         ▶ **Queda UNA sección y UN selector**: el toggle, que ahora dice quién es cada zona (icono
+         del kit + nombre + edad) en vez de ser solo una palabra.
+         ⚠️ **Y queda UNA cabecera, no dos.** Con las tarjetas y las cifras fuera, la de zonas se
+         quedaba presentando el vacío y la de atracciones venía detrás con el mismo molde. Sobrevive
+         la de ZONAS porque su párrafo acaba literalmente en «Elige el tuyo», que es lo que hace el
+         toggle que va justo debajo; la de atracciones solo explicaba la interfaz («pasa de una zona
+         a otra con un clic»), que es el texto que `#297` señala como sobrante.
+
+         ⚠️⚠️ **LAS DOS ANCLAS SIGUEN VIVAS Y NO ES UN DETALLE**: `/#zones` lo enlazan 4 sitios
+         (menú ×2, pie ×2) y `/#rides` otros 2. `#zones` es la sección; `#rides` envuelve el selector
+         y el carrusel, así que «Atracciones» del menú sigue aterrizando en los juegos.
+         ▶ Y `#rides` **tiene que envolver a los dos**: `applyZoneAccent()` tiñe ese contenedor con
+         la paleta de la zona activa, así que si el ancla se quedara solo en el carrusel las
+         pestañas perderían el color de su zona. --}}
     <section id="zones" class="section wrap">
         <div class="zones__head">
-            <div>
-                <div class="eyebrow" style="margin-bottom:16px">{{ __('landing.zones.eyebrow') }}</div>
-                <h2 class="zones__title">{{ __('landing.zones.title') }}<br /><em>{{ __('landing.zones.title_em') }}</em></h2>
+            {{-- `B1·02` del kit, en la ranura `slot-zonas`. **Su propia nota manda dónde va**: «la
+                 mancha detrás de la PRIMERA PALABRA, nunca detrás de todo el bloque».
+                 ⚠️ Va ABSOLUTA y con `z-index: -1` dentro de un contexto de apilamiento propio (el
+                 patrón de `#286`): sin paquete el componente no emite nada y aquí no puede quedar
+                 hueco reservado. --}}
+            {{-- ⚠️⚠️ **La mancha va DENTRO del bloque del titular, no de la cabecera, y eso es lo
+                 que la mantiene donde su nota manda.** Estuvo colgando de `.zones__head` con un
+                 `top` en PORCENTAJE, y un porcentaje se resuelve contra el ALTO DEL CONTENEDOR: al
+                 acortar los titulares (`#303`) la cabecera pasó de 264 a 153 px, el mismo `-20%`
+                 valió la mitad y la mancha bajó **11.016 px² sobre el párrafo**.
+                 ▶ *Un ajuste sobrevive a la razón que lo justificaba si nadie lo revisa al cambiar
+                 lo que hay alrededor.* Anclada al titular, su sitio ya no depende de cuánto texto
+                 tenga la sección. --}}
+            <div class="zones__titulo">
+                <x-site.ilu clave="slot-zonas" class="zones__mancha" />
+                <h2 class="zones__title">{{ __('landing.zones.title') }}</h2>
             </div>
             <p class="zones__intro">{{ __('landing.zones.intro') }}</p>
         </div>
 
-        <div class="zone-stats">
-            @foreach ([[$totalSqm, $totalLabels[0]], [$totalRides, $totalLabels[1]], [$totalZones, $totalLabels[2]]] as $i => $t)
-                {{-- ⚠️ El separador entre cifras **ya no está en el marcado**: lo pinta el CSS con
-                     `.zone-stats__item + .zone-stats__item::before`. Aquí había un `<span>` con
-                     `.jj-block`, el cuadrado «foam» del cliente ANTIGUO —sus iniciales daban nombre
-                     a la clase—, y su primer sustituto repetía una TEXTURA una vez por fila, que es
-                     justo lo que `FacadeDecorationIsPerScreenTest` prohíbe. La guarda lo cazó: un
-                     separador es puntuación, y la puntuación es del CSS. --}}
-                <div class="zone-stats__item">
-                    <span class="zone-stats__num">{{ $t[0] }}</span>
-                    <span class="zone-stats__label">{{ $t[1] }}</span>
+        <div id="rides" class="zones__juegos">
+            {{-- EL SELECTOR. Antes era una fila de palabras; ahora cada pestaña dice **quién es** la
+                 zona: su dibujo del kit, su nombre y su edad.
+                 ⚠️⚠️ **La identidad es `slug`, NUNCA `accent`** (`#295`, conservado en `#301`):
+                 `accent` AGRUPA —`kids`, `cap` y `cap2` comparten el suyo en datos reales—, así que
+                 con él tres pestañas emitían el mismo valor y abrían tres carruseles a la vez.
+                 ⚠️ **El dibujo es del CLIENTE y puede no estar**: `<x-site.ilu>` no emite nada si el
+                 kit no trae ese `zone-<slug>`, y la pestaña se queda con nombre y edad. Es el modo
+                 de fallo elegido en `hueco-ilustracion.md` §7 — invisible, nunca caja vacía.
+                 ⚠️ **La edad también puede faltar** (`cap`/`cap2` no la tienen): sin ella no se
+                 pinta la línea, en vez de dejar un hueco o un guion. --}}
+            <div class="zone-pick" role="tablist" aria-label="{{ __('landing.rides.eyebrow') }}">
+                @foreach ($zones as $zone)
+                    <button type="button" class="zone-pick__tab" data-tap
+                            id="zone-pick-{{ $zone->slug }}"
+                            role="tab" aria-controls="rides-{{ $zone->slug }}"
+                            :aria-selected="zone==='{{ $zone->slug }}' ? 'true' : 'false'"
+                            :class="zone==='{{ $zone->slug }}' && 'active'"
+                            @click="setZone('{{ $zone->slug }}')">
+                        <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-pick__ilu" />
+                        <span class="zone-pick__name">{{ __('landing.rides.zone_tab') }} {{ $zone->tr('name') }}</span>
+                        @if ($zone->tr('age_range'))
+                            <span class="zone-pick__age">{{ $zone->tr('age_range') }}</span>
+                        @endif
+                    </button>
+                @endforeach
+            </div>
+
+            @foreach ($zones as $zone)
+                {{-- ⚠️ El carrusel lleva la PALETA YA COMPUESTA (`data-zone-style`, `DECISIONES #139`).
+                     `data-color` traía solo el primario, así que el JS tenía que (a) quemar el
+                     secundario a la paleta del primer cliente y (b) **repetir la fórmula de contraste
+                     de `ThemeSettings::onBrand()`** en JavaScript. Dos definiciones de la misma regla
+                     es como empiezan las divergencias que el tema existe para cerrar.
+                     ⚠️⚠️ **IDENTIDAD `slug`, PALETA `accent`**: lo que dice *cuál* es este carrusel
+                     sale de `slug`, que es único; lo que dice *de qué color va* sigue saliendo de
+                     `accent`, porque agrupar es justo su trabajo. --}}
+                <div class="slider" x-ref="slider_{{ $zone->slug }}" data-zone="{{ $zone->slug }}"
+                     id="rides-{{ $zone->slug }}" role="tabpanel" aria-labelledby="zone-pick-{{ $zone->slug }}"
+                     data-color="{{ \App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent) }}"
+                     data-zone-style="{{ \App\Domain\Content\Services\ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent) }}"
+                     x-show="zone==='{{ $zone->slug }}'" @scroll="updateProgress()" @if (! $loop->first) style="display:none" @endif>
+                    @foreach ($zone->attractions as $ride)
+                        {{-- **LA TARJETA SE QUEDA EN FOTO + TÍTULO + TAG** (`[DECIDIDO owner]`, `#302`).
+                             Se van la edad y la descripción: medido, las 23 atracciones tienen foto y
+                             descripción, así que el carril era una fila de párrafos de 58 caracteres
+                             de media compitiendo con 23 fotos. La sección es VISUAL y adopta esa forma.
+                             ⚠️ **El bloque de compra NO se va**, y no es un descuido: es una venta, no
+                             una descripción. Hoy lo cumple 1 de 23 (la Tirolina) y retirarlo cerraría
+                             un camino de compra sin que nadie lo hubiera pedido. --}}
+                        <article class="ride-card{{ $ride->is_special ? ' ride-card--special' : '' }}{{ $complements->isPurchasable($ride) ? ' ride-card--sellable' : '' }}">
+                            <div class="ride-card__viz">
+                                @if ($ride->tr('badge'))
+                                    <span class="tag tag--senal tag--punteada ride-card__badge">{{ $ride->tr('badge') }}</span>
+                                @endif
+                                @if ($ride->image)
+                                    <img class="ride-card__img" src="{{ asset($ride->image) }}" alt="{{ $ride->tr('name') }}" loading="lazy">
+                                @else
+                                    <span class="ride-card__placeholder">Foto — {{ \Illuminate\Support\Str::lower($ride->tr('name')) }}</span>
+                                @endif
+                            </div>
+                            {{-- El nombre lleva el PUNTO DE COLOR de la zona, que es lo que su `E1`
+                                 describe para esta familia: «sombra dura, borde de tinta y un punto de
+                                 color a la derecha». Es un pseudo-elemento, no marcado. --}}
+                            <h3 class="ride-card__name">{{ $ride->tr('name') }}</h3>
+
+                            {{-- **EL PIE DE LA TARJETA: siempre hay CTA** (`[DECIDIDO owner]`, `#303`:
+                                 «añade un CTA a las cards para que el usuario sepa que tiene que
+                                 clicarlo»).
+
+                                 ⚠️⚠️ **NO existe página de detalle de atracción**, así que el clic
+                                 tiene que llevar a algo que exista. `[DECIDIDO owner]`: **todas llevan
+                                 a reservar la ZONA de esa atracción** —abre el cajón posicionado en
+                                 ella—, que es exactamente lo que ya hacía el botón de la única
+                                 comprable. Y es coherente con el modelo: **el parque vende por ZONA,
+                                 no por atracción**.
+                                 ▶ Por eso las dos ramas llaman a la MISMA acción y solo cambian el
+                                 rótulo: la comprable enseña además su precio (`#228`).
+
+                                 ⚠️ **La tarjeta NO es un enlace, y el CTA sí.** Envolverla entera en
+                                 un `<button>` metería el precio y el badge dentro del nombre
+                                 accesible; un botón dentro de una tarjeta pulsable es la otra mitad
+                                 de la misma trampa. La afordancia la da el CTA, que es lo que se
+                                 pulsa. --}}
+                            <div class="ride-card__buy">
+                                @if ($complements->isPurchasable($ride))
+                                    <div class="ride-card__price">@if ($ride->ticketType?->priceVaries())<span class="ride-card__from">{{ __('landing.pricing.from') }}</span>@endif{{ $ride->ticketType?->euros() }}<span class="cents">,{{ $ride->ticketType?->cents() }}</span><span class="eur">€</span></div>
+                                    <button type="button" class="btn ride-card__cta" aria-label="{{ __('landing.rides.buy') }} · {{ $ride->tr('name') }}" @click="$store.purchase.openWith({ type: 'zone', slug: '{{ $zone->slug }}' })">{{ __('landing.rides.buy') }}</button>
+                                @else
+                                    <button type="button" class="btn btn--ghost ride-card__cta" aria-label="{{ __('landing.rides.book_zone', ['zone' => $zone->tr('name')]) }}" @click="$store.purchase.openWith({ type: 'zone', slug: '{{ $zone->slug }}' })">{{ __('landing.rides.book_zone', ['zone' => $zone->tr('name')]) }} <x-icons.arrow-right class="arrow" :width="14" :height="14" /></button>
+                                @endif
+                            </div>
+                        </article>
+                    @endforeach
                 </div>
             @endforeach
-        </div>
 
-        {{-- **ZONAS Y ATRACCIONES, UNIFICADAS** (`specs/idioma-visual-heredado.md`, T3,
-             `[DECIDIDO owner]`: «las zonas hay que unificarlo con las atracciones»).
-
-             ▶ Antes eran DOS secciones con dos cabeceras: las tarjetas de zona y, más abajo, una
-             sección propia con **una barra de pestañas** para elegir zona y un carrusel por zona.
-             La tarjeta llevaba un CTA que saltaba a la otra sección y cambiaba la pestaña. Ahora
-             cada zona lleva **sus** atracciones justo debajo: se va una cabecera, se va el salto,
-             se va el CTA y se va **una de las dos barras de pestañas que tenía la portada** —la
-             otra, la de entradas, se queda—.
-
-             ⚠️⚠️ **Y eso cierra un defecto REAL, medido**: la identidad de la zona era `accent`, que
-             **agrupa y no identifica** — `cap` y `cap2` comparten el de `kids` —, así que tres
-             sliders emitían el mismo `x-ref` y el mismo `data-zone`. Pulsar «Zona KIDS» abría
-             **tres carruseles a la vez** (8 tarjetas + dos vacíos, 568 px), y las flechas movían
-             uno cualquiera. *Un campo que agrupa no sirve para identificar.* Ahora manda `slug`,
-             que es lo que la sección de precios ya hacía bien al lado.
-
-             ⚠️ **La paleta va INLINE en el bloque**, ya compuesta por el servidor: antes la aplicaba
-             el JavaScript a `#rides` entero. Una zona sin atracciones no emite carrusel — antes
-             emitía uno vacío. --}}
-        <div class="zones-list" id="rides">
-            @foreach ($zones as $zone)
-                <article class="zone-block"
-                         style="{{ \App\Domain\Content\Services\ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent) }}">
-                    @if ($zone->image)
-                        {{-- Card de zona CON foto (patrón «Foto integrada en la tarjeta» del mockup
-                             `Ejemplos Imagenes Secciones.html`): banda de foto arriba + color de zona y
-                             datos abajo. Fondo = color de la zona (white-label, vía ThemeSettings). --}}
-                        <div class="zone-photo-card"
-                                 style="background: {{ \App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent) }}; --on-brand: {{ \App\Domain\Content\Services\ThemeSettings::onBrand(\App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent)) }}"
-                                 >
-                            <img class="zone-photo-card__photo" src="{{ asset($zone->image) }}"
-                                 alt="{{ $zone->tr('name') }}" loading="lazy">
-                            {{-- La ilustración de la zona, «apoyada en el borde» — literalmente lo que
-                                 dice su `E3`: «foto arriba con mancha entrando por la esquina y silueta
-                                 apoyada en el borde». La pose la asigna él en `F10` y no cambia.
-                                 ⚠️⚠️ Va TAMBIÉN aquí y no solo en el fallback: ésta es la variante que
-                                 usan las zonas con foto, o sea las reales. Con el dibujo solo en la otra
-                                 rama, en esta instalación no se veía en NINGUNA parte. --}}
-                            <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-photo-card__ilu" />
-                            <div class="zone-photo-card__body">
-                                @if ($zone->tr('age_label') || $zone->tr('age_range'))
-                                <span class="tag tag--senal tag--punteada zone-photo-card__tag">{{ implode(' · ', array_filter([$zone->tr('age_label'), $zone->tr('age_range')])) }}</span>
-                            @endif
-                                <h3 class="zone-photo-card__name">{{ $zone->tr('name') }}</h3>
-                                <p class="zone-photo-card__sub">{{ $zone->tr('subtitle') }}</p>
-                                <x-site.zone-metrics :zone="$zone" class="zone-photo-card__meta" />
-                            </div>
-                        </div>
-                    @else
-                        {{-- Fallback: card de zona sin foto (diseño actual con número de marca de fondo).
-                             ⚠️ El color va INLINE, no en una clase `--{accent}` (`DECISIONES #138`): esas
-                             reglas solo existían para `jump` y `kids`, y una zona con otro acento se
-                             quedaba sin color en silencio. Lo compone `ThemeSettings::zoneStyle()`.
-                             ⚠️⚠️ **Y aquí NO se vuelve a escribir**: la paleta ya la declara el
-                             `<article class="zone-block">` que la envuelve, con la MISMA llamada y los
-                             mismos argumentos, así que la tarjeta la hereda. Repetirla dejaba dos
-                             fuentes para el mismo dato — el día que el bloque quisiera teñir algo
-                             distinto, la tarjeta seguiría con la suya y en silencio (es lo que `#260`
-                             documentó con el icono del CTA: dos fuentes y gana la del marcado). --}}
-                        <div class="zone-intro__card">
-                            <div class="zone-intro__bg">{{ $zone->tr('name') }}</div>
-                            {{-- **EL PRIMER CONSUMIDOR DEL HUECO DE ILUSTRACIÓN** (`#257`, cerrada aquí).
-                                 La clave sale de `zones.slug`, que ya existe: por eso esta pantalla fue la
-                                 elegida para estrenar el mecanismo —es la única que no exige declarar
-                                 ninguna ranura nueva—.
-                                 ⚠️ Sin `client-kit.svg` el componente **no emite nada** y la tarjeta queda
-                                 exactamente como estaba: el hueco falla hacia invisible a propósito. --}}
-                            <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-intro__ilu" />
-                            <div class="zone-intro__top">
-                                @if ($zone->tr('age_label') || $zone->tr('age_range'))
-                                <span class="tag tag--senal tag--punteada zone-intro__tag">{{ implode(' · ', array_filter([$zone->tr('age_label'), $zone->tr('age_range')])) }}</span>
-                            @endif
-                            </div>
-                            <div style="position:relative; z-index:1">
-                                <h3 class="zone-intro__name">{{ $zone->tr('name') }}</h3>
-                                <p class="zone-intro__sub">{{ $zone->tr('subtitle') }}</p>
-                                <p class="zone-intro__copy">{{ $zone->tr('description') }}</p>
-                            </div>
-                            <x-site.zone-metrics :zone="$zone" class="zone-intro__meta" style="position:relative; z-index:1" />
-                        </div>
-                    @endif
-
-                    @if ($zone->attractions->isNotEmpty())
-                        {{-- Un componente por carrusel: su propio progreso y su propio `$refs.slider`.
-                             El estado compartido era justo lo que hacía posible el defecto de arriba. --}}
-                        <div class="zone-block__rides" x-data="zoneSlider">
-                            <div class="zone-block__rides-head">
-                                <span class="eyebrow">{{ __('landing.rides.eyebrow') }} · {{ $zone->tr('name') }}</span>
-                                <div class="slider-nav">
-                                    <button class="slider-arrow" @click="scroll(-1)" aria-label="{{ __('landing.nav.slider_prev') }}"><x-icons.arrow-left :width="16" :height="16" /></button>
-                                    <button class="slider-arrow" @click="scroll(1)" aria-label="{{ __('landing.nav.slider_next') }}"><x-icons.arrow-right :width="16" :height="16" /></button>
-                                </div>
-                            </div>
-                            {{-- ⚠️ **`tabindex="0"` y nombre accesible, y no es adorno**: una región que se DESPLAZA y no
-                                 recibe foco no se puede recorrer con el teclado (WCAG 2.1.1). Las flechas
-                                 no bastan: se esconden con puntero grueso, así que en una tablet con teclado
-                                 no quedaría ninguna vía. Es el mismo patrón que el carrusel de `/normas` ya
-                                 usaba antes de retirarse. --}}
-                            <div class="slider" x-ref="slider" data-zone="{{ $zone->slug }}" @scroll="update()"
-                                 tabindex="0" role="group"
-                                 aria-label="{{ __('landing.rides.eyebrow') }} · {{ $zone->tr('name') }}">
-                @foreach ($zone->attractions as $ride)
-                    <article class="ride-card{{ $ride->is_special ? ' ride-card--special' : '' }}{{ $complements->isPurchasable($ride) ? ' ride-card--sellable' : '' }}">
-                        <div class="ride-card__viz">
-                            @if ($ride->tr('badge'))
-                                <span class="tag tag--senal tag--punteada ride-card__badge">{{ $ride->tr('badge') }}</span>
-                            @endif
-                            @if ($ride->image)
-                                <img class="ride-card__img" src="{{ asset($ride->image) }}" alt="{{ $ride->tr('name') }}" loading="lazy">
-                            @else
-                                <span class="ride-card__placeholder">Foto — {{ \Illuminate\Support\Str::lower($ride->tr('name')) }}</span>
-                            @endif
-                        </div>
-                        <h3 class="ride-card__name">{{ $ride->tr('name') }}</h3>
-                        <span class="ride-card__age">{{ $ride->tr('age') }}</span>
-                        <p class="ride-card__desc">{{ $ride->tr('description') }}</p>
-                        {{-- Atracción de pago (#228): si su complemento es comprable en esta zona, precio
-                             + CTA «Comprar» que abre la cesta en Entradas, posicionada en esta zona. --}}
-                        @if ($complements->isPurchasable($ride))
-                            <div class="ride-card__buy">
-                                <div class="ride-card__price">@if ($ride->ticketType?->priceVaries())<span class="ride-card__from">{{ __('landing.pricing.from') }}</span>@endif{{ $ride->ticketType?->euros() }}<span class="cents">,{{ $ride->ticketType?->cents() }}</span><span class="eur">€</span></div>
-                                <button type="button" class="btn ride-card__cta" aria-label="{{ __('landing.rides.buy') }} · {{ $ride->tr('name') }}" @click="$store.purchase.openWith({ type: 'zone', slug: '{{ $zone->slug }}' })">{{ __('landing.rides.buy') }}</button>
-                            </div>
-                        @endif
-                    </article>
-                @endforeach
-                            </div>
-                            <div class="slider-progress">
-                                <div class="slider-progress__bar" :style="{ left: (progressLeft*100)+'%', width: (progressWidth*100)+'%' }"></div>
-                            </div>
-                        </div>
-                    @endif
-                </article>
-            @endforeach
+            {{-- EL PIE DEL CARRUSEL: progreso a la izquierda, flechas a la derecha.
+                 ⚠️ Las flechas estaban arriba, en una fila que compartían con las pestañas; ahí
+                 competían con el selector por la atención. Van con lo que gobiernan.
+                 ⚠️ Se ocultan con puntero grueso: en un teléfono el carril se recorre con el dedo y
+                 dos botones que repiten un gesto que ya existe son ruido. --}}
+            <div class="slider-foot">
+                <div class="slider-progress">
+                    <div class="slider-progress__bar" :style="{ left: (progressLeft*100)+'%', width: (progressWidth*100)+'%' }"></div>
+                </div>
+                <div class="slider-nav">
+                    <button class="slider-arrow" @click="scrollSlider(-1)" aria-label="{{ __('landing.nav.slider_prev') }}"><x-icons.arrow-left :width="16" :height="16" /></button>
+                    <button class="slider-arrow" @click="scrollSlider(1)" aria-label="{{ __('landing.nav.slider_next') }}"><x-icons.arrow-right :width="16" :height="16" /></button>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -344,8 +337,7 @@
     <section id="pricing" class="section wrap">
         <div class="rides__head">
             <div>
-                <div class="eyebrow" style="margin-bottom:16px">{{ __('landing.pricing.eyebrow') }}</div>
-                <h2 class="rides__title">{{ __('landing.pricing.title') }}<br /><em style="font-style:normal; color:var(--zone-1)">{{ __('landing.pricing.title_em') }}</em></h2>
+                <h2 class="rides__title">{{ __('landing.pricing.title') }}</h2>
             </div>
             <p>{{ __('landing.pricing.intro') }}</p>
         </div>
@@ -363,8 +355,7 @@
     <section id="info" class="section wrap">
         <div class="rides__head">
             <div>
-                <div class="eyebrow" style="margin-bottom:16px">{{ __('landing.info.eyebrow') }}</div>
-                <h2 class="rides__title">{{ __('landing.info.title') }} <em style="font-style:normal; color:var(--zone-1)">{{ __('landing.info.title_em') }}</em></h2>
+                <h2 class="rides__title">{{ __('landing.info.title') }}</h2>
             </div>
         </div>
         <div class="info__grid">
@@ -423,45 +414,33 @@
     </section>
 
     {{-- ===================== NORMAS ===================== --}}
-    {{-- **T1 del carril de idioma visual** (`specs/idioma-visual-heredado.md`, `[DECIDIDO owner]`:
-         «las normas irán sin imagen, solo será texto, un texto simple y un CTA a la página de
-         normas… en la landing, lo más importante»).
-
-         ▶ Aquí había un **pliego de doce pictogramas del cliente ANTIGUO** (`images/historia-
-         seguridad.png`) junto a un carrusel vertical con TODAS las normas. Dos formas de decir lo
-         mismo, una de ellas con arte de otro parque, y ninguna cabía en un teléfono.
-         ▶ Ahora: **tres normas** —las tres primeras del panel, que es quien las ordena— en texto
-         plano y numerado, y el CTA a `/normas`, que es donde están todas.
-
-         ⚠️ **El TOPE de tres se declara aquí y no en el panel**: el operador decide QUÉ normas hay
-         y en qué orden; cuántas caben en la portada es una decisión de diseño, no de contenido. --}}
+    {{-- ⚠️⚠️ **ESTA SECCIÓN VOLVIÓ A SU FORMA ANTERIOR** (`[DECIDIDO owner, 2026-08-31]`, `#300`):
+         la T1 del carril de idioma visual (`#292`) se revierte ENTERA a petición suya, con la
+         consecuencia delante —vuelve el pliego de doce pictogramas del cliente ANTIGUO y el
+         carrusel con todas las normas; se van las tres normas en texto, el CTA y la mancha—.
+         ▶ El diagnóstico del molde editorial NO se retira (`specs/idioma-visual-heredado.md`
+         §3.quinquies): la portada se rehará desde aquí, y ésta es la base común desde la que se
+         empieza a iterar. **No la des por buena: está pendiente de rediseño.** --}}
     <section class="section wrap">
-        <div class="rules-lite">
-            {{-- `B1·03` del kit: mancha «de lengüetas largas», que es la que su propia nota manda a
-                 **esquinas y bordes**. Es la PRIMERA ranura decorativa del producto (`slot-normas`)
-                 y nace con su consumidor en el mismo cambio, que es la regla del carril.
-                 ⚠️ Va fuera del bucle a propósito: una por PANTALLA, no una por norma. --}}
-            <x-site.ilu clave="slot-normas" class="rules-lite__mancha" />
-
-            <div class="rules-lite__head">
-                <div class="eyebrow">{{ __('landing.rules.eyebrow') }}</div>
-                <h2 class="rides__title">{{ __('landing.rules.title') }}<br /><em style="font-style:normal; color:var(--zone-1)">{{ __('landing.rules.title_em') }}</em></h2>
-                <p class="rules-lite__intro">{{ __('landing.rules.intro') }}</p>
+        <div class="rides__head">
+            <div>
+                <h2 class="rides__title">{{ __('landing.rules.title') }}</h2>
             </div>
-
-            <ol class="rules-lite__list">
-                @foreach ($rules->take(3) as $rule)
-                    <li class="rules-lite__item">
-                        <span class="rules-lite__num" aria-hidden="true">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
-                        <span class="rules-lite__name">{{ $rule->tr('name') }}</span>
-                        <span class="rules-lite__desc">{{ $rule->tr('description') }}</span>
-                    </li>
+        </div>
+        <div class="rules-layout">
+            <div class="rules-layout__media">
+                <img src="{{ asset('images/historia-seguridad.png') }}"
+                     alt="{{ __('landing.rules.title') }}" loading="lazy">
+            </div>
+            <div class="rules-vslider" tabindex="0" aria-label="{{ __('landing.rules.eyebrow') }}">
+                @foreach ($rules as $rule)
+                    <div class="rule">
+                        <div class="rule__icon">!</div>
+                        <span class="rule__name">{{ $rule->tr('name') }}</span>
+                        <span class="rule__desc">{{ $rule->tr('description') }}</span>
+                    </div>
                 @endforeach
-            </ol>
-
-            <a href="{{ route('normas') }}" class="btn btn--ghost rules-lite__cta" data-tap>
-                {{ __('landing.rules.cta') }} <x-icons.arrow-right class="arrow" :width="14" :height="14" />
-            </a>
+            </div>
         </div>
     </section>
 
@@ -490,8 +469,7 @@
     <section id="gallery" class="section wrap">
         <div class="rides__head">
             <div>
-                <div class="eyebrow" style="margin-bottom:16px">{{ __('landing.gallery.eyebrow') }}</div>
-                <h2 class="rides__title" style="font-size:clamp(48px, 6vw, 96px)">{{ __('landing.gallery.title') }} <em style="font-style:normal; color:var(--zone-1)">{{ __('landing.gallery.title_em') }}</em></h2>
+                <h2 class="rides__title" style="font-size:clamp(48px, 6vw, 96px)">{{ __('landing.gallery.title') }}</h2>
             </div>
             <p>{{ __('landing.gallery.intro') }}</p>
         </div>
@@ -501,7 +479,7 @@
              Bloqueo previo (#219): solo carga con consentimiento de la categoría «redes sociales»
              (transfiere datos a su proveedor); si no, la galería estática de polaroids. --}}
         <x-site.consent-frame category="social" :src="$site['social_feed']"
-            :title="__('landing.gallery.title').' '.__('landing.gallery.title_em')"
+            :title="__('landing.gallery.title')"
             wrapper-class="social-embed"
             frame-style="width:100%;border:0;border-radius:18px;min-height:480px"
             referrerpolicy="no-referrer" scrolling="no" allowtransparency="true">
@@ -524,8 +502,7 @@
     <section class="section wrap">
         <div class="faq">
             <div>
-                <div class="eyebrow" style="margin-bottom:16px">{{ __('landing.faq.eyebrow') }}</div>
-                <h2 class="rides__title" style="font-size:clamp(48px, 6vw, 96px)">{{ __('landing.faq.title') }}<br /><em style="font-style:normal; color:var(--zone-1)">{{ __('landing.faq.title_em') }}</em></h2>
+                <h2 class="rides__title" style="font-size:clamp(48px, 6vw, 96px)">{{ __('landing.faq.title') }}</h2>
             </div>
             <div class="faq__list">
                 @foreach ($faqs as $i => $faq)

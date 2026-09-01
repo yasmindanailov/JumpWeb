@@ -3,7 +3,7 @@
 return [
     'legal_eyebrow' => 'Legal information',
     'rules_eyebrow' => 'Rules',
-    'rules_title' => 'Park rules',
+    'rules_title' => 'Rules',
     'back_home' => '← Back to home',
     'legal_draft_notice' => 'Draft text, pending legal review.',
 

@@ -2,12 +2,20 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-09-01 — carril MIXTOS: T1→T5 en el árbol
-> (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL GUARDIÁN DE SOLAPES EN EL
-> ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** — siguen fuera por diseño la
-> fase 3 de §20.2, el AFORO (owner) y la ficha del fantasma de la señal en `DEUDA.md`; queda el
-> OJO del owner sobre T5+T6. Carril IDIOMA VISUAL: T1 normas
-> (`#292`), T2 cinta C3 (`#293`) y T3 zonas/atracciones (`#295`) en el árbol.**
+> aquí solo se enlaza.** Última actualización: **2026-09-01 — DOS carriles a la vez.
+> **MIXTOS**: T1→T5 en el árbol (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL
+> GUARDIÁN DE SOLAPES EN EL ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** —
+> siguen fuera por diseño la fase 3 de §20.2, el AFORO (owner) y la ficha del fantasma de la señal
+> en `DEUDA.md`; queda el OJO del owner sobre T5+T6.
+> **IDIOMA VISUAL / LANDING**: en el árbol la tanda A (etiquetas), la T2 (cinta C3, `#293`), **la
+> T4: zonas y juegos con UN solo selector (`#302`)** y **la T5: titular a una línea sin etiqueta +
+> tarjeta pegatina (`#303`) — la PRIMERA pieza del molde de `#297` ejecutada**; ⛔ **la T1 de normas
+> (`#292`) está REVERTIDA ENTERA (`#300`) y la T3 de zonas (`#295`) REVERTIDA EN SU ESTRUCTURA
+> (`#301`)**, las dos `[DECIDIDO owner]`. **La portada arranca con normas, horarios y zonas en su
+> forma heredada**: es la base común desde la que se va a rediseñar, no una forma aprobada. El
+> diagnóstico del molde (`#297`) sigue vivo. ❗ **De la T3 SÍ se conserva el arreglo de identidad**
+> (`slug`, no `accent`), con guarda propia. ▶ **Y los DATOS REALES de Play Jump Park ya están en la
+> BD local** (`#304`, **no versionados**: el volcado vive en el scratchpad de esa sesión).**
 > ❗ **SI ENTRAS NUEVO A MIXTOS: `specs/cumple-mixto.md` §18 (visión) → §21 (sello) → §22 (completo son
 > dos preguntas) → §23 (la T3) → §20 + §24 (la T4: el descuento espejo) → §25 (la T5: las
 > palabras) → **§26 (la T6: el guardián en el dominio)**. Diseño fino antes de código y preguntas
@@ -25,7 +33,10 @@
 > ═══════════ CARRIL 1 · RESERVAS MIXTAS (T1–T6 hechas: el plan de `#284`, COMPLETO) ═══════════
 > ❗❗❗ **2026-09-01 · T6 · EL GUARDIÁN DE SOLAPES EN EL DOMINIO, EN EL ÁRBOL** (`#299`,
 > `specs/cumple-mixto.md` **§26** diseño fino · **§26.5 ejecución**).
-> Suite **3704 en verde** (24.120 aserciones, 1 skipped a propósito) · **`audit-clock` verde en
+> Suite **3709 en verde** (24.037 aserciones, 1 skipped a propósito) — cifra del árbol CONJUNTO
+> tras rebasar el carril de la landing (`#300`→`#304`) encima; la de esta tanda sola era 3704 /
+> 24.120. ⚠️ **Las aserciones BAJAN aunque los tests suban**: el otro carril retiró guardas cuyo
+> sujeto desapareció. · **`audit-clock` verde en
 > las 12 fronteras al cierre** (incluida la del 05-09, la fecha que habría volteado los tests
 > viejos de `MePrivacyTest` que la D8 pasó a relativas) · **2/2 mutaciones muerden** (sin el hook de
 > `saving`: 4 rojos; sin el dirty-check: cae el solape preexistente) · el verificador mixto en
@@ -195,8 +206,30 @@
 > ⚠️⚠️ **Y dos trampas de instrumento**: la sonda contaba ítems ya invisibles (6 falsos en móvil), y
 > el cero solo vale con CONTROL — que en móvil **no muerde**, así que ahí el alto extra es aire.
 >
-> ▶ ✅ **T3 hecha — ZONAS Y ATRACCIONES UNIFICADAS** (`#295`): un bloque por zona con su carrusel
-> debajo, y **solo si tiene atracciones**. Se van una cabecera, el salto, el CTA y **una de las dos
+> ▶ ⛔ **T3 — ESTRUCTURA REVERTIDA por `#301`** (`[DECIDIDO owner]`: «deja la sección de zonas como
+> estaba antes, 2 cards y debajo la sección de juegos»). Vuelven `#zones` y `#rides` como DOS
+> secciones, con la barra de pestañas por zona, las flechas y la barra de progreso.
+> ❗❗❗ **PERO EL ARREGLO DE IDENTIDAD SE QUEDA, y es lo primero que hay que saber si tocas esto**:
+> la zona se identifica por **`slug`** y `accent` solo pone COLOR. Volver a la estructura **no
+> obliga a volver al defecto** — medido en Chrome tras revertir: **un solo carrusel abierto**, y
+> pulsar «Zona KIDS» abre exactamente uno.
+> ⚠️⚠️ **Y la lección de la jornada: un arreglo puede SOBREVIVIR a la guarda que lo protegía.** El
+> caso que lo cazaba vivía en `ZonesAndRidesUnifiedTest`, que vigilaba la estructura unificada: al
+> revertirla el fichero se fue entero y **el arreglo se quedó desnudo con la suite en verde**. Red
+> nueva: **`ZoneIdentityIsUniqueTest`** (3 casos · 3 mutaciones que muerden · una vigila lo
+> CONTRARIO, que la paleta siga saliendo de `accent`, para que nadie «termine el trabajo» moviendo
+> también el color y rompa el agrupador).
+> ⚠️ **Lo demás de la revisión adversarial se revierte CON SU SUJETO**: anillo de foco, tarjetas
+> inertes con `cursor:pointer`, encuadre 62 %→31 % y el `trim` por bytes eran defectos **de la
+> estructura unificada** y hoy no aplican.
+> ⚠️ **Un valor del primer cliente que NO vuelve**: `landing` arrancaba con `zone: 'jump'` (slug del
+> primer cliente en el producto). Nace vacía y la primera zona la dice el DOM.
+> ⚠️ **La portada pinta 4 tarjetas, no 2, y es DATO**: `cap` y `cap2` tienen `show_in_landing = 1`,
+> 0 atracciones, el mismo nombre y el mismo acento que `kids`. Huelen a restos de prueba; se quitan
+> **desde el panel**, no desde código.
+>
+> ▶ **Lo que la T3 hizo, como registro** (`#295`): un bloque por zona con su carrusel
+> debajo, y **solo si tiene atracciones**. Se iban una cabecera, el salto, el CTA y **una de las dos
 > barras de pestañas** de la portada.
 > ❗❗ **Destapó un defecto que NO era de presentación**: la identidad de la zona era `accent`, que
 > **agrupa y no identifica** — `cap` y `cap2` comparten el de `kids`—, así que **tres carruseles
@@ -216,7 +249,9 @@
 > sobrevivieron a la refutación** — sin ese paso habría «arreglado» tres cosas sanas.
 >
 > ❗❗❗ **POR DÓNDE SE RETOMA EL CARRIL DEL TEMA — LEE ESTO Y NADA MÁS** (`#297`, cierre del
-> 2026-08-31 noche). **La sesión terminó SIN código nuevo: todo lo que se construyó se REVIRTIÓ**
+> 2026-08-31 noche; ⚠️ **la base de partida la cambió `#300`, unos párrafos más abajo: la T1 está
+> REVERTIDA y la portada arranca con normas y horarios las dos en su forma heredada**).
+> **La sesión terminó SIN código nuevo: todo lo que se construyó se REVIRTIÓ**
 > (`[owner]`: «déjalo como estaba, no quiero ninguna de esas opciones, en el siguiente chat
 > iteraremos sobre cómo se hará»). El árbol está en el estado de `#295`.
 >
@@ -242,8 +277,191 @@
 > devuelve** (y **no se deduce de `weeklyRows()`**: su `is_today` se apaga cuando manda una
 > temporada o una fecha especial), y **«Parking gratis 2h» está en el código, no en el panel** —
 > `[DECIDIDO owner]`: se retira cuando se rehaga la sección.
-> ⚠️ **Presupuesto de dibujo de la portada**: tres colocaciones; hoy gasta **dos** (las poses de zona
-> y la mancha de `/normas`), **queda una libre**.
+> ⚠️ **Presupuesto de dibujo de la portada**: tres colocaciones; **hoy gasta UNA** (las poses de
+> zona) y **quedan DOS libres** — la mancha de normas se fue con la T1 en `#300`.
+>
+> ❗❗❗ **2026-09-01 · LOS DATOS REALES DE PLAY JUMP PARK, Y TRES CAMPOS QUE NO LEE NADIE**
+> (`#304`). **Sesión de DATOS dictados por el owner**, no de código de producto — salvo un defecto
+> del cajón que salió por el camino (abajo).
+>
+> ❗❗ **LOS DATOS VIVEN SOLO EN LA BD LOCAL Y NO VIAJAN EN EL COMMIT.** Este repo es el PRODUCTO sin
+> marca de cliente (`DECISIONES #1`): meter el catálogo real de un parque en un seeder lo clava
+> dentro de JumpWeb. ▶ **Si tu BD no los tiene, no está rota**: el volcado completo (17 productos con
+> precios, ventajas, mínimos, señal y tramos de edad) quedó en el scratchpad de esa sesión,
+> `pjp/catalogo.json`. La suite NO depende de esto —corre en SQLite en memoria, verificado—.
+>
+> ▶ **Qué hay configurado**: 5 entradas + 2 packs + 9 complementos · Kids 1h 8/10, 2h 12/15,
+> Ilimitada 18/— · Jump 1h 12/14, 2h 18/22 · packs 14,95/16,95 y 15,95/19,95, 120 min, 8–20 niños,
+> **señal 50 €** · zonas **Jump +8 años/+1,30 m** y **Kids 4–7 años/+1 m** · horario **L-V
+> 16:30-21:30, Sáb y Dom 11:00-21:30** · antelación mínima 1 día (entradas) y 4 (packs) · cupo **20
+> por franja** y **5 packs por franja**.
+> ⚠️ **`[DECIDIDO owner]`: el VIERNES es precio ESPECIAL** («es víspera de sábado»): el tramo pasó de
+> `[0,6]` a `[5,6,0]`. Verificada la rejilla de 7 días × 7 productos.
+> ⚠️ **Las zonas `cap` y `cap2` se BORRARON** (`[owner]`: «no existen»). La portada vuelve a DOS
+> pestañas.
+>
+> ❗❗❗ **LA LECCIÓN DE MÉTODO, Y ES LA QUE MÁS VALE: TRES CAMPOS PARECEN RELLENABLES Y NO LOS LEE
+> NADIE.** (1) **`description` de un COMPLEMENTO** —ni API, ni cajón, ni web: el contenido de los
+> menús se escribió ahí y no se veía; va en `features`—; (2) **`conditions`**, cero consumidores;
+> (3) **`badge` de un COMPLEMENTO**, que `AddonResolver` **DERIVA** (`included`/`free`) y el cajón
+> traduce como CLAVE, así que un texto libre saldría crudo. ⚠️ **En un producto el `badge` SÍ es
+> texto libre y sí se pinta**: la asimetría es el detalle que hay que saber.
+> ▶ *Antes de escribir en un campo, mide quién lo lee.*
+>
+> ⚠️⚠️ **Y UN PRECIO SE ESCRIBIÓ EN FILAS NUEVAS SIN QUE NADA FALLARA**: `prices.priceable_type` usa
+> el **alias de morph** (`ticket_type`), no la clase. Escribir `get_class()` creó 4 filas duplicadas
+> y dejó las viejas mandando — **la web habría seguido con el precio anterior y el cambio parecería
+> aplicado**. Se cazó comprobando el resultado **por el MODELO**, no por la consulta recién escrita.
+>
+> ⚠️⚠️ **«QUITARLO TODO» TUVO TRES EXCEPCIONES QUE LA INSTRUCCIÓN NO PODÍA CONOCER**: los dos
+> **portadores de dinero de fiestas mixtas** (`mixed_party.*_product_id`) no son catálogo y no se
+> tocan; `order_items.ticket_type_id` es **`ON DELETE CASCADE`**, así que retirar un producto se
+> lleva EN SILENCIO sus líneas y deja pedidos pagados sin contenido (por eso se limpiaron antes los
+> 26 pedidos de prueba, preguntando); y el catálogo se recreó **desde cero**. Cero huérfanos después.
+>
+> ❗ **TRES COSAS QUE EL OWNER PIDIÓ Y EL SISTEMA NO SABE HACER** (fichas en `DEUDA.md`):
+> **«mostrar sin vender» no existe para un complemento** (`addons()` filtra `is_sellable` **y**
+> `is_active` → apagarlo lo hace INVISIBLE; para una ATRACCIÓN sí existe) · el **máximo de
+> antelación es UNO GLOBAL**, no por producto (`[DECIDIDO owner]`: se queda en 6 meses) · el **tope
+> de packs es por FRANJA, no por DÍA** (`[DECIDIDO owner]`: 5 por franja).
+> ▶ **Y LA HORA EXTRA NO SE CONSTRUYE TODAVÍA** (`[owner]`: «hay que iterar cómo lo haremos para que
+> sea profesional»): **alarga la reserva a 180 min**, así que toca AFORO —hoy ningún complemento
+> mueve la duración— y son **CUATRO productos distintos** (4 € y 5 € en cumples, 5 € y 8 € en
+> entradas), uno por producto padre. Su ficha lista las cuatro preguntas a resolver antes de tocar
+> código.
+>
+> ⚠️ **Un defecto REAL del cajón, encontrado por el OWNER usándolo**: el botón «Más info» de cada
+> complemento **no tenía `@click`** y la lista de ventajas se pintaba **sin condición de estado** —
+> salía siempre abierta y el botón era decoración—. Arreglado y con guarda
+> (`DrawerDisclosureIsWiredTest`, 3 mutaciones). ⚠️ **Ninguna guarda podía verlo**: la de clases
+> pregunta si hay REGLA de CSS, y el contrato de árbol compara ESTRUCTURA — *nadie preguntaba si el
+> control hace lo que su rótulo promete*. ⚠️ **Y el comentario de `addon-chip.blade.php` AFIRMABA que
+> funcionaba** («el mismo patrón que el sidebar… + toggle Alpine»): la landing sí, el cajón nunca.
+> ⚠️⚠️ **La guarda nueva se cazó A SÍ MISMA** al citar el marcado roto en su propio comentario: caso
+> rojo con el producto sano. Ahora quita los comentarios antes de escanear. *Todo escáner de marcado
+> tiene que decidir a propósito qué hace con la prosa* — y le pasó lo mismo a `guard-bash.sh`, que
+> **bloqueó el `cat` de esta misma entrada** porque el texto nombraba una orden destructiva.
+>
+> ⚠️ **Sigue abierto y es del owner**: si los **combos son excluyentes entre sí** (hoy no lo son:
+> se pueden sumar los tres) y si los **calcetines** van solo en cumpleaños o en todo (hoy en las 5
+> entradas y los 2 packs, porque la web dice que son obligatorios para saltar).
+>
+> ❗❗❗ **2026-08-31 (noche) · EL TITULAR A UNA LÍNEA Y LA TARJETA COMO PEGATINA** (`#303`,
+> `[DECIDIDO owner]`, `specs/idioma-visual-heredado.md` §3.septies).
+> ▶ **PRIMERA PIEZA DEL MOLDE DE `#297` EJECUTADA**: fuera la etiqueta de toda vista pública y
+> titulares de UNA palabra **sin punto y en tinta** (**Dos zonas · Tarifas · Cumpleaños ·
+> Visítanos · Normas · En directo · Dudas**, ×3 idiomas).
+> ⚠️⚠️ **Elegido sobre DOS caminos MEDIDOS**: con el suelo del `clamp` en 48 px, a 390 px solo caben
+> ~10 caracteres («Tarifas claras.» pedía 40, «Un parque, dos zonas.» 29). O una palabra, o **bajar
+> el suelo** (el arreglo exacto de `#220`). Eligió una palabra **con la consecuencia delante**: son
+> casi los eyebrows que se retiran, lo cual resuelve del todo la redundancia medida (4 de 7).
+> ⚠️⚠️ **PUSE UN PUNTO EN COLOR —en los titulares y en las tarjetas— Y EL OWNER LO RETIRÓ.** Al
+> preguntarme por qué estaba salió lo que había que decir: **4 de los 7 titulares ya acababan en
+> punto y yo se lo añadí a los otros 3**, y el color fue invención mía para un efecto colateral de
+> mi propio cambio. ⚠️ Y la pegatina de la tarjeta cita `E1`, **que se titula «Botones»**: la tarjeta
+> es `E3` y pide otra cosa. *Extrapolación presentada como cita.* Sobreviven sombra y borde.
+> ⚠️⚠️ **Y la mancha se había CAÍDO sobre el párrafo** (11.016 px²): su `top` era un porcentaje de la
+> CABECERA, que encogió de 264 a 153 px al acortar los titulares. Anclada al bloque del TITULAR y
+> re-dimensionada (`-84%` · `min(22%,165px)`) → **0 px² sobre el párrafo**, 9.381 sobre el titular.
+> ⚠️⚠️ **El aire hero→sección: empezó como COMPENSACIÓN y acabó siendo DECISIÓN.** Nació en 32 px
+> medidos (lo que ocupaba la etiqueta) y **seguía viéndose corto con razón**: antes lo primero bajo
+> el hero era una etiqueta de 16 px y ahora es el titular, **71 px de tinta maciza** —mismo hueco,
+> mucha más presión visual—. `[DECIDIDO owner]` sobre tres opciones renderizadas: **`--hero-air:
+> 64px`** (160 escritorio · 128 móvil), solo en `.hero + .section`. **Ya no es «lo de la etiqueta»**.
+> ▶ **CTA en TODAS las tarjetas**: ⚠️ **no existe página de detalle de atracción** (verificado), así
+> que `[DECIDIDO owner]` lleva a **reservar la ZONA** —lo que ya hacía la comprable, y el parque
+> vende por zona—. La tarjeta pasa a **PEGATINA**: borde de tinta, sombra dura y punto de color, que
+> sale de su `E1`. ⚠️ **La sombra entra como ROL (`--shadow-float`), no como valor**.
+> ❗ **DOS titulares NO se tocan, y se dice en vez de «arreglarlos»**: el del cierre («VAMOS A /
+> SALTAR», coreografía medida de `#252` contra el alto de ventana → **excepción DECLARADA** en la
+> guarda, pendiente del owner) y **los nombres de servicio de `/servicios`, que los escribe el
+> panel** — *un titular data-driven no puede tener regla de longitud*.
+> ⚠️ **`.blink` de `/servicios` se apaga** (una palabra no tiene nada que destacar), pero **el
+> mecanismo NO es código muerto**: se le añade un caso que lo ejercita — antes solo estaba cubierta
+> la rama con acento.
+> ⚠️⚠️ **DOS TRAMPAS DE INSTRUMENTO, las dos con número creíble**: (1) **una captura de ELEMENTO más
+> alto que la ventana COSE los `fixed`** —enseñaba las flechas del carrusel, que miden **0×0 con
+> `display:none`** en ese mismo contexto—, se rehízo con captura de VENTANA; (2) un contador **por
+> subcadena** dio **115 tarjetas donde hay 23** (`class="ride-card` casa con `ride-card__viz`…).
+> ▶ Guarda nueva **`SectionHeadlineTest`** (sin etiqueta · sin `<br />`, con la excepción y su
+> comprobación de que sigue teniendo sujeto) y dos guardas re-apuntadas sin quedar más débiles.
+> **Verificación**: suite **3680 verde** · Pint ✓ (1051) · docs-check ✓ · build ✓ · **4/4 mutaciones
+> muerden** · Chrome real 1280 y 390 con puntero grueso, seis rutas: **cero titulares de sección en
+> dos líneas** salvo los dos declarados. **Queda el OJO del owner.**
+>
+> ❗❗❗ **2026-08-31 (noche) · ZONAS Y JUEGOS: FUERA EL SELECTOR DUPLICADO** (`#302`,
+> `[DECIDIDO owner]`, `specs/idioma-visual-heredado.md` §3.sexies).
+> ▶ **El diagnóstico es suyo y se pudo medir: había DOS selectores de zona en la misma página.** Las
+> tarjetas tenían un CTA que SALTABA a la sección de atracciones, donde una barra de pestañas hacía
+> la misma elección. El de arriba costaba **1.011 px en escritorio y 1.831 en móvil**.
+> ▶ **Queda UNA sección y UN selector**, y el toggle dice ahora quién es cada zona: **dibujo del kit
+> + nombre + EDAD**. Fuera las tarjetas y la tira de cifras; la tarjeta de atracción se queda en
+> **foto + título + tag**.
+> ⚠️⚠️ **Y queda UNA cabecera, que no se pidió pero lo exige lo que sí**: sobrevive la de ZONAS
+> porque su párrafo acaba en «Elige el tuyo», que es lo que hace el toggle de debajo.
+> ⚠️ **Las dos anclas sobreviven** (6 enlaces dependen), y `#rides` **envuelve selector + carriles**:
+> `applyZoneAccent()` tiñe ese contenedor, así que si solo envolviera el carrusel las pestañas
+> perderían el color de su zona.
+> ▶ **Fachada**: iconos de zona (**ya instalados**, y son IDENTIDAD, no decoración: por eso no chocan
+> con la regla de `#286`) + **UNA mancha** `B1·02` en ranura nueva `slot-zonas`, elegida **midiendo
+> las seis** (la más ancha de las libres, 1,19) y colocada **midiendo** (`top: -20%` → **0 px² sobre
+> el párrafo**, 32.162 detrás del titular). **Nada por tarjeta**: el CSS ya lleva la lápida del
+> intento rechazado por ruido.
+> ▶ **Carrusel a nuestro estilo**: la siguiente tarjeta **cortada por el borde** (la afordancia
+> medida en `cajon-en-movil` §5.2 — antes cabían 3 EXACTAS y parecía una rejilla), flechas al pie con
+> `--shadow-nav-*` y ocultas con puntero grueso.
+> ⚠️ **Dos defectos PREEXISTENTES arreglados**: `.ride-card` tenía `cursor:pointer` **siendo un
+> `<article>` sin enlace**, y `landing` arrancaba con `zone: 'jump'` —el slug del primer cliente
+> escrito en el producto—.
+> ⚠️⚠️ **Se fue MUCHO con su sujeto**: 55 reglas y 288 líneas de CSS **con sus `@media`** (la trampa
+> de `#295`), `<x-site.zone-metrics>`, `goToRides()`, **7 claves × 3 idiomas** y 4 variables de vista.
+> ⚠️⚠️ **Y SIETE guardas se quedaron sin sujeto**: dos se re-apuntan (**más fuertes**), dos listas
+> encogen y tres se retiran con lápida. ❗ **Guarda NUEVA que faltaba desde `#257`**:
+> `test_every_declared_slot_is_painted_by_a_screen` — «una ranura vive lo que vive su consumidor»
+> estaba escrito en tres sitios y **no lo imponía nadie**.
+> ⚠️⚠️ **Una mutación NO mordió por el fallo de siempre: el caso nació SIN SUJETO** (en la BD de test
+> `accent == slug` para jump y kids). Rehecho con zona gemela; y destapó que **dependía del kit REAL,
+> que está gitignorado** — habría pasado aquí y fallado en un clon limpio.
+> ❗ **LO QUE CUESTA**: se pierden las 2 fotos de zona, los 2 subtítulos y las métricas por zona, y
+> **`zones.image` se queda sin consumidor** (ficha en `DEUDA.md`, con tres salidas y es del owner).
+> ⚠️ La portada pinta **4** pestañas y no 2 porque `cap`/`cap2` están marcadas para la landing: es
+> DATO, se quita desde el panel.
+> **Verificación**: suite **3675 verde** · Pint ✓ (1050) · docs-check ✓ · build ✓ · `kit:build`
+> servible con **4 símbolos** · **6/6 mutaciones muerden** · Chrome real 1280 y 390 **con puntero
+> grueso emulado**: sección **2.779 → 1.452** (escritorio) y **3.531 → 1.130** (móvil), tarjeta
+> **380×497 → 475×713**, mancha 0 px² sobre párrafo, 0 errores de consola, 0 desborde, ningún control
+> < 44 px. **Capturas en `/root/e2e/zonas-capturas/`. Queda el OJO del owner.**
+> ⚠️ **Dos lecturas de la sonda fueron ARTEFACTOS**: flechas «visibles» en móvil (headless reporta
+> `pointer: fine` sin `hasTouch`/`isMobile`) y un «lado menor 0 px» que era medir flechas OCULTAS.
+> ⚠️⚠️ **TERCERA colisión de numeración de la jornada**: el otro agente publicó `#298` mientras se
+> trabajaba, y las tres entradas de este carril se renumeraron a `#300`/`#301`/`#302` (41 referencias
+> en 17 ficheros). **Mirar el remoto otra vez antes de empujar.**
+>
+> ❗❗❗ **2026-08-31 (noche) · LA T1 SE REVIERTE ENTERA — LA PORTADA VUELVE A SU BASE COMÚN**
+> (`#300`, `[DECIDIDO owner]`, elegido **con la consecuencia delante**: se le enseñaron las tres
+> opciones renderizadas y se le dijo que revertir devuelve arte de otro parque).
+> ▶ La sección de normas vuelve a `.rules-layout` + `.rules-vslider`: el pliego de doce pictogramas
+> del cliente ANTIGUO y **todas** las normas. Se van las tres en texto, el CTA y la mancha;
+> `IllustrationKit::SLOTS` queda **vacía** (3.ª vez) y el kit baja de 4 a **3 símbolos**.
+> ▶ **Y horarios/ubicación NO se tocó porque ya estaba como estaba, y se MIDIÓ antes de creerlo**:
+> byte a byte idéntica a antes del carril, sin restos del `?forma=a|b|c` de `#297`. *Cuando alguien
+> pide deshacer algo, lo primero es comprobar si ya está deshecho.*
+> ⚠️⚠️ **Esto NO retira el diagnóstico ni su `[DECIDIDO owner]`**: el molde se sigue rompiendo. Lo
+> que hizo el owner fue poner las dos secciones tocadas en el MISMO punto de partida para rediseñar
+> desde ahí, en vez de encima de una forma a medias que no había aprobado. **La sección de normas de
+> hoy no es una forma aprobada** — es material heredado, y así está anotado en la vista y en las dos
+> hojas de estilo para que el siguiente agente no lea el commit al revés.
+> ⚠️ **La otra mitad de `#292` NO se revirtió**: la retirada del registro fino de badges
+> (`.tag--dato`) es decisión independiente y sigue en pie —venía de `Landing PJP Modos`, que el
+> owner desautorizó como fuente salvo para las reseñas—. `#292` mezclaba tres cosas en un commit.
+> ⚠️ **`client-kit.svg` está GITIGNORADO**: la reconstrucción sin `slot-normas` **no viaja en el
+> commit**, así que quien despliegue o clone tiene que rehacer el kit.
+> ⚠️ **Se retira el caso que fijaba el tope de tres** y el otro vuelve a su contrato original: la
+> suite baja de 3679 a **3678** y es correcto. *Una guarda de un contrato retirado no protege nada.*
+> **Verificación**: suite **3678 verde** (23.999 aserciones, 1 skipped) · Pint ✓ (1049) · docs-check
+> ✓ · `kit:build --check` servible con 3 símbolos · y comprobado **en la página servida**, no solo en
+> verde: `rules-layout` + `historia-seguridad.png` presentes, **5 normas**, `rules-lite`/`slot-normas`
+> /el CTA ausentes.
 >
 > ❗❗❗ **`Landing PJP Modos` YA NO GUÍA LA ESTRUCTURA DE LA LANDING** (`#292`, `[owner]`: «de esa
 > maqueta solo sacaremos la sección de reseñas»). ▶ **Corrige a `tema-por-instalacion.md` §1**: aquel
@@ -253,11 +471,12 @@
 > y se retiró — `[DECIDIDO owner]` «todo al registro del mural». Una sola voz.
 > ▶ ⛔ **El BAR / zona de Ocio NO entra** (`[DECIDIDO owner]`): era lo único que tocaba el modelo de
 > datos. **Zonas y atracciones sí se unifican**, que es presentación.
-> ▶ ✅ **T1 hecha — las normas de la portada**: fuera el pliego de pictogramas del cliente antiguo y
-> el carrusel con todas; quedan **tres** normas en texto y el CTA a `/normas`. El tope de tres se
-> declara en la VISTA, no en el panel, y hay guarda con mutación.
-> ▶ ✅ **Y con ella la PRIMERA ranura decorativa** (`slot-normas`, mancha `B1·03`). **Presupuesto
-> declarado: una pieza de dibujo por sección y la portada entera no pasa de TRES** — hoy gasta dos.
+> ▶ ⛔ **T1 — REVERTIDA ENTERA por `#300`** (`[DECIDIDO owner]`). Lo que hizo y ya NO está: fuera el
+> pliego de pictogramas del cliente antiguo y el carrusel con todas; quedaban **tres** normas en
+> texto y el CTA a `/normas`, con el tope declarado en la VISTA y guarda con mutación. **Hoy la
+> sección está otra vez como el cliente antiguo la dejó**, a la espera del rediseño del molde.
+> ▶ ⛔ **Y con ella se fue la PRIMERA ranura decorativa** (`slot-normas`, mancha `B1·03`).
+> **Presupuesto: una pieza por sección y la portada no pasa de TRES** — hoy gasta **UNA**.
 > ⚠️⚠️ **Dónde va la mancha lo decidió MEDIR**: el primer sitio caía sobre un párrafo (13.755 px²) y
 > bajarla no servía porque *ahí no había hueco* — la columna estaba llena. *Cuando mover una pieza no
 > cambia el número, el problema no es la posición.*

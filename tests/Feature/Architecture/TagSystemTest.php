@@ -37,8 +37,10 @@ class TagSystemTest extends TestCase
      * @var array<string, list<string>>
      */
     private const CONSUMERS = [
-        '.zone-photo-card__tag' => ['tag', 'tag--senal', 'tag--punteada'],
-        '.zone-intro__tag' => ['tag', 'tag--senal', 'tag--punteada'],
+        // ⚠️ Aquí estaban `.zone-photo-card__tag` y `.zone-intro__tag`, la etiqueta de edad de las
+        // tarjetas de zona. **Se van con su sujeto** (`#302`): las tarjetas se retiraron y la EDAD
+        // subió al selector, donde no es una etiqueta sino un dato de la pestaña (`.zone-pick__age`,
+        // en el registro mono). El sistema de etiquetas sigue con sus otros consumidores.
         '.ride-card__badge' => ['tag', 'tag--senal', 'tag--punteada'],
         '.price__badge' => ['tag', 'tag--senal', 'tag--tinta'],
         '.price__special-chip' => ['tag', 'tag--senal', 'tag--punteada'],

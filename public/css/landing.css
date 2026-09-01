@@ -335,6 +335,19 @@
   --fs-20: calc(var(--fs-unit) * 20);
   --fs-22: calc(var(--fs-unit) * 22);
 
+  /* **EL AIRE DE LA PRIMERA SECCIÓN BAJO EL HERO.**
+     ⚠️⚠️ **Empezó siendo una compensación y acabó siendo una decisión, y conviene saber cuál es
+     cuál.** Nació en **32 px**, que es exactamente lo que ocupaba la etiqueta retirada en `#303`
+     (16 de alto + 16 de margen, medido); con eso el hueco volvía al que había: 128 px en escritorio.
+     ▶ **Pero el owner siguió viéndolo corto, y tenía razón aunque el número fuera el mismo**: antes
+     lo primero bajo el hero era una etiqueta de 16 px —ligera—, y ahora es el titular, **71 px de
+     tinta maciza**. Mismo hueco geométrico, mucha más presión visual.
+     `[DECIDIDO owner]` sobre tres opciones renderizadas (131 · 163 · 195 px de tinta a tinta): **64
+     px**, o sea 163 en escritorio y 128 en móvil.
+     ⚠️ Ya NO es «lo que ocupaba la etiqueta»: es aire decidido. Si alguien lo baja a 32 buscando el
+     número «correcto», estará deshaciendo una decisión. */
+  --hero-air: 64px;
+
   --sp-unit: 1px;
   --sp-1: calc(var(--sp-unit) * 1);
   --sp-2: calc(var(--sp-unit) * 2);
@@ -468,6 +481,22 @@ img { display: block; max-width: 100%; }
 .wrap { width: min(var(--col-max), 100% - var(--col-gutter) * 2); margin-inline: auto; }
 .section { padding: 96px 0; position: relative; }
 .section + .section { border-top: 1px solid var(--line); }
+
+/* ⚠️⚠️ **EL AIRE QUE PERDIÓ LA PRIMERA SECCIÓN AL RETIRAR LA ETIQUETA** (`[DECIDIDO owner]`: «añade
+   espacio entre el hero y la primera sección, el mismo que había antes»).
+
+   ▶ **Son 32 px y están MEDIDOS, no elegidos**: la etiqueta que se retiró en `#303` ocupaba
+   exactamente **16 px de alto + 16 de margen inferior**, verificado en navegador a 1280 y a 390
+   —el mismo número en los dos, porque ni la talla ni el margen de la etiqueta eran adaptables—.
+   Sin ella, el titular subía esos 32 px y el hero quedaba pegado a la sección.
+
+   ⚠️ **Solo a la primera sección, no a todas.** El ritmo entre secciones no cambió: lo que cambió
+   es lo que hay ARRIBA de la primera. Subir el `padding` de `.section` habría separado también las
+   otras seis, que es un cambio que nadie pidió.
+   ⚠️ **El selector cuelga del HERO** (`.hero + .section`), así que la corrección solo existe en las
+   páginas que tienen hero — que son las que tenían el problema. Una página sin hero no gana aire de
+   la nada. */
+.hero + .section { padding-top: calc(96px + var(--hero-air)); }
 
 /* ---------- nav ---------- */
 /* **LA BARRA SE DISUELVE EN DOS RACIMOS** (armazón · tanda 2c·2).
@@ -1023,105 +1052,55 @@ img { display: block; max-width: 100%; }
   flex-shrink: 0;
   vertical-align: middle;
 }
-/* ⚠️⚠️ **AQUÍ VIVÍAN LAS SEIS VARIANTES DE `.jj-block` Y SE RETIRARON**
-   (`[DECIDIDO owner, 2026-08-31]`: «fuera, y separo como él»). El cuadrado «foam» es del cliente
-   ANTIGUO —**sus iniciales están en el nombre de la clase**— y de las seis solo se usaba una, el
-   separador de las cifras de zonas; las otras cinco llevaban tiempo sin pintar nada. Su artboard no
-   tiene ese motivo: separa con TIRA (`C2`), y ése es hoy el separador.
-   ⚠️ **La regla base sobrevive y no es un descuido**: la usa `BookingProgress.vue` dentro del cajón
-   (`.bk-context .jj-block`), y el SPA es otra tanda —el owner lo separó a propósito—. El nombre se
-   va con ella; renombrarlo ahora tocaría el contrato de ÁRBOL del cajón. */
 
-/* El separador entre cifras: un tramo corto de la punteada de `C2`, en pseudo-elemento.
-   ⚠️ `flex: none` es imprescindible: dentro de un contenedor flex un pseudo con `width` fija se
-   encoge igual si se le deja. */
-.zone-stats__item + .zone-stats__item::before {
-  content: ""; flex: none; align-self: center;
-  width: 48px; height: 10px; margin-inline: 4px;
-  background-image: var(--dots-tile); background-size: 16px 10px;
-}
-
-/* ══ NORMAS EN LA PORTADA · texto simple y un CTA (T1 del idioma visual) ═══════════════════════
-   `[DECIDIDO owner]`: sin imagen, lo más importante y de ahí a `/normas`.
-   ⚠️ **Escrito de móvil hacia arriba**, que es el orden que el owner pidió («que sea perfecto en
-   móvil, que es lo más importante»): la regla base es la del teléfono y el escritorio es la
-   excepción. Al revés, el teléfono acaba siendo lo que sobra de una rejilla pensada para 1280. */
-.rules-lite {
-  position: relative; isolation: isolate;
-  display: flex; flex-direction: column; gap: 32px;
-}
-.rules-lite__intro {
-  margin: 18px 0 0; max-width: 46ch;
-  color: var(--fg-mute); font-size: 17px; line-height: 1.6;
-}
-
-/* La lista: numeración propia, sin viñetas del navegador. Aire entre normas, que es el encargo. */
-.rules-lite__list {
-  list-style: none; margin: 0; padding: 0;
-  display: flex; flex-direction: column; gap: 28px;
-}
-.rules-lite__item {
-  display: grid; gap: 4px 16px;
-  grid-template-columns: auto 1fr;
-  grid-template-areas: "num nombre" ".   desc";
-  padding-top: 22px; border-top: 1px solid var(--line);
-}
-.rules-lite__num {
-  grid-area: num;
-  font-family: var(--font-mono); font-size: 13px; color: var(--fg-mute);
-  letter-spacing: 0.08em; line-height: 1.5;
-}
-.rules-lite__name {
-  grid-area: nombre;
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(21px, 3.4vw, 27px); line-height: 1.1; letter-spacing: -0.02em;
-}
-.rules-lite__desc { grid-area: desc; color: var(--fg-mute); font-size: 16px; line-height: 1.6; max-width: 58ch; }
-.rules-lite__cta { align-self: flex-start; }
-
-/* La mancha del kit. ⚠️ Sin paquete el componente no emite nada y aquí no queda hueco: la sección
-   es un flex en columna y la pieza va ABSOLUTA, así que no reserva sitio.
-   ⚠️ `z-index: -1` con `isolation: isolate` en el contenedor — el patrón de `#286`: dentro de un
-   contexto de apilamiento propio pinta encima del fondo y debajo del contenido, sin tocar a nadie. */
-.rules-lite__mancha {
-  position: absolute; z-index: -1; pointer-events: none;
-  right: -6%; top: -4%; width: min(52%, 300px); height: auto;
-  --ilu-fg: var(--zone-1);
-  opacity: 0.14;
-}
-
-@media (min-width: 900px) {
-  /* Escritorio: el texto a la izquierda y la lista a la derecha, con la columna del sitio. */
-  .rules-lite {
-    display: grid; gap: 56px 72px;
-    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-    align-items: start;
-  }
-  .rules-lite__head { grid-column: 1; grid-row: 1 / span 2; }
-  .rules-lite__list { grid-column: 2; grid-row: 1; }
-  /* ⚠️ `justify-self: start` y no `align-self`: dentro de una rejilla el botón se ESTIRA a toda la
-     columna si no se le dice lo contrario, y `align-self` solo manda en el otro eje. Se vio en la
-     captura: un CTA de 640 px de ancho para tres palabras. */
-  .rules-lite__cta  { grid-column: 2; grid-row: 2; justify-self: start; margin-top: -20px; }
-  /* ⚠️⚠️ **En escritorio la mancha cambia de sitio, y el sitio lo decidió MEDIR, no mirar.**
-     Arriba a la derecha caía sobre el párrafo de la primera norma (**13.755 px²**, medido), y su
-     regla 02 lo prohíbe: «la pintura nunca va debajo de un párrafo».
-     ▶ **Y bajarla no servía**: la columna izquierda está LLENA —el párrafo de entrada acaba a solo
-     107 px del final de la sección—, así que ningún desplazamiento hacia abajo despeja nada. El
-     barrido lo enseñó: cinco posiciones y el solape apenas se movía. *Cuando mover una pieza no
-     cambia el número, el problema no es la posición: es que ahí no hay hueco.*
-     ▶ El hueco real está **detrás del titular**, que es tinta maciza y no un párrafo — y es
-     literalmente lo que describe su `B3`: «la mancha detrás de la primera palabra». Medido en esta
-     posición: **0 px² bajo párrafo**, y asoma 41 px por arriba y 24 por la izquierda, que es lo que
-     su nota pide para esta familia («recortada por el borde de la tarjeta»). */
-  .rules-lite__mancha { right: auto; bottom: auto; left: -4%; top: -12%; width: min(30%, 265px); }
-}
+/* ⚠️⚠️ **AQUÍ VIVÍA `.rules-lite` —LA T1 DEL IDIOMA VISUAL— Y SE RETIRÓ ENTERA** (`#300`,
+   `[DECIDIDO owner, 2026-08-31]`, elegido con la consecuencia delante). Eran tres normas en texto
+   numerado, un CTA a `/normas` y la mancha `B1·03` del kit en `slot-normas`.
+   ▶ La portada vuelve a `.rules-layout` + `.rules-vslider`, que están en `site.css`.
+   ⚠️ **Esto NO retira el diagnóstico del molde editorial** (`specs/idioma-visual-heredado.md`
+   §3.quinquies): la sección queda pendiente de rediseño, y ésta es la base desde la que se itera. */
 
 /* ---------- zones intro ---------- */
+/* ⚠️ `position: relative` + `isolation: isolate` para la mancha `slot-zonas`: crea un contexto de
+   apilamiento propio, así que un `z-index: -1` pinta encima del fondo y DEBAJO del texto sin
+   tocar a nadie más. Es el patrón de `#286`. */
 .zones__head {
   display: flex; flex-direction: column;
-  gap: 20px; margin-bottom: 56px;
+  gap: 20px; margin-bottom: 40px;
   max-width: 920px;
+}
+
+/* **LA MANCHA, DETRÁS DE LA PRIMERA PALABRA** — no detrás del bloque, que es lo que manda su propia
+   nota (`B1`, artboard «Elementos Fachada»): «la mancha detrás de la primera palabra, nunca detrás
+   de todo el bloque».
+   ⚠️ Va ABSOLUTA: sin paquete el componente no emite nada, y una pieza que reservara sitio dejaría
+   un hueco en la cabecera cuando la instalación no trae kit.
+   ⚠️ La opacidad es la misma que ya se midió para este material (0,14): por encima compite con el
+   titular, y el titular es tinta maciza. */
+/* El bloque del titular es el contexto de la mancha: `position` para que el `top` se resuelva
+   contra ÉL, e `isolation` para que el `z-index: -1` no se escape a la página. */
+.zones__titulo { position: relative; isolation: isolate; }
+
+/* ⚠️⚠️ **EL `top` ES UN PORCENTAJE DEL BLOQUE DEL TITULAR, NO DE LA CABECERA, y ese cambio es el
+   arreglo de un defecto REAL.** Estuvo colgando de `.zones__head`: al acortar los titulares
+   (`#303`) la cabecera pasó de **264 a 153 px**, el mismo `-20%` valió la mitad y la mancha cayó
+   **11.016 px² encima del párrafo** —justo lo que su nota prohíbe—. Anclada al titular, que la
+   guarda mantiene en UNA línea, su sitio ya no depende de cuánto texto tenga la sección.
+
+   ⚠️ **Y lo que había que cambiar era el TAMAÑO, no la posición.** Con 250 px de mancha sobre un
+   titular de 79, mover el `top` no cambiaba el número: la pieza se tragaba el párrafo entera
+   estuviera donde estuviera. Barrido de seis combinaciones → **`-84%` con `min(22%, 165px)`** es la
+   que más titular cubre (9.381 px² en escritorio, 2.512 en móvil) **con 0 px² sobre el párrafo** en
+   los dos anchos. Asoma 66 px por encima del titular, y ahí hay 128 px de aire de sección.
+
+   ⚠️ Va ABSOLUTA y con `z-index: -1` dentro de un contexto de apilamiento propio (el patrón de
+   `#286`): sin paquete el componente no emite nada y aquí no puede quedar hueco reservado. */
+.zones__mancha {
+  position: absolute; z-index: -1; pointer-events: none;
+  left: -5%; top: -84%;
+  width: min(22%, 165px); height: auto;
+  --ilu-fg: var(--zone-1);
+  opacity: 0.14;
 }
 .zones__title {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
@@ -1134,230 +1113,75 @@ img { display: block; max-width: 100%; }
   color: var(--fg-mute); max-width: 56ch;
   margin: 0;
 }
-
-/* totals strip — subtle, between head and zone cards */
-.zone-stats {
-  display: flex; align-items: center; gap: 28px;
-  padding: 22px 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 48px;
-  flex-wrap: wrap;
-}
-.zone-stats__item {
-  display: flex; align-items: baseline; gap: 14px;
-}
-.zone-stats__num {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: 38px; letter-spacing: -0.025em; line-height: 1;
-  color: var(--fg);
-}
-.zone-stats__label {
-  font-family: var(--font-body); font-size: 11px;
-  text-transform: uppercase; letter-spacing: 0.16em;
-  color: var(--fg-mute);
-}
-
-/* ══ ZONAS Y ATRACCIONES, UNIFICADAS ═══════════════════════════════════════════════════════════
-   Cada zona es un BLOQUE: su tarjeta y, debajo, sus atracciones. Antes eran dos secciones con dos
-   cabeceras y una barra de pestañas para saltar de una a otra.
-   ⚠️ **Escrito de móvil hacia arriba**: en el teléfono los bloques se apilan y la tarjeta ocupa el
-   ancho; el emparejado de dos columnas es la EXCEPCIÓN de escritorio, no al revés. */
-.zones-list { display: flex; flex-direction: column; gap: 56px; }
-.zone-block { display: flex; flex-direction: column; gap: 22px; }
-
-/* La cabecera del carrusel: de quién son estas atracciones, y las flechas. */
-.zone-block__rides { display: flex; flex-direction: column; gap: 14px; }
-.zone-block__rides-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-}
-/* ⚠️ Las flechas se ESCONDEN en el teléfono y no es un descuido: ahí el carrusel se recorre con el
-   dedo, y dos botones que repiten un gesto que ya existe son ruido. Vuelven con el puntero fino. */
-.zone-block__rides-head .slider-nav { display: none; }
-@media (pointer: fine) {
-  .zone-block__rides-head .slider-nav { display: flex; }
-}
-
-/* ⚠️ Aquí estaba `.zone-intro`, la rejilla de dos columnas que emparejaba las tarjetas de zona.
-   Con las atracciones DEBAJO de cada zona el emparejado ya no tiene sentido: cada bloque ocupa su
-   fila. La familia `.zone-intro__*` sigue viva —es la tarjeta sin foto—, solo se va el envoltorio. */
-.zone-intro__card {
-  position: relative; overflow: hidden;
-  border-radius: var(--r-lg);
-  padding: 36px 32px 32px;
-  min-height: 400px;
-  display: flex; flex-direction: column; justify-content: space-between;
-  border: 1px solid var(--line);
-}
-/* ⚠️⚠️ **AQUÍ VIVÍAN `cursor: pointer` Y EL LEVANTAMIENTO AL HOVER, Y SE RETIRARON.** La tarjeta
-   era un `<a href="#rides">` que saltaba a la sección de atracciones; con las atracciones DEBAJO
-   de su propia zona volvió a ser un `<div>` inerte, y el CSS se quedó vistiéndola de enlace:
-   salía la manita, la tarjeta se levantaba 6 px, y al pulsar no pasaba nada.
-   ▶ *Una afordancia que sobrevive a su consumidor promete una interacción que ya no existe.* */
-/* El color de la zona llega INLINE desde el servidor (`--zone-1`/`--on-brand`, `DECISIONES #138`).
-   Antes había una regla por acento y solo existían para `jump` y `kids`: una zona con cualquier otro
-   acento se quedaba sin color, y dos zonas con el MISMO acento y distinto color divergían según la
-   superficie (la tarjeta usaba el suyo y la pestaña el de la primera zona de ese acento). */
-.zone-intro__card { background: var(--zone-1); color: var(--on-brand); }
-
-/* ── LA ILUSTRACIÓN DE LA ZONA (`specs/hueco-ilustracion.md`) ────────────────────────────────
-   El dibujo lo trae la instalación en `client-kit.svg` con la clave `zone-<slug>`; **sin paquete
-   no se emite nada** y la tarjeta queda exactamente como estaba.
-   ⚠️ `--ilu-fg` en `--on-brand` y no en `--paper-fg`: esta tarjeta es una superficie del color de
-   la zona, no papel — el mismo motivo por el que su texto ya lee `--on-brand`.
-   ⚠️ La opacidad **no es un número inventado**: es la de `--deco-blob-a` en el menú (`#228`), que
-   es la marca decorativa que este producto ya usa sobre una superficie grande.
-   ⚠️ Va DEBAJO del contenido —que se sube con `z-index: 1`— y encima del nombre gigante del fondo. */
-.zone-intro__card { --ilu-fg: var(--on-brand); }
-
-/* Y la MISMA colocación en la variante con foto, que es la que usan las zonas reales.
-   ⚠️ «Apoyada en el borde» es suyo y es literal: `bottom: 0`, sin margen. El cuerpo de la tarjeta
-   va sobre el color de zona, así que `--ilu-fg` es `--on-brand` igual que su texto. */
-.zone-photo-card { --ilu-fg: var(--on-brand); }
 /* ⚠️⚠️ **`isolation: isolate` + `z-index: -1`, y NO «subir el contenido con `position: relative`».**
-   Esa fue la primera solución y ROMPIÓ cosas: `> :not(.ilu) { position: relative }` es un martillo
-   que pisa a cualquier hijo colocado a propósito. Medido, se llevó por delante **dos**: la insignia
-   «TOP» de la tarjeta de precio —que es `absolute` en su esquina y, al volverse `relative`, pasó a
-   ser un hijo de flex y **se estiró a todo el ancho**— y el CTA de la tarjeta de zona con foto.
-   ▶ Dentro de un contexto de apilamiento, un hijo con `z-index: -1` pinta **encima del fondo del
-   padre y debajo de su contenido**, que es exactamente lo que hace falta — y **sin tocar a nadie**.
-   Verificado en navegador con los tres casos al lado: sin nada, con el martillo y con esto. */
-.zone-photo-card { isolation: isolate; }
-/* `B6` · LA MANCHA DE ESQUINA de la tarjeta de atracción.
-   ⚠️ «Recortada por el borde» es literal: sobresale y la corta el `overflow` de la tarjeta. Por eso
-   va con coordenadas negativas y no con un margen.
-   ⚠️ Lee `--zone-1` —el color de la ZONA— porque su nota dice que la mancha «marca la categoría por
-   color»: el dibujo es el mismo en las 23 tarjetas y lo que cambia es el color, que es justo lo que
-   evita tener que poner una etiqueta. */
-/* ⚠️ `.ride-card` ya trae `position: relative` y `overflow: hidden` de su propia regla: aquí solo
-   hace falta subir el contenido por encima de la mancha. */
-/* ⚠️⚠️ **AQUÍ HUBO UNA MANCHA POR TARJETA DE PRECIO Y SE RETIRÓ**
-   (`[DECIDIDO owner, 2026-08-31]`: «no me convence, demasiado ruido con varias tarjetas»).
+   Esa fue la primera solución y ROMPIÓ cosas: `> :not(.ilu) { position: relative }
 
-   ▶ **La lección, que vale para todo lo que venga**: el material de este cliente es SATURADO, y
-   repetirlo en un componente que se repite lo convierte en ruido. Es la misma queja que ya provocó
-   pasar de cuatro tiras de marca a dos. **La decoración va en la PANTALLA, no en el componente que
-   se repite** — y su propio artboard lo dice dos veces sin que nadie se lo pidiera: los rayos «uno
-   por página» y la mancha del precio «máximo una por pantalla».
+/* El bloque de juegos: el selector, los carriles y su pie. Lleva el ancla `#rides` y es lo que
+   `applyZoneAccent()` tiñe con la paleta de la zona activa — por eso envuelve TAMBIÉN al selector,
+   que sin ello perdería el color de su zona. */
+.zones__juegos { display: flex; flex-direction: column; }
 
-   ⚠️ Lo que SÍ se queda son las poses de las tarjetas de zona: son dos, no cuatro, y van al 17 % en
-   la tinta de su propia superficie, no a color pleno. La diferencia no es solo cuántas: es cuánto
-   pesa cada una.
+/* ══ EL SELECTOR DE ZONA · antes era una fila de palabras ══════════════════════════════════════
+   `[DECIDIDO owner, 2026-08-31]` (`#302`): las tarjetas de zona se retiran y **el selector pasa a
+   decir quién es cada zona** — su dibujo del kit, su nombre y su edad—.
 
-   ▶ La ranura `slot-mancha-esquina` y su dibujo siguen en el kit, construidos y validados. Lo que
-   falta es un sitio donde haya UNA, no cuatro. */
+   ⚠️⚠️ **Clases PROPIAS y no un modificador de `.zone-tab`, y el motivo es medible.** Aquellas son
+   una cápsula de píldoras que comparten `/precios` y `/servicios`: reutilizarlas aquí obligaba a
+   anular su fondo, su borde, su padding y su radio —cuatro anulaciones— antes de escribir la
+   primera regla propia. Un modificador que empieza borrando a su base no es un modificador.
+   ▶ `.zone-tab` sigue viva y con dos consumidores; aquí no queda nada huérfano.
 
-.zone-photo-card__ilu {
-  z-index: -1;
-  position: absolute; right: 14px; bottom: 0;
-  width: min(34%, 170px); height: auto;
-  opacity: 0.17;
-  pointer-events: none;
+   ⚠️ **Escrito de móvil hacia arriba**: la regla base es la del teléfono (envuelve) y el escritorio
+   no necesita excepción, porque `flex-wrap` ya reparte. */
+.zone-pick {
+  display: flex; flex-wrap: wrap;
+  gap: var(--sp-10);
+  margin: 0 0 var(--sp-16);
 }
-.zone-intro__ilu {
-  position: absolute; right: -8px; bottom: 0;
-  width: min(38%, 190px); height: auto;
-  opacity: 0.17;
-  pointer-events: none;
-}
-.zone-intro__top { display: flex; justify-content: space-between; align-items: start; }
-/* Misma etiqueta que la tarjeta con foto, misma forma del sistema; solo cambia dónde vive. */
-.zone-intro__tag {
-  --tag-tilt: -2deg;
-}
-.zone-intro__name {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(64px, 9.5vw, 152px);
-  line-height: 0.82; letter-spacing: -0.045em; margin: 0;
-}
-.zone-intro__sub {
-  font-size: 20px; font-weight: 600; max-width: 280px; margin: 0;
-}
-.zone-intro__copy { font-size: 15px; line-height: 1.55; max-width: 380px; opacity: 0.85; margin: 12px 0 0; }
-.zone-intro__meta {
-  display: flex; gap: 28px; flex-wrap: wrap; margin-top: 32px;
-  padding-top: 22px; border-top: 1px solid color-mix(in srgb, var(--on-brand) 26%, transparent);
-}
-.zone-intro__meta .v {
-  font-family: var(--font-display); font-stretch: 75%;
-  font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; display: block;
-}
-.zone-intro__meta .l { font-family: var(--font-body); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.7; margin-top: 4px; }
-/* ⚠️ `.zone-intro__cta` («Ver atracciones →») se retiró con la unificación: las atracciones están
-   justo debajo de la tarjeta, así que el botón llevaba a donde ya estabas. */
-
-/* big number watermark inside zone card */
-.zone-intro__bg {
-  position: absolute; right: -40px; bottom: -100px;
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: 480px; line-height: 0.7; letter-spacing: -0.05em;
-  color: color-mix(in srgb, var(--fg) 8%, transparent); pointer-events: none;
-  user-select: none;
-}
-
-/* ---------- zona CON foto (patrón «Foto integrada en la tarjeta», mockup
-   `design_mockup/Ejemplos Imagenes Secciones.html`) ----------
-   Se usa cuando la zona tiene `image`; si no, cae a `.zone-intro__card` (fallback).
-   El fondo es el color de la zona (white-label, inline desde ThemeSettings): la foto es
-   una banda superior y los datos quedan abajo sobre el color. Vive dentro del mismo grid
-   `.zone-intro` → hereda el 1-col en móvil. */
-.zone-photo-card {
-  position: relative; overflow: hidden;
-  border-radius: var(--r-lg);
+.zone-pick__tab {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: var(--sp-8);
+  flex: 1 1 clamp(140px, 40%, 220px);
+  padding: var(--sp-16);
   border: 1px solid var(--line);
-  display: flex; flex-direction: column;
-  /* ⚠️ El `min-height` se queda, pero su RAZÓN cambió: nació «para que en un grid mixto las cards
-     queden alineadas» (revisión adversarial `#230`), y ese grid —`.zone-intro`— se retiró con la
-     unificación. Hoy sostiene el alto de la tarjeta cuando la zona trae poco contenido. Se deja
-     dicho para que nadie conserve el número por una razón que ya no existe. */
-  min-height: 400px;
+  border-radius: var(--r-btn);
+  background: var(--bg-card);
+  color: var(--fg-mute);
+  text-align: left;
+  transition:
+    border-color var(--dur-estado) var(--ease-sale),
+    background var(--dur-estado) var(--ease-sale),
+    color var(--dur-estado) var(--ease-sale);
+}
+/* ⚠️ El dibujo lo trae la INSTALACIÓN y puede no estar: sin él la pestaña se queda con nombre y
+   edad, que es el modo de fallo elegido (`hueco-ilustracion.md` §7). No hay `min-height` que
+   reserve su sitio, justamente para que su ausencia no deje un hueco. */
+.zone-pick__ilu {
+  width: 44px; height: auto;
+  --ilu-fg: currentColor;
+}
+.zone-pick__name {
+  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
+  font-size: var(--fs-18); line-height: 1.05; letter-spacing: -0.02em;
+  text-transform: uppercase;
   color: var(--fg);
+  transition: color var(--dur-estado) var(--ease-sale);
 }
-/* ⚠️ Ídem que en la tarjeta sin foto: `cursor: pointer` y el hover que levantaba se retiraron al
-   dejar de ser un enlace. */
-/* ⚠️⚠️ **La foto pasa de ALTO FIJO a PROPORCIÓN, y el motivo está medido.** Con la unificación la
-   tarjeta dejó de ocupar media rejilla (580 px) y pasó a la columna entera (1174): con `height:
-   240px` clavado, la caja pasó de 2,42:1 a **4,89:1**, y como la foto va con `object-fit: cover`
-   eso significa que **solo se veía el 31 % del alto del original** —medido en navegador— donde
-   antes se veía el 62 %. Una foto encuadrada para la tarjeta antigua se queda sin cabezas.
-   ▶ `3 / 1` recupera la mitad de lo perdido (**50 % visible**) sin disparar el alto de la tarjeta;
-   la proporción escala sola con el ancho, que es lo que el alto fijo no hacía.
-   ⚠️ **No vuelve al 62 %**, y se dice: para eso harían falta 470 px de foto. Es una regresión
-   MITIGADA, no cerrada, y quien la cierre tendrá que decidir cuánto alto vale una tarjeta. */
-.zone-photo-card__photo {
-  width: 100%; height: auto; aspect-ratio: 3 / 1; display: block; object-fit: cover;
+/* La EDAD, que es el dato que el owner pidió subir aquí. En mono, que es el registro «DATO» del
+   sistema de etiquetas (`specs/idioma-visual-heredado.md` §3.2). */
+.zone-pick__age {
+  font-family: var(--font-mono); font-size: var(--fs-11);
+  letter-spacing: 0.08em; line-height: 1.4;
 }
-.zone-photo-card__body {
-  padding: 26px 30px 30px;
-  display: flex; flex-direction: column; flex: 1;
+.zone-pick__tab:hover { border-color: var(--line-strong); }
+/* ⚠️ El color de la zona ACTIVA lo pone `--zone-1`, que `applyZoneAccent()` publica en `#rides` con
+   la paleta ya compuesta por el servidor (`ThemeSettings::zoneStyle()`). Aquí no se calcula nada. */
+.zone-pick__tab.active {
+  background: var(--zone-1);
+  border-color: var(--zone-1);
   color: var(--on-brand);
 }
-/* ⚠️ La FORMA la pone `.tag--dato` (el sistema de etiquetas). Aquí solo queda la COLOCACIÓN —
-   dónde va y cuánto se inclina—, que es del consumidor. Antes esta regla escribía su propia
-   cápsula: 11px/700 en caja alta, `--r-xs` y fondo de papel, o sea una quinta forma distinta. */
-.zone-photo-card__tag {
-  align-self: flex-start;
-  --tag-tilt: -2deg;
-  margin-bottom: 16px;
-}
-.zone-photo-card__name {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(48px, 6vw, 92px); line-height: 0.82; letter-spacing: -0.045em; margin: 0;
-}
-.zone-photo-card__sub { font-size: 18px; font-weight: 600; margin: 10px 0 0; }
-.zone-photo-card__meta {
-  display: flex; gap: 28px; margin-top: 22px; padding-top: 18px;
-  border-top: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
-}
-.zone-photo-card__meta .v {
-  font-family: var(--font-display); font-stretch: 75%;
-  font-size: 26px; font-weight: 800; line-height: 1; letter-spacing: -0.02em; display: block;
-}
-.zone-photo-card__meta .l {
-  font-family: var(--font-body); font-size: 10px; text-transform: uppercase;
-  letter-spacing: 0.14em; opacity: 0.7; margin-top: 4px;
-}
-/* ⚠️ Ídem con el de la tarjeta con foto. */
+.zone-pick__tab.active .zone-pick__name { color: var(--on-brand); }
 
 /* ---------- atracciones (tabs + slider) ---------- */
 .rides__head {
@@ -1374,9 +1198,6 @@ img { display: block; max-width: 100%; }
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
   font-size: clamp(48px, 7vw, 108px); line-height: 0.88; letter-spacing: -0.035em; margin: 0;
 }
-
-/* ⚠️ `.rides__controls` era la fila «pestañas + flechas» de la sección de atracciones, que ya no
-   existe: las flechas viven ahora en la cabecera de cada carrusel. */
 .zone-tabs {
   display: inline-flex;
   background: var(--bg-card);
@@ -1395,17 +1216,28 @@ img { display: block; max-width: 100%; }
 .zone-tab.active { background: var(--zone-1); color: var(--on-brand); }
 
 .slider-nav { display: flex; gap: 8px; align-items: center; }
-/* ⚠️ Aquí estaba `.slider-nav__counter`, el contador «1 / 8» que acompañaría a las flechas. **No
-   lo pinta nadie y no lo pintaba antes de este cambio**: era huérfana preexistente, y se barre
-   ahora porque este cambio mueve justo esta familia y el próximo inventario la contaría como viva. */
+.slider-nav__counter {
+  font-family: var(--font-body); font-size: 12px; color: var(--fg-mute);
+  text-transform: uppercase; letter-spacing: 0.14em; margin-right: 8px;
+}
+/* ⚠️ **La sombra es del CUARTO rol de elevación, no de `--shadow-lift`.** `#217` creó
+   `--shadow-nav-*` para el mobiliario que FLOTA sobre el contenido —el racimo del armazón— y estas
+   flechas son eso mismo: controles que se posan encima del carril. `--shadow-float` con el paquete
+   de este cliente vale `5px 5px 0`, dura y desplazada, que es otra familia. */
 .slider-arrow {
-  width: 48px; height: 48px; border-radius: 50%;
+  width: 48px; height: 48px; border-radius: var(--r-pill);
   border: 1px solid var(--line-strong);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-nav-ghost);
   display: grid; place-items: center;
-  transition: all var(--dur-estado) var(--ease-sale);
+  transition:
+    background var(--dur-estado) var(--ease-sale),
+    color var(--dur-estado) var(--ease-sale),
+    border-color var(--dur-estado) var(--ease-sale),
+    box-shadow var(--dur-estado) var(--ease-sale);
   color: var(--fg);
 }
-.slider-arrow:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); transform: scale(1.1); }
+.slider-arrow:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); box-shadow: var(--shadow-nav-ghost-lift); }
 .slider-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
 .slider-arrow:disabled:hover { background: transparent; color: var(--fg); border-color: var(--line-strong); }
 
@@ -1420,70 +1252,96 @@ img { display: block; max-width: 100%; }
 }
 .slider::-webkit-scrollbar { display: none; }
 
+/* ══ LA TARJETA DE ATRACCIÓN · foto + título + tag ═════════════════════════════════════════════
+   `[DECIDIDO owner, 2026-08-31]` (`#302`): **se amplía y se queda en título y tag; fuera la edad y
+   la descripción**. Medido antes: las 23 atracciones traen foto Y descripción (58 caracteres de
+   media), así que el carril era una fila de párrafos compitiendo con 23 fotos.
+
+   ⚠️⚠️ **`cursor: pointer` y el hover que LEVANTABA se retiran, y eso arregla un defecto que ya
+   estaba aquí.** La tarjeta es un `<article>` sin enlace ni manejador —verificado—, así que la
+   manita prometía una interacción que no existe: pulsas y no pasa nada. Es exactamente lo que
+   `#295` cazó en las tarjetas de zona. Queda un hover de BORDE, que dice «esto es una pieza» sin
+   prometer que se pulse.
+
+   ⚠️ **El ancho deja la siguiente tarjeta CORTADA por el borde, y eso es la afordancia.** Lo midió
+   `specs/cajon-en-movil.md` §5.2: lo que dice «hay más» no es un degradado ni una vela, es la pieza
+   partida por el canto. Antes cabían 3 EXACTAS y el carril parecía una rejilla quieta.
+   ⚠️ **No va a sangre completa**, y es a propósito: esta sección está acotada por `.wrap`, y ahí el
+   `100%` de `--wrap-gutter` mide el CONTENEDOR y no la ventana — la trampa medida en `#238`. El
+   corte se hace contra el borde de la columna, que no necesita escapar de ella. */
+/* ⚠️⚠️ **LA TARJETA ES UNA PEGATINA, y los tres rasgos salen de su `E1`**: «sombra dura de 5px,
+   borde de tinta y un punto de color a la derecha» (`[DECIDIDO owner]`, `#303`: las tarjetas se
+   veían «demasiado simples/limpias»).
+   ▶ **La sombra es `--shadow-float` y eso es un ROL, no un valor.** Con el paquete de este cliente
+   vale `5px 5px 0 var(--paper-fg)` —dura y desplazada, la pegatina—; sin paquete, la difusa del
+   producto. Escribir `5px 5px 0` a mano habría clavado el sistema de ESTE cliente en el producto.
+   ⚠️ El borde pasa de `--line` a `--paper-fg` (tinta): con `--line` la sombra dura salía flotando
+   sin contorno que la sostuviera, que es medio efecto.
+   ⚠️ **`overflow: hidden` se queda**: la foto tiene su propio radio y sin él asoma por las esquinas.
+   ⚠️ **Y no se levanta al pasar por encima**: la tarjeta no se pulsa —lo que se pulsa es su CTA—,
+   así que un `translateY` volvería a prometer lo que `#302` acaba de quitar. Lo que responde es la
+   SOMBRA, que es como se comporta una pegatina cuando la empujas. */
 .ride-card {
-  flex: 0 0 calc((100% - 18px * 2) / 3);
+  flex: 0 0 82%;
   scroll-snap-align: start;
-  border: 1px solid var(--line);
+  border: 1px solid var(--paper-fg);
   border-radius: var(--r-lg);
-  padding: 24px;
+  padding: var(--sp-16);
   background: var(--bg-card);
-  display: flex; flex-direction: column; gap: 20px;
-  transition:
-    transform var(--dur-entra) var(--ease-sale),
-    border-color var(--dur-estado) var(--ease-sale),
-    box-shadow var(--dur-entra) var(--ease-sale);
-  cursor: pointer;
-  min-height: 460px;
+  box-shadow: var(--shadow-float);
+  display: flex; flex-direction: column; gap: var(--sp-16);
+  transition: box-shadow var(--dur-estado) var(--ease-sale);
   position: relative; overflow: hidden;
 }
-.ride-card:hover {
-  transform: translateY(-6px);
-  border-color: var(--zone-1);
-  box-shadow: var(--shadow-lift);
-}
+.ride-card:hover { box-shadow: none; }
+
+/* La FOTO manda: proporción en vez de alto fijo, para que escale con el ancho de la tarjeta.
+   ⚠️ Un alto FIJO cambia el encuadre al cambiar de ancho — medido en `#295`, una foto pasó de
+   enseñar el 62 % del original al 31 % al ensancharse su caja. */
 .ride-card__viz {
-  height: 220px; border-radius: var(--r);
+  aspect-ratio: 4 / 5; border-radius: var(--r);
   background:
     repeating-linear-gradient(135deg, var(--bg-soft) 0 14px, var(--bg-card) 14px 15px);
   position: relative; overflow: hidden;
   border: 1px solid var(--line);
 }
+/* El disco de color: solo se ve cuando la atracción NO trae foto, porque la imagen lo cubre.
+   Es el estado vacío de la tarjeta. */
 .ride-card__viz::before {
   content: ""; position: absolute;
   inset: auto -10% -40% auto;
   width: 220px; height: 220px; border-radius: 50%;
   background: var(--zone-1); opacity: 0.55;
-  transition: transform var(--dur-cae) var(--ease-sale);
 }
-.ride-card:hover .ride-card__viz::before { transform: scale(1.15) translate(-10%, -10%); }
 .ride-card__placeholder {
   position: absolute; left: 16px; bottom: 14px;
   font-family: var(--font-body); font-size: 10px;
   text-transform: uppercase; letter-spacing: 0.14em;
   color: var(--fg-mute);
 }
+/* ⚠️ **Aquí hubo un PUNTO DE COLOR a la derecha del nombre y se retiró** (`[DECIDIDO owner]`:
+   «quita todos los puntos»). Lo había puesto extrapolando su `E1`, que describe ese punto **para
+   los BOTONES**; la tarjeta tiene su propia entrada (`E3`) y no lo pide. *Una regla escrita para
+   una pieza no vale para otra solo porque compartan sistema visual.* */
 .ride-card__name {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: 28px; line-height: 0.95; letter-spacing: -0.02em; margin: 0;
+  font-size: clamp(24px, 4.4vw, 34px);
+  line-height: 0.95; letter-spacing: -0.02em; margin: 0;
 }
-.ride-card__age {
-  font-family: var(--font-body); font-size: 11px;
-  text-transform: uppercase; letter-spacing: 0.14em;
-  color: var(--fg-mute);
-  display: inline-flex; align-items: center; gap: 6px;
-}
-.ride-card__age::before {
-  content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--zone-1);
-}
-.ride-card__desc {
-  font-size: 14px; line-height: 1.55; color: var(--fg-mute);
-  margin: 0;
-  flex: 1;
+
+@media (min-width: 900px) {
+  /* Escritorio: **2,4 tarjetas por vista**. Con 3,4 la tarjeta salía más ESTRECHA que antes, y el
+     encargo era ampliarla; con 2,4 mide ~448 px donde antes medía 380, y la siguiente sigue
+     asomando cortada. */
+  .ride-card { flex: 0 0 calc((100% - 18px * 2) / 2.4); }
 }
 
 /* Atracción de pago (#228): precio del complemento + CTA «Comprar» al pie de la card */
+/* El pie: precio y CTA, o solo el CTA. ⚠️ `margin-top: auto` lo empuja abajo para que todas las
+   tarjetas del carril terminen a la misma altura aunque el nombre ocupe una o dos líneas. */
 .ride-card__buy {
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  margin-top: auto;
   padding-top: 18px; border-top: 1px solid var(--line);
 }
 .ride-card__price {
@@ -1516,10 +1374,25 @@ img { display: block; max-width: 100%; }
 }
 
 /* progress bar under slider */
+/* EL PIE DEL CARRIL: el progreso ocupa lo que sobra y las flechas van a la derecha.
+   ⚠️ **Las flechas se esconden con puntero GRUESO**: en un teléfono el carril se recorre con el
+   dedo, y dos botones que repiten un gesto que ya existe son ruido. Vuelven con puntero fino.
+   Es la misma puerta de puntero que `#264` usó para las áreas táctiles. */
+.slider-foot {
+  display: flex; align-items: center; gap: var(--sp-16);
+  margin-top: var(--sp-12);
+}
+.slider-foot .slider-progress { flex: 1; }
+.slider-foot .slider-nav { display: none; }
+@media (pointer: fine) {
+  .slider-foot .slider-nav { display: flex; }
+}
+
+/* ⚠️ El canto sale del token de cápsula, no de un literal: `ShapeScaleTest` prohíbe escribir un
+   radio a mano, y una barra de 4 px con `border-radius: 2px` era justamente eso. */
 .slider-progress {
-  height: 2px; background: var(--line);
-  position: relative; overflow: hidden; border-radius: 2px;
-  margin-top: 8px;
+  height: 4px; background: var(--line);
+  position: relative; overflow: hidden; border-radius: var(--r-pill);
 }
 .slider-progress__bar {
   position: absolute; top: 0; left: 0; height: 100%;
@@ -2216,25 +2089,13 @@ img { display: block; max-width: 100%; }
 *:focus { outline: none; }
 /* Lote 6 (a11y teclado): se añaden casillas/radios — antes quedaban SIN foco visible
    bajo el reset `*:focus` (las legales del registro eran inalcanzables a la vista al
-   tabular). El FAQ pasó a `<button>` → ya lo cubre `button`, por eso deja de tener
-   selector propio aquí.
-   ⚠️⚠️ **Y `.slider` entra el 2026-08-31, el mismo día que se hizo focalizable.** Al darle
-   `tabindex="0"` para poder recorrerlo con el teclado quedó **enfocable y SIN anillo**: esta
-   lista es CERRADA y un `<div tabindex="0">` no casa con ninguna de sus entradas, así que el
-   reset `*:focus { outline: none }` de arriba se lo comía. Medido: `outline-style: none` en el
-   carrusel contra `solid` en un botón de la misma página. **Nada falla — el foco simplemente
-   desaparece de la vista** (WCAG 2.4.7), y encima en el único caso donde el teclado es la única
-   vía (con puntero grueso las flechas se esconden).
-   ▶ *Hacer algo enfocable no es hacerlo accesible: si el anillo sale de una lista cerrada, hay
-   que añadirlo a la lista.*
-   ⚠️ `.zone-intro__card`/`.zone-photo-card` NO entran: volvieron a ser `<div>` inertes con la
-   unificación de zonas y atracciones, así que no reciben foco. */
+   tabular). El FAQ y las cards de zona pasaron a `<button>`/`<a>` → ya los cubren
+   `button`/`a`, por eso dejan de tener selector propio aquí. */
 a:focus-visible,
 button:focus-visible,
 [role="menuitem"]:focus-visible,
 input[type="checkbox"]:focus-visible,
 input[type="radio"]:focus-visible,
-.slider:focus-visible,
 .ride-card:focus-visible {
   /* Anillo de foco unificado en --fg: contrasta siempre (la marca --zone-1 puede
      caer a ~1:1 con la zona Kids activa) y NO redefine el border-radius del elemento
@@ -2244,39 +2105,8 @@ input[type="radio"]:focus-visible,
   outline-offset: 3px;
 }
 
-/* active (pressed) — subtle "press" feedback on all buttons */
-.btn:active,
-.nav__burger:active,
-.mob-menu__close:active,
-.slider-arrow:active:not(:disabled),
-.zone-tab:active {
-  transform: translateY(0) scale(0.97);
-  transition: transform var(--dur-toque) var(--ease-sale);
-}
-
-/* card press (smaller scale since cards are bigger) */
-.ride-card:active,
-/* ⚠️ `.zone-intro__card` y `.zone-photo-card` salieron el 2026-08-31: dejaron de ser enlaces con
-   la unificación, y un acuse de recibo al pulsar algo inerte es peor que no darlo. */
-.price:active,
-.gallery__item:active,
-.polaroid:active,
-.events__photo:active {
-  transform: translateY(-2px) scale(0.995);
-  transition: transform var(--dur-toque) var(--ease-sale);
-}
-
 /* touch devices — disable hover translates so they don't stick after tap */
 @media (hover: none) {
-  .btn:hover,
-  .ride-card:hover,
-  .events__photo:hover,
-  .price:hover,
-  .gallery__item:hover,
-  .polaroid:hover,
-  .rule:hover {
-    transform: none;
-  }
   .zone-feat:hover {
     transform: none;
   }
@@ -2296,6 +2126,7 @@ input[type="radio"]:focus-visible,
 
 @media (max-width: 768px) {
   .section { padding: 64px 0; }
+  .hero + .section { padding-top: calc(64px + var(--hero-air)); }
   .nav__brand { font-size: 18px; }
   /* hero */
   .hero { padding: 92px 0 40px; min-height: auto; }
@@ -2310,29 +2141,14 @@ input[type="radio"]:focus-visible,
   /* zones intro */
   .zones__title { font-size: clamp(44px, 13vw, 80px); }
   .zones__intro { font-size: 16px; }
-  .zone-stats { gap: 20px; padding: 18px 0; margin-bottom: 32px; }
-  .zone-stats__num { font-size: 28px; }
-  .zone-stats__item { gap: 10px; }
   .zones__head, .rides__head { margin-bottom: 36px; gap: 16px; }
   .zones__intro, .rides__head > p { font-size: 16px; }
-  .zone-intro__card { padding: 28px 24px; min-height: 360px; }
-  /* Zona con foto en móvil: misma altura mínima que el fallback + banda de foto más baja
-     (la card pasa a 1-col, no necesita 240px de foto). Revisión adversarial #230. */
-  .zone-photo-card { min-height: 360px; }
-  /* En móvil la tarjeta ya ocupaba el ancho antes del cambio: su alto se queda como estaba
-     (medido: 84 % del original visible, que es sano) y la proporción no manda aquí. */
-  .zone-photo-card__photo { height: 200px; aspect-ratio: auto; }
-  .zone-intro__name { font-size: clamp(64px, 18vw, 120px); }
-  .zone-intro__sub { font-size: 17px; }
-  .zone-intro__copy { font-size: 14px; }
-  .zone-intro__bg { font-size: 280px; right: -20px; bottom: -70px; }
   /* rides */
   .rides__title { font-size: clamp(44px, 13vw, 80px); }
   .rides__head { flex-direction: column; align-items: flex-start; gap: 16px; }
-  /* #232: el switcher de zonas `.zone-tabs` a ANCHO COMPLETO en móvil, con sus botones repartidos
-     sin hueco vacío. ⚠️ Su texto decía «tanto en Atracciones (#rides) como en Entradas»: desde la
-     unificación del 2026-08-31 **Atracciones ya no tiene pestañas**, y el único consumidor es la
-     sección de entradas (`.ticket-prices__tabs`). */
+  /* #232: el switcher de zonas `.zone-tabs` a ANCHO COMPLETO en móvil — tanto en Atracciones
+     (#rides) como en Entradas (#pricing, donde su contenedor `.ticket-prices__tabs` lo centraba a
+     ancho de contenido) — con los 2 botones «Zona Jump/Kids» repartidos 50/50, sin hueco vacío. */
   .zone-tabs { display: flex; width: 100%; }
   .zone-tab { flex: 1; text-align: center; }
   .slider-nav { justify-content: flex-end; }

@@ -11,10 +11,10 @@ return [
         'description' => 'School trips, companies, adults sessions and private events at our park.',
     ],
     'eyebrow' => 'For groups and events',
-    'title' => 'Beyond open jump',
+    'title' => 'Services',
     // Highlighted fragment of the hero title (`.blink`, mockup v2). Must be an EXACT substring
     // of `title`; if absent, the hero falls back gracefully to the plain title.
-    'title_accent' => 'open jump',
+    'title_accent' => '',
     'intro' => "We adapt the park for schools, companies and groups, including outside our regular hours. Ask for no-strings info and we'll plan the day with you.",
     'cta_contact' => 'Get in touch',
     'service_label' => 'Service',

@@ -11,10 +11,10 @@ return [
         'description' => 'Sorties scolaires, entreprises, sessions adultes et événements privés dans notre parc.',
     ],
     'eyebrow' => 'Pour les groupes et événements',
-    'title' => 'Au-delà du saut libre',
+    'title' => 'Services',
     // Fragment du titre mis en avant dans le hero (`.blink`, maquette v2). Doit être une
     // sous-chaîne EXACTE de `title`; sinon le hero retombe proprement sur le titre simple.
-    'title_accent' => 'saut libre',
+    'title_accent' => '',
     'intro' => 'On adapte le parc aux écoles, entreprises et groupes, y compris en dehors de nos horaires habituels. Demande-nous des infos sans engagement et on conçoit la journée avec toi.',
     'cta_contact' => 'Nous contacter',
     'service_label' => 'Service',

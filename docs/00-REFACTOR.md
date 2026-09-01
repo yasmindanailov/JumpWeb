@@ -2679,6 +2679,110 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
 > ⚠️ **La lista de ranuras decorativas está VACÍA a propósito**: una ranura sin consumidor es lo que
 > dejó los 19 dibujos de `#257` esperando años.
 >
+> ✅ **DATOS REALES DE PLAY JUMP PARK + EL «MÁS INFO» DEL CAJÓN, QUE ESTABA MUERTO** (2026-09-01,
+> `#304`). Sesión de DATOS dictados por el owner, no de código de producto — salvo el defecto.
+> ❗❗ **Los datos viven SOLO en la BD local y no viajan en el commit** (`DECISIONES #1`: el repo es
+> el producto sin marca de cliente). Volcado en el scratchpad, `pjp/catalogo.json`. La suite no
+> depende de ellos: corre en SQLite en memoria.
+> ▶ 5 entradas + 2 packs + 9 complementos, zonas con sus edades, horario, antelación y cupos.
+> `[DECIDIDO owner]`: el **viernes es precio especial**, el máximo de antelación **se queda en 6
+> meses** (es un ajuste global, no por producto) y los packs van a **5 por franja** (no existe tope
+> por día). Las zonas `cap`/`cap2` **borradas**: no existían.
+> ❗❗❗ **La lección: TRES campos parecen rellenables y no los lee nadie** — `description` y `badge`
+> de un COMPLEMENTO y `conditions`. El badge de un complemento lo **DERIVA** `AddonResolver` y el
+> cajón lo traduce como CLAVE; en un producto sí es texto libre. *Antes de escribir en un campo,
+> mide quién lo lee.*
+> ⚠️⚠️ **Un precio se escribió en filas NUEVAS sin que nada fallara**: `priceable_type` es el ALIAS
+> de morph (`ticket_type`), no la clase — la web habría seguido con el precio viejo y el cambio
+> parecería aplicado. Se cazó leyendo por el MODELO, no por la consulta recién escrita.
+> ⚠️⚠️ **«Quitarlo todo» tuvo tres excepciones que la instrucción no podía conocer**: los portadores
+> de dinero de fiestas mixtas, el `ON DELETE CASCADE` de `order_items` (retirar un producto se lleva
+> sus líneas EN SILENCIO) y recrear el catálogo desde cero.
+> ▶ **Defecto del cajón, encontrado por el OWNER**: el botón «Más info» sin `@click` y la lista sin
+> condición de estado — siempre abierta, botón decorativo. Arreglado, con guarda y 3 mutaciones.
+> ⚠️ Ninguna guarda podía verlo (la de clases mira REGLAS, el contrato de árbol mira ESTRUCTURA), y
+> **el comentario de la landing afirmaba que funcionaba**. ⚠️⚠️ La guarda nueva **se cazó a sí misma**
+> citando el marcado roto en su comentario — y a `guard-bash.sh` le pasó lo mismo con esta doc.
+> ❗ **Sin construir**: la HORA EXTRA (4 productos, alarga a 180 min → toca AFORO) y «mostrar sin
+> vender» para complementos. Fichas en `DEUDA.md`.
+>
+> ✅ **IDIOMA VISUAL · T5: TITULAR A UNA LÍNEA, SIN ETIQUETA, Y LA TARJETA COMO PEGATINA**
+> (2026-08-31, `#303`, `[DECIDIDO owner]`). **Primera pieza del molde de `#297` ejecutada.**
+> ▶ Titulares de una palabra, **sin punto y en tinta** (**Dos zonas · Tarifas · Cumpleaños ·
+> Visítanos · Normas · En directo · Dudas**, ×3 idiomas) y **fuera la etiqueta** de toda vista
+> pública. Elegido sobre DOS caminos medidos: a 390 px solo caben ~10 caracteres con el suelo actual
+> del `clamp`, así que era «una palabra» o «bajar el suelo» (el arreglo de `#220`).
+> ▶ **CTA en TODAS las tarjetas** — no hay página de detalle de atracción, así que lleva a reservar
+> la ZONA, que es lo que ya hacía la comprable —, y la tarjeta pasa a **pegatina** (borde de tinta y
+> sombra dura como ROL `--shadow-float`).
+> ⚠️⚠️ **Puse un PUNTO en color en titulares y tarjetas y el owner lo retiró**: 4 de 7 titulares ya
+> lo tenían y yo se lo añadí a los otros 3; el color fue mío. Y la pegatina citaba `E1`, **que se
+> titula «Botones»** — extrapolación presentada como cita.
+> ⚠️⚠️ **La mancha se había caído sobre el párrafo** (11.016 px²): su `top` era % de la CABECERA, que
+> encogió de 264 a 153 al acortar los titulares. Anclada al TITULAR y re-dimensionada → **0 px²**.
+> ⚠️ **Aire hero→sección**: nació en 32 px medidos (lo de la etiqueta) y subió a **64** porque
+> seguía corto —antes lo primero bajo el hero pesaba 16 px y ahora 71 de tinta—; `[DECIDIDO owner]`
+> sobre tres opciones renderizadas. Solo en `.hero + .section`.
+> ❗ **Dos titulares NO se tocan y se dice**: el del cierre (coreografía medida de `#252`, excepción
+> declarada) y los nombres de servicio de `/servicios` (**los escribe el panel**: un titular
+> data-driven no puede tener regla de longitud).
+> ⚠️⚠️ **Dos trampas de instrumento**: una captura de ELEMENTO cose los `fixed` (enseñaba flechas que
+> miden 0×0), y un contador por subcadena dio **115 tarjetas donde hay 23**.
+> ▶ Guarda nueva `SectionHeadlineTest` + 4 mutaciones que muerden. Suite **3680 verde**.
+>
+> ✅ **IDIOMA VISUAL · T4: ZONAS Y JUEGOS, UN SOLO SELECTOR** (2026-08-31, `#302`,
+> `[DECIDIDO owner]`). Había **DOS selectores de zona en la misma página** —las tarjetas saltaban a
+> la sección donde las pestañas hacían la misma elección—: el de arriba costaba **1.011 px en
+> escritorio y 1.831 en móvil**. Queda UNA sección, UNA cabecera y UN selector, que ahora dice quién
+> es cada zona (dibujo del kit + nombre + edad). La tarjeta de atracción se queda en foto + título +
+> tag y se amplía (380×497 → **475×713**).
+> ▶ Fachada: iconos de zona (**ya instalados**; identidad, no decoración) + **una** mancha `B1·02`
+> en `slot-zonas`, elegida y colocada MIDIENDO (0 px² sobre el párrafo). Nada por tarjeta.
+> ▶ Carrusel a nuestro estilo: siguiente tarjeta **cortada por el borde**, flechas al pie con el rol
+> de mobiliario flotante y ocultas con puntero grueso.
+> ⚠️ **Dos defectos preexistentes arreglados**: manita sobre una tarjeta que no se pulsa, y
+> `zone: 'jump'` (slug del primer cliente) quemado en el JS.
+> ⚠️⚠️ Se fue con su sujeto: 55 reglas y 288 líneas de CSS **con sus `@media`**, un componente, un
+> método de JS, 7 claves × 3 idiomas. **Siete guardas sin sujeto**: dos re-apuntadas (más fuertes),
+> dos listas encogidas, tres retiradas con lápida.
+> ❗ Guarda NUEVA que faltaba desde `#257`: **toda ranura declarada tiene pantalla que la pinta**.
+> ⚠️⚠️ Una mutación no mordió: **el caso nació sin sujeto** (`accent == slug` en la BD de test), y al
+> rehacerlo se vio que **dependía del kit REAL, gitignorado**.
+> ❗ Cuesta: fuera las 2 fotos de zona, los 2 subtítulos y las métricas — **`zones.image` se queda sin
+> consumidor** (`DEUDA.md`). Portada **2.779 → 1.452** y **3.531 → 1.130**. Queda el OJO del owner.
+>
+> ⛔ **IDIOMA VISUAL · LA T3 DE ZONAS, REVERTIDA EN SU ESTRUCTURA** (2026-08-31, `#301`,
+> `[DECIDIDO owner]`: «2 cards y debajo la sección de juegos»). Vuelven `#zones` y `#rides` como dos
+> secciones, con pestañas por zona, flechas y barra de progreso; se va `zoneSlider`.
+> ❗❗ **El arreglo de IDENTIDAD no se revierte**: la zona se identifica por `slug` y `accent` solo
+> pone color. Con datos reales `kids`/`cap`/`cap2` comparten acento, así que con `accent` las
+> pestañas volverían a abrir tres carruseles a la vez. Medido tras revertir: **uno**.
+> ⚠️⚠️ **Un arreglo puede sobrevivir a la guarda que lo protegía**: el caso vivía en
+> `ZonesAndRidesUnifiedTest`, que vigilaba la estructura unificada, así que se fue con ella y dejó el
+> arreglo desnudo **con la suite en verde**. Red nueva: `ZoneIdentityIsUniqueTest`, 3 casos y 3
+> mutaciones que muerden — una vigila lo CONTRARIO (que la paleta siga saliendo de `accent`).
+> ⚠️ El resto de la revisión adversarial de `#295` se revierte **con su sujeto**: eran defectos de la
+> estructura unificada. ⚠️ `zone: 'jump'` (slug del primer cliente en el código) **no vuelve**: la
+> primera zona la dice el DOM. ⚠️ Salen 4 tarjetas y no 2 porque `cap`/`cap2` están marcadas para la
+> landing: es DATO, se quita desde el panel.
+> **Verificación**: suite 3673 verde · Pint ✓ · docs-check ✓ · build ✓ · Chrome 1280 y 390 con 0
+> errores de consola.
+>
+> ⛔ **IDIOMA VISUAL · LA T1 DE NORMAS, REVERTIDA ENTERA** (2026-08-31, `#300`, `[DECIDIDO owner]`,
+> elegido con la consecuencia delante). La portada vuelve al pliego de doce pictogramas del cliente
+> ANTIGUO y al carrusel con **todas** las normas; se van las tres en texto, el CTA y la mancha.
+> ▶ **Con horarios/ubicación ya intacta —medido byte a byte, sin restos del `?forma=` de `#297`—,
+> las dos secciones tocadas quedan en el MISMO punto de partida**, que es lo que el owner buscaba:
+> rediseñar desde una base común y no encima de una tanda a medias.
+> ⚠️⚠️ **No retira el diagnóstico ni su `[DECIDIDO owner]`**: el molde se sigue rompiendo. **La
+> sección de normas de hoy NO es una forma aprobada** y así queda anotado en la vista y en las dos
+> hojas, para que el commit no se lea al revés.
+> ⚠️ **`#292` mezclaba TRES cosas**: solo se revirtió la T1. La retirada de `.tag--dato` sigue en pie.
+> ⚠️ `IllustrationKit::SLOTS` **vacía** (3.ª vez) y kit 4 → **3 símbolos**; `client-kit.svg` está
+> gitignorado, así que **la reconstrucción no viaja en el commit**. Presupuesto de dibujo: gasta UNA.
+> ⚠️ **Se retira el caso del tope de tres**: 3679 → **3678** tests, y es correcto — *una guarda de un
+> contrato retirado no protege nada*. Suite y Pint verdes; comprobado **en la página servida**.
+>
 > ⛔ **IDIOMA VISUAL · EL MOLDE EDITORIAL: DIAGNOSTICADO, TRES FORMAS RECHAZADAS** (2026-08-31,
 > `#297`). **Sesión sin código: todo revertido** (`[owner]`: «déjalo como estaba… en el siguiente
 > chat iteraremos»). Queda el diagnóstico, medido: las SIETE secciones usan el mismo molde

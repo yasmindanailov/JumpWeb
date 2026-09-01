@@ -54,9 +54,10 @@ class ActionFillTest extends TestCase
         // landing.css
         '.btn' => 'el botón sólido de la landing y del cajón',
         '.btn:disabled:hover, .btn[aria-disabled="true"]:hover' => 'su guarda de deshabilitado',
-        // ⚠️ `.zone-intro__cta` y `.zone-photo-card__cta` («Ver atracciones →») salieron el
-        // 2026-08-31 con la unificación de zonas y atracciones: el botón llevaba a una sección que
-        // ahora está justo debajo de la tarjeta. La lista solo encoge.
+        // ⚠️ Aquí estaban `.zone-intro__cta` y `.zone-photo-card__cta`, los dos «Ver atracciones»
+        // de las tarjetas de zona. **Se van con su sujeto** (`#302`, `[DECIDIDO owner]`: las
+        // tarjetas fuera): las atracciones están ahora debajo del selector, así que el botón
+        // llevaba a donde ya estabas. La lista de acción **solo encoge**, que es la regla.
         '.price--feat .price__cta' => 'el CTA de la tarifa destacada',
         '.bd-pack__cta' => '«Reservar este cumple»',
         '.bd-btn--solid' => 'el primario del par del editor de invitaciones',

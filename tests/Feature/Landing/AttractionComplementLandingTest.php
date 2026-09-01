@@ -89,14 +89,27 @@ class AttractionComplementLandingTest extends TestCase
         $this->get('/')->assertOk()->assertDontSee('AtraccionOcultaXyz');
     }
 
-    public function test_complement_not_purchasable_shows_no_cta(): void
+    /**
+     * **Si el complemento deja de ser vendible, la atracción NO enseña precio ni «Comprar».**
+     *
+     * ⚠️⚠️ **Este caso cambió de contrato el 2026-08-31** (`#303`, `[DECIDIDO owner]`: «añade un CTA
+     * a las cards para que el usuario sepa que tiene que clicarlo»). Antes aseveraba que **no había
+     * CTA ninguno**; ahora TODAS las tarjetas llevan uno —el que abre el cajón en la zona—, así que
+     * esa aserción se habría puesto roja con el producto sano.
+     *
+     * ▶ **No se retira: se re-apunta a lo que de verdad protegía, y queda más fuerte.** Lo peligroso
+     * nunca fue el CTA, era **enseñar un PRECIO de algo que no se vende**. Eso se asevera igual, y
+     * además se exige que la tarjeta **siga ofreciendo el camino a reservar la zona**: sin esa
+     * segunda mitad, un cambio que dejara la tarjeta muda pasaría en verde.
+     */
+    public function test_complement_not_purchasable_shows_no_price_but_keeps_a_way_in(): void
     {
-        // Si el complemento deja de ser vendible, la atracción degrada a informativa (sin precio/CTA).
         $this->addon->update(['is_sellable' => false]);
         Cache::flush();
 
         $res = $this->get('/')->assertOk();
         $res->assertDontSee('ride-card--sellable', false);
-        $res->assertDontSee('ride-card__cta', false);
+        $res->assertDontSee('ride-card__price', false);
+        $res->assertSee('ride-card__cta', false);
     }
 }

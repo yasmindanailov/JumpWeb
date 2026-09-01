@@ -44,15 +44,16 @@ class ZoneForm
                             ->label(__('admin.zones.field_accent'))
                             ->helperText(__('admin.zones.field_accent_hint'))
                             ->maxLength(40)
-                            // ⚠️⚠️ **La razón que justificaba esto CAMBIÓ, y la regla sigue haciendo
-                            // falta.** Decía: «el acento viaja al DOM dentro de directivas Alpine
-                            // (`goToRides('…')`, `:class`)» — esas directivas se retiraron el
-                            // 2026-08-31 al unificar zonas y atracciones. Pero `accent` SIGUE
-                            // llegando al DOM: entra en `ThemeSettings::zoneStyle()` y de ahí a un
-                            // atributo `style` EN LÍNEA. Se restringe a [a-z0-9-_] (como el slug) →
-                            // defensa en origen contra manipulación directa de BD (`#230`).
-                            // ▶ Se deja escrito para que nadie retire la validación al ver que el
-                            // método que la justificaba ya no existe.
+                            // ⚠️⚠️ **La razón original de esta regla YA NO ES la que vale, y la regla
+                            // sigue haciendo falta.** Decía: «el acento viaja al DOM dentro de
+                            // directivas Alpine (`goToRides('…')`, `:class`)». Desde `#295` esas
+                            // directivas llevan el **`slug`**, no el acento (`accent` agrupa y no
+                            // identifica). Pero `accent` SIGUE llegando al DOM: entra en
+                            // `ThemeSettings::zoneStyle()` y de ahí a un atributo `style` EN LÍNEA.
+                            // Se restringe a [a-z0-9-_] (como el slug) → defensa en origen contra
+                            // manipulación directa de BD (revisión adversarial `#230`).
+                            // ▶ Se deja escrito para que nadie retire la validación al comprobar que
+                            // el argumento que la justificaba ya no describe el código.
                             ->alphaDash()
                             ->default('jump'),
                         ColorPicker::make('color')

@@ -8,8 +8,7 @@
                  `/precios`. Detrás del titular y NUNCA detrás de un párrafo (su regla 02). --}}
             <div class="rays pricing__rays" aria-hidden="true"></div>
             <div>
-                <div class="eyebrow" style="margin-bottom:16px">{{ __('landing.pricing.eyebrow') }}</div>
-                <h1 class="rides__title">{{ __('landing.pricing.title') }}<br /><em style="font-style:normal; color:var(--zone-1)">{{ __('landing.pricing.title_em') }}</em></h1>
+                <h1 class="rides__title">{{ __('landing.pricing.title') }}</h1>
             </div>
             <p>{{ __('landing.pricing.intro') }}</p>
         </div>

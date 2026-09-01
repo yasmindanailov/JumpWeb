@@ -26,25 +26,15 @@ class ZoneImageTest extends TestCase
         $this->seed(LandingContentSeeder::class);
     }
 
-    public function test_zone_with_image_renders_the_photo_card(): void
-    {
-        $response = $this->get('/')->assertOk();
+    /* ⚠️⚠️ **AQUÍ VIVÍAN LOS DOS CASOS DE LA TARJETA DE ZONA Y SE FUERON CON SU SUJETO** (`#302`,
+       `[DECIDIDO owner, 2026-08-31]`: las tarjetas de zona, fuera). Comprobaban las dos ramas del
+       bucle —`zone-photo-card` cuando la zona traía `image`, `zone-intro__card` cuando no—.
 
-        // Zonas jump/kids vienen sembradas CON foto → card con foto integrada (patrón A).
-        $response->assertSee('zone-photo-card', false);
-        $response->assertSee('images/attractions/park_jump.webp', false); // foto de la zona Jump
-        $response->assertSee('images/attractions/kids_zone.webp', false); // foto de la zona Kids
-    }
-
-    public function test_zone_without_image_falls_back_to_the_plain_card(): void
-    {
-        // Sin foto en ninguna zona visible → todas las cards caen al diseño actual.
-        Zone::query()->update(['image' => null]);
-
-        $this->get('/')->assertOk()
-            ->assertSee('zone-intro__card', false)   // fallback presente
-            ->assertDontSee('zone-photo-card', false); // ninguna card con foto
-    }
+       ❗ **Y dejan una consecuencia que NO es del test: `zones.image` se ha quedado SIN NINGÚN
+       consumidor en la web.** El panel sigue ofreciendo el campo, el seeder sigue asignando las
+       fotos y la portada ya no las pinta en ninguna parte. Ficha en `docs/DEUDA.md`; los casos del
+       SEEDER de más abajo siguen vivos y siguen exigiendo que esas fotos existan en disco, así que
+       el dato no se degrada en silencio mientras se decide qué hacer con él. */
 
     public function test_gallery_shows_real_photos_as_fallback_when_no_social_feed(): void
     {

@@ -23,9 +23,10 @@
     <x-site.nav />
 
     <main id="main" class="svc-main">
-        {{-- Hero: eyebrow + título XL + intro + índice de anclas a cada servicio --}}
+        {{-- Hero: título XL + intro + índice de anclas a cada servicio.
+             ⚠️ El EYEBROW se retiró (`#303`, `[DECIDIDO owner]`: «el eyebrow de los titulares lo
+             vamos a quitar»). --}}
         <header class="svc-hero wrap">
-            <span class="eyebrow">{{ __('services.eyebrow') }}</span>
             <h1 class="svc-hero__title">{!! $svcTitleHtml !!}</h1>
             <p class="svc-hero__intro">{{ __('services.intro') }}</p>
             @if ($services->isNotEmpty())

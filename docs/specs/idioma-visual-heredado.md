@@ -151,7 +151,28 @@ cápsula que ya es mono de 10,5. Dos tallas dentro de la misma etiqueta, y no lo
 
 ---
 
-## 3.bis · T1 · las normas de la portada (hecha)
+## 3.bis · T1 · las normas de la portada (⛔ REVERTIDA — `#300`)
+
+> ⛔⛔ **ESTA TANDA YA NO ESTÁ EN EL PRODUCTO. LA CORRECCIÓN VA ANTES QUE EL TEXTO QUE CORRIGE.**
+> `[DECIDIDO owner, 2026-08-31]` (`#300`): **revertir la T1 entera**, elegido con la consecuencia
+> delante —se le enseñaron las tres opciones renderizadas y se le dijo que revertir devuelve arte de
+> otro parque—. La portada vuelve a `.rules-layout` + `.rules-vslider` con el pliego de doce
+> pictogramas del cliente ANTIGUO y **todas** las normas; se van las tres en texto, el CTA y la
+> mancha, `IllustrationKit::SLOTS` queda **vacía** otra vez y el kit baja a **3 símbolos**.
+>
+> ▶ **No es un retroceso del carril: es fijar la base común desde la que se itera.** El diagnóstico
+> del molde editorial (§3.quinquies) **sigue vivo** y su `[DECIDIDO owner]` sigue en pie. Lo que el
+> owner hizo fue devolver al mismo punto de partida las dos secciones que se habían tocado, para
+> rediseñar desde ahí en vez de encima de una forma a medias que no había aprobado.
+> ⚠️ **La sección de normas de hoy NO es una forma aprobada**: es material heredado pendiente de
+> rediseño, y así está anotado en la vista y en las dos hojas de estilo.
+> ⚠️ **La otra mitad de `#292` NO se revirtió**: la retirada del registro fino de badges
+> (`.tag--dato`) es una decisión independiente y sigue en pie — venía de `Landing PJP Modos`, que el
+> owner desautorizó como fuente de la landing salvo para las reseñas.
+>
+> **Lo que sigue de aquí abajo es el registro de lo que se hizo y por qué, no del producto de hoy.**
+> Se conserva porque su medición (dónde cabe una mancha, y por qué) sigue valiendo para la siguiente
+> pieza que se coloque.
 
 `[DECIDIDO owner]`: *«las normas irán sin imagen, solo será texto, un texto simple y un CTA a la
 página de normas… en la landing, lo más importante»*.
@@ -192,7 +213,8 @@ lo que describe su `B3`: «la mancha detrás de la primera palabra». Medido ah�
 en las dos anchuras, y asoma por el borde, que es lo que su nota pide para esta familia.
 
 ⚠️ **Presupuesto declarado**: **una pieza de dibujo por sección, y la portada entera no pasa de
-TRES**. Hoy gasta dos (las poses de zona y esta mancha); queda una.
+TRES**. ⚠️⚠️ **Corregido por `#300`**: con la T1 revertida esta mancha se retiró, así que la portada
+gasta **UNA** —las poses de zona— y quedan **DOS** libres.
 
 ---
 
@@ -254,7 +276,32 @@ marquesina, no suma. El techo de 2 de su artboard sigue siendo la deuda que `#27
 
 ---
 
-## 3.quater · T3 · zonas y atracciones, unificadas (hecha)
+## 3.quater · T3 · zonas y atracciones, unificadas (⛔ REVERTIDA en su ESTRUCTURA — `#301`)
+
+> ⛔⛔ **LA ESTRUCTURA UNIFICADA YA NO ESTÁ. LA CORRECCIÓN VA ANTES QUE EL TEXTO QUE CORRIGE.**
+> `[DECIDIDO owner, 2026-08-31]` (`#301`): *«deja la sección de zonas como estaba antes, con su
+> estructura de antes, 2 cards y debajo la sección de juegos»*. Vuelven **`#zones`** y **`#rides`**
+> como dos secciones, con la barra de pestañas por zona, las flechas y la barra de progreso.
+>
+> ❗❗ **PERO EL ARREGLO DE §3.quater.1 SE QUEDA, y eso es lo que hay que saber antes de tocar nada
+> aquí.** La identidad de la zona en el marcado sigue siendo **`slug`**; `accent` solo pone COLOR.
+> Volver a la estructura **no obliga a volver al defecto**: verificado hoy contra datos reales,
+> `kids`, `cap` y `cap2` siguen compartiendo `accent`, así que con `accent` como identidad las tres
+> pestañas abrirían tres carruseles a la vez. Medido en Chrome tras la reversión: **uno**.
+>
+> ⚠️⚠️ **Y la lección que deja: un arreglo puede sobrevivir a la guarda que lo protegía.** El caso
+> que cazaba esto vivía en `ZonesAndRidesUnifiedTest`, que vigilaba la estructura UNIFICADA — al
+> revertirla el fichero se fue entero y **el arreglo se quedó desnudo con la suite en verde**. Tiene
+> red propia desde `#301`: **`ZoneIdentityIsUniqueTest`** (3 casos, 3 mutaciones que muerden, una de
+> ellas vigilando lo contrario: que la PALETA siga saliendo de `accent`).
+> ▶ *Cuando retires una estructura, pregúntate qué arreglos ajenos viajaban en su guarda.*
+>
+> ⚠️ **Lo demás de §3.quater.3 se revierte CON SU SUJETO y no es una pérdida**: el anillo de foco,
+> las tarjetas inertes con `cursor: pointer`, el encuadre 62 % → 31 % y el `trim` por bytes eran
+> defectos **de la estructura unificada** — la tarjeta vuelve a ser un `<a>`, la foto vuelve a media
+> rejilla y la etiqueta se compone otra vez en Blade sin `trim`.
+>
+> **Lo de aquí abajo es el registro de lo que se hizo y por qué, no del producto de hoy.**
 
 `[DECIDIDO owner]`: *«las zonas hay que unificarlo con las atracciones»*.
 
@@ -398,11 +445,165 @@ por encima del mapa; y el teléfono entra, que hoy la sección no lo tiene aunqu
 
 ---
 
+## 3.sexies · T4 · zonas y juegos: fuera el selector duplicado (`#302`)
+
+`[DECIDIDO owner, 2026-08-31]`: *«quitar las tarjetas para seleccionar la zona, porque en las
+atracciones ya hay un toggle»* · *«las cards de las zonas y las cifras, fuera»* · *«las cards de las
+atracciones, solamente el título y el tag, sin texto descriptivo ni la edad»* · el carrusel **a
+nuestro estilo** · el material de fachada, a mi valoración.
+
+### 3.sexies.1 · El diagnóstico, que es suyo: DOS selectores para la misma elección
+
+Las tarjetas de zona tenían un CTA «Ver atracciones» que **saltaba** a la otra sección, donde una
+barra de pestañas hacía **exactamente la misma elección**. Medido, el de arriba costaba **1.011 px
+en escritorio y 1.831 en móvil**.
+
+▶ Queda **una sección y un selector**, y el selector dice quién es cada zona: **dibujo del kit +
+nombre + edad**.
+
+⚠️⚠️ **Y queda UNA cabecera, que eso no se pidió pero lo exige lo que sí se pidió.** Con las tarjetas
+y las cifras fuera, la de zonas presentaba el vacío y la de atracciones venía detrás con el mismo
+molde. Sobrevive la de ZONAS porque **su párrafo acaba en «Elige el tuyo»**, que es lo que hace el
+toggle de debajo; la de atracciones solo explicaba la interfaz, que es el texto que §3.quinquies
+señala como sobrante.
+
+⚠️ **Las dos anclas sobreviven y hay seis enlaces que dependen**: `#zones` es la sección, `#rides`
+envuelve selector + carriles. Y **tiene que envolver a los dos**: `applyZoneAccent()` tiñe ese
+contenedor, así que con el ancla solo en el carrusel las pestañas perderían el color de su zona.
+
+### 3.sexies.2 · El material de fachada, y por qué ése
+
+1. **Iconos de zona (`F10`/`G5`)**: **ya viajan instalados** y **no chocan con la regla de `#286`**
+   —un icono por zona es **identidad, no decoración**: se repite porque los datos se repiten—.
+2. **UNA mancha** (`B1·02`, ranura `slot-zonas`) detrás del titular, elegida **midiendo las seis**:
+   la más ANCHA de las libres (relación **1,19**, la forma que pide ir detrás de una palabra) y de
+   las más ligeras (**17,3 %**). `B1·01` y `B1·04` ya viajan como `--deco-blob-a/b`.
+3. **Nada por tarjeta de atracción**: el CSS ya lleva la lápida del intento anterior —una mancha por
+   tarjeta de precio, rechazada por el owner: *«demasiado ruido con varias tarjetas»*—.
+
+⚠️ **La posición se MIDIÓ**: su nota manda «detrás de la primera palabra, nunca detrás de todo el
+bloque». Con `top: -14%` pisaba el párrafo **701 px²**; barrido de seis → **`-20%` da 0 px² sobre el
+párrafo conservando 32.162 px² detrás del titular**.
+
+### 3.sexies.3 · El carrusel, a nuestro estilo
+
+**La siguiente tarjeta queda CORTADA por el borde**, que es la afordancia medida en
+`cajon-en-movil.md` §5.2 —lo que dice «hay más» es la pieza partida por el canto, no un degradado—.
+Antes cabían **3 exactas** y parecía una rejilla quieta. ⚠️ **No va a sangre completa a propósito**:
+dentro de `.wrap` el `100%` de `--wrap-gutter` mide el CONTENEDOR (la trampa de `#238`).
+Las flechas bajan al pie, con `--shadow-nav-*` (el cuarto rol) y **ocultas con puntero grueso**.
+
+### 3.sexies.4 · ⚠️ Dos defectos PREEXISTENTES arreglados de paso
+
+1. `.ride-card` tenía `cursor: pointer` y hover que levantaba, **siendo un `<article>` sin enlace**.
+   El mismo defecto que `#295` cazó en las tarjetas de zona.
+2. `landing` arrancaba con `zone: 'jump'`, **el slug del primer cliente en el producto**: otra
+   instalación arrancaría sin pestaña activa y con los carriles ocultos, sin fallar nada.
+
+### 3.sexies.5 · ❗ Lo que cuesta, y una guarda que faltaba desde `#257`
+
+**Se pierden de la portada las dos fotos de zona, los dos subtítulos y las métricas por zona**, y con
+ellas **`zones.image` se queda sin ningún consumidor** (ficha en `DEUDA.md`).
+
+▶ **Guarda nueva**: `test_every_declared_slot_is_painted_by_a_screen`. «Una ranura vive lo que vive su
+consumidor» estaba escrito en tres sitios y **no lo imponía nadie**.
+
+⚠️⚠️ **Y una mutación no mordió por el fallo de siempre: el caso nació SIN SUJETO.** Pedir el dibujo
+por `accent` salía verde porque en la BD de test `accent == slug` para `jump` y `kids`. Se rehízo con
+una zona gemela. ▶ De paso destapó que **dependía del kit REAL, gitignorado**: habría pasado aquí y
+fallado en un clon limpio.
+
+---
+
+## 3.septies · T5 · el titular a una línea y la tarjeta como pegatina (`#303`)
+
+`[DECIDIDO owner, 2026-08-31]`: *«añade un CTA a las cards»* · *«las cards me parecen demasiado
+simples/limpias»* · *«todos los titulares solo 1 línea»* · *«el eyebrow de los titulares lo vamos a
+quitar»*.
+
+**❗ Es la primera pieza del molde de §3.quinquies que se EJECUTA**, y coincide con lo que aquella
+medición ya había establecido: se retiran la etiqueta y el titular partido.
+
+### 3.septies.1 · El CTA abrió una pregunta que no se podía contestar solo
+
+**No existe página de detalle de atracción** (verificado en `routes/`). `[DECIDIDO owner]`: el clic
+lleva a **reservar la ZONA**, que es lo que ya hacía el botón de la única comprable y lo coherente
+con el modelo —el parque vende por zona—. ⚠️ La tarjeta **no** se envuelve en un botón: metería el
+precio y el badge dentro del nombre accesible.
+
+### 3.septies.2 · La tarjeta es una PEGATINA, y los rasgos son suyos
+
+Su `E1`: *«sombra dura de 5px, borde de tinta y un punto de color a la derecha»*.
+⚠️⚠️ **CORRECCIÓN: `E1` se titula «Botones» y describe BOTONES.** La tarjeta tiene su propia entrada,
+`E3 · Tarjeta de zona`, y pide otra cosa (`.ride-card` + mancha de esquina + silueta). Aplicarle la
+regla de los botones fue **extrapolación mía, no una cita** — y presentarla como cita le quitó al
+owner la oportunidad de discutirla. Sobreviven la sombra y el borde; el punto se retiró.
+⚠️ **La sombra entra como ROL (`--shadow-float`), no como valor**: con este paquete vale
+`5px 5px 0`, sin paquete es la difusa del producto. Escribir el número habría clavado su sistema
+dentro del producto. ⚠️ Y **no se levanta al hover**: responde la SOMBRA, que es como se comporta una
+pegatina; un `translateY` volvería a prometer el clic que `#302` quitó.
+
+### 3.septies.3 · Los titulares: dos caminos MEDIDOS y una elección con la consecuencia delante
+
+Con el suelo del `clamp` en 48 px, a 390 px solo caben ~10 caracteres: «Tarifas claras.» pedía
+**40 px** y «Un parque, dos zonas.» **29**. Caminos: (a) una palabra, que cabe ya · (b) conservar la
+voz **bajando el suelo del `clamp`**, el arreglo exacto de `#220`. **Eligió (a)**, sabiendo que *son
+casi los eyebrows que se retiran* — lo cual **resuelve del todo la redundancia medida** (4 de 7
+etiquetas repetían una palabra del titular) a cambio de voz.
+
+⚠️⚠️ **PUSE UN PUNTO EN COLOR Y EL OWNER LO RETIRÓ, y el registro vale.** Al acortar, el titular
+perdía su mitad de color, así que puse el punto final en el acento —y otro a la derecha del nombre
+de cada tarjeta—. `[DECIDIDO owner]`: **fuera todos**. Al preguntarme por qué estaban salió lo que
+había que decir: **4 de los 7 titulares ya acababan en punto y yo se lo añadí a los otros 3**, y el
+color fue invención mía para un efecto colateral de mi propio cambio. Quedan **sin punto y en
+tinta**; el color de sección vive en el selector, los CTA y la mancha.
+
+### 3.septies.3.bis · ⚠️⚠️ La mancha se cayó sobre el párrafo, y el `top` era la causa
+
+Su `top` era un **porcentaje de la CABECERA**. Al acortar los titulares, la cabecera pasó de **264 a
+153 px**: el mismo `-20%` valió la mitad y la mancha bajó **11.016 px² encima del párrafo**, que es
+justo lo que su nota prohíbe. *Un ajuste sobrevive a la razón que lo justificaba si nadie lo revisa
+al cambiar lo que hay alrededor.*
+▶ Se ancla al **bloque del titular** (que la guarda mantiene en una línea) y **se re-dimensiona**:
+con 250 px de mancha sobre un titular de 79, **mover el `top` no cambiaba el número**. Barrido de
+seis → `-84%` con `min(22%, 165px)`: **9.381 px² sobre el titular, 0 sobre el párrafo**.
+
+⚠️ **Y el aire entre el hero y la primera sección se restauró**: 32 px MEDIDOS —lo que ocupaba la
+etiqueta (16 de alto + 16 de margen), igual a 1280 y a 390—, como `--hero-air` y **solo en
+`.hero + .section`**, para no separar las otras seis.
+
+### 3.septies.4 · ❗ Dos titulares que NO se tocan, y se dice
+
+1. **«VAMOS A / SALTAR»** del cierre: no es un par etiqueta+titular, son TRES partes apiladas, y es
+   la coreografía que `#252`/`#253`/`#254` midieron contra el alto de ventana. **Excepción declarada
+   en la guarda, pendiente del owner.**
+2. **Los nombres de servicio de `/servicios`**: los escribe el operador desde el panel. *Un titular
+   data-driven no puede tener una regla de longitud* — acortarlo sería truncar el texto de un
+   cliente, y encoger el tipo hasta que quepa cualquier nombre es rendir el diseño al dato más largo.
+
+### 3.septies.5 · ⚠️⚠️ Dos trampas de instrumento, las dos con número creíble
+
+1. **Una captura de ELEMENTO más alto que la ventana COSE los elementos `fixed`**: enseñaba las
+   flechas del carrusel —ocultas con puntero grueso— y el CTA flotante en medio de una tarjeta.
+   Medido en el mismo contexto: **0×0 y `display: none`**. *La captura mentía y la medición no.*
+2. **Un contador por subcadena dio 115 tarjetas donde hay 23** (`class="ride-card` casa con
+   `ride-card__viz`, `__img`…) y acusó al producto de un defecto suyo.
+
+---
+
 ## 4. Lo que queda, y en qué orden
+
+> ⚠️ **La base de partida cambió el 2026-08-31 (`#300`)**: el owner revirtió la T1 entera y dejó
+> horarios/ubicación y normas **las dos en su forma heredada**, para rediseñar desde el mismo punto
+> en vez de encima de una tanda a medias. **Las dos vuelven a la lista de pendientes**, y la portada
+> recupera **dos** de las tres colocaciones de dibujo.
 
 | # | tanda | qué |
 |---|---|---|
-| **B** | La marquesina de `/servicios` → **cinta `C3`** | `[DECIDIDO owner]` quitar la de palabras. ⚠️ **Choca con `#252`**, que retiró la marquesina de la portada por espacio: la cinta vuelve, pero en `/servicios`, no en la portada |
+| **A′** | **Normas de la portada, otra vez** | Revertida por `#300`. Su decisión original —«sin imagen, texto simple y un CTA»— **no la retiró el owner**: lo que rechazó fue la ejecución. Se rehace dentro del rediseño del molde, no suelta |
+| **B′** | **Horarios y ubicación** | El caso extremo del molde (§3.quinquies): 5 encabezados para 4 líneas de dato. ⛔ Con las formas A, B y C ya descartadas, y con el ESCRITORIO como requisito, no solo el móvil |
+| **C′** | **Zonas y atracciones, otra vez** | Revertida por `#301`. La unificación **no la retiró el owner como criterio**: pidió volver a la base para rediseñar desde ahí. ⚠️ **Al rehacerla, la identidad es `slug`** — el defecto ya está cerrado y con guarda (`ZoneIdentityIsUniqueTest`) |
+| **B** | ~~La marquesina de `/servicios` → **cinta `C3`**~~ **(hecha, `#293`)** | `[DECIDIDO owner]` quitar la de palabras. ⚠️ **Choca con `#252`**, que retiró la marquesina de la portada por espacio: la cinta vuelve, pero en `/servicios`, no en la portada |
 | **C** | Los cubos 1-2-3 del cumple · la nota de calcetines | forma por decidir |
 | **D** | La galería de polaroids | ¿sigue el lenguaje polaroid o pasa a cinta con poses (`F11`)? |
 | **E** | **El SPA**: catálogo y badge de destacado | el owner quiere **cambiar la presentación**, no solo vestirla: es su propia spec |

@@ -3,7 +3,7 @@
 return [
     'legal_eyebrow' => 'Información legal',
     'rules_eyebrow' => 'Normas',
-    'rules_title' => 'Normas del parque',
+    'rules_title' => 'Normas',
     'back_home' => '← Volver al inicio',
     'legal_draft_notice' => 'Texto provisional pendiente de revisión legal.',
 

@@ -20,7 +20,6 @@
                  tira de puntos bajando por el margen izquierdo hasta el pie. Aquí entra por la
                  esquina y desaparece, que es lo que dice su propia descripción de A2. --}}
             <div class="grain grain--fade" aria-hidden="true"></div>
-            <div class="eyebrow">{{ __('site.rules_eyebrow') }}</div>
             <h1 class="page__title">{{ __('site.rules_title') }}</h1>
         </div>
 

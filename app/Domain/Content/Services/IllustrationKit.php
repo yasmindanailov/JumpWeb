@@ -48,14 +48,18 @@ class IllustrationKit
      * @var list<string>
      */
     public const SLOTS = [
-        // ⚠️ Antes estuvo VACÍA dos veces, y las dos por la misma regla: aquí llegaron a vivir
-        // `slot-mancha-esquina` y `slot-friso-1..5`, y se fueron con sus consumidores.
+        // ⚠️ **Esta lista ha estado VACÍA tres veces, y las tres por la misma regla: una ranura vive
+        // exactamente lo que vive su consumidor.** Aquí llegaron a estar `slot-mancha-esquina`,
+        // `slot-friso-1..5` y `slot-normas`; todas se fueron con la pantalla que las pintaba —la
+        // última en `#300`, al revertir la T1 del idioma visual—.
         //
-        // **La PRIMERA que se queda es ésta, y se queda porque nace con su pantalla en el mismo
-        // cambio**: la sección de normas de la portada (T1 del idioma visual). Su dibujo es la
-        // mancha `B1·03` del artboard —la de «lengüetas largas», que su propia nota manda a
-        // «esquinas y bordes»—, y va UNA por pantalla, fuera del bucle de normas.
-        'slot-normas',
+        // **`slot-zonas` nace con su pantalla en el mismo cambio** (`#302`): la mancha que va detrás
+        // del titular de la sección de zonas y sus juegos. Su dibujo es `B1·02` del artboard —la
+        // más ANCHA de las seis libres (relación 1,19 medida), que es la forma que pide ir detrás de
+        // una palabra, y de las más ligeras (17,3 % de cobertura) para no pelearse con el texto—.
+        // ⚠️ `B1·01` y `B1·04` no se podían usar: **ya viajan instaladas** como `--deco-blob-a/b`
+        // (verificado byte a byte en `#286`).
+        'slot-zonas',
     ];
 
     /**

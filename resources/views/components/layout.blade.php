@@ -58,10 +58,7 @@
          valores editables en el panel, y por eso va DESPUÉS de landing.css.
          `--brand`/`--brand-2` = marca global · `--zone-1`/`--zone-2` la siguen · `--on-brand` sale
          por contraste WCAG. **Cada zona re-escopa lo suyo EN LÍNEA** sobre su elemento con
-         `ThemeSettings::zoneStyle()` — **desde el SERVIDOR y una sola vez por bloque de zona**.
-         ⚠️ Aquí ponía «el acento de Atracciones va scoped a `#rides` desde `app.js`»: eso lo hacía
-         `applyZoneAccent()`, retirado el 2026-08-31 al unificar zonas y atracciones. Ya no hay
-         JavaScript aplicando paleta.
+         `ThemeSettings::zoneStyle()`; el acento de «Atracciones» va scoped a `#rides` desde `app.js`.
          ⚠️ Aquí se citaban `--jump-1`/`--kids-1` como «color de cada zona»: los retiró `#139` y este
          comentario los sobrevivió. Las zonas son DATOS y pueden ser dos, cinco o llamarse de otra forma. --}}
     <style id="jj-theme">:root{ {{ \App\Domain\Content\Services\ThemeSettings::cssRootDeclarations() }} }</style>

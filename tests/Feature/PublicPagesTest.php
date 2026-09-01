@@ -142,9 +142,33 @@ class PublicPagesTest extends TestCase
         $response->assertSee('Pedir información');
         $response->assertDontSee('svc-price', false);
 
-        // Highlight `.blink` del título del hero (fidelidad al mockup v2): el fragmento «salto
-        // libre» se envuelve en `<span class="blink">`.
-        $response->assertSee('<span class="blink">salto libre</span>', false);
+        // ⚠️⚠️ **El highlight `.blink` YA NO SE EMITE, y no porque se haya roto** (`#303`,
+        // `[DECIDIDO owner]`: titulares a una línea y sin eyebrow). `.blink` es una pastilla con el
+        // color de zona girada −2°, y existía para **destacar dos palabras dentro de una frase**
+        // («Más allá del **salto libre**»). Con el titular en una sola palabra —«Servicios»— no hay
+        // nada que destacar: envolverla entera convertiría el titular en una pastilla de color.
+        // ▶ Por eso `services.title_accent` se deja VACÍO, que es la rama de degradación que el
+        // propio hero ya tenía escrita («si no aparece, cae con elegancia al título plano»).
+        $response->assertSee('Servicios');
+        $response->assertDontSee('<span class="blink">', false);
+    }
+
+    /**
+     * **Y el MECANISMO del highlight sigue vivo: se ejercita poniéndole un acento.**
+     *
+     * ⚠️ Sin este caso, vaciar `title_accent` habría dejado la rama del resaltado **sin cubrir** y
+     * el caso de arriba pasaría igual con el mecanismo roto. No es código muerto: es un mecanismo
+     * data-driven que ESTA instalación no usa, y otra con un título más largo sí puede usar.
+     */
+    public function test_the_services_hero_still_highlights_an_accent_when_there_is_one(): void
+    {
+        app('translator')->addLines([
+            'services.title' => 'Más allá del salto libre',
+            'services.title_accent' => 'salto libre',
+        ], 'es');
+
+        $this->get('/servicios')->assertOk()
+            ->assertSee('<span class="blink">salto libre</span>', false);
     }
 
     public function test_services_page_respects_locale(): void
@@ -153,9 +177,8 @@ class PublicPagesTest extends TestCase
 
         $this->get('/servicios')
             ->assertOk()
-            ->assertSee('School trips')                              // sección (EN)
-            ->assertSee('Beyond ', false)                            // título plano (EN, antes del highlight)
-            ->assertSee('<span class="blink">open jump</span>', false); // highlight del título (EN)
+            ->assertSee('School trips')   // sección (EN)
+            ->assertSee('Services');      // título del hero (EN)
     }
 
     /**

@@ -16,10 +16,10 @@ return [
         'description' => 'Excursiones de colegio, empresas, sesiones para adultos y eventos privados en nuestro parque.',
     ],
     'eyebrow' => 'Para grupos y eventos',
-    'title' => 'Más allá del salto libre',
+    'title' => 'Servicios',
     // Fragmento del título resaltado en el hero (`.blink`, mockup v2). Debe ser una subcadena
     // EXACTA de `title`; si no aparece, el hero cae con elegancia al título plano.
-    'title_accent' => 'salto libre',
+    'title_accent' => '',
     'intro' => 'Adaptamos el parque a colegios, empresas y grupos, también fuera de nuestro horario habitual. Pídenos información sin compromiso y diseñamos la jornada contigo.',
     'cta_contact' => 'Pedir información',
     'service_label' => 'Servicio',
