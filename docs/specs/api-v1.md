@@ -1155,3 +1155,14 @@ nadie cruzaba el cobro con el estado; con la identidad I2 (cobrado == Σ online 
 revisión». Se LEGALIZARON —el cobro se registra como lo hace `RedsysReturnHandler`, por
 `onlineDueCents()`—, no se excepcionó la identidad.
 
+**97. Una liquidación `gate` puede ser NEGATIVA, y el motivo de una cortesía NO viaja** (T4 del libro,
+2026-09-01, `DECISIONES #317`). La liquidación en el parque es simétrica (D9 bis): con la visita pasada,
+lo que quedaba por devolver se da por entregado en recepción y sale como `settlements[]` de `kind =
+gate` con `amount_cents < 0` y la etiqueta «Devuelto en el parque» — solo cambia la DESCRIPCIÓN del
+contrato (`LedgerSettlement.kind` y `amount_cents`), no su forma: un cliente que ya pintaba por signo
+no tiene nada que cambiar (medido: el cajón lo pintó sin tocar `orders.js`, sonda §5.sexies 53/53). Y
+la línea `courtesy` pasa a llamarse «Descuento por cortesía» con un MOTIVO del operador detrás que es
+INTERNO (D-T4·1, `[DECIDIDO owner]`): vive en `Movement::$note`, lo pinta el panel y `LedgerResource`
+**no lo transcribe** — `LedgerMovement` sigue con `additionalProperties: false`, así que publicarlo por
+descuido lo caza Spectator además de `RefundIntentGovernsTest`.
+

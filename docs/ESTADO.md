@@ -2,11 +2,11 @@
 
 > Documento CORTO (carga obligatoria al arrancar). Solo «dónde estamos / qué sigue».
 > **El «qué pasó» de cada paso vive en `00-REFACTOR.md` (tracker) y `DECISIONES.md` (el porqué):
-> aquí solo se enlaza.** Última actualización: **2026-09-01 — TRES carriles a la vez.
+> aquí solo se enlaza.** Última actualización: **2026-09-01 (mediodía) — TRES carriles a la vez.
 > **LIBRO DEL PEDIDO**: spec ✅ del owner (`#305`), **T1 (`#306`), T2 (`#308`), T3·1 (`#310`), T3·2
-> (`#311`), T3·3 (`#312`) y T3·4 (`#315`, LA RETIRADA del modelo de dos ejes) EN EL ÁRBOL: CÓDIGO
-> COMPLETO; el owner lo leyó con once pedidos delante y decidió la T4 (`#316`), DISEÑADA en §6.4 y
-> ✅ APROBADA: LA SIGUIENTE SESIÓN LA EJECUTA** — carril 3, abajo.
+> (`#311`), T3·3 (`#312`), T3·4 (`#315`, LA RETIRADA del modelo de dos ejes) Y LA T4 (`#317`, EL
+> MOTIVO MANDA en el reembolso · liquidación simétrica · «Descuento por cortesía») EN EL ÁRBOL:
+> CÓDIGO COMPLETO; queda el OJO del owner (V18–V22) y sus vetos a D-T4·6/D-T4·7** — carril 3, abajo.
 > **MIXTOS**: T1→T5 en el árbol (`#288`/`#289`/`#294`/`#296`/`#298` con sus 5 adendas) y **T6 EL
 > GUARDIÁN DE SOLAPES EN EL ÁRBOL (`#299`): el plan de `#284` queda SIN tandas pendientes** —
 > siguen fuera por diseño la fase 3 de §20.2 y el AFORO (owner); la ficha del fantasma de la señal
@@ -56,29 +56,52 @@
 > remoto ya en 287 y pasó a `#288` al integrar). Los dos carriles NO se solapan en código.
 >
 > ▶ **CONTADOR VIVO** (la única copia; el hook lee la PRIMERA de estas líneas del fichero):
-> Suite **3728 en verde** (24.295 aserciones, 1 skipped a propósito), medida el
-> 2026-09-01 (noche) sobre el árbol CONJUNTO con la T3·4 del libro (`#315`) encima de `#314` (landing).
+> Suite **3744 en verde** (24.465 aserciones, 1 skipped a propósito), medida el
+> 2026-09-01 (mediodía) sobre el árbol con la T4 del libro (`#317`) encima de `1060dbc`.
 > ⚠️ **No se suma, se mide** — y ⚠️⚠️ **tras un rebase que toque Vue hay que
 > `npm run build:ssr` ANTES de leer la suite**: sin eso salieron 35 rojos en
 > `SidebarDomContractTest` que no eran de ningún cambio.
-> - Antes, 3760 / 24.946 (`#314`, landing) y 3760 / 24.940 (`#313` y `#312`: la T3·4 retiró los
+> - Antes, 3728 / 24.295 (`#315`, la T3·4 sobre el árbol conjunto), 3760 / 24.946 (`#314`, landing) y 3760 / 24.940 (`#313` y `#312`: la T3·4 retiró los
 >   dos tests de servicio del modelo viejo, −50, y sumó 18), 3758 / 24.958 (`#311`).
 >
 > ═══════════ CARRIL 3 · EL LIBRO DEL PEDIDO (spec ✅ · T1 → T3·4 EN EL ÁRBOL: código COMPLETO · queda el OJO del owner) ═══════════
-> ▶ **SESIÓN EN CURSO (carril 3 · el libro) desde el 2026-09-01 a las 10:10 (hora de Madrid; el
-> contenedor va en UTC, 2 h menos): la T4 de `specs/desglose-libro.md` §6.4 — el motivo manda en el
-> reembolso, la liquidación simétrica y «Descuento por cortesía».** Ficheros que toca, para el reparto
-> (`CONVENCIONES` §10·3): `app/Domain/Booking/Models/Order.php` ·
-> `app/Domain/Booking/Services/{OrderBook,Movement,MovementLabel,Settlement,OrderItemRefunder}.php` ·
-> `app/Domain/Booking/Contracts/ItemRefundRequest.php` · `app/Filament/Resources/Orders/Pages/ViewOrder.php` ·
-> `resources/views/filament/orders/partials/reservation-financials.blade.php` · `lang/{es,en,fr,zh_CN}/tickets.php`
-> (grupo `journal`) · `lang/{es,zh_CN}/admin.php` (`orders.actions.refund` · `orders.refund_item` · las listas
-> `reasons`) · `openapi/v1.yaml` (solo la descripción de `gate`) · `tests/Feature/Orders/*` y
-> `tests/Feature/Admin/Orders/*` · la doc del carril (`desglose-libro.md`, `INVARIANTES` PAY-17, `DEUDA.md`,
-> `VERIFICACION-E2E-CAJON.md` §5.sexies). ▶ **Para el agente de la LANDING** (§10·4, retíralo al leerlo):
-> no entro en `resources/css`, `resources/views/site`, `resources/js/site`, `public/` ni en tus specs; si
-> necesitas tocar alguno de los ficheros de arriba, escríbelo aquí antes y `git pull --rebase` en cuanto
-> empuje. El número de la decisión se fija al empujar mirando `origin/main` (hoy va por `#316`).
+> ❗❗❗ **2026-09-01 (mañana, 5.ª sesión: 10:10 → 12:40, hora de Madrid) · T4 · EL MOTIVO MANDA EN EL REEMBOLSO,
+> LA LIQUIDACIÓN SIMÉTRICA Y «DESCUENTO POR CORTESÍA» — EN EL ÁRBOL** (`DECISIONES #317`;
+> `specs/desglose-libro.md` **§6.4 diseño · §6.4.1 lo ejecutado**; `INVARIANTES` `PAY-17`; `MODELO-DATOS`
+> §2; `api-v1.md` punto 97; `VERIFICACION-E2E-CAJON.md` §5.sexies «La T4 sobre los mismos pedidos»).
+> Suite: el CONTADOR de arriba · Pint · docs-check · **11/12 mutaciones con arnés de CONTROL** (la que
+> no muerde es a sabiendas: segunda capa) · **sonda headless 53/53** sobre los 11 `LB-*` · migración
+> corrida en local. Sin `VERIFY_CONC`: ningún fichero del `CRITICAL_RE` cambió.
+> ▶ `value_returned` capado a lo debido (modal: `maxValue`, opción deshabilitada, la Σ de remanentes
+> tiene que caber; dominio: `exceeds_owed` bajo lock y ANTES de la pasarela, sin dejar ni la fila
+> `pending`) · `compensation` con motivo obligatorio (`payment_refunds.reason`, 5–200;
+> `compensation_without_note`) y la cortesía SOLO su exceso, con el motivo en `context.note` y en
+> `Movement.note` (INTERNO: el panel lo pinta bajo la línea, `LedgerResource` no lo transcribe) · sin
+> intención, sin cortesía · D9 bis: `liquidado` con signo, «Devuelto en el parque»
+> (`tickets.journal.gate_refund`) · «Descuento por cortesía» en cuatro idiomas · los dos modales con
+> TRES motivos y la frase del exceso en vivo; el de línea mide lo debido en SU RESERVA ·
+> `RefundIntentGovernsTest` (13) · `OrderBookTest` +2 · `CourtesyMovementTest` +1 · 29 reembolsos de
+> tests ganan su motivo.
+> ⚠️⚠️ **DOS afirmaciones de §6.4 resultaron FALSAS al ejecutarla** (corrección delante del texto):
+> `payment_refunds.reason` NO existía (era `failure_reason`, del gateway → migración
+> `2026_09_01_120000`; **docs-check: 93 migraciones**) y «tras la visita, solo compensación» contaba
+> el dinero DOS veces → **D-T4·6: «lo debido» es lo debido EN DINERO** (sin lo inferido) y **D-T4·7**
+> (el total ofrece «lo debido» solo si cubre el pago entero). **Las dos son VETABLES por el owner.**
+> ⚠️⚠️ El arnés de mutación dio **12/12 y mentía** (buscaba «OK (»; el runner de un fichero imprime
+> «Tests: N passed»): rehecho por código de salida con pasada de control → 11/12. ⚠️
+> `validationMessages()` de Filament solo admite un array (el `Closure` va en el VALOR): el `TypeError`
+> tumbó la página del pedido entera y la suite se fue al timeout sin enseñarlo.
+> ▶ **RETOMAR (siguiente sesión del carril 3): el OJO del owner** — V18–V21 de §5.sexies (panel, hoja,
+> puerta, correos) + **V22**: el modal «Reembolsar» de `LB-BAJADA` (ofrece «lo debido» hasta 19,80 y
+> dice que el libro lo da por devuelto en recepción), el de `LB-ORDEN` sin bajada (la opción
+> deshabilitada), `LB-CORTESIA` en la ficha (el motivo bajo la línea). **Preguntas al owner**: (1)
+> D-T4·6 — ¿lo debido en dinero (hoy) o la lectura literal de §6.4 (tras la visita, solo compensación;
+> coste: el dinero contado dos veces)? (2) plegar «Pagos y devoluciones» con un solo cobro. Aparcados
+> con ficha (`DEUDA.md`): cancelación (producción) · «Regularizar» · el aviso al bajar tras una cortesía.
+> ▶ **Para el agente de la LANDING** (§10·4, retíralo al leerlo): la sesión del libro cerró a las
+> 12:40 con todo empujado; no toqué nada de `resources/css`, `resources/views/site`, `resources/js/site`
+> ni tus specs. `docs/README.md` dice ahora **93 migraciones** (una nueva del libro): si tu
+> `docs-check` local se queja del contador tras el rebase, es eso.
 > ❗❗❗ **2026-09-01 (noche, 4.ª sesión) · T3·4 · EL MODELO DE DOS EJES SE RETIRA; EL LIBRO ES EL ÚNICO COMPOSITOR**
 > (`DECISIONES #315` — los carriles de assets y landing tomaron `#313` y `#314` entre medias —, `specs/desglose-libro.md`
 > **§6.3.6 diseño fino y §6.3.7 lo ejecutado**; `INVARIANTES` `PAY-16`/`PAY-17` REESCRITAS como las

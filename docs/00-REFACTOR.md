@@ -2579,13 +2579,22 @@ solo en la proyección: había cuatro defectos en el dominio que ninguna auditor
         solo con el libro (40 pedidos, 37 cierran, 3 en revisión — los mismos que con el oráculo) y el
         guion headless del cajón (cuatro pedidos sembrados por `OrderCreator`, 17/17 ✓; ampliado a
         once pedidos con los siete de demostración, 54/54 ✓). ▶ **El owner ya los leyó** (`#316`).
-  - [ ] **T4 · el motivo manda en el reembolso + la liquidación simétrica + «Descuento por cortesía»
-        — DISEÑADA (spec §6.4, `DECISIONES #316`) y ✅ APROBADA por el owner el 2026-09-01 (D-T4·1
-        confirmado: el motivo es interno), SIN código: la siguiente sesión la ejecuta.** Cierra
-        `LB-ORDEN` (la cortesía solo con `compensation` y con motivo; `value_returned` capado a lo
-        debido, en el modal y bajo lock) y el «pendiente de devolución» eterno de una bajada con la
-        visita pasada (D9 simétrica). Seis guardas con sus mutaciones previstas. Fuera, con ficha:
-        cancelación (producción) · «Regularizar» (aparcado) · el aviso al bajar tras una cortesía.
+  - [x] **T4 · el motivo manda en el reembolso + la liquidación simétrica + «Descuento por cortesía»
+        — EJECUTADA el 2026-09-01** (diseño §6.4, `DECISIONES #316` · ejecución **§6.4.1**,
+        `DECISIONES #317`): `value_returned` capado a lo debido en el modal (importe capado, opción
+        deshabilitada con 0, la Σ de remanentes tiene que caber) y bajo lock ANTES de la pasarela
+        (`exceeds_owed`); `compensation` con motivo obligatorio (`payment_refunds.reason` — **la
+        columna NO existía**, la crea la migración `2026_09_01_120000`; la spec la daba por
+        existente) y la cortesía es solo su exceso, con el motivo en `context.note` y en
+        `Movement.note` (interno: el panel lo pinta, `LedgerResource` no lo transcribe); D9 bis con
+        signo («Devuelto en el parque», `tickets.journal.gate_refund` en cuatro idiomas); la etiqueta
+        «Descuento por cortesía». ⚠️ **D-T4·6**: lo debido es lo debido EN DINERO (sin lo inferido)
+        — la lectura literal de §6.4 («tras la visita, solo compensación») contaba el dinero dos
+        veces. `RefundIntentGovernsTest` (13 casos), `OrderBookTest` +2, `CourtesyMovementTest` +1;
+        mutaciones y sonda en §6.4.1. Cierra `LB-ORDEN` (re-sembrado: IMPOSIBLE) y el «pendiente de
+        devolución» eterno (`LB-BAJADA` con la visita de ayer: saldado). Fuera, con ficha: cancelación
+        (producción) · «Regularizar» (aparcado) · el aviso al bajar tras una cortesía. Queda el OJO
+        del owner (T3·4b + esto).
 
 ### El CAMBIO DE PRECIO ✅ — la línea `#145`→`#155`, CERRADA el 2026-08-25
 

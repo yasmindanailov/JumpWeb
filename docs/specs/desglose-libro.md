@@ -206,10 +206,13 @@ Tipos:
   exceso sobre lo debido es cortesía. ▶ Es la regla que `compensado()` aplica hoy **al leer**,
   escrita **al ocurrir**; y resuelve `L4` (`#133`, aparcado): «Compensación devuelta» deja de ser
   un canal opaco y es una línea «−» con fecha.
-  ⚠️ **CORRECCIÓN (T4, `DECISIONES #316`, §6.4 — diseñada, sin código)**: la cortesía se escribe
-  **SOLO con `compensation`** y con motivo obligatorio; `value_returned` **no puede exceder lo
-  debido** (el modal lo capa y el dominio lo bloquea). Con esta regla `LB-ORDEN` (§6.3.7) era
-  posible; con la de §6.4, no. La línea se llama «Descuento por cortesía».
+  ⚠️ **CORRECCIÓN (T4, `DECISIONES #316` diseño · `#317` EN EL ÁRBOL, §6.4 y §6.4.1)**: la cortesía
+  se escribe **SOLO con `compensation`** y con motivo obligatorio (`payment_refunds.reason` →
+  `context.note`, interno); `value_returned` **no puede exceder lo debido** (el modal lo capa y el
+  dominio lo bloquea bajo lock, `exceeds_owed`, ANTES de la pasarela) y nunca la genera; sin
+  intención tampoco. Con la regla de arriba `LB-ORDEN` (§6.3.7) era posible; con la de §6.4, no. La
+  línea se llama «Descuento por cortesía». ⚠️ Y «lo debido» es lo debido EN DINERO
+  (`OrderBook::owedToCustomerCents` = cobrado − devuelto − Total, sin la liquidación inferida): D-T4·6.
 - **El tope de la T4 cae** (D4): `MixedPartySurcharge::applyCredit()` escribe el crédito
   **derivado entero** (`min(derivado, cobertura)` → `derivado`); `gateCoverageCents()` e
   `inFavourCents()` se retiran. Un pedido 100 % online con −8,00 € de descuento queda con
@@ -260,11 +263,14 @@ línea de valor lleva delante el nombre de su reserva.
 entra en `paid_cents`**: el saldo sigue diciendo «a devolver X» mientras el dinero no ha vuelto, y
 `PAY-09` (la capacidad cuenta los pendientes) impide devolverlo dos veces. Visible para los dos.
 
-⚠️ **CORRECCIÓN (T4, `DECISIONES #316`, §6.4 — diseñada, sin código)**: la liquidación implícita de
-D9 pasa a ser **simétrica**. Con la visita pasada, el pedido cobrado y el principal vivo, un
-`Saldo < 0` se da por **devuelto en recepción** (liquidación `gate` negativa, «Devuelto en el parque»)
-y el saldo queda `settled`; `refund_pending` queda solo para lo que NO tuvo visita (pedido o principal
-cancelados). La inferencia cede ante los hechos: un reembolso posterior la reduce en su importe.
+⚠️ **CORRECCIÓN (T4, `DECISIONES #316` diseño · `#317` EN EL ÁRBOL, §6.4 y §6.4.1)**: la liquidación
+implícita de D9 pasa a ser **simétrica**. Con la visita pasada, el pedido cobrado y el principal vivo,
+un `Saldo < 0` se da por **devuelto en recepción** (liquidación `gate` negativa, «Devuelto en el
+parque») y el saldo queda `settled`; `refund_pending` queda solo para lo que NO tuvo visita (pedido o
+principal cancelados). La inferencia cede ante los hechos: un reembolso posterior la reduce en su
+importe — y para que eso sea posible desde el panel, «lo debido» que sugiere y capa el modal es lo
+debido EN DINERO, sin lo inferido (D-T4·6): medido, `LB-BAJADA` con la visita de ayer queda `settled`
+con «Devuelto en el parque −19,80» y `owedToCustomerCents() = 19,80`.
 
 ### 4.5 El contrato (`openapi/v1.yaml` → `Ledger`, **primero**, como manda `specs/api-v1.md`)
 
@@ -1157,10 +1163,18 @@ pinta (`settled` · `under_review`).
 ### 6.4 · Diseño fino de la T4 (2026-09-01) — «el motivo manda» en el reembolso, y la liquidación simétrica
 
 > ✅ **Diseño APROBADO por el owner el 2026-09-01** (*«SÍ, PROCEDEREMOS así»*), con **D-T4·1
-> confirmado explícitamente: el motivo es interno, el cliente NO lee el texto**. **SIN código
-> todavía**: la siguiente sesión la ejecuta tal como está escrita aquí, guardas y mutaciones incluidas.
-> Nace de la primera lectura del owner sobre los once pedidos `LB-*` (`VERIFICACION-E2E-CAJON.md`
-> §5.sexies) y de sus cinco decisiones (`DECISIONES #316`).
+> confirmado explícitamente: el motivo es interno, el cliente NO lee el texto**. Nace de la primera
+> lectura del owner sobre los once pedidos `LB-*` (`VERIFICACION-E2E-CAJON.md` §5.sexies) y de sus
+> cinco decisiones (`DECISIONES #316`).
+> ▶ ✅ **EJECUTADA el 2026-09-01 (`DECISIONES #317`): §6.4.1 es lo hecho.** ⚠️⚠️ **DOS afirmaciones
+> de este diseño resultaron FALSAS al ejecutarlo, y su corrección va delante del texto**: (1)
+> «`payment_refunds.reason` existe desde la migración fundacional» — **NO existía** (lo que hay es
+> `failure_reason`, del gateway); la crea la migración `2026_09_01_120000`; (2) «`owedToCustomerCents()`
+> vuelve 0 [tras la visita] y el modal solo ofrece compensación» **se contradice con la consecuencia
+> (b) del mismo párrafo** («la inferencia cede ante los hechos»): con 0 debido, el único camino tras
+> la visita sería una compensación, que escribe cortesía por el importe entero y deja lo inferido
+> intacto — el dinero contado DOS veces. Resuelto con **D-T4·6** (§6.4.1): lo debido es lo debido EN
+> DINERO (sin lo inferido), «devolver lo debido» cabe hasta esa cifra y hace desaparecer lo inferido.
 
 **Lo que el owner decidió** (2026-09-01, con los pedidos delante):
 
@@ -1178,9 +1192,13 @@ pinta (`settled` · `under_review`).
   con lo debido sugerido, D5). El **total** (`refund`, 277) solo pregunta el motivo cuando NO se cancela
   (`compensation` | `paid_in_person`); con «también cancelar» el motivo es `value_returned` implícito y
   el importe es el pago entero (`#153`). Ningún modal admite hoy un texto de motivo.
-- `payment_refunds.reason` **existe** desde la migración fundacional («motivo libre del operador»,
+- ~~`payment_refunds.reason` **existe** desde la migración fundacional («motivo libre del operador»,
   nullable) y **no lo rellena ningún modal**: `grep` en `ViewOrder` da cero escrituras. No hace falta
-  migración para guardar el motivo.
+  migración para guardar el motivo.~~ ⚠️⚠️ **FALSO, medido al ejecutar (§6.4.1)**: la columna de la
+  migración fundacional es `failure_reason` (`transport_error_check_portal|gateway_denied|unknown`,
+  del GATEWAY), y `reason` no existía en ninguna parte — la suite entera cayó con «no column named
+  reason» al escribirla. La crea `2026_09_01_120000_add_reason_to_payment_refunds` (`string(200)`,
+  nullable). *Un `grep` que encuentra «reason» no demuestra que exista la columna que buscas.*
 - La regla de §4.2: `cortesía = max(0, importe − debido)` para `compensation`, `value_returned` **o sin
   motivo**, y solo `paid_in_person` la evita. Es la que convirtió los 19,80 de `LB-ORDEN` en cortesía
   con el operador diciendo «devuelvo lo que se le debe».
@@ -1224,7 +1242,10 @@ pinta (`settled` · `under_review`).
   cobrado y el principal vivo, `liquidado = total − (online_nac − dev)` **con signo**. Negativo →
   liquidación `gate` con importe negativo y rótulo nuevo «Devuelto en el parque»
   (`tickets.journal.gate_refund`); `Pagado` lo suma con signo; el saldo queda `settled`;
-  `owedToCustomerCents()` vuelve 0 y el modal ya no ofrece «devolver lo debido» (solo compensación).
+  ~~`owedToCustomerCents()` vuelve 0 y el modal ya no ofrece «devolver lo debido» (solo compensación)~~
+  ⚠️ **CORREGIDO por D-T4·6 (§6.4.1)**: `owedToCustomerCents()` mide lo debido EN DINERO —sin lo
+  inferido— y sigue diciendo 19,80; el modal sigue ofreciendo «devolver lo debido» hasta esa cifra, y
+  es ESE reembolso el que hace desaparecer la línea «Devuelto en el parque» (consecuencia (b), abajo).
   `refund_pending` queda para lo que NO tuvo visita: pedido cancelado, principal cancelado, reservas
   sin liquidar (decisión 3). ⚠️ **Consecuencias dichas**: (a) un cliente que NO vino y al que se le
   debía dinero leerá «Devuelto en el parque» — es exactamente la aceptación de D9 en la otra
@@ -1268,6 +1289,120 @@ falta salvo que la tanda toque `MixedPartySurcharge`/`OrderItemEditor`, que no t
 (decisión 4, aparcado) · el aviso al bajar una línea con cortesía posterior · plegar «Pagos y
 devoluciones» cuando solo hay un cobro (pregunta abierta al owner, de presentación).
 
+### 6.4.1 · ✅ T4 EJECUTADA (2026-09-01, `DECISIONES #317`) — el motivo manda, la liquidación simétrica y «Descuento por cortesía»
+
+**Lo hecho**, por pieza (todo en `main`; sin `VERIFY_CONC`: ningún fichero del `CRITICAL_RE` cambió):
+
+- **Dominio (`Order`)**: `executeFullRefund` · `executePartialRefund` · `executePartialRefundBatch`
+  ganan `?string $note`. El motivo se normaliza (recorte; en blanco = `null`) y se valida ANTES de la
+  txn 1 —`compensation` sin texto → `compensation_without_note`; > 200 caracteres → `note_too_long`
+  (`Order::REFUND_NOTE_MAX_LENGTH`, el ancho de la columna)—. **El tope `exceeds_owed` va DENTRO de la
+  txn 1, bajo lock y antes de la pasarela**: a partir de la llamada REST ya no se puede deshacer, así
+  que lo que se bloquea se bloquea sin dejar ni la fila `pending`. Por línea mide lo debido con
+  `OrderBook::forReservation(principal)`; el total, con `forOrder`; con «también cancelar» no hay tope
+  explícito (D-T4·5: lo acotan el remanente de la línea y `refundBlockedReason`). El motivo se guarda en
+  `payment_refunds.reason` y **`recordCourtesyForRefund` solo escribe con `compensation`**, con
+  `context.note`. ⚠️ **`payment_refunds.reason` NO existía** (arriba): migración
+  `2026_09_01_120000_add_reason_to_payment_refunds` (`string(200)` nullable; `MODELO-DATOS` §2 al día).
+- **Libro (`OrderBook`)**: `liquidado = total − (online_nac − dev)` CON SIGNO cuando la reserva está
+  resuelta; `gateSettlement` pone la etiqueta por signo (`MovementLabel::gateRefund()` →
+  `tickets.journal.gate_refund`, «Devuelto en el parque»); `Movement` gana `note` (solo en `courtesy`,
+  leída de `context.note`); **`owedToCustomerCents()` = `max(0, (Pagado − Σ gate) − Total)`** si el libro
+  cierra, 0 si no (D-T4·6, abajo). `Settlement`/`Balance` con sus docblocks al día.
+- **Panel (`ViewOrder`)**: los DOS modales ofrecen TRES motivos —`value_returned` («Devolver lo que se
+  le debe») · `compensation` · `paid_in_person`— con descripción dinámica; `disableOptionWhen` deshabilita
+  «lo debido» cuando no cabe y el mensaje `in` dice por qué; `Textarea refund_note` (obligatorio y
+  5–200 solo con `compensation`; opcional con el resto; oculto con «también cancelar»); `Placeholder`
+  con la frase del exceso EN VIVO («De estos 29,70 €, 19,80 € devuelven lo que se le debe y 9,90 € son
+  un descuento por cortesía»). En el modal de LÍNEA lo debido es el de SU RESERVA (`owedForItem`, la
+  misma cifra que el dominio) —hasta hoy sugería el del pedido—, `custom_amount` lleva `maxValue` =
+  lo debido con `value_returned` y una regla sobre `intent` exige que con «todo lo que queda» la Σ de
+  remanentes (complementos auto-marcados incluidos, `plannedRefundCents`) quepa en lo debido. En el
+  modal TOTAL el importe es fijo (el pago entero, `#153`), así que «lo debido» solo se ofrece cuando lo
+  debido lo cubre (D-T4·7) y la descripción dice dónde se hace si no («por línea, eligiendo importe»).
+  `reservation-financials.blade.php` pinta el motivo bajo la línea (`data-book-note`), FUERA de la
+  fila `data-book-movement`: la etiqueta que compara `BookSurfacesParityTest` no cambia.
+- **Contrato**: solo DESCRIPCIONES (`LedgerSettlement.kind` y `amount_cents`: `gate` con signo);
+  `LedgerResource` **no transcribe `note`** y `LedgerMovement` sigue con `additionalProperties: false`
+  (Spectator lo cazaría además de la guarda). `specs/api-v1.md` §10.octodecies punto 97.
+- **Idioma**: `tickets.journal.courtesy` → «Descuento por cortesía» / «Courtesy discount» / «Remise
+  commerciale» / «礼遇折扣»; `gate_refund` nuevo en los cuatro; `admin.orders.actions.refund.*` y
+  `refund_item.*` (los textos de la opción, del motivo y del exceso), las dos listas `reasons`
+  (`exceeds_owed` · `compensation_without_note` · `note_too_long`) y `book.movement_note` (es · zh_CN).
+- **Tests**: `RefundIntentGovernsTest` (nuevo: 13 casos, 128 aserciones — el tope por línea y total,
+  el ámbito de la reserva, el motivo obligatorio y su tope, la cortesía = exceso con el motivo, sin
+  intención no hay cortesía, el panel pinta el motivo y la API no lo publica, y los tres modales por
+  conducta) · `OrderBookTest` +2 (D9 bis; la inferencia cede ante un reembolso posterior) ·
+  `CourtesyMovementTest` +1 (`LB-ORDEN` bloqueado); **29 reembolsos con `compensation` en ocho
+  ficheros de tests ganan su motivo**; `ClientMoneyLabelsAreTranslatedTest::JOURNAL_LABELS` con
+  `gate_refund`. `OrderBookTest` asevera la etiqueta nueva.
+
+**Decisiones derivadas NUEVAS** (vetables, como las cinco de §6.4):
+
+- **D-T4·6 · «lo debido» es lo debido EN DINERO, sin la liquidación inferida.** §6.4 decía que tras
+  la visita `owedToCustomerCents()` vuelve 0 y el modal solo ofrece compensación — y dos párrafos
+  después que «la inferencia cede ante los hechos» si el operador devuelve por tarjeta. Las dos cosas
+  no pueden ser: con 0 debido el único camino sería `compensation`, que escribiría una cortesía por
+  el importe ENTERO y dejaría la línea «Devuelto en el parque» intacta — el libro contando el dinero
+  dos veces (una devolución inferida que no ocurrió + una devolución real + un descuento que no es).
+  Con `owedToCustomerCents = max(0, (Pagado − Σ gate) − Total)`: `LB-BAJADA` con la visita de ayer
+  queda `settled` con «Devuelto en el parque −19,80» **y** sigue debiendo 19,80 en dinero; «devolver
+  lo que se le debe» cabe hasta esa cifra, no escribe cortesía y hace desaparecer lo inferido en la
+  misma cantidad (medido en `OrderBookTest`: 6,00 devueltos → «Devuelto en el parque −4,00»; los 4,00
+  restantes → ninguna línea inferida). Coste dicho: el modal de una reserva ya pasada dice «se le
+  deben 19,80 €» mientras el libro dice `settled`, y la descripción de la opción lo explica.
+- **D-T4·7 · en el reembolso TOTAL «devolver lo que se le debe» solo se ofrece cuando lo debido cubre
+  el pago entero** (`#153`: esa acción no elige importe). Si se debe menos, la opción queda
+  deshabilitada y dice que se hace por línea desde «Gestionar»; si se debe todo (todas las líneas
+  canceladas sin cancelar el pedido), cabe.
+- **D-T4·8 · sin intención tampoco hay cortesía** (`intent = null`: filas viejas, un cliente
+  programático): una cortesía es una decisión, no un residuo. El libro dice entonces la verdad —«a
+  pagar en el parque» por lo devuelto de más— en vez de fabricar un descuento.
+- **D-T4·9 · el motivo se exige en el DOMINIO además de en el modal** (`SEC-04`, como el `mode` y el
+  `also_cancel`), y su tope (200) es el ancho de la columna.
+
+**Mutaciones** (arnés en el scratchpad con pasada de CONTROL; cada una muta UN fichero, corre su
+guarda y vuelve al commit — `#181`): **11 de 12 muerden**.
+
+| Mutación | Guarda | ¿Muerde? |
+|---|---|---|
+| M1 cortesía con cualquier motivo salvo `paid_in_person` (la regla vieja) | `RefundIntentGovernsTest` | ✓ |
+| M2 quitar el tope del dominio por línea · M2b en el total | `CourtesyMovementTest` · `RefundIntentGovernsTest` | ✓ · ✓ |
+| M3 motivo opcional en el dominio · M3b en el modal de línea | `RefundIntentGovernsTest` | ✓ · ✓ |
+| M4 transcribir `note` en `LedgerResource` | `RefundIntentGovernsTest` | ✓ |
+| M5 restaurar el `max(0, …)` de D9 · M6 no restar `dev` de lo inferido | `OrderBookTest` | ✓ · ✓ |
+| M7 el modal de línea sin capar `custom_amount` | `RefundIntentGovernsTest` | ✓ |
+| M8 borrar una traducción de `gate_refund` | `ClientMoneyLabelsAreTranslatedTest` | ✓ |
+| M9 el modal de línea sin `disableOptionWhen` | `RefundIntentGovernsTest` | **✗ — a sabiendas**: es la segunda capa; la regla sobre `intent` sigue rechazando «lo debido» con 0 y el caso queda en rojo por ella. Deshabilitar la opción es afordancia, no defensa |
+| M10 lo debido medido con el saldo (la lectura literal de §6.4) | `OrderBookTest` | ✓ |
+
+⚠️⚠️ **El arnés dio primero 12/12 y era FALSO**: buscaba «OK (» en la salida, y el runner de UN
+fichero imprime «Tests: N passed» — daba ROJO con la guarda sana. *Cuando un instrumento dice que
+TODO funciona, la primera hipótesis es el instrumento* (la lección de `tema-por-instalacion.md`
+§10.6, otra vez): se rehízo con el código de salida y una pasada de CONTROL sin mutar, y M9 salió a
+la luz.
+
+**Sonda y siembra** (`VERIFICACION-E2E-CAJON.md` §5.sexies, «La T4 sobre los mismos pedidos»): las
+tres sondas viejas de «en revisión» borradas; `LB-ORDEN` re-sembrado —**el intento de devolver
+antes de la bajada da `exceeds_owed` sin dejar fila**; después, saldado sin cortesía—, `LB-BAJADA`
+con la visita de ayer («Devuelto en el parque −19,80», saldado) y `LB-CORTESIA` con motivo. La sonda
+headless sobre los 11 `LB-*`: **53/53 ✓** (el cajón pintó las dos etiquetas nuevas sin tocar `orders.js`).
+
+**Trampas pagadas**:
+1. **`validationMessages()` solo admite un ARRAY** (Filament evalúa cada VALOR, que sí puede ser un
+   `Closure`); un `Closure` como argumento es un `TypeError` **al construir el modal**, o sea al
+   renderizar la página del pedido entera — y como la suite lo pisa en decenas de casos, la corrida se
+   fue a los 600 s del timeout antes de enseñar el fallo. *Un error de firma en un componente de un
+   modal no falla en el modal: falla en la página.*
+2. **La columna que la spec daba por existente no existía** (arriba). La spec se escribió con un
+   `grep` de «reason» que casó `failure_reason`.
+3. `php artisan test` admite UNA sola ruta: para correr varios directorios, uno por invocación.
+
+**Lo que queda**: el OJO del owner (V18–V22 de §5.sexies) · la pregunta de presentación (plegar «Pagos
+y devoluciones» con un solo cobro) · **D-T4·6 y D-T4·7 son vetables**: si el owner prefiere la
+lectura literal de §6.4 (tras la visita, solo compensación), es cambiar `owedToCustomerCents()` y dos
+casos de `OrderBookTest`, con el coste del dinero contado dos veces delante.
+
 ## 7. Revisión y decisión
 
 - 2026-09-01 · **Agente**: análisis empírico (§1.2–§1.4), prototipo de lectura y este diseño. Dos
@@ -1293,6 +1428,12 @@ devoluciones» cuando solo hay un cobro (pregunta abierta al owner, de presentac
   regularización, aparcadas). **Espera su ✅ antes de escribir código.**
 - 2026-09-01 · **Owner**: *«SÍ, PROCEDEREMOS así»* — diseño de la T4 ✅, con D-T4·1 confirmado
   (el motivo es interno). Sesión cerrada ahí: **la siguiente ejecuta la T4.**
+- 2026-09-01 · **T4 ejecutada** (§6.4.1, `DECISIONES #317`): el motivo manda (tope `exceeds_owed`
+  bajo lock, motivo obligatorio con `compensation`, la cortesía solo su exceso y con el motivo
+  interno), la liquidación simétrica («Devuelto en el parque») y «Descuento por cortesía». Dos
+  afirmaciones de §6.4 resultaron falsas al medirlas (la columna `reason` no existía; «tras la
+  visita, solo compensación» contaba el dinero dos veces → D-T4·6). 11/12 mutaciones, sonda 53/53.
+  **Sigue 🟦 solo por el OJO del owner** (V18–V22) y por sus vetos a D-T4·6/D-T4·7.
 - Entradas: `DECISIONES #305` (la decisión de producto) · `#306` (la T1) · `#308` (la T2) · `#310`
   (la T3·1) · `#311` (la T3·2) · `#312` (la T3·3) · **`#315` (la T3·4)** · `#316` (las decisiones
-  del owner tras los `LB-*`; la T4).
+  del owner tras los `LB-*`; la T4) · **`#317` (la T4 ejecutada)**.

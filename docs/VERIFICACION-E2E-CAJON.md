@@ -2072,3 +2072,26 @@ el MISMO segundo salen con la devolución primero (empate en `occurred_at`); en 
 - Los pedidos `LB-*` **quedan vivos en local** (retienen aforo real de franjas abiertas y llevan
   `event_data`/edades ficticios marcados como tal); se borran con
   `Order::where('code','like','LB-%')->get()->each->delete()`.
+
+### La T4 sobre los mismos pedidos (2026-09-01, `DECISIONES #317`)
+
+`seed-libro-t4.php` (scratchpad de la sesión de la T4; se corre igual que los anteriores) borra
+`LB-ORDEN`, `LB-BAJADA`, `LB-CORTESIA` y las tres sondas viejas de «en revisión» (`T4-PRB01`, `R-IBX8B1`,
+`R-D3AN8Q` — `#316` decisión 4) y re-siembra los tres por el dominio:
+
+| Código | Lo que hace el guion | Libro que compone el dominio |
+|---|---|---|
+| `LB-ORDEN` | Intenta «devolver lo que se le debe» (19,80) ANTES de registrar la bajada → **`exceeds_owed`, ni una fila**; registra la bajada 3 → 1 y devuelve 19,80 como lo debido | Reserva +29,70 · Cantidad 3 → 1 −19,80 · Devuelto en el parque (registrado) −19,80 · **Total 9,90 = Pagado 9,90 · saldado, sin cortesía** (era Total −9,90) |
+| `LB-BAJADA` | La misma bajada con la franja movida a AYER | Reserva +29,70 · Cantidad 3 → 1 −19,80 · **«Devuelto en el parque» −19,80 (inferido, D9 bis)** · Total 9,90 = Pagado 9,90 · **saldado** (era «a devolver en el parque» para siempre) · `owedToCustomerCents() = 19,80` (D-T4·6) |
+| `LB-CORTESIA` | 4 → 2 (debidos 19,80), se devuelven 29,70 como COMPENSACIÓN con motivo | … · **«Descuento por cortesía» −9,90** con el motivo debajo en el panel (`data-book-note`) y **sin motivo en la API** · saldado |
+
+✅ **Sonda `libro-probe.js` sobre los 11 `LB-*`: 53 comprobaciones, 53 ✓, 0 ✗** (una menos que antes:
+`LB-ORDEN` ya no tiene la línea «Compensación»). El cajón pintó «Devuelto en el parque · 31/08/2026
+−19,80 €» y «Descuento por cortesía · −9,90 €» **sin tocar `orders.js`**: pinta por signo y por
+etiqueta, como manda el contrato. ⚠️ Cosmética: la liquidación inferida va fechada al FIN de la franja
+(ayer) y por eso sale ANTES del «Pagado online» de hoy — es la siembra; en producción el cobro
+precede a la visita.
+
+Queda para el OJO del owner (V22): el modal «Reembolsar» de `LB-BAJADA` (ofrece «devolver lo que se le
+debe» hasta 19,80 y explica que el libro lo da por devuelto en recepción), el de `LB-ORDEN` sin bajada
+registrada (la opción deshabilitada con la frase), y `LB-CORTESIA` en la ficha (el motivo bajo la línea).

@@ -18638,3 +18638,59 @@ explícito), la lista de lo que toca, seis guardas con sus mutaciones; correccio
 ▶ **2026-09-01 (la misma mañana) · Owner: «SÍ, PROCEDEREMOS así»**, con D-T4·1 confirmado
 explícitamente —*«el motivo es interno, no se le enseña al cliente el texto»*— → **§6.4 ✅**. La
 sesión se cierra ahí; **la siguiente ejecuta la T4** tal como §6.4 la escribe.
+
+## #317 · 2026-09-01 · La T4 del libro en el árbol: el motivo manda en el reembolso, la liquidación en el parque es simétrica y la cortesía se llama «Descuento por cortesía»; dos afirmaciones del diseño resultaron falsas al ejecutarlo
+
+**Contexto.** `#316` dejó la T4 diseñada (`specs/desglose-libro.md` §6.4) y aprobada por el owner
+(*«SÍ, PROCEDEREMOS así»*, con el motivo INTERNO). Esta sesión la ejecuta tal como está escrita —guardas
+y mutaciones incluidas— y, al medir, encuentra que dos de sus afirmaciones no eran ciertas:
+
+- **«`payment_refunds.reason` existe desde la migración fundacional» — NO existía.** Lo que hay es
+  `failure_reason`, del gateway. La suite entera cayó con «no column named reason» al escribir el
+  motivo: la crea la migración `2026_09_01_120000_add_reason_to_payment_refunds` (`string(200)`, nullable).
+- **«Tras la visita `owedToCustomerCents()` vuelve 0 y el modal solo ofrece compensación» se
+  contradecía con el mismo párrafo** («la inferencia cede ante los hechos: un reembolso posterior la
+  reduce»). Con 0 debido, el único reembolso posible tras la visita sería una compensación, que
+  escribe cortesía por el importe ENTERO y deja la línea «Devuelto en el parque» intacta: el dinero
+  contado dos veces. No se preguntó porque el propio diseño ya había decidido el criterio («el libro
+  no cuenta el dinero dos veces»); se resolvió con una decisión derivada vetable.
+
+**Decisión** (`[DECIDIDO owner]` en `#316`; aquí lo derivado, vetable — D-T4·6 → D-T4·9 en §6.4.1):
+1. **«Lo debido» es lo debido EN DINERO**: `OrderBook::owedToCustomerCents = max(0, (Pagado − Σ
+   liquidado en el parque) − Total)` si el libro cierra. Con la visita pasada el saldo queda `settled`
+   («Devuelto en el parque», inferido) **y** «devolver lo que se le debe» sigue cabiendo hasta esa
+   cifra, sin cortesía, haciendo desaparecer lo inferido en la misma cantidad (D-T4·6).
+2. En el reembolso TOTAL, «lo debido» solo se ofrece cuando cubre el pago entero: esa acción no
+   elige importe (`#153`); si se debe menos, la opción se deshabilita y dice que se hace por línea (D-T4·7).
+3. Sin intención tampoco hay cortesía: una cortesía es una decisión, no un residuo (D-T4·8).
+4. El motivo se exige en el dominio además de en el modal, con el ancho de la columna de tope (D-T4·9).
+
+**Lo hecho** (§6.4.1): el tope `exceeds_owed` bajo lock y ANTES de la pasarela (línea: su reserva;
+total: el pedido; «también cancelar» sin tope, D-T4·5) · `compensation_without_note` / `note_too_long`
+· `recordCourtesyForRefund` solo con `compensation`, con `context.note` · `Movement.note` interno
+(`LedgerResource` no lo transcribe; `reservation-financials` lo pinta bajo la línea) · D9 bis con signo
+y `tickets.journal.gate_refund` · «Descuento por cortesía» en cuatro idiomas · los dos modales de
+`ViewOrder` con tres motivos, importe capado, opción deshabilitada, `Textarea` de motivo y la frase
+del exceso en vivo; el modal de línea mide lo debido en SU RESERVA (hasta hoy, en el pedido) ·
+`RefundIntentGovernsTest` (13) · `OrderBookTest` +2 · `CourtesyMovementTest` +1 · 29 reembolsos de
+tests ganan su motivo · `INVARIANTES` `PAY-17` · `MODELO-DATOS` · `api-v1.md` punto 97 · siembra y
+sonda (§5.sexies): `LB-ORDEN` IMPOSIBLE por `value_returned` y saldado por el camino bueno,
+`LB-BAJADA` con la visita de ayer saldado, `LB-CORTESIA` con motivo; **53/53 ✓**.
+
+**Lecciones.**
+- ⚠️⚠️ **Un diseño aprobado también se mide.** Dos afirmaciones de §6.4 —una columna que «existía» y
+  una consecuencia que se contradecía con la de al lado— no las vio nadie hasta ejecutarlas: la
+  columna, porque un `grep` de «reason» casó `failure_reason`; la contradicción, porque las dos
+  frases eran ciertas por separado. *La corrección va delante del texto, y el owner puede vetarla.*
+- ⚠️⚠️ **El arnés de mutación dio 12/12 y mentía**: buscaba «OK (» y el runner de un fichero
+  imprime «Tests: N passed». Rehecho con el código de salida y una pasada de CONTROL sin mutar:
+  **11/12**, y la que no muerde (deshabilitar la opción del modal) no muerde porque hay una segunda
+  capa — que es exactamente lo que había que saber. *Un arnés sin control no distingue «todo muerde»
+  de «todo está roto».*
+- ⚠️ **`validationMessages()` de Filament solo admite un array** (el `Closure` va en el VALOR). Un
+  error de firma en un componente de un modal no falla en el modal: falla al RENDERIZAR la página, y la
+  suite se fue a los 600 s del timeout sin enseñar el fallo.
+
+**Verificación**: suite entera en verde (el contador de `ESTADO`) · Pint · docs-check · 11/12
+mutaciones con control · sonda headless 53/53 · migración corrida en local. Sin `VERIFY_CONC`: ningún
+fichero del `CRITICAL_RE` cambió.
