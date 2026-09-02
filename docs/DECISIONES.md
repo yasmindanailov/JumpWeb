@@ -21675,3 +21675,57 @@ los CASOS— que no se tocaron ese día.**
 
 **Verificación**: la colisión reproducida y vista en ROJO antes del arreglo · suite **4.023 · 25.709**
 verde · Pint ✓ · docs-check ✓ · aviso del otro carril retirado con acuse, según `CONVENCIONES §10.4`.
+
+---
+
+## #409 · 2026-09-02 · El producto de excursiones es DATO: se prepara sin desplegar, pero su ACTIVACIÓN sí depende del despliegue
+
+`[DECIDIDO owner, 2026-09-02]`, dos decisiones: la **señal de 100,00 € fijos** queda confirmada —hasta
+hoy era un número que puso un agente, no el owner— y los dos packs nacen con el justificante en
+**`required`**, que es el caso para el que se construyó la feature: en una excursión de colegio cada
+niño necesita el permiso de su padre, y lo marca el SERVIDOR.
+
+▶ **Lo que esto NO necesita: un despliegue.** Los mecanismos (`#322` horario por zona, `#324` precio
+por tramo) llevan en producción desde el lanzamiento; lo que falta es **dato**. El guion vive **fuera
+del repo** (`#325`, distancia sana: los precios de un cliente no son un mecanismo).
+
+### Lo que enseñó el ensayo en staging, que es para lo que se ensaya
+
+**1 · Las tarifas se resuelven por `key`, jamás por id — y no es cinturón.** Medido: `normal` es la
+**#2** en local y la **#1** en staging, y `special` cubre **`[0,5,6]`** (con viernes) en local pero
+**`[0,6]`** en staging. Un guion con ids dentro habría escrito los tramos **en la tarifa equivocada**,
+que es DINERO, sin fallar y sin avisar.
+
+**2 · Un guion de datos también necesita su pre-vuelo, y lo aprendí rompiéndolo.** La primera versión
+creó la zona y las cinco plantillas y **reventó a mitad** al insertar el pack: staging no tiene
+`ticket_types.guardian_authorization`. **Es el mismo defecto que `#406` arregló esta mañana en una
+migración, cometido por mí en otro sitio doce horas después.** Ahora comprueba el esquema **antes de
+la primera escritura** y aborta sin tocar nada.
+
+**3 · Un dry-run que enseña menos de lo que va a hacer es peor que no tenerlo.** Sobre un entorno
+virgen decía **1 acción** cuando hay **24**: sin la zona creada no podía consultar lo que cuelga de
+ella. *Y el dry-run es justo lo que el owner lee para decidir.* Ahora planifica el árbol completo
+aunque la zona no exista.
+
+### ❗ La dependencia que hay que saber antes de tocar producción
+
+**`required` NO se puede aplicar todavía.** `ticket_types.guardian_authorization` es de `#400` y
+**staging no la tiene** — y producción corre código **más antiguo**, así que tampoco. El guion lo
+detecta, crea el producto igual (vendible, sin pedir justificante) y **lo dice en voz alta**: al
+desplegar, se repite el mismo guion y entonces sí pone los dos packs en `required`. Es idempotente.
+
+### Lo verificado en staging, sobre el stack real
+
+24 acciones aplicadas · **tercera pasada: 0 por hacer, 24 ya estaban** (idempotencia) · 130 franjas
+generadas con `slots:generate-rolling` · y el **precio por tramo medido de verdad**: 30–69 personas a
+15,00 €/persona, 70–99 a 13,00 y 100 a 12,00, con +2,00 en fin de semana. La zona nace con **un solo
+grupo por franja** (`max_per_slot = 1`), horario propio 08:00–15:00 e `ignores_venue_closure`, que es
+lo que le permite operar con el recinto cerrado.
+
+⚠️ **Anotado para el owner, y no es un defecto sino una propiedad de los tramos**: **99 personas
+cuestan 1.287 € y 100 cuestan 1.200 €** — comprar una plaza más sale más barato. Es el escalón normal
+de un descuento por volumen; suavizarlo o no es decisión suya.
+
+**Verificación**: ensayo completo en staging (mismo servidor físico que producción, otro usuario) ·
+dry-run → ejecución → **no-op** en la tercera pasada · franjas generadas · precio por tramo medido en
+cinco cantidades y las dos tarifas · el guion entregado al owner fuera del repo, con sus tres comandos.

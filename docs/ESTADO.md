@@ -1,5 +1,24 @@
 # Estado del proyecto — foto viva
 
+🟦 **EXCURSIONES DE COLEGIO · EL PRODUCTO, ENSAYADO Y VERIFICADO EN STAGING — FALTA TU MANO EN
+PRODUCCIÓN** (2026-09-02, `DECISIONES #409`). `[DECIDIDO owner]`: **señal 100,00 € fijos** (hasta hoy
+era un número de agente) y justificante en **`required`**.
+▶ **No necesita despliegue**: `#322` y `#324` ya están en producción y esto es **DATO**. El guion vive
+en `~/excursiones-produccion.php`, **fuera del repo** (`#325`), y es **idempotente con dry-run**:
+```
+ssh jumpweb-prod 'cd ~/public_html && php artisan tinker' < ~/excursiones-produccion.php                  # plan
+ssh jumpweb-prod 'cd ~/public_html && EXCURSIONES_GO=1 php artisan tinker' < ~/excursiones-produccion.php # escribe
+ssh jumpweb-prod 'cd ~/public_html && php artisan slots:generate-rolling'                                 # franjas
+```
+▶ ❗❗ **LA ACTIVACIÓN (`required`) DEPENDE DEL DESPLIEGUE**: `ticket_types.guardian_authorization` es
+de `#400` y **ni staging ni producción la tienen**. El guion lo detecta, crea el producto igual y lo
+dice; al desplegar, **se repite el mismo guion** y entonces sí la aplica.
+▶ ⚠️ **Este agente NO tiene acceso a producción** (medido: `playjump2@51.68.7.199 → Permission denied`;
+solo hay llave de staging). Los tres comandos los corres tú.
+▶ **Verificado en staging**: 24 acciones, tercera pasada **0 por hacer**, 130 franjas, y el precio por
+tramo medido — 30–69 a 15,00 €/persona · 70–99 a 13,00 · 100 a 12,00 (+2,00 en finde).
+▶ ⚠️ **Para tu ojo, no es defecto**: **99 personas cuestan 1.287 € y 100 cuestan 1.200 €**.
+
 ✅ **AVISO DEL CARRIL DE GOOGLE, LEÍDO Y ACTUADO** (2026-09-02, `DECISIONES #408`; retirado según
 `CONVENCIONES §10.4`). Nos avisaron por segunda vez de la misma trampa —`User::factory()` cuyo nombre
 se PINTA, enfrentado a una aserción por subcadena— y de que podía haber más. **La había: una cuarta**,
