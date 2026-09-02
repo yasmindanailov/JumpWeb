@@ -41,6 +41,16 @@ export const useAccountContextStore = defineStore('accountContext', {
     getters: {
         /** ¿Hay titular? Lo decide el CONTEXTO, nunca `userId` (ver el docblock del store). */
         identified: (state) => state.context !== null,
+
+        /**
+         * **Lo que este titular debe antes de poder contratar** (`#349`). Lo lee el paso de PAGAR.
+         *
+         * ⚠️ **Se leen como getters y no `context.terms_pending` a pelo** para que el `null` del
+         * anónimo no obligue a cada consumidor a defenderse: sin titular no se debe nada, que es la
+         * respuesta correcta y no un caso especial.
+         */
+        termsPending: (state) => state.context?.terms_pending === true,
+        phoneMissing: (state) => state.context?.phone_missing === true,
     },
 
     actions: {

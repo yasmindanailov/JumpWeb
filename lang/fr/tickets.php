@@ -94,6 +94,12 @@ return [
     'identify_intro' => 'Connecte-toi ou crée ton compte pour finaliser ta réservation.',
     'pay_title' => 'Paiement',
     'pay_intro' => 'Vérifie ta réservation avant de payer.',
+    // ── Ce qui manque avant de payer (`#349`) ──────────────────────────────────────────────────
+    'due_phone_label' => 'Ton téléphone',
+    'due_phone_hint' => "Il nous manque pour pouvoir te prévenir si quelque chose change dans ta réservation. Nous ne l'utilisons pour rien d'autre.",
+    'due_terms' => 'J\'ai lu et j\'accepte les <a href=":url" target="_blank" rel="noopener">conditions de réservation</a>.',
+    'terms_link' => 'En réservant, tu acceptes les <a href=":url" target="_blank" rel="noopener">conditions de réservation</a>.',
+    'due_terms_updated' => 'Nous avons mis à jour les conditions de réservation. Merci de les lire et de les accepter pour continuer.',
     'pay_notice' => 'Paiement par carte sécurisé via Redsys. Tes données de carte ne sont pas conservées sur ce site.',
     'pay_confirm' => 'Payer par carte',
     'pay_redirecting' => 'Nous t’emmenons vers la page de paiement sécurisée. Si la redirection ne se fait pas dans quelques secondes, appuie sur le bouton.',

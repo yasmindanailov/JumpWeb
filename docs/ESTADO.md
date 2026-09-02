@@ -155,8 +155,13 @@ registro afirmando que aceptó un documento que no existía cuando firmó. *Una 
 que la consulta salga más corta.* Y **muere en la v2**.
 ⚠️ **PASO MANUAL AL DESPLEGAR**: publicar la v1 de `condiciones` desde el panel en cada instalación.
 Sin publicar, no se pide nada y la venta sigue (el hueco falla hacia invisible).
-▶ **Queda la T8·b** (el checkout pide condiciones y teléfono; toca `OrdersController`, o sea
-`VERIFY_CONC=1`), **la T8·c** (las dos altas pierden las casillas + el contrato) y **la T8·d** (el
+▶ ✅ **T8·b EN EL ÁRBOL** (`#349`): el checkout pide condiciones y teléfono, con los dos verificadores
+de concurrencia corridos sobre MySQL real. ⚠️⚠️ **Dos guardas de arquitectura obligaron a hacerlo
+mejor**: `ApiBoundariesTest` cazó una escritura de dominio en el controlador (nació `CheckoutDuties`,
+y al escribirlo se vio que «¿qué le falta a esta cuenta?» se respondía en DOS sitios) y
+`SidebarComponentBudgetTest` obligó a sacar la decisión a un módulo plano en vez de subir el techo.
+⚠️ **Y la CAPTURA cazó dos defectos que la suite no ve**: el aviso y la línea legal decían casi lo
+mismo a 30 px, y las dos peticiones se separaban demasiado poco. ▶ **Queda la T8·c** (las dos altas pierden las casillas + el contrato) y **la T8·d** (el
 botón de Google encima del formulario, `[DECIDIDO owner]`). ▶ **Y detrás, la T9: One Tap**
 —`[owner]`, viable gateando el chip tras el banner de cookies—, cuya pieza cara es **verificar la
 firma del `id_token`**, porque ahí el token llega del CLIENTE y no del canje.
@@ -781,7 +786,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > número**: 4019 + 4 + 15 = **4038** y el gate mide **4039 · 25.772**. Un test y dos aserciones de
 > más, o sea que uno de los dos números declarados se tomó sobre una base que ya no era 4019. *Que la
 > suma no cuadre es justo el motivo por el que el gate mide en vez de creerse la resta.*
-> Suite **4048 en verde** (25.797 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> Suite **4056 en verde** (25.868 aserciones, 1 skipped a propósito), medida el 2026-09-02
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`): las cuatro tandas del
 > justificante (`#400`→`#403`) sobre las TRES de Google auth (`#342`, `#343`, `#344`), la columna del menú
 > (`#341`, +8), el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo (`#339`),

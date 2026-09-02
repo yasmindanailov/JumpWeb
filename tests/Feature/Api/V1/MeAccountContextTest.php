@@ -108,6 +108,13 @@ class MeAccountContextTest extends ApiTestCase
                 'pending_forms' => [],
                 'pending_forms_count' => 0,
                 'waiver' => ['mode' => 'externo', 'required' => false, 'pending' => false, 'outdated' => false, 'document_id' => null],
+                // `#349`: si le faltan las CONDICIONES antes de contratar. ⚠️ Aquí es `false` porque
+                // esta instalación **no ha publicado ninguna versión** — sin versión no hay nada que
+                // aceptar y la venta sigue. El caso que lo pone a `true` publica una.
+                'terms_pending' => false,
+                'terms_updated' => false,
+                // Un usuario de fábrica SÍ trae teléfono, así que aquí no falta nada.
+                'phone_missing' => false,
             ]);
     }
 

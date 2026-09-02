@@ -2095,6 +2095,38 @@ body.no-scroll { overflow: hidden; }
 .qtybox__price { font-weight: var(--fw-bold); color: var(--fg); }
 
 /* Datos del evento del pack (paso 3): campos configurables por pack (#86). Mismo aspecto que .form__field. */
+/* ══ LO QUE FALTA ANTES DE PAGAR (`specs/auth-con-google.md` §21.4.2, `#349`) ══════════════════
+   El teléfono si la cuenta no lo tiene y la aceptación de condiciones si no están aceptadas en su
+   versión vigente. Debajo, SIEMPRE, el enlace a las condiciones.
+
+   ⚠️⚠️ **No estrena ni una pieza: reutiliza `.eventfields` y `.check`**, que son las que el embudo ya
+   usa para un campo extra y para una casilla legal. Una tarjeta propia aquí habría sido un cuarto
+   tratamiento para lo mismo — como murió el sistema de sombras de `#196`.
+
+   ⚠️ **La separación es la MISMA receta que `.purchase__foot`** (regla fina + 18/16 de aire) porque
+   la relación es la misma: algo de otra naturaleza justo debajo de la lista del resumen. Copiar sus
+   números en vez de elegir unos nuevos es lo que mantiene el ritmo de la pantalla.
+
+   ⚠️ Los dos `margin` que se anulan abajo no son ruido: `.eventfields` trae `margin-top: 14px` y
+   `.form__checks` trae `margin: 4px 0 20px`. Sumados al aire del bloque dejaban un hueco muerto
+   antes del pie — medido en navegador. */
+.paydue { margin-top: 18px; padding-top: var(--sp-16); border-top: 1px solid var(--line); }
+.paydue .eventfields { margin-top: 0; }
+.paydue__hint { margin: var(--sp-6) 0 0; font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); line-height: 1.5; }
+/* ⚠️ **18 y no 14, medido en navegador**: el teléfono y las condiciones son DOS peticiones distintas,
+   y con 14 sus dos textos de apoyo —los dos en gris y del mismo cuerpo— se leían como un solo párrafo
+   soso. El 18 es el mismo aire con el que el bloque se separa del resumen: se repite el número que ya
+   dice «aquí empieza otra cosa» en vez de estrenar uno. */
+.paydue__checks { margin: var(--sp-18) 0 0; }
+/* Pero si la casilla es lo PRIMERO del bloque —cuando solo faltan las condiciones— ese aire se
+   sumaría al del propio bloque y dejaría el control flotando a 34 px de su regla. */
+.paydue > :first-child { margin-top: 0; }
+/* El peso MÁS BAJO de la pantalla, el mismo de `.purchase__note`: es información, no una acción — y
+   por eso su enlace va en la tinta del texto y no en el color de marca, que aquí invitaría a pulsar
+   en vez de a leer. */
+.paydue__legal { margin: var(--sp-14) 0 0; font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); line-height: 1.5; }
+.paydue__legal a { color: inherit; text-decoration: underline; }
+
 .eventfields { margin-top: 14px; display: flex; flex-direction: column; gap: var(--sp-14); }
 .eventfields__field { display: flex; flex-direction: column; gap: var(--sp-6); }
 .eventfields__label { font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); color: var(--fg); }

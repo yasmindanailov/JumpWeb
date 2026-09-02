@@ -79,6 +79,18 @@ class AccountContextResource extends JsonResource
                 'outdated' => (bool) $context['waiver']['outdated'],
                 'document_id' => $context['waiver']['documentId'] === null ? null : (int) $context['waiver']['documentId'],
             ],
+            // `#349`: si le faltan las CONDICIONES antes de poder contratar. Es el mismo tipo de hecho
+            // que `waiver.pending` y viaja por el mismo sitio.
+            // ⚠️ Es una PISTA para saber qué pintar, no la autoridad: quien decide es el servidor al
+            // crear el pedido, y el cliente sabe reaccionar a su 422 aunque esta pista se equivoque.
+            'terms_pending' => (bool) ($context['termsPending'] ?? false),
+            // ⚠️ **`pending` decide si se PIDE; `updated` decide qué se DICE**, y son dos hechos. Sin
+            // el segundo no se puede cumplir lo que el owner pidió —«se pide de nuevo diciendo que las
+            // condiciones se han actualizado»— sin mentirle a quien nunca las aceptó.
+            'terms_updated' => (bool) ($context['termsUpdated'] ?? false),
+            // ⚠️ «missing», no «pending»: el teléfono no espera una decisión del titular, sencillamente
+            // no está. Y por eso la pantalla pinta un CAMPO y no una casilla.
+            'phone_missing' => (bool) ($context['phoneMissing'] ?? false),
         ];
     }
 }

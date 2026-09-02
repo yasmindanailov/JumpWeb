@@ -21088,6 +21088,68 @@ de «sin publicar» y con el CONTRA-caso de que la gracia muere en la v2) · `Pu
 ampliado · Pint ✓ · docs-check ✓.
 ---
 
+## #349 · 2026-09-02 · Las condiciones y el teléfono se piden en el momento del contrato, no al crear la cuenta
+
+**T8·b del pulido del OJO del owner** (`specs/auth-con-google.md` §21.4.2). Es lo que permite que el
+alta con Google no pregunte ninguna de las dos cosas — y, de paso, **cierra un hueco legal medido**:
+antes de esta tanda el embudo no enseñaba las condiciones en NINGÚN sitio (LCGC art. 5 · TRLGDCU
+art. 97).
+
+⚠️ **El orden de las dos mitades importa**: primero el checkout PIDE (esto) y solo después el alta
+deja de pedir (T8·c). Al revés habría una ventana en la que nadie acepta nada.
+
+### 1 · Ninguna de las dos es de la CESTA
+
+Por eso no viven en `CartPayload::rules()` ni en `CartRequest`: ese esquema lo comparte el
+**presupuesto**, y meterlas allí obligaría a aceptar las condiciones **para ver un precio**. Es la
+lección de `#329` con el `EmailRequest` compartido, pagada antes de que doliera. `POST /orders`
+estrena `CreateOrderRequest`, que repite `items` a sabiendas — `allOf` no vale con
+`additionalProperties: false`, porque cada subesquema valida por su cuenta.
+
+### 2 · La pista, y por qué el 422 TAMBIÉN enciende el campo
+
+El contexto de cuenta gana `terms_pending`, `terms_updated` y `phone_missing`: es el mismo tipo de
+hecho que `waiver.pending` y el servidor lo siembra al pintar la página, así que el embudo lo tiene
+**sin una petición más**.
+⚠️⚠️ **Pero la pista se sembró al CARGAR.** Si mientras el cliente llenaba el carrito alguien publicó
+una versión nueva, decía `false` y el servidor responde 422: sin una segunda voz, el error apuntaría a
+**una casilla que no está en pantalla**. Cada campo se enciende por los dos caminos, y eso vive en
+`buyer-due.js` con su `node --test`.
+⚠️ **`pending` y `updated` son dos hechos**: uno decide si se PIDE y otro qué se DICE. Y «actualizadas»
+solo lo dice la pista, **nunca el error**: el 422 sabe que faltan, no por qué.
+
+### 3 · Un «no» de éstos no devuelve al carrito
+
+Única excepción del desenlace: hasta hoy **cualquier** 422 al confirmar mandaba al paso 4. El campo de
+éstos está en la pantalla de pagar. Se distingue **por el CAMPO y no por el código** — los dos 422 del
+checkout comparten `validation_failed`.
+
+### 4 · La UI no estrena ni una pieza, y la CAPTURA cazó dos defectos
+
+Reutiliza `.eventfields` y `.check`; la separación copia la receta de `.purchase__foot`. Y **no hay
+botón muerto**: la regla ya estaba escrita en `foot.js` —*«se validan AL PULSAR, con un aviso que dice
+qué falta»*—.
+⚠️⚠️ Lo que la suite no podía ver: (1) el aviso de arriba y la línea legal de abajo **decían casi lo
+mismo a 30 px**, así que esa línea se pinta solo cuando NO hay casilla —con casilla, el enlace va
+dentro—; (2) las dos peticiones se separaban 14 px y sus textos de apoyo se leían como un párrafo
+soso: van a **18**, el mismo aire con el que el bloque se separa del resumen. Medido en las cuatro
+variantes, con **0 px de desborde**, y con «nada» pendiente **el enlace sigue ahí**.
+
+### 5 · Dos guardas de arquitectura obligaron a hacerlo mejor
+
+⚠️⚠️ **`ApiBoundariesTest` puso en rojo el `save()` del teléfono en el controlador** — escritura de
+dominio en la capa HTTP. Nació `CheckoutDuties`, y al escribirlo se vio que *«¿qué le falta a esta
+cuenta?»* **se estaba respondiendo en dos sitios**, cada uno con su `trim($user->phone) === ''`.
+⚠️ **`SidebarComponentBudgetTest` puso en rojo la sección, y la respuesta NO fue subir el techo**: la
+decisión se fue a un módulo plano. Medido, la extracción bajó de 448 a 444 líneas. *Subir un techo
+después de extraer no es lo mismo que subirlo en vez de extraer.*
+
+**Verificación**: suite **4056 · 25.868** · 8 casos de API con su control (una cuenta con teléfono no
+se lo puede pisar desde aquí) · `buyer-due.test.js` y los dos de `pay.js` con control ·
+**`purchase:verify-oversell` y `redsys:verify-concurrency` con 16 procesos sobre MySQL real**, porque
+toca `OrdersController` (`CRITICAL_RE`) · cuatro variantes medidas en navegador · chunk 274 → **277** (⚠️ se puso en 276 con una medición previa al último retoque y el gate lo cazó por 30 bytes: *un techo medido antes del último cambio no describe el árbol que se empuja*).
+---
+
 ## #400 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
 
 **Encontrado por el owner probando lo construido**, con la suite verde y las cuatro tandas anteriores

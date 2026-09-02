@@ -246,7 +246,14 @@
                     <div id="sidecart-spa" data-boot="{{ json_encode([
                         'outcome' => $sidebarEntry->outcome,
                         'orderCode' => $sidebarEntry->orderCode,
-                        'messages' => __('tickets'),
+                        {{-- ⚠️ Los dos textos de CONDICIONES del paso de pagar llevan un `<a href>` dentro
+                             y viajan **ya interpolados**, por lo mismo que los del alta: recomponer una
+                             frase traducida en el cliente obliga a partirla, y en francés y en inglés
+                             no ordena igual. La URL la decide `routes/web.php`, no el cajón (`#349`). --}}
+                        'messages' => array_replace(__('tickets'), [
+                            'due_terms' => __('tickets.due_terms', ['url' => route('legal.condiciones')]),
+                            'terms_link' => __('tickets.terms_link', ['url' => route('legal.condiciones')]),
+                        ]),
                         'ui' => __('ui'),
                         'account' => [
                             'login' => __('account.login'),

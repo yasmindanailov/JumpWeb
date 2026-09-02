@@ -71,6 +71,41 @@ export const RESERVATIONS_PAUSED = 'reservations_paused';
  * @param {object} messages  el grupo `tickets`
  * @returns {{error: string, rereadStatus: boolean}}
  */
+/**
+ * **Los campos que el COMPRADOR debe, si el «no» del servidor va de eso** (`#349`).
+ *
+ * Devuelve `{accept_terms?, phone?}` con los mensajes YA traducidos que manda el servidor, o `null`
+ * si este 422 no habla de eso.
+ *
+ * ⚠️⚠️ **Se mira el CAMPO y no el código**, y es lo único que funciona: los dos 422 del checkout
+ * —éste y el de la asignación de menores— comparten `validation_failed`, así que distinguirlos por
+ * código es imposible. Lo que los separa es de qué hablan.
+ *
+ * ⚠️ **La lista es CERRADA.** Un campo desconocido no se pinta aquí: acabaría en el aviso genérico y
+ * en el carrito, que es la conducta de siempre. Ensancharla sin pantalla que lo pinte dejaría un «no»
+ * mudo — el error se enseñaría en un campo que no existe.
+ */
+export function buyerDueFields(error) {
+    const fields = error?.fields;
+
+    if (fields === null || typeof fields !== 'object' || Array.isArray(fields)) {
+        return null;
+    }
+
+    const due = {};
+
+    for (const name of ['accept_terms', 'phone']) {
+        const messages = fields[name];
+        const first = Array.isArray(messages) ? messages[0] : messages;
+
+        if (typeof first === 'string' && first !== '') {
+            due[name] = first;
+        }
+    }
+
+    return Object.keys(due).length > 0 ? due : null;
+}
+
 export function confirmError(response, messages = {}) {
     if (response?.ok) {
         return { error: '', rereadStatus: false };
@@ -82,6 +117,17 @@ export function confirmError(response, messages = {}) {
     // el paso al pago (4.4a·1). Es además lo que el contrato pide releer tras un 409.
     if (code === RESERVATIONS_PAUSED) {
         return { error: '', rereadStatus: true };
+    }
+
+    // ⚠️⚠️ **Lo que el COMPRADOR debe va ANTES que la asignación de menores** (`#349`), y el orden
+    // importa: los dos son 422 con campos, pero éste **no puede devolver al carrito**. Su campo está
+    // en la pantalla de PAGAR, y mandar al cliente al carrito para que arregle algo que se teclea dos
+    // pantallas más allá es dejarle sin la corrección a la vista. Es la asimetría entera de este
+    // desenlace: se queda donde está, con el error pegado al campo.
+    const due = buyerDueFields(response?.error);
+
+    if (due !== null) {
+        return { error: '', rereadStatus: false, due };
     }
 
     // Fase 6 · tanda 4: la asignación de menores se comprueba ANTES del dinero y responde 422 por
@@ -157,18 +203,29 @@ export function gatewayForm(payment) {
  * `DECISIONES #37`). Partirlo en dos llamadas desde el cliente sería reimplementar aquí esa secuencia,
  * que es justo lo que `CheckoutSequenceTest` prohíbe fuera de `app/Domain`.
  *
+ * ⚠️ **`buyer` son los dos campos que el comprador puede deber** (`#349`: las condiciones y el
+ * teléfono) y **se envían SOLO si tienen valor**: el cuerpo declara `additionalProperties: false`, así
+ * que mandar `accept_terms: false` a quien no tiene nada pendiente sería colar un campo que el
+ * servidor ignoraría — y quien decide si hacen falta es él, no esta pantalla.
+ *
  * @param {{
  *   items: Array<object>,
+ *   buyer?: {accept_terms?: boolean, phone?: string},
  *   api: {post: (path: string, body: object) => Promise<object>},
  *   messages: object,
  * }} deps
  * @returns {Promise<{ok: boolean, orderCode: string, form: GatewayForm|null, error: string, rereadStatus: boolean}>}
  */
-export async function runConfirm({ items, api, messages = {} }) {
-    const response = await api.post('/orders', { items });
+export async function runConfirm({ items, buyer = {}, api, messages = {} }) {
+    const body = { items };
+
+    if (buyer.accept_terms === true) body.accept_terms = true;
+    if (typeof buyer.phone === 'string' && buyer.phone.trim() !== '') body.phone = buyer.phone.trim();
+
+    const response = await api.post('/orders', body);
 
     if (! response.ok) {
-        return { ok: false, orderCode: '', form: null, ...confirmError(response, messages) };
+        return { ok: false, orderCode: '', form: null, due: null, ...confirmError(response, messages) };
     }
 
     const form = gatewayForm(response.data?.payment);

@@ -6,6 +6,7 @@ use App\Domain\Booking\Contracts\AdmissionDecision;
 use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CheckoutDuties;
 use App\Domain\Identity\Services\DependentAssigner;
 use App\Domain\Payments\Contracts\PaymentInitiationException;
 use App\Domain\Payments\Contracts\PaymentTicket;
@@ -49,7 +50,7 @@ class OrdersController extends Controller
      * **201**, porque crea un recurso: el pedido existe y retiene aforo desde este momento, se
      * complete el pago o no.
      */
-    public function store(Request $request, ReservationCheckout $checkout, DependentAssigner $assigner): OrderPaymentResource|JsonResponse
+    public function store(Request $request, ReservationCheckout $checkout, DependentAssigner $assigner, CheckoutDuties $duties): OrderPaymentResource|JsonResponse
     {
         $validated = $request->validate(CartPayload::rules());
 
@@ -66,6 +67,10 @@ class OrdersController extends Controller
         if ($rejections !== []) {
             throw ValidationException::withMessages($rejections);
         }
+
+        // Lo que el COMPRADOR debe antes de contratar (`#349`), y va ANTES del dinero por lo mismo que
+        // la asignación de menores: si falta, no se crea nada ni se consume la ficha de admisión.
+        $this->requireBuyerDuties($request, $user, $duties);
 
         try {
             $outcome = $checkout->start(
@@ -127,6 +132,60 @@ class OrdersController extends Controller
         abort_if($order === null, 404);
 
         return new OrderResource($order);
+    }
+
+    /**
+     * **LO QUE EL COMPRADOR DEBE ANTES DE CONTRATAR** (`specs/auth-con-google.md` §21.4.2, `#349`).
+     *
+     * Son dos cosas y ninguna es de la CESTA, por eso no viven en `CartPayload::rules()`: ese esquema
+     * lo comparten crear el pedido y **el presupuesto**, y meterlas allí obligaría a pedir la
+     * aceptación de las condiciones para ver un precio. Es la lección de `#329` con el `EmailRequest`
+     * compartido, aplicada antes de pagarla.
+     *
+     * 1. **Las condiciones**, si esta instalación las publica y el titular no tiene aceptada la
+     *    versión vigente. `[DECIDIDO owner, 2026-09-02]`: se piden en el momento del CONTRATO —que es
+     *    donde el TRLGDCU (art. 97) y la LCGC (art. 5) las sitúan— y no al crear la cuenta.
+     * 2. **El teléfono**, si la cuenta no lo tiene. `[owner]`: *«imprescindible para las reservas»*.
+     *    Solo se pide cuando falta: a quien ya lo dio no se le vuelve a preguntar.
+     *
+     * ⚠️⚠️ **La comprobación es del SERVIDOR, y eso es lo que la hace real.** El cajón sabe qué pintar
+     * porque el contexto de cuenta le da una PISTA (`terms_pending`), pero si la decisión viviera en
+     * la casilla, se compraría sin aceptar nada **quitando un `input` del DOM** — es literalmente el
+     * defecto que `#400` documenta para el justificante.
+     *
+     * ⚠️ **Se registra ANTES de crear el pedido, y es lo correcto**: la ley pide que la aceptación sea
+     * previa a quedar vinculado. Si después el pedido se cae por aforo, la aceptación y el teléfono se
+     * quedan escritos — porque los dio de verdad.
+     */
+    private function requireBuyerDuties(Request $request, User $user, CheckoutDuties $duties): void
+    {
+        $pending = $duties->pendingFor($user);
+
+        if (! $pending['terms'] && ! $pending['phone']) {
+            return;
+        }
+
+        $rules = [];
+        if ($pending['terms']) {
+            $rules['accept_terms'] = ['accepted'];
+        }
+        if ($pending['phone']) {
+            // Las MISMAS reglas que el alta: un teléfono no cambia de forma según por dónde entre.
+            $rules['phone'] = ['required', 'string', 'max:32'];
+        }
+
+        $data = $request->validate($rules, [
+            'accept_terms.accepted' => __('account.register.must_accept'),
+        ]);
+
+        // Y ESCRIBIRLO es del módulo, no de aquí: `ApiBoundariesTest` puso en rojo la primera versión,
+        // que hacía el `save()` del teléfono en este fichero. La capa de entrega pregunta y pasa.
+        $duties->settle(
+            $user,
+            $data['phone'] ?? null,
+            ($data['accept_terms'] ?? false) === true || ($data['accept_terms'] ?? null) === '1',
+            (string) $request->ip(),
+        );
     }
 
     /**

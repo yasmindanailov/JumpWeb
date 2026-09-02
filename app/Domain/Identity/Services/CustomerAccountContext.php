@@ -54,7 +54,13 @@ class CustomerAccountContext
      * y el área de cuenta es donde se le pide al cliente que lo verifique. Antes no hacía falta: quien
      * llegaba aquí venía de una compra pagada (que verifica sola) o de pulsar el enlace del correo.
      *
-     * @return array{firstName: string, emailVerified: bool, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, waiver: array{mode: string, required: bool, pending: bool, outdated: bool, documentId: ?int}}
+     * ▶ **`#349` — y si le faltan las CONDICIONES**, que es el mismo tipo de hecho que `waiver.pending`
+     * y por eso vive aquí: «qué le debe esta cuenta al producto antes de poder contratar». El cajón
+     * repinta este contexto al conseguir sesión, así que el embudo lo tiene **sin una petición más**.
+     * ⚠️ Es una PISTA para saber qué pintar, nunca la autoridad: quien decide es el servidor al crear
+     * el pedido (`OrdersController`), y por eso el cliente sabe además reaccionar a su 422.
+     *
+     * @return array{firstName: string, emailVerified: bool, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, waiver: array{mode: string, required: bool, pending: bool, outdated: bool, documentId: ?int}, termsPending: bool, termsUpdated: bool, phoneMissing: bool}
      */
     public function for(User $user): array
     {
@@ -75,6 +81,15 @@ class CustomerAccountContext
             'pendingFormsCount' => 0,
             'hasPendingForm' => false,
             'waiver' => ['mode' => WaiverSettings::MODE_EXTERNAL, 'required' => false, 'pending' => false, 'outdated' => false, 'documentId' => null],
+            // ⚠️ **`false` es el respaldo SEGURO y no el cómodo** (`#349`): si el contexto se cae, el
+            // cliente no pinta la casilla — y el pedido lo rechaza igualmente el SERVIDOR, que dice
+            // qué falta. Al revés —pintarla por si acaso— se le pediría aceptar a quien ya aceptó.
+            'termsPending' => false,
+            'termsUpdated' => false,
+            // El teléfono no está «pendiente»: está AUSENTE. El nombre lo dice, porque de él depende
+            // que la pantalla de pagar pinte un campo en vez de una casilla. El valor lo resuelve
+            // `CheckoutDuties` dentro del `try`; esto es el respaldo si el contexto se cae.
+            'phoneMissing' => false,
         ];
 
         try {
@@ -88,6 +103,14 @@ class CustomerAccountContext
                     ? LegalDocuments::current(WaiverSettings::SLUG, app()->getLocale())?->getKey()
                     : null,
             ];
+
+            // ⚠️ **La MISMA fuente que el controlador de pedidos** (`CheckoutDuties`): si esto y el
+            // servidor respondieran por su cuenta, el cajón pintaría un campo que el servidor no pide
+            // —o al revés— y nada fallaría. Aquí es una PISTA; allí es la autoridad; el criterio, uno.
+            $due = app(CheckoutDuties::class)->pendingFor($user);
+            $context['termsPending'] = $due['terms'];
+            $context['termsUpdated'] = $due['updated'];
+            $context['phoneMissing'] = $due['phone'];
 
             $upcoming = $this->reservations->upcomingFor((int) $user->id);
             $context['upcomingCount'] = count($upcoming);

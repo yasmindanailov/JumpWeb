@@ -59,6 +59,13 @@ class ApiContractTest extends TestCase
         // titular acabe evitando la pantalla—, y OpenAPI 3.0 no sabe expresar «obligatorio si otro
         // campo cambia»: quien lo decide es el servidor, que la exige cuando toca.
         'ProfileUpdateRequest' => ['current_password'],
+        // Cuerpo de PETICIÓN, y la opcionalidad vuelve a ser CONDICIONAL (`#349`): las condiciones
+        // solo se envían si esta instalación las publica **y** este titular no tiene aceptada la
+        // versión vigente; el teléfono, solo si la cuenta no lo tiene. Exigir los dos siempre
+        // convertiría en 422 a quien ya aceptó y ya dio su teléfono — o sea, a casi todo el mundo.
+        // OpenAPI 3.0 no sabe decir «obligatorio si el servidor dice que falta», así que lo decide el
+        // servidor: `account-context.terms_pending` es la pista y el 422 por campo es la autoridad.
+        'CreateOrderRequest' => ['accept_terms', 'phone'],
         // Mismo caso: cuerpo de PETICIÓN. `marketing` es un consentimiento opcional por definición
         // (exigirlo sería pedir una respuesta a algo que puede no contestarse), `context` tiene
         // valor por defecto, y los dos anti-bot solo los envía quien los tiene: el señuelo

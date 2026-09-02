@@ -128,7 +128,18 @@ class SidebarComponentBudgetTest extends TestCase
         // ▶ **Subió a 434 y se bajó a 433 antes de commitear**, que es la mitad de la regla que casi
         // nunca se cumple: la primera versión resolvía DOS booleanos (`guardianOffered`/
         // `guardianRequired`) para pasárselos al paso 3, y eso era traducir un enum dos veces.
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 433, 'api' => 2],
+        // ⚠️⚠️ **433 → 444 el 2026-09-02 (`#349`), y el techo hizo EXACTAMENTE su trabajo: se puso rojo
+        // y la respuesta NO fue subirlo.** La primera versión metía aquí la decisión de qué pedirle al
+        // comprador —dos `computed` que cruzaban la pista del servidor con sus errores— y eso es
+        // lógica, no cableado: se fue a `buyer-due.js`, módulo plano con su `node --test` (`CE-6`).
+        // ▶ Lo que queda son once líneas y ninguna es una regla: un import, el estado de la pantalla
+        // (que muere con la compra y por eso no va al store global), las cuatro del marcado y **las
+        // cuatro que impiden que un «no» sobre el teléfono o las condiciones devuelva al CARRITO** —el
+        // campo está en la pantalla de pagar, y mandarle dos pantallas atrás para arreglar algo que se
+        // teclea aquí es dejarle sin la corrección a la vista.
+        // ▶ La extracción se midió: bajó de 448 a 444. *Subir un techo después de extraer no es lo
+        // mismo que subirlo en vez de extraer.*
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 444, 'api' => 2],
 
         // ⚠️ **`TimeStep.vue` estrena excepción el 2026-09-01 (`#327`): 44 sobre un techo de 40.**
         // Son cuatro líneas y son TRABAJO DE DOM, que es justo lo que un módulo plano no puede hacer:

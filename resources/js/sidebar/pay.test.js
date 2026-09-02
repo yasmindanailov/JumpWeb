@@ -157,6 +157,43 @@ describe('los «no» del checkout', () => {
         assert.equal(confirmError(offline(), MESSAGES).error, MESSAGES.errors.try_later);
     });
 
+    /**
+     * ⚠️⚠️ **Un «no» sobre lo que el COMPRADOR debe no puede tratarse como los demás** (`#349`): su
+     * campo está en la pantalla de PAGAR, y el desenlace normal de un 422 aquí es devolver al carrito.
+     * Se distingue por el CAMPO y no por el código —los dos comparten `validation_failed`—, y por eso
+     * sale con `due` puesto y **sin mensaje**: lo que se pinta es el error pegado a su campo.
+     */
+    test('lo que el comprador debe sale por su cuenta, con los campos y sin aviso genérico', () => {
+        const verdict = confirmError(fail(422, {
+            code: 'validation_failed',
+            fields: { accept_terms: ['Tienes que aceptar las condiciones.'], phone: ['El teléfono es obligatorio.'] },
+        }), MESSAGES);
+
+        assert.deepEqual(verdict.due, {
+            accept_terms: 'Tienes que aceptar las condiciones.',
+            phone: 'El teléfono es obligatorio.',
+        });
+        assert.equal(verdict.error, '');
+    });
+
+    /**
+     * ⚠️ **Y el CONTROL, que es lo que le da valor al caso de arriba**: un 422 de los de siempre —una
+     * línea de la cesta— NO sale por esa puerta. Sin esto, el caso anterior no distinguiría «reconoce
+     * los campos del comprador» de «cualquier 422 se queda en la pantalla de pagar».
+     */
+    test('CONTROL: un 422 de la cesta sigue siendo un aviso normal, sin `due`', () => {
+        const verdict = confirmError(fail(422, {
+            code: 'validation_failed', fields: { 'items.0.quantity': ['x'] },
+        }), MESSAGES);
+
+        assert.equal(verdict.due, undefined);
+    });
+
+    test('un campo del comprador vacío o mal formado no inventa un «no»', () => {
+        assert.equal(confirmError(fail(422, { code: 'validation_failed', fields: { accept_terms: [] } }), MESSAGES).due, undefined);
+        assert.equal(confirmError(fail(422, { code: 'validation_failed', fields: null }), MESSAGES).due, undefined);
+    });
+
     test('el mapa cubre los doce motivos del checkout', () => {
         for (const code of [
             'cart_empty', 'cart_too_large', 'product_unavailable', 'line_unavailable', 'line_past_date',

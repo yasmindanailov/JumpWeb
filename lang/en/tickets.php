@@ -94,6 +94,12 @@ return [
     'identify_intro' => 'Log in or create your account to complete your booking.',
     'pay_title' => 'Payment',
     'pay_intro' => 'Review your booking before paying.',
+    // ── What is missing before paying (`#349`) ─────────────────────────────────────────────────
+    'due_phone_label' => 'Your phone number',
+    'due_phone_hint' => 'We need it so we can let you know if anything changes about your booking. We use it for nothing else.',
+    'due_terms' => 'I have read and accept the <a href=":url" target="_blank" rel="noopener">booking terms</a>.',
+    'terms_link' => 'By booking you accept the <a href=":url" target="_blank" rel="noopener">booking terms</a>.',
+    'due_terms_updated' => 'We have updated the booking terms. Please read and accept them to continue.',
     'pay_notice' => 'Secure card payment via Redsys. Your card details are not stored on this site.',
     'pay_confirm' => 'Pay by card',
     'pay_redirecting' => 'Taking you to the secure payment page. If you are not redirected in a few seconds, tap the button.',

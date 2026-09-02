@@ -1256,3 +1256,85 @@ fuera —que es lo que le da valor— y ahora cubre también las condiciones.
 
 ⚠️ **Paso manual al desplegar**: en cada instalación hay que **publicar la v1 de `condiciones`** desde
 el panel. Hasta entonces no se pide nada, que es la conducta segura.
+
+#### 21.4.2 · T8·b — el checkout pide lo que falta (`DECISIONES #349`)
+
+Segunda mitad, y **va antes que la T8·c a propósito**: primero el checkout PIDE y solo después el alta
+deja de pedir. Al revés habría una ventana en la que nadie acepta nada.
+
+**Dos cosas, y ninguna es de la cesta**: las condiciones en su versión vigente y el teléfono si la
+cuenta no lo tiene. ⚠️ Por eso **no viven en `CartPayload::rules()` ni en `CartRequest`**: ese esquema
+lo comparte el **presupuesto**, y meterlas allí obligaría a aceptar las condiciones para ver un precio
+— la lección de `#329` con el `EmailRequest` compartido, pagada antes de que doliera. `POST /orders`
+estrena `CreateOrderRequest`, que repite `items` a sabiendas (`allOf` no vale con
+`additionalProperties: false`: cada subesquema valida por su cuenta).
+
+⚠️⚠️ **La autoridad es el SERVIDOR.** El cajón sabe qué pintar porque el contexto de cuenta le da una
+PISTA, pero si la decisión viviera en la casilla se compraría sin aceptar nada **quitando un `input`
+del DOM** — el defecto que `#400` documenta para el justificante.
+
+#### La pista, y por qué el 422 también enciende el campo
+
+`account-context` gana `terms_pending`, `terms_updated` y `phone_missing`. Va ahí porque es el mismo
+tipo de hecho que `waiver.pending` —qué le debe esta cuenta antes de contratar— y porque **el servidor
+lo siembra al pintar la página**: el embudo lo tiene sin una petición más.
+
+⚠️⚠️ **Pero la pista se sembró al CARGAR.** Si mientras el cliente llenaba el carrito alguien publicó
+una versión nueva, decía `false` y el servidor responde 422: sin una segunda voz, el error apuntaría a
+**una casilla que no está en pantalla**. Por eso cada campo se enciende por dos caminos —la pista y el
+«no» del servidor— y eso vive en `buyer-due.js`, con su `node --test`.
+
+⚠️ **`terms_pending` y `terms_updated` son dos hechos**: aquél decide si se PIDE y éste qué se DICE.
+`[owner]`: *«se pide de nuevo diciendo que las condiciones se han actualizado»* — y decírselo a quien
+nunca las aceptó sería contarle una historia que no es la suya. **«Actualizadas» solo lo dice la
+pista, nunca el error**: el 422 sabe que faltan, no por qué.
+
+#### Un «no» de éstos NO devuelve al carrito
+
+Es la única excepción del desenlace: hasta hoy **cualquier** 422 al confirmar mandaba al paso 4. El
+campo de éstos está en la pantalla de PAGAR, y mandar al cliente dos pantallas atrás para arreglar
+algo que se teclea aquí lo deja sin la corrección a la vista. Se distingue **por el CAMPO y no por el
+código**: los dos 422 del checkout comparten `validation_failed`.
+
+#### La UI: ni una pieza nueva
+
+Reutiliza `.eventfields` (el patrón del embudo para campos extra) y `.check` (la casilla legal de
+siempre). Una tarjeta propia habría sido un cuarto tratamiento para lo mismo. La separación copia la
+receta de `.purchase__foot` —regla fina + 18/16— porque la relación es la misma.
+
+⚠️ **No hay botón muerto**, y la regla estaba escrita en `foot.js`: los campos obligatorios *«se
+validan AL PULSAR, con un aviso que dice qué falta, en vez de con un botón muerto que no lo
+explica»*.
+
+⚠️⚠️ **Y la CAPTURA destapó dos cosas que la suite no podía ver**, medidas en las cuatro variantes:
+ 1. **El aviso de arriba y la línea legal de abajo decían casi lo mismo a 30 px** («léelas y
+    acéptalas» / «al reservar las aceptas»). Con casilla, el enlace va DENTRO de ella y esa línea
+    sobra: se pinta **solo cuando no hay casilla**. La obligación se cumple igual — el enlace está
+    siempre en la pantalla, y donde de verdad hay que leerlo.
+ 2. **Las dos peticiones se separaban 14 px** y sus dos textos de apoyo —los dos en gris y del mismo
+    cuerpo— se leían como un párrafo soso. Van a **18**, que es el mismo aire con el que el bloque se
+    separa del resumen: se repite el número que ya dice «aquí empieza otra cosa».
+ ▶ Y un `:first-child { margin-top: 0 }`, porque cuando solo faltan las condiciones esos 18 se
+ sumaban al aire del bloque y dejaban el control flotando a 34 px de su regla.
+
+**Medido en las cuatro variantes** (ambos · solo teléfono · solo condiciones · nada): 32/18 de ritmo,
+**0 px de desborde** y —lo que importa legalmente— **con «nada» pendiente el enlace sigue ahí**.
+
+#### Lo que las guardas de arquitectura obligaron a hacer mejor
+
+⚠️⚠️ **`ApiBoundariesTest` puso en rojo el `save()` del teléfono en el controlador**, y con razón: es
+una escritura de dominio en la capa HTTP. Nació `Identity\Services\CheckoutDuties` — y al escribirlo
+se vio que la pregunta *«¿qué le falta a esta cuenta?»* **se estaba respondiendo en dos sitios**, cada
+uno con su `trim($user->phone) === ''`. Ahora es una, y la usan el contexto y el controlador.
+
+⚠️ **`SidebarComponentBudgetTest` puso en rojo la sección**, y la respuesta **no fue subir el techo**:
+la decisión se fue a `buyer-due.js`. Medido, la extracción bajó de 448 a 444 líneas; el techo sube a
+444 con eso escrito. *Subir un techo después de extraer no es lo mismo que subirlo en vez de extraer.*
+
+**Presupuestos**: chunk **274 → 277** (medido 276,03; ⚠️ se puso primero en 276 con una medición tomada ANTES del último retoque de la plantilla y salió rojo en el push por **30 bytes** — *un techo medido antes del último cambio no describe el árbol que se empuja*) — dos KiB de marcado y cableado para una
+pantalla entera. El payload no se mueve.
+
+**Verificación**: suite **4056 · 25.868** · 8 casos de API (incluido el CONTROL de que una cuenta con
+teléfono no se lo puede pisar desde aquí) · `buyer-due.test.js` + los dos de `pay.js` con su control ·
+**`purchase:verify-oversell` y `redsys:verify-concurrency` con 16 procesos sobre MySQL real** (toca
+`OrdersController`, que está en el `CRITICAL_RE`) · cuatro variantes medidas en navegador.

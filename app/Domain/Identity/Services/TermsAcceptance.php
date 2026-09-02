@@ -71,25 +71,46 @@ final class TermsAcceptance
      */
     public function pendingFor(User $user): bool
     {
+        return $this->statusFor($user)['pending'];
+    }
+
+    /**
+     * **Si le faltan Y si es porque han CAMBIADO**, que son dos cosas distintas y las dos hacen falta.
+     *
+     * `pending` decide si se le pide; `updated` decide **qué se le dice**. `[owner]`: *«si se cambian
+     * las condiciones, se pide de nuevo diciendo que las condiciones se han actualizado»* — y eso no
+     * se puede decir sin distinguir a quien nunca las aceptó de quien aceptó una versión anterior.
+     *
+     * ⚠️ Las dos salen de la MISMA lectura: separarlas en dos métodos públicos costaría dos consultas
+     * por cada página con sesión, porque de aquí bebe el contexto de cuenta.
+     *
+     * @return array{pending: bool, updated: bool}
+     */
+    public function statusFor(User $user): array
+    {
         $current = LegalDocuments::latestVersionNumber(self::SLUG);
 
         if ($current === null) {
-            return false;
+            return ['pending' => false, 'updated' => false];
         }
 
-        foreach ($this->liveVersions($user) as $version) {
+        $accepted = $this->liveVersions($user);
+
+        foreach ($accepted as $version) {
             $number = self::numberOf($version);
 
             if ($number === $current) {
-                return false;
+                return ['pending' => false, 'updated' => false];
             }
 
             if ($number === null && $current === 1) {
-                return false;
+                return ['pending' => false, 'updated' => false];
             }
         }
 
-        return true;
+        // Tiene alguna aceptación, pero no la vigente: para él las condiciones han CAMBIADO. Sin
+        // ninguna, es la primera vez y decirle «las hemos actualizado» sería mentirle.
+        return ['pending' => true, 'updated' => $accepted !== []];
     }
 
     /**

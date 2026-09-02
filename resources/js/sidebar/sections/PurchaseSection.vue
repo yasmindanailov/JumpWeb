@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { usePurchaseStore } from '../stores/purchase.js';
 import { useDateStore } from '../stores/date.js';
 import { useTimeStore } from '../stores/time.js';
@@ -22,11 +22,13 @@ import { buildFooter } from '../foot.js';
 import { buildNotice } from '../paused.js';
 import { continueAfterIdentification, runCheckout } from '../admission.js';
 import { runConfirm } from '../pay.js';
+import { buyerNeeds, emptyBuyerDue } from '../buyer-due.js';
 import { lineProblems } from '../line-problems.js';
 import { loadPaymentStatus, pollVerdict, runRetry } from '../outcome.js';
 import { signupRequiresCaptcha, CONTEXT_PURCHASE } from '../register.js';
 import { addLine, hasPendingEventFields, toCheckoutItems, todayIso } from '../cart.js';
 import { sessionGained } from '../account/session-gained.js';
+import { useAccountContextStore } from '../stores/accountContext.js';
 import Shell from '../Shell.vue';
 import CatalogStep from '../steps/CatalogStep.vue';
 import DateStep from '../steps/DateStep.vue';
@@ -792,6 +794,19 @@ const outcomeStore = useOutcomeStore();
 // consumido por `Http\Sidebar\SidebarEntry` (mirarlo dos veces reabriría el cajón en cada página).
 outcomeStore.setOrderCode(props.orderCode);
 
+/**
+ * **LO QUE EL COMPRADOR DEBE ANTES DE PAGAR** (`specs/auth-con-google.md` §21.4.2, `#349`).
+ *
+ * Vive aquí y no en un store porque **muere con la compra**: son dos campos de UNA pantalla, y en el
+ * store global los pagaría en peso todo el que abre el cajón — el mismo criterio que `#343` aplicó a
+ * la pantalla del alta con Google.
+ *
+ * ⚠️ **PII en un dispositivo compartido**: el teléfono se vacía al terminar, como los campos de auth.
+ */
+const buyerDue = reactive(emptyBuyerDue());
+const accountContext = useAccountContextStore();
+const buyerNeed = computed(() => buyerNeeds(accountContext.context, buyerDue.errors));
+
 
 /**
  * «Pagar con tarjeta». Espejo de `Purchase::confirmReservation()`.
@@ -810,17 +825,32 @@ async function confirmReservation() {
     if (outcomeStore.confirming) return;
 
     outcomeStore.confirming = true;
+    buyerDue.errors = {};
 
     try {
         const result = await tracked(runConfirm({
             // Con los menores asignados por línea (tanda 4): SOLO aquí, no en los endpoints públicos.
             items: toCheckoutItems(cartStore.lines),
+            // Lo que el comprador debe (`#349`). El módulo los manda **solo si tienen valor**.
+            buyer: { accept_terms: buyerDue.acceptTerms, phone: buyerDue.phone },
             api,
             messages: props.messages,
         }));
 
         if (result.rereadStatus) {
             await tracked(refreshBookingStatus());
+        }
+
+        // ⚠️⚠️ **Un «no» sobre lo que el comprador debe NO devuelve al carrito** (`#349`), y es la
+        // única excepción de este desenlace. Su campo está en ESTA pantalla: mandar al cliente al
+        // carrito para que arregle algo que se teclea aquí lo deja sin la corrección a la vista.
+        // ▶ Y la pista del contexto puede haberse quedado corta —`terms_pending` se sembró al cargar
+        // la página—, así que el «no» del servidor también ENCIENDE el campo: por eso `needsTerms` y
+        // `needsPhone` miran además estos errores.
+        if (result.due) {
+            buyerDue.errors = result.due;
+
+            return;
         }
 
         if (! result.ok) {
@@ -1235,10 +1265,14 @@ function goBack() {
 
         <PayStep
             v-else-if="store.step === STEPS.PAY"
+            v-model:accept-terms="buyerDue.acceptTerms"
+            v-model:phone="buyerDue.phone"
             :lines="cartStore.rows"
             :error="cartStore.error"
             :messages="messages"
             :locale="locale"
+            :need="buyerNeed"
+            :due-errors="buyerDue.errors"
             @back="goToCart" />
 
         <RedirectStep

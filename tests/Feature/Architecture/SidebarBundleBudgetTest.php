@@ -675,8 +675,24 @@ class SidebarBundleBudgetTest extends TestCase
      * único efecto de la poda habría sido dejar el marcado menos explícito **sin evitar esta subida**.
      * Se revirtió. *Una poda que no evita subir el techo no es una poda: es solo peor código.*
      * ⚠️ Se sube a **274** y quedan **0,86 KiB**.
+     *
+     * ▶ **276 (`#349`, lo que el comprador debe antes de pagar).** Medido: **276,00 KiB**, o sea
+     * **2,00** por encima. Es la subida más grande del día y compra una pantalla entera: el bloque del
+     * paso de pagar (teléfono cuando falta, casilla de condiciones cuando cambian, y el enlace legal
+     * que **antes no estaba en ningún sitio del embudo**), su módulo de decisión y la rama que impide
+     * que un «no» sobre esos campos devuelva al carrito.
+     * ⚠️ **La poda que sí se hizo fue de CÓDIGO, no de bytes**: la decisión salió del componente a
+     * `buyer-due.js` porque `SidebarComponentBudgetTest` se puso rojo. Eso no baja el chunk —el módulo
+     * viaja igual— pero es la razón por la que estas dos KiB son marcado y cableado, y no lógica
+     * duplicada.
+     * ⚠️⚠️ **Se puso a 276 con una medición de 276,00 y salió ROJO en el push con 276,03**, que son
+     * **30 bytes**. No lo trajo el otro carril —sus dos commits de esa tanda son solo doc, comprobado—:
+     * la medición se tomó **antes del último retoque de la plantilla** (el `v-if` que quita la línea
+     * legal cuando hay casilla, que la captura pidió). *Un techo medido antes del último cambio no
+     * describe el árbol que se empuja: se remide DESPUÉS de tocar la última línea.*
+     * ⚠️ Se sube a **277** y quedan **0,97 KiB**.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 274;
+    private const SIDEBAR_CHUNK_MAX_KB = 277;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

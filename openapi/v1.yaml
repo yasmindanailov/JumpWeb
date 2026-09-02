@@ -889,7 +889,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CartRequest'
+              $ref: '#/components/schemas/CreateOrderRequest'
       responses:
         '201':
           description: Reserva creada y cobro abierto.
@@ -3308,7 +3308,7 @@ components:
       description: |
         El contexto de cuenta del titular: saludo, próxima reserva, cuántas quedan y qué formularios
         de invitados están pendientes.
-      required: [first_name, email_verified, upcoming_count, next_reservation, pending_forms, pending_forms_count, waiver]
+      required: [first_name, email_verified, upcoming_count, next_reservation, pending_forms, pending_forms_count, waiver, terms_pending, terms_updated, phone_missing]
       additionalProperties: false
       properties:
         first_name:
@@ -3409,6 +3409,39 @@ components:
             document_id:
               type: integer
               nullable: true
+        terms_pending:
+          type: boolean
+          description: |
+            ¿Le faltan las **condiciones** antes de poder contratar? (`#349`)
+
+            Es el mismo tipo de hecho que `waiver.pending` —qué le debe esta cuenta al producto antes
+            de comprar— y por eso viaja por aquí: el cajón repinta este contexto al conseguir sesión,
+            así que el embudo lo tiene sin una petición más.
+
+            ⚠️ **Es una PISTA para saber qué pintar, nunca la autoridad.** Quien decide es el servidor
+            al crear el pedido (`POST /orders` responde `422` con `accept_terms` si faltan), y un
+            cliente correcto sabe reaccionar a ese `422` aunque esta pista dijera `false`.
+
+            `false` cuando esta instalación **no ha publicado** ninguna versión de las condiciones: sin
+            versión no hay nada que aceptar y la venta sigue.
+        terms_updated:
+          type: boolean
+          description: |
+            ¿Le faltan porque **han cambiado**? (`#349`)
+
+            ⚠️ Va aparte de `terms_pending` porque son dos hechos: aquél decide si se PIDE y éste
+            decide qué se DICE. `[owner]`: *«si se cambian las condiciones, se pide de nuevo diciendo
+            que se han actualizado»* — y decírselo a quien nunca las aceptó sería contarle una
+            historia que no es la suya. Solo puede ser `true` si `terms_pending` lo es.
+        phone_missing:
+          type: boolean
+          description: |
+            ¿La cuenta **no tiene teléfono**? (`#349`)
+
+            ⚠️ Se llama `missing` y no `pending` a propósito: el teléfono no espera una decisión del
+            titular, sencillamente no está — y de eso depende que la pantalla de pagar pinte un CAMPO
+            y no una casilla. Es lo que permite que el alta con Google no lo pregunte: se pide donde
+            hace falta, y solo a quien no lo ha dado.
 
     PendingGuestForm:
       type: object
@@ -4632,6 +4665,50 @@ components:
             desmedida bloquearía muchas franjas a la vez al comprarla.
           items:
             $ref: '#/components/schemas/CartLine'
+
+    CreateOrderRequest:
+      type: object
+      description: |
+        La cesta **más lo que el COMPRADOR debe** antes de contratar (`#349`).
+
+        ⚠️⚠️ **Es un esquema propio y NO `CartRequest` con dos campos más**, y la repetición de `items`
+        es deliberada: `CartRequest` lo comparte el **presupuesto**, y añadirle estos dos campos
+        obligaría a aceptar las condiciones para ver un precio. Es la lección de `#329` con el
+        `EmailRequest` compartido. (`allOf` tampoco valdría: con `additionalProperties: false` cada
+        subesquema valida por su cuenta y los campos nuevos fallarían contra `CartRequest`.)
+
+        **Los dos campos se envían SOLO cuando hacen falta**, y quién lo decide es el servidor:
+        `GET /me/account-context` publica `terms_pending`, y la cuenta sabe si tiene teléfono. Un
+        cliente que no los mande cuando hacían falta recibe **422 por campo**, que es la forma
+        correcta de enterarse — la pista puede equivocarse, el 422 no.
+      required: [items]
+      additionalProperties: false
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 50
+          description: |
+            Las líneas de la cesta. El tope espeja el invariante de servidor del checkout: una cesta
+            desmedida bloquearía muchas franjas a la vez al comprarla.
+          items:
+            $ref: '#/components/schemas/CartLine'
+        accept_terms:
+          type: boolean
+          description: |
+            La aceptación de las **condiciones** en su versión vigente, en el momento del contrato.
+
+            Obligatorio (y tiene que ser `true`) cuando `account-context.terms_pending` lo es: esta
+            instalación publica condiciones y este titular no tiene aceptada la versión en vigor. Al
+            aceptarlas se escribe un consentimiento con la **versión, la fecha y la IP**, que es la
+            prueba de qué texto exacto rigió la compra (LCGC art. 5).
+        phone:
+          type: string
+          maxLength: 32
+          description: |
+            El teléfono, **solo si la cuenta no lo tiene**. Se pide aquí porque es donde hace falta —
+            gestionar la reserva— y no al crear la cuenta, que es lo que permite que el alta con
+            Google no lo pregunte. A quien ya lo dio no se le vuelve a preguntar.
 
     CartLineCheckRequest:
       type: object

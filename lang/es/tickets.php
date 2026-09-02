@@ -108,6 +108,18 @@ return [
     'identify_intro' => 'Inicia sesión o crea tu cuenta para completar tu reserva.',
     'pay_title' => 'Pago',
     'pay_intro' => 'Revisa tu reserva antes de pagar.',
+    // ── Lo que falta antes de pagar (`#349`) ───────────────────────────────────────────────────
+    // ⚠️ El teléfono se pide con su PORQUÉ y en tono de favor, no de trámite: es un dato que el
+    // cliente no esperaba dar aquí, y decirle para qué sirve es la diferencia entre un formulario y
+    // un peaje. `[owner]`: «algo amable y sutil, solo si falta su número de teléfono».
+    'due_phone_label' => 'Tu teléfono',
+    'due_phone_hint' => 'Nos falta para poder avisarte si algo cambia en tu reserva. No lo usamos para nada más.',
+    'due_terms' => 'He leído y acepto las <a href=":url" target="_blank" rel="noopener">condiciones de reserva</a>.',
+    // ⚠️⚠️ Este enlace se pinta SIEMPRE, se pida la casilla o no: antes de `#349` el embudo no
+    // enseñaba las condiciones en ningún sitio, y la LCGC (art. 5) pide que el consumidor haya
+    // podido conocerlas para que se incorporen al contrato.
+    'terms_link' => 'Al reservar aceptas las <a href=":url" target="_blank" rel="noopener">condiciones de reserva</a>.',
+    'due_terms_updated' => 'Hemos actualizado las condiciones de reserva. Léelas y acéptalas para seguir.',
     'pay_notice' => 'Pago seguro con tarjeta a través de Redsys. Tu tarjeta no se guarda en este sitio.',
     'pay_confirm' => 'Pagar con tarjeta',
     'pay_redirecting' => 'Te llevamos a la pasarela de pago segura. Si no se redirige en unos segundos, pulsa el botón.',
