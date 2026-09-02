@@ -543,3 +543,18 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
 - ⚠️ **La política de privacidad no menciona el login con Google** (art. 13/14). Es **requisito de
   salida** de la Q7: el texto vive en la BD de cada instalación, así que en `playjump.es` es un paso
   manual y **no se anuncia el botón a clientes reales sin él**.
+
+## ▶ Media · lo que la AUDITORÍA DE DISEÑO vio fuera de su alcance (2026-09-02, `DECISIONES #430`)
+
+- ⚠️ **La plantilla de correo lleva el naranja del PRIMER cliente quemado cinco veces**:
+  `resources/views/vendor/mail/html/themes/brand.css` escribe `#FF5B22` como color de enlace y como
+  relleno/bordes del botón («mockup `--zone-1`»). Los correos no cargan `client.css` ni `landing.css`,
+  así que en una instalación con otra marca **el botón del correo sale del color de otro parque**, y
+  no falla nada. Es la misma fuga que `#138` cerró en la web (`--jump-*` heredado por toda
+  instalación), por la puerta que aquella tanda no miró. ▶ Salida: que la plantilla lea el color de
+  acción del tema como ya hace el panel (`ThemeSettings`), no un literal. Fuera del alcance de
+  `specs/auditoria-diseno.md` (12 vistas públicas), por eso está aquí y no allí.
+- Los hallazgos de la propia auditoría **no se duplican aquí**: viven en `specs/auditoria-diseno.md`
+  §3–§5 con su plan (§8) y se retiran de allí al ejecutarse. Los dos que YA tenían ficha —
+  `/servicios` 503 en el sitemap, y las imágenes sin proporción (`#252`)— siguen en sus fichas; la
+  auditoría les añadió la medida (64 de 64 peticiones · 25 de 25 imágenes).

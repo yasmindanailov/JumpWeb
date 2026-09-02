@@ -29,6 +29,13 @@
 >    sembrados, guion en `VERIFICACION-E2E-CAJON.md` §5.septies — ⚠️ **ese escenario ENVEJECE**: se
 >    sembró para «hoy» el 01/09) · el libro del pedido (V18–V23) · los TPV · su `client-menu.webp`.
 >
+> **4. EL CARRIL DE DISEÑO, que corre en PARALELO en esta misma máquina** (`#430`, 2026-09-02): la
+>    segunda auditoría de la web pública está en `docs/specs/auditoria-diseno.md` (3 críticos · 10
+>    mayores · 6 menores) y **espera seis decisiones del owner** (su §7). Su bloque «CARRIL DISEÑO» y
+>    el **REPARTO VIGENTE de los dos carriles** —ficheros y sub-bandas: diseño numera en
+>    `#430`–`#439`, este carril sigue en `#410`+— están bajo «POR DÓNDE RETOMAR», más abajo.
+>    **Léelo antes de elegir número o de tocar `resources/views/components/site/**`.**
+>
 > ⚠️⚠️ **NUMERACIÓN POR BANDAS** (`#404`, `CONVENCIONES §10.6`): **este ordenador numera desde `#400`**
 > y el portátil sigue en `#34x`. Mirar el remoto antes de empujar **se probó y no basta** — trece
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
@@ -304,6 +311,35 @@ mirar quién cita cada uno y desambiguar las citas, no sustituir a lo bruto. Que
 haga a propósito. *Encontrarlo fue gratis: `grep -oE '^## #[0-9]+' docs/DECISIONES.md | sort | uniq -d`.*
 
 ## ▶ POR DÓNDE RETOMAR (lee esto primero)
+
+═══════════ CARRIL DISEÑO · LA AUDITORÍA DE LA WEB PÚBLICA, EN EL REPO (2026-09-02, `#430`) ═══════════
+▶ **`docs/specs/auditoria-diseno.md`** es el informe —**3 críticos · 10 mayores · 6 menores**— y
+**sustituye a «Un solo idioma»** (01-09), que se publicó como artefacto y **no es recuperable** (medido:
+no está en la cuenta del owner con `scope: all`, ni en el repo, ni en local). El artefacto de lectura
+es «Costuras a la vista» (https://claude.ai/code/artifact/4d0ce068-150e-4f33-86eb-96ba071c9f40);
+**el registro es el fichero**. ▶ **Lo que sigue: las seis decisiones del
+owner (§7) y, con ellas, la tanda C (§8: lo roto — el mapa de `/contacto` tapado al 100 %, el foco de
+los campos, el acordeón con tope, los cuatro contrastes)**. **No se tocó ni una línea de producto.**
+⚠️ **Lo que la auditoría vio fuera de su alcance**: `resources/views/vendor/mail/html/themes/brand.css`
+lleva `#FF5B22` (el naranja del PRIMER cliente) quemado **cinco veces** — fuga white-label en los
+correos, ficha en `DEUDA.md`.
+
+❗❗ **REPARTO VIGENTE EN ESTA MÁQUINA (2026-09-02) — DOS CARRILES SOBRE EL MISMO CLON.** Sigue la
+regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`reset`/`clean`, y
+`git add` **solo de lo propio**.
+  · **HORA EXTRA** (el otro agente) → `specs/hora-extra.md` · `app/Domain/Booking/**` ·
+    `app/Filament/**` (catálogo) · migraciones · `tests/Feature/{Booking,Admin}/**`.
+    **Numera en la secuencia natural, desde `#410`.**
+  · **DISEÑO / IDIOMA VISUAL** (este) → `public/css/{site,landing}.css` ·
+    `resources/views/{home.blade.php,pages/**,components/site/**}` · `lang/*/landing.php` ·
+    `tests/Feature/{Landing,Theme}/**` · `docs/specs/{auditoria-diseno,idioma-visual-heredado}.md`.
+    **Numera en la sub-banda `#430`–`#439`**, reservada A DISTANCIA de la secuencia natural para que
+    el otro carril no tenga que mirar nada antes de empujar; si se agota, la siguiente se reserva
+    aquí ANTES de usarla.
+  ▶ **Para el agente de HORA EXTRA**: la auditoría solo mide — no he tocado ningún fichero tuyo ni
+    ninguno compartido salvo `CLAUDE.md` (una fila), `docs/README.md` (una fila), `DECISIONES.md`
+    (`#430`, al final) y este bloque. Si vas a tocar `resources/views/components/site/**` (p. ej. el
+    complemento en la tarjeta de tarifa), dilo aquí antes.
 
 **✅ EL CARRIL DE GOOGLE AUTH ESTÁ CERRADO Y EN PRODUCCIÓN** (`#353`, `#354`). La T8 entera, los
 siete puntos del ojo del owner, y **One Tap descartado por decisión suya**. No queda nada de este

@@ -22203,3 +22203,64 @@ de un descuento por volumen; suavizarlo o no es decisión suya.
 **Verificación**: ensayo completo en staging (mismo servidor físico que producción, otro usuario) ·
 dry-run → ejecución → **no-op** en la tercera pasada · franjas generadas · precio por tramo medido en
 cinco cantidades y las dos tarifas · el guion entregado al owner fuera del repo, con sus tres comandos.
+
+---
+
+## #430 · 2026-09-02 · La auditoría de diseño vive en el REPO, no en una URL — y la segunda pasada sobre la web pública sustituye a la primera
+
+**Contexto.** El owner pidió continuar el diseño con la skill `hallmark` y el informe del día anterior
+(«Un solo idioma», 01-09: 3 críticos · 8 mayores · 6 menores, tandas A–F) **no estaba**: se publicó
+como artefacto y no aterrizó en su cuenta (medido: 5 artefactos con `scope: all`, ninguno es él; ni en
+el repo ni en local — el único «Auditoría» local es el artboard del diseñador del cliente, otra cosa).
+De él sobrevivían el resumen de `ESTADO.md` y sus dos tandas ejecutadas (`#321`, `#323`).
+
+**`[DECIDIDO owner, 2026-09-02]`**: re-auditar **entero** (12 vistas × 8 anchos), **en solitario, sin
+workflow** —cuarta vez que lo pide: solitario por defecto—, y no solo por la pérdida: sus dos
+hallazgos mayores ya estaban arreglados, y desde el 01 aterrizaron Google auth, `#322` y `#324`.
+*Un informe cuyos dos primeros temas ya no existen describe una web que no está.*
+
+**Decisión de método (agente)**: **el informe es un fichero del repo** —
+`docs/specs/auditoria-diseno.md`— y el artefacto («Costuras a la vista») es solo la presentación. Un
+hallazgo que vive en una URL no es un registro; ésta es la lección de haberlo perdido, y con ella
+las tandas C→H tienen de dónde colgar sin volver a medir.
+
+**Lo que salió** (el detalle, con fichero:línea, en la spec): **3 críticos · 10 mayores · 6
+menores**. La tesis cambia: la capa de tokens es buena y **las tandas A y B se sostienen medidas hoy**
+(relleno de acción ≤ 4,01 % del primer viewport; 0 px de desbordamiento en 96 mediciones; 0 activos
+sin anillo en 10 de 12 vistas). Lo que queda son **costuras**: (C2) `--zone-1` es *la identidad de la
+zona que estés mirando*, no un color, y pinta 27 estados interactivos — la FAQ abierta a **2,45 : 1**;
+(C3) «O INICIA SESIÓN» a **2,61 : 1** en las doce vistas, leyendo el gris de la superficie de TINTA
+sobre blanco, justo lo que `client.css:40` avisa; (M4) en `/contacto` la tarjeta «Ubicación» tapa
+**al 100 %** el botón «Cargar el mapa»; (M2) el mando tipográfico por instalación solo mueve el 31 % del
+tipo porque 245 `font-size` en px esquivan un token que existe; (M10) 13 bucles infinitos en la
+portada contra el techo de 2 que `#279` dio por cumplido. ⚠️ **Seis puertas de Hallmark fallan A
+PROPÓSITO** y van en §6 para que nadie las «arregle»: el sobreimpulso (`#265`), la sombra dura
+(`#303`), el hero de pantalla completa (`#252`), los bucles ambientales (`#280`), las cuatro familias
+y el croma del cliente. **Las seis decisiones pendientes son del owner (§7)** y el plan C→H (§8)
+propone empezar por lo roto, que no pide gusto.
+
+**Cruce con la auditoría del propio cliente (27-08)**: su nº 1 (el naranja) cerrado; su nº 2 (papel
+seguido) sustituido por su `S-00`; su nº 3 (teclado) **a medias** — los campos de formulario siguen
+con `outline: none` y un borde de 1 px por todo anillo.
+
+**Reparto y numeración en esta máquina.** Hay **dos carriles sobre el mismo clon**: HORA EXTRA
+(aforo) y DISEÑO. `CONVENCIONES §10.6` repartió la banda por ORDENADOR (`#400`+), no por carril, así
+que los dos compartirían contador. Este carril **numera en la sub-banda `#430`–`#439`**, reservada a
+distancia para que el otro siga la secuencia natural (`#410`+) sin mirar nada; si se agota, la
+siguiente se reserva en `ESTADO.md` ANTES de usarla. El bloque «REPARTO VIGENTE» de `ESTADO.md` lista
+los ficheros de cada carril: **cero solape**.
+
+**Trampas de instrumento pagadas** (spec §9): «dos líneas» por alto/line-height contaba el **área
+táctil de 44 px** (`#264`) como segunda línea — 13 falsos en el pie; se re-midió con
+`Range.getClientRects()`. Las capturas de 1280 se tomaron **después** de tabular y no son el pliegue.
+`getAnimations().length` no es el presupuesto de `#279`: se filtró por `iterations === Infinity`. Y
+el primer conteo de «hex fuera de tokens» dio 323 + 112 con los comentarios dentro; el real es 36 + 1.
+
+**Verificación**: 96 + 24 mediciones en Chromium real, control positivo en las dos sondas
+(`caughtTwoLine: true, caughtContrast: true`; `control (a) ✓`), 36 capturas. **Ni una línea de
+producto tocada**: `docs-check` ✓ (commit solo de doc).
+
+**Ficheros**: `docs/specs/auditoria-diseno.md` (nuevo) · `docs/README.md` · `CLAUDE.md` (una fila) ·
+`docs/ESTADO.md` (retoma + reparto) · `docs/DEUDA.md` (una ficha: el naranja del primer cliente
+quemado cinco veces en la plantilla de correo). Instrumentos gitignorados:
+`storage/app/audit-hallmark.mjs`, `audit-hallmark-2.mjs`, `storage/app/audit/`.
