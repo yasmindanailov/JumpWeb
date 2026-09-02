@@ -401,6 +401,10 @@
                                     'title', 'intro', 'consents_title', 'no_consents', 'export_btn',
                                     'delete_title', 'delete_intro', 'delete_password',
                                     'delete_confirm', 'delete_btn', 'deleting', 'waiver',
+                                    // El interruptor de marketing y la palabra que marca una fila
+                                    // RETIRADA (art. 7.3, `#344`). Van con sesión, como el resto de
+                                    // esta zona: nadie los pinta sin haber entrado.
+                                    'consent_revoked', 'marketing_label', 'marketing_hint',
                                 ]),
                                 // ⚠️ **Menores a cargo** entra ENTERO (Fase 6 · C, `specs/menores-a-cargo.md`
                                 // §9.8): 17 rótulos que la zona y sus tarjetas pintan todos. Y primero se

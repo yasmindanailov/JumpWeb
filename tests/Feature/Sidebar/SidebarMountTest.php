@@ -557,6 +557,10 @@ class SidebarMountTest extends TestCase
         $this->assertSame(
             [
                 'title', 'intro', 'consents_title', 'no_consents', 'export_btn',
+                // El interruptor del art. 7.3 y la palabra que marca una fila RETIRADA (`#344`). Van
+                // aquí —con sesión— porque nadie los pinta sin haber entrado, y en este orden porque
+                // `Arr::only` conserva el de `lang/`.
+                'consent_revoked', 'marketing_label', 'marketing_hint',
                 'delete_title', 'delete_intro', 'delete_password',
                 'delete_confirm', 'delete_btn',
                 // Fase 6 · waiver (`DECISIONES #166`): el subgrupo entero, 12 rótulos que la tarjeta
@@ -762,8 +766,21 @@ class SidebarMountTest extends TestCase
         // en el montaje; no se hizo ahora porque sacaría estas claves del alcance de
         // `SidebarTranslationKeysExistTest`, que es lo que impide que un rótulo se quede MUDO.*
         // **9.400 deja 35 B**: más estrecho que nunca.
+        //
+        // ⚠️ **9.400 → 9.650 el 2026-09-02, y lo paga un DERECHO** (`#344`): el interruptor que permite
+        // **retirar** el consentimiento de marketing (art. 7.3) y la palabra que marca una fila
+        // retirada en la lista de consentimientos. Medido: **9.365 → 9.604 B (+239)**, tres rótulos.
+        // ▶ **La poda se hizo ANTES y está medida**: el primer intento traía CUATRO y pesaba 9.651 B.
+        // Se retiró `marketing_title` porque **decía exactamente lo mismo que `consent_types.marketing`,
+        // que YA VIAJABA** en este mismo montaje para la lista de arriba. **−47 B.** *El rótulo más
+        // barato sigue siendo el que ya está en el payload.*
+        // ⚠️⚠️ **Y aquí no cabía la salida de «mandarlo en la respuesta del endpoint»**: el interruptor
+        // se pinta en la propia zona, no cuelga de una petición bajo demanda. Lo que sí es cierto es
+        // que estos bytes los paga cada página con sesión — a cambio de que retirar un consentimiento
+        // sea *tan fácil como darlo*, que es literalmente lo que el art. 7.3 exige.
+        // **9.650 deja 46 B**: la estrechez de siempre.
         $this->assertLessThan(
-            9400, $bytes,
+            9650, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

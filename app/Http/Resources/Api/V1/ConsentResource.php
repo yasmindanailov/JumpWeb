@@ -35,6 +35,14 @@ class ConsentResource extends JsonResource
             // ⚠️ Con la ZONA HORARIA de la instalación, por el mismo motivo que `created_label` en un
             // pedido: `display_timezone` es un ajuste del panel que el navegador no conoce.
             'accepted_label' => DisplayTime::format($consent->accepted_at, 'd/m/Y'),
+            // La RETIRADA (art. 7.3, `#344`). ⚠️ Viaja aunque sea `null`: sin el campo, un cliente no
+            // podría distinguir «no se ha retirado» de «esta versión del servidor no lo sabe», y ésa
+            // es justo la ambigüedad que dejaría enseñando «aceptado» un consentimiento retirado.
+            'revoked_at' => $consent->revoked_at?->toIso8601String(),
+            // Compuesta por el SERVIDOR y con la zona horaria de la instalación, como la de arriba: si
+            // el cliente la formateara, un titular en otro huso vería una fecha distinta de la que el
+            // export declara.
+            'revoked_label' => $consent->revoked_at !== null ? DisplayTime::format($consent->revoked_at, 'd/m/Y') : null,
             'version' => (string) $consent->version,
         ];
     }

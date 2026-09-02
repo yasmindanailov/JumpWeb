@@ -6,9 +6,11 @@ use App\Domain\Booking\Contracts\CustomerOrderHistory;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Identity\Contracts\CredentialChangeResult;
 use App\Domain\Identity\Exceptions\AccountHasUpcomingReservationsException;
+use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\UserIdentity;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -105,6 +107,59 @@ class AccountPrivacy
     }
 
     /**
+     * **Dar o RETIRAR el consentimiento de marketing** (art. 7.3, `specs/auth-con-google.md` §9).
+     *
+     * ⚠️⚠️ **Cierra un incumplimiento que llevaba vivo desde el primer día, y no es de las cuentas de
+     * Google**: `marketing_opt_in` se escribía en el alta y **ninguna ruta lo actualizaba**, así que
+     * el consentimiento se daba con un clic y no se podía retirar por ninguna superficie. El art. 7.3
+     * exige que retirarlo sea *tan fácil como darlo*.
+     *
+     * ⚠️ **Y no basta con apagar el booleano.** El art. 5.2 pide poder demostrar las dos cosas, así
+     * que la retirada **sella la fila** (`revoked_at`) en vez de borrarla: la fila sigue probando que
+     * en su día se aceptó —lo que justifica los envíos que se hicieron— y ahora dice además cuándo
+     * dejó de valer. Sin esa marca, `GET /me/consents` enseñaría «marketing, aceptado el …» encima de
+     * un interruptor apagado, que es exactamente la contradicción que la revisión de la spec señaló.
+     *
+     * ⚠️ **Es idempotente**: apagar lo ya apagado no escribe nada. Un segundo clic no puede crear una
+     * segunda prueba de lo mismo ni mover la fecha de una retirada que ya ocurrió.
+     *
+     * @return bool si el estado ha CAMBIADO (lo usa la superficie para decidir si avisar de algo)
+     */
+    public function setMarketing(User $user, bool $wants, string $ip): bool
+    {
+        if ((bool) $user->marketing_opt_in === $wants) {
+            return false;
+        }
+
+        DB::transaction(function () use ($user, $wants, $ip): void {
+            $user->forceFill(['marketing_opt_in' => $wants])->save();
+
+            if ($wants) {
+                $user->consents()->create([
+                    'type' => Consent::TYPE_MARKETING,
+                    'accepted_at' => now(),
+                    'ip' => $ip,
+                    'version' => Consent::CURRENT_VERSION,
+                ]);
+
+                return;
+            }
+
+            // La retirada alcanza a TODAS las aceptaciones vivas de marketing, no solo a la última:
+            // una cuenta antigua puede tener más de una fila (el alta y un consentimiento posterior),
+            // y dejar una sin sellar sería dejar escrito que sigue aceptado.
+            $user->consents()
+                ->where('type', Consent::TYPE_MARKETING)
+                ->whereNull('revoked_at')
+                ->update(['revoked_at' => now(), 'revoked_ip' => $ip]);
+        });
+
+        Log::info('account.marketing_changed', ['user_id' => $user->id, 'accepted' => $wants]);
+
+        return true;
+    }
+
+    /**
      * **El documento de portabilidad** (art. 20): copia legible por máquina de los datos personales
      * del titular.
      *
@@ -141,6 +196,9 @@ class AccountPrivacy
             'consents' => $user->consents->map(fn ($consent): array => [
                 'type' => $consent->type,
                 'accepted_at' => $consent->accepted_at?->toIso8601String(),
+                // La RETIRADA viaja con la aceptación (art. 7.3 + art. 20): sin ella, el documento de
+                // portabilidad diría que un consentimiento sigue vivo cuando el titular lo retiró.
+                'revoked_at' => $consent->revoked_at?->toIso8601String(),
                 'ip' => $consent->ip,
                 'version' => $consent->version,
             ])->values()->all(),

@@ -258,6 +258,11 @@ Route::name('api.v1.')->group(function (): void {
         // y esa página se retira: sin esto, el borrado le quitaría al cliente la prueba visible del
         // art. 7.1. NO publica la IP — eso viaja en el export, que es un acto explícito.
         Route::get('/me/consents', [MePrivacyController::class, 'consents'])->name('me.consents.index');
+        // ⚠️⚠️ **RETIRAR el consentimiento de marketing** (art. 7.3, `#344`), que hasta hoy no se podía
+        // por ninguna superficie. **Sin `current_password` a propósito**: la ley exige que retirarlo
+        // sea *tan fácil como darlo*, y pedir fricción solo para la retirada sería incumplirlo por
+        // otra puerta. Lo que sí queda es la PRUEBA: el dominio sella la fila en vez de borrarla.
+        Route::put('/me/marketing', [MePrivacyController::class, 'marketing'])->name('me.marketing.update');
 
         // ── Mi waiver (Fase 6, `specs/waiver-probatorio.md` §4.4, §4.5, §4.8) ──────────────────
         // Estado según el modo · ACEPTAR el texto vigente con el `document_id` que se sirvió (si

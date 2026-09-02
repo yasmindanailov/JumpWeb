@@ -46,7 +46,12 @@ store.reset();
 // Y se piden los consentimientos, solo si no están: la lista es contexto, no cambia sola.
 store.ensureConsents();
 
-const consents = computed(() => consentRows(store.consents));
+const consents = computed(() => consentRows(store.consents, { revokedWord: a('account.privacy.consent_revoked') }));
+
+// **El interruptor de marketing** (art. 7.3, `#344`), que hasta hoy no existía: el consentimiento se
+// daba en el alta y no había forma de retirarlo. El estado y su lectura viven en el store —el techo
+// de componentes manda, y esto es una pantalla que PINTA—; de dónde sale, en su getter.
+store.ensureMarketing();
 
 const current = ref('');
 
@@ -120,6 +125,23 @@ async function sign() {
                     <span class="account__consent-meta">{{ consent.meta }}</span>
                 </li>
             </ul>
+
+            <!--
+              ⚠️⚠️ **El interruptor del art. 7.3, y va AQUÍ por dos razones que se refuerzan.** La
+              primera es de significado: la lista de arriba dice a qué se dijo que sí, y el único de
+              esos consentimientos que se puede retirar es éste — separarlo en otra tarjeta habría
+              contado dos veces la misma historia. La segunda es que así **no necesita título propio**,
+              y el rótulo que se ahorra son 47 B en cada página con sesión (`SidebarMountTest`).
+              ▶ Y va **antes del borrado**: retirar el marketing es la salida proporcionada para quien
+              no quiere que le escriban, y tenerla debajo de «eliminar mi cuenta» empuja a la
+              irreversible a quien solo quería dejar de recibir correos.
+            -->
+            <label class="check">
+                <input type="checkbox" :checked="store.marketing" :disabled="store.busy"
+                       @change="store.setMarketing($event.target.checked)">
+                <span>{{ a('account.privacy.marketing_label') }}</span>
+            </label>
+            <small class="form__hint">{{ a('account.privacy.marketing_hint') }}</small>
 
             <!-- El derecho de PORTABILIDAD (art. 20). No pide contraseña: descargarse los datos propios
                  no destruye ni cede nada, y es lo que hace hoy la web. -->

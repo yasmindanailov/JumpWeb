@@ -1622,6 +1622,46 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/marketing:
+    put:
+      tags: [Cuenta]
+      operationId: updateMyMarketingConsent
+      summary: Dar o retirar el consentimiento de marketing
+      description: |
+        Enciende o apaga las comunicaciones comerciales (**art. 7.3**).
+
+        ⚠️⚠️ **NO pide contraseña, y es una decisión legal, no una omisión**: el art. 7.3 exige que
+        retirar un consentimiento sea *tan fácil como darlo*, y ponerle fricción solo a la retirada
+        sería incumplirlo por otra puerta.
+
+        ⚠️ **La retirada NO borra la prueba**: la fila de `consents` se conserva —sigue demostrando
+        que en su día se aceptó, que es lo que justifica los envíos hechos— y se sella con
+        `revoked_at`. Por eso `GET /me/consents` puede enseñar un consentimiento *retirado*, con sus
+        dos fechas.
+
+        Responde **204 siempre**, incluida la llamada que no cambia nada: el titular pide un ESTADO,
+        no una transición.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketingConsentRequest'
+      responses:
+        '204':
+          description: Estado aplicado.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/export:
     get:
       tags: [Cuenta]
@@ -2899,7 +2939,7 @@ components:
       description: |
         Un consentimiento otorgado. La **IP** va incluida a propósito: es parte de la prueba del art.
         7.1 y es un dato personal del titular, así que le pertenece.
-      required: [type, accepted_at, ip, version]
+      required: [type, accepted_at, revoked_at, ip, version]
       additionalProperties: false
       properties:
         type:
@@ -2909,6 +2949,11 @@ components:
           type: string
           format: date-time
           nullable: true
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Cuándo se retiró (art. 7.3), o `null` si sigue vivo.
         ip:
           type: string
           nullable: true
@@ -3125,7 +3170,7 @@ components:
     Consent:
       type: object
       description: Un consentimiento otorgado, tal como el titular lo ve.
-      required: [type, type_label, accepted_at, accepted_label, version]
+      required: [type, type_label, accepted_at, accepted_label, revoked_at, revoked_label, version]
       additionalProperties: false
       properties:
         type:
@@ -3149,6 +3194,21 @@ components:
           description: |
             La fecha ya compuesta («23/08/2026`»), **en la zona horaria de la instalación**, por el
             mismo motivo que `created_label` en un pedido.
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            Cuándo se RETIRÓ (art. 7.3), o `null` si sigue vivo. La fila no se borra al retirar: sigue
+            probando que en su día se aceptó —lo que justifica los envíos que se hicieron— y esta
+            fecha dice cuándo dejó de valer.
+
+            ⚠️ Hoy **solo `marketing` se puede retirar**: los otros tres no son consentimientos
+            revocables en el sentido del RGPD.
+        revoked_label:
+          type: string
+          nullable: true
+          description: La fecha de la retirada ya compuesta, en la zona horaria de la instalación.
         version:
           type: string
           description: Versión del documento que se aceptó. Es lo que dice a QUÉ se dijo que sí.
@@ -5205,6 +5265,19 @@ components:
         remember:
           type: boolean
           description: Mantener la sesión abierta más allá del cierre del navegador.
+
+    MarketingConsentRequest:
+      type: object
+      description: |
+        El ESTADO que el titular pide para sus comunicaciones comerciales. Un solo campo a propósito:
+        aquí no hay nada más que decidir, y `additionalProperties: false` impide que un cliente cuele
+        un campo que el servidor ignoraría en silencio.
+      required: [accepted]
+      additionalProperties: false
+      properties:
+        accepted:
+          type: boolean
+          description: '`true` los quiere; `false` los retira (art. 7.3).'
 
     GoogleSignupPending:
       type: object

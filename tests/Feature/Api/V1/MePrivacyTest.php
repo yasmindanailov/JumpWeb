@@ -397,6 +397,109 @@ class MePrivacyTest extends ApiTestCase
         $this->assertSame(400, $response->json('orders.0.items.0.addons.0.unit_price_cents'));
     }
 
+    // ── PUT /me/marketing — el art. 7.3 ───────────────────────────────────────────────────────
+
+    /**
+     * **Retirar el consentimiento de marketing deja CONSTANCIA, y no borra la prueba de haberlo
+     * dado** (art. 7.3 + art. 5.2, `specs/auth-con-google.md` §9).
+     *
+     * ⚠️⚠️ Cierra un incumplimiento que llevaba vivo desde el primer día **y no es de las cuentas de
+     * Google**: `marketing_opt_in` se escribía en el alta y ninguna ruta lo actualizaba.
+     */
+    public function test_withdrawing_marketing_seals_the_consent_instead_of_deleting_it(): void
+    {
+        $user = $this->holder();
+        $user->forceFill(['marketing_opt_in' => true])->save();
+        $consent = $user->consents()->create([
+            'type' => Consent::TYPE_MARKETING, 'accepted_at' => now()->subMonth(),
+            'ip' => '10.0.0.1', 'version' => Consent::CURRENT_VERSION,
+        ]);
+
+        $this->actingAs($user)->putJson(self::ROOT.'/me/marketing', ['accepted' => false])
+            ->assertNoContent()
+            ->assertValidResponse(204);
+
+        $this->assertFalse((bool) $user->fresh()->marketing_opt_in);
+
+        $fresh = $consent->fresh();
+        $this->assertNotNull($fresh->revoked_at, 'sin sello, la lista diría «aceptado» sobre un interruptor apagado');
+        $this->assertNotNull($fresh->accepted_at, 'la prueba de haberlo dado NO se borra: justifica los envíos ya hechos');
+    }
+
+    /** Y darlo escribe su prueba, con la versión del documento: es el mismo acto en el otro sentido. */
+    public function test_granting_marketing_writes_its_proof(): void
+    {
+        $user = $this->holder();
+
+        $this->actingAs($user)->putJson(self::ROOT.'/me/marketing', ['accepted' => true])->assertNoContent();
+
+        $this->assertTrue((bool) $user->fresh()->marketing_opt_in);
+        $this->assertDatabaseHas('consents', [
+            'user_id' => $user->id,
+            'type' => Consent::TYPE_MARKETING,
+            'revoked_at' => null,
+        ]);
+    }
+
+    /**
+     * ⚠️ **Idempotente**: el titular pide un ESTADO, no una transición. Dos clics seguidos en «no
+     * quiero» no pueden crear una segunda prueba de lo mismo ni mover la fecha de una retirada que ya
+     * ocurrió.
+     */
+    public function test_asking_for_the_state_it_already_has_writes_nothing(): void
+    {
+        $user = $this->holder();
+
+        $this->actingAs($user)->putJson(self::ROOT.'/me/marketing', ['accepted' => true])->assertNoContent();
+        $revokedFirst = null;
+        $this->actingAs($user)->putJson(self::ROOT.'/me/marketing', ['accepted' => false])->assertNoContent();
+        $revokedFirst = $user->consents()->where('type', Consent::TYPE_MARKETING)->value('revoked_at');
+
+        $this->travel(2)->minutes();
+        $this->actingAs($user)->putJson(self::ROOT.'/me/marketing', ['accepted' => false])->assertNoContent();
+
+        $this->assertSame(1, $user->consents()->where('type', Consent::TYPE_MARKETING)->count());
+        $this->assertEquals($revokedFirst, $user->consents()->where('type', Consent::TYPE_MARKETING)->value('revoked_at'));
+    }
+
+    /**
+     * ⚠️⚠️ **NO pide contraseña, y es una decisión legal**: el art. 7.3 exige que retirar sea *tan
+     * fácil como dar*. Este caso lo fija para que nadie «endurezca» la retirada creyendo que mejora
+     * la seguridad — endurecerla es incumplir.
+     */
+    public function test_withdrawing_does_not_ask_for_the_password(): void
+    {
+        $user = $this->holder();
+        $user->forceFill(['marketing_opt_in' => true])->save();
+
+        $this->actingAs($user)->putJson(self::ROOT.'/me/marketing', ['accepted' => false])->assertNoContent();
+
+        $this->assertFalse((bool) $user->fresh()->marketing_opt_in);
+    }
+
+    public function test_the_switch_rejects_an_anonymous_request(): void
+    {
+        $this->putJson(self::ROOT.'/me/marketing', ['accepted' => false])->assertUnauthorized();
+    }
+
+    /** Y la lista lo publica: sin `revoked_at`, la pantalla no puede distinguir vivo de retirado. */
+    public function test_the_consent_list_publishes_the_withdrawal(): void
+    {
+        $user = $this->holder();
+        $user->forceFill(['marketing_opt_in' => true])->save();
+        $user->consents()->create([
+            'type' => Consent::TYPE_MARKETING, 'accepted_at' => now()->subMonth(),
+            'ip' => '10.0.0.1', 'version' => Consent::CURRENT_VERSION,
+        ]);
+
+        $this->actingAs($user)->putJson(self::ROOT.'/me/marketing', ['accepted' => false])->assertNoContent();
+
+        $response = $this->actingAs($user)->getJson(self::ROOT.'/me/consents');
+
+        $response->assertOk()->assertValidResponse(200);
+        $this->assertNotNull($response->json('data.0.revoked_at'));
+    }
+
     /**
      * **Las IDENTIDADES EXTERNAS también son suyas** (`specs/auth-con-google.md` §11): con qué cuenta
      * de un tercero se entra a ésta, desde cuándo y por qué puerta.

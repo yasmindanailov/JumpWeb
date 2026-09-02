@@ -87,6 +87,32 @@ class MePrivacyController extends Controller
     }
 
     /**
+     * `PUT /me/marketing` — dar o **RETIRAR** el consentimiento de comunicaciones comerciales
+     * (art. 7.3, `specs/auth-con-google.md` §9).
+     *
+     * ⚠️⚠️ **Es la pieza que cierra un incumplimiento vivo**, y no de las cuentas de Google: hasta hoy
+     * el consentimiento se daba en el alta con un clic y **no había forma de retirarlo** — ninguna
+     * ruta actualizaba `marketing_opt_in`—. El art. 7.3 exige que retirarlo sea *tan fácil como
+     * darlo*, y por eso esto **no pide contraseña**: es exactamente igual de fácil en los dos
+     * sentidos, y ponerle fricción solo a la retirada sería incumplirlo por otra puerta.
+     *
+     * ⚠️ **204 pase lo que pase**, incluida la llamada que no cambia nada: el titular pide un ESTADO,
+     * no una transición, así que dos clics seguidos en «no quiero» dan el mismo desenlace. La
+     * idempotencia la garantiza el dominio, que no escribe dos pruebas de lo mismo.
+     */
+    public function marketing(Request $request, AccountPrivacy $privacy): JsonResponse
+    {
+        $data = $request->validate(['accepted' => ['required', 'boolean']]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $privacy->setMarketing($user, (bool) $data['accepted'], (string) $request->ip());
+
+        return response()->json(status: 204);
+    }
+
+    /**
      * `GET /me/export` — derecho de portabilidad (art. 20).
      *
      * ⚠️ **Devuelve el documento, no un fichero adjunto.** El `Content-Disposition` de la página web

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { api as httpClient } from '../api.js';
 import { formState, resetForm, runForm } from '../account/form-run.js';
+import { useProfileStore } from './profile.js';
 import { saveExport } from '../account/privacy.js';
 
 /**
@@ -87,6 +88,40 @@ export const usePrivacyStore = defineStore('privacy', {
             } finally {
                 this.consentsLoading = false;
             }
+        },
+
+        /**
+         * **Da o RETIRA el consentimiento de marketing** (art. 7.3, `#344`).
+         *
+         * ⚠️⚠️ **No pide contraseña, y eso es la ley, no una comodidad**: el art. 7.3 exige que
+         * retirar sea *tan fácil como dar*. Poner fricción solo a la retirada sería incumplirlo por
+         * otra puerta — y es justo la fricción que a alguien le parecería «más seguro» añadir.
+         *
+         * ⚠️ **Al salir bien se RELEEN los consentimientos**: la lista de arriba es la prueba visible
+         * del art. 7.1, y dejarla con la foto vieja diría «aceptado» sobre un interruptor que el
+         * titular acaba de apagar. Es la contradicción que esta tanda existe para cerrar.
+         *
+         * @returns {Promise<boolean>} si el servidor lo aplicó
+         */
+        /** Trae el perfil si no está: es de donde sale el estado del interruptor. */
+        ensureMarketing({ api = httpClient } = {}) {
+            return useProfileStore().ensure({ api });
+        },
+
+        async setMarketing(accepted, { api = httpClient } = {}) {
+            const response = await api.put('/me/marketing', { accepted });
+
+            if (! response.ok) return false;
+
+            // El perfil ya cargado refleja el cambio sin volver a pedir `/me`: es la MISMA fuente
+            // (`marketing_opt_in` de `GET /me`), y pedirla otra vez solo añadiría una espera.
+            const profile = useProfileStore();
+            if (profile.user) profile.user.marketing_opt_in = accepted;
+
+            this.consents = null;
+            await this.ensureConsents({ api });
+
+            return true;
         },
 
         /**

@@ -24,11 +24,21 @@ const INDENT = 4;
  * ocurre aquí es juntar fecha y versión en una línea, que es la forma que la página lleva usando:
  * «23/08/2026 · v2026-05-23».
  */
-export function consentRows(payload) {
+export function consentRows(payload, { revokedWord = '' } = {}) {
     return (payload?.data ?? []).map((consent, index) => ({
         key: consent.type + '-' + index,
         label: consent.type_label,
-        meta: [consent.accepted_label, consent.version ? 'v' + consent.version : ''].filter(Boolean).join(' · '),
+        // ⚠️⚠️ **Una fila RETIRADA no se puede leer igual que una viva** (art. 7.3, `#344`): sin esta
+        // rama, la lista diría «Comunicaciones comerciales · 23/08/2026» encima de un interruptor
+        // apagado, que es exactamente la contradicción que la revisión de la spec señaló. La palabra
+        // la pone quien llama —este módulo es plano y no lee `lang/`— y la FECHA la compone el
+        // servidor con la zona horaria de la instalación.
+        revoked: Boolean(consent.revoked_at),
+        meta: [
+            consent.accepted_label,
+            consent.version ? 'v' + consent.version : '',
+            consent.revoked_at && revokedWord ? revokedWord + ' ' + (consent.revoked_label ?? '') : '',
+        ].filter(Boolean).join(' · ').trim(),
     }));
 }
 

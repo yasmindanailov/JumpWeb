@@ -105,9 +105,35 @@ describe('los consentimientos', () => {
     /** El nombre y la fecha llegan compuestos por el servidor: aquí solo se juntan fecha y versión. */
     test('se pintan con lo que el servidor resolvió, en su orden', () => {
         assert.deepEqual(consentRows(payload), [
-            { key: 'waiver-0', label: 'Descargo de responsabilidad (waiver)', meta: '01/06/2026 · v2026-06-01' },
-            { key: 'privacy-1', label: 'Política de privacidad', meta: '23/05/2026 · v2026-05-23' },
+            { key: 'waiver-0', label: 'Descargo de responsabilidad (waiver)', meta: '01/06/2026 · v2026-06-01', revoked: false },
+            { key: 'privacy-1', label: 'Política de privacidad', meta: '23/05/2026 · v2026-05-23', revoked: false },
         ]);
+    });
+
+    /**
+     * ⚠️⚠️ **Una fila RETIRADA no puede leerse igual que una viva** (art. 7.3, `#344`): sin esto, la
+     * lista diría «Comunicaciones comerciales · 23/08/2026» encima de un interruptor apagado.
+     */
+    test('un consentimiento retirado lo dice, con su fecha', () => {
+        const rows = consentRows({ data: [{
+            type: 'marketing', type_label: 'Comunicaciones comerciales',
+            accepted_label: '23/05/2026', version: '1',
+            revoked_at: '2026-09-02T10:00:00+02:00', revoked_label: '02/09/2026',
+        }] }, { revokedWord: 'retirado el' });
+
+        assert.equal(rows[0].revoked, true);
+        assert.equal(rows[0].meta, '23/05/2026 · v1 · retirado el 02/09/2026');
+    });
+
+    /** Y sin la palabra —quien llama no la pasó— la fila sigue diciendo que está retirada por su bandera. */
+    test('sin la palabra, la retirada sigue marcada', () => {
+        const rows = consentRows({ data: [{
+            type: 'marketing', type_label: 'Comunicaciones comerciales',
+            accepted_label: '23/05/2026', version: '1', revoked_at: '2026-09-02T10:00:00+02:00',
+        }] });
+
+        assert.equal(rows[0].revoked, true);
+        assert.equal(rows[0].meta, '23/05/2026 · v1');
     });
 
     /**
