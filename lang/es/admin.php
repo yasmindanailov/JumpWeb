@@ -1430,6 +1430,9 @@ return [
                 'park_closed' => 'el parque está cerrado ese día',
                 'product_window' => 'el producto no se ofrece en esa franja',
                 'insufficient_capacity_at_save' => 'ya no quedan plazas suficientes en esa franja',
+                // La HORA EXTRA (`specs/hora-extra.md`): la hija ocupa la franja SIGUIENTE al padre.
+                'addon_occupancy_at_destination' => 'la hora extra de esta reserva no cabe detrás del destino: la franja siguiente no existe, está cerrada o está completa',
+                'addon_stay_exceeds_quantity' => 'no pueden quedarse más personas (hora extra) de las que entran; baja primero las horas extra',
                 'beyond_horizon' => 'la fecha está más allá del horizonte de reservas permitido',
 
                 // Sub-fase 7.2e.3 (decisión #167): razones del cambio de

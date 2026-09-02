@@ -25,15 +25,20 @@ class SlotAvailability
      * sin pedido): restan aforo para que no se pueda sobrevender una franja desde la propia cesta
      * (5.4b, #70). El que llama los filtra por zona y día.
      *
-     * $excludeItemId (sub-fase 7.2e.3, decisión #167) excluye un `order_items.id` del cómputo de
+     * $excludeItemId (sub-fase 7.2e.3, decisión #167) excluye `order_items.id` del cómputo de
      * ocupación. Necesario al EDITAR un item desde el panel: para saber si una nueva cantidad/
      * duración cabe en SU PROPIA franja hay que descontar primero la huella actual del item (si no,
      * un crecimiento legítimo se contaría a sí mismo y se bloquearía). Inocuo cuando el item está
      * en otra franja distinta de la que se evalúa.
      *
+     * ⚠️ **Admite VARIOS ids desde la hora extra** (`specs/hora-extra.md` §4.6·1, el borde 1): al
+     * excluir un padre hay que excluir **su descendencia** — con un solo id, la edición del padre
+     * competiría contra su propia hora extra y vería la franja más llena de lo que está. Es el
+     * cambio de firma que la spec pedía, no un parche: un `int` suelto sigue valiendo.
+     *
      * @param  array<int, array{entry_start:string, duration_min:int|null, seats:int}>  $cartOccupants
      */
-    public function availableFor(Slot $entrySlot, ?int $durationMin, array $cartOccupants = [], ?int $excludeItemId = null): int
+    public function availableFor(Slot $entrySlot, ?int $durationMin, array $cartOccupants = [], int|array|null $excludeItemId = null): int
     {
         // Solo bloquea si está EXPLÍCITAMENTE cerrada (online_sales_open=false o status=closed);
         // null (p. ej. valor por defecto no cargado en memoria) se trata como abierta.
@@ -118,13 +123,16 @@ class SlotAvailability
      * Cuenta los pedidos (pagados + pendientes vivos) y, opcionalmente, los ocupantes
      * PROVISIONALES de la cesta en curso (5.4b, #70) ya filtrados por esta zona y día.
      *
-     * $excludeItemId (sub-fase 7.2e.3): omite un `order_items.id` del recuento (ver `availableFor`).
+     * $excludeItemId (sub-fase 7.2e.3): omite `order_items.id` del recuento (ver `availableFor`;
+     * varios ids desde la hora extra — el padre y su descendencia se excluyen JUNTOS).
      *
      * @param  array<int, array{entry_start:string, duration_min:int|null, seats:int}>  $cartOccupants
      * @return array<string, int>
      */
-    public function occupancyMap(int $zoneId, string $date, array $cartOccupants = [], ?int $excludeItemId = null): array
+    public function occupancyMap(int $zoneId, string $date, array $cartOccupants = [], int|array|null $excludeItemId = null): array
     {
+        $excludeIds = $excludeItemId === null ? [] : array_values(array_map('intval', (array) $excludeItemId));
+
         $stored = OrderItem::query()
             ->select('order_items.seats', 'entry.start_time as entry_start', 'ticket_types.duration_min')
             ->join('slots as entry', 'entry.id', '=', 'order_items.slot_id')
@@ -132,7 +140,7 @@ class SlotAvailability
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('entry.zone_id', $zoneId)
             ->where('entry.date', $date)
-            ->when($excludeItemId !== null, fn ($q) => $q->where('order_items.id', '!=', $excludeItemId))
+            ->when($excludeIds !== [], fn ($q) => $q->whereNotIn('order_items.id', $excludeIds))
             // Sub-fase 7.2e.2 (decisión #159): items soft-cancelados liberan
             // su plaza para que el aforo refleje la realidad operativa. La
             // decisión #152 prometió esta exclusión pero solo se aplicó a

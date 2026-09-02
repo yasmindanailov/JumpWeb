@@ -176,7 +176,7 @@ class ItemRescheduleOffer
                 // lock (AFORO-06), no de la oferta.
                 $available = $this->displayAvailableFor($slot, $ticketType);
                 $isCurrentSlot = $currentSlot !== null && $currentSlot->id === $slot->id;
-                if ($available < $seatsNeeded && ! $isCurrentSlot) {
+                if (($available < $seatsNeeded || ! $this->occupyingChildrenFitAfter($item, $slot)) && ! $isCurrentSlot) {
                     continue;
                 }
                 $entries[] = [
@@ -253,6 +253,57 @@ class ItemRescheduleOffer
             return true;
         }
 
-        return $available >= $seatsNeeded;
+        return $available >= $seatsNeeded && $this->occupyingChildrenFitAfter($item, $slot);
+    }
+
+    /**
+     * ¿La HORA EXTRA de este ítem cabe DETRÁS de la franja candidata? (`specs/hora-extra.md`
+     * §4.6·4: un hueco solo vale si también cabe la hija — ofrecer por el padre solo es `AFORO-02`
+     * por la puerta de la edición).
+     *
+     * Mismo carácter de DISPLAY que el resto de esta oferta (#173: huella propia contada, y por eso
+     * conservador cerca de la posición actual — el slot actual siempre se ofrece igualmente); la
+     * autoridad es la validación bajo lock de `OrderItemEditor::landOccupyingFamily()`. Las hijas
+     * se leen por los HECHOS de su fila (franja y plazas), no por el catálogo vivo.
+     */
+    public function occupyingChildrenFitAfter(OrderItem $item, Slot $candidate): bool
+    {
+        $children = $item->children()
+            ->whereNull('cancelled_at')
+            ->whereNotNull('slot_id')
+            ->where('seats', '>', 0)
+            ->with('ticketType')
+            ->get();
+
+        if ($children->isEmpty()) {
+            return true;
+        }
+
+        $ticketType = $item->ticketType;
+        $childStart = $ticketType === null ? null : AddonOccupancy::childEntryStart($ticketType, (string) $candidate->start_time);
+        if ($childStart === null) {
+            return false;
+        }
+
+        $childSlot = Slot::query()
+            ->where('zone_id', $candidate->zone_id)
+            ->where('date', $candidate->date->toDateString())
+            ->where('start_time', $childStart)
+            ->first();
+        if ($childSlot === null) {
+            return false;
+        }
+
+        foreach ($children as $child) {
+            if ($child->ticketType === null) {
+                return false;
+            }
+            $available = $this->slotAvailability->availableFor($childSlot, $child->ticketType->duration_min);
+            if ($available < (int) $child->seats) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

@@ -12,6 +12,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Notifications\OrderItemModified;
 use Closure;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -134,8 +135,9 @@ class OrderItemEditor
         $oldLabel = self::humanSlotLabel($oldSlot);
         $newLabel = self::humanSlotLabel($newSlot);
 
-        // Capa 5: txn bajo el lock de zona/día del destino + revalidar aforo.
-        $committed = $this->withZoneDayLock($newSlot, function () use ($item, $newSlot): bool {
+        // Capa 5: txn bajo el lock de zona/día del destino + revalidar aforo. Devuelve `true`, o el
+        // MOTIVO del bloqueo (`false` conserva su significado histórico: sin plazas / cancelado).
+        $committed = $this->withZoneDayLock($newSlot, function ($lockedSlots) use ($item, $newSlot): bool|string {
             /** @var OrderItem $locked */
             $locked = OrderItem::query()->lockForUpdate()->findOrFail($item->id);
 
@@ -152,12 +154,28 @@ class OrderItemEditor
                 return true;
             }
 
-            // Aforo revalidado DENTRO del lock, EXCLUYENDO la huella propia del item (AFORO-06).
+            // La HORA EXTRA (`specs/hora-extra.md` §4.4·3, borde 4): mover el padre MUEVE a sus
+            // hijas que ocupan — la familia aterriza entera en el destino o no se mueve nada. La
+            // huella propia excluida es la de TODA la familia (borde 1): con un solo id, la edición
+            // competiría contra su propia hora extra.
+            $family = $this->liveOccupyingChildren($locked);
+            $excludeIds = array_merge([(int) $locked->id], $family->pluck('id')->map(fn ($id) => (int) $id)->all());
+
+            // Aforo del padre revalidado DENTRO del lock, EXCLUYENDO la huella familiar (AFORO-06 + borde 1).
             $available = $locked->ticketType?->isPack()
                 ? $this->packAvailability->availableGuestsFor($newSlot, $locked->ticketType, [], $locked->id)
-                : $this->slotAvailability->availableFor($newSlot, $locked->ticketType?->duration_min, [], $locked->id);
+                : $this->slotAvailability->availableFor($newSlot, $locked->ticketType?->duration_min, [], $excludeIds);
             if ($available < (int) $locked->seats) {
                 return false; // → `insufficient_capacity_at_save`, decidido tras la txn.
+            }
+
+            $resulting = $family->map(fn (OrderItem $child): array => [
+                'type' => $child->ticketType,
+                'seats' => (int) $child->seats,
+            ])->all();
+            [$childSlot, $familyReason] = $this->landOccupyingFamily($lockedSlots, $locked->ticketType, $newSlot, $resulting, $excludeIds);
+            if ($familyReason !== null) {
+                return $familyReason;
             }
 
             // El sello de condiciones se RE-PRECIA para el día nuevo en el MISMO `forceFill` que
@@ -165,11 +183,15 @@ class OrderItemEditor
             // reconciliación —que relee la fila bloqueada— derivaría de un sello del día viejo.
             $locked->forceFill(['slot_id' => $newSlot->id] + $this->sealUpdateFor($locked, $locked->ticketType, $newSlot))->save();
 
+            foreach ($family as $child) {
+                $child->forceFill(['slot_id' => $childSlot?->id])->save();
+            }
+
             return true;
         });
 
-        if (! $committed) {
-            return ItemActionOutcome::blocked('insufficient_capacity_at_save');
+        if ($committed !== true) {
+            return ItemActionOutcome::blocked(is_string($committed) ? $committed : 'insufficient_capacity_at_save');
         }
 
         // Audit log del cambio de slot.
@@ -259,17 +281,20 @@ class OrderItemEditor
      * literales, que es lo que la receta exige. Nada más entra en esta transacción: ni audits de
      * éxito, ni dinero, ni email — eso va después del commit (spec §4.3).
      *
+     * El cuerpo recibe las franjas BLOQUEADAS (la hora extra busca «la franja siguiente» entre
+     * ellas, `AddonOccupancy::childSlotAmong` — una consulta aparte leería otro snapshot).
+     *
      * @template T
      *
-     * @param  Closure(): T  $body
+     * @param  Closure(Collection): T  $body
      * @return T
      */
     private function withZoneDayLock(Slot $slot, Closure $body): mixed
     {
         return DB::transaction(function () use ($slot, $body): mixed {
-            $this->zoneDayLock->acquire([(int) $slot->zone_id], [$slot->date->toDateString()]);
+            $lockedSlots = $this->zoneDayLock->acquire([(int) $slot->zone_id], [$slot->date->toDateString()]);
 
-            return $body();
+            return $body($lockedSlots);
         });
     }
 
@@ -492,12 +517,70 @@ class OrderItemEditor
 
         // Grupo de elección de cada complemento del producto (para el CAMBIO de menú: añadir un
         // miembro de un grupo sustituye al miembro presente de ese mismo grupo).
+        $offeredAddons = $newType->addons()->get()->keyBy('id');
         $addonGroupByTypeId = [];
-        foreach ($newType->addons()->get() as $addonOption) {
+        foreach ($offeredAddons as $addonOption) {
             $addonGroup = $addonOption->pivot->choiceGroup();
             if ($addonGroup !== null) {
                 $addonGroupByTypeId[(int) $addonOption->id] = $addonGroup;
             }
+        }
+
+        // La HORA EXTRA (`specs/hora-extra.md` §4.4·3 + §4.6·5): la familia OCUPANTE que RESULTARÁ
+        // de este guardado — las hijas vivas que no se cancelan aquí (con su cantidad subida si se
+        // sube) más los añadidos de complementos que ocupan. De ella salen las dos reglas:
+        //  · el borde 5 («no se quedan más de los que entran»): Σ cantidades ≤ cantidad NUEVA del
+        //    padre — la mitad del tope de `AddonResolver` que la edición tiene que decir igual;
+        //  · la validación de aterrizaje bajo el lock (más abajo), que mueve a toda la familia con
+        //    el padre o no mueve nada.
+        $editByChildId = [];
+        foreach ($addonEdits['edits'] ?? [] as $edit) {
+            $editByChildId[(int) $edit['child_id']] = (int) $edit['quantity'];
+        }
+        $resultingOccupying = []; // list<{type, qty, seats, child_id|null, type_id|null}>
+        $stayingTotal = 0;
+        foreach ($this->liveOccupyingChildren($item) as $child) {
+            $edited = $editByChildId[(int) $child->id] ?? null;
+            if ($edited === 0) {
+                continue; // se cancela en este mismo guardado: deja de ocupar
+            }
+            $qty = ($edited !== null && $edited > (int) $child->quantity) ? $edited : (int) $child->quantity;
+            $resultingOccupying[] = [
+                'type' => $child->ticketType,
+                'qty' => $qty,
+                'seats' => AddonOccupancy::seats($child->ticketType, $qty),
+                'child_id' => (int) $child->id,
+                'type_id' => null,
+            ];
+            $stayingTotal += $qty;
+        }
+        foreach ($addonEdits['adds'] ?? [] as $add) {
+            $addTypeId = (int) $add['ticket_type_id'];
+            /** @var TicketType|null $addType */
+            $addType = $offeredAddons->get($addTypeId);
+            if ($addType === null || ! $addType->occupiesAfterParent()) {
+                continue;
+            }
+            // El cinturón de §4.1 en la puerta del panel: un ocupante con configuración rota no se
+            // añade (jamás degrada a neutro — sería vender sin ocupar).
+            if (! $addType->hasSaneOccupancyConfig()) {
+                return ItemActionOutcome::blocked('addon_incompatible_with_product');
+            }
+            $qty = (int) ($addonAddQuantities[$addTypeId] ?? $add['quantity']);
+            $resultingOccupying[] = [
+                'type' => $addType,
+                'qty' => $qty,
+                'seats' => AddonOccupancy::seats($addType, $qty),
+                'child_id' => null,
+                'type_id' => $addTypeId,
+            ];
+            $stayingTotal += $qty;
+        }
+        if ($stayingTotal > $newQty) {
+            return ItemActionOutcome::blocked('addon_stay_exceeds_quantity', [
+                'staying' => $stayingTotal,
+                'entering' => $newQty,
+            ]);
         }
 
         // Cambios estructurados para el email + audit.
@@ -533,20 +616,45 @@ class OrderItemEditor
 
         // Capa 5: mutación atómica bajo el lock de zona/día con revalidación de aforo EXCLUYENDO la
         // huella propia del item (si no, un crecimiento en su propia franja se contaría a sí mismo
-        // y se bloquearía).
+        // y se bloquearía). Devuelve `true`, o el MOTIVO del bloqueo (`false` conserva su
+        // significado histórico: sin plazas / cancelado).
         $perGuestRescales = []; // child_id => ['delta'=>cents, 'old_qty'=>n, 'new_qty'=>n, 'name'=>str] (M4)
-        $committed = $this->withZoneDayLock($effectiveSlot, function () use ($item, $effectiveSlot, $newType, $newQty, $oldQty, $newUnit, $newSeats, $addonEdits, $addonAddUnitPrices, $addonAddQuantities, $addonAddFreeQuantities, $addonGroupByTypeId, $by, &$addonAddChildIds, &$perGuestRescales): bool {
+        $committed = $this->withZoneDayLock($effectiveSlot, function ($lockedSlots) use ($item, $effectiveSlot, $newType, $newQty, $oldQty, $newUnit, $newSeats, $addonEdits, $addonAddUnitPrices, $addonAddQuantities, $addonAddFreeQuantities, $addonGroupByTypeId, $offeredAddons, $resultingOccupying, $by, &$addonAddChildIds, &$perGuestRescales): bool|string {
             /** @var OrderItem $locked */
             $locked = OrderItem::query()->lockForUpdate()->findOrFail($item->id);
             if ($locked->isCancelled()) {
                 return false;
             }
 
+            // La huella excluida es la de TODA la familia (hora extra, borde 1 de §4.6): con solo
+            // el id del padre, su edición competiría contra su propia hija en la franja siguiente.
+            $familyIds = array_merge(
+                [(int) $locked->id],
+                $this->liveOccupyingChildren($locked)->pluck('id')->map(fn ($id) => (int) $id)->all(),
+            );
+
             $available = $newType->isPack()
                 ? $this->packAvailability->availableGuestsFor($effectiveSlot, $newType, [], $locked->id)
-                : $this->slotAvailability->availableFor($effectiveSlot, $newType->duration_min, [], $locked->id);
+                : $this->slotAvailability->availableFor($effectiveSlot, $newType->duration_min, [], $familyIds);
             if ($available < $newSeats) {
                 return false;
+            }
+
+            // La HORA EXTRA: la familia resultante ATERRIZA detrás de la posición nueva del padre
+            // (producto nuevo = duración nueva = otra «franja siguiente»; día/hora nuevos, ídem) o
+            // no se guarda nada — el borde 4 de §4.6, dentro del mismo lock.
+            $childSlot = null;
+            if ($resultingOccupying !== []) {
+                [$childSlot, $familyReason] = $this->landOccupyingFamily(
+                    $lockedSlots,
+                    $newType,
+                    $effectiveSlot,
+                    array_map(fn (array $c): array => ['type' => $c['type'], 'seats' => $c['seats']], $resultingOccupying),
+                    $familyIds,
+                );
+                if ($familyReason !== null) {
+                    return $familyReason;
+                }
             }
 
             // El sello de condiciones viaja en el MISMO `forceFill` que el pack y la franja
@@ -560,7 +668,8 @@ class OrderItemEditor
                 'slot_id' => $effectiveSlot->id,
             ] + $this->sealUpdateFor($locked, $newType, $effectiveSlot))->save();
 
-            // Sub-fase 7.2e.4 (#170): complementos (NEUTROS al aforo) en la misma txn. Subir
+            // Sub-fase 7.2e.4 (#170): complementos en la misma txn — neutros al aforo salvo la HORA
+            // EXTRA, cuya fila lleva franja y plazas (validadas arriba con la familia). Subir
             // cantidad → forceFill; quitar (0) → markCancelled (sin refund, #170); añadir → nuevo
             // child enlazado al parent.
             // ⚠️⚠️ La línea del SUPLEMENTO de fiesta mixta no es un complemento que el operador
@@ -584,7 +693,13 @@ class OrderItemEditor
                 if ($q === 0) {
                     $child->markCancelled($by);
                 } elseif ($q > (int) $child->quantity) {
-                    $child->forceFill(['quantity' => $q])->save();
+                    // Una hija que OCUPA (franja en la fila, el HECHO) recalcula sus plazas con la
+                    // cantidad — el «gemelo silencioso» de §4.4·6: subir 1 → 3 dejando `seats`
+                    // quieto son tres personas ocupando una plaza, sin carrera y sin fallo.
+                    $seatsUpdate = $child->slot_id !== null && $child->ticketType !== null
+                        ? ['seats' => AddonOccupancy::seats($child->ticketType, $q)]
+                        : [];
+                    $child->forceFill(['quantity' => $q] + $seatsUpdate)->save();
                 }
             }
             foreach ($addonEdits['adds'] ?? [] as $add) {
@@ -602,19 +717,38 @@ class OrderItemEditor
                     }
                 }
 
+                // La HORA EXTRA (§4.4·6): una hija que OCUPA nace con su franja y sus plazas — este
+                // `create` era el punto de NACIMIENTO con literales que la primera revisión cazó
+                // (un operador creaba una ocupación que el aforo no contaba, sin error y sin franja
+                // que imprimir). La franja es la validada arriba con la familia; las plazas, la
+                // MISMA cuenta que `AddonResolver` pone al vender.
+                $addQty = (int) ($addonAddQuantities[$typeId] ?? $add['quantity']);
+                $addType = $offeredAddons->get($typeId);
+                $occupies = $addType !== null && $addType->occupiesAfterParent();
+
                 $created = $locked->children()->create([
                     'order_id' => $locked->order_id,
                     'ticket_type_id' => $typeId,
-                    'slot_id' => null,
+                    'slot_id' => $occupies ? $childSlot?->id : null,
                     // Cantidad efectiva + unidades gratis las computó computeAddonPricing con la
                     // config del pivote (incluido/por-invitado), no el qty crudo del operador.
-                    'quantity' => (int) ($addonAddQuantities[$typeId] ?? $add['quantity']),
+                    'quantity' => $addQty,
                     'free_quantity' => (int) ($addonAddFreeQuantities[$typeId] ?? 0),
                     'unit_price' => (int) ($addonAddUnitPrices[$typeId] ?? 0),
-                    'seats' => 0,
+                    'seats' => $occupies ? AddonOccupancy::seats($addType, $addQty) : 0,
                     'event_data' => null,
                 ]);
                 $addonAddChildIds[$typeId] = (int) $created->id;
+            }
+
+            // La HORA EXTRA (borde 4): las hijas que ocupan y SIGUEN vivas se mudan CON el padre —
+            // el producto nuevo (otra duración) o el día/hora nuevos cambian su «franja siguiente»,
+            // que es la ya validada arriba. Sin esto, la hija se queda ocupando una franja de un
+            // día en el que la familia ya no está, sin fallo y sin aviso.
+            foreach ($this->liveOccupyingChildren($locked) as $child) {
+                if ((int) $child->slot_id !== (int) $childSlot?->id && $childSlot !== null) {
+                    $child->forceFill(['slot_id' => $childSlot->id])->save();
+                }
             }
 
             // M4 (auditoría Fase 1): re-escalar los complementos PER-INVITADO al nuevo nº de
@@ -652,8 +786,8 @@ class OrderItemEditor
             return true;
         });
 
-        if (! $committed) {
-            return ItemActionOutcome::blocked('insufficient_capacity_at_save');
+        if ($committed !== true) {
+            return ItemActionOutcome::blocked(is_string($committed) ? $committed : 'insufficient_capacity_at_save');
         }
 
         // D7: la excepción del mínimo se AUDITA solo cuando de verdad se usó — un `false` en cada
@@ -813,6 +947,82 @@ class OrderItemEditor
      * comprobar el permiso `orders.edit_item_below_minimum` — este validador es puro y no mira
      * permisos. Solo el panel: `OrderCreator` sigue exigiendo el mínimo al vender.
      */
+    /**
+     * Las hijas VIVAS de un ítem que OCUPAN aforo — por los HECHOS de la fila (franja y plazas),
+     * nunca por el catálogo vivo: una hija vendida ocupando sigue ocupando aunque el interruptor
+     * del producto cambie después (la doctrina del sello, `specs/hora-extra.md` §4.3), y una
+     * vendida neutra sigue neutra.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, OrderItem>
+     */
+    private function liveOccupyingChildren(OrderItem $item): \Illuminate\Database\Eloquent\Collection
+    {
+        return $item->children()
+            ->whereNull('cancelled_at')
+            ->whereNotNull('slot_id')
+            ->where('seats', '>', 0)
+            ->with('ticketType')
+            ->get();
+    }
+
+    /**
+     * Dónde ATERRIZA la familia ocupante detrás de la posición (nueva) del padre, validando que
+     * CABE — `[franja de la hija, null]` o `[null, motivo de bloqueo]` (`specs/hora-extra.md`
+     * §4.4·3 + borde 4).
+     *
+     * La franja sale de la regla determinista del borde 8 (`AddonOccupancy::childSlotAmong`),
+     * buscada entre las franjas BLOQUEADAS por `withZoneDayLock` — no con una consulta que leería
+     * otro snapshot. Cada hija se valida excluyendo la huella actual de TODA la familia
+     * (`$excludeItemIds`, el borde 1) y con sus HERMANOS resultantes como ocupantes provisionales
+     * (el borde 6: dos hijas de la misma línea caen sobre la misma franja y ninguna está aún
+     * escrita en su posición nueva). El padre no hace falta como provisional: su tramo acaba
+     * exactamente donde el de las hijas empieza.
+     *
+     * @param  Collection<array-key, Slot>  $lockedSlots
+     * @param  list<array{type: TicketType|null, seats: int}>  $children  la familia RESULTANTE
+     * @param  list<int>  $excludeItemIds  padre + hijas vivas (huella actual, excluida en bloque)
+     * @return array{0: ?Slot, 1: ?string}
+     */
+    private function landOccupyingFamily($lockedSlots, TicketType $parentType, Slot $parentSlot, array $children, array $excludeItemIds): array
+    {
+        if ($children === []) {
+            return [null, null];
+        }
+
+        $childSlot = AddonOccupancy::childSlotAmong($lockedSlots, $parentType, $parentSlot);
+        if ($childSlot === null) {
+            return [null, 'addon_occupancy_at_destination'];
+        }
+
+        foreach ($children as $i => $child) {
+            if ($child['type'] === null) {
+                return [null, 'addon_occupancy_at_destination'];
+            }
+            $siblings = [];
+            foreach ($children as $j => $other) {
+                if ($j === $i || $other['type'] === null) {
+                    continue;
+                }
+                $siblings[] = [
+                    'entry_start' => (string) $childSlot->start_time,
+                    'duration_min' => $other['type']->duration_min,
+                    'seats' => (int) $other['seats'],
+                ];
+            }
+            $available = $this->slotAvailability->availableFor(
+                $childSlot,
+                $child['type']->duration_min,
+                $siblings,
+                $excludeItemIds,
+            );
+            if ($available < (int) $child['seats']) {
+                return [null, 'addon_occupancy_at_destination'];
+            }
+        }
+
+        return [$childSlot, null];
+    }
+
     public function validateItemEditTarget(OrderItem $item, TicketType $newType, int $newQty, bool $allowBelowMinimum = false): ?string
     {
         $oldType = $item->ticketType;

@@ -1084,6 +1084,9 @@ return [
                 'park_closed' => '当日公园关闭',
                 'product_window' => '该产品不在所选时段提供',
                 'insufficient_capacity_at_save' => '该时段已没有足够空位',
+                // 加时(hora extra):子项占用其父项之后的下一时段。
+                'addon_occupancy_at_destination' => '该预订的加时无法安排在目标时段之后:下一时段不存在、已关闭或已满',
+                'addon_stay_exceeds_quantity' => '停留人数(加时)不能多于入场人数;请先减少加时数量',
                 'beyond_horizon' => '该日期超过允许预约的范围',
 
                 // 子阶段 7.2e.3(决议 #167):修改数量 + 产品的原因。
