@@ -133,16 +133,22 @@ class AvailabilityReader implements AvailabilityOffer
     /**
      * Ocupantes PROVISIONALES que la cesta del cliente aporta a esta zona y día.
      *
-     * Es la pieza que estaba en la capa de UI. Las dos listas son deliberadamente distintas porque
-     * los dos aforos lo son: las entradas ocupan PLAZAS a lo largo de su duración y los packs ocupan
-     * CUPO en su propio pool, contando además montaje y limpieza (#82). Mezclarlas restaría plazas
-     * de entrada por un cumpleaños, que es justo lo que el pool propio evita.
+     * Las dos listas son deliberadamente distintas porque los dos aforos lo son: las PLAZAS se
+     * ocupan a lo largo de la duración y el CUPO de packs vive en su propio pool, contando además
+     * montaje y limpieza (#82).
+     *
+     * **La lista de plazas la compone `CartOccupants`** — la derivación ÚNICA compartida con el
+     * cobro (`OrderCreator`), `specs/hora-extra.md` §7·D1 — y con ella entran dos cosas que esta
+     * copia local no contaba: las líneas HIJAS que ocupan (la hora extra) y las líneas de PACK,
+     * que también ocupan plazas en cuanto existen (`occupancyMap` las cuenta: nacen con franja y
+     * `seats`; aquí la oferta y el cobro divergían sin morder solo porque los packs viven en zona
+     * propia). Una copia que cuente distinto ofrece horas que el checkout rechaza (`AFORO-02`).
      *
      * La línea que el cliente está configurando **no** está en su cesta todavía, así que no se
      * cuenta a sí misma — igual que en la web.
      *
      * @param  array<mixed>  $cart
-     * @return array{entries: list<array{entry_start:string, duration_min:int|null, seats:int}>, packs: list<array{start:string, prep_before_min:int, duration_min:int|null, prep_after_min:int, guests:int}>}
+     * @return array{entries: list<array{entry_start:string, duration_min:int|null, seats:int, line:int, addon:int|null}>, packs: list<array{start:string, prep_before_min:int, duration_min:int|null, prep_after_min:int, guests:int}>}
      */
     private function occupantsOf(array $cart, int $zoneId, string $date): array
     {
@@ -154,41 +160,30 @@ class AvailabilityReader implements AvailabilityOffer
 
         $types = $this->typesOf($cart);
 
-        $entries = [];
         $packs = [];
-
         foreach ($cart as $line) {
             if ($line['date'] !== $date) {
                 continue;
             }
 
             $type = $types->get($line['ticket_type_id']);
-            if (! $type || (int) $type->zone_id !== $zoneId) {
+            if (! $type || (int) $type->zone_id !== $zoneId || ! $type->isPack()) {
                 continue;
             }
 
-            $units = (int) $line['qty'] * (int) ($type->seats_per_unit ?? 1);
-
-            if ($type->isPack()) {
-                $packs[] = [
-                    'start' => $line['time'],
-                    'prep_before_min' => (int) $type->prep_before_min,
-                    'duration_min' => $type->duration_min,
-                    'prep_after_min' => (int) $type->prep_after_min,
-                    'guests' => $units,
-                ];
-
-                continue;
-            }
-
-            $entries[] = [
-                'entry_start' => $line['time'],
+            $packs[] = [
+                'start' => $line['time'],
+                'prep_before_min' => (int) $type->prep_before_min,
                 'duration_min' => $type->duration_min,
-                'seats' => $units,
+                'prep_after_min' => (int) $type->prep_after_min,
+                'guests' => (int) $line['qty'] * (int) ($type->seats_per_unit ?? 1),
             ];
         }
 
-        return ['entries' => $entries, 'packs' => $packs];
+        return [
+            'entries' => CartOccupants::entries($cart, $types, $zoneId, $date),
+            'packs' => $packs,
+        ];
     }
 
     /**
@@ -196,6 +191,9 @@ class AvailabilityReader implements AvailabilityOffer
      *
      * Mismo filtro que aplica el resto del flujo: una línea de un producto retirado no retiene
      * aforo, porque tampoco se puede comprar.
+     *
+     * `with('addons')` desde la hora extra: `CartOccupants` deriva de esa relación (con su pivote)
+     * las hijas que ocupan — sin la precarga cada línea costaría una consulta.
      *
      * @param  array<int, array{ticket_type_id:int}>  $cart
      * @return Collection<int, TicketType>
@@ -209,6 +207,7 @@ class AvailabilityReader implements AvailabilityOffer
 
         return TicketType::sellable()
             ->inOperationalZone()
+            ->with('addons')
             ->whereIn('id', $ids)
             ->get()
             ->keyBy('id');

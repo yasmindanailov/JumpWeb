@@ -280,6 +280,9 @@ return [
         'outside_window_line' => 'La hora del :when no está disponible para «:product». Elige otra.',
         'too_soon_line' => '«:product» del :when requiere reservar con más antelación. Elige una fecha más adelante.',
         'too_late_line' => 'La hora de «:product» del :when ya ha pasado. Elige una franja más tarde.',
+        // La HORA EXTRA (`specs/hora-extra.md`): un complemento que OCUPA la franja siguiente.
+        'addon_occupancy_line' => '«:addon» de «:product» del :when ya no cabe: la franja siguiente está completa o cerrada. Quítalo o elige otra hora.',
+        'addon_over_line' => 'No pueden quedarse más personas (:staying) de las que entran (:entering). Revisa las horas extra de tu selección.',
         'pack_sold_out_line' => 'El pack «:product» del :when ya no tiene cupo. Quítalo del carrito y prueba con otra franja.',
         'pack_guests_range_line' => 'El nº de invitados de «:product» debe estar entre :min y :max.',
         'event_required_line' => 'Faltan datos del cumpleaños para «:product». Vuelve atrás y rellénalos.',

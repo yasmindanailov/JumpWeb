@@ -88,12 +88,14 @@ las dos formas de preguntarla —una atracción o toda la página— comparten l
 
 ### `ticket_types` — producto vendible unificado (TicketType) ⭐ tabla central del catálogo
 Tres tipos (constantes de código, NO tabla): `entry` (entrada con franja),
-`pack` (cumpleaños: cupo + extras), `addon` (complemento sin aforo ni franja).
+`pack` (cumpleaños: cupo + extras), `addon` (complemento sin aforo ni franja — **salvo el que
+declara `occupies_after_parent`**: la HORA EXTRA, cuya línea hija nace ocupando la franja
+siguiente al tramo de su padre, `specs/hora-extra.md`).
 
 | Grupo | Campos |
 |---|---|
 | Display | `name`,`description`,`period_label`,`features`,`conditions`,`badge` (JSON i18n) · `featured` · `position` · `is_active` · `icon` = clave del set de diseño que marca el producto (`DECISIONES #140`); `null` ⇒ el que le toca por su tipo. **No es un fichero**: lista curada, para que la paridad de dibujos entre superficies siga siendo comprobable |
-| Venta | `type` (indexed, default `entry`) · `is_sellable` (default false) · `zone_id` (**uint indexado SIN FK real**, nullable = ambas zonas) · `duration_min` (null = ilimitada) · `tax_rate` decimal(5,2) · `wristband_color` · `seats_per_unit` (default 1; **en packs SIEMPRE 1**, normalizado por migración) |
+| Venta | `type` (indexed, default `entry`) · `is_sellable` (default false) · `zone_id` (**uint indexado SIN FK real**, nullable = ambas zonas) · `duration_min` (null = ilimitada; **bloqueada con ventas hechas** — `occupancyMap` la lee del producto para cada línea vendida, borde 9 de `specs/hora-extra.md`) · `occupies_after_parent` (bool, default false; **solo addons**: la HORA EXTRA — el guard de `TicketType::booted()` exige duración > 0 y `seats_per_unit >= 1`, y su cinturón vive en `AddonOccupancy`) · `tax_rate` decimal(5,2) · `wristband_color` · `seats_per_unit` (default 1; **en packs SIEMPRE 1**, normalizado por migración) |
 | Ventana | `available_after_open_min`/`available_before_close_min` (offsets sobre apertura/cierre del día) · `min_advance_value` + `min_advance_unit` (`days` calendario / `hours` rodante; ver `meetsMinAdvance()`) · `prep_before_min`/`prep_after_min` (solo packs: montaje/limpieza) |
 | Pack | `min_qty`/`max_qty` (invitados) · `deposit_type` (`none`\|`percent`\|`fixed`) + `deposit_value` (señal; calculador `depositCents()`) · `event_fields` JSON (esquema de campos del evento por pack: `{key,label i18n,type,required}`) · `guest_fields` JSON (esquema por-invitado; default 4 columnas `DEFAULT_GUEST_FIELDS`) |
 | Familia por edad | `guest_age_family` (slug, indexado) · `guest_age_min`/`guest_age_max` (tinyint, **los dos extremos INCLUIDOS**; nulo = sin tope por ese lado). **Solo packs.** Es lo que conecta dos productos que son el mismo servicio en dos regímenes (KIDS/JUMP) — antes del 2026-08-29 **no había ninguna relación entre ellos** — y de ahí sale el veredicto de fiesta MIXTA. Vacío = el producto no distingue edades y la función está apagada. La edad la declara el post-form con un campo de tipo `age`, acotado en el saneo. `docs/specs/cumple-mixto.md` §9 |

@@ -197,6 +197,7 @@ class TicketType extends Model
         'featured' => 'boolean',
         'is_sellable' => 'boolean',
         'is_active' => 'boolean',
+        'occupies_after_parent' => 'boolean',
     ];
 
     /**
@@ -330,10 +331,44 @@ class TicketType extends Model
         return $date >= $now->copy()->addDays($value)->toDateString();
     }
 
-    /** ¿Es un complemento (add-on)? No consume aforo ni tiene franja (#87). */
+    /**
+     * ¿Es un complemento (add-on)? Históricamente neutro al aforo y sin franja (#87); desde la
+     * hora extra (`specs/hora-extra.md`) uno puede declararse OCUPANTE — {@see occupiesAfterParent()}.
+     */
     public function isAddon(): bool
     {
         return $this->type === self::TYPE_ADDON;
+    }
+
+    /**
+     * ¿Este complemento OCUPA la franja siguiente al tramo de su padre? (la HORA EXTRA,
+     * `specs/hora-extra.md` §4.1). Es el INTERRUPTOR declarado, explícito a propósito: derivarlo de
+     * la duración haría que ponerle duración a una camiseta se comiera aforo en silencio.
+     *
+     * ⚠️ Que declare ocupar no es que PUEDA: la configuración sana la dice
+     * {@see hasSaneOccupancyConfig()}, y un ocupante declarado con configuración rota **ni se
+     * ofrece ni se vende** (el cinturón de §4.1) — jamás degrada a complemento neutro, porque eso
+     * sería vender sin ocupar.
+     */
+    public function occupiesAfterParent(): bool
+    {
+        return $this->isAddon() && $this->occupies_after_parent === true;
+    }
+
+    /**
+     * ¿La configuración de OCUPANTE es sana? Duración positiva (es CUÁNTO ocupa: nula significaría
+     * «hasta el cierre» para `occupancyMap`, el peor modo de fallo posible) y al menos una plaza por
+     * unidad (el diseño depende del default 1 que el formulario no enseña — §4.11·3).
+     *
+     * Fuente ÚNICA de la regla: la usan el guard de `booted()` (rechaza la escritura Eloquent) y el
+     * cinturón del punto de composición (para lo que entre por `Query\Builder::update()`, que los
+     * eventos del modelo no ven — el límite documentado de `#299`).
+     */
+    public function hasSaneOccupancyConfig(): bool
+    {
+        return $this->duration_min !== null
+            && (int) $this->duration_min > 0
+            && (int) ($this->seats_per_unit ?? 1) >= 1;
     }
 
     /**
@@ -688,6 +723,61 @@ class TicketType extends Model
                     'Un producto con tramos de precio por cantidad no puede declarar familia de edades: '
                     .'el sello congelaría un precio que el tramo movería después.'
                 );
+            }
+        });
+
+        // La HORA EXTRA (`specs/hora-extra.md` §4.1): `occupies_after_parent = true` con
+        // `duration_min` nula es una configuración IMPOSIBLE — declara que ocupa y no dice cuánto
+        // (y para `occupancyMap`, duración nula = «hasta el cierre»: una fila torcida ocuparía el
+        // resto del día). Igual que el guard de tramos de arriba: valida al tocar los TÉRMINOS,
+        // corre en `saving` (semillas, comandos, factories, tinker) y su límite es el mismo — los
+        // eventos no ven `Query\Builder::update()`, y ese hueco lo tapa el cinturón del punto de
+        // composición (ni se ofrece ni se vende). La regla sana vive en `hasSaneOccupancyConfig()`,
+        // fuente única compartida con ese cinturón.
+        static::saving(function (self $type): void {
+            $termsTouched = ! $type->exists
+                || $type->isDirty(['occupies_after_parent', 'duration_min', 'seats_per_unit', 'type']);
+            if (! $termsTouched || $type->occupies_after_parent !== true) {
+                return;
+            }
+
+            if ($type->type !== self::TYPE_ADDON) {
+                throw new \InvalidArgumentException(
+                    'Solo un COMPLEMENTO puede ocupar detrás de su padre (`occupies_after_parent`): '
+                    .'una entrada o un pack no tienen padre del que colgar.'
+                );
+            }
+
+            if (! $type->hasSaneOccupancyConfig()) {
+                throw new \InvalidArgumentException(
+                    'Un complemento que OCUPA tiene que decir cuánto (`duration_min` > 0) y cuántas '
+                    .'plazas por unidad (`seats_per_unit` >= 1): «ocupa y no dice cuánto» es la '
+                    .'configuración imposible de `specs/hora-extra.md` §4.1.'
+                );
+            }
+
+            // La OTRA dirección de la guarda del pivote (`ProductAddon::booted()`), la lección de
+            // `#324` (dos reglas cruzadas necesitan guarda en las DOS direcciones): encender el
+            // interruptor a un complemento YA enganchado como por-invitado/obligatorio o colgado de
+            // un pack dejaría en pie una configuración que el pivote habría rechazado al revés.
+            if ($type->exists) {
+                $conflicting = ProductAddon::query()
+                    ->where('addon_id', $type->getKey())
+                    ->where(fn ($q) => $q
+                        ->where('quantity_mode', ProductAddon::MODE_PER_GUEST)
+                        ->orWhere('is_mandatory', true))
+                    ->exists();
+                $onPack = ProductAddon::query()
+                    ->where('addon_id', $type->getKey())
+                    ->whereIn('product_id', self::query()->select('id')->where('type', self::TYPE_PACK))
+                    ->exists();
+                if ($conflicting || $onPack) {
+                    throw new \InvalidArgumentException(
+                        'Este complemento no puede pasar a OCUPAR: está enganchado como por-invitado/'
+                        .'obligatorio o cuelga de un pack — deshaz esos enganches primero '
+                        .'(`specs/hora-extra.md` §4.4·5 y §7·D2).'
+                    );
+                }
             }
         });
     }

@@ -38,6 +38,8 @@ return [
         'line_pack_sold_out' => 'No queda sitio para esa reserva en esa hora.',
         'line_pack_guests_range' => 'El número de invitados no es válido para ese servicio.',
         'line_event_required' => 'Faltan datos obligatorios de la reserva.',
+        'line_addon_occupancy' => 'La hora extra ya no cabe: la franja siguiente está completa o cerrada.',
+        'line_addon_over_quantity' => 'No pueden quedarse más personas de las que entran.',
         'reservations_paused' => 'Las reservas online están cerradas temporalmente.',
         'too_many_pending_orders' => 'Ya tienes varias reservas pendientes de pago. Complétalas o espera a que caduquen.',
         'order_not_retryable' => 'Esa reserva ya no se puede pagar.',

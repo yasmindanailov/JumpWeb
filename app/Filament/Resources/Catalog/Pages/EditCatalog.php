@@ -128,6 +128,22 @@ class EditCatalog extends EditRecord
             $data['zone_id'] = $record->zone_id;
         }
 
+        // La DURACIÓN de un producto vendido no se mueve (borde 9 de `specs/hora-extra.md` §4.6):
+        // `occupancyMap` la lee del PRODUCTO para cada línea ya vendida, así que cambiarla
+        // re-interpreta el aforo de lo vendido (y alargar un padre lo mete encima de su propia hora
+        // extra). El form la desactiva; esto es la defensa regla-12 contra un payload manipulado,
+        // el espejo exacto del bloque de la zona.
+        if (CatalogResource::hasSales($record) && array_key_exists('duration_min', $data)
+            && ($data['duration_min'] === null ? null : (int) $data['duration_min']) !== ($record->duration_min === null ? null : (int) $record->duration_min)) {
+            AuditLogger::log('catalog.update_blocked', $record, [
+                'reason' => 'duration_change_forbidden_sold',
+                'attempted_duration_min' => $data['duration_min'] === null ? null : (int) $data['duration_min'],
+            ]);
+            $data['duration_min'] = $record->duration_min;
+        }
+
+        $data = $this->normalizeAddonOccupancyOnEdit($record, $data);
+
         // 2) Transformaciones comunes (ventajas/i18n/event_fields/integridad pack + extracción
         // de precios a $this->priceInputs). Compartidas con la creación vía el trait.
         $data = $this->applyCommonFormTransforms($data);
@@ -153,6 +169,45 @@ class EditCatalog extends EditRecord
 
         // 3) Capturar el diff para auditar tras guardar.
         $this->auditPayload = $this->buildAuditDiff($record, $data);
+
+        return $data;
+    }
+
+    /**
+     * Complementos que OCUPAN (la hora extra, `specs/hora-extra.md` §4.9): la normalización SIMÉTRICA
+     * de la edición — `CreateCatalog::normalizeByType()` solo existe en el alta, y confiar en que
+     * Filament no dehidrata lo oculto es justo lo que la regla 12 prohíbe (el patrón del «2.bis»).
+     *
+     *  · No-complemento: el interruptor no se reescribe jamás (solo un addon puede ocupar).
+     *  · Apagar el interruptor con ventas OCUPANTES hechas se REVIERTE con rastro: las hijas ya
+     *    vendidas leen la duración de este producto, y apagarlo la anularía — para `occupancyMap`
+     *    duración nula es «hasta el cierre».
+     *  · Un complemento NEUTRO no guarda duración (la política del alta): si el interruptor se
+     *    apaga sin ventas, la duración se va con él.
+     *
+     * @param  array<string,mixed>  $data
+     * @return array<string,mixed>
+     */
+    private function normalizeAddonOccupancyOnEdit(TicketType $record, array $data): array
+    {
+        if (! $record->isAddon()) {
+            unset($data['occupies_after_parent']);
+
+            return $data;
+        }
+
+        $occupies = (bool) ($data['occupies_after_parent'] ?? $record->occupies_after_parent);
+        if ($record->occupies_after_parent && ! $occupies && CatalogResource::hasSales($record)) {
+            AuditLogger::log('catalog.update_blocked', $record, [
+                'reason' => 'occupancy_change_forbidden_sold',
+            ]);
+            $occupies = true;
+            unset($data['duration_min']); // conserva la del registro
+        }
+        $data['occupies_after_parent'] = $occupies;
+        if (! $occupies) {
+            $data['duration_min'] = null;
+        }
 
         return $data;
     }

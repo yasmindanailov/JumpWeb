@@ -102,6 +102,7 @@ class AddonResolver
         // 3) Filas autoritativas (en orden de pivote, para una visualización estable).
         $rows = [];
         $subtotal = 0;
+        $occupyingQuantity = 0; // Σ de entradas que SE QUEDAN (hora extra, `specs/hora-extra.md` §4.4·5)
         foreach ($offered as $id => $addon) {
             $id = (int) $id;
             if (! array_key_exists($id, $selected)) {
@@ -113,6 +114,32 @@ class AddonResolver
             if ($qty <= 0) {
                 continue;
             }
+
+            // La HORA EXTRA (`specs/hora-extra.md`): un complemento que OCUPA lleva sus plazas en la
+            // fila y tres CINTURONES delante — configuraciones que el pivote y el guard del modelo
+            // ya impiden, re-validadas aquí porque esta es la autoridad del cobro (regla 12) y una
+            // fila torcida por la puerta de atrás no puede ni venderse ni degradar a neutro:
+            $occupies = $addon->occupiesAfterParent();
+            if ($occupies) {
+                // D2 (§7): en un pack «todos se quedan» es que la fiesta DURA MÁS — otro mecanismo.
+                // Y un ocupante colgado de un pack sería invisible para `max_guests_per_slot`.
+                if ($product->isPack()) {
+                    throw new ReservationException('tickets.errors.unavailable');
+                }
+                // §4.1: «ocupa y no dice cuánto» — para `occupancyMap` sería «hasta el cierre».
+                if (! $addon->hasSaneOccupancyConfig()) {
+                    throw new ReservationException('tickets.errors.unavailable');
+                }
+                // §4.4·5: `per_guest` impondría la hora extra a TODO el grupo (lo contrario del
+                // encargo) y `is_mandatory` la auto-inyectaría — «no se ofrece» pasaría a ser
+                // «no se puede vender el padre a esa hora» (`AFORO-02` por otra puerta).
+                if ($pivot->isPerGuest() || $pivot->is_mandatory) {
+                    throw new ReservationException('tickets.errors.unavailable');
+                }
+
+                $occupyingQuantity += $qty;
+            }
+
             $free = self::freeUnits($pivot, $qty);
 
             $price = $this->rates->priceCents($addon, $date);
@@ -127,14 +154,28 @@ class AddonResolver
 
             $rows[] = [
                 'ticket_type_id' => $id,
+                // La FRANJA de una hija que ocupa la pone `OrderCreator` bajo el lock (la regla del
+                // borde 8 vive en `AddonOccupancy`); aquí solo las PLAZAS, que no dependen de ella.
                 'slot_id' => null,
                 'quantity' => $qty,
                 'free_quantity' => $free,
                 'unit_price' => $unit,
-                'seats' => 0,
+                'seats' => $occupies ? AddonOccupancy::seats($addon, $qty) : 0,
                 'event_data' => null,
             ];
             $subtotal += max(0, $qty - $free) * $unit;
+        }
+
+        // §4.4·5, la mitad que `effectiveQuantity()` NO puede imponer (resuelve UN complemento cada
+        // vez y no ve a los hermanos): no pueden QUEDARSE más de los que ENTRAN. Con «1 hora extra»
+        // ×3 y «2 horas extra» ×3 sobre un padre de 4, cada uno pasa por separado y se quedan 6 de 4
+        // — se cobraría un imposible físico y se ocuparían plazas fantasma. La SUMA se comprueba
+        // aquí, el único punto que ve todas las filas, compartido por presupuesto y cobro.
+        if ($occupyingQuantity > $lineQuantity) {
+            throw ReservationException::withContext('tickets.errors.addon_over_line', [
+                'staying' => $occupyingQuantity,
+                'entering' => $lineQuantity,
+            ]);
         }
 
         return ['rows' => $rows, 'subtotal' => $subtotal];
@@ -377,6 +418,12 @@ class AddonResolver
         foreach ($offered as $addon) {
             $pivot = $addon->pivot;
             $id = (int) $addon->id;
+            // La HORA EXTRA (`specs/hora-extra.md` §4.1): un ocupante declarado con configuración
+            // rota, o colgado de un pack (§7·D2), NO SE OFRECE — el mismo cinturón que `resolve()`
+            // aplica al cobro, aquí fallando hacia invisible (ofrecerlo terminaría en rechazo).
+            if ($addon->occupiesAfterParent() && (! $addon->hasSaneOccupancyConfig() || $isPack)) {
+                continue;
+            }
             // "Sin precio" (null = no vendible esa tarifa) ≠ "0 € explícito" (gratis): un complemento
             // DE PAGO sin precio NO se ofrece (el checkout lo rechazaría igual); un incluido sí es gratis.
             $rawRate = $this->rates->priceCents($addon, $date);

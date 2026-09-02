@@ -54,7 +54,7 @@ class SlotAvailability
         if ($durationMin !== null && ! $this->spanCoversDuration(
             $spanned,
             (string) $entrySlot->start_time,
-            $this->spanEnd((string) $entrySlot->start_time, $durationMin),
+            self::spanEnd((string) $entrySlot->start_time, $durationMin),
         )) {
             return 0;
         }
@@ -79,7 +79,7 @@ class SlotAvailability
             ->orderBy('start_time');
 
         if ($durationMin) {
-            $query->where('start_time', '<', $this->spanEnd($entrySlot->start_time, $durationMin));
+            $query->where('start_time', '<', self::spanEnd($entrySlot->start_time, $durationMin));
         }
 
         return $query->get();
@@ -172,7 +172,7 @@ class SlotAvailability
         $map = [];
         foreach ($occupants as $occupant) {
             $end = $occupant['duration_min']
-                ? $this->spanEnd($occupant['entry_start'], (int) $occupant['duration_min'])
+                ? self::spanEnd($occupant['entry_start'], (int) $occupant['duration_min'])
                 : null;
 
             foreach ($starts as $start) {
@@ -194,8 +194,14 @@ class SlotAvailability
      * si `entry_start + duración` cruza medianoche, `format('H:i:s')` envolvería y daría un fin
      * lexicográficamente menor que el inicio → tramo invertido (mismo fallo que `PackAvailability`).
      * Se acota a '24:00:00' (> cualquier `start_time` ≤ 23:59:59) para incluir el resto del día.
+     *
+     * `public static` desde la hora extra (`specs/hora-extra.md` §4.6·8): el inicio del tramo de la
+     * HIJA es exactamente este fin del tramo del padre, y `AddonOccupancy` tiene que calcularlo con
+     * LA MISMA aritmética que el aforo — una copia divergiría justo donde más duele. El clamp a
+     * '24:00:00' además falla hacia invisible ahí: nunca casa con un `start_time` real, así que un
+     * padre cuyo tramo cruza medianoche no tiene «franja siguiente» que ofrecer.
      */
-    private function spanEnd(string $start, int $durationMin): string
+    public static function spanEnd(string $start, int $durationMin): string
     {
         $startC = Carbon::parse($start)->setMicrosecond(0);
         $endC = $startC->copy()->addMinutes($durationMin);

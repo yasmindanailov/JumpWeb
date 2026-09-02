@@ -1801,6 +1801,19 @@ return [
 
         'field_duration_min' => 'Duración (minutos)',
         'duration_min_hint' => 'Vacío = ilimitada (todo el día).',
+        'duration_locked_sold' => 'No se puede cambiar la duración: el producto ya tiene ventas (re-interpretaría el aforo de lo ya vendido).',
+
+        /*
+         * La HORA EXTRA (`specs/hora-extra.md`): un complemento que OCUPA la franja siguiente al
+         * tramo de su producto. Los rótulos hablan del CASO («quedarse más tiempo»), no del mecanismo.
+         */
+        'section_occupancy' => 'Complemento que ocupa aforo',
+        'section_occupancy_hint' => 'La «hora extra»: quien lo compra se queda en la franja siguiente a su entrada, y esas plazas cuentan y se reservan. La cantidad son ENTRADAS que se quedan (el precio es por persona).',
+        'field_occupies_after_parent' => 'Ocupa la franja siguiente',
+        'occupies_after_parent_hint' => 'Apagado (lo normal): el complemento no toca el aforo, como una camiseta. Encendido: cada unidad vendida se queda ocupando plaza detrás de su entrada.',
+        'field_occupies_duration_min' => 'Cuánto ocupa (minutos)',
+        'occupies_duration_min_hint' => 'La duración de la estancia extra (60 = una hora). Obligatoria si ocupa: sin ella no se puede ofrecer.',
+        'occupancy_locked_sold' => 'No se puede cambiar: hay ventas hechas con esta configuración y el aforo de lo vendido se re-interpretaría.',
         'field_seats_per_unit' => 'Plazas por unidad',
         'seats_per_unit_hint' => 'Plazas de aforo que consume cada unidad vendida.',
         'field_available_after_open_min' => 'Disponible tras la apertura',

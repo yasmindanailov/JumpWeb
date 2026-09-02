@@ -29,7 +29,12 @@ class TicketIssuer
             return;
         }
 
-        $order->items()->whereNotNull('slot_id')->each(function (OrderItem $item) use ($order): void {
+        // Un ticket es una ADMISIÓN, y las admisiones son líneas de PRIMER NIVEL (`specs/hora-extra.md`
+        // §4.11, `#410`): una HIJA que ocupa (la hora extra) estrena franja y plazas, pero es la
+        // MISMA persona quedándose — no una entrada nueva. Sin este filtro emitiría `seats` tickets
+        // propios en silencio (era no-op mientras ninguna hija tenía franja; con la hora extra deja
+        // de serlo, y por eso se decide aquí y se fija con caso, no se deja emergente).
+        $order->items()->whereNull('parent_item_id')->whereNotNull('slot_id')->each(function (OrderItem $item) use ($order): void {
             $units = max(1, (int) $item->seats);
             for ($i = 0; $i < $units; $i++) {
                 Ticket::create([

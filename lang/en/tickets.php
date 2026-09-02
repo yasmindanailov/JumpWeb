@@ -234,6 +234,9 @@ return [
         'outside_window_line' => 'The time on :when is not available for “:product”. Pick another.',
         'too_soon_line' => '“:product” on :when must be booked further in advance. Pick a later date.',
         'too_late_line' => 'The time for “:product” on :when has already passed. Pick a later slot.',
+        // The EXTRA HOUR (`specs/hora-extra.md`): an add-on that OCCUPIES the next slot.
+        'addon_occupancy_line' => '“:addon” for “:product” on :when no longer fits: the next slot is full or closed. Remove it or pick another time.',
+        'addon_over_line' => 'More people cannot stay (:staying) than are coming in (:entering). Review the extra hours in your selection.',
         'pack_sold_out_line' => 'Pack “:product” on :when has no capacity left. Remove it from the cart and try another slot.',
         'pack_guests_range_line' => 'Number of guests for “:product” must be between :min and :max.',
         'event_required_line' => 'Missing birthday details for “:product”. Go back and fill them in.',

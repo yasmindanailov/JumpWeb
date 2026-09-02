@@ -45,6 +45,10 @@ class OversellVerifierCoversEveryQuotaTest extends TestCase
             'concurrentes hacia dos destinos cuyas ventanas pisan una franja intermedia con una '.
             'plaza — el instrumento de la extracción 4 del desmontaje de `ViewOrder`, visto FALLAR '.
             'con el lock mutado a solo-la-fila-destino (2 comprometidos donde cabía 1)',
+        'extra-hour' => 'la HORA EXTRA (`specs/hora-extra.md` §6·1): la última plaza de una franja '.
+            'disputada entre entradas directas y la línea HIJA que ocupa de un complemento con '.
+            '`occupies_after_parent` — visto FALLAR con la validación de la hija desactivada '.
+            '(5 asientos escritos en una franja de 1, SIN necesitar carrera) y pasar con ella (1 de 8)',
     ];
 
     public function test_the_verifier_declares_a_scenario_for_every_quota(): void

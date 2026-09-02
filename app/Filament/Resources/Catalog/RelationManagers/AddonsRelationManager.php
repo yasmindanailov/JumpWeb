@@ -98,8 +98,12 @@ class AddonsRelationManager extends RelationManager
                     ->label(__('admin.catalog.addons.attach'))
                     ->modalHeading(__('admin.catalog.addons.attach_heading'))
                     // Solo se pueden enganchar complementos (type=addon); el filtro también
-                    // blinda la resolución del attach (no se puede colar un no-addon).
-                    ->recordSelectOptionsQuery(fn (Builder $query): Builder => $query->where('type', TicketType::TYPE_ADDON))
+                    // blinda la resolución del attach (no se puede colar un no-addon). Y un PACK no
+                    // puede enganchar complementos que OCUPAN (hora extra, `specs/hora-extra.md`
+                    // §7·D2): allí «quedarse más» es que la fiesta dura más — otro mecanismo.
+                    ->recordSelectOptionsQuery(fn (Builder $query): Builder => $query
+                        ->where('type', TicketType::TYPE_ADDON)
+                        ->when($this->getOwnerRecord()->isPack(), fn (Builder $q): Builder => $q->where('occupies_after_parent', false)))
                     // Opciones EXPLÍCITAS con el nombre traducido: el preload del AttachAction no
                     // resuelve el título cuando `name` es JSON (mostraba "ticket type"). Excluye los
                     // ya enganchados (como hacía el dropdown nativo) y ordena por catálogo.
@@ -107,6 +111,7 @@ class AddonsRelationManager extends RelationManager
                         ->label(__('admin.catalog.addons.attach_select'))
                         ->options(fn (): array => TicketType::query()
                             ->where('type', TicketType::TYPE_ADDON)
+                            ->when($this->getOwnerRecord()->isPack(), fn (Builder $q): Builder => $q->where('occupies_after_parent', false))
                             ->whereNotIn('id', $this->getOwnerRecord()->configurableAddons()->pluck('ticket_types.id'))
                             ->orderBy('position')
                             ->get()
@@ -207,6 +212,18 @@ class AddonsRelationManager extends RelationManager
      */
     private function pivotConfigFields(?int $selfAddonId = null): array
     {
+        // La HORA EXTRA (`specs/hora-extra.md` §4.4·5): a un complemento que OCUPA no se le ofrecen
+        // ni «por invitado» (impondría la hora extra a todo el grupo) ni «obligatorio» (la
+        // auto-inyección haría invendible al padre cuando la franja siguiente no cabe). En el alta
+        // el complemento se elige en el MISMO modal (`recordId`); en «Configurar» viene fijado
+        // (`$selfAddonId`). La autoridad es el guard de `ProductAddon::booted()` — esto es la cara
+        // amable que evita llegar a él.
+        $occupyingAddon = function (Get $get) use ($selfAddonId): bool {
+            $id = $selfAddonId ?? (int) $get('recordId');
+
+            return $id > 0 && (bool) TicketType::query()->find($id)?->occupiesAfterParent();
+        };
+
         return [
             Toggle::make('is_included')
                 ->label(__('admin.catalog.addons.is_included'))
@@ -217,10 +234,12 @@ class AddonsRelationManager extends RelationManager
             Select::make('quantity_mode')
                 ->label(__('admin.catalog.addons.quantity_mode'))
                 ->helperText(__('admin.catalog.addons.quantity_mode_hint'))
-                ->options([
-                    ProductAddon::MODE_FIXED => __('admin.catalog.addons.mode_fixed'),
-                    ProductAddon::MODE_PER_GUEST => __('admin.catalog.addons.mode_per_guest'),
-                ])
+                ->options(fn (Get $get): array => $occupyingAddon($get)
+                    ? [ProductAddon::MODE_FIXED => __('admin.catalog.addons.mode_fixed')]
+                    : [
+                        ProductAddon::MODE_FIXED => __('admin.catalog.addons.mode_fixed'),
+                        ProductAddon::MODE_PER_GUEST => __('admin.catalog.addons.mode_per_guest'),
+                    ])
                 ->default(ProductAddon::MODE_FIXED)
                 ->selectablePlaceholder(false)
                 ->live(),
@@ -250,7 +269,10 @@ class AddonsRelationManager extends RelationManager
             Toggle::make('is_mandatory')
                 ->label(__('admin.catalog.addons.is_mandatory'))
                 ->helperText(__('admin.catalog.addons.is_mandatory_hint'))
-                ->default(false),
+                ->default(false)
+                // Oculto para un complemento que OCUPA (ver arriba): oculto no dehidrata y
+                // `sanitizePivotData` lo deja en `false`, que es lo único que el guard admite.
+                ->visible(fn (Get $get): bool => ! $occupyingAddon($get)),
 
             TextInput::make('choice_group')
                 ->label(__('admin.catalog.addons.choice_group'))

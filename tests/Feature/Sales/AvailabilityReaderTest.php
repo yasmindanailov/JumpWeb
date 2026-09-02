@@ -227,10 +227,21 @@ class AvailabilityReaderTest extends TestCase
     }
 
     /**
-     * Los dos aforos son pools independientes (#82): una fiesta no resta plazas de entrada ni al
-     * revés. Si la derivación de ocupantes mezclara las dos listas, esto caería.
+     * ⚠️ **Este caso CAMBIÓ DE PREMISA y se reescribió** (`specs/hora-extra.md` §7·D1, `#410` —
+     * el precedente es el `SlotOfferTest` de `#324`): afirmaba que «una fiesta no resta plazas de
+     * entrada», y eso era verdad SOLO en la derivación de la oferta — lo ALMACENADO dice lo
+     * contrario: una línea de pack nace con franja y `seats`, y `occupancyMap` (que NO filtra por
+     * tipo, lo documenta el propio `PackAvailability`) la cuenta contra las plazas de entrada de su
+     * zona en cuanto existe. El COBRO (`OrderCreator`) también la contaba. O sea que la oferta
+     * decía 10, el checkout rechazaba, y este test cementaba esa divergencia (`AFORO-02`) — sin
+     * morder en producción solo porque los packs viven en zona propia.
+     *
+     * Con la derivación ÚNICA (`CartOccupants`), la oferta cuenta lo MISMO que contará la BD:
+     * 20 invitados provisionales sobre una franja de 10 plazas → 0 para una entrada.
+     * (El CUPO de packs sigue siendo un pool aparte: eso no cambió — lo vigilan los casos de
+     * `maxQuantity` de pack de este mismo fichero.)
      */
-    public function test_a_pack_in_the_cart_does_not_eat_the_seats_of_an_entry(): void
+    public function test_a_pack_in_the_cart_occupies_the_seats_it_will_occupy_once_stored(): void
     {
         $entry = $this->entry(990);
         $pack = $this->pack(min: 8, max: 20);
@@ -239,7 +250,10 @@ class AvailabilityReaderTest extends TestCase
             ['ticket_type_id' => $pack->id, 'date' => $this->date, 'time' => '10:00:00', 'qty' => 20],
         ]);
 
-        $this->assertSame(10, $this->timeAt($times, '10:00:00')->available);
+        $this->assertSame(0, $this->timeAt($times, '10:00:00')->available);
+
+        // El control de la premisa nueva: sin la fiesta en la cesta, las 10 plazas siguen ahí.
+        $this->assertSame(10, $this->timeAt($this->offer->times($entry->id, $this->date), '10:00:00')->available);
     }
 
     // ── Cuánto cabe en una franja concreta ────────────────────────────────────────────────────

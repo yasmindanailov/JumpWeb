@@ -49,6 +49,9 @@ export const ERROR_KEYS = {
     line_pack_sold_out: 'errors.pack_sold_out_line',
     line_pack_guests_range: 'errors.pack_guests_range_line',
     line_event_required: 'errors.event_required_line',
+    // La HORA EXTRA (`specs/hora-extra.md`): un complemento que OCUPA la franja siguiente.
+    line_addon_occupancy: 'errors.addon_occupancy_line',
+    line_addon_over_quantity: 'errors.addon_over_line',
     // Los de admisión, que `POST /orders` puede devolver porque consume ficha al crear.
     too_many_pending_orders: 'errors.too_many_pending',
     too_many_requests: 'errors.try_later',

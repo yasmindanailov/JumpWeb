@@ -96,6 +96,19 @@ class CriticalPathGateTest extends TestCase
         // entre sellar y reconciliar. Mismo criterio que `PackAvailability`: quien DECIDE, no solo
         // quien llama.
         'app/Domain/Booking/Services/AgeFamilySealer.php',
+        // La HORA EXTRA (2026-09-03, `specs/hora-extra.md` §4.11, `#410`) — tres piezas nuevas de
+        // AFORO, todas «quien CUENTA o quien DECIDE», no quien llama:
+        //  · `CartOccupants` es la derivación ÚNICA de ocupantes provisionales (D1): alimenta la
+        //    validación de `OrderCreator` BAJO el lock y la oferta; contar mal aquí es `AFORO-02`
+        //    en las dos direcciones, y la carrera solo la ve `purchase:verify-oversell`.
+        //  · `AddonOccupancy` decide la FRANJA de la hija (la regla del borde 8) y lleva el
+        //    cinturón de §4.1 — sin él, una fila torcida ocuparía «hasta el cierre».
+        //  · `AddonResolver` dejó de ser solo precio: lleva el tope por SUMA («no se quedan más de
+        //    los que entran») y las plazas de las filas que ocupan. Mismo criterio con el que
+        //    entraron los dos contadores: tocarlo mueve lo que el verificador comprueba.
+        'app/Domain/Booking/Services/CartOccupants.php',
+        'app/Domain/Booking/Services/AddonOccupancy.php',
+        'app/Domain/Booking/Services/AddonResolver.php',
     ];
 
     /**

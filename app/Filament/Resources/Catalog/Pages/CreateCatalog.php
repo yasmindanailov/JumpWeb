@@ -131,12 +131,24 @@ class CreateCatalog extends CreateRecord
             $data['deposit_value'] = 0;
         }
 
-        // Un complemento no consume aforo ni tiene zona/horario.
+        // Un complemento no consume aforo ni tiene zona/horario — SALVO el que OCUPA (la hora
+        // extra, `specs/hora-extra.md` §4.9): ese conserva `duration_min`, que es CUÁNTO ocupa y la
+        // columna que el aforo lee. Hasta `#410` este `unset` incondicional tapiaba la puerta de
+        // entrada del dato: el diseño era coherente y aun así no se podía encender. La zona sigue
+        // nula a propósito también para él (la hija hereda la de la franja que ocupa).
         if ($type === TicketType::TYPE_ADDON) {
             $data['zone_id'] = null;
+            $occupies = (bool) ($data['occupies_after_parent'] ?? false);
             foreach (['duration_min', 'available_after_open_min', 'available_before_close_min'] as $key) {
+                if ($key === 'duration_min' && $occupies) {
+                    continue;
+                }
                 unset($data[$key]);
             }
+        } else {
+            // Solo un COMPLEMENTO puede ocupar detrás de un padre (regla 12; el guard del modelo
+            // lo rechazaría con excepción — aquí se normaliza antes de que llegue).
+            $data['occupies_after_parent'] = false;
         }
 
         // Un pack es «1 niño = 1 plaza» (auditoría Fase 1 · L2): `seats_per_unit` SIEMPRE 1. Con >1

@@ -53,6 +53,7 @@ class CatalogForm
                 self::classificationSection(),
                 self::translatableTabs(),
                 self::operationalSection(),
+                self::occupancySection(),
                 self::packSection(),
                 self::priceSection(),
                 self::priceTiersSection(),
@@ -198,6 +199,58 @@ class CatalogForm
         ]);
     }
 
+    /**
+     * La HORA EXTRA (`specs/hora-extra.md` §4.9): la sección que hace ENCENDIBLE el interruptor.
+     * Hasta `#410` era imposible: `CatalogForm` escondía `duration_min` a los complementos y
+     * `normalizeByType()` la borraba al guardar — el panel destruía el dato del que depende el
+     * diseño. Es una sección PROPIA (solo complementos) y no un destape de la operativa, porque un
+     * complemento no usa ventanas horarias ni antelaciones: solo QUE ocupa y CUÁNTO.
+     *
+     * ⚠️⚠️ Con ventas hechas, ni el interruptor se apaga ni la duración se mueve: `occupancyMap`
+     * lee la duración del PRODUCTO para cada línea vendida, así que cambiarla re-interpreta el
+     * aforo de lo YA vendido (apagarla lo dejaría en «hasta el cierre»). Es el borde 9 de §4.6
+     * aplicado al complemento, con el mismo candado que la zona (`zone_locked_sold`).
+     * Encenderlo con ventas NEUTRAS previas sí se puede: esas hijas tienen `slot_id` nulo y el
+     * aforo no las cuenta — solo cambia lo que se venda a partir de ahora.
+     */
+    private static function occupancySection(): Section
+    {
+        $lockedAsOccupant = fn (?TicketType $record): bool => $record !== null
+            && $record->occupies_after_parent === true
+            && CatalogResource::hasSales($record);
+
+        return Section::make(__('admin.catalog.section_occupancy'))
+            ->description(__('admin.catalog.section_occupancy_hint'))
+            ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ADDON)
+            ->schema([
+                Grid::make(['default' => 1, 'sm' => 2])->schema([
+                    Toggle::make('occupies_after_parent')
+                        ->label(__('admin.catalog.field_occupies_after_parent'))
+                        ->default(false)
+                        ->live()
+                        ->disabled($lockedAsOccupant)
+                        ->dehydrated(fn (?TicketType $record): bool => ! $lockedAsOccupant($record))
+                        ->helperText(fn (?TicketType $record): string => $lockedAsOccupant($record)
+                            ? __('admin.catalog.occupancy_locked_sold')
+                            : __('admin.catalog.occupies_after_parent_hint')),
+
+                    // El MISMO `duration_min` de la operativa (una columna, dos puertas excluyentes
+                    // por tipo): aquí es «cuánto ocupa» y solo existe si el interruptor está puesto.
+                    TextInput::make('duration_min')
+                        ->label(__('admin.catalog.field_occupies_duration_min'))
+                        ->numeric()
+                        ->minValue(1)
+                        ->visible(fn (Get $get): bool => (bool) $get('occupies_after_parent'))
+                        ->required(fn (Get $get): bool => (bool) $get('occupies_after_parent'))
+                        ->disabled($lockedAsOccupant)
+                        ->dehydrated(fn (?TicketType $record): bool => ! $lockedAsOccupant($record))
+                        ->helperText(fn (?TicketType $record): string => $lockedAsOccupant($record)
+                            ? __('admin.catalog.occupancy_locked_sold')
+                            : __('admin.catalog.occupies_duration_min_hint')),
+                ]),
+            ]);
+    }
+
     private static function operationalSection(): Section
     {
         return Section::make(__('admin.catalog.section_operational'))
@@ -205,11 +258,20 @@ class CatalogForm
             ->visible(fn (Get $get): bool => $get('type') !== TicketType::TYPE_ADDON)
             ->schema([
                 Grid::make(['default' => 1, 'sm' => 2])->schema([
+                    // ⚠️ Con ventas hechas la duración NO se mueve (borde 9 de `specs/hora-extra.md`
+                    // §4.6): `occupancyMap` la lee del PRODUCTO para cada línea vendida, así que
+                    // alargarla mete el tramo del padre encima de su propia hora extra (la misma
+                    // persona contada dos veces) y en general re-interpreta el aforo de lo ya
+                    // vendido. El mismo candado que la zona, que existe por el mismo motivo.
                     TextInput::make('duration_min')
                         ->label(__('admin.catalog.field_duration_min'))
                         ->numeric()
                         ->minValue(1)
-                        ->helperText(__('admin.catalog.duration_min_hint')),
+                        ->disabled(fn (?TicketType $record): bool => $record !== null && CatalogResource::hasSales($record))
+                        ->dehydrated(fn (?TicketType $record): bool => $record === null || ! CatalogResource::hasSales($record))
+                        ->helperText(fn (?TicketType $record): string => ($record !== null && CatalogResource::hasSales($record))
+                            ? __('admin.catalog.duration_locked_sold')
+                            : __('admin.catalog.duration_min_hint')),
 
                     // Solo ENTRADAS (auditoría Fase 1 · L2): un PACK es «1 niño = 1 plaza» (el cupo
                     // lo gobiernan min/max_qty + los topes por franja); con `seats_per_unit>1` el

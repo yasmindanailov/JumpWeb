@@ -1391,6 +1391,16 @@ return [
 
         'field_duration_min' => '时长(分钟)',
         'duration_min_hint' => '留空 = 不限时(全天)。',
+        'duration_locked_sold' => '无法修改时长:该产品已有销售记录(会重新解释已售出的容量)。',
+
+        // 加时(hora extra):占用容量的附加项(`specs/hora-extra.md`)。
+        'section_occupancy' => '占用容量的附加项',
+        'section_occupancy_hint' => '「加时」:购买者在其入场时段之后的下一时段继续停留,这些名额会被计入并保留。数量为继续停留的人数(按人计价)。',
+        'field_occupies_after_parent' => '占用下一时段',
+        'occupies_after_parent_hint' => '关闭(默认):附加项不影响容量,如同T恤。开启:每售出一份,即在其入场票之后占用一个名额。',
+        'field_occupies_duration_min' => '占用时长(分钟)',
+        'occupies_duration_min_hint' => '额外停留的时长(60 = 一小时)。若占用则必填:没有它无法销售。',
+        'occupancy_locked_sold' => '无法修改:已有按此配置的销售记录,修改会重新解释已售出的容量。',
         'field_seats_per_unit' => '每单位占用名额',
         'seats_per_unit_hint' => '每售出一个单位所占用的容量名额。',
         'field_available_after_open_min' => '开园后可用',

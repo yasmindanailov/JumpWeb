@@ -236,6 +236,9 @@ return [
         'outside_window_line' => "L'heure du :when n'est pas disponible pour « :product ». Choisis-en une autre.",
         'too_soon_line' => "« :product » du :when doit être réservé plus à l'avance. Choisis une date ultérieure.",
         'too_late_line' => "L'heure de « :product » du :when est déjà passée. Choisis un créneau plus tard.",
+        // L'HEURE SUPPLÉMENTAIRE (`specs/hora-extra.md`) : un supplément qui OCCUPE le créneau suivant.
+        'addon_occupancy_line' => '« :addon » de « :product » du :when ne rentre plus : le créneau suivant est complet ou fermé. Retire-le ou choisis une autre heure.',
+        'addon_over_line' => 'Il ne peut pas rester plus de personnes (:staying) que celles qui entrent (:entering). Vérifie les heures supplémentaires de ta sélection.',
         'pack_sold_out_line' => 'Le pack « :product » du :when n’a plus de capacité. Retire-le du panier et essaie un autre créneau.',
         'pack_guests_range_line' => 'Le nombre d’invités pour « :product » doit être entre :min et :max.',
         'event_required_line' => 'Il manque des données d’anniversaire pour « :product ». Reviens en arrière et remplis-les.',

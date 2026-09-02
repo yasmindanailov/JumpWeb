@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Domain\Booking\Exceptions\ReservationException;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
@@ -73,14 +74,23 @@ class VerifyPurchaseConcurrency extends Command
      *                    con un lock de solo-la-fila-destino, los dos destinos no comparten fila y
      *                    la franja intermedia se sobrevende.
      *
+     *  · `extra-hour`  — la HORA EXTRA (`specs/hora-extra.md` §6·1): la última plaza en disputa es
+     *                    la de una franja que la mitad de los compradores quiere como ENTRADA
+     *                    directa y la otra mitad como **hija que OCUPA** (un complemento con
+     *                    `occupies_after_parent` colgado de una entrada de la franja anterior).
+     *                    Con la validación de la hija bajo el lock gana UNO, sea del bando que sea;
+     *                    sin ella, el comprador de hora extra ESCRIBE sin comprobar y la franja se
+     *                    sobrevende — **incluso sin carrera**, que es lo que obligó a verlo fallar
+     *                    antes de construir (§7·D1).
+     *
      * Se separan a propósito: un cupo de fiestas correcto no dice nada sobre el de invitados, y
      * viceversa. En un escenario único, el que se rompiera se escondería detrás del que aguantara.
      */
-    private const SCENARIOS = ['entry', 'pack', 'pack-guests', 'pack-prep', 'mixed', 'panel-edit'];
+    private const SCENARIOS = ['entry', 'pack', 'pack-guests', 'pack-prep', 'mixed', 'panel-edit', 'extra-hour'];
 
     protected $signature = 'purchase:verify-oversell
         {--workers=8 : Nº de compras concurrentes (procesos)}
-        {--scenario=entry : Qué aforo se prueba: entry | pack | pack-guests | pack-prep | mixed | panel-edit}
+        {--scenario=entry : Qué aforo se prueba: entry | pack | pack-guests | pack-prep | mixed | panel-edit | extra-hour}
         {--keep : No borrar los datos de prueba al terminar}';
 
     protected $description = 'Verifica empíricamente (fork real + MySQL InnoDB) que N compras simultáneas de la ÚLTIMA plaza no sobrevenden: solo una gana. Cubre los tres aforos: entradas, cupo de fiestas y cupo de invitados. Solo dev/local.';
@@ -119,6 +129,7 @@ class VerifyPurchaseConcurrency extends Command
             'entry' => $this->seedEntryScenario($workers),
             'mixed' => $this->seedMixedScenario($workers),
             'panel-edit' => $this->seedPanelEditScenario($workers),
+            'extra-hour' => $this->seedExtraHourScenario($workers),
             default => $this->seedPackScenario($workers, $scenario),
         };
 
@@ -179,6 +190,13 @@ class VerifyPurchaseConcurrency extends Command
         // (permiso ausente, hora fuera de ventana…) y el «no hubo sobreventa» no mediría nada.
         if ($scenario === 'panel-edit') {
             return $this->probePanelEditActs($seed);
+        }
+
+        // La hora extra recorre un camino que `availableFor` a secas no cubre (resolver el
+        // complemento → componer la hija → validarla → escribirla): su guarda ejecuta ese camino
+        // ENTERO una vez y lo deshace, como hace la del panel.
+        if ($scenario === 'extra-hour') {
+            return $this->probeExtraHourActs($seed);
         }
 
         // ⚠️ Se comprueba CADA pool que el escenario pone en juego, no «el» hueco. En `mixed` hay
@@ -299,6 +317,156 @@ class VerifyPurchaseConcurrency extends Command
             return compact('zone', 'type', 'slot', 'users', 'date', 'time', 'cart', 'carts',
                 'scenario', 'probe_qty', 'expected_winners');
         });
+    }
+
+    /**
+     * **Escenario de la HORA EXTRA** (`specs/hora-extra.md` §6·1): dos franjas consecutivas — S1
+     * holgada y S2 con **UNA** plaza — y dos bandos pujando por la de S2: los pares la quieren como
+     * ENTRADA directa; los impares compran la entrada de S1 con el complemento «hora extra», cuya
+     * línea HIJA ocupa S2 (`occupies_after_parent`, la franja siguiente al tramo del padre).
+     *
+     * El invariante es UNO: gane quien gane, en S2 queda exactamente 1 plaza escrita. El comprador
+     * de hora extra rechazado sale con `addon_occupancy_line` y el directo con `sold_out_line`; a
+     * este verificador le dan igual los motivos — mira lo ESCRITO.
+     *
+     * ⚠️ La franja de la HIJA la valida `OrderCreator` bajo el mismo lock zona/día que la del padre
+     * (`ZoneDaySlotLock` trae la zona/día enteros). Sin esa validación, la hija se ESCRIBE sin
+     * comprobar S2 y la sobreventa ni siquiera necesita carrera — se vio fallar así antes de
+     * construir la validación (§7·D1).
+     *
+     * @return array{zone:Zone, type:TicketType, addon:TicketType, slot:Slot, users:array<int,User>, date:string, time:string, cart:array<int,array<string,mixed>>, carts:array<int,array<int,array<string,mixed>>>, scenario:string, probe_qty:int, expected_winners:int}
+     */
+    private function seedExtraHourScenario(int $workers): array
+    {
+        return DB::transaction(function () use ($workers): array {
+            $rateId = (int) (RateType::firstOrCreate(
+                ['key' => RateType::KEY_NORMAL],
+                ['label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0],
+            )->id);
+
+            $zone = Zone::create([
+                'slug' => 'xh-probe-'.Str::lower(Str::random(6)),
+                'name' => ['es' => 'Hora Extra Probe'],
+                'is_active' => true,
+            ]);
+
+            $schedule = app(OperatingSchedule::class);
+            [$date, $time] = $this->firstOpenSlotMoment($schedule);
+            $secondTime = Carbon::parse($time)->addHour()->format('H:i:s');
+
+            // S1 holgada (los padres siempre caben: la disputa tiene que ser SOLO por S2).
+            Slot::create([
+                'zone_id' => $zone->id, 'date' => $date,
+                'start_time' => $time, 'end_time' => $secondTime,
+                'capacity' => 100, 'online_capacity' => 100,
+            ]);
+            // S2 con UNA plaza: el último hueco en disputa.
+            $disputed = Slot::create([
+                'zone_id' => $zone->id, 'date' => $date,
+                'start_time' => $secondTime, 'end_time' => Carbon::parse($secondTime)->addHour()->format('H:i:s'),
+                'capacity' => 1, 'online_capacity' => 1,
+            ]);
+
+            $type = TicketType::create([
+                'name' => ['es' => 'Entrada XH'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $zone->id,
+                'duration_min' => 60, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 1,
+            ]);
+            $addon = TicketType::create([
+                'name' => ['es' => 'Hora extra XH'], 'type' => TicketType::TYPE_ADDON, 'zone_id' => null,
+                'duration_min' => 60, 'occupies_after_parent' => true,
+                'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 2,
+            ]);
+            $type->addons()->attach($addon->id, [
+                'position' => 1, 'is_included' => false, 'included_quantity' => 1,
+                'is_mandatory' => false, 'quantity_mode' => ProductAddon::MODE_FIXED,
+                'allow_extra' => true, 'choice_group' => null, 'max_qty' => null, 'requires_addon_id' => null,
+            ]);
+
+            // Precios: la ENTRADA a la tarifa del día de la visita; el COMPLEMENTO además a la de
+            // HOY, porque `AddonResolver` tarifica a `Carbon::today()` (límite aceptado y escrito,
+            // `specs/hora-extra.md` §4.11 — sin ese precio la sonda fallaría por siembra).
+            $dayRateId = (int) app(RateResolver::class)->for(Carbon::parse($date))->id;
+            $todayRateId = (int) app(RateResolver::class)->for(Carbon::today())->id;
+            foreach (array_unique([$dayRateId, $rateId]) as $r) {
+                $type->prices()->create(['rate_type_id' => $r, 'amount_cents' => 1000]);
+            }
+            foreach (array_unique([$todayRateId, $dayRateId, $rateId]) as $r) {
+                $addon->prices()->create(['rate_type_id' => $r, 'amount_cents' => 500]);
+            }
+
+            $users = [];
+            for ($i = 0; $i < $workers; $i++) {
+                $users[] = User::forceCreate([
+                    'name' => 'XH Buyer '.$i,
+                    'email' => 'xh-buyer-'.Str::random(8).'@deleted.local',
+                    'password' => bcrypt(Str::random(32)),
+                ]);
+            }
+
+            $directCart = [['ticket_type_id' => $type->id, 'date' => $date, 'time' => $secondTime, 'qty' => 1]];
+            $extraCart = [[
+                'ticket_type_id' => $type->id, 'date' => $date, 'time' => $time, 'qty' => 1,
+                'addons' => [['ticket_type_id' => $addon->id, 'qty' => 1]],
+            ]];
+            $carts = [];
+            for ($i = 0; $i < $workers; $i++) {
+                $carts[$i] = $i % 2 === 0 ? $directCart : $extraCart;
+            }
+
+            return [
+                'zone' => $zone, 'type' => $type, 'addon' => $addon, 'slot' => $disputed->fresh('zone'),
+                'users' => $users, 'date' => $date, 'time' => $time,
+                'cart' => $extraCart, 'carts' => $carts,
+                'scenario' => 'extra-hour', 'probe_qty' => 1, 'expected_winners' => 1,
+            ];
+        });
+    }
+
+    /**
+     * **La guarda del instrumento para `extra-hour`: el camino ENTERO de la hora extra, una vez y
+     * deshecho.** Un `availableFor` a secas no lo cubre — el rechazo de un comprador impar puede
+     * venir de resolver el complemento (sin precio HOY, pivote mal sembrado, guard del modelo) y
+     * ningún conteo lo distinguiría de «no hubo sobreventa». Se compra de verdad la cesta con hora
+     * extra dentro de una transacción EXTERNA (la interna de `OrderCreator` se vuelve savepoint) y
+     * se comprueba que la hija nació con la franja en disputa y su plaza; el rollback lo deshace.
+     *
+     * @param  array{slot:Slot, users:array<int,User>, carts:array<int,array<int,array<string,mixed>>>}  $seed
+     */
+    private function probeExtraHourActs(array $seed): bool
+    {
+        $direct = app(SlotAvailability::class)->availableFor($seed['slot'], 60);
+        if ($direct < 1) {
+            $this->error("Guarda del instrumento · la franja en disputa ofrece {$direct} y hace falta 1: siembra rota.");
+
+            return false;
+        }
+        $this->line("<fg=gray>Guarda del instrumento · entrada directa: la franja en disputa admite {$direct}. ✓</>");
+
+        DB::beginTransaction();
+        try {
+            $buyer = User::find($seed['users'][1]->id);
+            $order = app(OrderCreator::class)->createPendingOrder($buyer, $seed['carts'][1]);
+            /** @var OrderItem|null $child */
+            $child = $order->items()->whereNotNull('parent_item_id')->first();
+            $ok = $child !== null
+                && (int) $child->slot_id === (int) $seed['slot']->id
+                && (int) $child->seats === 1;
+        } catch (\Throwable $e) {
+            $this->error('Guarda del instrumento · la compra con hora extra no se pudo crear ni una vez: '.$e->getMessage());
+
+            return false;
+        } finally {
+            DB::rollBack();
+        }
+
+        if (! $ok) {
+            $this->error('Guarda del instrumento · la hija NO nació ocupando la franja en disputa (slot/seats): siembra o composición rotas.');
+
+            return false;
+        }
+        $this->line('<fg=gray>Guarda del instrumento · hora extra: la hija nace con la franja en disputa y su plaza, y se deshizo. ✓</>');
+
+        return true;
     }
 
     /**
@@ -1131,6 +1299,18 @@ class VerifyPurchaseConcurrency extends Command
 
         OrderItem::whereIn('order_id', $orderIds)->delete();
         Order::whereIn('id', $orderIds)->delete();
+
+        // `extra-hour` crea además el COMPLEMENTO, que tiene zona NULA a propósito (la hija hereda
+        // la de la franja que ocupa): el barrido por zona de abajo no lo vería y quedaría en la BD
+        // de desarrollo tras cada ejecución, con su precio y su enganche.
+        if (isset($seed['addon'])) {
+            $addon = TicketType::find($seed['addon']->id);
+            if ($addon !== null) {
+                $addon->prices()->delete();
+                DB::table('product_addons')->where('addon_id', $addon->id)->delete();
+                $addon->delete();
+            }
+        }
 
         // ⚠️ TODOS los productos de la zona, no solo `type`: el escenario `mixed` crea DOS (una
         // entrada y un pack) y borrar uno dejaría el otro huérfano con su precio.

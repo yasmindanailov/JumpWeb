@@ -36,6 +36,8 @@ return [
         'line_pack_sold_out' => 'There is no room left for that booking at that time.',
         'line_pack_guests_range' => 'That number of guests is not valid for this service.',
         'line_event_required' => 'Some required booking details are missing.',
+        'line_addon_occupancy' => 'The extra hour no longer fits: the next slot is full or closed.',
+        'line_addon_over_quantity' => 'More people cannot stay than are coming in.',
         'reservations_paused' => 'Online booking is temporarily closed.',
         'too_many_pending_orders' => 'You already have several bookings awaiting payment. Complete them or wait until they expire.',
         'order_not_retryable' => 'That booking can no longer be paid.',

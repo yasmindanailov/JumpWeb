@@ -40,6 +40,10 @@ final class ReservationErrorMap
         'tickets.errors.pack_sold_out_line' => ApiErrorCode::LinePackSoldOut,
         'tickets.errors.pack_guests_range_line' => ApiErrorCode::LinePackGuestsRange,
         'tickets.errors.event_required_line' => ApiErrorCode::LineEventRequired,
+        // La HORA EXTRA (`specs/hora-extra.md`): la hija no cabe en la franja siguiente · la suma
+        // de ocupantes pide que se queden más de los que entran.
+        'tickets.errors.addon_occupancy_line' => ApiErrorCode::LineAddonOccupancy,
+        'tickets.errors.addon_over_line' => ApiErrorCode::LineAddonOverQuantity,
     ];
 
     /** El status de TODOS los rechazos de reserva. Ver el docblock de la clase. */

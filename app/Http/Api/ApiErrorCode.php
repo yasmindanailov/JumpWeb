@@ -109,6 +109,21 @@ enum ApiErrorCode: string
     /** 422 — faltan respuestas obligatorias del formulario del pack. */
     case LineEventRequired = 'line_event_required';
 
+    /**
+     * 422 — un complemento que OCUPA (la hora extra, `specs/hora-extra.md`) no cabe: la franja
+     * siguiente al tramo de su línea no existe, está cerrada o está completa. Lleva `params.addon`
+     * además de `product`/`when`. El remedio es quitarlo o cambiar de hora — como `line_sold_out`,
+     * invita a refrescar la disponibilidad.
+     */
+    case LineAddonOccupancy = 'line_addon_occupancy';
+
+    /**
+     * 422 — la suma de complementos que OCUPAN pide que se queden más personas de las que entran
+     * (`specs/hora-extra.md` §4.4·5). Lleva `params.staying`/`params.entering`; el remedio es bajar
+     * la cantidad de horas extra.
+     */
+    case LineAddonOverQuantity = 'line_addon_over_quantity';
+
     // ── Negocio: la reserva no se admite, o el cobro no se puede abrir ───────────────────────
 
     /**

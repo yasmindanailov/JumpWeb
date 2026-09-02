@@ -201,6 +201,11 @@ class OrderCreator
 
                 $eventData = null; // respuestas de los campos del evento (solo packs, #86)
 
+                // Ocupantes provisionales de plazas que la cesta aporta a esta zona/día, etiquetados
+                // por (línea, complemento) — la derivación ÚNICA compartida con la oferta
+                // (`AvailabilityReader`), para que lo ofrecido y lo cobrado cuenten IGUAL (`AFORO-02`).
+                $cartOccupants = CartOccupants::entries($cart, $types, (int) $type->zone_id, $line['date']);
+
                 if ($type->isPack()) {
                     // Pack (cumpleaños): aforo por CUPO en su propio pool (#82). La cantidad es el
                     // nº de invitados, que debe caer en el rango del pack y dentro del cupo libre
@@ -233,12 +238,15 @@ class OrderCreator
                         throw ReservationException::withContext('tickets.errors.event_required_line', $context);
                     }
                 } else {
-                    // Entrada: aforo cumulativo por ocupación (#60); debe caber contando las DEMÁS
-                    // líneas de entrada de la cesta (mismo pool de plazas por zona/día).
+                    // Entrada: aforo cumulativo por ocupación (#60); debe caber contando los DEMÁS
+                    // ocupantes que la cesta aporta a esta zona/día — líneas base Y sus hijas que
+                    // ocupan (hora extra), menos EXACTAMENTE esta línea (`CartOccupants`, la
+                    // derivación única de `specs/hora-extra.md` §7·D1; sus propias hijas no pisan
+                    // su tramo: empiezan donde él acaba).
                     $available = $this->availability->availableFor(
                         $slot,
                         $type->duration_min,
-                        $this->otherOccupants($cart, $i, $types),
+                        CartOccupants::excluding($cartOccupants, $i, null),
                     );
                     if ($line['qty'] > $available) {
                         throw ReservationException::withContext('tickets.errors.sold_out_line', $context);
@@ -287,13 +295,50 @@ class OrderCreator
                         || ($type->offersGuardianAuthorization() && (bool) ($line['guardian_authorization'] ?? false)),
                 ];
 
-                // Complementos ANIDADOS de esta línea (#87): sin franja/aforo. Resueltos de forma
-                // AUTORITATIVA en servidor (regla 12) por `AddonResolver`, que aplica la config del
-                // pivote (incluido / obligatorio / por-invitado / grupo excluyente): computa la
-                // cantidad efectiva, las unidades GRATIS (incluidas), valida la exclusividad e
-                // inyecta los obligatorios y el default de cada grupo aunque el cliente los omita.
+                // Complementos ANIDADOS de esta línea (#87): resueltos de forma AUTORITATIVA en
+                // servidor (regla 12) por `AddonResolver`, que aplica la config del pivote
+                // (incluido / obligatorio / por-invitado / grupo excluyente): computa la cantidad
+                // efectiva, las unidades GRATIS (incluidas), valida la exclusividad, inyecta los
+                // obligatorios y el default de cada grupo aunque el cliente los omita — y desde la
+                // hora extra (`specs/hora-extra.md`) aplica también el tope por SUMA («no se quedan
+                // más de los que entran», §4.4·5) y pone las PLAZAS de las filas que ocupan.
                 $resolved = $this->addons->resolve($type, (int) $line['qty'], $line['addons'] ?? [], Carbon::today());
                 $subtotal += $resolved['subtotal'];
+
+                // La HORA EXTRA: cada hija que OCUPA (seats > 0, solo las pone `resolve()` para un
+                // ocupante) recibe su FRANJA y se valida AQUÍ, bajo el mismo lock de zona/día que ya
+                // cubre esa franja (`ZoneDaySlotLock` trae la zona/día enteros) — es la parte que
+                // toca `AFORO-01`. La franja sale de la regla determinista del borde 8
+                // (`AddonOccupancy::childSlotAmong`, buscada entre las filas BLOQUEADAS, no con una
+                // consulta que leería otro snapshot). Si no existe, está cerrada o no cabe: se
+                // rechaza — el primo de `AFORO-02` (borde 3). Al validar cada hija se excluye SOLO
+                // ella: sus HERMANOS de la misma línea se quedan dentro del recuento, que es el
+                // arreglo del borde 6 (la última plaza vendida dos veces sin carrera).
+                foreach ($resolved['rows'] as $k => $row) {
+                    if ((int) $row['seats'] <= 0) {
+                        continue; // complemento neutro: sin franja y sin aforo, idéntico a siempre
+                    }
+
+                    /** @var TicketType|null $addonType */
+                    $addonType = $type->addons->firstWhere('id', $row['ticket_type_id']);
+                    $addonContext = $context + ['addon' => $addonType?->tr('name') ?? '—'];
+
+                    $childSlot = $addonType === null ? null : AddonOccupancy::childSlotAmong($slots, $type, $slot);
+                    if ($childSlot === null) {
+                        throw ReservationException::withContext('tickets.errors.addon_occupancy_line', $addonContext);
+                    }
+
+                    $childAvailable = $this->availability->availableFor(
+                        $childSlot,
+                        $addonType->duration_min,
+                        CartOccupants::excluding($cartOccupants, $i, (int) $row['ticket_type_id']),
+                    );
+                    if ((int) $row['seats'] > $childAvailable) {
+                        throw ReservationException::withContext('tickets.errors.addon_occupancy_line', $addonContext);
+                    }
+
+                    $resolved['rows'][$k]['slot_id'] = $childSlot->id;
+                }
 
                 // Señal/depósito (#225): la parte del valor base de ESTA línea que NO se cobra
                 // online queda como ajuste `deposit_remainder` (a cobrar presencialmente en el
@@ -402,37 +447,10 @@ class OrderCreator
             ->keyBy(fn (Slot $s) => $this->slotKey($s->zone_id, $s->date->toDateString(), $s->start_time));
     }
 
-    /**
-     * Ocupantes provisionales = todas las líneas de la cesta MENOS la actual (para el aforo
-     * cumulativo). Se identifica la actual por ÍNDICE (dos líneas pueden ser idénticas).
-     *
-     * @param  array<int, array{ticket_type_id:int, date:string, time:string, qty:int}>  $cart
-     * @param  Collection<int, TicketType>  $types
-     * @return array<int, array{entry_start:string, duration_min:int|null, seats:int}>
-     */
-    private function otherOccupants(array $cart, int $currentIndex, $types): array
-    {
-        $current = $cart[$currentIndex];
-        $type = $types->get($current['ticket_type_id']);
-        $occupants = [];
-        foreach ($cart as $i => $line) {
-            if ($i === $currentIndex) {
-                continue;
-            }
-            $lineType = $types->get($line['ticket_type_id']);
-            // Solo cuentan los de la misma zona y día (la ocupación se calcula por zona/día).
-            if (! $lineType || (int) $lineType->zone_id !== (int) $type->zone_id || $line['date'] !== $current['date']) {
-                continue;
-            }
-            $occupants[] = [
-                'entry_start' => $line['time'],
-                'duration_min' => $lineType->duration_min,
-                'seats' => (int) $line['qty'] * (int) ($lineType->seats_per_unit ?? 1),
-            ];
-        }
-
-        return $occupants;
-    }
+    // `otherOccupants()` vivió aquí hasta la hora extra: era la mitad del COBRO de una derivación
+    // con dos copias (la otra, `AvailabilityReader::occupantsOf()`), y ninguna contaba hijas ni
+    // hermanos. Hoy la cuenta es UNA — `CartOccupants` (`specs/hora-extra.md` §7·D1) — y este
+    // fichero la llama con la exclusión exacta del elemento en validación.
 
     /**
      * Fiestas provisionales de la cesta para el cupo de packs = todas las líneas de PACK MENOS

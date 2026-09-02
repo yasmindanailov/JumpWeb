@@ -71,7 +71,7 @@ touched_critical=''
 # las CONDICIONES de las que sale el dinero del suplemento —la familia, los tramos y los precios con
 # los que se vendió cada fiesta— dentro de los locks de `OrderCreator` y `OrderItemEditor`. Mismo
 # criterio que `PackAvailability`: el gate vigila a quien decide, no solo a quien llama.
-CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator|WaiverSigner|ZoneDaySlotLock|OrderItemEditor|MixedPartySurcharge|AgeFamilySealer)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
+CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator|WaiverSigner|ZoneDaySlotLock|OrderItemEditor|MixedPartySurcharge|AgeFamilySealer|CartOccupants|AddonOccupancy|AddonResolver)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
 
 while read -r _local_ref local_sha remote_ref remote_sha; do
     [[ "$remote_ref" == "refs/heads/main" ]] || continue

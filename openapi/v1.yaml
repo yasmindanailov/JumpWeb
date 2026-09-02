@@ -2587,6 +2587,11 @@ components:
                 - line_pack_sold_out
                 - line_pack_guests_range
                 - line_event_required
+                # La HORA EXTRA (`specs/hora-extra.md`): un complemento que OCUPA la franja
+                # siguiente. El primero lleva `params.addon` además de `product`/`when`; el
+                # segundo, `params.staying`/`params.entering`.
+                - line_addon_occupancy
+                - line_addon_over_quantity
                 # Negocio — la reserva no se admite (409) o el cobro no se abre (502).
                 - reservations_paused
                 - too_many_pending_orders

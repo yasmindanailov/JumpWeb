@@ -44,6 +44,44 @@ class ProductAddon extends Pivot
     }
 
     /**
+     * La HORA EXTRA (`specs/hora-extra.md` §4.4·5 + §7·D2): un complemento que OCUPA no puede
+     * engancharse con `per_guest` (impondría la hora extra a TODO el grupo, lo contrario del
+     * encargo) ni como obligatorio (la auto-inyección convertiría «no cabe la hora extra» en «no se
+     * puede vender el padre a esa hora», `AFORO-02` por otra puerta), ni colgar de un PACK (allí
+     * «todos se quedan» es que la fiesta DURA MÁS — otro mecanismo — y el ocupante sería invisible
+     * para `max_guests_per_slot`).
+     *
+     * Corre en `saving` del PIVOTE, así que cubre el alta y la edición del enganche por Eloquent;
+     * su límite es el de siempre (`#299`: los eventos no ven `Query\Builder::update()`) y el
+     * cinturón está en `AddonResolver::resolve()`, que re-valida las tres reglas al vender.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $pivot): void {
+            $addon = TicketType::query()->find($pivot->addon_id);
+            if ($addon === null || ! $addon->occupiesAfterParent()) {
+                return;
+            }
+
+            if ($pivot->isPerGuest() || $pivot->is_mandatory) {
+                throw new \InvalidArgumentException(
+                    'Un complemento que OCUPA (hora extra) no puede ser por-invitado ni obligatorio: '
+                    .'la cantidad son las entradas que SE QUEDAN y la elige el cliente '
+                    .'(`specs/hora-extra.md` §4.4·5).'
+                );
+            }
+
+            $parent = TicketType::query()->find($pivot->product_id);
+            if ($parent !== null && $parent->isPack()) {
+                throw new \InvalidArgumentException(
+                    'Un complemento que OCUPA (hora extra) no puede colgar de un PACK: en un pack '
+                    .'«quedarse más» es que la fiesta dura más — otro mecanismo (`specs/hora-extra.md` §7·D2).'
+                );
+            }
+        });
+    }
+
+    /**
      * Id del complemento REQUERIDO por este enganche (dependencia «requiere»), o null si es
      * independiente. El dependiente solo es seleccionable/vendible cuando el requerido también lo
      * está (lo aplica `AddonResolver` a punto fijo, en oferta y en cobro). `0`/vacío → sin requisito.
