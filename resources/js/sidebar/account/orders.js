@@ -41,19 +41,26 @@ export function guestFormOf(order, item, account) {
 
     if (order.status !== 'paid' && ! terminated) return null;
 
-    const product = { product: item.product_name };
-
+    // ⚠️⚠️ **El rótulo YA NO lleva el nombre del producto** (`[DECIDIDO owner, 2026-09-02]`), y lo
+    // encontró él: `.btn` es `white-space: nowrap` y este botón es `width: 100%`, así que un nombre
+    // largo **se salía del botón**. Medido en navegador: con «Cumpleaños Jump» cabía con **0 px de
+    // margen** (308 = 308) y con uno largo desbordaba **110 px**.
+    //
+    // ▶ Y no se TRUNCA, se QUITA: el nombre del producto está tres líneas más arriba en cuerpo
+    // grande, así que repetirlo no informaba de nada — y **un rótulo que interpola un nombre que
+    // escribe el panel no puede tener regla de longitud** (la lección de `#303`). El botón dice lo
+    // que hace; qué reserva es lo dice la tarjeta que lo rodea.
     if (item.cancelled || terminated) {
-        return { state: 'cancelled', label: tp(account, 'orders.guest_form_cancelled', product), url: null };
+        return { state: 'cancelled', label: t(account, 'orders.guest_form_cancelled'), url: null };
     }
 
     if (item.status === 'finished') {
-        return { state: 'past', label: tp(account, 'orders.guest_form_past', product), url: item.guest_form_url };
+        return { state: 'past', label: t(account, 'orders.guest_form_past'), url: item.guest_form_url };
     }
 
     return item.needs_guest_form
-        ? { state: 'pending', label: tp(account, 'orders.guest_form_pending', product), url: item.guest_form_url }
-        : { state: 'done', label: tp(account, 'orders.guest_form_done', product), url: item.guest_form_url };
+        ? { state: 'pending', label: t(account, 'orders.guest_form_pending'), url: item.guest_form_url }
+        : { state: 'done', label: t(account, 'orders.guest_form_done'), url: item.guest_form_url };
 }
 
 /**

@@ -636,8 +636,21 @@ class SidebarBundleBudgetTest extends TestCase
      * ⚠️ **El desplegable NO trae JavaScript**: es un `<details>` nativo. Lo que pesa es el bloque de
      * plazas libres, el filtro por reserva del panel y los rótulos del resumen.
      * ⚠️ **Se sube a 267 y no a 275.** Queda **1,13 KiB**: lo siguiente que entre vuelve a justificarse.
+     *
+     * ▶ **268 (`#345`, compartir o copiar el enlace).** Medido con la rama sola: **265,97 → 267,23 KiB
+     * (+1,26)**. Lo que compra es el gesto que el owner pidió —*«añade un icono de copiar o compartir
+     * el enlace»*— y **no es un botón de portapapeles**: en un teléfono abre la hoja del sistema, que
+     * es donde está WhatsApp, y en un escritorio copia. Ese enlace se reparte a los padres uno a uno,
+     * así que el gesto ES la feature.
+     *
+     * ⚠️ **La poda se hizo antes y se midió**: el acuse pasó de un mapa por reserva a UN par
+     * `{id, estado}` —solo se pulsa un botón a la vez— y los rótulos se acortaron. Lo que NO se podó
+     * es tener DOS acuses (`shared` y `copied`): decir «copiado» cuando el sistema acaba de abrir
+     * WhatsApp sería mentir sobre lo que pasó.
+     * ⚠️ **Se sube a 268 y no a 272.** Queda **0,77 KiB**: la estrechez de siempre.
      */
     private const SIDEBAR_CHUNK_MAX_KB = 269;
+    private const SIDEBAR_CHUNK_MAX_KB = 268;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

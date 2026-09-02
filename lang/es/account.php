@@ -391,11 +391,11 @@ return [
         'order_show' => 'Ver pedido',
         'retry_payment' => 'Reintentar el pago',
         'retry_hint' => 'Mantenemos tu reserva unos minutos más por si quieres completar el pago.',
-        'guest_form_pending' => 'Completa el formulario de :product',
-        'guest_form_done' => 'Ver o editar el formulario de :product',
-        'guest_form_past' => 'Ver el formulario de :product',
+        'guest_form_pending' => 'Completa el formulario de reserva',
+        'guest_form_done' => 'Ver o editar el formulario de reserva',
+        'guest_form_past' => 'Ver el formulario de reserva',
         // Reserva CANCELADA: el botón sigue visible pero desactivado (no clicable) — el post-form ya no aplica.
-        'guest_form_cancelled' => 'Formulario de :product · reserva cancelada',
+        'guest_form_cancelled' => 'Formulario de reserva · cancelada',
         'manage' => 'Gestionar',
         'manage_eyebrow' => 'Tu reserva',
         'manage_title' => 'Gestionar tu reserva',
@@ -419,7 +419,14 @@ return [
             'count' => ':count firmados',
             'waiver_outdated' => 'versión anterior',
             'waiver_missing' => 'falta la firma',
-            'hint' => 'Comparte este enlace con los padres o tutores. Cada uno rellena SUS datos y no ve los de los demás.',
+            'hint' => 'Pásaselo a los padres o tutores: cada uno rellena SUS datos y no ve los de los demás.',
+            // El botón de compartir/copiar (`#345`). ⚠️ `shared` y `copied` son DOS acuses y no uno:
+            // en un teléfono el sistema abre WhatsApp y en un escritorio el enlace va al portapapeles,
+            // y decir «copiado» cuando se ha compartido sería mentir sobre lo que acaba de pasar.
+            'share' => 'Compartir o copiar el enlace',
+            'shared' => 'Enlace compartido',
+            'copied' => 'Enlace copiado',
+            'failed' => 'No se pudo copiar: selecciona el enlace y cópialo a mano.',
             // ⚠️ Plazas LIBRES de la reserva, no su cantidad: descuenta los menores a tu cargo que ya
             // tienen entrada y los justificantes ya firmados (`#343`). Es un HECHO, no el
             // denominador inventado que §4.10 prohíbe.

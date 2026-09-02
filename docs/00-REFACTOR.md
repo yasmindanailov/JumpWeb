@@ -3587,6 +3587,24 @@ de este carril**: es del waiver, no de las excursiones (§1.2 de la spec).
       ⚠️ Medido de ese entorno: Turnstile activo **con las claves de PRUEBA** (`1x00…`, siempre pasan)
       → no bloquea en local; cola `sync` → el correo sale al instante con el PDF adjunto; y hacen
       falta DOS pedidos porque la puerta solo mira HOY y el formulario se cierra pasada la visita.
+      ▶ ✅ **LA ACTIVACIÓN EJECUTADA** (`#342`, spec §12): hasta aquí el mecanismo entero existía y
+      **no había puerta por la que entrar** —el enlace tenía tres consumidores en el repo y ninguno lo
+      OFRECÍA—. Lo decide el PRODUCTO (`none`/`optional`/`required`), con la casilla en el embudo, el
+      correo al pagar y la sección del panel **siempre visible** (era un huevo-y-gallina: el botón del
+      enlace vivía dentro de una sección que solo salía con una firma ya hecha).
+      ▶ ✅ **EL MODELO POR RESERVA** (`#343`, spec §13): el justificante colgaba del PEDIDO y **un
+      pedido puede tener dos visitas**. Cuatro síntomas de una raíz —dos fechas en la hoja del padre,
+      un correo para dos reservas marcadas, la capacidad sumando las líneas y «un niño, un papel»
+      impidiendo dos visitas del mismo pedido—. `order_item_id`, ruta `/autorizacion/{reservation}`,
+      un correo por reserva y el enlace **en «Mis reservas»**.
+      ▶ ✅ **LAS TRES CORRECCIONES DEL OJO DEL OWNER** (`#344` y `#345`): una clave de idioma pintada en
+      crudo; **el enlace que NUNCA llegó a pintarse** —`api.js` devuelve el sobre y el store lo
+      guardaba tal cual, así que el 200 se veía en la red y el DOM salía vacío—; y el botón del
+      post-form que **se salía** con un nombre largo (`.btn` es `nowrap`), arreglado quitando el nombre
+      del producto **y dejando que el botón parta línea**, que cierra la clase y no solo el caso.
+      Más el gesto de **compartir o copiar** el enlace.
+      ▶ **Queda el OJO del owner**, con CINCO escenarios sembrados en su cuenta (`PRUEBA-J1`…`J5`,
+      guion en `VERIFICACION-E2E-CAJON.md` §5.septies bloques 7 y 8) y la casilla en el paso de CESTA.
       ▶ Pendiente del owner: el ✅ a la spec y el plazo de conservación (medido: hoy vale `NULL` y no
       se poda nada).
 

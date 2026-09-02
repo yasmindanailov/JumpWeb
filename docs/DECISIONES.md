@@ -21085,3 +21085,72 @@ aislado**. La causa era mía — reconstruí los assets con la suite en vuelo, y
 medio escribir. *Un rojo que no reproduce aislado es sospechoso del instrumento antes que del código.*
 
 Suite **3.940 / 25.267** verde en pasada limpia. Spec §13.7.
+
+---
+
+## #345 · 2026-09-02 · Un rótulo que interpola un nombre que escribe el panel no puede tener regla de longitud
+
+Dos encargos del owner en la misma pasada, y el segundo destapó una clase de defecto, no un caso.
+
+### El botón que se salía
+
+*«el botón "completa el formulario producto", cuando el producto tiene el nombre muy largo, se
+rompe, se sobresale del botón»*. **Medido en navegador, con CONTROL**:
+
+```
+«Completa el formulario de Cumpleaños Jump»   clientW 308 · scrollW 308  → cabía con CERO margen
+un nombre largo inyectado                     clientW 308 · scrollW 418  → se salía 110 px
+```
+
+El mecanismo es `.btn { white-space: nowrap }` sobre un botón de **ancho completo** dentro de una
+tarjeta de 308 px. Hoy cabía **por suerte**.
+
+▶ `[DECIDIDO owner]` sobre sus dos opciones (quitar el nombre o truncarlo): **se QUITA**. El nombre
+del producto está **tres líneas más arriba en cuerpo grande**, así que repetirlo no informaba de
+nada, y truncar dejaría «…de Cumpleaños Ju…», que se lee peor y no dice más. Es la lección de `#303`:
+*un titular data-driven no puede tener regla de longitud — acortarlo es truncar el texto de un
+cliente*.
+
+⚠️⚠️ **Y se arregla la CLASE, no el caso**: `.orders__guestform-btn` pasa a `white-space: normal`,
+anulando `.btn` a propósito. Verificado con el mismo control: el texto que pedía 418 px **parte en dos
+líneas dentro de los 308**. Sin esto, cualquier rótulo futuro —el francés es más largo que el
+español— volvería a desbordarlo.
+
+⚠️ Los CUATRO estados pierden `:product` (pendiente, hecho, pasado, cancelado) y `guestFormOf` deja de
+pasarlo. Caso nuevo que afirma que **ningún estado** lo interpola, con control de que tampoco queda el
+marcador sin resolver.
+
+### Compartir o copiar el enlace
+
+*«añade un icono de copiar o compartir el enlace»*. **No es un botón de portapapeles**: en un teléfono
+abre la hoja del sistema —que es donde está WhatsApp, el canal real— y en un escritorio copia.
+
+⚠️⚠️ **Cerrar la hoja de compartir NO es un fallo**: `navigator.share` lanza `AbortError` y eso es un
+«no, gracias». Tratarlo como error enseñaría un mensaje a quien acaba de cambiar de idea **y copiaría
+al portapapeles lo que decidió no mandar**. Se distingue por el `name` y no por el mensaje, que cambia
+con el idioma del sistema. Hay caso propio.
+
+⚠️ La regla vive en `account/share-link.js` con **seis casos de `node --test`** y las dependencias por
+parámetro: en el Node del contenedor `navigator` no existe, y leer `navigator.clipboard` **lanza** en
+algunos contextos —igual que `localStorage`—.
+
+⚠️ **`shared` y `copied` son DOS acuses y no uno**: decir «copiado» cuando el sistema acaba de abrir
+WhatsApp sería mentir sobre lo que pasó.
+
+⚠️ **El `input` de solo lectura se queda**: si las dos APIs fallan —sin TLS, sin permiso— el cliente
+sigue pudiendo seleccionarlo. Un botón no puede ser la única vía.
+
+⚠️⚠️ **El dibujo NO es propio: es la geometría de `<x-icons.share>`, copiada.** `SidebarIconParityTest`
+lo paró en el primer intento —el cajón tiene `DRAWER_OWN` **vacía** desde `#258`— y tenía razón: un
+glifo de otra librería iría en otra rejilla y con otro trazo, y eso no falla, solo se nota mirando la
+web entera a la vez.
+
+### Los presupuestos, con la poda ANTES del techo
+
+Chunk **265,97 → 267,23 KiB** (techo 267 → **268**, deja 0,77) y payload del montaje **9.365 → 9.499 B**
+(techo 9.400 → **9.550**, deja 51). Podado antes: el acuse pasó de un mapa por reserva a un par
+`{id, estado}` —solo se pulsa un botón a la vez— y se acortaron la pista y el mensaje de fallo (−18 B).
+⚠️ La salida buena para el payload sigue siendo la ya escrita: mandar los rótulos del justificante en
+la RESPUESTA del endpoint. **Cada tanda que añade uno hace esa deuda más cara.**
+
+Suite verde. Spec §13.8.

@@ -790,6 +790,19 @@ class SidebarMountTest extends TestCase
         // **9.900 deja 74 B.**
         $this->assertLessThan(
             9900, $bytes,
+        // ⚠️ **9.400 → 9.550 el 2026-09-02** (`#345`, compartir o copiar el enlace). Medido: **9.365 →
+        // 9.499 B (+134)**, y son CUATRO rótulos: el nombre accesible del botón y los TRES desenlaces
+        // —compartido, copiado y el fallo—. `shared` y `copied` no se funden en uno a propósito: decir
+        // «copiado» cuando el sistema acaba de abrir WhatsApp sería mentir sobre lo que pasó.
+        // ▶ **La poda se hizo ANTES y está medida (−18 B)**: se acortaron la pista y el mensaje de
+        // fallo. Y hay una poda de signo contrario que ayudó sin buscarlo — los cuatro rótulos del
+        // post-form perdieron el nombre del producto (`:product`), que era el defecto que el owner
+        // vio desbordando el botón.
+        // ⚠️ **La salida buena sigue siendo la escrita arriba**: mandar los rótulos del justificante
+        // en la RESPUESTA del endpoint, que ya se pide bajo demanda. Cada tanda que añade uno hace
+        // esa deuda más cara. **9.550 deja 51 B.**
+        $this->assertLessThan(
+            9550, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

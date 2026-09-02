@@ -18,9 +18,10 @@
  * de ningún otro adulto. No es que este componente los oculte — es que el servidor devuelve la forma
  * `forResponsible()`, que no los tiene.
  */
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 import { useOrdersStore } from '../../stores/orders.js';
+import { browserShareDeps, shareOrCopy } from '../share-link.js';
 
 const props = defineProps({
     /** El código del pedido: es por lo que se pide (una petición por pedido, cacheada). */
@@ -50,6 +51,29 @@ const groups = computed(() => {
 });
 
 watch(() => props.code, (code) => store.ensureGuestMinors(code), { immediate: true });
+
+/**
+ * **Compartir o copiar**, con el gesto que el dispositivo sepa hacer (`[DECIDIDO owner, 2026-09-02]`).
+ *
+ * ⚠️ La REGLA vive en `share-link.js` con sus casos de `node --test`; aquí solo se pinta el
+ * resultado. Y **el `input` de solo lectura se queda**: si las dos APIs fallan —contexto sin TLS, sin
+ * permiso— el cliente sigue pudiendo seleccionar el enlace a mano. Un botón no puede ser la única vía.
+ *
+ * ⚠️ El acuse se borra solo: es un estado de UN gesto, no del panel. `cancelled` NO dice nada —cerrar
+ * la hoja de compartir es un «no, gracias», no un fallo—.
+ */
+// ⚠️ UN solo acuse y no un mapa por reserva: solo se pulsa un botón a la vez, y un mapa costaba
+// bytes del chunk para representar un estado que no puede ser simultáneo.
+const acuse = ref({ id: null, estado: null });
+
+async function repartir(id, url) {
+    const estado = await shareOrCopy(url, browserShareDeps());
+
+    if (estado === 'cancelled') return;
+
+    acuse.value = { id, estado };
+    setTimeout(() => { acuse.value = { id: null, estado: null }; }, 2500);
+}
 </script>
 
 <template>
@@ -85,7 +109,35 @@ watch(() => props.code, (code) => store.ensureGuestMinors(code), { immediate: tr
              respaldo y sus dos rótulos de estado. -->
         <template v-if="group.link">
             <p class="orders__guests-hint">{{ a('purchases.guest_minors.hint') }}</p>
-            <input class="orders__guests-link" type="text" readonly :value="group.link" @focus="$event.target.select()">
+            <div class="orders__guests-share">
+                <input class="orders__guests-link" type="text" readonly :value="group.link" @focus="$event.target.select()">
+                <button type="button" class="orders__guests-copy" :aria-label="a('purchases.guest_minors.share')"
+                        @click="repartir(group.reservation_id, group.link)">
+                    <!-- ⚠️⚠️ **La geometría es la de `<x-icons.share>`, COPIADA, no inventada**
+                         (`#258`): el cajón **no tiene iconos propios** —`DRAWER_OWN` está vacía— y
+                         `SidebarIconParityTest` compara dibujo a dibujo contra el set del sitio. Un
+                         glifo de otra librería iría en otra rejilla y con otro trazo, y eso no falla:
+                         solo se nota mirando la web entera a la vez.
+                         ⚠️ Si el icono del sistema cambia, esta copia se queda vieja **y la guarda lo
+                         dice** — es literalmente para lo que existe.
+                         ⚠️⚠️ **A 24 y no a 18, que es su TALLA DE TRABAJO** (el artboard la declara en
+                         §05). El primer intento lo encogió a 18 y el owner lo vio roto: los tres
+                         puntos son de masa 3,2 sobre rejilla 24, así que al encogerlos se comen los
+                         conectores y el glifo se lee como un borrón. *Un icono de rejilla 24 no se
+                         escala: se pinta a 24 y se le da aire con el relleno del botón.* -->
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" focusable="false">
+                        <circle cx="18" cy="5.8" r="3.2" />
+                        <circle cx="6" cy="12" r="3.2" />
+                        <circle cx="18" cy="18.2" r="3.2" />
+                        <path d="M8.9 10.5l6.3-3.2M8.9 13.5l6.3 3.2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+            <!-- El acuse, y solo cuando hay algo que decir. `aria-live` para que un lector de pantalla
+                 se entere: sin él, quien no ve el cambio de texto no sabe si el gesto hizo algo. -->
+            <p v-if="acuse.id === group.reservation_id" class="orders__guests-ack" role="status" aria-live="polite">
+                {{ a('purchases.guest_minors.' + acuse.estado) }}
+            </p>
         </template>
     </div>
 </template>

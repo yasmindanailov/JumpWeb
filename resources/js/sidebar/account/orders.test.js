@@ -35,10 +35,14 @@ const ACCOUNT = {
     orders: {
         item_finished: 'Disfrutada',
         item_cancelled: 'Cancelada',
-        guest_form_pending: 'Rellenar datos de :product',
-        guest_form_done: 'Ver datos de :product',
-        guest_form_past: 'Datos de :product',
-        guest_form_cancelled: ':product cancelada',
+        // ⚠️ **SIN `:product` desde `#345`**: el rótulo dejó de llevar el nombre del producto porque
+        // `.btn` es `white-space: nowrap` y este botón es de ancho completo — con un nombre largo el
+        // texto **se salía del botón** (medido: 418 px pedidos en 308 disponibles). El nombre está
+        // tres líneas más arriba en la tarjeta.
+        guest_form_pending: 'Rellenar datos de la reserva',
+        guest_form_done: 'Ver datos de la reserva',
+        guest_form_past: 'Datos de la reserva',
+        guest_form_cancelled: 'Datos de la reserva · cancelada',
         pagination: { label: 'Paginación', prev: 'Anteriores', next: 'Siguientes', page: 'Página :current de :last' },
     },
     // ⚠️ «Mis pedidos» tiene su PROPIO grupo de rótulos: una barra que dijera «Paginación de
@@ -318,9 +322,33 @@ describe('el bloque del post-form', () => {
     test('pendiente de rellenar: enlace con su URL del servidor', () => {
         assert.deepEqual(paid({ needs_guest_form: true }), {
             state: 'pending',
-            label: 'Rellenar datos de Cumple Jump',
+            label: 'Rellenar datos de la reserva',
             url: '/reserva/1/datos-invitados',
         });
+    });
+
+    /**
+     * ❗ **El rótulo NO puede llevar el nombre del producto** (`#345`, `[DECIDIDO owner]`).
+     *
+     * `.btn` es `white-space: nowrap` y este botón es `width: 100%` dentro de una tarjeta de 308 px:
+     * medido en navegador, «Completa el formulario de Cumpleaños Jump» cabía con **0 px de margen** y
+     * uno más largo pedía **418**. Y no se trunca, se quita: *un rótulo que interpola un nombre que
+     * escribe el panel no puede tener regla de longitud* (`#303`).
+     */
+    test('⚠️ ningún estado interpola el nombre del producto', () => {
+        const estados = [
+            paid({ needs_guest_form: true }),
+            paid({ needs_guest_form: false, guest_form_status: 'ok' }),
+            paid({ status: 'finished' }),
+            paid({ cancelled: true }),
+        ];
+
+        for (const bloque of estados) {
+            assert.ok(! bloque.label.includes('Cumple Jump'), `«${bloque.label}» lleva el nombre del producto`);
+            // Y el control de que el rótulo se resolvió de verdad: un `:product` sin sustituir sería
+            // el defecto contrario, y `t()` no interpola nada.
+            assert.ok(! bloque.label.includes(':product'), `«${bloque.label}» dejó el marcador sin resolver`);
+        }
     });
 
     test('ya relleno: se puede ver', () => {

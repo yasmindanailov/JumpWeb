@@ -2959,6 +2959,22 @@ body[data-has-hero].nav--live .hero__pair-slot {
 /* Las plazas LIBRES, junto al contador y en tinta atenuada: es contexto del número de al lado, no un
    dato con el mismo peso. */
 .orders__guests-free { font-weight: var(--fw-normal); color: var(--fg-mute); }
+/* El enlace y su botón, en una fila. El `input` CRECE y el botón no: con `flex: 1` sobre el primero,
+   una URL larga no empuja al segundo fuera de la tarjeta. */
+.orders__guests-share { display: flex; align-items: stretch; gap: var(--sp-8); margin-top: var(--sp-6); }
+.orders__guests-share .orders__guests-link { flex: 1; min-width: 0; margin-top: 0; }
+/* ⚠️ 44×44 REALES y no un pseudo (`#264`): este botón vive junto a un `input` en una fila flexible, y
+   un área invisible se recortaría contra él. */
+.orders__guests-copy {
+    flex: none; width: var(--tap-min); min-height: var(--tap-min);
+    display: grid; place-items: center;
+    border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card);
+    color: var(--fg); cursor: pointer;
+    transition: border-color var(--dur-sale) var(--ease-sale), background var(--dur-sale) var(--ease-sale);
+}
+.orders__guests-copy:hover { border-color: var(--line-strong); background: var(--bg-soft); }
+.orders__guests-copy:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+.orders__guests-ack { margin: var(--sp-6) 0 0; font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); }
 .orders__guests-list { list-style: none; margin: var(--sp-6) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
 .orders__guests-item { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
 /* Solo la EXCEPCIÓN se marca (#320): un justificante vigente es la condición para estar en la lista. */
@@ -4540,7 +4556,14 @@ body[data-has-hero] .nav--over .nav__cta {
 .orders__product-form-link { font-size: 13px; color: var(--fg-mute); text-decoration: underline; text-underline-offset: 2px; }
 /* Botón del post-form de reserva (#217): ancho completo + texto centrado para que sea una acción
    clara y consistente con el resto de CTAs de ancho completo del flujo. */
-.orders__guestform-btn { width: 100%; justify-content: center; }
+/* ⚠️⚠️ **`white-space: normal` y no `nowrap`, y eso ANULA `.btn` a propósito** (`#345`). El botón de
+   la landing es `nowrap` porque son rótulos cortos en una fila; éste es de ANCHO COMPLETO dentro de
+   una tarjeta de 308 px y su texto es i18n —el francés es más largo que el español—. Con `nowrap`
+   cualquier rótulo que no quepa **se sale del botón**, y eso es lo que el owner vio.
+   ▶ Acortar el texto arregló el caso de hoy; esto arregla la CLASE: ningún rótulo futuro, en ningún
+   idioma, puede volver a desbordarlo. Medido: con `normal`, un texto que pedía 418 px parte en dos
+   líneas dentro de los 308. */
+.orders__guestform-btn { width: 100%; justify-content: center; white-space: normal; text-align: center; }
 
 /* Bloque de registro «del parque» en la pantalla final de la compra (#225): texto informativo
    editable + botón al sistema externo. Callout sobrio para no competir con «Ver mis reservas». */

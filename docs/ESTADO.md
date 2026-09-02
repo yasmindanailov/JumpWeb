@@ -296,7 +296,18 @@ asignados**, un caso que ninguna guarda montaba) y, la gorda, **que el enlace NU
 sale nada» diagnostiqué una causa real que **no era la única**; la que faltaba solo se ve abriendo el
 navegador y contando nodos. Guardas nuevas: tres de `node --test` sobre el store y **una general** —
 que ningún identificador de grupo de idioma aparezca en el HTML de la ficha—, **vista morder**.
-⚠️ De la sonda salió además la tercera condición del enlace: **sin plazas libres tampoco se ofrece**. ▶ **La T3 pone las SEIS superficies**:
+⚠️ De la sonda salió además la tercera condición del enlace: **sin plazas libres tampoco se ofrece**.
+❗❗ **`#345` — y una tercera pasada del OJO del owner**: el botón «Completa el formulario *producto*»
+**se salía** con un nombre largo (`.btn` es `white-space: nowrap` y el botón es de ancho completo;
+medido: cabía con **0 px de margen** y un nombre largo pedía 418 en 308). `[DECIDIDO owner]`: **fuera
+el nombre del producto** —está tres líneas más arriba— y el botón pasa a `white-space: normal`, que
+cierra la CLASE y no solo el caso. Y entra el gesto de **compartir o copiar** el enlace: en un teléfono
+abre la hoja del sistema (WhatsApp) y en un escritorio copia.
+⚠️⚠️ **Cerrar la hoja de compartir NO es un fallo** (`AbortError`) y **no se copia** lo que alguien
+decidió no mandar. ⚠️ El dibujo es la geometría de `<x-icons.share>` **copiada, no inventada**:
+`SidebarIconParityTest` paró el primer intento porque el cajón tiene `DRAWER_OWN` **vacía**.
+⚠️ Se pinta a **24**, su talla de trabajo: a 18 los puntos se comían los conectores y el owner lo vio
+roto. *Un icono de rejilla 24 no se escala: se pinta a 24 y se le da aire con el relleno del botón.* ▶ **La T3 pone las SEIS superficies**:
 puerta, hoja de sala, ficha del pedido, PDF, correo de copia con el PDF adjunto, y la cuenta del
 responsable en el cajón. ▶ **LA T4 YA TIENE GUION ESCRITO Y EL ESCENARIO SEMBRADO**:
 `VERIFICACION-E2E-CAJON.md` **§5.septies** — seis bloques con sus casillas, los dos pedidos de prueba

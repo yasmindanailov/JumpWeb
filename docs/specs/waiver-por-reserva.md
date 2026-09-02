@@ -1307,3 +1307,28 @@ que se apaga con la visita pasada. El caso real es el del owner: una entrada asi
 ⚠️ **Ruido ajeno visto de paso y NO tocado**: bajo cinco peticiones simultáneas al entrar, el driver de
 caché en BD lanza `1213 Deadlock` sobre la tabla `cache` y Laravel reintenta. Es preexistente y no es
 de esta feature; queda anotado por si alguien lo persigue.
+
+### 13.8 Compartir el enlace, y el rótulo que se salía del botón (`#345`)
+
+**(a) El botón del post-form.** `.btn` es `white-space: nowrap` y `.orders__guestform-btn` es de ancho
+completo dentro de una tarjeta de 308 px. Medido con CONTROL: «Completa el formulario de Cumpleaños
+Jump» cabía con **cero margen** (308 = 308) y un nombre más largo pedía **418**.
+
+▶ `[DECIDIDO owner]`: **se quita el nombre del producto** de los cuatro estados —está tres líneas más
+arriba en cuerpo grande— y **el botón pasa a `white-space: normal`**, que arregla la CLASE: ningún
+rótulo futuro, en ningún idioma, puede volver a desbordarlo. *Un rótulo que interpola un nombre que
+escribe el panel no puede tener regla de longitud* (`#303`).
+
+**(b) Compartir o copiar.** El enlace se reparte a los padres uno a uno, así que el gesto ES la
+feature: en un teléfono abre la hoja del sistema (WhatsApp) y en un escritorio copia.
+
+- ⚠️⚠️ **Cerrar la hoja de compartir no es un fallo** (`AbortError`): no se dice nada **y no se copia**
+  —copiar lo que alguien decidió no mandar es peor que no hacer nada—. Se distingue por el `name`, no
+  por el mensaje, que cambia con el idioma del sistema.
+- ⚠️ La regla vive en `account/share-link.js` (`CE-6`) con seis casos y las dependencias por
+  parámetro: en el Node del contenedor `navigator` no existe y leer `navigator.clipboard` **lanza**.
+- ⚠️ **`shared` y `copied` son dos acuses distintos**: decir «copiado» cuando el sistema acaba de abrir
+  WhatsApp sería mentir.
+- ⚠️ **El `input` de solo lectura se queda**: si las dos APIs fallan, el cliente lo selecciona a mano.
+- ⚠️⚠️ **El dibujo es la geometría de `<x-icons.share>`, copiada, no inventada.**
+  `SidebarIconParityTest` paró el primer intento: el cajón tiene `DRAWER_OWN` **vacía** desde `#258`.
