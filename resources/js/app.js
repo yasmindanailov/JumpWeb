@@ -854,13 +854,59 @@ document.addEventListener('alpine:init', () => {
         toca(e) {
             if (this.fase === 'off') return;
 
+            // Un botón o un enlace se activa SOLO: es la misma regla que ya aplica el manejador de
+            // teclado, y sin ella tocar «Otra vez» o «Reservar» dispararía las dos cosas.
+            if (e.target instanceof HTMLElement && e.target.closest('button, a')) return;
+
             const tactil = e.pointerType === 'touch';
 
-            if (tactil && this.fase !== 'jugando') return;
-            if (! tactil) e.preventDefault();
+            // ── JUGANDO: cualquier punto de la tarjeta salta ──────────────────────────────────
+            // Responde al `pointerdown` y no al `up` a propósito: un juego se juega con la latencia
+            // del dedo que baja, no con la del que se levanta.
+            if (this.fase === 'jugando') {
+                if (! tactil) e.preventDefault();
+                this._motor?.pulsa();
 
-            if (this.fase === 'jugando') this._motor?.pulsa();
-            else this.juega();
+                return;
+            }
+
+            // ── NO SE JUEGA: empezar ─────────────────────────────────────────────────────────
+            // Con ratón, al bajar: ahí no hay gesto de desplazar que confundir.
+            if (! tactil) { e.preventDefault(); this.juega(); return; }
+
+            // ⚠️⚠️ **Con el DEDO no se empieza aquí: se anota y se decide al levantar** (ver
+            // `sueltaTap`). Es lo que concilia la petición del owner —tocar cualquier parte del
+            // hero empieza la partida— con la mitad de `#253` que sigue viva: *«sin ella el primer
+            // arrastre para desplazar arranca un juego que nadie pidió»*.
+            this._tap = { x: e.clientX, y: e.clientY, t: performance.now() };
+        },
+
+        /**
+         * **El toque que EMPIEZA la partida, distinguido de un arrastre para desplazar** (`#352`).
+         *
+         * `[owner, 2026-09-02]`: *«darle tap a cualquier parte del hero empieza a jugar y puede
+         * saltar, no solo en la parte inferior»*. Hasta hoy solo respondía el lienzo, que es una
+         * tira pegada al borde inferior de la tarjeta.
+         *
+         * ⚠️⚠️ **Y aquí está la mitad delicada, porque `#253` decidió lo contrario POR UN MOTIVO
+         * QUE SIGUE SIENDO CIERTO**: en aquella tanda el owner se quejó de quedarse *«bloqueado en
+         * el juego»* en un teléfono, y una de las dos causas fue que tocar el lienzo arrancaba la
+         * partida — así que el primer arrastre para desplazar empezaba un juego que nadie pidió.
+         * ▶ Lo que se cambia es **dónde** se puede tocar, no **qué cuenta como toque**: un dedo que
+         * se mueve más de 12 px o que se queda más de 700 ms es un ARRASTRE o una pulsación larga,
+         * y no empieza nada. La otra mitad de `#253` —no llamar a `preventDefault()` en táctil, que
+         * es lo que de verdad cancelaba el gesto de desplazar— **no se toca**.
+         */
+        sueltaTap(e) {
+            const tap = this._tap;
+            this._tap = null;
+
+            if (! tap || this.fase === 'off' || this.fase === 'jugando') return;
+            if (e.target instanceof HTMLElement && e.target.closest('button, a')) return;
+            if (Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 12) return;
+            if (performance.now() - tap.t > 700) return;
+
+            this.juega();
         },
 
         sal() { this._motor?.para(); this.record = this._motor?.record ?? this.record; this.fase = 'listo'; this._publicaAlto(); },

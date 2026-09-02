@@ -21326,6 +21326,64 @@ Suite **4.065 · 25.931** · Pint · docs-check · sonda de navegador en cuatro 
 1280 · 1440) con control · captura del hero a 1280.
 
 
+## #352 · 2026-09-02 · El hero del cierre se juega tocando cualquier parte, y un arrastre sigue sin empezar partida
+
+`[owner, 2026-09-02]`: *«cuando el hero del footer está fullvw, darle tap a cualquier parte del hero
+empieza a jugar y puede saltar, no solo en la parte inferior»*.
+
+**Medido antes de tocar nada** (390×844, con el cierre abierto): la tarjeta ocupa de **10 a 834** y el
+lienzo empieza en **684**. O sea que en una pantalla entera solo respondían los **150 px de abajo** —
+el lienzo es una tira `position: absolute; bottom: 0`, y era el único que escuchaba el `pointerdown`.
+
+▶ El oyente sube a `.reserve__box` y el del lienzo se retira: por burbujeo lo cubre, y dos oyentes
+para el mismo gesto darían un salto doble.
+
+⚠️ **No hace falta condicionarlo a «pantalla completa»**, aunque el owner lo enunciara así: `fase` sale
+de `off` **únicamente** cuando dispara `cierre:abierto`, que es justo cuando la tarjeta llena la
+ventana. Un `x-show` extra sería una segunda copia de esa condición, y las copias divergen.
+
+### ❗❗ Lo delicado: `#253` decidió lo contrario, y su motivo SIGUE siendo cierto
+
+Aquella tanda quitó el arranque desde el lienzo porque el owner se quejó de quedarse **«bloqueado en
+el juego»** en un teléfono, y una de las dos causas era que *«el primer arrastre para desplazar
+arranca un juego que nadie pidió»*.
+
+▶ **Lo que cambia `#352` es DÓNDE se puede tocar, no QUÉ cuenta como toque.** Con el dedo el arranque
+se decide al **levantar** y solo si el dedo no se movió más de **12 px** ni estuvo más de **700 ms**:
+un arrastre para desplazar no empieza nada. Con ratón sigue actuando al bajar — ahí no hay gesto que
+confundir.
+
+▶ **Y la otra mitad de `#253` no se toca**: en táctil **no** se llama a `preventDefault()`. Ésa era la
+que de verdad encerraba al visitante, porque cancela el gesto de desplazar que el navegador iba a
+empezar con ese dedo.
+
+⚠️ **Saltar sí responde al `pointerdown`**, no al `up`: un juego se juega con la latencia del dedo que
+baja. Ahí no hay ambigüedad que resolver — un salto de más mientras alguien se va desplazando no
+molesta a nadie.
+
+⚠️ **Y los botones se activan solos**: un toque sobre «Reservar» o «Otra vez» no dispara además el
+juego. Es la misma regla que el manejador de TECLADO ya aplicaba (`closest('button, a')`), que estaba
+escrita en un solo sitio y ahora está en los tres. Sin ella, tocar «Reservar» abriría el cajón **y**
+empezaría una partida.
+
+### La guarda
+
+`SaltaJuegoTest::el_toque_alcanza_todo_el_hero_y_un_arrastre_no_empieza_partida`, **5/5 mutaciones
+muerden**: devolver el oyente al lienzo, perder cada uno de los dos umbrales, dejar de mirar el tipo
+de puntero en el `preventDefault()` y quitar la exención de botones.
+
+⚠️ **Una aserción se cayó por frágil antes de entrar**: buscaba un `preventDefault()` dentro de una
+cadena **multilínea**, o sea que ataba el caso a la indentación exacta del fichero. Se sustituyó por
+contar la guarda de tipo de puntero, que es lo que de verdad se quiere fijar.
+
+### Verificación
+
+Suite **4.066 · 25.953** · Pint · sonda de navegador a 390×844 **con CONTROL en las dos direcciones**:
+un arrastre de 120 px deja la fase en `listo`; un toque en el mismo punto —179 px, muy por encima del
+lienzo, y comprobado que no cae sobre ningún botón— la pone en `jugando`; y tocar arriba mientras se
+juega no saca del juego (7/7).
+
+
 ## #400 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
 
 **Encontrado por el owner probando lo construido**, con la suite verde y las cuatro tandas anteriores

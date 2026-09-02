@@ -120,6 +120,17 @@ líneas y 0,00 €**. *Cuando el mensaje contradice a sus cifras, el roto es el 
 forkear · veredicto que separa duplicación, ausencia e importe) y **visto FALLAR sin el lock: 12
 líneas y 84,00 €**. Preexistente, verificado en la base `#341`: no lo causó la fusión.
 
+✅ **EL HERO DEL CIERRE SE JUEGA TOCANDO DONDE SEA** (2026-09-02, `DECISIONES #352`). Medido a
+390×844 con el cierre abierto: la tarjeta ocupa **de 10 a 834** y el lienzo empezaba en **684**, o sea
+que en una pantalla entera solo respondían los **150 px de abajo**.
+▶ ❗❗ **Lo delicado es que `#253` decidió lo contrario y su motivo sigue vivo**: entonces te quedabas
+*«bloqueado en el juego»* en el móvil porque un arrastre para desplazar arrancaba una partida. **Lo
+que cambia es DÓNDE se toca, no QUÉ cuenta como toque**: con el dedo el arranque se decide al
+levantar, y solo si no se movió más de 12 px ni duró más de 700 ms. La mitad que de verdad te
+encerraba —cancelar el gesto de desplazar— no se toca.
+▶ ⚠️ Y los botones se activan solos: tocar «Reservar» ya no abriría además una partida.
+▶ Guarda con **5/5 mutaciones** y sonda de navegador con control en las dos direcciones.
+
 ⚠️⚠️ **MENOS FRICCIÓN EN EL ALTA, Y UNA DE LAS DOS ES SEGURIDAD** (2026-09-02, `DECISIONES #351`).
 ▶ **La contraseña ya NO se comprueba contra el corpus de filtraciones** (`[DECIDIDO owner]`: *«hay
 mucha fricción»*). Se te ofreció la vía intermedia —rechazar solo las MUY comunes— y elegiste
@@ -921,7 +932,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > número**: 4019 + 4 + 15 = **4038** y el gate mide **4039 · 25.772**. Un test y dos aserciones de
 > más, o sea que uno de los dos números declarados se tomó sobre una base que ya no era 4019. *Que la
 > suma no cuadre es justo el motivo por el que el gate mide en vez de creerse la resta.*
-> Suite **4065 en verde** (25.931 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> Suite **4066 en verde** (25.953 aserciones, 1 skipped a propósito), medida el 2026-09-02
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`). ⚠️ **+8 y +51 los pone la T8
 > de Google** (`#350`): las dos guardas nuevas del botón y del aviso de privacidad, más los casos que
 > sustituyen a los de las casillas retiradas. Antes: las cuatro tandas del

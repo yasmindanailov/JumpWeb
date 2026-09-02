@@ -548,8 +548,19 @@
         {{-- ⚠️ **`saltaJuego` vive en la TARJETA, no en el lienzo** (`#235`): el mockup desvanece el
              párrafo y los CTA mientras se juega, y para eso el estado del juego tiene que alcanzar
              a hermanos suyos. Con el `x-data` en el lienzo, la mitad de arriba no se enteraba. --}}
+        {{-- ⚠️⚠️ **EL TOQUE ESCUCHA EN LA TARJETA ENTERA, no en el lienzo** (`#352`,
+             `[owner, 2026-09-02]`: *«darle tap a cualquier parte del hero empieza a jugar y puede
+             saltar, no solo en la parte inferior»*). El lienzo es una tira pegada al borde inferior
+             (`bottom: 0`, alto `--salta-h`), así que antes solo se saltaba ahí.
+             ▶ **No hace falta condicionarlo a «pantalla completa»**: `fase` sale de `off` únicamente
+             cuando `cierre:abierto` dispara, o sea cuando la tarjeta ya llena la ventana. Un `x-show`
+             extra sería una segunda copia de esa condición.
+             ▶ `pointerup` va aquí también porque con el DEDO el arranque se decide al levantar, para
+             separar un TOQUE de un arrastre para desplazar (ver `sueltaTap` en `app.js`). --}}
         <div class="reserve__box" data-surface="ink"
              x-data="saltaJuego"
+             @pointerdown="toca($event)"
+             @pointerup="sueltaTap($event)"
              :class="fase === 'jugando' && 'reserve__box--jugando'">
             {{-- La trama de puntos, la misma que el menú: es la única textura que el sistema
                  admite sobre tinta, y aquí sale del mismo mecanismo. --}}
@@ -565,9 +576,11 @@
                  él y pulsar Enter — que es justo lo que el owner señaló. Ahora el espacio, las
                  flechas, `W`, `Enter` y el toque hacen lo mismo: empezar si no se juega, saltar si
                  se juega. Es lo que hace el mockup con un solo manejador. --}}
+            {{-- ⚠️ Sin manejador propio desde `#352`: el de la TARJETA lo cubre por burbujeo, y dos
+                 oyentes para el mismo gesto darían un salto doble. Conserva su `pointer-events` y su
+                 cursor porque es donde la acción se ve. --}}
             <canvas class="salta__lienzo" x-ref="lienzo" aria-hidden="true"
-                    :style="fase === 'off' ? 'pointer-events:none' : 'pointer-events:auto;cursor:pointer'"
-                    @pointerdown="toca($event)"></canvas>
+                    :style="fase === 'off' ? 'pointer-events:none' : 'pointer-events:auto;cursor:pointer'"></canvas>
 
             <button type="button" class="salta__invita" x-show="fase === 'listo'"
                     @click="juega()"

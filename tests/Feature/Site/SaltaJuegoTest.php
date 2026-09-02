@@ -202,6 +202,84 @@ class SaltaJuegoTest extends TestCase
     }
 
     /**
+     * **EL TOQUE ALCANZA TODO EL HERO, Y UN ARRASTRE SIGUE SIN EMPEZAR PARTIDA** (`#352`).
+     *
+     * `[owner, 2026-09-02]`: *«darle tap a cualquier parte del hero empieza a jugar y puede saltar,
+     * no solo en la parte inferior»*. El lienzo es una tira pegada al borde inferior de la tarjeta
+     * —medido a 390×844 con el cierre abierto: la tarjeta va de 10 a 834 y el lienzo empieza en
+     * **684**—, así que antes solo respondían los últimos 150 px de una pantalla entera.
+     *
+     * ⚠️⚠️ **Y la mitad de `#253` que sigue viva se comprueba AQUÍ, porque es la que se pierde sin
+     * enterarse.** Aquella tanda decidió que tocar el lienzo NO empezara la partida, y el motivo
+     * sigue siendo cierto: *«sin ella el primer arrastre para desplazar arranca un juego que nadie
+     * pidió»*. Lo que cambia `#352` es **dónde** se puede tocar, no **qué cuenta como toque**: con el
+     * dedo el arranque se decide al LEVANTAR, y solo si no hubo desplazamiento ni pulsación larga.
+     * ▶ Verificado en navegador con CONTROL: un arrastre de 120 px deja la fase en `listo`; un toque
+     * en el mismo punto la pone en `jugando`.
+     */
+    #[Test]
+    public function el_toque_alcanza_todo_el_hero_y_un_arrastre_no_empieza_partida(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        // 1 · El oyente vive en la TARJETA. Sin esto, el resto de este caso vigilaría un método que
+        //     no llama nadie desde donde importa.
+        $this->assertMatchesRegularExpression(
+            '/<div[^>]*class="reserve__box"[^>]*@pointerdown="toca\(\$event\)"/s',
+            $html,
+            "El hero del cierre ha dejado de escuchar el toque en la TARJETA.\n".
+            '▶ `[owner]`: tocar cualquier parte del hero tiene que empezar y hacer saltar, no solo la tira de abajo.'
+        );
+        $this->assertMatchesRegularExpression(
+            '/<div[^>]*class="reserve__box"[^>]*@pointerup="sueltaTap\(\$event\)"/s',
+            $html,
+            'la tarjeta ya no escucha el `pointerup`: con el dedo, el arranque se decide al LEVANTAR.'
+        );
+
+        // 2 · Y NO se queda además en el lienzo: dos oyentes para el mismo gesto dan un salto doble.
+        $this->assertSame(
+            1, preg_match_all('/@pointerdown="toca\(/', $html),
+            'hay más de un oyente del mismo toque: el de la tarjeta ya cubre el lienzo por burbujeo, '.
+            'y con los dos un solo toque saltaría dos veces.'
+        );
+
+        // 3 · El toque con el dedo se distingue de un arrastre. Se aseveran los DOS umbrales: sin el
+        //     de distancia, desplazar empieza partida; sin el de tiempo, una pulsación larga también.
+        $suelta = $this->metodoDelJuego('sueltaTap');
+
+        $this->assertStringContainsString(
+            'Math.hypot', $suelta,
+            "`sueltaTap` ya no mide cuánto se movió el dedo.\n".
+            '▶ Es lo único que separa un TOQUE de un arrastre para desplazar (`#253`).'
+        );
+        $this->assertMatchesRegularExpression('/>\s*12\b/', $suelta, 'se ha perdido el umbral de distancia del toque');
+        $this->assertMatchesRegularExpression('/>\s*700\b/', $suelta, 'se ha perdido el umbral de tiempo del toque');
+
+        // 4 · Y la OTRA mitad de `#253`, que es la que de verdad encerraba al visitante: en táctil no
+        //    se cancela el gesto del navegador.
+        $toca = $this->metodoDelJuego('toca');
+
+        // ⚠️ Se cuenta la GUARDA, no se busca el `preventDefault()` en una cadena multilínea: esa
+        // forma ataba el caso a la indentación exacta del fichero y se ponía roja al reformatear.
+        $this->assertSame(
+            2, substr_count($toca, '! tactil'),
+            "`toca` ha dejado de separar el puntero grueso del fino.\n".
+            "▶ `preventDefault()` sobre un `pointerdown` táctil **cancela el gesto de desplazar**, y\n".
+            '  sobre una tarjeta a pantalla completa eso deja al visitante encerrado (`#253`).'
+        );
+
+        // 5 · Un botón o un enlace se activa SOLO. Sin esto, tocar «Reservar» abriría el cajón Y
+        //    empezaría una partida — el mismo defecto que el manejador de teclado ya evitaba.
+        foreach (['toca', 'sueltaTap'] as $metodo) {
+            $this->assertStringContainsString(
+                "closest('button, a')", $this->metodoDelJuego($metodo),
+                "`{$metodo}` ya no deja que los botones y enlaces del hero se activen solos: un toque ".
+                'sobre «Reservar» haría las dos cosas a la vez.'
+            );
+        }
+    }
+
+    /**
      * **LA DEMO ARRANCA CUANDO EL LIENZO SE VE, NO CUANDO LA TARJETA LLENA LA PANTALLA** (`#256`).
      *
      * `[DECIDIDO owner]`: «que la animación del juego esté activada en su punto estático». Es lo
