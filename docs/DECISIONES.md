@@ -20649,7 +20649,24 @@ se queda fuera en silencio. Lo que lo caza es el CONTRATO (`additionalProperties
 `required`), y por eso el esquema `ExportedIdentity` y su clave entran en el mismo commit, con el
 caso validando la respuesta contra él.
 
-**Verificación**: 33 casos nuevos (31 del mecanismo + 2 del export, éstos contra el contrato) ·
-**20 mutaciones con control, 19 muerden** y la que no está explicada · suite completa verde · Pint ✓.
+### Y una corrección al código que ya existía: `RGPD-06` alcanza al vínculo
+
+La primera versión de la T1 dejó el vínculo **fuera** de `revokeAllAccess()` razonando que no es una
+credencial. Es cierto que no lo es —con la fila no se entra a ninguna parte— y la conclusión era
+FALSA: `revokeAllAccess()` no es «borra credenciales», es **la palanca de «me han entrado»**, y un
+vínculo plantado por quien te tomó la cuenta sería una puerta trasera que **el restablecimiento de
+contraseña no cerraría**. Ahora cae con ella y **sobrevive a `revokeOtherAccess()`**: el criterio
+exacto del carné, que §11 de la spec ya había escrito.
+
+⚠️⚠️ **Eso obliga a un ORDEN dentro de la toma de una cuenta sin verificar**: expulsar **antes** de
+escribir el vínculo. Al revés, la expulsión se lleva por delante la llave recién dada y **nada
+falla** — la persona entra y su cuenta queda sin vincular, con otro correo de aviso la próxima vez.
+Hay caso para el orden y su mutación muerde.
+▶ Consecuencia aceptada: tras un reset, la siguiente entrada con Google **vuelve a vincular sola** y
+manda su aviso. Ruido, no bloqueo.
+
+**Verificación**: 35 casos nuevos (33 del mecanismo + 2 del export, éstos contra el contrato) ·
+**21 mutaciones con control, 20 muerden** y la que no está explicada · suite completa verde · Pint ✓ ·
+docs-check ✓.
 ▶ **Queda**: la T2 (la pantalla, en el cajón por `[DECIDIDO owner]`), la T3 y tu OJO en navegador —
 que necesita el cliente de OAuth de DESARROLLO, con `http://localhost:8081/auth/google/callback`.

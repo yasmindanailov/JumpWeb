@@ -3651,15 +3651,15 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **El OJO del owner** sobre las cuatro, y **subir su `client-menu.webp`**
 - [ ] ⚠️ **Producción NO lleva `#340` ni `#341`**, y el siguiente despliegue desde `main` **estrena la T3 del justificante** (`#337`): no es un despliegue de rutina
 
-### GOOGLE AUTH ⬜ — spec diseñada y revisada, CERO código (2026-09-02)
+### GOOGLE AUTH 🟦 — la T1 en el árbol (2026-09-02)
 - [x] **Spec** `docs/specs/auth-con-google.md`, con la decisión del owner que la ordena: **pantalla intermedia y exención al 100 %** (§4)
 - [x] **Revisión adversarial de cinco lentes: OCHO bloqueantes**, dos de ellos agujeros de seguridad, aplicados con marcas ✱
-- [x] **Nueve de once preguntas cerradas** con `[DECIDIDO owner]`
-- [ ] **T1 · el mecanismo** — DESBLOQUEADA: tabla `user_identities`, la raíz de confianza (§6.3), el servicio de vinculación con sus guardas, la purga por BORRADO y las acciones de auditoría
-- [ ] **T2 · el alta** — con la medición del presupuesto del cajón ANTES de escribir (quedan ~51 B)
+- [x] **Diez de once preguntas cerradas** con `[DECIDIDO owner]` (la Q8 se cerró al empezar: la pantalla va en el CAJÓN)
+- [x] **T1 · el mecanismo** (`#342`, §18): `user_identities` · la raíz de confianza · el reto de un solo uso · las tres puertas · el aviso por correo · la purga por BORRADO · el export del art. 20 con su contrato. ⚠️ **Corrige `RGPD-06`**: el vínculo cae con `revokeAllAccess()`, y eso obliga a expulsar ANTES de escribirlo. 21 mutaciones, muerden 20
+- [ ] **T2 · el alta** — la pantalla EN EL CAJÓN (`[DECIDIDO owner]` Q8), con la medición del presupuesto ANTES de escribir (quedan ~51 B)
 - [ ] **T3 · lo irreversible y el marketing** — ⚠️ **dependencia DURA con la T2**: sin ella se crean cuentas sin autoservicio para las cuatro acciones que exigen contraseña
 - [ ] **T4 · el OJO del owner**
-- [ ] Del owner: su ✅, el cliente de OAuth (**§10.1**) y la política de privacidad al terminar
+- [ ] Del owner: su ✅, **el cliente de OAuth de DESARROLLO** (el de producción ya está creado; su secreto vive fuera del repo) y la política de privacidad al terminar
 
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no

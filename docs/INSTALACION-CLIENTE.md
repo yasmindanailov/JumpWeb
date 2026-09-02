@@ -511,6 +511,54 @@ antes si de verdad se subió — no es la caché.
   ⚠️ **`make:filament-user` NO sirve**: `canAccessPanel()` exige `hasRole('admin'|'staff')` y ese rol
   vive en la pivote `role_user`, que ese comando no toca — crearía una cuenta que no entra.
 
+### 5.a · Entrar y registrarse con GOOGLE (`#342`, 2026-09-02)
+
+**Opcional y por instalación.** Sin las dos claves, `/auth/google` y `/auth/google/callback`
+responden **404** y no aparece ningún botón: el hueco falla hacia invisible, como el logotipo o el
+kit. Una instalación que no lo quiera no tiene que hacer nada.
+
+**1 · En Google Cloud Console** (`specs/auth-con-google.md` §10.1) — es del CLIENTE, no del producto:
+una instalación = un proyecto = un ID de cliente.
+
+| | |
+|---|---|
+| Tipo de aplicación | **Aplicación web** |
+| **URI de redireccionamiento** | **`https://<dominio>/auth/google/callback`** — la RUTA COMPLETA |
+| Orígenes de JavaScript | **No hacen falta** (solo los usa el botón JS/One Tap; aquí redirige el servidor) |
+
+⚠️⚠️ **El error que falla en el primer intento**: poner el origen pelado (`https://<dominio>`).
+Google exige que la URI coincida **exactamente** con la que enviamos, y con el origen a secas
+devuelve `Error 400: redirect_uri_mismatch` — sin nada que depurar en nuestro lado. Si el sitio
+responde también en `www.`, **da de alta las dos URIs**: `route()` genera la de vuelta con el host
+por el que ha entrado el visitante.
+
+▶ **Pantalla de consentimiento**: **Externa** · ámbitos **solo `openid`, `email`, `profile`**
+(cualquier ámbito sensible dispara una verificación de semanas) · **sin logotipo** al principio
+(subirlo dispara la verificación de marca) · y hay que **PUBLICARLA**: en «Testing» solo entran los
+usuarios de prueba que se añadan a mano.
+
+▶ **Un segundo cliente para desarrollo**, en el mismo proyecto, con
+`http://localhost:8081/auth/google/callback`. Separado a propósito: meter localhost en el cliente de
+producción obliga a tener el secreto de producción en la máquina de desarrollo.
+
+**2 · En la instalación**, con `app:set-setting`. Las dos claves son **PROTEGIDAS** y exigen
+`--force` escrito a mano (`SetSetting::PROTECTED_KEYS`):
+
+```bash
+php artisan app:set-setting auth.google_client_id  '…apps.googleusercontent.com' --group=auth --force
+php artisan app:set-setting auth.google_client_secret 'GOCSPX-…'                 --group=auth --force
+```
+
+⚠️ **Exige las DOS**: con media configuración el botón aparecería y el canje fallaría **después** de
+que la persona haya elegido su cuenta en Google. `GoogleAuth::enabled()` lo impone.
+⚠️ **El secreto no se pega en un chat, ni en el repo, ni en un documento**: va del navegador del
+owner al servidor y a ningún sitio más. El fichero `client_secret_*.json` que descarga la consola
+está **gitignorado** —la consola lo deja con ese nombre en la carpeta del proyecto y un `git add .`
+distraído lo publicaría—, pero ignorar no es guardar: sácalo del árbol en cuanto lo uses.
+⚠️⚠️ **Coste asumido y escrito** (`[DECIDIDO owner]` Q10): viven en `settings`, o sea **en una tabla
+que se vuelca en cada backup** — es lo que el propio repo dice de la clave de Redsys para mandarla al
+vault. El owner lo acepta a cambio de aprovisionar sin tocar el `.env`.
+
 ## 6 · Pagos (Redsys) — go-live
 1. Rellenar en el panel el FUC real, terminal, nombre y URL del comercio.
 2. `REDSYS_SECRET_KEY` (32 chars) SOLO en `.env`/vault. Cadena de fallback de

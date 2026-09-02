@@ -1,8 +1,11 @@
 # [SPEC] Entrar y registrarse con Google
 
-> Estado: ⬜ **BORRADOR — pendiente del ✅ del owner.** · Abierta: 2026-09-02 · Autor: agente
-> **Cero código hasta el ✅.** Las decisiones `[DECIDIDO owner]` se tomaron en la conversación de
-> diseño del 2026-09-02 y se citan con la frase del owner cuando la hay.
+> Estado: 🟦 **LA T1 ESTÁ EN EL ÁRBOL** (2026-09-02, `DECISIONES #342`) · Abierta: 2026-09-02 ·
+> Autor: agente
+> ▶ **Lo ejecutado, con lo que enseñó, está en §18 — y va ANTES que las tandas de §16.** Quedan la
+> T2 (la pantalla), la T3 (lo irreversible y el marketing) y el OJO del owner.
+> Las decisiones `[DECIDIDO owner]` se tomaron en la conversación de diseño del 2026-09-02 y se citan
+> con la frase del owner cuando la hay.
 >
 > ⚠️ **Esta spec ha pasado una revisión adversarial de cinco lentes (2026-09-02) y la revisión
 > encontró OCHO bloqueantes, incluidos varios en la propia sección de «hechos medidos».** Todo lo
@@ -561,7 +564,7 @@ owner al servidor, y nada más.
 | P7 | El vínculo sobrevive a la anonimización | §11, **borrado explícito** |
 | P8 | Botón sin que el servidor pueda verificar nada | §10 |
 | **P13** ✱ | **Doble envío, dos pestañas, `state` consumido, cancelación en Google** | §5.3 y §6.3 |
-| P9 | Cuenta de equipo vinculada | ✱ **Rechazada por defecto** (§6.6) |
+| P9 | Cuenta de equipo vinculada | ⚠️ **CADUCADO: el owner decidió que SÍ pueden** (Q5, §6.6). Esta fila decía «rechazada por defecto» y era el texto de la revisión, ANTERIOR a esa respuesta. Lo que lo hace defendible es el aviso por correo de la Q3, que pasa a obligatorio |
 | P10 | Cuenta de Google compartida | El `UNIQUE` lo resuelve; se eleva al owner porque aquí una cuenta lleva menores y firmas |
 
 ---
@@ -609,8 +612,10 @@ owner al servidor, y nada más.
 7. ✅ **RESUELTA** (Q7): se actualiza **cuando la feature esté terminada**, no antes. ⚠️ Queda como
    requisito de salida: **no se anuncia el botón a clientes reales sin ese texto**, porque el
    cumplimiento del art. 13 descansa en que el documento enlazado describa el tratamiento.
-8. **✱ El cajón no tiene sitio: quedan ~51 B de chunk y 91/35 B de payload** `[MEDIDO]`.
-   ¿Ampliamos el techo o parte de la pantalla va en carga diferida?
+8. ✅ **RESUELTA** (Q8, 2026-09-02): la pantalla va **en el CAJÓN**. Se le ofreció una tercera
+   opción que la spec no había valorado —una página servida por el servidor, como
+   `/autorizacion/{pedido}`, con coste CERO de bundle— y eligió el cajón. El presupuesto se mide **al
+   empezar la T2**, y el techo o la carga diferida se deciden con la cifra real delante.
 9. ✅ **RESUELTA** (Q9): **solo el interruptor** de la cuenta.
 10. **Q3 · `settings` o `.env`** — ✱ ya sin recomendación mía: §3.8 y §10.
 11. **Texto del botón**: «Continuar con Google».
@@ -621,7 +626,7 @@ owner al servidor, y nada más.
 
 | | Qué | |
 |---|---|---|
-| **T1 · El mecanismo** | Migración `user_identities` · `GoogleAuth` · **la raíz de confianza de §6.3** · las rutas web con `state` · el servicio de vinculación (guarda de `email_verified`, cuenta destino verificada, **rechazo de `PANEL_ROLES`**, `isAnonymized()` en los dos caminos) · **la purga por BORRADO en `anonymize()` con su caso** · ✱ **`user_identities` en el export del art. 20 + su cambio de contrato** · ✱ **acciones de auditoría (`identities.linked`, `identities.unlinked`) declaradas en `AuditLog::ACTIONS`** —si no, `AuditLogger` lanza `LogicException`— | La prueba primero |
+| **T1 · El mecanismo** ✅ | **HECHA — ver §18.** Migración `user_identities` · `GoogleAuth` · **la raíz de confianza de §6.3** · las rutas web con `state` · el servicio de vinculación · **la purga por BORRADO con su caso** · **`user_identities` en el export del art. 20 + su cambio de contrato** · la acción `identities.linked` en `AuditLog::ACTIONS`. ⚠️ **Esta celda decía «rechazo de `PANEL_ROLES`» y estaba CADUCADA**: es el texto de la revisión, anterior a la Q5 — el owner decidió que el equipo **sí** puede vincular (§6.6), y así se ha construido. ⚠️ `identities.unlinked` **no se declara todavía**: su emisor es la T3, y una acción catalogada sin emisor es vocabulario muerto | La prueba primero |
 | **T2 · El alta** | La pantalla, el alta que nace de ella (con **todo** lo de §5.3), el aviso de vinculación por correo, y el botón · ✱ **la medición del presupuesto del cajón ANTES de escribir**, y la partida en carga diferida si no cabe · ✱ **la CSP no admite hoy `accounts.google.com`** si se usara One Tap · ✱ el icono tetracolor de Google **choca con `IconSetAnatomyTest`** («ningún glifo teclea un color») | El caso del 90 % |
 | **T3 · Lo irreversible y el marketing** | Ticket de re-autenticación (esquema **nuevo**) para las **cuatro** superficies · **desvincular** · interruptor de marketing **+ su registro de retirada** y el endpoint | Cierra los huecos legales |
 | **T4 · El OJO del owner** | Guion de navegador con los tres caminos y con P12 | |
@@ -650,8 +655,101 @@ poda ninguna**.
 - [x] Q7 · la política se actualiza **al terminar**, y es requisito de salida
 - [x] Q9 · marketing **solo** en el interruptor de la cuenta
 - [x] Q10 · las claves en `settings`
-- [ ] **Q8 · el presupuesto del cajón** — se mide al empezar la T2, no antes
+- [x] Q8 · la pantalla va **en el cajón** (2026-09-02); el presupuesto se mide al empezar la T2
 - [ ] **Q11 · texto del botón** — «Continuar con Google» salvo que digas otra cosa
-- [ ] ✅ final del owner a la spec
+- [ ] ✅ final del owner a la spec, y su OJO en navegador (T4)
 
-▶ **Con esto la T1 está DESBLOQUEADA.** Lo único abierto es de la T2 y se resuelve al llegar.
+▶ **La T1 está EN EL ÁRBOL** (`#342`, §18). Lo abierto es de la T2 en adelante.
+
+---
+
+## 18 · La T1, EJECUTADA (2026-09-02, `DECISIONES #342`)
+
+**Lee esto antes que §16**: aquí está lo que se construyó, lo que el diseño no había previsto y las
+decisiones que hubo que tomar sobre la marcha. Sin claves configuradas, **las dos rutas responden
+404**, así que ninguna instalación cambia de conducta hasta que alguien las escriba.
+
+### 18.1 · Las piezas
+
+| Pieza | Qué es |
+|---|---|
+| `user_identities` (migración) | Una fila = «esta cuenta es también este `sub` de este proveedor». **Dos** claves únicas: por `(provider, provider_id)` y por `(user_id, provider)` |
+| `Identity\Models\UserIdentity` | El modelo. Sin `updated_at`: la fila no se edita, y `linked_at` es su `CREATED_AT` |
+| `Identity\Services\GoogleAuth` | Las dos claves por instalación, con memo estático y su purga en `TestCase` |
+| `Identity\Services\GoogleOAuth` | **La raíz de confianza**: URL de autorización, canje servidor-a-servidor y comprobación del `id_token` |
+| `Identity\Contracts\SocialProfile` | Lo que el proveedor afirma, **ya comprobado**. Que exista uno significa que la afirmación es de fiar |
+| `Identity\Services\SocialLogin` | Las tres puertas de §5. Hermano de `PasswordLogin`: autentica, sella y registra; no toca la sesión |
+| `Http\Auth\GoogleAuthSession` | La custodia entre las dos peticiones: reto de un solo uso y perfil en espera, los dos con caducidad |
+| `Http\Controllers\Auth\GoogleAuthController` | Las dos rutas de navegador, el destino de vuelta y los efectos de sesión de §6.5 |
+| `Notifications\SocialIdentityLinked` | El aviso de la Q3, con dos textos: vinculación normal y **cuenta tomada** |
+
+### 18.2 · Cuatro decisiones que la spec no tomaba
+
+1. **`UNIQUE(user_id, provider)`: una cuenta, una llave por proveedor.** No es seguridad —para
+   vincular hay que demostrar el buzón— sino significado: dos llaves sobre la misma cuenta dejan
+   «desvincular» (T3) sin sujeto y el rastro sin dueño. El segundo intento se rechaza **con su
+   motivo** (`google-provider-conflict`), nunca en silencio.
+2. **`prompt=select_account`.** Sin él, un dispositivo compartido entra con la última cuenta de
+   Google que quedó abierta **sin preguntar** — que es el modo de fallo que `SidebarEntry::clear()`
+   existe para limitar. Que la persona vea con qué cuenta entra es parte del diseño.
+3. **`access_type=online`**: no pedimos `refresh_token` porque no llamamos a ninguna API de Google.
+   El `access_token` del canje se ignora: guardarlo sería custodiar una credencial que no hace falta.
+4. **El aviso por correo entra en la T1 y no en la T2**, aunque §16 lo listara allí: nace con el
+   código que vincula. Un vínculo que se crea sin avisar, aunque sea un día, es el defecto que el
+   contrapeso 2 existe para no tener.
+
+### 18.3 · Y una que CORRIGE al código que ya existía: `RGPD-06`
+
+**El vínculo CAE con `revokeAllAccess()` y SOBREVIVE a `revokeOtherAccess()`** — el criterio exacto
+del carné, que §11 ya había escrito y la primera versión de la T1 no implementó (dejaba el vínculo
+fuera de la revocación «porque no es una credencial»).
+
+⚠️⚠️ **Lo que lo decide no es si es una credencial, sino para qué sirve `revokeAllAccess()`**: es la
+palanca de «me han entrado». Un vínculo plantado por quien te tomó la cuenta sería una puerta trasera
+que **el restablecimiento de contraseña no cerraría**. Un cambio voluntario de contraseña no lo toca,
+por la misma razón que no toca el carné: no es una defensa, es mantenimiento.
+
+⚠️ **Eso obliga a un ORDEN dentro de la toma de una cuenta sin verificar** (P12): expulsar **antes**
+de escribir el vínculo. Al revés —que es como estaba— la expulsión se lleva por delante la llave
+recién dada, y **nada falla**: la persona entra y su cuenta queda sin vincular. Hay caso para el
+orden, y su mutación muerde.
+
+▶ **Consecuencia conocida y aceptada**: tras un reset, la siguiente entrada con Google **vuelve a
+vincular sola** (la cuenta está verificada) y manda su aviso. Es ruido, no un bloqueo.
+
+### 18.4 · Lo que enseñó la mutación (21 mutaciones, 20 muerden)
+
+1. ⚠️⚠️ **El caso del `state` reutilizado no probaba nada.** Cerraba la sesión entre los dos retornos,
+   así que el reto desaparecía por el `logout` y no por consumirse: quitar el `forget()` lo dejaba
+   verde. Los dos retornos van ahora seguidos, sobre la misma sesión.
+2. ⚠️⚠️ **Las dos caducidades se medían con `time()`, que es invisible para `travel()` y para la
+   auditoría del reloj de la suite.** No es que el caso fallara: es que **no se podía escribir**, y
+   por eso no existía. Pasan a `now()` y entran sus dos casos. *Una guarda de caducidad que no se
+   puede hacer caducar en un test no está probada.*
+3. ▶ **`session()->regenerate()` no muerde y se conserva.** `SessionGuard::login()` ya llama a
+   `migrate(true)`, así que la propiedad está garantizada dos veces y el caso no distingue cuál la
+   sostiene. Queda dicho en el propio test para que nadie lo lea como una guarda ciega — y la llamada
+   se queda porque es lo que hace el único login que ya existía.
+4. ⚠️ **El arnés restaura con `git checkout` y se llevó cambios sin commitear.** La regla de `#181`
+   —commitea antes de mutar— vale también para lo que se escribe **después** de empezar a mutar.
+
+### 18.5 · Dos trampas que el repo ya conocía y volvieron a morder
+
+- **Pint convierte un `{@see}` en `use`** (`#320`): un modelo acabó importando un servicio por una
+  cita en su docblock. La salida es reescribir la cita **en prosa y quitar el import**, no solo lo
+  primero.
+- **El export del art. 20 enumera claves a mano y no hay censo que obligue**, así que un dato nuevo
+  se queda fuera **en silencio**. Lo que lo caza es el CONTRATO (`additionalProperties: false` con
+  todo en `required`): por eso `ExportedIdentity` y su clave entran en el mismo commit, y el caso
+  valida la respuesta contra él —sin `assertValidResponse` sería un test de texto—.
+
+### 18.6 · Lo que la T1 deja abierto a propósito
+
+- **La pantalla de §7 no existe**, así que un visitante sin cuenta sale a `/registro` con un aviso.
+  Es el único punto del controlador que la T2 cambia (`pendingRegistration()`).
+- **`identities.unlinked` no está catalogada**: su emisor es la T3.
+- **Nadie enseña el botón todavía** (T2), y sin claves las rutas son 404 — o sea que esto no es
+  alcanzable por un visitante hasta que las dos cosas ocurran.
+- ⚠️ **Un titular ya identificado que pase por `/auth/google` cambia de cuenta si su Google resuelve
+  a otra**: es la conducta normal de «entrar con Google», no la de «vincular la mía», que llega en la
+  T3 con su intención explícita (`linked_via = account`).

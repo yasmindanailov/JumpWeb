@@ -1,6 +1,37 @@
 # Estado del proyecto — foto viva
 
-⬜ **GOOGLE AUTH · SPEC DISEÑADA Y REVISADA, CERO CÓDIGO** (2026-09-02,
+🟦 **GOOGLE AUTH · LA T1 ESTÁ EN EL ÁRBOL — el mecanismo y la raíz de confianza** (2026-09-02,
+`DECISIONES #342`, `docs/specs/auth-con-google.md` §18). Encargo del owner: *«0 fricción para el
+cliente a la hora de registrarse»*. ▶ **Sin las dos claves configuradas, `/auth/google` y su retorno
+responden 404 y no hay botón**: ninguna instalación cambia de conducta hasta que alguien las escriba,
+así que esto se puede desplegar sin estrenar nada.
+▶ ❗❗❗ **LO QUE HAY QUE SABER SI TOCAS ESTO**: lo que hace creíble lo que Google afirma **no es el
+token, es el CANAL** — canje servidor-a-servidor autenticado con nuestro secreto, y **ninguna rama
+lee un `id_token` de la petición** (hay caso que manda uno fabricado en la URL de vuelta y se entra
+como dice el CANJE). El día que se acepte uno del cliente (One Tap, app nativa), **ese camino
+necesita además verificar la FIRMA**: es la mitad que nadie debe añadir sola.
+▶ ⚠️⚠️ **Corrige al código que ya existía**: el vínculo **CAE en `revokeAllAccess()`** y sobrevive a
+`revokeOtherAccess()` — el criterio del carné (`RGPD-06`). No porque sea una credencial, sino porque
+aquélla es la palanca de «me han entrado» y un vínculo plantado por quien te tomó la cuenta
+sobreviviría al reset. **Y eso obliga a un ORDEN**: en la toma de una cuenta sin verificar se EXPULSA
+antes de escribir el vínculo, o la expulsión se lleva la llave recién dada **sin que falle nada**.
+▶ ⚠️ **Dos hallazgos de la MUTACIÓN** (21, muerden 20): el caso del `state` reutilizado **no probaba
+nada** (cerraba la sesión entre los dos retornos, así que el reto moría por el `logout`), y las dos
+caducidades se medían con `time()`, **invisible para `travel()` y para la auditoría del reloj** — o
+sea que su caso no se podía escribir, y por eso no existía. *Una guarda de caducidad que no se puede
+hacer caducar en un test no está probada.*
+▶ ⚠️ **La spec se contradecía sobre el EQUIPO** y lo resolvió el owner: **sí pueden vincular** (Q5);
+§16 y el peligro P9 decían lo contrario y eran texto anterior a esa respuesta — quedan marcados como
+caducados en la spec.
+▶ **QUEDA**: la **T2** (la pantalla que completa el alta, **en el cajón** por `[DECIDIDO owner]` Q8 —
+mide el presupuesto del bundle ANTES de escribir), la **T3** (las CUATRO acciones que hoy exigen
+contraseña, desvincular, y el interruptor de marketing con su registro de retirada) y **tu OJO**.
+▶ ❗ **Y hace falta el cliente de OAuth de DESARROLLO**: el que me pasaste es el de **PRODUCCIÓN**
+(sus URIs son `playjump.es` y `www.playjump.es`, sin localhost), así que **no sirve para probar en
+esta máquina** y su secreto no debe vivir aquí. Está fuera del repo, en
+`~/secretos-jumpweb/google-oauth-PRODUCCION.json`, y `client_secret_*.json` ya está gitignorado.
+
+📜 **GOOGLE AUTH · LA ENTRADA DEL DISEÑO** (superada por la de arriba: la T1 ya está en el árbol) (2026-09-02,
 `docs/specs/auth-con-google.md`). Encargo del owner: *«0 fricción para el cliente a la hora de
 registrarse»*. **La T1 está desbloqueada**: nueve de once preguntas cerradas.
 ▶ ❗❗❗ **LA DECISIÓN QUE MANDA (§4) ES DEL OWNER Y VA CONTRA MI RECOMENDACIÓN INICIAL**: yo diseñé
@@ -411,10 +442,11 @@ aquí lo que no se podaría son datos de menores de terceros.
 > ⚠️ **RE-MEDIDA tras rebasar encima los DOS arreglos del reloj de la T3** (con `npm run build` +
 > `build:ssr` delante, porque `#340` toca Vue): **sale el MISMO número**, que es lo que había que
 > comprobar — los dos arreglan FIXTURES y no añaden casos. *Coincidir no se supone: se mide.*
-> Suite **3912 en verde** (25.084 aserciones, 1 skipped a propósito), medida el 2026-09-02
-> sobre el árbol CONJUNTO: la columna del menú (`#341`, **+8**) sobre el refresco al volver a la
-> pestaña (`#340`) y el vocabulario del descargo (`#339`), encima del arreglo del 500 de la puerta
-> (`#338`) y de la **T3** del justificante (`#337`) con sus arreglos del reloj.
+> Suite **3949 en verde** (25.248 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> sobre el árbol CONJUNTO: la **T1 de Google auth** (`#342`, **+37**) sobre la columna del menú
+> (`#341`, +8), el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo (`#339`),
+> encima del arreglo del 500 de la puerta (`#338`) y de la **T3** del justificante (`#337`) con sus
+> arreglos del reloj.
 > ⚠️ `#340` **no suma tests PHP**: los suyos son 12 de `node --test`
 > (891 → **903**), y el presupuesto del cajón quedó en verde **sin subir el techo**.
 > ⚠️ El neto de `#338` es **+1** (dos guardas y fuera `TmpProbeTest`) y el de `#339` **+3**.

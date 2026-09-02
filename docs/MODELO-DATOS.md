@@ -423,6 +423,22 @@ ampliada; `anonymize()` la revoca con motivo `anonymized`; `revokeOtherAccess()`
 propósito). Escanearla NO autentica: es una búsqueda desde la sesión del empleado. La tabla está en
 `AccessRevocationTest::CREDENTIAL_TABLES` (solo `User.php` puede nombrarla).
 
+### `user_identities` (UserIdentity) — entrar y registrarse con Google
+La identidad EXTERNA de una cuenta (`specs/auth-con-google.md` §6.2; `DECISIONES #342`): `user_id` FK
+**CASCADE** · `provider` (32; hoy solo `google`) · `provider_id` (191, el `sub` de OpenID Connect) ·
+`email_at_link` (255, nullable: **copia probatoria** de con qué dirección se vinculó, nunca la forma
+de buscar) · `linked_via` (`signup` · `login` · `account`) · `linked_at` (**sin `updated_at`**: la
+fila no se edita; desvincular es borrarla). **DOS únicos**: `(provider, provider_id)` —un `sub`
+apunta como mucho a una cuenta— y `(user_id, provider)` —una cuenta tiene como mucho una llave por
+proveedor, para que «desvincular» tenga sujeto—.
+⚠️ **No es una credencial** (con la fila no se entra a ninguna parte: entrar exige que Google lo
+afirme en una petición servidor-a-servidor) **y aun así cae en `User::revokeAllAccess()`**, igual que
+el carné y por la misma razón: es la palanca de «me han entrado», y un vínculo plantado por quien te
+tomó la cuenta sobreviviría al reset. `revokeOtherAccess()` NO la toca.
+⚠️⚠️ **En `anonymize()` se BORRA, no se redacta**: una fila redactada dejaría el `sub` ocupado en su
+único y esa persona **no podría volver a registrarse con su Google nunca más**. Y el `cascadeOnDelete`
+de la FK no cubre ese caso: la supresión no borra la fila de `users`.
+
 ### `customer_visits` (CustomerVisit) — Fase 6 · subsistema A (la visita acreditada)
 El HECHO OBSERVABLE que JumpPoints no tenía (`identidad-qr-puerta.md` §8.3; `lealtad-jumppoints.md`
 §8.1): `user_id` FK **CASCADE** · `visited_on` (date) · `registered_by` FK users nullOnDelete ·
