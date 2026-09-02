@@ -1,7 +1,7 @@
 # [SPEC] La HORA EXTRA — un complemento que OCUPA
 
-> Estado: ⬜ **BORRADOR — REVISADO DE FORMA ADVERSARIAL (35 hallazgos → 3 defectos + 2 bloqueos), y
-> pendiente del ✅ del owner (§7).**
+> Estado: 🟦 **APROBADA — revisada de forma adversarial (35 hallazgos → 3 defectos + 2 bloqueos) y
+> con las TRES decisiones del owner cerradas (§7, 2026-09-02). Lista para construirse.**
 > ❗ **EMPIEZA POR §4.10**, que dice qué cambió la revisión, y por **§4.9**, que es un bloqueo de
 > configuración que ninguna lente buscaba: **hoy el interruptor no se puede encender.**
 > Carril: producto/reservas. Autor: agente, 2026-09-02.
@@ -340,24 +340,57 @@ y que ninguna superficie del cliente diría la hora (es determinista y se puede 
 6. **Las superficies**: hoja de sala y puerta dicen cuántos se quedan y hasta cuándo.
 
 
-## 7. Revisión y decisión
+## 7. Revisión y decisión — ✅ **LAS TRES, CERRADAS** (`[DECIDIDO owner, 2026-09-02]`)
 
-**`[PENDIENTE: owner]` D1 — el ✅ a esta spec.** Sin él no se escribe código (`CONVENCIONES §5`).
+### D1 · Se construye, y el ORDEN es parte de la decisión ✅
 
-**`[PENDIENTE: owner]` D2 — ¿solo entradas, o también packs y excursiones?**
-⚠️⚠️ **La premisa con la que se escribió esta pregunta era FALSA y la revisión la corrigió**:
-`PackAvailability::occupancyMaps()` **sí filtra** por `type = pack`, así que una hora extra (tipo
-`addon`) **no puede comerse el cupo de grupos ni el de invitados** de la franja siguiente. *Se estaba
-pidiendo al owner que decidiera sobre un riesgo que no existe.*
-▶ **El riesgo real es el contrario**: consumiría **asientos de entrada** en la zona del pack (la regla
-ya decidida en `#148`/`#151`) y **NO** contaría en `max_guests_per_slot`, que es el tope que de verdad
-gobierna esa sala. La pregunta, bien planteada: *¿debe una hora extra de un pack ocupar el cupo de
-invitados de la franja siguiente, o solo asientos?*
+`[DECIDIDO owner]`: adelante, **empezando por unificar la derivación de ocupantes provisionales**.
 
-**`[PENDIENTE: owner]` D3 — ¿qué ve el operador?** La hoja de sala y la puerta tienen que decir
-«**1 de 4 se queda hasta las 13:00**». Falta decidir la forma; sin ella, la feature es correcta en la
-base de datos e ilegible en el mostrador.
+▶ Una sola función compone los ocupantes —incluyendo las hijas que ocupan **y los hermanos de la
+misma línea**— y la usan las DOS derivaciones: `OrderCreator::otherOccupants()` (el cobro) y
+`AvailabilityReader::occupantsOf()` (la oferta). *Tres de los nueve bordes de §4.6 son el mismo
+defecto visto desde sitios distintos: unificar primero convierte tres arreglos en uno y hace que la
+feature nazca sobre una base que ya no miente.*
 
-▶ **Resuelto y sin coste**: el precio por persona (§4.2, sale de la cantidad), «solo para ciertos
-productos con límites» (pivote de siempre) y que dos entradas del mismo pedido tengan su hora extra
-independiente (los complementos cuelgan de cada línea).
+⚠️⚠️ **Condición innegociable, y es doctrina de la casa**: el escenario de `purchase:verify-oversell`
+(§6·1) **se escribe ANTES que la feature y se ve FALLAR**. Un verde solo vale si el instrumento se ha
+visto en rojo.
+
+### D2 · Solo ENTRADAS ✅ — y la razón es mejor que «los packs son más arriesgados»
+
+`[DECIDIDO owner]`: entradas primero. Y su aclaración sobre los packs —*«el complemento de hora extra
+es para todos los invitados»*— **cambia el argumento y refuerza la decisión**:
+
+- ⚠️⚠️ **No simplifica: agranda el hueco.** `PackAvailability::occupancyMaps()` filtra por
+  `type = pack`, así que un complemento **nunca** cuenta en `max_guests_per_slot`, el tope que
+  gobierna la sala. Con una persona son 1 invitado invisible; **con toda la fiesta, veinte.** Mismo
+  defecto, veinte veces más caro.
+- ❗ **Y sobre todo: si en un pack se quedan TODOS, eso ya no es un complemento que ocupa — es que la
+  fiesta DURA MÁS.** O sea el mecanismo de la duración (la opción D de §3, que existe hoy y ya
+  re-tarifica y re-comprueba aforo), no éste.
+
+▶ **Entradas y packs quieren mecanismos distintos**, y por eso los packs no entran aquí:
+
+| | qué es físicamente | mecanismo natural |
+|---|---|---|
+| **Entrada** | una parte del grupo se queda | el complemento que OCUPA (esta spec) |
+| **Pack** | la fiesta entera dura más | duración: cambio de producto, o un pack más largo |
+
+### D3 · Se ve como un complemento NORMAL ✅
+
+`[DECIDIDO owner]`: *«quiero que se vea como un complemento normal»*. Nada de una línea propia con la
+hora de salida.
+
+▶ **Y sale barato, medido**: la hoja de sala ya imprime la **ventana horaria** (`slotWindow()`) y la
+**duración** junto a la cantidad, y los complementos como `{cantidad} × {nombre}`. El operador lee
+`12:00–14:00 · 4 · 2 h` y `1 × Hora extra`: **tiene todos los datos y le queda una resta.**
+
+⚠️ **Su único coste, dicho para que nadie lo descubra en el mostrador**: el campo «duración» seguirá
+diciendo **2 h** aunque una persona esté tres. No es falso para la línea —los cuatro compraron 2 h—
+pero es incompleto. Si algún día estorba, el arreglo es una línea, no un rediseño.
+⚠️ La puerta hereda la misma decisión: `GateProfile` ya transporta `addons` y se pinta como cualquier
+otro.
+
+▶ **Resuelto y sin coste** (no vuelvas a preguntarlo): el precio por persona sale de que la cantidad
+SON entradas (§4.2), «solo para ciertos productos con límites» es el pivote de siempre, y dos entradas
+del mismo pedido tienen su hora extra independiente porque los complementos cuelgan de cada línea.

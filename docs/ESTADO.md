@@ -25,8 +25,15 @@ revisión que solo entra por donde se vende no ve si el dato se puede introducir
 ▶ **Y el que más dinero cuesta sobrevende SIN carrera**: los ocupantes provisionales son DOS
 derivaciones y **ninguna cuenta a los hermanos de la misma línea** — dos complementos que ocupan sobre
 la misma línea venden dos veces la última plaza **con el lock puesto**.
-▶ **Tres decisiones tuyas en §7**: el ✅, si vale también para packs (⚠️ la premisa de esa pregunta era
-FALSA y está corregida) y **qué ve el operador**.
+▶ ✅ **LAS TRES DECISIONES, CERRADAS** (`[DECIDIDO owner, 2026-09-02]`), y la spec pasa a 🟦 APROBADA:
+**D1** se construye, **empezando por unificar la derivación de ocupantes** (tres de los nueve bordes
+son el mismo defecto visto desde sitios distintos), y **el escenario del verificador se escribe ANTES
+y se ve fallar**. **D2** solo entradas — y su aclaración *«en un pack la hora extra es para todos los
+invitados»* **no simplifica: agranda el hueco** (con toda la fiesta son **veinte** invitados invisibles
+para `max_guests_per_slot`, no uno) y sobre todo revela que **en un pack eso ya no es un complemento
+que ocupa: es que la fiesta DURA MÁS**, o sea otro mecanismo. **D3** se ve como un complemento normal,
+y sale barato: la hoja ya imprime ventana horaria y duración, así que al operador le queda una resta.
+⚠️ Su único coste, anotado: el campo «duración» dirá 2 h aunque una persona esté tres.
 
 🟦 **EXCURSIONES DE COLEGIO · EL PRODUCTO, ENSAYADO Y VERIFICADO EN STAGING — FALTA TU MANO EN
 PRODUCCIÓN** (2026-09-02, `DECISIONES #409`). `[DECIDIDO owner]`: **señal 100,00 € fijos** (hasta hoy
