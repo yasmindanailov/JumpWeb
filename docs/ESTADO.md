@@ -2,19 +2,15 @@
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-02, noche).
 >
-> **1. LA HORA EXTRA — 🚧 EN CURSO EN ESTE ORDENADOR desde el 2026-09-03** (carril producto/reservas;
->    si eres el otro agente —landing—, no hay choque de ficheros: esto vive entero en Booking/panel.
->    Antes de la obra se hizo una SEGUNDA revisión pre-construcción: **§4.11 de la spec + `#410`**
->    — 4 huecos nuevos (el peor: el tope es por SUMA de hermanos), 3 reglas escritas y el
->    `[DECIDIDO owner]` de que el precio NO varía por día.** `docs/specs/hora-extra.md` 🟦, con las
->    tres decisiones del owner cerradas en su §7. **El orden es parte de la decisión**: primero
->    unificar la derivación de ocupantes provisionales —una función que incluya hijas y hermanos,
->    usada por `OrderCreator::otherOccupants()` **y** `AvailabilityReader::occupantsOf()`—, porque
->    tres de los nueve bordes de §4.6 son el mismo defecto visto desde sitios distintos. Y el
->    escenario de `purchase:verify-oversell` **se escribe ANTES y se ve fallar**.
->    ⚠️⚠️ **Empieza por §4.9: hoy el interruptor NO SE PUEDE ENCENDER** —
->    `CreateCatalog::normalizeByType()` hace `unset(duration_min)` para todo complemento y
->    `CatalogForm` esconde el campo—, así que la primera tanda desbloquea la configuración.
+> **1. LA HORA EXTRA — ✅ CÓDIGO COMPLETO, LAS CUATRO TANDAS EN EL ÁRBOL (2026-09-03, `#410`/`#411`).**
+>    Queda el **OJO del owner** y que el producto se DÉ DE ALTA (es DATO: catálogo → complemento →
+>    «Ocupa la franja siguiente» + duración + precio + engancharlo a la entrada larga). **EMPIEZA por
+>    `docs/specs/hora-extra.md` §8** (lo construido y sus trampas). Evidencia: suite 4.105 · 24/24
+>    mutaciones · `purchase:verify-oversell` visto FALLAR sin la validación (5 asientos en franja de
+>    1, SIN carrera) y sus SIETE escenarios + Redsys en verde sobre InnoDB · sonda de navegador 4/4
+>    (la oferta del cajón recalcula al cambiar de hora, `/root/e2e/extra-hour-probe.js`).
+>    Si eres el otro agente (landing): esto vivió entero en Booking/panel/API — sin choque.
+>    Sigue 🟦 hasta el ✅ del owner; la entrada larga de más abajo cuenta la historia completa.
 >
 > **2. EL PRODUCTO DE EXCURSIONES EN PRODUCCIÓN, que lo corre el OWNER.** Guion idempotente con
 >    dry-run en `~/excursiones-produccion.php`, **fuera del repo** (`#325`). Este agente **no tiene
@@ -51,7 +47,31 @@
 > que el hook preserva y dice por su nombre** antes de reintentar.
 
 
-🟦 **LA HORA EXTRA · SPEC APROBADA Y LISTA PARA CONSTRUIRSE** (2026-09-02, `docs/specs/hora-extra.md`; las tres decisiones cerradas en §7).
+🟦 **LA HORA EXTRA · CÓDIGO COMPLETO — LAS CUATRO TANDAS EN EL ÁRBOL** (2026-09-03, `#410`/`#411`;
+commits `d36c59a6` · `08c124be` · `f2c23a6b` · `18c74c7e` + docs. **La ejecución está en
+`docs/specs/hora-extra.md` §8, que es por donde se empieza**).
+▶ **Lo que queda**: el **OJO del owner** (el guion §6·4 corrió en headless: 4/4) y **dar de alta el
+PRODUCTO, que es DATO** — catálogo → complemento nuevo → «Ocupa la franja siguiente» + «Cuánto
+ocupa» (60) + precio + engancharlo a la entrada larga desde su pestaña de complementos. Sin ese
+alta, la feature está dormida por construcción (interruptor `false` por defecto, 0 filas tocadas).
+▶ **Antes de la obra, una SEGUNDA revisión** (`#410`, §4.11 de la spec): 4 huecos nuevos —el peor,
+que el tope del padre es por **SUMA de hermanos** y `effectiveQuantity()` no puede verla—, 3 reglas
+escritas (la franja de la hija es determinista por el `UNIQUE` de `slots`) y el `[DECIDIDO owner]`
+de que **el precio de la hora extra NO varía por día** (los complementos se tarifican a HOY en los
+tres caminos; límite aceptado y escrito, no descubierto en producción).
+▶ **La condición de D1, cumplida y medida**: el escenario `extra-hour` del verificador se vio
+FALLAR con la validación de la hija desactivada —**5 asientos escritos en una franja de 1, SIN
+carrera**— y pasar con ella (1 de 8 sobre InnoDB). 24/24 mutaciones muerden (12 núcleo · 8 editor ·
+4 oferta, con control previo y por código de salida); los SIETE escenarios + Redsys en verde.
+▶ **Dos verdades incómodas que la obra destapó, resueltas hacia lo ALMACENADO**: la oferta y el
+cobro contaban DISTINTO los packs como ocupantes de plazas (un test cementaba la premisa falsa y se
+reescribió, el precedente del `SlotOfferTest` de `#324`) — hoy la derivación es UNA
+(`CartOccupants`) y la usan los dos lados.
+▶ ⚠️ Deuda deliberada, dicha: la cota de la oferta va SIN la cesta y la UI de complementos del alta
+manual no decora (§8.3 de la spec, con el porqué y la palanca).
+
+*(Lo de abajo es la spec APROBADA previa a la obra — historia de cómo se llegó.)*
+🟦 (2026-09-02, `docs/specs/hora-extra.md`; las tres decisiones cerradas en §7).
 `[owner]`: *«no tener 4 productos tipo entrada 1 hora, entrada 2 horas… la idea es tener dos y si
 alguien quiere más horas, puede añadirlas»*, atada solo a ciertos productos y con límites.
 ▶ ❗❗❗ **LA CORRECCIÓN DEL OWNER TIRÓ EL PRIMER DISEÑO Y DEJÓ UNO MUCHO MÁS PEQUEÑO**: yo leí «hora

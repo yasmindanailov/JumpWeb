@@ -3723,9 +3723,15 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **Los tres comandos de excursiones en PRODUCCIÓN** — los corre el owner: este agente **no tiene
       acceso** (medido: solo hay llave de staging). ⚠️ `required` **depende del despliegue**; el guion
       lo detecta, avisa y se aplica al repetirlo
-- [ ] **CONSTRUIR la hora extra**, con el orden que el owner fijó: **primero unificar la derivación de
-      ocupantes provisionales** (tres de los nueve bordes son el mismo defecto), y **el escenario de
-      `purchase:verify-oversell` escrito ANTES y visto fallar**
+- [x] **La hora extra CONSTRUIDA — las CUATRO tandas en el árbol** (2026-09-03, `#410`/`#411`;
+      ejecución en `specs/hora-extra.md` §8): la derivación de ocupantes UNIFICADA
+      (`CartOccupants`, el orden que el owner fijó), el escenario `extra-hour` del verificador
+      **visto FALLAR** sin la validación (5 asientos en franja de 1, SIN carrera) y en verde con
+      ella, el editor arrastrando a la familia, y la oferta del embudo recalculando (sonda de
+      navegador 4/4). Suite 4.105 · 24/24 mutaciones · 7/7 + Redsys sobre InnoDB
+- [ ] **La hora extra: el OJO del owner + dar de alta el PRODUCTO (es DATO)** — catálogo →
+      complemento → «Ocupa la franja siguiente» + duración + precio + enganche a la entrada larga;
+      dormida por construcción hasta ese alta
 
 ### GOOGLE AUTH 🟦 — las tres tandas de código MÁS el pulido del ojo del owner (2026-09-02; T5→T8·d en el árbol, **los siete puntos del owner HECHOS**; queda la T9)
 ### GOOGLE AUTH ✅ — CERRADO Y EN PRODUCCIÓN (2026-09-02; T1→T8·d, los siete puntos del owner hechos, **One Tap descartado** por `#354`, y `playjump.es` sirviéndolo)

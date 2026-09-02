@@ -22364,3 +22364,48 @@ ADMISIÓN; la hora extra es la misma persona quedándose) — no-op hoy, fijado 
 **Verificación**: cada hallazgo con su medición en la entrada de spec (§4.11); los datos re-medidos
 sobre BD real (7 complementos `duration_min` nulo · 2/10 entradas ilimitadas · 0 hijas con franja o
 plazas · 28/28 pivotes sin `max_qty` · `UNIQUE` de `slots` en migración e índices vivos).
+
+## #411 · 2026-09-03 · La hora extra, construida: el rojo se vio antes que el verde, y la premisa falsa la tenía un TEST
+
+**Las cuatro tandas de `specs/hora-extra.md` en el árbol en una jornada** (§8 de la spec es la
+ejecución): el interruptor y sus guardas en las dos direcciones, la derivación ÚNICA de ocupantes
+(`CartOccupants`), la regla determinista de la franja de la hija (`AddonOccupancy`), el tope por
+SUMA en `resolve()`, la validación de la hija bajo el lock de `OrderCreator`, el editor del panel
+arrastrando a la familia entera (bordes 1, 4 y 5 + el nacimiento sin literales), y la oferta del
+embudo recalculando con la hora — con cero cambios de cliente, porque el cajón ya mandaba la hora y
+ya respetaba `can_increase`. Evidencia: suite 4.105 · 24/24 mutaciones · 7/7 + Redsys sobre InnoDB ·
+sonda de navegador 4/4.
+
+**1 · La condición de D1 se cumplió al pie de la letra y valió lo que costó.** El escenario
+`extra-hour` del verificador, con la validación de la hija desactivada, escribió **5 asientos en una
+franja de 1 — sin necesitar la carrera**; con ella, 1 ganador exacto de 8. *Un verde solo vale si el
+instrumento se ha visto en rojo*, y este rojo era además la demostración empírica del defecto que la
+feature existía para no tener.
+
+**2 · La premisa falsa estaba en un TEST, y la tenía medida el propio repo.** «Una fiesta no resta
+plazas de entrada ni al revés» — lo aseveraba `AvailabilityReaderTest` sobre la OFERTA, mientras
+`occupancyMap` contaba las líneas de pack desde siempre (lo midió `evaluateMixed` en `#148`) y el
+cobro provisional también. La unificación de D1 destapó la divergencia y se resolvió hacia lo
+ALMACENADO, reescribiendo el caso con su premisa invertida y su control (el precedente del
+`SlotOfferTest` de `#324`). *Cuando dos derivaciones gemelas discrepan, la verdad no es ninguna de
+las dos: es lo que hay en la BD.*
+
+**3 · Mi aritmética falló antes que el código.** Cuatro aserciones nuevas esperaban que un padre de
+60 minutos ocupara también la franja siguiente; los valores «fallidos» del sistema eran los
+correctos. *Cuando un test recién escrito falla, el primer sospechoso es el test* — la variante
+barata del «instrumento primero».
+
+**4 · Tres guardas del repo tiraron del hilo completo sin que nadie se lo pidiera**: el mapa de
+errores de la API exigió los dos códigos nuevos, la paridad del cajón exigió su mapa en `pay.js`, y
+el contrato de árbol se negó a comparar un bundle SSR rancio diciéndolo por su nombre. El coste de
+cada una fue minutos; la alternativa era un cliente pintando avisos genéricos en la pantalla de
+pagar.
+
+**5 · Deuda deliberada, dicha tres veces en vez de callada**: la cota de la oferta se calcula SIN la
+cesta (optimista en un borde que el checkout cierra con mensaje) y la UI de complementos del alta
+manual del panel no decora — el operador recibe el rechazo claro al guardar. Las dos con su porqué y
+su palanca en §8.3.
+
+**Verificación**: cada tanda commiteada ANTES de su arnés de mutación (la regla de `#181`), los dos
+verificadores tras tocar `CRITICAL_RE`, y la sonda de navegador con siembra idempotente que se
+limpia sola.

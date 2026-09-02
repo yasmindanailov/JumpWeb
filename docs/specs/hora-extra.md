@@ -1,14 +1,14 @@
 # [SPEC] La HORA EXTRA — un complemento que OCUPA
 
-> Estado: 🟦 **APROBADA — revisada de forma adversarial (35 hallazgos → 3 defectos + 2 bloqueos),
-> con las TRES decisiones del owner cerradas (§7, 2026-09-02) y una SEGUNDA revisión pre-obra
-> (2026-09-03) que verificó cada afirmación contra el código y añadió §4.11: 4 huecos nuevos, 3
-> reglas que faltaba escribir y un `[DECIDIDO owner]` de precio. EN CONSTRUCCIÓN.**
-> ❗ **EMPIEZA POR §4.11** (lo que la segunda revisión añadió — el peor hueco es el TOPE por SUMA
-> de hermanos), después **§4.10** (qué cambió la primera revisión) y **§4.9** (el bloqueo de
-> configuración: hoy el interruptor no se puede encender).
-> Carril: producto/reservas. Autor: agente, 2026-09-02 · segunda revisión 2026-09-03.
-> ⚠️ **Toca AFORO.** El ✅ está dado (D1, §7); el orden de obra es parte de la decisión.
+> Estado: 🟦 **CÓDIGO COMPLETO — LAS CUATRO TANDAS EN EL ÁRBOL (2026-09-03, `#410`/`#411`; §8 es
+> la ejecución). Suite 4.105 en verde · 24/24 mutaciones muerden · los SIETE escenarios de
+> `purchase:verify-oversell` + `redsys:verify-concurrency` en verde sobre InnoDB · §6·4 verificado
+> en NAVEGADOR (4/4). Sigue 🟦 por el OJO del owner y porque el producto «Hora extra» es DATO que
+> él da de alta desde el panel (catálogo → complemento → «Ocupa la franja siguiente»).**
+> ❗ **EMPIEZA POR §8** (qué hay construido y sus trampas), después **§4.11** (la segunda revisión:
+> el peor hueco era el TOPE por SUMA), **§4.10** y **§4.9**.
+> Carril: producto/reservas. Autor: agente, 2026-09-02 · segunda revisión y ejecución 2026-09-03.
+> ⚠️ **Toca AFORO**: `CartOccupants` · `AddonOccupancy` · `AddonResolver` están en el `CRITICAL_RE`.
 
 ## 1. Contexto y problema
 
@@ -494,3 +494,91 @@ otro.
 ▶ **Resuelto y sin coste** (no vuelvas a preguntarlo): el precio por persona sale de que la cantidad
 SON entradas (§4.2), «solo para ciertos productos con límites» es el pivote de siempre, y dos entradas
 del mismo pedido tienen su hora extra independiente porque los complementos cuelgan de cada línea.
+
+## 8. Lo EJECUTADO (2026-09-03, `#410`/`#411` — commits `d36c59a6` · `08c124be` · `f2c23a6b` · `18c74c7e` + docs)
+
+**Las cuatro tandas están EN EL ÁRBOL**, por el orden de D1, con la suite en verde en cada hito
+(4.091 → 4.100 → 4.105 casos), **24/24 mutaciones mordiendo** (12 del núcleo + 8 del editor + 4 de
+la oferta, cada tanda con CONTROL previo en verde y veredicto por código de salida) y **los SIETE
+escenarios de `purchase:verify-oversell` + `redsys:verify-concurrency` en verde sobre InnoDB real**.
+
+### 8.1 · El núcleo (commit `08c124be`)
+
+- **Migración** `2026_09_03_100000` (`occupies_after_parent`, bool default false) + guard en
+  `TicketType::booted()` (solo addon · duración > 0 · `seats_per_unit >= 1`, **en las dos
+  direcciones** — la de encender el interruptor con un enganche prohibido incluida, la lección de
+  `#324`) + guard del PIVOTE en `ProductAddon::booted()` (ni `per_guest`, ni obligatorio, ni pack;
+  corre en `attach`/`updateExistingPivot` porque la relación usa `->using()`, y eso está fijado con
+  caso).
+- **§4.9 destapiado**: sección propia del catálogo para el complemento ocupante (interruptor +
+  «cuánto ocupa»); `normalizeByType()` conserva la duración del ocupante; **`EditCatalog` gana el
+  simétrico** (`normalizeAddonOccupancyOnEdit()`, regla 12) — y con ventas hechas ni el interruptor
+  se apaga ni la duración se mueve (tampoco la del PADRE: el borde 9 quedó cerrado con el candado de
+  la zona, form + defensa server con rastro).
+- **`AddonOccupancy`** (regla del borde 8 + cinturón §4.1 + plazas) y **`CartOccupants`** (la
+  derivación ÚNICA de D1, con etiquetas `(línea, complemento)` y exclusión exacta) — los dos en el
+  `CRITICAL_RE` y en `CriticalPathGateTest`, junto a `AddonResolver` (lleva el tope por SUMA y las
+  plazas de las filas ocupantes).
+- **`OrderCreator`**: valida la hija BAJO el lock (la franja sale de las filas BLOQUEADAS, no de
+  una consulta), con los HERMANOS dentro del recuento. **`AvailabilityReader`** delega en
+  `CartOccupants` → la oferta y el cobro cuentan IGUAL.
+- **El verificador `extra-hour` se vio FALLAR** con la validación desactivada — **5 asientos
+  escritos en una franja de 1, SIN carrera** — y pasar con ella (1 ganador de 8). La condición de D1,
+  cumplida y medida.
+- `TicketIssuer` gana `whereNull('parent_item_id')` (§4.11, fijado con caso) y el contrato de la API
+  los dos códigos nuevos (`line_addon_occupancy` · `line_addon_over_quantity`), con mensajes en
+  es/en/fr y el mapa del cajón (`pay.js`).
+
+### 8.2 · El editor del panel (commit `f2c23a6b`)
+
+`changeSlot()` y `edit()` mueven a la FAMILIA entera o no mueven nada (`landOccupyingFamily()`, bajo
+el mismo lock, con los hermanos como provisionales); la huella excluida es la familiar
+(`excludeItemId` admite varios ids — el cambio de firma del borde 1); bajar el padre por debajo de
+la suma se rechaza (`addon_stay_exceeds_quantity`); subir la hija recalcula `seats`; el `create` de
+«Gestionar → Complementos» nace con franja y plazas; y `ItemRescheduleOffer` esconde las horas donde
+la hija no cabe (con su CONTROL de que sin hijas no esconde nada). Claves de bloqueo nuevas en
+es/zh_CN.
+
+### 8.3 · La oferta del embudo (commit `18c74c7e`)
+
+`POST /catalog/products/{id}/addons` usa la hora de la línea (el cajón YA la mandaba y **re-resuelve
+al cambiar de hora** — `selectTime → refreshAddons`): un ocupante que no aterriza **no se ofrece** y
+la `selection` lo suelta; el que aterriza sale capado (`max_quantity`/`can_increase`) por sus plazas
+y por la SUMA. **Cero cambios de cliente.** ⚠️ **A sabiendas, y dicho en tres sitios** (reader, yaml,
+aquí): la cota se calcula **sin la cesta** (el endpoint no la recibe) — un pelín optimista cuando la
+propia cesta ocupa la franja siguiente, y ese borde lo cierra el checkout con su mensaje. ⚠️ **El
+alta manual del panel tampoco decora su UI de complementos** (usa `viewModel` directo): el operador
+que elija una hora extra imposible recibe el rechazo claro del dominio al guardar — con el cliente
+delante, suficiente; si estorba, la palanca es hacer pasar esa pantalla por `AddonOffer`.
+
+### 8.4 · Verificación empírica (el §6, caso a caso)
+
+§6·1 verificador visto fallar/pasar · §6·2 control del neutro (aforo IDÉNTICO) · §6·3 último tramo
+· §6·5 editor (9 casos) · §6·6 hermanos sin carrera · §6·7 la SUMA (6 de 4, con el borde exacto en
+verde) · §6·8 cinturón (la fila por `Query\Builder::update()` ni se ofrece ni se vende ni ocupa
+hasta el cierre, con control de que sana SÍ se ofrece) · §6·9 paridad oferta/cobro · §6·10 alta Y
+edición del panel conservan el dato · §6·11 tickets solo de admisiones · **§6·4 en NAVEGADOR real**
+(sonda `/root/e2e/extra-hour-probe.js`, 4/4: la fila aparece a las 10:00, desaparece a las 20:00 —
+la última del día real—, reaparece al volver, y el stepper suma; siembra idempotente y limpiada,
+capturas en `/root/e2e/extra-hour-capturas/`). §6·12: por D3, las superficies ya dicen lo que hay
+que leer (la hoja imprime ventana+duración y `N × Hora extra`) — nada que construir, nada construido.
+
+### 8.5 · Trampas pagadas en la ejecución (para el siguiente)
+
+- **Mi propia aritmética de test estaba mal, no el código**: esperé que un padre de 60 min a las
+  10:00 restara plazas a las 11:00 — un tramo de 60 marca SOLO su franja. Los valores «fallidos»
+  (49/48/50) eran los correctos; se corrigieron las aserciones, no el producto.
+- **`AvailabilityReaderTest::test_a_pack_in_the_cart_does_not_eat_the_seats_of_an_entry` cambió de
+  premisa y se reescribió** (el precedente de `#324`): afirmaba una independencia de pools que lo
+  ALMACENADO desmiente — `occupancyMap` cuenta las líneas de pack (lo tenía medido el propio
+  `evaluateMixed` del verificador, `#148`) y el cobro provisional también las contaba; solo la
+  oferta no. La unificación resolvió hacia lo almacenado, con control de la premisa nueva.
+- **Editar `pay.js` puso 35 casos del contrato de árbol en rojo**: el bundle SSR estaba RANCIO y la
+  guarda lo dice por su nombre — `npm run build:ssr` y en verde. No era un defecto: era el
+  instrumento protegiéndose de comparar código viejo.
+- **La sonda de navegador esperó un `.cal` que ya no existe**: desde `#237`/`#239` la fecha es una
+  TIRA (`daystrip`) con el calendario plegado — las sondas anteriores a esa tanda envejecieron y
+  quien copie una de plantilla hereda el selector muerto.
+- **El escenario nuevo del verificador necesita limpiar el complemento APARTE**: su zona es nula a
+  propósito y el barrido por zona del `cleanup()` no lo ve — quedaría en la BD de desarrollo tras
+  cada ejecución.
