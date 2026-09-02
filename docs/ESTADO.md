@@ -80,9 +80,14 @@ para el pintado de verdad, un navegador. Comprobado en staging: con claves, `url
 `/auth/google` redirige a Google con `redirect_uri=https://jumpweb.sites.aelium.app/auth/google/callback`.
 *Un indicador que vale lo mismo en los dos estados no es un indicador.*
 ▶ ✅ **DESPLEGADO A STAGING Y VERIFICADO** (2026-09-02, `https://jumpweb.sites.aelium.app`): las dos
-migraciones aplicadas —`user_identities` y `consents.revoked_at`—, waiver en modo **`interno` con la
-v1 publicada** (o sea que la pantalla SÍ pedirá el descargo), y **sin claves la ruta da 404 y el botón
-no se pinta**. **A producción NO se ha subido nada.**
+migraciones aplicadas —`user_identities` y `consents.revoked_at`—, waiver en modo **`interno`** (o
+sea que la pantalla SÍ pedirá el descargo), y **sin claves la ruta da 404 y el botón no se pinta**.
+**A producción NO se ha subido nada.**
+⚠️ **Y una precisión sobre el descargo, porque la primera versión de esta línea decía «con la v1
+publicada» y eso no existe**: no hay tabla de versiones ni paso de publicación —la versión canónica es
+una **constante de clase** (`WaiverSignature::CANONICAL_VERSION`) y el único interruptor es el ajuste
+`waiver.mode`—. Medido el 2026-09-02 en los dos entornos: `mode=interno · enabled=true`. *No busques
+un paso de publicación: no lo hay.*
 ▶ ❗❗ **Y una corrección de dato que te ahorra un error en Google Cloud**: **`jumpweb.staging.aelium.app`
 NO EXISTE** —medido: no resuelve en DNS—. El host de staging es **`jumpweb.sites.aelium.app`**, que es
 el que llevan `deploy.sh` y el `~/.ssh/config`. Registrar el otro en la consola no habría servido de
