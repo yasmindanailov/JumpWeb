@@ -2329,8 +2329,18 @@ ssh jumpweb-staging "cd ~/public_html && php artisan app:set-setting auth.google
 | Versión publicada | **v1 (es)** | **v1 (es)** |
 | Esquema de esta feature | `user_identities` ✓ · `consents.revoked_at` ✓ | ✓ ✓ (desplegado y migrado el 2026-09-02) |
 | Claves de Google | sin poner | sin poner |
-| **Sin claves** | `/auth/google` → **404** y **cero** marcado de botón | idéntico, verificado por HTTP |
+| **Sin claves** | `/auth/google` → **404** y `urls.google` ausente del `data-boot` | idéntico, verificado por HTTP |
 | A dónde va el CORREO | **Mailpit**, `http://localhost:8028` | ⚠️ **`MAIL_MAILER=log`**: no sale ningún correo — se lee en `storage/logs/laravel.log` |
+
+⚠️⚠️ **Cómo se comprueba si el botón está o no, sin abrir un navegador** — y hay que decirlo porque
+la forma obvia MIENTE: el cajón **no se renderiza en el servidor** (la página solo trae el punto de
+montaje `sidecart-spa`), así que sobre el HTML `grep "Continuar con Google"` da **1 siempre** —es el
+rótulo dentro del payload, que viaja para todos— y `grep auth__google` da **0 siempre**. Lo que
+distingue los dos estados es **`urls.google` en el `data-boot`**:
+
+```bash
+curl -s https://jumpweb.sites.aelium.app/login | grep -o '&quot;google&quot;:&quot;[^&]*'
+```
 
 ⚠️ **Eso último decide dónde probar el caso P12**: su comprobación clave es *«llega el aviso y dice
 que la contraseña anterior ha dejado de servir»*. En local se lee en Mailpit; en staging hay que

@@ -57,10 +57,16 @@ COMPLETA, `scope` los tres mínimos, `prompt=select_account`, `access_type=onlin
 de 64 hex—; `/registro/google` abre el cajón en `google-signup`; los textos de esa pantalla salen
 **solo en su puerta** (0 en la home, 1 en la puerta); y **sin claves el botón desaparece y la ruta da
 404**.
-▶ ⚠️ **Y una trampa de medición que te ahorro**: `grep "Continuar con Google"` sobre el HTML **sigue
-dando 1 sin claves** — es el RÓTULO dentro del payload del cajón, que viaja siempre. Lo que dice si
-el botón se pinta es su marcado (`auth__google`), que sin claves sale **0**. Es la misma trampa que
-`#339` anotó con la palabra «waiver».
+▶ ⚠️⚠️ **UNA TRAMPA DE MEDICIÓN, Y LA PRIMERA VERSIÓN DE ESTA LÍNEA CAYÓ EN ELLA** (corregido el
+2026-09-02 midiéndolo en staging): sobre el HTML servido, **`grep "Continuar con Google"` da 1
+siempre** —es el RÓTULO dentro del payload, que viaja para todos— y **`grep auth__google` da 0
+siempre**, con claves y sin ellas. *Ninguno de los dos dice si el botón se pinta*, porque **el cajón
+NO se renderiza en el servidor**: la página solo trae el punto de montaje (`sidecart-spa`) y Vue lo
+dibuja en el navegador (medido: `auth__form` → 0 en una página con el cajón).
+▶ **Lo que SÍ lo dice**: que `urls.google` viaje en el `data-boot` —su presencia ES el interruptor— y,
+para el pintado de verdad, un navegador. Comprobado en staging: con claves, `urls.google` aparece y
+`/auth/google` redirige a Google con `redirect_uri=https://jumpweb.sites.aelium.app/auth/google/callback`.
+*Un indicador que vale lo mismo en los dos estados no es un indicador.*
 ▶ ✅ **DESPLEGADO A STAGING Y VERIFICADO** (2026-09-02, `https://jumpweb.sites.aelium.app`): las dos
 migraciones aplicadas —`user_identities` y `consents.revoked_at`—, waiver en modo **`interno` con la
 v1 publicada** (o sea que la pantalla SÍ pedirá el descargo), y **sin claves la ruta da 404 y el botón
@@ -69,6 +75,15 @@ no se pinta**. **A producción NO se ha subido nada.**
 NO EXISTE** —medido: no resuelve en DNS—. El host de staging es **`jumpweb.sites.aelium.app`**, que es
 el que llevan `deploy.sh` y el `~/.ssh/config`. Registrar el otro en la consola no habría servido de
 nada, y el síntoma habría sido `redirect_uri_mismatch` sin nada que depurar de nuestro lado.
+▶ ✅ **LAS CLAVES DE DESARROLLO YA ESTÁN PUESTAS** (2026-09-02) **en staging Y en local**, del cliente
+`playjumppark_dev` que el owner creó — **el de producción quedó limpio de URIs de prueba**, que era el
+punto: su secreto no sale de producción. Verificado en los dos: `urls.google` viaja en el montaje y
+`/auth/google` redirige a Google con el `redirect_uri` de cada host.
+⚠️ **La pantalla de consentimiento está en modo *Testing***, así que solo entran las cuentas listadas
+como usuarios de prueba en la consola. El síntoma, si falta la tuya, es «acceso bloqueado» **después**
+del botón.
+⚠️ **En producción NO hay claves puestas** y no debe haberlas hasta que esté la política de privacidad
+(Q7): sin ellas la ruta da 404 y el botón no se pinta, así que producción sigue igual que antes.
 ▶ **QUEDA SOLO TU OJO** y **la política de privacidad**: es requisito de salida de tu Q7 — no se
 anuncia el botón a clientes reales sin que el documento describa el tratamiento (art. 13/14). El
 texto vive en la BD, así que en `playjump.es` es un paso manual desde el panel.
