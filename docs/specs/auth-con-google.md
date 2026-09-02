@@ -1,10 +1,11 @@
 # [SPEC] Entrar y registrarse con Google
 
 > Estado: 🟦 **LAS TRES TANDAS DE CÓDIGO ESTÁN EN EL ÁRBOL** (2026-09-02, `DECISIONES #342`, `#343`
-> y `#344`) · Abierta: 2026-09-02 · Autor: agente
-> ▶ **Lo ejecutado, con lo que enseñó, está en §18 (T1), §19 (T2) y §20 (T3) — y va ANTES que las
-> tandas de §16.** Queda el **OJO del owner** (guion en `VERIFICACION-E2E-CAJON.md` §5.google) y, como
-> requisito de salida de la Q7, **la política de privacidad**.
+> y `#344`) **y la T4 —el OJO del owner— YA SE HA HECHO: lo que sacó está en §21** · Abierta:
+> 2026-09-02 · Autor: agente
+> ▶ **Lo ejecutado, con lo que enseñó, está en §18 (T1), §19 (T2), §20 (T3) y §21 (el pulido que
+> salió del ojo del owner) — y va ANTES que las tandas de §16.** Queda, como requisito de salida de
+> la Q7, **la política de privacidad**.
 > Las decisiones `[DECIDIDO owner]` se tomaron en la conversación de diseño del 2026-09-02 y se citan
 > con la frase del owner cuando la hay.
 >
@@ -907,3 +908,106 @@ quitarle al titular su forma de entrar.
   reales sin que el documento describa el tratamiento y el origen de los datos (art. 13/14). El texto
   vive en la BD de cada instalación, así que en `playjump.es` es un paso manual.
 - La desviación de la letra de la Q6 (§19.6), pendiente de tu palabra.
+
+---
+
+## 21 · El PULIDO que salió del ojo del owner (2026-09-02)
+
+**La T4 de §16 era «el OJO del owner». Se ha hecho, y esto es lo que sacó.** Son siete puntos, y la
+mitad no son de Google: son huecos del producto que solo se ven cuando alguien recorre el camino
+entero con ojos de cliente.
+
+⚠️⚠️ **Dos de ellos REABREN decisiones escritas, y eso es deliberado del owner, no un descuido de
+quien lo ejecuta.** Están marcados abajo con su decisión anterior delante, para que nadie los lea
+como una incoherencia y los «arregle» de vuelta.
+
+| # | Qué pidió | Dónde estaba | Tanda |
+|---|---|---|---|
+| 1 | El botón **oficial** de Google, con su marca | Ficha ABIERTA en `DEUDA.md` desde `#343` | **T5** ✅ `#345` |
+| 2 | El copy de «Completa tu registro» no habla de reservar | Defecto nuestro, sin ficha | **T5** ✅ `#345` |
+| 3 | El **interruptor de marketing** es un checkbox, y al pulsarlo aparece un scroll horizontal | Defecto de `#344`, sin ficha | T6 |
+| 4 | **Vincular** Google desde la cuenta (desvincular ya está) | `UserIdentity::VIA_ACCOUNT` declarado y sin emisor; §18.6 lo avisa | T7 |
+| 5 | El **panel de admin** dice si el cliente entra con Google | No estaba en la spec | T7 |
+| 6 | Las **condiciones** y el **teléfono** se piden en el checkout, no en el alta | ⚠️ **§4 lo DESCARTÓ y §13 lo dejó como ficha** «decisión independiente» | T8 |
+| 7 | La **privacidad** no lleva casilla en ninguna de las dos altas | Hecho en la de Google (§7.1); **pendiente en el alta con contraseña** | T8 |
+
+### 21.1 · T5 — el botón oficial y el copy (`DECISIONES #345`)
+
+`[DECIDIDO owner, 2026-09-02]`, elegido sobre tres variantes renderizadas: **la CLARA, en píldora**.
+
+▶ **Lo que cambia**: el botón dejaba de ser suyo. Era `.btn--zone` —el color de marca de la
+INSTALACIÓN— con «Google» como única pista, que es admisible pero no es su botón; la ficha de
+`DEUDA.md` (`#343`) ya decía que la salida era tratar su logotipo como **asset por proveedor**.
+Ahora lleva su «G» a cuatro colores, su blanco, su borde y sus medidas.
+
+**Los valores son suyos y están tomados de su guía** (`developers.google.com/identity/branding-guidelines`,
+leída el 2026-09-02): fondo `#FFFFFF` · borde `#747775` de 1 px por dentro · texto `#1F1F1F` a 14/20
+en peso Medium · 12 px antes del logotipo, 10 después · forma rectangular **o píldora**, las dos
+admitidas · el rótulo, una de sus tres cadenas («Continuar con Google»), localizada.
+
+⚠️⚠️ **Van en px ABSOLUTOS y no en `--sp-*`/`--fs-*`, y no es descuido.** Esas escalas son TEMA: un
+cliente que quiera el cajón más aireado cambia `--sp-unit` y se mueve todo a la vez. El botón de un
+tercero no puede moverse con eso, porque entonces retocar el tema **deja de cumplir su guía sin que
+nada falle**. Lo único nuestro es el suelo táctil (`--tap-min`, 44 px, por encima de sus 40): crecer
+está permitido, encoger no.
+
+⚠️ **`--r-pill` sobre un botón contradice la prosa de la escala de forma** («ONLY decorative passive
+labels»). Es la excepción de esta pieza y está dicha en el CSS: el canto lo manda Google. Se usa el
+TOKEN igualmente para no dejar un literal que `ShapeScaleTest` tuviera que perdonar.
+
+#### El logotipo es un FICHERO, y las tres razones se refuerzan
+
+1. Es la salida que `DEUDA.md` ya había escrito: **asset por proveedor**, como `client-logo.svg`.
+2. **En línea no cabe.** Como `<svg>` dentro del cajón sería un *dibujo inventado* para
+   `SidebarIconParityTest`, cuya `DRAWER_OWN` está **vacía a propósito y solo encoge**; y como
+   componente `<x-icons.*>` rompería `IconSetAnatomyTest`, que exige `currentColor` y rejilla 24.
+   Las dos guardas tienen razón: por eso la pieza vive **fuera** de las dos.
+3. Dentro de un `<img>` un SVG es **inerte** (`#254`) y **no hay forma de recolorearlo desde el CSS**
+   — la única defensa real contra que alguien lo «adapte al tema».
+
+⚠️ **Y va con `:src` enlazado a una constante, no con `src` literal**: con `src="/images/…"` Vite lo
+trata como un import a resolver desde la raíz y **el build SSR falla** (`UNRESOLVED_IMPORT`, medido).
+Un fichero de `public/` no pasa por el empaquetador.
+
+#### Lo verificado, con control
+
+- **El dibujo es el suyo, no una reconstrucción.** Se descargó de
+  `gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg` —el asset que Google distribuye con
+  FirebaseUI— y se conserva su nota de copyright. Al normalizarlo (quitar los dos `<g transform>` de
+  Sketch, que **se anulan exactamente**, y el rect del artboard) se rasterizaron original y resultado
+  a 472×480 con `rsvg-convert`: **0 píxeles distintos de 226.560**, mismo sha1 del PNG. **CONTROL**:
+  borrando un `<path>` salen **15.855**.
+  ⚠️⚠️ **El rect del artboard había que quitarlo, no era limpieza cosmética**: no declara `fill` y
+  solo era invisible porque heredaba el `fill="none"` del grupo que lo envolvía. Aplanando los grupos
+  habría pasado a pintar un **cuadrado negro** encima del logotipo — la trampa del troquel de
+  `hueco-ilustracion.md` §8, entrando por otra puerta.
+- **Sonda de navegador** sobre `/login` y `/registro` (Chromium, 420×900, `document.fonts.ready`
+  comprobado con familias > 0 para no caer en la captura sin letras de `#335`): fondo, texto, borde,
+  radio, 14/20/500, logotipo a 18×18 con `object-fit: contain` y hueco de 10 px — **todo coincide con
+  su guía**, y el alto sale 44. **CONTROL de imagen rota**: una ruta inventada da `naturalWidth = 0`,
+  o sea que el instrumento sabe decir que no cargó — que es lo que hace creíble el `118` del bueno.
+- **La tercera superficie (paso 5 del embudo) comparte componente y regla**, y que ningún contenedor
+  la pise se comprobó estáticamente: no hay ninguna regla de ancestro que alcance a `.auth__google`,
+  y la única `… .btn` del embudo es `.purchase__maint-ctas`, que es otra pantalla.
+- **9/9 mutaciones muerden** (`scripts/mutar-boton-google.sh`, con puerta de VERDE antes de mutar y
+  veredicto por código de salida): redibujar, recolorear, `currentColor`, un `on…=` dentro, volver a
+  `btn--zone`, `alt="Google"`, quitar la marca, «armonizar» el fondo con `--action` y el hover.
+
+#### La guarda, y por qué hacía falta una nueva
+
+`GoogleButtonBrandingTest`. ⚠️⚠️ **Existe porque NINGUNA otra guarda veía este botón, y está
+medido**: el manifiesto congelado de `SidebarDomContractTest` tiene **cero** ocurrencias de «google»
+—sus fixtures no pasan `urls.google` y el componente es un `v-if="href"`—, así que todo el marcado y
+toda la piel estaban fuera de cobertura.
+
+⚠️⚠️ **El modo de fallo que persigue no es que se rompa: es que alguien lo ARREGLE.** El impulso
+natural de cualquiera que mire esta web —y de cualquier guarda de coherencia visual— es devolver este
+botón al idioma de la casa. Eso no rompe nada, no lo enseña ninguna captura y **incumple las
+directrices de Google**.
+
+#### El copy
+
+⚠️ La pantalla decía *«Solo nos falta esto para poder reservar a tu nombre»* y **aquí no se reserva
+nada**: crea la cuenta, que es lo que dice su propio botón de envío. Corregido en es/en/fr a *«Google
+ya nos ha confirmado quién eres. Solo falta esto para crear tu cuenta»*, que **sigue siendo verdad
+después de la T8**, cuando esa pantalla se quede solo con el descargo.

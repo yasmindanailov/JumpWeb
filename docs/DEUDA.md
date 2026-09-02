@@ -479,13 +479,13 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
 
 ## ▶ Baja/Media · lo que ENTRAR CON GOOGLE dejó anotado (2026-09-02, `DECISIONES #342` y `#343`)
 
-- **El botón no lleva el logotipo de Google.** Su «G» es tetracolor y el set de iconos de este
-  producto exige `currentColor` y rejilla 24 (`IconSetAnatomyTest`): un glifo con colores tecleados
-  dentro rompe la anatomía que hace que la web se vea de un solo idioma. La marca queda en el rótulo
-  («Continuar con Google»), que es admisible, pero **no es el botón oficial**.
-  ▶ **La salida, si el owner lo quiere**: tratar su logo como **ASSET por proveedor** —un fichero,
-  como `client-logo.svg`— y no como icono del set. Entonces habría que decidir además si se usa la
-  variante de color o la monocroma, que es lo que Google permite.
+- ✅ ~~**El botón no lleva el logotipo de Google.**~~ — **CERRADA con la T5** (`#345`,
+  `specs/auth-con-google.md` §21.1). `[DECIDIDO owner, 2026-09-02]`: el botón oficial, variante
+  CLARA y píldora. Se hizo por donde esta ficha decía —**asset por proveedor**,
+  `public/images/providers/google.svg`, no icono del set— y con la marca **descargada de Google**, no
+  redibujada: 0 px distintos de 226.560 contra su asset, con control.
+  ▶ **Lo que deja anotado para el día que entre Apple**: la carpeta `providers/` y la exención de las
+  dos guardas de iconos ya existen, así que el segundo proveedor es un fichero más y una regla más.
 - ❗ **Una desviación de la letra de la Q6, pendiente del owner** (`specs/auth-con-google.md` §19.6):
   el owner dijo que sin descargo que pedir **no hay pantalla intermedia**, y la pantalla se pinta
   igual porque además recoge el **teléfono** y las **condiciones**. Hoy no muerde —`playjump.es` está

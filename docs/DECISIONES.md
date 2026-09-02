@@ -20820,6 +20820,71 @@ verde · Pint ✓ · docs-check ✓ · `npm run test:js` 921 ✓ · build y buil
 botón a clientes reales sin que el documento describa el tratamiento (art. 13/14).
 ---
 
+## #345 · 2026-09-02 · El botón de Google pasa a ser el de Google, y el copy dejaba de decir la verdad
+
+**Primera tanda (T5) del pulido que salió del OJO del owner** (la T4 de `specs/auth-con-google.md`
+§16; lo que sacó, entero, en **§21**). Dos cosas pequeñas y una de ellas llevaba ficha abierta.
+
+### 1 · El botón oficial — `[DECIDIDO owner]`, elegido sobre tres variantes renderizadas
+
+**La variante CLARA, en píldora.** Hasta hoy el botón era `.btn--zone`: el color de marca de la
+**instalación**, con la palabra «Google» como única pista. Es admisible y así lo dijo `#343`, pero
+**no es su botón**, y la ficha de `DEUDA.md` ya dejaba escrita la salida: tratar su logotipo como
+**asset por proveedor**.
+
+Los valores salen de su guía (`developers.google.com/identity/branding-guidelines`, leída hoy):
+`#FFFFFF` de fondo · `#747775` de borde a 1 px por dentro · `#1F1F1F` de texto a 14/20 en Medium ·
+12 px antes del logotipo y 10 después · rectángulo **o píldora**, las dos admitidas · una de sus tres
+cadenas de rótulo, localizada.
+
+⚠️⚠️ **Los números van en px ABSOLUTOS y no en `--sp-*`/`--fs-*`.** Esas escalas son TEMA —un cliente
+que quiera el cajón más aireado cambia `--sp-unit` y se mueve todo—, y el botón de un tercero no
+puede moverse con eso: retocar el tema **dejaría de cumplir su guía sin que nada falle**. Lo único
+nuestro es el suelo táctil de 44 px (`--tap-min`, `#264`), por encima de sus 40: crecer se puede.
+
+⚠️ **`--r-pill` sobre un botón contradice la prosa de la escala de forma** («ONLY decorative passive
+labels»): es la excepción de esta pieza, dicha en el CSS. El canto lo manda Google.
+
+### 2 · El logotipo es un FICHERO, y las tres razones se refuerzan
+
+`public/images/providers/google.svg`. **En línea no cabía por dos guardas que tienen razón las dos**:
+como `<svg>` del cajón sería un *dibujo inventado* para `SidebarIconParityTest` —cuya `DRAWER_OWN`
+está vacía a propósito y **solo encoge**— y como `<x-icons.*>` rompería `IconSetAnatomyTest`, que
+exige `currentColor` y rejilla 24. Y dentro de un `<img>` un SVG es **inerte** (`#254`) y **no hay
+forma de recolorearlo desde el CSS**, que es la única defensa real contra que alguien lo «adapte».
+
+⚠️ Va con **`:src` enlazado a una constante**: con `src="/images/…"` literal, Vite lo trata como un
+import a resolver desde la raíz y **el build SSR FALLA** (`UNRESOLVED_IMPORT`, medido).
+
+⚠️⚠️ **Al normalizar su fichero había que quitar el rect del artboard, y no era limpieza.** No declara
+`fill` y solo era invisible porque heredaba el `fill="none"` del grupo: aplanando los grupos habría
+pasado a pintar un **cuadrado negro** encima del logotipo. Es la trampa del troquel de
+`hueco-ilustracion.md` §8 entrando por otra puerta.
+
+### 3 · La guarda existía que hacer, porque el botón NO LO VEÍA NADIE
+
+`GoogleButtonBrandingTest`. ⚠️⚠️ **Medido**: el manifiesto congelado de `SidebarDomContractTest`
+tiene **cero** ocurrencias de «google» —sus fixtures no pasan `urls.google` y el componente es un
+`v-if="href"`—, así que todo el marcado y toda la piel de esta pieza estaban fuera de cobertura.
+
+⚠️⚠️ **Y lo que persigue no es que se rompa: es que alguien lo ARREGLE.** Devolver este botón al
+idioma de la casa —el color de acción, `--r-btn`, el gris del tema— no rompe nada, no lo enseña
+ninguna captura y **incumple las directrices de Google**. Solo lo caza una guarda que sepa que esta
+pieza es una excepción deliberada.
+
+### 4 · El copy prometía una reserva
+
+*«Solo nos falta esto para poder reservar a tu nombre»*, en la pantalla que **crea la cuenta** — lo
+que dice su propio botón de envío. Corregido en es/en/fr, y la frase nueva **sigue siendo verdad
+después de la T8**, cuando esa pantalla se quede solo con el descargo.
+
+**Verificación**: `GoogleButtonBrandingTest` (8 casos, 35 aserciones) · **9/9 mutaciones muerden**
+(`scripts/mutar-boton-google.sh`, con puerta de VERDE antes de mutar y veredicto por código de
+salida) · **rasterizado contra el asset oficial: 0 px distintos de 226.560**, mismo sha1, con control
+en 15.855 · **sonda de navegador** en `/login` y `/registro` con los diez valores de su guía y
+**control de imagen rota** (ruta inventada → `naturalWidth 0`) · build y build:ssr ✓ · Pint ✓.
+---
+
 ## #400 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
 
 **Encontrado por el owner probando lo construido**, con la suite verde y las cuatro tandas anteriores

@@ -30,6 +30,15 @@ Leído y retirado el aviso de la banda: **numero desde `#345`** (la secuencia na
 `stores/{privacy,credentials}.js` · `Api\V1\Me{Credentials,Privacy}Controller` · `AuthRegistrationController` ·
 `Identity\Services\{SelfSignup,GoogleSignup,SocialLogin}` · `Auth\GoogleAuthController` ·
 `Filament\Resources\Users\*` · `public/css/site.css` · `lang/*/account.php` · `openapi/v1.yaml`.
+▶ ✅ **T5 EN EL ÁRBOL** (`DECISIONES #345`, spec §21.1): **el botón oficial de Google** —su «G»
+descargada de `gstatic.com`, no redibujada: **0 px distintos de 226.560** al rasterizar contra el
+original, con control en 15.855— y el **copy** de «Completa tu registro», que prometía *«poder
+reservar a tu nombre»* en una pantalla que solo crea la cuenta.
+⚠️⚠️ **La guarda nueva (`GoogleButtonBrandingTest`) existe porque este botón NO LO VEÍA NADIE**, y
+está medido: el manifiesto congelado de `SidebarDomContractTest` tiene **cero** ocurrencias de
+«google» —sus fixtures no pasan `urls.google` y el componente es un `v-if="href"`—. Y lo que persigue
+no es que se rompa: es que alguien lo **«arregle»** devolviéndolo al color de acción del cliente, que
+no rompe nada, no lo ve ninguna captura e incumple las directrices de Google. 9/9 mutaciones muerden.
 ▶ ❗❗ **PARA EL CARRIL DEL JUSTIFICANTE — DOS AVISOS**: (1) voy a tocar **`openapi/v1.yaml`** y
 **`lang/*/account.php`**, que son de los ocho ficheros compartidos: si los tocas tú, `git pull --rebase`
 antes de empujar. (2) Voy a mover la **aceptación de condiciones al checkout** y a dejar el alta con
@@ -643,7 +652,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > ⚠️ **RE-MEDIDA tras rebasar encima los DOS arreglos del reloj de la T3** (con `npm run build` +
 > `build:ssr` delante, porque `#340` toca Vue): **sale el MISMO número**, que es lo que había que
 > comprobar — los dos arreglan FIXTURES y no añaden casos. *Coincidir no se supone: se mide.*
-> Suite **4003 en verde** (25.611 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> Suite **4011 en verde** (25.650 aserciones, 1 skipped a propósito), medida el 2026-09-02
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`): las cuatro tandas del
 > justificante (`#400`→`#403`) sobre las TRES de Google auth (`#342`, `#343`, `#344`), la columna del menú
 > (`#341`, +8), el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo (`#339`),
