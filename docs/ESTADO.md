@@ -102,9 +102,44 @@ líneas y 0,00 €**. *Cuando el mensaje contradice a sus cifras, el roto es el 
 forkear · veredicto que separa duplicación, ausencia e importe) y **visto FALLAR sin el lock: 12
 líneas y 84,00 €**. Preexistente, verificado en la base `#341`: no lo causó la fusión.
 
+✅ **GOOGLE AUTH · LA T8, CERRADA ENTERA — Y EL HUECO QUE QUITAR LA CASILLA NO CERRABA** (2026-09-02,
+`DECISIONES #350`, spec §21.4.3 y §21.4.4). Con la T8·c y la T8·d, **los SIETE puntos de tu ojo (§21)
+están hechos**. Banda `#34x`: usado `#350`, el siguiente libre es **`#351`**.
+▶ ❗❗❗ **LO QUE IMPORTA DE ESTA TANDA NO ES LA CASILLA, ES LO QUE HABÍA DEBAJO.** Medido ANTES de
+tocar nada, con la v1 de «Condiciones» publicada: **una cuenta recién creada salía como si ya las
+hubiera aceptado**, así que **el checkout no se las pedía a ningún cliente nuevo** — la T8·b quedaba
+desactivada por su propia alta. La causa: el alta escribía su fila de condiciones con una FECHA por
+versión, y la regla de gracia de `#348` —la que indulta a los 19 clientes que ya aceptaron— la daba
+por buena. *La regla escrita para indultar a los viejos indultaba a todos los futuros.*
+▶ Por eso las dos altas **dejan de escribir esa fila**; ahora hay **un solo escritor** de la
+aceptación de condiciones en todo el producto, y las dos quedan alineadas con el alta de mostrador,
+que ya era así. Caso nuevo **con su control**: la cuenta nueva sí las debe y la gracia sigue viva.
+▶ **Tus tres decisiones del día**: (1) la pantalla de Google **se sigue pintando aunque no haya
+descargo, por el NOMBRE** —Google devuelve a veces «Ana G.» y ese nombre viaja a la reserva y a la
+firma—, lo que **cierra la desviación de la Q6** que llevaba abierta desde `#343`; (2) el texto de
+privacidad **deja de decir «acepto»** (sin casilla, afirmaba algo que la pantalla no recoge); (3) para
+la T9, **entra `firebase/php-jwt`**.
+▶ ❗❗ **UN DEFECTO QUE SOLO VIO LA CAPTURA, y esta tanda lo convertía en carga**: el enlace a la
+política de privacidad se pintaba **del mismo color exacto que el párrafo y sin subrayado** — texto
+plano con una zona pulsable invisible. Venía de `#343`, pero al quitar la casilla ése pasa a ser **el
+único sitio donde las dos altas te enseñan la política**. Arreglado, remedido y con guarda.
+▶ **El botón de Google ya va encima del formulario con su «o»** — dentro de los dos formularios, no
+colgado de la pantalla: *«encima del formulario» no es «encima del título»*.
+▶ ⚠️ **El techo del chunk BAJA por primera vez** (277 → 275, medido 274,47): un trinquete que solo
+sube deja de vigilar en cuanto alguien retira código.
+▶ **Verificado**: suite **4.064 · 25.919** · Pint · docs-check · **6/6 y 8/8 mutaciones** en dos
+arneses versionados · **sonda de navegador 18/18** con control y capturas de las dos pantallas.
+▶ ⚠️ **Para el otro carril**: he tocado `openapi/v1.yaml`, `lang/*/account.php`, `lang/*/validation.php`
+y `resources/views/components/layout.blade.php`. Todo empujado; `git pull --rebase` antes de vuestro
+próximo push. **No toca `WaiverSigner` ni la aceptación retenida**: la casilla del descargo se queda
+donde estaba, y es la única que sobrevive en el alta.
+
 ❗❗❗ **▶ CARRIL DE GOOGLE AUTH · SESIÓN CERRADA (2026-09-02, 12:00 → 20:10) — EL PULIDO DEL OJO DEL
-OWNER, CINCO TANDAS EN EL ÁRBOL Y TRES POR HACER.** Banda `#34x`: **usados `#345`→`#349`, el siguiente
-libre es `#350`** (`#400`+ es del justificante; `CONVENCIONES §10.6`).
+OWNER, CINCO TANDAS EN EL ÁRBOL Y TRES POR HACER.** Banda `#34x`: **usados `#345`→`#349`**
+(`#400`+ es del justificante; `CONVENCIONES §10.6`).
+⚠️ **CADUCADO en dos cifras, y la corrección va delante**: la entrada de arriba cerró la T8 con
+`#350`, así que ya no son «tres por hacer» sino **una** (la T9) más los dos requisitos de salida, y el
+**siguiente libre es `#351`**.
 
 ⚠️ **HALLAZGO SUELTO, ni mío ni de esta tanda: `DECISIONES.md` tiene un `#217` DUPLICADO.** Dos
 entradas distintas del 2026-08-28 (líneas ~11.528 y ~11.814: el ojo del owner sobre la 2c·8, y el
@@ -117,28 +152,18 @@ haga a propósito. *Encontrarlo fue gratis: `grep -oE '^## #[0-9]+' docs/DECISIO
 
 ## ▶ POR DÓNDE RETOMAR (lee esto primero)
 
-**Todo lo de abajo está empujado y verde. Lo que queda son tres cosas, en este orden:**
+**Todo lo de abajo está empujado y verde. ✅ La T8 está CERRADA ENTERA (`#350`, 2026-09-02): con la
+T8·c y la T8·d, los SIETE puntos que sacó tu ojo en §21 están hechos.** Lo que queda es una cosa:
 
-1. **T8·c — las dos altas pierden las casillas** de privacidad, condiciones y marketing (queda solo la
-   del descargo). `[DECIDIDO owner]`: **aplica a las DOS altas**, la de contraseña y la de Google.
-   ⚠️⚠️ **Va DESPUÉS de la T8·b y no antes, y el orden es la regla**: primero el checkout PIDE (ya lo
-   hace) y solo entonces el alta deja de pedir. Al revés hay una ventana en la que nadie acepta nada.
-   ▶ Toca: `steps/RegisterForm.vue` · `account/zones/GoogleSignupZone.vue` · `AuthRegistrationController`
-   · `Identity\Services\{SelfSignup,GoogleSignup}` · `Api\V1\GoogleSignupController` · **`openapi/v1.yaml`**
-   (`accept_privacy` y `accept_terms` son hoy `required`: sacarlos **cambia el contrato público**).
-   ⚠️ **La privacidad pierde la casilla pero NO el rastro** (§7.1): se siguen escribiendo
-   `privacy_accepted_at` y su fila de `Consent`. Lo que desaparece es la casilla.
-   ⚠️ **El alta con Google pierde también el TELÉFONO** (lo pide ya el checkout) y se queda con el
-   nombre y la casilla del descargo. El copy nuevo (`#345`) **ya está escrito para ese estado**.
-2. **T8·d — el botón de Google encima del formulario**, con un separador «o» (`[DECIDIDO owner]`, sobre
-   dos opciones). Hoy va DEBAJO con su motivo escrito en `LoginZone.vue`; revertirlo es deliberado.
-3. **T9 — One Tap** (`[owner]`: viable **gateando el chip tras el banner de cookies** — quien rechaza ve
+1. **T9 — One Tap** (`[owner]`: viable **gateando el chip tras el banner de cookies** — quien rechaza ve
    el botón de siempre, quien acepta ve «Continuar como …»). ⚠️⚠️ **Su pieza cara es una sola**: ahí el
    `id_token` llega **del CLIENTE** y no del canje servidor-a-servidor, así que hay que **verificar su
    firma** contra las claves de Google. `#342` avisa de que ésa es *«la mitad que nadie debe añadir
    sola»*. **Medido: no hay atajo** —One Tap no puede devolver un CÓDIGO para reutilizar el canje—.
-   ▶ **PREGUNTA PENDIENTE AL OWNER antes de escribirla**: si esa verificación se escribe a mano
-   (~100 líneas de RS256 + caché de JWKS) o entra una librería — dependencia nueva, `CONVENCIONES §9.3`.
+   ▶ ✅ **CONTESTADA** (`[DECIDIDO owner, 2026-09-02]`): **entra una librería, `firebase/php-jwt`** —
+   dependencia nueva (`CONVENCIONES §9.3`), y el motivo es que ésta es justo la pieza donde escribir a
+   mano sale caro: **un error ahí no falla, deja entrar**. Es además la que Google documenta para PHP.
+   ⚠️ Al traerla: fijar versión, medir qué superficie se usa de verdad y dejarlo dicho.
    ▶ Lo demás es rutina: CSP (tres directivas) y una **categoría de cookies propia** con su texto en el
    banner. ⚠️ **No vale meterla en `social`**, que además `#309` dejó sin consumidor.
    ⚠️ **Si One Tap entra, `prompt=select_account` deja de hacer falta**: el chip enseña el nombre antes

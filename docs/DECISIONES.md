@@ -21150,6 +21150,104 @@ se lo puede pisar desde aquí) · `buyer-due.test.js` y los dos de `pay.js` con 
 toca `OrdersController` (`CRITICAL_RE`) · cuatro variantes medidas en navegador · chunk 274 → **277** (⚠️ se puso en 276 con una medición previa al último retoque y el gate lo cazó por 30 bytes: *un techo medido antes del último cambio no describe el árbol que se empuja*).
 ---
 
+## #350 · 2026-09-02 · Las dos altas dejan de pedir, y quitar la casilla NO bastaba: la fila `terms` indultaba a toda cuenta nueva
+
+**T8·c y T8·d del pulido del OJO del owner** (`specs/auth-con-google.md` §21.4.3 y §21.4.4). Con ellas
+la T8 queda cerrada entera y **los siete puntos que sacó el owner probando el producto están hechos**.
+
+### La decisión
+
+`[DECIDIDO owner]`: **aplica a las DOS altas**, la de contraseña y la de Google — dejar una con cuatro
+casillas y otra con una serían **dos posturas legales distintas para el mismo producto**. Y cada
+casilla se va por un motivo distinto: la **privacidad** porque el art. 13 pide informar y no que se
+acepte; las **condiciones** porque se aceptan en el momento del contrato (LCGC art. 5 · TRLGDCU
+art. 97), que es lo que la T8·b construyó; el **marketing** porque el art. 7.3 exige que retirarlo sea
+tan fácil como darlo, y una casilla del alta no da eso.
+
+### ❗❗❗ Lo que hace que esto no sea marcado: el hueco medido antes de tocar nada
+
+⚠️⚠️ **Con la v1 de `condiciones` publicada, una cuenta recién creada salía con
+`TermsAcceptance::pendingFor() === false`.** O sea que **el checkout no le pedía las condiciones a
+ningún cliente nuevo**: la T8·b quedaba desactivada por su propia alta.
+
+El mecanismo: la **regla de gracia** de `#348` da por aceptada la primera versión a quien tenga una
+aceptación anterior al versionado, y lo detecta porque `numberOf()` devuelve `null` para una etiqueta
+que no es `vN·xx`. El alta escribía su fila con `version = Consent::CURRENT_VERSION`, que es **una
+fecha**. *La regla escrita para indultar a diecinueve clientes viejos indultaba a todos los futuros.*
+
+▶ Por eso `SelfSignup` y `GoogleSignup` dejan de escribir la fila `terms` y de sellar
+`terms_accepted_at`. Con eso `Consent::TYPE_TERMS` tiene **un solo escritor** en el producto, y las
+dos altas quedan alineadas con la de mostrador, que ya lo hacía así (verificado).
+
+⚠️ **El caso lleva su CONTROL**: la cuenta nueva SÍ las debe **y** la gracia sigue viva para quien
+aceptó antes del versionado. Sin él pasaría igual habiendo roto un `[DECIDIDO owner]`.
+
+### El alta con Google se queda en el nombre y el descargo
+
+Pierde también el teléfono. `[DECIDIDO owner]`: **la pantalla se sigue pintando aunque no haya
+descargo que firmar, y ahora POR EL NOMBRE** —Google devuelve a veces «Ana G.» y ese nombre viaja a la
+reserva y a la firma—, lo que **cierra la desviación de la Q6 que §19.6 dejó abierta**. La alternativa
+costaba construir una rama de alta directa que ninguna instalación viva ejercita.
+
+### El texto de privacidad, y un defecto que solo vio la captura
+
+`[DECIDIDO owner]`: sin casilla, «He leído y acepto…» **afirma una aceptación que la pantalla no
+recoge**. Pasa a *«Al crear tu cuenta tratamos tus datos según nuestra política de privacidad»* y la
+clave se renombra a `privacy_notice` — una clave llamada `accept_privacy` con un texto que no dice
+«acepto» invita a que el siguiente le devuelva el verbo.
+
+⚠️⚠️ **Y su enlace era invisible**: `rgb(98,106,114)`, **el mismo color exacto que el párrafo**, sin
+subrayado. Venía de `#343` y **la T8·c lo convertía en carga**, porque al perder la casilla ése pasa a
+ser el único sitio donde las dos altas enseñan la política — y el argumento de §7.1 se apoya entero en
+que se vea. Arreglado con los valores que `.check span a` ya usaba y remedido.
+
+### T8·d — el botón encima, con un «o»
+
+`[DECIDIDO owner]`, sobre las dos opciones; iba debajo desde `#343` y revertirlo es deliberado.
+⚠️⚠️ **Va DENTRO de los dos componentes de formulario**: *«encima del formulario» no es «encima de la
+pantalla»*, y la cabecera vive dentro de ellos. ⚠️⚠️ **El separador vive dentro del `v-if` del botón**:
+en dos sitios, el día que alguien tocara uno, una instalación sin claves de Google se quedaría con una
+raya y un «o» separando el formulario de nada.
+
+### Las guardas, y por qué hacían falta dos nuevas
+
+⚠️⚠️ **`#345` midió que el manifiesto congelado de `SidebarDomContractTest` tiene CERO ocurrencias de
+«google»**, así que mover esta pieza de sitio **no ponía en rojo nada**. Nacen
+`GoogleSignInPlacementTest` (las dos fronteras, y que el «o» no se pinte solo) y
+`PrivacyNoticeIsVisibleTest` (aviso y no casilla; enlace distinguible del párrafo).
+
+### El techo del chunk BAJA, y es la primera vez en este contador
+
+277 → **275** (medido 274,47; −1,56 KiB contra `#349`). *Un trinquete que solo sube deja de vigilar en
+cuanto alguien retira código: un presupuesto que no se ajusta cuando el gasto baja no es un
+presupuesto, es un techo histórico.*
+
+### Trampas pagadas
+
+⚠️⚠️ **El arnés de mutación mintió y lo cazó su propia guarda de dos líneas**: la primera versión
+interpolaba los patrones dentro del `python3 -c` y el `$` de una variable PHP llegaba escapado a
+medias — el patrón no casaba, el fichero no cambiaba y el veredicto habría dicho «no muerde» sobre una
+mutación **que nunca se aplicó**. *Un «3 de 6» con tres mutaciones sin aplicar es una cifra creíble y
+falsa.* Los patrones viajan por `argv` y el arnés comprueba que el fichero CAMBIÓ.
+
+⚠️ **Un caso siguió en verde por un motivo distinto del que lo escribió**: el del orden del banner
+usaba `marketing` como campo conocido que cierra la lista; al retirarlo de las reglas seguía saliendo
+el último, pero por la regla de «lo que no conozco, al final». Se re-apuntó a un campo desconocido a
+propósito.
+
+### Contrato público
+
+`RegisterRequest` pierde `accept_privacy`, `accept_terms` y `marketing`; `GoogleSignupRequest` pierde
+`phone` y `accept_terms` y queda en `required: [name]`. Los dos son `additionalProperties: false`, así
+que mandarlos hoy es un **422 por esquema**.
+
+### Verificación
+
+Suite **4.064 · 25.919** · Pint · docs-check · `node --test` (43) · **6/6 y 8/8 mutaciones** en
+`scripts/mutar-alta-sin-casillas.sh` y `scripts/mutar-google-encima.sh` · sonda de navegador
+**18/18** con su CONTROL y capturas de las dos pantallas a 420 px.
+
+
 ## #400 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
 
 **Encontrado por el owner probando lo construido**, con la suite verde y las cuatro tandas anteriores

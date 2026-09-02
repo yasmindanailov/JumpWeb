@@ -381,6 +381,14 @@ contraseña, y a partir de aquí también una cuenta de Google.
 
 ## 7 · La pantalla de completar
 
+> ❗❗❗ **CORRECCIÓN, Y VA ANTES QUE LA TABLA (T8·c, `#350`, 2026-09-02).** Esta pantalla se quedó en
+> **DOS cosas: el nombre y el descargo.** El **teléfono** y las **condiciones** los pide el checkout
+> desde `#349`, que es el momento del contrato; el marketing nunca estuvo aquí. La tabla de abajo
+> describe la T2 tal y como se ejecutó y se conserva porque explica de dónde salió cada campo — pero
+> **lo vigente es §21.4.3**.
+> ▶ Y con ello la Q6 queda cerrada: la pantalla **se sigue pintando aunque no haya descargo**, por el
+> NOMBRE (`[DECIDIDO owner]`, §19.6).
+
 | | | |
 |---|---|---|
 | Nombre | relleno por Google, editable | Evita el «Ana G.» que a veces devuelve |
@@ -829,15 +837,19 @@ con las dos claves configuradas, y su ausencia ES el interruptor. Con caso en la
   autoservicio para las cuatro acciones que exigen contraseña (art. 12.2).
 - **El OJO del owner**: guion en `VERIFICACION-E2E-CAJON.md` §5.google. Necesita el cliente de OAuth
   de DESARROLLO — el de producción no sirve, y es correcto que no sirva.
-- ❗ **UNA DESVIACIÓN DE LA LETRA DE LA Q6, dicha para que la decidas tú.** §7 dice que en modo
-  `externo` o sin versión publicada **no hay pantalla** y se entra directo; aquí la pantalla se pinta
-  igualmente, con teléfono y condiciones. El motivo: la Q6 se contestó dando por hecho que la
-  pantalla existía **solo** para el descargo, y no es así — también recoge el **teléfono**, que tú
-  llamaste *«imprescindible para las reservas»*, y la **aceptación de condiciones**, que es
-  contractual. Entrar directo en esa instalación crearía cuentas sin ninguna de las dos, que es
-  justo la consecuencia que §7 avisa.
-  ▶ **Hoy no muerde**: `playjump.es` está en modo `interno` con versión publicada, así que la rama no
-  se ejercita en ninguna instalación viva. Si prefieres la letra de la Q6, es un `if` en el retorno.
+- ✅ **LA DESVIACIÓN DE LA LETRA DE LA Q6, RESUELTA POR EL OWNER** (`[DECIDIDO owner, 2026-09-02]`,
+  con la T8·c delante; el texto de abajo se conserva porque explica cómo llegó aquí).
+  ▶ **La razón vieja YA NO EXISTE**: la T8·c se llevó de esa pantalla el teléfono y las condiciones,
+  así que en una instalación sin descargo se quedaría con **un solo campo**. La pregunta volvía a ser
+  la de la Q6.
+  ▶ **Se sigue pintando, y ahora POR EL NOMBRE**: Google devuelve a veces «Ana G.», y ese nombre viaja
+  a la reserva y a la firma del descargo — ésta es la única ocasión de corregirlo antes de que se use.
+  La alternativa costaba construir una rama de alta directa que **ninguna instalación viva ejercita**,
+  y código nuevo sin uso real es peor red que una pantalla probada. Ver §21.4.3.
+- 📜 *Lo que decía antes, para que se entienda la decisión:* §7 dice que en modo `externo` o sin
+  versión publicada **no hay pantalla** y se entra directo; la T2 la pintaba igualmente, con teléfono
+  y condiciones. El motivo era que la Q6 se contestó dando por hecho que la pantalla existía **solo**
+  para el descargo, y no era así.
 
 ---
 
@@ -928,8 +940,12 @@ como una incoherencia y los «arregle» de vuelta.
 | 3 | El **interruptor de marketing** es un checkbox, y al pulsarlo aparece un scroll horizontal | Defecto de `#344`, sin ficha | **T6** ✅ `#346` |
 | 4 | **Vincular** Google desde la cuenta (desvincular ya está) | `UserIdentity::VIA_ACCOUNT` declarado y sin emisor; §18.6 lo avisa | **T7** ✅ `#347` |
 | 5 | El **panel de admin** dice si el cliente entra con Google | No estaba en la spec | **T7** ✅ `#347` |
-| 6 | Las **condiciones** y el **teléfono** se piden en el checkout, no en el alta | ⚠️ **§4 lo DESCARTÓ y §13 lo dejó como ficha** «decisión independiente» | T8 (a ✅ `#348`) |
-| 7 | La **privacidad** no lleva casilla en ninguna de las dos altas | Hecho en la de Google (§7.1); **pendiente en el alta con contraseña** | T8 |
+| 6 | Las **condiciones** y el **teléfono** se piden en el checkout, no en el alta | ⚠️ **§4 lo DESCARTÓ y §13 lo dejó como ficha** «decisión independiente» | **T8** ✅ `#348` · `#349` · `#350` |
+| 7 | La **privacidad** no lleva casilla en ninguna de las dos altas | Hecho en la de Google (§7.1); **pendiente en el alta con contraseña** | **T8·c** ✅ `#350` |
+
+▶ **Los siete puntos están cerrados.** Lo que queda del carril es la **T9 (One Tap)**, que no salió
+del ojo del owner sino de §13, y sus dos requisitos de salida: la **política de privacidad** (Q7) y el
+**✅ del owner en navegador**.
 
 ### 21.1 · T5 — el botón oficial y el copy (`DECISIONES #345`)
 
@@ -1338,3 +1354,174 @@ pantalla entera. El payload no se mueve.
 teléfono no se lo puede pisar desde aquí) · `buyer-due.test.js` + los dos de `pay.js` con su control ·
 **`purchase:verify-oversell` y `redsys:verify-concurrency` con 16 procesos sobre MySQL real** (toca
 `OrdersController`, que está en el `CRITICAL_RE`) · cuatro variantes medidas en navegador.
+
+#### 21.4.3 · T8·c — las dos altas dejan de pedir (`DECISIONES #350`)
+
+`[DECIDIDO owner, 2026-09-02]`: **aplica a las DOS altas**, la de contraseña y la de Google. Dejar
+una con cuatro casillas y otra con una serían **dos posturas legales distintas para el mismo
+producto**.
+
+**Cada casilla se va por un motivo distinto, y no son intercambiables**:
+
+| Casilla | Por qué se va | A dónde va |
+|---|---|---|
+| Privacidad | El art. 13 pide **informar**, no que se acepte; la base legal de una reserva es el contrato (art. 6.1.b) | A un aviso con enlace visible. **El rastro se queda**: `privacy_accepted_at` y su fila de `consents` |
+| Condiciones | Se aceptan en el **momento del contrato** (LCGC art. 5 · TRLGDCU art. 97) | Al checkout, que es lo que la T8·b construyó |
+| Marketing | El art. 7.3 exige que retirarlo sea **tan fácil como darlo**, y una casilla del alta no da eso | Al interruptor de «Mi cuenta → Privacidad» (T3) |
+
+##### ❗❗❗ El hueco que esto cierra, y por qué quitar la casilla NO bastaba
+
+⚠️⚠️ **Medido ANTES de tocar una línea, con la v1 de `condiciones` publicada: una cuenta recién
+creada salía con `TermsAcceptance::pendingFor() === false`.** O sea que **el checkout no le pedía las
+condiciones a ningún cliente nuevo** y la T8·b quedaba desactivada por su propia alta.
+
+El mecanismo: la **regla de gracia** de §21.4.1 da por aceptada la primera versión a quien tenga una
+aceptación anterior al versionado, y eso lo detecta porque `numberOf()` devuelve `null` para una
+etiqueta que no es `vN·xx`. El alta escribía su fila con `version = Consent::CURRENT_VERSION`, que es
+**una fecha** (`2026-05-23`). *La regla escrita para indultar a diecinueve clientes viejos indultaba a
+todos los futuros.*
+
+▶ Por eso la T8·c no es marcado: **`SelfSignup` y `GoogleSignup` dejan de escribir la fila `terms` y
+de sellar `terms_accepted_at`**. Con eso, `Consent::TYPE_TERMS` tiene **un solo escritor** en todo el
+producto —`TermsAcceptance::accept()`—, que es donde debía estar desde el principio.
+
+⚠️ **Y las dos altas quedan alineadas con la de mostrador**, que ya era así: `CustomerRegistrar`
+escribe privacidad y nunca condiciones (verificado). Lo que se corrigió no fue una decisión nueva:
+fue una divergencia entre puertas.
+
+⚠️ **Caso con su CONTROL** (`AuthRegistrationTest`): la cuenta nueva SÍ las debe **y** la gracia sigue
+viva para quien aceptó antes del versionado. Sin ese control, el caso pasaría igual habiendo roto el
+indulto de `#348` — que es una decisión del owner, no un efecto colateral.
+
+##### El alta con Google se queda en dos cosas
+
+**El nombre y el descargo.** Pierde también el **teléfono**, que pide el checkout: la cuenta nace sin
+él, y `CheckoutDuties` lo reclama antes de crear el primer pedido.
+
+⚠️⚠️ **Eso REENCUADRA la desviación de la Q6 que §19.6 dejó abierta**, y el owner la ha resuelto.
+Aquella pantalla se seguía pintando sin descargo que firmar **porque también recogía teléfono y
+condiciones**; hoy esas dos ya no están, así que la razón vieja ha desaparecido.
+`[DECIDIDO owner, 2026-09-02]`: **se sigue pintando, por el NOMBRE** — Google devuelve a veces «Ana
+G.» y ese nombre viaja a la reserva y a la firma del descargo, así que ésta es la única ocasión de
+corregirlo antes de que se use. ▶ Y la alternativa costaba construir una rama de alta directa que
+**ninguna instalación viva ejercita**: código nuevo sin uso real es peor red que una pantalla probada.
+
+##### El texto de privacidad deja de decir «acepto»
+
+`[DECIDIDO owner, 2026-09-02]`. Sin casilla, «He leído y acepto la política de privacidad» **afirma una
+aceptación que la pantalla no recoge** — y un texto que dice «acepto» sin control que pulsar no crea
+consentimiento: solo despista. Pasa a *«Al crear tu cuenta tratamos tus datos según nuestra política
+de privacidad»* (es/en/fr), que es lo que el art. 13 pide.
+
+⚠️ **La clave se renombra a `register.privacy_notice`**, y eso no es cosmético: una clave llamada
+`accept_privacy` con un texto que no dice «acepto» invita a que el siguiente le devuelva el verbo por
+parecer incoherente. El nombre tiene que decir qué es.
+
+##### ❗❗ Un defecto que solo vio la CAPTURA, y que la T8·c convertía en carga
+
+⚠️⚠️ **El `<a>` de ese aviso se pintaba en `rgb(98,106,114)` — el mismo color EXACTO que el párrafo —,
+sin subrayado y con peso 400.** Texto plano, con una zona pulsable invisible de 336×32. Medido en
+navegador a 420 px.
+
+▶ **Venía de `#343`** (el aviso ya se pintaba así en la pantalla de Google) y nadie lo vio porque allí
+era un aviso más. **La T8·c lo convierte en el único sitio donde las dos altas enseñan la política**, y
+el argumento de §7.1 —*el RGPD pide informar, y el enlace va visible*— se apoya entero en que se vea.
+*Un enlace que no se distingue no informa.*
+
+▶ Arreglado con los valores que `.check span a` ya usaba —no se inventa un cuarto tratamiento para un
+enlace legal que hasta ayer vivía dentro de una casilla— y **remedido**: `rgb(26,169,222)` con
+subrayado, contra el `rgb(98,106,114)` del párrafo. Guarda: **`PrivacyNoticeIsVisibleTest`**.
+
+##### El contrato público cambia
+
+- **`RegisterRequest`**: fuera `accept_privacy`, `accept_terms` y `marketing`, de `required` y de
+  `properties`. `required` queda en `[name, email, phone, password]`.
+- **`GoogleSignupRequest`**: fuera `phone` y `accept_terms`. `required` queda en `[name]`.
+
+⚠️ Los dos son `additionalProperties: false`, así que **mandarlos hoy es un 422 por ESQUEMA**, no por
+lógica — un «no» que no habla de ningún campo de la pantalla. Por eso `register.js` y `account/google.js`
+dejan de ponerlos en el cuerpo, con caso que lo fija por `in` (lo que se prohíbe es que la CLAVE exista).
+
+##### El manifiesto congelado, regenerado a propósito
+
+Dos entradas y solo dos (`git diff`: 2 líneas):
+- **el árbol del alta** — salen tres `label.check` (dos con `<a>` y la `.check--opt` del marketing),
+  entra un `p.form__hint` con el enlace;
+- **el banner de errores** — **cuatro** `<li>` en vez de seis, porque quedan cuatro campos
+  obligatorios. ⚠️ Su precondición pide «más de tres» y hoy son exactamente cuatro: si alguien quita
+  otro obligatorio, ese caso se pondrá rojo **por su precondición**, que es lo correcto — con tres
+  avisos deja de probar lo que dice probar.
+
+##### Verificación
+
+Suite **4.057 · 25.866** · `node --test` de `register.js` y `account/google.js` (43) ·
+**`scripts/mutar-alta-sin-casillas.sh`: 6/6 muerden**, incluidas las dos direcciones (devolver la fila
+`terms` a cada alta **y** romper la regla de gracia).
+
+⚠️⚠️ **Y una trampa del propio arnés, cazada por una guarda de dos líneas**: la primera versión
+interpolaba los patrones dentro del `python3 -c`, y el `$` de una variable PHP (`$now`) llegaba
+escapado a medias — el patrón no casaba, el fichero no cambiaba y **el veredicto habría dicho «no
+muerde» sobre una mutación que nunca se aplicó**. Los patrones viajan por `argv`, y el arnés comprueba
+que el fichero CAMBIÓ antes de creerse un veredicto. *Un «3 de 6» con tres mutaciones que no se
+aplicaron es una cifra creíble y falsa.*
+
+#### 21.4.4 · T8·d — el botón de Google, encima (`DECISIONES #350`)
+
+`[DECIDIDO owner, 2026-09-02]`, sobre las dos opciones: **encima del formulario, con un separador
+«o»**. Iba debajo desde `#343`, con su motivo escrito en `LoginZone.vue` («quien ya tiene contraseña la
+teclea, y quien no, lee hasta abajo»); **revertirlo es deliberado** y el comentario viejo se retiró
+para que nadie lo lea como la razón vigente.
+
+⚠️⚠️ **Va DENTRO de `LoginForm.vue` y `RegisterForm.vue`, no colgado de sus padres, y no es un detalle
+de implementación**: *«encima del formulario» no es «encima de la pantalla»*. La cabecera
+(`.auth__head`) vive dentro de esos dos componentes, así que dejarlo en el padre lo habría puesto
+encima del TÍTULO. Los tres consumidores —el paso 5 del embudo y las dos zonas de la cuenta— pasan
+ahora `:google-url` y no colocan nada.
+
+⚠️⚠️ **El separador vive dentro del `v-if` del botón**, en `GoogleButton.vue`, y ésa es la propiedad
+que importa: escribiéndolo en los dos formularios haría falta repetir la condición `href` en cada uno,
+y el día que alguien tocara una y no la otra, **una instalación sin claves de Google se quedaría con
+una raya y un «o» separando el formulario de nada** — visible solo en la instalación que no lo usa.
+
+⚠️ **Las dos rayas son pseudo-elementos** (`::before`/`::after`): dos `<span>` vacíos añadirían al
+árbol nodos que no dicen nada y que un lector de pantalla tendría que saltarse.
+
+⚠️ **`.auth__or` SÍ usa la escala del tema** (`--sp-*`, `--fs-13`, `--line`), al revés que el botón:
+lo que la guía de Google congela es su botón, no lo que le pongamos al lado. Un cliente que airee el
+cajón con `--sp-unit` mueve este separador, y hace bien.
+
+##### La guarda, y por qué hacía falta otra
+
+**`GoogleSignInPlacementTest`**. ⚠️⚠️ **`#345` midió que el manifiesto congelado de
+`SidebarDomContractTest` tiene CERO ocurrencias de «google»** —sus fixtures no pasan la URL y el
+componente es un `v-if="href"`—, así que **mover esta pieza de sitio no ponía en rojo absolutamente
+nada**. `GoogleButtonBrandingTest` cubre su marca y su piel; su COLOCACIÓN no la cubría nadie.
+
+Fija las **dos** fronteras y no una: «después de la cabecera» lo cumple también un botón al final del
+fichero, y «antes del formulario» lo cumpliría uno encima del título. La decisión es que esté **en
+medio**. Y fija que el «o» no pueda pintarse solo.
+
+⚠️ **Lo que un test de fichero NO puede ver es el orden EN PANTALLA**: un `order:` de flex o un
+`position` lo cambiarían sin tocar una línea del `<template>`. Eso lo mide
+`storage/app/sonda-google-encima.mjs` en navegador, con su CONTROL (la comparación inversa tiene que
+salir falsa) y con la comprobación de `document.fonts.size > 0` para no caer en la captura sin letras
+de `#335`.
+
+##### Presupuesto: el techo BAJA, y es la primera vez
+
+Chunk medido **274,47 KiB** contra los 276,03 de `#349`: **−1,56 KiB**. La T8·c retira tres casillas
+con su marcado, sus `v-model` en dos consumidores y tres campos del cuerpo; la T8·d suma el separador
+y el cableado en los dos formularios.
+
+⚠️⚠️ **El techo baja a 275 a propósito, en vez de dejarlo en 277.** Un trinquete que solo sube deja de
+vigilar en cuanto alguien retira código: con 277 quedarían **2,53 KiB** de margen regalado, o sea que
+las dos próximas subidas entrarían sin que nadie las decidiera. *Un presupuesto que no se ajusta
+cuando el gasto baja no es un presupuesto, es un techo histórico.*
+
+##### Verificación
+
+Suite **4.064 · 25.919** · **sonda de navegador 18/18** en `/login` y `/registro` a 420 px (cabecera →
+botón → «o» → formulario, con las tres distancias medidas y el área táctil en 44) · capturas de las
+dos pantallas · **`scripts/mutar-google-encima.sh`: 8/8 muerden** (devolverlo abajo, subirlo encima del
+título, quitarle el separador, huerfanar el «o», devolver la privacidad a casilla y las tres formas de
+apagar el enlace legal).

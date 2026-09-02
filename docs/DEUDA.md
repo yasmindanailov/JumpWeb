@@ -491,11 +491,12 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
   redibujada: 0 px distintos de 226.560 contra su asset, con control.
   ▶ **Lo que deja anotado para el día que entre Apple**: la carpeta `providers/` y la exención de las
   dos guardas de iconos ya existen, así que el segundo proveedor es un fichero más y una regla más.
-- ❗ **Una desviación de la letra de la Q6, pendiente del owner** (`specs/auth-con-google.md` §19.6):
-  el owner dijo que sin descargo que pedir **no hay pantalla intermedia**, y la pantalla se pinta
-  igual porque además recoge el **teléfono** y las **condiciones**. Hoy no muerde —`playjump.es` está
-  en modo `interno` con versión publicada—, y cerrarlo en la dirección de la Q6 es un `if` en el
-  retorno **que crearía cuentas sin teléfono**.
+- ✅ ~~**Una desviación de la letra de la Q6, pendiente del owner**~~ — **CERRADA con la T8·c**
+  (`#350`, `specs/auth-con-google.md` §21.4.3 y §19.6). La razón vieja desapareció con la tanda: esa
+  pantalla ya no recoge teléfono ni condiciones, así que sin descargo se quedaría con **un solo
+  campo** y la pregunta volvía a estar abierta. `[DECIDIDO owner, 2026-09-02]`: **se sigue pintando,
+  por el NOMBRE** —Google devuelve a veces «Ana G.» y ese nombre viaja a la reserva y a la firma—, y la
+  alternativa costaba construir una rama de alta directa que **ninguna instalación viva ejercita**.
 - ✅ ~~**`identities.unlinked` no está catalogada**~~ — entró con la T3 (`#344`), con su emisor.
 - **No se sabe si una cuenta TIENE contraseña propia**, y por eso el aviso de «créala con “he olvidado
   mi contraseña”» se pinta en las cuatro pantallas **a todo el mundo** (`#344`). Un hash aleatorio y
