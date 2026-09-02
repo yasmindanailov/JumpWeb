@@ -878,8 +878,10 @@ aquí lo que no se podaría son datos de menores de terceros.
 > número**: 4019 + 4 + 15 = **4038** y el gate mide **4039 · 25.772**. Un test y dos aserciones de
 > más, o sea que uno de los dos números declarados se tomó sobre una base que ya no era 4019. *Que la
 > suma no cuadre es justo el motivo por el que el gate mide en vez de creerse la resta.*
-> Suite **4056 en verde** (25.868 aserciones, 1 skipped a propósito), medida el 2026-09-02
-> sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`): las cuatro tandas del
+> Suite **4064 en verde** (25.919 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`). ⚠️ **+8 y +51 los pone la T8
+> de Google** (`#350`): las dos guardas nuevas del botón y del aviso de privacidad, más los casos que
+> sustituyen a los de las casillas retiradas. Antes: las cuatro tandas del
 > justificante (`#400`→`#403`) sobre las TRES de Google auth (`#342`, `#343`, `#344`), la columna del menú
 > (`#341`, +8), el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo (`#339`),
 > encima del arreglo del 500 de la puerta (`#338`) y de la **T3** del justificante (`#337`) con sus
