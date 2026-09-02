@@ -20820,7 +20820,7 @@ verde · Pint ✓ · docs-check ✓ · `npm run test:js` 921 ✓ · build y buil
 botón a clientes reales sin que el documento describa el tratamiento (art. 13/14).
 ---
 
-## #344 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
+## #400 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
 
 **Encontrado por el owner probando lo construido**, con la suite verde y las cuatro tandas anteriores
 cerradas: *«En el panel del cliente no me sale nada del enlace. Ni de los que han firmado o no.»*
@@ -20941,9 +20941,9 @@ de idea obliga a rehacer la línea). Spec: `docs/specs/waiver-por-reserva.md` §
 
 ---
 
-## #343 · 2026-09-02 · Un padre no autoriza un PEDIDO: autoriza que su hijo entre a una visita
+## #401 · 2026-09-02 · Un padre no autoriza un PEDIDO: autoriza que su hijo entre a una visita
 
-**Encontrado por el owner probando `#342`** con un pedido real (`R-LUKFD2`), y dicho por él en una
+**Encontrado por el owner probando `#400`** con un pedido real (`R-LUKFD2`), y dicho por él en una
 frase: *«y 1 justificante es por reserva no por pedido, creo que ahí tenemos el fallo»*.
 
 ### Lo medido, con el pedido delante
@@ -21029,7 +21029,7 @@ asignada** · **dos reservas en días distintos** · **más justificantes que pl
 
 ---
 
-## #344 · 2026-09-02 · Un 200 en la pestaña de red no dice que el dato haya llegado a donde se lee
+## #402 · 2026-09-02 · Un 200 en la pestaña de red no dice que el dato haya llegado a donde se lee
 
 **Dos defectos que el owner encontró MIRANDO**, con la suite verde las dos veces. Son la misma clase
 de fallo: algo que no falla y no se ve.
@@ -21048,7 +21048,7 @@ blanco, el escalón de `#161`— y **vista morder** retirando la clave.
 ### (b) El enlace NUNCA llegó a pintarse, y no era donde estaba
 
 El owner lo dijo **dos veces** —*«no me sale nada del enlace»*— y las dos se le achacó a otra cosa: la
-visita pasada (`#342`) y el sitio (`#343`). **Había una tercera causa debajo, y era la de verdad**:
+visita pasada (`#400`) y el sitio (`#401`). **Había una tercera causa debajo, y era la de verdad**:
 
 ```
 api.js  →  result(true, status, payload)      // payload = {data: {...}} ← el SOBRE ENTERO
@@ -21088,7 +21088,7 @@ Suite **3.940 / 25.267** verde en pasada limpia. Spec §13.7.
 
 ---
 
-## #345 · 2026-09-02 · Un rótulo que interpola un nombre que escribe el panel no puede tener regla de longitud
+## #403 · 2026-09-02 · Un rótulo que interpola un nombre que escribe el panel no puede tener regla de longitud
 
 Dos encargos del owner en la misma pasada, y el segundo destapó una clase de defecto, no un caso.
 
@@ -21154,3 +21154,89 @@ Chunk **265,97 → 267,23 KiB** (techo 267 → **268**, deja 0,77) y payload del
 la RESPUESTA del endpoint. **Cada tanda que añade uno hace esa deuda más cara.**
 
 Suite verde. Spec §13.8.
+
+---
+
+## #404 · 2026-09-02 · El contador compartido se parte en BANDAS, y dos ramas que suben el mismo presupuesto no se fusionan eligiendo un número
+
+**Reconciliación de los dos carriles** tras encontrar, al arrancar la sesión, que `main` local y
+`origin/main` habían divergido: **9 commits del carril de Google auth** (otro equipo del owner, ya
+empujados) contra **4 del justificante** (aquí, sin empujar — el agente anterior cerró sin push).
+
+### Se acaba el contador compartido: BANDAS por equipo
+
+`[DECIDIDO owner, 2026-09-02]`, y no es un ajuste de proceso: **este ordenador numera desde `#400`**
+y el carril de Google auth del portátil se queda con la secuencia natural (`#34x`).
+
+❗❗ **Lo que se retira es la regla que ya existía y que se probó**: `CONVENCIONES §10.6` decía «el
+número se fija al EMPUJAR, mirando `origin/main` justo antes». Sobre las **siete** colisiones que
+abren ese §10 se han sumado **seis más el 1 y el 2 de septiembre**, y **todas se produjeron al
+CERRAR** — con el otro carril empujando mientras aquí corrían la suite (1:37) y el gate. *Una
+ventana de minutos sigue siendo una ventana; un reparto por bandas no tiene ventana.*
+▶ Esta misma sesión lo demostró **dos veces en una hora**: se renumeró el bloque a `#344`→`#347`
+mirando el remoto (máximo `#343`), y mientras corrían los verificadores de concurrencia el portátil
+empujó su **`#344`**. La segunda renumeración es la que instaura la banda.
+▶ **Verificado antes de elegirla**: `docs-check` **no valida continuidad** — su check 6 (línea 137)
+solo exige que un número citado EXISTA como entrada. El hueco `#348`–`#399` no rompe el gate.
+⚠️ **El precio, dicho**: entre carriles, un número deja de indicar QUÉ SE HIZO ANTES. Lo dice la
+fecha, que ya va en cada cabecera.
+
+### La quinta colisión de numeración, y esta vez con dos síntomas
+
+Los dos carriles habían escrito `#342` y `#343` para cosas distintas. `[DECIDIDO owner]`: **renumera
+el que llega después al remoto**, que es este carril, con **mapa explícito** y **bloque contiguo**:
+
+| era | pasa a | qué es |
+|---|---|---|
+| `#342` | **`#400`** | el justificante: la ACTIVACIÓN |
+| `#343` | **`#401`** | el justificante cuelga de la RESERVA |
+| `#400` | **`#402`** | el sobre del store |
+| `#401` | **`#403`** | compartir o copiar el enlace |
+
+**76 citas reescritas** (46 en código y tests, 30 en doc). ⚠️⚠️ **Y aquí está la trampa que ya costó
+«46 citas apuntando a una decisión ajena»**: ocho ficheros los tocan los DOS carriles, y cinco citas
+del otro (`SidebarBundleBudgetTest:581`, `SidebarMountTest:323` y `:472`, `CLAUDE.md:58`,
+`ESTADO.md:4/26/535`) viven **dentro de ficheros que este carril también edita**. Un `sed` sobre
+`#343` se las habría llevado. El renumerado se hizo con **ámbito por fichero para los propios y por
+LÍNEA para los compartidos**, y con **huella del otro carril antes y después**, verificada idéntica.
+▶ ⚠️ **Un renumerado a mano y otro automático sobre la misma cabecera la mueven DOS veces**: la
+cabecera de la activación acabó en `#402`, chocando con otra. Lo cazó `uniq -d` sobre las cabeceras;
+*después de renumerar hay que buscar duplicados, no dar por bueno el recuento de sustituciones.*
+
+### Lo que la fusión desmintió, y es lo importante
+
+**Los dos carriles subieron el MISMO presupuesto midiendo cada uno su rama sola, y desde la misma
+base** (262,95 KiB): Google a **267** (+3,03) y el justificante a **268** (+4,28).
+❗❗ **Ninguno de los TRES vale para el árbol conjunto, y `max()` tampoco** — el chunk lleva las
+features de los dos carriles (a Google se le sumó su T3, `#344`, con techo 269). Medido tras
+reconstruir: **279.251 B = 272,71 KiB**, contra **272,54** que predice la suma de los costes
+(262,95 + 3,03 + 2,28 + 4,28): **0,17 KiB de desvío**, o sea que se SUMAN y apenas comparten código.
+Techo a **273**, con **0,29 KiB** — la holgura más estrecha que ha tenido: *la fusión se comió el
+margen que cada carril creía tener por separado*.
+▶ *Un techo heredado de una medición en solitario no es un techo: es una coincidencia.* La guarda
+hizo su trabajo — se puso ROJA al fusionar en vez de dejar pasar un número que ya no describía nada.
+
+⚠️⚠️ **El segundo presupuesto es peor, porque AUTO-FUSIONÓ en silencio**: `SidebarMountTest` tiene
+dos techos y cada carril tocó una línea distinta (anónimo 2.750 → **2.800**; con sesión 9.400 →
+**9.550**), así que git los unió sin conflicto **y sin que nadie volviera a medir**. Medido en el
+árbol conjunto: anónimo **2.769 B** (no se mueve: los rótulos del justificante viven en `account.*`,
+que viaja solo con sesión, y los tres derechos de la T3 en zonas con sesión) y con sesión **9.967 B**,
+por encima de los **9.900** que la rama de Google dejó puestos → **10.000**, con 33 B. La aritmética
+cierra al byte: 9.365 + 461 (Google) + 141 (justificante) = **9.967 exactos**; los rótulos de los dos
+carriles se suman porque no comparten ni una clave. *Un auto-merge limpio no dice que el número siga
+siendo cierto.*
+
+⚠️ Y la guarda del **bundle SSR rancio** mordió citando ficheros de los DOS carriles
+(`GoogleButton.vue` de uno, `assignment.js` y `TimeStep.vue` del otro): sin `build:ssr` la suite
+habría comparado código viejo y dado verde. 35 rojos que desaparecieron al reconstruir.
+
+### Lo anotado sin arreglar
+
+`docs/DECISIONES.md` tiene **dos entradas `## #217`** desde antes de esta sesión (verificado: también
+en `origin/main` y en la base `#341`). No es de este carril y no se toca aquí.
+
+**Verificación**: suite **4.003 · 25.611** (1 skipped a propósito) sobre el árbol conjunto y medida
+DESPUÉS de reconstruir los dos bundles · Pint ✓ (1.132 ficheros) · docs-check ✓ (39 modelos · 100
+migraciones) · huella de las citas del otro carril verificada idéntica antes y después en las DOS
+renumeraciones · los seis escenarios de `purchase:verify-oversell`, `redsys:verify-concurrency` y los
+dos de `waiver:verify-chain`, verdes sobre MySQL real.

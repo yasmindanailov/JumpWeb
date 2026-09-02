@@ -398,7 +398,7 @@ describe('«Mis pedidos»', () => {
 });
 
 /**
- * **Los JUSTIFICANTES de menores invitados** (`specs/waiver-por-reserva.md` §13; `#344`).
+ * **Los JUSTIFICANTES de menores invitados** (`specs/waiver-por-reserva.md` §13; `#402`).
  *
  * ❗❗ **El defecto que motiva estos casos salía con 200 y no pintaba NADA.** `api.js` devuelve el
  * CUERPO entero —`{data: {...}}`— y este store guardaba eso tal cual, así que el componente leía

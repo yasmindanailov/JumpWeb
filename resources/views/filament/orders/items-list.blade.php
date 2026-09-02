@@ -629,7 +629,7 @@
                      §12.3, T7). Gemelo del de arriba y en el mismo sitio: es lo que el owner pidió
                      —«como el botón de completar formulario post reserva»—.
 
-                     ⚠️ **El enlace es de ESTA línea desde `#343`**, así que el icono va donde tiene
+                     ⚠️ **El enlace es de ESTA línea desde `#401`**, así que el icono va donde tiene
                      que ir: en la reserva que trae menores de otras familias. Se pinta en la que
                      nació marcada; para la que no —el caso «el cliente no sabía»— está «Reenviar
                      email».

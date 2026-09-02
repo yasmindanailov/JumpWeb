@@ -35,7 +35,7 @@ const ACCOUNT = {
     orders: {
         item_finished: 'Disfrutada',
         item_cancelled: 'Cancelada',
-        // ⚠️ **SIN `:product` desde `#345`**: el rótulo dejó de llevar el nombre del producto porque
+        // ⚠️ **SIN `:product` desde `#403`**: el rótulo dejó de llevar el nombre del producto porque
         // `.btn` es `white-space: nowrap` y este botón es de ancho completo — con un nombre largo el
         // texto **se salía del botón** (medido: 418 px pedidos en 308 disponibles). El nombre está
         // tres líneas más arriba en la tarjeta.
@@ -328,7 +328,7 @@ describe('el bloque del post-form', () => {
     });
 
     /**
-     * ❗ **El rótulo NO puede llevar el nombre del producto** (`#345`, `[DECIDIDO owner]`).
+     * ❗ **El rótulo NO puede llevar el nombre del producto** (`#403`, `[DECIDIDO owner]`).
      *
      * `.btn` es `white-space: nowrap` y este botón es `width: 100%` dentro de una tarjeta de 308 px:
      * medido en navegador, «Completa el formulario de Cumpleaños Jump» cabía con **0 px de margen** y

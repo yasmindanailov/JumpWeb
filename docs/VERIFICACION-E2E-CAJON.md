@@ -2189,7 +2189,7 @@ Abre el enlace firmado del pedido (se saca con el guion de siembra; caduca a la 
 - [ ] Está el **enlace** para repartir (se autoselecciona al pincharlo).
 - [ ] ⚠️ **No aparece ningún dato de los otros padres**: ni nombre, ni relación, ni contacto.
 
-### 7 · LA ACTIVACIÓN (`#342`) — lo que antes no existía
+### 7 · LA ACTIVACIÓN (`#400`) — lo que antes no existía
 
 > ❗ **Este bloque es el que responde a lo que encontraste**: *«no me sale nada del enlace»*. Antes de
 > recorrerlo hay que **encender el interruptor en un producto**, que es donde ahora vive la decisión.
@@ -2224,7 +2224,7 @@ Abre el enlace firmado del pedido (se saca con el guion de siembra; caduca a la 
       línea a 0 o cancélala. ▶ El panel avisa: *«Ojo: hay N justificantes firmados y el pedido tiene M
       plazas»*. La hoja de sala imprime el mismo aviso.
 
-### 8 · LOS CINCO ESCENARIOS SEMBRADOS (`#343`) — el justificante cuelga de la RESERVA
+### 8 · LOS CINCO ESCENARIOS SEMBRADOS (`#401`) — el justificante cuelga de la RESERVA
 
 > **Entra en tu cuenta de cliente** (`admin@jumpweb.test`) y abre **«Mis reservas»**: ahí es donde
 > ahora vive el enlace. Cada pedido aísla UNA cosa.

@@ -2952,7 +2952,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
    quién ha firmado ya y el enlace para repartir. Mismos TOKENS que el resto del bloque de pedidos —
    ni un literal nuevo— porque es un apartado más de la misma tarjeta, no otra pieza. */
 .orders__guests { margin-top: var(--sp-10); padding-top: var(--sp-10); border-top: 1px dashed var(--line); }
-/* A QUÉ visita pertenecen estos justificantes (`#343`). Solo se pinta en «Mis pedidos», donde se
+/* A QUÉ visita pertenecen estos justificantes (`#401`). Solo se pinta en «Mis pedidos», donde se
    listan VARIAS reservas; en la tarjeta de una reserva el nombre ya está tres líneas más arriba. */
 .orders__guests-what { margin: 0 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg); }
 .orders__guests-count { margin: 0; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg); }
@@ -4500,7 +4500,7 @@ body[data-has-hero] .nav--over .nav__cta {
     border-radius: 50%; background: var(--fg); color: var(--bg);
     font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0;
 }
-/* A QUÉ visita autoriza el padre (`#343`). Va DENTRO del resguardo oscuro, así que su color se deriva
+/* A QUÉ visita autoriza el padre (`#401`). Va DENTRO del resguardo oscuro, así que su color se deriva
    de `--bg` como el de sus vecinos y nunca de `--fg`: ahí `--fg` es el fondo (la lección de `.gf-mix`). */
 .guardian__what {
     margin: 14px 0 0;
@@ -4556,7 +4556,7 @@ body[data-has-hero] .nav--over .nav__cta {
 .orders__product-form-link { font-size: 13px; color: var(--fg-mute); text-decoration: underline; text-underline-offset: 2px; }
 /* Botón del post-form de reserva (#217): ancho completo + texto centrado para que sea una acción
    clara y consistente con el resto de CTAs de ancho completo del flujo. */
-/* ⚠️⚠️ **`white-space: normal` y no `nowrap`, y eso ANULA `.btn` a propósito** (`#345`). El botón de
+/* ⚠️⚠️ **`white-space: normal` y no `nowrap`, y eso ANULA `.btn` a propósito** (`#403`). El botón de
    la landing es `nowrap` porque son rótulos cortos en una fila; éste es de ANCHO COMPLETO dentro de
    una tarjeta de 308 px y su texto es i18n —el francés es más largo que el español—. Con `nowrap`
    cualquier rótulo que no quepa **se sale del botón**, y eso es lo que el owner vio.
@@ -5802,7 +5802,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
 }
 .guardnote--ask { display: flex; align-items: flex-start; gap: var(--sp-10); background: var(--bg-card); cursor: pointer; }
 .guardnote--ask:hover { border-color: var(--line-strong); }
-/* Sin plazas libres (`#343`): apagada y SIN cursor de clic — una afordancia sin consumidor es el
+/* Sin plazas libres (`#401`): apagada y SIN cursor de clic — una afordancia sin consumidor es el
    defecto de `#295`. El motivo va dentro, en `__help`: apagar en silencio deja al cliente sin poder
    atar «he asignado todas mis entradas» con «ya no puedo marcar esto». */
 .guardnote--off { background: var(--bg-soft); cursor: not-allowed; }

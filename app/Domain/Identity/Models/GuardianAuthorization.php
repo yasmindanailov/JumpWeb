@@ -32,7 +32,7 @@ use Illuminate\Support\Str;
  * que la flecha va al revés y por contrato (`ModuleBoundariesTest`). Es el patrón de
  * {@see DependentAssignment}, que cuelga de la misma columna y por la misma razón.
  *
- * ⚠️⚠️ **Colgaba del PEDIDO hasta `#343`, y lo encontró el owner con datos reales** (§13): un pedido
+ * ⚠️⚠️ **Colgaba del PEDIDO hasta `#401`, y lo encontró el owner con datos reales** (§13): un pedido
  * con dos reservas en días distintos hacía que la hoja del padre dijera «Días de la visita: 03/09 ·
  * 07/09». *Un padre no autoriza un pedido: autoriza que su hijo entre a una visita concreta.* De esa
  * sola raíz salían la capacidad sumada de las dos líneas, el correo único para dos reservas marcadas

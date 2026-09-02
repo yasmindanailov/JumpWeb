@@ -54,7 +54,7 @@ class OrderGuestMinorsTest extends ApiTestCase
             'status' => Order::STATUS_PAID, 'subtotal' => 500, 'tax' => 0, 'total' => 500,
             'currency' => 'EUR', 'paid_at' => now(),
         ]);
-        // ⚠️ La línea nace MARCADA: desde `#343` el endpoint devuelve una entrada por RESERVA
+        // ⚠️ La línea nace MARCADA: desde `#401` el endpoint devuelve una entrada por RESERVA
         // marcada, así que una línea sin marca no tiene enlace que ofrecer — y es lo correcto: a un
         // pedido normal no se le reparte nada.
         $order->items()->create([
@@ -70,7 +70,7 @@ class OrderGuestMinorsTest extends ApiTestCase
         if ($withAuthorization) {
             app(GuardianAuthorizationSigner::class)->sign(
                 $responsible,
-                // ⚠️ El sujeto es la RESERVA desde `#343`, no el pedido.
+                // ⚠️ El sujeto es la RESERVA desde `#401`, no el pedido.
                 (int) $order->items()->whereNull('parent_item_id')->orderBy('id')->value('id'),
                 $version, [
                     'minor_name' => 'Luis', 'minor_surname' => 'Pérez Soto', 'minor_born_on' => '2016-11-20',
@@ -90,7 +90,7 @@ class OrderGuestMinorsTest extends ApiTestCase
         $response = $this->getJson(self::ROOT."/orders/{$order->code}/guest-minors");
 
         $response->assertValidResponse(200);
-        // ⚠️ **Una entrada por RESERVA desde `#343`**: el justificante cuelga de la visita, no de la
+        // ⚠️ **Una entrada por RESERVA desde `#401`**: el justificante cuelga de la visita, no de la
         // compra. Un pedido con dos visitas trae dos enlaces y dos fechas.
         $response->assertJsonCount(1, 'data.reservations');
         $response->assertJsonPath('data.reservations.0.minors.0.minor', 'Luis Pérez Soto');

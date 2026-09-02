@@ -624,7 +624,7 @@ class SidebarBundleBudgetTest extends TestCase
      * una poda: es empeorar el diseño y seguir necesitando el techo.*
      * ⚠️ **Se sube a 265 y no a 270.** Queda **0,47 KiB**: la misma estrechez, a propósito.
      *
-     * ▶ **267 (`#343`, el justificante cuelga de la RESERVA).** Medido con la rama sola: **264,40 →
+     * ▶ **267 (`#401`, el justificante cuelga de la RESERVA).** Medido con la rama sola: **264,40 →
      * 265,87 KiB (+1,47)**. Lo que compra son las TRES cosas que el owner echó en falta probándolo:
      *  · el enlace **en «Mis reservas»**, que es donde lo buscó —*«sigo sin ver el enlace para copiar
      *    en mis reservas, ni en ningún lado»*— y donde tiene sentido desde que cuelga de la visita;
@@ -637,7 +637,7 @@ class SidebarBundleBudgetTest extends TestCase
      * plazas libres, el filtro por reserva del panel y los rótulos del resumen.
      * ⚠️ **Se sube a 267 y no a 275.** Queda **1,13 KiB**: lo siguiente que entre vuelve a justificarse.
      *
-     * ▶ **268 (`#345`, compartir o copiar el enlace).** Medido con la rama sola: **265,97 → 267,23 KiB
+     * ▶ **268 (`#403`, compartir o copiar el enlace).** Medido con la rama sola: **265,97 → 267,23 KiB
      * (+1,26)**. Lo que compra es el gesto que el owner pidió —*«añade un icono de copiar o compartir
      * el enlace»*— y **no es un botón de portapapeles**: en un teléfono abre la hoja del sistema, que
      * es donde está WhatsApp, y en un escritorio copia. Ese enlace se reparte a los padres uno a uno,
@@ -648,9 +648,24 @@ class SidebarBundleBudgetTest extends TestCase
      * es tener DOS acuses (`shared` y `copied`): decir «copiado» cuando el sistema acaba de abrir
      * WhatsApp sería mentir sobre lo que pasó.
      * ⚠️ **Se sube a 268 y no a 272.** Queda **0,77 KiB**: la estrechez de siempre.
+     *
+     * ▶ **273 (la FUSIÓN de los dos carriles, 2026-09-02).** Los tres techos anteriores —**267** y
+     * **269** del carril de Google (T1+T2 y T3) y **268** de éste— se midieron **cada uno con su rama
+     * sola y desde la misma base** (262,95 KiB), así que **ninguno describe el árbol conjunto y
+     * `max()` tampoco**: el chunk lleva las features de los dos.
+     * ⚠️⚠️ **Un techo heredado de una medición en solitario no es un techo: es una coincidencia.**
+     * Aquí la guarda hizo su trabajo — se puso ROJA al fusionar, en vez de dejar pasar un número que
+     * ya no describía nada. *Si dos ramas suben el mismo presupuesto, al juntarlas hay que volver a
+     * medir: no se elige entre los dos números.*
+     * ▶ **Medido sobre el árbol fusionado: 279.251 B = 272,71 KiB.** Y la aritmética CIERRA, que es lo
+     * que demuestra que no se coló nada por el camino: 262,95 + 3,03 (Google T1+T2) + 2,28 (Google T3)
+     * + 4,28 (justificante) = **272,54 esperados** contra **272,71 medidos** — **0,17 KiB** de desvío,
+     * o sea que los tres costes se SUMAN y apenas comparten código.
+     * ⚠️ **Se sube a 273 y quedan 0,29 KiB**, la holgura más estrecha que ha tenido este techo: la
+     * fusión se comió el margen que cada carril creía tener por separado. Lo siguiente que entre,
+     * de cualquiera de los dos, tiene que podar o justificarse — y volver a medir AQUÍ, no en su rama.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 269;
-    private const SIDEBAR_CHUNK_MAX_KB = 268;
+    private const SIDEBAR_CHUNK_MAX_KB = 273;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

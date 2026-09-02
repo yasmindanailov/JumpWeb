@@ -81,7 +81,7 @@ class ReservationSlipController extends Controller
         //
         // ⚠️ Va la forma del OPERADOR, que **no lleva el correo ni el teléfono** de ningún adulto:
         // la sala no los necesita para recibir a un niño.
-        // ⚠️⚠️ **Los de ESTA reserva, no los del pedido** (`#343`). Antes la hoja de la excursión del
+        // ⚠️⚠️ **Los de ESTA reserva, no los del pedido** (`#401`). Antes la hoja de la excursión del
         // lunes imprimía también a los menores de la entrada del miércoles: el justificante cuelga de
         // la visita, y esta hoja es la de UNA visita.
         $guestMinors = app(GuardianRoster::class)->forOperator((int) $item->getKey());

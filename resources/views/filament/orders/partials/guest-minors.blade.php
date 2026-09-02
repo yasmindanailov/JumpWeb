@@ -3,7 +3,7 @@
      * Los menores INVITADOS de un pedido, vistos por el OPERADOR
      * (`docs/specs/waiver-por-reserva.md` §4.12, §12.1, §12.6, §13).
      *
-     * ⚠️⚠️ **Agrupado POR RESERVA desde `#343`, y ése era el fallo de fondo.** El justificante cuelga
+     * ⚠️⚠️ **Agrupado POR RESERVA desde `#401`, y ése era el fallo de fondo.** El justificante cuelga
      * de la visita, no del pedido: un pedido con una excursión el lunes y una entrada el miércoles
      * tiene **dos** enlaces, dos cupos y dos listas. Antes se pintaba una sola lista y un solo enlace
      * que, abierto, decía las dos fechas.

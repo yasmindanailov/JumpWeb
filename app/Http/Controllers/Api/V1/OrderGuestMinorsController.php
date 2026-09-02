@@ -20,7 +20,7 @@ use Illuminate\Http\Request;
  * Quién ha firmado ya, cuántas plazas quedan y **el enlace para repartir**, **una entrada por
  * RESERVA**.
  *
- * ⚠️⚠️ **Devolvía UNA cosa por pedido hasta `#343`, y lo cazó el owner**: un pedido con una excursión
+ * ⚠️⚠️ **Devolvía UNA cosa por pedido hasta `#401`, y lo cazó el owner**: un pedido con una excursión
  * el lunes y una entrada el miércoles daba un solo enlace que, abierto, decía las dos fechas. El
  * justificante cuelga de la VISITA.
  *

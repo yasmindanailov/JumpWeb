@@ -1,5 +1,32 @@
 # Estado del proyecto — foto viva
 
+❗❗❗ **▶ PARA EL AGENTE DEL PORTÁTIL (Google auth) — LÉELO ANTES DE NUMERAR NADA**: se acabó el
+contador compartido. **Este ordenador pasa a la banda `#400`+ y tú te quedas con la secuencia
+natural (`#34x`), toda para ti** — no tienes que cambiar nada, solo saber que un `#40x` no es tuyo.
+`[DECIDIDO owner, 2026-09-02]`, regla en `CONVENCIONES §10.6`. El motivo: **seis colisiones el 1 y
+el 2 de septiembre** (sobre las siete que ya abren ese §10), *todas al cerrar*, con el otro carril
+empujando mientras corrían la suite y el gate — la regla de «mira `origin/main` justo antes de
+empujar» se probó y no basta, porque una ventana de minutos sigue siendo una ventana.
+▶ Hoy tú te llevaste `#342`, `#343` y `#344`; **este carril ha renumerado el suyo a `#400`→`#404`**
+y tus citas se han verificado intactas antes y después. **Retira este aviso cuando lo hayas leído.**
+
+⚠️⚠️ **LOS DOS CARRILES ESTÁN FUSIONADOS Y LA NUMERACIÓN, CORREGIDA** (2026-09-02,
+`DECISIONES #404`). Al arrancar, `main` local y `origin/main` habían divergido — **9 commits del
+carril de Google auth** (el otro equipo, ya empujados) contra **4 del justificante** (aquí, que el
+agente anterior dejó sin push) — con la **quinta colisión de numeración**: los dos habían escrito
+`#342` y `#343`.
+▶ `[DECIDIDO owner]`: renumera quien llega después al remoto. **El justificante pasa a `#400`
+(activación) · `#401` (cuelga de la RESERVA) · `#402` (el sobre del store) · `#403` (compartir el
+enlace)**; **Google conserva `#342` y `#343`**. 76 citas reescritas con ámbito por LÍNEA en los ocho
+ficheros compartidos, y huella del otro carril verificada idéntica antes y después.
+▶ ❗❗ **LO QUE HAY QUE SABER SI SUBES UN PRESUPUESTO ESTANDO LOS DOS CARRILES VIVOS**: los dos
+subieron el techo del chunk del cajón midiendo **su rama sola desde la misma base**, y al fusionar
+**ninguno de los TRES valía** (267 y 269 suyos, 268 de aquí, contra **272,71 KiB** medidos).
+Techo a **273**, con 0,29 KiB — la holgura más estrecha que ha tenido. Y el del payload del montaje
+igual: **9.967 B** medidos contra los 9.900 que su rama dejó puestos → **10.000**.
+▶ **Suite conjunta: 4.003 · 25.611** verde, tras reconstruir los dos bundles (la guarda de SSR rancio
+mordió con 35 rojos citando ficheros de los dos carriles).
+
 🟦 **GOOGLE AUTH · LAS TRES TANDAS DE CÓDIGO, EN EL ÁRBOL** (2026-09-02, `DECISIONES #342`, `#343`
 y `#344`; spec §18, §19 y §20). Entrar, registrarse y **los tres derechos que no se podían ejercer**.
 ▶ ❗❗ **DOS DE LOS TRES HUECOS QUE CIERRA LA T3 NO ERAN DE GOOGLE: llevaban vivos desde el primer día
@@ -240,8 +267,8 @@ rutina. La rama `deploy/fix-338` se puede borrar en cuanto eso ocurra.
      mano**, el mismo criterio que las filas de niños sin datos. Ni BD ni panel.
 
 ✅ **CARRIL P3 · EL JUSTIFICANTE DE UN MENOR INVITADO («waiver offshore») — SPEC + T1 + T2 + T3 +
-LA ACTIVACIÓN (T5→T8) EN EL ÁRBOL** (2026-09-01, `DECISIONES #328`, `#335`, `#337` y **`#342`**).
-❗❗❗ **`#342` — EL OWNER PROBÓ LO CONSTRUIDO Y NO HABÍA PUERTA POR LA QUE ENTRAR**: *«En el panel del
+LA ACTIVACIÓN (T5→T8) EN EL ÁRBOL** (2026-09-01, `DECISIONES #328`, `#335`, `#337` y **`#400`**).
+❗❗❗ **`#400` — EL OWNER PROBÓ LO CONSTRUIDO Y NO HABÍA PUERTA POR LA QUE ENTRAR**: *«En el panel del
 cliente no me sale nada del enlace. Ni de los que han firmado o no.»* El enlace tenía **tres
 consumidores en todo el repo y ninguno lo OFRECÍA**, y el peor era un **huevo y una gallina**: el
 botón «Copiar enlace» vivía DENTRO de una sección `visible(countFor > 0)`, así que solo aparecía
@@ -265,7 +292,7 @@ mensaje que mentía al padre está corregido. **El TOPE no se toca** (`SEC-04`).
 ⚠️⚠️ **La trampa que casi lo entierra**: `Cart::sanitize()` es una LISTA BLANCA y el campo se habría
 caído ahí **en silencio** camino de `OrderCreator`. Tiene caso propio, y hay una segunda costura igual
 en el pedido manual.
-❗❗❗ **`#343` (2026-09-02) — Y PROBÁNDOLO ENCONTRÓ EL FALLO DE FONDO: el justificante colgaba del
+❗❗❗ **`#401` (2026-09-02) — Y PROBÁNDOLO ENCONTRÓ EL FALLO DE FONDO: el justificante colgaba del
 PEDIDO y **un pedido puede tener dos visitas**. Su frase: *«1 justificante es por reserva no por
 pedido, creo que ahí tenemos el fallo»*. Medido sobre `R-LUKFD2` (excursión el 07/09 + entrada el
 03/09): la hoja del padre decía **«Días de la visita 03/09 · 07/09»**, llegaba **un solo correo**, la
@@ -286,7 +313,7 @@ entrada y asignándosela a su hija.
 le supone existe de verdad.*
 ▶ **CINCO ESCENARIOS SEMBRADOS en su cuenta** (`PRUEBA-J1`…`J5`, guion en `VERIFICACION-E2E-CAJON.md`
 §5.septies bloque 8) y **queda su OJO**. También sigue pendiente la casilla en el paso de CESTA.
-❗❗❗ **`#344` — Y MIRÁNDOLO ENCONTRÓ DOS MÁS, los dos MUDOS**: una clave de idioma pintada en crudo
+❗❗❗ **`#402` — Y MIRÁNDOLO ENCONTRÓ DOS MÁS, los dos MUDOS**: una clave de idioma pintada en crudo
 (`admin.orders.guest_minors.assigned`, que se usó sin declararse y **solo se pinta con menores a cargo
 asignados**, un caso que ninguna guarda montaba) y, la gorda, **que el enlace NUNCA llegó a pintarse**:
 `api.js` devuelve el SOBRE (`{data:{…}}`) y el store lo guardaba tal cual, así que el panel leía
@@ -297,7 +324,7 @@ sale nada» diagnostiqué una causa real que **no era la única**; la que faltab
 navegador y contando nodos. Guardas nuevas: tres de `node --test` sobre el store y **una general** —
 que ningún identificador de grupo de idioma aparezca en el HTML de la ficha—, **vista morder**.
 ⚠️ De la sonda salió además la tercera condición del enlace: **sin plazas libres tampoco se ofrece**.
-❗❗ **`#345` — y una tercera pasada del OJO del owner**: el botón «Completa el formulario *producto*»
+❗❗ **`#403` — y una tercera pasada del OJO del owner**: el botón «Completa el formulario *producto*»
 **se salía** con un nombre largo (`.btn` es `white-space: nowrap` y el botón es de ancho completo;
 medido: cabía con **0 px de margen** y un nombre largo pedía 418 en 308). `[DECIDIDO owner]`: **fuera
 el nombre del producto** —está tres líneas más arriba— y el botón pasa a `white-space: normal`, que
@@ -559,8 +586,9 @@ aquí lo que no se podaría son datos de menores de terceros.
 > ⚠️ **RE-MEDIDA tras rebasar encima los DOS arreglos del reloj de la T3** (con `npm run build` +
 > `build:ssr` delante, porque `#340` toca Vue): **sale el MISMO número**, que es lo que había que
 > comprobar — los dos arreglan FIXTURES y no añaden casos. *Coincidir no se supone: se mide.*
-> Suite **3975 en verde** (25.416 aserciones, 1 skipped a propósito), medida el 2026-09-02
-> sobre el árbol CONJUNTO: la **T3 de Google auth** (`#344`, **+12**) sobre su T2 (`#343`, +14) sobre su T1 (`#342`, +37), la columna del menú
+> Suite **4003 en verde** (25.611 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`): las cuatro tandas del
+> justificante (`#400`→`#403`) sobre las TRES de Google auth (`#342`, `#343`, `#344`), la columna del menú
 > (`#341`, +8), el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo (`#339`),
 > encima del arreglo del 500 de la puerta (`#338`) y de la **T3** del justificante (`#337`) con sus
 > arreglos del reloj.

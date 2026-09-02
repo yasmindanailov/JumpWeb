@@ -137,7 +137,7 @@ class GuardianLinkDeliveryTest extends TestCase
         Notification::assertSentTo(
             $order->user,
             GuardianAuthorizationRequest::class,
-            // ⚠️ **UNO por RESERVA desde `#343`**, no uno por pedido: cada visita tiene su enlace y su
+            // ⚠️ **UNO por RESERVA desde `#401`**, no uno por pedido: cada visita tiene su enlace y su
             // fecha. Se asevera CUÁL, no solo que llegó uno.
             fn (GuardianAuthorizationRequest $n): bool => (int) $n->reservation->id === (int) $reservation->id,
         );
@@ -256,7 +256,7 @@ class GuardianLinkDeliveryTest extends TestCase
     // ─── 4 · Ninguna clave sin traducir llega a la pantalla ───────────────────
 
     /**
-     * ❗❗ **Lo cazó el owner leyendo `admin.orders.guest_minors.assigned` EN PANTALLA** (`#344`).
+     * ❗❗ **Lo cazó el owner leyendo `admin.orders.guest_minors.assigned` EN PANTALLA** (`#402`).
      *
      * La clave se usó y nunca se declaró, y **ningún test lo vio**: solo se pinta cuando la reserva
      * tiene menores a cargo asignados, y ninguna guarda montaba ese caso. Laravel no falla ante una

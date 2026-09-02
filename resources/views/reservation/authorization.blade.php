@@ -21,7 +21,7 @@
     $minorName = session('guardian_minor');
     $errors ??= new \Illuminate\Support\ViewErrorBag;
 
-    // ⚠️⚠️ **UNA visita, no las del pedido** (`#343`). Antes esto pintaba `visitDates` —las fechas de
+    // ⚠️⚠️ **UNA visita, no las del pedido** (`#401`). Antes esto pintaba `visitDates` —las fechas de
     // TODAS las líneas del pedido— y con una excursión el lunes y una entrada el miércoles la hoja
     // decía «Días de la visita: 03/09/2026 · 07/09/2026» sin decir a cuál iba el niño. Lo cazó el
     // owner con un pedido real delante.

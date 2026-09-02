@@ -39,7 +39,7 @@ use Illuminate\Support\Facades\DB;
  * ya está firmado. Si es el MISMO adulto reenviando, se comporta como la idempotencia de siempre:
  * misma versión → la firma que hay; versión nueva → una firma más, encadenada.
  *
- * ⚠️⚠️ **«Un papel» es por VISITA desde `#343`, no por pedido**, y el cambio da MÁS de lo que quita: el
+ * ⚠️⚠️ **«Un papel» es por VISITA desde `#401`, no por pedido**, y el cambio da MÁS de lo que quita: el
  * mismo niño que va a dos días distintos del mismo pedido necesita **dos** autorizaciones, y con la
  * clave por pedido la segunda se rechazaba diciendo que ya estaba firmada.
  */
@@ -109,7 +109,7 @@ final class GuardianAuthorizationSigner
                 return ['authorization' => $existing, 'signature' => $signature, 'created' => false];
             }
 
-            // El TOPE, y desde `#343` es el de ESTA reserva y descuenta lo que ya tiene dueño
+            // El TOPE, y desde `#401` es el de ESTA reserva y descuenta lo que ya tiene dueño
             // (`GuardianPlaces`): la cantidad de la línea menos los menores a cargo ya asignados
             // menos los justificantes ya firmados. Antes sumaba las líneas del pedido entero, así que
             // una entrada suelta comprada junto a una excursión de 80 ofrecía 81 plazas.

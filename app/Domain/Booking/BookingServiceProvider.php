@@ -58,7 +58,7 @@ class BookingServiceProvider extends ServiceProvider
         // Fase 6 · el JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §13): la
         // RESERVA vista por quien tiene su enlace y NO tiene cuenta. Lo consume
         // `Identity\Services\GuardianAuthorizationSigner` para decidir si la autorización cabe.
-        // ⚠️ Colgaba del PEDIDO hasta `#343` y lo cazó el owner con datos reales: un pedido con dos
+        // ⚠️ Colgaba del PEDIDO hasta `#401` y lo cazó el owner con datos reales: un pedido con dos
         // visitas hacía que la hoja del padre dijera dos fechas y ofreciera las plazas de las dos.
         // ⚠️ No devuelve NADA que ese desconocido no pueda ver: ni importes, ni nombres de nadie.
         $this->app->bind(AuthorizableReservations::class, AuthorizableReservationsReader::class);

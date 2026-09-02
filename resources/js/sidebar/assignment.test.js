@@ -183,7 +183,7 @@ describe('el 422 del checkout aplicado a la cesta', () => {
 });
 
 /**
- * **El rótulo del bloque plegado y la casilla que no se puede marcar** (`#343`).
+ * **El rótulo del bloque plegado y la casilla que no se puede marcar** (`#401`).
  *
  * Las dos reglas salieron del componente porque `SidebarComponentBudgetTest` lo pidió, y aquí es
  * donde ganan la red que un árbol no puede darles: un árbol dice qué se pintó, no qué rama se eligió.

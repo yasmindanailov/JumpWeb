@@ -1116,7 +1116,7 @@ class ViewOrder extends ViewRecord
             ->modalSubmitAction(false)
             ->modalCancelActionLabel(__('admin.orders.copy_guest_form.close'))
             ->modalContent(function (array $arguments): ?View {
-                // ⚠️ **Por LÍNEA desde `#343`**: el enlace es de la VISITA. Con `resolveItem()` va
+                // ⚠️ **Por LÍNEA desde `#401`**: el enlace es de la VISITA. Con `resolveItem()` va
                 // además la defensa IDOR que ya usa su gemelo del post-form — el ítem tiene que ser
                 // de ESTE pedido aunque se fuerce el id por `mountAction`.
                 $item = $this->resolveItem($arguments);

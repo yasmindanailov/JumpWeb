@@ -159,7 +159,7 @@ final class WaiverProof
     }
 
     /**
-     * A QUÉ visita autoriza esta prueba (`#343`): el producto y el día.
+     * A QUÉ visita autoriza esta prueba (`#401`): el producto y el día.
      *
      * ⚠️ **Faltaba, y en un documento probatorio importa**: el PDF decía la referencia del pedido y
      * un pedido puede tener dos visitas. Quien lea esta prueba dentro de dos años tiene que poder

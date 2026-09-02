@@ -788,9 +788,8 @@ class SidebarMountTest extends TestCase
         // las páginas por ser texto de invitado, y el bloque de cuentas vinculadas **no tiene rótulo
         // de «no hay ninguna»**: sin vínculos no se pinta nada, que además dice más.
         // **9.900 deja 74 B.**
-        $this->assertLessThan(
-            9900, $bytes,
-        // ⚠️ **9.400 → 9.550 el 2026-09-02** (`#345`, compartir o copiar el enlace). Medido: **9.365 →
+        //
+        // ⚠️ **9.400 → 9.550 el 2026-09-02** (`#403`, compartir o copiar el enlace). Medido: **9.365 →
         // 9.499 B (+134)**, y son CUATRO rótulos: el nombre accesible del botón y los TRES desenlaces
         // —compartido, copiado y el fallo—. `shared` y `copied` no se funden en uno a propósito: decir
         // «copiado» cuando el sistema acaba de abrir WhatsApp sería mentir sobre lo que pasó.
@@ -801,8 +800,25 @@ class SidebarMountTest extends TestCase
         // ⚠️ **La salida buena sigue siendo la escrita arriba**: mandar los rótulos del justificante
         // en la RESPUESTA del endpoint, que ya se pide bajo demanda. Cada tanda que añade uno hace
         // esa deuda más cara. **9.550 deja 51 B.**
+        // ⚠️⚠️ **9.900 → 10.000: RE-MEDIDO EN EL ÁRBOL CONJUNTO el 2026-09-02, y NINGUNO de los dos
+        // techos anteriores valía.** Los 9.499 B de la línea de arriba se midieron con la rama del
+        // justificante SOLA (contra 9.365), y los 9.826 del carril de Google con la suya (contra los
+        // mismos 9.365). Cada uno subió el techo **desde la misma base**, así que al fusionar los dos
+        // el payload lleva las dos cosas: **medido 9.967 B**, por encima de los 9.900 que su rama
+        // dejó puestos. *Dos ramas que suben el mismo presupuesto no se fusionan eligiendo un número.*
+        // ▶ **Y la aritmética CIERRA**, que es lo que demuestra que no se coló nada: 9.365 + 461
+        // (Google, 9.365→9.826) + 141 (justificante, medido aquí como el delta que aporta) = 9.967
+        // exactos. Los rótulos de los dos carriles **se suman**: no comparten ni una clave.
+        // ⚠️ El payload **ANÓNIMO no se mueve** (2.769 B, igual que en la rama de Google, con sus
+        // 31 B de holgura intactos): los rótulos del justificante viven en `account.*` y los tres
+        // derechos de la T3 en zonas con sesión, así que ninguno viaja sin ella. *Que dos presupuestos
+        // hermanos se toquen no significa que los dos se muevan: se comprueban por separado.*
+        // **10.000 deja 33 B**: la estrechez de siempre, a propósito.
+        // ⚠️⚠️ **La deuda escrita arriba ya no es teórica**: cada tanda de cualquiera de los dos
+        // carriles empuja este número, y la salida buena sigue siendo la misma — mandar los rótulos
+        // del justificante en la RESPUESTA de su endpoint, que ya se pide bajo demanda.
         $this->assertLessThan(
-            9550, $bytes,
+            10000, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

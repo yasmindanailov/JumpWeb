@@ -132,7 +132,7 @@ defineEmits(['toggle', 'retry']);
 
         <!--
           Los JUSTIFICANTES de menores invitados (`specs/waiver-por-reserva.md` §4.10, `#337`).
-          ⚠️⚠️ **Ya NO va dentro del desplegable** (`#343`): estaba tras «Ver el desglose» y el owner
+          ⚠️⚠️ **Ya NO va dentro del desplegable** (`#401`): estaba tras «Ver el desglose» y el owner
           no lo encontró —*«no me sale nada del enlace»*—. La «acción explícita» que §4.10 exige la
           sigue cumpliendo la PETICIÓN, que se hace al montar esta tarjeta y no se siembra en el
           contexto de cuenta; esconderlo además tras un clic no protegía nada, solo lo ocultaba.

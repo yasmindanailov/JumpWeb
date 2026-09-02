@@ -352,7 +352,7 @@ class VerifyWaiverChainConcurrency extends Command
         DB::table('waiver_signatures')->where('user_id', $userId)->delete();
         if ($seed['order_item_id'] !== null) {
             DB::table('guardian_authorizations')->where('order_item_id', $seed['order_item_id'])->delete();
-            // ⚠️ El PEDIDO se resuelve desde la línea: el `seed` guarda la reserva desde `#343`, y
+            // ⚠️ El PEDIDO se resuelve desde la línea: el `seed` guarda la reserva desde `#401`, y
             // borrar `orders.id = <id de línea>` habría borrado el pedido EQUIVOCADO (o ninguno).
             $orderId = DB::table('order_items')->where('id', $seed['order_item_id'])->value('order_id');
             // `order_items.order_id` es CASCADE (verificado en `information_schema`): la línea cae sola.

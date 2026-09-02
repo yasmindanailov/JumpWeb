@@ -5,7 +5,7 @@
  *
  * Quién ha firmado ya y **el enlace para repartir** a los padres que faltan.
  *
- * ❗❗ **Vive en «Mis RESERVAS» desde `#343`, que es donde el owner lo buscó** —*«sigo sin ver el
+ * ❗❗ **Vive en «Mis RESERVAS» desde `#401`, que es donde el owner lo buscó** —*«sigo sin ver el
  * enlace para copiar en mis reservas, ni en ningún lado»*—. Estaba en «Mis pedidos» y **dentro del
  * desplegable del desglose**: dos clics y una pantalla de distancia de donde tiene sentido.
  *

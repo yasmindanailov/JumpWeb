@@ -554,7 +554,7 @@ class OrderItem extends Model
      * (`docs/specs/waiver-por-reserva.md` §13). **Fuente ÚNICA del enlace**, como
      * {@see guestFormSignedUrl()} lo es del post-form — y ahora, por fin, su gemelo exacto.
      *
-     * ⚠️⚠️ **Vivía en `Order` hasta `#343` y lo cazó el owner con datos reales**: un pedido con dos
+     * ⚠️⚠️ **Vivía en `Order` hasta `#401` y lo cazó el owner con datos reales**: un pedido con dos
      * visitas en días distintos daba UN enlace, y la hoja que firmaba el padre decía *«Días de la
      * visita: 03/09/2026 · 07/09/2026»* sin decir a cuál iba su hijo. *Un padre no autoriza un
      * pedido: autoriza que su hijo entre a una visita concreta.*

@@ -4,7 +4,7 @@
 > dominio (§8.1), la pantalla pública (§8.2) y las seis superficies (§8.3). **Queda la T4**: el guion
 > de navegador con el anti-bot encendido y el OJO del owner.
 >
-> ❗❗❗ **Y desde el 2026-09-01 por la noche, §12: LA ACTIVACIÓN — T5 → T8 EN EL ÁRBOL** (`#342`).
+> ❗❗❗ **Y desde el 2026-09-01 por la noche, §12: LA ACTIVACIÓN — T5 → T8 EN EL ÁRBOL** (`#400`).
 > El owner probó lo construido y encontró que **no había puerta por la que entrar**: *«En el panel del
 > cliente no me sale nada del enlace. Ni de los que han firmado o no.»* §12.1 tiene los tres defectos
 > medidos —el peor, un huevo-y-gallina: el botón del enlace vivía DENTRO de una sección que solo
@@ -1151,9 +1151,9 @@ captura ahora forzando la familia de respaldo.
 
 ---
 
-## 13. EL JUSTIFICANTE CUELGA DE LA RESERVA, NO DEL PEDIDO (2026-09-02, `DECISIONES #343`)
+## 13. EL JUSTIFICANTE CUELGA DE LA RESERVA, NO DEL PEDIDO (2026-09-02, `DECISIONES #401`)
 
-> **Lo encontró el owner probando `#342` con un pedido real** (`R-LUKFD2`). Su frase: *«y 1
+> **Lo encontró el owner probando `#400` con un pedido real** (`R-LUKFD2`). Su frase: *«y 1
 > justificante es por reserva no por pedido, creo que ahí tenemos el fallo»*. Tenía razón, y esa sola
 > raíz explicaba cuatro síntomas que parecían independientes.
 
@@ -1268,7 +1268,7 @@ sutil, es demasiado centrada en el proceso, hazla tal vez con un desplegable»*.
 6. ⚠️ El manifiesto congelado del árbol del cajón **se regenera a propósito** (`MANIFEST_REFRESH=1`) y
    se dice en el commit: el `<details>` es un cambio deliberado del contrato visual.
 
-### 13.7 Dos defectos MÁS que el owner encontró mirando (`#344`)
+### 13.7 Dos defectos MÁS que el owner encontró mirando (`#402`)
 
 Los dos son la misma clase de fallo: **algo que sale verde y no se ve**.
 
@@ -1283,8 +1283,8 @@ una página que no la incluyera pasaría en blanco, el escalón de `#161`— y *
 clave retirada.
 
 **(b) EL ENLACE NUNCA LLEGÓ A PINTARSE, Y NO ERA DONDE ESTABA.** El owner lo dijo dos veces —*«no me
-sale nada del enlace»*— y las dos se le achacó a otra cosa (la visita pasada en `#342`, el sitio en
-`#343`). **Había una tercera causa debajo**:
+sale nada del enlace»*— y las dos se le achacó a otra cosa (la visita pasada en `#400`, el sitio en
+`#401`). **Había una tercera causa debajo**:
 
 ```
 api.js  →  result(true, status, payload)      // payload = {data: {...}}  ← el SOBRE ENTERO
@@ -1308,7 +1308,7 @@ que se apaga con la visita pasada. El caso real es el del owner: una entrada asi
 caché en BD lanza `1213 Deadlock` sobre la tabla `cache` y Laravel reintenta. Es preexistente y no es
 de esta feature; queda anotado por si alguien lo persigue.
 
-### 13.8 Compartir el enlace, y el rótulo que se salía del botón (`#345`)
+### 13.8 Compartir el enlace, y el rótulo que se salía del botón (`#403`)
 
 **(a) El botón del post-form.** `.btn` es `white-space: nowrap` y `.orders__guestform-btn` es de ancho
 completo dentro de una tarjeta de 308 px. Medido con CONTROL: «Completa el formulario de Cumpleaños

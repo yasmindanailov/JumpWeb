@@ -9,7 +9,7 @@ use App\Domain\Platform\Services\DisplayTime;
  * Fase 6 · el JUSTIFICANTE de un menor invitado — **quién viene autorizado en una RESERVA**
  * (`docs/specs/waiver-por-reserva.md` §4.10, §4.12, §13), para las superficies que lo enseñan.
  *
- * ⚠️⚠️ **Recibe RESERVAS y no un pedido desde `#343`.** Colgaba del pedido, y con dos visitas en la
+ * ⚠️⚠️ **Recibe RESERVAS y no un pedido desde `#401`.** Colgaba del pedido, y con dos visitas en la
  * misma compra la hoja de sala de una imprimía los menores de la otra. Quien necesite el pedido
  * entero le pasa la lista de sus líneas: agrupar es de quien pinta, no de quien lee.
  *

@@ -185,7 +185,7 @@ final class GateProfile
             return [];
         }
 
-        // ⚠️ **Por LÍNEA desde `#343`, no por pedido.** El justificante cuelga de la visita, así que
+        // ⚠️ **Por LÍNEA desde `#401`, no por pedido.** El justificante cuelga de la visita, así que
         // un pedido con una excursión hoy y una entrada el jueves ya no arrastra a la puerta los
         // menores de la otra fecha. La clave sigue siendo el CÓDIGO del pedido porque es lo que el
         // operador reconoce en pantalla, pero el filtro es la reserva.

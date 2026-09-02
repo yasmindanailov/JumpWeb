@@ -17,7 +17,7 @@ use Illuminate\Notifications\Notification;
  * Es «el papelito de la excursión»: **uno por RESERVA marcada**, que él pasa por WhatsApp, correo o
  * impreso.
  *
- * ⚠️⚠️ **Era uno por PEDIDO hasta `#343` y lo cazó el owner**: compró una excursión y una entrada, las
+ * ⚠️⚠️ **Era uno por PEDIDO hasta `#401` y lo cazó el owner**: compró una excursión y una entrada, las
  * dos con menores invitados, y le llegó **un** correo con **un** enlace que decía dos fechas. Ahora es
  * uno por visita, exactamente como su hermano `GuestFormRequest`.
  *

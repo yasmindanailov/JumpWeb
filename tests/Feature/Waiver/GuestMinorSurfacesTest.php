@@ -115,7 +115,7 @@ class GuestMinorSurfacesTest extends TestCase
     {
         return app(GuardianAuthorizationSigner::class)->sign(
             $responsible,
-            // ⚠️ El sujeto es la RESERVA desde `#343`, no el pedido: un pedido puede tener dos
+            // ⚠️ El sujeto es la RESERVA desde `#401`, no el pedido: un pedido puede tener dos
             // visitas y el padre autoriza una.
             (int) $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail()->id,
             LegalDocumentVersion::query()->latest('id')->first() ?? $this->version(),

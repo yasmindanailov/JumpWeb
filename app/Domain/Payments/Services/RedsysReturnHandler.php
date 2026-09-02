@@ -431,7 +431,7 @@ class RedsysReturnHandler
             // tumbar el cierre de un cobro que el banco ya autorizó. La reserva existe; el acuse es
             // una cortesía que la cola reintenta.
             try {
-                // ⚠️ **UNO POR RESERVA marcada desde `#343`, no uno por pedido.** Lo cazó el owner:
+                // ⚠️ **UNO POR RESERVA marcada desde `#401`, no uno por pedido.** Lo cazó el owner:
                 // compró una excursión y una entrada, las dos con menores invitados, y recibió UN
                 // correo con UN enlace que decía dos fechas. Es exactamente la forma de su hermano
                 // `GuestFormRequest`, dos bloques más arriba.

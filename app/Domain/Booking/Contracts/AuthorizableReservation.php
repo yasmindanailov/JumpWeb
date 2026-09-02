@@ -24,7 +24,7 @@ final readonly class AuthorizableReservation
      * @param  string  $orderCode  la referencia que el cliente ya conoce («R-AB12CD»): sin ella el
      *                             justificante no dice a qué compra pertenece
      * @param  string  $productName  a qué va el menor («Excursión 2 h», «Jump · 1 hora»). ⚠️ Es lo
-     *                               que faltaba: hasta `#343` la hoja no decía el tipo de reserva
+     *                               que faltaba: hasta `#401` la hoja no decía el tipo de reserva
      * @param  ?string  $date  el día (`Y-m-d`), o `null` si la línea todavía no tiene franja
      * @param  ?string  $startTime  hora de inicio (`H:i:s`) y {@see $endTime} de fin: un padre quiere
      *                              saber a qué hora deja y recoge a su hijo

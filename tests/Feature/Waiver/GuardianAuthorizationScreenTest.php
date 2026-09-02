@@ -67,7 +67,7 @@ class GuardianAuthorizationScreenTest extends TestCase
     private function orderFor(User $responsible, int $quantity = 4, ?string $date = null, string $status = Order::STATUS_PAID): Order
     {
         // Devuelve el PEDIDO por compatibilidad con los casos que hablan de él; la RESERVA —que es el
-        // sujeto desde `#343`— se saca con `reservationOf()`.
+        // sujeto desde `#401`— se saca con `reservationOf()`.
         $zone = Zone::firstOrCreate(['slug' => 'jump'], ['name' => ['es' => 'Jump'], 'position' => 1, 'is_active' => true]);
         $type = TicketType::firstOrCreate(['zone_id' => $zone->id, 'type' => TicketType::TYPE_ENTRY], [
             'name' => ['es' => 'Entrada'], 'duration_min' => 60, 'seats_per_unit' => 1,
@@ -111,7 +111,7 @@ class GuardianAuthorizationScreenTest extends TestCase
         ], $overrides);
     }
 
-    /** La reserva del pedido: el JUSTIFICANTE cuelga de la VISITA desde `#343`, no de la compra. */
+    /** La reserva del pedido: el JUSTIFICANTE cuelga de la VISITA desde `#401`, no de la compra. */
     private function reservationOf(Order $order): OrderItem
     {
         return $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail();

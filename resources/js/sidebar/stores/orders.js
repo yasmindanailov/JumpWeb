@@ -213,7 +213,7 @@ export const useOrdersStore = defineStore('orders', {
          * ⚠️ Un fallo NO se anuncia: es un despliegue que el cliente ha pedido, no el contenido de la
          * pantalla. Que no se pueda leer este bloque no puede teñir de error la lista de pedidos.
          *
-         * ⚠️⚠️ **`response.data` es el SOBRE, no su contenido, y ahí estuvo el defecto REAL** (`#344`):
+         * ⚠️⚠️ **`response.data` es el SOBRE, no su contenido, y ahí estuvo el defecto REAL** (`#402`):
          * `api.js` devuelve el cuerpo entero —`{data: {...}}`— y este store guardaba eso tal cual,
          * así que el componente leía `guestMinors[code].reservations` sobre un objeto que solo tiene
          * `data`. **Resultado: la petición salía con 200 y la pantalla no pintaba NADA**, en silencio

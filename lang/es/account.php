@@ -420,7 +420,7 @@ return [
             'waiver_outdated' => 'versión anterior',
             'waiver_missing' => 'falta la firma',
             'hint' => 'Pásaselo a los padres o tutores: cada uno rellena SUS datos y no ve los de los demás.',
-            // El botón de compartir/copiar (`#345`). ⚠️ `shared` y `copied` son DOS acuses y no uno:
+            // El botón de compartir/copiar (`#403`). ⚠️ `shared` y `copied` son DOS acuses y no uno:
             // en un teléfono el sistema abre WhatsApp y en un escritorio el enlace va al portapapeles,
             // y decir «copiado» cuando se ha compartido sería mentir sobre lo que acaba de pasar.
             'share' => 'Compartir o copiar el enlace',
@@ -428,7 +428,7 @@ return [
             'copied' => 'Enlace copiado',
             'failed' => 'No se pudo copiar: selecciona el enlace y cópialo a mano.',
             // ⚠️ Plazas LIBRES de la reserva, no su cantidad: descuenta los menores a tu cargo que ya
-            // tienen entrada y los justificantes ya firmados (`#343`). Es un HECHO, no el
+            // tienen entrada y los justificantes ya firmados (`#401`). Es un HECHO, no el
             // denominador inventado que §4.10 prohíbe.
             'places' => 'plazas libres: :count',
         ],

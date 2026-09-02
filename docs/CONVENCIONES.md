@@ -186,8 +186,21 @@ No hay chat entre agentes: **lo que no está en `origin/main`, el otro no lo sab
    Quien lo lee y actúa **lo retira** en su siguiente push: un aviso resuelto que se queda es ruido.
 5. **Empujar PRONTO** —cada unidad de trabajo verde, no solo al cierre— y **`git pull --rebase`
    antes de cada push**. Cada hora en local es una hora en la que el otro decide sin verte.
-6. **El número de `DECISIONES.md` se fija al EMPUJAR**, mirando `origin/main` justo antes, y el
-   «último usado» de `ESTADO.md` se actualiza en el mismo commit.
+6. **El número de `DECISIONES.md` sale de la BANDA DE TU EQUIPO, no del contador compartido**
+   (`[DECIDIDO owner, 2026-09-02]`, `DECISIONES #404`). **Este ordenador (`~/proyectos/jumpweb`,
+   carril de producto/reservas) numera desde `#400`**; el carril de Google auth del portátil sigue
+   en la secuencia natural (`#34x`). Los huecos entre bandas son deliberados y **`docs-check` no
+   valida continuidad** (su check 6 solo exige que un número citado EXISTA como entrada).
+   ⚠️⚠️ **Esto SUSTITUYE a la regla de «mirar `origin/main` justo antes de empujar», que se probó y
+   NO basta**: entre las siete colisiones que abren este §10 y las **seis** del 1–2 de septiembre,
+   todas se produjeron *al cerrar*, con el otro carril empujando mientras corrían la suite y el
+   gate. *Una ventana de minutos sigue siendo una ventana; el reparto por bandas no tiene ventana.*
+   ▶ **Y lo que hace caro equivocarse no es renumerar: es renumerar MAL.** Una sustitución mecánica
+   sobre un número compartido reapunta las citas del otro carril —ya pasó con 46—, así que si hay
+   que renumerar: **mapa explícito**, **ámbito por fichero para los propios y por LÍNEA para los
+   compartidos**, **huella de las citas ajenas antes y después** y **`uniq -d` sobre las cabeceras**
+   al terminar (un renumerado a mano más otro automático mueven la misma cabecera dos veces).
+   ▶ El «último usado» de `ESTADO.md` se actualiza en el mismo commit, por banda.
 7. **Defectos y fichas de `DEUDA.md`**: antes de abrir uno, mira si está en la fila del otro. Si
    cae en la frontera de los dos carriles, el reparto dice quién lo lleva; no se arregla dos veces.
 8. **Al cerrar un carril** se retira su fila: el bloque de reparto es una FOTO, no un histórico
