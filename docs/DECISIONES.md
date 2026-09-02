@@ -21640,3 +21640,38 @@ sigue siendo el primer sospechoso, y esta sesión lo pagó cinco veces.*
 **Verificación**: 41 ✓ de servidor · 8 ✓ de flujo en navegador · 12 → 4 objetivos táctiles, los cuatro
 justificados · 57 guardas de CSS y del cajón en verde · suite **4.023 · 25.709** · Pint ✓ · docs-check ✓ ·
 escenario sembrado **restaurado byte a byte** (454→1, 455→0, 456→1, 457→0, 458→2).
+
+---
+
+## #408 · 2026-09-02 · La cuarta vez de la misma trampa, y esta vez se barrió el subsistema entero
+
+El carril de Google auth avisó **por segunda vez** —en la cabecera de `ESTADO.md`, que es el canal
+entre agentes— de que un `User::factory()` cuyo nombre se PINTA, enfrentado a una aserción por
+subcadena, es *«una moneda al aire disfrazada de test»*, y de que **podía quedar alguna más**.
+
+**La había.** `GuardianAuthorizationScreenTest::test_a_signed_in_parent_sees_no_dependents_of_the_holder`
+aseveraba `assertDontSee('Nora')` sobre una pantalla abierta por un firmante creado con
+`User::factory()` — y esa pantalla **prellena el nombre de quien tiene sesión** en `guardian_name`
+(`GuardianAuthorizationController:101`), así que ese nombre se pinta en el HTML.
+▶ **Reproducida a voluntad antes de tocarla**: con `'name' => 'Nora Colisión'` el caso se pone **rojo
+con el producto sano**. Nombre fijado y la razón escrita en el propio caso.
+
+### Lo que sí aporta esta entrada: el barrido, no el arreglo
+
+Se revisaron **una a una las 41 aserciones negativas por subcadena** de los 17 ficheros del
+subsistema. Solo esa estaba enferma. Las dos que más lo parecían, y por qué NO se tocan:
+
+- `GuestMinorIsolationTest:144-146` ya está endurecido desde `#337`: nombre fijado, aserción por
+  **nombre COMPLETO** («Carlos» a secas lo puede traer cualquier otro dato, dice su propio comentario)
+  y un **control** que comprueba que el partial pinta de verdad.
+- `GuestMinorAuthorizationTest:249` asevera `'Ana'` —tres letras— pero **contra el payload de un
+  registro de auditoría**, que solo contiene `subject_type` y un id: ahí no entra ningún nombre de
+  factoría. *Sobre-arreglar también es un defecto*; se deja dicho lo que se miró y por qué se deja.
+
+⚠️ **La regla, tal como la formuló el otro carril y que conviene no perder**: *ningún `User::factory()`
+cuyo nombre se pinte, enfrentado a una aserción por subcadena.* Y la lección de fondo, que ya es de
+los dos carriles: **que una lección esté escrita en una entrada no la aplica en los ficheros —ni en
+los CASOS— que no se tocaron ese día.**
+
+**Verificación**: la colisión reproducida y vista en ROJO antes del arreglo · suite **4.023 · 25.709**
+verde · Pint ✓ · docs-check ✓ · aviso del otro carril retirado con acuse, según `CONVENCIONES §10.4`.

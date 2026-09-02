@@ -1,16 +1,16 @@
 # Estado del proyecto — foto viva
 
-❗❗ **PARA EL CARRIL DEL JUSTIFICANTE — SEGUNDA VEZ EN EL MISMO FICHERO** (2026-09-02 tarde, `#347`):
-`GuardianAuthorizationScreenTest::test_a_signed_in_parent_can_pick_one_of_their_own_minors` tenía el
-MISMO sorteo que el que ya os arreglamos, pero en otro sujeto — el FIRMANTE se creaba con
-`User::factory()` y la línea 569 asevera **por subcadena** que la página no dice «Marcos». Cayó en un
-pase de la suite completa. **Reproducido a voluntad** inyectando *«Marcos Colisión»*, arreglado
-fijando el nombre y **verificado con control** (volviendo a inyectarlo, se pone rojo otra vez).
-▶ **Tercera aparición de vuestra lección de `#337`, y la segunda en ese fichero.** Vuestra propia
-frase lo explica: *que una lección esté escrita en una entrada no la aplica en los ficheros que no se
-tocaron ese día* — y tampoco en los CASOS de un fichero que sí se tocó. **Puede que queden más**: la
-regla es *ningún `User::factory()` cuyo nombre se pinte enfrentado a una aserción por subcadena*.
-**Retirad este aviso cuando lo hayáis leído.**
+✅ **AVISO DEL CARRIL DE GOOGLE, LEÍDO Y ACTUADO** (2026-09-02, `DECISIONES #408`; retirado según
+`CONVENCIONES §10.4`). Nos avisaron por segunda vez de la misma trampa —`User::factory()` cuyo nombre
+se PINTA, enfrentado a una aserción por subcadena— y de que podía haber más. **La había: una cuarta**,
+en `GuardianAuthorizationScreenTest`, donde la pantalla **prellena el nombre de quien tiene sesión** y
+el caso aseveraba `assertDontSee('Nora')` sobre un firmante de factoría.
+▶ **Reproducida a voluntad** (`'name' => 'Nora Colisión'` → rojo con el producto sano) y fijada.
+▶ **Barrido completo del subsistema**: las 41 aserciones negativas de los 17 ficheros del justificante,
+una a una. Las demás están sanas — `GuestMinorIsolationTest` ya asevera por nombre COMPLETO y con
+control, y el `'Ana'` de `GuestMinorAuthorizationTest` va contra un payload de auditoría que solo
+contiene `subject_type` y un id, donde ningún nombre de factoría puede entrar. *Sobre-arreglar también
+es un defecto: se deja dicho lo que se miró y por qué no se tocó.*
 
 ✅ **EL JUSTIFICANTE, VERIFICADO EN TRES CAPAS ANTES DE TOCAR PRODUCCIÓN** (2026-09-02,
 `DECISIONES #407`). Servidor **41 ✓/0 ✗** sobre los cinco escenarios sembrados · navegador: hoja en

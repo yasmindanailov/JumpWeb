@@ -607,7 +607,16 @@ class GuardianAuthorizationScreenTest extends TestCase
             'born_on' => now()->subYears(7)->toDateString(), 'relationship' => 'father',
         ]);
 
-        $signer = User::factory()->create(['email_verified_at' => now()]);
+        // ⚠️⚠️ **El nombre del firmante va FIJADO, y es la CUARTA vez que esta trampa aparece**
+        // (`#408`; antes en `#337` y dos veces avisadas por el carril de Google). La pantalla
+        // **prellena el nombre de quien tiene sesión** en `guardian_name`, así que ese nombre se
+        // pinta en el HTML — y enfrentarlo a un `assertDontSee('Nora')` con un `User::factory()`
+        // detrás es *una moneda al aire disfrazada de test*: basta con que el faker saque un nombre
+        // que contenga «Nora» para que esto falle con el producto sano.
+        // ▶ **Reproducido a voluntad** antes de fijarlo: con `'name' => 'Nora Colisión'` el caso se
+        // pone rojo. La regla, del carril de Google: *ningún `User::factory()` cuyo nombre se pinte
+        // enfrentado a una aserción por subcadena.*
+        $signer = User::factory()->create(['email_verified_at' => now(), 'name' => 'Firmante Sin Colision']);
 
         $this->actingAs($signer)
             ->get($this->signedShowUrl($order))
