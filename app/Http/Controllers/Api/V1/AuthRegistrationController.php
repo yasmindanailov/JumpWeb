@@ -49,9 +49,9 @@ class AuthRegistrationController extends Controller
     private const CONTEXT_PURCHASE = 'purchase';
 
     /**
-     * Las reglas del alta. **Las mismas que el componente Livewire**, campo a campo: son las dos
-     * puertas de la misma operación, y una regla que difiera es una cuenta que una puerta acepta y la
-     * otra no.
+     * Las reglas del alta. **Ésta es hoy la única puerta**: el componente Livewire que las duplicaba
+     * murió con el modal (`DECISIONES #122`), así que lo que se comparaba campo a campo con él ahora
+     * lo fija esta lista y la valida el contrato (`RegisterRequest`).
      *
      * @return array<string, array<int, mixed>>
      */
@@ -64,9 +64,12 @@ class AuthRegistrationController extends Controller
             'email' => ['required', 'string', 'email:rfc', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
             'password' => PasswordPolicy::rules(),
-            'accept_privacy' => ['accepted'],
-            'accept_terms' => ['accepted'],
-            'marketing' => ['sometimes', 'boolean'],
+            // ⚠️⚠️ **Aquí NO hay casillas legales, desde la T8·c** (`[DECIDIDO owner, 2026-09-02]`,
+            // spec §21.4.3). La privacidad se INFORMA con un enlace visible —el art. 13 no pide que
+            // se acepte— y las condiciones se aceptan **en el momento del contrato**, que es donde
+            // las sitúan la LCGC (art. 5) y el TRLGDCU (art. 97): las pide `POST /orders` a través de
+            // `CheckoutDuties`. El marketing se ofrece en «Mi cuenta → Privacidad», con su
+            // interruptor, porque el art. 7.3 exige que retirarlo sea tan fácil como darlo.
             'context' => ['sometimes', 'string', 'in:'.self::CONTEXT_STANDALONE.','.self::CONTEXT_PURCHASE],
             // El campo señuelo viaja igual que en la web: un cliente legítimo lo deja vacío.
             //
@@ -89,22 +92,16 @@ class AuthRegistrationController extends Controller
     }
 
     /**
-     * Los avisos propios de las casillas legales.
+     * Los avisos propios de la casilla del descargo, que es la única que queda en el alta.
      *
-     * ⚠️ **Espejo de `Register::messages()`, y sin ellos las dos puertas divergían**: el componente
-     * dice «Debes aceptar esta condición para continuar.» y la API caía al genérico de la regla
-     * `accepted`. Un cliente que pinte el mismo formulario enseñaría un texto distinto según por qué
-     * puerta entrara.
+     * ⚠️ Van en `api.register`, no en `account.register`: ese grupo viaja en el montaje de cada página
+     * y estos avisos solo los emite el servidor (`SidebarMountTest` mide el peaje).
      *
      * @return array<string, string>
      */
     private function messages(): array
     {
         return [
-            'accept_privacy.accepted' => __('account.register.must_accept'),
-            'accept_terms.accepted' => __('account.register.must_accept'),
-            // En `api.register`, no en `account.register`: ese grupo viaja en el montaje de cada
-            // página y estos avisos solo los emite el servidor (`SidebarMountTest` mide el peaje).
             'waiver_document_id.required_if_accepted' => __('api.register.waiver_document_required'),
             'accept_waiver.accepted' => __('api.register.waiver_required'),
         ];
@@ -183,7 +180,6 @@ class AuthRegistrationController extends Controller
                 'email' => $data['email'],
                 'phone' => $data['phone'],
                 'password' => $data['password'],
-                'marketing' => (bool) ($data['marketing'] ?? false),
                 'waiver' => $waiver,
             ],
             (string) $request->ip(),

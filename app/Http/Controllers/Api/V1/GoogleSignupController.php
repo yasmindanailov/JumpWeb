@@ -24,7 +24,8 @@ use Illuminate\Http\Response;
  * perfil ya verificado:
  *
  *  · `GET  auth/google/pending`  — qué pintar: el nombre que sugiere Google y el correo, que es fijo.
- *  · `POST auth/google/complete` — el alta, con lo único que Google no da: teléfono y aceptaciones.
+ *  · `POST auth/google/complete` — el alta, con lo único que Google no da: el nombre corregido y el
+ *    descargo. Teléfono y condiciones se piden en el checkout desde la T8·c.
  *
  * ⚠️⚠️ **Ni el `sub` ni el correo viajan en la petición, y ésa es la defensa entera.** Si viajaran,
  * cualquiera crearía una cuenta con la identidad verificada de otro — y a esa cuenta se le firma un
@@ -102,7 +103,7 @@ class GoogleSignupController extends Controller
         try {
             $result = $signup->register(
                 $profile,
-                ['name' => $data['name'], 'phone' => $data['phone']],
+                ['name' => $data['name']],
                 (string) $request->ip(),
                 $request->userAgent(),
                 $waiver,
@@ -134,14 +135,17 @@ class GoogleSignupController extends Controller
      * ⚠️ **Ni `email` ni `sub`**: los pone el servidor. Lo único que se acepta del cliente es lo que
      * Google no sabe.
      *
+     * ⚠️⚠️ **Y desde la T8·c son DOS cosas, no cuatro** (`[DECIDIDO owner, 2026-09-02]`, spec §21.4.3):
+     * el **nombre** —que Google a veces da como «Ana G.» y viaja a la firma del descargo— y la
+     * **casilla del descargo**. El teléfono y las condiciones los pide el checkout, que es donde hacen
+     * falta y donde la ley sitúa la aceptación.
+     *
      * @return array<string, array<int, mixed>>
      */
     private function rules(): array
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:30'],
-            'accept_terms' => ['accepted'],
             'accept_waiver' => $this->waiverRequired() ? ['accepted'] : ['sometimes', 'nullable', 'boolean'],
             'waiver_document_id' => $this->waiverRequired()
                 ? ['required', 'integer', 'min:1']
@@ -155,7 +159,6 @@ class GoogleSignupController extends Controller
     private function messages(): array
     {
         return [
-            'accept_terms.accepted' => __('account.register.must_accept'),
             'accept_waiver.accepted' => __('api.register.waiver_required'),
             'waiver_document_id.required' => __('api.register.waiver_document_required'),
         ];
@@ -168,7 +171,6 @@ class GoogleSignupController extends Controller
     {
         return [
             'name' => __('account.register.name'),
-            'phone' => __('account.register.phone'),
         ];
     }
 

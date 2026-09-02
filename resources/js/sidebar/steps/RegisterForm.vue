@@ -20,11 +20,17 @@ import { useWaiverStore } from '../stores/waiver.js';
  * (A11y de formulario largo): el banner deja ver el conjunto y los de debajo permiten corregir uno a
  * uno. El banner lleva `<strong>` + `<ul>`, y el número de `<li>` es parte del árbol.
  *
- * ⚠️ **3. Los textos legales llevan HTML del servidor.** `accept_privacy` y `accept_terms` son
- * literales con un `<a href>` cuya URL compone `route()`, y el Blade los pinta con `{!! !!}`. Aquí
- * llegan **ya interpolados** en el payload del montaje y se pintan con `v-html`: es la única forma de
- * emitir el mismo árbol —`<span><a>`— y de no partir un texto legal traducido en trozos. El contenido
- * sale de `lang/` y de `route()`, nunca de una entrada de usuario, así que no hay superficie XSS.
+ * ⚠️ **3. El texto legal lleva HTML del servidor.** `privacy_notice` es un literal con un `<a href>`
+ * cuya URL compone `route()`. Aquí llega **ya interpolado** en el payload del montaje y se pinta con
+ * `v-html`: es la única forma de no partir un texto legal traducido en trozos. El contenido sale de
+ * `lang/` y de `route()`, nunca de una entrada de usuario, así que no hay superficie XSS.
+ *
+ * ⚠️⚠️ **Y ya NO es una casilla, desde la T8·c** (`[DECIDIDO owner, 2026-09-02]`,
+ * `specs/auth-con-google.md` §21.4.3): el art. 13 del RGPD pide **informar**, no que se acepte, y la
+ * base legal de una reserva es el contrato (art. 6.1.b). El enlace queda visible y el rastro lo
+ * escribe el servidor igual —`privacy_accepted_at` y su fila de `consents`—: *lo que desaparece es la
+ * casilla, no la constancia*. Las condiciones se fueron al checkout y el marketing al interruptor de
+ * «Mi cuenta → Privacidad», así que aquí solo queda la casilla del DESCARGO.
  *
  * ⚠️ **4. El email y el teléfono van en un `.form__row`**, no sueltos: es una fila de dos columnas y
  * su contenedor es un nodo del árbol.
@@ -64,9 +70,6 @@ const name = defineModel('name', { type: String, default: '' });
 const email = defineModel('email', { type: String, default: '' });
 const phone = defineModel('phone', { type: String, default: '' });
 const password = defineModel('password', { type: String, default: '' });
-const acceptPrivacy = defineModel('acceptPrivacy', { type: Boolean, default: false });
-const acceptTerms = defineModel('acceptTerms', { type: Boolean, default: false });
-const marketing = defineModel('marketing', { type: Boolean, default: false });
 
 /**
  * ⚠️ **7. La casilla del waiver solo existe si hay TEXTO que firmar** (Fase 6,
@@ -170,19 +173,11 @@ const summary = computed(() => props.errors?.summary ?? []);
             </div>
 
             <div class="form__checks">
-                <label class="check">
-                    <input v-model="acceptPrivacy" type="checkbox">
-                    <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
-                    <span v-html="a('register.accept_privacy')"></span>
-                </label>
-                <span v-if="fieldErrors.accept_privacy" class="form__error">{{ fieldErrors.accept_privacy }}</span>
-
-                <label class="check">
-                    <input v-model="acceptTerms" type="checkbox">
-                    <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
-                    <span v-html="a('register.accept_terms')"></span>
-                </label>
-                <span v-if="fieldErrors.accept_terms" class="form__error">{{ fieldErrors.accept_terms }}</span>
+                <!-- El enlace de privacidad, VISIBLE y sin casilla (detalle 3). Mismo literal y mismo
+                     tratamiento que en la pantalla de completar el alta con Google: es la misma
+                     información, y una segunda redacción acabaría diciendo otra cosa. -->
+                <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
+                <p class="form__hint" v-html="a('register.privacy_notice')"></p>
 
                 <!-- Detalle 7: solo con texto firmable en memoria. Sin él, ni casilla ni nodo. -->
                 <template v-if="waiverStore.document">
@@ -198,11 +193,6 @@ const summary = computed(() => props.errors?.summary ?? []);
                         </p>
                     </details>
                 </template>
-
-                <label class="check check--opt">
-                    <input v-model="marketing" type="checkbox">
-                    <span>{{ a('register.marketing') }}</span>
-                </label>
             </div>
 
             <div v-if="turnstileSiteKey" ref="captchaEl"></div>

@@ -566,12 +566,17 @@ class SidebarDomContractTest extends TestCase
      * por aviso, **y además** cada aviso bajo su campo. Las dos cosas, no una.
      *
      * El caso anterior no puede verlo —un formulario recién abierto no tiene errores—, y el número de
-     * `<li>` depende de cuántos campos fallen: se fuerza un envío vacío, que falla en los seis.
+     * `<li>` depende de cuántos campos fallen: se fuerza un envío vacío, que falla en los CUATRO que
+     * quedan (nombre, correo, teléfono y contraseña). ⚠️ Eran seis hasta la T8·c (`#350`), cuando las
+     * dos casillas legales salieron del alta.
      */
     public function test_the_register_error_banner_emits_the_same_tree_in_both_engines(): void
     {
         // Un alta VACÍA: falla la validación de todos los campos obligatorios a la vez, que es lo que
         // llena la lista. Con un solo campo en rojo, un `<li>` de más o de menos no se vería.
+        // ⚠️ La precondición de abajo pide MÁS DE TRES y hoy son exactamente cuatro: si alguien quita
+        // otro campo obligatorio del alta, este caso se pondrá rojo por su precondición y no por el
+        // árbol — que es lo correcto, porque con tres avisos deja de probar lo que dice probar.
         // ⚠️ El lado SPA ya no recibe los errores cocinados por el test: recibe el **422 crudo** de
         // `POST /auth/register` y los compone `register.js`. El orden de los avisos —el de las reglas de
         // validación— y el reparto entre banner y campo son SUYOS, y el test los reimplementaba en PHP
@@ -631,8 +636,7 @@ class SidebarDomContractTest extends TestCase
             'account' => [
                 'login' => __('account.login'),
                 'register' => array_replace(__('account.register'), [
-                    'accept_privacy' => __('account.register.accept_privacy', ['url' => route('legal.privacidad')]),
-                    'accept_terms' => __('account.register.accept_terms', ['url' => route('legal.condiciones')]),
+                    'privacy_notice' => __('account.register.privacy_notice', ['url' => route('legal.privacidad')]),
                 ]),
             ],
             'auth' => __('auth'),
@@ -657,8 +661,7 @@ class SidebarDomContractTest extends TestCase
             'account' => [
                 'login' => __('account.login'),
                 'register' => array_replace(__('account.register'), [
-                    'accept_privacy' => __('account.register.accept_privacy', ['url' => route('legal.privacidad')]),
-                    'accept_terms' => __('account.register.accept_terms', ['url' => route('legal.condiciones')]),
+                    'privacy_notice' => __('account.register.privacy_notice', ['url' => route('legal.privacidad')]),
                 ]),
             ],
         ];

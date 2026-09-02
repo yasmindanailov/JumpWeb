@@ -66,14 +66,14 @@ class ApiContractTest extends TestCase
         // OpenAPI 3.0 no sabe decir «obligatorio si el servidor dice que falta», así que lo decide el
         // servidor: `account-context.terms_pending` es la pista y el 422 por campo es la autoridad.
         'CreateOrderRequest' => ['accept_terms', 'phone'],
-        // Mismo caso: cuerpo de PETICIÓN. `marketing` es un consentimiento opcional por definición
-        // (exigirlo sería pedir una respuesta a algo que puede no contestarse), `context` tiene
-        // valor por defecto, y los dos anti-bot solo los envía quien los tiene: el señuelo
-        // `website` lo rellenan los bots y `turnstile_token` solo existe si la instalación
-        // configuró claves. Obligarlos convertiría en 422 a un cliente correcto.
-        // Y desde Fase 6 la casilla del waiver, que es opcional por definición (desmarcada por
-        // defecto): quien la marca debe decir qué texto leyó, y eso lo exige el servidor.
-        'RegisterRequest' => ['marketing', 'context', 'website', 'turnstile_token', 'accept_waiver', 'waiver_document_id'],
+        // Mismo caso: cuerpo de PETICIÓN. `context` tiene valor por defecto, y los dos anti-bot solo
+        // los envía quien los tiene: el señuelo `website` lo rellenan los bots y `turnstile_token`
+        // solo existe si la instalación configuró claves. Obligarlos convertiría en 422 a un cliente
+        // correcto. Y desde Fase 6 la casilla del waiver, que es opcional por definición (desmarcada
+        // por defecto): quien la marca debe decir qué texto leyó, y eso lo exige el servidor.
+        // ⚠️ `marketing` estuvo aquí hasta la T8·c (`#350`) y ya no está en el esquema: el alta no lo
+        // pide, lo pide el interruptor de «Mi cuenta → Privacidad» (`PUT /me/marketing`).
+        'RegisterRequest' => ['context', 'website', 'turnstile_token', 'accept_waiver', 'waiver_document_id'],
         // Cuerpo de PETICIÓN del alta con Google (`specs/auth-con-google.md` §7). Las dos claves del
         // descargo son opcionales por la MISMA razón que arriba y una más: en una instalación en modo
         // externo —o sin versión publicada— **no hay texto que aceptar**, así que exigirlas convertiría

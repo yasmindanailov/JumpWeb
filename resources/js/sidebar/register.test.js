@@ -27,7 +27,7 @@ const errorsOf = (response) => registerErrors(response, { messages: MESSAGES, au
 
 const FORM = {
     name: 'Mara', email: 'mara@jumpweb.test', phone: '600111222', password: 'Un4-C0ntraseña-Larga',
-    accept_privacy: true, accept_terms: true, marketing: false, website: '',
+    website: '',
 };
 
 describe('el reparto de los avisos', () => {
@@ -251,14 +251,25 @@ describe('el envío', () => {
         assert.equal(limpio.calls[0].body.website, '');
     });
 
-    test('las dos casillas legales viajan como booleanos', async () => {
+    /**
+     * ⚠️⚠️ **La T8·c dio la vuelta a este caso.** Decía que las dos casillas legales viajan como
+     * booleanos; ahora dice que **NO viajan**, y eso no es cosmético: `RegisterRequest` es
+     * `additionalProperties: false`, así que un cliente que las siguiera mandando recibiría un 422
+     * **por esquema** —un «no» que no habla de ningún campo de la pantalla y que nadie sabría leer—.
+     *
+     * Se asevera con `in`, no comparando con `undefined`: lo que se prohíbe es que la CLAVE exista.
+     */
+    test('las casillas legales retiradas ya no viajan en el cuerpo', async () => {
         const api = apiDouble();
 
-        await runRegister({ form: { ...FORM, accept_privacy: true, accept_terms: false }, api, messages: MESSAGES, auth: AUTH });
+        await runRegister({
+            form: { ...FORM, accept_privacy: true, accept_terms: true, marketing: true },
+            api, messages: MESSAGES, auth: AUTH,
+        });
 
-        assert.equal(api.calls[0].body.accept_privacy, true);
-        assert.equal(api.calls[0].body.accept_terms, false);
-        assert.equal(api.calls[0].body.marketing, false);
+        for (const key of ['accept_privacy', 'accept_terms', 'marketing']) {
+            assert.equal(key in api.calls[0].body, false, `«${key}» ya no es del alta: lo rechaza el contrato`);
+        }
     });
 
     /**
@@ -355,10 +366,16 @@ describe('la casilla del waiver', () => {
         assert.equal(api.calls[0].body.waiver_document_id, null);
     });
 
+    /**
+     * ⚠️ El tercer campo es DESCONOCIDO a propósito. Hasta la T8·c aquí iba `marketing`, que estaba en
+     * `FIELD_ORDER` y cerraba la lista; al retirarlo de las reglas seguiría saliendo el último —pero
+     * por la regla de «lo que no conozco, al final», no por su sitio—. *Un caso que sigue verde por un
+     * motivo distinto del que lo escribió deja de vigilar lo que decía vigilar.*
+     */
     test('el aviso del texto caducado se pinta bajo su campo y en el banner, en su sitio', () => {
         const errors = registerErrors(fail(422, {
             code: 'validation_failed', message: 'x',
-            fields: { marketing: ['m'], waiver_document_id: ['El texto ha cambiado.'], name: ['n'] },
+            fields: { un_campo_que_no_conozco: ['m'], waiver_document_id: ['El texto ha cambiado.'], name: ['n'] },
         }), { messages: MESSAGES, auth: AUTH });
 
         assert.equal(errors.fields.waiver_document_id, 'El texto ha cambiado.');
@@ -368,7 +385,7 @@ describe('la casilla del waiver', () => {
 
 /** `#178` (spec §7·7): la casilla del waiver puede ser obligatoria en interno, y su aviso tiene sitio en el orden del banner. */
 describe('el aviso de la casilla obligatoria del waiver', () => {
-    test('accept_waiver va en el banner en su sitio: tras las condiciones y antes del texto del waiver', () => {
+    test('accept_waiver va en el banner en su sitio: tras los campos del formulario y antes del texto del waiver', () => {
         const response = { ok: false, error: { code: 'validation_failed', fields: { waiver_document_id: ['qué texto'], accept_waiver: ['hay que aceptarlo'], name: ['falta el nombre'] } } };
 
         const errors = registerErrors(response, { messages: {}, auth: {} });

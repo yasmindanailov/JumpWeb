@@ -25,6 +25,12 @@ import { t as translate } from '../../i18n.js';
  *
  * ⚠️ **La privacidad no es casilla** (§7.1): el RGPD pide INFORMAR, y la base legal de una reserva es
  * el contrato. El enlace va visible y el rastro lo escribe el servidor igual.
+ *
+ * ⚠️⚠️ **Desde la T8·c aquí solo se piden el NOMBRE y el DESCARGO** (`[DECIDIDO owner, 2026-09-02]`,
+ * §21.4.3): el teléfono y las condiciones se piden al contratar. ▶ Y eso **reencuadra la desviación de
+ * la Q6 que §19.6 dejó abierta**: aquella pantalla se seguía pintando sin descargo porque también
+ * recogía esas dos cosas; hoy se sigue pintando **por el nombre** (`[DECIDIDO owner, 2026-09-02]`), que
+ * es dato de la reserva y de la firma, y no un trámite legal.
  */
 const props = defineProps({
     /** El grupo `account`: aquí llega además el subgrupo `google`, que viaja SOLO en esta puerta. */
@@ -117,31 +123,21 @@ async function submit() {
                     <small class="form__hint">{{ a('google.email_hint') }}</small>
                 </div>
 
+                <!-- ⚠️ **El nombre es lo ÚNICO que se teclea aquí, desde la T8·c.** Google devuelve a
+                     veces «Ana G.», y ese nombre viaja a la reserva y a la firma del descargo: ésta es
+                     la única ocasión de corregirlo antes de que se use. -->
                 <div class="form__field">
                     <label class="form__label" for="gs-name">{{ a('register.name') }}</label>
                     <input id="gs-name" v-model="store.form.name" type="text" autocomplete="name" required>
                     <span v-if="ui.errors.fields.name" class="form__error">{{ ui.errors.fields.name }}</span>
                 </div>
 
-                <div class="form__field">
-                    <label class="form__label" for="gs-phone">{{ a('register.phone') }}</label>
-                    <input id="gs-phone" v-model="store.form.phone" type="tel" autocomplete="tel" required>
-                    <span v-if="ui.errors.fields.phone" class="form__error">{{ ui.errors.fields.phone }}</span>
-                </div>
-
                 <div class="form__checks">
-                    <label class="check">
-                        <input v-model="store.form.accept_terms" type="checkbox">
-                        <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
-                        <span v-html="a('register.accept_terms')"></span>
-                    </label>
-                    <span v-if="ui.errors.fields.accept_terms" class="form__error">{{ ui.errors.fields.accept_terms }}</span>
-
                     <!-- El enlace de privacidad, VISIBLE y sin casilla (§7.1). Se reutiliza el literal
                          del alta con contraseña: es la misma información, y una segunda redacción
                          acabaría diciendo otra cosa. -->
                     <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
-                    <p class="form__hint" v-html="a('register.accept_privacy')"></p>
+                    <p class="form__hint" v-html="a('register.privacy_notice')"></p>
 
                     <!-- Solo con texto firmable en memoria. Sin él, ni casilla ni nodo. -->
                     <template v-if="waiverStore.document">

@@ -70,8 +70,8 @@ export const TOO_MANY_REQUESTS = 'too_many_requests';
  * @typedef {{summary: string[], fields: Record<string, string>}} RegisterErrors
  */
 
-/** El orden en que la web lista los avisos del banner: el de las reglas de validación. */
-const FIELD_ORDER = ['name', 'email', 'phone', 'password', 'accept_privacy', 'accept_terms', 'accept_waiver', 'waiver_document_id', 'marketing'];
+/** El orden en que se listan los avisos del banner: el de las reglas de validación del servidor. */
+const FIELD_ORDER = ['name', 'email', 'phone', 'password', 'accept_waiver', 'waiver_document_id'];
 
 function clean() {
     return { summary: [], fields: {} };
@@ -180,9 +180,8 @@ export async function runRegister({ form, api, messages = {}, auth = {}, context
         email: form?.email ?? '',
         phone: form?.phone ?? '',
         password: form?.password ?? '',
-        marketing: form?.marketing === true,
-        accept_privacy: form?.accept_privacy === true,
-        accept_terms: form?.accept_terms === true,
+        // ⚠️ **Ni privacidad, ni condiciones, ni marketing** (T8·c): `RegisterRequest` es
+        // `additionalProperties: false`, así que mandarlos hoy sería un 422 por ESQUEMA.
         accept_waiver: acceptWaiver,
         waiver_document_id: acceptWaiver ? waiver.id : null,
         context,

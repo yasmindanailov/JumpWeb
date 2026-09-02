@@ -254,9 +254,13 @@ return [
         'must_accept' => 'Debes aceptar esta condición para continuar.',
         'accept_waiver' => 'He leído y acepto el descargo de responsabilidad.',
         'waiver_read' => 'Leer el texto completo',
-        'accept_privacy' => 'He leído y acepto la <a href=":url" target="_blank" rel="noopener">política de privacidad</a>.',
-        'accept_terms' => 'Acepto los <a href=":url" target="_blank" rel="noopener">términos y condiciones</a>.',
-        'marketing' => 'Quiero recibir novedades y ofertas (opcional).',
+        // ⚠️⚠️ **NO es una casilla y por eso NO dice «acepto»** (T8·c, `specs/auth-con-google.md`
+        // §21.4.3). El art. 13 del RGPD pide INFORMAR, no que se acepte, y la base legal de una
+        // reserva es el contrato (art. 6.1.b). Hasta la T8·c este literal decía «He leído y acepto…» y
+        // ya se pintaba como párrafo suelto en la pantalla de Google: *un texto que afirma una
+        // aceptación que la pantalla no recoge no crea consentimiento, solo despista*. Si alguien le
+        // devuelve el verbo, lo que falta es la casilla, no el texto.
+        'privacy_notice' => 'Al crear tu cuenta tratamos tus datos según nuestra <a href=":url" target="_blank" rel="noopener">política de privacidad</a>.',
         'submit' => 'Crear cuenta',
         'submitting' => 'Creando…',
         'fix_errors' => 'Revisa estos campos:',

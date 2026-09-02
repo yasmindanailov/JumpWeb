@@ -82,23 +82,26 @@ class GoogleSignupTest extends ApiTestCase
 
         $this->fromDrawer('post', self::COMPLETE, [
             'name' => 'Ana Pérez Gómez',
-            'phone' => '600111222',
-            'accept_terms' => true,
-        ])->assertCreated()->assertValidResponse(201);
+        ])->assertCreated()->assertValidRequest()->assertValidResponse(201);
 
         $user = User::where('email', self::GOOGLE_EMAIL)->firstOrFail();
 
         $this->assertSame('Ana Pérez Gómez', $user->name, 'el nombre es EDITABLE: Google a veces devuelve «Ana G.»');
-        $this->assertSame('600111222', $user->phone);
         $this->assertNotNull($user->email_verified_at, 'Google acredita el buzón (`[DECIDIDO owner]` Q1)');
         $this->assertNotNull($user->privacy_accepted_at);
-        $this->assertNotNull($user->terms_accepted_at);
         $this->assertTrue($user->hasRole('customer'));
         $this->assertFalse((bool) $user->marketing_opt_in, 'el marketing no se pide aquí (art. 7.4)');
 
+        // ⚠️⚠️ **Nace SIN teléfono y SIN condiciones aceptadas, y ése es el estado correcto**
+        // (T8·c, `#350`): las dos las reclama el checkout, que es el momento del contrato. Un
+        // `assertNull` en vez de no aseverar nada porque lo que se afirma es que el alta NO las
+        // inventa — escribir una fila `terms` aquí indultaría a la cuenta (ver `AuthRegistrationTest`).
+        $this->assertNull($user->phone);
+        $this->assertNull($user->terms_accepted_at);
+
         // La PRUEBA del art. 5.2, igual que en el alta con contraseña: la casilla desaparece, el
         // rastro no.
-        $this->assertEqualsCanonicalizing(['privacy', 'terms'], $user->consents()->pluck('type')->all());
+        $this->assertEqualsCanonicalizing(['privacy'], $user->consents()->pluck('type')->all());
 
         $this->assertDatabaseHas('user_identities', [
             'user_id' => $user->id,
@@ -119,7 +122,7 @@ class GoogleSignupTest extends ApiTestCase
     {
         $this->arriveFromGoogle();
 
-        $this->fromDrawer('post', self::COMPLETE, ['name' => 'Ana', 'phone' => '600111222', 'accept_terms' => true])->assertCreated();
+        $this->fromDrawer('post', self::COMPLETE, ['name' => 'Ana'])->assertCreated();
 
         $user = User::where('email', self::GOOGLE_EMAIL)->firstOrFail();
 
@@ -139,11 +142,9 @@ class GoogleSignupTest extends ApiTestCase
 
         $this->fromDrawer('post', self::COMPLETE, [
             'name' => 'Ana',
-            'phone' => '600111222',
-            'accept_terms' => true,
             'accept_waiver' => true,
             'waiver_document_id' => $version->getKey(),
-        ])->assertCreated();
+        ])->assertCreated()->assertValidRequest();
 
         $user = User::where('email', self::GOOGLE_EMAIL)->firstOrFail();
 
@@ -168,7 +169,7 @@ class GoogleSignupTest extends ApiTestCase
         $this->publishWaiver();
         $this->arriveFromGoogle();
 
-        $this->fromDrawer('post', self::COMPLETE, ['name' => 'Ana', 'phone' => '600111222', 'accept_terms' => true])
+        $this->fromDrawer('post', self::COMPLETE, ['name' => 'Ana'])
             ->assertStatus(422)
             ->assertValidResponse(422)
             ->assertJsonPath('error.fields.accept_waiver.0', __('api.register.waiver_required'));
@@ -188,8 +189,6 @@ class GoogleSignupTest extends ApiTestCase
 
         $this->fromDrawer('post', self::COMPLETE, [
             'name' => 'Ana',
-            'phone' => '600111222',
-            'accept_terms' => true,
             'accept_waiver' => true,
             'waiver_document_id' => $old->getKey(),
         ])->assertStatus(409)->assertValidResponse(409);
@@ -197,17 +196,35 @@ class GoogleSignupTest extends ApiTestCase
         $this->assertDatabaseCount('users', 0);
     }
 
-    public function test_the_phone_and_the_terms_are_required(): void
+    /**
+     * ⚠️⚠️ **La T8·c dio la vuelta a este caso**: decía «el teléfono y las condiciones son
+     * obligatorios» y ahora **ninguno de los dos se pide aquí**. Lo único obligatorio es el nombre,
+     * que es el dato que viaja a la reserva y a la firma del descargo.
+     */
+    public function test_only_the_name_is_required(): void
     {
         $this->arriveFromGoogle();
 
-        $this->fromDrawer('post', self::COMPLETE, ['name' => 'Ana'])
+        $this->fromDrawer('post', self::COMPLETE, [])
             ->assertStatus(422)
             ->assertValidResponse(422)
-            ->assertJsonPath('error.fields.phone.0', 'El campo Teléfono es obligatorio.');
+            ->assertJsonPath('error.fields.name.0', 'El campo Nombre y apellidos es obligatorio.');
 
-        $this->fromDrawer('post', self::COMPLETE, ['name' => 'Ana', 'phone' => '600', 'accept_terms' => false])
-            ->assertStatus(422);
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    /**
+     * ⚠️ **Y el nombre en blanco tampoco pasa**, que es la forma en la que llega de verdad: el campo
+     * viaja siempre desde la pantalla, así que el caso real no es omitirlo sino vaciarlo.
+     */
+    public function test_a_blank_name_is_refused(): void
+    {
+        $this->arriveFromGoogle();
+
+        $this->fromDrawer('post', self::COMPLETE, ['name' => '   '])
+            ->assertStatus(422)
+            ->assertValidResponse(422)
+            ->assertJsonStructure(['error' => ['fields' => ['name']]]);
 
         $this->assertDatabaseCount('users', 0);
     }
@@ -223,8 +240,6 @@ class GoogleSignupTest extends ApiTestCase
 
         $this->fromDrawer('post', self::COMPLETE, [
             'name' => 'Ana',
-            'phone' => '600111222',
-            'accept_terms' => true,
             'email' => 'victima@example.com',
         ]);
 
@@ -237,8 +252,8 @@ class GoogleSignupTest extends ApiTestCase
     {
         $this->arriveFromGoogle();
 
-        $this->fromDrawer('post', self::COMPLETE, ['name' => 'Ana', 'phone' => '600111222', 'accept_terms' => true])->assertCreated();
-        $this->fromDrawer('post', self::COMPLETE, ['name' => 'Ana', 'phone' => '600111222', 'accept_terms' => true])->assertNotFound();
+        $this->fromDrawer('post', self::COMPLETE, ['name' => 'Ana'])->assertCreated();
+        $this->fromDrawer('post', self::COMPLETE, ['name' => 'Ana'])->assertNotFound();
 
         $this->assertSame(1, User::query()->count());
     }
@@ -254,7 +269,7 @@ class GoogleSignupTest extends ApiTestCase
 
         $existing = User::factory()->create(['email' => self::GOOGLE_EMAIL, 'email_verified_at' => now()]);
 
-        $this->fromDrawer('post', self::COMPLETE, ['name' => 'Ana', 'phone' => '600111222', 'accept_terms' => true])->assertCreated();
+        $this->fromDrawer('post', self::COMPLETE, ['name' => 'Ana'])->assertCreated();
 
         $this->assertSame(1, User::query()->count(), 'no puede nacer una segunda cuenta con el mismo correo');
         $this->assertAuthenticatedAs($existing->fresh());

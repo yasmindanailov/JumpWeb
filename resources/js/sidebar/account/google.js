@@ -77,9 +77,10 @@ export async function runGoogleSignup({ form, api, waiver = null, messages = {},
     const acceptWaiver = form?.accept_waiver === true && Number.isInteger(waiver?.id);
 
     const response = await api.post('/auth/google/complete', {
+        // ⚠️ **Solo el nombre y el descargo, desde la T8·c** (§21.4.3): el teléfono y las condiciones
+        // los pide el checkout. `GoogleSignupRequest` es `additionalProperties: false`, así que
+        // mandarlos aquí sería un 422 por ESQUEMA, no por lógica.
         name: form?.name ?? '',
-        phone: form?.phone ?? '',
-        accept_terms: form?.accept_terms === true,
         accept_waiver: acceptWaiver,
         waiver_document_id: acceptWaiver ? waiver.id : null,
     });

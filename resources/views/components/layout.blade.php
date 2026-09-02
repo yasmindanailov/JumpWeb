@@ -257,10 +257,10 @@
                         'ui' => __('ui'),
                         'account' => [
                             'login' => __('account.login'),
-                            // ⚠️ Los dos textos legales llevan un `<a href>` dentro y viajan **ya
-                            // interpolados**: la URL la compone `route()`, y partirlos en «texto +
+                            // ⚠️ El texto de privacidad lleva un `<a href>` dentro y viaja **ya
+                            // interpolado**: la URL la compone `route()`, y partirlo en «texto +
                             // enlace» obligaría al cliente a recomponer una frase traducida —que en
-                            // francés y en inglés no ordena igual—. El cajón los pinta con `v-html`;
+                            // francés y en inglés no ordena igual—. El cajón lo pinta con `v-html`;
                             // el contenido sale de `lang/` y de `route()`, nunca de un usuario.
                             // ⚠️ `register` va PODADO clave a clave desde el 2026-08-26 (Fase 6, `DECISIONES
                             // #166`); antes viajaba entero. Se quedan fuera `must_accept`, `already_exists`,
@@ -268,10 +268,14 @@
                             // dentro del 422 —`register.js::registerErrors()` los pinta tal cual— y el cajón
                             // nunca los leía del arranque. Viajaban en TODAS las páginas públicas. La casilla
                             // del waiver y su «leer el texto» entran aquí porque los pinta el formulario de alta.
+                            // ⚠️ Y desde la T8·c (`#350`) se van también `accept_terms` y `marketing`: sus
+                            // casillas salieron de las dos altas —las condiciones se aceptan al contratar y el
+                            // marketing vive en el interruptor de la cuenta—, así que eran bytes que viajaban
+                            // en cada página pública sin tener quien los pintara.
                             'register' => array_replace(\Illuminate\Support\Arr::only(__('account.register'), [
                                 'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
-                                'password_hint', 'accept_waiver', 'waiver_read', 'accept_privacy', 'accept_terms',
-                                'marketing', 'submit', 'submitting', 'fix_errors', 'leave_blank',
+                                'password_hint', 'accept_waiver', 'waiver_read', 'privacy_notice',
+                                'submit', 'submitting', 'fix_errors', 'leave_blank',
                                 // ⚠️ **El botón de Google viaja SIEMPRE y su pantalla NO** (`#343`): el
                                 // rótulo lo pintan las dos pestañas de auth, que las ve quien no tiene
                                 // sesión, así que no hay condición bajo la que esconderlo. Cuesta ~35 B.
@@ -279,8 +283,7 @@
                                 // su puerta, más abajo: a ella no se llega sin volver de Google.
                                 'google_cta',
                             ]), [
-                                'accept_privacy' => __('account.register.accept_privacy', ['url' => route('legal.privacidad')]),
-                                'accept_terms' => __('account.register.accept_terms', ['url' => route('legal.condiciones')]),
+                                'privacy_notice' => __('account.register.privacy_notice', ['url' => route('legal.privacidad')]),
                             ]),
                             // ⚠️ **Recuperar contraseña viaja SIN sesión, igual que entrar y darse de
                             // alta** (`specs/auth-en-cajon.md` §4.1): sus tres pantallas son

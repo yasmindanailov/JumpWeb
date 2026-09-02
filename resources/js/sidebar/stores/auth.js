@@ -35,9 +35,12 @@ import { useWaiverStore } from './waiver.js';
  */
 const emptyForm = () => ({
     email: '', password: '', remember: false,
-    name: '', phone: '', accept_privacy: false, accept_terms: false, marketing: false,
-    // Fase 6 · waiver: la casilla SEPARADA y desmarcada por defecto. El id del texto NO vive aquí:
-    // lo pone `register.js` a partir del documento que el store del waiver tiene en memoria.
+    name: '', phone: '',
+    // ⚠️ **Ni privacidad, ni condiciones, ni marketing: la T8·c las sacó de las dos altas**
+    // (`specs/auth-con-google.md` §21.4.3). La privacidad es un enlace informativo, las condiciones
+    // se aceptan al contratar (`buyer-due.js`) y el marketing vive en el interruptor de la cuenta.
+    // Fase 6 · waiver: la única casilla que queda, SEPARADA y desmarcada por defecto. El id del texto
+    // NO vive aquí: lo pone `register.js` a partir del documento que el store del waiver tiene en memoria.
     accept_waiver: false,
     // El señuelo: un cliente legítimo lo deja vacío y el servidor finge un alta si llega relleno.
     // Y el token del anti-bot, que escribe Cloudflare por callback (`turnstile.js`), no el usuario.

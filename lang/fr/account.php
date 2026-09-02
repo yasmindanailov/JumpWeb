@@ -230,9 +230,8 @@ return [
         'must_accept' => 'Vous devez accepter cette condition pour continuer.',
         'accept_waiver' => "J'ai lu et j'accepte la décharge de responsabilité.",
         'waiver_read' => 'Lire le texte complet',
-        'accept_privacy' => "J'ai lu et j'accepte la <a href=\":url\" target=\"_blank\" rel=\"noopener\">politique de confidentialité</a>.",
-        'accept_terms' => "J'accepte les <a href=\":url\" target=\"_blank\" rel=\"noopener\">conditions générales</a>.",
-        'marketing' => 'Je souhaite recevoir les nouveautés et offres (facultatif).',
+        // Voir l'avertissement dans `lang/es/account.php` : c'est un AVIS, pas une case à cocher.
+        'privacy_notice' => 'En créant votre compte, nous traitons vos données conformément à notre <a href=":url" target="_blank" rel="noopener">politique de confidentialité</a>.',
         'submit' => 'Créer le compte',
         'submitting' => 'Création…',
         'fix_errors' => 'Vérifiez ces champs :',

@@ -74,8 +74,12 @@ describe('el envío', () => {
             waiver: { id: 7 },
         });
 
+        // ⚠️ La lista es EXACTA y desde la T8·c son tres claves: el teléfono y las condiciones se
+        // piden al contratar, y `GoogleSignupRequest` es `additionalProperties: false`, así que
+        // seguir mandándolos sería un 422 por esquema. Se le pasan a propósito en el `form` para
+        // que el caso demuestre que el módulo los DESCARTA, no que la pantalla no los tenga.
         assert.deepEqual(Object.keys(api.sent[0].body).sort(), [
-            'accept_terms', 'accept_waiver', 'name', 'phone', 'waiver_document_id',
+            'accept_waiver', 'name', 'waiver_document_id',
         ]);
         assert.equal(api.sent[0].path, '/auth/google/complete');
     });
@@ -84,7 +88,7 @@ describe('el envío', () => {
         const api = apiThatCaptures();
 
         await runGoogleSignup({
-            form: { name: 'Ana', phone: '600', accept_terms: true, accept_waiver: true },
+            form: { name: 'Ana', accept_waiver: true },
             api,
             waiver: { id: 12 },
         });
@@ -101,7 +105,7 @@ describe('el envío', () => {
         const api = apiThatCaptures();
 
         await runGoogleSignup({
-            form: { name: 'Ana', phone: '600', accept_terms: true, accept_waiver: true },
+            form: { name: 'Ana', accept_waiver: true },
             api,
             waiver: null,
         });
@@ -143,13 +147,13 @@ describe('el envío', () => {
             ok: false,
             status: 422,
             data: null,
-            error: { code: 'validation_failed', fields: { phone: ['El teléfono es obligatorio.'] } },
+            error: { code: 'validation_failed', fields: { name: ['El campo Nombre es obligatorio.'] } },
         });
 
         const outcome = await runGoogleSignup({ form: {}, api });
 
-        assert.equal(outcome.errors.fields.phone, 'El teléfono es obligatorio.');
-        assert.deepEqual(outcome.errors.summary, ['El teléfono es obligatorio.']);
+        assert.equal(outcome.errors.fields.name, 'El campo Nombre es obligatorio.');
+        assert.deepEqual(outcome.errors.summary, ['El campo Nombre es obligatorio.']);
         assert.equal(outcome.expired, false);
         assert.equal(outcome.stale, false);
     });
@@ -183,7 +187,7 @@ describe('el estado de la pantalla', () => {
     test('tras un «no» del servidor, el botón vuelve a estar vivo', async () => {
         const api = apiThatCaptures({
             ok: false, status: 422, data: null,
-            error: { code: 'validation_failed', fields: { phone: ['Falta el teléfono.'] } },
+            error: { code: 'validation_failed', fields: { name: ['Falta el nombre.'] } },
         });
 
         const { state } = await submitGoogleScreen({
@@ -192,7 +196,7 @@ describe('el estado de la pantalla', () => {
         });
 
         assert.equal(state.busy, false);
-        assert.equal(state.errors.fields.phone, 'Falta el teléfono.');
+        assert.equal(state.errors.fields.name, 'Falta el nombre.');
         assert.deepEqual(state.pending, { name: 'Ana', email: 'a@b.test' }, 'el perfil sigue ahí: el formulario tiene que poder corregirse');
     });
 

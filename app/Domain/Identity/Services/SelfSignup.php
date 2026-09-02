@@ -75,7 +75,7 @@ class SelfSignup
     public const RESEND_EMAIL_COOLDOWN_SECONDS = 60;
 
     /**
-     * @param  array{name:string,email:string,phone:string,password:string,marketing?:bool}  $data  ya validado por el llamante
+     * @param  array{name:string,email:string,phone:string,password:string}  $data  ya validado por el llamante
      * @param  bool  $notifyByEmail  `false` en la compra: pay-first no manda verificación (`DECISIONES` del 2026-06-14 —
      *                               el pago la sustituye, y un bot no paga)
      * @param  string  $honeypot  campo señuelo; si llega con algo, es un bot
@@ -121,8 +121,8 @@ class SelfSignup
             return $this->handleExisting($existing, $ip);
         }
 
-        // 6) Cuenta + rol + consentimientos, en UNA transacción. Sin ella, un fallo a mitad dejaría
-        //    al usuario sin rol o sin consents, que son la prueba de aceptación que exige el RGPD.
+        // 6) Cuenta + rol + consentimiento de privacidad, en UNA transacción. Sin ella, un fallo a
+        //    mitad dejaría al usuario sin rol o sin la constancia que exige el art. 5.2 del RGPD.
         //    El correo se manda FUERA: un fallo de SMTP no puede revertir un alta ya válida.
         $user = $this->createAccount($data, $email, $ip);
 
@@ -200,23 +200,28 @@ class SelfSignup
     }
 
     /**
-     * @param  array{name:string,email:string,phone:string,password:string,marketing?:bool}  $data
+     * @param  array{name:string,email:string,phone:string,password:string}  $data
      */
     private function createAccount(array $data, string $email, string $ip): User
     {
         $now = now();
-        $marketing = (bool) ($data['marketing'] ?? false);
 
-        return DB::transaction(function () use ($data, $email, $ip, $now, $marketing): User {
+        return DB::transaction(function () use ($data, $email, $ip, $now): User {
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $email,
                 'phone' => $data['phone'],
                 'password' => $data['password'],
                 'locale' => app()->getLocale(),
-                'marketing_opt_in' => $marketing,
+                // ⚠️ **El marketing NO se pide en el alta** (`[DECIDIDO owner, 2026-09-02]`, T8·c): se
+                // ofrece con su interruptor en «Mi cuenta → Privacidad», donde además se puede retirar
+                // (art. 7.3). Aquí nace apagado, igual que en el alta con Google y en la de mostrador.
+                'marketing_opt_in' => false,
+                // ⚠️⚠️ **Privacidad sí, condiciones NO, y la asimetría es la tanda entera.** La
+                // privacidad se INFORMA (art. 13) y su rastro es la prueba del art. 5.2; las
+                // condiciones se ACEPTAN, y desde la T8 eso ocurre en el momento del contrato —el
+                // checkout—, no al crear la cuenta.
                 'privacy_accepted_at' => $now,
-                'terms_accepted_at' => $now,
                 // #216: el waiver salió del flujo de alta (lo gestiona el sistema externo de la
                 // clienta). La columna y el tipo de consent se conservan para datos históricos.
             ]);
@@ -225,15 +230,18 @@ class SelfSignup
                 $user->roles()->attach($role);
             }
 
-            $types = $marketing ? ['privacy', 'terms', 'marketing'] : ['privacy', 'terms'];
-            foreach ($types as $type) {
-                $user->consents()->create([
-                    'type' => $type,
-                    'accepted_at' => $now,
-                    'ip' => $ip,
-                    'version' => Consent::CURRENT_VERSION,
-                ]);
-            }
+            // ⚠️⚠️ **NO se escribe una fila `terms` aquí, y no es una simplificación: escribirla
+            // INDULTA a la cuenta.** Medido antes de tocar nada: la regla de gracia de
+            // {@see TermsAcceptance::statusFor()} da por aceptada la v1 a quien tenga una aceptación
+            // anterior al versionado, y `Consent::CURRENT_VERSION` es una fecha, no un `vN·xx`. Una
+            // cuenta recién creada salía con `pendingFor() === false` y **el checkout no le pedía
+            // nada** — el hueco que la T8·b existe para cerrar, reabierto por su propio alta.
+            $user->consents()->create([
+                'type' => Consent::TYPE_PRIVACY,
+                'accepted_at' => $now,
+                'ip' => $ip,
+                'version' => Consent::CURRENT_VERSION,
+            ]);
 
             // Fase 6 · waiver (`specs/waiver-probatorio.md` §4.4): la casilla SEPARADA y desmarcada del
             // alta. Solo si el llamante ya comprobó que el identificador es el de la versión vigente

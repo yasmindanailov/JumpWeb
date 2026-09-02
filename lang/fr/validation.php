@@ -105,7 +105,7 @@ return [
         'phone' => 'téléphone',
         'born_on' => 'date de naissance',
         'password' => 'mot de passe',
-        'accept_privacy' => 'la politique de confidentialité',
+        // Voir `lang/es/validation.php` : `accept_privacy` est parti avec sa règle (T8·c).
         'accept_terms' => 'les conditions générales',
         'message' => 'message',
     ],

@@ -244,7 +244,7 @@ class SidebarMountTest extends TestCase
 
         foreach ([
             'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
-            'password_hint', 'marketing', 'submit', 'submitting', 'leave_blank', 'fix_errors',
+            'password_hint', 'privacy_notice', 'submit', 'submitting', 'leave_blank', 'fix_errors',
         ] as $key) {
             $this->assertNotSame(
                 '', (string) ($register[$key] ?? ''),
@@ -255,11 +255,15 @@ class SidebarMountTest extends TestCase
     }
 
     /**
-     * ⚠️ **Los dos textos legales viajan con su `<a href>` DENTRO y ya interpolado.**
+     * ⚠️ **El aviso de privacidad viaja con su `<a href>` DENTRO y ya interpolado.**
      *
-     * El Blade los pinta con `{!! !!}` y la URL la compone `route()`. Si viajaran sin interpolar, el
-     * cajón enseñaría un `:url` literal en medio de un texto legal; y partirlos en «texto + enlace»
+     * El Blade lo pinta con `{!! !!}` y la URL la compone `route()`. Si viajara sin interpolar, el
+     * cajón enseñaría un `:url` literal en medio de un texto legal; y partirlo en «texto + enlace»
      * obligaría al cliente a recomponer una frase traducida que no ordena igual en cada idioma.
+     *
+     * ⚠️ **Era una lista de DOS hasta la T8·c** (`#350`): `accept_terms` se fue con su casilla, y su
+     * enlace vive ahora en el paso de pagar (`tickets.due_terms` y `tickets.terms_link`), que es donde
+     * la ley pide que se pueda leer.
      */
     public function test_the_mount_payload_carries_the_legal_texts_with_their_links(): void
     {
@@ -268,7 +272,7 @@ class SidebarMountTest extends TestCase
 
             $register = $this->bootPayload()['account']['register'] ?? [];
 
-            foreach (['accept_privacy' => 'legal.privacidad', 'accept_terms' => 'legal.condiciones'] as $key => $route) {
+            foreach (['privacy_notice' => 'legal.privacidad'] as $key => $route) {
                 $text = (string) ($register[$key] ?? '');
 
                 $this->assertStringContainsString('<a ', $text, "«{$key}» tiene que llevar su enlace dentro");
@@ -318,8 +322,8 @@ class SidebarMountTest extends TestCase
             // ⚠️ El ORDEN lo fija `lang/*/account.php`, no la lista de `Arr::only`.
             [
                 'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
-                'password_hint', 'accept_waiver', 'waiver_read', 'accept_privacy', 'accept_terms',
-                'marketing', 'submit', 'submitting', 'fix_errors', 'leave_blank',
+                'password_hint', 'accept_waiver', 'waiver_read', 'privacy_notice',
+                'submit', 'submitting', 'fix_errors', 'leave_blank',
                 // ⚠️ **`google_cta` viaja SIEMPRE y su PANTALLA no** (`#343`): el rótulo lo pintan las
                 // dos pestañas de auth, que las ve quien no tiene sesión, así que no hay condición
                 // bajo la que esconderlo. El subgrupo `google` —los ~380 B de la pantalla que completa

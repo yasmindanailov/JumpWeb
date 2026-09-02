@@ -21,7 +21,7 @@ use Illuminate\Support\Str;
  * Hermano de {@see SelfSignup} y deliberadamente distinto: aquél se defiende de bots con cuatro capas
  * —honeypot, dos limitadores y anti-bot— porque cualquiera puede teclear un correo; aquí, **quien
  * llega ya pasó por Google**, así que no hay nada que fingir. Lo que sí comparte es lo que escribe:
- * cuenta, rol, sellos legales y **una fila de `consents` por tipo**, para que un cliente de Google no
+ * cuenta, rol, el sello de privacidad y **su fila de `consents`**, para que un cliente de Google no
  * salga distinto en el panel ni en el export.
  *
  * ## Las tres cosas que lo hacen seguro
@@ -45,7 +45,7 @@ final class GoogleSignup
     ) {}
 
     /**
-     * @param  array{name: string, phone: string}  $data  lo que la pantalla añade, ya validado
+     * @param  array{name: string}  $data  lo que la pantalla añade, ya validado
      * @param  LegalDocumentVersion|null  $waiver  el texto que la pantalla SIRVIÓ, o `null` si en esta
      *                                             instalación no se firma (modo externo o sin versión)
      *
@@ -72,18 +72,20 @@ final class GoogleSignup
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $profile->email,
-                'phone' => $data['phone'],
+                // ⚠️ **Sin teléfono, desde la T8·c** (`[DECIDIDO owner, 2026-09-02]`): lo pide el
+                // checkout, que es donde hace falta. La cuenta nace sin él —un estado que el producto
+                // ya admite por la puerta del alta de mostrador— y `CheckoutDuties` lo reclama antes
+                // de crear el primer pedido.
                 // Contraseña ALEATORIA e inservible, como el alta de mostrador: nadie la conoce y
                 // nadie puede entrar con ella. Quien quiera una la pide con «he olvidado mi
                 // contraseña», que es lo que hace que esta cuenta no dependa de Google para siempre.
                 'password' => Str::random(60),
                 'locale' => app()->getLocale(),
-                // ⚠️ **El marketing NO se pide aquí** (`[DECIDIDO owner]` Q9): la pantalla ya pide
-                // teléfono, condiciones y descargo, y el art. 7.4 prohíbe empaquetarlo con lo demás.
-                // Se ofrece en «Mi cuenta → Privacidad», con su interruptor (T3).
+                // ⚠️ **El marketing NO se pide aquí** (`[DECIDIDO owner]` Q9): el art. 7.4 prohíbe
+                // empaquetarlo con lo demás. Se ofrece en «Mi cuenta → Privacidad», con su
+                // interruptor (T3) — y desde la T8·c tampoco lo pide el alta con contraseña.
                 'marketing_opt_in' => false,
                 'privacy_accepted_at' => $now,
-                'terms_accepted_at' => $now,
             ]);
 
             // ⚠️ `email_verified_at` NO es `fillable` a propósito, así que se escribe con `forceFill`
@@ -99,14 +101,17 @@ final class GoogleSignup
             // La PRUEBA del art. 5.2, igual que en el alta con contraseña. La privacidad deja de ser
             // casilla (§7.1: el RGPD pide INFORMAR, no que se acepte) pero **el rastro se conserva**:
             // fecha, versión e IP. Lo que desaparece es la casilla, no la constancia.
-            foreach (['privacy', 'terms'] as $type) {
-                $user->consents()->create([
-                    'type' => $type,
-                    'accepted_at' => $now,
-                    'ip' => $ip,
-                    'version' => Consent::CURRENT_VERSION,
-                ]);
-            }
+            //
+            // ⚠️⚠️ **Y las condiciones NO dejan fila, desde la T8·c.** Escribirla con la versión de
+            // `Consent::CURRENT_VERSION` —una fecha, no un `vN·xx`— haría que la regla de gracia de
+            // {@see TermsAcceptance::statusFor()} diera por aceptada la v1 a una cuenta que no ha
+            // aceptado nada, y el checkout no le pediría las condiciones nunca.
+            $user->consents()->create([
+                'type' => Consent::TYPE_PRIVACY,
+                'accepted_at' => $now,
+                'ip' => $ip,
+                'version' => Consent::CURRENT_VERSION,
+            ]);
 
             UserIdentity::create([
                 'user_id' => $user->getKey(),

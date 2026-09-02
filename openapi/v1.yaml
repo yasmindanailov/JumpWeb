@@ -201,19 +201,24 @@ paths:
       operationId: completeGoogleSignup
       summary: Completar el alta con Google
       description: |
-        Crea la cuenta con lo que Google **no** puede dar —teléfono y aceptaciones— y **abre sesión**:
-        quien llega acaba de demostrar su identidad ante Google y no tiene contraseña que teclear (es
-        la misma decisión que el alta suelta desde `#331`).
+        Crea la cuenta con lo que Google **no** puede dar —el nombre corregido y el descargo— y **abre
+        sesión**: quien llega acaba de demostrar su identidad ante Google y no tiene contraseña que
+        teclear (es la misma decisión que el alta suelta desde `#331`).
 
-        En la misma operación se escriben los sellos legales, una fila de `consents` por tipo, el
-        vínculo con Google y **la firma del descargo**, que aquí se puede hacer en el acto porque el
-        correo queda verificado (`[DECIDIDO owner]`).
+        En la misma operación se escriben el sello de privacidad y su fila de `consents`, el vínculo
+        con Google y **la firma del descargo**, que aquí se puede hacer en el acto porque el correo
+        queda verificado (`[DECIDIDO owner]`).
 
         ⚠️ **Consume el perfil**: un segundo envío —dos pestañas, doble clic— ya no encuentra nada que
         crear y responde 404.
 
         ⚠️ **La privacidad no es una casilla** (§7.1): el RGPD pide INFORMAR, no que se acepte, y la
         base legal de una reserva es el contrato. El rastro sí se escribe.
+
+        ⚠️⚠️ **Ni el teléfono ni las condiciones se piden aquí, desde la T8·c**
+        (`[DECIDIDO owner, 2026-09-02]`): los reclama `POST /orders`, que es el momento del contrato —
+        donde los sitúan la LCGC (art. 5) y el TRLGDCU (art. 97)—. La cuenta nace **sin teléfono y sin
+        aceptación de condiciones registrada**, y el checkout no deja crear un pedido sin las dos.
 
         ⚠️ El **marketing no se pide aquí** (art. 7.4, no empaquetado): vive en el interruptor de la
         cuenta.
@@ -4707,8 +4712,8 @@ components:
           maxLength: 32
           description: |
             El teléfono, **solo si la cuenta no lo tiene**. Se pide aquí porque es donde hace falta —
-            gestionar la reserva— y no al crear la cuenta, que es lo que permite que el alta con
-            Google no lo pregunte. A quien ya lo dio no se le vuelve a preguntar.
+            gestionar la reserva— y porque al crear la cuenta no siempre está: ni el alta con Google
+            ni la de mostrador lo preguntan. A quien ya lo dio no se le vuelve a preguntar.
 
     CartLineCheckRequest:
       type: object
@@ -5555,19 +5560,15 @@ components:
       description: |
         Lo único que Google no puede dar. **Ni el `sub` ni el correo viajan aquí** y no es un olvido:
         los pone el servidor desde la sesión (§6.3·3).
-      required: [name, phone, accept_terms]
+
+        ⚠️ Desde la T8·c (`[DECIDIDO owner, 2026-09-02]`) son **dos cosas**: el nombre y el descargo.
+        El teléfono y las condiciones se piden al contratar (`POST /orders`), no al crear la cuenta.
+      required: [name]
       additionalProperties: false
       properties:
         name:
           type: string
           maxLength: 255
-        phone:
-          type: string
-          maxLength: 30
-          description: Obligatorio — «imprescindible para las reservas» (`[DECIDIDO owner]`).
-        accept_terms:
-          type: boolean
-          description: Aceptación contractual de las condiciones. Obligatoria.
         accept_waiver:
           type: boolean
           nullable: true
@@ -5586,9 +5587,20 @@ components:
     RegisterRequest:
       type: object
       description: |
-        Datos del alta. El correo se normaliza en servidor. Las dos casillas legales son la prueba
-        de aceptación que exige el RGPD y se persisten como consentimientos con su versión.
-      required: [name, email, phone, password, accept_privacy, accept_terms]
+        Datos del alta. El correo se normaliza en servidor.
+
+        ⚠️⚠️ **Desde la T8·c el alta NO lleva casillas legales** (`[DECIDIDO owner, 2026-09-02]`), y
+        cada una se fue por un motivo distinto:
+          · **privacidad** — el art. 13 pide INFORMAR, no que se acepte. El enlace va visible en la
+            pantalla y el rastro se sigue escribiendo (`privacy_accepted_at` y su fila de `consents`);
+          · **condiciones** — se aceptan en el momento del contrato, donde las sitúan la LCGC (art. 5)
+            y el TRLGDCU (art. 97): las pide `POST /orders`. La cuenta nace **sin aceptación
+            registrada**, y ése es el estado correcto;
+          · **marketing** — vive en `PUT /me/marketing`, con su interruptor, porque el art. 7.3 exige
+            que retirarlo sea tan fácil como darlo.
+
+        La única casilla que queda es la del descargo (`accept_waiver`).
+      required: [name, email, phone, password]
       additionalProperties: false
       properties:
         name:
@@ -5606,15 +5618,6 @@ components:
           format: password
           minLength: 8
           description: Mínimo 8 caracteres y no puede aparecer en filtraciones conocidas.
-        accept_privacy:
-          type: boolean
-          description: Debe ser `true`.
-        accept_terms:
-          type: boolean
-          description: Debe ser `true`.
-        marketing:
-          type: boolean
-          description: Consentimiento OPCIONAL de comunicaciones comerciales.
         context:
           type: string
           enum: [standalone, purchase]

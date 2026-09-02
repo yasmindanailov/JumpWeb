@@ -105,7 +105,9 @@ return [
         'phone' => 'teléfono',
         'born_on' => 'fecha de nacimiento',
         'password' => 'contraseña',
-        'accept_privacy' => 'la política de privacidad',
+        // ⚠️ `accept_privacy` se retiró con su regla (T8·c): la privacidad ya no es una casilla en
+        // ninguna de las dos altas, así que no hay campo que nombrar. `accept_terms` SÍ sigue: lo
+        // valida el checkout (`POST /orders`), que es donde se aceptan desde `#349`.
         'accept_terms' => 'los términos y condiciones',
         'message' => 'mensaje',
     ],

@@ -9,6 +9,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\SelfSignup;
+use App\Domain\Identity\Services\TermsAcceptance;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Turnstile;
 use App\Notifications\AccountAlreadyExists;
@@ -57,13 +58,13 @@ class AuthRegistrationTest extends ApiTestCase
     /** @param  array<string, mixed>  $overrides */
     private function payload(array $overrides = []): array
     {
+        // ⚠️ **Sin casillas legales desde la T8·c** (`#350`): la privacidad es un aviso, las
+        // condiciones se aceptan al contratar y el marketing vive en el interruptor de la cuenta.
         return array_merge([
             'name' => 'Ana Pérez',
             'email' => 'nuevo@jumpweb.test',
             'phone' => '600111222',
             'password' => 'un-secreto-muy-largo-2026',
-            'accept_privacy' => true,
-            'accept_terms' => true,
         ], $overrides);
     }
 
@@ -74,7 +75,7 @@ class AuthRegistrationTest extends ApiTestCase
             ->postJson(self::ROOT.'/auth/register', $this->payload($overrides));
     }
 
-    public function test_a_valid_signup_creates_the_account_with_its_role_and_consents(): void
+    public function test_a_valid_signup_creates_the_account_with_its_role_and_the_privacy_consent(): void
     {
         $this->register()
             ->assertCreated()
@@ -85,30 +86,73 @@ class AuthRegistrationTest extends ApiTestCase
         $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
 
         $this->assertTrue($user->roles->contains('name', 'customer'));
-        $this->assertSame(['privacy', 'terms'], $user->consents->pluck('type')->sort()->values()->all());
+        // ⚠️⚠️ **Privacidad SÍ, condiciones NO** (T8·c, `#350`). La privacidad se INFORMA (art. 13) y
+        // su fila es la constancia del art. 5.2; las condiciones se ACEPTAN, y eso ocurre en el
+        // momento del contrato. La lista es EXACTA a propósito: ver el caso de abajo para qué pasa si
+        // alguien devuelve aquí la fila `terms`.
+        $this->assertSame(['privacy'], $user->consents->pluck('type')->sort()->values()->all());
         $this->assertSame(Consent::CURRENT_VERSION, $user->consents->first()->version);
+        $this->assertNotNull($user->privacy_accepted_at);
+        $this->assertNull($user->terms_accepted_at, 'el alta no acepta condiciones: eso es del checkout');
         Notification::assertSentTo($user, VerifyEmail::class);
     }
 
-    public function test_the_marketing_consent_is_optional_and_recorded_when_given(): void
+    /**
+     * ❗❗❗ **EL caso de la T8·c, y el que hace que la tanda no sea cosmética.**
+     *
+     * Quitar la casilla de la pantalla no basta: mientras el alta siguiera escribiendo una fila
+     * `terms`, la **regla de gracia** de {@see TermsAcceptance::statusFor()} la empataría con la v1 —
+     * porque `Consent::CURRENT_VERSION` es una fecha (`2026-05-23`) y no un `vN·xx`— y el checkout
+     * **no le pediría nada nunca** a ninguna cuenta nueva. Medido antes de tocar el código:
+     * `pendingFor()` devolvía `false` para una cuenta recién creada.
+     *
+     * ⚠️ **Con su CONTROL**: la gracia sigue viva para quien SÍ aceptó antes del versionado, que es
+     * la única razón por la que existe. Sin ese control, este caso pasaría igual habiendo roto la
+     * regla entera.
+     */
+    public function test_a_brand_new_account_still_owes_the_terms_and_the_grace_rule_survives(): void
     {
-        $this->register(['marketing' => true])->assertCreated();
+        app(LegalDocumentPublisher::class)->publish('condiciones', [
+            'es' => ['title' => 'Condiciones', 'body' => [['h' => 'Uno', 'p' => 'Texto.']]],
+        ]);
+
+        $this->register()->assertCreated();
+        $nueva = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
+
+        $this->assertTrue(
+            app(TermsAcceptance::class)->pendingFor($nueva),
+            'una cuenta recién creada tiene que pasar por las condiciones al contratar'
+        );
+
+        // CONTROL: la cuenta ANTERIOR al versionado, con su fila de fecha. A ésa no se le vuelve a
+        // pedir — es el `[DECIDIDO owner]` de `#348`, y sigue en pie.
+        $vieja = User::factory()->create(['email' => 'de-siempre@jumpweb.test']);
+        $vieja->consents()->create([
+            'type' => Consent::TYPE_TERMS,
+            'accepted_at' => now()->subYear(),
+            'ip' => '127.0.0.1',
+            'version' => Consent::CURRENT_VERSION,
+        ]);
+
+        $this->assertFalse(
+            app(TermsAcceptance::class)->pendingFor($vieja->fresh()),
+            'la regla de gracia se ha roto: a quien ya aceptó no se le vuelve a pedir la v1'
+        );
+    }
+
+    /**
+     * `[DECIDIDO owner, 2026-09-02]` (T8·c): **el alta no pide marketing**. Se ofrece en «Mi cuenta →
+     * Privacidad», donde además se puede retirar con un clic — que es lo que exige el art. 7.3 y lo
+     * que una casilla del alta no daba.
+     */
+    public function test_the_signup_records_no_marketing_consent(): void
+    {
+        $this->register()->assertCreated();
 
         $user = User::where('email', 'nuevo@jumpweb.test')->firstOrFail();
 
-        $this->assertTrue($user->marketing_opt_in);
-        $this->assertContains('marketing', $user->consents->pluck('type')->all());
-    }
-
-    /** Las dos casillas legales son la prueba de aceptación del RGPD: sin ellas no hay alta. */
-    public function test_the_legal_checkboxes_are_required(): void
-    {
-        $this->register(['accept_privacy' => false, 'accept_terms' => false])
-            ->assertStatus(422)
-            ->assertValidResponse(422)
-            ->assertJsonStructure(['error' => ['fields' => ['accept_privacy', 'accept_terms']]]);
-
-        $this->assertSame(0, User::where('email', 'nuevo@jumpweb.test')->count());
+        $this->assertFalse((bool) $user->marketing_opt_in);
+        $this->assertNotContains('marketing', $user->consents->pluck('type')->all());
     }
 
     public function test_a_weak_password_is_rejected(): void
@@ -503,7 +547,7 @@ class AuthRegistrationTest extends ApiTestCase
         $this->assertSame('web', $signature->channel, 'el canal es el del ALTA, no el del clic de verificación');
         $this->assertSame('Ana Pérez', $signature->holder_name);
         $this->assertTrue($signature->verifyHash());
-        $this->assertSame(['privacy', 'terms', 'waiver'], $user->consents->pluck('type')->sort()->values()->all());
+        $this->assertSame(['privacy', 'waiver'], $user->consents->pluck('type')->sort()->values()->all());
         $this->assertNotNull($user->waiver_accepted_at);
         $this->assertNull($user->waiver_pending_document_id, 'la pendiente se limpia al firmar');
         $this->assertDatabaseHas('audit_logs', ['action' => 'waiver.signed']);

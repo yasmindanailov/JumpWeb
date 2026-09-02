@@ -229,9 +229,8 @@ return [
         'must_accept' => 'You must accept this to continue.',
         'accept_waiver' => 'I have read and accept the liability waiver.',
         'waiver_read' => 'Read the full text',
-        'accept_privacy' => 'I have read and accept the <a href=":url" target="_blank" rel="noopener">privacy policy</a>.',
-        'accept_terms' => 'I accept the <a href=":url" target="_blank" rel="noopener">terms and conditions</a>.',
-        'marketing' => 'I want to receive news and offers (optional).',
+        // Ver el aviso de `lang/es/account.php`: es un AVISO, no una casilla, y por eso no dice «I accept».
+        'privacy_notice' => 'When you create your account we handle your data as described in our <a href=":url" target="_blank" rel="noopener">privacy policy</a>.',
         'submit' => 'Create account',
         'submitting' => 'Creating…',
         'fix_errors' => 'Please check these fields:',
