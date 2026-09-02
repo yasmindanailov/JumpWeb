@@ -198,6 +198,8 @@ class AuditLog extends Model
         // se promovió (P12). El identificador de Google NO entra: no hace falta para auditar y es un
         // identificador de la persona en un tercero (`RGPD-02`).
         'identities.linked',
+        // El titular quita el vínculo desde su cuenta (T3). Payload: el proveedor y nada más.
+        'identities.unlinked',
 
         // ── Carné QR y puerta (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.2 A·10) — target = User; nunca el token ──
         'cards.issued',                     // payload: card_id

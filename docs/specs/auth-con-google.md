@@ -1,10 +1,10 @@
 # [SPEC] Entrar y registrarse con Google
 
-> Estado: 🟦 **LA T1 Y LA T2 ESTÁN EN EL ÁRBOL** (2026-09-02, `DECISIONES #342` y `#343`) ·
-> Abierta: 2026-09-02 · Autor: agente
-> ▶ **Lo ejecutado, con lo que enseñó, está en §18 (T1) y §19 (T2) — y va ANTES que las tandas de
-> §16.** Con la T2 el camino se cierra de punta a punta; quedan la **T3** (lo irreversible y el
-> marketing) y el **OJO del owner** (guion en `VERIFICACION-E2E-CAJON.md` §5.octies).
+> Estado: 🟦 **LAS TRES TANDAS DE CÓDIGO ESTÁN EN EL ÁRBOL** (2026-09-02, `DECISIONES #342`, `#343`
+> y `#344`) · Abierta: 2026-09-02 · Autor: agente
+> ▶ **Lo ejecutado, con lo que enseñó, está en §18 (T1), §19 (T2) y §20 (T3) — y va ANTES que las
+> tandas de §16.** Queda el **OJO del owner** (guion en `VERIFICACION-E2E-CAJON.md` §5.octies) y, como
+> requisito de salida de la Q7, **la política de privacidad**.
 > Las decisiones `[DECIDIDO owner]` se tomaron en la conversación de diseño del 2026-09-02 y se citan
 > con la frase del owner cuando la hay.
 >
@@ -629,11 +629,11 @@ owner al servidor, y nada más.
 |---|---|---|
 | **T1 · El mecanismo** ✅ | **HECHA — ver §18.** Migración `user_identities` · `GoogleAuth` · **la raíz de confianza de §6.3** · las rutas web con `state` · el servicio de vinculación · **la purga por BORRADO con su caso** · **`user_identities` en el export del art. 20 + su cambio de contrato** · la acción `identities.linked` en `AuditLog::ACTIONS`. ⚠️ **Esta celda decía «rechazo de `PANEL_ROLES`» y estaba CADUCADA**: es el texto de la revisión, anterior a la Q5 — el owner decidió que el equipo **sí** puede vincular (§6.6), y así se ha construido. ⚠️ `identities.unlinked` **no se declara todavía**: su emisor es la T3, y una acción catalogada sin emisor es vocabulario muerto | La prueba primero |
 | **T2 · El alta** ✅ | **HECHA — ver §19.** La pantalla en el CAJÓN (`[DECIDIDO owner]` Q8), el alta que nace de ella con todo lo de §5.3, y el botón en las tres superficies de auth. ⚠️ El aviso de vinculación por correo **entró con la T1**: nace con el código que vincula, y un vínculo silencioso aunque fuera un día es el defecto que el contrapeso 2 existe para no tener. ⚠️ El presupuesto **se midió antes de escribir** y decidió la forma: la pantalla va en carga DIFERIDA. ⚠️ El icono tetracolor **no entra**, como esta celda anticipaba: el rótulo nombra la marca y hay ficha en `DEUDA.md`. ▶ La CSP no se toca: no se usa One Tap | El caso del 90 % |
-| **T3 · Lo irreversible y el marketing** | Ticket de re-autenticación (esquema **nuevo**) para las **cuatro** superficies · **desvincular** · interruptor de marketing **+ su registro de retirada** y el endpoint | Cierra los huecos legales |
+| **T3 · Lo irreversible y el marketing** ✅ | **HECHA — ver §20.** ⚠️⚠️ **El ticket de re-autenticación NO se construye** (`[DECIDIDO owner, 2026-09-02]`, con las dos opciones y su coste delante): quien entró con Google **ya controla su buzón verificado**, así que crea su contraseña con «he olvidado mi contraseña» —un paso, no un muro— y el producto **se lo dice en las cuatro pantallas**. Es la misma salida que esta spec ya aceptaba para desvincular, y evita un segundo camino para autorizar lo irreversible. · **Desvincular**, con la contraseña y el limitador compartido · **interruptor de marketing + `revoked_at`/`revoked_ip`** y su endpoint | Cierra los huecos legales |
 | **T4 · El OJO del owner** | Guion de navegador con los tres caminos y con P12 | |
 
-⚠️ **T2→T3 es dependencia dura**: cada día que la T2 esté sin la T3 crea cuentas sin autoservicio
-para las cuatro acciones (art. 12.2).
+⚠️ **T2→T3 era dependencia dura** y quedó cerrada el mismo día: sin la T3, cada cuenta creada con
+Google se quedaba sin autoservicio para las cuatro acciones (art. 12.2).
 
 ✱ **Menores anotados por la revisión, uno por línea**: el camino de Google no sella `last_login_at`
 ni escribe `Log::info('auth.login')`, que tienen dos consumidores (panel y export) · el correo de
@@ -658,6 +658,7 @@ poda ninguna**.
 - [x] Q10 · las claves en `settings`
 - [x] Q8 · la pantalla va **en el cajón** (2026-09-02); el presupuesto se mide al empezar la T2
 - [x] Q11 · el botón dice **«Continuar con Google»** (es/en/fr), que era el valor por defecto de la spec
+- [x] Q12 · **no se construye el ticket de re-autenticación**: la contraseña por correo, con el aviso en pantalla (2026-09-02)
 - [ ] ✅ final del owner a la spec, y su OJO en navegador (T4)
 
 ▶ **La T1 está EN EL ÁRBOL** (`#342`, §18). Lo abierto es de la T2 en adelante.
@@ -836,3 +837,73 @@ con las dos claves configuradas, y su ausencia ES el interruptor. Con caso en la
   justo la consecuencia que §7 avisa.
   ▶ **Hoy no muerde**: `playjump.es` está en modo `interno` con versión publicada, así que la rama no
   se ejercita en ninguna instalación viva. Si prefieres la letra de la Q6, es un `if` en el retorno.
+
+---
+
+## 20 · La T3, EJECUTADA (2026-09-02, `DECISIONES #344`)
+
+Cierra los **tres huecos legales**, y dos de ellos **no eran de las cuentas de Google**: llevaban
+vivos desde el primer día para todo el mundo.
+
+### 20.1 · El art. 7.3, que era el más grave
+
+`consents` gana `revoked_at` y `revoked_ip`; `PUT /me/marketing` da y retira; el interruptor vive
+dentro de la tarjeta de consentimientos del cajón.
+
+⚠️⚠️ **La retirada SELLA la fila, no la borra**: la fila sigue probando que en su día se aceptó —lo
+que justifica los envíos hechos— y el sello dice cuándo dejó de valer. Borrarla dejaría al parque sin
+poder demostrar lo primero (art. 7.1).
+⚠️ **Sin `current_password`**, y es la ley: el art. 7.3 exige que retirar sea *tan fácil como dar*.
+Hay caso que lo fija para que nadie lo «endurezca» creyendo que mejora la seguridad.
+⚠️ **Idempotente en las dos direcciones**, y la mitad que importa es ENCENDER: sin guarda, el segundo
+clic escribe una segunda prueba del mismo consentimiento.
+
+### 20.2 · Las cuatro acciones que exigen contraseña — la Q12 cambia §8
+
+`[DECIDIDO owner, 2026-09-02]`, elegido sobre el ticket de §8 con las dos opciones y su coste
+delante: **la contraseña por correo, con el aviso en pantalla**.
+
+▶ **Lo que lo sostiene**: quien entró con Google ya controla su buzón verificado, así que «he
+olvidado mi contraseña» es un paso y no un muro — y es exactamente la salida que §8 ya aceptaba para
+desvincular. *Lo que faltaba no era un camino nuevo de autenticación: era decírselo donde se topa con
+la pared.*
+▶ **Lo que se evita**, dicho para que no se lea como un atajo: un SEGUNDO camino para autorizar lo
+irreversible, con su estado en sesión y su esquema en el contrato.
+
+⚠️ **El aviso se pinta SIEMPRE** (`account/NoPasswordHint.vue`, en las cuatro pantallas): el servidor
+no puede distinguir un hash aleatorio de uno elegido, así que detectarlo exigiría una columna nueva
+mantenida en los siete sitios que escriben contraseñas. Para quien sí la tiene, la frase sigue siendo
+verdad. La alternativa medida queda en `DEUDA.md`.
+
+⇒ **§8 queda corregida por esto**: el «ticket de re-autenticación de un solo uso» que aquella sección
+describe **no existe** y no se va a construir salvo que el owner lo reabra.
+
+### 20.3 · Desvincular
+
+`GET /me/identities` y `DELETE /me/identities/{provider}`, con la contraseña y **compartiendo el
+limitador** del cambio de contraseña.
+
+⚠️⚠️ **Sin esto, el aviso de vinculación de §5.2 no servía de nada**: el vínculo se crea solo, no
+caduca y se avisa por correo — y ese aviso solo vale si quien lo recibe puede deshacerlo. La única
+salida de un vínculo no pedido era borrar la cuenta.
+⚠️ **La lista no publica el `sub`**: la pantalla necesita saber con qué cuenta se entra y desde
+cuándo. El identificador viaja en el export del art. 20, que es un acto explícito del titular.
+⚠️ **Idempotente**, y con caso: desvincular con la contraseña equivocada **deja el vínculo intacto**.
+Un endpoint que borrara primero y comprobara después dejaría a cualquiera con una sesión robada
+quitarle al titular su forma de entrar.
+
+### 20.4 · Los dos presupuestos, subidos DESPUÉS de podar
+
+| | Antes | Ahora | Poda que se hizo antes |
+|---|---|---|---|
+| Chunk del cajón | 267 | **269** (medido 268,26) | El aviso es UN componente en las cuatro pantallas, no cuatro copias; el interruptor entró en una tarjeta que ya existía |
+| Payload con sesión | 9.650 | **9.900** (medido 9.826) | El botón del aviso reutiliza `forgot.title`, que ya viajaba; el bloque de vínculos no tiene rótulo de «no hay ninguno» |
+
+### 20.5 · Lo que queda del todo
+
+- **El OJO del owner** (`VERIFICACION-E2E-CAJON.md` §5.octies), que necesita el cliente de OAuth de
+  DESARROLLO.
+- **La política de privacidad** (Q7), y es **requisito de salida**: no se anuncia el botón a clientes
+  reales sin que el documento describa el tratamiento y el origen de los datos (art. 13/14). El texto
+  vive en la BD de cada instalación, así que en `playjump.es` es un paso manual.
+- La desviación de la letra de la Q6 (§19.6), pendiente de tu palabra.

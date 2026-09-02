@@ -371,6 +371,11 @@
                             // `account` completo son 9,6 kB.
                             ...(auth()->check() ? ['account' => [
                                 'title' => __('account.account.title'),
+                                // La salida de quien entró con Google y no tiene contraseña (`#344`):
+                                // la pintan las CUATRO pantallas que exigen contraseña. Va aquí —con
+                                // sesión— porque ninguna se ve sin haber entrado. El rótulo de su
+                                // botón se reutiliza de `forgot.title`, que ya viaja para todos.
+                                'no_password' => __('account.account.no_password'),
                                 // ⚠️ Los dos subgrupos que pintan las zonas de la tanda 2, ENTEROS y
                                 // no podados clave a clave: son 9 y 4 rótulos que la pantalla usa
                                 // todos —etiqueta, ayuda, botón y su estado «guardando»—, así que

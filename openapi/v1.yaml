@@ -1710,6 +1710,89 @@ paths:
         '503':
           $ref: '#/components/responses/Maintenance'
 
+  /me/identities:
+    get:
+      tags: [Cuenta]
+      operationId: listMyIdentities
+      summary: Mis cuentas vinculadas
+      description: |
+        Las cuentas de un proveedor externo (hoy, Google) con las que se entra a ésta
+        (`specs/auth-con-google.md` §8).
+
+        ⚠️ **No publica el identificador del proveedor** (el `sub`): lo que esta pantalla necesita es
+        con qué cuenta se entra y desde cuándo. El `sub` sí viaja en `GET /me/export`, que es un acto
+        explícito del titular — misma doctrina que la IP de los consentimientos.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Las identidades vinculadas, de la más reciente a la más antigua.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                additionalProperties: false
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LinkedIdentity'
+                  meta:
+                    $ref: '#/components/schemas/ListMeta'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /me/identities/{provider}:
+    delete:
+      tags: [Cuenta]
+      operationId: unlinkMyIdentity
+      summary: Desvincular una cuenta externa
+      description: |
+        Quita el vínculo con un proveedor. **Es el contrapeso del aviso de vinculación**: el vínculo
+        se crea solo al entrar con un correo que ya tenía cuenta, se avisa por correo, y ese aviso
+        solo sirve de algo si quien lo recibe **puede deshacerlo**.
+
+        ⚠️ **Exige la contraseña actual** y comparte el limitador de `PUT /me/password` — cinco
+        intentos por titular e IP—. No es una contradicción con el art. 12.2: la contraseña es lo que
+        impide que alguien se cierre a sí mismo la única puerta que tenía. Quien entró con Google y no
+        tiene ninguna la crea con «he olvidado mi contraseña».
+
+        ⚠️ **Idempotente**: desvincular lo que ya no está responde 204 igual. El titular pide un
+        estado, no una transición.
+      security:
+        - sessionCookie: []
+        - bearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [google]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordConfirmation'
+      responses:
+        '204':
+          description: El vínculo ya no existe.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
   /me/consents:
     get:
       tags: [Cuenta]
@@ -5265,6 +5348,30 @@ components:
         remember:
           type: boolean
           description: Mantener la sesión abierta más allá del cierre del navegador.
+
+    LinkedIdentity:
+      type: object
+      description: |
+        Una cuenta externa vinculada, vista por su titular (`specs/auth-con-google.md` §8).
+      required: [provider, email_at_link, linked_at, linked_label]
+      additionalProperties: false
+      properties:
+        provider:
+          type: string
+          description: '`google` es el único de hoy.'
+        email_at_link:
+          type: string
+          nullable: true
+          description: |
+            El correo **con el que se vinculó**. Puede diferir del correo actual de la cuenta: dice
+            con cuál se estableció el vínculo, que es lo que el titular necesita reconocer.
+        linked_at:
+          type: string
+          format: date-time
+          nullable: true
+        linked_label:
+          type: string
+          description: La fecha ya compuesta, en la zona horaria de la instalación.
 
     MarketingConsentRequest:
       type: object

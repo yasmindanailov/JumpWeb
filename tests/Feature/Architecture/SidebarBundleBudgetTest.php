@@ -597,8 +597,21 @@ class SidebarBundleBudgetTest extends TestCase
      *
      * ⚠️ **Se sube a 267 y no a 270**: queda **1,02 KiB**. Lo siguiente que entre vuelve a tener que
      * justificarse o podar.
+     *
+     * ▶ **269 (`#344`, la T3 de Google: lo irreversible y el marketing).** Medido: **265,98 → 268,26
+     * KiB (+2,28)**, y lo que compra son **tres derechos que hasta hoy no se podían ejercer**:
+     *  · el interruptor que permite **RETIRAR** el consentimiento de marketing (art. 7.3), que no
+     *    existía por ninguna superficie;
+     *  · **desvincular** una cuenta de Google, que es el contrapeso del aviso de vinculación — sin él,
+     *    la única salida de un vínculo no pedido era borrar la cuenta;
+     *  · y el aviso, en las CUATRO pantallas que exigen contraseña, de que quien entró con Google
+     *    puede crear una desde «he olvidado mi contraseña» (art. 12.2, `[DECIDIDO owner]`).
+     * ⚠️ **La poda que se hizo**: el aviso es UN componente reutilizado en las cuatro pantallas —no
+     * cuatro copias— y su botón reutiliza `forgot.title`, que ya viajaba. El interruptor de marketing
+     * se metió DENTRO de la tarjeta de consentimientos, que ya existía, en vez de estrenar una.
+     * ⚠️ **Se sube a 269 y no a 272**: queda **0,74 KiB**.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 267;
+    private const SIDEBAR_CHUNK_MAX_KB = 269;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

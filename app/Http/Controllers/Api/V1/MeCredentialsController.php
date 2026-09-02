@@ -6,8 +6,11 @@ use App\Domain\Identity\Contracts\CredentialChangeResult;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountCredentials;
 use App\Domain\Identity\Services\PasswordPolicy;
+use App\Domain\Identity\Services\SocialIdentities;
+use App\Http\Api\ApiCollection;
 use App\Http\Api\Concerns\TranslatesCredentialVerdicts;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\V1\UserIdentityResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -49,6 +52,41 @@ class MeCredentialsController extends Controller
         return $this->respond($credentials->changePassword(
             $user, $data['current_password'], $data['password'], (string) $request->ip(),
         ));
+    }
+
+    /**
+     * `GET /me/identities` — las cuentas de un proveedor externo vinculadas a ésta.
+     *
+     * ⚠️ **No publica el `sub`.** Lo que la pantalla necesita saber es *con qué cuenta se entra y
+     * desde cuándo*; el identificador del proveedor es un dato del titular que sí viaja en el export
+     * del art. 20, que es un acto explícito suyo. Misma doctrina que la IP en los consentimientos.
+     */
+    public function identities(Request $request, SocialIdentities $identities): ApiCollection
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return new ApiCollection($identities->forUser($user), UserIdentityResource::class);
+    }
+
+    /**
+     * `DELETE /me/identities/{provider}` — quitar el vínculo.
+     *
+     * ⚠️⚠️ **Es el contrapeso del aviso de vinculación** (`specs/auth-con-google.md` §5.2): el vínculo
+     * se crea solo y se avisa por correo, y ese aviso solo sirve si quien lo recibe puede deshacerlo.
+     *
+     * ⚠️ **Exige la contraseña** (`[DECIDIDO owner]`) y comparte el limitador con el cambio de
+     * contraseña. Quien entró con Google y no tiene ninguna la crea con «he olvidado mi contraseña»:
+     * es lo que impide que alguien se cierre a sí mismo la única puerta que tenía.
+     */
+    public function unlinkIdentity(Request $request, string $provider, SocialIdentities $identities): JsonResponse
+    {
+        $data = $request->validate(['current_password' => ['required', 'string']]);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        return $this->respond($identities->unlink($user, $provider, $data['current_password'], (string) $request->ip()));
     }
 
     /**

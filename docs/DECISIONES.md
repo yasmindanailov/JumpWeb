@@ -20744,3 +20744,77 @@ tratar su logo como **asset** y no como icono.
 ▶ **Queda la T3** (las cuatro acciones que exigen contraseña, desvincular y el interruptor de
 marketing) y **tu OJO**: `VERIFICACION-E2E-CAJON.md` §5.octies, que necesita el cliente de
 OAuth de DESARROLLO.
+
+## #344 · 2026-09-02 · Entrar con Google — la T3: los derechos que no se podían ejercer
+
+Tercera y última tanda de código de `docs/specs/auth-con-google.md`. Cierra los **tres huecos
+legales** que la spec destapó, y dos de ellos **no eran de las cuentas de Google**: llevaban vivos
+desde el primer día para todo el mundo.
+
+### 1 · El marketing se puede RETIRAR (art. 7.3), y queda constancia (art. 5.2)
+
+Medido en la spec y confirmado al tocarlo: `marketing_opt_in` se escribía en el alta y **ninguna ruta
+lo actualizaba**, así que el consentimiento se daba con un clic y **no se podía retirar por ninguna
+superficie**. Y aunque se hubiera podido, `consents` no tenía dónde anotarlo.
+
+- `consents` gana **`revoked_at`** y **`revoked_ip`**. ⚠️ **La fila NO se borra**: sigue probando que
+  en su día se aceptó —lo que justifica los envíos que se hicieron— y el sello dice cuándo dejó de
+  valer. Borrarla dejaría al parque sin poder demostrar lo primero (art. 7.1).
+- `PUT /me/marketing` **sin `current_password`**, y eso es la ley y no una comodidad: el art. 7.3
+  exige que retirar sea *tan fácil como dar*. Hay caso que lo fija, para que nadie «endurezca» la
+  retirada creyendo que mejora la seguridad — endurecerla es incumplir.
+- El interruptor va **dentro de la tarjeta de consentimientos** del cajón: allí es donde la lista
+  dice a qué se dijo que sí, y el único de esos consentimientos que se puede retirar es éste.
+
+### 2 · Las cuatro acciones que exigen contraseña — `[DECIDIDO owner]`, y NO se construye el ticket
+
+La spec §8 proponía un **ticket de re-autenticación con Google**. Se le ofrecieron las dos opciones
+con su coste y el owner eligió la otra: **crear la contraseña por correo, con el aviso en pantalla**.
+
+▶ **El argumento que la sostiene**: quien entró con Google **ya controla su buzón verificado**, así
+que «he olvidado mi contraseña» es un paso, no un muro — y es exactamente la salida que la propia
+spec ya aceptaba para desvincular. Lo que faltaba no era un camino nuevo de autenticación: era
+**decírselo donde se topa con la pared**.
+▶ Lo que se evita con eso, dicho: un SEGUNDO camino para autorizar lo irreversible, con su estado en
+sesión y su esquema en el contrato. Menos superficie es menos que defender.
+
+⚠️ **El aviso se pinta SIEMPRE, no solo a quien no tiene contraseña.** El servidor no puede
+distinguir un hash aleatorio de uno elegido, así que detectarlo exigiría una columna nueva mantenida
+en los **siete** sitios que escriben contraseñas. Para quien sí la tiene, la frase sigue siendo
+verdad y útil. La alternativa medida queda en `DEUDA.md`.
+
+### 3 · Desvincular, que es el contrapeso del aviso de vinculación
+
+`GET /me/identities` + `DELETE /me/identities/{provider}`, con la contraseña (`[DECIDIDO owner]`) y
+**compartiendo el limitador** del cambio de contraseña — un segundo contador serían cinco intentos más
+por endpoint, que es como se afloja `SEC-06` sin que se note.
+
+⚠️ **Sin esto, el aviso de `#342` no servía de nada**: el vínculo se crea solo, no caduca y se avisa
+por correo, y ese aviso solo vale si quien lo recibe **puede deshacerlo**. La única salida de un
+vínculo no pedido era borrar la cuenta.
+⚠️ **La lista NO publica el `sub`**: la pantalla necesita saber con qué cuenta se entra y desde
+cuándo. El identificador sí viaja en el export del art. 20, que es un acto explícito del titular —
+misma doctrina que la IP de los consentimientos.
+
+### Lo que enseñó la mutación (5, muerden 5 — la quinta tras arreglar el test)
+
+⚠️⚠️ **El caso de la idempotencia probaba la mitad que se cumple sola.** Apagar dos veces es
+inofensivo aunque falte la guarda, porque la retirada solo alcanza a las filas VIVAS
+(`whereNull('revoked_at')`); la mitad que de verdad la necesita es **encender dos veces**, que sin
+guarda escribe una SEGUNDA prueba del mismo consentimiento — y entonces la lista del art. 7.1 cuenta
+dos veces lo que ocurrió una. *Cuando una mutación no muerde, la pregunta es qué mitad no estaba
+mirando el caso.*
+
+### Los dos presupuestos, subidos DESPUÉS de podar
+
+- **Chunk del cajón 267 → 269** (medido 268,26). Podas: el aviso es UN componente reutilizado en las
+  cuatro pantallas —no cuatro copias— y el interruptor entró en una tarjeta que ya existía.
+- **Payload con sesión 9.650 → 9.900** (medido 9.826). Podas: el botón del aviso reutiliza
+  `forgot.title`, que ya viajaba para todos, y el bloque de cuentas vinculadas **no tiene rótulo de
+  «no hay ninguna»** — sin vínculos no se pinta nada, que además dice más.
+
+**Verificación**: 14 casos nuevos · 5 mutaciones con control, **5 muerden** · suite **3975 · 25.413**
+verde · Pint ✓ · docs-check ✓ · `npm run test:js` 921 ✓ · build y build:ssr ✓.
+▶ **Con esto las tres tandas de código están hechas.** Queda **tu OJO** (`VERIFICACION-E2E-CAJON.md`
+§5.octies) y, como requisito de salida de la Q7, **la política de privacidad**: no se anuncia el
+botón a clientes reales sin que el documento describa el tratamiento (art. 13/14).

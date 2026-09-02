@@ -4,6 +4,7 @@ import { useCredentialsStore } from '../../stores/credentials.js';
 import { fieldError } from '../form-outcome.js';
 import { t as translate } from '../../i18n.js';
 import PasswordInput from '../../steps/PasswordInput.vue';
+import NoPasswordHint from '../NoPasswordHint.vue';
 
 /**
  * **Cambiar la contraseña** (`specs/area-cliente.md` §9, tanda 2 · paso 6b).
@@ -74,6 +75,7 @@ watch(() => store.done, (done) => {
                 <label class="form__label" for="acct-current-password">{{ a('account.password.current') }}</label>
                 <PasswordInput :id="'acct-current-password'" v-model="current" autocomplete="current-password" />
                 <span v-if="fieldError(store.fields, 'current_password')" class="form__error">{{ fieldError(store.fields, 'current_password') }}</span>
+                <NoPasswordHint :account="account" />
             </div>
 
             <div class="form__field">

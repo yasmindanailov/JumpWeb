@@ -491,8 +491,16 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
   igual porque además recoge el **teléfono** y las **condiciones**. Hoy no muerde —`playjump.es` está
   en modo `interno` con versión publicada—, y cerrarlo en la dirección de la Q6 es un `if` en el
   retorno **que crearía cuentas sin teléfono**.
-- **`identities.unlinked` no está catalogada** en `AuditLog::ACTIONS`: su emisor es la T3. Declararla
-  antes sería vocabulario muerto — y con emisor, `AuditLogger` lanza si falta.
+- ✅ ~~**`identities.unlinked` no está catalogada**~~ — entró con la T3 (`#344`), con su emisor.
+- **No se sabe si una cuenta TIENE contraseña propia**, y por eso el aviso de «créala con “he olvidado
+  mi contraseña”» se pinta en las cuatro pantallas **a todo el mundo** (`#344`). Un hash aleatorio y
+  uno elegido son indistinguibles, así que detectarlo exige una columna (`password_set_at`) mantenida
+  en los **siete** sitios que escriben contraseñas: alta pública, alta de mostrador, alta con Google,
+  reset, cambio, anonimización y la toma de una cuenta sin verificar (P12).
+  ▶ **Lo que compraría**: el aviso solo donde hace falta, y de regalo el panel podría decir «cuenta
+  sin contraseña propia». ▶ **Lo que cuesta**: una migración con backfill y siete puntos que no
+  pueden divergir. Hoy el coste es un párrafo de más para quien sí tiene contraseña — y a ése también
+  se le olvidan.
 - ⚠️ **La política de privacidad no menciona el login con Google** (art. 13/14). Es **requisito de
   salida** de la Q7: el texto vive en la BD de cada instalación, así que en `playjump.es` es un paso
   manual y **no se anuncia el botón a clientes reales sin él**.

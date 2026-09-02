@@ -31,6 +31,8 @@ return [
         'title' => 'Mi cuenta',
         'subtitle' => 'Gestiona tus datos, tu acceso y tu privacidad.',
         'wrong_password' => 'La contraseña actual no es correcta.',
+        // La salida de quien entró con Google y no tiene contraseña (art. 12.2, `#344`).
+        'no_password' => '¿Entraste con Google y no tienes contraseña? Créala y podrás hacer esto: te enviamos un enlace a tu correo.',
         'profile' => [
             'title' => 'Tus datos',
             'intro' => 'Actualiza tu nombre, teléfono e idioma. Si cambias el email, te enviaremos un enlace al nuevo buzón: el cambio se aplica al confirmarlo desde ahí.',
@@ -64,6 +66,9 @@ return [
             'current_password' => 'Contraseña actual',
             'logout_others' => 'Cerrar sesión en los demás dispositivos',
             'working' => 'Cerrando…',
+            // Las cuentas externas vinculadas y su salida (`specs/auth-con-google.md` §8).
+            'identities_title' => 'Cuentas vinculadas',
+            'unlink' => 'Desvincular',
         ],
         'privacy' => [
             'title' => 'Privacidad y datos (RGPD)',

@@ -18,7 +18,15 @@ import { formState, resetForm, runForm } from '../account/form-run.js';
  * en memoria compartida— sería regalar una credencial a cualquier cosa que inspeccione el store.
  */
 export const useCredentialsStore = defineStore('credentials', {
-    state: formState,
+    state: () => ({
+        ...formState(),
+
+        /**
+         * **Las cuentas externas vinculadas** (`specs/auth-con-google.md` §8). `null` mientras no se
+         * hayan pedido; `[]` es una respuesta —esta cuenta no tiene ninguna— y no una falta.
+         */
+        identities: null,
+    }),
 
     actions: {
         /** Deja el estado como si nunca se hubiera intentado nada. Se llama al ENTRAR en la zona. */
@@ -46,6 +54,39 @@ export const useCredentialsStore = defineStore('credentials', {
                 () => api.post('/me/sessions/revoke-others', { current_password: currentPassword }),
                 { messages, auth },
             );
+        },
+
+        /**
+         * Pide las identidades **solo si no las tiene**. Un fallo NO se anuncia con el aviso del
+         * formulario: es contexto, no la acción de la pantalla — el mismo criterio que la lista de
+         * consentimientos de privacidad.
+         */
+        async ensureIdentities({ api = httpClient } = {}) {
+            if (this.identities !== null) return;
+
+            const response = await api.get('/me/identities');
+
+            if (response.ok) this.identities = response.data?.data ?? [];
+        },
+
+        /**
+         * **Desvincula una cuenta externa.** Devuelve si salió.
+         *
+         * ⚠️ Al salir bien se RELEE la lista: dejarla con la foto vieja enseñaría un vínculo que el
+         * titular acaba de quitar, que es justo lo que esta pantalla existe para poder hacer.
+         */
+        async unlinkIdentity(provider, { currentPassword }, { api = httpClient, messages = {}, auth = {} } = {}) {
+            const ok = await this.run(
+                () => api.delete('/me/identities/' + provider, { current_password: currentPassword }),
+                { messages, auth },
+            );
+
+            if (ok) {
+                this.identities = null;
+                await this.ensureIdentities({ api });
+            }
+
+            return ok;
         },
 
         /**

@@ -246,6 +246,17 @@ Route::name('api.v1.')->group(function (): void {
         Route::post('/me/sessions/revoke-others', [MeCredentialsController::class, 'revokeOtherSessions'])
             ->name('me.sessions.revoke-others');
 
+        // ── Las identidades EXTERNAS del titular (`specs/auth-con-google.md` §8) ──────────────────
+        // ⚠️⚠️ Desvincular es el **contrapeso** del aviso de vinculación: el vínculo se crea solo y se
+        // avisa por correo, y ese aviso solo sirve si quien lo recibe puede deshacerlo. Sin esto, la
+        // única salida de un vínculo no pedido era borrar la cuenta.
+        // ⚠️ Exige la contraseña (`[DECIDIDO owner]`) y comparte el limitador de `PUT /me/password`:
+        // un segundo contador serían cinco intentos más por endpoint, que es como se afloja `SEC-06`.
+        Route::get('/me/identities', [MeCredentialsController::class, 'identities'])->name('me.identities.index');
+        Route::delete('/me/identities/{provider}', [MeCredentialsController::class, 'unlinkIdentity'])
+            ->whereIn('provider', ['google'])
+            ->name('me.identities.destroy');
+
         // ── Los dos derechos RGPD (tanda 2 · paso 8, `specs/area-cliente.md` §9.3) ─────────────
         // ⚠️ `DELETE /me` **no borra la fila**: anonimiza (`RGPD-01`). La factura sigue vinculada y
         // sin PII. Exige reconfirmar la contraseña y comparte el limitador de `PUT /me/password`,

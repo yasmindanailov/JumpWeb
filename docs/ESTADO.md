@@ -1,5 +1,23 @@
 # Estado del proyecto — foto viva
 
+🟦 **GOOGLE AUTH · LAS TRES TANDAS DE CÓDIGO, EN EL ÁRBOL** (2026-09-02, `DECISIONES #342`, `#343`
+y `#344`; spec §18, §19 y §20). Entrar, registrarse y **los tres derechos que no se podían ejercer**.
+▶ ❗❗ **DOS DE LOS TRES HUECOS QUE CIERRA LA T3 NO ERAN DE GOOGLE: llevaban vivos desde el primer día
+para todo el mundo.** El peor: **el consentimiento de marketing no se podía retirar** —se daba con un
+clic en el alta y ninguna ruta lo actualizaba— y el art. 7.3 exige que retirarlo sea *tan fácil como
+darlo*. Ya se puede, y **queda constancia**: la fila no se borra, se sella con `revoked_at`.
+▶ **TU DECISIÓN DEL DÍA**: sobre las cuatro acciones que exigen contraseña elegiste **la contraseña
+por correo con el aviso en pantalla**, no el ticket de re-autenticación que proponía la spec. Está
+implementado así y §8 queda corregida. *Lo que faltaba no era un camino nuevo de autenticación: era
+decírselo donde se topa con la pared.*
+▶ **Y entra DESVINCULAR**, que valoré que no podía esperar: sin ello, el aviso por correo de cada
+vinculación **no servía de nada** —la única salida de un vínculo no pedido era borrar la cuenta—.
+▶ ⚠️ Dos presupuestos suben (chunk 267→269, payload con sesión 9.650→9.900) y los dos **después de
+podar**, con la poda medida y escrita.
+▶ **QUEDA SOLO TU OJO** y **la política de privacidad**: es requisito de salida de tu Q7 — no se
+anuncia el botón a clientes reales sin que el documento describa el tratamiento (art. 13/14). El
+texto vive en la BD, así que en `playjump.es` es un paso manual desde el panel.
+
 🟦 **GOOGLE AUTH · LA T2 EN EL ÁRBOL: EL CAMINO SE CIERRA DE PUNTA A PUNTA** (2026-09-02,
 `DECISIONES #343`, spec §19). Quien no tiene cuenta vuelve de Google, completa **teléfono, condiciones
 y descargo** en el cajón, y entra **ya firmado** — que es exactamente lo que la decisión de §4 buscaba:
@@ -464,8 +482,8 @@ aquí lo que no se podaría son datos de menores de terceros.
 > ⚠️ **RE-MEDIDA tras rebasar encima los DOS arreglos del reloj de la T3** (con `npm run build` +
 > `build:ssr` delante, porque `#340` toca Vue): **sale el MISMO número**, que es lo que había que
 > comprobar — los dos arreglan FIXTURES y no añaden casos. *Coincidir no se supone: se mide.*
-> Suite **3963 en verde** (25.358 aserciones, 1 skipped a propósito), medida el 2026-09-02
-> sobre el árbol CONJUNTO: la **T2 de Google auth** (`#343`, **+14**) sobre su T1 (`#342`, +37), la columna del menú
+> Suite **3975 en verde** (25.416 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> sobre el árbol CONJUNTO: la **T3 de Google auth** (`#344`, **+12**) sobre su T2 (`#343`, +14) sobre su T1 (`#342`, +37), la columna del menú
 > (`#341`, +8), el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo (`#339`),
 > encima del arreglo del 500 de la puerta (`#338`) y de la **T3** del justificante (`#337`) con sus
 > arreglos del reloj.

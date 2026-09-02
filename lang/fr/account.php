@@ -31,6 +31,8 @@ return [
         'title' => 'Mon compte',
         'subtitle' => 'Gérez vos informations, votre accès et votre confidentialité.',
         'wrong_password' => 'Votre mot de passe actuel est incorrect.',
+        // La salida de quien entró con Google y no tiene contraseña (art. 12.2, `#344`).
+        'no_password' => "Tu t'es connecté avec Google et tu n'as pas de mot de passe ? Crées-en un et tu pourras le faire : nous t'envoyons un lien par e-mail.",
         'profile' => [
             'title' => 'Vos informations',
             'intro' => "Mettez à jour votre nom, téléphone et langue. Si vous changez d'e-mail, nous enverrons un lien à la nouvelle boîte : le changement est appliqué quand vous le confirmez depuis là-bas.",
@@ -64,6 +66,9 @@ return [
             'current_password' => 'Mot de passe actuel',
             'logout_others' => 'Se déconnecter des autres appareils',
             'working' => 'Déconnexion…',
+            // Las cuentas externas vinculadas y su salida (`specs/auth-con-google.md` §8).
+            'identities_title' => 'Comptes liés',
+            'unlink' => 'Dissocier',
         ],
         'privacy' => [
             'title' => 'Confidentialité et données (RGPD)',

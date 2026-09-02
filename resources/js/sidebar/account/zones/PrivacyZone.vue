@@ -9,6 +9,7 @@ import { waiverNeedsSignature, waiverStatusKey } from '../waiver.js';
 import { fieldError } from '../form-outcome.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 import PasswordInput from '../../steps/PasswordInput.vue';
+import NoPasswordHint from '../NoPasswordHint.vue';
 
 /**
  * **Privacidad y datos**: los dos derechos RGPD del titular (`specs/area-cliente.md` §9, paso 8).
@@ -73,8 +74,7 @@ async function remove() {
  */
 const waiver = useWaiverStore();
 waiver.reset();
-waiver.ensureStatus();
-waiver.ensureLegal();
+waiver.ensureStatus(); waiver.ensureLegal();
 const acceptWaiver = ref(false);
 // CAJ-REREAD (`#181`): volver a marcar tras releer apaga la relectura — un fallo posterior que no sea de texto no desmarca.
 watch(acceptWaiver, (v) => { if (v) waiver.reread = false; });
@@ -199,6 +199,7 @@ async function sign() {
                     <label class="form__label" for="acct-delete-password">{{ a('account.privacy.delete_password') }}</label>
                     <PasswordInput :id="'acct-delete-password'" v-model="current" autocomplete="current-password" />
                     <span v-if="fieldError(store.fields, 'current_password')" class="form__error">{{ fieldError(store.fields, 'current_password') }}</span>
+                    <NoPasswordHint :account="account" />
                 </div>
 
                 <button type="submit" class="btn account__delete-btn" :disabled="store.busy">

@@ -6,6 +6,7 @@ import { fieldError } from '../form-outcome.js';
 import { pendingNotice, profileForm } from '../profile.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 import PasswordInput from '../../steps/PasswordInput.vue';
+import NoPasswordHint from '../NoPasswordHint.vue';
 
 /**
  * **«Tus datos»** (`specs/area-cliente.md` §9, tanda 2 · paso 7b).
@@ -102,6 +103,7 @@ const pending = computed(() => pendingNotice(store.user, props.account, Date.now
                 <PasswordInput :id="'acct-profile-password'" v-model="currentPassword" autocomplete="current-password" />
                 <span class="purchase__note">{{ a('account.profile.email_change_hint') }}</span>
                 <span v-if="fieldError(store.fields, 'current_password')" class="form__error">{{ fieldError(store.fields, 'current_password') }}</span>
+                <NoPasswordHint :account="account" />
             </div>
 
             <button type="submit" class="btn btn--zone auth__submit" :disabled="store.busy">

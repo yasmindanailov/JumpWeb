@@ -31,6 +31,8 @@ return [
         'title' => 'My account',
         'subtitle' => 'Manage your details, your access and your privacy.',
         'wrong_password' => 'Your current password is incorrect.',
+        // La salida de quien entró con Google y no tiene contraseña (art. 12.2, `#344`).
+        'no_password' => 'Signed in with Google and have no password? Create one and you will be able to do this: we send a link to your email.',
         'profile' => [
             'title' => 'Your details',
             'intro' => 'Update your name, phone and language. If you change your email, we will send a link to the new mailbox: the change is applied when you confirm it from there.',
@@ -64,6 +66,9 @@ return [
             'current_password' => 'Current password',
             'logout_others' => 'Log out on other devices',
             'working' => 'Logging out…',
+            // Las cuentas externas vinculadas y su salida (`specs/auth-con-google.md` §8).
+            'identities_title' => 'Linked accounts',
+            'unlink' => 'Unlink',
         ],
         'privacy' => [
             'title' => 'Privacy & data (GDPR)',

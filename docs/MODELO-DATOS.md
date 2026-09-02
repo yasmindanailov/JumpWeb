@@ -301,9 +301,17 @@ Permisos: `hasRole()`, `hasPermission()` (rol `admin` = super-admin, puede todo)
 PK compuesta, cascade. N:M estándar sin paquete externo.
 
 ### `consents` (Consent)
-`user_id` FK cascade · `type` (`waiver|privacy|terms|marketing`) · `accepted_at` · `ip` ·
-`version` (versión del documento; `Consent::CURRENT_VERSION`, se sube al cambiar textos →
-re-aceptación). Una fila por documento aceptado.
+`user_id` FK cascade · `type` (`waiver|privacy|terms|marketing`) · `accepted_at` · **`revoked_at`** ·
+`ip` · **`revoked_ip`** · `version` (versión del documento; `Consent::CURRENT_VERSION`, se sube al
+cambiar textos → re-aceptación). Una fila por documento aceptado.
+⚠️⚠️ **La RETIRADA sella la fila; NO la borra** (art. 7.3 + art. 5.2, `#344`): la fila sigue probando
+que en su día se aceptó —que es lo que justifica los envíos hechos— y `revoked_at` dice cuándo dejó
+de valer. Borrarla dejaría al parque sin poder demostrar lo primero.
+⚠️ **Hoy solo `marketing` se retira**: privacidad y condiciones son la base contractual de la reserva
+y el descargo es una prueba que se conserva. Lo escribe `AccountPrivacy::setMarketing()`, que es
+idempotente en las dos direcciones.
+⚠️ Y la IP de la retirada va **aparte** de la del alta: son dos actos, en dos momentos y puede que
+desde dos sitios.
 
 ### `cookie_consent_logs` (CookieConsentLog, **Prunable**)
 Prueba del consentimiento de cookies (sujeto puede ser ANÓNIMO): `user_id` nullable

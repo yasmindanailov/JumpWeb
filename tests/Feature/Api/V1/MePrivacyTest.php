@@ -442,16 +442,26 @@ class MePrivacyTest extends ApiTestCase
     }
 
     /**
-     * ⚠️ **Idempotente**: el titular pide un ESTADO, no una transición. Dos clics seguidos en «no
-     * quiero» no pueden crear una segunda prueba de lo mismo ni mover la fecha de una retirada que ya
-     * ocurrió.
+     * ⚠️ **Idempotente en las DOS direcciones**: el titular pide un ESTADO, no una transición.
+     *
+     * ⚠️⚠️ **La primera versión de este caso solo probaba la mitad que se cumple sola, y lo dijo la
+     * mutación**: apagar dos veces es inofensivo aunque falte la guarda, porque la retirada solo
+     * alcanza a las filas VIVAS (`whereNull('revoked_at')`). La mitad que de verdad la necesita es
+     * **encender dos veces**: sin guarda, el segundo clic escribe una SEGUNDA prueba del mismo
+     * consentimiento — y entonces la lista del art. 7.1 cuenta dos veces lo que ocurrió una.
      */
     public function test_asking_for_the_state_it_already_has_writes_nothing(): void
     {
         $user = $this->holder();
 
+        // Encender dos veces: una sola prueba.
         $this->actingAs($user)->putJson(self::ROOT.'/me/marketing', ['accepted' => true])->assertNoContent();
-        $revokedFirst = null;
+        $this->travel(2)->minutes();
+        $this->actingAs($user)->putJson(self::ROOT.'/me/marketing', ['accepted' => true])->assertNoContent();
+
+        $this->assertSame(1, $user->consents()->where('type', Consent::TYPE_MARKETING)->count());
+
+        // Y apagar dos veces: la fecha de la retirada no se mueve.
         $this->actingAs($user)->putJson(self::ROOT.'/me/marketing', ['accepted' => false])->assertNoContent();
         $revokedFirst = $user->consents()->where('type', Consent::TYPE_MARKETING)->value('revoked_at');
 

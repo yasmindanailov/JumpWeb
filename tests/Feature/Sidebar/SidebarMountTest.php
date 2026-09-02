@@ -513,7 +513,7 @@ class SidebarMountTest extends TestCase
             array_keys($boot['account']['purchases'] ?? []),
             'el grupo de «Mis pedidos» ha crecido: si la pantalla no pinta lo nuevo, hay que podarlo'
         );
-        $this->assertSame(['title', 'password', 'sessions', 'profile', 'privacy', 'dependents', 'card'], array_keys($boot['account']['account'] ?? []));
+        $this->assertSame(['title', 'no_password', 'password', 'sessions', 'profile', 'privacy', 'dependents', 'card'], array_keys($boot['account']['account'] ?? []));
 
         // ⚠️ **Menores a cargo** (Fase 6 · C, `DECISIONES #199`) va ENTERO: 17 rótulos que la zona y
         // sus tarjetas pintan todos. La lista exacta es lo que impide que crezca en silencio — y lo
@@ -779,8 +779,17 @@ class SidebarMountTest extends TestCase
         // que estos bytes los paga cada página con sesión — a cambio de que retirar un consentimiento
         // sea *tan fácil como darlo*, que es literalmente lo que el art. 7.3 exige.
         // **9.650 deja 46 B**: la estrechez de siempre.
+        //
+        // ⚠️ **9.650 → 9.900 el 2026-09-02, y lo pagan otros dos derechos** (`#344`): el aviso de que
+        // quien entró con Google puede crear una contraseña —en las CUATRO pantallas que la exigen
+        // (art. 12.2)— y los dos rótulos de **desvincular** una cuenta externa. Medido: **9.604 →
+        // 9.826 B (+222)**, tres rótulos.
+        // ▶ **La poda, antes**: el botón del aviso reutiliza `forgot.title`, que ya viajaba en TODAS
+        // las páginas por ser texto de invitado, y el bloque de cuentas vinculadas **no tiene rótulo
+        // de «no hay ninguna»**: sin vínculos no se pinta nada, que además dice más.
+        // **9.900 deja 74 B.**
         $this->assertLessThan(
-            9650, $bytes,
+            9900, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

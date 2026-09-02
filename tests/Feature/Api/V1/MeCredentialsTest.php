@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api\V1;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Identity\Services\AccountCredentials;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -239,5 +240,97 @@ class MeCredentialsTest extends ApiTestCase
 
         $this->actingAs($user)->putJson(self::ROOT.'/me/password', ['password' => self::NUEVA])->assertStatus(422);
         $this->actingAs($user)->postJson(self::ROOT.'/me/sessions/revoke-others', [])->assertStatus(422);
+    }
+
+    // ── Las identidades externas (`specs/auth-con-google.md` §8) ──────────────────────────────
+
+    public function test_it_lists_the_linked_accounts_without_the_provider_identifier(): void
+    {
+        $user = $this->holder();
+        $this->linkGoogle($user);
+
+        $response = $this->actingAs($user)->getJson(self::ROOT.'/me/identities');
+
+        $response->assertOk()->assertValidResponse(200);
+        $this->assertSame('google', $response->json('data.0.provider'));
+        $this->assertSame('ana@gmail.test', $response->json('data.0.email_at_link'));
+
+        // ⚠️ El `sub` NO sale: la pantalla necesita saber con qué cuenta se entra, no su identificador
+        // en el proveedor. Ése viaja en el export del art. 20, que es un acto explícito del titular.
+        $this->assertStringNotContainsString('110000000000000000001', (string) $response->getContent());
+    }
+
+    /**
+     * **Desvincular es el contrapeso del aviso de vinculación**: sin esto, la única salida de un
+     * vínculo que no se pidió era borrar la cuenta.
+     */
+    public function test_it_unlinks_with_the_current_password(): void
+    {
+        $user = $this->holder();
+        $this->linkGoogle($user);
+
+        $this->actingAs($user)
+            ->deleteJson(self::ROOT.'/me/identities/google', ['current_password' => self::PASSWORD])
+            ->assertNoContent()
+            ->assertValidResponse(204);
+
+        $this->assertSame(0, UserIdentity::query()->count());
+        $this->assertDatabaseHas('audit_logs', ['action' => 'identities.unlinked', 'target_id' => $user->id]);
+    }
+
+    /**
+     * ⚠️⚠️ **Y con la contraseña equivocada el vínculo SOBREVIVE.** Es la mitad que de verdad importa:
+     * un endpoint que borrara primero y comprobara después dejaría a cualquiera con una sesión robada
+     * quitar la forma de entrar del titular.
+     */
+    public function test_a_wrong_password_leaves_the_link_alone(): void
+    {
+        $user = $this->holder();
+        $this->linkGoogle($user);
+
+        $this->actingAs($user)
+            ->deleteJson(self::ROOT.'/me/identities/google', ['current_password' => 'la-que-no-es'])
+            ->assertStatus(422)
+            ->assertValidResponse(422);
+
+        $this->assertSame(1, UserIdentity::query()->count());
+    }
+
+    /** Idempotente: el titular pide un ESTADO —«que no haya vínculo»—, no una transición. */
+    public function test_unlinking_what_is_not_there_is_fine(): void
+    {
+        $user = $this->holder();
+
+        $this->actingAs($user)
+            ->deleteJson(self::ROOT.'/me/identities/google', ['current_password' => self::PASSWORD])
+            ->assertNoContent();
+
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'identities.unlinked']);
+    }
+
+    public function test_the_identity_endpoints_reject_an_anonymous_request(): void
+    {
+        $this->getJson(self::ROOT.'/me/identities')->assertStatus(401);
+        $this->deleteJson(self::ROOT.'/me/identities/google', ['current_password' => 'x'])->assertStatus(401);
+    }
+
+    /** Un proveedor que no existe no es una ruta: sin esto, `DELETE /me/identities/lo-que-sea` pasaría. */
+    public function test_an_unknown_provider_is_not_a_route(): void
+    {
+        $this->actingAs($this->holder())
+            ->deleteJson(self::ROOT.'/me/identities/inventado', ['current_password' => self::PASSWORD])
+            ->assertNotFound();
+    }
+
+    private function linkGoogle(User $user): UserIdentity
+    {
+        return UserIdentity::create([
+            'user_id' => $user->id,
+            'provider' => UserIdentity::PROVIDER_GOOGLE,
+            'provider_id' => '110000000000000000001',
+            'email_at_link' => 'ana@gmail.test',
+            'linked_via' => UserIdentity::VIA_LOGIN,
+            'linked_at' => now()->subDay(),
+        ]);
     }
 }
