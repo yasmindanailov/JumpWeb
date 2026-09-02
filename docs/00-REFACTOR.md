@@ -3669,6 +3669,65 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **El OJO del owner** sobre las cuatro, y **subir su `client-menu.webp`**
 - [ ] ⚠️ **Producción NO lleva `#340` ni `#341`**, y el siguiente despliegue desde `main` **estrena la T3 del justificante** (`#337`): no es un despliegue de rutina
 
+### RECONCILIACIÓN, REVISIÓN DEL JUSTIFICANTE Y LA HORA EXTRA 🟦 — `#404` → `#409` (2026-09-02, tarde)
+- [x] **Los dos carriles FUSIONADOS y la numeración por BANDAS** (`#404`, `[DECIDIDO owner]`): `main`
+      local y `origin/main` habían divergido (9 commits del portátil contra 4 de aquí, sin push) con
+      DOS colisiones de número el mismo día. **Este ordenador numera desde `#400`**; el portátil sigue
+      en `#34x`. ⚠️ **Mirar el remoto antes de empujar se probó y NO basta**: las trece colisiones se
+      produjeron *al cerrar*, con el otro carril empujando mientras corría el gate. 168 citas
+      reescritas en dos pasadas, con ámbito por LÍNEA en los ocho ficheros compartidos y huella del
+      otro carril verificada idéntica. ▶ Y lo que la fusión desmintió: **los tres techos del chunk del
+      cajón se midieron cada uno con su rama SOLA** y ninguno valía (270,41 KiB medidos); el del
+      payload **auto-fusionó sin conflicto**. *Un auto-merge limpio no dice que el número siga siendo
+      cierto.*
+- [x] **Revisión adversarial del JUSTIFICANTE** (`#406`): 29 hallazgos → 7 supervivientes, con TRES
+      arreglados. ❗ El que más urgía: **la migración `2026_09_02_120000` se declaraba «ya migrada» en
+      el paso 4 de 5**, y el 5 crea el `UNIQUE`, la FK y el `NOT NULL`. En MySQL cada `ALTER` hace
+      commit implícito (`supportsSchemaTransactions` → **false**, medido), así que el estado
+      intermedio existe. Verificado sobre **MySQL real en BD desechable con CONTROL**: el código viejo
+      corre en **5,17 ms**, dice `DONE` y deja la tabla rota; el nuevo repara en 382 ms. Más: el
+      **nombre del menor fuera del ASUNTO** del correo (buzón tecleado sin verificar) y
+      **`GuardianTwoReservationsTest`**, la red que `#401` nunca tuvo (los SIETE ficheros creaban
+      pedidos de UNA línea, así que el cambio entero se podía revertir en verde). Cinco fichas en
+      `DEUDA.md`
+- [x] **Verificación del subsistema en TRES capas** (`#407`): servidor **41 ✓/0 ✗** sobre los cinco
+      escenarios sembrados · navegador **8 ✓/0 ✗** (hoja en blanco, firma, «un niño un papel», fecha
+      de adulto) · API con dos reservas, su enlace y sus plazas. ▶ Un defecto: los campos de la
+      pantalla pública medían **42** y el estándar propio es 44 — se escapó porque el barrido de
+      `#264` recorre *«las siete vistas PÚBLICAS»* y **ésta exige un enlace firmado**. 12 controles
+      bajo 44 → 4, los cuatro justificados
+- [x] **La cuarta vez de la misma trampa** (`#408`): el carril de Google avisó de que un
+      `User::factory()` cuyo nombre se PINTA enfrentado a una aserción por subcadena es una moneda al
+      aire, y quedaba una. Reproducida a voluntad y fijada. ▶ Lo que aporta es **el barrido**: las 41
+      aserciones negativas de los 17 ficheros, una a una
+- [x] **El producto de EXCURSIONES, ensayado y verificado en STAGING** (`#409`, `[DECIDIDO owner]`:
+      señal **100,00 € fijos** y justificante **`required`**). Guion idempotente con dry-run **fuera
+      del repo** (`~/excursiones-produccion.php`, `#325`). ⚠️ **Las tarifas se resuelven por `key`,
+      jamás por id**: medido, `normal` es la #2 en local y la #1 en staging, y `special` cubre
+      `[0,5,6]` en local pero `[0,6]` en staging. ⚠️ Y **un guion de datos también necesita pre-vuelo**:
+      la primera versión creó la zona y cinco plantillas y **reventó a mitad** — el mismo defecto que
+      `#406` arregló doce horas antes, en otro sitio
+- [x] **La HORA EXTRA: spec APROBADA** (`docs/specs/hora-extra.md` 🟦, tres `[DECIDIDO owner]` en §7).
+      Un complemento que **OCUPA** la franja siguiente. ❗❗ La corrección del owner —*«la hora extra es
+      de 1 entrada, no de las 4»*— tiró el diseño caro (duración por línea, 50 referencias en 14
+      ficheros) y dejó uno que cabe en el mecanismo existente: **`occupancyMap` no filtra por tipo**.
+      ▶ **Revisada de forma adversarial**: 35 hallazgos → 3 defectos y **2 bloqueos**, y el peor no es
+      un defecto sino que **hoy el interruptor NO SE PUEDE ENCENDER** (`normalizeByType()` hace
+      `unset(duration_min)` para todo complemento). *Una revisión que solo entra por donde se vende no
+      ve si el dato se puede introducir.*
+- [x] **El rojo transitorio del pre-push, por fin CAPTURADO**: era un `ProcessTimedOutException` del
+      renderizador SSR. Cierra el lazo que `DECISIONES #97` dejó abierto el 2026-08-16 y que `#164` no
+      pudo explicar. Medido: un render tarda **~140 ms** y el tope eran 60 s (430× de margen) y aun así
+      saltaba, porque bajo la contención del hook el proceso **se queda sin CPU el minuto entero**.
+      Tope a 300 s; el arreglo de fondo (reutilizar UN proceso en vez de ~38) queda fichado
+- [ ] **Los tres comandos de excursiones en PRODUCCIÓN** — los corre el owner: este agente **no tiene
+      acceso** (medido: solo hay llave de staging). ⚠️ `required` **depende del despliegue**; el guion
+      lo detecta, avisa y se aplica al repetirlo
+- [ ] **CONSTRUIR la hora extra**, con el orden que el owner fijó: **primero unificar la derivación de
+      ocupantes provisionales** (tres de los nueve bordes son el mismo defecto), y **el escenario de
+      `purchase:verify-oversell` escrito ANTES y visto fallar**
+
+### GOOGLE AUTH 🟦 — las tres tandas de código MÁS el pulido del ojo del owner (2026-09-02; T5→T8·d en el árbol, **los siete puntos del owner HECHOS**; queda la T9)
 ### GOOGLE AUTH ✅ — CERRADO Y EN PRODUCCIÓN (2026-09-02; T1→T8·d, los siete puntos del owner hechos, **One Tap descartado** por `#354`, y `playjump.es` sirviéndolo)
 - [x] **Spec** `docs/specs/auth-con-google.md`, con la decisión del owner que la ordena: **pantalla intermedia y exención al 100 %** (§4)
 - [x] **Revisión adversarial de cinco lentes: OCHO bloqueantes**, dos de ellos agujeros de seguridad, aplicados con marcas ✱

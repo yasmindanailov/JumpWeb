@@ -1,6 +1,46 @@
 # Estado del proyecto — foto viva
 
-⬜ **LA HORA EXTRA · SPEC ESCRITA, PENDIENTE DE TU ✅** (2026-09-02, `docs/specs/hora-extra.md`).
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-02, noche).
+>
+> **1. LA HORA EXTRA, que es lo siguiente y está APROBADA.** `docs/specs/hora-extra.md` 🟦, con las
+>    tres decisiones del owner cerradas en su §7. **El orden es parte de la decisión**: primero
+>    unificar la derivación de ocupantes provisionales —una función que incluya hijas y hermanos,
+>    usada por `OrderCreator::otherOccupants()` **y** `AvailabilityReader::occupantsOf()`—, porque
+>    tres de los nueve bordes de §4.6 son el mismo defecto visto desde sitios distintos. Y el
+>    escenario de `purchase:verify-oversell` **se escribe ANTES y se ve fallar**.
+>    ⚠️⚠️ **Empieza por §4.9: hoy el interruptor NO SE PUEDE ENCENDER** —
+>    `CreateCatalog::normalizeByType()` hace `unset(duration_min)` para todo complemento y
+>    `CatalogForm` esconde el campo—, así que la primera tanda desbloquea la configuración.
+>
+> **2. EL PRODUCTO DE EXCURSIONES EN PRODUCCIÓN, que lo corre el OWNER.** Guion idempotente con
+>    dry-run en `~/excursiones-produccion.php`, **fuera del repo** (`#325`). Este agente **no tiene
+>    acceso a producción** (medido: solo hay llave de staging; `playjump2@…` da `Permission denied`).
+>    ✅ **Y el despliegue YA ESTÁ HECHO** (el carril de Google auth lo subió esta misma noche), así que
+>    `ticket_types.guardian_authorization` ya existe en producción: **el guion aplicará `required` a la
+>    primera**, sin segunda pasada.
+>    ▶ ❗ **Con ese despliegue corrió también la migración `2026_09_02_120000`**, la del centinela que
+>    `#406` arregló por la mañana. Si por lo que sea quedó a medias, **ahora se puede reintentar y se
+>    repara** (con el código de antes habría quedado registrada como hecha y la tabla sin el `UNIQUE`
+>    ni la FK, en silencio). Comprobación de LECTURA, diez segundos:
+>    `Schema::getIndexes('guardian_authorizations')` tiene que traer
+>    `guardian_authorizations_order_item_id_minor_key_unique`.
+>
+> **3. Lo que sigue esperando el OJO del owner**: el justificante (cinco escenarios `PRUEBA-J1`…`J5`
+>    sembrados, guion en `VERIFICACION-E2E-CAJON.md` §5.septies — ⚠️ **ese escenario ENVEJECE**: se
+>    sembró para «hoy» el 01/09) · el libro del pedido (V18–V23) · los TPV · su `client-menu.webp`.
+>
+> ⚠️⚠️ **NUMERACIÓN POR BANDAS** (`#404`, `CONVENCIONES §10.6`): **este ordenador numera desde `#400`**
+> y el portátil sigue en `#34x`. Mirar el remoto antes de empujar **se probó y no basta** — trece
+> colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
+> continuidad.
+>
+> ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está
+> diagnosticado y mitigado (tope 60 → 300 s, medido: un render tarda ~140 ms), y el arreglo de fondo
+> —reutilizar UN proceso en vez de ~38— está fichado en `DEUDA.md`. Si vuelve a caer, **mira el log
+> que el hook preserva y dice por su nombre** antes de reintentar.
+
+
+🟦 **LA HORA EXTRA · SPEC APROBADA Y LISTA PARA CONSTRUIRSE** (2026-09-02, `docs/specs/hora-extra.md`; las tres decisiones cerradas en §7).
 `[owner]`: *«no tener 4 productos tipo entrada 1 hora, entrada 2 horas… la idea es tener dos y si
 alguien quiere más horas, puede añadirlas»*, atada solo a ciertos productos y con límites.
 ▶ ❗❗❗ **LA CORRECCIÓN DEL OWNER TIRÓ EL PRIMER DISEÑO Y DEJÓ UNO MUCHO MÁS PEQUEÑO**: yo leí «hora
