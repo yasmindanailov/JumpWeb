@@ -14,6 +14,16 @@ decírselo donde se topa con la pared.*
 vinculación **no servía de nada** —la única salida de un vínculo no pedido era borrar la cuenta—.
 ▶ ⚠️ Dos presupuestos suben (chunk 267→269, payload con sesión 9.650→9.900) y los dos **después de
 podar**, con la poda medida y escrita.
+▶ ✅ **VERIFICADO EN LA WEB LOCAL, no solo en la suite** (con claves de prueba y quitándolas después):
+la ida sale a `accounts.google.com` con **los seis parámetros exactos** —`redirect_uri` con la RUTA
+COMPLETA, `scope` los tres mínimos, `prompt=select_account`, `access_type=online`, `state` y `nonce`
+de 64 hex—; `/registro/google` abre el cajón en `google-signup`; los textos de esa pantalla salen
+**solo en su puerta** (0 en la home, 1 en la puerta); y **sin claves el botón desaparece y la ruta da
+404**.
+▶ ⚠️ **Y una trampa de medición que te ahorro**: `grep "Continuar con Google"` sobre el HTML **sigue
+dando 1 sin claves** — es el RÓTULO dentro del payload del cajón, que viaja siempre. Lo que dice si
+el botón se pinta es su marcado (`auth__google`), que sin claves sale **0**. Es la misma trampa que
+`#339` anotó con la palabra «waiver».
 ▶ **QUEDA SOLO TU OJO** y **la política de privacidad**: es requisito de salida de tu Q7 — no se
 anuncia el botón a clientes reales sin que el documento describa el tratamiento (art. 13/14). El
 texto vive en la BD, así que en `playjump.es` es un paso manual desde el panel.
