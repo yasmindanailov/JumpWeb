@@ -1,5 +1,22 @@
 # Estado del proyecto — foto viva
 
+⬜ **LA HORA EXTRA · SPEC ESCRITA, PENDIENTE DE TU ✅** (2026-09-02, `docs/specs/hora-extra.md`).
+`[owner]`: *«no tener 4 productos tipo entrada 1 hora, entrada 2 horas… la idea es tener dos y si
+alguien quiere más horas, puede añadirlas»*, atada solo a ciertos productos y con límites.
+▶ ❗❗❗ **LA CORRECCIÓN DEL OWNER TIRÓ EL PRIMER DISEÑO Y DEJÓ UNO MUCHO MÁS PEQUEÑO**: yo leí «hora
+extra» como *«la reserva dura más»* y él precisó *«la hora extra es de 1 entrada, no de las 4»*. O sea
+**4 personas de 10 a 12 y UNA de 12 a 13**: no es más tiempo con las mismas plazas, es **menos plazas
+más tarde** — un OCUPANTE nuevo, no una duración distinta.
+▶ La lectura falsa pedía **duración por LÍNEA** (50 referencias en 14 ficheros, ~8 servicios de aforo);
+la correcta cabe en lo que ya existe, porque **`occupancyMap` no filtra por tipo**: cuenta cualquier
+línea con franja, usando sus plazas y la duración de su producto. *Cuando el diseño sale caro,
+sospecha de que estás modelando el problema equivocado antes de aceptar el precio.*
+▶ **Y resuelve solo el precio**: si la cantidad son ENTRADAS que se quedan, el precio es por persona
+por construcción y el tope físico sale gratis (no se pueden quedar 5 de 4).
+▶ **Lo que hay que construir son DOS cosas**: el **LOCK** (hoy los complementos se saltan) y
+**recalcular la oferta al añadirla**, o se ofrece lo que el checkout rechaza (`AFORO-02`).
+▶ **Tres decisiones tuyas en §7**: el ✅, si vale también para packs, y **qué ve el operador**.
+
 🟦 **EXCURSIONES DE COLEGIO · EL PRODUCTO, ENSAYADO Y VERIFICADO EN STAGING — FALTA TU MANO EN
 PRODUCCIÓN** (2026-09-02, `DECISIONES #409`). `[DECIDIDO owner]`: **señal 100,00 € fijos** (hasta hoy
 era un número de agente) y justificante en **`required`**.
