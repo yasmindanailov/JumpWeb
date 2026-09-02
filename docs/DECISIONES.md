@@ -21585,3 +21585,58 @@ de producción.
 **Verificación**: suite **4.023 · 25.709** verde (medida tras rebasar encima el carril de Google) · Pint ✓ · docs-check ✓ · la migración probada sobre
 **MySQL real** con estado intermedio fabricado y **control sobre el código viejo** · 4 mutaciones
 vistas morder (1 del asunto + 3 de las dos visitas) · los tres ficheros mutados restaurados byte a byte.
+
+---
+
+## #407 · 2026-09-02 · Un recorrido de vistas PÚBLICAS no llega a una pantalla que exige un enlace, por pública que sea
+
+**Verificación del subsistema del justificante** antes de tocar producción, en tres capas y con los
+datos sembrados de `VERIFICACION-E2E-CAJON.md` §5.septies.
+
+### Lo que salió bien, medido
+
+| Capa | Resultado |
+|---|---|
+| **Servidor**, sobre los cinco escenarios `PRUEBA-J*` | **41 ✓ / 0 ✗**: un enlace DISTINTO por reserva y apuntando a su id · el cupo es el de **su** línea (20 y 2 en un pedido de 22, no 22) · `freeIn` nunca negativo · el responsable no ve contacto de otros padres |
+| **Navegador** (390×844, puntero grueso) | hoja en blanco: **ninguno de los 5 nombres** ya firmados aparece · casilla desmarcada · los seis campos · cero errores de JS · cero desborde |
+| **Flujo de firma** | **8 ✓ / 0 ✗**: firma → «ha quedado registrada» · segundo progenitor → «ya tiene su autorización firmada» **sin decir quién la firmó** · fecha de adulto → rechazada con su frase propia |
+| **API** | `PRUEBA-J4` devuelve **dos reservas con su enlace y sus plazas** (19 y 1) · `PRUEBA-J5` con 0 plazas → **`link: null`** · los menores viajan sin contacto de ningún adulto |
+
+▶ **Dos propiedades se verificaron por ACCIDENTE, que es la mejor forma**: pedir un pedido ajeno
+devuelve **404 y no 403** (un 403 le confirmaría a un desconocido que ese pedido existe), y cuando
+Turnstile no dio token la pantalla dijo *«NO hemos registrado nada»* en vez de callar — la conducta
+que `#335` construyó, vista en vivo por un fallo de la sonda.
+
+### El defecto: 42 donde el proyecto exige 44
+
+Medido con puntero grueso en la pantalla pública del justificante: los siete campos y el `select` a
+**42 px** (`11 + 18 + 11 + 2`) y la etiqueta que ACEPTA el descargo también a 42. El estándar propio
+es **44** desde `#264`, que dejó «37 → 1».
+
+❗❗ **Por qué se escapó, y es lo que hay que recordar**: el barrido de `#264` recorre *«las siete
+vistas PÚBLICAS renderizables»*, y la regla que las viste (`.eventfields`) vive en **tres pantallas
+que exigen sesión o un enlace firmado** — el paso de datos del cajón, el post-form de invitados y
+ésta. *Un recorrido de vistas públicas no llega a una pantalla que exige un enlace, por pública que
+sea.* Anotado en `VERIFICACION-E2E-CAJON.md` §5.duovicies, junto con que su guion cita una ruta
+(`/home/sail/e2e/tap44.mjs`) que **ya no existe**.
+
+▶ Arreglado con `min-height: var(--tap-min)` —no con más relleno, que movería el texto— en
+`.eventfields input/select/textarea` y en `.guardian__accept`. Medido: **12 controles bajo 44 → 4**,
+y **ninguno de los cuatro es un defecto**: dos son el HONEYPOT (que no debe ser táctil: agrandarlo lo
+haría más fácil de pulsar sin querer), la casilla de 13 px tiene su área en la etiqueta que la
+envuelve —**44 × 310**, verificado pulsando su extremo con control— y el cuarto es el enlace EN LÍNEA
+que WCAG exime, el mismo superviviente que `#264` dejó vivo.
+
+### Cinco errores de INSTRUMENTO, todos míos, y por eso van escritos
+
+`networkidle` **cuelga** en una página con Turnstile (mantiene la conexión abierta) · `document.fonts.size`
+da **0** sin webfonts declaradas y no dice nada del FOIT — el control bueno es que el texto **ocupe
+ancho** · una aserción por subcadena (`/registrad/`) casó con otra palabra de la página y me hizo
+creer que una firma había entrado · la espera de Turnstile pasaba de largo porque **`!t` es cierto
+mientras el campo no existe**, así que la sonda enviaba sin token · y medí un clic **sin desplazar el
+elemento a la vista**, lo que me hizo acusar en falso a la etiqueta de la casilla. *El instrumento
+sigue siendo el primer sospechoso, y esta sesión lo pagó cinco veces.*
+
+**Verificación**: 41 ✓ de servidor · 8 ✓ de flujo en navegador · 12 → 4 objetivos táctiles, los cuatro
+justificados · 57 guardas de CSS y del cajón en verde · suite **4.023 · 25.709** · Pint ✓ · docs-check ✓ ·
+escenario sembrado **restaurado byte a byte** (454→1, 455→0, 456→1, 457→0, 458→2).

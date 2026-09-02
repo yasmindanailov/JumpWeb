@@ -12,6 +12,22 @@ tocaron ese día* — y tampoco en los CASOS de un fichero que sí se tocó. **P
 regla es *ningún `User::factory()` cuyo nombre se pinte enfrentado a una aserción por subcadena*.
 **Retirad este aviso cuando lo hayáis leído.**
 
+✅ **EL JUSTIFICANTE, VERIFICADO EN TRES CAPAS ANTES DE TOCAR PRODUCCIÓN** (2026-09-02,
+`DECISIONES #407`). Servidor **41 ✓/0 ✗** sobre los cinco escenarios sembrados · navegador: hoja en
+blanco con los 5 nombres ajenos ausentes, firma → «registrada», segundo progenitor → «ya tiene su
+autorización» sin decir quién, fecha de adulto rechazada (**8 ✓/0 ✗**) · API: dos reservas con su
+enlace y sus plazas, y `link: null` sin plazas libres.
+▶ **Un defecto, arreglado**: los campos de la pantalla pública medían **42** y el estándar propio es
+44. Se escapó porque el barrido de `#264` recorre *«las siete vistas PÚBLICAS»* y esta pantalla
+**exige un enlace firmado** — igual que el paso de datos del cajón y el post-form, que compartían la
+misma regla. **12 controles bajo 44 → 4**, y los cuatro justificados (dos son el honeypot, uno tiene
+su área en la etiqueta —44×310 medidos— y el otro es el enlace en línea que WCAG exime).
+▶ ⚠️ **Cinco errores de instrumento pagados y escritos** en la entrada: `networkidle` cuelga con
+Turnstile, `document.fonts.size` no dice nada del FOIT, una aserción por subcadena, una espera que
+pasaba de largo porque `!t` es cierto mientras el campo no existe, y un clic sin desplazar.
+▶ **El escenario sembrado se restauró byte a byte** — pero OJO, **envejece**: `PRUEBA-PUERTA` se
+sembró para «hoy» el 01/09 y ya no sale en la puerta. Anotado en el guion.
+
 ✅ **EL JUSTIFICANTE, REVISADO DE FORMA ADVERSARIAL — Y TRES ARREGLOS, UNO DE ELLOS INMINENTE**
 (2026-09-02, `DECISIONES #406`). Seis lentes independientes + una pasada que REFUTA cada hallazgo:
 **29 crudos → 25 únicos → 10 refutados a fondo → 7 sobreviven**, y la refutación **corrigió la

@@ -2108,6 +2108,16 @@ body.no-scroll { overflow: hidden; }
     font-family: var(--font-body); font-size: var(--fs-15); color: var(--fg);
     background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
     padding: var(--sp-11) var(--sp-13); width: 100%; resize: vertical;
+    /* ⚠️⚠️ **44 y no 42** (`#264` aplicado aquí por fin): `11 + 18 + 11 + 2` da **42**, dos píxeles por
+       debajo del mínimo táctil que este proyecto se impuso. Se corrige con `min-height` y no con más
+       relleno para no mover el texto dentro de la caja.
+       ▶ **Por qué se escapó al barrido de `#264`**, que dejó «37 → 1»: aquél recorre *las siete vistas
+       PÚBLICAS renderizables*, y los tres sitios donde vive esta clase —el paso de datos del cajón, el
+       post-form de invitados y la pantalla del justificante— **necesitan sesión o un enlace firmado**.
+       *Un recorrido de vistas públicas no llega a una pantalla que exige un enlace, por pública que sea.*
+       ▶ Medido en navegador a 390×844 con puntero grueso: **42 → 44** en los siete campos y el `select`.
+       El `textarea` ya pasaba de sobra; para él esto no cambia nada. */
+    min-height: var(--tap-min);
     transition: border-color var(--dur-sale) var(--ease-sale);
 }
 .eventfields select { appearance: none; resize: none; cursor: pointer; }
@@ -4609,7 +4619,13 @@ body[data-has-hero] .nav--over .nav__cta {
 .guardian__waiver-h { font-family: var(--font-body); font-size: 14px; font-weight: 700; margin: 14px 0 4px; color: var(--fg); }
 .guardian__waiver-p { font-size: 13px; line-height: 1.6; color: var(--fg); margin: 0; }
 /* Casilla SEPARADA y desmarcada por defecto: no se mezcla con privacidad ni con condiciones. */
-.guardian__accept { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; font-size: 14px; line-height: 1.5; color: var(--fg); cursor: pointer; }
+/* ⚠️ **La casilla mide 13 px y su área útil es ESTA etiqueta**, que la envuelve — verificado pulsando
+   su extremo, lejos de la casilla, y con control de que la sonda sabía marcarla. A 390 px el texto
+   ocupa dos renglones (14 × 1,5 × 2 = **42**), dos por debajo del mínimo: los pone `min-height`.
+   ▶ Con `align-items: flex-start` los 2 px sobrantes caen ABAJO, así que el texto no se mueve.
+   ▶ **Es el control que ACEPTA el descargo**, o sea el gesto legal de toda esta pantalla: si algún
+   objetivo táctil de aquí tiene que llegar a 44, es éste. */
+.guardian__accept { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; min-height: var(--tap-min); font-size: 14px; line-height: 1.5; color: var(--fg); cursor: pointer; }
 .guardian__accept input { margin-top: 3px; flex-shrink: 0; }
 .guardian__accept.is-invalid { color: var(--err); }
 .guestform__section { display: flex; flex-direction: column; gap: 14px; }

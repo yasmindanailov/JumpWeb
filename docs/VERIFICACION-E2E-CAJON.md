@@ -1734,7 +1734,14 @@ cerrado**, así que leerla sin comprobar `is-open` no dice nada.
 
 > Recorre las **siete vistas públicas renderizables** a 390×844 con `hasTouch` y mide el **área
 > efectiva** de cada control: su caja, más los pseudo-elementos absolutos que la amplían, menos lo
-> que le recorte un ancestro. Guion: `/home/sail/e2e/tap44.mjs`.
+> que le recorte un ancestro. Guion: ~~`/home/sail/e2e/tap44.mjs`~~ ⚠️ **esa ruta ya no existe**
+> (verificado el 2026-09-02: los guiones de este entorno viven en `/root/e2e/`).
+>
+> ⚠️⚠️ **Y su ALCANCE tiene un agujero que costó un defecto** (`#407`): «las siete vistas PÚBLICAS
+> renderizables» **deja fuera toda pantalla que exija sesión o un enlace firmado** — el paso de datos
+> del cajón, el post-form de invitados y la pantalla del justificante. Las tres son formularios que
+> un cliente rellena en el móvil, y las tres tenían sus campos a **42**. *Un recorrido de vistas
+> públicas no llega a una pantalla que exige un enlace, por pública que sea esa pantalla.*
 
 ❗❗ **LEE ESTO ANTES DE CREERTE UN NÚMERO SUYO.** Esta sonda salió mal **dos veces** y las dos daban
 cifras plausibles:
@@ -2133,6 +2140,15 @@ Cliente responsable : colegio-prueba@jumpweb.test  ·  contraseña: prueba1234
 PRUEBA-WAIVER  · visita FUTURA · 6 plazas · 1 justificante firmado  → el formulario, el panel, la cuenta
 PRUEBA-PUERTA  · visita HOY    · 4 plazas · 2 justificantes         → la puerta
 ```
+
+⚠️⚠️ **ESTE ESCENARIO ENVEJECE, y hay que mirarlo antes de recorrerlo** (2026-09-02): `PRUEBA-PUERTA`
+se sembró con su visita «HOY» el **01/09**, así que **al día siguiente ya no sale en la puerta** —la
+puerta solo compone las reservas de hoy— y `PRUEBA-WAIVER` deja de ser «futura» en cuanto pasa su
+día. *Un fixture con una fecha absoluta no describe «hoy»: describe el día en que se sembró.*
+▶ Antes de recorrer los bloques 4 y 5, **mueve su franja al día en curso** o vuelve a sembrar.
+▶ Los cinco de `#401` (`PRUEBA-J1`…`J5`) son de **`admin@jumpweb.test`**, no del cliente de prueba —
+comprobado el 2026-09-02—: pedirlos con la otra cuenta devuelve **404**, que es lo correcto (un 403
+le confirmaría a un desconocido que ese pedido existe) pero despista si no se sabe.
 
 ⚠️ **Son DOS pedidos y no uno por una razón**: la puerta solo enseña los justificantes de las
 reservas **de HOY**, y el formulario público se **cierra** cuando la visita ya pasó. Con un solo
