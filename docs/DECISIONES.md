@@ -21384,6 +21384,122 @@ lienzo, y comprobado que no cae sobre ningún botón— la pone en `jugando`; y 
 juega no saca del juego (7/7).
 
 
+## #353 · 2026-09-02 · La puesta en PRODUCCIÓN: Google auth, el justificante y las excursiones
+
+`[owner]`: *«vamos a subir toda la actualización a prod»*. Es el primer despliegue de este carril a
+`playjump.es`, con **69 clientes y 6 pedidos reales** detrás.
+
+### ❗❗ Lo primero: la doc mentía sobre el acceso
+
+`ESTADO.md` afirmaba —con la palabra «medido» delante— que **este agente no tiene acceso a
+producción** (`playjump2@51.68.7.199 → Permission denied`). **Lo tiene.** El `~/.ssh/config` de esta
+máquina declara el host `jumpweb-prod` y entra con la misma llave que staging. *Una medición
+heredada no es una medición: se vuelve a hacer antes de construir encima de ella.*
+
+### Lo desplegado, y por qué no podía esperar
+
+Producción tenía **96 migraciones y el repo 100**. Las cuatro que faltaban son exactamente este
+carril: la activación del justificante (`#400`), `user_identities` (`#342`), el justificante colgando
+de la reserva (`#401`) y la revocación de consentimientos (`#344`).
+
+⚠️⚠️ **Y una de ellas llevaba un defecto que `#406` arregló a tiempo**: se declaraba migrada en el
+paso 4 de 5, y el 5 es el que crea el `UNIQUE`, la FK y el `NOT NULL`. Producción **no la había
+corrido**, así que el arreglo llegó antes que el daño — que es exactamente el escenario para el que
+se arregló.
+
+⚠️ **`deploy.sh` corre `migrate --force` y NO hace copia de la base de datos**, y no había carpeta de
+copias en el servidor. Se hizo un `mysqldump` antes de tocar nada (134 KB, 49 tablas, con la línea
+`Dump completed` comprobada). Ficha en `DEUDA.md`: el script debería hacerlo él.
+
+### Los cuatro pasos de DATO que el despliegue no hace
+
+1. **Condiciones v1 publicada** (el paso manual que `#348` dejó escrito). ▶ Y la regla de gracia se
+   midió sobre los clientes REALES: **63 de 69 quedan indultados** y **6** pasarán por la casilla —
+   los creados en mostrador, que nunca aceptaron nada. *La regla hace exactamente lo que decía.*
+2. **Excursiones**: zona propia (08:00–15:00, ignora el cierre del recinto, 1 grupo y 100 plazas por
+   franja), 5 plantillas L–V y **130 franjas**; dos productos `pack` con señal fija de 100 € y el
+   justificante en **`required`**. **24 acciones, las mismas que el ensayo de staging.**
+   ⚠️ **El guion NO era idempotente para los productos y lo dijo su segunda pasada**: buscaba por
+   nombre con tilde y el JSON los guarda escapados (`Excursi\u00f3n`), así que una repetición habría
+   DUPLICADO los dos productos. No llegó a pasar —solo se escribió una vez— y se verificó contando.
+3. **30 fechas especiales** (festivos y vísperas de 2026 y 2027 → tarifa especial). Pascua 2027 la
+   calculó `easter_date()`, no una cabeza: 28 de marzo. ⚠️ `is_closed = false` y sin horas, porque
+   `OperatingSchedule` hereda entonces el horario semanal: estas filas mueven el PRECIO y nada más.
+   Verificado con CONTROL: martes 08/12 → `special` 14,00 € · martes 15/12 → `normal` 12,00 €.
+4. **Las claves de Google**, y aquí hubo un diagnóstico que el owner encontró antes: puso las claves
+   en el `.env` y el botón no salía. ⚠️⚠️ **No viven en el `.env`: viven en `settings`**
+   (`[DECIDIDO owner]` Q10, para aprovisionar sin tocarlo). Y **la comprobación que yo había dado por
+   buena era la equivocada** —`grep GOOGLE_CLIENT .env`—: acertó por casualidad, porque tampoco
+   estaban configuradas. Lo que vale es `GoogleAuth::enabled()`.
+
+### Los textos legales, que eran requisito de salida de Google
+
+- **La política de privacidad describe el acceso con Google** (es/en/fr), en sección propia y
+  colocada tras «qué datos tratamos y cómo los obtenemos», que es donde el art. 14 pide decir **qué
+  se recibe y de dónde**. Redactada en CONDICIONAL a propósito: era cierta con el botón aún apagado y
+  lo sigue siendo ahora.
+- ❗ **El francés estaba PUBLICADO con cinco marcadores `[À COMPLÉTER]`** —privacidad y cookies—,
+  nombrando además proveedores retirados. Reescrito usando el español como fuente (`[owner]`: *«reusa
+  la política en inglés o español, ahí están los datos»*). Barrido final: **cero marcadores**.
+- ⚠️ **Y `#350` había dejado desfasado un texto legal sin que nadie lo viera**: «solo te enviaremos
+  comunicaciones comerciales si lo has consentido al registrarte» — desde esa tanda el consentimiento
+  se da en «Mi cuenta». Corregido en los tres idiomas. *Una tanda que cambia dónde se consiente tiene
+  que mirar quién lo cuenta.*
+
+### Lo que NO se tocó, dicho para que conste
+
+`sales.online_enabled` sigue en **0** (`[owner]`: pausado hasta tener Redsys de producción), la
+tarifa especial no se modificó —**el viernes ya estaba en producción**; lo que le faltaba era a
+STAGING, y se lo dije al owner leyendo el entorno equivocado— y los 69 clientes y 6 pedidos quedan
+intactos.
+
+### Verificación
+
+Salud del despliegue: `/up` y `/` en 200, 0 migraciones pendientes, 0 jobs fallidos, 5 tareas del
+scheduler · las 11 páginas del sitemap en 200 salvo `/servicios`, que está en mantenimiento a
+propósito (ficha en `DEUDA.md`: está en el sitemap) · `/auth/google` redirige a Google con los **seis
+parámetros exactos** (`redirect_uri` completo, los tres ámbitos mínimos, `prompt=select_account`,
+`access_type=online`, `state` y `nonce` de 64) · **sonda de navegador contra producción, 12/12**: el
+botón se pinta en `/login` y `/registro`, su «G» carga, el separador está y va encima del formulario.
+
+⚠️⚠️ **Dos falsos negativos de esa sonda, los dos creíbles**: exigía el `href` RELATIVO cuando el
+servidor lo compone absoluto con `route()` —acusaba al producto de un acierto suyo— y leía
+`naturalWidth` sin esperar a que la imagen cargara, dando **0 en `/login` y 118 en `/registro`**
+(cacheada). *Un cero por medir pronto es indistinguible de un cero por imagen rota si no se espera.*
+
+## #354 · 2026-09-02 · One Tap NO se construye: lo que hay es suficiente
+
+`[DECIDIDO owner, 2026-09-02]`, con el carril ya funcionando en producción: *«google one tap no lo
+vamos a implementar, con esto es suficiente»*.
+
+▶ **Cierra la T9**, que era lo único que quedaba del plan de `§16` y que `ESTADO` llevaba dos
+sesiones anunciando como «lo siguiente». El carril de Google auth queda **cerrado**.
+
+### Lo que se evita, y por eso la decisión es buena
+
+⚠️⚠️ **One Tap cambia el modelo de confianza del retorno**, y eso está medido en `#342`: hoy lo que
+hace creíble lo que Google afirma **no es el token, es el CANAL** —canje servidor-a-servidor
+autenticado con nuestro secreto, y ninguna rama lee un `id_token` de la petición—. En One Tap el
+`id_token` llega **del cliente**, así que ese camino necesitaría además **verificar la firma RS256**
+contra las claves de Google. `#342` lo dejó escrito como *«la mitad que nadie debe añadir sola»*.
+
+▶ Y no había atajo: **medido, One Tap no puede devolver un CÓDIGO** para reutilizar el canje que ya
+existe.
+
+▶ Se llegó a tomar la decisión de dependencia (`[DECIDIDO owner]`: entraría `firebase/php-jwt`, porque
+escribir a mano ~100 líneas de RS256 y una caché de JWKS es la clase de pieza donde **un error no
+falla, deja entrar**). **Queda sin efecto**: no entra ninguna dependencia nueva.
+
+▶ Se evitan además tres cosas que la T9 arrastraba: tres directivas de CSP, una **categoría de
+cookies propia** con su texto en el banner —⚠️ no valía meterla en `social`, que `#309` dejó sin
+consumidor— y el gateo del chip tras el banner.
+
+⚠️ **Y una consecuencia que conviene no perder**: `prompt=select_account` **sigue haciendo falta**.
+`#342` lo puso para que la persona vea con qué cuenta entra, y el argumento para quitarlo era
+precisamente que el chip de One Tap enseñaba el nombre antes de pulsar. Sin One Tap, ese argumento
+desaparece — **no lo quites**.
+
+
 ## #400 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
 
 **Encontrado por el owner probando lo construido**, con la suite verde y las cuatro tandas anteriores

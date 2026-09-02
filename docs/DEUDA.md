@@ -492,6 +492,32 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
   redibujada: 0 px distintos de 226.560 contra su asset, con control.
   ▶ **Lo que deja anotado para el día que entre Apple**: la carpeta `providers/` y la exención de las
   dos guardas de iconos ya existen, así que el segundo proveedor es un fichero más y una regla más.
+- ⚠️⚠️ **`deploy.sh` corre `migrate --force` y NO hace copia de la base de datos** (Media, `#353`).
+  Medido el 2026-09-02 al desplegar a producción: no existía ni carpeta de copias en el servidor. Se
+  hizo un `mysqldump` a mano antes de aplicar cuatro migraciones estructurales sobre 69 clientes y 6
+  pedidos reales. ▶ **Salida**: un paso más en el script, antes del `migrate`, con `mysqldump
+  --single-transaction` a `~/backups/` y su comprobación de que el volcado acaba en `Dump completed`.
+  `mysqldump` está disponible en el servidor y sobra disco (421 GB).
+- **`/servicios` devuelve 503 y está en el sitemap** (Baja, `#353`). `maintenance.page.servicios = 1`
+  es deliberado, pero `sitemap.xml` lista esa URL igual, así que se le está pidiendo a Google que
+  indexe una página que le responde error. ▶ **Dos salidas y es del owner**: quitarla del
+  mantenimiento, o que el sitemap salte las páginas en mantenimiento —que es lo que `SitemapController`
+  debería hacer, porque el dato ya está en `Setting`—.
+- **`robots.txt` no declara el sitemap** (Baja, `#353`). El sitemap existe y responde, pero un
+  rastreador que no lo tenga enviado a mano no lo encuentra solo. ⚠️ **No es una línea en el fichero
+  estático**: la URL del sitemap es ABSOLUTA y distinta en cada instalación, y `deploy.sh` reescribe
+  ese fichero en staging. ▶ Salida: que el script lo componga con `DEPLOY_URL`, como ya hace con el
+  `Disallow: /` de staging.
+- **Una fecha especial se salta la TEMPORADA al resolver el horario** (Baja, latente, `#353`).
+  `OperatingSchedule` da prioridad a `special_dates` y, sin horas propias, cae al horario **SEMANAL**
+  —no al de la temporada—. Hoy no muerde: `seasons` tiene **0 filas** en producción. Mordería el día
+  que se cree una temporada, y entonces las 30 fechas especiales cargadas usarían el horario semanal
+  en vez del suyo, **sin que nada falle**.
+- **La víspera de Jueves Santo salió de aplicar la regla al pie de la letra** (Baja, `#353`). El
+  owner definió la tarifa especial como «viernes, sábado, domingo, vísperas y festivos», y eso genera
+  un «Miércoles Santo» (24/03/2027) a precio de festivo. Se cargó porque es lo que la regla dice; si
+  no lo quiere, es borrar esa fila de `special_dates`. ⚠️ Se omitieron 6 vísperas que ya caían en
+  viernes, sábado o domingo: no aportaban nada.
 - **El par de CTA de la cabecera desborda 5 px a 1080 px de ancho** (Baja, `#351`). A ese ancho el
   botón de la mitad expandida se estrecha de 224 a **182 px** y su contenido no cabe. ⚠️ **Es
   PREEXISTENTE y está medido con control**: el desborde es idéntico con el subtítulo nuevo y sin él,

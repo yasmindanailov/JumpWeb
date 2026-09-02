@@ -3669,7 +3669,7 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **El OJO del owner** sobre las cuatro, y **subir su `client-menu.webp`**
 - [ ] ⚠️ **Producción NO lleva `#340` ni `#341`**, y el siguiente despliegue desde `main` **estrena la T3 del justificante** (`#337`): no es un despliegue de rutina
 
-### GOOGLE AUTH 🟦 — las tres tandas de código MÁS el pulido del ojo del owner (2026-09-02; T5→T8·d en el árbol, **los siete puntos del owner HECHOS**; queda la T9)
+### GOOGLE AUTH ✅ — CERRADO Y EN PRODUCCIÓN (2026-09-02; T1→T8·d, los siete puntos del owner hechos, **One Tap descartado** por `#354`, y `playjump.es` sirviéndolo)
 - [x] **Spec** `docs/specs/auth-con-google.md`, con la decisión del owner que la ordena: **pantalla intermedia y exención al 100 %** (§4)
 - [x] **Revisión adversarial de cinco lentes: OCHO bloqueantes**, dos de ellos agujeros de seguridad, aplicados con marcas ✱
 - [x] **Diez de once preguntas cerradas** con `[DECIDIDO owner]` (la Q8 se cerró al empezar: la pantalla va en el CAJÓN)
@@ -3684,6 +3684,8 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [x] **T8·b · el checkout pide lo que falta** (`#349`, §21.4.2): condiciones y teléfono en el momento del contrato, con el enlace SIEMPRE en pantalla — cierra un hueco legal medido (LCGC art. 5 · TRLGDCU art. 97). Los dos verificadores de concurrencia corridos
 - [x] **T8·c · las dos altas pierden las casillas** de privacidad, condiciones y marketing (`#350`, §21.4.3): y **quitar la casilla no era el trabajo** — el alta escribía una fila `terms` con una FECHA por versión que la regla de gracia de `#348` empataba con la v1, así que *toda cuenta nueva salía indultada* (medido). Cambia `openapi/v1.yaml` en los dos esquemas de alta
 - [x] **T8·d · el botón de Google encima del formulario** con el separador «o» (`#350`, §21.4.4): dentro de los dos formularios —la cabecera vive ahí— y con el separador colgando del `v-if` del botón. Guarda nueva, porque el manifiesto congelado no ve esta pieza
+- [x] **EN PRODUCCIÓN** (`#353`, §22): las 4 migraciones, la v1 de «Condiciones», la política de privacidad describiendo el acceso con Google en los tres idiomas y las claves en `settings` (⚠️ **no en el `.env`**). Verificado con navegador contra `playjump.es`: 12/12
+- [x] ⛔ **T9 · One Tap — NO SE CONSTRUYE** (`[DECIDIDO owner]`, `#354`): *«con esto es suficiente»*. Se evita verificar la firma de un `id_token` que llega del CLIENTE, una dependencia nueva, tres directivas de CSP y una categoría de cookies propia. ⚠️ `prompt=select_account` SIGUE haciendo falta: el único argumento para quitarlo era el chip de One Tap
 - [ ] **T9 · One Tap** (`[owner]`, viable gateando el chip tras el banner de cookies): su pieza cara es **verificar la firma del `id_token`**, porque ahí el token llega del CLIENTE y no del canje
 - [ ] Del owner: su ✅, **el cliente de OAuth de DESARROLLO** (el de producción ya está creado; su secreto vive fuera del repo), la política de privacidad al terminar y **publicar la v1 de «Condiciones»** en cada instalación
 

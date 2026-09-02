@@ -360,6 +360,23 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 
 ## 6 · PRODUCCIÓN · playjump.es, MEDIDO (2026-09-01, `DECISIONES #325`)
 
+> 🚀 **SEGUNDO DESPLIEGUE, 2026-09-02** (`DECISIONES #353`): commit `64ff3b6`, con las cuatro
+> migraciones de Google auth y del justificante. Estado tras él, medido:
+> `sales.online_enabled = 0` (compra cerrada, decisión del owner hasta tener Redsys de producción) ·
+> **condiciones v1 publicada** · `GoogleAuth::enabled() = true` · 4 zonas y 21 productos (entran las
+> excursiones) · 30 fechas especiales · 69 clientes y 6 pedidos.
+> ▶ ❗❗ **Este documento y `ESTADO` decían que el agente NO tiene acceso a producción** («medido:
+> Permission denied»). **Lo tiene**: el `~/.ssh/config` declara `jumpweb-prod` y entra con la llave de
+> staging. *Una medición heredada no es una medición.*
+> ▶ ⚠️⚠️ **Las claves de Google NO van en el `.env`**: viven en `settings` (`[DECIDIDO owner]` Q10) y
+> se ponen con `php artisan app:set-setting auth.google_client_id|auth.google_client_secret … --force`,
+> que además **enmascara el secreto en su salida** porque esto se ejecuta por SSH.
+> ▶ ⚠️ **`deploy.sh` NO hace copia de la base de datos** y corre `migrate --force`. Antes de este
+> despliegue se hizo a mano (`mysqldump --single-transaction` → `~/backups/`, 134 KB, 49 tablas).
+> Ficha en `DEUDA.md`.
+> ▶ **Pasos de DATO que el script no hace** y que hubo que dar aparte: publicar la v1 de
+> «Condiciones», crear las excursiones y cargar los festivos.
+
 El mismo panel que staging (**Enhance**), así que `deploy.sh` vale con dos variables y una bandera:
 
 ```bash

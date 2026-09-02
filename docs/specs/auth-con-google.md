@@ -1564,3 +1564,86 @@ usaba (`.form__checks` cierra con 20 y separa sus controles con 12).
 pasa de 21 a 18 px bajo la cabecera, que es el margen de `.auth__head`), remedidas con la sonda de la
 T8·d — **18/18**.
 
+
+---
+
+## 22 · EN PRODUCCIÓN, y el carril se CIERRA (2026-09-02, `DECISIONES #353` y `#354`)
+
+### 22.1 · Lo desplegado
+
+`playjump.es`, commit `64ff3b6`, con **69 clientes y 6 pedidos reales**. Las cuatro migraciones que
+faltaban —`user_identities`, la revocación de consentimientos y las dos del justificante— aplicadas
+en el mismo despliegue.
+
+⚠️⚠️ **Y una corrección de esta documentación que va delante de todo lo demás**: `ESTADO.md` afirmaba
+—con la palabra «medido» delante— que el agente **no tiene acceso a producción**. Lo tiene. *Una
+medición heredada no es una medición: se rehace antes de construir encima de ella.*
+
+### 22.2 · ❗❗❗ Las claves NO van en el `.env`, y el owner lo descubrió antes que yo
+
+Puso `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en el `.env` de producción y **el botón no salía**.
+La causa no era la caché de configuración: **§10 las pone en `settings`** (`[DECIDIDO owner]` Q10,
+para aprovisionar sin tocar el `.env`), con `app:set-setting … --force`.
+
+⚠️⚠️ **Y la comprobación que yo había dado por buena era la equivocada.** Reporté «claves de Google en
+el `.env`: no están» tras un `grep GOOGLE_CLIENT .env`. La conclusión era correcta —tampoco estaban en
+`settings`— pero **por casualidad**: el `.env` nunca fue donde viven. *Un instrumento que apunta al
+sitio equivocado puede acertar, y eso es peor que fallar: no se corrige.* Lo que vale es
+`GoogleAuth::enabled()`, que es lo que la propia clase publica para esto.
+
+⚠️ Las dos claves entran en `SetSetting::PROTECTED_KEYS`, así que exigen `--force` escrito a mano, y
+el comando **enmascara el valor en su salida** porque se ejecuta por SSH y acaba en el log del
+despliegue.
+
+### 22.3 · Los dos requisitos de salida, cumplidos
+
+- **La política de privacidad describe el acceso con Google** (es/en/fr), en sección propia colocada
+  tras «qué datos tratamos y cómo los obtenemos» — que es donde el art. 14 pide decir **qué se recibe
+  y de dónde**. Redactada en CONDICIONAL a propósito: era cierta con el botón apagado y lo sigue
+  siendo ahora, que es lo que permitía publicarla ANTES de encender nada (Google la exige para
+  publicar la app).
+- **La pantalla de consentimiento, publicada** por el owner. ⚠️ Con solo los tres ámbitos mínimos
+  —no sensibles— Google no exige revisión; lo que sí la dispara es **subir un logotipo**, que es
+  *brand verification* con revisión manual. Queda dicho para que nadie lo suba sin saberlo.
+
+⚠️ **De regalo, dos hallazgos que no eran de este carril**: el francés de `privacidad` y `cookies`
+estaba PUBLICADO con cinco marcadores `[À COMPLÉTER]`, y **`#350` había dejado desfasado el texto de
+marketing** («si lo has consentido al registrarte»), que desde esa tanda se consiente en «Mi cuenta».
+Los dos corregidos. *Una tanda que cambia dónde se consiente tiene que mirar quién lo cuenta.*
+
+### 22.4 · Verificado en producción, no en local
+
+- `GoogleAuth::enabled()` → `true`; `/auth/google` → **302** a `accounts.google.com` con los **seis
+  parámetros exactos**: `redirect_uri=https://playjump.es/auth/google/callback`, `scope` los tres
+  mínimos, `response_type=code`, `prompt=select_account`, `access_type=online`, y `state` y `nonce`
+  de 64 caracteres.
+- **Sonda de navegador contra producción: 12/12** en `/login` y `/registro` — el botón se pinta
+  (380×44), su «G» carga de verdad (`naturalWidth` 118), el separador está y va **encima** del
+  formulario. Hacía falta un navegador y está medido por qué: sobre el HTML servido, «Continuar con
+  Google» sale 1 vez siempre y `auth__google` sale 0 siempre, **con claves y sin ellas** (`#342`).
+
+⚠️⚠️ **Dos falsos negativos de esa sonda, los dos con cifras creíbles**: exigía el `href` RELATIVO
+cuando el servidor lo compone absoluto con `route()` —acusaba al producto de un acierto suyo— y leía
+`naturalWidth` sin esperar a que la imagen cargara, dando **0 en `/login` y 118 en `/registro`**, que
+era la segunda pasada con la imagen en caché. *Un cero por medir pronto es indistinguible de un cero
+por imagen rota si no se espera.*
+
+### 22.5 · ⛔ One Tap NO se construye — el carril queda CERRADO
+
+`[DECIDIDO owner, 2026-09-02]`, con el producto ya funcionando en producción: *«google one tap no lo
+vamos a implementar, con esto es suficiente»*.
+
+▶ **Lo que se evita es la pieza cara y su modelo de confianza**: hoy lo que hace creíble lo que Google
+afirma **no es el token, es el CANAL** —canje servidor-a-servidor con nuestro secreto—. En One Tap el
+`id_token` llega **del cliente**, así que ese camino necesitaría verificar la **firma RS256** contra
+las claves de Google; `#342` lo dejó escrito como *«la mitad que nadie debe añadir sola»*. Y no había
+atajo: medido, **One Tap no puede devolver un CÓDIGO** para reutilizar el canje que ya existe.
+
+▶ La decisión de dependencia que se había tomado —entraría `firebase/php-jwt`— **queda sin efecto**.
+Se evitan también tres directivas de CSP y una **categoría de cookies propia** con su texto en el
+banner (⚠️ no valía meterla en `social`, que `#309` dejó sin consumidor).
+
+⚠️⚠️ **Y una consecuencia que no se puede perder de vista: `prompt=select_account` SIGUE haciendo
+falta.** `#342` lo puso para que la persona vea con qué cuenta entra, y el único argumento para
+quitarlo era que el chip de One Tap enseñaba el nombre antes de pulsar. **Sin One Tap, ese argumento
+desaparece.**

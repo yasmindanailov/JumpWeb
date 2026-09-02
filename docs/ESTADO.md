@@ -120,6 +120,47 @@ líneas y 0,00 €**. *Cuando el mensaje contradice a sus cifras, el roto es el 
 forkear · veredicto que separa duplicación, ausencia e importe) y **visto FALLAR sin el lock: 12
 líneas y 84,00 €**. Preexistente, verificado en la base `#341`: no lo causó la fusión.
 
+🚀 **EN PRODUCCIÓN: GOOGLE AUTH, EL JUSTIFICANTE Y LAS EXCURSIONES** (2026-09-02, `DECISIONES #353`
+y `#354`). `playjump.es` corre el commit `64ff3b6`, con **69 clientes y 6 pedidos reales** detrás.
+▶ ❗❗ **CORRIGE A ESTE MISMO DOCUMENTO**: `ESTADO` afirmaba —con «medido» delante— que este agente
+**no tiene acceso a producción**. Lo tiene. *Una medición heredada no es una medición.*
+▶ **Las 4 migraciones que faltaban** aplicadas (justificante, `user_identities`, el justificante por
+reserva, revocación de consentimientos). ⚠️ Una de ellas llevaba el defecto que `#406` arregló —se
+declaraba migrada en el paso 4 de 5— y producción **no la había corrido**: el arreglo llegó a tiempo.
+▶ **Copia de la BD antes de tocar** (134 KB, 49 tablas, volcado íntegro). ⚠️ `deploy.sh` **no la
+hace**: ficha en `DEUDA.md`.
+▶ **Condiciones v1 publicada**, y la regla de gracia medida sobre clientes REALES: **63 de 69
+indultados**, 6 pasarán por la casilla (los de mostrador, que nunca aceptaron nada).
+▶ **Excursiones creadas**: zona propia 08:00–15:00 que ignora el cierre, 1 grupo y 100 plazas por
+franja, **130 franjas**, dos packs con señal de 100 € y justificante `required`. **24 acciones, las
+mismas que el ensayo de staging.** ⚠️ El guion **no era idempotente para los productos** —busca por
+nombre con tilde y el JSON los guarda escapados— y una repetición los habría DUPLICADO; no llegó a
+pasar y se verificó contando.
+▶ **30 fechas especiales** (festivos y vísperas 2026-2027 → tarifa especial). Pascua 2027 la calculó
+`easter_date()`, no una cabeza. Verificado con control: martes 08/12 → 14,00 € · martes 15/12 → 12,00.
+▶ **Los legales, que eran requisito de salida de Google**: la privacidad ya describe el acceso con
+Google en los tres idiomas, y **el francés estaba PUBLICADO con cinco `[À COMPLÉTER]`** —reescrito
+desde el español—. ⚠️ Y `#350` había dejado desfasado el texto de marketing sin que nadie lo viera.
+▶ ❗❗ **LO QUE MÁS VALE SABER, porque el owner lo encontró antes que yo**: las claves de Google **NO
+van en el `.env`, van en `settings`** (`[DECIDIDO owner]` Q10). Puso las suyas en el `.env` y el botón
+no salía. ⚠️ **Y la comprobación que yo había dado por buena era la equivocada** (`grep GOOGLE_CLIENT
+.env`): acertó por casualidad. Lo que vale es `GoogleAuth::enabled()`.
+▶ **Verificado en producción con navegador, 12/12**: el botón se pinta en `/login` y `/registro`, su
+«G» carga, el separador está y va encima del formulario; y `/auth/google` redirige con los **seis
+parámetros exactos**. ⚠️ Dos falsos negativos de esa sonda, los dos creíbles: exigir el `href`
+relativo cuando el servidor lo compone absoluto, y leer `naturalWidth` sin esperar a la imagen.
+▶ ⚠️ **La compra online sigue CERRADA** (`sales.online_enabled = 0`, decisión del owner hasta tener
+Redsys de producción): las excursiones están creadas pero **no son comprables** todavía.
+
+⛔ **ONE TAP NO SE CONSTRUYE** (`[DECIDIDO owner, 2026-09-02]`, `DECISIONES #354`): *«con esto es
+suficiente»*. **Con eso el carril de Google auth queda CERRADO.**
+▶ Se evita la pieza cara —verificar la firma RS256 de un `id_token` que llega del CLIENTE, que `#342`
+llamó *«la mitad que nadie debe añadir sola»*—, la dependencia nueva (`firebase/php-jwt`, cuya
+decisión queda SIN EFECTO), tres directivas de CSP y una categoría de cookies propia.
+⚠️ **Consecuencia que no se puede perder: `prompt=select_account` SIGUE haciendo falta.** El único
+argumento para quitarlo era que el chip de One Tap enseñaba el nombre antes de pulsar. Sin One Tap,
+ese argumento desaparece.
+
 ✅ **EL HERO DEL CIERRE SE JUEGA TOCANDO DONDE SEA** (2026-09-02, `DECISIONES #352`). Medido a
 390×844 con el cierre abierto: la tarjeta ocupa **de 10 a 834** y el lienzo empezaba en **684**, o sea
 que en una pantalla entera solo respondían los **150 px de abajo**.
@@ -206,10 +247,17 @@ haga a propósito. *Encontrarlo fue gratis: `grep -oE '^## #[0-9]+' docs/DECISIO
 
 ## ▶ POR DÓNDE RETOMAR (lee esto primero)
 
-**Todo lo de abajo está empujado y verde. ✅ La T8 está CERRADA ENTERA (`#350`, 2026-09-02): con la
-T8·c y la T8·d, los SIETE puntos que sacó tu ojo en §21 están hechos.** Lo que queda es una cosa:
+**✅ EL CARRIL DE GOOGLE AUTH ESTÁ CERRADO Y EN PRODUCCIÓN** (`#353`, `#354`). La T8 entera, los
+siete puntos del ojo del owner, y **One Tap descartado por decisión suya**. No queda nada de este
+carril por construir; lo de abajo es historia y contexto.
 
-1. **T9 — One Tap** (`[owner]`: viable **gateando el chip tras el banner de cookies** — quien rechaza ve
+▶ **Lo único vivo son fichas de `DEUDA.md`**, ninguna bloqueante: `deploy.sh` no hace copia de la BD,
+`/servicios` da 503 estando en el sitemap, `robots.txt` no declara el sitemap, y la víspera de Jueves
+Santo salió de aplicar la regla al pie de la letra (el owner decide si se poda).
+
+📜 *Lo que fue la T9 y ya no se hace, conservado porque explica por qué:*
+
+1. ~~**T9 — One Tap**~~ (`[owner]`: viable **gateando el chip tras el banner de cookies** — quien rechaza ve
    el botón de siempre, quien acepta ve «Continuar como …»). ⚠️⚠️ **Su pieza cara es una sola**: ahí el
    `id_token` llega **del CLIENTE** y no del canje servidor-a-servidor, así que hay que **verificar su
    firma** contra las claves de Google. `#342` avisa de que ésa es *«la mitad que nadie debe añadir
