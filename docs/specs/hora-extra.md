@@ -62,12 +62,28 @@ complemento actual**.
 ### 4.1 · Qué es una «hora extra», en datos
 
 Un complemento **normal** en todo —cuelga del pivote, tiene precio, se edita desde el panel— con
-**una columna nueva** que dice cuánto ocupa: `ticket_types.extends_duration_min`
-(`unsignedInteger`, **nullable**).
+**dos datos**, y son dos a propósito:
 
-⚠️⚠️ **`null` no es «cero»: es la conducta de hoy, intacta por construcción.** Los complementos que ya
-existen no declaran nada, siguen con `slot_id = NULL` y `seats = 0`, y el aforo no los ve — igual que
-ahora. *Una feature que se apaga sola sobre los datos que ya existen no necesita interruptor.*
+| dato | qué dice | de dónde sale |
+|---|---|---|
+| `ticket_types.occupies_after_parent` (`bool`, default `false`) | **el interruptor**: «esta línea ocupa aforo detrás de su padre» | **columna nueva** |
+| `ticket_types.duration_min` | **cuánto** ocupa (60, 120…) | **la columna que YA existe**, y **la que el aforo YA lee** |
+
+❗❗ **La primera versión de esta spec inventó un `extends_duration_min` y era un campo HUÉRFANO**:
+`SlotAvailability::occupancyMap()` lee **`ticket_types.duration_min`** (`select` de la consulta), así
+que la longitud tiene que vivir ahí o **no la lee nadie**. *Un campo nuevo que duplica lo que otro ya
+significa acaba divergiendo, y el que decide el aforo no será el que se enseña* — es la misma lección
+que `#329` con los tramos de precio.
+▶ **Medido y por eso es seguro reusarla**: los **7** complementos que existen hoy tienen
+`duration_min` **nula**, así que la columna está libre y ningún dato actual cambia de significado.
+
+⚠️⚠️ **Y el interruptor es EXPLÍCITO, no derivado.** La alternativa —«ocupa si tiene `duration_min`»—
+sería una regla implícita: alguien pone una duración a la camiseta para pintarla en la ficha y **empieza
+a comerse aforo en silencio**. *Consumir plazas sin que nadie lo haya pedido es exactamente el fallo
+que ninguna guarda ve.* Con `false` por defecto, **los siete complementos actuales siguen igual por
+construcción** y la feature se apaga sola sobre los datos que ya existen.
+⚠️ Guarda: `occupies_after_parent = true` con `duration_min` nula es una configuración **imposible** —
+declara que ocupa y no dice cuánto. Se rechaza en el modelo, como `#299` hizo con los tramos solapados.
 
 ### 4.2 · La cantidad son ENTRADAS, no horas
 
@@ -81,7 +97,7 @@ salen dos cosas gratis:
   `max_qty` del pivote sigue valiendo como techo comercial, y este otro es el **físico**.
 
 ▶ **¿Y dos horas para una persona?** Otro complemento dado de alta («2 horas extra»,
-`extends_duration_min = 120`). Es data-driven y es el propio owner quien decide cuáles ofrece.
+`duration_min = 120` y el interruptor puesto). Es data-driven y es el owner quien decide cuáles ofrece.
 
 ### 4.3 · Lo que la línea hija guarda al nacer
 
@@ -118,11 +134,81 @@ la oferta puede recalcularse ahí sin reordenar el embudo.
 ⚠️ **La decisión del dominio manda igual**: la oferta es presentación; `OrderCreator` re-comprueba y
 lockea. Recalcular evita el rechazo, no lo sustituye.
 
-### 4.6 · Lo que NO se toca
+### 4.6 · ❗❗ LOS SEIS BORDES, salidos de someter este diseño a presión
+
+No son «casos raros»: son los sitios por donde una feature de aforo se rompe **sin fallar**.
+
+1. **`excludeItemId` es UN solo id, y la hija se quedaría contando.** Al editar la línea padre, el
+   aforo excluye al padre del recuento (`SlotAvailability::availableFor()`) pero **no a su hora extra**:
+   la edición **competiría contra su propio complemento** y vería la franja más llena de lo que está.
+   ▶ Al excluir un padre hay que excluir **su descendencia**. Es un cambio de firma, no un parche.
+2. **La extensión tiene que caer en el BORDE de una franja.** La rejilla es discreta y `occupancyMap`
+   marca por `start_time`: si el padre dura 90 min sobre una rejilla de 60, su fin cae **a mitad** de
+   una franja y «la siguiente» es ambigua — o se solapa con el padre o deja un hueco.
+   ▶ Regla: si `duración del padre` no es múltiplo del paso de la rejilla, **la hora extra no se
+   ofrece** en ese producto. Se comprueba **al configurar**, no al vender.
+3. **Sin franja siguiente no hay hora extra.** El último tramo del día, o una franja cerrada
+   (`online_sales_open = false`, `status = closed`), o llena: **no se ofrece y se rechaza**. Los tres
+   estados ya los distingue `availableFor()`; hay que consultarlos para la franja de la HIJA, no la del
+   padre.
+4. **Re-programar arrastra dos comprobaciones, no una.** `ItemRescheduleOffer` ofrece huecos para el
+   padre; con hora extra, un hueco solo vale si **también** cabe la hija detrás. Ofrecer por el padre
+   solo es la trampa de `AFORO-02` otra vez, por la puerta de la edición.
+5. **Bajar la cantidad del padre por debajo de la hija.** 4 entradas con 3 horas extra → se bajan a 2:
+   quedan 3 personas quedándose de 2 que hay. Se **rechaza** con su frase, o se recorta la hija; lo que
+   no puede es aceptarse en silencio.
+6. **La cesta cuenta contra sí misma.** `OrderCreator::otherOccupants()` construye los ocupantes
+   provisionales de las OTRAS líneas del carrito: las horas extra de esas líneas tienen que entrar
+   ahí, o dos líneas del mismo pedido se venderán la misma plaza de la franja siguiente.
+
+⚠️ **Los seis son de LECTURA o de ESCRITURA del aforo, y ninguno lo ve un test de SQLite** (`INVARIANTES
+§6`): el 1, el 4 y el 6 se prueban con casos; el 3 y el 5 con casos; **el 2 se previene al configurar**.
+La carrera del punto 6 es la que exige el escenario nuevo del verificador (§6·1).
+
+### 4.7 · Lo que NO se toca
 
 - Ningún complemento actual (§4.1).
 - `seats_per_unit`, `max_qty`, dependencias, obligatoriedad: se usan **tal cual**.
 - El catálogo no crece: dos entradas y los complementos que el owner quiera colgar de la larga.
+
+### 4.8 · Casos de uso, con los números delante
+
+Rejilla de 60 min, entrada de 2 h, complemento «1 hora extra» a 5 €, aforo de la zona 20/franja.
+
+**Caso 1 · El normal.** Familia de 4, entrada a las 12:00. Se queda **uno**.
+```
+línea padre   Entrada 2 h ×4   slot 12:00   seats 4   → ocupa 12:00 y 13:00
+línea hija    Hora extra  ×1   slot 14:00   seats 1   → ocupa 14:00
+cobro         4 × entrada + 1 × 5 €
+aforo         12:00 −4 · 13:00 −4 · 14:00 −1
+```
+▶ Lo que el operador tiene que leer: **«4 entradas · 1 se queda hasta las 15:00»** (§7·D3).
+
+**Caso 2 · Se quedan tres de los cuatro.** Complemento ×3 → **15 €** y `seats 3` a las 14:00. El precio
+escala con las personas **porque la cantidad SON personas**, sin campo nuevo y sin segundo eje.
+
+**Caso 3 · Dos entradas en el mismo pedido, cada una con lo suyo.** Ya funciona hoy: los complementos
+cuelgan de **cada línea** (`parent_item_id`). Dos padres, dos hijas, dos franjas, independientes.
+
+**Caso 4 · No cabe, y hay que decirlo ANTES.** Misma compra, pero a las 14:00 quedan **0** plazas.
+▶ La hora extra **no se ofrece**; si llega igual (pestaña vieja, `POST` forjado), el dominio la rechaza
+bajo el lock. Es el borde 3 de §4.6 y el motivo de §4.5.
+
+**Caso 5 · El último tramo del día.** Entrada 20:00–22:00 y el parque cierra a las 22:00: **no hay
+franja siguiente**, así que no se ofrece a esa hora. *La hora extra no es una propiedad del producto:
+es una propiedad del producto EN ESA FRANJA.*
+
+**Caso 6 · La carrera, que es lo que obliga al verificador.** Dos clientes se disputan la última plaza
+de las 14:00: uno la quiere como entrada normal y **el otro como hora extra**. Sin el lock cubriendo la
+franja de la HIJA, **ganan los dos**. Es el escenario nuevo de §6·1, con su control negativo.
+
+**Caso 7 · El operador edita.** Baja la línea de 4 a 2 con 3 horas extra vendidas → **se rechaza**
+(borde 5). Mueve el pedido del martes al jueves → hay que comprobar **las dos** franjas, no solo la del
+padre (borde 4).
+
+**Caso 8 · El que NO debe cambiar nada.** Un pedido con una camiseta de complemento: interruptor a
+`false` → `slot_id NULL`, `seats 0`, invisible al aforo. **Idéntico a hoy**, y es el caso de CONTROL
+de §6·2.
 
 ## 5. Impacto en invariantes
 
@@ -139,7 +225,7 @@ lockea. Recalcular evita el rechazo, no lo sustituye.
 1. **Escenario nuevo en `purchase:verify-oversell`**: N compras concurrentes en las que **la última
    plaza en disputa es la de la franja que solo ocupa la hora extra**, con **control negativo** (sin el
    lock, sobreventa). Es la prueba que decide si esto se puede desplegar.
-2. **CONTROL de que nada viejo se mueve**: un complemento sin `extends_duration_min` deja el aforo
+2. **CONTROL de que nada viejo se mueve**: un complemento con `occupies_after_parent = false` deja el aforo
    **idéntico** — medido antes y después sobre los mismos datos.
 3. **El borde del día**: hora extra cuyo tramo se sale del cierre → no se ofrece **y** se rechaza.
 4. **La trampa de §4.5, en navegador**: elegir una hora que cabe, añadir la extra, y comprobar que la
