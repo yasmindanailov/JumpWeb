@@ -6,8 +6,10 @@ use App\Domain\Booking\Contracts\AddonChoiceGroup;
 use App\Domain\Booking\Contracts\AddonOffer;
 use App\Domain\Booking\Contracts\ResolvedAddon;
 use App\Domain\Booking\Contracts\ResolvedAddons;
+use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Read-model de COMPLEMENTOS RESUELTOS ({@see AddonOffer}).
@@ -24,16 +26,24 @@ use Illuminate\Support\Carbon;
  * tipo de dato que consume su plantilla —la del paso con más clics del embudo— sin retirar ninguna
  * duplicación. No hay copia que unificar: hay una fuente que publicar.
  *
- * **La fecha es HOY, no la de la línea.** Medido (spec §4.4.0, punto 2): los cuatro llamantes de
- * producción pasan `Carbon::today()`, incluido `CartPricer` con el comentario explícito de que «los
- * complementos no tienen fecha propia». Pasar aquí la fecha reservada inventaría una divergencia con
- * lo que el checkout va a cobrar.
+ * **La fecha del PRECIO es HOY, no la de la línea.** Medido (spec §4.4.0, punto 2): los cuatro
+ * llamantes de producción pasan `Carbon::today()`, incluido `CartPricer` con el comentario explícito
+ * de que «los complementos no tienen fecha propia». Tarificar aquí al día reservado inventaría una
+ * divergencia con lo que el checkout va a cobrar (`specs/hora-extra.md` §4.11, `[DECIDIDO owner]`:
+ * el precio de la hora extra no varía por día).
+ *
+ * ⚠️ Desde la hora extra la fecha/hora de la línea SÍ entran en `resolve()` — para OTRA cosa: la
+ * OCUPACIÓN (¿aterriza la hija a esa hora, y con cuántas plazas?). Precio y aterrizaje son dos
+ * preguntas con dos fechas, y mezclarlas es como nació el bug que este párrafo evita.
  */
 class AddonOfferReader implements AddonOffer
 {
-    public function __construct(private AddonResolver $resolver) {}
+    public function __construct(
+        private AddonResolver $resolver,
+        private SlotAvailability $slotAvailability,
+    ) {}
 
-    public function resolve(int $productId, int $quantity, array $quantities = [], array $choices = []): ?ResolvedAddons
+    public function resolve(int $productId, int $quantity, array $quantities = [], array $choices = [], ?string $date = null, ?string $time = null): ?ResolvedAddons
     {
         $product = $this->selectableProduct($productId);
 
@@ -43,6 +53,19 @@ class AddonOfferReader implements AddonOffer
 
         $offered = $product->addons;
         $guests = max(0, $quantity);
+
+        // La HORA EXTRA (`specs/hora-extra.md` §4.5): con la hora de la línea delante, un ocupante
+        // que NO ATERRIZA —sin «franja siguiente», cerrada o llena— se retira de la oferta ANTES de
+        // resolver nada: así el modelo de vista, el total y la `selection` quedan coherentes sin él,
+        // igual que con un complemento de pago sin tarifa. Ofrecerlo sería ofrecer lo que el
+        // checkout rechaza (el primo de `AFORO-02`, la trampa exacta que motivó §4.5).
+        $landing = $this->occupantLanding($product, $offered, $date, $time);
+        if ($date !== null && $time !== null) {
+            $offered = $offered->filter(
+                fn (TicketType $addon): bool => ! $addon->occupiesAfterParent()
+                    || array_key_exists((int) $addon->id, $landing)
+            )->values();
+        }
 
         // Un grupo sin elegir no es un estado que exista: siempre hay uno activo. Se completan solo
         // los grupos que el cliente no mandó, para no pisar su elección.
@@ -57,6 +80,11 @@ class AddonOfferReader implements AddonOffer
             Carbon::today(),
         );
 
+        // Y el que SÍ aterriza sale CAPADO por las plazas reales de su franja y por «no se quedan
+        // más de los que entran» (§4.4·5) — el mismo tope que `AddonResolver::resolve()` impone al
+        // cobrar, dicho aquí en `max`/`can_inc` para que el stepper pare ANTES del rechazo.
+        $this->capOccupantRows($view, $landing, $guests);
+
         return new ResolvedAddons(
             groups: array_map(static fn (array $group): AddonChoiceGroup => new AddonChoiceGroup(
                 key: (string) $group['key'],
@@ -70,6 +98,109 @@ class AddonOfferReader implements AddonOffer
             // huérfanos fuera.
             selection: array_values(AddonResolver::buildSelection($offered, $quantities, $choices, $guests)),
         );
+    }
+
+    /**
+     * Plazas con las que ATERRIZA cada complemento ocupante a la hora dada: `addonId → plazas
+     * libres de su franja` (solo los que aterrizan con ≥ 1; la franja sale de la regla del borde 8
+     * vía `AddonOccupancy`). Vacío sin fecha/hora — sin la hora de la línea no hay franja siguiente
+     * que consultar, y la oferta pasa sin decorar.
+     *
+     * ⚠️ Se calcula SIN los ocupantes provisionales de la cesta (este endpoint no la recibe): una
+     * cesta con otra línea sobre la misma franja puede dejar la oferta un punto OPTIMISTA — y ese
+     * borde lo cierra el checkout con su mensaje (`addon_occupancy_line`). Es presentación; la
+     * autoridad re-comprueba bajo lock (§4.5: «recalcular evita el rechazo, no lo sustituye»).
+     *
+     * @param  Collection<int, TicketType>  $offered
+     * @return array<int, int>
+     */
+    private function occupantLanding(TicketType $product, $offered, ?string $date, ?string $time): array
+    {
+        if ($date === null || $time === null || $product->zone_id === null) {
+            return [];
+        }
+
+        $occupying = $offered->filter(fn (TicketType $addon): bool => $addon->occupiesAfterParent());
+        if ($occupying->isEmpty()) {
+            return [];
+        }
+
+        $time = strlen($time) === 5 ? $time.':00' : $time;
+        $childStart = AddonOccupancy::childEntryStart($product, $time);
+        if ($childStart === null) {
+            return []; // borde 7: un padre sin fin no tiene franja siguiente
+        }
+
+        $childSlot = Slot::query()
+            ->where('zone_id', $product->zone_id)
+            ->where('date', $date)
+            ->where('start_time', $childStart)
+            ->first();
+        if ($childSlot === null) {
+            return []; // borde 3/8: sin franja siguiente no hay hora extra a esa hora
+        }
+
+        $landing = [];
+        foreach ($occupying as $addon) {
+            if (! $addon->hasSaneOccupancyConfig()) {
+                continue; // el cinturón de §4.1: una config rota ni se ofrece
+            }
+            $available = $this->slotAvailability->availableFor($childSlot, $addon->duration_min);
+            if ($available >= 1) {
+                $landing[(int) $addon->id] = $available;
+            }
+        }
+
+        return $landing;
+    }
+
+    /**
+     * Capa `max`/`can_inc` de las filas OCUPANTES con las dos cotas reales: las plazas de su
+     * franja (`$landing`) y «no se quedan más de los que entran» (§4.4·5, contando a los HERMANOS
+     * seleccionados). Los valores que el cobro impondrá, dichos en la oferta para que el stepper
+     * pare antes del rechazo. Una fila con la cantidad ya por encima del tope no se muta: su
+     * `can_inc` queda en `false` y el checkout dirá el resto.
+     *
+     * @param  array{singles: array<int, array<string, mixed>>, groups: array<int, array{options: array<int, array<string, mixed>>}>}  $view
+     * @param  array<int, int>  $landing
+     */
+    private function capOccupantRows(array &$view, array $landing, int $lineQuantity): void
+    {
+        if ($landing === []) {
+            return;
+        }
+
+        $eachRow = function (callable $fn) use (&$view): void {
+            foreach ($view['singles'] as &$row) {
+                $fn($row);
+            }
+            unset($row);
+            foreach ($view['groups'] as &$group) {
+                foreach ($group['options'] as &$row) {
+                    $fn($row);
+                }
+                unset($row);
+            }
+            unset($group);
+        };
+
+        $staying = 0;
+        $eachRow(function (array $row) use (&$staying, $landing): void {
+            if (isset($landing[(int) $row['id']]) && ($row['selected'] ?? false)) {
+                $staying += (int) $row['qty'];
+            }
+        });
+
+        $eachRow(function (array &$row) use ($staying, $landing, $lineQuantity): void {
+            $id = (int) $row['id'];
+            if (! isset($landing[$id])) {
+                return; // fila neutra: ni una cota nueva
+            }
+            $others = $staying - (($row['selected'] ?? false) ? (int) $row['qty'] : 0);
+            $cap = max(0, min($landing[$id], $lineQuantity - $others));
+            $row['max'] = $row['max'] === null ? $cap : min((int) $row['max'], $cap);
+            $row['can_inc'] = (bool) $row['can_inc'] && (int) $row['qty'] < (int) $row['max'];
+        });
     }
 
     /**

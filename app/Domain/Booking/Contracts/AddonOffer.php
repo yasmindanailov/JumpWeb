@@ -27,8 +27,17 @@ namespace App\Domain\Booking\Contracts;
  *  - **no tarifica la línea**: eso es {@see CartPricing}, y el endpoint que publica esto lo compone
  *    con él para que un clic no cueste dos peticiones — pero el cálculo del dinero sigue teniendo un
  *    solo dueño (`PAY-12` exige una sola fuente de CÁLCULO, no una sola URL);
- *  - **no comprueba aforo ni disponibilidad**: un complemento no consume plazas;
  *  - **no reserva nada**.
+ *
+ * ⚠️ **«No comprueba aforo: un complemento no consume plazas» dejó de ser verdad con la HORA EXTRA**
+ * (`specs/hora-extra.md` §4.5, `#410`): un complemento que OCUPA la franja siguiente a su línea sí
+ * consume, y ofrecerlo a una hora donde no aterriza es ofrecer lo que el checkout rechaza — el primo
+ * de `AFORO-02`. Por eso `resolve()` acepta la FECHA y la HORA de la línea: con ellas delante, un
+ * ocupante que no aterriza (sin franja siguiente, cerrada o llena) **no se ofrece** —la misma regla
+ * que el complemento de pago sin tarifa— y el que aterriza justo sale con su `max`/`canIncrease`
+ * capados por las plazas reales y por «no se quedan más de los que entran». Sin fecha/hora, la
+ * oferta no puede saberlo y pasa sin decorar: la autoridad sigue siendo `OrderCreator` bajo lock —
+ * recalcular evita el rechazo, no lo sustituye.
  *
  * Implementación actual: `App\Domain\Booking\Services\AddonOfferReader` (bind en
  * `BookingServiceProvider`).
@@ -60,6 +69,8 @@ interface AddonOffer
      *                                       las cantidades a propósito**: dentro de un grupo lo que
      *                                       selecciona es ser el elegido, no tener cantidad, y con
      *                                       una lista plana dos miembros marcados serían ambiguos
+     * @param  string|null  $date  fecha de la línea (`Y-m-d`) — SOLO para la hora extra (ver arriba)
+     * @param  string|null  $time  hora de la línea (`H:i:s` o `H:i`) — ídem
      */
-    public function resolve(int $productId, int $quantity, array $quantities = [], array $choices = []): ?ResolvedAddons;
+    public function resolve(int $productId, int $quantity, array $quantities = [], array $choices = [], ?string $date = null, ?string $time = null): ?ResolvedAddons;
 }

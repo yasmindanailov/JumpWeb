@@ -47,10 +47,11 @@ class CatalogAddonsController extends Controller
             // La cantidad de la línea: los invitados de un pack. Decide la cantidad de los
             // complementos por-invitado, así que no es opcional ni sustituible por un defecto.
             'quantity' => ['required', 'integer', 'min:1'],
-            // Fecha y hora de la línea. Van SOLO para tarificarla —el precio del producto base
-            // depende del día—, nunca para resolver los complementos: eso depende del producto, de
-            // la selección y de la cantidad, y los cuatro llamantes de producción pasan «hoy»
-            // (spec §4.4.0, punto 2). Sin ellas se devuelven los complementos sin el pie.
+            // Fecha y hora de la línea. Para TARIFICARLA —el precio del producto base depende del
+            // día— y, desde la hora extra (`specs/hora-extra.md` §4.5), también para RESOLVER los
+            // complementos que OCUPAN: sin la hora no se sabe si su franja siguiente existe y cabe.
+            // El PRECIO de los complementos sigue siendo el de «hoy» (§4.11, `[DECIDIDO owner]`).
+            // Sin ellas se devuelven los complementos sin el pie y sin decorar la ocupación.
             'date' => ['sometimes', 'date_format:Y-m-d'],
             'time' => ['sometimes', 'date_format:H:i:s,H:i'],
             // Cantidades de los complementos de cantidad libre.
@@ -67,11 +68,17 @@ class CatalogAddonsController extends Controller
 
         $quantity = (int) $validated['quantity'];
 
+        // La fecha y la hora entran también en la RESOLUCIÓN desde la hora extra
+        // (`specs/hora-extra.md` §4.5): un complemento que OCUPA la franja siguiente no se ofrece
+        // a una hora donde no aterriza, y el que aterriza sale capado por sus plazas reales. El
+        // comentario histórico de arriba («nunca para resolver») murió con esa feature.
         $resolved = $addons->resolve(
             $product,
             $quantity,
             self::quantities($validated['addons'] ?? []),
             self::choices($validated['choices'] ?? []),
+            $validated['date'] ?? null,
+            $validated['time'] ?? null,
         );
 
         // Un producto que no está en el catálogo responde 404, igual que en `catalog/products/{id}`.

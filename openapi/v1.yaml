@@ -594,9 +594,17 @@ paths:
           lista plana, dos miembros marcados serían ambiguos. Un grupo que no mandes se resuelve con
           su elegido por defecto, así que la **primera** llamada puede ir sin `choices` y ya
           devuelve el estado inicial correcto.
-        - **`date` y `time`** son opcionales y van **solo** para tarificar la línea. Los complementos
-          NO dependen del día reservado —dependen del producto, de la selección y de la cantidad—,
-          así que sin ellos la respuesta es la misma salvo que `line` viaja nula.
+        - **`date` y `time`** son opcionales y hacen DOS cosas: tarifican la línea (`line`) y, desde
+          la hora extra, deciden la oferta de los complementos que **OCUPAN aforo**
+          (`occupies_after_parent`): uno que a esa hora no aterriza —su franja siguiente no existe,
+          está cerrada o está llena— **no se ofrece** (la misma regla que el complemento de pago sin
+          tarifa) y `selection` lo suelta aunque lo mandes; el que aterriza sale con
+          `max_quantity`/`can_increase` capados por sus plazas reales y por «no se quedan más de los
+          que entran». Cambiar de hora obliga a re-preguntar. Sin `date`/`time`, los ocupantes viajan
+          sin decorar y `line` va nula — el checkout siempre re-valida y su rechazo es
+          `line_addon_occupancy`/`line_addon_over_quantity`.
+          ⚠️ El **precio** de un complemento sigue siendo el de HOY (no varía por el día reservado):
+          fecha del precio y fecha de la ocupación son dos preguntas distintas.
 
         ### Qué devuelve, y por qué junto
 
