@@ -817,8 +817,16 @@ class SidebarMountTest extends TestCase
         // ⚠️⚠️ **La deuda escrita arriba ya no es teórica**: cada tanda de cualquiera de los dos
         // carriles empuja este número, y la salida buena sigue siendo la misma — mandar los rótulos
         // del justificante en la RESPUESTA de su endpoint, que ya se pide bajo demanda.
+        //
+        // ⚠️ **10.000 → 10.050 el 2026-09-02** (`#347`, vincular Google desde la cuenta). Lo que entra
+        // es **UN** rótulo, el del botón. Medido: 9.967 → **10.104 B** con los dos que llevaba, y
+        // **10.012** tras podar. ▶ **La poda se hizo antes y está medida (−92 B)**: se retiró el
+        // `link_intro` que explicaba para qué sirve vincular — bajo el título «Cuentas vinculadas», el
+        // rótulo del botón ya lo dice—. Los **12 B** que quedan por encima no salen de acortar el
+        // rótulo a algo peor: eso sería pagar la claridad de una frase con doce bytes.
+        // **10.050 deja 38 B**, la estrechez de siempre.
         $this->assertLessThan(
-            10000, $bytes,
+            10050, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

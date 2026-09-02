@@ -5,6 +5,7 @@ import { fieldError } from '../form-outcome.js';
 import { t as translate } from '../../i18n.js';
 import PasswordInput from '../../steps/PasswordInput.vue';
 import NoPasswordHint from '../NoPasswordHint.vue';
+import GoogleButton from '../../steps/GoogleButton.vue';
 
 /**
  * **Cerrar sesión en los demás dispositivos** (`specs/area-cliente.md` §9, tanda 2 · paso 6b).
@@ -16,6 +17,8 @@ const props = defineProps({
     account: { type: Object, default: () => ({}) },
     messages: { type: Object, default: () => ({}) },
     auth: { type: Object, default: () => ({}) },
+    /** Las rutas del servidor: aquí, la IDA a Google para VINCULAR (`#347`). */
+    urls: { type: Object, default: () => ({}) },
 });
 
 const store = useCredentialsStore();
@@ -63,19 +66,37 @@ watch(() => store.done, (done) => { if (done) current.value = ''; });
               sería pedirla dos veces en la misma pantalla.
               ▶ Sin ninguna vinculada no se pinta nada: un bloque vacío con título no dice nada.
             -->
-            <template v-if="store.identities?.length">
+            <!--
+              ⚠️ El bloque se pinta ahora también SIN vínculos, porque es donde vive el botón de
+              VINCULAR (`#347`). Antes salía solo con alguno, y eso dejaba el gesto sin puerta: es
+              exactamente el huevo-y-gallina de `#400` —el botón de una acción escondido tras una
+              condición escrita para lo que se LEE— visto en otro subsistema.
+            -->
+            <template v-if="store.identities?.length || urls.google_link">
                 <h3 class="account__card-title">{{ a('account.sessions.identities_title') }}</h3>
 
-                <ul class="account__consents">
+                <ul v-if="store.identities?.length" class="account__consents">
                     <li v-for="identity in store.identities" :key="identity.provider">
                         <span class="account__consent-type">{{ identity.email_at_link }}</span>
-                        <span class="account__consent-meta">{{ identity.linked_label }}</span>
+                        <span class="account__consent-meta">
+                            <span class="account__consent-part">{{ identity.linked_label }}</span>
+                        </span>
                         <button type="button" class="btn btn--ghost" :disabled="store.busy"
                                 @click="store.unlinkIdentity(identity.provider, { currentPassword: current }, { messages, auth })">
                             {{ a('account.sessions.unlink') }}
                         </button>
                     </li>
                 </ul>
+
+                <!--
+                  ⚠️⚠️ **Es un `<a>` al SERVIDOR, no un botón con JS**, igual que el de entrar: el flujo
+                  empieza con una redirección (§6.4) y aquí no hay nada que orquestar.
+                  ⚠️ Solo si NO hay ya una cuenta de Google vinculada: `UNIQUE(user_id, provider)` es
+                  una cuenta, una llave por proveedor (`#342`), así que ofrecerlo con una puesta sería
+                  ofrecer un camino que solo puede acabar en «tu cuenta ya está vinculada a otra».
+                -->
+                <GoogleButton v-if="urls.google_link && ! store.identities?.length"
+                              :href="urls.google_link" :label="a('account.sessions.link_google')" />
             </template>
         </form>
     </div>

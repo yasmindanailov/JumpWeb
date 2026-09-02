@@ -41,6 +41,20 @@ final readonly class SocialLoginResult
      */
     public const REASON_PROVIDER_CONFLICT = 'provider_conflict';
 
+    /**
+     * **Esa cuenta de Google ya es de OTRO titular** (`#347`, la vinculación desde la cuenta).
+     *
+     * ⚠️⚠️ Es el espejo de `REASON_PROVIDER_CONFLICT` y no se pueden confundir: aquél dice «TU cuenta
+     * ya tiene otra llave», éste dice «esa llave ya abre OTRA cuenta». Las salidas son distintas —en
+     * el primero desvinculas la tuya; en el segundo no hay nada que puedas hacer desde aquí— y
+     * dárselas cambiadas manda a la persona a buscar un botón que no le sirve.
+     *
+     * ⚠️⚠️ **Y el veredicto NO es entrar en aquella cuenta.** Quien pide «vincula mi Google a ESTA
+     * cuenta» no está pidiendo cambiar de sesión: si el `sub` resolviera a otro titular y le
+     * abriéramos su sesión, el gesto de vincular sería un cambio de cuenta encubierto.
+     */
+    public const REASON_PROVIDER_TAKEN = 'provider_taken';
+
     private function __construct(
         public string $status,
         public ?User $user = null,

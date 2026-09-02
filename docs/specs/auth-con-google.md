@@ -926,8 +926,8 @@ como una incoherencia y los «arregle» de vuelta.
 | 1 | El botón **oficial** de Google, con su marca | Ficha ABIERTA en `DEUDA.md` desde `#343` | **T5** ✅ `#345` |
 | 2 | El copy de «Completa tu registro» no habla de reservar | Defecto nuestro, sin ficha | **T5** ✅ `#345` |
 | 3 | El **interruptor de marketing** es un checkbox, y al pulsarlo aparece un scroll horizontal | Defecto de `#344`, sin ficha | **T6** ✅ `#346` |
-| 4 | **Vincular** Google desde la cuenta (desvincular ya está) | `UserIdentity::VIA_ACCOUNT` declarado y sin emisor; §18.6 lo avisa | T7 |
-| 5 | El **panel de admin** dice si el cliente entra con Google | No estaba en la spec | T7 |
+| 4 | **Vincular** Google desde la cuenta (desvincular ya está) | `UserIdentity::VIA_ACCOUNT` declarado y sin emisor; §18.6 lo avisa | **T7** ✅ `#347` |
+| 5 | El **panel de admin** dice si el cliente entra con Google | No estaba en la spec | **T7** ✅ `#347` |
 | 6 | Las **condiciones** y el **teléfono** se piden en el checkout, no en el alta | ⚠️ **§4 lo DESCARTÓ y §13 lo dejó como ficha** «decisión independiente» | T8 |
 | 7 | La **privacidad** no lleva casilla en ninguna de las dos altas | Hecho en la de Google (§7.1); **pendiente en el alta con contraseña** | T8 |
 
@@ -1090,3 +1090,102 @@ delante**: pasar los trozos de la meta y el rótulo del interruptor a selectores
 ahorró **0,06 KiB** y seguía por encima del techo, así que su único efecto habría sido dejar el
 marcado menos explícito **sin evitar la subida**. Se revirtió.
 ▶ ***Una poda que no evita subir el techo no es una poda: es solo peor código.***
+
+### 21.3 · T7 — vincular desde la cuenta, y el vínculo en el panel (`DECISIONES #347`)
+
+El owner: *«nos falta el sincronizar o desvincular la cuenta de Google en el panel de usuario, ¿no?»*
+— **Desvincular ya estaba** (`#344`, §20.3). **Vincular no existía**, y su ausencia tenía consecuencia
+escrita: §18.6 avisaba de que un titular identificado que pasara por `/auth/google` **cambiaba de
+cuenta** si su Google resolvía a otra. Es la conducta correcta de «entrar con Google» y la equivocada
+para «vincular la mía»: **lo que faltaba era la INTENCIÓN, no una comprobación más**.
+
+#### La cuarta puerta
+
+`SocialLogin::linkToAccount()`, aparte de `enter()` porque **no es entrar**. Lo que se vigila no es
+que vincule: es lo que **NO** hace.
+
+| No hace | Por qué |
+|---|---|
+| **No autentica** | Si el `sub` resolviera a otro titular y le abriéramos su sesión, «vincular» sería un cambio de cuenta encubierto — y en un dispositivo compartido, entrar en la cuenta de otro |
+| **No promueve a verificado** | La toma de `enter()` (P12) existe porque allí la única prueba es el CORREO. Aquí el titular ya está dentro; tocar `email_verified_at` afirmaría algo sobre un buzón que nadie ha comprobado (`#336`: se acredita a la PERSONA, nunca al BUZÓN) |
+| **No expulsa ni invalida la contraseña** | Lo mismo: la expulsión es la mitad de la toma, y aquí no hay nada que tomar |
+
+⚠️ **El correo de Google puede ser OTRO y se admite**: la clave es el `sub` (§6.1), y aquí el titular
+se ha identificado él mismo — prueba más fuerte que la coincidencia de correo en la que se apoya §5.2.
+⚠️ **La guarda dura de `email_verified` SÍ se conserva** aunque aquí el correo no identifique a nadie:
+`email_at_link` se guarda como prueba de con qué dirección se vinculó, y guardar como prueba una
+dirección que el proveedor no da por buena es guardar **una prueba falsa**.
+
+#### Los dos rechazos son ESPEJOS y no se pueden confundir
+
+- `provider_conflict` — *tu cuenta ya tiene otra llave*. Salida: desvincular la tuya.
+- `provider_taken` (**nuevo**) — *esa llave ya abre otra cuenta*. Desde aquí no hay nada que hacer.
+
+Dar la salida equivocada manda a la persona a buscar un botón que no le sirve.
+
+#### La intención viaja en el RETO, no en la URL
+
+Ruta aparte (`/auth/google/vincular`) con middleware `auth`, y el reto anota `intent` **y quién la
+pidió**. ⚠️⚠️ **La comprobación del titular es la que evita el defecto silencioso**: entre la ida y la
+vuelta caben un `logout` y un `login` con otra cuenta —en un dispositivo compartido es lo normal— y
+sin ella el vínculo aterrizaría en la cuenta equivocada **sin que nada fallara**. Hay caso.
+
+⚠️ Un reto viejo sin la clave `intent` —de una sesión abierta antes del despliegue— cae a ENTRAR, que
+es la conducta de siempre.
+
+#### Sin contraseña, y la asimetría con desvincular es deliberada
+
+Desvincular sí la exige porque puede dejarte **FUERA**; vincular no. Contra el escenario que importa
+—una sesión robada que planta su Google como puerta trasera— hay dos defensas que **ya existen** y
+son las de §5.2: el **aviso por correo** de cada vinculación (detección) y que `revokeAllAccess()`
+**se lleve las identidades** (`RGPD-06`), o sea que «he olvidado mi contraseña» cierra la puerta.
+▶ **Lo que NO cierra, dicho**: un cambio VOLUNTARIO de contraseña no retira el vínculo, igual que no
+retira el carné. Es idéntico al vínculo automático de §5.2 — este camino **no añade una clase de
+riesgo nueva**, solo otra forma de llegar a la misma.
+
+#### Dónde vive el botón, y el huevo-y-gallina que se evitó
+
+En la zona de Sesiones, junto a la lista de vinculadas. ⚠️ **El bloque se pinta ahora también sin
+ninguna vinculada**: antes salía solo con alguna, y con el botón dentro eso habría sido **el
+huevo-y-gallina de `#400`** —el botón de una acción escondido tras una condición escrita para lo que
+se LEE— repetido en otro subsistema. Se ofrece **solo si no hay ya una de Google**:
+`UNIQUE(user_id, provider)` es una cuenta, una llave (`#342`), así que ofrecerlo con una puesta sería
+ofrecer un camino que solo puede acabar en un «no».
+
+#### El panel de admin
+
+Una entrada en la ficha del cliente: **sí/no + desde cuándo**, y el correo con el que se vinculó
+**solo si es distinto** del de la cuenta — ahí está el valor, porque desde esta tanda pueden diferir.
+⚠️⚠️ **No publica el `sub`**, que es la misma línea de `#344`: el identificador viaja solo en el
+export del art. 20.
+
+#### Lo verificado
+
+- **12 casos** en `GoogleAccountLinkTest`, que conducen el flujo de verdad (piden la ida, leen el
+  `state` del redirect y vuelven con él) + **4** del panel + **1** del montaje en sus tres direcciones.
+- **Navegador**, de punta a punta: la sección se pinta sin vinculadas, el botón lleva a
+  `/auth/google/vincular` y **la ida sale a Google** con `redirect_uri` completo, `state` de 64 hex y
+  `prompt=select_account`.
+- ⚠️⚠️ **Una trampa del ARNÉS, medida**: `Http::fake()` **acumula** stubs y gana el primero que casa,
+  así que un caso que recorre el flujo dos veces —el de idempotencia, o cualquiera con su control—
+  recibía en el segundo canje el token del PRIMER reto, con su `nonce` viejo, y salía `google-failed`.
+  *Parecía un defecto del producto y era el instrumento.* El stub se registra una vez y lee el token
+  del reto en curso.
+- ⚠️ **Un caso propio salió ROJO con el producto sano**: hacía `logout()` en medio y dejaba anónima la
+  comprobación que necesitaba sesión.
+
+#### Presupuesto
+
+Payload con sesión **10.000 → 10.050** (medido **10.104** con dos rótulos, **10.012** tras podar).
+⚠️ **La poda está medida (−92 B)**: se retiró el `link_intro` que explicaba para qué sirve vincular —
+bajo el título «Cuentas vinculadas», el rótulo del botón ya lo dice. Los **12 B** que quedaban por
+encima **no se pagan acortando el rótulo a algo peor**.
+
+#### Y un test intermitente del OTRO carril, arreglado por segunda vez
+
+`GuardianAuthorizationScreenTest::test_a_signed_in_parent_can_pick_one_of_their_own_minors` creaba al
+firmante con `User::factory()` —`fake()->name()` en español— y aseveraba **por subcadena** que la
+página no dice «Marcos». Es **la misma lección de `#337`, tercera aparición**, y la segunda en este
+mismo fichero (la primera la arregló el carril de Google el mismo día, en `responsible()`).
+▶ **Reproducido a voluntad** inyectando *«Marcos Colisión»*, arreglado fijando el nombre y
+**verificado con control**: volviendo a inyectarlo, el caso se pone rojo otra vez.

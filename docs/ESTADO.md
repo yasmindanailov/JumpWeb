@@ -1,5 +1,17 @@
 # Estado del proyecto — foto viva
 
+❗❗ **PARA EL CARRIL DEL JUSTIFICANTE — SEGUNDA VEZ EN EL MISMO FICHERO** (2026-09-02 tarde, `#347`):
+`GuardianAuthorizationScreenTest::test_a_signed_in_parent_can_pick_one_of_their_own_minors` tenía el
+MISMO sorteo que el que ya os arreglamos, pero en otro sujeto — el FIRMANTE se creaba con
+`User::factory()` y la línea 569 asevera **por subcadena** que la página no dice «Marcos». Cayó en un
+pase de la suite completa. **Reproducido a voluntad** inyectando *«Marcos Colisión»*, arreglado
+fijando el nombre y **verificado con control** (volviendo a inyectarlo, se pone rojo otra vez).
+▶ **Tercera aparición de vuestra lección de `#337`, y la segunda en ese fichero.** Vuestra propia
+frase lo explica: *que una lección esté escrita en una entrada no la aplica en los ficheros que no se
+tocaron ese día* — y tampoco en los CASOS de un fichero que sí se tocó. **Puede que queden más**: la
+regla es *ningún `User::factory()` cuyo nombre se pinte enfrentado a una aserción por subcadena*.
+**Retirad este aviso cuando lo hayáis leído.**
+
 ✅ **EL JUSTIFICANTE, REVISADO DE FORMA ADVERSARIAL — Y TRES ARREGLOS, UNO DE ELLOS INMINENTE**
 (2026-09-02, `DECISIONES #406`). Seis lentes independientes + una pasada que REFUTA cada hallazgo:
 **29 crudos → 25 únicos → 10 refutados a fondo → 7 sobreviven**, y la refutación **corrigió la
@@ -66,6 +78,18 @@ la tarjeta acumulaba **cinco filas del mismo consentimiento** (una por vuelta de
 colapsa a la última de cada tipo — **sin ocultar prueba**, que sigue en la BD y en el export del
 art. 20. ⚠️ Chunk **273 → 274**: la poda se intentó, ahorró 0,06 KiB y **se revirtió** porque no
 evitaba la subida.
+▶ ✅ **T7 EN EL ÁRBOL** (`DECISIONES #347`, spec §21.3): **vincular Google desde la cuenta** —
+desvincular ya estaba desde `#344`— y el **vínculo visible en el panel de admin** (sí/no, desde
+cuándo, y el correo del vínculo solo si difiere; **nunca el `sub`**).
+⚠️⚠️ **Lo que faltaba era la INTENCIÓN, no una comprobación más**: hasta hoy un titular identificado
+que pasara por `/auth/google` **cambiaba de cuenta** si su Google resolvía a otra (§18.6 lo avisaba).
+La cuarta puerta se define por lo que NO hace: no autentica, no promueve a verificado y no expulsa.
+⚠️ **La intención y QUIÉN la pidió viajan en el reto del servidor**: entre la ida y la vuelta caben un
+`logout` y un `login` con otra cuenta, y sin esa segunda anotación el vínculo aterrizaría en la cuenta
+equivocada **sin que nada fallara**.
+⚠️⚠️ **Trampa del arnés, medida: `Http::fake()` ACUMULA stubs y gana el primero que casa** — un caso
+que recorre el flujo dos veces recibía el token del PRIMER reto y salía `google-failed`. *Parecía un
+defecto del producto y era el instrumento.*
 ▶ ❗❗ **PARA EL CARRIL DEL JUSTIFICANTE — DOS AVISOS**: (1) voy a tocar **`openapi/v1.yaml`** y
 **`lang/*/account.php`**, que son de los ocho ficheros compartidos: si los tocas tú, `git pull --rebase`
 antes de empujar. (2) Voy a mover la **aceptación de condiciones al checkout** y a dejar el alta con
@@ -679,7 +703,15 @@ aquí lo que no se podaría son datos de menores de terceros.
 > ⚠️ **RE-MEDIDA tras rebasar encima los DOS arreglos del reloj de la T3** (con `npm run build` +
 > `build:ssr` delante, porque `#340` toca Vue): **sale el MISMO número**, que es lo que había que
 > comprobar — los dos arreglan FIXTURES y no añaden casos. *Coincidir no se supone: se mide.*
-> Suite **4023 en verde** (25.709 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> ⚠️⚠️ **Y RE-MEDIDA otra vez al fusionar `#406` (justificante) con `#347` (Google), porque NINGUNO
+> de los dos números valía**: el justificante dejó **4023 · 25.709** y Google **4034 · 25.755**, los
+> dos medidos **desde la misma base de 4019**. Es la lección de `#404` en pequeño: *dos ramas que
+> mueven el mismo contador no se fusionan eligiendo un número*.
+> ⚠️ **Y aquí la aritmética NO cierra, a diferencia de la de `#404`, y se dice en vez de forzar el
+> número**: 4019 + 4 + 15 = **4038** y el gate mide **4039 · 25.772**. Un test y dos aserciones de
+> más, o sea que uno de los dos números declarados se tomó sobre una base que ya no era 4019. *Que la
+> suma no cuadre es justo el motivo por el que el gate mide en vez de creerse la resta.*
+> Suite **4039 en verde** (25.772 aserciones, 1 skipped a propósito), medida el 2026-09-02
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`): las cuatro tandas del
 > justificante (`#400`→`#403`) sobre las TRES de Google auth (`#342`, `#343`, `#344`), la columna del menú
 > (`#341`, +8), el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo (`#339`),

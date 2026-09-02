@@ -543,7 +543,15 @@ class GuardianAuthorizationScreenTest extends TestCase
         $this->version();
 
         // El que firma es OTRO adulto con cuenta —el padre del amigo—, no quien reservó.
-        $signer = User::factory()->create(['email_verified_at' => now()]);
+        // ⚠️⚠️ **El nombre va FIJADO, y es la segunda vez que este fichero paga lo mismo** (`#347`,
+        // 2026-09-02; la primera fue `responsible()` en el caso de la «hoja en blanco»). La página
+        // pinta el nombre de quien ha entrado, y aquí abajo se asevera **por subcadena** que no
+        // aparece «Marcos»: con `User::factory()` —o sea `fake()->name()` en español— eso es una
+        // moneda al aire disfrazada de test. Reproducido a voluntad inyectando *«Marcos Colisión»*:
+        // el caso se pone rojo en la misma línea que falló solo.
+        // ▶ *Un nombre aleatorio enfrentado a una aserción por subcadena no es un test, es un sorteo*
+        // (la lección de `#337`, tercera aparición).
+        $signer = User::factory()->create(['email_verified_at' => now(), 'name' => 'Bruno Salas Vidal']);
         $child = Dependent::create([
             'user_id' => $signer->id, 'name' => 'Ana', 'surname' => 'Gómez Ruiz',
             'born_on' => now()->subYears(9)->toDateString(), 'relationship' => 'mother',

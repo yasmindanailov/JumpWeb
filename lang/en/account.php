@@ -69,6 +69,7 @@ return [
             // Las cuentas externas vinculadas y su salida (`specs/auth-con-google.md` §8).
             'identities_title' => 'Linked accounts',
             'unlink' => 'Unlink',
+            'link_google' => 'Link my Google account',
         ],
         'privacy' => [
             'title' => 'Privacy & data (GDPR)',
@@ -283,6 +284,11 @@ return [
         'google-email-unverified' => 'Google does not consider that address verified, so we cannot use it to identify you. Verify it in your Google account, or sign up with your email and a password.',
         'google-anonymized' => 'That account was deleted at its owner’s request and cannot be recovered. You can create a new one whenever you like.',
         'google-provider-conflict' => 'Your account is already linked to a different Google account. Sign in with that one, or with your password, and contact us if you want to change it.',
+        // ⚠️ The MIRROR of the one above, and they are not interchangeable: that one says «your
+        // account already has another key»; this one says «that key already opens another account».
+        'google-provider-taken' => 'That Google account is already linked to a different account here. Sign in with it if it is yours, or link a different Google account.',
+        'google-already-linked' => 'That Google account was already linked to yours.',
+        'google-link-session-changed' => 'You changed session while linking your Google account, so we have not linked anything. Please try again.',
     ],
 
     'verify' => [

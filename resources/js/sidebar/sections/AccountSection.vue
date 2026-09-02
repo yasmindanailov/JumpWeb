@@ -159,7 +159,8 @@ const signIn = () => store.go(ZONES.LOGIN);
             v-else-if="store.zone === ZONES.SESSIONS"
             :messages="messages"
             :auth="auth"
-            :account="account" />
+            :account="account"
+            :urls="urls" />
 
         <PrivacyZone
             v-else-if="store.zone === ZONES.PRIVACY"

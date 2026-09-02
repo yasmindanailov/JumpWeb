@@ -47,20 +47,37 @@ final readonly class GoogleAuthSession
      */
     public const PROFILE_TTL_SECONDS = 1800;
 
+    /** Entrar o darse de alta: la intención por defecto, la que existía antes de `#347`. */
+    public const INTENT_ENTER = 'enter';
+
+    /**
+     * **Vincular a la cuenta en la que ya se está** (`#347`, §21.3). Viaja en el reto y no en la URL
+     * de vuelta por la misma razón que el `nonce`: lo que decide qué se hace al volver no puede ser
+     * algo que ponga quien vuelve.
+     */
+    public const INTENT_LINK = 'link';
+
     /**
      * Abre el reto y devuelve lo que hay que mandarle a Google.
      *
      * `random_bytes` explícito y no un ayudante de cadenas: los dos valores son secretos de un solo
      * uso y quien los lea tiene que ver de dónde sale su aleatoriedad.
      *
+     * ⚠️⚠️ **El `holder` es la mitad que hace segura la vinculación.** El reto anota QUIÉN la pidió, y
+     * la vuelta comprueba que sigue siendo el mismo: entre las dos peticiones caben un `logout` y un
+     * `login` con otra cuenta —en un dispositivo compartido es lo normal—, y sin esta anotación el
+     * vínculo aterrizaría en la cuenta equivocada **sin que nada fallara**.
+     *
      * @return array{state: string, nonce: string}
      */
-    public static function startChallenge(string $intended): array
+    public static function startChallenge(string $intended, string $intent = self::INTENT_ENTER, ?int $holder = null): array
     {
         $challenge = [
             'state' => bin2hex(random_bytes(32)),
             'nonce' => bin2hex(random_bytes(32)),
             'intended' => $intended,
+            'intent' => $intent,
+            'holder' => $holder,
             'at' => now()->getTimestamp(),
         ];
 
@@ -72,8 +89,8 @@ final readonly class GoogleAuthSession
     /**
      * Comprueba el `state` de la vuelta y **consume el reto pase lo que pase**.
      *
-     * @return array{nonce: string, intended: string}|null `null` = esta vuelta no corresponde a
-     *                                                     ninguna ida nuestra: no se hace nada.
+     * @return array{nonce: string, intended: string, intent: string, holder: int|null}|null
+     *                                                                                       `null` = esta vuelta no corresponde a ninguna ida nuestra: no se hace nada.
      */
     public static function consumeChallenge(?string $state): ?array
     {
@@ -100,9 +117,17 @@ final readonly class GoogleAuthSession
             return null;
         }
 
+        $intent = $challenge['intent'] ?? null;
+        $holder = $challenge['holder'] ?? null;
+
         return [
             'nonce' => $nonce,
             'intended' => is_string($challenge['intended'] ?? null) ? $challenge['intended'] : '',
+            // ⚠️ Una intención que no reconozcamos cae a ENTRAR, que es la conducta de siempre. Lo que
+            // no puede pasar es que un reto viejo —de una sesión abierta antes del despliegue— llegue
+            // con la clave ausente y el `match` del controlador se estrelle.
+            'intent' => $intent === self::INTENT_LINK ? self::INTENT_LINK : self::INTENT_ENTER,
+            'holder' => is_int($holder) ? $holder : null,
         ];
     }
 

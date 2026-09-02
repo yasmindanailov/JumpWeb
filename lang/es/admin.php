@@ -1487,6 +1487,10 @@ return [
         'col_created_at' => 'Alta',
         'col_locale' => 'Idioma',
         'col_marketing' => 'Comunicaciones comerciales',
+        // `#347`: cómo entra este cliente. Sin el `sub` — el operador necesita saber CÓMO entra,
+        // no el identificador, que solo viaja en el export del art. 20.
+        'col_google' => 'Entra con Google',
+        'google_linked' => 'Sí, desde el :date',
 
         'verified' => 'Verificado',
         'unverified' => 'Sin verificar',

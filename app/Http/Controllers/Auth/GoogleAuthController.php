@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Domain\Identity\Contracts\SocialLoginResult;
+use App\Domain\Identity\Contracts\SocialProfile;
 use App\Domain\Identity\Exceptions\GoogleAuthException;
 use App\Domain\Identity\Services\GoogleAuth;
 use App\Domain\Identity\Services\GoogleOAuth;
@@ -40,6 +41,34 @@ class GoogleAuthController extends Controller
         abort_unless(GoogleAuth::enabled(), 404);
 
         $challenge = GoogleAuthSession::startChallenge($this->safeDestination($request, $request->query('next')));
+
+        return redirect()->away(
+            $oauth->authorizationUrl($challenge['state'], $challenge['nonce'], $this->callbackUrl())
+        );
+    }
+
+    /**
+     * **La ida para VINCULAR** a la cuenta en la que ya se está (`#347`, §21.3).
+     *
+     * ⚠️⚠️ **Es una ruta aparte y no un `?intent=` sobre la de entrar**, y hay dos razones. La primera
+     * es que así la protege el middleware `auth`: sin sesión no hay nada que vincular, y con un
+     * parámetro habría que comprobarlo a mano dentro. La segunda es que la intención **se anota en el
+     * reto del SERVIDOR**, igual que el `nonce`: lo que decide qué se hace al volver no puede ser algo
+     * que ponga quien vuelve.
+     *
+     * ⚠️ Se anota además QUIÉN la pidió. Entre la ida y la vuelta caben un `logout` y un `login` con
+     * otra cuenta —en un dispositivo compartido es lo normal—, y sin eso el vínculo aterrizaría en la
+     * cuenta equivocada sin que fallara nada.
+     */
+    public function link(Request $request, GoogleOAuth $oauth): RedirectResponse
+    {
+        abort_unless(GoogleAuth::enabled(), 404);
+
+        $challenge = GoogleAuthSession::startChallenge(
+            $this->safeDestination($request, $request->query('next')),
+            GoogleAuthSession::INTENT_LINK,
+            (int) Auth::id(),
+        );
 
         return redirect()->away(
             $oauth->authorizationUrl($challenge['state'], $challenge['nonce'], $this->callbackUrl())
@@ -93,6 +122,12 @@ class GoogleAuthController extends Controller
             return $this->failure($destination);
         }
 
+        // La vuelta de una ida que pedía VINCULAR se resuelve por otra puerta: no autentica, no
+        // promueve y no expulsa (`#347`, §21.3).
+        if ($challenge['intent'] === GoogleAuthSession::INTENT_LINK) {
+            return $this->afterLink($request, $login, $profile, $challenge['holder'], $destination);
+        }
+
         // ⚠️ Quién estaba en esta sesión ANTES de autenticar. Se lee aquí porque dentro de un instante
         // `SocialLogin` lo habrá sustituido; para qué sirve, más abajo.
         $previousId = Auth::id();
@@ -138,6 +173,41 @@ class GoogleAuthController extends Controller
     }
 
     /**
+     * **La vuelta de una vinculación pedida desde la cuenta** (`#347`, §21.3).
+     *
+     * ⚠️⚠️ **La comprobación que de verdad importa es que siga siendo el MISMO titular.** El reto anotó
+     * quién la pidió; si ahora hay otra sesión —o ninguna—, no se vincula nada: entre la ida y la
+     * vuelta caben un `logout` y un `login` con otra cuenta, y sin esto el vínculo aterrizaría en la
+     * cuenta equivocada **sin que fallara nada**. No es un caso raro en un dispositivo compartido.
+     *
+     * ⚠️ El aviso por correo va aquí y no en el dominio, como en la otra puerta: es un efecto de la
+     * petición, y un fallo del SMTP no puede deshacer un vínculo que ya es válido.
+     */
+    private function afterLink(Request $request, SocialLogin $login, SocialProfile $profile, ?int $holder, string $destination): RedirectResponse
+    {
+        $user = Auth::user();
+
+        if ($holder === null || $user === null || (int) $user->getKey() !== $holder) {
+            Log::warning('auth.google_link_holder_changed', ['ip' => $request->ip()]);
+
+            return redirect()->to($destination)->with('status', 'google-link-session-changed');
+        }
+
+        $result = $login->linkToAccount($user, $profile, (string) $request->ip());
+
+        if ($result->wasRefused()) {
+            return redirect()->to($destination)->with('status', $this->refusalStatus($result->reason));
+        }
+
+        if ($result->linked && $result->user !== null) {
+            $login->announceLink($result->user, $profile->provider);
+        }
+
+        // Sin `linked` la vinculación ya existía: se dice que está hecha, no que se acaba de hacer.
+        return redirect()->to($destination)->with('status', $result->linked ? 'google-linked' : 'google-already-linked');
+    }
+
+    /**
      * No hay cuenta todavía: el perfil verificado espera en la sesión y la persona va a la pantalla
      * que completa el alta (§5.3, §7).
      *
@@ -157,6 +227,7 @@ class GoogleAuthController extends Controller
             SocialLoginResult::REASON_EMAIL_UNVERIFIED => 'google-email-unverified',
             SocialLoginResult::REASON_ANONYMIZED => 'google-anonymized',
             SocialLoginResult::REASON_PROVIDER_CONFLICT => 'google-provider-conflict',
+            SocialLoginResult::REASON_PROVIDER_TAKEN => 'google-provider-taken',
             default => 'google-failed',
         };
     }

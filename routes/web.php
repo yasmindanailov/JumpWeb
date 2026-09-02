@@ -68,6 +68,14 @@ Route::post('/logout', LogoutController::class)->middleware('auth')->name('logou
 // La vuelta la trae Google con un código de un solo uso, y su reto ya la acota.
 Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])
     ->middleware('throttle:10,1')->name('auth.google.redirect');
+// **Vincular** a la cuenta en la que ya se está (`#347`, §21.3). Ruta APARTE y no un `?intent=` sobre
+// la de arriba: así la protege `auth` —sin sesión no hay nada que vincular— y la intención se anota
+// en el reto del SERVIDOR, que es lo único que impide que la ponga quien vuelve.
+// ⚠️ **`auth` y NO `verified`**: vincular no exige el correo verificado, por la misma puerta y el
+// mismo motivo que `#332` abrió el área de cuenta — y porque quien viene de Google trae su propia
+// prueba del buzón, que aquí ni siquiera se usa para identificar.
+Route::get('/auth/google/vincular', [GoogleAuthController::class, 'link'])
+    ->middleware(['auth', 'throttle:10,1'])->name('auth.google.link');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])
     ->middleware('throttle:30,1')->name('auth.google.callback');
 

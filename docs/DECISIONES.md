@@ -20955,6 +20955,77 @@ navegador: 82 px → **0** en los tres estados, con control · Pint ✓ · docs-
 build:ssr ✓.
 ---
 
+## #347 · 2026-09-02 · Vincular Google desde la cuenta: lo que faltaba era la INTENCIÓN, no una comprobación más
+
+**Tercera tanda (T7) del pulido del OJO del owner** (`specs/auth-con-google.md` §21.3). *«Nos falta el
+sincronizar o desvincular la cuenta de Google en el panel de usuario, ¿no?»* — **desvincular ya
+estaba** (`#344`); **vincular no existía**, y su ausencia tenía consecuencia escrita: §18.6 avisaba de
+que un titular identificado que pasara por `/auth/google` **cambiaba de cuenta** si su Google resolvía
+a otra. Es la conducta correcta de «entrar con Google» y la equivocada para «vincular la mía».
+
+### 1 · La cuarta puerta se define por lo que NO hace
+
+`SocialLogin::linkToAccount()`, aparte de `enter()` porque no es entrar:
+
+- **No autentica.** Si el `sub` resolviera a otro titular y le abriéramos su sesión, «vincular» sería
+  un cambio de cuenta encubierto — en un dispositivo compartido, entrar en la cuenta de otro. Hay
+  caso que lo asevera mirando `Auth::id()` después del rechazo.
+- **No promueve a verificado ni expulsa.** La toma de `enter()` (P12) existe porque allí la única
+  prueba es el CORREO. Aquí el titular ya está dentro; tocar `email_verified_at` afirmaría algo sobre
+  un buzón que nadie ha comprobado — la doctrina de `#336`.
+- ⚠️ **El correo de Google puede ser OTRO y se admite**: la clave es el `sub`, y el titular se ha
+  identificado él mismo, que es prueba más fuerte que la coincidencia de correo de §5.2.
+- ⚠️ **La guarda de `email_verified` se conserva** aunque aquí no identifique: `email_at_link` es
+  PRUEBA, y guardar como prueba una dirección que el proveedor no da por buena es guardar una falsa.
+
+### 2 · Dos rechazos que son ESPEJOS
+
+`provider_conflict` dice *«tu cuenta ya tiene otra llave»* —salida: desvincular la tuya—; el nuevo
+`provider_taken` dice *«esa llave ya abre otra cuenta»* —desde aquí no hay nada que hacer—. Darle a
+alguien la salida equivocada lo manda a buscar un botón que no le sirve.
+
+### 3 · La intención viaja en el RETO del servidor
+
+Ruta aparte con `auth`, y el reto anota `intent` **y quién la pidió**. ⚠️⚠️ **Esa segunda anotación es
+la que evita el defecto silencioso**: entre la ida y la vuelta caben un `logout` y un `login` con otra
+cuenta, y sin ella el vínculo aterrizaría en la cuenta equivocada **sin que nada fallara**.
+⚠️ Un reto viejo sin la clave cae a ENTRAR, la conducta de siempre.
+
+### 4 · Sin contraseña, y la asimetría con desvincular está razonada
+
+Desvincular la exige porque puede dejarte FUERA; vincular no. Contra la sesión robada que planta un
+Google como puerta trasera valen las **dos defensas que ya existen**: el aviso por correo (detección)
+y que `revokeAllAccess()` se lleve las identidades (`RGPD-06`), o sea que «he olvidado mi contraseña»
+la cierra. ▶ **Lo que no cierra, dicho**: un cambio VOLUNTARIO de contraseña no la retira — idéntico
+al vínculo automático de §5.2, así que esto **no añade una clase de riesgo nueva**.
+
+### 5 · El botón, y el huevo-y-gallina que se evitó a tiempo
+
+⚠️ El bloque de «Cuentas vinculadas» se pinta ahora **también sin ninguna**: antes salía solo con
+alguna, y meter el botón dentro habría repetido **el huevo-y-gallina de `#400`** —la acción escondida
+tras una condición escrita para lo que se LEE— en otro subsistema.
+
+### 6 · El panel de admin
+
+Sí/no + desde cuándo, y el correo del vínculo **solo si difiere** del de la cuenta (ahí está el valor,
+porque desde hoy pueden diferir). ⚠️⚠️ **Sin el `sub`**, que es la línea de `#344`.
+
+### 7 · Una trampa del ARNÉS y un test intermitente del otro carril
+
+⚠️⚠️ **`Http::fake()` ACUMULA stubs y gana el primero que casa** (medido): un caso que recorre el flujo
+dos veces recibía en el segundo canje el token del PRIMER reto, con su `nonce` viejo, y salía
+`google-failed`. *Parecía un defecto del producto y era el instrumento.*
+
+⚠️ **`GuardianAuthorizationScreenTest` volvía a sortear**: creaba al firmante con `User::factory()` y
+aseveraba por subcadena que la página no dice «Marcos». **Tercera aparición de la lección de `#337`**
+y segunda en ese fichero. Reproducido a voluntad, fijado el nombre y **verificado con control**.
+
+**Verificación**: suite **4034 · 25.755** verde · 12 casos nuevos de vinculación + 4 del panel + 1 del
+montaje · navegador de punta a punta (el botón lleva a `/auth/google/vincular` y **la ida sale a
+Google** con `redirect_uri` completo, `state` de 64 hex y `prompt=select_account`) · payload con
+sesión **10.000 → 10.050**, con poda de −92 B medida antes · Pint ✓ · docs-check ✓.
+---
+
 ## #400 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
 
 **Encontrado por el owner probando lo construido**, con la suite verde y las cuatro tandas anteriores

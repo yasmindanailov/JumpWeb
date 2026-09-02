@@ -496,8 +496,12 @@
                             // ▶ Va aquí y no en `GET /config` porque el botón lo pintan las zonas de
                             // AUTH del área, y esa sección **no pide config**: solo lo hace el embudo.
                             // Un segundo sitio del que leerlo sería el `if` que un día discrepa.
+                            // ⚠️ **La de VINCULAR viaja SOLO con sesión** (`#347`): sin ella la ruta
+                            // responde con la redirección de `auth` y el botón no tendría a dónde
+                            // llevar. Es además la poda: quien no ha entrado no paga sus bytes.
                             ...(\App\Domain\Identity\Services\GoogleAuth::enabled()
                                 ? ['google' => route('auth.google.redirect')]
+                                    + (auth()->check() ? ['google_link' => route('auth.google.link')] : [])
                                 : []),
                         ],
                     ], JSON_UNESCAPED_UNICODE) }}">

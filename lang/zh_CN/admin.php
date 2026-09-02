@@ -1139,6 +1139,8 @@ return [
         'col_created_at' => '注册时间',
         'col_locale' => '语言',
         'col_marketing' => '营销通讯',
+        'col_google' => '使用 Google 登录',
+        'google_linked' => '是，自 :date 起',
 
         'verified' => '已验证',
         'unverified' => '未验证',

@@ -69,6 +69,7 @@ return [
             // Las cuentas externas vinculadas y su salida (`specs/auth-con-google.md` §8).
             'identities_title' => 'Comptes liés',
             'unlink' => 'Dissocier',
+            'link_google' => 'Lier mon compte Google',
         ],
         'privacy' => [
             'title' => 'Confidentialité et données (RGPD)',
@@ -284,6 +285,11 @@ return [
         'google-email-unverified' => "Google ne considère pas cette adresse comme vérifiée, nous ne pouvons donc pas l'utiliser pour t'identifier. Vérifie-la dans ton compte Google, ou inscris-toi avec ton e-mail et un mot de passe.",
         'google-anonymized' => 'Ce compte a été supprimé à la demande de son titulaire et ne peut pas être récupéré. Tu peux en créer un nouveau quand tu veux.',
         'google-provider-conflict' => 'Ton compte est déjà lié à un autre compte Google. Connecte-toi avec celui-là, ou avec ton mot de passe, et écris-nous si tu veux en changer.',
+        // ⚠️ Le MIROIR du précédent, et ils ne sont pas interchangeables : celui-là dit « ton compte a
+        // déjà une autre clé » ; celui-ci dit « cette clé ouvre déjà un autre compte ».
+        'google-provider-taken' => 'Ce compte Google est déjà lié à un autre compte du parc. Connecte-toi avec lui s\'il est à toi, ou lie un autre compte Google.',
+        'google-already-linked' => 'Ce compte Google était déjà lié au tien.',
+        'google-link-session-changed' => 'Tu as changé de session pendant la liaison de ton compte Google : nous n\'avons rien lié. Réessaie.',
     ],
 
     'verify' => [

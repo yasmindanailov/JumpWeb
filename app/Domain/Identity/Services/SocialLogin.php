@@ -35,6 +35,10 @@ use Throwable;
  *    cuenta nace al enviar la pantalla de §7, nunca antes, para que no exista el estado «existes y
  *    no puedes hacer nada».
  *
+ * Y una CUARTA que no entra por `enter()` porque no es entrar (`#347`, §21.3):
+ * {@see self::linkToAccount()} — **vincular a la cuenta en la que ya se está**. Va aparte porque su
+ * intención es otra y su veredicto también: no autentica, no promueve y no expulsa.
+ *
  * ## Lo que sostiene que la puerta 2 sea segura
  *
  * ⚠️⚠️ **La guarda dura es el `email_verified` del PROVEEDOR** (P1): si viene `false` —pasa en algunos
@@ -133,6 +137,123 @@ final class SocialLogin
         $this->signIn($linked, $ip, $profile->provider);
 
         return $outcome;
+    }
+
+    /**
+     * **CUARTA puerta: vincular a la cuenta en la que YA se está** (`#347`, §21.3).
+     *
+     * Hasta hoy no existía y su ausencia tenía consecuencia: un titular identificado que pasara por
+     * `/auth/google` **cambiaba de cuenta** si su Google resolvía a otra (la spec lo avisa en §18.6).
+     * Es la conducta correcta de «entrar con Google» y la equivocada para «vincular la mía», así que
+     * lo que faltaba era la INTENCIÓN, no una comprobación más.
+     *
+     * ## En qué se diferencia de `enter()`, y por qué cada cosa
+     *
+     * ⚠️⚠️ **NO autentica.** La sesión ya está abierta y este camino no la toca: si el `sub` resolviera
+     * a otro titular y le abriéramos su sesión, «vincular» sería un cambio de cuenta encubierto.
+     *
+     * ⚠️⚠️ **NO promueve ni expulsa.** La toma de `enter()` (P12) existe porque allí la única prueba es
+     * el CORREO y hay que desalojar a quien pudiera estar dentro. Aquí quien pide el vínculo ya está
+     * dentro y demostrado; tocar `email_verified_at` sería afirmar algo sobre un buzón que nadie ha
+     * comprobado —la doctrina de `#336`: se acredita a la PERSONA, nunca al BUZÓN—. Si la cuenta
+     * estaba sin verificar, sigue sin verificarlo, que es su estado honesto.
+     *
+     * ⚠️ **El correo de Google puede ser DISTINTO del de la cuenta, y se admite**: la clave es el
+     * `sub` (§6.1) y aquí el titular se ha identificado él mismo, que es prueba más fuerte que la
+     * coincidencia de correo en la que se apoya §5.2. El correo se guarda como copia, igual que allí.
+     *
+     * ⚠️ **La guarda dura de `email_verified` SÍ se conserva**, aunque aquí no identifique a nadie:
+     * `email_at_link` se guarda como prueba de con qué dirección se vinculó, y guardar como prueba una
+     * dirección que el proveedor no da por buena es guardar una prueba falsa.
+     *
+     * ## Lo que sostiene que sea seguro sin pedir la contraseña
+     *
+     * Desvincular sí la exige y esto no, y la asimetría es deliberada: desvincular puede dejarte
+     * FUERA, y vincular no. Contra el escenario que sí importa —una sesión robada que planta su
+     * Google como puerta trasera— hay dos defensas que ya existen y son las mismas de §5.2: el
+     * **aviso por correo** de cada vinculación (detección) y que **`revokeAllAccess()` se lleve las
+     * identidades** (`RGPD-06`), o sea que «he olvidado mi contraseña» cierra la puerta.
+     * ▶ **Lo que NO cierra, dicho**: un cambio VOLUNTARIO de contraseña no retira el vínculo, por la
+     * misma razón por la que no retira el carné. Es idéntico al vínculo automático de §5.2: este
+     * camino no añade una clase de riesgo nueva, solo otra forma de llegar a la misma.
+     */
+    public function linkToAccount(User $holder, SocialProfile $profile, string $ip): SocialLoginResult
+    {
+        if (! $profile->emailVerified) {
+            Log::info('auth.social_email_unverified', ['ip' => $ip, 'provider' => $profile->provider]);
+
+            return SocialLoginResult::refused(SocialLoginResult::REASON_EMAIL_UNVERIFIED);
+        }
+
+        // Cinturón: una cuenta anonimizada no puede tener sesión abierta, pero el día que eso cambie
+        // el fallo sería silencioso — y aquí se estaría dando una llave a una cuenta suprimida.
+        if ($holder->isAnonymized()) {
+            Log::info('auth.social_refused', ['ip' => $ip, 'reason' => SocialLoginResult::REASON_ANONYMIZED]);
+
+            return SocialLoginResult::refused(SocialLoginResult::REASON_ANONYMIZED);
+        }
+
+        return DB::transaction(function () use ($holder, $profile, $ip): SocialLoginResult {
+            $locked = User::query()->whereKey($holder->getKey())->lockForUpdate()->firstOrFail();
+
+            // ⚠️ Las DOS preguntas van bajo el mismo lock y en este orden. Primero «¿de quién es esta
+            // llave?», porque si es de otro no hay nada más que decidir; después «¿esta cuenta ya
+            // tiene una?». Al revés, dos titulares vinculando el mismo `sub` a la vez podrían pasar
+            // los dos la segunda comprobación y chocar contra el `UNIQUE` con un 500.
+            $ofTheKey = UserIdentity::query()
+                ->where('provider', $profile->provider)
+                ->where('provider_id', $profile->subject)
+                ->first();
+
+            if ($ofTheKey !== null && (int) $ofTheKey->user_id !== (int) $locked->getKey()) {
+                Log::info('auth.social_refused', ['ip' => $ip, 'reason' => SocialLoginResult::REASON_PROVIDER_TAKEN]);
+
+                return SocialLoginResult::refused(SocialLoginResult::REASON_PROVIDER_TAKEN);
+            }
+
+            // Ya era suya: idempotente y sin segundo aviso por correo. Dos pestañas o un doble clic no
+            // pueden convertirse en dos correos que digan lo mismo.
+            if ($ofTheKey !== null) {
+                return SocialLoginResult::signedIn($locked, linked: false);
+            }
+
+            $existing = UserIdentity::query()
+                ->where('user_id', $locked->getKey())
+                ->where('provider', $profile->provider)
+                ->first();
+
+            if ($existing !== null) {
+                Log::info('auth.social_refused', ['ip' => $ip, 'reason' => SocialLoginResult::REASON_PROVIDER_CONFLICT]);
+
+                return SocialLoginResult::refused(SocialLoginResult::REASON_PROVIDER_CONFLICT);
+            }
+
+            UserIdentity::create([
+                'user_id' => $locked->getKey(),
+                'provider' => $profile->provider,
+                'provider_id' => $profile->subject,
+                'email_at_link' => $profile->email,
+                'linked_via' => UserIdentity::VIA_ACCOUNT,
+                'linked_at' => now(),
+            ]);
+
+            AuditLogger::log('identities.linked', $locked, [
+                'provider' => $profile->provider,
+                'via' => UserIdentity::VIA_ACCOUNT,
+                'promoted' => false,
+            ]);
+
+            return SocialLoginResult::signedIn($locked, linked: true);
+        });
+    }
+
+    /**
+     * El aviso por correo de una vinculación, **fuera de la transacción y sin poder tumbarla**: el
+     * vínculo ya es válido y un fallo del SMTP no puede deshacerlo.
+     */
+    public function announceLink(User $user, string $provider, bool $promoted = false): void
+    {
+        $this->notifySafely($user, new SocialIdentityLinked($provider, $promoted));
     }
 
     /**

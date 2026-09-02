@@ -69,6 +69,11 @@ return [
             // Las cuentas externas vinculadas y su salida (`specs/auth-con-google.md` §8).
             'identities_title' => 'Cuentas vinculadas',
             'unlink' => 'Desvincular',
+            // Vincular desde la cuenta (`#347`). ⚠️ **UNA sola clave, y es una PODA medida**: llevaba
+            // además un `link_intro` explicando que sirve para entrar sin contraseña, y el montaje
+            // con sesión —que paga cada página que abre un cliente— se pasó del techo. Bajo el
+            // título «Cuentas vinculadas», el rótulo del botón ya dice lo que hace.
+            'link_google' => 'Vincular mi cuenta de Google',
         ],
         'privacy' => [
             'title' => 'Privacidad y datos (RGPD)',
@@ -318,6 +323,13 @@ return [
         'google-email-unverified' => 'Google no da por verificado ese correo, así que no podemos usarlo para identificarte. Verifícalo en tu cuenta de Google o regístrate con tu correo y contraseña.',
         'google-anonymized' => 'Esa cuenta se eliminó a petición de su titular y no se puede recuperar. Puedes crear una nueva cuando quieras.',
         'google-provider-conflict' => 'Tu cuenta ya está vinculada a otra cuenta de Google. Entra con aquélla, o con tu contraseña, y escríbenos si quieres cambiarla.',
+        // ⚠️ El ESPEJO del anterior, y no se pueden intercambiar: aquél dice «tu cuenta ya tiene otra
+        // llave» —y la salida es desvincular la tuya—; éste dice «esa llave ya abre otra cuenta», y
+        // desde aquí no hay nada que se pueda hacer. Dar la salida equivocada manda a la persona a
+        // buscar un botón que no le sirve.
+        'google-provider-taken' => 'Esa cuenta de Google ya está vinculada a otra cuenta del parque. Entra con ella si es tuya, o vincula una cuenta de Google distinta.',
+        'google-already-linked' => 'Esa cuenta de Google ya estaba vinculada a la tuya.',
+        'google-link-session-changed' => 'Has cambiado de sesión mientras vinculabas tu cuenta de Google, así que no hemos vinculado nada. Vuelve a intentarlo.',
     ],
 
     'verify' => [

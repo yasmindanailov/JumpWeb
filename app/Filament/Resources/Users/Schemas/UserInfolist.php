@@ -68,6 +68,42 @@ class UserInfolist
                                     ? DisplayTime::format($record->last_login_at)
                                     : __('admin.users.never')),
 
+                            /**
+                             * **¿Entra con Google?** (`#347`, encargo del owner: *«quiero también en
+                             * el panel de admin el cliente que tenga su correo vinculado a Google o
+                             * no»*).
+                             *
+                             * ⚠️⚠️ **No publica el `sub`**, que es la misma línea que traza `#344`
+                             * para la lista del cliente: el operador necesita saber CÓMO entra esta
+                             * persona —para atenderla cuando dice «no me deja entrar»— y para eso
+                             * basta el proveedor, la fecha y con qué correo se vinculó. El
+                             * identificador solo viaja en el export del art. 20, que es un acto
+                             * explícito del titular.
+                             *
+                             * ⚠️ **Enseña `email_at_link` cuando NO coincide con el de la cuenta**, y
+                             * ahí está el valor real del dato: desde `#347` se puede vincular un
+                             * Google con otra dirección, así que «entra con Google» a secas dejaría
+                             * al operador sin saber con cuál. Cuando coinciden no se repite.
+                             */
+                            TextEntry::make('identities')
+                                ->label(__('admin.users.col_google'))
+                                ->state(function (User $record): string {
+                                    $identity = $record->identities->firstWhere('provider', 'google');
+
+                                    if ($identity === null) {
+                                        return __('admin.users.no');
+                                    }
+
+                                    $other = $identity->email_at_link !== null
+                                        && mb_strtolower((string) $identity->email_at_link) !== mb_strtolower((string) $record->email);
+
+                                    return __('admin.users.google_linked', [
+                                        'date' => DisplayTime::format($identity->linked_at),
+                                    ]).($other ? ' · '.$identity->email_at_link : '');
+                                })
+                                ->badge()
+                                ->color(fn (User $record): string => $record->identities->firstWhere('provider', 'google') !== null ? 'success' : 'gray'),
+
                             TextEntry::make('created_at')
                                 ->label(__('admin.users.col_created_at'))
                                 ->state(fn (User $record): string => DisplayTime::format($record->created_at)),

@@ -57,20 +57,43 @@ trait DrivesGoogleAuth
     }
 
     /**
+     * El `id_token` que devolverá el próximo canje. Vive aquí, y no dentro del stub, por lo de abajo.
+     */
+    private ?string $googleNextIdToken = null;
+
+    /**
      * @param  array{state: string, nonce: string}  $flow
      * @param  array<string, mixed>  $claims  lo que se manipula del token
      */
     protected function fakeGoogleExchange(array $flow, array $claims = []): void
     {
+        // ⚠️⚠️ **`Http::fake()` ACUMULA stubs y gana el PRIMERO que casa** (medido, `#347`): llamarlo
+        // dos veces en el mismo caso no sustituye la respuesta, la deja detrás. Con eso, un caso que
+        // recorre el flujo DOS veces —el de la idempotencia, o cualquiera con su control— recibía en
+        // el segundo canje el token del PRIMER reto, con su `nonce` viejo, y el veredicto salía
+        // `google-failed`. *Parece un defecto del producto y es el instrumento.*
+        // ▶ La salida: el stub se registra UNA vez y lee esta propiedad **en el momento de la
+        // llamada**, así que siempre devuelve el token del reto en curso.
+        $this->googleNextIdToken = $this->googleIdToken($claims + ['nonce' => $flow['nonce']]);
+
+        if ($this->googleExchangeFaked) {
+            return;
+        }
+
+        $this->googleExchangeFaked = true;
+
         Http::fake([
-            GoogleOAuth::TOKEN_ENDPOINT => Http::response([
+            GoogleOAuth::TOKEN_ENDPOINT => fn () => Http::response([
                 'access_token' => 'ya29.token-que-no-usamos',
                 'expires_in' => 3599,
                 'token_type' => 'Bearer',
-                'id_token' => $this->googleIdToken($claims + ['nonce' => $flow['nonce']]),
+                'id_token' => $this->googleNextIdToken,
             ]),
         ]);
     }
+
+    /** Si el stub ya está puesto. Ver el aviso de `fakeGoogleExchange()`. */
+    private bool $googleExchangeFaked = false;
 
     /** @param  array{state: string, nonce: string}  $flow */
     protected function returnFromGoogle(array $flow): TestResponse
@@ -91,6 +114,40 @@ trait DrivesGoogleAuth
         $this->configureGoogleKeys();
 
         $flow = $this->startGoogleFlow();
+        $this->fakeGoogleExchange($flow, $claims);
+
+        return $this->returnFromGoogle($flow);
+    }
+
+    /**
+     * **La IDA de VINCULAR** (`#347`), que es otra ruta y otra intención.
+     *
+     * ⚠️ Se pide de verdad, como la de entrar: la intención y el titular se anotan en el reto del
+     * SERVIDOR, así que sembrar la sesión a mano dejaría sin ejercitar justo la pieza que impide que
+     * el vínculo aterrice en la cuenta equivocada.
+     *
+     * @return array{state: string, nonce: string}
+     */
+    protected function startGoogleLinkFlow(): array
+    {
+        $response = $this->get(route('auth.google.link'));
+        $response->assertRedirect();
+
+        parse_str((string) parse_url((string) $response->headers->get('Location'), PHP_URL_QUERY), $query);
+
+        return ['state' => (string) $query['state'], 'nonce' => (string) $query['nonce']];
+    }
+
+    /**
+     * El recorrido entero de VINCULAR desde la cuenta. Exige sesión abierta por quien llama.
+     *
+     * @param  array<string, mixed>  $claims
+     */
+    protected function linkWithGoogle(array $claims = []): TestResponse
+    {
+        $this->configureGoogleKeys();
+
+        $flow = $this->startGoogleLinkFlow();
         $this->fakeGoogleExchange($flow, $claims);
 
         return $this->returnFromGoogle($flow);
