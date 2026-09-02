@@ -20,9 +20,9 @@ use Illuminate\Console\Command;
  * comando, y porque la necesidad que lo justifica —ajustes fuera del panel— sigue igual de viva.
  *
  * ⚠️ **Es una puerta trasera al panel, así que trae guardas.** No basta con «escribe lo que te digan»:
- * las tres claves de {@see self::PROTECTED_KEYS} pueden costar dinero o corromper la numeración de
- * pedidos, así que exigen `--force` escrito a mano. La lista espeja lo que el propio panel se niega a
- * editar; no es una precaución genérica.
+ * las claves de {@see self::PROTECTED_KEYS} pueden costar dinero, corromper la numeración de pedidos
+ * o entregarle a otro la identidad de la instalación, así que exigen `--force` escrito a mano. La
+ * lista espeja lo que el propio panel se niega a editar; no es una precaución genérica.
  *
  * ⚠️ **Y nunca imprime un secreto.** El valor se enmascara si la clave parece un secreto: este comando
  * se ejecuta por SSH y su salida acaba en el log del despliegue.
@@ -46,6 +46,11 @@ class SetSetting extends Command
         'redsys_environment' => 'en `live` la instalación COBRA de verdad, con tarjetas de verdad. Es el único ajuste de esta tabla que cuesta dinero.',
         'redsys_secret_key' => 'la clave del comercio vive en el vault/`.env`, no en BD: escribirla aquí la deja en una tabla que se vuelca en cada backup.',
         'redsys_next_gateway_order' => 'es un contador OPERATIVO que gestiona el flujo de pago; retrocederlo colisiona pedidos en la pasarela (SIS0051/0913).',
+        // `specs/auth-con-google.md` §10, `[DECIDIDO owner]` Q10: las claves de Google viven en esta
+        // tabla —con el coste asumido de que se vuelca en cada backup— y por eso entran aquí, que es
+        // como este repo dice «esto cuesta caro tocarlo a ciegas».
+        'auth.google_client_id' => 'identifica a ESTA instalación ante Google. Cambiarla por la de otro cliente manda a sus visitantes a la pantalla de consentimiento equivocada y deja el inicio de sesión roto.',
+        'auth.google_client_secret' => 'es el secreto que autentica el canje del código ante Google: quien lo tenga puede hacerse pasar por esta instalación. Como el de Redsys, escribirlo aquí lo deja en una tabla que se vuelca en cada backup.',
     ];
 
     /** Fragmentos que delatan un secreto: su valor no se imprime jamás. */

@@ -108,3 +108,10 @@ storage/ssr
 # árbol de TRABAJO, no lo que git sigue, así que una carpeta ignorada pero presente SÍ se sube.
 # Por eso lleva además su `--exclude` en `RSYNC_EXCLUDES`.
 /mockup_playjumppark/
+
+# Credenciales de OAuth descargadas de Google Cloud Console (`specs/auth-con-google.md` §10.1).
+# La consola las descarga con ESTE nombre exacto y el navegador las deja en la carpeta del proyecto:
+# un `git add .` distraído publicaría el secreto de una instalación en el repo del PRODUCTO.
+# ⚠️ Ignorar NO es guardar: el fichero se saca del árbol y las dos claves se escriben con
+# `app:set-setting --force` en la instalación que toque. Aquí solo se cierra el accidente.
+/client_secret_*.json

@@ -2693,7 +2693,7 @@ components:
 
         Su forma la componen dos módulos: Identity pone perfil, consentimientos y roles, y Booking
         pone `orders` por contrato (`Booking\Contracts\CustomerOrderHistory`) — porque son sus datos.
-      required: [exported_at, profile, consents, roles, dependents, orders]
+      required: [exported_at, profile, consents, roles, identities, dependents, orders]
       additionalProperties: false
       properties:
         exported_at:
@@ -2714,6 +2714,14 @@ components:
             esperable, y va igualmente porque es un dato que existe sobre él.
           items:
             type: string
+        identities:
+          type: array
+          description: |
+            Las cuentas de un proveedor externo (hoy, Google) con las que se entra a ésta
+            (`specs/auth-con-google.md` §11). Un cliente que nunca haya vinculado ninguna tiene la
+            lista vacía, y va igualmente: es un dato que existe sobre él.
+          items:
+            $ref: '#/components/schemas/ExportedIdentity'
         dependents:
           type: array
           description: |
@@ -2804,6 +2812,38 @@ components:
         version:
           type: string
           description: Versión del documento que se aceptó, para saber a QUÉ se dijo que sí.
+
+    ExportedIdentity:
+      type: object
+      description: |
+        Una identidad externa vinculada a la cuenta (`specs/auth-con-google.md` §6.2).
+
+        ⚠️ **No es una credencial**: con lo que hay aquí no se entra a ninguna parte —entrar exige que
+        el proveedor lo afirme en una petición servidor-a-servidor—. Por eso el identificador SÍ sale
+        en el export: es un dato personal del titular en un tercero, y portabilidad quiere decir
+        llevarse lo que hay.
+      required: [provider, provider_id, email_at_link, linked_via, linked_at]
+      additionalProperties: false
+      properties:
+        provider:
+          type: string
+          description: '`google` es el único de hoy.'
+        provider_id:
+          type: string
+          description: El identificador estable de esa persona en el proveedor (el `sub` de OpenID Connect).
+        email_at_link:
+          type: string
+          nullable: true
+          description: |
+            El correo **con el que se vinculó**, como copia probatoria. Puede diferir del correo actual
+            de la cuenta o del que tenga hoy en el proveedor: dice con cuál se estableció el vínculo.
+        linked_via:
+          type: string
+          description: 'Por qué puerta se vinculó: `signup` · `login` · `account`.'
+        linked_at:
+          type: string
+          format: date-time
+          nullable: true
 
     ExportedDependent:
       type: object

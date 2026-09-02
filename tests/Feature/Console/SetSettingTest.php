@@ -103,6 +103,10 @@ class SetSettingTest extends TestCase
             'el entorno de Redsys' => ['redsys_environment', 'live'],
             'la clave del comercio' => ['redsys_secret_key', 'una-clave-de-32-caracteres-abcdef'],
             'el contador de pedidos' => ['redsys_next_gateway_order', '1'],
+            // `specs/auth-con-google.md` §10: identifican a ESTA instalación ante Google, y el
+            // secreto le deja a quien lo tenga hacerse pasar por ella.
+            'el ID de cliente de Google' => ['auth.google_client_id', '123-abc.apps.googleusercontent.com'],
+            'el secreto de Google' => ['auth.google_client_secret', 'GOCSPX-lo-que-sea'],
         ];
     }
 

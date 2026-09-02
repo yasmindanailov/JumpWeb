@@ -39,6 +39,7 @@ use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\CookieConsent;
 use App\Domain\Identity\Services\CustomerAccountContext;
@@ -149,6 +150,7 @@ class AppServiceProvider extends ServiceProvider
             'ticket' => Ticket::class,
             'ticket_type' => TicketType::class,
             'user' => User::class,
+            'user_identity' => UserIdentity::class,
             'waiver_signature' => WaiverSignature::class,
             'zone' => Zone::class,
         ]);

@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Consent;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Identity\Services\AccountCredentials;
 use App\Domain\Identity\Services\AccountPrivacy;
 use Illuminate\Support\Facades\DB;
@@ -394,6 +395,48 @@ class MePrivacyTest extends ApiTestCase
         $this->assertSame('10:00:00', $response->json('orders.0.items.0.time'));
         $this->assertSame('Calcetines', $response->json('orders.0.items.0.addons.0.product'));
         $this->assertSame(400, $response->json('orders.0.items.0.addons.0.unit_price_cents'));
+    }
+
+    /**
+     * **Las IDENTIDADES EXTERNAS también son suyas** (`specs/auth-con-google.md` §11): con qué cuenta
+     * de un tercero se entra a ésta, desde cuándo y por qué puerta.
+     *
+     * ⚠️ La lista del export se **enumera a mano** y no hay censo que obligue, así que un dato
+     * personal nuevo se queda fuera del art. 20 en silencio. Lo que lo caza es el CONTRATO
+     * (`additionalProperties: false` y todo en `required`), y por eso este caso valida la respuesta
+     * contra él: sin `assertValidResponse` sería un test de texto.
+     */
+    public function test_the_export_carries_the_linked_external_identities(): void
+    {
+        $user = $this->holder();
+
+        UserIdentity::create([
+            'user_id' => $user->id,
+            'provider' => UserIdentity::PROVIDER_GOOGLE,
+            'provider_id' => '110000000000000000001',
+            'email_at_link' => 'titular@gmail.test',
+            'linked_via' => UserIdentity::VIA_LOGIN,
+            'linked_at' => now()->subDay(),
+        ]);
+
+        $response = $this->actingAs($user)->getJson(self::ROOT.'/me/export');
+
+        $response->assertOk()->assertValidResponse(200);
+
+        $this->assertSame('google', $response->json('identities.0.provider'));
+        $this->assertSame('110000000000000000001', $response->json('identities.0.provider_id'));
+        $this->assertSame('titular@gmail.test', $response->json('identities.0.email_at_link'));
+        $this->assertSame('login', $response->json('identities.0.linked_via'));
+        $this->assertNotNull($response->json('identities.0.linked_at'));
+    }
+
+    /** Sin ninguna vinculada, la clave va igual y vacía: es un dato que existe sobre el titular. */
+    public function test_the_export_carries_an_empty_identity_list_when_there_is_none(): void
+    {
+        $response = $this->actingAs($this->holder())->getJson(self::ROOT.'/me/export');
+
+        $response->assertOk()->assertValidResponse(200);
+        $this->assertSame([], $response->json('identities'));
     }
 
     /**

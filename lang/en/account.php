@@ -254,6 +254,13 @@ return [
         'order-retry-throttled' => 'You are trying too often. Wait a minute and try again: your booking is still held.',
         'order-retry-paused' => 'Online booking is paused for now. Call us and we will complete your booking by phone.',
         'guest-form-saved' => 'Booking form saved. Thank you! You can edit it again anytime.',
+        'google-linked' => 'We have linked your Google account. From now on you can sign in with it.',
+        'google-cancelled' => 'You did not finish signing in with Google. You can try again whenever you like.',
+        'google-failed' => 'We could not sign you in with Google. Please try again; if it keeps failing, sign in with your password or contact us.',
+        'google-email-unverified' => 'Google does not consider that address verified, so we cannot use it to identify you. Verify it in your Google account, or sign up with your email and a password.',
+        'google-anonymized' => 'That account was deleted at its owner’s request and cannot be recovered. You can create a new one whenever you like.',
+        'google-provider-conflict' => 'Your account is already linked to a different Google account. Sign in with that one, or with your password, and contact us if you want to change it.',
+        'google-complete-signup' => 'Almost there: fill in these details to finish signing up.',
     ],
 
     'verify' => [
@@ -280,6 +287,18 @@ return [
         'line1' => 'Someone tried to sign up with your email. If it was you, you already have an account: sign in or reset your password.',
         'action' => 'Sign in',
         'line2' => 'If it was not you, you can safely ignore this message.',
+    ],
+
+    'social_link_mail' => [
+        'providers' => [
+            'google' => 'Google',
+        ],
+        'subject' => 'Your :park account now signs in with :provider',
+        'greeting' => 'Hi!',
+        'line1' => 'From now on you can sign in to your :park account with :provider, as well as the way you did before.',
+        'promoted' => 'Your email address was not verified yet, so we have taken :provider as proof of it and, to keep the account safe, closed any open sessions and disabled the previous password. If you want a password again, use “I forgot my password”.',
+        'not_you' => 'If this was not you, change your email account password right away and let us know.',
+        'action' => 'Contact us',
     ],
 
     'orders' => [

@@ -251,6 +251,19 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             $this->consents()->delete();
             $this->roles()->detach();
 
+            // Las IDENTIDADES EXTERNAS (`specs/auth-con-google.md` §11): el `sub` de Google es un
+            // identificador de ESTA persona en un tercero, así que no sobrevive a la supresión.
+            //
+            // ⚠️⚠️ **Tiene que estar escrito aquí y no puede confiarse al `cascadeOnDelete` de la FK**:
+            // esto no borra la fila de `users` —la FK de los pedidos es RESTRICT—, así que el cascade
+            // NO SE DISPARA NUNCA por esta vía. Fue el hallazgo de la revisión adversarial.
+            //
+            // ⚠️⚠️ **Y va por BORRADO, no por redacción como el resto de esta purga**: una fila
+            // redactada dejaría el `sub` ocupado en `UNIQUE(provider, provider_id)` y **esa persona no
+            // podría volver a registrarse con su Google nunca más** — el derecho de supresión le
+            // habría cerrado la puerta de entrada en vez de devolverle sus datos.
+            $this->identities()->delete();
+
             // Fase 6 · menores a cargo (`specs/menores-a-cargo.md` §5, `RGPD-01` ampliada): cada
             // persona a cargo sigue el régimen de su waiver. Con una firma detrás se CONSERVA vinculada
             // bajo el mismo tratamiento restringido que la firma (desvinculada: sale de toda superficie;
@@ -441,6 +454,22 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
     public function visits(): HasMany
     {
         return $this->hasMany(CustomerVisit::class);
+    }
+
+    /**
+     * Las IDENTIDADES EXTERNAS de esta cuenta (`specs/auth-con-google.md` §6.2): hoy, como mucho una
+     * de Google.
+     *
+     * ⚠️ **No son credenciales de esta cuenta**, así que no entran en `revokeAllAccess()`: revocar
+     * accesos cierra sesiones, tokens y carné, y el vínculo no abre ninguno por sí solo —para entrar
+     * por él hay que volver a demostrarle a Google quién eres—. Lo que sí lo borra es la supresión
+     * del art. 17, y por eso vive escrito en {@see anonymize()}.
+     *
+     * @return HasMany<UserIdentity, $this>
+     */
+    public function identities(): HasMany
+    {
+        return $this->hasMany(UserIdentity::class);
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Domain\Identity\Contracts\CredentialChangeResult;
 use App\Domain\Identity\Exceptions\AccountHasUpcomingReservationsException;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\UserIdentity;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -144,6 +145,26 @@ class AccountPrivacy
                 'version' => $consent->version,
             ])->values()->all(),
             'roles' => $user->roles->pluck('name')->values()->all(),
+            // Las IDENTIDADES EXTERNAS (`specs/auth-con-google.md` §11): con qué cuenta de un tercero
+            // se entra a ésta, desde cuándo y por dónde se vinculó.
+            //
+            // ⚠️ **Se enumeran a mano, como todo lo de arriba, y ése es el riesgo de esta lista**: no
+            // hay censo que obligue a que un dato nuevo aparezca aquí, así que un dato personal nuevo
+            // se queda fuera del art. 20 **en silencio**. Lo que sí hay es el contrato
+            // (`PersonalDataExport`, `additionalProperties: false` y todo en `required`), que rompe si
+            // las dos mitades no cuadran — por eso esta clave y su esquema entran en el mismo commit.
+            //
+            // ⚠️ El `provider_id` VA INCLUIDO: es el identificador de esa persona en el proveedor, o
+            // sea un dato personal suyo. No es una credencial —con él no se entra a ninguna parte— y
+            // portabilidad quiere decir llevarse lo que hay, no un resumen.
+            'identities' => $user->identities()->orderBy('id')->get()
+                ->map(static fn (UserIdentity $identity): array => [
+                    'provider' => (string) $identity->provider,
+                    'provider_id' => (string) $identity->provider_id,
+                    'email_at_link' => $identity->email_at_link,
+                    'linked_via' => (string) $identity->linked_via,
+                    'linked_at' => $identity->linked_at?->toIso8601String(),
+                ])->values()->all(),
             // Fase 6 · menores a cargo (`specs/menores-a-cargo.md` §5, `RGPD-04`): las personas a cargo
             // ACTIVAS —las que declaró y no ha retirado—. Una retirada con firma detrás vive bajo el
             // régimen restringido del waiver, fuera del export del art. 20 como la propia firma.

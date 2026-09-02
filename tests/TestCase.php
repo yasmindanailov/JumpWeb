@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Domain\Identity\Services\GoogleAuth;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Turnstile;
 use Carbon\Carbon;
@@ -93,6 +94,12 @@ abstract class TestCase extends BaseTestCase
         // misma copia de un reset por Reflection porque, sin esto, unas claves configuradas por un
         // test decidían el resultado de los siguientes según el ORDEN en que corrieran.
         Turnstile::flushCache();
+
+        // Y el de `GoogleAuth`, que es el mismo patrón con las claves de otra instalación
+        // (`specs/auth-con-google.md` §10): sin esta purga, unas claves puestas por un test dejarían
+        // «entrar con Google» activado para los siguientes del mismo proceso, y el resultado
+        // dependería del ORDEN. `SUITE-02` lo exige para todo memo estático nuevo.
+        GoogleAuth::flushCache();
 
         $this->applyAuditClock();
     }

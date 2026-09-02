@@ -255,6 +255,13 @@ return [
         'order-retry-throttled' => 'Tu essaies trop souvent. Attends une minute et réessaie : ta réservation est toujours conservée.',
         'order-retry-paused' => 'La réservation en ligne est suspendue pour le moment. Appelle-nous et nous finalisons ta réservation par téléphone.',
         'guest-form-saved' => 'Formulaire de réservation enregistré. Merci ! Vous pouvez le modifier à tout moment.',
+        'google-linked' => 'Nous avons lié ton compte Google. Tu peux désormais te connecter avec lui.',
+        'google-cancelled' => "Tu n'as pas terminé la connexion avec Google. Tu peux réessayer quand tu veux.",
+        'google-failed' => "Nous n'avons pas pu te connecter avec Google. Réessaie ; si le problème persiste, connecte-toi avec ton mot de passe ou écris-nous.",
+        'google-email-unverified' => "Google ne considère pas cette adresse comme vérifiée, nous ne pouvons donc pas l'utiliser pour t'identifier. Vérifie-la dans ton compte Google, ou inscris-toi avec ton e-mail et un mot de passe.",
+        'google-anonymized' => 'Ce compte a été supprimé à la demande de son titulaire et ne peut pas être récupéré. Tu peux en créer un nouveau quand tu veux.',
+        'google-provider-conflict' => 'Ton compte est déjà lié à un autre compte Google. Connecte-toi avec celui-là, ou avec ton mot de passe, et écris-nous si tu veux en changer.',
+        'google-complete-signup' => 'Presque fini : complète ces informations pour terminer ton inscription.',
     ],
 
     'verify' => [
@@ -281,6 +288,18 @@ return [
         'line1' => "Quelqu'un a tenté de s'inscrire avec ton e-mail. Si c'était toi, tu as déjà un compte : connecte-toi ou réinitialise ton mot de passe.",
         'action' => 'Se connecter',
         'line2' => "Si ce n'était pas toi, tu peux ignorer ce message en toute tranquillité.",
+    ],
+
+    'social_link_mail' => [
+        'providers' => [
+            'google' => 'Google',
+        ],
+        'subject' => 'Ton compte :park se connecte désormais avec :provider',
+        'greeting' => 'Bonjour !',
+        'line1' => 'Tu peux désormais te connecter à ton compte :park avec :provider, en plus de la méthode que tu utilisais avant.',
+        'promoted' => "Ton adresse e-mail n'était pas encore vérifiée : nous la considérons vérifiée grâce à :provider et, par sécurité, nous avons fermé les sessions ouvertes et désactivé l'ancien mot de passe. Si tu veux de nouveau un mot de passe, utilise « j'ai oublié mon mot de passe ».",
+        'not_you' => "Si ce n'était pas toi, change tout de suite le mot de passe de ta messagerie et préviens-nous.",
+        'action' => 'Nous écrire',
     ],
 
     'orders' => [

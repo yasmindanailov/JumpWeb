@@ -277,6 +277,16 @@ return [
         // Reservas en pausa (#218): el reintento de pago se bloquea; el cliente puede llamar.
         'order-retry-paused' => 'Las reservas online están pausadas temporalmente. Llámanos por teléfono y completamos tu reserva.',
         'guest-form-saved' => 'Formulario de reserva guardado. ¡Gracias! Puedes volver a editarlo cuando quieras.',
+        // Entrar con Google (`specs/auth-con-google.md`). El motivo del rechazo SÍ se le dice a quien
+        // llega: a este punto solo se llega tras demostrarle a Google que ese buzón es suyo, así que
+        // no hay enumeración que proteger — y callarlo solo consigue que no sepa qué hacer.
+        'google-linked' => 'Hemos vinculado tu cuenta de Google. A partir de ahora puedes entrar con ella.',
+        'google-cancelled' => 'No has terminado de entrar con Google. Puedes intentarlo otra vez cuando quieras.',
+        'google-failed' => 'No hemos podido entrar con Google. Inténtalo de nuevo; si el problema sigue, entra con tu contraseña o escríbenos.',
+        'google-email-unverified' => 'Google no da por verificado ese correo, así que no podemos usarlo para identificarte. Verifícalo en tu cuenta de Google o regístrate con tu correo y contraseña.',
+        'google-anonymized' => 'Esa cuenta se eliminó a petición de su titular y no se puede recuperar. Puedes crear una nueva cuando quieras.',
+        'google-provider-conflict' => 'Tu cuenta ya está vinculada a otra cuenta de Google. Entra con aquélla, o con tu contraseña, y escríbenos si quieres cambiarla.',
+        'google-complete-signup' => 'Ya casi está: completa estos datos para terminar tu registro.',
     ],
 
     'verify' => [
@@ -303,6 +313,20 @@ return [
         'line1' => 'Alguien ha intentado registrarse con tu email. Si fuiste tú, ya tienes una cuenta: inicia sesión o recupera tu contraseña.',
         'action' => 'Iniciar sesión',
         'line2' => 'Si no has sido tú, puedes ignorar este mensaje con tranquilidad.',
+    ],
+
+    // El aviso de que la cuenta se ha vinculado a una identidad externa. NO es cortesía: es lo que
+    // hace que una vinculación automática deje de ser silenciosa (`specs/auth-con-google.md` §5.2).
+    'social_link_mail' => [
+        'providers' => [
+            'google' => 'Google',
+        ],
+        'subject' => 'Tu cuenta de :park ya entra con :provider',
+        'greeting' => '¡Hola!',
+        'line1' => 'A partir de ahora puedes entrar en tu cuenta de :park con :provider, además de como lo hicieras antes.',
+        'promoted' => 'Como tu correo todavía no estaba verificado, lo hemos dado por verificado con :provider y, por seguridad, hemos cerrado las sesiones que hubiera abiertas y desactivado la contraseña anterior. Si quieres volver a tener contraseña, usa «he olvidado mi contraseña».',
+        'not_you' => 'Si no has sido tú, cambia cuanto antes la contraseña de tu cuenta de correo y avísanos.',
+        'action' => 'Escribirnos',
     ],
 
     'orders' => [

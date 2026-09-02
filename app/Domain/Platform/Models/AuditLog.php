@@ -193,6 +193,12 @@ class AuditLog extends Model
         'dependents.assigned',              // payload: dependent_id + order_item_id + order_id (tanda 4; nunca el nombre)
         'dependents.unassigned',            // payload: dependent_id + order_item_id + order_id (tanda 5, el mostrador desmarca; user_id = el operador)
 
+        // ── Identidades externas (`specs/auth-con-google.md` §6.2) — target = User; nunca el `sub` ──
+        // Payload: proveedor, por qué puerta se vinculó y si la cuenta destino estaba SIN verificar y
+        // se promovió (P12). El identificador de Google NO entra: no hace falta para auditar y es un
+        // identificador de la persona en un tercero (`RGPD-02`).
+        'identities.linked',
+
         // ── Carné QR y puerta (Fase 6 · A, `specs/identidad-qr-puerta.md` §9.2 A·10) — target = User; nunca el token ──
         'cards.issued',                     // payload: card_id
         'cards.rotated',                    // payload: card_id (el revocado) + reason (`rotated`)

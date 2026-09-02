@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\PanelLocaleController;
 use App\Http\Controllers\Admin\ReservationSlipController;
 use App\Http\Controllers\Admin\WaiverProofController;
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\ContactController;
@@ -43,6 +44,25 @@ Route::get('/email/verificar/{id}/{hash}', [EmailVerificationController::class, 
 Route::post('/email/verificar/reenviar', [EmailVerificationController::class, 'resend'])
     ->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 Route::post('/logout', LogoutController::class)->middleware('auth')->name('logout');
+
+// Entrar y registrarse con GOOGLE (`docs/specs/auth-con-google.md` §6.4). Dos rutas de NAVEGADOR:
+// van en `web` y no en `/api/v1` porque son redirecciones con sesión, no una superficie de datos —y
+// el contrato exige paridad en las dos direcciones, así que declararlas allí obligaría a describir
+// un `302` hacia Google.
+//
+// ⚠️⚠️ **La URI de redirección es la RUTA COMPLETA `/auth/google/callback`**, y es la que hay que dar
+// de alta en la consola de Google (§10.1). Con el origen pelado, el primer inicio de sesión devuelve
+// `Error 400: redirect_uri_mismatch` y no hay nada que depurar en nuestro lado.
+//
+// ⚠️ Sin las dos claves configuradas las dos responden **404** (el controlador lo impone): una
+// instalación que no use Google no tiene por qué enterarse de que esto existe.
+//
+// Los limitadores son por IP y sobre la IDA sobre todo: es la que cualquiera puede pedir en bucle.
+// La vuelta la trae Google con un código de un solo uso, y su reto ya la acota.
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])
+    ->middleware('throttle:10,1')->name('auth.google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])
+    ->middleware('throttle:30,1')->name('auth.google.callback');
 
 // Mi cuenta. Zona privada: requiere sesión y email verificado.
 //
