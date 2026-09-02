@@ -125,8 +125,19 @@ plano con una zona pulsable invisible. Venía de `#343`, pero al quitar la casil
 único sitio donde las dos altas te enseñan la política**. Arreglado, remedido y con guarda.
 ▶ **El botón de Google ya va encima del formulario con su «o»** — dentro de los dos formularios, no
 colgado de la pantalla: *«encima del formulario» no es «encima del título»*.
-▶ ⚠️ **El techo del chunk BAJA por primera vez** (277 → 275, medido 274,47): un trinquete que solo
+▶ ⚠️ **El techo del chunk BAJA por primera vez** (277 → 275, medido 274,50): un trinquete que solo
 sube deja de vigilar en cuanto alguien retira código.
+▶ **Y un tercer punto tuyo del mismo día, arreglado**: el aire de «Cuentas vinculadas» (0 px al título
+y 3 al botón, medidos). ⚠️ **La causa no estaba en esa pantalla, estaba en el botón** —llevaba un
+`margin-top` de TRES píxeles que viajaba con él a los cuatro sitios donde se pinta—: *el aire de una
+pieza lo decide quien la coloca, no ella*. Queda en 20 y 12.
+▶ ❗ **Y una cosa que te costó una vuelta y ahora está escrita** (`VERIFICACION-E2E-CAJON.md` §0.bis):
+lo que te dejaba clavado en «elige hora y cantidad» **no era el mantenimiento**, era
+`sales.online_enabled = 0` — el interruptor de `#325`—, que hace que `POST /cart/validate-line`
+responda 503. Son DOS interruptores distintos y los dos son DATO. ⚠️ La confusión tiene causa: el
+texto del aviso de pausa dice «Estamos en mantenimiento» y **viaja siempre** en `GET /booking/status`,
+también con las reservas abiertas. **En tu local ya está abierto**, y la v1 de «Condiciones» publicada
+con el texto REAL del CMS.
 ▶ **Verificado**: suite **4.064 · 25.919** · Pint · docs-check · **6/6 y 8/8 mutaciones** en dos
 arneses versionados · **sonda de navegador 18/18** con control y capturas de las dos pantallas.
 ▶ ⚠️ **Para el otro carril**: he tocado `openapi/v1.yaml`, `lang/*/account.php`, `lang/*/validation.php`
@@ -878,7 +889,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > número**: 4019 + 4 + 15 = **4038** y el gate mide **4039 · 25.772**. Un test y dos aserciones de
 > más, o sea que uno de los dos números declarados se tomó sobre una base que ya no era 4019. *Que la
 > suma no cuadre es justo el motivo por el que el gate mide en vez de creerse la resta.*
-> Suite **4064 en verde** (25.919 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> Suite **4064 en verde** (25.923 aserciones, 1 skipped a propósito), medida el 2026-09-02
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`). ⚠️ **+8 y +51 los pone la T8
 > de Google** (`#350`): las dos guardas nuevas del botón y del aviso de privacidad, más los casos que
 > sustituyen a los de las casillas retiradas. Antes: las cuatro tandas del

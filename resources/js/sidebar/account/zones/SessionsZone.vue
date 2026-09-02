@@ -72,7 +72,15 @@ watch(() => store.done, (done) => { if (done) current.value = ''; });
               exactamente el huevo-y-gallina de `#400` —el botón de una acción escondido tras una
               condición escrita para lo que se LEE— visto en otro subsistema.
             -->
-            <template v-if="store.identities?.length || urls.google_link">
+            <!--
+              ⚠️ **El envoltorio no es decorativo: es lo que le da AIRE al bloque.** Va dentro del
+              mismo formulario que «cerrar sesión en los demás dispositivos» —porque reutiliza su
+              contraseña— y sin él quedaba pegado a ese botón: medido, **0 px** entre el botón y este
+              título y **3 px** entre el título y el de Google. Las demás secciones de la cuenta se
+              separan porque son tarjetas distintas y las separa la rejilla; ésta no puede serlo, así
+              que su aire lo declara ella.
+            -->
+            <div v-if="store.identities?.length || urls.google_link" class="account__linked">
                 <h3 class="account__card-title">{{ a('account.sessions.identities_title') }}</h3>
 
                 <ul v-if="store.identities?.length" class="account__consents">
@@ -97,7 +105,7 @@ watch(() => store.done, (done) => { if (done) current.value = ''; });
                 -->
                 <GoogleButton v-if="urls.google_link && ! store.identities?.length"
                               :href="urls.google_link" :label="a('account.sessions.link_google')" />
-            </template>
+            </div>
         </form>
     </div>
 </template>

@@ -22,6 +22,36 @@ pese a tener la fase entera transcrita y en verde. El detalle está en `DECISION
 paso 11 se comprobó con la vuelta *data-less* real: sondeo cada 5 s, salto solo al paso 6 y **parada**
 del sondeo. Lo que sigue sin verificarse está en §6 de este documento.
 
+## 0.bis · ❗ ANTES DE RECORRER EL EMBUDO A MANO: los dos interruptores que lo cierran
+
+**Costó una vuelta del owner el 2026-09-02**, que se quedó atascado en «elige hora y cantidad» y lo
+leyó como el modo de MANTENIMIENTO. No lo era. Son dos cosas distintas y las dos son **DATO**, no
+código —se tocan desde el panel o desde la BD de la instalación—:
+
+| Qué | Ajuste | Síntoma exacto | Dónde |
+|---|---|---|---|
+| **Venta online cerrada** (`#325`, lanzamiento sin Redsys real) | `sales.online_enabled = 0` | El cajón abre y llega hasta hora/cantidad, **y ahí se para**: `POST /cart/validate-line` responde **503** (`EnsureOnlineSalesEnabled`). Los CTA de la web pasan a `tel:` | Panel → Ajustes |
+| **Reservas en pausa** | `reservations.paused = 1` | El cajón **sustituye el embudo entero** por el aviso con los canales de contacto | Panel → Mantenimiento |
+
+⚠️⚠️ **La confusión tiene una causa concreta y conviene saberla**: el texto del aviso de pausa dice
+«Estamos en mantenimiento» y **viaja SIEMPRE** en `GET /booking/status`, también con las reservas
+abiertas —lo dice `paused.js`: *«el objeto `notice` viaja siempre, así que su presencia no es la
+señal»*—. O sea que se puede ver la palabra «mantenimiento» en la respuesta **con la pausa apagada**,
+que es justo lo que pasó. La señal es el bit `reservations_paused`.
+
+▶ **Para recorrer el embudo en local** hacen falta las dos abiertas, y además —desde `#350`— la **v1
+de «Condiciones» publicada**, o el paso de pagar no pide nada y falla hacia invisible:
+
+```bash
+docker compose exec -u sail laravel.test php artisan tinker
+# >>> Setting::updateOrCreate(['key'=>'sales.online_enabled'], ['value'=>'1','group'=>'sales']);
+# Y las condiciones, desde el panel: Páginas legales → Condiciones → «Publicar versión».
+```
+
+⚠️ **La v1 se publica desde el PANEL, no a mano**: la acción compone el texto persistido de la página
+con los tokens fiscales resueltos, y publicar es **irreversible**. Publicar un texto de relleno deja
+en la cadena una versión que no se puede retirar.
+
 ## 0. Qué es esto, y qué NO es
 
 Es lo único que separa a `sidebar.engine = spa` de poder desplegarse. **No sustituye a ninguna

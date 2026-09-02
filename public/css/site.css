@@ -1133,8 +1133,13 @@
 
    ⚠️ **El hover NO usa `--action-hover`**: heredarlo pintaría el botón del color de acción del
    cliente, que es exactamente lo que su guía prohíbe. Es el mismo blanco un punto más apagado. */
+/* ⚠️ **Sin `margin-top` propio, y es un arreglo**: llevaba `var(--sp-3)` —TRES píxeles—, que no
+   separa de nada y que además viajaba con el botón a los cuatro sitios donde se pinta. En «Sesiones»
+   eso dejaba el bloque de cuentas vinculadas pegado al botón de arriba (medido: **0 px** de aire al
+   título y **3 px** del título a este botón). *El aire de una pieza lo decide quien la coloca, no
+   ella.* En los dos formularios de auth lo da `.auth__head`; en «Sesiones», `.account__linked`. */
 .auth__google {
-    width: 100%; justify-content: center; margin-top: var(--sp-3);
+    width: 100%; justify-content: center;
     gap: 10px; min-height: var(--tap-min); padding: 10px 12px;
     background: #fff; color: #1f1f1f;
     border: 1px solid #747775; border-radius: var(--r-pill);
@@ -1214,6 +1219,13 @@
 /* RGPD: consentimientos, exportar y zona de borrado */
 .account__subhead { font-family: var(--font-body); font-weight: 700; font-size: 14px; color: var(--fg); margin: 18px 0 8px; }
 .account__muted { color: var(--fg-mute); font-size: 14px; }
+/* **LAS CUENTAS VINCULADAS, DENTRO DEL FORMULARIO DE SESIONES** (`specs/auth-con-google.md` §21.4.5).
+   Es la única sección del área de cuenta que NO puede ser una tarjeta —comparte el campo de
+   contraseña con «cerrar sesión en los demás dispositivos»—, así que la rejilla no la separa y su aire
+   lo declara ella. Los dos números son los que el cajón ya usa: 20 es el cierre de `.form__checks` y
+   12 su separación entre controles. */
+.account__linked { margin-top: var(--sp-20); }
+.account__linked .account__card-title { margin-bottom: var(--sp-12); }
 .account__consents { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 /* ⚠️⚠️ **`flex-wrap: wrap` es la mitad del arreglo de `#346`.** Sin él, la meta y el rótulo compiten
    por el mismo renglón y la fila crece hacia fuera del carril en vez de partirse. Medido: al

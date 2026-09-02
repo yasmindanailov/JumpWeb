@@ -1540,3 +1540,27 @@ botón → «o» → formulario, con las tres distancias medidas y el área tác
 dos pantallas · **`scripts/mutar-google-encima.sh`: 8/8 muerden** (devolverlo abajo, subirlo encima del
 título, quitarle el separador, huerfanar el «o», devolver la privacidad a casilla y las tres formas de
 apagar el enlace legal).
+
+#### 21.4.5 · El aire del bloque de cuentas vinculadas (`DECISIONES #350`)
+
+**Lo vio el owner probando el producto**: *«falta margen entre lo de vincular con Google y la sección
+de arriba»*. Medido en navegador antes de tocar nada, con sesión y sin vínculos: **0 px** entre el
+botón «Cerrar sesión en los demás dispositivos» y el título «Cuentas vinculadas», y **3 px** entre ese
+título y el botón de Google.
+
+⚠️⚠️ **La causa no estaba en «Sesiones»: estaba en el botón.** `.auth__google` llevaba
+`margin-top: var(--sp-3)` —**tres píxeles**, que no separan de nada— y ese margen **viajaba con él a
+los cuatro sitios donde se pinta**. En los dos formularios de auth colaba porque el aire real lo daba
+`.auth__head`; aquí no había nadie que lo diera. *El aire de una pieza lo decide quien la coloca, no
+ella*: el margen se retira y cada sitio declara el suyo.
+
+⚠️ **Y «Sesiones» es la única sección del área de cuenta que NO puede ser una tarjeta**: el bloque de
+cuentas vinculadas vive **dentro del mismo formulario** que cerrar sesión en otros dispositivos,
+porque reutiliza su campo de contraseña (§21.3). Como no es tarjeta, la rejilla no lo separa — así que
+su aire lo declara él, en `.account__linked`. **20 y 12**, que son los dos números que el cajón ya
+usaba (`.form__checks` cierra con 20 y separa sus controles con 12).
+
+**Medido después**: 0 → **20 px** y 3 → **12 px**; y las dos pantallas de auth siguen bien (el botón
+pasa de 21 a 18 px bajo la cabecera, que es el margen de `.auth__head`), remedidas con la sonda de la
+T8·d — **18/18**.
+

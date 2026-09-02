@@ -21241,11 +21241,21 @@ propósito.
 `phone` y `accept_terms` y queda en `required: [name]`. Los dos son `additionalProperties: false`, así
 que mandarlos hoy es un **422 por esquema**.
 
+### Y un tercer punto del ojo del owner, el mismo día: el aire de «Cuentas vinculadas»
+
+*«Falta margen entre lo de vincular con Google y la sección de arriba»* — medido: **0 px** al título y
+**3 px** del título al botón. ⚠️⚠️ **La causa no estaba en «Sesiones», estaba en el botón**:
+`.auth__google` llevaba un `margin-top` de **tres píxeles** que no separaba de nada y que viajaba con
+él a los cuatro sitios donde se pinta; en los formularios de auth colaba porque el aire lo daba
+`.auth__head`. *El aire de una pieza lo decide quien la coloca, no ella.* Retirado, y el bloque —la
+única sección de la cuenta que **no puede ser una tarjeta**, porque comparte el campo de contraseña—
+declara el suyo en `.account__linked`. Queda **20 y 12**, los números que el cajón ya usaba.
+
 ### Verificación
 
-Suite **4.064 · 25.919** · Pint · docs-check · `node --test` (43) · **6/6 y 8/8 mutaciones** en
+Suite **4.064 · 25.923** · Pint · docs-check · `node --test` (43) · **6/6 y 8/8 mutaciones** en
 `scripts/mutar-alta-sin-casillas.sh` y `scripts/mutar-google-encima.sh` · sonda de navegador
-**18/18** con su CONTROL y capturas de las dos pantallas a 420 px.
+**18/18** con su CONTROL y capturas de las tres pantallas a 420 px.
 
 
 ## #400 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
