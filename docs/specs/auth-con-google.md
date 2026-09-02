@@ -1452,6 +1452,21 @@ Dos entradas y solo dos (`git diff`: 2 líneas):
   otro obligatorio, ese caso se pondrá rojo **por su precondición**, que es lo correcto — con tres
   avisos deja de probar lo que dice probar.
 
+##### La pantalla, vista
+
+Comprobada en navegador a 420 px interceptando `GET auth/google/pending` (lo que se mira es el
+PINTADO; el canje ya tiene sus casos de servidor): **correo fijo → nombre editable con «Ana G.» →
+aviso de privacidad con su enlace → casilla del descargo → botón**. Dos campos donde había cuatro,
+**0 px de desborde**, y el copy de `#345` —*«Solo falta esto para crear tu cuenta»*— sigue siendo
+verdad, que era la condición con la que se escribió.
+
+⚠️ **Y una trampa de instrumento pagada aquí mismo**: la primera pasada dijo «no hay casilla del
+descargo» **con el producto sano**. La casilla llega por una SEGUNDA petición (`GET /legal/waiver`) y
+la sonda esperaba solo al formulario. *Esperar a que aparezca el contenedor no es esperar a que
+aparezca lo que se quiere medir* — y el falso negativo era creíble, porque «sin descargo» es un estado
+real del producto. Se espera a la casilla, con tope explícito para que la ausencia real siga siendo
+detectable.
+
 ##### Verificación
 
 Suite **4.057 · 25.866** · `node --test` de `register.js` y `account/google.js` (43) ·
