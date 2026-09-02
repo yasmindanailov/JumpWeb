@@ -158,20 +158,9 @@ final class SocialLogin
             }
 
             // Idempotencia bajo el lock: si otro retorno simultáneo del mismo `sub` ya lo escribió, no
-            // se crea una segunda fila ni se vuelve a avisar por correo. Lo mismo que hace el firmador
-            // del descargo con la firma anterior.
+            // se avisa dos veces por correo. Lo mismo que hace el firmador del descargo con la firma
+            // anterior.
             $alreadyLinked = $existing !== null;
-
-            if (! $alreadyLinked) {
-                UserIdentity::create([
-                    'user_id' => $locked->getKey(),
-                    'provider' => $profile->provider,
-                    'provider_id' => $profile->subject,
-                    'email_at_link' => $profile->email,
-                    'linked_via' => $via,
-                    'linked_at' => now(),
-                ]);
-            }
 
             // La toma de una cuenta sin verificar (P12). Las TRES cosas van juntas o no vale ninguna:
             // promover sin expulsar dejaría dentro a quien tuviera la contraseña; expulsar sin
@@ -185,6 +174,23 @@ final class SocialLogin
                 ])->save();
 
                 $locked->revokeAllAccess(CustomerCard::REASON_REVOKED);
+            }
+
+            // ⚠️⚠️ **El vínculo se escribe DESPUÉS de expulsar, y el orden es la regla**: desde
+            // `RGPD-06`, `revokeAllAccess()` **se lleva también las identidades** —para que un vínculo
+            // plantado por quien te tomó la cuenta no sobreviva a la defensa—, así que crearlo antes
+            // sería borrar la llave que acabamos de dar. Por eso la condición mira también `$promoted`:
+            // en el caso raro de una cuenta ya vinculada Y sin verificar, la expulsión se llevó su fila
+            // y hay que volver a escribirla.
+            if (! $alreadyLinked || $promoted) {
+                UserIdentity::create([
+                    'user_id' => $locked->getKey(),
+                    'provider' => $profile->provider,
+                    'provider_id' => $profile->subject,
+                    'email_at_link' => $profile->email,
+                    'linked_via' => $via,
+                    'linked_at' => now(),
+                ]);
             }
 
             if (! $alreadyLinked) {

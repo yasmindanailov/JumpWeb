@@ -130,6 +130,7 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
         $this->purgeSessions(exceptCurrent: false);
         $this->tokens()->delete();
         $this->revokeCards($cardReason);
+        $this->purgeIdentities();
     }
 
     /**
@@ -152,6 +153,27 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
         if ($count > 0) {
             AuditLogger::log('cards.revoked', $this, ['count' => $count, 'reason' => $reason]);
         }
+    }
+
+    /**
+     * Las IDENTIDADES EXTERNAS caen con `revokeAllAccess()` y **sobreviven** a `revokeOtherAccess()`
+     * (`RGPD-06`, `specs/auth-con-google.md` §11): exactamente el mismo criterio que el carné.
+     *
+     * ⚠️⚠️ **No es que el vínculo sea una credencial** —con la fila no se entra a ninguna parte—: es
+     * que `revokeAllAccess()` es la palanca de «me han entrado», y un vínculo plantado por quien te
+     * tomó la cuenta sería una puerta trasera que **el restablecimiento de contraseña no cerraría**.
+     * Quien se defiende tiene que echar a todo el mundo, no solo a quien tenga la contraseña.
+     *
+     * ⚠️ Un cambio VOLUNTARIO de contraseña no lo toca, por la misma razón que no toca el carné: no
+     * es una defensa, es mantenimiento.
+     *
+     * ▶ **Consecuencia conocida y aceptada**: tras un reset, la siguiente entrada con Google
+     * **vuelve a vincular sola** (la cuenta está verificada) y manda su aviso. Es ruido, no un
+     * bloqueo — y es el precio de que la palanca de emergencia no deje nada abierto.
+     */
+    private function purgeIdentities(): void
+    {
+        $this->identities()->delete();
     }
 
     /**
@@ -251,18 +273,16 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
             $this->consents()->delete();
             $this->roles()->detach();
 
-            // Las IDENTIDADES EXTERNAS (`specs/auth-con-google.md` §11): el `sub` de Google es un
-            // identificador de ESTA persona en un tercero, así que no sobrevive a la supresión.
+            // Las IDENTIDADES EXTERNAS (`specs/auth-con-google.md` §11) las purga `revokeAllAccess()`
+            // al final de esta misma transacción, igual que el carné: aquí no se repiten.
             //
-            // ⚠️⚠️ **Tiene que estar escrito aquí y no puede confiarse al `cascadeOnDelete` de la FK**:
-            // esto no borra la fila de `users` —la FK de los pedidos es RESTRICT—, así que el cascade
-            // NO SE DISPARA NUNCA por esta vía. Fue el hallazgo de la revisión adversarial.
+            // ⚠️⚠️ Lo que hay que saber de ellas es que se **BORRAN**, no se redactan como el resto de
+            // esta purga: una fila redactada dejaría el `sub` ocupado en `UNIQUE(provider, provider_id)`
+            // y **esa persona no podría volver a registrarse con su Google nunca más** — el derecho de
+            // supresión le habría cerrado la puerta de entrada en vez de devolverle sus datos.
             //
-            // ⚠️⚠️ **Y va por BORRADO, no por redacción como el resto de esta purga**: una fila
-            // redactada dejaría el `sub` ocupado en `UNIQUE(provider, provider_id)` y **esa persona no
-            // podría volver a registrarse con su Google nunca más** — el derecho de supresión le
-            // habría cerrado la puerta de entrada en vez de devolverle sus datos.
-            $this->identities()->delete();
+            // ⚠️ Y **no basta con el `cascadeOnDelete` de su FK**: esto no borra la fila de `users`, así
+            // que ese cascade no se dispara nunca por esta vía.
 
             // Fase 6 · menores a cargo (`specs/menores-a-cargo.md` §5, `RGPD-01` ampliada): cada
             // persona a cargo sigue el régimen de su waiver. Con una firma detrás se CONSERVA vinculada
@@ -460,10 +480,9 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
      * Las IDENTIDADES EXTERNAS de esta cuenta (`specs/auth-con-google.md` §6.2): hoy, como mucho una
      * de Google.
      *
-     * ⚠️ **No son credenciales de esta cuenta**, así que no entran en `revokeAllAccess()`: revocar
-     * accesos cierra sesiones, tokens y carné, y el vínculo no abre ninguno por sí solo —para entrar
-     * por él hay que volver a demostrarle a Google quién eres—. Lo que sí lo borra es la supresión
-     * del art. 17, y por eso vive escrito en {@see anonymize()}.
+     * ⚠️ **No son credenciales** —con la fila no se entra a ninguna parte— y aun así **caen en
+     * `revokeAllAccess()`**: ver el porqué en `purgeIdentities()`. Sobreviven a `revokeOtherAccess()`,
+     * que es el mismo trato que recibe el carné (`RGPD-06`).
      *
      * @return HasMany<UserIdentity, $this>
      */

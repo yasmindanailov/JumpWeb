@@ -20573,3 +20573,83 @@ de la landing no se ofrece · la foto propia se pinta · **sin fichero no se pin
 rebasar · Pint ✓ · docs-check ✓ · 8 casos nuevos y 3 mutaciones con control.
 ▶ **Queda tu OJO** y **el fichero es tuyo**: para probarlo en local se instaló `pjp-149.webp` como
 respaldo; elige la foto que quieras y súbela con ese nombre.
+
+## #342 · 2026-09-02 · Entrar y registrarse con Google — la T1: el mecanismo y la raíz de confianza
+
+Primera tanda de `docs/specs/auth-con-google.md`, la que la spec dejó **desbloqueada** con nueve de
+once preguntas cerradas. Encargo del owner: *«0 fricción para el cliente a la hora de registrarse»*.
+
+**Lo que entra**: la tabla `user_identities`, las claves por instalación, el canje con Google, el
+reto de un solo uso, la resolución de identidad con sus tres puertas, el aviso por correo de cada
+vinculación, la purga del vínculo en la supresión y las identidades en el export del art. 20.
+**Lo que NO entra**: la pantalla que completa el alta (T2) y las cuatro acciones que hoy exigen
+contraseña (T3). Sin claves configuradas **las dos rutas responden 404**, así que ninguna instalación
+cambia de conducta hasta que alguien las escriba.
+
+### La decisión que ordena la tanda: dónde vive la confianza
+
+⚠️⚠️ Un `id_token` es un JWT y **cualquiera puede fabricar uno** que afirme el correo que quiera con
+`email_verified: true`. La spec lo señaló como su bloqueante nº 1 —en 494 líneas no decía cómo se
+comprueba que lo que dice Google es verdad— y el diseño lo cierra por el **canal**, no por el token:
+
+ 1. *Authorization Code* con **canje servidor-a-servidor** autenticado con nuestro `client_secret`.
+    El navegador solo trae un `code` de un solo uso, que por sí mismo no afirma nada.
+ 2. **Ninguna rama lee un `id_token` de la petición**, y hay caso que lo demuestra: se manda uno
+    fabricado en la URL de vuelta junto a un canje legítimo, y se entra como dice el CANJE.
+ 3. Aun sobre ese canal se comprueban **emisor, destinatario, caducidad y `nonce`** — lo que hace que
+    un token capturado de otra aplicación o de otra petición no sirva aquí.
+
+▶ Y queda escrito en el código que si algún día se acepta un token del cliente (One Tap, app nativa),
+**ese camino necesita además verificar la firma** contra las claves de Google. Es la mitad que nadie
+debe añadir sola.
+
+### Las dos guardas de la vinculación automática, que son del owner
+
+`[DECIDIDO owner]` Q2: con la cuenta destino **sin verificar** no se hereda, **se toma** — se promueve
+a verificada, se llama a `revokeAllAccess()` y **se invalida la contraseña**, las tres juntas o
+ninguna. Es el bloqueante P12: `SelfSignup` crea cuentas sin verificar y el área de cliente no exige
+verificación, así que un tercero pudo registrarse **antes** con el correo de la víctima. Rechazar no
+era salida: `users.email` es UNIQUE y **6 de 48 cuentas de producción están sin verificar**.
+▶ Contrapeso obligatorio (Q3): **aviso por correo en CADA vinculación**, con dos textos —el normal y
+el de la cuenta tomada, que tiene que explicar por qué su contraseña dejó de servir—.
+▶ `[DECIDIDO owner]` Q5, confirmado en esta sesión contra la lista de la T1, que decía lo contrario:
+**el equipo SÍ puede vincular**. Con la consecuencia escrita: `AdminPanelProvider` no declara
+`authGuard`, así que esa sesión **es** la del panel.
+
+### Una invariante que la tabla añade, y que no es la obvia
+
+**El vínculo se borra en `anonymize()`, escrito a mano y por BORRADO.** El `cascadeOnDelete` de la FK
+**no se dispara nunca** por esa vía —la supresión no borra la fila de `users`, porque la FK de los
+pedidos es RESTRICT—, y redactar en vez de borrar dejaría el `sub` ocupado en su `UNIQUE`: **esa
+persona no podría volver a registrarse con su Google nunca más**. El derecho de supresión le habría
+cerrado la puerta de entrada. Hay caso que reclama el `sub` con otra cuenta después.
+
+### Lo que enseñó la MUTACIÓN (19 de 20 muerden, y las tres que no son el hallazgo)
+
+ 1. ⚠️⚠️ **El caso del `state` reutilizado NO probaba nada**: cerraba la sesión entre los dos
+    retornos, así que el reto desaparecía por el `logout` y no por consumirse. Quitar el `forget()`
+    lo dejaba verde. Los dos retornos van ahora seguidos, sobre la misma sesión.
+ 2. ⚠️⚠️ **Las dos caducidades se medían con `time()`, que es invisible para `travel()` y para la
+    auditoría del reloj** — o sea que no había forma de escribir el caso, y por eso no existía.
+    Pasan a `now()`, y con ellas entran sus dos casos. *Una guarda de caducidad que no se puede hacer
+    caducar en un test no está probada.*
+ 3. ▶ **`regenerate()` no muerde, y se conserva**: `SessionGuard::login()` ya llama a `migrate(true)`,
+    así que la propiedad está garantizada dos veces y el caso no distingue cuál la sostiene. Se deja
+    dicho en el propio test para que nadie lo lea como una guarda ciega.
+
+⚠️ Y **el arnés restauró con `git checkout` y se llevó cambios sin commitear** — la regla de `#181`,
+que dice «commitea antes de mutar», vale también para lo que se escribe DESPUÉS de empezar a mutar.
+
+### Dos trampas más, ya conocidas por el repo
+
+ · **Pint convirtió tres `{@see}` en `use`** (la de `#320`): un modelo acabó importando un servicio
+por una cita. Se reescriben en prosa **y se quita el import**, que es lo que la lección decía.
+ · **El export del art. 20 enumera claves a mano y no hay censo que obligue**, así que un dato nuevo
+se queda fuera en silencio. Lo que lo caza es el CONTRATO (`additionalProperties: false` + todo en
+`required`), y por eso el esquema `ExportedIdentity` y su clave entran en el mismo commit, con el
+caso validando la respuesta contra él.
+
+**Verificación**: 33 casos nuevos (31 del mecanismo + 2 del export, éstos contra el contrato) ·
+**20 mutaciones con control, 19 muerden** y la que no está explicada · suite completa verde · Pint ✓.
+▶ **Queda**: la T2 (la pantalla, en el cajón por `[DECIDIDO owner]`), la T3 y tu OJO en navegador —
+que necesita el cliente de OAuth de DESARROLLO, con `http://localhost:8081/auth/google/callback`.

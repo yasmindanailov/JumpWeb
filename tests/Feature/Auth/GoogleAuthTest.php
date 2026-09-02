@@ -613,6 +613,62 @@ class GoogleAuthTest extends TestCase
         $this->assertDatabaseHas('user_identities', ['user_id' => $otra->id, 'provider_id' => self::SUB]);
     }
 
+    /**
+     * **`RGPD-06`, el criterio del carné aplicado al vínculo** (§11): cae con la palanca de «me han
+     * entrado» y sobrevive a un cambio voluntario de contraseña.
+     *
+     * ⚠️ Es un PAR y se comprueba como par: una guarda que solo mirase la mitad que borra dejaría
+     * pasar el día en que alguien «terminara el trabajo» y un cambio de contraseña rutinario
+     * empezara a desvincular la cuenta de todo el mundo.
+     */
+    public function test_the_link_falls_with_a_full_revocation_and_survives_a_partial_one(): void
+    {
+        $this->configureKeys();
+
+        $recovering = $this->linkedUser();
+        $recovering->revokeAllAccess();
+        $this->assertSame(
+            0, UserIdentity::query()->count(),
+            'Un vínculo plantado por quien te tomó la cuenta no puede sobrevivir al reset.'
+        );
+
+        $routine = User::factory()->create(['email' => 'rutina@example.com', 'email_verified_at' => now()]);
+        UserIdentity::create([
+            'user_id' => $routine->id,
+            'provider' => UserIdentity::PROVIDER_GOOGLE,
+            'provider_id' => 'otro-sub',
+            'email_at_link' => 'rutina@example.com',
+            'linked_via' => UserIdentity::VIA_LOGIN,
+            'linked_at' => now(),
+        ]);
+
+        $routine->revokeOtherAccess();
+
+        $this->assertDatabaseHas('user_identities', ['user_id' => $routine->id]);
+    }
+
+    /**
+     * Y el orden dentro de la toma de una cuenta: expulsar **antes** de escribir el vínculo.
+     *
+     * ⚠️⚠️ Al revés —que es como estaba escrito primero— la expulsión se lleva por delante la llave
+     * que se acaba de dar, y la persona entra a una cuenta que no queda vinculada. Nada falla: solo
+     * se le vuelve a pedir Google la próxima vez, con otro correo de aviso.
+     */
+    public function test_taking_over_an_account_leaves_the_link_written(): void
+    {
+        $this->configureKeys();
+        Notification::fake();
+
+        User::factory()->create(['email' => self::EMAIL, 'email_verified_at' => null]);
+
+        $this->signInWithGoogle();
+
+        $this->assertDatabaseHas('user_identities', [
+            'provider' => UserIdentity::PROVIDER_GOOGLE,
+            'provider_id' => self::SUB,
+        ]);
+    }
+
     // ── Utillaje ──────────────────────────────────────────────────────────────────────────────
 
     private function configureKeys(): void
