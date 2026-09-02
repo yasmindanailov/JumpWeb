@@ -6,6 +6,8 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Identity\Models\Dependent;
+use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\GuardianAuthorizationSigner;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
@@ -131,6 +133,30 @@ class OrderGuestMinorsTest extends ApiTestCase
         $response->assertJsonPath('data.reservations.0.link', null);
         // CONTROL: los justificantes ya firmados SIGUEN saliendo — la visita pasada no los borra.
         $response->assertJsonCount(1, 'data.reservations.0.minors');
+    }
+
+    public function test_without_free_places_the_link_is_null_too(): void
+    {
+        // ❗ El caso del owner, encontrado con la sonda: compró UNA entrada, se la asignó a su hija y
+        // la pantalla seguía ofreciendo el enlace. Repartirlo era mandar a un padre a una pantalla
+        // que le iba a decir que no — la misma razón por la que se apaga con la visita pasada.
+        [$responsible, $order] = $this->scenario(withAuthorization: false);
+        $item = $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail();
+        $item->update(['quantity' => 1]);
+        DependentAssignment::create([
+            'dependent_id' => Dependent::create([
+                'user_id' => $responsible->id, 'name' => 'Hija', 'surname' => 'Del Titular',
+                'born_on' => now()->subYears(8)->toDateString(), 'relationship' => 'father',
+            ])->id,
+            'order_item_id' => $item->id,
+        ]);
+        Sanctum::actingAs($responsible);
+
+        $response = $this->getJson(self::ROOT."/orders/{$order->code}/guest-minors");
+
+        $response->assertValidResponse(200);
+        $response->assertJsonPath('data.reservations.0.places', 0);
+        $response->assertJsonPath('data.reservations.0.link', null);
     }
 
     public function test_an_order_of_someone_else_is_a_404_not_a_403(): void

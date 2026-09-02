@@ -1078,7 +1078,11 @@ return [
              * firmas con valor probatorio— así que un pedido puede acabar con más papeles que plazas.
              * Antes no lo decía nadie y la hoja de sala imprimía los cincuenta tan tranquila.
              */
-            'capacity' => '{1}:count plaza en el pedido|[2,*]:count plazas en el pedido',
+            'capacity' => '{1}:count plaza en la reserva|[2,*]:count plazas en la reserva',
+            // ⚠️ Esta clave se USÓ antes de existir y **ningún test lo vio**: solo se pinta cuando la
+            // reserva tiene menores a cargo asignados, y ninguna guarda montaba ese caso. Lo cazó el
+            // owner leyendo `admin.orders.guest_minors.assigned` en pantalla.
+            'assigned' => '{1}:count de ellas para un menor a tu cargo|[2,*]:count de ellas para menores a tu cargo',
             'empty' => 'Todavía no ha firmado ningún padre o tutor. Cópiale el enlace al cliente o envíaselo para que lo reparta.',
             'overflow' => 'Ojo: hay :count justificantes firmados y el pedido tiene :capacity plazas. No se borra ninguno (son firmas), pero conviene revisarlo antes de la visita.',
             'send_link' => 'Enviárselo al cliente',

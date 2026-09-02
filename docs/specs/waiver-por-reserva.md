@@ -1267,3 +1267,43 @@ sutil, es demasiado centrada en el proceso, hazla tal vez con un desplegable»*.
    admite sin arrastrar el locale hasta el paso 3.
 6. ⚠️ El manifiesto congelado del árbol del cajón **se regenera a propósito** (`MANIFEST_REFRESH=1`) y
    se dice en el commit: el `<details>` es un cambio deliberado del contrato visual.
+
+### 13.7 Dos defectos MÁS que el owner encontró mirando (`#344`)
+
+Los dos son la misma clase de fallo: **algo que sale verde y no se ve**.
+
+**(a) `admin.orders.guest_minors.assigned` se pintó EN CRUDO.** La clave se usó y nunca se declaró.
+Laravel no falla ante una clave ausente —devuelve la clave—, y **ningún test lo vio** porque esa línea
+solo se pinta cuando la reserva tiene menores a cargo asignados y ninguna guarda montaba ese caso.
+
+▶ Guarda nueva, y **general a propósito**: `GuardianLinkDeliveryTest::test_no_untranslated_key_reaches_the_order_page`
+monta ese caso y afirma que **el identificador de ningún grupo de idioma** (`admin.`, `guardian.`,
+`tickets.`) aparece en el HTML de la ficha. Con CONTROL de que la sección se pinta de verdad —sin él,
+una página que no la incluyera pasaría en blanco, el escalón de `#161`— y **vista morder** con la
+clave retirada.
+
+**(b) EL ENLACE NUNCA LLEGÓ A PINTARSE, Y NO ERA DONDE ESTABA.** El owner lo dijo dos veces —*«no me
+sale nada del enlace»*— y las dos se le achacó a otra cosa (la visita pasada en `#342`, el sitio en
+`#343`). **Había una tercera causa debajo**:
+
+```
+api.js  →  result(true, status, payload)      // payload = {data: {...}}  ← el SOBRE ENTERO
+store   →  guestMinors[code] = response.data  // = {data: {...}}
+panel   →  guestMinors[code].reservations     // undefined
+```
+
+**La petición salía con 200 y la pantalla no pintaba nada.** Medido en navegador: `200
+/api/v1/orders/PRUEBA-J2/guest-minors` en la pestaña de red y `paneles: 0` en el DOM.
+
+▶ *Un 200 en la pestaña de red no dice que el dato haya llegado a donde se lee.* El resto del store
+desenvuelve al COMPONER (`cardRows(payload)` hace `payload?.data ?? []`); este ámbito no tiene
+compositor, así que **desenvuelve al guardar**. Tres casos de `node --test` en
+`stores/orders.test.js`, incluido el que fija que lo guardado es el CONTENIDO y no el sobre.
+
+⚠️ **Y de la sonda salió una tercera condición para el enlace**: con **cero plazas libres** tampoco se
+ofrece. Repartirlo sería mandar a un padre a una pantalla que le dirá que no — la misma razón por la
+que se apaga con la visita pasada. El caso real es el del owner: una entrada asignada a su propia hija.
+
+⚠️ **Ruido ajeno visto de paso y NO tocado**: bajo cinco peticiones simultáneas al entrar, el driver de
+caché en BD lanza `1213 Deadlock` sobre la tabla `cache` y Laravel reintenta. Es preexistente y no es
+de esta feature; queda anotado por si alguien lo persigue.

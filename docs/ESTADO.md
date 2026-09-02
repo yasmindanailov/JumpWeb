@@ -285,7 +285,18 @@ entrada y asignándosela a su hija.
 `guardian_authorization = none`. *Antes de arreglar un síntoma, comprobar que la configuración que se
 le supone existe de verdad.*
 ▶ **CINCO ESCENARIOS SEMBRADOS en su cuenta** (`PRUEBA-J1`…`J5`, guion en `VERIFICACION-E2E-CAJON.md`
-§5.septies bloque 8) y **queda su OJO**. También sigue pendiente la casilla en el paso de CESTA. ▶ **La T3 pone las SEIS superficies**:
+§5.septies bloque 8) y **queda su OJO**. También sigue pendiente la casilla en el paso de CESTA.
+❗❗❗ **`#344` — Y MIRÁNDOLO ENCONTRÓ DOS MÁS, los dos MUDOS**: una clave de idioma pintada en crudo
+(`admin.orders.guest_minors.assigned`, que se usó sin declararse y **solo se pinta con menores a cargo
+asignados**, un caso que ninguna guarda montaba) y, la gorda, **que el enlace NUNCA llegó a pintarse**:
+`api.js` devuelve el SOBRE (`{data:{…}}`) y el store lo guardaba tal cual, así que el panel leía
+`.reservations` sobre un objeto que solo tiene `data`. **Medido: `200` en la pestaña de red y
+`paneles: 0` en el DOM.**
+▶ *Un 200 no dice que el dato haya llegado a donde se lee.* Las DOS veces que el owner dijo «no me
+sale nada» diagnostiqué una causa real que **no era la única**; la que faltaba solo se ve abriendo el
+navegador y contando nodos. Guardas nuevas: tres de `node --test` sobre el store y **una general** —
+que ningún identificador de grupo de idioma aparezca en el HTML de la ficha—, **vista morder**.
+⚠️ De la sonda salió además la tercera condición del enlace: **sin plazas libres tampoco se ofrece**. ▶ **La T3 pone las SEIS superficies**:
 puerta, hoja de sala, ficha del pedido, PDF, correo de copia con el PDF adjunto, y la cuenta del
 responsable en el cajón. ▶ **LA T4 YA TIENE GUION ESCRITO Y EL ESCENARIO SEMBRADO**:
 `VERIFICACION-E2E-CAJON.md` **§5.septies** — seis bloques con sus casillas, los dos pedidos de prueba

@@ -9,6 +9,8 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\ManualOrderFulfiller;
+use App\Domain\Identity\Models\Dependent;
+use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -251,7 +253,61 @@ class GuardianLinkDeliveryTest extends TestCase
         Notification::assertSentTo($order->user, GuardianAuthorizationRequest::class);
     }
 
-    // ─── 4 · Más justificantes que plazas (§12.6) ─────────────────────────────
+    // ─── 4 · Ninguna clave sin traducir llega a la pantalla ───────────────────
+
+    /**
+     * ❗❗ **Lo cazó el owner leyendo `admin.orders.guest_minors.assigned` EN PANTALLA** (`#344`).
+     *
+     * La clave se usó y nunca se declaró, y **ningún test lo vio**: solo se pinta cuando la reserva
+     * tiene menores a cargo asignados, y ninguna guarda montaba ese caso. Laravel no falla ante una
+     * clave ausente — devuelve la clave —, así que el defecto es **mudo salvo que alguien mire**.
+     *
+     * ▶ Esta guarda es general a propósito: no comprueba una clave concreta, sino que **el
+     * identificador de ningún grupo de idioma aparezca en el HTML**. Sirve para la siguiente.
+     */
+    public function test_no_untranslated_key_reaches_the_order_page(): void
+    {
+        $order = $this->sellAtCounter($this->product(TicketType::GUARDIAN_REQUIRED), said: false);
+        $item = $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail();
+
+        // El caso que nadie montaba: una reserva con un menor a cargo asignado Y un justificante.
+        // Es el único que pinta la línea de «de ellas para un menor a tu cargo».
+        $holder = $order->user;
+        DependentAssignment::create([
+            'dependent_id' => Dependent::create([
+                'user_id' => $holder->id, 'name' => 'Hija', 'surname' => 'Del Titular',
+                'born_on' => now()->subYears(8)->toDateString(), 'relationship' => 'father',
+            ])->id,
+            'order_item_id' => $item->id,
+        ]);
+        GuardianAuthorization::create([
+            'order_item_id' => $item->id,
+            'minor_name' => 'Nora', 'minor_surname' => 'Invitada Uno',
+            'minor_key' => GuardianAuthorization::keyFor('Nora', 'Invitada Uno'),
+            'minor_born_on' => '2016-04-02',
+            'guardian_name' => 'Elena', 'guardian_surname' => 'Familia Invitada',
+            'guardian_relationship' => 'mother',
+        ]);
+
+        $html = Livewire::actingAs($this->admin())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->html();
+
+        // CONTROL: la sección se está pintando de verdad. Sin él, una página que no la incluyera
+        // pasaría este test en blanco — que es el escalón de `#161`.
+        $this->assertStringContainsString(__('admin.orders.guest_minors.section'), $html);
+        $this->assertStringContainsString('Nora Invitada Uno', $html);
+
+        // Y ninguna clave en crudo. `admin.` y `guardian.` son los dos grupos que esta sección usa.
+        foreach (['admin.orders.', 'guardian.relationships.', 'tickets.'] as $prefijo) {
+            $this->assertStringNotContainsString(
+                $prefijo, $html,
+                "la ficha del pedido enseña «{$prefijo}…» en crudo: hay una clave de idioma sin declarar",
+            );
+        }
+    }
+
+    // ─── 5 · Más justificantes que plazas (§12.6) ─────────────────────────────
 
     public function test_the_panel_warns_when_there_are_more_authorizations_than_places(): void
     {

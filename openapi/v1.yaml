@@ -4080,8 +4080,9 @@ components:
                     format: uri
                     description: |
                       Enlace firmado de ESTA reserva, para repartir a los padres. `null` si el pedido
-                      no está pagado o la visita ya pasó. ⚠️ Es una credencial portadora: quien lo
-                      tenga puede firmar.
+                      no está pagado, si la visita ya pasó **o si no quedan plazas libres**: en los
+                      tres casos repartirlo sería mandar a un padre a una pantalla que le dirá que no.
+                      ⚠️ Es una credencial portadora: quien lo tenga puede firmar.
 
     OrderEventData:
       type: object

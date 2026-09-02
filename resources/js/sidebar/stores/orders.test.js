@@ -396,3 +396,59 @@ describe('«Mis pedidos»', () => {
         assert.equal(api.llamadas[0].url, '/me/orders?per_page=5&containing=R-A%20B%2FC');
     });
 });
+
+/**
+ * **Los JUSTIFICANTES de menores invitados** (`specs/waiver-por-reserva.md` §13; `#344`).
+ *
+ * ❗❗ **El defecto que motiva estos casos salía con 200 y no pintaba NADA.** `api.js` devuelve el
+ * CUERPO entero —`{data: {...}}`— y este store guardaba eso tal cual, así que el componente leía
+ * `guestMinors[code].reservations` sobre un objeto que solo tiene `data`. La petición se veía en la
+ * pestaña de red, verde, y la pantalla salía vacía. El owner lo dijo dos veces.
+ *
+ * ▶ *Un 200 no dice que el dato haya llegado a donde se lee.* El resto del store desenvuelve al
+ * COMPONER; aquí no hay compositor, así que se desenvuelve al guardar — y eso es lo que se fija.
+ */
+describe('los justificantes de menores invitados', () => {
+    beforeEach(() => setActivePinia(createPinia()));
+
+    const SOBRE = {
+        ok: true,
+        status: 200,
+        data: { data: { reservations: [{ reservation_id: 7, product_name: 'Excursión', date: '2026-09-09', minors: [], places: 3, link: 'https://x/autorizacion/7' }] } },
+    };
+
+    test('se guarda el CONTENIDO del sobre, no el sobre', async () => {
+        const store = useOrdersStore();
+        const api = fakeApi({ '/orders/R-1/guest-minors': SOBRE });
+
+        await store.ensureGuestMinors('R-1', { api });
+
+        // Lo que el componente lee. Con el sobre sin abrir esto era `undefined` y el `v-for` no
+        // pintaba ni una fila — en silencio.
+        assert.equal(store.guestMinors['R-1'].reservations.length, 1);
+        assert.equal(store.guestMinors['R-1'].reservations[0].reservation_id, 7);
+        assert.equal(store.guestMinors['R-1'].reservations[0].places, 3);
+    });
+
+    test('no repite la petición del mismo pedido', async () => {
+        // Dos tarjetas del MISMO pedido en «Mis reservas» piden a la vez; la segunda no debe llamar.
+        const store = useOrdersStore();
+        const api = fakeApi({ '/orders/R-1/guest-minors': SOBRE });
+
+        await store.ensureGuestMinors('R-1', { api });
+        await store.ensureGuestMinors('R-1', { api });
+
+        assert.equal(api.llamadas.length, 1);
+    });
+
+    test('un fallo deja una forma LEGIBLE, no un hueco', async () => {
+        // ⚠️ Sin esto, un 500 dejaba la clave sin poner y el componente hacía `?.reservations` sobre
+        // `undefined` — que funciona, pero deja la puerta abierta a que el siguiente lea sin `?.`.
+        const store = useOrdersStore();
+        const api = fakeApi({});
+
+        await store.ensureGuestMinors('R-9', { api });
+
+        assert.equal(store.guestMinors['R-9'], undefined, 'un fallo no inventa datos');
+    });
+});

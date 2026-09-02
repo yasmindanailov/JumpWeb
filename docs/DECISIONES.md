@@ -21026,3 +21026,62 @@ Suite completa verde. Escenarios sembrados en la cuenta del owner (`PRUEBA-J1`�
 excursión obligatoria sin firmas · plazas libres con menor a cargo y firma · **la entrada única ya
 asignada** · **dos reservas en días distintos** · **más justificantes que plazas**. Guion en
 `VERIFICACION-E2E-CAJON.md` §5.septies. Spec: `docs/specs/waiver-por-reserva.md` §13.
+
+---
+
+## #344 · 2026-09-02 · Un 200 en la pestaña de red no dice que el dato haya llegado a donde se lee
+
+**Dos defectos que el owner encontró MIRANDO**, con la suite verde las dos veces. Son la misma clase
+de fallo: algo que no falla y no se ve.
+
+### (a) Una clave de idioma pintada EN CRUDO
+
+`admin.orders.guest_minors.assigned` se usó y **nunca se declaró**. Laravel no falla ante una clave
+ausente —devuelve la clave—, y ningún test lo vio porque esa línea solo se pinta cuando la reserva
+tiene menores a cargo asignados y **ninguna guarda montaba ese caso**.
+
+▶ Guarda nueva y **general a propósito**: la ficha del pedido se renderiza con ese caso montado y se
+afirma que **el identificador de ningún grupo de idioma** (`admin.`, `guardian.`, `tickets.`) aparece
+en el HTML. Con CONTROL de que la sección se pinta —sin él, una página que no la incluyera pasaría en
+blanco, el escalón de `#161`— y **vista morder** retirando la clave.
+
+### (b) El enlace NUNCA llegó a pintarse, y no era donde estaba
+
+El owner lo dijo **dos veces** —*«no me sale nada del enlace»*— y las dos se le achacó a otra cosa: la
+visita pasada (`#342`) y el sitio (`#343`). **Había una tercera causa debajo, y era la de verdad**:
+
+```
+api.js  →  result(true, status, payload)      // payload = {data: {...}} ← el SOBRE ENTERO
+store   →  guestMinors[code] = response.data  // = {data: {...}}
+panel   →  guestMinors[code].reservations     // undefined
+```
+
+Medido en navegador: **`200 /api/v1/orders/PRUEBA-J2/guest-minors` en la pestaña de red y `paneles: 0`
+en el DOM**. La petición salía, el servidor respondía bien, y la pantalla no pintaba nada.
+
+▶ *Un 200 no dice que el dato haya llegado a donde se lee.* El resto del store desenvuelve al
+COMPONER (`cardRows(payload)` hace `payload?.data ?? []`); este ámbito no tiene compositor, así que
+**desenvuelve al guardar**. Tres casos de `node --test`, incluido el que fija que lo guardado es el
+CONTENIDO y no el sobre.
+
+⚠️ **Y de la sonda salió una tercera condición para el enlace**: con **cero plazas libres** tampoco se
+ofrece. Repartirlo sería mandar a un padre a una pantalla que le dirá que no — la misma razón por la
+que se apaga con la visita pasada. El caso real es el suyo: una entrada asignada a su propia hija.
+
+### La lección de método
+
+**Las dos veces que el owner dijo «no me sale nada» yo diagnostiqué una causa REAL que no era la
+única.** La primera —la visita pasada— era cierta; la segunda —el sitio— también. Ninguna de las dos
+era suficiente, y la que faltaba solo se ve **abriendo el navegador y contando nodos en el DOM**, no
+leyendo el código ni mirando el código de estado. *Cuando alguien repite el mismo síntoma después de
+un arreglo que era correcto, lo que falta no es otro arreglo: es otro instrumento.*
+
+⚠️ **Ruido ajeno visto de paso y NO tocado**: bajo cinco peticiones simultáneas al entrar, el driver
+de caché en BD lanza `1213 Deadlock` sobre la tabla `cache` y Laravel reintenta. Preexistente y ajeno
+a esta feature; queda anotado.
+
+⚠️ **Y una trampa propia**: la suite salió con UN fallo (`ClientThemePackageTest`) que **pasaba
+aislado**. La causa era mía — reconstruí los assets con la suite en vuelo, y leyó el manifiesto a
+medio escribir. *Un rojo que no reproduce aislado es sospechoso del instrumento antes que del código.*
+
+Suite **3.940 / 25.267** verde en pasada limpia. Spec §13.7.

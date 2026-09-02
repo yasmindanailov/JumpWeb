@@ -212,13 +212,26 @@ export const useOrdersStore = defineStore('orders', {
          *
          * ⚠️ Un fallo NO se anuncia: es un despliegue que el cliente ha pedido, no el contenido de la
          * pantalla. Que no se pueda leer este bloque no puede teñir de error la lista de pedidos.
+         *
+         * ⚠️⚠️ **`response.data` es el SOBRE, no su contenido, y ahí estuvo el defecto REAL** (`#344`):
+         * `api.js` devuelve el cuerpo entero —`{data: {...}}`— y este store guardaba eso tal cual,
+         * así que el componente leía `guestMinors[code].reservations` sobre un objeto que solo tiene
+         * `data`. **Resultado: la petición salía con 200 y la pantalla no pintaba NADA**, en silencio
+         * y durante dos tandas. El owner lo dijo dos veces —*«no me sale nada del enlace»*— y las dos
+         * veces se le achacó a otra cosa.
+         *
+         * ▶ *Un 200 en la pestaña de red no dice que el dato haya llegado a donde se lee.* El resto
+         * del store desenvuelve al COMPONER (`cardRows(payload)` hace `payload?.data ?? []`); aquí no
+         * hay compositor, así que se desenvuelve al guardar y el componente recibe lo que espera.
          */
         async ensureGuestMinors(code, { api = httpClient } = {}) {
             if (! code || this.guestMinors[code]) return;
 
             const response = await api.get('/orders/' + encodeURIComponent(code) + '/guest-minors');
 
-            if (response.ok) this.guestMinors = { ...this.guestMinors, [code]: response.data };
+            if (response.ok) {
+                this.guestMinors = { ...this.guestMinors, [code]: response.data?.data ?? { reservations: [] } };
+            }
         },
 
         async load(scope, page = 1, { api = httpClient } = {}) {

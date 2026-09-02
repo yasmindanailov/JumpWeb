@@ -88,9 +88,11 @@ class OrderGuestMinorsController extends Controller
                         'date' => $r->date,
                         'minors' => $roster->forResponsible($r->reservationId),
                         'places' => $places->freeIn($r),
-                        // El enlace SOLO mientras se pueda usar: pasada la visita o con el pedido sin
-                        // pagar, repartirlo sería mandar a un padre a una pantalla que le dirá que no.
-                        'link' => $r->isPaid && ! $r->visitFinished
+                        // El enlace SOLO mientras se pueda usar. Tres condiciones, y la tercera la
+                        // destapó la sonda del owner: con el pedido sin pagar, con la visita pasada
+                        // **o sin plazas libres**, repartirlo sería mandar a un padre a una pantalla
+                        // que le dirá que no. El caso real: una entrada asignada a su propia hija.
+                        'link' => $r->isPaid && ! $r->visitFinished && $places->freeIn($r) > 0
                             ? OrderItem::query()->whereKey($r->reservationId)->first()?->guardianAuthorizationSignedUrl()
                             : null,
                     ],
