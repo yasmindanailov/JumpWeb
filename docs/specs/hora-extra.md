@@ -1,6 +1,9 @@
 # [SPEC] La HORA EXTRA — un complemento que OCUPA
 
-> Estado: ⬜ **BORRADOR — pendiente del ✅ del owner (§7).**
+> Estado: ⬜ **BORRADOR — REVISADO DE FORMA ADVERSARIAL (35 hallazgos → 3 defectos + 2 bloqueos), y
+> pendiente del ✅ del owner (§7).**
+> ❗ **EMPIEZA POR §4.10**, que dice qué cambió la revisión, y por **§4.9**, que es un bloqueo de
+> configuración que ninguna lente buscaba: **hoy el interruptor no se puede encender.**
 > Carril: producto/reservas. Autor: agente, 2026-09-02.
 > ⚠️ **Toca AFORO.** Nada de esto se construye antes del ✅ (`CONVENCIONES §5`).
 
@@ -93,8 +96,12 @@ salen dos cosas gratis:
 - **El precio es por entrada** (`unit_price × quantity`), que es lo que el owner quiere, **sin
   inventar un segundo eje**. La pregunta «¿la hora extra escala con el grupo?» desaparece: escala
   porque la cantidad *son* las personas.
-- **El tope natural es la cantidad de la línea padre**: no se pueden quedar 5 de 4 entradas. El
-  `max_qty` del pivote sigue valiendo como techo comercial, y este otro es el **físico**.
+- ⚠️⚠️ **El tope por la cantidad del padre NO viene gratis, y decirlo fue un error de esta spec**
+  (revisión adversarial, §4.9·B). `AddonResolver::effectiveQuantity()` **solo mira la cantidad de la
+  línea en la rama `per_guest`**; en `fixed` los únicos techos son `max_qty` (nullable = **sin
+  límite**, y las 28 filas reales de `product_addons` lo tienen a `null`) y las reglas de incluido.
+  Medido: pedir 40 horas extra sobre una línea de 1 devuelve **40**. ▶ Pasa a ser trabajo explícito
+  de §4.4·5.
 
 ▶ **¿Y dos horas para una persona?** Otro complemento dado de alta («2 horas extra»,
 `duration_min = 120` y el interruptor puesto). Es data-driven y es el owner quien decide cuáles ofrece.
@@ -122,6 +129,25 @@ producto con duración. Es la pieza que hace este diseño barato.
    cantidad del padre por debajo de la hija tiene que rechazarse o recortarla (`OrderItemEditor`).
 4. **Las superficies.** Hoja de sala, puerta y calendario tienen que decir **cuántos se quedan y hasta
    cuándo**: un operador que lea «4 entradas» y tenga 1 niño a las 12:15 no sabrá qué hacer.
+5. ❗❗ **El TOPE por la cantidad del padre, que §4.2 daba por gratis y no existe.** Se acota **en
+   servidor** dentro de `AddonResolver::effectiveQuantity()`, que es la fuente ÚNICA que comparten el
+   presupuesto (`CartPricer`) y el cobro (`OrderCreator`). Con eso, el borde 5 de §4.6 deja de ser una
+   regla suelta del editor y pasa a ser **la otra mitad de la misma regla**.
+   ⚠️ Y `per_guest` e `is_mandatory` se **prohíben** para un complemento que ocupa: el primero le
+   impone la hora extra a todo el grupo (justo lo contrario del encargo) y el segundo la haría
+   obligatoria, convirtiendo «no se ofrece la hora extra» en «no se puede vender el padre a esa hora»
+   — `AFORO-02` por otra puerta.
+6. ❗❗❗ **El EDITOR del panel es un punto de NACIMIENTO, no solo de mutación.** `OrderItemEditor::edit()`
+   compone la fila hija **él mismo, en línea**, sin pasar por `AddonResolver`, y escribe
+   `slot_id => null` y `seats => 0` como **literales** bajo el comentario «complementos (NEUTROS al
+   aforo)». Un operador que añada «1 hora extra» desde «Gestionar → Complementos» crearía una
+   ocupación que **el aforo no cuenta**, sin error y sin franja que imprimir.
+   ⚠️ **Y el gemelo silencioso**: subir una hija de 1 a 3 escribe solo `quantity` y **deja `seats`
+   quieto** → tres personas ocupando una plaza. *No hace falta concurrencia para romperlo, así que
+   tampoco lo cazaría el verificador de §6·1.*
+   ▶ La composición de la hija (franja siguiente + `seats`) vive en **UN sitio** que compartan
+   `AddonResolver::resolve()` y `OrderItemEditor::edit()`, con la comprobación de aforo dentro del
+   `withZoneDayLock()` que el editor **ya toma**.
 
 ### 4.5 · ❗❗ El riesgo de DISEÑO, que no es fontanería
 
@@ -134,7 +160,7 @@ la oferta puede recalcularse ahí sin reordenar el embudo.
 ⚠️ **La decisión del dominio manda igual**: la oferta es presentación; `OrderCreator` re-comprueba y
 lockea. Recalcular evita el rechazo, no lo sustituye.
 
-### 4.6 · ❗❗ LOS SEIS BORDES, salidos de someter este diseño a presión
+### 4.6 · ❗❗ LOS NUEVE BORDES, salidos de someter este diseño a presión
 
 No son «casos raros»: son los sitios por donde una feature de aforo se rompe **sin fallar**.
 
@@ -157,11 +183,34 @@ No son «casos raros»: son los sitios por donde una feature de aforo se rompe *
 5. **Bajar la cantidad del padre por debajo de la hija.** 4 entradas con 3 horas extra → se bajan a 2:
    quedan 3 personas quedándose de 2 que hay. Se **rechaza** con su frase, o se recorta la hija; lo que
    no puede es aceptarse en silencio.
-6. **La cesta cuenta contra sí misma.** `OrderCreator::otherOccupants()` construye los ocupantes
-   provisionales de las OTRAS líneas del carrito: las horas extra de esas líneas tienen que entrar
-   ahí, o dos líneas del mismo pedido se venderán la misma plaza de la franja siguiente.
+6. ❗❗❗ **La cesta cuenta contra sí misma, y son DOS derivaciones, no una.**
+   `OrderCreator::otherOccupants()` (el cobro) tiene un **gemelo**: `AvailabilityReader::occupantsOf()`,
+   que alimenta `SlotOffer::offerableTimes()` y con él la web, la API y `CartLineValidator`. Arreglar
+   solo el del cobro deja la **oferta ciega**: el cliente vería libre una franja que el checkout le
+   rechaza — `AFORO-02` otra vez, y justo sobre la pieza en la que §4.5 apoya su mitigación.
+   ⚠️⚠️ **Y ninguna de las dos cuenta a los HERMANOS de la misma línea.** §4.2 propone dar de alta
+   «2 horas extra» como producto aparte: dos complementos que ocupan, colgados de la MISMA línea,
+   caen sobre la misma franja y **cada uno se valida contra un mapa que no incluye al otro** (no están
+   en BD todavía, y los ocupantes provisionales solo traen OTRAS líneas). ▶ **La última plaza se vende
+   dos veces en una sola petición, sin carrera ninguna y con el lock puesto.** Es el peor de los seis.
+7. ❗❗ **Un padre SIN duración no tiene «franja siguiente».** Medido: **2 de las 10 entradas**
+   (`duration_min` nula = «ilimitada hasta el cierre») no tienen tramo que termine. La guarda de §4.1
+   protege la duración nula del COMPLEMENTO, nunca la del PADRE: hay que prohibir el enganche.
+8. ❗❗ **La rejilla NO es uniforme, y está medido sobre datos reales.** El borde 2 supone «un paso de
+   rejilla», y `slot_templates` es `zona × día × hora`, cada fila con su duración: hay zonas a 60, otra
+   a 180, y **la zona 4 tiene el mismo día franjas de 60 min y una de 840** (09:00–23:00, aforo 300)
+   — rejillas SOLAPADAS, que `SlotAvailability::spannedSlots()` tolera a propósito. Con dos franjas
+   abiertas a la vez, «la siguiente» no está definida por el producto: **se decide por zona y día**, no
+   al configurar el catálogo. Eso corrige al propio borde 2.
+9. ❗❗❗ **La duración del padre es EDITABLE con ventas hechas, y eso descoloca a la hija.** Verificado:
+   `CatalogResource::hasSales()` protege **solo el campo de zona** (`CatalogForm`); `duration_min` no
+   lleva `disabled`. Subir una entrada de 120 a 180 alarga el tramo del padre **de todas las líneas ya
+   vendidas** y **mete a la hija dentro del tramo de su propio padre**: la misma persona contada dos
+   veces en la franja solapada, sin fallo y sin aviso. Es la familia del sello de `#288`, en el eje del
+   aforo. ▶ Salida barata y con precedente: **bloquear `duration_min` cuando `hasSales()`**, igual que
+   ya se hace con la zona.
 
-⚠️ **Los seis son de LECTURA o de ESCRITURA del aforo, y ninguno lo ve un test de SQLite** (`INVARIANTES
+⚠️ **Son de LECTURA o de ESCRITURA del aforo, y ninguno lo ve un test de SQLite** (`INVARIANTES
 §6`): el 1, el 4 y el 6 se prueban con casos; el 3 y el 5 con casos; **el 2 se previene al configurar**.
 La carrera del punto 6 es la que exige el escenario nuevo del verificador (§6·1).
 
@@ -210,6 +259,51 @@ padre (borde 4).
 `false` → `slot_id NULL`, `seats 0`, invisible al aforo. **Idéntico a hoy**, y es el caso de CONTROL
 de §6·2.
 
+### 4.9 · ❗❗❗ EL BLOQUEO DE CONFIGURACIÓN: hoy el interruptor NO SE PUEDE ENCENDER
+
+Ninguna de las seis lentes lo buscó —todas entran por la compra— y lo encontró el crítico de
+completitud: **el diseño depende de un dato que el panel BORRA**.
+
+Verificado en el código:
+- `CreateCatalog::normalizeByType()` hace, para un complemento, `zone_id = null` y **`unset()` de
+  `duration_min`**, bajo el comentario *«un complemento no consume aforo ni tiene zona/horario»*.
+- `CatalogForm` esconde esos campos para complementos (`visible(type !== TYPE_ADDON)`).
+
+▶ O sea que **la columna que §4.1 llama «la que ya existe» el panel la vacía al guardar**, y con la
+guarda que la propia §4.1 propone —«ocupa y no dice cuánto» es imposible— una hora extra creada desde
+el panel **la rechazaría el modelo**. *El diseño era coherente consigo mismo y aun así no se podía
+poner en marcha: la puerta de entrada del dato estaba tapiada.*
+
+▶ **Lo que hay que hacer, y es trabajo de la tanda, no fontanería**: el formulario del catálogo tiene
+que ofrecer `duration_min` **también** para un complemento que declare `occupies_after_parent`, y
+`normalizeByType()` dejar de borrarla en ese caso. La zona **sigue siendo nula a propósito**: la hija
+no tiene zona propia, la hereda de la franja que ocupa (`occupancyMap` filtra por `entry.zone_id`, la
+del SLOT, no la del producto).
+
+⚠️ **Lección**: *una revisión que solo entra por donde se vende no ve si el dato se puede introducir.*
+Las seis lentes miraron compra, aforo, ciclo de vida, superficies, alternativas y huecos; ninguna
+preguntó **quién enciende el interruptor**.
+
+### 4.10 · Lo que la revisión adversarial CAMBIÓ
+
+35 hallazgos crudos → 10 refutados a fondo → **3 defectos reales** (cinco supervivientes que se
+reducen a tres: dos los encontraron **dos lentes independientes cada uno**, que es la mejor señal de
+que no son ruido) **+ 2 condiciones de diseño** del crítico de completitud.
+
+| | qué era | dónde vive ahora |
+|---|---|---|
+| **1** | el editor del panel **crea** hijas con `slot_id null` y `seats 0` cableados, y al subir la cantidad no toca `seats` | §4.4·6 |
+| **2** | el «tope natural = la cantidad del padre» **no existe** en el código | §4.2 (retirado) y §4.4·5 |
+| **3** | los ocupantes provisionales son **DOS** derivaciones, y los **hermanos** de la misma línea no los cuenta ninguna → se vende dos veces la última plaza **sin carrera** | §4.6·6 |
+| **4** | el panel **borra** `duration_min` de un complemento: el interruptor no se puede encender | §4.9 |
+| **5** | la duración del padre es **editable con ventas hechas** y descoloca a la hija | §4.6·9 |
+
+⚠️ **Y lo que la revisión REFUTÓ, para que nadie lo vuelva a levantar**: que dar franja a la hija le
+haría emitir QR propios (la mecánica de `TicketIssuer` es cierta, las consecuencias no) · que cambiar
+el producto del padre dejaría la hija descolgada (hay dos defensas aguas arriba) · que la hija
+heredaría el «ya terminó» de su padre · que el recálculo de §4.5 no tiene canal (lo tiene, §4.4·2) ·
+y que ninguna superficie del cliente diría la hora (es determinista y se puede componer).
+
 ## 5. Impacto en invariantes
 
 | Invariante | Impacto |
@@ -231,17 +325,34 @@ de §6·2.
 4. **La trampa de §4.5, en navegador**: elegir una hora que cabe, añadir la extra, y comprobar que la
    oferta se recalcula **antes** de que el checkout la rechace.
 5. **La edición**: mover el padre de día arrastra la hija; bajar su cantidad por debajo de la hija se
-   rechaza; cancelar el padre cancela la hija.
+   rechaza; cancelar el padre cancela la hija. ▶ **Y el camino del PANEL con caso propio** (§4.4·6):
+   añadir una hora extra desde «Gestionar → Complementos» tiene que nacer con franja y plazas, y
+   subirle la cantidad tiene que recalcular `seats` — hoy los dos escriben literales.
+7. ❗❗ **El caso de los HERMANOS, que es el único que sobrevende SIN carrera** (§4.6·6): una línea con
+   «1 hora extra» y «2 horas extra» a la vez, en una zona donde solo queda UNA plaza en la franja
+   siguiente. Con el lock puesto y sin concurrencia, hoy se venderían las dos. Es un caso de suite, no
+   del verificador.
+8. **La oferta y el cobro dicen lo MISMO**: la misma cesta pasada por `AvailabilityReader::times()` y
+   por `OrderCreator::createPendingOrder()` tiene que coincidir en qué horas ofrece y cuáles acepta
+   (`AFORO-02`).
+9. **El bloqueo de configuración** (§4.9): dar de alta una hora extra **desde el panel** y comprobar
+   que su `duration_min` sobrevive al guardado.
 6. **Las superficies**: hoja de sala y puerta dicen cuántos se quedan y hasta cuándo.
+
 
 ## 7. Revisión y decisión
 
 **`[PENDIENTE: owner]` D1 — el ✅ a esta spec.** Sin él no se escribe código (`CONVENCIONES §5`).
 
-**`[PENDIENTE: owner]` D2 — ¿solo entradas, o también packs y excursiones?** El mecanismo no
-distingue, pero un pack arrastra `prep_after_min` (limpieza) y su **cupo de grupos por franja**
-(`max_per_slot`): una hora extra en un pack podría comerse el grupo de la franja siguiente. Si entra,
-se dice aquí y se le añade su escenario al verificador.
+**`[PENDIENTE: owner]` D2 — ¿solo entradas, o también packs y excursiones?**
+⚠️⚠️ **La premisa con la que se escribió esta pregunta era FALSA y la revisión la corrigió**:
+`PackAvailability::occupancyMaps()` **sí filtra** por `type = pack`, así que una hora extra (tipo
+`addon`) **no puede comerse el cupo de grupos ni el de invitados** de la franja siguiente. *Se estaba
+pidiendo al owner que decidiera sobre un riesgo que no existe.*
+▶ **El riesgo real es el contrario**: consumiría **asientos de entrada** en la zona del pack (la regla
+ya decidida en `#148`/`#151`) y **NO** contaría en `max_guests_per_slot`, que es el tope que de verdad
+gobierna esa sala. La pregunta, bien planteada: *¿debe una hora extra de un pack ocupar el cupo de
+invitados de la franja siguiente, o solo asientos?*
 
 **`[PENDIENTE: owner]` D3 — ¿qué ve el operador?** La hoja de sala y la puerta tienen que decir
 «**1 de 4 se queda hasta las 13:00**». Falta decidir la forma; sin ella, la feature es correcta en la

@@ -15,7 +15,18 @@ sospecha de que estás modelando el problema equivocado antes de aceptar el prec
 por construcción y el tope físico sale gratis (no se pueden quedar 5 de 4).
 ▶ **Lo que hay que construir son DOS cosas**: el **LOCK** (hoy los complementos se saltan) y
 **recalcular la oferta al añadirla**, o se ofrece lo que el checkout rechaza (`AFORO-02`).
-▶ **Tres decisiones tuyas en §7**: el ✅, si vale también para packs, y **qué ve el operador**.
+▶ ❗❗❗ **REVISADA DE FORMA ADVERSARIAL** (2026-09-02): 35 hallazgos → 10 refutados a fondo → **3
+defectos reales y 2 bloqueos de diseño**, y los tres defectos los encontraron **dos lentes
+independientes cada uno**. §4.10 los lista.
+▶ **El peor no es un defecto: es que el diseño NO SE PODÍA PONER EN MARCHA.** `normalizeByType()` hace
+`unset(duration_min)` para todo complemento y el formulario esconde el campo, así que **el panel borra
+el dato del que depende el interruptor** — y la propia guarda de la spec lo habría rechazado. *Una
+revisión que solo entra por donde se vende no ve si el dato se puede introducir.*
+▶ **Y el que más dinero cuesta sobrevende SIN carrera**: los ocupantes provisionales son DOS
+derivaciones y **ninguna cuenta a los hermanos de la misma línea** — dos complementos que ocupan sobre
+la misma línea venden dos veces la última plaza **con el lock puesto**.
+▶ **Tres decisiones tuyas en §7**: el ✅, si vale también para packs (⚠️ la premisa de esa pregunta era
+FALSA y está corregida) y **qué ve el operador**.
 
 🟦 **EXCURSIONES DE COLEGIO · EL PRODUCTO, ENSAYADO Y VERIFICADO EN STAGING — FALTA TU MANO EN
 PRODUCCIÓN** (2026-09-02, `DECISIONES #409`). `[DECIDIDO owner]`: **señal 100,00 € fijos** (hasta hoy
