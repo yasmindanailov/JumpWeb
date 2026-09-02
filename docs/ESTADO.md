@@ -102,14 +102,77 @@ líneas y 0,00 €**. *Cuando el mensaje contradice a sus cifras, el roto es el 
 forkear · veredicto que separa duplicación, ausencia e importe) y **visto FALLAR sin el lock: 12
 líneas y 84,00 €**. Preexistente, verificado en la base `#341`: no lo causó la fusión.
 
-❗❗❗ **▶ CARRIL DE GOOGLE AUTH · SESIÓN ABIERTA (2026-09-02, tarde) — EL PULIDO DEL OJO DEL OWNER.**
-Leído y retirado el aviso de la banda: **numero desde `#345`** (la secuencia natural es mía;
-`#400`→`#405` son del justificante y no los toco). Regla en `CONVENCIONES §10.6`.
-▶ **Qué toco** (`specs/auth-con-google.md` §21, tandas T5→T8): `GoogleButton.vue` ·
-`account/zones/{GoogleSignupZone,PrivacyZone,SessionsZone}.vue` · `steps/{RegisterForm,PayStep,IdentifyStep}.vue` ·
-`stores/{privacy,credentials}.js` · `Api\V1\Me{Credentials,Privacy}Controller` · `AuthRegistrationController` ·
-`Identity\Services\{SelfSignup,GoogleSignup,SocialLogin}` · `Auth\GoogleAuthController` ·
-`Filament\Resources\Users\*` · `public/css/site.css` · `lang/*/account.php` · `openapi/v1.yaml`.
+❗❗❗ **▶ CARRIL DE GOOGLE AUTH · SESIÓN CERRADA (2026-09-02, 12:00 → 20:10) — EL PULIDO DEL OJO DEL
+OWNER, CINCO TANDAS EN EL ÁRBOL Y TRES POR HACER.** Banda `#34x`: **usados `#345`→`#349`, el siguiente
+libre es `#350`** (`#400`+ es del justificante; `CONVENCIONES §10.6`).
+
+⚠️ **HALLAZGO SUELTO, ni mío ni de esta tanda: `DECISIONES.md` tiene un `#217` DUPLICADO.** Dos
+entradas distintas del 2026-08-28 (líneas ~11.528 y ~11.814: el ojo del owner sobre la 2c·8, y el
+pulido tras la prueba en staging). Es una de las colisiones que la decisión de bandas (`#404`) nació
+para evitar, anterior a ella. **`docs-check` no lo ve** —su check 6 solo exige que un número citado
+EXISTA— y por eso lleva ahí cinco días.
+▶ **No lo renumero en un cierre y a ciegas**, que es justo lo que `#404` avisa que sale caro: hay que
+mirar quién cita cada uno y desambiguar las citas, no sustituir a lo bruto. Queda dicho para que se
+haga a propósito. *Encontrarlo fue gratis: `grep -oE '^## #[0-9]+' docs/DECISIONES.md | sort | uniq -d`.*
+
+## ▶ POR DÓNDE RETOMAR (lee esto primero)
+
+**Todo lo de abajo está empujado y verde. Lo que queda son tres cosas, en este orden:**
+
+1. **T8·c — las dos altas pierden las casillas** de privacidad, condiciones y marketing (queda solo la
+   del descargo). `[DECIDIDO owner]`: **aplica a las DOS altas**, la de contraseña y la de Google.
+   ⚠️⚠️ **Va DESPUÉS de la T8·b y no antes, y el orden es la regla**: primero el checkout PIDE (ya lo
+   hace) y solo entonces el alta deja de pedir. Al revés hay una ventana en la que nadie acepta nada.
+   ▶ Toca: `steps/RegisterForm.vue` · `account/zones/GoogleSignupZone.vue` · `AuthRegistrationController`
+   · `Identity\Services\{SelfSignup,GoogleSignup}` · `Api\V1\GoogleSignupController` · **`openapi/v1.yaml`**
+   (`accept_privacy` y `accept_terms` son hoy `required`: sacarlos **cambia el contrato público**).
+   ⚠️ **La privacidad pierde la casilla pero NO el rastro** (§7.1): se siguen escribiendo
+   `privacy_accepted_at` y su fila de `Consent`. Lo que desaparece es la casilla.
+   ⚠️ **El alta con Google pierde también el TELÉFONO** (lo pide ya el checkout) y se queda con el
+   nombre y la casilla del descargo. El copy nuevo (`#345`) **ya está escrito para ese estado**.
+2. **T8·d — el botón de Google encima del formulario**, con un separador «o» (`[DECIDIDO owner]`, sobre
+   dos opciones). Hoy va DEBAJO con su motivo escrito en `LoginZone.vue`; revertirlo es deliberado.
+3. **T9 — One Tap** (`[owner]`: viable **gateando el chip tras el banner de cookies** — quien rechaza ve
+   el botón de siempre, quien acepta ve «Continuar como …»). ⚠️⚠️ **Su pieza cara es una sola**: ahí el
+   `id_token` llega **del CLIENTE** y no del canje servidor-a-servidor, así que hay que **verificar su
+   firma** contra las claves de Google. `#342` avisa de que ésa es *«la mitad que nadie debe añadir
+   sola»*. **Medido: no hay atajo** —One Tap no puede devolver un CÓDIGO para reutilizar el canje—.
+   ▶ **PREGUNTA PENDIENTE AL OWNER antes de escribirla**: si esa verificación se escribe a mano
+   (~100 líneas de RS256 + caché de JWKS) o entra una librería — dependencia nueva, `CONVENCIONES §9.3`.
+   ▶ Lo demás es rutina: CSP (tres directivas) y una **categoría de cookies propia** con su texto en el
+   banner. ⚠️ **No vale meterla en `social`**, que además `#309` dejó sin consumidor.
+   ⚠️ **Si One Tap entra, `prompt=select_account` deja de hacer falta**: el chip enseña el nombre antes
+   de pulsar, que es justo la garantía por la que `#342` lo puso.
+
+## ▶ DOS COSAS DEL OWNER, Y UNA ES UN PASO DE DESPLIEGUE
+
+- ⚠️⚠️ **Hay que PUBLICAR la v1 de «Condiciones»** en cada instalación (panel → Páginas legales →
+  Condiciones → «Publicar versión»). **Hasta que se publique no se pide nada y la venta sigue** (el
+  hueco falla hacia invisible), así que no bloquea el despliegue — pero sin ella la T8 no hace nada.
+  ❗ **Publícala con el texto tal y como está**: la regla de gracia de `#348` da por aceptada la v1 a
+  quien ya aceptó, y editar el texto ANTES de publicar le atribuiría a 19 clientes un texto que nunca
+  vieron. Si hay que retocarlo: se publica primero y se edita después.
+- La **política de privacidad** (Q7) y el **cliente de OAuth de DESARROLLO** siguen pendientes, como
+  desde `#344`.
+
+## ▶ LO QUE ESTA SESIÓN TOCÓ
+
+`GoogleButton.vue` · `account/zones/{PrivacyZone,SessionsZone}.vue` · `steps/PayStep.vue` ·
+`sections/PurchaseSection.vue` · `stores/accountContext.js` · `{buyer-due,pay,account/privacy}.js` ·
+`Identity\Services\{TermsAcceptance,CheckoutDuties,SocialLogin,CustomerAccountContext,LegalDocuments}` ·
+`Auth\GoogleAuthController` · `Api\V1\OrdersController` · `Http\Auth\GoogleAuthSession` ·
+`Filament\Resources\{Users,Pages}\*` · `public/{css/site.css,images/providers/google.svg}` ·
+`lang/*/{account,tickets,admin}.php` · `openapi/v1.yaml` · `routes/web.php`.
+
+▶ **Instrumentos que dejo montados** (gitignorados, como todas las sondas anteriores). El de medir el
+paso de pagar vale la pena conocerlo antes de la T8·c: **`storage/app/paydue-render.sh <variante>`**
+renderiza el paso 8 con el bundle SSR y lo mete en una página con el CSS real, y
+`storage/app/sonda-paydue2.mjs` mide su ritmo vertical. Las cuatro variantes son `ambos`,
+`solo-telefono`, `solo-condiciones` y `nada`. ⚠️ **Es MUCHO más fiable que recorrer el embudo**, que se
+rompe por cualquier cambio del catálogo — lo intenté primero y lo tiré.
+▶ Y dos arneses de mutación que sí van versionados: `scripts/mutar-boton-google.sh` (9/9) y
+`scripts/mutar-tarjeta-consentimientos.sh` (10/10), los dos con puerta de VERDE antes de mutar y
+veredicto por código de salida.
 ▶ ✅ **T5 EN EL ÁRBOL** (`DECISIONES #345`, spec §21.1): **el botón oficial de Google** —su «G»
 descargada de `gstatic.com`, no redibujada: **0 px distintos de 226.560** al rasterizar contra el
 original, con control en 15.855— y el **copy** de «Completa tu registro», que prometía *«poder
@@ -165,12 +228,16 @@ mismo a 30 px, y las dos peticiones se separaban demasiado poco. ▶ **Queda la 
 botón de Google encima del formulario, `[DECIDIDO owner]`). ▶ **Y detrás, la T9: One Tap**
 —`[owner]`, viable gateando el chip tras el banner de cookies—, cuya pieza cara es **verificar la
 firma del `id_token`**, porque ahí el token llega del CLIENTE y no del canje.
-▶ ❗❗ **PARA EL CARRIL DEL JUSTIFICANTE — DOS AVISOS**: (1) voy a tocar **`openapi/v1.yaml`** y
-**`lang/*/account.php`**, que son de los ocho ficheros compartidos: si los tocas tú, `git pull --rebase`
-antes de empujar. (2) Voy a mover la **aceptación de condiciones al checkout** y a dejar el alta con
-**solo la casilla del descargo** (`[DECIDIDO owner, 2026-09-02]`): eso **NO toca `WaiverSigner` ni la
-aceptación retenida** —el descargo se queda exactamente donde está—, pero sí cambia el marcado del alta,
-que es donde vive la casilla del waiver. Si vuestro carril asevera sobre `RegisterForm.vue`, avisadme.
+▶ ❗❗ **PARA EL CARRIL DEL JUSTIFICANTE — TRES AVISOS, ACTUALIZADOS AL CERRAR**:
+**(1)** He tocado **`openapi/v1.yaml`**, **`lang/*/{account,admin}.php`** y **`lang/*/tickets.php`**, de
+los ocho ficheros compartidos. Todo empujado; `git pull --rebase` antes de vuestro próximo push.
+**(2)** **`Api\V1\OrdersController` ha cambiado** (`#349`): antes del dinero comprueba lo que el
+comprador debe. Está en el `CRITICAL_RE`, así que si volvéis a tocarlo os pedirá `VERIFY_CONC=1` — yo
+corrí `purchase:verify-oversell` y `redsys:verify-concurrency` con 16 procesos y pasan.
+**(3)** ⚠️ **La T8·c todavía NO está hecha**: el alta sigue pidiendo privacidad, condiciones y
+marketing, y ahí vive también la casilla del descargo. Cuando la haga tocaré `RegisterForm.vue` y
+`GoogleSignupZone.vue` — **no toca `WaiverSigner` ni la aceptación retenida**, el descargo se queda
+donde está. Si aseveráis sobre el marcado de esas dos pantallas, decidlo aquí.
 
 ⚠️⚠️ **LOS DOS CARRILES ESTÁN FUSIONADOS Y LA NUMERACIÓN, CORREGIDA** (2026-09-02,
 `DECISIONES #404`). Al arrancar, `main` local y `origin/main` habían divergido — **9 commits del

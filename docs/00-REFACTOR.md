@@ -3669,15 +3669,23 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **El OJO del owner** sobre las cuatro, y **subir su `client-menu.webp`**
 - [ ] ⚠️ **Producción NO lleva `#340` ni `#341`**, y el siguiente despliegue desde `main` **estrena la T3 del justificante** (`#337`): no es un despliegue de rutina
 
-### GOOGLE AUTH 🟦 — las tres tandas de código en el árbol (2026-09-02)
+### GOOGLE AUTH 🟦 — las tres tandas de código MÁS el pulido del ojo del owner (2026-09-02; T5→T8·b en el árbol, quedan T8·c, T8·d y T9)
 - [x] **Spec** `docs/specs/auth-con-google.md`, con la decisión del owner que la ordena: **pantalla intermedia y exención al 100 %** (§4)
 - [x] **Revisión adversarial de cinco lentes: OCHO bloqueantes**, dos de ellos agujeros de seguridad, aplicados con marcas ✱
 - [x] **Diez de once preguntas cerradas** con `[DECIDIDO owner]` (la Q8 se cerró al empezar: la pantalla va en el CAJÓN)
 - [x] **T1 · el mecanismo** (`#342`, §18): `user_identities` · la raíz de confianza · el reto de un solo uso · las tres puertas · el aviso por correo · la purga por BORRADO · el export del art. 20 con su contrato. ⚠️ **Corrige `RGPD-06`**: el vínculo cae con `revokeAllAccess()`, y eso obliga a expulsar ANTES de escribirlo. 21 mutaciones, muerden 20
 - [x] **T2 · el alta** (`#343`, §19): la pantalla **en el cajón y en carga DIFERIDA**, el alta que nace de ella con la firma del descargo dentro, y el botón en las tres superficies de auth. ⚠️ El presupuesto se midió antes: 44 B de holgura → dos podas medidas y el techo 263 → 267. ⚠️ **Una desviación de la letra de la Q6, para el owner** (§19.6). 7 mutaciones, muerden 7
 - [x] **T3 · lo irreversible y el marketing** (`#344`, §20): el marketing se puede **RETIRAR** con constancia (art. 7.3, hueco vivo desde el primer día), **desvincular** con su contraseña, y el aviso de «crea tu contraseña» en las cuatro pantallas. ⚠️ **El ticket de re-autenticación NO se construye** (`[DECIDIDO owner]`, con las dos opciones delante). 5 mutaciones, muerden 5
-- [ ] **T4 · el OJO del owner**
-- [ ] Del owner: su ✅, **el cliente de OAuth de DESARROLLO** (el de producción ya está creado; su secreto vive fuera del repo) y la política de privacidad al terminar
+- [x] **T4 · el OJO del owner** (2026-09-02): lo recorrió y sacó **siete puntos**. La lista, con cuál reabre una decisión escrita, en **§21** — y va ANTES que las tandas de §16
+- [x] **T5 · el botón OFICIAL de Google y el copy** (`#345`, §21.1): su «G» descargada de Google, **0 px de diferencia** contra el original; entra como asset de proveedor, fuera de las dos guardas de iconos. ⚠️ Ninguna otra guarda veía este botón (cero «google» en el manifiesto congelado)
+- [x] **T6 · el interruptor de marketing y el desborde** (`#346`, §21.2): **82 px → 0** de scroll horizontal en el cajón; el `nowrap` pasa de la LÍNEA al TROZO y la lista de consentimientos colapsa a la última fila de cada tipo
+- [x] **T7 · vincular desde la cuenta y el vínculo en el panel** (`#347`, §21.3): la CUARTA puerta, que se define por lo que NO hace —no autentica, no promueve, no expulsa—; la intención y el titular viajan en el reto del servidor
+- [x] **T8·a · las condiciones, publicables por versión** (`#348`, §21.4.1): se abrió la maquinaria del descargo en vez de construir otra; la regla de gracia es una REGLA, no una reescritura de la prueba
+- [x] **T8·b · el checkout pide lo que falta** (`#349`, §21.4.2): condiciones y teléfono en el momento del contrato, con el enlace SIEMPRE en pantalla — cierra un hueco legal medido (LCGC art. 5 · TRLGDCU art. 97). Los dos verificadores de concurrencia corridos
+- [ ] **T8·c · las dos altas pierden las casillas** de privacidad, condiciones y marketing (toca `openapi/v1.yaml`)
+- [ ] **T8·d · el botón de Google encima del formulario** con el separador «o» (`[DECIDIDO owner]`)
+- [ ] **T9 · One Tap** (`[owner]`, viable gateando el chip tras el banner de cookies): su pieza cara es **verificar la firma del `id_token`**, porque ahí el token llega del CLIENTE y no del canje
+- [ ] Del owner: su ✅, **el cliente de OAuth de DESARROLLO** (el de producción ya está creado; su secreto vive fuera del repo), la política de privacidad al terminar y **publicar la v1 de «Condiciones»** en cada instalación
 
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no
