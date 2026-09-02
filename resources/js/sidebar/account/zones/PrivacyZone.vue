@@ -119,10 +119,22 @@ async function sign() {
 
             <p v-else-if="store.consentsLoaded && ! consents.length" class="account__card-sub">{{ a('account.privacy.no_consents') }}</p>
 
+            <!--
+              ⚠️⚠️ **La meta va en TROZOS y no en una cadena** (`#346`). `#344` pegó «retirado el …»
+              al final de la misma línea, que se pinta con `white-space: nowrap` desde que solo
+              tenía fecha y versión: medido en navegador, **82 px de desborde** en el carril del
+              cajón y una barra de scroll horizontal que aparecía **al pulsar el interruptor**.
+              Cada trozo sigue siendo indivisible —una fecha no se parte— y entre trozos ya se
+              puede saltar de línea. El «·» lo dibuja la hoja, así que un trozo que falte no deja
+              separador colgando.
+            -->
             <ul v-else-if="consents.length" class="account__consents">
-                <li v-for="consent in consents" :key="consent.key">
+                <li v-for="consent in consents" :key="consent.key"
+                    :class="{ 'account__consent--revoked': consent.revoked }">
                     <span class="account__consent-type">{{ consent.label }}</span>
-                    <span class="account__consent-meta">{{ consent.meta }}</span>
+                    <span class="account__consent-meta">
+                        <span v-for="(part, i) in consent.parts" :key="i" class="account__consent-part">{{ part }}</span>
+                    </span>
                 </li>
             </ul>
 
@@ -136,10 +148,23 @@ async function sign() {
               no quiere que le escriban, y tenerla debajo de «eliminar mi cuenta» empuja a la
               irreversible a quien solo quería dejar de recibir correos.
             -->
-            <label class="check">
-                <input type="checkbox" :checked="store.marketing" :disabled="store.busy"
+            <!--
+              ⚠️⚠️ **Es un INTERRUPTOR, no una casilla** (`[DECIDIDO owner, 2026-09-02]`, `#346`), y la
+              diferencia no es estética: una casilla es una elección que se ENVÍA con un formulario y
+              esto se guarda **al soltarlo**, sin botón. `role="switch"` es lo que se lo dice al
+              lector de pantalla — con `checkbox` anuncia «casilla, no marcada» y quien no ve espera
+              un «Guardar» que no existe.
+              ⚠️ El control es el propio `<input>` con `appearance: none`: así el anillo de foco cae
+              sobre su caja real, que es la que `landing.css` ya tiene en su lista blanca cerrada
+              (`input[type="checkbox"]:focus-visible`). Un input escondido a 0×0 con la pista pintada
+              al lado dibujaría el anillo sobre nada — y la trampa de `#295` es justo ésa: hacer algo
+              enfocable no es hacerlo accesible.
+            -->
+            <label class="switch">
+                <input class="switch__input" type="checkbox" role="switch"
+                       :checked="store.marketing" :disabled="store.busy"
                        @change="store.setMarketing($event.target.checked)">
-                <span>{{ a('account.privacy.marketing_label') }}</span>
+                <span class="switch__label">{{ a('account.privacy.marketing_label') }}</span>
             </label>
             <small class="form__hint">{{ a('account.privacy.marketing_hint') }}</small>
 

@@ -1188,9 +1188,58 @@
 .account__subhead { font-family: var(--font-body); font-weight: 700; font-size: 14px; color: var(--fg); margin: 18px 0 8px; }
 .account__muted { color: var(--fg-mute); font-size: 14px; }
 .account__consents { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.account__consents li { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; font-family: var(--font-body); font-size: 13px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); }
+/* ⚠️⚠️ **`flex-wrap: wrap` es la mitad del arreglo de `#346`.** Sin él, la meta y el rótulo compiten
+   por el mismo renglón y la fila crece hacia fuera del carril en vez de partirse. Medido: al
+   retirar el marketing, **82 px de desborde** y barra de scroll horizontal en el cajón. */
+.account__consents li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; align-items: baseline; font-family: var(--font-body); font-size: 13px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); }
 .account__consent-type { font-weight: 600; color: var(--fg); }
-.account__consent-meta { color: var(--fg-mute); white-space: nowrap; }
+/* ⚠️⚠️ **El `white-space: nowrap` se movió de la LÍNEA al TROZO** (`#346`, y ésta es la otra mitad).
+   Cuando la meta eran «fecha · versión» el `nowrap` describía algo cierto: nada dentro se podía
+   partir sin quedar mal. `#344` le añadió «retirado el …» al final y la línea pasó a medir 418 px
+   dentro de un carril de 380 **sin que nada fallara**.
+   ▶ *El `nowrap` no estaba mal: dejó de ser cierto cuando alguien alargó lo que envolvía.*
+   Ahora lo indivisible es cada trozo —una fecha no se parte por la mitad— y entre trozos se salta
+   de línea. El «·» lo dibuja esta hoja entre hermanos, así que un trozo ausente (una versión vacía)
+   no deja un separador colgando. */
+.account__consent-meta { display: flex; flex-wrap: wrap; align-items: baseline; color: var(--fg-mute); }
+.account__consent-part { white-space: nowrap; }
+.account__consent-part + .account__consent-part::before { content: "·"; margin: 0 6px; }
+/* Una fila retirada se LEE retirada: es el consumidor que le faltaba a la bandera `revoked`, que
+   `#344` publicó y no usaba nadie. Sin esto, «Comunicaciones comerciales» se lee igual viva que
+   muerta y la única pista es leerse la fecha del final. */
+.account__consent--revoked .account__consent-type { color: var(--fg-mute); font-weight: 500; text-decoration: line-through; text-decoration-thickness: 1px; }
+
+/* ══ EL INTERRUPTOR (`#346`) ═══════════════════════════════════════════════════════════════════
+   `[DECIDIDO owner, 2026-09-02]`: el marketing es un interruptor, no una casilla. La diferencia no
+   es estética — una casilla es una elección que se ENVÍA con un formulario, y esto se guarda al
+   soltarlo, sin botón. `role="switch"` lo dice en el marcado; esto solo lo dibuja.
+
+   ⚠️ **El control es el propio `<input>` con `appearance: none`**, no una pista pintada al lado de
+   un input escondido: así el anillo de foco cae sobre la caja real del control, que es la que
+   `landing.css` ya cubre en su lista blanca CERRADA (`input[type="checkbox"]:focus-visible`).
+   Un input a 0×0 dibujaría el anillo sobre nada — la trampa de `#295`.
+
+   ⚠️ **Encendido es `--ok`, no `--action`** (`#254`, y lo dijo `ActionFillTest` con el chip de
+   «Abierto ahora»): acción es el control que hace AVANZAR; «encendido» es un ESTADO.
+
+   ⚠️ El suelo táctil va en la etiqueta con `min-height`, que es como `#264` resolvió el chip de
+   cuenta: la pista mide 26 de alto y el objetivo que se toca es la fila entera. */
+.switch { display: flex; align-items: center; gap: 12px; min-height: var(--tap-min); font-family: var(--font-body); font-size: 13px; line-height: 1.45; color: var(--fg); cursor: pointer; }
+.switch__input {
+    appearance: none; -webkit-appearance: none;
+    position: relative; flex: none; width: 44px; height: 26px; margin: 0; cursor: pointer;
+    background: var(--bg-soft); border: 1px solid var(--line-strong); border-radius: var(--r-pill);
+    transition: background var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
+}
+.switch__input::before {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+    border-radius: var(--r-pill); background: var(--bg-card); border: 1px solid var(--line-strong);
+    transition: transform var(--dur-sale) var(--ease-sale), background var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
+}
+.switch__input:checked { background: var(--ok); border-color: var(--ok); }
+.switch__input:checked::before { transform: translateX(18px); background: var(--bg-card); border-color: var(--ok); }
+.switch__input:disabled { opacity: 0.55; cursor: not-allowed; }
+.switch__label { flex: 1 1 auto; }
 .account__export-btn { margin-top: 4px; }
 .account__card--danger { border-color: var(--err-border); }
 .account__delete-btn { width: 100%; justify-content: center; background: var(--err); color: #fff; border: 1px solid var(--err); }

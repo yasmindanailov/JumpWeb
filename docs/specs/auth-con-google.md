@@ -925,7 +925,7 @@ como una incoherencia y los «arregle» de vuelta.
 |---|---|---|---|
 | 1 | El botón **oficial** de Google, con su marca | Ficha ABIERTA en `DEUDA.md` desde `#343` | **T5** ✅ `#345` |
 | 2 | El copy de «Completa tu registro» no habla de reservar | Defecto nuestro, sin ficha | **T5** ✅ `#345` |
-| 3 | El **interruptor de marketing** es un checkbox, y al pulsarlo aparece un scroll horizontal | Defecto de `#344`, sin ficha | T6 |
+| 3 | El **interruptor de marketing** es un checkbox, y al pulsarlo aparece un scroll horizontal | Defecto de `#344`, sin ficha | **T6** ✅ `#346` |
 | 4 | **Vincular** Google desde la cuenta (desvincular ya está) | `UserIdentity::VIA_ACCOUNT` declarado y sin emisor; §18.6 lo avisa | T7 |
 | 5 | El **panel de admin** dice si el cliente entra con Google | No estaba en la spec | T7 |
 | 6 | Las **condiciones** y el **teléfono** se piden en el checkout, no en el alta | ⚠️ **§4 lo DESCARTÓ y §13 lo dejó como ficha** «decisión independiente» | T8 |
@@ -1011,3 +1011,82 @@ directrices de Google**.
 nada**: crea la cuenta, que es lo que dice su propio botón de envío. Corregido en es/en/fr a *«Google
 ya nos ha confirmado quién eres. Solo falta esto para crear tu cuenta»*, que **sigue siendo verdad
 después de la T8**, cuando esa pantalla se quede solo con el descargo.
+
+### 21.2 · T6 — el interruptor de marketing, y el defecto que lo destapó (`DECISIONES #346`)
+
+El owner: *«el checkbox al darle clic añade un texto horizontal que hace que el SPA sea más ancho y
+se genera un scrollbar horizontal»*. Son **tres cosas** y solo una era la que se veía.
+
+#### 1 · El desborde, reproducido con control antes de tocar nada
+
+**Medido en navegador a 420 px de ancho**: 0 px de desborde antes de pulsar · 0 al ENCENDER ·
+**82 px al APAGAR**, en `.account__grid`, con 62 px en `.purchase__scroll`, que es el carril del
+cajón y el que enseña la barra.
+
+⚠️⚠️ **El `documento` NO desbordaba** (`scrollWidth − clientWidth = 0`): el cajón es un panel con su
+propio scroll, así que una sonda que mire `document.documentElement` habría salido limpia con la
+barra a la vista. La sonda sube por la cadena de ancestros desde la fila culpable buscando el primero
+que desborda — *y esa decisión de instrumento es la que hizo visible el defecto*.
+
+**El mecanismo**: `.account__consent-meta` llevaba `white-space: nowrap` desde que su contenido era
+«fecha · versión», donde describía algo cierto —nada de eso se puede partir sin quedar mal—. `#344`
+le añadió al final «retirado el 02/09/2026» y la línea pasó a medir **418 px dentro de un carril de
+380**, sin que fallara nada.
+
+▶ ***El `nowrap` no estaba mal: dejó de ser cierto cuando alguien alargó lo que envolvía.*** Por eso
+la corrección no es quitarlo, es **moverlo de la LÍNEA al TROZO**: `consentRows()` devuelve una lista
+de trozos, cada uno indivisible, y entre ellos se salta de línea. El «·» lo dibuja la hoja entre
+hermanos, así que un trozo ausente (una versión vacía) no deja un separador colgando.
+
+#### 2 · Es un INTERRUPTOR, y la diferencia no es estética
+
+`[DECIDIDO owner]`. Una casilla es una elección que se **envía** con un formulario; esto se guarda
+**al soltarlo**, sin botón. `role="switch"` es lo que se lo dice al lector de pantalla: con
+`checkbox` anuncia «casilla, no marcada» y quien no ve **espera un “Guardar” que no existe**.
+
+⚠️ **El control es el propio `<input>` con `appearance: none`**, no una pista pintada al lado de un
+input escondido: así el anillo de foco cae sobre la caja real, que es la que `landing.css` ya cubre
+en su lista blanca CERRADA (`input[type="checkbox"]:focus-visible`). Un input a 0×0 dibujaría el
+anillo **sobre nada** — la trampa de `#295`: *hacer algo enfocable no es hacerlo accesible*.
+
+⚠️ **Encendido es `--ok`, no `--action`** (`#254`): acción es el control que hace AVANZAR; encendido
+es un ESTADO. Medido en navegador: `rgb(95,168,46)`, que es el `--ok` del paquete del cliente.
+
+#### 3 · Y la captura destapó lo que no se había pedido: CINCO filas del mismo consentimiento
+
+Cada vuelta del interruptor escribe una fila nueva —es un hecho nuevo y `#344` lo dejó así a
+propósito—, así que tras cinco vueltas la tarjeta decía **cinco veces «Comunicaciones comerciales»**,
+cuatro tachadas. Es justo lo que el owner pedía evitar: *«cuidado de no añadir datos en ese recuadro»*.
+
+▶ **La lista colapsa a la ÚLTIMA fila de cada tipo.** ⚠️⚠️ **Esto no oculta ninguna prueba**: el
+rastro completo sigue en la BD (art. 5.2 / 7.1) y viaja entero en el documento de portabilidad
+(art. 20), que se descarga **desde esta misma tarjeta**. Se colapsa la lectura, no la prueba.
+⚠️ La «última» sale del ORDEN QUE MANDA EL SERVIDOR (`accepted_at DESC, id DESC`, que
+`MePrivacyController::consents` ya publicaba): aquí no se comparan fechas ya localizadas como texto.
+▶ Y una fila retirada **se lee retirada** (tachada y en gris), que es el consumidor que le faltaba a
+la bandera `revoked` que `#344` publicó y no usaba nadie.
+
+#### Lo verificado
+
+- **Navegador, con control**: 82 px de desborde → **0 px** en los tres estados.
+- ⚠️⚠️ **Una trampa de instrumento pagada**: la primera medición del interruptor decía que el dibujo
+  iba **un paso por detrás del estado** (`checked = true` con la pista apagada). Era la sonda leyendo
+  **dentro** de la transición de 180 ms, que además se reinicia cuando la lista se recarga tras el
+  `PUT`. En reposo y preguntando por `getAnimations()` —**cero animaciones vivas**— los dos estados
+  leen correctos. *Un valor leído en mitad de una transición es el del estado anterior, y parece un
+  defecto del producto.*
+- **10/10 mutaciones muerden** (`scripts/mutar-tarjeta-consentimientos.sh`), empezando por el defecto
+  real del owner: devolver el `nowrap` a la línea.
+- Guardas: `ConsentCardTest` (el CSS y el marcado) + `privacy.test.js` (los trozos y el colapso).
+  ⚠️ **La primera versión de un caso salió ROJA con el producto sano**: aseveraba «no hay ningún
+  `<label class="check">` en la pantalla» y en esa misma zona vive la casilla del DESCARGO, que sí es
+  una casilla. Acotado al control de marketing. *Una guarda que acusa a lo que está bien está mal
+  escrita.*
+
+#### El presupuesto: se intentó podar, se midió, y no sirvió
+
+Chunk **273 → 274** (medido **273,14**). ⚠️⚠️ **La poda se hizo primero y se descartó con la cifra
+delante**: pasar los trozos de la meta y el rótulo del interruptor a selectores por tipo de elemento
+ahorró **0,06 KiB** y seguía por encima del techo, así que su único efecto habría sido dejar el
+marcado menos explícito **sin evitar la subida**. Se revirtió.
+▶ ***Una poda que no evita subir el techo no es una poda: es solo peor código.***

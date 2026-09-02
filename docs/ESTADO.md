@@ -39,6 +39,17 @@ está medido: el manifiesto congelado de `SidebarDomContractTest` tiene **cero**
 «google» —sus fixtures no pasan `urls.google` y el componente es un `v-if="href"`—. Y lo que persigue
 no es que se rompa: es que alguien lo **«arregle»** devolviéndolo al color de acción del cliente, que
 no rompe nada, no lo ve ninguna captura e incumple las directrices de Google. 9/9 mutaciones muerden.
+▶ ✅ **T6 EN EL ÁRBOL** (`DECISIONES #346`, spec §21.2): **el marketing es un interruptor** y la
+tarjeta de consentimientos ya no desborda el cajón. ⚠️⚠️ **El defecto del owner era un `nowrap` que
+dejó de ser cierto cuando alguien alargó lo que envolvía**: `.account__consent-meta` lo llevaba desde
+que decía «fecha · versión», y `#344` le añadió «retirado el …» al final → **418 px de línea en un
+carril de 380**. Reproducido con control (**0 · 0 · 82 px**) y remedido en **0** en los tres estados.
+⚠️ **El documento NO desbordaba**: la barra es del carril del cajón, así que una sonda que mire
+`document.documentElement` sale limpia con la barra a la vista. ▶ De regalo, la captura destapó que
+la tarjeta acumulaba **cinco filas del mismo consentimiento** (una por vuelta del interruptor): ahora
+colapsa a la última de cada tipo — **sin ocultar prueba**, que sigue en la BD y en el export del
+art. 20. ⚠️ Chunk **273 → 274**: la poda se intentó, ahorró 0,06 KiB y **se revirtió** porque no
+evitaba la subida.
 ▶ ❗❗ **PARA EL CARRIL DEL JUSTIFICANTE — DOS AVISOS**: (1) voy a tocar **`openapi/v1.yaml`** y
 **`lang/*/account.php`**, que son de los ocho ficheros compartidos: si los tocas tú, `git pull --rebase`
 antes de empujar. (2) Voy a mover la **aceptación de condiciones al checkout** y a dejar el alta con
@@ -652,7 +663,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > ⚠️ **RE-MEDIDA tras rebasar encima los DOS arreglos del reloj de la T3** (con `npm run build` +
 > `build:ssr` delante, porque `#340` toca Vue): **sale el MISMO número**, que es lo que había que
 > comprobar — los dos arreglan FIXTURES y no añaden casos. *Coincidir no se supone: se mide.*
-> Suite **4011 en verde** (25.650 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> Suite **4019 en verde** (25.694 aserciones, 1 skipped a propósito), medida el 2026-09-02
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`): las cuatro tandas del
 > justificante (`#400`→`#403`) sobre las TRES de Google auth (`#342`, `#343`, `#344`), la columna del menú
 > (`#341`, +8), el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo (`#339`),

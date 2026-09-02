@@ -664,8 +664,19 @@ class SidebarBundleBudgetTest extends TestCase
      * ⚠️ **Se sube a 273 y quedan 0,29 KiB**, la holgura más estrecha que ha tenido este techo: la
      * fusión se comió el margen que cada carril creía tener por separado. Lo siguiente que entre,
      * de cualquiera de los dos, tiene que podar o justificarse — y volver a medir AQUÍ, no en su rama.
+     *
+     * ▶ **274 (`#345` + `#346`, el pulido del ojo del owner).** Medido: **273,14 KiB**, o sea **0,14
+     * por encima** — la holgura de 0,29 que dejó la fusión se agotó, como aquella nota anticipaba.
+     * Lo que compra: el botón OFICIAL de Google (su marca, no la del cliente) y que el marketing sea
+     * un INTERRUPTOR con la lista de consentimientos que ya no desborda el cajón.
+     * ⚠️⚠️ **Se INTENTÓ podar primero, se midió y NO sirvió — y eso también es un resultado.** Pasar
+     * los dos trozos de la meta y el rótulo del interruptor a selectores por TIPO DE ELEMENTO
+     * (`.account__consent-meta > span`) ahorró **0,06 KiB**: seguía por encima del techo, así que el
+     * único efecto de la poda habría sido dejar el marcado menos explícito **sin evitar esta subida**.
+     * Se revirtió. *Una poda que no evita subir el techo no es una poda: es solo peor código.*
+     * ⚠️ Se sube a **274** y quedan **0,86 KiB**.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 273;
+    private const SIDEBAR_CHUNK_MAX_KB = 274;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

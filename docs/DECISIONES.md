@@ -20885,6 +20885,76 @@ en 15.855 · **sonda de navegador** en `/login` y `/registro` con los diez valor
 **control de imagen rota** (ruta inventada → `naturalWidth 0`) · build y build:ssr ✓ · Pint ✓.
 ---
 
+## #346 · 2026-09-02 · El marketing es un interruptor, y el `nowrap` que dejó de ser cierto cuando alguien alargó lo que envolvía
+
+**Segunda tanda (T6) del pulido del OJO del owner** (`specs/auth-con-google.md` §21.2). El encargo
+era *«el checkbox al darle clic añade un texto horizontal que hace que el SPA sea más ancho y se
+genera un scrollbar horizontal»*. Eran **tres cosas** y solo una se veía.
+
+### 1 · El desborde: reproducido con control ANTES de tocar nada
+
+Medido en navegador a 420 px: **0 px de desborde antes de pulsar, 0 al encender y 82 al APAGAR**,
+en `.account__grid`, con 62 en `.purchase__scroll` —el carril del cajón, el que enseña la barra—.
+
+⚠️⚠️ **El documento NO desbordaba** (`scrollWidth − clientWidth = 0`): el cajón es un panel con su
+propio scroll, así que una sonda que mirara `document.documentElement` habría salido **limpia con la
+barra a la vista**. Sube por la cadena de ancestros desde la fila culpable buscando el primero que
+desborda, y esa decisión de instrumento es la que hizo visible el defecto.
+
+**El mecanismo**: `.account__consent-meta` llevaba `white-space: nowrap` desde que su contenido era
+«fecha · versión», donde describía algo cierto. `#344` le añadió al final «retirado el …» y la línea
+pasó a medir **418 px dentro de un carril de 380**, sin que fallara nada.
+
+▶ ***El `nowrap` no estaba mal: dejó de ser cierto cuando alguien alargó lo que envolvía.*** Por eso
+la corrección no es quitarlo sino **moverlo de la LÍNEA al TROZO**: `consentRows()` devuelve trozos
+indivisibles y entre ellos se salta de línea. El «·» lo dibuja la hoja, así que un trozo ausente no
+deja separador colgando.
+
+### 2 · Interruptor, no casilla — `[DECIDIDO owner]`
+
+Una casilla es una elección que se **envía** con un formulario; esto se guarda **al soltarlo**, sin
+botón. `role="switch"` se lo dice al lector de pantalla: con `checkbox` anuncia «casilla, no marcada»
+y quien no ve **espera un “Guardar” que no existe**.
+
+⚠️ **El control es el propio `<input>` con `appearance: none`**, no una pista pintada al lado de un
+input escondido: el anillo de foco cae sobre la caja real, que es la que `landing.css` cubre en su
+lista blanca CERRADA. Un input a 0×0 lo dibujaría **sobre nada** — la trampa de `#295`.
+⚠️ **Encendido es `--ok`, no `--action`** (`#254`): acción es lo que hace AVANZAR, encendido es un
+ESTADO. Medido: `rgb(95,168,46)`.
+
+### 3 · Y la captura destapó CINCO filas del mismo consentimiento
+
+Cada vuelta del interruptor escribe una fila nueva —correcto, es un hecho nuevo—, así que la tarjeta
+decía **cinco veces «Comunicaciones comerciales»**, cuatro tachadas: justo lo que el owner pedía
+evitar. **La lista colapsa a la última fila de cada tipo.**
+⚠️⚠️ **No oculta ninguna prueba**: el rastro sigue en la BD (art. 5.2/7.1) y viaja entero en el
+documento de portabilidad (art. 20), que se descarga desde **esta misma tarjeta**. Se colapsa la
+lectura, no la prueba. La «última» sale del orden que ya manda el servidor, no de comparar fechas
+localizadas como texto.
+
+### 4 · Dos trampas y una poda que se descartó midiendo
+
+⚠️⚠️ **La primera medición del interruptor decía que el dibujo iba un paso por detrás del estado**
+(`checked = true` con la pista apagada). Era la sonda leyendo **dentro** de la transición de 180 ms
+—que además se reinicia cuando la lista se recarga tras el `PUT`—. En reposo y con `getAnimations()`
+devolviendo **cero animaciones vivas**, los dos estados leen correctos. *Un valor leído en mitad de
+una transición es el del estado anterior, y parece un defecto del producto.*
+
+⚠️ **Una guarda salió ROJA con el producto sano**: aseveraba «no hay ningún `<label class="check">`
+en la pantalla» y en esa misma zona vive la casilla del DESCARGO, que sí es una casilla. Acotada al
+control de marketing. *Una guarda que acusa a lo que está bien está mal escrita.*
+
+⚠️⚠️ **Chunk 273 → 274 (medido 273,14), y la poda se intentó primero y se descartó CON LA CIFRA
+DELANTE**: pasar los trozos y el rótulo a selectores por tipo de elemento ahorró **0,06 KiB** y
+seguía por encima, así que su único efecto habría sido dejar el marcado menos explícito **sin evitar
+la subida**. Se revirtió. ***Una poda que no evita subir el techo no es una poda: es peor código.***
+
+**Verificación**: suite **4018 · 25.694** verde · `ConsentCardTest` (8) + `privacy.test.js` ·
+**10/10 mutaciones muerden** con puerta de verde previo y veredicto por código de salida ·
+navegador: 82 px → **0** en los tres estados, con control · Pint ✓ · docs-check ✓ · build y
+build:ssr ✓.
+---
+
 ## #400 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
 
 **Encontrado por el owner probando lo construido**, con la suite verde y las cuatro tandas anteriores

@@ -20,12 +20,19 @@ const INDENT = 4;
  *
  * ⚠️ **Ni el nombre del documento ni la fecha se componen aquí**: el servidor publica `type_label`
  * —para que el cliente no lleve su propia tabla de cuatro rótulos, que envejecería sola al añadirse
- * un quinto tipo— y `accepted_label` con la zona horaria de la instalación aplicada. Lo único que
- * ocurre aquí es juntar fecha y versión en una línea, que es la forma que la página lleva usando:
- * «23/08/2026 · v2026-05-23».
+ * un quinto tipo— y `accepted_label` con la zona horaria de la instalación aplicada.
+ *
+ * ⚠️⚠️ **Devuelve TROZOS y no una cadena, y esa es la corrección de `#346`.** `#344` añadió la
+ * cláusula de retirada al final de la misma línea —«02/09/2026 · v2026-05-23 · retirado el
+ * 02/09/2026»— y esa línea la pinta `.account__consent-meta`, que lleva `white-space: nowrap` desde
+ * que solo tenía dos trozos. Resultado medido en navegador: **82 px de desborde** en el carril del
+ * cajón y una barra de scroll horizontal que aparecía **al pulsar el interruptor**.
+ * ▶ *El `nowrap` no estaba mal: dejó de ser cierto cuando alguien alargó lo que envolvía.* Cada
+ * trozo sigue siendo INDIVISIBLE —una fecha no se parte por la mitad— y entre trozos ya se puede
+ * saltar de línea, que es lo único que faltaba.
  */
 export function consentRows(payload, { revokedWord = '' } = {}) {
-    return (payload?.data ?? []).map((consent, index) => ({
+    return latestPerType(payload?.data ?? []).map(([consent, index]) => ({
         key: consent.type + '-' + index,
         label: consent.type_label,
         // ⚠️⚠️ **Una fila RETIRADA no se puede leer igual que una viva** (art. 7.3, `#344`): sin esta
@@ -34,12 +41,44 @@ export function consentRows(payload, { revokedWord = '' } = {}) {
         // la pone quien llama —este módulo es plano y no lee `lang/`— y la FECHA la compone el
         // servidor con la zona horaria de la instalación.
         revoked: Boolean(consent.revoked_at),
-        meta: [
+        parts: [
             consent.accepted_label,
             consent.version ? 'v' + consent.version : '',
             consent.revoked_at && revokedWord ? revokedWord + ' ' + (consent.revoked_label ?? '') : '',
-        ].filter(Boolean).join(' · ').trim(),
+        ].map((part) => String(part ?? '').trim()).filter(Boolean),
     }));
+}
+
+/**
+ * **Un consentimiento, una fila: la ÚLTIMA de cada tipo** (`#346`).
+ *
+ * ⚠️⚠️ **Esto no oculta nada, y la distinción importa.** Cada vez que el titular vuelve a encender el
+ * marketing se escribe una fila nueva —es un hecho nuevo y `#344` lo dejó así a propósito, porque la
+ * anterior sigue probando lo que se hizo mientras valía—. Pero la tarjeta se titula «Tus
+ * consentimientos» y responde a *«¿a qué estoy apuntado ahora?»*: con cinco vueltas del interruptor
+ * decía **cinco veces «Comunicaciones comerciales»**, cuatro tachadas. Medido en navegador.
+ * ▶ **El rastro completo sigue existiendo** en la BD (art. 5.2 / 7.1) y viaja entero en el documento
+ * de portabilidad (art. 20), que se descarga desde **esta misma tarjeta**. Lo que se colapsa es la
+ * lectura, no la prueba.
+ *
+ * ⚠️ **La «última» sale del ORDEN QUE MANDA EL SERVIDOR**, que ya publica `accepted_at DESC, id
+ * DESC` (`MePrivacyController::consents`): aquí no se reordena ni se comparan fechas como texto —dos
+ * formatos de fecha localizados no se ordenan comparando cadenas—, se conserva la primera aparición.
+ *
+ * @return {Array<[object, number]>} cada superviviente con su índice ORIGINAL, que es lo que hace la
+ *   clave de Vue estable aunque el colapso cambie de tamaño entre dos cargas.
+ */
+function latestPerType(rows) {
+    const vistos = new Set();
+
+    return rows.reduce((keep, consent, index) => {
+        if (vistos.has(consent.type)) return keep;
+
+        vistos.add(consent.type);
+        keep.push([consent, index]);
+
+        return keep;
+    }, []);
 }
 
 /**
