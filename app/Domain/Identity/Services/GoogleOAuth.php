@@ -163,7 +163,10 @@ final class GoogleOAuth
             throw GoogleAuthException::because(GoogleAuthException::BAD_AUDIENCE);
         }
 
-        $now = time();
+        // ⚠️ El reloj del FRAMEWORK, no `time()`: con `time()` esta comprobación es invisible para la
+        // auditoría del reloj de la suite y para cualquier caso que viaje en el tiempo — y una guarda
+        // de caducidad que no se puede hacer caducar en un test no está probada.
+        $now = now()->getTimestamp();
 
         $expiresAt = $claims['exp'] ?? null;
         if (! is_int($expiresAt) || $expiresAt + self::CLOCK_LEEWAY_SECONDS < $now) {

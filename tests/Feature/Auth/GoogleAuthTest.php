@@ -8,6 +8,7 @@ use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Identity\Services\GoogleAuth;
 use App\Domain\Identity\Services\GoogleOAuth;
 use App\Domain\Platform\Models\Setting;
+use App\Http\Auth\GoogleAuthSession;
 use App\Http\Sidebar\SidebarEntry;
 use App\Notifications\SocialIdentityLinked;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -172,7 +173,7 @@ class GoogleAuthTest extends TestCase
         $this->configureKeys();
         $this->linkedUser();
 
-        $this->signInWithGoogle(['exp' => time() - 3600, 'iat' => time() - 7200])
+        $this->signInWithGoogle(['exp' => now()->getTimestamp() - 3600, 'iat' => now()->getTimestamp() - 7200])
             ->assertSessionHas('status', 'google-failed');
 
         $this->assertGuest();
@@ -248,7 +249,14 @@ class GoogleAuthTest extends TestCase
         Http::assertNothingSent();
     }
 
-    /** Un reto es de UN SOLO USO: se consume aunque el intento falle. */
+    /**
+     * Un reto es de UN SOLO USO.
+     *
+     * ⚠️⚠️ **La primera versión de este caso cerraba la sesión entre los dos retornos y NO PROBABA
+     * NADA**: `logout` invalida la sesión entera, así que el reto desaparecía por eso y no por
+     * consumirse. Lo dijo la mutación —quitar el `forget()` la dejaba verde— y por eso los dos
+     * retornos van seguidos, sobre la misma sesión.
+     */
     public function test_the_state_cannot_be_replayed(): void
     {
         $this->configureKeys();
@@ -259,11 +267,42 @@ class GoogleAuthTest extends TestCase
         $this->returnFromGoogle($flow);
         $this->assertAuthenticatedAs($user->fresh());
 
-        $this->post(route('logout'));
-        $this->assertGuest();
+        $this->returnFromGoogle($flow)->assertSessionHas('status', 'google-failed');
+    }
+
+    /**
+     * Y CADUCA por su cuenta, sin depender de que nadie termine el flujo: una pestaña abierta ayer no
+     * es una vuelta de hoy.
+     *
+     * ⚠️ Esto solo se puede medir porque el reto marca la hora con `now()` y no con `time()`: el
+     * segundo es invisible para el reloj de la suite (`TEST_CLOCK`) y para `travel()`. Se cambió al
+     * escribir este caso, que hasta entonces no existía porque no se podía escribir.
+     */
+    public function test_the_challenge_expires_on_its_own(): void
+    {
+        $this->configureKeys();
+        $this->linkedUser();
+        $flow = $this->startFlow();
+        $this->fakeGoogle($flow);
+
+        $this->travel(GoogleAuthSession::CHALLENGE_TTL_SECONDS + 60)->seconds();
 
         $this->returnFromGoogle($flow)->assertSessionHas('status', 'google-failed');
+
         $this->assertGuest();
+    }
+
+    /** Y el perfil que espera a la pantalla de alta, igual (§6.3·3). */
+    public function test_the_waiting_profile_expires_on_its_own(): void
+    {
+        $this->configureKeys();
+
+        $this->signInWithGoogle();
+        $this->assertNotNull(GoogleAuthSession::peekProfile());
+
+        $this->travel(GoogleAuthSession::PROFILE_TTL_SECONDS + 60)->seconds();
+
+        $this->assertNull(GoogleAuthSession::peekProfile(), 'Una identidad verificada no espera en sesión para siempre.');
     }
 
     /** Cancelar en Google no es un fallo: se dice y se deja a la persona donde estaba. */
@@ -503,6 +542,17 @@ class GoogleAuthTest extends TestCase
         $this->assertNotNull($user->fresh()->last_login_at, 'Sin sello, el panel y el export tendrían un agujero con forma de Google.');
     }
 
+    /**
+     * La fijación de sesión queda cerrada al entrar.
+     *
+     * ⚠️⚠️ **Este caso comprueba una PROPIEDAD, y la mutación lo dice**: quitar el `regenerate()` del
+     * controlador lo deja **verde**, porque `SessionGuard::login()` ya llama a `migrate(true)` por su
+     * cuenta. O sea que la propiedad está garantizada dos veces y este caso no distingue cuál de las
+     * dos la sostiene. Se conserva —la propiedad importa y el día que Laravel cambie ese detalle esto
+     * lo dirá— y se conserva también la llamada explícita, que es lo que hace el único login que ya
+     * existía: la doctrina del proyecto es que los efectos de sesión los pone quien atiende la
+     * petición, no el servicio.
+     */
     public function test_the_session_id_is_regenerated_when_entering(): void
     {
         $this->configureKeys();
@@ -658,8 +708,11 @@ class GoogleAuthTest extends TestCase
             'email' => self::EMAIL,
             'email_verified' => true,
             'name' => 'Ana Pérez',
-            'iat' => time() - 10,
-            'exp' => time() + 3600,
+            // Con el reloj del framework, como el validador: si el token se fechara con `time()` y la
+            // suite corriera con `TEST_CLOCK` en otra fecha, estos casos saldrían caducados sin que
+            // nada estuviera mal.
+            'iat' => now()->getTimestamp() - 10,
+            'exp' => now()->getTimestamp() + 3600,
         ], $claims);
 
         return implode('.', [

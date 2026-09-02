@@ -21,6 +21,11 @@ use App\Domain\Identity\Contracts\SocialProfile;
  * reto que sobreviviera a un intento fallido sería un reto reutilizable, que es justo lo que el
  * `state` existe para impedir. Y las dos claves caducan por su cuenta, sin depender de que alguien
  * termine el flujo.
+ *
+ * ⚠️ Las horas se marcan con el reloj del FRAMEWORK (`now()`), nunca con `time()`: con `time()` las
+ * dos caducidades quedan fuera del alcance de `travel()` y de la auditoría del reloj de la suite, o
+ * sea **sin poder probarse**. Se descubrió al mutar: quitar la caducidad del reto dejaba la suite
+ * verde porque no había ningún caso capaz de envejecerlo.
  */
 final readonly class GoogleAuthSession
 {
@@ -56,7 +61,7 @@ final readonly class GoogleAuthSession
             'state' => bin2hex(random_bytes(32)),
             'nonce' => bin2hex(random_bytes(32)),
             'intended' => $intended,
-            'at' => time(),
+            'at' => now()->getTimestamp(),
         ];
 
         session([self::CHALLENGE_KEY => $challenge]);
@@ -87,7 +92,7 @@ final readonly class GoogleAuthSession
             return null;
         }
 
-        if ($at + self::CHALLENGE_TTL_SECONDS < time()) {
+        if ($at + self::CHALLENGE_TTL_SECONDS < now()->getTimestamp()) {
             return null;
         }
 
@@ -104,7 +109,7 @@ final readonly class GoogleAuthSession
     /** Guarda el perfil ya verificado mientras la persona completa su alta. */
     public static function rememberProfile(SocialProfile $profile): void
     {
-        session([self::PROFILE_KEY => $profile->toSession() + ['at' => time()]]);
+        session([self::PROFILE_KEY => $profile->toSession() + ['at' => now()->getTimestamp()]]);
     }
 
     /**
@@ -119,7 +124,7 @@ final readonly class GoogleAuthSession
             return null;
         }
 
-        if (time() > $row['at'] + self::PROFILE_TTL_SECONDS) {
+        if (now()->getTimestamp() > $row['at'] + self::PROFILE_TTL_SECONDS) {
             self::forgetProfile();
 
             return null;
