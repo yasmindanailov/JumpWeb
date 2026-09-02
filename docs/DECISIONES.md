@@ -22318,3 +22318,49 @@ gitignorado) · `docs/specs/guion-de-la-portada.md` (nuevo) · `docs/INSTALACION
 `docs/README.md` · `CLAUDE.md` · `docs/ESTADO.md` · `docs/specs/auditoria-diseno.md` (la cita de su
 tabla en C2/C3). Instrumento: `storage/app/audit-camino.mjs` (gitignorado). **Ni una línea de
 producto.**
+
+## #410 · 2026-09-03 · La segunda revisión pre-obra: el peor hueco era una SUMA que ningún resolvedor por-elemento puede ver
+
+**Contexto.** La spec de la hora extra (`specs/hora-extra.md`) llegó aprobada y revisada de forma
+adversarial (35 hallazgos). Antes de construir se hizo una **segunda pasada**: re-medir cada
+afirmación contra el código y la BD real, y barrer lo que la primera revisión no miró. Todas las
+afirmaciones medibles salieron exactas — y aun así aparecieron **cuatro huecos reales** (§4.11).
+
+**1 · El tope del padre tiene dos mitades y la spec solo tenía una.** La invariante es
+`Σ(complementos que OCUPAN de la línea) ≤ cantidad del padre`, y `effectiveQuantity()` no puede
+imponerla: resuelve UN complemento cada vez y no ve a los hermanos («1 hora extra» ×3 + «2 horas
+extra» ×3 sobre un padre de 4 = 6 se quedan de 4, cobrando el imposible). *La lección: cuando una
+regla es sobre un CONJUNTO, colocarla en el resolvedor por-elemento es no colocarla — la suma va en
+`resolve()`, el único sitio que ve todas las filas.*
+
+**2 · Un guard de modelo sin cinturón, citando la entrada que documenta por qué hace falta el
+cinturón.** La spec proponía rechazar «ocupa sin duración» en el modelo «como `#299`» — y el límite
+escrito de `#299` es que los eventos de Eloquent no ven `Query\Builder::update()`. Aquí el modo de
+fallo era el peor posible: para `occupancyMap`, duración nula = **«hasta el cierre»** — una fila
+torcida ocuparía el resto del día. El cinturón va en el punto único de composición: sin duración,
+**ni se ofrece ni se vende**.
+
+**3 · El hermano silencioso del bloqueo de configuración.** `seats_per_unit` vive en la MISMA
+sección que `CatalogForm` esconde a los complementos: el diseño dependía del default 1 de BD sin que
+ningún formulario lo enseñara. El guard lo hace explícito (`>= 1`). Y `EditCatalog` no tiene el
+simétrico de `normalizeByType()`: la defensa regla-12 de la edición es trabajo de la tanda.
+
+**4 · Una regla que corregía el DÓNDE sin decir el QUÉ.** El borde 8 decía que «la franja siguiente»
+se decide por zona y día — pero no escribía la regla. Ahora es determinista y está medida:
+`start_time == fin del tramo del padre`, única por `UNIQUE(zone_id, date, start_time)` (verificado);
+si no existe, invendible. *Primero se comprobó el esquema y la regla salió más simple: la rama
+«varias» era imposible y describirla habría sido describir un mundo que no existe.*
+
+**`[DECIDIDO owner, 2026-09-03]` · el precio de la hora extra NO varía por día (en principio).**
+Los complementos se tarifican a `Carbon::today()` (día de compra) en los tres caminos; el padre, por
+el día de la visita. No hay bug de paridad — hay un límite, y ahora está aceptado y escrito en
+§4.11 en vez de esperando a que alguien lo descubra con un suplemento de finde.
+
+**Además**: `TicketIssuer` gana `whereNull('parent_item_id')` como decisión (un ticket es una
+ADMISIÓN; la hora extra es la misma persona quedándose) — no-op hoy, fijado con caso para mañana; y
+`CRITICAL_RE` + `CriticalPathGateTest` tienen que crecer con el servicio de ocupantes nuevo y
+`AddonResolver`, que pasa a llevar aforo.
+
+**Verificación**: cada hallazgo con su medición en la entrada de spec (§4.11); los datos re-medidos
+sobre BD real (7 complementos `duration_min` nulo · 2/10 entradas ilimitadas · 0 hijas con franja o
+plazas · 28/28 pivotes sin `max_qty` · `UNIQUE` de `slots` en migración e índices vivos).

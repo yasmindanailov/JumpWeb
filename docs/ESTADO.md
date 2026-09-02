@@ -2,7 +2,11 @@
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-02, noche).
 >
-> **1. LA HORA EXTRA, que es lo siguiente y está APROBADA.** `docs/specs/hora-extra.md` 🟦, con las
+> **1. LA HORA EXTRA — 🚧 EN CURSO EN ESTE ORDENADOR desde el 2026-09-03** (carril producto/reservas;
+>    si eres el otro agente —landing—, no hay choque de ficheros: esto vive entero en Booking/panel.
+>    Antes de la obra se hizo una SEGUNDA revisión pre-construcción: **§4.11 de la spec + `#410`**
+>    — 4 huecos nuevos (el peor: el tope es por SUMA de hermanos), 3 reglas escritas y el
+>    `[DECIDIDO owner]` de que el precio NO varía por día.** `docs/specs/hora-extra.md` 🟦, con las
 >    tres decisiones del owner cerradas en su §7. **El orden es parte de la decisión**: primero
 >    unificar la derivación de ocupantes provisionales —una función que incluya hijas y hermanos,
 >    usada por `OrderCreator::otherOccupants()` **y** `AvailabilityReader::occupantsOf()`—, porque
