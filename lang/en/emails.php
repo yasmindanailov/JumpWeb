@@ -54,7 +54,7 @@ return [
         'outro' => 'Any questions before your visit? Write to us, we’re happy to help.',
     ],
     'guardian_authorization' => [
-        'subject' => 'Your authorisation for :name',
+        'subject' => 'Your signed authorisation',
         'greeting' => 'Hello,',
         'intro' => 'You have just signed the authorisation for :name. Here is your copy.',
         'booking' => 'Booking: :code.',

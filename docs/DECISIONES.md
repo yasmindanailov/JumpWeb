@@ -21430,3 +21430,87 @@ FALLAR, que es lo único que hace válido un verde** (`#147`): retirado el `lock
 restauró byte a byte (`git status` limpio) — no se ha tocado dominio: el cambio es **solo** del
 comando. Pint ✓ · docs-check ✓ · suite intacta (este camino no vive en la suite a propósito,
 `INVARIANTES §6`).
+
+---
+
+## #406 · 2026-09-02 · Un centinela de idempotencia que describe un estado INTERMEDIO sabe mentir sobre sí mismo
+
+**Revisión adversarial del subsistema del justificante** (`specs/waiver-por-reserva.md`), con seis
+lentes independientes y una pasada que intenta REFUTAR cada hallazgo antes de reportarlo: **29
+hallazgos crudos → 25 únicos → 10 refutados a fondo → 7 sobreviven**. La refutación tumbó 3 y
+**corrigió la severidad de 3 de los supervivientes** (dos «altas» eran bajas). *Sin esa pasada, este
+documento tendría dos alarmas de seguridad que no lo eran.*
+
+### 1 · La migración se declaraba «ya migrada» antes de crear el `UNIQUE`, la FK y el `NOT NULL`
+
+`2026_09_02_120000` cambia el vínculo del justificante del PEDIDO a la RESERVA en cinco pasos, y su
+centinela de idempotencia era *«¿ya no está `order_id`? entonces está migrada»*. **`order_id` se
+suelta en el paso 4 de 5**, y el paso 5 es el que crea `order_item_id NOT NULL`, la FK RESTRICT y el
+`UNIQUE (order_item_id, minor_key)`.
+
+⚠️⚠️ **Medido, no supuesto: en MySQL `supportsSchemaTransactions` vale `false`**, o sea que cada
+`ALTER` hace commit implícito y el estado «paso 4 hecho, paso 5 no» **existe de verdad y no se
+deshace solo**. Con el centinela viejo el reintento salía por el `return`, la migración quedaba
+**registrada como ejecutada**, y la tabla se quedaba para siempre sin el `UNIQUE` —la última red de
+«un niño, un papel»— y sin la FK que impide borrar la reserva de la que cuelga una prueba firmada.
+▶ *Un centinela de idempotencia tiene que describir el estado FINAL. Si se cumple antes que el
+último paso, la migración sabe mentir sobre sí misma.* Ahora el centinela **es el `UNIQUE`**, que se
+crea el último a propósito, y **cada pieza tiene su guarda** — incluidas las dos que no la tenían
+(`dropForeign` y `dropColumn`), por las que un reintento moría con `1091`.
+
+❗❗ **Y era inminente**: producción corre un commit anterior, así que esta migración **no ha corrido
+allí todavía** — el siguiente despliegue la ejecuta.
+
+⚠️ **La suite no puede ver esto**: en SQLite el DDL **sí** es transaccional. Por eso se verificó
+sobre **MySQL real, en una BD desechable**, con el estado intermedio fabricado a mano:
+- pasada limpia → `UNIQUE` ✓ · FK ✓ · `NOT NULL` ✓ · sin `order_id`;
+- desde el estado intermedio → **repara en 382 ms**;
+- **CONTROL con el código viejo desde el MISMO estado → corre en 5,17 ms, dice `DONE` y deja la
+  tabla rota**. Ése es el número que hace válido el verde;
+- estando ya migrada → **no-op en 7 ms**.
+
+### 2 · El nombre del menor viajaba en el ASUNTO, a un buzón que nadie verifica
+
+`guardian_email` lo teclea un adulto **sin cuenta**, es `nullable` y solo se valida con
+`email:filter`. Una errata (`@gmial.com`) mandaba a un desconocido un correo con asunto **«Tu
+justificante para Lucía Pérez García»**.
+▶ **El asunto es la peor mitad**: se replica en la previsualización de la bandeja, en la pantalla de
+bloqueo, en los logs del servidor de correo y en los **rebotes**, que citan asunto y cabeceras —
+sitios a los que el adjunto no llega. El cuerpo y el PDF los lee quien abre el mensaje.
+▶ Fuera el nombre del asunto en los tres idiomas; **se queda en el cuerpo**, que es donde el
+destinatario legítimo necesita saber por quién firmó. Guarda `test_the_subject_never_names_the_minor`
+**nacida roja**, con **control dentro** (asevera que el cuerpo SÍ lo nombra y que el asunto no está
+vacío: sin eso, un `toMail()` que no compusiera nada pasaría) y **mutación vista morder**.
+
+### 3 · El cambio entero de `#401` no lo vigilaba ninguna guarda
+
+Los **siete** ficheros que cubren el justificante creaban pedidos de **UNA sola línea**, y con una
+reserva por pedido «por reserva» y «por pedido» son conductas **indistinguibles**: los cuatro
+síntomas que el owner encontró con `R-LUKFD2` se podían reintroducir con la suite en verde.
+⚠️⚠️ Y el dato lo remata: **cero pedidos con justificantes en dos reservas distintas** en toda la BD,
+así que el cambio tampoco tenía sujeto en los datos. *Una feature sin fixture y sin datos es una
+feature sin red.*
+▶ **`GuardianTwoReservationsTest`**: un pedido con dos visitas en días distintos y cantidades
+distintas, y un caso por síntoma —un correo por reserva **con enlaces distintos**, el cupo de SU
+línea (`[1, 10]`, no `[11, 11]`), y el mismo menor autorizado en las DOS visitas—. **Tres mutaciones,
+las tres muerden** (`limit(1)` en `guardianReservations()`, la cantidad como suma del pedido, y la
+clave de «un niño, un papel» acotada al pedido), con verde de control antes de cada una y los tres
+ficheros restaurados byte a byte.
+
+### Lo que NO se arregla y queda fichado (`DEUDA.md`, cinco fichas)
+
+Las dos caducidades divergentes (**solo lectura**: la ventana extra cae siempre tras el cierre de la
+visita, así que no se escribe nada — y con ella **tres textos que afirman lo contrario del código**,
+`RGPD-03` incluida) · `assignedDependents()` no acota y la hoja imprime plazas **negativas**
+(reproducido: −2) · ~7 consultas por reserva contra un docblock que promete dos · el docblock de
+`sendGuardianLinkAction`, falso en sus dos mitades (**verificado que NO es hueco de autorización**:
+la página ya exige `orders.view`) · y el cupo impuesto por **dos escritores sin lock compartido**,
+que la crítica de completitud señaló como refutación DÉBIL y merece decisión de producto.
+
+⚠️ **Lo que este diseño de revisión NO puede ver**, dicho para quien siga: lo que solo aparece en
+navegador, lo que necesita MySQL real (justo el hallazgo 1) y lo que depende de reloj, cola o datos
+de producción.
+
+**Verificación**: suite **4.023 · 25.709** verde (medida tras rebasar encima el carril de Google) · Pint ✓ · docs-check ✓ · la migración probada sobre
+**MySQL real** con estado intermedio fabricado y **control sobre el código viejo** · 4 mutaciones
+vistas morder (1 del asunto + 3 de las dos visitas) · los tres ficheros mutados restaurados byte a byte.

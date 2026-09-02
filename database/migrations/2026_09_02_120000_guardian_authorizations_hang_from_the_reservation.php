@@ -44,84 +44,152 @@ return new class extends Migration
      * llegó a registrarse, el siguiente `migrate` la reintentó desde arriba y se estrelló con
      * *«Duplicate column name»*. Una migración que cambia varias cosas en varios `ALTER` tiene que
      * poder repetirse: el estado intermedio existe.
+     *
+     * ❗❗❗ **Y el primer intento de hacerla idempotente eligió MAL el centinela** (2026-09-02,
+     * `DECISIONES #406`, encontrado por una revisión adversarial antes de que esto llegara a
+     * producción). Decía «si ya no hay `order_id`, ya está migrada» — pero `order_id` se suelta en el
+     * **paso 4 de 5**, y el paso 5 es el que crea el `NOT NULL`, la FK y el **`UNIQUE`**.
+     *
+     * ⚠️⚠️ **En MySQL cada `ALTER` hace COMMIT IMPLÍCITO** (medido en este entorno:
+     * `supportsSchemaTransactions` → `false`), así que el estado «paso 4 hecho, paso 5 no» **existe de
+     * verdad y no se deshace solo**. Con el centinela viejo, el reintento salía por el `return`, la
+     * migración quedaba **registrada como ejecutada** y la tabla se quedaba para siempre sin el
+     * `UNIQUE (order_item_id, minor_key)` —la última red de «un niño, un papel»— y sin la FK que
+     * impide borrar la reserva de la que cuelga una prueba firmada. **Nada falla y nada avisa.**
+     *
+     * ▶ *Un centinela de idempotencia tiene que describir el estado FINAL, no uno intermedio.* Si el
+     * centinela se cumple antes que el último paso, la migración sabe mentir sobre sí misma.
+     *
+     * ⚠️ **La suite no puede ver esto**: en SQLite el DDL **sí** es transaccional, así que allí el
+     * estado intermedio no existe. Por eso la verificación de este arreglo va sobre MySQL real, con
+     * el estado intermedio fabricado a mano y con CONTROL sobre el código viejo.
      */
     public function up(): void
     {
+        // El estado FINAL, que es el único centinela honesto: la pieza que se crea la ÚLTIMA.
+        if ($this->hasIndex('guardian_authorizations_order_item_id_minor_key_unique')) {
+            return; // ya migrada, de verdad.
+        }
+
         if (! Schema::hasColumn('guardian_authorizations', 'order_item_id')) {
             Schema::table('guardian_authorizations', function (Blueprint $table) {
                 $table->unsignedBigInteger('order_item_id')->nullable()->after('id');
             });
         }
 
-        if (! Schema::hasColumn('guardian_authorizations', 'order_id')) {
-            return; // ya migrada.
-        }
+        // El relleno y el desmontaje del vínculo viejo solo tienen sentido mientras `order_id` esté.
+        // Una pasada que muriera después de soltarlo entra igual al bloque final de abajo.
+        if (Schema::hasColumn('guardian_authorizations', 'order_id')) {
+            // Relleno: la primera línea PRINCIPAL VIVA de su pedido. La misma cuenta que define la
+            // capacidad, para que una fila rellenada no caiga en un complemento ni en una cancelada.
+            foreach (DB::table('guardian_authorizations')->select('id', 'order_id')->get() as $row) {
+                $itemId = DB::table('order_items')
+                    ->where('order_id', $row->order_id)
+                    ->whereNull('parent_item_id')
+                    ->whereNull('cancelled_at')
+                    ->orderBy('id')
+                    ->value('id');
 
-        // Relleno: la primera línea PRINCIPAL VIVA de su pedido. La misma cuenta que define la
-        // capacidad, para que una fila rellenada no caiga en un complemento ni en una cancelada.
-        foreach (DB::table('guardian_authorizations')->select('id', 'order_id')->get() as $row) {
-            $itemId = DB::table('order_items')
-                ->where('order_id', $row->order_id)
-                ->whereNull('parent_item_id')
-                ->whereNull('cancelled_at')
-                ->orderBy('id')
-                ->value('id');
+                if ($itemId === null) {
+                    // Sin reserva viva no hay visita que autorizar. La firma va primero: la FK de
+                    // `subject_authorization_id` es RESTRICT y abortaría la transacción entera.
+                    DB::table('waiver_signatures')->where('subject_authorization_id', $row->id)->delete();
+                    DB::table('guardian_authorizations')->where('id', $row->id)->delete();
 
-            if ($itemId === null) {
-                // Sin reserva viva no hay visita que autorizar. La firma va primero: la FK de
-                // `subject_authorization_id` es RESTRICT y abortaría la transacción entera.
-                DB::table('waiver_signatures')->where('subject_authorization_id', $row->id)->delete();
-                DB::table('guardian_authorizations')->where('id', $row->id)->delete();
+                    continue;
+                }
 
-                continue;
+                DB::table('guardian_authorizations')->where('id', $row->id)->update(['order_item_id' => $itemId]);
             }
 
-            DB::table('guardian_authorizations')->where('id', $row->id)->update(['order_item_id' => $itemId]);
+            // ⚠️⚠️ **El ORDEN es el que MySQL impone, y solo se ve al pisarlo: la FK PRIMERO.** Mientras
+            // existe la clave foránea hace falta *algún* índice que la respalde; con el `UNIQUE` ya
+            // retirado, el índice simple es el único que queda y MySQL se niega a soltarlo —
+            // *«Cannot drop index …: needed in a foreign key constraint»*—. Soltar la FK antes deja el
+            // índice libre.
+            //
+            // ⚠️ **Cada paso con su guarda, SIN EXCEPCIÓN**: hasta `#406` la de `dropForeign` y la del
+            // `dropColumn` faltaban, así que un reintento desde el estado intermedio anterior moría con
+            // `1091 Can't DROP FOREIGN KEY` en vez de continuar.
+            // ⚠️ `Schema::getIndexes()` y **NO `SHOW INDEX`**: aquélla es portable y ésta es de MySQL —
+            // la suite corre en SQLite y una migración que solo sabe hablar con un motor rompe los 3.900
+            // casos en el primer `RefreshDatabase`. Lo dijo la suite en cuanto se intentó.
+            if ($this->hasIndex('guardian_authorizations_order_id_minor_key_unique')) {
+                Schema::table('guardian_authorizations', function (Blueprint $table) {
+                    $table->dropUnique(['order_id', 'minor_key']);
+                });
+            }
+
+            if ($this->hasForeignKeyOn('order_id')) {
+                Schema::table('guardian_authorizations', function (Blueprint $table) {
+                    $table->dropForeign(['order_id']);
+                });
+            }
+
+            if ($this->hasIndex('guardian_authorizations_order_id_index')) {
+                Schema::table('guardian_authorizations', function (Blueprint $table) {
+                    $table->dropIndex(['order_id']);
+                });
+            }
+
+            Schema::table('guardian_authorizations', function (Blueprint $table) {
+                $table->dropColumn('order_id');
+            });
         }
 
-        // ⚠️⚠️ **El ORDEN es el que MySQL impone, y solo se ve al pisarlo: la FK PRIMERO.** Mientras
-        // existe la clave foránea hace falta *algún* índice que la respalde; con el `UNIQUE` ya
-        // retirado, el índice simple es el único que queda y MySQL se niega a soltarlo —
-        // *«Cannot drop index …: needed in a foreign key constraint»*—. Soltar la FK antes deja el
-        // índice libre.
+        // El estado final, pieza a pieza y cada una con su guarda: aquí se llega tanto en la pasada
+        // buena como retomando una que muriera a mitad. **Laravel emite un `ALTER` por pieza**, así
+        // que el corte también puede caer DENTRO de este bloque.
+        if ($this->columnIsNullable('order_item_id')) {
+            Schema::table('guardian_authorizations', function (Blueprint $table) {
+                $table->unsignedBigInteger('order_item_id')->nullable(false)->change();
+            });
+        }
+
+        if (! $this->hasForeignKeyOn('order_item_id')) {
+            Schema::table('guardian_authorizations', function (Blueprint $table) {
+                // RESTRICT como la tenía el pedido: una autorización es la mitad de una prueba legal, y
+                // borrar la reserva por debajo la dejaría huérfana. `PurgeCustomerData` ya sabe el orden.
+                $table->foreign('order_item_id')->references('id')->on('order_items')->restrictOnDelete();
+            });
+        }
+
+        if (! $this->hasIndex('guardian_authorizations_order_item_id_index')) {
+            Schema::table('guardian_authorizations', function (Blueprint $table) {
+                $table->index('order_item_id');
+            });
+        }
+
+        // El `UNIQUE` va el ÚLTIMO a propósito: es el centinela de arriba, así que solo existe cuando
+        // todo lo demás está hecho. Si se creara antes, volvería a mentir.
         //
-        // ⚠️ Cada paso con su guarda: la primera pasada de esta migración se quedó a medias y el
-        // reintento tiene que poder continuar desde donde estuviera.
-        // ⚠️ `Schema::getIndexes()` y **NO `SHOW INDEX`**: aquélla es portable y ésta es de MySQL —
-        // la suite corre en SQLite y una migración que solo sabe hablar con un motor rompe los 3.900
-        // casos en el primer `RefreshDatabase`. Lo dijo la suite en cuanto se intentó.
-        $indexes = collect(Schema::getIndexes('guardian_authorizations'))->pluck('name');
+        // «Un niño, un papel» pasa a ser **por VISITA**: el mismo menor puede tener dos justificantes
+        // en el mismo pedido si va a dos días distintos, que es lo correcto.
+        if (! $this->hasIndex('guardian_authorizations_order_item_id_minor_key_unique')) {
+            Schema::table('guardian_authorizations', function (Blueprint $table) {
+                $table->unique(['order_item_id', 'minor_key']);
+            });
+        }
+    }
 
-        Schema::table('guardian_authorizations', function (Blueprint $table) use ($indexes) {
-            if ($indexes->contains('guardian_authorizations_order_id_minor_key_unique')) {
-                $table->dropUnique(['order_id', 'minor_key']);
-            }
-        });
+    /** Introspección PORTABLE (MySQL en producción, SQLite en la suite). */
+    private function hasIndex(string $name): bool
+    {
+        return collect(Schema::getIndexes('guardian_authorizations'))
+            ->pluck('name')
+            ->contains($name);
+    }
 
-        Schema::table('guardian_authorizations', function (Blueprint $table) {
-            $table->dropForeign(['order_id']);
-        });
+    private function hasForeignKeyOn(string $column): bool
+    {
+        return collect(Schema::getForeignKeys('guardian_authorizations'))
+            ->contains(fn (array $fk): bool => in_array($column, $fk['columns'], true));
+    }
 
-        Schema::table('guardian_authorizations', function (Blueprint $table) use ($indexes) {
-            if ($indexes->contains('guardian_authorizations_order_id_index')) {
-                $table->dropIndex(['order_id']);
-            }
-        });
-
-        Schema::table('guardian_authorizations', function (Blueprint $table) {
-            $table->dropColumn('order_id');
-        });
-
-        Schema::table('guardian_authorizations', function (Blueprint $table) {
-            $table->unsignedBigInteger('order_item_id')->nullable(false)->change();
-            // RESTRICT como la tenía el pedido: una autorización es la mitad de una prueba legal, y
-            // borrar la reserva por debajo la dejaría huérfana. `PurgeCustomerData` ya sabe el orden.
-            $table->foreign('order_item_id')->references('id')->on('order_items')->restrictOnDelete();
-            // «Un niño, un papel» pasa a ser **por VISITA**: el mismo menor puede tener dos
-            // justificantes en el mismo pedido si va a dos días distintos, que es lo correcto.
-            $table->unique(['order_item_id', 'minor_key']);
-            $table->index('order_item_id');
-        });
+    private function columnIsNullable(string $column): bool
+    {
+        return collect(Schema::getColumns('guardian_authorizations'))
+            ->firstWhere('name', $column)['nullable'] ?? false;
     }
 
     public function down(): void

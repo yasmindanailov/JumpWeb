@@ -333,6 +333,58 @@ class GuestMinorSurfacesTest extends TestCase
         $this->assertSame(1, GuardianAuthorization::count());
     }
 
+    /**
+     * ❗❗ **El ASUNTO no puede nombrar al menor** (`DECISIONES #406`, encontrado por la revisión
+     * adversarial del subsistema).
+     *
+     * `guardian_email` es un campo TECLEADO por un adulto sin cuenta, `nullable` y validado solo con
+     * `email:filter`: nadie comprueba que ese buzón sea suyo. Una errata —`@gmial.com`— manda el
+     * correo a un desconocido.
+     *
+     * ⚠️⚠️ **Y el asunto es la peor mitad**: se replica en la previsualización de la bandeja, en la
+     * pantalla de bloqueo del móvil, en los logs del servidor de correo y en los REBOTES, que citan
+     * asunto y cabeceras — sitios a los que el adjunto no llega. El cuerpo y el PDF los lee quien
+     * abre el mensaje; el asunto lo ve cualquiera que mire la pantalla.
+     *
+     * ▶ Por eso el nombre del menor sale del asunto y se queda en el cuerpo, que es donde el
+     * destinatario legítimo necesita saber por quién firmó.
+     */
+    public function test_the_subject_never_names_the_minor(): void
+    {
+        Notification::fake();
+
+        $responsible = User::factory()->create(['email_verified_at' => now()]);
+        $order = $this->orderFor($responsible);
+        $version = $this->version();
+
+        $this->post(URL::temporarySignedRoute('reservation.authorization.store', now()->addDays(14), ['reservation' => $order->items()->whereNull('parent_item_id')->orderBy('id')->firstOrFail()]), [
+            'document_id' => $version->getKey(), 'accept_waiver' => '1',
+            'minor_name' => 'Luis', 'minor_surname' => 'Pérez Soto',
+            'minor_born_on' => now()->subYears(9)->toDateString(),
+            'guardian_name' => 'Carlos', 'guardian_surname' => 'Pérez Gil',
+            'guardian_relationship' => 'father', 'guardian_email' => 'carlos@example.com',
+        ])->assertSessionHas('guardian_status', 'signed');
+
+        Notification::assertSentOnDemand(
+            GuardianAuthorizationSigned::class,
+            function ($notification, array $channels, $notifiable): bool {
+                $mail = $notification->toMail($notifiable);
+
+                // El nombre del menor NO, en ninguna de sus dos mitades ni completo.
+                $this->assertStringNotContainsString('Luis', (string) $mail->subject);
+                $this->assertStringNotContainsString('Pérez Soto', (string) $mail->subject);
+
+                // ⚠️ **CONTROL de que la sonda mira donde cree**: el cuerpo SÍ lo nombra, así que un
+                // asunto vacío o un `toMail()` que no compusiera nada pasarían el bloque de arriba sin
+                // decir nada. Si esto se rompe, el instrumento dejó de leer el correo de verdad.
+                $this->assertStringContainsString('Luis Pérez Soto', implode(' ', $mail->introLines));
+                $this->assertNotSame('', (string) $mail->subject);
+
+                return true;
+            },
+        );
+    }
+
     public function test_a_resend_by_the_same_parent_does_not_send_a_second_copy(): void
     {
         Notification::fake();

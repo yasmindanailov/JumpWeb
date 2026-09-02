@@ -1,16 +1,32 @@
 # Estado del proyecto — foto viva
 
-❗ **PARA EL CARRIL DEL JUSTIFICANTE: os he arreglado un test INTERMITENTE vuestro** (2026-09-02, un
-commit propio, `tests/Feature/Waiver/GuardianAuthorizationScreenTest.php`). Apareció al fusionar:
-**falló en un pase paralelo y pasó en el siguiente**, y no era el paralelismo.
-▶ **La causa, reproducida a voluntad**: `responsible()` crea al titular con `User::factory()` —o sea
-`fake()->name()` en español— y la hoja del padre **sí pinta ese nombre**; el caso de la «hoja en
-blanco» asevera **por subcadena** que no aparecen «Luis», «Carlos», «Elena» ni «Nora». Creando al
-responsable como *«Luis Blanco Díaz»* se pone rojo en la misma línea 183 que falló sola.
-▶ **Es vuestra propia lección de `#337`** —*un nombre aleatorio enfrentado a una aserción por
-subcadena es una moneda al aire disfrazada de test*— reaparecida en otro fichero. Arreglado igual:
-**nombre fijado**, con control de que la aserción **sigue mordiendo** (inyectando el nombre que
-colisiona vuelve a fallar).
+✅ **EL JUSTIFICANTE, REVISADO DE FORMA ADVERSARIAL — Y TRES ARREGLOS, UNO DE ELLOS INMINENTE**
+(2026-09-02, `DECISIONES #406`). Seis lentes independientes + una pasada que REFUTA cada hallazgo:
+**29 crudos → 25 únicos → 10 refutados a fondo → 7 sobreviven**, y la refutación **corrigió la
+severidad de tres** (dos «altas» eran bajas). *Sin esa pasada habría dos alarmas de seguridad falsas.*
+▶ ❗❗❗ **ARREGLADO ANTES DE QUE LLEGARA A PRODUCCIÓN**: la migración `2026_09_02_120000` se declaraba
+«ya migrada» **en el paso 4 de 5**, y el paso 5 es el que crea el `UNIQUE`, la FK y el `NOT NULL`. En
+MySQL cada `ALTER` hace commit implícito (`supportsSchemaTransactions` → **false**, medido), así que
+un corte dejaba la tabla **sin la última red de «un niño, un papel»**, con la migración marcada como
+hecha y **sin que nada avisara**. Producción no la ha corrido todavía: **el próximo despliegue sí**.
+▶ Verificado sobre **MySQL real** en BD desechable, con el estado intermedio fabricado y **CONTROL**:
+el código viejo corre en **5,17 ms**, dice `DONE` y deja la tabla rota; el nuevo **repara en 382 ms**
+y es no-op (7 ms) si ya está.
+▶ **El nombre del menor sale del ASUNTO** del correo de copia (va a un buzón tecleado que nadie
+verifica; el asunto se replica en previsualizaciones, logs de correo y rebotes, donde el adjunto no
+llega). Se queda en el cuerpo.
+▶ **`GuardianTwoReservationsTest`**: los SIETE ficheros del subsistema creaban pedidos de UNA línea,
+así que **el cambio entero de `#401` se podía revertir en verde**. Tres mutaciones, las tres muerden.
+▶ **Cinco fichas nuevas en `DEUDA.md`**, con su reproducción — la más jugosa: el cupo lo imponen DOS
+escritores sin lock compartido, y eso es decisión de producto tuya.
+▶ ⚠️ **Y el carril de Google nos arregló de paso un test INTERMITENTE nuestro** (aviso suyo en
+`ESTADO`, leído y **retirado** según `CONVENCIONES §10.4`): `GuardianAuthorizationScreenTest` creaba
+al titular con `User::factory()` y aseveraba **por subcadena** que en la hoja del padre no aparecen
+«Luis», «Carlos», «Elena» ni «Nora» — con un responsable llamado *«Luis Blanco Díaz»* se pone rojo.
+**Es nuestra propia lección de `#337`** —*un nombre aleatorio contra una aserción por subcadena es
+una moneda al aire disfrazada de test*— reaparecida en otro fichero. Lo arreglaron con nombre fijado
+y control. *Que una lección esté escrita en una entrada no la aplica en los ficheros que no se
+tocaron ese día.*
 
 ⚠️⚠️ **UN VERIFICADOR DE DINERO LLEVABA FALLANDO 3 DE CADA 7 DÍAS CON EL PRODUCTO SANO** (2026-09-02,
 `DECISIONES #405`). `mixed-party:verify-concurrency` siembra su franja a `+30 días` y solo ponía
@@ -663,7 +679,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > ⚠️ **RE-MEDIDA tras rebasar encima los DOS arreglos del reloj de la T3** (con `npm run build` +
 > `build:ssr` delante, porque `#340` toca Vue): **sale el MISMO número**, que es lo que había que
 > comprobar — los dos arreglan FIXTURES y no añaden casos. *Coincidir no se supone: se mide.*
-> Suite **4019 en verde** (25.694 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> Suite **4023 en verde** (25.709 aserciones, 1 skipped a propósito), medida el 2026-09-02
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`): las cuatro tandas del
 > justificante (`#400`→`#403`) sobre las TRES de Google auth (`#342`, `#343`, `#344`), la columna del menú
 > (`#341`, +8), el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo (`#339`),

@@ -54,7 +54,7 @@ return [
         'outro' => '¿Alguna duda antes de tu visita? Escríbenos, estamos encantados de ayudarte.',
     ],
     'guardian_authorization' => [
-        'subject' => 'Tu justificante para :name',
+        'subject' => 'Tu justificante firmado',
         'greeting' => 'Hola,',
         'intro' => 'Acabas de firmar la autorización de :name. Aquí tienes tu copia.',
         'booking' => 'Reserva: :code.',

@@ -57,7 +57,13 @@ class GuardianAuthorizationSigned extends Notification implements ShouldQueue
             $code = $proof->orderCode();
 
             $mail = (new MailMessage)
-                ->subject(__('emails.guardian_authorization.subject', ['name' => $minor]))
+                // ⚠️⚠️ **El asunto NO nombra al menor** (`#406`): `guardian_email` lo teclea un adulto
+                // sin cuenta y nadie comprueba que ese buzón sea suyo, así que una errata manda esto a
+                // un desconocido. El asunto se replica donde el adjunto no llega —previsualización de
+                // la bandeja, pantalla de bloqueo, logs del servidor de correo y los REBOTES, que citan
+                // asunto y cabeceras—, así que ahí no va un nombre de menor. En el CUERPO sí, que es
+                // donde el destinatario legítimo necesita saber por quién firmó.
+                ->subject(__('emails.guardian_authorization.subject'))
                 ->greeting(__('emails.guardian_authorization.greeting'))
                 ->line(__('emails.guardian_authorization.intro', ['name' => $minor]));
 
