@@ -1,5 +1,15 @@
 # Estado del proyecto — foto viva
 
+⚠️⚠️ **UN VERIFICADOR DE DINERO LLEVABA FALLANDO 3 DE CADA 7 DÍAS CON EL PRODUCTO SANO** (2026-09-02,
+`DECISIONES #405`). `mixed-party:verify-concurrency` siembra su franja a `+30 días` y solo ponía
+precio en la tarifa `normal`; en esta BD `special` (prioridad 10) cubre viernes, sábado y domingo, y
+esos días el dominio **se abstiene con razón** (`#288`) → cero líneas y rojo.
+▶ **Lo delató el propio instrumento**: decía «la línea se duplicó» sobre una tabla que ponía **0
+líneas y 0,00 €**. *Cuando el mensaje contradice a sus cifras, el roto es el instrumento.*
+▶ Arreglado en tres sitios (precio en todas las tarifas · **guarda del instrumento** antes de
+forkear · veredicto que separa duplicación, ausencia e importe) y **visto FALLAR sin el lock: 12
+líneas y 84,00 €**. Preexistente, verificado en la base `#341`: no lo causó la fusión.
+
 ❗❗❗ **▶ PARA EL AGENTE DEL PORTÁTIL (Google auth) — LÉELO ANTES DE NUMERAR NADA**: se acabó el
 contador compartido. **Este ordenador pasa a la banda `#400`+ y tú te quedas con la secuencia
 natural (`#34x`), toda para ti** — no tienes que cambiar nada, solo saber que un `#40x` no es tuyo.

@@ -11,7 +11,9 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AgeFamilySealer;
+use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Identity\Models\User;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -73,6 +75,15 @@ class VerifyMixedPartySurchargeConcurrency extends Command
         $dir = storage_path('app/mixed-party-verify-'.Str::random(8));
         File::ensureDirectoryExists($dir);
 
+        if (! $this->guardTheInstrument($seed, $scenario)) {
+            if (! $this->option('keep')) {
+                $this->cleanUp($seed);
+            }
+            File::deleteDirectory($dir);
+
+            return self::FAILURE;
+        }
+
         $this->line("Reserva #{$seed['item']->id} · {$workers} guardados simultáneos del mismo post-form [{$scenario}].");
 
         // Todos arrancan a la vez: sin cita común, los forks se escalonan y la carrera no ocurre.
@@ -112,7 +123,21 @@ class VerifyMixedPartySurchargeConcurrency extends Command
             ]);
             $family = 'verify-'.Str::lower(Str::random(6));
 
-            $make = function (string $name, int $min, int $max, int $cents) use ($zone, $family, $rate): TicketType {
+            // ⚠️⚠️ **El precio va en TODAS las tarifas activas, no solo en `normal`, y esto NO es
+            // cinturón: era un DEFECTO del instrumento** (2026-09-02, `#405`). La franja nace a
+            // `+30 días`, así que el día de la semana en que cae lo decide el CALENDARIO — y si ese
+            // día lo gobierna otra tarifa (en la BD de desarrollo, `special` con prioridad 10 cubre
+            // viernes, sábado y domingo), los packs no tienen precio bajo ella, `guestRegimes()` no
+            // puede tarificar, y `MixedPartySurcharge::reconcile()` **se abstiene con razón**
+            // (`#288`: «no poder tarificar es una ausencia»). Resultado: **CERO líneas y el
+            // verificador en rojo con el producto perfecto, 3 de cada 7 días**.
+            // ▶ *Un verificador que depende del día de la semana en que se ejecuta no verifica: sortea.*
+            // Es el hermano exacto de la auditoría del reloj de `#337`, que cazó once rojos de esa
+            // misma familia. El mismo importe en todas las tarifas mantiene el suplemento esperado
+            // (25,00 − 18,00 = 7,00 €) sea cual sea la que mande ese día.
+            $rates = RateType::query()->where('is_active', true)->get();
+
+            $make = function (string $name, int $min, int $max, int $cents) use ($zone, $family, $rates): TicketType {
                 $pack = TicketType::create([
                     'name' => ['es' => $name], 'type' => TicketType::TYPE_PACK,
                     'zone_id' => $zone->id, 'seats_per_unit' => 1, 'min_qty' => 1, 'max_qty' => 30,
@@ -124,10 +149,12 @@ class VerifyMixedPartySurchargeConcurrency extends Command
                     ],
                     'guest_age_family' => $family, 'guest_age_min' => $min, 'guest_age_max' => $max,
                 ]);
-                Price::create([
-                    'priceable_type' => $pack->getMorphClass(), 'priceable_id' => $pack->id,
-                    'rate_type_id' => $rate->id, 'amount_cents' => $cents, 'currency' => 'EUR',
-                ]);
+                foreach ($rates as $r) {
+                    Price::create([
+                        'priceable_type' => $pack->getMorphClass(), 'priceable_id' => $pack->id,
+                        'rate_type_id' => $r->id, 'amount_cents' => $cents, 'currency' => 'EUR',
+                    ]);
+                }
 
                 return $pack;
             };
@@ -223,6 +250,50 @@ class VerifyMixedPartySurchargeConcurrency extends Command
     }
 
     /** @param  array{item:OrderItem, order:Order}  $seed */
+    /**
+     * Guarda del INSTRUMENTO, hermana de la de `purchase:verify-oversell` (`#147`): comprueba que el
+     * escenario sembrado PUEDE producir la línea que se va a disputar, ANTES de forkear.
+     *
+     * ⚠️⚠️ **Nace de un rojo REAL con el producto sano** (2026-09-02, `#405`): sin precio bajo la
+     * tarifa que gobierna el día de la franja, `reconcile()` se abstiene, salen CERO líneas y el
+     * comando lo cantaba como «la línea se duplicó». *Un instrumento que no distingue «no pudo
+     * medir» de «el invariante falló» convierte cualquier problema de fixture en un falso defecto
+     * de dinero* — y aquí el falso defecto tocaba justo el camino que nadie quiere tocar a ciegas.
+     *
+     * Lo que comprueba es la PRECONDICIÓN exacta que faltaba: que la tarifa que manda ese día
+     * tarifica los DOS regímenes de la familia. Si no, dice qué falta y se rinde en amarillo.
+     *
+     * @param  array{item:OrderItem, order:Order, zone:Zone, packs:array<int,TicketType>, user:User}  $seed
+     */
+    private function guardTheInstrument(array $seed, string $scenario): bool
+    {
+        $slot = $seed['item']->slot;
+        $day = Carbon::parse($slot->date);
+        $rate = app(RateResolver::class)->for($day);
+
+        $unpriced = collect($seed['packs'])
+            ->filter(fn (TicketType $p): bool => $p->priceCentsForRate($rate, 1) === null)
+            ->map(fn (TicketType $p): string => (string) $p->id);
+
+        if ($unpriced->isNotEmpty()) {
+            $this->newLine();
+            $this->error(
+                "✗ FIXTURE ROTO (no es un fallo del invariante): el día {$day->toDateString()} lo gobierna la ".
+                "tarifa «{$rate->key}» y los packs {$unpriced->implode(', ')} no tienen precio bajo ella, ".
+                'así que `reconcile()` se abstendría y saldrían CERO líneas. Siembra el precio en esa tarifa.'
+            );
+
+            return false;
+        }
+
+        $this->line(
+            "<fg=gray>Guarda del instrumento · el día {$day->toDateString()} lo gobierna la tarifa ".
+            "«{$rate->key}» y los dos regímenes tarifican bajo ella. ✓</>"
+        );
+
+        return true;
+    }
+
     private function evaluate(array $seed, int $workers, string $dir, string $scenario): bool
     {
         $outcomes = collect(File::files($dir))->map(fn ($f): string => trim(File::get($f->getPathname())));
@@ -258,8 +329,28 @@ class VerifyMixedPartySurchargeConcurrency extends Command
             $this->info($scenario === 'credit'
                 ? '✓ UNA sola línea de descuento de −7,00 €: el lock serializa también el espejo.'
                 : '✓ UNA sola línea de suplemento y un solo cargo de 7,00 €: el lock serializa.');
+        } elseif ($children->count() > 1 || $marked->count() > 1) {
+            $this->error(
+                '✗ La línea se DUPLICÓ ('.$children->count().' líneas · '.$marked->count().
+                ' ajustes): sin serializar, cada guardado escribe la suya. Es el fallo que este comando busca.'
+            );
+        } elseif ($children->isEmpty() && $marked->isEmpty()) {
+            // ⚠️ **Cero NO es duplicación, y decir que lo es manda a buscar el defecto al sitio
+            // equivocado** (`#405`): hasta el 2026-09-02 los dos casos compartían mensaje. Con la
+            // guarda del instrumento delante, llegar aquí ya significa que el fixture era capaz y
+            // que quien se abstuvo fue el dominio — que es una pista muy distinta.
+            $this->error(
+                '✗ NO se escribió NINGUNA línea. Ojo: esto NO es la carrera que busca el comando — el '.
+                'invariante ni se ha ejercitado. `MixedPartySurcharge::reconcile()` se abstuvo pese a que '.
+                'la guarda del instrumento dio verde: mira el portador (`MixedPartySettings`), el sello de '.
+                'la reserva y `allAgesDeclared()` antes de sospechar del lock.'
+            );
         } else {
-            $this->error('✗ La línea se duplicó: sin serializar, cada guardado escribe la suya.');
+            $this->error(
+                '✗ UNA línea, pero el importe no es el esperado: '.
+                number_format($marked->sum('amount_cents') / 100, 2, ',', '.').' € contra '.
+                number_format($expected / 100, 2, ',', '.').' € — el lock serializa; lo que falla es la aritmética.'
+            );
         }
 
         return $ok;

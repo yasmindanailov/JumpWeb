@@ -21240,3 +21240,58 @@ DESPUÉS de reconstruir los dos bundles · Pint ✓ (1.132 ficheros) · docs-che
 migraciones) · huella de las citas del otro carril verificada idéntica antes y después en las DOS
 renumeraciones · los seis escenarios de `purchase:verify-oversell`, `redsys:verify-concurrency` y los
 dos de `waiver:verify-chain`, verdes sobre MySQL real.
+
+---
+
+## #405 · 2026-09-02 · Un verificador que depende del día de la semana en que se ejecuta no verifica: sortea
+
+`mixed-party:verify-concurrency` —el verificador de concurrencia del suplemento de fiesta mixta, o
+sea de un camino de **DINERO**— llevaba **saliendo rojo con el producto perfecto 3 de cada 7 días**.
+Encontrado al correr los verificadores para empujar la reconciliación de `#404`.
+
+### Lo medido, con control
+
+El comando siembra su franja a **`now()->addDays(30)`**, así que el día de la semana en que cae lo
+decide el CALENDARIO. Sus dos packs, en cambio, solo tenían precio en la tarifa **`normal`**. En la
+BD de desarrollo hay una tarifa **`special` con prioridad 10 que cubre `[0,5,6]`** —domingo, viernes
+y sábado—, y el 2026-09-02 el `+30` cae en **viernes**: bajo `special` los packs no tienen precio,
+`guestRegimes()` no puede tarificar y **`MixedPartySurcharge::reconcile()` se abstiene con razón**
+(`#288`: *«no poder tarificar es una ausencia»*). Salen **CERO líneas**.
+
+▶ **Control que lo cerró**: movida la franja de viernes a lunes con el resto idéntico, **verde** (1
+línea, 7,00 €). Y **control de que no lo causaba nada reciente**: el mismo rojo en la base `#341`,
+antes de los dos carriles — es preexistente, no una regresión.
+⚠️ **El primer sospechoso fue el producto y era el instrumento.** Lo que lo delató fueron sus propios
+números: el veredicto decía «la línea se **duplicó**» mientras la tabla de encima decía **0 líneas,
+0 ajustes, 0,00 €**. *Cuando el mensaje de un instrumento contradice a sus propias cifras, el roto es
+el instrumento.* Es el hermano exacto de la auditoría del reloj de `#337`, que cazó once rojos de
+esta misma familia: **una prueba que depende de cuándo se ejecuta no es una prueba**.
+
+### Los tres arreglos, porque el defecto era triple
+
+1. **El fixture pone precio en TODAS las tarifas activas**, no solo en `normal` — con el mismo
+   importe, así que el suplemento esperado (25,00 − 18,00 = 7,00 €) no cambia mande la que mande.
+   Esto quita la dependencia del calendario de raíz.
+2. **Guarda del INSTRUMENTO antes de forkear** (el idioma de `purchase:verify-oversell`, `#147`):
+   resuelve qué tarifa gobierna ese día y comprueba que **los dos regímenes tarifican bajo ella**;
+   si no, dice «FIXTURE ROTO, no es un fallo del invariante» y se rinde. ▶ *Un instrumento que no
+   distingue «no pude medir» de «el invariante falló» convierte cualquier problema de fixture en un
+   falso defecto de dinero* — y aquí el falso defecto señalaba al lock anti-carrera.
+3. **El veredicto distingue tres desenlaces** donde antes había uno: **duplicación** (con el número
+   de líneas), **ausencia** (que NO es duplicación y manda a mirar el portador, el sello y
+   `allAgesDeclared()` antes que el lock) e **importe equivocado** (el lock serializa; falla la
+   aritmética).
+
+### Por qué importaba arreglarlo hoy y no ficharlo
+
+El `pre-push` manda correr este comando al tocar el reconciliador. **Un gate de dinero que miente el
+43 % de los días no se ignora: se aprende a saltárselo**, y entonces deja de proteger el día que sí
+tiene razón.
+
+**Verificación**: los DOS escenarios verdes (`charge` 7,00 € · `credit` −7,00 €) **con la franja en
+viernes**, que es el caso que fallaba, y la guarda cantando que ese día manda `special`. ▶ **Y visto
+FALLAR, que es lo único que hace válido un verde** (`#147`): retirado el `lockForUpdate()` de
+`reconcile()`, el comando caza **12 líneas y 84,00 €** y las rotula como duplicación. El servicio se
+restauró byte a byte (`git status` limpio) — no se ha tocado dominio: el cambio es **solo** del
+comando. Pint ✓ · docs-check ✓ · suite intacta (este camino no vive en la suite a propósito,
+`INVARIANTES §6`).
