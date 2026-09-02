@@ -20742,7 +20742,7 @@ tratar su logo como **asset** y no como icono.
 7 mutaciones con control, **7 muerden** · suite **3962 · 25.353** verde · Pint ✓ · docs-check ✓ ·
 `npm run build` y `build:ssr` ✓.
 ▶ **Queda la T3** (las cuatro acciones que exigen contraseña, desvincular y el interruptor de
-marketing) y **tu OJO**: `VERIFICACION-E2E-CAJON.md` §5.octies, que necesita el cliente de
+marketing) y **tu OJO**: `VERIFICACION-E2E-CAJON.md` §5.google, que necesita el cliente de
 OAuth de DESARROLLO.
 
 ## #344 · 2026-09-02 · Entrar con Google — la T3: los derechos que no se podían ejercer
@@ -20816,7 +20816,7 @@ mirando el caso.*
 **Verificación**: 14 casos nuevos · 5 mutaciones con control, **5 muerden** · suite **3975 · 25.413**
 verde · Pint ✓ · docs-check ✓ · `npm run test:js` 921 ✓ · build y build:ssr ✓.
 ▶ **Con esto las tres tandas de código están hechas.** Queda **tu OJO** (`VERIFICACION-E2E-CAJON.md`
-§5.octies) y, como requisito de salida de la Q7, **la política de privacidad**: no se anuncia el
+§5.google) y, como requisito de salida de la Q7, **la política de privacidad**: no se anuncia el
 botón a clientes reales sin que el documento describa el tratamiento (art. 13/14).
 ---
 

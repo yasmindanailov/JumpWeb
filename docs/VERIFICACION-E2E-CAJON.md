@@ -2277,7 +2277,12 @@ echo 'limpio'.PHP_EOL;"
 
 ---
 
-## 5.octies · ENTRAR Y REGISTRARSE CON GOOGLE — guion del OJO del owner (T4 de `specs/auth-con-google.md`; `DECISIONES #342`, `#343`)
+## 5.google · ENTRAR Y REGISTRARSE CON GOOGLE — guion del OJO del owner (T4 de `specs/auth-con-google.md`; `DECISIONES #342`, `#343`, `#344`)
+
+> ⚠️ **Se llama `5.google` y no `5.octies` a propósito**: este fichero tiene DOS series de ordinales
+> —la vieja con `§` y la nueva sin él— y **`5.sexies`, `5.septies` y `5.octies` ya están duplicados**
+> (medido el 2026-09-02). Añadir un cuarto choque habría dejado los punteros de `DECISIONES` y
+> `ESTADO` señalando a dos sitios distintos. Un ordinal que no identifica no es un ordinal.
 
 > **Qué se está probando**: los tres caminos de §5 —entrar con un vínculo que ya existe, vincular una
 > cuenta que ya tenía ese correo, y darse de alta desde cero— más el que la revisión adversarial
@@ -2285,13 +2290,54 @@ echo 'limpio'.PHP_EOL;"
 
 ### ❗ Lo que hace falta ANTES, y sin ello esto no se puede recorrer
 
-**Un cliente de OAuth de DESARROLLO** en la consola de Google (`INSTALACION-CLIENTE.md` §5.a), con
-`http://localhost:8081/auth/google/callback` como URI de redireccionamiento. **El de producción no
-sirve**: sus URIs son `playjump.es` y `www.playjump.es`, y Google exige coincidencia exacta.
+**Un cliente de OAuth de DESARROLLO** en la consola de Google (`INSTALACION-CLIENTE.md` §5.a). **El de
+producción no sirve**: sus URIs son `playjump.es` y `www.playjump.es`, y Google exige coincidencia
+**exacta** con la que la aplicación envía.
+
+▶ **En ese mismo cliente caben las DOS URIs de prueba** (Google admite varias), así que sirve para
+local y para staging sin crear un tercer cliente:
+
+| Dónde se prueba | URI de redireccionamiento autorizado |
+|---|---|
+| Local (Sail) | `http://localhost:8081/auth/google/callback` |
+| Staging | `https://jumpweb.sites.aelium.app/auth/google/callback` |
+
+⚠️⚠️ **El host de staging es `jumpweb.sites.aelium.app`, NO `jumpweb.staging.aelium.app`** — medido el
+2026-09-02: el segundo **no resuelve en DNS**, así que registrarlo en Google no habría servido de
+nada. Es el mismo que llevan `scripts/deploy.sh` y `~/.ssh/config`.
+⚠️ **Orígenes de JavaScript: no hacen falta** — este flujo redirige desde el servidor.
+⚠️ **Publica la pantalla de consentimiento** o añádete como usuario de prueba: en «Testing» Google
+solo deja entrar a los usuarios listados, y el síntoma es «esta app no está verificada».
+
+**Las claves, en el entorno que vayas a probar:**
 
 ```bash
+# LOCAL
 docker compose exec -u sail laravel.test php artisan app:set-setting auth.google_client_id  '…apps.googleusercontent.com' --group=auth --force
 docker compose exec -u sail laravel.test php artisan app:set-setting auth.google_client_secret 'GOCSPX-…'                  --group=auth --force
+
+# STAGING
+ssh jumpweb-staging "cd ~/public_html && php artisan app:set-setting auth.google_client_id  '…apps.googleusercontent.com' --group=auth --force"
+ssh jumpweb-staging "cd ~/public_html && php artisan app:set-setting auth.google_client_secret 'GOCSPX-…'                  --group=auth --force"
+```
+
+### Lo medido de los dos entornos (2026-09-02, antes de empezar)
+
+| | Local | Staging |
+|---|---|---|
+| Modo del waiver | **`interno`** | **`interno`** |
+| Versión publicada | **v1 (es)** | **v1 (es)** |
+| Esquema de esta feature | `user_identities` ✓ · `consents.revoked_at` ✓ | ✓ ✓ (desplegado y migrado el 2026-09-02) |
+| Claves de Google | sin poner | sin poner |
+| **Sin claves** | `/auth/google` → **404** y **cero** marcado de botón | idéntico, verificado por HTTP |
+| A dónde va el CORREO | **Mailpit**, `http://localhost:8028` | ⚠️ **`MAIL_MAILER=log`**: no sale ningún correo — se lee en `storage/logs/laravel.log` |
+
+⚠️ **Eso último decide dónde probar el caso P12**: su comprobación clave es *«llega el aviso y dice
+que la contraseña anterior ha dejado de servir»*. En local se lee en Mailpit; en staging hay que
+mirar el log:
+
+```bash
+ssh jumpweb-staging "cd ~/public_html && grep -A 20 'ya entra con' storage/logs/laravel.log | tail -30"
 ```
 
 ⚠️ Sin las dos claves, `/auth/google` responde **404** y **el botón no se pinta**: eso también es una
@@ -2313,16 +2359,30 @@ comprobación válida —el hueco falla hacia invisible— pero no es el recorri
 
 ```bash
 # 1) Alguien se registra ANTES con tu correo de Google y NO lo verifica
+#    LOCAL:
 docker compose exec -u sail laravel.test php artisan tinker --execute="
   \$u = App\Domain\Identity\Models\User::create(['name'=>'Ocupante','email'=>'TU-CORREO@gmail.com','phone'=>'600000000','password'=>'ocupante1234']);
   echo \$u->id;"
+
+#    STAGING (el mismo comando, por SSH):
+ssh jumpweb-staging "cd ~/public_html && php artisan tinker --execute=\"
+  \\\$u = App\Domain\Identity\Models\User::create(['name'=>'Ocupante','email'=>'TU-CORREO@gmail.com','phone'=>'600000000','password'=>'ocupante1234']);
+  echo \\\$u->id;\""
 ```
 
 | # | Qué hacer | Qué tiene que pasar |
 |---|---|---|
 | P12·1 | Entrar con Google con ESE correo | Entras **a esa cuenta**, con el aviso «Hemos vinculado tu cuenta de Google» |
-| P12·2 | Mirar Mailpit (`localhost:8028`) | Ha llegado el aviso de vinculación, y **dice que la contraseña anterior ha dejado de servir** |
+| P12·2 | El aviso por correo (Mailpit en local · `laravel.log` en staging) | Ha llegado, y **dice que la contraseña anterior ha dejado de servir** |
 | P12·3 | Cerrar sesión e intentar entrar con `ocupante1234` | **No entra.** Es la mitad de la defensa que hace segura la vinculación automática |
+
+### Y las tres piezas de la T3, que se ven en «Mi cuenta» (`#344`)
+
+| # | Dónde | Qué mirar |
+|---|---|---|
+| T3·1 | Privacidad y datos → «Tus consentimientos» | El **interruptor de comunicaciones comerciales**. Apágalo: la lista pasa a decir «retirado el …» sin perder la fecha en que se aceptó |
+| T3·2 | Sesiones | **«Cuentas vinculadas»** con tu correo de Google y su fecha, y **«Desvincular»** — que exige la contraseña de arriba. Con la equivocada, el vínculo **sigue ahí** |
+| T3·3 | Las cuatro pantallas con contraseña | Bajo el campo, el aviso de que quien entró con Google puede **crearla** desde «Recupera tu contraseña» |
 
 ### Lo que NO se puede comprobar aquí
 

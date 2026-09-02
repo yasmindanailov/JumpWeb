@@ -61,11 +61,20 @@ de 64 hex—; `/registro/google` abre el cajón en `google-signup`; los textos d
 dando 1 sin claves** — es el RÓTULO dentro del payload del cajón, que viaja siempre. Lo que dice si
 el botón se pinta es su marcado (`auth__google`), que sin claves sale **0**. Es la misma trampa que
 `#339` anotó con la palabra «waiver».
+▶ ✅ **DESPLEGADO A STAGING Y VERIFICADO** (2026-09-02, `https://jumpweb.sites.aelium.app`): las dos
+migraciones aplicadas —`user_identities` y `consents.revoked_at`—, waiver en modo **`interno` con la
+v1 publicada** (o sea que la pantalla SÍ pedirá el descargo), y **sin claves la ruta da 404 y el botón
+no se pinta**. **A producción NO se ha subido nada.**
+▶ ❗❗ **Y una corrección de dato que te ahorra un error en Google Cloud**: **`jumpweb.staging.aelium.app`
+NO EXISTE** —medido: no resuelve en DNS—. El host de staging es **`jumpweb.sites.aelium.app`**, que es
+el que llevan `deploy.sh` y el `~/.ssh/config`. Registrar el otro en la consola no habría servido de
+nada, y el síntoma habría sido `redirect_uri_mismatch` sin nada que depurar de nuestro lado.
 ▶ **QUEDA SOLO TU OJO** y **la política de privacidad**: es requisito de salida de tu Q7 — no se
 anuncia el botón a clientes reales sin que el documento describa el tratamiento (art. 13/14). El
 texto vive en la BD, así que en `playjump.es` es un paso manual desde el panel.
 
-🟦 **GOOGLE AUTH · LA T2 EN EL ÁRBOL: EL CAMINO SE CIERRA DE PUNTA A PUNTA** (2026-09-02,
+📜 **GOOGLE AUTH · LA T2** (la entrada de arriba la CONTINÚA: la T3 ya está hecha, así que su «queda
+la T3» del final ya no aplica; lo demás sigue vigente) (2026-09-02,
 `DECISIONES #343`, spec §19). Quien no tiene cuenta vuelve de Google, completa **teléfono, condiciones
 y descargo** en el cajón, y entra **ya firmado** — que es exactamente lo que la decisión de §4 buscaba:
 que nadie llegue al parque sin haberlo aceptado él mismo.
@@ -83,12 +92,13 @@ iconos exige `currentColor` y rejilla 24, y un glifo con colores dentro rompe la
 la web se vea de un solo idioma. Dice «Continuar con Google». Ficha en `DEUDA.md`.
 ▶ **QUEDA LA T3** —las CUATRO acciones que hoy exigen contraseña (una cuenta de Google no puede
 ninguna: art. 12.2), **desvincular**, y el interruptor de marketing con su registro de retirada— y
-**TU OJO**: guion en `VERIFICACION-E2E-CAJON.md` **§5.octies**, con el caso P12 montado paso a paso.
+**TU OJO**: guion en `VERIFICACION-E2E-CAJON.md` **§5.google**, con el caso P12 montado paso a paso.
 ▶ ❗ **Y para eso hace falta el cliente de OAuth de DESARROLLO** (`localhost:8081`): el que me pasaste
 es el de PRODUCCIÓN y **no sirve para probar aquí** —Google exige coincidencia exacta de la URI—.
 
-🟦 **GOOGLE AUTH · LA T1 ESTÁ EN EL ÁRBOL — el mecanismo y la raíz de confianza** (2026-09-02,
-`DECISIONES #342`, `docs/specs/auth-con-google.md` §18). Encargo del owner: *«0 fricción para el
+📜 **GOOGLE AUTH · LA T1** (continuada por las dos entradas de arriba: su «queda la T2 y la T3» ya no
+aplica; **lo que sí sigue vigente es todo lo demás**, y sobre todo el aviso de la raíz de confianza)
+(2026-09-02, `DECISIONES #342`, `docs/specs/auth-con-google.md` §18). Encargo del owner: *«0 fricción para el
 cliente a la hora de registrarse»*. ▶ **Sin las dos claves configuradas, `/auth/google` y su retorno
 responden 404 y no hay botón**: ninguna instalación cambia de conducta hasta que alguien las escriba,
 así que esto se puede desplegar sin estrenar nada.

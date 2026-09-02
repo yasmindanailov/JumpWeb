@@ -3,7 +3,7 @@
 > Estado: 🟦 **LAS TRES TANDAS DE CÓDIGO ESTÁN EN EL ÁRBOL** (2026-09-02, `DECISIONES #342`, `#343`
 > y `#344`) · Abierta: 2026-09-02 · Autor: agente
 > ▶ **Lo ejecutado, con lo que enseñó, está en §18 (T1), §19 (T2) y §20 (T3) — y va ANTES que las
-> tandas de §16.** Queda el **OJO del owner** (guion en `VERIFICACION-E2E-CAJON.md` §5.octies) y, como
+> tandas de §16.** Queda el **OJO del owner** (guion en `VERIFICACION-E2E-CAJON.md` §5.google) y, como
 > requisito de salida de la Q7, **la política de privacidad**.
 > Las decisiones `[DECIDIDO owner]` se tomaron en la conversación de diseño del 2026-09-02 y se citan
 > con la frase del owner cuando la hay.
@@ -826,7 +826,7 @@ con las dos claves configuradas, y su ausencia ES el interruptor. Con caso en la
 
 - **La T3 entera**, y sigue siendo dependencia dura: cada día que esto esté sin ella crea cuentas sin
   autoservicio para las cuatro acciones que exigen contraseña (art. 12.2).
-- **El OJO del owner**: guion en `VERIFICACION-E2E-CAJON.md` §5.octies. Necesita el cliente de OAuth
+- **El OJO del owner**: guion en `VERIFICACION-E2E-CAJON.md` §5.google. Necesita el cliente de OAuth
   de DESARROLLO — el de producción no sirve, y es correcto que no sirva.
 - ❗ **UNA DESVIACIÓN DE LA LETRA DE LA Q6, dicha para que la decidas tú.** §7 dice que en modo
   `externo` o sin versión publicada **no hay pantalla** y se entra directo; aquí la pantalla se pinta
@@ -901,7 +901,7 @@ quitarle al titular su forma de entrar.
 
 ### 20.5 · Lo que queda del todo
 
-- **El OJO del owner** (`VERIFICACION-E2E-CAJON.md` §5.octies), que necesita el cliente de OAuth de
+- **El OJO del owner** (`VERIFICACION-E2E-CAJON.md` §5.google), que necesita el cliente de OAuth de
   DESARROLLO.
 - **La política de privacidad** (Q7), y es **requisito de salida**: no se anuncia el botón a clientes
   reales sin que el documento describa el tratamiento y el origen de los datos (art. 13/14). El texto
