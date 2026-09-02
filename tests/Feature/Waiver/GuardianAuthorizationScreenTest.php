@@ -59,9 +59,24 @@ class GuardianAuthorizationScreenTest extends TestCase
         ])->first();
     }
 
+    /**
+     * ⚠️⚠️ **El nombre va FIJADO, y no es cosmética: sin él este fichero es intermitente.**
+     * `UserFactory` usa `fake()->name()` con el faker español, y la hoja del padre **sí pinta el
+     * nombre del responsable**; el caso de la «hoja en blanco» asevera por SUBCADENA que no aparecen
+     * «Luis», «Carlos», «Elena» o «Nora» —nombres corrientes—, así que una tirada desafortunada lo
+     * pone rojo sin que nada esté mal.
+     * ▶ Reproducido el 2026-09-02: falló en un pase paralelo, pasó en el siguiente, y **se provocó a
+     * voluntad** creando al responsable como «Luis Blanco Díaz» → rojo en la misma línea 183.
+     * ▶ Es exactamente la lección que `#337` ya dejó escrita en `GuestMinorIsolationTest`: *un nombre
+     * aleatorio enfrentado a una aserción por subcadena es una moneda al aire disfrazada de test*.
+     * Aquí vuelve a aparecer en otro fichero, así que la respuesta es la misma: fijar el nombre.
+     */
     private function responsible(): User
     {
-        return User::factory()->create(['email_verified_at' => now()]);
+        return User::factory()->create([
+            'email_verified_at' => now(),
+            'name' => 'Responsable De La Reserva',
+        ]);
     }
 
     private function orderFor(User $responsible, int $quantity = 4, ?string $date = null, string $status = Order::STATUS_PAID): Order

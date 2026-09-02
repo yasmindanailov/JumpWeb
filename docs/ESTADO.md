@@ -1,5 +1,17 @@
 # Estado del proyecto — foto viva
 
+❗ **PARA EL CARRIL DEL JUSTIFICANTE: os he arreglado un test INTERMITENTE vuestro** (2026-09-02, un
+commit propio, `tests/Feature/Waiver/GuardianAuthorizationScreenTest.php`). Apareció al fusionar:
+**falló en un pase paralelo y pasó en el siguiente**, y no era el paralelismo.
+▶ **La causa, reproducida a voluntad**: `responsible()` crea al titular con `User::factory()` —o sea
+`fake()->name()` en español— y la hoja del padre **sí pinta ese nombre**; el caso de la «hoja en
+blanco» asevera **por subcadena** que no aparecen «Luis», «Carlos», «Elena» ni «Nora». Creando al
+responsable como *«Luis Blanco Díaz»* se pone rojo en la misma línea 183 que falló sola.
+▶ **Es vuestra propia lección de `#337`** —*un nombre aleatorio enfrentado a una aserción por
+subcadena es una moneda al aire disfrazada de test*— reaparecida en otro fichero. Arreglado igual:
+**nombre fijado**, con control de que la aserción **sigue mordiendo** (inyectando el nombre que
+colisiona vuelve a fallar).
+
 ⚠️⚠️ **UN VERIFICADOR DE DINERO LLEVABA FALLANDO 3 DE CADA 7 DÍAS CON EL PRODUCTO SANO** (2026-09-02,
 `DECISIONES #405`). `mixed-party:verify-concurrency` siembra su franja a `+30 días` y solo ponía
 precio en la tarifa `normal`; en esta BD `special` (prioridad 10) cubre viernes, sábado y domingo, y
