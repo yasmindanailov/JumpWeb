@@ -251,6 +251,27 @@ return [
         'already_exists' => 'Ya tienes una cuenta con este correo. Inicia sesión para continuar.',
         'exists_unverified' => 'Ya te registraste con este correo pero no lo verificaste. Te hemos reenviado el enlace de verificación.',
         'leave_blank' => 'Deja este campo en blanco',
+        // El botón de entrar con Google, en las dos pestañas de auth. Viaja SIEMPRE —es una clave, no
+        // un subgrupo— porque las dos pantallas las ve quien no tiene sesión.
+        'google_cta' => 'Continuar con Google',
+    ],
+
+    // La pantalla que COMPLETA un alta con Google (`specs/auth-con-google.md` §7).
+    //
+    // ⚠️ Este subgrupo viaja **solo en su puerta** (`/registro/google`), y por eso puede permitirse
+    // ser largo: a esta pantalla no se llega de ninguna otra forma —hay que volver de Google—, así
+    // que mandarlo en todas las páginas públicas sería pagar bytes para no pintarlos nunca.
+    'google' => [
+        'eyebrow' => 'Ya casi está',
+        'title' => 'Completa tu registro',
+        'intro' => 'Ya sabemos quién eres por tu cuenta de Google. Solo nos falta esto para poder reservar a tu nombre.',
+        'email_label' => 'Tu correo',
+        'email_hint' => 'Es el de tu cuenta de Google, ya verificado.',
+        'submit' => 'Crear mi cuenta',
+        'submitting' => 'Creando…',
+        // Lo que se ve si la sesión caducó, si ya se completó el alta o si se llega aquí de rebote.
+        'expired' => 'Ha pasado demasiado tiempo desde que entraste con Google, o este registro ya se completó.',
+        'restart' => 'Empezar otra vez con Google',
     ],
 
     'status' => [
@@ -286,7 +307,6 @@ return [
         'google-email-unverified' => 'Google no da por verificado ese correo, así que no podemos usarlo para identificarte. Verifícalo en tu cuenta de Google o regístrate con tu correo y contraseña.',
         'google-anonymized' => 'Esa cuenta se eliminó a petición de su titular y no se puede recuperar. Puedes crear una nueva cuando quieras.',
         'google-provider-conflict' => 'Tu cuenta ya está vinculada a otra cuenta de Google. Entra con aquélla, o con tu contraseña, y escríbenos si quieres cambiarla.',
-        'google-complete-signup' => 'Ya casi está: completa estos datos para terminar tu registro.',
     ],
 
     'verify' => [

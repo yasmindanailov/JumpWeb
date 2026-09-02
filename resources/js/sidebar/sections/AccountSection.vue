@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, defineAsyncComponent } from 'vue';
 import { useAccountStore } from '../stores/account.js';
 import { useAuthStore } from '../stores/auth.js';
 import { ZONES, bringsOwnHeading, titleKeyOf } from '../account/navigation.js';
@@ -17,6 +17,18 @@ import CardZone from '../account/zones/CardZone.vue';
 import LoginZone from '../account/zones/LoginZone.vue';
 import RegisterZone from '../account/zones/RegisterZone.vue';
 import ForgotZone from '../account/zones/ForgotZone.vue';
+/**
+ * ⚠️⚠️ **La ÚNICA zona en carga diferida, y el motivo es una medición** (`#343`): entera pesa
+ * **~6,2 KiB** del chunk del cajón, que se descarga en la PRIMERA apertura —o sea, tiempo de espera
+ * de cualquiera que vaya a comprar—, y esta pantalla la ve una vez en la vida quien se registra con
+ * Google. El presupuesto (`SidebarBundleBudgetTest`) tenía 44 B de holgura, así que la elección real
+ * era subir el techo para todo el mundo o cobrárselo a quien la usa. Se cobra a quien la usa: llega
+ * por su PUERTA (`/registro/google`), o sea con una carga de página por delante, y la petición del
+ * chunk va en paralelo con la del perfil que la pantalla necesita igualmente.
+ * ▶ Es también la razón de que el botón y `account/google.js` NO se difieran: esos sí los pinta o los
+ * lee cualquiera, y separarlos costaría una petición para ahorrar unos cientos de bytes.
+ */
+const GoogleSignupZone = defineAsyncComponent(() => import('../account/zones/GoogleSignupZone.vue'));
 import AuthTabs from '../account/zones/AuthTabs.vue';
 
 /**
@@ -250,5 +262,15 @@ const signIn = () => store.go(ZONES.LOGIN);
             :account="account"
             :messages="messages"
             :auth="auth" />
+
+        <!-- La CUARTA pantalla de auth: completar un alta que viene de Google. No lleva pestañas
+             —no es una tercera cara de «entrar / crear cuenta»: se llega volviendo de Google— y por
+             eso queda fuera de la condición de `AuthTabs`, como `FORGOT`. -->
+        <GoogleSignupZone
+            v-else-if="store.zone === ZONES.GOOGLE_SIGNUP"
+            :account="account"
+            :messages="messages"
+            :auth="auth"
+            :urls="urls" />
     </Shell>
 </template>

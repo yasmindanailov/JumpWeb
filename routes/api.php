@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\CatalogAddonsController;
 use App\Http\Controllers\Api\V1\CatalogProductsController;
 use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
+use App\Http\Controllers\Api\V1\GoogleSignupController;
 use App\Http\Controllers\Api\V1\GuestFormController;
 use App\Http\Controllers\Api\V1\LegalWaiverController;
 use App\Http\Controllers\Api\V1\MeAccountContextController;
@@ -83,6 +84,14 @@ Route::name('api.v1.')->group(function (): void {
     Route::post('/auth/email/resend', [AuthRegistrationController::class, 'resendVerification'])->name('auth.email.resend');
     Route::post('/auth/password/forgot', [PasswordRecoveryController::class, 'sendLink'])->name('auth.password.forgot');
     Route::post('/auth/password/reset', [PasswordRecoveryController::class, 'reset'])->name('auth.password.reset');
+
+    // ── Completar el alta que viene de GOOGLE (`specs/auth-con-google.md` §7) — PÚBLICO ───────
+    // Públicas porque quien las usa **todavía no tiene cuenta**: acaba de volver de Google y le falta
+    // el teléfono y las aceptaciones. Lo que las acota no es un guard, es que **el perfil vive en la
+    // SESIÓN del servidor**: sin él las dos responden 404, y ni el `sub` ni el correo se aceptan de
+    // la petición. Sin claves de Google configuradas, 404 también.
+    Route::get('/auth/google/pending', [GoogleSignupController::class, 'pending'])->name('auth.google.pending');
+    Route::post('/auth/google/complete', [GoogleSignupController::class, 'complete'])->name('auth.google.complete');
 
     // ── Ajustes de la instalación (Fase 4 · paso 4.0b) — PÚBLICO ────────────────────────────
     // Los cuatro valores que un cliente necesita para pintar el cajón bien a la primera: el bloque

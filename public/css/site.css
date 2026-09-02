@@ -1108,6 +1108,13 @@
 .auth__sent { margin: 0 0 var(--sp-4); font-family: var(--font-body); font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); }
 .auth__form { max-width: none; margin-top: 18px; }
 .auth__submit { width: 100%; justify-content: center; margin-top: 6px; }
+/* Entrar con Google (`specs/auth-con-google.md`). Es la SEGUNDA forma de entrar, no la principal:
+   va debajo del formulario, con su propio aire y en el tratamiento secundario del botón para que no
+   compita con el que envía lo que la persona acaba de escribir.
+   ⚠️ **Sin logotipo tetracolor a propósito**: el set de iconos exige `currentColor` y rejilla 24
+   (`IconSetAnatomyTest`), y un glifo con colores tecleados dentro rompe la anatomía que hace que la
+   web se vea de un solo idioma. La marca queda nombrada en el rótulo (ficha en `DEUDA.md`). */
+.auth__google { width: 100%; justify-content: center; margin-top: var(--sp-3); }
 .form__hint { color: var(--fg-mute); font-size: 12px; }
 
 /* casillas legales / marketing */

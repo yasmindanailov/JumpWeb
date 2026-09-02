@@ -230,6 +230,19 @@ return [
         'already_exists' => 'You already have an account with this email. Please log in to continue.',
         'exists_unverified' => 'You already registered with this email but did not verify it. We have resent the verification link.',
         'leave_blank' => 'Leave this field blank',
+        'google_cta' => 'Continue with Google',
+    ],
+
+    'google' => [
+        'eyebrow' => 'Almost there',
+        'title' => 'Finish signing up',
+        'intro' => 'We know who you are from your Google account. We just need this to book in your name.',
+        'email_label' => 'Your email',
+        'email_hint' => 'The one from your Google account, already verified.',
+        'submit' => 'Create my account',
+        'submitting' => 'Creating…',
+        'expired' => 'Too much time has passed since you signed in with Google, or this signup was already completed.',
+        'restart' => 'Start again with Google',
     ],
 
     'status' => [
@@ -260,7 +273,6 @@ return [
         'google-email-unverified' => 'Google does not consider that address verified, so we cannot use it to identify you. Verify it in your Google account, or sign up with your email and a password.',
         'google-anonymized' => 'That account was deleted at its owner’s request and cannot be recovered. You can create a new one whenever you like.',
         'google-provider-conflict' => 'Your account is already linked to a different Google account. Sign in with that one, or with your password, and contact us if you want to change it.',
-        'google-complete-signup' => 'Almost there: fill in these details to finish signing up.',
     ],
 
     'verify' => [

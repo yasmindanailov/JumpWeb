@@ -1,9 +1,10 @@
 # [SPEC] Entrar y registrarse con Google
 
-> Estado: 🟦 **LA T1 ESTÁ EN EL ÁRBOL** (2026-09-02, `DECISIONES #342`) · Abierta: 2026-09-02 ·
-> Autor: agente
-> ▶ **Lo ejecutado, con lo que enseñó, está en §18 — y va ANTES que las tandas de §16.** Quedan la
-> T2 (la pantalla), la T3 (lo irreversible y el marketing) y el OJO del owner.
+> Estado: 🟦 **LA T1 Y LA T2 ESTÁN EN EL ÁRBOL** (2026-09-02, `DECISIONES #342` y `#343`) ·
+> Abierta: 2026-09-02 · Autor: agente
+> ▶ **Lo ejecutado, con lo que enseñó, está en §18 (T1) y §19 (T2) — y va ANTES que las tandas de
+> §16.** Con la T2 el camino se cierra de punta a punta; quedan la **T3** (lo irreversible y el
+> marketing) y el **OJO del owner** (guion en `VERIFICACION-E2E-CAJON.md` §5.octies).
 > Las decisiones `[DECIDIDO owner]` se tomaron en la conversación de diseño del 2026-09-02 y se citan
 > con la frase del owner cuando la hay.
 >
@@ -627,7 +628,7 @@ owner al servidor, y nada más.
 | | Qué | |
 |---|---|---|
 | **T1 · El mecanismo** ✅ | **HECHA — ver §18.** Migración `user_identities` · `GoogleAuth` · **la raíz de confianza de §6.3** · las rutas web con `state` · el servicio de vinculación · **la purga por BORRADO con su caso** · **`user_identities` en el export del art. 20 + su cambio de contrato** · la acción `identities.linked` en `AuditLog::ACTIONS`. ⚠️ **Esta celda decía «rechazo de `PANEL_ROLES`» y estaba CADUCADA**: es el texto de la revisión, anterior a la Q5 — el owner decidió que el equipo **sí** puede vincular (§6.6), y así se ha construido. ⚠️ `identities.unlinked` **no se declara todavía**: su emisor es la T3, y una acción catalogada sin emisor es vocabulario muerto | La prueba primero |
-| **T2 · El alta** | La pantalla, el alta que nace de ella (con **todo** lo de §5.3), el aviso de vinculación por correo, y el botón · ✱ **la medición del presupuesto del cajón ANTES de escribir**, y la partida en carga diferida si no cabe · ✱ **la CSP no admite hoy `accounts.google.com`** si se usara One Tap · ✱ el icono tetracolor de Google **choca con `IconSetAnatomyTest`** («ningún glifo teclea un color») | El caso del 90 % |
+| **T2 · El alta** ✅ | **HECHA — ver §19.** La pantalla en el CAJÓN (`[DECIDIDO owner]` Q8), el alta que nace de ella con todo lo de §5.3, y el botón en las tres superficies de auth. ⚠️ El aviso de vinculación por correo **entró con la T1**: nace con el código que vincula, y un vínculo silencioso aunque fuera un día es el defecto que el contrapeso 2 existe para no tener. ⚠️ El presupuesto **se midió antes de escribir** y decidió la forma: la pantalla va en carga DIFERIDA. ⚠️ El icono tetracolor **no entra**, como esta celda anticipaba: el rótulo nombra la marca y hay ficha en `DEUDA.md`. ▶ La CSP no se toca: no se usa One Tap | El caso del 90 % |
 | **T3 · Lo irreversible y el marketing** | Ticket de re-autenticación (esquema **nuevo**) para las **cuatro** superficies · **desvincular** · interruptor de marketing **+ su registro de retirada** y el endpoint | Cierra los huecos legales |
 | **T4 · El OJO del owner** | Guion de navegador con los tres caminos y con P12 | |
 
@@ -656,7 +657,7 @@ poda ninguna**.
 - [x] Q9 · marketing **solo** en el interruptor de la cuenta
 - [x] Q10 · las claves en `settings`
 - [x] Q8 · la pantalla va **en el cajón** (2026-09-02); el presupuesto se mide al empezar la T2
-- [ ] **Q11 · texto del botón** — «Continuar con Google» salvo que digas otra cosa
+- [x] Q11 · el botón dice **«Continuar con Google»** (es/en/fr), que era el valor por defecto de la spec
 - [ ] ✅ final del owner a la spec, y su OJO en navegador (T4)
 
 ▶ **La T1 está EN EL ÁRBOL** (`#342`, §18). Lo abierto es de la T2 en adelante.
@@ -753,3 +754,85 @@ vincular sola** (la cuenta está verificada) y manda su aviso. Es ruido, no un b
 - ⚠️ **Un titular ya identificado que pase por `/auth/google` cambia de cuenta si su Google resuelve
   a otra**: es la conducta normal de «entrar con Google», no la de «vincular la mía», que llega en la
   T3 con su intención explícita (`linked_via = account`).
+
+---
+
+## 19 · La T2, EJECUTADA (2026-09-02, `DECISIONES #343`)
+
+Con ella el camino se cierra: quien no tiene cuenta vuelve de Google, completa lo que Google no da y
+entra **ya firmado**.
+
+### 19.1 · Las piezas
+
+| Pieza | Qué es |
+|---|---|
+| `Identity\Services\GoogleSignup` | El alta desde un `SocialProfile`: cuenta, rol, sellos, `consents`, vínculo y **la firma del descargo** |
+| `Api\V1\GoogleSignupController` | `GET auth/google/pending` (qué pintar) y `POST auth/google/complete` (el alta) |
+| `account/google.js` | El módulo plano: qué se manda, los tres desenlaces y **la secuencia de la pantalla** |
+| `account/zones/GoogleSignupZone.vue` | La pantalla, en **carga diferida** |
+| `steps/GoogleButton.vue` | El botón, en las dos zonas de auth y en el paso 5 del embudo |
+| Ruta `registro.google` + `AccountDoor` | La PUERTA: sirve la home y el cajón abre su zona, como `/registro` |
+
+### 19.2 · Q8, resuelta con la cifra delante
+
+`[DECIDIDO owner]`: **en el cajón**. Se le ofreció la tercera opción que la spec no valoró —una página
+servida por el servidor, coste cero de bundle— y eligió el cajón.
+
+Medido antes de escribir, que es lo que §16 pedía: **44 B de holgura** en el chunk y **~6,2 KiB** de
+pantalla. Así que la elección real era subir el techo para todos o cobrárselo a quien la usa. Se
+cobra a quien la usa, con **dos podas medidas**: carga diferida (**−1,88 KiB**) y el estado fuera del
+store global (**−1,32 KiB**). El techo sube 263 → **267**, y el del payload anónimo 2.750 → **2.800**,
+que son los 44 B del rótulo del botón.
+
+⚠️ **Los ~380 B de la pantalla no viajan en ninguna página**: es la primera poda por RUTA del montaje,
+y se sostiene porque a esa zona **no se llega de ninguna otra forma**.
+
+### 19.3 · Lo que sostiene la seguridad de la pantalla
+
+1. ⚠️⚠️ **Ni el `sub` ni el correo viajan en la petición.** Los pone el servidor desde la sesión. Hay
+   caso que manda un `email` en el cuerpo y comprueba que la cuenta nace igualmente con el de la
+   sesión — porque el silencio sería la vulnerabilidad.
+2. **El envío CONSUME el perfil**: dos pestañas o un doble clic no crean dos cuentas.
+3. **Antes de crear se vuelve a RESOLVER la identidad** con el mismo servicio que el retorno: si el
+   correo se registró mientras tanto, se ENTRA en vez de estrellarse contra el `UNIQUE`.
+4. La firma del descargo va **fuera** de la transacción del alta: `WaiverSigner` abre la suya y
+   bloquea la fila del titular, y anidarla dejaría ese lock tomado durante todo el alta. Si fallara,
+   la cuenta es válida y el aviso de «te falta firmar» ya existe.
+
+### 19.4 · Dos guardas ENSANCHADAS (no exceptuadas) y una mutación que enseñó algo
+
+- **`SidebarTranslationKeysExistTest` medía contra UNA página.** Con la primera poda por RUTA eso
+  daba un **falso positivo** —declararía «mudas» unas claves que llegan— y un falso positivo empuja a
+  mandar bytes a todas las páginas para callarlo. Ahora recorre también las PUERTAS, como invitado
+  (con sesión, una puerta de invitado abre el índice).
+- **`SidebarStyleWiringTest`** cazó `.auth__google` sin regla: la clase se escribió antes que su CSS.
+- ⚠️⚠️ **Y un caso pasaba en verde por el motivo equivocado**: «sin aceptar el descargo no hay cuenta»
+  aseveraba solo el 422, que con la regla de la casilla relajada seguía saliendo por la regla del
+  identificador del texto. Ahora asevera el CAMPO. *Un test que solo mira el código de estado no dice
+  qué guarda funciona.*
+
+### 19.5 · El botón, y lo que NO lleva
+
+**Sin logotipo tetracolor de Google.** El set de iconos exige `currentColor` y rejilla 24
+(`IconSetAnatomyTest`), y un glifo con colores tecleados dentro rompe la anatomía que hace que la web
+se vea de un solo idioma — la celda de §16 ya lo anticipaba. La marca queda en el rótulo, y hay ficha
+en `DEUDA.md` por si el owner quiere el botón oficial, que exige tratar su logo como **asset**.
+
+⚠️ El botón se pinta **solo si la instalación ofrece Google**: la ida viaja en el montaje únicamente
+con las dos claves configuradas, y su ausencia ES el interruptor. Con caso en las dos direcciones.
+
+### 19.6 · Lo que la T2 deja abierto
+
+- **La T3 entera**, y sigue siendo dependencia dura: cada día que esto esté sin ella crea cuentas sin
+  autoservicio para las cuatro acciones que exigen contraseña (art. 12.2).
+- **El OJO del owner**: guion en `VERIFICACION-E2E-CAJON.md` §5.octies. Necesita el cliente de OAuth
+  de DESARROLLO — el de producción no sirve, y es correcto que no sirva.
+- ❗ **UNA DESVIACIÓN DE LA LETRA DE LA Q6, dicha para que la decidas tú.** §7 dice que en modo
+  `externo` o sin versión publicada **no hay pantalla** y se entra directo; aquí la pantalla se pinta
+  igualmente, con teléfono y condiciones. El motivo: la Q6 se contestó dando por hecho que la
+  pantalla existía **solo** para el descargo, y no es así — también recoge el **teléfono**, que tú
+  llamaste *«imprescindible para las reservas»*, y la **aceptación de condiciones**, que es
+  contractual. Entrar directo en esa instalación crearía cuentas sin ninguna de las dos, que es
+  justo la consecuencia que §7 avisa.
+  ▶ **Hoy no muerde**: `playjump.es` está en modo `interno` con versión publicada, así que la rama no
+  se ejercita en ninguna instalación viva. Si prefieres la letra de la Q6, es un `if` en el retorno.

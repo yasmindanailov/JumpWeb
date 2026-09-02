@@ -66,4 +66,8 @@ return [
         'waiver_required' => 'To create the account you must read and accept the liability waiver.',
         'online_sales_disabled' => 'Online booking is not available yet. Call us or come to the park to book.',
     ],
+
+    'google' => [
+        'refused' => 'We could not finish signing you up with that Google account. Try again, or sign up with your email and a password.',
+    ],
 ];

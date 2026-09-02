@@ -320,10 +320,30 @@ class SidebarMountTest extends TestCase
                 'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
                 'password_hint', 'accept_waiver', 'waiver_read', 'accept_privacy', 'accept_terms',
                 'marketing', 'submit', 'submitting', 'fix_errors', 'leave_blank',
+                // ⚠️ **`google_cta` viaja SIEMPRE y su PANTALLA no** (`#343`): el rótulo lo pintan las
+                // dos pestañas de auth, que las ve quien no tiene sesión, así que no hay condición
+                // bajo la que esconderlo. El subgrupo `google` —los ~380 B de la pantalla que completa
+                // el alta— viaja **solo en su puerta**, y eso lo fija el caso de abajo.
+                'google_cta',
             ],
             array_keys($boot['account']['register'] ?? []),
             'el subgrupo `register` ha dejado de estar podado a lo que el formulario de alta pinta'
         );
+
+        // ⚠️⚠️ **La pantalla de Google NO viaja en una página cualquiera.** Es la primera poda por RUTA
+        // de este montaje, y la razón es que a esa zona **no se llega de ninguna otra forma**: hay que
+        // volver de Google, y el retorno aterriza en `/registro/google`. Sin esta guarda, sus textos
+        // acabarían en cada página pública para no pintarse nunca — que es exactamente lo que el
+        // presupuesto de abajo existe para cazar.
+        $this->assertArrayNotHasKey('google', $boot['account'] ?? []);
+
+        // Y su CONTROL, sin el que lo de arriba se cumpliría también si el subgrupo no existiera en
+        // ninguna parte: en SU puerta sí viaja, y con lo que la pantalla pinta.
+        $atDoor = $this->bootPayload((string) $this->get('/registro/google')->assertOk()->getContent());
+
+        $this->assertArrayHasKey('google', $atDoor['account'] ?? [], 'la pantalla de Google no recibe sus textos en su propia puerta');
+        $this->assertArrayHasKey('title', $atDoor['account']['google'] ?? []);
+        $this->assertArrayHasKey('expired', $atDoor['account']['google'] ?? []);
 
         // ⚠️⚠️ **`account.title` viaja SIN sesión, y es el rótulo de uno de los botones del
         // bloque.** Sin él, quien entra en el paso 5 y vuelve al catálogo vería ese botón **en
@@ -449,8 +469,16 @@ class SidebarMountTest extends TestCase
         // nunca. Lo que ocupa su hueco («Mi QR») **no cuesta nada aquí**: se rotula con
         // `account.card.title`, que viaja solo con sesión. Con 2.850 sobraban 191 B y *un techo con
         // margen sobrante deja de apretar*: **2.750 deja 91**, la holgura de siempre.
+        // ⚠️ **2.750 → 2.800 el 2026-09-02: el botón de Google** (`#343`). Medido: **2.769 B**, **+44**
+        // — que es exactamente `register.google_cta` («Continuar con Google»)—. Se sube el techo a
+        // propósito y **después de buscar qué podar**: los tres subgrupos que viajan sin sesión ya
+        // están podados clave a clave y no queda ninguno que la pantalla no pinte, así que la única
+        // alternativa era no ofrecer el botón en las pantallas de auth, que es donde tiene sentido.
+        // ▶ **Y lo que NO sube es la pantalla**: los ~380 B del subgrupo `google` viajan **solo en su
+        // puerta** (`/registro/google`), porque a esa zona no se llega sin volver de Google. El caso
+        // de arriba lo fija con su control. Quedan 31 B de holgura.
         $this->assertLessThan(
-            2750, $anonBytes,
+            2800, $anonBytes,
             "Los textos de auth del montaje anónimo pesan {$anonBytes} B. Es un presupuesto, no un ".
             'objetivo: si hace falta subirlo, súbelo a propósito sabiendo que viaja en cada página.'
         );

@@ -476,3 +476,23 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
 |---|---|---|---|
 | **Un correo que sale del panel no deja rastro** (Media) | El owner mandó los dos formularios post-reserva desde la ficha del pedido y **no hay forma de comprobarlo**: esa acción no escribe en `audit_logs`, no marca ninguna columna del ítem (no existe `guest_form_sent_at`) y la cola del sistema ya estaba vacía. Reconocido por el owner: *«sí, es un hueco, no tenemos trazabilidad de los correos que salen»*. | Nadie puede responder «¿se le mandó a esta clienta y cuándo?» sin mirar el buzón del cliente. Y con un incidente de correo como el de esta noche —límite por hora del hosting— tampoco se puede saber a quién hay que reenviar. | Una entrada de auditoría por envío es lo barato (`orders.guest_form_sent`, con el ítem como target). Lo completo sería una columna `guest_form_sent_at` por reserva, que además dejaría al panel enseñar «enviado el …» en vez de un botón mudo. ⚠️ Aplica a TODOS los correos que el operador dispara, no solo a éste. |
 | **Un padre sin el correo verificado no puede ni ACEPTAR la exención de sus hijos** (Media; ⚠️⚠️ **reescrita el 2026-09-02, `#338`: su redacción anterior era FALSA en las dos mitades**) | ⚠️ Decía «un titular con menores declarados tiene una aceptación retenida **por cada uno**»: **no existe tal cosa** — medido, `dependents` no tiene ninguna columna `waiver_pending_*`; la aceptación retenida vive **solo** en `users`. Y decía que ésas «siguen pidiendo la tablet»: **la tablet tampoco sirve**, porque es el mismo `POST /me/dependents/{id}/waiver` desde la misma cuenta y devuelve el mismo **409**. ▶ **Tres sondas con control**: sin verificar → `WaiverEmailUnverifiedException`; **control** verificado → firma; **control** sin verificar pero con `declaredBy` = operador → **firma**. El dominio YA lo permite (`WaiverSigner:89-90`). | Desde `#336` el padre sin verificar cierra **su** exención en la puerta y la de sus hijos no tiene ninguna vía: **pasa él y no pasan ellos, con él delante**. No es que falte el gesto del operador — falta el paso anterior, porque para los menores **nunca hubo aceptación que retener**. | Es DISEÑO y es del owner, no una línea de código: `[owner, 2026-09-02]` *«el cliente no le pasa la tablet, solo le avisa; ya la ha leído y aceptado — lo único que no podemos verificar es que sea una persona»*. El espejo de `#336` sería dejar que el padre acepte por sus hijos desde su cuenta **sin** el correo verificado, y que la puerta lo cierre igual. ⚠️ Toca la puerta, o sea el carril del justificante: coordinar antes. |
+
+## ▶ Baja/Media · lo que ENTRAR CON GOOGLE dejó anotado (2026-09-02, `DECISIONES #342` y `#343`)
+
+- **El botón no lleva el logotipo de Google.** Su «G» es tetracolor y el set de iconos de este
+  producto exige `currentColor` y rejilla 24 (`IconSetAnatomyTest`): un glifo con colores tecleados
+  dentro rompe la anatomía que hace que la web se vea de un solo idioma. La marca queda en el rótulo
+  («Continuar con Google»), que es admisible, pero **no es el botón oficial**.
+  ▶ **La salida, si el owner lo quiere**: tratar su logo como **ASSET por proveedor** —un fichero,
+  como `client-logo.svg`— y no como icono del set. Entonces habría que decidir además si se usa la
+  variante de color o la monocroma, que es lo que Google permite.
+- ❗ **Una desviación de la letra de la Q6, pendiente del owner** (`specs/auth-con-google.md` §19.6):
+  el owner dijo que sin descargo que pedir **no hay pantalla intermedia**, y la pantalla se pinta
+  igual porque además recoge el **teléfono** y las **condiciones**. Hoy no muerde —`playjump.es` está
+  en modo `interno` con versión publicada—, y cerrarlo en la dirección de la Q6 es un `if` en el
+  retorno **que crearía cuentas sin teléfono**.
+- **`identities.unlinked` no está catalogada** en `AuditLog::ACTIONS`: su emisor es la T3. Declararla
+  antes sería vocabulario muerto — y con emisor, `AuditLogger` lanza si falta.
+- ⚠️ **La política de privacidad no menciona el login con Google** (art. 13/14). Es **requisito de
+  salida** de la Q7: el texto vive en la BD de cada instalación, así que en `playjump.es` es un paso
+  manual y **no se anuncia el botón a clientes reales sin él**.

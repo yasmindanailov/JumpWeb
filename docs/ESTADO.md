@@ -1,5 +1,27 @@
 # Estado del proyecto — foto viva
 
+🟦 **GOOGLE AUTH · LA T2 EN EL ÁRBOL: EL CAMINO SE CIERRA DE PUNTA A PUNTA** (2026-09-02,
+`DECISIONES #343`, spec §19). Quien no tiene cuenta vuelve de Google, completa **teléfono, condiciones
+y descargo** en el cajón, y entra **ya firmado** — que es exactamente lo que la decisión de §4 buscaba:
+que nadie llegue al parque sin haberlo aceptado él mismo.
+▶ **La Q8 la contestaste tú con la cifra delante**: la pantalla va **en el cajón**, no en una página
+propia. Lo que costaba se midió ANTES de escribir: **44 B de holgura** en el chunk y **~6,2 KiB** de
+pantalla, así que se paga con **dos podas medidas** —carga diferida (−1,88 KiB) y el estado fuera del
+store global (−1,32 KiB)— y el techo sube 263 → **267**. **Los ~380 B de sus textos no viajan en
+ninguna página**: es la primera poda por RUTA del montaje.
+▶ ❗ **HAY UNA DESVIACIÓN DE LA LETRA DE TU Q6 Y ES TUYA DECIDIRLA** (spec §19.6): dijiste que sin
+descargo que pedir **no hay pantalla**; la hay, porque esa pantalla recoge además el **teléfono**
+—«imprescindible para las reservas», dijiste— y la **aceptación de condiciones**. Hoy no muerde:
+`playjump.es` está en modo `interno` con versión publicada.
+▶ ⚠️ **El botón NO lleva el logotipo tetracolor de Google** y es una decisión, no un olvido: el set de
+iconos exige `currentColor` y rejilla 24, y un glifo con colores dentro rompe la anatomía que hace que
+la web se vea de un solo idioma. Dice «Continuar con Google». Ficha en `DEUDA.md`.
+▶ **QUEDA LA T3** —las CUATRO acciones que hoy exigen contraseña (una cuenta de Google no puede
+ninguna: art. 12.2), **desvincular**, y el interruptor de marketing con su registro de retirada— y
+**TU OJO**: guion en `VERIFICACION-E2E-CAJON.md` **§5.octies**, con el caso P12 montado paso a paso.
+▶ ❗ **Y para eso hace falta el cliente de OAuth de DESARROLLO** (`localhost:8081`): el que me pasaste
+es el de PRODUCCIÓN y **no sirve para probar aquí** —Google exige coincidencia exacta de la URI—.
+
 🟦 **GOOGLE AUTH · LA T1 ESTÁ EN EL ÁRBOL — el mecanismo y la raíz de confianza** (2026-09-02,
 `DECISIONES #342`, `docs/specs/auth-con-google.md` §18). Encargo del owner: *«0 fricción para el
 cliente a la hora de registrarse»*. ▶ **Sin las dos claves configuradas, `/auth/google` y su retorno
@@ -442,8 +464,8 @@ aquí lo que no se podaría son datos de menores de terceros.
 > ⚠️ **RE-MEDIDA tras rebasar encima los DOS arreglos del reloj de la T3** (con `npm run build` +
 > `build:ssr` delante, porque `#340` toca Vue): **sale el MISMO número**, que es lo que había que
 > comprobar — los dos arreglan FIXTURES y no añaden casos. *Coincidir no se supone: se mide.*
-> Suite **3949 en verde** (25.248 aserciones, 1 skipped a propósito), medida el 2026-09-02
-> sobre el árbol CONJUNTO: la **T1 de Google auth** (`#342`, **+37**) sobre la columna del menú
+> Suite **3963 en verde** (25.358 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> sobre el árbol CONJUNTO: la **T2 de Google auth** (`#343`, **+14**) sobre su T1 (`#342`, +37), la columna del menú
 > (`#341`, +8), el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo (`#339`),
 > encima del arreglo del 500 de la puerta (`#338`) y de la **T3** del justificante (`#337`) con sus
 > arreglos del reloj.

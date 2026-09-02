@@ -79,6 +79,16 @@ export const ZONES = {
     FORGOT: 'forgot',
 
     /**
+     * **Completar un alta que viene de Google** (`specs/auth-con-google.md` §7).
+     *
+     * ⚠️ Es la única zona a la que **NO se llega desde otra**: se entra por su puerta
+     * (`/registro/google`), que es donde aterriza el retorno de Google cuando no hay cuenta. Por eso
+     * no está en `HOME_ENTRIES` ni en `ZONE_PARENTS` — su alcanzabilidad la da `GUEST_ZONES`, como
+     * las otras tres de auth.
+     */
+    GOOGLE_SIGNUP: 'google-signup',
+
+    /**
      * **El historial**: lo cancelado y lo ya disfrutado (`specs/mis-reservas-por-reserva.md`).
      *
      * ⚠️ **No está en `HOME_ENTRIES` a propósito**: se llega desde «Mis reservas», que es donde
@@ -131,6 +141,7 @@ export const ZONE_TITLE_KEYS = {
     [ZONES.LOGIN]: 'login.title',
     [ZONES.REGISTER]: 'register.title',
     [ZONES.FORGOT]: 'forgot.title',
+    [ZONES.GOOGLE_SIGNUP]: 'google.title',
     [ZONES.ORDERS_HISTORY]: 'orders.history.title',
     [ZONES.PURCHASES]: 'purchases.title',
 };
@@ -168,7 +179,7 @@ export const ZONE_PARENTS = {
  * **dos** puertas declaradas en vez de una. Sin esta lista, «alcanzable» se habría convertido en una
  * excepción escrita a mano en el test, que es donde se acaba metiendo cualquier cosa.
  */
-export const GUEST_ZONES = [ZONES.LOGIN, ZONES.REGISTER, ZONES.FORGOT];
+export const GUEST_ZONES = [ZONES.LOGIN, ZONES.REGISTER, ZONES.FORGOT, ZONES.GOOGLE_SIGNUP];
 
 /** ¿Esta zona la ve alguien SIN sesión? Lo pregunta la sección para decidir por dónde entrar. */
 export function isGuestZone(value) {
@@ -234,7 +245,7 @@ export const HOME_ENTRIES = [ZONES.ORDERS, ZONES.PURCHASES, ZONES.CARD, ZONES.PR
  *
  * @var {string[]}
  */
-const ZONES_WITH_OWN_HEADING = [ZONES.LOGIN, ZONES.REGISTER, ZONES.FORGOT];
+const ZONES_WITH_OWN_HEADING = [ZONES.LOGIN, ZONES.REGISTER, ZONES.FORGOT, ZONES.GOOGLE_SIGNUP];
 
 /** ¿Esta zona pinta ya su encabezado, y el armazón debe callarse? */
 export function bringsOwnHeading(zone) {

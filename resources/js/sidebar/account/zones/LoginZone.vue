@@ -5,6 +5,8 @@ import { ZONES } from '../navigation.js';
 import { landOnAccount } from '../after-auth.js';
 import { api } from '../../api.js';
 import LoginForm from '../../steps/LoginForm.vue';
+import GoogleButton from '../../steps/GoogleButton.vue';
+import { t as translate } from '../../i18n.js';
 
 /**
  * **IDENTIFICARSE dentro del cajón, fuera de la compra** (`specs/auth-en-cajon.md` §4.1).
@@ -39,6 +41,8 @@ const nav = useAccountStore();
 // recuperar su contraseña y vuelva no tenga que escribir su correo dos veces.
 store.clearNotices();
 
+const a = (key) => translate(props.account, key);
+
 async function submit() {
     const result = await store.login({ api, messages: props.messages, auth: props.auth });
 
@@ -57,4 +61,8 @@ async function submit() {
         :with-recovery="true"
         @submit="submit"
         @recover="nav.go(ZONES.FORGOT)" />
+
+    <!-- La otra forma de entrar. Va DEBAJO del formulario y no encima: quien ya tiene contraseña la
+         teclea, y quien no, lee hasta abajo. Sin claves configuradas no se pinta nada. -->
+    <GoogleButton :href="urls.google ?? ''" :label="a('register.google_cta')" />
 </template>

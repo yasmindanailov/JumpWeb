@@ -2208,3 +2208,59 @@ echo 'limpio'.PHP_EOL;"
 - **El plazo de conservación** sigue `[PENDIENTE: owner]`: hoy vale `NULL` y **no se poda nada**.
 - **El texto definitivo del waiver**: la v11 publicada es la de pruebas de este entorno.
 - **Claves REALES de Turnstile**: con ellas hay que comprobar que el dominio está permitido.
+
+---
+
+## 5.octies · ENTRAR Y REGISTRARSE CON GOOGLE — guion del OJO del owner (T4 de `specs/auth-con-google.md`; `DECISIONES #342`, `#343`)
+
+> **Qué se está probando**: los tres caminos de §5 —entrar con un vínculo que ya existe, vincular una
+> cuenta que ya tenía ese correo, y darse de alta desde cero— más el que la revisión adversarial
+> señaló como el peor: **P12, la cuenta que un tercero creó con tu correo**.
+
+### ❗ Lo que hace falta ANTES, y sin ello esto no se puede recorrer
+
+**Un cliente de OAuth de DESARROLLO** en la consola de Google (`INSTALACION-CLIENTE.md` §5.a), con
+`http://localhost:8081/auth/google/callback` como URI de redireccionamiento. **El de producción no
+sirve**: sus URIs son `playjump.es` y `www.playjump.es`, y Google exige coincidencia exacta.
+
+```bash
+docker compose exec -u sail laravel.test php artisan app:set-setting auth.google_client_id  '…apps.googleusercontent.com' --group=auth --force
+docker compose exec -u sail laravel.test php artisan app:set-setting auth.google_client_secret 'GOCSPX-…'                  --group=auth --force
+```
+
+⚠️ Sin las dos claves, `/auth/google` responde **404** y **el botón no se pinta**: eso también es una
+comprobación válida —el hueco falla hacia invisible— pero no es el recorrido.
+
+### Lo que hay que ver
+
+| # | Camino | Qué mirar |
+|---|---|---|
+| G1 | Abrir el cajón → «Entrar» | Bajo el formulario aparece **«Continuar con Google»**. Lo mismo en «Crear cuenta» y en el paso 5 del embudo (con algo en la cesta) |
+| G2 | Pulsarlo con una cuenta de Google **que no tenga cuenta aquí** | Google pregunta **con qué cuenta** (`prompt=select_account`) → vuelve a `/registro/google` con el cajón abierto en «Completa tu registro»: tu **correo escrito y no editable**, el nombre relleno y editable, teléfono vacío |
+| G3 | Enviar sin teléfono | El aviso sale **bajo el campo** y arriba, como en el alta de siempre |
+| G4 | Enviar con teléfono, condiciones y **descargo** marcados | Entra directo a «Mi cuenta» — **sin correo de verificación de por medio** |
+| G5 | En «Mi cuenta → Privacidad» | El descargo aparece **firmado, versión vigente**: es lo que esta pantalla existe para conseguir |
+| G6 | Cerrar sesión y volver a «Continuar con Google» | Entra en **un gesto**, sin pantalla intermedia: el vínculo ya existe |
+| G7 | Panel → Clientes → esa cuenta | Correo **verificado**, teléfono, consentimientos de privacidad y condiciones, y su firma |
+
+### El caso que más importa (P12), y cómo montarlo
+
+```bash
+# 1) Alguien se registra ANTES con tu correo de Google y NO lo verifica
+docker compose exec -u sail laravel.test php artisan tinker --execute="
+  \$u = App\Domain\Identity\Models\User::create(['name'=>'Ocupante','email'=>'TU-CORREO@gmail.com','phone'=>'600000000','password'=>'ocupante1234']);
+  echo \$u->id;"
+```
+
+| # | Qué hacer | Qué tiene que pasar |
+|---|---|---|
+| P12·1 | Entrar con Google con ESE correo | Entras **a esa cuenta**, con el aviso «Hemos vinculado tu cuenta de Google» |
+| P12·2 | Mirar Mailpit (`localhost:8028`) | Ha llegado el aviso de vinculación, y **dice que la contraseña anterior ha dejado de servir** |
+| P12·3 | Cerrar sesión e intentar entrar con `ocupante1234` | **No entra.** Es la mitad de la defensa que hace segura la vinculación automática |
+
+### Lo que NO se puede comprobar aquí
+
+- **El rechazo de un correo sin verificar en Google** (`email_verified: false`): pasa en algunos
+  dominios de Workspace y no se puede provocar a mano. Lo cubre la suite con un token fabricado.
+- **La pantalla de consentimiento publicada**: en «Testing» solo entran los usuarios de prueba que se
+  añadan a mano en la consola. Si Google dice «esta app no está verificada», es eso.

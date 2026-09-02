@@ -577,8 +577,28 @@ class SidebarBundleBudgetTest extends TestCase
      * su respaldo y sus dos rótulos de estado —el `input` de solo lectura ya se autoselecciona al
      * enfocarlo—, y dos refs de estado fundidas en una. **−0,46 KiB**, de 262,99 a 262,53.
      * ⚠️ **Se sube a 263 y no a 268.** Queda **0,47 KiB**: la estrechez de siempre.
+     *
+     * ▶ **267 (`#343`, la T2 de entrar con Google).** Medido: **262,95 → 265,98 KiB (+3,03)**, y es la
+     * subida más grande de este presupuesto — porque lo que entra es **un método de identificación
+     * entero**, no una pantalla más: el botón en las tres superficies de auth (las dos zonas del área
+     * y el paso 5 del embudo) y el cableado de la pantalla que completa el alta.
+     *
+     * ⚠️⚠️ **La poda se hizo ANTES y son DOS, las dos medidas** —la pregunta de `#120(r)` es qué sobra,
+     * no cuánto subir—:
+     *  · **La pantalla se carga en DIFERIDO** (`defineAsyncComponent` en `sections/AccountSection.vue`,
+     *    el único del cajón): **−1,88 KiB** del chunk, a cambio de una petición de 5,1 kB para quien
+     *    se registra con Google. Se la ve UNA vez en la vida y se llega a ella por una PUERTA —o sea,
+     *    con una carga de página por delante—, así que esa petición va donde no se nota; el chunk del
+     *    cajón, en cambio, lo descarga cualquiera que abra el cajón para comprar.
+     *  · **Su estado NO vive en el store global**: lo consume una sola pantalla, así que se bajó al
+     *    propio componente y viaja en el chunk diferido. **−1,32 KiB** más.
+     * ▶ Lo que NO se difiere, a propósito: el botón y su rótulo. Los pinta cualquiera que abra las
+     * pantallas de auth, y separarlos costaría una petición para ahorrar unos cientos de bytes.
+     *
+     * ⚠️ **Se sube a 267 y no a 270**: queda **1,02 KiB**. Lo siguiente que entre vuelve a tener que
+     * justificarse o podar.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 263;
+    private const SIDEBAR_CHUNK_MAX_KB = 267;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

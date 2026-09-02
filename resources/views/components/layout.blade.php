@@ -265,6 +265,12 @@
                                 'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
                                 'password_hint', 'accept_waiver', 'waiver_read', 'accept_privacy', 'accept_terms',
                                 'marketing', 'submit', 'submitting', 'fix_errors', 'leave_blank',
+                                // ⚠️ **El botón de Google viaja SIEMPRE y su pantalla NO** (`#343`): el
+                                // rótulo lo pintan las dos pestañas de auth, que las ve quien no tiene
+                                // sesión, así que no hay condición bajo la que esconderlo. Cuesta ~35 B.
+                                // El subgrupo `google` —la pantalla que completa el alta— viaja solo en
+                                // su puerta, más abajo: a ella no se llega sin volver de Google.
+                                'google_cta',
                             ]), [
                                 'accept_privacy' => __('account.register.accept_privacy', ['url' => route('legal.privacidad')]),
                                 'accept_terms' => __('account.register.accept_terms', ['url' => route('legal.condiciones')]),
@@ -275,6 +281,19 @@
                             // invitado dejaría la zona con los rótulos en blanco — que es el fallo
                             // que `i18n.js` no puede avisar. El subgrupo entero son 9 claves.
                             'forgot' => __('account.forgot'),
+                            // ⚠️⚠️ **Los textos de la pantalla que completa un alta con Google viajan
+                            // SOLO en su puerta** (`specs/auth-con-google.md` §7). Es la primera vez
+                            // que este montaje poda por RUTA y no por sesión, y el motivo es que a esa
+                            // zona **no se llega de ninguna otra forma**: hay que volver de Google, y
+                            // el retorno aterriza justo en `/registro/google`. Mandar sus ~380 B en
+                            // cada página pública sería pagarlos para no pintarlos nunca, que es lo
+                            // que el presupuesto del montaje anónimo existe para cazar.
+                            // ▶ La condición es la MISMA que abre el cajón en esa zona
+                            // (`AccountDoor::zone()`), no una copia: si la puerta cambia de nombre, el
+                            // texto la sigue.
+                            ...(\App\Http\Sidebar\AccountDoor::zone() === 'google-signup'
+                                ? ['google' => __('account.google')]
+                                : []),
                             // ⚠️⚠️ **Los rótulos del BLOQUE DE CUENTA viajan para TODO EL MUNDO, y no
                             // es comodidad** (`specs/account-context-vue.md` §4.12). El bloque cambia
                             // de cara **sin recargar**: quien entra en el paso 5 del embudo tiene en
@@ -461,6 +480,16 @@
                             // SERVIDOR — un «/» quemado en el cliente fallaría en una instalación con
                             // prefijo de idioma.
                             'home' => route('home'),
+                            // ⚠️ **La IDA a Google, y solo si esta instalación la ofrece**
+                            // (`specs/auth-con-google.md` §10): su presencia ES el interruptor del
+                            // botón — sin claves no viaja la clave y el botón no se pinta, que es el
+                            // mismo hueco que falla hacia invisible del logotipo o el kit.
+                            // ▶ Va aquí y no en `GET /config` porque el botón lo pintan las zonas de
+                            // AUTH del área, y esa sección **no pide config**: solo lo hace el embudo.
+                            // Un segundo sitio del que leerlo sería el `if` que un día discrepa.
+                            ...(\App\Domain\Identity\Services\GoogleAuth::enabled()
+                                ? ['google' => route('auth.google.redirect')]
+                                : []),
                         ],
                     ], JSON_UNESCAPED_UNICODE) }}">
                         {{-- ⚠️ **El velo de carga del cajón, y va DENTRO del hueco a propósito.**

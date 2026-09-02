@@ -1202,6 +1202,7 @@ function goBack() {
             :messages="messages"
             :account="account"
             :turnstile-site-key="authStore.signupSiteKey"
+            :google-url="urls.google ?? ''"
             @back="goToCart"
             @set-mode="authStore.setMode"
             @submit-login="submitLogin"

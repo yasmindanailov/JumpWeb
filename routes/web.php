@@ -32,6 +32,13 @@ Route::get('/', HomeController::class)->name('home');
 // Autenticación (Fase 4). Registro y login abren un modal sobre la home (#38);
 // la verificación de email son páginas (llegan desde el correo).
 Route::get('/registro', HomeController::class)->name('registro');
+// La PUERTA de la pantalla que completa un alta con Google (`specs/auth-con-google.md` §7). Sirve la
+// home y el cajón se abre solo en su zona, exactamente como las otras tres puertas de auth: el
+// mecanismo es el de `Http\Sidebar\AccountDoor`, no uno nuevo.
+// ⚠️ Aquí no se comprueba nada: **quien decide si hay algo que completar es la zona**, preguntando a
+// `GET /api/v1/auth/google/pending`. Poner la guarda en la ruta obligaría a duplicar la lectura de la
+// sesión y dejaría dos sitios que pueden discrepar.
+Route::get('/registro/google', HomeController::class)->name('registro.google');
 Route::get('/login', HomeController::class)->name('login');
 Route::get('/recuperar-contrasena', HomeController::class)->name('password.request');
 Route::get('/restablecer-contrasena/{token}', [PasswordResetController::class, 'edit'])->name('password.reset');

@@ -231,6 +231,19 @@ return [
         'already_exists' => 'Vous avez déjà un compte avec cet e-mail. Connectez-vous pour continuer.',
         'exists_unverified' => 'Vous vous êtes déjà inscrit avec cet e-mail sans le vérifier. Nous venons de renvoyer le lien de vérification.',
         'leave_blank' => 'Laissez ce champ vide',
+        'google_cta' => 'Continuer avec Google',
+    ],
+
+    'google' => [
+        'eyebrow' => 'On y est presque',
+        'title' => 'Termine ton inscription',
+        'intro' => 'Nous savons déjà qui tu es grâce à ton compte Google. Il ne manque que ceci pour réserver à ton nom.',
+        'email_label' => 'Ton e-mail',
+        'email_hint' => 'Celui de ton compte Google, déjà vérifié.',
+        'submit' => 'Créer mon compte',
+        'submitting' => 'Création…',
+        'expired' => "Trop de temps s'est écoulé depuis ta connexion avec Google, ou cette inscription est déjà terminée.",
+        'restart' => 'Recommencer avec Google',
     ],
 
     'status' => [
@@ -261,7 +274,6 @@ return [
         'google-email-unverified' => "Google ne considère pas cette adresse comme vérifiée, nous ne pouvons donc pas l'utiliser pour t'identifier. Vérifie-la dans ton compte Google, ou inscris-toi avec ton e-mail et un mot de passe.",
         'google-anonymized' => 'Ce compte a été supprimé à la demande de son titulaire et ne peut pas être récupéré. Tu peux en créer un nouveau quand tu veux.',
         'google-provider-conflict' => 'Ton compte est déjà lié à un autre compte Google. Connecte-toi avec celui-là, ou avec ton mot de passe, et écris-nous si tu veux en changer.',
-        'google-complete-signup' => 'Presque fini : complète ces informations pour terminer ton inscription.',
     ],
 
     'verify' => [

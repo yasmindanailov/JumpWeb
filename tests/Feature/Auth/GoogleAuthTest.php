@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
+use Tests\Support\DrivesGoogleAuth;
 use Tests\TestCase;
 
 /**
@@ -43,16 +44,7 @@ use Tests\TestCase;
  */
 class GoogleAuthTest extends TestCase
 {
-    use RefreshDatabase;
-
-    private const CLIENT_ID = '1023005524676-pruebas.apps.googleusercontent.com';
-
-    private const CLIENT_SECRET = 'GOCSPX-secreto-de-pruebas';
-
-    /** El `sub` de OpenID Connect: 21 dígitos, como los de Google. */
-    private const SUB = '110000000000000000001';
-
-    private const EMAIL = 'ana.google@example.com';
+    use DrivesGoogleAuth, RefreshDatabase;
 
     // ── El hueco por instalación ──────────────────────────────────────────────────────────────
 
@@ -65,7 +57,7 @@ class GoogleAuthTest extends TestCase
     /** Media configuración es NO configurado: la lección de `PublicConfigResource`. */
     public function test_only_the_client_id_is_not_enough(): void
     {
-        Setting::updateOrCreate(['key' => GoogleAuth::CLIENT_ID_KEY], ['value' => self::CLIENT_ID, 'group' => 'auth']);
+        Setting::updateOrCreate(['key' => GoogleAuth::CLIENT_ID_KEY], ['value' => self::GOOGLE_CLIENT_ID, 'group' => 'auth']);
         Setting::flushMemo();
         GoogleAuth::flushCache();
 
@@ -77,7 +69,7 @@ class GoogleAuthTest extends TestCase
 
     public function test_the_redirect_asks_google_for_the_three_minimum_scopes_with_a_state_and_a_nonce(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
 
         $response = $this->get(route('auth.google.redirect'));
 
@@ -88,7 +80,7 @@ class GoogleAuthTest extends TestCase
 
         parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
 
-        $this->assertSame(self::CLIENT_ID, $query['client_id']);
+        $this->assertSame(self::GOOGLE_CLIENT_ID, $query['client_id']);
         $this->assertSame(route('auth.google.callback'), $query['redirect_uri']);
         $this->assertSame('code', $query['response_type'], 'El flujo es Authorization Code: el navegador no maneja tokens.');
         $this->assertSame('openid email profile', $query['scope'], 'Ni un ámbito más: cualquier sensible dispara la verificación de Google.');
@@ -104,18 +96,18 @@ class GoogleAuthTest extends TestCase
     /** El `state` es de esta sesión: dos idas distintas no comparten reto. */
     public function test_every_start_mints_a_new_state(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
 
-        $this->assertNotSame($this->startFlow()['state'], $this->startFlow()['state']);
+        $this->assertNotSame($this->startGoogleFlow()['state'], $this->startGoogleFlow()['state']);
     }
 
     // ── El canje, que es la raíz de confianza ─────────────────────────────────────────────────
 
     public function test_the_code_is_exchanged_server_to_server_with_the_client_secret(): void
     {
-        $this->configureKeys();
-        $flow = $this->startFlow();
-        $this->fakeGoogle($flow);
+        $this->configureGoogleKeys();
+        $flow = $this->startGoogleFlow();
+        $this->fakeGoogleExchange($flow);
 
         $this->returnFromGoogle($flow);
 
@@ -125,8 +117,8 @@ class GoogleAuthTest extends TestCase
             return $request->url() === GoogleOAuth::TOKEN_ENDPOINT
                 && $request->method() === 'POST'
                 && $body['grant_type'] === 'authorization_code'
-                && $body['client_id'] === self::CLIENT_ID
-                && $body['client_secret'] === self::CLIENT_SECRET
+                && $body['client_id'] === self::GOOGLE_CLIENT_ID
+                && $body['client_secret'] === self::GOOGLE_CLIENT_SECRET
                 && $body['redirect_uri'] === route('auth.google.callback')
                 && $body['code'] === 'codigo-de-un-solo-uso';
         });
@@ -138,20 +130,20 @@ class GoogleAuthTest extends TestCase
      */
     public function test_control_an_untouched_token_signs_the_person_in(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $user = $this->linkedUser();
 
-        $this->signInWithGoogle();
+        $this->enterWithGoogleAlreadyConfigured();
 
         $this->assertAuthenticatedAs($user->fresh());
     }
 
     public function test_a_token_minted_for_another_application_is_refused(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $this->linkedUser();
 
-        $this->signInWithGoogle(['aud' => 'otra-aplicacion.apps.googleusercontent.com'])
+        $this->enterWithGoogleAlreadyConfigured(['aud' => 'otra-aplicacion.apps.googleusercontent.com'])
             ->assertSessionHas('status', 'google-failed');
 
         $this->assertGuest();
@@ -159,10 +151,10 @@ class GoogleAuthTest extends TestCase
 
     public function test_a_token_from_another_issuer_is_refused(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $this->linkedUser();
 
-        $this->signInWithGoogle(['iss' => 'https://accounts.example.invalid'])
+        $this->enterWithGoogleAlreadyConfigured(['iss' => 'https://accounts.example.invalid'])
             ->assertSessionHas('status', 'google-failed');
 
         $this->assertGuest();
@@ -170,10 +162,10 @@ class GoogleAuthTest extends TestCase
 
     public function test_an_expired_token_is_refused(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $this->linkedUser();
 
-        $this->signInWithGoogle(['exp' => now()->getTimestamp() - 3600, 'iat' => now()->getTimestamp() - 7200])
+        $this->enterWithGoogleAlreadyConfigured(['exp' => now()->getTimestamp() - 3600, 'iat' => now()->getTimestamp() - 7200])
             ->assertSessionHas('status', 'google-failed');
 
         $this->assertGuest();
@@ -182,10 +174,10 @@ class GoogleAuthTest extends TestCase
     /** El `nonce` ata el token a ESTA petición: uno capturado de otra no vale (replay). */
     public function test_a_token_with_another_nonce_is_refused(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $this->linkedUser();
 
-        $this->signInWithGoogle(['nonce' => bin2hex(random_bytes(32))])
+        $this->enterWithGoogleAlreadyConfigured(['nonce' => bin2hex(random_bytes(32))])
             ->assertSessionHas('status', 'google-failed');
 
         $this->assertGuest();
@@ -194,10 +186,10 @@ class GoogleAuthTest extends TestCase
     /** Sin `email` no hay identidad que resolver, aunque el token esté perfectamente firmado. */
     public function test_a_token_without_email_is_refused(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $this->linkedUser();
 
-        $this->signInWithGoogle(['email' => null])->assertSessionHas('status', 'google-failed');
+        $this->enterWithGoogleAlreadyConfigured(['email' => null])->assertSessionHas('status', 'google-failed');
 
         $this->assertGuest();
     }
@@ -209,15 +201,15 @@ class GoogleAuthTest extends TestCase
      */
     public function test_an_id_token_sent_by_the_browser_is_ignored(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $legitimate = $this->linkedUser();
 
         $victim = User::factory()->create(['email' => 'victima@example.com', 'email_verified_at' => now()]);
 
-        $flow = $this->startFlow();
-        $this->fakeGoogle($flow);
+        $flow = $this->startGoogleFlow();
+        $this->fakeGoogleExchange($flow);
 
-        $forged = $this->idToken([
+        $forged = $this->googleIdToken([
             'sub' => '999999999999999999999',
             'email' => $victim->email,
             'nonce' => $flow['nonce'],
@@ -237,10 +229,10 @@ class GoogleAuthTest extends TestCase
 
     public function test_a_return_without_a_matching_state_does_nothing(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $this->linkedUser();
-        $flow = $this->startFlow();
-        $this->fakeGoogle($flow);
+        $flow = $this->startGoogleFlow();
+        $this->fakeGoogleExchange($flow);
 
         $this->get(route('auth.google.callback', ['state' => bin2hex(random_bytes(32)), 'code' => 'codigo']))
             ->assertSessionHas('status', 'google-failed');
@@ -259,10 +251,10 @@ class GoogleAuthTest extends TestCase
      */
     public function test_the_state_cannot_be_replayed(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $user = $this->linkedUser();
-        $flow = $this->startFlow();
-        $this->fakeGoogle($flow);
+        $flow = $this->startGoogleFlow();
+        $this->fakeGoogleExchange($flow);
 
         $this->returnFromGoogle($flow);
         $this->assertAuthenticatedAs($user->fresh());
@@ -280,10 +272,10 @@ class GoogleAuthTest extends TestCase
      */
     public function test_the_challenge_expires_on_its_own(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $this->linkedUser();
-        $flow = $this->startFlow();
-        $this->fakeGoogle($flow);
+        $flow = $this->startGoogleFlow();
+        $this->fakeGoogleExchange($flow);
 
         $this->travel(GoogleAuthSession::CHALLENGE_TTL_SECONDS + 60)->seconds();
 
@@ -295,9 +287,9 @@ class GoogleAuthTest extends TestCase
     /** Y el perfil que espera a la pantalla de alta, igual (§6.3·3). */
     public function test_the_waiting_profile_expires_on_its_own(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
 
-        $this->signInWithGoogle();
+        $this->enterWithGoogleAlreadyConfigured();
         $this->assertNotNull(GoogleAuthSession::peekProfile());
 
         $this->travel(GoogleAuthSession::PROFILE_TTL_SECONDS + 60)->seconds();
@@ -308,8 +300,8 @@ class GoogleAuthTest extends TestCase
     /** Cancelar en Google no es un fallo: se dice y se deja a la persona donde estaba. */
     public function test_cancelling_at_google_says_so_and_creates_nothing(): void
     {
-        $this->configureKeys();
-        $flow = $this->startFlow();
+        $this->configureGoogleKeys();
+        $flow = $this->startGoogleFlow();
 
         $this->get(route('auth.google.callback', ['state' => $flow['state'], 'error' => 'access_denied']))
             ->assertRedirect(route('account'))
@@ -323,11 +315,11 @@ class GoogleAuthTest extends TestCase
 
     public function test_an_existing_link_enters_with_no_screens(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         Notification::fake();
         $user = $this->linkedUser();
 
-        $this->signInWithGoogle()->assertRedirect(route('account'));
+        $this->enterWithGoogleAlreadyConfigured()->assertRedirect(route('account'));
 
         $this->assertAuthenticatedAs($user->fresh());
         $this->assertDatabaseCount('user_identities', 1);
@@ -337,10 +329,10 @@ class GoogleAuthTest extends TestCase
     /** El vínculo se busca por el `sub`, **nunca** por el correo: cambiar de correo no cambia de dueño. */
     public function test_the_link_survives_the_google_account_changing_its_email(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $user = $this->linkedUser();
 
-        $this->signInWithGoogle(['email' => 'nueva.direccion@example.com']);
+        $this->enterWithGoogleAlreadyConfigured(['email' => 'nueva.direccion@example.com']);
 
         $this->assertAuthenticatedAs($user->fresh());
         $this->assertDatabaseCount('user_identities', 1);
@@ -348,23 +340,23 @@ class GoogleAuthTest extends TestCase
 
     public function test_an_account_with_the_same_email_is_linked_automatically_and_told_by_email(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         Notification::fake();
 
         $user = User::factory()->create([
-            'email' => self::EMAIL,
+            'email' => self::GOOGLE_EMAIL,
             'email_verified_at' => now(),
             'password' => 'contrasena-de-siempre',
         ]);
 
-        $this->signInWithGoogle()->assertSessionHas('status', 'google-linked');
+        $this->enterWithGoogleAlreadyConfigured()->assertSessionHas('status', 'google-linked');
 
         $this->assertAuthenticatedAs($user->fresh());
         $this->assertDatabaseHas('user_identities', [
             'user_id' => $user->id,
             'provider' => UserIdentity::PROVIDER_GOOGLE,
-            'provider_id' => self::SUB,
-            'email_at_link' => self::EMAIL,
+            'provider_id' => self::GOOGLE_SUB,
+            'email_at_link' => self::GOOGLE_EMAIL,
             'linked_via' => UserIdentity::VIA_LOGIN,
         ]);
 
@@ -387,17 +379,17 @@ class GoogleAuthTest extends TestCase
      */
     public function test_an_unverified_destination_account_is_taken_over(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         Notification::fake();
 
         $squatter = User::factory()->create([
-            'email' => self::EMAIL,
+            'email' => self::GOOGLE_EMAIL,
             'email_verified_at' => null,
             'password' => 'la-que-puso-el-tercero',
         ]);
         $squatter->createToken('sesion-del-ocupante');
 
-        $this->signInWithGoogle();
+        $this->enterWithGoogleAlreadyConfigured();
 
         $fresh = $squatter->fresh();
 
@@ -416,18 +408,17 @@ class GoogleAuthTest extends TestCase
 
     public function test_a_visitor_without_account_creates_nothing_and_is_sent_to_complete_the_signup(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
 
-        $this->signInWithGoogle()
-            ->assertRedirect(route('registro'))
-            ->assertSessionHas('status', 'google-complete-signup');
+        // La PUERTA de la pantalla que completa el alta: sirve la home y el cajón se abre en su zona.
+        $this->enterWithGoogleAlreadyConfigured()->assertRedirect(route('registro.google'));
 
         $this->assertGuest();
         $this->assertDatabaseCount('users', 0);
         $this->assertDatabaseCount('user_identities', 0);
 
         // La identidad verificada espera en la SESIÓN del servidor, no en el navegador (§6.3·3).
-        $this->assertSame(self::EMAIL, session('auth.google.profile')['email'] ?? null);
+        $this->assertSame(self::GOOGLE_EMAIL, session('auth.google.profile')['email'] ?? null);
     }
 
     /**
@@ -436,10 +427,10 @@ class GoogleAuthTest extends TestCase
      */
     public function test_google_saying_the_email_is_not_verified_links_nothing(): void
     {
-        $this->configureKeys();
-        $user = User::factory()->create(['email' => self::EMAIL, 'email_verified_at' => now()]);
+        $this->configureGoogleKeys();
+        $user = User::factory()->create(['email' => self::GOOGLE_EMAIL, 'email_verified_at' => now()]);
 
-        $this->signInWithGoogle(['email_verified' => false])
+        $this->enterWithGoogleAlreadyConfigured(['email_verified' => false])
             ->assertSessionHas('status', 'google-email-unverified');
 
         $this->assertGuest();
@@ -450,10 +441,10 @@ class GoogleAuthTest extends TestCase
     /** Y `true` es lo ÚNICO que cuenta como verificado: `"1"`, `1` o ausente son «no». */
     public function test_anything_but_a_true_email_verified_is_treated_as_unverified(): void
     {
-        $this->configureKeys();
-        User::factory()->create(['email' => self::EMAIL, 'email_verified_at' => now()]);
+        $this->configureGoogleKeys();
+        User::factory()->create(['email' => self::GOOGLE_EMAIL, 'email_verified_at' => now()]);
 
-        $this->signInWithGoogle(['email_verified' => 1])->assertSessionHas('status', 'google-email-unverified');
+        $this->enterWithGoogleAlreadyConfigured(['email_verified' => 1])->assertSessionHas('status', 'google-email-unverified');
 
         $this->assertGuest();
     }
@@ -462,7 +453,7 @@ class GoogleAuthTest extends TestCase
 
     public function test_an_anonymised_account_is_never_entered_by_its_link(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $user = $this->linkedUser();
         $user->anonymize();
 
@@ -472,13 +463,13 @@ class GoogleAuthTest extends TestCase
         UserIdentity::create([
             'user_id' => $user->id,
             'provider' => UserIdentity::PROVIDER_GOOGLE,
-            'provider_id' => self::SUB,
-            'email_at_link' => self::EMAIL,
+            'provider_id' => self::GOOGLE_SUB,
+            'email_at_link' => self::GOOGLE_EMAIL,
             'linked_via' => UserIdentity::VIA_LOGIN,
             'linked_at' => now(),
         ]);
 
-        $this->signInWithGoogle()->assertSessionHas('status', 'google-anonymized');
+        $this->enterWithGoogleAlreadyConfigured()->assertSessionHas('status', 'google-anonymized');
 
         $this->assertGuest();
     }
@@ -486,20 +477,20 @@ class GoogleAuthTest extends TestCase
     /** Una cuenta, una llave por proveedor: la segunda se rechaza **con su motivo**, no en silencio. */
     public function test_a_second_google_account_on_the_same_user_is_refused(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         Notification::fake();
 
-        $user = User::factory()->create(['email' => self::EMAIL, 'email_verified_at' => now()]);
+        $user = User::factory()->create(['email' => self::GOOGLE_EMAIL, 'email_verified_at' => now()]);
         UserIdentity::create([
             'user_id' => $user->id,
             'provider' => UserIdentity::PROVIDER_GOOGLE,
             'provider_id' => 'el-sub-de-la-primera',
-            'email_at_link' => self::EMAIL,
+            'email_at_link' => self::GOOGLE_EMAIL,
             'linked_via' => UserIdentity::VIA_LOGIN,
             'linked_at' => now(),
         ]);
 
-        $this->signInWithGoogle()->assertSessionHas('status', 'google-provider-conflict');
+        $this->enterWithGoogleAlreadyConfigured()->assertSessionHas('status', 'google-provider-conflict');
 
         $this->assertGuest();
         $this->assertDatabaseCount('user_identities', 1);
@@ -516,13 +507,13 @@ class GoogleAuthTest extends TestCase
      */
     public function test_a_team_account_can_link_and_enter(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         Notification::fake();
 
-        $admin = User::factory()->create(['email' => self::EMAIL, 'email_verified_at' => now()]);
+        $admin = User::factory()->create(['email' => self::GOOGLE_EMAIL, 'email_verified_at' => now()]);
         $admin->roles()->attach(Role::create(['name' => 'admin', 'label' => 'Administrador']));
 
-        $this->signInWithGoogle();
+        $this->enterWithGoogleAlreadyConfigured();
 
         $this->assertAuthenticatedAs($admin->fresh());
         $this->assertTrue($admin->fresh()->hasRole('admin'));
@@ -533,11 +524,11 @@ class GoogleAuthTest extends TestCase
 
     public function test_entering_seals_the_last_login(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $user = $this->linkedUser();
         $user->forceFill(['last_login_at' => null])->saveQuietly();
 
-        $this->signInWithGoogle();
+        $this->enterWithGoogleAlreadyConfigured();
 
         $this->assertNotNull($user->fresh()->last_login_at, 'Sin sello, el panel y el export tendrían un agujero con forma de Google.');
     }
@@ -555,10 +546,10 @@ class GoogleAuthTest extends TestCase
      */
     public function test_the_session_id_is_regenerated_when_entering(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $this->linkedUser();
-        $flow = $this->startFlow();
-        $this->fakeGoogle($flow);
+        $flow = $this->startGoogleFlow();
+        $this->fakeGoogleExchange($flow);
 
         $before = session()->getId();
         $this->returnFromGoogle($flow);
@@ -569,14 +560,14 @@ class GoogleAuthTest extends TestCase
     /** En un dispositivo compartido, el «pago denegado» de otra persona no puede aparecerle al que entra. */
     public function test_another_person_entering_clears_the_pending_purchase_outcome(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $alice = User::factory()->create(['email' => 'alice@example.com', 'email_verified_at' => now()]);
         $bob = $this->linkedUser();
 
         $this->actingAs($alice);
         $this->withSession(['purchase.failed_code' => 'R-ALICE1']);
 
-        $this->signInWithGoogle();
+        $this->enterWithGoogleAlreadyConfigured();
 
         $this->assertAuthenticatedAs($bob->fresh());
         $this->assertFalse(SidebarEntry::peek()->pending(), 'El desenlace de Alice no puede sobrevivir a que entre Bob.');
@@ -590,7 +581,7 @@ class GoogleAuthTest extends TestCase
      */
     public function test_anonymising_deletes_the_identity_and_frees_the_sub(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         $user = $this->linkedUser();
 
         $this->assertDatabaseCount('user_identities', 1);
@@ -600,17 +591,17 @@ class GoogleAuthTest extends TestCase
         $this->assertDatabaseCount('user_identities', 0);
 
         // El `sub` queda libre de verdad: otra cuenta puede reclamarlo.
-        $otra = User::factory()->create(['email' => self::EMAIL, 'email_verified_at' => now()]);
+        $otra = User::factory()->create(['email' => self::GOOGLE_EMAIL, 'email_verified_at' => now()]);
         UserIdentity::create([
             'user_id' => $otra->id,
             'provider' => UserIdentity::PROVIDER_GOOGLE,
-            'provider_id' => self::SUB,
-            'email_at_link' => self::EMAIL,
+            'provider_id' => self::GOOGLE_SUB,
+            'email_at_link' => self::GOOGLE_EMAIL,
             'linked_via' => UserIdentity::VIA_LOGIN,
             'linked_at' => now(),
         ]);
 
-        $this->assertDatabaseHas('user_identities', ['user_id' => $otra->id, 'provider_id' => self::SUB]);
+        $this->assertDatabaseHas('user_identities', ['user_id' => $otra->id, 'provider_id' => self::GOOGLE_SUB]);
     }
 
     /**
@@ -623,7 +614,7 @@ class GoogleAuthTest extends TestCase
      */
     public function test_the_link_falls_with_a_full_revocation_and_survives_a_partial_one(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
 
         $recovering = $this->linkedUser();
         $recovering->revokeAllAccess();
@@ -656,39 +647,51 @@ class GoogleAuthTest extends TestCase
      */
     public function test_taking_over_an_account_leaves_the_link_written(): void
     {
-        $this->configureKeys();
+        $this->configureGoogleKeys();
         Notification::fake();
 
-        User::factory()->create(['email' => self::EMAIL, 'email_verified_at' => null]);
+        User::factory()->create(['email' => self::GOOGLE_EMAIL, 'email_verified_at' => null]);
 
-        $this->signInWithGoogle();
+        $this->enterWithGoogleAlreadyConfigured();
 
         $this->assertDatabaseHas('user_identities', [
             'provider' => UserIdentity::PROVIDER_GOOGLE,
-            'provider_id' => self::SUB,
+            'provider_id' => self::GOOGLE_SUB,
         ]);
+    }
+
+    /**
+     * **El botón del cajón se enciende con las claves, y con nada más** (T2): la ida a Google viaja en
+     * el montaje **solo si la instalación la ofrece**, y su ausencia ES el interruptor — el hueco
+     * falla hacia invisible, como el logotipo o el kit del cliente.
+     *
+     * ⚠️ Se comprueba en las DOS direcciones: sin claves no viaja (o el botón se pintaría llevando a
+     * un 404) y con ellas viaja con la ruta que compone el servidor (o el cajón tendría que quemar
+     * una URL, que es lo que `layout.blade.php` prohíbe por escrito).
+     */
+    public function test_the_drawer_only_receives_the_google_link_when_the_installation_offers_it(): void
+    {
+        $this->assertArrayNotHasKey('google', $this->bootUrls());
+
+        $this->configureGoogleKeys();
+
+        $this->assertSame(route('auth.google.redirect'), $this->bootUrls()['google'] ?? null);
     }
 
     // ── Utillaje ──────────────────────────────────────────────────────────────────────────────
 
-    private function configureKeys(): void
-    {
-        Setting::updateOrCreate(['key' => GoogleAuth::CLIENT_ID_KEY], ['value' => self::CLIENT_ID, 'group' => 'auth']);
-        Setting::updateOrCreate(['key' => GoogleAuth::CLIENT_SECRET_KEY], ['value' => self::CLIENT_SECRET, 'group' => 'auth']);
-        Setting::flushMemo();
-        GoogleAuth::flushCache();
-    }
-
-    /** Una cuenta con el vínculo ya hecho: la puerta 1 (§5.1). */
+    /**
+     * Una cuenta con el vínculo ya hecho: la puerta 1 (§5.1).
+     */
     private function linkedUser(): User
     {
-        $user = User::factory()->create(['email' => self::EMAIL, 'email_verified_at' => now()]);
+        $user = User::factory()->create(['email' => self::GOOGLE_EMAIL, 'email_verified_at' => now()]);
 
         UserIdentity::create([
             'user_id' => $user->id,
             'provider' => UserIdentity::PROVIDER_GOOGLE,
-            'provider_id' => self::SUB,
-            'email_at_link' => self::EMAIL,
+            'provider_id' => self::GOOGLE_SUB,
+            'email_at_link' => self::GOOGLE_EMAIL,
             'linked_via' => UserIdentity::VIA_LOGIN,
             'linked_at' => now(),
         ]);
@@ -697,89 +700,32 @@ class GoogleAuthTest extends TestCase
     }
 
     /**
-     * La IDA de verdad, y devuelve el reto que el servidor acaba de acuñar. **No se siembra la
-     * sesión a mano**: así la custodia entre peticiones queda ejercitada.
+     * El recorrido entero **sin volver a escribir las claves**: los casos de aquí las configuran al
+     * principio, y `enterWithGoogle()` del trait lo hace por su cuenta para quien no.
      *
-     * @return array{state: string, nonce: string}
+     * @param  array<string, mixed>  $claims
      */
-    private function startFlow(): array
+    private function enterWithGoogleAlreadyConfigured(array $claims = []): TestResponse
     {
-        $response = $this->get(route('auth.google.redirect'));
-        $response->assertRedirect();
-
-        parse_str((string) parse_url((string) $response->headers->get('Location'), PHP_URL_QUERY), $query);
-
-        return ['state' => (string) $query['state'], 'nonce' => (string) $query['nonce']];
-    }
-
-    /**
-     * Google, simulado en lo único que se simula: la respuesta del canje.
-     *
-     * @param  array{state: string, nonce: string}  $flow
-     * @param  array<string, mixed>  $claims  lo que se manipula del token
-     */
-    private function fakeGoogle(array $flow, array $claims = []): void
-    {
-        Http::fake([
-            GoogleOAuth::TOKEN_ENDPOINT => Http::response([
-                'access_token' => 'ya29.token-que-no-usamos',
-                'expires_in' => 3599,
-                'token_type' => 'Bearer',
-                'id_token' => $this->idToken($claims + ['nonce' => $flow['nonce']]),
-            ]),
-        ]);
-    }
-
-    /** @param  array{state: string, nonce: string}  $flow */
-    private function returnFromGoogle(array $flow): TestResponse
-    {
-        return $this->get(route('auth.google.callback', [
-            'state' => $flow['state'],
-            'code' => 'codigo-de-un-solo-uso',
-        ]));
-    }
-
-    /** El recorrido entero: ida real, Google simulado y vuelta. */
-    private function signInWithGoogle(array $claims = []): TestResponse
-    {
-        $flow = $this->startFlow();
-        $this->fakeGoogle($flow, $claims);
+        $flow = $this->startGoogleFlow();
+        $this->fakeGoogleExchange($flow, $claims);
 
         return $this->returnFromGoogle($flow);
     }
 
     /**
-     * Un `id_token` con la forma exacta de uno de Google. **La firma es basura a propósito**: por el
-     * canal servidor-a-servidor no se comprueba, y que estos casos pasen con una firma inventada es
-     * la prueba de que lo que sostiene la confianza es el CANAL, no el JWT.
+     * Las rutas que el layout inyecta en el punto de montaje del cajón.
      *
-     * @param  array<string, mixed>  $claims
+     * @return array<string, string>
      */
-    private function idToken(array $claims): string
+    private function bootUrls(): array
     {
-        $payload = array_merge([
-            'iss' => 'https://accounts.google.com',
-            'aud' => self::CLIENT_ID,
-            'sub' => self::SUB,
-            'email' => self::EMAIL,
-            'email_verified' => true,
-            'name' => 'Ana Pérez',
-            // Con el reloj del framework, como el validador: si el token se fechara con `time()` y la
-            // suite corriera con `TEST_CLOCK` en otra fecha, estos casos saldrían caducados sin que
-            // nada estuviera mal.
-            'iat' => now()->getTimestamp() - 10,
-            'exp' => now()->getTimestamp() + 3600,
-        ], $claims);
+        $html = (string) $this->get('/')->assertOk()->getContent();
 
-        return implode('.', [
-            $this->base64Url((string) json_encode(['alg' => 'RS256', 'kid' => 'de-prueba'])),
-            $this->base64Url((string) json_encode($payload)),
-            $this->base64Url('firma-que-este-canal-no-necesita'),
-        ]);
-    }
+        if (preg_match('/id="sidecart-spa" data-boot="([^"]*)"/', $html, $matches) !== 1) {
+            $this->fail('no se ha encontrado el punto de montaje de la SPA en la página');
+        }
 
-    private function base64Url(string $value): string
-    {
-        return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
+        return json_decode(html_entity_decode($matches[1], ENT_QUOTES), true, 512, JSON_THROW_ON_ERROR)['urls'] ?? [];
     }
 }

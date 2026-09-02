@@ -20670,3 +20670,77 @@ manda su aviso. Ruido, no bloqueo.
 docs-check ✓.
 ▶ **Queda**: la T2 (la pantalla, en el cajón por `[DECIDIDO owner]`), la T3 y tu OJO en navegador —
 que necesita el cliente de OAuth de DESARROLLO, con `http://localhost:8081/auth/google/callback`.
+
+## #343 · 2026-09-02 · Entrar con Google — la T2: la pantalla que completa el alta, en el cajón
+
+Segunda tanda de `docs/specs/auth-con-google.md`. Con ella el camino se cierra de punta a punta: quien
+no tiene cuenta vuelve de Google, completa **teléfono, condiciones y descargo**, y entra ya firmado.
+
+### La pregunta que faltaba (Q8), resuelta con la cifra delante
+
+`[DECIDIDO owner]`: **la pantalla vive en el CAJÓN**. Se le ofreció una tercera opción que la spec no
+había valorado —una página servida por el servidor, como `/autorizacion/{pedido}`, con coste **cero**
+de bundle— y eligió el cajón. Lo que eso cuesta se midió antes de escribir una línea, que es lo que
+§16 pedía:
+
+- **el chunk del cajón tenía 44 B de holgura** (262,95 KiB sobre un techo de 263);
+- la pantalla entera pesa **~6,2 KiB**.
+
+Así que la elección real era subir el techo para todo el mundo o cobrárselo a quien la usa. **Se
+cobra a quien la usa**, con dos podas medidas:
+
+1. **La pantalla se carga en DIFERIDO** (`defineAsyncComponent`, el único del cajón): **−1,88 KiB**.
+   Se llega a ella por una PUERTA —o sea, con una carga de página por delante—, así que su petición
+   va donde no se nota; el chunk del cajón lo descarga cualquiera que vaya a comprar.
+2. **Su estado NO vive en el store global**: lo consume una sola pantalla. **−1,32 KiB** más.
+
+▶ El techo sube **263 → 267** (queda 1,02 KiB) y el del payload anónimo **2.750 → 2.800**, que son
+los **44 B** del rótulo del botón. **Los ~380 B de la pantalla NO viajan en ninguna página**: es la
+primera poda por RUTA del montaje, y se sostiene porque a esa zona no se llega de ninguna otra forma.
+
+### Las tres cosas que hacen segura la pantalla
+
+1. ⚠️⚠️ **Ni el `sub` ni el correo viajan en la petición**: los pone el servidor desde la sesión. Si
+   viajaran, cualquiera crearía una cuenta con la identidad verificada de otro — **y a esa cuenta se
+   le firma un descargo probatorio**. Hay caso que manda un `email` en el cuerpo y comprueba que la
+   cuenta nace igualmente con el de la sesión.
+2. **El envío CONSUME el perfil**: un doble clic o una segunda pestaña no crean una segunda cuenta.
+3. ⚠️ **Antes de crear nada se vuelve a RESOLVER la identidad** con el mismo servicio que el retorno:
+   entre pintar la pantalla y enviarla, alguien pudo registrar ese correo. Si ahora resuelve, se
+   ENTRA. Así la carrera la resuelve el camino que ya está probado y no una excepción de unicidad.
+
+▶ Y lo que la pantalla consigue, que es su razón de existir (§4): **la exención queda FIRMADA en el
+acto**, en la misma operación que crea la cuenta. Puede hacerse porque el correo nace verificado
+(`[DECIDIDO owner]` Q1) y `WaiverSigner` lee esa COLUMNA.
+
+### Dos guardas que hubo que ENSANCHAR, no exceptuar
+
+- **`SidebarTranslationKeysExistTest` medía contra UNA página** y daba por hecho que el payload es el
+  mismo en todas — cierto mientras el montaje solo podaba por SESIÓN. Ahora recorre también **las
+  puertas** (`AccountDoor::ZONE_BY_ROUTE`, que es dato) **como invitado**, porque una puerta de
+  invitado con sesión abre el índice. Sin ensancharla habría dado un **falso positivo** que empuja a
+  mandar bytes a todas las páginas para callarlo.
+- **`SidebarStyleWiringTest`** cazó `.auth__google` sin regla: la clase se escribió antes que su CSS.
+  Es exactamente para lo que existe.
+
+### Lo que enseñó la mutación (7, muerden 7 — la séptima tras arreglar el test)
+
+⚠️⚠️ **Un caso pasaba en verde por el motivo equivocado**: «sin aceptar el descargo no hay cuenta»
+aseveraba solo el **422**, y con la regla de la casilla relajada seguía verde porque el 422 lo
+disparaba la regla del identificador del texto. Ahora asevera el CAMPO. *Un test que solo mira el
+código de estado no dice qué guarda funciona.*
+
+### Y una decisión de marca, dicha en voz alta
+
+**El botón NO lleva el logotipo tetracolor de Google.** El set de iconos de este producto exige
+`currentColor` y rejilla 24 (`IconSetAnatomyTest`), y un glifo con colores tecleados dentro rompe la
+anatomía que hace que la web se vea de un solo idioma. La marca queda nombrada en el rótulo
+(«Continuar con Google»). Ficha en `DEUDA.md` por si el owner quiere el botón oficial, que exige
+tratar su logo como **asset** y no como icono.
+
+**Verificación**: 14 casos nuevos de servidor (13 contra el contrato) + **16 de `node --test`** ·
+7 mutaciones con control, **7 muerden** · suite **3962 · 25.353** verde · Pint ✓ · docs-check ✓ ·
+`npm run build` y `build:ssr` ✓.
+▶ **Queda la T3** (las cuatro acciones que exigen contraseña, desvincular y el interruptor de
+marketing) y **tu OJO**: `VERIFICACION-E2E-CAJON.md` §5.octies, que necesita el cliente de
+OAuth de DESARROLLO.

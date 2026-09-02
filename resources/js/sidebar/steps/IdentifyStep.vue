@@ -2,6 +2,7 @@
 import { t as translate } from '../i18n.js';
 import LoginForm from './LoginForm.vue';
 import RegisterForm from './RegisterForm.vue';
+import GoogleButton from './GoogleButton.vue';
 
 /**
  * Paso 5 — la IDENTIFICACIÓN (Fase 4 · pasos 4.4a·2 y 4.4b·1).
@@ -44,6 +45,15 @@ const props = defineProps({
 
     /** Clave pública del anti-bot; baja tal cual a `RegisterForm` (4.4b·2). */
     turnstileSiteKey: { type: String, default: '' },
+
+    /**
+     * La ida a Google (`specs/auth-con-google.md`). Vacía = esta instalación no la ofrece, y entonces
+     * no se pinta nada: el hueco falla hacia invisible.
+     *
+     * ⚠️ Llega por PROP y no de un store porque este paso ya recibe todo así — es lo que permite
+     * renderizarlo en Node para el contrato de árbol.
+     */
+    googleUrl: { type: String, default: '' },
 });
 
 defineEmits(['back', 'set-mode', 'submit-login', 'submit-register', 'recover']);
@@ -114,4 +124,9 @@ const a = (key) => translate(props.account, key);
         :submitting="submitting"
         :account="account"
         @submit="$emit('submit-register')" />
+
+    <!-- Entrar o registrarse con Google, en las DOS pestañas: desde aquí sirve para las dos cosas —
+         el retorno decide si hay cuenta o hay que crearla— y esconderlo en una de ellas obligaría al
+         cliente a cambiar de pestaña para usar el camino más corto. -->
+    <GoogleButton :href="googleUrl" :label="a('register.google_cta')" />
 </template>

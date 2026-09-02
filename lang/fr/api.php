@@ -66,4 +66,8 @@ return [
         'waiver_required' => 'Pour créer le compte, il faut lire et accepter la décharge de responsabilité.',
         'online_sales_disabled' => 'La réservation en ligne n’est pas encore disponible. Appelez-nous ou venez au parc pour réserver.',
     ],
+
+    'google' => [
+        'refused' => "Nous n'avons pas pu terminer l'inscription avec ce compte Google. Réessaie, ou inscris-toi avec ton e-mail et un mot de passe.",
+    ],
 ];

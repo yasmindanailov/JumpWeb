@@ -67,6 +67,14 @@ class ApiContractTest extends TestCase
         // Y desde Fase 6 la casilla del waiver, que es opcional por definición (desmarcada por
         // defecto): quien la marca debe decir qué texto leyó, y eso lo exige el servidor.
         'RegisterRequest' => ['marketing', 'context', 'website', 'turnstile_token', 'accept_waiver', 'waiver_document_id'],
+        // Cuerpo de PETICIÓN del alta con Google (`specs/auth-con-google.md` §7). Las dos claves del
+        // descargo son opcionales por la MISMA razón que arriba y una más: en una instalación en modo
+        // externo —o sin versión publicada— **no hay texto que aceptar**, así que exigirlas convertiría
+        // en 422 al único cliente correcto que puede existir allí. Quien decide cuándo son obligatorias
+        // es el servidor, que las exige justo cuando `GET /legal/waiver` sirve un documento.
+        // ⚠️ Lo que sigue mordiendo es `additionalProperties: false`: es lo que impide colar aquí un
+        // `email` que el servidor ignoraría en silencio — y ese silencio sería la vulnerabilidad.
+        'GoogleSignupRequest' => ['accept_waiver', 'waiver_document_id'],
         // Cuerpo de PETICIÓN otra vez, y por el mismo motivo. Una línea de cesta sin complementos y
         // sin datos de evento es lo normal —una entrada suelta—, así que exigir los dos campos
         // convertiría en 422 la petición más frecuente de todas. `additionalProperties: false`

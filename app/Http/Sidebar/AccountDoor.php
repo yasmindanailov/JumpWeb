@@ -50,6 +50,13 @@ final readonly class AccountDoor
         'registro' => 'register',
         'login' => 'login',
         'password.request' => 'forgot',
+
+        // La CUARTA puerta de auth (`specs/auth-con-google.md` §7): aquí aterriza quien vuelve de
+        // Google **sin cuenta**, y el cajón abre la pantalla que completa el alta.
+        // ⚠️ Es una puerta como las otras tres, y por eso hereda sus dos reglas sin escribir nada: no
+        // se indexa, y con sesión abre el índice en vez del formulario — quien ya entró no tiene un
+        // alta que completar.
+        'registro.google' => 'google-signup',
     ];
 
     /**
@@ -60,7 +67,7 @@ final readonly class AccountDoor
      *
      * @var list<string>
      */
-    public const GUEST_ROUTES = ['registro', 'login', 'password.request'];
+    public const GUEST_ROUTES = ['registro', 'login', 'password.request', 'registro.google'];
 
     /**
      * La zona con la que abrir el cajón en la petición actual, o `''` si esta ruta no es una puerta.

@@ -117,6 +117,7 @@ export const useAuthStore = defineStore('auth', {
          * **no pinta el widget** y el servidor no verifica nada. Hoy el campo es el bit que decide.
          */
         signupSiteKey: '',
+
     }),
 
     getters: {

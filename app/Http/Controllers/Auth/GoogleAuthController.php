@@ -141,12 +141,13 @@ class GoogleAuthController extends Controller
      * No hay cuenta todavía: el perfil verificado espera en la sesión y la persona va a la pantalla
      * que completa el alta (§5.3, §7).
      *
-     * ⚠️ **En la T1 esa pantalla no existe todavía** y el destino es el alta de siempre. Es el único
-     * punto que la T2 cambia de este controlador.
+     * ⚠️ **La pantalla vive en el CAJÓN** (`[DECIDIDO owner]` Q8), así que el destino es una PUERTA:
+     * una ruta web que sirve la home y abre el cajón en su zona, el mismo mecanismo que `/registro` y
+     * `/login` (`Http\Sidebar\AccountDoor`). Aquí no se decide nada más.
      */
     private function pendingRegistration(): RedirectResponse
     {
-        return redirect()->route('registro')->with('status', 'google-complete-signup');
+        return redirect()->route('registro.google');
     }
 
     /** El desenlace visible de un rechazo del dominio. Uno por motivo: cada uno tiene otra salida. */

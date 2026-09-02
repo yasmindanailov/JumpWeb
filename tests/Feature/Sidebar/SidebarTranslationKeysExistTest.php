@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sidebar;
 
 use App\Domain\Identity\Models\User;
+use App\Http\Sidebar\AccountDoor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -91,14 +92,53 @@ class SidebarTranslationKeysExistTest extends TestCase
         $this->assertGreaterThan(20, $found, 'el localizador de claves no está encontrando nada');
     }
 
-    /** El grupo `account` tal y como el servidor lo MANDA a una página con sesión. */
+    /**
+     * El grupo `account` tal y como el servidor lo MANDA **en las páginas por las que se llega a cada
+     * zona**, fundidas en una sola foto.
+     *
+     * ⚠️⚠️ **No basta con la home, y eso lo enseñó `#343`.** Hasta entonces esta guarda leía una sola
+     * página con sesión y daba por hecho que el payload es el mismo en todas — cierto mientras el
+     * montaje solo podaba por SESIÓN. La pantalla que completa un alta con Google poda además por
+     * RUTA: sus textos viajan **solo en su puerta**, porque a esa zona no se llega de ninguna otra
+     * forma. Con la foto vieja, esta guarda habría declarado «mudas» unas claves que llegan
+     * perfectamente — un FALSO POSITIVO que empuja a añadir bytes a todas las páginas para callarlo.
+     *
+     * ▶ Las puertas se recorren **como INVITADO** y no es un detalle: una puerta de invitado con
+     * sesión abre el ÍNDICE (`AccountDoor::zone()`), así que con sesión esos textos no viajan — y es
+     * correcto que no viajen, porque quien ya entró no tiene un alta que completar.
+     * ▶ La lista sale de `ZONE_BY_ROUTE`, que es DATO: una puerta nueva entra aquí sola.
+     */
     private function accountMessages(): array
     {
-        $user = User::factory()->create();
-        $html = (string) $this->actingAs($user)->get('/')->assertOk()->getContent();
+        $payload = [];
 
-        if (preg_match('/id="sidecart-spa" data-boot="([^"]*)"/', $html, $matches) !== 1) {
-            $this->fail('no se ha encontrado el punto de montaje de la SPA en la página');
+        // Primero las puertas, de invitado. Después la página con sesión: `actingAs()` fija el titular
+        // para todas las peticiones siguientes del test, así que el orden importa.
+        foreach (array_keys(AccountDoor::ZONE_BY_ROUTE) as $name) {
+            $payload = array_replace_recursive($payload, $this->accountPayloadOf(route($name)));
+        }
+
+        $this->actingAs(User::factory()->create());
+
+        return array_replace_recursive($payload, $this->accountPayloadOf('/'));
+    }
+
+    /**
+     * El grupo `account` del `data-boot` de una URL, o `[]` si esa página no monta el cajón (una
+     * puerta privada pedida sin sesión redirige al login: no es un fallo, es que ahí no hay payload).
+     *
+     * @return array<string, mixed>
+     */
+    private function accountPayloadOf(string $url): array
+    {
+        $response = $this->get($url);
+
+        if ($response->getStatusCode() !== 200) {
+            return [];
+        }
+
+        if (preg_match('/id="sidecart-spa" data-boot="([^"]*)"/', (string) $response->getContent(), $matches) !== 1) {
+            return [];
         }
 
         $boot = json_decode(html_entity_decode($matches[1], ENT_QUOTES), true, 512, JSON_THROW_ON_ERROR);

@@ -75,4 +75,11 @@ return [
         // Lanzamiento 2026-09-01: la compra online puede estar cerrada (`sales.online_enabled=0`).
         'online_sales_disabled' => 'La compra online no está disponible por ahora. Llámanos o ven al parque para reservar.',
     ],
+
+    // Entrar y registrarse con Google (`specs/auth-con-google.md`).
+    'google' => [
+        // Entre que se pintó la pantalla y se envió, esa identidad dejó de poder entrar: apareció una
+        // cuenta con ese correo que se ha eliminado, o que ya tiene otra cuenta de Google vinculada.
+        'refused' => 'No hemos podido completar el alta con esa cuenta de Google. Vuelve a intentarlo o entra con tu correo y contraseña.',
+    ],
 ];

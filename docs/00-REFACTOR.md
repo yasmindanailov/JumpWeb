@@ -3656,7 +3656,7 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [x] **Revisión adversarial de cinco lentes: OCHO bloqueantes**, dos de ellos agujeros de seguridad, aplicados con marcas ✱
 - [x] **Diez de once preguntas cerradas** con `[DECIDIDO owner]` (la Q8 se cerró al empezar: la pantalla va en el CAJÓN)
 - [x] **T1 · el mecanismo** (`#342`, §18): `user_identities` · la raíz de confianza · el reto de un solo uso · las tres puertas · el aviso por correo · la purga por BORRADO · el export del art. 20 con su contrato. ⚠️ **Corrige `RGPD-06`**: el vínculo cae con `revokeAllAccess()`, y eso obliga a expulsar ANTES de escribirlo. 21 mutaciones, muerden 20
-- [ ] **T2 · el alta** — la pantalla EN EL CAJÓN (`[DECIDIDO owner]` Q8), con la medición del presupuesto ANTES de escribir (quedan ~51 B)
+- [x] **T2 · el alta** (`#343`, §19): la pantalla **en el cajón y en carga DIFERIDA**, el alta que nace de ella con la firma del descargo dentro, y el botón en las tres superficies de auth. ⚠️ El presupuesto se midió antes: 44 B de holgura → dos podas medidas y el techo 263 → 267. ⚠️ **Una desviación de la letra de la Q6, para el owner** (§19.6). 7 mutaciones, muerden 7
 - [ ] **T3 · lo irreversible y el marketing** — ⚠️ **dependencia DURA con la T2**: sin ella se crean cuentas sin autoservicio para las cuatro acciones que exigen contraseña
 - [ ] **T4 · el OJO del owner**
 - [ ] Del owner: su ✅, **el cliente de OAuth de DESARROLLO** (el de producción ya está creado; su secreto vive fuera del repo) y la política de privacidad al terminar
