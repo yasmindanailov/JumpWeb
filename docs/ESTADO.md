@@ -320,6 +320,19 @@ es «Costuras a la vista» (https://claude.ai/code/artifact/4d0ce068-150e-4f33-8
 **el registro es el fichero**. ▶ **Lo que sigue: las seis decisiones del
 owner (§7) y, con ellas, la tanda C (§8: lo roto — el mapa de `/contacto` tapado al 100 %, el foco de
 los campos, el acordeón con tope, los cuatro contrastes)**. **No se tocó ni una línea de producto.**
+▶ ❗❗ **FASE 2 ARRANCADA (2026-09-03, `#431`)** — el owner preguntó si arreglar la auditoría daba
+«diferenciación real y una UX que explique la propuesta»; medido, **no** (la portada tarda 6,3
+pantallas en decir qué es el parque). Hechos: **`design.md` (raíz) = el sistema del PRODUCTO** (roles y
+mecanismos; familias de estructura `[PENDIENTE: owner]`) · **`mockup_playjumppark/design-playjump.md` =
+el perfil de PlayJump** escrito desde su canvas entero (sus tablas viven en el JS de los artboards: su
+contraste marca «Cian sobre Papel 2,45 ✕ NUNCA» y «Blanco sobre Verde 2,95 ✕ NUNCA» —los dos pares
+que la web sirve— y su tabla de roles pone el enlace en papel en Azul Muro) · **`docs/specs/
+guion-de-la-portada.md` ⬜** = el guion (cuatro preguntas · «cada regla donde muerde» · orden que
+reabre `#314` con medida · siete decisiones D-G1..7 · objetivos medibles con `storage/app/
+audit-camino.mjs`). **Lo siguiente es 2c: tres renders de la portada (Conversational FAQ · Split
+Studio · Map) sobre la web real, con el selector de zona y el precio por día dentro, para que el owner
+elija viendo.** ⚠️ D-G6 es DATO del owner: edad y altura de zona son texto libre (`zones.age_range`).
+⚠️ `DesignSync` sigue sin autorización en sesión no interactiva; copia del canvas del 27/28/31-08.
 ⚠️ **Lo que la auditoría vio fuera de su alcance**: `resources/views/vendor/mail/html/themes/brand.css`
 lleva `#FF5B22` (el naranja del PRIMER cliente) quemado **cinco veces** — fuga white-label en los
 correos, ficha en `DEUDA.md`.

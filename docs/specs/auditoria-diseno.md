@@ -107,6 +107,10 @@ Formato de Hallmark: **tell** (el anti-patrón con nombre) · **dónde** (ficher
   contraste medido —como se hizo con el foco (`#209`, `client.css:53-72`)—, y **que `--zone-*`
   se quede para lo que identifica una zona** (pestañas, chips de zona, la tira). **El color lo
   decides tú** (§7 · D1): tinta, el color de acción, o un color del paquete.
+- ▶ **Su propio sistema lo dice** (leído el 03-09, `#431`): la tabla de contraste de `Colores de
+  Marca` marca **«Cian sobre Papel 2,45 · ✕ NUNCA · solo relleno»**, y su tabla de roles pone el
+  **enlace en papel en Azul Muro `#0A5C93`** y en tinta en cian (`mockup_playjumppark/design-playjump.md`
+  §2.4–§2.5). D1 tiene una respuesta de partida antes de renderizar nada.
 - **Guarda que falta**: ninguna. `ActionFillTest` mira rellenos de acción; nadie mira **quién
   consume `--zone-*`**.
 
@@ -124,6 +128,8 @@ opaco), WCAG 2.1, 400 nodos de texto por vista:
 - **Fix**: `--on-ok`/`--on-err`/`--on-warn` derivados por luminancia como ya se hace con
   `--on-brand`; `.cta-ghost__s` lee `--fg-mute` de SU superficie; y **nada por debajo de 10 px**
   (el propio sistema declara `--fs-9`: revisar si ese escalón debe existir).
+- ▶ **Su propio sistema lo marca**: **«Blanco sobre Verde 2,95 · ✕ NUNCA · usa Verde oscuro»** (la
+  tabla de contraste de `Colores de Marca`, `#431`) — es «Incluido» al dígito.
 - **Guarda que falta**: una sonda de contraste sobre el HTML renderizado. `ThemeColorTest` vigila
   tokens, no pares texto/fondo.
 

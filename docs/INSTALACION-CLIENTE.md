@@ -490,6 +490,20 @@ antes si de verdad se subió — no es la caché.
 
 ---
 
+### 4.g · El PERFIL DE DISEÑO del paquete (`#431`, 2026-09-03)
+
+El sistema de diseño va en **dos capas**: `design.md` (raíz del repo) es el del **producto** —roles y
+mecanismos, sin un solo valor de marca— y cada instalación trae su **perfil**, que vive **junto a su
+material de referencia, fuera del repo** (gitignorado y excluido del `rsync`, como el resto del
+paquete). El perfil escribe, con las palabras y los números del cliente: la identidad (qué es y qué
+no es), los valores de cada rol (color con hover/pulsado/oscuro, neutros, tipografía y su escala,
+radios, sombras, rotación, movimiento), sus propias reglas y prohibiciones, su tabla de contraste, el
+orden de página que su diseñador propuso, y **dónde el producto se aparta de su sistema y por qué**
+(con la decisión). Es lo que `design.md` lee como capa de arriba antes de rediseñar una página.
+▶ El de PlayJump: `mockup_playjumppark/design-playjump.md`. ⚠️ Un perfil se escribe **desde la fuente
+del cliente** (su canvas, su manual), no desde lo que el producto ya implementó: si no, hereda las
+desviaciones sin saberlo.
+
 ## 5 · Auth y primer admin
 - `RoleSeeder` (admin/customer/staff) + `PermissionSeeder` (22 permisos; staff = 11 de
   operativa). El admin no lleva permisos: `Gate::before` le concede todo.

@@ -22264,3 +22264,57 @@ producto tocada**: `docs-check` ✓ (commit solo de doc).
 `docs/ESTADO.md` (retoma + reparto) · `docs/DEUDA.md` (una ficha: el naranja del primer cliente
 quemado cinco veces en la plantilla de correo). Instrumentos gitignorados:
 `storage/app/audit-hallmark.mjs`, `audit-hallmark-2.mjs`, `storage/app/audit/`.
+
+---
+
+## #431 · 2026-09-03 · El sistema de diseño se escribe en DOS capas —`design.md` del PRODUCTO y el perfil del cliente con su paquete— y se abre la fase 2: el GUION de la portada
+
+**Contexto.** Tras la auditoría (`#430`) el owner preguntó lo que la auditoría no contesta: *«¿con esto
+conseguimos diferenciación real? … el objetivo es que el usuario entienda la propuesta de valor sin
+complicaciones»*. Medido, **no**: la portada tarda 6,3 pantallas en decir qué es el parque, 5,3 en
+llegar al botón del cumpleaños, pregunta «¿qué zona?» con tres componentes distintos y emite doce
+especies de cosa pulsable; tres de las doce URL son un trozo de la portada con título. Arreglar
+hallazgos no cambia lo que la portada dice. `[owner]`: las cuatro preguntas del visitante son las
+que se propusieron; la complejidad (registro, descargo, menores firmados por el padre, edad **y
+altura**, tarifa por tipo de día, 1 h/2 h, complementos, post-formulario del cumple) es real; y la
+dirección es **«limpio y entendible antes que wow; el juego del cierre es el único wow; los
+selectores con etiqueta son sosos, no dicen nada»**. Pidió proceder «con rigor» y ofreció su canvas
+(fachada, vinilos, siluetas, splash, grafiti, tramas) para escribir `design.md`.
+
+**`[DECIDIDO agente, con la pregunta del owner delante]`: dos capas.** `design.md` en la **raíz**
+es el sistema del **PRODUCTO** —roles y mecanismos, válidos para cualquier instalación; nombra los
+tokens que ya existen y les pone regla, no declara valores— y el **perfil de cada cliente vive con su
+paquete**, gitignorado: `mockup_playjumppark/design-playjump.md`. Un solo `design.md` con Bungee y
+cian dentro habría metido la marca de un cliente en el repo (`#1`). Precedencia: owner → paquete →
+`design.md` → la skill. Lo que `design.md` fija que no estaba escrito: **la identidad de zona no es
+color de interacción** (nace el rol `--interactive`, pendiente de D1); **los controles cargan
+contenido**; **cada regla, donde muerde**; **un solo selector de zona**; **dos opciones se comparan,
+no se alternan**; y las **familias de estructura por tipo de página**, `[PENDIENTE: owner]` porque
+la skill exige su confirmación y aquí se eligen viéndolas.
+
+**Lo que el canvas dijo al leerlo entero** (sus tablas viven en el JS de los artboards, no en su
+texto — la primera extracción las perdió): su **tabla de contraste marca «Cian sobre Papel 2,45 ·
+✕ NUNCA · solo relleno» y «Blanco sobre Verde 2,95 · ✕ NUNCA · usa Verde oscuro»** — los dos pares que
+la web sirve hoy (`#430` C2 y C3); su **tabla de roles pone el enlace en papel en Azul Muro
+`#0A5C93`** y en tinta en cian (responde a D1 antes de renderizar nada); su regla de fondo de
+sección («nunca dos papeles seguidos») **la sustituyó su propio `S-00`**; y sus dos órdenes de
+página tienen **«cómo funciona / antes de venir» como sección propia**, que hoy no existe. Su turno
+4 de precios ya argumentó «el día se elige al reservar, no al mirar» con el precio de finde impreso
+para que «desde» no sea cebo. ⚠️ `DesignSync` sigue sin autorización (`/design-login` interactivo):
+copia local del 27/28/31-08, dicho en la cabecera del perfil.
+
+**La fase 2** (`docs/specs/guion-de-la-portada.md` ⬜): 2a el guion —cuatro preguntas, la tabla
+«cada regla donde muerde», inventario de páginas, orden propuesto (reabre `#314` **con medida
+delante**), siete decisiones D-G1..7, **objetivos medibles** (edad y altura ≤ 1,5 pantallas · qué hay
+dentro ≤ 3 · cumple ≤ 3 · portada ≤ 8 pantallas · 1 selector · ≤ 5 especies · 0 URLs duplicadas · 4 de
+5 personas contestan en < 30 s)— · 2b `design.md` (hecho, v1) · **2c tres renders de la portada sobre
+la web real** (Conversational FAQ · Split Studio · Map) con el selector de zona y el precio por día
+dentro · 2d implementación por página · 2e cinco personas con un móvil. ⚠️ **Un dato que falta y es
+del owner (D-G6)**: la edad y la altura de una zona son **texto libre** (`zones.age_range`, y dice
+6 donde él fijó 8); la marca de altura y el filtro por edad piden dos campos.
+
+**Ficheros**: `design.md` (nuevo, raíz) · `mockup_playjumppark/design-playjump.md` (nuevo,
+gitignorado) · `docs/specs/guion-de-la-portada.md` (nuevo) · `docs/INSTALACION-CLIENTE.md` §4.g ·
+`docs/README.md` · `CLAUDE.md` · `docs/ESTADO.md` · `docs/specs/auditoria-diseno.md` (la cita de su
+tabla en C2/C3). Instrumento: `storage/app/audit-camino.mjs` (gitignorado). **Ni una línea de
+producto.**
