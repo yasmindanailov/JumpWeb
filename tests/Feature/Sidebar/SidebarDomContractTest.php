@@ -1786,7 +1786,22 @@ class SidebarDomContractTest extends TestCase
 
         $process = new Process(['node', $path], base_path());
         $process->setInput(json_encode($state, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
-        $process->setTimeout(60);
+        // ⚠️⚠️ **300 y no 60, y el número sale de una MEDICIÓN, no de un susto** (2026-09-02). Este
+        // fichero arranca un `node` POR CASO —unos 38— y el `pre-push` los corre después de `build`,
+        // `build:ssr` y `test:js`: bajo esa contención el proceso no es lento, **se queda sin CPU el
+        // minuto entero** y salta `ProcessTimedOutException`. Medido: un render normal tarda
+        // **~140 ms** (146/134/137 en tres pasadas), así que 60 s ya eran **430×** de margen y aun así
+        // no bastaban. Con 300 el margen es ~2.000× y **la guarda sigue haciendo su trabajo**: un
+        // proceso de verdad colgado sigue fallando.
+        // ▶ **Esto es lo que estaba detrás del rojo transitorio del pre-push** que `DECISIONES #97`
+        // dejó sin explicar el 2026-08-16 y que `#164` no pudo atribuir al reloj ni al orden: lo
+        // capturó la trampa que aquel incidente motivó (el hook preserva el log y dice su nombre).
+        // *Un rojo transitorio sin nombre no se puede arreglar; con nombre, se arregla en diez minutos.*
+        // ⚠️ El arreglo de fondo sigue fichado en `DEUDA.md`: reutilizar UN proceso en vez de arrancar
+        // uno por caso. Subir el tope quita el síntoma, no el coste.
+        // ⚠️ **Son DOS los sitios que arrancan el renderizador** y los dos suben: una aserción de
+        // conteo lo cazó al intentar cambiar solo uno.
+        $process->setTimeout(300);
         $process->run();
 
         $this->assertTrue($process->isSuccessful(), "El módulo del aviso falló:\n".$process->getErrorOutput());
@@ -2146,7 +2161,8 @@ class SidebarDomContractTest extends TestCase
             array_filter($payload, fn ($value) => $value !== null),
             JSON_THROW_ON_ERROR
         ));
-        $process->setTimeout(60);
+        // 300 y no 60: ver la medición en el otro arranque del renderizador de este mismo fichero.
+        $process->setTimeout(300);
         $process->run();
 
         $this->assertTrue(
