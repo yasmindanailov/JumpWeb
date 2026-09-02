@@ -2772,6 +2772,25 @@ return [
         ],
     ],
 
+    /**
+     * PUBLICAR una versión de un documento legal (`#348`). Vive fuera de `waiver` porque la acción es
+     * de DOS documentos: el descargo, que se FIRMA, y las condiciones, que se ACEPTAN al contratar.
+     * ⚠️ Los textos no dicen «firmar» ni «aceptar»: dicen **publicar**, que es lo único que los dos
+     * comparten. Nombrar aquí uno de los dos verbos volvería a atar la acción a un solo documento.
+     */
+    'legal' => [
+        'publish' => [
+            'label' => 'Publicar versión',
+            'heading' => 'Publicar el texto guardado como versión :next',
+            'description' => 'Se congela el texto tal y como está GUARDADO ahora (idiomas: :locales) como la versión :next, la que se le servirá a los clientes a partir de este momento. Una versión publicada NO se puede editar ni borrar: es la prueba de lo que cada persona aceptó. Si el texto todavía lleva un marcador [PENDIENTE], la publicación se rechaza.',
+            'confirm' => 'Publicar versión :next',
+            'done' => 'Versión :version publicada (:locales).',
+            'refused_draft' => 'No se ha publicado: el texto sigue siendo un borrador',
+            'nothing' => 'No hay texto que publicar: el cuerpo está vacío en todos los idiomas.',
+            'draft_words' => '⚠️ El texto menciona «borrador» (:locales). Publicar es irreversible: si de verdad es un borrador, no lo publiques.',
+        ],
+    ],
+
     'pages' => [
         'nav_label' => 'Páginas legales',
         'model_label_singular' => 'página legal',
@@ -2822,16 +2841,9 @@ return [
         'settings_dependent_retention' => 'Conservación de la firma de un MENOR a cargo (meses tras cumplir 18)',
         'settings_dependent_retention_hint' => 'Cuántos meses se conserva la firma hecha en nombre de un menor DESPUÉS de que cumpla 18 años (un niño de 3 puede implicar conservarla 15 años). Vacío = no se purga ninguna firma de menor hasta que se fije el plazo.',
         'gate_outdated' => 'Su descargo es de una versión anterior del texto: puede pasar. Se le pedirá la firma nueva en su próxima compra o inicio de sesión, no en el mostrador.',
-        'publish' => [
-            'label' => 'Publicar versión firmable',
-            'heading' => 'Publicar el texto guardado como versión :next',
-            'description' => 'Se congela el texto tal y como está GUARDADO ahora (idiomas: :locales) como la versión :next, la que firmarán los clientes a partir de este momento. Una versión publicada NO se puede editar ni borrar: es la prueba de lo que cada persona aceptó. Si el texto todavía lleva un marcador [PENDIENTE], la publicación se rechaza.',
-            'confirm' => 'Publicar versión :next',
-            'done' => 'Versión :version publicada (:locales).',
-            'refused_draft' => 'No se ha publicado: el texto sigue siendo un borrador',
-            'nothing' => 'No hay texto que publicar: el cuerpo está vacío en todos los idiomas.',
-            'draft_words' => '⚠️ El texto menciona «borrador» (:locales). Publicar es irreversible: si de verdad es un borrador, no lo publiques.',
-        ],
+        // ⚠️ Los textos de PUBLICAR se mudaron a `admin.legal.publish` en `#348`: la acción dejó de ser
+        // del descargo (se FIRMA) para servir también a las condiciones (se ACEPTAN), y un rótulo que
+        // dijera «firmable» mentiría en la mitad de los casos.
         // El registro probatorio en la ficha del usuario (tanda 2): acción con permiso propio y auditada.
         'proof' => [
             'action' => 'Registro del descargo',

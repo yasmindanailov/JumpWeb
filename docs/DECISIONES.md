@@ -21026,6 +21026,68 @@ Google** con `redirect_uri` completo, `state` de 64 hex y `prompt=select_account
 sesión **10.000 → 10.050**, con poda de −92 B medida antes · Pint ✓ · docs-check ✓.
 ---
 
+## #348 · 2026-09-02 · Las condiciones se publican por versiones, y la regla de gracia es una REGLA (no reescribir la prueba)
+
+**T8·a del pulido del OJO del owner** (`specs/auth-con-google.md` §21.4.1). Primera mitad de mover la
+aceptación de las condiciones al momento del contrato.
+
+### 1 · El hallazgo que reencuadra la tanda, y es LEGAL
+
+⚠️⚠️ **Medido antes de escribir nada: el embudo NO enseña las condiciones en ningún sitio.** Cero
+enlaces a `legal.condiciones` en los ocho pasos del cajón y **ningún correo las enlaza tampoco**. Hoy
+solo aparecen en la casilla del alta ⇒ **quien ya tiene cuenta compra sin que se le muestren nunca**.
+
+Es justo lo que la **LCGC (Ley 7/1998, art. 5)** pide evitar para que unas condiciones generales se
+incorporen al contrato, y lo que el **TRLGDCU (RDL 1/2007, art. 97)** exige como información
+precontractual. ▶ ***Mover la aceptación al checkout no relaja nada: cierra un hueco que existe hoy.***
+⚠️ Lo que SÍ está bien: el botón dice «Pagar con tarjeta» y cumple el art. 98.2. No se toca.
+
+### 2 · No se construyó maquinaria: se abrió la que había
+
+`LegalDocumentPublisher::publish($slug, …)` ya era genérico; la acción del panel estaba limitada a
+`slug === 'waiver'`. La lista pasa a `LegalDocuments::PUBLISHABLE` y es **CERRADA**: publicar es
+irreversible, y ofrecer el botón en cualquier página del CMS sería regalarle un acto sin vuelta atrás
+a quien solo quería corregir una errata.
+
+⚠️ **La privacidad queda FUERA y es el CONTROL del caso**: el RGPD no pide que se «acepte» una
+política —el art. 13 pide informar—, así que no hay aceptación que fechar contra una versión.
+⚠️ Los textos se mudan a `admin.legal.publish.*` y dejan de decir «firmable»: el descargo se FIRMA y
+las condiciones se ACEPTAN; el único verbo que comparten es **publicar**.
+
+### 3 · `TermsAcceptance`, y por qué la versión NO sale de una constante
+
+`Consent::CURRENT_VERSION` es un `'2026-05-23'` escrito a mano que —medido— **no lo lee nadie**. Con
+él, alguien edita el texto en el panel, se olvida de subirlo, y el producto **afirma que el cliente
+aceptó un texto que nunca vio**. `[DECIDIDO owner]`: la versión no puede divergir del texto, así que
+sale de la publicación.
+
+### 4 · La regla de gracia: `[DECIDIDO owner]`, y se hace con una REGLA
+
+A quien ya las aceptó en el alta **no se le vuelve a pedir** al estrenar el versionado.
+⚠️⚠️ **Y se hace con una regla en UN sitio, no reescribiendo su fila**: cambiarle la versión de
+`2026-05-23` a `v1·es` dejaría el registro afirmando que aceptó un documento que **no existía cuando
+firmó**. *Una prueba no se edita para que la consulta salga más corta.*
+▶ **Muere en la v2**: solo empata con la primera versión, así que al publicar una segunda todo el
+mundo vuelve a pasar por la casilla — que es lo que el owner pidió.
+⚠️ **El supuesto que asume, dicho**: que el texto de la v1 sea el mismo que aceptaron. Lo es mientras
+nadie edite `condiciones` antes de publicarla. **Si hay que retocarla, se publica ANTES.**
+
+### 5 · Sin publicar, no se pide nada
+
+El hueco falla hacia invisible, como las claves de Google: una instalación recién montada no puede
+quedarse sin vender porque nadie haya pulsado «Publicar». Con caso **y con su control** —sin él, ese
+caso no distingue «no hay nada que pedir» de «esto no pide nunca nada»—.
+⚠️ **Paso manual al desplegar**: publicar la v1 de `condiciones` en cada instalación.
+
+▶ **Y un caso existente cambió de nombre porque su nombre pasó a ser mentira**
+(`…is_visible_only_on_the_waiver_page`): sigue comprobando que la privacidad queda fuera, que es lo
+que le da valor, y ahora cubre también las condiciones.
+
+**Verificación**: suite **4048 · 25.797** verde · `TermsAcceptanceTest` (9 casos, con control en el
+de «sin publicar» y con el CONTRA-caso de que la gracia muere en la v2) · `PublishWaiverVersionActionTest`
+ampliado · Pint ✓ · docs-check ✓.
+---
+
 ## #400 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
 
 **Encontrado por el owner probando lo construido**, con la suite verde y las cuatro tandas anteriores

@@ -11,6 +11,22 @@ use Illuminate\Database\Eloquent\Collection;
  */
 final class LegalDocuments
 {
+    /**
+     * **Las páginas legales que se PUBLICAN por versiones**, y solo ésas.
+     *
+     * ⚠️⚠️ **Es una lista CERRADA a propósito.** Publicar es irreversible —la fila no se edita ni se
+     * borra— así que ofrecer el botón en una página cualquiera del CMS es regalar un acto sin vuelta
+     * atrás a quien solo quería corregir una errata. Aquí entra un documento cuando alguien tiene que
+     * poder demostrar **qué texto exacto aceptó cada persona**:
+     *  · `waiver` — el descargo, que se FIRMA (`specs/waiver-probatorio.md` §4.2);
+     *  · `condiciones` — que se ACEPTAN al contratar (`#348`), y de las que hay que poder decir qué
+     *    versión regía cada compra (LCGC art. 5).
+     *
+     * ⚠️ **La privacidad NO entra, y no es un olvido**: el RGPD no pide que se «acepte» una política
+     * (art. 13 pide INFORMAR), así que no hay ninguna aceptación que fechar contra una versión.
+     */
+    public const PUBLISHABLE = ['waiver', 'condiciones'];
+
     public static function latestVersionNumber(string $slug): ?int
     {
         $max = LegalDocumentVersion::query()->where('slug', $slug)->max('version');

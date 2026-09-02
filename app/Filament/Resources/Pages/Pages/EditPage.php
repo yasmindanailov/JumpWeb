@@ -7,7 +7,6 @@ use App\Domain\Content\Services\LegalIdentity;
 use App\Domain\Identity\Exceptions\DraftCannotBePublishedException;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\LegalDocuments;
-use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Filament\Resources\Pages\Concerns\InteractsWithPageForm;
 use App\Filament\Resources\Pages\PageResource;
@@ -49,19 +48,24 @@ class EditPage extends EditRecord
                 ->visible(fn (): bool => Route::has('legal.'.$record->slug)),
 
             // Fase 6 · waiver (`specs/waiver-probatorio.md` §4.2): PUBLICAR es un acto con fecha, no un
-            // guardado. Congela el texto GUARDADO como versión firmable, inmutable. Solo en la página
-            // del waiver y solo para quien gestiona contenido.
+            // guardado. Congela el texto GUARDADO como versión inmutable. Solo para quien gestiona
+            // contenido, y solo en las páginas que se publican por versiones.
+            //
+            // ⚠️ **Desde `#348` son DOS y no una** (el descargo y las condiciones), así que la acción y
+            // sus textos son GENÉRICOS: el descargo se FIRMA y las condiciones se ACEPTAN, y un rótulo
+            // que dijera «firmable» mentiría en la mitad de los casos. La lista vive en
+            // `LegalDocuments::PUBLISHABLE`, que es quien lee las versiones publicadas.
             Action::make('publishVersion')
-                ->label(__('admin.waiver.publish.label'))
+                ->label(__('admin.legal.publish.label'))
                 ->icon(Heroicon::OutlinedDocumentCheck)
                 ->color('warning')
                 ->requiresConfirmation()
-                ->modalHeading(fn (): string => __('admin.waiver.publish.heading', ['next' => $this->nextVersionNumber()]))
+                ->modalHeading(fn (): string => __('admin.legal.publish.heading', ['next' => $this->nextVersionNumber()]))
                 // El aviso de «borrador» (revisión `#169` §10.4): los marcadores bloquean, las palabras
                 // avisan — un texto definitivo puede mencionarlas, pero quien publica tiene que verlo.
                 ->modalDescription(function (): HtmlString {
                     $texts = $this->publishableTexts();
-                    $description = __('admin.waiver.publish.description', [
+                    $description = __('admin.legal.publish.description', [
                         'next' => $this->nextVersionNumber(),
                         // F-07 (`#181`): los idiomas que se ANUNCIAN son los que `publish()` publicará (con cuerpo).
                         'locales' => implode(', ', LegalDocumentPublisher::publishableLocales($texts)) ?: '—',
@@ -71,10 +75,10 @@ class EditPage extends EditRecord
                     // F-02 (`#181`): Filament pinta la descripción escapada en un `<p>`; un `\n\n` no separa nada.
                     return new HtmlString($drafty === []
                         ? e($description)
-                        : e($description).'<br><br><strong>'.e(__('admin.waiver.publish.draft_words', ['locales' => implode(', ', $drafty)])).'</strong>');
+                        : e($description).'<br><br><strong>'.e(__('admin.legal.publish.draft_words', ['locales' => implode(', ', $drafty)])).'</strong>');
                 })
-                ->modalSubmitActionLabel(fn (): string => __('admin.waiver.publish.confirm', ['next' => $this->nextVersionNumber()]))
-                ->visible(fn (): bool => $record->slug === WaiverSettings::SLUG
+                ->modalSubmitActionLabel(fn (): string => __('admin.legal.publish.confirm', ['next' => $this->nextVersionNumber()]))
+                ->visible(fn (): bool => in_array($record->slug, LegalDocuments::PUBLISHABLE, true)
                     && (auth()->user()?->hasPermission('content.manage') ?? false))
                 ->action(fn () => $this->publishVersion()),
         ];
@@ -120,7 +124,7 @@ class EditPage extends EditRecord
         } catch (DraftCannotBePublishedException $e) {
             // El bloqueante de la revisión (§8.1) como mecanismo: un borrador no se congela.
             Notification::make()
-                ->title(__('admin.waiver.publish.refused_draft'))
+                ->title(__('admin.legal.publish.refused_draft'))
                 ->body($e->getMessage())
                 ->danger()
                 ->persistent()
@@ -129,7 +133,7 @@ class EditPage extends EditRecord
             return;
         } catch (InvalidArgumentException) {
             Notification::make()
-                ->title(__('admin.waiver.publish.nothing'))
+                ->title(__('admin.legal.publish.nothing'))
                 ->danger()
                 ->send();
 
@@ -137,7 +141,7 @@ class EditPage extends EditRecord
         }
 
         Notification::make()
-            ->title(__('admin.waiver.publish.done', [
+            ->title(__('admin.legal.publish.done', [
                 'version' => $rows->first()?->version,
                 'locales' => $rows->pluck('locale')->implode(', '),
             ]))

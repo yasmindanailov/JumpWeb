@@ -125,6 +125,24 @@ equivocada **sin que nada fallara**.
 ⚠️⚠️ **Trampa del arnés, medida: `Http::fake()` ACUMULA stubs y gana el primero que casa** — un caso
 que recorre el flujo dos veces recibía el token del PRIMER reto y salía `google-failed`. *Parecía un
 defecto del producto y era el instrumento.*
+▶ 🟦 **T8·a EN EL ÁRBOL** (`DECISIONES #348`, spec §21.4.1): **las condiciones ya se publican por
+versiones**, como el descargo, y `TermsAcceptance` responde si un titular tiene que aceptarlas.
+❗❗❗ **EL HALLAZGO QUE REENCUADRA LA TANDA ES LEGAL, y lo medí antes de escribir nada: el embudo NO
+enseña las condiciones en ningún sitio** —cero enlaces en los ocho pasos del cajón, y ningún correo
+las enlaza—. Hoy solo salen en la casilla del alta, así que **quien ya tiene cuenta compra sin que se
+le muestren nunca** (LCGC art. 5 · TRLGDCU art. 97). *Moverlas al checkout no relaja nada: cierra un
+hueco que existe hoy.* ⚠️ Lo que SÍ está bien: «Pagar con tarjeta» cumple el art. 98.2.
+⚠️⚠️ **La regla de gracia (`[DECIDIDO owner]`: a quien ya las aceptó no se le vuelve a pedir) se hace
+con una REGLA, no reescribiendo su fila**: cambiarle la versión de `2026-05-23` a `v1·es` dejaría el
+registro afirmando que aceptó un documento que no existía cuando firmó. *Una prueba no se edita para
+que la consulta salga más corta.* Y **muere en la v2**.
+⚠️ **PASO MANUAL AL DESPLEGAR**: publicar la v1 de `condiciones` desde el panel en cada instalación.
+Sin publicar, no se pide nada y la venta sigue (el hueco falla hacia invisible).
+▶ **Queda la T8·b** (el checkout pide condiciones y teléfono; toca `OrdersController`, o sea
+`VERIFY_CONC=1`), **la T8·c** (las dos altas pierden las casillas + el contrato) y **la T8·d** (el
+botón de Google encima del formulario, `[DECIDIDO owner]`). ▶ **Y detrás, la T9: One Tap**
+—`[owner]`, viable gateando el chip tras el banner de cookies—, cuya pieza cara es **verificar la
+firma del `id_token`**, porque ahí el token llega del CLIENTE y no del canje.
 ▶ ❗❗ **PARA EL CARRIL DEL JUSTIFICANTE — DOS AVISOS**: (1) voy a tocar **`openapi/v1.yaml`** y
 **`lang/*/account.php`**, que son de los ocho ficheros compartidos: si los tocas tú, `git pull --rebase`
 antes de empujar. (2) Voy a mover la **aceptación de condiciones al checkout** y a dejar el alta con
@@ -746,7 +764,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > número**: 4019 + 4 + 15 = **4038** y el gate mide **4039 · 25.772**. Un test y dos aserciones de
 > más, o sea que uno de los dos números declarados se tomó sobre una base que ya no era 4019. *Que la
 > suma no cuadre es justo el motivo por el que el gate mide en vez de creerse la resta.*
-> Suite **4039 en verde** (25.772 aserciones, 1 skipped a propósito), medida el 2026-09-02
+> Suite **4048 en verde** (25.797 aserciones, 1 skipped a propósito), medida el 2026-09-02
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`): las cuatro tandas del
 > justificante (`#400`→`#403`) sobre las TRES de Google auth (`#342`, `#343`, `#344`), la columna del menú
 > (`#341`, +8), el refresco al volver a la pestaña (`#340`) y el vocabulario del descargo (`#339`),

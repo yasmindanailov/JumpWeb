@@ -928,7 +928,7 @@ como una incoherencia y los «arregle» de vuelta.
 | 3 | El **interruptor de marketing** es un checkbox, y al pulsarlo aparece un scroll horizontal | Defecto de `#344`, sin ficha | **T6** ✅ `#346` |
 | 4 | **Vincular** Google desde la cuenta (desvincular ya está) | `UserIdentity::VIA_ACCOUNT` declarado y sin emisor; §18.6 lo avisa | **T7** ✅ `#347` |
 | 5 | El **panel de admin** dice si el cliente entra con Google | No estaba en la spec | **T7** ✅ `#347` |
-| 6 | Las **condiciones** y el **teléfono** se piden en el checkout, no en el alta | ⚠️ **§4 lo DESCARTÓ y §13 lo dejó como ficha** «decisión independiente» | T8 |
+| 6 | Las **condiciones** y el **teléfono** se piden en el checkout, no en el alta | ⚠️ **§4 lo DESCARTÓ y §13 lo dejó como ficha** «decisión independiente» | T8 (a ✅ `#348`) |
 | 7 | La **privacidad** no lleva casilla en ninguna de las dos altas | Hecho en la de Google (§7.1); **pendiente en el alta con contraseña** | T8 |
 
 ### 21.1 · T5 — el botón oficial y el copy (`DECISIONES #345`)
@@ -1189,3 +1189,70 @@ página no dice «Marcos». Es **la misma lección de `#337`, tercera aparición
 mismo fichero (la primera la arregló el carril de Google el mismo día, en `responsible()`).
 ▶ **Reproducido a voluntad** inyectando *«Marcos Colisión»*, arreglado fijando el nombre y
 **verificado con control**: volviendo a inyectarlo, el caso se pone rojo otra vez.
+
+### 21.4 · T8 — las condiciones al momento del contrato (en curso)
+
+`[DECIDIDO owner, 2026-09-02]`, tres decisiones tomadas con la cifra y el coste delante:
+
+1. **Aplica a las DOS altas**, no solo a la de Google: dejar el alta con contraseña con cuatro
+   casillas y la de Google con una serían **dos posturas legales distintas para el mismo producto**.
+2. **Se piden UNA vez, y otra vez cuando el texto cambia de versión** — *«igual que el waiver»*.
+3. **A quien ya las aceptó no se le vuelve a pedir** al estrenar el versionado.
+
+⚠️ **El descargo NO baja al checkout** (`[DECIDIDO owner]`, sobre la opción de «cero pantallas»):
+§4 sigue en pie, y la pantalla de Google se queda con el nombre y **una** casilla.
+
+#### El hallazgo que reencuadra la tanda, y es LEGAL
+
+⚠️⚠️ **Medido antes de escribir nada: el embudo NO enseña las condiciones en ningún sitio.** Cero
+enlaces a `legal.condiciones` en los ocho pasos del cajón, y **ningún correo las enlaza tampoco**.
+Hoy solo aparecen en la casilla del alta ⇒ **un cliente que ya tiene cuenta compra sin que se le
+muestren nunca.**
+
+Eso es justo lo que la **LCGC (Ley 7/1998, art. 5)** pide evitar para que unas condiciones generales
+queden incorporadas al contrato, y lo que el **TRLGDCU (RDL 1/2007, art. 97)** exige como información
+precontractual. ▶ ***Mover la aceptación al checkout no relaja nada: cierra un hueco que existe hoy.***
+
+⚠️ **Lo que SÍ está bien y no se toca**: el botón que cierra la compra dice «Pagar con tarjeta», que
+cumple el art. 98.2 (la obligación de pago tiene que ser inequívoca en el propio botón).
+
+#### 21.4.1 · T8·a — las condiciones, publicables por versión (`DECISIONES #348`)
+
+**No se construyó maquinaria: se abrió la que había.** `LegalDocumentPublisher::publish($slug, …)` ya
+era genérico y la acción del panel estaba limitada a `slug === 'waiver'`. Ahora la lista vive en
+`LegalDocuments::PUBLISHABLE` y es **CERRADA**: publicar es irreversible, así que ofrecer el botón en
+cualquier página del CMS sería regalar un acto sin vuelta atrás a quien solo quería corregir una
+errata.
+
+⚠️ **La privacidad NO entra, y no es un olvido**: el RGPD no pide que se «acepte» una política —el
+art. 13 pide **informar**—, así que no hay ninguna aceptación que fechar contra una versión. Es el
+CONTROL del caso que vigila la lista.
+
+⚠️ Los textos de la acción se mudan a `admin.legal.publish.*` y dejan de decir «firmable»: el
+descargo se FIRMA y las condiciones se ACEPTAN, y el único verbo que comparten es **publicar**.
+
+**`Identity\Services\TermsAcceptance`** responde las dos preguntas —¿tiene que aceptar? y regístralo—
+sobre la versión **publicada**, nunca sobre `Consent::CURRENT_VERSION`, que es una constante escrita a
+mano y —medido— **no la lee nadie**: con ella, alguien edita el texto en el panel, se olvida de
+subirla, y el producto afirma que el cliente aceptó un texto que nunca vio.
+
+⚠️⚠️ **La regla de gracia va en UN sitio y se hace con una REGLA, no reescribiendo la fila.** Cambiar
+el consentimiento viejo de `2026-05-23` a `v1·es` dejaría el registro afirmando que aceptó un
+documento que **no existía cuando firmó**. *Una prueba no se edita para que la consulta salga más
+corta.* ▶ Y **muere en la v2**: solo empata con la primera versión, así que al publicar una segunda
+todo el mundo vuelve a pasar por la casilla.
+
+⚠️ **El supuesto que asume esa decisión, dicho para que no se descubra tarde**: que el texto de la v1
+sea el MISMO que aceptaron. Lo es mientras nadie edite `condiciones` entre hoy y su primera
+publicación. **Si hay que retocarlo, se publica ANTES y se edita después.**
+
+⚠️ **Sin ninguna versión publicada esto NO pide nada y la venta sigue**: el hueco falla hacia
+invisible, como las claves de Google o el kit del cliente. Una instalación recién montada no puede
+quedarse sin poder vender porque nadie haya pulsado «Publicar». Con caso, y con su CONTROL.
+
+▶ **Un caso existente cambió de nombre porque su nombre pasó a ser mentira**:
+`test_the_action_is_visible_only_on_the_waiver_page`. Sigue comprobando que la privacidad queda
+fuera —que es lo que le da valor— y ahora cubre también las condiciones.
+
+⚠️ **Paso manual al desplegar**: en cada instalación hay que **publicar la v1 de `condiciones`** desde
+el panel. Hasta entonces no se pide nada, que es la conducta segura.

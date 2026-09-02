@@ -54,14 +54,26 @@ class PublishWaiverVersionActionTest extends TestCase
         ], $overrides));
     }
 
-    public function test_the_action_is_visible_only_on_the_waiver_page(): void
+    /**
+     * ⚠️ **El nombre de este caso decía «only on the waiver page» y desde `#348` eso ya no es cierto**:
+     * publicar sirve también a las CONDICIONES, que se aceptan al contratar y de las que hay que poder
+     * decir qué versión regía cada compra. La lista es cerrada (`LegalDocuments::PUBLISHABLE`).
+     *
+     * ⚠️⚠️ **La privacidad sigue FUERA y es el control que da valor al caso**: el RGPD no pide que se
+     * «acepte» una política —el art. 13 pide INFORMAR—, así que no hay ninguna aceptación que fechar
+     * contra una versión. Sin esta mitad, el caso solo diría que el botón existe.
+     */
+    public function test_the_action_is_visible_on_the_documents_that_are_published_by_version(): void
     {
         $waiver = $this->waiverPage();
+        $terms = Page::create(['slug' => 'condiciones', 'title' => ['es' => 'Condiciones'], 'body' => ['es' => [['h' => 'x', 'p' => 'y']]], 'is_active' => true]);
         $privacy = Page::create(['slug' => 'privacidad', 'title' => ['es' => 'Privacidad'], 'body' => ['es' => [['h' => 'x', 'p' => 'y']]], 'is_active' => true]);
 
-        Livewire::actingAs($this->admin())
-            ->test(EditPage::class, ['record' => $waiver->id])
-            ->assertActionVisible('publishVersion');
+        foreach ([$waiver, $terms] as $publishable) {
+            Livewire::actingAs($this->admin())
+                ->test(EditPage::class, ['record' => $publishable->id])
+                ->assertActionVisible('publishVersion');
+        }
 
         Livewire::actingAs($this->admin())
             ->test(EditPage::class, ['record' => $privacy->id])
@@ -127,7 +139,7 @@ class PublishWaiverVersionActionTest extends TestCase
         Livewire::actingAs($this->admin())
             ->test(EditPage::class, ['record' => $page->id])
             ->callAction('publishVersion')
-            ->assertNotified(__('admin.waiver.publish.refused_draft'));
+            ->assertNotified(__('admin.legal.publish.refused_draft'));
 
         $this->assertSame(0, LegalDocumentVersion::count());
     }
@@ -139,7 +151,7 @@ class PublishWaiverVersionActionTest extends TestCase
         Livewire::actingAs($this->admin())
             ->test(EditPage::class, ['record' => $page->id])
             ->callAction('publishVersion')
-            ->assertNotified(__('admin.waiver.publish.nothing'));
+            ->assertNotified(__('admin.legal.publish.nothing'));
 
         $this->assertSame(0, LegalDocumentVersion::count());
     }
