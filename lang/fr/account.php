@@ -245,7 +245,9 @@ return [
     'google' => [
         'eyebrow' => 'On y est presque',
         'title' => 'Termine ton inscription',
-        'intro' => 'Nous savons déjà qui tu es grâce à ton compte Google. Il ne manque que ceci pour réserver à ton nom.',
+        // ⚠️ Disait «…pour réserver à ton nom», ce qui était FAUX (`#345`) : on ne réserve rien ici —
+        // cet écran CRÉE LE COMPTE, ce que dit son propre bouton d'envoi.
+        'intro' => 'Google nous a déjà confirmé qui tu es. Il ne manque que ceci pour créer ton compte.',
         'email_label' => 'Ton e-mail',
         'email_hint' => 'Celui de ton compte Google, déjà vérifié.',
         'submit' => 'Créer mon compte',

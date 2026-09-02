@@ -272,7 +272,10 @@ return [
     'google' => [
         'eyebrow' => 'Ya casi está',
         'title' => 'Completa tu registro',
-        'intro' => 'Ya sabemos quién eres por tu cuenta de Google. Solo nos falta esto para poder reservar a tu nombre.',
+        // ⚠️ Decía «…para poder reservar a tu nombre» y era FALSO (`#345`, lo cazó el owner): aquí no
+        // se reserva nada — esta pantalla CREA LA CUENTA, y el botón de abajo lo dice literalmente.
+        // Prometer una reserva donde solo hay un alta deja al cliente esperando algo que no va a pasar.
+        'intro' => 'Google ya nos ha confirmado quién eres. Solo falta esto para crear tu cuenta.',
         'email_label' => 'Tu correo',
         'email_hint' => 'Es el de tu cuenta de Google, ya verificado.',
         'submit' => 'Crear mi cuenta',

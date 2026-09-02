@@ -244,7 +244,9 @@ return [
     'google' => [
         'eyebrow' => 'Almost there',
         'title' => 'Finish signing up',
-        'intro' => 'We know who you are from your Google account. We just need this to book in your name.',
+        // ⚠️ Said «…to book in your name», which was FALSE (`#345`): nothing is booked here — this
+        // screen CREATES THE ACCOUNT, which is what its own submit button says.
+        'intro' => 'Google has already confirmed who you are. This is all we need to create your account.',
         'email_label' => 'Your email',
         'email_hint' => 'The one from your Google account, already verified.',
         'submit' => 'Create my account',

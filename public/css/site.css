@@ -1108,13 +1108,43 @@
 .auth__sent { margin: 0 0 var(--sp-4); font-family: var(--font-body); font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); }
 .auth__form { max-width: none; margin-top: 18px; }
 .auth__submit { width: 100%; justify-content: center; margin-top: 6px; }
-/* Entrar con Google (`specs/auth-con-google.md`). Es la SEGUNDA forma de entrar, no la principal:
-   va debajo del formulario, con su propio aire y en el tratamiento secundario del botón para que no
-   compita con el que envía lo que la persona acaba de escribir.
-   ⚠️ **Sin logotipo tetracolor a propósito**: el set de iconos exige `currentColor` y rejilla 24
-   (`IconSetAnatomyTest`), y un glifo con colores tecleados dentro rompe la anatomía que hace que la
-   web se vea de un solo idioma. La marca queda nombrada en el rótulo (ficha en `DEUDA.md`). */
-.auth__google { width: 100%; justify-content: center; margin-top: var(--sp-3); }
+/* ══ EL BOTÓN DE GOOGLE — el único control del producto que NO habla nuestro idioma visual ══
+   (`specs/auth-con-google.md` §21.1, `#345`. `[DECIDIDO owner, 2026-09-02]`: variante CLARA, píldora.)
+
+   ⚠️⚠️ **Los números y los colores de aquí son de su guía, no nuestros, y no se «armonizan»**
+   (`developers.google.com/identity/branding-guidelines`, leída el 2026-09-02):
+     · variante clara → fondo `#FFFFFF` · borde `#747775` de 1 px POR DENTRO · texto `#1F1F1F`
+     · texto a 14/20 en el peso Medium (500) — su tipo es «Google Sans», que no se distribuye, y su
+       propia guía admite una similar: aquí `--font-body`, que es de la misma familia de grotescas
+     · sangrados: 12 px antes del logotipo, 10 px después, 12 px tras el rótulo
+     · forma: admite RECTÁNGULO o PÍLDORA, y el owner eligió píldora
+     · el rótulo es una de sus tres cadenas admitidas («Continuar con Google»), localizada
+
+   ⚠️⚠️ **Van en px ABSOLUTOS y no en `--sp-*`/`--fs-*` a propósito.** Esas escalas son TEMA: un
+   cliente que quiera el cajón un 15 % más aireado cambia `--sp-unit` y se mueve todo a la vez
+   (`landing.css` §312). El botón de un tercero no puede moverse con eso, porque entonces la
+   instalación que retoca su tema deja de cumplir la guía de Google **sin que nada falle**.
+   ▶ Lo que SÍ es nuestro es el suelo táctil: `--tap-min` (44 px, `#264`), por encima de los 40 de
+   sus ejemplos. Crecer está permitido; encoger no.
+
+   ⚠️ **`--r-pill` sobre un botón contradice la prosa de la escala de forma** («ONLY decorative
+   passive labels»), y es la excepción de esta pieza: el canto lo manda Google, no nuestra escala.
+   Se usa el TOKEN igualmente para no escribir un literal que `ShapeScaleTest` tendría que perdonar.
+
+   ⚠️ **El hover NO usa `--action-hover`**: heredarlo pintaría el botón del color de acción del
+   cliente, que es exactamente lo que su guía prohíbe. Es el mismo blanco un punto más apagado. */
+.auth__google {
+    width: 100%; justify-content: center; margin-top: var(--sp-3);
+    gap: 10px; min-height: var(--tap-min); padding: 10px 12px;
+    background: #fff; color: #1f1f1f;
+    border: 1px solid #747775; border-radius: var(--r-pill);
+    font-family: var(--font-body); font-size: 14px; line-height: 20px; font-weight: 500;
+}
+.auth__google:hover { background: #f7f8f8; color: #1f1f1f; border-color: #747775; }
+/* El dibujo NO se estira ni se recolorea: `flex: none` lo saca del reparto del flex, y al ser un
+   `<img>` no hay `fill` que el CSS pueda tocar. Su caja nativa es 118×120, así que a 18 px de alto
+   sale 17,7 de ancho: `object-fit: contain` conserva esa proporción en vez de deformarla. */
+.auth__google-mark { flex: none; width: 18px; height: 18px; object-fit: contain; }
 .form__hint { color: var(--fg-mute); font-size: 12px; }
 
 /* casillas legales / marketing */
