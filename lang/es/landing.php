@@ -30,7 +30,7 @@ return [
         // distintas. Los `*_sub` son el subtítulo VISIBLE de la mitad expandida.
         'cta_switch_buy' => 'Cambiar a reservar entradas',
         'cta_switch_signup' => 'Cambiar a registrarse',
-        'cta_switch_signup_sub' => 'guarda tus reservas',
+        'cta_switch_signup_sub' => 'o inicia sesión',
         'cta_switch_account' => 'Cambiar a mi cuenta',
         'cta_account_sub' => 'tus reservas y tus datos',
         'menu_label' => 'Menú principal',

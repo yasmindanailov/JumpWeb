@@ -277,8 +277,9 @@ class CreateAdminTest extends TestCase
 
     public function test_it_refuses_an_explicit_password_below_the_policy(): void
     {
-        // La política es la MISMA que la del registro real (`Register`: `min(8)->uncompromised()`):
-        // una cuenta con todos los permisos no puede tener menos exigencia que un cliente.
+        // La política es la MISMA que la del registro real (`PasswordPolicy::rules()`): una cuenta
+        // con todos los permisos no puede tener menos exigencia que un cliente. ⚠️ Desde `#351` son
+        // 8 caracteres y nada más — el corpus de filtraciones se retiró (`[DECIDIDO owner]`).
         $this->artisan('app:create-admin', ['--email' => 'jefa@cliente.tld', '--password' => 'corta'])
             ->assertExitCode(1);
 

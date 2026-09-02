@@ -21258,6 +21258,74 @@ Suite **4.064 · 25.923** · Pint · docs-check · `node --test` (43) · **6/6 y
 **18/18** con su CONTROL y capturas de las tres pantallas a 420 px.
 
 
+## #351 · 2026-09-02 · Menos fricción en el alta: fuera el corpus de filtraciones, y el CTA dice que también se inicia sesión
+
+Dos cosas que salieron de probar el producto, y las dos son `[DECIDIDO owner]` con el coste delante.
+
+### 1 · La contraseña deja de comprobarse contra Have I Been Pwned
+
+`[owner]`: *«vamos a quitar ese estricto requerimiento para la contraseña, hay mucha fricción»*.
+
+La política pedía **dos** cosas —mínimo 8 y `uncompromised()`— y **toda la fricción venía de la
+segunda**: rechazaba cualquier contraseña que apareciera en el corpus de filtraciones, aunque fuera
+una sola vez, y eso es un «no» que el cliente no sabe cómo arreglar.
+
+▶ Se le ofreció la vía intermedia —`uncompromised(500)`, que rechaza solo las MUY comunes y deja
+pasar el resto— y **eligió retirarla entera**.
+
+⚠️⚠️ **El coste, dicho sin rodeos porque es seguridad: `12345678` pasa a ser una contraseña válida**,
+en un producto con 69 cuentas reales, datos personales y descargos firmados. Lo que sostiene la
+defensa ahora son los limitadores (login, altas por IP y por correo), la reconfirmación de contraseña
+de las cuatro acciones irreversibles y `RGPD-06`.
+
+▶ **Lo que se gana además del roce**: el camino feliz del alta pierde una **llamada de red a un
+tercero** que estaba dentro de la validación.
+
+⚠️⚠️ **La guarda NO se borra: cambia de signo.** `PasswordPolicySingleSourceTest` afirmaba que
+`uncompromised()` estaba puesto; ahora afirma que **no** lo está, con el porqué en el mensaje. Es la
+doctrina de `#301` —una guarda que vigila **lo contrario**— y aquí es lo correcto: quien reponga la
+comprobación estará revirtiendo una decisión, no arreglando un descuido, y debe enterarse.
+
+⚠️ Se corrigen de paso **tres comentarios que quedaban mintiendo**: el docblock de `ResetPassword`
+(«pasa el control anti-filtración»), el de `app:create-admin` (explicaba por qué él NO lo consultaba —
+ahora no lo consulta nadie) y el de `CreateAdminTest`. Y `SEGURIDAD.md` §1, que además citaba **tres
+componentes Livewire retirados en `#122`**: la política vive en `PasswordPolicy` desde `#144`.
+
+### 2 · El CTA doble decía «Registrarse» y también inicia sesión
+
+`[owner]`: *«ponle texto de o Iniciar Sesión, para que el usuario entienda que también se inicia
+sesión»* — y precisó: **debajo**.
+
+⚠️⚠️ **Va en el SUBTÍTULO y no en el rótulo, y eso está MEDIDO, no elegido**: el botón del nav tiene
+**224 px fijos** (`#217`) y «Entrar o registrarse» se sale **58 px**; en el hero, 8. El subtítulo no
+compite por ese ancho, y la fila **ya sabe pintar dos líneas** — es lo que hace la mitad de comprar
+con el precio. Verificado: 0 px de desborde y **0 px de crecimiento en alto**.
+
+⚠️ **El subtítulo existía desde `#227` pero se pintaba SOLO en la barra de móvil** (`@if ($esBarra)`),
+así que en la cabecera y en el hero el botón decía únicamente «Registrarse». Se retira esa condición
+y el texto pasa de «guarda tus reservas» a «o inicia sesión» en los tres sitios: dos redacciones para
+el mismo botón es justo lo que `#227` existe para evitar.
+
+⚠️ **Al quitarla no se puso rojo ni un test**: nace `ArmazonContractTest::test_the_account_half_says_it_also_logs_you_in_everywhere`,
+verificada por mutación (reponer el `@if` la pone roja).
+
+### Dos trampas de instrumento, y la segunda salvó un diagnóstico falso
+
+⚠️⚠️ **La primera sonda de anchos MINTIÓ y lo delató su CONTROL**: comparaba el texto con
+`.cta-ghost__body`, un contenedor flex que **se ajusta al propio texto**, así que «hueco» valía
+siempre lo mismo que «texto» y el rótulo ACTUAL salía como que no cabe. *Si tu instrumento acusa a lo
+que ya estaba bien, el roto es el instrumento* (`#307`).
+
+⚠️⚠️ **Y a 1080 px el botón desborda 5 px — con y sin subtítulo.** La sonda lo achacó al texto nuevo
+hasta que se midió el CONTROL quitando el nodo: es **preexistente** (a ese ancho el botón se estrecha
+a 182). Ficha en `DEUDA.md`. *Un número que aparece justo cuando tocas algo no es tuyo por eso.*
+
+### Verificación
+
+Suite **4.065 · 25.931** · Pint · docs-check · sonda de navegador en cuatro anchos (1080 · 1200 ·
+1280 · 1440) con control · captura del hero a 1280.
+
+
 ## #400 · 2026-09-01 · El justificante tenía todo el mecanismo y NINGUNA puerta por la que entrar: la activación la decide el PRODUCTO
 
 **Encontrado por el owner probando lo construido**, con la suite verde y las cuatro tandas anteriores

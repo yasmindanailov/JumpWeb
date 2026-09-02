@@ -80,10 +80,17 @@ class PasswordPolicySingleSourceTest extends TestCase
     }
 
     /**
-     * **Y la política SIGUE siendo la que era.** Una fuente única que relajara la regla al unificarla
-     * habría cambiado la seguridad del producto sin que nadie lo pidiera.
+     * **Qué rechaza la política, y qué NO — las dos mitades, a propósito.**
+     *
+     * ⚠️⚠️ **La segunda mitad cambió de signo el 2026-09-02** (`#351`): antes exigía que
+     * `uncompromised()` estuviera PUESTO y ahora exige que NO lo esté. No es que la guarda se haya
+     * relajado: es que **vigila una decisión**, y las decisiones se vigilan en la dirección en que se
+     * pueden deshacer sin querer. `[DECIDIDO owner]`: se retira el corpus de filtraciones porque
+     * genera demasiada fricción en el alta, con el coste asumido de que `12345678` pase.
+     * ▶ Es la doctrina de `#301`: una guarda que mira **lo contrario** para que nadie «termine el
+     * trabajo» reponiendo lo que se quitó a sabiendas.
      */
-    public function test_the_policy_still_rejects_what_it_rejected(): void
+    public function test_the_policy_rejects_what_it_must_and_no_longer_checks_breaches(): void
     {
         $this->assertSame(8, PasswordPolicy::MIN_LENGTH);
 
@@ -108,9 +115,13 @@ class PasswordPolicySingleSourceTest extends TestCase
         // dependiera de una API externa daría rojo sin red, y ese rojo no diría nada del código.
         $flag = new \ReflectionProperty($password[0], 'uncompromised');
 
-        $this->assertTrue(
+        $this->assertFalse(
             (bool) $flag->getValue($password[0]),
-            'la política ha dejado de comprobar el corpus de filtraciones (`uncompromised()`)'
+            "La política ha vuelto a comprobar el corpus de filtraciones (`uncompromised()`).\n".
+            "▶ Se RETIRÓ a propósito el 2026-09-02 (`[DECIDIDO owner]`, `#351`): en el alta rechazaba\n".
+            "  contraseñas por un motivo que el cliente no sabe arreglar, y eso costaba altas.\n".
+            "▶ Si hay que reponerla, se reabre la decisión con el owner — que ya descartó también la\n".
+            '  vía intermedia (`uncompromised(500)`, solo las muy comunes). No se repone por costumbre.'
         );
     }
 

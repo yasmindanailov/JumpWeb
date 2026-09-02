@@ -891,6 +891,40 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
+     * **La mitad de CUENTA dice que también se inicia sesión, y lo dice en los TRES sitios**
+     * (`[DECIDIDO owner, 2026-09-02]`, `#351`).
+     *
+     * ⚠️⚠️ **Nace de que nadie lo vigilaba.** El subtítulo existía desde `#227` pero se pintaba
+     * **solo en la barra de móvil** (`@if ($esBarra)`), así que en la cabecera y en el hero el botón
+     * decía únicamente «Registrarse» — y quien ya tenía cuenta no se veía invitado, que es
+     * exactamente lo que el owner reportó. Al quitar esa condición no se puso rojo ni un test.
+     *
+     * ⚠️ **Y va en el SUBTÍTULO y no en el rótulo porque está MEDIDO**: el botón del nav tiene 224 px
+     * fijos y «Entrar o registrarse» se sale **58** (el del hero, 8). El subtítulo no compite por ese
+     * ancho — la fila ya sabe pintar dos líneas, que es lo que hace la mitad de comprar con el precio.
+     */
+    public function test_the_account_half_says_it_also_logs_you_in_everywhere(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+        $subtitulo = __('landing.nav.cta_switch_signup_sub');
+
+        $this->assertNotSame('', trim($subtitulo), 'el subtítulo de la mitad de cuenta se ha quedado vacío');
+
+        foreach (['nav-cta-ghost', 'hero-cta-ghost', 'book-bar__cta--alt'] as $mitad) {
+            $nodo = $this->nodes($html, $mitad)[0] ?? null;
+
+            $this->assertNotNull($nodo, "no se encuentra la mitad `{$mitad}` en la portada");
+            $this->assertStringContainsString(
+                $subtitulo, $nodo->textContent,
+                "La mitad `{$mitad}` no dice que este botón también inicia sesión.\n".
+                "▶ Se pintaba SOLO en la barra de móvil hasta `#351`, y el owner reportó que en la\n".
+                "  cabecera el botón parecía servir solo para registrarse.\n".
+                '▶ Si estorba en un sitio, se decide con el owner — no se vuelve a poner `@if ($esBarra)`.'
+            );
+        }
+    }
+
+    /**
      * **Las tres ramas del par son enlaces de verdad: sin JavaScript, un solo clic actúa.**
      *
      * ⚠️ Con `<button>` el doble paso no degrada: **no hace nada**. Las tres puertas existen

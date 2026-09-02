@@ -31,15 +31,31 @@ final class PasswordPolicy
     public const MIN_LENGTH = 8;
 
     /**
-     * Las reglas de una contraseña NUEVA.
+     * Las reglas de una contraseña NUEVA: **longitud mínima y nada más**.
      *
-     * `uncompromised()` consulta el corpus de filtraciones de Have I Been Pwned por k-anonimato
-     * (solo viaja el prefijo del hash, nunca la contraseña).
+     * ⚠️⚠️ **NO lleva `uncompromised()`, y es una DECISIÓN del owner con su coste delante**
+     * (`[DECIDIDO owner, 2026-09-02]`, `DECISIONES #351`): *«vamos a quitar ese estricto requerimiento
+     * para la contraseña, hay mucha fricción»*. Hasta hoy se consultaba el corpus de filtraciones de
+     * Have I Been Pwned y se rechazaba **cualquier** contraseña que apareciera en él, aunque fuera una
+     * sola vez — y eso, en un alta, es un «no» que el cliente no sabe cómo arreglar.
+     *
+     * ▶ **Lo que se gana**: el alta deja de rechazar contraseñas por un motivo que el usuario no
+     * controla, y el camino feliz pierde una **llamada de red a un tercero** que estaba dentro de la
+     * validación.
+     *
+     * ▶ **Lo que se pierde, dicho sin rodeos porque es seguridad**: `12345678` pasa a ser una
+     * contraseña válida. Se le ofreció al owner la vía intermedia —`uncompromised(500)`, que rechaza
+     * solo las MUY comunes y deja pasar el resto— y eligió retirarla entera. *Queda escrito para que
+     * quien la reponga sepa que revierte una decisión, no que arregla un descuido.*
+     *
+     * ⚠️ **Lo que NO se toca**: el mínimo de 8, el limitador del login, el de altas por IP y por
+     * correo, y que las cuatro acciones irreversibles sigan pidiendo la contraseña actual. La defensa
+     * contra el relleno de credenciales pasa a apoyarse en ésos.
      *
      * @return list<string|Password>
      */
     public static function rules(): array
     {
-        return ['required', 'string', Password::min(self::MIN_LENGTH)->uncompromised()];
+        return ['required', 'string', Password::min(self::MIN_LENGTH)];
     }
 }

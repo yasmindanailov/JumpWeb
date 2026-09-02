@@ -16,7 +16,7 @@ return [
         'tickets' => 'Billets',
         'cta_switch_buy' => 'Passer à la réservation',
         'cta_switch_signup' => "Passer à l'inscription",
-        'cta_switch_signup_sub' => 'gardez vos réservations',
+        'cta_switch_signup_sub' => 'ou se connecter',
         'cta_switch_account' => 'Passer à mon compte',
         'cta_account_sub' => 'vos réservations et vos données',
         'menu_label' => 'Menu principal',

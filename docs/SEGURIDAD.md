@@ -31,9 +31,18 @@ tras varios intentos fallidos. Motivo: el producto trata **datos personales** (R
 
 ### 1. Contraseñas — NIST 800-63B
 - Mínimo **8** caracteres; permitir contraseñas **largas / frases**; sin reglas de composición absurdas.
-- **Rechazar contraseñas filtradas** (`Password::...->uncompromised()`; consulta segura a
-  "Have I Been Pwned"). En uso en `Livewire/Auth/Register`, `ResetPassword` y
-  `Livewire/Account/UpdatePassword`.
+- ❌ ~~**Rechazar contraseñas filtradas**~~ — **RETIRADO el 2026-09-02** (`[DECIDIDO owner]`,
+  `DECISIONES #351`). Hasta esa fecha la política llevaba `->uncompromised()` (consulta por
+  k-anonimato a *Have I Been Pwned*) y rechazaba **cualquier** contraseña que apareciera en el corpus,
+  aunque fuera una sola vez. El owner lo retiró por FRICCIÓN en el alta: es un «no» que el cliente no
+  sabe cómo arreglar. ⚠️ **El coste está asumido y dicho: `12345678` es hoy una contraseña válida.**
+  Se le ofreció la vía intermedia —`uncompromised(500)`, que rechaza solo las muy comunes— y la
+  descartó. ▶ Lo que sostiene la defensa ahora son los **límites de la sección 2**, la
+  reconfirmación de contraseña de la 4 y `RGPD-06`.
+  ⚠️ La cita de superficies ya estaba caducada: los tres componentes Livewire que nombraba se
+  retiraron con el modal (`#122`); desde `#144` la política vive en **`Identity\Services\PasswordPolicy`**,
+  fuente única, y lo vigila `PasswordPolicySingleSourceTest` —que desde `#351` asevera **lo contrario**,
+  para que nadie la reponga creyendo que arregla un descuido.
 - Hash **bcrypt 12** (o `argon2id` si el hosting lo soporta).
 
 ### 2. Fuerza bruta y enumeración — OWASP A07 / ASVS V2.2

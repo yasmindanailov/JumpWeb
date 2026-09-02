@@ -146,9 +146,16 @@
                     <span class="cta-ghost__ico"><x-icons.user-plus /></span>
                     <span class="cta-ghost__body">
                         <span class="cta-ghost__t">{{ __('landing.nav.reserve') }}</span>
-                        @if ($esBarra)
-                            <span class="cta-ghost__s">{{ __('landing.nav.cta_switch_signup_sub') }}</span>
-                        @endif
+                        {{-- ⚠️⚠️ **El subtítulo va en los TRES sitios desde el 2026-09-02**
+                             (`[DECIDIDO owner]`, `#351`), y antes solo en la barra. El motivo es de
+                             producto: este botón **también inicia sesión** —lleva a la puerta de auth,
+                             que abre con las dos pestañas— y el rótulo solo decía «Registrarse», así
+                             que quien ya tenía cuenta no se veía invitado.
+                             ▶ **Y va en el SUBTÍTULO y no en el rótulo porque está medido**: el botón
+                             del nav mide 224 px fijos y «Entrar o registrarse» se sale **58 px**
+                             (hero, 8). El subtítulo no compite por ese ancho y la fila ya sabe pintar
+                             dos líneas: es lo que hace la mitad de comprar con el precio. --}}
+                        <span class="cta-ghost__s">{{ __('landing.nav.cta_switch_signup_sub') }}</span>
                     </span>
                 </a>
             </span>

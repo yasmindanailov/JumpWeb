@@ -11,8 +11,10 @@ use Livewire\Component;
 
 /**
  * Fase 4.4 — Fijar nueva contraseña desde el enlace del correo (página).
- * Usa el broker de Laravel (valida token + caducidad, 60 min). La nueva
- * contraseña pasa el control anti-filtración (`uncompromised`) y confirmación.
+ * Usa el broker de Laravel (valida token + caducidad, 60 min). La nueva contraseña pasa por
+ * `PasswordPolicy::rules()` y por la confirmación del formulario.
+ * ⚠️ El control anti-filtración se RETIRÓ el 2026-09-02 (`[DECIDIDO owner]`, `#351`): esta línea
+ * decía que lo aplicaba, y era la única pista que quedaba de él en esta pantalla.
  */
 class ResetPassword extends Component
 {

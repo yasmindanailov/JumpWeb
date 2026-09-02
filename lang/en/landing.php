@@ -16,7 +16,7 @@ return [
         'tickets' => 'Tickets',
         'cta_switch_buy' => 'Switch to booking tickets',
         'cta_switch_signup' => 'Switch to sign up',
-        'cta_switch_signup_sub' => 'keep your bookings',
+        'cta_switch_signup_sub' => 'or log in',
         'cta_switch_account' => 'Switch to my account',
         'cta_account_sub' => 'your bookings and details',
         'menu_label' => 'Main menu',

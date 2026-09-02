@@ -176,11 +176,11 @@ class CreateAdmin extends Command
             // 24 caracteres del generador de Laravel (letras + números + símbolos, sin espacios):
             // entra en la política por construcción.
             //
-            // ⚠️ **No se le aplica `uncompromised()` a propósito**, y no es un descuido: una cadena
-            // aleatoria de 24 caracteres no está en ningún corpus de filtraciones, así que la
-            // comprobación no compraría nada — y sí metería una llamada a Have I Been Pwned **en el
-            // camino feliz del despliegue**, que pasaría a depender de que el servidor tenga salida
-            // a Internet y de que HIBP conteste (su verificador tiene 30 s de timeout).
+            // ⚠️ **Este comentario explicaba por qué aquí NO se consultaba Have I Been Pwned** —una
+            // cadena aleatoria de 24 caracteres no está en ningún corpus, y la llamada habría metido
+            // una dependencia de red en el camino feliz del despliegue—. Desde `#351` **no lo
+            // consulta nadie**: la política del producto lo retiró (`PasswordPolicy`). Se conserva
+            // dicho porque el razonamiento sigue valiendo si algún día vuelve.
             return Str::password(24);
         }
 

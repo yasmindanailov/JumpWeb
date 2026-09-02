@@ -491,6 +491,12 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
   redibujada: 0 px distintos de 226.560 contra su asset, con control.
   ▶ **Lo que deja anotado para el día que entre Apple**: la carpeta `providers/` y la exención de las
   dos guardas de iconos ya existen, así que el segundo proveedor es un fichero más y una regla más.
+- **El par de CTA de la cabecera desborda 5 px a 1080 px de ancho** (Baja, `#351`). A ese ancho el
+  botón de la mitad expandida se estrecha de 224 a **182 px** y su contenido no cabe. ⚠️ **Es
+  PREEXISTENTE y está medido con control**: el desborde es idéntico con el subtítulo nuevo y sin él,
+  así que no lo trae `#351` — se encontró al medirlo. Solo ocurre en la franja estrecha justo por
+  encima del punto donde el menú cambia de forma (1080). Salidas: dar al botón el ancho que ya tiene
+  por encima de 1100, o acortar el rótulo en esa franja.
 - ✅ ~~**Una desviación de la letra de la Q6, pendiente del owner**~~ — **CERRADA con la T8·c**
   (`#350`, `specs/auth-con-google.md` §21.4.3 y §19.6). La razón vieja desapareció con la tanda: esa
   pantalla ya no recoge teléfono ni condiciones, así que sin descargo se quedaría con **un solo
