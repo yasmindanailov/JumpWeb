@@ -281,7 +281,9 @@
                                 // sesión, así que no hay condición bajo la que esconderlo. Cuesta ~35 B.
                                 // El subgrupo `google` —la pantalla que completa el alta— viaja solo en
                                 // su puerta, más abajo: a ella no se llega sin volver de Google.
-                                'google_cta',
+                                // ⚠️ Y con él su «o» (T8·d, `#350`): el separador se pinta pegado al
+                                // botón y desaparece con él, así que viaja igual y por lo mismo.
+                                'google_cta', 'or',
                             ]), [
                                 'privacy_notice' => __('account.register.privacy_notice', ['url' => route('legal.privacidad')]),
                             ]),

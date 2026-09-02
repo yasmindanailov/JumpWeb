@@ -2,7 +2,6 @@
 import { t as translate } from '../i18n.js';
 import LoginForm from './LoginForm.vue';
 import RegisterForm from './RegisterForm.vue';
-import GoogleButton from './GoogleButton.vue';
 
 /**
  * Paso 5 — la IDENTIFICACIÓN (Fase 4 · pasos 4.4a·2 y 4.4b·1).
@@ -95,6 +94,9 @@ const a = (key) => translate(props.account, key);
                 @click="$emit('set-mode', 'register')">{{ a('register.cta') }}</button>
     </div>
 
+    <!-- ⚠️ La ida a Google baja a los DOS formularios y no cuelga de aquí: dentro va entre la cabecera
+         y los campos, que es donde el owner la pidió (T8·d). Sigue ofreciéndose en las dos pestañas —
+         desde aquí sirve para las dos cosas, porque el retorno decide si hay cuenta o hay que crearla. -->
     <LoginForm
         v-if="mode === 'login'"
         v-model:email="form.email"
@@ -104,6 +106,7 @@ const a = (key) => translate(props.account, key);
         :submitting="submitting"
         :account="account"
         :with-recovery="true"
+        :google-url="googleUrl"
         @submit="$emit('submit-login')"
         @recover="$emit('recover')" />
 
@@ -120,10 +123,6 @@ const a = (key) => translate(props.account, key);
         :errors="registerErrors"
         :submitting="submitting"
         :account="account"
+        :google-url="googleUrl"
         @submit="$emit('submit-register')" />
-
-    <!-- Entrar o registrarse con Google, en las DOS pestañas: desde aquí sirve para las dos cosas —
-         el retorno decide si hay cuenta o hay que crearla— y esconderlo en una de ellas obligaría al
-         cliente a cambiar de pestaña para usar el camino más corto. -->
-    <GoogleButton :href="googleUrl" :label="a('register.google_cta')" />
 </template>

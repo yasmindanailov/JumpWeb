@@ -239,6 +239,7 @@ return [
         'exists_unverified' => 'You already registered with this email but did not verify it. We have resent the verification link.',
         'leave_blank' => 'Leave this field blank',
         'google_cta' => 'Continue with Google',
+        'or' => 'or',
     ],
 
     'google' => [

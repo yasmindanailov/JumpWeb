@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { t as translate } from '../i18n.js';
 import PasswordInput from './PasswordInput.vue';
+import GoogleButton from './GoogleButton.vue';
 import { mountTurnstile } from '../turnstile.js';
 import { useWaiverStore } from '../stores/waiver.js';
 
@@ -62,6 +63,14 @@ const props = defineProps({
 
     /** Clave pública del anti-bot. Vacía ⟺ apagado ⟺ no se emite el contenedor (detalle 6). */
     turnstileSiteKey: { type: String, default: '' },
+
+    /**
+     * La ida a Google. Vacía = esta instalación no la ofrece y no se pinta nada, ni botón ni separador.
+     *
+     * ⚠️ **Va DENTRO del formulario y encima de sus campos** (T8·d, `#350`, `[DECIDIDO owner]`): ver el
+     * porqué completo en `LoginForm.vue`, que es la misma decisión para la otra pestaña.
+     */
+    googleUrl: { type: String, default: '' },
 });
 
 defineEmits(['submit']);
@@ -129,6 +138,10 @@ const summary = computed(() => props.errors?.summary ?? []);
             <h2 class="auth__title">{{ a('register.title') }}</h2>
             <p class="auth__sub">{{ a('register.subtitle') }}</p>
         </div>
+
+        <!-- Crear la cuenta con Google: cuatro campos y una contraseña menos. Encima del formulario y
+             con su «o» (T8·d, `#350`). -->
+        <GoogleButton :href="googleUrl" :label="a('register.google_cta')" :separator="a('register.or')" />
 
         <form class="form auth__form" novalidate @submit.prevent="$emit('submit')">
             <!-- ⚠️ El señuelo. Lo oculta el CSS, no un atributo: si estuviera `hidden` o fuera de la

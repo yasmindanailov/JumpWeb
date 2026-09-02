@@ -245,6 +245,9 @@ class SidebarMountTest extends TestCase
         foreach ([
             'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
             'password_hint', 'privacy_notice', 'submit', 'submitting', 'leave_blank', 'fix_errors',
+            // El botón de Google y el «o» que lo separa del formulario (T8·d): sin el segundo, la raya
+            // se pinta con un hueco en medio y nadie avisa — `i18n.js` devuelve cadena vacía.
+            'google_cta', 'or',
         ] as $key) {
             $this->assertNotSame(
                 '', (string) ($register[$key] ?? ''),
@@ -329,6 +332,9 @@ class SidebarMountTest extends TestCase
                 // bajo la que esconderlo. El subgrupo `google` —los ~380 B de la pantalla que completa
                 // el alta— viaja **solo en su puerta**, y eso lo fija el caso de abajo.
                 'google_cta',
+                // Y el «o» que lo separa del formulario (T8·d, `#350`): viaja pegado al botón porque
+                // solo se pinta con él.
+                'or',
             ],
             array_keys($boot['account']['register'] ?? []),
             'el subgrupo `register` ha dejado de estar podado a lo que el formulario de alta pinta'

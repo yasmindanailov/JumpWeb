@@ -34,6 +34,20 @@ defineProps({
     href: { type: String, default: '' },
     /** El rótulo, del grupo `account` (`register.google_cta`). Una de las tres cadenas que su guía admite. */
     label: { type: String, default: '' },
+
+    /**
+     * El «o» que separa este camino del formulario (`register.or`). Vacío = sin separador.
+     *
+     * ⚠️⚠️ **Vive AQUÍ y no en quien lo coloca, y es la propiedad que importa**: una raya con un «o»
+     * suelta en medio de una pantalla sin nada arriba no separa nada, así que **solo puede existir si
+     * existe el botón**. Escribiéndolo en los dos formularios haría falta repetir en cada uno la
+     * condición `v-if="href"` —y el día que alguien tocara una y no la otra, la instalación sin claves
+     * de Google se quedaría con un separador huérfano **sin que nada fallara**—.
+     *
+     * ⚠️ En «Mis sesiones» este botón VINCULA una cuenta ya identificada: allí no separa de ningún
+     * formulario y por eso no se le pasa.
+     */
+    separator: { type: String, default: '' },
 });
 
 /**
@@ -54,4 +68,8 @@ const MARK = '/images/providers/google.svg';
         <img class="auth__google-mark" :src="MARK" alt="" width="18" height="18">
         <span>{{ label }}</span>
     </a>
+
+    <!-- Las dos rayas las pinta el CSS con pseudo-elementos: el «o» es lo único que hay que leer, y
+         un lector de pantalla no tiene por qué anunciar dos `<span>` vacíos para decirlo. -->
+    <p v-if="href && separator" class="auth__or"><span>{{ separator }}</span></p>
 </template>

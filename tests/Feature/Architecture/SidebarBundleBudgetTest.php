@@ -691,8 +691,19 @@ class SidebarBundleBudgetTest extends TestCase
      * legal cuando hay casilla, que la captura pidió). *Un techo medido antes del último cambio no
      * describe el árbol que se empuja: se remide DESPUÉS de tocar la última línea.*
      * ⚠️ Se sube a **277** y quedan **0,97 KiB**.
+     *
+     * ▶ **275 (`#350`, la T8·c y la T8·d): BAJA, que es la primera vez en este contador.** Medido
+     * **274,47 KiB**: la T8·c retira de las dos altas tres casillas con su marcado, sus tres `v-model`
+     * en dos consumidores y tres campos del cuerpo de la petición; la T8·d suma el separador y el
+     * cableado del botón en los dos formularios. El saldo es **−1,56 KiB** contra los 276,03 de `#349`.
+     * ⚠️⚠️ **Se baja el techo a propósito y no se deja en 277.** Un trinquete que solo sube deja de
+     * vigilar en cuanto alguien retira código: con 277 quedaría **2,53 KiB** de margen regalado, o sea
+     * que las dos próximas subidas entrarían sin que nadie las decidiera. *Un presupuesto que no se
+     * ajusta cuando el gasto baja no es un presupuesto, es un techo histórico.* Quedan **0,53 KiB**.
+     * ⚠️ Y se mide **después del último cambio**, que es la lección de `#349` de aquí arriba: la
+     * cifra sale de reconstruir los dos bundles con el árbol tal y como se empuja.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 277;
+    private const SIDEBAR_CHUNK_MAX_KB = 275;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

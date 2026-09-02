@@ -271,6 +271,10 @@ return [
         // El botón de entrar con Google, en las dos pestañas de auth. Viaja SIEMPRE —es una clave, no
         // un subgrupo— porque las dos pantallas las ve quien no tiene sesión.
         'google_cta' => 'Continuar con Google',
+        // El separador entre el botón de Google y el formulario (T8·d). Va en `register` y no en
+        // `login` porque lo pintan las dos pestañas de auth: dos traducciones de la misma palabra
+        // acaban divergiendo.
+        'or' => 'o',
     ],
 
     // La pantalla que COMPLETA un alta con Google (`specs/auth-con-google.md` §7).

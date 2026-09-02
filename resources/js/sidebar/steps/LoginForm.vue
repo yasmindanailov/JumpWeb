@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { t as translate } from '../i18n.js';
 import PasswordInput from './PasswordInput.vue';
+import GoogleButton from './GoogleButton.vue';
 
 /**
  * El formulario de INICIO DE SESIÓN del paso 5 (Fase 4 · paso 4.4a·2).
@@ -22,7 +23,10 @@ const props = defineProps({
     /** `true` mientras la petición está en vuelo: cambia el rótulo del botón. */
     submitting: { type: Boolean, default: false },
 
-    /** El grupo `account`, podado a `login`. */
+    /**
+     * El grupo `account`. De él salen los rótulos de `login` y —desde la T8·d— los dos del botón de
+     * Google, que viven en `register` porque son los mismos en las dos pestañas de auth.
+     */
     account: { type: Object, default: () => ({}) },
 
     /**
@@ -37,6 +41,19 @@ const props = defineProps({
      * borrar.
      */
     withRecovery: { type: Boolean, default: false },
+
+    /**
+     * La ida a Google. Vacía = esta instalación no la ofrece y **no se pinta nada**, ni botón ni
+     * separador: el hueco falla hacia invisible.
+     *
+     * ⚠️⚠️ **Va DENTRO del formulario y no como hermano suyo** (`[DECIDIDO owner, 2026-09-02]`, T8·d).
+     * El owner lo pidió «encima del formulario», y colgarlo del padre lo habría dejado encima del
+     * TÍTULO —`.auth__head` vive aquí dentro—, que es otra cosa: el camino alternativo se ofrece
+     * después de saber en qué pantalla estás, no antes.
+     * ▶ Y eso **revierte a propósito el motivo escrito en `LoginZone.vue`** («va debajo: quien ya tiene
+     * contraseña la teclea»). Se decidió sobre las dos opciones.
+     */
+    googleUrl: { type: String, default: '' },
 });
 
 defineEmits(['submit', 'recover']);
@@ -58,6 +75,11 @@ const fieldErrors = computed(() => props.errors?.fields ?? {});
             <span class="eyebrow">{{ a('login.eyebrow') }}</span>
             <h2 class="auth__title">{{ a('login.title') }}</h2>
         </div>
+
+        <!-- La otra forma de entrar, ENCIMA del formulario y con su «o» (T8·d, `#350`). Los rótulos
+             salen del grupo `register` porque son los mismos en las dos pestañas de auth: duplicarlos
+             en `login` sería mantener dos traducciones de la misma frase. -->
+        <GoogleButton :href="googleUrl" :label="a('register.google_cta')" :separator="a('register.or')" />
 
         <!-- `novalidate` como el Blade: quien valida es el servidor, con las mismas reglas para los
              dos motores. La validación del navegador daría un tercer juego de mensajes. -->

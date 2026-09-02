@@ -8,7 +8,6 @@ import { landOnAccount } from '../after-auth.js';
 import { api } from '../../api.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 import RegisterForm from '../../steps/RegisterForm.vue';
-import GoogleButton from '../../steps/GoogleButton.vue';
 
 /**
  * **CREAR CUENTA dentro del cajón, fuera de la compra** (`specs/auth-en-cajon.md` §4.3).
@@ -114,9 +113,6 @@ async function submit() {
         :errors="store.registerError"
         :submitting="store.busy"
         :account="account"
+        :google-url="urls.google ?? ''"
         @submit="submit" />
-
-    <!-- Crear la cuenta con Google: cuatro campos y una contraseña menos. Solo mientras se pinta el
-         FORMULARIO — sobre «revisa tu correo» ofrecería empezar de nuevo un alta ya hecha. -->
-    <GoogleButton v-if="! store.pendingEmail" :href="urls.google ?? ''" :label="a('register.google_cta')" />
 </template>

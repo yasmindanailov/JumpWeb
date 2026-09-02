@@ -240,6 +240,7 @@ return [
         'exists_unverified' => 'Vous vous êtes déjà inscrit avec cet e-mail sans le vérifier. Nous venons de renvoyer le lien de vérification.',
         'leave_blank' => 'Laissez ce champ vide',
         'google_cta' => 'Continuer avec Google',
+        'or' => 'ou',
     ],
 
     'google' => [

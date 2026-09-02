@@ -1145,7 +1145,34 @@
    `<img>` no hay `fill` que el CSS pueda tocar. Su caja nativa es 118×120, así que a 18 px de alto
    sale 17,7 de ancho: `object-fit: contain` conserva esa proporción en vez de deformarla. */
 .auth__google-mark { flex: none; width: 18px; height: 18px; object-fit: contain; }
+/* El «o» que separa el camino de Google del formulario (T8·d, `#350`).
+
+   ⚠️ **Esto SÍ es nuestro, y por eso sí usa la escala del tema**, al revés que el botón de arriba:
+   lo que la guía de Google congela es su botón, no lo que le pongamos al lado. Un cliente que airee
+   el cajón con `--sp-unit` mueve este separador y hace bien.
+
+   ⚠️ **Las dos rayas son pseudo-elementos**: la alternativa —dos `<span>` vacíos— añadiría al árbol
+   dos nodos que no dicen nada y que un lector de pantalla tendría que saltarse. */
+.auth__or {
+    display: flex; align-items: center; gap: var(--sp-12);
+    margin: var(--sp-14) 0;
+    color: var(--fg-mute); font-family: var(--font-body); font-size: var(--fs-13);
+}
+.auth__or::before, .auth__or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .form__hint { color: var(--fg-mute); font-size: 12px; }
+/* ⚠️⚠️ **UN ENLACE DENTRO DE UN AVISO TIENE QUE PARECER UN ENLACE, y aquí no lo parecía.**
+   Medido en navegador (420 px, `/registro`): el `<a>` de la política de privacidad salía en
+   `rgb(98,106,114)` —**el mismo color exacto que el párrafo que lo envuelve**—, sin subrayado y con
+   peso 400. O sea: texto plano con una zona pulsable invisible de 336×32.
+
+   ▶ **Venía de `#343`** —el aviso de privacidad ya se pintaba así en la pantalla de Google— y **la
+   T8·c lo convierte en carga**: al perder su casilla, éste es el ÚNICO sitio donde las dos altas
+   enseñan la política, y el argumento de §7.1 («el RGPD pide INFORMAR, y el enlace va visible») se
+   apoya entero en que se pueda ver. Un enlace que no se distingue no informa.
+
+   ⚠️ Los valores son los que `.check span a` ya usaba para lo mismo: no se inventa un tratamiento
+   nuevo para un enlace legal que hasta ayer vivía dentro de una casilla. */
+.form__hint a { color: var(--zone-1); text-decoration: underline; }
 
 /* casillas legales / marketing */
 .form__checks { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 20px; }
