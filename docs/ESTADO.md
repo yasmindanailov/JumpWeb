@@ -152,6 +152,24 @@ relativo cuando el servidor lo compone absoluto, y leer `naturalWidth` sin esper
 ▶ ⚠️ **La compra online sigue CERRADA** (`sales.online_enabled = 0`, decisión del owner hasta tener
 Redsys de producción): las excursiones están creadas pero **no son comprables** todavía.
 
+▶ ❗❗ **LO QUE ESTA SESIÓN DEJÓ EN TU BD LOCAL, y NO coincide con producción** (para que nadie lo
+tome por el estado del producto):
+· **`sales.online_enabled = 1`** en local, para poder recorrer el embudo. En producción sigue en **0**.
+· **La v1 de «Condiciones» publicada** en local con el texto REAL del CMS. ⚠️ La publiqué antes sin
+  querer con un texto de relleno en una sonda de medición; se retiró y se republicó bien. *Publicar es
+  irreversible: no lo hagas desde una sonda.*
+· **Cuenta de sonda `sonda.sesion@jumpweb.test`** (contraseña `una-clave-de-sonda-2026`), **sin
+  teléfono y sin condiciones aceptadas**, que es el estado en el que el paso de pagar enseña los dos
+  campos. Es local; bórrala cuando estorbe.
+▶ **Sondas montadas** (gitignoradas, en `storage/app/` y `~/e2e` del contenedor):
+`sonda-google-encima.mjs` (el botón encima del formulario, con control), `prod-boton.mjs` (el botón en
+PRODUCCIÓN, 12/12) y `sesiones.mjs` (el ritmo vertical de «Cuentas vinculadas»). ⚠️ Para conducir el
+cajón hay que **clicar por DOM** (`element.click()`), no con el puntero de Playwright: el armazón
+intercepta el hit-test y el timeout parece defecto del producto.
+▶ **Arneses versionados**: `scripts/mutar-alta-sin-casillas.sh` (6/6) y `scripts/mutar-google-encima.sh`
+(8/8), los dos con puerta de VERDE y **comprobación de que la mutación se aplicó** — que es la que
+cazó que el primero mentía.
+
 ⛔ **ONE TAP NO SE CONSTRUYE** (`[DECIDIDO owner, 2026-09-02]`, `DECISIONES #354`): *«con esto es
 suficiente»*. **Con eso el carril de Google auth queda CERRADO.**
 ▶ Se evita la pieza cara —verificar la firma RS256 de un `id_token` que llega del CLIENTE, que `#342`
@@ -188,7 +206,7 @@ control (idéntico con el subtítulo y sin él).
 
 ✅ **GOOGLE AUTH · LA T8, CERRADA ENTERA — Y EL HUECO QUE QUITAR LA CASILLA NO CERRABA** (2026-09-02,
 `DECISIONES #350`, spec §21.4.3 y §21.4.4). Con la T8·c y la T8·d, **los SIETE puntos de tu ojo (§21)
-están hechos**. Banda `#34x`: usado `#350`, el siguiente libre es **`#351`**.
+están hechos**. Banda `#34x`: usados `#345`→`#354`; el siguiente libre es **`#355`**.
 ▶ ❗❗❗ **LO QUE IMPORTA DE ESTA TANDA NO ES LA CASILLA, ES LO QUE HABÍA DEBAJO.** Medido ANTES de
 tocar nada, con la v1 de «Condiciones» publicada: **una cuenta recién creada salía como si ya las
 hubiera aceptado**, así que **el checkout no se las pedía a ningún cliente nuevo** — la T8·b quedaba
@@ -232,9 +250,9 @@ donde estaba, y es la única que sobrevive en el alta.
 ❗❗❗ **▶ CARRIL DE GOOGLE AUTH · SESIÓN CERRADA (2026-09-02, 12:00 → 20:10) — EL PULIDO DEL OJO DEL
 OWNER, CINCO TANDAS EN EL ÁRBOL Y TRES POR HACER.** Banda `#34x`: **usados `#345`→`#349`**
 (`#400`+ es del justificante; `CONVENCIONES §10.6`).
-⚠️ **CADUCADO en dos cifras, y la corrección va delante**: la entrada de arriba cerró la T8 con
-`#350`, así que ya no son «tres por hacer» sino **una** (la T9) más los dos requisitos de salida, y el
-**siguiente libre es `#351`**.
+⚠️ **CADUCADO, y la corrección va delante**: no quedan tandas. La T8 se cerró con `#350`, el pulido
+con `#351`, la puesta en producción con `#353` y **One Tap se descartó** (`#354`). Banda `#34x`:
+**siguiente libre `#355`**.
 
 ⚠️ **HALLAZGO SUELTO, ni mío ni de esta tanda: `DECISIONES.md` tiene un `#217` DUPLICADO.** Dos
 entradas distintas del 2026-08-28 (líneas ~11.528 y ~11.814: el ojo del owner sobre la 2c·8, y el
