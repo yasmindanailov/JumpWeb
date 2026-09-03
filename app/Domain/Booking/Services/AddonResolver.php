@@ -30,15 +30,52 @@ class AddonResolver
     public function __construct(private RateResolver $rates) {}
 
     /**
+     * Los complementos de UNA FASE de venta (`specs/complementos-post-reserva.md` §4.1 y §4.4, `#413`).
+     *
+     * **Punto único del eje, y por eso es explícito y no vive en la relación.** `TicketType::addons()`
+     * la comparten doce clases y una de ellas es `OrderItemEditor`: filtrar ahí dejaría al panel sin
+     * encontrar la línea que tiene que mover. Y tampoco va en el *eager-load*: `resolve()` y
+     * `AddonOfferReader` leen `$product->addons` —el atributo YA cargado—, así que filtrar al cargar
+     * convertiría la fase en un contrato implícito de quien hizo la consulta, que es la clase exacta
+     * de fallo invisible que este eje existe para evitar.
+     *
+     * ⚠️⚠️ **Aquí vive el CINTURÓN de §4.3.** Los guards del pivote corren en `saving` y no ven
+     * `Query\Builder::update()`, el SQL crudo ni los tres seeders que escriben este pivote (medido).
+     * Una fila `postform` con una configuración prohibida —obligatoria, incluida, por-invitado, de
+     * grupo, que ocupa aforo, portadora de fiesta mixta, sin tope o sin plazo— **ni se ofrece ni se
+     * vende**: falla hacia invisible, nunca degrada a «se vende normal».
+     *
+     * ⚠️ La fase `booking` NO se re-valida: los 29 enganches de hoy tienen que quedar **idénticos por
+     * construcción**, que es el criterio de éxito 1 de la spec.
+     *
+     * @param  Collection<int, TicketType>  $offered
+     * @return Collection<int, TicketType>
+     */
+    public static function forStage(Collection $offered, string $stage): Collection
+    {
+        return $offered->filter(function (TicketType $addon) use ($stage): bool {
+            $pivot = $addon->pivot;
+            if (! $pivot instanceof ProductAddon || $pivot->saleStage() !== $stage) {
+                return false;
+            }
+
+            return $stage !== ProductAddon::STAGE_POSTFORM
+                || ProductAddon::postFormProblem($pivot, $addon) === null;
+        })->values();
+    }
+
+    /**
      * @param  TicketType  $product  producto base (con `addons` cargado, incluido el pivote)
      * @param  int  $lineQuantity  cantidad de la línea base (= invitados en un pack; = unidades en una entrada)
      * @param  array<int, array{ticket_type_id:int, qty:int}>  $requested  selección del cliente
+     * @param  string  $stage  la FASE de venta ({@see forStage}); `booking` por defecto, para que las
+     *                         cuatro superficies de venta de hoy no cambien ni una línea
      * @return array{rows: array<int, array<string, mixed>>, subtotal: int}
      */
-    public function resolve(TicketType $product, int $lineQuantity, array $requested, CarbonInterface $date): array
+    public function resolve(TicketType $product, int $lineQuantity, array $requested, CarbonInterface $date, string $stage = ProductAddon::STAGE_BOOKING): array
     {
-        /** @var Collection<int, TicketType> $offered Complementos ofrecibles (vendibles+activos) por id, con pivote. */
-        $offered = $product->addons->keyBy('id');
+        /** @var Collection<int, TicketType> $offered Complementos ofrecibles (vendibles+activos) DE ESTA FASE, por id. */
+        $offered = self::forStage($product->addons, $stage)->keyBy('id');
 
         // Cantidad pedida por el cliente, saneada (id => qty>0), SOLO de los ofrecibles (defensa).
         $wanted = [];

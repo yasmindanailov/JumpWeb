@@ -6,6 +6,7 @@ use App\Domain\Booking\Contracts\AddonChoiceGroup;
 use App\Domain\Booking\Contracts\AddonOffer;
 use App\Domain\Booking\Contracts\ResolvedAddon;
 use App\Domain\Booking\Contracts\ResolvedAddons;
+use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use Illuminate\Support\Carbon;
@@ -51,7 +52,10 @@ class AddonOfferReader implements AddonOffer
             return null;
         }
 
-        $offered = $product->addons;
+        // El eje de FASE (`specs/complementos-post-reserva.md` §4.4, `#413`): esta es la oferta del
+        // EMBUDO, así que solo se venden aquí los complementos de fase `booking`. Un `postform`
+        // **no nace nunca con el pedido**, y de eso vive la propiedad de §1.3.
+        $offered = AddonResolver::forStage($product->addons, ProductAddon::STAGE_BOOKING);
         $guests = max(0, $quantity);
 
         // La HORA EXTRA (`specs/hora-extra.md` §4.5): con la hora de la línea delante, un ocupante

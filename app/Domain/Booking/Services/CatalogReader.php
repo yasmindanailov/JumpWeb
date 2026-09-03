@@ -8,6 +8,7 @@ use App\Domain\Booking\Contracts\CatalogProduct;
 use App\Domain\Booking\Contracts\CatalogProductDetail;
 use App\Domain\Booking\Contracts\CatalogZone;
 use App\Domain\Booking\Contracts\ProductCatalog;
+use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use Illuminate\Database\Eloquent\Builder;
@@ -194,7 +195,13 @@ class CatalogReader implements ProductCatalog
     private function addons(TicketType $product): array
     {
         /** @var Collection<int, TicketType> $offered */
-        $offered = $product->addons()->with('prices.rateType')->get();
+        // Solo la fase `booking` (`#413` §4.4): la ficha pública anuncia lo que se compra AL
+        // reservar. ⚠️ Este método REPLICA la normalización de `AddonResolver::viewModel()` en vez
+        // de llamarla, así que el eje no llegaba aquí solo — por eso el filtro va explícito.
+        $offered = AddonResolver::forStage(
+            $product->addons()->with('prices.rateType')->get(),
+            ProductAddon::STAGE_BOOKING,
+        );
 
         $default = AddonResolver::defaultSelection($offered);
         $selected = array_flip([...array_values($default['groups']), ...array_keys($default['qty'])]);

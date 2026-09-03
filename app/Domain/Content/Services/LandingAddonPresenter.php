@@ -28,7 +28,11 @@ class LandingAddonPresenter
         $product->loadMissing('addons.prices.rateType');
 
         $rows = [];
-        foreach ($product->addons as $addon) {
+        // El eje de FASE (`specs/complementos-post-reserva.md` §4.4, `#413`): esta pantalla anuncia lo
+        // que se compra AL RESERVAR, y su propio docblock declara el invariante que un `postform`
+        // rompería —«lo que se anuncia es lo que se puede comprar»—: sin este filtro la landing
+        // ofrecería el cubo de refrescos bajo la tarjeta del cumpleaños y el embudo lo rechazaría.
+        foreach ($product->addonsSoldAtBooking() as $addon) {
             $pivot = $addon->pivot;
             $included = (bool) $pivot->is_included;
 

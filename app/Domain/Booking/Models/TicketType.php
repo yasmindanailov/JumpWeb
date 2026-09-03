@@ -3,6 +3,7 @@
 namespace App\Domain\Booking\Models;
 
 use App\Domain\Booking\Exceptions\OverlappingAgeRangeException;
+use App\Domain\Booking\Services\AddonResolver;
 use App\Domain\Booking\Services\ProductIcon;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Platform\Concerns\HasTranslations;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class TicketType extends Model
 {
@@ -47,6 +49,13 @@ class TicketType extends Model
         'choice_group',
         'max_qty', // P9: tope opcional de cantidad (null = sin límite). Solo aplica a `fixed`.
         'requires_addon_id', // dependencia «requiere»: id del complemento que debe estar elegido (null = ninguno).
+        // La FASE de venta y su plazo (`specs/complementos-post-reserva.md` §4.1 y §4.6, `#413`).
+        // ⚠️⚠️ **Si una columna del pivote NO está en esta lista, se cae en silencio al enganchar**:
+        // la acción de Filament escribe `Arr::only($data, $relationship->getPivotColumns())`, que es
+        // exactamente esto — y `AddonResolver` la leería `null` sin avisar. Es la primera de las tres
+        // listas blancas que hay entre el formulario del panel y la fila (§4.7·ter).
+        'stage',
+        'postform_cutoff_hours',
     ];
 
     /** Tipos de SEÑAL configurable para packs (#83). */
@@ -403,6 +412,26 @@ class TicketType extends Model
             ->where('ticket_types.type', self::TYPE_ADDON)
             ->withPivot(self::ADDON_PIVOT_COLUMNS)
             ->orderBy('product_addons.position');
+    }
+
+    /**
+     * Los complementos de este producto que se venden **AL RESERVAR** (`#413` §4.4).
+     *
+     * Es `AddonResolver::forStage($this->addons, STAGE_BOOKING)` con nombre propio, y existe por una
+     * razón de ARQUITECTURA, no de comodidad: la landing (`Content`) solo puede mirar a `Booking` a
+     * través de sus contratos, y su única exención declarada es tipar `TicketType`. Que el filtro
+     * viva aquí le deja nombrar el eje **sin arrastrar dos flechas nuevas** al grafo de módulos —
+     * cuyas baselines SOLO ENCOGEN.
+     *
+     * ⚠️ Sigue siendo explícito en el punto de llamada, que es lo que la spec exige: el nombre dice
+     * la fase. Lo que NO se hace es filtrar dentro de la relación `addons()`, que comparten doce
+     * clases y una de ellas es el editor del panel.
+     *
+     * @return Collection<int, self>
+     */
+    public function addonsSoldAtBooking(): Collection
+    {
+        return AddonResolver::forStage($this->addons, ProductAddon::STAGE_BOOKING);
     }
 
     /**
@@ -765,7 +794,13 @@ class TicketType extends Model
                     ->where('addon_id', $type->getKey())
                     ->where(fn ($q) => $q
                         ->where('quantity_mode', ProductAddon::MODE_PER_GUEST)
-                        ->orWhere('is_mandatory', true))
+                        ->orWhere('is_mandatory', true)
+                        // La misma dirección inversa para la FASE (`#413` §4.3·5): `occupies_after_parent`
+                        // es columna de ESTE modelo, así que encender el interruptor a un complemento ya
+                        // enganchado como venta POSTERIOR no lo ve el guard del pivote — y dejaría en pie
+                        // una configuración que aquél rechaza al revés. Ocupar aforo después de reservar
+                        // exige el lock de zona/día y la franja de aterrizaje, que esta feature no tiene.
+                        ->orWhere('stage', ProductAddon::STAGE_POSTFORM))
                     ->exists();
                 $onPack = ProductAddon::query()
                     ->where('addon_id', $type->getKey())
@@ -774,8 +809,9 @@ class TicketType extends Model
                 if ($conflicting || $onPack) {
                     throw new \InvalidArgumentException(
                         'Este complemento no puede pasar a OCUPAR: está enganchado como por-invitado/'
-                        .'obligatorio o cuelga de un pack — deshaz esos enganches primero '
-                        .'(`specs/hora-extra.md` §4.4·5 y §7·D2).'
+                        .'obligatorio, de venta POSTERIOR, o cuelga de un pack — deshaz esos enganches '
+                        .'primero (`specs/hora-extra.md` §4.4·5 y §7·D2, '
+                        .'`specs/complementos-post-reserva.md` §4.3·5).'
                     );
                 }
             }

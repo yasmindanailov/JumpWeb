@@ -141,6 +141,7 @@ class AddonsRelationManager extends RelationManager
                         AuditLogger::log('catalog.addon_attached', $this->getOwnerRecord(), [
                             'addon_id' => (int) ($data['recordId'] ?? 0),
                         ] + $this->sanitizePivotData($data));
+                        $this->warnIfPostFormWithoutForm($data);
                     }),
             ])
             ->recordActions([
@@ -149,7 +150,15 @@ class AddonsRelationManager extends RelationManager
                     ->label(__('admin.catalog.addons.configure'))
                     ->icon('heroicon-o-adjustments-horizontal')
                     ->modalHeading(__('admin.catalog.addons.configure_heading'))
+                    // ⚠️⚠️ **Tercera lista blanca, y la que peor falla** (`#413` §4.7·ter): enumera las
+                    // claves a mano y una ausente **no recibe su `->default()`, queda `null` y se
+                    // sobrescribe al guardar**. Traducido: un complemento bien configurado como venta
+                    // posterior volvería a `booking` al tocar su POSICIÓN en la lista, semanas
+                    // después y sin que nada falle. La guarda de simetría
+                    // (`sanitizePivotData` ⊆ `fillForm`) cierra la familia entera, no solo este campo.
                     ->fillForm(fn (TicketType $record): array => [
+                        'stage' => $record->pivot?->saleStage() ?? ProductAddon::STAGE_BOOKING,
+                        'postform_cutoff_hours' => $record->pivot?->postformCutoffHours(),
                         'is_included' => (bool) $record->pivot?->is_included,
                         'included_quantity' => (int) ($record->pivot?->included_quantity ?? 1),
                         'is_mandatory' => (bool) $record->pivot?->is_mandatory,
@@ -167,6 +176,7 @@ class AddonsRelationManager extends RelationManager
                         AuditLogger::log('catalog.addon_configured', $this->getOwnerRecord(), [
                             'addon_id' => $record->getKey(),
                         ] + $clean);
+                        $this->warnIfPostFormWithoutForm($data);
                         Notification::make()
                             ->title(__('admin.catalog.addons.configured'))
                             ->success()
@@ -224,17 +234,51 @@ class AddonsRelationManager extends RelationManager
             return $id > 0 && (bool) TicketType::query()->find($id)?->occupiesAfterParent();
         };
 
+        // La FASE de venta (`specs/complementos-post-reserva.md` §4.1, `#413`). ⚠️ `->live()` no es
+        // opcional: de él dependen las `visible()` de abajo, que son la CARA AMABLE de los guards del
+        // pivote — sin reactividad el operador marcaría una combinación prohibida y se llevaría una
+        // `InvalidArgumentException` sin capturar, o sea una pantalla de error.
+        $postForm = fn (Get $get): bool => $get('stage') === ProductAddon::STAGE_POSTFORM;
+
         return [
+            Select::make('stage')
+                ->label(__('admin.catalog.addons.stage'))
+                ->helperText(__('admin.catalog.addons.stage_hint'))
+                ->options([
+                    ProductAddon::STAGE_BOOKING => __('admin.catalog.addons.stage_booking'),
+                    ProductAddon::STAGE_POSTFORM => __('admin.catalog.addons.stage_postform'),
+                ])
+                ->default(ProductAddon::STAGE_BOOKING)
+                ->selectablePlaceholder(false)
+                ->live(),
+
+            // El plazo de corte, OBLIGATORIO en venta posterior (D10): `null` significaría «hereda el
+            // cierre del post-form», que es el predicado con el reloj torcido de §4.9 — y dejaría
+            // quitar un extra ya consumido. `0` es válido: «hasta que empiece la fiesta».
+            TextInput::make('postform_cutoff_hours')
+                ->label(__('admin.catalog.addons.cutoff'))
+                ->helperText(__('admin.catalog.addons.cutoff_hint'))
+                ->numeric()
+                ->minValue(0)
+                ->default(0)
+                ->required($postForm)
+                ->visible($postForm),
+
             Toggle::make('is_included')
                 ->label(__('admin.catalog.addons.is_included'))
                 ->helperText(__('admin.catalog.addons.is_included_hint'))
                 ->default(false)
-                ->live(),
+                ->live()
+                // §4.3·2: un incluido da unidades gratis, y `free_quantity > 0` rompe la igualdad
+                // `chargedSubtotalCents == Δ` de la que vive la propiedad de §1.3.
+                ->visible(fn (Get $get): bool => ! $postForm($get)),
 
             Select::make('quantity_mode')
                 ->label(__('admin.catalog.addons.quantity_mode'))
                 ->helperText(__('admin.catalog.addons.quantity_mode_hint'))
-                ->options(fn (Get $get): array => $occupyingAddon($get)
+                // §4.3·3: `per_guest` ataría la cantidad al nº de INVITADOS (los niños) y el caso del
+                // owner es *para los adultos* — un número equivocado con aspecto de correcto.
+                ->options(fn (Get $get): array => ($occupyingAddon($get) || $postForm($get))
                     ? [ProductAddon::MODE_FIXED => __('admin.catalog.addons.mode_fixed')]
                     : [
                         ProductAddon::MODE_FIXED => __('admin.catalog.addons.mode_fixed'),
@@ -264,15 +308,21 @@ class AddonsRelationManager extends RelationManager
                 ->helperText(__('admin.catalog.addons.max_qty_hint'))
                 ->numeric()
                 ->minValue(1)
+                // §4.3·8 (D3): OBLIGATORIO en venta posterior. El enlace del post-form se reenvía, así
+                // que la deuda máxima que un tercero puede crear tiene que estar declarada por el
+                // parque — el «tope de 20» que parece existir vive en `AddonResolver::viewModel()`
+                // como pista de UI, no como autoridad.
+                ->required($postForm)
                 ->visible(fn (Get $get): bool => $get('quantity_mode') === ProductAddon::MODE_FIXED),
 
             Toggle::make('is_mandatory')
                 ->label(__('admin.catalog.addons.is_mandatory'))
                 ->helperText(__('admin.catalog.addons.is_mandatory_hint'))
                 ->default(false)
-                // Oculto para un complemento que OCUPA (ver arriba): oculto no dehidrata y
-                // `sanitizePivotData` lo deja en `false`, que es lo único que el guard admite.
-                ->visible(fn (Get $get): bool => ! $occupyingAddon($get)),
+                // Oculto para un complemento que OCUPA (ver arriba) y para uno de venta POSTERIOR
+                // (§4.3·1: un obligatorio se auto-inyecta, o sea crea deuda sin un clic): oculto no
+                // dehidrata y `sanitizePivotData` lo deja en `false`, que es lo único que el guard admite.
+                ->visible(fn (Get $get): bool => ! $occupyingAddon($get) && ! $postForm($get)),
 
             TextInput::make('choice_group')
                 ->label(__('admin.catalog.addons.choice_group'))
@@ -280,6 +330,9 @@ class AddonsRelationManager extends RelationManager
                 ->maxLength(50)
                 // Reactivo: al marcar el complemento como miembro de grupo se oculta «Requiere».
                 ->live(onBlur: true)
+                // §4.3·4: un grupo excluyente SIEMPRE tiene un elegido, y post-venta el estado normal
+                // es «ninguno», que un grupo no sabe expresar.
+                ->visible(fn (Get $get): bool => ! $postForm($get))
                 ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? trim($state) : null),
 
             // Dependencia «requiere»: este complemento solo es seleccionable si el indicado ya está
@@ -312,6 +365,40 @@ class AddonsRelationManager extends RelationManager
     }
 
     /**
+     * **D4 (`#413` §4.2.bis): un enganche de venta POSTERIOR sobre un producto SIN post-form se
+     * AVISA, no se rechaza.**
+     *
+     * Rechazarlo ataría la configuración a `isPack()`, que es justo lo que el `[DECIDIDO owner]` del
+     * alcance evita: la puerta del cliente es «hay post-form», no «es un pack». Pero callar tampoco
+     * vale, y está medido: **21 de los 29 enganches reales cuelgan de ENTRADAS**, que no tienen
+     * post-form, así que un `postform` ahí crea un complemento que nadie puede comprar jamás — solo el
+     * operador desde «Gestionar».
+     *
+     * ⚠️ El aviso al guardar no basta por sí solo: una semana después nadie recuerda cuál está muerto.
+     * Por eso lo acompaña la INSIGNIA de fase en la lista ({@see pivotBadges}).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function warnIfPostFormWithoutForm(array $data): void
+    {
+        if (($data['stage'] ?? null) !== ProductAddon::STAGE_POSTFORM) {
+            return;
+        }
+
+        $owner = $this->getOwnerRecord();
+        if ($owner->isPack() && $owner->guestFields() !== []) {
+            return;
+        }
+
+        Notification::make()
+            ->title(__('admin.catalog.addons.postform_without_form'))
+            ->body(__('admin.catalog.addons.postform_without_form_body'))
+            ->warning()
+            ->persistent()
+            ->send();
+    }
+
+    /**
      * Normaliza los datos del formulario del pivote a tipos correctos (defensa: no se confía en el
      * cliente). `included_quantity` solo aplica en modo fija; `choice_group` vacío → null.
      *
@@ -327,7 +414,22 @@ class AddonsRelationManager extends RelationManager
             ? trim((string) $data['choice_group'])
             : null;
 
+        // ⚠️⚠️ **Segunda lista blanca entre el formulario y la fila** (`#413` §4.7·ter): lo que no esté
+        // enumerado aquí NO se escribe nunca, así que «Configurar» no podría cambiar la fase de los
+        // 29 enganches que ya existen — que es el gesto normal. Callan las tres y por eso hay guarda.
+        $stage = in_array($data['stage'] ?? null, ProductAddon::STAGES, true)
+            ? $data['stage']
+            : ProductAddon::STAGE_BOOKING;
+        $postForm = $stage === ProductAddon::STAGE_POSTFORM;
+
         return [
+            'stage' => $stage,
+            // El plazo solo significa algo en venta posterior; en `booking` se limpia. ⚠️ `0` es un
+            // valor VÁLIDO y distinto de `null`, así que NO se puede copiar el patrón `>= 1` de
+            // `max_qty`: convertiría «hasta que empiece» en «sin plazo», que es más permisivo.
+            'postform_cutoff_hours' => ($postForm && isset($data['postform_cutoff_hours']) && $data['postform_cutoff_hours'] !== '')
+                ? max(0, (int) $data['postform_cutoff_hours'])
+                : null,
             'is_included' => (bool) ($data['is_included'] ?? false),
             'included_quantity' => max(1, (int) ($data['included_quantity'] ?? 1)),
             'is_mandatory' => (bool) ($data['is_mandatory'] ?? false),
@@ -361,6 +463,15 @@ class AddonsRelationManager extends RelationManager
         }
 
         $badges = [];
+        // La FASE, primero y siempre visible cuando no es la normal (`#413` §4.2.bis): el eje que
+        // decide si un complemento puede generar deuda después de la venta no puede exigir abrir
+        // «Configurar» uno por uno para verlo. ⚠️ Precedente medido: `max_qty` tampoco tiene insignia
+        // y hay CERO filas que lo usen — un campo sin insignia es un campo que nadie usa.
+        if ($pivot->isPostFormStage()) {
+            $badges[] = $pivot->postformCutoffHours() === null
+                ? __('admin.catalog.addons.badge_postform')
+                : __('admin.catalog.addons.badge_postform_cutoff', ['hours' => $pivot->postformCutoffHours()]);
+        }
         if ($pivot->is_included) {
             $badges[] = __('admin.catalog.addons.badge_included');
         }

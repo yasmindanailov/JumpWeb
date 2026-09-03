@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Domain\Booking\Contracts\CounterSale;
 use App\Domain\Booking\Exceptions\ReservationException;
+use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\AddonResolver;
 use App\Domain\Booking\Services\ManualOrderFulfiller;
@@ -677,7 +678,15 @@ class CreateManualOrderPage extends Page
             return collect();
         }
         if ($this->addonsMemoFor !== (int) $type->id || $this->addonsMemo === null) {
-            $this->addonsMemo = $type->addons()->with('prices.rateType')->get();
+            // ⚠️ El alta manual **VENDE**, así que filtra como el embudo (`#413` §4.4 y D2): un
+            // complemento de venta POSTERIOR no puede nacer con el pedido ni siquiera desde el
+            // mostrador — si naciera, su línea valdría > 0 y el cliente podría retirar desde su
+            // post-form algo que SÍ se cobró, que es lo que la propiedad de §1.3 impide.
+            // *«El panel» no es la unidad: lo es VENDER frente a GESTIONAR una línea que ya existe.*
+            $this->addonsMemo = AddonResolver::forStage(
+                $type->addons()->with('prices.rateType')->get(),
+                ProductAddon::STAGE_BOOKING,
+            );
             $this->addonsMemoFor = (int) $type->id;
         }
 
