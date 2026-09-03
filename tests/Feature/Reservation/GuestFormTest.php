@@ -1070,8 +1070,26 @@ class GuestFormTest extends TestCase
     }
 
     /** Mueve la franja de la reserva a N horas de AHORA, en la hora del parque. */
+    /**
+     * Mueve la fiesta a N horas de AHORA, en hora de pared del parque.
+     *
+     * ⚠️⚠️ **Ancla el reloj a mediodía antes de calcular, y no es ceremonia: sin eso el caso se
+     * PUDRE con la hora del día.** Una franja guarda `date` + `start_time` + `end_time` por
+     * separado, y este ayudante escribía siempre la fecha del INICIO: corriendo la suite a partir
+     * de las ~21:00 del parque, «empieza dentro de 1 h y acaba dentro de 3» cruza medianoche y la
+     * franja quedaba como «hoy, de 22:00 a 00:00» — o sea terminada hace veintidós horas—, con lo
+     * que `isFinishedInPractice()` decía `true` y el caso fallaba **con el producto sano**.
+     * Medido: verde a las 19:45 y rojo a las 21:50 del mismo día, sin tocar una línea de producto.
+     *
+     * Anclar a mediodía mantiene el escenario dentro del mismo día natural para los desplazamientos
+     * que usa esta clase (±5 h) y deja de depender de cuándo se ejecute la suite. **No tapa nada**:
+     * el defecto de zona horaria de `isFinishedInPractice()` sigue anotado en `DEUDA.md`
+     * (`specs/complementos-post-reserva.md` §4.9) y este caso no lo ejercita.
+     */
     private function moveParty(OrderItem $reservation, int $startsIn, int $endsIn): void
     {
+        $this->travelTo(now(DisplayTime::timezone())->startOfDay()->addHours(12));
+
         $start = now(DisplayTime::timezone())->addHours($startsIn);
         $end = now(DisplayTime::timezone())->addHours($endsIn);
 

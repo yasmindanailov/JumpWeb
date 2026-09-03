@@ -1925,3 +1925,109 @@
 .cmo-pay input:checked + .fi-btn {
     box-shadow: inset 0 0 0 2px var(--primary-600);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+ * EL SHELL DEL PANEL (`#461`, `[DECIDIDO owner, 2026-09-03]`)
+ *
+ * Cinco encargos del owner sobre el armazón: la marca por tema con «Administración», el buscador
+ * al centro y diciendo qué encuentra, el idioma fuera del topbar, el CTA de crear pedido más
+ * grande, y el menú lateral SIEMPRE plegado con el rótulo bajo un icono grande.
+ *
+ * ⚠️ **Lo que NO está aquí, y es a propósito**: el ancho del sidebar (`->sidebarWidth('6rem')`, API
+ * del `Panel`), la retirada de la flecha (`sidebarCollapsibleOnDesktop()` fuera) y las entradas de
+ * idioma (`userMenuItems()`). Se configuran en `AdminPanelProvider`. Aquí solo vive lo que de
+ * verdad es presentación — **cero vistas de Filament sobrescritas**.
+ * ══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── La ESCALA de acción primaria ──────────────────────────────────────────────────────────
+ * El owner: «el botón más grande… tampoco que haya incoherencia entre tamaños de los botones».
+ * Eso no es un tamaño, es una ESCALA: un solo sitio del que salen «Crear pedido», «Añadir al
+ * carrito», «Ir a pagar» y «Cobrar y crear pedido». Se aplica con la clase, nunca con un valor.
+ *
+ * ⚠️ El suelo son 44 px por una razón medida, no estética: el armazón entero estaba por debajo del
+ * mínimo táctil (el CTA a 32 px de alto, el avatar a 32×32) en un panel que se usa en TABLET. */
+:root {
+    --jj-action-h: 2.75rem;      /* 44 px — mínimo táctil, y suelo de toda acción primaria */
+    --jj-action-px: 1.125rem;
+}
+
+.fi-jj-action {
+    min-height: var(--jj-action-h);
+    padding-inline: var(--jj-action-px);
+    font-weight: 600;
+}
+
+/* ─── El BUSCADOR, centrado ─────────────────────────────────────────────────────────────────
+ * ⚠️⚠️ **El buscador NO es hijo del topbar: vive dentro de `.fi-topbar-end`**, junto al CTA, el
+ * idioma y el avatar. Por eso no se puede centrar con un `grid` de tres columnas sobre el topbar
+ * ni con `margin-inline: auto`, que lo centraría dentro de la MITAD derecha (medido: quedaría en
+ * 623 px de un viewport de 1080, o sea 83 px a la derecha del centro real).
+ *
+ * Se saca del flujo y se ancla al centro del topbar. **Solo por encima de 64rem**: por debajo el
+ * topbar se aprieta y sacarlo del flujo lo haría chocar con el CTA — ahí se queda como está. */
+@media (min-width: 64rem) {
+    .fi-topbar {
+        position: relative;
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        position: absolute;
+        inset-inline-start: 50%;
+        translate: -50% 0;
+        /* Ancho acotado: a 1080 son 416 px centrados (332…748), que deja 77 px hasta el CTA.
+         * Sin el tope, el buscador crecería hasta chocar. */
+        width: min(26rem, 36vw);
+    }
+}
+
+/* ─── El MENÚ LATERAL: icono grande arriba, rótulo debajo ───────────────────────────────────
+ * `[DECIDIDO owner]`: siempre plegado, sin flecha, con el texto bajo el icono.
+ *
+ * ⚠️ **Esto NO es el modo colapsado de Filament.** El suyo enseña solo el icono y pone el rótulo
+ * en un tooltip — que en una tablet no existe, porque no hay hover. Aquí el sidebar está
+ * EXPANDIDO (así que el rótulo se pinta y es texto de verdad, legible por un lector de pantalla)
+ * y lo único que cambia es la dirección del ítem. */
+.fi-sidebar .fi-sidebar-item-btn {
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0.25rem;
+    /* 64 px: por encima del mínimo táctil incluso con el rótulo en una línea. */
+    min-height: 4rem;
+    text-align: center;
+    justify-content: center;
+}
+
+/* El icono es lo que se reconoce de un vistazo cuando el rótulo mide 11 px. */
+.fi-sidebar .fi-sidebar-item-btn .fi-icon,
+.fi-sidebar .fi-sidebar-item-btn svg {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
+/* ⚠️⚠️ **El relleno del carril se come la mitad del sidebar.** Medido antes de tocarlo: con
+ * `.fi-sidebar-nav` a 24 px por lado, de los 96 px del sidebar al ítem le llegaban **49**, y ahí
+ * «Calendario» se partía como «Calend/ario». No era el `font-size`, ni el ítem: era el CARRIL.
+ * A 8 px por lado el ítem pasa a ~80 y los cuatro rótulos caben en una línea. */
+.fi-sidebar .fi-sidebar-nav {
+    padding-inline: 0.5rem;
+}
+
+.fi-sidebar .fi-sidebar-item-label {
+    font-size: 0.6875rem;
+    line-height: 1.15;
+    /* ⚠️ **Sin `overflow-wrap: anywhere`, a propósito.** Con él una palabra larga se parte por la
+     * mitad —«Pedido/s»—, que es peor que envolver: un rótulo partido no se lee, se descifra. Aquí
+     * solo se envuelve ENTRE palabras; que quepan es responsabilidad del ancho, y lo vigila
+     * `PanelShellTest`, que acota la longitud del rótulo del menú plano. */
+    white-space: normal;
+    overflow-wrap: normal;
+    hyphens: none;
+}
+
+/* ─── La MARCA ──────────────────────────────────────────────────────────────────────────────
+ * Con el sidebar en 6rem la marca no cabe ahí: vive en el topbar (`.fi-topbar-start`), que es
+ * donde Filament la pinta. El logotipo por tema lo resuelve la vista con dos ficheros. */
+.fi-jj-brand-logo {
+    /* Tope de ancho para que un logotipo apaisado no empuje al buscador. */
+    max-width: 11rem;
+}

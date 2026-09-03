@@ -1,8 +1,8 @@
 <?php
 
 return [
-    // Subtítulo bajo el wordmark del panel (#215).
-    'panel_subtitle' => 'Panel de Control',
+    // Subtítulo bajo el logotipo del panel (#215; el texto lo fija `#461`, del owner).
+    'panel_subtitle' => 'Administración',
 
     'clusters' => [
         'configuracion' => 'Configuración',

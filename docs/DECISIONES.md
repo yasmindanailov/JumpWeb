@@ -23222,3 +23222,73 @@ TODOS los desplegables del documento**, así que el inventario dijo 9 entradas d
 **Verificación**: docs-check verde · el informe, `docs/README.md` y la tabla de enrutado de `CLAUDE.md` al
 día · **cero líneas de producto tocadas**. Sondas y capturas fuera del repo, en `/root/e2e/audit/` del
 contenedor.
+
+## #461 · 2026-09-03 · `[DECIDIDO owner]` El SHELL del panel: la marca por tema, el buscador al centro, el idioma al menú del avatar, una escala de acción y el menú lateral fijo y estrecho
+
+**Encargo del owner**, cinco puntos sobre el armazón tras leer la auditoría (`#460`): logotipo en
+claro/oscuro según el tema con «Administración» debajo · buscador al centro y diciendo qué encuentra
+· el selector de idioma fuera del topbar · «Crear pedido» más grande · el menú lateral **siempre
+plegado**, sin flecha, con el rótulo bajo un icono grande. `[DECIDIDO owner]` además: **el logotipo
+va a dos colores** (dos versiones del logotipo, no una silueta a un color).
+
+**Lo hecho, y por qué así:**
+
+1. **La marca.** Dos variantes que alterna el CSS por la clase `dark`. ⚠️⚠️ **No se creó ningún
+   fichero nuevo: se reutiliza `client-logo-ink.svg`, el hueco que existe desde `#216`** — el modo
+   oscuro del panel es el mismo problema que el menú a pantalla completa de la web (un fondo
+   oscuro) y por tanto el mismo rol. Descartadas `filter: invert()` (destroza los colores de marca)
+   y servirlo en línea con `currentColor` (solo vale para un logotipo de un color; el de este
+   cliente es multicolor, `#211`). **Falla hacia visible**: sin variante de tinta se sigue enseñando
+   el claro en los dos temas; sin logotipo, el wordmark de texto.
+2. **El buscador**, centrado por CSS y **solo por encima de 64rem** (por debajo el topbar se aprieta
+   y sacarlo del flujo lo haría chocar con el CTA). El placeholder sale de un **override PARCIAL**
+   de las cadenas del vendor — verificado antes de escribirlo que Laravel fusiona los overrides de
+   vendor con `array_replace_recursive`, así que declarar solo lo que cambia **no congela** las
+   demás claves. De paso, la superficie completa del login deja de tratar de usted («Entre a su
+   cuenta» → «Entra en tu cuenta»), que era el menor `m2` de la auditoría.
+3. **El idioma, al menú del avatar y NO a «Ajustes»** — y el motivo es de permisos: `AdminSettingsHub`
+   no lo abre un `staff`, así que allí el empleado de mostrador se quedaría sin el idioma que existe
+   para él. Se implementa con **`Action::postToUrl()`** (la API viva; `MenuItem::postAction()` está
+   deprecada) contra la MISMA ruta y el MISMO controlador: **un solo escritor de `panel_locale`**,
+   con su validación y su auditoría intactas. Un `GET` habría sido un cambio de estado por
+   navegación.
+4. **La escala de acción primaria** (`--jj-action-h: 2.75rem`) en UN token, aplicada por clase. El
+   CTA pasa de **127×32 a 152×44**. El owner lo pidió explícitamente así: «tampoco que haya
+   incoherencia entre tamaños de los botones».
+5. **El menú lateral**: `sidebarWidth('6rem')` —API del `Panel`, así que el contenido se desplaza
+   solo con `--sidebar-width`— y `sidebarCollapsibleOnDesktop()` retirado, que es lo que quita la
+   flecha. El ítem pasa a columna por CSS. ⚠️ **No se usa el modo colapsado de Filament**: el suyo
+   enseña solo el icono con un **tooltip**, y en una tablet no hay hover. **Cero vistas del
+   framework sobrescritas.** ▶ De 20rem a 6rem el área principal gana **224 px**.
+
+**Las seis cosas que enseñó la ejecución** (detalle en `specs/panel-navegacion.md` §13.1):
+⚠️⚠️ **`route()` en el cuerpo de `panel()` tumba el panel entero** —el proveedor se registra antes de
+que existan las rutas: `/admin` y `/admin/login` devolvían **500**—; va en closure, que es lo que el
+ítem «Ajustes» ya hacía y no se copió. ⚠️⚠️ **La nota de `CLAUDE.md` que decía que faltaba el hueco
+del logotipo sobre tinta estaba CADUCADA**, y se iba a crear un segundo fichero para un rol que ya
+tenía el suyo. ⚠️⚠️ **Con dos imágenes el nombre accesible se pierde en un tema** (`display: none`
+saca el `alt` del árbol): las dos van `aria-hidden` y el nombre en un `sr-only` permanente —el
+patrón que la web ya resolvió—, y se verificó que el segundo bloque de marca que Filament pinta en
+el sidebar está en `display: none`, así que se anuncia una sola vez. ⚠️ **El rótulo se partía por el
+CARRIL, no por el cuerpo de letra**: `.fi-sidebar-nav` se llevaba 48 de los 96 px. ⚠️ **Un
+`public_path()` temporal en los tests rompe el manifiesto de Vite** y toda petición al panel sale
+500: solo vale para renderizar la vista suelta.
+
+**Y un fallo de la suite que NO era de esta tanda, probado sobre la base limpia**: el ayudante
+`moveParty()` de `GuestFormTest` escribía la fecha del INICIO, así que corriendo la suite pasadas
+las ~21:00 del parque la fiesta cruzaba medianoche y quedaba «terminada hace veintidós horas»
+—verde a las 19:45 y rojo a las 21:50 del mismo día, sin tocar producto—. Se ancla el reloj a
+mediodía. ⚠️ **No tapa nada**: el defecto de zona horaria de `isFinishedInPractice()` sigue en
+`DEUDA.md`.
+
+**Tests re-apuntados por SUJETO, no borrados** (`CONVENCIONES §3.quater`): el subtítulo de
+`LandingTextsAndSocialTest` (mismo sujeto, texto nuevo) y las **tres** aserciones de
+`PanelLocaleTest` que miraban el `aria-label` del disparador del topbar, que ya no existe — ahora
+aseveran el formulario de cambio, que es lo que de verdad hace el trabajo.
+
+**Verificación**: `PanelShellTest`, **12 casos** con **9 mutaciones y las 9 muerden** (control verde
+antes de mutar, y con copias de seguridad en vez de `git checkout`, porque el trabajo no estaba
+commiteado) · sonda de navegador en tres anchos: sidebar 96 px, ítem 81×64 en columna con icono de
+28, buscador con **0 px de desvío** del centro a 1080 y 1440, CTA 152×44, cero desbordamiento
+horizontal · los tres caminos de la marca probados con ficheros reales en claro y en oscuro · Pint ·
+docs-check · **suite 4.240 en verde**.

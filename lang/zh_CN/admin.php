@@ -1,8 +1,8 @@
 <?php
 
 return [
-    // 面板 wordmark 下方的副标题 (#215)。
-    'panel_subtitle' => '控制面板',
+    // 面板 logo 下方的副标题 (#215；文案由 `#461` 确定，来自 owner)。
+    'panel_subtitle' => '管理',
 
     'clusters' => [
         'configuracion' => '设置',
