@@ -236,6 +236,59 @@ class DailySummaryTest extends TestCase
         $this->assertSame('#FF5B22', $rows[1]['zoneColor']);
     }
 
+    /**
+     * Los COMPLEMENTOS de cada reserva salen en su fila (ojo del owner, `specs/hora-extra.md`
+     * §8.6): el resumen es la hoja con la que se abre el día, y una hora extra vendida es
+     * inventario operativo — alguien SE QUEDA. Solo los VIVOS: un complemento cancelado no es
+     * operativa (la hoja individual sí lo enseña tachado, porque allí cuadra dinero).
+     */
+    public function test_rows_list_the_live_addons_of_each_reservation(): void
+    {
+        App::setLocale('es');
+        $slot = $this->makeSlot(self::DAY, '10:00:00', '11:00:00');
+        $next = $this->makeSlot(self::DAY, '11:00:00', '12:00:00');
+        $order = $this->makeOrder();
+        $parent = $this->makeItem($order, $this->entry, $slot, ['quantity' => 4, 'seats' => 4]);
+
+        $extraHour = TicketType::create([
+            'name' => ['es' => 'Hora extra'], 'type' => TicketType::TYPE_ADDON, 'zone_id' => null,
+            'duration_min' => 60, 'occupies_after_parent' => true,
+            'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 4,
+        ]);
+        // La hija que OCUPA (con franja y plaza, como la escribe OrderCreator), un neutro vivo y
+        // un neutro CANCELADO — el control de que la fila no lista lo que ya no va a pasar.
+        OrderItem::create([
+            'order_id' => $order->id, 'parent_item_id' => $parent->id,
+            'ticket_type_id' => $extraHour->id, 'slot_id' => $next->id,
+            'quantity' => 1, 'seats' => 1, 'unit_price' => 300,
+        ]);
+        OrderItem::create([
+            'order_id' => $order->id, 'parent_item_id' => $parent->id,
+            'ticket_type_id' => $this->addon->id, 'slot_id' => null,
+            'quantity' => 2, 'seats' => 0, 'unit_price' => 200,
+        ]);
+        $cancelled = OrderItem::create([
+            'order_id' => $order->id, 'parent_item_id' => $parent->id,
+            'ticket_type_id' => $this->addon->id, 'slot_id' => null,
+            'quantity' => 5, 'seats' => 0, 'unit_price' => 200,
+        ]);
+        $cancelled->markCancelled($order->user);
+
+        $rows = DailyReservationsSummary::for(self::DAY)->rows();
+
+        $this->assertSame(
+            [['name' => 'Hora extra', 'quantity' => 1], ['name' => 'Calcetines', 'quantity' => 2]],
+            $rows[0]['addons'],
+            'los complementos vivos, en orden de creación; el cancelado fuera',
+        );
+
+        // Y el PDF los PINTA — se renderiza el blade real (sin dompdf), que es donde una clave
+        // olvidada o un `@if` mal puesto dejarían la fila muda con el presenter en verde.
+        $html = view('pdf.daily-summary', ['summary' => DailyReservationsSummary::for(self::DAY)])->render();
+        $this->assertStringContainsString('+ 1 × Hora extra', $html);
+        $this->assertStringContainsString('+ 2 × Calcetines', $html);
+    }
+
     // ─── Ruta segura ──────────────────────────────────────────────────────────
 
     private function url(array $params = []): string

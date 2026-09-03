@@ -67,6 +67,9 @@ return [
     'addon_included_extra' => 'Incluido · extras :price/u',
     'addon_extra_each' => 'extras :price/u',
     'addon_per_unit' => ':price/invitado',
+    // La HORA EXTRA (`specs/hora-extra.md` §8.6): la cantidad son ENTRADAS que se quedan.
+    'addon_stay_price' => ':price por entrada que se queda',
+    'addon_stay_selected' => 'Para 1 entrada que se queda · :price|Para :count entradas que se quedan · :price',
     'addon_per_guest_qty' => ':count (uno por invitado)',
     'addon_per_guest_add' => 'Añadir · uno por invitado',
     'addon_requires' => 'Requiere: :name',

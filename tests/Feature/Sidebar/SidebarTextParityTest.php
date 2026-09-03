@@ -178,6 +178,10 @@ class SidebarTextParityTest extends TestCase
         // `trans_choice` y viajan YA RESUELTAS como movimientos del libro. El cajón no las nombra —
         // y esta guarda lo comprueba en la línea de abajo en vez de creérselo.
         'gate_mixed_party_line', 'gate_mixed_party_line_named',
+        // La nota de la HORA EXTRA elegida (`specs/hora-extra.md` §8.6): «Para N entradas que se
+        // quedan» la compone `AddonResolver::viewModel()` con `trans_choice` y viaja resuelta en el
+        // `note` de cada fila de complemento — el cajón la pinta como texto, sin nombrar la clave.
+        'addon_stay_selected',
         'gate_mixed_party_credit_line', 'gate_mixed_party_credit_line_named',
     ];
 

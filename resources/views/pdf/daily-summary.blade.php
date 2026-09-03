@@ -144,6 +144,11 @@
                         <td><span class="type-pill">{{ $row['typeLabel'] }}</span></td>
                         <td>
                             <span class="swatch" style="background: {{ $row['zoneColor'] }};"></span><span class="product">{{ $row['product'] }}</span>
+                            {{-- Complementos VIVOS de la reserva (`specs/hora-extra.md` §8.6): la hora
+                                 extra es inventario del día y sin esta línea el resumen no la decía. --}}
+                            @if ($row['addons'] !== [])
+                                <br><span class="muted">@foreach ($row['addons'] as $addon){{ $loop->first ? '' : ' · ' }}+ {{ $addon['quantity'] }} × {{ $addon['name'] }}@endforeach</span>
+                            @endif
                         </td>
                         <td>{{ $row['customer'] }}</td>
                         <td class="muted">{{ $row['phone'] ?? '—' }}</td>

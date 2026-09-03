@@ -51,7 +51,10 @@ final class DailyReservationsSummary
         $query = OrderItem::query()
             ->paidScheduledPrincipal()
             ->slotDateBetween($day, $day)
-            ->with(['ticketType.zone', 'slot', 'order.user']);
+            // `children.ticketType` para la línea de COMPLEMENTOS de cada fila (ojo del owner,
+            // `specs/hora-extra.md` §8.6): sin ella, la hora extra —que es inventario operativo del
+            // día— era invisible justo en la hoja con la que se abre la jornada.
+            ->with(['ticketType.zone', 'slot', 'order.user', 'children.ticketType']);
 
         if ($type === self::TYPE_ENTRY) {
             $query->whereHas('ticketType', fn ($q) => $q->where('type', TicketType::TYPE_ENTRY));
@@ -110,7 +113,8 @@ final class DailyReservationsSummary
      *
      * @return list<array{
      *     time:?string, isPack:bool, typeLabel:string, product:string,
-     *     zoneColor:string, customer:string, phone:?string, quantityLabel:string, celebrant:?string
+     *     zoneColor:string, customer:string, phone:?string, quantityLabel:string, celebrant:?string,
+     *     addons:list<array{name:string, quantity:int}>
      * }>
      */
     public function rows(): array
@@ -135,6 +139,19 @@ final class DailyReservationsSummary
                     ? __('tickets.guests_count', ['count' => (int) $item->quantity])
                     : trans_choice('admin.orders.slip.entries_count', (int) $item->quantity, ['count' => (int) $item->quantity]),
                 'celebrant' => $isPack ? $this->celebrantOf($item) : null,
+                // Los COMPLEMENTOS de la reserva (ojo del owner, `specs/hora-extra.md` §8.6): el
+                // resumen es la hoja con la que se abre el día y una hora extra vendida es
+                // inventario operativo — sin esta línea el operador no sabía que alguien se queda.
+                // Solo los VIVOS: un complemento cancelado no es operativa (la hoja individual sí
+                // los enseña tachados, porque allí el dinero tiene que cuadrar).
+                'addons' => $item->children
+                    ->reject(fn (OrderItem $child): bool => $child->isCancelled())
+                    ->map(fn (OrderItem $child): array => [
+                        'name' => $child->ticketType?->tr('name') ?? '—',
+                        'quantity' => (int) $child->quantity,
+                    ])
+                    ->values()
+                    ->all(),
             ];
         })->all();
     }

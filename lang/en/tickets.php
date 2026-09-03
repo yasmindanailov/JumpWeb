@@ -55,6 +55,9 @@ return [
     'addon_included_extra' => 'Included · extras :price each',
     'addon_extra_each' => 'extras :price each',
     'addon_per_unit' => ':price/guest',
+    // The EXTRA HOUR (`specs/hora-extra.md` §8.6): the quantity is TICKETS that stay.
+    'addon_stay_price' => ':price per ticket that stays',
+    'addon_stay_selected' => 'For 1 ticket staying · :price|For :count tickets staying · :price',
     'addon_per_guest_qty' => ':count (one per guest)',
     'addon_per_guest_add' => 'Add · one per guest',
     'addon_requires' => 'Requires: :name',

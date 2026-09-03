@@ -55,6 +55,9 @@ return [
     'addon_included_extra' => 'Inclus · extras :price/u',
     'addon_extra_each' => 'extras :price/u',
     'addon_per_unit' => ':price/invité',
+    // L'HEURE SUPPLÉMENTAIRE (`specs/hora-extra.md` §8.6) : la quantité, ce sont des ENTRÉES qui restent.
+    'addon_stay_price' => ':price par entrée qui reste',
+    'addon_stay_selected' => 'Pour 1 entrée qui reste · :price|Pour :count entrées qui restent · :price',
     'addon_per_guest_qty' => ':count (un par invité)',
     'addon_per_guest_add' => 'Ajouter · un par invité',
     'addon_requires' => 'Nécessite : :name',

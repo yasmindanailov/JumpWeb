@@ -462,6 +462,15 @@ class AddonResolver
                 $note = ($pivot->allow_extra && ! $pivot->isPerGuest() && $rate > 0)
                     ? __('tickets.addon_included_extra', ['price' => $priceStr])
                     : __('tickets.addon_included');
+            } elseif ($addon->occupiesAfterParent()) {
+                // La HORA EXTRA (ojo del owner, `specs/hora-extra.md` §8.6): la cantidad son
+                // ENTRADAS que se quedan, y la nota lo dice SIEMPRE — y con la fila elegida dice
+                // para CUÁNTAS («Hora extra · Para 2 entradas que se quedan»), que es la lectura
+                // que él pidió. Se compone aquí y no en el cliente: la heredan el cajón, la API y
+                // el alta manual del panel sin una línea suya, y se re-computa en cada clic.
+                $note = $qty > 0
+                    ? trans_choice('tickets.addon_stay_selected', $qty, ['count' => $qty, 'price' => $priceStr])
+                    : __('tickets.addon_stay_price', ['price' => $priceStr]);
             } elseif ($pivot->isPerGuest()) {
                 $note = __('tickets.addon_per_unit', ['price' => $priceStr]);
             } else {

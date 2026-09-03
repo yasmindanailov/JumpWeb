@@ -128,6 +128,31 @@ class ExtraHourOfferTest extends ApiTestCase
         $this->assertFalse($row['can_increase'], 'con 2 de 2 quedándose, el «+» se apaga');
     }
 
+    /**
+     * La NOTA dice que la cantidad son ENTRADAS que se quedan (ojo del owner, §8.6): sin elegir,
+     * el precio se explica POR ENTRADA; elegida, dice PARA CUÁNTAS — «Hora extra · Para 2
+     * entradas que se quedan» es la lectura que él pidió («1 hora extra para 2 entradas»).
+     * Se compone en `viewModel()` (fuente única) y se re-computa en cada clic: cajón, API y alta
+     * manual del panel la heredan sin una línea de cliente.
+     */
+    public function test_the_note_says_the_quantity_is_tickets_that_stay(): void
+    {
+        $base = ['date' => $this->date, 'time' => '10:00:00', 'quantity' => 4];
+
+        $row = $this->extraRow($this->ask($base));
+        $this->assertSame('5,00 € por entrada que se queda', $row['note']);
+
+        $row = $this->extraRow($this->ask($base + [
+            'addons' => [['product_id' => $this->extraHour->id, 'quantity' => 1]],
+        ]));
+        $this->assertSame('Para 1 entrada que se queda · 5,00 €', $row['note']);
+
+        $row = $this->extraRow($this->ask($base + [
+            'addons' => [['product_id' => $this->extraHour->id, 'quantity' => 2]],
+        ]));
+        $this->assertSame('Para 2 entradas que se quedan · 5,00 €', $row['note']);
+    }
+
     public function test_without_date_and_time_the_offer_passes_undecorated(): void
     {
         // El CONTROL de la decoración: sin la hora de la línea no hay franja siguiente que
