@@ -52,13 +52,21 @@
 >    sembrados, guion en `VERIFICACION-E2E-CAJON.md` §5.septies — ⚠️ **ese escenario ENVEJECE**: se
 >    sembró para «hoy» el 01/09) · el libro del pedido (V18–V23) · los TPV · su `client-menu.webp`.
 >
-> **4. EL CARRIL DE DISEÑO, que corre en PARALELO en esta misma máquina** (`#430`, 2026-09-02): la
->    segunda auditoría de la web pública está en `docs/specs/auditoria-diseno.md` (3 críticos · 10
->    mayores · 6 menores) y **espera seis decisiones del owner** (su §7). Su bloque «CARRIL DISEÑO» y
->    el **REPARTO VIGENTE de los dos carriles** —ficheros y sub-bandas: diseño numera en
->    `#430`–`#439`, este carril sigue en `#410`+— están bajo «POR DÓNDE RETOMAR», más abajo.
->    **Léelo antes de elegir número o de tocar `resources/views/components/site/**`.** ▶ **Y la fase 2 ya
->    tiene su B en ARTEFACTO** (`#433`, 2026-09-03): el owner la mira en el móvil antes de tocar la portada.
+> **4. EL CARRIL DE DISEÑO, que corre en PARALELO en esta misma máquina** (`#430` → `#437`, cierre del
+>    2026-09-03): la auditoría de la web pública (`docs/specs/auditoria-diseno.md`) tiene **ejecutadas
+>    y medidas las tandas C, E, H, D y F** (§11–§14; nueve guardas nuevas, todas vistas morder) y
+>    **queda solo la G** (interiores M3 y normas M6, m5, m6: decisiones D2 y D3), que el owner quiere
+>    valorar junto con la organización; C1 es producto. **El sistema visual está entero y vigilado**
+>    (`design.md`): las páginas interiores no necesitan diseño nuevo, necesitan contenido. ⚠️⚠️ **Paso
+>    de despliegue del owner: cinco líneas en el `client.css` de producción** (la lista, en «DOS COSAS
+>    DEL OWNER»). La portada B vive como ARTEFACTO para su ojo en el móvil (`#433`). ▶ **Lo que el
+>    owner está pensando** (sus palabras, 2026-09-03): ampliar la organización a TODAS las páginas
+>    —landing, servicios, cumpleaños, entradas, contacto, el parque— y decidir qué va en cada una **con
+>    el white-label y el data-driven de la BD delante**; lo primero que este carril aportará cuando lo
+>    abra es un CENSO por página (qué muestra, de dónde sale cada dato, qué falta en el panel), sin
+>    decidir por él. Su bloque «CARRIL DISEÑO» y el **REPARTO VIGENTE de los dos carriles** —diseño
+>    numera en `#430`–`#439`, este carril en `#410`+— están bajo «POR DÓNDE RETOMAR», más abajo.
+>    **Léelo antes de elegir número o de tocar `resources/views/components/site/**`.**
 >
 > ⚠️⚠️ **NUMERACIÓN POR BANDAS** (`#404`, `CONVENCIONES §10.6`): **este ordenador numera desde `#400`**
 > y el portátil sigue en `#34x`. Mirar el remoto antes de empujar **se probó y no basta** — trece
@@ -461,8 +469,22 @@ escalón no está en la escala. **«Cero reflujo» medido**: la huella de maquet
 1280 y 390 es idéntica en geometría en las 24 (la única cadena distinta es cómo Chrome reporta un
 `margin: auto`). Guarda `ScaleTokensAreUsedTest`, 2/2 mutaciones muerden. ▶ **Con esto la auditoría
 tiene ejecutadas C, E, H, D y F; queda la G** (interiores M3, normas M6, m5, m6: D2 y D3), que se valora
-con la organización y las secciones, y C1 (`/servicios`), que es producto. ▶ **LO SIGUIENTE**: valorar
-la organización y las secciones con el owner (el artefacto B, D-G3/D-G6/D-G7, y D2/D3 de la auditoría).
+con la organización y las secciones, y C1 (`/servicios`), que es producto.
+▶ **LO SIGUIENTE, dicho por el owner al cerrar (2026-09-03)**: las páginas fuera de la landing se
+trabajan APARTE porque él tiene que decidir qué texto y qué información va en cada una; y la
+organización la está pensando **ampliada a todas las páginas** (landing, servicios, cumpleaños,
+entradas, contacto, el parque…), valorando qué debería ir en cada una **y con ello el white-label y el
+data-driven de la BD**. Preguntó si el sistema visual (colores, sombras, píldoras, tags, elementos)
+estaba implementado y listo: **sí** —está en `design.md` con guarda por regla— y las interiores se
+montan con las piezas que ya existen. ▶ **Lo primero que hará este carril cuando el owner lo abra**:
+un CENSO medido por página, en tres columnas —qué información muestra hoy · de dónde sale cada dato
+(panel, tabla, `lang/`, quemado en la vista) · qué falta para que sea del panel—, apoyado en
+`MAPA-PAGINAS.md`, `MODELO-DATOS.md`, `SERVICIOS-CMS.md` y el inventario del guion §4.2; el
+precedente de no hacerlo es «Parking gratis 2h» viviendo en el código (`#434`). Sobre esa foto decide
+él la organización; con ella se cierran la G de la auditoría (D2, D3, m5, m6) y D-G3 · D-G6 · D-G7 del
+guion, y la portada B pasa a la web real. ⚠️ m6 (pulsables a dos líneas: anchura y tracking, nunca
+acortar textos del panel) se puede hacer sin esperar a nada. `design.md` §13 dice qué guardas quedan:
+la sonda de contraste sobre el HTML renderizado como test de la suite, y el selector de zona único.
 ⚠️ `DesignSync` sigue sin autorización en sesión no interactiva; copia del canvas del 27/28/31-08.
 ⚠️ **Lo que la auditoría vio fuera de su alcance**: `resources/views/vendor/mail/html/themes/brand.css`
 lleva `#FF5B22` (el naranja del PRIMER cliente) quemado **cinco veces** — fuga white-label en los

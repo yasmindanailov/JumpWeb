@@ -282,10 +282,16 @@ Existentes: `ActionFillTest` · `SingleButtonFamilyTest` · `CardSkinTest` · `S
 `FacadeCssHasNoOrphansTest` · `TouchTargetTest` · `ThemeColorTest` · `ThemeFontsTest` ·
 `ClientThemePackageTest` · `GoogleButtonBrandingTest`.
 
-Pendientes (las pide la auditoría, nacen con su tanda): contraste sobre el HTML renderizado ·
-`--zone-*` fuera de la interacción · `:hover` sin `transform` fuera de lista · `font-size`/espacio
-con token disponible · presupuesto de bucles por vista · un solo componente de selector de zona ·
-`transition` sin `all`.
+Nacidas con las tandas de la auditoría (2026-09-03, `#434` → `#437`): `FieldFocusRingTest` ·
+`FaqAccordionTest` · `ContactPageTest` · `SemanticFillTextTest` (texto sobre relleno semántico, el suelo
+de 10 px) · `HoverDoesNotJumpTest` (`:hover` sin `transform`, `transition` sin `all`, ninguna
+interacción anima relleno) · `MotionBudgetTest` (cada `infinite` enumerado con su motivo) ·
+`InteractionColourIsNotAZoneTest` (`--zone-*` solo identifica una zona) · `ScaleTokensAreUsedTest`
+(`font-size`/espacio con token disponible).
+
+Pendientes: **contraste sobre el HTML renderizado** como test de la suite (hoy lo miden sondas de
+`storage/app`, que no corren en el hook) · **un solo componente de selector de zona** (nace con la
+portada B, `guion-de-la-portada.md` §6.2).
 
 ---
 
