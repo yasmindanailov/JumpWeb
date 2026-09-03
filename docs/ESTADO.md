@@ -104,7 +104,11 @@
 >    `client.css` de producción** (la lista, en «DOS COSAS DEL OWNER»). Su bloque «CARRIL DISEÑO ·
 >    PARADO» y el **REPARTO VIGENTE de los dos carriles** —diseño numera en `#450`–`#459`, este carril
 >    en `#410`+— están bajo «POR DÓNDE RETOMAR», más abajo. **Léelo antes de elegir número o de tocar
->    `resources/views/components/site/**`.**
+>    `resources/views/components/site/**`.** ▶ **Cierre de este carril: 2026-09-03 por la tarde**, en
+>    `34f8fa6` (el revert + el archivo, integrado sobre la T1 de complementos sin conflictos) y el commit
+>    de cierre que sigue; árbol limpio, nada aparcado en `wip/`, hook activo. Lo único que hay que saber
+>    para retomarlo cabe en una frase: **hasta que el owner traiga su base de Claude Design, aquí no se
+>    diseña nada.**
 >
 > ⚠️⚠️ **NUMERACIÓN POR BANDAS** (`#404`, `CONVENCIONES §10.6`): **este ordenador numera desde `#400`**
 > y el portátil sigue en `#34x`. Mirar el remoto antes de empujar **se probó y no basta** — trece
