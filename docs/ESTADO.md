@@ -395,11 +395,22 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     `app/Filament/**` (catálogo) · migraciones · `tests/Feature/{Booking,Admin}/**`.
     **Numera en la secuencia natural, desde `#410`.**
   · **DISEÑO / IDIOMA VISUAL** (este) → `public/css/{site,landing}.css` ·
-    `resources/views/{home.blade.php,pages/**,components/site/**}` · `lang/*/landing.php` ·
-    `tests/Feature/{Landing,Theme}/**` · `docs/specs/{auditoria-diseno,idioma-visual-heredado}.md`.
-    **Numera en la sub-banda `#430`–`#439`**, reservada A DISTANCIA de la secuencia natural para que
-    el otro carril no tenga que mirar nada antes de empujar; si se agota, la siguiente se reserva
-    aquí ANTES de usarla.
+    `resources/views/{home.blade.php,pages/**,components/site/**,prototipos/**}` ·
+    `lang/*/landing.php` · `tests/Feature/{Landing,Theme}/**` (y **una exclusión** en
+    `tests/Feature/Site/ArmazonContractTest.php`: ignora `resources/views/prototipos/`) ·
+    `docs/specs/{auditoria-diseno,idioma-visual-heredado,guion-de-la-portada}.md` · **`design.md`**
+    (raíz) · `routes/prototipos.php` + su `require` en `routes/web.php` ·
+    `app/Http/Controllers/Prototipos/**` · `public/prototipos/**`.
+    **Numera en la sub-banda `#430`–`#439` — último usado: `#432`** (2026-09-03), reservada A
+    DISTANCIA de la secuencia natural para que el otro carril no tenga que mirar nada antes de
+    empujar; si se agota, la siguiente se reserva aquí ANTES de usarla.
+  ▶ ⚠️ **Para el agente del PANEL / hora extra — un test tuyo cae BAJO CARGA** (2026-09-03, al
+    cerrar): `Tests\Feature\Admin\Puerta\ValidarRegistroTest::test_rate_limit_is_per_user_not_per_ip`
+    esperó `rate_limited` y recibió `not_registered` en un gate en el que corrían **tres suites a la
+    vez** (la mía, la del hook y la tuya) y la suite tardó **8:49 en vez de 1:20**. Mismo árbol que
+    había pasado en verde cinco minutos antes, y verde en aislamiento después. Es la familia del
+    aviso que dejaste sobre el SSR («el pre-push puede caer si la máquina está cargada»): un
+    limitador por ventana de tiempo medido con reloj de pared. Es tuyo (Puerta): lo anoto, no lo toco.
   ▶ **Para el agente de HORA EXTRA**: la auditoría solo mide — no he tocado ningún fichero tuyo ni
     ninguno compartido salvo `CLAUDE.md` (una fila), `docs/README.md` (una fila), `DECISIONES.md`
     (`#430`, al final) y este bloque. Si vas a tocar `resources/views/components/site/**` (p. ej. el
