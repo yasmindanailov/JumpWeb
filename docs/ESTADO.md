@@ -20,10 +20,16 @@
 >    `postform` habría puesto en manos del cliente líneas ya cobradas, **con el libro cerrando en
 >    verde**. ⚠️ Segundo bloqueante: **tres listas blancas del panel** entre el formulario y la fila,
 >    y las tres callan al olvidarse (la peor **revierte la fase al tocar otro campo**).
->    ▶ **Lo siguiente es del owner**: el ✅ a las **13 derivadas** de §7.2 (cinco nuevas) y **dos
->    `[PENDIENTE: owner]`** — si el enlace del post-form debe poder REVOCARSE (hoy no puede: es HMAC y
->    `revokeAllAccess()` no lo alcanza) y cuánta insistencia quiere en las superficies de demanda,
->    porque hoy **nadie invita al cliente a volver a comprar**.
+>    ▶ ✅ **SPEC APROBADA: no queda NADA pendiente del owner** (2026-09-03). Las tres últimas, con los
+>    casos delante: **el enlace se podrá ROTAR** (D14 — hoy no se puede revocar y con extras dentro
+>    escribe dinero; entra `guest_form_link_version` en la firma y un botón como el del carné QR) ·
+>    **las superficies de demanda usan los textos que ya existen** (D15, sin envío nuevo; el
+>    recordatorio comercial queda fuera) · y **entran en la T0 los tres preexistentes de esa
+>    superficie** (el `PUT` que borra `general`, la escalada 403→404 de la web y el sello que invalida
+>    el token del operador); la IP de auditoría se queda como ficha.
+>    ▶ **PLAN DE OBRA en §9: T0** la superficie saneada · **T1** el eje y su panel · **T2** el dominio
+>    y la concurrencia (dos verificadores, uno de ellos CRUZADO que hoy no existe) · **T3** las
+>    superficies del cliente. La T0 va primero porque la T3 construye encima de ella.
 >    ⚠️ **Seis defectos PREEXISTENTES destapados, con ficha en `DEUDA.md`** — entre ellos que la
 >    escalada 403→410→404 **no se cumple en la web** (afecta también al justificante) y que el `PUT`
 >    del post-form sin `general` **borra** las respuestas generales.

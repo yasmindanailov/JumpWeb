@@ -22660,6 +22660,35 @@ que sobrevive al art. 17 (368 de 373) · `max_qty = null` sin techo en el domini
 `markGuestFormCompleted()` invalidando el token optimista de cinco puertas del operador · y
 `ProductAddon.php` fuera del `CRITICAL_RE` aunque es donde viven los guards.
 
+### 8 · Las TRES últimas del owner, con los casos delante (2026-09-03) — y con ellas la spec queda APROBADA
+
+- **D14 · El enlace del post-form pasa a poder ROTARSE.** Hoy no se puede revocar —es HMAC sobre
+  `APP_KEY`, sin fila que borrar— y `RGPD-06` afirma que invalidar el acceso de un titular tiene UN
+  solo sitio que alcanza a TRES credenciales. Con los extras dentro, ese enlace pasa a **escribir
+  dinero de importe elegido**, y las únicas palancas eran cancelar la reserva o anonimizar al titular
+  —que `RGPD-01` bloquea justo mientras hay una reserva por celebrar—. Entra
+  `order_items.guest_form_link_version` en la firma y un botón «Rotar el enlace» junto a «Copiar
+  enlace», calcado del que `identidad-qr-puerta.md` ya construyó para el carné QR. ⚠️ **Rotar no
+  borra lo añadido**: es una credencial, no una gestión. ⚠️ Y `RGPD-06` pasa a declarar **cuatro**
+  credenciales, con la nota de que ésta cae **por gesto del operador**, no con `revokeAllAccess()`.
+- **D15 · Las superficies de demanda usan los TEXTOS QUE YA EXISTEN**, sin ningún envío nuevo. El
+  hallazgo que lo motiva: medido, **nadie invita al cliente a volver a comprar** —el aviso de
+  «formulario pendiente» muere en cuanto rellena las fichas (consecuencia de D7), el único correo que
+  lleva al formulario habla solo de «los datos de cada invitado» y se manda una vez al pagar—, así que
+  la feature podía construirse entera y no vender un solo cubo de refrescos. ⛔ **El recordatorio
+  propio a N días queda FUERA**: es un envío comercial y arrastra la decisión del interruptor de
+  marketing. Si la venta no despega, ésa es la siguiente palanca, y se mide antes de gastarla.
+- **Qué PREEXISTENTES entran**: los **tres de la superficie del post-form** —el `PUT` que borra
+  `general`, la escalada 403→404 de la web (que afecta también al justificante) y el sello que
+  invalida el token optimista de cinco puertas del operador— van en la **T0**, porque esta feature
+  construye dinero encima de esa superficie. **La IP de auditoría que sobrevive al art. 17 se queda
+  como ficha**: tiene dos lados —se pierde rastro probatorio— y merece tanda propia.
+
+▶ **Plan de obra en `specs/complementos-post-reserva.md` §9**: T0 la superficie saneada · T1 el eje y
+su panel · T2 el dominio y la concurrencia · T3 las superficies del cliente. La T0 va primero porque
+la T3 construye encima de ella, y la T1 antes que la T2 porque el dominio necesita un dato que hoy no
+se puede introducir — la lección de `specs/hora-extra.md` §4.9, aplicada al orden de las tandas.
+
 ## #434 · 2026-09-03 · `[DECIDIDO owner]` La tanda C de la auditoría: lo roto se arregla midiendo antes y después — y el informe tenía una causa mal diagnosticada
 
 **Contexto.** El owner pidió seguir con los puntos de la auditoría (`specs/auditoria-diseno.md`) y

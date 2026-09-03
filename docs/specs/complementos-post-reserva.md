@@ -434,6 +434,31 @@ falle nada. Dos consecuencias de diseño, y las dos son obligatorias:
 2. el estado y **su motivo** viajan **por complemento** (`closed`, `closed_reason`, `closes_at`), no
    en el `readonly` booleano del formulario — que hoy es lo único que el contrato publica.
 
+### 4.6.bis · El enlace se puede ROTAR (D14, `[DECIDIDO owner, 2026-09-03]`)
+
+**El problema, medido**: `RGPD-06` afirma que invalidar el acceso de un titular tiene **un solo
+sitio** (`User::revokeAllAccess()`) y alcanza a **tres** credenciales —sesiones, tokens y el carné
+QR—. **La URL firmada del post-form no está, y no puede estar**: es HMAC sobre `APP_KEY`, sin fila
+que borrar. Hoy esa credencial ya lee y reescribe nombres y alergias de menores sin sesión
+(verificado: `GET` de una URL firmada real → 200 con las fichas); con los extras pasa además a
+**escribir dinero de importe elegido**. Y las únicas palancas de hoy son cancelar la reserva o
+anonimizar al titular — que `RGPD-01` **bloquea** mientras haya una reserva por celebrar, o sea justo
+mientras el enlace importa.
+
+▶ **`order_items.guest_form_link_version`** (entero, default 0) entra en la firma del enlace y de las
+dos URLs de la API. El panel gana **«Rotar el enlace»** junto a «Copiar enlace»: sube la versión, los
+enlaces viejos dejan de abrir (403) y el operador puede reenviar el nuevo. Es el mismo gesto que
+`identidad-qr-puerta.md` ya construyó para el carné QR, y por eso el rótulo, la confirmación y el
+audit se copian de allí.
+
+⚠️ **Rotar NO borra lo ya añadido**: es una credencial, no una gestión. Retirar los extras que metió
+un tercero sigue siendo un gesto aparte del operador (cancelar esas líneas, que es neutro por §1.3).
+⚠️ **La versión es del ÍTEM, no del pedido**: un pedido con dos cumpleaños tiene dos enlaces
+independientes desde `#217`, y rotar uno no puede tumbar el otro.
+⚠️ **Y hay que actualizar `RGPD-06`**: hoy dice «tres credenciales» y pasarían a ser cuatro, con la
+diferencia de que ésta **no** cae con `revokeAllAccess()` sino por gesto explícito del operador — el
+mismo criterio que el carné, que `revokeOtherAccess()` conserva a propósito.
+
 ### 4.7 · Las superficies
 
 | # | Superficie | Qué cambia |
@@ -513,10 +538,18 @@ que lleva al post-form (`GuestFormRequest`) habla solo de «los datos de cada in
 **una vez**, al pagar; y el chip del cajón dice «Ver o editar el formulario de reserva», que no
 insinúa que ahí se compre.
 
-▶ **La feature podría construirse entera y no venderse un solo cubo de refrescos.** Las tres
-superficies de demanda entran en el alcance: el texto del correo, el rótulo del cajón y el aviso de
-la cuenta. `[PENDIENTE: owner]` cuánta insistencia quiere (un recordatorio propio a N días de la
-fiesta es otra decisión, y no se toma aquí).
+▶ **La feature podría construirse entera y no venderse un solo cubo de refrescos.**
+
+✅ **`[DECIDIDO owner, 2026-09-03]` (D15): se usan los textos que YA existen, y no se añade ningún
+envío nuevo.** Concretamente: el correo del formulario y el rótulo del cajón mencionan los extras, y
+**el aviso de la cuenta deja de morir al completar las fichas** mientras haya extras disponibles y
+plazo abierto. ⛔ **Un recordatorio propio a N días de la fiesta queda FUERA**: sería un envío
+comercial nuevo y arrastraría la decisión de si respeta el interruptor de marketing o va como
+servicio. Si la venta no despega, esa es la siguiente palanca — pero se mide antes de gastarla.
+
+⚠️ **Ojo al condicionar el aviso**: hoy cuelga de `needsGuestForm()`. La condición nueva no puede ser
+«hay extras en el catálogo» a secas, o avisaría a reservas que ya los tienen todos elegidos y a las
+que están fuera de plazo. Es «hay algo que este cliente todavía **podría** añadir».
 
 ### 4.8 · Los bordes, y qué los cierra
 
@@ -680,20 +713,29 @@ manual), **D3** (`max_qty` obligatorio) y **D6** (ningún aviso nuevo al parque)
   tener la tarta pedida. Lo que entra en su lugar es limitar **por reserva**, el tope **por pedido**
   y el correo agrupado.
 - **D13** *(nueva)* · El `via` viaja en el **`context` del ajuste**, no solo en el audit.
+- **D14** *(`[DECIDIDO owner, 2026-09-03]`)* · **El enlace del post-form pasa a poder ROTARSE** —
+  §4.6.bis. Devuelve a `RGPD-06` su frase y le da al parque una salida cuando el enlace se ha ido de
+  las manos.
+- **D15** *(`[DECIDIDO owner, 2026-09-03]`)* · Las superficies de demanda usan **los textos que ya
+  existen**; ningún envío nuevo — §4.7·quinquies.
 
-### 7.3 · Lo que falta antes de escribir código
+### 7.3 · Lo que falta antes de escribir código — ✅ NADA DEL OWNER
 
 1. ✅ **Revisión adversarial hecha** (§8).
-2. El ✅ del owner a esta versión y a las **trece** derivadas de §7.2 (cinco son nuevas).
-3. ~~Decidir si el defecto de §4.10 entra en la tanda~~ — **sin efecto: ese defecto no existe**
-   (§4.10). Lo que queda es la decisión estrecha de permitir 3→2 en el panel **solo** para líneas con
-   `birthValue() === 0`.
-4. ❗ **`[PENDIENTE: owner]` · ¿el enlace del post-form debe poder REVOCARSE?** Hoy no puede: es HMAC
-   y `revokeAllAccess()` no lo alcanza. Con extras dentro pasa a escribir dinero. La salida barata es
-   una **versión del enlace** en `order_items` que entre en la firma, para que el operador lo «rote»
-   como rota el carné QR (`RGPD-06`). Alternativa: asumirlo, escribirlo y dar al operador un gesto de
-   «retirar los extras añadidos desde el enlace». **Lo que no vale es no decidirlo.**
-5. **`[PENDIENTE: owner]` · las superficies de demanda** (§4.7·quinquies): cuánta insistencia.
+2. ✅ **Las quince derivadas de §7.2**, con las cinco de la revisión y las dos últimas decididas con
+   los casos delante (2026-09-03).
+3. ~~Decidir si el defecto de §4.10 entra en la tanda~~ — **sin efecto: ese defecto no existe**.
+   Lo que queda es la decisión estrecha de permitir 3→2 en el panel **solo** para líneas con
+   `birthValue() === 0`, que se toma al construir la T2.
+4. ✅ **La revocabilidad del enlace: se construye** (D14).
+5. ✅ **Las superficies de demanda: los textos que ya existen** (D15).
+6. ✅ **Qué preexistentes entran** (`[DECIDIDO owner, 2026-09-03]`): los **tres** de la superficie del
+   post-form —el `PUT` que borra `general`, la escalada 403→404 de la web y el sello que invalida el
+   token del operador— van en la **T0**, porque esta feature construye encima de esa superficie. **La
+   IP de auditoría que sobrevive al art. 17 se queda como ficha**: tiene dos lados (se pierde rastro
+   probatorio) y merece tanda propia.
+
+▶ **Con esto la spec queda APROBADA y el plan de obra es §9.**
 
 ## 8. La revisión adversarial (2026-09-03) — seis lentes, y qué cambió
 
@@ -761,3 +803,67 @@ los guards; que la dirección inversa del guard de ocupación no existía): las 
 5. `markGuestFormCompleted()` **bumpea `updated_at`** en cada guardado completo, invalidando el token
    optimista de cinco puertas del operador.
 6. **`ProductAddon.php` no está en el `CRITICAL_RE`** aunque es donde viven los guards del pivote.
+
+## 9. Plan de obra — cuatro tandas, cada una verde y sin deuda propia
+
+El orden no es de comodidad: **la T0 va primero porque la T3 construye encima de esa superficie**, y
+la T1 antes que la T2 porque el dominio necesita un dato que hoy no se puede introducir (la lección
+de `specs/hora-extra.md` §4.9).
+
+### T0 · La superficie del post-form, saneada (los tres preexistentes + la rotación)
+
+`[DECIDIDO owner, 2026-09-03]`. **No añade nada de la feature**: deja sana la superficie sobre la que
+se va a construir dinero.
+
+1. **`addons`/`general` con semántica de ausencia real**: `array_key_exists` en vez de `?? []`, `null`
+   de verdad hacia `submitGuestForm()`, en **las dos** superficies (web y API). Se corrige además el
+   porqué escrito en `OPTIONAL_BY_DESIGN`, que hoy documenta lo contrario de lo que el código hace.
+2. **La escalada 403 → 410 → 404 en la web**: `->missing(fn () => abort(403))` en las rutas del
+   post-form **y del justificante** (`#335` comparte el defecto).
+3. **`markGuestFormCompleted()` deja de bumpear `updated_at`** cuando nada cambió.
+4. **La rotación del enlace** (§4.6.bis): columna, firma, acción del panel, y `RGPD-06` actualizada.
+
+**Guardas**: `PUT` sin `general` **conserva** / con `general: []` **vacía** (dos casos opuestos) · un
+id inexistente responde **403** en web como ya hace en API · dos guardados idénticos no mueven
+`updated_at` · el enlace viejo da 403 tras rotar y el nuevo abre. **Mutaciones**: volver al `?? []`,
+quitar el `missing()`, sellar siempre, no meter la versión en la firma.
+
+### T1 · El eje y su panel (sin cliente todavía)
+
+Migración (`stage` default `booking` + `postform_cutoff_hours`, **sin reescribir filas existentes**) ·
+`ADDON_PIVOT_COLUMNS` · `$casts` · los **siete** sitios de §4.7·ter · los **siete** guards de §4.3 en
+las **dos** direcciones (incluida la mitad que vive en `TicketType::booted()`) · el cinturón en
+`AddonResolver` · el filtro por `stage` en las **seis** superficies de venta de §4.4 · la guarda de
+censo de consumidores · la insignia de fase.
+
+**Guardas**: el **CONTROL** de que los 29 enganches no mueven nada (oferta, landing, cobro) · alta y
+edición del enganche **conservan** el dato · `sanitizePivotData ⊆ fillForm` (aserción de conjuntos) ·
+un `postform` no aparece en embudo, landing, ficha ni alta manual, y una cesta forjada se rechaza.
+**Mutaciones**: quitar una de las tres listas blancas, quitar el filtro de cada superficie, apagar
+cada guard.
+
+### T2 · El dominio y la concurrencia (sigue sin cliente)
+
+`PostFormAddons` con las **tres escrituras** de §4.5.1, las reglas R0–R5, el **orden de locks**
+`orders → order_items → hijas` (D11), la re-validación bajo lock de §4.5.5 y el token optimista del
+borde 5. Los **dos** verificadores: `--scenario=addons` en `mixed-party:verify-concurrency` y el
+**cruzado** `postform-vs-panel`, que hoy no existe en el repo — **los dos vistos FALLAR antes**.
+
+**Guardas**: los cuatro gestos con `assertBookCloses` **después** de cada uno y aserción **por
+línea** · la puerta del hecho con el enganche cambiado de fase y líneas vendidas delante · el plazo
+en sus dos direcciones · R1 en sus dos direcciones · R2 con el catálogo cambiado en medio.
+**Mutaciones**: escribir movimiento al retirar · no escribirlo al bajar · atar el hecho al principal ·
+gobernar por eje en vez de por hecho · invertir el orden de locks.
+
+### T3 · Las superficies del cliente
+
+**El contrato primero** (`openapi/v1.yaml`: el DTO propio de §4.7·bis, la semántica de ausencia, el
+estado por fila, el código de error nuevo en los dos enums) → API → la página web con su **suelo sin
+JS** → el correo agrupado con voz propia → los textos de demanda de D15.
+
+**Guardas**: contrato estricto (`required == properties`, en orden) · `addons` ausente no toca nada ·
+presupuesto de consultas del `GET` (1 vs 7 complementos) · sin JS el `input number` funciona · la
+instalación sin enganches `postform` no pinta la sección · navegador real con capturas.
+
+▶ **Cada tanda cierra con `VERIFY_CONC=1`** desde la T2 (antes no toca dinero concurrente), y el
+recuento de `SUITE-04` sube al añadir los dos escenarios.
