@@ -17,6 +17,7 @@ use App\Domain\Booking\Contracts\ComplementPlacement;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\GateReservation;
 use App\Domain\Booking\Contracts\GateReservations;
+use App\Domain\Booking\Contracts\GuestFormNotices;
 use App\Domain\Booking\Contracts\OfferedDate;
 use App\Domain\Booking\Contracts\OfferedTime;
 use App\Domain\Booking\Contracts\OperatingCalendar;
@@ -337,9 +338,9 @@ class ModuleContractsTest extends TestCase
                 ];
             }
 
-            public function pendingGuestFormsFor(int $userId): array
+            public function guestFormNoticesFor(int $userId): GuestFormNotices
             {
-                return [new PendingGuestForm(4242, 'Pack cumpleaños')];
+                return new GuestFormNotices([new PendingGuestForm(4242, 'Pack cumpleaños')]);
             }
 
             /**

@@ -3,6 +3,7 @@
 namespace App\Http\Concerns;
 
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Services\PostFormAddons;
 use Illuminate\Http\Request;
 
 /**
@@ -120,5 +121,34 @@ trait AuthorizesGuestForm
         $value = $source[$key];
 
         return is_array($value) ? $value : null;
+    }
+
+    /**
+     * **El testigo optimista que se le pasa al reconciliador de extras, ajustado a NUESTRA propia
+     * escritura** (T3 de `specs/complementos-post-reserva.md`).
+     *
+     * ⚠️⚠️ **Esto arregla un defecto que la suite no podía ver.** El token es `updated_at` de la
+     * reserva, y en esta misma petición `submitGuestForm()` **la escribe** antes de llegar a los
+     * extras: para cuando el reconciliador compara, el valor que el cliente vio al pintar la página
+     * ya no existe. En el navegador eso significaba que **un guardado normal —nombres y extras a la
+     * vez— nunca compraba nada** y devolvía «la reserva ha cambiado mientras tenías esta página
+     * abierta». Lo encontró la sonda de navegador; los casos pasaban en verde porque `updated_at`
+     * tiene **precisión de segundo** y en un test el render y el POST caen en el mismo.
+     *
+     * ▶ La regla: **nuestra propia escritura no es un tercero**. Si lo que trae el cliente coincide
+     * con el estado que la reserva tenía al ENTRAR en la petición, estaba al día, y lo que se
+     * comprueba bajo el lock es el estado de AHORA —que sigue cazando a quien escriba entre medias—.
+     * Si no coincide, su token viaja tal cual y el reconciliador lo rechaza.
+     *
+     * @param  string  $seen  el testigo que mandó el cliente, o `null` si no mandó ninguno
+     * @param  string  $before  el estado de la reserva al empezar la petición
+     */
+    protected function addonsExpectedVersion(?string $seen, string $before, OrderItem $after): ?string
+    {
+        if ($seen === null) {
+            return null;
+        }
+
+        return $seen === $before ? PostFormAddons::versionOf($after) : $seen;
     }
 }

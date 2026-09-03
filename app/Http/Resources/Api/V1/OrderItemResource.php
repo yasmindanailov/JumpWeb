@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\Balance;
 use App\Domain\Booking\Services\OrderBook;
+use App\Domain\Booking\Services\PostFormAddons;
 use App\Domain\Booking\Services\ProductIcon;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Http\Request;
@@ -55,6 +56,14 @@ class OrderItemResource extends JsonResource
         // ocurrir sin que alguien haya añadido un segundo llamante y se haya saltado `within()`.
         $order = $this->order;
         assert($order !== null, OrderItemResource::class.' necesita su Order: usa ->within($order)');
+
+        // ⚠️⚠️ **La relación INVERSA, puesta antes de nada.** Media docena de predicados de aquí
+        // preguntan por el pedido de la línea (`acceptsGuestForm()`, `needsGuestForm()`,
+        // `can_add_extras`…), y sin esto Eloquent lo resuelve con **una consulta por reserva** — en
+        // la lista paginada del cliente, una por tarjeta. El pedido ya está aquí, lo trae
+        // `within()`: es gratis. Medido con CONTROL en `PostFormDemandSurfacesTest`, era un N+1
+        // PREEXISTENTE que ningún presupuesto vigilaba.
+        $item->setRelation('order', $order);
 
         // El libro de ESTA reserva (T3·1 de `specs/desglose-libro.md`): nacimiento, gestiones, cobro
         // y devoluciones ATRIBUIDOS, y su propio saldo — la puerta y la hoja de sala leen el mismo.
@@ -133,6 +142,14 @@ class OrderItemResource extends JsonResource
             // entero se pintaba con dos dibujos. Va a la COLA: `ApiContractTest` compara `required`
             // con las propiedades EN ORDEN.
             'icon' => $item->ticketType?->iconKey() ?? ProductIcon::DEFAULT_OTHER,
+            // ⚠️ **Si esta reserva admite EXTRAS ahora** (D15): es lo que permite al cajón nombrarlos
+            // en el botón que lleva al post-form. Va a la COLA: `ApiContractTest` compara `required`
+            // con las propiedades EN ORDEN.
+            //
+            // ⚠️⚠️ El dato es de la RESERVA, no del catálogo: `false` con la fiesta pasada, con los
+            // plazos vencidos y en la instalación que no configura ninguno —el caso por defecto—.
+            // Publicar «el catálogo tiene extras» habría invitado a comprar donde ya no se puede.
+            'can_add_extras' => app(PostFormAddons::class)->offerableFor($item)->isNotEmpty(),
         ];
     }
 }

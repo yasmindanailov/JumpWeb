@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Services;
 
+use App\Domain\Booking\Contracts\PostFormAddonView;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\ProductAddon;
@@ -9,6 +10,8 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
+use App\Domain\Platform\Services\Money;
+use App\Notifications\PostFormAddonsChanged;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -120,6 +123,17 @@ final class PostFormAddons
                     $changes->moves,
                 ),
             ]);
+
+            // D8 · UN correo por ventana, con las tres líneas dentro, y **fuera de la transacción**:
+            // por `notifyCustomer` —la puerta que ya comprueba que el titular tiene correo, porque
+            // una cuenta anonimizada (`RGPD-01`) no lo tiene— y no por `$user->notify()`.
+            //
+            // ⚠️ Va bajo `changed()`, igual que el suplemento mixto: este formulario se edita
+            // durante días y un guardado que no mueve nada no puede mandar correo.
+            $order->notifyCustomer(new PostFormAddonsChanged(
+                $principal->fresh(['ticketType', 'slot', 'order']) ?? $principal,
+                $changes,
+            ));
         }
 
         return $changes;
@@ -160,6 +174,107 @@ final class PostFormAddons
     }
 
     /**
+     * Los extras de venta posterior de esta reserva **tal y como se le enseñan al cliente**: los
+     * abiertos con su cantidad, y los CERRADOS con su motivo (§4.7·bis).
+     *
+     * ⚠️ Enseña también los cerrados a propósito. Ocultarlos sería el modo de fallo de esta feature:
+     * quien pidió tapas hace dos semanas tiene que seguir viéndolas —con su «ya no se puede
+     * cambiar»— o creería que se han perdido. Y quien compró la tarta al reservar tiene que ver por
+     * qué ese botón no está.
+     *
+     * @return list<PostFormAddonView>
+     */
+    public function viewFor(OrderItem $principal): array
+    {
+        $type = $principal->ticketType;
+        if ($type === null || ! $principal->acceptsGuestForm()) {
+            return [];
+        }
+
+        // ⚠️ La fiesta pasada CIERRA las filas, NO las esconde. Es la regla de las tres puertas de
+        // §4.6 aplicada a la LECTURA: manda la más estricta, y «la más estricta» es un cierre. Con un
+        // `return []` aquí, quien encargó dos cubos de refrescos abría su formulario al día siguiente
+        // y **no encontraba ni rastro de ellos** —los mismos extras que se le van a cobrar en el
+        // parque—, y la rama `readonly` de la plantilla, escrita justo para eso, era código MUERTO.
+        //
+        // ⚠️⚠️ **Y el cierre NO necesita término propio para «ya se celebró»**: el plazo se mide
+        // contra el INICIO de la franja, así que una fiesta terminada venció su corte por
+        // construcción —para cualquier valor, `0` incluido—. Se escribió con un `|| $finished`
+        // delante y **ninguna mutación podía distinguirlo**: era una condición que no decide nada.
+        // *Un cinturón que ningún caso puede separar de su hebilla no es un cinturón, es ruido.*
+
+        $order = $principal->order;
+        $order?->loadMissing('adjustments');
+
+        $lines = [];
+        foreach ($principal->children as $child) {
+            if (! $child->isCancelled()) {
+                $lines[(int) $child->ticket_type_id] = $child;
+            }
+        }
+
+        $rows = [];
+        foreach (AddonResolver::forStage($type->addons, ProductAddon::STAGE_POSTFORM) as $addon) {
+            $id = (int) $addon->getKey();
+            $line = $lines[$id] ?? null;
+            $bornWithOrder = $line !== null && $order !== null
+                && LineFacts::forItem($order, $line)->birthValue() !== 0;
+
+            // R2 en la lectura: si ya hay línea manda SU precio, que es el comunicado. Sin línea,
+            // el del catálogo de hoy — y si ese día no tiene tarifa, el extra no se puede ofrecer.
+            $unit = $line !== null ? (int) $line->unit_price : $this->rates->priceCents($addon, Carbon::today());
+            if ($unit === null) {
+                continue;
+            }
+
+            $withinWindow = self::isWithinWindow($principal, $addon->pivot);
+            $quantity = $line !== null ? (int) $line->quantity : 0;
+
+            $rows[] = new PostFormAddonView(
+                productId: $id,
+                productName: (string) $addon->tr('name'),
+                unitPriceCents: $unit,
+                // El importe se formatea con el servicio del dominio y no a mano: el
+                // `number_format(...).' €'` quemado del embudo tiene ficha propia en `DEUDA.md`, y
+                // una superficie nueva no puede nacer heredándolo.
+                note: Money::format($unit, $principal->order?->currency ?? 'EUR'),
+                quantity: $quantity,
+                maxQuantity: (int) ($addon->pivot->max_qty ?? 0),
+                chargedCents: $quantity * $unit,
+                closed: $bornWithOrder || ! $withinWindow,
+                closedReason: match (true) {
+                    $bornWithOrder => PostFormAddonView::REASON_SOLD_AT_BOOKING,
+                    ! $withinWindow => PostFormAddonView::REASON_CUTOFF,
+                    default => null,
+                },
+                closesAt: self::deadlineFor($principal, $addon->pivot)?->toIso8601String(),
+            );
+        }
+
+        return $rows;
+    }
+
+    /**
+     * El instante EXACTO en que vence el plazo de este complemento, en la zona del parque. `null` si
+     * la reserva no tiene franja o el enganche no declara plazo (configuración que el cinturón ya
+     * descarta antes de llegar aquí).
+     */
+    public static function deadlineFor(OrderItem $principal, ProductAddon $pivot): ?Carbon
+    {
+        $hours = $pivot->postformCutoffHours();
+        $slot = $principal->slot;
+
+        if ($hours === null || $slot === null || $slot->date === null || $slot->start_time === null) {
+            return null;
+        }
+
+        return Carbon::parse(
+            $slot->date->format('Y-m-d').' '.$slot->start_time,
+            DisplayTime::timezone(),
+        )->subHours($hours);
+    }
+
+    /**
      * ¿Estamos DENTRO del plazo de este complemento para esta reserva? (§4.6.)
      *
      * ⚠️⚠️ **Se mide con `DisplayTime::now()` contra la hora de PARED de la franja**, y no con el
@@ -173,21 +288,14 @@ final class PostFormAddons
      */
     public static function isWithinWindow(OrderItem $principal, ProductAddon $pivot): bool
     {
-        $hours = $pivot->postformCutoffHours();
-        $slot = $principal->slot;
-
-        if ($hours === null || $slot === null || $slot->date === null || $slot->start_time === null) {
-            return false;
-        }
+        // Un solo sitio calcula el instante del corte ({@see deadlineFor}), y aquí solo se compara:
+        // dos aritméticas del mismo plazo acabarían dando respuestas distintas a la pantalla y al
+        // guardado, que es exactamente la clase de divergencia que esta feature no puede permitirse.
+        $deadline = self::deadlineFor($principal, $pivot);
 
         // Hora de PARED del parque, que es como se guardan las franjas (lo demuestra que
         // `SlotOffer::passesIntradayFloor` las compare contra `DisplayTime::now()`).
-        $start = Carbon::parse(
-            $slot->date->format('Y-m-d').' '.$slot->start_time,
-            DisplayTime::timezone(),
-        );
-
-        return DisplayTime::now()->lt($start->subHours($hours));
+        return $deadline !== null && DisplayTime::now()->lt($deadline);
     }
 
     /**
@@ -296,10 +404,21 @@ final class PostFormAddons
         // RETIRAR: `markCancelled()` y NINGÚN hecho. El libro emite su propio movimiento de
         // cancelación desde `chargedSubtotalCents()`, que no mira `cancelled_at`; escribir además un
         // `recordEdit` restaría DOS veces y rompería `I1` e `I3`.
+        //
+        // ⚠️⚠️ **Pero el delta que se DEVUELVE sí lleva la retirada, y no es lo mismo.** «Qué hecho
+        // se escribe» y «cuánto cambia el pedido» son dos preguntas distintas, y devolver 0 aquí
+        // confundía la segunda con la primera: el correo del cliente decía **«se suman 27,00 €»**
+        // en un guardado que subía el cubo (+12), retiraba las tapas (−8) y añadía la tarta (+15),
+        // o sea 19,00 — y el audit registraba el mismo número inflado. Lo cazó la aritmética de un
+        // caso, no una revisión.
         if ($target === 0) {
+            // Se mide ANTES de cancelar a propósito: hoy `chargedSubtotalCents()` no mira
+            // `cancelled_at` —de eso vive la retirada—, pero leerlo después ataría este importe a
+            // esa propiedad, y el día que alguien la cambie el delta caería a 0 sin fallar nada.
+            $charged = $current?->chargedSubtotalCents() ?? 0;
             $current?->markCancelled($actor);
 
-            return 0;
+            return -$charged;
         }
 
         $free = AddonResolver::freeUnits($addon->pivot, $target);

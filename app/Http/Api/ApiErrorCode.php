@@ -153,6 +153,13 @@ enum ApiErrorCode: string
     case GuestFormClosed = 'guest_form_closed';
 
     /**
+     * El formulario cambió mientras el cliente lo tenía abierto (`#413`, T3). No es un permiso que
+     * falte ni un recurso que no exista: es que el ENVÍO habla de un estado que ya no es el actual, y
+     * aplicarlo pisaría lo que el operador acabara de hacer.
+     */
+    case GuestFormStale = 'guest_form_stale';
+
+    /**
      * 502 — el cobro no se pudo abrir contra la pasarela. En un primer intento el pedido se suelta
      * en el acto (no retiene aforo sin nadie que lo vaya a pagar) y el cliente puede volver a
      * empezar; en un reintento el pedido sigue vivo y se puede volver a intentar.

@@ -18,6 +18,7 @@ const ACCOUNT = {
         guest_sub: 'Inicia sesión y guarda tus reservas.',
         form_pending_one: 'Tienes pendiente un formulario para :product',
         form_pending_many: 'Tienes :count formularios pendientes',
+        extras_invite: 'Añade extras a tu fiesta de :product',
         upcoming_count: ':count reservas próximas',
     },
 };
@@ -88,6 +89,39 @@ describe('la inicial del avatar', () => {
 describe('el aviso de formularios pendientes', () => {
     test('sin pendientes no hay aviso', () => {
         assert.equal(alertOf(ctx(), ACCOUNT, URLS), null);
+    });
+
+    /**
+     * ⚠️⚠️ D15 · **sin deuda pero con extras abiertos, el hueco INVITA en vez de callarse.** Es el
+     * caso normal tras rellenar las fichas, y hasta hoy la tarjeta se quedaba muda justo ahí.
+     */
+    test('sin pendientes pero con extras abiertos, invita', () => {
+        const alert = alertOf(
+            ctx({ extras_invite: { product_name: 'Cumpleaños Jump', url: '/reserva/7/datos-invitados' } }),
+            ACCOUNT,
+            URLS,
+        );
+
+        assert.deepEqual(alert, {
+            text: 'Añade extras a tu fiesta de Cumpleaños Jump',
+            href: '/reserva/7/datos-invitados',
+            zone: null,
+        });
+    });
+
+    /** Y la DEUDA gana: un formulario a medias importa más que vender un cubo de refrescos. */
+    test('con un formulario pendiente, la deuda gana a la invitación', () => {
+        const alert = alertOf(
+            ctx({
+                pending_forms_count: 1,
+                pending_forms: [{ product_name: 'Cumpleaños Jump', url: '/reserva/7/datos-invitados' }],
+                extras_invite: { product_name: 'Cumpleaños Jump', url: '/reserva/7/datos-invitados' },
+            }),
+            ACCOUNT,
+            URLS,
+        );
+
+        assert.equal(alert.text, 'Tienes pendiente un formulario para Cumpleaños Jump');
     });
 
     /** Con UNO lleva al formulario, y `zone: null` significa «deja navegar»: no es del cajón. */

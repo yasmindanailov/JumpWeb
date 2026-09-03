@@ -5139,6 +5139,31 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .gf-savebar .btn { width: 100%; justify-content: center; }
 .gf-savebar__help { font-size: 12.5px; line-height: 1.5; color: var(--fg-mute); text-align: center; margin: 0; }
 
+/* ─── EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, `#413` T3) ───────────────
+   La tercera zona del post-form y la única que mueve dinero. ⚠️ El control base es un
+   `input[type=number]`: esta página es de mejora progresiva declarada, así que un stepper a botones
+   dejaría sin comprar a quien no tiene JavaScript. El JS lo decora; el importe lo recalcula el
+   servidor. Todo con tokens: `RawColourIsNotATokenTest` y `ShapeScaleTest` barren este fichero. */
+.gf-extras__lead { font-size: var(--fs-13); line-height: 1.55; color: var(--fg-mute); margin: 0 0 var(--sp-14); }
+.gf-extras__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
+.gf-extra { display: flex; align-items: center; gap: var(--sp-14); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--bg-card); }
+.gf-extra__id { display: flex; flex-direction: column; gap: var(--sp-2); flex: 1 1 auto; min-width: 0; }
+.gf-extra__name { font-weight: 600; font-size: var(--fs-15); }
+.gf-extra__price { font-size: var(--fs-12); color: var(--fg-mute); }
+.gf-extra__field { flex: 0 0 auto; }
+.gf-extra__field input { width: 88px; min-height: var(--tap-min); text-align: center; font-size: var(--fs-15); font-weight: 600; }
+.gf-extra__qty { flex: 0 0 auto; font-weight: 600; font-size: var(--fs-15); color: var(--fg-mute); }
+.gf-extra__why { flex: 1 1 100%; font-size: var(--fs-12); color: var(--fg-mute); }
+.gf-extra.is-closed { border-style: dashed; }
+.gf-extras__total { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-14); margin: var(--sp-16) 0 0; padding-top: var(--sp-12); border-top: 1px dashed var(--line-strong); font-size: var(--fs-15); }
+.gf-extras__where { font-size: var(--fs-12); color: var(--fg-mute); margin: var(--sp-6) 0 0; }
+.gf-extras__warn { margin: var(--sp-16) auto 0; max-width: 700px; }
+
+/* El stepper que el JS monta encima del `input[type=number]`. Sin JS no existe y no hace falta. */
+.gf-extra__step { display: inline-flex; align-items: center; gap: var(--sp-6); }
+.gf-extra__step button { min-width: var(--tap-min); min-height: var(--tap-min); border: 1px solid var(--line-strong); border-radius: var(--r-btn); background: var(--bg); color: var(--fg); font-size: var(--fs-15); font-weight: 700; cursor: pointer; line-height: 1; }
+.gf-extra__step button:disabled { opacity: 0.4; cursor: default; }
+
 /* toast del flash de guardado */
 .gf-toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--fg); color: var(--bg); padding: 13px 22px; border-radius: var(--r-btn); font-size: var(--fs-13); font-weight: 600; display: inline-flex; align-items: center; gap: var(--sp-10); box-shadow: var(--shadow-float); opacity: 0; pointer-events: none; transition: opacity var(--dur-entra) var(--ease-sale), transform var(--dur-entra) var(--ease-sale); z-index: 200; }
 .gf-toast .tcheck { width: 20px; height: 20px; border-radius: 50%; background: var(--zone-1); color: var(--on-brand); display: grid; place-items: center; flex-shrink: 0; }

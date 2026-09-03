@@ -124,9 +124,11 @@ class ProductAddon extends Pivot
      *     feature no toca aforo, y esa es la mitad de su coste.
      *  6. Un requisito de OTRA fase nunca estaría en la selección de ésta → el dependiente quedaría
      *     **invisible sin fallar**.
-     *  7. Los PORTADORES de fiesta mixta llevan su marca en el ajuste, no en el producto: una línea
-     *     del mismo producto creada por el cliente sería indistinguible en la ficha e invisible para
-     *     el reconciliador mixto.
+     *  7. *(Los PORTADORES de fiesta mixta se comprueban en el guard de escritura y NO aquí: son
+     *     `is_sellable = false` e `is_active = false` por construcción, así que la relación `addons()`
+     *     ya los deja fuera de toda lectura — y meter aquí su consulta costaba **dos consultas por
+     *     complemento en el camino de lectura**, medido por el presupuesto del `GET` del post-form.
+     *     Un cinturón que no puede alcanzar nada no vale su coste.)*
      *  8. `max_qty` es OBLIGATORIO (D3): el enlace del post-form se reenvía, así que la deuda máxima
      *     que un tercero puede crear tiene que estar declarada por el parque — y el tope de 20 que
      *     parece existir vive en `AddonResolver::viewModel()` como pista de UI, no como autoridad.
@@ -149,9 +151,6 @@ class ProductAddon extends Pivot
         }
         if ($addon !== null && $addon->occupiesAfterParent()) {
             return 'occupies_after_parent';
-        }
-        if ($addon !== null && self::isMixedPartyCarrier((int) $addon->getKey())) {
-            return 'mixed_party_carrier';
         }
         if ($pivot->max_qty === null || (int) $pivot->max_qty < 1) {
             return 'missing_max_qty';
@@ -198,7 +197,17 @@ class ProductAddon extends Pivot
                 return;
             }
 
-            $problem = self::postFormProblem($pivot, TicketType::query()->find($pivot->addon_id));
+            $addon = TicketType::query()->find($pivot->addon_id);
+            $problem = self::postFormProblem($pivot, $addon);
+
+            // Regla 7, que vive SOLO en la escritura: un portador de fiesta mixta enganchado como
+            // venta posterior dejaría que el cliente creara una línea de ese mismo producto SIN la
+            // marca del ajuste — indistinguible en la ficha e invisible para el reconciliador mixto.
+            // No está en el cinturón porque allí es inalcanzable (los portadores no son vendibles) y
+            // costaba dos consultas por complemento en cada lectura del formulario.
+            if ($problem === null && $addon !== null && self::isMixedPartyCarrier((int) $addon->getKey())) {
+                $problem = 'mixed_party_carrier';
+            }
 
             if ($problem !== null) {
                 throw new \InvalidArgumentException(

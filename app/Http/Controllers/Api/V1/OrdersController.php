@@ -124,7 +124,9 @@ class OrdersController extends Controller
         $user = $request->user();
 
         $order = Order::query()
-            ->with(['items.ticketType', 'items.slot', 'items.children.ticketType', 'adjustments', 'payments.refunds'])
+            // `ticketType.addons` es del post-form (`can_add_extras`): sin él, una consulta por
+            // reserva para preguntar por los enganches del pack.
+            ->with(['items.ticketType.addons', 'items.slot', 'items.children.ticketType', 'adjustments', 'payments.refunds'])
             ->where('user_id', $user->getAuthIdentifier())
             ->where('code', $code)
             ->first();

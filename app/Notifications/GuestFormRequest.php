@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\EmailProductCard;
+use App\Domain\Booking\Services\PostFormAddons;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -39,12 +40,25 @@ class GuestFormRequest extends Notification implements ShouldQueue
         $product = (string) ($this->reservation->ticketType?->tr('name') ?? '');
         $code = (string) ($this->reservation->order?->code ?? '');
 
-        return (new MailMessage)
+        $message = (new MailMessage)
             ->subject(__('emails.guest_form.subject', ['product' => $product, 'code' => $code]))
             ->greeting(__('emails.guest_form.greeting'))
             ->line(__('emails.guest_form.intro', ['product' => $product, 'code' => $code]))
             ->line(EmailProductCard::forItem($this->reservation))
-            ->line(__('emails.guest_form.body'))
+            ->line(__('emails.guest_form.body'));
+
+        // D15 · **el único correo que lleva a este formulario tiene que nombrar lo que ahí se puede
+        // pedir**, o la feature se construye entera y no se vende un solo cubo de refrescos. No se
+        // añade un envío nuevo: se añade una frase al que ya sale.
+        //
+        // ⚠️ **Condicionada a que ESTA reserva tenga extras abiertos**, nunca al catálogo: una
+        // instalación sin enganches `postform` —el caso por defecto, y hoy los 29— prometería algo
+        // que no existe, y el cliente buscaría en su formulario una sección que no está.
+        if (app(PostFormAddons::class)->offerableFor($this->reservation)->isNotEmpty()) {
+            $message->line(__('emails.guest_form.extras'));
+        }
+
+        return $message
             ->action(
                 __('emails.guest_form.action'),
                 // Fuente ÚNICA del enlace firmado (compartida con el botón «Copiar enlace» del panel).

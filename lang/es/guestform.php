@@ -38,6 +38,18 @@ return [
     'children_heading' => 'Datos de cada invitado',
     'saved' => 'Formulario guardado. ¡Gracias! Puedes volver a editarlo cuando quieras.',
     'child' => 'Invitado/a :n',
+    // Los EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, `#413`): lo que se
+    // puede añadir DESPUÉS de reservar y se paga en el parque.
+    'extras_heading' => 'Extras',
+    'extras_lead' => 'Puedes añadirlos hasta poco antes de la fiesta. Se pagan en el parque, junto con el resto.',
+    'extras_qty_label' => 'Cuántos quieres de :name',
+    'extras_total' => 'Extras',
+    'extras_where' => 'Estos extras se pagan en el parque el día de la fiesta.',
+    'extras_closed_cutoff' => 'Ya no se puede cambiar',
+    'extras_closed_sold' => 'Lo elegiste al reservar — llámanos para cambiarlo',
+    'extras_blocked' => 'Tus datos se han guardado, pero alguno de los extras no se ha podido cambiar: puede que ya haya pasado su plazo. Llámanos si lo necesitas.',
+    'extras_stale' => 'Tus datos se han guardado, pero los extras no: la reserva ha cambiado mientras tenías esta página abierta. Vuelve a cargarla y revísalos.',
+
     'submit' => 'Guardar',
     'hint' => 'Si aún no los sabes todos, guarda lo que tengas y vuelve más adelante.',
     'back' => 'Volver a mis reservas',

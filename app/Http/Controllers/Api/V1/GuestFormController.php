@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Services\PostFormAddonChanges;
+use App\Domain\Booking\Services\PostFormAddons;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiErrorResponse;
 use App\Http\Concerns\AuthorizesGuestForm;
@@ -78,7 +80,18 @@ class GuestFormController extends Controller
             'guests' => ['sometimes', 'array', 'max:'.self::MAX_GUESTS],
             'guests.*' => ['array'],
             'general' => ['sometimes', 'array'],
+            // Los EXTRAS de venta posterior (T3 de `#413`). Aquí solo la FORMA: qué se ofrece, con
+            // qué tope y hasta cuándo lo decide el dominio bajo el lock (`PAY-12`).
+            'addons' => ['sometimes', 'array', 'max:'.self::MAX_ADDONS],
+            'addons.*.product_id' => ['required', 'integer', 'min:1'],
+            'addons.*.quantity' => ['required', 'integer', 'min:0'],
+            'expected_version' => ['sometimes', 'string', 'max:32'],
         ]);
+
+        // El estado ANTES de nuestra propia escritura ({@see addonsExpectedVersion}): `submitGuestForm()`
+        // mueve `updated_at`, así que comparar el testigo del cliente contra el de después haría
+        // que un `PUT` normal —fichas y extras a la vez— nunca comprara nada.
+        $before = PostFormAddons::versionOf($item);
 
         // ⚠️⚠️ La ausencia de una clave significa «no la toques», NUNCA «vacíala». El `?? []` que
         // había aquí hacía que un `PUT` con solo `general` **borrara las fichas de los menores**
@@ -90,7 +103,28 @@ class GuestFormController extends Controller
             $this->guestFormVia($request),
         );
 
-        return new GuestFormResource($item->fresh(['ticketType', 'order', 'slot']));
+        // Los extras van DESPUÉS y en su propia transacción (§4.5.3): un hueco de tarifas o un id que
+        // dejó de ofrecerse no puede tumbar el guardado de los nombres y las alergias, que es la
+        // razón de ser de este formulario. La no-atomicidad es deliberada y se DICE.
+        $desired = $this->submittedGuestFormArray($request, 'addons', $validated);
+        if ($desired !== null) {
+            $fresh = $item->fresh(['ticketType.addons', 'order', 'slot', 'children']);
+            $changes = app(PostFormAddons::class)->reconcile(
+                $fresh,
+                self::desiredQuantities($desired),
+                $this->guestFormVia($request),
+                null,
+                $this->addonsExpectedVersion($validated['expected_version'] ?? null, $before, $fresh),
+            );
+
+            // Un envío hecho con la pantalla vieja no se aplica a medias: se rechaza entero, y con un
+            // 409 —el permiso no ha cambiado, ha cambiado el estado— para que el cliente relea.
+            if ($this->isStale($changes)) {
+                return ApiErrorResponse::make(ApiErrorCode::GuestFormStale, 409);
+            }
+        }
+
+        return new GuestFormResource($item->fresh(['ticketType.addons', 'order', 'slot', 'children']));
     }
 
     /**
@@ -98,6 +132,37 @@ class GuestFormController extends Controller
      * así que esto no es la regla: es lo que impide que un cuerpo desmedido llegue a recorrerse.
      */
     private const MAX_GUESTS = 200;
+
+    /** Lo mismo para los extras: el catálogo de una instalación no tiene cientos de complementos. */
+    private const MAX_ADDONS = 50;
+
+    /**
+     * `[{product_id, quantity}]` → `[productId => quantity]`. Si un id viene repetido gana el ÚLTIMO:
+     * es lo que un formulario HTML produce al re-enviar un campo, y sumar dos valores del mismo
+     * complemento convertiría un cuerpo torpe en una compra que nadie pidió.
+     *
+     * @param  array<mixed>  $rows
+     * @return array<int,int>
+     */
+    private static function desiredQuantities(array $rows): array
+    {
+        $out = [];
+        foreach ($rows as $row) {
+            if (is_array($row) && isset($row['product_id'], $row['quantity'])) {
+                $out[(int) $row['product_id']] = (int) $row['quantity'];
+            }
+        }
+
+        return $out;
+    }
+
+    /** ¿El reconciliador rechazó TODO por testigo obsoleto? (§4.8·5.) */
+    private static function isStale(PostFormAddonChanges $changes): bool
+    {
+        return ! $changes->changed()
+            && $changes->blocked !== []
+            && collect($changes->blocked)->every(fn (array $b): bool => $b['reason'] === 'stale');
+    }
 
     /** Reserva por id, o `null`. Sin `firstOrFail`: el «no existe» lo decide la escalada, no esto. */
     private function resolve(int $reservation): ?OrderItem

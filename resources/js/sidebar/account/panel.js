@@ -69,7 +69,23 @@ export function initialOf(firstName) {
 export function alertOf(context, account, urls = {}) {
     const count = Number(context?.pending_forms_count ?? 0);
 
-    if (count <= 0) return null;
+    // ⚠️⚠️ **D15 · el aviso ya no MUERE al completar las fichas.** Cuando no queda ninguna deuda
+    // pero la reserva todavía admite extras dentro de plazo, este hueco pasa a ser una INVITACIÓN.
+    // Sin esto, la feature entera se construye y no se vende un solo cubo de refrescos: es
+    // exactamente en ese momento —formulario hecho, fiesta por llegar— cuando quedan extras por
+    // elegir, y hasta hoy la tarjeta se quedaba muda.
+    //
+    // ⚠️ **La deuda gana**: si además faltan datos de invitados, eso es lo que se dice. Un texto que
+    // invita a comprar por delante de un formulario a medias cambia el orden de lo que importa.
+    if (count <= 0) {
+        const invite = context?.extras_invite ?? null;
+
+        return invite === null ? null : {
+            text: tp(account, 'sidecart.extras_invite', { product: invite.product_name }),
+            href: invite.url,
+            zone: null,
+        };
+    }
 
     const only = count === 1 ? (context?.pending_forms?.[0] ?? null) : null;
 

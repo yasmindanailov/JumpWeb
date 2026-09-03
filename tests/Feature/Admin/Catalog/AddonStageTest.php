@@ -568,6 +568,12 @@ class AddonStageTest extends TestCase
             'app/Http/Resources/Api/V1/CatalogProductDetailResource.php' => 'serializa lo que el lector ya filtró',
             'app/Http/Resources/Api/V1/QuoteResource.php' => 'serializa lo que el presupuesto ya resolvió',
             'app/Http/Resources/Api/V1/ResolvedAddonsResource.php' => 'serializa lo que la oferta ya resolvió',
+            // Los dos post-forms **no deciden nada de la fase**: precargan `ticketType.addons` para
+            // que `PostFormAddons` no pague una consulta por reserva, y quien filtra —fase y
+            // plazo— es el servicio. Aparecen en el censo por la CADENA del eager-load, y eso es
+            // exactamente lo que este censo existe para hacer: que nadie entre sin pensarlo.
+            'app/Http/Controllers/GuestFormController.php' => 'precarga: filtra `PostFormAddons`',
+            'app/Http/Controllers/Api/V1/GuestFormController.php' => 'precarga: filtra `PostFormAddons`',
 
             // Herramienta de desarrollo, fuera del producto.
             'app/Console/Commands/VerifyPurchaseConcurrency.php' => 'verificador de concurrencia (dev)',

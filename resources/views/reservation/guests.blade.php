@@ -203,6 +203,10 @@
 
             <form method="POST" action="{{ $formAction }}" class="gf-form" id="gf-form">
                 @csrf
+                {{-- El TESTIGO de la reserva: si el parque la movió mientras el cliente tenía la
+                     pantalla abierta, el servidor rechaza el envío entero en vez de dejar que pise
+                     su trabajo (§4.8·5). --}}
+                <input type="hidden" name="expected_version" value="{{ $version }}">
 
                 {{-- Aviso: privacidad (editable) o solo-lectura (evento ya celebrado). Componentes existentes. --}}
                 @if ($readonly)
@@ -229,6 +233,74 @@
                                 </label>
                             @endforeach
                         </div>
+                    </section>
+                @endif
+
+                {{-- ───── 00.bis · EXTRAS de venta posterior (`specs/complementos-post-reserva.md`) ─────
+
+                     La tercera zona del formulario, y la única que mueve DINERO: lo que se añade aquí
+                     sube el total de la reserva y **se paga en el parque** (`DECISIONES #244`).
+
+                     ⚠️⚠️ **El suelo es un `<input type="number">`, no un stepper.** Esta página es de
+                     mejora progresiva declarada —nace `no-js` y el JS la enciende al final—, así que
+                     un +/− hecho a botones dejaría a quien no tiene JavaScript **sin poder comprar**.
+                     El JS lo decora; el importe lo recalcula siempre el servidor (`PAY-12`).
+
+                     ⚠️ Se pintan también los CERRADOS, con su motivo: quien pidió tapas hace dos
+                     semanas tiene que seguir viéndolas, o creería que se han perdido. --}}
+                @if (count($addons))
+                    <section class="gf-group gf-extras" id="gf-extras">
+                        <div class="gf-group__head">
+                            <h2 class="gf-group__title">{{ __('guestform.extras_heading') }}</h2>
+                        </div>
+                        <p class="gf-extras__lead">{{ __('guestform.extras_lead') }}</p>
+
+                        <ul class="gf-extras__list">
+                            @foreach ($addons as $i => $addon)
+                                <li class="gf-extra {{ $addon->closed ? 'is-closed' : '' }}">
+                                    <div class="gf-extra__id">
+                                        <span class="gf-extra__name">{{ $addon->productName }}</span>
+                                        <span class="gf-extra__price">{{ $addon->note }}</span>
+                                    </div>
+
+                                    {{-- El id viaja SIEMPRE, también en los cerrados: si no, un envío
+                                         normal llegaría sin ellos y el servidor no sabría que el
+                                         cliente no los estaba tocando. --}}
+                                    <input type="hidden" name="addons[{{ $i }}][product_id]" value="{{ $addon->productId }}">
+
+                                    @if ($addon->closed || $readonly)
+                                        <input type="hidden" name="addons[{{ $i }}][quantity]" value="{{ $addon->quantity }}">
+                                        <span class="gf-extra__qty" aria-live="polite">{{ $addon->quantity }}</span>
+                                        <span class="gf-extra__why">
+                                            {{ $addon->closedReason === \App\Domain\Booking\Contracts\PostFormAddonView::REASON_SOLD_AT_BOOKING
+                                                ? __('guestform.extras_closed_sold')
+                                                : __('guestform.extras_closed_cutoff') }}
+                                        </span>
+                                    @else
+                                        <label class="gf-extra__field" for="x-{{ $addon->productId }}">
+                                            <span class="sr-only">{{ __('guestform.extras_qty_label', ['name' => $addon->productName]) }}</span>
+                                            <input
+                                                id="x-{{ $addon->productId }}"
+                                                type="number"
+                                                name="addons[{{ $i }}][quantity]"
+                                                value="{{ $addon->quantity }}"
+                                                min="0"
+                                                max="{{ $addon->maxQuantity }}"
+                                                step="1"
+                                                inputmode="numeric"
+                                                data-extra-price="{{ $addon->unitPriceCents }}"
+                                            >
+                                        </label>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+
+                        <p class="gf-extras__total">
+                            <span>{{ __('guestform.extras_total') }}</span>
+                            <strong id="gf-extras-total" data-extras-total>{{ $extrasTotal }}</strong>
+                        </p>
+                        <p class="gf-extras__where">{{ __('guestform.extras_where') }}</p>
                     </section>
                 @endif
 
@@ -357,6 +429,18 @@
         <span>{{ __('guestform.toast_saved') }}</span>
     </div>
 
+    {{-- ⚠️⚠️ Cuando algo de los EXTRAS no se pudo aplicar, **se dice y no se calla**: los datos del
+         formulario SÍ se guardaron (van por otra transacción, §4.5.3) y el aviso lo separa. Callarlo
+         sería que quien creyó pedir tapas se entere en la puerta del parque. Va como aviso PERSISTENTE
+         y no como toast: es una noticia, no una confirmación. --}}
+    @if (in_array(session('status'), ['guest-form-extras-blocked', 'guest-form-stale'], true))
+        <div class="guestform__readonly gf-extras__warn" role="alert">
+            {{ session('status') === 'guest-form-stale'
+                ? __('guestform.extras_stale')
+                : __('guestform.extras_blocked') }}
+        </div>
+    @endif
+
     {{-- Acordeón (JS plano; mejora progresiva: sin JS las fichas salen abiertas y el form funciona). --}}
     <script>
         (function () {
@@ -453,6 +537,70 @@
             if (toast && toast.classList.contains('is-on')) {
                 setTimeout(function () { toast.classList.remove('is-on'); }, 2600);
             }
+
+            // ── EXTRAS: el stepper y el total en vivo (`#413` T3) ──────────────────────────────
+            // ⚠️⚠️ Esto es DECORADO, no el suelo. El control real es el `input[type=number]` que ya
+            // está en el HTML: sin JavaScript se teclea la cantidad y se guarda igual. Y el importe
+            // que vale es el que recalcula el SERVIDOR (`PAY-12`); esto solo lo anticipa.
+            var extrasTotal = document.querySelector('[data-extras-total]');
+            var extraInputs = [].slice.call(document.querySelectorAll('[data-extra-price]'));
+
+            function moneyFromPage(cents) {
+                // El formato lo pinta el servidor en el HTML; aquí solo se sustituye el número, así
+                // que se toma la forma del propio texto en vez de inventar una convención nueva.
+                return (cents / 100).toFixed(2).replace('.', ',') + ' €';
+            }
+
+            function refreshExtrasTotal() {
+                if (!extrasTotal) { return; }
+                var cents = 0;
+                extraInputs.forEach(function (input) {
+                    var qty = parseInt(input.value, 10);
+                    if (!isNaN(qty) && qty > 0) { cents += qty * parseInt(input.getAttribute('data-extra-price'), 10); }
+                });
+                extrasTotal.textContent = moneyFromPage(cents);
+            }
+
+            extraInputs.forEach(function (input) {
+                var min = parseInt(input.getAttribute('min'), 10) || 0;
+                var max = parseInt(input.getAttribute('max'), 10);
+                var step = document.createElement('span');
+                step.className = 'gf-extra__step';
+
+                function button(label, delta) {
+                    var b = document.createElement('button');
+                    b.type = 'button';           // dentro de un <form>, un <button> sin type ENVÍA
+                    b.textContent = label;
+                    b.setAttribute('aria-hidden', 'true');   // el control accesible es el input
+                    b.tabIndex = -1;
+                    b.addEventListener('click', function () {
+                        var next = (parseInt(input.value, 10) || 0) + delta;
+                        if (next < min) { next = min; }
+                        if (!isNaN(max) && next > max) { next = max; }
+                        input.value = String(next);
+                        refreshExtrasTotal();
+                        sync();
+                    });
+                    return b;
+                }
+
+                var minus = button('−', -1);
+                var plus = button('+', 1);
+
+                function sync() {
+                    var qty = parseInt(input.value, 10) || 0;
+                    minus.disabled = qty <= min;
+                    plus.disabled = !isNaN(max) && qty >= max;
+                }
+
+                input.addEventListener('input', function () { refreshExtrasTotal(); sync(); });
+                input.parentNode.insertBefore(step, input);
+                step.appendChild(minus);
+                step.appendChild(input);
+                step.appendChild(plus);
+                sync();
+            });
+            refreshExtrasTotal();
 
             // Acordeón ya cableado → activar modo JS (las fichas no-abiertas se colapsan). La clase `js`
             // se marca AQUÍ, AL FINAL: si algo de arriba hubiera fallado, el documento se queda en

@@ -4,6 +4,9 @@ namespace Tests\Feature\Site;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\Price;
+use App\Domain\Booking\Models\ProductAddon;
+use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
@@ -297,7 +300,7 @@ class CustomerAccountContextTest extends TestCase
     /**
      * ⚠️⚠️ **UN PACK SIN FRANJA SIGUE AVISANDO, y hasta hoy no lo aseveraba nadie.**
      *
-     * La conducta estaba escrita en el docblock de `CustomerReservationsReader::pendingGuestFormsFor()`
+     * La conducta estaba escrita en el docblock de `CustomerReservationsReader::guestFormNoticesFor()`
      * —«un pack sin franja (`isFinishedInPractice` → false) sigue avisando»— y comprobada en el
      * dominio (`OrderItem::isFinishedInPractice()` sale por `false` en cuanto no hay `slot`), pero
      * **ninguna prueba la fijaba**.
@@ -501,5 +504,74 @@ class CustomerAccountContextTest extends TestCase
             ->assertOk()
             ->assertSee('cta-pair__acct-icon', false)
             ->assertDontSee('cta-pair__acct-dot', false);
+    }
+    // ─── D15 · la INVITACIÓN a extras, que es otra cosa que la deuda ──────────────────────────
+
+    /**
+     * ⚠️⚠️ **El aviso de esta tarjeta MORÍA en cuanto el cliente completaba las fichas** —cuelga de
+     * `needsGuestForm()`—, que es exactamente cuando le quedan extras por elegir. La invitación es un
+     * hecho APARTE, y por eso el contador de pendientes no la cuenta: decir «tienes 1 formulario
+     * pendiente» de uno completo sería falso.
+     */
+    public function test_a_completed_form_still_invites_to_add_extras(): void
+    {
+        $user = User::factory()->create();
+        $pack = $this->pack();
+        $item = $this->reservation($user, $pack, now()->addDays(10)->format('Y-m-d'), 2, [
+            ['name' => 'Ana'], ['name' => 'Luis'],
+        ]);
+        $this->attachPostFormAddon($pack);
+
+        $ctx = $this->ctx($user);
+
+        $this->assertSame(0, $ctx['pendingFormsCount'], 'las fichas están completas: no es una deuda');
+        $this->assertNotNull($ctx['extrasInvite'], 'pero todavía puede añadir extras');
+        $this->assertSame('Cumpleaños Jump', $ctx['extrasInvite']['productName']);
+        $this->assertStringContainsString((string) $item->id, $ctx['extrasInvite']['url']);
+    }
+
+    /** Y sin enganches de venta posterior —el caso por defecto— no se invita a nada. */
+    public function test_without_postform_addons_there_is_no_invitation(): void
+    {
+        $user = User::factory()->create();
+        $this->reservation($user, $this->pack(), now()->addDays(10)->format('Y-m-d'));
+
+        $this->assertNull($this->ctx($user)['extrasInvite']);
+    }
+
+    /** Ni cuando su plazo ya venció: la invitación es «puede añadir», no «tiene extras». */
+    public function test_an_expired_cutoff_does_not_invite(): void
+    {
+        $user = User::factory()->create();
+        $pack = $this->pack();
+        $item = $this->reservation($user, $pack, now()->addDay()->format('Y-m-d'));
+        $this->attachPostFormAddon($pack, cutoff: 48);
+
+        $this->assertNull(
+            $this->ctx($user)['extrasInvite'],
+            'la fiesta es mañana y el corte era de 48 h: ya no se puede añadir'
+        );
+    }
+
+    /** Un complemento de venta posterior sano enganchado al pack. */
+    private function attachPostFormAddon(TicketType $pack, int $cutoff = 48): void
+    {
+        $addon = TicketType::create([
+            'name' => ['es' => 'Cubo de refrescos'], 'type' => TicketType::TYPE_ADDON,
+            'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 40,
+        ]);
+        $rate = RateType::firstOrCreate(
+            ['key' => RateType::KEY_NORMAL],
+            ['label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0, 'is_active' => true],
+        );
+        Price::create([
+            'priceable_type' => $addon->getMorphClass(), 'priceable_id' => $addon->id,
+            'rate_type_id' => $rate->id, 'amount_cents' => 1200, 'currency' => 'EUR',
+        ]);
+        $pack->configurableAddons()->attach($addon->id, [
+            'position' => 1, 'quantity_mode' => ProductAddon::MODE_FIXED,
+            'stage' => ProductAddon::STAGE_POSTFORM,
+            'postform_cutoff_hours' => $cutoff, 'max_qty' => 10,
+        ]);
     }
 }

@@ -22780,6 +22780,52 @@ del gate, cuando su propia regla dice que la copia es ÚNICA. Restauradas las tr
 y reducido a una. ▶ *El gate mide el número, no la prosa que lo rodea: un `sed` por línea acierta el
 número y borra la frase de al lado sin que nada falle.* A partir de aquí se edita por CONTENIDO.
 
+### 12 · ✅ T3 EJECUTADA (spec §9.4) — y el navegador encontró lo que 4.200 casos no
+
+Las superficies del cliente: contrato → API → **la página con su suelo sin JS** → el **correo
+agrupado** → las tres superficies de **DEMANDA** de D15 → el **limitador por RESERVA** de `SEC-06`.
+**Suite 4.228 · 951 casos de `node --test` · 15/15 mutaciones · sonda de navegador 13/13.**
+
+▶ ❗❗❗ **El testigo optimista se invalidaba a sí mismo, y ningún caso podía verlo.** El token es
+`updated_at` de la reserva y `submitGuestForm()` **lo escribe en la misma petición**, antes de llegar
+a los extras: cuando el reconciliador comparaba, el valor que el cliente vio ya no existía. En el
+navegador, **un guardado normal —nombres y extras a la vez— no compraba nada** y respondía *«la
+reserva ha cambiado mientras tenías esta página abierta»*. En la suite salía VERDE porque
+`updated_at` tiene **precisión de segundo** y en un test el render y el POST caen en el mismo.
+*Un reloj de un segundo esconde un defecto que el usuario ve siempre.* La regla que lo arregla:
+**nuestra propia escritura no es un tercero** (`AuthorizesGuestForm::addonsExpectedVersion()`), y su
+caso separa render y POST con `travel(3)->seconds()` — visto rojo con el arreglo retirado.
+
+▶ **Y el presupuesto de consultas destapó un N+1 PREEXISTENTE**: `OrderItemResource` no ponía la
+relación inversa, así que media docena de predicados que preguntan por el pedido de la línea hacían
+**una consulta por tarjeta** en la lista del cliente. La guarda salía roja **también con el control**,
+y *cuando un presupuesto acusa también al control, el defecto está debajo del sujeto*.
+
+▶ **Tres cosas del diseño cambiaron al construirlas**: la fiesta pasada **CIERRA** los extras y no los
+esconde (con `return []` quien encargó dos cubos no encontraba rastro de ellos al día siguiente, y la
+rama `readonly` de la plantilla era código muerto); el término `|| $finished` de ese cierre **se
+retiró porque ninguna mutación podía distinguirlo** —el plazo se mide contra el INICIO de la franja,
+así que una fiesta terminada venció su corte por construcción—; y la **retirada informa delta
+negativo** aunque no escriba hecho, porque «qué hecho se escribe» y «cuánto cambia el pedido» son dos
+preguntas distintas (el correo decía «se suman 27,00 €» donde eran 19,00).
+
+▶ **`SEC-06` cumplido**: entra `RateLimiter::for('guest-form')`, **12/min por RESERVA**, sumado al de
+IP — con solo aquél, treinta peticiones por minuto **desde cada IP** caben sobre la misma reserva, y
+con ellas treinta correos al titular, que es la única señal de que alguien con su enlace está
+encargando en su nombre. El **tope por PEDIDO** de esa misma fila **ya existe por construcción** y se
+declara: `Σ (max_qty × precio)` de los enganches `postform`, obligatorio por D3 y con cinturón.
+
+▶ **Cuatro trampas de guarda pagadas**, todas de la misma familia —*acota al elemento antes de creerte
+un test verde*—: `type="number"` aseverado sobre la página entera pasa en verde con el control
+convertido en `hidden` (los campos de edad también son numéricos); un caso que manda el cuerpo a mano
+no ve el MARCADO que hace falta (el campo oculto del extra cerrado, que **es el mecanismo**: los
+`<input disabled>` no se envían); dos reglas son invisibles en la página y solo se ven en la API; y un
+presupuesto que crece con PEDIDOS no mide un coste por RESERVA.
+
+▶ **Queda el OJO del owner** y una elección menor anotada sin cambiarla: un extra cerrado **que nunca
+se pidió** se pinta igual, con su «ya no se puede cambiar» y su 0.
+
+
 ## #434 · 2026-09-03 · `[DECIDIDO owner]` La tanda C de la auditoría: lo roto se arregla midiendo antes y después — y el informe tenía una causa mal diagnosticada
 
 **Contexto.** El owner pidió seguir con los puntos de la auditoría (`specs/auditoria-diseno.md`) y

@@ -206,7 +206,9 @@ Route::name('api.v1.')->group(function (): void {
         ->name('reservations.guest-form.show');
     Route::put('/reservations/{reservation}/guest-form', [GuestFormController::class, 'update'])
         ->whereNumber('reservation')
-        ->middleware(['throttle:30,1', 'no-store'])
+        // El mismo par que la web: por IP contra el barrido y **por RESERVA** desde que aquí se
+        // compran extras (`SEC-06`, D12). Ver el comentario de `routes/web.php`.
+        ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
         ->name('reservations.guest-form.update');
 
     // ── Zona autenticada ──────────────────────────────────────────────────────────────────────

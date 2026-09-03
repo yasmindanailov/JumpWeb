@@ -67,6 +67,7 @@ return [
         'greeting' => '¡Hola!',
         'intro' => '¡Tu reserva «:product» (nº :code) está confirmada! Para dejarlo todo listo y que el día sea perfecto, cuéntanos quién viene: completa los datos de cada invitado.',
         'body' => 'Puedes rellenarlo ahora o más adelante, y editarlo cuando quieras hasta el día del evento.',
+        'extras' => 'Y si quieres, ahí mismo puedes añadir extras para la fiesta: bebidas, algo de picar… Se pagan en el parque el día del evento.',
         'action' => 'Rellenar el formulario de reserva',
         'outro' => 'También puedes hacerlo desde «Mis reservas». ¡Gracias!',
     ],
@@ -180,6 +181,19 @@ return [
         'where_to_pay' => 'Se abona en el parque el día de la fiesta, junto con el resto pendiente.',
         'where_discounted' => 'Se descuenta de lo que pagarás en el parque el día de la fiesta; si ya lo tenías todo pagado, se te devuelve allí ese día.',
         'editable' => 'Puedes seguir editando los datos de los invitados hasta el día del evento; si cambian las edades, este importe se ajusta solo.',
+    ],
+
+    'postform_addons' => [
+        'subject' => 'Tus extras para la fiesta (reserva nº :code)',
+        'greeting' => 'Hola,',
+        'intro' => 'Hemos anotado los extras de tu reserva :code. Esto es lo que cambia:',
+        'added' => 'Añadido: :name × :qty.',
+        'updated' => ':name: de :old a :new.',
+        'removed' => 'Retirado: :name.',
+        'delta_up' => 'Se suman :amount a lo que abonarás en el parque.',
+        'delta_down' => 'Se restan :amount de lo que abonarás en el parque.',
+        'where_to_pay' => 'Los extras se pagan en el parque el día de la fiesta, junto con el resto pendiente.',
+        'editable' => 'Puedes cambiarlos desde el mismo formulario hasta poco antes de la fiesta. Si no has sido tú, llámanos.',
     ],
 
     'order_item_modified' => [

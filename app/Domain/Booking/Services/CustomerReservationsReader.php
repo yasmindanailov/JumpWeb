@@ -3,6 +3,7 @@
 namespace App\Domain\Booking\Services;
 
 use App\Domain\Booking\Contracts\CustomerReservations;
+use App\Domain\Booking\Contracts\GuestFormNotices;
 use App\Domain\Booking\Contracts\PendingGuestForm;
 use App\Domain\Booking\Contracts\ReservationScope;
 use App\Domain\Booking\Contracts\UpcomingReservation;
@@ -84,9 +85,12 @@ class CustomerReservationsReader implements CustomerReservations
      * MISMO ítem — no sobre el pedido—, para que un pedido con un pack viejo y otro futuro siga
      * entrando y el corte fino lo siga dando PHP.
      *
-     * @return list<PendingGuestForm>
+     * ▶ **Y de la misma pasada sale la INVITACIÓN a los extras** (D15): la reserva que todavía
+     * admite complementos de venta posterior dentro de plazo. Va aparte de los pendientes porque
+     * es otra cosa —una invitación, no una deuda—, y en la misma consulta porque barrer dos veces
+     * los pedidos del titular en cada página con sesión no lo paga.
      */
-    public function pendingGuestFormsFor(int $userId): array
+    public function guestFormNoticesFor(int $userId): GuestFormNotices
     {
         // Mismo colchón de un día y por el mismo motivo que `upcomingItems()`: la fecha de franja es
         // naive `Y-m-d` y el corte exacto lo hace PHP.
@@ -99,10 +103,14 @@ class CustomerReservationsReader implements CustomerReservations
                 ->whereHas('ticketType', fn ($t) => $t->where('type', TicketType::TYPE_PACK))
                 ->where(fn ($i) => $i->whereNull('slot_id')
                     ->orWhereHas('slot', fn ($s) => $s->whereDate('date', '>=', $floor))))
-            ->with(['items.ticketType', 'items.slot'])
+            // `ticketType.addons` es de la invitación a extras: sin precargarlo, una consulta por
+            // reserva para preguntar por los enganches del pack.
+            ->with(['items.ticketType.addons', 'items.slot'])
             ->get();
 
         $pending = [];
+        $extras = null;
+        $addons = app(PostFormAddons::class);
 
         // Individualizado POR RESERVA (#217): un aviso por cada pack pendiente cuya franja aún no ha
         // finalizado (no avisamos por un cumpleaños ya celebrado). El aviso apunta a ESA reserva
@@ -117,9 +125,29 @@ class CustomerReservationsReader implements CustomerReservations
                     productName: $item->displayProductName(),
                 );
             }
+
+            // ⚠️⚠️ La invitación NO se pregunta sobre los pendientes: se pregunta sobre TODAS las
+            // reservas del titular, porque el caso que D15 existe para cubrir es justamente el
+            // contrario — las fichas COMPLETAS, el aviso muerto y los extras todavía abiertos.
+            foreach ($order->guestFormItems() as $item) {
+                // ⚠️⚠️ **La relación INVERSA se pone a mano**: `offerableFor()` pregunta por
+                // `acceptsGuestForm()`, que mira el estado del PEDIDO — y sin esto Eloquent lo
+                // resuelve con una consulta **por reserva**, hidratando el pedido otra vez. Lo cazó
+                // la guarda de hidratación de este mismo fichero (2 pedidos donde hay 1), que se
+                // escribió para el suelo temporal y acabó vigilando esto. Lo paga cada página con
+                // sesión, así que no es un detalle de estilo.
+                $item->setRelation('order', $order);
+
+                if ($extras === null && $addons->offerableFor($item)->isNotEmpty()) {
+                    $extras = new PendingGuestForm(
+                        reservationId: (int) $item->id,
+                        productName: $item->displayProductName(),
+                    );
+                }
+            }
         }
 
-        return $pending;
+        return new GuestFormNotices($pending, $extras);
     }
 
     /**
@@ -133,7 +161,7 @@ class CustomerReservationsReader implements CustomerReservations
      *
      * ⚠️ **El `leftJoin` a `slots` no es una optimización: es lo que permite ORDENAR en SQL.** Sin él
      * habría que traer el histórico entero y ordenarlo en PHP para poder paginarlo — el coste que
-     * `pendingGuestFormsFor()` acaba de dejar de pagar. `left` y no `join` porque una reserva **sin
+     * `guestFormNoticesFor()` acaba de dejar de pagar. `left` y no `join` porque una reserva **sin
      * franja** tiene que seguir apareciendo.
      *
      * @return LengthAwarePaginator<int, OrderItem>

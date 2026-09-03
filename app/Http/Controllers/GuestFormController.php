@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Booking\Contracts\PostFormAddonView;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\MixedPartySettings;
 use App\Domain\Booking\Services\MixedPartySurcharge;
+use App\Domain\Booking\Services\PostFormAddons;
+use App\Domain\Platform\Services\Money;
 use App\Http\Concerns\AuthorizesGuestForm;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,6 +45,7 @@ class GuestFormController extends Controller
         $ageMix = app(GuestAgeMixReader::class)->for($reservation);
         $ageSurcharge = app(MixedPartySurcharge::class)->written($reservation);
         $guestRegimes = app(GuestAgeMixReader::class)->guestRegimes($reservation);
+        $addons = app(PostFormAddons::class)->viewFor($reservation);
 
         return view('reservation.guests', [
             'order' => $reservation->order,
@@ -90,6 +94,17 @@ class GuestFormController extends Controller
             // Si se entró por enlace firmado (sin sesión), el POST también debe ir firmado para
             // re-autorizar; si es el dueño autenticado, basta la ruta normal (la sesión autoriza).
             // El POST hereda la MISMA caducidad que el enlace del email (A7), de ESTA reserva.
+            // Los EXTRAS de venta posterior (T3 de `#413`): la lista completa —abiertos y cerrados—
+            // y su total. ⚠️ El total es **el de los extras**, NO el saldo del pedido: esta página se
+            // abre con un enlace que se reenvía, y el saldo es dinero del titular que hoy no enseña.
+            // ⚠️ Se compone UNA vez: cada llamada tarifica los complementos, y el presupuesto de
+            // consultas de esta superficie está medido y con guarda.
+            'addons' => $addons,
+            'extrasTotal' => Money::format(
+                array_sum(array_map(fn (PostFormAddonView $a): int => $a->chargedCents, $addons)),
+                $reservation->order?->currency ?? 'EUR',
+            ),
+            'version' => PostFormAddons::versionOf($reservation),
             // ⚠️ La firma la compone el DOMINIO (`guestFormSignedStoreUrl`), no esta capa: desde D14
             // toda URL firmada del post-form lleva además la VERSIÓN del enlace, y una compuesta a
             // mano aquí sería la que se queda sin ella.
@@ -112,6 +127,11 @@ class GuestFormController extends Controller
                 ->with('status', 'guest-form-readonly');
         }
 
+        // El estado de la reserva ANTES de nuestra propia escritura: el testigo de los extras se
+        // compara contra él, porque `submitGuestForm()` mueve `updated_at` en esta misma petición
+        // ({@see addonsExpectedVersion}).
+        $before = PostFormAddons::versionOf($reservation);
+
         // Qué se persiste de un formulario con datos de MENORES lo decide el dominio, no esta capa
         // (Fase 3 · paso 5): saneado contra el esquema, mezcla que preserva los datos de la fase de
         // reserva, sello de completado y rastro de auditoría, en una sola operación. La API hace
@@ -125,9 +145,56 @@ class GuestFormController extends Controller
             $this->guestFormVia($request),
         );
 
+        // Los extras van DESPUÉS y en su propia transacción (§4.5.3): un id que dejó de ofrecerse no
+        // puede tumbar el guardado de los nombres y las alergias, que es la razón de ser de esta
+        // página. La no-atomicidad es deliberada, y por eso el desenlace la DICE.
+        $status = 'guest-form-saved';
+        $desired = $this->submittedGuestFormArray($request, 'addons');
+        if ($desired !== null) {
+            $fresh = $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children']);
+            $changes = app(PostFormAddons::class)->reconcile(
+                $fresh,
+                self::desiredQuantities($desired),
+                $this->guestFormVia($request),
+                null,
+                $this->addonsExpectedVersion(
+                    is_string($request->input('expected_version')) ? $request->input('expected_version') : null,
+                    $before,
+                    $fresh,
+                ),
+            );
+
+            if ($changes->blocked !== []) {
+                // Se le dice, no se calla: quien creyó pedir tapas tiene que enterarse aquí y no en
+                // la puerta del parque. Sus datos SÍ se guardaron, y el aviso lo separa.
+                $status = collect($changes->blocked)->every(fn (array $b): bool => $b['reason'] === 'stale')
+                    ? 'guest-form-stale'
+                    : 'guest-form-extras-blocked';
+            }
+        }
+
         return redirect()
             ->to($this->backUrl($request, $reservation))
-            ->with('status', 'guest-form-saved');
+            ->with('status', $status);
+    }
+
+    /**
+     * `[{product_id, quantity}]` → `[productId => quantity]`. Con un id repetido gana el ÚLTIMO:
+     * sumar dos valores del mismo extra convertiría un envío torpe en una compra que nadie pidió.
+     *
+     * @param  array<mixed>  $rows
+     * @return array<int,int>
+     */
+    private static function desiredQuantities(array $rows): array
+    {
+        $out = [];
+        foreach ($rows as $row) {
+            if (is_array($row) && isset($row['product_id'], $row['quantity'])) {
+                $out[(int) $row['product_id']] = (int) $row['quantity'];
+            }
+        }
+
+        return $out;
     }
 
     /**

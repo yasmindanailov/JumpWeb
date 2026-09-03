@@ -2605,6 +2605,7 @@ components:
                 - too_many_pending_orders
                 - order_not_retryable
                 - guest_form_closed
+                - guest_form_stale
                 - payment_unavailable
                 # Fase 6 · waiver — aceptar el texto (409): no se firma aquí, o el texto cambió.
                 - waiver_not_internal
@@ -3326,7 +3327,7 @@ components:
       description: |
         El contexto de cuenta del titular: saludo, próxima reserva, cuántas quedan y qué formularios
         de invitados están pendientes.
-      required: [first_name, email_verified, upcoming_count, next_reservation, pending_forms, pending_forms_count, waiver, terms_pending, terms_updated, phone_missing]
+      required: [first_name, email_verified, upcoming_count, next_reservation, pending_forms, pending_forms_count, waiver, terms_pending, terms_updated, phone_missing, extras_invite]
       additionalProperties: false
       properties:
         first_name:
@@ -3460,6 +3461,41 @@ components:
             titular, sencillamente no está — y de eso depende que la pantalla de pagar pinte un CAMPO
             y no una casilla. Es lo que permite que el alta con Google no lo pregunte: se pide donde
             hace falta, y solo a quien no lo ha dado.
+        extras_invite:
+          type: object
+          nullable: true
+          description: |
+            **La reserva a la que invitar a añadir EXTRAS**, o `null` si no hay ninguna
+            (`specs/complementos-post-reserva.md` §4.7·quinquies, D15).
+
+            ⚠️ **No es `pending_forms` y no se mezcla con ella**: aquélla es una DEUDA («te faltan
+            los datos de los invitados») y ésta una INVITACIÓN («todavía puedes añadir algo»). En la
+            misma lista, «tienes 2 formularios pendientes» contaría como pendiente uno completo.
+
+            ⚠️⚠️ Existe porque el aviso de formulario **muere en cuanto las fichas están completas**,
+            que es justo cuando quedan extras por elegir. **Una sola reserva y no una lista**: el
+            aviso nombra un producto, y con varias la más cercana es la que antes cierra su plazo.
+
+            ⚠️⚠️ **Va escrito INLINE y es una COPIA VIGILADA de `PendingGuestForm`, no un `$ref`.**
+            En OpenAPI 3.0 un `$ref` no admite `nullable` a su lado, y la forma canónica —`allOf:
+            [$ref]` con `nullable: true`— **no funciona con el validador**: medido aquí, con ella un
+            contexto sin invitación falla con «The data (null) must match the type: object». Es el
+            hallazgo que `DECISIONES #27` documentó para la zona del catálogo y que
+            `AccountContext.next_reservation` ya pagó. Que las dos definiciones no diverjan lo vigila
+            `ApiContractTest`.
+          required: [product_name, url]
+          additionalProperties: false
+          properties:
+            product_name:
+              type: string
+              description: El nombre del producto de esa reserva, para nombrarlo en el aviso.
+            url:
+              type: string
+              format: uri
+              description: |
+                La ruta WEB del post-form de esa reserva, **sin firmar** — la misma que
+                `pending_forms[].url`, con las mismas razones y la misma prohibición: aquí NUNCA
+                viaja la URL firmada.
 
     PendingGuestForm:
       type: object
@@ -3907,6 +3943,7 @@ components:
         - shows_deposit_note
         - quantity_label
         - icon
+        - can_add_extras
       additionalProperties: false
       properties:
         id:
@@ -4029,6 +4066,23 @@ components:
             ⚠️ Es una CLAVE de un set curado, no una URL ni un SVG: el cliente la mapea a su propio
             dibujo. Así cada instalación puede llevar su set sin que el contrato cambie, y la paridad
             de dibujos entre superficies sigue siendo comprobable.
+        can_add_extras:
+          type: boolean
+          description: |
+            **Si esta reserva admite EXTRAS ahora mismo** en su post-form: complementos de venta
+            posterior (`stage: postform`) con configuración sana y **dentro de su plazo**
+            (`specs/complementos-post-reserva.md` §4.6).
+
+            ⚠️ Se publica para que el cliente pueda NOMBRARLOS donde invita a abrir el formulario. El
+            rótulo de ese botón decía «Ver o editar el formulario de reserva», que no insinúa que ahí
+            se compre — y el aviso de formulario pendiente **muere en cuanto las fichas están
+            completas**, que es justo cuando quedan extras por elegir. Medido: sin este dato, la
+            feature puede construirse entera y no venderse un solo cubo de refrescos.
+
+            ⚠️⚠️ **No es «el catálogo tiene extras»**: es «este cliente todavía podría añadir algo».
+            `false` cuando la fiesta ya pasó, cuando el pedido no está pagado, cuando todos los
+            plazos vencieron y en la instalación que no configura ninguno — que es el caso por
+            defecto.
     OrderItemAddon:
       type: object
       description: |
@@ -4327,6 +4381,8 @@ components:
         - guests
         - general
         - save_url
+        - addons
+        - version
       additionalProperties: false
       properties:
         reservation_id:
@@ -4401,6 +4457,23 @@ components:
             **El canje**: la URL de guardar, ya firmada y con la misma caducidad que el enlace del
             correo. Quien entra con una firma no puede construírsela, así que recibirla aquí es lo
             que le permite completar el formulario sin tener cuenta.
+        addons:
+          type: array
+          description: |
+            Los EXTRAS que se pueden añadir después de reservar (cubo de refrescos, tapas…), con lo
+            que el cliente ya tiene de cada uno. Lista **vacía** cuando la instalación no ha
+            configurado ninguno, que es el caso por defecto.
+
+            Se pagan **en el parque**: añadir uno sube el Total del pedido y su saldo, y no se cobra
+            nada online (`DECISIONES #244`).
+          items:
+            $ref: '#/components/schemas/PostFormAddon'
+        version:
+          type: string
+          description: |
+            El TESTIGO de la reserva en el momento de leerla. Hay que devolverlo en `expected_version`
+            al guardar: si el parque movió algo entre medias, el servidor responde 409 en vez de
+            dejar que un envío con la pantalla vieja pise su trabajo.
 
     GuestFormField:
       type: object
@@ -4450,6 +4523,24 @@ components:
             type: string
           description: |
             Respuestas de los campos generales. Ausente = se conservan; `{}` = se vacían.
+        addons:
+          type: array
+          description: |
+            El estado DESEADO de los extras de venta posterior: cuántas unidades quieres de cada uno.
+            Una cantidad `0` significa «este ya no lo quiero». **Ausente = no se toca ninguno**, con
+            la misma regla que las otras dos claves.
+
+            ⚠️ Solo gobierna los complementos **ofrecidos y dentro de su plazo**: lo que esté fuera de
+            plazo se conserva aunque no venga en el cuerpo — que es lo que hace inofensivo un envío
+            hecho con esos campos deshabilitados en la pantalla.
+          items:
+            $ref: '#/components/schemas/AddonQuantity'
+        expected_version:
+          type: string
+          description: |
+            El `version` que traía el `GET`. Si el parque movió la reserva entre medias, el servidor
+            responde **409 `guest_form_stale`** y no escribe nada, en vez de dejar que un envío hecho
+            con la pantalla vieja pise el trabajo del operador.
 
     PaymentStatus:
       type: object
@@ -5205,6 +5296,76 @@ components:
             El elegido de cada grupo excluyente. Un grupo que no mandes usa su elegido por defecto.
           items:
             $ref: '#/components/schemas/AddonChoice'
+
+    PostFormAddon:
+      type: object
+      description: |
+        Un complemento de **venta POSTERIOR** ofrecido en el formulario de una reserva
+        (`specs/complementos-post-reserva.md`): lo que el cliente puede añadir DESPUÉS de reservar, y
+        que se paga **en el parque**.
+
+        ⚠️ **No es `ResolvedAddon`, y no por gusto.** Aquél publica el precio del CATÁLOGO de hoy, y
+        aquí manda el precio de la LÍNEA: si el parque sube el cubo de refrescos de 12 a 14 €, quien
+        ya tiene dos sigue viéndolos a 12 —es lo que se le comunicó— y el libro dice lo mismo.
+        Reutilizarlo habría dado dos pantallas con dos importes y ningún fallo. Además `ResolvedAddon`
+        arrastra `selection` y `line`, que son de la CESTA: post-reserva no hay ni una cosa ni la otra.
+      required:
+        - product_id
+        - product_name
+        - unit_price_cents
+        - note
+        - quantity
+        - max_quantity
+        - charged_cents
+        - closed
+        - closed_reason
+        - closes_at
+      additionalProperties: false
+      properties:
+        product_id:
+          type: integer
+          format: int64
+        product_name:
+          type: string
+        unit_price_cents:
+          type: integer
+          description: |
+            El precio unitario que se aplicará. **El de la LÍNEA** si ya hay unidades compradas —lo
+            que se le comunicó al cliente—, y el del catálogo de hoy si aún no hay ninguna.
+        note:
+          type: string
+          description: La línea de precio ya compuesta y traducida. Viaja hecha, como en el embudo.
+        quantity:
+          type: integer
+          description: Lo que el cliente tiene ahora mismo de este complemento. `0` = ninguno.
+        max_quantity:
+          type: integer
+          description: |
+            El tope de este enganche. **Es obligatorio declararlo** en un complemento de venta
+            posterior: el enlace del formulario viaja por correo y se reenvía, así que la deuda máxima
+            que alguien puede crear la decide el parque y no una constante del código.
+        charged_cents:
+          type: integer
+          description: Lo que suman las unidades actuales (`quantity × unit_price_cents`).
+        closed:
+          type: boolean
+          description: |
+            `true` cuando su PLAZO ya venció: entonces no se puede añadir **ni quitar**. ⚠️ El estado
+            es **por complemento**, no por formulario: con «tapas 48 h» y «cubo 2 h» sobre la misma
+            fiesta, a 24 h uno está cerrado y el otro abierto.
+        closed_reason:
+          type: string
+          nullable: true
+          enum: [cutoff, sold_at_booking, null]
+          description: |
+            Por qué no se puede tocar. `cutoff` = venció su plazo. `sold_at_booking` = esas unidades
+            **se compraron al reservar**, así que son del parque: quitarlas devolvería dinero ya
+            cobrado, y eso se gestiona en las instalaciones.
+        closes_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Cuándo vence su plazo, para poder decírselo al cliente antes de que pase.
 
     AddonQuantity:
       type: object

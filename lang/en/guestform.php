@@ -30,6 +30,18 @@ return [
     'children_heading' => 'Each guest’s details',
     'saved' => 'Form saved. Thank you! You can edit it again anytime.',
     'child' => 'Guest :n',
+    // Los EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, `#413`): lo que se
+    // puede añadir DESPUÉS de reservar y se paga en el parque.
+    'extras_heading' => 'Extras',
+    'extras_lead' => 'You can add these until shortly before the party. You pay for them at the park, with everything else.',
+    'extras_qty_label' => 'How many :name do you want',
+    'extras_total' => 'Extras',
+    'extras_where' => 'These extras are paid at the park on the day of the party.',
+    'extras_closed_cutoff' => 'No longer changeable',
+    'extras_closed_sold' => 'You chose this when booking — call us to change it',
+    'extras_blocked' => 'Your details were saved, but one of the extras could not be changed: its deadline may have passed. Call us if you need to.',
+    'extras_stale' => 'Your details were saved, but the extras were not: the booking changed while you had this page open. Reload it and check them.',
+
     'submit' => 'Save',
     'hint' => "If you don't know them all yet, save what you have and come back later.",
     'back' => 'Back to my bookings',

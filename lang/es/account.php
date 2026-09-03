@@ -20,6 +20,9 @@ return [
         // públicas para no pintarse nunca. Con ellas se fue `panel.js::sublineOf()` y sus casos.
         'form_pending_one' => 'Tienes pendiente un formulario para :product',
         'form_pending_many' => 'Tienes :count formularios pendientes',
+        // D15 · la INVITACIÓN, que no es una deuda: sin ella este aviso muere en cuanto el
+        // cliente completa las fichas, que es justo cuando le quedan extras por elegir.
+        'extras_invite' => 'Añade extras a tu fiesta de :product',
         'guest_hello' => 'Hola, saltador/a',
         'guest_sub' => 'Inicia sesión y guarda tus reservas.',
         'upcoming_count' => ':count reservas próximas',
@@ -416,6 +419,9 @@ return [
         'retry_hint' => 'Mantenemos tu reserva unos minutos más por si quieres completar el pago.',
         'guest_form_pending' => 'Completa el formulario de reserva',
         'guest_form_done' => 'Ver o editar el formulario de reserva',
+        // El MISMO botón cuando esa reserva todavía admite extras: el rótulo de arriba no insinúa
+        // que ahí se compre, y sin decirlo la feature no se vende.
+        'guest_form_extras' => 'Añade extras o edita el formulario',
         'guest_form_past' => 'Ver el formulario de reserva',
         // Reserva CANCELADA: el botón sigue visible pero desactivado (no clicable) — el post-form ya no aplica.
         'guest_form_cancelled' => 'Formulario de reserva · cancelada',

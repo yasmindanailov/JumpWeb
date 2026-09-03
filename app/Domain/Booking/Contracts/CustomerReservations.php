@@ -52,12 +52,14 @@ interface CustomerReservations
     public function hasUpcomingFor(int $userId): bool;
 
     /**
-     * Post-forms de invitados (#217) pendientes: uno por cada pack pagado cuya franja aún
-     * no ha finalizado. Un pack sin franja sigue pendiente.
+     * Lo que hay que decirle al titular sobre sus post-forms: los PENDIENTES —uno por cada pack
+     * pagado cuya franja aún no ha finalizado; un pack sin franja sigue pendiente— y, aparte, la
+     * reserva a la que invitarle a añadir EXTRAS (D15 de `specs/complementos-post-reserva.md`).
      *
-     * @return list<PendingGuestForm>
+     * ⚠️ **Los dos en una llamada porque salen de una consulta.** Y separados en el resultado porque
+     * son cosas distintas: una deuda y una invitación ({@see GuestFormNotices}).
      */
-    public function pendingGuestFormsFor(int $userId): array;
+    public function guestFormNoticesFor(int $userId): GuestFormNotices;
 
     /**
      * **Una PÁGINA del historial de reservas del cliente**, ya ordenada para presentación

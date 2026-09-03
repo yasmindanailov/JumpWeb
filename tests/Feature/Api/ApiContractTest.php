@@ -124,7 +124,11 @@ class ApiContractTest extends TestCase
         // una reserva real, con un 200 por respuesta. *Un campo opcional cuya ausencia destruye no
         // es un campo opcional.* Hoy la ausencia se decide con `array_key_exists` en
         // `AuthorizesGuestForm::submittedGuestFormArray()` y el dominio recibe `null`.
-        'GuestFormRequest' => ['guests', 'general'],
+        // ▶ `addons` sigue la MISMA regla (T3 de `#413`): ausente = «no toques los extras». Y
+        // `expected_version` es opcional porque el testigo es una DEFENSA que el cliente elige usar:
+        // exigirlo rompería a quien guarda sin haber leído antes, y su ausencia no destruye nada —
+        // solo renuncia a que el servidor le avise de que el parque movió algo entre medias.
+        'GuestFormRequest' => ['guests', 'general', 'addons', 'expected_version'],
     ];
 
     /** @var array<string, mixed>|null */
@@ -327,6 +331,41 @@ class ApiContractTest extends TestCase
             $component['required'],
             $inline['required'] ?? null,
             '`AccountContext.next_reservation` ha divergido de `UpcomingReservation` en sus campos obligatorios'
+        );
+    }
+
+    /**
+     * ⚠️ **Y la invitación a extras del contexto de cuenta, por lo MISMO** (D15 de
+     * `specs/complementos-post-reserva.md`).
+     *
+     * `AccountContext.extras_invite` es anulable y tiene exactamente la forma de un elemento de
+     * `pending_forms`. Se probó primero con `allOf: [$ref] + nullable` y **falló igual que las otras
+     * dos veces**: medido, un contexto sin invitación da «The data (null) must match the type:
+     * object». Objeto entero escrito, con su `nullable`, y esta guarda como precio.
+     */
+    public function test_the_inlined_extras_invite_says_the_same_as_the_component(): void
+    {
+        $schemas = $this->contract()['components']['schemas'] ?? [];
+        $component = $schemas['PendingGuestForm'] ?? null;
+
+        $this->assertIsArray($component, 'falta el componente `PendingGuestForm`');
+
+        $inline = $schemas['AccountContext']['properties']['extras_invite'] ?? null;
+
+        $this->assertIsArray($inline, '`AccountContext` ya no declara la invitación a extras inline');
+        $this->assertTrue(
+            $inline['nullable'] ?? false,
+            'la invitación tiene que ser anulable: no tener ninguna es el caso normal'
+        );
+        $this->assertSame(
+            array_keys($component['properties']),
+            array_keys($inline['properties'] ?? []),
+            '`AccountContext.extras_invite` ha divergido de `PendingGuestForm`: ya no tienen los mismos campos'
+        );
+        $this->assertSame(
+            $component['required'],
+            $inline['required'] ?? null,
+            '`AccountContext.extras_invite` ha divergido de `PendingGuestForm` en sus campos obligatorios'
         );
     }
 

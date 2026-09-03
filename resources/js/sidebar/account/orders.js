@@ -58,8 +58,16 @@ export function guestFormOf(order, item, account) {
         return { state: 'past', label: t(account, 'orders.guest_form_past'), url: item.guest_form_url };
     }
 
-    return item.needs_guest_form
-        ? { state: 'pending', label: t(account, 'orders.guest_form_pending'), url: item.guest_form_url }
+    if (item.needs_guest_form) {
+        return { state: 'pending', label: t(account, 'orders.guest_form_pending'), url: item.guest_form_url };
+    }
+
+    // ⚠️ **Con el formulario hecho, el rótulo NOMBRA los extras si los hay** (D15): «Ver o editar el
+    // formulario de reserva» no insinúa que ahí se compre, y ése es el estado en el que se queda
+    // quien ya rellenó las fichas. `can_add_extras` lo decide el SERVIDOR —plazo incluido—, nunca
+    // «el catálogo tiene extras»: en una instalación sin enganches el rótulo no cambia.
+    return item.can_add_extras === true
+        ? { state: 'extras', label: t(account, 'orders.guest_form_extras'), url: item.guest_form_url }
         : { state: 'done', label: t(account, 'orders.guest_form_done'), url: item.guest_form_url };
 }
 

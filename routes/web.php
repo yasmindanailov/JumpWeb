@@ -195,8 +195,13 @@ Route::get('/reserva/{reservation}/datos-invitados', [GuestFormController::class
     ->middleware('no-store')
     ->missing(fn () => abort(403))
     ->name('reservation.guests');
+// ⚠️ **DOS limitadores y no uno** (`SEC-06`, D12 de `specs/complementos-post-reserva.md`): el de
+// siempre —por IP, contra el barrido— y `guest-form`, que limita **por RESERVA**. Desde que aquí se
+// compran extras este formulario mueve dinero, y su enlace viaja por correo y se reenvía: sin el
+// segundo, treinta peticiones por minuto **por cada IP** caben sobre la misma reserva, con sus
+// treinta correos al titular — que es la única señal de que alguien está encargando en su nombre.
 Route::post('/reserva/{reservation}/datos-invitados', [GuestFormController::class, 'store'])
-    ->middleware(['throttle:30,1', 'no-store'])
+    ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
     ->missing(fn () => abort(403))
     ->name('reservation.guests.store');
 

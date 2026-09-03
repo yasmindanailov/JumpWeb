@@ -981,6 +981,88 @@ de lo que mide. `SUITE-04` declara los dos.
 - ⚠️ **Un rótulo con backticks dentro de comillas dobles lo EJECUTA bash**: el arnés informaba de una
   mutación sin nombre. El veredicto era bueno; lo que mentía era el informe.
 
+### 9.4 · ✅ T3 EJECUTADA (2026-09-03, `DECISIONES #413`)
+
+**Suite 4.228 ✓** (26.648 aserciones) · **951 casos de `node --test` ✓** · Pint ✓ ·
+**`scripts/mutar-postform-t3.sh` 15/15** · los dos verificadores de concurrencia en verde ·
+**sonda de navegador 13/13** con capturas (`/root/e2e/pf-t3-capturas`).
+
+**Lo construido**: el contrato (`PostFormAddon`, la semántica de ausencia, `guest_form_stale` en los
+dos enums, `can_add_extras` y `extras_invite`) → la API → **la página con su suelo sin JS** → el
+**correo agrupado** con voz propia (`PostFormAddonsChanged`) → las **tres superficies de demanda** de
+D15 → el **limitador por RESERVA** que `SEC-06` pedía.
+
+#### 9.4.1 · Los DOS defectos que solo vio el navegador
+
+❗❗❗ **El testigo optimista se invalidaba a sí mismo, y ningún caso podía verlo.** El token es
+`updated_at` de la reserva, y `submitGuestForm()` **lo escribe en la misma petición**, antes de llegar
+a los extras: para cuando el reconciliador compara, el valor que el cliente vio al pintar la página ya
+no existe. En el navegador eso significaba que **un guardado normal —nombres y extras a la vez— nunca
+compraba nada**, y respondía *«la reserva ha cambiado mientras tenías esta página abierta»*.
+
+▶ En la suite pasaba **en verde**, y no por descuido: `updated_at` tiene **precisión de segundo**, así
+que en un test el render y el POST caen en el mismo. *Un reloj de un segundo puede esconder un defecto
+que el usuario ve siempre.* El caso que lo fija separa las dos cosas con `travel(3)->seconds()` —la
+misma familia que la mutación del reloj de la T2— y se vio **rojo con el arreglo retirado**.
+
+▶ La regla que lo resuelve, en `AuthorizesGuestForm::addonsExpectedVersion()`: **nuestra propia
+escritura no es un tercero**. Si lo que trae el cliente coincide con el estado que la reserva tenía al
+ENTRAR en la petición, estaba al día, y bajo el lock se comprueba el estado de AHORA —que sigue
+cazando a quien escriba entre medias—. Si no coincide, su token viaja tal cual y se rechaza.
+
+⚠️ **El segundo lo destapó el presupuesto de consultas**: `OrderItemResource` no ponía la relación
+INVERSA, así que media docena de predicados que preguntan por el pedido de la línea
+(`acceptsGuestForm()`, `needsGuestForm()`, `can_add_extras`…) hacían **una consulta por tarjeta** en la
+lista paginada del cliente. Es PREEXISTENTE: la guarda salía roja **también con el control** —el campo
+nuevo devuelto a secas—, y *cuando un presupuesto acusa también al control, el defecto está debajo del
+sujeto*. Hoy la pone `toArray()` antes de nada, y lo mismo hace `CustomerReservationsReader`.
+
+#### 9.4.2 · Lo que la ejecución cambió del diseño
+
+- ⚠️⚠️ **La fiesta pasada CIERRA los extras, no los esconde.** `viewFor()` devolvía `[]` con la fiesta
+  celebrada, así que quien encargó dos cubos abría su formulario al día siguiente y **no encontraba ni
+  rastro de ellos** —los mismos que se le van a cobrar en el parque—, y la rama `readonly` de la
+  plantilla, escrita justo para eso, era código MUERTO.
+- ⚠️⚠️ **Y el cierre NO necesita término propio para «ya se celebró».** Se escribió `|| $finished`
+  delante y **ninguna mutación podía distinguirlo**: el plazo se mide contra el INICIO de la franja, así
+  que una fiesta terminada venció su corte por construcción, para cualquier valor y `0` incluido. Se
+  retiró. *Un cinturón que ningún caso puede separar de su hebilla no es un cinturón, es ruido.*
+- ⚠️⚠️ **«Qué hecho se escribe» y «cuánto cambia el pedido» son dos preguntas distintas.** La retirada
+  no escribe `recordEdit` —el libro ya emite su `−fila`— pero **sí baja lo que el cliente va a pagar**,
+  y `deltaCents` devolvía 0: el correo decía **«se suman 27,00 €»** en un guardado de +12 −8 +15, y el
+  audit registraba lo mismo. Lo cazó la aritmética de un caso.
+- ▶ **El limitador POR RESERVA se construye** (`SEC-06`, D12): el `throttle:30,1` que había va **por
+  IP**, así que treinta peticiones por minuto **desde cada IP** caben sobre la misma reserva —y con
+  ellas treinta correos al titular, que es la única señal de que alguien con su enlace está encargando
+  en su nombre—. `RateLimiter::for('guest-form')`, 12/min por reserva, **sumado** al de IP.
+  ▶ El **«tope por PEDIDO»** de esa misma fila **ya existe por construcción y se declara aquí**: es
+  `Σ (max_qty × precio)` de los enganches `postform`, obligatorio por D3 y con cinturón en
+  `AddonResolver::forStage()`. No entra un segundo número que nadie ha decidido; si el owner quiere un
+  techo en euros por pedido, es una decisión suya y una columna más.
+
+#### 9.4.3 · Las cuatro trampas de guarda que pagó esta tanda
+
+1. ⚠️⚠️ **Aseverar `type="number"` sobre la página entera pasa en VERDE** con el control convertido en
+   `hidden`: los campos de edad de los invitados también son numéricos. **Acota al ELEMENTO** — hay
+   helper (`controlOf()`).
+2. ⚠️ **Un caso que manda el cuerpo a mano no puede ver el MARCADO.** La guarda del extra cerrado
+   posteaba `addons[0][quantity]` ella misma, así que quitar el campo oculto de la plantilla no la
+   ponía roja — y ese campo **es el mecanismo entero** (los `<input disabled>` no se envían). Se
+   asevera el HTML.
+3. ⚠️⚠️ **Dos reglas eran invisibles en la página y solo se ven en la API**: que la fiesta pasada
+   cierre las filas —el `readonly` del post-form las pinta cerradas de todas formas— y que mande el
+   precio de la LÍNEA sobre un catálogo que subió. Sus guardas viven en `Api\V1\GuestFormTest`.
+4. ⚠️ **Un presupuesto que crece con algo que no es su sujeto no mide su sujeto**: la primera versión
+   de la guarda de consultas creaba cuatro PEDIDOS, y lo que hay que variar son las RESERVAS.
+
+#### 9.4.4 · Lo que queda
+
+▶ **El OJO del owner** y su ✅ a la spec. La sonda deja capturas en `/root/e2e/pf-t3-capturas`
+(escritorio, teléfono y la portada con sesión). ▶ Y una elección menor de presentación, anotada sin
+cambiarla: un extra **cerrado que nunca se pidió** se pinta igual, con su «ya no se puede cambiar» y su
+0 — se ve en la captura `01-postform`. Enseñarlo dice «esto existía y llegaste tarde»; ocultarlo
+quitaría una fila que no aporta. **Es del owner.**
+
 ### T3 · Las superficies del cliente
 
 **El contrato primero** (`openapi/v1.yaml`: el DTO propio de §4.7·bis, la semántica de ausencia, el

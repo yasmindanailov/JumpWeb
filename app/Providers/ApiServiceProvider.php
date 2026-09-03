@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -42,6 +43,29 @@ class ApiServiceProvider extends ServiceProvider
 
             return Limit::perMinute((int) config('api.rate_limit.per_minute'))
                 ->by($identity !== null ? 'user:'.$identity : 'ip:'.$request->ip());
+        });
+
+        // **El post-form, limitado POR RESERVA** (`SEC-06`, D12 de
+        // `specs/complementos-post-reserva.md`). Desde que ahí se compran extras, ese formulario
+        // MUEVE DINERO, y su enlace viaja por correo y se reenvía: un tercero que lo tenga puede
+        // encargar y desencargar sin descanso.
+        //
+        // ⚠️⚠️ **El `throttle:30,1` que ya había NO cubre esto**: sin sesión su clave es la IP, así
+        // que treinta peticiones por minuto **por cada IP** caben sobre la MISMA reserva — y con
+        // ellas treinta correos al titular, que es la única señal de que alguien está encargando en
+        // su nombre. Aquí la clave es la reserva, así que el techo es del sujeto y no del emisor.
+        //
+        // ⚠️ **No sustituye al de IP, se suma**: aquél protege al servidor de un barrido; éste
+        // protege UNA reserva. Y no entra anti-bot (D12): para llegar hasta aquí hay que traer un
+        // HMAC válido de esta URL exacta, y un Turnstile fallaría también a personas —que aquí se
+        // paga con un padre que cree tener la tarta pedida—.
+        RateLimiter::for('guest-form', static function (Request $request): Limit {
+            $reservation = $request->route('reservation');
+            $key = $reservation instanceof Model
+                ? (string) $reservation->getKey()
+                : (string) (is_scalar($reservation) ? $reservation : '');
+
+            return Limit::perMinute(12)->by('guest-form:'.$key);
         });
     }
 }

@@ -2,8 +2,8 @@
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-03, madrugada — carril producto/reservas; el carril de diseño cerró el suyo aparte).
 >
-> **0. EN CURSO (2026-09-03) — COMPLEMENTOS QUE SE VENDEN DESPUÉS DE RESERVAR: spec escrita,
->    REVISADA de forma adversarial y CORREGIDA. Sigue sin una línea de código.**
+> **0. COMPLEMENTOS QUE SE VENDEN DESPUÉS DE RESERVAR — ✅ CÓDIGO COMPLETO: LAS CUATRO TANDAS
+>    (T0→T3) EN EL ÁRBOL. Solo queda el OJO del owner.**
 >    `docs/specs/complementos-post-reserva.md` (`#413`). `[owner]`: *«el cliente reserva un cumpleaños,
 >    va a su form post reserva y puede añadir ahí complementos tipo cubo de refrescos, tapas…»*.
 >    ▶ **EMPIEZA POR §8** (la revisión) y luego §1.3 y §4.5.1. **El mecanismo ya existe** —el panel
@@ -53,8 +53,24 @@
 >    demás forkean N copias del mismo—, con su control medido: **6 de 12 interbloqueos** con el orden
 >    invertido y **0 de 12** con el de D11. ⚠️ Desviación dicha: es comando propio y no un escenario de
 >    `mixed-party`, porque el cruzado no tiene nada que ver con la fiesta mixta.
->    ▶ **Lo siguiente es la T3**: las superficies del cliente — contrato primero, API, la página con
->    su suelo sin JavaScript, el correo agrupado y los textos de demanda de D15.
+>    ▶ ✅ **T3 EJECUTADA (2026-09-03, spec §9.4)**: las superficies del cliente. Contrato
+>    (`PostFormAddon`, `can_add_extras`, `extras_invite`, `guest_form_stale`) → API → **la página con
+>    su suelo sin JS** (`<input type=number>`; el stepper solo decora) → **el correo agrupado por
+>    ventana** con voz propia y el bloque del libro → las **tres superficies de DEMANDA** de D15 (el
+>    correo del post-form los nombra, el rótulo del cajón los nombra y el aviso de la cuenta **deja de
+>    morir** al completar las fichas) → el **limitador por RESERVA** que `SEC-06` pedía. Suite
+>    **4.228 ✓ · 26.648** · **951 casos de `node --test`** · **15/15 mutaciones**
+>    (`scripts/mutar-postform-t3.sh`) · **sonda de navegador 13/13** con capturas.
+>    ▶ ❗❗❗ **Y el navegador encontró lo que 4.200 casos no**: el testigo optimista **se invalidaba a
+>    sí mismo** —`submitGuestForm()` mueve `updated_at` en la misma petición—, así que **un guardado
+>    normal, nombres y extras a la vez, NO COMPRABA NADA** y decía «la reserva ha cambiado mientras
+>    tenías esta página abierta». En la suite salía verde porque `updated_at` tiene **precisión de
+>    segundo**. La regla: *nuestra propia escritura no es un tercero*. ⚠️ Y el presupuesto de consultas
+>    destapó un **N+1 preexistente** en `OrderItemResource` (una consulta por tarjeta en «Mis
+>    pedidos»), que salía rojo **también con el control**.
+>    ▶ **Lo siguiente es el OJO del owner** (capturas en `/root/e2e/pf-t3-capturas`) y su ✅. Una
+>    elección menor le queda: un extra **cerrado que nunca se pidió** hoy se pinta igual, con su «ya no
+>    se puede cambiar» y su 0.
 >    ⚠️ **Seis defectos PREEXISTENTES destapados, con ficha en `DEUDA.md`** — entre ellos que la
 >    escalada 403→410→404 **no se cumple en la web** (afecta también al justificante) y que el `PUT`
 >    del post-form sin `general` **borra** las respuestas generales.
@@ -1245,8 +1261,9 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4196 en verde** (26.472 aserciones, 1 skipped a propósito), medida el 2026-09-03 sobre el árbol
-> fusionado (tras `#452`, que quita los 8 casos de las tandas A/B del cajón, y con las tandas T0–T2 de `#413` dentro)
+> Suite **4228 en verde** (26.648 aserciones, 1 skipped a propósito), medida el 2026-09-03 sobre el árbol
+> fusionado (tras `#452`, que quita los 8 casos de las tandas A/B del cajón, y con las CUATRO tandas
+> T0–T3 de `#413` dentro). **JS 951** (`node --test`)
 > Antes: **2026-09-01 (cierre de la tarde) — 🚀 LA WEB DEL 2.º
 > CLIENTE ESTÁ EN PRODUCCIÓN (`https://playjump.es`, `#325`/`#326`): su bloque está en el CARRIL 4
 > (la PORTADA), que es el más reciente; antes, el 6.º (EXCURSIONES DE COLEGIO, `#322`/`#324`) bajo el

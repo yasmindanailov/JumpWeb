@@ -5,16 +5,20 @@ namespace Tests\Feature\Reservation;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Price;
+use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AgeFamilySealer;
+use App\Domain\Booking\Services\PostFormAddons;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\DisplayTime;
 use App\Notifications\GuestFormRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -842,5 +846,339 @@ class GuestFormTest extends TestCase
             'guests' => [['name' => 'Ana'], ['name' => 'Luis']],
         ])->assertRedirect();
         $this->assertSame('Ana', $reservation->refresh()->guestData()[0]['name'] ?? null);
+    }
+    // ── Los EXTRAS de venta posterior en la PÁGINA (T3 de `#413`) ──────────────────────────────
+
+    /** Un complemento de venta posterior sano, con su franja futura para que el plazo esté abierto. */
+    private function withPostFormAddon(string $name = 'Cubo de refrescos', int $cents = 1200, int $cutoff = 48): array
+    {
+        $pack = $this->pack();
+        $addon = $this->attachPostFormAddon($pack, $name, $cents, $cutoff);
+
+        static $day = 0;
+        $slot = Slot::create([
+            'zone_id' => $this->zone->id, 'date' => now()->addDays(20 + $day++)->toDateString(),
+            'start_time' => '11:00:00', 'end_time' => '13:00:00', 'capacity' => 20, 'online_capacity' => 20,
+        ]);
+
+        $user = User::factory()->create();
+        $order = $this->paidOrder($user, $pack);
+        $reservation = $this->reservation($order);
+        $reservation->forceFill(['slot_id' => $slot->id])->save();
+
+        return [$user, $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children']), $addon];
+    }
+
+    /** Engancha un complemento de venta posterior al pack, con su tarifa y su tope. */
+    private function attachPostFormAddon(TicketType $pack, string $name, int $cents = 1200, int $cutoff = 48): TicketType
+    {
+        $addon = TicketType::create([
+            'name' => ['es' => $name], 'type' => TicketType::TYPE_ADDON,
+            'seats_per_unit' => 1, 'tax_rate' => 21, 'is_sellable' => true, 'is_active' => true, 'position' => 40,
+        ]);
+        $rate = RateType::firstOrCreate(
+            ['key' => RateType::KEY_NORMAL],
+            ['label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0, 'is_active' => true],
+        );
+        Price::create([
+            'priceable_type' => $addon->getMorphClass(), 'priceable_id' => $addon->id,
+            'rate_type_id' => $rate->id, 'amount_cents' => $cents, 'currency' => 'EUR',
+        ]);
+        $pack->configurableAddons()->attach($addon->id, [
+            'position' => 1, 'quantity_mode' => ProductAddon::MODE_FIXED,
+            'stage' => ProductAddon::STAGE_POSTFORM,
+            'postform_cutoff_hours' => $cutoff, 'max_qty' => 10,
+        ]);
+
+        return $addon;
+    }
+
+    /**
+     * ❗❗ **El suelo SIN JavaScript.** Esta página nace `no-js` y el script la enciende al final, así
+     * que un stepper hecho a botones dejaría a quien no tiene JS **sin poder comprar**. El control
+     * real es un `input[type=number]` con su `min` y su `max`, y el stepper solo lo decora.
+     */
+    public function test_the_extras_section_works_without_javascript(): void
+    {
+        [$user, $reservation, $addon] = $this->withPostFormAddon();
+
+        $html = $this->actingAs($user)
+            ->get(route('reservation.guests', ['reservation' => $reservation]))
+            ->assertOk()
+            ->assertSee('Cubo de refrescos')
+            ->getContent();
+
+        // ⚠️⚠️ **Acotado al ELEMENTO.** Un `assertStringContainsString('type="number"')` sobre la
+        // página entera pasa en VERDE con este control convertido en `hidden`: los campos de edad de
+        // los invitados también son numéricos. Lo dijo la mutación, no una revisión.
+        $control = $this->controlOf($html, 'x-'.$addon->id);
+
+        $this->assertStringContainsString('type="number"', $control);
+        $this->assertStringContainsString('name="addons[0][quantity]"', $control);
+        $this->assertStringContainsString('max="10"', $control);
+        $this->assertStringContainsString('name="addons[0][product_id]"', $html);
+    }
+
+    /** Y se compra de verdad: el POST normal del formulario crea la línea y sube el pedido. */
+    public function test_posting_the_form_buys_the_extra(): void
+    {
+        [$user, $reservation, $addon] = $this->withPostFormAddon();
+
+        $this->actingAs($user)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
+            'guests' => [['name' => 'Ana'], ['name' => 'Luis']],
+            'addons' => [['product_id' => $addon->id, 'quantity' => 2]],
+            'expected_version' => PostFormAddons::versionOf($reservation),
+        ])->assertRedirect()->assertSessionHas('status', 'guest-form-saved');
+
+        $child = $reservation->fresh(['children'])->children->firstWhere('ticket_type_id', $addon->id);
+        $this->assertNotNull($child);
+        $this->assertSame(2400, $child->chargedSubtotalCents());
+    }
+
+    /**
+     * ⚠️⚠️ **El defecto que la suite NO PODÍA VER, y que encontró el navegador.** El testigo optimista
+     * es `updated_at` de la reserva, y `submitGuestForm()` lo mueve en ESTA misma petición: para
+     * cuando el reconciliador compara, el valor que el cliente vio al pintar la página ya no existe.
+     * En el navegador, un guardado normal —nombres y extras a la vez— **no compraba nada** y devolvía
+     * «la reserva ha cambiado mientras tenías esta página abierta».
+     *
+     * ▶ Aquí pasaba en VERDE porque `updated_at` tiene **precisión de segundo** y en un test el
+     * render y el POST caen en el mismo. El `travel()` es lo único que separa las dos respuestas —la
+     * misma familia que la mutación del reloj de la T2—.
+     */
+    public function test_saving_names_and_extras_at_once_buys_the_extra(): void
+    {
+        [$user, $reservation, $addon] = $this->withPostFormAddon();
+
+        $html = $this->actingAs($user)
+            ->get(route('reservation.guests', ['reservation' => $reservation]))
+            ->assertOk()->getContent();
+        preg_match('/name="expected_version" value="([^"]*)"/', $html, $m);
+        $this->assertNotEmpty($m[1] ?? '', 'la página no manda el testigo');
+
+        // El cliente rellena tranquilamente: entre pintar y guardar pasa tiempo.
+        $this->travel(3)->seconds();
+
+        $this->actingAs($user)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
+            'guests' => [['name' => 'Ana'], ['name' => 'Luis']],
+            'addons' => [['product_id' => $addon->id, 'quantity' => 2]],
+            'expected_version' => $m[1],
+        ])->assertRedirect()->assertSessionHas('status', 'guest-form-saved');
+
+        $child = $reservation->fresh(['children'])->children->firstWhere('ticket_type_id', $addon->id);
+        $this->assertNotNull($child, 'nuestra propia escritura de las fichas invalidó el testigo del cliente');
+        $this->assertSame(2, (int) $child->quantity);
+    }
+
+    /**
+     * ⚠️ **Un envío con la pantalla vieja se DICE, no se calla.** Los datos del formulario sí se
+     * guardan —van por otra transacción— y el aviso separa las dos cosas: callarlo sería que quien
+     * creyó pedir tapas se entere en la puerta del parque.
+     */
+    public function test_a_stale_version_says_so_and_still_saves_the_guest_data(): void
+    {
+        [$user, $reservation, $addon] = $this->withPostFormAddon();
+
+        $this->actingAs($user)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
+            'guests' => [['name' => 'Ana'], ['name' => 'Luis']],
+            'addons' => [['product_id' => $addon->id, 'quantity' => 2]],
+            'expected_version' => 'testigo-viejo',
+        ])->assertRedirect()->assertSessionHas('status', 'guest-form-stale');
+
+        $this->assertCount(0, $reservation->fresh(['children'])->children, 'el extra NO se aplicó');
+        $this->assertSame('Ana', $reservation->fresh()->guestData()[0]['name'] ?? null, 'los datos SÍ se guardaron');
+    }
+
+    /** Una instalación sin extras configurados —el caso por defecto— no pinta la sección. */
+    public function test_without_configured_addons_the_section_is_not_painted(): void
+    {
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
+
+        $this->actingAs($user)
+            ->get(route('reservation.guests', ['reservation' => $reservation]))
+            ->assertOk()
+            ->assertDontSee('id="gf-extras"', false);
+    }
+
+    /**
+     * Un extra fuera de plazo se pinta en SOLO LECTURA con su motivo —y con su cantidad en un campo
+     * oculto—, para que un envío normal no lo cancele: es la trampa de los `<input disabled>`, que
+     * no se envían.
+     */
+    public function test_an_addon_out_of_its_window_is_shown_read_only_and_survives_a_normal_save(): void
+    {
+        [$user, $reservation, $addon] = $this->withPostFormAddon(cutoff: 2);
+
+        // Se compra dentro de plazo…
+        app(PostFormAddons::class)
+            ->reconcile($reservation, [$addon->id => 2], 'account');
+
+        // …y luego la fiesta se acerca hasta pasar su corte, SIN llegar a celebrarse: empieza dentro
+        // de una hora y su corte era de dos, así que venció hace una.
+        $this->moveParty($reservation, startsIn: 1, endsIn: 3);
+        $reservation = $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children']);
+        $this->assertFalse($reservation->isFinishedInPractice(), 'la fiesta NO se ha celebrado aún');
+
+        $html = $this->actingAs($user)
+            ->get(route('reservation.guests', ['reservation' => $reservation]))
+            ->assertOk()
+            ->assertSee(__('guestform.extras_closed_cutoff'))
+            ->getContent();
+
+        // ⚠️⚠️ **La cantidad del cerrado viaja en un campo OCULTO, y eso es el mecanismo entero.**
+        // Los `<input disabled>` no se envían: sin este campo, el guardado normal de la página
+        // llegaría sin este extra y el estado deseado lo CANCELARÍA — justo lo contrario de D5. El
+        // caso de abajo manda el cuerpo a mano, así que no puede ver esto: hay que aseverar el
+        // MARCADO (lo dijo la mutación).
+        $this->assertMatchesRegularExpression(
+            '/<input type="hidden" name="addons\[0\]\[quantity\]" value="2">/',
+            $html,
+            'el extra cerrado no manda su cantidad: un guardado normal lo cancelaría',
+        );
+
+        // Un guardado normal, con lo que la pantalla manda para un cerrado, no lo toca.
+        $this->actingAs($user)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
+            'guests' => [['name' => 'Ana'], ['name' => 'Luis']],
+            'addons' => [['product_id' => $addon->id, 'quantity' => 2]],
+        ])->assertRedirect();
+
+        $child = $reservation->fresh(['children'])->children->firstWhere('ticket_type_id', $addon->id);
+        $this->assertSame(2, (int) $child->quantity, 'el extra fuera de plazo sigue como estaba');
+    }
+
+    /**
+     * ⚠️ **La fiesta pasada CIERRA los extras, no los esconde.** Quien encargó dos cubos de refrescos
+     * abre su formulario al día siguiente y los sigue viendo: se los van a cobrar en el parque.
+     */
+    public function test_after_the_party_the_extras_are_still_shown_closed(): void
+    {
+        [$user, $reservation, $addon] = $this->withPostFormAddon();
+
+        app(PostFormAddons::class)
+            ->reconcile($reservation, [$addon->id => 2], 'account');
+
+        $this->moveParty($reservation, startsIn: -5, endsIn: -3);
+        $reservation = $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children']);
+        $this->assertTrue($reservation->isFinishedInPractice(), 'la fiesta ya se celebró');
+
+        $this->actingAs($user)
+            ->get(route('reservation.guests', ['reservation' => $reservation]))
+            ->assertOk()
+            ->assertSee('Cubo de refrescos')
+            ->assertSee(__('guestform.extras_closed_cutoff'));
+    }
+
+    /** Mueve la franja de la reserva a N horas de AHORA, en la hora del parque. */
+    private function moveParty(OrderItem $reservation, int $startsIn, int $endsIn): void
+    {
+        $start = now(DisplayTime::timezone())->addHours($startsIn);
+        $end = now(DisplayTime::timezone())->addHours($endsIn);
+
+        $reservation->slot->forceFill([
+            'date' => $start->toDateString(),
+            'start_time' => $start->format('H:i:s'),
+            'end_time' => $end->format('H:i:s'),
+        ])->save();
+    }
+
+    /**
+     * ⚠️ **Lo que el `GET` puede pagar por cada extra, y ni una consulta más.** No es un coste
+     * CONSTANTE y decirlo importa: tarificar es **dos** consultas por complemento y salen de
+     * `RateResolver::priceCents()`, que es el único sitio que decide un precio (`#329`) — esquivarlo
+     * aquí para ahorrarlas crearía un séptimo camino de tarificación y la pantalla podría enseñar un
+     * importe distinto del que se va a cobrar.
+     *
+     * La guarda vigila la PENDIENTE, que es donde estaba el defecto: la primera versión comprobaba en
+     * la LECTURA si el complemento era el portador de la fiesta mixta y pagaba **cuatro** por cabeza
+     * —con siete extras, catorce consultas de más en la página de todo cliente, y nada fallando—.
+     * Esa comprobación es del guardián de ESCRITURA y allí se quedó.
+     */
+    public function test_the_page_pays_at_most_two_queries_per_addon(): void
+    {
+        [$user, $reservation] = $this->withPostFormAddon();
+        $withOne = $this->countQueriesRenderingTheForm($user, $reservation);
+
+        $pack = $reservation->ticketType;
+        foreach (range(2, 7) as $n) {
+            $this->attachPostFormAddon($pack, 'Extra '.$n);
+        }
+
+        $withSeven = $this->countQueriesRenderingTheForm($user, $reservation->fresh());
+
+        $this->assertLessThanOrEqual(
+            2 * 6,
+            $withSeven - $withOne,
+            "seis extras más costaron {$withSeven}−{$withOne} consultas: por encima de la tarifa, falta un eager-load",
+        );
+    }
+
+    private function countQueriesRenderingTheForm(User $user, OrderItem $reservation): int
+    {
+        $this->actingAs($user)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk();
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        $this->actingAs($user)->get(route('reservation.guests', ['reservation' => $reservation]))->assertOk();
+
+        $count = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        return $count;
+    }
+
+    /** El marcado del control `id="…"`, acotado a su elemento: aseverar sobre la página miente. */
+    private function controlOf(string $html, string $id): string
+    {
+        $at = strpos($html, 'id="'.$id.'"');
+        $this->assertNotFalse($at, "no se ha pintado el control «{$id}»");
+
+        $start = strrpos(substr($html, 0, $at), '<input');
+        $this->assertNotFalse($start, "el control «{$id}» no está dentro de un <input>");
+
+        return substr($html, $start, strpos($html, '>', $at) - $start + 1);
+    }
+
+    /**
+     * ⚠️⚠️ **El limitador POR RESERVA, que es el que faltaba** (`SEC-06`, D12). El de siempre va por
+     * IP, así que treinta peticiones por minuto **desde cada IP** caben sobre la misma reserva —y con
+     * ellas treinta correos al titular, que es la única señal de que alguien con su enlace está
+     * encargando en su nombre—. Desde que aquí se compran extras, este formulario mueve dinero.
+     *
+     * ⚠️ Se comprueba que el techo es **del sujeto**: dos IP distintas comparten cubo.
+     */
+    public function test_the_post_form_is_limited_per_reservation(): void
+    {
+        [$user, $reservation] = $this->withPostFormAddon();
+        $cuerpo = ['guests' => [['name' => 'Ana'], ['name' => 'Luis']]];
+
+        for ($i = 0; $i < 12; $i++) {
+            $this->actingAs($user)
+                ->withServerVariables(['REMOTE_ADDR' => '10.0.0.'.$i])
+                ->post(route('reservation.guests.store', ['reservation' => $reservation]), $cuerpo)
+                ->assertRedirect();
+        }
+
+        $this->actingAs($user)
+            ->withServerVariables(['REMOTE_ADDR' => '10.0.0.99'])
+            ->post(route('reservation.guests.store', ['reservation' => $reservation]), $cuerpo)
+            ->assertStatus(429);
+    }
+
+    /** Y el cubo es de ESA reserva: otra reserva del mismo cliente sigue guardando. */
+    public function test_the_cap_does_not_spill_onto_another_reservation(): void
+    {
+        [$user, $reservation] = $this->withPostFormAddon();
+        [$other, $second] = $this->withPostFormAddon('Tapas');
+        $cuerpo = ['guests' => [['name' => 'Ana'], ['name' => 'Luis']]];
+
+        for ($i = 0; $i < 13; $i++) {
+            $this->actingAs($user)->post(route('reservation.guests.store', ['reservation' => $reservation]), $cuerpo);
+        }
+
+        $this->actingAs($other)
+            ->post(route('reservation.guests.store', ['reservation' => $second]), $cuerpo)
+            ->assertRedirect();
     }
 }

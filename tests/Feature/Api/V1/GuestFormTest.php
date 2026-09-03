@@ -5,6 +5,7 @@ namespace Tests\Feature\Api\V1;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Price;
+use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
@@ -12,6 +13,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
@@ -636,5 +638,265 @@ class GuestFormTest extends ApiTestCase
         // Y deja de abrir en cuanto el operador rota, que es lo que se espera de él.
         $reservation->rotateGuestFormLink();
         $this->getJson($legacy)->assertForbidden();
+    }
+    // ── Los EXTRAS de venta posterior (T3 de `#413`) ───────────────────────────────────────────
+
+    /** Un complemento de venta posterior, sano: con tope y con plazo, que es lo que el guard exige. */
+    private function postFormAddon(TicketType $pack, string $name = 'Cubo de refrescos', int $cents = 1200, int $cutoff = 48): TicketType
+    {
+        $addon = TicketType::create([
+            'name' => ['es' => $name], 'type' => TicketType::TYPE_ADDON,
+            'seats_per_unit' => 1, 'tax_rate' => 21, 'is_sellable' => true, 'is_active' => true, 'position' => 40,
+        ]);
+        $rate = RateType::firstOrCreate(
+            ['key' => RateType::KEY_NORMAL],
+            ['label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0, 'is_active' => true],
+        );
+        Price::create([
+            'priceable_type' => $addon->getMorphClass(), 'priceable_id' => $addon->id,
+            'rate_type_id' => $rate->id, 'amount_cents' => $cents, 'currency' => 'EUR',
+        ]);
+        $pack->configurableAddons()->attach($addon->id, [
+            'position' => 1, 'quantity_mode' => ProductAddon::MODE_FIXED,
+            'stage' => ProductAddon::STAGE_POSTFORM,
+            'postform_cutoff_hours' => $cutoff, 'max_qty' => 10,
+        ]);
+
+        return $addon;
+    }
+
+    /**
+     * Una franja FUTURA, para que el plazo del complemento esté abierto.
+     *
+     * ⚠️ Cada llamada estrena DÍA: `slots` lleva `UNIQUE(zone_id, date, start_time)` —el mismo índice
+     * del que la hora extra deduce que «la franja siguiente» es única— y dos reservas en el mismo
+     * caso reventarían con una violación de integridad que parece un defecto del producto.
+     */
+    private function futureSlot(): Slot
+    {
+        static $day = 0;
+
+        return Slot::create([
+            'zone_id' => $this->zone->id, 'date' => now()->addDays(10 + $day++)->toDateString(),
+            'start_time' => '11:00:00', 'end_time' => '13:00:00', 'capacity' => 20, 'online_capacity' => 20,
+        ]);
+    }
+
+    /**
+     * **Una instalación sin extras configurados —el caso por defecto— publica la lista VACÍA**, no la
+     * omite: un cliente no debería tener que distinguir «no hay» de «este servidor no lo sabe hacer».
+     */
+    public function test_a_form_without_configured_addons_publishes_an_empty_list(): void
+    {
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack(), 2, $this->futureSlot()));
+
+        $this->getJson($reservation->guestFormApiUrls()['show'])
+            ->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('addons', [])
+            ->assertJsonPath('version', (string) $reservation->updated_at->getTimestamp());
+    }
+
+    /** Y con uno configurado, se publica con su precio, su tope y su plazo. */
+    public function test_a_configured_addon_travels_with_its_price_cap_and_deadline(): void
+    {
+        $user = User::factory()->create();
+        $pack = $this->pack();
+        $addon = $this->postFormAddon($pack);
+        $reservation = $this->reservation($this->paidOrder($user, $pack, 2, $this->futureSlot()));
+
+        $this->getJson($reservation->guestFormApiUrls()['show'])
+            ->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('addons.0.product_id', $addon->id)
+            ->assertJsonPath('addons.0.product_name', 'Cubo de refrescos')
+            ->assertJsonPath('addons.0.unit_price_cents', 1200)
+            ->assertJsonPath('addons.0.quantity', 0)
+            ->assertJsonPath('addons.0.max_quantity', 10)
+            ->assertJsonPath('addons.0.closed', false)
+            ->assertJsonPath('addons.0.closed_reason', null);
+    }
+
+    /**
+     * ⚠️⚠️ **Nuestra propia escritura no puede invalidar el testigo del cliente.** `submitGuestForm()`
+     * mueve `updated_at` en esta misma petición, así que un `PUT` normal —fichas y extras a la vez—
+     * llegaba al reconciliador con un token ya caducado y **no compraba nada**, devolviendo 409. Lo
+     * encontró el navegador; aquí solo se ve separando el render del guardado, porque `updated_at`
+     * tiene precisión de segundo.
+     */
+    public function test_a_put_with_guests_and_addons_at_once_is_not_stale_against_itself(): void
+    {
+        $user = User::factory()->create();
+        $pack = $this->pack();
+        $addon = $this->postFormAddon($pack);
+        $reservation = $this->reservation($this->paidOrder($user, $pack, 2, $this->futureSlot()));
+
+        $shown = $this->getJson($reservation->guestFormApiUrls()['show'])->assertOk();
+        $save = $shown->json('save_url');
+        $version = $shown->json('version');
+
+        $this->travel(3)->seconds();
+
+        $this->putJson($save, [
+            'guests' => [['name' => 'Ana'], ['name' => 'Luis']],
+            'addons' => [['product_id' => $addon->id, 'quantity' => 2]],
+            'expected_version' => $version,
+        ])->assertOk()->assertJsonPath('addons.0.quantity', 2);
+    }
+
+    /**
+     * ⚠️⚠️ **La fiesta pasada CIERRA los extras, y aquí es donde se ve.** En la PÁGINA el cierre lo
+     * tapa el `readonly` del post-form —los pinta en solo lectura de todos modos—, así que una
+     * mutación que quitase esta condición pasaba en verde con la página delante. Un cliente de API
+     * que leyera `closed: false` ofrecería un control que el servidor va a rechazar.
+     */
+    public function test_after_the_party_the_addons_travel_closed(): void
+    {
+        $user = User::factory()->create();
+        $pack = $this->pack();
+        $this->postFormAddon($pack);
+        $reservation = $this->reservation($this->paidOrder($user, $pack, 2, $this->pastSlot()));
+
+        $this->getJson($reservation->guestFormApiUrls()['show'])
+            ->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('addons.0.closed', true)
+            ->assertJsonPath('addons.0.closed_reason', 'cutoff');
+    }
+
+    /**
+     * ⚠️⚠️ **R2 en la LECTURA: manda el precio de la LÍNEA, no el del catálogo de hoy.** Es lo que se
+     * le comunicó al cliente y lo que dice el libro. Con el catálogo subido y esta regla fuera, el
+     * post-form enseñaría 14,00 € y el desglose del pedido 12,00 — **dos pantallas, dos importes y
+     * ningún fallo**.
+     */
+    public function test_the_line_price_wins_over_a_catalogue_that_moved(): void
+    {
+        $user = User::factory()->create();
+        $pack = $this->pack();
+        $addon = $this->postFormAddon($pack);
+        $reservation = $this->reservation($this->paidOrder($user, $pack, 2, $this->futureSlot()));
+        $save = $this->getJson($reservation->guestFormApiUrls()['show'])->json('save_url');
+
+        $this->putJson($save, ['addons' => [['product_id' => $addon->id, 'quantity' => 2]]])->assertOk();
+
+        // El parque sube la tarifa DESPUÉS de que el cliente lo pidiera.
+        Price::where('priceable_id', $addon->id)
+            ->where('priceable_type', $addon->getMorphClass())
+            ->update(['amount_cents' => 1400]);
+
+        $this->getJson($reservation->guestFormApiUrls()['show'])
+            ->assertOk()
+            ->assertJsonPath('addons.0.unit_price_cents', 1200)
+            ->assertJsonPath('addons.0.charged_cents', 2400);
+    }
+
+    /** Se añade por la API y se paga en el parque: el pedido sube y no se cobra nada online. */
+    public function test_saving_addons_adds_the_line_and_the_response_says_so(): void
+    {
+        $user = User::factory()->create();
+        $pack = $this->pack();
+        $addon = $this->postFormAddon($pack);
+        $reservation = $this->reservation($this->paidOrder($user, $pack, 2, $this->futureSlot()));
+        $save = $this->getJson($reservation->guestFormApiUrls()['show'])->json('save_url');
+
+        $this->putJson($save, ['addons' => [['product_id' => $addon->id, 'quantity' => 2]]])
+            ->assertOk()->assertValidRequest()->assertValidResponse(200)
+            ->assertJsonPath('addons.0.quantity', 2)
+            ->assertJsonPath('addons.0.charged_cents', 2400);
+
+        $this->assertSame(2400, $reservation->fresh(['children'])->children->sum(
+            fn ($c) => $c->chargedSubtotalCents()
+        ));
+    }
+
+    /**
+     * ⚠️ **La misma regla de ausencia que las otras dos claves**: un `PUT` que solo trae `guests` no
+     * puede llevarse por delante los extras que el cliente ya pidió.
+     */
+    public function test_a_body_without_addons_does_not_touch_them(): void
+    {
+        $user = User::factory()->create();
+        $pack = $this->pack();
+        $addon = $this->postFormAddon($pack);
+        $reservation = $this->reservation($this->paidOrder($user, $pack, 2, $this->futureSlot()));
+        $save = $this->getJson($reservation->guestFormApiUrls()['show'])->json('save_url');
+
+        $this->putJson($save, ['addons' => [['product_id' => $addon->id, 'quantity' => 2]]])->assertOk();
+
+        $this->putJson($save, ['guests' => [['name' => 'Ana'], ['name' => 'Luis']]])
+            ->assertOk()
+            ->assertJsonPath('addons.0.quantity', 2);
+    }
+
+    /**
+     * El TESTIGO: un envío hecho con la pantalla vieja se rechaza ENTERO con 409, en vez de pisar en
+     * silencio lo que el operador acabara de cambiar por teléfono.
+     */
+    public function test_a_stale_version_is_refused_with_409_and_writes_nothing(): void
+    {
+        $user = User::factory()->create();
+        $pack = $this->pack();
+        $addon = $this->postFormAddon($pack);
+        $reservation = $this->reservation($this->paidOrder($user, $pack, 2, $this->futureSlot()));
+        $save = $this->getJson($reservation->guestFormApiUrls()['show'])->json('save_url');
+
+        $this->putJson($save, [
+            'addons' => [['product_id' => $addon->id, 'quantity' => 2]],
+            'expected_version' => 'testigo-viejo',
+        ])->assertStatus(409)->assertJsonPath('error.code', 'guest_form_stale');
+
+        $this->assertCount(0, $reservation->fresh(['children'])->children);
+
+        // Control: con el testigo bueno, el mismo envío sí escribe.
+        $fresh = $this->getJson($reservation->guestFormApiUrls()['show'])->json();
+        $this->putJson($fresh['save_url'], [
+            'addons' => [['product_id' => $addon->id, 'quantity' => 2]],
+            'expected_version' => $fresh['version'],
+        ])->assertOk()->assertJsonPath('addons.0.quantity', 2);
+    }
+
+    /**
+     * ⚠️ **El presupuesto de CONSULTAS, y su historia**: la respuesta recorre cada extra para
+     * tarificarlo, así que sin guarda el N+1 nace aquí sin que nadie lo vea.
+     *
+     * Lo cazó nada más escribirse: costaba **4 consultas por complemento** porque el cinturón
+     * consultaba los dos productos portadores de fiesta mixta en cada lectura. Esa comprobación se
+     * mudó al guard de ESCRITURA —allí es donde puede impedir algo; en la lectura era inalcanzable,
+     * porque los portadores no son vendibles— y quedan **2**, que son el coste CONOCIDO de
+     * `RateResolver::priceCents()` (tarifa del día + importe) y tienen ficha propia en `DEUDA.md`.
+     *
+     * Por eso esta guarda vigila que **no EMPEORE**, igual que
+     * `ApiOverheadTest::test_the_known_cost_per_addon_does_not_get_worse`: fijarla en cero exigiría
+     * arreglar un N+1 compartido con la compra, que es una tanda propia y de dinero.
+     */
+    public function test_the_cost_does_not_grow_with_the_number_of_addons(): void
+    {
+        $user = User::factory()->create();
+
+        $onePack = $this->pack();
+        $this->postFormAddon($onePack, 'Uno');
+        $one = $this->reservation($this->paidOrder($user, $onePack, 2, $this->futureSlot()));
+
+        $manyPack = $this->pack();
+        foreach (['A', 'B', 'C', 'D', 'E', 'F', 'G'] as $n) {
+            $this->postFormAddon($manyPack, $n);
+        }
+        $many = $this->reservation($this->paidOrder($user, $manyPack, 2, $this->futureSlot()));
+
+        $count = function (string $url): int {
+            DB::enableQueryLog();
+            DB::flushQueryLog();
+            $this->getJson($url)->assertOk();
+            $n = count(DB::getQueryLog());
+            DB::disableQueryLog();
+
+            return $n;
+        };
+
+        $withOne = $count($one->guestFormApiUrls()['show']);
+        $withSeven = $count($many->guestFormApiUrls()['show']);
+
+        // 6 complementos más × el coste conocido de tarificar cada uno (2). Ni una consulta más.
+        $this->assertLessThanOrEqual($withOne + 12, $withSeven,
+            "con 7 complementos cuesta {$withSeven} consultas y con 1 cuesta {$withOne}: el coste por complemento EMPEORÓ");
     }
 }

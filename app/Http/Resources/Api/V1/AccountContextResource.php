@@ -91,6 +91,18 @@ class AccountContextResource extends JsonResource
             // ⚠️ «missing», no «pending»: el teléfono no espera una decisión del titular, sencillamente
             // no está. Y por eso la pantalla pinta un CAMPO y no una casilla.
             'phone_missing' => (bool) ($context['phoneMissing'] ?? false),
+            // D15 · **la INVITACIÓN a añadir extras**, que no es la deuda de arriba: `pending_forms`
+            // dice «te faltan datos» y esto dice «todavía puedes añadir algo». Van separadas porque
+            // meterlas en la misma lista haría que «tienes 2 formularios pendientes» contase como
+            // pendiente uno que está completo.
+            //
+            // ⚠️ Una sola reserva y no una lista: el aviso NOMBRA un producto, y la lista es la única
+            // parte del contexto sin cota —la razón por la que `pending_forms` se poda en la semilla—.
+            // Va a la COLA: `ApiContractTest` compara `required` con las propiedades EN ORDEN.
+            'extras_invite' => ($context['extrasInvite'] ?? null) === null ? null : [
+                'product_name' => (string) $context['extrasInvite']['productName'],
+                'url' => (string) $context['extrasInvite']['url'],
+            ],
         ];
     }
 }

@@ -115,6 +115,10 @@ class MeAccountContextTest extends ApiTestCase
                 'terms_updated' => false,
                 // Un usuario de fábrica SÍ trae teléfono, así que aquí no falta nada.
                 'phone_missing' => false,
+                // D15 · sin reservas no hay a qué invitar. La clave viaja igual, con `null`: es la
+                // misma regla que `next_reservation` —el consumidor no distingue «no está» de
+                // «está vacío»— y lo que permite que esta aserción sea EXACTA.
+                'extras_invite' => null,
             ]);
     }
 

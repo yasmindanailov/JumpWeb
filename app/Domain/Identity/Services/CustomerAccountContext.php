@@ -60,7 +60,7 @@ class CustomerAccountContext
      * ⚠️ Es una PISTA para saber qué pintar, nunca la autoridad: quien decide es el servidor al crear
      * el pedido (`OrdersController`), y por eso el cliente sabe además reaccionar a su 422.
      *
-     * @return array{firstName: string, emailVerified: bool, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, waiver: array{mode: string, required: bool, pending: bool, outdated: bool, documentId: ?int}, termsPending: bool, termsUpdated: bool, phoneMissing: bool}
+     * @return array{firstName: string, emailVerified: bool, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, extrasInvite: ?array{productName: string, url: string}, waiver: array{mode: string, required: bool, pending: bool, outdated: bool, documentId: ?int}, termsPending: bool, termsUpdated: bool, phoneMissing: bool}
      */
     public function for(User $user): array
     {
@@ -79,6 +79,7 @@ class CustomerAccountContext
             'nextReservation' => null,
             'pendingForms' => [],
             'pendingFormsCount' => 0,
+            'extrasInvite' => null,
             'hasPendingForm' => false,
             'waiver' => ['mode' => WaiverSettings::MODE_EXTERNAL, 'required' => false, 'pending' => false, 'outdated' => false, 'documentId' => null],
             // ⚠️ **`false` es el respaldo SEGURO y no el cómodo** (`#349`): si el contexto se cae, el
@@ -116,16 +117,20 @@ class CustomerAccountContext
             $context['upcomingCount'] = count($upcoming);
             $context['nextReservation'] = $upcoming[0] ?? null;
 
-            $pending = array_map(
-                fn (PendingGuestForm $form): array => [
-                    'productName' => $form->productName,
-                    'url' => route('reservation.guests', $form->reservationId),
-                ],
-                $this->reservations->pendingGuestFormsFor((int) $user->id),
-            );
+            $notices = $this->reservations->guestFormNoticesFor((int) $user->id);
+            $link = fn (PendingGuestForm $form): array => [
+                'productName' => $form->productName,
+                'url' => route('reservation.guests', $form->reservationId),
+            ];
+
+            $pending = array_map($link, $notices->pending);
             $context['pendingForms'] = $pending;
             $context['pendingFormsCount'] = count($pending);
             $context['hasPendingForm'] = $pending !== [];
+            // D15 · la INVITACIÓN a añadir extras, que es otra cosa que la deuda de arriba: sin
+            // ella el aviso de esta tarjeta **muere en cuanto el cliente completa las fichas**, que
+            // es exactamente cuando le quedan extras por elegir.
+            $context['extrasInvite'] = $notices->extras === null ? null : $link($notices->extras);
         } catch (\Throwable $e) {
             // Cortesía de UI: nunca rompemos la página por el contexto de cuenta.
             report($e);

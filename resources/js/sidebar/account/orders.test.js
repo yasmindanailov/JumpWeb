@@ -41,6 +41,7 @@ const ACCOUNT = {
         // tres líneas más arriba en la tarjeta.
         guest_form_pending: 'Rellenar datos de la reserva',
         guest_form_done: 'Ver datos de la reserva',
+        guest_form_extras: 'Añade extras o edita el formulario',
         guest_form_past: 'Datos de la reserva',
         guest_form_cancelled: 'Datos de la reserva · cancelada',
         pagination: { label: 'Paginación', prev: 'Anteriores', next: 'Siguientes', page: 'Página :current de :last' },
@@ -325,6 +326,29 @@ describe('el bloque del post-form', () => {
             label: 'Rellenar datos de la reserva',
             url: '/reserva/1/datos-invitados',
         });
+    });
+
+    /**
+     * ⚠️⚠️ D15 · **con el formulario hecho y extras abiertos, el rótulo los NOMBRA.** «Ver datos de
+     * la reserva» no insinúa que ahí se compre, y ése es justo el estado en el que se queda quien ya
+     * rellenó las fichas.
+     */
+    test('con extras abiertos el rótulo los nombra', () => {
+        assert.deepEqual(paid({ needs_guest_form: false, can_add_extras: true }), {
+            state: 'extras',
+            label: 'Añade extras o edita el formulario',
+            url: '/reserva/1/datos-invitados',
+        });
+    });
+
+    /**
+     * ⚠️ Y **lo decide el SERVIDOR**: sin ese dato —o con él en `false`, que es la instalación sin
+     * enganches de venta posterior— el rótulo es el de siempre. Derivarlo aquí de «el pedido tiene
+     * complementos» invitaría a comprar donde ya no se puede.
+     */
+    test('sin extras abiertos, el rótulo de siempre', () => {
+        assert.equal(paid({ needs_guest_form: false }).state, 'done');
+        assert.equal(paid({ needs_guest_form: false, can_add_extras: false }).state, 'done');
     });
 
     /**

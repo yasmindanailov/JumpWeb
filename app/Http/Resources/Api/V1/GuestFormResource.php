@@ -4,6 +4,7 @@ namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\PostFormAddons;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -62,6 +63,14 @@ class GuestFormResource extends JsonResource
             'guests' => array_map(static fn (array $row): object => (object) $row, $item->guestData()),
             'general' => (object) $this->generalAnswers($item, $type),
             'save_url' => $item->guestFormApiUrls()['save'],
+            // Los EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, T3 de `#413`):
+            // lista VACÍA si la instalación no ha configurado ninguno, que es el caso por defecto.
+            // ⚠️ Viajan también los CERRADOS con su motivo: ocultarlos haría creer al cliente que lo
+            // que pidió se ha perdido.
+            'addons' => PostFormAddonResource::collection(app(PostFormAddons::class)->viewFor($item))->resolve($request),
+            // El TESTIGO de la reserva: hay que devolverlo al guardar. Sin él, un envío hecho con la
+            // pantalla vieja pisaría en silencio lo que el operador acabara de cambiar por teléfono.
+            'version' => PostFormAddons::versionOf($item),
         ];
     }
 

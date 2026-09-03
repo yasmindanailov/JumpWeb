@@ -20,6 +20,7 @@ return [
         // públicas para no pintarse nunca. Con ellas se fue `panel.js::sublineOf()` y sus casos.
         'form_pending_one' => 'You have a pending form for :product',
         'form_pending_many' => 'You have :count pending forms',
+        'extras_invite' => 'Add extras to your :product party',
         'guest_hello' => 'Hi, jumper!',
         'guest_sub' => 'Log in to keep your bookings.',
         'upcoming_count' => ':count upcoming bookings',
@@ -359,6 +360,7 @@ return [
         'retry_hint' => 'We are holding your booking for a few more minutes in case you want to complete the payment.',
         'guest_form_pending' => 'Complete the booking form',
         'guest_form_done' => 'View or edit the booking form',
+        'guest_form_extras' => 'Add extras or edit the form',
         'guest_form_past' => 'View the booking form',
         'guest_form_cancelled' => 'Booking form · cancelled',
         'manage' => 'Manage',

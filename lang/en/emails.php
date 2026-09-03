@@ -67,6 +67,7 @@ return [
         'greeting' => 'Hi!',
         'intro' => 'Your :product booking (no. :code) is confirmed! To get everything ready and make the day perfect, tell us who’s coming: fill in the details for each guest.',
         'body' => 'You can fill it in now or later, and edit it anytime until the event.',
+        'extras' => 'And if you like, you can add party extras right there: drinks, something to nibble… They are paid at the park on the day.',
         'action' => 'Fill in the booking form',
         'outro' => 'You can also do it from "My bookings". Thank you!',
     ],
@@ -156,6 +157,19 @@ return [
         'where_to_pay' => 'It is paid at the park on the day of the party, together with anything else outstanding.',
         'where_discounted' => 'It comes off what you will pay at the park on the day of the party; if you had already paid everything, it is refunded to you there that day.',
         'editable' => 'You can keep editing the guest details until the day of the event; if the ages change, this amount adjusts on its own.',
+    ],
+
+    'postform_addons' => [
+        'subject' => 'Your party extras (booking no. :code)',
+        'greeting' => 'Hello,',
+        'intro' => "We've noted the extras for your booking :code. Here's what changed:",
+        'added' => 'Added: :name × :qty.',
+        'updated' => ':name: from :old to :new.',
+        'removed' => 'Removed: :name.',
+        'delta_up' => ':amount is added to what you will pay at the park.',
+        'delta_down' => ':amount is taken off what you will pay at the park.',
+        'where_to_pay' => 'Extras are paid at the park on the day of the party, together with the rest.',
+        'editable' => 'You can change them from the same form until shortly before the party. If this was not you, please call us.',
     ],
 
     'order_item_modified' => [

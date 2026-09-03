@@ -19,8 +19,10 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\DisplayTime;
+use App\Notifications\PostFormAddonsChanged;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 /**
@@ -535,5 +537,128 @@ class PostFormAddonsTest extends TestCase
         $this->assertSame('account', $payload['via'] ?? null);
         $this->assertSame(2400, $payload['delta_cents'] ?? null);
         $this->assertStringNotContainsString('Mara', json_encode($payload) ?: '', 'ni un nombre en el rastro');
+    }
+
+    /**
+     * ⚠️⚠️ **«Qué hecho se escribe» y «cuánto cambia el pedido» son dos preguntas distintas.** Una
+     * retirada no escribe `recordEdit` —el libro ya emite su `−fila`— pero **sí baja lo que el
+     * cliente va a pagar**, y el delta que sale de la pasada tiene que decirlo: alimenta el correo
+     * («se restan 24,00 €») y el audit que lee el operador en el mostrador.
+     */
+    public function test_removing_reports_a_negative_delta_even_though_it_writes_no_fact(): void
+    {
+        $this->attach($this->drinks);
+        $item = $this->party();
+        $this->service()->reconcile($item, [$this->drinks->id => 2], 'account');
+
+        $changes = $this->service()->reconcile(
+            $item->fresh(['ticketType.addons', 'order', 'slot', 'children']),
+            [$this->drinks->id => 0],
+            'account',
+        );
+
+        $this->assertSame(-2400, $changes->deltaCents, 'la retirada baja 24,00 € lo que se paga');
+
+        // Y ni un hecho nuevo: el movimiento de la retirada lo emite el libro desde la propia fila.
+        $facts = OrderAdjustment::where('order_id', $item->order_id)
+            ->where('reason', 'postform_addon')->get();
+        $this->assertCount(1, $facts, 'solo el hecho del alta');
+
+        $row = AuditLog::where('action', 'orders.postform_addons_changed')->latest('id')->firstOrFail();
+        $payload = is_array($row->payload) ? $row->payload : [];
+        $this->assertSame(-2400, $payload['delta_cents'] ?? null);
+
+        $this->assertBookCloses($item, 'tras retirar');
+    }
+
+    // ── El CORREO: agrupado por VENTANA, no por gesto (D8) ────────────────────────────────────
+
+    /**
+     * ⚠️⚠️ **Un guardado, un correo — con las tres líneas dentro.** Uno por gesto convertiría una
+     * tarde de indecisión en una bandeja llena, y ahogaría la señal que este correo existe para dar:
+     * es la única forma que tiene el titular de enterarse de que alguien con su enlace le ha
+     * encargado algo (D12: aquí no hay anti-bot).
+     */
+    public function test_one_save_with_three_gestures_sends_one_grouped_email(): void
+    {
+        Notification::fake();
+
+        $tapas = $this->addon('Tapas', 800, 21);
+        $cake = $this->addon('Tarta', 1500, 22);
+        $this->attach($this->drinks);
+        $this->attach($tapas);
+        $this->attach($cake);
+
+        $item = $this->party();
+        $this->service()->reconcile($item, [$this->drinks->id => 2, $tapas->id => 1], 'signed_link');
+
+        Notification::fake(); // descarta el correo de la primera pasada
+
+        // Una sola pasada: sube el cubo, retira las tapas y añade la tarta.
+        $this->service()->reconcile(
+            $item->fresh(['ticketType.addons', 'order', 'slot', 'children']),
+            [$this->drinks->id => 3, $tapas->id => 0, $cake->id => 1],
+            'signed_link',
+        );
+
+        Notification::assertSentToTimes($item->order->user, PostFormAddonsChanged::class, 1);
+        Notification::assertSentTo(
+            $item->order->user,
+            PostFormAddonsChanged::class,
+            function (PostFormAddonsChanged $n) use ($item): bool {
+                $lines = $n->toMail($item->order->user)->introLines;
+
+                return in_array(__('emails.postform_addons.updated', ['name' => 'Cubo de refrescos', 'old' => 2, 'new' => 3]), $lines, true)
+                    && in_array(__('emails.postform_addons.removed', ['name' => 'Tapas']), $lines, true)
+                    && in_array(__('emails.postform_addons.added', ['name' => 'Tarta', 'qty' => 1]), $lines, true)
+                    // El neto de la pasada: +12,00 (cubo) −8,00 (tapas) +15,00 (tarta) = +19,00.
+                    && in_array(__('emails.postform_addons.delta_up', ['amount' => '19,00 €']), $lines, true)
+                    && in_array(__('emails.postform_addons.where_to_pay'), $lines, true);
+            },
+        );
+    }
+
+    /** Un guardado que no mueve nada no manda correo: este formulario se edita durante días. */
+    public function test_an_identical_save_sends_nothing(): void
+    {
+        $this->attach($this->drinks);
+        $item = $this->party();
+        $this->service()->reconcile($item, [$this->drinks->id => 2], 'account');
+
+        Notification::fake();
+
+        $this->service()->reconcile(
+            $item->fresh(['ticketType.addons', 'order', 'slot', 'children']),
+            [$this->drinks->id => 2],
+            'account',
+        );
+
+        Notification::assertNothingSent();
+    }
+
+    /** Y el correo lleva EL LIBRO: la pregunta que sigue a «he pedido dos cubos» es «¿cuánto pago?». */
+    public function test_the_email_carries_the_book_block(): void
+    {
+        Notification::fake();
+
+        $this->attach($this->drinks);
+        $item = $this->party();
+        $this->service()->reconcile($item, [$this->drinks->id => 2], 'signed_link');
+
+        Notification::assertSentTo(
+            $item->order->user,
+            PostFormAddonsChanged::class,
+            function (PostFormAddonsChanged $n) use ($item): bool {
+                $mail = $n->toMail($item->order->user);
+                $book = array_values(array_filter(
+                    $mail->introLines,
+                    static fn (string $line): bool => str_starts_with($line, '<table class="book"'),
+                ));
+
+                // Un solo bloque de libro, y dentro el extra recién pedido: si el correo trajera el
+                // libro de ANTES del cambio, el cliente leería un saldo que ya no es el suyo.
+                return count($book) === 1 && str_contains($book[0], 'Cubo de refrescos');
+            },
+        );
     }
 }

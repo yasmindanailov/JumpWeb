@@ -53,7 +53,10 @@ class MeOrdersController extends Controller
             // Mismo eager-load que «Mis pedidos» en web, y por el mismo motivo: sin él, pintar el
             // estado de reembolso y los subtotales realmente cobrados dispara N+1 por cada línea.
             ->with([
-                'items.ticketType', 'items.slot',
+                // ⚠️ `ticketType.addons` es del post-form: `can_add_extras` pregunta por los
+                // enganches del pack, y sin precargarlos serían N consultas —una por reserva— en la
+                // lista paginada. Con él es UNA para toda la página.
+                'items.ticketType.addons', 'items.slot',
                 'items.children.ticketType',
                 'payments.refunds', 'adjustments',
             ])

@@ -1074,8 +1074,13 @@ class SidebarMountTest extends TestCase
         // de hecho que `waiver.pending` —qué le debe esta cuenta antes de comprar— y por eso viaja por
         // aquí: sembrado en cada carga y refrescado al conseguir sesión, o sea **sin una petición
         // más** en el paso de pagar. Un booleano.
+        // ▶ **`extras_invite` entró a propósito el 2026-09-03** (`#413` D15): el aviso de la tarjeta
+        // cuelga de «te faltan datos» y por eso MORÍA en cuanto el cliente completaba las fichas —que
+        // es justo cuando le quedan extras por elegir—. Es `null` salvo cuando hay algo que ofrecer,
+        // y viene acotado a UNA reserva: la lista es la única parte del contexto sin cota, y por eso
+        // `pending_forms` se poda aquí.
         $this->assertSame(
-            ['first_name', 'email_verified', 'upcoming_count', 'next_reservation', 'pending_forms', 'pending_forms_count', 'waiver', 'terms_pending', 'terms_updated', 'phone_missing'],
+            ['first_name', 'email_verified', 'upcoming_count', 'next_reservation', 'pending_forms', 'pending_forms_count', 'waiver', 'terms_pending', 'terms_updated', 'phone_missing', 'extras_invite'],
             array_keys($seed),
             'La semilla ha cambiado de forma. Cada campo nuevo viaja en el HTML de TODA página con '.
             'sesión: si hace falta, que entre a propósito — y comprueba antes que el endpoint lo '.
@@ -1085,8 +1090,14 @@ class SidebarMountTest extends TestCase
         // (2) Y el techo, como red contra lo que crece con el cliente.
         $bytes = strlen((string) json_encode($seed, JSON_UNESCAPED_UNICODE));
 
+        // ▶ **640 desde el 2026-09-03** (`#413` D15), y el número está MEDIDO: `extras_invite` cuesta
+        // **20 B** vacío —que es el caso de este fixture y el normal— y **114 B** con una invitación
+        // viva (nombre de producto + URL de post-form). El techo deja sitio al caso caro en vez de
+        // ajustarse al barato, que es como un trinquete acaba saltando con el producto sano.
+        // ⚠️ La clave viaja SIEMPRE aunque valga `null`: podarla por CAMPO daría dos formas del mismo
+        // contexto —`AccountContextSeed` lo tiene escrito— y la poda de aquí es por CARDINALIDAD.
         $this->assertLessThan(
-            512, $bytes,
+            640, $bytes,
             "La semilla del contexto de cuenta pesa {$bytes} B en el HTML de cada página con sesión, ".
             "sobre 320 medidos.\n".
             '⚠️ Mira primero si lo que ha crecido es una LISTA: la de formularios pendientes se poda '.
