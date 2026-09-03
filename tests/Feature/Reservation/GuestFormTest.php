@@ -1069,9 +1069,28 @@ class GuestFormTest extends TestCase
             ->assertSee(__('guestform.extras_closed_cutoff'));
     }
 
-    /** Mueve la franja de la reserva a N horas de AHORA, en la hora del parque. */
+    /**
+     * Mueve la franja de la reserva a N horas de AHORA, en la hora del parque.
+     *
+     * ⚠️⚠️ **ANCLA EL RELOJ A MEDIODÍA PRIMERO, y no es adorno: sin eso este helper es una BOMBA DE
+     * RELOJ** (`DECISIONES #414`). Una franja guarda **una fecha y dos horas de pared**, así que no
+     * sabe expresar un tramo que cruce medianoche: `date` sale del INICIO y `end_time` es solo una
+     * hora. Con el reloj real, `moveParty(startsIn: 1, endsIn: 3)` a las 21:30 del parque componía
+     * `date = hoy` con `end_time = 00:30` — o sea **esta madrugada, hace 21 horas** — y
+     * `isFinishedInPractice()` declaraba celebrada una fiesta que aún no ha empezado.
+     *
+     * Medido con el reloj congelado: VERDE a las 12:00 y a las 23:20 del parque, **ROJO a las
+     * 21:00**. La ventana roja son las ~2 horas en que el FIN cruza el día y el inicio todavía no,
+     * así que el caso pasaba 22 horas al día y fallaba 2 — el tipo de rojo con fecha que `#412`
+     * documenta y que `audit-clock` existe para cazar.
+     *
+     * Con el reloj en mediodía, los dos usos de hoy (+1/+3 y −5/−3) caen dentro del mismo día por
+     * construcción, y el instante deja de depender de cuándo se corra la suite.
+     */
     private function moveParty(OrderItem $reservation, int $startsIn, int $endsIn): void
     {
+        $this->travelTo(now(DisplayTime::timezone())->setTime(12, 0)->utc());
+
         $start = now(DisplayTime::timezone())->addHours($startsIn);
         $end = now(DisplayTime::timezone())->addHours($endsIn);
 

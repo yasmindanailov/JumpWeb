@@ -1492,7 +1492,13 @@ body.no-scroll { overflow: hidden; }
    navegador impone; sin esto el número sale con la fuente del sistema y una caja gris entre dos
    botones redondos. ⚠️ Y las flechas nativas (`spin buttons`) se retiran: al lado de un `+` y un `−`
    de 32 px son un tercer control que hace lo mismo y en móvil roban la mitad del ancho. */
-.entry__qty { min-width: 3ch; text-align: center; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); color: var(--fg); background: transparent; border: 0; padding: 0 var(--sp-4); border-radius: var(--r-5); }
+.entry__qty { min-width: 3ch; text-align: center; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); color: var(--fg); background: transparent; border: 0; padding: 0 var(--sp-4); border-radius: var(--r-sm); }
+/* ⚠️ Decía `var(--r-5)`, que no existe (`#414`): la declaración se descartaba y el radio valía 0.
+   Medido en navegador: **0px → 6px**, con un `<input>` sin la clase como control (0px), que es lo
+   que demuestra que la clase hace algo. ⚠️ Este control **no tiene borde ni fondo**, así que lo
+   único a lo que el radio puede afectar es al `outline` de `:focus-visible` de aquí abajo — que por
+   especificación sigue al `border-radius`. **Eso último NO se midió aquí** (la sonda de foco se
+   descartó por coste); si alguien lo comprueba, que corrija esta nota. */
 .entry__qty::-webkit-outer-spin-button,
 .entry__qty::-webkit-inner-spin-button { appearance: none; margin: 0; }
 .entry__qty[type="number"] { appearance: textfield; }
@@ -2193,9 +2199,15 @@ body.no-scroll { overflow: hidden; }
 /* `select` entra con el justificante de un menor invitado (#328): la relación con el menor es una
    lista CERRADA, no texto libre. Es puramente ADITIVO —medido: no había ni un `<select>` en las
    vistas públicas— y usa los MISMOS tokens, para que un desplegable no invente una segunda forma. */
+/* ⚠️ El `input` de cantidad de los EXTRAS (`#413` T3) entra en ESTA regla y no en una propia: vive
+   fuera de `.eventfields`, así que sin esto salía con el chrome del navegador — medido, `2px inset`
+   y `0` de radio junto a campos de `1px solid` y 14 — y desentonaba en la única zona que cobra.
+   Se AÑADE al grupo en vez de copiarle los valores para que siga al campo si el campo cambia; lo
+   suyo (ancho, centrado, peso) lo sobrescribe su propia regla, que va después en este fichero. */
 .eventfields input,
 .eventfields select,
-.eventfields textarea {
+.eventfields textarea,
+.gf-extra__field input {
     font-family: var(--font-body); font-size: var(--fs-15); color: var(--fg);
     background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
     padding: var(--sp-11) var(--sp-13); width: 100%; resize: vertical;
@@ -3138,7 +3150,12 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__guests-count { margin: 0; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg); }
 /* Las plazas LIBRES, junto al contador y en tinta atenuada: es contexto del número de al lado, no un
    dato con el mismo peso. */
-.orders__guests-free { font-weight: var(--fw-normal); color: var(--fg-mute); }
+/* ⚠️ `400` literal y no un token: la escala declara `--fw-semibold/bold/black` y **no tiene «normal»**
+   (ni 500, que la hoja usa 29 veces). Decía `var(--fw-normal)`, que no existe, así que la
+   declaración se descartaba y esto **heredaba el semibold** de `.orders__guests-count` en vez de
+   anularlo (`#414`). Ampliar la escala es decisión del carril de diseño, hoy parado (`#452`); esto
+   se limita a hacer lo que la hoja ya hace en otros ocho sitios. */
+.orders__guests-free { font-weight: 400; color: var(--fg-mute); }
 /* El enlace y su botón, en una fila. El `input` CRECE y el botón no: con `flex: 1` sobre el primero,
    una URL larga no empuja al segundo fuera de la tarjeta. */
 .orders__guests-share { display: flex; align-items: stretch; gap: var(--sp-8); margin-top: var(--sp-6); }
@@ -4661,14 +4678,14 @@ body[data-has-hero] .nav--over .nav__cta {
 }
 .guestform__facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 16px 32px; }
 .guestform__fact { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
-.guestform__fact-label { font-size: var(--fs-12); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.guestform__fact-label { font-size: var(--fs-12); text-transform: uppercase; letter-spacing: .04em; color: var(--fg-mute); }
 .guestform__fact-value { font-weight: 600; font-size: var(--fs-15); }
 .guestform__progress {
     align-self: flex-start; font-size: var(--fs-13); font-weight: 600; color: var(--zone-1);
     background: color-mix(in srgb, var(--zone-1) 10%, var(--sheet)); border-radius: var(--r-pill); padding: 5px 14px;
 }
 .guestform__progress.is-complete { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--sheet)); }
-.guestform__privacy { color: var(--muted); font-size: var(--fs-13); line-height: 1.5; margin: 0; }
+.guestform__privacy { color: var(--fg-mute); font-size: var(--fs-13); line-height: 1.5; margin: 0; }
 
 /* El JUSTIFICANTE de un menor invitado (#328, `specs/waiver-por-reserva.md` §4.6). Reutiliza el
    lenguaje de la hoja del post-form —mismos tokens, mismo molde— porque son la misma clase de
@@ -4743,7 +4760,7 @@ body[data-has-hero] .nav--over .nav__cta {
 }
 .guestform__child-legend { font-weight: 700; font-size: var(--fs-14); padding: 0 var(--sp-6); color: var(--zone-1); }
 .guestform__actions { display: flex; flex-direction: column; gap: var(--sp-8); align-items: flex-start; }
-.guestform__hint { color: var(--muted); font-size: var(--fs-13); margin: 0; }
+.guestform__hint { color: var(--fg-mute); font-size: var(--fs-13); margin: 0; }
 .purchase__note--guestform {
     background: color-mix(in srgb, var(--zone-1) 10%, var(--sheet));
     border-radius: var(--r-md); padding: var(--sp-10) var(--sp-12);
@@ -4795,9 +4812,9 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 }
 .maint__brand-dot { color: var(--zone-1); }
 .maint__title { font-family: var(--font-display); font-size: clamp(30px, 6vw, 46px); margin: var(--sp-10) 0 var(--sp-14); }
-.maint__body { color: var(--muted); font-size: var(--fs-17); line-height: 1.6; margin: 0 auto; max-width: 46ch; }
+.maint__body { color: var(--fg-mute); font-size: var(--fs-17); line-height: 1.6; margin: 0 auto; max-width: 46ch; }
 .maint__contact { margin-top: 34px; }
-.maint__contact-label { display: block; color: var(--muted); font-size: var(--fs-14); margin-bottom: var(--sp-12); }
+.maint__contact-label { display: block; color: var(--fg-mute); font-size: var(--fs-14); margin-bottom: var(--sp-12); }
 .maint__contact-row { display: flex; flex-wrap: wrap; gap: var(--sp-12); justify-content: center; }
 
 /* Banner de bypass: solo lo ve el personal del panel cuando la web está en mantenimiento. */
@@ -4814,7 +4831,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 /* Aviso de mantenimiento DENTRO del sidecart (#218): solo mensaje + canales de contacto (tel/WA).
    Los CTAs se apilan a TODO EL ANCHO (sidecart estrecho), con el TEXTO centrado. */
 .purchase__maint { text-align: center; padding: var(--sp-28) var(--sp-4) var(--sp-12); }
-.purchase__maint-body { color: var(--muted); font-size: var(--fs-16); line-height: 1.6; margin: 10px 0 26px; }
+.purchase__maint-body { color: var(--fg-mute); font-size: var(--fs-16); line-height: 1.6; margin: 10px 0 26px; }
 .purchase__maint-ctas { display: flex; flex-direction: column; gap: var(--sp-12); }
 .purchase__maint-ctas .btn { width: 100%; justify-content: center; text-align: center; }
 
@@ -4831,10 +4848,10 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 }
 .e404__head { max-width: 60ch; }
 .e404__title { font-family: var(--font-display); font-size: clamp(28px, 5vw, 40px); margin: var(--sp-6) 0 var(--sp-12); }
-.e404__body { color: var(--muted); font-size: var(--fs-17); line-height: 1.6; margin: 0 auto; max-width: 52ch; }
+.e404__body { color: var(--fg-mute); font-size: var(--fs-17); line-height: 1.6; margin: 0 auto; max-width: 52ch; }
 .e404__cta { display: flex; flex-wrap: wrap; gap: var(--sp-12); justify-content: center; margin-top: 30px; }
 .e404__links { margin-top: 44px; }
-.e404__links-label { display: block; color: var(--muted); font-size: var(--fs-14); margin-bottom: var(--sp-14); }
+.e404__links-label { display: block; color: var(--fg-mute); font-size: var(--fs-14); margin-bottom: var(--sp-14); }
 .e404__links ul {
     list-style: none; margin: 0; padding: 0;
     display: flex; flex-wrap: wrap; gap: var(--sp-10); justify-content: center;
@@ -5146,7 +5163,19 @@ html:not(.js) .gf-fiche__foot { display: none; }
    servidor. Todo con tokens: `RawColourIsNotATokenTest` y `ShapeScaleTest` barren este fichero. */
 .gf-extras__lead { font-size: var(--fs-13); line-height: 1.55; color: var(--fg-mute); margin: 0 0 var(--sp-14); }
 .gf-extras__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
-.gf-extra { display: flex; align-items: center; gap: var(--sp-14); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--bg-card); }
+/* ⚠️⚠️ Dos correcciones MEDIDAS en navegador, las dos del mismo tipo: una declaración que suponía
+   algo no declarado, sin que fallara nada.
+   ▶ El radio decía `var(--r-card)`, y **ese token no existe** en la escala (`--r-xs · --r-sm ·
+     --r-md · --r-btn · --r · --r-lg · --r-pill`): un `var()` sin fallback a un token no declarado
+     hace que el navegador DESCARTE la declaración entera → esquina viva. Medido: `0px` aquí contra
+     `16px` en `.gf-fiche`, que es la tarjeta hermana de esta misma página. Va con `--r`, el mismo
+     que ella, que es lo que la escala documenta como radio de tarjeta. ⚠️ `ShapeScaleTest` no podía
+     verlo: prohíbe escribir un canto LITERAL, y `var(--r-card)` no lo es.
+   ▶ Y `flex-wrap: wrap`, porque `.gf-extra__why` declara `flex: 1 1 100%` para bajar a su propia
+     línea — pero sin `wrap` ese `100%` no salta: se queda en la fila y aplasta a los hermanos.
+     Medido en una fila cerrada: el motivo se llevaba 424 px de 612 y el nombre caía a 119 px
+     necesitando 164, o sea partido en dos líneas con sitio de sobra al lado. */
+.gf-extra { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-14); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
 .gf-extra__id { display: flex; flex-direction: column; gap: var(--sp-2); flex: 1 1 auto; min-width: 0; }
 .gf-extra__name { font-weight: 600; font-size: var(--fs-15); }
 .gf-extra__price { font-size: var(--fs-12); color: var(--fg-mute); }

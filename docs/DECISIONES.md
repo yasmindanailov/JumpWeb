@@ -23165,3 +23165,104 @@ contrastarla con los tokens y las guardas que ya viven en código.
 **Verificación**: suite completa en verde antes de empujar (el hook la repite) · el contrato de árbol NO se
 regenera (el manifiesto vuelve al de `1b8db76` y el SSR se reconstruyó sobre los componentes restaurados) ·
 docs-check.
+
+## #414 · 2026-09-03 · Un token que no existe no es un valor vacío: es una declaración que el navegador TIRA — y ninguna guarda lo veía
+
+**Lo encontró el OWNER mirando la pantalla**, no la suite: *«el recuadro de los complementos en el
+formulario post reserva es cuadrado, no tiene border radius»*. La T3 de `#413` había entrado con la
+suite en verde, 4.228 casos y su propio arnés de mutación.
+
+**La causa**: `.gf-extra` escribía `border-radius: var(--r-card)` y **`--r-card` no existe**. La
+escala del producto es `--r-xs · --r-sm · --r-md · --r-btn · --r · --r-lg · --r-pill`. Un `var()`
+**sin fallback** a un token no declarado no cae a un valor vacío ni al inicial de la propiedad: la
+declaración entera es *inválida en tiempo de valor computado* y el navegador **la descarta**. Medido
+en Chrome real, con control en la misma página: `.gf-extra` a **0px** contra `.gf-fiche` —su tarjeta
+hermana— a **16px**.
+
+**⚠️⚠️ Por qué la suite no podía verlo, y es lo que hay que llevarse de aquí.** `ShapeScaleTest`
+existe justo para esto y pasó en verde: prohíbe escribir un canto **LITERAL** y obliga a usar un
+token — y `var(--r-card)` *es* un token. *La guarda que vigila que uses la escala no puede además
+vigilar que el token exista: son dos preguntas distintas, y la segunda no la hacía nadie.* Es el
+mismo hueco que `#253` cerró para los modificadores de clase («ningún modificador que un componente
+emite puede quedarse sin regla»), ahora en el vocabulario de tokens.
+
+**La misma pieza traía otros dos defectos de la misma familia** —una declaración que supone algo no
+declarado—, los dos medidos en navegador y ninguno capaz de fallar:
+
+- `.gf-extra` es `flex-wrap: nowrap` y `.gf-extra__why` declara `flex: 1 1 100%` para bajar a su
+  línea. **Sin `wrap` ese `100%` no salta**: se queda en la fila y aplasta a los hermanos. Medido en
+  una fila cerrada: el motivo se llevaba **424 px de 612** y el nombre caía a **119** necesitando
+  **164**, o sea partido en dos líneas con sitio de sobra al lado.
+- El `input` de cantidad vive **fuera de `.eventfields`**, así que no recibía la regla de campo del
+  formulario y salía con el **chrome del navegador**: `2px inset` y `0` de radio, al lado de campos
+  de `1px solid` y 14. Se ARREGLA añadiéndolo a esa misma regla, no copiándole los valores: así
+  sigue al campo si el campo cambia.
+
+**La guarda**: `UsedTokenIsDeclaredTest` — *ningún token que una hoja usa sin fallback puede quedar
+sin declarar*. Barre `landing.css` y `site.css`; cuenta como declarado lo que declare cualquier hoja
+de `public/css` **y lo que el servidor o el navegador publiquen en caliente** (`setProperty`,
+`style="--x: …"`, el tema por instalación desde BD), porque un token puede existir sin estar escrito
+en el CSS.
+
+- ⚠️ **Solo juzga el `var()` SIN fallback.** `var(--action-brand, var(--fg))` es el mecanismo
+  deliberado de `#209` —«vacío es una RESPUESTA, no una falta»— y son **52** usos: acusarlos habría
+  roto una decisión del producto. Que las dos formas se distingan es lo que hace posible la guarda.
+- ⚠️ **Los comentarios se blanquean, y la trampa volvió a morder**: `--jump-1`/`--jump-2` solo
+  aparecen **dentro de comentarios** que explican por qué ya no se usan. Sin blanquear salían como
+  dos defectos con toda la pinta de serlo (la lección de `#193`, y la de «no contar los comentarios»
+  de la 2c·0).
+- ⚠️ **Y el instrumento se validó en las dos direcciones antes de creerle**: que viera el fallo
+  conocido (`--r-card`) **y** que no acusara a los sanos (`--r`, `--action-brand`).
+
+**El barrido destapó TRES tokens rotos PREEXISTENTES, y `[DECIDIDO owner, 2026-09-03]` se arreglan
+los tres en esta misma tanda** — así `KNOWN_BROKEN` nace y se queda **VACÍA**, y el corpus limpio.
+
+| token | usos | efecto medido | arreglo |
+|---|---|---|---|
+| `--muted` | **8** | `color` inválido → **heredaba el color del padre**: `rgb(20,19,15)` donde tocaba `rgb(107,103,93)`, medido en el post-form. También mantenimiento, compra en mantenimiento y 404 | `--fg-mute`; re-medido: `actual == should` y ya no hereda |
+| `--fw-normal` | 1 | `font-weight` inválido → `.orders__guests-free` heredaba el semibold de su vecina en vez de anularlo | `400` literal, que es lo que la hoja hace en otros **ocho** sitios: la escala no declara «normal» (ni 500, con 29 usos literales). Ampliarla es del carril de diseño, parado |
+| `--r-5` | 1 | radio inválido en `.entry__qty` | `--r-sm`; medido **0px → 6px** con un `<input>` sin la clase como control (0px) |
+
+⚠️ **Corrección a mi propia valoración**: llamé a `--r-5` «el único sin efecto visible» porque el
+control no tiene borde ni fondo. Es inexacto — lo único a lo que ese radio puede afectar es al
+`outline` de `:focus-visible`, que por especificación sigue al `border-radius`. **No se midió** (la
+sonda de foco se descartó por coste) y así queda dicho en el CSS, en vez de dejar escrita una
+afirmación que nadie comprobó.
+
+### ▶ Y de propina, un ROJO CON FECHA que la suite entera destapó a las 21:17
+
+Correr la suite COMPLETA tras el arreglo sacó **un fallo que nada tenía que ver con él**:
+`GuestFormTest::test_an_addon_out_of_its_window_is_shown_read_only…`, recién llegado con la T3 de
+`#413`. La misma suite había salido verde veinte minutos antes.
+
+**La causa no era el defecto de UTC de `isFinishedInPractice()`** (ése sigue en `DEUDA.md`, y es
+otro): era el helper `moveParty()`. Una franja guarda **una fecha y dos horas de pared**, así que no
+sabe expresar un tramo que cruce medianoche — `date` sale del INICIO y `end_time` es solo una hora.
+Con `startsIn: 1, endsIn: 3` a las 21:30 del parque, componía `date = hoy` con `end_time = 00:30`,
+o sea **esta madrugada, hace 21 horas**, y el predicado declaraba celebrada una fiesta que aún no ha
+empezado.
+
+Medido con el reloj congelado: **VERDE a las 12:00 y a las 23:20, ROJO a las 21:00**. La ventana son
+las ~2 horas en que el FIN cruza el día y el INICIO todavía no: el caso pasaba 22 horas al día y
+fallaba 2. Es la familia de `#412` —lo que parece un defecto del producto y es un rojo con fecha—,
+solo que aquí el reloj no estaba congelado en absoluto.
+
+▶ **Arreglado en el helper y no en el caso**, para que proteja a todo uso futuro: `moveParty()`
+ancla el reloj a mediodía del parque antes de calcular, así los dos usos de hoy (+1/+3 y −5/−3) caen
+dentro del mismo día por construcción. **Barrido de 24 horas: 24/24 en verde**, contra el rojo medido
+de las 19:00 UTC antes del arreglo.
+
+⚠️ *La lección para quien escriba fixtures de franjas: «dentro de N horas» no es un instante seguro.
+Una franja no puede cruzar medianoche, así que cualquier aritmética relativa al reloj real acaba
+componiendo una franja imposible en algún momento del día.*
+
+**Verificación**: medido en Chrome real antes y después, con control en la misma página en las dos
+pasadas (`.gf-fiche` a 16px y los campos generales a 14px no se movieron) · **6/6 mutaciones muerden**
+(`scripts/mutar-token-declarado.sh`, con control previo en verde y veredicto por código de salida),
+y la primera es **el defecto real**, no uno inventado · barrido de reloj 24/24 · suite completa en
+verde.
+
+**⚠️ Lo que esto NO es**: diseñar. El carril de diseño sigue PARADO (`#452`) — aquí no se ha elegido
+ninguna forma nueva. Los tres arreglos devuelven la pieza al vocabulario que su propio código ya
+decía usar: el radio de su tarjeta hermana, el `wrap` que su `flex-basis` daba por hecho, y la regla
+de campo que sus vecinos ya tienen.
