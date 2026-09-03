@@ -22515,3 +22515,94 @@ pantalla **sin desbordamiento medido**, y lo cazó la captura; y el detector de 
 
 **Queda**: el OJO del owner en el móvil y D-G3 · D-G6 · D-G7; con su ✅, B en la portada real con guardas
 y las mismas medidas.
+## #413 · 2026-09-03 · `[DECIDIDO owner]` Un complemento puede venderse DESPUÉS de reservar — y la fase se declara en el ENGANCHE, no en el producto
+
+`[owner, 2026-09-03]`: *«el cliente reserva un cumpleaños, va a su form post reserva y puede añadir
+ahí complementos tipo cubo de refrescos para los adultos, tapas para los adultos… etc.»*.
+Spec: `docs/specs/complementos-post-reserva.md` (🟦 EN REVISIÓN, sin una línea de código escrita).
+
+### 1 · Lo que ya existía, y por eso esto sale barato
+
+**El mecanismo de «añadir un complemento a una reserva ya pagada» está construido y en producción**
+desde `#170`: el panel crea la línea hija y `Order::recordEdit(+Δ)` deja el hecho; desde el LIBRO
+(`#305`→`#317`) eso se pinta como «+2 Cubo de refrescos» con su fecha y el saldo pasa a «A pagar en
+el parque». **Y el post-form YA mueve dinero hoy**: al guardar las edades, `submitGuestForm()`
+dispara `MixedPartySurcharge::reconcile()`, que bajo lock crea/ajusta/cancela una línea hija de
+forma idempotente y simétrica. Esta feature es **el mismo patrón con otro disparador**.
+
+Lo que faltaba eran dos cosas: un eje que diga **cuándo se vende** un complemento, y la puerta del
+cliente en el post-form.
+
+### 2 · ⚠️⚠️ La propiedad que lo sostiene, y por qué la definición del eje importa
+
+`LineFacts` (verificado): `nac(i) = fila(i) − Δ(i)` y `online_nac(i) = max(0, nac − reparto)`. Una
+línea creada DESPUÉS del pedido lleva un ajuste `edit` de su importe exacto, así que **`nac = 0` y
+`online_nac = 0`: no aportó ni un céntimo al cobro online**. De ahí sale, sin programarla:
+
+> **quitar un complemento de venta posterior es NEUTRO en dinero** — el Total baja lo mismo que
+> subió, no hay devolución, y las cuatro identidades del libro siguen cerrando.
+
+Por eso el eje se define como **«cuándo se VENDE»** y no como «dónde lo ve el cliente»: un
+`postform` **no nace nunca con el pedido**, y eso convierte la neutralidad en una invariante en vez
+de en una casualidad que haya que cuidar. ⚠️ Incluye el **alta manual del panel**: dejar que el
+mostrador lo venda dentro del pedido que crea le daría `nac > 0`, y entonces el cliente podría
+retirar desde su post-form algo que **sí se cobró**. El operador tiene su camino de siempre —crear
+el pedido y añadírselo desde «Gestionar»—, que es una edición y nace con `nac = 0`.
+
+### 3 · El eje va en el PIVOTE
+
+`product_addons.stage` (`booking` por defecto | `postform`). En el enganche y no en el producto por
+la doctrina heredada del origen (*«config por enganche, no global»*, migración `2026_06_05_000002`)
+y con el vocabulario de `event_fields.stage`, que ya dice `booking`/`postform` para las fases de
+captura de un campo. Con `booking` por defecto, **los 29 enganches actuales quedan idénticos por
+construcción** (medido: los 29 son `fixed`, sueltos, sin tope y sin grupo).
+
+⚠️⚠️ **El filtro NO va dentro de la relación `addons()`**: tiene **12 consumidores** y uno de ellos
+es `OrderItemEditor`, que dejaría de encontrar la línea que tiene que mover. Va en cada superficie
+con el valor explícito, y **el panel no filtra**: el eje gobierna la venta, no la capacidad del
+operador. *Un filtro escondido en una relación se aplica también donde nadie lo pensó.*
+
+⚠️ **No hay valor `both`**, y es decisión: obligaría a distinguir POR UNIDAD qué se cobró y qué no,
+que es justo la ambigüedad que la propiedad de §2 elimina. Entraría de forma aditiva si algún día
+hace falta.
+
+### 4 · Las cuatro decisiones del owner
+
+1. **Se paga EN EL PARQUE** — aplica `#244` («cualquier gestión de dinero post-reserva ya cobrada se
+   hace en las instalaciones»). El cobro online post-reserva queda fuera: contradiría `#244` y es una
+   tanda propia sobre `PAY-01`/`PAY-02`.
+2. **Plazo de corte POR COMPLEMENTO** (`product_addons.postform_cutoff_hours`, nullable; `null` =
+   hereda el cierre del post-form, la doctrina de `AFORO-11`): «tapas 48 h» y «cubo 2 h» no necesitan
+   la misma antelación. Se mide contra el inicio de la franja con **`DisplayTime::now()`** (`AFORO-09`),
+   y gobierna **las dos direcciones** — pasado el plazo no se añade ni se quita, o el parque compra la
+   comida y pierde el importe sin margen.
+3. **El cliente puede quitar** mientras el plazo esté abierto, incluido lo que le añadió el parque por
+   teléfono: es neutro en dinero por §2, y un solo modelo simétrico e idempotente.
+4. ❗ **La puerta es «hay post-form», no «es un pack»** (`[owner]`: *«no es por producto, sería por
+   postform más bien»*). El gate es `OrderItem::acceptsGuestForm()`, el mismo que ya protege la página.
+   Hoy eso significa cumpleaños, pero **como consecuencia, no como restricción escrita**: el día que el
+   post-form llegue a otra reserva, los extras viajan con él sin una línea de código.
+
+### 5 · ⚠️ Dos hallazgos MEDIDOS por el camino, ninguno causado por esta feature
+
+**a · `OrderItem::isFinishedInPractice()` cierra el post-form 1–2 HORAS TARDE.** Las franjas guardan
+hora de pared del parque —lo demuestra que `SlotOffer::passesIntradayFloor` y el backstop de
+`OrderCreator` las comparan contra `DisplayTime::now()`— pero ese predicado las parsea con
+`CarbonImmutable::parse()`, que las interpreta en `config('app.timezone')` = **UTC**. Medido el
+2026-09-03 a las 08:40 CEST: una franja terminada **hace una hora en hora del parque** sale como «aún
+viva». De ese predicado cuelgan el `readonly` del post-form, el `item_finished` del gate del panel y
+la ventana de dinero del suplemento mixto. ⚠️ **No contradice a `#244`**: aquella decisión afirma que
+la ventana del cliente y la del dinero cierran **a la vez**, y siguen haciéndolo — lo que pasa es que
+**las dos cierran tarde**. Ficha en `DEUDA.md`; la spec **no hereda el error**.
+
+**b · `OrderItemEditor::edit()` no sabe BAJAR la cantidad de un complemento.** Sólo hay dos ramas:
+`$q === 0` cancela y `$q > $child->quantity` sube. Poner 3 → 2 **no hace nada**, y
+`ItemEditPricing::computeAddonPricing()` tampoco lo registra (no entra en `removed` ni en `updated`):
+sin error, sin correo y sin rastro. Medido leyendo el código; no conducido en el panel. Deja al
+operador con menos capacidad que al cliente — pendiente de decidir si entra en la tanda o va a ficha.
+
+### 6 · Lo medido antes de diseñar (2026-09-03, BD local)
+
+8 complementos · **29 enganches, todos `fixed`** y **0** incluidos, **0** obligatorios, **0** en grupo,
+**0** con `max_qty` · 2 packs con post-form (5 campos por invitado + 2 generales + 4 complementos) ·
+13 líneas hijas vivas.

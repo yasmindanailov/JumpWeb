@@ -2,6 +2,21 @@
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-03, madrugada — carril producto/reservas; el carril de diseño cerró el suyo aparte).
 >
+> **0. EN CURSO (2026-09-03, mañana) — COMPLEMENTOS QUE SE VENDEN DESPUÉS DE RESERVAR: la spec está
+>    escrita y espera REVISIÓN, sin una línea de código.** `docs/specs/complementos-post-reserva.md`
+>    (`#413`). `[owner]`: *«el cliente reserva un cumpleaños, va a su form post reserva y puede añadir
+>    ahí complementos tipo cubo de refrescos para los adultos, tapas…»*. ▶ **El mecanismo ya existe**
+>    (el panel añade complementos a una reserva pagada y el LIBRO lo pinta con saldo «A pagar en el
+>    parque»; el post-form ya mueve dinero hoy con el suplemento mixto): falta el eje
+>    **`product_addons.stage`** y la puerta del cliente. ⚠️⚠️ **La propiedad que lo sostiene, verificada
+>    en `LineFacts`**: un complemento de venta posterior **no nace nunca con el pedido** (tampoco en el
+>    alta manual), así que `nac = 0` → **quitarlo es NEUTRO en dinero**. **Cuatro `[DECIDIDO owner]`**
+>    en §7.1 y **ocho derivadas vetables** en §7.2. ▶ **Lo siguiente: la revisión adversarial**, con el
+>    encargo explícito de entrar **por donde se configura el dato** (la lente que faltó en la primera
+>    revisión de la hora extra). ⚠️ **Dos hallazgos medidos, con ficha en `DEUDA.md`**:
+>    `isFinishedInPractice()` cierra el post-form **1–2 h tarde** (hora de pared del parque parseada
+>    como UTC) y `OrderItemEditor::edit()` **no sabe bajar** la cantidad de un complemento.
+>
 > **1. LA HORA EXTRA — ✅ CÓDIGO COMPLETO Y DEMO EN LOCAL; queda su ✅ FINAL y el alta en PRODUCCIÓN**
 >    (2026-09-03, `#410`/`#411`). Las cuatro tandas en el árbol, el producto REAL dado de alta en
 >    localhost («Hora extra» 3,00 € en «Jump · 2 horas») con **6 pedidos demo** del cliente
@@ -415,9 +430,17 @@ correos, ficha en `DEUDA.md`.
 ❗❗ **REPARTO VIGENTE EN ESTA MÁQUINA (2026-09-02) — DOS CARRILES SOBRE EL MISMO CLON.** Sigue la
 regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`reset`/`clean`, y
 `git add` **solo de lo propio**.
-  · **HORA EXTRA** (el otro agente) → `specs/hora-extra.md` · `app/Domain/Booking/**` ·
-    `app/Filament/**` (catálogo) · migraciones · `tests/Feature/{Booking,Admin}/**`.
-    **Numera en la secuencia natural, desde `#410`.**
+  · **PRODUCTO / RESERVAS** → **carril de la HORA EXTRA CERRADO** (`#410`→`#412`, código completo);
+    desde el 2026-09-03 este carril lleva **COMPLEMENTOS DE VENTA POSTERIOR**
+    (`specs/complementos-post-reserva.md`, `#413`) → `app/Domain/Booking/**` ·
+    `app/Filament/**` (catálogo y pedidos) · migraciones · `openapi/v1.yaml` ·
+    `resources/views/reservation/**` · `lang/*/{tickets,guestform,admin}.php` ·
+    `tests/Feature/{Booking,Admin,Api}/**`. **Numera en la secuencia natural, desde `#413`.**
+    ▶ ⚠️ **AVISO AL CARRIL DE DISEÑO (2026-09-03), y es una incursión declarada**: la sección de
+    extras del post-form necesita CSS, y las **96 reglas `.gf-*` viven en `public/css/site.css`**,
+    que es tuyo. Tocaré **solo el bloque `.gf-*`** (y sólo cuando la spec esté aprobada), sin entrar
+    en nada de la landing ni del armazón. `git pull --rebase` antes de cada push por los dos lados.
+    **No toco `resources/views/components/site/**` ni `lang/*/landing.php`.**
   · **DISEÑO / IDIOMA VISUAL** (este) → `public/css/{site,landing}.css` ·
     `resources/views/{home.blade.php,pages/**,components/site/**,prototipos/**}` ·
     `lang/*/landing.php` · `tests/Feature/{Landing,Theme}/**` (y **una exclusión** en
@@ -429,17 +452,13 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     **Numera en la sub-banda `#430`–`#439` — último usado: `#433`** (2026-09-03), reservada A
     DISTANCIA de la secuencia natural para que el otro carril no tenga que mirar nada antes de
     empujar; si se agota, la siguiente se reserva aquí ANTES de usarla.
-  ▶ ⚠️ **Para el agente del PANEL / hora extra — un test tuyo cae BAJO CARGA** (2026-09-03, al
-    cerrar): `Tests\Feature\Admin\Puerta\ValidarRegistroTest::test_rate_limit_is_per_user_not_per_ip`
-    esperó `rate_limited` y recibió `not_registered` en un gate en el que corrían **tres suites a la
-    vez** (la mía, la del hook y la tuya) y la suite tardó **8:49 en vez de 1:20**. Mismo árbol que
-    había pasado en verde cinco minutos antes, y verde en aislamiento después. Es la familia del
-    aviso que dejaste sobre el SSR («el pre-push puede caer si la máquina está cargada»): un
-    limitador por ventana de tiempo medido con reloj de pared. Es tuyo (Puerta): lo anoto, no lo toco.
-  ▶ **Para el agente de HORA EXTRA**: la auditoría solo mide — no he tocado ningún fichero tuyo ni
-    ninguno compartido salvo `CLAUDE.md` (una fila), `docs/README.md` (una fila), `DECISIONES.md`
-    (`#430`, al final) y este bloque. Si vas a tocar `resources/views/components/site/**` (p. ej. el
-    complemento en la tarjeta de tarifa), dilo aquí antes.
+  ▶ ✅ **Aviso del carril de diseño sobre `ValidarRegistroTest`: LEÍDO Y ACTUADO** (2026-09-03,
+    retirado según `CONVENCIONES §10.4`). El limitador de la puerta se mide con reloj de pared y cae
+    con tres suites en la misma máquina: **ficha propia en `DEUDA.md`** con la reproducción y la
+    salida (`travelTo()`, `SUITE-03`, sin perder la auditoría de `SEC-05`).
+  ▶ ✅ **Aviso del carril de diseño sobre `components/site/**`: LEÍDO.** No voy a tocar esa carpeta
+    ni `lang/*/landing.php`. Lo único compartido que tocaré es el bloque `.gf-*` de
+    `public/css/site.css`, declarado arriba.
 
 **✅ EL CARRIL DE GOOGLE AUTH ESTÁ CERRADO Y EN PRODUCCIÓN** (`#353`, `#354`). La T8 entera, los
 siete puntos del ojo del owner, y **One Tap descartado por decisión suya**. No queda nada de este
