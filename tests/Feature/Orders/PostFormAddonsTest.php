@@ -18,7 +18,9 @@ use App\Domain\Booking\Services\PostFormAddons;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
@@ -338,6 +340,43 @@ class PostFormAddonsTest extends TestCase
         $changes = $this->service()->reconcile($item, [$this->drinks->id => 2], 'signed_link');
 
         $this->assertFalse($changes->changed());
+        $this->assertSame([['addon_id' => $this->drinks->id, 'reason' => 'not_offerable']], $changes->blocked);
+    }
+
+    /**
+     * ❗❗ **El plazo se mide con el reloj del PARQUE, no con el del contenedor.**
+     *
+     * Las franjas guardan hora de PARED del parque, y `isFinishedInPractice()` las parsea como UTC —
+     * por eso declara terminada una reserva 1–2 h tarde (§4.9, ficha en `DEUDA.md`). Heredar ese
+     * reloj aquí dejaría **quitar un extra ya consumido**, que es justo lo que el plazo existe para
+     * impedir.
+     *
+     * El caso está construido para que la diferencia MUERDA: el corte vence hace 10 minutos en hora
+     * del parque, pero con el reloj torcido —que va 1 o 2 h por detrás— aún parecería abierto. Sin
+     * este margen, una fiesta a diez días da lo mismo con los dos relojes y el caso no vigilaría nada.
+     */
+    public function test_the_cutoff_is_measured_with_the_park_clock_and_not_the_container_one(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-15 09:00:00', 'UTC'));
+
+        $parkNow = DisplayTime::now();
+        // El corte (inicio − 2 h) vence hace 10 minutos en hora de pared del parque.
+        $start = $parkNow->copy()->addMinutes(110);
+
+        $slot = Slot::create([
+            'zone_id' => $this->zone->id, 'date' => $parkNow->toDateString(),
+            'start_time' => $start->format('H:i:s'), 'end_time' => $start->copy()->addHours(2)->format('H:i:s'),
+            'capacity' => 20, 'online_capacity' => 20,
+        ]);
+        $this->attach($this->drinks, cutoffHours: 2);
+
+        $item = $this->party();
+        $item->forceFill(['slot_id' => $slot->id])->save();
+        $item = $item->fresh(['slot', 'ticketType.addons', 'order', 'children']);
+
+        $changes = $this->service()->reconcile($item, [$this->drinks->id => 2], 'signed_link');
+
+        $this->assertFalse($changes->changed(), 'el corte venció hace 10 minutos en hora del parque');
         $this->assertSame([['addon_id' => $this->drinks->id, 'reason' => 'not_offerable']], $changes->blocked);
     }
 
