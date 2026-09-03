@@ -13,6 +13,7 @@ use App\Domain\Booking\Services\CatalogReader;
 use App\Domain\Content\Services\LandingAddonPresenter;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Filament\Pages\CreateManualOrderPage;
 use App\Filament\Resources\Catalog\Pages\EditCatalog;
 use App\Filament\Resources\Catalog\RelationManagers\AddonsRelationManager;
 use Database\Seeders\PermissionSeeder;
@@ -223,6 +224,32 @@ class AddonStageTest extends TestCase
         $this->assertSame(2, $resolved['rows'][0]['quantity']);
         // Neutro al aforo, como cualquier complemento que no ocupa.
         $this->assertSame(0, $resolved['rows'][0]['seats']);
+    }
+
+    /**
+     * ❗❗ **El ALTA MANUAL del mostrador tampoco lo vende, y es la decisión D2** — la que el owner
+     * confirmó con el caso delante: si el gerente metiera dos cubos dentro del pedido que crea, esa
+     * línea nacería CON el pedido (`nac > 0`) y estaría cobrada; tres días después la madre podría
+     * quitarla desde su post-form y habría que devolverle dinero que ya está en la caja. Su camino es
+     * crear el pedido y añadírselo desde «Gestionar», que es una edición y nace en 0.
+     *
+     * ⚠️ Esta guarda la escribió una mutación que NO mordía: el filtro estaba puesto y sin red.
+     */
+    public function test_the_manual_order_page_does_not_offer_a_post_form_addon(): void
+    {
+        $pack = $this->pack();
+        $socks = $this->addon('Calcetines', 200, 20);
+        $drinks = $this->addon('Cubo de refrescos', 1200, 21);
+        $this->attachBooking($pack, $socks);
+        $this->attachPostForm($pack, $drinks);
+
+        $offered = Livewire::actingAs($this->admin())
+            ->test(CreateManualOrderPage::class)
+            ->set('data.sel_product_id', $pack->id)
+            ->instance()
+            ->selectedProductAddons();
+
+        $this->assertSame(['Calcetines'], $offered->map(fn ($a) => $a->tr('name'))->values()->all());
     }
 
     // ── 3 · Las TRES listas blancas del panel ──────────────────────────────────────────────────
