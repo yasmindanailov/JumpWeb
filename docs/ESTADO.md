@@ -353,9 +353,17 @@ contraste marca «Cian sobre Papel 2,45 ✕ NUNCA» y «Blanco sobre Verde 2,95 
 que la web sirve— y su tabla de roles pone el enlace en papel en Azul Muro) · **`docs/specs/
 guion-de-la-portada.md` ⬜** = el guion (cuatro preguntas · «cada regla donde muerde» · orden que
 reabre `#314` con medida · siete decisiones D-G1..7 · objetivos medibles con `storage/app/
-audit-camino.mjs`). **Lo siguiente es 2c: tres renders de la portada (Conversational FAQ · Split
-Studio · Map) sobre la web real, con el selector de zona y el precio por día dentro, para que el owner
-elija viendo.** ⚠️ D-G6 es DATO del owner: edad y altura de zona son texto libre (`zones.age_range`).
+audit-camino.mjs`). ▶ ✅ **2c HECHA (2026-09-03)**: las tres formas están **montadas sobre la web y los datos reales** en
+rutas **solo de local** (`/_diseno/portada/{a,b,c}` · `/_diseno/piezas` · `?zona=` · `?precio=` ·
+`?orden=cumple`; `routes/prototipos.php` bajo `app()->environment('local')`, controlador
+`Prototipos\PortadaController` que reutiliza los datos de `HomeController`; hoja
+`public/prototipos/guion.css` FUERA de `public/css/`, solo tokens) y **medidas** (guion §6.6): las tres
+bajan «qué hay dentro» de la pantalla 6,9 a la 3,2 y la edad de 2,1 a 1,6, con UN selector y cero
+contrastes nuevos; **ninguna baja el cumpleaños de la 3 ni el total de 10,7 pantallas** — eso es
+D-G3/D-G7 (contenido), no forma. **Lo siguiente es la elección del owner (D-G2·D-G4·D-G5) sobre la hoja
+«Tres portadas» (https://claude.ai/code/artifact/0ef89d7e-ab11-4776-8650-daef4e3a9253) y las URL
+locales**; los prototipos se retiran con ella. ⚠️ D-G6 es DATO del owner:
+edad y altura de zona son texto libre (`zones.age_range`).
 ⚠️ `DesignSync` sigue sin autorización en sesión no interactiva; copia del canvas del 27/28/31-08.
 ⚠️ **Lo que la auditoría vio fuera de su alcance**: `resources/views/vendor/mail/html/themes/brand.css`
 lleva `#FF5B22` (el naranja del PRIMER cliente) quemado **cinco veces** — fuga white-label en los

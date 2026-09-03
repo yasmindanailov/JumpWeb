@@ -270,6 +270,80 @@ cada pregunta en voz alta («¿puede saltar tu hijo de 6 años, y cuánto os cos
 mide si la contestan **sin ayuda en menos de 30 s** y dónde han mirado. 4 de 5 por pregunta es el
 listón. Es la única verificación que convierte «entendible» en un dato; el owner las trae.
 
+### 6.5 · El protocolo de la 2c — los renders (2026-09-03)
+
+Las tres formas se montan **sobre la web y los datos reales**, no como maqueta, en rutas que **solo
+existen en local** (`routes/prototipos.php`, cargado desde `routes/web.php` bajo
+`app()->environment('local')`; en testing y producción no existen):
+
+| URL | qué |
+|---|---|
+| `/_diseno/portada/a` | Conversational FAQ |
+| `/_diseno/portada/b` | Split Studio |
+| `/_diseno/portada/c` | Map / Diagram |
+| `/_diseno/piezas` | las tres variantes del selector de zona (D-G4) y del precio (D-G5), y los packs y «cómo funciona» |
+
+Parámetros en las tres portadas: `?zona=altura|tarjetas|pestanas` · `?precio=semana|dos|desde`.
+
+**Qué es real y qué es provisional**: zonas, atracciones, entradas, precios por tarifa, packs, normas,
+FAQ, horario, armazón, hero y cierre son **los del producto** (el controlador
+`Prototipos\PortadaController` pide sus datos a `HomeController` y no duplica consultas). **Provisional
+y marcado en pantalla**: la edad y la altura de cada zona se **parsean del texto** `zones.age_range`
+(D-G6), y los textos de «cómo funciona» y de las preguntas son copia del prototipo, sin i18n. La hoja
+`public/prototipos/guion.css` vive **fuera** de `public/css/` (las guardas del sistema barren esa
+carpeta) y aun así **solo usa tokens**. Los prototipos se **retiran con la decisión D-G2**.
+
+**Cómo se comparan**: la sonda `storage/app/audit-guion.mjs` mide las tres formas con el criterio de
+§2 (pantalla de cada respuesta a 390 y 1280, pantallas totales, desbordamiento, dos líneas por
+`Range`, contraste efectivo) y captura a 1440 y 390. Los números van en la hoja de decisión junto a
+las capturas. `?orden=cumple` (en A y B) adelanta el cumpleaños a antes de los juegos, para **medir**
+D-G3 en vez de estimarla.
+
+**La hoja de decisión** (presentación; el registro es este fichero): «Tres portadas» —
+https://claude.ai/code/artifact/0ef89d7e-ab11-4776-8650-daef4e3a9253 — con las capturas a 1440 y 390
+de la actual y de las tres formas, la tabla de §6.6 y las decisiones D-G2..D-G7.
+
+### 6.6 · Lo que los renders MIDIERON (2026-09-03, sonda `audit-guion.mjs`, Chromium)
+
+Pantalla en la que aparece la respuesta, a **390 px** (portátil 1440 entre paréntesis):
+
+| | actual | **A** FAQ | **B** díptico | **C** esquema | A · cumple antes | B · cumple antes | objetivo §2 |
+|---|---|---|---|---|---|---|---|
+| ¿puede saltar mi hijo? (edad **y** altura) | 2,1 (2,3) | **1,6** (1,8) | **1,6** (1,8) | **1,6** (1,8) | 1,6 | 1,6 | ≤ 1,5 |
+| ¿cuánto, el día que voy? | 2 (2,1) + una suma | 2,6 (2,6) sin sumar | 2,7 (2,3) | 2,5 (3,3) | 2,6 | 2,7 | ≤ 2, sin sumar |
+| ¿qué hay dentro? | **6,9** (5,9) | **3,2** (3,3) | 3,3 (3) | 3,2 (4) | 5 | 5,1 | ≤ 3 |
+| ¿cumpleaños? (su botón) | 5,3 (4,2) | 4,9 (5,1) | 5,1 (4,9) | 4,9 (5,9) | **3,9** (3,8) | **4** (3,6) | ≤ 3 |
+| cómo funciona una visita | 8,8 (8) | 6 (5,7) | 6,3 (5,3) | 6 (6,4) | 6 | 6,3 | — |
+| pantallas totales | **12,9** (11,5) | 10,7 (9,7) | 11 (9,5) | 10,7 (10,4) | 10,7 | 11 | ≤ 8 |
+| selectores de zona | **3** | **1** | **1** | **1** | 1 | 1 | 1 |
+| desbordamiento · pulsables a dos líneas | 0 · 0 | 0 · 0 | 0 · 0 | 0 · 0 | 0 · 0 | 0 · 0 | 0 · 0 |
+| fallos de contraste (de las piezas NUEVAS) | 3–4 (C2, C3) | **0** | **0** | **0** | 0 | 0 | 0 |
+
+**Lo que enseñan los números, dicho antes de que nadie elija**:
+1. **Lo que las tres formas ganan por igual** viene del GUION, no de la forma: un solo selector,
+   edad y altura en la primera pantalla tras el hero, «qué hay dentro» de la 6,9 a la 3,2, cero
+   contrastes nuevos por debajo de AA. La forma cambia la voz y el ritmo, no estas cifras.
+2. **El precio se retrasa media pantalla** (2 → 2,5–2,7) porque la zona va primero. Es el coste de
+   contestar «¿para quién?» antes que «¿cuánto?», y es el orden que el guion propone (D-G3).
+3. **El cumpleaños no llega a la 3 en ninguna**: con el orden propuesto queda en 4,9–5,1; adelantado
+   a antes de los juegos, en **3,9–4,0**. Para bajar más hay que **acortar** lo que va delante (el
+   selector + los precios miden ~2,4 pantallas a 390) o subirlo a la segunda posición. Es D-G3.
+4. **El largo total no baja de 10,7 pantallas** con las seis respuestas + hero + visita + dudas +
+   cierre. El hero mide **1,36 pantallas** a 390 (el recorrido del imán, `#252`), el cierre 0,6 más su
+   pista, y cada sección lleva 160 px de aire (`#314`). Llegar a ≤ 8 exige **quitar o comprimir**
+   (visita y dudas son 2,2 pantallas juntas; los juegos 1,7): es una decisión de contenido, no de
+   forma, y va a D-G3/D-G7.
+5. **C pierde en escritorio y se rompe en móvil**: a 1280 el esquema empuja precio y juegos ~0,9
+   pantallas más abajo que A y B, y a 390 el SVG escala hasta dejar los nombres de las atracciones
+   ilegibles (~4 px). Si se eligiera, en móvil tendría que **colapsar a lista**, que es volver a A/B.
+6. **A rompe a sabiendas `#303`** (titulares a una palabra en Bungee): sus títulos son la pregunta,
+   en Hanken 800. Es la voz del visitante en vez de la del rótulo; el owner decide si ese cambio de
+   voz compensa. **B es la que más suena a PlayJump** (Bungee a una palabra + díptico) y la
+   comparación —dos zonas, dos precios, dos packs— le es nativa.
+7. **Dos líneas: 0 en las tres**, medido con el detector corregido (solo nodos de texto; los
+   controles de dos filas por diseño, excluidos). El primer pase daba 21 falsos por contar un icono
+   `<svg>` en línea como segunda línea — cuarta trampa del instrumento en este carril.
+
 ### 6.4 · Lo que la skill mide al final
 `hallmark` · slop test sobre la portada nueva, con las excepciones declaradas de la auditoría §6.
 
