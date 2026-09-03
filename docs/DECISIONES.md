@@ -22319,6 +22319,40 @@ gitignorado) · `docs/specs/guion-de-la-portada.md` (nuevo) · `docs/INSTALACION
 tabla en C2/C3). Instrumento: `storage/app/audit-camino.mjs` (gitignorado). **Ni una línea de
 producto.**
 
+---
+
+## #432 · 2026-09-03 · `[DECIDIDO owner]` La portada tipo FAQ queda DESCARTADA; el MÓVIL va primero y perfecto; «slide» donde hay lista; y la capa de imagen entra — B se prueba primero en ARTEFACTO
+
+**Contexto.** La 2c montó las tres formas de la portada sobre la web y los datos reales
+(`/_diseno/portada/{a,b,c}`, rutas solo de local; `guion-de-la-portada.md` §6.5) y las midió (§6.6):
+las tres bajan «qué hay dentro» de la pantalla 6,9 a la 3,2 y la edad de 2,1 a 1,6 con un solo
+selector; ninguna baja el cumpleaños de la 3 (3,9 adelantándolo) ni el total de 10,7 pantallas.
+
+**`[DECIDIDO owner]`** al verlas: **A (Conversational FAQ) fuera**; la organización, aprobada; **el
+móvil tiene que estar perfecto y va primero** (vio el texto de las tarjetas de zona partido a 390);
+le gusta **la medida en metros dentro de las tarjetas de zona**; los precios como están pero
+perfectos en móvil; **«slide» lateral en las secciones que son lista** (precedente: la pasada de móvil
+de su propio mockup usa `scroll-snap`); y **faltan iconos, imágenes y «juego» (stickers)** — los
+renders eran tipografía a propósito. **Y el siguiente paso lo fija él: B se hace primero como
+ARTEFACTO, una prueba con estas decisiones tomadas, para verla antes de tocar la portada real.**
+
+**Reglas que salen de aquí** (spec §6.7): una elección entre DOS nunca va en slide (las dos zonas se
+ven a la vez); una lista de tres o más sí, con el siguiente asomando cortado por el borde (`#239`);
+la capa de imagen entra dentro del presupuesto del propio cliente (una mancha grande por pantalla,
+un sello de precio por página, nunca pintura bajo un párrafo, nada en bucle): icono de producto en
+cada precio, foto y dibujo de zona en su tarjeta, friso o pose por sección, el sello girado en el
+precio. Estimado por alturas medidas: los slides llevan el móvil de 10,7 a **~8,7** pantallas.
+
+⚠️⚠️ **Corrección al instrumento**: el detector de «dos líneas» excluía las tarjetas de zona por ser
+controles de dos filas por diseño, y **esa exclusión escondió justo lo que el owner vio** — la línea
+de datos en mono mayúsculas con tracking se parte en tres a 390. *Un control puede tener dos filas por
+diseño y aun así una fila que no debe partirse.* La sonda mide cada línea de dato por separado, y la
+aceptación es a 320 · 360 · 375 · 390 · 414.
+
+**Queda abierto**: D-G3 (¿cumpleaños antes que los juegos? medido 4,9 → 3,9), D-G6 (los dos campos
+de zona), D-G7 (qué normas en la portada). Los prototipos de local siguen en el árbol hasta que B se
+construya en la portada real.
+
 ## #410 · 2026-09-03 · La segunda revisión pre-obra: el peor hueco era una SUMA que ningún resolvedor por-elemento puede ver
 
 **Contexto.** La spec de la hora extra (`specs/hora-extra.md`) llegó aprobada y revisada de forma

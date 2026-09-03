@@ -347,6 +347,50 @@ Pantalla en la que aparece la respuesta, a **390 px** (portátil 1440 entre par�
 ### 6.4 · Lo que la skill mide al final
 `hallmark` · slop test sobre la portada nueva, con las excepciones declaradas de la auditoría §6.
 
+### 6.7 · Lo que el owner dijo al ver los renders (2026-09-03) — decisiones y dos correcciones
+
+`[owner, 2026-09-03]`, textual: *«Me gusta la idea de la organización, la landing tipo FAQ no me
+convence, pero para mí es muy importante que la UI/UX en el móvil esté perfecta, y el texto se rompe
+en el móvil por ejemplo con las zonas; la idea de la medida, los metros en las cards de zonas, me
+gusta. Lo de los precios también me gusta, pero en el móvil lo quiero perfecto, y valoro hacerlo todo
+lo posible tipo slide, en vez de deslizar que hagan slide lateral en ciertas secciones. Y parece que
+me faltan elementos tipo iconos o imágenes, es demasiado solo texto, y no hay algo de "juego", un
+sticker o algo.»*
+
+- **D-G2 · `[DECIDIDO owner]`: la forma A (Conversational FAQ) queda DESCARTADA.** La organización
+  (el guion) se aprueba. Queda **B** (díptico) como forma de trabajo — C se rompe en móvil, que es la
+  prioridad declarada — pendiente de que el owner lo confirme al ver la B **en móvil, terminada**.
+- **D-G4 · orientación**: las **tarjetas de zona con la medida en metros** (la marca de altura dentro
+  de la tarjeta, no como pieza aparte). Se renderiza así en la siguiente pasada.
+- **D-G5 · orientación**: el precio como está (dos precios llanos / la semana), pero **perfecto en
+  móvil**.
+- **REQUISITO NUEVO, y manda sobre todo lo demás: el MÓVIL primero y perfecto.** Cada pieza se
+  diseña a 390 antes que a 1440, y la aceptación es a 320 · 360 · 375 · 390 · 414.
+- **REQUISITO NUEVO: «slide» lateral donde lo que hay es una lista.** Precedente del propio cliente:
+  la pasada de móvil de `Landing PJP Modos` (28-08) usa **carruseles con `scroll-snap`** y el panel
+  de reserva como hoja inferior (`mockup_playjumppark/README.md`). Regla de diseño: **una elección
+  entre dos nunca va en slide** (las dos zonas se ven a la vez); una lista de tres o más sí, con el
+  siguiente elemento **asomando cortado por el borde** (la pista de `#239` §5.2), nunca con puntos.
+- **REQUISITO NUEVO: la capa de imagen, iconos y «juego».** Los renders son tipografía a propósito
+  (primero la estructura, después el vestido — el orden de la skill): el material existe y entra en
+  la siguiente pasada dentro del presupuesto del propio cliente (`design-playjump.md` §8–§9: una
+  mancha grande por pantalla, un sello de precio por página, nunca pintura bajo un párrafo, ninguna
+  pieza en bucle) — el icono de producto en cada precio (`ticket_types.icon`, que la tarjeta actual
+  ya pinta y el render perdió), la foto de zona en su tarjeta, el dibujo de zona como identidad, un
+  friso o una pose por sección, el sello girado en el precio, los estados vacíos con enjambre.
+- ⚠️⚠️ **CORRECCIÓN AL INSTRUMENTO: el detector de «dos líneas» excluía `.pg-zbtn` por ser un
+  control de dos filas por diseño, y esa exclusión escondió justo lo que el owner vio** — la línea de
+  datos de la tarjeta de zona («4–7 AÑOS · SIN ALTURA MÍNIMA · DESDE 8 €», mono, mayúsculas, `.1em`)
+  **se parte en dos y tres líneas a 390**. *Un control puede tener dos filas por diseño y aun así una
+  fila que no debe partirse.* La sonda pasa a medir **cada línea de dato por separado**. Salidas de
+  diseño, para renderizar: menos datos por línea (edad y altura en una, el precio en otra) · sin
+  mayúsculas ni tracking en la línea de dato (el `.16em` en mayúsculas es ~1,5× más ancho que el
+  cuerpo) · o dos filas deliberadas.
+- ⚠️ **CORRECCIÓN AL ALCANCE DE LA MEDIDA**: el objetivo de ≤ 8 pantallas a 390 se acerca por los
+  slides, no por la forma — estimado sobre las alturas medidas (packs apilados 1,6 → ~0,9 · visita
+  1,0 → ~0,6 · cómo funciona 1,1 → ~0,6 · precios 0,9 → ~0,7): **~8,7 pantallas**. Es una estimación
+  y se mide al construirlo.
+
 ## 7. Revisión y decisión
 
 - 2026-09-03 · borrador del agente a partir de la auditoría (`#430`), las cuatro preguntas del owner,

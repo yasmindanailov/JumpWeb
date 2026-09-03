@@ -360,9 +360,25 @@ rutas **solo de local** (`/_diseno/portada/{a,b,c}` · `/_diseno/piezas` · `?zo
 `public/prototipos/guion.css` FUERA de `public/css/`, solo tokens) y **medidas** (guion §6.6): las tres
 bajan «qué hay dentro» de la pantalla 6,9 a la 3,2 y la edad de 2,1 a 1,6, con UN selector y cero
 contrastes nuevos; **ninguna baja el cumpleaños de la 3 ni el total de 10,7 pantallas** — eso es
-D-G3/D-G7 (contenido), no forma. **Lo siguiente es la elección del owner (D-G2·D-G4·D-G5) sobre la hoja
-«Tres portadas» (https://claude.ai/code/artifact/0ef89d7e-ab11-4776-8650-daef4e3a9253) y las URL
-locales**; los prototipos se retiran con ella. ⚠️ D-G6 es DATO del owner:
+D-G3/D-G7 (contenido), no forma. Hoja de decisión: «Tres portadas»
+(https://claude.ai/code/artifact/0ef89d7e-ab11-4776-8650-daef4e3a9253).
+▶ ❗❗❗ **EL OWNER YA DECIDIÓ AL VERLAS (`#432`, spec §6.7) — POR DÓNDE SE RETOMA ESTE CARRIL:**
+**A (FAQ) DESCARTADA · la organización aprobada · B es la forma de trabajo** (C se rompe en móvil).
+**Lo siguiente, dicho por él: «haremos B en ARTEFACTO primero, una prueba, para verla con las
+decisiones de ahora tomadas»** — o sea, NO tocar la portada real todavía: montar B como artefacto
+(HTML autocontenido, con los datos reales copiados y el CSS del sistema), **MÓVIL PRIMERO** (diseñar
+a 390; aceptar a 320·360·375·390·414), con: **(1)** tarjetas de zona con **la medida en metros
+dentro** y una línea de dato que **no se parta** (sin mayúsculas ni tracking en la línea de dato, o
+edad/altura en una fila y precio en otra); **(2)** **slides** con `scroll-snap` y el siguiente
+asomando cortado en precios, packs, cómo funciona y visítanos — **nunca en las dos zonas ni en las
+dudas**; **(3)** la **capa de imagen** dentro del presupuesto del cliente (`design-playjump.md`
+§8–§9): icono de producto en cada precio (`ticket_types.icon`), foto + dibujo de zona en su tarjeta,
+friso o pose por sección, **el sello girado en el precio**, nada bajo un párrafo, nada en bucle;
+**(4)** el orden zona → precio → juegos → cumple, con **D-G3 abierta** (cumple antes de juegos:
+medido 4,9 → 3,9). Objetivo medible en móvil: ≤ 8,7 pantallas estimadas por slides, y las cuatro
+respuestas de la spec §2. Cuando el owner dé el ✅ al artefacto, se construye en la portada real con
+guardas (línea de dato, un selector, presupuesto de fachada) y las mismas medidas. Los prototipos
+de local (`/_diseno/…`) siguen en el árbol hasta entonces. ⚠️ D-G6 es DATO del owner:
 edad y altura de zona son texto libre (`zones.age_range`).
 ⚠️ `DesignSync` sigue sin autorización en sesión no interactiva; copia del canvas del 27/28/31-08.
 ⚠️ **Lo que la auditoría vio fuera de su alcance**: `resources/views/vendor/mail/html/themes/brand.css`
