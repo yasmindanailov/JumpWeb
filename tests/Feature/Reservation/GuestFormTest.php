@@ -771,6 +771,35 @@ class GuestFormTest extends TestCase
         $this->assertSame('7', $reservation->event_data['adults'] ?? null);
     }
 
+    /**
+     * ⚠️ **Un cuerpo MALFORMADO se conserva, no se vacía.** La web no valida el tipo —el formulario
+     * siempre manda listas—, así que un POST forjado puede traer `guests` como cadena. Ante eso, la
+     * única respuesta segura es conservar: destruir los datos de ocho menores por un tipo equivocado
+     * no puede ser la conducta por defecto. (En la API esta rama no se alcanza: `['sometimes','array']`
+     * responde 422 antes de llegar al dominio — dos superficies, dos defensas, ninguna que borre.)
+     *
+     * Lo escribió una mutación que NO mordía: la regla estaba en el código y sin red.
+     */
+    public function test_a_malformed_body_preserves_the_data_instead_of_wiping_it(): void
+    {
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
+
+        $this->actingAs($user)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
+            'guests' => [['name' => 'Ana'], ['name' => 'Luis']],
+        ])->assertRedirect();
+
+        $this->actingAs($user)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
+            'guests' => 'no soy una lista',
+            'general' => 'yo tampoco',
+        ])->assertRedirect();
+
+        $reservation->refresh();
+        $this->assertSame('Ana', $reservation->guestData()[0]['name'] ?? null);
+        $this->assertSame('Luis', $reservation->guestData()[1]['name'] ?? null);
+        $this->assertSame('Mara', $reservation->event_data['celebrant'] ?? null);
+    }
+
     // ── Rotar el enlace (D14 de `#413`) ────────────────────────────────────────────────────────
 
     /**

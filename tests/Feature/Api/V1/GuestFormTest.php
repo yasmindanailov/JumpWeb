@@ -530,6 +530,22 @@ class GuestFormTest extends ApiTestCase
         $this->assertSame('Mara', $reservation->event_data['celebrant'] ?? null);
     }
 
+    /**
+     * El CONTROL de su hermana de la web: en la API un tipo equivocado **no llega al dominio**, lo
+     * corta la validación con un 422. Dos superficies, dos defensas distintas, y ninguna que borre.
+     */
+    public function test_a_malformed_guests_body_is_rejected_before_touching_anything(): void
+    {
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
+        $save = $this->getJson($reservation->guestFormApiUrls()['show'])->json('save_url');
+
+        $this->putJson($save, ['guests' => [['name' => 'Ana'], ['name' => 'Luis']]])->assertOk();
+        $this->putJson($save, ['guests' => 'no soy una lista'])->assertStatus(422);
+
+        $this->assertSame('Ana', $reservation->refresh()->guestData()[0]['name'] ?? null);
+    }
+
     // ── El sello deja de mover el token optimista del operador (T0 de `#413`) ──────────────────
 
     /**
