@@ -2,20 +2,31 @@
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-03, madrugada — carril producto/reservas; el carril de diseño cerró el suyo aparte).
 >
-> **0. EN CURSO (2026-09-03, mañana) — COMPLEMENTOS QUE SE VENDEN DESPUÉS DE RESERVAR: la spec está
->    escrita y espera REVISIÓN, sin una línea de código.** `docs/specs/complementos-post-reserva.md`
->    (`#413`). `[owner]`: *«el cliente reserva un cumpleaños, va a su form post reserva y puede añadir
->    ahí complementos tipo cubo de refrescos para los adultos, tapas…»*. ▶ **El mecanismo ya existe**
->    (el panel añade complementos a una reserva pagada y el LIBRO lo pinta con saldo «A pagar en el
->    parque»; el post-form ya mueve dinero hoy con el suplemento mixto): falta el eje
->    **`product_addons.stage`** y la puerta del cliente. ⚠️⚠️ **La propiedad que lo sostiene, verificada
->    en `LineFacts`**: un complemento de venta posterior **no nace nunca con el pedido** (tampoco en el
->    alta manual), así que `nac = 0` → **quitarlo es NEUTRO en dinero**. **Cuatro `[DECIDIDO owner]`**
->    en §7.1 y **ocho derivadas vetables** en §7.2. ▶ **Lo siguiente: la revisión adversarial**, con el
->    encargo explícito de entrar **por donde se configura el dato** (la lente que faltó en la primera
->    revisión de la hora extra). ⚠️ **Dos hallazgos medidos, con ficha en `DEUDA.md`**:
->    `isFinishedInPractice()` cierra el post-form **1–2 h tarde** (hora de pared del parque parseada
->    como UTC) y `OrderItemEditor::edit()` **no sabe bajar** la cantidad de un complemento.
+> **0. EN CURSO (2026-09-03) — COMPLEMENTOS QUE SE VENDEN DESPUÉS DE RESERVAR: spec escrita,
+>    REVISADA de forma adversarial y CORREGIDA. Sigue sin una línea de código.**
+>    `docs/specs/complementos-post-reserva.md` (`#413`). `[owner]`: *«el cliente reserva un cumpleaños,
+>    va a su form post reserva y puede añadir ahí complementos tipo cubo de refrescos, tapas…»*.
+>    ▶ **EMPIEZA POR §8** (la revisión) y luego §1.3 y §4.5.1. **El mecanismo ya existe** —el panel
+>    añade complementos a una reserva pagada y el LIBRO lo pinta con saldo «A pagar en el parque»; el
+>    post-form ya mueve dinero hoy con el suplemento mixto—: falta el eje **`product_addons.stage`** y
+>    la puerta del cliente.
+>    ▶ ❗❗❗ **LA REVISIÓN (6 lentes) ENCONTRÓ TRES AFIRMACIONES MÍAS FALSAS Y DOS BLOQUEANTES.**
+>    Falsas: que el editor del panel ignora una bajada de complemento (**la BLOQUEA**, y el bloqueo
+>    sostiene el modelo de dinero) · que «no hay inversión de locks posible» (**hay cuatro caminos que
+>    la invierten y el interbloqueo se REPRODUJO**, `SQLSTATE[40001]`) · y que `general` tiene
+>    semántica *nullable* en el `PUT` (**ausente BORRA**, medido con petición firmada real).
+>    ⚠️⚠️ **El cambio de diseño que trajo (D9): la propiedad «quitar es neutro» es un hecho de la
+>    LÍNEA (`birthValue() === 0`), no del eje** — el eje es configuración mutable, y pasar «Tarta» a
+>    `postform` habría puesto en manos del cliente líneas ya cobradas, **con el libro cerrando en
+>    verde**. ⚠️ Segundo bloqueante: **tres listas blancas del panel** entre el formulario y la fila,
+>    y las tres callan al olvidarse (la peor **revierte la fase al tocar otro campo**).
+>    ▶ **Lo siguiente es del owner**: el ✅ a las **13 derivadas** de §7.2 (cinco nuevas) y **dos
+>    `[PENDIENTE: owner]`** — si el enlace del post-form debe poder REVOCARSE (hoy no puede: es HMAC y
+>    `revokeAllAccess()` no lo alcanza) y cuánta insistencia quiere en las superficies de demanda,
+>    porque hoy **nadie invita al cliente a volver a comprar**.
+>    ⚠️ **Seis defectos PREEXISTENTES destapados, con ficha en `DEUDA.md`** — entre ellos que la
+>    escalada 403→410→404 **no se cumple en la web** (afecta también al justificante) y que el `PUT`
+>    del post-form sin `general` **borra** las respuestas generales.
 >
 > **1. LA HORA EXTRA — ✅ CÓDIGO COMPLETO Y DEMO EN LOCAL; queda su ✅ FINAL y el alta en PRODUCCIÓN**
 >    (2026-09-03, `#410`/`#411`). Las cuatro tandas en el árbol, el producto REAL dado de alta en

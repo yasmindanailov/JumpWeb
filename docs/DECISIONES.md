@@ -22595,18 +22595,70 @@ la ventana de dinero del suplemento mixto. ⚠️ **No contradice a `#244`**: aq
 la ventana del cliente y la del dinero cierran **a la vez**, y siguen haciéndolo — lo que pasa es que
 **las dos cierran tarde**. Ficha en `DEUDA.md`; la spec **no hereda el error**.
 
-**b · `OrderItemEditor::edit()` no sabe BAJAR la cantidad de un complemento.** Sólo hay dos ramas:
-`$q === 0` cancela y `$q > $child->quantity` sube. Poner 3 → 2 **no hace nada**, y
-`ItemEditPricing::computeAddonPricing()` tampoco lo registra (no entra en `removed` ni en `updated`):
-sin error, sin correo y sin rastro. Medido leyendo el código; no conducido en el panel. Deja al
-operador con menos capacidad que al cliente — pendiente de decidir si entra en la tanda o va a ficha.
+**b · ~~`OrderItemEditor::edit()` no sabe BAJAR la cantidad de un complemento~~ — ERA FALSO, corregido
+el mismo día por la revisión adversarial (§7).** No lo ignora: **lo BLOQUEA.** `validateAddonEdits()`
+—que corre **antes** del cuerpo de `edit()`— devuelve `addon_partial_reduce_unsupported`, con mensaje
+al operador en es y zh_CN, fila de auditoría y caso propio en `ManageItemAddonsTest`. *Leí las dos
+ramas del guardado y me salté la validación de delante.* ▶ Y el bloqueo **no es un olvido: es una
+exclusión deliberada que sostiene el modelo de dinero** — para una línea nacida con el pedido
+`nac > 0`, así que bajarla debe dinero, y esta misma entrada dice que `#244` prohíbe moverlo online.
+La «asimetría difícil de defender» que escribí **es exactamente la propiedad de §2**: el cliente
+podrá bajar **porque** su línea nació en 0.
 
 ### 6 · Lo medido antes de diseñar (2026-09-03, BD local)
 
 8 complementos · **29 enganches, todos `fixed`** y **0** incluidos, **0** obligatorios, **0** en grupo,
 **0** con `max_qty` · 2 packs con post-form (5 campos por invitado + 2 generales + 4 complementos) ·
-13 líneas hijas vivas.
+13 líneas hijas **en total: 12 vivas y 1 cancelada** (la primera versión decía «13 vivas»).
 
+### 7 · ⚠️⚠️ LA REVISIÓN ADVERSARIAL, EL MISMO DÍA — tres afirmaciones MÍAS eran FALSAS
+
+Seis lentes independientes (configuración del dato · dinero y libro · ciclo de vida y locks ·
+superficies y contrato · seguridad y RGPD · crítico de completitud). Registro completo en
+`specs/complementos-post-reserva.md` §8; aquí lo que cambia la decisión.
+
+**Lo FALSO, y las tres son mías:**
+1. **§4.10** (arriba, punto 5·b): el editor **bloquea** la bajada parcial, no la ignora.
+2. **«No hay inversión de locks posible»**: hay **cuatro** caminos que toman `orders` antes que
+   `order_items` (cancelar ítem, cancelar pedido, y las dos transacciones del reembolso), y el
+   interbloqueo se **reprodujo** con dos conexiones MySQL reales (`SQLSTATE[40001] … 1213`).
+   ⚠️ **Y la inversión ya existe hoy sin esta feature**: la FK de `order_adjustments` hacia `orders`
+   obliga a un lock compartido sobre el pedido, así que un cliente guardando edades y un operador
+   cancelando ya pueden chocar. ▶ Sale una regla del subsistema: **`orders` → `order_items` → hijas**.
+3. **«`addons` ausente no toca nada, como `general`»**: medido con una petición firmada real, un
+   `PUT` sin `general` **BORRA** las respuestas generales. Cité un precedente que hace lo contrario.
+
+**El cambio de diseño más importante, y no lo vi yo** (`D9`): la propiedad «quitar es neutro» es un
+hecho **de la línea** (`LineFacts::birthValue() === 0`), no del eje. El eje es configuración
+**mutable**: el día que el parque pase «Tarta» de `booking` a `postform` —que es justo lo que la
+feature quiere que haga—, toda fiesta ya vendida con tarta comprada en el embudo tendría su línea
+dentro de la oferta, y quitarla **debe dinero**. Medido sobre un pedido real: el saldo pasa de
+`settled: 0` a `refund_at_park: −4,00 €`, **y el libro sigue cerrando** — o sea que la guarda que yo
+había escrito («las cuatro identidades cierran») pasaba **en verde con el defecto puesto**.
+
+**El segundo bloqueante · las tres listas blancas del panel.** `ADDON_PIVOT_COLUMNS`,
+`sanitizePivotData()` y el `fillForm()` de «Configurar» están entre el formulario y la fila, y **las
+tres callan al olvidarse**: la primera hace que el dato se caiga al añadir (con el audit diciendo lo
+contrario), la segunda impide cambiar la fase de los 29 enganches existentes, y la tercera —la peor—
+**revierte un `postform` a `booking` al tocar cualquier otro campo**. Es la lección de
+`specs/hora-extra.md` §4.9 aplicada a sí misma, y esta vez son tres puertas y no una.
+
+**Cinco decisiones derivadas nuevas** (D9 la puerta por el hecho · D10 el plazo obligatorio, porque
+`null` heredaba el reloj torcido de §4.9 · D11 el orden de locks · **D12 no entra anti-bot**, con
+argumento de modelo de amenaza en vez de por analogía · D13 el canal en el `context` del ajuste).
+
+**Y tres desacuerdos ENTRE LENTES, resueltos midiendo y no votando**: dos lentes dieron por buena mi
+afirmación del editor y dos la desmintieron; dos dieron por bueno mi orden de locks **cometiendo mi
+mismo error** (comparar solo contra el editor) y una lo midió; y sobre si BAJAR escribe movimiento,
+lo resolvió la aritmética —sin él, `nac` cae a −12,00 € e `I1` falla—: **bajar escribe, retirar no**.
+⚠️ *Una lente que confirma no vale lo mismo que una que mide.*
+
+**Seis defectos PREEXISTENTES destapados**, todos con ficha en `DEUDA.md`: el `PUT` que borra
+`general` · la escalada 403→410→404 que **no se cumple en la web** (el *route binding* lanza el 404
+antes de autorizar, y afecta también al justificante) · la IP de las filas de auditoría sin sesión
+que sobrevive al art. 17 (368 de 373) · `max_qty = null` sin techo en el dominio ·
+`markGuestFormCompleted()` invalidando el token optimista de cinco puertas del operador · y
+`ProductAddon.php` fuera del `CRITICAL_RE` aunque es donde viven los guards.
 
 ## #434 · 2026-09-03 · `[DECIDIDO owner]` La tanda C de la auditoría: lo roto se arregla midiendo antes y después — y el informe tenía una causa mal diagnosticada
 
