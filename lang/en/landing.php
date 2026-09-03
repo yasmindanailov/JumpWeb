@@ -177,7 +177,7 @@ return [
         'special_dates_title' => 'Special dates',
         'until' => '· until :time',
         'weekdays' => [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'],
-        'address_title' => 'Location', 'parking' => 'Free parking 2h', 'directions' => 'Directions',
+        'address_title' => 'Location', 'directions' => 'Directions',
     ],
     'rules' => [
         'eyebrow' => 'Rules', 'title' => 'Rules',

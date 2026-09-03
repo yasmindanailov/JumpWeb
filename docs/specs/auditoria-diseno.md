@@ -1,7 +1,8 @@
 # [AUDITORÍA] Costuras a la vista — segunda auditoría de diseño de la web pública
 
-> Estado: 🟦 **INFORME ENTREGADO, pendiente de las seis decisiones del owner (§7)** ·
-> Última actualización: 2026-09-02 · Decisión asociada: `DECISIONES #430` (el informe vive en el
+> Estado: 🟦 **INFORME ENTREGADO · TANDA C EJECUTADA (§11, `#434`) · D4, D5 y D6 decididas; D1 se
+> decide viendo opciones renderizadas (tanda D) y D2/D3 con la organización (tanda G)** ·
+> Última actualización: 2026-09-03 · Decisión asociada: `DECISIONES #430` (el informe vive en el
 > repo; el artefacto es solo la presentación) · Carril: **diseño / idioma visual** (este ordenador,
 > sub-banda `#430`–`#439`, reservada a distancia de la secuencia natural `#410`+ que sigue el
 > otro carril de esta máquina, `specs/hora-extra.md` — aforo, sin solape de ficheros).
@@ -300,16 +301,19 @@ Se listan para que nadie las «arregle». Cada una tiene su porqué medido en `D
   enseñan las tres **sobre la FAQ y las pestañas reales**, a 1440 y 390.
 - **D2 · Las interiores** (M3): versión larga vs. anclar. Y qué es `/entradas`.
 - **D3 · Normas** (M6): sin icono · icono por norma desde el panel · lista.
-- **D4 · Contacto** (M4, M5): dónde va la tarjeta, y «Parking» al panel o fuera.
+- **D4 · Contacto** (M4, M5): dónde va la tarjeta, y «Parking» al panel o fuera. →
+  `[DECIDIDO owner, 2026-09-03]`: **debajo del mapa, como pegatina; «Parking» FUERA** (§11).
 - **D5 · Los hovers** (M1): retirar los cinco; y **confirmar** si el del logotipo es el «flota»
-  de `#217`.
-- **D6 · Movimiento** (M10): las 11 banderitas de la invitación y el spinner oculto.
+  de `#217`. → `[DECIDIDO owner, 2026-09-03]`: **fuera los cinco; el logotipo conserva su gesto**.
+- **D6 · Movimiento** (M10): las 11 banderitas de la invitación y el spinner oculto. →
+  `[DECIDIDO owner, 2026-09-03]`: **banderitas QUIETAS (fuera el bucle)**; el spinner oculto y el
+  icono de calcetines se pausan mientras no se ven (no necesitaba decisión).
 
 ## 8. Plan propuesto (el orden es una recomendación; las letras siguen a la A y la B ejecutadas)
 
 | tanda | qué | gusto | tamaño |
 |---|---|---|---|
-| **C** | **Lo roto**: M4 (solape del mapa) · M7 (foco de campos) · M8 (acordeón) · C3 (`--on-ok`, el sub-rótulo, ≥ 10 px) | solo D4 | pequeña |
+| **C** | **Lo roto**: M4 (solape del mapa) · M7 (foco de campos) · M8 (acordeón) · C3 (`--on-ok`, el sub-rótulo, ≥ 10 px) — ✅ **HECHA, `#434` (§11)** | solo D4 | pequeña |
 | **D** | **El color que responde**: C2 con D1, opciones renderizadas; retira `--zone-*` de lo que no es zona | D1 | media |
 | **E** | **La física, terminada**: M1 · m1 · m2 · m3 · m4, con la guarda ampliada | D5 | pequeña |
 | **F** | **La escala**: M2, sustitución mecánica + guarda | ninguno | media, cero reflujo |
@@ -347,3 +351,54 @@ Se listan para que nadie las «arregle». Cada una tiene su porqué medido en `D
 - Controles: sonda 1 `caughtTwoLine: true, caughtContrast: true`; sonda 2 `control (a) ✓`.
 - Cada cifra de §3–§5 tiene fichero:línea o sonda; ninguna sale de la doc anterior.
 - **No se tocó ni una línea de producto.**
+
+## 11. Ejecución — tanda C, «lo roto» (2026-09-03, `#434`)
+
+`[DECIDIDO owner, 2026-09-03]` **D4** (la tarjeta de contacto DEBAJO del mapa, como pegatina · «Parking»
+FUERA), **D5** (fuera los cinco hovers que saltan; el logotipo conserva su «flota») y **D6** (banderitas
+quietas). D5 y D6 se ejecutan en las tandas E y H; aquí, la C.
+
+**Medido ANTES y DESPUÉS con la misma sonda** (`storage/app/audit-tanda-c.mjs`, Chromium, 1280 y 390,
+fuentes cargadas; tabulando de verdad para el foco y `elementFromPoint()` para el solape):
+
+| hallazgo | antes | después |
+|---|---|---|
+| C3 «O inicia sesión» (`.cta-ghost__s`) | Humo `#626A72` al **62 %** sobre blanco · 9 px → **2,61** | opacidad 1 · `--paper-fg-mute` · 10 px → **5,49** |
+| C3 «Incluido» (`.addons(-mini)__badge--included`) | `#fff` sobre `--ok` → **2,95** · 9,5 px | `--on-ok` (tinta, del paquete) → **6,28** · 10 px |
+| C3 «¡Felicidades!» (`.bd-pol__sticker`) | magenta puro sobre tinta → **4,11** | magenta aclarado un 28 % hacia papel → **5,13** |
+| M8 acordeón (`.faq__a`) | `transition: max-height, margin-top` · abierto `max-height: 240px` | `transition: grid-template-rows` · abierto = su contenido (62 px a 1280, 86 a 390), **sin tope** |
+| M4 `/contacto` | `elementFromPoint()` sobre «Cargar el mapa» → la tarjeta (1280) / su párrafo (390) | → **el botón** |
+| M5 «Parking gratis 2h» | en la página | fuera, y la clave fuera de los tres idiomas |
+| M7 foco del primer campo (Tab real) | `outline: none` · borde de 1 px | `outline: solid 3px` Azul Muro (`--focus-outline`) |
+
+**Lo que cambia en el sistema**: nacen **`--on-ok` · `--on-err` · `--on-warn`** (texto sobre relleno
+semántico; `design.md` §3 los tenía como *(futuro)*) — el producto declara papel sobre sus verde y rojo
+oscuros y **el paquete del cliente declara los suyos** (`client.css`: tinta sobre Verde Salta, blanco
+sobre Rojo Goteo, que es su tabla §2.1); el anillo del token cubre ya `input`/`textarea`/`select`;
+el suelo de 10 px pasa a guarda (seis literales de 9 y 9,5 px subidos; la única excepción enumerada,
+`.bk-seg__label`, es del cajón, aparcado). La tarjeta de la dirección es la pegatina de «Visítanos»
+(`.visit-card`, `#307`), sin título dentro y sin `:hover`.
+
+**Guardas nuevas — las cuatro vistas MORDER con el defecto real** (mutación en el fichero y
+restauración sin git, control en verde): `FieldFocusRingTest` (un `outline: none` en un `:focus` de
+campo · falta la regla `:focus-visible`) · `FaqAccordionTest` (vuelve `max-height` · falta el envoltorio
+que recorta) · `SemanticFillTextTest` (blanco quemado sobre `--ok/--err/--warn` · tokens ausentes ·
+`.cta-ghost__s` con opacidad · `font-size` < 10 px fuera de la lista del cajón) · `ContactPageTest` (la
+tarjeta dentro de `.map-card` · algo posado con `z-index` sobre el mapa · «Parking» en página o en `lang/`).
+
+**Tres correcciones a este informe, medidas**:
+1. **La causa de «O INICIA SESIÓN» no era el gris de la OTRA superficie** (§3·C3 decía «lee
+   `--ink-fg-mute`»): la sonda dio `rgb(98,106,114)` = Humo de PAPEL, y lo que lo hundía era
+   `opacity: .62` de la regla compartida con el relleno de tinta (`.cta-med__s, .cta-ghost__s`), pensada
+   para papel sobre tinta (donde da 6,9). *Un color medido en pantalla puede ser el correcto atenuado:
+   la sonda tiene que multiplicar la opacidad de los ancestros, y el informe no lo hizo.*
+2. **`--on-ok` NO se puede derivar por luminancia como `--on-brand`**: aquél lo calcula el servidor desde
+   el panel; `--ok` lo declara el CSS del paquete y el servidor no lo ve. El par lo declara quien declara
+   el color, y eso deja **un paso de despliegue**: dos líneas en el `client.css` de producción
+   (`--on-ok: #101418; --on-err: #FFFFFF;`), que no viajan por rsync.
+3. **Un `color-mix()` computa como `color(srgb …)`**: una sonda que lee `rgb()` se cae con `null.a` en
+   cuanto un texto usa la mezcla. Se normaliza pintando el color en un canvas de 1×1.
+
+**Lo que no cambia, a propósito**: el borde de 1 px que cambia de color al foco sigue (es la respuesta
+de ratón, y `:focus-visible` la complementa); el reset `*:focus { outline: none }` sigue; el `:focus`
+del calendario y del cajón heredan el mismo anillo sin tocar sus reglas.

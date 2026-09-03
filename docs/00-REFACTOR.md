@@ -3774,7 +3774,12 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       https://claude.ai/code/artifact/56f75f11-fb65-4e81-96d2-e9fd8fdc39c2
 - [ ] El OJO del owner sobre el artefacto en su móvil, y D-G3 · D-G6 · D-G7.
 - [ ] B en la portada real con guardas (§6.2 + las de §6.8) y las mismas medidas; retirar `/_diseno/…`.
-- [ ] La tanda C de la auditoría (lo roto) y las decisiones D1–D6.
+- [x] **Tanda C de la auditoría, «lo roto»** (`#434`, spec §11): contacto (D4), foco de campos, acordeón sin
+      tope, los cuatro contrastes con `--on-ok/--on-err/--on-warn`; cuatro guardas que muerden. D4 · D5 · D6
+      `[DECIDIDO owner]`. ⚠️ Paso de despliegue: dos líneas en el `client.css` de producción.
+- [ ] Tanda E (hovers con D5 + m1–m4, guarda ampliada a todo `:hover`) · H (imágenes con dimensiones, bucles
+      con D6 y guarda) · D (C2: tres opciones renderizadas para D1) · F (la escala, mecánica).
+- [ ] Tanda G (interiores M3, normas M6, m5, m6: D2 y D3) — con la organización y las secciones.
 
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no

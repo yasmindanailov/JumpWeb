@@ -289,6 +289,13 @@ Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cua
        una instalación con cinco colores propios los pone aquí, uno a uno. */
     --strip-1: #1AA9DE;  --strip-2: #A3C21C;  --strip-3: #F5C400;
     --strip-4: #F2711C;  --strip-5: #D93E14;
+
+    /* EL TEXTO SOBRE TUS RELLENOS SEMÁNTICOS (`DECISIONES #434`). Si redefines `--ok` / `--err` /
+       `--warn`, declara también quién va encima: el producto no puede derivarlo (no ve tu color y CSS
+       no tiene luminancia) y su defecto —papel— está pensado para SUS verde y rojo oscuros. Con un
+       verde claro como Verde Salta, papel encima da 2,95 (falla AA); tinta da 7,6. */
+    --on-ok: #101418;    /* tinta sobre Verde Salta */
+    --on-err: #FFFFFF;   /* blanco sobre Rojo Goteo (4,52; el papel se queda en 4,11) */
 }
 ```
 

@@ -420,8 +420,23 @@ hero (`#252`) y el aire entre secciones (`#314`), no la forma. ⚠️ **Cuatro t
 (la peor: la copia local sin `<meta viewport>` maquetada a 980 px; y un fallo de cascada que la sonda no vio
 y la captura sí). **No reproduce** el imán del hero, el vídeo, el minijuego, el menú ni el cajón, a propósito.
 Fuente, constructor, sonda y volcado en **`scripts/prototipo-b/`**; la copia servida (gitignorada) en
-`http://localhost:8081/storage/prototipo-b/index.html`. ▶ **LO SIGUIENTE**: el OJO del owner en el móvil;
+`http://localhost:8081/storage/prototipo-b/index.html`. ▶ El OJO del owner en el móvil sigue pendiente;
 con su ✅ y D-G3 · D-G6 · D-G7, B en la portada real con guardas y las mismas medidas.
+▶ ✅ **TANDA C DE LA AUDITORÍA — HECHA (2026-09-03, `#434`, `auditoria-diseno.md` §11)**: el owner pidió
+seguir con los puntos de la auditoría y dejar la organización para después. Lo roto: `/contacto` con la
+dirección DEBAJO del mapa como pegatina y sin «Parking» (`[DECIDIDO owner]` D4), el anillo de foco en
+los campos, el acordeón sin tope (`grid-template-rows`) y los cuatro contrastes — «O inicia sesión»
+2,61 → 5,49 (**no era el gris de otra superficie, era `opacity: .62`**: el informe tenía la causa mal),
+«Incluido» 2,95 → 6,28 con los tokens nuevos `--on-ok/--on-err/--on-warn`, «¡Felicidades!» 4,11 → 5,13;
+suelo de 10 px con guarda. Cuatro guardas nuevas, las cuatro vistas morder. ⚠️⚠️ **PASO DE DESPLIEGUE
+DEL OWNER**: dos líneas en el `client.css` de producción (`--on-ok: #101418; --on-err: #FFFFFF;`), que
+no viajan por rsync — sin ellas «Incluido» sigue en 2,95 allí. `[DECIDIDO owner]` también **D5** (fuera
+los cinco hovers que saltan; el logotipo se queda) y **D6** (banderitas quietas; spinner y calcetines
+pausados fuera de vista), que se ejecutan en E y H. ▶ **LO SIGUIENTE, en este orden**: tanda **E**
+(hovers + m1–m4, con guarda ampliada a todo `:hover`), **H** (imágenes con dimensiones y el presupuesto
+de bucles con guarda), **D** (C2: tres opciones del color de interacción renderizadas sobre la FAQ y
+las pestañas reales para D1), **F** (la escala, mecánica); la **G** (interiores, normas: D2, D3) se
+valora con la organización.
 ⚠️ `DesignSync` sigue sin autorización en sesión no interactiva; copia del canvas del 27/28/31-08.
 ⚠️ **Lo que la auditoría vio fuera de su alcance**: `resources/views/vendor/mail/html/themes/brand.css`
 lleva `#FF5B22` (el naranja del PRIMER cliente) quemado **cinco veces** — fuga white-label en los
@@ -449,7 +464,7 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     (raíz) · `routes/prototipos.php` + su `require` en `routes/web.php` ·
     `app/Http/Controllers/Prototipos/**` · `public/prototipos/**` · **`scripts/prototipo-b/**`** (el
     fuente del artefacto B, su constructor, su sonda y el volcado de datos).
-    **Numera en la sub-banda `#430`–`#439` — último usado: `#433`** (2026-09-03), reservada A
+    **Numera en la sub-banda `#430`–`#439` — último usado: `#434`** (2026-09-03), reservada A
     DISTANCIA de la secuencia natural para que el otro carril no tenga que mirar nada antes de
     empujar; si se agota, la siguiente se reserva aquí ANTES de usarla.
   ▶ ✅ **Aviso del carril de diseño sobre `ValidarRegistroTest`: LEÍDO Y ACTUADO** (2026-09-03,
@@ -486,6 +501,10 @@ Santo salió de aplicar la regla al pie de la letra (el owner decide si se poda)
 
 ## ▶ DOS COSAS DEL OWNER, Y UNA ES UN PASO DE DESPLIEGUE
 
+- ⚠️⚠️ **`client.css` de PRODUCCIÓN (carril de diseño, `#434`)**: añadir a mano las dos líneas
+  `--on-ok: #101418;` y `--on-err: #FFFFFF;` en el `:root` del paquete instalado — el paquete no viaja
+  por rsync. Sin ellas, «Incluido» sigue pintando blanco sobre el verde claro (2,95) allí, con la suite
+  en verde aquí. El fichero local ya las lleva.
 - ⚠️⚠️ **Hay que PUBLICAR la v1 de «Condiciones»** en cada instalación (panel → Páginas legales →
   Condiciones → «Publicar versión»). **Hasta que se publique no se pide nada y la venta sigue** (el
   hueco falla hacia invisible), así que no bloquea el despliegue — pero sin ella la T8 no hace nada.

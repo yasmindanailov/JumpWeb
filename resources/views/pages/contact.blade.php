@@ -98,18 +98,29 @@
                 referrerpolicy="no-referrer-when-downgrade" allowfullscreen>
                 <span class="map-pin"></span>
             </x-site.consent-frame>
-            <div style="position:relative; z-index:1; background:var(--bg-card); padding:20px 24px; border-radius:var(--r); border:1px solid var(--line); max-width:340px">
-                <h2 style="margin:0; font-family:var(--font-display); font-size:32px; letter-spacing:-0.03em; font-weight:800">{{ __('landing.info.address_title') }}</h2>
-                <p style="margin:10px 0 16px; color:var(--fg-mute); font-size:14px; line-height:1.6">
-                    {{ $site['address1'] ?? '' }}<br />
-                    {{ $site['address2'] ?? '' }}<br />
-                    {{ __('landing.info.parking') }}
-                </p>
+        </div>
+        {{-- LA DIRECCIÓN, DEBAJO DEL MAPA Y NO ENCIMA (auditoría M4 · `[DECIDIDO owner, 2026-09-03]`,
+             `DECISIONES #434`). Hasta hoy esta tarjeta iba posada SOBRE el marco del mapa y tapaba
+             al 100 % el botón «Cargar el mapa» y su enlace a la política (medido con
+             `elementFromPoint()` a 1440 y a 390): en escritorio el mapa no se podía cargar.
+             ▶ Es la PEGATINA de «Visítanos» (`#307`, `CardSkinTest`), sin título dentro —el pin dice
+             qué es— y sin `:hover`, porque no lleva a ninguna parte.
+             ⚠️ «Parking gratis 2h» se retira (auditoría M5, `[DECIDIDO owner]`: fuera): era un dato
+             de negocio escrito en el código; la FAQ del panel ya lo dice. `ContactPageTest` vigila
+             las dos cosas: que la tarjeta no vuelva dentro del mapa y que la frase no vuelva. --}}
+        @if (filled($site['address1'] ?? null) || filled($site['address2'] ?? null) || $hasMaps)
+            <div class="visit-card contact-where">
+                <span class="visit-card__ico" aria-hidden="true"><x-icons.pin :width="22" :height="22" /></span>
+                @if (filled($site['address1'] ?? null) || filled($site['address2'] ?? null))
+                    <p class="visit__addr">{{ $site['address1'] ?? '' }}<br />{{ $site['address2'] ?? '' }}</p>
+                @endif
                 @if ($hasMaps)
-                    <a href="{{ $site['maps'] }}" target="_blank" rel="noopener" class="btn btn--ghost btn--sm">{{ __('landing.info.directions') }}</a>
+                    <div class="visit__actions">
+                        <a href="{{ $site['maps'] }}" target="_blank" rel="noopener" class="btn btn--ghost btn--sm" data-tap>{{ __('landing.info.directions') }}</a>
+                    </div>
                 @endif
             </div>
-        </div>
+        @endif
         </aside>
         </div>{{-- /.contact-layout --}}
 

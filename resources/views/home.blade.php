@@ -510,7 +510,11 @@
                                 @click="faqOpen = faqOpen==={{ $i }} ? -1 : {{ $i }}"
                                 :aria-expanded="faqOpen==={{ $i }} ? 'true' : 'false'"
                                 aria-controls="faq-answer-{{ $i }}">{{ $faq->tr('question') }}<span class="ico" aria-hidden="true"><x-icons.plus :width="14" :height="14" /></span></button>
-                        <div class="faq__a" id="faq-answer-{{ $i }}">{{ $faq->tr('answer') }}</div>
+                        {{-- Dos envoltorios a propósito (auditoría M8, `#434`): el acordeón anima
+                             `grid-template-rows` 0fr → 1fr y no `max-height`, que animaba layout y era
+                             un TOPE de 240 px sobre respuestas que escribe el panel. El de fuera
+                             (`.faq__a-in`) recorta y NO lleva relleno; el de dentro lleva el aire. --}}
+                        <div class="faq__a" id="faq-answer-{{ $i }}"><div class="faq__a-in"><p class="faq__a-p">{{ $faq->tr('answer') }}</p></div></div>
                     </div>
                 @endforeach
             </div>

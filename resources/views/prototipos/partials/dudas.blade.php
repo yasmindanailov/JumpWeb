@@ -7,7 +7,7 @@
         <div class="faq__item" :class="faqOpen==={{ $i }} && 'open'">
             <button type="button" class="faq__q" data-tap @click="faqOpen = faqOpen==={{ $i }} ? -1 : {{ $i }}"
                     :aria-expanded="faqOpen==={{ $i }} ? 'true' : 'false'" aria-controls="faq-answer-{{ $i }}">{{ $faq->tr('question') }}<span class="ico" aria-hidden="true"><x-icons.plus :width="14" :height="14" /></span></button>
-            <div class="faq__a" id="faq-answer-{{ $i }}">{{ $faq->tr('answer') }}</div>
+            <div class="faq__a" id="faq-answer-{{ $i }}"><div class="faq__a-in"><p class="faq__a-p">{{ $faq->tr('answer') }}</p></div></div>
         </div>
     @endforeach
 </div>

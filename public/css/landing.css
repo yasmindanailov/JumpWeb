@@ -2099,12 +2099,20 @@ img { display: block; max-width: 100%; }
   transition: transform var(--dur-entra) var(--ease-sale), background var(--dur-entra), color var(--dur-entra), border-color var(--dur-entra);
 }
 .faq__item.open .faq__q .ico { transform: rotate(45deg); background: var(--zone-1); border-color: transparent; color: var(--on-brand); }
+/* EL DESPLIEGUE SIN TOPE (auditoría M8, `#434`). Aquí se animaba `max-height: 0 → 240px`: anima
+   layout Y es un tope de contenido — hoy las seis respuestas miden 24–48 px, pero las escribe el
+   panel y la primera larga se habría cortado SIN FALLAR. La receta que anima sin tope es la rejilla
+   `0fr → 1fr`. ⚠️ Hacen falta DOS envoltorios: el recorte (`overflow: hidden`) no puede llevar
+   relleno, porque estirado a una fila de 0 px conservaría su relleno y asomarían 14 px; el aire va
+   en el párrafo de dentro. `FaqAccordionTest` vigila que no vuelva el tope. */
 .faq__a {
-  max-height: 0; overflow: hidden;
-  transition: max-height var(--dur-cae) var(--ease-sale), margin-top var(--dur-cae) var(--ease-sale);
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows var(--dur-cae) var(--ease-sale);
   color: var(--fg-mute); font-size: 15px; line-height: 1.6; max-width: 640px;
 }
-.faq__item.open .faq__a { max-height: 240px; margin-top: 14px; }
+.faq__a-in { overflow: hidden; min-height: 0; }
+.faq__a-p { margin: 0; padding-top: 14px; }
+.faq__item.open .faq__a { grid-template-rows: 1fr; }
 
 /* ---------- big CTA footer ---------- */
 .reserve { text-align: center; padding: 120px 0 80px; }
@@ -2298,6 +2306,19 @@ input[type="radio"]:focus-visible,
   outline: var(--focus-outline);
   outline-offset: 3px;
 }
+/* LOS CAMPOS TAMBIÉN (auditoría M7, `#434`): tabulando, `/contacto` y `/cumpleanos` llegaban al foco
+   con `outline: none` y solo cambiaba el color de un borde de 1 px — la mitad que quedaba del
+   hallazgo nº 3 del auditor del cliente («los campos llevan outline:none sin sustituto»). WCAG 2.4.11
+   pide un perímetro de ≥ 2 px. El anillo es el del token; con 2 px de aire y no 3 porque el campo ya
+   tiene su borde. ⚠️ Las reglas `input:focus { outline: none }` de `site.css` se quedan solo con el
+   cambio de borde: si una vuelve a poner `outline: none`, gana por orden y el anillo desaparece sin
+   que falle nada — lo vigila `FieldFocusRingTest`. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
 
 /* touch devices — disable hover translates so they don't stick after tap */
 @media (hover: none) {
@@ -2385,7 +2406,7 @@ input[type="radio"]:focus-visible,
   .events__timeline-dot { width: 16px; height: 16px; border-width: 4px; }
   .events__timeline-steps::before { top: 8px; left: 6%; right: 6%; }
   .events__timeline-time { font-size: 16px; }
-  .events__timeline-name { font-size: 9px; letter-spacing: 0.1em; }
+  .events__timeline-name { font-size: 10px; letter-spacing: 0.1em; }
   /* ubicación — `.info-card` y su `h3` se fueron con «Visítanos» (`#307`); `.map-card` sigue
      porque la usa `/contacto`. */
   .map-card { min-height: 280px; padding: 18px; }
@@ -2575,7 +2596,10 @@ input[type="radio"]:focus-visible,
 }
 .bd-pol__sticker {
   position: absolute; top: 20px; right: -22px;
-  background: var(--fg); color: var(--bda);
+  /* «¡Felicidades!» en magenta puro sobre tinta daba 4,11 (auditoría C3, `#434`): el acento se ACLARA
+     hacia el papel —la salida que el sistema del cliente da a sus enlaces en tinta («aclarar en
+     tinta»)— y con el magenta queda en 5,15; con cualquier acento de zona (cian, lima) sube más. */
+  background: var(--fg); color: color-mix(in srgb, var(--bda) 72%, var(--paper-bg));
   font-size: 11px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.14em;
   padding: 6px 14px; transform: rotate(8deg);
@@ -2766,7 +2790,7 @@ input[type="radio"]:focus-visible,
 .bd-card__top { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 26px; padding-right: 116px; }
 .bd-card__brand { font-family: var(--font-display); font-weight: 800; font-size: 17px; letter-spacing: -0.04em; }
 .bd-card__brand .dot { color: var(--inv); }
-.bd-card__eyebrow { font-family: var(--font-mono); font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
+.bd-card__eyebrow { font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
 .bd-card__msg { font-size: 15px; font-weight: 600; color: var(--fg-mute); margin: 0 0 6px; padding-right: 116px; }
 .bd-card__name {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
@@ -2785,7 +2809,7 @@ input[type="radio"]:focus-visible,
 .bd-card__row .ico { width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%; background: var(--inv); color: var(--fg); display: grid; place-items: center; transition: background-color var(--dur-cae) var(--ease-sale); }
 .bd-card__row:nth-child(2) .ico { background: var(--inv2); }
 .bd-card__row:nth-child(3) .ico { background: var(--fg); color: var(--bg); }
-.bd-card__row .lbl { font-family: var(--font-mono); font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); width: 52px; flex-shrink: 0; }
+.bd-card__row .lbl { font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); width: 52px; flex-shrink: 0; }
 .bd-card__row .val { font-weight: 600; }
 .bd-card__ps { font-size: 12.5px; color: var(--fg-mute); margin: 14px 0 0; font-style: italic; }
 

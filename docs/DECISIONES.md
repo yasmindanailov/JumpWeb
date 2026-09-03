@@ -22606,3 +22606,43 @@ operador con menos capacidad que al cliente — pendiente de decidir si entra en
 8 complementos · **29 enganches, todos `fixed`** y **0** incluidos, **0** obligatorios, **0** en grupo,
 **0** con `max_qty` · 2 packs con post-form (5 campos por invitado + 2 generales + 4 complementos) ·
 13 líneas hijas vivas.
+
+
+## #434 · 2026-09-03 · `[DECIDIDO owner]` La tanda C de la auditoría: lo roto se arregla midiendo antes y después — y el informe tenía una causa mal diagnosticada
+
+**Contexto.** El owner pidió seguir con los puntos de la auditoría (`specs/auditoria-diseno.md`) y
+dejar la organización y las secciones para después. Su plan (§8) empieza por la tanda C, «lo roto»:
+M4 (la tarjeta «Ubicación» de `/contacto` tapaba al 100 % el botón «Cargar el mapa»), M7 (los campos
+llegaban al foco sin anillo), M8 (el acordeón animaba `max-height` con tope de 240 px sobre
+respuestas que escribe el panel) y C3 (cuatro textos por debajo de AA).
+
+**Decisiones del owner, preguntadas con opciones**: **D4** la tarjeta va DEBAJO del mapa, como pegatina
+(la de «Visítanos», `#307`), y «Parking gratis 2h» FUERA (era un dato de negocio en el código; la FAQ del
+panel ya lo dice) · **D5** fuera los cinco hovers que saltan; el logotipo conserva su gesto de «flota»
+(`#217`) · **D6** las banderitas de la invitación quedan QUIETAS; el spinner oculto y el icono de
+calcetines se pausan mientras no se ven. D5 y D6 se ejecutan en las tandas E y H.
+
+**Lo hecho y medido (§11 de la spec)**: «O inicia sesión» 2,61 → **5,49**; «Incluido» 2,95 → **6,28**;
+«¡Felicidades!» 4,11 → **5,13**; el acordeón anima `grid-template-rows` y abierto mide su contenido;
+en `/contacto` `elementFromPoint()` sobre el botón del mapa devuelve **el botón**; el primer campo llega
+al foco con `outline: solid 3px` del token. Nacen `--on-ok` · `--on-err` · `--on-warn` y el suelo de
+10 px pasa a guarda. Cuatro guardas nuevas, las cuatro vistas morder con el defecto real.
+
+**1 · El informe tenía la causa mal.** Decía que el sub-rótulo del CTA «lee el gris de la OTRA
+superficie» (`--ink-fg-mute`). La sonda dio `rgb(98,106,114)`: Humo de PAPEL, el correcto, atenuado al
+62 % por una regla compartida con el relleno de tinta. *Una cifra de contraste bien medida puede llevar
+a un diagnóstico equivocado si la sonda no dice también POR QUÉ sale ese color; arreglar «el gris» habría
+dejado la opacidad puesta.*
+
+**2 · Un par de color no siempre se puede derivar.** `--on-brand` lo calcula el servidor desde el panel;
+`--ok` lo declara el CSS del paquete y el servidor no lo ve, y CSS no tiene luminancia. El par lo declara
+quien declara el color: el producto para sus valores, el paquete para los suyos — y eso deja **un paso
+de despliegue** (dos líneas en el `client.css` de producción, que no viaja por rsync). Un mecanismo
+white-label que exige un paso manual se dice; callarlo es exactamente el modo en que «Incluido» seguiría
+en 2,95 en producción con la suite en verde.
+
+**3 · Trampa de instrumento**: un `color-mix()` computa como `color(srgb …)` y la sonda que lee `rgb()`
+se cae en silencio. Se normaliza con un canvas.
+
+**Verificación**: sonda antes/después a 1280 y 390 · 227 guardas de hojas y vistas en verde · Pint ·
+cuatro mutaciones que muerden con control en verde.
