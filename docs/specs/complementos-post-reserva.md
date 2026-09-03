@@ -941,6 +941,46 @@ en sus dos direcciones · R1 en sus dos direcciones · R2 con el catálogo cambi
 **Mutaciones**: escribir movimiento al retirar · no escribirlo al bajar · atar el hecho al principal ·
 gobernar por eje en vez de por hecho · invertir el orden de locks.
 
+### 9.3 · ✅ T2 EJECUTADA (2026-09-03, `DECISIONES #413`)
+
+Commits `cb497127` + el de la guarda del reloj. **Suite 4.204 ✓** · Pint ✓ ·
+**`scripts/mutar-postform-t2.sh` 13/13** · los dos escenarios nuevos sobre MySQL real, **el cruzado
+visto FALLAR con su control**.
+
+**Lo construido**: `Booking\Services\PostFormAddons` (+ `PostFormAddonChanges`), con las tres
+escrituras de §4.5.1, R0–R5, el orden de locks de D11, la re-validación bajo lock de §4.5.5 y el
+token optimista del borde 5. Entra en el `CRITICAL_RE` y en `CriticalPathGateTest`.
+
+**Los dos verificadores** (`postform:verify-concurrency`):
+
+| escenario | qué mide | medido |
+|---|---|---|
+| `addons` | N guardados simultáneos del MISMO post-form escriben **UNA** línea y **UN** hecho | 12 procesos → 1 línea de 2 unidades, 1 ajuste |
+| `cross` | un guardado del **cliente** contra una cancelación del **operador** no se interbloquea | **0 de 12** con el orden de D11 · **6 de 12** con `--control` (orden invertido) |
+
+⚠️⚠️ **`cross` es el primer escenario del repo que cruza DOS caminos distintos.** `purchase:verify-oversell`
+forkea N compras o N ediciones, `mixed-party` N guardados y `redsys` N notificaciones: todos, N copias
+del MISMO actor. El interbloqueo que la revisión reprodujo **solo aparece cruzándolos**, y por eso no
+lo veía ningún verificador.
+
+▶ **Desviación de la spec, dicha**: §6·5 proponía añadir un `--scenario=addons` a
+`mixed-party:verify-concurrency`. Se hizo **comando propio** porque el segundo escenario no tiene nada
+que ver con la fiesta mixta y meterlo allí habría dejado un comando cuyo nombre miente sobre la mitad
+de lo que mide. `SUITE-04` declara los dos.
+
+**Lo que enseñó la ejecución**
+
+- ⚠️ **El «desde» de un rótulo no se lee de `getOriginal()` después de `save()`**: Eloquent sincroniza
+  los originales al guardar, así que el libro habría dicho «Cubo de refrescos: 2 → 2». Lo cazó el caso
+  del rótulo, no una revisión.
+- ⚠️⚠️ **Un caso que no puede distinguir las dos respuestas no vigila la regla.** La mutación que mide
+  el plazo con el reloj torcido **no mordía**: los casos ponían la fiesta a diez días, donde 1–2 h de
+  desfase no cambian nada. El caso nuevo está construido para que muerda —el corte vence hace diez
+  minutos en hora del parque y con el reloj de UTC aún parecería abierto—, y es la misma familia que
+  el `travel()` de la T0.
+- ⚠️ **Un rótulo con backticks dentro de comillas dobles lo EJECUTA bash**: el arnés informaba de una
+  mutación sin nombre. El veredicto era bueno; lo que mentía era el informe.
+
 ### T3 · Las superficies del cliente
 
 **El contrato primero** (`openapi/v1.yaml`: el DTO propio de §4.7·bis, la semántica de ausencia, el

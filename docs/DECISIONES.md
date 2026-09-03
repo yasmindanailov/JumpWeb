@@ -22744,6 +22744,42 @@ qué hace con la fase. ⚠️ *Cazó mi propio método mientras lo escribía.*
 ▶ Y el arnés volvió a cazar **una guarda que faltaba** (15/16 a la primera): el alta manual tenía el
 filtro puesto y sin red, y es justo la decisión D2 que el owner confirmó con el caso delante.
 
+### 11 · ✅ T2 EJECUTADA (spec §9.3, commit `cb497127`)
+
+`PostFormAddons`: el dominio de la venta posterior. **13/13 mutaciones** y **dos verificadores nuevos
+sobre MySQL real**.
+
+▶ **La asimetría que decide si el libro cierra**, y que ninguna lente acertó entera: **alta y subida
+escriben su hecho · BAJAR también lo escribe · RETIRAR no**. Sin el de la bajada, el valor de
+nacimiento cae a −12,00 € e `I1` falla; con uno en la retirada, el valor se resta DOS veces porque
+`chargedSubtotalCents()` no mira `cancelled_at` y el libro ya emite su `−fila`. Las dos roturas
+tienen la misma consecuencia: el pedido «en revisión» y el cliente sin su desglose.
+
+▶ ❗❗ **`postform:verify-concurrency --scenario=cross` es el PRIMER escenario del repo que cruza dos
+caminos distintos.** Los tres verificadores existentes forkean N copias del MISMO actor —N compras,
+N guardados, N notificaciones—, y el interbloqueo que la revisión adversarial reprodujo **solo
+aparece cruzando cliente y operador**. Medido: **6 de 12** procesos con `SQLSTATE[40001]` invirtiendo
+el orden de locks (`--control`), y **0 de 12** con el orden de D11. *Un verificador que solo se
+enfrenta a sí mismo no ve las carreras entre actores.*
+
+▶ **Desviación de la spec, dicha**: §6·5 proponía colgar el escenario `addons` de
+`mixed-party:verify-concurrency`; se hizo comando propio, porque el cruzado no tiene nada que ver con
+la fiesta mixta y habría dejado un comando cuyo nombre miente sobre la mitad de lo que mide.
+
+▶ **Y dos lecciones de instrumento**: un caso que **no puede distinguir las dos respuestas** no
+vigila la regla (la mutación del reloj no mordía con la fiesta a diez días: 1–2 h de desfase no
+cambian nada allí), y un **rótulo con backticks dentro de comillas dobles lo ejecuta bash** — el
+arnés informaba de una mutación sin nombre.
+
+⚠️⚠️ **Y una TERCERA, ésta cara y del propio autor: NO se edita por NÚMERO DE LÍNEA un fichero que
+otro carril está tocando.** El contador de la suite de `ESTADO.md` se venía actualizando con
+`sed -i '1290s/…'`, y entre tanda y tanda el documento creció por el otro lado: **tres líneas de
+prosa quedaron aplastadas** —una explicación del `build:ssr`, medio punto pendiente del owner y una
+frase sobre la categoría de cookies— y el fichero acabó con **cinco** líneas que casaban el patrón
+del gate, cuando su propia regla dice que la copia es ÚNICA. Restauradas las tres desde el histórico
+y reducido a una. ▶ *El gate mide el número, no la prosa que lo rodea: un `sed` por línea acierta el
+número y borra la frase de al lado sin que nada falle.* A partir de aquí se edita por CONTENIDO.
+
 ## #434 · 2026-09-03 · `[DECIDIDO owner]` La tanda C de la auditoría: lo roto se arregla midiendo antes y después — y el informe tenía una causa mal diagnosticada
 
 **Contexto.** El owner pidió seguir con los puntos de la auditoría (`specs/auditoria-diseno.md`) y

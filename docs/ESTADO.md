@@ -45,9 +45,16 @@
 >    que Eloquent lo tome por una relación** (105 casos en rojo), **el `+` de arrays conserva el
 >    operando izquierdo** (tres casos del proveedor ignorados en silencio) y **las baselines del
 >    grafo de módulos solo encogen**. ⚠️ El arnés volvió a cazar una guarda que faltaba (15/16).
->    ▶ **Lo siguiente es la T2**: `PostFormAddons`, las tres escrituras asimétricas, el orden de
->    locks `orders → order_items → hijas` y los DOS verificadores de concurrencia — uno de ellos
->    CRUZA dos actores distintos, algo que ningún verificador del repo hace hoy.
+>    ▶ ✅ **T2 EJECUTADA (2026-09-03, commit `cb497127`, spec §9.3)**: `PostFormAddons` con las tres
+>    escrituras asimétricas —**bajar SÍ escribe su hecho y retirar NO**—, la puerta por el HECHO de la
+>    fila, el orden de locks de D11, el token optimista y la re-validación bajo lock. **13/13
+>    mutaciones**. ▶ **Dos verificadores nuevos** (`postform:verify-concurrency`): `addons` (12
+>    guardados → UNA línea) y **`cross`, el primero del repo que cruza DOS actores distintos** —los
+>    demás forkean N copias del mismo—, con su control medido: **6 de 12 interbloqueos** con el orden
+>    invertido y **0 de 12** con el de D11. ⚠️ Desviación dicha: es comando propio y no un escenario de
+>    `mixed-party`, porque el cruzado no tiene nada que ver con la fiesta mixta.
+>    ▶ **Lo siguiente es la T3**: las superficies del cliente — contrato primero, API, la página con
+>    su suelo sin JavaScript, el correo agrupado y los textos de demanda de D15.
 >    ⚠️ **Seis defectos PREEXISTENTES destapados, con ficha en `DEUDA.md`** — entre ellos que la
 >    escalada 403→410→404 **no se cumple en la web** (afecta también al justificante) y que el `PUT`
 >    del post-form sin `general` **borra** las respuestas generales.
@@ -1234,8 +1241,8 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4179 en verde** (26.383 aserciones, 1 skipped a propósito), medida el 2026-09-03 (tras `#452`: la
-> integración quita los 8 casos de las tandas A/B del cajón; el otro carril dejó 4187 en su cierre)
+> Suite **4196 en verde** (26.472 aserciones, 1 skipped a propósito), medida el 2026-09-03 sobre el árbol
+> fusionado (tras `#452`, que quita los 8 casos de las tandas A/B del cajón, y con las tandas T0–T2 de `#413` dentro)
 > Antes: **2026-09-01 (cierre de la tarde) — 🚀 LA WEB DEL 2.º
 > CLIENTE ESTÁ EN PRODUCCIÓN (`https://playjump.es`, `#325`/`#326`): su bloque está en el CARRIL 4
 > (la PORTADA), que es el más reciente; antes, el 6.º (EXCURSIONES DE COLEGIO, `#322`/`#324`) bajo el
@@ -1307,7 +1314,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > que encontró; ver el bloque del justificante más abajo). ⚠️ `audit-clock.sh` **no está en el
 > pre-push**: si no se corre al cerrar, un test que solo falla ciertas noches se va a `main`.
 > ⚠️ **RE-MEDIDA tras rebasar encima los DOS arreglos del reloj de la T3** (con `npm run build` +
-> Suite **4178 en verde** (26.382 aserciones, 1 skipped a propósito), medida el 2026-09-03
+> `build:ssr` delante, porque `#340` toca Vue): **sale el MISMO número**, que es lo que había que
 > comprobar — los dos arreglan FIXTURES y no añaden casos. *Coincidir no se supone: se mide.*
 > ⚠️⚠️ **Y RE-MEDIDA otra vez al fusionar `#406` (justificante) con `#347` (Google), porque NINGUNO
 > de los dos números valía**: el justificante dejó **4023 · 25.709** y Google **4034 · 25.755**, los
@@ -1317,7 +1324,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > número**: 4019 + 4 + 15 = **4038** y el gate mide **4039 · 25.772**. Un test y dos aserciones de
 > más, o sea que uno de los dos números declarados se tomó sobre una base que ya no era 4019. *Que la
 > suma no cuadre es justo el motivo por el que el gate mide en vez de creerse la resta.*
-> Suite **4156 en verde** (26.328 aserciones, 1 skipped a propósito), medida el 2026-09-03
+> Recuento anterior a `#452`: **4156** (26.328 aserciones, 1 skipped a propósito), medido el 2026-09-03
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`). ⚠️ **+8 y +51 los pone la T8
 > de Google** (`#350`): las dos guardas nuevas del botón y del aviso de privacidad, más los casos que
 > sustituyen a los de las casillas retiradas. Antes: las cuatro tandas del
