@@ -6,7 +6,8 @@ use Tests\TestCase;
 
 /**
  * **LA IDENTIDAD DE ZONA NO ES EL COLOR DE LA INTERACCIÓN** (auditoría de diseño C2 ·
- * `[DECIDIDO owner, 2026-09-03]` D1 · `DECISIONES #436`; la regla en `design.md` §3).
+ * `[DECIDIDO owner, 2026-09-03]` D1 · `DECISIONES #436`; la regla quedó escrita en el `design.md` de la
+ * raíz, hoy `docs/archivo/design-producto-2026-09-03.md` §3 — archivado por `#452`, la regla sigue).
  *
  * `--zone-1`/`--zone-2` no son colores: son la identidad de la zona que se está mirando, y los repinta
  * el servidor por elemento desde `zones.color`. Un token cuyo valor depende del contexto pintaba el
@@ -32,8 +33,8 @@ class InteractionColourIsNotAZoneTest extends TestCase
     private const IDENTIDAD = [
         '.zone-pick__tab.active' => 'la pestaña de zona de la portada (#302)',
         '.zone-tab.active' => 'la pestaña de zona de tarifas y /servicios',
-        // `.purchase__chip.is-active` (la hora elegida) y `.btn--zone` salieron de aquí con la tanda B
-        // del cajón (`#451`): lo elegido es un ESTADO y va en tinta, y la variante de botón murió.
+        '.purchase__chip.is-active' => 'cajón: el chip de zona del embudo',
+        '.btn--zone:disabled:hover, .btn--zone[aria-disabled="true"]:hover' => 'cajón: el botón de zona, prohibido en Blade (#321) y vivo en el CSS a propósito',
     ];
 
     /** RELLENOS de marca: un fondo, con el texto encima calculado por luminancia (`--on-brand`). No es texto de color. */
@@ -42,12 +43,17 @@ class InteractionColourIsNotAZoneTest extends TestCase
         '.salta__btn:hover' => 'el botón del minijuego oscurece su relleno de marca',
     ];
 
-    /**
-     * El cajón SPA. Fue una lista de ocho «aparcado» (`[DECIDIDO owner, 2026-09-01]`) y **se vació con la
-     * tanda A de su auditoría** (`#450`): lo que respondía en cian responde en tinta o en `--interactive`,
-     * y la cabecera de sección del catálogo, que no se pliega, ya no se tiñe al pasar. Solo encoge: vacía.
-     */
-    private const CAJON = [];
+    /** El cajón SPA, aparcado (`[DECIDIDO owner, 2026-09-01]`). Solo encoge. */
+    private const CAJON = [
+        '.bk-foot__info-btn:hover',
+        '.purchase__add-more:hover',
+        '.catalog__item:hover .catalog__ico',
+        '.catalog__item:hover .catalog__go',
+        '.catalog-acc__head:hover .catalog-acc__icon',
+        '.catalog-acc__head:hover .catalog-acc__icon .ic-e5 svg .occ',
+        '.acct__alert:hover',
+        '.acc-tile:hover .acc-tile__ico svg',
+    ];
 
     public function test_the_scan_sees_the_corpus_and_every_exception_has_a_subject(): void
     {

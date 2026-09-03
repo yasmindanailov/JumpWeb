@@ -296,10 +296,6 @@ Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cua
        verde claro como Verde Salta, papel encima da 2,95 (falla AA); tinta da 7,6. */
     --on-ok: #101418;    /* tinta sobre Verde Salta */
     --on-err: #FFFFFF;   /* blanco sobre Rojo Goteo (4,52; el papel se queda en 4,11) */
-    /* El color COMO TEXTO sobre papel (`#450`): la columna «oscuro (texto en papel)» de su tabla §2.1.
-       Sin ellas «Incluido» sale en Verde Salta a 2,95 y el error en Rojo Goteo a 4,10. */
-    --ok-text: #447921;  /* Verde Salta oscuro — 4,8 sobre papel */
-    --err-text: #C83912; /* Rojo Goteo oscuro — 4,7 sobre papel */
 
     /* EL COLOR DE LA INTERACCIÓN (`DECISIONES #436`): lo que responde al ratón y al teclado fuera de
        una zona (la pregunta abierta de la FAQ, el destino enfocado del menú, el enlace del banner). El

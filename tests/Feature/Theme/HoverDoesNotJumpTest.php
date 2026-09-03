@@ -31,12 +31,14 @@ class HoverDoesNotJumpTest extends TestCase
 {
     private const SHEETS = ['public/css/landing.css', 'public/css/site.css'];
 
-    /**
-     * El cajón SPA. Fue una lista de cinco «aparcado» (`[DECIDIDO owner, 2026-09-01]`) y **se vació con la
-     * tanda B de su auditoría** (`#451`, D-C5): sus botones son `.btn` y responden con color; la
-     * tarjeta del área responde con borde y sombra. Solo encoge: vacía.
-     */
-    private const CAJON_QUE_SALTA = [];
+    /** El cajón SPA (aparcado, `[DECIDIDO owner, 2026-09-01]`): sus botones siguen subiendo 2 px. Solo encoge. */
+    private const CAJON_QUE_SALTA = [
+        '.bk-cta:hover',
+        '.cartbar:hover',
+        '.acct__btn--primary:hover',
+        '.acct__btn--ghost:hover',
+        '.acc-tile:hover',
+    ];
 
     public function test_the_scan_sees_the_corpus(): void
     {

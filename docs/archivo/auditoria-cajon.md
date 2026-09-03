@@ -1,6 +1,13 @@
 # [AUDITORÍA] El cajón de compra, de punta a punta — auditoría Hallmark del embudo SPA
 
-> Estado: 🟦 **INFORME ENTREGADO (`#438`) · DECISIONES TOMADAS (§7, `#439`) · TANDAS A Y B EJECUTADAS
+> 📜 **ARCHIVADO el 2026-09-03 (`DECISIONES #452`, `[DECIDIDO owner]`)**: el diseño se delega a
+> **Claude Design**. ⚠️⚠️ **Las tandas A y B (§11, §12; `#450`, `#451`) ESTÁN REVERTIDAS**: el cajón
+> volvió a su estado anterior en un commit nuevo (manifiesto congelado incluido) y la C, que estaba a
+> medias, se descartó sin commit. Lo que este informe describe como «en el árbol» **ya no lo está**;
+> lo que sigue valiendo es la MEDICIÓN (§1–§6: 100 medidas, 3 críticos · 10 mayores · 7 menores) y
+> las decisiones del owner de §7, que se retomarán sobre su sistema nuevo. **No se mantiene.**
+
+> Estado (al archivar): 🟦 **INFORME ENTREGADO (`#438`) · DECISIONES TOMADAS (§7, `#439`) · TANDAS A Y B EJECUTADAS
 > Y MEDIDAS (§11 `#450`, §12 `#451`); queda la C (la hoja, el calendario, el paso 5)** · 2026-09-03 ·
 > Carril: **diseño / idioma visual** (sub-banda `#430`–`#439`, agotada; sigue en `#450`–`#459`).
 > ▶ Hermana de `specs/auditoria-diseno.md` (la web pública): aquélla **excluía el cajón a propósito**

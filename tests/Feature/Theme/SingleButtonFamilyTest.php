@@ -86,52 +86,8 @@ class SingleButtonFamilyTest extends TestCase
                 '▶ La familia del contenido es UNA: `.btn` (+ `--ghost`/`--sm`/`--lg`). La acción',
                 '  es `--action` en toda la web; `btn--zone` era MARCA pintando acción.',
                 '▶ `bd-btn` se absorbió en `.btn` — el par del editor no perdió nada.',
-                '▶ El cajón Vue tiene su propio caso, abajo: desde `#451` tampoco la emite.'],
+                '▶ El cajón Vue está EXENTO (SPA aparcado): esto solo mira `*.blade.php`.'],
         )));
-    }
-
-    /**
-     * **Y ningún componente del cajón la emite** (`#451`, la tanda B de `specs/auditoria-cajon.md`):
-     * el cajón fue el ÚNICO emisor de `btn--zone` desde la T9 —28 apariciones en 21 ficheros—, y esa
-     * era la razón de que la variante siguiera viva en la hoja. Se miran los `.vue` sin sus comentarios
-     * (HTML y docblocks), que cuentan la historia y nombran la clase a propósito.
-     */
-    public function test_no_vue_component_uses_a_retired_button_variant(): void
-    {
-        $offenders = [];
-
-        foreach ($this->vues() as $path) {
-            $clean = (string) preg_replace(['#<!--.*?-->#s', '#/\*.*?\*/#s'], '', (string) file_get_contents($path));
-
-            if (preg_match($this->retiredPattern(), $clean, $m)) {
-                $offenders[] = str_replace(base_path().'/', '', $path).' → '.$m[0];
-            }
-        }
-
-        $this->assertSame([], $offenders, implode("\n", array_merge(
-            ['Estos componentes del cajón emiten una variante de botón RETIRADA:'],
-            array_map(fn (string $o): string => '  · '.$o, $offenders),
-            ['', '▶ El cajón emite `.btn` / `.btn--ghost` como toda la web (`#451`, D-C1 «ninguna variante nueva»).'],
-        )));
-    }
-
-    /** @return list<string> */
-    private function vues(): array
-    {
-        $out = [];
-        $it = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator(base_path('resources/js/sidebar'), \FilesystemIterator::SKIP_DOTS),
-        );
-
-        foreach ($it as $file) {
-            if (str_ends_with($file->getPathname(), '.vue')) {
-                $out[] = $file->getPathname();
-            }
-        }
-
-        $this->assertGreaterThan(30, count($out), 'el localizador de componentes del cajón se ha roto');
-
-        return $out;
     }
 
     /** Y la familia absorbida tampoco sigue DECLARADA en las hojas del producto. */
@@ -141,10 +97,9 @@ class SingleButtonFamilyTest extends TestCase
             $css = $this->strippedCss($sheet);
 
             $this->assertDoesNotMatchRegularExpression(
-                '/\.(bd-btn|btn--zone)(?![\w-])/', $css,
-                "`{$sheet}` vuelve a declarar `.bd-btn` o `.btn--zone`: la primera se absorbió en `.btn` (T9) y ".
-                'la segunda murió con la tanda B del cajón (`#451`): resucitarlas es volver a tres anatomías '.
-                'para la misma función.',
+                '/\.bd-btn(?![\w-])/', $css,
+                "`{$sheet}` vuelve a declarar `.bd-btn`: la familia se absorbió en `.btn` (T9) y ".
+                'resucitarla es volver a tres anatomías para la misma función.',
             );
         }
     }

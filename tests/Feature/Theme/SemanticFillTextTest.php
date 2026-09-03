@@ -21,7 +21,9 @@ use Tests\TestCase;
  *  1. Que los tres tokens existan en el `:root` del producto.
  *  2. Que ninguna regla combine `background: var(--ok|--err|--warn)` con un blanco quemado.
  *  3. Que `.cta-ghost__s` lea el gris de PAPEL a opacidad 1.
- *  4. El suelo tipográfico de `design.md` §3: ningún `font-size` literal por debajo de 10 px en la
+ *  4. El suelo tipográfico de `docs/archivo/design-producto-2026-09-03.md` §3 (el `design.md` de la
+ *     raíz hasta `#452`; la regla sigue vigente aunque el documento esté archivado): ningún
+ *     `font-size` literal por debajo de 10 px en la
  *     web pública. ⚠️ La lista de excepciones es del CAJÓN (aparcado) y solo encoge.
  */
 class SemanticFillTextTest extends TestCase
@@ -29,7 +31,7 @@ class SemanticFillTextTest extends TestCase
     private const SHEETS = ['public/css/landing.css', 'public/css/site.css'];
 
     /** Reglas del cajón SPA (aparcado, `[DECIDIDO owner, 2026-09-01]`) que aún bajan de 10 px. Solo encoge. */
-    private const CAJON_BAJO_EL_SUELO = [];
+    private const CAJON_BAJO_EL_SUELO = ['.bk-seg__label'];
 
     public function test_the_scan_sees_the_corpus(): void
     {
@@ -40,9 +42,7 @@ class SemanticFillTextTest extends TestCase
     {
         $root = $this->rootOf('public/css/site.css');
 
-        // `--ok-text`/`--err-text` son el mismo trato para el color COMO TEXTO sobre papel (`#450`):
-        // el par lo declara quien declara el color, y sin token el verde vuelve a 2,95.
-        foreach (['--on-ok', '--on-err', '--on-warn', '--ok-text', '--err-text', '--warn-text'] as $token) {
+        foreach (['--on-ok', '--on-err', '--on-warn'] as $token) {
             $this->assertStringContainsString(
                 $token.':',
                 $root,
@@ -99,16 +99,12 @@ class SemanticFillTextTest extends TestCase
         $this->assertSame(
             [],
             array_values(array_unique($culpables)),
-            "`font-size` por debajo del suelo de 10 px de `design.md` §3:\n  ".implode("\n  ", $culpables),
+            "`font-size` por debajo del suelo de 10 px (`docs/archivo/design-producto-2026-09-03.md` §3):\n  ".implode("\n  ", $culpables),
         );
     }
 
     public function test_the_exception_list_still_has_a_subject(): void
     {
-        // La lista se VACIÓ con la tanda A de la auditoría del cajón (`#450`: `.bk-seg__label` pasó a
-        // `--fs-10`) y solo encoge: que vuelva a tener entradas es una decisión, no un descuido.
-        $this->assertSame([], self::CAJON_BAJO_EL_SUELO, 'la lista de excepciones del cajón solo encoge, y ya estaba vacía');
-
         $rules = $this->rules();
         foreach (self::CAJON_BAJO_EL_SUELO as $selector) {
             $this->assertArrayHasKey($selector, $rules, "`{$selector}` ya no existe: retíralo de la lista de excepciones, que solo encoge");

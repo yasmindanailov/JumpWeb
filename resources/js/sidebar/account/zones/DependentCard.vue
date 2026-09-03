@@ -64,7 +64,7 @@ const canSign = computed(() => dependentNeedsSignature(props.dependent) && props
                     <span>{{ a('register.accept_waiver') }}</span>
                 </label>
             </div>
-            <button type="submit" class="btn auth__submit" :disabled="busy || ! accept">
+            <button type="submit" class="btn btn--zone auth__submit" :disabled="busy || ! accept">
                 {{ signing ? a('account.privacy.waiver.signing') : a('account.privacy.waiver.sign_btn') }}
             </button>
         </form>

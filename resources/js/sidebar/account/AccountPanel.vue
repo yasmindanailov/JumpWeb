@@ -132,7 +132,7 @@ async function leave() {
               peso visual: un «cerrar sesión» que grita se pulsa sin querer.
             -->
             <div class="acct__cta">
-                <a :href="urls.my_orders" class="btn acct__btn acct__btn--reservas"
+                <a :href="urls.my_orders" class="acct__btn acct__btn--primary acct__btn--reservas"
                    @click="$event.preventDefault(), accountStore.openZone(ZONES.ORDERS)">
                     {{ panel.reservations }}
                     <template v-if="panel.counter">
@@ -141,7 +141,7 @@ async function leave() {
                     </template>
                 </a>
 
-                <a :href="urls.account" class="btn btn--ghost acct__btn"
+                <a :href="urls.account" class="acct__btn acct__btn--ghost"
                    @click="$event.preventDefault(), accountStore.openZone(ZONES.HOME)">
                     {{ panel.account }}
                 </a>
@@ -155,7 +155,7 @@ async function leave() {
                   ⚠️ NO es un `<form>` con `@csrf`: el `_token` de la página está caducado en cuanto
                   alguien entra en el paso 5, y daría 419. El porqué, en `account/sign-out.js`.
                 -->
-                <button type="button" class="btn btn--ghost acct__btn acct__btn--icon"
+                <button type="button" class="acct__btn acct__btn--ghost acct__btn--icon"
                         :disabled="leaving" :aria-label="panel.signOut" :title="panel.signOut"
                         @click="leave()">
                     <!-- `logout` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
@@ -182,7 +182,7 @@ async function leave() {
               existe si el JS corre, y entrar es una ZONA de este mismo cajón (no una página).
             -->
             <div class="acct__cta">
-                <button type="button" class="btn acct__btn"
+                <button type="button" class="acct__btn acct__btn--primary"
                         :disabled="identifying" @click="accountStore.openZone(ZONES.LOGIN)">
                     <!-- `login` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`).
                          ⚠️ Lleva el `<g transform>` del componente: el espejo es PARTE del dibujo, y
@@ -197,7 +197,7 @@ async function leave() {
                     {{ panel.login }}
                 </button>
 
-                <button type="button" class="btn btn--ghost acct__btn"
+                <button type="button" class="acct__btn acct__btn--ghost"
                         :disabled="identifying" @click="accountStore.openZone(ZONES.LOGIN)">
                     {{ panel.reservations }}
                 </button>

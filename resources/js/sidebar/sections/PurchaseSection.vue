@@ -1285,7 +1285,6 @@ function goBack() {
             :confirmation="outcomeStore.confirmation"
             :order-code="outcomeStore.orderCode"
             :registration="outcomeStore.registration"
-            :orders-url="urls.my_orders ?? ''"
             :messages="messages"
             :locale="locale"
             @add-another="addAnother" />

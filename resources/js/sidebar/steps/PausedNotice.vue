@@ -36,12 +36,12 @@ defineProps({
         <div class="purchase__maint-ctas">
             <!--
               Los canales van A LA VEZ, no en cascada: si hay teléfono y WhatsApp se pintan los dos.
-              Solo el de llamar lleva el relleno de acción (es el canal principal); los demás, fantasma (`#451`).
+              Solo el de llamar lleva `btn--zone` (es el canal principal).
             -->
             <a v-for="cta in notice.ctas" :key="cta.key"
                :href="cta.href"
                class="btn btn--lg"
-               :class="cta.primary ? '' : 'btn--ghost'"
+               :class="cta.primary ? 'btn--zone' : ''"
                :target="cta.external ? '_blank' : null"
                :rel="cta.external ? 'noopener' : null">{{ cta.label }}</a>
         </div>

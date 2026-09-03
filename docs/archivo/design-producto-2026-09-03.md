@@ -1,7 +1,14 @@
 # Design — JumpWeb (el PRODUCTO)
 
+> 📜 **ARCHIVADO el 2026-09-03 (`DECISIONES #452`, `[DECIDIDO owner]`)**: el owner rehace el sistema del
+> producto en **Claude Design** y avisará con la base; este fichero deja de ser el sistema vigente y
+> **sale de la raíz a propósito** (la skill `hallmark` lee un `design.md` de raíz como sistema bloqueado,
+> y ya no lo es). Se conserva porque sus roles y mecanismos describen lo que SIGUE en `site.css` y
+> `landing.css` (`#434`→`#437`, con sus guardas), pero **no se mantiene**: sus punteros al guion de la
+> portada apuntan hoy a `docs/archivo/`.
+
 > El sistema de diseño **del producto**, escrito una vez y leído antes de tocar cualquier página.
-> Es la primera pieza de la fase 2 (`docs/specs/guion-de-la-portada.md`) y sigue el flujo
+> Es la primera pieza de la fase 2 (`docs/archivo/guion-de-la-portada.md`) y sigue el flujo
 > multi-página de la skill `hallmark` (`redesign` · § Multi-page): *una web necesita un sistema, no
 > diecisiete temas; entre páginas del mismo producto la consistencia es el objetivo, no la variedad*.
 >
@@ -56,7 +63,7 @@ operador).
   firmados por el padre, dos zonas por edad **y altura**, tarifa por tipo de día, 1 h / 2 h,
   complementos, post-formulario del cumpleaños). Ningún visitante lo necesita entero a la vez: cada
   dato aparece en el momento en que decide algo, y lo que es «después de comprar» se **promete** en
-  la web y se **pide** en el embudo. El guion está en `docs/specs/guion-de-la-portada.md`.
+  la web y se **pide** en el embudo. El guion está en `docs/archivo/guion-de-la-portada.md`.
 
 ---
 

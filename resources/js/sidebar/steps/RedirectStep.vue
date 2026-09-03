@@ -34,16 +34,6 @@ const props = defineProps({
 const el = ref(null);
 
 /**
- * ¿Se está tardando? Entonces el botón manual aparece de verdad (`#450`, auditoría del cajón M6).
- *
- * ⚠️⚠️ Hasta hoy el texto decía «si no se redirige en unos segundos, pulsa el botón» y el botón vivía
- * SOLO en `<noscript>`: con JavaScript —que es como se llega aquí— no había botón, solo la frase y
- * media pantalla vacía. Se enseña pasados 2,5 s, que es cuando la frase deja de ser verdad.
- * ▶ Es `v-show` y no `v-if` a propósito: el nodo está siempre en el árbol y el contrato lo ve.
- */
-const slow = ref(false);
-
-/**
  * El auto-envío.
  *
  * ⚠️ **`onMounted` no corre en SSR**, así que el renderizador del gate compara el marcado sin dispararlo
@@ -58,7 +48,6 @@ onMounted(() => {
     if (! props.form) return;
 
     setTimeout(() => el.value?.submit(), 80);
-    setTimeout(() => { slow.value = true; }, 2500);
 });
 
 const t = (key) => translate(props.messages, key);
@@ -69,9 +58,8 @@ const t = (key) => translate(props.messages, key);
         <p class="purchase__note">{{ t('pay_redirecting') }}</p>
         <form ref="el" :action="form.url" :method="form.method" target="_top">
             <input v-for="field in form.fields" :key="field.name" type="hidden" :name="field.name" :value="field.value">
-            <button v-show="slow" type="submit" class="btn btn--lg purchase__cta">{{ t('pay_proceed_manual') }}</button>
             <noscript>
-                <button type="submit" class="btn btn--lg purchase__cta">{{ t('pay_proceed_manual') }}</button>
+                <button type="submit" class="btn btn--zone btn--lg purchase__cta">{{ t('pay_proceed_manual') }}</button>
             </noscript>
         </form>
     </div>

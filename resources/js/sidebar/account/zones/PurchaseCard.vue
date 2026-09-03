@@ -147,7 +147,7 @@ defineEmits(['toggle', 'retry']);
           único camino que le queda al cliente para no perder su plaza.
         -->
         <div v-if="row.canRetry" class="orders__retry">
-            <button type="button" class="btn" :disabled="busy" @click="$emit('retry')">{{ account?.orders?.retry_payment ?? '' }}</button>
+            <button type="button" class="btn btn--zone" :disabled="busy" @click="$emit('retry')">{{ account?.orders?.retry_payment ?? '' }}</button>
             <p class="orders__retry-hint">{{ account?.orders?.retry_hint ?? '' }}</p>
         </div>
     </li>

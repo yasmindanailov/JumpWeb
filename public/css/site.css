@@ -136,13 +136,6 @@
     --on-ok: var(--paper-bg);
     --on-err: var(--paper-bg);
     --on-warn: var(--paper-bg);
-    /* El color semántico COMO TEXTO sobre papel (`#450`, auditoría del cajón C2): «Incluido» iba en
-       `--ok` a 2,95 y el error en `--err` a 4,10 con el paquete de PlayJump. Es el mismo trato que
-       `--on-*`: el par lo declara quien declara el color (su tabla §2.1 trae la «versión oscura para
-       texto en papel» de cada uno). Los del producto ya son oscuros y valen tal cual. */
-    --ok-text: var(--ok);
-    --err-text: var(--err-strong);
-    --warn-text: var(--warn);
 
     /* ══ EL MOVIMIENTO — CUATRO CURVAS Y SIETE DURACIONES (tanda 2d, `#222`) ════════════════════
        ⚠️⚠️ **Aquí había DOS duraciones y DOS curvas, y no era un sistema: era un parche.**
@@ -857,7 +850,7 @@
 }
 .form__field input:focus,
 .form__field textarea:focus { border-color: var(--fg); }  /* el anillo lo pone `:focus-visible` (landing.css, M7) */
-.form__error { color: var(--err-text); font-size: var(--fs-12); font-style: normal; margin-top: var(--sp-2); }
+.form__error { color: var(--err); font-size: var(--fs-12); font-style: normal; margin-top: var(--sp-2); }
 .form-success {
     max-width: 640px; margin: 8px 0 32px; padding: var(--sp-16) var(--sp-18);
     background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: var(--r);
@@ -873,9 +866,9 @@
 .pwd-input { position: relative; display: block; }
 .pwd-input input { padding-right: 44px; }
 .pwd-input__toggle {
-    position: absolute; top: 50%; right: 1px;
+    position: absolute; top: 50%; right: 6px;
     transform: translateY(-50%);
-    width: var(--tap-min); height: var(--tap-min);
+    width: 32px; height: 32px;
     display: inline-flex; align-items: center; justify-content: center;
     border: 0; background: transparent;
     color: var(--fg-mute); cursor: pointer; border-radius: 6px;
@@ -1058,8 +1051,7 @@
 .auth__row .check--opt { margin: 0; }
 .auth__link {
     background: none; border: none; cursor: pointer; padding: 0;
-    display: inline-flex; align-items: center; min-height: var(--tap-min);
-    font-family: var(--font-body); font-size: var(--fs-13); color: var(--interactive);
+    font-family: var(--font-body); font-size: var(--fs-13); color: var(--zone-1);
     font-weight: 600; text-decoration: underline; white-space: nowrap;
 }
 
@@ -1073,8 +1065,7 @@
 }
 .auth__switch button {
     background: none; border: none; cursor: pointer; padding: 0;
-    font: inherit; color: var(--interactive); font-weight: 600; text-decoration: underline;
-    display: inline-flex; align-items: center; min-height: var(--tap-min);
+    font: inherit; color: var(--zone-1); font-weight: 600; text-decoration: underline;
 }
 
 /* ---------- banner de avisos (flash) ---------- */
@@ -1200,18 +1191,13 @@
 
    ⚠️ Los valores son los que `.check span a` ya usaba para lo mismo: no se inventa un tratamiento
    nuevo para un enlace legal que hasta ayer vivía dentro de una casilla. */
-.form__hint a { color: var(--interactive); text-decoration: underline; }
-/* «Leer el texto completo» del descargo es un `<summary>` de 16 px de alto (`#450`, C3): 44 al dedo. */
-.form__hint > summary { display: flex; align-items: center; min-height: var(--tap-min); cursor: pointer; }
+.form__hint a { color: var(--zone-1); text-decoration: underline; }
 
 /* casillas legales / marketing */
 .form__checks { display: flex; flex-direction: column; gap: var(--sp-12); margin: var(--sp-4) 0 var(--sp-20); }
-/* 44 al dedo (`#450`, C3): la fila entera es el objetivo, y centrada para que la casilla no quede
-   colgando arriba en una etiqueta de dos líneas. El marcado (`accent-color`) es un ESTADO: tinta,
-   no el color de una zona. El enlace de dentro es interacción: `--interactive` (`#436`). */
-.check { display: flex; align-items: center; gap: var(--sp-10); min-height: var(--tap-min); font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.45; color: var(--fg); cursor: pointer; }
-.check input { margin: 0; width: 16px; height: 16px; flex: none; accent-color: var(--fg); }
-.check span a { color: var(--interactive); text-decoration: underline; }
+.check { display: flex; align-items: flex-start; gap: var(--sp-10); font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.45; color: var(--fg); cursor: pointer; }
+.check input { margin-top: var(--sp-2); width: 16px; height: 16px; flex: none; accent-color: var(--zone-1); }
+.check span a { color: var(--zone-1); text-decoration: underline; }
 .check--opt { color: var(--fg-mute); }
 
 /* honeypot: display:none para que el autocompletar/gestores de contraseñas
@@ -1351,29 +1337,13 @@ body.no-scroll { overflow: hidden; }
 .sidecart:not(.is-open) .jj-spinner::before,
 .sidecart:not(.is-open) .jj-spinner::after { animation-play-state: paused; }
 .sidecart.is-open { visibility: visible; }
-/* Y LA PÁGINA NO ANIMA DETRÁS DEL VELO (`#450`, auditoría del cajón M10): con el diálogo abierto
-   seguían corriendo el latido y el aro del CTA doble y el destello de la atracción destacada, tres
-   bucles al 50 % de velo, para nadie. Es el caso simétrico del spinner de arriba. Solo el cajón: un
-   `body.no-scroll` también lo pone el menú, y allí el par SÍ está a la vista. */
-body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz),
-body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz)::before,
-body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz)::after,
-body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *,
-body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::before,
-body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after { animation-play-state: paused; }
-/* ⚠️ Los pseudo-elementos van escritos porque el aro (`cta-aro`) y el destello (`jj-shine-sweep`) viven en
-   un `::after`, y `animation-play-state` sobre el elemento no le llega: medido, con la primera versión
-   seguían corriendo dos de los tres. */
 .sidecart__backdrop { position: absolute; inset: 0; background: color-mix(in srgb, var(--fg) 50%, transparent); opacity: 0; transition: opacity var(--dur-entra) var(--ease-sale); }
 .sidecart.is-open .sidecart__backdrop { opacity: 1; }
 .sidecart__panel { position: absolute; top: 0; right: 0; height: 100%; width: min(440px, 100%); display: flex; flex-direction: column; background: var(--bg); box-shadow: -20px 0 60px -20px color-mix(in srgb, var(--fg) 40%, transparent); transform: translateX(100%); transition: transform var(--dur-entra) var(--ease-sale); }
 .sidecart.is-open .sidecart__panel { transform: translateX(0); }
 .sidecart__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-16) var(--sp-20); border-bottom: 1px solid var(--line); }
 .sidecart__title { font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: var(--fs-18); color: var(--fg); }
-/* La × es el `close` del set (`#450`, m2) y su caja mide 44 (C3: medía 15×26, y cierra el diálogo).
-   Los márgenes negativos devuelven a la cabecera el alto que tenía con el carácter de 26 px. */
-.sidecart__close { display: grid; place-items: center; width: var(--tap-min); height: var(--tap-min); margin: calc((26px - var(--tap-min)) / 2) calc(var(--sp-12) * -1) calc((26px - var(--tap-min)) / 2) 0; background: none; border: 0; border-radius: var(--r-btn); color: var(--fg-mute); line-height: 1; cursor: pointer; }
-.sidecart__close svg { width: 22px; height: 22px; }
+.sidecart__close { background: none; border: 0; color: var(--fg-mute); font-size: 26px; line-height: 1; cursor: pointer; }
 .sidecart__close:hover { color: var(--fg); }
 /* Sidebar v2: el cuerpo es columna flex SIN scroll propio; el scroll vive en `.purchase__scroll`
    y el footer dinámico (`.bk-foot`) queda anclado fuera del scroll, al fondo del panel. */
@@ -1452,7 +1422,7 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
    Atenuarla habría sido castigarla dos veces, que es justo lo que su artboard prohíbe. */
 .purchase__chip.is-full { cursor: not-allowed; border-style: dashed; }
 .purchase__chip.is-full .purchase__chip-t { text-decoration: line-through; text-decoration-thickness: 1.5px; }
-.purchase__chip.is-full .purchase__chip-full { color: var(--err-text); }
+.purchase__chip.is-full .purchase__chip-full { color: var(--err); }
 .purchase__chip.is-full:hover { border-color: var(--line); }
 
 /* ❗❗❗ **LA CASCADA DE FRANJAS** (`#277`, `[DECIDIDO owner]`, del artboard `Microanimaciones PJP`).
@@ -1501,9 +1471,9 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 /* ⚠️ **El aviso va en SEGUNDO plano, no al mismo nivel que la hora** (`[OWNER, 2026-08-28]`). Es
    contexto de la decisión, no la decisión: por eso baja de peso, envuelve en dos líneas si hace falta
    y se queda en el ámbar de señal del producto. */
-.purchase__chip-full { max-width: 100%; font-size: var(--fs-10); font-weight: var(--fw-semibold); line-height: 1.15; letter-spacing: 0.02em; text-align: center; color: var(--warn-text); }
+.purchase__chip-full { max-width: 100%; font-size: var(--fs-9); font-weight: var(--fw-semibold); line-height: 1.15; letter-spacing: 0.02em; text-align: center; color: var(--warn); }
 /* Sobre el acento de zona el ámbar se pierde: el rótulo hereda la tinta del chip elegido. */
-.purchase__chip.is-active .purchase__chip-full { color: var(--bg); opacity: 0.78; }
+.purchase__chip.is-active .purchase__chip-full { color: var(--fg); opacity: 0.78; }
 
 .purchase__entries { display: flex; flex-direction: column; gap: var(--sp-8); }
 .entry { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
@@ -1522,9 +1492,7 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
    navegador impone; sin esto el número sale con la fuente del sistema y una caja gris entre dos
    botones redondos. ⚠️ Y las flechas nativas (`spin buttons`) se retiran: al lado de un `+` y un `−`
    de 32 px son un tercer control que hace lo mismo y en móvil roban la mitad del ancho. */
-/* La cantidad SE ESCRIBE (`#327`) y hasta `#450` no lo parecía: un número de 18 px sin caja entre dos
-   botones (auditoría del cajón M7). Es un campo, con la caja de un campo y 44 de alto. */
-.entry__qty { display: inline-flex; align-items: center; justify-content: center; min-width: 60px; height: var(--tap-min); text-align: center; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-16); font-variant-numeric: tabular-nums; color: var(--fg); background: var(--bg-card); border: 1px solid var(--line-strong); padding: 0 var(--sp-6); border-radius: var(--r-btn); }
+.entry__qty { min-width: 3ch; text-align: center; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); color: var(--fg); background: transparent; border: 0; padding: 0 var(--sp-4); border-radius: var(--r-5); }
 .entry__qty::-webkit-outer-spin-button,
 .entry__qty::-webkit-inner-spin-button { appearance: none; margin: 0; }
 .entry__qty[type="number"] { appearance: textfield; }
@@ -1556,13 +1524,9 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
    identificarse abajo, así que `$store.purchase.identifying` los bloquea) — o sea ruido con botones
    muertos.
 
-   ▶ Qué modos ocultan: `booking` (día · hora) y `cart` (carrito · identificación · pago) — **y desde
-     `#451` también `catalog` y `result`** (`[DECIDIDO owner]` D-C3 de la auditoría del cajón: el bloque
-     era lo primero del cajón, con su naranja, antes de enseñar qué se compra; y en los desenlaces
-     ponía «Ver mis reservas» en naranja encima de «Reintentar»). La cuenta se pide en el paso 5, que
-     es donde muerde, y vive en «Mi cuenta». ⚠️ Con esto el bloque no tiene ningún modo visible dentro
-     del panel de compra (`is-account` ya lo colapsaba): su retirada entera está en `DEUDA.md`. Lo que
-     el bloque daba en los desenlaces («Ver mis reservas») lo da ahora la propia pantalla (paso 6).
+   ▶ Qué modos ocultan: `booking` (día · hora) y `cart` (carrito · identificación · pago).
+     Siguen visibles `catalog` —aún no ha entrado en el proceso, y ahí el CTA de sesión SÍ sirve— y
+     `result` —ya terminó: reserva creada, denegada o verificando—.
      ⚠️ El mapa paso→modo vive en `machine.js::modeOf()` y está bajo PARIDAD con el servidor
      (`SidebarProgressParityTest`): desde el CSS no se toca, solo se reacciona a la clase.
 
@@ -1595,8 +1559,6 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
    que se colapsa igual. Es un modo PROPIO y no `is-cart` reutilizado a propósito: `cart` también lo
    colapsaría, pero haría que la señal dijera «carrito» con el cliente mirando sus pedidos, que es el
    fallo de `DECISIONES #115` —una comprobación que mide una cosa y se lee como otra—. */
-.sidecart__panel.is-catalog .acct,
-.sidecart__panel.is-result .acct,
 .sidecart__panel.is-booking .acct,
 .sidecart__panel.is-cart .acct,
 .sidecart__panel.is-account .acct {
@@ -1647,8 +1609,6 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
    Medido en navegador con control: `opacity, visibility / 0.24s, 0s` → `none / 0s`. */
 @media (prefers-reduced-motion: reduce) {
     .acct,
-    .sidecart__panel.is-catalog .acct,
-    .sidecart__panel.is-result .acct,
     .sidecart__panel.is-booking .acct,
     .sidecart__panel.is-cart .acct,
     .sidecart__panel.is-account .acct {
@@ -1669,7 +1629,7 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 @keyframes bk-fade { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 .bk-progress { flex: none; display: flex; flex-direction: column; gap: var(--sp-12); padding: var(--sp-14) var(--sp-20); background: var(--bg-soft); border-bottom: 1px solid var(--line); animation: bk-fade var(--dur-entra) var(--ease-sale); }
 .bk-progress__top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); }
-.bk-back { display: inline-flex; align-items: center; gap: var(--sp-7); background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-bold); color: var(--interactive); transition: gap var(--dur-sale) var(--ease-sale); }
+.bk-back { display: inline-flex; align-items: center; gap: var(--sp-7); background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-bold); color: var(--zone-1); transition: gap var(--dur-sale) var(--ease-sale); }
 .bk-back svg { width: 15px; height: 15px; }
 /* Flecha/chevron canónicos (componentes x-icons.arrow-right/arrow-left). En contexto inline
    (enlace con texto + flecha) se alinea al centro de la línea; dentro de flex (botones) manda
@@ -1694,15 +1654,15 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 .bk-seg { display: flex; gap: var(--sp-7); }
 .bk-seg__item { flex: 1; display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0; }
 .bk-seg__bar { height: 5px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--fg) 12%, transparent); overflow: hidden; position: relative; }
-.bk-seg__bar::after { content: ""; position: absolute; inset: 0; border-radius: var(--r-pill); background: var(--fg); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-cae) var(--ease-sale); }
+.bk-seg__bar::after { content: ""; position: absolute; inset: 0; border-radius: var(--r-pill); background: var(--zone-1); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-cae) var(--ease-sale); }
 .bk-seg__item.is-done .bk-seg__bar::after,
 .bk-seg__item.is-current .bk-seg__bar::after { transform: scaleX(1); }
-.bk-seg__item.is-current .bk-seg__bar { box-shadow: 0 0 0 2px color-mix(in srgb, var(--fg) 30%, transparent); }
-.bk-seg__label { font-size: var(--fs-10); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-mute); text-align: center; white-space: nowrap; transition: color var(--dur-estado) var(--ease-sale); }
+.bk-seg__item.is-current .bk-seg__bar { box-shadow: 0 0 0 2px color-mix(in srgb, var(--zone-1) 30%, transparent); }
+.bk-seg__label { font-size: 9.5px; font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-mute); text-align: center; white-space: nowrap; transition: color var(--dur-estado) var(--ease-sale); }
 .bk-seg__item.is-current .bk-seg__label,
 .bk-seg__item.is-done .bk-seg__label { color: var(--fg); }
-.bk-context { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-13); font-weight: var(--fw-bold); color: var(--interactive); line-height: 1.2; }
-.bk-context .jj-block { width: 11px; height: 11px; border-radius: 3px; transform: rotate(20deg); background: var(--interactive); flex: none; }
+.bk-context { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-13); font-weight: var(--fw-bold); color: var(--zone-1); line-height: 1.2; }
+.bk-context .jj-block { width: 11px; height: 11px; border-radius: 3px; transform: rotate(20deg); background: var(--zone-1); flex: none; }
 
 /* (3) Footer sticky y dinámico: anclado al fondo del panel, fuera del scroll. En columna porque
    reúne TODOS los textos de pago: fila [total + CTA], y debajo la señal/«En el parque» y la nota
@@ -1711,16 +1671,14 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 .bk-foot__row { display: flex; align-items: center; gap: var(--sp-14); }
 .bk-foot__total { display: flex; flex-direction: column; flex-shrink: 0; }
 .bk-foot__l { font-size: var(--fs-11); font-weight: var(--fw-semibold); color: var(--fg-mute); letter-spacing: 0.04em; }
-/* El total encoge ANTES que el botón (`#450`, M3): a 320 un «144,60 €» a 22 px dejaba «Pagar con
-   tarjeta» en dos líneas y el pie crecía de 119 a 139. */
-.bk-foot__v { font-family: var(--font-display); font-weight: var(--fw-black); font-stretch: 75%; font-size: clamp(var(--fs-16), 5.2vw, var(--fs-22)); letter-spacing: -0.01em; line-height: 1.1; white-space: nowrap; }
+.bk-foot__v { font-family: var(--font-display); font-weight: var(--fw-black); font-stretch: 75%; font-size: var(--fs-22); letter-spacing: -0.01em; line-height: 1.1; white-space: nowrap; }
 .bk-foot__note { margin: 0; font-size: 11.5px; color: var(--fg-mute); line-height: 1.4; }
 
 /* Desglose de la señal vía ⓘ (popover), para NO romper la estética «Total — CTA» con líneas extra.
    La ⓘ va junto al rótulo del total; el popover abre HACIA ARRIBA (el footer está al fondo del panel). */
 .bk-foot__info { display: inline-flex; vertical-align: middle; margin-left: 5px; }
 .bk-foot__info-btn { display: inline-grid; place-items: center; width: 16px; height: 16px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--fg-mute); transition: color var(--dur-sale) var(--ease-sale); }
-.bk-foot__info-btn:hover { color: var(--fg); }
+.bk-foot__info-btn:hover { color: var(--zone-1); }
 .bk-foot__info-btn svg { width: 15px; height: 15px; }
 /* Anclado al FOOTER (no al icono): abarca su ancho interior (left/right = padding) y se abre justo
    encima. Así queda SIEMPRE dentro del panel — no lo recorta el `overflow:hidden` de `.sidecart__body`
@@ -1739,27 +1697,25 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 
 /* Enlace «volver al carrito» del paso de pago (reusa el estilo de `.bk-back`). */
 .purchase__back { margin-bottom: var(--sp-14); }
-/* EL CTA DEL PIE ES UN `.btn` (`#451`, D-C1 «ninguna variante nueva»): el relleno, el texto, el hover y la
-   pisada los pone la familia (`landing.css`); aquí queda solo la CAJA del pie —ancho, talla y el gris del
-   deshabilitado—. Hasta hoy era una variante propia en cian, el color de la PRIMERA zona para todo. */
-.bk-cta { flex: 1; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-15); border: 0; cursor: pointer; border-radius: var(--r-btn); font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-15); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
+.bk-cta { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-15); border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--zone-1); color: var(--on-brand); font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-15); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
+.bk-cta:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg); box-shadow: var(--shadow-lift); }
 .bk-cta svg { width: 17px; height: 17px; transition: transform var(--dur-entra) var(--ease-entra); }
-/* Deshabilitado en GRIS PLENO, no al 55 % de `.btn:disabled`: con la opacidad encima el rótulo caía a
-   2,08 (medido tras `#451`). Un control inactivo está exento de AA, pero no hace falta que lo parezca. */
-.bk-cta:disabled { background: var(--bg-soft); color: var(--fg-mute); opacity: 1; cursor: not-allowed; transform: none; box-shadow: none; }
-.bk-cta:disabled:hover { background: var(--bg-soft); color: var(--fg-mute); }
+.bk-cta:hover svg { transform: translateX(4px); }
+.bk-cta:disabled { background: var(--bg-soft); color: var(--fg-mute); cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* (3.bis) Barra-carrito del catálogo (estilo mockup `.cart`): un único botón con badge de cantidad
    + (artículos / total) + «Ir al carrito». Clase propia (`.cartbar`) para no colisionar con `.cart`
    (lista de líneas del carrito). */
-/* La barra del carrito también es un `.btn` (`#451`): aquí solo su reparto interior. */
-.cartbar { display: flex; align-items: center; gap: var(--sp-14); width: 100%; border: 0; cursor: pointer; border-radius: var(--r-btn); padding: var(--sp-13) var(--sp-16); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
-.cartbar__count { display: grid; place-items: center; flex-shrink: 0; min-width: 34px; height: 34px; padding: 0 var(--sp-8); border-radius: var(--r-md); background: color-mix(in srgb, var(--on-action) 14%, transparent); color: var(--on-action); font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-17); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
+.cartbar { display: flex; align-items: center; gap: var(--sp-14); width: 100%; border: 0; cursor: pointer; background: var(--action); color: var(--on-action); border-radius: var(--r-btn); padding: var(--sp-13) var(--sp-16); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
+.cartbar:hover { transform: translateY(-2px); background: var(--action-hover); color: var(--on-action-hover); }
+.cartbar:hover .cartbar__count { background: var(--fg); color: var(--action-hover); }
+.cartbar__count { display: grid; place-items: center; flex-shrink: 0; min-width: 34px; height: 34px; padding: 0 var(--sp-8); border-radius: var(--r-md); background: var(--zone-1); color: var(--on-brand); font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-17); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
 .cartbar__txt { display: flex; flex-direction: column; gap: var(--sp-1); flex: 1; min-width: 0; text-align: left; }
 .cartbar__label { font-size: var(--fs-11); font-weight: var(--fw-semibold); opacity: 0.7; letter-spacing: 0.04em; }
 .cartbar__total { font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-18); letter-spacing: -0.01em; }
 .cartbar__go { display: inline-flex; align-items: center; gap: var(--sp-7); font-size: var(--fs-13); font-weight: var(--fw-semibold); white-space: nowrap; }
 .cartbar__go svg { width: 16px; height: 16px; transition: transform var(--dur-entra) var(--ease-entra); }
+.cartbar:hover .cartbar__go svg { transform: translateX(4px); }
 
 /* Respeto de `prefers-reduced-motion`: sin animaciones/transiciones decorativas.
    ⚠️⚠️ **`.acct` sale de esta lista** (`#277`): su fundido y su `visibility` diferido se arreglan
@@ -1895,11 +1851,12 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 /* Elegido: mismo tratamiento que `.cal__day.is-selected` — acento de zona + anillo, y tinta sobre el
    acento para que el contraste aguante cualquier marca white-label (`#213`). */
 .daystrip__day.is-selected {
-    background: var(--fg); border-color: var(--fg);
-    color: var(--bg);
+    background: var(--zone-1); border-color: var(--zone-1);
+    box-shadow: 0 0 0 2px var(--fg) inset;
+    color: var(--on-brand);
 }
 .daystrip__day.is-selected .daystrip__wd,
-.daystrip__day.is-selected .daystrip__price { color: var(--bg); opacity: 0.78; }
+.daystrip__day.is-selected .daystrip__price { color: var(--fg); opacity: 0.78; }
 
 /* ══ LAS FLECHAS DE LAS TIRAS (`#241`) ═════════════════════════════════════════════════════════
    `[OWNER, 2026-08-28]`: «en escritorio no hay manera de deslizar con el ratón, y no hay flechas —
@@ -1975,9 +1932,7 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
    Agrandar la celda sin quitarle sitio al contenedor era la única vía: el cajón mide 390 y no crece. */
 .cal { padding: var(--sp-8); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
 .cal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-10); }
-/* «Septiembre De 2026» (`#450`, m1): `capitalize` ponía la preposición en mayúscula. Solo la primera. */
-.cal__month { display: inline-block; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); }
-.cal__month::first-letter { text-transform: uppercase; }
+.cal__month { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); text-transform: capitalize; }
 /* 44×44: eran 32×32 (`#237`). El dibujo del chevron no crece —lo manda `font-size`—, crece la caja. */
 .cal__nav { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font-size: var(--fs-18); line-height: 1; cursor: pointer; }
 .cal__nav:hover:not(:disabled) { border-color: var(--fg); }
@@ -1986,9 +1941,7 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 .cal__grid--head { margin-bottom: var(--sp-4); }
 .cal__wd { padding: var(--sp-4) 0; text-align: center; font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-semibold); color: var(--fg-mute); text-transform: capitalize; }
 .cal__day {
-    /* 44 de alto al dedo (`#450`, C3). ⚠️ Sin `aspect-ratio`: con la celda cuadrada y el mínimo, a 320 la
-       rejilla de siete desbordaba 35 px (medido) — el ancho lo pone la pista, el alto el mínimo. */
-    min-height: var(--tap-min);
+    aspect-ratio: 1 / 1;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     gap: var(--sp-3);
@@ -2009,8 +1962,8 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 /* Día elegido (Sidebar v2): como ya no se auto-avanza, el día seleccionado queda MARCADO con el
    acento de zona + anillo, hasta pulsar «Continuar». Tinta oscura sobre el acento = contraste
    robusto con cualquier marca white-label (#213), igual que el badge del carrito. */
-.cal__day.is-selected { background: var(--fg); color: var(--bg); font-weight: var(--fw-black); }
-.cal__day.is-selected .cal__day-price { color: var(--bg); opacity: 0.78; }
+.cal__day.is-selected { background: var(--zone-1); box-shadow: 0 0 0 2px var(--fg) inset; color: var(--on-brand); font-weight: var(--fw-black); }
+.cal__day.is-selected .cal__day-price { color: var(--fg); opacity: 0.78; }
 
 /* Jerarquía de la celda del calendario: día (principal, grande) + precio (secundario,
    pequeño y atenuado). Línea-altura 1 para que el gap entre ambos sea exacto. El precio
@@ -2081,19 +2034,19 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 .cart { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
 .cart__item { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); padding: var(--sp-12) var(--sp-14); }
 .cart__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-10); }
-.cart__when { flex: 1; min-width: 0; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-13); color: var(--interactive); text-transform: capitalize; }
+.cart__when { flex: 1; min-width: 0; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-13); color: var(--zone-1); text-transform: capitalize; }
 .cart__price { flex: none; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-13); color: var(--fg); }
 .cart__remove { background: none; border: 0; color: var(--fg-mute); font-size: var(--fs-20); line-height: 1; cursor: pointer; }
 .cart__remove:hover { color: var(--fg); }
 .cart__lines { list-style: none; margin: var(--sp-8) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-4); }
 .cart__lines li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg); }
 .purchase__add-more {
-    width: 100%; min-height: var(--tap-min); margin-top: var(--sp-14); padding: var(--sp-11) var(--sp-16);
+    width: 100%; margin-top: var(--sp-14); padding: var(--sp-11) var(--sp-16);
     background: none; border: 1px dashed var(--line-strong); border-radius: var(--r-btn);
     font-family: var(--font-body); font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); cursor: pointer;
     transition: border-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
 }
-.purchase__add-more:hover { border-color: var(--fg); color: var(--fg); }
+.purchase__add-more:hover { border-color: var(--fg); color: var(--zone-1); }
 
 /* Catálogo de entradas (paso 1 del flujo de compra: elegir producto) */
 .catalog { display: flex; flex-direction: column; gap: var(--sp-8); margin-bottom: var(--sp-4); }
@@ -2127,7 +2080,7 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
    rótulo largo —el contenedor es flex— y `margin-right` porque el `gap` de `.catalog__item` separa
    sus HIJOS, y esto va dentro del rótulo. */
 .catalog__ico { flex: none; margin-right: var(--sp-10); color: var(--fg-mute); }
-.catalog__item:hover .catalog__ico { color: var(--fg); }
+.catalog__item:hover .catalog__ico { color: var(--zone-1); }
 .catalog__badge {
     font-size: var(--fs-9); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.08em;
     background: var(--zone-1); color: var(--on-brand); padding: var(--sp-2) var(--sp-7); border-radius: var(--r-pill, 999px);
@@ -2141,9 +2094,9 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 /* Flecha CTA de la card (Sidebar v2): affordance de «entra a reservar», se desliza y toma el acento al hover. */
 .catalog__go { flex: none; display: inline-grid; place-items: center; color: var(--fg-mute); transition: transform var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
 .catalog__go svg { width: 18px; height: 18px; }
-.catalog__item:hover .catalog__go { transform: translateX(3px); color: var(--fg); }
+.catalog__item:hover .catalog__go { transform: translateX(3px); color: var(--zone-1); }
 /* Anuncio de señal en el catálogo (#227 F2): «Señal 30,00 €» bajo el PRECIO (en `.catalog__pricecol`). */
-.catalog__deposit { font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-semibold); color: var(--warn-text); line-height: 1.3; }
+.catalog__deposit { font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-semibold); color: var(--warn); line-height: 1.3; }
 
 /* ====================================================================
    Paso 1: catálogo en secciones-acordeón POR TIPO + buscador progresivo.
@@ -2169,8 +2122,10 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 .catalog-acc__head { width: 100%; display: flex; align-items: center; gap: var(--sp-11); padding: var(--sp-15) var(--sp-2); background: none; border: 0; text-align: left; }
 .catalog-acc__icon { width: 30px; height: 30px; flex: none; border-radius: 9px; display: grid; place-items: center; background: var(--bg-soft, var(--bg-soft)); color: var(--fg); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
 .catalog-acc__icon svg { width: 24px; height: 24px; }
+.catalog-acc__head:hover .catalog-acc__icon { background: var(--zone-1); color: var(--on-brand); }
 /* El icono de entradas apiladas (E5): el occluder de las cards de delante debe fundirse con el
    fondo naranja del box al hover (si no, se ven cards blancas sobre el naranja). Igual que E2 en los CTAs. */
+.catalog-acc__head:hover .catalog-acc__icon .ic-e5 svg .occ { fill: var(--zone-1); }
 .catalog-acc__title { flex: 1; font-family: var(--font-display); font-weight: var(--fw-bold); font-size: var(--fs-15); letter-spacing: -0.01em; color: var(--fg); }
 .catalog-acc__count { flex: none; min-width: 22px; height: 20px; padding: 0 var(--sp-7); border-radius: var(--r-pill); display: inline-grid; place-items: center; background: var(--bg-soft, var(--bg-soft)); font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-bold); color: var(--fg-mute); }
 .catalog-acc__chev { width: 20px; height: 20px; flex: none; color: var(--fg-mute); transition: transform var(--dur-entra) var(--ease-sale); }
@@ -2189,8 +2144,7 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 }
 
 /* Chip de hora seleccionado (paso 3) */
-/* LO ELEGIDO ES UN ESTADO Y VA EN TINTA (`#451`): el cian era el color de la primera zona para todo. */
-.purchase__chip.is-active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.purchase__chip.is-active { background: var(--zone-1); color: var(--on-brand); border-color: var(--zone-1); }
 
 /* Caja de cantidad (paso 3, tras elegir la hora) */
 .qtybox { margin-top: var(--sp-16); padding: var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
@@ -2235,7 +2189,7 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 .eventfields { margin-top: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-14); }
 .eventfields__field { display: flex; flex-direction: column; gap: var(--sp-6); }
 .eventfields__label { font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); color: var(--fg); }
-.eventfields__req { color: var(--err-text); }
+.eventfields__req { color: var(--zone-1); }
 /* `select` entra con el justificante de un menor invitado (#328): la relación con el menor es una
    lista CERRADA, no texto libre. Es puramente ADITIVO —medido: no había ni un `<select>` en las
    vistas públicas— y usa los MISMOS tokens, para que un desplegable no invente una segunda forma. */
@@ -2267,7 +2221,7 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 .eventfields__field.is-invalid textarea { border-color: var(--err); box-shadow: 0 0 0 3px color-mix(in srgb, var(--err) 13%, transparent); }
 /* Mensaje de error bajo el campo y ayuda: mismos tokens que el resto de la hoja. */
 .eventfields__help { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
-.eventfields__error { font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--err-text); }
+.eventfields__error { font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--err); }
 
 /* Datos del evento mostrados bajo una línea de carrito/pago/confirmación */
 .cart__event { list-style: none; margin: var(--sp-8) 0 0; padding: var(--sp-8) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3); }
@@ -2285,7 +2239,7 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 /* Complementos avanzados: incluidos/gratis, grupos de elección y "Más info" */
 .addons__badge { display: inline-block; margin-left: var(--sp-6); padding: var(--sp-1) var(--sp-7); border-radius: var(--r-pill); font-family: var(--font-body); font-size: var(--fs-10); font-weight: var(--fw-bold); letter-spacing: 0.03em; text-transform: uppercase; vertical-align: middle; }
 .addons__badge--included { background: var(--ok); color: var(--on-ok); }
-.addons__badge--free { background: var(--ok-bg); color: var(--ok-text); border: 1px solid var(--ok-border); }
+.addons__badge--free { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-border); }
 .addons__charged { font-weight: var(--fw-bold); color: var(--fg); }
 .addons__group { border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-10) var(--sp-12); margin: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-6); }
 .addons__group-label { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-13); color: var(--fg); padding: 0; }
@@ -2293,18 +2247,18 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 .addons__row--choice.is-selected { border-color: var(--fg); box-shadow: inset 0 0 0 1px var(--fg); }
 .addons__choice { display: flex; align-items: center; gap: var(--sp-10); flex: 1 1 auto; min-width: 0; cursor: pointer; margin: 0; }
 .addons__radio { width: 18px; height: 18px; flex: none; accent-color: var(--ok); cursor: pointer; }
-.addons__moreinfo { align-self: flex-start; display: inline-flex; align-items: center; min-height: var(--tap-min); background: none; border: none; padding: var(--sp-2) 0; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg-mute); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.addons__moreinfo { align-self: flex-start; background: none; border: none; padding: var(--sp-2) 0; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg-mute); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .addons__moreinfo:hover { color: var(--fg); }
 .addons__perguest { flex: none; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg-mute); }
 .addons__features { flex-basis: 100%; list-style: none; margin: var(--sp-4) 0 0; padding: var(--sp-8) 0 var(--sp-2); border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-4); }
 .addons__features li { position: relative; padding-left: var(--sp-18); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
-.addons__features li::before { content: "✓"; position: absolute; left: 0; color: var(--ok-text); font-weight: var(--fw-bold); }
+.addons__features li::before { content: "✓"; position: absolute; left: 0; color: var(--ok); font-weight: var(--fw-bold); }
 /* Dependencia «requiere» (data-driven): el complemento dependiente se atenúa y muestra la nota
    «Requiere: X» hasta que su requisito esté elegido. Los controles ya van `disabled` desde el blade. */
-.addons__requires { font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--warn-text); }
+.addons__requires { font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--warn); }
 .addons__row.is-disabled, .addons__group .addons__row--choice.is-disabled { opacity: 0.6; }
 .addons__row.is-disabled .entry__stepper button[disabled] { cursor: not-allowed; }
-.cart__addon-incl { font-style: normal; font-weight: var(--fw-semibold); font-size: var(--fs-11); color: var(--ok-text); }
+.cart__addon-incl { font-style: normal; font-weight: var(--fw-semibold); font-size: var(--fs-11); color: var(--ok); }
 .orders__line-included { display: inline-block; padding: 0 var(--sp-6); border-radius: var(--r-pill); background: var(--ok-bg); font-weight: 700; font-size: var(--fs-10); text-transform: uppercase; letter-spacing: 0.02em; color: var(--ok); }
 .orders__line-unit { color: var(--fg-mute); font-size: var(--fs-12); font-weight: 400; }
 
@@ -2313,7 +2267,7 @@ body:has(.sidecart.is-open) :is(.cta-pair, .book-bar, .ride-card__viz) *::after 
 .cart__addons li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
 /* Nota de señal por producto (#227 F2): «Señal X€ ahora · resto en el parque» en la card del
    producto que cobra señal — evita etiquetar el agregado como «(señal)» en cestas mixtas. */
-.cart__deposit { margin: var(--sp-6) 0 0; padding: var(--sp-6) var(--sp-8); border-radius: var(--r-sm); background: color-mix(in srgb, var(--warn) 8%, transparent); font-family: var(--font-body); font-size: var(--fs-12); line-height: 1.4; color: var(--warn-text); font-weight: var(--fw-semibold); }
+.cart__deposit { margin: var(--sp-6) 0 0; padding: var(--sp-6) var(--sp-8); border-radius: var(--r-sm); background: color-mix(in srgb, var(--warn) 8%, transparent); font-family: var(--font-body); font-size: var(--fs-12); line-height: 1.4; color: var(--warn); font-weight: var(--fw-semibold); }
 
 /* ====================================================================
    Pulido visual (demo): fotos de atracciones + hero full-bleed con vídeo.
@@ -3088,12 +3042,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
    existe: «Entrar» parecía menos que «Crear cuenta».
    ▶ Va acotado a `.purchase__authtabs` por lo mismo que la regla de arriba: la landing sigue
    exactamente como estaba, y el cajón no depende del ancho de la ventana. */
-/* Dentro del cajón la pestaña mide 44 y va en caja baja sin tracking (`#450`, C3 y M3): con mayúsculas
-   y `.14em` «CREAR CUENTA» partía en dos líneas a 320 y 375. Y todo `.btn` del cajón llega a 44. */
-.purchase__authtabs .zone-tab { flex: 1; text-align: center; min-height: var(--tap-min); letter-spacing: 0; text-transform: none; font-size: var(--fs-15); }
-/* La pestaña activa es un ESTADO, no una zona (`#451`): tinta. */
-.purchase__authtabs .zone-tab.active { background: var(--fg); color: var(--bg); }
-.sidecart__panel .btn { min-height: var(--tap-min); }
+.purchase__authtabs .zone-tab { flex: 1; text-align: center; }
 
 /* ====================================================================
    Mis pedidos (Fase 5): lista de reservas con detalle.
@@ -4485,7 +4434,7 @@ body[data-has-hero] .nav--over .nav__cta {
 /* Variantes Incluido/Gratis (espejo de `.addons__badge--*` del sidebar, #194) — el blade genera
    `addons-mini__badge--{incluido|gratis}`; sin estas reglas ambos se veían idénticos (revisión #233). */
 .addons-mini__badge--included { background: var(--ok); color: var(--on-ok); }
-.addons-mini__badge--free { background: var(--ok-bg); color: var(--ok-text); border: 1px solid var(--ok-border); }
+.addons-mini__badge--free { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-border); }
 /* Landing (decisión clienta): el botón «Más info +» (mismo patrón que el sidebar, `.addons__moreinfo`
    definido arriba) va INLINE en la fila, justo tras el NOMBRE — no en su propia línea. El badge + el
    precio se agrupan en `.addons-mini__meta`, empujado a la derecha, para que el «Más info» quede
@@ -4601,14 +4550,21 @@ body[data-has-hero] .nav--over .nav__cta {
 .acct__logout-form { margin: 0; display: flex; flex: 1; }
 .acct__btn {
     flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-8);
-    padding: var(--sp-11) var(--sp-15); border-radius: var(--r-btn); min-height: var(--tap-min);
+    padding: var(--sp-11) var(--sp-15); border-radius: var(--r-btn);
     font-family: var(--font-body); font-size: var(--fs-13); font-weight: 600; white-space: nowrap;
     cursor: pointer; text-decoration: none; border: 1px solid transparent;
     transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale);
 }
 .acct__btn svg { width: 15px; height: 15px; }
-/* Los botones del bloque son `.btn` / `.btn--ghost` (`#451`): relleno, hover, pisada y deshabilitado
-   los pone la familia. Aquí queda solo la talla del bloque (13 px, 44 de alto, reparto a partes). */
+.acct__btn--primary { background: var(--action); color: var(--on-action); }
+.acct__btn--primary:hover { transform: translateY(-2px); background: var(--action-hover); color: var(--on-action-hover); box-shadow: var(--shadow-lift); }
+.acct__btn--ghost { background: transparent; color: var(--fg); border-color: var(--line-strong); }
+.acct__btn--ghost:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg-card); border-color: var(--fg); }
+/* Bloqueado en el paso de identificación del flujo (login/registro ya pedido abajo): atenuado,
+   cursor not-allowed y SIN efecto hover (el `disabled` lo fija Alpine vía $store.purchase.identifying). */
+.acct__btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.acct__btn--primary:disabled:hover { transform: none; background: var(--action); color: var(--on-action); box-shadow: none; }
+.acct__btn--ghost:disabled:hover { transform: none; background: transparent; color: var(--fg); border-color: var(--line-strong); }
 /* ⚠️ El botón de SOLO ICONO no se reparte el ancho: con `flex: 1` los tres saldrían iguales y el de
    salir —que es el menos importante de los tres— ocuparía tanto como los otros dos. `aspect-ratio`
    lo deja cuadrado sin fijarle un tamaño, así que sigue creciendo con el padding del sistema. */
@@ -4643,7 +4599,7 @@ body[data-has-hero] .nav--over .nav__cta {
     color: var(--fg); font-size: var(--fs-12); font-weight: 600; line-height: 1.3;
     transition: background var(--dur-sale) var(--ease-sale);
 }
-.acct__alert:hover { background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.acct__alert:hover { background: color-mix(in srgb, var(--zone-1) 20%, transparent); }
 .acct__alert-ico {
     flex: none; display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px; border-radius: 50%;
@@ -4652,7 +4608,7 @@ body[data-has-hero] .nav--over .nav__cta {
     background: var(--zone-1); color: var(--on-brand); font-weight: 800; font-size: var(--fs-12); line-height: 1;
 }
 .acct__alert-text { flex: 1; }
-.acct__alert-arrow { flex: none; color: var(--interactive); font-weight: 700; }
+.acct__alert-arrow { flex: none; color: var(--zone-1); font-weight: 700; }
 
 /* Botón «Cerrar sesión» al pie de /mi-cuenta (#221). */
 .account__logout { margin: var(--sp-8) 0 0; }
@@ -5891,7 +5847,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
 }
 /* La sombra SOLO en hover: una tarjeta quieta está apoyada, no elevada — es la regla de los
    tres roles de elevación (`specs/tema-por-instalacion.md` §13). */
-.acc-tile:hover { border-color: var(--fg); box-shadow: var(--shadow-lift); }
+.acc-tile:hover { border-color: var(--fg); transform: translateY(-2px); box-shadow: var(--shadow-lift); }
 .acc-tile:active { transform: translateY(0) scale(0.97); transition: transform var(--dur-toque) var(--ease-sale); }
 .acc-tile:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 .acc-tile__ico { display: inline-flex; }
@@ -5903,7 +5859,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     color: var(--fg-mute);
     transition: color var(--dur-toque) var(--ease-sale);
 }
-.acc-tile:hover .acc-tile__ico svg { color: var(--fg); }
+.acc-tile:hover .acc-tile__ico svg { color: var(--zone-1); }
 .acc-tile__name {
     font-family: var(--font-body); font-weight: var(--fw-semibold);
     font-size: var(--fs-13); line-height: 1.25; color: var(--fg);
@@ -5918,7 +5874,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    el peor momento. El hueco lo deja la sub-línea de la próxima reserva, que se retira de aquí
    porque el índice del área ya la enseña (§9.7 C·2). */
 .acct__qr {
-    flex: none; min-height: var(--tap-min);
+    flex: none;
     display: inline-flex; align-items: center; gap: var(--sp-6);
     padding: var(--sp-6) var(--sp-10);
     border: 1px solid var(--line-strong);

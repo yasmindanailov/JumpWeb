@@ -22303,7 +22303,7 @@ página tienen **«cómo funciona / antes de venir» como sección propia**, que
 para que «desde» no sea cebo. ⚠️ `DesignSync` sigue sin autorización (`/design-login` interactivo):
 copia local del 27/28/31-08, dicho en la cabecera del perfil.
 
-**La fase 2** (`docs/specs/guion-de-la-portada.md` ⬜): 2a el guion —cuatro preguntas, la tabla
+**La fase 2** (`docs/archivo/guion-de-la-portada.md` ⬜, archivado en `#452`): 2a el guion —cuatro preguntas, la tabla
 «cada regla donde muerde», inventario de páginas, orden propuesto (reabre `#314` **con medida
 delante**), siete decisiones D-G1..7, **objetivos medibles** (edad y altura ≤ 1,5 pantallas · qué hay
 dentro ≤ 3 · cumple ≤ 3 · portada ≤ 8 pantallas · 1 selector · ≤ 5 especies · 0 URLs duplicadas · 4 de
@@ -22314,7 +22314,7 @@ del owner (D-G6)**: la edad y la altura de una zona son **texto libre** (`zones.
 6 donde él fijó 8); la marca de altura y el filtro por edad piden dos campos.
 
 **Ficheros**: `design.md` (nuevo, raíz) · `mockup_playjumppark/design-playjump.md` (nuevo,
-gitignorado) · `docs/specs/guion-de-la-portada.md` (nuevo) · `docs/INSTALACION-CLIENTE.md` §4.g ·
+gitignorado) · `docs/archivo/guion-de-la-portada.md` (nuevo; hoy archivado, `#452`) · `docs/INSTALACION-CLIENTE.md` §4.g ·
 `docs/README.md` · `CLAUDE.md` · `docs/ESTADO.md` · `docs/specs/auditoria-diseno.md` (la cita de su
 tabla en C2/C3). Instrumento: `storage/app/audit-camino.mjs` (gitignorado). **Ni una línea de
 producto.**
@@ -22476,7 +22476,7 @@ anotados.
 
 **Contexto.** `#432` fijó el paso: la forma B con las decisiones del owner tomadas (el móvil perfecto,
 «slide» donde hay lista, la capa de imagen del cliente, la medida en metros dentro de la tarjeta), como
-ARTEFACTO y no en la web. Se ha hecho así (`specs/guion-de-la-portada.md` §6.8): HTML autocontenido con
+ARTEFACTO y no en la web. Se ha hecho así (`archivo/guion-de-la-portada.md` §6.8): HTML autocontenido con
 los DATOS REALES de la instalación —volcados por el mismo `HomeController` que pinta la portada—, las
 fotos reales recortadas y comprimidas con GD, el kit de fachada y el logotipo en línea, y los tokens del
 sistema con los valores del paquete. **La portada real no cambia una línea.** Artefacto:
@@ -22899,7 +22899,7 @@ dentro** (`InteractionColourIsNotAZoneTest` 8 · `HoverDoesNotJumpTest` 5 · `Se
 `MotionBudgetTest` 4), todas «solo encogen». El 03, con la F cerrada, pidió *«auditar también el cajón de
 compra con todo el flujo»*. Se reabre la EXCLUSIÓN, no el «no tocar»: el informe no cambia una línea.
 
-**Lo hecho**: `docs/specs/auditoria-cajon.md` — `hallmark audit` sobre el embudo **recorrido en
+**Lo hecho**: `docs/archivo/auditoria-cajon.md` (archivado en `#452`) — `hallmark audit` sobre el embudo **recorrido en
 Chromium** con el motor `spa`: catálogo → día → hora/cantidad/complementos → carrito → identificarse
 (entrar · crear cuenta · el «no») → pagar (y el «no» de las condiciones) → saliendo a la pasarela, con
 entrada y con pack, más los dos desenlaces por el pase real `?redsys=` (token acuñado para un pedido
@@ -23042,3 +23042,44 @@ KIDS» en tres líneas y lee «14,95 €por niño» — m8, para la C.
 **Verificación**: guardas de tema y presupuesto 125/125 · contrato 38/38 · `test:js` 947/947 · sonda del
 embudo a 390 y 1280: un relleno de acción por pantalla, contraste 0, bucles 0 · suite completa antes de
 empujar.
+
+## #452 · 2026-09-03 · `[DECIDIDO owner]` El diseño se delega a Claude Design: el carril se para, la fase 2 se archiva y el cajón vuelve a como estaba antes de `#450`
+
+**Contexto.** Con las tandas A y B del cajón en el árbol (`#450`, `#451`) y la C empezada, el owner decidió:
+*«Vamos a quitar todo eso, el diseño lo voy a delegar a claude design primero, voy a iterar ahí, aquí vamos
+a dejarlo, bórralo o archívalo, design.md también, cuando lo tenga, te aviso y empezaremos a trabajar
+sobre una base profesional y robusta, con todo claro. Deja el SPA como estaba.»*
+
+**Lo hecho.** (1) La tanda C a medias, descartada del árbol (no llegó a commit). (2) `#450` y `#451`
+**revertidos en un commit nuevo**, sin reescribir historia: `site.css`, `landing.css`, `app.js`, los 21
+componentes del cajón, `layout.blade.php`, `render-sidebar.mjs`, las seis guardas de tema tocadas y el
+manifiesto congelado vuelven a su estado en `1b8db76`; `DrawerControlsTest` se retira; `DEUDA.md` e
+`INSTALACION-CLIENTE.md` pierden lo que aquellas tandas añadieron; el `client.css` local pierde
+`--ok-text/--err-text` y el ajuste `sidebar.engine`, que la sonda había puesto en `spa`, se borra (el motor
+vuelve a su defecto). Bundle y SSR reconstruidos. (3) **Archivados en `docs/archivo/`**, con su 📜 y sin
+mantenerse: el `design.md` de la raíz → `design-producto-2026-09-03.md` (sale de la raíz a propósito: la
+skill `hallmark` leería un `design.md` de raíz como sistema bloqueado), el guion de la portada y la
+auditoría del cajón (`archivo/guion-de-la-portada.md` · `archivo/auditoria-cajon.md`). (4) **Retirados los
+prototipos de decisión**: el fichero de rutas `prototipos.php` y su `require` en `routes/web.php`, `Prototipos\PortadaController`, `resources/views/prototipos/`, `public/prototipos/`,
+`scripts/prototipo-b/` y la exclusión de `ArmazonContractTest`. (5) `#438`–`#451` quedan en este registro
+como historia: lo que dicen se midió y se decidió; lo que ejecutaron ya no está en el árbol.
+
+**Lo que NO se toca.** Las tandas C→F de la auditoría de la web pública (`#434`→`#437`) siguen en código
+con sus guardas y `specs/auditoria-diseno.md` sigue viva (su G queda parada con el carril). Las cinco
+líneas del `client.css` de producción de `#434`/`#436` siguen siendo un paso de despliegue del owner.
+
+**1 · Deshacer se hace con `revert`, no con `reset`.** Dos commits ya empujados y otro carril vivo en el
+mismo clon: reescribir `main` habría dejado al otro agente sobre una base que ya no existe. El revert es
+un commit más y el registro cuenta lo que pasó.
+
+**2 · Archivar y no borrar, porque leerlo mañana cuesta cero y rehacerlo no.** Las 100 medidas del cajón
+(3 críticos · 10 mayores · 7 menores) y las de la portada B a cinco anchos siguen valiendo como DATO cuando
+el owner vuelva con su sistema; lo que caduca es la ejecución, no la observación.
+
+**3 · Parar es una decisión y va en `ESTADO.md` como tal**: el siguiente agente de este carril no construye
+nada hasta que el owner avise con la base de Claude Design, y entonces empieza por leerla entera y
+contrastarla con los tokens y las guardas que ya viven en código.
+
+**Verificación**: suite completa en verde antes de empujar (el hook la repite) · el contrato de árbol NO se
+regenera (el manifiesto vuelve al de `1b8db76` y el SSR se reconstruyó sobre los componentes restaurados) ·
+docs-check.

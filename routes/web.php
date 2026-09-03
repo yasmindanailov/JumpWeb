@@ -27,14 +27,6 @@ use App\Http\Middleware\SetLocale;
 use App\Livewire\Admin\Puerta\ValidarRegistro;
 use Illuminate\Support\Facades\Route;
 
-// ── PROTOTIPOS de diseño, SOLO en local (`specs/guion-de-la-portada.md` §6.5, `#431`) ─────────
-// Las tres formas de la portada que el owner elige VIENDO, sobre los datos reales. No existen en
-// testing ni en producción: la condición es el entorno, no un flag, para que un despliegue no pueda
-// llevárselas por descuido. Se retiran con la decisión (D-G2).
-if (app()->environment('local')) {
-    require __DIR__.'/prototipos.php';
-}
-
 Route::get('/', HomeController::class)->name('home');
 
 // Autenticación (Fase 4). Registro y login abren un modal sobre la home (#38);

@@ -53,7 +53,7 @@ function toggle(code) {
 
 <template>
     <p v-if="store.unauthenticated" class="purchase__empty">
-        <button type="button" class="btn" @click="emit('sign-in')">{{ account?.login?.cta ?? '' }}</button>
+        <button type="button" class="btn btn--zone" @click="emit('sign-in')">{{ account?.login?.cta ?? '' }}</button>
     </p>
 
     <template v-else>

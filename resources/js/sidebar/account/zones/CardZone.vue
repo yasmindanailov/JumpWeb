@@ -155,7 +155,7 @@ function dismiss() {
                   botón con JS: el navegador ya sabe guardar una imagen del mismo origen.
                 -->
                 <div class="acc-actions qr-pass__acts">
-                    <a class="btn" :href="cardImageUrl(store.card)" download="carne-qr.png">{{ a('account.card.download') }}</a>
+                    <a class="btn btn--zone" :href="cardImageUrl(store.card)" download="carne-qr.png">{{ a('account.card.download') }}</a>
                 </div>
             </template>
 
@@ -187,7 +187,7 @@ function dismiss() {
                     <p id="acct-card-rotate-q">{{ a('account.card.rotate_confirm_title') }}</p>
 
                     <div class="acc-actions">
-                        <button ref="confirmBtn" type="button" class="btn" :disabled="store.busy" @click="rotate">
+                        <button ref="confirmBtn" type="button" class="btn btn--zone" :disabled="store.busy" @click="rotate">
                             {{ store.busy ? a('account.card.rotating') : a('account.card.rotate_confirm_yes') }}
                         </button>
                         <button type="button" class="btn btn--ghost" :disabled="store.busy" @click="dismiss">

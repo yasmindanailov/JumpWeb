@@ -437,31 +437,13 @@ document.addEventListener('alpine:init', () => {
             'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])',
         init() {
             this.$watch(openExpr, (open) => {
-                this.isolate(open);
                 if (open) {
                     this.$nextTick(() => this.focusFirst());
                 }
             });
             // Si el panel ya estaba abierto al cargar (auth-modal por URL, sidecart por /entradas).
             if (this.$data.$evaluate ? this.$data.$evaluate(openExpr) : false) {
-                this.isolate(true);
                 this.$nextTick(() => this.focusFirst());
-            }
-        },
-        /**
-         * `inert` en todo lo que NO es el panel (`#450`, auditoría del cajón m7). La trampa de `trap()`
-         * retiene el foco del teclado, pero un lector de pantalla seguía viendo la página entera bajo
-         * el diálogo. Se marcan los hermanos de cada ancestro hasta `<body>` —no `document.body.children`
-         * a secas, porque el panel puede vivir dentro de un envoltorio y marcarlo lo dejaría inerte a él—.
-         */
-        isolate(open) {
-            let node = this.$el;
-            while (node && node.parentElement && node !== document.body) {
-                for (const sibling of node.parentElement.children) {
-                    if (sibling === node || sibling.tagName === 'SCRIPT') continue;
-                    sibling.toggleAttribute('inert', open);
-                }
-                node = node.parentElement;
             }
         },
         focusFirst() {

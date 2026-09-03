@@ -87,21 +87,17 @@
 >    sembrados, guion en `VERIFICACION-E2E-CAJON.md` §5.septies — ⚠️ **ese escenario ENVEJECE**: se
 >    sembró para «hoy» el 01/09) · el libro del pedido (V18–V23) · los TPV · su `client-menu.webp`.
 >
-> **4. EL CARRIL DE DISEÑO, que corre en PARALELO en esta misma máquina** (`#430` → `#437`, cierre del
->    2026-09-03): la auditoría de la web pública (`docs/specs/auditoria-diseno.md`) tiene **ejecutadas
->    y medidas las tandas C, E, H, D y F** (§11–§14; nueve guardas nuevas, todas vistas morder) y
->    **queda solo la G** (interiores M3 y normas M6, m5, m6: decisiones D2 y D3), que el owner quiere
->    valorar junto con la organización; C1 es producto. **El sistema visual está entero y vigilado**
->    (`design.md`): las páginas interiores no necesitan diseño nuevo, necesitan contenido. ⚠️⚠️ **Paso
->    de despliegue del owner: cinco líneas en el `client.css` de producción** (la lista, en «DOS COSAS
->    DEL OWNER»). La portada B vive como ARTEFACTO para su ojo en el móvil (`#433`). ▶ **Lo que el
->    owner está pensando** (sus palabras, 2026-09-03): ampliar la organización a TODAS las páginas
->    —landing, servicios, cumpleaños, entradas, contacto, el parque— y decidir qué va en cada una **con
->    el white-label y el data-driven de la BD delante**; lo primero que este carril aportará cuando lo
->    abra es un CENSO por página (qué muestra, de dónde sale cada dato, qué falta en el panel), sin
->    decidir por él. Su bloque «CARRIL DISEÑO» y el **REPARTO VIGENTE de los dos carriles** —diseño
->    numera en `#430`–`#439`, este carril en `#410`+— están bajo «POR DÓNDE RETOMAR», más abajo.
->    **Léelo antes de elegir número o de tocar `resources/views/components/site/**`.**
+> **4. EL CARRIL DE DISEÑO ESTÁ PARADO** (`#452`, 2026-09-03, `[DECIDIDO owner]`): el owner delega el
+>    diseño a **Claude Design**, itera allí y avisará con la base; hasta entonces este carril **no
+>    construye nada**. Al parar se revirtieron las tandas A y B del cajón (`#450`/`#451`, en un commit
+>    nuevo: el cajón está como antes), se archivaron `design.md`, el guion de la portada y la auditoría
+>    del cajón en `docs/archivo/` y se retiraron los prototipos `/_diseno/…`. **Lo que queda en código**:
+>    las tandas C→F de la auditoría de la web pública (`docs/specs/auditoria-diseno.md`, `#434`→`#437`,
+>    guardas vistas morder); su G, parada. ⚠️⚠️ **Paso de despliegue del owner: cinco líneas en el
+>    `client.css` de producción** (la lista, en «DOS COSAS DEL OWNER»). Su bloque «CARRIL DISEÑO ·
+>    PARADO» y el **REPARTO VIGENTE de los dos carriles** —diseño numera en `#450`–`#459`, este carril
+>    en `#410`+— están bajo «POR DÓNDE RETOMAR», más abajo. **Léelo antes de elegir número o de tocar
+>    `resources/views/components/site/**`.**
 >
 > ⚠️⚠️ **NUMERACIÓN POR BANDAS** (`#404`, `CONVENCIONES §10.6`): **este ordenador numera desde `#400`**
 > y el portátil sigue en `#34x`. Mirar el remoto antes de empujar **se probó y no basta** — trece
@@ -403,7 +399,32 @@ haga a propósito. *Encontrarlo fue gratis: `grep -oE '^## #[0-9]+' docs/DECISIO
 
 ## ▶ POR DÓNDE RETOMAR (lee esto primero)
 
-═══════════ CARRIL DISEÑO · LA AUDITORÍA DE LA WEB PÚBLICA, EN EL REPO (2026-09-02, `#430`) ═══════════
+═══════════ CARRIL DISEÑO · PARADO Y ARCHIVADO (2026-09-03, `#452`, `[DECIDIDO owner]`) ═══════════
+▶ ❗❗❗ **POR DÓNDE SE RETOMA ESTE CARRIL: NO SE RETOMA HASTA QUE EL OWNER AVISE.** Sus palabras:
+*«el diseño lo voy a delegar a claude design primero, voy a iterar ahí, aquí vamos a dejarlo… cuando lo
+tenga, te aviso y empezaremos a trabajar sobre una base profesional y robusta, con todo claro»*. Cuando
+vuelva traerá su sistema hecho en Claude Design; lo primero entonces es **leerlo entero y contrastarlo
+con lo que ya vive en código** (los tokens de `site.css`/`landing.css`, las guardas de
+`tests/Feature/Theme/**`, el paquete `client.css` de la instalación) ANTES de proponer nada, y la
+regla de la casa sigue: opciones renderizadas, decisiones suyas, guarda por regla.
+▶ **Lo que se hizo al parar**: la tanda C del cajón, a medias, **descartada sin commit**; `#450` y `#451`
+(las tandas A y B del cajón) **revertidos en un commit nuevo, sin reescribir historia** — el cajón está
+como en `1b8db76`, manifiesto congelado incluido, bundle y SSR reconstruidos, `DrawerControlsTest`
+retirado, `DEUDA.md` e `INSTALACION-CLIENTE.md` sin lo que aquellas tandas añadieron; el
+`design.md` de la raíz, el guion de la portada y la auditoría del cajón **archivados en
+`docs/archivo/`** (`design-producto-2026-09-03.md` · `guion-de-la-portada.md` · `auditoria-cajon.md`)
+con su 📜 (no se mantienen); los prototipos (el fichero de rutas `prototipos.php` y su `require`,
+`Prototipos\PortadaController`, `resources/views/prototipos/`, `public/prototipos/`,
+`scripts/prototipo-b/`) y la exclusión de `ArmazonContractTest` **retirados**; el ajuste
+`sidebar.engine` que la sonda había puesto en `spa` **borrado** de `settings` (el motor vuelve a su
+defecto) y el `client.css` local sin `--ok-text/--err-text`.
+▶ **Lo que SIGUE en código y vigilado**: las tandas C→F de la auditoría de la web pública
+(`#434`→`#437`, `specs/auditoria-diseno.md` §11–§14), cuya G queda parada con el carril. ⚠️ Sigue el
+paso de despliegue de «DOS COSAS DEL OWNER» (las cinco líneas del `client.css` de producción).
+⚠️ `#438`–`#451` en `DECISIONES.md` son historia: **sus medidas valen, su ejecución ya no está**.
+**Lo de abajo, hasta el REPARTO, es el registro de lo archivado — no hace falta leerlo para trabajar.**
+
+═══ 📜 CARRIL DISEÑO · LA AUDITORÍA DE LA WEB PÚBLICA, EN EL REPO (2026-09-02, `#430`) — superado por el bloque de arriba ═══
 ▶ **`docs/specs/auditoria-diseno.md`** es el informe —**3 críticos · 10 mayores · 6 menores**— y
 **sustituye a «Un solo idioma»** (01-09), que se publicó como artefacto y **no es recuperable** (medido:
 no está en la cuenta del owner con `scope: all`, ni en el repo, ni en local). El artefacto de lectura
@@ -422,7 +443,7 @@ guion-de-la-portada.md` ⬜** = el guion (cuatro preguntas · «cada regla donde
 reabre `#314` con medida · siete decisiones D-G1..7 · objetivos medibles con `storage/app/
 audit-camino.mjs`). ▶ ✅ **2c HECHA (2026-09-03)**: las tres formas están **montadas sobre la web y los datos reales** en
 rutas **solo de local** (`/_diseno/portada/{a,b,c}` · `/_diseno/piezas` · `?zona=` · `?precio=` ·
-`?orden=cumple`; `routes/prototipos.php` bajo `app()->environment('local')`, controlador
+`?orden=cumple`; el fichero de rutas `prototipos.php` —retirado en `#452`— bajo `app()->environment('local')`, controlador
 `Prototipos\PortadaController` que reutiliza los datos de `HomeController`; hoja
 `public/prototipos/guion.css` FUERA de `public/css/`, solo tokens) y **medidas** (guion §6.6): las tres
 bajan «qué hay dentro» de la pantalla 6,9 a la 3,2 y la edad de 2,1 a 1,6, con UN selector y cero
@@ -524,75 +545,6 @@ la sonda de contraste sobre el HTML renderizado como test de la suite, y el sele
 ⚠️ **Lo que la auditoría vio fuera de su alcance**: `resources/views/vendor/mail/html/themes/brand.css`
 lleva `#FF5B22` (el naranja del PRIMER cliente) quemado **cinco veces** — fuga white-label en los
 correos, ficha en `DEUDA.md`.
-▶ ❗❗❗ **EL CAJÓN, AUDITADO CON EL FLUJO ENTERO (2026-09-03, tarde, `#438`,
-`docs/specs/auditoria-cajon.md`)** — el owner reabrió el «el SPA lo dejamos» del 01 pidiendo auditarlo
-con todo el flujo: **3 críticos · 10 mayores · 7 menores** sobre **100 mediciones** en Chromium (15
-pantallas × 7 anchos + los dos desenlaces por el pase real `?redsys=`, control en verde, 49 capturas).
-**Sin una línea de producto.** Lo que más importa: **C1** el embudo no tiene rol de acción (naranja en
-el bloque de cuenta y el cartbar · cian en el CTA y en `.btn--zone` · tinta al hover — y el cian **no
-identifica**: ningún módulo del cajón escribe `--zone-1`, un pack Jump se compra con el cian de la
-primera zona); **C2** las ocho «excepción que solo encoge» de la tanda D pintan **12 textos bajo AA en
-todas las pantallas** («Volver» y el contexto a **2,21** sobre la banda); **C3** la × del diálogo mide
-**15×26** y la mitad de los controles no llega a 44 (`#264` dio cuatro al cajón); **M1** media hoja
-vacía en móvil (la §7.4 de `cajon-en-movil.md`, medida: 362→591 px de 844). ▶ **Cinco decisiones del
-owner (§7: D-C1 el color de acción del embudo · D-C2 la hoja en móvil · D-C3 el bloque de cuenta ·
-D-C4 el paso 5 · D-C5 la física del hover) y tres tandas (§8: A lo roto sin decisión · B el rol de
-acción y vaciar las cuatro listas de excepción · C la hoja y el paso 5)**. ⚠️ **`sidebar.engine = spa`
-queda PUESTO en local** (para volver a Livewire: borrar la fila, `VERIFICACION-E2E-CAJON.md` §1); los
-dos motores comparten el CSS, así que los hallazgos valen para los dos. ⚠️ Trampas nuevas en §9: el ratón
-se queda donde hizo clic y **pinta el hover** («Ir a pagar» salió tinta y era `:hover`); un
-`.addons__moreinfo` de la landing DETRÁS del cajón se lleva el localizador sin acotar; abortar la ida a
-Redsys pinta la página de error (se contesta 204); el pase se consume al aplicarse (un token por ancho).
-Instrumentos gitignorados: `storage/app/audit-cajon-hallmark.mjs` (con control) · `resumen-cajon.py` ·
-`bar-390.mjs` · JSON y capturas en `storage/app/audit/`. ▶ **Hoja de decisión para el owner**: «Cinco
-decisiones del cajón» — https://claude.ai/code/artifact/b332251a-85b2-4fb1-8414-5fd70dd4b86a — con las
-opciones de D-C1..5 **renderizadas sobre el cajón vivo** (`opciones-cajon.mjs`: CSS inyectado y
-retirado, 31 capturas en `storage/app/audit/opciones/`); se contesta con cinco letras.
-▶ ❗❗ **EL OWNER CONTESTÓ (`#439`, `auditoria-cajon.md` §7)**: **D-C2 = B** (hoja inferior con asa) **y el
-calendario ENTERO sin la tira de días** (revierte la mitad de fecha de `#239`; la tira de horas se
-queda) · **D-C3 = A** (bloque de cuenta plegado) · **D-C4 = B** («Identifícate» y los campos) · **D-C5 = A**
-(el botón responde con color). **D-C1: ninguna de las tres**, y preguntó cuántos botones hay: medido en
-§7.1 (32 combinaciones en la web, 28 en el cajón, 14 fuera de `.btn`) → **propuesta pendiente de su
-respuesta: retirar la variante** (`.bk-cta`, `.cartbar`, `.btn--zone`, `.acct__btn--*` → `.btn`), no
-elegirle un color. Con eso se construyen las tandas A → B → C del informe.
-▶ ✅ **TANDA A DEL CAJÓN — HECHA Y MEDIDA (2026-09-03, `#450`, `auditoria-cajon.md` §11)**: 26 lecturas de
-`--zone-*`/`--ok`/`--err`/`--warn` como texto pasan a `--interactive` o a los tokens nuevos
-**`--ok-text` · `--err-text` · `--warn-text`** (el par oscuro para texto sobre papel); doce familias de
-control leen `--tap-min`; el CTA del pie no parte y el total encoge antes; el botón manual del paso 9
-existe (aparece a los 2,5 s; el manifiesto congelado cambia en UNA clave); la cantidad es un campo; la ×
-es el `close` del set; el diálogo pone `inert` a la página; la página pausa sus bucles tras el velo.
-**Medido después (320 · 390 · 1280)**: contraste **12 → 0**; bajo 44 solo lo que WCAG exime (y las celdas
-del calendario a 320: 40 × 44, dicho); dos líneas 0; bucles 3 → 0. Guarda `DrawerControlsTest` (6/6
-mutaciones muerden); las listas de excepción del cajón en `InteractionColourIsNotAZoneTest` y
-`SemanticFillTextTest` quedan VACÍAS. ⚠️⚠️ **PASO DE DESPLIEGUE**: dos líneas en el `client.css` de
-producción (`--ok-text: #447921; --err-text: #C83912;`). ⚠️ La guarda cazó **nueve reglas** que el recorrido
-no vio (estados no capturados): *una guarda estática es la segunda auditoría*. Dos trampas de CSS con cifra
-en `#450`: `aspect-ratio` + `min-height` desborda 35 px; `animation-play-state` no llega a un `::after`.
-▶ ✅ **TANDA B DEL CAJÓN — HECHA Y MEDIDA (2026-09-03, `#451`, `auditoria-cajon.md` §12)**: **muere
-`btn--zone`** (28 apariciones en 21 componentes → `.btn`/`.btn--ghost`; las cuatro reglas fuera de
-`landing.css`); `.bk-cta`, `.cartbar` y `.acct__btn` SON `.btn` y quedan como caja; **lo elegido va en
-tinta** (hora, día, progreso, pestaña activa); **D-C3**: el bloque de cuenta plegado también en `catalog` y
-`result` → **sin ningún modo visible**, ficha en `DEUDA.md` para retirarlo (hace de puente); «Ver mis
-reservas» vuelve al paso 6 como fantasma. Tres listas de excepción pierden sus entradas del cajón
-(`HoverDoesNotJumpTest` 5 → 0, `InteractionColourIsNotAZoneTest`, `ActionFillTest`);
-`SingleButtonFamilyTest` mira también los `.vue`. **El manifiesto congelado cambia en 15 claves**, todas la
-clase de un botón (y el enlace nuevo del paso 6); regenerado tras ver los otros 23 intactos. **Medido
-después (390 · 1280)**: un relleno de acción por pantalla, cero en el catálogo; contraste 0; bucles 0.
-⚠️ m8 nuevo para la C: el catálogo a 390 parte «Pack Cumpleaños KIDS» en tres líneas y lee «14,95 €por
-niño». ▶ **SIGUE la tanda C** (hoja inferior con asa en móvil · el calendario entero sin la tira de días ·
-el paso 5 con «Identifícate» y los campos · el pie sin botón muerto (M8) · m8).
-▶ **Y LA SEGUNDA VUELTA DEL OWNER SOBRE B (`guion-de-la-portada.md` §6.9)**: le gusta, y pide **más
-JUEGO** (brand, animaciones, «que la sombra salte al clic»), el **cumpleaños en SLIDE** con tarjetas
-más anchas, **otra «Visita 1·2·3·4»** («muy sosa, nada de diferenciación»), **otro «Visítanos»**, y una
-sección de **reseñas de Google** (`specs/google-reviews.md`, 🟦 pendiente de su ✅ y de tres datos:
-`place_id`, clave de API, techo de gasto). **La barra flotante, medida** (§6.9): mecánicamente correcta
-(56 px · safe-area · 85 px reservados · el clic entra · oculta ≥ 900 · no tapa el pie); **lo que no**:
-2–3 rellenos de acción a la vista en **8 de 18** medias pantallas (la web real: máximo 2, en 3 de 27) y
-el fantasma «Registrarse» del prototipo lleva a `#visita`. ▶ **LO SIGUIENTE, en este orden**: (1) el
-owner lee la auditoría del cajón y decide D-C1..5 (o dicta); (2) sobre el prototipo B se renderizan las
-OPCIONES de los cinco puntos de §6.9 —pegatina que se aplasta al clic · packs en slide · dos o tres
-formas de «Visita» · dos de «Visítanos» · la sección de reseñas con la forma del cliente— y elige, o
-«te digo yo la idea»; (3) las tandas A/B/C del cajón con sus decisiones.
 
 ❗❗ **REPARTO VIGENTE EN ESTA MÁQUINA (2026-09-02) — DOS CARRILES SOBRE EL MISMO CLON.** Sigue la
 regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`reset`/`clean`, y
@@ -608,19 +560,15 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     que es tuyo. Tocaré **solo el bloque `.gf-*`** (y sólo cuando la spec esté aprobada), sin entrar
     en nada de la landing ni del armazón. `git pull --rebase` antes de cada push por los dos lados.
     **No toco `resources/views/components/site/**` ni `lang/*/landing.php`.**
-  · **DISEÑO / IDIOMA VISUAL** (este) → `public/css/{site,landing}.css` ·
-    `resources/views/{home.blade.php,pages/**,components/site/**,prototipos/**}` ·
-    `lang/*/landing.php` · `tests/Feature/{Landing,Theme}/**` (y **una exclusión** en
-    `tests/Feature/Site/ArmazonContractTest.php`: ignora `resources/views/prototipos/`) ·
-    `docs/specs/{auditoria-diseno,idioma-visual-heredado,guion-de-la-portada}.md` · **`design.md`**
-    (raíz) · `routes/prototipos.php` + su `require` en `routes/web.php` ·
-    `app/Http/Controllers/Prototipos/**` · `public/prototipos/**` · **`scripts/prototipo-b/**`** (el
-    fuente del artefacto B, su constructor, su sonda y el volcado de datos).
-    `docs/specs/auditoria-cajon.md` (`#438`, el informe del cajón: lee `site.css` 884–3050 y no toca
-    nada) · **Numera en la sub-banda `#430`–`#439` — último usado: `#439`, AGOTADA** (2026-09-03),
-    reservada A DISTANCIA de la secuencia natural para que el otro carril no tenga que mirar nada antes
-    de empujar. ▶ **Banda actual de este carril: `#450`–`#459` — último usado: `#451`** (2026-09-03; la
-    natural va por `#413`; `#440`–`#449` se deja de colchón entre las dos).
+  · **DISEÑO / IDIOMA VISUAL** (este) → ⏸️ **PARADO desde el 2026-09-03 (`#452`)**: no toca nada hasta
+    que el owner vuelva con su sistema de Claude Design. Su ámbito, cuando vuelva, sigue siendo
+    `public/css/{site,landing}.css` · `resources/views/{home.blade.php,pages/**,components/site/**}` ·
+    `lang/*/landing.php` · `tests/Feature/{Landing,Theme}/**` ·
+    `docs/specs/{auditoria-diseno,idioma-visual-heredado}.md` · `docs/archivo/**`. Los prototipos y
+    `design.md` ya no existen en el árbol (archivados/retirados por `#452`).
+    **Numera en la sub-banda `#450`–`#459` — último usado: `#452`** (2026-09-03; la `#430`–`#439` se
+    agotó en `#439`), reservada A DISTANCIA de la secuencia natural para que el otro carril no tenga
+    que mirar nada antes de empujar; si se agota, la siguiente se reserva aquí ANTES de usarla.
   ▶ ✅ **Aviso del carril de diseño sobre `ValidarRegistroTest`: LEÍDO Y ACTUADO** (2026-09-03,
     retirado según `CONVENCIONES §10.4`). El limitador de la puerta se mide con reloj de pared y cae
     con tres suites en la misma máquina: **ficha propia en `DEUDA.md`** con la reproducción y la
@@ -655,11 +603,10 @@ Santo salió de aplicar la regla al pie de la letra (el owner decide si se poda)
 
 ## ▶ DOS COSAS DEL OWNER, Y UNA ES UN PASO DE DESPLIEGUE
 
-- ⚠️⚠️ **`client.css` de PRODUCCIÓN (carril de diseño, `#434`, `#436` y `#450`)**: añadir a mano las dos
-  líneas `--on-ok: #101418;` y `--on-err: #FFFFFF;` en el `:root` del paquete instalado, **las tres de
+- ⚠️⚠️ **`client.css` de PRODUCCIÓN (carril de diseño, `#434` y `#436`)**: añadir a mano las dos líneas
+  `--on-ok: #101418;` y `--on-err: #FFFFFF;` en el `:root` del paquete instalado, **y las tres de
   `--interactive`** (`#0A5C93` en `:root` y en `[data-surface="paper"]`, `#1AA9DE` en
-  `[data-surface="ink"]`) **y las dos del texto semántico** (`--ok-text: #447921;` y
-  `--err-text: #C83912;`, `#450`) — el paquete no viaja por rsync. Sin ellas, «Incluido» sigue en 2,95 y la FAQ
+  `[data-surface="ink"]`) — el paquete no viaja por rsync. Sin ellas, «Incluido» sigue en 2,95 y la FAQ
   abierta cae al defecto del producto (tinta) allí, con la suite en verde aquí. El fichero local ya las
   lleva; la receta completa está en `INSTALACION-CLIENTE.md` §4.a.ter.
 - ⚠️⚠️ **Hay que PUBLICAR la v1 de «Condiciones»** en cada instalación (panel → Páginas legales →
@@ -1287,7 +1234,8 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4187 en verde** (26.409 aserciones, 1 skipped a propósito), medida el 2026-09-03
+> Suite **4179 en verde** (26.383 aserciones, 1 skipped a propósito), medida el 2026-09-03 (tras `#452`: la
+> integración quita los 8 casos de las tandas A/B del cajón; el otro carril dejó 4187 en su cierre)
 > Antes: **2026-09-01 (cierre de la tarde) — 🚀 LA WEB DEL 2.º
 > CLIENTE ESTÁ EN PRODUCCIÓN (`https://playjump.es`, `#325`/`#326`): su bloque está en el CARRIL 4
 > (la PORTADA), que es el más reciente; antes, el 6.º (EXCURSIONES DE COLEGIO, `#322`/`#324`) bajo el
@@ -1369,7 +1317,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > número**: 4019 + 4 + 15 = **4038** y el gate mide **4039 · 25.772**. Un test y dos aserciones de
 > más, o sea que uno de los dos números declarados se tomó sobre una base que ya no era 4019. *Que la
 > suma no cuadre es justo el motivo por el que el gate mide en vez de creerse la resta.*
-> Suite **4164 en verde** (26.354 aserciones, 1 skipped a propósito), medida el 2026-09-03
+> Suite **4156 en verde** (26.328 aserciones, 1 skipped a propósito), medida el 2026-09-03
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`). ⚠️ **+8 y +51 los pone la T8
 > de Google** (`#350`): las dos guardas nuevas del botón y del aviso de privacidad, más los casos que
 > sustituyen a los de las casillas retiradas. Antes: las cuatro tandas del

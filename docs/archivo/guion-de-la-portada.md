@@ -1,6 +1,12 @@
 # [SPEC] El GUION de la portada — la fase 2 del diseño: qué se cuenta, en qué orden y con qué pieza
 
-> Estado: 🟦 **LA 2c MEDIDA Y B EN ARTEFACTO** (2026-09-03, `#431` → `#433`) — la organización
+> 📜 **ARCHIVADO el 2026-09-03 (`DECISIONES #452`, `[DECIDIDO owner]`)**: el diseño se delega a
+> **Claude Design**; la fase 2 se para aquí. Los prototipos de `/_diseno/…` y `scripts/prototipo-b/`
+> se retiraron del árbol y el artefacto B queda solo como referencia. **No se mantiene**: sus medidas
+> (línea base de la portada, las tres formas, B a cinco anchos) siguen valiendo como dato cuando el
+> owner vuelva con su sistema; sus decisiones D-G1..7 se retoman desde cero sobre esa base.
+
+> Estado (al archivar): 🟦 **LA 2c MEDIDA Y B EN ARTEFACTO** (2026-09-03, `#431` → `#433`) — la organización
 > aprobada y A descartada por el owner (§6.7); **B, móvil primero y con datos reales, publicada como
 > artefacto para su OJO (§6.8)**. Quedan D-G3 · D-G6 · D-G7 y su ✅ antes de tocar la portada real.
 > ▶ **§6.9: el owner la vio en su móvil (2026-09-03, `#438`) — le gusta, y pide más juego, el cumpleaños
@@ -278,7 +284,7 @@ listón. Es la única verificación que convierte «entendible» en un dato; el 
 ### 6.5 · El protocolo de la 2c — los renders (2026-09-03)
 
 Las tres formas se montan **sobre la web y los datos reales**, no como maqueta, en rutas que **solo
-existen en local** (`routes/prototipos.php`, cargado desde `routes/web.php` bajo
+existen en local** (el fichero de rutas `prototipos.php` —retirado en `#452`—, cargado desde `routes/web.php` bajo
 `app()->environment('local')`; en testing y producción no existen):
 
 | URL | qué |

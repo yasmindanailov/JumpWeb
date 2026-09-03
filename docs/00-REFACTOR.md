@@ -3760,20 +3760,27 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **T9 · One Tap** (`[owner]`, viable gateando el chip tras el banner de cookies): su pieza cara es **verificar la firma del `id_token`**, porque ahí el token llega del CLIENTE y no del canje
 - [ ] Del owner: su ✅, **el cliente de OAuth de DESARROLLO** (el de producción ya está creado; su secreto vive fuera del repo), la política de privacidad al terminar y **publicar la v1 de «Condiciones»** en cada instalación
 
-### LA PORTADA · FASE 2 DEL DISEÑO 🟦 — el guion, las tres formas medidas y B EN ARTEFACTO (`#430` → `#433`, 2026-09-02/03, carril de diseño)
+### LA PORTADA · FASE 2 DEL DISEÑO ⏸️ 📜 PARADA Y ARCHIVADA (`#452`, 2026-09-03) — el guion, las tres formas medidas y B en artefacto (`#430` → `#433`, carril de diseño)
+- [x] ⏸️ **PARADA POR EL OWNER (`#452`, `[DECIDIDO owner]`)**: el diseño se delega a **Claude Design**; itera
+      allí y avisará con la base. `design.md` (raíz), el guion y la auditoría del cajón → `docs/archivo/`
+      (no se mantienen); prototipos `/_diseno/…` y `scripts/prototipo-b/` retirados; las tandas A y B del
+      cajón (`#450`/`#451`) **revertidas** en un commit nuevo. **Lo de abajo es historia, salvo las tandas
+      C→F de la auditoría, que siguen en código con sus guardas.** La G espera a la base nueva.
 - [x] La segunda auditoría de la web pública, EN EL REPO (`specs/auditoria-diseno.md`, `#430`): 3 críticos
       · 10 mayores · 6 menores; espera las seis decisiones del owner (§7) y con ellas su tanda C.
-- [x] `design.md` (raíz) = el sistema del PRODUCTO, en dos capas con el perfil de PlayJump (`#431`).
-- [x] El guion de la portada (`specs/guion-de-la-portada.md`): cuatro preguntas, «cada regla donde
-      muerde», objetivos medibles con la sonda de `#430`.
+- [x] `design.md` (raíz) = el sistema del PRODUCTO, en dos capas con el perfil de PlayJump (`#431`) —
+      hoy `docs/archivo/design-producto-2026-09-03.md`.
+- [x] El guion de la portada (hoy `docs/archivo/guion-de-la-portada.md`): cuatro preguntas, «cada regla
+      donde muerde», objetivos medibles con la sonda de `#430`.
 - [x] 2c · las TRES formas sobre la web y los datos reales, en rutas de local, medidas (§6.6) — el owner
       descarta A y elige B, móvil primero, slides e imagen (`#432`, §6.7).
 - [x] **B EN ARTEFACTO** (`#433`, §6.8): móvil primero con datos reales, medida a 320·360·375·390·414 —
       a 390 **8,5 pantallas** (objetivo ≤ 8), cero líneas de dato partidas, cero fallos de contraste;
       cumple 4,8 → 3,5 con «cumple antes» (conmutador). Instrumentos en `scripts/prototipo-b/`.
       https://claude.ai/code/artifact/56f75f11-fb65-4e81-96d2-e9fd8fdc39c2
-- [ ] El OJO del owner sobre el artefacto en su móvil, y D-G3 · D-G6 · D-G7.
-- [ ] B en la portada real con guardas (§6.2 + las de §6.8) y las mismas medidas; retirar `/_diseno/…`.
+- [x] El OJO del owner sobre el artefacto en su móvil (`#438`, guion §6.9: le gusta y pide más juego) — y
+      ahí decidió delegar el diseño a Claude Design (`#452`). D-G3 · D-G6 · D-G7 se retoman sobre su base.
+- [ ] ~~B en la portada real con guardas~~ — **archivado** (`#452`); `/_diseno/…` ya retirado.
 - [x] **Tanda C de la auditoría, «lo roto»** (`#434`, spec §11): contacto (D4), foco de campos, acordeón sin
       tope, los cuatro contrastes con `--on-ok/--on-err/--on-warn`; cuatro guardas que muerden. D4 · D5 · D6
       `[DECIDIDO owner]`. ⚠️ Paso de despliegue: dos líneas en el `client.css` de producción.
@@ -3786,7 +3793,7 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       `InteractionColourIsNotAZoneTest`. ⚠️ Tres líneas más en el `client.css` de producción.
 - [x] **Tanda F** (`#437`, spec §14): 662 literales al token del mismo píxel con `scripts/escala-a-tokens.py`;
       huella de maquetación 24/24 idéntica; guarda `ScaleTokensAreUsedTest`. Quedan 163 huecos sin escalón.
-- [ ] Tanda G (interiores M3, normas M6, m5, m6: D2 y D3) — con la organización y las secciones.
+- [ ] Tanda G (interiores M3, normas M6, m5, m6: D2 y D3) — ⏸️ espera a la base de Claude Design (`#452`).
 
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no

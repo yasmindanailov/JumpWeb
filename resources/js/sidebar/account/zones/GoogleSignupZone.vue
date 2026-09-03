@@ -98,7 +98,7 @@ async function submit() {
                 <h2 class="auth__title">{{ a('google.title') }}</h2>
             </div>
             <p class="auth__sub" role="status">{{ a('google.expired') }}</p>
-            <a v-if="urls.google" class="btn auth__submit" :href="urls.google">{{ a('google.restart') }}</a>
+            <a v-if="urls.google" class="btn btn--zone auth__submit" :href="urls.google">{{ a('google.restart') }}</a>
         </template>
 
         <template v-else-if="ui.pending">
@@ -155,7 +155,7 @@ async function submit() {
                     </template>
                 </div>
 
-                <button type="submit" class="btn auth__submit" :disabled="ui.busy">
+                <button type="submit" class="btn btn--zone auth__submit" :disabled="ui.busy">
                     <span v-show="! ui.busy">{{ a('google.submit') }}</span>
                     <span v-show="ui.busy" class="btn__loading">
                         <span class="jj-spinner jj-spinner--xs" aria-hidden="true"></span> {{ a('google.submitting') }}

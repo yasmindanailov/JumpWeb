@@ -434,7 +434,7 @@ class SidebarDrawerPolishTest extends TestCase
         $card = $this->code($this->source(self::CARD));
 
         $this->assertMatchesRegularExpression(
-            '/<a class="btn"[^>]*download="carne-qr\.png"/', $card,
+            '/<a class="btn btn--zone"[^>]*download="carne-qr\.png"/', $card,
             'Descargar ha dejado de ser la acción principal de la pantalla.'
         );
 

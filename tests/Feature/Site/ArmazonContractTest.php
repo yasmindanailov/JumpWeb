@@ -165,14 +165,6 @@ class ArmazonContractTest extends TestCase
                 continue;
             }
 
-            // Los PROTOTIPOS de decisión (`resources/views/prototipos/`, `specs/guion-de-la-portada.md`
-            // §6.5) sirven el armazón a propósito —simulan la portada entera— pero NO son páginas del
-            // producto: sus rutas solo existen en local y se retiran con la decisión. Contarlos aquí
-            // obligaría a tocar esta lista dos veces por cada prototipo, para nada.
-            if (str_contains($file->getPathname(), DIRECTORY_SEPARATOR.'prototipos'.DIRECTORY_SEPARATOR)) {
-                continue;
-            }
-
             $source = (string) preg_replace('/\{\{--.*?--\}\}/s', ' ', (string) file_get_contents($file->getPathname()));
 
             if (! str_contains($source, '<x-site.nav')) {

@@ -814,7 +814,6 @@ class SidebarDomContractTest extends TestCase
             state: $this->clientState(step: 6) + [
                 'orderCode' => $this->confirmedOrderCode(),
                 'registration' => RegistrationLink::current()?->toArray(),
-                'ordersUrl' => route('account.orders'),
             ]);
 
         $this->assertTree(__FUNCTION__, $vue,
@@ -849,7 +848,6 @@ class SidebarDomContractTest extends TestCase
             state: $this->clientState(step: 6) + [
                 'orderCode' => $this->confirmedOrderCode(),
                 'registration' => RegistrationLink::current()?->toArray(),
-                'ordersUrl' => route('account.orders'),
             ]);
 
         $this->assertTree(__FUNCTION__, $vue,
@@ -875,7 +873,6 @@ class SidebarDomContractTest extends TestCase
             'confirmation' => null,
             'orderCode' => 'R-ABC123',
             'registration' => null,
-            'ordersUrl' => route('account.orders'),
             'messages' => __('tickets'),
             'locale' => app()->getLocale(),
         ], 'purchase__confirm', withSiblings: true);

@@ -3,6 +3,10 @@
 > Estado: 🟦 **INFORME ENTREGADO · TANDAS C, E, H, D y F EJECUTADAS (§11 `#434`, §12 `#435`, §13
 > `#436`, §14 `#437`) · D1, D4, D5 y D6 decididas; queda la G (interiores y normas: D2, D3), que se
 > valora con la organización, y C1, que es producto** ·
+> ⏸️ **EL CARRIL DE DISEÑO ESTÁ PARADO (`#452`, 2026-09-03, `[DECIDIDO owner]`)**: el owner rehace el
+> sistema en Claude Design y avisará con la base; **la G no se hace hasta entonces**. Las tandas C→F
+> siguen en código con sus guardas. El `design.md` que citan §11–§14 vive ya en
+> `docs/archivo/design-producto-2026-09-03.md`; la auditoría hermana del cajón, en `docs/archivo/auditoria-cajon.md`, con sus tandas revertidas.
 > Última actualización: 2026-09-03 · Decisión asociada: `DECISIONES #430` (el informe vive en el
 > repo; el artefacto es solo la presentación) · Carril: **diseño / idioma visual** (este ordenador,
 > sub-banda `#430`–`#439`, reservada a distancia de la secuencia natural `#410`+ que sigue el

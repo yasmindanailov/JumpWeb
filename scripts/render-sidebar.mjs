@@ -228,8 +228,6 @@ const PROPS_FROM_API = {
         // El enlace de registro lo inyecta el SERVIDOR en el montaje (`RegistrationLink`): no es una
         // derivación del cliente, así que viaja como estado y no se recompone aquí.
         registration: state.registration ?? null,
-        // «Ver mis reservas» (`#451`): la ruta la compone el servidor; aquí viaja como estado, como `contactUrl`.
-        ordersUrl: state.ordersUrl ?? '',
         messages,
         locale: state.locale ?? 'es',
     }),
