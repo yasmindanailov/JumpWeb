@@ -42,7 +42,8 @@
 >    mayores · 6 menores) y **espera seis decisiones del owner** (su §7). Su bloque «CARRIL DISEÑO» y
 >    el **REPARTO VIGENTE de los dos carriles** —ficheros y sub-bandas: diseño numera en
 >    `#430`–`#439`, este carril sigue en `#410`+— están bajo «POR DÓNDE RETOMAR», más abajo.
->    **Léelo antes de elegir número o de tocar `resources/views/components/site/**`.**
+>    **Léelo antes de elegir número o de tocar `resources/views/components/site/**`.** ▶ **Y la fase 2 ya
+>    tiene su B en ARTEFACTO** (`#433`, 2026-09-03): el owner la mira en el móvil antes de tocar la portada.
 >
 > ⚠️⚠️ **NUMERACIÓN POR BANDAS** (`#404`, `CONVENCIONES §10.6`): **este ordenador numera desde `#400`**
 > y el portátil sigue en `#34x`. Mirar el remoto antes de empujar **se probó y no basta** — trece
@@ -388,6 +389,24 @@ respuestas de la spec §2. Cuando el owner dé el ✅ al artefacto, se construye
 guardas (línea de dato, un selector, presupuesto de fachada) y las mismas medidas. Los prototipos
 de local (`/_diseno/…`) siguen en el árbol hasta entonces. ⚠️ D-G6 es DATO del owner:
 edad y altura de zona son texto libre (`zones.age_range`).
+▶ ✅ **B EN ARTEFACTO — HECHO (2026-09-03, `#433`, spec §6.8)**: la portada en la forma B, **móvil primero**
+(diseñada a 390, aceptada a 320·360·375·390·414 y 1280 de control) con los DATOS REALES de la instalación,
+las fotos reales, el kit y el logotipo en línea y los tokens del sistema con los valores del paquete —
+https://claude.ai/code/artifact/56f75f11-fb65-4e81-96d2-e9fd8fdc39c2 (el registro es la spec). Lleva las
+decisiones de `#432`: metros dentro de la tarjeta de zona con cada dato en su línea; slides con el siguiente
+asomando en precios (Kids, 3), pasos y visítanos, y **dos a la vez** donde la elección es entre dos (zonas,
+los dos billetes de Jump, los dos packs con filas alineadas); la capa de imagen dentro del presupuesto del
+cliente (dibujo y foto de zona, sello girado «desde X €», friso y manchas del kit, pose del cumple); un
+relleno de acción por pantalla; y **un conmutador para D-G3** («cumple antes de juegos»). **Medido**: a 390
+**8,5 pantallas** (2c: 11 · objetivo ≤ 8), edad 1,6 · precio 2,5 · juegos 3,2 · cumple 4,8 (**3,5 con cumple
+antes**), y en los seis anchos **cero** desbordamientos, **cero** líneas de dato partidas, **cero** pulsables a
+dos líneas, **cero** áreas táctiles < 44 y **cero** fallos de contraste medibles. Lo que separa 8,5 de ≤ 8 es el
+hero (`#252`) y el aire entre secciones (`#314`), no la forma. ⚠️ **Cuatro trampas de instrumento** en §6.8
+(la peor: la copia local sin `<meta viewport>` maquetada a 980 px; y un fallo de cascada que la sonda no vio
+y la captura sí). **No reproduce** el imán del hero, el vídeo, el minijuego, el menú ni el cajón, a propósito.
+Fuente, constructor, sonda y volcado en **`scripts/prototipo-b/`**; la copia servida (gitignorada) en
+`http://localhost:8081/storage/prototipo-b/index.html`. ▶ **LO SIGUIENTE**: el OJO del owner en el móvil;
+con su ✅ y D-G3 · D-G6 · D-G7, B en la portada real con guardas y las mismas medidas.
 ⚠️ `DesignSync` sigue sin autorización en sesión no interactiva; copia del canvas del 27/28/31-08.
 ⚠️ **Lo que la auditoría vio fuera de su alcance**: `resources/views/vendor/mail/html/themes/brand.css`
 lleva `#FF5B22` (el naranja del PRIMER cliente) quemado **cinco veces** — fuga white-label en los
@@ -405,8 +424,9 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     `tests/Feature/Site/ArmazonContractTest.php`: ignora `resources/views/prototipos/`) ·
     `docs/specs/{auditoria-diseno,idioma-visual-heredado,guion-de-la-portada}.md` · **`design.md`**
     (raíz) · `routes/prototipos.php` + su `require` en `routes/web.php` ·
-    `app/Http/Controllers/Prototipos/**` · `public/prototipos/**`.
-    **Numera en la sub-banda `#430`–`#439` — último usado: `#432`** (2026-09-03), reservada A
+    `app/Http/Controllers/Prototipos/**` · `public/prototipos/**` · **`scripts/prototipo-b/**`** (el
+    fuente del artefacto B, su constructor, su sonda y el volcado de datos).
+    **Numera en la sub-banda `#430`–`#439` — último usado: `#433`** (2026-09-03), reservada A
     DISTANCIA de la secuencia natural para que el otro carril no tenga que mirar nada antes de
     empujar; si se agota, la siguiente se reserva aquí ANTES de usarla.
   ▶ ⚠️ **Para el agente del PANEL / hora extra — un test tuyo cae BAJO CARGA** (2026-09-03, al

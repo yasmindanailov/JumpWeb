@@ -22471,3 +22471,47 @@ ese reloj → verde. Con eso el reloj queda contestado **12/12**, y no 11/12 má
 **Verificación**: suite completa re-corrida con `TEST_CLOCK="2026-09-05 12:00:00"` (4107 ✓) · 20/20
 repeticiones del fichero arreglado · `grep` de `mt_rand` sobre `tests/` con los espacios de valores
 anotados.
+
+## #433 · 2026-09-03 · B se prueba en ARTEFACTO, móvil primero y con datos reales — y la medida dice dónde cae cada respuesta antes de que nadie toque la portada
+
+**Contexto.** `#432` fijó el paso: la forma B con las decisiones del owner tomadas (el móvil perfecto,
+«slide» donde hay lista, la capa de imagen del cliente, la medida en metros dentro de la tarjeta), como
+ARTEFACTO y no en la web. Se ha hecho así (`specs/guion-de-la-portada.md` §6.8): HTML autocontenido con
+los DATOS REALES de la instalación —volcados por el mismo `HomeController` que pinta la portada—, las
+fotos reales recortadas y comprimidas con GD, el kit de fachada y el logotipo en línea, y los tokens del
+sistema con los valores del paquete. **La portada real no cambia una línea.** Artefacto:
+https://claude.ai/code/artifact/56f75f11-fb65-4e81-96d2-e9fd8fdc39c2 · fuente, constructor, sonda y
+volcado en `scripts/prototipo-b/`.
+
+**Lo que se decidió construyendo, y el owner puede vetar viéndolo**:
+1. **«Una elección entre dos nunca va en slide» vale también para los billetes y los packs**: Jump tiene
+   dos entradas y van a dos columnas; Kids tiene tres y va en slide con la siguiente asomando. Los dos
+   packs se comparan lado a lado con las filas alineadas (`subgrid`), no en slide, aunque `#432` nombrara
+   «packs» entre las secciones con slide — la regla que el owner mismo dio manda sobre la lista.
+2. **Un solo relleno de acción por pantalla** (`design.md` §9): las tarjetas de precio no llevan botón, lo
+   lleva el panel de la zona; los packs van con botón fantasma; la barra de abajo es el CTA de acción
+   persistente, como en la web real a 390 (medido: arriba el par mide 0×0 y abajo 56).
+3. **La interacción en TINTA** (la D1 de la auditoría sigue pendiente): la pregunta abierta y los chips
+   activos van en tinta; el color de zona pinta solo lo que identifica una zona.
+4. **El sello girado es AMARILLO** (pegatina, −7°), no lima: la lima es la identidad de la zona Jump en
+   esta instalación y un sello lima sobre «Precios» diría «Jump».
+5. **La edad de cada atracción va sobre la foto en punteada** (el registro de condiciones de la tanda A)
+   y el distintivo en tinta; la sonda no puede medir contraste sobre una foto y los cuenta aparte.
+
+**Lo que MIDIÓ** (sonda propia, Chromium, seis anchos; la tabla en §6.8): a 390, **8,5 pantallas** (la 2c
+daba 11; objetivo ≤ 8), edad en la 1,6, precio 2,5, juegos 3,2, cumple 4,8 — **3,5 con «cumple antes»,
+que va en un conmutador dentro del prototipo para que D-G3 se VEA y no se estime**. En los seis anchos:
+**cero** desbordamientos, **cero** líneas de dato partidas (medidas una a una), **cero** pulsables a dos
+líneas, **cero** áreas táctiles por debajo de 44 y **cero** fallos de contraste medibles, con las cuatro
+familias cargadas antes de medir. Lo que separa 8,5 de ≤ 8 no es la forma: es el hero (0,94 pantallas,
+`#252`) y el aire entre ocho secciones (1,5 pantallas, `#314`).
+
+**Cuatro trampas del instrumento, las cuatro con cifras creíbles**: la copia servida sin `<meta viewport>`,
+maquetada a 980 px por el contexto móvil («3,3 pantallas» a 414); una línea de dato medida junto con su
+hijo en bloque (dos filas «rotas» que eran una decisión); un fallo de CASCADA —`.pair` después que
+`.nav__pair`, misma especificidad— que pintaba el par de arriba en móvil y echaba la hamburguesa fuera de
+pantalla **sin desbordamiento medido**, y lo cazó la captura; y el detector de dos líneas por cubos de
+4 px, que partía «Jump 8+» por mezclar dos fuentes en una línea.
+
+**Queda**: el OJO del owner en el móvil y D-G3 · D-G6 · D-G7; con su ✅, B en la portada real con guardas
+y las mismas medidas.

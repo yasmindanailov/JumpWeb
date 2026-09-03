@@ -1,7 +1,10 @@
 # [SPEC] El GUION de la portada — la fase 2 del diseño: qué se cuenta, en qué orden y con qué pieza
 
-> Estado: ⬜ **BORRADOR para el owner** (2026-09-03) — siete decisiones marcadas `[PENDIENTE: owner]`
-> (§4.7), tres de ellas se toman **viendo opciones renderizadas sobre la web real** (§6).
+> Estado: 🟦 **LA 2c MEDIDA Y B EN ARTEFACTO** (2026-09-03, `#431` → `#433`) — la organización
+> aprobada y A descartada por el owner (§6.7); **B, móvil primero y con datos reales, publicada como
+> artefacto para su OJO (§6.8)**. Quedan D-G3 · D-G6 · D-G7 y su ✅ antes de tocar la portada real.
+> Las siete decisiones de §4.7 nacieron `[PENDIENTE: owner]` y se toman **viendo opciones renderizadas
+> sobre la web real** (§6).
 > Decisión asociada: `DECISIONES #431` (abre la fase; la aprobación del guion será otra).
 > Carril: diseño / idioma visual, sub-banda `#430`–`#439`. Sistema de referencia: `design.md` (raíz)
 > y `mockup_playjumppark/design-playjump.md`.
@@ -391,11 +394,92 @@ sticker o algo.»*
   1,0 → ~0,6 · cómo funciona 1,1 → ~0,6 · precios 0,9 → ~0,7): **~8,7 pantallas**. Es una estimación
   y se mide al construirlo.
 
+### 6.8 · B EN ARTEFACTO — la prueba con las decisiones de §6.7 tomadas (2026-09-03, `#433`)
+
+**Qué es**: la portada en la forma B, **diseñada a 390 y aceptada a 320 · 360 · 375 · 390 · 414** (y
+1280 de control), como HTML autocontenido con los DATOS REALES de la instalación —zonas, entradas y sus
+dos precios, packs, FAQ, horario, dirección, volcados por el mismo `HomeController` que pinta la
+portada—, las fotos reales recortadas y comprimidas, el kit de fachada y el logotipo del cliente en
+línea, y el CSS del sistema (`design.md`) con los valores del paquete. **No toca la portada real.**
+- Artefacto: https://claude.ai/code/artifact/56f75f11-fb65-4e81-96d2-e9fd8fdc39c2 — presentación; **el
+  registro es este fichero**.
+- Fuente e instrumentos, en el repo: `scripts/prototipo-b/index.src.html` (el fuente, con marcadores
+  `{{img:…}}` y `{{svg:…}}`) · `build.php` (GD: recorte 4:5 a 480×600, webp q58–66; deja la copia servida
+  en `storage/app/public/prototipo-b/index.html` → `http://localhost:8081/storage/prototipo-b/index.html`)
+  · `medir.mjs` (la sonda, desde `/root/e2e` del contenedor) · `dump-portada.php` (el volcado de datos).
+
+**Lo que lleva, y de dónde sale cada decisión**:
+
+| pieza | forma | decisión |
+|---|---|---|
+| Zonas | DOS tarjetas pegatina a la vez: foto 4:5 + dibujo de zona del kit + nombre + edad + **la medida en metros como regla dentro** + «desde X €» + juegos y m², **cada dato en SU línea**, sin mayúsculas ni tracking; la elegida se pinta del color de zona | §6.7 D-G4 · «una elección entre dos nunca va en slide» |
+| Precios | la semana como regla (V·S·D·fest en tinta) + un BILLETE por duración con el icono de producto, precio L–J grande y el de V·S·D·fest debajo; Jump (2) a dos columnas, Kids (3) en slide con el siguiente asomando; calcetines y **UN** CTA de acción por panel; el **sello girado** «desde X €» (amarillo, pegatina, −7°) | D-G5 · `#432` (2) y (3) · `design.md` §9 |
+| Juegos | el carril de atracciones de la zona elegida: foto 4:5, edad en punteada sobre la foto, distintivo en tinta | `#302` |
+| Cumpleaños | foto pegatina con la pose de cumpleaños en contorno + los dos packs **lado a lado con las filas alineadas** (`subgrid`: edad · por niño L–J · V·S·D·fest · invitados · dura · señal · incluye · CTA fantasma) + la promesa del post-formulario | `design.md` §9 «dos opciones se comparan» |
+| Visita | los cuatro pasos como tarjetas de APOYO en slide (2×2 en escritorio), con las dos manchas de normas del kit | §3.5 · `#432` (2) |
+| Visítanos | tres pegatinas en slide (horario · dónde · mapa sin iframe: el anfitrión del artefacto no admite marcos externos) | `#307` |
+| Dudas | `<details>` nativo, sin tope de alto, la interacción en TINTA | auditoría M8 · D1 por defecto |
+| Cierre | la tarjeta de tinta con VAMOS / A / SALTAR, **sin el minijuego** (dicho en pantalla) | `#252`, no se toca |
+| Armazón | logotipo + hamburguesa arriba; **el par de CTA en la barra de abajo** en el rol de acción, como la web real a 390 (medido: arriba el par mide 0×0 y abajo 56) | `#205` · `#217` |
+| Selector | UNO (las dos tarjetas); los chips de Precios y Juegos son el MISMO estado | D-G4 «un componente, tres sitios» |
+| D-G3 | el sello del prototipo lleva un conmutador «cumple antes de juegos» que reordena las secciones | para verlo, no estimarlo |
+
+**Lo que MIDIÓ** (`medir.mjs`, Chromium 151, las cuatro familias cargadas antes de medir; pantalla en la
+que aparece cada respuesta; «rotas» = líneas de dato partidas, medidas una a una por `Range`):
+
+| ancho | pant. | edad | precio | juegos | cumple (botón) | cumple ANTES (packs · botón) | funciona | visítanos | dudas | rotas · 2ln · tap<44 · contraste |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 320×568 | 12,4 | 1,9 | 3,4 | 4,4 | 6,8 | 4,9 · 5,6 | 7,7 | 8,9 | 9,7 | 0 · 0 · 0 · 0/182 |
+| 360×740 | 9,5 | 1,6 | 2,7 | 3,5 | 5,3 | 3,9 · 4,4 | 6,0 | 6,8 | 7,5 | 0 · 0 · 0 · 0/182 |
+| 375×812 | 8,8 | 1,6 | 2,5 | 3,2 | 4,9 | 3,6 · 4,1 | 5,6 | 6,3 | 6,9 | 0 · 0 · 0 · 0/182 |
+| **390×844** | **8,5** | **1,6** | **2,5** | **3,2** | **4,8** | **3,5 · 4,0** | 5,4 | 6,1 | 6,7 | 0 · 0 · 0 · 0/182 |
+| 414×896 | 8,1 | 1,5 | 2,3 | 3,0 | 4,6 | 3,4 · 3,8 | 5,2 | 5,8 | 6,4 | 0 · 0 · 0 · 0/182 |
+| 1280×800 | 9,9 | 1,7 | 2,6 | 3,4 | 5,6 | 3,7 · 4,2 | 6,1 | 7,2 | 7,8 | 0 · 0 · 0 · 0/183 |
+| objetivo §2 (390) | ≤ 8 | ≤ 1,5 | ≤ 2 | ≤ 3 | ≤ 3 | — | — | — | — | 0 |
+
+Contra la 2c (§6.6, B a 390): pantallas **11 → 8,5**, precio 2,7 → 2,5, juegos 3,3 → 3,2, cumple 5,1 → 4,8
+(3,5 con el orden cambiado). Lo que enseñan los números:
+1. **Los slides bajan el largo casi hasta el objetivo** (8,5 contra ≤ 8; §6.7 estimó ~8,7). Lo que queda es
+   el hero (0,94 pantallas, `#252`) y el aire de 160 px entre ocho secciones (1,5 pantallas, `#314`):
+   llegar a ≤ 8 es tocar una de esas dos decisiones, no la forma.
+2. **El precio a 2,5 y no a ≤ 2** es el coste de contestar «¿para quién?» antes que «¿cuánto?» (§6.6·2):
+   las dos tarjetas de zona miden 0,94 pantallas a 390.
+3. **El cumpleaños solo llega a ≤ 3 si va antes que los juegos y se mide su TARJETA (3,5), no su botón
+   (4,0)**: la comparación de packs mide 1,36 pantallas y el botón está al final de las columnas. D-G3
+   sigue siendo del owner, y ahora se ve con el conmutador.
+4. **320 px es el peor caso a propósito** (568 de alto): 12,4 pantallas — y aun así cero líneas partidas.
+5. **18 textos (Jump) y 11 (Kids) van SOBRE FOTO** (la edad en punteada y los distintivos del carril): la
+   sonda no puede medir su fondo efectivo y los cuenta aparte, no como verdes. Es el trato que la web
+   real ya da a `.ride-card__badge`; si el owner los ve flojos, la salida es un velo bajo la etiqueta.
+
+**Lo que NO reproduce (a propósito, y dicho en la página)**: el imán y la coreografía del hero (`#252`; se
+enseña el punto estático), el vídeo (la foto de la zona Jump en su lugar — el póster del vídeo es la
+cafetería), el minijuego, el menú a pantalla completa, el cajón, el banner de cookies, la i18n y el par
+de la cabecera que asoma y late.
+
+**Trampas pagadas — cuatro, todas con cifras creíbles**:
+1. **La copia servida no llevaba `<meta viewport>`** y el contexto móvil de Playwright la maquetaba a
+   980 px: «3,3 pantallas» a 414 y líneas rotas a 202 px que no existían. El anfitrión del artefacto pone
+   la suya; la copia local, no. Se declara en el fuente.
+2. **Una línea de dato con un hijo en bloque** («desde 12 €» + «por persona · L–J») contaba dos filas por
+   diseño: se marca cada línea por separado, nunca el envoltorio.
+3. **Un fallo de CASCADA**: `.pair` iba después que `.nav__pair` con la misma especificidad, así que el par
+   de arriba se pintaba también en móvil y echaba la hamburguesa fuera de pantalla — y `overflow-x: clip`
+   lo escondía (desbordamiento medido: 0). **Lo cazó la captura, no la sonda.**
+4. **El detector de «dos líneas» por cubos de 4 px** partía «Jump 8+» (Bungee y Hanken en la misma línea,
+   tops distintos): se agrupa por solape vertical.
+
+**Lo que sigue**: el OJO del owner en el móvil (el artefacto, y el conmutador para D-G3). Con su ✅, B se
+construye en la portada real con las guardas de §6.2 más las de esta prueba —línea de dato sin partir de
+320 a 414 · un selector · presupuesto de fachada · un relleno de acción por pantalla— y las mismas medidas;
+los prototipos de local (`/_diseno/…`) se retiran entonces.
+
 ## 7. Revisión y decisión
 
 - 2026-09-03 · borrador del agente a partir de la auditoría (`#430`), las cuatro preguntas del owner,
   el material del cliente (`design-playjump.md` §9–§10) y la medición de §1.2.
+- 2026-09-03 · la 2c medida (§6.6) · el owner decide (§6.7, `#432`) · **B en artefacto** (§6.8, `#433`).
 - Pendiente: revisión adversarial (¿qué pregunta del visitante falta? ¿qué regla muerde en un sitio
-  que no he visto?), las siete decisiones de §4.7, y la entrada de aprobación en `DECISIONES.md`.
-- **Siguiente paso concreto**: la fase 2c — los tres renders de D-G2 con las piezas de D-G4/D-G5
-  dentro, sobre la web real, para que el owner elija viendo.
+  que no he visto?), D-G3 · D-G6 · D-G7, y la entrada de aprobación en `DECISIONES.md`.
+- **Siguiente paso concreto**: el OJO del owner sobre el artefacto en su móvil; con su ✅ y las tres
+  decisiones que quedan, B en la portada real (§6.8, «lo que sigue»).

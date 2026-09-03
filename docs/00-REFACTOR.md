@@ -3760,6 +3760,22 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **T9 · One Tap** (`[owner]`, viable gateando el chip tras el banner de cookies): su pieza cara es **verificar la firma del `id_token`**, porque ahí el token llega del CLIENTE y no del canje
 - [ ] Del owner: su ✅, **el cliente de OAuth de DESARROLLO** (el de producción ya está creado; su secreto vive fuera del repo), la política de privacidad al terminar y **publicar la v1 de «Condiciones»** en cada instalación
 
+### LA PORTADA · FASE 2 DEL DISEÑO 🟦 — el guion, las tres formas medidas y B EN ARTEFACTO (`#430` → `#433`, 2026-09-02/03, carril de diseño)
+- [x] La segunda auditoría de la web pública, EN EL REPO (`specs/auditoria-diseno.md`, `#430`): 3 críticos
+      · 10 mayores · 6 menores; espera las seis decisiones del owner (§7) y con ellas su tanda C.
+- [x] `design.md` (raíz) = el sistema del PRODUCTO, en dos capas con el perfil de PlayJump (`#431`).
+- [x] El guion de la portada (`specs/guion-de-la-portada.md`): cuatro preguntas, «cada regla donde
+      muerde», objetivos medibles con la sonda de `#430`.
+- [x] 2c · las TRES formas sobre la web y los datos reales, en rutas de local, medidas (§6.6) — el owner
+      descarta A y elige B, móvil primero, slides e imagen (`#432`, §6.7).
+- [x] **B EN ARTEFACTO** (`#433`, §6.8): móvil primero con datos reales, medida a 320·360·375·390·414 —
+      a 390 **8,5 pantallas** (objetivo ≤ 8), cero líneas de dato partidas, cero fallos de contraste;
+      cumple 4,8 → 3,5 con «cumple antes» (conmutador). Instrumentos en `scripts/prototipo-b/`.
+      https://claude.ai/code/artifact/56f75f11-fb65-4e81-96d2-e9fd8fdc39c2
+- [ ] El OJO del owner sobre el artefacto en su móvil, y D-G3 · D-G6 · D-G7.
+- [ ] B en la portada real con guardas (§6.2 + las de §6.8) y las mismas medidas; retirar `/_diseno/…`.
+- [ ] La tanda C de la auditoría (lo roto) y las decisiones D1–D6.
+
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no
 le despliega nada. Mejoras de JumpWeb aplicables allí se portan **solo por decisión explícita**,
