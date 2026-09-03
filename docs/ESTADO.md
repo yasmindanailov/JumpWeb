@@ -514,6 +514,64 @@ la sonda de contraste sobre el HTML renderizado como test de la suite, y el sele
 ⚠️ **Lo que la auditoría vio fuera de su alcance**: `resources/views/vendor/mail/html/themes/brand.css`
 lleva `#FF5B22` (el naranja del PRIMER cliente) quemado **cinco veces** — fuga white-label en los
 correos, ficha en `DEUDA.md`.
+▶ ❗❗❗ **EL CAJÓN, AUDITADO CON EL FLUJO ENTERO (2026-09-03, tarde, `#438`,
+`docs/specs/auditoria-cajon.md`)** — el owner reabrió el «el SPA lo dejamos» del 01 pidiendo auditarlo
+con todo el flujo: **3 críticos · 10 mayores · 7 menores** sobre **100 mediciones** en Chromium (15
+pantallas × 7 anchos + los dos desenlaces por el pase real `?redsys=`, control en verde, 49 capturas).
+**Sin una línea de producto.** Lo que más importa: **C1** el embudo no tiene rol de acción (naranja en
+el bloque de cuenta y el cartbar · cian en el CTA y en `.btn--zone` · tinta al hover — y el cian **no
+identifica**: ningún módulo del cajón escribe `--zone-1`, un pack Jump se compra con el cian de la
+primera zona); **C2** las ocho «excepción que solo encoge» de la tanda D pintan **12 textos bajo AA en
+todas las pantallas** («Volver» y el contexto a **2,21** sobre la banda); **C3** la × del diálogo mide
+**15×26** y la mitad de los controles no llega a 44 (`#264` dio cuatro al cajón); **M1** media hoja
+vacía en móvil (la §7.4 de `cajon-en-movil.md`, medida: 362→591 px de 844). ▶ **Cinco decisiones del
+owner (§7: D-C1 el color de acción del embudo · D-C2 la hoja en móvil · D-C3 el bloque de cuenta ·
+D-C4 el paso 5 · D-C5 la física del hover) y tres tandas (§8: A lo roto sin decisión · B el rol de
+acción y vaciar las cuatro listas de excepción · C la hoja y el paso 5)**. ⚠️ **`sidebar.engine = spa`
+queda PUESTO en local** (para volver a Livewire: borrar la fila, `VERIFICACION-E2E-CAJON.md` §1); los
+dos motores comparten el CSS, así que los hallazgos valen para los dos. ⚠️ Trampas nuevas en §9: el ratón
+se queda donde hizo clic y **pinta el hover** («Ir a pagar» salió tinta y era `:hover`); un
+`.addons__moreinfo` de la landing DETRÁS del cajón se lleva el localizador sin acotar; abortar la ida a
+Redsys pinta la página de error (se contesta 204); el pase se consume al aplicarse (un token por ancho).
+Instrumentos gitignorados: `storage/app/audit-cajon-hallmark.mjs` (con control) · `resumen-cajon.py` ·
+`bar-390.mjs` · JSON y capturas en `storage/app/audit/`. ▶ **Hoja de decisión para el owner**: «Cinco
+decisiones del cajón» — https://claude.ai/code/artifact/b332251a-85b2-4fb1-8414-5fd70dd4b86a — con las
+opciones de D-C1..5 **renderizadas sobre el cajón vivo** (`opciones-cajon.mjs`: CSS inyectado y
+retirado, 31 capturas en `storage/app/audit/opciones/`); se contesta con cinco letras.
+▶ ❗❗ **EL OWNER CONTESTÓ (`#439`, `auditoria-cajon.md` §7)**: **D-C2 = B** (hoja inferior con asa) **y el
+calendario ENTERO sin la tira de días** (revierte la mitad de fecha de `#239`; la tira de horas se
+queda) · **D-C3 = A** (bloque de cuenta plegado) · **D-C4 = B** («Identifícate» y los campos) · **D-C5 = A**
+(el botón responde con color). **D-C1: ninguna de las tres**, y preguntó cuántos botones hay: medido en
+§7.1 (32 combinaciones en la web, 28 en el cajón, 14 fuera de `.btn`) → **propuesta pendiente de su
+respuesta: retirar la variante** (`.bk-cta`, `.cartbar`, `.btn--zone`, `.acct__btn--*` → `.btn`), no
+elegirle un color. Con eso se construyen las tandas A → B → C del informe.
+▶ ✅ **TANDA A DEL CAJÓN — HECHA Y MEDIDA (2026-09-03, `#450`, `auditoria-cajon.md` §11)**: 26 lecturas de
+`--zone-*`/`--ok`/`--err`/`--warn` como texto pasan a `--interactive` o a los tokens nuevos
+**`--ok-text` · `--err-text` · `--warn-text`** (el par oscuro para texto sobre papel); doce familias de
+control leen `--tap-min`; el CTA del pie no parte y el total encoge antes; el botón manual del paso 9
+existe (aparece a los 2,5 s; el manifiesto congelado cambia en UNA clave); la cantidad es un campo; la ×
+es el `close` del set; el diálogo pone `inert` a la página; la página pausa sus bucles tras el velo.
+**Medido después (320 · 390 · 1280)**: contraste **12 → 0**; bajo 44 solo lo que WCAG exime (y las celdas
+del calendario a 320: 40 × 44, dicho); dos líneas 0; bucles 3 → 0. Guarda `DrawerControlsTest` (6/6
+mutaciones muerden); las listas de excepción del cajón en `InteractionColourIsNotAZoneTest` y
+`SemanticFillTextTest` quedan VACÍAS. ⚠️⚠️ **PASO DE DESPLIEGUE**: dos líneas en el `client.css` de
+producción (`--ok-text: #447921; --err-text: #C83912;`). ⚠️ La guarda cazó **nueve reglas** que el recorrido
+no vio (estados no capturados): *una guarda estática es la segunda auditoría*. Dos trampas de CSS con cifra
+en `#450`: `aspect-ratio` + `min-height` desborda 35 px; `animation-play-state` no llega a un `::after`.
+▶ **SIGUE la tanda B** (retirar las variantes de botón → `.btn`; D-C3 plegar el bloque de cuenta; D-C5; vaciar
+`HoverDoesNotJumpTest`) **y la C** (hoja inferior, calendario entero sin tira, paso 5 con un título).
+▶ **Y LA SEGUNDA VUELTA DEL OWNER SOBRE B (`guion-de-la-portada.md` §6.9)**: le gusta, y pide **más
+JUEGO** (brand, animaciones, «que la sombra salte al clic»), el **cumpleaños en SLIDE** con tarjetas
+más anchas, **otra «Visita 1·2·3·4»** («muy sosa, nada de diferenciación»), **otro «Visítanos»**, y una
+sección de **reseñas de Google** (`specs/google-reviews.md`, 🟦 pendiente de su ✅ y de tres datos:
+`place_id`, clave de API, techo de gasto). **La barra flotante, medida** (§6.9): mecánicamente correcta
+(56 px · safe-area · 85 px reservados · el clic entra · oculta ≥ 900 · no tapa el pie); **lo que no**:
+2–3 rellenos de acción a la vista en **8 de 18** medias pantallas (la web real: máximo 2, en 3 de 27) y
+el fantasma «Registrarse» del prototipo lleva a `#visita`. ▶ **LO SIGUIENTE, en este orden**: (1) el
+owner lee la auditoría del cajón y decide D-C1..5 (o dicta); (2) sobre el prototipo B se renderizan las
+OPCIONES de los cinco puntos de §6.9 —pegatina que se aplasta al clic · packs en slide · dos o tres
+formas de «Visita» · dos de «Visítanos» · la sección de reseñas con la forma del cliente— y elige, o
+«te digo yo la idea»; (3) las tandas A/B/C del cajón con sus decisiones.
 
 ❗❗ **REPARTO VIGENTE EN ESTA MÁQUINA (2026-09-02) — DOS CARRILES SOBRE EL MISMO CLON.** Sigue la
 regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`reset`/`clean`, y
@@ -537,9 +595,11 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     (raíz) · `routes/prototipos.php` + su `require` en `routes/web.php` ·
     `app/Http/Controllers/Prototipos/**` · `public/prototipos/**` · **`scripts/prototipo-b/**`** (el
     fuente del artefacto B, su constructor, su sonda y el volcado de datos).
-    **Numera en la sub-banda `#430`–`#439` — último usado: `#437`** (2026-09-03), reservada A
-    DISTANCIA de la secuencia natural para que el otro carril no tenga que mirar nada antes de
-    empujar; si se agota, la siguiente se reserva aquí ANTES de usarla.
+    `docs/specs/auditoria-cajon.md` (`#438`, el informe del cajón: lee `site.css` 884–3050 y no toca
+    nada) · **Numera en la sub-banda `#430`–`#439` — último usado: `#439`, AGOTADA** (2026-09-03),
+    reservada A DISTANCIA de la secuencia natural para que el otro carril no tenga que mirar nada antes
+    de empujar. ▶ **Banda actual de este carril: `#450`–`#459` — último usado: `#450`** (2026-09-03; la
+    natural va por `#413`; `#440`–`#449` se deja de colchón entre las dos).
   ▶ ✅ **Aviso del carril de diseño sobre `ValidarRegistroTest`: LEÍDO Y ACTUADO** (2026-09-03,
     retirado según `CONVENCIONES §10.4`). El limitador de la puerta se mide con reloj de pared y cae
     con tres suites en la misma máquina: **ficha propia en `DEUDA.md`** con la reproducción y la
@@ -574,10 +634,11 @@ Santo salió de aplicar la regla al pie de la letra (el owner decide si se poda)
 
 ## ▶ DOS COSAS DEL OWNER, Y UNA ES UN PASO DE DESPLIEGUE
 
-- ⚠️⚠️ **`client.css` de PRODUCCIÓN (carril de diseño, `#434` y `#436`)**: añadir a mano las dos líneas
-  `--on-ok: #101418;` y `--on-err: #FFFFFF;` en el `:root` del paquete instalado, **y las tres de
+- ⚠️⚠️ **`client.css` de PRODUCCIÓN (carril de diseño, `#434`, `#436` y `#450`)**: añadir a mano las dos
+  líneas `--on-ok: #101418;` y `--on-err: #FFFFFF;` en el `:root` del paquete instalado, **las tres de
   `--interactive`** (`#0A5C93` en `:root` y en `[data-surface="paper"]`, `#1AA9DE` en
-  `[data-surface="ink"]`) — el paquete no viaja por rsync. Sin ellas, «Incluido» sigue en 2,95 y la FAQ
+  `[data-surface="ink"]`) **y las dos del texto semántico** (`--ok-text: #447921;` y
+  `--err-text: #C83912;`, `#450`) — el paquete no viaja por rsync. Sin ellas, «Incluido» sigue en 2,95 y la FAQ
   abierta cae al defecto del producto (tinta) allí, con la suite en verde aquí. El fichero local ya las
   lleva; la receta completa está en `INSTALACION-CLIENTE.md` §4.a.ter.
 - ⚠️⚠️ **Hay que PUBLICAR la v1 de «Condiciones»** en cada instalación (panel → Páginas legales →

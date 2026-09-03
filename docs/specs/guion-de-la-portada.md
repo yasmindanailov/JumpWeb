@@ -3,6 +3,8 @@
 > Estado: 🟦 **LA 2c MEDIDA Y B EN ARTEFACTO** (2026-09-03, `#431` → `#433`) — la organización
 > aprobada y A descartada por el owner (§6.7); **B, móvil primero y con datos reales, publicada como
 > artefacto para su OJO (§6.8)**. Quedan D-G3 · D-G6 · D-G7 y su ✅ antes de tocar la portada real.
+> ▶ **§6.9: el owner la vio en su móvil (2026-09-03, `#438`) — le gusta, y pide más juego, el cumpleaños
+> en slide, otra «Visita», otro «Visítanos» y las reseñas de Google; la barra flotante, medida.**
 > Las siete decisiones de §4.7 nacieron `[PENDIENTE: owner]` y se toman **viendo opciones renderizadas
 > sobre la web real** (§6).
 > Decisión asociada: `DECISIONES #431` (abre la fase; la aprobación del guion será otra).
@@ -474,11 +476,83 @@ construye en la portada real con las guardas de §6.2 más las de esta prueba �
 320 a 414 · un selector · presupuesto de fachada · un relleno de acción por pantalla— y las mismas medidas;
 los prototipos de local (`/_diseno/…`) se retiran entonces.
 
+### 6.9 · La segunda vuelta del owner sobre B, en su móvil (2026-09-03) — y la barra flotante, medida
+
+`[owner, 2026-09-03]`, textual: *«Me gusta la portada B, pero me falta un poco más de juego, algo
+entretenido, algún elemento más de diseño del brand, animaciones, que la sombra salte al darle clic tal
+vez, la card de cumpleaños que se haga slide para ver entre las cards, así son más anchas. La visita 1234
+es muy sosa, nada de diferenciación o originalidad. Visítanos tampoco, y faltaría una sección de reseñas
+de Google.»* Y el orden: *«Lanzaremos auditoría Hallmark sobre el cajón SPA, y después valoraremos
+organización con tu propuesta B si me gusta; si no, te digo yo la idea.»*
+
+**Lo primero que preguntó fue por la barra** (*«¿el botón sticky, float, es correcto?»*). Medido con
+`storage/app/bar-390.mjs` a 390 × 844 (control: un botón inyectado del color de acción que la sonda
+tiene que contar), la web real contra el prototipo:
+
+| | web real (`.book-bar`, `#205`/`#265`) | prototipo B (`.bar`) |
+|---|---|---|
+| alto del CTA · de la barra | 56 · 85 (10 + 56 + 19 + safe-area) | 56 · 85, idéntica |
+| reserva bajo la página | `--book-bar-block` | `padding-bottom: 85px` en `body` |
+| ¿recibe el clic? (`elementFromPoint`) | sí | sí |
+| ¿tapa el último texto del pie? | no (0 px) | no (32 px de aire) |
+| oculta desde | 900 px | 900 px |
+| cuándo aparece | **al encoger el hero** (nace bajo él, `#216`) | desde el primer píxel (el prototipo es el punto estático) |
+| rellenos de acción a la vista, máximo | **2** (en 3 de 27 medias pantallas) | **3** (en **8 de 18**: la barra + el CTA de sección + un chip) |
+| el fantasma «Registrarse» | abre el alta | lleva a `#visita` |
+
+▶ **Respuesta**: la barra es la de la web (`#205`, `#217`, `#265`) y es correcta como mecanismo. **Lo que
+no es correcto es lo que hay debajo de ella**: en B cada sección lleva su CTA relleno y la barra se le
+suma, así que la regla «un relleno de acción por pantalla» (`design.md` §3) falla en casi la mitad del
+recorrido — en la web real casi nunca. Salidas, para D-G3: los CTA de sección **fantasma** mientras la
+barra está a la vista (la barra ES el CTA de compra; la sección solo necesita decir «reservar Jump»), o
+la barra se **retira** cuando un CTA de sección entra en pantalla. Y el fantasma de la barra tiene que
+abrir el alta, como en la web.
+
+**Lo que cada petición toca, y de dónde sale la respuesta** (orientación; se decide viendo opciones
+renderizadas sobre B, como todo en esta fase):
+
+1. **Juego · brand · animaciones**: B fue tipografía a propósito (§6.7: «primero la estructura, después
+   el vestido»). El vestido está inventariado: el kit (`design-playjump.md` §8: poses, frisos, manchas,
+   tiras) con su presupuesto (una mancha grande por pantalla, nada bajo un párrafo, ninguna pose
+   repetida) y **las once microanimaciones del cliente** (§6: el *bote* al entrar una tarjeta, la *lona*
+   una vez por pantalla, el sello que gira, la cascada de franjas; máx. dos a la vez; ningún bucle).
+2. **«Que la sombra salte al clic»**: es el estado PULSADO de su sistema — *la pegatina se aplasta*
+   (`design-playjump.md` §5: translate 3 · sombra 5→2; activo translate 5 · sombra 0 · 180 ms). Es la
+   D5 de la auditoría, que el owner dejó en «responde con color» para los BOTONES; aquí la pide para
+   las **pegatinas**. Se enseña sobre una tarjeta real y decide si entra (`HoverDoesNotJumpTest` mira
+   `:hover`, no `:active`: la pisada no la prohíbe).
+3. **El cumpleaños en slide, tarjetas más anchas**: choca con la regla de §6.7 —*«una elección entre
+   dos nunca va en slide»*— y con «dos opciones se comparan» (`design.md` §9). Es suya: se renderizan
+   las dos (lado a lado con filas alineadas, como hoy · slide con la segunda asomando y las filas
+   alineadas dentro de cada tarjeta) y elige con la consecuencia delante: en slide no se comparan de un
+   vistazo.
+4. **«Visita 1·2·3·4», muy sosa**: cuatro tarjetas de apoyo con icono, título, párrafo y tiempo
+   (`scripts/prototipo-b/index.src.html:617-656`) — es la forma-plantilla de los pasos. Opciones a
+   renderizar: (a) el **camino** — una sola pieza horizontal con las cuatro poses del kit (`F`, el
+   friso) y el paso escrito bajo cada una, el tiempo como sello; (b) la **entrada troquelada** — los
+   cuatro pasos como un billete que se arranca (la forma que su diseñador exploró para precios,
+   `design-playjump.md` §10, 3b «la tira»); (c) **«Antes de venir»** del cliente (§9: *«Llega y salta:
+   tres minutos de lectura y te ahorras la cola»*): un solo bloque de texto con tres cosas y un sello.
+5. **«Visítanos», tampoco**: tres pegatinas iguales (horario · dónde · mapa). Opciones: el **mapa como
+   pieza** con el horario en vivo encima (chip «Abierto ahora», `#307`) y el teléfono como único botón;
+   o el **plano de llegada** dibujado (identidad local, «Salta la Ciudad», `#256`) con los datos al lado.
+6. **Reseñas de Google**: `specs/google-reviews.md` 🟦 — §3 decidida (Google fuente de verdad, reseñas
+   propias de respaldo; **el snapshot de Google está PROHIBIDO**, la caché corta no) y **pendiente de su
+   ✅ y de tres datos suyos: `place_id`, clave de API y techo de gasto**. La forma es la que él señaló
+   como lo único estructural de `Landing PJP Modos`: «**Lo dicen ellos**» + «**4,8 sobre 5** · 320
+   reseñas en Google» (el marcador amarillo) + tarjetas en slide con `scroll-snap` (estrellas en píldora
+   de tinta, texto, nombre, meta en mono). ⚠️ Sin `place_id` y clave la sección **solo puede enseñar
+   el respaldo**; y la valoración agregada es el único número que el dominio no sabe calcular (§1.1).
+
+**Lo que sigue**: con la auditoría del cajón entregada (`auditoria-cajon.md`, `#438`), se renderizan
+sobre el prototipo B las opciones de 2–6 y el owner elige, o dicta la idea.
+
 ## 7. Revisión y decisión
 
 - 2026-09-03 · borrador del agente a partir de la auditoría (`#430`), las cuatro preguntas del owner,
   el material del cliente (`design-playjump.md` §9–§10) y la medición de §1.2.
 - 2026-09-03 · la 2c medida (§6.6) · el owner decide (§6.7, `#432`) · **B en artefacto** (§6.8, `#433`).
+- 2026-09-03 · el owner ve B en su móvil: segunda vuelta y la barra medida (§6.9, `#438`).
 - Pendiente: revisión adversarial (¿qué pregunta del visitante falta? ¿qué regla muerde en un sitio
   que no he visto?), D-G3 · D-G6 · D-G7, y la entrada de aprobación en `DECISIONES.md`.
 - **Siguiente paso concreto**: el OJO del owner sobre el artefacto en su móvil; con su ✅ y las tres

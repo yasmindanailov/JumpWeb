@@ -22860,3 +22860,122 @@ escala crezca, si crece.
 
 **Verificación**: huella de maquetación 24/24 en geometría · 834 guardas de hojas, vistas y cajón en
 verde · la guarda nueva muerde 2/2 con control en verde.
+
+## #438 · 2026-09-03 · `[DECIDIDO owner]` El cajón SPA se audita con el flujo entero — lo que una excepción «que solo encoge» aparca se mide cuando toca encoger
+
+**Contexto.** El 2026-09-01 el owner dijo *«el SPA lo dejamos por ahora»*: la auditoría de la web pública
+(`#430`) lo excluyó y sus tandas C, D, E y H dejaron **cuatro listas de excepción con reglas del cajón
+dentro** (`InteractionColourIsNotAZoneTest` 8 · `HoverDoesNotJumpTest` 5 · `SemanticFillTextTest` 1 ·
+`MotionBudgetTest` 4), todas «solo encogen». El 03, con la F cerrada, pidió *«auditar también el cajón de
+compra con todo el flujo»*. Se reabre la EXCLUSIÓN, no el «no tocar»: el informe no cambia una línea.
+
+**Lo hecho**: `docs/specs/auditoria-cajon.md` — `hallmark audit` sobre el embudo **recorrido en
+Chromium** con el motor `spa`: catálogo → día → hora/cantidad/complementos → carrito → identificarse
+(entrar · crear cuenta · el «no») → pagar (y el «no» de las condiciones) → saliendo a la pasarela, con
+entrada y con pack, más los dos desenlaces por el pase real `?redsys=` (token acuñado para un pedido
+pagado y otro pendiente). **15 pantallas × 7 anchos + 2 × 2 = 100 mediciones** dentro del panel, con
+control; **3 críticos · 10 mayores · 7 menores**; cinco decisiones (D-C1..5) y tres tandas.
+
+**1 · El sistema de diseño se quedó en la puerta del embudo.** La landing tiene desde `#321` UN color de
+acción; dentro del cajón hay tres (naranja en el bloque de cuenta y el cartbar · cian en el CTA y en
+`.btn--zone` · tinta al hover) — y **el cian no es identidad de nada**: ningún módulo del cajón escribe
+`--zone-1` (medido), así que un pack Jump se compra con el cian de la primera zona. *Donde está el dinero
+es donde el rol no existe.*
+
+**2 · Lo que cuesta una excepción se sabe al abrirla.** Las ocho reglas que la tanda D dejó como «cajón,
+aparcado» pintan **12 textos por debajo de AA en todas las pantallas del embudo** («Volver» y la línea
+de contexto a **2,21 : 1** sobre la banda gris). Una lista que «solo encoge» es una deuda con fecha,
+no una decisión: se encoge en la tanda B del informe.
+
+**3 · Tres trampas de instrumento, con cifras creíbles**: (a) **el ratón se queda donde hizo clic y
+pinta el `:hover`** — «Ir a pagar» salió tinta y parecía una variante; (b) un `.addons__moreinfo` de la
+LANDING detrás del cajón: el localizador sin acotar hizo scroll a la página y el pie del cajón tapó el
+botón; (c) **abortar la navegación a Redsys pinta la página de error de Chromium** y el panel desaparece
+— se contesta 204 y el documento se queda.
+
+**4 · La barra flotante de B, medida (la pregunta del owner)**: mecánicamente correcta —56 px, safe-area,
+85 px reservados bajo la página, el clic entra, oculta desde 900— y **dos cosas que no**: en el prototipo
+hay **2–3 rellenos de acción a la vista en 8 de 18 medias pantallas** (la web real: máximo 2, en 3 de 27)
+porque los CTA de sección no ceden ante la barra; y el fantasma «Registrarse» de la barra lleva a
+`#visita`, no al alta. Registro en `guion-de-la-portada.md` §6.9, con la segunda vuelta del owner sobre B.
+
+**Verificación**: 100 mediciones · 3 controles en verde · 49 capturas · producto intacto ·
+`sidebar.engine = spa` en local, dejado puesto y dicho.
+
+## #439 · 2026-09-03 · `[DECIDIDO owner]` Las decisiones del cajón: hoja inferior con asa, el calendario entero sin la tira, el bloque de cuenta plegado, «Identifícate» solo, el botón responde con color — y para el color de la acción, «ninguna variante nueva»
+
+**Contexto.** Sobre la hoja «Cinco decisiones del cajón» (`#438`, opciones renderizadas sobre el cajón
+vivo) el owner contestó en una vuelta.
+
+**Lo decidido**:
+- **D-C2 = B**: el cajón en móvil es una **hoja inferior con asa** que mide lo que el paso necesita (la
+  forma de la pasada de móvil de su diseñador). **Y el paso 2 vuelve al CALENDARIO ENTERO sin la tira de
+  días** (*«vamos a dejar el calendario completo como estaba antes y quitamos el slider»*): revierte la
+  mitad de FECHA de `#239` §4.2 (`[DECIDIDO owner, 2026-08-28]`); **la tira de HORAS se queda** (*«la
+  hora se queda como está»*), y la rejilla de horas propuesta como C queda descartada.
+- **D-C3 = A**: el bloque de cuenta **plegado** en el catálogo y en los desenlaces, como en los pasos 2–4.
+- **D-C4 = B**: en el paso 5 queda «Identifícate» y los campos; fuera la etiqueta y el segundo título.
+- **D-C5 = A**: el botón **responde con color y no salta** (la física de `.btn`, `#321`).
+- **D-C1: ninguna de las tres** (naranja · cian · tinta), con una pregunta que cambia el marco: *«¿cuántos
+  tipos de botones tenemos? ¿no tenemos demasiadas variantes?»*.
+
+**1 · La pregunta tenía razón y se midió** (`auditoria-cajon.md` §7.1): 61 clases pulsables declaradas
+entre las dos hojas; la web pública emite **32** combinaciones de clase en un pulsable (20 fuera de la
+familia `.btn`), el cajón **28** (14 fuera, y tres de ellas son PRIMARIOS con color propio: `bk-cta`
+cian, `cartbar` naranja, `acct__btn--primary` naranja). El objetivo del guion es ≤ 5 especies además de
+`.btn`. ▶ **Propuesta que sale de la medida, pendiente del owner**: D-C1 no es elegir un color para una
+variante más, es **retirar la variante** — `.bk-cta`, `.cartbar`, `.btn--zone` y `.acct__btn--*` pasan a
+`.btn`/`.btn--ghost`; el color del embudo es entonces el de la web sin decidir nada, y `btn--zone`
+—viva en CSS solo «porque el cajón la emite», `#321`— muere. *Cuando el owner rechaza las tres opciones
+y pregunta cuántas hay, la respuesta no es una cuarta opción: es una menos.*
+
+**2 · El botón flotante del armazón no cambia con ninguna opción.** Las tres tocan dos selectores dentro
+de `.sidecart__panel`; `.cta-med` (tinta, `#217`) y la barra de móvil (`--action`, `#209`) siguen igual.
+Se dice porque el owner lo preguntó.
+
+**3 · Una decisión de agosto revertida con medida delante.** `#239` puso la tira de días midiendo que el
+calendario abría con 4 seleccionables de 42; hoy el owner la retira viendo el cajón como hoja inferior,
+donde el calendario entero es la pieza. Se anota en `cajon-en-movil.md` §4.2 como corrección, no se
+borra: el porqué de entonces sigue siendo verdad (el mes en curso abre casi entero en el pasado) y quien
+construya la hoja tiene que resolverlo con el calendario (abrir en el primer mes con oferta, `#68`).
+
+**Verificación**: inventario con guion sobre las dos hojas y sobre las vistas Blade y los `.vue` del
+cajón (2026-09-03); sin código tocado.
+
+## #450 · 2026-09-03 · La tanda A del cajón: lo roto se arregla midiendo antes y después — y la guarda que se escribe para fijarlo ve más que el recorrido que lo encontró
+
+**Contexto.** `auditoria-cajon.md` §8, tanda A: lo que no necesita decisión — el cian de zona como TEXTO en
+todas las pantallas del embudo (C2), la mitad de los controles por debajo de 44 (C3), el CTA del pie a dos
+líneas a 320 (M3), el botón del paso 9 que solo existía sin JavaScript (M6), la cantidad sin caja (M7), los
+tres bucles de la página corriendo tras el velo (M10), y m1 · m2 · m7. Primera banda nueva del carril
+(`#450`–`#459`, reservada en `ESTADO.md` antes de usarla).
+
+**Lo hecho** (§11 del informe): 26 lecturas de `--zone-*`/`--ok`/`--err`/`--warn` como texto pasan a
+`--interactive` (`#436`) o al par oscuro nuevo; nacen **`--ok-text` · `--err-text` · `--warn-text`** con el
+trato de `--on-*` (`#434`: el par lo declara quien declara el color); doce familias de control leen
+`--tap-min`; el CTA no parte y el total encoge antes; el botón manual del paso 9 aparece a los 2,5 s; la ×
+es el `close` del set; el diálogo pone `inert` a lo que no es él; la página pausa sus bucles tras el velo.
+**Medido después**: contraste **12 → 0** en 43 mediciones; controles bajo 44 sin ampliación → solo los que
+WCAG exime (y las celdas del calendario a 320, 40 × 44, dichas); dos líneas 0; bucles 3 → 0.
+
+**1 · Una guarda estática lee todos los estados; un recorrido, los que pisa.** `DrawerControlsTest`, escrita
+para fijar C2, cazó **nueve reglas más** que la auditoría no vio («casi llena», la nota de la señal, «gratis»,
+«requiere…», el error del evento…): estados por los que el recorrido no pasó. *La guarda no es solo la red
+del arreglo: es la segunda auditoría, la que no depende de qué pantallas capturaste.*
+
+**2 · Dos trampas de CSS con cifra**: `aspect-ratio: 1 / 1` con `min-height: 44` hace la celda 44 de ANCHO
+en una pista de 40 y la rejilla de siete se sale **35 px** a 320 (medido en la primera pasada; fuera el
+`aspect-ratio`). Y `animation-play-state: paused` sobre un elemento **no llega a su `::after`**: la primera
+pausa dejó vivos **2 de 3** bucles (el aro y el destello son pseudo-elementos). Se escriben los
+pseudo-elementos en la regla.
+
+**3 · El manifiesto congelado cambia en UNA clave, y se dice**: el botón manual del paso 9 (`v-show`, siempre
+en el árbol). Regenerado con `MANIFEST_REFRESH=1` tras comprobar que los otros 37 casos pasaban sin tocar
+nada — es la condición que `SidebarDomContractTest` pone desde que no hay segundo motor.
+
+**4 · Paso de despliegue del owner**: `--ok-text: #447921; --err-text: #C83912;` en el `client.css` de
+producción (`INSTALACION-CLIENTE.md` §4.a.ter); sin ellas «Incluido» sigue a 2,95 allí con la suite en verde.
+
+**Verificación**: guarda nueva 6/6 mutaciones muerden (restauración desde copia, control en verde) ·
+`test:js` 947/947 · contrato de árbol 38/38 · las guardas de tema y presupuesto en verde · suite completa
+antes de empujar (el hook la repite).

@@ -154,7 +154,7 @@
         <aside class="sidecart__panel" :class="'is-' + $store.purchase.mode" role="dialog" aria-modal="true" aria-label="{{ __('tickets.title') }}">
             <header class="sidecart__head">
                 <span class="sidecart__title">{{ __('tickets.title') }}</span>
-                <button type="button" class="sidecart__close" @click="$store.purchase.close()" aria-label="{{ __('account.close') }}">&times;</button>
+                <button type="button" class="sidecart__close" @click="$store.purchase.close()" aria-label="{{ __('account.close') }}"><x-icons.close /></button>
             </header>
             {{-- ⚠️⚠️ **El HUECO del bloque de cuenta** (`specs/account-context-vue.md` §4.1). Hasta el
                  2026-08-23 aquí vivía el componente Livewire `site.account-context`, el ÚLTIMO

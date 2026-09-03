@@ -42,17 +42,12 @@ class InteractionColourIsNotAZoneTest extends TestCase
         '.salta__btn:hover' => 'el botón del minijuego oscurece su relleno de marca',
     ];
 
-    /** El cajón SPA, aparcado (`[DECIDIDO owner, 2026-09-01]`). Solo encoge. */
-    private const CAJON = [
-        '.bk-foot__info-btn:hover',
-        '.purchase__add-more:hover',
-        '.catalog__item:hover .catalog__ico',
-        '.catalog__item:hover .catalog__go',
-        '.catalog-acc__head:hover .catalog-acc__icon',
-        '.catalog-acc__head:hover .catalog-acc__icon .ic-e5 svg .occ',
-        '.acct__alert:hover',
-        '.acc-tile:hover .acc-tile__ico svg',
-    ];
+    /**
+     * El cajón SPA. Fue una lista de ocho «aparcado» (`[DECIDIDO owner, 2026-09-01]`) y **se vació con la
+     * tanda A de su auditoría** (`#450`): lo que respondía en cian responde en tinta o en `--interactive`,
+     * y la cabecera de sección del catálogo, que no se pliega, ya no se tiñe al pasar. Solo encoge: vacía.
+     */
+    private const CAJON = [];
 
     public function test_the_scan_sees_the_corpus_and_every_exception_has_a_subject(): void
     {

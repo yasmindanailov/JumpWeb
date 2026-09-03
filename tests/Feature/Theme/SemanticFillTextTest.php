@@ -29,7 +29,7 @@ class SemanticFillTextTest extends TestCase
     private const SHEETS = ['public/css/landing.css', 'public/css/site.css'];
 
     /** Reglas del cajón SPA (aparcado, `[DECIDIDO owner, 2026-09-01]`) que aún bajan de 10 px. Solo encoge. */
-    private const CAJON_BAJO_EL_SUELO = ['.bk-seg__label'];
+    private const CAJON_BAJO_EL_SUELO = [];
 
     public function test_the_scan_sees_the_corpus(): void
     {
@@ -40,7 +40,9 @@ class SemanticFillTextTest extends TestCase
     {
         $root = $this->rootOf('public/css/site.css');
 
-        foreach (['--on-ok', '--on-err', '--on-warn'] as $token) {
+        // `--ok-text`/`--err-text` son el mismo trato para el color COMO TEXTO sobre papel (`#450`):
+        // el par lo declara quien declara el color, y sin token el verde vuelve a 2,95.
+        foreach (['--on-ok', '--on-err', '--on-warn', '--ok-text', '--err-text', '--warn-text'] as $token) {
             $this->assertStringContainsString(
                 $token.':',
                 $root,
@@ -103,6 +105,10 @@ class SemanticFillTextTest extends TestCase
 
     public function test_the_exception_list_still_has_a_subject(): void
     {
+        // La lista se VACIÓ con la tanda A de la auditoría del cajón (`#450`: `.bk-seg__label` pasó a
+        // `--fs-10`) y solo encoge: que vuelva a tener entradas es una decisión, no un descuido.
+        $this->assertSame([], self::CAJON_BAJO_EL_SUELO, 'la lista de excepciones del cajón solo encoge, y ya estaba vacía');
+
         $rules = $this->rules();
         foreach (self::CAJON_BAJO_EL_SUELO as $selector) {
             $this->assertArrayHasKey($selector, $rules, "`{$selector}` ya no existe: retíralo de la lista de excepciones, que solo encoge");
