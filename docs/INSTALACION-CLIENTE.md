@@ -296,7 +296,16 @@ Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cua
        verde claro como Verde Salta, papel encima da 2,95 (falla AA); tinta da 7,6. */
     --on-ok: #101418;    /* tinta sobre Verde Salta */
     --on-err: #FFFFFF;   /* blanco sobre Rojo Goteo (4,52; el papel se queda en 4,11) */
+
+    /* EL COLOR DE LA INTERACCIÓN (`DECISIONES #436`): lo que responde al ratón y al teclado fuera de
+       una zona (la pregunta abierta de la FAQ, el destino enfocado del menú, el enlace del banner). El
+       producto trae tinta; si tu marca tiene un color de enlace, ponlo POR SUPERFICIE con el contraste
+       medido (≥ 4,5 como texto), igual que el foco. ⚠️ No uses tu color de zona: es identidad, no
+       interacción, y su contraste sobre papel no lo garantiza nadie. */
+    --interactive: #0A5C93;                          /* Azul Muro sobre papel — 6,43 */
 }
+[data-surface="ink"]   { --interactive: #1AA9DE; }  /* cian sobre tinta — 6,85 */
+[data-surface="paper"] { --interactive: #0A5C93; }
 ```
 
 ⚠️ **La superficie OSCURA se deriva sola.** El producto calcula la paleta de tinta a partir de

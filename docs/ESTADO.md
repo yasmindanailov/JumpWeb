@@ -444,10 +444,18 @@ cerrado, calcetines solo mientras se ven: la portada baja de **13 bucles a 5** (
 motivo), 4/4 mutaciones muerden. ⚠️ **El hook rechazó el push de la C** por `SidebarTokenBudgetTest`
 (trinquete de colores crudos del cajón, 3 → **0** por tres literales de C y E): baja aquí — tras un
 segundo rechazo por escribir un 1 sin leer la cifra (la puerta era `grep -q passed`, que casó con «15
-passed»: la puerta de un arnés es el código de salida). ▶ **LO SIGUIENTE**:
-tanda **D** (C2: tres opciones del color de interacción renderizadas sobre la FAQ y las pestañas reales
-para D1), **F** (la escala, mecánica con guarda); la **G** (interiores, normas: D2, D3) se valora con la
-organización.
+passed»: la puerta de un arnés es el código de salida).
+▶ ✅ **TANDA D — HECHA (2026-09-03, `#436`, `auditoria-diseno.md` §13)**: las tres opciones del color de
+interacción se renderizaron sobre la FAQ, el menú y el banner reales
+(https://claude.ai/code/artifact/1dac07ee-d17a-4484-9ea6-f651d834cab1) y **el owner eligió C, el par de su
+sistema** (Azul Muro en papel 6,43 · cian en tinta 6,85). Nace `--interactive` (tinta por defecto,
+re-declarado en las dos superficies; el paquete lo fija por superficie), doce reglas públicas dejan
+`--zone-1`, el toggle de cookies pasa a `--ok` y el foco de la ficha al anillo del token; lo que identifica
+una zona, los rellenos de marca y el cajón quedan enumerados en `InteractionColourIsNotAZoneTest`. Medido
+después: FAQ abierta **2,45 → 6,43**. ⚠️⚠️ **PASO DE DESPLIEGUE del owner**: tres líneas más en el
+`client.css` de producción (`--interactive` en `:root` y en las dos superficies; están en
+`INSTALACION-CLIENTE.md`). ▶ **LO SIGUIENTE**: tanda **F** (la escala, mecánica con guarda); la **G**
+(interiores, normas: D2, D3) se valora con la organización.
 ⚠️ `DesignSync` sigue sin autorización en sesión no interactiva; copia del canvas del 27/28/31-08.
 ⚠️ **Lo que la auditoría vio fuera de su alcance**: `resources/views/vendor/mail/html/themes/brand.css`
 lleva `#FF5B22` (el naranja del PRIMER cliente) quemado **cinco veces** — fuga white-label en los
@@ -475,7 +483,7 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     (raíz) · `routes/prototipos.php` + su `require` en `routes/web.php` ·
     `app/Http/Controllers/Prototipos/**` · `public/prototipos/**` · **`scripts/prototipo-b/**`** (el
     fuente del artefacto B, su constructor, su sonda y el volcado de datos).
-    **Numera en la sub-banda `#430`–`#439` — último usado: `#435`** (2026-09-03), reservada A
+    **Numera en la sub-banda `#430`–`#439` — último usado: `#436`** (2026-09-03), reservada A
     DISTANCIA de la secuencia natural para que el otro carril no tenga que mirar nada antes de
     empujar; si se agota, la siguiente se reserva aquí ANTES de usarla.
   ▶ ✅ **Aviso del carril de diseño sobre `ValidarRegistroTest`: LEÍDO Y ACTUADO** (2026-09-03,
@@ -512,10 +520,12 @@ Santo salió de aplicar la regla al pie de la letra (el owner decide si se poda)
 
 ## ▶ DOS COSAS DEL OWNER, Y UNA ES UN PASO DE DESPLIEGUE
 
-- ⚠️⚠️ **`client.css` de PRODUCCIÓN (carril de diseño, `#434`)**: añadir a mano las dos líneas
-  `--on-ok: #101418;` y `--on-err: #FFFFFF;` en el `:root` del paquete instalado — el paquete no viaja
-  por rsync. Sin ellas, «Incluido» sigue pintando blanco sobre el verde claro (2,95) allí, con la suite
-  en verde aquí. El fichero local ya las lleva.
+- ⚠️⚠️ **`client.css` de PRODUCCIÓN (carril de diseño, `#434` y `#436`)**: añadir a mano las dos líneas
+  `--on-ok: #101418;` y `--on-err: #FFFFFF;` en el `:root` del paquete instalado, **y las tres de
+  `--interactive`** (`#0A5C93` en `:root` y en `[data-surface="paper"]`, `#1AA9DE` en
+  `[data-surface="ink"]`) — el paquete no viaja por rsync. Sin ellas, «Incluido» sigue en 2,95 y la FAQ
+  abierta cae al defecto del producto (tinta) allí, con la suite en verde aquí. El fichero local ya las
+  lleva; la receta completa está en `INSTALACION-CLIENTE.md` §4.a.ter.
 - ⚠️⚠️ **Hay que PUBLICAR la v1 de «Condiciones»** en cada instalación (panel → Páginas legales →
   Condiciones → «Publicar versión»). **Hasta que se publique no se pide nada y la venta sigue** (el
   hueco falla hacia invisible), así que no bloquea el despliegue — pero sin ella la T8 no hace nada.

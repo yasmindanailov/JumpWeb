@@ -315,7 +315,7 @@
     transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
 }
 .lang-dd__panel a:hover { background: var(--bg-soft); }
-.lang-dd__panel a.active { color: var(--zone-1); }
+.lang-dd__panel a.active { color: var(--interactive); }   /* estado de interacción, no identidad de zona (`#436`) */
 .lang-dd__panel a .name {
     font-size: 11px; font-weight: 500; letter-spacing: 0;
     color: var(--fg-mute); text-transform: none;
@@ -2590,7 +2590,7 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     border: 1.5px solid var(--line-strong);
     transition: border-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
 }
-.reserve__act--alt:hover { background: transparent; border-color: var(--zone-1); color: var(--zone-1); transform: none; }
+.reserve__act--alt:hover { background: transparent; border-color: var(--interactive); color: var(--interactive); transform: none; }
 
 /* ⚠️⚠️ **AL JUGAR, EL TEXTO Y LOS CTA SE APARTAN** (`#235`, del mockup). No es un adorno: el lienzo
    crece del 17 % al 44 % de la ventana y se comería la mitad del bloque. Y `pointer-events: none`
@@ -2789,7 +2789,7 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
 }
 .salta__btn:hover { background: color-mix(in srgb, var(--zone-1) 88%, var(--paper-fg)); }
 .salta__btn--ghost { background: transparent; color: var(--fg); border: 1.5px solid var(--line-strong); }
-.salta__btn--ghost:hover { background: transparent; border-color: var(--zone-1); color: var(--zone-1); }
+.salta__btn--ghost:hover { background: transparent; border-color: var(--interactive); color: var(--interactive); }
 .salta__btn:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
 
 /* ⚠️ El lienzo NO se esconde con movimiento reducido: enseña un fotograma quieto, que es un
@@ -4838,7 +4838,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     border: 1px solid var(--line); color: var(--fg); text-decoration: none;
     font-weight: 600; font-size: 14px; transition: border-color var(--dur-toque) var(--ease-sale), color var(--dur-toque) var(--ease-sale);
 }
-.e404__links a:hover { border-color: var(--zone-1); color: var(--zone-1); }
+.e404__links a:hover { border-color: var(--interactive); color: var(--interactive); }
 
 /* ============================================================================
    Consentimiento de cookies (#219) — banner 2 capas + bloqueo previo de iframes.
@@ -4908,7 +4908,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     background: none; border: 0; cursor: pointer;
     text-decoration: underline; text-underline-offset: 3px; transition: color var(--dur-sale) var(--ease-sale);
 }
-.cookie__config:hover { color: var(--zone-1); }
+.cookie__config:hover { color: var(--interactive); }
 .cookie__prefs { margin-top: 4px; }
 /* En preferencias hay 3 botones con etiquetas largas («Guardar selección»…): NO caben en una
    fila dentro de los 416px de la tarjeta, así que se apilan a lo ancho (la capa compacta, con
@@ -4916,7 +4916,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .cookie__prefs-actions { display: flex; flex-direction: column; gap: 9px; margin-top: 18px; }
 /* Mismo ajuste y mismo motivo que `.cookie__config`: 14 → 17 de hueco para los 14 que crece. */
 .cookie__policy { display: inline-block; margin-top: 17px; font-size: 12px; color: var(--fg-mute); text-decoration: underline; }
-.cookie__policy:hover { color: var(--zone-1); }
+.cookie__policy:hover { color: var(--interactive); }
 .pref { display: flex; align-items: flex-start; gap: 13px; padding: 14px 0; border-top: 1px solid var(--line); }
 .pref:first-child { margin-top: 8px; }
 .pref__txt { flex: 1; min-width: 0; }
@@ -4934,7 +4934,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     border-radius: 50%; background: var(--bg-card);
     transition: transform var(--dur-estado) var(--ease-entra); box-shadow: 0 1px 3px color-mix(in srgb, var(--paper-fg) 30%, transparent);
 }
-.ck-tgl.is-on { background: var(--zone-1); }
+.ck-tgl.is-on { background: var(--ok); }   /* «encendido» es un ESTADO, como el interruptor de la cuenta (`#436`, la regla de `#254`) */
 .ck-tgl.is-on::after { transform: translateX(18px); }
 .ck-tgl.is-locked { background: var(--fg); cursor: not-allowed; }
 .ck-tgl.is-locked::after { transform: translateX(18px); }
@@ -5092,7 +5092,7 @@ html:not(.js) .gf-bulk { display: none; }
 .gf-fiche.is-complete { border-color: color-mix(in oklab, var(--zone-1) 55%, var(--line)); }
 .gf-fiche__head { display: flex; align-items: center; gap: 14px; width: 100%; padding: 15px 16px; text-align: left; background: none; border: none; cursor: pointer; font: inherit; color: inherit; transition: background var(--dur-sale) var(--ease-sale); }
 .gf-fiche__head:hover { background: var(--bg-card); }
-.gf-fiche__head:focus-visible { outline: 2px solid var(--zone-1); outline-offset: -2px; }
+.gf-fiche__head:focus-visible { outline: var(--focus-outline); outline-offset: -3px; }   /* el anillo del token, no el color de zona (`#436`) */
 html:not(.js) .gf-fiche__head { cursor: default; }
 html:not(.js) .gf-fiche__chev { display: none; }
 .gf-fiche__cube { width: 42px; height: 42px; flex-shrink: 0; border-radius: var(--r-md); background: var(--bg-card); border: 1px solid var(--line); display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: 18px; letter-spacing: -0.03em; color: var(--fg); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale); }
@@ -5449,7 +5449,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
 }
 .menu--open .menu__item a { opacity: 1; transform: translateY(0); }
 .menu__item a:hover,
-.menu__item a:focus-visible { color: var(--zone-1); }   /* el foco no DESPLAZA el elemento (auditoría m2, `#435`) */
+.menu__item a:focus-visible { color: var(--interactive); }   /* el rol de interacción (`#436`); y el foco no DESPLAZA el elemento (m2, `#435`) */
 .menu__item a:focus-visible { outline: var(--focus-outline); outline-offset: 4px; }
 
 /* `.menu__n` (los números «01…» de cada destino) RETIRADA con su consumidor

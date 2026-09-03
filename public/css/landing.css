@@ -272,6 +272,20 @@
   --focus-color: var(--fg);
   --focus-outline: var(--focus-w) solid var(--focus-color);
 
+  /* ── EL COLOR DE LA INTERACCIÓN (auditoría C2 · `[DECIDIDO owner, 2026-09-03]` D1, `#436`) ────
+     Lo que RESPONDE al ratón y al teclado fuera de una zona: la pregunta abierta de la FAQ, el
+     destino enfocado del menú, el enlace del banner de cookies. Hasta hoy lo pintaba `--zone-1`,
+     que **no es un color: es la identidad de la zona que se está mirando** —lo repinta el servidor
+     por elemento desde `zones.color`—, y su contraste no lo garantiza nadie porque cambia con el
+     dato: el cian del 2.º cliente daba **2,45** sobre papel en la FAQ abierta.
+     ▶ Por defecto vale TINTA, como el anillo de foco: pasa en cualquier instalación sin declarar
+     nada. Se re-declara en las dos superficies para que `var(--fg)` se evalúe con el `--fg` de
+     cada una (el mismo mecanismo que `--action`). El paquete del 2.º cliente pone su par medido
+     —Azul Muro en papel (6,43), cian en tinta (6,85)—, que es lo que su propia tabla de roles
+     escribe para el enlace. `--zone-*` se queda para lo que IDENTIFICA una zona: sus pestañas, sus
+     chips, su tarjeta, la tira. Lo vigila `InteractionColourIsNotAZoneTest`. */
+  --interactive: var(--fg);
+
   /* ── LA TIRA DE MARCA ──────────────────────────────────────────────────────────────────
      Cinco franjas de color que rematan el pie. Es la pieza «C2 · tiras» del sistema del
      segundo cliente, y por eso son cinco: su marca tiene cinco colores.
@@ -394,6 +408,7 @@
   --fg-mute: var(--ink-fg-mute);
   --line: var(--ink-line);
   --line-strong: var(--ink-line-strong);
+  --interactive: var(--fg);   /* tinta → aquí es papel; el paquete lo fija por superficie (`#436`) */
 
   /* El rol de ACCIÓN se re-declara para que su fallback se evalúe con el `--fg`/`--bg` de ESTA
      superficie. Sin estas cuatro líneas el botón primario dejaría de invertirse dentro del menú
@@ -414,6 +429,7 @@
   --fg-mute: var(--paper-fg-mute);
   --line: var(--paper-line);
   --line-strong: var(--paper-line-strong);
+  --interactive: var(--fg);   /* de vuelta a papel: tinta (`#436`) */
 
   /* El rol de ACCIÓN se re-declara para que su fallback se evalúe con el `--fg`/`--bg` de ESTA
      superficie. Sin estas cuatro líneas el botón primario dejaría de invertirse dentro del menú
@@ -767,12 +783,12 @@ img { display: block; max-width: 100%; }
   transition: color var(--dur-sale) var(--ease-sale);
 }
 /* Sin desplazar el relleno al pasar (auditoría m2, `#435`): animar layout en una interacción. */
-.mob-menu__primary a:hover { color: var(--zone-1); }
+.mob-menu__primary a:hover { color: var(--interactive); }
 .mob-menu__primary .arrow {
   font-family: var(--font-body); font-size: 16px;
   color: var(--fg-mute);
 }
-.mob-menu__primary a:hover .arrow { color: var(--zone-1); }
+.mob-menu__primary a:hover .arrow { color: var(--interactive); }
 
 .mob-menu__section h4 {
   font-family: var(--font-body); font-size: 11px;
@@ -788,7 +804,7 @@ img { display: block; max-width: 100%; }
   background: var(--bg-card);
   transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
 }
-.mob-menu__secondary a:hover { background: var(--zone-1); }
+.mob-menu__secondary a:hover { background: var(--interactive); color: var(--bg); }
 .mob-menu__secondary .arrow { font-family: var(--font-body); color: var(--fg-mute); }
 
 .mob-menu__foot {
@@ -2100,15 +2116,18 @@ img { display: block; max-width: 100%; }
   font-size: 22px; font-weight: 600; letter-spacing: -0.01em;
   transition: color var(--dur-sale) var(--ease-sale);
 }
-.faq__item:hover .faq__q { color: var(--zone-1); }
-.faq__item.open .faq__q { color: var(--zone-1); }
+/* La interacción, en su ROL (auditoría C2, `#436`): la pregunta abierta y la que tiene el ratón encima
+   leen `--interactive`, no la identidad de una zona que aquí no existe — con el cian del 2.º cliente
+   daban 2,45 sobre papel. */
+.faq__item:hover .faq__q { color: var(--interactive); }
+.faq__item.open .faq__q { color: var(--interactive); }
 .faq__q .ico {
   width: 28px; height: 28px; border-radius: 50%;
   border: 1px solid var(--line-strong);
   display: grid; place-items: center; flex-shrink: 0;
   transition: transform var(--dur-entra) var(--ease-sale), background var(--dur-entra), color var(--dur-entra), border-color var(--dur-entra);
 }
-.faq__item.open .faq__q .ico { transform: rotate(45deg); background: var(--zone-1); border-color: transparent; color: var(--on-brand); }
+.faq__item.open .faq__q .ico { transform: rotate(45deg); background: var(--interactive); border-color: transparent; color: var(--bg); }
 /* EL DESPLIEGUE SIN TOPE (auditoría M8, `#434`). Aquí se animaba `max-height: 0 → 240px`: anima
    layout Y es un tope de contenido — hoy las seis respuestas miden 24–48 px, pero las escribe el
    panel y la primera larga se habría cortado SIN FALLAR. La receta que anima sin tope es la rejilla

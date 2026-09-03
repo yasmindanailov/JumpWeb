@@ -3781,7 +3781,10 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       once colores crudos; banderitas quietas (D6), spinner y calcetines pausados fuera de vista; `/` de 13
       bucles a 5. Guardas `HoverDoesNotJumpTest` y `MotionBudgetTest`. m3 no procede (`.eyebrow` tiene
       consumidores fuera de las doce vistas).
-- [ ] Tanda D (C2: tres opciones renderizadas para D1) · F (la escala, mecánica con guarda).
+- [x] **Tanda D** (`#436`, spec §13): D1 elegida viendo tres opciones renderizadas — el par del cliente;
+      nace `--interactive` por superficie, doce reglas dejan `--zone-1`, FAQ abierta 2,45 → 6,43. Guarda
+      `InteractionColourIsNotAZoneTest`. ⚠️ Tres líneas más en el `client.css` de producción.
+- [ ] Tanda F (la escala, mecánica con guarda).
 - [ ] Tanda G (interiores M3, normas M6, m5, m6: D2 y D3) — con la organización y las secciones.
 
 ## Relación con el proyecto origen

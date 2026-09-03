@@ -1,8 +1,7 @@
 # [AUDITORÍA] Costuras a la vista — segunda auditoría de diseño de la web pública
 
-> Estado: 🟦 **INFORME ENTREGADO · TANDAS C, E y H EJECUTADAS (§11 `#434`, §12 `#435`) · D4, D5 y D6
-> decididas; D1 se decide viendo opciones renderizadas (tanda D) y D2/D3 con la organización (tanda G);
-> queda la F (la escala)** ·
+> Estado: 🟦 **INFORME ENTREGADO · TANDAS C, E, H y D EJECUTADAS (§11 `#434`, §12 `#435`, §13 `#436`)
+> · D1, D4, D5 y D6 decididas; D2/D3 con la organización (tanda G); queda la F (la escala)** ·
 > Última actualización: 2026-09-03 · Decisión asociada: `DECISIONES #430` (el informe vive en el
 > repo; el artefacto es solo la presentación) · Carril: **diseño / idioma visual** (este ordenador,
 > sub-banda `#430`–`#439`, reservada a distancia de la secuencia natural `#410`+ que sigue el
@@ -299,7 +298,9 @@ Se listan para que nadie las «arregle». Cada una tiene su porqué medido en `D
 
 - **D1 · El color de la INTERACCIÓN** (C2): ¿tinta (`--fg`, como el foco) · el color de acción ·
   un color del paquete (Azul Muro `#0A5C93`, que ya es el foco sobre papel y da 6,43)? Se te
-  enseñan las tres **sobre la FAQ y las pestañas reales**, a 1440 y 390.
+  enseñan las tres **sobre la FAQ y las pestañas reales**, a 1440 y 390. → `[DECIDIDO owner,
+  2026-09-03]` viendo las tres renderizadas: **el par del cliente** (Azul Muro en papel, cian en
+  tinta) — §13.
 - **D2 · Las interiores** (M3): versión larga vs. anclar. Y qué es `/entradas`.
 - **D3 · Normas** (M6): sin icono · icono por norma desde el panel · lista.
 - **D4 · Contacto** (M4, M5): dónde va la tarjeta, y «Parking» al panel o fuera. →
@@ -315,7 +316,7 @@ Se listan para que nadie las «arregle». Cada una tiene su porqué medido en `D
 | tanda | qué | gusto | tamaño |
 |---|---|---|---|
 | **C** | **Lo roto**: M4 (solape del mapa) · M7 (foco de campos) · M8 (acordeón) · C3 (`--on-ok`, el sub-rótulo, ≥ 10 px) — ✅ **HECHA, `#434` (§11)** | solo D4 | pequeña |
-| **D** | **El color que responde**: C2 con D1, opciones renderizadas; retira `--zone-*` de lo que no es zona | D1 | media |
+| **D** | **El color que responde**: C2 con D1, opciones renderizadas; retira `--zone-*` de lo que no es zona — ✅ **HECHA, `#436` (§13)**: D1 = el par del cliente | D1 | media |
 | **E** | **La física, terminada**: M1 · m1 · m2 · m3 · m4, con la guarda ampliada — ✅ **HECHA, `#435` (§12)**; m3 no procede (`.eyebrow` tiene consumidores fuera de las doce) | D5 | pequeña |
 | **F** | **La escala**: M2, sustitución mecánica + guarda | ninguno | media, cero reflujo |
 | **G** | **Las páginas interiores**: M3 · M6 · m5 · m6 | D2 · D3 | grande |
@@ -464,3 +465,57 @@ del calendario y del cajón heredan el mismo anillo sin tocar sus reglas.
   línea**, y los números de línea salían desplazados — las reglas se localizaron por SELECTOR;
   (2) la sonda de hover marca la polaroid como «SE MUEVE» porque la matriz cambia: es la rotación
   deliberada, no un salto — *un instrumento que compara matrices no distingue enderezarse de saltar*.
+
+## 13. Ejecución — tanda D, «el color que responde» (2026-09-03, `#436`)
+
+**D1, decidida viendo** (`[DECIDIDO owner, 2026-09-03]`): las tres opciones se montaron sobre la web real
+con las mismas reglas que hoy leen el cian de zona fuera de una zona —la FAQ abierta y con el ratón encima
+(papel), el destino enfocado del menú a pantalla completa (tinta), el enlace «Configurar» del banner de
+cookies— a 1440 y 390, en una hoja de decisión con su contraste medido como texto
+(https://claude.ai/code/artifact/1dac07ee-d17a-4484-9ea6-f651d834cab1; el registro es este fichero):
+
+| opción | en papel | en tinta | sobre papel | sobre tinta |
+|---|---|---|---|---|
+| A · tinta (el defecto del producto) | `#101418` | `#F4F4F1` | 16,79 | 16,79 |
+| B · el color de acción | `#F2711C` | `#F2711C` | **2,66 ✕** | 6,30 |
+| **C · el par del cliente** ✓ | `#0A5C93` Azul Muro | `#1AA9DE` cian | 6,43 | 6,85 |
+| hoy · el cian de zona | `#1AA9DE` | `#1AA9DE` | **2,45 ✕** | 6,85 |
+
+El owner eligió **C**: lo que su propio sistema escribe para el enlace (su tabla de roles, §2.4 del
+perfil), con una pista de color para «esto responde» que la tinta no da —en A la pregunta abierta de la
+FAQ queda igual que las cerradas salvo por el icono— y sin gastar el naranja, que como texto sobre papel
+no llega a AA.
+
+**Lo hecho**:
+- Nace **`--interactive`** en `landing.css`: tinta por defecto, **re-declarado en `[data-surface="ink"]`
+  y `[data-surface="paper"]`** para que `var(--fg)` se evalúe con el `--fg` de cada superficie (el
+  mecanismo de `--action`, `#209`). El paquete del cliente (`client.css`) lo fija por superficie: Azul
+  Muro en papel, cian en tinta — igual que el foco. ⚠️ **Paso de despliegue**: tres líneas en el
+  `client.css` de producción.
+- **Doce reglas públicas** pasan de `--zone-1` a `--interactive`: la FAQ (hover, abierta y su icono, que
+  ahora pinta `--bg` encima, papel sobre Azul Muro y tinta sobre cian), el menú a pantalla completa
+  (hover y foco), el menú móvil viejo (tres), el idioma activo, los dos enlaces del banner de cookies,
+  los enlaces de la 404, y los dos fantasma del cierre (`.reserve__act--alt`, `.salta__btn--ghost`).
+- **Dos que no eran interacción**: el toggle de cookies encendido pasa a **`--ok`** (es un ESTADO, la
+  regla de `#254` y del interruptor de la cuenta) y el foco de la ficha del formulario de invitados
+  pasa al **anillo del token** (`--focus-outline`), que es lo que ya usa todo lo demás.
+- **Lo que se queda con `--zone-*`, enumerado con su porqué** en la guarda: lo que IDENTIFICA una zona
+  (`.zone-pick__tab.active` · `.zone-tab.active` · el chip y el botón de zona del cajón), los RELLENOS
+  de marca —`.cta-med:hover` pasa a marca como el mockup (`#217`) y `.salta__btn:hover` oscurece su
+  relleno; el texto encima lo calcula `--on-brand`, no es texto de color— y ocho reglas del cajón SPA,
+  aparcado. `--offw-accent` sigue en `--zone-1` porque el lanzador es un RELLENO con `--on-brand`.
+
+**Medido después** (`storage/app/audit-tanda-d.mjs`, Chromium, 1280 y 390, color computado y fondo
+efectivo): FAQ abierta **`#0A5C93` sobre `#F4F4F1` → 6,43** (era 2,45) · su icono Azul Muro con papel
+encima · destino enfocado del menú **`#1AA9DE` sobre `#101418` → 6,85** · «Configurar» del banner
+**7,08** · la pestaña de zona activa sigue en su lima `rgb(163,194,28)`.
+
+**Guarda nueva, vista morder dos veces**: `InteractionColourIsNotAZoneTest` — el token en `:root` y en las
+DOS superficies (sin la de tinta, el rol cae al valor de papel sin que nada falle); ningún estado de
+interacción lee `--zone-*` fuera de las tres listas, que solo encogen; la FAQ, el banner y el idioma leen
+`--interactive`.
+
+**Lo que enseñó**: (1) el cian «ilegible» y el cian «legible» son EL MISMO token en dos superficies —lo
+que fallaba no era el color sino que el rol no existía—; (2) `SurfaceScopeTest` exige que las dos
+superficies declaren el MISMO conjunto de tokens y lo tenía en una lista cerrada: el token nuevo entra
+en ella, que es exactamente para lo que la guarda existe.

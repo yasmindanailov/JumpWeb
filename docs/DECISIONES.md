@@ -22682,3 +22682,41 @@ arnés es el código de salida, nunca un texto.*
 **Verificación**: sonda de navegador antes/después (bucles por vista, `transform` computado al pasar,
 la barra de progreso) · 256 guardas de hojas y vistas en verde · cuatro mutaciones que muerden con
 control en verde · Pint · `npm run build`.
+
+## #436 · 2026-09-03 · `[DECIDIDO owner]` El color de lo que RESPONDE es un rol, no la identidad de una zona — y el owner eligió el par de su propio sistema viéndolo renderizado
+
+**Contexto.** El hallazgo C2 de `specs/auditoria-diseno.md`: `--zone-1` pintaba la pregunta abierta de la
+FAQ, el destino enfocado del menú y el enlace del banner de cookies —sitios donde no hay zona—, y con el
+cian del 2.º cliente eso daba **2,45** sobre papel. Un token cuyo valor lo pone el servidor por elemento
+desde `zones.color` no puede garantizar contraste en ninguna parte: no es un color, es la identidad de la
+zona que se mira.
+
+**La decisión, tomada viendo** (D1 de §7): las tres opciones se montaron sobre la web real con las
+mismas reglas (tinta · el color de acción · el par del cliente) a 1440 y 390, con su contraste como texto
+en la hoja (§13). **El owner eligió C, el par del cliente**: Azul Muro en papel (6,43) y cian en tinta
+(6,85), que es lo que su propia tabla de roles escribe para el enlace. Lo que descartó, con el número
+delante: la tinta deja la FAQ abierta igual que las cerradas salvo por el icono; el naranja como texto
+sobre papel da 2,66.
+
+**Lo que cambia**: nace `--interactive` (tinta por defecto, re-declarado en las dos superficies; el
+paquete lo fija por superficie como el foco), doce reglas públicas dejan `--zone-1`, el toggle de cookies
+encendido pasa a `--ok` (es un estado) y el foco de la ficha de invitados al anillo del token. Se queda con
+`--zone-*`, enumerado en la guarda: lo que identifica una zona, los rellenos de marca (`.cta-med:hover`, el
+botón del minijuego: su texto lo calcula `--on-brand`) y el cajón. ⚠️ Tres líneas más en el `client.css`
+de producción.
+
+**1 · El cian ilegible y el cian legible eran el MISMO token en dos superficies.** Lo que fallaba no era
+el color: era que el rol no existía, y un rol que no existe lo suple el token que haya a mano. *Cuando
+un color falla en un sitio y pasa en otro, la pregunta no es «qué color pongo» sino «de qué rol es esto».*
+
+**2 · Un relleno no es un texto.** `.cta-med:hover` y el botón del minijuego pintan la marca como FONDO
+y el texto encima lo calcula `--on-brand` por luminancia; su contraste sí lo garantiza alguien. Por eso
+se quedan, enumerados, y la guarda distingue las dos cosas en vez de prohibir el token.
+
+**3 · La guarda de superficies hizo su trabajo.** `SurfaceScopeTest` exige que las dos superficies
+declaren el mismo conjunto de tokens y lo lleva en una lista cerrada; el token nuevo la puso en rojo y
+entró en ella. *Una lista cerrada que se queja cuando algo nuevo aparece es una lista que funciona.*
+
+**Verificación**: renders de las tres opciones (Chromium, 1440 y 390) · sonda después (color computado y
+fondo efectivo) · `InteractionColourIsNotAZoneTest` vista morder dos veces con control en verde · las
+guardas de tema en verde.

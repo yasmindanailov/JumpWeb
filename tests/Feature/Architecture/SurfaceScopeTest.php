@@ -54,8 +54,15 @@ class SurfaceScopeTest extends TestCase
      * fondos**, que es lo que exige el sistema del 2.º cliente («CTA primario: idéntico en ambos
      * fondos, siempre con texto tinta»). Las dos conductas salen de la MISMA declaración.
      */
+    /**
+     * ▶ **`--interactive` entra aquí por el MISMO motivo** (`DECISIONES #436`, auditoría C2): vale
+     * `var(--fg)` —tinta por defecto— y ese `var(--fg)` tiene que resolver contra el `--fg` de ESTA
+     * superficie; en `:root` solo bajaría computado contra papel y la pregunta abierta de la FAQ o el
+     * destino enfocado del menú de tinta se pintarían de tinta sobre tinta. El paquete del 2.º cliente
+     * lo fija por superficie (Azul Muro / cian), igual que el foco.
+     */
     private const ROLE_TOKENS = [
-        '--action', '--on-action', '--action-hover', '--on-action-hover',
+        '--action', '--on-action', '--action-hover', '--on-action-hover', '--interactive',
     ];
 
     /** @var ?array<string, array<string, string>> */
