@@ -41,7 +41,7 @@ const t = (key) => translate(props.messages, key);
         <p class="purchase__note">{{ t('payment_verifying_email_note') }}</p>
 
         <div class="purchase__final-actions">
-            <a :href="ordersUrl" class="btn btn--zone btn--lg purchase__cta">{{ t('see_my_orders') }}</a>
+            <a :href="ordersUrl" class="btn btn--lg purchase__cta">{{ t('see_my_orders') }}</a>
         </div>
     </div>
 </template>

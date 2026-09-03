@@ -50,7 +50,7 @@ import { t as translate, tp as translateWith } from '../../i18n.js';
  * para hacer: provocar la pregunta antes de que la lógica se escondiera en un `.vue`.
  *
  * ⚠️ Clases nuevas: solo `dep-add` y `dep-page`, las dos de separación. El disparador es el botón de
- * zona a todo el ancho del resto del área (`btn--zone auth__submit`), los dos botones del formulario
+ * zona a todo el ancho del resto del área (`btn auth__submit`), los dos botones del formulario
  * van en la fila `acc-actions` que estrenó la confirmación del QR, y el paginador es el `.pagination`
  * del sitio — el MISMO que «Mis pedidos» y «Mis reservas» usan dentro de este cajón.
  */
@@ -128,7 +128,7 @@ async function sign(dependent) {
               lista paginada «el final» deja de ser un sitio fijo. Se rotula con `add_title`, el mismo
               texto que titula lo que abre.
             -->
-            <button id="acct-dep-add-btn" type="button" class="btn btn--zone auth__submit"
+            <button id="acct-dep-add-btn" type="button" class="btn auth__submit"
                     ref="addBtn" :aria-expanded="view.adding" aria-controls="acct-dep-add"
                     :disabled="store.busy" @click="toggleAdd">
                 {{ a('account.dependents.add_title') }}
@@ -183,7 +183,7 @@ async function sign(dependent) {
                     <!-- Guardar y cancelar juntos y en ese orden: la fila que estrenó la confirmación
                          del QR, para que las dos decisiones del área se ofrezcan igual. -->
                     <div class="acc-actions">
-                        <button type="submit" class="btn btn--zone" :disabled="store.busy">
+                        <button type="submit" class="btn" :disabled="store.busy">
                             {{ store.busy && ! store.signingId && ! store.removingId ? a('account.dependents.adding') : a('account.dependents.add') }}
                         </button>
                         <button type="button" class="btn btn--ghost" :disabled="store.busy" @click="closeAdd()">

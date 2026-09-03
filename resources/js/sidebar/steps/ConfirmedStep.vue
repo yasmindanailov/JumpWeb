@@ -38,6 +38,14 @@ const props = defineProps({
      */
     registration: { type: Object, default: null },
 
+    /**
+     * «Ver mis reservas», que vuelve (`#451`): `#225` lo retiró porque el bloque de cuenta lo ofrecía
+     * SIEMPRE, y desde D-C3 el bloque va plegado también en los desenlaces. Sin esto, quien acaba de
+     * pagar no tendría camino a sus reservas desde la pantalla que se lo confirma. Es fantasma: la
+     * acción primaria sigue siendo una (`#225` F3).
+     */
+    ordersUrl: { type: String, default: '' },
+
     messages: { type: Object, default: () => ({}) },
     locale: { type: String, default: 'es' },
 });
@@ -105,10 +113,11 @@ const t = (key) => translate(props.messages, key);
             <a :href="registration.url" target="_blank" rel="noopener" class="btn btn--ghost purchase__reginfo-btn">{{ registration.label }} →</a>
         </div>
 
-        <!-- #225 F3: «Ver mis reservas» se retiró (ya está SIEMPRE en el bloque de cuenta del cajón),
-             así que queda UNA sola acción y por eso es primaria. -->
+        <!-- #225 F3 dejó UNA acción primaria. `#451` devuelve «Ver mis reservas» como FANTASMA: el bloque
+             de cuenta que lo ofrecía va plegado también aquí (D-C3). -->
         <div class="purchase__final-actions">
-            <button type="button" class="btn btn--zone btn--lg purchase__cta" @click="$emit('add-another')">{{ t('new_purchase') }}</button>
+            <button type="button" class="btn btn--lg purchase__cta" @click="$emit('add-another')">{{ t('new_purchase') }}</button>
+            <a v-if="ordersUrl" :href="ordersUrl" class="btn btn--ghost purchase__cta-secondary">{{ t('see_my_orders') }}</a>
         </div>
     </div>
 </template>

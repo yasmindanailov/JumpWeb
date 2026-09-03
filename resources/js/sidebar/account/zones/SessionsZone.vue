@@ -52,7 +52,7 @@ watch(() => store.done, (done) => { if (done) current.value = ''; });
                 <NoPasswordHint :account="account" />
             </div>
 
-            <button type="submit" class="btn btn--zone auth__submit" :disabled="store.busy">
+            <button type="submit" class="btn auth__submit" :disabled="store.busy">
                 {{ store.busy ? a('account.sessions.working') : a('account.sessions.logout_others') }}
             </button>
 

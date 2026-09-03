@@ -32,7 +32,8 @@ const open = ref(false);
 <template>
     <div class="bk-foot">
         <!-- Catálogo: un único botón con toda la información de la cesta. -->
-        <button v-if="footer.type === 'cart'" type="button" class="cartbar" @click="$emit('action', footer.action)">
+        <!-- `.btn` + su reparto interior (`#451`): la familia pone relleno, hover y pisada. -->
+        <button v-if="footer.type === 'cart'" type="button" class="btn cartbar" @click="$emit('action', footer.action)">
             <span class="cartbar__count">{{ footer.count }}</span>
             <span class="cartbar__txt">
                 <span class="cartbar__label">{{ footer.label }}</span>
@@ -68,7 +69,7 @@ const open = ref(false);
                     </span></span>
                     <span class="bk-foot__v">{{ footer.amount }}</span>
                 </span>
-                <button type="button" class="bk-cta" :disabled="footer.disabled" @click="$emit('action', footer.action)">
+                <button type="button" class="btn bk-cta" :disabled="footer.disabled" @click="$emit('action', footer.action)">
                     <span>{{ footer.cta }}</span>
                     <!-- ⚠️⚠️ **Dejan de ser un solo NODO con dos `<template>` dentro, y no es un
                          capricho** (`#257`). Los dos dibujos son ahora los del set, y **no

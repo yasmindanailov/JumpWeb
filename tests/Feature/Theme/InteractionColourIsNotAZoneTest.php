@@ -32,8 +32,8 @@ class InteractionColourIsNotAZoneTest extends TestCase
     private const IDENTIDAD = [
         '.zone-pick__tab.active' => 'la pestaña de zona de la portada (#302)',
         '.zone-tab.active' => 'la pestaña de zona de tarifas y /servicios',
-        '.purchase__chip.is-active' => 'cajón: el chip de zona del embudo',
-        '.btn--zone:disabled:hover, .btn--zone[aria-disabled="true"]:hover' => 'cajón: el botón de zona, prohibido en Blade (#321) y vivo en el CSS a propósito',
+        // `.purchase__chip.is-active` (la hora elegida) y `.btn--zone` salieron de aquí con la tanda B
+        // del cajón (`#451`): lo elegido es un ESTADO y va en tinta, y la variante de botón murió.
     ];
 
     /** RELLENOS de marca: un fondo, con el texto encima calculado por luminancia (`--on-brand`). No es texto de color. */

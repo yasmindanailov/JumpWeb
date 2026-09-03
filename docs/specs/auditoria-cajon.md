@@ -1,8 +1,8 @@
 # [AUDITORÍA] El cajón de compra, de punta a punta — auditoría Hallmark del embudo SPA
 
-> Estado: 🟦 **INFORME ENTREGADO (`#438`) · DECISIONES TOMADAS (§7, `#439`) · TANDA A EJECUTADA Y
-> MEDIDA (§11, `#450`)** · 2026-09-03 · Carril: **diseño / idioma visual** (sub-banda `#430`–`#439`,
-> agotada; sigue en `#450`–`#459`).
+> Estado: 🟦 **INFORME ENTREGADO (`#438`) · DECISIONES TOMADAS (§7, `#439`) · TANDAS A Y B EJECUTADAS
+> Y MEDIDAS (§11 `#450`, §12 `#451`); queda la C (la hoja, el calendario, el paso 5)** · 2026-09-03 ·
+> Carril: **diseño / idioma visual** (sub-banda `#430`–`#439`, agotada; sigue en `#450`–`#459`).
 > ▶ Hermana de `specs/auditoria-diseno.md` (la web pública): aquélla **excluía el cajón a propósito**
 > (§1) y sus tandas dejaron **cuatro listas de excepción «que solo encogen»** con reglas del cajón
 > dentro (§6). Este informe las mide, y dice cuáles de aquellas costuras cruzaron la puerta del embudo.
@@ -382,6 +382,45 @@ excepción del cajón en `InteractionColourIsNotAZoneTest` (8) y `SemanticFillTe
 **Lo que NO se toca aquí, a propósito**: los colores de ACCIÓN y de lo elegido (cian) y el bloque de cuenta
 en naranja (tanda B, D-C1 y D-C3); la hoja, el calendario y el paso 5 (tanda C). En «saliendo a la pasarela»
 hay ahora **dos** rellenos de acción (el botón nuevo y «Ver mis reservas»): la B pliega el bloque.
+
+## 12. Ejecución — tanda B, «el rol de acción» (2026-09-03, `#451`)
+
+`[DECIDIDO owner]` D-C1 = **ninguna variante nueva** (§7) · D-C3 = A · D-C5 = A. Lo hecho:
+
+- **`btn--zone` MUERE.** Las 28 apariciones en 21 componentes del cajón pasan a `.btn` (y `.btn--ghost`
+  donde eran secundarias: los canales no principales del aviso de pausa, la ficha de invitados no
+  pendiente); las cuatro reglas de `landing.css` se retiran. `SingleButtonFamilyTest` gana el caso de los
+  `.vue` (sin sus comentarios) y vigila las hojas también para `.btn--zone`.
+- **`.bk-cta`, `.cartbar` y `.acct__btn` SON `.btn`**: el relleno, el texto, el hover (color, no salto) y
+  la pisada los pone la familia; las tres clases quedan como CAJA (ancho, talla, reparto interior, el gris
+  del deshabilitado — en opacidad plena, porque al 55 % de `.btn:disabled` el rótulo caía a 2,08, medido).
+  La pastilla del contador del carrito pasa a `--on-action` al 14 % sobre el relleno de acción.
+- **Lo ELEGIDO es un estado y va en tinta**: la hora activa, el día elegido (tira y calendario), la barra
+  de progreso y la pestaña activa de entrar/crear cuenta. `InteractionColourIsNotAZoneTest` pierde las dos
+  entradas del cajón que quedaban en su lista de identidad; `HoverDoesNotJumpTest` vacía la suya (5 → 0;
+  la tarjeta del área responde con borde y sombra). `ActionFillTest` deja de enumerar `.cartbar` y
+  `.acct__btn--primary`: el rol lo pinta la familia.
+- **D-C3: el bloque de cuenta va plegado también en `catalog` y `result`.** Con `is-account` ya
+  colapsado desde `#66`, **no le queda ningún modo visible**: ficha en `DEUDA.md` para retirarlo entero
+  (hace de puente del contexto y del repintado tras el login, así que no se arranca en una tanda de CSS).
+  Lo único útil que daba en los desenlaces vuelve donde toca: **«Ver mis reservas» como fantasma en el
+  paso 6** (`#225` F3 lo había retirado porque el bloque lo ofrecía siempre).
+
+**El manifiesto congelado cambia en 15 claves** (identificarse, crear cuenta, la banda del pago, el paso
+9, los tres de reserva creada, los dos de pago denegado, verificando, la pausa y los cuatro estados del
+pie): en todas es la clase de un botón (`btn--zone` → `btn`, `bk-cta` → `btn bk-cta`, `cartbar` → `btn
+cartbar`) y, en las tres de reserva creada, el enlace nuevo. Regenerado con `MANIFEST_REFRESH=1` tras
+comprobar que los otros 23 casos pasaban intactos.
+
+**Medido después** (`audit-cajon-hallmark.mjs`, 390 · 1280): **un relleno de acción por pantalla**, el
+de `.btn` (cantidad, entrar, pagar, saliendo; **cero en el catálogo**, donde antes lo ponía el bloque de
+cuenta); contraste **0**; bucles **0**; el CTA en naranja y lo elegido en tinta, capturado.
+⚠️ Trampa de la sonda, otra vez la de §9·3: el carrito y el pago del pack dan «0 rellenos» porque el
+ratón se queda sobre el CTA que acaba de pulsar y pinta `--action-hover`.
+
+**Lo que asomó en las capturas y no estaba en el informe** (m8, para la tanda C): en el catálogo a 390 el
+nombre «Pack Cumpleaños KIDS» parte en tres líneas y el precio lee «14,95 €por niño» sin espacio — la
+columna del precio no deja sitio al nombre y el sufijo va en un flex sin hueco.
 
 ## 10. Verificación de este informe
 

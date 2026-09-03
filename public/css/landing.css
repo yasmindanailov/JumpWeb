@@ -839,9 +839,10 @@ img { display: block; max-width: 100%; }
    T9: UNA familia para todo el contenido. El hover NO salta — la física la fijaron el CTA del
    armazón (#217 §9.4) y la pegatina (#303): responde el color, no la posición — y su texto SIGUE
    AL ROL (`--on-action-hover`), lo que retira la excepción que `ActionFillTest` enumeraba y su
-   ficha de `DEUDA.md`. ⚠️ `.btn--zone` ya NO se usa en ningún Blade (acción ≠ marca): se queda
-   SOLO porque el cajón Vue la emite (`SidebarDomContractTest`) y el SPA está aparcado — cuando el
-   cajón se rediseñe, se va con él. `SingleButtonFamilyTest` vigila las dos cosas. */
+   ficha de `DEUDA.md`. ▶ `.btn--zone` MURIÓ con la tanda B del cajón (`#451`, D-C1 «ninguna
+   variante nueva»): era MARCA pintando acción y solo la emitía el cajón Vue. El cajón emite ya
+   `.btn`/`.btn--ghost` como toda la web. `SingleButtonFamilyTest` vigila que no vuelva ni en Blade,
+   ni en `.vue`, ni en las hojas. */
 .btn {
   display: inline-flex; align-items: center; gap: var(--sp-10);
   padding: var(--sp-12) var(--sp-20);
@@ -861,8 +862,6 @@ img { display: block; max-width: 100%; }
 .btn:active:not(:disabled):not([aria-disabled="true"]) { transform: translateY(1px); }
 .btn svg { transition: transform var(--dur-entra) var(--ease-entra); }
 .btn:hover svg { transform: translateX(5px); }
-.btn--zone { background: var(--zone-1); color: var(--on-brand); }
-.btn--zone:hover { background: var(--fg); color: var(--bg); }
 .btn--ghost { background: transparent; color: var(--fg); border: 1px solid var(--line-strong); }
 .btn--ghost:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .btn--lg { padding: var(--sp-18) var(--sp-28); font-size: var(--fs-16); }
@@ -876,8 +875,6 @@ img { display: block; max-width: 100%; }
 .btn[aria-disabled="true"]:hover { transform: none; background: var(--action); color: var(--on-action); }
 .btn:disabled:hover svg,
 .btn[aria-disabled="true"]:hover svg { transform: none; }
-.btn--zone:disabled:hover,
-.btn--zone[aria-disabled="true"]:hover { background: var(--zone-1); color: var(--on-brand); }
 .btn--ghost:disabled:hover,
 .btn--ghost[aria-disabled="true"]:hover { background: transparent; color: var(--fg); border-color: var(--line-strong); }
 

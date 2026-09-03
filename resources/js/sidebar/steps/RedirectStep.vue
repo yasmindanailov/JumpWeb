@@ -71,7 +71,7 @@ const t = (key) => translate(props.messages, key);
             <input v-for="field in form.fields" :key="field.name" type="hidden" :name="field.name" :value="field.value">
             <button v-show="slow" type="submit" class="btn btn--lg purchase__cta">{{ t('pay_proceed_manual') }}</button>
             <noscript>
-                <button type="submit" class="btn btn--zone btn--lg purchase__cta">{{ t('pay_proceed_manual') }}</button>
+                <button type="submit" class="btn btn--lg purchase__cta">{{ t('pay_proceed_manual') }}</button>
             </noscript>
         </form>
     </div>

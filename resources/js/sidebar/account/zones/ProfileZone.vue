@@ -106,7 +106,7 @@ const pending = computed(() => pendingNotice(store.user, props.account, Date.now
                 <NoPasswordHint :account="account" />
             </div>
 
-            <button type="submit" class="btn btn--zone auth__submit" :disabled="store.busy">
+            <button type="submit" class="btn auth__submit" :disabled="store.busy">
                 {{ store.busy ? a('account.profile.saving') : a('account.profile.save') }}
             </button>
         </form>

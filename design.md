@@ -208,8 +208,11 @@ y **conserva** los fundidos de 120 ms; el reposo de una pieza se declara **fuera
 ## 9. La voz de los botones y de los CONTROLES
 
 - **Una familia de botón**, `.btn`, con `--ghost` y `--sm` (`#321`, `SingleButtonFamilyTest`);
-  **la acción es `--action`** en toda la web; un solo relleno de acción por pantalla, el resto
-  fantasma o tinta. El rótulo dice el verbo (*Reservar*, *Llamar*), en cuerpo, ≥ 16 px, una línea.
+  **la acción es `--action`** en toda la web, **cajón incluido desde `#451`** (`btn--zone` murió: el
+  cajón emite `.btn` como el resto, y sus cajas propias —`.bk-cta`, `.cartbar`, `.acct__btn`— son
+  solo talla y reparto); un solo relleno de acción por pantalla, el resto fantasma o tinta. **Lo
+  elegido es un ESTADO y va en tinta** (la hora, el día, la pestaña activa), no en el color de una
+  zona. El rótulo dice el verbo (*Reservar*, *Llamar*), en cuerpo, ≥ 16 px, una línea.
 - **El par del armazón** (`#205`, `#217`): Reservar + Registrarse, uno ancho y otro reducido a
   icono; el primero expande, el segundo actúa. Cambia de rol dentro del menú (`#213`).
 - **Los controles cargan la respuesta** (§1). Un selector de opción excluyente no es un formulario:

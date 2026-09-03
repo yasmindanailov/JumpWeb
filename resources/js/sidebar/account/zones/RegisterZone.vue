@@ -82,7 +82,7 @@ async function submit() {
         <p class="auth__sub">{{ a('verify.spam_hint') }}</p>
 
         <template v-if="! gate.exhausted">
-            <button type="button" class="btn btn--zone auth__submit" :disabled="! gate.canResend"
+            <button type="button" class="btn auth__submit" :disabled="! gate.canResend"
                     @click="store.resendVerification({ api })">
                 <span v-if="gate.waiting">{{ a('verify.resend_in') }} {{ store.resendSeconds }}s</span>
                 <span v-else>{{ a('verify.resend') }}</span>

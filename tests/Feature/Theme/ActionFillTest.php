@@ -85,10 +85,9 @@ class ActionFillTest extends TestCase
         // compra— y con el sitio: el cierre es donde más falta hace que se distinga.
         // Nuestra versión anterior usaba `.btn--zone`, que es la MARCA (el cian).
         '.reserve__act' => 'el CTA del hero del cierre',
-        '.cartbar' => 'la barra del carrito: lleva a pagar',
+        // `.cartbar` y `.acct__btn--primary` salieron de aquí con la tanda B del cajón (`#451`): la barra
+        // del carrito y los botones del bloque de cuenta SON `.btn`, así que el rol lo pinta la familia.
         '.svc-cta--book' => '«Reservar» de servicios',
-        '.acct__btn--primary' => 'el primario del cajón de cuenta',
-        '.acct__btn--primary:disabled:hover' => 'su guarda de deshabilitado',
     ];
 
     /**

@@ -181,7 +181,7 @@
                         <div class="acct__cta">
                             <form method="POST" action="{{ route('logout') }}" class="acct__logout-form">
                                 @csrf
-                                <button type="submit" class="acct__btn acct__btn--primary"><x-icons.logout /> {{ __('account.nav.sign_out') }}</button>
+                                <button type="submit" class="btn acct__btn"><x-icons.logout /> {{ __('account.nav.sign_out') }}</button>
                             </form>
                         </div>
                     </div>

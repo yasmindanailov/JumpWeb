@@ -90,7 +90,7 @@ watch(() => store.done, (done) => {
                 <span v-if="mismatch" class="form__error">{{ a('account.password.mismatch') }}</span>
             </div>
 
-            <button type="submit" class="btn btn--zone auth__submit" :disabled="store.busy">
+            <button type="submit" class="btn auth__submit" :disabled="store.busy">
                 {{ store.busy ? a('account.password.saving') : a('account.password.save') }}
             </button>
         </form>

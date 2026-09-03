@@ -78,7 +78,7 @@ defineEmits(['open-order', 'toggle-event', 'toggle-dependents', 'retry']);
         <span v-if="row.guestForm" class="orders__product-form">
             <button v-if="! row.guestForm.url" type="button" class="btn btn--ghost orders__guestform-btn" disabled>{{ row.guestForm.label }}</button>
             <a v-else :href="row.guestForm.url" class="btn orders__guestform-btn"
-               :class="row.guestForm.state === 'pending' ? 'btn--zone' : 'btn--ghost'">{{ row.guestForm.label }}</a>
+               :class="row.guestForm.state === 'pending' ? '' : 'btn--ghost'">{{ row.guestForm.label }}</a>
         </span>
 
         <!--
@@ -144,7 +144,7 @@ defineEmits(['open-order', 'toggle-event', 'toggle-dependents', 'retry']);
           para no perder su plaza (`openapi/v1.yaml`, `/me/orders`).
         -->
         <div v-if="row.canRetry" class="orders__retry">
-            <button type="button" class="btn btn--zone" :disabled="busy" @click="$emit('retry')">{{ account?.orders?.retry_payment ?? '' }}</button>
+            <button type="button" class="btn" :disabled="busy" @click="$emit('retry')">{{ account?.orders?.retry_payment ?? '' }}</button>
             <p class="orders__retry-hint">{{ account?.orders?.retry_hint ?? '' }}</p>
         </div>
     </li>

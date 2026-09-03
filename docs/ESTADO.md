@@ -558,8 +558,19 @@ mutaciones muerden); las listas de excepción del cajón en `InteractionColourIs
 producción (`--ok-text: #447921; --err-text: #C83912;`). ⚠️ La guarda cazó **nueve reglas** que el recorrido
 no vio (estados no capturados): *una guarda estática es la segunda auditoría*. Dos trampas de CSS con cifra
 en `#450`: `aspect-ratio` + `min-height` desborda 35 px; `animation-play-state` no llega a un `::after`.
-▶ **SIGUE la tanda B** (retirar las variantes de botón → `.btn`; D-C3 plegar el bloque de cuenta; D-C5; vaciar
-`HoverDoesNotJumpTest`) **y la C** (hoja inferior, calendario entero sin tira, paso 5 con un título).
+▶ ✅ **TANDA B DEL CAJÓN — HECHA Y MEDIDA (2026-09-03, `#451`, `auditoria-cajon.md` §12)**: **muere
+`btn--zone`** (28 apariciones en 21 componentes → `.btn`/`.btn--ghost`; las cuatro reglas fuera de
+`landing.css`); `.bk-cta`, `.cartbar` y `.acct__btn` SON `.btn` y quedan como caja; **lo elegido va en
+tinta** (hora, día, progreso, pestaña activa); **D-C3**: el bloque de cuenta plegado también en `catalog` y
+`result` → **sin ningún modo visible**, ficha en `DEUDA.md` para retirarlo (hace de puente); «Ver mis
+reservas» vuelve al paso 6 como fantasma. Tres listas de excepción pierden sus entradas del cajón
+(`HoverDoesNotJumpTest` 5 → 0, `InteractionColourIsNotAZoneTest`, `ActionFillTest`);
+`SingleButtonFamilyTest` mira también los `.vue`. **El manifiesto congelado cambia en 15 claves**, todas la
+clase de un botón (y el enlace nuevo del paso 6); regenerado tras ver los otros 23 intactos. **Medido
+después (390 · 1280)**: un relleno de acción por pantalla, cero en el catálogo; contraste 0; bucles 0.
+⚠️ m8 nuevo para la C: el catálogo a 390 parte «Pack Cumpleaños KIDS» en tres líneas y lee «14,95 €por
+niño». ▶ **SIGUE la tanda C** (hoja inferior con asa en móvil · el calendario entero sin la tira de días ·
+el paso 5 con «Identifícate» y los campos · el pie sin botón muerto (M8) · m8).
 ▶ **Y LA SEGUNDA VUELTA DEL OWNER SOBRE B (`guion-de-la-portada.md` §6.9)**: le gusta, y pide **más
 JUEGO** (brand, animaciones, «que la sombra salte al clic»), el **cumpleaños en SLIDE** con tarjetas
 más anchas, **otra «Visita 1·2·3·4»** («muy sosa, nada de diferenciación»), **otro «Visítanos»**, y una
@@ -598,7 +609,7 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     `docs/specs/auditoria-cajon.md` (`#438`, el informe del cajón: lee `site.css` 884–3050 y no toca
     nada) · **Numera en la sub-banda `#430`–`#439` — último usado: `#439`, AGOTADA** (2026-09-03),
     reservada A DISTANCIA de la secuencia natural para que el otro carril no tenga que mirar nada antes
-    de empujar. ▶ **Banda actual de este carril: `#450`–`#459` — último usado: `#450`** (2026-09-03; la
+    de empujar. ▶ **Banda actual de este carril: `#450`–`#459` — último usado: `#451`** (2026-09-03; la
     natural va por `#413`; `#440`–`#449` se deja de colchón entre las dos).
   ▶ ✅ **Aviso del carril de diseño sobre `ValidarRegistroTest`: LEÍDO Y ACTUADO** (2026-09-03,
     retirado según `CONVENCIONES §10.4`). El limitador de la puerta se mide con reloj de pared y cae
@@ -1348,7 +1359,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > número**: 4019 + 4 + 15 = **4038** y el gate mide **4039 · 25.772**. Un test y dos aserciones de
 > más, o sea que uno de los dos números declarados se tomó sobre una base que ya no era 4019. *Que la
 > suma no cuadre es justo el motivo por el que el gate mide en vez de creerse la resta.*
-> Suite **4156 en verde** (26.328 aserciones, 1 skipped a propósito), medida el 2026-09-03
+> Suite **4164 en verde** (26.354 aserciones, 1 skipped a propósito), medida el 2026-09-03
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`). ⚠️ **+8 y +51 los pone la T8
 > de Google** (`#350`): las dos guardas nuevas del botón y del aviso de privacidad, más los casos que
 > sustituyen a los de las casillas retiradas. Antes: las cuatro tandas del

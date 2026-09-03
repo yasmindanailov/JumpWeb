@@ -210,7 +210,7 @@ const summary = computed(() => props.errors?.summary ?? []);
 
             <div v-if="turnstileSiteKey" ref="captchaEl"></div>
 
-            <button type="submit" class="btn btn--zone auth__submit" :disabled="submitting">
+            <button type="submit" class="btn auth__submit" :disabled="submitting">
                 <span v-show="! submitting">{{ a('register.submit') }}</span>
                 <span v-show="submitting" class="btn__loading">
                     <span class="jj-spinner jj-spinner--xs" aria-hidden="true"></span> {{ a('register.submitting') }}

@@ -22979,3 +22979,36 @@ producción (`INSTALACION-CLIENTE.md` §4.a.ter); sin ellas «Incluido» sigue a
 **Verificación**: guarda nueva 6/6 mutaciones muerden (restauración desde copia, control en verde) ·
 `test:js` 947/947 · contrato de árbol 38/38 · las guardas de tema y presupuesto en verde · suite completa
 antes de empujar (el hook la repite).
+
+## #451 · 2026-09-03 · `[DECIDIDO owner]` La tanda B del cajón: el botón del embudo es el de la web — muere `btn--zone`, lo elegido va en tinta y el bloque de cuenta se pliega hasta quedarse sin modo visible
+
+**Contexto.** `auditoria-cajon.md` §7: D-C1 «ninguna variante nueva» (`#439`: el owner rechazó los tres
+colores y preguntó cuántos botones había; medido, 32 combinaciones en la web y 28 en el cajón), D-C3 = A
+(bloque de cuenta plegado), D-C5 = A (el hover responde con color).
+
+**Lo hecho** (§12 del informe): `btn--zone` desaparece de los 21 componentes que la emitían y de las hojas;
+`.bk-cta`, `.cartbar` y `.acct__btn` son `.btn` y quedan como caja; la hora, el día, la barra de progreso y
+la pestaña activa pasan a TINTA (son estados, no zonas); el bloque de cuenta se pliega también en `catalog`
+y `result`; «Ver mis reservas» vuelve al paso 6 como fantasma. Tres listas de excepción encogen a cero o
+pierden sus entradas del cajón (`HoverDoesNotJumpTest`, `InteractionColourIsNotAZoneTest`,
+`ActionFillTest`); `SingleButtonFamilyTest` mira también los `.vue`.
+
+**1 · Retirar una variante deja el color decidido sin decidirlo.** El owner no eligió naranja: eligió que no
+hubiera una cuarta anatomía, y el naranja vino solo con la familia. *Cuando la pregunta es «¿qué color?»
+y la respuesta es «¿cuántos tipos hay?», la decisión correcta es una menos, y el color la sigue.*
+
+**2 · Un bloque que se pliega en el último modo que le quedaba es un bloque muerto, y hay que decirlo.**
+D-C3 lo pliega en `catalog` y `result`; `is-account` ya lo colapsaba (`#66`). Se cumple la decisión
+literal y se escribe la consecuencia en `DEUDA.md` en vez de arrancarlo en la misma tanda: hace de puente
+(el contexto de cuenta, el repintado tras entrar) y retirarlo es otro encargo.
+
+**3 · El manifiesto cambia en 15 claves y todas son la clase de un botón.** Se enumeran en el informe; se
+regeneró tras ver que los otros 23 casos pasaban sin tocar — la condición de `SidebarDomContractTest`.
+
+**4 · Dos flecos medidos**: `.btn:disabled` al 55 % dejaba el CTA gris del pie a 2,08 → opacidad plena
+(un inactivo está exento, pero no hace falta que lo parezca); y el catálogo a 390 parte «Pack Cumpleaños
+KIDS» en tres líneas y lee «14,95 €por niño» — m8, para la C.
+
+**Verificación**: guardas de tema y presupuesto 125/125 · contrato 38/38 · `test:js` 947/947 · sonda del
+embudo a 390 y 1280: un relleno de acción por pantalla, contraste 0, bucles 0 · suite completa antes de
+empujar.
