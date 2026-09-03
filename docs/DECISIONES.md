@@ -23165,3 +23165,60 @@ contrastarla con los tokens y las guardas que ya viven en código.
 **Verificación**: suite completa en verde antes de empujar (el hook la repite) · el contrato de árbol NO se
 regenera (el manifiesto vuelve al de `1b8db76` y el SSR se reconstruyó sobre los componentes restaurados) ·
 docs-check.
+
+## #460 · 2026-09-03 · La auditoría UI/UX del panel: el error de operación que ya costó dinero, y las tres decisiones del owner que acotan lo que se arregla
+
+**Contexto.** Encargo del owner: *«valorar el UI/UX del panel de admin. Objetivo: que cualquier persona
+intuitivamente pueda hacer la operativa del parque; quitar ruido y poner cada cosa en el momento adecuado y
+cada acción en su sitio. Normalmente se usa en tablet»*. El informe vive en el repo
+(`specs/auditoria-panel-admin.md`), **no en un artefacto**: la lección de `#430`, cuyo informe anterior se
+perdió con su URL.
+
+**Lo medido**: Playwright + Chromium sobre el panel real, 10 pantallas × 3 tamaños (iPad horizontal
+1080×810 —el dispositivo declarado—, vertical 810×1080 y escritorio de control) más cinco sondas de estados
+de trabajo. **4 críticos · 10 mayores · 11 menores.**
+
+**El hallazgo que manda no lo encontró la sonda: lo trajo el owner.** Una admin vendió un cumpleaños como
+**diez entradas sueltas**. Medido con el catálogo real para 10 personas: **119,00 € en vez de 180,00 €
+(−61,00 €, −34 %)**, la sala de cumpleaños sin reservar, **60 minutos de ocupación en vez de 120** y **el
+formulario de invitados que no se pide** —sin él no hay edades y sin edades no hay suplemento de fiesta
+mixta—. La causa está medida: el paso 2 de «Crear pedido» ofrece **un desplegable plano de 18 opciones con
+entradas y packs mezclados** cuyo rótulo es `«{zona} · {nombre}»`, y **nada dice de qué tipo es cada cosa**
+—ni el prefijo de zona sirve: «JUMP · Cumpleaños E2E extras» es un pack—. ⚠️⚠️ **Y el error no se puede
+deshacer**: «Editar producto» solo ofrece productos del MISMO tipo y la MISMA zona, así que la salida es
+cancelar, reembolsar y rehacer. ⚠️ **El panel SÍ sabe el tipo**: «Catálogo» tiene columna «Tipo» y filtro
+por tipo. La pantalla que cobra no tiene ninguna de las dos.
+
+**`[DECIDIDO owner, 2026-09-03]`, tres decisiones que acotan el trabajo:**
+
+- **D1 · la tablet es el dispositivo del DÍA A DÍA, no de todo el panel**: seis pantallas (Hoy · Calendario ·
+  Pedidos · ficha de pedido · Crear pedido · Puerta). Ajustes y las 19 de puesta en marcha se quedan para
+  ordenador. Eso saca de alcance «Configuración» (2.883 px, 70 campos) y las tres columnas cortadas de
+  «Catálogo».
+- **D2 · el saldo del parque se queda INFORMATIVO**: nadie marca en el panel que se cobró. Coherente con
+  `#244`. El libro seguirá liquidando por el paso del tiempo.
+- **D3 · no se construye pantalla de aforo**: la respuesta vive dentro del flujo de venta.
+
+▶ **D2 y D3 convierten M4 y M3 en conducta querida, no en defectos** (§9.bis del informe, mismo trato que
+`auditoria-diseno.md` §6 da a las puertas de Hallmark): quedan escritos para que nadie los «arregle».
+⚠️ **D3 deja deuda documental**: `PANEL-ADMIN.md` §2.1 sigue prometiendo «Clic en día/franja → detalle:
+quién viene, ocupación, plazas libres», que ya no se va a construir.
+
+**Y una premisa del owner que la medición DESMIENTE, antes de que nadie construya encima**: sospechaba que
+el calendario y los cupos del panel divergían del frontend. **No divergen**: los dos pasan por `SlotOffer` y
+dan lo mismo —mismo producto, **177 días idénticos**, **11 horas idénticas** y los mismos números de
+plazas—. ⚠️⚠️ **Lo que sí es real es otra cosa**: la web le pasa a `SlotOffer` **los ocupantes de la cesta**
+(`AvailabilityController`: «las horas van por POST y llevan la cesta») y **el alta manual del panel no**
+—llama a `offerableTimes()` con la cesta vacía—. Hoy es un borde declarado (`hora-extra.md` §8.3); **el
+asistente nuevo, que permite añadir varios productos antes de pagar, lo convierte en el camino normal.**
+
+**Las cinco trampas de instrumento pagadas** (§1 del informe), en orden de coste: **medir un 404 durante
+tres tamaños** porque `Order` se resuelve por `code` y la sonda pidió el id —cifras plausibles, sujeto
+equivocado—; dos instrumentos propios contradiciéndose sobre si las tablas se salen (lo zanjó la captura);
+**un barrido de controles por etiqueta HTML no ve las 38 píldoras del calendario**, que son `div`; un `fill`
+sobre «el primer campo de búsqueda» escribiendo en el buscador global; y **`.fi-dropdown-panel` casa con
+TODOS los desplegables del documento**, así que el inventario dijo 9 entradas donde hay 3.
+
+**Verificación**: docs-check verde · el informe, `docs/README.md` y la tabla de enrutado de `CLAUDE.md` al
+día · **cero líneas de producto tocadas**. Sondas y capturas fuera del repo, en `/root/e2e/audit/` del
+contenedor.
