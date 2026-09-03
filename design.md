@@ -122,7 +122,9 @@ la de cualquier marca saturada). Guarda pendiente: sonda de contraste sobre el H
 - **Máx. 3 familias + el guiño una vez** por pantalla (el «2+1» de la skill y el contrato del
   paquete coinciden).
 - **La escala es `--fs-*` sobre `--fs-unit`** (`landing.css`): un paquete la mueve entera. **Todo
-  `font-size` con escalón disponible usa el token** — hoy lo hacen 110 de 355 (auditoría M2, tanda F).
+  `font-size` con escalón disponible usa el token** — desde `#437` lo hacen TODOS los que tienen
+  escalón exacto (233 sustituidos a mismo píxel; guarda `ScaleTokensAreUsedTest`); lo que sigue en
+  literal no tiene escalón en la escala.
   Los titulares son `clamp()` con suelo que quepa a 390 (`#220`, `#303`).
 - **Titulares de sección: una palabra, sin punto, en tinta, sin etiqueta encima** (`#303`,
   `SectionHeadlineTest`). Las etiquetas de sección («01 · ZONAS») **no existen** en la web pública
@@ -136,7 +138,9 @@ la de cualquier marca saturada). Guarda pendiente: sonda de contraste sobre el H
   `--wrap-gutter` solo para lo que va a sangre completa (`#238`, `#250`, `ColumnIsDeclaredOnceTest`,
   `CappedContainerGutterTest`).
 - **La escala es `--sp-*` sobre `--sp-unit`**; todo `padding`/`gap`/`margin` con escalón disponible
-  usa el token (hoy 246 de 843, auditoría M2).
+  usa el token — desde `#437`, todos los que tienen escalón exacto en cada uno de sus valores (429
+  sustituidos a mismo píxel; guarda `ScaleTokensAreUsedTest`). Quedan 163 con algún escalón fuera de
+  la escala (24, 32, 36, 40…): entrarán cuando la escala los tenga, no con un `calc()` a mano.
 - **El aire entre secciones es uniforme y decidido** (240 escritorio · 160 móvil, `#314`;
   `--hero-air` 64 bajo el hero, `#303`). Las secciones se distinguen por lo que contienen, no por
   el hueco.

@@ -22720,3 +22720,37 @@ entró en ella. *Una lista cerrada que se queja cuando algo nuevo aparece es una
 **Verificación**: renders de las tres opciones (Chromium, 1440 y 390) · sonda después (color computado y
 fondo efectivo) · `InteractionColourIsNotAZoneTest` vista morder dos veces con control en verde · las
 guardas de tema en verde.
+
+## #437 · 2026-09-03 · La tanda F de la auditoría: 662 literales pasan al token del mismo píxel, y «cero reflujo» se mide con una huella, no se promete
+
+**Contexto.** M2 de `specs/auditoria-diseno.md`: las escalas `--fs-*` y `--sp-*` existen para que
+`--fs-unit`/`--sp-unit` muevan la web entera desde el paquete de una instalación, y medido solo movían un
+tercio (31 % de los `font-size`, 29 % del espacio): 245 tallas y 597 huecos tenían token del mismo píxel
+y no lo usaban. `site.css` lo decía a propósito desde la Fase 4: «tokenizarlo entero exigiría re-verificar
+la landing completa». Es trabajo, no gusto; el plan lo daba sin decisión del owner.
+
+**Lo hecho**: `scripts/escala-a-tokens.py` sustituye MECÁNICAMENTE y solo con token exacto —233
+`font-size` y 429 `padding`/`margin`/`gap`— dejando fuera lo que no tiene escalón (163) y lo que no es un
+literal simple. La re-verificación que la Fase 4 no quiso pagar se hizo con instrumento: la huella de
+maquetación de las doce vistas a 1280 y 390 (rectángulo y tipografía computada de cada elemento, con el
+movimiento congelado) es **idéntica en geometría en las 24**. `ScaleTokensAreUsedTest` impide que vuelva
+un literal con token disponible; vista morder dos veces.
+
+**1 · «Cero reflujo» es una medida, no una propiedad del método.** Sustituir `13px` por `calc(1px * 13)`
+es idéntico por aritmética, pero la aritmética no ve un `:root` mal cerrado ni un token fuera de alcance:
+la huella sí. Y la huella misma tuvo su trampa: el `margin` computado de un `margin-inline: auto` cambia
+de «0px 16px» a «0px» según el estado de la página, con la misma geometría — *lo que manda es el
+rectángulo, no cómo el navegador describe el rectángulo.*
+
+**2 · El guion y la guarda tienen que leer el MISMO texto.** El guion buscaba sobre el CSS crudo y la
+guarda sobre el CSS sin comentarios; un `font-size: 13px /* … */;` se le escapaba al guion en silencio y
+la guarda lo cazó a la primera. El guion pasa a buscar sobre la copia blanqueada y a escribir sobre el
+original. *Un guion que convierte y una guarda que vigila son la misma regla en dos lenguajes; si
+difieren en una coma, la guarda gana y el guion se corrige.*
+
+**3 · Lo que se queda fuera, dicho**: 163 huecos con escalones que la escala no tiene (24, 32, 36, 40…).
+No se meten con `calc(var(--sp-8) * 3)`: un múltiplo a mano no es un escalón decidido. Entrarán cuando la
+escala crezca, si crece.
+
+**Verificación**: huella de maquetación 24/24 en geometría · 834 guardas de hojas, vistas y cajón en
+verde · la guarda nueva muerde 2/2 con control en verde.

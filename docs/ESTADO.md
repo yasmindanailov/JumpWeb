@@ -454,8 +454,15 @@ re-declarado en las dos superficies; el paquete lo fija por superficie), doce re
 una zona, los rellenos de marca y el cajón quedan enumerados en `InteractionColourIsNotAZoneTest`. Medido
 después: FAQ abierta **2,45 → 6,43**. ⚠️⚠️ **PASO DE DESPLIEGUE del owner**: tres líneas más en el
 `client.css` de producción (`--interactive` en `:root` y en las dos superficies; están en
-`INSTALACION-CLIENTE.md`). ▶ **LO SIGUIENTE**: tanda **F** (la escala, mecánica con guarda); la **G**
-(interiores, normas: D2, D3) se valora con la organización.
+`INSTALACION-CLIENTE.md`).
+▶ ✅ **TANDA F — HECHA (2026-09-03, `#437`, `auditoria-diseno.md` §14)**: **662 literales al token del
+mismo píxel** (233 `font-size`, 429 de espacio) con `scripts/escala-a-tokens.py`; quedan 163 huecos cuyo
+escalón no está en la escala. **«Cero reflujo» medido**: la huella de maquetación de las doce vistas a
+1280 y 390 es idéntica en geometría en las 24 (la única cadena distinta es cómo Chrome reporta un
+`margin: auto`). Guarda `ScaleTokensAreUsedTest`, 2/2 mutaciones muerden. ▶ **Con esto la auditoría
+tiene ejecutadas C, E, H, D y F; queda la G** (interiores M3, normas M6, m5, m6: D2 y D3), que se valora
+con la organización y las secciones, y C1 (`/servicios`), que es producto. ▶ **LO SIGUIENTE**: valorar
+la organización y las secciones con el owner (el artefacto B, D-G3/D-G6/D-G7, y D2/D3 de la auditoría).
 ⚠️ `DesignSync` sigue sin autorización en sesión no interactiva; copia del canvas del 27/28/31-08.
 ⚠️ **Lo que la auditoría vio fuera de su alcance**: `resources/views/vendor/mail/html/themes/brand.css`
 lleva `#FF5B22` (el naranja del PRIMER cliente) quemado **cinco veces** — fuga white-label en los
@@ -483,7 +490,7 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     (raíz) · `routes/prototipos.php` + su `require` en `routes/web.php` ·
     `app/Http/Controllers/Prototipos/**` · `public/prototipos/**` · **`scripts/prototipo-b/**`** (el
     fuente del artefacto B, su constructor, su sonda y el volcado de datos).
-    **Numera en la sub-banda `#430`–`#439` — último usado: `#436`** (2026-09-03), reservada A
+    **Numera en la sub-banda `#430`–`#439` — último usado: `#437`** (2026-09-03), reservada A
     DISTANCIA de la secuencia natural para que el otro carril no tenga que mirar nada antes de
     empujar; si se agota, la siguiente se reserva aquí ANTES de usarla.
   ▶ ✅ **Aviso del carril de diseño sobre `ValidarRegistroTest`: LEÍDO Y ACTUADO** (2026-09-03,
@@ -1233,7 +1240,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > número**: 4019 + 4 + 15 = **4038** y el gate mide **4039 · 25.772**. Un test y dos aserciones de
 > más, o sea que uno de los dos números declarados se tomó sobre una base que ya no era 4019. *Que la
 > suma no cuadre es justo el motivo por el que el gate mide en vez de creerse la resta.*
-> Suite **4107 en verde** (26.093 aserciones, 1 skipped a propósito), medida el 2026-09-03
+> Suite **4137 en verde** (26.250 aserciones, 1 skipped a propósito), medida el 2026-09-03
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`). ⚠️ **+8 y +51 los pone la T8
 > de Google** (`#350`): las dos guardas nuevas del botón y del aviso de privacidad, más los casos que
 > sustituyen a los de las casillas retiradas. Antes: las cuatro tandas del

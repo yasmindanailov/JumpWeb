@@ -24,7 +24,13 @@
        de hecho, escrita a mano.
        ⚠️ Alcance: se aplica al SIDEBAR, que es lo que Fase 4 tokeniza. El resto de `site.css`
        sigue con literales a propósito — tokenizarlo entero exigiría re-verificar la landing
-       completa, y esta fase no la toca. */
+       completa, y esta fase no la toca.
+       ▶ **CADUCADO en la tanda F de la auditoría de diseño** (`DECISIONES #437`): la sustitución se hizo
+       MECÁNICA y del MISMO píxel —`font-size: 13px` → `var(--fs-13)`, `padding: 12px 20px` →
+       `var(--sp-12) var(--sp-20)`— con `scripts/escala-a-tokens.py`, y la re-verificación fue la huella de
+       maquetación de las doce vistas a 1280 y 390: idéntica antes y después. Lo que sigue en literal es lo
+       que NO tiene escalón exacto en la escala (24, 32, 36, 40…); `ScaleTokensAreUsedTest` impide que
+       vuelva un literal con token disponible. */
     --fw-semibold: 600;
     --fw-bold: 700;
     --fw-black: 800;
@@ -227,9 +233,9 @@
 .skip-link {
     position: absolute; top: 8px; left: 8px; z-index: 200;
     display: inline-flex; align-items: center; min-height: var(--tap-min);
-    padding: 10px 16px; border-radius: var(--r-btn);
+    padding: var(--sp-10) var(--sp-16); border-radius: var(--r-btn);
     background: var(--fg); color: var(--bg);
-    font-family: var(--font-body); font-weight: 700; font-size: 14px;
+    font-family: var(--font-body); font-weight: 700; font-size: var(--fs-14);
     transform: translateY(calc(-100% - 16px));
     transition: transform var(--dur-sale) var(--ease-sale);
 }
@@ -272,12 +278,12 @@
 .lang-dd { position: relative; }
 
 .lang-dd__trigger {
-    display: inline-flex; align-items: center; gap: 6px;
+    display: inline-flex; align-items: center; gap: var(--sp-6);
     min-height: var(--tap-min);
     padding: 9px 12px;
     border: 1px solid var(--line); border-radius: var(--r-btn);
     background: var(--bg-card); color: var(--fg);
-    font-family: var(--font-body); font-size: 12px; font-weight: 600;
+    font-family: var(--font-body); font-size: var(--fs-12); font-weight: 600;
     text-transform: uppercase; letter-spacing: 0.12em;
     transition: border-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), transform var(--dur-sale) var(--ease-sale);
 }
@@ -291,7 +297,7 @@
     min-width: 170px;
     background: var(--bg-card);
     border: 1px solid var(--line); border-radius: var(--r);
-    padding: 6px;
+    padding: var(--sp-6);
     box-shadow: var(--shadow-float);
     opacity: 0; visibility: hidden;
     transform: translateY(-8px) scale(0.97); transform-origin: top right;
@@ -307,17 +313,17 @@
    que un objetivo de 44 centrado sobre una caja de 37 se metería 3,5 px dentro de la vecina. Un
    área táctil que se solapa con la de al lado no amplía nada: mueve el destino del dedo. */
 .lang-dd__panel a {
-    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-14);
     min-height: var(--tap-min);
-    padding: 10px 12px; border-radius: var(--r-sm);
-    font-family: var(--font-body); font-size: 13px; font-weight: 700;
+    padding: var(--sp-10) var(--sp-12); border-radius: var(--r-sm);
+    font-family: var(--font-body); font-size: var(--fs-13); font-weight: 700;
     letter-spacing: 0.08em; color: var(--fg);
     transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
 }
 .lang-dd__panel a:hover { background: var(--bg-soft); }
 .lang-dd__panel a.active { color: var(--interactive); }   /* estado de interacción, no identidad de zona (`#436`) */
 .lang-dd__panel a .name {
-    font-size: 11px; font-weight: 500; letter-spacing: 0;
+    font-size: var(--fs-11); font-weight: 500; letter-spacing: 0;
     color: var(--fg-mute); text-transform: none;
 }
 
@@ -432,13 +438,13 @@
 
 /* Bloque izquierdo del bottom row: lang-dd arriba + copyright debajo, alineados al inicio. */
 .foot__bottom-left {
-    display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+    display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-12);
 }
 
 /* ⚠️ El `gap` es lo ÚNICO que queda aquí del bloque legal: desde `#264` es una tira que se
    desliza, y su mecánica —carril, vela, alto táctil— la comparte con `.foot__links` en una regla
    sola (`landing.css`). Un `display: flex` repetido aquí sería la segunda copia que diverge. */
-.foot__legal { gap: 18px; }
+.foot__legal { gap: var(--sp-18); }
 
 /* Lote 8: el selector de idioma del footer (`.lang-dd`) SÍ se muestra en móvil —el mismo
    selector del desktop—: `.foot__bottom-left` lo apila justo encima del copyright y es el único
@@ -495,15 +501,15 @@
 .page__title {
     font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
     letter-spacing: -0.03em; line-height: 0.95;
-    font-size: clamp(40px, 6vw, 80px); margin: 14px 0 0;
+    font-size: clamp(40px, 6vw, 80px); margin: var(--sp-14) 0 0;
 }
-.page__body { max-width: 70ch; color: var(--fg-mute); font-size: 17px; line-height: 1.7; }
+.page__body { max-width: 70ch; color: var(--fg-mute); font-size: var(--fs-17); line-height: 1.7; }
 .page__body p { margin: 0 0 1em; }
 .page__body a { color: var(--zone-1); text-decoration: underline; }
 .page__back {
     display: inline-block; margin-top: 48px;
-    font-family: var(--font-body); font-size: 14px; font-weight: 600;
-    color: var(--fg-mute); border-bottom: 1px solid var(--line); padding-bottom: 2px;
+    font-family: var(--font-body); font-size: var(--fs-14); font-weight: 600;
+    color: var(--fg-mute); border-bottom: 1px solid var(--line); padding-bottom: var(--sp-2);
     transition: color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
 }
 .page__back:hover { color: var(--fg); border-color: var(--fg); }
@@ -512,30 +518,30 @@
    coherente con la página (mismos tokens que el resto del sitio). */
 .pagination {
     display: flex; align-items: center; justify-content: center;
-    flex-wrap: wrap; gap: 16px; margin-top: 40px;
+    flex-wrap: wrap; gap: var(--sp-16); margin-top: 40px;
     font-family: var(--font-body);
 }
 .pagination__btn {
-    font-size: 14px; font-weight: 600; color: var(--fg);
-    border: 1px solid var(--line); border-radius: var(--r-pill); padding: 8px 18px;
+    font-size: var(--fs-14); font-weight: 600; color: var(--fg);
+    border: 1px solid var(--line); border-radius: var(--r-pill); padding: var(--sp-8) var(--sp-18);
     transition: color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
 }
 .pagination__btn:hover { border-color: var(--fg); }
 .pagination__btn--disabled { color: var(--fg-mute); opacity: 0.5; pointer-events: none; }
-.pagination__info { font-size: 14px; color: var(--fg-mute); }
+.pagination__info { font-size: var(--fs-14); color: var(--fg-mute); }
 
 .page__note {
     max-width: 70ch; margin: 0 0 36px;
-    font-family: var(--font-body); font-size: 13px; color: var(--fg-mute);
+    font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg-mute);
     background: var(--bg-card); border: 1px dashed var(--line-strong);
-    border-radius: var(--r-sm); padding: 10px 14px;
+    border-radius: var(--r-sm); padding: var(--sp-10) var(--sp-14);
 }
 .page__h2 {
     font-family: var(--font-display); font-weight: 700; font-stretch: 75%;
     letter-spacing: -0.02em; font-size: 24px; color: var(--fg);
     margin: 32px 0 8px;
 }
-.page__cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 48px; }
+.page__cta { display: flex; gap: var(--sp-12); flex-wrap: wrap; margin-top: 48px; }
 
 /* ====================================================================
    Página /servicios — diseño v2 «Editorial XL»
@@ -550,7 +556,7 @@
 
 /* ---------- hero ---------- */
 .svc-hero { padding: clamp(124px, 15vh, 172px) 0 64px; }
-.svc-hero .eyebrow { margin-bottom: 18px; display: block; }
+.svc-hero .eyebrow { margin-bottom: var(--sp-18); display: block; }
 .svc-hero__title {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
   font-size: clamp(64px, 10vw, 168px);
@@ -562,15 +568,15 @@
   padding: 0 0.12em 0.04em; border-radius: var(--r-btn); transform: rotate(-2deg);
 }
 .svc-hero__intro {
-  max-width: 56ch; font-size: 18px; line-height: 1.55;
-  color: var(--fg-mute); margin: 28px 0 0;
+  max-width: 56ch; font-size: var(--fs-18); line-height: 1.55;
+  color: var(--fg-mute); margin: var(--sp-28) 0 0;
 }
-.svc-hero__index { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 36px; }
+.svc-hero__index { display: flex; flex-wrap: wrap; gap: var(--sp-10); margin-top: 36px; }
 .svc-hero__jump {
   display: inline-flex; align-items: center; gap: 9px;
   border: 1px solid var(--line-strong); border-radius: var(--r-pill);
   padding: 9px 16px;
-  font-size: 12px; font-weight: 600;
+  font-size: var(--fs-12); font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.1em;
   transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale), transform var(--dur-estado) var(--ease-sale);
 }
@@ -606,7 +612,7 @@
 .brand-band__inner {
   width: 120%; margin-left: -10%;          /* suyos, al dígito */
   background: var(--paper-fg);
-  padding: 14px 0;                          /* suyo */
+  padding: var(--sp-14) 0;                          /* suyo */
   overflow: hidden;
   transform: rotate(-2.4deg);               /* suyo (su nota dice 2°) */
 }
@@ -637,10 +643,10 @@
 
 /* ---------- átomos compartidos ---------- */
 .svc-cta {
-  display: inline-flex; align-items: center; gap: 10px;
+  display: inline-flex; align-items: center; gap: var(--sp-10);
   min-height: 44px; /* objetivo táctil WCAG 2.5.5 */
   border-radius: var(--r-btn); padding: 14px 22px;
-  font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  font-size: var(--fs-14); font-weight: 600; cursor: pointer; white-space: nowrap;
   background: transparent; color: var(--fg); border: 1px solid var(--line-strong);
   transition:
     transform var(--dur-entra) var(--ease-entra),
@@ -671,11 +677,11 @@
 /* mini-ficha de specs (las condiciones rápidas, en formato tabla) */
 .svc-spec { border-top: 1px solid var(--line-strong); max-width: 480px; margin: 0 0 34px; }
 .svc-spec__row {
-  display: flex; align-items: baseline; gap: 18px;
-  padding: 13px 2px; border-bottom: 1px solid var(--line); font-size: 14px;
+  display: flex; align-items: baseline; gap: var(--sp-18);
+  padding: var(--sp-13) var(--sp-2); border-bottom: 1px solid var(--line); font-size: var(--fs-14);
 }
 .svc-spec__label {
-  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute);
   width: 92px; flex-shrink: 0;
 }
@@ -695,7 +701,7 @@
 .svc-rates__title {
   display: block; font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
   font-size: clamp(20px, 2.6vw, 26px); line-height: 1; letter-spacing: -0.02em;
-  color: var(--fg); margin: 0 0 20px;
+  color: var(--fg); margin: 0 0 var(--sp-20);
 }
 /* Pestañas de zona = sistema canónico `.zone-tabs`/`.zone-tab` (base en landing.css, incl. móvil
    full-width). Aquí solo el espaciado y el TINTE POR ZONA de la pestaña activa, scoped a `.svc-rates`
@@ -707,28 +713,28 @@
    para `jump` y `kids`: cualquier otro acento se quedaba sin color, en silencio. `.zone-tab.active`
    ya es genérica en `landing.css`, así que no hace falta ninguna. */
 .svc-rates__panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 18px 26px; }
-.svc-rates__table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.svc-rates__table caption { text-align: left; padding-bottom: 12px; }
+.svc-rates__table { width: 100%; border-collapse: collapse; font-size: var(--fs-14); }
+.svc-rates__table caption { text-align: left; padding-bottom: var(--sp-12); }
 /* Chip del caption (duración por zona): FONDO del color de zona + texto legible (arregla el bajo
    contraste de usar el color de zona como texto). Va en un <span> para ajustarse al contenido (un
    <caption> es tan ancho como la tabla). */
 .svc-rates__cap {
   display: inline-block; background: var(--zone-1); color: var(--on-brand);
-  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  font-family: var(--font-mono); font-size: var(--fs-11); font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.1em; padding: 5px 12px; border-radius: var(--r-pill);
 }
 .svc-rates__table th, .svc-rates__table td {
   padding: 9px 2px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap;
 }
 .svc-rates__table thead th {
-  font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase;
+  font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase;
   letter-spacing: 0.08em; color: var(--fg-mute); border-bottom-color: var(--line-strong);
 }
 .svc-rates__table thead th:first-child,
 .svc-rates__table tbody th { text-align: left; }
 .svc-rates__table tbody th { font-weight: 600; }
 .svc-rates__table td { font-weight: 700; font-variant-numeric: tabular-nums; }
-.svc-rates__note { font-size: 13px; line-height: 1.55; color: var(--fg-mute); margin: 18px 0 0; max-width: 52ch; }
+.svc-rates__note { font-size: var(--fs-13); line-height: 1.55; color: var(--fg-mute); margin: var(--sp-18) 0 0; max-width: 52ch; }
 
 /* ---------- plantilla Editorial XL (filas full-bleed alternadas) ---------- */
 .svc-ed2__row { border-top: 1px solid var(--line); scroll-margin-top: clamp(108px, 14vh, 156px); }
@@ -741,8 +747,8 @@
 }
 .svc-ed2__row--flip .svc-ed2__media { order: -1; }
 .svc-ed2__kicker {
-  display: inline-flex; align-items: center; gap: 12px;
-  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: var(--sp-12);
+  font-family: var(--font-mono); font-size: var(--fs-11); font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute);
   margin-bottom: 22px;
 }
@@ -753,24 +759,24 @@
 .svc-ed2__title {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
   font-size: clamp(44px, 5vw, 84px);
-  line-height: 0.88; letter-spacing: -0.035em; margin: 0 0 20px; text-wrap: balance;
+  line-height: 0.88; letter-spacing: -0.035em; margin: 0 0 var(--sp-20); text-wrap: balance;
 }
-.svc-ed2__desc { font-size: 17px; line-height: 1.6; color: var(--fg-mute); max-width: 52ch; margin: 0 0 30px; }
+.svc-ed2__desc { font-size: var(--fs-17); line-height: 1.6; color: var(--fg-mute); max-width: 52ch; margin: 0 0 30px; }
 .svc-ed2__foot { display: flex; align-items: center; gap: 30px; flex-wrap: wrap; }
 
 /* Variante COMPRABLE (#256): un LandingService con pack vendible muestra precio + «Reservar»
    (deep-link al sidebar). Los servicios solo-contacto siguen con «Pedir información». */
 .svc-ed2__addons { margin: 0 0 26px; max-width: 480px; }
-.svc-ed2__price { display: inline-flex; align-items: baseline; gap: 7px; }
+.svc-ed2__price { display: inline-flex; align-items: baseline; gap: var(--sp-7); }
 .svc-ed2__price .from {
-  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500;
   text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute);
 }
 .svc-ed2__price .val {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
   font-size: 30px; letter-spacing: -0.02em; line-height: 1;
 }
-.svc-ed2__price .per { font-size: 13px; color: var(--fg-mute); }
+.svc-ed2__price .per { font-size: var(--fs-13); color: var(--fg-mute); }
 /* Acción primaria = relleno oscuro (contraste seguro, sin depender de --on-brand global). */
 .svc-cta--book { background: var(--action); color: var(--on-action); border-color: var(--action); }
 .svc-cta--book:hover {
@@ -808,9 +814,9 @@
 }
 .svc-other__title {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(34px, 4vw, 56px); line-height: 0.9; letter-spacing: -0.03em; margin: 0 0 14px;
+  font-size: clamp(34px, 4vw, 56px); line-height: 0.9; letter-spacing: -0.03em; margin: 0 0 var(--sp-14);
 }
-.svc-other__copy { font-size: 16px; line-height: 1.6; color: var(--fg-mute); max-width: 52ch; margin: 0; }
+.svc-other__copy { font-size: var(--fs-16); line-height: 1.6; color: var(--fg-mute); max-width: 52ch; margin: 0; }
 .svc-other__cta { position: relative; z-index: 1; }
 
 @media (max-width: 900px) {
@@ -823,10 +829,10 @@
 }
 
 /* ---------- formulario de contacto ---------- */
-.form { max-width: 640px; margin-top: 8px; }
-.form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.form { max-width: 640px; margin-top: var(--sp-8); }
+.form__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-18); }
 @media (max-width: 560px) { .form__row { grid-template-columns: 1fr; } }
-.form__field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.form__field { display: flex; flex-direction: column; gap: var(--sp-6); margin-bottom: var(--sp-18); }
 /* ⚠️⚠️ **El selector cubre también `.form__label`, y desde el 2026-08-23** (`specs/account-context-vue.md`).
    Esta regla se escribió para un `<span>` porque así lo pintaba la web; al transcribir el cajón, las
    etiquetas pasaron a ser `<label class="form__label" for="…">` —que es lo CORRECTO: un `<span>` no
@@ -834,19 +840,19 @@
    cinco zonas del área servían sus etiquetas sin tamaño, sin peso y sin color. Una mejora de
    accesibilidad que perdió su aspecto por el camino, y que ningún gate veía. */
 .form__field > span,
-.form__field > .form__label { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--fg); }
+.form__field > .form__label { font-family: var(--font-body); font-size: var(--fs-13); font-weight: 600; color: var(--fg); }
 .form__field input,
 .form__field textarea {
-    font-family: var(--font-body); font-size: 15px; color: var(--fg);
+    font-family: var(--font-body); font-size: var(--fs-15); color: var(--fg);
     background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
-    padding: 12px 14px; width: 100%; resize: vertical;
+    padding: var(--sp-12) var(--sp-14); width: 100%; resize: vertical;
     transition: border-color var(--dur-sale) var(--ease-sale);
 }
 .form__field input:focus,
 .form__field textarea:focus { border-color: var(--fg); }  /* el anillo lo pone `:focus-visible` (landing.css, M7) */
-.form__error { color: var(--err); font-size: var(--fs-12); font-style: normal; margin-top: 2px; }
+.form__error { color: var(--err); font-size: var(--fs-12); font-style: normal; margin-top: var(--sp-2); }
 .form-success {
-    max-width: 640px; margin: 8px 0 32px; padding: 16px 18px;
+    max-width: 640px; margin: 8px 0 32px; padding: var(--sp-16) var(--sp-18);
     background: var(--bg-card); border: 1px solid var(--line-strong); border-radius: var(--r);
     font-family: var(--font-body); color: var(--fg);
 }
@@ -881,9 +887,9 @@
 [x-cloak] { display: none !important; }
 
 /* ── Cumpleaños: toggle Jump/Kids (landing, #1 · 2026-05-31) ─────────────── */
-.events__tabs { display: inline-flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.events__tabs { display: inline-flex; flex-wrap: wrap; gap: var(--sp-8); margin-top: var(--sp-4); }
 .events__tab {
-  font-family: var(--font-body); font-weight: 600; font-size: 13px;
+  font-family: var(--font-body); font-weight: 600; font-size: var(--fs-13);
   padding: 9px 18px; border-radius: var(--r-btn); cursor: pointer;
   background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg);
   border: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
@@ -892,7 +898,7 @@
 .events__tab:hover { background: color-mix(in srgb, var(--fg) 15%, transparent); }
 .events__tab.is-active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .events__pack-terms {
-  margin: 16px 0 0; font-size: 13px; font-weight: 600; line-height: 1.4;
+  margin: var(--sp-16) 0 0; font-size: var(--fs-13); font-weight: 600; line-height: 1.4;
   color: var(--fg); opacity: 0.85;
 }
 
@@ -909,7 +915,7 @@
    marca (--zone-1) en los grips. */
 .socks-note {
   margin: 28px auto 0; max-width: 640px;
-  display: flex; align-items: center; gap: 16px;
+  display: flex; align-items: center; gap: var(--sp-16);
   background: var(--bg-card); border: 1px solid var(--line);
   border-radius: var(--r); padding: 18px 22px;
 }
@@ -917,11 +923,11 @@
 .socks-note__body { min-width: 0; }
 .socks-note__title {
   margin: 0; font-family: var(--font-display); font-weight: 700; font-stretch: 75%;
-  letter-spacing: -0.01em; font-size: 18px; color: var(--fg);
+  letter-spacing: -0.01em; font-size: var(--fs-18); color: var(--fg);
 }
-.socks-note__text { margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: var(--fg-mute); }
+.socks-note__text { margin: var(--sp-4) 0 0; font-size: var(--fs-14); line-height: 1.5; color: var(--fg-mute); }
 @media (max-width: 540px) {
-  .socks-note { flex-direction: column; text-align: center; gap: 12px; padding: 22px 18px; }
+  .socks-note { flex-direction: column; text-align: center; gap: var(--sp-12); padding: 22px 18px; }
 }
 
 /* ====================================================================
@@ -939,11 +945,11 @@
   background: var(--bg-card); border: 1px solid var(--line);
   border-radius: var(--r-lg); padding: 34px 40px;
 }
-.qr-frame { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.qr-frame { display: flex; flex-direction: column; align-items: center; gap: var(--sp-14); }
 .qr-tile {
   position: relative; width: var(--qr-size); height: var(--qr-size);
   background: var(--sheet); border: 1px solid var(--line);   /* era `#fdfbf4` a mano (auditoría m4, `#435`) */
-  border-radius: var(--r); padding: 14px;
+  border-radius: var(--r); padding: var(--sp-14);
 }
 .qr-slot { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 5px; }
 .qr-slot svg { display: block; width: 100%; height: 100%; }
@@ -954,7 +960,7 @@
 .qr-corner--bl { bottom: -5px; left: -5px; border-right: none; border-top: none; border-radius: 0 0 0 7px; }
 .qr-corner--br { bottom: -5px; right: -5px; border-left: none; border-top: none; border-radius: 0 0 7px 0; }
 /* Columna IZQUIERDA: QR y, debajo, el CTA a todo el ancho de la columna. */
-.reg-aside { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.reg-aside { display: flex; flex-direction: column; align-items: center; gap: var(--sp-18); }
 /* El CTA queda EXACTAMENTE al ancho del recuadro del QR (comparten `--qr-size`) → columna alineada. */
 .reg-aside .reg-actions { width: var(--qr-size); }
 .reg-aside .reg-cta { width: 100%; text-align: center; line-height: 1.25; }
@@ -963,12 +969,12 @@
 .reg-title {
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
   font-size: clamp(22px, 3vw, 30px); line-height: 1.05; letter-spacing: -0.03em;
-  margin: 0 0 10px; color: var(--fg);
+  margin: 0 0 var(--sp-10); color: var(--fg);
 }
-.reg-copy { font-size: 15px; line-height: 1.55; color: var(--fg-mute); max-width: 46ch; margin: 0; }
+.reg-copy { font-size: var(--fs-15); line-height: 1.55; color: var(--fg-mute); max-width: 46ch; margin: 0; }
 /* Segundo párrafo del copy: separación clara del primero (ambos son `.reg-copy`). */
-.reg-copy + .reg-copy { margin-top: 12px; }
-.reg-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.reg-copy + .reg-copy { margin-top: var(--sp-12); }
+.reg-actions { display: flex; align-items: center; gap: var(--sp-16); flex-wrap: wrap; }
 /* CTA de menos atención: estilo GHOST (transparent + borde), igual que `.btn--ghost` del sistema;
    el registro es secundario frente a comprar la entrada. El arrow-ico sigue a `currentColor`. */
 .reg-cta {
@@ -994,12 +1000,12 @@
     flex: 0 1 calc((100% - 48px) / 4 * 1.32);  /* ~10% más ancha que antes (era 1.2) */
     align-self: center;                         /* centrada en la vertical de la fila (no pegada arriba) */
     margin: 0 0 0 24px;                         /* separación EXTRA respecto a las cards de producto */
-    max-width: none; --qr-size: 132px; grid-template-columns: auto 1fr; gap: 18px; padding: 26px;
+    max-width: none; --qr-size: 132px; grid-template-columns: auto 1fr; gap: var(--sp-18); padding: 26px;
   }
-  .regcard--inline .reg-aside { gap: 14px; }
+  .regcard--inline .reg-aside { gap: var(--sp-14); }
   .regcard--inline .reg-title { font-size: clamp(18px, 1.4vw, 22px); }
-  .regcard--inline .reg-copy { font-size: 13px; max-width: none; }
-  .regcard--inline .reg-cta { font-size: 13px; padding: 11px 12px; }
+  .regcard--inline .reg-copy { font-size: var(--fs-13); max-width: none; }
+  .regcard--inline .reg-cta { font-size: var(--fs-13); padding: var(--sp-11) var(--sp-12); }
 }
 /* ≤1080px la inline cae a BANDA a ancho completo (su propia fila dentro del grid flex). */
 @media (max-width: 1080px) {
@@ -1041,21 +1047,21 @@
 
 
 /* fila "recordar sesión" + "¿olvidaste tu contraseña?" */
-.auth__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 4px 0 18px; }
+.auth__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin: var(--sp-4) 0 var(--sp-18); }
 .auth__row .check--opt { margin: 0; }
 .auth__link {
     background: none; border: none; cursor: pointer; padding: 0;
-    font-family: var(--font-body); font-size: 13px; color: var(--zone-1);
+    font-family: var(--font-body); font-size: var(--fs-13); color: var(--zone-1);
     font-weight: 600; text-decoration: underline; white-space: nowrap;
 }
 
 /* formulario de auth cuando va en una página (no modal), p. ej. restablecer contraseña */
-.auth--page { max-width: 480px; margin-top: 8px; }
+.auth--page { max-width: 480px; margin-top: var(--sp-8); }
 
 /* cambiar entre login/registro dentro del modal */
 .auth__switch {
-    margin: 16px 0 0; text-align: center;
-    font-family: var(--font-body); font-size: 13px; color: var(--fg-mute);
+    margin: var(--sp-16) 0 0; text-align: center;
+    font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg-mute);
 }
 .auth__switch button {
     background: none; border: none; cursor: pointer; padding: 0;
@@ -1066,15 +1072,15 @@
 .flash {
     position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
     z-index: 200; max-width: min(560px, calc(100vw - 32px));
-    display: flex; align-items: center; gap: 14px;
+    display: flex; align-items: center; gap: var(--sp-14);
     background: var(--fg); color: var(--bg);
-    padding: 12px 16px; border-radius: var(--r);
+    padding: var(--sp-12) var(--sp-16); border-radius: var(--r);
     box-shadow: var(--shadow-float);
-    font-family: var(--font-body); font-size: 14px; line-height: 1.4;
+    font-family: var(--font-body); font-size: var(--fs-14); line-height: 1.4;
 }
 .flash__close {
     background: none; border: none; color: inherit; cursor: pointer;
-    font-size: 20px; line-height: 1; opacity: 0.7;
+    font-size: var(--fs-20); line-height: 1; opacity: 0.7;
 }
 .flash__close:hover { opacity: 1; }
 
@@ -1092,7 +1098,7 @@
        superior-derecha → el ✕ se ve donde estaba, pero el toque cubre 44px hacia dentro. */
     position: absolute; top: 2px; right: 4px;
     width: var(--tap-min); height: var(--tap-min);
-    display: inline-flex; align-items: flex-start; justify-content: flex-end; padding: 8px 10px;
+    display: inline-flex; align-items: flex-start; justify-content: flex-end; padding: var(--sp-8) var(--sp-10);
     background: none; border: none; color: var(--fg-mute); cursor: pointer;
     font-size: 26px; line-height: 1; transition: color var(--dur-sale) var(--ease-sale);
 }
@@ -1103,19 +1109,19 @@
 .modal__panel--narrow { max-width: 440px; }
 
 /* ---------- formulario de autenticación ---------- */
-.auth__head { margin-bottom: 18px; }
+.auth__head { margin-bottom: var(--sp-18); }
 .auth__title {
     font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-    letter-spacing: -0.02em; line-height: 1; font-size: clamp(28px, 5vw, 38px); margin: 8px 0 0;
+    letter-spacing: -0.02em; line-height: 1; font-size: clamp(28px, 5vw, 38px); margin: var(--sp-8) 0 0;
 }
-.auth__sub { margin: 8px 0 0; color: var(--fg-mute); font-size: 14px; line-height: 1.5; }
+.auth__sub { margin: var(--sp-8) 0 0; color: var(--fg-mute); font-size: var(--fs-14); line-height: 1.5; }
 
 /* ⚠️ **La confirmación del alta: «te hemos escrito a …»**, y va con más peso que el consejo de spam
    que lleva debajo. Sin regla —como estuvo hasta el 2026-08-23— las dos frases se leían igual y el
    correo, que es el DATO que el titular tiene que reconocer, se perdía entre ellas. */
 .auth__sent { margin: 0 0 var(--sp-4); font-family: var(--font-body); font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); }
-.auth__form { max-width: none; margin-top: 18px; }
-.auth__submit { width: 100%; justify-content: center; margin-top: 6px; }
+.auth__form { max-width: none; margin-top: var(--sp-18); }
+.auth__submit { width: 100%; justify-content: center; margin-top: var(--sp-6); }
 /* ══ EL BOTÓN DE GOOGLE — el único control del producto que NO habla nuestro idioma visual ══
    (`specs/auth-con-google.md` §21.1, `#345`. `[DECIDIDO owner, 2026-09-02]`: variante CLARA, píldora.)
 
@@ -1148,10 +1154,10 @@
    ella.* En los dos formularios de auth lo da `.auth__head`; en «Sesiones», `.account__linked`. */
 .auth__google {
     width: 100%; justify-content: center;
-    gap: 10px; min-height: var(--tap-min); padding: 10px 12px;
+    gap: var(--sp-10); min-height: var(--tap-min); padding: var(--sp-10) var(--sp-12);
     background: #fff; color: #1f1f1f;
     border: 1px solid #747775; border-radius: var(--r-pill);
-    font-family: var(--font-body); font-size: 14px; line-height: 20px; font-weight: 500;
+    font-family: var(--font-body); font-size: var(--fs-14); line-height: 20px; font-weight: 500;
 }
 .auth__google:hover { background: #f7f8f8; color: #1f1f1f; border-color: #747775; }
 /* El dibujo NO se estira ni se recolorea: `flex: none` lo saca del reparto del flex, y al ser un
@@ -1172,7 +1178,7 @@
     color: var(--fg-mute); font-family: var(--font-body); font-size: var(--fs-13);
 }
 .auth__or::before, .auth__or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
-.form__hint { color: var(--fg-mute); font-size: 12px; }
+.form__hint { color: var(--fg-mute); font-size: var(--fs-12); }
 /* ⚠️⚠️ **UN ENLACE DENTRO DE UN AVISO TIENE QUE PARECER UN ENLACE, y aquí no lo parecía.**
    Medido en navegador (420 px, `/registro`): el `<a>` de la política de privacidad salía en
    `rgb(98,106,114)` —**el mismo color exacto que el párrafo que lo envuelve**—, sin subrayado y con
@@ -1188,9 +1194,9 @@
 .form__hint a { color: var(--zone-1); text-decoration: underline; }
 
 /* casillas legales / marketing */
-.form__checks { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 20px; }
-.check { display: flex; align-items: flex-start; gap: 10px; font-family: var(--font-body); font-size: 13px; line-height: 1.45; color: var(--fg); cursor: pointer; }
-.check input { margin-top: 2px; width: 16px; height: 16px; flex: none; accent-color: var(--zone-1); }
+.form__checks { display: flex; flex-direction: column; gap: var(--sp-12); margin: var(--sp-4) 0 var(--sp-20); }
+.check { display: flex; align-items: flex-start; gap: var(--sp-10); font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.45; color: var(--fg); cursor: pointer; }
+.check input { margin-top: var(--sp-2); width: 16px; height: 16px; flex: none; accent-color: var(--zone-1); }
 .check span a { color: var(--zone-1); text-decoration: underline; }
 .check--opt { color: var(--fg-mute); }
 
@@ -1201,16 +1207,16 @@
 /* resumen de errores del formulario */
 .auth__errors {
     background: var(--err-bg); border: 1px solid var(--err-border); color: var(--err-strong);
-    border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 16px;
-    font-family: var(--font-body); font-size: 13px; line-height: 1.5;
+    border-radius: var(--r-sm); padding: var(--sp-12) var(--sp-14); margin-bottom: var(--sp-16);
+    font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.5;
 }
-.auth__errors strong { display: block; margin-bottom: 4px; }
-.auth__errors ul { margin: 0; padding-left: 18px; }
+.auth__errors strong { display: block; margin-bottom: var(--sp-4); }
+.auth__errors ul { margin: 0; padding-left: var(--sp-18); }
 
 /* ====================================================================
    Mi cuenta (Fase 4.5): zona privada con secciones en tarjetas.
    ==================================================================== */
-.account__intro { max-width: 70ch; margin: 14px 0 0; color: var(--fg-mute); font-size: 16px; line-height: 1.6; }
+.account__intro { max-width: 70ch; margin: var(--sp-14) 0 0; color: var(--fg-mute); font-size: var(--fs-16); line-height: 1.6; }
 .account__grid { display: grid; gap: 22px; max-width: 720px; }
 .account__card {
     background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
@@ -1218,15 +1224,15 @@
 }
 .account__card-title {
     font-family: var(--font-display); font-weight: 700; font-stretch: 75%;
-    letter-spacing: -0.02em; font-size: 22px; color: var(--fg); margin: 0;
+    letter-spacing: -0.02em; font-size: var(--fs-22); color: var(--fg); margin: 0;
 }
-.account__card-sub { margin: 6px 0 18px; color: var(--fg-mute); font-size: 14px; line-height: 1.5; }
+.account__card-sub { margin: var(--sp-6) 0 var(--sp-18); color: var(--fg-mute); font-size: var(--fs-14); line-height: 1.5; }
 .account__card .form { max-width: none; margin-top: 0; }
 .account__danger-btn { width: 100%; justify-content: center; }
 
 /* RGPD: consentimientos, exportar y zona de borrado */
-.account__subhead { font-family: var(--font-body); font-weight: 700; font-size: 14px; color: var(--fg); margin: 18px 0 8px; }
-.account__muted { color: var(--fg-mute); font-size: 14px; }
+.account__subhead { font-family: var(--font-body); font-weight: 700; font-size: var(--fs-14); color: var(--fg); margin: var(--sp-18) 0 var(--sp-8); }
+.account__muted { color: var(--fg-mute); font-size: var(--fs-14); }
 /* **LAS CUENTAS VINCULADAS, DENTRO DEL FORMULARIO DE SESIONES** (`specs/auth-con-google.md` §21.4.5).
    Es la única sección del área de cuenta que NO puede ser una tarjeta —comparte el campo de
    contraseña con «cerrar sesión en los demás dispositivos»—, así que la rejilla no la separa y su aire
@@ -1234,11 +1240,11 @@
    12 su separación entre controles. */
 .account__linked { margin-top: var(--sp-20); }
 .account__linked .account__card-title { margin-bottom: var(--sp-12); }
-.account__consents { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.account__consents { list-style: none; margin: 0 0 var(--sp-18); padding: 0; display: flex; flex-direction: column; gap: var(--sp-8); }
 /* ⚠️⚠️ **`flex-wrap: wrap` es la mitad del arreglo de `#346`.** Sin él, la meta y el rótulo compiten
    por el mismo renglón y la fila crece hacia fuera del carril en vez de partirse. Medido: al
    retirar el marketing, **82 px de desborde** y barra de scroll horizontal en el cajón. */
-.account__consents li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; align-items: baseline; font-family: var(--font-body); font-size: 13px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); }
+.account__consents li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-4) var(--sp-12); align-items: baseline; font-family: var(--font-body); font-size: var(--fs-13); padding: var(--sp-10) var(--sp-12); border: 1px solid var(--line); border-radius: var(--r-sm); }
 .account__consent-type { font-weight: 600; color: var(--fg); }
 /* ⚠️⚠️ **El `white-space: nowrap` se movió de la LÍNEA al TROZO** (`#346`, y ésta es la otra mitad).
    Cuando la meta eran «fecha · versión» el `nowrap` describía algo cierto: nada dentro se podía
@@ -1250,7 +1256,7 @@
    no deja un separador colgando. */
 .account__consent-meta { display: flex; flex-wrap: wrap; align-items: baseline; color: var(--fg-mute); }
 .account__consent-part { white-space: nowrap; }
-.account__consent-part + .account__consent-part::before { content: "·"; margin: 0 6px; }
+.account__consent-part + .account__consent-part::before { content: "·"; margin: 0 var(--sp-6); }
 /* Una fila retirada se LEE retirada: es el consumidor que le faltaba a la bandera `revoked`, que
    `#344` publicó y no usaba nadie. Sin esto, «Comunicaciones comerciales» se lee igual viva que
    muerta y la única pista es leerse la fecha del final. */
@@ -1271,7 +1277,7 @@
 
    ⚠️ El suelo táctil va en la etiqueta con `min-height`, que es como `#264` resolvió el chip de
    cuenta: la pista mide 26 de alto y el objetivo que se toca es la fila entera. */
-.switch { display: flex; align-items: center; gap: 12px; min-height: var(--tap-min); font-family: var(--font-body); font-size: 13px; line-height: 1.45; color: var(--fg); cursor: pointer; }
+.switch { display: flex; align-items: center; gap: var(--sp-12); min-height: var(--tap-min); font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.45; color: var(--fg); cursor: pointer; }
 .switch__input {
     appearance: none; -webkit-appearance: none;
     position: relative; flex: none; width: 44px; height: 26px; margin: 0; cursor: pointer;
@@ -1287,16 +1293,16 @@
 .switch__input:checked::before { transform: translateX(18px); background: var(--bg-card); border-color: var(--ok); }
 .switch__input:disabled { opacity: 0.55; cursor: not-allowed; }
 .switch__label { flex: 1 1 auto; }
-.account__export-btn { margin-top: 4px; }
+.account__export-btn { margin-top: var(--sp-4); }
 .account__card--danger { border-color: var(--err-border); }
 .account__delete-btn { width: 100%; justify-content: center; background: var(--err); color: var(--on-err); border: 1px solid var(--err); }
 .account__delete-btn:hover { background: var(--err-hover); border-color: var(--err-hover); }
 
 /* el <select> de idioma usa el mismo aspecto que los inputs */
 .form__field select {
-    font-family: var(--font-body); font-size: 15px; color: var(--fg);
+    font-family: var(--font-body); font-size: var(--fs-15); color: var(--fg);
     background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
-    padding: 12px 14px; width: 100%;
+    padding: var(--sp-12) var(--sp-14); width: 100%;
 }
 .form__field select:focus { border-color: var(--fg); }
 
@@ -1304,7 +1310,7 @@
    Precios (Fase 5.1): switcher de zona (reutiliza .zone-tabs) + "desde".
    ==================================================================== */
 /* el switcher de precios reutiliza .zone-tabs/.zone-tab; aquí solo lo centramos */
-.ticket-prices__tabs { display: flex; justify-content: center; margin-bottom: 28px; }
+.ticket-prices__tabs { display: flex; justify-content: center; margin-bottom: var(--sp-28); }
 
 /* ⚠️ El color activo POR ZONA y los acentos de su rejilla —la tarjeta «Top», su insignia— llegan
    INLINE desde el servidor como `--zone-1`/`--zone-2`/`--on-brand` (`DECISIONES #138`). Aquí había
@@ -1364,7 +1370,7 @@ body.no-scroll { overflow: hidden; }
 .purchase__scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--sp-20); }
 .purchase__scroll::-webkit-scrollbar { width: 10px; }
 .purchase__scroll::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: var(--r-pill); border: 3px solid var(--bg); }
-.wiz__title { margin: 0 0 14px; font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: var(--fs-20); color: var(--fg); }
+.wiz__title { margin: 0 0 var(--sp-14); font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: var(--fs-20); color: var(--fg); }
 .purchase__empty { color: var(--fg-mute); font-family: var(--font-body); font-size: var(--fs-14); }
 
 /* ══ LA TIRA DE HORAS (paso 3 · `DECISIONES #239`) ═════════════════════════════════════════════
@@ -1469,13 +1475,13 @@ body.no-scroll { overflow: hidden; }
 /* Sobre el acento de zona el ámbar se pierde: el rótulo hereda la tinta del chip elegido. */
 .purchase__chip.is-active .purchase__chip-full { color: var(--fg); opacity: 0.78; }
 
-.purchase__entries { display: flex; flex-direction: column; gap: 8px; }
-.entry { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
+.purchase__entries { display: flex; flex-direction: column; gap: var(--sp-8); }
+.entry { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
 .entry.is-out { opacity: 0.55; }
-.entry__info { display: flex; flex-direction: column; gap: 2px; }
-.entry__name { font-family: var(--font-body); font-weight: 600; font-size: 14px; color: var(--fg); }
-.entry__price { font-family: var(--font-body); font-weight: 700; font-size: 13px; color: var(--fg); }
-.entry__avail { font-family: var(--font-body); font-size: 11px; color: var(--fg-mute); }
+.entry__info { display: flex; flex-direction: column; gap: var(--sp-2); }
+.entry__name { font-family: var(--font-body); font-weight: 600; font-size: var(--fs-14); color: var(--fg); }
+.entry__price { font-family: var(--font-body); font-weight: 700; font-size: var(--fs-13); color: var(--fg); }
+.entry__avail { font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); }
 .entry__stepper { display: flex; align-items: center; gap: var(--sp-8); flex: none; }
 .entry__stepper button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font-size: var(--fs-17); line-height: 1; cursor: pointer; transition: border-color var(--dur-toque) var(--ease-sale); }
 .entry__stepper button:hover:not(:disabled) { border-color: var(--fg); }
@@ -1492,14 +1498,14 @@ body.no-scroll { overflow: hidden; }
 .entry__qty[type="number"] { appearance: textfield; }
 .entry__qty:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 
-.purchase__foot { margin-top: 18px; padding-top: var(--sp-16); border-top: 1px solid var(--line); }
+.purchase__foot { margin-top: var(--sp-18); padding-top: var(--sp-16); border-top: 1px solid var(--line); }
 /* Sidebar v2: variante «solo informativa» (el CTA y el total prominentes viven en `.bk-foot`).
    Aquí quedan errores, aviso de señal, desglose del parque y notas; sin separador superior fuerte. */
-.purchase__foot--info { margin-top: 16px; padding-top: 0; border-top: 0; }
+.purchase__foot--info { margin-top: var(--sp-16); padding-top: 0; border-top: 0; }
 .purchase__total { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--font-body); }
 .purchase__total strong { font-size: var(--fs-22); font-family: var(--font-display); font-stretch: 75%; }
 /* Señal/depósito (#227): sub-líneas «Pagas ahora (señal) / En el parque» bajo el total. */
-.purchase__split { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg-mute); }
+.purchase__split { display: flex; justify-content: space-between; align-items: baseline; margin-top: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg-mute); }
 .purchase__split strong { font-weight: var(--fw-bold); color: var(--fg); }
 
 /* ====================================================================
@@ -1690,7 +1696,7 @@ body.no-scroll { overflow: hidden; }
 .bk-paybreakdown__v { font-family: var(--font-display); font-weight: var(--fw-black); font-stretch: 75%; color: var(--fg); white-space: nowrap; }
 
 /* Enlace «volver al carrito» del paso de pago (reusa el estilo de `.bk-back`). */
-.purchase__back { margin-bottom: 14px; }
+.purchase__back { margin-bottom: var(--sp-14); }
 .bk-cta { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-15); border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--zone-1); color: var(--on-brand); font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-15); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
 .bk-cta:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg); box-shadow: var(--shadow-lift); }
 .bk-cta svg { width: 17px; height: 17px; transition: transform var(--dur-entra) var(--ease-entra); }
@@ -1719,13 +1725,13 @@ body.no-scroll { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
     .acct__avatar, .bk-progress, .bk-seg__bar::after, .bk-cta, .bk-cta svg, .cartbar, .cartbar__go svg { transition: none; animation: none; }
 }
-.purchase__cta { width: 100%; justify-content: center; margin-top: 14px; }
+.purchase__cta { width: 100%; justify-content: center; margin-top: var(--sp-14); }
 
 /* Acciones finales del paso 6 (reserva confirmada): CTA principal arriba ("Ver mis
    reservas"), secundario debajo ("Hacer otra reserva"). En columna y full-width para
    buena legibilidad y golpe táctil holgado tanto en móvil como en desktop angosto. */
 .purchase__final-actions {
-    margin-top: 20px;
+    margin-top: var(--sp-20);
     display: flex; flex-direction: column; gap: var(--sp-10);
 }
 .purchase__final-actions .purchase__cta { margin-top: 0; }
@@ -1745,8 +1751,8 @@ body.no-scroll { overflow: hidden; }
     border-color: var(--line);
 }
 .purchase__cta-tertiary:hover { color: var(--bg); }
-.purchase__confirm { margin-top: 12px; padding: var(--sp-10) var(--sp-12); background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r-sm); font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.5; color: var(--fg); }
-.purchase__note { margin: 10px 0 0; font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); line-height: 1.5; }
+.purchase__confirm { margin-top: var(--sp-12); padding: var(--sp-10) var(--sp-12); background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r-sm); font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.5; color: var(--fg); }
+.purchase__note { margin: var(--sp-10) 0 0; font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); line-height: 1.5; }
 /* Aviso de señal bajo el total del paso de cantidad (#227 F2): «Señal X€ ahora · resto en el parque». */
 
 /* ══ LA TIRA DE DÍAS RESERVABLES (paso 2 · `DECISIONES #239`) ══════════════════════════════════
@@ -1925,14 +1931,14 @@ body.no-scroll { overflow: hidden; }
    aritmética es `(351 − 2·relleno − 2·borde − 6·hueco) / 7`; con 12 y 4 daba 43, con 8 y 3 da **45**.
    Agrandar la celda sin quitarle sitio al contenedor era la única vía: el cajón mide 390 y no crece. */
 .cal { padding: var(--sp-8); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
-.cal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.cal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-10); }
 .cal__month { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); text-transform: capitalize; }
 /* 44×44: eran 32×32 (`#237`). El dibujo del chevron no crece —lo manda `font-size`—, crece la caja. */
 .cal__nav { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font-size: var(--fs-18); line-height: 1; cursor: pointer; }
 .cal__nav:hover:not(:disabled) { border-color: var(--fg); }
 .cal__nav:disabled { opacity: 0.35; cursor: not-allowed; }
 .cal__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--sp-3); }
-.cal__grid--head { margin-bottom: 4px; }
+.cal__grid--head { margin-bottom: var(--sp-4); }
 .cal__wd { padding: var(--sp-4) 0; text-align: center; font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-semibold); color: var(--fg-mute); text-transform: capitalize; }
 .cal__day {
     aspect-ratio: 1 / 1;
@@ -1984,7 +1990,7 @@ body.no-scroll { overflow: hidden; }
     .cal__day { gap: var(--sp-2); padding: var(--sp-2); }
     .cal__day-price { padding: 0; background: transparent; font-size: var(--fs-9); }
 }
-.cal__legend { display: flex; flex-wrap: wrap; gap: var(--sp-16); margin-top: 12px; }
+.cal__legend { display: flex; flex-wrap: wrap; gap: var(--sp-16); margin-top: var(--sp-12); }
 .cal__legend-item { display: inline-flex; align-items: center; gap: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
 .cal__dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
 .cal__dot--normal { background: color-mix(in srgb, var(--fg) 12%, transparent); }
@@ -2032,10 +2038,10 @@ body.no-scroll { overflow: hidden; }
 .cart__price { flex: none; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-13); color: var(--fg); }
 .cart__remove { background: none; border: 0; color: var(--fg-mute); font-size: var(--fs-20); line-height: 1; cursor: pointer; }
 .cart__remove:hover { color: var(--fg); }
-.cart__lines { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-4); }
+.cart__lines { list-style: none; margin: var(--sp-8) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-4); }
 .cart__lines li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg); }
 .purchase__add-more {
-    width: 100%; margin-top: 14px; padding: var(--sp-11) var(--sp-16);
+    width: 100%; margin-top: var(--sp-14); padding: var(--sp-11) var(--sp-16);
     background: none; border: 1px dashed var(--line-strong); border-radius: var(--r-btn);
     font-family: var(--font-body); font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); cursor: pointer;
     transition: border-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
@@ -2043,7 +2049,7 @@ body.no-scroll { overflow: hidden; }
 .purchase__add-more:hover { border-color: var(--fg); color: var(--zone-1); }
 
 /* Catálogo de entradas (paso 1 del flujo de compra: elegir producto) */
-.catalog { display: flex; flex-direction: column; gap: var(--sp-8); margin-bottom: 4px; }
+.catalog { display: flex; flex-direction: column; gap: var(--sp-8); margin-bottom: var(--sp-4); }
 .catalog__item { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); width: 100%; text-align: left; padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); cursor: pointer; transition: border-color var(--dur-toque) var(--ease-sale), box-shadow var(--dur-toque) var(--ease-sale); }
 .catalog__item:hover { border-color: var(--fg); }
 /* #222: icono de ticket, badge editable (panel) y resaltado de entradas destacadas (`featured`). */
@@ -2100,7 +2106,7 @@ body.no-scroll { overflow: hidden; }
 .catalog-acc { display: flex; flex-direction: column; }
 
 /* Buscador (solo si el catálogo supera el umbral; `catalogSearchEnabled`). */
-.catalog-search { position: relative; margin: 0 0 12px; }
+.catalog-search { position: relative; margin: 0 0 var(--sp-12); }
 .catalog-search svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--fg-mute); pointer-events: none; }
 .catalog-search__input {
     width: 100%; font-family: var(--font-body); font-size: var(--fs-14); color: var(--fg);
@@ -2130,7 +2136,7 @@ body.no-scroll { overflow: hidden; }
 .catalog-acc__body.is-open { grid-template-rows: 1fr; }
 .catalog-acc__body-inner { overflow: hidden; min-height: 0; }
 .catalog-acc__body .catalog { padding: var(--sp-2) 0 var(--sp-14); margin-bottom: 0; }
-.catalog-acc__none { margin-top: 12px; }
+.catalog-acc__none { margin-top: var(--sp-12); }
 
 @media (prefers-reduced-motion: reduce) {
     .catalog-acc__body,
@@ -2141,10 +2147,10 @@ body.no-scroll { overflow: hidden; }
 .purchase__chip.is-active { background: var(--zone-1); color: var(--on-brand); border-color: var(--zone-1); }
 
 /* Caja de cantidad (paso 3, tras elegir la hora) */
-.qtybox { margin-top: 16px; padding: var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
+.qtybox { margin-top: var(--sp-16); padding: var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
 .qtybox__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); }
 .qtybox__label { font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-14); color: var(--fg); }
-.qtybox__avail { margin: 8px 0 0; font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
+.qtybox__avail { margin: var(--sp-8) 0 0; font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
 .qtybox__price { font-weight: var(--fw-bold); color: var(--fg); }
 
 /* Datos del evento del pack (paso 3): campos configurables por pack (#86). Mismo aspecto que .form__field. */
@@ -2163,7 +2169,7 @@ body.no-scroll { overflow: hidden; }
    ⚠️ Los dos `margin` que se anulan abajo no son ruido: `.eventfields` trae `margin-top: 14px` y
    `.form__checks` trae `margin: 4px 0 20px`. Sumados al aire del bloque dejaban un hueco muerto
    antes del pie — medido en navegador. */
-.paydue { margin-top: 18px; padding-top: var(--sp-16); border-top: 1px solid var(--line); }
+.paydue { margin-top: var(--sp-18); padding-top: var(--sp-16); border-top: 1px solid var(--line); }
 .paydue .eventfields { margin-top: 0; }
 .paydue__hint { margin: var(--sp-6) 0 0; font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); line-height: 1.5; }
 /* ⚠️ **18 y no 14, medido en navegador**: el teléfono y las condiciones son DOS peticiones distintas,
@@ -2180,7 +2186,7 @@ body.no-scroll { overflow: hidden; }
 .paydue__legal { margin: var(--sp-14) 0 0; font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); line-height: 1.5; }
 .paydue__legal a { color: inherit; text-decoration: underline; }
 
-.eventfields { margin-top: 14px; display: flex; flex-direction: column; gap: var(--sp-14); }
+.eventfields { margin-top: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-14); }
 .eventfields__field { display: flex; flex-direction: column; gap: var(--sp-6); }
 .eventfields__label { font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); color: var(--fg); }
 .eventfields__req { color: var(--zone-1); }
@@ -2218,20 +2224,20 @@ body.no-scroll { overflow: hidden; }
 .eventfields__error { font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--err); }
 
 /* Datos del evento mostrados bajo una línea de carrito/pago/confirmación */
-.cart__event { list-style: none; margin: 8px 0 0; padding: var(--sp-8) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3); }
+.cart__event { list-style: none; margin: var(--sp-8) 0 0; padding: var(--sp-8) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3); }
 .cart__event li { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); line-height: 1.45; }
 .cart__event-label { font-weight: var(--fw-semibold); color: var(--fg); }
 
 /* Complementos del producto (paso 3): "mejora tu reserva" (#87) */
-.addons { margin-top: 14px; display: flex; flex-direction: column; gap: var(--sp-10); }
-.addons__intro { margin: 0 0 2px; font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); color: var(--fg); }
-.addons__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
+.addons { margin-top: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-10); }
+.addons__intro { margin: 0 0 var(--sp-2); font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); color: var(--fg); }
+.addons__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; padding: var(--sp-10) var(--sp-12); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
 .addons__info { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
 .addons__name { font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-14); color: var(--fg); }
 .addons__price { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
 
 /* Complementos avanzados: incluidos/gratis, grupos de elección y "Más info" */
-.addons__badge { display: inline-block; margin-left: 6px; padding: var(--sp-1) var(--sp-7); border-radius: var(--r-pill); font-family: var(--font-body); font-size: var(--fs-10); font-weight: var(--fw-bold); letter-spacing: 0.03em; text-transform: uppercase; vertical-align: middle; }
+.addons__badge { display: inline-block; margin-left: var(--sp-6); padding: var(--sp-1) var(--sp-7); border-radius: var(--r-pill); font-family: var(--font-body); font-size: var(--fs-10); font-weight: var(--fw-bold); letter-spacing: 0.03em; text-transform: uppercase; vertical-align: middle; }
 .addons__badge--included { background: var(--ok); color: var(--on-ok); }
 .addons__badge--free { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-border); }
 .addons__charged { font-weight: var(--fw-bold); color: var(--fg); }
@@ -2244,7 +2250,7 @@ body.no-scroll { overflow: hidden; }
 .addons__moreinfo { align-self: flex-start; background: none; border: none; padding: var(--sp-2) 0; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg-mute); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .addons__moreinfo:hover { color: var(--fg); }
 .addons__perguest { flex: none; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg-mute); }
-.addons__features { flex-basis: 100%; list-style: none; margin: 4px 0 0; padding: var(--sp-8) 0 var(--sp-2); border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-4); }
+.addons__features { flex-basis: 100%; list-style: none; margin: var(--sp-4) 0 0; padding: var(--sp-8) 0 var(--sp-2); border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-4); }
 .addons__features li { position: relative; padding-left: var(--sp-18); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
 .addons__features li::before { content: "✓"; position: absolute; left: 0; color: var(--ok); font-weight: var(--fw-bold); }
 /* Dependencia «requiere» (data-driven): el complemento dependiente se atenúa y muestra la nota
@@ -2253,15 +2259,15 @@ body.no-scroll { overflow: hidden; }
 .addons__row.is-disabled, .addons__group .addons__row--choice.is-disabled { opacity: 0.6; }
 .addons__row.is-disabled .entry__stepper button[disabled] { cursor: not-allowed; }
 .cart__addon-incl { font-style: normal; font-weight: var(--fw-semibold); font-size: var(--fs-11); color: var(--ok); }
-.orders__line-included { display: inline-block; padding: 0 6px; border-radius: var(--r-pill); background: var(--ok-bg); font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ok); }
-.orders__line-unit { color: var(--fg-mute); font-size: 12px; font-weight: 400; }
+.orders__line-included { display: inline-block; padding: 0 var(--sp-6); border-radius: var(--r-pill); background: var(--ok-bg); font-weight: 700; font-size: var(--fs-10); text-transform: uppercase; letter-spacing: 0.02em; color: var(--ok); }
+.orders__line-unit { color: var(--fg-mute); font-size: var(--fs-12); font-weight: 400; }
 
 /* Complementos agrupados bajo su producto (carrito/pago/confirmación) */
-.cart__addons { list-style: none; margin: 6px 0 0; padding: var(--sp-6) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3); }
+.cart__addons { list-style: none; margin: var(--sp-6) 0 0; padding: var(--sp-6) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3); }
 .cart__addons li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
 /* Nota de señal por producto (#227 F2): «Señal X€ ahora · resto en el parque» en la card del
    producto que cobra señal — evita etiquetar el agregado como «(señal)» en cestas mixtas. */
-.cart__deposit { margin: 6px 0 0; padding: var(--sp-6) var(--sp-8); border-radius: var(--r-sm); background: color-mix(in srgb, var(--warn) 8%, transparent); font-family: var(--font-body); font-size: var(--fs-12); line-height: 1.4; color: var(--warn); font-weight: var(--fw-semibold); }
+.cart__deposit { margin: var(--sp-6) 0 0; padding: var(--sp-6) var(--sp-8); border-radius: var(--r-sm); background: color-mix(in srgb, var(--warn) 8%, transparent); font-family: var(--font-body); font-size: var(--fs-12); line-height: 1.4; color: var(--warn); font-weight: var(--fw-semibold); }
 
 /* ====================================================================
    Pulido visual (demo): fotos de atracciones + hero full-bleed con vídeo.
@@ -2569,7 +2575,7 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
    `#209`: es el botón que hace avanzar la compra, y el cierre es el sitio donde más lo necesita.
    Nuestra versión anterior usaba `.btn--zone`, que es la MARCA — el cian, no el naranja. */
 .reserve__actions {
-    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 32px;
+    display: flex; gap: var(--sp-12); justify-content: center; flex-wrap: wrap; margin-top: 32px;
     transition: opacity var(--dur-estado) var(--ease-sale),
                 transform var(--dur-entra) var(--ease-sale);
 }
@@ -2681,8 +2687,8 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     position: absolute; left: 50%; bottom: calc(var(--salta-h) - 34px);
     transform: translateX(-50%);
     z-index: 8; pointer-events: auto;
-    display: inline-flex; align-items: center; gap: 11px;
-    min-height: 46px; padding: 0 18px;
+    display: inline-flex; align-items: center; gap: var(--sp-11);
+    min-height: 46px; padding: 0 var(--sp-18);
     background: color-mix(in srgb, var(--bg) 72%, transparent);
     border: 1px solid var(--line-strong);
     border-radius: var(--r-pill);
@@ -2700,9 +2706,9 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     background: var(--attn); color: var(--paper-fg);
     flex: 0 0 auto;
 }
-.salta__invita-ico svg { display: block; margin-left: 1px; }
+.salta__invita-ico svg { display: block; margin-left: var(--sp-1); }
 .salta__invita-t {
-    font-family: var(--font-mono); font-size: 11px;
+    font-family: var(--font-mono); font-size: var(--fs-11);
     letter-spacing: 0.16em; text-transform: uppercase;
 }
 .salta__rec {
@@ -2719,22 +2725,22 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     position: absolute; left: 50%; bottom: calc(var(--salta-h-now, var(--salta-h)) - 30px);
     transform: translateX(-50%);
     z-index: 8; pointer-events: none;
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+    display: flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; justify-content: center;
 }
 .salta__chip {
-    display: inline-flex; align-items: baseline; gap: 6px;
-    padding: 6px 14px;
+    display: inline-flex; align-items: baseline; gap: var(--sp-6);
+    padding: var(--sp-6) var(--sp-14);
     background: color-mix(in srgb, var(--bg) 74%, transparent);
     border: 1px solid var(--line);
     border-radius: var(--r-pill);
 }
 .salta__chip strong { font-family: var(--font-display); font-weight: 400; font-size: 19px; line-height: 1; color: var(--fg); }
-.salta__u { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.5; }
-.salta__chip--band { align-items: center; padding: 7px 14px; }
-.salta__chip--band strong { font-family: var(--font-mono); font-size: 12px; color: var(--attn); }
+.salta__u { font-family: var(--font-mono); font-size: var(--fs-10); letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.5; }
+.salta__chip--band { align-items: center; padding: var(--sp-7) var(--sp-14); }
+.salta__chip--band strong { font-family: var(--font-mono); font-size: var(--fs-12); color: var(--attn); }
 .salta__aro { width: 10px; height: 10px; flex: 0 0 auto; border-radius: 50%; border: 2px solid var(--attn); }
 .salta__pista {
-    font-family: var(--font-mono); font-size: 10px;
+    font-family: var(--font-mono); font-size: var(--fs-10);
     letter-spacing: 0.12em; text-transform: uppercase;
     color: var(--fg-mute);
 }
@@ -2745,7 +2751,7 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     position: absolute; left: 50%; bottom: calc(var(--salta-h-now, var(--salta-h)) * 0.4 + 40px);
     transform: translateX(-50%);
     z-index: 9; pointer-events: auto;
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    display: flex; flex-direction: column; align-items: center; gap: var(--sp-8);
     padding: 13px 22px 12px;
     background: color-mix(in srgb, var(--bg) 88%, transparent);
     border: 1px solid color-mix(in srgb, var(--attn) 50%, transparent);
@@ -2758,26 +2764,26 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     text-align: center;
 }
 .salta__fin-rec {
-    font-family: var(--font-mono); font-size: 10px;
+    font-family: var(--font-mono); font-size: var(--fs-10);
     letter-spacing: 0.2em; text-transform: uppercase; color: var(--attn);
 }
-.salta__fin-m { display: flex; align-items: baseline; gap: 16px; }
+.salta__fin-m { display: flex; align-items: baseline; gap: var(--sp-16); }
 .salta__fin-m strong {
     font-family: var(--font-display); font-weight: 400; font-size: 42px;
     line-height: 0.9; color: var(--fg);
 }
-.salta__fin-u { font-size: 17px; opacity: 0.5; }
+.salta__fin-u { font-size: var(--fs-17); opacity: 0.5; }
 .salta__fin-band {
-    display: inline-flex; align-items: center; gap: 7px;
+    display: inline-flex; align-items: center; gap: var(--sp-7);
     font-family: var(--font-mono); font-size: 12.5px; color: var(--attn);
 }
 .salta__fin-band .salta__aro { width: 11px; height: 11px; }
 .salta__fin-best {
-    font-family: var(--font-mono); font-size: 10px;
+    font-family: var(--font-mono); font-size: var(--fs-10);
     letter-spacing: 0.14em; text-transform: uppercase;
     color: color-mix(in srgb, var(--fg) 42%, transparent);
 }
-.salta__fin-acts { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+.salta__fin-acts { display: flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-3); }
 .salta__btn {
     min-height: 48px; padding: 0 22px;
     border-radius: var(--r-md); border: 0; cursor: pointer;
@@ -2953,9 +2959,9 @@ body[data-has-hero].nav--live .hero__pair-slot {
 
 .purchase__done { text-align: center; }
 .purchase__done .wiz__title { text-align: center; }
-.purchase__party { font-size: 40px; line-height: 1; margin-bottom: 4px; }
-.cart--summary { margin: 14px 0; text-align: left; }
-.purchase__code { margin: 12px 0 0; font-family: var(--font-body); font-size: var(--fs-14); color: var(--fg); }
+.purchase__party { font-size: 40px; line-height: 1; margin-bottom: var(--sp-4); }
+.cart--summary { margin: var(--sp-14) 0; text-align: left; }
+.purchase__code { margin: var(--sp-12) 0 0; font-family: var(--font-body); font-size: var(--fs-14); color: var(--fg); }
 
 /* ══ EL DESENLACE: DOS PIEZAS, Y NI UNA MÁS (`#278`, `[DECIDIDO owner]`) ═══════════════════════
    `[DECIDIDO owner]`: «quitamos el confeti, tampoco vamos a saturar al cliente». El confeti a
@@ -3041,8 +3047,8 @@ body[data-has-hero].nav--live .hero__pair-slot {
 /* ====================================================================
    Mis pedidos (Fase 5): lista de reservas con detalle.
    ==================================================================== */
-.orders { list-style: none; margin: 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: 16px; max-width: 760px; }
-.orders__item { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); padding: 18px 20px; }
+.orders { list-style: none; margin: 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: var(--sp-16); max-width: 760px; }
+.orders__item { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); padding: var(--sp-18) var(--sp-20); }
 /* ⚠️⚠️ **La CORTINA del historial** (2026-08-23, `specs/mis-reservas-por-reserva.md`). Lo cancelado
    y lo ya disfrutado vive en su propia pantalla y se sirve atenuado: la lista principal responde a
    «¿qué tengo?» y el pasado no debe competir visualmente con lo vivo.
@@ -3063,13 +3069,13 @@ body[data-has-hero].nav--live .hero__pair-slot {
 
 /* La referencia del pedido dentro de la tarjeta de una reserva: la tarjeta ya no ES el pedido, así
    que su código va en una fila propia y discreta, no en el encabezado. */
-.orders__order { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.orders__order { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; margin-top: var(--sp-14); padding-top: var(--sp-12); border-top: 1px solid var(--line); }
 
 /* El paso al historial, DESPUÉS de la paginación: lo pasado no compite con lo vivo. */
-.orders__history-cta { display: flex; justify-content: center; margin: 4px 0 0; }
-.orders__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.orders__code { font-family: var(--font-body); font-size: 14px; color: var(--fg); }
-.orders__status { font-family: var(--font-body); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 10px; border-radius: var(--r-pill); background: var(--bg-soft); color: var(--fg-mute); }
+.orders__history-cta { display: flex; justify-content: center; margin: var(--sp-4) 0 0; }
+.orders__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; }
+.orders__code { font-family: var(--font-body); font-size: var(--fs-14); color: var(--fg); }
+.orders__status { font-family: var(--font-body); font-size: var(--fs-11); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 10px; border-radius: var(--r-pill); background: var(--bg-soft); color: var(--fg-mute); }
 .orders__status--paid { background: var(--ok-bg); color: var(--ok); }
 .orders__status--pending { background: var(--attn); color: var(--fg); }
 .orders__status--cancelled, .orders__status--expired { background: var(--err-bg); color: var(--err-strong); }
@@ -3078,27 +3084,27 @@ body[data-has-hero].nav--live .hero__pair-slot {
    anotado — no sustituye al status (un "Completado" con reembolso sigue siendo
    "Completado"). El reembolso es una dimensión independiente del servicio. */
 .orders__status--refunded-badge { background: var(--refund-bg); color: var(--refund); }
-.orders__meta { margin: 4px 0 12px; font-family: var(--font-body); font-size: 12px; color: var(--fg-mute); }
-.orders__lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.orders__line { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: var(--font-body); font-size: 13px; color: var(--fg); }
+.orders__meta { margin: var(--sp-4) 0 var(--sp-12); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
+.orders__lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-8); }
+.orders__line { display: flex; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg); }
 /* Título del producto de cada reserva: más grueso (negrita) y un punto mayor, para que destaque
    sobre la fecha/precio (que se quedan en el 13px base). Acotado a la línea principal — NO a los
    complementos (`.orders__line--addon`), para no engordarlos. */
-.orders__line:not(.orders__line--addon) .orders__line-name { font-size: 15px; font-weight: 700; }
+.orders__line:not(.orders__line--addon) .orders__line-name { font-size: var(--fs-15); font-weight: 700; }
 .orders__line-when { color: var(--fg-mute); text-transform: capitalize; }
 /* Nota de señal por producto en «Mis pedidos» (#227 F3): «Señal 30€ · resto en el parque». Reubicada
    (2026-06-15) al PIE de la card de la reserva, separada de los datos del evento por una línea sutil
    (mismo separador discontinuo que `.orders__final`). Pie financiero de la reserva. */
-.orders__product-deposit { margin-top: 2px; padding-top: 8px; border-top: 1px dashed var(--line); font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--warn); }
-.orders__event { list-style: none; margin: 4px 0 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 2px; }
-.orders__event li { font-family: var(--font-body); font-size: 12px; color: var(--fg-mute); line-height: 1.45; }
+.orders__product-deposit { margin-top: var(--sp-2); padding-top: var(--sp-8); border-top: 1px dashed var(--line); font-family: var(--font-body); font-size: var(--fs-12); font-weight: 600; color: var(--warn); }
+.orders__event { list-style: none; margin: var(--sp-4) 0 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: var(--sp-2); }
+.orders__event li { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); line-height: 1.45; }
 .orders__event-label { font-weight: 600; color: var(--fg); }
-.orders__total { display: flex; justify-content: space-between; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-family: var(--font-body); font-weight: 700; }
+.orders__total { display: flex; justify-content: space-between; margin-top: var(--sp-14); padding-top: var(--sp-12); border-top: 1px solid var(--line); font-family: var(--font-body); font-weight: 700; }
 /* Resumen del reembolso (#146): se renderiza solo si la Order tiene reembolso
    anotado. Patrón análogo al de `.orders__total` (mismo flex space-between) para
    coherencia visual; tono ámbar en el importe para reforzar el "salió dinero".
    `.orders__net` muestra el importe efectivamente cobrado tras la devolución. */
-.orders__refund { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; font-family: var(--font-body); font-size: 13px; color: var(--fg); }
+.orders__refund { display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-8); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg); }
 .orders__refund-label { color: var(--fg-mute); }
 .orders__refund-amount { color: var(--refund); font-weight: 700; }
 /* EL ANCLA DE CAJA (`DECISIONES #128`): lo REALMENTE cobrado, con su método y su fecha. Va NEUTRA
@@ -3106,20 +3112,20 @@ body[data-has-hero].nav--live .hero__pair-slot {
    pintaba habiendo devoluciones no se notaba; desde que el ancla se enseña en todo pedido cobrado,
    un cargo corriente en ámbar se leería como «te devolvimos algo». */
 .orders__refund--anchor .orders__refund-amount { color: var(--fg); }
-.orders__net { display: flex; justify-content: space-between; margin-top: 6px; padding-top: 8px; border-top: 1px dashed var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
+.orders__net { display: flex; justify-content: space-between; margin-top: var(--sp-6); padding-top: var(--sp-8); border-top: 1px dashed var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
 /* Desglose detallado en Mis pedidos (#196): "A cobrar en el parque" (naranja,
    lo que el cliente pagará en recepción) + su caption, y "Total final" (lo que
    acaba pagando neto). Mismo patrón flex space-between que `.orders__total`. */
-.orders__gate { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; font-family: var(--font-body); font-size: 13px; color: var(--fg); }
+.orders__gate { display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-8); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg); }
 .orders__gate-label { color: var(--fg-mute); }
 .orders__gate-amount { color: var(--warn); font-weight: 700; }
 /* Desglose ↳ por componente de "A cobrar en el parque" (#227 F2): cargos de
    edición + "Resto de la señal". Indentado, más pequeño y atenuado; el importe
    conserva el naranja de `.orders__gate-amount` con peso algo menor. */
-.orders__gate-line { display: flex; justify-content: space-between; gap: 12px; margin-top: 3px; padding-left: 14px; font-family: var(--font-body); font-size: 12px; color: var(--fg-mute); }
+.orders__gate-line { display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-3); padding-left: var(--sp-14); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
 .orders__gate-line strong { color: var(--warn); font-weight: 600; }
 /* Toggle "Ver desglose" del desglose ↳ (#227 F3): link sobrio, sin fondo de botón. */
-.orders__gate-toggle { margin: 2px 0 0; padding: 0; background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--warn); text-decoration: underline; }
+.orders__gate-toggle { margin: var(--sp-2) 0 0; padding: 0; background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-12); font-weight: 600; color: var(--warn); text-decoration: underline; }
 .orders__gate-toggle:hover { color: var(--warn-hover); }
 
 /* Los JUSTIFICANTES de menores invitados de un pedido (#336, `specs/waiver-por-reserva.md` §4.10):
@@ -3158,34 +3164,34 @@ body[data-has-hero].nav--live .hero__pair-slot {
    presupuesto del chunk se llevó (`SidebarBundleBudgetTest`, la subida a 263). */
 .orders__guests-link { width: 100%; font-family: var(--font-mono); font-size: var(--fs-11); color: var(--fg); background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn); padding: var(--sp-8) var(--sp-10); }
 .orders__guests-link:focus { border-color: var(--fg); }
-.orders__gate-caption { margin: 2px 0 0; font-family: var(--font-body); font-size: 12px; line-height: 1.4; color: var(--fg-mute); }
-.orders__final { display: flex; justify-content: space-between; margin-top: 6px; padding-top: 8px; border-top: 1px dashed var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
+.orders__gate-caption { margin: var(--sp-2) 0 0; font-family: var(--font-body); font-size: var(--fs-12); line-height: 1.4; color: var(--fg-mute); }
+.orders__final { display: flex; justify-content: space-between; margin-top: var(--sp-6); padding-top: var(--sp-8); border-top: 1px dashed var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
 /* ⚠️⚠️ LOS DOS BLOQUES del desglose (`DECISIONES #127`). Arriba lo que vale y por qué canal se
    paga; abajo qué ha pasado con su dinero. **La separación es la corrección**: hasta la tanda B,
    «Devuelto» y «Pendiente de devolverte» se pintaban como restas dentro de la columna del valor —de
    la que NO restan— y por eso la columna dejaba de leerse. El aire entre bloques y su rótulo son lo
    que hace que se lean como dos cosas distintas, no como una resta más. */
-.orders__ledger { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
-.orders__ledger--cash { margin-top: 16px; }
-.orders__ledger-title { margin: 0 0 6px; font-family: var(--font-body); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fg-mute); }
+.orders__ledger { margin-top: var(--sp-14); padding-top: var(--sp-12); border-top: 1px solid var(--line); }
+.orders__ledger--cash { margin-top: var(--sp-16); }
+.orders__ledger-title { margin: 0 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-11); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fg-mute); }
 /* La FRASE que explica el estado. Destacada sobre fondo suave: es lo primero que hay que leer
    cuando algo se sale de lo normal, y un párrafo más de texto gris se pierde. */
-.orders__ledger-note { margin: 12px 0 0; padding: 10px 12px; border-radius: var(--r-s, 8px); background: var(--bg-soft, var(--bg-card)); border: 1px solid var(--line); font-family: var(--font-body); font-size: 13px; line-height: 1.45; color: var(--fg); }
+.orders__ledger-note { margin: var(--sp-12) 0 0; padding: var(--sp-10) var(--sp-12); border-radius: var(--r-s, 8px); background: var(--bg-soft, var(--bg-card)); border: 1px solid var(--line); font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.45; color: var(--fg); }
 /* Trazabilidad: lo facturado al reservar. Atenuado y al pie porque NO es un canal — pintarlo
    arriba, como hacía el «Subtotal», apilaba dos bases distintas sin decirlo. */
-.orders__ledger-invoiced { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); opacity: 0.85; }
+.orders__ledger-invoiced { margin-top: var(--sp-12); padding-top: var(--sp-10); border-top: 1px dashed var(--line); opacity: 0.85; }
 /* EL LIBRO (T3·1 de `specs/desglose-libro.md`, `DECISIONES #305`): una línea por movimiento y por
    liquidación, con su signo delante y su fecha en mudo; el Total y lo Pagado como `.orders__final`.
    Lo negativo (bajadas, cortesías, devoluciones) toma el color de devolución; una devolución en
    curso o fallida se atenúa. El SALDO cierra el bloque y toma el color de su clase: ámbar lo que se
    paga, el de devolución lo que se devuelve. */
-.orders__mov { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; font-family: var(--font-body); font-size: 13px; color: var(--fg); }
+.orders__mov { display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg); }
 .orders__mov-label { color: var(--fg-mute); }
-.orders__mov-date { font-size: 12px; white-space: nowrap; }
+.orders__mov-date { font-size: var(--fs-12); white-space: nowrap; }
 .orders__mov strong { font-weight: 700; color: var(--fg); white-space: nowrap; }
 .orders__mov--neg strong { color: var(--refund); }
 .orders__mov--pending { opacity: 0.7; }
-.orders__balance { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
+.orders__balance { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-2) var(--sp-12); margin-top: var(--sp-12); padding-top: var(--sp-10); border-top: 1px solid var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
 .orders__balance--pay_at_park strong,
 .orders__balance--pay_online strong { color: var(--warn); }
 .orders__balance--refund_at_park strong,
@@ -3194,7 +3200,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
 /* Badge "Finalizado" en Mis pedidos (Fase 7.1b, #127). Sutil para no competir
    con el resto del row; gris/atenuado porque para el cliente "finished" no
    es ni positivo ni negativo, simplemente "ya pasó". */
-.orders__line-badge { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: var(--r-pill); font-size: 11px; font-weight: 600; line-height: 1.6; }
+.orders__line-badge { display: inline-flex; align-items: center; padding: var(--sp-1) var(--sp-8); border-radius: var(--r-pill); font-size: var(--fs-11); font-weight: 600; line-height: 1.6; }
 .orders__line-badge--finished { background: var(--line); color: var(--fg-mute); }
 .orders__line--finished .orders__line-name,
 .orders__line--finished .orders__line-when,
@@ -3211,18 +3217,18 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__line--cancelled .orders__line-text,
 .orders__line--cancelled .orders__line-price { text-decoration: line-through; }
 /* #172: badges (pedido y línea) agrupados y alineados a la DERECHA. */
-.orders__head-badges { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.orders__line-badges { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.orders__head-badges { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap; }
+.orders__line-badges { margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-6); flex-wrap: wrap; }
 /* Botón "Reintentar el pago" en Mis pedidos (audit edge cases 2026-05-28). Solo
    aparece en Orders pending no expiradas con Payment intentado. Espacio claro vs
    el total, anchura completa para fácil táctil. */
-.orders__retry { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+.orders__retry { margin-top: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-6); }
 .orders__retry-btn { width: 100%; justify-content: center; }
-.orders__retry-hint { font-family: var(--font-body); font-size: 12px; color: var(--fg-mute); margin: 0; line-height: 1.5; }
+.orders__retry-hint { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); margin: 0; line-height: 1.5; }
 
 /* Botón "Gestionar" para Orders pagadas (#117). En la card de la Order: width
    completo, ghost para no competir con el CTA primario de los Orders pending. */
-.orders__manage { margin-top: 14px; }
+.orders__manage { margin-top: var(--sp-14); }
 .orders__manage-btn { width: 100%; justify-content: center; }
 
 /* Modal "Gestionar tu reserva" (#117). Tono profesional: texto justificado a la
@@ -3233,25 +3239,25 @@ body[data-has-hero].nav--live .hero__pair-slot {
     font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
     letter-spacing: -0.02em; line-height: 1.1;
     font-size: clamp(24px, 4vw, 30px);
-    margin: 8px 0 0;
+    margin: var(--sp-8) 0 0;
 }
-.manage__intro { margin: 14px 0 0; font-family: var(--font-body); font-size: 14px; line-height: 1.6; color: var(--fg); }
+.manage__intro { margin: var(--sp-14) 0 0; font-family: var(--font-body); font-size: var(--fs-14); line-height: 1.6; color: var(--fg); }
 .manage__code {
-    margin: 18px 0 0; padding: 14px 16px;
+    margin: var(--sp-18) 0 0; padding: var(--sp-14) var(--sp-16);
     background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r-sm);
-    display: flex; flex-direction: column; gap: 4px;
+    display: flex; flex-direction: column; gap: var(--sp-4);
     user-select: all; /* facilita seleccionar el código completo de un click */
 }
 .manage__code-label {
-    font-family: var(--font-body); font-size: 11px; font-weight: 700;
+    font-family: var(--font-body); font-size: var(--fs-11); font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-mute);
 }
 .manage__code-value {
     font-family: var(--font-display); font-weight: 800; letter-spacing: 0.02em;
     font-size: clamp(20px, 3vw, 24px); color: var(--fg);
 }
-.manage__note { margin: 12px 0 0; font-family: var(--font-body); font-size: 13px; color: var(--fg-mute); line-height: 1.5; }
-.manage__actions { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+.manage__note { margin: var(--sp-12) 0 0; font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg-mute); line-height: 1.5; }
+.manage__actions { margin-top: 22px; display: flex; flex-direction: column; gap: var(--sp-10); }
 .manage__cta { width: 100%; justify-content: center; }
 .manage__cancel { width: 100%; justify-content: center; }
 
@@ -3405,7 +3411,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .tk svg .thin { stroke-width: 0.8; }
 .tk svg .stubnum {
     font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-    font-size: 18px; letter-spacing: -0.04em;
+    font-size: var(--fs-18); letter-spacing: -0.04em;
     fill: currentColor; stroke: none;
 }
 
@@ -3694,7 +3700,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
    el componente), y el del hero no tiene de quién heredarlo — su envase no es flex—. Se declara
    con el mismo valor para que las dos mitades midan igual en los dos sitios, que es lo que hace
    creíble el relevo. */
-.hero__pair { gap: 14px; }
+.hero__pair { gap: var(--sp-14); }
 
 /* El texto de dentro: el que SE VA se va sin esperar, el que ENTRA espera a que le hagan sitio.
    ⚠️ Ese retardo asimétrico no es un adorno: sin él los dos rótulos se cruzan a mitad de camino y
@@ -4029,7 +4035,7 @@ body[data-has-hero] .nav--over .nav__cta {
    que **ninguna regla llegaba a mostrar nunca**: su única declaración era `display: none`. */
 
 @media (max-width: 720px) {
-    .nav__cta { gap: 6px; }
+    .nav__cta { gap: var(--sp-6); }
 
     /* Comprar sale del racimo y reaparece abajo como `.book-bar`; el alta sale del racimo y vive
        en el menú (`mob-menu__foot`). En el pulgar quedan la hamburguesa y la barra. */
@@ -4092,7 +4098,7 @@ body[data-has-hero] .nav--over .nav__cta {
    `stretch`, la mitad más alta estiraba a la otra — el rótulo de comprar partido en dos líneas
    subía las DOS mitades a 100 px. Con una altura de componente ya no hay nada que estirar. */
 .book-bar__pair {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: var(--sp-8);
     pointer-events: none;
     /* El par entero mide desde aquí: es la colocación la que decide el alto, y las dos mitades
        —y su chip, y su glifo, que salen de `--cta-pair-h` desde `#260`— crecen con él. */
@@ -4262,7 +4268,7 @@ body[data-has-hero] .nav--over .nav__cta {
 .hero__acts {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: var(--sp-12);
     /* ⚠️ **`width: 100%` NO es redundante con el `max-width`**, y sin él los dos botones salen
        APILADOS: el contenido del hero es un flex de columna con `align-items: flex-start`, así que
        esta fila se encogía a su contenido mínimo —el ancho del botón más ancho, 327 px— y el
@@ -4275,7 +4281,7 @@ body[data-has-hero] .nav--over .nav__cta {
 
 .hero__act {
     display: inline-flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 2px;
+    flex-direction: column; gap: var(--sp-2);
     /* ⚠️ **Más grande, también en teléfono** (`#253`, `[DECIDIDO owner]`: «el CTA del hero lo
        quiero más grande, y en el móvil también»). Antes: 60 px de alto, 17/18 de talla y base
        200/240. La talla y el alto suben con la ventana pero **arrancan por encima de lo de antes**,
@@ -4304,7 +4310,7 @@ body[data-has-hero] .nav--over .nav__cta {
 }
 /* ⚠️ HEREDA y baja la opacidad, como el subtítulo del CTA del armazón (`#213`): el botón pinta de
    dos colores —acción y acción-hover— y un token fijo fallaría en uno de los dos. */
-.hero__act-s { font-size: 12px; font-weight: 600; opacity: 0.72; }
+.hero__act-s { font-size: var(--fs-12); font-weight: 600; opacity: 0.72; }
 
 .hero__act--alt {
     color: var(--fg);
@@ -4357,19 +4363,19 @@ body[data-has-hero] .nav--over .nav__cta {
    pequeño, tono muted, fondo sutil; etiqueta «Incluido/Gratis» en verde.
    ==================================================================== */
 .addons-mini {
-    margin-top: 14px;
-    padding-top: 12px;
+    margin-top: var(--sp-14);
+    padding-top: var(--sp-12);
     border-top: 1px dashed var(--line);
     text-align: left;
 }
 .addons-mini__label {
     display: block;
-    font-size: 11px;
+    font-size: var(--fs-11);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--fg-mute);
-    margin-bottom: 8px;
+    margin-bottom: var(--sp-8);
 }
 .addons-mini__list {
     list-style: none;
@@ -4393,7 +4399,7 @@ body[data-has-hero] .nav--over .nav__cta {
 }
 .addons-mini__plus {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: var(--fs-12);
     color: var(--fg-mute);
     width: 6px;
     text-align: center;
@@ -4403,23 +4409,23 @@ body[data-has-hero] .nav--over .nav__cta {
     /* Tono atenuado (lista quieta del mockup #233). El badge + el precio se empujan a la derecha
        desde `.addons-mini__meta` (margin-left:auto), NO desde el nombre — así el «Más info» inline
        queda pegado al título (#194). */
-    font-size: 13px;
+    font-size: var(--fs-13);
     font-weight: 500;
     color: var(--fg-mute);
 }
 .addons-mini__price {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: var(--fs-12);
     font-weight: 500;
     color: var(--fg);
     white-space: nowrap;
 }
 .addons-mini__badge {
-    font-size: 10px;   /* el suelo de `design.md` §3 (auditoría C3): nada por debajo de 10 px */
+    font-size: var(--fs-10);   /* el suelo de `design.md` §3 (auditoría C3): nada por debajo de 10 px */
     font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    padding: 2px 6px;
+    padding: var(--sp-2) var(--sp-6);
     border-radius: var(--r-pill);
     line-height: 1;
     background: color-mix(in srgb, var(--ok) 15%, transparent);   /* era un verde que NO era `--ok` (auditoría m4) */
@@ -4451,20 +4457,20 @@ body[data-has-hero] .nav--over .nav__cta {
 .addons-mini__group {
     border: 1px dashed var(--line-strong);
     border-radius: var(--r-md);
-    padding: 8px 10px;
+    padding: var(--sp-8) var(--sp-10);
     background: transparent;
 }
 .addons-mini__group-label {
     display: block;
-    font-size: 10px;
+    font-size: var(--fs-10);
     font-weight: 800;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--fg-mute);
-    margin-bottom: 6px;
+    margin-bottom: var(--sp-6);
 }
 .addons-mini__list--group {
-    gap: 6px;
+    gap: var(--sp-6);
 }
 
 /* ====================================================================
@@ -4499,7 +4505,7 @@ body[data-has-hero] .nav--over .nav__cta {
 
 /* (6a) Ghost CTA «Registro» con subtítulo bajo la etiqueta (sistema externo). */
 .cta-ghost--stack { align-items: center; }
-.cta-ghost__body { display: inline-flex; flex-direction: column; line-height: 1.1; gap: 1px; text-align: left; }
+.cta-ghost__body { display: inline-flex; flex-direction: column; line-height: 1.1; gap: var(--sp-1); text-align: left; }
 /* ⚠️ «O INICIA SESIÓN» daba 2,61 : 1 en las doce vistas (auditoría C3, `#434`) y NO era el gris de la
    otra superficie, como decía el informe: era `--fg-mute` (Humo, 4,98 sobre blanco) atenuado al 62 %
    por la regla compartida `.cta-med__s, .cta-ghost__s { opacity: .62 }` de más arriba — pensada para
@@ -4508,7 +4514,7 @@ body[data-has-hero] .nav--over .nav__cta {
    (4,98 ✓), lee el alias de PAPEL —el fantasma es blanco también dentro del menú de tinta (`#213`)— y
    sube al suelo de 10 px de `design.md` §3. */
 .cta-ghost__s {
-    font-family: var(--font-mono); font-size: 10px;
+    font-family: var(--font-mono); font-size: var(--fs-10);
     text-transform: uppercase; letter-spacing: 0.08em;
     color: var(--paper-fg-mute); opacity: 1;
 }
@@ -4521,31 +4527,31 @@ body[data-has-hero] .nav--over .nav__cta {
        del sidecart (`--bg`), igual que en el mockup `design_mockup/Sidebar Catalogo.html` (allí el
        bloque de cuenta es `--bg` sobre un panel `--bg-card`); aquí el panel ya es `--bg`, así que el
        bloque usa el tono más marcado `--bg-soft` para conservar ese contraste. */
-    padding: 16px 20px; border-bottom: 1px solid var(--line); background: var(--bg-soft);
+    padding: var(--sp-16) var(--sp-20); border-bottom: 1px solid var(--line); background: var(--bg-soft);
 }
 /* La columna vive en el envoltorio, no en el root: el root es hoy una rejilla de UNA fila que se
    colapsa a `0fr` durante el proceso de compra (ver el bloque «(1) Mi cuenta» de más arriba). */
-.acct__inner { overflow: hidden; min-height: 0; display: flex; flex-direction: column; gap: 13px; }
-.acct__row { display: flex; align-items: center; gap: 13px; }
+.acct__inner { overflow: hidden; min-height: 0; display: flex; flex-direction: column; gap: var(--sp-13); }
+.acct__row { display: flex; align-items: center; gap: var(--sp-13); }
 .acct__avatar {
     width: 44px; height: 44px; border-radius: var(--r-btn); flex-shrink: 0;
     background: var(--fg); color: var(--zone-1);
     display: grid; place-items: center; transform: rotate(-3deg);
     font-family: var(--font-display); font-weight: 800; font-size: 19px;
 }
-.acct__txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.acct__txt { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; flex: 1; }
 .acct__hello {
-    font-family: var(--font-display); font-weight: 800; font-size: 17px;
+    font-family: var(--font-display); font-weight: 800; font-size: var(--fs-17);
     letter-spacing: -0.01em; line-height: 1.05; color: var(--fg);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.acct__sub { font-size: 12px; color: var(--fg-mute); line-height: 1.3; }
+.acct__sub { font-size: var(--fs-12); color: var(--fg-mute); line-height: 1.3; }
 .acct__cta { display: flex; gap: 9px; }
 .acct__logout-form { margin: 0; display: flex; flex: 1; }
 .acct__btn {
-    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 11px 15px; border-radius: var(--r-btn);
-    font-family: var(--font-body); font-size: 13px; font-weight: 600; white-space: nowrap;
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-8);
+    padding: var(--sp-11) var(--sp-15); border-radius: var(--r-btn);
+    font-family: var(--font-body); font-size: var(--fs-13); font-weight: 600; white-space: nowrap;
     cursor: pointer; text-decoration: none; border: 1px solid transparent;
     transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale);
 }
@@ -4582,15 +4588,15 @@ body[data-has-hero] .nav--over .nav__cta {
 }
 .acct__count {
     display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px;
-    border-radius: var(--r-pill); background: var(--zone-1); color: var(--on-brand); font-size: 10px; font-weight: 700;
+    border-radius: var(--r-pill); background: var(--zone-1); color: var(--on-brand); font-size: var(--fs-10); font-weight: 700;
 }
 /* Aviso de formulario de reserva pendiente (#217), accionable. */
 .acct__alert {
-    display: flex; align-items: center; gap: 8px; text-decoration: none;
-    padding: 8px 10px; border-radius: var(--r-sm);
+    display: flex; align-items: center; gap: var(--sp-8); text-decoration: none;
+    padding: var(--sp-8) var(--sp-10); border-radius: var(--r-sm);
     background: color-mix(in srgb, var(--zone-1) 12%, transparent);
     border: 1px solid color-mix(in srgb, var(--zone-1) 35%, transparent);
-    color: var(--fg); font-size: 12px; font-weight: 600; line-height: 1.3;
+    color: var(--fg); font-size: var(--fs-12); font-weight: 600; line-height: 1.3;
     transition: background var(--dur-sale) var(--ease-sale);
 }
 .acct__alert:hover { background: color-mix(in srgb, var(--zone-1) 20%, transparent); }
@@ -4599,23 +4605,23 @@ body[data-has-hero] .nav--over .nav__cta {
     width: 18px; height: 18px; border-radius: 50%;
     /* Tinta oscura (no #fff) sobre el acento: contraste robusto con cualquier marca white-label
        (#213) — el naranja por defecto y un verde lima claro pasan ambos. Igual que .acct__count. */
-    background: var(--zone-1); color: var(--on-brand); font-weight: 800; font-size: 12px; line-height: 1;
+    background: var(--zone-1); color: var(--on-brand); font-weight: 800; font-size: var(--fs-12); line-height: 1;
 }
 .acct__alert-text { flex: 1; }
 .acct__alert-arrow { flex: none; color: var(--zone-1); font-weight: 700; }
 
 /* Botón «Cerrar sesión» al pie de /mi-cuenta (#221). */
-.account__logout { margin: 8px 0 0; }
+.account__logout { margin: var(--sp-8) 0 0; }
 
 /* (1) CTAs directos de la página de contacto (llamar / WhatsApp). Solo LAYOUT: los botones usan
    los componentes del sistema de diseño de la landing (`.btn`, `.btn--zone`, `.btn--ghost`). */
 .contact-quick { margin-bottom: 36px; }
 .contact-quick__label {
-    display: block; margin-bottom: 12px;
-    font-family: var(--font-mono); font-size: 11px;
+    display: block; margin-bottom: var(--sp-12);
+    font-family: var(--font-mono); font-size: var(--fs-11);
     text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-mute);
 }
-.contact-quick__row { display: flex; flex-wrap: wrap; gap: 12px; }
+.contact-quick__row { display: flex; flex-wrap: wrap; gap: var(--sp-12); }
 
 /* Contacto en 2 columnas: formulario + ubicación al lateral (#216). En móvil se apila (mapa debajo). */
 .contact-layout {
@@ -4626,43 +4632,43 @@ body[data-has-hero] .nav--over .nav__cta {
 /* El panel lateral apila el mapa y la dirección (auditoría M4, `#434`): la tarjeta de la dirección
    iba POSADA sobre el marco del mapa y tapaba el botón de consentimiento. Ahora son dos piezas, una
    debajo de otra, y el mapa se queda con su tarjeta entera. */
-.contact-layout__aside { position: sticky; top: 96px; display: grid; gap: 16px; align-content: start; }
+.contact-layout__aside { position: sticky; top: 96px; display: grid; gap: var(--sp-16); align-content: start; }
 .map-card--aside { min-height: 400px; height: auto; margin: 0; }
 @media (max-width: 768px) {
-    .contact-layout { grid-template-columns: 1fr; gap: 28px; }
+    .contact-layout { grid-template-columns: 1fr; gap: var(--sp-28); }
     .contact-layout__aside { position: static; }
     .map-card--aside { min-height: 300px; }
 }
 
 /* Post-formulario de datos por invitado de un cumpleaños (#217). Reutiliza el bloque
    `.eventfields` (etiqueta + input) para cada campo; aquí van el contenedor y las tarjetas. */
-.guestform { display: flex; flex-direction: column; gap: var(--sp-28); margin-top: 8px; }
+.guestform { display: flex; flex-direction: column; gap: var(--sp-28); margin-top: var(--sp-8); }
 .guestform__flash {
     background: color-mix(in srgb, var(--zone-1) 12%, var(--sheet));
     border: 1px solid color-mix(in srgb, var(--zone-1) 40%, var(--sheet));
-    color: var(--fg); border-radius: var(--r-md); padding: 14px 18px; font-weight: 600;
+    color: var(--fg); border-radius: var(--r-md); padding: var(--sp-14) var(--sp-18); font-weight: 600;
 }
 /* Aviso de SOLO LECTURA (#217): la reserva ya se celebró → el formulario se muestra pero no se edita. */
 .guestform__readonly {
     background: var(--bg-soft); border: 1px solid var(--line);
-    color: var(--fg); border-radius: var(--r-md); padding: 14px 18px; font-size: 14px; margin-top: 8px;
+    color: var(--fg); border-radius: var(--r-md); padding: var(--sp-14) var(--sp-18); font-size: var(--fs-14); margin-top: var(--sp-8);
 }
 /* Post-form individualizado POR RESERVA (#217): resumen de la reserva (cuándo · invitados ·
    referencia) + indicador de progreso + nota de privacidad de datos de menores. */
 .guestform__summary {
-    border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; background: var(--sheet);
-    display: flex; flex-direction: column; gap: 14px; margin-top: 8px;
+    border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-18) var(--sp-20); background: var(--sheet);
+    display: flex; flex-direction: column; gap: var(--sp-14); margin-top: var(--sp-8);
 }
 .guestform__facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 16px 32px; }
-.guestform__fact { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.guestform__fact-label { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
-.guestform__fact-value { font-weight: 600; font-size: 15px; }
+.guestform__fact { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+.guestform__fact-label { font-size: var(--fs-12); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.guestform__fact-value { font-weight: 600; font-size: var(--fs-15); }
 .guestform__progress {
-    align-self: flex-start; font-size: 13px; font-weight: 600; color: var(--zone-1);
+    align-self: flex-start; font-size: var(--fs-13); font-weight: 600; color: var(--zone-1);
     background: color-mix(in srgb, var(--zone-1) 10%, var(--sheet)); border-radius: var(--r-pill); padding: 5px 14px;
 }
 .guestform__progress.is-complete { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--sheet)); }
-.guestform__privacy { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
+.guestform__privacy { color: var(--muted); font-size: var(--fs-13); line-height: 1.5; margin: 0; }
 
 /* El JUSTIFICANTE de un menor invitado (#328, `specs/waiver-por-reserva.md` §4.6). Reutiliza el
    lenguaje de la hoja del post-form —mismos tokens, mismo molde— porque son la misma clase de
@@ -4670,7 +4676,7 @@ body[data-has-hero] .nav--over .nav__cta {
    de aceptar, que el post-form no tiene. */
 .guardian__notice {
     background: var(--bg-soft); border: 1px solid var(--line);
-    color: var(--fg); border-radius: var(--r-md); padding: 14px 18px; font-size: 14px; margin: 0 0 18px;
+    color: var(--fg); border-radius: var(--r-md); padding: var(--sp-14) var(--sp-18); font-size: var(--fs-14); margin: 0 0 var(--sp-18);
 }
 /* T8 — el desenlace se DISTINGUE. Antes los cinco estados salían con el mismo gris: «tu autorización
    ha quedado registrada» y «no hemos podido comprobar que no eres un robot, así que NO hemos
@@ -4684,19 +4690,19 @@ body[data-has-hero] .nav--over .nav__cta {
    del menor»), no decoración. */
 .gf-group__num {
     display: inline-grid; place-items: center;
-    width: 26px; height: 26px; margin-right: 8px; vertical-align: 2px;
+    width: 26px; height: 26px; margin-right: var(--sp-8); vertical-align: 2px;
     border-radius: 50%; background: var(--fg); color: var(--bg);
-    font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0;
+    font-family: var(--font-mono); font-size: var(--fs-12); font-weight: 600; letter-spacing: 0;
 }
 /* A QUÉ visita autoriza el padre (`#401`). Va DENTRO del resguardo oscuro, así que su color se deriva
    de `--bg` como el de sus vecinos y nunca de `--fg`: ahí `--fg` es el fondo (la lección de `.gf-mix`). */
 .guardian__what {
-    margin: 14px 0 0;
-    padding: 11px 14px;
+    margin: var(--sp-14) 0 0;
+    padding: var(--sp-11) var(--sp-14);
     border: 1px solid color-mix(in srgb, var(--bg) 26%, transparent);
     border-radius: var(--r-md);
     background: color-mix(in srgb, var(--bg) 8%, transparent);
-    font-family: var(--font-body); font-size: 14px; line-height: 1.45;
+    font-family: var(--font-body); font-size: var(--fs-14); line-height: 1.45;
     color: color-mix(in srgb, var(--bg) 88%, transparent);
 }
 .guardian__what strong { color: var(--bg); }
@@ -4705,18 +4711,18 @@ body[data-has-hero] .nav--over .nav__cta {
    el segundo tono— porque no es un dato que se envíe: es un atajo. Confundirlo con un campo del
    formulario haría pensar que hay que elegir algo. */
 .guardian__pick {
-    margin-bottom: 16px; padding: 14px 16px;
+    margin-bottom: var(--sp-16); padding: var(--sp-14) var(--sp-16);
     border: 1px dashed var(--line-strong); border-radius: var(--r); background: var(--bg-soft);
 }
 /* El texto se lee EN EL PROPIO FLUJO (§4.4): con altura acotada y su propio scroll, para que un
    waiver largo no empuje la casilla y el botón fuera de la pantalla. */
 .guardian__waiver {
     border: 1px solid var(--line); border-radius: var(--r); background: var(--sheet);
-    padding: 18px 20px; max-height: 320px; overflow-y: auto;
+    padding: var(--sp-18) var(--sp-20); max-height: 320px; overflow-y: auto;
 }
-.guardian__waiver-title { font-family: var(--font-display); font-size: 18px; font-weight: 800; margin: 0 0 10px; color: var(--fg); }
-.guardian__waiver-h { font-family: var(--font-body); font-size: 14px; font-weight: 700; margin: 14px 0 4px; color: var(--fg); }
-.guardian__waiver-p { font-size: 13px; line-height: 1.6; color: var(--fg); margin: 0; }
+.guardian__waiver-title { font-family: var(--font-display); font-size: var(--fs-18); font-weight: 800; margin: 0 0 var(--sp-10); color: var(--fg); }
+.guardian__waiver-h { font-family: var(--font-body); font-size: var(--fs-14); font-weight: 700; margin: var(--sp-14) 0 var(--sp-4); color: var(--fg); }
+.guardian__waiver-p { font-size: var(--fs-13); line-height: 1.6; color: var(--fg); margin: 0; }
 /* Casilla SEPARADA y desmarcada por defecto: no se mezcla con privacidad ni con condiciones. */
 /* ⚠️ **La casilla mide 13 px y su área útil es ESTA etiqueta**, que la envuelve — verificado pulsando
    su extremo, lejos de la casilla, y con control de que la sonda sabía marcarla. A 390 px el texto
@@ -4724,30 +4730,30 @@ body[data-has-hero] .nav--over .nav__cta {
    ▶ Con `align-items: flex-start` los 2 px sobrantes caen ABAJO, así que el texto no se mueve.
    ▶ **Es el control que ACEPTA el descargo**, o sea el gesto legal de toda esta pantalla: si algún
    objetivo táctil de aquí tiene que llegar a 44, es éste. */
-.guardian__accept { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; min-height: var(--tap-min); font-size: 14px; line-height: 1.5; color: var(--fg); cursor: pointer; }
-.guardian__accept input { margin-top: 3px; flex-shrink: 0; }
+.guardian__accept { display: flex; align-items: flex-start; gap: var(--sp-10); margin-top: var(--sp-16); min-height: var(--tap-min); font-size: var(--fs-14); line-height: 1.5; color: var(--fg); cursor: pointer; }
+.guardian__accept input { margin-top: var(--sp-3); flex-shrink: 0; }
 .guardian__accept.is-invalid { color: var(--err); }
-.guestform__section { display: flex; flex-direction: column; gap: 14px; }
-.guestform__section-title { font-family: var(--font-display); font-size: 18px; margin: 0; }
-.guestform__general { border-left: 3px solid var(--zone-1); padding-left: 16px; }
-.guestform__children { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.guestform__section { display: flex; flex-direction: column; gap: var(--sp-14); }
+.guestform__section-title { font-family: var(--font-display); font-size: var(--fs-18); margin: 0; }
+.guestform__general { border-left: 3px solid var(--zone-1); padding-left: var(--sp-16); }
+.guestform__children { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sp-16); }
 .guestform__child {
-    border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px 16px 16px;
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-14) var(--sp-16) var(--sp-16);
     margin: 0; min-width: 0;
 }
-.guestform__child-legend { font-weight: 700; font-size: 14px; padding: 0 6px; color: var(--zone-1); }
-.guestform__actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
-.guestform__hint { color: var(--muted); font-size: 13px; margin: 0; }
+.guestform__child-legend { font-weight: 700; font-size: var(--fs-14); padding: 0 var(--sp-6); color: var(--zone-1); }
+.guestform__actions { display: flex; flex-direction: column; gap: var(--sp-8); align-items: flex-start; }
+.guestform__hint { color: var(--muted); font-size: var(--fs-13); margin: 0; }
 .purchase__note--guestform {
     background: color-mix(in srgb, var(--zone-1) 10%, var(--sheet));
     border-radius: var(--r-md); padding: var(--sp-10) var(--sp-12);
 }
 /* Subcard sutil POR PRODUCTO (#217 UX): separa cada reserva del pedido y agrupa producto +
    complementos + su formulario, sin saturar (relleno suave, sin borde — el contraste lo da el fondo). */
-.orders__products { display: flex; flex-direction: column; gap: 10px; }
-.orders__product { background: var(--bg-soft); border-radius: var(--r-md); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
-.orders__product-form { margin-top: 2px; }
-.orders__product-form-link { font-size: 13px; color: var(--fg-mute); text-decoration: underline; text-underline-offset: 2px; }
+.orders__products { display: flex; flex-direction: column; gap: var(--sp-10); }
+.orders__product { background: var(--bg-soft); border-radius: var(--r-md); padding: var(--sp-12) var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-8); }
+.orders__product-form { margin-top: var(--sp-2); }
+.orders__product-form-link { font-size: var(--fs-13); color: var(--fg-mute); text-decoration: underline; text-underline-offset: 2px; }
 /* Botón del post-form de reserva (#217): ancho completo + texto centrado para que sea una acción
    clara y consistente con el resto de CTAs de ancho completo del flujo. */
 /* ⚠️⚠️ **`white-space: normal` y no `nowrap`, y eso ANULA `.btn` a propósito** (`#403`). El botón de
@@ -4762,7 +4768,7 @@ body[data-has-hero] .nav--over .nav__cta {
 /* Bloque de registro «del parque» en la pantalla final de la compra (#225): texto informativo
    editable + botón al sistema externo. Callout sobrio para no competir con «Ver mis reservas». */
 .purchase__reginfo {
-    margin-top: 16px; padding: var(--sp-14) var(--sp-16);
+    margin-top: var(--sp-16); padding: var(--sp-14) var(--sp-16);
     background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r);
     display: flex; flex-direction: column; gap: var(--sp-12);
 }
@@ -4785,22 +4791,22 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .maint__card { max-width: 560px; text-align: center; }
 .maint__brand {
     display: inline-block; font-family: var(--font-display); font-weight: 800;
-    font-size: 26px; letter-spacing: -0.02em; margin-bottom: 28px;
+    font-size: 26px; letter-spacing: -0.02em; margin-bottom: var(--sp-28);
 }
 .maint__brand-dot { color: var(--zone-1); }
-.maint__title { font-family: var(--font-display); font-size: clamp(30px, 6vw, 46px); margin: 10px 0 14px; }
-.maint__body { color: var(--muted); font-size: 17px; line-height: 1.6; margin: 0 auto; max-width: 46ch; }
+.maint__title { font-family: var(--font-display); font-size: clamp(30px, 6vw, 46px); margin: var(--sp-10) 0 var(--sp-14); }
+.maint__body { color: var(--muted); font-size: var(--fs-17); line-height: 1.6; margin: 0 auto; max-width: 46ch; }
 .maint__contact { margin-top: 34px; }
-.maint__contact-label { display: block; color: var(--muted); font-size: 14px; margin-bottom: 12px; }
-.maint__contact-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.maint__contact-label { display: block; color: var(--muted); font-size: var(--fs-14); margin-bottom: var(--sp-12); }
+.maint__contact-row { display: flex; flex-wrap: wrap; gap: var(--sp-12); justify-content: center; }
 
 /* Banner de bypass: solo lo ve el personal del panel cuando la web está en mantenimiento. */
 .maint-banner {
     display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-    gap: 6px 16px; padding: 10px 18px; text-align: center;
+    gap: var(--sp-6) var(--sp-16); padding: var(--sp-10) var(--sp-18); text-align: center;
     background: color-mix(in srgb, var(--zone-1) 16%, var(--sheet));
     border-bottom: 2px solid var(--zone-1);
-    color: var(--fg); font-size: 14px; font-weight: 600;
+    color: var(--fg); font-size: var(--fs-14); font-weight: 600;
     position: sticky; top: 0; z-index: 60;
 }
 .maint-banner__link { color: var(--zone-1); text-decoration: underline; white-space: nowrap; }
@@ -4821,22 +4827,22 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     font-family: var(--font-display); font-weight: 800; line-height: 0.9;
     font-size: clamp(96px, 22vw, 200px); letter-spacing: -0.04em;
     color: color-mix(in srgb, var(--zone-1) 22%, transparent);
-    margin-bottom: 8px; user-select: none;
+    margin-bottom: var(--sp-8); user-select: none;
 }
 .e404__head { max-width: 60ch; }
-.e404__title { font-family: var(--font-display); font-size: clamp(28px, 5vw, 40px); margin: 6px 0 12px; }
-.e404__body { color: var(--muted); font-size: 17px; line-height: 1.6; margin: 0 auto; max-width: 52ch; }
-.e404__cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 30px; }
+.e404__title { font-family: var(--font-display); font-size: clamp(28px, 5vw, 40px); margin: var(--sp-6) 0 var(--sp-12); }
+.e404__body { color: var(--muted); font-size: var(--fs-17); line-height: 1.6; margin: 0 auto; max-width: 52ch; }
+.e404__cta { display: flex; flex-wrap: wrap; gap: var(--sp-12); justify-content: center; margin-top: 30px; }
 .e404__links { margin-top: 44px; }
-.e404__links-label { display: block; color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+.e404__links-label { display: block; color: var(--muted); font-size: var(--fs-14); margin-bottom: var(--sp-14); }
 .e404__links ul {
     list-style: none; margin: 0; padding: 0;
-    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    display: flex; flex-wrap: wrap; gap: var(--sp-10); justify-content: center;
 }
 .e404__links a {
     display: inline-block; padding: 9px 16px; border-radius: var(--r-pill);
     border: 1px solid var(--line); color: var(--fg); text-decoration: none;
-    font-weight: 600; font-size: 14px; transition: border-color var(--dur-toque) var(--ease-sale), color var(--dur-toque) var(--ease-sale);
+    font-weight: 600; font-size: var(--fs-14); transition: border-color var(--dur-toque) var(--ease-sale), color var(--dur-toque) var(--ease-sale);
 }
 .e404__links a:hover { border-color: var(--interactive); color: var(--interactive); }
 
@@ -4850,11 +4856,11 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .consent-frame { display: block; height: 100%; }
 .consent-frame__ph {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 12px; height: 100%; min-height: 260px; padding: 28px 24px; text-align: center;
+    gap: var(--sp-12); height: 100%; min-height: 260px; padding: 28px 24px; text-align: center;
     background: var(--bg-soft); border: 1px dashed var(--line); border-radius: var(--r);
 }
-.consent-frame__ph-text { margin: 0; max-width: 420px; color: var(--fg-mute); font-size: 14px; line-height: 1.6; }
-.consent-frame__ph-link { color: var(--fg-mute); font-size: 13px; text-decoration: underline; }
+.consent-frame__ph-text { margin: 0; max-width: 420px; color: var(--fg-mute); font-size: var(--fs-14); line-height: 1.6; }
+.consent-frame__ph-link { color: var(--fg-mute); font-size: var(--fs-13); text-decoration: underline; }
 
 /* Banner de cookies (#222, mockup «Banner Cookies»): UNA tarjeta abajo-izquierda que se expande
    en sitio (compacta → preferencias). Tira de bloques foam + chip + toggles por finalidad. */
@@ -4883,50 +4889,50 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     /* Lote 9: caja táctil de 44px (transparente) con el glifo anclado a la esquina. */
     position: absolute; top: 2px; right: 4px;
     width: var(--tap-min); height: var(--tap-min);
-    display: inline-flex; align-items: flex-start; justify-content: flex-end; padding: 8px 10px;
+    display: inline-flex; align-items: flex-start; justify-content: flex-end; padding: var(--sp-8) var(--sp-10);
     background: none; border: 0; font-size: 24px; line-height: 1; color: var(--fg-mute); cursor: pointer;
 }
 .cookie__x:hover { color: var(--fg); }
-.cookie__head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.cookie__head { display: flex; align-items: center; gap: var(--sp-10); margin-bottom: var(--sp-12); }
 .cookie__chip {
     width: 30px; height: 30px; border-radius: var(--r-sm); flex-shrink: 0; transform: rotate(-4deg);
     background: var(--fg); color: var(--zone-1); display: grid; place-items: center;
 }
-.cookie__eyebrow { font-family: var(--font-mono, var(--font-body)); font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--fg-mute); }
-.cookie__title { font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.01em; line-height: 1.1; margin: 0 0 8px; color: var(--fg); }
+.cookie__eyebrow { font-family: var(--font-mono, var(--font-body)); font-size: var(--fs-11); text-transform: uppercase; letter-spacing: 0.16em; color: var(--fg-mute); }
+.cookie__title { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-22); letter-spacing: -0.01em; line-height: 1.1; margin: 0 0 var(--sp-8); color: var(--fg); }
 .cookie__body { font-size: 13.5px; line-height: 1.55; color: var(--fg-mute); margin: 0; }
 .cookie__body a { color: var(--fg); text-decoration: underline; text-underline-offset: 2px; font-weight: 600; }
-.cookie__actions { display: flex; gap: 9px; margin-top: 18px; }
+.cookie__actions { display: flex; gap: 9px; margin-top: var(--sp-18); }
 /* Igualdad (AEPD): los botones comparten clase/peso (.btn--ghost), ninguno con el color de marca. */
 .cookie-btn { flex: 1; min-width: 0; justify-content: center; }
 /* ⚠️ El `margin-top` sube de 13 a 16 (`#264`): el área táctil de 44 crece 13,5 px hacia arriba y
    con 13 de hueco habría tocado la de los botones de aceptar/rechazar. Tres píxeles que no se ven
    y que son la diferencia entre dos objetivos separados y dos que se pisan. */
 .cookie__config {
-    margin-top: 16px; width: 100%; text-align: center;
+    margin-top: var(--sp-16); width: 100%; text-align: center;
     font-family: var(--font-body); font-size: 12.5px; font-weight: 600; color: var(--fg-mute);
     background: none; border: 0; cursor: pointer;
     text-decoration: underline; text-underline-offset: 3px; transition: color var(--dur-sale) var(--ease-sale);
 }
 .cookie__config:hover { color: var(--interactive); }
-.cookie__prefs { margin-top: 4px; }
+.cookie__prefs { margin-top: var(--sp-4); }
 /* En preferencias hay 3 botones con etiquetas largas («Guardar selección»…): NO caben en una
    fila dentro de los 416px de la tarjeta, así que se apilan a lo ancho (la capa compacta, con
    labels cortos, sí va en fila). */
-.cookie__prefs-actions { display: flex; flex-direction: column; gap: 9px; margin-top: 18px; }
+.cookie__prefs-actions { display: flex; flex-direction: column; gap: 9px; margin-top: var(--sp-18); }
 /* Mismo ajuste y mismo motivo que `.cookie__config`: 14 → 17 de hueco para los 14 que crece. */
-.cookie__policy { display: inline-block; margin-top: 17px; font-size: 12px; color: var(--fg-mute); text-decoration: underline; }
+.cookie__policy { display: inline-block; margin-top: 17px; font-size: var(--fs-12); color: var(--fg-mute); text-decoration: underline; }
 .cookie__policy:hover { color: var(--interactive); }
-.pref { display: flex; align-items: flex-start; gap: 13px; padding: 14px 0; border-top: 1px solid var(--line); }
-.pref:first-child { margin-top: 8px; }
+.pref { display: flex; align-items: flex-start; gap: var(--sp-13); padding: var(--sp-14) 0; border-top: 1px solid var(--line); }
+.pref:first-child { margin-top: var(--sp-8); }
 .pref__txt { flex: 1; min-width: 0; }
 .pref__name { font-family: var(--font-body); font-size: 13.5px; font-weight: 700; display: block; color: var(--fg); }
-.pref__desc { font-size: 12px; line-height: 1.45; color: var(--fg-mute); margin-top: 3px; }
-.pref__lock { font-family: var(--font-mono, var(--font-body)); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); margin-top: 6px; display: inline-block; }
+.pref__desc { font-size: var(--fs-12); line-height: 1.45; color: var(--fg-mute); margin-top: var(--sp-3); }
+.pref__lock { font-family: var(--font-mono, var(--font-body)); font-size: var(--fs-10); text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); margin-top: var(--sp-6); display: inline-block; }
 /* Toggle de finalidad. */
 .ck-tgl {
     position: relative; width: 42px; height: 24px; border-radius: var(--r-pill); flex-shrink: 0;
-    margin-top: 1px; border: 0; padding: 0; background: var(--line-strong); cursor: pointer;
+    margin-top: var(--sp-1); border: 0; padding: 0; background: var(--line-strong); cursor: pointer;
     transition: background var(--dur-estado) var(--ease-sale);
 }
 .ck-tgl::after {
@@ -4958,11 +4964,11 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .hero__chip {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: var(--sp-7);
     align-self: flex-start;
     margin: clamp(14px, 1.6vw, 20px) 0 0;
     font-family: var(--font-body);
-    font-size: 15px;
+    font-size: var(--fs-15);
     font-weight: 600;
     line-height: 1;
     letter-spacing: 0.01em;
@@ -4990,7 +4996,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 }
 @media (max-width: 768px) {
     /* Móvil: el hero pasa a layout vertical (≤768px) → el chip se centra. */
-    .hero__chip { align-self: center; font-size: 15px; }
+    .hero__chip { align-self: center; font-size: var(--fs-15); }
 }
 
 /* ====================================================================
@@ -5012,13 +5018,13 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     background-size: 24px 24px;
 }
 
-.gf-mark { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; margin-bottom: clamp(20px, 3vw, 30px); text-align: center; }
+.gf-mark { display: inline-flex; flex-direction: column; align-items: center; gap: var(--sp-4); margin-bottom: clamp(20px, 3vw, 30px); text-align: center; }
 /* El logotipo de la instalación en el parte (`#334`). Alto acotado y ancho libre: los logotipos
    de cliente no comparten proporción, así que fijar el ANCHO deformaría unos y dejaría enanos otros.
    El suelo de texto (`.gf-mark__brand`) sigue debajo para quien no instale logotipo. */
 .gf-mark__logo { display: block; height: 48px; width: auto; max-width: min(280px, 70vw); }
-.gf-mark__brand { font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -0.04em; color: var(--fg); }
-.gf-mark__sub { font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.22em; color: var(--fg-mute); }
+.gf-mark__brand { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-22); letter-spacing: -0.04em; color: var(--fg); }
+.gf-mark__sub { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.22em; color: var(--fg-mute); }
 
 .gf-sheet {
     width: 100%; max-width: 700px; background: var(--bg-card); border-radius: var(--r-lg);
@@ -5031,26 +5037,26 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .gf-stub__top { margin-bottom: 22px; }
 /* Badge = nombre del producto (data-driven). Recto, sin rotación. */
 .gf-stub__badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-family: var(--font-body); font-size: 12px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: var(--sp-8);
+    font-family: var(--font-body); font-size: var(--fs-12); font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.1em;
-    padding: 8px 14px; border-radius: var(--r-sm);
+    padding: var(--sp-8) var(--sp-14); border-radius: var(--r-sm);
     background: var(--zone-1); color: var(--on-brand);
 }
-.gf-stub__title { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: clamp(30px, 6vw, 44px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 12px; }
-.gf-stub__lede { font-size: 14px; line-height: 1.55; margin: 0; color: color-mix(in srgb, var(--bg) 70%, transparent); max-width: 54ch; }
+.gf-stub__title { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: clamp(30px, 6vw, 44px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 var(--sp-12); }
+.gf-stub__lede { font-size: var(--fs-14); line-height: 1.55; margin: 0; color: color-mix(in srgb, var(--bg) 70%, transparent); max-width: 54ch; }
 .gf-stub__meta { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 24px; border: 1px solid color-mix(in srgb, var(--bg) 16%, transparent); border-radius: var(--r); overflow: hidden; }
-.gf-stub__cell { padding: 15px 18px; border-left: 1px solid color-mix(in srgb, var(--bg) 16%, transparent); display: flex; flex-direction: column; gap: 5px; }
+.gf-stub__cell { padding: var(--sp-15) var(--sp-18); border-left: 1px solid color-mix(in srgb, var(--bg) 16%, transparent); display: flex; flex-direction: column; gap: 5px; }
 .gf-stub__cell:first-child { border-left: none; }
-.gf-stub__cell .k { font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.16em; color: color-mix(in srgb, var(--bg) 50%, transparent); }
-.gf-stub__cell .v { font-family: var(--font-body); font-size: 14px; font-weight: 600; line-height: 1.25; }
+.gf-stub__cell .k { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.16em; color: color-mix(in srgb, var(--bg) 50%, transparent); }
+.gf-stub__cell .v { font-family: var(--font-body); font-size: var(--fs-14); font-weight: 600; line-height: 1.25; }
 .gf-stub__cell .v.mono { font-family: var(--font-mono); letter-spacing: 0.02em; }
 
 /* progreso */
 .gf-meter { margin-top: 22px; }
-.gf-meter__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 9px; }
-.gf-meter__label { font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: color-mix(in srgb, var(--bg) 60%, transparent); }
-.gf-meter__count { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: 18px; letter-spacing: -0.02em; }
+.gf-meter__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12); margin-bottom: 9px; }
+.gf-meter__label { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: color-mix(in srgb, var(--bg) 60%, transparent); }
+.gf-meter__count { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: var(--fs-18); letter-spacing: -0.02em; }
 .gf-meter__count em { font-style: normal; color: var(--zone-1); }
 .gf-meter__track { height: 8px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--bg) 14%, transparent); overflow: hidden; }
 .gf-meter__bar { height: 100%; width: 0%; background: var(--zone-1); border-radius: var(--r-pill); transition: width var(--dur-cae) var(--ease-sale); }
@@ -5058,8 +5064,8 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 /* Aviso de fiesta MIXTA en el post-form (`docs/specs/cumple-mixto.md` §9·7). Vive DENTRO del
    `.gf-stub`, que es superficie oscura: sus colores se derivan de `--bg` como los de sus vecinos,
    nunca de `--fg` —ahí `--fg` es el fondo—. */
-.gf-mix { margin-top: 18px; padding: 13px 15px; border-radius: var(--r-md); border: 1px solid color-mix(in srgb, var(--bg) 26%, transparent); background: color-mix(in srgb, var(--bg) 8%, transparent); }
-.gf-mix__title { font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: color-mix(in srgb, var(--bg) 60%, transparent); margin: 0 0 6px; }
+.gf-mix { margin-top: var(--sp-18); padding: var(--sp-13) var(--sp-15); border-radius: var(--r-md); border: 1px solid color-mix(in srgb, var(--bg) 26%, transparent); background: color-mix(in srgb, var(--bg) 8%, transparent); }
+.gf-mix__title { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: color-mix(in srgb, var(--bg) 60%, transparent); margin: 0 0 var(--sp-6); }
 .gf-mix__text { font-size: 13.5px; line-height: 1.5; margin: 0; color: color-mix(in srgb, var(--bg) 88%, transparent); }
 
 /* perforación entre stub y form */
@@ -5070,7 +5076,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 
 /* cuerpo del formulario */
 .gf-form { padding: clamp(28px, 4vw, 40px) clamp(24px, 5vw, 44px) clamp(32px, 4vw, 44px); }
-.gf-form .guestform__readonly, .gf-form .guestform__privacy { margin-bottom: 4px; }
+.gf-form .guestform__readonly, .gf-form .guestform__privacy { margin-bottom: var(--sp-4); }
 
 .gf-group { padding: 30px 0; border-top: 1px dashed var(--line-strong); }
 .gf-group:first-of-type { border-top: none; padding-top: 26px; }
@@ -5078,30 +5084,30 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
    —«Descargo de responsabilidad»— y la versión del documento a su derecha, en un teléfono el título
    se estrangulaba a tres líneas rotas («Descargo / de / responsabilidad») mientras el rótulo de la
    versión ocupaba su columna. Ninguna guarda mira anchos; esto solo se ve mirando. */
-.gf-group__head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+.gf-group__head { display: flex; align-items: baseline; gap: var(--sp-12); margin-bottom: var(--sp-18); flex-wrap: wrap; }
 .gf-group__title { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: 24px; letter-spacing: -0.02em; line-height: 1; margin: 0; }
-.gf-group__opt { font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); margin-left: auto; align-self: center; }
+.gf-group__opt { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); margin-left: auto; align-self: center; }
 
-.gf-bulk { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; font-size: 12.5px; color: var(--fg-mute); }
+.gf-bulk { display: flex; align-items: center; gap: var(--sp-12); flex-wrap: wrap; margin-bottom: var(--sp-16); font-size: 12.5px; color: var(--fg-mute); }
 html:not(.js) .gf-bulk { display: none; }
 
 /* fichas (acordeón) */
-.gf-fiches { display: flex; flex-direction: column; gap: 10px; }
+.gf-fiches { display: flex; flex-direction: column; gap: var(--sp-10); }
 .gf-fiche { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); overflow: hidden; transition: border-color var(--dur-estado) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
 .gf-fiche.is-open { border-color: var(--line-strong); box-shadow: var(--shadow-lift); }
 .gf-fiche.is-complete { border-color: color-mix(in oklab, var(--zone-1) 55%, var(--line)); }
-.gf-fiche__head { display: flex; align-items: center; gap: 14px; width: 100%; padding: 15px 16px; text-align: left; background: none; border: none; cursor: pointer; font: inherit; color: inherit; transition: background var(--dur-sale) var(--ease-sale); }
+.gf-fiche__head { display: flex; align-items: center; gap: var(--sp-14); width: 100%; padding: var(--sp-15) var(--sp-16); text-align: left; background: none; border: none; cursor: pointer; font: inherit; color: inherit; transition: background var(--dur-sale) var(--ease-sale); }
 .gf-fiche__head:hover { background: var(--bg-card); }
 .gf-fiche__head:focus-visible { outline: var(--focus-outline); outline-offset: -3px; }   /* el anillo del token, no el color de zona (`#436`) */
 html:not(.js) .gf-fiche__head { cursor: default; }
 html:not(.js) .gf-fiche__chev { display: none; }
-.gf-fiche__cube { width: 42px; height: 42px; flex-shrink: 0; border-radius: var(--r-md); background: var(--bg-card); border: 1px solid var(--line); display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: 18px; letter-spacing: -0.03em; color: var(--fg); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale); }
+.gf-fiche__cube { width: 42px; height: 42px; flex-shrink: 0; border-radius: var(--r-md); background: var(--bg-card); border: 1px solid var(--line); display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: var(--fs-18); letter-spacing: -0.03em; color: var(--fg); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale); }
 .gf-fiche.is-complete .gf-fiche__cube { background: var(--zone-1); border-color: transparent; color: var(--on-brand); }
-.gf-fiche__who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.gf-fiche__role { font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
-.gf-fiche__name { font-family: var(--font-body); font-size: 16px; font-weight: 600; line-height: 1.2; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gf-fiche__who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.gf-fiche__role { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
+.gf-fiche__name { font-family: var(--font-body); font-size: var(--fs-16); font-weight: 600; line-height: 1.2; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gf-fiche__name.is-empty { color: var(--fg-mute); font-weight: 500; font-style: italic; }
-.gf-fiche__status { display: inline-flex; align-items: center; flex-shrink: 0; font-family: var(--font-mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; padding: 5px 11px; border-radius: var(--r-pill); }
+.gf-fiche__status { display: inline-flex; align-items: center; flex-shrink: 0; font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; padding: 5px 11px; border-radius: var(--r-pill); }
 .gf-fiche__status--pending { color: var(--fg-mute); background: var(--bg-soft); }
 .gf-fiche__status--done { color: var(--on-brand); background: var(--zone-1); }
 .gf-fiche.is-complete .gf-fiche__status--pending { display: none; }
@@ -5110,7 +5116,7 @@ html:not(.js) .gf-fiche__chev { display: none; }
 /* El régimen del niño dentro de su ficha (`docs/specs/cumple-mixto.md` §15). Discreto por defecto
    —es contexto, no un estado— y marcado cuando NO es el pack reservado, que es el que mueve el
    precio. Reutiliza la forma del `__status` vecino para no inventar una pastilla nueva. */
-.gf-fiche__regime { display: inline-flex; align-items: center; flex-shrink: 0; font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.06em; padding: 5px 10px; border-radius: var(--r-pill); color: var(--fg-mute); background: var(--bg-soft); }
+.gf-fiche__regime { display: inline-flex; align-items: center; flex-shrink: 0; font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; letter-spacing: 0.06em; padding: 5px 10px; border-radius: var(--r-pill); color: var(--fg-mute); background: var(--bg-soft); }
 .gf-fiche__regime.is-other { color: var(--on-brand); background: var(--zone-1); }
 .gf-fiche__regime.is-unknown { color: var(--err); background: color-mix(in srgb, var(--err) 12%, transparent); }
 .gf-fiche.is-open .gf-fiche__chev { transform: rotate(180deg); color: var(--fg); }
@@ -5120,9 +5126,9 @@ html.js .gf-fiche.is-open .gf-fiche__body { grid-template-rows: 1fr; }
 /* Durante la activación JS (#264-audit): el colapso inicial (todas abiertas → acordeón) sin animación. */
 html.gf-initing .gf-fiche__body, html.gf-initing .gf-fiche__chev { transition: none !important; }
 .gf-fiche__body > div { overflow: hidden; }
-.gf-fiche__pad { padding: 18px 18px 20px; border-top: 1px dashed var(--line); }
+.gf-fiche__pad { padding: var(--sp-18) var(--sp-18) var(--sp-20); border-top: 1px dashed var(--line); }
 .gf-fiche__pad .eventfields { margin-top: 0; }
-.gf-fiche__foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.gf-fiche__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-20); }
 html:not(.js) .gf-fiche__foot { display: none; }
 /* Prev/Siguiente usan el componente .btn del sitio (.btn--ghost / .btn--zone, .btn--sm). El .btn
    desliza su icono a la DERECHA al hover; en «Anterior» (flecha izquierda) lo corregimos a la izquierda. */
@@ -5134,15 +5140,15 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .gf-savebar__help { font-size: 12.5px; line-height: 1.5; color: var(--fg-mute); text-align: center; margin: 0; }
 
 /* toast del flash de guardado */
-.gf-toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--fg); color: var(--bg); padding: 13px 22px; border-radius: var(--r-btn); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; box-shadow: var(--shadow-float); opacity: 0; pointer-events: none; transition: opacity var(--dur-entra) var(--ease-sale), transform var(--dur-entra) var(--ease-sale); z-index: 200; }
+.gf-toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--fg); color: var(--bg); padding: 13px 22px; border-radius: var(--r-btn); font-size: var(--fs-13); font-weight: 600; display: inline-flex; align-items: center; gap: var(--sp-10); box-shadow: var(--shadow-float); opacity: 0; pointer-events: none; transition: opacity var(--dur-entra) var(--ease-sale), transform var(--dur-entra) var(--ease-sale); z-index: 200; }
 .gf-toast .tcheck { width: 20px; height: 20px; border-radius: 50%; background: var(--zone-1); color: var(--on-brand); display: grid; place-items: center; flex-shrink: 0; }
 .gf-toast.is-on { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* footer mínimo */
-.gf-foot { width: 100%; max-width: 700px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 20px; padding: 26px 4px 34px; margin-top: auto; font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
+.gf-foot { width: 100%; max-width: 700px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-10) var(--sp-20); padding: 26px 4px 34px; margin-top: auto; font-family: var(--font-mono); font-size: var(--fs-10); text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
 .gf-foot a { text-decoration: none; color: inherit; transition: color var(--dur-sale) var(--ease-sale); }
 .gf-foot a:hover { color: var(--fg); }
-.gf-foot__links { display: flex; gap: 18px; flex-wrap: wrap; }
+.gf-foot__links { display: flex; gap: var(--sp-18); flex-wrap: wrap; }
 
 @media (max-width: 560px) {
     .gf-stub__meta { grid-template-columns: 1fr 1fr; }
@@ -5219,7 +5225,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .offw-badge {
     position: absolute; top: 2px; right: -2px; min-width: 19px; height: 19px; padding: 0 5px;
     background: var(--offw-accent); color: var(--on-brand); border-radius: var(--r-pill); border: 2px solid var(--bg, var(--bg));
-    font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; font-weight: 700;
+    font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--fs-10); font-weight: 700;
     display: grid; place-items: center; z-index: 2; line-height: 1;
     box-shadow: 0 4px 10px -3px color-mix(in srgb, var(--offw-accent) 70%, transparent);
     transition: opacity var(--dur-estado) var(--ease-sale), transform var(--dur-estado) var(--offw-spring);
@@ -5346,7 +5352,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
     line-height: 1.05; letter-spacing: -0.02em; margin: 4px 24px 16px; color: var(--fg, var(--fg));
 }
 .offw-img { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; border-radius: var(--r-btn); }
-.offw-dots { display: flex; justify-content: center; gap: 7px; margin-top: 16px; }
+.offw-dots { display: flex; justify-content: center; gap: var(--sp-7); margin-top: var(--sp-16); }
 .offw-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: var(--line-strong, color-mix(in srgb, var(--fg) 22%, transparent)); transition: background var(--dur-sale) var(--ease-sale), transform var(--dur-sale) var(--offw-spring); }
 .offw-dot.is-on { background: var(--offw-accent); transform: scale(1.25); }
 
@@ -5359,7 +5365,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
 }
 @media (max-width: 560px) {
     .offw-modal { width: calc(100vw - 24px); }
-    .offw-title { font-size: 22px; }
+    .offw-title { font-size: var(--fs-22); }
 }
 
 /* ====================================================================
@@ -5436,7 +5442,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
 
 .menu__item { border-bottom: 1px solid var(--line); }
 .menu__item a {
-    display: flex; align-items: baseline; gap: 18px;
+    display: flex; align-items: baseline; gap: var(--sp-18);
     padding: clamp(9px, 1.8vh, 18px) 6px;
     color: var(--fg);
     /* Entrada escalonada: la posición la pone el marcado (`--i`), el tiempo el tema. */
@@ -5480,10 +5486,10 @@ html:not(.js) .gf-fiche__foot { display: none; }
 @media (max-width: 1080px) {
     .menu__inner {
         padding: clamp(88px, 12vh, 120px) var(--col-gutter) clamp(48px, 7vh, 88px);
-        gap: 18px;
+        gap: var(--sp-18);
     }
     .menu__list { justify-content: flex-start; }
-    .menu__item a { padding: clamp(9px, 1.6vh, 16px) 2px; gap: 12px; }
+    .menu__item a { padding: clamp(9px, 1.6vh, 16px) 2px; gap: var(--sp-12); }
     .menu__t {
         font-size: clamp(26px, min(9vw, 7vh), 44px);
         white-space: normal;
@@ -5630,7 +5636,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
    del contrato de movimiento (`#222`). */
 .menu__aside {
     flex: 0 0 320px; min-width: 0;
-    display: flex; flex-direction: column; gap: 20px; justify-content: center;
+    display: flex; flex-direction: column; gap: var(--sp-20); justify-content: center;
     opacity: 0; transform: translateY(20px);
     transition: opacity var(--dur-cae) var(--ease-sale) var(--dur-estado),
                 transform var(--dur-salto) var(--ease-sale) var(--dur-estado);
@@ -5655,7 +5661,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .menu__preview {
     position: relative; flex: 1; min-height: 190px;
     border-radius: var(--r); overflow: hidden;
-    display: flex; align-items: flex-end; padding: 20px;
+    display: flex; align-items: flex-end; padding: var(--sp-20);
     background: repeating-linear-gradient(135deg,
         color-mix(in srgb, var(--fg) 8%, var(--bg-card)) 0 14px,
         var(--bg-card) 14px 28px);
@@ -5672,7 +5678,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
 }
 .menu__preview-body {
     position: relative; z-index: 1;
-    display: flex; flex-direction: column; gap: 7px; min-width: 0;
+    display: flex; flex-direction: column; gap: var(--sp-7); min-width: 0;
 }
 .menu__preview-n {
     font-family: var(--font-mono); font-size: 10.5px;
@@ -5684,7 +5690,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
     font-size: 30px; line-height: 1; text-transform: uppercase;
 }
 .menu__preview-s {
-    font-size: 14px; line-height: 1.5; color: var(--fg-mute);
+    font-size: var(--fs-14); line-height: 1.5; color: var(--fg-mute);
     max-width: 280px;
 }
 
@@ -5694,10 +5700,10 @@ html:not(.js) .gf-fiche__foot { display: none; }
    en esta misma pantalla ya está el aro que invita a descubrir el CTA doble. Un punto latiendo
    para siempre al lado de un aro latiendo para siempre no informa más: compite. Queda estático,
    que es como el producto pinta el resto de sus estados. */
-.menu__facts { display: flex; flex-direction: column; gap: 12px; }
+.menu__facts { display: flex; flex-direction: column; gap: var(--sp-12); }
 .menu__fact {
     display: inline-flex; align-items: center; gap: 9px;
-    font-size: 14px; color: var(--fg-mute);
+    font-size: var(--fs-14); color: var(--fg-mute);
     transition: color var(--dur-toque) var(--ease-sale);
 }
 a.menu__fact:hover { color: var(--fg); }
@@ -5723,13 +5729,13 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
 
 .menu__foot {
     border-top: 1px solid var(--line);
-    padding-top: 20px;
+    padding-top: var(--sp-20);
     display: flex; align-items: center; justify-content: space-between;
-    gap: 20px; flex-wrap: wrap;
+    gap: var(--sp-20); flex-wrap: wrap;
 }
 .menu__chips {
     list-style: none; margin: 0; padding: 0;
-    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    display: flex; flex-wrap: wrap; gap: var(--sp-10); align-items: center;
 }
 /* El eslogan a rotulador. `--font-accent` vale por defecto lo mismo que la de display y un
    paquete de instalación la redefine junto a las demás familias: aquí no se nombra ninguna
@@ -5737,7 +5743,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
 .menu__slogan {
     margin: 0;
     font-family: var(--font-accent);
-    font-size: 18px; line-height: 1;
+    font-size: var(--fs-18); line-height: 1;
     color: var(--zone-2);
     transform: rotate(-2deg);
 }
@@ -5745,7 +5751,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    invisible: una cápsula del menú tiene sitio de sobra, y un chip que se ve de 44 se toca mejor
    que uno de 38 con 6 px de aire fingido. `[DECIDIDO owner]`. */
 .menu__chip {
-    display: inline-flex; align-items: center; gap: 8px;
+    display: inline-flex; align-items: center; gap: var(--sp-8);
     min-height: var(--tap-min);
     padding: 9px 16px;
     border: 1px solid var(--line-strong);
@@ -6005,7 +6011,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
 .guardnote--off .guardnote__label { color: var(--fg-mute); }
 /* El área táctil de 44 la da el propio bloque, que es alto: la casilla no la necesita aparte
    (`#264`). `margin-top` la alinea con la primera línea del rótulo, no con el centro del bloque. */
-.guardnote__box { margin-top: 2px; flex-shrink: 0; }
+.guardnote__box { margin-top: var(--sp-2); flex-shrink: 0; }
 .guardnote__body { display: flex; flex-direction: column; gap: var(--sp-4); }
 .guardnote__label { font-family: var(--font-body); font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); }
 .guardnote__help { font-family: var(--font-body); font-size: var(--fs-12); line-height: 1.4; color: var(--fg-mute); }
@@ -6605,7 +6611,7 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
 /* ── SEÑAL · el registro de E2 ──────────────────────────────────────────────────────────────────
    Sus números al dígito: gap 7, padding 7/14, 13px/700. ⚠️ **Sin `text-transform`**: sus ejemplos
    van en caja normal y el texto lo escribe el panel — forzar mayúsculas aquí decidiría por él. */
-.tag--senal { gap: 7px; padding: 7px 14px; font-family: var(--font-body); font-weight: 700; font-size: 13px; }
+.tag--senal { gap: var(--sp-7); padding: var(--sp-7) var(--sp-14); font-family: var(--font-body); font-weight: 700; font-size: var(--fs-13); }
 
 /* La punteada: **CONDICIONES**, que es literalmente su papel en E2 —«punteadas para condiciones»—.
    Una edad, un suplemento, un tamaño: todo lo que acota. ⚠️ Su padding es **1 px menor** que el de
@@ -6613,7 +6619,7 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
    ⚠️ **Sobre una foto es además la única que se lee sin fondo propio** —el trazo discontinuo se
    distingue de cualquier textura—, así que la misma variante sirve encima de una imagen; el color
    lo pone el consumidor con `currentColor`. */
-.tag--punteada { border: 2px dashed currentColor; padding: 6px 13px; }
+.tag--punteada { border: 2px dashed currentColor; padding: var(--sp-6) var(--sp-13); }
 
 /* Tinta: la etiqueta que DESTACA una tarjeta. Lee los alias de superficie, no `--fg`: dentro de la
    tarjeta destacada `--fg` vale el color de la zona (misma cautela que las sombras de `#196`). */

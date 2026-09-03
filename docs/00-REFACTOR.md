@@ -3784,7 +3784,8 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [x] **Tanda D** (`#436`, spec §13): D1 elegida viendo tres opciones renderizadas — el par del cliente;
       nace `--interactive` por superficie, doce reglas dejan `--zone-1`, FAQ abierta 2,45 → 6,43. Guarda
       `InteractionColourIsNotAZoneTest`. ⚠️ Tres líneas más en el `client.css` de producción.
-- [ ] Tanda F (la escala, mecánica con guarda).
+- [x] **Tanda F** (`#437`, spec §14): 662 literales al token del mismo píxel con `scripts/escala-a-tokens.py`;
+      huella de maquetación 24/24 idéntica; guarda `ScaleTokensAreUsedTest`. Quedan 163 huecos sin escalón.
 - [ ] Tanda G (interiores M3, normas M6, m5, m6: D2 y D3) — con la organización y las secciones.
 
 ## Relación con el proyecto origen

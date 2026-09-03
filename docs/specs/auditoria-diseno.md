@@ -1,7 +1,8 @@
 # [AUDITORÍA] Costuras a la vista — segunda auditoría de diseño de la web pública
 
-> Estado: 🟦 **INFORME ENTREGADO · TANDAS C, E, H y D EJECUTADAS (§11 `#434`, §12 `#435`, §13 `#436`)
-> · D1, D4, D5 y D6 decididas; D2/D3 con la organización (tanda G); queda la F (la escala)** ·
+> Estado: 🟦 **INFORME ENTREGADO · TANDAS C, E, H, D y F EJECUTADAS (§11 `#434`, §12 `#435`, §13
+> `#436`, §14 `#437`) · D1, D4, D5 y D6 decididas; queda la G (interiores y normas: D2, D3), que se
+> valora con la organización, y C1, que es producto** ·
 > Última actualización: 2026-09-03 · Decisión asociada: `DECISIONES #430` (el informe vive en el
 > repo; el artefacto es solo la presentación) · Carril: **diseño / idioma visual** (este ordenador,
 > sub-banda `#430`–`#439`, reservada a distancia de la secuencia natural `#410`+ que sigue el
@@ -318,7 +319,7 @@ Se listan para que nadie las «arregle». Cada una tiene su porqué medido en `D
 | **C** | **Lo roto**: M4 (solape del mapa) · M7 (foco de campos) · M8 (acordeón) · C3 (`--on-ok`, el sub-rótulo, ≥ 10 px) — ✅ **HECHA, `#434` (§11)** | solo D4 | pequeña |
 | **D** | **El color que responde**: C2 con D1, opciones renderizadas; retira `--zone-*` de lo que no es zona — ✅ **HECHA, `#436` (§13)**: D1 = el par del cliente | D1 | media |
 | **E** | **La física, terminada**: M1 · m1 · m2 · m3 · m4, con la guarda ampliada — ✅ **HECHA, `#435` (§12)**; m3 no procede (`.eyebrow` tiene consumidores fuera de las doce) | D5 | pequeña |
-| **F** | **La escala**: M2, sustitución mecánica + guarda | ninguno | media, cero reflujo |
+| **F** | **La escala**: M2, sustitución mecánica + guarda — ✅ **HECHA, `#437` (§14)**: 662 literales a token, huella idéntica | ninguno | media, cero reflujo |
 | **G** | **Las páginas interiores**: M3 · M6 · m5 · m6 | D2 · D3 | grande |
 | **H** | **Rendimiento**: M9 · M10 — ✅ **HECHA, `#435` (§12)** | D6 | pequeña |
 | — | **C1** `/servicios` | producto | fuera de este carril |
@@ -519,3 +520,43 @@ interacción lee `--zone-*` fuera de las tres listas, que solo encogen; la FAQ, 
 que fallaba no era el color sino que el rol no existía—; (2) `SurfaceScopeTest` exige que las dos
 superficies declaren el MISMO conjunto de tokens y lo tenía en una lista cerrada: el token nuevo entra
 en ella, que es exactamente para lo que la guarda existe.
+
+## 14. Ejecución — tanda F, «la escala» (2026-09-03, `#437`)
+
+**M2, sin decisión que tomar**: la sustitución MECÁNICA del literal por el token del MISMO píxel, con
+`scripts/escala-a-tokens.py` (informe en seco y `--aplicar`), sobre las dos hojas:
+
+| | `font-size` → `--fs-*` | espacio → `--sp-*` | espacio que se queda (algún escalón sin token) |
+|---|---|---|---|
+| `landing.css` | 82 | 114 | 71 |
+| `site.css` | 151 | 315 | 92 |
+| **total** | **233** | **429** | 163 |
+
+Solo se toca lo que tiene token EXACTO: `13px` → `var(--fs-13)`, `12px 20px` → `var(--sp-12)
+var(--sp-20)`, `0 0 16px` → `0 0 var(--sp-16)`; fuera `calc()`/`clamp()`/`var()`, negativos, decimales,
+`em`/`%`, los `:root` (son la escala) y los `@keyframes`. Lo que se queda son escalones que la escala no
+tiene (24, 32, 36, 40…): entrarán cuando la escala los tenga, no con un `calc()` a mano.
+
+**«Cero reflujo» MEDIDO, no prometido**: la huella de maquetación de las doce vistas a 1280 y 390
+(`storage/app/audit-tanda-f.mjs`: el rectángulo de cada elemento visible y su `font-size`, `padding`,
+`margin` y `gap` computados, con animaciones y transiciones congeladas) es **idéntica en geometría y
+tipografía en las 24** antes y después. Una sola cadena difiere: el `margin` computado del pie de
+`/registro` a 390 («0px 16px» → «0px») con el MISMO `left` (16) y el MISMO ancho (358) — es cómo Chrome
+reporta un `margin-inline: auto`, y ese mismo valor ya daba «0px» en `/precios` ANTES. *Una huella que
+lee propiedades computadas mezcla layout con cómo el navegador describe el layout: la geometría es la
+que manda.*
+
+**Guarda nueva, vista morder dos veces**: `ScaleTokensAreUsedTest` — con el MISMO criterio que el guion
+(y el guion y la guarda son el mismo texto en dos lenguajes): ningún `font-size` en px con escalón en
+`--fs-*`, ningún `padding`/`margin`/`gap` cuyos escalones estén TODOS en `--sp-*`; y que las dos escalas
+sigan declaradas enteras.
+
+**Trampa pagada**: el guion buscaba sobre el CSS crudo y la guarda sobre el CSS con los comentarios
+blanqueados; un `font-size: 13px /* … */;` llevaba el comentario dentro del valor capturado y el guion
+lo saltaba en silencio mientras la guarda lo veía (`.addons-mini__name`). El guion pasa a buscar sobre
+la copia blanqueada —misma longitud, mismas posiciones— y a escribir sobre el original. *Dos
+instrumentos que miden lo mismo tienen que leer el mismo texto, o uno de los dos miente por omisión.*
+
+**Lo que gana el white-label**: `--fs-unit`/`--sp-unit` movían un tercio de la web (31 % · 29 %,
+auditoría M2); ahora mueven todo lo que está en la escala. `SidebarTokenBudgetTest` (el suelo de
+tokenización del cajón, 72 %) sube de hecho con esto y su cifra la dice el propio test.
