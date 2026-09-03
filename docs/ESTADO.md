@@ -10,7 +10,10 @@
 >    1, SIN carrera) y sus SIETE escenarios + Redsys en verde sobre InnoDB · sonda de navegador 4/4
 >    (la oferta del cajón recalcula al cambiar de hora, `/root/e2e/extra-hour-probe.js`).
 >    Si eres el otro agente (landing): esto vivió entero en Booking/panel/API — sin choque.
->    Sigue 🟦 hasta el ✅ del owner; la entrada larga de más abajo cuenta la historia completa.
+>    ▶ **El producto REAL está dado de alta en localhost** («Hora extra» 3,00 € en «Jump · 2 horas»)
+>    con 6 pedidos demo del cliente `demo-hora-extra@jumpweb.test` y **la PRIMERA pasada del ojo del
+>    owner hecha y APLICADA** (spec §8.5): el Resumen del día lista los complementos de cada reserva
+>    y la nota de la fila dice «Para N entradas que se quedan». Sigue 🟦 hasta su ✅ final.
 >
 > **2. EL PRODUCTO DE EXCURSIONES EN PRODUCCIÓN, que lo corre el OWNER.** Guion idempotente con
 >    dry-run en `~/excursiones-produccion.php`, **fuera del repo** (`#325`). Este agente **no tiene
@@ -1135,7 +1138,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > número**: 4019 + 4 + 15 = **4038** y el gate mide **4039 · 25.772**. Un test y dos aserciones de
 > más, o sea que uno de los dos números declarados se tomó sobre una base que ya no era 4019. *Que la
 > suma no cuadre es justo el motivo por el que el gate mide en vez de creerse la resta.*
-> Suite **4105 en verde** (26.072 aserciones, 1 skipped a propósito), medida el 2026-09-03
+> Suite **4107 en verde** (26.093 aserciones, 1 skipped a propósito), medida el 2026-09-03
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`). ⚠️ **+8 y +51 los pone la T8
 > de Google** (`#350`): las dos guardas nuevas del botón y del aviso de privacidad, más los casos que
 > sustituyen a los de las casillas retiradas. Antes: las cuatro tandas del

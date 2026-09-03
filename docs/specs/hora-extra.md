@@ -1,10 +1,10 @@
 # [SPEC] La HORA EXTRA — un complemento que OCUPA
 
 > Estado: 🟦 **CÓDIGO COMPLETO — LAS CUATRO TANDAS EN EL ÁRBOL (2026-09-03, `#410`/`#411`; §8 es
-> la ejecución). Suite 4.105 en verde · 24/24 mutaciones muerden · los SIETE escenarios de
+> la ejecución). Suite 4.107 en verde · 28/28 mutaciones muerden · los SIETE escenarios de
 > `purchase:verify-oversell` + `redsys:verify-concurrency` en verde sobre InnoDB · §6·4 verificado
-> en NAVEGADOR (4/4). Sigue 🟦 por el OJO del owner y porque el producto «Hora extra» es DATO que
-> él da de alta desde el panel (catálogo → complemento → «Ocupa la franja siguiente»).**
+> en NAVEGADOR (4/4). El producto REAL está dado de alta en localhost con 6 pedidos demo (§8.5) y
+> la PRIMERA pasada del ojo del owner está hecha y aplicada — sus dos ajustes, en §8.5.**
 > ❗ **EMPIEZA POR §8** (qué hay construido y sus trampas), después **§4.11** (la segunda revisión:
 > el peor hueco era el TOPE por SUMA), **§4.10** y **§4.9**.
 > Carril: producto/reservas. Autor: agente, 2026-09-02 · segunda revisión y ejecución 2026-09-03.
@@ -563,7 +563,36 @@ la última del día real—, reaparece al volver, y el stepper suma; siembra ide
 capturas en `/root/e2e/extra-hour-capturas/`). §6·12: por D3, las superficies ya dicen lo que hay
 que leer (la hoja imprime ventana+duración y `N × Hora extra`) — nada que construir, nada construido.
 
-### 8.5 · Trampas pagadas en la ejecución (para el siguiente)
+### 8.5 · El OJO del owner, primera pasada (2026-09-03, con la demo delante)
+
+El producto REAL está dado de alta en localhost (guion idempotente `hora-extra-demo.php`, en el
+`storage/app/e2e` local — gitignorado, como los puentes de las sondas):
+«Hora extra» a 3,00 € (el salto exacto 2h→3h del catálogo) enganchado a «Jump · 2 horas», el cliente
+`demo-hora-extra@jumpweb.test` con **6 pedidos** que cubren A–F de §4.8 (pagados por
+`ManualOrderFulfiller`, la pendiente retiene aforo) y el intento G rechazado sobre datos reales.
+El owner lo miró y pidió DOS ajustes, hechos el mismo día:
+
+1. **El Resumen del día lista los COMPLEMENTOS de cada reserva** («+ 1 × Hora extra», bajo el
+   producto): la hora extra es inventario operativo y la hoja con la que se abre el día no la decía.
+   Solo los VIVOS — un complemento cancelado no es operativa (la hoja individual sí lo enseña
+   tachado, porque allí cuadra dinero). ⚠️ La hoja individual (`ReservationSlip`) YA los listaba:
+   el hueco era solo del resumen. ⚠️ La reserva PENDIENTE no sale en el resumen y no es un hueco:
+   su regla canónica es «pedido pagado» (`paidScheduledPrincipal`, la misma del calendario).
+2. **La nota de la fila dice que la cantidad son ENTRADAS**: sin elegir, «3,00 € por entrada que se
+   queda»; elegida, **«Para N entrada/s que se queda/n · 3,00 €»** — la lectura que él pidió («1 hora
+   extra para 2 entradas»). Compuesta en `AddonResolver::viewModel()` (fuente única: cajón, API y
+   alta manual del panel la heredan sin una línea de cliente) y re-computada en cada clic.
+   ⚠️⚠️ **Dos guardas del cajón dispararon y las dos tenían razón**: el grupo `tickets` viaja ENTERO
+   al SPA y su `i18n.js` solo resuelve `singular|plural` — nada de sintaxis de rangos (`{1}…|[2,*]…`)
+   en ese grupo—, y una clave con dos formas o la resuelve el cliente con `tc()` o entra en
+   `PLURALISED_BY_SERVER` **con la comprobación de que el cliente no la nombra** (la exención se
+   demuestra, no se concede).
+
+Evidencia: 4/4 mutaciones nuevas muerden (28/28 en la feature) · suite 4.107 · la hoja real del
+día demo verificada renderizando el blade (6 menciones de la hora extra, la cancelada fuera) · la
+nota medida en navegador («Hora extra — Para 1 entrada que se queda · 3,00 €»).
+
+### 8.6 · Trampas pagadas en la ejecución (para el siguiente)
 
 - **Mi propia aritmética de test estaba mal, no el código**: esperé que un padre de 60 min a las
   10:00 restara plazas a las 11:00 — un tramo de 60 marca SOLO su franja. Los valores «fallidos»
