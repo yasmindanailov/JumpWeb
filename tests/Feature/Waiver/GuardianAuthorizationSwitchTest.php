@@ -43,6 +43,12 @@ class GuardianAuthorizationSwitchTest extends TestCase
 
     private Zone $zone;
 
+    /** Contador de códigos de pedido: `mt_rand(100, 999)` era una MONEDA AL AIRE contra el
+     * `UNIQUE` de `orders.code` (900 valores, dos pedidos por caso ≈ 0,11 % de colisión por
+     * ejecución) — la cazó `audit-clock` por pura repetición, no por el reloj (`#411`). La
+     * familia de `#337`/`#408`: lo aleatorio contra una restricción es un rojo con fecha. */
+    private int $orderCounter = 0;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -90,7 +96,7 @@ class GuardianAuthorizationSwitchTest extends TestCase
 
         $order = Order::create([
             'user_id' => User::factory()->create()->id,
-            'code' => 'R-SWITCH'.mt_rand(100, 999),
+            'code' => 'R-SWITCH'.str_pad((string) ++$this->orderCounter, 3, '0', STR_PAD_LEFT),
             'status' => Order::STATUS_PAID,
             'subtotal' => 1000, 'tax' => 0, 'total' => 1000, 'currency' => 'EUR', 'paid_at' => now(),
         ]);

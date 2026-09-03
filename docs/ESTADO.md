@@ -1,19 +1,24 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-02, noche).
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-03, madrugada — carril producto/reservas; el carril de diseño cerró el suyo aparte).
 >
-> **1. LA HORA EXTRA — ✅ CÓDIGO COMPLETO, LAS CUATRO TANDAS EN EL ÁRBOL (2026-09-03, `#410`/`#411`).**
->    Queda el **OJO del owner** y que el producto se DÉ DE ALTA (es DATO: catálogo → complemento →
->    «Ocupa la franja siguiente» + duración + precio + engancharlo a la entrada larga). **EMPIEZA por
->    `docs/specs/hora-extra.md` §8** (lo construido y sus trampas). Evidencia: suite 4.105 · 24/24
->    mutaciones · `purchase:verify-oversell` visto FALLAR sin la validación (5 asientos en franja de
->    1, SIN carrera) y sus SIETE escenarios + Redsys en verde sobre InnoDB · sonda de navegador 4/4
->    (la oferta del cajón recalcula al cambiar de hora, `/root/e2e/extra-hour-probe.js`).
+> **1. LA HORA EXTRA — ✅ CÓDIGO COMPLETO Y DEMO EN LOCAL; queda su ✅ FINAL y el alta en PRODUCCIÓN**
+>    (2026-09-03, `#410`/`#411`). Las cuatro tandas en el árbol, el producto REAL dado de alta en
+>    localhost («Hora extra» 3,00 € en «Jump · 2 horas») con **6 pedidos demo** del cliente
+>    `demo-hora-extra@jumpweb.test` (casos A–F de la spec §4.8 + el rechazo G sobre datos reales), y
+>    **la PRIMERA pasada del ojo del owner hecha y APLICADA** (spec §8.5): el Resumen del día lista
+>    los complementos vivos de cada reserva y la nota de la fila dice «Para N entradas que se quedan».
+>    **EMPIEZA por `docs/specs/hora-extra.md` §8** (lo construido y sus trampas). Evidencia: suite
+>    4.107 · 28/28 mutaciones · `purchase:verify-oversell` visto FALLAR sin la validación (5 asientos
+>    en franja de 1, SIN carrera) y sus SIETE escenarios + Redsys en verde sobre InnoDB · sondas de
+>    navegador 4/4 y 4/4. ▶ **Lo que queda es del owner**: su ✅ final mirando la demo, y —cuando
+>    toque producción— dar de alta el producto ALLÍ (es DATO; en producción la feature está dormida
+>    por construcción hasta ese alta. El código ya está desplegable: viaja con el próximo deploy).
 >    Si eres el otro agente (landing): esto vivió entero en Booking/panel/API — sin choque.
->    ▶ **El producto REAL está dado de alta en localhost** («Hora extra» 3,00 € en «Jump · 2 horas»)
->    con 6 pedidos demo del cliente `demo-hora-extra@jumpweb.test` y **la PRIMERA pasada del ojo del
->    owner hecha y APLICADA** (spec §8.5): el Resumen del día lista los complementos de cada reserva
->    y la nota de la fila dice «Para N entradas que se quedan». Sigue 🟦 hasta su ✅ final.
+>    ▶ ⚠️ **Del cierre**: `audit-clock` cazó una MONEDA AL AIRE que no era del reloj —
+>    `mt_rand(100,999)` contra el `UNIQUE` de `orders.code` en `GuardianAuthorizationSwitchTest`
+>    (y un hermano con emails en `GuardianLinkDeliveryTest`) — arreglada con contadores
+>    deterministas; la pasada rota se REPITIÓ entera con su reloj y el reloj queda 12/12 (`#412`).
 >
 > **2. EL PRODUCTO DE EXCURSIONES EN PRODUCCIÓN, que lo corre el OWNER.** Guion idempotente con
 >    dry-run en `~/excursiones-produccion.php`, **fuera del repo** (`#325`). Este agente **no tiene

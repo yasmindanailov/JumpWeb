@@ -42,6 +42,8 @@ use Tests\TestCase;
  */
 class GuardianLinkDeliveryTest extends TestCase
 {
+    private int $customerCounter = 0;
+
     use RefreshDatabase;
 
     /**
@@ -112,7 +114,9 @@ class GuardianLinkDeliveryTest extends TestCase
     /** Un pedido PAGADO por la puerta del MOSTRADOR, que es el «caso 3» del owner. */
     private function sellAtCounter(TicketType $type, bool $said): Order
     {
-        $customer = User::factory()->create(['email' => 'cliente'.mt_rand(1, 9999).'@example.test']);
+        // Determinista y no `mt_rand`: lo aleatorio contra el `UNIQUE` de `users.email` es la
+        // misma moneda al aire que `audit-clock` cazó en el fichero hermano (`#411`).
+        $customer = User::factory()->create(['email' => 'cliente'.(++$this->customerCounter).'@example.test']);
         $customer->roles()->sync([Role::where('name', 'customer')->value('id')]);
 
         return app(ManualOrderFulfiller::class)->fulfill($customer, [[

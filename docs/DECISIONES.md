@@ -22443,3 +22443,31 @@ su palanca en §8.3.
 **Verificación**: cada tanda commiteada ANTES de su arnés de mutación (la regla de `#181`), los dos
 verificadores tras tocar `CRITICAL_RE`, y la sonda de navegador con siembra idempotente que se
 limpia sola.
+
+## #412 · 2026-09-03 · La auditoría del reloj cazó un fallo que NO era del reloj — y mi tubería se comió el veredicto
+
+**En el cierre de la jornada de la hora extra**, `audit-clock` (obligatorio: la tanda añadió
+fixtures con fechas) salió con UNA pasada roja. Tres lecciones, dos de ellas repetidas:
+
+**1 · El instrumento primero — y esta vez el torcido era el MÍO.** Lancé la auditoría como
+`bash scripts/audit-clock.sh | tail -20`: la tubería se comió el principio del informe (el nombre de
+la pasada rota y el test) **y el código de salida** (el `exit 0` era de `tail`). El ✗ era real y mi
+arnés decía verde. *Por código de salida y sin tuberías delante del veredicto* — la misma regla que
+el arnés de mutación de `#317` aprendió por su lado.
+
+**2 · Lo que parecía reloj era una MONEDA AL AIRE.** El test roto
+(`GuardianAuthorizationSwitchTest`) generaba códigos de pedido con `mt_rand(100, 999)` contra el
+`UNIQUE` de `orders.code`: 900 valores, dos pedidos por caso ≈ 0,11 % de colisión por ejecución. Las
+~12 pasadas de la auditoría la sacaron por pura REPETICIÓN (`R-SWITCH323` dos veces), no por la
+fecha congelada. Es la familia de `#337`/`#408` —lo aleatorio contra una restricción es un rojo con
+fecha— en su variante de UNIQUE. Arreglado con contador determinista, y el barrido encontró **un
+hermano** (`GuardianLinkDeliveryTest`: emails `mt_rand(1, 9999)` contra el UNIQUE de `users.email`),
+arreglado igual. Los demás generadores del barrido usan espacios de ≥16M valores.
+
+**3 · La pasada rota no se da por buena: se REPITE.** El pase congelado en `2026-09-05 12:00` nunca
+terminó su suite, así que «el reloj está bien» era una inferencia. Se re-corrió la suite ENTERA con
+ese reloj → verde. Con eso el reloj queda contestado **12/12**, y no 11/12 más una esperanza.
+
+**Verificación**: suite completa re-corrida con `TEST_CLOCK="2026-09-05 12:00:00"` (4107 ✓) · 20/20
+repeticiones del fichero arreglado · `grep` de `mt_rand` sobre `tests/` con los espacios de valores
+anotados.

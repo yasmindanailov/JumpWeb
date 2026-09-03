@@ -3729,9 +3729,15 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       **visto FALLAR** sin la validación (5 asientos en franja de 1, SIN carrera) y en verde con
       ella, el editor arrastrando a la familia, y la oferta del embudo recalculando (sonda de
       navegador 4/4). Suite 4.105 · 24/24 mutaciones · 7/7 + Redsys sobre InnoDB
-- [ ] **La hora extra: el OJO del owner + dar de alta el PRODUCTO (es DATO)** — catálogo →
-      complemento → «Ocupa la franja siguiente» + duración + precio + enganche a la entrada larga;
-      dormida por construcción hasta ese alta
+- [x] **La hora extra dada de alta EN LOCAL, con demo y la PRIMERA pasada del ojo APLICADA**
+      (2026-09-03, spec §8.5): «Hora extra» 3,00 € en «Jump · 2 horas», 6 pedidos demo (casos A–F)
+      del cliente `demo-hora-extra@jumpweb.test` + el intento G rechazado sobre datos reales. Sus
+      dos ajustes, hechos el mismo día: el **Resumen del día** lista los complementos vivos de cada
+      reserva, y la nota de la fila dice **«Para N entradas que se quedan»** (compuesta en
+      `viewModel()`, fuente única). 4/4 mutaciones nuevas (28/28 en la feature)
+- [ ] **La hora extra: el ✅ FINAL del owner + el alta del producto en PRODUCCIÓN (es DATO)** —
+      catálogo → complemento → «Ocupa la franja siguiente» + duración + precio + enganche a la
+      entrada larga; en producción sigue dormida por construcción hasta ese alta
 
 ### GOOGLE AUTH 🟦 — las tres tandas de código MÁS el pulido del ojo del owner (2026-09-02; T5→T8·d en el árbol, **los siete puntos del owner HECHOS**; queda la T9)
 ### GOOGLE AUTH ✅ — CERRADO Y EN PRODUCCIÓN (2026-09-02; T1→T8·d, los siete puntos del owner hechos, **One Tap descartado** por `#354`, y `playjump.es` sirviéndolo)
