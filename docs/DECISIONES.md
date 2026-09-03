@@ -23266,3 +23266,73 @@ verde.
 ninguna forma nueva. Los tres arreglos devuelven la pieza al vocabulario que su propio código ya
 decía usar: el radio de su tarjeta hermana, el `wrap` que su `flex-basis` daba por hecho, y la regla
 de campo que sus vecinos ya tienen.
+
+## #415 · 2026-09-03 · `[DECIDIDO owner]` Un complemento se tarifica por el día de la VISITA, no por el de la COMPRA — y con eso la hora extra puede ser de fin de semana
+
+**Lo pidió el encargo, no una auditoría.** El owner dio de alta la hora extra así: *«Hora extra Zona
+Kids para entrada de 2h findes, viernes, víspera y festivos: 5 € · Zona Jump: 8 €»*. El mecanismo
+para expresar «solo esos días» ya existe y encaja 1:1: el tipo de tarifa **`special`**, que se llama
+literalmente «Viernes, findes y festivos» (`weekdays [5,6,0]`), más `special_dates` para vísperas y
+festivos concretos. Un producto sin precio para la tarifa de ese día **ni se ofrece ni se vende** —
+falla hacia invisible, que es la conducta que se quiere.
+
+**Pero se preguntaba con el día equivocado.** Los complementos se tarificaban con `Carbon::today()`
+mientras el padre lo hacía con el día de la línea: dos relojes para la misma línea. Medido, lo que
+el owner pide salía **invertido en los dos sentidos**:
+
+| caso | conducta vieja |
+|---|---|
+| compro el **martes** una entrada para el **sábado** | la hora extra **no se puede añadir** — y es justo cuando se compra |
+| compro el **sábado** una entrada para el **martes** | **sí se añade**, cobrando un producto que ese día no existe |
+
+⚠️⚠️ **`hora-extra.md` §4.11 lo había ANTICIPADO ayer mismo** (`[DECIDIDO owner, 2026-09-03]`: «el
+precio de la hora extra NO varía por día, *en principio*»), con el aviso escrito: *«si algún día el
+owner quisiera suplemento de finde, cobraría el precio del día en que se compró. No lo descubras en
+producción: ya está descubierto aquí»*. Esta entrada es ese día. **La decisión de ayer queda
+revisada por el encargo**, no contradicha.
+
+**La medida que abarató el cambio**: de los **12** complementos del catálogo, **CERO** tienen precio
+distinto por tipo de día (10 iguales en ambas tarifas, 2 son portadores internos sin precio). O sea
+que el cambio de conducta **no mueve un solo céntimo de lo que ya se vendía** — y por eso mismo la
+suite entera pasaba con el defecto puesto: la diferencia valía cero euros y no la veía nadie.
+
+▶ **Son SIETE puntos, no los tres que la spec nombraba** (censo, no lectura): `OrderCreator` ·
+`CartPricer` · `AddonOfferReader` · `CreateManualOrderPage` (×2) · `PostFormAddons` (×2). Los dos
+últimos entran **a propósito**: si el post-form se quedara con `today()`, la regla serían DOS y
+podrían divergir sin que fallara nada, que es justo lo que este subsistema evita en todo lo demás.
+`PostFormAddons` gana un `pricingDate()` único que comparten su lectura y su escritura, porque si
+divergieran la pantalla enseñaría un precio y se cobraría otro.
+
+▶ **Y en `CartPricer` había una excepción explícita que era FALSA**: un complemento vendido como
+línea principal se tarificaba a hoy «porque no tiene fecha propia», y `date` es **obligatorio en toda
+línea de cesta** (`CartLine.required` del contrato). Retirada.
+
+**Guarda**: `AddonPricingDateTest`, 6 casos sobre las **cuatro** superficies (presupuesto, cobro,
+oferta, post-form y mostrador) — todos con `travelTo`, porque la conducta vieja y la nueva **solo se
+distinguen cuando el día de la compra y el de la visita caen en tarifas distintas**: sin viajar en el
+tiempo, estos casos pasarían con el defecto puesto los días en que ambos coinciden, que es
+exactamente cómo el defecto sobrevivió. Incluye el CONTROL de que un complemento de precio plano no
+se mueve, que es el que dice que la migración no tocó lo ya vendido.
+
+**Arnés**: `scripts/mutar-tarifa-complemento.sh` devuelve `Carbon::today()` a cada punto por
+separado. **7 de 7 muerden.** ⚠️ Nació en **2 de 7** y las lecciones son dos: cuatro puntos no tenían
+red (se escribieron los casos que faltaban), y uno decía «no muerde» porque **la mutación estaba mal
+escrita** —restauraba una rama que en esos casos no se toma—: *una mutación que no altera la conducta
+no prueba que falte una guarda, prueba que está mal escrita*.
+
+⚠️⚠️ **El cambio ROMPIÓ un verificador y eso también es un hallazgo**: `postform:verify-concurrency
+--scenario=addons` pasó a escribir **0 líneas** y cantaba «✗ FALLA» con el producto sano. Su fixture
+daba precio solo en `normal` y siembra la fiesta a **hoy + 10 días**, así que 3 de cada 7 ejecuciones
+caen en `special`. Arreglado dando precio en TODAS las tarifas activas: *un comando que mide
+CONCURRENCIA no puede depender del día de la semana en que se ejecute*.
+
+❗❗ **PASO DE DESPLIEGUE, y es la otra cara de la moneda**: desde este cambio, **un complemento con
+precio solo en `normal` deja de venderse en días `special`**. En local no afecta a ninguno (los 10
+con precio lo tienen en las dos tarifas), pero **hay que comprobarlo en producción ANTES de
+desplegar**, porque el modo de fallo es mudo: el complemento simplemente deja de aparecer.
+
+**Verificación**: suite **4.237 ✓ · 26.676** · Pint 1.172 · 7/7 mutaciones · `VERIFY_CONC` con los
+**siete** escenarios de aforo (incluido `extra-hour`), Redsys, los dos de post-form con su control
+negativo (4 de 8 interbloqueos con el orden invertido) y los dos de fiesta mixta · y medido sobre los
+datos reales: la hora extra se ofrece viernes y sábado y **no** martes ni miércoles, corriéndolo un
+jueves — que es lo que demuestra que se pregunta por el día de la visita y no por hoy.

@@ -359,6 +359,13 @@ barrió lo que la spec **no** miraba. Salieron cuatro huecos reales y tres regla
 | **3** | `seats_per_unit` está en la MISMA sección oculta que `duration_min`: el diseño dependía en silencio del default 1 | §4.1 (el guard lo exige) + §4.9 |
 | **4** | la regla de «la franja siguiente» no estaba ESCRITA (el borde 8 corregía el dónde, no el qué) | §4.6·8 (determinista, con el `UNIQUE` medido) |
 
+▶ ⚠️⚠️ **REVISADA EL MISMO DÍA por `DECISIONES #415`, y la corrección va ANTES que el texto de
+abajo.** El owner dio de alta la hora extra como producto de **viernes, findes, vísperas y festivos**,
+que es justo el caso que este párrafo dejó anotado como pendiente. Hoy **un complemento se tarifica
+por el día de la VISITA** en los SIETE puntos que lo hacen (eran tres en este texto: el censo dio
+siete), así que «solo findes» se expresa poniéndole precio únicamente en la tarifa `special` y la
+hora extra aparece o no según el día de la FIESTA, no según cuándo se abra la web. El límite que este
+párrafo aceptaba **ya no existe**; lo que sigue vale como historia de por qué se aceptó.
 ▶ **`[DECIDIDO owner, 2026-09-03]` · el PRECIO de la hora extra NO varía por día (en principio).**
 Lo que lo motiva: los complementos se tarifican a **`Carbon::today()`** —el día de la COMPRA— en los
 TRES caminos (`OrderCreator::createPendingOrder()`, `CartPricer`, `CreateManualOrderPage`), mientras

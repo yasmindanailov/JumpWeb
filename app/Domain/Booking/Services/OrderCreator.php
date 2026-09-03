@@ -302,7 +302,13 @@ class OrderCreator
                 // obligatorios y el default de cada grupo aunque el cliente los omita — y desde la
                 // hora extra (`specs/hora-extra.md`) aplica también el tope por SUMA («no se quedan
                 // más de los que entran», §4.4·5) y pone las PLAZAS de las filas que ocupan.
-                $resolved = $this->addons->resolve($type, (int) $line['qty'], $line['addons'] ?? [], Carbon::today());
+                // ⚠️⚠️ **La fecha es la de la VISITA, no `Carbon::today()`** (`#415`). Hasta el
+                // 2026-09-03 los complementos se tarificaban al día de la COMPRA en los siete puntos
+                // que los tarifican, y el padre al día de la visita: dos relojes para la misma línea.
+                // Con la hora extra —un complemento ANCLADO a una franja— eso significaba que un
+                // producto de fin de semana se vendía o no según el día en que se abriera la web.
+                // La misma fecha que el padre, dos líneas más arriba.
+                $resolved = $this->addons->resolve($type, (int) $line['qty'], $line['addons'] ?? [], Carbon::parse($line['date']));
                 $subtotal += $resolved['subtotal'];
 
                 // La HORA EXTRA: cada hija que OCUPA (seats > 0, solo las pone `resolve()` para un

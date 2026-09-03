@@ -75,13 +75,23 @@ class AddonOfferReader implements AddonOffer
         // los grupos que el cliente no mandó, para no pisar su elección.
         $choices += AddonResolver::defaultSelection($offered)['groups'];
 
+        // ⚠️⚠️ **La OFERTA se tarifica con el día de la VISITA, igual que el cobro** (`#415`). Con
+        // `Carbon::today()` aquí y en `OrderCreator` los dos coincidían —no había bug de paridad—,
+        // pero los dos respondían a la pregunta equivocada: si un complemento solo tiene precio en
+        // días `special` (la hora extra de finde), lo que decidía si aparece era **el día en que se
+        // abre la web**, no el de la fiesta. Un martes no se podía añadir a una reserva del sábado, y
+        // un sábado sí se añadía a una del martes.
+        //
+        // ⚠️ Sin fecha elegida todavía se cae a HOY, que es la conducta de siempre: es el estado en
+        // que el cliente aún no ha dicho qué día viene, así que no hay día de visita con el que
+        // preguntar. En cuanto elige, el precio y la presencia se recalculan con el suyo.
         $view = $this->resolver->viewModel(
             $offered,
             $quantities,
             $choices,
             $guests,
             $product->isPack(),
-            Carbon::today(),
+            $date !== null ? Carbon::parse($date) : Carbon::today(),
         );
 
         // Y el que SÍ aterriza sale CAPADO por las plazas reales de su franja y por «no se quedan

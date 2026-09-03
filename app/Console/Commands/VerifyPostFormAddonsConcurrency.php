@@ -113,10 +113,20 @@ class VerifyPostFormAddonsConcurrency extends Command
      */
     private function seed(): array
     {
-        $rate = RateType::firstOrCreate(
+        // La `normal` tiene que existir aunque ya no se use suelta: es el suelo del resolvedor.
+        RateType::firstOrCreate(
             ['key' => RateType::KEY_NORMAL],
             ['label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0, 'is_active' => true],
         );
+
+        // ⚠️⚠️ **El fixture pone precio en TODAS las tarifas activas, no solo en `normal`** (`#415`).
+        // La fiesta se siembra a hoy + 10 días, o sea que 3 de cada 7 ejecuciones caen en viernes,
+        // sábado o domingo — tarifa `special`. Desde que un complemento se tarifica por el día de la
+        // VISITA, uno con precio solo en `normal` **no se vende ese día**, así que el escenario
+        // escribía CERO líneas y el verificador cantaba «✗ FALLA: se esperaba UNA línea» con el
+        // producto sano. *Este comando mide CONCURRENCIA: que su sujeto exista no puede depender del
+        // día de la semana en que se ejecute.*
+        $rates = RateType::query()->where('is_active', true)->get();
 
         $zone = Zone::create([
             'slug' => 'pf-'.Str::lower(Str::random(6)), 'name' => ['es' => 'Verify post-form'],
@@ -129,19 +139,23 @@ class VerifyPostFormAddonsConcurrency extends Command
             'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 901,
             'guest_fields' => [['key' => 'name', 'type' => 'text', 'required' => true, 'label' => ['es' => 'Nombre']]],
         ]);
-        Price::create([
-            'priceable_type' => $pack->getMorphClass(), 'priceable_id' => $pack->id,
-            'rate_type_id' => $rate->id, 'amount_cents' => 2500, 'currency' => 'EUR',
-        ]);
+        foreach ($rates as $r) {
+            Price::create([
+                'priceable_type' => $pack->getMorphClass(), 'priceable_id' => $pack->id,
+                'rate_type_id' => $r->id, 'amount_cents' => 2500, 'currency' => 'EUR',
+            ]);
+        }
 
         $addon = TicketType::create([
             'name' => ['es' => 'Cubo de refrescos (verify)'], 'type' => TicketType::TYPE_ADDON,
             'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 902,
         ]);
-        Price::create([
-            'priceable_type' => $addon->getMorphClass(), 'priceable_id' => $addon->id,
-            'rate_type_id' => $rate->id, 'amount_cents' => 1200, 'currency' => 'EUR',
-        ]);
+        foreach ($rates as $r) {
+            Price::create([
+                'priceable_type' => $addon->getMorphClass(), 'priceable_id' => $addon->id,
+                'rate_type_id' => $r->id, 'amount_cents' => 1200, 'currency' => 'EUR',
+            ]);
+        }
 
         $pack->configurableAddons()->attach($addon->id, [
             'position' => 1, 'quantity_mode' => ProductAddon::MODE_FIXED,
