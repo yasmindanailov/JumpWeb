@@ -112,11 +112,18 @@ class ApiContractTest extends TestCase
         // con el elegido por defecto de cada grupo. Lo que sigue mordiendo es `quantity`, que es
         // obligatoria porque decide la cantidad de los complementos por invitado.
         'AddonSelectionRequest' => ['date', 'time', 'addons', 'choices'],
-        // Cuerpo de PETICIÓN, y aquí los DOS campos son opcionales de verdad: un formulario de
-        // invitados se guarda a trozos —primero las fichas, luego las observaciones generales, o al
-        // revés— y exigir ambos obligaría a reenviar lo que no se está tocando. Lo que sigue
-        // mordiendo es `additionalProperties: false`, que impide colar un campo que el servidor
-        // ignoraría en silencio.
+        // Cuerpo de PETICIÓN, y aquí los DOS campos son opcionales de verdad: **la ausencia de una
+        // clave significa «no la toques»**, así que un cliente puede guardar las fichas sin reenviar
+        // las observaciones generales, o al revés. Lo que sigue mordiendo es
+        // `additionalProperties: false`, que impide colar un campo que el servidor ignoraría en silencio.
+        //
+        // ⚠️⚠️ **Este porqué DECÍA lo mismo y era MENTIRA hasta la T0 de
+        // `specs/complementos-post-reserva.md` (`#413`, 2026-09-03)**: hablaba de «guardar a trozos»
+        // mientras el controlador hacía `$validated['guests'] ?? []`, y `[]` significa VACIAR —
+        // medido, un `PUT` con solo `general` borraba los nombres y las edades de los ocho niños de
+        // una reserva real, con un 200 por respuesta. *Un campo opcional cuya ausencia destruye no
+        // es un campo opcional.* Hoy la ausencia se decide con `array_key_exists` en
+        // `AuthorizesGuestForm::submittedGuestFormArray()` y el dominio recibe `null`.
         'GuestFormRequest' => ['guests', 'general'],
     ];
 

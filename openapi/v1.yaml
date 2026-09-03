@@ -4424,12 +4424,22 @@ components:
       description: |
         El envío SUSTITUYE la lista entera de invitados. Todo se sanea en servidor contra el esquema
         del pack: lo que no esté en `guest_fields` se descarta.
+
+        **La AUSENCIA de una clave significa «no la toques»; mandarla vacía significa «vacíala».**
+        Las dos propiedades son opcionales precisamente para eso: se puede guardar solo las fichas,
+        o solo las observaciones generales, sin reenviar lo que no se está tocando.
+
+        ⚠️ Hasta 2026-09-03 el servidor convertía la ausencia en «vacía», así que un `PUT` que solo
+        mandara `general` **borraba las fichas de todos los invitados** y respondía 200. Un cliente
+        que guarde por partes debe omitir la clave, nunca mandarla vacía.
       additionalProperties: false
       properties:
         guests:
           type: array
           maxItems: 200
-          description: Una ficha por invitado, con sus respuestas por clave de campo.
+          description: |
+            Una ficha por invitado, con sus respuestas por clave de campo. Ausente = se conservan
+            las que ya hay; `[]` = se vacían todas.
           items:
             type: object
             additionalProperties:
@@ -4438,7 +4448,8 @@ components:
           type: object
           additionalProperties:
             type: string
-          description: Respuestas de los campos generales.
+          description: |
+            Respuestas de los campos generales. Ausente = se conservan; `{}` = se vacían.
 
     PaymentStatus:
       type: object

@@ -80,9 +80,13 @@ class GuestFormController extends Controller
             'general' => ['sometimes', 'array'],
         ]);
 
+        // ⚠️⚠️ La ausencia de una clave significa «no la toques», NUNCA «vacíala». El `?? []` que
+        // había aquí hacía que un `PUT` con solo `general` **borrara las fichas de los menores**
+        // (medido: 8 filas vaciadas, respuesta 200) — y el propio contrato lo documentaba como una
+        // virtud, «se guarda a trozos». Guardar a trozos borraba el otro trozo.
         $item->submitGuestForm(
-            $validated['guests'] ?? [],
-            $validated['general'] ?? [],
+            $this->submittedGuestFormArray($request, 'guests', $validated),
+            $this->submittedGuestFormArray($request, 'general', $validated),
             $this->guestFormVia($request),
         );
 

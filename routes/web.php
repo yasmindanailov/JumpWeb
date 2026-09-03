@@ -191,11 +191,22 @@ Route::post('/contacto', [ContactController::class, 'store'])
 // firma prueba la titularidad de ESA reserva) o autenticado desde "Mis pedidos" — el controlador
 // valida AMBOS (no usa el middleware `signed` para no excluir al dueño autenticado). POST con CSRF
 // estándar + throttle. `no-store` (L1): la página lleva nombres+alergias de menores (art. 9).
+//
+// ⚠️⚠️ **`->missing()` NO es cosmético: sostiene la escalada 403 → 410 → 404** (`RGPD-03`,
+// `Http\Concerns\AuthorizesGuestForm`). Con el *route model binding* implícito a secas, un id
+// INEXISTENTE responde 404 **antes** de que corra la autorización, y uno existente 403: la
+// diferencia le cuenta a cualquier desconocido qué reservas hay. Medido con `curl` el 2026-09-03,
+// antes de este cambio: id existente → 403, id inventado → 404, mientras la API respondía 403 a los
+// dos porque su controlador resuelve a mano. *El orden de la escalada solo se sostiene si nada
+// responde antes que ella.*
 Route::get('/reserva/{reservation}/datos-invitados', [GuestFormController::class, 'show'])
     ->middleware('no-store')
+    ->missing(fn () => abort(403))
     ->name('reservation.guests');
 Route::post('/reserva/{reservation}/datos-invitados', [GuestFormController::class, 'store'])
-    ->middleware(['throttle:30,1', 'no-store'])->name('reservation.guests.store');
+    ->middleware(['throttle:30,1', 'no-store'])
+    ->missing(fn () => abort(403))
+    ->name('reservation.guests.store');
 
 // El JUSTIFICANTE de un menor INVITADO a una reserva («waiver offshore», `#328`): un adulto SIN
 // cuenta autoriza a un menor que no es menor a cargo de quien reservó. Va por PEDIDO —es «el papelito
@@ -206,11 +217,16 @@ Route::post('/reserva/{reservation}/datos-invitados', [GuestFormController::clas
 // Lleva `throttle` por IP además de Turnstile y del honeypot (`SEC-06`): un CAPTCHA resuelto no es una
 // barrera de volumen. El tope por pedido y la ventana temporal los impone el DOMINIO bajo el lock.
 // `no-store` (`RGPD-04`): la pantalla lleva el nombre y la fecha de nacimiento de un menor.
+//
+// ⚠️ Y el mismo `->missing()` que el post-form, por el mismo motivo: `AuthorizesGuardianAuthorization`
+// repite la escalada 403 → 410 → 404 y el binding implícito la cortocircuitaba igual.
 Route::get('/autorizacion/{reservation}', [GuardianAuthorizationController::class, 'show'])
     ->middleware('no-store')
+    ->missing(fn () => abort(403))
     ->name('reservation.authorization');
 Route::post('/autorizacion/{reservation}', [GuardianAuthorizationController::class, 'store'])
     ->middleware(['throttle:10,1', 'no-store'])
+    ->missing(fn () => abort(403))
     ->name('reservation.authorization.store');
 
 // SEO: mapa del sitio para buscadores.

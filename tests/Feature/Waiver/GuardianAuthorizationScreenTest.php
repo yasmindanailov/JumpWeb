@@ -203,6 +203,26 @@ class GuardianAuthorizationScreenTest extends TestCase
 
     // ─── 2 · La escalada, y su ORDEN ──────────────────────────────────────────
 
+    /**
+     * ❗❗ **El compañero que faltaba, y sin él la escalada era una media verdad** (T0 de `#413`).
+     * El caso de abajo prueba que una reserva REAL sin firma da 403; éste prueba que una que **no
+     * existe** da lo mismo. Hasta el 2026-09-03 daba **404**, porque el *route model binding*
+     * implícito respondía antes de que corriera `AuthorizesGuardianAuthorization` — o sea que el
+     * orden que el docblock de esta clase declara como propiedad de seguridad se cumplía en la
+     * teoría y no en la ruta. Lo cerró `->missing(fn () => abort(403))`.
+     */
+    public function test_an_unknown_reservation_answers_403_exactly_like_a_real_one(): void
+    {
+        $order = $this->orderFor($this->responsible());
+
+        $real = $this->get(route('reservation.authorization', ['reservation' => $this->reservationOf($order)]));
+        $unknown = $this->get(route('reservation.authorization', ['reservation' => 999999]));
+
+        $real->assertForbidden();
+        $unknown->assertForbidden();
+        $this->post(route('reservation.authorization.store', ['reservation' => 999999]), [])->assertForbidden();
+    }
+
     public function test_without_a_valid_signature_it_is_403_even_for_a_real_order(): void
     {
         $order = $this->orderFor($this->responsible());

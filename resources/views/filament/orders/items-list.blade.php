@@ -623,6 +623,20 @@
                         size="lg"
                         :label="__('admin.orders.copy_guest_form.btn_aria')"
                     />
+
+                    {{-- ROTAR el enlace (`#413` D14): ese enlace abre sin sesión y se reenvía, así que
+                         es una credencial. Si ha circulado por donde no debía, esto la retira en el
+                         acto. Va junto a «Copiar» porque es el mismo objeto, y solo con el permiso
+                         que gobierna el formulario de invitados desde el panel. --}}
+                    @if (auth()->user()?->hasPermission('orders.edit_guest_data'))
+                        <x-filament::icon-button
+                            wire:click="mountAction('rotateGuestFormLink', { item: {{ $item->id }} })"
+                            icon="heroicon-o-arrow-path"
+                            color="gray"
+                            size="lg"
+                            :label="__('admin.orders.rotate_guest_form.btn_aria')"
+                        />
+                    @endif
                 @endif
 
                 {{-- El enlace del JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md`

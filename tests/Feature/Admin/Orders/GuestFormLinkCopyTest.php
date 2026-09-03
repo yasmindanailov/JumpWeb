@@ -6,8 +6,10 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -162,5 +164,112 @@ class GuestFormLinkCopyTest extends TestCase
         $reservationB = $this->reservation($orderB);
 
         $this->assertNull($this->linkFor($orderA, $reservationB));
+    }
+    // ── ROTAR el enlace (D14 de `#413`) ────────────────────────────────────────────────────────
+
+    /**
+     * El enlace del post-form abre sin sesión y se reenvía: es una **credencial portadora**, y
+     * `RGPD-06` no la alcanza porque es HMAC y no hay fila que revocar. Este gesto es su palanca:
+     * sube la versión que viaja dentro de la firma, y los enlaces anteriores dejan de abrir.
+     *
+     * Se conduce la ACCIÓN REAL de la página, no el helper: una guarda sobre el método suelto no ve
+     * el cableado (la lección de `OrderAdminActionsTest`).
+     */
+    public function test_the_operator_can_rotate_the_link_and_the_previous_one_stops_opening(): void
+    {
+        $order = $this->orderWith($this->pack);
+        $item = $this->reservation($order);
+        $old = $item->guestFormSignedUrl();
+
+        $this->get($old)->assertOk();
+
+        Livewire::actingAs($this->admin())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('rotateGuestFormLink', arguments: ['item' => $item->id]);
+
+        $this->assertSame(1, $item->refresh()->guestFormLinkVersion());
+        $this->get($old)->assertForbidden();
+        $this->get($item->guestFormSignedUrl())->assertOk();
+    }
+
+    /**
+     * ⚠️ **Rotar retira una CREDENCIAL, no deshace una GESTIÓN.** Lo que el cliente ya rellenó con el
+     * enlace viejo sigue ahí: borrarlo sería castigar al titular por haber compartido el enlace, y
+     * quitar lo que un tercero añadió es otro gesto del operador.
+     */
+    public function test_rotating_does_not_touch_what_was_already_filled_in(): void
+    {
+        $order = $this->orderWith($this->pack);
+        $item = $this->reservation($order);
+        $item->submitGuestForm([['name' => 'Ana'], ['name' => 'Luis']], null, 'signed_link');
+
+        Livewire::actingAs($this->admin())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('rotateGuestFormLink', arguments: ['item' => $item->id]);
+
+        $this->assertSame('Ana', $item->refresh()->guestData()[0]['name'] ?? null);
+        $this->assertSame('Luis', $item->guestData()[1]['name'] ?? null);
+    }
+
+    /**
+     * `SEC-04`: el permiso se re-exige en el MOMENTO de ejecutar. Un empleado sin
+     * `orders.edit_guest_data` no rota aunque fuerce el `mountAction`, y el intento **queda auditado**
+     * — un bloqueo silencioso no deja ver que alguien lo intentó.
+     */
+    public function test_without_the_permission_it_neither_rotates_nor_stays_silent(): void
+    {
+        $order = $this->orderWith($this->pack);
+        $item = $this->reservation($order);
+
+        $staff = User::factory()->create();
+        $staff->roles()->sync([Role::where('name', 'staff')->value('id')]);
+        $staff->roles()->first()->permissions()->detach(
+            Permission::where('name', 'orders.edit_guest_data')->value('id')
+        );
+
+        Livewire::actingAs($staff)
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('rotateGuestFormLink', arguments: ['item' => $item->id]);
+
+        $this->assertSame(0, $item->refresh()->guestFormLinkVersion());
+        $this->assertDatabaseHas('audit_logs', ['action' => 'orders.guest_form_link_rotate_blocked']);
+    }
+
+    /**
+     * `RGPD-02`: el rastro dice QUÉ reserva y en qué versión quedó, **nunca el enlace ni la firma** —
+     * escribirlos sería guardar la credencial en claro en una tabla que el panel enseña.
+     */
+    public function test_the_rotation_is_audited_without_the_link(): void
+    {
+        $order = $this->orderWith($this->pack);
+        $item = $this->reservation($order);
+
+        Livewire::actingAs($this->admin())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('rotateGuestFormLink', arguments: ['item' => $item->id]);
+
+        $row = AuditLog::where('action', 'orders.guest_form_link_rotated')->firstOrFail();
+        $payload = is_array($row->payload) ? $row->payload : [];
+        $this->assertSame($item->id, $payload['order_item_id'] ?? null);
+        $this->assertSame(1, $payload['version'] ?? null);
+        $this->assertStringNotContainsString('signature', json_encode($payload) ?: '');
+        $this->assertStringNotContainsString('/reserva/', json_encode($payload) ?: '');
+    }
+
+    /**
+     * Defensa IDOR: el gesto pasa por `resolveItem()` + `guestFormLinkForManageItem()`, así que una
+     * reserva de OTRO pedido no se rota aunque se fuerce el id — la misma puerta que el enlace.
+     */
+    public function test_it_does_not_rotate_a_reservation_of_another_order(): void
+    {
+        $order = $this->orderWith($this->pack);
+        $other = $this->orderWith($this->pack);
+        $foreign = $this->reservation($other);
+
+        Livewire::actingAs($this->admin())
+            ->test(ViewOrder::class, ['record' => $order->code])
+            ->callAction('rotateGuestFormLink', arguments: ['item' => $foreign->id]);
+
+        $this->assertSame(0, $foreign->refresh()->guestFormLinkVersion());
     }
 }

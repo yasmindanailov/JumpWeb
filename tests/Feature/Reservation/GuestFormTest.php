@@ -718,4 +718,100 @@ class GuestFormTest extends TestCase
             @rmdir($dir);
         }
     }
+    // ── La escalada 403 → 410 → 404 en la WEB (T0 de `#413`) ───────────────────────────────────
+
+    /**
+     * ❗❗ **Hasta el 2026-09-03 esta propiedad solo se cumplía en la API.** El `AuthorizesGuestForm`
+     * documenta que el ORDEN de la escalada es una propiedad de seguridad —autorizar ANTES de mirar
+     * si el recurso existe— y el controlador de la API resuelve la reserva a mano justamente para
+     * eso. La ruta web usaba *route model binding* implícito, así que Laravel respondía **404 antes
+     * de que corriera nada**: medido con `curl`, un id existente daba 403 y uno inventado 404, y esa
+     * diferencia le cuenta a cualquier desconocido qué reservas hay.
+     *
+     * El arreglo es `->missing(fn () => abort(403))` en las rutas; este caso es su red.
+     */
+    public function test_an_unknown_reservation_answers_403_exactly_like_an_existing_one(): void
+    {
+        $reservation = $this->reservation($this->paidOrder(User::factory()->create(), $this->pack()));
+
+        $existing = $this->get(route('reservation.guests', ['reservation' => $reservation]));
+        $unknown = $this->get(route('reservation.guests', ['reservation' => 999999]));
+
+        $existing->assertForbidden();
+        $unknown->assertForbidden();
+        // Y el POST igual: un id inventado no puede distinguirse de uno real sin firma.
+        $this->post(route('reservation.guests.store', ['reservation' => 999999]), [])->assertForbidden();
+    }
+
+    // ── La AUSENCIA de una clave: «no la toques», nunca «vacíala» (T0 de `#413`) ────────────────
+
+    /**
+     * ❗❗ El mismo defecto que la API, por la puerta de la web: `input('guests', [])` convertía un
+     * cuerpo parcial en **N fichas vacías**. Aquí el formulario siempre manda las fichas, así que la
+     * forma de llegar es un POST forjado o una pestaña vieja — y la respuesta correcta a un cuerpo
+     * incompleto nunca puede ser destruir datos de menores.
+     */
+    public function test_a_post_without_guests_does_not_wipe_the_children_data(): void
+    {
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
+
+        $this->actingAs($user)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
+            'guests' => [['name' => 'Ana', 'allergy' => 'frutos secos'], ['name' => 'Luis']],
+        ])->assertRedirect();
+
+        // Un POST que solo trae los generales: no puede llevarse por delante lo demás.
+        $this->actingAs($user)->post(route('reservation.guests.store', ['reservation' => $reservation]), [
+            'general' => ['adults' => '7'],
+        ])->assertRedirect();
+
+        $reservation->refresh();
+        $this->assertSame('Ana', $reservation->guestData()[0]['name'] ?? null);
+        $this->assertSame('frutos secos', $reservation->guestData()[0]['allergy'] ?? null);
+        $this->assertSame('7', $reservation->event_data['adults'] ?? null);
+    }
+
+    // ── Rotar el enlace (D14 de `#413`) ────────────────────────────────────────────────────────
+
+    /**
+     * El enlace del post-form es una **credencial portadora**: abre sin sesión y se reenvía. `RGPD-06`
+     * no la alcanza —es HMAC, no hay fila que revocar—, así que la palanca es la VERSIÓN que viaja
+     * dentro de la firma. Rotar la sube y el enlace anterior deja de abrir en el acto.
+     */
+    public function test_rotating_the_link_closes_the_previous_web_link(): void
+    {
+        $reservation = $this->reservation($this->paidOrder(User::factory()->create(), $this->pack()));
+        $old = $reservation->guestFormSignedUrl();
+
+        $this->get($old)->assertOk();
+
+        $reservation->rotateGuestFormLink();
+
+        // Credencial retirada: 403, el mismo peldaño que «no traes firma» — nunca un 404, que diría
+        // que la reserva existió.
+        $this->get($old)->assertForbidden();
+        $this->post($reservation->guestFormSignedStoreUrl().'&forged=1', [])->assertForbidden();
+        $this->get($reservation->refresh()->guestFormSignedUrl())->assertOk();
+    }
+
+    /**
+     * ⚠️ El formulario que se pinta al abrir un enlace firmado tiene que POSTear a una URL firmada
+     * **con la misma versión**: si la compusiera a mano sin ella, el cliente abriría la página y no
+     * podría guardar. Por eso las cuatro URLs firmadas del post-form salen del dominio.
+     */
+    public function test_the_form_of_a_signed_visit_posts_to_a_url_that_carries_the_version(): void
+    {
+        $reservation = $this->reservation($this->paidOrder(User::factory()->create(), $this->pack()));
+        $reservation->rotateGuestFormLink();
+        $reservation->refresh();
+
+        $html = $this->get($reservation->guestFormSignedUrl())->assertOk()->getContent();
+
+        $this->assertStringContainsString('v=1', $html);
+        // Y el POST a esa URL de verdad guarda (no basta con que el parámetro esté escrito).
+        $this->post($reservation->guestFormSignedStoreUrl(), [
+            'guests' => [['name' => 'Ana'], ['name' => 'Luis']],
+        ])->assertRedirect();
+        $this->assertSame('Ana', $reservation->refresh()->guestData()[0]['name'] ?? null);
+    }
 }

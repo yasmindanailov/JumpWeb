@@ -1008,6 +1008,8 @@ return [
                     'refund_failed' => 'Reembolso fallido',
                     'email_resent' => 'Email reenviado',
                     'email_resent_blocked' => 'Reenvío de email bloqueado',
+                    'guest_form_link_rotated' => 'Enlace del formulario rotado',
+                    'guest_form_link_rotate_blocked' => 'Rotación del enlace bloqueada',
                     'guest_form_submitted' => 'Formulario de invitados enviado',
                     'payment_init_failed' => 'No se pudo iniciar el cobro',
                     'slip_printed' => 'Hoja de reserva impresa',
@@ -1089,6 +1091,17 @@ return [
             'send_heading' => 'Enviar el enlace del justificante',
             'send_description' => 'Se le manda a :email un correo con el enlace para que lo reparta entre los padres de los menores invitados.',
         ],
+        // El enlace del post-form es una CREDENCIAL: abre sin sesión, viaja por correo y se reenvía.
+        // Rotarlo lo retira en el acto (`specs/complementos-post-reserva.md` §4.6.bis, `#413` D14).
+        'rotate_guest_form' => [
+            'btn_aria' => 'Rotar el enlace del formulario',
+            'modal_heading' => '¿Rotar el enlace de este formulario?',
+            'modal_description' => 'El enlace que se envió deja de funcionar en el acto y hay que mandarle uno nuevo al cliente. Úsalo si el enlace ha circulado por donde no debía. Lo que ya se rellenó o se añadió con el enlace anterior NO se borra.',
+            'submit' => 'Rotar el enlace',
+            'success' => 'Enlace rotado. Cópialo de nuevo y envíaselo al cliente.',
+            'blocked' => 'No se ha podido rotar el enlace de esta reserva.',
+        ],
+
         'copy_guest_form' => [
             'btn_aria' => 'Enlace del formulario de invitados',
             'modal_heading' => 'Enlace del formulario de invitados',

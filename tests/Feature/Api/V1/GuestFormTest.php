@@ -12,6 +12,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AgeFamilySealer;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -458,5 +459,166 @@ class GuestFormTest extends ApiTestCase
 
         $this->assertArrayHasKey('adults', $response->json('general'));
         $this->assertArrayNotHasKey('celebrant', $response->json('general'));
+    }
+
+    // ── La AUSENCIA de una clave: «no la toques», nunca «vacíala» (T0 de `#413`) ────────────────
+
+    /**
+     * ❗❗ **El defecto que esto cierra borraba datos de MENORES, y respondía 200.**
+     *
+     * El controlador hacía `$validated['guests'] ?? []`, y `[]` no significa «no me lo mandes»:
+     * `TicketType::sanitizeGuestData([], N)` devuelve **N filas VACÍAS**. Medido sobre una reserva
+     * real de 8 invitados antes del arreglo: un `PUT` que solo traía `general` dejaba las ocho fichas
+     * a cero —nombres, edades y alergias— sin un solo error. Y el contrato de la API lo documentaba
+     * como una virtud: «un formulario de invitados se guarda a trozos». *Guardar a trozos borraba el
+     * otro trozo.*
+     */
+    public function test_a_body_without_guests_does_not_wipe_the_children_data(): void
+    {
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
+        $save = $this->getJson($reservation->guestFormApiUrls()['show'])->json('save_url');
+
+        $this->putJson($save, [
+            'guests' => [['name' => 'Ana', 'allergy' => 'frutos secos'], ['name' => 'Luis']],
+            'general' => ['adults' => '4'],
+        ])->assertOk();
+
+        // Segundo guardado: SOLO los generales, como haría un cliente que actualiza una sola parte.
+        $this->putJson($save, ['general' => ['adults' => '6']])
+            ->assertOk()->assertValidRequest()->assertValidResponse(200);
+
+        $reservation->refresh();
+        $this->assertSame('Ana', $reservation->guestData()[0]['name'] ?? null);
+        $this->assertSame('frutos secos', $reservation->guestData()[0]['allergy'] ?? null);
+        $this->assertSame('Luis', $reservation->guestData()[1]['name'] ?? null);
+        // Y lo que SÍ venía en el cuerpo se guardó.
+        $this->assertSame('6', $reservation->event_data['adults'] ?? null);
+    }
+
+    /**
+     * El CONTROL de la anterior, y lo que hace que «ausente» signifique algo: mandar la lista
+     * explícitamente VACÍA sí vacía. Sin este caso, la regla sería «guests nunca se toca», que es
+     * otra cosa.
+     */
+    public function test_an_explicit_empty_guests_list_does_wipe_it(): void
+    {
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
+        $save = $this->getJson($reservation->guestFormApiUrls()['show'])->json('save_url');
+
+        $this->putJson($save, ['guests' => [['name' => 'Ana'], ['name' => 'Luis']]])->assertOk();
+        $this->putJson($save, ['guests' => []])->assertOk();
+
+        $reservation->refresh();
+        $this->assertSame([[], []], $reservation->guestData());
+    }
+
+    /** La misma regla para los generales, que es donde se midió el defecto por primera vez. */
+    public function test_a_body_without_general_does_not_wipe_the_general_answers(): void
+    {
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
+        $save = $this->getJson($reservation->guestFormApiUrls()['show'])->json('save_url');
+
+        $this->putJson($save, ['guests' => [['name' => 'Ana'], ['name' => 'Luis']], 'general' => ['adults' => '9']])->assertOk();
+        $this->putJson($save, ['guests' => [['name' => 'Ana'], ['name' => 'Luis']]])->assertOk();
+
+        $reservation->refresh();
+        $this->assertSame('9', $reservation->event_data['adults'] ?? null);
+        // Y lo de la fase de RESERVA sigue intacto, como siempre.
+        $this->assertSame('Mara', $reservation->event_data['celebrant'] ?? null);
+    }
+
+    // ── El sello deja de mover el token optimista del operador (T0 de `#413`) ──────────────────
+
+    /**
+     * `guest_form_completed_at` se re-estampaba con `now()` en CADA guardado completo, y `updated_at`
+     * del ítem es el token optimista de **cinco** puertas del operador: un cliente repasando su
+     * formulario le invalidaba los modales abiertos con `stale_item_version` sin haber cambiado nada.
+     *
+     * ⚠️ **El `travel()` no es adorno**: sin él los dos guardados caen en el mismo segundo y el test
+     * pasaría con el defecto puesto — la trampa del valor trivial de `CONVENCIONES §3.quater`.
+     */
+    public function test_an_identical_save_does_not_move_the_optimistic_token(): void
+    {
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
+        $save = $this->getJson($reservation->guestFormApiUrls()['show'])->json('save_url');
+        $body = ['guests' => [['name' => 'Ana'], ['name' => 'Luis']], 'general' => ['adults' => '4']];
+
+        $this->putJson($save, $body)->assertOk();
+        $token = $reservation->refresh()->updated_at;
+
+        $this->travel(120)->seconds();
+        $this->putJson($save, $body)->assertOk();
+
+        $this->assertTrue($token->equalTo($reservation->refresh()->updated_at));
+    }
+
+    /** El CONTROL: un guardado que SÍ cambia algo mueve el token, que es lo que el operador espera. */
+    public function test_a_save_that_changes_something_does_move_the_token(): void
+    {
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
+        $save = $this->getJson($reservation->guestFormApiUrls()['show'])->json('save_url');
+
+        $this->putJson($save, ['guests' => [['name' => 'Ana'], ['name' => 'Luis']]])->assertOk();
+        $token = $reservation->refresh()->updated_at;
+
+        $this->travel(120)->seconds();
+        $this->putJson($save, ['guests' => [['name' => 'Ana'], ['name' => 'Marta']]])->assertOk();
+
+        $this->assertTrue($reservation->refresh()->updated_at->greaterThan($token));
+    }
+
+    // ── Rotar el enlace: la palanca que a esta credencial le faltaba (D14 de `#413`) ────────────
+
+    /**
+     * El enlace del post-form abre sin sesión y se reenvía: es una credencial portadora. `RGPD-06`
+     * dice que invalidar el acceso de un titular tiene un solo sitio y alcanza a TRES credenciales —
+     * ésta no está ni puede estar, porque es HMAC y no hay fila que borrar. Rotar sube la versión que
+     * viaja DENTRO de la firma, y con eso el enlace anterior deja de abrir en el acto.
+     */
+    public function test_rotating_the_link_closes_the_previous_one_in_both_surfaces(): void
+    {
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
+        $old = $reservation->guestFormApiUrls();
+
+        $this->getJson($old['show'])->assertOk();
+
+        $reservation->rotateGuestFormLink();
+
+        // El viejo es una credencial retirada: 403, el mismo peldaño que «no traes firma».
+        $this->getJson($old['show'])->assertForbidden();
+        $this->putJson($old['save'], ['guests' => [['name' => 'Ana']]])->assertForbidden();
+
+        // Y el nuevo abre.
+        $this->getJson($reservation->refresh()->guestFormApiUrls()['show'])->assertOk();
+    }
+
+    /**
+     * ⚠️ **Ningún enlace ya emitido se rompe al desplegar**: los que viajan SIN el parámetro de
+     * versión se leen como versión 0, que es el default de la columna. La versión solo separa cuando
+     * alguien rota — sin este caso, el arreglo habría invalidado de golpe todos los enlaces vivos.
+     */
+    public function test_a_link_issued_before_the_version_existed_still_opens(): void
+    {
+        $user = User::factory()->create();
+        $reservation = $this->reservation($this->paidOrder($user, $this->pack()));
+
+        // Un enlace firmado SIN `v`, exactamente como los emitidos antes de D14.
+        $legacy = URL::temporarySignedRoute(
+            'api.v1.reservations.guest-form.show',
+            $reservation->guestFormLinkExpiresAt(),
+            ['reservation' => $reservation->id],
+        );
+
+        $this->getJson($legacy)->assertOk();
+
+        // Y deja de abrir en cuanto el operador rota, que es lo que se espera de él.
+        $reservation->rotateGuestFormLink();
+        $this->getJson($legacy)->assertForbidden();
     }
 }

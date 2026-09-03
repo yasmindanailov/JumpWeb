@@ -825,6 +825,15 @@ return [
             'send_heading' => '发送授权书链接',
             'send_description' => '将向 :email 发送一封含链接的邮件,由他分发给受邀未成年人的家长。',
         ],
+        'rotate_guest_form' => [
+            'btn_aria' => '轮换表单链接',
+            'modal_heading' => '要轮换此表单的链接吗？',
+            'modal_description' => '已发送的链接将立即失效，需要向客户发送新链接。如果链接被转发到不该去的地方，请使用此功能。使用旧链接填写或添加的内容不会被删除。',
+            'submit' => '轮换链接',
+            'success' => '链接已轮换。请重新复制并发送给客户。',
+            'blocked' => '无法轮换此预订的链接。',
+        ],
+
         'copy_guest_form' => [
             'btn_aria' => '宾客表单链接',
             'modal_heading' => '宾客表单链接',

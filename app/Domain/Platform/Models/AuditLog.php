@@ -127,6 +127,8 @@ class AuditLog extends Model
         'orders.email_resent',
         'orders.email_resent_blocked',
         'orders.extra_due_applied',
+        'orders.guest_form_link_rotated',
+        'orders.guest_form_link_rotate_blocked',
         'orders.guest_form_submitted',
         'orders.item_cancel_blocked',   // ⚠️ construida: 'orders.item_'.$actionKey.'_blocked'
         'orders.item_cancelled',

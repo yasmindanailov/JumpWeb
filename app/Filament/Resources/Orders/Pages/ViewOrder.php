@@ -1147,6 +1147,72 @@ class ViewOrder extends ViewRecord
     }
 
     /**
+     * **ROTAR el enlace del post-form** (`specs/complementos-post-reserva.md` §4.6.bis, `#413` D14).
+     *
+     * El enlace del post-form es una **credencial portadora**: abre sin sesión, viaja por correo y se
+     * reenvía. `RGPD-06` dice que invalidar el acceso de un titular tiene un solo sitio y alcanza a
+     * tres credenciales — y ésta no está ni puede estar, porque es HMAC y no hay fila que borrar.
+     * Este gesto es su palanca: sube la versión que viaja DENTRO de la firma y los enlaces anteriores
+     * dejan de abrir (403) en el acto.
+     *
+     * Mismo patrón que «Rotar carné QR» de `ViewUser`: permiso → confirmación → `fresh()` + re-check
+     * → audit del bloqueo O del éxito → aviso. Y la misma frontera: **rotar retira una credencial, no
+     * deshace una gestión** — lo que se rellenó o se añadió con el enlace viejo sigue ahí, y retirarlo
+     * es otro gesto del operador.
+     *
+     * ⚠️ El permiso es `orders.edit_guest_data`, el mismo que gobierna quién actúa sobre el formulario
+     * de invitados desde el panel (`specs/cumple-mixto.md` §23.3): existe justamente para poder
+     * revocarse por rol sin tocar la edición normal del pedido.
+     */
+    public function rotateGuestFormLinkAction(): Action
+    {
+        return Action::make('rotateGuestFormLink')
+            ->modalHeading(__('admin.orders.rotate_guest_form.modal_heading'))
+            ->modalDescription(__('admin.orders.rotate_guest_form.modal_description'))
+            ->modalIcon(Heroicon::OutlinedArrowPath)
+            ->modalSubmitActionLabel(__('admin.orders.rotate_guest_form.submit'))
+            ->requiresConfirmation()
+            ->action(function (array $arguments): void {
+                // `SEC-04`: el permiso y el gating se re-comprueban AQUÍ, en el momento de ejecutar —
+                // no basta con que el icono estuviera pintado cuando se cargó la página.
+                $item = $this->resolveItem($arguments);
+                $allowed = (auth()->user()?->hasPermission('orders.edit_guest_data') ?? false)
+                    && $item !== null
+                    && $this->guestFormLinkForManageItem($item) !== null;
+
+                if (! $allowed) {
+                    if ($item !== null) {
+                        AuditLogger::log('orders.guest_form_link_rotate_blocked', $this->record, [
+                            'order_item_id' => $item->id,
+                            'reason' => 'not_allowed',
+                        ]);
+                    }
+                    Notification::make()
+                        ->title(__('admin.orders.rotate_guest_form.blocked'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                $version = $item->rotateGuestFormLink();
+
+                // `RGPD-02`: ni el enlace ni la firma entran en el rastro — solo QUÉ reserva y en qué
+                // versión quedó. El enlace es la credencial: escribirlo aquí sería guardarla en claro.
+                AuditLogger::log('orders.guest_form_link_rotated', $this->record, [
+                    'order_code' => $this->record->code,
+                    'order_item_id' => $item->id,
+                    'version' => $version,
+                ]);
+
+                Notification::make()
+                    ->title(__('admin.orders.rotate_guest_form.success'))
+                    ->success()
+                    ->send();
+            });
+    }
+
+    /**
      * Enlace FIRMADO del post-form de ESTA reserva. Solo cuando el item es una reserva con post-form
      * (`isGuestFormReservation()`) de un pedido PAGADO — coincide con lo que el endpoint del post-form
      * acepta (404 si no está pagado). Misma fuente que el email (`OrderItem::guestFormSignedUrl()`):

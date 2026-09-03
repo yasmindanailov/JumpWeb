@@ -61,6 +61,11 @@ class OrderItem extends Model
         'event_data' => 'array',
         'guest_data' => 'array',
         'guest_form_completed_at' => 'datetime',
+        // La VERSIÓN del enlace firmado del post-form (`#413` D14): subirla invalida los enlaces ya
+        // emitidos. Casteada porque viaja DENTRO de la firma y se compara con `===` contra el `v` de
+        // la URL: un `'0'` de SQLite frente a un `0` de MySQL sería una diferencia de motor
+        // decidiendo quién entra.
+        'guest_form_link_version' => 'integer',
         // El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2): lo que se
         // acordó AL COMPRAR. Es un hecho de la línea y no una consulta al catálogo — cambiar el
         // interruptor del producto mañana no reescribe lo que este cliente marcó ayer.
@@ -542,10 +547,58 @@ class OrderItem extends Model
      */
     public function guestFormSignedUrl(): string
     {
+        return $this->signedGuestFormRoute('reservation.guests');
+    }
+
+    /**
+     * El enlace firmado del POST (guardar). Vive aquí y no en el controlador —donde estaba— por lo
+     * mismo que su hermano: **cuatro URLs firmadas del mismo formulario tienen que llevar todas la
+     * versión del enlace** ({@see guestFormLinkVersion}), y una compuesta a mano en una plantilla es
+     * la que se queda sin ella el día que alguien añade un parámetro.
+     */
+    public function guestFormSignedStoreUrl(): string
+    {
+        return $this->signedGuestFormRoute('reservation.guests.store');
+    }
+
+    /**
+     * La VERSIÓN del enlace del post-form (`specs/complementos-post-reserva.md` §4.6.bis, `#413` D14).
+     *
+     * Viaja como parámetro `v` dentro de la URL firmada y la autorización la compara con ésta: subirla
+     * invalida en el acto todos los enlaces emitidos antes, que es la palanca que `RGPD-06` no tenía
+     * para esta credencial (es HMAC: no hay fila que revocar). ⚠️ Los enlaces emitidos ANTES de que
+     * la columna existiera viajan sin `v` y se leen como versión 0, así que **no se rompe ninguno al
+     * desplegar**: la versión solo separa cuando alguien rota.
+     */
+    public function guestFormLinkVersion(): int
+    {
+        return (int) ($this->guest_form_link_version ?? 0);
+    }
+
+    /**
+     * Rota el enlace del post-form: sube la versión y con ello los enlaces anteriores dejan de abrir
+     * (403). Idempotente en el sentido que importa —cada llamada emite una versión nueva— y **NO
+     * toca lo que ya se hizo con el enlace viejo**: rotar retira una credencial, no deshace una
+     * gestión. Quitar lo que un tercero añadió es otro gesto del operador.
+     */
+    public function rotateGuestFormLink(): int
+    {
+        $next = $this->guestFormLinkVersion() + 1;
+        $this->forceFill(['guest_form_link_version' => $next])->save();
+
+        return $next;
+    }
+
+    /**
+     * La firma de una ruta web del post-form de ESTA reserva, con su caducidad y su versión. Punto
+     * único: la caducidad la fija `RGPD-03` y la versión, D14.
+     */
+    private function signedGuestFormRoute(string $name): string
+    {
         return URL::temporarySignedRoute(
-            'reservation.guests',
+            $name,
             $this->guestFormLinkExpiresAt(),
-            ['reservation' => $this],
+            ['reservation' => $this, 'v' => $this->guestFormLinkVersion()],
         );
     }
 
@@ -596,10 +649,13 @@ class OrderItem extends Model
     public function guestFormApiUrls(): array
     {
         $expiresAt = $this->guestFormLinkExpiresAt();
+        // La versión del enlace (D14) viaja también en las URLs de la API: si no, rotar cerraría la
+        // web y dejaría abierta la puerta de la app, que es la misma credencial por otro path.
+        $params = ['reservation' => $this->id, 'v' => $this->guestFormLinkVersion()];
 
         return [
-            'show' => URL::temporarySignedRoute('api.v1.reservations.guest-form.show', $expiresAt, ['reservation' => $this->id]),
-            'save' => URL::temporarySignedRoute('api.v1.reservations.guest-form.update', $expiresAt, ['reservation' => $this->id]),
+            'show' => URL::temporarySignedRoute('api.v1.reservations.guest-form.show', $expiresAt, $params),
+            'save' => URL::temporarySignedRoute('api.v1.reservations.guest-form.update', $expiresAt, $params),
         ];
     }
 
@@ -646,12 +702,29 @@ class OrderItem extends Model
      * «el parque» y no «has actualizado…» — antes de la T3 el operador solo podía usar el enlace
      * del cliente, y el rastro mentía (`via: signed_link`).
      *
-     * @param  array<mixed>  $guests  respuestas por invitado, en bruto
+     * ⚠️⚠️ **`$guests` es NULABLE desde la T0 de `specs/complementos-post-reserva.md` (`#413`), y es
+     * un arreglo de PÉRDIDA DE DATOS, no una comodidad.** Hasta el 2026-09-03 las dos superficies de
+     * cliente convertían la ausencia de la clave en `[]` (`$validated['guests'] ?? []`,
+     * `$request->input('guests', [])`), y `sanitizeGuestData([], N)` **devuelve N filas VACÍAS**:
+     * medido sobre la reserva 159 (`R-BEEL3E`, 8 invitados), un `PUT` que solo mandaba `general`
+     * **borraba los nombres y las edades de los ocho niños**, respondiendo 200. La misma forma que
+     * ya se conocía de `$general` —y que la propia API documentaba como una virtud, «el formulario
+     * se guarda a trozos»— pero sobre el dato del art. 9. Ahora las dos claves significan lo mismo:
+     * **ausente = no lo toques · `[]` = vacíalo**, y quien decide cuál es cada caso es la capa HTTP
+     * mirando si la clave VIENE, nunca un `?? []`.
+     *
+     * ⚠️ **El sello NO se re-estampa cuando nada cambió** (misma tanda): `guest_form_completed_at`
+     * se escribía con `now()` en cada guardado completo, y como `updated_at` del ítem es el token
+     * optimista de CINCO puertas del operador, un cliente repasando su formulario invalidaba los
+     * modales que el operador tuviera abiertos. Se sella la PRIMERA vez y cada vez que el contenido
+     * cambia de verdad; un guardado idéntico es ahora un no-op para la fila.
+     *
+     * @param  array<mixed>|null  $guests  respuestas por invitado, en bruto; `null` = conservarlas
      * @param  array<mixed>|null  $general  respuestas de los campos generales, en bruto; `null` = conservarlos
      * @param  string  $via  por dónde entró quien guardó (`signed_link` | `account` | `panel`), solo para el audit
      * @param  User|null  $by  el OPERADOR cuando guarda el panel; `null` = el propio titular
      */
-    public function submitGuestForm(array $guests, ?array $general, string $via, ?User $by = null): void
+    public function submitGuestForm(?array $guests, ?array $general, string $via, ?User $by = null): void
     {
         $type = $this->ticketType;
 
@@ -659,23 +732,30 @@ class OrderItem extends Model
             return;
         }
 
-        $guestData = $type->sanitizeGuestData($guests, (int) $this->quantity);
+        $attributes = [];
 
-        $eventData = $this->event_data ?? [];
+        if ($guests !== null) {
+            $attributes['guest_data'] = $type->sanitizeGuestData($guests, (int) $this->quantity);
+        }
+
         if ($general !== null) {
             $postformData = $type->sanitizeEventData($general, TicketType::EVENT_STAGE_POSTFORM);
             $postformKeys = array_column($type->eventFields(TicketType::EVENT_STAGE_POSTFORM), 'key');
-            $preserved = array_diff_key($eventData, array_flip($postformKeys));
-            $eventData = array_merge($preserved, $postformData);
+            $preserved = array_diff_key($this->event_data ?? [], array_flip($postformKeys));
+            $attributes['event_data'] = array_merge($preserved, $postformData);
         }
 
-        $this->forceFill([
-            'guest_data' => $guestData,
-            'event_data' => $eventData,
-        ])->save();
+        // ¿Cambió algo DE VERDAD? Se pregunta ANTES de guardar y sobre los atributos ya saneados,
+        // que es lo único que distingue «el cliente corrigió una alergia» de «el cliente volvió a
+        // pulsar Guardar». De ahí cuelga el sello (y con él, el token optimista del operador).
+        $this->forceFill($attributes);
+        $changed = $this->isDirty();
+        $this->save();
 
-        // Sello de «completado» solo si de verdad lo está (el estado es derivado; esto es auditoría).
-        if ($this->isGuestFormComplete()) {
+        // Sello de «completado» solo si de verdad lo está (el estado es derivado; esto es auditoría)
+        // y solo si es la PRIMERA vez o si el contenido se movió: re-estamparlo por un guardado
+        // idéntico bumpea `updated_at` y le rompe el modal al operador sin que nadie haya cambiado nada.
+        if ($this->isGuestFormComplete() && ($this->guest_form_completed_at === null || $changed)) {
             $this->markGuestFormCompleted();
         }
 

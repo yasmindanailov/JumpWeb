@@ -10,7 +10,6 @@ use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Http\Concerns\AuthorizesGuestForm;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
 
 /**
@@ -91,8 +90,11 @@ class GuestFormController extends Controller
             // Si se entró por enlace firmado (sin sesión), el POST también debe ir firmado para
             // re-autorizar; si es el dueño autenticado, basta la ruta normal (la sesión autoriza).
             // El POST hereda la MISMA caducidad que el enlace del email (A7), de ESTA reserva.
+            // ⚠️ La firma la compone el DOMINIO (`guestFormSignedStoreUrl`), no esta capa: desde D14
+            // toda URL firmada del post-form lleva además la VERSIÓN del enlace, y una compuesta a
+            // mano aquí sería la que se queda sin ella.
             'formAction' => $request->hasValidSignature()
-                ? URL::temporarySignedRoute('reservation.guests.store', $reservation->guestFormLinkExpiresAt(), ['reservation' => $reservation])
+                ? $reservation->guestFormSignedStoreUrl()
                 : route('reservation.guests.store', ['reservation' => $reservation]),
         ]);
     }
@@ -114,12 +116,12 @@ class GuestFormController extends Controller
         // (Fase 3 · paso 5): saneado contra el esquema, mezcla que preserva los datos de la fase de
         // reserva, sello de completado y rastro de auditoría, en una sola operación. La API hace
         // exactamente esta llamada, así que las dos superficies no pueden guardar cosas distintas.
-        $rawGuests = $request->input('guests', []);
-        $rawGeneral = $request->input('general', []);
-
+        // ⚠️ Ausente = «no lo toques»; presente = el estado completo. La distinción vive en
+        // `submittedGuestFormArray()` (compartida con la API) porque el `input('guests', [])` que
+        // había aquí convertía un cuerpo parcial en un BORRADO de las fichas de los menores.
         $reservation->submitGuestForm(
-            is_array($rawGuests) ? $rawGuests : [],
-            is_array($rawGeneral) ? $rawGeneral : [],
+            $this->submittedGuestFormArray($request, 'guests'),
+            $this->submittedGuestFormArray($request, 'general'),
             $this->guestFormVia($request),
         );
 
@@ -157,6 +159,6 @@ class GuestFormController extends Controller
             return route('account.orders');
         }
 
-        return URL::temporarySignedRoute('reservation.guests', $reservation->guestFormLinkExpiresAt(), ['reservation' => $reservation]);
+        return $reservation->guestFormSignedUrl();
     }
 }
