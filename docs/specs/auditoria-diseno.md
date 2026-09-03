@@ -455,9 +455,11 @@ del calendario y del cajón heredan el mismo anillo sin tocar sus reglas.
   · `padding`/`margin` en una interacción) y `MotionBudgetTest` (**cada `infinite` de las tres hojas
   enumerado con su motivo** —añadir uno es decidirlo—, banderitas y estrella sin bucle, el spinner pausado
   con el cajón cerrado, el icono pausado fuera de pantalla y el JS que lo enciende).
-- **El trinquete del otro extremo**: `SidebarTokenBudgetTest::MAX_RAW_COLOURS` baja de **3 a 1** —dos de
-  los literales de m4 (`.account__delete-btn`, `.qr-tile`) eran del cajón— y la guarda lo exige «en el
-  mismo commit»; **el hook rechazó el push de la tanda C por esto**, con razón.
+- **El trinquete del otro extremo**: `SidebarTokenBudgetTest::MAX_RAW_COLOURS` baja de **3 a 0** —tres de
+  los literales de C y E (`.account__delete-btn`, `.qr-tile`, el verde del badge de complementos) eran del
+  cajón— y la guarda lo exige «en el mismo commit»; **el hook rechazó el push de la tanda C por esto**, con
+  razón, y **un segundo push por poner un 1 sin leer la cifra** (y por una puerta de `grep -q passed` que
+  casó con «15 passed»): *el número lo dice el test y la puerta es el código de salida, no un texto.*
 - **Trampas pagadas**: (1) el barrido en Python **blanqueaba los comentarios comiéndose sus saltos de
   línea**, y los números de línea salían desplazados — las reglas se localizaron por SELECTOR;
   (2) la sonda de hover marca la polaroid como «SE MUEVE» porque la matriz cambia: es la rotación

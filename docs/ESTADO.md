@@ -442,7 +442,9 @@ consumidores fuera de las doce vistas). Banderitas y estrella quietas, spinner p
 cerrado, calcetines solo mientras se ven: la portada baja de **13 bucles a 5** (los aceptados en `#279`),
 `/cumpleanos` de 17 a 2. Guardas `HoverDoesNotJumpTest` y `MotionBudgetTest` (cada `infinite` con su
 motivo), 4/4 mutaciones muerden. ⚠️ **El hook rechazó el push de la C** por `SidebarTokenBudgetTest`
-(trinquete de colores crudos del cajón, 3 → 1 por dos literales de m4): baja aquí. ▶ **LO SIGUIENTE**:
+(trinquete de colores crudos del cajón, 3 → **0** por tres literales de C y E): baja aquí — tras un
+segundo rechazo por escribir un 1 sin leer la cifra (la puerta era `grep -q passed`, que casó con «15
+passed»: la puerta de un arnés es el código de salida). ▶ **LO SIGUIENTE**:
 tanda **D** (C2: tres opciones del color de interacción renderizadas sobre la FAQ y las pestañas reales
 para D1), **F** (la escala, mecánica con guarda); la **G** (interiores, normas: D2, D3) se valora con la
 organización.

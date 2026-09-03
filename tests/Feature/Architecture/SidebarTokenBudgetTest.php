@@ -104,11 +104,13 @@ class SidebarTokenBudgetTest extends TestCase
      *     literal, así que su tinte no seguía a la superficie.
      * Ninguno de los dos cambia píxel —`--sheet` vale hoy `#FFFFFF`, verificado en navegador regla a
      * regla—, y los dos pasan de ser color del primer cliente a seguir el tema de la instalación.
-     * ▶ **3 → 1 en la tanda E de la auditoría de diseño** (`DECISIONES #435`, m4): `.account__delete-btn`
-     *   pintaba `#fff` sobre `--err` (ahora `--on-err`, `#434`) y `.qr-tile` llevaba `#fdfbf4` a mano (ahora
-     *   `--sheet`). El hook del carril de diseño se comió un push por este trinquete, con razón.
+     * ▶ **3 → 0 en las tandas C y E de la auditoría de diseño** (`DECISIONES #434`, `#435`, m4):
+     *   `.account__delete-btn` pintaba `#fff` sobre `--err` (ahora `--on-err`), `.qr-tile` llevaba
+     *   `#fdfbf4` a mano (ahora `--sheet`) y el verde del badge de complementos no era `--ok` (ahora un
+     *   `color-mix` sobre él). El hook del carril de diseño se comió un push por este trinquete, con razón
+     *   — y un segundo por poner aquí un 1 sin leer la cifra: **el número lo dice el test, no el que edita**.
      */
-    private const MAX_RAW_COLOURS = 1;
+    private const MAX_RAW_COLOURS = 0;
 
     /** @var ?list<array{property: string, value: string}> */
     private ?array $declarations = null;

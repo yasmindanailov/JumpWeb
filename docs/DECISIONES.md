@@ -22674,8 +22674,10 @@ corriendo a 5 (los que `#279` aceptó), `/cumpleanos` de 17 a 2, `/normas` de 5 
 
 **4 · Un trinquete ajeno con razón.** `SidebarTokenBudgetTest` cuenta los colores crudos del cajón y exige
 bajar su tope en el mismo commit cuando bajan; dos literales de m4 eran del cajón y el hook rechazó el
-push de la tanda C por ello. El tope baja de 3 a 1 aquí. *Un trinquete que solo encoge muerde también a
-quien mejora: es su forma de que el número siga siendo verdad.*
+push de la tanda C por ello. El tope baja de 3 a **0** aquí — tras un segundo rechazo por escribir un 1 sin
+leer la cifra, detrás de una puerta `grep -q passed` que casó con «15 passed». *Un trinquete que solo
+encoge muerde también a quien mejora: es su forma de que el número siga siendo verdad; y la puerta de un
+arnés es el código de salida, nunca un texto.*
 
 **Verificación**: sonda de navegador antes/después (bucles por vista, `transform` computado al pasar,
 la barra de progreso) · 256 guardas de hojas y vistas en verde · cuatro mutaciones que muerden con
