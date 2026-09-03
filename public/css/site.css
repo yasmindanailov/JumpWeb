@@ -576,7 +576,6 @@
 }
 .svc-hero__jump:hover {
   background: var(--fg); color: var(--bg); border-color: var(--fg);
-  transform: translateY(-2px);
 }
 
 /* ---------- marquee (títulos de los servicios) ---------- */
@@ -650,7 +649,6 @@
 .svc-cta svg { transition: transform var(--dur-entra) var(--ease-entra); }
 .svc-cta:hover svg { transform: translateX(4px); }
 .svc-cta--info:hover {
-  transform: translateY(-3px) scale(1.02);
   background: var(--fg); color: var(--bg); border-color: var(--fg);
 }
 
@@ -776,8 +774,7 @@
 /* Acción primaria = relleno oscuro (contraste seguro, sin depender de --on-brand global). */
 .svc-cta--book { background: var(--action); color: var(--on-action); border-color: var(--action); }
 .svc-cta--book:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: var(--shadow-lift);
+  border-color: var(--fg);   /* responde, no salta ni levita (tanda E, `#435`) */
 }
 
 /* media: foto que RESPETA el wrapper (sin sangrado al viewport) + palabra de acento outline
@@ -945,7 +942,7 @@
 .qr-frame { display: flex; flex-direction: column; align-items: center; gap: 14px; }
 .qr-tile {
   position: relative; width: var(--qr-size); height: var(--qr-size);
-  background: #fdfbf4; border: 1px solid var(--line);
+  background: var(--sheet); border: 1px solid var(--line);   /* era `#fdfbf4` a mano (auditoría m4, `#435`) */
   border-radius: var(--r); padding: 14px;
 }
 .qr-slot { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 5px; }
@@ -981,7 +978,7 @@
   font-family: var(--font-body); font-size: var(--fs-15); font-weight: var(--fw-bold); text-decoration: none;
   transition: transform var(--dur-sale) var(--ease-sale), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
 }
-.reg-cta:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.reg-cta:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }  /* sin salto (tanda E, `#435`) */
 .reg-cta .arrow-ico { transition: transform var(--dur-sale) var(--ease-sale); }
 .reg-cta:hover .arrow-ico { transform: translateX(3px); }
 
@@ -1327,6 +1324,12 @@
 html.no-scroll,
 body.no-scroll { overflow: hidden; }
 .sidecart { position: fixed; inset: 0; z-index: 160; visibility: hidden; }
+/* EL SPINNER NO GIRA CON EL CAJÓN CERRADO (auditoría M10, `#435`): `visibility: hidden` no detiene una
+   animación —solo `display: none` lo hace— y sus tres bucles corrían en las doce vistas para nadie,
+   la página legal más quieta incluida. Se pausan hasta que el cajón se abre. */
+.sidecart:not(.is-open) .jj-spinner,
+.sidecart:not(.is-open) .jj-spinner::before,
+.sidecart:not(.is-open) .jj-spinner::after { animation-play-state: paused; }
 .sidecart.is-open { visibility: visible; }
 .sidecart__backdrop { position: absolute; inset: 0; background: color-mix(in srgb, var(--fg) 50%, transparent); opacity: 0; transition: opacity var(--dur-entra) var(--ease-sale); }
 .sidecart.is-open .sidecart__backdrop { opacity: 1; }
@@ -2579,7 +2582,7 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     background: var(--action); color: var(--on-action);
     transition: background var(--dur-sale) var(--ease-sale), transform var(--dur-sale) var(--ease-sale);
 }
-.reserve__act:hover { background: var(--action-hover); color: var(--on-action-hover); transform: translateY(-1px); }
+.reserve__act:hover { background: var(--action-hover); color: var(--on-action-hover); }
 .reserve__act:active { transform: translateY(0); }
 .reserve__act:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
 .reserve__act--alt {
@@ -2608,7 +2611,7 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
     background-image: var(--deco-tag); background-size: contain;
     background-repeat: no-repeat; background-position: center;
     transform: rotate(-7deg);
-    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45));
+    filter: drop-shadow(0 8px 20px color-mix(in srgb, var(--paper-fg) 45%, transparent));
 }
 
 /* El recorrido, al FINAL del documento. Es lo que da scroll para que la tarjeta acabe de crecer
@@ -3375,6 +3378,12 @@ body[data-has-hero].nav--live .hero__pair-slot {
     transform-origin: 50% 100%; transform-box: fill-box;
     animation: s1-bob 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite 1.2s;
 }
+/* Los ocho bucles del icono solo corren MIENTRAS SE VE (auditoría M10, `#435`): `app.js` marca
+   `is-onscreen` con un `IntersectionObserver`. Sin JS queda en su pose de reposo, que es el
+   fotograma final (el mismo trato que `prefers-reduced-motion`). */
+.ic-s1:not(.is-onscreen) svg .grip,
+.ic-s1:not(.is-onscreen) svg .sock-a,
+.ic-s1:not(.is-onscreen) svg .sock-b { animation-play-state: paused; }
 @keyframes s1-bob {
     0%, 100% { transform: translateY(1.4px) scale(1.03, 0.97) rotate(-2deg); }
     50%      { transform: translateY(-2.4px) scale(0.99, 1.02) rotate(2deg); }
@@ -4292,8 +4301,6 @@ body[data-has-hero] .nav--over .nav__cta {
 }
 .hero__act--buy:hover {
     background: var(--action-hover); color: var(--on-action-hover);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lift);
 }
 /* ⚠️ HEREDA y baja la opacidad, como el subtítulo del CTA del armazón (`#213`): el botón pinta de
    dos colores —acción y acción-hover— y un token fijo fallaría en uno de los dos. */
@@ -4415,7 +4422,7 @@ body[data-has-hero] .nav--over .nav__cta {
     padding: 2px 6px;
     border-radius: var(--r-pill);
     line-height: 1;
-    background: rgba(34, 197, 94, 0.15);
+    background: color-mix(in srgb, var(--ok) 15%, transparent);   /* era un verde que NO era `--ok` (auditoría m4) */
     color: var(--ok);
 }
 /* Variantes Incluido/Gratis (espejo de `.addons__badge--*` del sidebar, #194) — el blade genera
@@ -4925,7 +4932,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .ck-tgl::after {
     content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
     border-radius: 50%; background: var(--bg-card);
-    transition: transform var(--dur-estado) var(--ease-entra); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    transition: transform var(--dur-estado) var(--ease-entra); box-shadow: 0 1px 3px color-mix(in srgb, var(--paper-fg) 30%, transparent);
 }
 .ck-tgl.is-on { background: var(--zone-1); }
 .ck-tgl.is-on::after { transform: translateX(18px); }
@@ -4965,7 +4972,7 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     transition: opacity var(--dur-sale) var(--ease-sale);
 }
 .hero__chip--onvideo {
-    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.5);  /* legibilidad sin fondo, sobre el vídeo */
+    text-shadow: 0 1px 14px color-mix(in srgb, var(--paper-fg) 50%, transparent);  /* legibilidad sin fondo, sobre el vídeo */
 }
 .hero__chip--onvideo:hover { opacity: 0.82; }
 .hero__chip--onvideo:hover .hero__chip-pin { transform: translateY(-1px); }
@@ -5159,7 +5166,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .offw {
     --box: #E0392C; --ribbon: #FBF1DD;
     --box-dk: #B02C21; --box-lt: #E55241; --box-in: #892119; --ribbon-dk: #C9A24A;
-    --offw-accent: var(--zone-1, #FF5B22);
+    --offw-accent: var(--zone-1);   /* sin el naranja del PRIMER cliente de respaldo (auditoría m4/C2, `#435`); qué rol le toca es de la tanda D */
     --offw-spring: var(--ease-entra);
 }
 
@@ -5169,7 +5176,9 @@ html:not(.js) .gf-fiche__foot { display: none; }
     z-index: 95; padding: 0; border: 0; background: none; cursor: pointer; line-height: 0;
     -webkit-tap-highlight-color: transparent; transition: transform var(--dur-entra) var(--offw-spring);
 }
-.offw-launch:hover { transform: translateY(-3px) scale(1.05); }
+/* El lanzador FLOTA sobre el contenido: responde como el mobiliario del armazón, con la sombra del
+   cuarto rol (`#217`), no saltando ni creciendo (auditoría M1, `#435`). */
+.offw-launch:hover { box-shadow: var(--shadow-nav-fill-lift); }
 .offw-launch.is-open-modal { cursor: default; }
 /* MÓVIL: por defecto en la esquina inferior derecha. Cuando aparece la .book-bar (sticky), el widget
    SUBE por encima de ella con animación; al ocultarse la barra, vuelve a la esquina. La clase
@@ -5202,14 +5211,14 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .offw-gift .pc-ribbon { fill: var(--ribbon); stroke: var(--ribbon-dk); stroke-width: 0.7; }
 .offw-gift .pc-bow { fill: var(--ribbon); stroke: var(--ribbon-dk); stroke-width: 0.7; }
 .offw-gift .pc-knot { fill: var(--ribbon-dk); stroke: var(--ribbon-dk); }
-.offw-gift .pc-hi { fill: rgba(255,255,255,0.20); stroke: none; }
+.offw-gift .pc-hi { fill: color-mix(in srgb, var(--paper-bg) 20%, transparent); stroke: none; }
 .offw-gift .pc-crease { fill: none; stroke: var(--ribbon-dk); stroke-width: 0.6; opacity: 0.9; }
 .offw-gift .cft { position: absolute; border-radius: 1.6px; opacity: 0; pointer-events: none; }
 
 /* Badge del nº de ofertas */
 .offw-badge {
     position: absolute; top: 2px; right: -2px; min-width: 19px; height: 19px; padding: 0 5px;
-    background: var(--offw-accent); color: #fff; border-radius: var(--r-pill); border: 2px solid var(--bg, var(--bg));
+    background: var(--offw-accent); color: var(--on-brand); border-radius: var(--r-pill); border: 2px solid var(--bg, var(--bg));
     font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; font-weight: 700;
     display: grid; place-items: center; z-index: 2; line-height: 1;
     box-shadow: 0 4px 10px -3px color-mix(in srgb, var(--offw-accent) 70%, transparent);
@@ -5275,7 +5284,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .offw-flash { width: 240px; height: 240px; margin: -120px 0 0 -120px; border-radius: 50%; background: radial-gradient(circle, rgba(255,247,236,0.95) 0%, rgba(255,196,140,0.55) 34%, transparent 70%); transform: scale(0.2); opacity: 0; }
 .offw-rays { width: 280px; height: 280px; margin: -140px 0 0 -140px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--offw-accent) 92%, #fff) 0deg 2.6deg, transparent 2.6deg 15deg); -webkit-mask: radial-gradient(circle, transparent 16%, #000 27%, #000 47%, transparent 66%); mask: radial-gradient(circle, transparent 16%, #000 27%, #000 47%, transparent 66%); transform: scale(0.1); opacity: 0; }
 .offw-ring { width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--offw-accent) 80%, #fff); transform: scale(0.3); opacity: 0; }
-.offw-ring.r2 { border-color: color-mix(in srgb, #F0B33F 80%, #fff); }
+.offw-ring.r2 { border-color: color-mix(in srgb, var(--attn) 80%, var(--paper-bg)); }
 .offw-burst.is-burst .offw-flash { animation: offw-b-flash var(--dur-salto) var(--ease-sale) forwards; }
 .offw-burst.is-burst .offw-rays { animation: offw-b-rays var(--dur-espera) var(--ease-sale) forwards; }
 .offw-burst.is-burst .offw-ring { animation: offw-b-ring var(--dur-salto) var(--ease-sale) forwards; }
@@ -5285,9 +5294,9 @@ html:not(.js) .gf-fiche__foot { display: none; }
 @keyframes offw-b-ring { 0%{transform:scale(0.3);opacity:0.9} 100%{transform:scale(3.4);opacity:0} }
 .offw-burst .spark { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 2px; opacity: 0; }
 .offw-burst .spark.s-a { background: var(--offw-accent); }
-.offw-burst .spark.s-g { background: #F0B33F; }
+.offw-burst .spark.s-g { background: var(--attn); }
 .offw-burst .spark.s-c { background: var(--ribbon); }
-.offw-burst .spark.s-w { background: #FFF7EC; }
+.offw-burst .spark.s-w { background: var(--sheet); }
 .offw-burst .spark.star { border-radius: 0; width: 12px; height: 12px; margin: -6px 0 0 -6px; clip-path: polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%); }
 .offw-burst.is-burst .spark { animation: offw-b-spark var(--dur-espera) var(--ease-sale) forwards; }
 @keyframes offw-b-spark {
@@ -5440,7 +5449,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
 }
 .menu--open .menu__item a { opacity: 1; transform: translateY(0); }
 .menu__item a:hover,
-.menu__item a:focus-visible { padding-left: 18px; color: var(--zone-1); }
+.menu__item a:focus-visible { color: var(--zone-1); }   /* el foco no DESPLAZA el elemento (auditoría m2, `#435`) */
 .menu__item a:focus-visible { outline: var(--focus-outline); outline-offset: 4px; }
 
 /* `.menu__n` (los números «01…» de cada destino) RETIRADA con su consumidor
@@ -5481,8 +5490,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
     }
     /* El subtítulo se va, como en el mockup: en una fila estrecha compite con el destino. */
     .menu__s { display: none; }
-    .menu__item a:hover,
-    .menu__item a:focus-visible { padding-left: 2px; }
+    /* (aquí el hover y el foco desplazaban el relleno 2 px: retirado en la tanda E, `#435`) */
 
     /* ❗ **LA VELA: la señal de que la lista SIGUE.** Medido a 390 px: la lista mide 521 px y su
        contenido 806, o sea que **cinco de los diez destinos quedan fuera** — y la barra de scroll

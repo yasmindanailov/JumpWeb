@@ -1,7 +1,8 @@
 # [AUDITORÍA] Costuras a la vista — segunda auditoría de diseño de la web pública
 
-> Estado: 🟦 **INFORME ENTREGADO · TANDA C EJECUTADA (§11, `#434`) · D4, D5 y D6 decididas; D1 se
-> decide viendo opciones renderizadas (tanda D) y D2/D3 con la organización (tanda G)** ·
+> Estado: 🟦 **INFORME ENTREGADO · TANDAS C, E y H EJECUTADAS (§11 `#434`, §12 `#435`) · D4, D5 y D6
+> decididas; D1 se decide viendo opciones renderizadas (tanda D) y D2/D3 con la organización (tanda G);
+> queda la F (la escala)** ·
 > Última actualización: 2026-09-03 · Decisión asociada: `DECISIONES #430` (el informe vive en el
 > repo; el artefacto es solo la presentación) · Carril: **diseño / idioma visual** (este ordenador,
 > sub-banda `#430`–`#439`, reservada a distancia de la secuencia natural `#410`+ que sigue el
@@ -315,10 +316,10 @@ Se listan para que nadie las «arregle». Cada una tiene su porqué medido en `D
 |---|---|---|---|
 | **C** | **Lo roto**: M4 (solape del mapa) · M7 (foco de campos) · M8 (acordeón) · C3 (`--on-ok`, el sub-rótulo, ≥ 10 px) — ✅ **HECHA, `#434` (§11)** | solo D4 | pequeña |
 | **D** | **El color que responde**: C2 con D1, opciones renderizadas; retira `--zone-*` de lo que no es zona | D1 | media |
-| **E** | **La física, terminada**: M1 · m1 · m2 · m3 · m4, con la guarda ampliada | D5 | pequeña |
+| **E** | **La física, terminada**: M1 · m1 · m2 · m3 · m4, con la guarda ampliada — ✅ **HECHA, `#435` (§12)**; m3 no procede (`.eyebrow` tiene consumidores fuera de las doce) | D5 | pequeña |
 | **F** | **La escala**: M2, sustitución mecánica + guarda | ninguno | media, cero reflujo |
 | **G** | **Las páginas interiores**: M3 · M6 · m5 · m6 | D2 · D3 | grande |
-| **H** | **Rendimiento**: M9 · M10 | D6 | pequeña |
+| **H** | **Rendimiento**: M9 · M10 — ✅ **HECHA, `#435` (§12)** | D6 | pequeña |
 | — | **C1** `/servicios` | producto | fuera de este carril |
 
 ## 9. Método, instrumento y trampas pagadas
@@ -402,3 +403,62 @@ tarjeta dentro de `.map-card` · algo posado con `z-index` sobre el mapa · «Pa
 **Lo que no cambia, a propósito**: el borde de 1 px que cambia de color al foco sigue (es la respuesta
 de ratón, y `:focus-visible` la complementa); el reset `*:focus { outline: none }` sigue; el `:focus`
 del calendario y del cajón heredan el mismo anillo sin tocar sus reglas.
+
+## 12. Ejecución — tandas E («la física») y H («rendimiento») (2026-09-03, `#435`)
+
+**E · M1, m1, m2, m3, m4 — `[DECIDIDO owner]` D5: fuera los que saltan, el logotipo se queda.**
+- **M1**: el barrido por selector encontró **19** reglas cuyo PROPIO elemento se mueve o crece al pasar el
+  ratón, no 5: a las cinco del informe se suman la polaroid de cumpleaños y la foto de eventos (subían 8 px
+  con sombra difusa), el cierre del cajón viejo, los tres CTA de `/servicios`, el CTA del cierre y el del
+  hero viejo, y **cinco del cajón SPA** (`.bk-cta` · `.cartbar` · `.acct__btn--*` · `.acc-tile`). Los
+  catorce públicos pasan a responder con color, borde o sombra; **las dos polaroids conservan el gesto de
+  ENDEREZARSE** (`rotate(-2.5deg) → 0`), que no es un salto; los cinco del cajón quedan enumerados como
+  excepción que solo encoge (el cajón está aparcado, `[DECIDIDO owner, 2026-09-01]`); el «flota» del
+  logotipo es un descendiente del hover y la guarda no lo alcanza.
+- **m1**: el único `transition: all` (`.zone-tab`) pasa a propiedades nombradas.
+- **m2**: el enlace del menú móvil viejo ya no desplaza su relleno al pasar; el foco del menú a pantalla
+  completa ya no lo desplaza 18 px (ni 2 en móvil); **la barra de progreso del carril anima
+  `transform`** —`translateX(L %) scaleX(W)` con el origen a la izquierda— en vez de `left`/`width`
+  (medido: `transition-property: transform`, `matrix(0.159, …)`).
+- **m3 · NO se ejecuta, y el informe estaba incompleto**: `.eyebrow` no tiene consumidor en las doce vistas
+  públicas pero **sí en cinco fuera de ellas** (`errors/404`, `errors/maintenance`,
+  `errors/page-maintenance`, `auth/reset-password`, `auth/verify-email`, `payments/retry-redirect`), y
+  `.jj-block` lo emite `BookingProgress.vue`. *«Sin consumidor en las vistas auditadas» no es «muerto».*
+- **m4**: once literales pasan a rol — `#fdfbf4` → `--sheet`; el verde que no era `--ok` → `color-mix`
+  sobre `--ok`; cuatro sombras `rgba(0,0,0,…)` → `--paper-fg` mezclado; en el widget de ofertas `#F0B33F`
+  → `--attn`, `#FFF7EC` → `--sheet`, el blanco al 20 % → `--paper-bg` mezclado y el `#fff` sobre el
+  acento → `--on-brand`; y **`--offw-accent` pierde el naranja del PRIMER cliente de respaldo**
+  (`var(--zone-1, #FF5B22)` → `var(--zone-1)`). Qué rol le toca al widget es de la tanda D.
+
+**H · M9, M10 — `[DECIDIDO owner]` D6: banderitas quietas.**
+- **M9**: la foto de `/cumpleanos` que abre la página va `eager` + `fetchpriority="high"` **solo cuando el
+  componente es la página** (`level=1`); en la portada sigue `lazy`. **Corrección al informe**: «25 `<img>`,
+  0 con `width`/`height`/`aspect-ratio`» se midió sobre el `<img>`, y la reserva vive en el ENVOLTORIO —
+  `.ride-card__viz` y `.bd-pol__frame` declaran `aspect-ratio: 4 / 5` y la foto va absoluta dentro—, así
+  que esas 24 no mueven el layout al cargar. Quedan sin proporción propia la del widget (`.offw-img`,
+  `height: auto`) y la previsualización del menú (absoluta en una caja con `min-height`).
+- **M10**: las once banderitas y la estrella de la invitación, **quietas** (fuera `bdFlagSway` y
+  `bdStarFloat`); **el spinner se PAUSA con el cajón cerrado** (`visibility: hidden` no detiene
+  animaciones: `animation-play-state: paused` bajo `.sidecart:not(.is-open)`); **los ocho bucles del icono
+  de calcetines solo corren mientras se ve** (`IntersectionObserver` en `app.js` pone `is-onscreen`; sin
+  JS, reposo). Medido con `getAnimations()` (`iterations === Infinity`) al cargar a 1280, cajón cerrado:
+
+| vista | informe (§4·M10) | ahora, corriendo | de ellos, aceptados por `#279` |
+|---|---|---|---|
+| `/` | 13 | **5** (latido y aro del CTA doble ×2 · destello de la atracción destacada ×1) | los 5 |
+| `/cumpleanos` | 17 | **2** (latido y aro) | los 2 |
+| `/precios` | 9 (`#279`) | **2** al cargar; los 8 del icono se encienden al verlo | — |
+| `/normas` | 5 | **2** | los 2 |
+
+- **Guardas nuevas, las cuatro mutaciones vistas MORDER** (restauración sin git, control en verde):
+  `HoverDoesNotJumpTest` (transform en el propio `:hover` fuera de la lista del cajón · `transition: all`
+  · `padding`/`margin` en una interacción) y `MotionBudgetTest` (**cada `infinite` de las tres hojas
+  enumerado con su motivo** —añadir uno es decidirlo—, banderitas y estrella sin bucle, el spinner pausado
+  con el cajón cerrado, el icono pausado fuera de pantalla y el JS que lo enciende).
+- **El trinquete del otro extremo**: `SidebarTokenBudgetTest::MAX_RAW_COLOURS` baja de **3 a 1** —dos de
+  los literales de m4 (`.account__delete-btn`, `.qr-tile`) eran del cajón— y la guarda lo exige «en el
+  mismo commit»; **el hook rechazó el push de la tanda C por esto**, con razón.
+- **Trampas pagadas**: (1) el barrido en Python **blanqueaba los comentarios comiéndose sus saltos de
+  línea**, y los números de línea salían desplazados — las reglas se localizaron por SELECTOR;
+  (2) la sonda de hover marca la polaroid como «SE MUEVE» porque la matriz cambia: es la rotación
+  deliberada, no un salto — *un instrumento que compara matrices no distingue enderezarse de saltar*.

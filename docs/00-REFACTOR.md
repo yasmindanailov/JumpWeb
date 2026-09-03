@@ -3777,8 +3777,11 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [x] **Tanda C de la auditoría, «lo roto»** (`#434`, spec §11): contacto (D4), foco de campos, acordeón sin
       tope, los cuatro contrastes con `--on-ok/--on-err/--on-warn`; cuatro guardas que muerden. D4 · D5 · D6
       `[DECIDIDO owner]`. ⚠️ Paso de despliegue: dos líneas en el `client.css` de producción.
-- [ ] Tanda E (hovers con D5 + m1–m4, guarda ampliada a todo `:hover`) · H (imágenes con dimensiones, bucles
-      con D6 y guarda) · D (C2: tres opciones renderizadas para D1) · F (la escala, mecánica).
+- [x] **Tandas E y H** (`#435`, spec §12): 19 hovers que saltaban (D5), `transition: all`, layout animado,
+      once colores crudos; banderitas quietas (D6), spinner y calcetines pausados fuera de vista; `/` de 13
+      bucles a 5. Guardas `HoverDoesNotJumpTest` y `MotionBudgetTest`. m3 no procede (`.eyebrow` tiene
+      consumidores fuera de las doce vistas).
+- [ ] Tanda D (C2: tres opciones renderizadas para D1) · F (la escala, mecánica con guarda).
 - [ ] Tanda G (interiores M3, normas M6, m5, m6: D2 y D3) — con la organización y las secciones.
 
 ## Relación con el proyecto origen

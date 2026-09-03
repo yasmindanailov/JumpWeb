@@ -146,7 +146,11 @@
                     <span class="bd-pol__tape"></span>
                     <div class="bd-pol__frame">
                         @if ($cumpleImage)
-                            <img src="{{ asset($cumpleImage) }}" alt="{{ __('landing.events.eyebrow') }} · {{ $parkName }}" loading="lazy">
+                            {{-- En `/cumpleanos` esta foto ABRE la página (primer viewport): cargarla `lazy` allí
+                                 retrasa lo primero que se ve (auditoría M9, `#435`). En la portada está bajo el
+                                 pliegue y el `lazy` es el correcto. El marco ya reserva su proporción (4:5). --}}
+                            <img src="{{ asset($cumpleImage) }}" alt="{{ __('landing.events.eyebrow') }} · {{ $parkName }}"
+                                 loading="{{ $level === 1 ? 'eager' : 'lazy' }}" @if ($level === 1) fetchpriority="high" @endif>
                         @endif
                     </div>
                     <span class="bd-pol__cap">{{ __('landing.events.bd_photo_cap') }}</span>

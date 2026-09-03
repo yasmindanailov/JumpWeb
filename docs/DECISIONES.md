@@ -22646,3 +22646,37 @@ se cae en silencio. Se normaliza con un canvas.
 
 **Verificación**: sonda antes/después a 1280 y 390 · 227 guardas de hojas y vistas en verde · Pint ·
 cuatro mutaciones que muerden con control en verde.
+
+## #435 · 2026-09-03 · `[DECIDIDO owner]` Las tandas E y H de la auditoría: el hover no salta en toda la web, y el presupuesto de bucles pasa a ser una lista que solo crece decidiendo
+
+**Contexto.** Tras la tanda C (`#434`), las dos siguientes del plan de `specs/auditoria-diseno.md` §8
+que no dependen de una decisión pendiente: **E**, la física (M1 hovers que saltan · m1 `transition: all`
+· m2 propiedades de layout animadas · m4 colores crudos), y **H**, el rendimiento (M9 imágenes · M10 el
+presupuesto de movimiento). `[DECIDIDO owner, 2026-09-03]`: **D5** fuera los cinco hovers que saltan y
+el logotipo conserva su «flota»; **D6** las banderitas de la invitación quedan quietas.
+
+**1 · El informe contaba cinco y eran diecinueve.** El barrido por SELECTOR (no por los cinco que la
+auditoría había mirado) encontró 19 reglas que mueven o escalan el propio elemento en `:hover`; catorce
+son de la web pública y pasan a responder con color, borde o sombra; los cinco del cajón quedan
+enumerados como excepción que solo encoge (el cajón está aparcado). *Una decisión sobre una lista corta
+vale para la regla entera si la regla se enuncia: «el hover responde, no salta», en toda la web.*
+
+**2 · «Sin consumidor en las vistas auditadas» no es «muerto».** m3 proponía retirar `.eyebrow`; tiene
+cinco consumidores fuera de las doce vistas (errores y auth). No se retira, y queda escrito para que
+nadie lo «limpie».
+
+**3 · El presupuesto de bucles se hace ejecutable como LISTA, no como número.** Una guarda de navegador
+no cabe en la suite; lo que sí cabe es que **cada `infinite` de las tres hojas esté enumerado con su
+motivo** (`MotionBudgetTest`, 20 entradas). Añadir un bucle es decidirlo. Con eso y tres hechos —
+banderitas y estrella quietas, el spinner pausado con el cajón cerrado (`visibility: hidden` no detiene
+animaciones), los ocho bucles del icono de calcetines solo mientras se ve— la portada baja de 13 bucles
+corriendo a 5 (los que `#279` aceptó), `/cumpleanos` de 17 a 2, `/normas` de 5 a 2.
+
+**4 · Un trinquete ajeno con razón.** `SidebarTokenBudgetTest` cuenta los colores crudos del cajón y exige
+bajar su tope en el mismo commit cuando bajan; dos literales de m4 eran del cajón y el hook rechazó el
+push de la tanda C por ello. El tope baja de 3 a 1 aquí. *Un trinquete que solo encoge muerde también a
+quien mejora: es su forma de que el número siga siendo verdad.*
+
+**Verificación**: sonda de navegador antes/después (bucles por vista, `transform` computado al pasar,
+la barra de progreso) · 256 guardas de hojas y vistas en verde · cuatro mutaciones que muerden con
+control en verde · Pint · `npm run build`.

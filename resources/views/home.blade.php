@@ -370,7 +370,7 @@
                  dos botones que repiten un gesto que ya existe son ruido. --}}
             <div class="slider-foot">
                 <div class="slider-progress">
-                    <div class="slider-progress__bar" :style="{ left: (progressLeft*100)+'%', width: (progressWidth*100)+'%' }"></div>
+                    <div class="slider-progress__bar" :style="{ transform: 'translateX(' + (progressLeft*100) + '%) scaleX(' + progressWidth + ')' }"></div>
                 </div>
                 <div class="slider-nav">
                     <button class="slider-arrow" @click="scrollSlider(-1)" aria-label="{{ __('landing.nav.slider_prev') }}"><x-icons.arrow-left :width="16" :height="16" /></button>

@@ -654,7 +654,9 @@ img { display: block; max-width: 100%; }
 /* El hover LEVANTA el botón. Es el único del racimo que se mueve, y en el mockup también: los dos
    CTA solo cambian de sombra porque son objetivos de compra —moverlos invita al clic accidental—;
    éste abre un menú, y el gesto de «asomar» es la afordancia. */
-.nav__burger:hover { transform: translateY(-2px); }
+/* Responde con el borde, no saltando (auditoría M1, `[DECIDIDO owner]` D5, `#435`): el par de al lado
+   tampoco salta desde `#217`. */
+.nav__burger:hover { border-color: var(--paper-fg); }
 
 /* Abierto: el botón pasa a PAPEL macizo y su keyline desaparece dentro de él. Con el menú de tinta
    detrás, es la pieza más clara de la pantalla — que es lo que la convierte en «la salida». */
@@ -752,7 +754,7 @@ img { display: block; max-width: 100%; }
   border: 1px solid var(--line); background: var(--bg-card);
   transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
 }
-.mob-menu__close:hover { background: var(--fg); color: var(--bg); transform: scale(1.08); }
+.mob-menu__close:hover { background: var(--fg); color: var(--bg); }
 
 .mob-menu__primary { list-style: none; padding: 0; margin: 0; }
 .mob-menu__primary li { border-top: 1px solid var(--line); }
@@ -762,9 +764,10 @@ img { display: block; max-width: 100%; }
   padding: 18px 4px;
   font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
   font-size: 32px; letter-spacing: -0.02em; line-height: 1;
-  transition: color var(--dur-sale) var(--ease-sale), padding-left var(--dur-estado) var(--ease-sale);
+  transition: color var(--dur-sale) var(--ease-sale);
 }
-.mob-menu__primary a:hover { color: var(--zone-1); padding-left: 8px; }
+/* Sin desplazar el relleno al pasar (auditoría m2, `#435`): animar layout en una interacción. */
+.mob-menu__primary a:hover { color: var(--zone-1); }
 .mob-menu__primary .arrow {
   font-family: var(--font-body); font-size: 16px;
   color: var(--fg-mute);
@@ -1054,7 +1057,7 @@ img { display: block; max-width: 100%; }
 .hero__title.hero__title--onvideo {
   font-size: clamp(56px, 10.5vw, 168px);
   margin: 0;
-  text-shadow: 0 4px 40px rgba(0,0,0,0.18);
+  text-shadow: 0 4px 40px color-mix(in srgb, var(--paper-fg) 18%, transparent);
 }.hero__stage-label {
   position: absolute;
   left: clamp(20px, 3vw, 40px); bottom: clamp(16px, 2vw, 28px);
@@ -1278,7 +1281,9 @@ img { display: block; max-width: 100%; }
   border-radius: var(--r-md);
   font-size: var(--fs-13); font-weight: 600;
   color: var(--fg-mute);
-  transition: all var(--dur-estado) var(--ease-sale);
+  /* Propiedades NOMBRADAS (auditoría m1, `#435`): era el único `transition: all` de las dos hojas y
+     `MotionScaleTest` no lo veía — mira duraciones y curvas, no la propiedad. */
+  transition: background-color var(--dur-estado) var(--ease-sale), color var(--dur-estado) var(--ease-sale);
   font-family: var(--font-body); text-transform: uppercase; letter-spacing: 0.14em;
 }
 .zone-tab.active { background: var(--zone-1); color: var(--on-brand); }
@@ -1462,10 +1467,14 @@ img { display: block; max-width: 100%; }
   height: 4px; background: var(--line);
   position: relative; overflow: hidden; border-radius: var(--r-pill);
 }
+/* La barra se MUEVE con `transform`, no con `left`/`width` (auditoría m2, `#435`): ocupa la pista entera
+   y el JS publica `translateX(L %) scaleX(W)` con el origen a la izquierda — el mismo par de números de
+   antes, sin animar layout. */
 .slider-progress__bar {
-  position: absolute; top: 0; left: 0; height: 100%;
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   background: var(--zone-1);
-  transition: left var(--dur-entra) var(--ease-sale), width var(--dur-entra) var(--ease-sale);
+  transform-origin: left center;
+  transition: transform var(--dur-entra) var(--ease-sale);
 }
 
 /* ---------- precios ---------- */
@@ -1653,9 +1662,10 @@ img { display: block; max-width: 100%; }
     box-shadow var(--dur-cae) var(--ease-sale);
   align-self: start;
 }
+/* La polaroid se ENDEREZA al pasar, pero ya no levita (tanda E, `#435`): el giro es el gesto; los 8 px
+   de subida y la sombra difusa eran el «levanta» que el sistema retiró (`#323`). */
 .events__photo:hover {
-  transform: rotate(0deg) translateY(-8px);
-  box-shadow: var(--shadow-lift);
+  transform: rotate(0deg);
 }
 .events__photo-frame {
   width: 100%; aspect-ratio: 4 / 5;
@@ -2574,8 +2584,7 @@ select:focus-visible {
   margin-top: 10px;
 }
 .bd-pol:hover {
-  transform: rotate(0deg) translateY(-8px);
-  box-shadow: var(--shadow-lift);
+  transform: rotate(0deg);   /* se endereza; no levita (tanda E, `#435`) */
 }
 .bd-pol__frame {
   width: 100%; aspect-ratio: 4 / 5;
@@ -2668,7 +2677,9 @@ select:focus-visible {
   font-size: 15px; font-weight: 600; margin-top: 20px; cursor: pointer;
   transition: transform var(--dur-entra) var(--ease-entra), background-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale);
 }
-.bd-pack__cta:hover { transform: translateY(-3px) scale(1.01); background: var(--action-hover); color: var(--on-action-hover); box-shadow: var(--shadow-lift); }
+/* Tres efectos a la vez —salto, escala y sombra— en el CTA de la banda más cargada de la web (auditoría
+   M1, G13). Queda la respuesta de color, como `.btn` (`#321`); la pisada sigue en `:active`. */
+.bd-pack__cta:hover { background: var(--action-hover); color: var(--on-action-hover); }
 .bd-pack__cta:active { transform: translateY(0) scale(0.98); transition: transform var(--dur-toque) var(--ease-sale); }
 .bd-pack__cta svg { transition: transform var(--dur-entra) var(--ease-entra); }
 .bd-pack__cta:hover svg { transform: translateX(5px); }
@@ -2717,7 +2728,7 @@ select:focus-visible {
   padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; background: transparent; color: var(--fg);
   transition: border-color var(--dur-sale) var(--ease-sale), background-color var(--dur-sale) var(--ease-sale), transform var(--dur-sale) var(--ease-sale);
 }
-.bd-swatch:hover { transform: translateY(-2px); }
+.bd-swatch:hover { border-color: var(--fg); }
 .bd-swatch .dot { width: 12px; height: 12px; border-radius: 50%; }
 /* El punto del swatch toma el acento que la propia paleta pinta en línea. Antes había una regla por
    zona —`--jump` y `--kids`— y un parque con otras zonas se quedaba con puntos invisibles. */
@@ -2760,11 +2771,9 @@ select:focus-visible {
 .bd-card__bunting .flag:nth-child(3n + 2) { border-top-color: var(--fg); }
 .bd-card__bunting .flag:nth-child(3n) { border-top-color: var(--inv2); }
 .bd-card__bunting .flag:nth-child(even) { border-top-width: 18px; }
-@keyframes bdFlagSway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
-@media (prefers-reduced-motion: no-preference) {
-  .bd-card__bunting .flag { animation: bdFlagSway 2.6s ease-in-out infinite; }
-  .bd-card__bunting .flag:nth-child(even) { animation-delay: -1.3s; }
-}
+/* Las banderitas QUIETAS (`[DECIDIDO owner, 2026-09-03]` D6, auditoría M10, `#435`): eran once bucles
+   sin fin —más la estrella— en una página cuyo presupuesto de movimiento (`#279`) es de dos, y la
+   tarjeta las lleva dibujadas igual de bien quietas. `MotionBudgetTest` cuenta los `infinite`. */
 .bd-card__conf { position: absolute; pointer-events: none; z-index: 1; border-radius: 3px; }
 .bd-card__conf--1 { width: 12px; height: 12px; top: 64px; left: 26px; background: var(--inv2); transform: rotate(22deg); }
 .bd-card__conf--2 { width: 8px; height: 8px; top: 120px; right: 150px; background: var(--inv); transform: rotate(-15deg); }
@@ -2782,8 +2791,7 @@ select:focus-visible {
 .bd-card__star-svg polygon { fill: var(--inv); transition: fill var(--dur-cae) var(--ease-sale); }
 .bd-card__star .num, .bd-card__star .yrs { position: relative; z-index: 1; }
 .bd-card:hover .bd-card__star { transform: rotate(-4deg) scale(1.08); }
-@keyframes bdStarFloat { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
-@media (prefers-reduced-motion: no-preference) { .bd-card__star { animation: bdStarFloat 3.2s ease-in-out infinite; } }
+/* (la estrella flotaba en bucle: quieta desde D6, `#435`) */
 .bd-card__star .num { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: 38px; line-height: 0.9; letter-spacing: -0.03em; color: var(--fg); }
 .bd-card__star .yrs { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg); }
 .bd-card__inner { padding: 52px 30px 24px; min-width: 0; position: relative; z-index: 2; }
@@ -2847,7 +2855,7 @@ select:focus-visible {
 .bd-proc__s { font-size: 16px; line-height: 1.55; color: var(--fg-mute); margin: 0; max-width: 46ch; }
 .bd-proc__arrows { display: flex; gap: 10px; align-self: end; }
 .bd-proc__arrow { width: 50px; height: 50px; border: 1px solid var(--line-strong); border-radius: 50%; display: grid; place-items: center; color: var(--fg); background: transparent; cursor: pointer; transition: background-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale), transform var(--dur-estado) var(--ease-sale); }
-.bd-proc__arrow:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); transform: translateY(-2px); }
+.bd-proc__arrow:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .bd-proc__rail { display: flex; align-items: flex-start; padding-top: 36px; }
 .bd-proc__stop { display: flex; flex-direction: column; align-items: center; gap: 10px; flex-shrink: 0; cursor: pointer; background: transparent; border: 0; }
 .bd-proc__cube {

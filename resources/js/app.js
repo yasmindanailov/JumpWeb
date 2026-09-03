@@ -1236,6 +1236,16 @@ document.addEventListener('alpine:init', () => {
             this.applyZoneAccent();
             this.$nextTick(() => this.updateProgress());
 
+            // Los bucles del icono de calcetines (ocho) solo corren mientras el icono SE VE
+            // (auditoría M10, `#435`): el CSS los deja pausados y aquí se encienden al entrar en
+            // pantalla. Sin `IntersectionObserver` se quedan en su pose de reposo.
+            if ('IntersectionObserver' in window) {
+                const vistos = new IntersectionObserver((entradas) => {
+                    entradas.forEach((e) => e.target.classList.toggle('is-onscreen', e.isIntersecting));
+                });
+                document.querySelectorAll('.ic-s1').forEach((el) => vistos.observe(el));
+            }
+
             // Drawer móvil = overlay accesible (Lote 10), alineado con el modal de auth / sidecart.
             // Un único `$watch` cubre TODAS las vías de apertura/cierre (☰ / ✕ / backdrop / Escape /
             // un enlace —incluido un ancla same-page que NO recarga): al abrir bloquea el scroll del

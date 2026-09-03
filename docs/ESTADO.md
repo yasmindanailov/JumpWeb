@@ -432,11 +432,20 @@ suelo de 10 px con guarda. Cuatro guardas nuevas, las cuatro vistas morder. ⚠�
 DEL OWNER**: dos líneas en el `client.css` de producción (`--on-ok: #101418; --on-err: #FFFFFF;`), que
 no viajan por rsync — sin ellas «Incluido» sigue en 2,95 allí. `[DECIDIDO owner]` también **D5** (fuera
 los cinco hovers que saltan; el logotipo se queda) y **D6** (banderitas quietas; spinner y calcetines
-pausados fuera de vista), que se ejecutan en E y H. ▶ **LO SIGUIENTE, en este orden**: tanda **E**
-(hovers + m1–m4, con guarda ampliada a todo `:hover`), **H** (imágenes con dimensiones y el presupuesto
-de bucles con guarda), **D** (C2: tres opciones del color de interacción renderizadas sobre la FAQ y
-las pestañas reales para D1), **F** (la escala, mecánica); la **G** (interiores, normas: D2, D3) se
-valora con la organización.
+pausados fuera de vista).
+▶ ✅ **TANDAS E Y H — HECHAS (2026-09-03, `#435`, `auditoria-diseno.md` §12)**: **19** reglas que saltaban
+al pasar (el informe contaba 5), las 14 públicas responden con color, borde o sombra y las 5 del cajón
+quedan enumeradas como excepción que solo encoge; `transition: all` fuera; el foco y el hover ya no
+desplazan relleno y la barra de progreso anima `transform`; once literales de color a rol (y
+`--offw-accent` pierde el naranja del primer cliente); **m3 NO procede** (`.eyebrow` tiene cinco
+consumidores fuera de las doce vistas). Banderitas y estrella quietas, spinner pausado con el cajón
+cerrado, calcetines solo mientras se ven: la portada baja de **13 bucles a 5** (los aceptados en `#279`),
+`/cumpleanos` de 17 a 2. Guardas `HoverDoesNotJumpTest` y `MotionBudgetTest` (cada `infinite` con su
+motivo), 4/4 mutaciones muerden. ⚠️ **El hook rechazó el push de la C** por `SidebarTokenBudgetTest`
+(trinquete de colores crudos del cajón, 3 → 1 por dos literales de m4): baja aquí. ▶ **LO SIGUIENTE**:
+tanda **D** (C2: tres opciones del color de interacción renderizadas sobre la FAQ y las pestañas reales
+para D1), **F** (la escala, mecánica con guarda); la **G** (interiores, normas: D2, D3) se valora con la
+organización.
 ⚠️ `DesignSync` sigue sin autorización en sesión no interactiva; copia del canvas del 27/28/31-08.
 ⚠️ **Lo que la auditoría vio fuera de su alcance**: `resources/views/vendor/mail/html/themes/brand.css`
 lleva `#FF5B22` (el naranja del PRIMER cliente) quemado **cinco veces** — fuga white-label en los
@@ -464,7 +473,7 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     (raíz) · `routes/prototipos.php` + su `require` en `routes/web.php` ·
     `app/Http/Controllers/Prototipos/**` · `public/prototipos/**` · **`scripts/prototipo-b/**`** (el
     fuente del artefacto B, su constructor, su sonda y el volcado de datos).
-    **Numera en la sub-banda `#430`–`#439` — último usado: `#434`** (2026-09-03), reservada A
+    **Numera en la sub-banda `#430`–`#439` — último usado: `#435`** (2026-09-03), reservada A
     DISTANCIA de la secuencia natural para que el otro carril no tenga que mirar nada antes de
     empujar; si se agota, la siguiente se reserva aquí ANTES de usarla.
   ▶ ✅ **Aviso del carril de diseño sobre `ValidarRegistroTest`: LEÍDO Y ACTUADO** (2026-09-03,
