@@ -22689,6 +22689,31 @@ su panel · T2 el dominio y la concurrencia · T3 las superficies del cliente. L
 la T3 construye encima de ella, y la T1 antes que la T2 porque el dominio necesita un dato que hoy no
 se puede introducir — la lección de `specs/hora-extra.md` §4.9, aplicada al orden de las tandas.
 
+### 9 · ✅ T0 EJECUTADA el mismo día (spec §9.1, commit `055d4781`)
+
+**Suite 4.156 ✓ · 26.328 aserciones** (+19 casos) · Pint · docs-check · **13/13 mutaciones**
+(`scripts/mutar-postform-t0.sh`) · verificación con `curl` fuera de la suite.
+
+⚠️⚠️ **El defecto era MÁS ancho de lo que la revisión encontró.** Las lentes midieron que un `PUT`
+sin `general` borraba las respuestas generales; al construir el arreglo se midió que **`guests` tenía
+el mismo defecto y peor**: `sanitizeGuestData([], N)` devuelve N filas VACÍAS, así que un cuerpo
+parcial **borraba los nombres, las edades y las alergias de los ocho niños** de una reserva real,
+respondiendo 200. *Una revisión que encuentra un defecto en un campo ha encontrado la FORMA del
+defecto, no su alcance: hay que medir a los hermanos.*
+
+▶ **El arnés de mutación cazó una regla SIN RED**: 12 de 13 a la primera. La que no mordía era la
+defensa del cuerpo malformado —«un valor que no es una lista se trata como ausente»—, escrita en el
+código y sin ningún caso que la ejerciera. Se escribió el caso y quedó 13/13. *12 de 13 no es un
+aprobado: es un mapa.*
+
+▶ **Y la suite entera pasaba con los cuatro defectos puestos** —126 casos del post-form, del
+justificante y del contrato—, que es exactamente por lo que esta tanda va antes que las demás.
+
+▶ `INVARIANTES` `RGPD-06` gana la **cuarta credencial** (el enlace del post-form) con su matiz: **no
+cae con `revokeAllAccess()`** —es HMAC, no hay fila que borrar— y se retira por gesto del operador,
+el mismo criterio que el carné QR. `RGPD-03` gana la nota de que su escalada solo se cumplía en la
+API hasta hoy.
+
 ## #434 · 2026-09-03 · `[DECIDIDO owner]` La tanda C de la auditoría: lo roto se arregla midiendo antes y después — y el informe tenía una causa mal diagnosticada
 
 **Contexto.** El owner pidió seguir con los puntos de la auditoría (`specs/auditoria-diseno.md`) y

@@ -828,6 +828,47 @@ id inexistente responde **403** en web como ya hace en API · dos guardados idé
 `updated_at` · el enlace viejo da 403 tras rotar y el nuevo abre. **Mutaciones**: volver al `?? []`,
 quitar el `missing()`, sellar siempre, no meter la versión en la firma.
 
+### 9.1 · ✅ T0 EJECUTADA (2026-09-03, `DECISIONES #413`)
+
+Commits `055d4781` (código y guardas) + el de la mutación que faltaba. **Suite 4.156 ✓ · 26.328
+aserciones** (+19 casos) · Pint ✓ · docs-check ✓ · **`scripts/mutar-postform-t0.sh` 13/13**.
+
+**Lo construido**, con lo que la obra enseñó y la spec no decía:
+
+1. **La ausencia de una clave = «no la toques», en las DOS claves.** ⚠️⚠️ **La spec decía `general` y
+   al construirlo se midió que `guests` tenía el mismo defecto y era PEOR**: `sanitizeGuestData([], N)`
+   devuelve **N filas vacías**, así que un `PUT` sin `guests` **borraba los nombres, las edades y las
+   alergias de los ocho niños** de una reserva real, con un 200 por respuesta. La decisión vive en un
+   solo sitio (`AuthorizesGuestForm::submittedGuestFormArray()`) que comparten web y API, y el dominio
+   recibe `null`. ⚠️ Un cuerpo **malformado** se trata como ausente: destruir datos de menores por un
+   tipo equivocado no puede ser la conducta por defecto. Corregido también el porqué escrito en
+   `OPTIONAL_BY_DESIGN` y el `description` del contrato, que documentaban lo contrario de lo que el
+   código hacía.
+2. **La escalada 403 → 410 → 404 se cumple ya en la WEB**: `->missing(fn () => abort(403))` en las
+   **cuatro** rutas públicas (post-form y justificante). Verificado con `curl` fuera de la suite:
+   antes id existente → 403 e inventado → 404; ahora **403 los dos**, en los dos formularios.
+3. **El sello no se re-estampa cuando nada cambió**, y con eso el token optimista del operador deja
+   de moverse solo. ⚠️ **El `travel()` de sus dos casos no es adorno**: sin él los guardados caen en
+   el mismo segundo y el caso pasaría con el defecto puesto — la trampa del valor trivial de
+   `CONVENCIONES §3.quater`.
+4. **D14 · el enlace se puede ROTAR.** `order_items.guest_form_link_version` viaja como `v` dentro de
+   la firma y `hasLiveGuestFormSignature()` la compara; el operador rota desde la ficha del pedido con
+   `orders.edit_guest_data`, con confirmación, re-comprobación en el momento de ejecutar (`SEC-04`) y
+   audit sin el enlace (`RGPD-02`). Las **cuatro** URLs firmadas del post-form salen ya del dominio —
+   el controlador componía dos a mano, que es justo por donde una se habría quedado sin versión.
+   Verificado sobre HTTP real: **200 → rotar → 403 el viejo y 200 el nuevo**.
+   ⚠️ **Ningún enlace vivo se rompió**: los emitidos sin `v` se leen como versión 0, con caso propio.
+
+**Lo que enseñó la ejecución**
+
+- ⚠️⚠️ **El arnés de mutación encontró una regla SIN RED**: 12 de 13 a la primera. La que no mordía
+  era la defensa del cuerpo malformado — estaba escrita en el código y no la ejercía ningún caso.
+  *12 de 13 no es un aprobado: es un mapa.*
+- ⚠️ **La suite entera pasaba con los cuatro defectos puestos** (126 casos del post-form, el
+  justificante y el contrato), que es exactamente por lo que esta tanda existe antes que las demás.
+- `INVARIANTES` `RGPD-06` gana la **cuarta credencial** con su matiz —no cae con `revokeAllAccess()`,
+  se retira por gesto del operador— y `RGPD-03` la nota de que su escalada solo se cumplía en la API.
+
 ### T1 · El eje y su panel (sin cliente todavía)
 
 Migración (`stage` default `booking` + `postform_cutoff_hours`, **sin reescribir filas existentes**) ·

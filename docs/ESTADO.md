@@ -30,6 +30,14 @@
 >    ▶ **PLAN DE OBRA en §9: T0** la superficie saneada · **T1** el eje y su panel · **T2** el dominio
 >    y la concurrencia (dos verificadores, uno de ellos CRUZADO que hoy no existe) · **T3** las
 >    superficies del cliente. La T0 va primero porque la T3 construye encima de ella.
+>    ▶ ✅ **T0 EJECUTADA (2026-09-03, commit `055d4781`, spec §9.1)**: suite **4.156 ✓ · 26.328**
+>    (+19 casos) · **13/13 mutaciones** (`scripts/mutar-postform-t0.sh`) · verificado con `curl` fuera
+>    de la suite. ⚠️⚠️ **El defecto era MÁS ancho que lo que la revisión encontró**: las lentes
+>    midieron `general` y al construirlo se midió que **`guests` era peor** —un `PUT` parcial borraba
+>    los nombres, las edades y las alergias de los OCHO niños de una reserva real, con un 200—.
+>    ⚠️ El arnés cazó **una regla sin red** (12/13 a la primera: la defensa del cuerpo malformado
+>    estaba escrita y sin caso). ⚠️ **La suite entera pasaba con los cuatro defectos puestos.**
+>    ▶ **Lo siguiente es la T1**: el eje `product_addons.stage` y sus SIETE sitios del panel.
 >    ⚠️ **Seis defectos PREEXISTENTES destapados, con ficha en `DEUDA.md`** — entre ellos que la
 >    escalada 403→410→404 **no se cumple en la web** (afecta también al justificante) y que el `PUT`
 >    del post-form sin `general` **borra** las respuestas generales.
@@ -1279,7 +1287,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > número**: 4019 + 4 + 15 = **4038** y el gate mide **4039 · 25.772**. Un test y dos aserciones de
 > más, o sea que uno de los dos números declarados se tomó sobre una base que ya no era 4019. *Que la
 > suma no cuadre es justo el motivo por el que el gate mide en vez de creerse la resta.*
-> Suite **4137 en verde** (26.250 aserciones, 1 skipped a propósito), medida el 2026-09-03
+> Suite **4156 en verde** (26.328 aserciones, 1 skipped a propósito), medida el 2026-09-03
 > sobre el árbol CONJUNTO **de los dos carriles ya fusionados** (`#404`). ⚠️ **+8 y +51 los pone la T8
 > de Google** (`#350`): las dos guardas nuevas del botón y del aviso de privacidad, más los casos que
 > sustituyen a los de las casillas retiradas. Antes: las cuatro tandas del
