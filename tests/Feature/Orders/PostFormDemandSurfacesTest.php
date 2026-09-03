@@ -14,6 +14,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Notifications\GuestFormRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -141,13 +142,13 @@ class PostFormDemandSurfacesTest extends TestCase
     {
         $this->actingAs($user)->getJson('/api/v1/me/orders')->assertOk();
 
-        \DB::flushQueryLog();
-        \DB::enableQueryLog();
+        DB::flushQueryLog();
+        DB::enableQueryLog();
 
         $this->actingAs($user)->getJson('/api/v1/me/orders')->assertOk();
 
-        $count = count(\DB::getQueryLog());
-        \DB::disableQueryLog();
+        $count = count(DB::getQueryLog());
+        DB::disableQueryLog();
 
         return $count;
     }

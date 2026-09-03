@@ -3795,6 +3795,43 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       huella de maquetación 24/24 idéntica; guarda `ScaleTokensAreUsedTest`. Quedan 163 huecos sin escalón.
 - [ ] Tanda G (interiores M3, normas M6, m5, m6: D2 y D3) — ⏸️ espera a la base de Claude Design (`#452`).
 
+### COMPLEMENTOS DE VENTA POSTERIOR 🟦 — las CUATRO tandas en el árbol (`#413`, 2026-09-03); queda el OJO del owner
+- [x] **Spec escrita, REVISADA de forma adversarial y CORREGIDA** (`docs/specs/complementos-post-reserva.md`,
+      cuatro `[DECIDIDO owner]` + quince derivadas). ❗ La revisión encontró **TRES afirmaciones de la
+      propia spec que eran FALSAS** y **dos bloqueantes**, y de ahí salió el cambio de diseño que lo
+      sostiene todo (**D9**): la puerta del reconciliador es el **HECHO de la fila**
+      (`LineFacts::birthValue() === 0`), no el eje del catálogo — que es configuración MUTABLE y habría
+      puesto en manos del cliente líneas ya cobradas **con el libro cerrando en verde**.
+- [x] **T0 · la superficie del post-form, SANEADA** (`#413`, spec §9.1): los tres preexistentes de esa
+      pantalla (el `PUT` que borra `general` —y `guests`, que era **peor**: ocho niños—, la escalada
+      403→410→404 de la web y el sello que invalida el token del operador) + la **rotación del enlace**
+      (D14). Suite 4.156 · **13/13 mutaciones**. ⚠️ **La suite entera pasaba con los cuatro defectos
+      puestos.**
+- [x] **T1 · el eje y su panel** (spec §9.2): `product_addons.stage` (`booking` | `postform`) con
+      `postform_cutoff_hours` y `max_qty` obligatorios, los **siete sitios del panel** y el censo de
+      consumidores. Suite 4.178 · **16/16 mutaciones**. ⚠️ Tres trampas: **un método llamado como una
+      columna hace que Eloquent lo tome por relación** (105 rojos), **el `+` de arrays conserva el
+      operando izquierdo** y **las baselines del grafo de módulos solo encogen**.
+- [x] **T2 · el dominio y la concurrencia** (spec §9.3): `PostFormAddons` con las **tres escrituras
+      asimétricas** —alta y subida escriben su hecho, **bajar también, retirar no**—, el orden de locks
+      `orders → order_items → hijas` (D11), el token optimista y la re-validación bajo lock. Suite
+      4.204 · **13/13 mutaciones** · **dos verificadores nuevos**, y `cross` es **el primero del repo
+      que cruza DOS actores**: 6 de 12 interbloqueos con el orden invertido, 0 de 12 con el de D11.
+- [x] **T3 · las superficies del cliente** (spec §9.4): contrato → API → **la página con su suelo sin
+      JavaScript** → el **correo agrupado por ventana** → las tres superficies de **DEMANDA** de D15 →
+      el **limitador por RESERVA** que `SEC-06` pedía. Suite **4.228 · 26.648** · **JS 951** ·
+      **15/15 mutaciones** · los dos verificadores en verde · **sonda de navegador 13/13**.
+      ▶ ❗❗❗ **El navegador encontró lo que 4.200 casos no**: el testigo optimista **se invalidaba a sí
+      mismo** —`submitGuestForm()` mueve `updated_at` en la misma petición—, así que un guardado normal
+      **no compraba nada**; en la suite salía verde porque `updated_at` tiene **precisión de segundo**.
+      ▶ Y el presupuesto de consultas destapó un **N+1 preexistente** en `OrderItemResource`, que salía
+      rojo **también con el control**.
+- [ ] **El ✅ del owner en navegador** (capturas en `/root/e2e/pf-t3-capturas`) y **el alta del producto,
+      que es DATO**: catálogo → complemento → enganche con `stage = postform`, su plazo y su tope. Sin
+      ese alta, en producción la feature sigue dormida por construcción.
+- [ ] **Una elección menor del owner**, anotada sin tocarla: un extra **cerrado que nunca se pidió** hoy
+      se pinta igual, con su «ya no se puede cambiar» y su 0.
+
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no
 le despliega nada. Mejoras de JumpWeb aplicables allí se portan **solo por decisión explícita**,

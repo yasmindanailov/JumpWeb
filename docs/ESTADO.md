@@ -1,15 +1,16 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-03, madrugada — carril producto/reservas; el carril de diseño cerró el suyo aparte).
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-03, TARDE — carril producto/reservas; el carril de diseño está PARADO por el owner, `#452`).
 >
 > **0. COMPLEMENTOS QUE SE VENDEN DESPUÉS DE RESERVAR — ✅ CÓDIGO COMPLETO: LAS CUATRO TANDAS
 >    (T0→T3) EN EL ÁRBOL. Solo queda el OJO del owner.**
 >    `docs/specs/complementos-post-reserva.md` (`#413`). `[owner]`: *«el cliente reserva un cumpleaños,
 >    va a su form post reserva y puede añadir ahí complementos tipo cubo de refrescos, tapas…»*.
->    ▶ **EMPIEZA POR §8** (la revisión) y luego §1.3 y §4.5.1. **El mecanismo ya existe** —el panel
->    añade complementos a una reserva pagada y el LIBRO lo pinta con saldo «A pagar en el parque»; el
->    post-form ya mueve dinero hoy con el suplemento mixto—: falta el eje **`product_addons.stage`** y
->    la puerta del cliente.
+>    ▶ **EMPIEZA POR §9.4** (la T3 y sus dos defectos de navegador); §8 es la revisión y §1.3 y §4.5.1
+>    el modelo de dinero. **El mecanismo de fondo ya existía** —el panel añade complementos a una
+>    reserva pagada y el LIBRO lo pinta con saldo «A pagar en el parque»; el post-form ya movía dinero
+>    con el suplemento mixto—: lo que esta tanda construyó es el eje **`product_addons.stage`** y la
+>    puerta del cliente.
 >    ▶ ❗❗❗ **LA REVISIÓN (6 lentes) ENCONTRÓ TRES AFIRMACIONES MÍAS FALSAS Y DOS BLOQUEANTES.**
 >    Falsas: que el editor del panel ignora una bajada de complemento (**la BLOQUEA**, y el bloqueo
 >    sostiene el modelo de dinero) · que «no hay inversión de locks posible» (**hay cuatro caminos que
@@ -68,9 +69,30 @@
 >    segundo**. La regla: *nuestra propia escritura no es un tercero*. ⚠️ Y el presupuesto de consultas
 >    destapó un **N+1 preexistente** en `OrderItemResource` (una consulta por tarjeta en «Mis
 >    pedidos»), que salía rojo **también con el control**.
->    ▶ **Lo siguiente es el OJO del owner** (capturas en `/root/e2e/pf-t3-capturas`) y su ✅. Una
->    elección menor le queda: un extra **cerrado que nunca se pidió** hoy se pinta igual, con su «ya no
->    se puede cambiar» y su 0.
+>    ▶ **LO SIGUIENTE, y cómo se retoma sin esta conversación:**
+>    (a) **El OJO del owner.** El escenario está sembrado en local como pedido **`R-PFT3E2E`** (una
+>    fiesta dentro de 3 h con DOS extras: «Cubo de refrescos» a 48 h —ya **fuera** de plazo— y «Tabla de
+>    tapas» a 2 h —**dentro**—), del cliente `probe-card@jumpweb.test`. Se rehace con
+>    `php artisan tinker --execute="require '/root/e2e/pf-t3-seed.php';"` (idempotente, borra y crea el
+>    suyo) y se recorre con `/root/e2e/pf-t3.js`. ⚠️ **El enlace hay que firmarlo con el host del
+>    navegador**: `URL::forceRootUrl('http://localhost:8081')` antes de `guestFormSignedUrl()`, y el
+>    puente `8081→80` (`/root/e2e/bridge.js`) tiene que estar arriba. Capturas de la última pasada en
+>    `/root/e2e/pf-t3-capturas`.
+>    (b) **El PRODUCTO es DATO y en producción la feature está dormida por construcción**: se activa
+>    desde el panel, catálogo → complemento → engancharlo al pack con **«se vende después de reservar»**,
+>    su **plazo** y su **tope** (los dos obligatorios). Sin ese enganche no cambia una sola pantalla.
+>    (c) **Una elección menor del owner**, anotada sin tocarla: un extra **cerrado que nunca se pidió**
+>    hoy se pinta igual, con su «ya no se puede cambiar» y su 0.
+>    ⚠️ **Si tocas el subsistema**: `scripts/mutar-postform-t{0,1,2,3}.sh` son sus cuatro arneses (13 ·
+>    16 · 13 · 15) y **exigen el árbol commiteado**; `PostFormAddons` está en el `CRITICAL_RE`, así que
+>    el push pedirá `VERIFY_CONC=1` con los **dos** escenarios de `postform:verify-concurrency`.
+>    ▶ **Cierre de este carril: 2026-09-03 por la tarde**, con la T3 y su doc (los dos commits de
+>    `#413` sobre el sello del carril de diseño, integrados por rebase sin conflictos). Árbol limpio,
+>    nada aparcado en `wip/`, hook activo. **Evidencia**: suite **4228 · 26.648** (1 skipped) · JS
+>    **951** · Pint ✓ · docs-check ✓ · `build` + `build:ssr` ✓ · **15/15 mutaciones** · los **dos**
+>    verificadores de concurrencia sobre InnoDB con 12 procesos · **auditoría del reloj en verde en
+>    las diez fronteras** (se corrió porque esta tanda añade fixtures con calendario) · sonda de
+>    navegador 13/13.
 >    ⚠️ **Seis defectos PREEXISTENTES destapados, con ficha en `DEUDA.md`** — entre ellos que la
 >    escalada 403→410→404 **no se cumple en la web** (afecta también al justificante) y que el `PUT`
 >    del post-form sin `general` **borra** las respuestas generales.
