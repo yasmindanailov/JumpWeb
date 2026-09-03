@@ -71,7 +71,7 @@ touched_critical=''
 # las CONDICIONES de las que sale el dinero del suplemento —la familia, los tramos y los precios con
 # los que se vendió cada fiesta— dentro de los locks de `OrderCreator` y `OrderItemEditor`. Mismo
 # criterio que `PackAvailability`: el gate vigila a quien decide, no solo a quien llama.
-CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator|WaiverSigner|ZoneDaySlotLock|OrderItemEditor|MixedPartySurcharge|AgeFamilySealer|CartOccupants|AddonOccupancy|AddonResolver)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
+CRITICAL_RE='^(app/(.+/)?(OrderCreator|RedsysReturnHandler|SlotGenerator|SlotOffer|SlotAvailability|PackAvailability|PaymentInitiator|ReservationAdmissionPolicy|CheckoutOrchestrator|WaiverSigner|ZoneDaySlotLock|OrderItemEditor|MixedPartySurcharge|AgeFamilySealer|CartOccupants|AddonOccupancy|AddonResolver|PostFormAddons)\.php|app/Http/Controllers/Api/(.+/)?(Order|Payment|Checkout|Quote|Availability|Cart)[A-Za-z]*\.php)$'
 
 while read -r _local_ref local_sha remote_ref remote_sha; do
     [[ "$remote_ref" == "refs/heads/main" ]] || continue
@@ -111,6 +111,8 @@ if [[ -n "$touched_critical" && "${VERIFY_CONC:-0}" != "1" ]]; then
     echo '    docker compose exec -u sail laravel.test php artisan purchase:verify-oversell --workers=16' >&2
     echo '    docker compose exec -u sail laravel.test php artisan waiver:verify-chain --workers=16   # si tocas WaiverSigner' >&2
     echo '    docker compose exec -u sail laravel.test php artisan mixed-party:verify-concurrency --workers=12  # si tocas MixedPartySurcharge' >&2
+    echo '    docker compose exec -u sail laravel.test php artisan postform:verify-concurrency --workers=12 --scenario=addons  # si tocas PostFormAddons' >&2
+    echo '    docker compose exec -u sail laravel.test php artisan postform:verify-concurrency --workers=12 --scenario=cross   # …y su CRUZADO cliente-vs-operador' >&2
     echo '  y confirma con:  VERIFY_CONC=1 git push' >&2
     exit 1
 fi

@@ -106,9 +106,15 @@ class CriticalPathGateTest extends TestCase
         //  · `AddonResolver` dejó de ser solo precio: lleva el tope por SUMA («no se quedan más de
         //    los que entran») y las plazas de las filas que ocupan. Mismo criterio con el que
         //    entraron los dos contadores: tocarlo mueve lo que el verificador comprueba.
+        //  · `PostFormAddons` (T2 de `#413`) escribe DINERO desde una superficie PÚBLICA y sin
+        //    sesión: crea líneas, mueve cantidades y escribe los hechos que el LIBRO suma. Su carrera
+        //    —N guardados del mismo formulario, y un guardado del cliente contra una cancelación del
+        //    operador— no la reproduce SQLite, y el orden de locks que evita el interbloqueo es una
+        //    regla del subsistema que un cambio distraído puede invertir sin que nada falle.
         'app/Domain/Booking/Services/CartOccupants.php',
         'app/Domain/Booking/Services/AddonOccupancy.php',
         'app/Domain/Booking/Services/AddonResolver.php',
+        'app/Domain/Booking/Services/PostFormAddons.php',
     ];
 
     /**

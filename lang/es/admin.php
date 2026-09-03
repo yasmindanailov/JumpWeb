@@ -1012,6 +1012,7 @@ return [
                     'guest_form_link_rotate_blocked' => 'Rotación del enlace bloqueada',
                     'guest_form_submitted' => 'Formulario de invitados enviado',
                     'payment_init_failed' => 'No se pudo iniciar el cobro',
+                    'postform_addons_changed' => 'Extras del formulario actualizados',
                     'slip_printed' => 'Hoja de reserva impresa',
 
                     // Dinero de una gestión (T1 del libro, `specs/desglose-libro.md` §4.2): cada

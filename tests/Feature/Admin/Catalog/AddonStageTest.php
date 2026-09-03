@@ -545,6 +545,7 @@ class AddonStageTest extends TestCase
         $declared = [
             // VENDEN: filtran a `booking`, porque un `postform` no nace nunca con el pedido.
             'app/Domain/Booking/Services/AddonResolver.php' => 'la AUTORIDAD: el eje entra aquí',
+            'app/Domain/Booking/Services/PostFormAddons.php' => 'VENDE en la otra fase: filtra a `postform` y además por PLAZO',
             'app/Domain/Booking/Models/TicketType.php' => 'expone `addonsSoldAtBooking()` para que la landing nombre la fase sin arrastrar flechas nuevas al grafo de módulos',
             'app/Domain/Booking/Services/AddonOfferReader.php' => 'vende: la oferta del embudo',
             'app/Domain/Booking/Services/CatalogReader.php' => 'vende: la ficha pública del producto',
