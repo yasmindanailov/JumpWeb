@@ -883,6 +883,51 @@ un `postform` no aparece en embudo, landing, ficha ni alta manual, y una cesta f
 **Mutaciones**: quitar una de las tres listas blancas, quitar el filtro de cada superficie, apagar
 cada guard.
 
+### 9.2 · ✅ T1 EJECUTADA (2026-09-03, `DECISIONES #413`)
+
+Commits `2503adc7` + el de la guarda que faltaba. **Suite 4.178 ✓ · 26.382 aserciones** (+23 casos) ·
+Pint ✓ · **`scripts/mutar-postform-t1.sh` 16/16** · verificado sobre HTTP real.
+
+**Lo construido**
+
+1. **La migración** (`stage` default `booking` · `postform_cutoff_hours` nullable), **sin reescribir
+   ninguna fila**: los 29 enganches quedan idénticos, con su caso de CONTROL que mide la oferta, la
+   ficha, la landing y el cobro antes y después.
+2. **Las tres listas blancas del panel**, las tres con su caso: `ADDON_PIVOT_COLUMNS` (sin ella el
+   *attach* borra el dato **y el audit dice lo contrario**), `sanitizePivotData()` (sin ella no se
+   puede cambiar la fase de los 29 que ya existen) y el `fillForm()` de «Configurar» —la peor, que
+   devolvería un `postform` a `booking` al tocar **la posición en la lista**—. Más la **guarda de
+   simetría** `sanitizePivotData ⊆ fillForm`, que cierra la familia entera y no solo este campo.
+3. **Nueve guards en `ProductAddon::postFormProblem()`**, punto único que comparten el guard del
+   modelo y el **cinturón** de `AddonResolver`; y la **mitad inversa** del guard de ocupación en
+   `TicketType::booted()`, la lección de `#324`. Los seis que se ven desde el pivote, con proveedor
+   de datos; los otros tres, con caso propio.
+4. **El filtro en las seis superficies que venden**, explícito en cada una y **no** dentro de la
+   relación. Más el **censo de consumidores declarado**, que se pone rojo cuando aparece uno nuevo
+   sin decir qué hace con la fase. ⚠️ **Cazó mi propio método** mientras lo escribía.
+5. **La insignia de fase** en la lista del catálogo y el **aviso de D4** al enganchar sobre un
+   producto sin post-form.
+
+**Verificación fuera de la suite** (sobre el catálogo real, con la BD restaurada después): al pasar
+«Tarta» a venta posterior en «Cumpleaños Jump», el embudo por HTTP pasa de ofrecer **4** complementos
+a **3**, la landing y la ficha pública igual, y la fase `postform` la ve a ella sola. Restaurado,
+vuelven los cuatro.
+
+**Lo que enseñó la ejecución**
+
+- ⚠️⚠️ **Un método llamado como una columna hace que Eloquent lo tome por una RELACIÓN**: `stage()`
+  dejó **105 casos en rojo** con `Undefined property: $stage`, porque un pivote construido con
+  atributos parciales —lo que hace `attach()`— no lo trae. Hoy es `saleStage()` y lee de
+  `getAttributes()`, sin pasar por `__get`.
+- ⚠️ **El `+` de arrays conserva el operando IZQUIERDO**: tres de los seis casos del proveedor se
+  ignoraban en silencio, y el test decía «el guard no muerde» sobre una configuración **que nunca se
+  aplicó**. Es la trampa nº 3 de `CONVENCIONES §3.quater` con otra cara.
+- ⚠️ **La landing solo puede tipar `TicketType`** y las baselines del grafo de módulos **solo
+  encogen**: el filtro va detrás de `TicketType::addonsSoldAtBooking()` en vez de ensancharlas.
+  *Una guarda de arquitectura que muerde no se rodea: se obedece.*
+- **El arnés cazó una guarda que faltaba** (15/16 a la primera): el alta manual tenía el filtro
+  puesto y **sin red**, y es justo la decisión D2 que el owner confirmó con el caso delante.
+
 ### T2 · El dominio y la concurrencia (sigue sin cliente)
 
 `PostFormAddons` con las **tres escrituras** de §4.5.1, las reglas R0–R5, el **orden de locks**

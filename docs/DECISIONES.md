@@ -22714,6 +22714,36 @@ cae con `revokeAllAccess()`** —es HMAC, no hay fila que borrar— y se retira 
 el mismo criterio que el carné QR. `RGPD-03` gana la nota de que su escalada solo se cumplía en la
 API hasta hoy.
 
+### 10 · ✅ T1 EJECUTADA (spec §9.2, commit `2503adc7`)
+
+El eje `product_addons.stage` y su panel. **Suite 4.178 ✓ · 26.382 aserciones** (+23 casos) ·
+**16/16 mutaciones** (`scripts/mutar-postform-t1.sh`) · verificado sobre HTTP real: al pasar «Tarta» a
+venta posterior, el embudo pasa de ofrecer 4 complementos a 3 y la landing y la ficha pública igual;
+restaurado, vuelven los cuatro.
+
+Los **dos bloqueantes de la revisión, cerrados**: las tres listas blancas del panel —cada una con su
+caso, y con una guarda de SIMETRÍA que cierra la familia entera en vez de este campo— y la puerta del
+eje, que filtra en las seis superficies que VENDEN y **no** dentro de la relación, que comparten doce
+clases. Con **censo declarado** de consumidores, que se pone rojo cuando aparece uno nuevo sin decir
+qué hace con la fase. ⚠️ *Cazó mi propio método mientras lo escribía.*
+
+**Tres trampas pagadas, y las tres valen para el siguiente:**
+
+1. ⚠️⚠️ **Un método llamado como una columna hace que Eloquent lo tome por una RELACIÓN.** `stage()`
+   dejó **105 casos en rojo** (`Undefined property: $stage`) porque un pivote construido con atributos
+   parciales —lo que hace `attach()`— no trae ese atributo y la resolución cae por la puerta de las
+   relaciones. Hoy es `saleStage()` y lee de `getAttributes()`.
+2. ⚠️ **El `+` de arrays conserva el operando IZQUIERDO**: tres de los seis casos del proveedor se
+   ignoraban en silencio y el test decía «el guard no muerde» sobre una configuración **que nunca se
+   aplicó**. Es la trampa nº 3 de `CONVENCIONES §3.quater` con otra cara: *exige que el ancla sea
+   única antes de creerte un hueco.*
+3. ⚠️ **Las baselines del grafo de módulos SOLO ENCOGEN**, así que la landing —que solo puede tipar
+   `TicketType`— no ensancha la suya: el filtro va detrás de `TicketType::addonsSoldAtBooking()`.
+   *Una guarda de arquitectura que muerde no se rodea: se obedece.*
+
+▶ Y el arnés volvió a cazar **una guarda que faltaba** (15/16 a la primera): el alta manual tenía el
+filtro puesto y sin red, y es justo la decisión D2 que el owner confirmó con el caso delante.
+
 ## #434 · 2026-09-03 · `[DECIDIDO owner]` La tanda C de la auditoría: lo roto se arregla midiendo antes y después — y el informe tenía una causa mal diagnosticada
 
 **Contexto.** El owner pidió seguir con los puntos de la auditoría (`specs/auditoria-diseno.md`) y

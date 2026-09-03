@@ -37,7 +37,17 @@
 >    los nombres, las edades y las alergias de los OCHO niños de una reserva real, con un 200—.
 >    ⚠️ El arnés cazó **una regla sin red** (12/13 a la primera: la defensa del cuerpo malformado
 >    estaba escrita y sin caso). ⚠️ **La suite entera pasaba con los cuatro defectos puestos.**
->    ▶ **Lo siguiente es la T1**: el eje `product_addons.stage` y sus SIETE sitios del panel.
+>    ▶ ✅ **T1 EJECUTADA (2026-09-03, commit `2503adc7`, spec §9.2)**: el eje `product_addons.stage`
+>    y su panel. Suite **4.178 ✓ · 26.382** (+23 casos) · **16/16 mutaciones**
+>    (`scripts/mutar-postform-t1.sh`) · verificado por HTTP: al pasar «Tarta» a venta posterior el
+>    embudo ofrece **3 en vez de 4**, y la landing y la ficha igual. Los DOS bloqueantes de la
+>    revisión quedan cerrados. ⚠️ Tres trampas pagadas: **un método llamado como una columna hace
+>    que Eloquent lo tome por una relación** (105 casos en rojo), **el `+` de arrays conserva el
+>    operando izquierdo** (tres casos del proveedor ignorados en silencio) y **las baselines del
+>    grafo de módulos solo encogen**. ⚠️ El arnés volvió a cazar una guarda que faltaba (15/16).
+>    ▶ **Lo siguiente es la T2**: `PostFormAddons`, las tres escrituras asimétricas, el orden de
+>    locks `orders → order_items → hijas` y los DOS verificadores de concurrencia — uno de ellos
+>    CRUZA dos actores distintos, algo que ningún verificador del repo hace hoy.
 >    ⚠️ **Seis defectos PREEXISTENTES destapados, con ficha en `DEUDA.md`** — entre ellos que la
 >    escalada 403→410→404 **no se cumple en la web** (afecta también al justificante) y que el `PUT`
 >    del post-form sin `general` **borra** las respuestas generales.
@@ -1277,7 +1287,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
->
+> Suite **4187 en verde** (26.409 aserciones, 1 skipped a propósito), medida el 2026-09-03
 > Antes: **2026-09-01 (cierre de la tarde) — 🚀 LA WEB DEL 2.º
 > CLIENTE ESTÁ EN PRODUCCIÓN (`https://playjump.es`, `#325`/`#326`): su bloque está en el CARRIL 4
 > (la PORTADA), que es el más reciente; antes, el 6.º (EXCURSIONES DE COLEGIO, `#322`/`#324`) bajo el
@@ -1349,7 +1359,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > que encontró; ver el bloque del justificante más abajo). ⚠️ `audit-clock.sh` **no está en el
 > pre-push**: si no se corre al cerrar, un test que solo falla ciertas noches se va a `main`.
 > ⚠️ **RE-MEDIDA tras rebasar encima los DOS arreglos del reloj de la T3** (con `npm run build` +
-> `build:ssr` delante, porque `#340` toca Vue): **sale el MISMO número**, que es lo que había que
+> Suite **4178 en verde** (26.382 aserciones, 1 skipped a propósito), medida el 2026-09-03
 > comprobar — los dos arreglan FIXTURES y no añaden casos. *Coincidir no se supone: se mide.*
 > ⚠️⚠️ **Y RE-MEDIDA otra vez al fusionar `#406` (justificante) con `#347` (Google), porque NINGUNO
 > de los dos números valía**: el justificante dejó **4023 · 25.709** y Google **4034 · 25.755**, los

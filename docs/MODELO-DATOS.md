@@ -120,6 +120,19 @@ gratis en un pack y de pago en una entrada):
 - `max_qty` nullable — tope por reserva (solo `fixed`; cap duro global 20 aparte).
 - `requires_addon_id` FK → `ticket_types` `nullOnDelete` — dependencia «requiere» (2.ª tarta
   requiere tarta). Autoridad de servidor: `App\Domain\Booking\Services\AddonResolver`.
+- `stage` (`booking` por defecto | `postform`) — la **FASE de venta** (`#413`, T1): dice **cuándo se
+  VENDE**, no dónde se ve. Un `postform` **no nace nunca con el pedido** —tampoco en el alta manual—,
+  y de eso vive la propiedad de que quitarlo sea neutro en dinero. Lista cerrada en
+  `ProductAddon::STAGES`; el default deja los enganches existentes idénticos.
+- `postform_cutoff_hours` nullable — el plazo de corte **por complemento**, en horas antes del inicio
+  de la franja («tapas 48», «cubo 2»). ⚠️ **`0` es un valor válido** («hasta que empiece») y distinto
+  de `null`: nulable en el esquema porque un enganche `booking` no tiene plazo, y **obligatorio en
+  `postform`** por guard, no por columna.
+
+⚠️ Las nueve reglas de un enganche `postform` viven en **UN** sitio,
+`ProductAddon::postFormProblem()`, que comparten el guard del modelo y el **cinturón** de
+`AddonResolver::forStage()` — los eventos no ven `Query\Builder::update()` ni los tres seeders que
+escriben este pivote.
 
 Unique `(product_id, addon_id)`.
 
