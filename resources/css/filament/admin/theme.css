@@ -1547,7 +1547,11 @@
     align-items: center;
     gap: calc(var(--spacing) * 2);
     border-radius: 9999px;
-    padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3);
+    /* `#464`: 2 de relleno vertical y no 1,5. Con 1,5 el chip medía 41 px y el BOTÓN de dentro 29 —
+     * medido en navegador—, o sea dos controles bajo el mínimo táctil en una pantalla que se usa con
+     * el dedo. Con 2 el chip llega a 45 y el botón lo llena entero (abajo): **+4 px por fila**, que
+     * es lo que cuesta que el gesto de volver atrás se pueda acertar. */
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 10%, transparent);
     background-color: var(--gray-50);
     color: var(--gray-500);
@@ -1602,142 +1606,163 @@
     color: var(--gray-600);
 }
 
-/* ─── La tira de días rápidos del paso 2 (#240) ─────────────────────────────────
+/* ─── El CALENDARIO del paso «Cuándo» (#464) ────────────────────────────────────
  *
- * Mismo gesto que la del cajón del cliente (`specs/cajon-en-movil.md` §5.2) y por el mismo motivo:
- * un popover de calendario con el dedo son cuatro toques y objetivos de 36 px. Aquí la lista es
- * CORTA —14 días— así que no hace falta ni ajuste ni vela: caben casi todos y lo que sobra se
- * alcanza con un deslizamiento corto. */
-/* El rótulo de la tira: se pinta como cualquier etiqueta de campo de Filament, con su aire debajo. */
-.cmo-daystrip > .fi-fo-field-label-content {
+ * Sustituye a la tira de 14 días y al `DatePicker` plegado tras su CTA que traía `#241`. Medido
+ * antes de tocarlo, aquel calendario era un **popover de 259×248 px con celdas de 29×28** —bajo el
+ * mínimo táctil de 44— y costaba dos toques abrirlo; `[owner]`: «un calendario grande, bien
+ * visible».
+ *
+ * ⚠️ **La celda se dimensiona por ALTO fijo y ancho elástico**: la rejilla es de 7 columnas iguales
+ * (`1fr`), así que en la columna del formulario del panel —544 px medidos en iPad horizontal— cada
+ * día sale a ~74×48. El 48 es el que hay que defender: es el eje que un `min-height` menor rompería
+ * sin que ninguna guarda de ancho lo viera. */
+.cmo-cal > .fi-fo-field-label-content {
     display: block;
     margin-bottom: calc(var(--spacing) * 1.5);
 }
 
-.cmo-daystrip__track {
+.cmo-cal__box {
+    border-radius: 0.75rem;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 10%, transparent);
+    background-color: var(--color-white);
+    padding: calc(var(--spacing) * 2);
+}
+
+.cmo-cal__head {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: calc(var(--spacing) * 2);
-    overflow-x: auto;
-    padding-block: calc(var(--spacing) * 1);
-    scrollbar-width: none;
+    margin-bottom: calc(var(--spacing) * 1.5);
 }
 
-.cmo-daystrip__track::-webkit-scrollbar {
-    display: none;
+.cmo-cal__month {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--gray-950);
 }
 
-/* 56×56: por encima del mínimo táctil en los dos ejes, con sitio para el día de la semana encima
- * del número — que es lo que permite elegir «el sábado» sin contar casillas. */
-.cmo-daystrip__day {
-    flex: none;
+/* Las flechas SÍ son diana de dedo (44): mueven de mes, que es el gesto largo de esta pantalla. */
+.cmo-cal__nav {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: calc(var(--spacing) * 0.5);
-    min-width: 56px;
-    min-height: 56px;
+    min-width: 44px;
+    min-height: 44px;
     border-radius: 0.5rem;
+    font-size: 1.25rem;
+    line-height: 1;
+    color: var(--gray-700);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 10%, transparent);
+    background-color: var(--color-white);
+}
+
+.cmo-cal__nav:hover { box-shadow: inset 0 0 0 1px var(--primary-500); }
+
+/* Sin mes al que ir no hay botón, pero el hueco se reserva: el nombre del mes se queda centrado en
+ * vez de saltar de sitio al llegar al primer o al último mes con fechas. */
+.cmo-cal__nav.is-empty {
+    box-shadow: none;
+    background-color: transparent;
+    pointer-events: none;
+}
+
+.cmo-cal__grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: calc(var(--spacing) * 1);
+}
+
+.cmo-cal__wd {
+    text-align: center;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1;
+    padding-block: calc(var(--spacing) * 1);
+    color: var(--gray-500);
+}
+
+.cmo-cal__pad { min-height: 48px; }
+
+.cmo-cal__day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 10%, transparent);
     background-color: var(--color-white);
     color: var(--gray-950);
 }
 
-.cmo-daystrip__day:hover {
-    box-shadow: inset 0 0 0 1px var(--primary-500);
+.cmo-cal__day:hover:not(:disabled) { box-shadow: inset 0 0 0 1px var(--primary-500); }
+
+/* ⚠️ Un día que la oferta no admite se enseña APAGADO, no se esconde: el operador ve que el día
+ * existe y que ese producto no se vende ahí, en vez de encontrarse un hueco sin explicación. */
+.cmo-cal__day:disabled {
+    box-shadow: none;
+    background-color: transparent;
+    color: var(--gray-400);
+    cursor: not-allowed;
 }
 
-.cmo-daystrip__day.is-selected {
+/* HOY va marcado aunque no esté elegido: en un mostrador, la mayoría de las ventas son para hoy. */
+.cmo-cal__day.is-today:not(.is-selected):not(:disabled) {
+    box-shadow: inset 0 0 0 1px var(--gray-400);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.cmo-cal__day.is-selected {
     box-shadow: inset 0 0 0 2px var(--primary-600);
-    background-color: color-mix(in oklab, var(--primary-500) 10%, var(--color-white));
+    background-color: var(--primary-50);
     color: var(--primary-700);
 }
 
-.cmo-daystrip__wd {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    line-height: 1;
-    text-transform: uppercase;
-    color: var(--gray-500);
-}
-
-.cmo-daystrip__num {
-    font-size: 1.125rem;
-    font-weight: 700;
-    line-height: 1;
-}
-
-.cmo-daystrip__day.is-selected .cmo-daystrip__wd {
-    color: var(--primary-600);
-}
-
-.cmo-daystrip__day:where(.dark, .dark *) {
+.cmo-cal__box:where(.dark, .dark *) {
+    background-color: var(--gray-900);
     box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-white) 10%, transparent);
-    background-color: color-mix(in oklab, var(--color-white) 5%, transparent);
+}
+
+.cmo-cal__month:where(.dark, .dark *) { color: var(--color-white); }
+
+.cmo-cal__nav:where(.dark, .dark *) {
+    background-color: var(--gray-800);
+    color: var(--gray-200);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+.cmo-cal__nav.is-empty:where(.dark, .dark *) { background-color: transparent; box-shadow: none; }
+
+.cmo-cal__wd:where(.dark, .dark *) { color: var(--gray-400); }
+
+.cmo-cal__day:where(.dark, .dark *) {
+    background-color: var(--gray-800);
+    color: var(--gray-100);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+.cmo-cal__day:disabled:where(.dark, .dark *) {
+    background-color: transparent;
+    color: var(--gray-600);
+    box-shadow: none;
+}
+
+.cmo-cal__day.is-selected:where(.dark, .dark *) {
+    background-color: color-mix(in oklab, var(--primary-500) 25%, transparent);
     color: var(--color-white);
+    box-shadow: inset 0 0 0 2px var(--primary-500);
 }
-
-.cmo-daystrip__day.is-selected:where(.dark, .dark *) {
-    box-shadow: inset 0 0 0 2px var(--primary-400);
-    background-color: color-mix(in oklab, var(--primary-400) 15%, transparent);
-    color: var(--primary-300);
-}
-
-.cmo-daystrip__wd:where(.dark, .dark *) {
-    color: var(--gray-400);
-}
-
-.cmo-daystrip__day.is-selected .cmo-daystrip__wd:where(.dark, .dark *) {
-    color: var(--primary-300);
-}
-
 
 /* ─── Lo que pidió el OJO del owner sobre «Crear pedido» (#241) ─────────────────────────────────
- * Cuatro cosas, todas suyas y todas de la misma pantalla:
- *   1. con RATÓN no había forma de deslizar la tira → flechas, solo donde hay ratón;
+ * De las cuatro cosas que pidió, quedan DOS: las otras dos eran de la tira de días y del calendario
+ * plegado, que `#464` retiró con ellas (`[DECIDIDO owner, 2026-09-04]`: manda el calendario).
  *   2. las plazas de una franja pesaban lo mismo que la hora → dos niveles;
- *   3. «Otra fecha» era un campo más → un CTA «Abrir calendario»;
  *   4. el resumen no decía de QUIÉN es el pedido y empezaba más abajo que la columna izquierda.
  */
-
-/* ── 1 · Las flechas de la tira de días ──
- * ⚠️ **Solo donde hay RATÓN**, igual que en el cajón del cliente (`site.css`): en una pantalla táctil
- * dos botones flotando sobre la tira tapan chips y compiten con el gesto que ya funciona. Las DOS
- * consultas juntas, porque `hover: hover` sola la cumple un táctil con lápiz. */
-.cmo-daystrip__body { position: relative; }
-
-.cmo-daystrip__nav { display: none; }
-
-@media (hover: hover) and (pointer: fine) {
-    .cmo-daystrip__nav {
-        position: absolute; top: 50%; z-index: 2;
-        display: flex; align-items: center; justify-content: center;
-        width: 32px; height: 32px;
-        transform: translateY(-50%);
-        border-radius: 9999px;
-        box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 15%, transparent), 0 2px 6px color-mix(in oklab, var(--gray-950) 12%, transparent);
-        background-color: var(--color-white);
-        color: var(--gray-700);
-    }
-
-    .cmo-daystrip__nav:hover { box-shadow: inset 0 0 0 1px var(--primary-500), 0 2px 6px color-mix(in oklab, var(--gray-950) 12%, transparent); }
-    .cmo-daystrip__nav--prev { left: 0; }
-    .cmo-daystrip__nav--next { right: 0; }
-
-    .cmo-daystrip__nav span {
-        width: 7px; height: 7px;
-        border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
-    }
-
-    .cmo-daystrip__nav--prev span { transform: translateX(2px) rotate(135deg); }
-    .cmo-daystrip__nav--next span { transform: translateX(-2px) rotate(-45deg); }
-
-    .cmo-daystrip__nav:where(.dark, .dark *) {
-        background-color: var(--gray-800);
-        color: var(--gray-200);
-        box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-white) 15%, transparent);
-    }
-}
 
 /* ── 2 · Las franjas: la hora manda, las plazas son contexto ──
  * `[OWNER]`: «lo de las plazas debería mostrarse de manera más sutil, no al mismo nivel que la hora».
@@ -1809,43 +1834,6 @@
 }
 
 .cmo-times__seats:where(.dark, .dark *) { color: var(--gray-400); }
-
-/* ── 3 · «Abrir calendario» ──
- * Una ACCIÓN, no un campo: se busca cuando hace falta. Ancho completo y 44 px, como «Ver más fechas»
- * del cajón, porque es la única puerta al salto largo. */
-.cmo-calcta {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: calc(var(--spacing) * 2);
-    width: 100%;
-    min-height: 44px;
-    border-radius: 0.5rem;
-    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 10%, transparent);
-    background-color: transparent;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--gray-600);
-}
-
-.cmo-calcta:hover {
-    box-shadow: inset 0 0 0 1px var(--primary-500);
-    color: var(--primary-700);
-}
-
-/* Un cuadradito de calendario dibujado con bordes: cero peso y hereda el color. */
-.cmo-calcta__ico {
-    width: 13px;
-    height: 12px;
-    border: 2px solid currentColor;
-    border-top-width: 4px;
-    border-radius: 2px;
-}
-
-.cmo-calcta:where(.dark, .dark *) {
-    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-white) 10%, transparent);
-    color: var(--gray-400);
-}
 
 /* ── 4 · De QUIÉN es el pedido, en el resumen ──
  * En una tablet de mostrador el resumen es lo único que queda a la vista mientras se monta la
@@ -2044,6 +2032,11 @@
     align-items: center;
     gap: calc(var(--spacing) * 2);
     text-align: start;
+    /* ⚠️ El botón se come el relleno vertical del chip en vez de crecer por su cuenta: así la DIANA
+     * es el chip entero —lo que el operador ve como «el paso»— y el indicador no gana altura. Un
+     * `min-height: 44px` aquí habría sumado el relleno del chip encima: 56 px por fila. */
+    margin-block: calc(var(--spacing) * -2);
+    padding-block: calc(var(--spacing) * 2);
 }
 
 /* El paso ya pasado es un BOTÓN: el auto-avance solo es seguro si volver cuesta un toque. */

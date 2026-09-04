@@ -23391,3 +23391,78 @@ que el operador no puede rellenar desde ninguna pantalla; ficha en `DEUDA.md`.
 · los 99 casos previos de esta pantalla en verde tras el re-apuntado · sonda de navegador (18
 tarjetas en dos grupos, **0 controles bajo 44 px**, 0 desbordamiento, el modal sin elegir) · Pint ·
 docs-check · **suite 4.263 verde**.
+
+## #464 · 2026-09-04 · `[DECIDIDO owner]` El calendario grande manda en «Cuándo» — y el panel deja de ofrecer horas que su propia cesta ya ocupa
+
+**Dos mitades de naturaleza distinta**, y la segunda es la ÚNICA corrección de dominio de todo el
+encargo del asistente (`specs/asistente-crear-pedido.md` §9).
+
+**LA PANTALLA.** `[owner]`: «la fecha la selecciona de un calendario grande, bien visible». **Medido
+antes de tocar nada**: el calendario del panel era **un popover de 259×248 px con 30 celdas de
+29×28** —bajo el mínimo táctil de 44 en los dos ejes— **detrás de un CTA**, o sea a dos toques; lo
+que se veía sin tocar nada era la tira de 14 días. ▶ **`[DECIDIDO owner, 2026-09-04]`, preguntado con
+el coste de las dos salidas delante: la tira SE RETIRA, manda el calendario.** Con la rejilla
+desplegada eran **dos puertas a la misma pregunta** —«hoy» sigue estando a un toque en las dos— y la
+tira costaba **90 px** de una pantalla que ya no cabía. ⚠️ Eso **corrige a `auditoria-panel-admin.md`
+§7**, que la daba por buena: lo era cuando el calendario vivía escondido.
+
+Entra `calendarMonth()` —la rejilla compuesta en el SERVIDOR, con los días de otro mes como HUECOS y
+no como números atenuados—, `pickDay()` como **única puerta** a la fecha (y con ella muere
+`onDateChosen()`, que existía porque había dos escritores que podían divergir), y flechas que saltan
+al mes **ofrecible** anterior/siguiente, no al de al lado. Se van la tira, el CTA «Abrir calendario»,
+el `DatePicker` y sus tres topes, con su CSS y sus cinco claves. **Medido en iPad horizontal**:
+calendario **544×371**, celda **72×48**, flecha **44×44**, **0** controles bajo 44 px en el paso y
+**0** desbordamiento. ⚠️ Los dos que había eran del indicador de pasos de la T1 (204×29 y 98×29): hoy
+el botón se come el relleno del chip, así que la diana es el chip entero y el indicador solo crece
+**4 px por fila**.
+
+⚠️ **Y el bloque de franjas se trae a la vista al elegir día**: con el calendario delante, las horas
+caen fuera de una tablet de 810 px y el operador elegía día **sin ver pasar nada**. Medido: `scrollY`
+208 y las franjas enteras dentro de la ventana.
+
+**LA CESTA A LA OFERTA.** `timeMap()` pasa los ocupantes provisionales de su propia cesta a
+`SlotOffer::offerableTimes()`. **Medido en navegador de punta a punta**: con 7 entradas de las 10:00
+ya en el carrito, la segunda línea ofrece **33 plazas donde antes seguía diciendo 40**. ⚠️⚠️ **La
+cuenta no se escribe en el panel**: sube entera a `CartOccupants` —la derivación ÚNICA de
+`hora-extra.md` §7·D1—, que gana `packs()` (el cupo de fiestas, que vivía dentro de
+`AvailabilityReader`) y `forCart()` (la cesta en bruto → los dos grupos, **con el saneado y el filtro
+de qué producto retiene aforo dentro**, porque son parte de la respuesta). `OrderCreator` no cambia.
+El número de derivaciones no sube: **la oferta pasa a tener UNA**, compartida por web, API y panel.
+
+⚠️ **La huella de la cesta entra en la clave del memo** de `timeMap()` —contar líneas no vale: quitar
+una y añadir otra deja el mismo número y otra ocupación—. Es la lección de `#329` por la otra puerta.
+
+**Lo que enseñaron el arnés y las sondas**, y que vale para la siguiente pantalla:
+
+1. ⚠️⚠️ **Dos guardas miraban el modelo de vista y no la PANTALLA**: quitar el `@disabled` del
+   calendario o la marca del día elegido **pasaba en verde**. No habría daño en los datos —el
+   servidor sigue rechazando el día—, solo un operador pulsando sin que pase nada, que es la peor
+   clase de defecto. *Que el servidor sepa la respuesta no es que la pantalla la enseñe.*
+2. ⚠️⚠️ **Una comprobación sobraba y el arnés lo dijo**: validar el mes dentro de `goToMonth()` no
+   mordía porque el LECTOR ya lo descarta — y `$calMonth` es una propiedad **pública** de Livewire,
+   así que el navegador la escribe sin pasar por la acción: la defensa de fuera **daba sensación de
+   defensa sin defender nada**. Se retiró y la guarda escribe la propiedad a pelo.
+3. ⚠️ **Una mutación mató la línea equivocada** (`sel_time = null` está en tres sitios): al acotarla
+   se vio que **el reinicio tras añadir al carrito no tenía guarda**, con el caso llamándose
+   «…and resets selection». Y seguía sin morder porque **el fichero de esa guarda no entraba en el
+   `--filter` del arnés**: *un arnés no mide lo que no corre.*
+4. ⚠️ **La inicial del día de la semana no distingue martes de miércoles** en español (`L M M J V S
+   D`); el rótulo pasa a la abreviatura del idioma y la guarda vigila la PROPIEDAD —siete rótulos
+   distintos—, no las letras.
+5. ▶ **Un N+1 del elegidor de producto, de la tanda anterior**: pintar las 18 tarjetas costaba **54
+   consultas** y con la precarga son **5**. Guarda nueva que asevera «el coste no crece con el
+   catálogo» en vez de un techo.
+6. ▶ **Ficha de deuda nueva y medida**: el paso cuesta ~700 ms de servidor y el 90 % es
+   `SlotOffer::offeredSlots()` hidratando las ~1.900 franjas del horizonte para responder por un mes.
+
+⚠️ **Corrige una CITA de `#462`**: aquella spec decía que el borde del panel sin cesta estaba
+«declarado en `hora-extra.md` §8.3», y lo que §8.3 declara es otra cosa de la misma familia (el
+endpoint de complementos del embudo, que sigue en pie). *Una deuda parecida en la misma familia no es
+la misma deuda.*
+
+**Verificación**: `CreateManualOrderCalendarTest` (7 casos) · `CreateManualOrderCartAvailabilityTest`
+(7 casos) · **14/14 mutaciones muerden** (`scripts/mutar-asistente-t3.sh`, con control verde y
+restaurando por copia de seguridad, no con `git checkout`) · 147 casos previos de esta pantalla y de
+`SlotOffer` en verde tras re-apuntar seis **por sujeto** · **los SIETE escenarios de
+`purchase:verify-oversell` sobre InnoDB** (`CartOccupants` está en el `CRITICAL_RE`) · sonda de
+navegador con el recorrido entero · Pint · docs-check · **suite 4.275 verde**.

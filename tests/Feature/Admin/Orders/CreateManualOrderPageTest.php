@@ -204,8 +204,17 @@ class CreateManualOrderPageTest extends TestCase
         $this->assertSame($this->h1->id, $cart[0]['ticket_type_id']);
         $this->assertSame(3, $cart[0]['qty']);
         $this->assertSame(3000, $cart[0]['line_total_cents']);
-        // La selección se reinicia para la siguiente línea.
-        $component->assertSet('data.sel_product_id', null);
+
+        // ⚠️ **La selección se reinicia ENTERA para la siguiente línea**, y hasta `#464` esto solo
+        // aseveraba el producto: el arnés de mutación borró el olvido de la HORA y pasó en verde,
+        // con el nombre del caso prometiendo justo lo contrario. Una línea que hereda la hora, la
+        // cantidad o los complementos de la anterior es un pedido mal montado sin ningún error.
+        foreach (['sel_product_id', 'sel_date', 'sel_time', 'sel_qty'] as $campo) {
+            $component->assertSet('data.'.$campo, null);
+        }
+        $component->assertSet('data.sel_dependent_ids', []);
+        $component->assertSet('data.event_data', []);
+        $component->assertSet('selAddonQty', []);
     }
 
     public function test_changing_customer_empties_the_cart(): void

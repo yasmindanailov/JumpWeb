@@ -607,7 +607,19 @@ nota medida en navegador («Hora extra — Para 1 entrada que se queda · 3,00 �
   instrumento protegiéndose de comparar código viejo.
 - **La sonda de navegador esperó un `.cal` que ya no existe**: desde `#237`/`#239` la fecha es una
   TIRA (`daystrip`) con el calendario plegado — las sondas anteriores a esa tanda envejecieron y
-  quien copie una de plantilla hereda el selector muerto.
+  quien copie una de plantilla hereda el selector muerto. ⚠️ **Y volvió a pasar**: en el PANEL, `#464`
+  retiró esa misma tira y el calendario plegado (hoy es `.cmo-cal`), así que la lección se cumple dos
+  veces — *el selector de una sonda envejece en silencio*.
+
+  ▶ **`#464` toca este documento por el fondo, y de paso corrige una CITA de otro**:
+  `CreateManualOrderPage::timeMap()` ya pasa los ocupantes provisionales de su cesta, derivados por
+  `CartOccupants::forCart()` —la misma derivación única de §7·D1, que ahora incluye también el CUPO de
+  packs—. ⚠️⚠️ **Eso NO era lo que decía §8.3**, aunque `asistente-crear-pedido.md` §2.3 lo citara
+  así: la deuda declarada ahí es la del ENDPOINT de complementos del embudo (`POST
+  /catalog/products/{id}/addons`, que no recibe la cesta) y la UI de complementos del alta manual —
+  **las dos siguen en pie**. Que el panel no le pasara la cesta a `offerableTimes()` no lo había
+  declarado nadie: se midió en `#462`. *Una deuda parecida en la misma familia no es la misma
+  deuda.*
 - **El escenario nuevo del verificador necesita limpiar el complemento APARTE**: su zona es nula a
   propósito y el barrido por zona del `cleanup()` no lo ve — quedaría en la BD de desarrollo tras
   cada ejecución.

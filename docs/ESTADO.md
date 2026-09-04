@@ -2,52 +2,45 @@
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-04 — carril PANEL DE ADMIN, banda `#460`–`#469`; el carril de diseño sigue PARADO por el owner, `#452`).
 >
-> **0. EL PANEL DE ADMIN — 🟦 EN CURSO. Lo siguiente es la T3 del asistente de crear pedido, y
->    lleva dentro la ÚNICA corrección de DOMINIO de todo el encargo.**
+> **0. EL PANEL DE ADMIN — 🟦 EN CURSO. Lo siguiente es la T4 del asistente: la pantalla de
+>    desenlace. Lo único que queda del encargo con trabajo de DOMINIO ya está hecho.**
 >    ▶ **El encargo del owner** (2026-09-03/04, literal): *«que cualquier persona intuitivamente pueda
 >    hacer la operativa del parque, hay que quitar ruido y poner cada cosa en el momento adecuado y
 >    cada acción en su sitio»*, con el marco *«usamos Filament, no quiero chapuzas ni deuda, ni huecos;
 >    sé profesional y riguroso»*. ⚠️ **El panel se usa normalmente en TABLET** (iPad horizontal,
 >    1080×810): es el tamaño con el que se mide, no el escritorio.
->    ▶ **Lo hecho, en el árbol** — cuatro commits, `origin/main` al día:
+>    ▶ **Lo hecho, en el árbol** — cinco commits, `origin/main` al día:
 >    **`#460`** la AUDITORÍA (`docs/specs/auditoria-panel-admin.md`, 4 críticos · 10 mayores · 11
 >    menores, medidos con Chromium sobre el panel real) · **`#461`** el SHELL (marca por tema, buscador
 >    centrado, idioma al menú del avatar, «Crear pedido» a escala de acción, menú lateral fijo y
 >    estrecho) · **`#462`** la T1 del asistente (de 3 pasos a **7**, con el salto de los pasos que no
 >    preguntan nada) · **`#463`** la T2 (el producto en **tarjetas agrupadas**, que cierra el crítico
->    **C1** — el cumpleaños vendido como diez entradas).
->    ▶ ❗❗❗ **LO SIGUIENTE ES LA T3 · «CUÁNDO», Y NO ES SOLO PRESENTACIÓN.** Son dos cosas y la
->    segunda toca **AFORO**:
->    **(a)** la pantalla — la CANTIDAD arriba (`[DECIDIDO owner]` D1: así las horas dicen la verdad
->    para esa cantidad, y el auto-avance sigue estando en la hora, que es lo último), un CALENDARIO
->    grande que resalta los días reservables y las **plazas al elegir el día** (D2);
->    **(b)** ⚠️⚠️ **pasarle la CESTA a `SlotOffer`.** Medido en `#462`: web y panel **NO divergen** en
->    disponibilidad —los dos son `SlotOffer`, y dan **177 días y 11 horas idénticos** con los mismos
->    asientos, lo que CORRIGE la premisa de partida del owner—, pero **el panel llama a
->    `offerableTimes()` SIN los ocupantes de la cesta y la web SÍ se los pasa**. Hasta hoy era un borde
->    declarado; con «Añadir más productos» (la T1 ya lo ofrece) **pasa a ser el camino normal**: dos
->    líneas del mismo pedido para la misma franja se ofrecen como si la primera no existiera.
->    ▶ **Antes de tocar (b), lee `docs/INVARIANTES.md` §2 (AFORO) y la fila de `hora-extra.md`**: la
->    derivación de ocupantes provisionales ya existe y es **UNA** —`Booking\Services\CartOccupants`
->    (`#410`, D1)—, usada por `OrderCreator` **y** `AvailabilityReader`, con exclusión EXACTA y los
->    hermanos dentro. **No inventes una segunda**: ése fue justo el defecto que `#410` cerró.
->    ⚠️ `SlotOffer` está en el `CRITICAL_RE` → el `pre-push` exigirá **`VERIFY_CONC=1`** con los dos
->    verificadores corridos (`INVARIANTES §6`).
->    ▶ **Lo medido que acota el diseño de (a)**: pintar las plazas **por día** cuesta **709 consultas
->    y 11,4 s** y **NO existe vía agregada por rango** en `AvailabilityReader`, `SlotOffer` ni
->    `PackAvailability` — por eso D2 es «días reservables + plazas al elegir el día» y el semáforo por
->    día sería tanda propia sobre AFORO.
->    ▶ **Después de la T3 queda la T4**: la pantalla de «pedido creado» que refleje lo que de verdad
->    pasó (⚠️ hay clientes SIN email: no prometas un correo que no se manda), y con ella **los 5
->    controles bajo 44 px del paso del carrito** (medidos y anotados en `asistente-crear-pedido.md`
->    §7).
->    ▶ **EMPIEZA POR** `docs/specs/asistente-crear-pedido.md` §2 (las tres medidas que cambian el
->    encargo), §3 (las tres decisiones del owner) y §5 (el plan por tandas); §7 y §8 son la T1 y la T2
->    ejecutadas. La fila de enrutado de `CLAUDE.md` está al día con las dos.
+>    **C1** — el cumpleaños vendido como diez entradas) · **`#464`** la **T3**: el calendario grande y
+>    **la cesta a la oferta**.
+>    ▶ ✅ **T3 HECHA** (`specs/asistente-crear-pedido.md` §9). Las dos mitades:
+>    **(a)** el calendario **grande y siempre visible** —medido antes: era un popover de **259×248 px
+>    con celdas de 29×28**, bajo el mínimo táctil y a dos toques—; `[DECIDIDO owner]` **la tira de 14
+>    días se RETIRA** (dos puertas a la misma pregunta, 90 px), lo que **corrige a
+>    `auditoria-panel-admin.md` §7**; medido en tablet: celda **72×48**, **0** controles bajo 44 px,
+>    **0** desbordamiento, y las franjas **se traen a la vista** al elegir día (sin eso el operador
+>    elegía día y no veía pasar nada).
+>    **(b)** ⚠️⚠️ **la CESTA a `SlotOffer`**: medido en navegador, con 7 entradas ya en el carrito la
+>    segunda línea ofrece **33 plazas donde antes decía 40**. La cuenta **no** se escribió en el panel:
+>    subió entera a **`CartOccupants`** (`forCart()` + `packs()`), que sigue siendo la derivación
+>    ÚNICA; `OrderCreator` no cambia. Los **siete** escenarios de `purchase:verify-oversell` verdes
+>    sobre InnoDB.
+>    ▶ ❗❗❗ **LO SIGUIENTE ES LA T4 · EL DESENLACE**: la pantalla de «pedido creado» que refleje lo
+>    que de verdad pasó (⚠️ **hay clientes SIN email: no prometas un correo que no se manda**), y con
+>    ella **los 5 controles bajo 44 px del paso del carrito** (medidos y anotados en
+>    `asistente-crear-pedido.md` §7.4).
+>    ▶ **EMPIEZA POR** `docs/specs/asistente-crear-pedido.md` **§9** (la T3 ejecutada y sus siete
+>    lecciones de arnés), §3 (las tres decisiones del owner) y §5 (el plan por tandas); §7 y §8 son la
+>    T1 y la T2. La fila de enrutado de `CLAUDE.md` está al día con las tres.
 >    ⚠️ **Y lo que NO hay que tocar** está escrito: `auditoria-panel-admin.md` **§7** (el menú plano,
 >    las 20 tarjetas de Ajustes, la puerta en reposo) y **§9.bis** (M3 «no hay pantalla de aforo» y M4
 >    «nadie registra el cobro del parque» **son conducta querida**, D3 y D2 del owner: no los
 >    «arregles»). **D4 sigue pendiente del detalle del owner.**
+>    ⚠️ **Queda el OJO del owner** sobre el asistente entero (pasos 1→7 en su tablet).
 >
 > **1. COMPLEMENTOS QUE SE VENDEN DESPUÉS DE RESERVAR — ✅ CÓDIGO COMPLETO: LAS CUATRO TANDAS
 >    (T0→T3) EN EL ÁRBOL. Solo queda el OJO del owner.**
@@ -1383,8 +1376,9 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4263 en verde** (26.766 aserciones, 1 skipped a propósito), medida el 2026-09-04 con las
-> tres tandas del panel dentro (`#461` +12 · `#462` +13 · `#463` +10). **JS 951** (`node --test`).
+> Suite **4276 en verde** (26.816 aserciones, 1 skipped a propósito), medida el 2026-09-04 con las
+> cuatro tandas del panel dentro (`#461` +12 · `#462` +13 · `#463` +10 · `#464` +13, y **seis casos
+> re-apuntados por sujeto** al retirarse la tira de días). **JS 951** (`node --test`).
 > ⚠️ **El `pre-push` compara este número con la suite real y RECHAZA el push si no cuadra** — es la
 > única copia a propósito, no la dupliques en otro documento. Antes: 4228 el 2026-09-03 (árbol
 > fusionado tras `#452`, con las cuatro tandas T0–T3 de `#413` dentro).

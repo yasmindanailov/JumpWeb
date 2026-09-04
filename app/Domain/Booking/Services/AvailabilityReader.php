@@ -7,7 +7,6 @@ use App\Domain\Booking\Contracts\OfferedDate;
 use App\Domain\Booking\Contracts\OfferedTime;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
-use Illuminate\Support\Collection;
 
 /**
  * Read-model de DISPONIBILIDAD ({@see AvailabilityOffer}).
@@ -18,6 +17,9 @@ use Illuminate\Support\Collection;
  *    `Livewire\Tickets\Purchase` —una clase de interfaz—, y que sin embargo es la que decide si una
  *    hora se puede vender. Cualquier otro cliente habría tenido que reescribirla, y una copia que
  *    cuente distinto los ocupantes ofrece horas que el checkout rechaza.
+ *    ▶ Desde `#464` esa derivación **ya no vive aquí**: subió entera a `CartOccupants::forCart()`
+ *    porque el panel es el segundo cliente que la necesitaba. Este read-model la pide, igual que
+ *    pide las reglas de oferta.
  *
  * **No reserva nada.** Lo que devuelve es cierto en el instante en que se calcula; la garantía la da
  * `OrderCreator` bajo lock (`AFORO-01`), que vuelve a comprobarlo todo.
@@ -133,83 +135,20 @@ class AvailabilityReader implements AvailabilityOffer
     /**
      * Ocupantes PROVISIONALES que la cesta del cliente aporta a esta zona y día.
      *
-     * Las dos listas son deliberadamente distintas porque los dos aforos lo son: las PLAZAS se
-     * ocupan a lo largo de la duración y el CUPO de packs vive en su propio pool, contando además
-     * montaje y limpieza (#82).
-     *
-     * **La lista de plazas la compone `CartOccupants`** — la derivación ÚNICA compartida con el
-     * cobro (`OrderCreator`), `specs/hora-extra.md` §7·D1 — y con ella entran dos cosas que esta
-     * copia local no contaba: las líneas HIJAS que ocupan (la hora extra) y las líneas de PACK,
-     * que también ocupan plazas en cuanto existen (`occupancyMap` las cuenta: nacen con franja y
-     * `seats`; aquí la oferta y el cobro divergían sin morder solo porque los packs viven en zona
-     * propia). Una copia que cuente distinto ofrece horas que el checkout rechaza (`AFORO-02`).
+     * **La cuenta entera vive en `CartOccupants`** —la derivación ÚNICA compartida con el cobro
+     * (`specs/hora-extra.md` §7·D1) y, desde `#464`, con la página de «Crear pedido» del panel—.
+     * Aquí solo se pide: si esta clase la copiara, un cambio en cómo se cuentan las hijas que ocupan
+     * o las líneas de pack tendría que portarse a tres sitios, y el que se olvidara ofrecería horas
+     * que el checkout rechaza (`AFORO-02`).
      *
      * La línea que el cliente está configurando **no** está en su cesta todavía, así que no se
-     * cuenta a sí misma — igual que en la web.
+     * cuenta a sí misma.
      *
      * @param  array<mixed>  $cart
      * @return array{entries: list<array{entry_start:string, duration_min:int|null, seats:int, line:int, addon:int|null}>, packs: list<array{start:string, prep_before_min:int, duration_min:int|null, prep_after_min:int, guests:int}>}
      */
     private function occupantsOf(array $cart, int $zoneId, string $date): array
     {
-        $cart = Cart::sanitize($cart);
-
-        if ($cart === []) {
-            return ['entries' => [], 'packs' => []];
-        }
-
-        $types = $this->typesOf($cart);
-
-        $packs = [];
-        foreach ($cart as $line) {
-            if ($line['date'] !== $date) {
-                continue;
-            }
-
-            $type = $types->get($line['ticket_type_id']);
-            if (! $type || (int) $type->zone_id !== $zoneId || ! $type->isPack()) {
-                continue;
-            }
-
-            $packs[] = [
-                'start' => $line['time'],
-                'prep_before_min' => (int) $type->prep_before_min,
-                'duration_min' => $type->duration_min,
-                'prep_after_min' => (int) $type->prep_after_min,
-                'guests' => (int) $line['qty'] * (int) ($type->seats_per_unit ?? 1),
-            ];
-        }
-
-        return [
-            'entries' => CartOccupants::entries($cart, $types, $zoneId, $date),
-            'packs' => $packs,
-        ];
-    }
-
-    /**
-     * Productos de la cesta que hoy se venden, en UNA consulta.
-     *
-     * Mismo filtro que aplica el resto del flujo: una línea de un producto retirado no retiene
-     * aforo, porque tampoco se puede comprar.
-     *
-     * `with('addons')` desde la hora extra: `CartOccupants` deriva de esa relación (con su pivote)
-     * las hijas que ocupan — sin la precarga cada línea costaría una consulta.
-     *
-     * @param  array<int, array{ticket_type_id:int}>  $cart
-     * @return Collection<int, TicketType>
-     */
-    private function typesOf(array $cart): Collection
-    {
-        $ids = array_values(array_unique(array_map(
-            static fn (array $line): int => (int) $line['ticket_type_id'],
-            $cart,
-        )));
-
-        return TicketType::sellable()
-            ->inOperationalZone()
-            ->with('addons')
-            ->whereIn('id', $ids)
-            ->get()
-            ->keyBy('id');
+        return CartOccupants::forCart($cart, $zoneId, $date);
     }
 }

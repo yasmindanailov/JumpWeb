@@ -7,8 +7,17 @@
 
      ❗ **Cambiar el control NO cambia la regla**: una franja no vendible sale DESHABILITADA y no
      escondida —igual que en la web—, lo decide el mismo `timeMap()` de `SlotOffer` (`AFORO-02`) y
-     `pickTime()` lo vuelve a comprobar en el servidor. --}}
-<div class="cmo-times">
+     `pickTime()` lo vuelve a comprobar en el servidor.
+
+     ⚠️ **El bloque se trae a la vista al elegir día** (`#464`): con el calendario grande delante, las
+     franjas caen fuera de una tablet de 810 px, y sin esto el operador elige día y **no ve pasar
+     nada**. Lo dispara `pickDay()` en el servidor —un evento, no un estado—, así que solo ocurre en
+     el gesto que lo justifica y no en cada render. `block: 'end'` deja a la vista lo más posible del
+     calendario que se acaba de usar. --}}
+<div class="cmo-times"
+     x-data
+     x-on:cmo-day-chosen.window="$nextTick(() => $el.scrollIntoView({ behavior: 'smooth', block: 'end' }))"
+>
     <span class="fi-fo-field-label-content">{{ $label }}</span>
 
     @if ($times === [])

@@ -1,6 +1,6 @@
 # El asistente de «Crear pedido» — de tres pasos a siete, con menos toques
 
-> Estado: 🟦 **DISEÑO CERRADO · T1 EN EL ÁRBOL** (§7) · quedan T2, T3 y T4 · Fecha: **2026-09-04**
+> Estado: 🟦 **DISEÑO CERRADO · T1, T2 y T3 EN EL ÁRBOL** (§7, §8 y §9) · queda la **T4** · Fecha: **2026-09-04**
 > Encargo del owner (2026-09-03, literal en §1) · Decisiones suyas en **§3**
 > Carril: **panel / UI-UX** (este ordenador, banda **`#460`–`#469`**; `#460` la auditoría,
 > `#461` el shell).
@@ -78,9 +78,15 @@ mismos números de plazas—, así que **la lógica de disponibilidad no diverge
 argumento: `AvailabilityController` le pasa los **ocupantes de la cesta** («las horas van por POST y
 llevan la cesta») y `CreateManualOrderPage::timeMap()` llama a `offerableTimes()` **sin ellos**.
 
-Hoy es un borde declarado (`hora-extra.md` §8.3). **El asistente nuevo lo convierte en el camino
-normal**: con «añadir más productos», el operador mete 20 entradas a las 17:00, vuelve, y el
-calendario le dice que quedan 40. ▶ **Se corrige en la T3**, que es la que toca esa pantalla.
+**El asistente nuevo lo convierte en el camino normal**: con «añadir más productos», el operador mete
+20 entradas a las 17:00, vuelve, y el calendario le dice que quedan 40. ▶ **CORREGIDO en la T3**
+(§9).
+
+⚠️ **Y una cita de esta misma sección era inexacta**: decía que el borde estaba «declarado en
+`hora-extra.md` §8.3», y lo que aquel §8.3 declara es otra cosa de la misma familia —que el ENDPOINT
+de complementos del embudo no recibe la cesta, y que la UI de complementos del alta manual no
+decora—. **Las dos siguen en pie.** Que el panel no le pasara la cesta a `offerableTimes()` no lo
+había declarado nadie: se midió aquí. *Una deuda parecida en la misma familia no es la misma deuda.*
 
 ---
 
@@ -132,7 +138,7 @@ la que sabe en qué paso está.
 |---|---|---|
 | **T1** | **La estructura**: siete pasos, auto-avance, saltar los vacíos, el CTA correcto en cada paso, el carrito como paso propio a una columna | Es un cambio de CONDUCTA y se puede medir en toques. Sin ella, lo demás no tiene dónde vivir |
 | **T2** | **El producto en cards** con icono, agrupadas por tipo, y «más info» con los datos públicos | Es lo que cierra **C1** de la auditoría: hoy nada distingue una entrada de un pack |
-| **T3** | **Cuándo**: cantidad arriba, calendario grande, horas con plazas — **y la cesta a `SlotOffer`** | Lleva la única corrección de DOMINIO del encargo (§2.3) y no debe viajar con cambios de presentación |
+| **T3** ✅ | **Cuándo**: cantidad arriba, calendario grande, horas con plazas — **y la cesta a `SlotOffer`** | Lleva la única corrección de DOMINIO del encargo (§2.3) y no debe viajar con cambios de presentación |
 | **T4** | **El desenlace**: pantalla de pedido creado con lo que de verdad pasó | Toca correos y post-form: es donde más fácil es prometer lo que no ocurrió |
 
 ---
@@ -269,3 +275,113 @@ es el rótulo con el que la línea aparece en el carrito.
 muerden** · los 99 casos previos de esta pantalla en verde tras un re-apuntado mecánico (la puerta
 pasa de `set('data.sel_product_id')` a `call('pickProduct')`, que es la que usa el operador) · sonda
 de navegador · Pint · docs-check · **suite 4.263 verde**.
+
+---
+
+## 9. T3 · El calendario, y la cesta a la oferta (2026-09-04, `#464`)
+
+La tanda tiene dos mitades de naturaleza distinta y por eso viajan juntas pero se leen aparte: la
+**pantalla** (§9.1) y la **única corrección de dominio** del encargo (§9.2).
+
+### 9.1 · La pantalla: un calendario grande, y una sola puerta a la fecha
+
+`[owner]`: «la fecha la selecciona de un calendario grande, bien visible». **Medido antes de tocar
+nada**, el calendario del panel era **un popover de 259×248 px con 30 celdas de 29×28** —bajo el
+mínimo táctil de 44 en los dos ejes— **detrás de un CTA**, o sea a dos toques. Lo que se veía sin
+tocar nada era la tira de 14 días.
+
+▶ **`[DECIDIDO owner, 2026-09-04]`: la tira se RETIRA, manda el calendario.** Se preguntó con el
+coste de las dos salidas delante: con el calendario desplegado, tira y rejilla son **dos puertas a la
+misma pregunta**, «hoy» sigue estando a un toque en las dos, y la tira cuesta **90 px** de una
+pantalla que ya no cabía. ⚠️ Eso **corrige a `auditoria-panel-admin.md` §7**, que daba la tira por
+buena — lo era cuando el calendario vivía escondido.
+
+Qué hay ahora en código:
+
+- **`calendarMonth()`** compone la rejilla en el SERVIDOR: semanas de 7, lunes primero, los días de
+  otro mes como HUECOS (no números atenuados: dos grises que significan cosas distintas se pulsan
+  igual de mal), y cada día con `offerable`, `selected` y `today`.
+- **`pickDay()`** es la ÚNICA puerta a la fecha y **re-valida en el servidor** (`AFORO-02`). Con ella
+  muere `onDateChosen()`: existía porque había DOS escritores que podían divergir.
+- **`goToMonth()` + `offerableMonths()`**: las flechas saltan al mes **ofrecible** anterior/siguiente
+  —no al de al lado—, y no se pintan si no llevan a ninguna parte.
+- Se retiran la tira, el CTA «Abrir calendario», el `DatePicker` y sus topes (`minOfferableDate`,
+  `maxOfferableDate`, `disabledOfferDates`), con su CSS y sus cinco claves de idioma.
+- **El bloque de franjas se trae a la vista al elegir día** (evento `cmo-day-chosen`): con el
+  calendario delante, las horas caen fuera de una tablet de 810 px y el operador elegía día sin ver
+  pasar nada. Medido: `scrollY` pasa a 208 y las franjas quedan enteras dentro de la ventana.
+
+**Medido en navegador (iPad horizontal, 1080×810):** calendario **544×371**, celda **72×48**, flecha
+de mes **44×44**, **30 días** con 4 apagados, **cero** controles bajo 44 px en el paso y **cero**
+desbordamiento horizontal. ⚠️ Los dos que había bajo 44 eran del **indicador de pasos** de la T1
+(204×29 y 98×29): el botón se come ahora el relleno del chip en vez de crecer por su cuenta, así que
+la diana es el chip entero y el indicador solo gana **4 px por fila**.
+
+### 9.2 · La cesta a la oferta, sin inventar una segunda derivación
+
+`timeMap()` pasa a `SlotOffer::offerableTimes()` los ocupantes provisionales de su propia cesta.
+**Medido en navegador de punta a punta**: con 7 entradas de las 10:00 ya en el carrito, la segunda
+línea ofrece **33 plazas donde antes seguía diciendo 40**.
+
+⚠️⚠️ **La cuenta no se escribe en el panel.** Sube entera a `CartOccupants` —la derivación única de
+`hora-extra.md` §7·D1— que gana dos piezas:
+
+- **`packs()`**: el cupo de fiestas, que vivía dentro de `AvailabilityReader::occupantsOf()`. Es OTRO
+  pool (#82) y por eso es otra lista, no otra forma de contar lo mismo.
+- **`forCart()`**: la cesta EN BRUTO → los dos grupos. **El saneado y el filtro de «qué producto
+  retiene aforo» van dentro a propósito**: son parte de la respuesta, y una copia que filtrara
+  distinto ofrecería horas que el cobro rechaza.
+
+`AvailabilityReader` la pide en vez de tenerla. `OrderCreator` no cambia: ya trae sus productos
+resueltos de la transacción y llama a `entries()` directamente, y su `otherPackOccupants()` —que
+excluye por índice la línea en validación— **se queda donde está**: unificarlo es tocar el camino del
+COBRO y no es lo que esta tanda arregla. El número de derivaciones no sube: la oferta pasa a tener
+UNA, compartida por web, API y panel.
+
+⚠️ **La huella de la cesta entra en la clave del memo** de `timeMap()`. Contar líneas no vale —quitar
+una y añadir otra deja el mismo número y otra ocupación—, y un memo que no ve entrar un dato sirve
+«el número de antes», que aquí son plazas que ya no están libres. Es la lección de `#329` por la otra
+puerta.
+
+### 9.3 · Lo que el arnés y las sondas enseñaron
+
+1. ⚠️⚠️ **Dos guardas miraban el modelo de vista y no la PANTALLA.** Quitar el `@disabled` del
+   calendario o la marca del día elegido **pasaba en verde**: el servidor seguiría rechazando el día,
+   así que no habría daño en los datos — el operador pulsaría y no pasaría nada, que es la peor clase
+   de defecto porque es silencioso. *Que el servidor sepa la respuesta no es que la pantalla la
+   enseñe.* Entró un caso que asevera sobre el HTML renderizado, acotado al botón del día.
+2. ⚠️⚠️ **Una comprobación sobraba y el arnés lo dijo**: validar el mes dentro de `goToMonth()` no
+   mordía, porque el LECTOR ya descarta un mes sin oferta. Y no es una redundancia inocente:
+   `$calMonth` es una propiedad **pública** de Livewire, o sea que el navegador puede escribirla sin
+   pasar por la acción — la defensa de fuera daba sensación de defensa **sin defender nada**. Se
+   retiró, y la guarda ahora escribe la propiedad a pelo.
+3. ⚠️ **Una mutación mató la línea equivocada**: `$this->data['sel_time'] = null;` está escrita en
+   TRES sitios, y `replace(…, 1)` muta la primera. Al acotarla con su contexto se vio que **el
+   reinicio tras añadir al carrito no tenía guarda** —el caso se llamaba «…and resets selection» y
+   solo aseveraba el producto—. Hoy asevera los seis campos.
+4. ⚠️ **El filtro del arnés decide qué puede morder**: la mutación anterior seguía sin morder porque
+   el fichero con su guarda no entraba en el `--filter`. *Un arnés no mide lo que no corre.*
+5. ⚠️ **La inicial del día de la semana no distingue martes de miércoles** en español (`L M M J V S
+   D`). Lo cazó la guarda al aseverar la fila; el rótulo pasa a ser la abreviatura del idioma, y la
+   guarda vigila la PROPIEDAD —siete rótulos distintos— y no las letras, que dependen del idioma.
+6. ▶ **Coste medido del paso** (catálogo real): `calendarMonth()` **8 consultas / 343 ms** y
+   `timeChips()` **39 / 371 ms**. El grueso no son las consultas: es `SlotOffer::offeredSlots()`
+   hidratando las ~1.900 franjas del horizonte para responder por un mes. Ficha en `DEUDA.md`; no es
+   de esta tanda.
+7. ▶ **Y de paso, un N+1 del elegidor de producto**: pintar las 18 tarjetas costaba **54 consultas**
+   —tres por producto, `prices`, `price_tiers` y la `rate_type` de cada precio— y con la precarga son
+   **5**. Guarda nueva que asevera la PROPIEDAD (mismo coste con 2 productos que con 12) en vez de un
+   techo, porque un techo se queda viejo en cuanto alguien añade una relación legítima.
+
+**Verificación**: `CreateManualOrderCalendarTest` (7 casos) · `CreateManualOrderCartAvailabilityTest`
+(7 casos) · **14/14 mutaciones muerden** (`scripts/mutar-asistente-t3.sh`, con control verde y
+restaurando por copia de seguridad) · los 147 casos previos de esta pantalla y de `SlotOffer` en
+verde tras re-apuntar seis por SUJETO · **los siete escenarios de `purchase:verify-oversell` sobre
+InnoDB** (`CartOccupants` está en el `CRITICAL_RE`) · sonda de navegador con el recorrido entero ·
+Pint · docs-check · **suite 4.275 verde**.
+
+### 9.4 · Lo que queda de esta pantalla
+
+- **El OJO del owner** sobre el paso «Cuándo» (y el resto del asistente).
+- **La T4**: la pantalla de desenlace, y con ella los **5 controles bajo 44 px** del paso del carrito
+  (§7.4).

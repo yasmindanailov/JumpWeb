@@ -340,13 +340,11 @@ return [
             'time_help' => 'Solo se muestran las franjas con plazas disponibles.',
             // `#240`: unos chips sin opciones no pintan nada, así que el hueco lo explica la ayuda.
             'time_pick_date_first' => 'Elige primero un día para ver las franjas.',
-            // `#240`: el día se elige en la tira; el calendario queda para el salto largo.
-            'date_other' => 'Otra fecha (calendario)',
-            'calendar_show' => 'Abrir calendario',
-            'calendar_hide' => 'Cerrar calendario',
-            // Flechas de la tira de días (`#241`): solo con ratón, pero su nombre accesible siempre.
-            'strip_prev' => 'Ver días anteriores',
-            'strip_next' => 'Ver días siguientes',
+            // `#464`: el día se elige en el calendario, que es el único control de fecha desde que
+            // la tira se retiró. Las flechas saltan al mes OFRECIBLE anterior/siguiente, así que su
+            // nombre dice «mes» y no «anterior» a secas.
+            'calendar_prev' => 'Mes anterior con fechas',
+            'calendar_next' => 'Mes siguiente con fechas',
             'no_times_for_date' => 'No hay franjas disponibles para esta fecha. Regenera o abre franjas, o elige otro día.',
             'quantity' => 'Cantidad',
             'guests' => 'Invitados',

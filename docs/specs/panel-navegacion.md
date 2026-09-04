@@ -405,6 +405,21 @@ tarjeta por debajo de un punto de ruptura. Ficha en `DEUDA.md`.
 
 ## 9. Tanda 4 — «CREAR PEDIDO» en tablet (`#240`, U7)
 
+> ❗❗❗ **CORRECCIÓN, Y VA ANTES QUE ESTE TEXTO** (`#464`, 2026-09-04, `[DECIDIDO owner]`). De lo que
+> §9 y §10 describen, **dos piezas ya no existen**: la **tira de 14 días** y el CTA **«Abrir
+> calendario»** (con él, el `DatePicker` plegado). Las sustituye **un calendario grande siempre
+> visible** en el paso «Cuándo» del asistente — el owner pidió «un calendario grande, bien visible», y
+> medido antes de tocarlo aquel calendario era **un popover de 259×248 px con celdas de 29×28**, bajo
+> el mínimo táctil y a dos toques de distancia.
+>
+> ▶ **Lo que SIGUE VIGENTE de estas dos secciones**: las dos columnas con el resumen pegajoso, la
+> navegación junto al resumen, los 17rem de la columna derecha, las **horas en chips de dos niveles**
+> (§10.2) y el «Atrás» de solo icono. Y sobre todo el criterio de §9.3 —*una regla escrita dos veces
+> diverge*—, que hoy se cumple de otra manera: **hay UNA sola puerta para elegir día** (`pickDay()`),
+> así que `onDateChosen()` murió con el segundo escritor que lo justificaba.
+>
+> ▶ Lo vigente está en `specs/asistente-crear-pedido.md` §10 y en `CreateManualOrderCalendarTest`.
+
 `[DECIDIDO owner, 2026-08-28]`: **el gerente crea las reservas desde la tablet**. Eso **corrige la
 premisa de §8** —«la puerta tiene tablet propia, el resto del panel se usa en ordenador»— para esta
 pantalla en concreto.

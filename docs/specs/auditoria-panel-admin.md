@@ -451,8 +451,12 @@ cada una con su «Ver el desglose».
   cada uno»).
 - **La pantalla de puerta en reposo**: 3 controles, cero por debajo de 44, cabe entera. Es el mejor
   kiosco del panel.
-- **«Crear pedido», su FORMA**: tres pasos, resumen pegajoso, la hora en chips, la tira de días,
-  cero controles bajo 44 en el paso 1. Es la única pantalla del panel diseñada para un dedo, y se
+- **«Crear pedido», su FORMA**: resumen pegajoso, la hora en chips, cero controles bajo 44 en el
+  paso 1. ⚠️ **Dos cosas de esta línea CADUCARON el 2026-09-04**: los tres pasos son **siete**
+  (`#462`) y **la tira de días se retiró** (`#464`, `[DECIDIDO owner]`, preguntado con el coste
+  delante) — con el calendario grande siempre visible eran dos puertas a la misma pregunta, y «hoy»
+  sigue estando a un toque. *Lo que era bueno lo era en una pantalla donde el calendario vivía
+  escondido tras un CTA.* Es la única pantalla del panel diseñada para un dedo, y se
   nota. ⚠️ **Pero su primer campo es C1**: la forma está resuelta y **el contenido del desplegable de
   producto no** — 18 opciones planas que no dicen si son entradas o packs. *Lo que falló no fue la
   pasada de tablet: fue que nadie miró qué había dentro del `Select`.*

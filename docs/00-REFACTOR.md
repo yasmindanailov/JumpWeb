@@ -3832,7 +3832,7 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **Una elección menor del owner**, anotada sin tocarla: un extra **cerrado que nunca se pidió** hoy
       se pinta igual, con su «ya no se puede cambiar» y su 0.
 
-### EL PANEL DE ADMIN · UI/UX 🟦 EN CURSO — la auditoría y las tres primeras tandas (`#460` → `#463`, carril del panel, banda `#460`–`#469`)
+### EL PANEL DE ADMIN · UI/UX 🟦 EN CURSO — la auditoría y las cuatro primeras tandas (`#460` → `#464`, carril del panel, banda `#460`–`#469`)
 - [x] **La AUDITORÍA del panel, EN EL REPO** (`specs/auditoria-panel-admin.md`, `#460`): 10 pantallas
       × 3 tamaños con Chromium sobre el panel real + 5 sondas de estados de trabajo → **4 críticos ·
       10 mayores · 11 menores**. **§7 es lo que NO hay que tocar** y **§9.bis lo que falla a
@@ -3852,12 +3852,17 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       del pack. `pickProduct()` es la única puerta y **re-valida en el servidor**; «Más info» es de
       lectura y **no elige**. `CreateManualOrderProductCardsTest` (10 casos · 9/9 mutaciones) ·
       sonda de navegador (18 tarjetas, 0 controles bajo 44 px, 0 desbordamiento)
-- [ ] ❗❗❗ **T3 · «Cuándo», y lleva DENTRO la única corrección de DOMINIO del encargo**: la pantalla
-      (cantidad arriba · calendario grande con días reservables · plazas al elegir el día) **y pasarle
-      la CESTA a `SlotOffer`** — el panel llama a `offerableTimes()` sin los ocupantes y la web sí se
-      los pasa; con «Añadir más productos» eso deja de ser un borde y pasa a ser el camino normal.
-      ⚠️ **Toca AFORO**: `INVARIANTES §2` primero, reutilizar `CartOccupants` (**no inventar una
-      segunda derivación**, que es el defecto que `#410` cerró) y `VERIFY_CONC=1` en el push
+- [x] ❗❗❗ **T3 · «Cuándo», con la única corrección de DOMINIO del encargo** (`#464`, spec §9). Dos
+      mitades: **(a)** el **calendario grande y siempre visible** —medido antes: un popover de
+      **259×248 px con celdas de 29×28**, bajo el mínimo táctil y a dos toques— y `[DECIDIDO owner]`
+      **la tira de 14 días RETIRADA** (dos puertas a la misma pregunta, 90 px), lo que **corrige a
+      `auditoria-panel-admin.md` §7**; celda **72×48**, **0** controles bajo 44 px en el paso, y las
+      franjas **se traen a la vista** al elegir día. **(b)** la **CESTA a `SlotOffer`**: con 7 entradas
+      en el carrito la segunda línea ofrece **33 plazas donde antes decía 40** (medido en navegador).
+      ⚠️ La cuenta **no** se copió: subió a **`CartOccupants::forCart()` + `packs()`**, la derivación
+      única; `OrderCreator` intacto. `CreateManualOrderCalendarTest` (7) ·
+      `CreateManualOrderCartAvailabilityTest` (7) · **14/14 mutaciones** · los **siete** escenarios de
+      `purchase:verify-oversell` sobre InnoDB · N+1 del elegidor de paso: **54 → 5** consultas
 - [ ] **T4 · la pantalla de «pedido creado»** que refleje lo que de verdad pasó (⚠️ hay clientes SIN
       email: no prometer un correo que no se manda), y con ella **los 5 controles bajo 44 px del paso
       del carrito**, ya medidos
