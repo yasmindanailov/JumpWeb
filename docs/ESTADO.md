@@ -175,11 +175,29 @@
 >    cerrar, no está en el pre-push.
 >    ▶ ⚠️ Del cierre anterior: `audit-clock` cazó una MONEDA AL AIRE que no era del reloj
 >    (`mt_rand` contra el `UNIQUE` de `orders.code`), arreglada con contadores deterministas (`#412`).
+>    ▶ **EVIDENCIA DEL CIERRE, toda sobre el árbol YA FUSIONADO con el carril del panel**: suite
+>    **4.312 ✓ · 26.992 aserciones** · JS **951/951** · Pint 1.183 ficheros · docs-check ·
+>    **`audit-clock` completo: 12/12 fronteras verdes**, incluidas fin de mes y fin de año, que son
+>    justo las dos que tumbaban a `#419` · y los **once verificadores de concurrencia** re-corridos
+>    porque `#465` toca aforo (los SIETE de `purchase:verify-oversell` + Redsys + `postform` `addons`
+>    y `cross` + `mixed-party` `charge` y `credit`), todos con **código de salida 0**.
 
 > **2.bis ❗❗❗ EL DESPLIEGUE ESTÁ DECIDIDO Y ESPERA** (`[DECIDIDO owner, 2026-09-04]`: *«haré deploy
 >    cuando se termine el UI/UX del panel admin»*). **NO despliegues antes de que ese carril cierre.**
->    ▶ **Qué iría**, medido: **54 commits** desde el último despliegue (`64ff3b6`, 02-09) · **141
->    ficheros de código** · **3 migraciones nuevas, ninguna existente modificada**.
+>    ▶ **Qué iría**, medido **después de fusionar el carril del panel** (`#464`–`#466`): **61 commits**
+>    desde el último despliegue (`64ff3b6`, 02-09) · **114 ficheros** fuera de `docs/`, `scripts/` y
+>    `tests/` (55 de ellos en `app/`) · **3 migraciones nuevas, ninguna existente modificada**
+>    (`occupies_after_parent`, `guest_form_link_version`, `stage`).
+>    ▶ ⚠️ **Ese paquete lleva DOS carriles, no uno**, y el del panel entra con un cambio en el núcleo
+>    del AFORO: `#465` reescribe `SlotOffer` en dos vías (la pesada, que hidrata, y una ligera para
+>    las fechas) para bajar el calendario del cliente de ~420 a ~45 ms. **Revisado antes de empujarlo**
+>    —las dos vías comparten consulta (`offeredSlotQuery`, con el *scope*, no un `WHERE` copiado) y
+>    predicado (`passesOffer`); `start_time` no tiene *cast*, así que las dos leen el mismo valor;
+>    `toBase()` sí aplica los *scopes*; y `clampToHorizon()` repone exactamente el techo de venta que
+>    antes ponía el `whereBetween`— y **los SIETE escenarios de `purchase:verify-oversell` + Redsys +
+>    los dos de post-form + los dos de fiesta mixta se volvieron a correr sobre el árbol YA FUSIONADO**,
+>    todos en verde por código de salida. Su red propia es `SlotOfferPathParityTest`, que es la que
+>    impide que las dos vías se separen.
 >    ▶ **Las features nuevas llegan DORMIDAS**: `occupies_after_parent` nace `false` y `stage` nace
 >    `booking`, así que las tres migraciones son aditivas con defaults neutros y **no reescriben una
 >    sola fila**. Se activan con DATO, no con código.

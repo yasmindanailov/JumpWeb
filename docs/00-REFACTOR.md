@@ -3758,12 +3758,17 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       gestos del cliente por HTTP real con el libro cerrando, cuatro ataques a la superficie pública
       defendidos, sin JS y 6/6 en su arnés. ⚠️ Y destapó un hueco **mío**: el cruce entre las dos
       features (re-tarificar una línea `postform`, con `birthValue = 0`) no lo cubría ninguna
+- [x] **El cierre encontró una BOMBA DE RELOJ que la suite no veía** (2026-09-04, `#419`):
+      `AddonDateReconcilerTest` daba sus doce casos en rojo a fin de mes y a fin de año —verde el 05,
+      el 06 y el 07 de septiembre— **con el producto sano**, por usar fechas absolutas sin anclar el
+      reloj. Anclado en `setUp()` a un lunes anterior; 12/12 en los cuatro instantes que lo tumbaban.
+      ⚠️ **Tercera vez de esta familia** (`#412`, `#414`, `#419`): la lección va ya en `TESTING.md`
+      §2.septies, que es donde vive el instrumento, y no solo en el tracker
 - [ ] **La hora extra: el ✅ FINAL del owner + el alta de los productos en PRODUCCIÓN (es DATO)** —
       los mismos guiones idempotentes que se usaron en local (en seco primero); en producción sigue
       dormida por construcción hasta ese alta. ⚠️ **El despliegue espera al carril del panel**
       (`[DECIDIDO owner, 2026-09-04]`: se despliega cuando termine su UI/UX)
 
-### GOOGLE AUTH 🟦 — las tres tandas de código MÁS el pulido del ojo del owner (2026-09-02; T5→T8·d en el árbol, **los siete puntos del owner HECHOS**; queda la T9)
 ### GOOGLE AUTH ✅ — CERRADO Y EN PRODUCCIÓN (2026-09-02; T1→T8·d, los siete puntos del owner hechos, **One Tap descartado** por `#354`, y `playjump.es` sirviéndolo)
 - [x] **Spec** `docs/specs/auth-con-google.md`, con la decisión del owner que la ordena: **pantalla intermedia y exención al 100 %** (§4)
 - [x] **Revisión adversarial de cinco lentes: OCHO bloqueantes**, dos de ellos agujeros de seguridad, aplicados con marcas ✱
