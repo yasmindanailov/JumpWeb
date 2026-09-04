@@ -252,7 +252,7 @@ class ManualOrderBelowPackMinimumTest extends TestCase
 
             $component = Livewire::actingAs($this->operator(true))
                 ->test(CreateManualOrderPage::class)
-                ->set('data.sel_product_id', $this->excursion->id)
+                ->call('pickProduct', $this->excursion->id)
                 ->set('data.sel_below_minimum', $qty < 30)
                 ->set('data.sel_date', $date)
                 ->set('data.sel_time', '09:00:00')
@@ -373,14 +373,14 @@ class ManualOrderBelowPackMinimumTest extends TestCase
         $withPermission = Livewire::actingAs($this->operator(below: true))
             ->test(CreateManualOrderPage::class)
             ->set('step', CreateManualOrderPage::STEP_PRODUCT)
-            ->set('data.sel_product_id', $this->excursion->id);
+            ->call('pickProduct', $this->excursion->id);
 
         $withPermission->assertSee(__('admin.orders.create_manual.below_minimum_label'));
 
         $without = Livewire::actingAs($this->operator(below: false))
             ->test(CreateManualOrderPage::class)
             ->set('step', CreateManualOrderPage::STEP_PRODUCT)
-            ->set('data.sel_product_id', $this->excursion->id);
+            ->call('pickProduct', $this->excursion->id);
 
         $without->assertDontSee(__('admin.orders.create_manual.below_minimum_label'));
     }

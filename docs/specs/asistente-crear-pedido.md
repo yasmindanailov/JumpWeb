@@ -208,3 +208,64 @@ Recorrido completo con un cliente y un producto reales:
 (control verde antes de mutar, con copias de seguridad y no `git checkout`) · los 86 casos que ya
 existían de esta pantalla, **re-apuntados por sujeto** y en verde · sonda de navegador con el
 recorrido entero · Pint · docs-check · **suite 4.252 verde**.
+
+---
+
+## 8. T2 · El producto en tarjetas (2026-09-04, `#462`)
+
+**Es la tanda que cierra el crítico C1 de la auditoría**, el que ya costó dinero: un desplegable
+plano de 18 opciones cuyo rótulo era `«{zona} · {nombre}»` y **no decía de qué tipo era nada**.
+
+### 8.1 · Qué hay ahora
+
+- **`productCards()`** — los productos vendibles **agrupados por tipo**, entradas primero, con lo
+  que DISTINGUE: icono, zona, duración, precio y —solo en los packs— **el rango de invitados**.
+- **`pickProduct()`** — la **ÚNICA** puerta. Valida en el servidor (`AFORO-02`: un `wire:click` se
+  puede llamar con cualquier id), hace los mismos olvidos que hacía el `afterStateUpdated` del
+  `Select` que ya no existe, y avanza.
+- **`productInfoAction()` / `productInfoFields()`** — «Más info» con lo que el cliente ve: tipo,
+  zona, duración, rango de invitados, descripción y ventajas. **De lectura: abrirlo no elige nada**,
+  o el operador no podría comparar dos productos sin comprometerse con el primero.
+- El partial `manual-order-products.blade.php` y su CSS.
+
+⚠️ **`productOptions()` murió con el `Select`; `productLabel()` NO**, porque tiene otro consumidor:
+es el rótulo con el que la línea aparece en el carrito.
+
+### 8.2 · Lo medido en navegador (iPad horizontal)
+
+| | |
+|---|---|
+| Tarjetas | **18**, en dos grupos: «ENTRADAS» (10) · «PACKS Y CELEBRACIONES» (8) |
+| Lo que enseña una entrada | `Jump · 1 hora · JUMP · 60 min · desde 9,90 €` |
+| Lo que enseña un pack | `Cumpleaños Jump · Cumpleaños · 120 min · **8–20 invitados** · desde 15,00 €` |
+| Controles bajo 44 px | **0** · desbordamiento horizontal **0** |
+| «Más info» | Tipo · Zona · Duración · Ventajas — y **el paso sigue siendo «Producto»** al cerrarlo |
+| Alto del paso | **1.722 px** con 18 productos: se desplaza, y es lo esperado en un elegidor |
+
+### 8.3 · Los tres tropiezos
+
+1. ⚠️⚠️ **Las ventajas salían en LOS TRES IDIOMAS**: «Access to the Jump zone · Acceso a la zona
+   Jump · Accès à la zone Jump». `features` es **traducible** y `tr()` es su puente; leerlo en crudo
+   devuelve el mapa de idiomas entero y recorrerlo a mano saca uno de cada. *Inventar un recorrido
+   donde ya hay un puente es cómo se cuela un idioma equivocado sin que nada falle.* Lo vio la sonda.
+2. ⚠️⚠️ **Dos mutaciones no mordieron, y por motivos distintos**: la del icono porque **el fixture no
+   tenía icono elegido** —sin sujeto, «leer el marcador» y «deducirlo del tipo» dan lo mismo—, y la
+   de los menores porque **nunca se aplicó** (un `sed` con `\n` no casa entre líneas). *Una mutación
+   que no muerde puede ser una guarda ciega o un arnés roto, y hay que distinguirlo.*
+3. ⚠️ **`assertSee` no ve el modal de Filament** (es un `wire:partial`): la trampa de `#161`, pagada
+   otra vez. La guarda pasa a aseverar por CONDUCTA sobre `productInfoFields()`.
+
+### 8.4 · Lo que NO entra, y por qué
+
+- **`ticket_types.conditions` no se enseña.** Medido: esa columna **no la lee nadie y el catálogo no
+  la edita** —cero consumidores en el repo—. Pintarla aquí la convertiría en el único sitio donde
+  aparece un texto que el operador no puede rellenar desde ninguna pantalla. Ficha en `DEUDA.md`.
+- **El panel no adopta el set de iconos del cliente**, y esto no lo contradice: se pinta el
+  **marcador del producto** (`ticket_types.icon`), que el propio panel ya deja elegir en el catálogo
+  y que la web pinta en su tarjeta de precio. Le da al operador la razón para rellenarlo — medido en
+  `#259`: **2 claves usadas de 11**.
+
+**Verificación**: `CreateManualOrderProductCardsTest`, **10 casos** con **9 mutaciones y las 9
+muerden** · los 99 casos previos de esta pantalla en verde tras un re-apuntado mecánico (la puerta
+pasa de `set('data.sel_product_id')` a `call('pickProduct')`, que es la que usa el operador) · sonda
+de navegador · Pint · docs-check · **suite 4.263 verde**.

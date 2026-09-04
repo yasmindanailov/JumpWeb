@@ -193,7 +193,7 @@ class CreateManualOrderPageTest extends TestCase
         $component = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $customer->id)
-            ->set('data.sel_product_id', $this->h1->id)
+            ->call('pickProduct', $this->h1->id)
             ->set('data.sel_date', $this->date)
             ->set('data.sel_time', '10:00:00')
             ->set('data.sel_qty', 3)
@@ -291,7 +291,7 @@ class CreateManualOrderPageTest extends TestCase
 
         $component = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
-            ->set('data.sel_product_id', $this->h1->id);
+            ->call('pickProduct', $this->h1->id);
 
         // El complemento del pivote debe aparecer en el view-model compartido (como single opcional).
         $model = $component->instance()->manualAddonViewModel();
@@ -316,7 +316,7 @@ class CreateManualOrderPageTest extends TestCase
 
         $component = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
-            ->set('data.sel_product_id', $this->h1->id);
+            ->call('pickProduct', $this->h1->id);
 
         $socks = collect($component->instance()->manualAddonViewModel()['singles'])->firstWhere('id', $addon->id);
         $this->assertTrue($socks['can_toggle']);
@@ -341,7 +341,7 @@ class CreateManualOrderPageTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $customer->id)
             ->set('data.payment_method', 'cash')
-            ->set('data.sel_product_id', $this->h1->id)
+            ->call('pickProduct', $this->h1->id)
             ->set('data.sel_date', $this->date)
             ->set('data.sel_time', '10:00:00')
             ->set('data.sel_qty', 1)
@@ -372,7 +372,7 @@ class CreateManualOrderPageTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $customer->id)
             ->set('data.payment_method', 'cash')
-            ->set('data.sel_product_id', $this->h1->id);
+            ->call('pickProduct', $this->h1->id);
 
         // Pre-carga: el obligatorio incluido arranca seleccionado a 1 en el view-model.
         $cakeRow = collect($component->instance()->manualAddonViewModel()['singles'])->firstWhere('id', $cake->id);
@@ -452,7 +452,7 @@ class CreateManualOrderPageTest extends TestCase
             ->set('data.customer_id', $customer->id)
             ->assertSet('step', CreateManualOrderPage::STEP_PRODUCT)
             // Paso 2 · producto: elegirlo avanza solo al de «cuándo».
-            ->set('data.sel_product_id', $this->h1->id)
+            ->call('pickProduct', $this->h1->id)
             ->assertSet('step', CreateManualOrderPage::STEP_WHEN)
             // Paso 3 · cuántos, qué día y a qué hora.
             ->set('data.sel_qty', 2)
@@ -485,7 +485,7 @@ class CreateManualOrderPageTest extends TestCase
 
         $component = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
-            ->set('data.sel_product_id', $pack->id)
+            ->call('pickProduct', $pack->id)
             ->set('data.sel_date', $this->date)
             ->set('data.sel_time', '10:00:00')
             ->set('data.sel_qty', 5)            // por debajo del mínimo (8)
@@ -512,7 +512,7 @@ class CreateManualOrderPageTest extends TestCase
 
         $component = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
-            ->set('data.sel_product_id', $pack->id);
+            ->call('pickProduct', $pack->id);
 
         $method = new \ReflectionMethod(CreateManualOrderPage::class, 'selectionEventDataFields');
         $method->setAccessible(true);

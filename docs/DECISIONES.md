@@ -23342,3 +23342,52 @@ las guardas de la navegación pegajosa y del «Atrás» se re-apuntan al partial
 **Verificación**: `CreateManualOrderStepsTest` **13 casos** con **9/9 mutaciones que muerden** ·
 los 86 casos previos de esta pantalla en verde · sonda de navegador con el recorrido entero ·
 Pint · docs-check · **suite 4.252 verde**.
+
+## #463 · 2026-09-04 · El producto se elige en TARJETAS agrupadas — el crítico C1, cerrado
+
+**Es el hallazgo que ya costó dinero en el parque** (`specs/auditoria-panel-admin.md` §C1): una admin
+vendió un cumpleaños como **diez entradas sueltas** —119,00 € en vez de 180,00 €, la sala sin
+reservar, 60 min de ocupación en vez de 120 y el formulario de invitados que nunca se pidió—, y
+**no se puede deshacer**: «Editar producto» solo ofrece productos del mismo tipo y la misma zona.
+
+**La causa medida no era la falta de un aviso, era el ELEGIDOR**: un `Select` plano de 18 opciones
+rotuladas `«{zona} · {nombre}»`, donde **ni una palabra decía si aquello era una entrada o un pack**
+—y el prefijo tampoco: «JUMP · Cumpleaños E2E extras» es un PACK—.
+
+**Lo que cierra el agujero es el AGRUPADO, no la tarjeta.** El operador ya no elige de una lista
+donde las dos cosas se parecen: elige dentro de «ENTRADAS (10)» o dentro de «PACKS Y CELEBRACIONES
+(8)». Y el **rango de invitados**, que solo pintan los packs, es la marca inconfundible de un
+producto de grupo. La tarjeta añade además icono, zona, duración y precio.
+
+**«Más info» es de LECTURA y esa es su propiedad**: abrirlo **no elige el producto** —medido en
+navegador: el paso sigue siendo «Producto» tras cerrarlo—, o el operador no podría comparar dos
+candidatos sin comprometerse con el primero. Enseña lo que el cliente ve: tipo, zona, duración,
+rango, descripción y ventajas.
+
+⚠️⚠️ **`pickProduct()` es la ÚNICA puerta y vuelve a validar en el SERVIDOR**: un `wire:click` se
+puede llamar con cualquier id (`AFORO-02`), y además tiene que hacer los mismos olvidos que hacía el
+`afterStateUpdated` del `Select` que ha muerto —hora, menores, campos, complementos—. Los diez casos
+previos que empujaban `set('data.sel_product_id', X)` se re-apuntan **por sujeto** a `pickProduct`,
+que es la puerta que usa el operador.
+
+⚠️ **`productOptions()` murió con el `Select`; `productLabel()` NO**: tiene otro consumidor, es el
+rótulo con el que la línea aparece en el carrito.
+
+**Los tres tropiezos, y qué enseñan:** ⚠️⚠️ **las ventajas salían en LOS TRES IDIOMAS** («Access to
+the Jump zone · Acceso a la zona Jump · Accès à la zone Jump»): `features` es traducible y `tr()` es
+su puente, y yo recorrí el mapa a mano — *inventar un recorrido donde ya hay un puente es cómo se
+cuela un idioma equivocado sin que nada falle*; lo vio la sonda, no un test. ⚠️⚠️ **dos mutaciones no
+mordieron por motivos DISTINTOS** —una porque el fixture no tenía icono elegido (sin sujeto, «leer el
+marcador» y «deducirlo del tipo» dan lo mismo) y otra porque **nunca se aplicó**, un `sed` con `\n`
+no casa entre líneas—: *una mutación que no muerde puede ser una guarda ciega o un arnés roto, y hay
+que distinguirlo*. ⚠️ **`assertSee` no ve un modal de Filament** (es un `wire:partial`, la trampa de
+`#161`): la guarda asevera por CONDUCTA sobre `productInfoFields()`.
+
+**Lo que NO entra, dicho**: `ticket_types.conditions` **no la lee nadie y el catálogo no la edita**
+—cero consumidores—, así que pintarla aquí la convertiría en el único sitio donde aparece un texto
+que el operador no puede rellenar desde ninguna pantalla; ficha en `DEUDA.md`.
+
+**Verificación**: `CreateManualOrderProductCardsTest` **10 casos** con **9/9 mutaciones que muerden**
+· los 99 casos previos de esta pantalla en verde tras el re-apuntado · sonda de navegador (18
+tarjetas en dos grupos, **0 controles bajo 44 px**, 0 desbordamiento, el modal sin elegir) · Pint ·
+docs-check · **suite 4.263 verde**.

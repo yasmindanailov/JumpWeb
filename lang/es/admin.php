@@ -386,6 +386,20 @@ return [
             // dónde lleva; y al lado, la puerta para seguir añadiendo.
             'go_to_pay' => 'Ir a pagar',
             'add_more_products' => 'Añadir más productos',
+
+            // `#462` T2 — las TARJETAS de producto. El agrupado por tipo es lo que cierra
+            // el crítico C1: en el desplegable plano una entrada y un pack se parecían.
+            'product_group' => [
+                'entry' => 'Entradas',
+                'pack' => 'Packs y celebraciones',
+            ],
+            'product_minutes' => ':n min',
+            'product_guest_range' => ':min–:max invitados',
+            'product_from' => 'desde',
+            'product_more_info' => 'Más info',
+            'product_info_close' => 'Cerrar',
+            'product_none' => 'No hay ningún producto a la venta. Revisa el catálogo y las zonas activas.',
+            'product_guests' => 'Invitados',
             'confirm' => '¿Cobrar y crear el pedido?',
             'confirm_description' => 'Se registrará el cobro y se creará la reserva del cliente.',
             'submit' => 'Cobrar y crear pedido',

@@ -2090,3 +2090,142 @@ button.cmo-steps__go:hover .cmo-steps__label {
 .cmo-nav__more {
     margin-inline-start: auto;
 }
+
+/* ─── Las TARJETAS DE PRODUCTO del asistente (`#462`, T2) ────────────────────────────────────
+ * Sustituyen a un desplegable plano de 18 opciones en el que una entrada y un pack se parecían.
+ * Lo que cierra el agujero es el AGRUPADO por tipo; la tarjeta solo lo hace legible con el dedo. */
+.cmo-products {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 6);
+}
+
+.cmo-products__group-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    margin-bottom: calc(var(--spacing) * 2);
+}
+
+.cmo-products__group-title:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+/* ⚠️ `auto-fill` con un mínimo, NO un número fijo de columnas: el ancho útil cambia con el paso
+ * (aquí hay columna pegajosa al lado) y con la orientación de la tablet. */
+.cmo-products__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: calc(var(--spacing) * 3);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.cmo-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.75rem;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 10%, transparent);
+    background-color: var(--color-white);
+    overflow: hidden;
+}
+
+.cmo-card:where(.dark, .dark *) {
+    background-color: var(--gray-900);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+/* ⚠️ El elegido se distingue **por algo más que el fondo**: en una tablet a un brazo y con reflejos
+ * un relleno claro se pierde. Es el mismo criterio que las tarjetas de cobro de `#242`. */
+.cmo-card.is-selected {
+    box-shadow: inset 0 0 0 2px var(--primary-600);
+}
+
+.cmo-card__pick {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 3);
+    /* 44 px de mínimo táctil aparte, el alto real lo pone el contenido. */
+    min-height: var(--jj-action-h);
+    padding: calc(var(--spacing) * 3);
+    text-align: start;
+    cursor: pointer;
+    width: 100%;
+}
+
+.cmo-card__ico {
+    flex: none;
+    color: var(--primary-600);
+    margin-top: 2px;
+}
+
+.cmo-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.cmo-card__name {
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.cmo-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.cmo-card__meta:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+/* El rango de invitados es la marca inconfundible de un producto de grupo: se resalta. */
+.cmo-card__guests {
+    font-weight: 600;
+    color: var(--primary-700);
+}
+
+.cmo-card__guests:where(.dark, .dark *) {
+    color: var(--primary-400);
+}
+
+.cmo-card__price {
+    flex: none;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.cmo-card__from {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--gray-500);
+}
+
+/* «Más info» es hermano de la tarjeta, nunca un botón dentro de otro botón. */
+.cmo-card__info {
+    min-height: var(--jj-action-h);
+    padding-inline: calc(var(--spacing) * 3);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--primary-600);
+    text-align: start;
+    cursor: pointer;
+    border-top: 1px solid color-mix(in oklab, var(--gray-950) 8%, transparent);
+}
+
+.cmo-card__info:where(.dark, .dark *) {
+    color: var(--primary-400);
+    border-top-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+.cmo-products__empty {
+    color: var(--gray-500);
+}

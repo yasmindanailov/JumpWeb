@@ -226,7 +226,7 @@ class CreateManualOrderTabletTest extends TestCase
         $component = Livewire::actingAs($this->seedAdmin())
             ->test(CreateManualOrderPage::class)
             ->set('step', CreateManualOrderPage::STEP_PRODUCT)
-            ->set('data.sel_product_id', $product->id);
+            ->call('pickProduct', $product->id);
 
         $days = $component->instance()->quickDays();
 
@@ -263,7 +263,7 @@ class CreateManualOrderTabletTest extends TestCase
             $component = Livewire::actingAs($admin)
                 ->test(CreateManualOrderPage::class)
                 ->set('step', CreateManualOrderPage::STEP_PRODUCT)
-                ->set('data.sel_product_id', $product->id)
+                ->call('pickProduct', $product->id)
                 ->set('data.sel_date', $primero)
                 ->set('data.sel_time', '10:00:00')
                 ->set('data.sel_dependent_ids', [7]);
@@ -292,7 +292,7 @@ class CreateManualOrderTabletTest extends TestCase
         $component = Livewire::actingAs($this->seedAdmin())
             ->test(CreateManualOrderPage::class)
             ->set('step', CreateManualOrderPage::STEP_PRODUCT)
-            ->set('data.sel_product_id', $product->id)
+            ->call('pickProduct', $product->id)
             ->call('pickQuickDay', now()->addYears(3)->toDateString());
 
         $this->assertNull(
@@ -324,7 +324,7 @@ class CreateManualOrderTabletTest extends TestCase
         $component = Livewire::actingAs($this->seedAdmin())
             ->test(CreateManualOrderPage::class)
             ->set('step', CreateManualOrderPage::STEP_PRODUCT)
-            ->set('data.sel_product_id', $product->id)
+            ->call('pickProduct', $product->id)
             ->set('data.sel_date', $dia);
 
         $chips = $component->instance()->timeChips();
@@ -349,7 +349,7 @@ class CreateManualOrderTabletTest extends TestCase
         $component = Livewire::actingAs($this->seedAdmin())
             ->test(CreateManualOrderPage::class)
             ->set('step', CreateManualOrderPage::STEP_PRODUCT)
-            ->set('data.sel_product_id', $product->id)
+            ->call('pickProduct', $product->id)
             ->set('data.sel_date', now()->addDay()->toDateString());
 
         $component->call('pickTime', '10:00:00');

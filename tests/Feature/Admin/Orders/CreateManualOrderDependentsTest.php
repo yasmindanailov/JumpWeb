@@ -139,7 +139,7 @@ class CreateManualOrderDependentsTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('step', CreateManualOrderPage::STEP_PRODUCT)
             ->set('data.customer_id', $holder->id)
-            ->set('data.sel_product_id', $this->entry->id)
+            ->call('pickProduct', $this->entry->id)
             ->set('data.sel_date', $this->date)
             // `#462`: el selector de menores vive en el paso «Datos», que es adonde lleva el
             // asistente tras la hora. Aquí se salta directo porque lo que se prueba es el SELECTOR,
@@ -152,15 +152,15 @@ class CreateManualOrderDependentsTest extends TestCase
             ->assertSee('sin descargo firmado y vigente');
 
         // Un pack no lleva menores; sin cliente tampoco hay selector.
-        $page->set('data.sel_product_id', $this->pack->id)->assertDontSee('¿Para quién son estas entradas?');
-        $page->set('data.sel_product_id', $this->entry->id)->set('data.customer_id', null)->assertDontSee('¿Para quién son estas entradas?');
+        $page->call('pickProduct', $this->pack->id)->assertDontSee('¿Para quién son estas entradas?');
+        $page->call('pickProduct', $this->entry->id)->set('data.customer_id', null)->assertDontSee('¿Para quién son estas entradas?');
 
         // Un cliente sin menores: nada que preguntar.
         Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
             ->set('step', CreateManualOrderPage::STEP_PRODUCT)
             ->set('data.customer_id', $this->customer()->id)
-            ->set('data.sel_product_id', $this->entry->id)
+            ->call('pickProduct', $this->entry->id)
             ->set('data.sel_date', $this->date)
             ->set('step', CreateManualOrderPage::STEP_DETAILS)
             ->assertDontSee('¿Para quién son estas entradas?');
@@ -178,7 +178,7 @@ class CreateManualOrderDependentsTest extends TestCase
         $page = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $holder->id)
-            ->set('data.sel_product_id', $this->entry->id)
+            ->call('pickProduct', $this->entry->id)
             ->set('data.sel_date', $this->date)
             ->set('data.sel_time', '10:00:00')
             ->set('data.sel_qty', 1)
@@ -193,7 +193,7 @@ class CreateManualOrderDependentsTest extends TestCase
         $page->assertSee('Para: Lior');
 
         // Dos menores para una entrada: aviso y NO se añade la línea.
-        $page->set('data.sel_product_id', $this->entry->id)
+        $page->call('pickProduct', $this->entry->id)
             ->set('data.sel_date', $this->date)
             ->set('data.sel_time', '10:00:00')
             ->set('data.sel_qty', 1)

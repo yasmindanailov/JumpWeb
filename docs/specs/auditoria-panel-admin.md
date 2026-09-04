@@ -189,6 +189,13 @@ pulsaciones, sin contar lo que se teclea.
 
 ### C1 · Un cumpleaños se vendió como diez entradas — y la fricción está medida
 
+> ✅ **CERRADO el 2026-09-04 (`DECISIONES #463`, T2 de `specs/asistente-crear-pedido.md`).** El
+> desplegable plano murió: el producto se elige en **tarjetas agrupadas** por tipo («ENTRADAS» /
+> «PACKS Y CELEBRACIONES»), y el **rango de invitados** —que solo pintan los packs— hace imposible
+> confundir los dos. Lo que sigue debajo es el diagnóstico tal como se midió, y **no se retira**:
+> es lo que justifica la forma que hay hoy. ⚠️ **Lo que NO cierra esta tanda es el DESHACER**: el
+> «Editar producto» sigue ofreciendo solo productos del mismo tipo y la misma zona.
+
 **El caso es real** (`[OWNER, 2026-09-03]`): *«una de las admin hizo la reserva de cumpleaños como
 una entrada: reservó 10 entradas en vez de hacer una reserva de cumpleaños pack de 10
 invitados»*. No es una hipótesis de usabilidad: es un fallo de operación que ya ocurrió, y el

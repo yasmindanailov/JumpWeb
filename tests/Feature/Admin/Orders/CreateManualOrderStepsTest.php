@@ -132,7 +132,7 @@ class CreateManualOrderStepsTest extends TestCase
         return Livewire::actingAs($this->staff())
             ->test(Cmo::class)
             ->set('data.customer_id', $this->customer()->id)
-            ->set('data.sel_product_id', $type->id);
+            ->call('pickProduct', $type->id);
     }
 
     // ─── 1 · Saltar lo que no pregunta nada ──────────────────────────────────────────────────

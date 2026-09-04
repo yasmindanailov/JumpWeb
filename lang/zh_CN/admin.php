@@ -347,6 +347,20 @@ return [
             'next' => '下一步',
             'go_to_pay' => '去付款',
             'add_more_products' => '添加更多产品',
+
+            // `#462` T2 — las TARJETAS de producto. El agrupado por tipo es lo que cierra
+            // el crítico C1: en el desplegable plano una entrada y un pack se parecían.
+            'product_group' => [
+                'entry' => '门票',
+                'pack' => '套餐与庆生',
+            ],
+            'product_minutes' => ':n 分钟',
+            'product_guest_range' => ':min–:max 位来宾',
+            'product_from' => '起',
+            'product_more_info' => '更多信息',
+            'product_info_close' => '关闭',
+            'product_none' => '目前没有在售产品。请检查产品目录和启用的区域。',
+            'product_guests' => '来宾',
             'confirm' => '确认收款并创建订单?',
             'confirm_description' => '将登记收款并为该客户创建预订。',
             'submit' => '收款并创建订单',

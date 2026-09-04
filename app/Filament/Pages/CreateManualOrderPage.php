@@ -34,6 +34,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions as SchemaActions;
@@ -491,48 +492,22 @@ class CreateManualOrderPage extends Page
             ->schema([
                 Section::make(__('admin.orders.create_manual.add_product'))
                     ->schema([
-                        Select::make('sel_product_id')
-                            ->label(__('admin.orders.create_manual.product'))
-                            ->options(fn (): array => $this->productOptions())
-                            ->searchable()
-                            ->live()
-                            ->afterStateUpdated(function (Get $get, callable $set): void {
-                                $set('sel_time', null);
-                                // `#329`: el interruptor del mínimo se apaga al cambiar de producto —
-                                // es una excepción sobre ESTE pack, no un modo del formulario. Va
-                                // ANTES del default de cantidad, que lee el suelo vigente.
-                                $set('sel_below_minimum', false);
-                                $set('sel_qty', $this->defaultQtyFor((int) $get('sel_product_id')));
-                                $set('event_data', []);
-                                $set('sel_dependent_ids', []);
-                                // Pre-carga los complementos incluidos/obligatorios y el default de
-                                // cada grupo del producto elegido (igual que la web).
-                                $this->initManualAddonDefaults();
-
-                                // `#462`, `[DECIDIDO owner]`: «al seleccionar producto,
-                                // automáticamente al siguiente paso».
-                                $this->advanceAfterChoice();
-                            }),
-
-                        // ⚠️ **La TIRA DE DÍAS RÁPIDOS, y el calendario se queda debajo** (`#240`, U7).
-                        // Con la tablet en la mano el popover del calendario son cuatro toques y
-                        // objetivos de 36 px, y la reserva de mostrador casi siempre es para hoy o
-                        // para los próximos días. La tira resuelve ESE caso con un toque.
-                        // ❗ **El calendario NO se retira**, y es la misma razón que en el cajón del
-                        // cliente (`specs/cajon-en-movil.md` §4.1): un cumpleaños se reserva con meses
-                        // de antelación y eso no se alcanza deslizando. La tira son 14 días; el resto,
-                        // el calendario.,
+                        // ⚠️⚠️ **Aquí vivía un `Select` PLANO de 18 opciones, y es el crítico C1 de la
+                        // auditoría**: su rótulo era `«{zona} · {nombre}»` y **nada decía si aquello
+                        // era una entrada o un pack** —ni el prefijo de zona servía: «JUMP ·
+                        // Cumpleaños E2E extras» es un PACK—. Con él, una admin vendió un cumpleaños
+                        // como diez entradas sueltas: **119,00 € en vez de 180,00 €**, la sala sin
+                        // reservar, 60 min de ocupación en vez de 120 y sin formulario de invitados.
+                        //
+                        // ▶ Las tarjetas van **AGRUPADAS POR TIPO**, que es lo que cierra el agujero:
+                        // el operador ya no elige de una lista donde las dos cosas se parecen, elige
+                        // dentro de «Entradas» o dentro de «Packs y celebraciones».
+                        ViewComponent::make('filament.pages.partials.manual-order-products')
+                            ->viewData(fn (): array => ['grupos' => $this->productCards()]),
                     ]),
             ]);
     }
 
-    /**
-     * PASO 3 · CUÁNDO: cuántos, qué día y a qué hora.
-     *
-     * ⚠️ **La cantidad va ARRIBA y no es cosmética** (`[DECIDIDO owner]` D1): las horas se ofrecen
-     * con sus plazas, así que preguntarla ANTES es lo que hace que la oferta diga la verdad para
-     * ESA cantidad. Y deja el auto-avance en la hora, que es lo último que se toca.
-     */
     private function whenStep(): Group
     {
         return Group::make()
@@ -1450,23 +1425,214 @@ class CreateManualOrderPage extends Page
     }
 
     /** @return array<int,string> */
-    private function productOptions(): array
+    /**
+     * Los productos vendibles AGRUPADOS POR TIPO, listos para pintar en tarjetas (`#462`, T2).
+     *
+     * ⚠️⚠️ **El agrupado es la corrección, no la decoración.** Antes esto devolvía un mapa plano
+     * `id => "{zona} · {nombre}"` para un `Select`, y en él una entrada y un pack se parecían: la
+     * ÚNICA señal era el nombre del producto, que lo escribe el cliente desde el panel. Con las dos
+     * familias separadas y rotuladas, elegir mal deja de ser un descuido y pasa a ser otra pantalla.
+     *
+     * ⚠️ **El orden de los grupos no es alfabético: entradas primero.** Es lo que más se vende en
+     * mostrador, y poner las celebraciones arriba obligaría a pasar por delante de ellas cada vez.
+     *
+     * ⚠️ Cada tarjeta lleva lo que DISTINGUE, no lo que decora: el icono que el propio panel ya deja
+     * elegir, la zona, la duración, el precio y —solo en los packs— el rango de invitados, que es la
+     * marca inconfundible de un producto de grupo.
+     *
+     * @return list<array{type: string, label: string, items: list<array<string, mixed>>}>
+     */
+    public function productCards(): array
     {
-        return TicketType::sellable()
+        $productos = TicketType::sellable()
             ->inOperationalZone() // una zona desactivada no vende (igual que la web)
             ->whereIn('type', [TicketType::TYPE_ENTRY, TicketType::TYPE_PACK])
             ->with('zone')
             ->orderBy('position')
-            ->get()
-            ->mapWithKeys(fn (TicketType $t) => [$t->id => $this->productLabel($t)])
-            ->all();
+            ->get();
+
+        $elegido = (int) ($this->data['sel_product_id'] ?? 0);
+        $grupos = [];
+
+        foreach ([TicketType::TYPE_ENTRY, TicketType::TYPE_PACK] as $tipo) {
+            $items = $productos
+                ->where('type', $tipo)
+                ->map(fn (TicketType $t): array => [
+                    'id' => (int) $t->id,
+                    'name' => (string) $t->tr('name'),
+                    'zone' => $t->zone?->tr('name'),
+                    // ⚠️ El MARCADOR del producto, el que el panel ya deja elegir en el catálogo
+                    // (`ticket_types.icon`). Se resuelve con `iconKey()`, que es el puente único:
+                    // una clave desconocida cae al defecto de su TIPO en vez de quedarse en blanco.
+                    'icon' => $t->iconKey(),
+                    'duration' => $t->duration_min,
+                    'price' => $t->displayPriceCents(),
+                    'price_varies' => $t->priceVaries(),
+                    'is_pack' => $t->isPack(),
+                    'min' => $t->isPack() ? $t->contractableMinimum() : null,
+                    'max' => $t->isPack() ? $t->max_qty : null,
+                    'selected' => $elegido === (int) $t->id,
+                    // Para el «Más info»: si no hay NADA público que enseñar, la tarjeta no ofrece
+                    // un botón que abriría un modal vacío.
+                    'has_info' => filled($t->tr('description')) || filled($t->tr('features')),
+                ])
+                ->values()
+                ->all();
+
+            if ($items === []) {
+                continue;
+            }
+
+            $grupos[] = [
+                'type' => $tipo,
+                // Mismo vocabulario que el catálogo (`admin.catalog.types.*`), en plural: dos
+                // nombres para «pack» en el mismo panel sería el problema que esto viene a resolver.
+                'label' => __('admin.orders.create_manual.product_group.'.$tipo),
+                'items' => $items,
+            ];
+        }
+
+        return $grupos;
     }
 
+    /**
+     * «Más info» de un producto: lo que el CLIENTE ve de él (`#462`, T2, `[owner]`: «un CTA de "más
+     * info" abre un modal con la descripción y demás datos públicos, o sea datos de la landing»).
+     *
+     * ⚠️⚠️ **Es de LECTURA y de datos PÚBLICOS, y eso es lo que la hace segura de enseñar delante de
+     * un cliente**: sale de los mismos campos que pinta la web (descripción, condiciones,
+     * características, duración, rango de invitados). Ni precios de coste, ni aforo, ni nada que el
+     * operador no pueda leer en voz alta.
+     *
+     * ⚠️ **No decide nada.** Abrirla no elige el producto: se puede consultar y cerrar. Si eligiera,
+     * el operador no podría comparar dos productos sin comprometerse con el primero que abre.
+     */
+    public function productInfoAction(): Action
+    {
+        return Action::make('productInfo')
+            ->modalHeading(fn (array $arguments): string => (string) (TicketType::find($arguments['product'] ?? 0)?->tr('name') ?? ''))
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel(__('admin.orders.create_manual.product_info_close'))
+            ->schema(fn (array $arguments): array => $this->productInfoFields((int) ($arguments['product'] ?? 0)));
+    }
+
+    /**
+     * Los campos del modal de «Más info», en el orden en que se cuentan por teléfono.
+     *
+     * ⚠️ **Público como `productCards()`**: los dos son compositores de vista, y el modal de Filament
+     * es un `wire:partial` que `assertSee` **no ve** (la trampa de `#161`, pagada otra vez aquí).
+     * Se asevera por CONDUCTA sobre lo que compone, no por el HTML de la página.
+     *
+     * @return array<int, mixed>
+     */
+    public function productInfoFields(int $id): array
+    {
+        $type = TicketType::with('zone')->find($id);
+
+        if ($type === null) {
+            return [];
+        }
+
+        $filas = [];
+
+        // La ficha seca primero: es lo que el operador necesita para contestar «¿cuánto dura?».
+        $ficha = array_filter([
+            __('admin.catalog.col_type') => __('admin.catalog.types.'.$type->type),
+            __('admin.catalog.col_zone') => $type->zone?->tr('name'),
+            __('admin.catalog.col_duration') => $type->duration_min ? __('admin.orders.create_manual.product_minutes', ['n' => $type->duration_min]) : null,
+            __('admin.orders.create_manual.product_guests') => $type->isPack()
+                ? __('admin.orders.create_manual.product_guest_range', ['min' => $type->contractableMinimum(), 'max' => $type->max_qty ?? '∞'])
+                : null,
+        ], fn ($v): bool => filled($v));
+
+        foreach ($ficha as $rotulo => $valor) {
+            $filas[] = TextEntry::make('info_'.md5((string) $rotulo))
+                ->label($rotulo)
+                ->state($valor);
+        }
+
+        // ⚠️ El rótulo es el MISMO que usa la ficha del catálogo (`admin.catalog.field_description`):
+        // el operador acaba de escribir ese campo ahí, y llamarlo de otra forma aquí le haría dudar
+        // de si está mirando lo mismo.
+        //
+        // ⚠️⚠️ **`ticket_types.conditions` NO se enseña, y no es un olvido**: medido, esa columna
+        // **no la lee nadie y el catálogo no la edita** —cero consumidores en todo el repo—. Pintarla
+        // aquí la convertiría en el único sitio donde aparece un texto que el operador no puede
+        // rellenar desde ninguna pantalla. Ficha en `DEUDA.md`: es columna muerta, preexistente.
+        if (filled($type->tr('description'))) {
+            $filas[] = TextEntry::make('info_description')
+                ->label(__('admin.catalog.field_description'))
+                ->state($type->tr('description'));
+        }
+
+        // ⚠️⚠️ **`features` es TRADUCIBLE y `tr()` es su puente**: un `(array) $type->features` da el
+        // mapa de idiomas entero (`{en: [...], es: [...], fr: [...]}`) y recorrerlo a mano sacaba
+        // **las tres lenguas juntas** — medido en navegador: «Access to the Jump zone · Acceso a la
+        // zona Jump · Accès à la zone Jump». *Inventar un recorrido donde ya hay un puente es cómo
+        // se cuela un idioma equivocado sin que nada falle.*
+        $features = collect((array) $type->tr('features'))
+            ->filter(fn ($f): bool => is_string($f) && filled($f))
+            ->all();
+
+        if ($features !== []) {
+            $filas[] = TextEntry::make('info_features')
+                ->label(__('admin.catalog.field_features'))
+                ->state(implode(' · ', $features));
+        }
+
+        return $filas;
+    }
+
+    /**
+     * El rótulo de un producto en UNA línea: «{zona} · {nombre}».
+     *
+     * ⚠️ **Sobrevive al `Select` que lo estrenó** porque tiene otro consumidor: es la etiqueta con
+     * la que la línea aparece en el carrito, donde no hay tarjeta que enseñe la zona aparte.
+     */
     private function productLabel(TicketType $type): string
     {
         $zone = $type->zone?->tr('name');
 
         return ($zone ? "{$zone} · " : '').(string) $type->tr('name');
+    }
+
+    /**
+     * Elegir producto. **Es la ÚNICA puerta** (`#462`, T2).
+     *
+     * ⚠️⚠️ **Aquí vivía un `afterStateUpdated` de Filament y ahora es un `wire:click`, y eso cambia
+     * DÓNDE se puede escribir**: dentro de un `afterStateUpdated` escribir en `$this->data` a mano
+     * se pierde —el formulario vuelve a sincronizar su estado después— y hay que usar el `$set` del
+     * campo; desde un `wire:click` es al revés. La regla de `#240` sigue valiendo: **un escritor por
+     * puerta**. Con una sola puerta no hay dos escrituras que puedan divergir.
+     *
+     * ⚠️ **El servidor vuelve a comprobar el producto** (`AFORO-02`): el navegador propone un id y
+     * aquí se confirma que sigue siendo vendible y de una zona operativa. Un `wire:click` se puede
+     * llamar con cualquier número.
+     */
+    public function pickProduct(int $id): void
+    {
+        $ofrecible = TicketType::sellable()
+            ->inOperationalZone()
+            ->whereIn('type', [TicketType::TYPE_ENTRY, TicketType::TYPE_PACK])
+            ->whereKey($id)
+            ->exists();
+
+        if (! $ofrecible) {
+            return;
+        }
+
+        $this->data['sel_product_id'] = $id;
+
+        // Los mismos olvidos que hacía el `afterStateUpdated`: cambiar de producto invalida la hora,
+        // la excepción del mínimo, los campos del evento y los menores asignados.
+        $this->data['sel_time'] = null;
+        $this->data['sel_below_minimum'] = false;
+        $this->data['sel_qty'] = $this->defaultQtyFor($id);
+        $this->data['event_data'] = [];
+        $this->data['sel_dependent_ids'] = [];
+        $this->initManualAddonDefaults();
+
+        $this->advanceAfterChoice();
     }
 
     /** Producto en curso, leído del estado del formulario (scope-independiente). */
