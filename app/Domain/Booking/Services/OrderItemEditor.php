@@ -61,6 +61,7 @@ class OrderItemEditor
         private ItemEditPricing $pricing,
         private MixedPartySurcharge $mixedParty,
         private AgeFamilySealer $sealer,
+        private AddonDateReconciler $addonDates,
     ) {}
 
     // ─── Operaciones ────────────────────────────────────────────────────────
@@ -135,9 +136,14 @@ class OrderItemEditor
         $oldLabel = self::humanSlotLabel($oldSlot);
         $newLabel = self::humanSlotLabel($newSlot);
 
+        // El plan de complementos APLICADO sale del lock por referencia: su dinero se escribe
+        // POST-COMMIT (`#417`), y para eso hace falta saber qué se aplicó de verdad ahí dentro —
+        // no lo que se previó fuera.
+        $appliedDatePlan = null;
+
         // Capa 5: txn bajo el lock de zona/día del destino + revalidar aforo. Devuelve `true`, o el
         // MOTIVO del bloqueo (`false` conserva su significado histórico: sin plazas / cancelado).
-        $committed = $this->withZoneDayLock($newSlot, function ($lockedSlots) use ($item, $newSlot): bool|string {
+        $committed = $this->withZoneDayLock($newSlot, function ($lockedSlots) use ($item, $newSlot, &$appliedDatePlan): bool|string {
             /** @var OrderItem $locked */
             $locked = OrderItem::query()->lockForUpdate()->findOrFail($item->id);
 
@@ -169,10 +175,20 @@ class OrderItemEditor
                 return false; // → `insufficient_capacity_at_save`, decidido tras la txn.
             }
 
-            $resulting = $family->map(fn (OrderItem $child): array => [
-                'type' => $child->ticketType,
-                'seats' => (int) $child->seats,
-            ])->all();
+            // ⚠️⚠️ **PRIMERO se decide QUIÉN sobrevive al día nuevo, y DESPUÉS se valida su
+            // aterrizaje** (`specs/hora-extra.md` §9.8·H1, `#417`). El orden es la propiedad: con la
+            // validación delante, una reserva no se podía mover a un día en que su hora extra **no se
+            // vende** si la franja de aterrizaje estaba llena — bloqueada por un aforo que nadie iba
+            // a consumir, porque esa hija se retiraba de todas formas. Medido antes de invertirlo.
+            $datePlan = $this->addonDates->plan($locked, $newSlot->date);
+            $surviving = $datePlan->survivingChildIds;
+
+            $resulting = $family
+                ->filter(fn (OrderItem $child): bool => in_array((int) $child->id, $surviving, true))
+                ->map(fn (OrderItem $child): array => [
+                    'type' => $child->ticketType,
+                    'seats' => (int) $child->seats,
+                ])->all();
             [$childSlot, $familyReason] = $this->landOccupyingFamily($lockedSlots, $locked->ticketType, $newSlot, $resulting, $excludeIds);
             if ($familyReason !== null) {
                 return $familyReason;
@@ -183,8 +199,23 @@ class OrderItemEditor
             // reconciliación —que relee la fila bloqueada— derivaría de un sello del día viejo.
             $locked->forceFill(['slot_id' => $newSlot->id] + $this->sealUpdateFor($locked, $locked->ticketType, $newSlot))->save();
 
+            // La MUTACIÓN de los complementos va dentro del lock —retirar es aforo— y su DINERO
+            // fuera, tras el commit (`#417`, §9.8·H3: la doctrina §4.3 de este mismo fichero).
+            //
+            // ⚠️ Va ANTES del re-aterrizaje, igual que en `edit()`: con el orden al revés el filtro
+            // de abajo quedaba REDUNDANTE —`applyMutations()` le quitaba la franja después— y lo
+            // dijo el arnés, que no conseguía matar esa línea. *Una guarda que otro paso repara a
+            // continuación no protege nada: solo esconde de qué depende el resultado.*
+            $this->addonDates->applyMutations($datePlan, $locked);
+            $appliedDatePlan = $datePlan;
+
+            // Solo las SUPERVIVIENTES aterrizan. `$family` se calculó antes de retirar, así que
+            // sigue teniéndolas en memoria: el filtro es lo único que impide darle franja —y plazas—
+            // a una línea que se acaba de cancelar.
             foreach ($family as $child) {
-                $child->forceFill(['slot_id' => $childSlot?->id])->save();
+                if (in_array((int) $child->id, $surviving, true)) {
+                    $child->forceFill(['slot_id' => $childSlot?->id])->save();
+                }
             }
 
             return true;
@@ -229,11 +260,25 @@ class OrderItemEditor
             changes: $changes,
         ));
 
+        // El DINERO de los complementos re-tarificados (`#417`): POST-COMMIT y en su propia
+        // transacción corta, como el resto de la secuencia financiera (§4.3) — la mutación ya se
+        // confirmó dentro del lock. ⚠️ Las RETIRADAS no pasan por aquí: no llevan hecho, porque el
+        // libro emite su `−fila` solo (§9.6 de `hora-extra.md`).
+        if ($appliedDatePlan !== null) {
+            $this->addonDates->applyMoney(
+                $appliedDatePlan,
+                $order->fresh(['items.children', 'items.ticketType', 'adjustments']) ?? $order,
+                $by,
+            );
+        }
+
         // El suplemento de fiesta MIXTA se re-tarifica al mover la fecha (`specs/cumple-mixto.md`
         // §12): la diferencia entre packs sale del catálogo de ESE día, así que mover el día es
         // mover el importe — el mismo criterio que `PAY-18` aplica al precio del propio ítem.
         // Es un cambio del HECHO, no de la configuración, y por eso sí reconcilia.
         // POST-COMMIT y fuera del lock de zona/día: abre su propia transacción corta (§4.3).
+        // ⚠️ Va DESPUÉS del reconciliador de complementos y no antes: aquél excluye los portadores
+        // justamente para que sea ÉSTE quien los gobierne (§9.8·H2).
         if ($by !== null) {
             $this->mixedParty->reconcile($item->fresh(), $by, 'panel_slot_change');
         }
@@ -619,7 +664,10 @@ class OrderItemEditor
         // y se bloquearía). Devuelve `true`, o el MOTIVO del bloqueo (`false` conserva su
         // significado histórico: sin plazas / cancelado).
         $perGuestRescales = []; // child_id => ['delta'=>cents, 'old_qty'=>n, 'new_qty'=>n, 'name'=>str] (M4)
-        $committed = $this->withZoneDayLock($effectiveSlot, function ($lockedSlots) use ($item, $effectiveSlot, $newType, $newQty, $oldQty, $newUnit, $newSeats, $addonEdits, $addonAddUnitPrices, $addonAddQuantities, $addonAddFreeQuantities, $addonGroupByTypeId, $offeredAddons, $resultingOccupying, $by, &$addonAddChildIds, &$perGuestRescales): bool|string {
+        // El plan de complementos APLICADO sale del lock por referencia: su dinero se escribe
+        // POST-COMMIT, y hace falta saber qué se aplicó DENTRO, no lo que se previó fuera (`#417`).
+        $appliedDatePlan = null;
+        $committed = $this->withZoneDayLock($effectiveSlot, function ($lockedSlots) use ($item, $effectiveSlot, $newType, $newQty, $oldQty, $newUnit, $newSeats, $addonEdits, $addonAddUnitPrices, $addonAddQuantities, $addonAddFreeQuantities, $addonGroupByTypeId, $offeredAddons, $resultingOccupying, $by, &$addonAddChildIds, &$perGuestRescales, &$appliedDatePlan): bool|string {
             /** @var OrderItem $locked */
             $locked = OrderItem::query()->lockForUpdate()->findOrFail($item->id);
             if ($locked->isCancelled()) {
@@ -640,16 +688,30 @@ class OrderItemEditor
                 return false;
             }
 
+            // ⚠️⚠️ **QUIÉN sobrevive al día nuevo se decide ANTES de validar su aterrizaje**
+            // (`specs/hora-extra.md` §9.8·H1, `#417`): con el orden al revés, una reserva no se podía
+            // mover a un día en que su hora extra **no se vende** si la franja de aterrizaje estaba
+            // llena — bloqueada por un aforo que nadie iba a consumir. Medido antes de invertirlo.
+            $datePlan = $this->addonDates->plan($locked, $effectiveSlot->date);
+            $surviving = $datePlan->survivingChildIds;
+
+            // Las hijas AÑADIDAS en este mismo guardado (`child_id === null`) no pasan por el plan:
+            // se están comprando ahora, ya tarificadas al día nuevo por `ItemEditPricing`.
+            $occupyingToLand = array_values(array_filter(
+                $resultingOccupying,
+                fn (array $c): bool => $c['child_id'] === null || in_array((int) $c['child_id'], $surviving, true),
+            ));
+
             // La HORA EXTRA: la familia resultante ATERRIZA detrás de la posición nueva del padre
             // (producto nuevo = duración nueva = otra «franja siguiente»; día/hora nuevos, ídem) o
             // no se guarda nada — el borde 4 de §4.6, dentro del mismo lock.
             $childSlot = null;
-            if ($resultingOccupying !== []) {
+            if ($occupyingToLand !== []) {
                 [$childSlot, $familyReason] = $this->landOccupyingFamily(
                     $lockedSlots,
                     $newType,
                     $effectiveSlot,
-                    array_map(fn (array $c): array => ['type' => $c['type'], 'seats' => $c['seats']], $resultingOccupying),
+                    array_map(fn (array $c): array => ['type' => $c['type'], 'seats' => $c['seats']], $occupyingToLand),
                     $familyIds,
                 );
                 if ($familyReason !== null) {
@@ -740,6 +802,14 @@ class OrderItemEditor
                 ]);
                 $addonAddChildIds[$typeId] = (int) $created->id;
             }
+
+            // Las condiciones del día NUEVO, aplicadas a los complementos (`#417`): retirar lo que ese
+            // día no se vende y mover el precio de lo que cambia. ⚠️ Va ANTES del re-aterrizaje a
+            // propósito: una hija retirada ya no aparece en `liveOccupyingChildren()`, así que no se
+            // le busca franja — reservarle plazas para soltarlas en la misma transacción sería el
+            // gemelo silencioso de H1. Su DINERO va post-commit ({@see AddonDateReconciler}).
+            $this->addonDates->applyMutations($datePlan, $locked);
+            $appliedDatePlan = $datePlan;
 
             // La HORA EXTRA (borde 4): las hijas que ocupan y SIGUEN vivas se mudan CON el padre —
             // el producto nuevo (otra duración) o el día/hora nuevos cambian su «franja siguiente»,
@@ -918,11 +988,24 @@ class OrderItemEditor
             changes: $changes,
         ));
 
+        // El DINERO de los complementos re-tarificados por el día nuevo (`#417`): post-commit y en
+        // su propia transacción corta, como el resto de la secuencia financiera. ⚠️ Las RETIRADAS no
+        // pasan por aquí — no llevan hecho (§9.6 de `hora-extra.md`).
+        if ($appliedDatePlan !== null) {
+            $this->addonDates->applyMoney(
+                $appliedDatePlan,
+                $order->fresh(['items.children', 'items.ticketType', 'adjustments']) ?? $order,
+                $by,
+            );
+        }
+
         // ⚠️⚠️ **Sin esto, la línea del suplemento se queda MINTIENDO.** Si el operador baja los
         // invitados de 10 a 8, o cambia el pack, el veredicto derivado cambia al instante pero lo
         // ESCRITO no — y seguiría cobrando por niños que ya no están. La reconciliación no puede
         // colgar solo del guardado del cliente, que puede no volver a producirse nunca
         // (`specs/cumple-mixto.md` §12). POST-COMMIT y fuera del lock de zona/día.
+        // ⚠️ Va DESPUÉS del reconciliador de complementos, que excluye los portadores justamente
+        // para que sea ÉSTE quien los gobierne (§9.8·H2).
         if ($by !== null) {
             $this->mixedParty->reconcile($item->fresh(), $by, 'panel_item_edit');
         }

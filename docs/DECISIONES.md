@@ -23382,3 +23382,70 @@ pantallas y el carril de diseño está parado (`#452`).
 **Verificación**: en navegador con las features reales del cliente — 6 desplegables, 7 líneas el
 primero, el giro medido tras la transición · suite en verde · el «Más info» reutiliza el rótulo que
 ya existía (`tickets.addon_more_info`), sin clave nueva.
+
+## #417 · 2026-09-04 · `[DECIDIDO owner]` Mover el día mueve también las condiciones de los COMPLEMENTOS — con aviso al operador antes de confirmar
+
+**El encargo, con sus palabras**: *«si el cliente cambia de fecha a sabiendas de las condiciones de
+esa fecha hay que aplicar las condiciones de esa fecha; si una fecha no permite hora extra, la hora
+extra se le quita y se aplica su devolución como todo el sistema aplica a este tipo de cambios».*
+
+▶ **No era una feature nueva: era una incoherencia.** El padre se re-tarifica al mover la fecha
+(`PAY-18`) y el suplemento de fiesta mixta también (`cumple-mixto.md` §12, con su porqué ya escrito:
+*«mover el día es mover el importe… es un cambio del HECHO, no de la configuración»*). **Los
+complementos no**: conservaban el precio del día viejo y sobrevivían aunque ese día no se vendieran.
+
+**Alcance `[DECIDIDO owner]`: TODOS los complementos**, no solo los ocupantes — *«no hay otro
+complemento condicionado por la fecha hoy, pero lo hacemos para tenerlo hecho y tener una base
+profesional»*. ⚠️ Y eso lo hace **medible**: los 12 complementos tienen precio plano, así que la
+re-tarificación es no-op para once y la retirada solo alcanza a la hora extra. **Criterio de éxito:
+ningún pedido existente cambia de importe** — verificado en PRODUCCIÓN sobre las **9** líneas hijas
+vivas reales (0 difieren del catálogo, 0 sin precio).
+
+▶ **Las dos escrituras NO son simétricas, y está medido** (`hora-extra.md` §9.6): **retirar** escribe
+`markCancelled()` y **ningún** hecho (el libro ya emite su `−fila`); **re-tarificar** escribe
+`unit_price` **y su `recordEdit(±Δ)`** — sin él el libro deja de cerrar, el pedido pasa a
+`under_review` y **el cliente se queda sin desglose** (`#132`) por haber movido una fecha. Es la misma
+asimetría que `complementos-post-reserva.md` §4.5.1 alcanzó por otro camino.
+
+▶ **La frontera transaccional se parte en dos**, como la doctrina §4.3 del editor ya fija: **decidir y
+mutar DENTRO** del lock de zona/día (retirar es aforo), **el dinero POST-COMMIT** en su transacción
+corta.
+
+**La revisión adversarial (§9.8) encontró TRES cosas mal en mi propio plan, dos reproducidas:**
+
+1. **El ORDEN estaba invertido**: se validaba el aterrizaje de hijas que se iban a retirar, y eso
+   **bloqueaba el movimiento** (`addon_occupancy_at_destination`) por un aforo que nadie iba a
+   consumir. La supervivencia se decide ANTES.
+2. **La regla retiraría los PORTADORES de fiesta mixta en cada cambio de fecha**: no tienen precio en
+   catálogo NINGÚN día, y `MixedPartySurcharge` los gobierna en el mismo post-commit — dos servicios
+   peleando por la misma línea con el dinero moviéndose dos veces. Exclusión explícita.
+3. **La frontera**: el plan ponía todo en el post-commit, imposible tras (1).
+
+**Guardas**: `AddonDateReconcilerTest`, 11 casos, con `assertBookCloses()` **después de cada gesto** y
+el CONTROL de que un complemento de precio plano no se mueve. **Arnés: 7 de 7 mutaciones muerden**
+(`scripts/mutar-addon-date.sh`). El servicio entra en el `CRITICAL_RE` y en `CriticalPathGateTest`.
+
+⚠️⚠️ **CUATRO trampas de instrumento pagadas, todas con síntoma creíble:**
+
+- **`git diff` no ve un fichero NUEVO sin commitear**, así que el arnés daba «no aplicó» para todas
+  las mutaciones del servicio recién creado — *ciego justo en el fichero que la tanda crea*. El
+  detector pasa a ser el código de salida de la sustitución.
+- **Dos mutaciones no morían por falta de ESCENARIO, no de guarda**: hacía falta un caso por
+  `changeSlot()` (el otro camino público) y otro con **dos hijas ocupantes, una que sobrevive y otra
+  que no** — con una sola no hay franja de aterrizaje que heredar y el defecto es invisible.
+- **El contenido de un modal de Filament NO aparece en el HTML del componente** (medido: ni el
+  calendario ni su resumen salen en `->html()`), así que un `assertSee` pasa en vacío — la trampa de
+  `#161`. Por eso el aviso vive en un partial suelto: para poder aseverarlo.
+- **`bg-warning-50` compila y NO PINTA**: el recuadro salía transparente (`rgba(0,0,0,0)` medido en el
+  panel real). Es el fallo de `#217`; se usa `amber-*` de la paleta base, el mismo vocabulario que su
+  banner hermano. *Un aviso que no se ve como aviso no avisa, y nada falla.*
+
+⚠️ Y al extraer el partial, el Blade del calendario quedó descuadrado por un `@endif` de más — **lo
+cazaron tests de OTRA cosa** (`ManageItemAddons`, que renderizan la página): esa vista no tiene guarda
+propia de render.
+
+**Verificación**: suite **4.249 ✓ · 26.752** · Pint 1.176 · docs-check · 7/7 mutaciones ·
+`VERIFY_CONC` con los siete escenarios de aforo, Redsys, los dos de post-form con su control negativo
+y los dos de fiesta mixta · y **en el panel real**: mover una reserva del sábado a un martes muestra
+*«Hora extra · JUMP no se vende ese día: se retirará y sus 8,00 € quedarán a devolver en el parque»*,
+y aplicarlo deja el libro en `refund_at_park −16,00 €` **cerrando sus identidades**.

@@ -111,10 +111,17 @@ class CriticalPathGateTest extends TestCase
         //    —N guardados del mismo formulario, y un guardado del cliente contra una cancelación del
         //    operador— no la reproduce SQLite, y el orden de locks que evita el interbloqueo es una
         //    regla del subsistema que un cambio distraído puede invertir sin que nada falle.
+        //  · `AddonDateReconciler` (`#417`) decide, al mover una reserva de día, qué complementos
+        //    sobreviven y a qué precio — y escribe las dos cosas: la RETIRADA (que suelta franja y
+        //    plazas, o sea AFORO) y el hecho de la re-tarificación (o sea DINERO). Sus dos modos de
+        //    fallo son mudos: sin el hecho, el libro deja de cerrar y el pedido pasa a «en revisión»;
+        //    con la exclusión de portadores rota, retira en cada cambio de fecha una línea que
+        //    gobierna otro servicio en el mismo post-commit.
         'app/Domain/Booking/Services/CartOccupants.php',
         'app/Domain/Booking/Services/AddonOccupancy.php',
         'app/Domain/Booking/Services/AddonResolver.php',
         'app/Domain/Booking/Services/PostFormAddons.php',
+        'app/Domain/Booking/Services/AddonDateReconciler.php',
     ];
 
     /**

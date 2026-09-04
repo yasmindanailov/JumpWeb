@@ -1210,6 +1210,11 @@ return [
             // P5: invitación cuando aún no se ha elegido fecha (columna derecha del modal).
             'pick_a_date' => 'Elige una fecha en el calendario para ver las franjas.',
             'selection_summary' => 'Nueva fecha y hora: :date · :time',
+            // Aviso PREVIO del cambio de fecha (`#417`): lo que ese día le hace a los complementos.
+            'addon_date_heading' => 'El día elegido cambia los extras de esta reserva:',
+            'addon_date_withdrawn' => '«:name» no se vende ese día: se retirará y sus :amount quedarán a devolver en el parque.',
+            'addon_date_repriced' => '«:name» pasa de :from a :to, que es su precio ese día.',
+            'addon_date_balance' => 'En total, el cliente tiene :amount a su favor, que se liquidan en el parque.',
 
             // ── 7.2e.3 (#167): cambio de cantidad + producto del item ──────
             'field_product' => 'Producto',

@@ -843,3 +843,22 @@ lo APLICADO, no lo previsto — que es lo que el editor ya hace con `item_edit_c
    **0** difieren del catálogo y **0** se quedan sin precio. En local solo hay 1, así que la muestra
    que vale es la de producción.
 3. **El caso D no tenía defecto** (ya corregido en §9.2): el motivo específico existe y se propaga.
+
+
+### 9.9 · ✅ EJECUTADO (`DECISIONES #417`, 2026-09-04)
+
+`Booking\Services\AddonDateReconciler` (+ `AddonDatePlan` · `AddonDateChange`), con el plan de §9.7
+**corregido por §9.8**: `plan()` es lectura pura y gobierna qué aterrizajes se validan;
+`applyMutations()` va DENTRO del lock; `applyMoney()` POST-COMMIT. Integrado en los **dos** caminos
+públicos del editor (`changeSlot()` y `edit()`), con el aviso previo al operador en el calendario del
+modal.
+
+| lo pedido | dónde acabó |
+|---|---|
+| retirar lo que ese día no se vende | `applyMutations()`, sin hecho — el libro emite su `−fila` |
+| su devolución | el saldo sale `refund_at_park`: se liquida en el parque (`#244`) |
+| re-tarificar lo que cambia de precio | `unit_price` + `recordEdit(±Δ)` post-commit |
+| aviso antes de confirmar | `partials/addon-date-notice.blade.php`, con el importe |
+
+**11 casos · 7/7 mutaciones · `VERIFY_CONC` completo · verificado en el panel real.** Las cuatro
+trampas de instrumento que costó están en `DECISIONES #417`; las tres correcciones al plan, en §9.8.
