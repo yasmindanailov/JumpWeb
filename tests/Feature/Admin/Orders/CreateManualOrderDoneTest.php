@@ -115,18 +115,26 @@ class CreateManualOrderDoneTest extends TestCase
         Notification::assertSentTo($cliente, OrderConfirmation::class);
         $this->assertSame(1, $this->enviadas($cliente, GuestFormRequest::class), 'el sujeto no pidió el formulario de invitados');
         $this->assertSame(1, $this->enviadas($cliente, GuardianAuthorizationRequest::class), 'el sujeto no pidió el justificante');
-        $this->assertTrue($resumen['sent']['confirmation'], 'la pantalla no cuenta la confirmación que SÍ se envió');
+
         $this->assertSame(
-            $this->enviadas($cliente, GuestFormRequest::class), $resumen['sent']['guest_form'],
-            'la pantalla y el correo no cuentan lo mismo del formulario de invitados',
-        );
-        $this->assertSame(
-            $this->enviadas($cliente, GuardianAuthorizationRequest::class), $resumen['sent']['guardian'],
-            'la pantalla y el correo no cuentan lo mismo del justificante',
+            [$this->enviadas($cliente, OrderConfirmation::class),
+                $this->enviadas($cliente, GuestFormRequest::class),
+                $this->enviadas($cliente, GuardianAuthorizationRequest::class)],
+            [$this->marcados($resumen, 'confirmation'),
+                $this->marcados($resumen, 'guest_form'),
+                $this->marcados($resumen, 'guardian')],
+            "La pantalla y el correo no cuentan lo mismo.\n".
+            'Lo que la pantalla marca como enviado tiene que ser exactamente lo que se ha notificado.',
         );
 
-        $componente->assertSee(__('admin.orders.create_manual.done_mail_title'));
-        $componente->assertSee('con-correo@jumpweb.test');
+        $componente->assertSee(__('admin.orders.create_manual.done_delivery_title'));
+        $componente->assertSee(__('admin.orders.create_manual.done_state_sent', ['email' => 'con-correo@jumpweb.test']));
+
+        // ⚠️ Y el aviso de «sin correo» NO sale cuando sí lo hay: un aviso falso en la pantalla que se
+        // lee con el cliente delante manda al operador a entregar a mano algo que ya ha salido. Lo
+        // dijo la mutación —el caso solo miraba lo que SÍ tenía que aparecer—.
+        $componente->assertDontSee(__('admin.orders.create_manual.done_no_mail_title'));
+        $componente->assertDontSee(__('admin.orders.create_manual.done_state_by_hand'));
     }
 
     /**
@@ -146,15 +154,30 @@ class CreateManualOrderDoneTest extends TestCase
         $resumen = $componente->instance()->doneSummary();
 
         Notification::assertNothingSentTo($cliente);
-        $this->assertNotSame([], $resumen['links'], 'CONTROL: este pedido SÍ tiene enlaces que entregar a mano.');
 
-        $this->assertFalse($resumen['sent']['confirmation']);
-        $this->assertSame(0, $resumen['sent']['guest_form']);
-        $this->assertSame(0, $resumen['sent']['guardian']);
+        // CONTROL: este pedido SÍ tiene entregables con enlace, o «nada enviado» sería trivial.
+        $conEnlace = collect($resumen['deliverables'])->whereNotNull('url');
+        $this->assertCount(2, $conEnlace, 'CONTROL: el sujeto tiene que traer formulario y justificante.');
+
+        // NINGUNO sale marcado como enviado, y los tres siguen en la lista: lo que cambia es su
+        // estado, no que desaparezcan — el operador tiene que ver que existen y que le tocan a él.
+        $this->assertCount(3, $resumen['deliverables']);
+        $this->assertSame(0, $this->marcados($resumen, 'confirmation'));
+        $this->assertSame(0, $this->marcados($resumen, 'guest_form'));
+        $this->assertSame(0, $this->marcados($resumen, 'guardian'));
 
         $componente->assertSee(__('admin.orders.create_manual.done_no_mail_title'));
         $componente->assertSee(__('admin.orders.create_manual.done_no_mail_body'));
-        $componente->assertDontSee(__('admin.orders.create_manual.done_mail_title'));
+
+        // ⚠️⚠️ **«Entrégalo tú» solo donde hay ALGO que entregar.** La confirmación no tiene enlace:
+        // pedirle al operador que la entregue sería mandarle a hacer algo que no existe, así que sale
+        // «No enviado». Lo vio el ojo en el navegador, no la sonda ni la suite.
+        $html = $componente->html();
+        $this->assertSame(
+            2, substr_count($html, __('admin.orders.create_manual.done_state_by_hand')),
+            'Solo los entregables CON enlace pueden pedirle al operador que los entregue.',
+        );
+        $componente->assertSee(__('admin.orders.create_manual.done_state_not_sent'));
     }
 
     // ─── Lo que impide cobrar dos veces ───────────────────────────────────────────────────────
@@ -293,5 +316,14 @@ class CreateManualOrderDoneTest extends TestCase
     private function enviadas(User $cliente, string $clase): int
     {
         return Notification::sent($cliente, $clase)->count();
+    }
+
+    /** Cuántos entregables de ese tipo marca la PANTALLA como enviados. */
+    private function marcados(array $resumen, string $kind): int
+    {
+        return collect($resumen['deliverables'])
+            ->where('kind', $kind)
+            ->where('sent', true)
+            ->count();
     }
 }

@@ -56,17 +56,39 @@ P=app/Filament/Pages/CreateManualOrderPage.php
 V=resources/views/filament/pages/partials/manual-order-done.blade.php
 
 # ── Que la pantalla no mienta sobre el correo ─────────────────────────────────────────────────
-mutar "la pantalla da por enviada la confirmacion SIEMPRE" "$P" \
-  "                'confirmation' => filled(\$email)," \
-  "                'confirmation' => true,"
+mutar "la confirmacion sale marcada como ENVIADA siempre" "$P" \
+  "                    'kind' => 'confirmation',
+                    'subject' => null,
+                    'when' => null,
+                    'sent' => filled(\$email)," \
+  "                    'kind' => 'confirmation',
+                    'subject' => null,
+                    'when' => null,
+                    'sent' => true,"
 
-mutar "cuenta los formularios de invitados sin mirar si hay correo" "$P" \
-  "                'guest_form' => filled(\$email) ? \$postForm->count() : 0," \
-  "                'guest_form' => \$postForm->count(),"
+mutar "el formulario de invitados sale enviado sin mirar si hay correo" "$P" \
+  "                    'kind' => 'guest_form',
+                    'subject' => \$item->displayProductName(),
+                    'when' => \$this->slotLabel(\$item),
+                    'sent' => filled(\$email)," \
+  "                    'kind' => 'guest_form',
+                    'subject' => \$item->displayProductName(),
+                    'when' => \$this->slotLabel(\$item),
+                    'sent' => true,"
 
-mutar "cuenta los justificantes sin mirar si hay correo" "$P" \
-  "                'guardian' => filled(\$email) ? \$guardian->count() : 0," \
-  "                'guardian' => \$guardian->count(),"
+mutar "el justificante sale enviado sin mirar si hay correo" "$P" \
+  "                    'kind' => 'guardian',
+                    'subject' => \$item->displayProductName(),
+                    'when' => \$this->slotLabel(\$item),
+                    'sent' => filled(\$email)," \
+  "                    'kind' => 'guardian',
+                    'subject' => \$item->displayProductName(),
+                    'when' => \$this->slotLabel(\$item),
+                    'sent' => true,"
+
+mutar "los entregables que NO han salido se esconden en vez de decirse" "$P" \
+  "                ...\$postForm->map(fn (OrderItem \$item): array => [" \
+  "                ...(filled(\$email) ? \$postForm : collect())->map(fn (OrderItem \$item): array => ["
 
 # ⚠️ **No hay mutación para el filtro `needsGuestForm()` del post-form, y no es un olvido**: recién
 # creado el pedido, TODA reserva con post-form está pendiente, así que filtrar o no filtrar da el
@@ -75,14 +97,20 @@ mutar "cuenta los justificantes sin mirar si hay correo" "$P" \
 # y la pantalla existe para decir lo que él hizo.
 
 mutar "la pantalla se calla que no hay correo" "$V" \
-  '            <p class="cmo-done__warn" data-done-no-mail>{{ __('"'"'admin.orders.create_manual.done_no_mail_body'"'"') }}</p>' \
-  '            <p class="cmo-done__warn" data-done-no-mail></p>'
+  '                    {{ __('"'"'admin.orders.create_manual.done_no_mail_body'"'"') }}' \
+  ''"''"''
 
-mutar "el bloque del correo se pinta igual sin correo" "$V" \
-  '        @if ($tieneCorreo)
-            <ul class="cmo-done__sent" data-done-sent>' \
-  '        @if (true)
-            <ul class="cmo-done__sent" data-done-sent>'
+mutar "el aviso de «sin correo» se pinta tambien cuando SI lo hay" "$V" \
+  '        @unless ($tieneCorreo)' \
+  '        @unless (false)'
+
+mutar "«entregalo tu» tambien donde no hay nada que entregar" "$V" \
+  '                            @elseif ($entrega['"'"'url'"'"'])' \
+  '                            @elseif (true)'
+
+mutar "la pastilla dice «enviado» aunque el entregable no haya salido" "$V" \
+  '                            @if ($entrega['"'"'sent'"'"'])' \
+  '                            @if (true)'
 
 # ── Lo que sustituyó a la redirección ─────────────────────────────────────────────────────────
 mutar "el carrito NO se vacia al cobrar (un segundo clic cobra dos veces)" "$P" \

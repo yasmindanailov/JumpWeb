@@ -2299,12 +2299,71 @@ button.cmo-steps__go:hover .cmo-steps__label {
     color: var(--gray-800);
 }
 
-.cmo-done__sent {
+/* ── Lo que el cliente tiene que recibir (#467) ──
+ * Una FILA por entregable: qué es · de qué reserva · su estado en pastilla · y su enlace debajo.
+ * Las filas se separan con una línea y no con tarjetas: son partes de una misma lista, y una tarjeta
+ * por fila competiría con las secciones que ya envuelven el bloque. */
+.cmo-done__deliveries {
     display: flex;
     flex-direction: column;
-    gap: calc(var(--spacing) * 1);
+}
+
+.cmo-done__delivery {
+    padding-block: calc(var(--spacing) * 3);
+    border-top: 1px solid color-mix(in oklab, var(--gray-950) 8%, transparent);
+}
+
+.cmo-done__delivery:first-child { border-top: 0; padding-top: 0; }
+.cmo-done__delivery:last-child { padding-bottom: 0; }
+
+.cmo-done__delivery-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 2);
+}
+
+.cmo-done__delivery-what { min-width: 0; }
+
+.cmo-done__delivery-title {
     font-size: 0.875rem;
-    color: var(--gray-700);
+    font-weight: 600;
+    color: var(--gray-950);
+}
+
+.cmo-done__delivery-sub {
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+}
+
+/* El enlace, cuando lo hay, va debajo de su fila y con aire: es un control, no una nota. */
+.cmo-done__delivery > .space-y-3 { margin-top: calc(var(--spacing) * 3); }
+
+/* El aviso de «sin correo» pesa: es lo que el operador tiene que ver antes de despedir al cliente. */
+.cmo-done__alert {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 2);
+    margin-bottom: calc(var(--spacing) * 4);
+    padding: calc(var(--spacing) * 3);
+    border-radius: 0.5rem;
+    background-color: var(--warning-50);
+    color: var(--warning-800);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.cmo-done__delivery-title:where(.dark, .dark *) { color: var(--color-white); }
+.cmo-done__delivery-sub:where(.dark, .dark *) { color: var(--gray-400); }
+
+.cmo-done__delivery:where(.dark, .dark *) {
+    border-top-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+.cmo-done__alert:where(.dark, .dark *) {
+    background-color: color-mix(in oklab, var(--warning-400) 15%, transparent);
+    color: var(--warning-200);
 }
 
 .cmo-done__warn { font-size: 0.875rem; color: var(--gray-700); }

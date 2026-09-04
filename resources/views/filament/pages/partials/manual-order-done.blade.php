@@ -56,52 +56,70 @@
         </div>
     </x-filament::section>
 
-    {{-- EL CORREO: lo que se le ha enviado al cliente… o el aviso de que NO se le ha enviado nada. --}}
-    <x-filament::section
-        :icon="$tieneCorreo ? 'heroicon-o-envelope' : 'heroicon-o-exclamation-triangle'"
-        :icon-color="$tieneCorreo ? 'gray' : 'warning'"
-    >
-        <x-slot name="heading">
-            {{ $tieneCorreo
-                ? __('admin.orders.create_manual.done_mail_title')
-                : __('admin.orders.create_manual.done_no_mail_title') }}
-        </x-slot>
+    {{-- ❗❗❗ **LO QUE EL CLIENTE TIENE QUE RECIBIR**, en UNA lista (`#467`, `[owner]`: «la parte de que
+         al cliente le ha llegado un formulario o lo que sea, más profesional»).
 
-        @if ($tieneCorreo)
-            <ul class="cmo-done__sent" data-done-sent>
-                <li>{{ __('admin.orders.create_manual.done_mail_confirmation', ['email' => $resumen['email']]) }}</li>
-                @if ($resumen['sent']['guest_form'] > 0)
-                    <li>{{ trans_choice('admin.orders.create_manual.done_mail_guest_form', $resumen['sent']['guest_form'], ['count' => $resumen['sent']['guest_form']]) }}</li>
-                @endif
-                @if ($resumen['sent']['guardian'] > 0)
-                    <li>{{ trans_choice('admin.orders.create_manual.done_mail_guardian', $resumen['sent']['guardian'], ['count' => $resumen['sent']['guardian']]) }}</li>
-                @endif
-            </ul>
-        @else
-            <p class="cmo-done__warn" data-done-no-mail>{{ __('admin.orders.create_manual.done_no_mail_body') }}</p>
-        @endif
-    </x-filament::section>
+         Antes eran DOS bloques —«se le ha enviado» arriba, «enlaces para entregar a mano» abajo— y el
+         operador tenía que emparejar de cabeza cada correo con su enlace. Ahora cada entregable es una
+         FILA: qué es · de qué reserva · **si ha salido o no** · y su enlace copiable al lado.
 
-    {{-- LOS ENLACES que el operador puede entregar a mano. Existen tenga correo o no: el cliente que
-         dice «no me ha llegado» está delante, y aquí ya está lo que necesita. --}}
-    @if ($resumen['links'] !== [])
-        <x-filament::section icon="heroicon-o-link">
-            <x-slot name="heading">{{ __('admin.orders.create_manual.done_links_title') }}</x-slot>
+         ⚠️ El estado va en una PASTILLA y no en prosa: es lo que el operador escanea con el cliente
+         delante. Verde = ha salido; ámbar = **no**, y hay que entregarlo a mano.
 
-            <div class="space-y-4" data-done-links>
-                @foreach ($resumen['links'] as $enlace)
-                    <div>
-                        <p class="cmo-done__link-label">
-                            {{ $enlace['kind'] === 'guardian'
-                                ? __('admin.orders.create_manual.done_link_guardian', ['product' => $enlace['label']])
-                                : __('admin.orders.create_manual.done_link_guest_form', ['product' => $enlace['label']]) }}
-                        </p>
-                        @include('filament.orders.partials.guest-form-link', ['url' => $enlace['url']])
-                    </div>
-                @endforeach
+         ⚠️ El enlace se ofrece aunque el correo haya salido: el cliente que dice «no me ha llegado»
+         está delante, y así el operador no tiene que ir a la ficha a buscarlo. --}}
+    <x-filament::section icon="heroicon-o-paper-airplane">
+        <x-slot name="heading">{{ __('admin.orders.create_manual.done_delivery_title') }}</x-slot>
+
+        @unless ($tieneCorreo)
+            {{-- El caso que motiva la tanda: sin correo NO SE ENVÍA NADA, y el operador tiene que
+                 enterarse antes de despedir al cliente. Va arriba y con peso, no como una nota. --}}
+            <div class="cmo-done__alert" data-done-no-mail>
+                <x-filament::icon icon="heroicon-o-exclamation-triangle" class="h-5 w-5 shrink-0" />
+                <p>
+                    <strong>{{ __('admin.orders.create_manual.done_no_mail_title') }}</strong>
+                    {{ __('admin.orders.create_manual.done_no_mail_body') }}
+                </p>
             </div>
-        </x-filament::section>
-    @endif
+        @endunless
+
+        <ul class="cmo-done__deliveries" data-done-deliveries>
+            @foreach ($resumen['deliverables'] as $entrega)
+                <li class="cmo-done__delivery" data-done-delivery="{{ $entrega['kind'] }}">
+                    <div class="cmo-done__delivery-head">
+                        <div class="cmo-done__delivery-what">
+                            <p class="cmo-done__delivery-title">
+                                {{ __('admin.orders.create_manual.done_item_'.$entrega['kind']) }}
+                            </p>
+                            @if ($entrega['subject'])
+                                <p class="cmo-done__delivery-sub">
+                                    {{ $entrega['subject'] }}@if ($entrega['when']) · {{ $entrega['when'] }} @endif
+                                </p>
+                            @endif
+                        </div>
+
+                        {{-- ⚠️ **Tres estados y no dos.** «Entrégalo tú» solo vale si hay ALGO que
+                             entregar: la confirmación del pedido no tiene enlace, así que sin correo
+                             simplemente **no se envía** — pedirle al operador que la entregue sería
+                             mandarle a hacer algo que no existe. Lo vio el ojo, no la sonda. --}}
+                        <x-filament::badge :color="$entrega['sent'] ? 'success' : 'warning'" class="shrink-0">
+                            @if ($entrega['sent'])
+                                {{ __('admin.orders.create_manual.done_state_sent', ['email' => $resumen['email']]) }}
+                            @elseif ($entrega['url'])
+                                {{ __('admin.orders.create_manual.done_state_by_hand') }}
+                            @else
+                                {{ __('admin.orders.create_manual.done_state_not_sent') }}
+                            @endif
+                        </x-filament::badge>
+                    </div>
+
+                    @if ($entrega['url'])
+                        @include('filament.orders.partials.guest-form-link', ['url' => $entrega['url'], 'hint' => false])
+                    @endif
+                </li>
+            @endforeach
+        </ul>
+    </x-filament::section>
 
     {{-- Los menores que la asignación no pudo colocar: era un *toast*, y los toasts desaparecen. --}}
     @if ($resumen['dependents_skipped'] > 0)

@@ -23595,3 +23595,38 @@ superficie nueva, como manda su regla.
 (`scripts/mutar-asistente-t4.sh`) · el caso de los menores re-apuntado por sujeto · sonda de
 navegador (0 controles bajo 44 en carrito y desenlace, 810 px de 810, sin desbordamiento, «Crear otro
 pedido» vuelve al paso 1 limpio) · Pint · docs-check · **suite 4.290 verde**.
+
+## #467 · 2026-09-04 · `[owner]` «Lo que recibe el cliente»: un solo bloque, una fila por entregable, y TRES estados
+
+**El ojo del owner sobre la T4**, tras probar el asistente entero: *«todo ok, pero la parte de que al
+cliente le ha llegado un formulario o lo que sea… más profesional, mejor UI/UX»*.
+
+**Lo que estaba mal, y no era el estilo**: eran **DOS bloques** —«se le ha enviado por correo», con
+una lista suelta, y «enlaces para entregar a mano» debajo— así que el operador tenía que **emparejar
+de cabeza** cada correo con su enlace, con el cliente delante.
+
+▶ Ahora es **UNO**, «Lo que recibe el cliente», y cada cosa que el cliente tiene que recibir es una
+**fila**: qué es · de qué reserva y cuándo · **su estado en pastilla** · y su enlace copiable debajo.
+El aviso de «sin correo» sube a **banda ámbar delante de la lista**: es lo que hay que ver antes de
+despedir al cliente, no una nota al pie.
+
+⚠️⚠️ **Los estados son TRES y no dos, y lo cazó el OJO, no la sonda ni la suite**: «Enviado a …»
+(verde), «Entrégalo tú» (ámbar) y **«No enviado»**. La confirmación del pedido **no tiene enlace**, así
+que sin correo salía pidiéndole al operador que «la entregara» — *mandarle a hacer algo que no
+existe*. Hay guarda que cuenta cuántas filas pueden decir «entrégalo tú»: solo las que traen enlace.
+
+⚠️ **La pista del partial de copiar pasa a ser opcional** (`hint`, por defecto sí): en el modal de la
+ficha es todo el contenido y orienta; repetida en cada fila de una lista era ruido. Y de paso el
+partial gana diana táctil —input **38 → 44**, botón **36 → 44**—, lo que arregla también las otras
+superficies del panel que lo incluyen.
+
+⚠️ El modelo de vista cambia con la pantalla: `sent` + `links` se funden en **`deliverables`**, una
+lista de `{kind, subject, when, sent, url}`. La guarda central mantiene su propiedad —**lo que la
+pantalla marca como enviado es exactamente lo que se ha NOTIFICADO**— contando por tipo sobre esa
+lista.
+
+**Verificación**: `CreateManualOrderDoneTest` (6 casos, re-apuntados a la forma nueva) · **15/15
+mutaciones** (`scripts/mutar-asistente-t4.sh`; una dejó de casar al cambiar el marcado y el arnés lo
+DIJO en vez de contarla como muerta) · sonda de navegador en los **dos** casos con un pack que trae
+formulario **y** justificante: tres filas correctas, **0 controles bajo 44 px**, sin desbordamiento ·
+Pint · docs-check · **suite 4.290 verde**.

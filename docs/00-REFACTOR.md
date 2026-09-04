@@ -3880,7 +3880,11 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       ⚠️⚠️ La redirección era también lo que impedía **cobrar dos veces**: hoy lo impide que `create()`
       vacíe el carrito. Controles bajo 44 px: **0** en carrito y desenlace (eran 4 y eran los chips
       del indicador, no los 5 «de quitar línea» que la spec daba de memoria), y de paso «Ver el
-      desglose» pasa a 44 px en las cuatro superficies del libro. 6 casos · **12/12 mutaciones**
+      desglose» pasa a 44 px en las cuatro superficies del libro. 6 casos · **15/15 mutaciones**
+- [x] **El pulido del OJO del owner sobre la T4** (`#467`, spec §10.3.bis): «Lo que recibe el cliente»
+      pasa de DOS bloques que había que emparejar de cabeza a UNO con una fila por entregable, con
+      **tres** estados —«Enviado a …», «Entrégalo tú» y «No enviado»—; la confirmación no tiene enlace,
+      así que pedir que se «entregue» era mandar a hacer algo que no existe. 0 controles bajo 44 px
 - [ ] **D4 de la auditoría**, pendiente del detalle del owner
 
 ## Relación con el proyecto origen

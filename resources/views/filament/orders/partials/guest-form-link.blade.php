@@ -31,20 +31,25 @@
             readonly
             value="{{ $url }}"
             onfocus="this.select()"
-            class="block w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
+            class="block min-h-11 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
         />
         <x-filament::button
             x-on:click="copy()"
             icon="heroicon-o-clipboard-document"
             color="gray"
-            class="shrink-0"
+            class="min-h-11 shrink-0"
         >
             <span x-show="! copied">{{ __('admin.orders.copy_guest_form.copy') }}</span>
             <span x-show="copied" x-cloak>{{ __('admin.orders.copy_guest_form.copied') }}</span>
         </x-filament::button>
     </div>
 
-    <p class="text-sm text-gray-500 dark:text-gray-400">
-        {{ __('admin.orders.copy_guest_form.hint') }}
-    </p>
+    {{-- ⚠️ **La pista la decide quien incluye** (`#467`): en el modal de la ficha este partial es TODO
+         el contenido y la pista orienta; en una LISTA de enlaces se repetiría por fila y sería ruido,
+         porque la sección ya dice para qué son. Por defecto se pinta, que es como estaba. --}}
+    @if ($hint ?? true)
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+            {{ __('admin.orders.copy_guest_form.hint') }}
+        </p>
+    @endif
 </div>
