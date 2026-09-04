@@ -183,7 +183,7 @@
 >    ▶ ⚠️ Del cierre anterior: `audit-clock` cazó una MONEDA AL AIRE que no era del reloj
 >    (`mt_rand` contra el `UNIQUE` de `orders.code`), arreglada con contadores deterministas (`#412`).
 >    ▶ **EVIDENCIA DEL CIERRE, toda sobre el árbol YA FUSIONADO con el carril del panel**: suite
->    **4.312 ✓ · 26.992 aserciones** · JS **951/951** · Pint 1.183 ficheros · docs-check ·
+>    **4.312 ✓ · 26.994 aserciones** · JS **951/951** · Pint 1.183 ficheros · docs-check ·
 >    **`audit-clock` completo: 12/12 fronteras verdes**, incluidas fin de mes y fin de año, que son
 >    justo las dos que tumbaban a `#419` · y los **once verificadores de concurrencia** re-corridos
 >    porque `#465` toca aforo (los SIETE de `purchase:verify-oversell` + Redsys + `postform` `addons`
@@ -1445,10 +1445,14 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4290 en verde** (26.883 aserciones, 1 skipped a propósito), medida el 2026-09-04 con las
-> seis tandas del panel dentro (`#461` +12 · `#462` +13 · `#463` +10 · `#464` +13 · `#465` +8 ·
-> `#466` +6, y **siete casos re-apuntados por sujeto** al retirarse la tira de días y el *toast* del
-> desenlace). **JS 951** (`node --test`).
+> Suite **4312 en verde** (26.994 aserciones, 1 skipped a propósito), medida el 2026-09-04 sobre el
+> árbol con **LOS DOS CARRILES FUSIONADOS**: las siete tandas del panel (`#461` +12 · `#462` +13 ·
+> `#463` +10 · `#464` +13 · `#465` +8 · `#466` +6 · `#467`, y **siete casos re-apuntados por sujeto**
+> al retirarse la tira de días y el *toast* del desenlace) **más las del carril de complementos**
+> (`#415` +6 · `#417` +12 · `#418` +1). **JS 951** (`node --test`).
+> ⚠️⚠️ **Con dos carriles vivos esta cifra CADUCA al fusionar, y el hook lo dice antes que nadie**:
+> si el push sale rechazado por aquí, no es un fallo — es que el otro carril trajo casos. Se remide
+> y se escribe la de la suite REAL, nunca la que uno midió antes de integrar.
 > ⚠️ **El `pre-push` compara este número con la suite real y RECHAZA el push si no cuadra** — es la
 > única copia a propósito, no la dupliques en otro documento. Antes: 4228 el 2026-09-03 (árbol
 > fusionado tras `#452`, con las cuatro tandas T0–T3 de `#413` dentro).
