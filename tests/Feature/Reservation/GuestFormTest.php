@@ -1114,26 +1114,28 @@ class GuestFormTest extends TestCase
     }
 
     /**
-     * Mueve la franja de la reserva a N horas de AHORA, en la hora del parque.
+     * Mueve la fiesta a N horas de AHORA, en hora de pared del parque.
      *
-     * ⚠️⚠️ **ANCLA EL RELOJ A MEDIODÍA PRIMERO, y no es adorno: sin eso este helper es una BOMBA DE
-     * RELOJ** (`DECISIONES #414`). Una franja guarda **una fecha y dos horas de pared**, así que no
-     * sabe expresar un tramo que cruce medianoche: `date` sale del INICIO y `end_time` es solo una
-     * hora. Con el reloj real, `moveParty(startsIn: 1, endsIn: 3)` a las 21:30 del parque componía
-     * `date = hoy` con `end_time = 00:30` — o sea **esta madrugada, hace 21 horas** — y
-     * `isFinishedInPractice()` declaraba celebrada una fiesta que aún no ha empezado.
+     * ⚠️⚠️ **Ancla el reloj a mediodía antes de calcular, y no es ceremonia: sin eso el caso se
+     * PUDRE con la hora del día.** Una franja guarda `date` + `start_time` + `end_time` por
+     * separado, y este ayudante escribía siempre la fecha del INICIO: corriendo la suite a partir
+     * de las ~21:00 del parque, «empieza dentro de 1 h y acaba dentro de 3» cruza medianoche y la
+     * franja quedaba como «hoy, de 22:00 a 00:00» —o sea terminada hace veintidós horas—, con lo
+     * que `isFinishedInPractice()` decía `true` y el caso fallaba **con el producto sano**.
      *
-     * Medido con el reloj congelado: VERDE a las 12:00 y a las 23:20 del parque, **ROJO a las
-     * 21:00**. La ventana roja son las ~2 horas en que el FIN cruza el día y el inicio todavía no,
-     * así que el caso pasaba 22 horas al día y fallaba 2 — el tipo de rojo con fecha que `#412`
-     * documenta y que `audit-clock` existe para cazar.
+     * ▶ **Lo encontraron DOS sesiones por separado el mismo día y llegaron al mismo arreglo**
+     * (`#414` y el carril del panel), cada una con su medición: verde a las 19:45 y rojo a las 21:50;
+     * verde a las 12:00 y a las 23:20, rojo a las 21:00. *Que dos caminos independientes den el mismo
+     * diagnóstico es la señal de que el defecto está en el ayudante y no en quien lo usa.*
      *
-     * Con el reloj en mediodía, los dos usos de hoy (+1/+3 y −5/−3) caen dentro del mismo día por
-     * construcción, y el instante deja de depender de cuándo se corra la suite.
+     * Anclar a mediodía mantiene el escenario dentro del mismo día natural para los desplazamientos
+     * que usa esta clase (±5 h) y deja de depender de cuándo se ejecute la suite. **No tapa nada**:
+     * el defecto de zona horaria de `isFinishedInPractice()` sigue anotado en `DEUDA.md`
+     * (`specs/complementos-post-reserva.md` §4.9) y este caso no lo ejercita.
      */
     private function moveParty(OrderItem $reservation, int $startsIn, int $endsIn): void
     {
-        $this->travelTo(now(DisplayTime::timezone())->setTime(12, 0)->utc());
+        $this->travelTo(now(DisplayTime::timezone())->startOfDay()->addHours(12));
 
         $start = now(DisplayTime::timezone())->addHours($startsIn);
         $end = now(DisplayTime::timezone())->addHours($endsIn);

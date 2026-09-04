@@ -245,7 +245,7 @@ class AddonStageTest extends TestCase
 
         $offered = Livewire::actingAs($this->admin())
             ->test(CreateManualOrderPage::class)
-            ->set('data.sel_product_id', $pack->id)
+            ->call('pickProduct', $pack->id)
             ->instance()
             ->selectedProductAddons();
 

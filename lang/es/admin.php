@@ -1,8 +1,8 @@
 <?php
 
 return [
-    // Subtítulo bajo el wordmark del panel (#215).
-    'panel_subtitle' => 'Panel de Control',
+    // Subtítulo bajo el logotipo del panel (#215; el texto lo fija `#461`, del owner).
+    'panel_subtitle' => 'Administración',
 
     'clusters' => [
         'configuracion' => 'Configuración',
@@ -292,7 +292,15 @@ return [
             'nav_label' => 'Crear pedido',
             'title' => 'Crear pedido manual',
             'step_customer' => 'Cliente',
-            'step_products' => 'Productos',
+            'step_products' => 'Producto',
+            // `#462` — los pasos nuevos. «Cuándo» agrupa cuántos + qué día + qué hora: son las tres
+            // preguntas de una misma cosa, y la cantidad va delante porque las horas se ofrecen con
+            // sus plazas (`[DECIDIDO owner]` D1).
+            'step_when' => 'Cuándo',
+            'step_details' => 'Datos',
+            'step_extras' => 'Extras',
+            'step_cart' => 'Carrito',
+            'step_skipped' => 'sin nada que rellenar',
             'step_payment' => 'Pago',
             'customer' => 'Cliente',
             'customer_search_placeholder' => 'Busca por email, teléfono o nombre',
@@ -374,6 +382,24 @@ return [
             'method_datafono' => 'Datáfono',
             'back' => 'Anterior',
             'next' => 'Siguiente',
+            // `#462`, `[DECIDIDO owner]`: en el carrito el botón deja de decir «Siguiente» y dice a
+            // dónde lleva; y al lado, la puerta para seguir añadiendo.
+            'go_to_pay' => 'Ir a pagar',
+            'add_more_products' => 'Añadir más productos',
+
+            // `#462` T2 — las TARJETAS de producto. El agrupado por tipo es lo que cierra
+            // el crítico C1: en el desplegable plano una entrada y un pack se parecían.
+            'product_group' => [
+                'entry' => 'Entradas',
+                'pack' => 'Packs y celebraciones',
+            ],
+            'product_minutes' => ':n min',
+            'product_guest_range' => ':min–:max invitados',
+            'product_from' => 'desde',
+            'product_more_info' => 'Más info',
+            'product_info_close' => 'Cerrar',
+            'product_none' => 'No hay ningún producto a la venta. Revisa el catálogo y las zonas activas.',
+            'product_guests' => 'Invitados',
             'confirm' => '¿Cobrar y crear el pedido?',
             'confirm_description' => 'Se registrará el cobro y se creará la reserva del cliente.',
             'submit' => 'Cobrar y crear pedido',

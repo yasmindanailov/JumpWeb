@@ -12,6 +12,7 @@ use App\Http\Middleware\RequiresPanelRole;
 use App\Http\Middleware\RestrictsPuertaRole;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetAdminLocale;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -54,9 +55,12 @@ class AdminPanelProvider extends PanelProvider
 {
     public function boot(): void
     {
-        // Topbar: la CTA "Crear pedido" (Fase 7.3, #120) + el selector de idioma (#123), los dos
-        // en `USER_MENU_BEFORE` (antes del avatar). El ORDEN de registro = orden visual.
-        // Gateados por permiso/vista, sin tocar la estructura del topbar de Filament.
+        // Topbar: la CTA "Crear pedido" (Fase 7.3, #120), en `USER_MENU_BEFORE` (antes del avatar).
+        // Gateada por permiso, sin tocar la estructura del topbar de Filament.
+        //
+        // ⚠️ `#461`: aquí vivía TAMBIÉN el selector de idioma (#123) y **se ha ido al menú del
+        // avatar** — ver `localeMenuItems()`. Con él se retiró su vista, que se quedaba sin ningún
+        // consumidor: una pieza muere con quien la usa.
         //
         // ⚠️ El botón "Calendario" SE RETIRÓ aquí (#223): con el menú plano el Calendario es una
         // entrada fija de la barra lateral, y tenerlo también arriba era el único enlace
@@ -67,10 +71,10 @@ class AdminPanelProvider extends PanelProvider
             fn (): View => view('filament.admin.create-order-topbar-button'),
         );
 
-        FilamentView::registerRenderHook(
-            PanelsRenderHook::USER_MENU_BEFORE,
-            fn (): View => view('filament.admin.locale-switcher'),
-        );
+        // `#461` — el SELECTOR DE IDIOMA salió del topbar (`[DECIDIDO owner]`: «el selector de
+        // idioma fuera»). Ya no es un render hook: son dos entradas del MENÚ DEL AVATAR, junto al
+        // conmutador de tema, que es donde Filament pone las preferencias personales. Ver
+        // `localeMenuItems()`.
 
         // Fase 7.4: bundle del calendario (FullCalendar + componente Alpine).
         // En el head para que persista entre navegaciones SPA y el componente
@@ -106,13 +110,26 @@ class AdminPanelProvider extends PanelProvider
             // solo como suelo. Antes el panel enseñaba la «J» naranja del producto en cada cliente.
             ->favicon(file_exists(public_path('img/client-favicon.svg')) ? asset('img/client-favicon.svg') : asset('favicon.svg'))
             ->brandName(fn () => (string) (Setting::value('business.name') ?: config('app.name')))
-            // «Panel de Control» bajo el wordmark (#215): el brand del sidebar pasa de texto plano
-            // a una vista propia (nombre + subtítulo). Filament la oculta al colapsar el sidebar.
+            // La marca del panel (#215): logotipo de la instalación —con su variante para fondo
+            // oscuro desde `#461`— o el wordmark del negocio, y debajo «Administración».
+            // Todo el porqué (y por qué son DOS ficheros y no uno) vive en la propia vista.
             ->brandLogo(fn (): View => view('filament.admin.brand'))
-            // Colapsar el sidebar a iconos en escritorio: feature NATIVA de Filament
-            // (`HasSidebar`), apagada por defecto. No hay CSS/JS a medida. Los grupos
-            // de navegación ya son plegables por defecto (no se toca eso).
-            ->sidebarCollapsibleOnDesktop()
+            // `#461` — **`sidebarCollapsibleOnDesktop()` SE RETIRA** (`[DECIDIDO owner]`: «quitamos
+            // la flecha de plegar el menú; el menú lateral SIEMPRE plegado, con el texto debajo del
+            // icono»). Retirarlo es lo que quita la flecha: el botón de contraer lo pinta Filament
+            // solo cuando esa opción está activa.
+            //
+            // ⚠️ **Y no se sustituye por el modo colapsado de Filament, porque no es lo que se pide**:
+            // su sidebar colapsado enseña SOLO el icono con un tooltip, y aquí el rótulo tiene que
+            // estar a la vista bajo el icono. Eso es una tercera forma que Filament no trae, y se
+            // resuelve en `theme.css` con el sidebar EXPANDIDO estrechado — **sin sobrescribir
+            // ninguna vista del framework**, que es la diferencia entre configurarlo y bifurcarlo.
+            //
+            // ⚠️ **El ancho se CONFIGURA, no se pelea**: `sidebarWidth()` es API del `Panel` y el
+            // layout desplaza el contenido con `--sidebar-width`. Ponerlo a mano en el CSS habría
+            // estrechado la barra dejando el contenido donde estaba. De 20rem a 6rem, el área
+            // principal gana **224 px** — justo lo que le faltaba a las tablas en tablet.
+            ->sidebarWidth('6rem')
             ->colors([
                 // primary = color de marca global (white-label, #7.10): botón del topbar, item
                 // activo del dropdown locale, etc. Sigue `theme.brand` (editable en el panel).
@@ -196,12 +213,16 @@ class AdminPanelProvider extends PanelProvider
             // topbar. `visible()` delega en `AdminSettingsHub::canAccess()`, que a su vez
             // pregunta a cada pantalla: a un empleado no le aparece, porque no abriría nada.
             ->userMenuItems([
+                // ⚠️ `MenuItem` está DEPRECADO en favor de `Filament\Actions\Action` (Filament lo
+                // convierte con `toAction()`). No se migra aquí para no tocar una entrada que
+                // funciona y cuyo `visible()` es una puerta de autorización; lo NUEVO usa la API viva.
                 'ajustes' => MenuItem::make()
                     ->label(fn (): string => __('admin.hub.nav_label'))
                     ->icon(Heroicon::OutlinedCog6Tooth)
                     ->url(fn (): string => AdminSettingsHub::getUrl())
                     ->visible(fn (): bool => AdminSettingsHub::canAccess())
                     ->sort(-1),
+                ...$this->localeMenuItems(),
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -233,5 +254,58 @@ class AdminPanelProvider extends PanelProvider
                 // panel, así que la redirección no puede realimentarse.
                 RestrictsPuertaRole::class,
             ]);
+    }
+
+    /**
+     * `#461` — el IDIOMA del panel, como entradas del menú del avatar.
+     *
+     * `[DECIDIDO owner, 2026-09-03]`: «el selector de idioma fuera [del topbar], va a ajustes en
+     * algún sitio por ahí donde valores tú». **No va a «Ajustes»**, y el motivo es de permisos, no
+     * de gusto: `AdminSettingsHub::canAccess()` es falso para el rol `staff` —a un empleado no le
+     * sale ni la entrada del avatar (`specs/panel-navegacion.md` §4.3)—, así que meterlo ahí dejaría
+     * SIN idioma justo al empleado de mostrador, que es para quien existe el `zh_CN`. Va al menú del
+     * avatar, que es donde Filament pone las preferencias personales (ahí vive ya el conmutador de
+     * tema) y donde llega cualquier rol.
+     *
+     * ⚠️ **Un `Action` que POSTea, no un enlace.** Cambiar el idioma MUTA estado (`users.panel_locale`)
+     * y deja rastro en la auditoría: hacerlo con un `GET` sería un cambio de estado por navegación.
+     * `postToUrl()` hace que Filament pinte un `<form method="POST">` con su CSRF, contra la MISMA
+     * ruta y el MISMO controlador de siempre — **un solo escritor de `panel_locale`**, con su
+     * validación contra `SUPPORTED` y su `AuditLogger` intactos. Duplicar esa lógica en un closure
+     * de Livewire habría creado un segundo escritor.
+     *
+     * ⚠️ **Los nombres van en su propia grafía** (`Español`, `中文`): quien busca su idioma no puede
+     * depender de tener traducido el idioma que aún no ha elegido.
+     *
+     * ⚠️ `sort()` ≥ 0 los coloca DESPUÉS del conmutador de tema (Filament parte el menú por el signo
+     * del sort), que es donde tienen sentido: las dos son preferencias de quien mira la pantalla.
+     *
+     * @return array<string, Action>
+     */
+    private function localeMenuItems(): array
+    {
+        $labels = ['es' => 'Español', 'zh_CN' => '中文'];
+        $items = [];
+
+        foreach (SetAdminLocale::SUPPORTED as $i => $locale) {
+            $items['locale_'.$locale] = Action::make('locale_'.$locale)
+                ->label($labels[$locale] ?? $locale)
+                // El activo se marca con un check y el color de marca; el resto, en gris. Sin esto
+                // el menú ofrece dos idiomas y no dice en cuál estás.
+                ->icon(fn (): Heroicon => SetAdminLocale::resolve(auth()->user()) === $locale
+                    ? Heroicon::Check
+                    : Heroicon::Language)
+                ->color(fn (): string => SetAdminLocale::resolve(auth()->user()) === $locale ? 'primary' : 'gray')
+                // ⚠️⚠️ **La URL va en un CLOSURE, no resuelta.** El cuerpo de `panel()` corre al
+                // REGISTRAR el proveedor, antes de que Laravel haya cargado las rutas: con
+                // `route(...)` evaluado aquí el panel entero devuelve 500 —«Route [admin.lang.switch]
+                // not defined»— y se lleva por delante hasta `/admin/login`. Es la misma razón por la
+                // que el ítem «Ajustes» de arriba envuelve su `getUrl()`.
+                ->url(fn (): string => route('admin.lang.switch', $locale))
+                ->postToUrl()
+                ->sort(10 + $i);
+        }
+
+        return $items;
     }
 }

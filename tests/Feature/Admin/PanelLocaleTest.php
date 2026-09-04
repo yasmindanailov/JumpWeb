@@ -171,8 +171,8 @@ class PanelLocaleTest extends TestCase
 
     public function test_full_flow_zh_to_es_and_back_reflects_in_panel_html(): void
     {
-        // Regresión: garantiza que cambiar el idioma desde el dropdown del topbar
-        // produce HTML actualizado en la siguiente request (sin cache stale).
+        // Regresión: garantiza que cambiar el idioma desde el menú del avatar (`#461`; antes,
+        // el dropdown del topbar) produce HTML actualizado en la siguiente request (sin cache stale).
         // Cubre el ciclo completo POST → next GET con mismo authState.
         $admin = User::factory()->create(['panel_locale' => 'zh_CN']);
         $admin->roles()->sync([Role::where('name', 'admin')->value('id')]);
@@ -181,8 +181,13 @@ class PanelLocaleTest extends TestCase
         $first = $this->actingAs($admin)->get('/admin')->assertOk();
         $this->assertStringContainsString('用户菜单', $first->getContent(),
             'Panel debe arrancar en zh_CN cuando users.panel_locale=zh_CN.');
-        $this->assertStringContainsString('aria-label="中文"', $first->getContent(),
-            'Trigger del switcher debe etiquetar 中文 cuando es el current.');
+        // ⚠️ `#461`: el selector dejó de ser un icon-button del topbar con `aria-label` y pasó a ser
+        // DOS entradas del menú del avatar. Lo que este caso protege sigue siendo lo mismo —que el
+        // control de idioma llega a la página renderizada—, así que se asevera por su FORMULARIO,
+        // que es lo que de verdad hace el cambio, en vez de por el rótulo del disparador que ya no
+        // existe. Cuál está activo lo vigila `PanelShellTest`.
+        $this->assertStringContainsString(route('admin.lang.switch', 'es'), $first->getContent(),
+            'El menú del avatar tiene que ofrecer el cambio a español.');
 
         // 2) Cambio a es.
         $this->actingAs($admin)
@@ -195,8 +200,8 @@ class PanelLocaleTest extends TestCase
         $second = $this->actingAs($admin)->get('/admin')->assertOk();
         $this->assertStringContainsString('Menú del usuario', $second->getContent(),
             'Tras POST→es, la siguiente request debe estar en español.');
-        $this->assertStringContainsString('aria-label="Español"', $second->getContent(),
-            'Trigger debe etiquetar Español tras cambiar.');
+        $this->assertStringContainsString(route('admin.lang.switch', 'zh_CN'), $second->getContent(),
+            'Y el de vuelta a chino: las dos entradas se pintan siempre.');
 
         // 4) Vuelta a zh_CN simétrica.
         $this->actingAs($admin)
@@ -204,6 +209,7 @@ class PanelLocaleTest extends TestCase
             ->post(route('admin.lang.switch', 'zh_CN'))
             ->assertRedirect('/admin');
         $third = $this->actingAs($admin)->get('/admin')->assertOk();
-        $this->assertStringContainsString('aria-label="中文"', $third->getContent());
+        $this->assertStringContainsString('用户菜单', $third->getContent(),
+            'Y de vuelta en chino: el ciclo completo se refleja en el HTML.');
     }
 }

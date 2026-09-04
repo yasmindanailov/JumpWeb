@@ -71,7 +71,7 @@ entradas donde ahora hay 5.
 
 ```
 MENÚ (plano, sin grupos, sin plegables)        BARRA SUPERIOR
-┌────────────────────────┐                     [⊕ Crear pedido] [🌐] ( avatar ▾ )
+┌────────────────────────┐                     [⊕ Crear pedido] ( avatar ▾ )
 │  Hoy                   │  ← Dashboard                              │
 │  Calendario            │                                           ├─ Ajustes
 │  Pedidos               │                                           └─ Salir
@@ -703,3 +703,52 @@ Citar el middleware con `{@see \App\Http\Middleware\RestrictsPuertaRole}` en el 
 hacia la capa HTTP, que `ModuleBoundariesTest` cazó. Reescribir la cita en prosa **no bastó**: el
 import seguía ahí. Se cita en prosa **y sin import**, como ya hace `CartPricing` con su
 implementación.
+
+
+---
+
+## 13. Tanda 6 — el ARMAZÓN, con el ojo del owner encima (`#461`)
+
+`[DECIDIDO owner, 2026-09-03]`, cinco encargos sobre el shell tras leer
+`specs/auditoria-panel-admin.md`. **Esto no revisa `#223`**: el menú sigue plano y con los mismos
+sitios; lo que cambia es cómo se ven y dónde vive cada control del armazón.
+
+| | Qué pidió | Qué se hizo | Cómo se sostiene |
+|---|---|---|---|
+| 1 | Logotipo según el tema, y «Administración» debajo | Las dos variantes del paquete de instalación; el subtítulo pasa a «Administración» | **No hay fichero nuevo**: se reutiliza `client-logo-ink.svg`, el hueco de `#216` |
+| 2 | Buscador al centro, diciendo qué encuentra | Centrado por CSS **solo por encima de 64rem**; placeholder «Busca cliente, pedido, reserva…» | Override PARCIAL de las cadenas del vendor |
+| 3 | Idioma fuera del topbar | Dos entradas del **menú del avatar**, junto al conmutador de tema | `Action::postToUrl()` contra la MISMA ruta y el MISMO controlador |
+| 4 | «Crear pedido» más grande | Escala de acción primaria (`--jj-action-h: 2.75rem`), aplicada por clase | 127×32 → **152×44**, medido |
+| 5 | Menú siempre plegado, texto bajo un icono grande | `sidebarWidth('6rem')` + ítem en columna; `sidebarCollapsibleOnDesktop()` retirado | **Cero vistas de Filament sobrescritas** |
+
+### 13.1 Lo que enseñó la ejecución
+
+1. ⚠️⚠️ **`route()` en el cuerpo de `panel()` revienta el panel entero.** El proveedor se registra
+   **antes** de que Laravel cargue las rutas: con la URL del idioma resuelta ahí, `/admin` y hasta
+   `/admin/login` devolvían **500** («Route [admin.lang.switch] not defined»). Va en un closure —que
+   es justo lo que el ítem «Ajustes» ya hacía y no se copió—. *Lo cazó la sonda al primer intento;
+   ningún test lo habría visto antes de escribirlo.*
+2. ⚠️⚠️ **El hueco del logotipo sobre tinta YA EXISTÍA y la nota de `CLAUDE.md` estaba CADUCADA.**
+   Se iba a crear un `client-logo-dark.svg` cuando `client-logo-ink.svg` lleva desde `#216` en el
+   `.gitignore`, en `INSTALACION-CLIENTE.md` y consumido por la web. *Dos ficheros para un mismo rol
+   se desincronizan; antes de abrir un hueco, comprueba si ya está abierto.*
+3. ⚠️⚠️ **Con dos imágenes el nombre accesible se pierde en un tema**, porque `display: none` saca el
+   `alt` del árbol. La web ya lo había resuelto (`#216`): las dos `aria-hidden` y el nombre en un
+   `sr-only` permanente. Aquí se copió el patrón en vez de reinventarlo — y **se verificó que el
+   segundo bloque de marca que Filament pinta en el sidebar está en `display: none`**, así que el
+   nombre se anuncia una sola vez.
+4. ⚠️ **El rótulo se partía («Calend/ario») y no era el cuerpo de letra: era el CARRIL.**
+   `.fi-sidebar-nav` se llevaba 24 px por lado, así que de los 96 del sidebar al ítem le llegaban
+   **49**. A 0,5rem por lado pasa a **81** y los cuatro rótulos caben en una línea.
+5. ⚠️ **El `public_path()` temporal de los tests rompe el manifiesto de Vite**: cualquier petición
+   HTTP al panel devuelve 500. Solo vale para renderizar la vista suelta.
+6. ⚠️ **Un fallo de la suite que NO era de esta tanda**, y se probó: `GuestFormTest` fallaba también
+   sobre la base limpia. Su ayudante `moveParty()` escribía la fecha del INICIO, así que corriendo
+   la suite pasadas las ~21:00 del parque la fiesta cruzaba medianoche y quedaba «terminada hace
+   veintidós horas». Medido: **verde a las 19:45 y rojo a las 21:50 del mismo día**. Se ancla el
+   reloj a mediodía; el defecto de zona horaria de `isFinishedInPractice()` sigue en `DEUDA.md`.
+
+**Verificación**: `PanelShellTest` (12 casos) con **9 mutaciones y las 9 muerden**, control verde ·
+sonda de navegador en tres anchos (sidebar 96 px · ítem 81×64 en columna con icono de 28 · buscador
+con **0 px de desvío** del centro a 1080 y 1440 · CTA 152×44 · cero desbordamiento horizontal) · los
+tres caminos de la marca probados con ficheros reales, en claro y en oscuro · suite **4.240 verde**.

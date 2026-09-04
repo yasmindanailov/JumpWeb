@@ -47,13 +47,26 @@ la barra lateral es **plana y solo tiene los sitios del día a día**:
 
 ```
 Hoy · Calendario · Pedidos · Clientes · Puerta          ← el menú, sin grupos
-[⊕ Crear pedido] [🌐] ( avatar ▾ → «Ajustes» · «Salir» )  ← la barra superior
+[ marca ]        [ 🔍 buscador, centrado ]   [⊕ Crear pedido] ( avatar ▾ )   ← la barra superior
+                                                 avatar ▾ → «Ajustes» · tema · «Español» · «中文» · «Salir»
 ```
 
 - Las **19 pantallas de §3 y §4** viven en **`/admin/ajustes`**, en tarjetas por área y cada una
   con una línea de qué hace. Se entra **solo** por el menú del avatar.
+- ▶ **`#461` cambió el ARMAZÓN** (`specs/auditoria-panel-admin.md` es el porqué medido): la marca
+  lleva el logotipo **por tema** y debajo «Administración»; el **buscador va centrado** y dice qué
+  encuentra; el **idioma salió del topbar al menú del avatar** (es preferencia personal, y en
+  «Ajustes» un empleado no la alcanzaría); «Crear pedido» pasa a la **escala de acción primaria**
+  (44 px); y el **menú lateral es fijo y estrecho** (6rem, icono grande con el rótulo debajo, sin
+  flecha de plegar). ⚠️ Con el sidebar en 6rem el rótulo del menú **no puede pasar de 13
+  caracteres** o se parte: lo vigila `PanelShellTest`.
 - **«Crear pedido» es una acción, no un sitio**: por eso está arriba y no en el menú.
   «Calendario» se retiró de la barra superior — era el único enlace duplicado del panel.
+  ▶ **Y detrás hay un ASISTENTE de siete pasos** (`#462`/`#463`, `specs/asistente-crear-pedido.md`):
+  Cliente · Producto · Cuándo · Datos · Extras · Carrito · Pago, con auto-avance al elegir y **el
+  salto de todo paso que no pregunta nada**. El producto se elige en **tarjetas agrupadas** por tipo
+  —«Entradas» y «Packs y celebraciones»—, que es lo que cierra el crítico C1 de la auditoría: con el
+  desplegable plano anterior se vendió un cumpleaños como diez entradas sueltas.
 - **«Usuarios» es ahora «Clientes»**, y el EQUIPO es la otra pestaña de esa misma pantalla,
   a la que se llega desde Ajustes (§3 lo describe igual: la ficha y sus acciones no cambian).
 - El **empleado** ve 4 entradas (no «Clientes»: exige `users.manage`) y **no ve «Ajustes»**.

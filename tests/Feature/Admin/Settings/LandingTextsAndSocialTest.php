@@ -150,11 +150,16 @@ class LandingTextsAndSocialTest extends TestCase
         $this->assertStringContainsString('lightwidget.com', $csp);
     }
 
-    public function test_admin_panel_shows_panel_de_control_subtitle(): void
+    /**
+     * ⚠️ Se llamaba `..._shows_panel_de_control_subtitle` y aseveraba «Panel de Control». El SUJETO
+     * no ha cambiado —que el panel pinte su subtítulo bajo la marca—, solo el texto: `#461` lo pasó
+     * a «Administración» por decisión del owner. Se re-apunta, no se borra.
+     */
+    public function test_admin_panel_shows_its_subtitle_under_the_brand(): void
     {
         $this->actingAs($this->admin())
             ->get('/admin')
             ->assertOk()
-            ->assertSee('Panel de Control');
+            ->assertSee(__('admin.panel_subtitle'));
     }
 }

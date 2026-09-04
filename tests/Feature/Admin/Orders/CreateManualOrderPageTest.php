@@ -193,7 +193,7 @@ class CreateManualOrderPageTest extends TestCase
         $component = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $customer->id)
-            ->set('data.sel_product_id', $this->h1->id)
+            ->call('pickProduct', $this->h1->id)
             ->set('data.sel_date', $this->date)
             ->set('data.sel_time', '10:00:00')
             ->set('data.sel_qty', 3)
@@ -219,6 +219,11 @@ class CreateManualOrderPageTest extends TestCase
             ->set('cart', [$this->cartLine(2)]);
 
         $this->assertCount(1, $component->get('cart'));
+
+        // ⚠️ `#462`: elegir cliente AVANZA, así que para cambiarlo hay que volver al paso 1 — que es
+        // exactamente lo que hace el operador. Sin este `back`, el `set` cae sobre un campo OCULTO,
+        // su `afterStateUpdated` no se llama y el carrito no se vacía: sería un defecto del arnés.
+        $component->call('back');
 
         // Cambiar de cliente debe vaciar el carrito (nunca cobrar a B las líneas de A).
         $component->set('data.customer_id', $b->id);
@@ -286,7 +291,7 @@ class CreateManualOrderPageTest extends TestCase
 
         $component = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
-            ->set('data.sel_product_id', $this->h1->id);
+            ->call('pickProduct', $this->h1->id);
 
         // El complemento del pivote debe aparecer en el view-model compartido (como single opcional).
         $model = $component->instance()->manualAddonViewModel();
@@ -311,7 +316,7 @@ class CreateManualOrderPageTest extends TestCase
 
         $component = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
-            ->set('data.sel_product_id', $this->h1->id);
+            ->call('pickProduct', $this->h1->id);
 
         $socks = collect($component->instance()->manualAddonViewModel()['singles'])->firstWhere('id', $addon->id);
         $this->assertTrue($socks['can_toggle']);
@@ -336,7 +341,7 @@ class CreateManualOrderPageTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $customer->id)
             ->set('data.payment_method', 'cash')
-            ->set('data.sel_product_id', $this->h1->id)
+            ->call('pickProduct', $this->h1->id)
             ->set('data.sel_date', $this->date)
             ->set('data.sel_time', '10:00:00')
             ->set('data.sel_qty', 1)
@@ -367,7 +372,7 @@ class CreateManualOrderPageTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('data.customer_id', $customer->id)
             ->set('data.payment_method', 'cash')
-            ->set('data.sel_product_id', $this->h1->id);
+            ->call('pickProduct', $this->h1->id);
 
         // Pre-carga: el obligatorio incluido arranca seleccionado a 1 en el view-model.
         $cakeRow = collect($component->instance()->manualAddonViewModel()['singles'])->firstWhere('id', $cake->id);
@@ -389,20 +394,34 @@ class CreateManualOrderPageTest extends TestCase
         $this->assertSame(1000, $order->total);                  // solo la entrada
     }
 
-    public function test_stepper_gates_next_on_customer_then_on_cart(): void
+    /**
+     * ⚠️ Se llamaba `..._on_customer_then_on_cart` y describía el asistente de TRES pasos. El SUJETO
+     * no cambia —el avance está cerrado hasta que la pregunta del paso está contestada—, pero desde
+     * `#462` los pasos son siete y **elegir cliente ya avanza solo**, así que lo que se comprueba es
+     * la PUERTA de cada paso, no el número de toques.
+     */
+    public function test_each_step_gates_the_advance_until_its_question_is_answered(): void
     {
         $customer = $this->customer();
 
-        Livewire::actingAs($this->staff())
+        $component = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
             ->assertSet('step', CreateManualOrderPage::STEP_CUSTOMER)
-            ->call('next')->assertSet('step', CreateManualOrderPage::STEP_CUSTOMER) // sin cliente → bloqueado
+            // Sin cliente no se avanza ni pulsando.
+            ->call('next')->assertSet('step', CreateManualOrderPage::STEP_CUSTOMER)
+            // Elegir cliente avanza SOLO (`[DECIDIDO owner]`).
             ->set('data.customer_id', $customer->id)
-            ->call('next')->assertSet('step', CreateManualOrderPage::STEP_PRODUCTS) // con cliente → avanza
-            ->call('next')->assertSet('step', CreateManualOrderPage::STEP_PRODUCTS) // carrito vacío → bloqueado
+            ->assertSet('step', CreateManualOrderPage::STEP_PRODUCT)
+            // Sin producto elegido, el paso de producto no deja pasar.
+            ->call('next')->assertSet('step', CreateManualOrderPage::STEP_PRODUCT);
+
+        // Y desde el carrito: vacío no deja ir a pagar; con una línea, sí.
+        $component->set('step', CreateManualOrderPage::STEP_CART)
+            ->set('cart', [])
+            ->call('next')->assertSet('step', CreateManualOrderPage::STEP_CART)
             ->set('cart', [$this->cartLine(1)])
-            ->call('next')->assertSet('step', CreateManualOrderPage::STEP_PAYMENT)  // carrito lleno → avanza
-            ->call('back')->assertSet('step', CreateManualOrderPage::STEP_PRODUCTS);
+            ->call('next')->assertSet('step', CreateManualOrderPage::STEP_PAYMENT)
+            ->call('back')->assertSet('step', CreateManualOrderPage::STEP_CART);
     }
 
     public function test_can_advance_reflects_customer_and_cart_state(): void
@@ -411,10 +430,15 @@ class CreateManualOrderPageTest extends TestCase
         $this->assertFalse($component->instance()->canAdvance());           // paso 1 sin cliente
 
         $component->set('data.customer_id', $this->customer()->id);
-        $this->assertTrue($component->instance()->canAdvance());            // paso 1 con cliente
+        // Ya está en el paso 2 (elegir cliente avanza), y ahí la puerta es el PRODUCTO.
+        $component->assertSet('step', CreateManualOrderPage::STEP_PRODUCT);
+        $this->assertFalse($component->instance()->canAdvance());           // paso 2 sin producto
 
-        $component->call('next')->set('cart', []);
-        $this->assertFalse($component->instance()->canAdvance());           // paso 2 sin carrito
+        $component->set('step', CreateManualOrderPage::STEP_CART)->set('cart', []);
+        $this->assertFalse($component->instance()->canAdvance());           // carrito vacío
+
+        $component->set('cart', [$this->cartLine(1)]);
+        $this->assertTrue($component->instance()->canAdvance());            // carrito con una línea
     }
 
     public function test_full_stepped_flow_creates_the_order_and_persists_hidden_step_state(): void
@@ -424,17 +448,21 @@ class CreateManualOrderPageTest extends TestCase
 
         Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
-            // Paso 1: cliente.
+            // Paso 1 · cliente: elegirlo avanza solo al paso de producto.
             ->set('data.customer_id', $customer->id)
-            ->call('next')->assertSet('step', CreateManualOrderPage::STEP_PRODUCTS)
-            // Paso 2: producto → carrito.
-            ->set('data.sel_product_id', $this->h1->id)
+            ->assertSet('step', CreateManualOrderPage::STEP_PRODUCT)
+            // Paso 2 · producto: elegirlo avanza solo al de «cuándo».
+            ->call('pickProduct', $this->h1->id)
+            ->assertSet('step', CreateManualOrderPage::STEP_WHEN)
+            // Paso 3 · cuántos, qué día y a qué hora.
+            ->set('data.sel_qty', 2)
             ->set('data.sel_date', $this->date)
             ->set('data.sel_time', '10:00:00')
-            ->set('data.sel_qty', 2)
             ->call('addLineToCart')
+            // Añadir la línea deja al operador EN EL CARRITO (`[DECIDIDO owner]`).
+            ->assertSet('step', CreateManualOrderPage::STEP_CART)
             ->call('next')->assertSet('step', CreateManualOrderPage::STEP_PAYMENT)
-            // Paso 3: pago. El customer_id del paso 1 (oculto) debe persistir y usarse.
+            // Pago. El `customer_id` del paso 1 (oculto desde hace cinco pasos) persiste y se usa.
             ->set('data.payment_method', 'datafono')
             ->call('create');
 
@@ -457,7 +485,7 @@ class CreateManualOrderPageTest extends TestCase
 
         $component = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
-            ->set('data.sel_product_id', $pack->id)
+            ->call('pickProduct', $pack->id)
             ->set('data.sel_date', $this->date)
             ->set('data.sel_time', '10:00:00')
             ->set('data.sel_qty', 5)            // por debajo del mínimo (8)
@@ -484,7 +512,7 @@ class CreateManualOrderPageTest extends TestCase
 
         $component = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
-            ->set('data.sel_product_id', $pack->id);
+            ->call('pickProduct', $pack->id);
 
         $method = new \ReflectionMethod(CreateManualOrderPage::class, 'selectionEventDataFields');
         $method->setAccessible(true);

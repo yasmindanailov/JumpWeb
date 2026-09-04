@@ -1925,3 +1925,307 @@
 .cmo-pay input:checked + .fi-btn {
     box-shadow: inset 0 0 0 2px var(--primary-600);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+ * EL SHELL DEL PANEL (`#461`, `[DECIDIDO owner, 2026-09-03]`)
+ *
+ * Cinco encargos del owner sobre el armazón: la marca por tema con «Administración», el buscador
+ * al centro y diciendo qué encuentra, el idioma fuera del topbar, el CTA de crear pedido más
+ * grande, y el menú lateral SIEMPRE plegado con el rótulo bajo un icono grande.
+ *
+ * ⚠️ **Lo que NO está aquí, y es a propósito**: el ancho del sidebar (`->sidebarWidth('6rem')`, API
+ * del `Panel`), la retirada de la flecha (`sidebarCollapsibleOnDesktop()` fuera) y las entradas de
+ * idioma (`userMenuItems()`). Se configuran en `AdminPanelProvider`. Aquí solo vive lo que de
+ * verdad es presentación — **cero vistas de Filament sobrescritas**.
+ * ══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── La ESCALA de acción primaria ──────────────────────────────────────────────────────────
+ * El owner: «el botón más grande… tampoco que haya incoherencia entre tamaños de los botones».
+ * Eso no es un tamaño, es una ESCALA: un solo sitio del que salen «Crear pedido», «Añadir al
+ * carrito», «Ir a pagar» y «Cobrar y crear pedido». Se aplica con la clase, nunca con un valor.
+ *
+ * ⚠️ El suelo son 44 px por una razón medida, no estética: el armazón entero estaba por debajo del
+ * mínimo táctil (el CTA a 32 px de alto, el avatar a 32×32) en un panel que se usa en TABLET. */
+:root {
+    --jj-action-h: 2.75rem;      /* 44 px — mínimo táctil, y suelo de toda acción primaria */
+    --jj-action-px: 1.125rem;
+}
+
+.fi-jj-action {
+    min-height: var(--jj-action-h);
+    padding-inline: var(--jj-action-px);
+    font-weight: 600;
+}
+
+/* ─── El BUSCADOR, centrado ─────────────────────────────────────────────────────────────────
+ * ⚠️⚠️ **El buscador NO es hijo del topbar: vive dentro de `.fi-topbar-end`**, junto al CTA, el
+ * idioma y el avatar. Por eso no se puede centrar con un `grid` de tres columnas sobre el topbar
+ * ni con `margin-inline: auto`, que lo centraría dentro de la MITAD derecha (medido: quedaría en
+ * 623 px de un viewport de 1080, o sea 83 px a la derecha del centro real).
+ *
+ * Se saca del flujo y se ancla al centro del topbar. **Solo por encima de 64rem**: por debajo el
+ * topbar se aprieta y sacarlo del flujo lo haría chocar con el CTA — ahí se queda como está. */
+@media (min-width: 64rem) {
+    .fi-topbar {
+        position: relative;
+    }
+
+    .fi-topbar .fi-global-search-ctn {
+        position: absolute;
+        inset-inline-start: 50%;
+        translate: -50% 0;
+        /* Ancho acotado: a 1080 son 416 px centrados (332…748), que deja 77 px hasta el CTA.
+         * Sin el tope, el buscador crecería hasta chocar. */
+        width: min(26rem, 36vw);
+    }
+}
+
+/* ─── El MENÚ LATERAL: icono grande arriba, rótulo debajo ───────────────────────────────────
+ * `[DECIDIDO owner]`: siempre plegado, sin flecha, con el texto bajo el icono.
+ *
+ * ⚠️ **Esto NO es el modo colapsado de Filament.** El suyo enseña solo el icono y pone el rótulo
+ * en un tooltip — que en una tablet no existe, porque no hay hover. Aquí el sidebar está
+ * EXPANDIDO (así que el rótulo se pinta y es texto de verdad, legible por un lector de pantalla)
+ * y lo único que cambia es la dirección del ítem. */
+.fi-sidebar .fi-sidebar-item-btn {
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0.25rem;
+    /* 64 px: por encima del mínimo táctil incluso con el rótulo en una línea. */
+    min-height: 4rem;
+    text-align: center;
+    justify-content: center;
+}
+
+/* El icono es lo que se reconoce de un vistazo cuando el rótulo mide 11 px. */
+.fi-sidebar .fi-sidebar-item-btn .fi-icon,
+.fi-sidebar .fi-sidebar-item-btn svg {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
+/* ⚠️⚠️ **El relleno del carril se come la mitad del sidebar.** Medido antes de tocarlo: con
+ * `.fi-sidebar-nav` a 24 px por lado, de los 96 px del sidebar al ítem le llegaban **49**, y ahí
+ * «Calendario» se partía como «Calend/ario». No era el `font-size`, ni el ítem: era el CARRIL.
+ * A 8 px por lado el ítem pasa a ~80 y los cuatro rótulos caben en una línea. */
+.fi-sidebar .fi-sidebar-nav {
+    padding-inline: 0.5rem;
+}
+
+.fi-sidebar .fi-sidebar-item-label {
+    font-size: 0.6875rem;
+    line-height: 1.15;
+    /* ⚠️ **Sin `overflow-wrap: anywhere`, a propósito.** Con él una palabra larga se parte por la
+     * mitad —«Pedido/s»—, que es peor que envolver: un rótulo partido no se lee, se descifra. Aquí
+     * solo se envuelve ENTRE palabras; que quepan es responsabilidad del ancho, y lo vigila
+     * `PanelShellTest`, que acota la longitud del rótulo del menú plano. */
+    white-space: normal;
+    overflow-wrap: normal;
+    hyphens: none;
+}
+
+/* ─── La MARCA ──────────────────────────────────────────────────────────────────────────────
+ * Con el sidebar en 6rem la marca no cabe ahí: vive en el topbar (`.fi-topbar-start`), que es
+ * donde Filament la pinta. El logotipo por tema lo resuelve la vista con dos ficheros. */
+.fi-jj-brand-logo {
+    /* Tope de ancho para que un logotipo apaisado no empuje al buscador. */
+    max-width: 11rem;
+}
+
+/* ─── El asistente de «Crear pedido», siete pasos (`#462`) ───────────────────────────────────
+ * Lo que añade la T1 sobre el indicador que ya existía: el paso enseña LO ELEGIDO, los pasados son
+ * botones que llevan de vuelta, y el que se salta se pinta saltado.
+ *
+ * ⚠️ **Un salto silencioso se lee como un fallo.** El asistente se salta pasos casi siempre —medido:
+ * 16 de los 18 productos vendibles no tienen ni un campo que rellenar—, así que si «Datos» y
+ * «Extras» desaparecieran sin decir nada, el operador vería el asistente dar brincos. */
+.cmo-steps__go {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    text-align: start;
+}
+
+/* El paso ya pasado es un BOTÓN: el auto-avance solo es seguro si volver cuesta un toque. */
+button.cmo-steps__go {
+    cursor: pointer;
+}
+
+button.cmo-steps__go:hover .cmo-steps__label {
+    text-decoration: underline;
+}
+
+.cmo-steps__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+/* Lo elegido, bajo el rótulo: es lo que permite corregirse sin retroceder a ciegas. */
+.cmo-steps__choice {
+    font-size: 0.6875rem;
+    color: var(--gray-500);
+    max-width: 11rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cmo-steps__item.is-skipped {
+    opacity: 0.55;
+}
+
+.cmo-steps__choice:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+/* ⚠️ **El carrito va a UNA columna** (`[DECIDIDO owner]`): ahí el resumen deja de acompañar y pasa a
+ * ser el asunto. La vista además NO pinta el aside en ese paso, así que esto solo retira la rejilla:
+ * si algún día volviera el aside, se vería —no se queda escondido detrás de un `display: none`—. */
+.cmo-layout--single {
+    display: block;
+}
+
+/* Los dos CTA del carrito comparten fila y el que decide (ir a pagar) manda. */
+.cmo-nav__more {
+    margin-inline-start: auto;
+}
+
+/* ─── Las TARJETAS DE PRODUCTO del asistente (`#462`, T2) ────────────────────────────────────
+ * Sustituyen a un desplegable plano de 18 opciones en el que una entrada y un pack se parecían.
+ * Lo que cierra el agujero es el AGRUPADO por tipo; la tarjeta solo lo hace legible con el dedo. */
+.cmo-products {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 6);
+}
+
+.cmo-products__group-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    margin-bottom: calc(var(--spacing) * 2);
+}
+
+.cmo-products__group-title:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+/* ⚠️ `auto-fill` con un mínimo, NO un número fijo de columnas: el ancho útil cambia con el paso
+ * (aquí hay columna pegajosa al lado) y con la orientación de la tablet. */
+.cmo-products__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: calc(var(--spacing) * 3);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.cmo-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 0.75rem;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--gray-950) 10%, transparent);
+    background-color: var(--color-white);
+    overflow: hidden;
+}
+
+.cmo-card:where(.dark, .dark *) {
+    background-color: var(--gray-900);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+/* ⚠️ El elegido se distingue **por algo más que el fondo**: en una tablet a un brazo y con reflejos
+ * un relleno claro se pierde. Es el mismo criterio que las tarjetas de cobro de `#242`. */
+.cmo-card.is-selected {
+    box-shadow: inset 0 0 0 2px var(--primary-600);
+}
+
+.cmo-card__pick {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 3);
+    /* 44 px de mínimo táctil aparte, el alto real lo pone el contenido. */
+    min-height: var(--jj-action-h);
+    padding: calc(var(--spacing) * 3);
+    text-align: start;
+    cursor: pointer;
+    width: 100%;
+}
+
+.cmo-card__ico {
+    flex: none;
+    color: var(--primary-600);
+    margin-top: 2px;
+}
+
+.cmo-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.cmo-card__name {
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.cmo-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.cmo-card__meta:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+/* El rango de invitados es la marca inconfundible de un producto de grupo: se resalta. */
+.cmo-card__guests {
+    font-weight: 600;
+    color: var(--primary-700);
+}
+
+.cmo-card__guests:where(.dark, .dark *) {
+    color: var(--primary-400);
+}
+
+.cmo-card__price {
+    flex: none;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.cmo-card__from {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--gray-500);
+}
+
+/* «Más info» es hermano de la tarjeta, nunca un botón dentro de otro botón. */
+.cmo-card__info {
+    min-height: var(--jj-action-h);
+    padding-inline: calc(var(--spacing) * 3);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--primary-600);
+    text-align: start;
+    cursor: pointer;
+    border-top: 1px solid color-mix(in oklab, var(--gray-950) 8%, transparent);
+}
+
+.cmo-card__info:where(.dark, .dark *) {
+    color: var(--primary-400);
+    border-top-color: color-mix(in oklab, var(--color-white) 10%, transparent);
+}
+
+.cmo-products__empty {
+    color: var(--gray-500);
+}

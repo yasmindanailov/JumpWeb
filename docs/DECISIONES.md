@@ -23495,3 +23495,229 @@ martes se re-tarifica a 2 × 10,00 €, el total baja de 175,58 a 147,60 y **el 
 
 **Verificación**: suite **4.250 ✓ · 26.759** · Pint 1.176 · docs-check · 7/7 mutaciones del
 reconciliador · 6/6 del token declarado.
+## #460 · 2026-09-03 · La auditoría UI/UX del panel: el error de operación que ya costó dinero, y las tres decisiones del owner que acotan lo que se arregla
+
+**Contexto.** Encargo del owner: *«valorar el UI/UX del panel de admin. Objetivo: que cualquier persona
+intuitivamente pueda hacer la operativa del parque; quitar ruido y poner cada cosa en el momento adecuado y
+cada acción en su sitio. Normalmente se usa en tablet»*. El informe vive en el repo
+(`specs/auditoria-panel-admin.md`), **no en un artefacto**: la lección de `#430`, cuyo informe anterior se
+perdió con su URL.
+
+**Lo medido**: Playwright + Chromium sobre el panel real, 10 pantallas × 3 tamaños (iPad horizontal
+1080×810 —el dispositivo declarado—, vertical 810×1080 y escritorio de control) más cinco sondas de estados
+de trabajo. **4 críticos · 10 mayores · 11 menores.**
+
+**El hallazgo que manda no lo encontró la sonda: lo trajo el owner.** Una admin vendió un cumpleaños como
+**diez entradas sueltas**. Medido con el catálogo real para 10 personas: **119,00 € en vez de 180,00 €
+(−61,00 €, −34 %)**, la sala de cumpleaños sin reservar, **60 minutos de ocupación en vez de 120** y **el
+formulario de invitados que no se pide** —sin él no hay edades y sin edades no hay suplemento de fiesta
+mixta—. La causa está medida: el paso 2 de «Crear pedido» ofrece **un desplegable plano de 18 opciones con
+entradas y packs mezclados** cuyo rótulo es `«{zona} · {nombre}»`, y **nada dice de qué tipo es cada cosa**
+—ni el prefijo de zona sirve: «JUMP · Cumpleaños E2E extras» es un pack—. ⚠️⚠️ **Y el error no se puede
+deshacer**: «Editar producto» solo ofrece productos del MISMO tipo y la MISMA zona, así que la salida es
+cancelar, reembolsar y rehacer. ⚠️ **El panel SÍ sabe el tipo**: «Catálogo» tiene columna «Tipo» y filtro
+por tipo. La pantalla que cobra no tiene ninguna de las dos.
+
+**`[DECIDIDO owner, 2026-09-03]`, tres decisiones que acotan el trabajo:**
+
+- **D1 · la tablet es el dispositivo del DÍA A DÍA, no de todo el panel**: seis pantallas (Hoy · Calendario ·
+  Pedidos · ficha de pedido · Crear pedido · Puerta). Ajustes y las 19 de puesta en marcha se quedan para
+  ordenador. Eso saca de alcance «Configuración» (2.883 px, 70 campos) y las tres columnas cortadas de
+  «Catálogo».
+- **D2 · el saldo del parque se queda INFORMATIVO**: nadie marca en el panel que se cobró. Coherente con
+  `#244`. El libro seguirá liquidando por el paso del tiempo.
+- **D3 · no se construye pantalla de aforo**: la respuesta vive dentro del flujo de venta.
+
+▶ **D2 y D3 convierten M4 y M3 en conducta querida, no en defectos** (§9.bis del informe, mismo trato que
+`auditoria-diseno.md` §6 da a las puertas de Hallmark): quedan escritos para que nadie los «arregle».
+⚠️ **D3 deja deuda documental**: `PANEL-ADMIN.md` §2.1 sigue prometiendo «Clic en día/franja → detalle:
+quién viene, ocupación, plazas libres», que ya no se va a construir.
+
+**Y una premisa del owner que la medición DESMIENTE, antes de que nadie construya encima**: sospechaba que
+el calendario y los cupos del panel divergían del frontend. **No divergen**: los dos pasan por `SlotOffer` y
+dan lo mismo —mismo producto, **177 días idénticos**, **11 horas idénticas** y los mismos números de
+plazas—. ⚠️⚠️ **Lo que sí es real es otra cosa**: la web le pasa a `SlotOffer` **los ocupantes de la cesta**
+(`AvailabilityController`: «las horas van por POST y llevan la cesta») y **el alta manual del panel no**
+—llama a `offerableTimes()` con la cesta vacía—. Hoy es un borde declarado (`hora-extra.md` §8.3); **el
+asistente nuevo, que permite añadir varios productos antes de pagar, lo convierte en el camino normal.**
+
+**Las cinco trampas de instrumento pagadas** (§1 del informe), en orden de coste: **medir un 404 durante
+tres tamaños** porque `Order` se resuelve por `code` y la sonda pidió el id —cifras plausibles, sujeto
+equivocado—; dos instrumentos propios contradiciéndose sobre si las tablas se salen (lo zanjó la captura);
+**un barrido de controles por etiqueta HTML no ve las 38 píldoras del calendario**, que son `div`; un `fill`
+sobre «el primer campo de búsqueda» escribiendo en el buscador global; y **`.fi-dropdown-panel` casa con
+TODOS los desplegables del documento**, así que el inventario dijo 9 entradas donde hay 3.
+
+**Verificación**: docs-check verde · el informe, `docs/README.md` y la tabla de enrutado de `CLAUDE.md` al
+día · **cero líneas de producto tocadas**. Sondas y capturas fuera del repo, en `/root/e2e/audit/` del
+contenedor.
+
+## #461 · 2026-09-03 · `[DECIDIDO owner]` El SHELL del panel: la marca por tema, el buscador al centro, el idioma al menú del avatar, una escala de acción y el menú lateral fijo y estrecho
+
+**Encargo del owner**, cinco puntos sobre el armazón tras leer la auditoría (`#460`): logotipo en
+claro/oscuro según el tema con «Administración» debajo · buscador al centro y diciendo qué encuentra
+· el selector de idioma fuera del topbar · «Crear pedido» más grande · el menú lateral **siempre
+plegado**, sin flecha, con el rótulo bajo un icono grande. `[DECIDIDO owner]` además: **el logotipo
+va a dos colores** (dos versiones del logotipo, no una silueta a un color).
+
+**Lo hecho, y por qué así:**
+
+1. **La marca.** Dos variantes que alterna el CSS por la clase `dark`. ⚠️⚠️ **No se creó ningún
+   fichero nuevo: se reutiliza `client-logo-ink.svg`, el hueco que existe desde `#216`** — el modo
+   oscuro del panel es el mismo problema que el menú a pantalla completa de la web (un fondo
+   oscuro) y por tanto el mismo rol. Descartadas `filter: invert()` (destroza los colores de marca)
+   y servirlo en línea con `currentColor` (solo vale para un logotipo de un color; el de este
+   cliente es multicolor, `#211`). **Falla hacia visible**: sin variante de tinta se sigue enseñando
+   el claro en los dos temas; sin logotipo, el wordmark de texto.
+2. **El buscador**, centrado por CSS y **solo por encima de 64rem** (por debajo el topbar se aprieta
+   y sacarlo del flujo lo haría chocar con el CTA). El placeholder sale de un **override PARCIAL**
+   de las cadenas del vendor — verificado antes de escribirlo que Laravel fusiona los overrides de
+   vendor con `array_replace_recursive`, así que declarar solo lo que cambia **no congela** las
+   demás claves. De paso, la superficie completa del login deja de tratar de usted («Entre a su
+   cuenta» → «Entra en tu cuenta»), que era el menor `m2` de la auditoría.
+3. **El idioma, al menú del avatar y NO a «Ajustes»** — y el motivo es de permisos: `AdminSettingsHub`
+   no lo abre un `staff`, así que allí el empleado de mostrador se quedaría sin el idioma que existe
+   para él. Se implementa con **`Action::postToUrl()`** (la API viva; `MenuItem::postAction()` está
+   deprecada) contra la MISMA ruta y el MISMO controlador: **un solo escritor de `panel_locale`**,
+   con su validación y su auditoría intactas. Un `GET` habría sido un cambio de estado por
+   navegación.
+4. **La escala de acción primaria** (`--jj-action-h: 2.75rem`) en UN token, aplicada por clase. El
+   CTA pasa de **127×32 a 152×44**. El owner lo pidió explícitamente así: «tampoco que haya
+   incoherencia entre tamaños de los botones».
+5. **El menú lateral**: `sidebarWidth('6rem')` —API del `Panel`, así que el contenido se desplaza
+   solo con `--sidebar-width`— y `sidebarCollapsibleOnDesktop()` retirado, que es lo que quita la
+   flecha. El ítem pasa a columna por CSS. ⚠️ **No se usa el modo colapsado de Filament**: el suyo
+   enseña solo el icono con un **tooltip**, y en una tablet no hay hover. **Cero vistas del
+   framework sobrescritas.** ▶ De 20rem a 6rem el área principal gana **224 px**.
+
+**Las seis cosas que enseñó la ejecución** (detalle en `specs/panel-navegacion.md` §13.1):
+⚠️⚠️ **`route()` en el cuerpo de `panel()` tumba el panel entero** —el proveedor se registra antes de
+que existan las rutas: `/admin` y `/admin/login` devolvían **500**—; va en closure, que es lo que el
+ítem «Ajustes» ya hacía y no se copió. ⚠️⚠️ **La nota de `CLAUDE.md` que decía que faltaba el hueco
+del logotipo sobre tinta estaba CADUCADA**, y se iba a crear un segundo fichero para un rol que ya
+tenía el suyo. ⚠️⚠️ **Con dos imágenes el nombre accesible se pierde en un tema** (`display: none`
+saca el `alt` del árbol): las dos van `aria-hidden` y el nombre en un `sr-only` permanente —el
+patrón que la web ya resolvió—, y se verificó que el segundo bloque de marca que Filament pinta en
+el sidebar está en `display: none`, así que se anuncia una sola vez. ⚠️ **El rótulo se partía por el
+CARRIL, no por el cuerpo de letra**: `.fi-sidebar-nav` se llevaba 48 de los 96 px. ⚠️ **Un
+`public_path()` temporal en los tests rompe el manifiesto de Vite** y toda petición al panel sale
+500: solo vale para renderizar la vista suelta.
+
+**Y un fallo de la suite que NO era de esta tanda, probado sobre la base limpia**: el ayudante
+`moveParty()` de `GuestFormTest` escribía la fecha del INICIO, así que corriendo la suite pasadas
+las ~21:00 del parque la fiesta cruzaba medianoche y quedaba «terminada hace veintidós horas»
+—verde a las 19:45 y rojo a las 21:50 del mismo día, sin tocar producto—. Se ancla el reloj a
+mediodía. ⚠️ **No tapa nada**: el defecto de zona horaria de `isFinishedInPractice()` sigue en
+`DEUDA.md`.
+
+**Tests re-apuntados por SUJETO, no borrados** (`CONVENCIONES §3.quater`): el subtítulo de
+`LandingTextsAndSocialTest` (mismo sujeto, texto nuevo) y las **tres** aserciones de
+`PanelLocaleTest` que miraban el `aria-label` del disparador del topbar, que ya no existe — ahora
+aseveran el formulario de cambio, que es lo que de verdad hace el trabajo.
+
+**Verificación**: `PanelShellTest`, **12 casos** con **9 mutaciones y las 9 muerden** (control verde
+antes de mutar, y con copias de seguridad en vez de `git checkout`, porque el trabajo no estaba
+commiteado) · sonda de navegador en tres anchos: sidebar 96 px, ítem 81×64 en columna con icono de
+28, buscador con **0 px de desvío** del centro a 1080 y 1440, CTA 152×44, cero desbordamiento
+horizontal · los tres caminos de la marca probados con ficheros reales en claro y en oscuro · Pint ·
+docs-check · **suite 4.240 en verde**.
+
+## #462 · 2026-09-04 · `[DECIDIDO owner]` El asistente de crear pedido pasa a SIETE pasos — y un paso que no pregunta nada se salta
+
+**Encargo del owner** (literal en `specs/asistente-crear-pedido.md` §1): más pasos, con auto-avance
+al elegir cliente, producto y hora; los productos en tarjetas; un calendario grande con las plazas;
+el carrito a pantalla completa con «Ir a pagar» y «Añadir más productos»; y una pantalla de
+desenlace. Marco: **«usamos Filament, no quiero chapuzas ni deuda, ni huecos»**.
+
+**Tres cosas medidas ANTES de diseñar, y las tres cambian el encargo:**
+
+1. ⚠️⚠️ **Dos de cada tres pasos saldrían VACÍOS.** De los 18 productos vendibles, **16 no tienen ni
+   un campo que rellenar** y 7 no tienen ni campos ni complementos: vender una entrada obligaría a
+   pasar por una pantalla en blanco y una excursión por dos. ▶ **Un paso sin nada que preguntar se
+   SALTA, y el indicador lo dice** — el owner delegó la mejora («si valoras algo mejor, menos
+   fricción y que el usuario lo entienda, lo acepto»).
+2. **El calendario con plazas por día cuesta 709 consultas y 11,4 s** (medido), y **no existe vía
+   agregada por rango** en `AvailabilityReader`, `SlotOffer` ni `PackAvailability`.
+3. **La disponibilidad del panel NO diverge de la web** —los dos son `SlotOffer`, y dan 177 días y
+   11 horas idénticos con los mismos números—, pero **el panel no le pasa la cesta y la web sí**.
+   Hoy es un borde declarado; el asistente nuevo lo convierte en el camino normal.
+
+**Las tres decisiones del owner** (preguntadas con el número y el coste delante): **D1** la CANTIDAD
+va arriba de la pantalla de fecha —así las horas dicen la verdad para esa cantidad y el auto-avance
+sigue en la hora, que es lo último—; **D2** el calendario resalta los días reservables y las plazas
+se ven con las horas (el semáforo por día sería una consulta agregada sobre AFORO: tanda propia);
+**D3** el post-form **no se renombra** a «Parte de celebración» —eran ~57 claves en 7 ficheros × 4
+idiomas, y dos nombres para lo mismo era la incoherencia a evitar—.
+
+**T1, EN EL ÁRBOL** (§7): siete pasos con la regla del salto en UN sitio (`stepHasSomethingToAsk()`),
+`isLastLineStep()` —del que cuelga «Añadir al carrito», y es VARIABLE—, la navegación que salta lo
+vacío en las dos direcciones, el auto-avance en tres puntos, el indicador que enseña lo elegido y
+lleva hacia atrás, y el carrito como paso propio a UNA columna. **Medido en navegador**: **7 toques**
+de vacío a carrito lleno, «Datos» saltado y dicho, y los cinco pasos en **810 px de 810** — cabe
+entero sin desplazar.
+
+**Los tres tropiezos, y qué enseñan:** ⚠️⚠️ **el indicador afirmaba lo que no sabía** («sin nada que
+rellenar» en el paso 1, sin producto elegido) — el predicado de NAVEGACIÓN y el de PINTAR no son el
+mismo, y lo vio la sonda de navegador, no un test. ⚠️⚠️ **dos mutaciones no mordieron y el hueco era
+real**: las guardas comprobaban el PREDICADO del salto y no el MOVIMIENTO, así que se podía quitar
+el salto de la navegación con la suite en verde — hizo falta un tercer sujeto (una entrada CON
+complemento) para hacerlo observable. ⚠️ **un caso pasaba por el motivo equivocado**: el fixture
+tenía una franja de 60 min y el pack dura 120, así que `pickTime()` salía sin elegir nada y «no
+avanza» era cierto por otra razón.
+
+⚠️ **`STEP_PRODUCTS` deja de existir** y sus diez usos en tests pasan a la constante del paso real;
+las guardas de la navegación pegajosa y del «Atrás» se re-apuntan al partial nuevo, **por sujeto**.
+
+**Verificación**: `CreateManualOrderStepsTest` **13 casos** con **9/9 mutaciones que muerden** ·
+los 86 casos previos de esta pantalla en verde · sonda de navegador con el recorrido entero ·
+Pint · docs-check · **suite 4.252 verde**.
+
+## #463 · 2026-09-04 · El producto se elige en TARJETAS agrupadas — el crítico C1, cerrado
+
+**Es el hallazgo que ya costó dinero en el parque** (`specs/auditoria-panel-admin.md` §C1): una admin
+vendió un cumpleaños como **diez entradas sueltas** —119,00 € en vez de 180,00 €, la sala sin
+reservar, 60 min de ocupación en vez de 120 y el formulario de invitados que nunca se pidió—, y
+**no se puede deshacer**: «Editar producto» solo ofrece productos del mismo tipo y la misma zona.
+
+**La causa medida no era la falta de un aviso, era el ELEGIDOR**: un `Select` plano de 18 opciones
+rotuladas `«{zona} · {nombre}»`, donde **ni una palabra decía si aquello era una entrada o un pack**
+—y el prefijo tampoco: «JUMP · Cumpleaños E2E extras» es un PACK—.
+
+**Lo que cierra el agujero es el AGRUPADO, no la tarjeta.** El operador ya no elige de una lista
+donde las dos cosas se parecen: elige dentro de «ENTRADAS (10)» o dentro de «PACKS Y CELEBRACIONES
+(8)». Y el **rango de invitados**, que solo pintan los packs, es la marca inconfundible de un
+producto de grupo. La tarjeta añade además icono, zona, duración y precio.
+
+**«Más info» es de LECTURA y esa es su propiedad**: abrirlo **no elige el producto** —medido en
+navegador: el paso sigue siendo «Producto» tras cerrarlo—, o el operador no podría comparar dos
+candidatos sin comprometerse con el primero. Enseña lo que el cliente ve: tipo, zona, duración,
+rango, descripción y ventajas.
+
+⚠️⚠️ **`pickProduct()` es la ÚNICA puerta y vuelve a validar en el SERVIDOR**: un `wire:click` se
+puede llamar con cualquier id (`AFORO-02`), y además tiene que hacer los mismos olvidos que hacía el
+`afterStateUpdated` del `Select` que ha muerto —hora, menores, campos, complementos—. Los diez casos
+previos que empujaban `set('data.sel_product_id', X)` se re-apuntan **por sujeto** a `pickProduct`,
+que es la puerta que usa el operador.
+
+⚠️ **`productOptions()` murió con el `Select`; `productLabel()` NO**: tiene otro consumidor, es el
+rótulo con el que la línea aparece en el carrito.
+
+**Los tres tropiezos, y qué enseñan:** ⚠️⚠️ **las ventajas salían en LOS TRES IDIOMAS** («Access to
+the Jump zone · Acceso a la zona Jump · Accès à la zone Jump»): `features` es traducible y `tr()` es
+su puente, y yo recorrí el mapa a mano — *inventar un recorrido donde ya hay un puente es cómo se
+cuela un idioma equivocado sin que nada falle*; lo vio la sonda, no un test. ⚠️⚠️ **dos mutaciones no
+mordieron por motivos DISTINTOS** —una porque el fixture no tenía icono elegido (sin sujeto, «leer el
+marcador» y «deducirlo del tipo» dan lo mismo) y otra porque **nunca se aplicó**, un `sed` con `\n`
+no casa entre líneas—: *una mutación que no muerde puede ser una guarda ciega o un arnés roto, y hay
+que distinguirlo*. ⚠️ **`assertSee` no ve un modal de Filament** (es un `wire:partial`, la trampa de
+`#161`): la guarda asevera por CONDUCTA sobre `productInfoFields()`.
+
+**Lo que NO entra, dicho**: `ticket_types.conditions` **no la lee nadie y el catálogo no la edita**
+—cero consumidores—, así que pintarla aquí la convertiría en el único sitio donde aparece un texto
+que el operador no puede rellenar desde ninguna pantalla; ficha en `DEUDA.md`.
+
+**Verificación**: `CreateManualOrderProductCardsTest` **10 casos** con **9/9 mutaciones que muerden**
+· los 99 casos previos de esta pantalla en verde tras el re-apuntado · sonda de navegador (18
+tarjetas en dos grupos, **0 controles bajo 44 px**, 0 desbordamiento, el modal sin elegir) · Pint ·
+docs-check · **suite 4.263 verde**.
+

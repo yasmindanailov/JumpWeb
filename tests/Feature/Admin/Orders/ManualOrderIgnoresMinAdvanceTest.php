@@ -241,8 +241,8 @@ class ManualOrderIgnoresMinAdvanceTest extends TestCase
 
         $page = Livewire::actingAs($operator)
             ->test(CreateManualOrderPage::class)
-            ->set('step', CreateManualOrderPage::STEP_PRODUCTS)
-            ->set('data.sel_product_id', $this->pack->id)
+            ->set('step', CreateManualOrderPage::STEP_PRODUCT)
+            ->call('pickProduct', $this->pack->id)
             ->instance();
 
         $days = array_column($page->quickDays(), 'date');

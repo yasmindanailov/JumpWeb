@@ -35,6 +35,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions as SchemaActions;
@@ -43,7 +44,6 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\View as ViewComponent;
 use Filament\Schemas\Schema;
-use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -72,9 +72,33 @@ class CreateManualOrderPage extends Page
 {
     public const STEP_CUSTOMER = 1;
 
-    public const STEP_PRODUCTS = 2;
+    public const STEP_PRODUCT = 2;
 
-    public const STEP_PAYMENT = 3;
+    /** Cantidad + día + hora: las tres preguntas de «cuándo viene» (`#462`, D1 del owner). */
+    public const STEP_WHEN = 3;
+
+    /** Campos del evento · menores a cargo · justificante. CONDICIONAL: se salta si no hay nada. */
+    public const STEP_DETAILS = 4;
+
+    /** Complementos. CONDICIONAL. */
+    public const STEP_EXTRAS = 5;
+
+    /** El carrito, a pantalla completa y en UNA columna (`[DECIDIDO owner]`). */
+    public const STEP_CART = 6;
+
+    public const STEP_PAYMENT = 7;
+
+    /**
+     * Los pasos que componen UNA LÍNEA, en orden. Del último con algo que preguntar cuelga «Añadir
+     * al carrito».
+     *
+     * ⚠️ **Ese último paso es VARIABLE** —Extras si el producto tiene, si no Datos, si no Cuándo—,
+     * y por eso el botón no puede vivir dentro del formulario de un paso fijo: vive en la
+     * navegación, que es la única que sabe en qué paso está.
+     *
+     * @var list<int>
+     */
+    public const LINE_STEPS = [self::STEP_PRODUCT, self::STEP_WHEN, self::STEP_DETAILS, self::STEP_EXTRAS];
 
     /** Cuántos días ofrecibles enseña la tira rápida del paso 2 (`#240`). El resto, el calendario. */
     private const QUICK_DAYS = 14;
@@ -106,7 +130,7 @@ class CreateManualOrderPage extends Page
     /** @var array<string,int> */
     public array $selAddonGroup = [];
 
-    /** Paso actual del asistente (1 Cliente · 2 Productos · 3 Pago). */
+    /** Paso actual del asistente (§4 de `specs/asistente-crear-pedido.md`). */
     public int $step = self::STEP_CUSTOMER;
 
     /**
@@ -185,33 +209,161 @@ class CreateManualOrderPage extends Page
             ->statePath('data')
             ->components([
                 $this->customerStep(),
-                $this->productsStep(),
+                $this->productStep(),
+                $this->whenStep(),
+                $this->detailsStep(),
+                $this->extrasStep(),
+                // El CARRITO (paso 6) no es un componente del formulario: no pregunta nada, enseña
+                // lo elegido. Lo pinta la vista a una columna (`[DECIDIDO owner]`).
                 $this->paymentStep(),
             ]);
     }
 
     // ─── Navegación del stepper ───────────────────────────────────────────
 
-    /** ¿Puede avanzarse desde el paso actual? (gobierna el `:disabled` de "Siguiente"). */
+    /**
+     * ¿Este paso tiene algo que preguntar? (`#462`)
+     *
+     * ⚠️⚠️ **Sin esto, dos de cada tres pasos saldrían EN BLANCO.** Medido sobre el catálogo real:
+     * de los 18 productos vendibles, **16 no tienen ni un campo que rellenar** y 7 no tienen ni
+     * campos ni complementos — o sea que vender una entrada obligaría a pasar por una pantalla
+     * vacía y una excursión por dos. Eso es MÁS fricción, que es lo contrario del encargo.
+     *
+     * ▶ Un paso sin nada que preguntar **se salta**, y el indicador de arriba lo pinta saltado:
+     * nunca en silencio, porque entonces el operador no entendería por qué el asistente «da
+     * saltos».
+     */
+    public function stepHasSomethingToAsk(int $step): bool
+    {
+        return match ($step) {
+            self::STEP_DETAILS => $this->selectionEventDataFields() !== []
+                || $this->manualDependentOptions()['options'] !== []
+                || ($this->selectedProduct()?->offersGuardianAuthorization() ?? false)
+                || ($this->selectedProduct()?->requiresGuardianAuthorization() ?? false),
+            self::STEP_EXTRAS => $this->selectedProductAddons()->isNotEmpty(),
+            default => true,
+        };
+    }
+
+    /**
+     * ¿Este paso se pinta SALTADO en el indicador?
+     *
+     * ⚠️⚠️ **No es lo mismo que «no tiene nada que preguntar».** Lo que decide si «Datos» y «Extras»
+     * preguntan algo es el PRODUCTO, así que antes de elegirlo la respuesta no se sabe — y sin esta
+     * distinción el indicador arrancaba diciendo «sin nada que rellenar» en el paso 1, con el
+     * operador aún sin haber elegido nada. *Afirmar lo que todavía no se sabe es peor que callar.*
+     * Lo vio la sonda de navegador, no un test.
+     */
+    public function stepIsSkipped(int $step): bool
+    {
+        return filled($this->data['sel_product_id'] ?? null) && ! $this->stepHasSomethingToAsk($step);
+    }
+
+    /** ¿Es éste el ÚLTIMO paso de la línea con algo que preguntar? De él cuelga «Añadir al carrito». */
+    public function isLastLineStep(): bool
+    {
+        if (! in_array($this->step, self::LINE_STEPS, true)) {
+            return false;
+        }
+
+        foreach (self::LINE_STEPS as $candidate) {
+            if ($candidate > $this->step && $this->stepHasSomethingToAsk($candidate)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /** ¿Puede avanzarse desde el paso actual? (gobierna el `:disabled` del botón de avanzar). */
     public function canAdvance(): bool
     {
         return match ($this->step) {
             self::STEP_CUSTOMER => filled($this->data['customer_id'] ?? null),
-            self::STEP_PRODUCTS => $this->cart !== [],
+            self::STEP_PRODUCT => filled($this->data['sel_product_id'] ?? null),
+            self::STEP_WHEN => filled($this->data['sel_date'] ?? null) && filled($this->data['sel_time'] ?? null),
+            self::STEP_DETAILS, self::STEP_EXTRAS => true,
+            self::STEP_CART => $this->cart !== [],
             default => false,
         };
     }
 
     public function next(): void
     {
-        if ($this->canAdvance()) {
-            $this->step = min(self::STEP_PAYMENT, $this->step + 1);
+        if (! $this->canAdvance()) {
+            return;
         }
+
+        // El último paso de la línea no «avanza»: añade al carrito. Que el botón de avanzar acabe
+        // aquí es lo que evita tener DOS acciones que hacen lo mismo con nombres distintos.
+        if ($this->isLastLineStep()) {
+            $this->addLineToCart();
+
+            return;
+        }
+
+        $this->step = $this->stepAfter($this->step);
     }
 
     public function back(): void
     {
-        $this->step = max(self::STEP_CUSTOMER, $this->step - 1);
+        $this->step = $this->stepBefore($this->step);
+    }
+
+    /** Vuelve al paso de PRODUCTO para añadir otra línea (`[DECIDIDO owner]`: «añadir más productos»). */
+    public function addMoreProducts(): void
+    {
+        $this->step = self::STEP_PRODUCT;
+    }
+
+    /**
+     * Salta al paso pedido desde el indicador de arriba. **Solo hacia ATRÁS y solo a pasos con algo
+     * que preguntar**: hacia adelante saltaría preguntas sin contestar, y a un paso vacío llevaría
+     * a una pantalla en blanco.
+     */
+    public function goToStep(int $step): void
+    {
+        if ($step < $this->step && $step >= self::STEP_CUSTOMER && $this->stepHasSomethingToAsk($step)) {
+            $this->step = $step;
+        }
+    }
+
+    /** El siguiente paso con algo que preguntar (o el de pago, que siempre lo tiene). */
+    private function stepAfter(int $step): int
+    {
+        for ($n = $step + 1; $n <= self::STEP_PAYMENT; $n++) {
+            if ($this->stepHasSomethingToAsk($n)) {
+                return $n;
+            }
+        }
+
+        return self::STEP_PAYMENT;
+    }
+
+    /** El anterior con algo que preguntar (o el primero). */
+    private function stepBefore(int $step): int
+    {
+        for ($n = $step - 1; $n >= self::STEP_CUSTOMER; $n--) {
+            if ($this->stepHasSomethingToAsk($n)) {
+                return $n;
+            }
+        }
+
+        return self::STEP_CUSTOMER;
+    }
+
+    /**
+     * Avanza SOLO si el gesto que lo dispara es una ELECCIÓN del operador (`#462`).
+     *
+     * ⚠️⚠️ **El auto-avance se engancha al CAMBIO, jamás al estado.** Si mirase el estado, volver
+     * atrás a «Cuándo» con la hora ya puesta rebotaría hacia adelante otra vez y el operador no
+     * podría corregir nada: quedaría atrapado en el último paso.
+     */
+    private function advanceAfterChoice(): void
+    {
+        if ($this->canAdvance() && ! $this->isLastLineStep()) {
+            $this->step = $this->stepAfter($this->step);
+        }
     }
 
     /**
@@ -223,6 +375,11 @@ class CreateManualOrderPage extends Page
         $this->data['customer_id'] = $id;
         $this->cart = [];
         $this->clearPhoneMatch();
+
+        // `#462`: el alta en mostrador termina igual que elegir de la lista — «o se registre un
+        // cliente manualmente, automáticamente seguimos». Si solo avanzara una de las dos puertas,
+        // el operador que da de alta se quedaría mirando un paso ya contestado.
+        $this->advanceAfterChoice();
     }
 
     // ─── Paso 1: cliente ──────────────────────────────────────────────────
@@ -244,9 +401,16 @@ class CreateManualOrderPage extends Page
                             ->live()
                             // Cambiar de cliente vacía el carrito (nunca cobrar a B las líneas de A) y
                             // descarta cualquier aviso de duplicado pendiente.
+                            // ⚠️ Cambiar de cliente vacía el carrito (nunca cobrar a B las líneas de
+                            // A) y descarta cualquier aviso de duplicado pendiente. Y AVANZA
+                            // (`#462`, `[DECIDIDO owner]`: «en cuanto se elija un cliente,
+                            // automáticamente seguimos»): elegir es la respuesta a la única
+                            // pregunta del paso, así que pedir además un «Siguiente» es un toque
+                            // que no decide nada.
                             ->afterStateUpdated(function (): void {
                                 $this->cart = [];
                                 $this->clearPhoneMatch();
+                                $this->advanceAfterChoice();
                             })
                             ->required(),
 
@@ -318,40 +482,96 @@ class CreateManualOrderPage extends Page
 
     // ─── Paso 2: productos ────────────────────────────────────────────────
 
-    private function productsStep(): Group
+    /**
+     * PASO 2 · el PRODUCTO. Hoy es un desplegable; la T2 lo convierte en tarjetas con icono, que es
+     * lo que cierra el crítico C1 de la auditoría (un cumpleaños vendido como diez entradas).
+     */
+    private function productStep(): Group
     {
         return Group::make()
-            ->visible(fn (): bool => $this->step === self::STEP_PRODUCTS)
+            ->visible(fn (): bool => $this->step === self::STEP_PRODUCT)
             ->schema([
                 Section::make(__('admin.orders.create_manual.add_product'))
                     ->schema([
-                        Select::make('sel_product_id')
-                            ->label(__('admin.orders.create_manual.product'))
-                            ->options(fn (): array => $this->productOptions())
-                            ->searchable()
+                        // ⚠️⚠️ **Aquí vivía un `Select` PLANO de 18 opciones, y es el crítico C1 de la
+                        // auditoría**: su rótulo era `«{zona} · {nombre}»` y **nada decía si aquello
+                        // era una entrada o un pack** —ni el prefijo de zona servía: «JUMP ·
+                        // Cumpleaños E2E extras» es un PACK—. Con él, una admin vendió un cumpleaños
+                        // como diez entradas sueltas: **119,00 € en vez de 180,00 €**, la sala sin
+                        // reservar, 60 min de ocupación en vez de 120 y sin formulario de invitados.
+                        //
+                        // ▶ Las tarjetas van **AGRUPADAS POR TIPO**, que es lo que cierra el agujero:
+                        // el operador ya no elige de una lista donde las dos cosas se parecen, elige
+                        // dentro de «Entradas» o dentro de «Packs y celebraciones».
+                        ViewComponent::make('filament.pages.partials.manual-order-products')
+                            ->viewData(fn (): array => ['grupos' => $this->productCards()]),
+                    ]),
+            ]);
+    }
+
+    private function whenStep(): Group
+    {
+        return Group::make()
+            ->visible(fn (): bool => $this->step === self::STEP_WHEN)
+            ->schema([
+                Section::make(__('admin.orders.create_manual.step_when'))
+                    ->schema([
+                        TextInput::make('sel_qty')
+                            ->label(fn (): string => $this->isPackSelected()
+                                ? __('admin.orders.create_manual.guests')
+                                : __('admin.orders.create_manual.quantity'))
+                            ->numeric()
+                            // Min/máx aplicados en el campo (no solo al validar): packs respetan
+                            // su rango [min_qty, max_qty]; entradas mínimo 1, sin tope.
+                            // `#329`: con el interruptor puesto el suelo es 1; el tope no se mueve.
+                            ->minValue(fn (): int => $this->selectedMinQty())
+                            ->maxValue(fn (): ?int => $this->selectedMaxQty())
+                            ->default(1)
+                            ->helperText(fn (): ?string => $this->belowMinimumActive()
+                                ? __('admin.orders.create_manual.below_minimum_active', [
+                                    'min' => $this->selectedProduct()?->contractableMinimum() ?? 1,
+                                ])
+                                : null)
+                            // Reactivo: al cambiar el nº de invitados, el widget de complementos
+                            // recalcula los `per_guest` (uno por invitado) y su importe.
+                            ->live(onBlur: true),
+
+                        // Menores a cargo (Fase 6 · C, tanda 5, `specs/menores-a-cargo.md` §9.10 D14·5): para
+                        // quién son estas ENTRADAS. Solo con cliente, fecha y entrada, y solo si el cliente
+                        // tiene alguno; los no asignables van deshabilitados con su motivo (las mismas reglas
+                        // que el embudo, `DependentAssigner::candidates()`). Se guarda en la línea y se escribe
+                        // DESPUÉS de cobrar (`create()`), nunca dentro de la transacción del cobro.,
+
+                        Toggle::make('sel_below_minimum')
+                            ->label(__('admin.orders.create_manual.below_minimum_label'))
+                            ->helperText(fn (): string => __('admin.orders.create_manual.below_minimum_help', [
+                                'min' => $this->selectedProduct()?->contractableMinimum() ?? 1,
+                            ]))
+                            ->default(false)
                             ->live()
+                            ->visible(fn (): bool => $this->canGoBelowPackMinimum())
+                            // Al apagarlo, una cantidad que solo era válida con la excepción dejaría
+                            // el campo por debajo de su suelo: se sube al mínimo del pack en el mismo
+                            // gesto en vez de esperar a que el operador choque con la validación.
                             ->afterStateUpdated(function (Get $get, callable $set): void {
-                                $set('sel_time', null);
-                                // `#329`: el interruptor del mínimo se apaga al cambiar de producto —
-                                // es una excepción sobre ESTE pack, no un modo del formulario. Va
-                                // ANTES del default de cantidad, que lee el suelo vigente.
-                                $set('sel_below_minimum', false);
-                                $set('sel_qty', $this->defaultQtyFor((int) $get('sel_product_id')));
-                                $set('event_data', []);
-                                $set('sel_dependent_ids', []);
-                                // Pre-carga los complementos incluidos/obligatorios y el default de
-                                // cada grupo del producto elegido (igual que la web).
-                                $this->initManualAddonDefaults();
+                                $min = $this->selectedMinQty();
+                                if ((int) $get('sel_qty') < $min) {
+                                    $set('sel_qty', $min);
+                                }
                             }),
 
-                        // ⚠️ **La TIRA DE DÍAS RÁPIDOS, y el calendario se queda debajo** (`#240`, U7).
-                        // Con la tablet en la mano el popover del calendario son cuatro toques y
-                        // objetivos de 36 px, y la reserva de mostrador casi siempre es para hoy o
-                        // para los próximos días. La tira resuelve ESE caso con un toque.
-                        // ❗ **El calendario NO se retira**, y es la misma razón que en el cajón del
-                        // cliente (`specs/cajon-en-movil.md` §4.1): un cumpleaños se reserva con meses
-                        // de antelación y eso no se alcanza deslizando. La tira son 14 días; el resto,
-                        // el calendario.
+                        // El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2,
+                        // T6). Es la MISMA pregunta que el cajón le hace al cliente, en la boca del
+                        // operador: *«¿viene algún menor que no sea hijo de quien reserva?»*.
+                        //
+                        // ⚠️ **Solo con `optional`.** Con `required` el servidor marca la línea igual
+                        // (`OrderCreator`), y ofrecer aquí un interruptor que no decide nada invita a
+                        // apagarlo y a creer que se ha apagado algo.
+                        //
+                        // ⚠️ **Y esto es el «caso 3» del owner por dentro**: el mostrador crea un
+                        // pedido con responsable, así que la venta en persona entra por la misma
+                        // puerta que la web y recibe el mismo correo con el enlace (§12.3).,
+
                         ViewComponent::make('filament.pages.partials.manual-order-daystrip')
                             ->viewData(fn (): array => ['days' => $this->quickDays()])
                             ->visible(fn (): bool => $this->quickDays() !== []),
@@ -414,36 +634,22 @@ class CreateManualOrderPage extends Page
                         // `#329` — el gemelo de D7 al CREAR: el interruptor solo se OFRECE con su
                         // permiso y con un mínimo que rebajar, y va ANTES del campo de cantidad
                         // porque es lo que decide su suelo. `live()` sin `onBlur` para que el campo
-                        // de al lado se re-evalúe en el mismo gesto.
-                        Toggle::make('sel_below_minimum')
-                            ->label(__('admin.orders.create_manual.below_minimum_label'))
-                            ->helperText(fn (): string => __('admin.orders.create_manual.below_minimum_help', [
-                                'min' => $this->selectedProduct()?->contractableMinimum() ?? 1,
-                            ]))
-                            ->default(false)
-                            ->live()
-                            ->visible(fn (): bool => $this->canGoBelowPackMinimum())
-                            // Al apagarlo, una cantidad que solo era válida con la excepción dejaría
-                            // el campo por debajo de su suelo: se sube al mínimo del pack en el mismo
-                            // gesto en vez de esperar a que el operador choque con la validación.
-                            ->afterStateUpdated(function (Get $get, callable $set): void {
-                                $min = $this->selectedMinQty();
-                                if ((int) $get('sel_qty') < $min) {
-                                    $set('sel_qty', $min);
-                                }
-                            }),
+                        // de al lado se re-evalúe en el mismo gesto.,
+                    ]),
+            ]);
+    }
 
-                        // El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2,
-                        // T6). Es la MISMA pregunta que el cajón le hace al cliente, en la boca del
-                        // operador: *«¿viene algún menor que no sea hijo de quien reserva?»*.
-                        //
-                        // ⚠️ **Solo con `optional`.** Con `required` el servidor marca la línea igual
-                        // (`OrderCreator`), y ofrecer aquí un interruptor que no decide nada invita a
-                        // apagarlo y a creer que se ha apagado algo.
-                        //
-                        // ⚠️ **Y esto es el «caso 3» del owner por dentro**: el mostrador crea un
-                        // pedido con responsable, así que la venta en persona entra por la misma
-                        // puerta que la web y recibe el mismo correo con el enlace (§12.3).
+    /**
+     * PASO 4 · DATOS de la reserva. **CONDICIONAL**: la mayoría de los productos no tiene ninguno de
+     * los tres (campos de evento, menores asignables, justificante), y entonces el paso se salta.
+     */
+    private function detailsStep(): Group
+    {
+        return Group::make()
+            ->visible(fn (): bool => $this->step === self::STEP_DETAILS)
+            ->schema([
+                Section::make(__('admin.orders.create_manual.step_details'))
+                    ->schema([
                         Toggle::make('sel_guardian_authorization')
                             ->label(__('admin.orders.create_manual.guardian_label'))
                             ->helperText(__('admin.orders.create_manual.guardian_help'))
@@ -457,31 +663,6 @@ class CreateManualOrderPage extends Page
                             ->content(__('admin.orders.create_manual.guardian_required'))
                             ->visible(fn (): bool => $this->selectedProduct()?->requiresGuardianAuthorization() ?? false),
 
-                        TextInput::make('sel_qty')
-                            ->label(fn (): string => $this->isPackSelected()
-                                ? __('admin.orders.create_manual.guests')
-                                : __('admin.orders.create_manual.quantity'))
-                            ->numeric()
-                            // Min/máx aplicados en el campo (no solo al validar): packs respetan
-                            // su rango [min_qty, max_qty]; entradas mínimo 1, sin tope.
-                            // `#329`: con el interruptor puesto el suelo es 1; el tope no se mueve.
-                            ->minValue(fn (): int => $this->selectedMinQty())
-                            ->maxValue(fn (): ?int => $this->selectedMaxQty())
-                            ->default(1)
-                            ->helperText(fn (): ?string => $this->belowMinimumActive()
-                                ? __('admin.orders.create_manual.below_minimum_active', [
-                                    'min' => $this->selectedProduct()?->contractableMinimum() ?? 1,
-                                ])
-                                : null)
-                            // Reactivo: al cambiar el nº de invitados, el widget de complementos
-                            // recalcula los `per_guest` (uno por invitado) y su importe.
-                            ->live(onBlur: true),
-
-                        // Menores a cargo (Fase 6 · C, tanda 5, `specs/menores-a-cargo.md` §9.10 D14·5): para
-                        // quién son estas ENTRADAS. Solo con cliente, fecha y entrada, y solo si el cliente
-                        // tiene alguno; los no asignables van deshabilitados con su motivo (las mismas reglas
-                        // que el embudo, `DependentAssigner::candidates()`). Se guarda en la línea y se escribe
-                        // DESPUÉS de cobrar (`create()`), nunca dentro de la transacción del cobro.
                         CheckboxList::make('sel_dependent_ids')
                             ->label(__('admin.orders.dependents.field_label'))
                             ->helperText(__('admin.orders.dependents.manual_hint'))
@@ -491,7 +672,8 @@ class CreateManualOrderPage extends Page
                             ->columns(1)
                             ->visible(fn (): bool => $this->manualDependentOptions()['options'] !== []),
 
-                        // Datos del evento del pack (reactivo: solo hay UNA selección en curso).
+                        // Datos del evento del pack (reactivo: solo hay UNA selección en curso).,
+
                         Group::make()
                             ->schema(fn (): array => $this->selectionEventDataFields())
                             ->visible(fn (): bool => $this->selectionEventDataFields() !== []),
@@ -499,18 +681,24 @@ class CreateManualOrderPage extends Page
                         // Complementos del producto seleccionado: MISMA lógica/condiciones que la web
                         // (incluido/obligatorio/por-invitado/grupo de elección) vía el view-model
                         // compartido `AddonResolver::viewModel`. La data se pasa por `viewData` (el
-                        // `$this` del partial sería el View, no la página — lección #161).
+                        // `$this` del partial sería el View, no la página — lección #161).,
+                    ]),
+            ]);
+    }
+
+    /** PASO 5 · COMPLEMENTOS. **CONDICIONAL**: se salta si el producto no tiene ninguno. */
+    private function extrasStep(): Group
+    {
+        return Group::make()
+            ->visible(fn (): bool => $this->step === self::STEP_EXTRAS)
+            ->schema([
+                Section::make(__('admin.orders.create_manual.step_extras'))
+                    ->schema([
                         ViewComponent::make('filament.pages.partials.manual-order-addons')
                             ->viewData(fn (): array => ['model' => $this->manualAddonViewModel()])
                             ->visible(fn (): bool => $this->selectedProductAddons()->isNotEmpty()),
 
-                        // "Añadir al carrito" alineado a la derecha.
-                        SchemaActions::make([
-                            Action::make('addLine')
-                                ->label(__('admin.orders.create_manual.add_to_cart'))
-                                ->icon(Heroicon::OutlinedPlus)
-                                ->action('addLineToCart'),
-                        ])->alignment(Alignment::End),
+                        // "Añadir al carrito" alineado a la derecha.,
                     ]),
             ]);
     }
@@ -657,6 +845,11 @@ class CreateManualOrderPage extends Page
         $this->addonsMemoFor = null;
 
         Notification::make()->success()->title(__('admin.orders.create_manual.line_added'))->send();
+
+        // `#462`: añadir una línea TERMINA la línea, así que la pantalla siguiente es el carrito
+        // (`[DECIDIDO owner]`: «después de añadir al carrito, quiero que el carrito ocupe toda la
+        // pantalla»). Volver a productos es una acción propia, no el camino por defecto.
+        $this->step = self::STEP_CART;
     }
 
     public function removeLine(int $index): void
@@ -1244,23 +1437,214 @@ class CreateManualOrderPage extends Page
     }
 
     /** @return array<int,string> */
-    private function productOptions(): array
+    /**
+     * Los productos vendibles AGRUPADOS POR TIPO, listos para pintar en tarjetas (`#462`, T2).
+     *
+     * ⚠️⚠️ **El agrupado es la corrección, no la decoración.** Antes esto devolvía un mapa plano
+     * `id => "{zona} · {nombre}"` para un `Select`, y en él una entrada y un pack se parecían: la
+     * ÚNICA señal era el nombre del producto, que lo escribe el cliente desde el panel. Con las dos
+     * familias separadas y rotuladas, elegir mal deja de ser un descuido y pasa a ser otra pantalla.
+     *
+     * ⚠️ **El orden de los grupos no es alfabético: entradas primero.** Es lo que más se vende en
+     * mostrador, y poner las celebraciones arriba obligaría a pasar por delante de ellas cada vez.
+     *
+     * ⚠️ Cada tarjeta lleva lo que DISTINGUE, no lo que decora: el icono que el propio panel ya deja
+     * elegir, la zona, la duración, el precio y —solo en los packs— el rango de invitados, que es la
+     * marca inconfundible de un producto de grupo.
+     *
+     * @return list<array{type: string, label: string, items: list<array<string, mixed>>}>
+     */
+    public function productCards(): array
     {
-        return TicketType::sellable()
+        $productos = TicketType::sellable()
             ->inOperationalZone() // una zona desactivada no vende (igual que la web)
             ->whereIn('type', [TicketType::TYPE_ENTRY, TicketType::TYPE_PACK])
             ->with('zone')
             ->orderBy('position')
-            ->get()
-            ->mapWithKeys(fn (TicketType $t) => [$t->id => $this->productLabel($t)])
-            ->all();
+            ->get();
+
+        $elegido = (int) ($this->data['sel_product_id'] ?? 0);
+        $grupos = [];
+
+        foreach ([TicketType::TYPE_ENTRY, TicketType::TYPE_PACK] as $tipo) {
+            $items = $productos
+                ->where('type', $tipo)
+                ->map(fn (TicketType $t): array => [
+                    'id' => (int) $t->id,
+                    'name' => (string) $t->tr('name'),
+                    'zone' => $t->zone?->tr('name'),
+                    // ⚠️ El MARCADOR del producto, el que el panel ya deja elegir en el catálogo
+                    // (`ticket_types.icon`). Se resuelve con `iconKey()`, que es el puente único:
+                    // una clave desconocida cae al defecto de su TIPO en vez de quedarse en blanco.
+                    'icon' => $t->iconKey(),
+                    'duration' => $t->duration_min,
+                    'price' => $t->displayPriceCents(),
+                    'price_varies' => $t->priceVaries(),
+                    'is_pack' => $t->isPack(),
+                    'min' => $t->isPack() ? $t->contractableMinimum() : null,
+                    'max' => $t->isPack() ? $t->max_qty : null,
+                    'selected' => $elegido === (int) $t->id,
+                    // Para el «Más info»: si no hay NADA público que enseñar, la tarjeta no ofrece
+                    // un botón que abriría un modal vacío.
+                    'has_info' => filled($t->tr('description')) || filled($t->tr('features')),
+                ])
+                ->values()
+                ->all();
+
+            if ($items === []) {
+                continue;
+            }
+
+            $grupos[] = [
+                'type' => $tipo,
+                // Mismo vocabulario que el catálogo (`admin.catalog.types.*`), en plural: dos
+                // nombres para «pack» en el mismo panel sería el problema que esto viene a resolver.
+                'label' => __('admin.orders.create_manual.product_group.'.$tipo),
+                'items' => $items,
+            ];
+        }
+
+        return $grupos;
     }
 
+    /**
+     * «Más info» de un producto: lo que el CLIENTE ve de él (`#462`, T2, `[owner]`: «un CTA de "más
+     * info" abre un modal con la descripción y demás datos públicos, o sea datos de la landing»).
+     *
+     * ⚠️⚠️ **Es de LECTURA y de datos PÚBLICOS, y eso es lo que la hace segura de enseñar delante de
+     * un cliente**: sale de los mismos campos que pinta la web (descripción, condiciones,
+     * características, duración, rango de invitados). Ni precios de coste, ni aforo, ni nada que el
+     * operador no pueda leer en voz alta.
+     *
+     * ⚠️ **No decide nada.** Abrirla no elige el producto: se puede consultar y cerrar. Si eligiera,
+     * el operador no podría comparar dos productos sin comprometerse con el primero que abre.
+     */
+    public function productInfoAction(): Action
+    {
+        return Action::make('productInfo')
+            ->modalHeading(fn (array $arguments): string => (string) (TicketType::find($arguments['product'] ?? 0)?->tr('name') ?? ''))
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel(__('admin.orders.create_manual.product_info_close'))
+            ->schema(fn (array $arguments): array => $this->productInfoFields((int) ($arguments['product'] ?? 0)));
+    }
+
+    /**
+     * Los campos del modal de «Más info», en el orden en que se cuentan por teléfono.
+     *
+     * ⚠️ **Público como `productCards()`**: los dos son compositores de vista, y el modal de Filament
+     * es un `wire:partial` que `assertSee` **no ve** (la trampa de `#161`, pagada otra vez aquí).
+     * Se asevera por CONDUCTA sobre lo que compone, no por el HTML de la página.
+     *
+     * @return array<int, mixed>
+     */
+    public function productInfoFields(int $id): array
+    {
+        $type = TicketType::with('zone')->find($id);
+
+        if ($type === null) {
+            return [];
+        }
+
+        $filas = [];
+
+        // La ficha seca primero: es lo que el operador necesita para contestar «¿cuánto dura?».
+        $ficha = array_filter([
+            __('admin.catalog.col_type') => __('admin.catalog.types.'.$type->type),
+            __('admin.catalog.col_zone') => $type->zone?->tr('name'),
+            __('admin.catalog.col_duration') => $type->duration_min ? __('admin.orders.create_manual.product_minutes', ['n' => $type->duration_min]) : null,
+            __('admin.orders.create_manual.product_guests') => $type->isPack()
+                ? __('admin.orders.create_manual.product_guest_range', ['min' => $type->contractableMinimum(), 'max' => $type->max_qty ?? '∞'])
+                : null,
+        ], fn ($v): bool => filled($v));
+
+        foreach ($ficha as $rotulo => $valor) {
+            $filas[] = TextEntry::make('info_'.md5((string) $rotulo))
+                ->label($rotulo)
+                ->state($valor);
+        }
+
+        // ⚠️ El rótulo es el MISMO que usa la ficha del catálogo (`admin.catalog.field_description`):
+        // el operador acaba de escribir ese campo ahí, y llamarlo de otra forma aquí le haría dudar
+        // de si está mirando lo mismo.
+        //
+        // ⚠️⚠️ **`ticket_types.conditions` NO se enseña, y no es un olvido**: medido, esa columna
+        // **no la lee nadie y el catálogo no la edita** —cero consumidores en todo el repo—. Pintarla
+        // aquí la convertiría en el único sitio donde aparece un texto que el operador no puede
+        // rellenar desde ninguna pantalla. Ficha en `DEUDA.md`: es columna muerta, preexistente.
+        if (filled($type->tr('description'))) {
+            $filas[] = TextEntry::make('info_description')
+                ->label(__('admin.catalog.field_description'))
+                ->state($type->tr('description'));
+        }
+
+        // ⚠️⚠️ **`features` es TRADUCIBLE y `tr()` es su puente**: un `(array) $type->features` da el
+        // mapa de idiomas entero (`{en: [...], es: [...], fr: [...]}`) y recorrerlo a mano sacaba
+        // **las tres lenguas juntas** — medido en navegador: «Access to the Jump zone · Acceso a la
+        // zona Jump · Accès à la zone Jump». *Inventar un recorrido donde ya hay un puente es cómo
+        // se cuela un idioma equivocado sin que nada falle.*
+        $features = collect((array) $type->tr('features'))
+            ->filter(fn ($f): bool => is_string($f) && filled($f))
+            ->all();
+
+        if ($features !== []) {
+            $filas[] = TextEntry::make('info_features')
+                ->label(__('admin.catalog.field_features'))
+                ->state(implode(' · ', $features));
+        }
+
+        return $filas;
+    }
+
+    /**
+     * El rótulo de un producto en UNA línea: «{zona} · {nombre}».
+     *
+     * ⚠️ **Sobrevive al `Select` que lo estrenó** porque tiene otro consumidor: es la etiqueta con
+     * la que la línea aparece en el carrito, donde no hay tarjeta que enseñe la zona aparte.
+     */
     private function productLabel(TicketType $type): string
     {
         $zone = $type->zone?->tr('name');
 
         return ($zone ? "{$zone} · " : '').(string) $type->tr('name');
+    }
+
+    /**
+     * Elegir producto. **Es la ÚNICA puerta** (`#462`, T2).
+     *
+     * ⚠️⚠️ **Aquí vivía un `afterStateUpdated` de Filament y ahora es un `wire:click`, y eso cambia
+     * DÓNDE se puede escribir**: dentro de un `afterStateUpdated` escribir en `$this->data` a mano
+     * se pierde —el formulario vuelve a sincronizar su estado después— y hay que usar el `$set` del
+     * campo; desde un `wire:click` es al revés. La regla de `#240` sigue valiendo: **un escritor por
+     * puerta**. Con una sola puerta no hay dos escrituras que puedan divergir.
+     *
+     * ⚠️ **El servidor vuelve a comprobar el producto** (`AFORO-02`): el navegador propone un id y
+     * aquí se confirma que sigue siendo vendible y de una zona operativa. Un `wire:click` se puede
+     * llamar con cualquier número.
+     */
+    public function pickProduct(int $id): void
+    {
+        $ofrecible = TicketType::sellable()
+            ->inOperationalZone()
+            ->whereIn('type', [TicketType::TYPE_ENTRY, TicketType::TYPE_PACK])
+            ->whereKey($id)
+            ->exists();
+
+        if (! $ofrecible) {
+            return;
+        }
+
+        $this->data['sel_product_id'] = $id;
+
+        // Los mismos olvidos que hacía el `afterStateUpdated`: cambiar de producto invalida la hora,
+        // la excepción del mínimo, los campos del evento y los menores asignados.
+        $this->data['sel_time'] = null;
+        $this->data['sel_below_minimum'] = false;
+        $this->data['sel_qty'] = $this->defaultQtyFor($id);
+        $this->data['event_data'] = [];
+        $this->data['sel_dependent_ids'] = [];
+        $this->initManualAddonDefaults();
+
+        $this->advanceAfterChoice();
     }
 
     /** Producto en curso, leído del estado del formulario (scope-independiente). */
@@ -1408,6 +1792,11 @@ class CreateManualOrderPage extends Page
         }
 
         $this->data['sel_time'] = $time;
+
+        // `#462`, `[DECIDIDO owner]`: «al elegir la hora, siguiente pantalla automáticamente».
+        // ⚠️ Va DESPUÉS de la guarda: una franja no vendible no elige nada, así que tampoco avanza
+        // —si avanzara, el operador creería haber elegido una hora que el servidor ya rechazó—.
+        $this->advanceAfterChoice();
     }
 
     /** Despliega o pliega el calendario amplio del paso 2 (`#241`). */
@@ -1666,8 +2055,44 @@ class CreateManualOrderPage extends Page
     {
         return [
             self::STEP_CUSTOMER => __('admin.orders.create_manual.step_customer'),
-            self::STEP_PRODUCTS => __('admin.orders.create_manual.step_products'),
+            self::STEP_PRODUCT => __('admin.orders.create_manual.step_products'),
+            self::STEP_WHEN => __('admin.orders.create_manual.step_when'),
+            self::STEP_DETAILS => __('admin.orders.create_manual.step_details'),
+            self::STEP_EXTRAS => __('admin.orders.create_manual.step_extras'),
+            self::STEP_CART => __('admin.orders.create_manual.step_cart'),
             self::STEP_PAYMENT => __('admin.orders.create_manual.step_payment'),
+        ];
+    }
+
+    /**
+     * Lo elegido en cada paso ya contestado, para que el indicador de arriba no sea solo un número.
+     *
+     * ⚠️ Es lo que hace SEGURO el auto-avance: si el operador se equivoca de producto, lo ve escrito
+     * y vuelve con un toque, en vez de retroceder a ciegas.
+     *
+     * @return array<int, string|null>
+     */
+    public function stepChoices(): array
+    {
+        $type = $this->selectedProduct();
+        $date = $this->data['sel_date'] ?? null;
+        $time = $this->data['sel_time'] ?? null;
+        $qty = (int) ($this->data['sel_qty'] ?? 0);
+
+        $cuando = null;
+        if ($date && $time) {
+            $cuando = trim(($qty > 0 ? $qty.' · ' : '')
+                .Carbon::parse((string) $date)->isoFormat('D MMM').' · '.substr((string) $time, 0, 5));
+        }
+
+        return [
+            self::STEP_CUSTOMER => $this->currentCustomerLabel(),
+            self::STEP_PRODUCT => $type?->tr('name'),
+            self::STEP_WHEN => $cuando,
+            self::STEP_DETAILS => null,
+            self::STEP_EXTRAS => null,
+            self::STEP_CART => $this->cart === [] ? null : (string) count($this->cart),
+            self::STEP_PAYMENT => null,
         ];
     }
 

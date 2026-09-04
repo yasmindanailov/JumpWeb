@@ -1,8 +1,8 @@
 <?php
 
 return [
-    // 面板 wordmark 下方的副标题 (#215)。
-    'panel_subtitle' => '控制面板',
+    // 面板 logo 下方的副标题 (#215；文案由 `#461` 确定，来自 owner)。
+    'panel_subtitle' => '管理',
 
     'clusters' => [
         'configuracion' => '设置',
@@ -265,6 +265,11 @@ return [
             'title' => '手动创建订单',
             'step_customer' => '客户',
             'step_products' => '产品',
+            'step_when' => '时间',
+            'step_details' => '资料',
+            'step_extras' => '附加项',
+            'step_cart' => '购物车',
+            'step_skipped' => '无需填写',
             'step_payment' => '付款',
             'customer' => '客户',
             'customer_search_placeholder' => '按邮箱、电话或姓名搜索',
@@ -340,6 +345,22 @@ return [
             'method_datafono' => '刷卡机',
             'back' => '上一步',
             'next' => '下一步',
+            'go_to_pay' => '去付款',
+            'add_more_products' => '添加更多产品',
+
+            // `#462` T2 — las TARJETAS de producto. El agrupado por tipo es lo que cierra
+            // el crítico C1: en el desplegable plano una entrada y un pack se parecían.
+            'product_group' => [
+                'entry' => '门票',
+                'pack' => '套餐与庆生',
+            ],
+            'product_minutes' => ':n 分钟',
+            'product_guest_range' => ':min–:max 位来宾',
+            'product_from' => '起',
+            'product_more_info' => '更多信息',
+            'product_info_close' => '关闭',
+            'product_none' => '目前没有在售产品。请检查产品目录和启用的区域。',
+            'product_guests' => '来宾',
             'confirm' => '确认收款并创建订单?',
             'confirm_description' => '将登记收款并为该客户创建预订。',
             'submit' => '收款并创建订单',
