@@ -9,14 +9,14 @@
 >    cada acción en su sitio»*, con el marco *«usamos Filament, no quiero chapuzas ni deuda, ni huecos;
 >    sé profesional y riguroso»*. ⚠️ **El panel se usa normalmente en TABLET** (iPad horizontal,
 >    1080×810): es el tamaño con el que se mide, no el escritorio.
->    ▶ **Lo hecho, en el árbol** — cinco commits, `origin/main` al día:
+>    ▶ **Lo hecho, en el árbol** — seis commits, `origin/main` al día:
 >    **`#460`** la AUDITORÍA (`docs/specs/auditoria-panel-admin.md`, 4 críticos · 10 mayores · 11
 >    menores, medidos con Chromium sobre el panel real) · **`#461`** el SHELL (marca por tema, buscador
 >    centrado, idioma al menú del avatar, «Crear pedido» a escala de acción, menú lateral fijo y
 >    estrecho) · **`#462`** la T1 del asistente (de 3 pasos a **7**, con el salto de los pasos que no
 >    preguntan nada) · **`#463`** la T2 (el producto en **tarjetas agrupadas**, que cierra el crítico
 >    **C1** — el cumpleaños vendido como diez entradas) · **`#464`** la **T3**: el calendario grande y
->    **la cesta a la oferta**.
+>    **la cesta a la oferta** · **`#465`** el rendimiento de la oferta (el paso, de 714 a 95 ms).
 >    ▶ ✅ **T3 HECHA** (`specs/asistente-crear-pedido.md` §9). Las dos mitades:
 >    **(a)** el calendario **grande y siempre visible** —medido antes: era un popover de **259×248 px
 >    con celdas de 29×28**, bajo el mínimo táctil y a dos toques—; `[DECIDIDO owner]` **la tira de 14
@@ -29,6 +29,17 @@
 >    subió entera a **`CartOccupants`** (`forCart()` + `packs()`), que sigue siendo la derivación
 >    ÚNICA; `OrderCreator` no cambia. Los **siete** escenarios de `purchase:verify-oversell` verdes
 >    sobre InnoDB.
+>    ▶ ✅ **Y la DEUDA que la T3 dejó anotada está RETIRADA** (`#465`, el mismo día, a petición del
+>    owner). El paso costaba **~714 ms** de servidor y **la consulta cruda eran 9,9**: el coste era
+>    hidratar **1.947 modelos** y resolver la ventana del día **once veces por día**. ⚠️⚠️ **Y no era
+>    del panel**: la web y la API del cajón llaman a lo mismo, así que **cada cliente pagaba ~420 ms
+>    al abrir su calendario**. Hoy: paso **94,6 ms**, read-model público **44,8**. ▶ Las FECHAS leen
+>    filas crudas y resuelven la ventana una vez por día; las HORAS cargan **solo el día que se
+>    pregunta**. ❗❗ **Si tocas `SlotOffer`, lee `AFORO-02` primero**: hay DOS vías internas y lo que
+>    las mantiene siendo la misma fuente son la consulta compartida, el predicado compartido y
+>    `SlotOfferPathParityTest` (equivalencia día↔horas). ⚠️⚠️ **Y `clampToHorizon()` no se toca**:
+>    acotar por día **retira el techo de venta**, y sin él un día a dos años vista se vendería sin
+>    que nada fallara.
 >    ▶ ❗❗❗ **LO SIGUIENTE ES LA T4 · EL DESENLACE**: la pantalla de «pedido creado» que refleje lo
 >    que de verdad pasó (⚠️ **hay clientes SIN email: no prometas un correo que no se manda**), y con
 >    ella **los 5 controles bajo 44 px del paso del carrito** (medidos y anotados en
@@ -1376,9 +1387,9 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4276 en verde** (26.816 aserciones, 1 skipped a propósito), medida el 2026-09-04 con las
-> cuatro tandas del panel dentro (`#461` +12 · `#462` +13 · `#463` +10 · `#464` +13, y **seis casos
-> re-apuntados por sujeto** al retirarse la tira de días). **JS 951** (`node --test`).
+> Suite **4284 en verde** (26.843 aserciones, 1 skipped a propósito), medida el 2026-09-04 con las
+> cinco tandas del panel dentro (`#461` +12 · `#462` +13 · `#463` +10 · `#464` +13 · `#465` +8, y
+> **seis casos re-apuntados por sujeto** al retirarse la tira de días). **JS 951** (`node --test`).
 > ⚠️ **El `pre-push` compara este número con la suite real y RECHAZA el push si no cuadra** — es la
 > única copia a propósito, no la dupliques en otro documento. Antes: 4228 el 2026-09-03 (árbol
 > fusionado tras `#452`, con las cuatro tandas T0–T3 de `#413` dentro).

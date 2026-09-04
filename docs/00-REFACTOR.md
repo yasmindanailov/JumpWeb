@@ -3832,7 +3832,7 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **Una elección menor del owner**, anotada sin tocarla: un extra **cerrado que nunca se pidió** hoy
       se pinta igual, con su «ya no se puede cambiar» y su 0.
 
-### EL PANEL DE ADMIN · UI/UX 🟦 EN CURSO — la auditoría y las cuatro primeras tandas (`#460` → `#464`, carril del panel, banda `#460`–`#469`)
+### EL PANEL DE ADMIN · UI/UX 🟦 EN CURSO — la auditoría y las cinco primeras tandas (`#460` → `#465`, carril del panel, banda `#460`–`#469`)
 - [x] **La AUDITORÍA del panel, EN EL REPO** (`specs/auditoria-panel-admin.md`, `#460`): 10 pantallas
       × 3 tamaños con Chromium sobre el panel real + 5 sondas de estados de trabajo → **4 críticos ·
       10 mayores · 11 menores**. **§7 es lo que NO hay que tocar** y **§9.bis lo que falla a
@@ -3863,6 +3863,16 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       única; `OrderCreator` intacto. `CreateManualOrderCalendarTest` (7) ·
       `CreateManualOrderCartAvailabilityTest` (7) · **14/14 mutaciones** · los **siete** escenarios de
       `purchase:verify-oversell` sobre InnoDB · N+1 del elegidor de paso: **54 → 5** consultas
+- [x] **El RENDIMIENTO de la oferta** (`#465`, `INVARIANTES AFORO-02`), que sale de la ficha de deuda
+      que la T3 dejó anotada y la retira el mismo día. Medido: el paso costaba **714 ms** y la
+      consulta cruda **9,9** — el coste era hidratar **1.947 modelos** y resolver la ventana del día
+      **once veces por día**; y **no era del panel**, la web y la API del cajón pagaban lo mismo
+      (~420 ms por calendario abierto). Hoy: paso **94,6 ms**, read-model público **44,8**. Las
+      FECHAS leen filas crudas del horizonte; las HORAS cargan **solo el día que se pregunta**.
+      ⚠️⚠️ Lo que lo hace robusto: la consulta y el predicado son UNO para las dos vías,
+      `clampToHorizon()` re-pone el techo de venta que la consulta del horizonte ponía sola, y
+      **`SlotOfferPathParityTest` las ata por equivalencia** (un día se ofrece si y solo si sus horas
+      no están vacías). 8 casos · **8/8 mutaciones** · los siete escenarios de concurrencia
 - [ ] **T4 · la pantalla de «pedido creado»** que refleje lo que de verdad pasó (⚠️ hay clientes SIN
       email: no prometer un correo que no se manda), y con ella **los 5 controles bajo 44 px del paso
       del carrito**, ya medidos

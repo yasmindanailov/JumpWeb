@@ -23466,3 +23466,71 @@ restaurando por copia de seguridad, no con `git checkout`) · 147 casos previos 
 `SlotOffer` en verde tras re-apuntar seis **por sujeto** · **los SIETE escenarios de
 `purchase:verify-oversell` sobre InnoDB** (`CartOccupants` está en el `CRITICAL_RE`) · sonda de
 navegador con el recorrido entero · Pint · docs-check · **suite 4.275 verde**.
+
+## #465 · 2026-09-04 · La oferta deja de traerse seis meses para contestar por un día — y las dos vías quedan atadas por una equivalencia
+
+**Sale de la ficha de deuda que abrió `#464` y la retira el día siguiente**, a petición del owner
+(*«esa deuda no me gusta, dime opciones… ¿es la manera más profesional y robusta?»*).
+
+**LO MEDIDO PRIMERO, que cambió el diagnóstico.** El paso «Cuándo» costaba **~714 ms** de servidor,
+pero **la consulta cruda son 9,9 ms**: el coste era PHP. Desglosado: **hidratar 1.947 modelos**
+(68 ms) y **resolver la ventana del día once veces por día** (124 de los 167 ms del filtro), y el
+horizonte se cargaba **dos veces** por render. ⚠️⚠️ **Y no era un problema del panel**:
+`AvailabilityReader` —la web y la API del cajón— llama a lo mismo, así que **cada cliente que abría
+su calendario pagaba ~420 ms**.
+
+⚠️ **Una opción que parecía buena y no lo era**: memoizar la ventana por (día, zona) daba **−62 ms de
+714 (−9 %)** medido de punta a punta, contra los −150 que prometía el micro-benchmark. *Un
+micro-benchmark mide una pieza en un banco, no la pieza dentro de la máquina.*
+
+**LO QUE SE DESCARTÓ, Y POR QUÉ.** **Traducir la regla a SQL** (un `JOIN` con horarios, temporadas y
+fechas especiales) sería lo más rápido y **duplicaría la regla de negocio** —prioridad de temporadas,
+herencia de zona, `ignores_venue_closure`, offsets del producto, antelación—, que es el defecto que
+este proyecto persigue. **Cachear la disponibilidad**: los puntos de invalidación son muchos y una
+caché rancia **ofrece días que no existen**; aforo no se cachea. **Materializar los días ofrecibles**:
+segunda fuente de verdad con deriva silenciosa. **Un índice**: el plan es un escaneo completo, pero
+la consulta cuesta 9,9 ms — no era el cuello.
+
+**LO HECHO.** `SlotOffer` gana un núcleo con **la consulta en UN sitio** (`offeredSlotQuery`, con el
+*scope* `sellableOnline()` y no un `WHERE` copiado) y **el predicado en UN sitio** (`passesOffer`:
+corte intra-día + ventana viva + antelación). Sobre él, dos vías:
+
+- **`offerableDates()`** lee **filas crudas** del horizonte (`toBase()`, solo `date` y `start_time`),
+  resuelve la ventana **una vez por día** y para en cuanto un día pasa: **329 → 18 ms**.
+- **`offerableTimes()`** carga **solo el día que se pregunta**: **364 → 30 ms**.
+
+**Resultado medido**: el paso del panel **714 → 94,6 ms**; el read-model público **421 → 44,8**
+(fechas) y **396 → 40,3** (horas). Con control: **las mismas 176 fechas** y las mismas horas y plazas
+por los dos caminos, antes y después.
+
+⚠️⚠️ **EL RIESGO QUE INTRODUCE EL ATAJO, Y CÓMO SE CIERRA.** Mientras la consulta abarcaba
+`[hoy, hoy+N meses]`, **el techo de venta lo ponía ella**; al preguntar por un día suelto ese techo
+desaparece y **un día a dos años vista se vendería sin que nada fallara**. Lo re-pone
+`clampToHorizon()`, con caso en las dos direcciones y mutación que muerde.
+
+❗❗❗ **Y la guarda que hace robusto tener dos vías: la EQUIVALENCIA.** `SlotOfferPathParityTest`
+recorre el horizonte entero comprobando que **un día está en `offerableDates()` si y solo si
+`offerableTimes()` de ese día devuelve algo**, sobre una siembra con los cuatro motivos por los que
+un día se cae (cerrado, fuera de ventana, ya pasado, fuera del horizonte). *El peligro de dos
+recorridos no es el rendimiento: es que se separen, y eso no lo ve ninguna prueba que mire uno solo.*
+
+**Lo que enseñó el arnés** (5/9 la primera vez, **8/8** al final):
+
+1. ⚠️⚠️ **El día CERRADO de la siembra no tenía SUJETO**: caía en un día cuyas franjas ya estaban
+   fuera de horario, así que el cierre no decidía nada y la mutación «la vía ligera reutiliza la
+   ventana del primer día» **pasaba en verde**.
+2. ⚠️ **Faltaban dos sujetos enteros**: ninguna guarda tenía una franja retirada de la venta online
+   ni **dos zonas**, así que quitar el *scope* `sellableOnline()` o el filtro de zona no ponía nada
+   en rojo. *Un filtro sin dos sujetos no se puede ver fallar.*
+3. ⚠️ **Una guarda mía era código muerto**: el `if ($from > $to)` que escribí como cinturón resultó
+   **inalcanzable** —el recorte devuelve antes y `whereBetween` invertido no devuelve filas—, y el
+   arnés lo dijo. Se retiró: defensa que no defiende es ruido para el siguiente lector.
+4. ⚠️ **La primera versión del caso de la fecha especial falló con el producto sano**:
+   `OperatingSchedule` memoiza horario, temporadas y fechas especiales **por instancia**, así que un
+   caso que pregunta antes de sembrar mide el horario de antes (la trampa de `#268`, por otra
+   puerta). Siembra primero, instancia limpia después.
+
+**Verificación**: `SlotOfferPathParityTest` (8 casos) · **8/8 mutaciones**
+(`scripts/mutar-oferta-ligera.sh`) · los **siete** escenarios de `purchase:verify-oversell` sobre
+InnoDB · control de igualdad panel↔read-model antes y después · sonda de navegador del paso (mismas
+30 celdas, mismas 11 horas, 0 controles bajo 44 px) · Pint · docs-check · **suite 4.284 verde**.

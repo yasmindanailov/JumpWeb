@@ -365,9 +365,10 @@ puerta.
    D`). Lo cazó la guarda al aseverar la fila; el rótulo pasa a ser la abreviatura del idioma, y la
    guarda vigila la PROPIEDAD —siete rótulos distintos— y no las letras, que dependen del idioma.
 6. ▶ **Coste medido del paso** (catálogo real): `calendarMonth()` **8 consultas / 343 ms** y
-   `timeChips()` **39 / 371 ms**. El grueso no son las consultas: es `SlotOffer::offeredSlots()`
-   hidratando las ~1.900 franjas del horizonte para responder por un mes. Ficha en `DEUDA.md`; no es
-   de esta tanda.
+   `timeChips()` **39 / 371 ms**. El grueso no son las consultas —la cruda son 9,9 ms—: es
+   `SlotOffer::offeredSlots()` hidratando las ~1.900 franjas del horizonte para responder por un mes.
+   ✅ **ARREGLADO al día siguiente en `#465`** (`INVARIANTES` `AFORO-02`): el paso queda en **94,6 ms**
+   y el calendario del CLIENTE en la web, que llamaba a lo mismo, en **44,8**.
 7. ▶ **Y de paso, un N+1 del elegidor de producto**: pintar las 18 tarjetas costaba **54 consultas**
    —tres por producto, `prices`, `price_tiers` y la `rate_type` de cada precio— y con la precarga son
    **5**. Guarda nueva que asevera la PROPIEDAD (mismo coste con 2 productos que con 12) en vez de un
