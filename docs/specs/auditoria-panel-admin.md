@@ -337,8 +337,11 @@ a Salir**.
 reserva, «TOTALES DEL PEDIDO» y «TOTALES DEL PRODUCTO» enseñan **las mismas tres cifras** (Total
 77,00 € · Pagado 88,00 € · A devolver en el parque −11,00 €) **con un «Ver el desglose» cada uno**,
 a 215 px de distancia en la misma pantalla. Y **13 de sus 15 controles miden menos de 44 px**: el
-enlace al cliente (132×20), su teléfono (79×17), «Ver el desglose» (86×16), «Ver más» (47×16), el
+enlace al cliente (132×20), su teléfono (79×17), ~~«Ver el desglose» (86×16)~~, «Ver más» (47×16), el
 icono de copiar el código (24×24), «Acciones del pedido» (188×36) y los cinco iconos de la reserva.
+▶ ✅ **«Ver el desglose» pasa a 86×44 en `#466`**, y con él las CUATRO superficies del panel que
+pintan el libro: es un control del pintor compartido, así que se arregla una vez. El resto de M7
+sigue abierto.
 
 **M8 · El supuesto que retiró «Puerta» del menú del admin no se cumple.** `#320` la bajó a Ajustes
 con este argumento del owner: *«es innecesario, él puede ver todos los detalles de cualquier cliente

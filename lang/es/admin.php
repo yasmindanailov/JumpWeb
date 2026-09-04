@@ -405,7 +405,24 @@ return [
             'cart_empty' => 'Añade al menos un producto al pedido.',
             'invalid_method' => 'Método de pago no válido.',
             'reservation_failed' => 'No se pudo crear el pedido.',
-            'created' => 'Pedido :code creado y cobrado.',
+            // `#466` — EL DESENLACE. La clave `created` del *toast* murió con la redirección a la
+            // ficha: lo que decía en una línea que se desvanece lo dice ahora la pantalla entera.
+            'done_title' => 'Pedido creado y cobrado',
+            'done_charged' => 'Cobrado ahora · :method',
+            'done_mail_title' => 'Se le ha enviado por correo',
+            'done_mail_confirmation' => 'La confirmación del pedido, a :email',
+            'done_mail_guest_form' => '{1} El formulario de invitados de su reserva|[2,*] Los formularios de invitados de sus :count reservas',
+            'done_mail_guardian' => '{1} El justificante para un menor invitado|[2,*] Los justificantes para menores invitados de sus :count reservas',
+            // ⚠️ Este texto es el encargo: con un cliente de agenda (solo teléfono) NO se envía nada,
+            // y el operador tiene que enterarse ANTES de despedirlo.
+            'done_no_mail_title' => 'Este cliente no tiene correo: no se le ha enviado nada',
+            'done_no_mail_body' => 'Ni la confirmación, ni el formulario de invitados, ni el justificante. Entrégale los enlaces de abajo por WhatsApp o SMS.',
+            'done_links_title' => 'Enlaces para entregar a mano',
+            'done_link_guest_form' => 'Formulario de invitados · :product',
+            'done_link_guardian' => 'Justificante de un menor invitado · :product',
+            'done_dependents_hint' => 'Asígnalos desde la ficha del pedido, en «Asignar menores».',
+            'done_another' => 'Crear otro pedido',
+            'done_view_order' => 'Ver el pedido',
         ],
 
         // Columnas de la tabla.

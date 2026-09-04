@@ -1,6 +1,6 @@
 # El asistente de «Crear pedido» — de tres pasos a siete, con menos toques
 
-> Estado: 🟦 **DISEÑO CERRADO · T1, T2 y T3 EN EL ÁRBOL** (§7, §8 y §9) · queda la **T4** · Fecha: **2026-09-04**
+> Estado: 🟦 **LAS CUATRO TANDAS EN EL ÁRBOL** (§7 → §10) · queda el **OJO del owner** · Fecha: **2026-09-04**
 > Encargo del owner (2026-09-03, literal en §1) · Decisiones suyas en **§3**
 > Carril: **panel / UI-UX** (este ordenador, banda **`#460`–`#469`**; `#460` la auditoría,
 > `#461` el shell).
@@ -139,7 +139,7 @@ la que sabe en qué paso está.
 | **T1** | **La estructura**: siete pasos, auto-avance, saltar los vacíos, el CTA correcto en cada paso, el carrito como paso propio a una columna | Es un cambio de CONDUCTA y se puede medir en toques. Sin ella, lo demás no tiene dónde vivir |
 | **T2** | **El producto en cards** con icono, agrupadas por tipo, y «más info» con los datos públicos | Es lo que cierra **C1** de la auditoría: hoy nada distingue una entrada de un pack |
 | **T3** ✅ | **Cuándo**: cantidad arriba, calendario grande, horas con plazas — **y la cesta a `SlotOffer`** | Lleva la única corrección de DOMINIO del encargo (§2.3) y no debe viajar con cambios de presentación |
-| **T4** | **El desenlace**: pantalla de pedido creado con lo que de verdad pasó | Toca correos y post-form: es donde más fácil es prometer lo que no ocurrió |
+| **T4** ✅ | **El desenlace**: pantalla de pedido creado con lo que de verdad pasó | Toca correos y post-form: es donde más fácil es prometer lo que no ocurrió |
 
 ---
 
@@ -207,8 +207,11 @@ Recorrido completo con un cliente y un producto reales:
 
 - **No deja huérfanos**: la vista del selector de idioma no aplica aquí, pero sí se retiró el import
   de `Alignment`, cuyo único uso se fue con el botón que salió del formulario.
-- **Sí queda anotado**: en el paso del carrito hay **5 controles bajo 44 px** (los de quitar línea y
-  el paginador del resumen). Es presentación del carrito y le toca a la **T4**.
+- **Sí queda anotado**: en el paso del carrito hay controles bajo 44 px. ⚠️ **Esta frase decía «5, los
+  de quitar línea y el paginador del resumen» y al medirlos en la T4 eran OTROS**: **cuatro**, y los
+  cuatro eran **chips del indicador de pasos** —los de un paso sin elección escrita, que miden una
+  línea—. El de quitar línea ya estaba bien. *Una cifra anotada de memoria envejece igual que un
+  comentario.* ✅ Cerrado en la T4 (§10): **0** en las dos pantallas.
 
 **Verificación**: `CreateManualOrderStepsTest`, **13 casos** con **9 mutaciones y las 9 muerden**
 (control verde antes de mutar, con copias de seguridad y no `git checkout`) · los 86 casos que ya
@@ -386,3 +389,75 @@ Pint · docs-check · **suite 4.275 verde**.
 - **El OJO del owner** sobre el paso «Cuándo» (y el resto del asistente).
 - **La T4**: la pantalla de desenlace, y con ella los **5 controles bajo 44 px** del paso del carrito
   (§7.4).
+
+---
+
+## 10. T4 · El desenlace (2026-09-04, `#466`)
+
+`[owner]`: «después de crear el pedido, una pantalla nueva: pedido creado correctamente…». Hasta hoy
+había **un *toast* y una redirección a la ficha del pedido**: el operador aterrizaba en 2.347 px de
+administración, con el cliente delante y sin que nada le dijera qué hacer ahora.
+
+### 10.1 · La regla de la pantalla: no prometer nada que no haya pasado
+
+El mostrador la lee en voz alta, así que su afirmación más peligrosa es **«se le ha enviado»**.
+
+⚠️⚠️ **Hay clientes SIN correo** —el alta de mostrador solo pide teléfono (`#263`)— y con ellos
+`ManualOrderFulfiller` **no envía NADA**: ni la confirmación, ni el formulario de invitados, ni el
+justificante; lo deja en el log y el enlace hay que entregarlo a mano. Una pantalla que lo diera por
+enviado mandaría al operador a casa creyendo que el cliente tiene su enlace.
+
+▶ Por eso el bloque del correo sale del **MISMO predicado** que usa el fulfiller (`filled($email)`) y
+las listas, de las **MISMAS autoridades** que él consulta (`needsGuestForm()` por reserva y
+`guardianReservations()`). Y la guarda central **no comprueba textos: compara lo que la pantalla dice
+con lo que se ha NOTIFICADO de verdad** (`Notification::fake()`), así que si el fulfiller cambia a
+quién le manda qué, la pantalla se pone roja en vez de empezar a mentir.
+
+Qué enseña, en orden: el **código** (grande, es lo que se dicta por teléfono) · qué se ha reservado ·
+**cobrado ahora + el método** y el **libro** del pedido —pintado por `reservation-financials`, el
+pintor ÚNICO (`#311`): esta pantalla no compone ni un importe— · qué se ha enviado **o el aviso de
+que no** · los **enlaces copiables** para entregar a mano · los menores que la asignación no pudo
+colocar · y dos salidas: **«Crear otro pedido»** y «Ver el pedido».
+
+### 10.2 · Lo que sustituyó a la redirección, y lo que había que reponer con ella
+
+⚠️⚠️ **La redirección era también lo que impedía cobrar dos veces**: al terminar, la página dejaba de
+existir. Sin ella el estado sigue vivo en el navegador, así que un doble clic —o un `wire:click`
+repetido a mano— crearía **otro pedido idéntico**. Lo impide que `create()` **vacíe el carrito**: la
+segunda llamada se encuentra la guarda de «carrito vacío». Hay caso propio que llama a `create()` dos
+veces, y no confía en que el botón ya no esté.
+
+⚠️ **Y del desenlace no se navega.** `next()`, `back()` y `goToStep()` se cierran mientras hay pedido
+en pantalla: un «atrás» llevaría a un asistente con el carrito vacío y un pedido ya cobrado detrás —
+ni el estado de antes ni el de después—. La única salida es **«Crear otro pedido»**, que limpia todo
+**incluido el cliente**: en un mostrador el siguiente es de otra persona, y dejar al anterior puesto
+es la forma más fácil de cobrarle a quien no era (el mismo motivo que «Nueva búsqueda» en la puerta).
+
+### 10.3 · Los controles bajo 44 px, cerrados con su medida
+
+- **El paso del carrito: 0** (eran **4**, no los 5 que §7.4 daba por memoria, y eran los **chips del
+  indicador**, no los de quitar línea). ⚠️ El arreglo de `#464` salvaba a los chips de DOS líneas
+  (45 px) y **dejaba en 36 los de UNA** —los pasos sin elección escrita—; el `min-height` va en el
+  BOTÓN, que es quien decide el alto del chip por los márgenes negativos.
+- **El desenlace: 0.** Los dos CTA salían a **40 px** con el `size="lg"` de Filament.
+- **Y de paso, parte del M7 de la auditoría**: «Ver el desglose» medía **86×16** y es del pintor
+  compartido del libro → **86×44** en las **cuatro** superficies del panel que lo pintan, sin tocar el
+  cuerpo del texto.
+
+### 10.4 · Lo que enseñó el arnés (9/13 la primera vez, **12/12** al final)
+
+1. ⚠️⚠️ **El caso «sin correo» no tenía SUJETO**: compraba una entrada, así que «formularios
+   enviados» y «justificantes enviados» valían 0 **con y sin la regla** y las dos mutaciones pasaban
+   en verde. Hoy compra exactamente lo mismo que el caso con correo — *lo que distingue los dos casos
+   tiene que ser SOLO el correo*.
+2. ⚠️⚠️ **El código del pedido se aseveraba sobre la página entera** y la URL de la ficha
+   (`/admin/orders/R-XXXX`) **lo lleva dentro**: la guarda pasaba con el hueco del código vacío.
+   Acotada al elemento. Es la lección de `#295`/`#303`, otra vez.
+3. ⚠️ **Una mutación EQUIVALENTE, dicha en el arnés**: filtrar las reservas por `needsGuestForm()` da
+   lo mismo que no filtrarlas **recién creado el pedido** (todas están pendientes). El filtro se
+   conserva porque es literalmente la condición del fulfiller, y el arnés explica por qué no la muta.
+
+**Verificación**: `CreateManualOrderDoneTest` (6 casos) · **12/12 mutaciones**
+(`scripts/mutar-asistente-t4.sh`) · el caso de los menores re-apuntado por sujeto (era un *toast*) ·
+la nueva superficie registrada en `LedgerSingleSourceTest` · sonda de navegador (0 controles bajo 44
+en carrito y desenlace, 810 px de 810, sin desbordamiento) · Pint · docs-check · **suite 4.290 verde**.

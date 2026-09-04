@@ -2034,7 +2034,12 @@
     text-align: start;
     /* ⚠️ El botón se come el relleno vertical del chip en vez de crecer por su cuenta: así la DIANA
      * es el chip entero —lo que el operador ve como «el paso»— y el indicador no gana altura. Un
-     * `min-height: 44px` aquí habría sumado el relleno del chip encima: 56 px por fila. */
+     * `min-height` con el relleno del chip ENCIMA habría dado 56 px por fila.
+     * ⚠️⚠️ **El `min-height` es del BOTÓN y por eso vale 44 y no 28**: con los márgenes negativos, el
+     * alto del chip acaba siendo el del botón. `#464` puso solo el relleno y **eso salvaba a los
+     * chips de DOS líneas (45 px) y dejaba en 36 los de UNA** —los pasos sin elección escrita, que en
+     * el paso del carrito son cuatro—; lo cazó la sonda del paso siguiente, no la del suyo. */
+    min-height: 44px;
     margin-block: calc(var(--spacing) * -2);
     padding-block: calc(var(--spacing) * 2);
 }
@@ -2221,4 +2226,122 @@ button.cmo-steps__go:hover .cmo-steps__label {
 
 .cmo-products__empty {
     color: var(--gray-500);
+}
+
+/* ─── El DESENLACE del pedido manual (#466) ─────────────────────────────────────
+ *
+ * Una columna, sin indicador y sin navegación: el asistente terminó. Lo que manda es el CÓDIGO —lo
+ * que el operador dice en voz alta— y, debajo, lo que de verdad ha pasado. */
+.cmo-done {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 4);
+}
+
+.cmo-done__head {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(var(--spacing) * 4);
+}
+
+.cmo-done__tick {
+    display: flex;
+    flex: none;
+    color: var(--success-600);
+}
+
+.cmo-done__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-950);
+}
+
+/* El código es el dato de la pantalla: se dicta por teléfono y se busca en el buscador. */
+.cmo-done__code {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--gray-950);
+}
+
+.cmo-done__who { font-size: 0.875rem; color: var(--gray-500); }
+
+.cmo-done__lines {
+    margin-top: calc(var(--spacing) * 4);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 1);
+}
+
+.cmo-done__line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 2);
+    font-size: 0.875rem;
+    color: var(--gray-800);
+}
+
+.cmo-done__when { color: var(--gray-500); }
+
+.cmo-done__money {
+    margin-top: calc(var(--spacing) * 4);
+    padding-top: calc(var(--spacing) * 3);
+    border-top: 1px solid color-mix(in oklab, var(--gray-950) 8%, transparent);
+}
+
+.cmo-done__method {
+    margin-bottom: calc(var(--spacing) * 2);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.cmo-done__sent {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 1);
+    font-size: 0.875rem;
+    color: var(--gray-700);
+}
+
+.cmo-done__warn { font-size: 0.875rem; color: var(--gray-700); }
+
+.cmo-done__link-label {
+    margin-bottom: calc(var(--spacing) * 2);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+/* Las dos salidas, a lo ancho y a talla de dedo: es lo último que se toca con la cola delante.
+ * ⚠️ El `min-height` es necesario: el `size="lg"` de Filament da **40 px**, y esta pantalla se usa en
+ * tablet — lo midió la sonda, no el ojo. */
+.cmo-done__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 3);
+}
+
+.cmo-done__cta .fi-btn {
+    min-height: 44px;
+}
+
+.cmo-done__title:where(.dark, .dark *),
+.cmo-done__code:where(.dark, .dark *) { color: var(--color-white); }
+
+.cmo-done__line:where(.dark, .dark *),
+.cmo-done__method:where(.dark, .dark *),
+.cmo-done__link-label:where(.dark, .dark *) { color: var(--gray-200); }
+
+.cmo-done__sent:where(.dark, .dark *),
+.cmo-done__warn:where(.dark, .dark *) { color: var(--gray-300); }
+
+.cmo-done__who:where(.dark, .dark *),
+.cmo-done__when:where(.dark, .dark *) { color: var(--gray-400); }
+
+.cmo-done__money:where(.dark, .dark *) {
+    border-top-color: color-mix(in oklab, var(--color-white) 10%, transparent);
 }

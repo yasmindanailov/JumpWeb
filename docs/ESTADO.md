@@ -2,56 +2,40 @@
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-04 — carril PANEL DE ADMIN, banda `#460`–`#469`; el carril de diseño sigue PARADO por el owner, `#452`).
 >
-> **0. EL PANEL DE ADMIN — 🟦 EN CURSO. Lo siguiente es la T4 del asistente: la pantalla de
->    desenlace. Lo único que queda del encargo con trabajo de DOMINIO ya está hecho.**
+> **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
+>    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
 >    ▶ **El encargo del owner** (2026-09-03/04, literal): *«que cualquier persona intuitivamente pueda
 >    hacer la operativa del parque, hay que quitar ruido y poner cada cosa en el momento adecuado y
 >    cada acción en su sitio»*, con el marco *«usamos Filament, no quiero chapuzas ni deuda, ni huecos;
 >    sé profesional y riguroso»*. ⚠️ **El panel se usa normalmente en TABLET** (iPad horizontal,
 >    1080×810): es el tamaño con el que se mide, no el escritorio.
->    ▶ **Lo hecho, en el árbol** — seis commits, `origin/main` al día:
->    **`#460`** la AUDITORÍA (`docs/specs/auditoria-panel-admin.md`, 4 críticos · 10 mayores · 11
->    menores, medidos con Chromium sobre el panel real) · **`#461`** el SHELL (marca por tema, buscador
->    centrado, idioma al menú del avatar, «Crear pedido» a escala de acción, menú lateral fijo y
->    estrecho) · **`#462`** la T1 del asistente (de 3 pasos a **7**, con el salto de los pasos que no
->    preguntan nada) · **`#463`** la T2 (el producto en **tarjetas agrupadas**, que cierra el crítico
->    **C1** — el cumpleaños vendido como diez entradas) · **`#464`** la **T3**: el calendario grande y
->    **la cesta a la oferta** · **`#465`** el rendimiento de la oferta (el paso, de 714 a 95 ms).
->    ▶ ✅ **T3 HECHA** (`specs/asistente-crear-pedido.md` §9). Las dos mitades:
->    **(a)** el calendario **grande y siempre visible** —medido antes: era un popover de **259×248 px
->    con celdas de 29×28**, bajo el mínimo táctil y a dos toques—; `[DECIDIDO owner]` **la tira de 14
->    días se RETIRA** (dos puertas a la misma pregunta, 90 px), lo que **corrige a
->    `auditoria-panel-admin.md` §7**; medido en tablet: celda **72×48**, **0** controles bajo 44 px,
->    **0** desbordamiento, y las franjas **se traen a la vista** al elegir día (sin eso el operador
->    elegía día y no veía pasar nada).
->    **(b)** ⚠️⚠️ **la CESTA a `SlotOffer`**: medido en navegador, con 7 entradas ya en el carrito la
->    segunda línea ofrece **33 plazas donde antes decía 40**. La cuenta **no** se escribió en el panel:
->    subió entera a **`CartOccupants`** (`forCart()` + `packs()`), que sigue siendo la derivación
->    ÚNICA; `OrderCreator` no cambia. Los **siete** escenarios de `purchase:verify-oversell` verdes
->    sobre InnoDB.
->    ▶ ✅ **Y la DEUDA que la T3 dejó anotada está RETIRADA** (`#465`, el mismo día, a petición del
->    owner). El paso costaba **~714 ms** de servidor y **la consulta cruda eran 9,9**: el coste era
->    hidratar **1.947 modelos** y resolver la ventana del día **once veces por día**. ⚠️⚠️ **Y no era
->    del panel**: la web y la API del cajón llaman a lo mismo, así que **cada cliente pagaba ~420 ms
->    al abrir su calendario**. Hoy: paso **94,6 ms**, read-model público **44,8**. ▶ Las FECHAS leen
->    filas crudas y resuelven la ventana una vez por día; las HORAS cargan **solo el día que se
->    pregunta**. ❗❗ **Si tocas `SlotOffer`, lee `AFORO-02` primero**: hay DOS vías internas y lo que
->    las mantiene siendo la misma fuente son la consulta compartida, el predicado compartido y
->    `SlotOfferPathParityTest` (equivalencia día↔horas). ⚠️⚠️ **Y `clampToHorizon()` no se toca**:
->    acotar por día **retira el techo de venta**, y sin él un día a dos años vista se vendería sin
->    que nada fallara.
->    ▶ ❗❗❗ **LO SIGUIENTE ES LA T4 · EL DESENLACE**: la pantalla de «pedido creado» que refleje lo
->    que de verdad pasó (⚠️ **hay clientes SIN email: no prometas un correo que no se manda**), y con
->    ella **los 5 controles bajo 44 px del paso del carrito** (medidos y anotados en
->    `asistente-crear-pedido.md` §7.4).
->    ▶ **EMPIEZA POR** `docs/specs/asistente-crear-pedido.md` **§9** (la T3 ejecutada y sus siete
->    lecciones de arnés), §3 (las tres decisiones del owner) y §5 (el plan por tandas); §7 y §8 son la
->    T1 y la T2. La fila de enrutado de `CLAUDE.md` está al día con las tres.
->    ⚠️ **Y lo que NO hay que tocar** está escrito: `auditoria-panel-admin.md` **§7** (el menú plano,
->    las 20 tarjetas de Ajustes, la puerta en reposo) y **§9.bis** (M3 «no hay pantalla de aforo» y M4
->    «nadie registra el cobro del parque» **son conducta querida**, D3 y D2 del owner: no los
->    «arregles»). **D4 sigue pendiente del detalle del owner.**
->    ⚠️ **Queda el OJO del owner** sobre el asistente entero (pasos 1→7 en su tablet).
+>    ▶ **Lo hecho, en el árbol** — siete commits, `origin/main` al día: **`#460`** la AUDITORÍA
+>    (`docs/specs/auditoria-panel-admin.md`) · **`#461`** el SHELL · **`#462`** la T1 del asistente
+>    (7 pasos, y el vacío se salta) · **`#463`** la T2 (producto en tarjetas agrupadas → cierra **C1**)
+>    · **`#464`** la T3 (calendario grande + la cesta a la oferta) · **`#465`** el rendimiento de la
+>    oferta (714 → 95 ms el paso; 421 → 45 el calendario del CLIENTE) · **`#466`** la **T4**: el
+>    DESENLACE.
+>    ▶ ✅ **T4 HECHA** (`specs/asistente-crear-pedido.md` §10): una pantalla propia al terminar, en vez
+>    del *toast* + redirección a la ficha. ❗❗❗ **Su regla es no prometer nada que no haya pasado**:
+>    **hay clientes SIN correo** y con ellos no se envía **nada** —ni confirmación, ni formulario de
+>    invitados, ni justificante—, así que la pantalla lo dice y entrega los enlaces copiables. La
+>    guarda **compara lo que dice con lo que se ha NOTIFICADO de verdad**, no con un texto.
+>    ⚠️⚠️ **La redirección era también lo que impedía cobrar dos veces**: hoy lo impide que `create()`
+>    vacíe el carrito, con caso propio. ⚠️ Del desenlace **no se navega** (la única salida es «Crear
+>    otro pedido», que limpia todo **incluido el cliente**).
+>    ▶ **Controles bajo 44 px: 0** en el carrito y en el desenlace — y de paso **«Ver el desglose»
+>    pasa de 86×16 a 86×44 en las CUATRO superficies del panel que pintan el libro** (parte del M7).
+>    ▶ ❗❗❗ **LO SIGUIENTE: los tres CRÍTICOS que siguen abiertos** (`auditoria-panel-admin.md` §4):
+>    **C2** —en «Gestionar», «Cancelar producto» (el que ANULA la reserva) es el botón más ancho y más
+>    saturado del pie y está a 12 px de «Guardar cambios», y en un modal «Cancelar» significa
+>    universalmente *descartar*— · **C3** —la acción principal de una reserva es un icono gris de
+>    40×40 sin rótulo, uno de hasta SEIS iguales, y otro de los seis **retira una credencial en el
+>    acto**; en tablet no hay hover que los distinga— · **C4** —en la puerta, «Nueva búsqueda» se sale
+>    de pantalla con un cliente con menores (907 px en 810), y ese botón es PRIVACIDAD—.
+>    ▶ **EMPIEZA POR** `docs/specs/auditoria-panel-admin.md` §4 (los críticos con su medida) y §7/§9.bis
+>    (lo que NO hay que tocar y lo que falla **a propósito**: D2 y D3 del owner). **D4 sigue pendiente
+>    de su detalle.**
+>    ⚠️ **Queda el OJO del owner** sobre el asistente entero (pasos 1→7 + desenlace, en su tablet).
 >
 > **1. COMPLEMENTOS QUE SE VENDEN DESPUÉS DE RESERVAR — ✅ CÓDIGO COMPLETO: LAS CUATRO TANDAS
 >    (T0→T3) EN EL ÁRBOL. Solo queda el OJO del owner.**
@@ -1387,9 +1371,10 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4284 en verde** (26.843 aserciones, 1 skipped a propósito), medida el 2026-09-04 con las
-> cinco tandas del panel dentro (`#461` +12 · `#462` +13 · `#463` +10 · `#464` +13 · `#465` +8, y
-> **seis casos re-apuntados por sujeto** al retirarse la tira de días). **JS 951** (`node --test`).
+> Suite **4290 en verde** (26.881 aserciones, 1 skipped a propósito), medida el 2026-09-04 con las
+> seis tandas del panel dentro (`#461` +12 · `#462` +13 · `#463` +10 · `#464` +13 · `#465` +8 ·
+> `#466` +6, y **siete casos re-apuntados por sujeto** al retirarse la tira de días y el *toast* del
+> desenlace). **JS 951** (`node --test`).
 > ⚠️ **El `pre-push` compara este número con la suite real y RECHAZA el push si no cuadra** — es la
 > única copia a propósito, no la dupliques en otro documento. Antes: 4228 el 2026-09-03 (árbol
 > fusionado tras `#452`, con las cuatro tandas T0–T3 de `#413` dentro).

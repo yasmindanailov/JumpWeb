@@ -3832,7 +3832,7 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **Una elección menor del owner**, anotada sin tocarla: un extra **cerrado que nunca se pidió** hoy
       se pinta igual, con su «ya no se puede cambiar» y su 0.
 
-### EL PANEL DE ADMIN · UI/UX 🟦 EN CURSO — la auditoría y las cinco primeras tandas (`#460` → `#465`, carril del panel, banda `#460`–`#469`)
+### EL PANEL DE ADMIN · UI/UX 🟦 EN CURSO — la auditoría y el ASISTENTE completo (`#460` → `#466`, carril del panel, banda `#460`–`#469`)
 - [x] **La AUDITORÍA del panel, EN EL REPO** (`specs/auditoria-panel-admin.md`, `#460`): 10 pantallas
       × 3 tamaños con Chromium sobre el panel real + 5 sondas de estados de trabajo → **4 críticos ·
       10 mayores · 11 menores**. **§7 es lo que NO hay que tocar** y **§9.bis lo que falla a
@@ -3873,9 +3873,14 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       `clampToHorizon()` re-pone el techo de venta que la consulta del horizonte ponía sola, y
       **`SlotOfferPathParityTest` las ata por equivalencia** (un día se ofrece si y solo si sus horas
       no están vacías). 8 casos · **8/8 mutaciones** · los siete escenarios de concurrencia
-- [ ] **T4 · la pantalla de «pedido creado»** que refleje lo que de verdad pasó (⚠️ hay clientes SIN
-      email: no prometer un correo que no se manda), y con ella **los 5 controles bajo 44 px del paso
-      del carrito**, ya medidos
+- [x] **T4 · el DESENLACE** (`#466`, spec §10): una pantalla propia al terminar, en vez del *toast* y
+      la redirección a la ficha. ❗❗ Su regla es **no prometer nada que no haya pasado**: hay clientes
+      SIN correo y con ellos no se envía **nada**, así que la pantalla lo dice y entrega los enlaces
+      copiables — y la guarda **compara lo que dice con lo que se ha NOTIFICADO de verdad**.
+      ⚠️⚠️ La redirección era también lo que impedía **cobrar dos veces**: hoy lo impide que `create()`
+      vacíe el carrito. Controles bajo 44 px: **0** en carrito y desenlace (eran 4 y eran los chips
+      del indicador, no los 5 «de quitar línea» que la spec daba de memoria), y de paso «Ver el
+      desglose» pasa a 44 px en las cuatro superficies del libro. 6 casos · **12/12 mutaciones**
 - [ ] **D4 de la auditoría**, pendiente del detalle del owner
 
 ## Relación con el proyecto origen

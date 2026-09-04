@@ -23534,3 +23534,64 @@ recorridos no es el rendimiento: es que se separen, y eso no lo ve ninguna prueb
 (`scripts/mutar-oferta-ligera.sh`) · los **siete** escenarios de `purchase:verify-oversell` sobre
 InnoDB · control de igualdad panel↔read-model antes y después · sonda de navegador del paso (mismas
 30 celdas, mismas 11 horas, 0 controles bajo 44 px) · Pint · docs-check · **suite 4.284 verde**.
+
+## #466 · 2026-09-04 · El DESENLACE del pedido manual: una pantalla que dice lo que de verdad pasó — y que no promete un correo que no se manda
+
+**T4 del asistente** (`specs/asistente-crear-pedido.md` §10), y con ella el encargo del owner sobre
+«Crear pedido» queda completo en código. `[owner]`: «después de crear el pedido, una pantalla nueva:
+pedido creado correctamente…». Hasta hoy había **un *toast* y una redirección a la ficha**: el
+operador aterrizaba en 2.347 px de administración, con el cliente delante y sin nada que le dijera
+qué hacer ahora.
+
+❗❗❗ **LA REGLA DE LA PANTALLA ES NO PROMETER NADA QUE NO HAYA PASADO.** El mostrador la lee en voz
+alta y su afirmación más peligrosa es «se le ha enviado». ⚠️⚠️ **Hay clientes SIN correo** —el alta de
+mostrador solo pide teléfono (`#263`)— y con ellos `ManualOrderFulfiller` **no envía NADA**: ni la
+confirmación, ni el formulario de invitados, ni el justificante. Una pantalla que lo diera por
+enviado mandaría al operador a casa creyendo que el cliente tiene su enlace.
+
+▶ Por eso el bloque del correo usa el **MISMO predicado** que el fulfiller (`filled($email)`) y las
+listas salen de las **MISMAS autoridades** (`needsGuestForm()` por reserva, `guardianReservations()`).
+Y la guarda central **no comprueba textos**: compara lo que la pantalla dice con lo que se ha
+**NOTIFICADO de verdad** (`Notification::fake()`), así que si el fulfiller cambia a quién le manda
+qué, la pantalla se pone roja en vez de empezar a mentir.
+
+La pantalla enseña, en orden: el **código** —grande, es lo que se dicta por teléfono—, qué se ha
+reservado, **cobrado ahora + método** con el **libro** del pedido (pintado por
+`reservation-financials`, el pintor ÚNICO de `#311`: aquí no se compone ni un importe), qué se ha
+enviado **o el aviso de que no**, los **enlaces copiables** para entregar a mano, los menores que la
+asignación no pudo colocar —era un *toast*, y los toasts desaparecen— y dos salidas.
+
+⚠️⚠️ **La redirección era también lo que impedía cobrar dos veces.** Sin ella el estado sigue vivo en
+el navegador y un doble clic crearía otro pedido idéntico; lo impide que `create()` **vacíe el
+carrito**, y hay caso que llama a `create()` dos veces en vez de confiar en que el botón ya no esté.
+⚠️ Y **del desenlace no se navega** (`next`/`back`/`goToStep` cerrados): un «atrás» llevaría a un
+asistente con el carrito vacío y un pedido ya cobrado detrás. La única salida es «Crear otro pedido»,
+que limpia todo **incluido el cliente** —en un mostrador el siguiente es de otra persona, y dejar al
+anterior puesto es la forma más fácil de cobrarle a quien no era—.
+
+**Los controles bajo 44 px, cerrados con su medida**: el paso del carrito queda en **0** (eran
+**cuatro**, y **no los cinco «de quitar línea y el paginador» que la spec daba de memoria**: eran los
+chips del indicador de un paso sin elección escrita — el arreglo de `#464` salvaba a los de dos
+líneas y dejaba en 36 los de una). El desenlace, **0** (los CTA salían a 40 con el `size="lg"` de
+Filament). Y de paso **parte del M7 de la auditoría**: «Ver el desglose» pasa de **86×16 a 86×44** en
+las **cuatro** superficies del panel que pintan el libro, porque es un control del pintor compartido.
+
+**Lo que enseñó el arnés** (9/13 la primera vez, **12/12** al final):
+
+1. ⚠️⚠️ **El caso «sin correo» no tenía SUJETO**: compraba una entrada, así que las dos cifras de
+   correos valían 0 **con y sin la regla**. Hoy compra exactamente lo mismo que el caso con correo:
+   *lo que distingue los dos casos tiene que ser SOLO el correo.*
+2. ⚠️⚠️ **El código se aseveraba sobre la página entera** y la URL de la ficha lo lleva dentro
+   (`/admin/orders/R-XXXX`): la guarda pasaba **con el hueco del código vacío**. Acotada al elemento.
+3. ⚠️ **Una mutación EQUIVALENTE, y dicha**: filtrar por `needsGuestForm()` da lo mismo que no
+   filtrar recién creado el pedido. El filtro se conserva porque es la condición del fulfiller, y el
+   arnés explica por qué no la muta — un «no muerde» sin explicación se lee como un hueco.
+
+⚠️ La clave `create_manual.created` del *toast* **muere con la redirección**, y el aviso de los
+menores sin asignar deja de ser notificación para ser sección. `LedgerSingleSourceTest` registra la
+superficie nueva, como manda su regla.
+
+**Verificación**: `CreateManualOrderDoneTest` (6 casos) · **12/12 mutaciones**
+(`scripts/mutar-asistente-t4.sh`) · el caso de los menores re-apuntado por sujeto · sonda de
+navegador (0 controles bajo 44 en carrito y desenlace, 810 px de 810, sin desbordamiento, «Crear otro
+pedido» vuelve al paso 1 limpio) · Pint · docs-check · **suite 4.290 verde**.

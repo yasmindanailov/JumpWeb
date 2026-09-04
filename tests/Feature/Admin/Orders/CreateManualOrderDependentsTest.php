@@ -255,7 +255,13 @@ class CreateManualOrderDependentsTest extends TestCase
         $this->assertSame(0, DependentAssignment::count());
     }
 
-    /** Si la asignación falla DESPUÉS de cobrar, el pedido sigue en pie y el operador lo sabe. */
+    /**
+     * Si la asignación falla DESPUÉS de cobrar, el pedido sigue en pie y el operador lo sabe.
+     *
+     * ⚠️ **Re-apuntado en `#466`, no reescrito**: el aviso era un *toast* y ahora lo dice el
+     * DESENLACE. El sujeto no cambia —«el operador se entera»—; lo que cambia es que un toast
+     * **desaparece** y lo que hay que hacer (asignarlos desde la ficha) queda para después.
+     */
     public function test_an_assignment_failure_after_charging_leaves_the_order_and_warns(): void
     {
         Notification::fake();
@@ -276,7 +282,9 @@ class CreateManualOrderDependentsTest extends TestCase
             ->set('data.payment_method', 'cash')
             ->set('cart', [$this->cartLine(1, [$lucas->id], ['Lior'])])
             ->call('create')
-            ->assertNotified(__('admin.orders.dependents.manual_assign_failed', ['count' => 1]));
+            ->assertSet('dependentsSkipped', 1)
+            ->assertSee(__('admin.orders.dependents.manual_assign_failed', ['count' => 1]))
+            ->assertSee(__('admin.orders.create_manual.done_dependents_hint'));
 
         $order = Order::where('user_id', $holder->id)->sole();
         $this->assertSame(Order::STATUS_PAID, $order->status, 'el cobro y el pedido no se deshacen por una etiqueta');

@@ -103,9 +103,14 @@
     @endif
 
     {{-- UN CTA (`#318`): abre y cierra el detalle. Sustituye al atajo «Ver historial completo» que iba
-         aquí (T5 adenda 4); la puerta al historial sigue en la tarjeta «Detalles» del pedido. --}}
+         aquí (T5 adenda 4); la puerta al historial sigue en la tarjeta «Detalles» del pedido.
+
+         ⚠️ **`min-h-11` = 44 px, el mínimo táctil** (`#466`): medía **86×16** —es el hallazgo M7 de
+         `auditoria-panel-admin.md`— y el panel se usa con el dedo. El alto lo pone la DIANA, no el
+         texto: el rótulo sigue en `text-xs`, así que ninguna de las cuatro superficies que pintan el
+         libro cambia de aspecto más allá de este control. --}}
     <button type="button" x-on:click="open = ! open" x-bind:aria-expanded="open ? 'true' : 'false'"
-            class="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
+            class="mt-1.5 inline-flex min-h-11 items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
             data-book-toggle>
         <span x-show="! open">{{ __('admin.orders.book.expand') }}</span>
         <span x-show="open" x-cloak>{{ __('admin.orders.book.collapse') }}</span>

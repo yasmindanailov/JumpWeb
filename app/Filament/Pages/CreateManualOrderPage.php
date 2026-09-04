@@ -4,11 +4,14 @@ namespace App\Filament\Pages;
 
 use App\Domain\Booking\Contracts\CounterSale;
 use App\Domain\Booking\Exceptions\ReservationException;
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\AddonResolver;
 use App\Domain\Booking\Services\CartOccupants;
 use App\Domain\Booking\Services\ManualOrderFulfiller;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Booking\Services\SlotAvailability;
@@ -87,6 +90,16 @@ class CreateManualOrderPage extends Page
     public const STEP_PAYMENT = 7;
 
     /**
+     * El DESENLACE: qué ha pasado de verdad con el pedido que se acaba de crear (`#466`, T4).
+     *
+     * ⚠️ **No está en `stepLabels()` y por tanto no sale en el indicador, a propósito.** No es un
+     * paso del asistente: es su final. Pintarlo como un octavo chip invitaría a volver atrás a un
+     * asistente cuyo pedido **ya está cobrado**, que es justo lo que {@see goToStep()} y sus hermanas
+     * bloquean mientras haya desenlace en pantalla.
+     */
+    public const STEP_DONE = 8;
+
+    /**
      * Los pasos que componen UNA LÍNEA, en orden. Del último con algo que preguntar cuelga «Añadir
      * al carrito».
      *
@@ -130,6 +143,25 @@ class CreateManualOrderPage extends Page
 
     /** Paso actual del asistente (§4 de `specs/asistente-crear-pedido.md`). */
     public int $step = self::STEP_CUSTOMER;
+
+    /**
+     * El pedido que se acaba de crear, mientras se enseña su desenlace (`#466`). `null` = no hay.
+     *
+     * ⚠️⚠️ **Es también lo que impide crear el mismo pedido dos veces.** Al terminar, `create()`
+     * VACÍA el carrito, así que una segunda llamada —un doble clic, un `wire:click` repetido— se
+     * encuentra la cesta vacía y no crea nada. Antes esto lo garantizaba la redirección a la ficha
+     * del pedido; sin ella, lo garantiza el estado. Hay caso propio.
+     */
+    public ?int $createdOrderId = null;
+
+    /**
+     * Menores que la asignación NO pudo colocar tras cobrar (`specs/menores-a-cargo.md` D14·5).
+     *
+     * Se guarda para que el DESENLACE lo diga: la asignación corre fuera de la transacción del cobro
+     * y su aviso era un *toast*, que desaparece — y lo que hay que hacer (asignarlos desde la ficha)
+     * queda para después.
+     */
+    public int $dependentsSkipped = 0;
 
     /**
      * El mes que enseña el calendario del paso «Cuándo», `Y-m`. `null` = el que toque solo.
@@ -290,7 +322,7 @@ class CreateManualOrderPage extends Page
 
     public function next(): void
     {
-        if (! $this->canAdvance()) {
+        if ($this->isDone() || ! $this->canAdvance()) {
             return;
         }
 
@@ -307,7 +339,46 @@ class CreateManualOrderPage extends Page
 
     public function back(): void
     {
+        if ($this->isDone()) {
+            return;
+        }
+
         $this->step = $this->stepBefore($this->step);
+    }
+
+    /**
+     * ¿Hay un pedido recién creado en pantalla? (`#466`)
+     *
+     * ⚠️ **Mientras lo haya, el asistente NO navega.** Volver «atrás» desde el desenlace llevaría a
+     * un asistente con el carrito vacío y un pedido ya cobrado detrás: un estado que no es ni el de
+     * antes ni el de después. La única salida es {@see startAnotherOrder()}, que lo limpia todo.
+     */
+    private function isDone(): bool
+    {
+        return $this->createdOrderId !== null;
+    }
+
+    /**
+     * Empezar OTRO pedido desde el desenlace (`#466`, `[owner]`: la pantalla nueva es el final del
+     * flujo, y del final se sale volviendo a empezar).
+     *
+     * ⚠️ **Limpia el CLIENTE también.** En un mostrador el siguiente pedido es de otra persona; dejar
+     * al anterior seleccionado es la forma más fácil de cobrarle a quien no era — el mismo motivo por
+     * el que la puerta tiene «Nueva búsqueda» (`panel-navegacion.md` §8.3).
+     */
+    public function startAnotherOrder(): void
+    {
+        $this->createdOrderId = null;
+        $this->dependentsSkipped = 0;
+        $this->cart = [];
+        $this->calMonth = null;
+        $this->selAddonQty = [];
+        $this->selAddonGroup = [];
+        $this->addonsMemo = null;
+        $this->addonsMemoFor = null;
+        $this->clearPhoneMatch();
+        $this->form->fill();
+        $this->step = self::STEP_CUSTOMER;
     }
 
     /** Vuelve al paso de PRODUCTO para añadir otra línea (`[DECIDIDO owner]`: «añadir más productos»). */
@@ -323,6 +394,10 @@ class CreateManualOrderPage extends Page
      */
     public function goToStep(int $step): void
     {
+        if ($this->isDone()) {
+            return;
+        }
+
         if ($step < $this->step && $step >= self::STEP_CUSTOMER && $this->stepHasSomethingToAsk($step)) {
             $this->step = $step;
         }
@@ -1263,20 +1338,101 @@ class CreateManualOrderPage extends Page
         // transacción. El cobro ya está tomado y el pedido en pie; si esto falla, el operador lo ve y lo
         // asigna desde la ficha del pedido («Asignar menores»). Nunca lanza.
         $outcome = app(DependentAssigner::class)->assign($customer, (int) $order->id, $dependentRequests);
-        if ($outcome->skipped > 0 || $outcome->abortedBecause !== null) {
-            Notification::make()
-                ->warning()
-                ->persistent()
-                ->title(__('admin.orders.dependents.manual_assign_failed', ['count' => max(1, $outcome->skipped)]))
-                ->send();
+        $this->dependentsSkipped = ($outcome->skipped > 0 || $outcome->abortedBecause !== null)
+            ? max(1, $outcome->skipped)
+            : 0;
+
+        // `#466` — el DESENLACE sustituye a la redirección a la ficha (`[owner]`: «después de crear el
+        // pedido, una pantalla nueva: pedido creado correctamente…»).
+        //
+        // ⚠️⚠️ **Vaciar el carrito no es limpieza: es lo que impide cobrar dos veces.** Sin la
+        // redirección, la página sigue viva con su estado, así que un segundo `create()` —doble clic,
+        // un `wire:click` repetido— crearía OTRO pedido idéntico. Con la cesta vacía se encuentra la
+        // guarda de arriba y no crea nada. Hay caso propio.
+        //
+        // ⚠️ El aviso de los menores sin asignar deja de ser un *toast*: los toasts desaparecen y lo
+        // que hay que hacer (asignarlos desde la ficha) queda para después. Lo dice la pantalla.
+        $this->createdOrderId = (int) $order->id;
+        $this->cart = [];
+        $this->step = self::STEP_DONE;
+    }
+
+    /**
+     * El DESENLACE del pedido recién creado (`#466`, T4), o `null` si no hay ninguno en pantalla.
+     *
+     * ❗❗❗ **Su única regla es no prometer nada que no haya pasado.** El encargo del owner era «una
+     * pantalla nueva: pedido creado correctamente…», y lo que la hace útil —y peligrosa si se
+     * escribe a ojo— es que el mostrador la lee en voz alta: qué se ha cobrado, qué queda por pagar
+     * en el parque y **qué se le ha enviado al cliente**.
+     *
+     * ⚠️⚠️ **Hay clientes SIN correo** (`#263`: el alta de mostrador solo pide teléfono), y con ellos
+     * `ManualOrderFulfiller` **no envía NADA** —ni la confirmación, ni el post-form, ni el
+     * justificante— y lo deja en el log. Una pantalla que dijera «se lo hemos enviado» mandaría al
+     * operador a casa creyendo que el cliente tiene su enlace. Por eso el correo se pregunta con el
+     * MISMO predicado que usa el fulfiller (`filled($user->email)`) y, cuando no lo hay, la pantalla
+     * lo dice y entrega los enlaces para que el operador los mande por WhatsApp.
+     *
+     * ⚠️ **Y las tres listas salen de las MISMAS autoridades que el fulfiller consulta**
+     * (`needsGuestForm()` por reserva y `guardianReservations()`), no de una regla nueva: si la
+     * pantalla dedujera por su cuenta a quién hay que mandarle qué, diría una cosa y el correo haría
+     * otra. Lo fija `CreateManualOrderDoneTest` comparando con lo que se ha NOTIFICADO de verdad.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function doneSummary(): ?array
+    {
+        if ($this->createdOrderId === null) {
+            return null;
         }
 
-        Notification::make()
-            ->success()
-            ->title(__('admin.orders.create_manual.created', ['code' => $order->code]))
-            ->send();
+        /** @var Order|null $order */
+        $order = Order::with(['user', 'items.ticketType', 'items.slot'])->find($this->createdOrderId);
 
-        $this->redirect(OrderResource::getUrl('view', ['record' => $order]));
+        if ($order === null) {
+            return null;   // borrado entre medias: la pantalla cae al asistente en vez de reventar
+        }
+
+        $email = $order->user?->email;
+        $postForm = $order->guestFormItems()->filter(fn (OrderItem $item): bool => $item->needsGuestForm())->values();
+        $guardian = $order->guardianReservations();
+
+        return [
+            'code' => (string) $order->code,
+            'url' => OrderResource::getUrl('view', ['record' => $order]),
+            'customer' => $order->user ? $this->customerDisplay($order->user) : null,
+            'email' => $email,
+            'method' => (string) ($this->data['payment_method'] ?? ''),
+            'book' => OrderBook::forOrder($order),
+            'reservations' => $order->items
+                ->whereNull('parent_item_id')
+                ->map(fn (OrderItem $item): array => [
+                    'label' => $item->displayProductName(),
+                    'when' => $item->slot
+                        ? $item->slot->date->format('d/m/Y').' '.substr((string) $item->slot->start_time, 0, 5)
+                        : null,
+                    'qty' => (int) $item->quantity,
+                ])->values()->all(),
+            // Los enlaces se entregan a mano SIEMPRE que existan, haya correo o no: el cliente que
+            // dice «no me ha llegado» está delante, y el operador ya tiene aquí lo que necesita.
+            'links' => [
+                ...$postForm->map(fn (OrderItem $item): array => [
+                    'kind' => 'guest_form',
+                    'label' => $item->displayProductName(),
+                    'url' => $item->guestFormSignedUrl(),
+                ])->all(),
+                ...$guardian->map(fn (OrderItem $item): array => [
+                    'kind' => 'guardian',
+                    'label' => $item->displayProductName(),
+                    'url' => $item->guardianAuthorizationSignedUrl(),
+                ])->all(),
+            ],
+            'sent' => [
+                'confirmation' => filled($email),
+                'guest_form' => filled($email) ? $postForm->count() : 0,
+                'guardian' => filled($email) ? $guardian->count() : 0,
+            ],
+            'dependents_skipped' => $this->dependentsSkipped,
+        ];
     }
 
     /**
