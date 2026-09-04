@@ -3735,9 +3735,33 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       dos ajustes, hechos el mismo día: el **Resumen del día** lista los complementos vivos de cada
       reserva, y la nota de la fila dice **«Para N entradas que se quedan»** (compuesta en
       `viewModel()`, fuente única). 4/4 mutaciones nuevas (28/28 en la feature)
-- [ ] **La hora extra: el ✅ FINAL del owner + el alta del producto en PRODUCCIÓN (es DATO)** —
-      catálogo → complemento → «Ocupa la franja siguiente» + duración + precio + enganche a la
-      entrada larga; en producción sigue dormida por construcción hasta ese alta
+- [x] **La hora extra es de FIN DE SEMANA, y eso obligó a arreglar la tarificación** (2026-09-04,
+      `#415`): el owner la dio de alta como producto de «viernes, findes, vísperas y festivos», que
+      se expresa con el mecanismo que ya existe —precio solo en la tarifa `special`—, pero los
+      complementos se tarificaban a `Carbon::today()` y salía **invertido en los dos sentidos**
+      (un martes no se podía comprar para el sábado; un sábado sí para el martes). Hoy se tarifica
+      por el día de la VISITA en los **SIETE** puntos (la spec nombraba tres). ⚠️ **No movió un
+      céntimo**: cero de los doce complementos varían de precio por día. 7/7 mutaciones
+- [x] **Los DATOS de las dos features, dados de alta EN LOCAL** (2026-09-04): «Hora extra · KIDS»
+      5,00 € y «Hora extra · JUMP» 8,00 €, 60 min, con precio **solo en `special`** — medido: se
+      ofrecen viernes y sábado y **no** martes ni miércoles, corriéndolo un jueves. Y los seis
+      complementos de restauración pasados a venta posterior en sus **12 enganches** (cuelgan de los
+      dos packs), 48 h de plazo y tope 5
+- [x] **Mover el día mueve también las condiciones de los COMPLEMENTOS** (2026-09-04, `#417`,
+      `[DECIDIDO owner]`; diseño y revisión en `specs/hora-extra.md` §9): `AddonDateReconciler`
+      retira lo que ese día no se vende —con su devolución en el parque— y re-tarifica lo que cambia
+      de precio, con **aviso al operador antes de confirmar**. ⚠️ No era una feature nueva: era una
+      **incoherencia** con `PAY-18` y `cumple-mixto` §12, que sus dos vecinos ya cumplían.
+      12 casos · **7/7 mutaciones** · `VERIFY_CONC` completo · verificado en el panel real
+- [x] **La revisión de lo que NO era mío, antes de desplegarlo** (2026-09-04, `#418`,
+      `[DECIDIDO owner]`): la T3 de `#413` y `#414`, de la otra sesión. **Las dos pasan** — los cuatro
+      gestos del cliente por HTTP real con el libro cerrando, cuatro ataques a la superficie pública
+      defendidos, sin JS y 6/6 en su arnés. ⚠️ Y destapó un hueco **mío**: el cruce entre las dos
+      features (re-tarificar una línea `postform`, con `birthValue = 0`) no lo cubría ninguna
+- [ ] **La hora extra: el ✅ FINAL del owner + el alta de los productos en PRODUCCIÓN (es DATO)** —
+      los mismos guiones idempotentes que se usaron en local (en seco primero); en producción sigue
+      dormida por construcción hasta ese alta. ⚠️ **El despliegue espera al carril del panel**
+      (`[DECIDIDO owner, 2026-09-04]`: se despliega cuando termine su UI/UX)
 
 ### GOOGLE AUTH 🟦 — las tres tandas de código MÁS el pulido del ojo del owner (2026-09-02; T5→T8·d en el árbol, **los siete puntos del owner HECHOS**; queda la T9)
 ### GOOGLE AUTH ✅ — CERRADO Y EN PRODUCCIÓN (2026-09-02; T1→T8·d, los siete puntos del owner hechos, **One Tap descartado** por `#354`, y `playjump.es` sirviéndolo)

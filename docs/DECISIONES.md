@@ -23721,3 +23721,32 @@ que el operador no puede rellenar desde ninguna pantalla; ficha en `DEUDA.md`.
 tarjetas en dos grupos, **0 controles bajo 44 px**, 0 desbordamiento, el modal sin elegir) · Pint ·
 docs-check · **suite 4.263 verde**.
 
+
+
+## #419 · 2026-09-04 · El cierre encontró lo que la suite no: `AddonDateReconcilerTest` era una BOMBA DE RELOJ
+
+`audit-clock.sh` —que **no está en el pre-push** y por eso solo corre en el cierre— puso en rojo los
+**doce** casos de `AddonDateReconcilerTest` (`#417`) en dos de sus fechas frontera: **fin de mes y fin
+de año**. Verde el 05, el 06 y el 07 de septiembre; rojo después. **Con el producto sano.**
+
+**La causa**: el fichero usa fechas ABSOLUTAS (`2026-09-12` el sábado, `2026-09-15` el martes) y **no
+anclaba el reloj**. En cuanto el día de hoy pasa de esas fechas, las reservas caen en el PASADO,
+`OrderCreator` las rechaza por `past_date_line` y revientan los doce a la vez.
+
+⚠️⚠️ **Y el fichero hermano NO caía**: `AddonPricingDateTest` (`#415`) usa las mismas fechas absolutas
+pero **viaja en el tiempo en todos sus casos**, así que el reloj real nunca decide nada. *La
+diferencia entre los dos no era el cuidado al escribirlos: era que uno tenía una razón para viajar
+—medir la conducta vieja contra la nueva— y el otro no.*
+
+**El arreglo**: anclar el reloj en `setUp()` a un LUNES anterior al sábado (`self::TODAY`), antes de
+sembrar nada — las franjas y los pedidos se crean contra él. Verificado con `TEST_CLOCK` en cuatro
+instantes que antes lo tumbaban: **12/12 en todos** (fin de mes, fin de año, mitad de 2027 y el 29 de
+febrero de 2028).
+
+⚠️ **Se descartó calcular «el próximo sábado»**: haría el caso no determinista, porque el tipo de
+tarifa que toca a cada fecha dependería del día en que se ejecute la suite. *Una fecha relativa arregla
+la caducidad y estropea la reproducibilidad; el ancla arregla las dos.*
+
+▶ **La lección, que ya es la tercera de esta familia** (`#412`, `#414` y ésta): un test con fechas
+sale verde el día que se escribe **y eso no dice nada**. El reloj no es ceremonia de cierre — es el
+único momento en que este defecto es visible, y cuesta una sesión ajena si se cuela en `main`.

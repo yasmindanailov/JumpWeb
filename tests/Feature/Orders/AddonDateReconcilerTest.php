@@ -42,6 +42,19 @@ class AddonDateReconcilerTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * ⚠️⚠️ **Estas fechas son ABSOLUTAS y por eso el reloj se ANCLA en `setUp()`. Sin el ancla, este
+     * fichero es una BOMBA DE RELOJ y lo cazó `audit-clock` en el cierre**: con el reloj real, en
+     * cuanto el día de hoy pasa del 12 de septiembre las dos caen en el PASADO, `OrderCreator` las
+     * rechaza y los **doce** casos revientan a la vez. Medido: verde el 05, 06 y 07 de septiembre;
+     * **rojo a fin de mes y a fin de año**, con el producto sano.
+     *
+     * El ancla es un LUNES anterior al sábado, así que los dos días quedan siempre en el futuro y el
+     * escenario deja de depender de cuándo se ejecute la suite. *La alternativa —calcular «el próximo
+     * sábado»— hace el caso no determinista: el tipo de tarifa dependería del día de la corrida.*
+     */
+    private const TODAY = '2026-09-07 09:00:00';   // lunes
+
     private const SATURDAY = '2026-09-12';   // tarifa `special`
 
     private const TUESDAY = '2026-09-15';    // tarifa `normal`
@@ -68,6 +81,9 @@ class AddonDateReconcilerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // El ancla del reloj, ANTES de sembrar nada: las franjas y los pedidos se crean contra él.
+        $this->travelTo(Carbon::parse(self::TODAY));
 
         RateType::create(['key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0]);
         RateType::create(['key' => 'special', 'label' => ['es' => 'Findes'], 'is_special' => true, 'weekdays' => [5, 6, 0], 'priority' => 10]);

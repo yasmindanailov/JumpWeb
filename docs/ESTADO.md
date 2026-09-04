@@ -144,24 +144,73 @@
 >    escalada 403→410→404 **no se cumple en la web** (afecta también al justificante) y que el `PUT`
 >    del post-form sin `general` **borra** las respuestas generales.
 >
-> **2. LA HORA EXTRA — ✅ CÓDIGO COMPLETO Y DEMO EN LOCAL; queda su ✅ FINAL y el alta en PRODUCCIÓN**
->    (2026-09-03, `#410`/`#411`). Las cuatro tandas en el árbol, el producto REAL dado de alta en
->    localhost («Hora extra» 3,00 € en «Jump · 2 horas») con **6 pedidos demo** del cliente
->    `demo-hora-extra@jumpweb.test` (casos A–F de la spec §4.8 + el rechazo G sobre datos reales), y
->    **la PRIMERA pasada del ojo del owner hecha y APLICADA** (spec §8.5): el Resumen del día lista
->    los complementos vivos de cada reserva y la nota de la fila dice «Para N entradas que se quedan».
->    **EMPIEZA por `docs/specs/hora-extra.md` §8** (lo construido y sus trampas). Evidencia: suite
->    4.107 · 28/28 mutaciones · `purchase:verify-oversell` visto FALLAR sin la validación (5 asientos
->    en franja de 1, SIN carrera) y sus SIETE escenarios + Redsys en verde sobre InnoDB · sondas de
->    navegador 4/4 y 4/4. ▶ **Lo que queda es del owner**: su ✅ final mirando la demo, y —cuando
->    toque producción— dar de alta el producto ALLÍ (es DATO; en producción la feature está dormida
->    por construcción hasta ese alta. El código ya está desplegable: viaja con el próximo deploy).
->    Si eres el otro agente (landing): esto vivió entero en Booking/panel/API — sin choque.
->    ▶ ⚠️ **Del cierre**: `audit-clock` cazó una MONEDA AL AIRE que no era del reloj —
->    `mt_rand(100,999)` contra el `UNIQUE` de `orders.code` en `GuardianAuthorizationSwitchTest`
->    (y un hermano con emails en `GuardianLinkDeliveryTest`) — arreglada con contadores
->    deterministas; la pasada rota se REPITIÓ entera con su reloj y el reloj queda 12/12 (`#412`).
->
+> **2. LA HORA EXTRA Y LOS COMPLEMENTOS — ✅ CÓDIGO COMPLETO Y DATOS EN LOCAL; queda el ✅ del owner
+>    y el alta en PRODUCCIÓN** (`#410`/`#411`, `#415`, `#417`, `#418`). **EMPIEZA por
+>    `docs/specs/hora-extra.md` §9**, que es lo último y lo que más cambia: el cambio de fecha.
+>    ▶ ❗❗❗ **`#415` SI TOCAS EL PRECIO DE UN COMPLEMENTO**: se tarifica por el día de la **VISITA**,
+>    no por `Carbon::today()`, en los **SIETE** puntos que lo hacen (la spec nombraba tres; el censo
+>    dio siete, y dos son del post-form). Eso es lo que permite que la hora extra sea de FIN DE SEMANA
+>    —precio solo en la tarifa `special`—, que es como el owner la dio de alta. ⚠️ **No movió un
+>    céntimo**: cero de los doce complementos varían por día, verificado también en PRODUCCIÓN sobre
+>    las 9 líneas hijas vivas reales. ⚠️⚠️ **Rompió un verificador y eso fue un hallazgo**: el fixture
+>    de `postform:verify-concurrency` daba precio solo en `normal` y siembra a hoy+10, así que 3 de
+>    cada 7 ejecuciones caían en finde y cantaba «✗ FALLA» con el producto sano.
+>    ▶ ❗❗❗ **`#417` SI TOCAS EL EDITOR O UNA LÍNEA HIJA**: mover el día **retira** los complementos
+>    que ese día no se venden (con su devolución EN EL PARQUE) y **re-tarifica** los que cambian de
+>    precio, con **aviso al operador antes de confirmar**. Las dos escrituras son ASIMÉTRICAS y está
+>    medido: retirar **no** lleva hecho, re-tarificar **sí** —sin él el pedido pasa a «en revisión» y
+>    el cliente se queda sin desglose (`#132`)—. ⚠️⚠️ **La revisión adversarial encontró TRES cosas
+>    mal en el plan, dos reproducidas** (§9.8): el ORDEN invertido bloqueaba el movimiento por el
+>    aforo de una hija que se iba a retirar igualmente, y la regla **retiraba los PORTADORES de fiesta
+>    mixta en cada cambio de fecha**. `AddonDateReconciler` entra en el `CRITICAL_RE`.
+>    ▶ **Los DATOS, en local**: «Hora extra · KIDS» 5,00 € y «Hora extra · JUMP» 8,00 €, 60 min, con
+>    precio **solo en `special`** — medido un jueves: se ofrecen viernes y sábado y **no** martes ni
+>    miércoles. Y los seis complementos de restauración en venta posterior, en sus **12 enganches**
+>    (cuelgan de los DOS packs, no de uno), 48 h de plazo y tope 5. Los guiones están en el
+>    scratchpad de la sesión; son idempotentes y tienen modo en seco.
+>    ▶ ⚠️ **La demo de `#411` YA NO EXISTE**: la BD local se rehízo (por eso las tres migraciones
+>    estaban sin aplicar y la web daba 500 al arrancar). Si el owner quiere mirar la demo de la hora
+>    extra, hay que **volver a sembrarla**.
+>    ▶ **`#418` · lo que NO era mío, revisado antes de desplegarlo** (`[DECIDIDO owner]`): la T3 de
+>    `#413` y `#414`. **Las dos pasan** —los cuatro gestos del cliente por HTTP real con el libro
+>    cerrando, cuatro ataques a la superficie pública defendidos (999 → capado a 5), sin JS, y 6/6 en
+>    su arnés—. ⚠️ Y destapó un hueco **mío**: el cruce entre las dos features (re-tarificar una línea
+>    `postform`, con `birthValue = 0`) no lo cubría ninguna. Cierra, y ahora con caso propio.
+>    ▶ ❗❗ **DEL CIERRE (`#419`): `audit-clock` cazó que `AddonDateReconcilerTest` era una BOMBA DE
+>    RELOJ** — sus doce casos en rojo a fin de mes y a fin de año, verdes el 05/06/07 de septiembre,
+>    **con el producto sano**: usa fechas absolutas y no anclaba el reloj, así que al pasar del 12 de
+>    septiembre las reservas caían en el pasado. Arreglado anclando el reloj en `setUp()` a un lunes
+>    anterior; verificado con `TEST_CLOCK` en cuatro instantes que antes lo tumbaban (12/12 en todos).
+>    ⚠️ **Su fichero hermano `AddonPricingDateTest` NO caía** —usa las mismas fechas pero viaja en el
+>    tiempo en todos sus casos—: *la diferencia no era el cuidado, era que uno tenía una razón para
+>    viajar y el otro no.* **Tercera vez de esta familia** (`#412`, `#414`, `#419`): corre el reloj al
+>    cerrar, no está en el pre-push.
+>    ▶ ⚠️ Del cierre anterior: `audit-clock` cazó una MONEDA AL AIRE que no era del reloj
+>    (`mt_rand` contra el `UNIQUE` de `orders.code`), arreglada con contadores deterministas (`#412`).
+
+> **2.bis ❗❗❗ EL DESPLIEGUE ESTÁ DECIDIDO Y ESPERA** (`[DECIDIDO owner, 2026-09-04]`: *«haré deploy
+>    cuando se termine el UI/UX del panel admin»*). **NO despliegues antes de que ese carril cierre.**
+>    ▶ **Qué iría**, medido: **54 commits** desde el último despliegue (`64ff3b6`, 02-09) · **141
+>    ficheros de código** · **3 migraciones nuevas, ninguna existente modificada**.
+>    ▶ **Las features nuevas llegan DORMIDAS**: `occupies_after_parent` nace `false` y `stage` nace
+>    `booking`, así que las tres migraciones son aditivas con defaults neutros y **no reescriben una
+>    sola fila**. Se activan con DATO, no con código.
+>    ▶ ⚠️ **Lo único que un visitante NOTARÍA son las tandas C→F de la auditoría de diseño**
+>    (`#434`→`#437`): **1.428 líneas** de `site.css` y `landing.css`. `[DECIDIDO owner]`: **capturas
+>    de `playjump.es` ANTES y DESPUÉS** para compararlas — es la única forma de ver si algo se rompe
+>    con el paquete del cliente puesto, que en local no existe.
+>    ▶ ❗❗ **TRES pasos que `deploy.sh` NO hace**: (1) **copia de la BD** —corre `migrate --force` sin
+>    backup; la vez anterior se hizo a mano con `mysqldump --single-transaction`—; (2) **las cinco
+>    líneas del `client.css` de producción** (`--on-ok`, `--on-err` y las tres de `--interactive`),
+>    que el rsync no lleva y sin las cuales las tandas C y D quedan a medias **con la suite en verde
+>    aquí**; (3) el **alta de los productos**, si se quieren activar.
+>    ▶ **Estado de producción, LEÍDO el 2026-09-04** (solo lectura, con `jumpweb-prod`): tarifas
+>    idénticas a local · **CERO complementos con precio en una sola tarifa** (el paso crítico de
+>    `#415` está limpio) · **30 fechas especiales ya cargadas, vísperas incluidas** (no hay que darlas
+>    de alta) · los productos padre con los **mismos ids** (#101, #104) · las tres migraciones
+>    pendientes · `sales.online_enabled = '0'`, o sea que **la compra online sigue cerrada**: aunque
+>    se dé de alta la hora extra, solo se podrá vender por mostrador y post-form.
+
 > **3. EL PRODUCTO DE EXCURSIONES EN PRODUCCIÓN, que lo corre el OWNER.** Guion idempotente con
 >    dry-run en `~/excursiones-produccion.php`, **fuera del repo** (`#325`). Este agente **no tiene
 >    acceso a producción** (medido: solo hay llave de staging; `playjump2@…` da `Permission denied`).
