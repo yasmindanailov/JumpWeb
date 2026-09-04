@@ -649,7 +649,29 @@ tiene escrita para sus dos vecinos.**
 | **A** · el día nuevo **no vende** ese complemento | la edición pasa y la hija **sobrevive a 8,00 €** | ❌ el encargo pide retirarla con su devolución |
 | **B** · el día nuevo lo vende **a otro precio** | conserva **8,00 €** donde ese día vale **3,00 €**; total 52,00 € cuando serían 39,00 € | ❌ la doctrina de §12 de mixtos dice re-tarificar |
 | **C** · otro día del **mismo** tipo de tarifa | la familia se mueve entera (padre 11:00 → hija 13:00), precio intacto | ✓ |
-| **D** · destino **sin franja siguiente** (última del día) | **bloqueado** — pero el motivo es `insufficient_capacity_at_save` | ✓ en efecto · ⚠️ **el motivo MIENTE**: no falta aforo, falta la franja. El operador buscará plazas que sí hay |
+| **D** · destino **sin franja siguiente** | **bloqueado con el motivo CORRECTO**: `addon_occupancy_at_destination` | ✓ **sin defecto** — ver la corrección de abajo |
+
+> ⚠️⚠️ **CORRECCIÓN, y va delante del texto que corrige.** La primera versión de este estudio afirmó
+> que el caso D bloqueaba con un motivo engañoso (`insufficient_capacity_at_save`, «falta aforo»,
+> cuando lo que falta es la franja). **Era FALSO, y el error era del experimento**: se probó moviendo
+> a la **última** franja del día, donde el padre —120 min desde las 20:00— tampoco cabe, así que
+> falla el aforo del PADRE antes de llegar a mirar a la hija. Ese motivo es correcto ahí.
+>
+> Medido de nuevo separando los dos casos, con el padre cabiendo y la hija no (destino 19:00, el
+> padre acaba a las 21:00 y no hay franja a esa hora):
+>
+> | destino | qué falla | motivo devuelto |
+> |---|---|---|
+> | 19:00 | el padre cabe, **la hija no tiene franja** | `addon_occupancy_at_destination` ✓ |
+> | 20:00 | **el padre no cabe** (acabaría a las 22:00) | `insufficient_capacity_at_save` ✓ |
+>
+> Y el texto que ve el operador ya es exacto: *«la hora extra de esta reserva no cabe detrás del
+> destino: la franja siguiente no existe, está cerrada o está completa»*. **`landOccupyingFamily`
+> distingue los dos casos y propaga su motivo propio: aquí no hay nada que arreglar.**
+>
+> *La lección es de método y es la de siempre en este repo: un experimento que mezcla dos causas no
+> prueba cuál de las dos actuó. El caso «sin franja siguiente» hay que montarlo donde el padre SÍ
+> quepa, o se está midiendo otra cosa.*
 
 ### 9.3 · ⚠️ Lo que ya existe y NO hay que construir
 
@@ -693,5 +715,50 @@ el disparador. Copiar la lógica del post-form aquí sería exactamente el error
    hoy los combos y los cubos **también** conservan su precio al mover la fecha. Acotarlo a la hora
    extra deja dos conductas distintas para el mismo tipo de fila; extenderlo a todos toca el dinero
    de **todos** los complementos y necesita su propio `VERIFY_CONC`.
-4. **El texto del caso D**: el motivo de bloqueo tiene que dejar de decir «falta aforo» cuando lo que
-   falta es la franja siguiente. Es barato y es independiente de lo demás.
+4. ~~**El texto del caso D**~~ — **RETIRADA: no había defecto** (ver la corrección de §9.2). El
+   motivo propio existe, se propaga y su texto es exacto.
+
+### 9.6 · Las DOS escrituras, y no son simétricas (MEDIDO)
+
+El libro no admite que se le cambie un importe sin contarle por qué. Medido sobre un pedido pagado
+de verdad, con las identidades de `OrderBook` como juez:
+
+| gesto | qué se escribe | total | saldo | estado | ¿cierra? |
+|---|---|---|---|---|---|
+| **retirar** la línea | `markCancelled()` y **NINGÚN** `recordEdit` | 52,00 → **44,00** | **−8,00** | `refund_at_park` | **sí ✓** |
+| **re-tarificar** (8,00 → 3,00) | `unit_price` **+ `recordEdit(−Δ)`** | 52,00 → **47,00** | **−5,00** | `refund_at_park` | **sí ✓** |
+| re-tarificar **sin** el hecho | solo `unit_price` | 52,00 → 47,00 | 0,00 | **`under_review`** | **NO ❌** |
+
+⚠️⚠️ **La tercera fila es el modo de fallo, y es mudo**: el importe cambia, nada lanza, y el pedido
+entero pasa a «en revisión» — o sea **el cliente se queda sin su desglose** (`#132`) por haber movido
+una fecha.
+
+▶ Es exactamente la asimetría que `complementos-post-reserva.md` §4.5.1 documenta para el post-form,
+llegando desde el otro lado: **retirar no lleva hecho porque el libro ya emite su `−fila`; mover un
+importe SÍ lo lleva, o `nac` se desplaza**. Que las dos tandas hayan llegado a la misma regla por
+caminos distintos es la señal de que es la regla del subsistema, no un detalle de ninguna de las dos.
+
+### 9.7 · Plan de obra propuesto (`[DECIDIDO owner, 2026-09-04]` las tres de §9.5)
+
+**Alcance: TODOS los complementos**, no solo los ocupantes — *«no hay otro complemento condicionado
+por la fecha hoy, pero lo hacemos para tenerlo hecho y tener una base profesional»*.
+⚠️ **Y eso lo hace medible**: los 12 complementos del catálogo tienen precio PLANO, así que la
+re-tarificación es **no-op para once de ellos** y la retirada solo alcanza hoy a la hora extra. El
+criterio de éxito es que **ningún pedido existente cambie de importe**.
+
+| pieza | qué hace |
+|---|---|
+| **`AddonDateReconciler::preview()`** | dado un ítem y una fecha destino, qué pasaría con cada hija: `keep` · `reprice(Δ)` · `withdraw(importe)`. **Lectura pura**, sin escribir |
+| **`AddonDateReconciler::reconcile()`** | lo aplica, con las dos escrituras de §9.6 |
+| **el modal del panel** | usa el `preview()` para AVISAR antes de confirmar (`[DECIDIDO owner]`): «esta reserva lleva una hora extra de 8,00 € que no se vende ese día: al mover se retirará y quedará a devolver en el parque» |
+| **el post-commit del editor** | llama a `reconcile()` **junto al de fiesta mixta**, misma frontera transaccional (§4.3): fuera del lock de zona/día, en su propia transacción corta |
+
+⚠️ **El `preview()` y el `reconcile()` tienen que dar lo MISMO**, o el operador confirma una cosa y se
+aplica otra: son una sola derivación con dos caras, como `SlotOffer`/`OrderCreator` en la oferta y el
+cobro. Guarda propia para esa paridad.
+
+⚠️ **Entra en el `CRITICAL_RE`** (toca dinero de líneas vendidas) → `VERIFY_CONC=1` y su escenario:
+dos operadores moviendo la misma reserva a la vez no pueden escribir dos veces el mismo ajuste.
+
+⚠️ **Lo que NO cambia**: `#244` sigue en pie — nada se devuelve online. El saldo negativo se liquida
+**en el parque**, que es lo que el libro ya hace solo (§9.3).
