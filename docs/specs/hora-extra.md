@@ -618,3 +618,80 @@ nota medida en navegador («Hora extra — Para 1 entrada que se queda · 3,00 �
 - **El escenario nuevo del verificador necesita limpiar el complemento APARTE**: su zona es nula a
   propósito y el barrido por zona del `cleanup()` no lo ve — quedaría en la BD de desarrollo tras
   cada ejecución.
+
+---
+
+## 9 · ESTUDIO — mover la fecha y los complementos: lo que hoy NO pasa
+
+> **Encargo del owner (2026-09-04)**: *«Aquí entra tema de dinero, y hay que respetar la misma
+> lógica que hicimos con las reservas mixtas y los cambios de fecha. Si el cliente cambia de fecha a
+> sabiendas de las condiciones de esa fecha hay que aplicar las condiciones de esa fecha, es algo
+> voluntario; si una fecha no permite hora extra, la hora extra se le quita y se aplica su devolución
+> como todo el sistema aplica a este tipo de cambios. Hay que estudiarlo a fondo.»*
+>
+> **Esto es un ESTUDIO, no una obra**: nada de lo de aquí está implementado. Termina en decisiones.
+
+### 9.1 · El hueco, en una frase
+
+Al mover la fecha de una reserva, **el padre se re-tarifica con el catálogo del día nuevo** (`PAY-18`)
+y **el suplemento de fiesta mixta también** (`cumple-mixto.md` §12, con su porqué escrito: *«mover el
+día es mover el importe… es un cambio del HECHO, no de la configuración, y por eso sí reconcilia»*).
+**Los COMPLEMENTOS no**: conservan el precio del día viejo, y si el producto no se vende ese día,
+sobreviven igual.
+
+O sea que la hora extra no estrena un problema: **es incoherente con una regla que el sistema ya
+tiene escrita para sus dos vecinos.**
+
+### 9.2 · Los cuatro casos, MEDIDOS sobre datos reales (2026-09-04)
+
+| caso | hoy | ¿correcto? |
+|---|---|---|
+| **A** · el día nuevo **no vende** ese complemento | la edición pasa y la hija **sobrevive a 8,00 €** | ❌ el encargo pide retirarla con su devolución |
+| **B** · el día nuevo lo vende **a otro precio** | conserva **8,00 €** donde ese día vale **3,00 €**; total 52,00 € cuando serían 39,00 € | ❌ la doctrina de §12 de mixtos dice re-tarificar |
+| **C** · otro día del **mismo** tipo de tarifa | la familia se mueve entera (padre 11:00 → hija 13:00), precio intacto | ✓ |
+| **D** · destino **sin franja siguiente** (última del día) | **bloqueado** — pero el motivo es `insufficient_capacity_at_save` | ✓ en efecto · ⚠️ **el motivo MIENTE**: no falta aforo, falta la franja. El operador buscará plazas que sí hay |
+
+### 9.3 · ⚠️ Lo que ya existe y NO hay que construir
+
+**La retirada cuadra sola en el libro.** Medido sobre un pedido pagado de verdad, cancelando la línea
+de la hora extra:
+
+| | total | pagado | saldo | estado | coherente |
+|---|---|---|---|---|---|
+| antes | 52,00 | 52,00 | 0,00 | `settled` | ✓ |
+| tras retirar la hija | **44,00** | 52,00 | **−8,00** | **`refund_at_park`** | ✓ |
+
+Es decir: el saldo sale como **«a devolver en el parque»** y las identidades del libro siguen
+cerrando, sin escribir un solo hecho a mano. Eso es exactamente *«se le quita y se aplica su
+devolución como todo el sistema aplica a este tipo de cambios»* — y encaja con `#244` (nada se
+devuelve online post-reserva) sin tocar `PAY-16`/`PAY-17`.
+
+▶ También existe ya: **la familia se mueve entera** (`landOccupyingFamily`, `#410`) y **el bloqueo
+cuando la hija no cabe** (caso D). Lo que falta es **el DISPARADOR**, no la maquinaria.
+
+### 9.4 · ⚠️⚠️ La trampa que este estudio destapó, y cambia el alcance
+
+`complementos-post-reserva.md` §1.3 sostiene su seguridad en que *«quitar una línea es NEUTRO en
+dinero»*, porque una línea nacida DESPUÉS del pedido lleva un ajuste `edit` de su importe exacto y su
+`birthValue()` vale 0.
+
+**Una hora extra comprada CON el pedido NO cumple eso.** Medido: `birthValue = 8,00 €` y
+`onlineAtBirth = 8,00 €` — **nació con el pedido y aportó dinero online**. Retirarla **debe dinero**,
+y por eso produce el `refund_at_park` de arriba en vez de ser neutra.
+
+*No es un problema: es la diferencia entre los dos mecanismos, y hay que tenerla delante al escribir
+el disparador. Copiar la lógica del post-form aquí sería exactamente el error.*
+
+### 9.5 · Lo que hay que decidir antes de construir (owner)
+
+1. **¿Retirada automática o confirmación del operador?** El encargo dice «se le quita». Pero el
+   operador está moviendo una fecha, no gestionando extras: retirar en silencio una línea de 8,00 €
+   con devolución es un efecto que probablemente quiera ver antes de confirmar.
+2. **¿Entra también el caso B (mismo producto, otro precio)?** La doctrina de mixtos dice que sí.
+   Hoy no aplica —los 12 complementos tienen precio plano— pero la regla se escribe una vez.
+3. **❗ ¿Aplica a TODOS los complementos o solo a los OCUPANTES?** Ésta es la que decide el tamaño:
+   hoy los combos y los cubos **también** conservan su precio al mover la fecha. Acotarlo a la hora
+   extra deja dos conductas distintas para el mismo tipo de fila; extenderlo a todos toca el dinero
+   de **todos** los complementos y necesita su propio `VERIFY_CONC`.
+4. **El texto del caso D**: el motivo de bloqueo tiene que dejar de decir «falta aforo» cuando lo que
+   falta es la franja siguiente. Es barato y es independiente de lo demás.
