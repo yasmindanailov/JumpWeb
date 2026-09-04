@@ -409,17 +409,20 @@ return [
             // ficha: lo que decía en una línea que se desvanece lo dice ahora la pantalla entera.
             'done_title' => 'Pedido creado y cobrado',
             'done_charged' => 'Cobrado ahora · :method',
-            'done_mail_title' => 'Se le ha enviado por correo',
-            'done_mail_confirmation' => 'La confirmación del pedido, a :email',
-            'done_mail_guest_form' => '{1} El formulario de invitados de su reserva|[2,*] Los formularios de invitados de sus :count reservas',
-            'done_mail_guardian' => '{1} El justificante para un menor invitado|[2,*] Los justificantes para menores invitados de sus :count reservas',
+            // `#467` — UNA lista de lo que el cliente tiene que recibir, cada cosa con su estado.
+            'done_delivery_title' => 'Lo que recibe el cliente',
+            'done_item_confirmation' => 'Confirmación del pedido',
+            'done_item_guest_form' => 'Formulario de invitados',
+            'done_item_guardian' => 'Justificante de un menor invitado',
+            'done_state_sent' => 'Enviado a :email',
+            // ⚠️ Dice lo que hay que HACER, no solo que falló: es lo que el operador lee de un vistazo.
+            'done_state_by_hand' => 'Entrégalo tú',
+            // ⚠️ Sin enlace no hay nada que entregar: la confirmación simplemente no ha salido.
+            'done_state_not_sent' => 'No enviado',
             // ⚠️ Este texto es el encargo: con un cliente de agenda (solo teléfono) NO se envía nada,
             // y el operador tiene que enterarse ANTES de despedirlo.
-            'done_no_mail_title' => 'Este cliente no tiene correo: no se le ha enviado nada',
-            'done_no_mail_body' => 'Ni la confirmación, ni el formulario de invitados, ni el justificante. Entrégale los enlaces de abajo por WhatsApp o SMS.',
-            'done_links_title' => 'Enlaces para entregar a mano',
-            'done_link_guest_form' => 'Formulario de invitados · :product',
-            'done_link_guardian' => 'Justificante de un menor invitado · :product',
+            'done_no_mail_title' => 'Este cliente no tiene correo.',
+            'done_no_mail_body' => 'No se le ha enviado nada: ni la confirmación, ni el formulario de invitados, ni el justificante. Entrégale los enlaces por WhatsApp o SMS.',
             'done_dependents_hint' => 'Asígnalos desde la ficha del pedido, en «Asignar menores».',
             'done_another' => 'Crear otro pedido',
             'done_view_order' => 'Ver el pedido',

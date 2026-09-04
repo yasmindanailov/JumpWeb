@@ -1383,10 +1383,14 @@ class CreateManualOrderPage extends Page
      * MISMO predicado que usa el fulfiller (`filled($user->email)`) y, cuando no lo hay, la pantalla
      * lo dice y entrega los enlaces para que el operador los mande por WhatsApp.
      *
-     * ⚠️ **Y las tres listas salen de las MISMAS autoridades que el fulfiller consulta**
+     * ⚠️ **Y la lista de ENTREGABLES sale de las MISMAS autoridades que el fulfiller consulta**
      * (`needsGuestForm()` por reserva y `guardianReservations()`), no de una regla nueva: si la
      * pantalla dedujera por su cuenta a quién hay que mandarle qué, diría una cosa y el correo haría
      * otra. Lo fija `CreateManualOrderDoneTest` comparando con lo que se ha NOTIFICADO de verdad.
+     *
+     * ▶ `#467` — **un solo bloque en vez de dos** (`[owner]`: «más profesional»): cada cosa que el
+     * cliente tiene que recibir es una FILA con su estado y su enlace, en vez de una lista de
+     * «enviado» arriba y otra de «enlaces» abajo que el operador tenía que emparejar de cabeza.
      *
      * @return array<string, mixed>|null
      */
@@ -1418,32 +1422,51 @@ class CreateManualOrderPage extends Page
                 ->whereNull('parent_item_id')
                 ->map(fn (OrderItem $item): array => [
                     'label' => $item->displayProductName(),
-                    'when' => $item->slot
-                        ? $item->slot->date->format('d/m/Y').' '.substr((string) $item->slot->start_time, 0, 5)
-                        : null,
+                    'when' => $this->slotLabel($item),
                     'qty' => (int) $item->quantity,
                 ])->values()->all(),
-            // Los enlaces se entregan a mano SIEMPRE que existan, haya correo o no: el cliente que
-            // dice «no me ha llegado» está delante, y el operador ya tiene aquí lo que necesita.
-            'links' => [
+            // ❗❗❗ **UNA sola lista: lo que el cliente TIENE QUE RECIBIR** (`#467`, `[owner]`: «la parte
+            // de que al cliente le ha llegado un formulario o lo que sea, más profesional»).
+            //
+            // Antes eran dos bloques —«se le ha enviado» arriba y «enlaces para entregar a mano»
+            // abajo— y el operador tenía que atar mentalmente cada correo con su enlace. Aquí cada
+            // ENTREGABLE es una fila: qué es, de qué reserva, si ha salido, y su enlace al lado.
+            //
+            // ⚠️ El enlace viaja aunque el correo haya salido: el cliente que dice «no me ha llegado»
+            // está delante, y el operador ya tiene aquí lo que necesita sin ir a la ficha.
+            'deliverables' => [
+                [
+                    'kind' => 'confirmation',
+                    'subject' => null,
+                    'when' => null,
+                    'sent' => filled($email),
+                    'url' => null,
+                ],
                 ...$postForm->map(fn (OrderItem $item): array => [
                     'kind' => 'guest_form',
-                    'label' => $item->displayProductName(),
+                    'subject' => $item->displayProductName(),
+                    'when' => $this->slotLabel($item),
+                    'sent' => filled($email),
                     'url' => $item->guestFormSignedUrl(),
                 ])->all(),
                 ...$guardian->map(fn (OrderItem $item): array => [
                     'kind' => 'guardian',
-                    'label' => $item->displayProductName(),
+                    'subject' => $item->displayProductName(),
+                    'when' => $this->slotLabel($item),
+                    'sent' => filled($email),
                     'url' => $item->guardianAuthorizationSignedUrl(),
                 ])->all(),
             ],
-            'sent' => [
-                'confirmation' => filled($email),
-                'guest_form' => filled($email) ? $postForm->count() : 0,
-                'guardian' => filled($email) ? $guardian->count() : 0,
-            ],
             'dependents_skipped' => $this->dependentsSkipped,
         ];
+    }
+
+    /** Cuándo es una reserva, para leerlo en voz alta. `null` si la línea no tiene franja. */
+    private function slotLabel(OrderItem $item): ?string
+    {
+        return $item->slot
+            ? $item->slot->date->format('d/m/Y').' '.substr((string) $item->slot->start_time, 0, 5)
+            : null;
     }
 
     /**

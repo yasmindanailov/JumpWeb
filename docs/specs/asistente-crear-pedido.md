@@ -444,7 +444,34 @@ es la forma más fácil de cobrarle a quien no era (el mismo motivo que «Nueva 
   compartido del libro → **86×44** en las **cuatro** superficies del panel que lo pintan, sin tocar el
   cuerpo del texto.
 
-### 10.4 · Lo que enseñó el arnés (9/13 la primera vez, **12/12** al final)
+### 10.3.bis · El pulido del OJO del owner (`#467`)
+
+`[owner]`, tras probar el asistente entero: *«todo ok, pero la parte de que al cliente le ha llegado
+un formulario o lo que sea… más profesional, mejor UI/UX»*.
+
+El bloque eran **DOS**: «se le ha enviado por correo» arriba, con una lista suelta, y «enlaces para
+entregar a mano» abajo — y el operador tenía que **emparejar de cabeza** cada correo con su enlace.
+
+▶ Ahora es **UNO: «Lo que recibe el cliente»**, y cada cosa que el cliente tiene que recibir es una
+FILA — qué es · de qué reserva y cuándo · **su estado en pastilla** · y su enlace copiable debajo—.
+
+⚠️⚠️ **Los estados son TRES y no dos, y lo cazó el ojo, no la sonda**: «Enviado a …» (verde),
+«Entrégalo tú» (ámbar) y **«No enviado»**. La confirmación del pedido **no tiene enlace**, así que
+pedirle al operador que la «entregue» sería mandarle a hacer algo que no existe.
+
+⚠️ El aviso de «sin correo» sube a **banda ámbar dentro de la sección**, delante de la lista: es lo
+que hay que ver antes de despedir al cliente, no una nota al pie.
+
+⚠️ **La pista del partial de copiar pasa a ser opcional** (`hint`): en el modal de la ficha es todo el
+contenido y orienta; repetida por fila era ruido. Y el partial gana diana táctil —input 38 → 44,
+botón 36 → 44—, lo que también arregla las otras superficies que lo incluyen.
+
+**Medido en navegador**, con un pack que trae formulario de invitados **y** justificante: las tres
+filas correctas en los dos casos, **0 controles bajo 44 px** y sin desbordamiento; el alto pasa a
+986 px (con correo) y 1.065 (sin) sobre 810 — el código y el dinero quedan sobre la línea de flotación
+y los enlaces piden un deslizamiento, que es su sitio.
+
+### 10.4 · Lo que enseñó el arnés (9/13 la primera vez, **15/15** al final)
 
 1. ⚠️⚠️ **El caso «sin correo» no tenía SUJETO**: compraba una entrada, así que «formularios
    enviados» y «justificantes enviados» valían 0 **con y sin la regla** y las dos mutaciones pasaban
@@ -457,7 +484,7 @@ es la forma más fácil de cobrarle a quien no era (el mismo motivo que «Nueva 
    lo mismo que no filtrarlas **recién creado el pedido** (todas están pendientes). El filtro se
    conserva porque es literalmente la condición del fulfiller, y el arnés explica por qué no la muta.
 
-**Verificación**: `CreateManualOrderDoneTest` (6 casos) · **12/12 mutaciones**
+**Verificación**: `CreateManualOrderDoneTest` (6 casos) · **15/15 mutaciones**
 (`scripts/mutar-asistente-t4.sh`) · el caso de los menores re-apuntado por sujeto (era un *toast*) ·
 la nueva superficie registrada en `LedgerSingleSourceTest` · sonda de navegador (0 controles bajo 44
 en carrito y desenlace, 810 px de 810, sin desbordamiento) · Pint · docs-check · **suite 4.290 verde**.

@@ -9,13 +9,20 @@
 >    cada acción en su sitio»*, con el marco *«usamos Filament, no quiero chapuzas ni deuda, ni huecos;
 >    sé profesional y riguroso»*. ⚠️ **El panel se usa normalmente en TABLET** (iPad horizontal,
 >    1080×810): es el tamaño con el que se mide, no el escritorio.
->    ▶ **Lo hecho, en el árbol** — siete commits, `origin/main` al día: **`#460`** la AUDITORÍA
+>    ▶ **Lo hecho, en el árbol** — ocho commits, `origin/main` al día: **`#460`** la AUDITORÍA
 >    (`docs/specs/auditoria-panel-admin.md`) · **`#461`** el SHELL · **`#462`** la T1 del asistente
 >    (7 pasos, y el vacío se salta) · **`#463`** la T2 (producto en tarjetas agrupadas → cierra **C1**)
 >    · **`#464`** la T3 (calendario grande + la cesta a la oferta) · **`#465`** el rendimiento de la
->    oferta (714 → 95 ms el paso; 421 → 45 el calendario del CLIENTE) · **`#466`** la **T4**: el
->    DESENLACE.
->    ▶ ✅ **T4 HECHA** (`specs/asistente-crear-pedido.md` §10): una pantalla propia al terminar, en vez
+>    oferta (714 → 95 ms el paso; 421 → 45 el calendario del CLIENTE) · **`#466`** la **T4** (el
+>    DESENLACE) · **`#467`** su pulido con el ojo del owner.
+>    ▶ ✅ **T4 HECHA** (`specs/asistente-crear-pedido.md` §10) **y PULIDA con el ojo del owner**
+>    (`#467`, §10.3.bis: *«todo ok, pero la parte de que al cliente le ha llegado un formulario…, más
+>    profesional»*): el bloque eran DOS —«se le ha enviado» y «enlaces para entregar a mano»— y el
+>    operador tenía que emparejarlos de cabeza; ahora es **UNO**, «Lo que recibe el cliente», con una
+>    FILA por entregable (qué es · de qué reserva · **estado en pastilla** · su enlace copiable).
+>    ⚠️⚠️ **Los estados son TRES** —«Enviado a …», «Entrégalo tú» y **«No enviado»**—: la confirmación
+>    no tiene enlace, así que pedir que se «entregue» era mandar a hacer algo que no existe. Lo cazó
+>    el OJO, no la sonda. Una pantalla propia al terminar, en vez
 >    del *toast* + redirección a la ficha. ❗❗❗ **Su regla es no prometer nada que no haya pasado**:
 >    **hay clientes SIN correo** y con ellos no se envía **nada** —ni confirmación, ni formulario de
 >    invitados, ni justificante—, así que la pantalla lo dice y entrega los enlaces copiables. La
@@ -1438,7 +1445,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4290 en verde** (26.881 aserciones, 1 skipped a propósito), medida el 2026-09-04 con las
+> Suite **4290 en verde** (26.883 aserciones, 1 skipped a propósito), medida el 2026-09-04 con las
 > seis tandas del panel dentro (`#461` +12 · `#462` +13 · `#463` +10 · `#464` +13 · `#465` +8 ·
 > `#466` +6, y **siete casos re-apuntados por sujeto** al retirarse la tira de días y el *toast* del
 > desenlace). **JS 951** (`node --test`).
