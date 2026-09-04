@@ -11,6 +11,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AddonDateReconciler;
+use App\Domain\Booking\Services\LineFacts;
 use App\Domain\Booking\Services\MixedPartySettings;
 use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\OrderCreator;
@@ -481,5 +482,62 @@ class AddonDateReconcilerTest extends TestCase
         $this->assertNotNull($ver(self::TUESDAY), 'con día nuevo que no vende el extra, el calendario lleva plan');
         $this->assertNull($ver(self::SATURDAY), 'con el MISMO día no hay nada que avisar');
         $this->assertNull($ver(null), 'sin fecha elegida tampoco');
+    }
+
+    /**
+     * **EL CRUCE ENTRE LAS DOS FEATURES DE ESTA JORNADA, que ninguna de las dos cubría.**
+     *
+     * Una línea de venta POSTERIOR (`#413`) nace DESPUÉS del pedido, así que su `birthValue()` vale
+     * 0 y toda la seguridad de aquella feature se apoya en eso. Cuando el operador mueve la fecha,
+     * **este reconciliador la gobierna igual** — y re-tarificarla escribe un `recordEdit(±Δ)` sobre
+     * una línea que no aportó nada al cobro online.
+     *
+     * ⚠️ El resto de casos de este fichero usan líneas nacidas CON el pedido (`birthValue > 0`), así
+     * que ninguno responde a la pregunta que importa aquí: **¿sigue cerrando el libro?** Lo hace, y
+     * el caso existe para que siga haciéndolo — lo destapó revisar la T3 de la otra sesión, no una
+     * lectura de este código.
+     */
+    public function test_a_post_form_line_repriced_by_the_move_keeps_the_book_closed(): void
+    {
+        // Un extra de venta POSTERIOR con precio distinto según el día.
+        $extra = $this->addon('Cubo de refrescos', 33);
+        $this->price($extra, 'special', 2399);
+        $this->price($extra, 'normal', 1000);
+        $this->entry->configurableAddons()->attach($extra->id, [
+            'position' => 9, 'quantity_mode' => ProductAddon::MODE_FIXED,
+            'stage' => ProductAddon::STAGE_POSTFORM, 'postform_cutoff_hours' => 48, 'max_qty' => 5,
+        ]);
+        $this->entry->refresh();
+
+        $order = $this->soldOnSaturday([]);
+        $principal = $this->reload($order->id)->items->firstWhere('parent_item_id', null);
+
+        // Nace DESPUÉS del pedido, como la vende el post-form: línea + su ajuste del importe exacto.
+        $child = $principal->children()->create([
+            'order_id' => $order->id, 'ticket_type_id' => $extra->id,
+            'quantity' => 2, 'unit_price' => 2399, 'seats' => 0, 'free_quantity' => 0,
+        ]);
+        $order->recordEdit($child, 2 * 2399, $this->operator, 'postform_addon');
+
+        $before = $this->assertBookCloses($order->id, 'con el extra recién comprado por el cliente');
+        $this->assertSame(
+            0,
+            LineFacts::forItem($this->reload($order->id), $this->reload($order->id)->items->firstWhere('id', $child->id))->birthValue(),
+            'la premisa de `#413`: una línea nacida después no aportó nada al cobro online',
+        );
+
+        $this->assertTrue($this->moveTo($order, self::TUESDAY, '17:00:00')->ok);
+
+        $after = $this->reload($order->id);
+        $repriced = $after->items->firstWhere('id', $child->id);
+        $this->assertSame(1000, (int) $repriced->unit_price, 'se re-tarifica al precio del día de la VISITA');
+        $this->assertNull($repriced->cancelled_at, 'ese día SÍ se vende: se re-tarifica, no se retira');
+
+        $book = $this->assertBookCloses($order->id, 'tras re-tarificar una línea de venta POSTERIOR');
+        $this->assertSame(
+            $before->totalCents - (2 * (2399 - 1000)) - 800,
+            $book->totalCents,
+            'el total baja lo del extra (2 × 13,99 €) más lo del padre (22,00 → 18,00)',
+        );
     }
 }

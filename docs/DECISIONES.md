@@ -23449,3 +23449,49 @@ propia de render.
 y los dos de fiesta mixta · y **en el panel real**: mover una reserva del sábado a un martes muestra
 *«Hora extra · JUMP no se vende ese día: se retirará y sus 8,00 € quedarán a devolver en el parque»*,
 y aplicarlo deja el libro en `refund_at_park −16,00 €` **cerrando sus identidades**.
+
+## #418 · 2026-09-04 · La revisión de lo que NO era mío — la T3 de complementos y `#414`, antes de desplegarlas
+
+`[DECIDIDO owner]`: antes de subir el lote, revisar el trabajo de la otra sesión que entró en el
+árbol durante ésta — la **T3 de `#413`** (las superficies del cliente de la venta posterior, 2.586
+líneas y 56 ficheros) y **`#414`** (la guarda de tokens CSS). *No se despliega lo que nadie ha
+mirado, aunque la suite esté verde.*
+
+**Veredicto: las dos pasan.** Lo medido, no lo leído:
+
+▶ **Dinero — los CUATRO gestos del cliente por HTTP real** (POST con CSRF y enlace firmado, no
+llamadas al servicio): alta 0→2, subir 2→3, bajar 3→1 y retirar 1→0. El libro **cierra en los
+cuatro**, la aritmética cuadra en cada paso y **la retirada devuelve al total EXACTO del control**
+(127,60 → 127,60): la propiedad §1.3 de la spec, «quitar es neutro», demostrada end-to-end.
+
+⚠️⚠️ **Y la primera pasada dio `under_review` en los cuatro, con `pagado = 0,00 €`.** No era la T3:
+el pedido de la BD local estaba `paid` con **cero pagos** y `paid_at` nulo — un fixture ilegal, y el
+libro cantándolo bien (identidad I2). Se LEGALIZÓ con un cobro real y entonces cerró. *Un veredicto
+de dinero sobre un fixture que el propio libro rechaza no dice nada del código.*
+
+▶ **Seguridad — cuatro ataques sobre la superficie pública sin sesión**: cantidad **999** se capa al
+tope declarado (**5**: la deuda máxima la decide el parque, no el cliente); un extra **no ofrecido**
+(fase `booking`) se ignora; un **id inexistente**, igual; y una cantidad **negativa** retira en vez de
+crear crédito. Tras los cuatro, el libro sigue cerrando, todos los hechos son `edit` y **no queda
+ninguna línea viva con cantidad ≤ 0**.
+
+▶ **Sin JavaScript**: 6 inputs `type="number"` con su `max`, botón de envío y los 6 `<details>`
+nativos. La página cumple lo que declara.
+
+▶ **`#414`**: su arnés da **6 de 6**. La guarda de tokens no nació ciega.
+
+### ⚠️ Lo que la revisión SÍ destapó — y era un hueco MÍO, no suyo
+
+El cruce de las dos features de la jornada **no lo cubría ninguna de las dos**: una línea de venta
+POSTERIOR tiene `birthValue() === 0` —de eso vive toda la seguridad de `#413`— y, al mover la fecha,
+`AddonDateReconciler` (`#417`) **la gobierna igual**, escribiéndole un `recordEdit(±Δ)`. Todos mis
+casos usaban líneas nacidas CON el pedido, así que ninguno respondía a la pregunta.
+
+**Medido con la hipótesis puesta** (el cubo a 23,99 € en finde y 10,00 € entre semana): al mover al
+martes se re-tarifica a 2 × 10,00 €, el total baja de 175,58 a 147,60 y **el libro cierra**. Correcto
+— y ahora con caso propio (`test_a_post_form_line_repriced_by_the_move_keeps_the_book_closed`).
+
+*Lo encontró revisar el código de otro, no releer el mío.*
+
+**Verificación**: suite **4.250 ✓ · 26.759** · Pint 1.176 · docs-check · 7/7 mutaciones del
+reconciliador · 6/6 del token declarado.
