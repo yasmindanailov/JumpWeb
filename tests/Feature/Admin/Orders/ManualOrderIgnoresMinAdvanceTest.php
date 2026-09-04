@@ -231,24 +231,36 @@ class ManualOrderIgnoresMinAdvanceTest extends TestCase
      *
      * Los dos casos de arriba prueban el servicio; éste prueba que el panel lo usa. Sin él, devolver
      * la página al `offerableDates($type)` de la web pasaba en VERDE —lo dijo el arnés de mutación—
-     * y el operador se quedaba con el día bloqueado en la tira y en el suelo del calendario.
+     * y el operador se quedaba con el día apagado en el calendario.
      * *Que el dominio pueda hacerlo no es que la pantalla lo haga.*
+     *
+     * ⚠️ **La superficie cambió en `#464` y el sujeto no**: donde este caso miraba la tira de 14
+     * días, ahora mira la rejilla del calendario, que es el único control de fecha desde que la tira
+     * se retiró. Lo que se comprueba sigue siendo que el día que la antelación mínima reserva al
+     * autoservicio **se pueda pulsar** en el panel.
      */
-    public function test_the_panel_offers_those_days_in_its_own_day_strip(): void
+    public function test_the_panel_offers_those_days_in_its_calendar(): void
     {
         $operator = User::factory()->create();
         $operator->roles()->sync([Role::where('name', 'staff')->value('id')]);
 
         $page = Livewire::actingAs($operator)
             ->test(CreateManualOrderPage::class)
-            ->set('step', CreateManualOrderPage::STEP_PRODUCT)
+            ->set('step', CreateManualOrderPage::STEP_WHEN)
             ->call('pickProduct', $this->pack->id)
             ->instance();
 
-        $days = array_column($page->quickDays(), 'date');
+        $ofrecibles = [];
+        foreach ($page->calendarMonth()['weeks'] as $semana) {
+            foreach ($semana as $dia) {
+                if ($dia !== null && $dia['offerable']) {
+                    $ofrecibles[] = $dia['date'];
+                }
+            }
+        }
 
-        $this->assertContains($this->tomorrow(), $days,
-            'la tira de días del panel sigue escondiendo lo que la antelación mínima reserva al autoservicio');
+        $this->assertContains($this->tomorrow(), $ofrecibles,
+            'el calendario del panel sigue apagando lo que la antelación mínima reserva al autoservicio');
     }
 
     /** Un producto SIN antelación declarada no cambia de conducta por ningún lado. */

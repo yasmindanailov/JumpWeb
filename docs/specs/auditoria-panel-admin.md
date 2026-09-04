@@ -337,8 +337,11 @@ a Salir**.
 reserva, «TOTALES DEL PEDIDO» y «TOTALES DEL PRODUCTO» enseñan **las mismas tres cifras** (Total
 77,00 € · Pagado 88,00 € · A devolver en el parque −11,00 €) **con un «Ver el desglose» cada uno**,
 a 215 px de distancia en la misma pantalla. Y **13 de sus 15 controles miden menos de 44 px**: el
-enlace al cliente (132×20), su teléfono (79×17), «Ver el desglose» (86×16), «Ver más» (47×16), el
+enlace al cliente (132×20), su teléfono (79×17), ~~«Ver el desglose» (86×16)~~, «Ver más» (47×16), el
 icono de copiar el código (24×24), «Acciones del pedido» (188×36) y los cinco iconos de la reserva.
+▶ ✅ **«Ver el desglose» pasa a 86×44 en `#466`**, y con él las CUATRO superficies del panel que
+pintan el libro: es un control del pintor compartido, así que se arregla una vez. El resto de M7
+sigue abierto.
 
 **M8 · El supuesto que retiró «Puerta» del menú del admin no se cumple.** `#320` la bajó a Ajustes
 con este argumento del owner: *«es innecesario, él puede ver todos los detalles de cualquier cliente
@@ -451,8 +454,12 @@ cada una con su «Ver el desglose».
   cada uno»).
 - **La pantalla de puerta en reposo**: 3 controles, cero por debajo de 44, cabe entera. Es el mejor
   kiosco del panel.
-- **«Crear pedido», su FORMA**: tres pasos, resumen pegajoso, la hora en chips, la tira de días,
-  cero controles bajo 44 en el paso 1. Es la única pantalla del panel diseñada para un dedo, y se
+- **«Crear pedido», su FORMA**: resumen pegajoso, la hora en chips, cero controles bajo 44 en el
+  paso 1. ⚠️ **Dos cosas de esta línea CADUCARON el 2026-09-04**: los tres pasos son **siete**
+  (`#462`) y **la tira de días se retiró** (`#464`, `[DECIDIDO owner]`, preguntado con el coste
+  delante) — con el calendario grande siempre visible eran dos puertas a la misma pregunta, y «hoy»
+  sigue estando a un toque. *Lo que era bueno lo era en una pantalla donde el calendario vivía
+  escondido tras un CTA.* Es la única pantalla del panel diseñada para un dedo, y se
   nota. ⚠️ **Pero su primer campo es C1**: la forma está resuelta y **el contenido del desplegable de
   producto no** — 18 opciones planas que no dicen si son entradas o packs. *Lo que falló no fue la
   pasada de tablet: fue que nadie miró qué había dentro del `Select`.*

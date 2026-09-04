@@ -24,7 +24,8 @@ use Illuminate\Support\Collection;
  *    `slot_id` y `seats`, así que `occupancyMap` las cuenta en cuanto existen. Aquí las dos
  *    derivaciones DIVERGÍAN — el cobro las contaba y la oferta no — sin morder solo porque los
  *    packs viven en zona propia; la unificación resuelve hacia lo almacenado. (El CUPO de packs es
- *    otro pool con otra derivación — `otherPackOccupants`/'packs' — y no se toca.)
+ *    otro pool: lo lleva {@see packs()}, y del lado del COBRO sigue teniéndolo
+ *    `OrderCreator::otherPackOccupants()`, que excluye por índice la línea en validación.)
  *
  *  - **Las hijas que OCUPAN cuentan como ocupantes propios**: franja = la siguiente al tramo del
  *    padre ({@see AddonOccupancy}), plazas = cantidad efectiva × `seats_per_unit` — la MISMA
@@ -38,10 +39,49 @@ use Illuminate\Support\Collection;
  * veces en una sola petición, sin carrera y con el lock puesto»).
  * `occupancyMap` lee solo `entry_start`/`duration_min`/`seats`; las etiquetas extra las ignora.
  *
+ * **Los dos POOLS y las cuatro funciones** (`#464`). Las plazas y el cupo de fiestas son aforos
+ * distintos, así que la cesta aporta DOS listas: {@see entries()} y {@see packs()}. Las dos son
+ * PURAS —reciben los productos ya resueltos— y {@see forCart()} es la que las une para quien tiene
+ * una cesta en bruto y ningún producto cargado: **el filtro de qué producto retiene aforo es parte
+ * de la derivación**, y copiarlo fuera es la misma divergencia que esta clase existe para cerrar.
+ *
  * ⚠️ Este fichero es AFORO: está en el `CRITICAL_RE` del pre-push (`INVARIANTES §6`).
  */
 class CartOccupants
 {
+    /**
+     * Los dos grupos de ocupantes que una cesta EN BRUTO aporta a una zona y un día.
+     *
+     * Es la puerta de los consumidores que solo tienen la cesta: el read-model de disponibilidad
+     * (web y API) y la página de «Crear pedido» del panel. **Los dos preguntan lo mismo y por eso
+     * preguntan aquí**: hasta `#464` el panel no descontaba su propia cesta y ofrecía horas que su
+     * propio checkout habría rechazado (`AFORO-02`).
+     *
+     * ⚠️ **El SANEADO y el filtro de productos van dentro a propósito.** «Qué es una línea válida»
+     * (`Cart::sanitize`) y «qué producto retiene aforo» (vendible, en zona operativa) son parte de
+     * la respuesta: una copia que sanee distinto —o que cuente una línea de un producto retirado—
+     * ofrece horas que el cobro rechaza. `OrderCreator` no pasa por aquí porque ya trae sus
+     * productos resueltos de la transacción: llama a {@see entries()} directamente.
+     *
+     * @param  array<mixed>  $cart  cesta en bruto; se sanea aquí
+     * @return array{entries: list<array{entry_start:string, duration_min:int|null, seats:int, line:int, addon:int|null}>, packs: list<array{start:string, prep_before_min:int, duration_min:int|null, prep_after_min:int, guests:int}>}
+     */
+    public static function forCart(array $cart, int $zoneId, string $date): array
+    {
+        $cart = Cart::sanitize($cart);
+
+        if ($cart === []) {
+            return ['entries' => [], 'packs' => []];
+        }
+
+        $types = self::typesOf($cart);
+
+        return [
+            'entries' => self::entries($cart, $types, $zoneId, $date),
+            'packs' => self::packs($cart, $types, $zoneId, $date),
+        ];
+    }
+
     /**
      * TODOS los ocupantes de plazas que la cesta aporta a esta zona y día, etiquetados.
      *
@@ -82,6 +122,52 @@ class CartOccupants
             foreach (self::occupyingChildrenOf($type, $line) as $child) {
                 $occupants[] = $child + ['line' => $i];
             }
+        }
+
+        return $occupants;
+    }
+
+    /**
+     * Las FIESTAS provisionales que la cesta aporta al cupo de packs de esta zona y día.
+     *
+     * Vivía dentro de `AvailabilityReader::occupantsOf()` y sube aquí en `#464` porque el panel
+     * necesita la misma cuenta: **dos copias de esto ofrecen fiestas que el cobro rechaza**.
+     *
+     * ⚠️ **Es OTRO pool, no otra forma de contar lo mismo** (#82): el cupo de fiestas se mide en
+     * INVITADOS sobre la zona de packs y cuenta además el montaje y la limpieza, mientras las plazas
+     * de {@see entries()} se ocupan a lo largo de la duración. Por eso la forma de cada ocupante es
+     * distinta y no se pueden mezclar en una lista.
+     *
+     * ⚠️ **Aquí no se excluye nada.** El llamador que valida una línea YA existente —`OrderCreator`—
+     * tiene su propia exclusión por índice; este camino sirve a la OFERTA, donde la línea que se
+     * está configurando todavía no está en la cesta.
+     *
+     * @param  array<int, array{ticket_type_id:int, date:string, time:string, qty:int}>  $cart  saneada (`Cart::sanitize`)
+     * @param  Collection<int, TicketType>  $types  productos por id
+     * @return list<array{start:string, prep_before_min:int, duration_min:int|null, prep_after_min:int, guests:int}>
+     */
+    public static function packs(array $cart, Collection $types, int $zoneId, string $date): array
+    {
+        $occupants = [];
+
+        foreach ($cart as $line) {
+            if (($line['date'] ?? null) !== $date) {
+                continue;
+            }
+
+            /** @var TicketType|null $type */
+            $type = $types->get($line['ticket_type_id'] ?? 0);
+            if (! $type || (int) $type->zone_id !== $zoneId || ! $type->isPack()) {
+                continue;
+            }
+
+            $occupants[] = [
+                'start' => (string) $line['time'],
+                'prep_before_min' => (int) $type->prep_before_min,
+                'duration_min' => $type->duration_min,
+                'prep_after_min' => (int) $type->prep_after_min,
+                'guests' => (int) $line['qty'] * (int) ($type->seats_per_unit ?? 1),
+            ];
         }
 
         return $occupants;
@@ -155,5 +241,32 @@ class CartOccupants
         }
 
         return $children;
+    }
+
+    /**
+     * Los productos de la cesta que HOY se venden, en UNA consulta.
+     *
+     * Mismo filtro que aplica el resto del flujo: una línea de un producto retirado o de una zona
+     * apagada **no retiene aforo**, porque tampoco se puede comprar.
+     *
+     * `with('addons')` es de la hora extra: {@see occupyingChildrenOf()} deriva de esa relación —con
+     * su pivote— las hijas que ocupan, y sin la precarga cada línea costaría una consulta.
+     *
+     * @param  array<int, array{ticket_type_id:int}>  $cart
+     * @return Collection<int, TicketType>
+     */
+    private static function typesOf(array $cart): Collection
+    {
+        $ids = array_values(array_unique(array_map(
+            static fn (array $line): int => (int) $line['ticket_type_id'],
+            $cart,
+        )));
+
+        return TicketType::sellable()
+            ->inOperationalZone()
+            ->with('addons')
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
     }
 }

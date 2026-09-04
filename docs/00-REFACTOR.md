@@ -3856,7 +3856,7 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **Una elección menor del owner**, anotada sin tocarla: un extra **cerrado que nunca se pidió** hoy
       se pinta igual, con su «ya no se puede cambiar» y su 0.
 
-### EL PANEL DE ADMIN · UI/UX 🟦 EN CURSO — la auditoría y las tres primeras tandas (`#460` → `#463`, carril del panel, banda `#460`–`#469`)
+### EL PANEL DE ADMIN · UI/UX 🟦 EN CURSO — la auditoría y el ASISTENTE completo (`#460` → `#466`, carril del panel, banda `#460`–`#469`)
 - [x] **La AUDITORÍA del panel, EN EL REPO** (`specs/auditoria-panel-admin.md`, `#460`): 10 pantallas
       × 3 tamaños con Chromium sobre el panel real + 5 sondas de estados de trabajo → **4 críticos ·
       10 mayores · 11 menores**. **§7 es lo que NO hay que tocar** y **§9.bis lo que falla a
@@ -3876,15 +3876,35 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       del pack. `pickProduct()` es la única puerta y **re-valida en el servidor**; «Más info» es de
       lectura y **no elige**. `CreateManualOrderProductCardsTest` (10 casos · 9/9 mutaciones) ·
       sonda de navegador (18 tarjetas, 0 controles bajo 44 px, 0 desbordamiento)
-- [ ] ❗❗❗ **T3 · «Cuándo», y lleva DENTRO la única corrección de DOMINIO del encargo**: la pantalla
-      (cantidad arriba · calendario grande con días reservables · plazas al elegir el día) **y pasarle
-      la CESTA a `SlotOffer`** — el panel llama a `offerableTimes()` sin los ocupantes y la web sí se
-      los pasa; con «Añadir más productos» eso deja de ser un borde y pasa a ser el camino normal.
-      ⚠️ **Toca AFORO**: `INVARIANTES §2` primero, reutilizar `CartOccupants` (**no inventar una
-      segunda derivación**, que es el defecto que `#410` cerró) y `VERIFY_CONC=1` en el push
-- [ ] **T4 · la pantalla de «pedido creado»** que refleje lo que de verdad pasó (⚠️ hay clientes SIN
-      email: no prometer un correo que no se manda), y con ella **los 5 controles bajo 44 px del paso
-      del carrito**, ya medidos
+- [x] ❗❗❗ **T3 · «Cuándo», con la única corrección de DOMINIO del encargo** (`#464`, spec §9). Dos
+      mitades: **(a)** el **calendario grande y siempre visible** —medido antes: un popover de
+      **259×248 px con celdas de 29×28**, bajo el mínimo táctil y a dos toques— y `[DECIDIDO owner]`
+      **la tira de 14 días RETIRADA** (dos puertas a la misma pregunta, 90 px), lo que **corrige a
+      `auditoria-panel-admin.md` §7**; celda **72×48**, **0** controles bajo 44 px en el paso, y las
+      franjas **se traen a la vista** al elegir día. **(b)** la **CESTA a `SlotOffer`**: con 7 entradas
+      en el carrito la segunda línea ofrece **33 plazas donde antes decía 40** (medido en navegador).
+      ⚠️ La cuenta **no** se copió: subió a **`CartOccupants::forCart()` + `packs()`**, la derivación
+      única; `OrderCreator` intacto. `CreateManualOrderCalendarTest` (7) ·
+      `CreateManualOrderCartAvailabilityTest` (7) · **14/14 mutaciones** · los **siete** escenarios de
+      `purchase:verify-oversell` sobre InnoDB · N+1 del elegidor de paso: **54 → 5** consultas
+- [x] **El RENDIMIENTO de la oferta** (`#465`, `INVARIANTES AFORO-02`), que sale de la ficha de deuda
+      que la T3 dejó anotada y la retira el mismo día. Medido: el paso costaba **714 ms** y la
+      consulta cruda **9,9** — el coste era hidratar **1.947 modelos** y resolver la ventana del día
+      **once veces por día**; y **no era del panel**, la web y la API del cajón pagaban lo mismo
+      (~420 ms por calendario abierto). Hoy: paso **94,6 ms**, read-model público **44,8**. Las
+      FECHAS leen filas crudas del horizonte; las HORAS cargan **solo el día que se pregunta**.
+      ⚠️⚠️ Lo que lo hace robusto: la consulta y el predicado son UNO para las dos vías,
+      `clampToHorizon()` re-pone el techo de venta que la consulta del horizonte ponía sola, y
+      **`SlotOfferPathParityTest` las ata por equivalencia** (un día se ofrece si y solo si sus horas
+      no están vacías). 8 casos · **8/8 mutaciones** · los siete escenarios de concurrencia
+- [x] **T4 · el DESENLACE** (`#466`, spec §10): una pantalla propia al terminar, en vez del *toast* y
+      la redirección a la ficha. ❗❗ Su regla es **no prometer nada que no haya pasado**: hay clientes
+      SIN correo y con ellos no se envía **nada**, así que la pantalla lo dice y entrega los enlaces
+      copiables — y la guarda **compara lo que dice con lo que se ha NOTIFICADO de verdad**.
+      ⚠️⚠️ La redirección era también lo que impedía **cobrar dos veces**: hoy lo impide que `create()`
+      vacíe el carrito. Controles bajo 44 px: **0** en carrito y desenlace (eran 4 y eran los chips
+      del indicador, no los 5 «de quitar línea» que la spec daba de memoria), y de paso «Ver el
+      desglose» pasa a 44 px en las cuatro superficies del libro. 6 casos · **12/12 mutaciones**
 - [ ] **D4 de la auditoría**, pendiente del detalle del owner
 
 ## Relación con el proyecto origen

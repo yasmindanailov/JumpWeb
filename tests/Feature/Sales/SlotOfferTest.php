@@ -162,8 +162,12 @@ class SlotOfferTest extends TestCase
         $page = new CreateManualOrderPage;
         $page->data = ['sel_product_id' => $this->entry->id, 'sel_date' => $d1];
 
-        $maxOfferable = $this->invoke($page, 'maxOfferableDate');
-        $this->assertSame($d2, $maxOfferable?->toDateString(), 'el tope del panel es la última franja REAL');
+        // ⚠️ **Re-apuntado en `#464`, no reescrito**: el sujeto sigue siendo «el panel no ofrece más
+        // allá de la última franja REAL» —el defecto original era un tope aritmético «hoy + horizonte»—.
+        // Lo que cambió es dónde se lee: `maxOfferableDate()` existía para el `DatePicker`, que se
+        // retiró con la tira; hoy el techo es el último día que enciende la rejilla del calendario.
+        $ofrecibles = $this->invoke($page, 'offerableDates');
+        $this->assertSame($d2, end($ofrecibles), 'el tope del panel es la última franja REAL');
 
         // ⚠️ **Re-apuntado a `timeChips()` en `#241`, no reescrito**: el SUJETO de esta guarda es «el
         // panel ofrece exactamente lo que el servicio compartido», y eso sigue vivo — lo que cambió es
@@ -292,9 +296,14 @@ class SlotOfferTest extends TestCase
         $page = new CreateManualOrderPage;
         $page->data = ['sel_product_id' => $this->entry->id];
 
+        // ⚠️ **Re-apuntado en `#464`**: el suelo del calendario era `minOfferableDate()`, que existía
+        // para los topes del `DatePicker` retirado. Hoy la rejilla no tiene topes: enciende los días
+        // que la oferta admite, así que el sujeto se mide en el PRIMERO de ellos.
+        $ofrecibles = $this->invoke($page, 'offerableDates');
+
         $this->assertSame(
             $this->today->copy()->addDay()->toDateString(),
-            $this->invoke($page, 'minOfferableDate')?->toDateString(),
+            $ofrecibles[0] ?? null,
             'el mostrador tiene que poder llegar al día que la antelación reserva al autoservicio'
         );
     }

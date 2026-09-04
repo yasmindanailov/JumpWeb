@@ -4,10 +4,14 @@ namespace App\Filament\Pages;
 
 use App\Domain\Booking\Contracts\CounterSale;
 use App\Domain\Booking\Exceptions\ReservationException;
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\AddonResolver;
+use App\Domain\Booking\Services\CartOccupants;
 use App\Domain\Booking\Services\ManualOrderFulfiller;
+use App\Domain\Booking\Services\OrderBook;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\RateResolver;
 use App\Domain\Booking\Services\SlotAvailability;
@@ -18,17 +22,14 @@ use App\Domain\Identity\Services\CustomerRegistrar;
 use App\Domain\Identity\Services\DependentAssigner;
 use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\WaiverSettings;
-use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\Orders\OrderResource;
 use BackedEnum;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
-use Carbon\CarbonPeriod;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -89,6 +90,16 @@ class CreateManualOrderPage extends Page
     public const STEP_PAYMENT = 7;
 
     /**
+     * El DESENLACE: qué ha pasado de verdad con el pedido que se acaba de crear (`#466`, T4).
+     *
+     * ⚠️ **No está en `stepLabels()` y por tanto no sale en el indicador, a propósito.** No es un
+     * paso del asistente: es su final. Pintarlo como un octavo chip invitaría a volver atrás a un
+     * asistente cuyo pedido **ya está cobrado**, que es justo lo que {@see goToStep()} y sus hermanas
+     * bloquean mientras haya desenlace en pantalla.
+     */
+    public const STEP_DONE = 8;
+
+    /**
      * Los pasos que componen UNA LÍNEA, en orden. Del último con algo que preguntar cuelga «Añadir
      * al carrito».
      *
@@ -100,8 +111,8 @@ class CreateManualOrderPage extends Page
      */
     public const LINE_STEPS = [self::STEP_PRODUCT, self::STEP_WHEN, self::STEP_DETAILS, self::STEP_EXTRAS];
 
-    /** Cuántos días ofrecibles enseña la tira rápida del paso 2 (`#240`). El resto, el calendario. */
-    private const QUICK_DAYS = 14;
+    /** Los días de la semana empiezan en LUNES: el panel es de un parque español. */
+    private const WEEK_STARTS_ON = CarbonInterface::MONDAY;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPlusCircle;
 
@@ -134,14 +145,35 @@ class CreateManualOrderPage extends Page
     public int $step = self::STEP_CUSTOMER;
 
     /**
-     * ¿Está desplegado el calendario amplio del paso 2? (`#241`, `[OWNER]`: «mejor un CTA "abrir
-     * calendario" y así puedes elegir otra fecha del calendario más amplio»).
+     * El pedido que se acaba de crear, mientras se enseña su desenlace (`#466`). `null` = no hay.
      *
-     * ⚠️ **Nace CERRADO**: la tira de 14 días resuelve la reserva de mostrador, y el calendario es el
-     * atajo para el salto largo — la misma decisión y el mismo motivo que en el cajón del cliente
-     * (`specs/cajon-en-movil.md` §4.1).
+     * ⚠️⚠️ **Es también lo que impide crear el mismo pedido dos veces.** Al terminar, `create()`
+     * VACÍA el carrito, así que una segunda llamada —un doble clic, un `wire:click` repetido— se
+     * encuentra la cesta vacía y no crea nada. Antes esto lo garantizaba la redirección a la ficha
+     * del pedido; sin ella, lo garantiza el estado. Hay caso propio.
      */
-    public bool $calendarOpen = false;
+    public ?int $createdOrderId = null;
+
+    /**
+     * Menores que la asignación NO pudo colocar tras cobrar (`specs/menores-a-cargo.md` D14·5).
+     *
+     * Se guarda para que el DESENLACE lo diga: la asignación corre fuera de la transacción del cobro
+     * y su aviso era un *toast*, que desaparece — y lo que hay que hacer (asignarlos desde la ficha)
+     * queda para después.
+     */
+    public int $dependentsSkipped = 0;
+
+    /**
+     * El mes que enseña el calendario del paso «Cuándo», `Y-m`. `null` = el que toque solo.
+     *
+     * ⚠️ **Es un OVERRIDE, no el estado del mes** ({@see calendarMonthKey()}): mientras nadie
+     * navegue, el mes lo decide la oferta —el del día elegido, y si no, el del primer día
+     * ofrecible—, y **el override se descarta en cuanto deja de tener oferta**. Por eso cambiar de
+     * producto no puede dejar el calendario plantado en un mes donde el nuevo no se vende, y no hace
+     * falta reiniciarlo a mano: si los dos productos venden en ese mes, quedarse es lo que el
+     * operador espera.
+     */
+    public ?string $calMonth = null;
 
     /**
      * Alta de cliente SIN email a la espera de la decisión de duplicados (#263; decisión clienta:
@@ -290,7 +322,7 @@ class CreateManualOrderPage extends Page
 
     public function next(): void
     {
-        if (! $this->canAdvance()) {
+        if ($this->isDone() || ! $this->canAdvance()) {
             return;
         }
 
@@ -307,7 +339,46 @@ class CreateManualOrderPage extends Page
 
     public function back(): void
     {
+        if ($this->isDone()) {
+            return;
+        }
+
         $this->step = $this->stepBefore($this->step);
+    }
+
+    /**
+     * ¿Hay un pedido recién creado en pantalla? (`#466`)
+     *
+     * ⚠️ **Mientras lo haya, el asistente NO navega.** Volver «atrás» desde el desenlace llevaría a
+     * un asistente con el carrito vacío y un pedido ya cobrado detrás: un estado que no es ni el de
+     * antes ni el de después. La única salida es {@see startAnotherOrder()}, que lo limpia todo.
+     */
+    private function isDone(): bool
+    {
+        return $this->createdOrderId !== null;
+    }
+
+    /**
+     * Empezar OTRO pedido desde el desenlace (`#466`, `[owner]`: la pantalla nueva es el final del
+     * flujo, y del final se sale volviendo a empezar).
+     *
+     * ⚠️ **Limpia el CLIENTE también.** En un mostrador el siguiente pedido es de otra persona; dejar
+     * al anterior seleccionado es la forma más fácil de cobrarle a quien no era — el mismo motivo por
+     * el que la puerta tiene «Nueva búsqueda» (`panel-navegacion.md` §8.3).
+     */
+    public function startAnotherOrder(): void
+    {
+        $this->createdOrderId = null;
+        $this->dependentsSkipped = 0;
+        $this->cart = [];
+        $this->calMonth = null;
+        $this->selAddonQty = [];
+        $this->selAddonGroup = [];
+        $this->addonsMemo = null;
+        $this->addonsMemoFor = null;
+        $this->clearPhoneMatch();
+        $this->form->fill();
+        $this->step = self::STEP_CUSTOMER;
     }
 
     /** Vuelve al paso de PRODUCTO para añadir otra línea (`[DECIDIDO owner]`: «añadir más productos»). */
@@ -323,6 +394,10 @@ class CreateManualOrderPage extends Page
      */
     public function goToStep(int $step): void
     {
+        if ($this->isDone()) {
+            return;
+        }
+
         if ($step < $this->step && $step >= self::STEP_CUSTOMER && $this->stepHasSomethingToAsk($step)) {
             $this->step = $step;
         }
@@ -536,12 +611,10 @@ class CreateManualOrderPage extends Page
                             // recalcula los `per_guest` (uno por invitado) y su importe.
                             ->live(onBlur: true),
 
-                        // Menores a cargo (Fase 6 · C, tanda 5, `specs/menores-a-cargo.md` §9.10 D14·5): para
-                        // quién son estas ENTRADAS. Solo con cliente, fecha y entrada, y solo si el cliente
-                        // tiene alguno; los no asignables van deshabilitados con su motivo (las mismas reglas
-                        // que el embudo, `DependentAssigner::candidates()`). Se guarda en la línea y se escribe
-                        // DESPUÉS de cobrar (`create()`), nunca dentro de la transacción del cobro.,
-
+                        // `#329` — el gemelo de D7 al CREAR: el interruptor del mínimo solo se
+                        // OFRECE con su permiso y con un mínimo que rebajar, y va JUNTO al campo de
+                        // cantidad porque es lo que decide su suelo. `live()` sin `onBlur` para que
+                        // el campo de al lado se re-evalúe en el mismo gesto.
                         Toggle::make('sel_below_minimum')
                             ->label(__('admin.orders.create_manual.below_minimum_label'))
                             ->helperText(fn (): string => __('admin.orders.create_manual.below_minimum_help', [
@@ -560,61 +633,26 @@ class CreateManualOrderPage extends Page
                                 }
                             }),
 
-                        // El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2,
-                        // T6). Es la MISMA pregunta que el cajón le hace al cliente, en la boca del
-                        // operador: *«¿viene algún menor que no sea hijo de quien reserva?»*.
+                        // ❗❗ **EL CALENDARIO, GRANDE Y SIEMPRE VISIBLE** (`#464`, T3, `[owner]`: «la
+                        // fecha la selecciona de un calendario grande, bien visible»). Sustituye a la
+                        // tira de 14 días y al `DatePicker` plegado tras su CTA que traía `#241`:
+                        // medido antes de tocarlo, aquel calendario era un popover de **259×248 px con
+                        // celdas de 29×28** —bajo el mínimo táctil— y costaba dos toques abrirlo.
                         //
-                        // ⚠️ **Solo con `optional`.** Con `required` el servidor marca la línea igual
-                        // (`OrderCreator`), y ofrecer aquí un interruptor que no decide nada invita a
-                        // apagarlo y a creer que se ha apagado algo.
+                        // ⚠️ **La tira SE RETIRA** (`[DECIDIDO owner, 2026-09-04]`, preguntado con el
+                        // coste delante): con el calendario desplegado eran DOS puertas a la misma
+                        // pregunta, y «hoy» sigue estando a un toque en el calendario, así que la tira
+                        // no ahorraba ninguno — solo 90 px. Eso corrige a `auditoria-panel-admin.md`
+                        // §7, que la daba por buena cuando el calendario vivía escondido.
                         //
-                        // ⚠️ **Y esto es el «caso 3» del owner por dentro**: el mostrador crea un
-                        // pedido con responsable, así que la venta en persona entra por la misma
-                        // puerta que la web y recibe el mismo correo con el enlace (§12.3).,
-
-                        ViewComponent::make('filament.pages.partials.manual-order-daystrip')
-                            ->viewData(fn (): array => ['days' => $this->quickDays()])
-                            ->visible(fn (): bool => $this->quickDays() !== []),
-
-                        // El CTA que abre el calendario amplio (`#241`, `[OWNER]`). Solo existe cuando
-                        // hay tira: sin ella el calendario ES el control de fecha y no se pliega.
-                        ViewComponent::make('filament.pages.partials.manual-order-calendar-cta')
-                            ->viewData(fn (): array => ['open' => $this->calendarOpen])
-                            ->visible(fn (): bool => $this->quickDays() !== []),
-
-                        DatePicker::make('sel_date')
-                            // ⚠️ **Cambia de rótulo porque ya no es el control principal** (`#240`):
-                            // el día se elige en la tira de arriba, que es la que lleva «Fecha». Dos
-                            // controles con la misma etiqueta uno debajo de otro se leen como un fallo.
-                            // ▶ Y desde `#241` **está PLEGADO tras su CTA**: «Otra fecha» era un campo
-                            // más en la columna; «Abrir calendario» es una acción que se busca cuando
-                            // se necesita, que es como lo usa el mostrador.
-                            ->visible(fn (): bool => $this->calendarOpen || $this->quickDays() === [])
-                            ->label(fn (): string => $this->quickDays() === []
-                                ? __('admin.orders.create_manual.date')
-                                : __('admin.orders.create_manual.date_other'))
-                            ->native(false)
-                            ->closeOnDateSelection()           // cierra el popover al elegir día
-                            // Fuente ÚNICA compartida con la web (SlotOffer): solo se habilitan los
-                            // días con franja ofrecible del producto, y el máximo es la última franja
-                            // REAL (no hoy+horizonte aritmético, que ofrecía días sin franjas). "Hoy"
-                            // en la zona operativa del parque (auditoría Fase 1).
-                            // Empieza en la PRIMERA fecha ofrecible → la ventana de antelación y los
-                            // días sin franja del principio quedan bloqueados (gris), no clicables-sin-horas.
-                            ->minDate(fn (): Carbon => $this->minOfferableDate() ?? DisplayTime::today())
-                            ->maxDate(fn (): Carbon => $this->maxOfferableDate()
-                                ?? DisplayTime::today()->addMonths(PaymentSettings::purchaseHorizonMonths()))
-                            ->disabledDates(fn (): array => $this->disabledOfferDates())
-                            ->live()
-                            // ⚠️ **Las DOS puertas de elegir día llaman a lo MISMO.** Desde `#240` hay
-                            // dos —la tira y el calendario— y duplicar aquí el «olvida la hora y los
-                            // menores» sería exactamente cómo divergen: se arregla una y la otra se
-                            // queda con una hora de otro día. La regla vive en `onDateChosen()`.
-                            // ⚠️ Le pasa el `$set` de Filament, y no es ceremonia: dentro de un
-                            // `afterStateUpdated` **escribir en `$this->data` a mano se pierde** —el
-                            // formulario vuelve a sincronizar su estado después—, así que la hora de
-                            // otro día sobrevivía. Lo dijo la guarda de las dos puertas, no el ojo.
-                            ->afterStateUpdated(fn (callable $set) => $this->onDateChosen($set)),
+                        // ⚠️ **El modelo de vista lo compone el SERVIDOR** ({@see calendarMonth()}) y
+                        // el clic va a `pickDay()`, que **vuelve a comprobar** que el día esté en la
+                        // oferta: el navegador propone, el servidor decide (`AFORO-02`).
+                        ViewComponent::make('filament.pages.partials.manual-order-calendar')
+                            ->viewData(fn (): array => [
+                                'label' => __('admin.orders.create_manual.date'),
+                                'mes' => $this->calendarMonth(),
+                            ]),
 
                         // ⚠️ **CHIPS de dos niveles** (`#241`, `[OWNER]`: «lo de las plazas debería
                         // mostrarse de manera más sutil, no al mismo nivel que la hora»). En `#240`
@@ -630,11 +668,6 @@ class CreateManualOrderPage extends Page
                                 'label' => __('admin.orders.create_manual.time'),
                                 'help' => $this->timeFieldHelp(),
                             ]),
-
-                        // `#329` — el gemelo de D7 al CREAR: el interruptor solo se OFRECE con su
-                        // permiso y con un mínimo que rebajar, y va ANTES del campo de cantidad
-                        // porque es lo que decide su suelo. `live()` sin `onBlur` para que el campo
-                        // de al lado se re-evalúe en el mismo gesto.,
                     ]),
             ]);
     }
@@ -1316,20 +1349,101 @@ class CreateManualOrderPage extends Page
         // transacción. El cobro ya está tomado y el pedido en pie; si esto falla, el operador lo ve y lo
         // asigna desde la ficha del pedido («Asignar menores»). Nunca lanza.
         $outcome = app(DependentAssigner::class)->assign($customer, (int) $order->id, $dependentRequests);
-        if ($outcome->skipped > 0 || $outcome->abortedBecause !== null) {
-            Notification::make()
-                ->warning()
-                ->persistent()
-                ->title(__('admin.orders.dependents.manual_assign_failed', ['count' => max(1, $outcome->skipped)]))
-                ->send();
+        $this->dependentsSkipped = ($outcome->skipped > 0 || $outcome->abortedBecause !== null)
+            ? max(1, $outcome->skipped)
+            : 0;
+
+        // `#466` — el DESENLACE sustituye a la redirección a la ficha (`[owner]`: «después de crear el
+        // pedido, una pantalla nueva: pedido creado correctamente…»).
+        //
+        // ⚠️⚠️ **Vaciar el carrito no es limpieza: es lo que impide cobrar dos veces.** Sin la
+        // redirección, la página sigue viva con su estado, así que un segundo `create()` —doble clic,
+        // un `wire:click` repetido— crearía OTRO pedido idéntico. Con la cesta vacía se encuentra la
+        // guarda de arriba y no crea nada. Hay caso propio.
+        //
+        // ⚠️ El aviso de los menores sin asignar deja de ser un *toast*: los toasts desaparecen y lo
+        // que hay que hacer (asignarlos desde la ficha) queda para después. Lo dice la pantalla.
+        $this->createdOrderId = (int) $order->id;
+        $this->cart = [];
+        $this->step = self::STEP_DONE;
+    }
+
+    /**
+     * El DESENLACE del pedido recién creado (`#466`, T4), o `null` si no hay ninguno en pantalla.
+     *
+     * ❗❗❗ **Su única regla es no prometer nada que no haya pasado.** El encargo del owner era «una
+     * pantalla nueva: pedido creado correctamente…», y lo que la hace útil —y peligrosa si se
+     * escribe a ojo— es que el mostrador la lee en voz alta: qué se ha cobrado, qué queda por pagar
+     * en el parque y **qué se le ha enviado al cliente**.
+     *
+     * ⚠️⚠️ **Hay clientes SIN correo** (`#263`: el alta de mostrador solo pide teléfono), y con ellos
+     * `ManualOrderFulfiller` **no envía NADA** —ni la confirmación, ni el post-form, ni el
+     * justificante— y lo deja en el log. Una pantalla que dijera «se lo hemos enviado» mandaría al
+     * operador a casa creyendo que el cliente tiene su enlace. Por eso el correo se pregunta con el
+     * MISMO predicado que usa el fulfiller (`filled($user->email)`) y, cuando no lo hay, la pantalla
+     * lo dice y entrega los enlaces para que el operador los mande por WhatsApp.
+     *
+     * ⚠️ **Y las tres listas salen de las MISMAS autoridades que el fulfiller consulta**
+     * (`needsGuestForm()` por reserva y `guardianReservations()`), no de una regla nueva: si la
+     * pantalla dedujera por su cuenta a quién hay que mandarle qué, diría una cosa y el correo haría
+     * otra. Lo fija `CreateManualOrderDoneTest` comparando con lo que se ha NOTIFICADO de verdad.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function doneSummary(): ?array
+    {
+        if ($this->createdOrderId === null) {
+            return null;
         }
 
-        Notification::make()
-            ->success()
-            ->title(__('admin.orders.create_manual.created', ['code' => $order->code]))
-            ->send();
+        /** @var Order|null $order */
+        $order = Order::with(['user', 'items.ticketType', 'items.slot'])->find($this->createdOrderId);
 
-        $this->redirect(OrderResource::getUrl('view', ['record' => $order]));
+        if ($order === null) {
+            return null;   // borrado entre medias: la pantalla cae al asistente en vez de reventar
+        }
+
+        $email = $order->user?->email;
+        $postForm = $order->guestFormItems()->filter(fn (OrderItem $item): bool => $item->needsGuestForm())->values();
+        $guardian = $order->guardianReservations();
+
+        return [
+            'code' => (string) $order->code,
+            'url' => OrderResource::getUrl('view', ['record' => $order]),
+            'customer' => $order->user ? $this->customerDisplay($order->user) : null,
+            'email' => $email,
+            'method' => (string) ($this->data['payment_method'] ?? ''),
+            'book' => OrderBook::forOrder($order),
+            'reservations' => $order->items
+                ->whereNull('parent_item_id')
+                ->map(fn (OrderItem $item): array => [
+                    'label' => $item->displayProductName(),
+                    'when' => $item->slot
+                        ? $item->slot->date->format('d/m/Y').' '.substr((string) $item->slot->start_time, 0, 5)
+                        : null,
+                    'qty' => (int) $item->quantity,
+                ])->values()->all(),
+            // Los enlaces se entregan a mano SIEMPRE que existan, haya correo o no: el cliente que
+            // dice «no me ha llegado» está delante, y el operador ya tiene aquí lo que necesita.
+            'links' => [
+                ...$postForm->map(fn (OrderItem $item): array => [
+                    'kind' => 'guest_form',
+                    'label' => $item->displayProductName(),
+                    'url' => $item->guestFormSignedUrl(),
+                ])->all(),
+                ...$guardian->map(fn (OrderItem $item): array => [
+                    'kind' => 'guardian',
+                    'label' => $item->displayProductName(),
+                    'url' => $item->guardianAuthorizationSignedUrl(),
+                ])->all(),
+            ],
+            'sent' => [
+                'confirmation' => filled($email),
+                'guest_form' => filled($email) ? $postForm->count() : 0,
+                'guardian' => filled($email) ? $guardian->count() : 0,
+            ],
+            'dependents_skipped' => $this->dependentsSkipped,
+        ];
     }
 
     /**
@@ -1459,7 +1573,12 @@ class CreateManualOrderPage extends Page
         $productos = TicketType::sellable()
             ->inOperationalZone() // una zona desactivada no vende (igual que la web)
             ->whereIn('type', [TicketType::TYPE_ENTRY, TicketType::TYPE_PACK])
-            ->with('zone')
+            // ⚠️ **`prices.rateType` y `priceTiers` van en la precarga porque la TARJETA los pinta**:
+            // `displayPriceCents()` busca la tarifa `normal` dentro de cada precio y `priceVaries()`
+            // compara importes. Sin esto cada tarjeta abre TRES consultas y la pantalla costaba **54
+            // para 18 productos** (medido en `#464`) — el N+1 que `#259` ya documentó en la web, aquí
+            // por la puerta del panel. La misma precarga que hacen los controladores de la landing.
+            ->with(['zone', 'prices.rateType', 'priceTiers'])
             ->orderBy('position')
             ->get();
 
@@ -1711,42 +1830,87 @@ class CreateManualOrderPage extends Page
     }
 
     /**
-     * Franjas ofrecibles para el producto+fecha en curso, vía la fuente ÚNICA `SlotOffer` (idéntica
-     * a la web): aplica la ventana viva del día y el cupo de pack ≥ min_qty. Las entradas llenas se
-     * muestran DESHABILITADAS (sellable=false). @return array<string,string>
-     */
-    /**
-     * Mapa franja → {available, sellable} de `SlotOffer`, memoizado por petición (lo consumen las
-     * opciones, el `disableOptionWhen` y el helper del selector de hora).
+     * Mapa franja → {available, sellable} de la fuente ÚNICA `SlotOffer` (la misma que la web,
+     * `AFORO-02`): ventana viva del día, cupo de pack ≥ min_qty y **los ocupantes que la propia
+     * cesta de este pedido ya está reteniendo**. Las franjas llenas viajan igual, marcadas
+     * `sellable=false` — se enseñan deshabilitadas, no se esconden. Memoizado por petición.
      *
-     * @return array<string, array{available:int, sellable:bool}>
+     * ❗❗ **La CESTA entra aquí desde `#464`, y es la única corrección de dominio del asistente.**
+     * Hasta hoy el panel llamaba a `offerableTimes()` sin ocupantes provisionales mientras la web sí
+     * se los pasaba: dos líneas del mismo pedido sobre la misma franja se ofrecían **como si la
+     * primera no existiera**, y el operador veía 40 plazas después de haber metido 20 en la línea
+     * anterior. Era un borde declarado (`specs/hora-extra.md` §8.3) hasta que el asistente puso
+     * «Añadir más productos» en el camino normal.
+     *
+     * ⚠️ **La cuenta NO se escribe aquí**: es `CartOccupants::forCart()`, la derivación ÚNICA que
+     * comparten el cobro (`OrderCreator`) y la oferta (web y API). Una copia local contaría distinto
+     * las hijas que ocupan o las líneas de pack, y ofrecería horas que el propio checkout rechaza.
+     *
+     * ⚠️ **La línea en curso NO está en `$this->cart`** —entra al pulsar «Añadir al carrito»—, así
+     * que no se cuenta a sí misma. Es la misma semántica que en la web.
+     *
+     * @return array<string, array{available:int, max_quantity:int, sellable:bool}>
      */
     private function timeMap(): array
     {
         // `#329`: el interruptor del mínimo entra en la CLAVE del memo. Sin él, activarlo no
         // recalcularía las horas y el operador seguiría viendo la lista filtrada por el mínimo — el
         // defecto que esta tanda existe para evitar, escondido en una caché.
+        // `#464`: y la CESTA también. Es la misma lección: un memo que no ve entrar un dato devuelve
+        // el número de antes, y aquí «el número de antes» son plazas que ya no están libres.
         $belowMinimum = $this->belowMinimumActive();
         $key = (string) ($this->data['sel_product_id'] ?? '').'|'.(string) ($this->data['sel_date'] ?? '')
-            .'|'.($belowMinimum ? '1' : '0');
+            .'|'.($belowMinimum ? '1' : '0').'|'.$this->cartFingerprint();
         if ($this->timeMapKey === $key && $this->timeMapCache !== null) {
             return $this->timeMapCache;
         }
 
         $type = $this->selectedProduct();
         $date = $this->data['sel_date'] ?? null;
-        $map = (! $type || ! $type->zone_id || ! $date)
-            ? []
-            : app(SlotOffer::class)->offerableTimes(
-                $type,
-                Carbon::parse($date)->toDateString(),
-                sale: CounterSale::byOperator($belowMinimum),
-            );
+
+        if (! $type || ! $type->zone_id || ! $date) {
+            $this->timeMapKey = $key;
+
+            return $this->timeMapCache = [];
+        }
+
+        $day = Carbon::parse($date)->toDateString();
+        $occupants = CartOccupants::forCart($this->cart, (int) $type->zone_id, $day);
+
+        $map = app(SlotOffer::class)->offerableTimes(
+            $type,
+            $day,
+            $occupants['entries'],
+            $occupants['packs'],
+            CounterSale::byOperator($belowMinimum),
+        );
 
         $this->timeMapKey = $key;
         $this->timeMapCache = $map;
 
         return $map;
+    }
+
+    /**
+     * Huella de la cesta para la clave del memo de {@see timeMap()}: lo que cambia las plazas.
+     *
+     * ⚠️ **Contar líneas no vale**: quitar una y añadir otra deja el mismo número y otra ocupación.
+     * Entra lo que `CartOccupants` mira —producto, día, hora, cantidad y complementos— y nada más:
+     * el rótulo o los menores asignados no mueven una plaza.
+     */
+    private function cartFingerprint(): string
+    {
+        if ($this->cart === []) {
+            return '-';
+        }
+
+        return md5(json_encode(array_map(static fn (array $line): array => [
+            $line['ticket_type_id'] ?? null,
+            $line['date'] ?? null,
+            $line['time'] ?? null,
+            $line['qty'] ?? null,
+            $line['addons'] ?? [],
+        ], $this->cart), JSON_THROW_ON_ERROR));
     }
 
     /** Ayuda del selector de hora: avisa si la fecha elegida no tiene franjas ofrecibles. */
@@ -1799,74 +1963,191 @@ class CreateManualOrderPage extends Page
         $this->advanceAfterChoice();
     }
 
-    /** Despliega o pliega el calendario amplio del paso 2 (`#241`). */
-    public function toggleCalendar(): void
+    /**
+     * El CALENDARIO del paso «Cuándo», compuesto en el servidor (`#464`, T3).
+     *
+     * `[owner]`: «la fecha la selecciona de un calendario grande, bien visible, que se vean las
+     * plazas disponibles del producto en concreto». Las PLAZAS van con las horas y no por día
+     * (`[DECIDIDO owner]` D2): pintarlas por día cuesta **709 consultas y 11,4 s** —`offerableTimes()`
+     * resuelve día a día y no existe vía agregada por rango—, así que aquí un día solo dice si se
+     * puede reservar o no, que sale de las **5 consultas** que ya cuesta `offerableDates()`.
+     *
+     * ⚠️ **Los días de otro mes salen VACÍOS, no atenuados.** Un número gris que no es de este mes,
+     * al lado de otro número gris que sí lo es pero no se vende, son dos grises que significan cosas
+     * distintas — y en una tablet se pulsan igual de mal.
+     *
+     * @return array{ym: string, label: string, prev: ?string, next: ?string, weekdays: list<string>, weeks: list<list<?array{day: int, date: string, offerable: bool, selected: bool, today: bool}>>}
+     */
+    public function calendarMonth(): array
     {
-        $this->calendarOpen = ! $this->calendarOpen;
+        $ofrecibles = array_flip($this->offerableDates());
+        $ym = $this->calendarMonthKey();
+        $primero = Carbon::createFromFormat('Y-m-d', $ym.'-01')->startOfDay();
+        $hoy = DisplayTime::today()->toDateString();
+        $elegido = (string) ($this->data['sel_date'] ?? '');
+
+        $cursor = $primero->copy()->startOfWeek(self::WEEK_STARTS_ON);
+        $fin = $primero->copy()->endOfMonth()->endOfWeek(self::WEEK_STARTS_ON);
+
+        $semanas = [];
+        $semana = [];
+        while ($cursor <= $fin) {
+            $ymd = $cursor->toDateString();
+            $semana[] = $cursor->format('Y-m') === $ym
+                ? [
+                    'day' => (int) $cursor->day,
+                    'date' => $ymd,
+                    'offerable' => isset($ofrecibles[$ymd]),
+                    'selected' => $ymd === $elegido,
+                    'today' => $ymd === $hoy,
+                ]
+                : null;   // relleno: ni se pinta ni se pulsa
+
+            if (count($semana) === 7) {
+                $semanas[] = $semana;
+                $semana = [];
+            }
+
+            $cursor->addDay();
+        }
+
+        $meses = $this->offerableMonths();
+
+        return [
+            'ym' => $ym,
+            'label' => mb_convert_case($primero->translatedFormat('F Y'), MB_CASE_TITLE),
+            // ⚠️ Las flechas saltan al mes OFRECIBLE anterior/siguiente, no al mes de al lado: con un
+            // mes entero cerrado por medio, «mes anterior» llevaría a una rejilla apagada y el
+            // operador tendría que adivinar cuántas veces pulsar.
+            'prev' => $this->neighbourMonth($meses, $ym, before: true),
+            'next' => $this->neighbourMonth($meses, $ym, before: false),
+            'weekdays' => $this->weekdayLabels(),
+            'weeks' => $semanas,
+        ];
     }
 
     /**
-     * Los días de la TIRA RÁPIDA: los primeros **14 ofrecibles** del producto en curso (`#240`, U7).
+     * Mover el calendario de mes.
      *
-     * ⚠️ **Son ofrecibles, no «los próximos 14 del calendario»**: salen de `offerableDates()`, que es
-     * `SlotOffer` —la misma fuente que la web (`AFORO-02`)—, así que un día cerrado no aparece. Aquí
-     * no se decide qué días se venden; se cogen los primeros de los que ya se venden.
+     * ⚠️⚠️ **Aquí NO se valida, y no es un olvido: `$calMonth` es una propiedad PÚBLICA de Livewire,
+     * o sea que el navegador puede escribirla sin pasar por este método.** Una comprobación aquí
+     * daría la sensación de defensa y no defendería nada; la que vale está en el LECTOR
+     * ({@see calendarMonthKey()}), que descarta cualquier mes sin oferta venga de donde venga.
      *
-     * ⚠️ **14 y no 182.** El calendario sigue debajo para el salto largo, y meter el horizonte entero
-     * en la tira serían ~180 nodos re-renderizados por Livewire en cada cambio del formulario.
-     *
-     * @return array<int, array{date: string, day: string, weekday: string, selected: bool}>
+     * ▶ Y esto no contradice a `pickDay()`, donde la comprobación sí vive en la acción: allí lo que
+     * se escribe es `sel_date`, que sale de la página hacia el COBRO, así que el valor tiene que ser
+     * bueno en el momento de guardarse. Aquí lo que se escribe solo decide qué rejilla se pinta.
      */
-    public function quickDays(): array
+    public function goToMonth(string $mes): void
     {
-        $selected = (string) ($this->data['sel_date'] ?? '');
-
-        return array_map(function (string $ymd) use ($selected): array {
-            $day = Carbon::parse($ymd);
-
-            return [
-                'date' => $ymd,
-                'day' => $day->translatedFormat('j'),
-                // Abreviatura del día en el idioma del PANEL: quien lo usa es el operador.
-                'weekday' => mb_convert_case($day->translatedFormat('D'), MB_CASE_TITLE),
-                'selected' => $ymd === $selected,
-            ];
-        }, array_slice($this->offerableDates(), 0, self::QUICK_DAYS));
+        $this->calMonth = $mes;
     }
 
     /**
-     * Elegir día por la TIRA. Es la segunda puerta del mismo hecho, así que termina en
-     * {@see onDateChosen()} igual que el calendario.
+     * Elegir día. **Es la única puerta** desde que la tira se retiró (`#464`).
+     *
+     * ⚠️ **El servidor vuelve a comprobar que el día esté en la oferta** (`AFORO-02`): que la rejilla
+     * solo pinte días buenos no basta, porque quien decide qué se vende es `SlotOffer` y no el
+     * marcado. Un `wire:click` se puede llamar con cualquier fecha.
      */
-    public function pickQuickDay(string $ymd): void
+    public function pickDay(string $ymd): void
     {
-        // Defensa: solo un día que la oferta admita. Un `wire:click` con otra fecha no puede colar
-        // una que `SlotOffer` no da — el navegador propone, el servidor decide.
         if (! in_array($ymd, $this->offerableDates(), true)) {
             return;
         }
 
         $this->data['sel_date'] = $ymd;
-        $this->onDateChosen();
+
+        // ⚠️ La hora y los menores dependen de la FECHA (`D13`): quedarse con los del día anterior es
+        // ofrecer algo que el checkout rechazaría. Desde `#464` hay UNA sola puerta, así que la regla
+        // ya no puede divergir entre dos escritores — que era el motivo de `onDateChosen()`.
+        $this->data['sel_time'] = null;
+        $this->data['sel_dependent_ids'] = [];
+
+        // Las FRANJAS aparecen debajo del calendario y en una tablet de 810 px caen fuera de la
+        // ventana: sin esto el operador elige día y no ve pasar nada. Lo escucha el partial de horas.
+        $this->dispatch('cmo-day-chosen');
     }
 
     /**
-     * Lo que pasa cuando se elige un día, **venga de donde venga**.
+     * Los meses (`Y-m`) que tienen algún día ofrecible, en orden.
      *
-     * ⚠️ Existe porque hay DOS puertas —la tira y el calendario— y una regla escrita dos veces es
-     * una regla que diverge: la hora y los menores dependen de la FECHA (`D13`), así que quedarse con
-     * los de otro día es ofrecer algo que el checkout rechazaría.
+     * Sale de `offerableDates()`, que ya está memoizado: el calendario no abre ninguna consulta
+     * nueva sobre aforo.
+     *
+     * @return list<string>
      */
-    private function onDateChosen(?callable $set = null): void
+    private function offerableMonths(): array
     {
-        // Dos ESCRITORES, una regla. Dentro del formulario manda el `$set` de Filament; fuera —el
-        // `wire:click` de la tira— se escribe en el estado de la página, que es donde vive.
-        $set ??= function (string $key, mixed $value): void {
-            $this->data[$key] = $value;
-        };
+        $meses = [];
+        foreach ($this->offerableDates() as $ymd) {
+            $mes = substr($ymd, 0, 7);
+            $meses[$mes] = true;
+        }
 
-        $set('sel_time', null);
-        $set('sel_dependent_ids', []);
+        return array_keys($meses);
+    }
+
+    /**
+     * El mes que se está enseñando: el override si lo hay y sigue teniendo oferta; si no, el del día
+     * elegido; si no, el del primer día ofrecible; y en último término el mes en curso.
+     *
+     * ⚠️ **El override se descarta cuando deja de tener oferta** —cambiar de producto o que se agote
+     * un mes—: si no, el calendario se quedaría en un mes donde ese producto no se vende y el
+     * operador vería una rejilla entera apagada sin saber por qué.
+     */
+    private function calendarMonthKey(): string
+    {
+        $meses = $this->offerableMonths();
+
+        if ($this->calMonth !== null && in_array($this->calMonth, $meses, true)) {
+            return $this->calMonth;
+        }
+
+        $elegido = (string) ($this->data['sel_date'] ?? '');
+        if ($elegido !== '') {
+            return substr($elegido, 0, 7);
+        }
+
+        return $meses[0] ?? DisplayTime::today()->format('Y-m');
+    }
+
+    /** El mes ofrecible anterior o siguiente a `$ym`, o `null` si no hay. @param list<string> $meses */
+    private function neighbourMonth(array $meses, string $ym, bool $before): ?string
+    {
+        $vecinos = array_values(array_filter(
+            $meses,
+            static fn (string $mes): bool => $before ? $mes < $ym : $mes > $ym,
+        ));
+
+        if ($vecinos === []) {
+            return null;
+        }
+
+        return $before ? end($vecinos) : $vecinos[0];
+    }
+
+    /**
+     * Los rótulos de los días de la semana, empezando en LUNES y **en el idioma del panel**: quien
+     * mira esta rejilla es el operador.
+     *
+     * ⚠️⚠️ **Es la ABREVIATURA del idioma, no su inicial**, y lo dijo una guarda: en español «martes»
+     * y «miércoles» empiezan igual, así que una fila de iniciales sale `L M M J V S D` y las dos
+     * columnas del medio dejan de distinguirse. Recortar un nombre a mano es inventarse una
+     * abreviatura que el idioma ya tiene resuelta —y en otro idioma puede no tener ni sentido—.
+     *
+     * @return list<string>
+     */
+    private function weekdayLabels(): array
+    {
+        $dia = DisplayTime::today()->copy()->startOfWeek(self::WEEK_STARTS_ON);
+        $rotulos = [];
+        for ($i = 0; $i < 7; $i++) {
+            $rotulos[] = mb_convert_case(rtrim($dia->translatedFormat('D'), '.'), MB_CASE_TITLE);
+            $dia->addDay();
+        }
+
+        return $rotulos;
     }
 
     private function timeFieldHelp(): string
@@ -1887,10 +2168,12 @@ class CreateManualOrderPage extends Page
     }
 
     /**
-     * Días SIN franja ofrecible dentro del rango con franjas, para deshabilitarlos en el calendario
-     * (fuente `SlotOffer`, misma que la web). @return array<int,string>
+     * Fechas (`Y-m-d`) con franja ofrecible del producto en curso, vía `SlotOffer`. Memoizado por
+     * petición: de aquí salen la rejilla del calendario, sus meses navegables y la defensa de
+     * `pickDay()`, y las tres se resuelven en las MISMAS 5 consultas.
+     *
+     * @return list<string>
      */
-    /** Fechas (Y-m-d) con franja ofrecible del producto en curso, vía `SlotOffer`. Memoizado por petición. */
     private function offerableDates(): array
     {
         $type = $this->selectedProduct();
@@ -1902,51 +2185,12 @@ class CreateManualOrderPage extends Page
         $this->offerableDatesFor = $id;
 
         // `#330` — el mostrador ve TODOS los días con franja, incluidos los que la antelación
-        // mínima del producto reserva al autoservicio. ⚠️ Esto es además el SUELO del calendario
-        // (`minOfferableDate()`): sin pasarlo aquí, el operador podría elegir la hora pero no llegar
-        // al día — la mitad de la función, y sin ningún error.
+        // mínima del producto reserva al autoservicio. ⚠️ Y esto gobierna el CALENDARIO entero: sin
+        // pasar la venta de mostrador aquí, esos días saldrían apagados en la rejilla y el operador
+        // podría elegir la hora pero no llegar al día — la mitad de la función, y sin ningún error.
         return $this->offerableDatesCache = $type
             ? app(SlotOffer::class)->offerableDates($type, CounterSale::byOperator())
             : [];
-    }
-
-    /**
-     * Primera fecha ofrecible (tope INFERIOR real del calendario): así la ventana de antelación
-     * mínima / días sin franja del principio quedan BLOQUEADOS en el calendario, no clicables-sin-horas.
-     */
-    private function minOfferableDate(): ?Carbon
-    {
-        $dates = $this->offerableDates();
-
-        return $dates === [] ? null : Carbon::parse($dates[0]);
-    }
-
-    /** Última fecha ofrecible (tope SUPERIOR real del calendario). */
-    private function maxOfferableDate(): ?Carbon
-    {
-        $dates = $this->offerableDates();
-
-        return $dates === [] ? null : Carbon::parse(end($dates));
-    }
-
-    /** Días SIN franja ofrecible ENTRE la primera y la última (huecos: cerrados, etc.), para deshabilitarlos. */
-    private function disabledOfferDates(): array
-    {
-        $offerable = $this->offerableDates();
-        if ($offerable === []) {
-            return [];
-        }
-
-        $set = array_flip($offerable);
-        $disabled = [];
-        foreach (CarbonPeriod::create(Carbon::parse($offerable[0]), Carbon::parse(end($offerable))) as $day) {
-            $ymd = $day->toDateString();
-            if (! isset($set[$ymd])) {
-                $disabled[] = $ymd;
-            }
-        }
-
-        return $disabled;
     }
 
     /** Campos de event_data del pack seleccionado (text/number/textarea). @return array<int,mixed> */

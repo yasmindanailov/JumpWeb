@@ -57,6 +57,9 @@ class LedgerSingleSourceTest extends TestCase
         'app/Filament/Resources/Users/RelationManagers/OrdersRelationManager.php',
         'app/Filament/Resources/Orders/Pages/ViewOrder.php',
         'app/Domain/Booking/Services/ReservationSlip.php',
+        // T4 del asistente (`#466`): el DESENLACE del pedido manual enseña el libro del pedido recién
+        // creado. Transcribe: incluye el pintor compartido y no compone ni un importe.
+        'resources/views/filament/pages/partials/manual-order-done.blade.php',
     ];
 
     /**

@@ -12,6 +12,7 @@ use App\Filament\Pages\CreateManualOrderPage as Cmo;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -251,5 +252,54 @@ class CreateManualOrderProductCardsTest extends TestCase
 
         $this->assertTrue($grupos[0]['items'][0]['has_info'], 'La entrada tiene descripción: tiene que ofrecer «Más info».');
         $this->assertFalse($grupos[1]['items'][0]['has_info'], 'Sin nada público que enseñar, el botón abriría un modal vacío.');
+    }
+
+    // ─── 6 · El precio de la tarjeta no puede costar una consulta por tarjeta ────────────────
+
+    /**
+     * ⚠️⚠️ **El coste del elegidor tiene que ser CONSTANTE, no crecer con el catálogo.**
+     *
+     * Medido en `#464` sobre el catálogo real: pintar las 18 tarjetas costaba **54 consultas** —tres
+     * por producto: `prices`, `price_tiers` y la `rate_type` de cada precio, que es lo que leen
+     * `displayPriceCents()` y `priceVaries()`—. Con la precarga puesta, **5**.
+     *
+     * ▶ **Se asevera la PROPIEDAD y no un número**: el mismo coste con 2 productos que con 12. Un
+     * techo fijo se queda viejo en cuanto alguien añade una relación legítima; «no crece con el
+     * catálogo» es lo que de verdad se quiere, y es lo que un N+1 rompe siempre.
+     */
+    public function test_painting_the_cards_does_not_cost_a_query_per_product(): void
+    {
+        $normal = RateType::where('key', RateType::KEY_NORMAL)->value('id');
+        $pagina = $this->page()->instance();
+
+        $contar = function () use ($pagina): int {
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            $pagina->productCards();
+            $n = count(DB::getQueryLog());
+            DB::disableQueryLog();
+
+            return $n;
+        };
+
+        $conDos = $contar();
+
+        for ($i = 3; $i <= 12; $i++) {
+            $producto = TicketType::create([
+                'name' => ['es' => 'Jump · relleno '.$i], 'zone_id' => $this->zone->id, 'duration_min' => 60,
+                'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => $i,
+            ]);
+            $producto->prices()->create(['rate_type_id' => $normal, 'amount_cents' => 1000 + $i]);
+        }
+
+        // Control del propio caso: si el fixture no creciera, comparar los dos números no diría nada.
+        $this->assertSame(12, TicketType::sellable()->count(), 'el catálogo del caso no ha crecido');
+
+        $this->assertSame(
+            $conDos, $contar(),
+            "Pintar las tarjetas cuesta una consulta por PRODUCTO.\n".
+            'Con el catálogo real eso eran 54 consultas para 18 tarjetas: falta la precarga de '
+            .'`prices.rateType` y `priceTiers`, que es lo que leen el precio y el «desde».',
+        );
     }
 }

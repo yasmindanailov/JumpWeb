@@ -4,9 +4,16 @@
     $paso = $this->step;
     $enCarrito = $paso === Cmo::STEP_CART;
     $elecciones = $this->stepChoices();
+
+    // `#466` — el DESENLACE. Se resuelve aquí arriba porque decide la pantalla ENTERA: sin indicador
+    // de pasos (el asistente terminó) y sin navegación (la única salida es «otro pedido»).
+    $desenlace = $paso === Cmo::STEP_DONE ? $this->doneSummary() : null;
 @endphp
 
 <x-filament-panels::page>
+@if ($desenlace)
+    @include('filament.pages.partials.manual-order-done', ['resumen' => $desenlace])
+@else
     {{-- ─── Indicador de pasos ────────────────────────────────────────────────────────────────
          `#462`. Tres cosas que NO son decoración:
 
@@ -125,4 +132,5 @@
             </aside>
         @endunless
     </div>
+@endif
 </x-filament-panels::page>

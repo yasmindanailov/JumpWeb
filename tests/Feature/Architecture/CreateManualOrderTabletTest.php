@@ -12,7 +12,6 @@ use App\Filament\Pages\CreateManualOrderPage;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -214,78 +213,41 @@ class CreateManualOrderTabletTest extends TestCase
     }
 
     /**
-     * ⚠️ **La tira son 14 días y no el horizonte entero**, y las dos mitades importan: 14 porque el
-     * calendario sigue debajo para el salto largo y meter 182 chips serían ~180 nodos re-renderizados
-     * por Livewire en cada cambio del formulario; y **solo días OFRECIBLES** porque salen de
-     * `SlotOffer` (`AFORO-02`), no de sumarle días a hoy.
-     */
-    public function test_the_quick_strip_is_capped_and_only_offers_offerable_days(): void
-    {
-        $product = $this->seedProduct();
-
-        $component = Livewire::actingAs($this->seedAdmin())
-            ->test(CreateManualOrderPage::class)
-            ->set('step', CreateManualOrderPage::STEP_PRODUCT)
-            ->call('pickProduct', $product->id);
-
-        $days = $component->instance()->quickDays();
-
-        $this->assertCount(14, $days, 'La tira rápida tiene que estar acotada a 14 días.');
-
-        // Ninguno es HOY: las franjas sembradas empiezan mañana, así que un «hoy + N» se notaría.
-        $this->assertNotContains(
-            Carbon::today()->toDateString(),
-            array_column($days, 'date'),
-            'La tira está inventando días en vez de leer la oferta de `SlotOffer`.'
-        );
-    }
-
-    /**
-     * ⚠️⚠️ **Las DOS puertas de elegir día tienen que hacer LO MISMO.**
+     * ⚠️⚠️ **Elegir día OLVIDA la hora y los menores**, porque las dos cosas dependen de la FECHA
+     * (`D13`): quedarse con la hora de otro día es ofrecer algo que el checkout rechazaría.
      *
-     * Desde `#240` hay dos —la tira y el calendario— y la hora y los menores dependen de la FECHA
-     * (`D13`). Quedarse con la hora de otro día es ofrecer algo que el checkout rechazaría, y una
-     * regla escrita dos veces es una regla que diverge: se arregla una y la otra se queda atrás.
-     * Por eso las dos terminan en `onDateChosen()`, y esto lo comprueba **por conducta**.
+     * ▶ **La premisa de este caso cambió en `#464` y por eso se reescribió.** Nació en `#240` como
+     * «las DOS puertas hacen lo mismo» —la tira y el calendario, con la regla en `onDateChosen()`
+     * para que no divergieran—, y desde que la tira se retiró (`[DECIDIDO owner, 2026-09-04]`)
+     * **hay UNA sola puerta**: `pickDay()`. La regla es la misma; lo que desaparece es el riesgo de
+     * que dos escritores se separen, y con él el motivo de `onDateChosen()`.
      */
-    public function test_both_doors_to_choosing_a_day_forget_the_time_and_the_dependents(): void
+    public function test_choosing_a_day_forgets_the_time_and_the_dependents(): void
     {
         $product = $this->seedProduct();
-        $admin = $this->seedAdmin();
         $primero = now()->addDay()->toDateString();
         $segundo = now()->addDays(2)->toDateString();
 
-        foreach (['tira', 'calendario'] as $puerta) {
-            // ⚠️ **El paso 2 tiene que estar VISIBLE.** Sus campos viven en un `Group` con
-            // `->visible(step === STEP_PRODUCT)`, y un campo oculto no está en el formulario: su
-            // `afterStateUpdated` no se llama. La primera versión de este caso dejaba el paso en 1 y
-            // daba «el calendario conserva la hora» — un defecto del arnés, no del código.
-            $component = Livewire::actingAs($admin)
-                ->test(CreateManualOrderPage::class)
-                ->set('step', CreateManualOrderPage::STEP_PRODUCT)
-                ->call('pickProduct', $product->id)
-                ->set('data.sel_date', $primero)
-                ->set('data.sel_time', '10:00:00')
-                ->set('data.sel_dependent_ids', [7]);
+        $component = Livewire::actingAs($this->seedAdmin())
+            ->test(CreateManualOrderPage::class)
+            ->set('step', CreateManualOrderPage::STEP_WHEN)
+            ->call('pickProduct', $product->id)
+            ->set('data.sel_date', $primero)
+            ->set('data.sel_time', '10:00:00')
+            ->set('data.sel_dependent_ids', [7])
+            ->call('pickDay', $segundo);
 
-            if ($puerta === 'tira') {
-                $component->call('pickQuickDay', $segundo);
-            } else {
-                $component->set('data.sel_date', $segundo);
-            }
-
-            $this->assertSame($segundo, $component->get('data.sel_date'), "«{$puerta}» no cambió el día");
-            $this->assertNull($component->get('data.sel_time'), "«{$puerta}» conservó la hora de OTRO día");
-            $this->assertSame([], $component->get('data.sel_dependent_ids'), "«{$puerta}» conservó los menores de OTRO día");
-        }
+        $this->assertSame($segundo, $component->get('data.sel_date'), 'el calendario no cambió el día');
+        $this->assertNull($component->get('data.sel_time'), 'se conservó la hora de OTRO día');
+        $this->assertSame([], $component->get('data.sel_dependent_ids'), 'se conservaron los menores de OTRO día');
     }
 
     /**
-     * ⚠️ **El navegador propone, el servidor decide.** El `wire:click` de la tira lleva una fecha, y
-     * una fecha que la oferta no admite no puede entrar por ahí — da igual que la tira solo pinte
-     * días buenos: quien decide qué se vende es `SlotOffer` (`AFORO-02`), no el marcado.
+     * ⚠️ **El navegador propone, el servidor decide.** El `wire:click` del calendario lleva una
+     * fecha, y una fecha que la oferta no admite no puede entrar por ahí — da igual que la rejilla
+     * solo pinte días buenos: quien decide qué se vende es `SlotOffer` (`AFORO-02`), no el marcado.
      */
-    public function test_the_strip_refuses_a_day_that_is_not_offered(): void
+    public function test_the_calendar_refuses_a_day_that_is_not_offered(): void
     {
         $product = $this->seedProduct();
 
@@ -293,11 +255,11 @@ class CreateManualOrderTabletTest extends TestCase
             ->test(CreateManualOrderPage::class)
             ->set('step', CreateManualOrderPage::STEP_PRODUCT)
             ->call('pickProduct', $product->id)
-            ->call('pickQuickDay', now()->addYears(3)->toDateString());
+            ->call('pickDay', now()->addYears(3)->toDateString());
 
         $this->assertNull(
             $component->get('data.sel_date'),
-            'La tira ha aceptado un día que `SlotOffer` no ofrece.'
+            'El calendario ha aceptado un día que `SlotOffer` no ofrece.'
         );
     }
 
@@ -383,21 +345,39 @@ class CreateManualOrderTabletTest extends TestCase
     }
 
     /**
-     * El calendario amplio nace PLEGADO tras su CTA (`[OWNER]`: «mejor un CTA "abrir calendario"»).
-     * Misma decisión y mismo motivo que en el cajón del cliente: la tira resuelve la reserva de
-     * mostrador y el calendario es el atajo para el salto largo.
+     * ⚠️⚠️ **El calendario ya NO se pliega, y su CTA no existe** (`#464`,
+     * `[DECIDIDO owner, 2026-09-04]`, preguntado con el coste delante).
+     *
+     * Este caso nació en `#241` afirmando lo contrario —«nace PLEGADO tras su CTA», con la tira
+     * resolviendo la reserva de mostrador y el calendario como atajo para el salto largo—, y **se
+     * reescribió con su premisa**: el owner pidió «un calendario grande, bien visible», y medido
+     * antes de tocarlo aquel calendario era un popover de **259×248 px con celdas de 29×28** —bajo
+     * el mínimo táctil— al que se llegaba con dos toques.
+     *
+     * Lo que fija esto es que no vuelva ninguna de las dos piezas retiradas: si alguien reintroduce
+     * el pliegue, el operador vuelve a tener el control de fecha escondido.
      */
-    public function test_the_wide_calendar_is_folded_behind_its_cta(): void
+    public function test_the_calendar_is_inline_and_has_no_fold(): void
     {
-        $component = Livewire::actingAs($this->seedAdmin())->test(CreateManualOrderPage::class);
+        $pagina = (string) file_get_contents(base_path('app/Filament/Pages/CreateManualOrderPage.php'));
 
-        $this->assertFalse($component->get('calendarOpen'), 'El calendario amplio ya no nace plegado.');
+        foreach (['toggleCalendar', 'calendarOpen', 'quickDays', 'pickQuickDay'] as $muerto) {
+            $this->assertStringNotContainsString(
+                'function '.$muerto, $pagina,
+                "Ha vuelto «{$muerto}»: el calendario plegado y la tira se retiraron en `#464`."
+            );
+        }
 
-        $component->call('toggleCalendar');
-        $this->assertTrue($component->get('calendarOpen'));
+        $this->assertFileDoesNotExist(base_path('resources/views/filament/pages/partials/manual-order-calendar-cta.blade.php'));
+        $this->assertFileDoesNotExist(base_path('resources/views/filament/pages/partials/manual-order-daystrip.blade.php'));
 
-        $component->call('toggleCalendar');
-        $this->assertFalse($component->get('calendarOpen'), 'El CTA tiene que poder cerrarlo también.');
+        // Y el calendario se pinta SIEMPRE que se pinta el paso: no cuelga de ningún estado.
+        $paso = $this->between($pagina, 'private function whenStep(): Group', 'PASO 4 · DATOS');
+        $this->assertStringContainsString('filament.pages.partials.manual-order-calendar', $paso);
+        $this->assertStringNotContainsString(
+            '->visible(fn (): bool => $this->calMonth', $paso,
+            'El calendario ha vuelto a colgar de un estado: tiene que estar siempre a la vista.'
+        );
     }
 
     /**
@@ -425,24 +405,6 @@ class CreateManualOrderTabletTest extends TestCase
         // Sin cliente elegido no hay cabecera que pintar.
         $vacio = Livewire::actingAs($admin)->test(CreateManualOrderPage::class);
         $this->assertNull($vacio->instance()->currentCustomerLabel());
-    }
-
-    /**
-     * ⚠️ **Las flechas de la tira SOLO existen donde hay ratón.** Nacen de un defecto real
-     * (`[OWNER]`: «en desktop no hay manera de deslizar»), pero en una tablet táctil dos botones
-     * flotando sobre la tira tapan chips y compiten con el gesto que ya funciona. Las DOS consultas
-     * juntas: `hover: hover` sola la cumple un táctil con lápiz.
-     */
-    public function test_the_panel_strip_arrows_only_exist_where_there_is_a_mouse(): void
-    {
-        $css = $this->css();
-
-        $this->assertMatchesRegularExpression(
-            '/\.cmo-daystrip__nav\s*\{\s*display:\s*none;?\s*\}/',
-            $css,
-            'Las flechas de la tira del panel han dejado de nacer APAGADAS.'
-        );
-        $this->assertStringContainsString('@media (hover: hover) and (pointer: fine)', $css);
     }
 
     /**
