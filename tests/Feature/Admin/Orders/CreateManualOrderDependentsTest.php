@@ -137,10 +137,14 @@ class CreateManualOrderDependentsTest extends TestCase
 
         $page = Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
-            ->set('step', CreateManualOrderPage::STEP_PRODUCTS)
+            ->set('step', CreateManualOrderPage::STEP_PRODUCT)
             ->set('data.customer_id', $holder->id)
             ->set('data.sel_product_id', $this->entry->id)
-            ->set('data.sel_date', $this->date);
+            ->set('data.sel_date', $this->date)
+            // `#462`: el selector de menores vive en el paso «Datos», que es adonde lleva el
+            // asistente tras la hora. Aquí se salta directo porque lo que se prueba es el SELECTOR,
+            // no el camino.
+            ->set('step', CreateManualOrderPage::STEP_DETAILS);
 
         $page->assertSee('¿Para quién son estas entradas?')
             ->assertSee("Lior · {$age} años")
@@ -154,10 +158,11 @@ class CreateManualOrderDependentsTest extends TestCase
         // Un cliente sin menores: nada que preguntar.
         Livewire::actingAs($this->staff())
             ->test(CreateManualOrderPage::class)
-            ->set('step', CreateManualOrderPage::STEP_PRODUCTS)
+            ->set('step', CreateManualOrderPage::STEP_PRODUCT)
             ->set('data.customer_id', $this->customer()->id)
             ->set('data.sel_product_id', $this->entry->id)
             ->set('data.sel_date', $this->date)
+            ->set('step', CreateManualOrderPage::STEP_DETAILS)
             ->assertDontSee('¿Para quién son estas entradas?');
     }
 

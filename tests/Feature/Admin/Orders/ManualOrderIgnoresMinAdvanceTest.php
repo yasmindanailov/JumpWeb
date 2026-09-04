@@ -241,7 +241,7 @@ class ManualOrderIgnoresMinAdvanceTest extends TestCase
 
         $page = Livewire::actingAs($operator)
             ->test(CreateManualOrderPage::class)
-            ->set('step', CreateManualOrderPage::STEP_PRODUCTS)
+            ->set('step', CreateManualOrderPage::STEP_PRODUCT)
             ->set('data.sel_product_id', $this->pack->id)
             ->instance();
 

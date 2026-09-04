@@ -23292,3 +23292,53 @@ commiteado) · sonda de navegador en tres anchos: sidebar 96 px, ítem 81×64 en
 28, buscador con **0 px de desvío** del centro a 1080 y 1440, CTA 152×44, cero desbordamiento
 horizontal · los tres caminos de la marca probados con ficheros reales en claro y en oscuro · Pint ·
 docs-check · **suite 4.240 en verde**.
+
+## #462 · 2026-09-04 · `[DECIDIDO owner]` El asistente de crear pedido pasa a SIETE pasos — y un paso que no pregunta nada se salta
+
+**Encargo del owner** (literal en `specs/asistente-crear-pedido.md` §1): más pasos, con auto-avance
+al elegir cliente, producto y hora; los productos en tarjetas; un calendario grande con las plazas;
+el carrito a pantalla completa con «Ir a pagar» y «Añadir más productos»; y una pantalla de
+desenlace. Marco: **«usamos Filament, no quiero chapuzas ni deuda, ni huecos»**.
+
+**Tres cosas medidas ANTES de diseñar, y las tres cambian el encargo:**
+
+1. ⚠️⚠️ **Dos de cada tres pasos saldrían VACÍOS.** De los 18 productos vendibles, **16 no tienen ni
+   un campo que rellenar** y 7 no tienen ni campos ni complementos: vender una entrada obligaría a
+   pasar por una pantalla en blanco y una excursión por dos. ▶ **Un paso sin nada que preguntar se
+   SALTA, y el indicador lo dice** — el owner delegó la mejora («si valoras algo mejor, menos
+   fricción y que el usuario lo entienda, lo acepto»).
+2. **El calendario con plazas por día cuesta 709 consultas y 11,4 s** (medido), y **no existe vía
+   agregada por rango** en `AvailabilityReader`, `SlotOffer` ni `PackAvailability`.
+3. **La disponibilidad del panel NO diverge de la web** —los dos son `SlotOffer`, y dan 177 días y
+   11 horas idénticos con los mismos números—, pero **el panel no le pasa la cesta y la web sí**.
+   Hoy es un borde declarado; el asistente nuevo lo convierte en el camino normal.
+
+**Las tres decisiones del owner** (preguntadas con el número y el coste delante): **D1** la CANTIDAD
+va arriba de la pantalla de fecha —así las horas dicen la verdad para esa cantidad y el auto-avance
+sigue en la hora, que es lo último—; **D2** el calendario resalta los días reservables y las plazas
+se ven con las horas (el semáforo por día sería una consulta agregada sobre AFORO: tanda propia);
+**D3** el post-form **no se renombra** a «Parte de celebración» —eran ~57 claves en 7 ficheros × 4
+idiomas, y dos nombres para lo mismo era la incoherencia a evitar—.
+
+**T1, EN EL ÁRBOL** (§7): siete pasos con la regla del salto en UN sitio (`stepHasSomethingToAsk()`),
+`isLastLineStep()` —del que cuelga «Añadir al carrito», y es VARIABLE—, la navegación que salta lo
+vacío en las dos direcciones, el auto-avance en tres puntos, el indicador que enseña lo elegido y
+lleva hacia atrás, y el carrito como paso propio a UNA columna. **Medido en navegador**: **7 toques**
+de vacío a carrito lleno, «Datos» saltado y dicho, y los cinco pasos en **810 px de 810** — cabe
+entero sin desplazar.
+
+**Los tres tropiezos, y qué enseñan:** ⚠️⚠️ **el indicador afirmaba lo que no sabía** («sin nada que
+rellenar» en el paso 1, sin producto elegido) — el predicado de NAVEGACIÓN y el de PINTAR no son el
+mismo, y lo vio la sonda de navegador, no un test. ⚠️⚠️ **dos mutaciones no mordieron y el hueco era
+real**: las guardas comprobaban el PREDICADO del salto y no el MOVIMIENTO, así que se podía quitar
+el salto de la navegación con la suite en verde — hizo falta un tercer sujeto (una entrada CON
+complemento) para hacerlo observable. ⚠️ **un caso pasaba por el motivo equivocado**: el fixture
+tenía una franja de 60 min y el pack dura 120, así que `pickTime()` salía sin elegir nada y «no
+avanza» era cierto por otra razón.
+
+⚠️ **`STEP_PRODUCTS` deja de existir** y sus diez usos en tests pasan a la constante del paso real;
+las guardas de la navegación pegajosa y del «Atrás» se re-apuntan al partial nuevo, **por sujeto**.
+
+**Verificación**: `CreateManualOrderStepsTest` **13 casos** con **9/9 mutaciones que muerden** ·
+los 86 casos previos de esta pantalla en verde · sonda de navegador con el recorrido entero ·
+Pint · docs-check · **suite 4.252 verde**.

@@ -2031,3 +2031,62 @@
     /* Tope de ancho para que un logotipo apaisado no empuje al buscador. */
     max-width: 11rem;
 }
+
+/* ─── El asistente de «Crear pedido», siete pasos (`#462`) ───────────────────────────────────
+ * Lo que añade la T1 sobre el indicador que ya existía: el paso enseña LO ELEGIDO, los pasados son
+ * botones que llevan de vuelta, y el que se salta se pinta saltado.
+ *
+ * ⚠️ **Un salto silencioso se lee como un fallo.** El asistente se salta pasos casi siempre —medido:
+ * 16 de los 18 productos vendibles no tienen ni un campo que rellenar—, así que si «Datos» y
+ * «Extras» desaparecieran sin decir nada, el operador vería el asistente dar brincos. */
+.cmo-steps__go {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    text-align: start;
+}
+
+/* El paso ya pasado es un BOTÓN: el auto-avance solo es seguro si volver cuesta un toque. */
+button.cmo-steps__go {
+    cursor: pointer;
+}
+
+button.cmo-steps__go:hover .cmo-steps__label {
+    text-decoration: underline;
+}
+
+.cmo-steps__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+/* Lo elegido, bajo el rótulo: es lo que permite corregirse sin retroceder a ciegas. */
+.cmo-steps__choice {
+    font-size: 0.6875rem;
+    color: var(--gray-500);
+    max-width: 11rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cmo-steps__item.is-skipped {
+    opacity: 0.55;
+}
+
+.cmo-steps__choice:where(.dark, .dark *) {
+    color: var(--gray-400);
+}
+
+/* ⚠️ **El carrito va a UNA columna** (`[DECIDIDO owner]`): ahí el resumen deja de acompañar y pasa a
+ * ser el asunto. La vista además NO pinta el aside en ese paso, así que esto solo retira la rejilla:
+ * si algún día volviera el aside, se vería —no se queda escondido detrás de un `display: none`—. */
+.cmo-layout--single {
+    display: block;
+}
+
+/* Los dos CTA del carrito comparten fila y el que decide (ir a pagar) manda. */
+.cmo-nav__more {
+    margin-inline-start: auto;
+}

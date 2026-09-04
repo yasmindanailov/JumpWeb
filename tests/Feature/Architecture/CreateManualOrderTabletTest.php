@@ -44,6 +44,10 @@ class CreateManualOrderTabletTest extends TestCase
 
     private const VIEW = 'resources/views/filament/pages/create-manual-order.blade.php';
 
+    /** `#462`: la navegación salió a su propio partial, porque el paso del CARRITO la pinta a una
+     * columna y los demás dentro de la columna pegajosa. El SUJETO de las guardas no cambia. */
+    private const VIEW_NAV = 'resources/views/filament/pages/partials/manual-order-nav.blade.php';
+
     private function css(): string
     {
         return (string) file_get_contents(base_path(self::THEME));
@@ -100,17 +104,26 @@ class CreateManualOrderTabletTest extends TestCase
         // ⚠️ **Se asevera el ATRIBUTO completo, no la subcadena `cmo-nav`.** La primera versión de
         // esta guarda pasaba en verde con la mutación puesta, porque `cmo-nav-fuera` **contiene**
         // `cmo-nav`. Es la QUINTA vez que este repo tropieza con lo mismo (`#234`·trampa 2).
+        //
+        // ▶ `#462`: la navegación es ya un PARTIAL —el paso del carrito la pinta a una columna—, así
+        // que aquí se comprueba que la columna pegajosa sigue incluyéndola, y aparte que el partial
+        // sigue siendo `.cmo-nav`. Las dos mitades, o la guarda pasaría con la navegación vacía.
         $this->assertStringContainsString(
-            'class="cmo-nav"', $aside,
+            "@include('filament.pages.partials.manual-order-nav')", $aside,
             "La navegación del asistente ha salido de la columna pegajosa.\n".
             'Ahí es donde está siempre a la vista; debajo del formulario vuelve a quedar fuera de pantalla.'
         );
 
-        // Y que esté DENTRO del `<aside>`, no después de cerrarlo: `strstr()` devuelve todo el resto
-        // del fichero, así que sin esto la navegación podría vivir al final de la página.
+        $this->assertStringContainsString(
+            'class="cmo-nav"', (string) file_get_contents(base_path(self::VIEW_NAV)),
+            'El partial de navegación ha perdido su contenedor `.cmo-nav`.'
+        );
+
+        // Y que el include esté DENTRO del `<aside>`, no después de cerrarlo: `strstr()` devuelve
+        // todo el resto del fichero, así que sin esto podría vivir al final de la página.
         $this->assertLessThan(
             strpos((string) $aside, '</aside>'),
-            strpos((string) $aside, 'class="cmo-nav"'),
+            strpos((string) $aside, "@include('filament.pages.partials.manual-order-nav')"),
             'La navegación está DESPUÉS de cerrar la columna pegajosa, no dentro.'
         );
     }
@@ -212,7 +225,7 @@ class CreateManualOrderTabletTest extends TestCase
 
         $component = Livewire::actingAs($this->seedAdmin())
             ->test(CreateManualOrderPage::class)
-            ->set('step', CreateManualOrderPage::STEP_PRODUCTS)
+            ->set('step', CreateManualOrderPage::STEP_PRODUCT)
             ->set('data.sel_product_id', $product->id);
 
         $days = $component->instance()->quickDays();
@@ -244,12 +257,12 @@ class CreateManualOrderTabletTest extends TestCase
 
         foreach (['tira', 'calendario'] as $puerta) {
             // ⚠️ **El paso 2 tiene que estar VISIBLE.** Sus campos viven en un `Group` con
-            // `->visible(step === STEP_PRODUCTS)`, y un campo oculto no está en el formulario: su
+            // `->visible(step === STEP_PRODUCT)`, y un campo oculto no está en el formulario: su
             // `afterStateUpdated` no se llama. La primera versión de este caso dejaba el paso en 1 y
             // daba «el calendario conserva la hora» — un defecto del arnés, no del código.
             $component = Livewire::actingAs($admin)
                 ->test(CreateManualOrderPage::class)
-                ->set('step', CreateManualOrderPage::STEP_PRODUCTS)
+                ->set('step', CreateManualOrderPage::STEP_PRODUCT)
                 ->set('data.sel_product_id', $product->id)
                 ->set('data.sel_date', $primero)
                 ->set('data.sel_time', '10:00:00')
@@ -278,7 +291,7 @@ class CreateManualOrderTabletTest extends TestCase
 
         $component = Livewire::actingAs($this->seedAdmin())
             ->test(CreateManualOrderPage::class)
-            ->set('step', CreateManualOrderPage::STEP_PRODUCTS)
+            ->set('step', CreateManualOrderPage::STEP_PRODUCT)
             ->set('data.sel_product_id', $product->id)
             ->call('pickQuickDay', now()->addYears(3)->toDateString());
 
@@ -310,7 +323,7 @@ class CreateManualOrderTabletTest extends TestCase
 
         $component = Livewire::actingAs($this->seedAdmin())
             ->test(CreateManualOrderPage::class)
-            ->set('step', CreateManualOrderPage::STEP_PRODUCTS)
+            ->set('step', CreateManualOrderPage::STEP_PRODUCT)
             ->set('data.sel_product_id', $product->id)
             ->set('data.sel_date', $dia);
 
@@ -335,7 +348,7 @@ class CreateManualOrderTabletTest extends TestCase
 
         $component = Livewire::actingAs($this->seedAdmin())
             ->test(CreateManualOrderPage::class)
-            ->set('step', CreateManualOrderPage::STEP_PRODUCTS)
+            ->set('step', CreateManualOrderPage::STEP_PRODUCT)
             ->set('data.sel_product_id', $product->id)
             ->set('data.sel_date', now()->addDay()->toDateString());
 
@@ -443,7 +456,8 @@ class CreateManualOrderTabletTest extends TestCase
      */
     public function test_the_back_button_is_icon_only_but_not_mute(): void
     {
-        $vista = (string) file_get_contents(base_path(self::VIEW));
+        // `#462`: el bloque vive en el partial de navegación, no en la página.
+        $vista = (string) file_get_contents(base_path(self::VIEW_NAV));
         $nav = $this->between($vista, '<div class="cmo-nav">', '</div>');
 
         $this->assertStringContainsString('icon="heroicon-o-arrow-left"', $nav, 'El «Atrás» ha perdido su icono.');
