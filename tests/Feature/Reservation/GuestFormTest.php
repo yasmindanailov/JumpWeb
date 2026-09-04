@@ -850,6 +850,50 @@ class GuestFormTest extends TestCase
     // ── Los EXTRAS de venta posterior en la PÁGINA (T3 de `#413`) ──────────────────────────────
 
     /** Un complemento de venta posterior sano, con su franja futura para que el plazo esté abierto. */
+    /**
+     * **EL «MÁS INFO» DE CADA EXTRA** (`#416`), y por qué tiene guarda propia: estos complementos se
+     * eligen en esta pantalla y en ninguna otra, así que sin lo que llevan dentro el cliente decide
+     * entre «Combo 1 · 39 €» y «Combo 2 · 59 €» a ciegas. El dato ya vivía en el catálogo —lo enseña
+     * la landing— y aquí simplemente no se pintaba.
+     *
+     * ⚠️⚠️ Se asevera que es un `<details>` **NATIVO** y no el toggle de Alpine de la landing
+     * (`addon-chip.blade.php`). No es purismo: esta página es de mejora progresiva declarada —nace
+     * `no-js`—, así que con Alpine quien no tenga JavaScript no podría **leer qué está comprando**.
+     * Un `assertSee` del texto pasaría con las dos implementaciones; por eso se mira el elemento.
+     */
+    public function test_each_extra_shows_what_it_includes_without_javascript(): void
+    {
+        [$user, $reservation, $addon] = $this->withPostFormAddon();
+        $addon->forceFill(['features' => ['es' => ['12 refrescos a elegir', 'Para toda la mesa']]])->save();
+
+        $html = $this->actingAs($user)
+            ->get(route('reservation.guests', ['reservation' => $reservation]))
+            ->assertOk()
+            ->assertSee('12 refrescos a elegir')
+            ->assertSee('Para toda la mesa')
+            ->getContent();
+
+        // El desplegable existe y es nativo: sin JS también se abre.
+        $this->assertMatchesRegularExpression('/<details class="gf-extra__more">/', $html);
+        $this->assertStringContainsString(__('tickets.addon_more_info'), $html);
+
+        // CONTROL: un extra SIN features no pinta el bloque, o saldría un desplegable vacío.
+        $mudo = $this->attachPostFormAddon($reservation->ticketType, 'Cubo mudo', 900);
+        $mudo->forceFill(['features' => null])->save();
+
+        $html = $this->actingAs($user)
+            ->get(route('reservation.guests', ['reservation' => $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children'])]))
+            ->assertOk()
+            ->assertSee('Cubo mudo')
+            ->getContent();
+
+        $this->assertSame(
+            1,
+            substr_count($html, '<details class="gf-extra__more">'),
+            'con dos extras y uno sin «Más info», solo puede haber UN desplegable',
+        );
+    }
+
     private function withPostFormAddon(string $name = 'Cubo de refrescos', int $cents = 1200, int $cutoff = 48): array
     {
         $pack = $this->pack();

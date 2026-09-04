@@ -559,6 +559,12 @@ se tocan para no ensuciar el diff, pero constan como verificadas:
   `/servicios` 503 en el sitemap, y las imágenes sin proporción (`#252`)— siguen en sus fichas; la
   auditoría les añadió la medida (64 de 64 peticiones · 25 de 25 imágenes).
 
+## ▶ Media · `focused-layout` no sirve el paquete visual del cliente (2026-09-04, `DECISIONES #416`)
+
+| qué | lo medido | consecuencia | salida |
+|---|---|---|---|
+| **`focused-layout` no incluye `client.css`** | El layout general (`components/layout.blade.php`) lo enlaza; `focused-layout` **no** — solo inyecta el bloque `<style id="jj-theme">` con **9** variables de BD (`--brand`, `--zone-*`, la familia `--action-brand-*`). Medido comparando las hojas de `/entradas` (landing.css · spinner.css · site.css · **client.css**) con las del post-form (landing.css · site.css). Lo usan **dos** vistas: el post-form de invitados y la pantalla del justificante | Esas dos pantallas se pintan con la piel del PRODUCTO, no con la del cliente: se pierden `--interactive` (`#436`), `--on-ok`/`--on-err` (`#434`), los radios, las sombras y las fuentes por rol del paquete. Hoy **no se ve roto** —la escala base de `landing.css` es coherente y el logotipo llega como asset— pero la divergencia crece con cada tanda que añade un token al paquete. Lo destapó que el «Más info» nuevo saliera en tinta en vez del azul del cliente: el rol es correcto, lo que falta es quién lo define | Enlazar `client.css` en `focused-layout` igual que en `layout`, con su `@filemtime`. ⚠️ **Cambia el aspecto de dos pantallas** (colores de interacción, radios y sombras del cliente), así que es del carril de DISEÑO — hoy parado (`#452`) — y merece una pasada de ojo del owner, no un `<link>` a escondidas. ⚠️ Y hay que comprobar antes que ninguna regla del paquete pise la maqueta enfocada, que no se diseñó bajo él |
+
 ## ▶ Alta/Media · lo que destapó diseñar los complementos de venta posterior (2026-09-03, `DECISIONES #413`)
 
 | Ítem | Qué (medido) | Dónde muerde | La retira |

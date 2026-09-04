@@ -23336,3 +23336,49 @@ desplegar**, porque el modo de fallo es mudo: el complemento simplemente deja de
 negativo (4 de 8 interbloqueos con el orden invertido) y los dos de fiesta mixta · y medido sobre los
 datos reales: la hora extra se ofrece viernes y sábado y **no** martes ni miércoles, corriéndolo un
 jueves — que es lo que demuestra que se pregunta por el día de la visita y no por hoy.
+
+## #416 · 2026-09-04 · `[DECIDIDO owner]` El «Más info» de cada extra, en el post-form — y un `<details>` nativo porque esa página no puede depender de JavaScript
+
+**El hueco**: desde `#413` los complementos de restauración se eligen en el post-form **y en ninguna
+otra pantalla**, pero allí solo se pintaban nombre y precio. O sea que el cliente decidía entre
+«Combo 1 · 39,00 €» y «Combo 2 · 59,00 €» **sin poder ver qué llevan**. El dato ya existía —
+`ticket_types.features`, siete líneas por combo y en tres idiomas, que la landing enseña con su «Más
+info»—: simplemente no se publicaba en esta superficie.
+
+⚠️⚠️ **Y no se copia el mecanismo de la landing.** Allí el desplegable es un toggle de Alpine
+(`addon-chip.blade.php`: `x-data`, `x-show`). Aquí es un **`<details>` nativo**, y la diferencia no es
+purismo: el post-form es de **mejora progresiva declarada** —nace `no-js` y el JS solo lo decora—, así
+que con Alpine quien no tuviera JavaScript no podría **leer qué está comprando**. Es el mismo patrón
+que el «¿Quiénes vienen?» de `#401`.
+
+▶ El campo entra en el DTO (`PostFormAddonView::features`), en el contrato (`PostFormAddon.features`,
+que es `additionalProperties: false` y exige tocar `required`) y en el resource, que sigue siendo
+traducción pura.
+
+**Guarda**: `GuestFormTest::test_each_extra_shows_what_it_includes_without_javascript`, y asevera el
+ELEMENTO (`<details class="gf-extra__more">`), no el texto: un `assertSee` de las líneas pasaría
+igual con Alpine, que es justo la implementación que no vale aquí. Con su CONTROL — un extra sin
+`features` no pinta el bloque, o saldría un desplegable vacío.
+
+⚠️⚠️ **DOS trampas pagadas al construirlo, las dos de la familia «no falla, no hace nada»:**
+
+1. **El chevron se dibujó primero a mano** con bordes rotados, y salía mal orientado al abrir. Se
+   cambió por el icono del SET (`x-icons.chevron-down`), que esta misma vista ya usa: un dibujo
+   propio habría ido en otra rejilla y con otro trazo que el resto de la página — la regla de `#257`.
+2. **La regla del giro apuntaba a `.icon` y el componente NO emite esa clase** (medido:
+   `getAttribute('class')` → `null`), así que no giraba nada: `transform` computaba `none` con el
+   desplegable abierto **y** cerrado. Re-apuntada al `svg`.
+   ⚠️ **Y al verificarlo casi caigo en la trampa de `#265`**: la primera medición devolvió
+   `matrix(1, 0, 0, 1, 0, 0)`, que **no es «no hay transform»: es la identidad** — la transición
+   recién empezada. Midiendo tras dejarla terminar sale `matrix(-1, 0, 0, -1, 0, 0)`, que sí es el
+   giro de 180°.
+
+▶ **Hallazgo colateral, con ficha en `DEUDA.md`**: lo destapó que el «Más info» saliera en tinta en
+vez del azul del cliente. La causa no es la regla —usa el rol `--interactive`, que es lo correcto—
+sino que **`focused-layout` no enlaza `client.css`**: el post-form y el justificante se pintan con la
+piel del producto y solo reciben las 9 variables de BD. No se arregla aquí: cambia el aspecto de dos
+pantallas y el carril de diseño está parado (`#452`).
+
+**Verificación**: en navegador con las features reales del cliente — 6 desplegables, 7 líneas el
+primero, el giro medido tras la transición · suite en verde · el «Más info» reutiliza el rótulo que
+ya existía (`tickets.addon_more_info`), sin clave nueva.

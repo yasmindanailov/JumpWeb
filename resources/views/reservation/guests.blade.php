@@ -261,6 +261,30 @@
                                     <div class="gf-extra__id">
                                         <span class="gf-extra__name">{{ $addon->productName }}</span>
                                         <span class="gf-extra__price">{{ $addon->note }}</span>
+
+                                        {{-- El «Más info» del catálogo (`#416`). ⚠️ Es un `<details>`
+                                             NATIVO, no el toggle de Alpine que usa la landing
+                                             (`addon-chip.blade.php`): esta página nace `no-js` por
+                                             decisión declarada, y con Alpine quien no tenga
+                                             JavaScript se quedaría **sin poder leer qué lleva lo que
+                                             está comprando**. Aquí no es adorno — estos extras se
+                                             eligen en esta pantalla y en ninguna otra. --}}
+                                        @if ($addon->features !== [])
+                                            <details class="gf-extra__more">
+                                                {{-- El chevron sale del SET de iconos (`#257`), no de
+                                                     bordes rotados a mano: un dibujo propio aquí iría
+                                                     en otra rejilla y con otro trazo que el resto de
+                                                     la página, y eso no falla — solo se nota mirando
+                                                     la pantalla entera. Esta misma vista ya lo usa
+                                                     para plegar la ficha de cada invitado. --}}
+                                                <summary>{{ __('tickets.addon_more_info') }}<x-icons.chevron-down :width="14" :height="14" /></summary>
+                                                <ul>
+                                                    @foreach ($addon->features as $feature)
+                                                        <li>{{ $feature }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            </details>
+                                        @endif
                                     </div>
 
                                     {{-- El id viaja SIEMPRE, también en los cerrados: si no, un envío

@@ -5314,6 +5314,7 @@ components:
         - product_name
         - unit_price_cents
         - note
+        - features
         - quantity
         - max_quantity
         - charged_cents
@@ -5335,6 +5336,17 @@ components:
         note:
           type: string
           description: La línea de precio ya compuesta y traducida. Viaja hecha, como en el embudo.
+        features:
+          type: array
+          description: |
+            Lo que lleva dentro, traducido — el «Más info» que la landing ya enseña de cada
+            complemento (`DECISIONES #416`). Lista vacía si el producto no declara ninguna.
+
+            ⚠️ **Aquí no es adorno.** Estos complementos se eligen en esta pantalla y en ninguna otra,
+            así que sin esto el cliente decide entre «Combo 1 · 39 €» y «Combo 2 · 59 €» sin saber qué
+            llevan. El dato ya existía en el catálogo; solo no se publicaba.
+          items:
+            type: string
         quantity:
           type: integer
           description: Lo que el cliente tiene ahora mismo de este complemento. `0` = ninguno.

@@ -240,6 +240,12 @@ final class PostFormAddons
                 // `number_format(...).' €'` quemado del embudo tiene ficha propia en `DEUDA.md`, y
                 // una superficie nueva no puede nacer heredándolo.
                 note: Money::format($unit, $principal->order?->currency ?? 'EUR'),
+                // El «Más info» del catálogo (`#416`), traducido y saneado a lista de textos: es el
+                // mismo dato que la landing enseña, y aquí decide una compra.
+                features: array_values(array_filter(array_map(
+                    static fn ($f): string => trim((string) $f),
+                    is_array($addon->tr('features')) ? $addon->tr('features') : [],
+                ), static fn (string $f): bool => $f !== '')),
                 quantity: $quantity,
                 maxQuantity: (int) ($addon->pivot->max_qty ?? 0),
                 chargedCents: $quantity * $unit,

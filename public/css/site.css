@@ -5179,6 +5179,20 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .gf-extra__id { display: flex; flex-direction: column; gap: var(--sp-2); flex: 1 1 auto; min-width: 0; }
 .gf-extra__name { font-weight: 600; font-size: var(--fs-15); }
 .gf-extra__price { font-size: var(--fs-12); color: var(--fg-mute); }
+/* El «Más info» de cada extra (`#416`): `<details>` nativo, así que funciona sin una línea de JS —
+   la condición de esta página. Se le quita el marcador propio del navegador y se pone el nuestro,
+   que gira al abrir, para que no salga la flecha del sistema junto a los iconos del set. */
+.gf-extra__more { margin-top: var(--sp-4); }
+.gf-extra__more > summary { display: inline-flex; align-items: center; gap: var(--sp-6); cursor: pointer; font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--interactive); list-style: none; min-height: var(--tap-min); }
+.gf-extra__more > summary::-webkit-details-marker { display: none; }
+/* ⚠️ Apunta al `svg`, NO a `.icon`: el componente del set **no emite esa clase** (medido —
+   `getAttribute('class')` → `null`), así que la primera versión de estas dos reglas no giraba nada
+   y `transform` computaba `none` con el desplegable abierto y cerrado. No fallaba: no hacía nada. */
+.gf-extra__more > summary svg { transition: transform var(--dur-sale) var(--ease-sale); }
+.gf-extra__more[open] > summary svg { transform: rotate(180deg); }
+.gf-extra__more > summary:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+.gf-extra__more ul { list-style: none; margin: var(--sp-6) 0 0; padding: var(--sp-8) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-4); font-size: var(--fs-12); color: var(--fg-mute); }
+
 .gf-extra__field { flex: 0 0 auto; }
 .gf-extra__field input { width: 88px; min-height: var(--tap-min); text-align: center; font-size: var(--fs-15); font-weight: 600; }
 .gf-extra__qty { flex: 0 0 auto; font-weight: 600; font-size: var(--fs-15); color: var(--fg-mute); }

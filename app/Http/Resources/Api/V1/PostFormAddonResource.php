@@ -26,6 +26,7 @@ class PostFormAddonResource extends JsonResource
             'product_name' => $view->productName,
             'unit_price_cents' => $view->unitPriceCents,
             'note' => $view->note,
+            'features' => $view->features,
             'quantity' => $view->quantity,
             'max_quantity' => $view->maxQuantity,
             'charged_cents' => $view->chargedCents,
