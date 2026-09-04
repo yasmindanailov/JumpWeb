@@ -740,6 +740,11 @@ caminos distintos es la señal de que es la regla del subsistema, no un detalle 
 
 ### 9.7 · Plan de obra propuesto (`[DECIDIDO owner, 2026-09-04]` las tres de §9.5)
 
+> ⚠️⚠️ **CORREGIDO POR §9.8, y esa corrección va antes que este texto.** La revisión adversarial
+> encontró que este plan (a) valida aterrizajes de hijas que iba a retirar, (b) retiraría los
+> portadores de fiesta mixta en cada cambio de fecha y (c) pone en el post-commit una decisión que
+> gobierna lo que hay que validar dentro del lock. **Lee §9.8 antes de construir desde aquí.**
+
 **Alcance: TODOS los complementos**, no solo los ocupantes — *«no hay otro complemento condicionado
 por la fecha hoy, pero lo hacemos para tenerlo hecho y tener una base profesional»*.
 ⚠️ **Y eso lo hace medible**: los 12 complementos del catálogo tienen precio PLANO, así que la
@@ -762,3 +767,79 @@ dos operadores moviendo la misma reserva a la vez no pueden escribir dos veces e
 
 ⚠️ **Lo que NO cambia**: `#244` sigue en pie — nada se devuelve online. El saldo negativo se liquida
 **en el parque**, que es lo que el libro ya hace solo (§9.3).
+
+### 9.8 · REVISIÓN ADVERSARIAL del plan (2026-09-04) — tres cosas que el plan de §9.7 hacía MAL
+
+> Encargo del owner: *«lanza un adversarial sobre el plan»*. Seis lentes contra el diseño de §9.7,
+> **con medición en cada hallazgo**. Resultado: **tres correcciones al plan** (dos de ellas
+> reproducidas), **un límite aceptado** y **tres confirmaciones** — que también son medida.
+
+#### ❌ H1 · El ORDEN estaba invertido: bloquea el movimiento por una hija que iba a retirarse
+
+El plan validaba el aterrizaje de TODAS las hijas y decidía después cuáles sobreviven. **Reproducido**:
+una reserva del sábado con hora extra, movida a un martes —día en que la hora extra **no se vende**—
+con la franja de aterrizaje sin plazas:
+
+```
+veredicto: ok=false · motivo='addon_occupancy_at_destination'
+```
+
+El operador **no puede mover la reserva por un aforo que nadie va a consumir**, porque esa hija se
+iba a retirar de todos modos. ▶ **Corrección**: la supervivencia de cada hija se decide **ANTES** de
+validar aterrizajes, y `landOccupyingFamily` recibe solo a las supervivientes.
+
+#### ❌ H2 · La regla retiraría los PORTADORES de fiesta mixta, en CADA cambio de fecha
+
+`«sin precio ese día ⇒ retirar»` es demasiado ancha. **Medido**: los dos portadores
+(`Suplemento fiesta mixta`, `Descuento fiesta mixta`) tienen **cero precios en catálogo**, así que
+`priceCents()` devuelve `null` **siempre, todos los días**.
+
+| línea hija | precio un martes | qué haría el plan |
+|---|---|---|
+| Suplemento fiesta mixta | `NULL` | **retirarla** ❌ |
+| Descuento fiesta mixta | `NULL` | **retirarla** ❌ |
+| Hora extra · KIDS / JUMP | `NULL` | retirarla ✓ (es el objetivo) |
+| los otros 10 complementos | tienen precio | nada ✓ |
+
+⚠️⚠️ Y no es solo que sobre: **`MixedPartySurcharge::reconcile()` corre en el MISMO post-commit, justo
+después**. Serían dos servicios peleando por la misma línea en una petición, con el dinero moviéndose
+dos veces. El editor ya tiene escrito por qué esa línea es intocable: *«no es un complemento que el
+operador gobierne: es el reflejo de una edad que declaró el cliente»*.
+▶ **Corrección**: exclusión explícita de los portadores, con el predicado que ya existe
+(`ProductAddon::isMixedPartyCarrier()`, la regla 7 de `postFormProblem`).
+
+#### ❌ H3 · La frontera transaccional: el plan lo ponía TODO en el post-commit
+
+§9.7 decía «el post-commit llama a `reconcile()`». Con H1 eso es imposible: **la decisión gobierna qué
+se valida**, así que tiene que estar dentro del lock. Y la doctrina del editor (§4.3) ya fija el
+reparto: *«cada paso abre su PROPIA transacción corta… la REST de un reembolso no puede ir dentro de
+la txn de aforo, y por eso esta fase va después»*.
+
+▶ **Corrección — el reconciliador se PARTE en dos**, que es como el editor ya trata todo lo demás:
+
+| fase | qué va | dónde |
+|---|---|---|
+| decidir + mutar | qué hijas sobreviven · validar aterrizaje de ÉSAS · mover · `markCancelled` de las que caen | **DENTRO** del lock de zona/día |
+| dinero | el `recordEdit(±Δ)` de las re-tarificadas | **POST-COMMIT**, transacción corta propia |
+
+⚠️ La retirada cae del lado de la mutación **porque no lleva hecho** (§9.6): es coherente, no una
+excepción.
+
+#### ⚠️ L1 · Límite aceptado: el `preview()` corre SIN lock
+
+El aviso al operador se calcula al abrir el modal; la decisión real, dentro del lock. Entre las dos
+puede cambiar el catálogo, y entonces se aplicaría algo distinto de lo confirmado. La ventana es de
+segundos y hace falta que alguien toque precios justo entonces.
+▶ **No se cierra con más locks: se cierra DICIENDO lo que se hizo.** El desenlace y el audit reportan
+lo APLICADO, no lo previsto — que es lo que el editor ya hace con `item_edit_context`.
+
+#### ✓ Lo que la revisión CONFIRMÓ (resultados negativos, que también son medida)
+
+1. **Las dos escrituras de §9.6 cierran también con SEÑAL.** Se midieron sobre una entrada sin señal;
+   repetidas sobre un pack con señal de 50,00 € —donde el complemento tiene `onlineAtBirth = 0` porque
+   se paga en el parque— las dos siguen cerrando (`pay_at_park`, coherente ✓). La regla no depende del
+   régimen de cobro.
+2. **El criterio de no-op se cumple en PRODUCCIÓN.** Medido sobre las **9** líneas hijas vivas reales:
+   **0** difieren del catálogo y **0** se quedan sin precio. En local solo hay 1, así que la muestra
+   que vale es la de producción.
+3. **El caso D no tenía defecto** (ya corregido en §9.2): el motivo específico existe y se propaga.
