@@ -62,6 +62,11 @@ Hoy · Calendario · Pedidos · Clientes · Puerta          ← el menú, sin gr
   caracteres** o se parte: lo vigila `PanelShellTest`.
 - **«Crear pedido» es una acción, no un sitio**: por eso está arriba y no en el menú.
   «Calendario» se retiró de la barra superior — era el único enlace duplicado del panel.
+  ▶ **Y detrás hay un ASISTENTE de siete pasos** (`#462`/`#463`, `specs/asistente-crear-pedido.md`):
+  Cliente · Producto · Cuándo · Datos · Extras · Carrito · Pago, con auto-avance al elegir y **el
+  salto de todo paso que no pregunta nada**. El producto se elige en **tarjetas agrupadas** por tipo
+  —«Entradas» y «Packs y celebraciones»—, que es lo que cierra el crítico C1 de la auditoría: con el
+  desplegable plano anterior se vendió un cumpleaños como diez entradas sueltas.
 - **«Usuarios» es ahora «Clientes»**, y el EQUIPO es la otra pestaña de esa misma pantalla,
   a la que se llega desde Ajustes (§3 lo describe igual: la ficha y sus acciones no cambian).
 - El **empleado** ve 4 entradas (no «Clientes»: exige `users.manage`) y **no ve «Ajustes»**.

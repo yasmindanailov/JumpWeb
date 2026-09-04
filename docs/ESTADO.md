@@ -1,8 +1,55 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-03, TARDE — carril producto/reservas; el carril de diseño está PARADO por el owner, `#452`).
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-04 — carril PANEL DE ADMIN, banda `#460`–`#469`; el carril de diseño sigue PARADO por el owner, `#452`).
 >
-> **0. COMPLEMENTOS QUE SE VENDEN DESPUÉS DE RESERVAR — ✅ CÓDIGO COMPLETO: LAS CUATRO TANDAS
+> **0. EL PANEL DE ADMIN — 🟦 EN CURSO. Lo siguiente es la T3 del asistente de crear pedido, y
+>    lleva dentro la ÚNICA corrección de DOMINIO de todo el encargo.**
+>    ▶ **El encargo del owner** (2026-09-03/04, literal): *«que cualquier persona intuitivamente pueda
+>    hacer la operativa del parque, hay que quitar ruido y poner cada cosa en el momento adecuado y
+>    cada acción en su sitio»*, con el marco *«usamos Filament, no quiero chapuzas ni deuda, ni huecos;
+>    sé profesional y riguroso»*. ⚠️ **El panel se usa normalmente en TABLET** (iPad horizontal,
+>    1080×810): es el tamaño con el que se mide, no el escritorio.
+>    ▶ **Lo hecho, en el árbol** — cuatro commits, `origin/main` al día:
+>    **`#460`** la AUDITORÍA (`docs/specs/auditoria-panel-admin.md`, 4 críticos · 10 mayores · 11
+>    menores, medidos con Chromium sobre el panel real) · **`#461`** el SHELL (marca por tema, buscador
+>    centrado, idioma al menú del avatar, «Crear pedido» a escala de acción, menú lateral fijo y
+>    estrecho) · **`#462`** la T1 del asistente (de 3 pasos a **7**, con el salto de los pasos que no
+>    preguntan nada) · **`#463`** la T2 (el producto en **tarjetas agrupadas**, que cierra el crítico
+>    **C1** — el cumpleaños vendido como diez entradas).
+>    ▶ ❗❗❗ **LO SIGUIENTE ES LA T3 · «CUÁNDO», Y NO ES SOLO PRESENTACIÓN.** Son dos cosas y la
+>    segunda toca **AFORO**:
+>    **(a)** la pantalla — la CANTIDAD arriba (`[DECIDIDO owner]` D1: así las horas dicen la verdad
+>    para esa cantidad, y el auto-avance sigue estando en la hora, que es lo último), un CALENDARIO
+>    grande que resalta los días reservables y las **plazas al elegir el día** (D2);
+>    **(b)** ⚠️⚠️ **pasarle la CESTA a `SlotOffer`.** Medido en `#462`: web y panel **NO divergen** en
+>    disponibilidad —los dos son `SlotOffer`, y dan **177 días y 11 horas idénticos** con los mismos
+>    asientos, lo que CORRIGE la premisa de partida del owner—, pero **el panel llama a
+>    `offerableTimes()` SIN los ocupantes de la cesta y la web SÍ se los pasa**. Hasta hoy era un borde
+>    declarado; con «Añadir más productos» (la T1 ya lo ofrece) **pasa a ser el camino normal**: dos
+>    líneas del mismo pedido para la misma franja se ofrecen como si la primera no existiera.
+>    ▶ **Antes de tocar (b), lee `docs/INVARIANTES.md` §2 (AFORO) y la fila de `hora-extra.md`**: la
+>    derivación de ocupantes provisionales ya existe y es **UNA** —`Booking\Services\CartOccupants`
+>    (`#410`, D1)—, usada por `OrderCreator` **y** `AvailabilityReader`, con exclusión EXACTA y los
+>    hermanos dentro. **No inventes una segunda**: ése fue justo el defecto que `#410` cerró.
+>    ⚠️ `SlotOffer` está en el `CRITICAL_RE` → el `pre-push` exigirá **`VERIFY_CONC=1`** con los dos
+>    verificadores corridos (`INVARIANTES §6`).
+>    ▶ **Lo medido que acota el diseño de (a)**: pintar las plazas **por día** cuesta **709 consultas
+>    y 11,4 s** y **NO existe vía agregada por rango** en `AvailabilityReader`, `SlotOffer` ni
+>    `PackAvailability` — por eso D2 es «días reservables + plazas al elegir el día» y el semáforo por
+>    día sería tanda propia sobre AFORO.
+>    ▶ **Después de la T3 queda la T4**: la pantalla de «pedido creado» que refleje lo que de verdad
+>    pasó (⚠️ hay clientes SIN email: no prometas un correo que no se manda), y con ella **los 5
+>    controles bajo 44 px del paso del carrito** (medidos y anotados en `asistente-crear-pedido.md`
+>    §7).
+>    ▶ **EMPIEZA POR** `docs/specs/asistente-crear-pedido.md` §2 (las tres medidas que cambian el
+>    encargo), §3 (las tres decisiones del owner) y §5 (el plan por tandas); §7 y §8 son la T1 y la T2
+>    ejecutadas. La fila de enrutado de `CLAUDE.md` está al día con las dos.
+>    ⚠️ **Y lo que NO hay que tocar** está escrito: `auditoria-panel-admin.md` **§7** (el menú plano,
+>    las 20 tarjetas de Ajustes, la puerta en reposo) y **§9.bis** (M3 «no hay pantalla de aforo» y M4
+>    «nadie registra el cobro del parque» **son conducta querida**, D3 y D2 del owner: no los
+>    «arregles»). **D4 sigue pendiente del detalle del owner.**
+>
+> **1. COMPLEMENTOS QUE SE VENDEN DESPUÉS DE RESERVAR — ✅ CÓDIGO COMPLETO: LAS CUATRO TANDAS
 >    (T0→T3) EN EL ÁRBOL. Solo queda el OJO del owner.**
 >    `docs/specs/complementos-post-reserva.md` (`#413`). `[owner]`: *«el cliente reserva un cumpleaños,
 >    va a su form post reserva y puede añadir ahí complementos tipo cubo de refrescos, tapas…»*.
@@ -97,7 +144,7 @@
 >    escalada 403→410→404 **no se cumple en la web** (afecta también al justificante) y que el `PUT`
 >    del post-form sin `general` **borra** las respuestas generales.
 >
-> **1. LA HORA EXTRA — ✅ CÓDIGO COMPLETO Y DEMO EN LOCAL; queda su ✅ FINAL y el alta en PRODUCCIÓN**
+> **2. LA HORA EXTRA — ✅ CÓDIGO COMPLETO Y DEMO EN LOCAL; queda su ✅ FINAL y el alta en PRODUCCIÓN**
 >    (2026-09-03, `#410`/`#411`). Las cuatro tandas en el árbol, el producto REAL dado de alta en
 >    localhost («Hora extra» 3,00 € en «Jump · 2 horas») con **6 pedidos demo** del cliente
 >    `demo-hora-extra@jumpweb.test` (casos A–F de la spec §4.8 + el rechazo G sobre datos reales), y
@@ -115,7 +162,7 @@
 >    (y un hermano con emails en `GuardianLinkDeliveryTest`) — arreglada con contadores
 >    deterministas; la pasada rota se REPITIÓ entera con su reloj y el reloj queda 12/12 (`#412`).
 >
-> **2. EL PRODUCTO DE EXCURSIONES EN PRODUCCIÓN, que lo corre el OWNER.** Guion idempotente con
+> **3. EL PRODUCTO DE EXCURSIONES EN PRODUCCIÓN, que lo corre el OWNER.** Guion idempotente con
 >    dry-run en `~/excursiones-produccion.php`, **fuera del repo** (`#325`). Este agente **no tiene
 >    acceso a producción** (medido: solo hay llave de staging; `playjump2@…` da `Permission denied`).
 >    ✅ **Y el despliegue YA ESTÁ HECHO** (el carril de Google auth lo subió esta misma noche), así que
@@ -128,11 +175,11 @@
 >    `Schema::getIndexes('guardian_authorizations')` tiene que traer
 >    `guardian_authorizations_order_item_id_minor_key_unique`.
 >
-> **3. Lo que sigue esperando el OJO del owner**: el justificante (cinco escenarios `PRUEBA-J1`…`J5`
+> **4. Lo que sigue esperando el OJO del owner**: el justificante (cinco escenarios `PRUEBA-J1`…`J5`
 >    sembrados, guion en `VERIFICACION-E2E-CAJON.md` §5.septies — ⚠️ **ese escenario ENVEJECE**: se
 >    sembró para «hoy» el 01/09) · el libro del pedido (V18–V23) · los TPV · su `client-menu.webp`.
 >
-> **4. EL CARRIL DE DISEÑO ESTÁ PARADO** (`#452`, 2026-09-03, `[DECIDIDO owner]`): el owner delega el
+> **5. EL CARRIL DE DISEÑO ESTÁ PARADO** (`#452`, 2026-09-03, `[DECIDIDO owner]`): el owner delega el
 >    diseño a **Claude Design**, itera allí y avisará con la base; hasta entonces este carril **no
 >    construye nada**. Al parar se revirtieron las tandas A y B del cajón (`#450`/`#451`, en un commit
 >    nuevo: el cajón está como antes), se archivaron `design.md`, el guion de la portada y la auditoría
@@ -158,6 +205,49 @@
 > —reutilizar UN proceso en vez de ~38— está fichado en `DEUDA.md`. Si vuelve a caer, **mira el log
 > que el hook preserva y dice por su nombre** antes de reintentar.
 
+
+🟦 **EL PANEL DE ADMIN · LA AUDITORÍA Y SUS TRES PRIMERAS TANDAS** (2026-09-03/04, `#460`→`#463`;
+commits `4faeb850` · `1cb2976c` · `65134311` · `6e7b0085`).
+
+**Lo que hizo la sesión, en una línea cada cosa**
+- **`#460` · La AUDITORÍA, y está EN EL REPO** (`docs/specs/auditoria-panel-admin.md`). 10 pantallas
+  × 3 tamaños con Chromium sobre el panel real + 5 sondas de estados de trabajo: **4 críticos · 10
+  mayores · 11 menores**. ⚠️ **No se publicó como artefacto**: la primera auditoría de diseño se
+  publicó así y **se perdió con su URL** (`#430`).
+- **`#461` · El SHELL**, los cinco puntos que dictó el owner: logotipo por tema con «Administración»
+  debajo · buscador centrado que dice qué encuentra · el idioma fuera del topbar, al menú del avatar
+  · «Crear pedido» a escala de acción (127×32 → **152×44**) · menú lateral **siempre plegado**, sin
+  flecha, icono grande y rótulo debajo. **Cero vistas de Filament sobrescritas.**
+- **`#462` · T1 del asistente**: de 3 pasos a **7**, con auto-avance en cliente/producto/hora y **el
+  salto de todo paso que no pregunta nada** (medido: 16 de 18 productos no tienen ni un campo).
+- **`#463` · T2 del asistente**: el producto en **tarjetas agrupadas**, que cierra el crítico **C1**.
+
+**Lo que MÁS importa que sepas**
+- ⚠️⚠️ **La auditoría no le sirvió al owner como plan de obra** —*«nada de eso, te lo digo yo»*— y
+  eso **no la invalida**: sigue siendo el mapa medido de qué está mal y de **§7, lo que NO hay que
+  tocar**. Lo que el owner rechazó fue MI orden de trabajo, no las mediciones. *Un informe se
+  entrega para que decida quien decide.*
+- ⚠️⚠️ **C1 no era un fallo de aviso, era el ELEGIDOR**: un desplegable plano de 18 opciones donde
+  nada distinguía entrada de pack. Ya costó **61,00 €** y una sala sin reservar, **y no se puede
+  deshacer** (editar producto solo ofrece del mismo tipo y zona). Lo cierra el **agrupado**, no la
+  tarjeta. **El deshacer sigue abierto.**
+- ⚠️⚠️ **Corregí una premisa del owner con datos**: web y panel **no divergen** en disponibilidad
+  (los dos son `SlotOffer`; 177 días y 11 horas idénticos). La asimetría real es otra —**el panel no
+  le pasa la cesta y la web sí**— y es lo que va en la T3.
+- ⚠️ **Tres cosas las vio la SONDA DE NAVEGADOR y ningún test**: el indicador afirmando «sin nada que
+  rellenar» antes de haber elegido producto, las ventajas del modal **en los tres idiomas a la vez**
+  (por saltarme `tr()`), y el alto real de cada paso. *La suite mide conducta; el navegador mide lo
+  que el operador ve.*
+- ⚠️ **Repetí una nota CADUCADA de `CLAUDE.md`** («falta el hueco del logo sobre tinta»):
+  `client-logo-ink.svg` existe desde `#216`. *Una nota de doc no es una medición.*
+- ⚠️ Las sondas viven en **`/root/e2e/` DENTRO del contenedor**, fuera del repo a propósito
+  (`deploy.sh` no excluye carpetas nuevas de la raíz), y el serve escucha en **`:80`**, no en 8081.
+
+**Deuda que esta sesión deja dicha, no escondida**
+- `ticket_types.conditions` es **columna muerta** (cero lectores, cero escritores, el catálogo no la
+  edita) — ficha en `DEUDA.md` con las dos salidas; es del owner.
+- **5 controles bajo 44 px en el paso del carrito**, medidos: entran en la **T4**.
+- **D4 de la auditoría sigue pendiente** del detalle del owner.
 
 🟦 **LA HORA EXTRA · CÓDIGO COMPLETO — LAS CUATRO TANDAS EN EL ÁRBOL** (2026-09-03, `#410`/`#411`;
 commits `d36c59a6` · `08c124be` · `f2c23a6b` · `18c74c7e` + docs. **La ejecución está en
@@ -609,6 +699,16 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     que es tuyo. Tocaré **solo el bloque `.gf-*`** (y sólo cuando la spec esté aprobada), sin entrar
     en nada de la landing ni del armazón. `git pull --rebase` antes de cada push por los dos lados.
     **No toco `resources/views/components/site/**` ni `lang/*/landing.php`.**
+  · **PANEL DE ADMIN · UI/UX** (2026-09-03/04) → la auditoría del panel y lo que sale de ella
+    (`specs/auditoria-panel-admin.md` · `specs/asistente-crear-pedido.md`) → `app/Filament/**` ·
+    `app/Providers/Filament/AdminPanelProvider.php` · `resources/views/filament/**` ·
+    `resources/css/filament/admin/theme.css` · `lang/{es,zh_CN}/admin.php` ·
+    `lang/vendor/filament-panels/**` · `tests/Feature/Admin/**`.
+    **Numera en la sub-banda `#460`–`#469` — último usado: `#463`** (2026-09-04), reservada A
+    DISTANCIA igual que la de diseño; si se agota, la siguiente se reserva aquí ANTES de usarla.
+    ⚠️ **La T3 tocará `SlotOffer` / `CartOccupants`, que son del carril de PRODUCTO y están en el
+    `CRITICAL_RE`**: es una incursión declarada, con `VERIFY_CONC=1` y `git pull --rebase` antes de
+    empujar. **No toco nada de la landing ni del armazón público.**
   · **DISEÑO / IDIOMA VISUAL** (este) → ⏸️ **PARADO desde el 2026-09-03 (`#452`)**: no toca nada hasta
     que el owner vuelva con su sistema de Claude Design. Su ámbito, cuando vuelva, sigue siendo
     `public/css/{site,landing}.css` · `resources/views/{home.blade.php,pages/**,components/site/**}` ·
@@ -1283,9 +1383,13 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4228 en verde** (26.648 aserciones, 1 skipped a propósito), medida el 2026-09-03 sobre el árbol
-> fusionado (tras `#452`, que quita los 8 casos de las tandas A/B del cajón, y con las CUATRO tandas
-> T0–T3 de `#413` dentro). **JS 951** (`node --test`)
+> Suite **4263 en verde** (26.766 aserciones, 1 skipped a propósito), medida el 2026-09-04 con las
+> tres tandas del panel dentro (`#461` +12 · `#462` +13 · `#463` +10). **JS 951** (`node --test`).
+> ⚠️ **El `pre-push` compara este número con la suite real y RECHAZA el push si no cuadra** — es la
+> única copia a propósito, no la dupliques en otro documento. Antes: 4228 el 2026-09-03 (árbol
+> fusionado tras `#452`, con las cuatro tandas T0–T3 de `#413` dentro).
+> ▶ **Reloj auditado el 2026-09-04**: `scripts/audit-clock.sh` en verde en **12 de 12** fronteras,
+> incluidos los dos pases que cruzan medianoche (Madrid y UTC) a mitad de suite
 > Antes: **2026-09-01 (cierre de la tarde) — 🚀 LA WEB DEL 2.º
 > CLIENTE ESTÁ EN PRODUCCIÓN (`https://playjump.es`, `#325`/`#326`): su bloque está en el CARRIL 4
 > (la PORTADA), que es el más reciente; antes, el 6.º (EXCURSIONES DE COLEGIO, `#322`/`#324`) bajo el

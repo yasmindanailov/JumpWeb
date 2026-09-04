@@ -3832,6 +3832,37 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **Una elección menor del owner**, anotada sin tocarla: un extra **cerrado que nunca se pidió** hoy
       se pinta igual, con su «ya no se puede cambiar» y su 0.
 
+### EL PANEL DE ADMIN · UI/UX 🟦 EN CURSO — la auditoría y las tres primeras tandas (`#460` → `#463`, carril del panel, banda `#460`–`#469`)
+- [x] **La AUDITORÍA del panel, EN EL REPO** (`specs/auditoria-panel-admin.md`, `#460`): 10 pantallas
+      × 3 tamaños con Chromium sobre el panel real + 5 sondas de estados de trabajo → **4 críticos ·
+      10 mayores · 11 menores**. **§7 es lo que NO hay que tocar** y **§9.bis lo que falla a
+      propósito** (D2 y D3 del owner). ⚠️ En el repo y no como artefacto: la primera auditoría de
+      diseño se publicó así y **se perdió con su URL** (`#430`)
+- [x] **El SHELL** (`#461`, `[DECIDIDO owner]`, los cinco puntos que dictó): marca por tema con
+      «Administración» · buscador centrado · idioma al menú del avatar · «Crear pedido» a escala de
+      acción (127×32 → 152×44) · menú lateral fijo y estrecho, sin flecha. **Cero vistas de Filament
+      sobrescritas.** ⚠️ `route()` en el cuerpo de `panel()` tumba `/admin` entero: va en closure.
+      `PanelShellTest` (12 casos · 9/9 mutaciones)
+- [x] **T1 del asistente de crear pedido** (`#462`): de 3 pasos a **SIETE**, con la regla del salto en
+      un solo sitio y el auto-avance enganchado al CAMBIO. Medido: **16 de 18** productos no tienen ni
+      un campo, así que sin el salto vender una entrada obligaba a pasar por una pantalla en blanco.
+      `CreateManualOrderStepsTest` (13 casos · 9/9 mutaciones)
+- [x] **T2 del asistente — el crítico C1, CERRADO** (`#463`): muere el `Select` plano de 18 opciones y
+      el producto se elige en **tarjetas AGRUPADAS** por tipo, con el rango de invitados como marca
+      del pack. `pickProduct()` es la única puerta y **re-valida en el servidor**; «Más info» es de
+      lectura y **no elige**. `CreateManualOrderProductCardsTest` (10 casos · 9/9 mutaciones) ·
+      sonda de navegador (18 tarjetas, 0 controles bajo 44 px, 0 desbordamiento)
+- [ ] ❗❗❗ **T3 · «Cuándo», y lleva DENTRO la única corrección de DOMINIO del encargo**: la pantalla
+      (cantidad arriba · calendario grande con días reservables · plazas al elegir el día) **y pasarle
+      la CESTA a `SlotOffer`** — el panel llama a `offerableTimes()` sin los ocupantes y la web sí se
+      los pasa; con «Añadir más productos» eso deja de ser un borde y pasa a ser el camino normal.
+      ⚠️ **Toca AFORO**: `INVARIANTES §2` primero, reutilizar `CartOccupants` (**no inventar una
+      segunda derivación**, que es el defecto que `#410` cerró) y `VERIFY_CONC=1` en el push
+- [ ] **T4 · la pantalla de «pedido creado»** que refleje lo que de verdad pasó (⚠️ hay clientes SIN
+      email: no prometer un correo que no se manda), y con ella **los 5 controles bajo 44 px del paso
+      del carrito**, ya medidos
+- [ ] **D4 de la auditoría**, pendiente del detalle del owner
+
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no
 le despliega nada. Mejoras de JumpWeb aplicables allí se portan **solo por decisión explícita**,
