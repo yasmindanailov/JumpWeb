@@ -24087,6 +24087,18 @@ las 15:00 seguirá dentro a las 15:30. Escribí `20` en el caso y el código dij
 razón** — afirmar 20 sería vender 26 simultáneas en una zona de 20. La rejilla fina no reduce el aforo:
 lo mide bien, y por eso los números que ve el cliente bajan donde antes mentían.
 
+### El montaje/limpieza entre fiestas se queda en CERO
+
+`[DECIDIDO owner, 2026-09-06]`: *«no necesita tiempo entre cumpleaños, eso no es problema»*. Se preguntó
+porque al escalonar los inicios cada 30 min hay más solape de entradas y salidas de grupos, y porque el
+mecanismo existe y está apagado: los dos packs tienen `prep_before_min = prep_after_min = 0`, así que hoy
+el sistema **no reserva ni un minuto** entre una fiesta y la siguiente.
+
+⚠️ **Y encenderlo no es gratis, medido antes de preguntar**: con `prep 30/30` y `packs.prep_blocks_cupo`
+activo (que lo está), la capacidad del sábado cae de **15 fiestas / 300 niños a 9 / 180 (−40 %)**, porque
+la ventana de cada fiesta pasa a bloquear cupo una hora más. No lo pongas «porque parece prudente»: es
+una decisión de negocio con precio, y está tomada en el otro sentido.
+
 ### La hora extra NO se puede aplicar a un pack, y sigue sin poderse
 
 Preguntado por el owner en la misma sesión. **No, y está bloqueado a propósito en las dos direcciones**

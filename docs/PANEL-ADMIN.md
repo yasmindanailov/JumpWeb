@@ -261,6 +261,10 @@ en solo lectura, el cierre de los extras y la ventana del suplemento mixto.
 ⚠️ **El aforo de las franjas nuevas es el MISMO que el de las viejas, nunca la mitad**: cada franja
 declara cuánta gente cabe **a la vez**, no una cuota a repartir entre las dos medias horas.
 
+⚠️ **Entre dos fiestas no se reserva tiempo de montaje/limpieza** (`prep_before_min`/`prep_after_min` = 0
+en los dos packs, `[DECIDIDO owner, 2026-09-06]`). Encenderlo con `prep 30/30` cuesta **−40 % de capacidad
+el sábado** (15 fiestas → 9), medido: no se toca sin volver a decidirlo.
+
 ⚠️ El generador descarta solo lo que no cabe en el horario del día, así que verás plantillas (10:00,
 10:30…) que de lunes a viernes no generan nada: el recinto abre a las 16:30. Es normal.
 
