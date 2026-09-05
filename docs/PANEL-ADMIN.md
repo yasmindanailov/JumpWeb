@@ -232,6 +232,43 @@ Acciones: **«Marcar preparada»** y **«Marcar canjeada»**.
 - **Textos legales** (aviso, privacidad, cookies, condiciones, waiver).
 - **Informes y exportaciones** (ventas, asistencia, reservas).
 
+### 4.1 La REJILLA de horarios reservables ⭐ (`DECISIONES #420`, `INVARIANTES AFORO-12`)
+
+**Qué horas se pueden reservar no es código: son filas de `slot_templates`** (zona × día de la semana ×
+hora de inicio). No existe ningún «paso» implícito — si no hay una plantilla a las 15:30, no hay 15:30.
+
+▶ **Dónde:** avatar → **Ajustes** → **Horarios y aforo** → **Plantillas de franja** → botón **«Generar
+plantillas»** (permiso `slots.manage`, solo admin).
+
+▶ **Los valores con los que se configuró el parque** (una pasada por zona, aditiva):
+
+| Campo | JUMP | KIDS | Cumpleaños |
+|---|---|---|---|
+| Días de la semana | los 7 | los 7 | los 7 |
+| Primera franja | `10:00` | `10:00` | `10:00` |
+| Cierre (la última franja termina a esta hora) | `21:30` | `21:30` | `21:30` |
+| Duración (min) | **`60`** | `60` | `60` |
+| Cada cuánto empieza una franja (min) | **`30`** | `30` | `30` |
+| Aforo total / online | `20` | `20` | `200` |
+| Reemplazar las existentes | apagado | apagado | apagado |
+| Regenerar las franjas al terminar | apagado | apagado | **encendido** (solo en la última) |
+
+❗❗❗ **La duración es 60 aunque los inicios vayan cada 30, y no es un gusto**: `slot.end_time` es lo que
+lee `OrderItem::isFinishedInPractice()` para dar una reserva por TERMINADA. Con franjas de 30, una
+entrada de 1 h comprada a las 15:30 se declararía terminada a las 16:00 — y de ahí cuelgan el post-form
+en solo lectura, el cierre de los extras y la ventana del suplemento mixto.
+
+⚠️ **El aforo de las franjas nuevas es el MISMO que el de las viejas, nunca la mitad**: cada franja
+declara cuánta gente cabe **a la vez**, no una cuota a repartir entre las dos medias horas.
+
+⚠️ El generador descarta solo lo que no cabe en el horario del día, así que verás plantillas (10:00,
+10:30…) que de lunes a viernes no generan nada: el recinto abre a las 16:30. Es normal.
+
+▶ **Para deshacerlo:** borrar las plantillas a las `:30` y pulsar **«Regenerar franjas»** en *Franjas*.
+La poda borra las `:30` vacías y **cierra —no borra— las que tuvieran reservas**, así que no se pierde
+ninguna venta. ⚠️ Una prueba acotada a unos días **dura hasta la madrugada**: el proceso automático
+(`slots:generate-rolling`, `AFORO-03`) regenera el horizonte completo cada noche.
+
 ---
 
 ## 5. Permisos del empleado (decidido)

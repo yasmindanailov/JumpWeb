@@ -66,7 +66,7 @@
 
 | Doc | Qué es |
 |---|---|
-| `INVARIANTES.md` | 61 invariantes de no-regresión (dinero · aforo · RGPD · seguridad · rendimiento · suite). **Leer antes de tocar esas áreas.** |
+| `INVARIANTES.md` | 62 invariantes de no-regresión (dinero · aforo · RGPD · seguridad · rendimiento · suite). **Leer antes de tocar esas áreas.** |
 | `ARQUITECTURA.md` | Stack real, estructura (`app/Domain/<Contexto>/`), white-label 3 capas, composer global memoizado. |
 | `MODELO-DATOS.md` | Mapa de BD **regenerado desde el código** (39 modelos · 103 migraciones), por dominios, con rarezas heredadas. |
 | `SEGURIDAD.md` | Estándar transversal nivel Reforzado (ASVS/NIST): 12 reglas + estado heredado. |

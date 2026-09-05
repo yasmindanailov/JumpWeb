@@ -1,6 +1,39 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (los DOS carriles cerraron con el trabajo del **2026-09-04** y sus dos bloques están abajo: **PANEL DE ADMIN**, banda `#460`–`#469`, en el punto 0 —cerrado el **05** por la tarde, tras el ✅ del owner al asistente—, y **COMPLEMENTOS / HORA EXTRA**, banda `#400`–`#419`, en los puntos 1 y 2 con el DESPLIEGUE en el 2.bis; el carril de diseño sigue PARADO por el owner, `#452`).
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (los DOS carriles cerraron con el trabajo del **2026-09-04** y sus dos bloques están abajo: **PANEL DE ADMIN**, banda `#460`–`#469`, en el punto 0 —cerrado el **05** por la tarde, tras el ✅ del owner al asistente—, y **COMPLEMENTOS / HORA EXTRA**, banda `#400`–`#419`, en los puntos 1 y 2 con el DESPLIEGUE en el 2.bis; el carril de diseño sigue PARADO por el owner, `#452`). ▶ **Lo ÚLTIMO es el punto A: la REJILLA DE MEDIA HORA (`#420`), que está pendiente de que el OWNER la aplique desde el panel.**
+>
+> **A. LA REJILLA DE MEDIA HORA — 🟦 CÓDIGO Y DOC LISTOS; LA APLICA EL OWNER DESDE EL PANEL**
+>    (`#420`, 2026-09-06, `[DECIDIDO owner]`; banda nueva `#420`–`#429` para este carril, que agotó la
+>    `#400`–`#419`.) ▶ **El encargo, literal**: *«el objetivo son ambas cosas»* (dar opciones de horario
+>    y no desperdiciar horario) y *«entradas y packs tienen que poder elegir 15:30 · 16:00 · 16:30»*.
+>    ▶ **Por qué no existía 15:30**: las franjas se materializan una a una desde `slot_templates` y
+>    **no hay ningún «paso» implícito**; las 231 plantillas estaban todas en punto. Es CONFIGURACIÓN.
+>    ⚠️⚠️ **Y de paso apareció horario que se tiraba a diario**: el recinto abre a las **16:30** L–V y
+>    cierra a las **21:30** los siete días, pero la rejilla empezaba a las 17:00 y moría a las 21:00.
+>    ❗❗❗ **LA REGLA DURA: intervalo 30, duración 60.** `slot.end_time` es lo que lee
+>    `OrderItem::isFinishedInPractice()` para dar una reserva por TERMINADA — con franjas de 30 min una
+>    entrada de 1 h comprada a las 15:30 se declararía terminada a las 16:00, y de ahí cuelgan el
+>    post-form, los extras, el suplemento mixto y «Mis reservas». La rejilla queda **solapada**, y el
+>    aforo lo aguanta porque **cuenta PRESENCIA** (`AFORO-12`).
+>    ▶ **Lo que le toca al owner** (se lo di paso a paso en la sesión): Ajustes → Horarios y aforo →
+>    Plantillas de franja → «Generar plantillas», **tres pasadas, una por zona**: los 7 días,
+>    `10:00`→**`21:30`**, duración **60**, cada **30**, el aforo que YA tiene cada zona (20 · 20 · 200),
+>    «reemplazar» **APAGADO** y «regenerar» sólo en la **última**. ⚠️ El aforo de las franjas nuevas es
+>    el MISMO de las viejas, **nunca la mitad**: cada franja declara cuánta gente cabe A LA VEZ.
+>    ▶ Medido: entradas **10→20** horas el sábado y **4→9** el martes; packs **9→18** y **3→7**; franjas
+>    3.557→**7.115**; `offerableTimes` de un sábado 20→**64 ms** (pack 40→94); `slots:generate-rolling`
+>    ~**9 s**. ⚠️ **La capacidad de cumpleaños NO sube** (el techo es `max_guests_per_slot = 60`, medido
+>    idéntico: 6 fiestas/120 niños en diario y 15/300 el sábado); lo que gana dinero es la ENTRADA —los
+>    huecos de una venta parcial, verificado vendiendo 12 a las 15:00 y las 8 restantes a las 15:30—.
+>    ⚠️⚠️ **Corolario que sorprende y es correcto**: las plazas de una franja son el **MÍNIMO del rato
+>    que dura la visita**, no «su» aforo. Lo escribí al revés en la guarda y **el código tenía razón**.
+>    ▶ Guarda nueva **`OverlappingSlotGridTest`** (11 casos) + `scripts/mutar-rejilla-solapada.sh`
+>    (**8/8 muerden**); una mutación no mordía y señalaba los dos casos que faltaban (la DIRECCIÓN del
+>    tiempo: en rejilla solapada, un derrame hacia atrás se confunde con el solape legítimo).
+>    ⛔ **La HORA EXTRA no se puede colgar de un pack y no es prudencia** (`hora-extra.md` §7·D2,
+>    verificado ejecutándolo en las dos direcciones): un complemento nunca cuenta en
+>    `max_guests_per_slot`, así que con la fiesta entera serían veinte invitados invisibles. Que un
+>    cumpleaños dure más es la DURACIÓN: un pack más largo, o cambiar el producto (re-tarifica, `PAY-18`).
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -282,6 +315,9 @@
 > y el portátil sigue en `#34x`. Mirar el remoto antes de empujar **se probó y no basta** — trece
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
+> ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
+> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#420`**. Las
+> otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está
 > diagnosticado y mitigado (tope 60 → 300 s, medido: un render tarda ~140 ms), y el arreglo de fondo
@@ -787,7 +823,7 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     `app/Providers/Filament/AdminPanelProvider.php` · `resources/views/filament/**` ·
     `resources/css/filament/admin/theme.css` · `lang/{es,zh_CN}/admin.php` ·
     `lang/vendor/filament-panels/**` · `tests/Feature/Admin/**`.
-    **Numera en la sub-banda `#460`–`#469` — último usado: `#463`** (2026-09-04), reservada A
+    **Numera en la sub-banda `#460`–`#469` — último usado: `#468`** (2026-09-05), reservada A
     DISTANCIA igual que la de diseño; si se agota, la siguiente se reserva aquí ANTES de usarla.
     ⚠️ **La T3 tocará `SlotOffer` / `CartOccupants`, que son del carril de PRODUCTO y están en el
     `CRITICAL_RE`**: es una incursión declarada, con `VERIFY_CONC=1` y `git pull --rebase` antes de
@@ -1466,12 +1502,13 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4313 en verde** (26.996 aserciones, 1 skipped a propósito), medida el **2026-09-05** sobre el
+> Suite **4324 en verde** (27.031 aserciones, 1 skipped a propósito), medida el **2026-09-06** sobre el
 > árbol con **LOS DOS CARRILES FUSIONADOS**: las siete tandas del panel (`#461` +12 · `#462` +13 ·
 > `#463` +10 · `#464` +13 · `#465` +8 · `#466` +6 · `#467`, y **siete casos re-apuntados por sujeto**
 > al retirarse la tira de días y el *toast* del desenlace) **más las del carril de complementos**
-> (`#415` +6 · `#417` +12 · `#418` +1) **y `#468` +1** (la guarda de tokens, que dependía de un
-> fichero gitignorado). **JS 951** (`node --test`).
+> (`#415` +6 · `#417` +12 · `#418` +1), **`#468` +1** (la guarda de tokens, que dependía de un
+> fichero gitignorado) **y `#420` +11** (`OverlappingSlotGridTest`, la rejilla solapada).
+> **JS 951** (`node --test`).
 > ⚠️⚠️ **Con dos carriles vivos esta cifra CADUCA al fusionar, y el hook lo dice antes que nadie**:
 > si el push sale rechazado por aquí, no es un fallo — es que el otro carril trajo casos. Se remide
 > y se escribe la de la suite REAL, nunca la que uno midió antes de integrar.

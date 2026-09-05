@@ -24020,3 +24020,106 @@ fallback en las dos hojas juzgadas.
 **Verificación**: control de que el arreglo MUERDE (con la lista vacía, la guarda vuelve a acusar a
 `--deco-tag`) · los 4 casos del fichero en verde · **suite 4.313 verde sobre el árbol fusionado** ·
 Pint ✓ · docs-check ✓ · auditoría del RELOJ verde en las 12 fronteras (corrida antes de la fusión).
+
+## #420 · 2026-09-06 · `[DECIDIDO owner]` La rejilla de franjas pasa a empezar cada 30 minutos — y su DURACIÓN no puede bajar a 30
+
+**Encargo del owner**, con las dos mitades dichas por él: *«el objetivo son ambas cosas»* (dar opciones
+de horario **y** no desperdiciar horario) y *«entradas y packs tienen que poder elegir 15:30 · 16:00 ·
+16:30»*. Sale de una pregunta suya: por qué un cumpleaños puede reservarse a las 15:00 y no a las 15:30.
+
+▶ **La respuesta es que nadie lo había creado.** Las franjas no se calculan: se materializan una a una
+desde `slot_templates` (zona × día de la semana × hora de inicio) y **no hay ningún «paso» implícito en
+el código**. Las 231 plantillas del parque estaban todas en punto, 10:00→20:00, duración 60, herencia
+del seed inicial. Ni `UNIQUE(zone_id, weekday, start_time)` ni `UNIQUE(zone_id, date, start_time)`
+prohíben solapar: prohíben **repetir la misma hora de inicio**.
+
+⚠️⚠️ **Y al medirlo apareció horario que se estaba tirando todos los días.** El recinto abre a las
+**16:30** de lunes a viernes y cierra a las **21:30** los siete días; la rejilla en punto empezaba a las
+17:00 (el generador descarta la de las 16:00: empieza antes de abrir) y su última franja moría a las
+21:00. **Una hora de sala por día de diario que no se podía ni ofrecer**, y de ahí que los cumpleaños de
+entre semana tuvieran sólo TRES horas de inicio posibles.
+
+### La regla dura: intervalo 30, duración **60**
+
+❗❗❗ **La duración de la franja NO baja a 30, y esto es lo que hay que saber antes de tocar nada aquí.**
+`slot.end_time` no es decoración: `OrderItem::isFinishedInPractice()` compara `slot.end_time < now()`
+para dar una reserva por TERMINADA, y de ahí cuelgan el post-form en solo lectura, el cierre de los
+extras (`complementos-post-reserva.md` §4.9), la ventana de dinero del suplemento mixto, el movimiento
+«liquidado en el parque» de `OrderBook`, «Mis reservas» y el calendario del panel. **Con franjas de 30
+minutos, una entrada de 1 h comprada a las 15:30 se declararía terminada a las 16:00.**
+
+▶ La forma correcta —y la que el panel ya soporta— es **inicio cada 30 con franjas de 60**, que deja
+`end_time` significando exactamente lo que significaba. La rejilla queda **solapada**, y eso el aforo lo
+aguanta porque **no cuenta huecos de un contenedor: cuenta PRESENCIA** (`occupancyMap` marca cada franja
+cuyo inicio cae dentro del tramo del ocupante). Como todo inicio de venta es un punto de la rejilla, dos
+tramos que se pisan comparten ese punto y se ven — compartan o no hora de entrada.
+
+⚠️ No es capacidad nueva del código: `GeneratesSlotTemplates` tiene `interval_min` separado de
+`duration_min` desde que se escribió, con caso propio (`test_custom_interval_spaces_the_slots`,
+literalmente *«franjas de 60 min pero empezando cada 30 min (oleadas solapadas)»*), y
+`SlotAvailability::spanCoversDuration()` declara en su docblock que tolera rejillas solapadas. **Esto es
+configuración, no desarrollo.**
+
+### Lo medido, sobre la BD real en transacciones con rollback
+
+| | rejilla en punto | inicios cada 30 |
+|---|---|---|
+| Entradas, sábado / martes | 10 / **4** horas | 20 / **9** |
+| Cumpleaños, sábado / martes | 9 / **3** horas | 18 / **7** |
+| Franjas en el horizonte (6 meses) | 3.557 | 7.115 |
+| `offerableTimes` de un sábado | 20 ms · pack 40 ms | 64 ms · pack 94 ms |
+| `offerableDates` | 11 ms | 17 ms |
+| `slots:generate-rolling` (3 zonas) | — | **~9 s** |
+
+▶ **Lo que NO sube es la capacidad de los cumpleaños**, y se dijo antes de decidir: llenado voraz del
+día, **6 fiestas / 120 niños en diario y 15 / 300 el sábado, idéntico antes y después**. El techo lo pone
+`packs.max_guests_per_slot = 60` (niños simultáneos), no la rejilla. Tampoco empeora la fragmentación: el
+peor caso según dónde caiga la primera reserva es el mismo rango (100–120 y 280–300).
+
+▶ **Donde sí hay dinero es en ENTRADAS**, y es un hueco que la rejilla en punto no podía vender: con 12
+de 20 plazas vendidas a las 15:00, las 8 restantes se pierden hasta las 16:00. Verificado con el checkout
+real: se venden a las 15:30, y la novena se rechaza.
+
+⚠️⚠️ **Y hay una consecuencia visible que corrigió mi propia suposición al escribir la guarda**: con la
+rejilla solapada, **las plazas de una franja son el MÍNIMO del rato que dura la visita**, no «su» aforo.
+Seis personas entrando a las 15:30 bajan a 14 lo que se puede vender a las 15:00, porque quien entre a
+las 15:00 seguirá dentro a las 15:30. Escribí `20` en el caso y el código dijo `14`: **el código tenía
+razón** — afirmar 20 sería vender 26 simultáneas en una zona de 20. La rejilla fina no reduce el aforo:
+lo mide bien, y por eso los números que ve el cliente bajan donde antes mentían.
+
+### La hora extra NO se puede aplicar a un pack, y sigue sin poderse
+
+Preguntado por el owner en la misma sesión. **No, y está bloqueado a propósito en las dos direcciones**
+(verificado ejecutándolo): `ProductAddon::booted()` rechaza enganchar un ocupante a un pack
+(*«en un pack quedarse más es que la fiesta dura más»*) y `TicketType::booted()` rechaza encender el
+interruptor en un complemento que ya cuelga de uno. El motivo es de `hora-extra.md` §7·D2 y **no es
+prudencia**: `PackAvailability::occupancyMaps()` filtra por `type = pack`, así que un complemento
+**nunca** cuenta en `max_guests_per_slot` — con una persona es un invitado invisible; con la fiesta
+entera, veinte. El mecanismo para que un cumpleaños dure más es la **duración**: un pack más largo, o
+cambiar el producto de la reserva (que ya re-tarifica, `PAY-18`).
+
+### La guarda que faltaba
+
+Hasta hoy la tolerancia a rejillas solapadas estaba **afirmada en un docblock y en ningún caso**:
+`SlotAvailabilityTest` y `PackAvailabilityTest` sólo usan horas en punto, y el escenario `pack-prep` de
+`purchase:verify-oversell` cubre fiestas que se pisan **por el montaje**, no por la rejilla. Entra
+**`OverlappingSlotGridTest`** (11 casos) sobre los tres niveles que sostienen la propiedad: la ocupación
+de entradas, el cupo de packs y el guardián del checkout, con su control (la misma franja `:30` se vende
+cuando nada la solapa).
+
+⚠️ **Una de las ocho mutaciones no mordía y señalaba un caso que faltaba**: derramar la ocupación *hacia
+atrás* era invisible porque en una rejilla solapada las franjas vecinas comparten ocupantes **de verdad**,
+así que el desbordamiento se confunde con el solape legítimo. De ahí los dos casos de «la dirección del
+tiempo» (una venta de las 17:00 no toca las 15:00), uno por pool.
+
+**Verificación**: `scripts/mutar-rejilla-solapada.sh` → **8/8 muerden**, con control verde previo y
+veredicto por código de salida · checkout real conducido en MySQL sobre rejilla solapada (3 fiestas de 20
+a las 17:00 aceptadas, 17:30 y 18:30 rechazadas con `pack_sold_out_line`, 19:00 aceptada; y el control en
+día limpio vendiendo 17:30–18:30) · **suite 4.324 verde** · Pint ✓ · docs-check ✓. No dispara
+`VERIFY_CONC`: no se toca una línea de `app/` — la concurrencia la sigue serializando `ZoneDaySlotLock`,
+que bloquea la zona/día entera precisamente porque la ocupación se cuenta por tramo.
+
+▶ **Lo que queda es del owner**: las tres pasadas del asistente (una por zona: los 7 días, 10:00→**21:30**,
+duración **60**, cada **30**, el aforo que ya tiene cada zona, «reemplazar» APAGADO y «regenerar» sólo en
+la última). El aforo de las franjas nuevas tiene que ser el MISMO de las viejas, nunca la mitad: cada
+franja declara cuánta gente cabe a la vez, no una cuota a repartir.
