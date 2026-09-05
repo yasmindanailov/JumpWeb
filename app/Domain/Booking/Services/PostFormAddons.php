@@ -12,6 +12,7 @@ use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
 use App\Notifications\PostFormAddonsChanged;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -221,8 +222,9 @@ final class PostFormAddons
                 && LineFacts::forItem($order, $line)->birthValue() !== 0;
 
             // R2 en la lectura: si ya hay línea manda SU precio, que es el comunicado. Sin línea,
-            // el del catálogo de hoy — y si ese día no tiene tarifa, el extra no se puede ofrecer.
-            $unit = $line !== null ? (int) $line->unit_price : $this->rates->priceCents($addon, Carbon::today());
+            // el del catálogo **del día de la VISITA** (`#415`) — y si ese día no tiene tarifa, el
+            // extra no se puede ofrecer.
+            $unit = $line !== null ? (int) $line->unit_price : $this->rates->priceCents($addon, self::pricingDate($principal));
             if ($unit === null) {
                 continue;
             }
@@ -238,6 +240,12 @@ final class PostFormAddons
                 // `number_format(...).' €'` quemado del embudo tiene ficha propia en `DEUDA.md`, y
                 // una superficie nueva no puede nacer heredándolo.
                 note: Money::format($unit, $principal->order?->currency ?? 'EUR'),
+                // El «Más info» del catálogo (`#416`), traducido y saneado a lista de textos: es el
+                // mismo dato que la landing enseña, y aquí decide una compra.
+                features: array_values(array_filter(array_map(
+                    static fn ($f): string => trim((string) $f),
+                    is_array($addon->tr('features')) ? $addon->tr('features') : [],
+                ), static fn (string $f): bool => $f !== '')),
                 quantity: $quantity,
                 maxQuantity: (int) ($addon->pivot->max_qty ?? 0),
                 chargedCents: $quantity * $unit,
@@ -286,6 +294,22 @@ final class PostFormAddons
      * «hereda el cierre del post-form», o sea heredar el reloj torcido. Sin plazo declarado, no se
      * ofrece — el cinturón de `AddonResolver::forStage()` ya lo excluye antes de llegar aquí.
      */
+    /**
+     * El día con el que se tarifica un extra NUEVO de esta reserva: **el de la VISITA** (`#415`).
+     *
+     * Punto único, y por eso existe: lo llaman la LECTURA ({@see viewFor}) y la ESCRITURA
+     * ({@see write}), y si divergieran la pantalla enseñaría un precio y se cobraría otro — la
+     * segunda fuente de verdad que este subsistema evita en todo lo demás.
+     *
+     * ⚠️ Sin franja se cae a hoy: una reserva sin día no tiene día de visita con el que preguntar.
+     */
+    private static function pricingDate(OrderItem $principal): CarbonInterface
+    {
+        $date = $principal->slot?->date;
+
+        return $date !== null ? Carbon::parse($date->toDateString()) : Carbon::today();
+    }
+
     public static function isWithinWindow(OrderItem $principal, ProductAddon $pivot): bool
     {
         // Un solo sitio calcula el instante del corte ({@see deadlineFor}), y aquí solo se compara:
@@ -391,11 +415,13 @@ final class PostFormAddons
     private function write(OrderItem $item, Order $order, TicketType $addon, ?OrderItem $current, int $from, int $target, User $actor): ?int
     {
         // R2 · la línea conserva su `unit_price`: subir de 2 a 3 cobra la tercera al precio de la
-        // LÍNEA, no al de hoy. Solo una línea NUEVA se tarifica a hoy (§4.11 de la hora extra: los
-        // complementos se tarifican al día de la compra, no al de la visita).
+        // LÍNEA, no al de hoy. Solo una línea NUEVA se tarifica, y con el día de la VISITA (`#415`,
+        // que revisa §4.11 de la hora extra: la regla pasó a ser el día de la línea, no el de la
+        // compra). Tiene que dar el MISMO número que la lectura de {@see viewFor}, o la pantalla
+        // enseñaría un precio y se cobraría otro.
         $unit = $current !== null
             ? (int) $current->unit_price
-            : $this->rates->priceCents($addon, Carbon::today());
+            : $this->rates->priceCents($addon, self::pricingDate($item));
 
         if ($unit === null) {
             return null;

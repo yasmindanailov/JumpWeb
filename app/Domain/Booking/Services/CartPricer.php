@@ -7,6 +7,7 @@ use App\Domain\Booking\Contracts\CartQuote;
 use App\Domain\Booking\Contracts\CartQuoteAddon;
 use App\Domain\Booking\Contracts\CartQuoteLine;
 use App\Domain\Booking\Models\TicketType;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Throwable;
@@ -76,11 +77,13 @@ class CartPricer implements CartPricing
 
             $quantity = (int) $line['qty'];
 
-            // Los complementos no tienen fecha propia: su precio (plano) se resuelve con HOY, igual
-            // que hacen `OrderCreator` y el read-model de catálogo. Que un complemento aparezca como
-            // línea PRINCIPAL no pasa por la interfaz (no es seleccionable), pero una cesta forjada
-            // podría traerlo: se tarifica igual y el checkout lo rechazará.
-            $priceDate = $type->isAddon() ? Carbon::today()->toDateString() : $line['date'];
+            // ⚠️ **Todo se tarifica por el día de la LÍNEA, complementos incluidos** (`#415`). Antes
+            // había aquí una excepción explícita —un complemento como línea principal se tarificaba a
+            // HOY «porque no tiene fecha propia»— y no era cierto: `date` es obligatorio en TODA línea
+            // de cesta (`CartLine.required` del contrato), así que la fecha existe siempre. Que un
+            // complemento aparezca como línea principal no pasa por la interfaz (no es seleccionable),
+            // pero una cesta forjada podría traerlo: se tarifica igual y el checkout lo rechazará.
+            $priceDate = $line['date'];
             $rates[$priceDate] ??= $this->rates->for(Carbon::parse($priceDate));
 
             // Leer el precio de la relación ya cargada equivale a `RateResolver::priceCents()`
@@ -93,7 +96,7 @@ class CartPricer implements CartPricing
             $unitPrice = $type->priceCentsForRate($rates[$priceDate], $quantity);
             $subtotal = $quantity * (int) $unitPrice;
 
-            $addons = $this->resolveAddons($type, $quantity, $line['addons']);
+            $addons = $this->resolveAddons($type, $quantity, $line['addons'], Carbon::parse($priceDate));
             $addonsSubtotal = array_sum(array_map(
                 static fn (CartQuoteAddon $addon): int => $addon->subtotalCents,
                 $addons,
@@ -179,17 +182,21 @@ class CartPricer implements CartPricing
      * los complementos ofrecibles: preguntarlo a otra consulta abriría la puerta a que un
      * complemento resuelto no tuviera nombre que mostrar.
      *
+     * ⚠️ `$date` es el día de la VISITA de la línea, el MISMO con el que se tarifica el padre
+     * (`#415`): el presupuesto y el checkout tienen que dar el mismo número, y desde la hora extra
+     * hay complementos cuyo precio depende del tipo de día.
+     *
      * @param  array<int, array{ticket_type_id:int, qty:int}>  $requested
      * @return list<CartQuoteAddon>
      */
-    private function resolveAddons(TicketType $product, int $quantity, array $requested): array
+    private function resolveAddons(TicketType $product, int $quantity, array $requested, CarbonInterface $date): array
     {
         if ($product->isAddon() || $requested === []) {
             return [];
         }
 
         try {
-            $resolved = $this->addons->resolve($product, $quantity, $requested, Carbon::today());
+            $resolved = $this->addons->resolve($product, $quantity, $requested, $date);
         } catch (Throwable) {
             // Selección inconsistente (p. ej. un complemento que dejó de estar disponible): la línea
             // se tarifica sin complementos en vez de romper. El checkout volverá a resolverlos y

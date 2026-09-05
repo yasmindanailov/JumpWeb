@@ -23,6 +23,16 @@ final readonly class PostFormAddonView
         public int $unitPriceCents,
         /** La nota de precio ya compuesta y traducida, como en el embudo. */
         public string $note,
+        /**
+         * Lo que lleva dentro, traducido: el «Más info» que la landing ya enseña (`#416`).
+         *
+         * ⚠️ Aquí NO es adorno. Estos extras se eligen en esta pantalla y en ninguna otra, así que
+         * sin esto el cliente decide entre «Combo 1 · 39 €» y «Combo 2 · 59 €» sin saber qué llevan.
+         * El dato ya existía en `ticket_types.features`, en tres idiomas; solo no se pintaba.
+         *
+         * @var list<string>
+         */
+        public array $features,
         /** Lo que el cliente tiene AHORA de este extra. */
         public int $quantity,
         /** El tope del enganche, obligatorio en esta fase: la deuda máxima la declara el parque. */

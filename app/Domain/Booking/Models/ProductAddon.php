@@ -162,7 +162,20 @@ class ProductAddon extends Pivot
         return null;
     }
 
-    /** ¿Es el producto uno de los dos portadores de fiesta mixta? (regla 7 de {@see postFormProblem}) */
+    /**
+     * ¿Es el producto uno de los dos portadores de fiesta mixta? (regla 7 de {@see postFormProblem}).
+     *
+     * ⚠️ **Público desde `#417`, y con un segundo consumidor que importa**: `AddonDateReconciler`
+     * tiene que EXCLUIRLOS. Los portadores no tienen precio en catálogo ningún día, así que la regla
+     * «sin precio ese día ⇒ retirar la línea» los retiraría en **todos** los cambios de fecha — y
+     * `MixedPartySurcharge` los gobierna en ese mismo post-commit, o sea dos servicios peleando por
+     * la misma línea con el dinero moviéndose dos veces (`specs/hora-extra.md` §9.8·H2).
+     */
+    public static function isMixedPartyCarrierId(int $addonId): bool
+    {
+        return self::isMixedPartyCarrier($addonId);
+    }
+
     private static function isMixedPartyCarrier(int $addonId): bool
     {
         foreach ([MixedPartySettings::surchargeProduct(), MixedPartySettings::creditProduct()] as $carrier) {

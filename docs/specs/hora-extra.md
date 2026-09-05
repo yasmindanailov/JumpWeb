@@ -359,6 +359,13 @@ barrió lo que la spec **no** miraba. Salieron cuatro huecos reales y tres regla
 | **3** | `seats_per_unit` está en la MISMA sección oculta que `duration_min`: el diseño dependía en silencio del default 1 | §4.1 (el guard lo exige) + §4.9 |
 | **4** | la regla de «la franja siguiente» no estaba ESCRITA (el borde 8 corregía el dónde, no el qué) | §4.6·8 (determinista, con el `UNIQUE` medido) |
 
+▶ ⚠️⚠️ **REVISADA EL MISMO DÍA por `DECISIONES #415`, y la corrección va ANTES que el texto de
+abajo.** El owner dio de alta la hora extra como producto de **viernes, findes, vísperas y festivos**,
+que es justo el caso que este párrafo dejó anotado como pendiente. Hoy **un complemento se tarifica
+por el día de la VISITA** en los SIETE puntos que lo hacen (eran tres en este texto: el censo dio
+siete), así que «solo findes» se expresa poniéndole precio únicamente en la tarifa `special` y la
+hora extra aparece o no según el día de la FIESTA, no según cuándo se abra la web. El límite que este
+párrafo aceptaba **ya no existe**; lo que sigue vale como historia de por qué se aceptó.
 ▶ **`[DECIDIDO owner, 2026-09-03]` · el PRECIO de la hora extra NO varía por día (en principio).**
 Lo que lo motiva: los complementos se tarifican a **`Carbon::today()`** —el día de la COMPRA— en los
 TRES caminos (`OrderCreator::createPendingOrder()`, `CartPricer`, `CreateManualOrderPage`), mientras
@@ -623,3 +630,247 @@ nota medida en navegador («Hora extra — Para 1 entrada que se queda · 3,00 �
 - **El escenario nuevo del verificador necesita limpiar el complemento APARTE**: su zona es nula a
   propósito y el barrido por zona del `cleanup()` no lo ve — quedaría en la BD de desarrollo tras
   cada ejecución.
+
+---
+
+## 9 · ESTUDIO — mover la fecha y los complementos: lo que hoy NO pasa
+
+> **Encargo del owner (2026-09-04)**: *«Aquí entra tema de dinero, y hay que respetar la misma
+> lógica que hicimos con las reservas mixtas y los cambios de fecha. Si el cliente cambia de fecha a
+> sabiendas de las condiciones de esa fecha hay que aplicar las condiciones de esa fecha, es algo
+> voluntario; si una fecha no permite hora extra, la hora extra se le quita y se aplica su devolución
+> como todo el sistema aplica a este tipo de cambios. Hay que estudiarlo a fondo.»*
+>
+> **Esto es un ESTUDIO, no una obra**: nada de lo de aquí está implementado. Termina en decisiones.
+
+### 9.1 · El hueco, en una frase
+
+Al mover la fecha de una reserva, **el padre se re-tarifica con el catálogo del día nuevo** (`PAY-18`)
+y **el suplemento de fiesta mixta también** (`cumple-mixto.md` §12, con su porqué escrito: *«mover el
+día es mover el importe… es un cambio del HECHO, no de la configuración, y por eso sí reconcilia»*).
+**Los COMPLEMENTOS no**: conservan el precio del día viejo, y si el producto no se vende ese día,
+sobreviven igual.
+
+O sea que la hora extra no estrena un problema: **es incoherente con una regla que el sistema ya
+tiene escrita para sus dos vecinos.**
+
+### 9.2 · Los cuatro casos, MEDIDOS sobre datos reales (2026-09-04)
+
+| caso | hoy | ¿correcto? |
+|---|---|---|
+| **A** · el día nuevo **no vende** ese complemento | la edición pasa y la hija **sobrevive a 8,00 €** | ❌ el encargo pide retirarla con su devolución |
+| **B** · el día nuevo lo vende **a otro precio** | conserva **8,00 €** donde ese día vale **3,00 €**; total 52,00 € cuando serían 39,00 € | ❌ la doctrina de §12 de mixtos dice re-tarificar |
+| **C** · otro día del **mismo** tipo de tarifa | la familia se mueve entera (padre 11:00 → hija 13:00), precio intacto | ✓ |
+| **D** · destino **sin franja siguiente** | **bloqueado con el motivo CORRECTO**: `addon_occupancy_at_destination` | ✓ **sin defecto** — ver la corrección de abajo |
+
+> ⚠️⚠️ **CORRECCIÓN, y va delante del texto que corrige.** La primera versión de este estudio afirmó
+> que el caso D bloqueaba con un motivo engañoso (`insufficient_capacity_at_save`, «falta aforo»,
+> cuando lo que falta es la franja). **Era FALSO, y el error era del experimento**: se probó moviendo
+> a la **última** franja del día, donde el padre —120 min desde las 20:00— tampoco cabe, así que
+> falla el aforo del PADRE antes de llegar a mirar a la hija. Ese motivo es correcto ahí.
+>
+> Medido de nuevo separando los dos casos, con el padre cabiendo y la hija no (destino 19:00, el
+> padre acaba a las 21:00 y no hay franja a esa hora):
+>
+> | destino | qué falla | motivo devuelto |
+> |---|---|---|
+> | 19:00 | el padre cabe, **la hija no tiene franja** | `addon_occupancy_at_destination` ✓ |
+> | 20:00 | **el padre no cabe** (acabaría a las 22:00) | `insufficient_capacity_at_save` ✓ |
+>
+> Y el texto que ve el operador ya es exacto: *«la hora extra de esta reserva no cabe detrás del
+> destino: la franja siguiente no existe, está cerrada o está completa»*. **`landOccupyingFamily`
+> distingue los dos casos y propaga su motivo propio: aquí no hay nada que arreglar.**
+>
+> *La lección es de método y es la de siempre en este repo: un experimento que mezcla dos causas no
+> prueba cuál de las dos actuó. El caso «sin franja siguiente» hay que montarlo donde el padre SÍ
+> quepa, o se está midiendo otra cosa.*
+
+### 9.3 · ⚠️ Lo que ya existe y NO hay que construir
+
+**La retirada cuadra sola en el libro.** Medido sobre un pedido pagado de verdad, cancelando la línea
+de la hora extra:
+
+| | total | pagado | saldo | estado | coherente |
+|---|---|---|---|---|---|
+| antes | 52,00 | 52,00 | 0,00 | `settled` | ✓ |
+| tras retirar la hija | **44,00** | 52,00 | **−8,00** | **`refund_at_park`** | ✓ |
+
+Es decir: el saldo sale como **«a devolver en el parque»** y las identidades del libro siguen
+cerrando, sin escribir un solo hecho a mano. Eso es exactamente *«se le quita y se aplica su
+devolución como todo el sistema aplica a este tipo de cambios»* — y encaja con `#244` (nada se
+devuelve online post-reserva) sin tocar `PAY-16`/`PAY-17`.
+
+▶ También existe ya: **la familia se mueve entera** (`landOccupyingFamily`, `#410`) y **el bloqueo
+cuando la hija no cabe** (caso D). Lo que falta es **el DISPARADOR**, no la maquinaria.
+
+### 9.4 · ⚠️⚠️ La trampa que este estudio destapó, y cambia el alcance
+
+`complementos-post-reserva.md` §1.3 sostiene su seguridad en que *«quitar una línea es NEUTRO en
+dinero»*, porque una línea nacida DESPUÉS del pedido lleva un ajuste `edit` de su importe exacto y su
+`birthValue()` vale 0.
+
+**Una hora extra comprada CON el pedido NO cumple eso.** Medido: `birthValue = 8,00 €` y
+`onlineAtBirth = 8,00 €` — **nació con el pedido y aportó dinero online**. Retirarla **debe dinero**,
+y por eso produce el `refund_at_park` de arriba en vez de ser neutra.
+
+*No es un problema: es la diferencia entre los dos mecanismos, y hay que tenerla delante al escribir
+el disparador. Copiar la lógica del post-form aquí sería exactamente el error.*
+
+### 9.5 · Lo que hay que decidir antes de construir (owner)
+
+1. **¿Retirada automática o confirmación del operador?** El encargo dice «se le quita». Pero el
+   operador está moviendo una fecha, no gestionando extras: retirar en silencio una línea de 8,00 €
+   con devolución es un efecto que probablemente quiera ver antes de confirmar.
+2. **¿Entra también el caso B (mismo producto, otro precio)?** La doctrina de mixtos dice que sí.
+   Hoy no aplica —los 12 complementos tienen precio plano— pero la regla se escribe una vez.
+3. **❗ ¿Aplica a TODOS los complementos o solo a los OCUPANTES?** Ésta es la que decide el tamaño:
+   hoy los combos y los cubos **también** conservan su precio al mover la fecha. Acotarlo a la hora
+   extra deja dos conductas distintas para el mismo tipo de fila; extenderlo a todos toca el dinero
+   de **todos** los complementos y necesita su propio `VERIFY_CONC`.
+4. ~~**El texto del caso D**~~ — **RETIRADA: no había defecto** (ver la corrección de §9.2). El
+   motivo propio existe, se propaga y su texto es exacto.
+
+### 9.6 · Las DOS escrituras, y no son simétricas (MEDIDO)
+
+El libro no admite que se le cambie un importe sin contarle por qué. Medido sobre un pedido pagado
+de verdad, con las identidades de `OrderBook` como juez:
+
+| gesto | qué se escribe | total | saldo | estado | ¿cierra? |
+|---|---|---|---|---|---|
+| **retirar** la línea | `markCancelled()` y **NINGÚN** `recordEdit` | 52,00 → **44,00** | **−8,00** | `refund_at_park` | **sí ✓** |
+| **re-tarificar** (8,00 → 3,00) | `unit_price` **+ `recordEdit(−Δ)`** | 52,00 → **47,00** | **−5,00** | `refund_at_park` | **sí ✓** |
+| re-tarificar **sin** el hecho | solo `unit_price` | 52,00 → 47,00 | 0,00 | **`under_review`** | **NO ❌** |
+
+⚠️⚠️ **La tercera fila es el modo de fallo, y es mudo**: el importe cambia, nada lanza, y el pedido
+entero pasa a «en revisión» — o sea **el cliente se queda sin su desglose** (`#132`) por haber movido
+una fecha.
+
+▶ Es exactamente la asimetría que `complementos-post-reserva.md` §4.5.1 documenta para el post-form,
+llegando desde el otro lado: **retirar no lleva hecho porque el libro ya emite su `−fila`; mover un
+importe SÍ lo lleva, o `nac` se desplaza**. Que las dos tandas hayan llegado a la misma regla por
+caminos distintos es la señal de que es la regla del subsistema, no un detalle de ninguna de las dos.
+
+### 9.7 · Plan de obra propuesto (`[DECIDIDO owner, 2026-09-04]` las tres de §9.5)
+
+> ⚠️⚠️ **CORREGIDO POR §9.8, y esa corrección va antes que este texto.** La revisión adversarial
+> encontró que este plan (a) valida aterrizajes de hijas que iba a retirar, (b) retiraría los
+> portadores de fiesta mixta en cada cambio de fecha y (c) pone en el post-commit una decisión que
+> gobierna lo que hay que validar dentro del lock. **Lee §9.8 antes de construir desde aquí.**
+
+**Alcance: TODOS los complementos**, no solo los ocupantes — *«no hay otro complemento condicionado
+por la fecha hoy, pero lo hacemos para tenerlo hecho y tener una base profesional»*.
+⚠️ **Y eso lo hace medible**: los 12 complementos del catálogo tienen precio PLANO, así que la
+re-tarificación es **no-op para once de ellos** y la retirada solo alcanza hoy a la hora extra. El
+criterio de éxito es que **ningún pedido existente cambie de importe**.
+
+| pieza | qué hace |
+|---|---|
+| **`AddonDateReconciler::preview()`** | dado un ítem y una fecha destino, qué pasaría con cada hija: `keep` · `reprice(Δ)` · `withdraw(importe)`. **Lectura pura**, sin escribir |
+| **`AddonDateReconciler::reconcile()`** | lo aplica, con las dos escrituras de §9.6 |
+| **el modal del panel** | usa el `preview()` para AVISAR antes de confirmar (`[DECIDIDO owner]`): «esta reserva lleva una hora extra de 8,00 € que no se vende ese día: al mover se retirará y quedará a devolver en el parque» |
+| **el post-commit del editor** | llama a `reconcile()` **junto al de fiesta mixta**, misma frontera transaccional (§4.3): fuera del lock de zona/día, en su propia transacción corta |
+
+⚠️ **El `preview()` y el `reconcile()` tienen que dar lo MISMO**, o el operador confirma una cosa y se
+aplica otra: son una sola derivación con dos caras, como `SlotOffer`/`OrderCreator` en la oferta y el
+cobro. Guarda propia para esa paridad.
+
+⚠️ **Entra en el `CRITICAL_RE`** (toca dinero de líneas vendidas) → `VERIFY_CONC=1` y su escenario:
+dos operadores moviendo la misma reserva a la vez no pueden escribir dos veces el mismo ajuste.
+
+⚠️ **Lo que NO cambia**: `#244` sigue en pie — nada se devuelve online. El saldo negativo se liquida
+**en el parque**, que es lo que el libro ya hace solo (§9.3).
+
+### 9.8 · REVISIÓN ADVERSARIAL del plan (2026-09-04) — tres cosas que el plan de §9.7 hacía MAL
+
+> Encargo del owner: *«lanza un adversarial sobre el plan»*. Seis lentes contra el diseño de §9.7,
+> **con medición en cada hallazgo**. Resultado: **tres correcciones al plan** (dos de ellas
+> reproducidas), **un límite aceptado** y **tres confirmaciones** — que también son medida.
+
+#### ❌ H1 · El ORDEN estaba invertido: bloquea el movimiento por una hija que iba a retirarse
+
+El plan validaba el aterrizaje de TODAS las hijas y decidía después cuáles sobreviven. **Reproducido**:
+una reserva del sábado con hora extra, movida a un martes —día en que la hora extra **no se vende**—
+con la franja de aterrizaje sin plazas:
+
+```
+veredicto: ok=false · motivo='addon_occupancy_at_destination'
+```
+
+El operador **no puede mover la reserva por un aforo que nadie va a consumir**, porque esa hija se
+iba a retirar de todos modos. ▶ **Corrección**: la supervivencia de cada hija se decide **ANTES** de
+validar aterrizajes, y `landOccupyingFamily` recibe solo a las supervivientes.
+
+#### ❌ H2 · La regla retiraría los PORTADORES de fiesta mixta, en CADA cambio de fecha
+
+`«sin precio ese día ⇒ retirar»` es demasiado ancha. **Medido**: los dos portadores
+(`Suplemento fiesta mixta`, `Descuento fiesta mixta`) tienen **cero precios en catálogo**, así que
+`priceCents()` devuelve `null` **siempre, todos los días**.
+
+| línea hija | precio un martes | qué haría el plan |
+|---|---|---|
+| Suplemento fiesta mixta | `NULL` | **retirarla** ❌ |
+| Descuento fiesta mixta | `NULL` | **retirarla** ❌ |
+| Hora extra · KIDS / JUMP | `NULL` | retirarla ✓ (es el objetivo) |
+| los otros 10 complementos | tienen precio | nada ✓ |
+
+⚠️⚠️ Y no es solo que sobre: **`MixedPartySurcharge::reconcile()` corre en el MISMO post-commit, justo
+después**. Serían dos servicios peleando por la misma línea en una petición, con el dinero moviéndose
+dos veces. El editor ya tiene escrito por qué esa línea es intocable: *«no es un complemento que el
+operador gobierne: es el reflejo de una edad que declaró el cliente»*.
+▶ **Corrección**: exclusión explícita de los portadores, con el predicado que ya existe
+(`ProductAddon::isMixedPartyCarrier()`, la regla 7 de `postFormProblem`).
+
+#### ❌ H3 · La frontera transaccional: el plan lo ponía TODO en el post-commit
+
+§9.7 decía «el post-commit llama a `reconcile()`». Con H1 eso es imposible: **la decisión gobierna qué
+se valida**, así que tiene que estar dentro del lock. Y la doctrina del editor (§4.3) ya fija el
+reparto: *«cada paso abre su PROPIA transacción corta… la REST de un reembolso no puede ir dentro de
+la txn de aforo, y por eso esta fase va después»*.
+
+▶ **Corrección — el reconciliador se PARTE en dos**, que es como el editor ya trata todo lo demás:
+
+| fase | qué va | dónde |
+|---|---|---|
+| decidir + mutar | qué hijas sobreviven · validar aterrizaje de ÉSAS · mover · `markCancelled` de las que caen | **DENTRO** del lock de zona/día |
+| dinero | el `recordEdit(±Δ)` de las re-tarificadas | **POST-COMMIT**, transacción corta propia |
+
+⚠️ La retirada cae del lado de la mutación **porque no lleva hecho** (§9.6): es coherente, no una
+excepción.
+
+#### ⚠️ L1 · Límite aceptado: el `preview()` corre SIN lock
+
+El aviso al operador se calcula al abrir el modal; la decisión real, dentro del lock. Entre las dos
+puede cambiar el catálogo, y entonces se aplicaría algo distinto de lo confirmado. La ventana es de
+segundos y hace falta que alguien toque precios justo entonces.
+▶ **No se cierra con más locks: se cierra DICIENDO lo que se hizo.** El desenlace y el audit reportan
+lo APLICADO, no lo previsto — que es lo que el editor ya hace con `item_edit_context`.
+
+#### ✓ Lo que la revisión CONFIRMÓ (resultados negativos, que también son medida)
+
+1. **Las dos escrituras de §9.6 cierran también con SEÑAL.** Se midieron sobre una entrada sin señal;
+   repetidas sobre un pack con señal de 50,00 € —donde el complemento tiene `onlineAtBirth = 0` porque
+   se paga en el parque— las dos siguen cerrando (`pay_at_park`, coherente ✓). La regla no depende del
+   régimen de cobro.
+2. **El criterio de no-op se cumple en PRODUCCIÓN.** Medido sobre las **9** líneas hijas vivas reales:
+   **0** difieren del catálogo y **0** se quedan sin precio. En local solo hay 1, así que la muestra
+   que vale es la de producción.
+3. **El caso D no tenía defecto** (ya corregido en §9.2): el motivo específico existe y se propaga.
+
+
+### 9.9 · ✅ EJECUTADO (`DECISIONES #417`, 2026-09-04)
+
+`Booking\Services\AddonDateReconciler` (+ `AddonDatePlan` · `AddonDateChange`), con el plan de §9.7
+**corregido por §9.8**: `plan()` es lectura pura y gobierna qué aterrizajes se validan;
+`applyMutations()` va DENTRO del lock; `applyMoney()` POST-COMMIT. Integrado en los **dos** caminos
+públicos del editor (`changeSlot()` y `edit()`), con el aviso previo al operador en el calendario del
+modal.
+
+| lo pedido | dónde acabó |
+|---|---|
+| retirar lo que ese día no se vende | `applyMutations()`, sin hecho — el libro emite su `−fila` |
+| su devolución | el saldo sale `refund_at_park`: se liquida en el parque (`#244`) |
+| re-tarificar lo que cambia de precio | `unit_price` + `recordEdit(±Δ)` post-commit |
+| aviso antes de confirmar | `partials/addon-date-notice.blade.php`, con el importe |
+
+**11 casos · 7/7 mutaciones · `VERIFY_CONC` completo · verificado en el panel real.** Las cuatro
+trampas de instrumento que costó están en `DECISIONES #417`; las tres correcciones al plan, en §9.8.

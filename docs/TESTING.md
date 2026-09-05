@@ -259,6 +259,28 @@ tests nuevos:
   ▶ Si necesitas aritmética de meses en un fixture, **congela en un día ≤ 28** o usa
   `addMonthsNoOverflow()`.
 
+**Lo que encontraron las pasadas siguientes** (`#412`, `#414`, `#419`) — la misma familia, tres veces:
+
+- ❗❗❗ **Una fecha ABSOLUTA en un fixture obliga a ANCLAR el reloj, y no anclarlo es una bomba.**
+  `AddonDateReconcilerTest` (`#419`) sembraba contra `2026-09-12` y `2026-09-15` sin viajar en el
+  tiempo: **verde el 05, el 06 y el 07 de septiembre; los doce casos en rojo a partir del 12**, porque
+  las reservas caían en el pasado y `OrderCreator` las rechaza por `past_date_line`. Con el producto
+  sano. ▶ El arreglo es `travelTo()` en `setUp()` **antes de sembrar nada**, a un día anterior a los
+  del fixture. ⚠️⚠️ **Y su fichero HERMANO no caía**: `AddonPricingDateTest` usa las mismas fechas
+  absolutas pero viaja en todos sus casos —*la diferencia no era el cuidado al escribirlos, era que
+  uno tenía una razón para viajar (medir la conducta vieja contra la nueva) y el otro no*—. Si el
+  reloj real puede decidir algo en tu fichero, ánclalo.
+  ⚠️ **Se descarta «calcula el próximo sábado»**: una fecha relativa arregla la caducidad y estropea
+  la reproducibilidad, porque el tipo de tarifa que toca a cada día dependería del día de la corrida.
+  El ancla arregla las dos.
+- ⚠️ **No todo lo que caza el barrido es del reloj**: `#412` destapó un `mt_rand(100,999)` contra el
+  `UNIQUE` de `orders.code` — una MONEDA AL AIRE que el barrido hace visible solo porque corre la
+  suite diez veces. Si un culpable no tiene nada que ver con fechas, mira si es aleatoriedad.
+
+▶ **La lección de método, después de tres**: un test con fechas **sale verde el día que se escribe y
+eso no dice nada**. El barrido no es ceremonia de cierre — es el único momento en que este defecto es
+visible, y colarlo en `main` le cuesta una sesión a otro agente.
+
 ### Y la sonda de ORDEN, que no es del reloj pero es de la misma familia
 
 Un test que depende de **en qué orden** corren los demás falla «a veces» igual que uno que depende del

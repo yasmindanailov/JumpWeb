@@ -289,4 +289,17 @@
             </p>
         </div>
     @endif
+
+    {{-- **Lo que el día elegido le hace a los complementos** (`#417`, `[DECIDIDO owner]`).
+
+         ⚠️ Vive en su PROPIO partial y no en línea aquí, por una razón de verificación: el contenido
+         de un modal de Filament **no aparece en el HTML del componente** —medido: ni el calendario ni
+         su resumen salen en `->html()`—, así que un `assertSee` sobre la página pasa en VACÍO (la
+         trampa de `#161`). Suelto se puede renderizar y aseverar de verdad. --}}
+    @if (! empty($addonDatePlan))
+        @include('filament.orders.partials.addon-date-notice', [
+            'plan' => $addonDatePlan,
+            'currency' => $record->currency ?? 'EUR',
+        ])
+    @endif
 </div>

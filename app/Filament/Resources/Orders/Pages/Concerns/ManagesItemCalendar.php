@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Orders\Pages\Concerns;
 
+use App\Domain\Booking\Contracts\AddonDatePlan;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Services\AddonDateReconciler;
 use App\Domain\Booking\Services\ItemRescheduleOffer;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Carbon;
@@ -154,7 +156,32 @@ trait ManagesItemCalendar
             'times' => $effectiveSelectedDate
                 ? $this->calendarTimesForItemWithSelection($item, $effectiveSelectedDate, $effectiveSelectedTime)
                 : [],
+            // **Lo que el día elegido le hace a los complementos de esta reserva** (`#417`,
+            // `[DECIDIDO owner, 2026-09-04]`: avisar y que el operador confirme). Retirar una línea
+            // de 8,00 € con devolución mientras se cambia una fecha es un efecto que no pidió: lo ve
+            // antes de guardar, no después en el historial.
+            //
+            // ⚠️ Es el MISMO `plan()` que decide bajo el lock, no un cálculo paralelo — si fueran dos,
+            // el operador podría confirmar una cosa y aplicarse otra. ⚠️ Y es lectura pura: llamarlo
+            // aquí, en cada render del calendario, no escribe nada.
+            'addonDatePlan' => $this->addonDatePlanFor($item, $effectiveSelectedDate),
         ];
+    }
+
+    /**
+     * El plan de complementos para la fecha que el operador tiene seleccionada, o `null` si no hay
+     * nada que avisar (misma fecha, sin complementos gobernados, o ninguno cambia).
+     */
+    private function addonDatePlanFor(OrderItem $item, ?string $selectedDate): ?AddonDatePlan
+    {
+        if ($selectedDate === null || $selectedDate === $item->slot?->date?->toDateString()) {
+            return null;
+        }
+
+        $plan = app(AddonDateReconciler::class)
+            ->plan($item, Carbon::parse($selectedDate));
+
+        return $plan->isEmpty() ? null : $plan;
     }
 
     /**

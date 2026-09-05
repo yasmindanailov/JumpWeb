@@ -850,6 +850,50 @@ class GuestFormTest extends TestCase
     // ── Los EXTRAS de venta posterior en la PÁGINA (T3 de `#413`) ──────────────────────────────
 
     /** Un complemento de venta posterior sano, con su franja futura para que el plazo esté abierto. */
+    /**
+     * **EL «MÁS INFO» DE CADA EXTRA** (`#416`), y por qué tiene guarda propia: estos complementos se
+     * eligen en esta pantalla y en ninguna otra, así que sin lo que llevan dentro el cliente decide
+     * entre «Combo 1 · 39 €» y «Combo 2 · 59 €» a ciegas. El dato ya vivía en el catálogo —lo enseña
+     * la landing— y aquí simplemente no se pintaba.
+     *
+     * ⚠️⚠️ Se asevera que es un `<details>` **NATIVO** y no el toggle de Alpine de la landing
+     * (`addon-chip.blade.php`). No es purismo: esta página es de mejora progresiva declarada —nace
+     * `no-js`—, así que con Alpine quien no tenga JavaScript no podría **leer qué está comprando**.
+     * Un `assertSee` del texto pasaría con las dos implementaciones; por eso se mira el elemento.
+     */
+    public function test_each_extra_shows_what_it_includes_without_javascript(): void
+    {
+        [$user, $reservation, $addon] = $this->withPostFormAddon();
+        $addon->forceFill(['features' => ['es' => ['12 refrescos a elegir', 'Para toda la mesa']]])->save();
+
+        $html = $this->actingAs($user)
+            ->get(route('reservation.guests', ['reservation' => $reservation]))
+            ->assertOk()
+            ->assertSee('12 refrescos a elegir')
+            ->assertSee('Para toda la mesa')
+            ->getContent();
+
+        // El desplegable existe y es nativo: sin JS también se abre.
+        $this->assertMatchesRegularExpression('/<details class="gf-extra__more">/', $html);
+        $this->assertStringContainsString(__('tickets.addon_more_info'), $html);
+
+        // CONTROL: un extra SIN features no pinta el bloque, o saldría un desplegable vacío.
+        $mudo = $this->attachPostFormAddon($reservation->ticketType, 'Cubo mudo', 900);
+        $mudo->forceFill(['features' => null])->save();
+
+        $html = $this->actingAs($user)
+            ->get(route('reservation.guests', ['reservation' => $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children'])]))
+            ->assertOk()
+            ->assertSee('Cubo mudo')
+            ->getContent();
+
+        $this->assertSame(
+            1,
+            substr_count($html, '<details class="gf-extra__more">'),
+            'con dos extras y uno sin «Más info», solo puede haber UN desplegable',
+        );
+    }
+
     private function withPostFormAddon(string $name = 'Cubo de refrescos', int $cents = 1200, int $cutoff = 48): array
     {
         $pack = $this->pack();
@@ -1069,7 +1113,6 @@ class GuestFormTest extends TestCase
             ->assertSee(__('guestform.extras_closed_cutoff'));
     }
 
-    /** Mueve la franja de la reserva a N horas de AHORA, en la hora del parque. */
     /**
      * Mueve la fiesta a N horas de AHORA, en hora de pared del parque.
      *
@@ -1077,9 +1120,13 @@ class GuestFormTest extends TestCase
      * PUDRE con la hora del día.** Una franja guarda `date` + `start_time` + `end_time` por
      * separado, y este ayudante escribía siempre la fecha del INICIO: corriendo la suite a partir
      * de las ~21:00 del parque, «empieza dentro de 1 h y acaba dentro de 3» cruza medianoche y la
-     * franja quedaba como «hoy, de 22:00 a 00:00» — o sea terminada hace veintidós horas—, con lo
+     * franja quedaba como «hoy, de 22:00 a 00:00» —o sea terminada hace veintidós horas—, con lo
      * que `isFinishedInPractice()` decía `true` y el caso fallaba **con el producto sano**.
-     * Medido: verde a las 19:45 y rojo a las 21:50 del mismo día, sin tocar una línea de producto.
+     *
+     * ▶ **Lo encontraron DOS sesiones por separado el mismo día y llegaron al mismo arreglo**
+     * (`#414` y el carril del panel), cada una con su medición: verde a las 19:45 y rojo a las 21:50;
+     * verde a las 12:00 y a las 23:20, rojo a las 21:00. *Que dos caminos independientes den el mismo
+     * diagnóstico es la señal de que el defecto está en el ayudante y no en quien lo usa.*
      *
      * Anclar a mediodía mantiene el escenario dentro del mismo día natural para los desplazamientos
      * que usa esta clase (±5 h) y deja de depender de cuándo se ejecute la suite. **No tapa nada**:

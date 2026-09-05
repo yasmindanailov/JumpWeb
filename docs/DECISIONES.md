@@ -23166,6 +23166,335 @@ contrastarla con los tokens y las guardas que ya viven en código.
 regenera (el manifiesto vuelve al de `1b8db76` y el SSR se reconstruyó sobre los componentes restaurados) ·
 docs-check.
 
+## #414 · 2026-09-03 · Un token que no existe no es un valor vacío: es una declaración que el navegador TIRA — y ninguna guarda lo veía
+
+**Lo encontró el OWNER mirando la pantalla**, no la suite: *«el recuadro de los complementos en el
+formulario post reserva es cuadrado, no tiene border radius»*. La T3 de `#413` había entrado con la
+suite en verde, 4.228 casos y su propio arnés de mutación.
+
+**La causa**: `.gf-extra` escribía `border-radius: var(--r-card)` y **`--r-card` no existe**. La
+escala del producto es `--r-xs · --r-sm · --r-md · --r-btn · --r · --r-lg · --r-pill`. Un `var()`
+**sin fallback** a un token no declarado no cae a un valor vacío ni al inicial de la propiedad: la
+declaración entera es *inválida en tiempo de valor computado* y el navegador **la descarta**. Medido
+en Chrome real, con control en la misma página: `.gf-extra` a **0px** contra `.gf-fiche` —su tarjeta
+hermana— a **16px**.
+
+**⚠️⚠️ Por qué la suite no podía verlo, y es lo que hay que llevarse de aquí.** `ShapeScaleTest`
+existe justo para esto y pasó en verde: prohíbe escribir un canto **LITERAL** y obliga a usar un
+token — y `var(--r-card)` *es* un token. *La guarda que vigila que uses la escala no puede además
+vigilar que el token exista: son dos preguntas distintas, y la segunda no la hacía nadie.* Es el
+mismo hueco que `#253` cerró para los modificadores de clase («ningún modificador que un componente
+emite puede quedarse sin regla»), ahora en el vocabulario de tokens.
+
+**La misma pieza traía otros dos defectos de la misma familia** —una declaración que supone algo no
+declarado—, los dos medidos en navegador y ninguno capaz de fallar:
+
+- `.gf-extra` es `flex-wrap: nowrap` y `.gf-extra__why` declara `flex: 1 1 100%` para bajar a su
+  línea. **Sin `wrap` ese `100%` no salta**: se queda en la fila y aplasta a los hermanos. Medido en
+  una fila cerrada: el motivo se llevaba **424 px de 612** y el nombre caía a **119** necesitando
+  **164**, o sea partido en dos líneas con sitio de sobra al lado.
+- El `input` de cantidad vive **fuera de `.eventfields`**, así que no recibía la regla de campo del
+  formulario y salía con el **chrome del navegador**: `2px inset` y `0` de radio, al lado de campos
+  de `1px solid` y 14. Se ARREGLA añadiéndolo a esa misma regla, no copiándole los valores: así
+  sigue al campo si el campo cambia.
+
+**La guarda**: `UsedTokenIsDeclaredTest` — *ningún token que una hoja usa sin fallback puede quedar
+sin declarar*. Barre `landing.css` y `site.css`; cuenta como declarado lo que declare cualquier hoja
+de `public/css` **y lo que el servidor o el navegador publiquen en caliente** (`setProperty`,
+`style="--x: …"`, el tema por instalación desde BD), porque un token puede existir sin estar escrito
+en el CSS.
+
+- ⚠️ **Solo juzga el `var()` SIN fallback.** `var(--action-brand, var(--fg))` es el mecanismo
+  deliberado de `#209` —«vacío es una RESPUESTA, no una falta»— y son **52** usos: acusarlos habría
+  roto una decisión del producto. Que las dos formas se distingan es lo que hace posible la guarda.
+- ⚠️ **Los comentarios se blanquean, y la trampa volvió a morder**: `--jump-1`/`--jump-2` solo
+  aparecen **dentro de comentarios** que explican por qué ya no se usan. Sin blanquear salían como
+  dos defectos con toda la pinta de serlo (la lección de `#193`, y la de «no contar los comentarios»
+  de la 2c·0).
+- ⚠️ **Y el instrumento se validó en las dos direcciones antes de creerle**: que viera el fallo
+  conocido (`--r-card`) **y** que no acusara a los sanos (`--r`, `--action-brand`).
+
+**El barrido destapó TRES tokens rotos PREEXISTENTES, y `[DECIDIDO owner, 2026-09-03]` se arreglan
+los tres en esta misma tanda** — así `KNOWN_BROKEN` nace y se queda **VACÍA**, y el corpus limpio.
+
+| token | usos | efecto medido | arreglo |
+|---|---|---|---|
+| `--muted` | **8** | `color` inválido → **heredaba el color del padre**: `rgb(20,19,15)` donde tocaba `rgb(107,103,93)`, medido en el post-form. También mantenimiento, compra en mantenimiento y 404 | `--fg-mute`; re-medido: `actual == should` y ya no hereda |
+| `--fw-normal` | 1 | `font-weight` inválido → `.orders__guests-free` heredaba el semibold de su vecina en vez de anularlo | `400` literal, que es lo que la hoja hace en otros **ocho** sitios: la escala no declara «normal» (ni 500, con 29 usos literales). Ampliarla es del carril de diseño, parado |
+| `--r-5` | 1 | radio inválido en `.entry__qty` | `--r-sm`; medido **0px → 6px** con un `<input>` sin la clase como control (0px) |
+
+⚠️ **Corrección a mi propia valoración**: llamé a `--r-5` «el único sin efecto visible» porque el
+control no tiene borde ni fondo. Es inexacto — lo único a lo que ese radio puede afectar es al
+`outline` de `:focus-visible`, que por especificación sigue al `border-radius`. **No se midió** (la
+sonda de foco se descartó por coste) y así queda dicho en el CSS, en vez de dejar escrita una
+afirmación que nadie comprobó.
+
+### ▶ Y de propina, un ROJO CON FECHA que la suite entera destapó a las 21:17
+
+Correr la suite COMPLETA tras el arreglo sacó **un fallo que nada tenía que ver con él**:
+`GuestFormTest::test_an_addon_out_of_its_window_is_shown_read_only…`, recién llegado con la T3 de
+`#413`. La misma suite había salido verde veinte minutos antes.
+
+**La causa no era el defecto de UTC de `isFinishedInPractice()`** (ése sigue en `DEUDA.md`, y es
+otro): era el helper `moveParty()`. Una franja guarda **una fecha y dos horas de pared**, así que no
+sabe expresar un tramo que cruce medianoche — `date` sale del INICIO y `end_time` es solo una hora.
+Con `startsIn: 1, endsIn: 3` a las 21:30 del parque, componía `date = hoy` con `end_time = 00:30`,
+o sea **esta madrugada, hace 21 horas**, y el predicado declaraba celebrada una fiesta que aún no ha
+empezado.
+
+Medido con el reloj congelado: **VERDE a las 12:00 y a las 23:20, ROJO a las 21:00**. La ventana son
+las ~2 horas en que el FIN cruza el día y el INICIO todavía no: el caso pasaba 22 horas al día y
+fallaba 2. Es la familia de `#412` —lo que parece un defecto del producto y es un rojo con fecha—,
+solo que aquí el reloj no estaba congelado en absoluto.
+
+▶ **Arreglado en el helper y no en el caso**, para que proteja a todo uso futuro: `moveParty()`
+ancla el reloj a mediodía del parque antes de calcular, así los dos usos de hoy (+1/+3 y −5/−3) caen
+dentro del mismo día por construcción. **Barrido de 24 horas: 24/24 en verde**, contra el rojo medido
+de las 19:00 UTC antes del arreglo.
+
+⚠️ *La lección para quien escriba fixtures de franjas: «dentro de N horas» no es un instante seguro.
+Una franja no puede cruzar medianoche, así que cualquier aritmética relativa al reloj real acaba
+componiendo una franja imposible en algún momento del día.*
+
+**Verificación**: medido en Chrome real antes y después, con control en la misma página en las dos
+pasadas (`.gf-fiche` a 16px y los campos generales a 14px no se movieron) · **6/6 mutaciones muerden**
+(`scripts/mutar-token-declarado.sh`, con control previo en verde y veredicto por código de salida),
+y la primera es **el defecto real**, no uno inventado · barrido de reloj 24/24 · suite completa en
+verde.
+
+**⚠️ Lo que esto NO es**: diseñar. El carril de diseño sigue PARADO (`#452`) — aquí no se ha elegido
+ninguna forma nueva. Los tres arreglos devuelven la pieza al vocabulario que su propio código ya
+decía usar: el radio de su tarjeta hermana, el `wrap` que su `flex-basis` daba por hecho, y la regla
+de campo que sus vecinos ya tienen.
+
+## #415 · 2026-09-03 · `[DECIDIDO owner]` Un complemento se tarifica por el día de la VISITA, no por el de la COMPRA — y con eso la hora extra puede ser de fin de semana
+
+**Lo pidió el encargo, no una auditoría.** El owner dio de alta la hora extra así: *«Hora extra Zona
+Kids para entrada de 2h findes, viernes, víspera y festivos: 5 € · Zona Jump: 8 €»*. El mecanismo
+para expresar «solo esos días» ya existe y encaja 1:1: el tipo de tarifa **`special`**, que se llama
+literalmente «Viernes, findes y festivos» (`weekdays [5,6,0]`), más `special_dates` para vísperas y
+festivos concretos. Un producto sin precio para la tarifa de ese día **ni se ofrece ni se vende** —
+falla hacia invisible, que es la conducta que se quiere.
+
+**Pero se preguntaba con el día equivocado.** Los complementos se tarificaban con `Carbon::today()`
+mientras el padre lo hacía con el día de la línea: dos relojes para la misma línea. Medido, lo que
+el owner pide salía **invertido en los dos sentidos**:
+
+| caso | conducta vieja |
+|---|---|
+| compro el **martes** una entrada para el **sábado** | la hora extra **no se puede añadir** — y es justo cuando se compra |
+| compro el **sábado** una entrada para el **martes** | **sí se añade**, cobrando un producto que ese día no existe |
+
+⚠️⚠️ **`hora-extra.md` §4.11 lo había ANTICIPADO ayer mismo** (`[DECIDIDO owner, 2026-09-03]`: «el
+precio de la hora extra NO varía por día, *en principio*»), con el aviso escrito: *«si algún día el
+owner quisiera suplemento de finde, cobraría el precio del día en que se compró. No lo descubras en
+producción: ya está descubierto aquí»*. Esta entrada es ese día. **La decisión de ayer queda
+revisada por el encargo**, no contradicha.
+
+**La medida que abarató el cambio**: de los **12** complementos del catálogo, **CERO** tienen precio
+distinto por tipo de día (10 iguales en ambas tarifas, 2 son portadores internos sin precio). O sea
+que el cambio de conducta **no mueve un solo céntimo de lo que ya se vendía** — y por eso mismo la
+suite entera pasaba con el defecto puesto: la diferencia valía cero euros y no la veía nadie.
+
+▶ **Son SIETE puntos, no los tres que la spec nombraba** (censo, no lectura): `OrderCreator` ·
+`CartPricer` · `AddonOfferReader` · `CreateManualOrderPage` (×2) · `PostFormAddons` (×2). Los dos
+últimos entran **a propósito**: si el post-form se quedara con `today()`, la regla serían DOS y
+podrían divergir sin que fallara nada, que es justo lo que este subsistema evita en todo lo demás.
+`PostFormAddons` gana un `pricingDate()` único que comparten su lectura y su escritura, porque si
+divergieran la pantalla enseñaría un precio y se cobraría otro.
+
+▶ **Y en `CartPricer` había una excepción explícita que era FALSA**: un complemento vendido como
+línea principal se tarificaba a hoy «porque no tiene fecha propia», y `date` es **obligatorio en toda
+línea de cesta** (`CartLine.required` del contrato). Retirada.
+
+**Guarda**: `AddonPricingDateTest`, 6 casos sobre las **cuatro** superficies (presupuesto, cobro,
+oferta, post-form y mostrador) — todos con `travelTo`, porque la conducta vieja y la nueva **solo se
+distinguen cuando el día de la compra y el de la visita caen en tarifas distintas**: sin viajar en el
+tiempo, estos casos pasarían con el defecto puesto los días en que ambos coinciden, que es
+exactamente cómo el defecto sobrevivió. Incluye el CONTROL de que un complemento de precio plano no
+se mueve, que es el que dice que la migración no tocó lo ya vendido.
+
+**Arnés**: `scripts/mutar-tarifa-complemento.sh` devuelve `Carbon::today()` a cada punto por
+separado. **7 de 7 muerden.** ⚠️ Nació en **2 de 7** y las lecciones son dos: cuatro puntos no tenían
+red (se escribieron los casos que faltaban), y uno decía «no muerde» porque **la mutación estaba mal
+escrita** —restauraba una rama que en esos casos no se toma—: *una mutación que no altera la conducta
+no prueba que falte una guarda, prueba que está mal escrita*.
+
+⚠️⚠️ **El cambio ROMPIÓ un verificador y eso también es un hallazgo**: `postform:verify-concurrency
+--scenario=addons` pasó a escribir **0 líneas** y cantaba «✗ FALLA» con el producto sano. Su fixture
+daba precio solo en `normal` y siembra la fiesta a **hoy + 10 días**, así que 3 de cada 7 ejecuciones
+caen en `special`. Arreglado dando precio en TODAS las tarifas activas: *un comando que mide
+CONCURRENCIA no puede depender del día de la semana en que se ejecute*.
+
+❗❗ **PASO DE DESPLIEGUE, y es la otra cara de la moneda**: desde este cambio, **un complemento con
+precio solo en `normal` deja de venderse en días `special`**. En local no afecta a ninguno (los 10
+con precio lo tienen en las dos tarifas), pero **hay que comprobarlo en producción ANTES de
+desplegar**, porque el modo de fallo es mudo: el complemento simplemente deja de aparecer.
+
+**Verificación**: suite **4.237 ✓ · 26.676** · Pint 1.172 · 7/7 mutaciones · `VERIFY_CONC` con los
+**siete** escenarios de aforo (incluido `extra-hour`), Redsys, los dos de post-form con su control
+negativo (4 de 8 interbloqueos con el orden invertido) y los dos de fiesta mixta · y medido sobre los
+datos reales: la hora extra se ofrece viernes y sábado y **no** martes ni miércoles, corriéndolo un
+jueves — que es lo que demuestra que se pregunta por el día de la visita y no por hoy.
+
+## #416 · 2026-09-04 · `[DECIDIDO owner]` El «Más info» de cada extra, en el post-form — y un `<details>` nativo porque esa página no puede depender de JavaScript
+
+**El hueco**: desde `#413` los complementos de restauración se eligen en el post-form **y en ninguna
+otra pantalla**, pero allí solo se pintaban nombre y precio. O sea que el cliente decidía entre
+«Combo 1 · 39,00 €» y «Combo 2 · 59,00 €» **sin poder ver qué llevan**. El dato ya existía —
+`ticket_types.features`, siete líneas por combo y en tres idiomas, que la landing enseña con su «Más
+info»—: simplemente no se publicaba en esta superficie.
+
+⚠️⚠️ **Y no se copia el mecanismo de la landing.** Allí el desplegable es un toggle de Alpine
+(`addon-chip.blade.php`: `x-data`, `x-show`). Aquí es un **`<details>` nativo**, y la diferencia no es
+purismo: el post-form es de **mejora progresiva declarada** —nace `no-js` y el JS solo lo decora—, así
+que con Alpine quien no tuviera JavaScript no podría **leer qué está comprando**. Es el mismo patrón
+que el «¿Quiénes vienen?» de `#401`.
+
+▶ El campo entra en el DTO (`PostFormAddonView::features`), en el contrato (`PostFormAddon.features`,
+que es `additionalProperties: false` y exige tocar `required`) y en el resource, que sigue siendo
+traducción pura.
+
+**Guarda**: `GuestFormTest::test_each_extra_shows_what_it_includes_without_javascript`, y asevera el
+ELEMENTO (`<details class="gf-extra__more">`), no el texto: un `assertSee` de las líneas pasaría
+igual con Alpine, que es justo la implementación que no vale aquí. Con su CONTROL — un extra sin
+`features` no pinta el bloque, o saldría un desplegable vacío.
+
+⚠️⚠️ **DOS trampas pagadas al construirlo, las dos de la familia «no falla, no hace nada»:**
+
+1. **El chevron se dibujó primero a mano** con bordes rotados, y salía mal orientado al abrir. Se
+   cambió por el icono del SET (`x-icons.chevron-down`), que esta misma vista ya usa: un dibujo
+   propio habría ido en otra rejilla y con otro trazo que el resto de la página — la regla de `#257`.
+2. **La regla del giro apuntaba a `.icon` y el componente NO emite esa clase** (medido:
+   `getAttribute('class')` → `null`), así que no giraba nada: `transform` computaba `none` con el
+   desplegable abierto **y** cerrado. Re-apuntada al `svg`.
+   ⚠️ **Y al verificarlo casi caigo en la trampa de `#265`**: la primera medición devolvió
+   `matrix(1, 0, 0, 1, 0, 0)`, que **no es «no hay transform»: es la identidad** — la transición
+   recién empezada. Midiendo tras dejarla terminar sale `matrix(-1, 0, 0, -1, 0, 0)`, que sí es el
+   giro de 180°.
+
+▶ **Hallazgo colateral, con ficha en `DEUDA.md`**: lo destapó que el «Más info» saliera en tinta en
+vez del azul del cliente. La causa no es la regla —usa el rol `--interactive`, que es lo correcto—
+sino que **`focused-layout` no enlaza `client.css`**: el post-form y el justificante se pintan con la
+piel del producto y solo reciben las 9 variables de BD. No se arregla aquí: cambia el aspecto de dos
+pantallas y el carril de diseño está parado (`#452`).
+
+**Verificación**: en navegador con las features reales del cliente — 6 desplegables, 7 líneas el
+primero, el giro medido tras la transición · suite en verde · el «Más info» reutiliza el rótulo que
+ya existía (`tickets.addon_more_info`), sin clave nueva.
+
+## #417 · 2026-09-04 · `[DECIDIDO owner]` Mover el día mueve también las condiciones de los COMPLEMENTOS — con aviso al operador antes de confirmar
+
+**El encargo, con sus palabras**: *«si el cliente cambia de fecha a sabiendas de las condiciones de
+esa fecha hay que aplicar las condiciones de esa fecha; si una fecha no permite hora extra, la hora
+extra se le quita y se aplica su devolución como todo el sistema aplica a este tipo de cambios».*
+
+▶ **No era una feature nueva: era una incoherencia.** El padre se re-tarifica al mover la fecha
+(`PAY-18`) y el suplemento de fiesta mixta también (`cumple-mixto.md` §12, con su porqué ya escrito:
+*«mover el día es mover el importe… es un cambio del HECHO, no de la configuración»*). **Los
+complementos no**: conservaban el precio del día viejo y sobrevivían aunque ese día no se vendieran.
+
+**Alcance `[DECIDIDO owner]`: TODOS los complementos**, no solo los ocupantes — *«no hay otro
+complemento condicionado por la fecha hoy, pero lo hacemos para tenerlo hecho y tener una base
+profesional»*. ⚠️ Y eso lo hace **medible**: los 12 complementos tienen precio plano, así que la
+re-tarificación es no-op para once y la retirada solo alcanza a la hora extra. **Criterio de éxito:
+ningún pedido existente cambia de importe** — verificado en PRODUCCIÓN sobre las **9** líneas hijas
+vivas reales (0 difieren del catálogo, 0 sin precio).
+
+▶ **Las dos escrituras NO son simétricas, y está medido** (`hora-extra.md` §9.6): **retirar** escribe
+`markCancelled()` y **ningún** hecho (el libro ya emite su `−fila`); **re-tarificar** escribe
+`unit_price` **y su `recordEdit(±Δ)`** — sin él el libro deja de cerrar, el pedido pasa a
+`under_review` y **el cliente se queda sin desglose** (`#132`) por haber movido una fecha. Es la misma
+asimetría que `complementos-post-reserva.md` §4.5.1 alcanzó por otro camino.
+
+▶ **La frontera transaccional se parte en dos**, como la doctrina §4.3 del editor ya fija: **decidir y
+mutar DENTRO** del lock de zona/día (retirar es aforo), **el dinero POST-COMMIT** en su transacción
+corta.
+
+**La revisión adversarial (§9.8) encontró TRES cosas mal en mi propio plan, dos reproducidas:**
+
+1. **El ORDEN estaba invertido**: se validaba el aterrizaje de hijas que se iban a retirar, y eso
+   **bloqueaba el movimiento** (`addon_occupancy_at_destination`) por un aforo que nadie iba a
+   consumir. La supervivencia se decide ANTES.
+2. **La regla retiraría los PORTADORES de fiesta mixta en cada cambio de fecha**: no tienen precio en
+   catálogo NINGÚN día, y `MixedPartySurcharge` los gobierna en el mismo post-commit — dos servicios
+   peleando por la misma línea con el dinero moviéndose dos veces. Exclusión explícita.
+3. **La frontera**: el plan ponía todo en el post-commit, imposible tras (1).
+
+**Guardas**: `AddonDateReconcilerTest`, 11 casos, con `assertBookCloses()` **después de cada gesto** y
+el CONTROL de que un complemento de precio plano no se mueve. **Arnés: 7 de 7 mutaciones muerden**
+(`scripts/mutar-addon-date.sh`). El servicio entra en el `CRITICAL_RE` y en `CriticalPathGateTest`.
+
+⚠️⚠️ **CUATRO trampas de instrumento pagadas, todas con síntoma creíble:**
+
+- **`git diff` no ve un fichero NUEVO sin commitear**, así que el arnés daba «no aplicó» para todas
+  las mutaciones del servicio recién creado — *ciego justo en el fichero que la tanda crea*. El
+  detector pasa a ser el código de salida de la sustitución.
+- **Dos mutaciones no morían por falta de ESCENARIO, no de guarda**: hacía falta un caso por
+  `changeSlot()` (el otro camino público) y otro con **dos hijas ocupantes, una que sobrevive y otra
+  que no** — con una sola no hay franja de aterrizaje que heredar y el defecto es invisible.
+- **El contenido de un modal de Filament NO aparece en el HTML del componente** (medido: ni el
+  calendario ni su resumen salen en `->html()`), así que un `assertSee` pasa en vacío — la trampa de
+  `#161`. Por eso el aviso vive en un partial suelto: para poder aseverarlo.
+- **`bg-warning-50` compila y NO PINTA**: el recuadro salía transparente (`rgba(0,0,0,0)` medido en el
+  panel real). Es el fallo de `#217`; se usa `amber-*` de la paleta base, el mismo vocabulario que su
+  banner hermano. *Un aviso que no se ve como aviso no avisa, y nada falla.*
+
+⚠️ Y al extraer el partial, el Blade del calendario quedó descuadrado por un `@endif` de más — **lo
+cazaron tests de OTRA cosa** (`ManageItemAddons`, que renderizan la página): esa vista no tiene guarda
+propia de render.
+
+**Verificación**: suite **4.249 ✓ · 26.752** · Pint 1.176 · docs-check · 7/7 mutaciones ·
+`VERIFY_CONC` con los siete escenarios de aforo, Redsys, los dos de post-form con su control negativo
+y los dos de fiesta mixta · y **en el panel real**: mover una reserva del sábado a un martes muestra
+*«Hora extra · JUMP no se vende ese día: se retirará y sus 8,00 € quedarán a devolver en el parque»*,
+y aplicarlo deja el libro en `refund_at_park −16,00 €` **cerrando sus identidades**.
+
+## #418 · 2026-09-04 · La revisión de lo que NO era mío — la T3 de complementos y `#414`, antes de desplegarlas
+
+`[DECIDIDO owner]`: antes de subir el lote, revisar el trabajo de la otra sesión que entró en el
+árbol durante ésta — la **T3 de `#413`** (las superficies del cliente de la venta posterior, 2.586
+líneas y 56 ficheros) y **`#414`** (la guarda de tokens CSS). *No se despliega lo que nadie ha
+mirado, aunque la suite esté verde.*
+
+**Veredicto: las dos pasan.** Lo medido, no lo leído:
+
+▶ **Dinero — los CUATRO gestos del cliente por HTTP real** (POST con CSRF y enlace firmado, no
+llamadas al servicio): alta 0→2, subir 2→3, bajar 3→1 y retirar 1→0. El libro **cierra en los
+cuatro**, la aritmética cuadra en cada paso y **la retirada devuelve al total EXACTO del control**
+(127,60 → 127,60): la propiedad §1.3 de la spec, «quitar es neutro», demostrada end-to-end.
+
+⚠️⚠️ **Y la primera pasada dio `under_review` en los cuatro, con `pagado = 0,00 €`.** No era la T3:
+el pedido de la BD local estaba `paid` con **cero pagos** y `paid_at` nulo — un fixture ilegal, y el
+libro cantándolo bien (identidad I2). Se LEGALIZÓ con un cobro real y entonces cerró. *Un veredicto
+de dinero sobre un fixture que el propio libro rechaza no dice nada del código.*
+
+▶ **Seguridad — cuatro ataques sobre la superficie pública sin sesión**: cantidad **999** se capa al
+tope declarado (**5**: la deuda máxima la decide el parque, no el cliente); un extra **no ofrecido**
+(fase `booking`) se ignora; un **id inexistente**, igual; y una cantidad **negativa** retira en vez de
+crear crédito. Tras los cuatro, el libro sigue cerrando, todos los hechos son `edit` y **no queda
+ninguna línea viva con cantidad ≤ 0**.
+
+▶ **Sin JavaScript**: 6 inputs `type="number"` con su `max`, botón de envío y los 6 `<details>`
+nativos. La página cumple lo que declara.
+
+▶ **`#414`**: su arnés da **6 de 6**. La guarda de tokens no nació ciega.
+
+### ⚠️ Lo que la revisión SÍ destapó — y era un hueco MÍO, no suyo
+
+El cruce de las dos features de la jornada **no lo cubría ninguna de las dos**: una línea de venta
+POSTERIOR tiene `birthValue() === 0` —de eso vive toda la seguridad de `#413`— y, al mover la fecha,
+`AddonDateReconciler` (`#417`) **la gobierna igual**, escribiéndole un `recordEdit(±Δ)`. Todos mis
+casos usaban líneas nacidas CON el pedido, así que ninguno respondía a la pregunta.
+
+**Medido con la hipótesis puesta** (el cubo a 23,99 € en finde y 10,00 € entre semana): al mover al
+martes se re-tarifica a 2 × 10,00 €, el total baja de 175,58 a 147,60 y **el libro cierra**. Correcto
+— y ahora con caso propio (`test_a_post_form_line_repriced_by_the_move_keeps_the_book_closed`).
+
+*Lo encontró revisar el código de otro, no releer el mío.*
+
+**Verificación**: suite **4.250 ✓ · 26.759** · Pint 1.176 · docs-check · 7/7 mutaciones del
+reconciliador · 6/6 del token declarado.
 ## #460 · 2026-09-03 · La auditoría UI/UX del panel: el error de operación que ya costó dinero, y las tres decisiones del owner que acotan lo que se arregla
 
 **Contexto.** Encargo del owner: *«valorar el UI/UX del panel de admin. Objetivo: que cualquier persona
@@ -23391,6 +23720,34 @@ que el operador no puede rellenar desde ninguna pantalla; ficha en `DEUDA.md`.
 · los 99 casos previos de esta pantalla en verde tras el re-apuntado · sonda de navegador (18
 tarjetas en dos grupos, **0 controles bajo 44 px**, 0 desbordamiento, el modal sin elegir) · Pint ·
 docs-check · **suite 4.263 verde**.
+
+## #419 · 2026-09-04 · El cierre encontró lo que la suite no: `AddonDateReconcilerTest` era una BOMBA DE RELOJ
+
+`audit-clock.sh` —que **no está en el pre-push** y por eso solo corre en el cierre— puso en rojo los
+**doce** casos de `AddonDateReconcilerTest` (`#417`) en dos de sus fechas frontera: **fin de mes y fin
+de año**. Verde el 05, el 06 y el 07 de septiembre; rojo después. **Con el producto sano.**
+
+**La causa**: el fichero usa fechas ABSOLUTAS (`2026-09-12` el sábado, `2026-09-15` el martes) y **no
+anclaba el reloj**. En cuanto el día de hoy pasa de esas fechas, las reservas caen en el PASADO,
+`OrderCreator` las rechaza por `past_date_line` y revientan los doce a la vez.
+
+⚠️⚠️ **Y el fichero hermano NO caía**: `AddonPricingDateTest` (`#415`) usa las mismas fechas absolutas
+pero **viaja en el tiempo en todos sus casos**, así que el reloj real nunca decide nada. *La
+diferencia entre los dos no era el cuidado al escribirlos: era que uno tenía una razón para viajar
+—medir la conducta vieja contra la nueva— y el otro no.*
+
+**El arreglo**: anclar el reloj en `setUp()` a un LUNES anterior al sábado (`self::TODAY`), antes de
+sembrar nada — las franjas y los pedidos se crean contra él. Verificado con `TEST_CLOCK` en cuatro
+instantes que antes lo tumbaban: **12/12 en todos** (fin de mes, fin de año, mitad de 2027 y el 29 de
+febrero de 2028).
+
+⚠️ **Se descartó calcular «el próximo sábado»**: haría el caso no determinista, porque el tipo de
+tarifa que toca a cada fecha dependería del día en que se ejecute la suite. *Una fecha relativa arregla
+la caducidad y estropea la reproducibilidad; el ancla arregla las dos.*
+
+▶ **La lección, que ya es la tercera de esta familia** (`#412`, `#414` y ésta): un test con fechas
+sale verde el día que se escribe **y eso no dice nada**. El reloj no es ceremonia de cierre — es el
+único momento en que este defecto es visible, y cuesta una sesión ajena si se cuela en `main`.
 
 ## #464 · 2026-09-04 · `[DECIDIDO owner]` El calendario grande manda en «Cuándo» — y el panel deja de ofrecer horas que su propia cesta ya ocupa
 
@@ -23630,3 +23987,36 @@ mutaciones** (`scripts/mutar-asistente-t4.sh`; una dejó de casar al cambiar el 
 DIJO en vez de contarla como muerta) · sonda de navegador en los **dos** casos con un pack que trae
 formulario **y** justificante: tres filas correctas, **0 controles bajo 44 px**, sin desbordamiento ·
 Pint · docs-check · **suite 4.290 verde**.
+
+## #468 · 2026-09-05 · La guarda de tokens dependía de un fichero GITIGNORADO: verde con el paquete del cliente puesto, roja en un clon limpio
+
+**Salió al FUSIONAR los dos carriles**, que es cuando este proyecto encuentra esta clase de cosas.
+`UsedTokenIsDeclaredTest` —la guarda que `#414` añadió en el carril de complementos, y que es buena:
+un `var(--x)` sin fallback de un token que nadie declara **tira la declaración entera** y la pieza se
+ve mal sin que falle nada— daba **rojo por `--deco-tag`** sobre el árbol fusionado.
+
+⚠️⚠️ **Y el rojo no era de ninguno de los dos carriles.** Su `declared()` considera declarado lo que
+haya en `glob(public/css/*.css)`, y ahí vive **`public/css/client.css`, el paquete de instalación,
+que está GITIGNORADO** (`.gitignore:27`) porque es de un cliente y no puede viajar en el producto
+(`DECISIONES #1`). Con el paquete puesto —la máquina donde se escribió la guarda— sale verde; sin él
+—otro carril, un clon limpio, CI— sale **rojo sin que nadie haya tocado nada**. Es literalmente la
+trampa de `#302`: *«un test así pasa en tu máquina y falla en un clon limpio»*.
+
+▶ **El arreglo no es declarar el token ni ponerle un fallback**, y las dos cosas habrían sido peores:
+`--deco-tag` es el hueco de ILUSTRACIÓN por instalación (`INSTALACION-CLIENTE.md` §4.e) y su uso sin
+fallback es **deliberado** — `hueco-ilustracion.md` lo deja escrito: **«sin paquete no se pinta
+nada»**, porque un dibujo genérico versionado es justo por donde se cuela el arte de un cliente
+dentro del producto. Un fallback inventaría ese suelo.
+
+▶ Lo que entra es una lista aparte —**`DECLARED_BY_INSTALLATION`**— con la misma disciplina que la de
+deuda (**solo encoge**, y cada entrada tiene que seguir teniendo sujeto), y **su comprobación se hace
+contra las hojas VERSIONADAS, nunca contra `declared()`**: usar el glob ahí habría devuelto el mismo
+problema por la puerta de atrás — la guarda de la guarda diciendo una cosa con el paquete puesto y
+otra sin él.
+
+⚠️ Hoy la lista tiene **un solo token**: medido, `--deco-tag` es el único del paquete que se usa sin
+fallback en las dos hojas juzgadas.
+
+**Verificación**: control de que el arreglo MUERDE (con la lista vacía, la guarda vuelve a acusar a
+`--deco-tag`) · los 4 casos del fichero en verde · **suite 4.313 verde sobre el árbol fusionado** ·
+Pint ✓ · docs-check ✓ · auditoría del RELOJ verde en las 12 fronteras (corrida antes de la fusión).

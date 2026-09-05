@@ -844,7 +844,7 @@ class CreateManualOrderPage extends Page
             'qty' => $qty,
             'event_data' => $eventData,
             'addons' => $addons,
-            'addon_display' => $this->resolvedAddonDisplay($type, $qty, $addons),
+            'addon_display' => $this->resolvedAddonDisplay($type, $qty, $addons, Carbon::parse($date)),
             'label' => $this->productLabel($type),
             'when' => Carbon::parse($date)->format('d/m/Y').' '.substr((string) $time, 0, 5),
             'line_total_cents' => $this->estimateLineCents($type, $date, $qty, $addons),
@@ -947,10 +947,17 @@ class CreateManualOrderPage extends Page
         ];
     }
 
-    /** Modelo de vista de los complementos (grupos + sueltos + total) para el partial. */
+    /**
+     * Modelo de vista de los complementos (grupos + sueltos + total) para el partial.
+     *
+     * ⚠️ Se tarifica con el DÍA ELEGIDO, no con hoy (`#415`): lo que el mostrador ve tiene que ser lo
+     * que se cobrará. Mientras el operador no haya elegido fecha se cae a hoy, que es el estado en
+     * que todavía no hay día de visita con el que preguntar.
+     */
     public function manualAddonViewModel(): array
     {
         $sel = $this->effectiveAddonSelection();
+        $date = (string) ($this->data['sel_date'] ?? '');
 
         return app(AddonResolver::class)->viewModel(
             $this->selectedProductAddons(),
@@ -958,7 +965,7 @@ class CreateManualOrderPage extends Page
             $sel['groups'],
             max(0, (int) ($this->data['sel_qty'] ?? 0)),
             $this->selectedProduct()?->isPack() ?? false,
-            Carbon::today(),
+            $date !== '' ? Carbon::parse($date) : Carbon::today(),
         );
     }
 
@@ -1026,17 +1033,21 @@ class CreateManualOrderPage extends Page
      * Desglose por complemento para el carrito (nombre · cantidad · unidades gratis · subtotal),
      * resuelto con `AddonResolver` → coincide con el cobro.
      *
+     * ⚠️ `$date` es el día de la VISITA de la línea (`#415`), el mismo con el que se tarifica el
+     * principal: si un complemento solo tiene precio en días `special`, el mostrador tiene que ver
+     * exactamente lo que se va a cobrar.
+     *
      * @param  array<int, array{ticket_type_id:int, qty:int}>  $addons
      * @return array<int, array{name:string, qty:int, free_qty:int, subtotal:int}>
      */
-    private function resolvedAddonDisplay(TicketType $type, int $qty, array $addons): array
+    private function resolvedAddonDisplay(TicketType $type, int $qty, array $addons, CarbonInterface $date): array
     {
         if ($addons === []) {
             return [];
         }
         $type->loadMissing('addons');
         try {
-            $resolved = app(AddonResolver::class)->resolve($type, $qty, $addons, Carbon::today());
+            $resolved = app(AddonResolver::class)->resolve($type, $qty, $addons, $date);
         } catch (\Throwable) {
             return [];
         }
@@ -2251,7 +2262,7 @@ class CreateManualOrderPage extends Page
         if (! $type->isAddon()) {
             $type->loadMissing('addons');
             try {
-                $cents += app(AddonResolver::class)->resolve($type, $qty, $addons, Carbon::today())['subtotal'];
+                $cents += app(AddonResolver::class)->resolve($type, $qty, $addons, Carbon::parse($date))['subtotal'];
             } catch (\Throwable) {
                 // Selección inválida en la previsualización: no rompemos el formulario.
             }
