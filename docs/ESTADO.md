@@ -1,6 +1,6 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del 2026-09-04 — carril PANEL DE ADMIN, banda `#460`–`#469`; el carril de diseño sigue PARADO por el owner, `#452`).
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (cierre del **2026-09-05**; la tanda se hizo el **04** por la tarde-noche — carril PANEL DE ADMIN, banda `#460`–`#469`; el carril de diseño sigue PARADO por el owner, `#452`).
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -15,14 +15,7 @@
 >    · **`#464`** la T3 (calendario grande + la cesta a la oferta) · **`#465`** el rendimiento de la
 >    oferta (714 → 95 ms el paso; 421 → 45 el calendario del CLIENTE) · **`#466`** la **T4** (el
 >    DESENLACE) · **`#467`** su pulido con el ojo del owner.
->    ▶ ✅ **T4 HECHA** (`specs/asistente-crear-pedido.md` §10) **y PULIDA con el ojo del owner**
->    (`#467`, §10.3.bis: *«todo ok, pero la parte de que al cliente le ha llegado un formulario…, más
->    profesional»*): el bloque eran DOS —«se le ha enviado» y «enlaces para entregar a mano»— y el
->    operador tenía que emparejarlos de cabeza; ahora es **UNO**, «Lo que recibe el cliente», con una
->    FILA por entregable (qué es · de qué reserva · **estado en pastilla** · su enlace copiable).
->    ⚠️⚠️ **Los estados son TRES** —«Enviado a …», «Entrégalo tú» y **«No enviado»**—: la confirmación
->    no tiene enlace, así que pedir que se «entregue» era mandar a hacer algo que no existe. Lo cazó
->    el OJO, no la sonda. Una pantalla propia al terminar, en vez
+>    ▶ ✅ **T4 HECHA** (`specs/asistente-crear-pedido.md` §10): una pantalla propia al terminar, en vez
 >    del *toast* + redirección a la ficha. ❗❗❗ **Su regla es no prometer nada que no haya pasado**:
 >    **hay clientes SIN correo** y con ellos no se envía **nada** —ni confirmación, ni formulario de
 >    invitados, ni justificante—, así que la pantalla lo dice y entrega los enlaces copiables. La
@@ -30,8 +23,24 @@
 >    ⚠️⚠️ **La redirección era también lo que impedía cobrar dos veces**: hoy lo impide que `create()`
 >    vacíe el carrito, con caso propio. ⚠️ Del desenlace **no se navega** (la única salida es «Crear
 >    otro pedido», que limpia todo **incluido el cliente**).
+>    ▶ ✅ **Y PULIDA con el ojo del owner** (`#467`, §10.3.bis): el bloque de entrega eran DOS —«se le
+>    ha enviado» y «enlaces para entregar a mano»— y el operador tenía que emparejarlos de cabeza;
+>    ahora es **UNO**, «Lo que recibe el cliente», con una FILA por entregable (qué es · de qué
+>    reserva · **estado en pastilla** · su enlace copiable debajo). ⚠️⚠️ **Los estados son TRES**
+>    —«Enviado a …», «Entrégalo tú» y **«No enviado»**—: la confirmación no tiene enlace, así que
+>    pedir que se «entregue» era mandar a hacer algo que no existe. **Lo cazó el OJO, no la sonda.**
 >    ▶ **Controles bajo 44 px: 0** en el carrito y en el desenlace — y de paso **«Ver el desglose»
->    pasa de 86×16 a 86×44 en las CUATRO superficies del panel que pintan el libro** (parte del M7).
+>    pasa de 86×16 a 86×44 en las CUATRO superficies del panel que pintan el libro** (parte del M7),
+>    y la fila de copiar un enlace (input 38 · botón 36) también sube a 44 en todas.
+>    ▶ ❗❗❗ **`#465` — SI TOCAS `SlotOffer`, LEE `INVARIANTES AFORO-02` ANTES.** Salió de una ficha de
+>    deuda que la T3 dejó anotada: el paso costaba **714 ms** y **no era del panel** —la web y la API
+>    del cajón llaman a lo mismo, así que cada cliente pagaba ~420 ms al abrir su calendario—. Hoy:
+>    paso **94,6 ms**, read-model público **44,8**. ⚠️⚠️ «Fuente única» **ya no es «un solo
+>    recorrido»**: las FECHAS leen filas crudas del horizonte y las HORAS cargan **solo el día que se
+>    pregunta**. Lo que las mantiene siendo la misma fuente son la CONSULTA compartida, el PREDICADO
+>    compartido y **`SlotOfferPathParityTest`** (un día se ofrece **si y solo si** sus horas no están
+>    vacías). ⚠️⚠️ **`clampToHorizon()` NO se toca**: acotar por día retira el techo de venta, y sin
+>    él un día a dos años vista se vendería sin que nada fallara.
 >    ▶ ❗❗❗ **LO SIGUIENTE: los tres CRÍTICOS que siguen abiertos** (`auditoria-panel-admin.md` §4):
 >    **C2** —en «Gestionar», «Cancelar producto» (el que ANULA la reserva) es el botón más ancho y más
 >    saturado del pie y está a 12 px de «Guardar cambios», y en un modal «Cancelar» significa
@@ -42,7 +51,11 @@
 >    ▶ **EMPIEZA POR** `docs/specs/auditoria-panel-admin.md` §4 (los críticos con su medida) y §7/§9.bis
 >    (lo que NO hay que tocar y lo que falla **a propósito**: D2 y D3 del owner). **D4 sigue pendiente
 >    de su detalle.**
->    ⚠️ **Queda el OJO del owner** sobre el asistente entero (pasos 1→7 + desenlace, en su tablet).
+>    ✅ **EL OJO DEL OWNER SOBRE EL ASISTENTE YA ESTÁ DADO** (2026-09-04, literal): *«el asistente lo
+>    he visto, todo ok, pero la parte de que al cliente le ha llegado un formulario o lo que sea…
+>    más profesional, mejor UI/UX»*. Ése fue el único reparo y es lo que se ejecutó en **`#467`**.
+>    ▶ **Lo que queda de su mirada**: la SEGUNDA pasada sobre ese bloque ya rehecho —«Lo que recibe el
+>    cliente»— y sobre el desenlace en su tablet. **No hace falta volver a validar los pasos 1→7.**
 >
 > **1. COMPLEMENTOS QUE SE VENDEN DESPUÉS DE RESERVAR — ✅ CÓDIGO COMPLETO: LAS CUATRO TANDAS
 >    (T0→T3) EN EL ÁRBOL. Solo queda el OJO del owner.**

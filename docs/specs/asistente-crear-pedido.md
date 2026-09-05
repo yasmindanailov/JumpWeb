@@ -1,6 +1,10 @@
 # El asistente de «Crear pedido» — de tres pasos a siete, con menos toques
 
-> Estado: 🟦 **LAS CUATRO TANDAS EN EL ÁRBOL** (§7 → §10) · queda el **OJO del owner** · Fecha: **2026-09-04**
+> Estado: 🟦 **LAS CUATRO TANDAS EN EL ÁRBOL** (§7 → §10) · Fecha: **2026-09-04**
+> ✅ **El owner VALIDÓ el asistente en su navegador** (2026-09-04): *«el asistente lo he visto, todo
+> ok, pero la parte de que al cliente le ha llegado un formulario o lo que sea… más profesional»* —
+> su único reparo, ejecutado en `#467` (§10.3.bis). **Queda solo su SEGUNDA pasada sobre ese bloque
+> ya rehecho**; los pasos 1→7 no hace falta volver a validarlos.
 > Encargo del owner (2026-09-03, literal en §1) · Decisiones suyas en **§3**
 > Carril: **panel / UI-UX** (este ordenador, banda **`#460`–`#469`**; `#460` la auditoría,
 > `#461` el shell).
