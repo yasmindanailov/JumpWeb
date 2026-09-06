@@ -3764,10 +3764,40 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       reloj. Anclado en `setUp()` a un lunes anterior; 12/12 en los cuatro instantes que lo tumbaban.
       ⚠️ **Tercera vez de esta familia** (`#412`, `#414`, `#419`): la lección va ya en `TESTING.md`
       §2.septies, que es donde vive el instrumento, y no solo en el tracker
-- [ ] **La hora extra: el ✅ FINAL del owner + el alta de los productos en PRODUCCIÓN (es DATO)** —
-      los mismos guiones idempotentes que se usaron en local (en seco primero); en producción sigue
-      dormida por construcción hasta ese alta. ⚠️ **El despliegue espera al carril del panel**
-      (`[DECIDIDO owner, 2026-09-04]`: se despliega cuando termine su UI/UX)
+- [x] **La hora extra, DADA DE ALTA EN PRODUCCIÓN** (2026-09-06, `#431`): el despliegue esperaba al
+      carril del panel y ese carril llegó. Script idempotente, verificado sobre la máquina: «Hora
+      extra · JUMP» y «Hora extra · KIDS» en los productos de 2 h, **con precio solo en la tarifa
+      especial**, que es lo que las esconde de lunes a jueves. ⚠️ **Queda el ✅ FINAL del owner** (su
+      pasada por navegador), que es la cuarta condición del DoD
+
+### LA HORA EXTRA DE UN PACK, LA REJILLA DE MEDIA HORA Y EL TERCER DESPLIEGUE 🟦 — `#420` → `#431` (2026-09-06)
+- [x] **La rejilla de franjas puede empezar cada 30 min** (`#420`, `INVARIANTES AFORO-12`): es
+      CONFIGURACIÓN, no código —las franjas salen de `slot_templates` y no hay ningún «paso»
+      implícito—. ❗ **La DURACIÓN sigue siendo 60**: `slot.end_time` decide cuándo termina una
+      reserva. Guarda `OverlappingSlotGridTest` + 8/8 mutaciones. ⚠️ Destapó que entre semana se
+      perdía **una hora de sala al día** (abre 16:30 y la primera franja era a las 17:00).
+      ▶ **Queda que el owner haga las tres pasadas en el panel de producción** (`PANEL-ADMIN.md` §4.1)
+- [x] **La HORA EXTRA DE UN PACK, completa** (`#421`→`#427`, `hora-extra.md` §10): el owner reabrió
+      `D2` y el hueco se **REPRODUJO** antes de diseñar nada (el cupo de sala ciego a la extensión, y
+      la hija naciendo con `seats = 1`). **Se vende como complemento y se modela como DURACIÓN**:
+      `extends_parent_stay` + `order_items.extra_minutes`. Las CINCO tandas en el árbol, con
+      **22/22 mutaciones** y un **OCTAVO escenario** de `purchase:verify-oversell`
+- [x] **Revisión ADVERSARIAL antes de construir** (`#423`): 9 hallazgos y 5 descartes, y **el peor era
+      del propio plan** — arreglar solo la duración de `isFinishedInPractice()` habría EMPEORADO
+      producción, porque sus dos defectos se compensaban
+- [x] **`isFinishedInPractice()` arreglado, los DOS defectos a la vez** (`#426`): cierra una ficha
+      ALTA de `DEUDA.md` viva desde `#413` y con ella el post-form, el cierre de extras, la ventana de
+      dinero del suplemento mixto y el libro dejan de cerrar a destiempo
+- [x] **Un producto sin precio para la tarifa del día deja de OFRECERSE** (`#429`): `[DECIDIDO owner]`
+      («la ilimitada no se vende fin de semana»). ⚠️ Había un caso que afirmaba lo contrario y **su
+      propio argumento lo desmentía**; reescrito con su premisa nueva. 4/4 mutaciones
+- [x] **TERCER DESPLIEGUE a `playjump.es`** (`#430`/`#431`, commit `612989a`): copia de BD primero ·
+      4 migraciones aditivas · **6.760 franjas regeneradas con 0 CERRADAS** · el catálogo configurado
+      aparte (el despliegue **no** lo hace: en producción no existía ninguna hora extra) · las cinco
+      líneas del `client.css`, **comparadas antes de subirlas** · 0 errores en el log
+- [ ] **El ✅ del owner sobre lo desplegado**: su pasada por navegador (la hora extra en el embudo, el
+      post-form con la Tarta, y el panel nuevo). ▶ Y las **tres pasadas de la rejilla** en el panel de
+      producción, que es configuración y no viaja en el despliegue
 
 ### GOOGLE AUTH ✅ — CERRADO Y EN PRODUCCIÓN (2026-09-02; T1→T8·d, los siete puntos del owner hechos, **One Tap descartado** por `#354`, y `playjump.es` sirviéndolo)
 - [x] **Spec** `docs/specs/auth-con-google.md`, con la decisión del owner que la ordena: **pantalla intermedia y exención al 100 %** (§4)

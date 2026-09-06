@@ -1,8 +1,14 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE** (los DOS carriles cerraron con el trabajo del **2026-09-04** y sus dos bloques están abajo: **PANEL DE ADMIN**, banda `#460`–`#469`, en el punto 0 —cerrado el **05** por la tarde, tras el ✅ del owner al asistente—, y **COMPLEMENTOS / HORA EXTRA**, banda `#400`–`#419`, en los puntos 1 y 2 con el DESPLIEGUE en el 2.bis; el carril de diseño sigue PARADO por el owner, `#452`). ▶ **Lo ÚLTIMO es el punto A: la REJILLA DE MEDIA HORA (`#420`), que está pendiente de que el OWNER la aplique desde el panel.**
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🚀 **EL 2026-09-06 SE DESPLEGÓ A PRODUCCIÓN** (`#431`, commit `612989a`): todo lo de septiembre está EN `playjump.es` —complementos de venta posterior, hora extra de entrada **y de pack**, el panel de admin nuevo y el arreglo de la oferta sin precio—, con la **compra online todavía CERRADA** (`sales.online_enabled = 0`), que es la ventana para verificar sin prisa. ▶ **LO QUE QUEDA ES DEL OWNER, y son TRES cosas, todas en el panel de PRODUCCIÓN**: **(1)** las **tres pasadas de la rejilla de media hora** (`PANEL-ADMIN.md` §4.1: los 7 días, `10:00`→`21:30`, duración **60**, cada **30**, «reemplazar» apagado) — es configuración y **no viaja en el despliegue**; **(2)** su **✅ por navegador** de la hora extra en el embudo, del post-form con la Tarta y del panel nuevo; **(3)** confirmar en el panel del hosting que **las dos líneas del cron siguen activas** (`#115`: el script avisa de que no ve demonio cron, y de ellas dependen los correos y la regeneración diaria de franjas). ▶ **NO hay nada a medias en el árbol**: las cinco tandas de la hora extra de pack están cerradas, la suite está verde y el despliegue, verificado. ▶ El detalle de la sesión, en el **punto A**; los dos carriles anteriores —**PANEL DE ADMIN** (`#460`–`#469`) y **COMPLEMENTOS / HORA EXTRA** (`#400`–`#419`)— en los puntos 0, 1 y 2; el carril de diseño sigue PARADO por el owner (`#452`). ⚠️ **La banda de este ordenador es ahora `#420`–`#429`, AGOTADA en `#429`; los `#430`/`#431` se tomaron del hueco siguiente — quien retome RESERVA banda antes de numerar** (`CONVENCIONES §10.6`).
 >
-> **A. LA REJILLA DE MEDIA HORA — 🟦 CÓDIGO Y DOC LISTOS; LA APLICA EL OWNER DESDE EL PANEL**
+> **A. LA SESIÓN DEL 2026-09-06 — REJILLA DE MEDIA HORA · HORA EXTRA DE PACK · DESPLIEGUE**
+>    ▶ **Resumen en tres líneas, por si no lees el resto**: (1) la rejilla de media hora está lista y
+>    **la aplica el owner en el panel de PRODUCCIÓN**; (2) la **hora extra de un pack** se construyó
+>    entera (5 tandas, `#421`→`#427`) y está **desplegada y configurada** con sus precios; (3) el
+>    **tercer despliegue** se hizo y se verificó (`#431`). **Nada quedó a medias.**
+>
+> **A.1 · LA REJILLA DE MEDIA HORA — 🟦 CÓDIGO Y DOC LISTOS; LA APLICA EL OWNER DESDE EL PANEL**
 >    (`#420`, 2026-09-06, `[DECIDIDO owner]`; banda nueva `#420`–`#429` para este carril, que agotó la
 >    `#400`–`#419`.) ▶ **El encargo, literal**: *«el objetivo son ambas cosas»* (dar opciones de horario
 >    y no desperdiciar horario) y *«entradas y packs tienen que poder elegir 15:30 · 16:00 · 16:30»*.
@@ -134,14 +140,15 @@
 >    su premisa nueva. ⚠️ **El coste lo delató `ApiOverheadTest`** (40 consultas de presupuesto 22)
 >    antes de llegar a ninguna pantalla: hoy las tarifas van en LOTE y **el catálogo normal ni
 >    entra en la rama**, así que `offerableDates` vuelve a los **18 ms** de `#465`. 4/4 mutaciones.
->    ▶ 🚀 **EL TERCER DESPLIEGUE ESTÁ PREPARADO Y PENDIENTE DEL OWNER** (`#430`, `ENTORNOS.md` §6):
+>    ▶ 🚀 **EL TERCER DESPLIEGUE — el PLAN** (`#430`, `ENTORNOS.md` §6; **ejecutado**, ver abajo):
 >    79 commits, **cuatro migraciones puramente ADITIVAS** (nada vendido cambia de conducta).
 >    ❗❗❗ **El despliegue NO configura el catálogo, y eso se midió en la máquina**: en producción
 >    **no existe ninguna hora extra** y los siete complementos de comida quedarían **todos en «al
 >    reservar»** tras migrar. Hay un script idempotente preparado (fuera del repo) que lo deja
->    todo, probado dos veces en local. ⚠️ El `client.css` de producción **sigue sin las cinco
->    líneas** de `#434`/`#436` (medido). ▶ Orden: copia de BD → `deploy.sh` → catálogo → CSS →
->    verificación. La compra online sigue CERRADA, que es la ventana para verificar sin prisa.
+>    todo, probado dos veces en local. ⚠️ El `client.css` de producción **seguía sin las cinco
+>    líneas** de `#434`/`#436` —medido **antes** de desplegar; ya están puestas, ver abajo—.
+>    ▶ Orden previsto: copia de BD → `deploy.sh` → catálogo → CSS → verificación. La compra online
+>    sigue CERRADA, que es la ventana para verificar sin prisa.
 >    ▶ ✅ **DESPLEGADO Y VERIFICADO EL 2026-09-06** (`#431`, commit `612989a`): copia de BD primero
 >    (255 KB, 50 tablas) · las 4 migraciones · **6.760 franjas regeneradas con 0 CERRADAS**
 >    (ninguna reserva tocada) · 4 complementos creados y 14 enganches a post-form · las 5 líneas
@@ -359,8 +366,12 @@
 >    porque `#465` toca aforo (los SIETE de `purchase:verify-oversell` + Redsys + `postform` `addons`
 >    y `cross` + `mixed-party` `charge` y `credit`), todos con **código de salida 0**.
 
-> **2.bis ❗❗❗ EL DESPLIEGUE ESTÁ DECIDIDO Y ESPERA** (`[DECIDIDO owner, 2026-09-04]`: *«haré deploy
->    cuando se termine el UI/UX del panel admin»*). **NO despliegues antes de que ese carril cierre.**
+> **2.bis ~~EL DESPLIEGUE ESTÁ DECIDIDO Y ESPERA~~ ✅ HECHO EL 2026-09-06** (`#431`, commit `612989a`;
+>    lo que sigue es el análisis PREVIO, que se conserva porque su medición sigue valiendo). La
+>    condición del owner —*«haré deploy cuando se termine el UI/UX del panel admin»*— se cumplió, y
+>    el paquete final llevó **79 commits y CUATRO migraciones** (una más: `extends_parent_stay` +
+>    `extra_minutes`). ▶ **La evidencia y los pasos que el script NO hace, en el punto A y en
+>    `ENTORNOS.md` §6.**
 >    ▶ **Qué iría**, medido **después de fusionar el carril del panel** (`#464`–`#466`): **61 commits**
 >    desde el último despliegue (`64ff3b6`, 02-09) · **114 ficheros** fuera de `docs/`, `scripts/` y
 >    `tests/` (55 de ellos en `app/`) · **3 migraciones nuevas, ninguna existente modificada**
@@ -431,14 +442,25 @@
 > y el portátil sigue en `#34x`. Mirar el remoto antes de empujar **se probó y no basta** — trece
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
-> ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
-> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#431`**. Las
-> otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
+> ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** Su sucesora, **`#420`–`#429`**, se
+> reservó aquí el 2026-09-06 antes de usarla — y **también se agotó, en `#429`**. Los dos últimos de la
+> sesión (`#430` el plan de despliegue, `#431` su ejecución y `#432` el cierre) se tomaron del **hueco siguiente**, así
+> que **`#432`–`#439` queda RESERVADA para este carril** y quien retome numera ahí. ⚠️ **Reserva la
+> banda ANTES de usarla**, no después: es la regla de `#404` y esta sesión la estiró dos números.
+> ▶ **Último usado: `#432`.** Otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y
+> `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está
 > diagnosticado y mitigado (tope 60 → 300 s, medido: un render tarda ~140 ms), y el arreglo de fondo
 > —reutilizar UN proceso en vez de ~38— está fichado en `DEUDA.md`. Si vuelve a caer, **mira el log
 > que el hook preserva y dice por su nombre** antes de reintentar.
+> ▶ ⚠️⚠️ **Y `audit-clock.sh` es donde más fácil salta, porque encadena ~12 pases de la suite**: el
+> 2026-09-06 dio **✗ en «cruza medianoche UTC»** y **era el timeout, no el reloj** — esa pasada tardó
+> **2 h 34 min** (contra 1:40 normal) y el `ProcessTimedOutException` cayó en
+> `SidebarDomContractTest`. Comprobado: **el mismo test con el mismo reloj congelado pasa en 12,8 s**
+> sin carga, y **la suite ENTERA en esa frontera da 4.358 verdes**. *Cuando el instrumento acusa a un
+> test que no toca el calendario, sospecha del instrumento antes que del test* — y la prueba barata es
+> re-correr ESE pase solo.
 
 
 🟦 **EL PANEL DE ADMIN · LA AUDITORÍA Y SUS TRES PRIMERAS TANDAS** (2026-09-03/04, `#460`→`#463`;

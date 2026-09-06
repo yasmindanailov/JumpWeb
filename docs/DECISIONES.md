@@ -24629,3 +24629,27 @@ verificar sin prisa).
 
 ▶ **Queda del owner**: las tres pasadas de la **rejilla de media hora** en el panel de producción
 (`PANEL-ADMIN.md` §4.1) — es configuración y no viaja en el despliegue.
+
+## #432 · 2026-09-06 · Cierre de sesión: la auditoría del reloj acusó a un test que no mira el calendario — y era el instrumento
+
+Cierre de la sesión del 2026-09-06 (`#420`→`#431`). Todo verde y desplegado; lo único que costó una
+comprobación extra fue el veredicto de `audit-clock.sh`.
+
+▶ **La auditoría dio ✗ en «cruza medianoche UTC»**: un `ProcessTimedOutException` del renderizador SSR
+en `SidebarDomContractTest`, que es un test de **árbol del cajón** y no toca fechas por ninguna parte.
+⚠️⚠️ **Esa pasada tardó 2 h 34 min contra los 1:40 normales** — el script encadena ~12 suites y la
+máquina se satura, así que el tope de 300 s del renderizador (mitigación ya documentada) se agota.
+
+▶ **Comprobado, no supuesto**: el mismo test con **el mismo reloj congelado** en esa frontera pasa en
+**12,8 s** sin carga, y **la suite ENTERA en esa frontera da 4.358 verdes**. *Cuando el instrumento
+acusa a un test que no mira el calendario, la primera hipótesis es el instrumento* (la lección de
+§10.6), y la prueba barata es re-correr ese pase solo. Anotado en `ESTADO.md`, junto al aviso del
+mismo timeout en el pre-push, para que la próxima vez cueste un minuto y no media hora.
+
+⚠️ **La banda `#420`–`#429` se agotó y los tres últimos números** (`#430`, `#431`, `#432`) salieron del
+hueco siguiente. **`#433`–`#439` queda reservada** para este carril: quien retome numera ahí. La regla
+de `#404` dice reservar ANTES de usar, y esta sesión la estiró.
+
+**Verificación del cierre**: suite **4.358 verde** (27.111 aserciones) · **auditoría del reloj: las 12
+fronteras en verde** (con el ✗ del SSR reproducido y descartado) · Pint ✓ · docs-check ✓ · los ocho
+escenarios de `purchase:verify-oversell` sobre InnoDB · producción desplegada y verificada (`#431`).
