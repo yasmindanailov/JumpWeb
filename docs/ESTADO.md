@@ -32,8 +32,21 @@
 >    tiempo: en rejilla solapada, un derrame hacia atrás se confunde con el solape legítimo).
 >    ⛔ **La HORA EXTRA no se puede colgar de un pack y no es prudencia** (`hora-extra.md` §7·D2,
 >    verificado ejecutándolo en las dos direcciones): un complemento nunca cuenta en
->    `max_guests_per_slot`, así que con la fiesta entera serían veinte invitados invisibles. Que un
->    cumpleaños dure más es la DURACIÓN: un pack más largo, o cambiar el producto (re-tarifica, `PAY-18`).
+>    `max_guests_per_slot`, así que con la fiesta entera serían veinte invitados invisibles.
+>    ▶ ⬜ **Y EL OWNER LO REABRIÓ EL MISMO DÍA** (`#421`): *«tenemos que añadir la hora extra también
+>    viable para producto tipo pack»*. **El diseño está escrito en `hora-extra.md` §10 y NO hay una
+>    línea de código**; quedan **cinco decisiones suyas** (§10.6). ▶ El hueco está **REPRODUCIDO** —con
+>    las tres guardas saltadas, una fiesta de 20 con hora extra deja el cupo de sala en `fiestas=0
+>    ninos=0` y **acepta otra fiesta encima**— y **son DOS defectos**: el conocido (la hija es un
+>    `addon` y `occupancyMaps` filtra `type = pack`) y uno que no estaba escrito (**la hija nace con
+>    `seats = 1`**, así que diría una persona donde hay veinte). ▶ **El diseño: se vende como
+>    complemento y se modela como DURACIÓN** —`extends_parent_stay` como interruptor HERMANO de
+>    `occupies_after_parent` (no un modo: la unidad es distinta, personas vs bloques, y `prices` es una
+>    tabla sola) + **`order_items.extra_minutes` materializado**, hermano de `seats`—. ⚠️⚠️ **Cuesta
+>    CAPACIDAD y eso debe fijar su precio**: con todas las fiestas comprando 1 hora extra, el sábado
+>    pasa de **15 fiestas a 9** y el martes de **6 a 3**, medido. ❗ **La decisión 1 manda sobre el
+>    resto**: «una hora más» son TRES cosas y **solo «la fiesta sigue en su sala» encaja** con este
+>    diseño; que los niños se queden SALTANDO ocupa otra zona, y eso no existe como mecanismo hoy.
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -316,7 +329,7 @@
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
 > ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
-> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#420`**. Las
+> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#421`**. Las
 > otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está

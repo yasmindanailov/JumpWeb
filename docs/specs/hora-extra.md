@@ -874,3 +874,192 @@ modal.
 
 **11 casos · 7/7 mutaciones · `VERIFY_CONC` completo · verificado en el panel real.** Las cuatro
 trampas de instrumento que costó están en `DECISIONES #417`; las tres correcciones al plan, en §9.8.
+
+---
+
+# 10 · LA HORA EXTRA EN UN PACK — reapertura de D2 ⬜ **DISEÑO, pendiente del owner** (`#421`, 2026-09-06)
+
+> ❗❗❗ **ESTA SECCIÓN CORRIGE A §7·D2 Y VA ANTES QUE AQUEL TEXTO.** D2 cerró «solo entradas» con un
+> argumento que sigue siendo **cierto** (un complemento colgado de un pack es invisible para
+> `max_guests_per_slot`), pero su conclusión —«esto no se hace»— la reabre el owner el 2026-09-06:
+> *«tenemos que añadir la hora extra también viable para producto tipo pack»*. Lo que sigue es el
+> diseño, con el hueco reproducido y el coste medido. **Nada de esto está implementado.**
+
+## 10.1 El hueco, REPRODUCIDO — y son DOS, no uno
+
+Con las tres guardas neutralizadas una a una se llegó a vender el enganche prohibido. Fiesta de **20
+niños de 15:00 a 17:00** con **1 hora extra**, sobre la rejilla real:
+
+```
+línea hija creada:  qty=1  seats=1  franja=17:00        ← (b)
+cupo de sala 15:00 → fiestas=1 ninos=20
+cupo de sala 17:00 → fiestas=0 ninos=0                  ← (a)  la sala está llena y nadie lo ve
+aforo de asientos de la zona 17:00 → 1                  ← (b)  hay 20 personas dentro
+freeGuestSlots(17:00) = 60 de 60
+→ ACEPTA otra fiesta de 20 a las 17:00 (y admitiría 60 niños más)
+```
+
+▶ **(a) es el que D2 anunció**: `PackAvailability::occupancyMaps()` filtra por `type = pack`, así que
+la hija —que es un `addon`— no cuenta **ni como fiesta ni como invitados**. Sobreventa de la sala.
+
+▶ **(b) no estaba escrito y es igual de grave**: las plazas de la hija son `cantidad × seats_per_unit`
+—**1**—, no los invitados de la fiesta. Aunque se arreglara (a) contando la hija en el pool de packs,
+seguiría contando **una persona donde hay veinte**. *Un complemento ocupante mide «cuántos se quedan»,
+y en una fiesta lo que se queda no es una cantidad que el cliente elige: es la fiesta entera.*
+
+⚠️ Las **tres** guardas funcionan y ninguna sobra: `ProductAddon::booted()` (el enganche),
+`TicketType::booted()` (el interruptor, en las dos direcciones) y `AddonResolver::resolve()` (la
+autoridad del cobro). La del resolutor es la que corta la venta de verdad — comprobado: con las dos
+primeras saltadas, el checkout todavía responde `unavailable`.
+
+## 10.2 La pregunta que decide el diseño (y es de producto)
+
+**¿Qué se vende exactamente cuando se vende «una hora más» en un cumpleaños?** Hay tres cosas
+distintas detrás de la misma frase, y cada una es un mecanismo distinto:
+
+| | qué pasa físicamente | qué debe consumir |
+|---|---|---|
+| **(1) La fiesta dura más** | la sala sigue ocupada por ese grupo | **cupo de sala** (1 fiesta + sus invitados) durante una hora más |
+| **(2) Algunos invitados se quedan a saltar** | la sala se libera; los niños pasan a la zona de salto | plazas de **JUMP/KIDS**, no de sala |
+| **(3) La fiesta entera se queda saltando** | la sala se libera; el grupo entero pasa a la zona de salto | plazas de JUMP/KIDS por el grupo entero |
+
+▶ **La aclaración que el owner dio en D2 —*«el complemento de hora extra es para todos los
+invitados»*— apunta a (1)**, y es lo que este diseño resuelve. **(2) y (3) son otra feature**: hoy
+`AddonOccupancy::childSlotAmong()` exige que la franja de la hija sea de **la misma zona del padre**,
+así que ocupar otra zona no existe como mecanismo (`#151` decidió además que los pools son POR ZONA:
+un cumpleaños no resta plazas de JUMP hoy). Si lo que se quiere es (2) o (3), **esto no vale y hay que
+diseñar otra cosa**.
+
+## 10.3 El diseño: la hora extra **EXTIENDE la ventana de la fiesta**, no añade un ocupante
+
+▶ **El principio, y es la síntesis de D2 en vez de su contradicción:** D2 tenía razón en que *«si en un
+pack se quedan todos, eso ya no es un complemento que ocupa — es que la fiesta DURA MÁS»*. Lo que se
+reabre no es el análisis: es la conclusión de que entonces no puede venderse como complemento. **Se
+vende como complemento (que es lo que el cliente entiende) y se modela como duración (que es lo que
+el aforo necesita).**
+
+### 10.3.1 El eje: un interruptor hermano, no un modo del que ya hay
+
+`ticket_types.extends_parent_stay` (bool, default false), **excluyente** con
+`occupies_after_parent`. Los dos describen «prolongar la estancia», pero son productos distintos
+porque **su unidad es distinta**:
+
+| | `occupies_after_parent` (existe) | `extends_parent_stay` (nuevo) |
+|---|---|---|
+| cuelga de | entradas — **nunca** de un pack | packs — **solo** de un pack |
+| qué crea | línea hija **con franja propia y plazas** | línea hija **sin franja y sin plazas** |
+| la cantidad son | **personas** que se quedan | **bloques de tiempo** (`duration_min` cada uno) |
+| el precio es por | persona | bloque |
+| qué consume | plazas de la franja siguiente | la ventana de la fiesta, **alargada** |
+
+⚠️⚠️ **Por eso no es «el mismo complemento con dos comportamientos».** Reinterpretar «Hora extra ·
+KIDS» según el tipo del padre haría que **su precio cambiara de unidad sin que nada lo diga** —€/persona
+colgado de una entrada, €/hora colgado de un pack— y `prices` es una tabla sola. Son **dos productos de
+catálogo**, cada uno enganchado donde le toca. Las guardas quedan simétricas y comprobables:
+ocupante ⇒ jamás de un pack · extensor ⇒ **solo** de un pack · nunca los dos a la vez · ni `per_guest`
+ni obligatorio (mismos motivos de §4.4·5) · `duration_min > 0` (el cinturón de §4.1).
+
+### 10.3.2 La duración con la que una reserva OCUPA es un HECHO de la línea
+
+**`order_items.extra_minutes`** (unsigned, default 0), escrito por el mismo sitio que escribe `seats` y
+con la misma naturaleza: `seats` **ya** es un derivado materializado en la línea (`cantidad ×
+seats_per_unit`) que los mapas de ocupación leen sin recalcular. `extra_minutes` es su hermano, y la
+duración efectiva de la línea es `ticket_types.duration_min + order_items.extra_minutes`.
+
+▶ **Por qué materializar y no derivar**, con el número delante: los dos mapas de ocupación son **SQL
+puro por rendimiento** (`#465` los dejó en 18 y 30 ms), y una hija extensora **no tiene `slot_id`**, así
+que el `join slots on slots.id = order_items.slot_id` no la trae. Derivarla exigiría **una consulta más
+por llamada**, y `offerableTimes()` llama a `availableGuestsFor()` **una vez por franja** —con la
+rejilla de `#420` son 18 el sábado—. Materializado, el cambio en las dos consultas es un `+` en el
+`SELECT`: **coste cero**.
+
+⚠️ El riesgo del dato duplicado se acota como se acota el de `seats`: **un solo escritor** (el mismo
+punto que hoy compone las filas de complemento) y **una guarda de identidad**
+(`extra_minutes == Σ hijas extensoras × su duración`). El precedente en contra —`slots.seats_taken`,
+que se desincronizó y hoy está muerta— **no aplica**: aquélla la movían terceros (cualquier compra de
+cualquiera), y ésta sólo cambia cuando cambia su propia línea.
+
+⚠️ `duration_min = null` (ilimitada) **no se puede extender**: lo ilimitado ya llega al cierre. Guarda
+en el resolutor.
+
+### 10.3.3 Dónde entra, exactamente
+
+| Pieza | Qué cambia |
+|---|---|
+| `PackAvailability::occupancyMaps()` | la ventana del padre suma `extra_minutes` → **1 fiesta, los mismos invitados, más rato**. Ni doble conteo ni fiesta fantasma |
+| `PackAvailability::spannedSlots()` / `availableGuestsFor()` | la fiesta debe **caber entera** con su extensión (rejilla + cupo) |
+| `SlotAvailability::occupancyMap()` | idem para el aforo de asientos de la zona: el padre ocupa hasta su fin real |
+| `CartOccupants` | los provisionales de la cesta emiten la ventana **ya extendida** (la derivación sigue siendo ÚNICA) |
+| `AddonResolver::resolve()` | el extensor no lleva `slot_id` ni `seats`; aporta `extra_minutes`. Tope por **suma**, como el ocupante |
+| `OrderCreator` | valida **bajo el lock** que la ventana extendida cabe y tiene cupo |
+| `AddonOfferReader` | un extensor se ofrece **solo si la ventana extendida cabe** — el patrón que ya usa el ocupante con su franja hija |
+| `OrderItemEditor` / `ItemRescheduleOffer` / `AddonDateReconciler` | mover día/hora o cambiar cantidad recalcula la ventana; mover el día ya retira lo que ese día no se vende |
+| `OrderItem::displayTimeWindow()` | suma `extra_minutes` → «15:00 – 18:00». **Arregla de paso** que hoy la hoja de sala diría 15:00–17:00 con la hora extra vendida |
+
+❗❗ **`isFinishedInPractice()` es el borde que hay que decidir, no descubrir**: lee `slot.end_time`,
+que con franjas de 60 ya declara terminada una fiesta de 2 h **una hora antes** (ficha viva en
+`DEUDA.md`, y `complementos-post-reserva.md` §4.9 midió que además parsea hora de pared como UTC). Con
+la extensión el desfase crece a dos horas o más, y de ese predicado cuelgan el post-form en solo
+lectura, el cierre de los extras y la ventana de dinero del suplemento mixto. **La extensión no crea el
+defecto, lo agranda**: o se arregla con la duración efectiva en la misma tanda, o se dice que no.
+
+## 10.4 Lo que cuesta en CAPACIDAD — y lo que eso significa para el precio
+
+Medido con el llenado voraz sobre la rejilla de `#420`, modelando la hora extra como lo que es (la
+fiesta dura más):
+
+| duración de la fiesta | horas ofrecidas (mar/sáb) | capacidad (mar) | capacidad (sáb) |
+|---|---|---|---|
+| 2 h — hoy | 7 / 18 | 6 fiestas · 120 niños | 15 fiestas · 300 niños |
+| 3 h — todas con 1 extra | 5 / 16 | **3 · 60** | **9 · 180** |
+| 4 h — todas con 2 extras | 3 / 14 | 3 · 60 | 6 · 120 |
+
+⚠️⚠️ **La hora extra no es margen: canibaliza sitio de otra fiesta.** En el caso extremo el sábado
+pierde **6 fiestas de 15** y el martes **la mitad**. Es el dato que debería fijar el precio: una hora
+extra que desplaza media fiesta tiene que costar más que un complemento simbólico. **No es una objeción
+al diseño —el owner puede quererlo igual—, es un número que debe estar sobre la mesa al ponerle precio.**
+
+## 10.5 Los bordes, con su respuesta
+
+1. **El cliente elige la hora ANTES que los extras** (los dos embudos: web y asistente del panel). Una
+   fiesta de las 18:30 puede admitir 2 h y no 3. ▶ El extensor **no se ofrece** si su ventana no cabe
+   —mismo patrón que el ocupante, que ya se esconde cuando su franja siguiente no existe— y el checkout
+   lo re-valida bajo lock.
+2. **El tope**: `max_qty` del pivote (cuántos bloques), la **rejilla** (el cierre del día) y el **cupo**.
+   Como en `#410`, el tope se comprueba por **SUMA** de las filas extensoras, no fila a fila.
+3. **`prep_after_min`** se apila **después** de la extensión, no en medio: la limpieza empieza cuando la
+   fiesta acaba de verdad. Hoy vale 0 (`[DECIDIDO owner, 2026-09-06]`, `#420`), así que no muerde.
+4. **Mover el día** con hora extra: `AddonDateReconciler` (`#417`) ya retira lo que no se vende ese día
+   y re-tarifica lo que cambia de precio; la ventana se recalcula con el resto.
+5. **Un ticket es una ADMISIÓN**: `TicketIssuer` salta las hijas; una extensión no emite entrada.
+6. **`postform` queda FUERA de esta versión**: vender la hora extra *después* de reservar mueve **aforo**
+   post-reserva, que es una categoría que hoy no existe (los extras de `#413` no ocupan a propósito). Se
+   puede hacer, pero es otra tanda y otra decisión.
+
+## 10.6 Lo que hay que decidir antes de construir — es del owner
+
+1. **¿Es (1), (2) o (3) de §10.2?** Si lo que se queda es la fiesta en su sala, este diseño vale. Si lo
+   que se queda son niños saltando en JUMP/KIDS, **hace falta otro mecanismo** (ocupar otra zona) y este
+   diseño no sirve.
+2. **¿Cuánto cuesta?** Con el coste de oportunidad de §10.4 delante: media fiesta el sábado.
+3. **¿Se puede comprar más de una hora extra?** (`max_qty` del enganche.)
+4. **¿Arreglamos `isFinishedInPractice()` en la misma tanda** —para que una fiesta con extensión no se
+   dé por terminada dos horas antes— o se deja la ficha de deuda como está?
+5. **¿La hora extra de sala se ofrece también en el mostrador** (`CounterSale`) sin las cotas que ata la
+   venta online, o con ellas?
+
+## 10.7 Las tandas propuestas
+
+| # | Qué | Por qué en este orden |
+|---|---|---|
+| T1 | El eje y sus guardas (`extends_parent_stay`, migración, guards en las dos direcciones, `AddonResolver`) | sin él no hay nada que enganchar, y las guardas son lo que impide que el hueco de §10.1 entre por la puerta de atrás |
+| T2 | `extra_minutes` + los **dos** mapas de ocupación + `CartOccupants` + `OrderCreator` bajo lock | el núcleo de aforo; **no se toca ninguna superficie hasta que esto cierre** |
+| T3 | La oferta (`AddonOfferReader`), el editor y el reconciliador de fechas | ya con el aforo diciendo la verdad |
+| T4 | Las superficies: ventana mostrada, hoja de sala, puerta, correos — y la decisión 4 de §10.6 | lo último, como en `#410` |
+
+▶ **Verificación exigida** (no negociable, `INVARIANTES §6`): `PackAvailability`, `SlotAvailability`,
+`CartOccupants`, `AddonResolver` y `OrderCreator` están **todos** en el `CRITICAL_RE`, así que cada
+tanda va con `VERIFY_CONC=1` y **los siete escenarios** de `purchase:verify-oversell`. Y hace falta un
+**octavo escenario**: la última plaza de sala disputada entre una fiesta nueva y **la extensión de la
+fiesta anterior** — el equivalente de `extra-hour` para el pool de packs, visto FALLAR sin la
+validación antes de darlo por bueno.

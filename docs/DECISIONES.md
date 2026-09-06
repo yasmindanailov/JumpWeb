@@ -24135,3 +24135,74 @@ que bloquea la zona/día entera precisamente porque la ocupación se cuenta por 
 duración **60**, cada **30**, el aforo que ya tiene cada zona, «reemplazar» APAGADO y «regenerar» sólo en
 la última). El aforo de las franjas nuevas tiene que ser el MISMO de las viejas, nunca la mitad: cada
 franja declara cuánta gente cabe a la vez, no una cuota a repartir.
+
+## #421 · 2026-09-06 · La hora extra en un PACK: D2 se reabre por encargo del owner — el hueco reproducido y el diseño que lo cierra
+
+**El owner reabre `hora-extra.md` §7·D2** (*«solo entradas»*, `[DECIDIDO owner, 2026-09-02]`) el mismo
+día en que preguntó si el suplemento se podía aplicar a un cumpleaños: *«tenemos que añadir la hora
+extra también viable para producto tipo pack»*. El diseño está escrito en **§10 de esa misma spec**, que
+**corrige a D2 y va antes que aquel texto**. ⬜ Nada implementado: quedan cinco decisiones suyas.
+
+▶ **Primero se reprodujo el hueco**, porque un diseño contra un defecto que nadie ha visto es una
+suposición. Con las tres guardas neutralizadas una a una (pivote → modelo → resolutor), fiesta de 20
+niños de 15:00 a 17:00 con una hora extra:
+
+```
+cupo de sala 17:00 → fiestas=0 ninos=0   (la sala está llena y el sistema no lo ve)
+→ ACEPTA otra fiesta de 20 a las 17:00, y admitiría 60 niños más
+```
+
+⚠️⚠️ **Y son DOS defectos, no el que D2 anunció.** El conocido es que `PackAvailability::occupancyMaps()`
+filtra por `type = pack` y la hija es un `addon`, así que no cuenta ni como fiesta ni como invitados. El
+que no estaba escrito: **la hija nace con `seats = 1`** —`cantidad × seats_per_unit`—, así que aunque se
+contara en el pool de packs seguiría diciendo **una persona donde hay veinte**. *Un complemento ocupante
+mide «cuántos se quedan», y en una fiesta lo que se queda no es una cantidad que el cliente elige.*
+
+⚠️ Las tres guardas funcionan y ninguna sobra: con las dos de configuración saltadas, el checkout
+**todavía** responde `unavailable` — la del resolutor es la que corta la venta, porque es la autoridad
+del cobro.
+
+### El diseño, en una frase
+
+**Se vende como complemento (que es lo que el cliente entiende) y se modela como duración (que es lo que
+el aforo necesita).** Eso no contradice a D2: *le da la razón*. D2 dijo que «si en un pack se quedan
+todos, la fiesta DURA MÁS»; lo que se reabre no es el análisis, es su conclusión de que entonces no
+puede venderse como complemento.
+
+▶ **Interruptor hermano y no un modo del que ya hay** (`extends_parent_stay`, excluyente con
+`occupies_after_parent`), y el motivo es la UNIDAD: el ocupante se vende **por persona** y el extensor
+**por bloque de tiempo**. Reinterpretar el mismo complemento según el tipo del padre haría que **su
+precio cambiara de unidad sin que nada lo diga**, y `prices` es una tabla sola. Guardas simétricas:
+ocupante ⇒ jamás de un pack · extensor ⇒ **solo** de un pack.
+
+▶ **`order_items.extra_minutes` materializado, y el precedente está dentro del mismo modelo**: `seats`
+**ya** es un derivado guardado en la línea que los mapas leen sin recalcular. Derivarlo en cambio
+costaría **una consulta más por llamada** —una hija extensora no tiene `slot_id`, así que el `join
+slots` no la trae— y `offerableTimes()` llama a `availableGuestsFor()` **una vez por franja** (18 el
+sábado con la rejilla de `#420`). Materializado, el cambio en las dos consultas críticas es un `+` en el
+`SELECT`. ⚠️ El precedente en contra —`slots.seats_taken`, desincronizada y hoy muerta— **no aplica**:
+aquélla la movían terceros; ésta sólo cambia cuando cambia su propia línea (un escritor + guarda de
+identidad).
+
+### El número que tiene que estar sobre la mesa al ponerle precio
+
+Medido con el llenado voraz sobre la rejilla de `#420`: si **todas** las fiestas compran una hora extra,
+el sábado pasa de **15 fiestas / 300 niños a 9 / 180** y el martes de **6 / 120 a 3 / 60**.
+⚠️⚠️ **La hora extra no es margen: canibaliza sitio de otra fiesta.** No es una objeción al encargo —el
+owner puede quererlo igual—, es lo que debe fijar su precio.
+
+### Lo que queda antes de construir
+
+Cinco decisiones en §10.6, y **la primera manda sobre el resto**: qué se vende exactamente. «Una hora
+más» son **tres cosas distintas** —la fiesta sigue en su sala · algunos niños se quedan saltando · el
+grupo entero se queda saltando— y sólo la primera encaja con este diseño. Las otras dos ocuparían **otra
+zona**, y hoy `AddonOccupancy::childSlotAmong()` exige la misma zona del padre: sería otro mecanismo.
+
+⚠️ Y un borde que hay que decidir, no descubrir: `isFinishedInPractice()` lee `slot.end_time` y ya
+declara terminada una fiesta de 2 h **una hora antes** (ficha viva en `DEUDA.md`). La extensión no crea
+ese defecto: lo agranda a dos horas o más, y de él cuelgan el post-form en solo lectura, el cierre de los
+extras y la ventana de dinero del suplemento mixto.
+
+**Verificación de este trabajo**: el hueco reproducido en MySQL con rollback y las guardas restauradas
+(árbol limpio, comprobado) · el coste de capacidad medido con el mismo instrumento que `#420` · suite
+4.324 verde · Pint ✓ · docs-check ✓. **Sin una línea de código de producto**: esto es diseño.
