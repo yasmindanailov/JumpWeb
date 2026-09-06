@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -80,22 +81,92 @@ class AvailabilityReaderTest extends TestCase
     }
 
     /**
-     * Un día se ofrece porque tiene franjas, no porque tenga precio. El calendario lo enseña con
-     * `priceCents` nulo y el checkout es quien rechaza la línea (`PAY-12`) — igual que hace la
-     * tarificación, y por el mismo motivo: romper la pantalla dejaría al cliente sin poder avanzar
-     * ni entender por qué.
+     * ⚠️⚠️ **ESTE CASO CAMBIÓ DE PREMISA Y SE REESCRIBIÓ** (`DECISIONES #429`).
+     *
+     * Afirmaba que «un día se ofrece porque tiene franjas, no porque tenga precio», con el argumento
+     * de que el calendario lo enseña con `priceCents` nulo y el checkout ya rechaza — *«romper la
+     * pantalla dejaría al cliente sin poder avanzar ni entender por qué»*.
+     *
+     * ▶ **La intención era buena y el resultado observable la contradice.** Medido sobre el catálogo
+     * real: el día sin precio **es seleccionable** (`calendar.js` marca `selectable: offer !== null`,
+     * y el `offer` existe aunque su precio sea nulo), sus horas se ofrecen y el cliente llega hasta
+     * pagar — donde recibe `tickets.errors.unavailable` **sin explicación**. Es decir: exactamente lo
+     * que ese razonamiento quería evitar, un paso más tarde. Y `PAY-12`, que se citaba de respaldo,
+     * habla del precio en SERVIDOR, no de ofrecer días sin él.
+     *
+     * ▶ Hoy «sin precio» significa «ese día no se vende» —que es como ya funcionaba la oferta de
+     * COMPLEMENTOS desde `#410`— y el día simplemente no aparece, como cualquier día cerrado.
      */
-    public function test_a_day_without_a_price_is_still_offered_with_a_null_price(): void
+    public function test_a_day_without_a_price_is_not_offered(): void
     {
         $priceless = TicketType::create([
             'name' => ['es' => 'Sin tarifa'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $this->zone->id,
             'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 3,
         ]);
 
-        $days = $this->offer->dates($priceless->id);
+        $this->assertSame([], $this->offer->dates($priceless->id));
+        $this->assertSame([], $this->offer->times($priceless->id, $this->date));
 
-        $this->assertCount(1, $days);
-        $this->assertNull($days[0]->priceCents);
+        // CONTROL: con precio, el mismo producto y el mismo día SÍ se ofrecen — la ausencia de arriba
+        // es el precio y no otra cosa.
+        $priceless->prices()->create(['rate_type_id' => $this->normalRateId, 'amount_cents' => 1000]);
+        $this->assertCount(1, app(AvailabilityOffer::class)->dates($priceless->id));
+    }
+
+    public function test_a_product_priced_only_by_tiers_is_still_offered(): void
+    {
+        // ⚠️ Un producto que se tarifica SOLO por tramos de cantidad (`#324`) es vendible aunque no
+        // tenga fila en `prices`: `RateResolver::priceCents()` devuelve el tramo. Si el filtro del
+        // precio mirara solo la tabla base, lo escondería del calendario **entero** — un producto
+        // vendible desaparecido sin que nada falle.
+        $tiered = TicketType::create([
+            'name' => ['es' => 'Solo tramos'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $this->zone->id,
+            'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 4,
+        ]);
+        $tiered->priceTiers()->create([
+            'rate_type_id' => $this->normalRateId, 'min_qty' => 1, 'amount_cents' => 900,
+        ]);
+
+        $this->assertCount(1, $this->offer->dates($tiered->id));
+    }
+
+    public function test_the_price_check_does_not_cost_a_query_per_day(): void
+    {
+        // El coste del filtro de `#429`, fijado: las tarifas del horizonte se resuelven EN LOTE.
+        // Resolverlas día a día son ~180 consultas —el «una consulta por celda» que `forDates()`
+        // existe para evitar— y no lo ve ninguna otra guarda, porque el catálogo normal ni siquiera
+        // entra en esta rama.
+        $medias = TicketType::create([
+            'name' => ['es' => 'Tarifas a medias'], 'type' => TicketType::TYPE_ENTRY, 'zone_id' => $this->zone->id,
+            'duration_min' => 60, 'seats_per_unit' => 1, 'is_sellable' => true, 'is_active' => true, 'position' => 5,
+        ]);
+        $medias->prices()->create(['rate_type_id' => $this->normalRateId, 'amount_cents' => 900]);
+        RateType::create([
+            'key' => 'special', 'label' => ['es' => 'Especial'], 'weekdays' => [6], 'priority' => 10, 'is_active' => true,
+        ]);
+
+        // ⚠️⚠️ **Hacen falta VARIOS días con franjas o el caso no mide nada**: con uno solo,
+        // resolver las tarifas «una a una» cuesta lo mismo que en lote y la mutación pasa en verde.
+        // Es la lección de `#238` otra vez — medir DONDE el fallo puede aparecer.
+        for ($i = 1; $i <= 40; $i++) {
+            Slot::create([
+                'zone_id' => $this->zone->id,
+                'date' => Carbon::parse($this->date)->addDays($i)->toDateString(),
+                'start_time' => '10:00:00', 'end_time' => '11:00:00',
+                'capacity' => 10, 'online_capacity' => 10,
+            ]);
+        }
+
+        DB::enableQueryLog();
+        $this->offer->dates($medias->id);
+        $consultas = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        $this->assertLessThan(
+            20, $consultas,
+            "Resolver el precio por día costó {$consultas} consultas.\n".
+            '▶ Las tarifas del horizonte se piden EN LOTE (`primeRates`); una por día es el coste que `#465` quitó.',
+        );
     }
 
     public function test_a_product_outside_the_catalog_has_no_availability_at_all(): void

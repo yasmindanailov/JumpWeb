@@ -49,6 +49,15 @@ class SlotOfferTest extends TestCase
             'name' => ['es' => 'Jump · 1 hora'], 'zone_id' => $this->zone->id, 'duration_min' => 60,
             'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 1,
         ]);
+
+        // ⚠️ **El fixture se LEGALIZA, no se excepciona la regla** (`#429`): desde que la oferta
+        // exige precio para la tarifa del día, un producto «vendible» sin ninguna tarifa ni precio es
+        // un mundo que el checkout rechazaría igualmente — este caso lo montaba y medía sobre él.
+        $rate = RateType::create([
+            'key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'],
+            'weekdays' => null, 'priority' => 0, 'is_active' => true,
+        ]);
+        $this->entry->prices()->create(['rate_type_id' => $rate->id, 'amount_cents' => 1000]);
     }
 
     protected function tearDown(): void
@@ -136,6 +145,11 @@ class SlotOfferTest extends TestCase
             'name' => ['es' => 'Cumpleaños'], 'type' => TicketType::TYPE_PACK, 'zone_id' => $this->zone->id,
             'duration_min' => 60, 'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1,
             'min_qty' => 8, 'max_qty' => 20, 'position' => 2,
+        ]);
+        // Igual que el fixture del `setUp`: un producto sin precio no se ofrece ningún día (`#429`),
+        // y este caso mide el CUPO, no el precio.
+        $pack->prices()->create([
+            'rate_type_id' => RateType::where('key', RateType::KEY_NORMAL)->value('id'), 'amount_cents' => 1500,
         ]);
         $date = $this->today->copy()->addDays(4)->toDateString();
         // Cupo de niños por franja = 5 (< min_qty 8 del pack) → no reservable.
@@ -256,7 +270,6 @@ class SlotOfferTest extends TestCase
     {
         Carbon::setTestNow(Carbon::parse('2026-09-14 12:00:00', 'Europe/Madrid'));
         // La oferta pública resuelve la tarifa del día (RateResolver) → necesita la base.
-        RateType::create(['key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0, 'is_active' => true]);
         $today = DisplayTime::today()->toDateString();
         $this->slot($today, '10:00:00');
         $this->slot($today, '15:00:00');

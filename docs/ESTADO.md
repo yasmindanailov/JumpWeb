@@ -125,6 +125,15 @@
 >    `DEUDA.md`, con dos salidas y la primera es del owner); y el escenario `stay-extension` de
 >    `#424` **dejaba 12 «Hora extra Probe» huérfanos** porque la limpieza que ya existía miraba
 >    solo la clave `addon` y mi escenario usa `extender`. Arreglado y verificado: 0 huérfanos.
+>    ▶ ✅ **EL PRIMERO, ARREGLADO** (`#429`, `[DECIDIDO owner]`: «la kids ilimitada no se vende fin
+>    de semana»): **un producto sin precio para la tarifa del día deja de ofrecerse**, como ya
+>    hacía la oferta de complementos desde `#410`. ⚠️⚠️ **Había un caso que afirmaba lo contrario**
+>    —«un día se ofrece porque tiene franjas, no porque tenga precio»— y **su propio argumento lo
+>    desmiente**: el día sin precio ERA seleccionable, así que el cliente avanzaba y el «no
+>    disponible» le llegaba al pagar, que es lo que ese razonamiento quería evitar. Reescrito con
+>    su premisa nueva. ⚠️ **El coste lo delató `ApiOverheadTest`** (40 consultas de presupuesto 22)
+>    antes de llegar a ninguna pantalla: hoy las tarifas van en LOTE y **el catálogo normal ni
+>    entra en la rama**, así que `offerableDates` vuelve a los **18 ms** de `#465`. 4/4 mutaciones.
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -407,7 +416,7 @@
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
 > ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
-> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#428`**. Las
+> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#429`**. Las
 > otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está
@@ -1593,7 +1602,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4356 en verde** (27.108 aserciones, 1 skipped a propósito), medida el **2026-09-06** sobre el
+> Suite **4358 en verde** (27.111 aserciones, 1 skipped a propósito), medida el **2026-09-06** sobre el
 > árbol con **LOS DOS CARRILES FUSIONADOS**: las siete tandas del panel (`#461` +12 · `#462` +13 ·
 > `#463` +10 · `#464` +13 · `#465` +8 · `#466` +6 · `#467`, y **siete casos re-apuntados por sujeto**
 > al retirarse la tira de días y el *toast* del desenlace) **más las del carril de complementos**

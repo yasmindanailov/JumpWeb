@@ -4,6 +4,7 @@ namespace Tests\Feature\Sales;
 
 use App\Domain\Booking\Contracts\CounterSale;
 use App\Domain\Booking\Models\OpeningHour;
+use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\SpecialDate;
 use App\Domain\Booking\Models\TicketType;
@@ -69,6 +70,15 @@ class SlotOfferPathParityTest extends TestCase
             'name' => ['es' => 'Jump · 1 hora'], 'zone_id' => $this->zona->id, 'duration_min' => 60,
             'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 1,
         ]);
+
+        // ⚠️ Fixture LEGALIZADO (`#429`): desde que la oferta exige precio para la tarifa del día, un
+        // producto sin tarifa no se ofrece **ningún** día — y las dos vías seguirían siendo idénticas
+        // (las dos vacías), o sea que la paridad pasaría midiendo la nada.
+        $tarifa = RateType::create([
+            'key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'],
+            'weekdays' => null, 'priority' => 0, 'is_active' => true,
+        ]);
+        $this->entrada->prices()->create(['rate_type_id' => $tarifa->id, 'amount_cents' => 1200]);
     }
 
     protected function tearDown(): void

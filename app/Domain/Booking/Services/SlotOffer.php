@@ -3,6 +3,7 @@
 namespace App\Domain\Booking\Services;
 
 use App\Domain\Booking\Contracts\CounterSale;
+use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Payments\Services\PaymentSettings;
@@ -35,11 +36,108 @@ use Illuminate\Support\Collection;
  */
 class SlotOffer
 {
+    /**
+     * Ids de tarifa con las que cada producto es vendible, memoizados por instancia.
+     *
+     * @var array<int, array<int, int>>
+     */
+    private array $sellableRates = [];
+
+    /** @var array<string, int> tarifa (id) que manda en cada día, memoizada por instancia */
+    private array $rateByDate = [];
+
+    /** @var array<int, int>|null ids de las tarifas activas, memoizados por instancia */
+    private ?array $activeRateIds = null;
+
     public function __construct(
         private ProductAvailability $productWindow,
         private SlotAvailability $slotAvailability,
         private PackAvailability $packAvailability,
+        private RateResolver $rates,
     ) {}
+
+    /**
+     * ¿Este producto tiene PRECIO el día `$ymd`? (`DECISIONES #429`)
+     *
+     * ❗❗ **Sin esto la oferta enseña días que el cobro rechaza**, que es `AFORO-02` por la puerta del
+     * precio. Medido sobre el catálogo real: «Kids · Ilimitada» no tiene precio en la tarifa de fin de
+     * semana y aun así el calendario ofrecía sus **10 horas del sábado**; al pagar,
+     * `tickets.errors.unavailable` — *el cliente elige día y hora y se lo tumban al final sin decirle
+     * por qué*. La oferta de COMPLEMENTOS ya funcionaba así desde `#410` («sin tarifa ese día no se
+     * ofrece»); esto lo extiende al producto base, que es de donde salía el defecto.
+     *
+     * ⚠️⚠️ **«Sin precio» es la forma de decir «este día no se vende»**, y por eso el arreglo va aquí
+     * y no en el dato (`[DECIDIDO owner, 2026-09-06]`: la entrada ilimitada no se vende los fines de
+     * semana). No hay otro interruptor de calendario por producto, y añadir uno sería un segundo sitio
+     * donde decir lo mismo.
+     *
+     * ⚠️ **Se precalcula por PRODUCTO, no se pregunta por día**: `RateResolver::priceCents()` consulta
+     * la BD en cada llamada, y un calendario resuelve ~176 días. Aquí son **dos consultas por producto**
+     * (precios base + tramos) y una por tanda de fechas (`forDates`), las dos memoizadas.
+     *
+     * ⚠️ Los TRAMOS de cantidad cuentan como precio: un producto que solo se tarifica por tramos
+     * (`#324`) es vendible aunque no tenga fila en `prices`, y dejarlo fuera lo escondería del
+     * calendario entero.
+     */
+    private function hasPriceOn(TicketType $type, string $ymd): bool
+    {
+        if (! $this->needsPriceCheck($type)) {
+            return true;
+        }
+
+        if (! isset($this->rateByDate[$ymd])) {
+            $this->primeRates([$ymd]);
+        }
+
+        return in_array($this->rateByDate[$ymd], $this->sellableRates[(int) $type->getKey()], true);
+    }
+
+    /**
+     * ¿Hace falta mirar el precio de este producto día a día?
+     *
+     * ⚠️⚠️ **El atajo que deja el caso normal a coste CERO**: un producto con precio en **todas** las
+     * tarifas activas no puede quedarse sin él ningún día, así que no hay nada que resolver — y ése
+     * es el catálogo entero salvo los que usan la tarifa como interruptor de calendario (la hora
+     * extra de entrada, la ilimitada de KIDS). Sin este corte, la comprobación costaba **resolver
+     * ~180 días por llamada** en un servicio que `#465` dejó en 18 ms.
+     */
+    private function needsPriceCheck(TicketType $type): bool
+    {
+        $id = (int) $type->getKey();
+        if (! isset($this->sellableRates[$id])) {
+            $this->sellableRates[$id] = array_values(array_unique(array_map('intval', array_merge(
+                $type->prices()->pluck('rate_type_id')->all(),
+                $type->priceTiers()->distinct()->pluck('rate_type_id')->all(),
+            ))));
+        }
+
+        $this->activeRateIds ??= array_map('intval', RateType::query()->where('is_active', true)->pluck('id')->all());
+
+        return array_diff($this->activeRateIds, $this->sellableRates[$id]) !== [];
+    }
+
+    /**
+     * Resuelve en LOTE la tarifa de un conjunto de días y la memoiza.
+     *
+     * ⚠️⚠️ **Es la mitad que evita volver al problema que `#465` arregló**: `RateResolver::for()`
+     * consulta `special_dates` **por llamada**, así que preguntar día a día por un horizonte de seis
+     * meses son ~180 consultas — el mismo «una consulta por celda» que `forDates()` existe para
+     * evitar. Lo delató `ApiOverheadTest` (40 consultas donde su presupuesto son 22) antes de que
+     * llegara a ninguna pantalla.
+     *
+     * @param  array<int, string>  $ymds
+     */
+    private function primeRates(array $ymds): void
+    {
+        $faltan = array_values(array_filter($ymds, fn (string $d): bool => ! isset($this->rateByDate[$d])));
+        if ($faltan === []) {
+            return;
+        }
+
+        foreach ($this->rates->forDates($faltan) as $ymd => $rate) {
+            $this->rateByDate[$ymd] = (int) $rate->getKey();
+        }
+    }
 
     /**
      * Meses del horizonte de compra/edición. Es la lectura Booking de
@@ -95,6 +193,10 @@ class SlotOffer
         $sale ??= CounterSale::no();
         $now = DisplayTime::now();
 
+        if ($type !== null && $this->needsPriceCheck($type)) {
+            $this->primeRates($this->daysBetween($from, $to));
+        }
+
         return $this->offeredSlotQuery($type, $from, $to)
             ->when($type?->isPack(), fn ($q) => $q->with('zone')) // packs leen el cupo por zona
             ->get()
@@ -102,6 +204,23 @@ class SlotOffer
                 $type, $s->date, $s->date->toDateString(), (string) $s->start_time, $now, $sale,
             ))
             ->values();
+    }
+
+    /**
+     * Los días `Y-m-d` de un rango inclusivo, para resolver sus tarifas de una vez.
+     *
+     * @return array<int, string>
+     */
+    private function daysBetween(string $from, string $to): array
+    {
+        // Aritmética de cadenas, no de `Carbon`: son ~180 días por llamada y construir un objeto por
+        // cada uno se nota en un servicio que `#465` dejó en 18 ms.
+        $dias = [];
+        for ($t = strtotime($from), $fin = strtotime($to); $t <= $fin; $t += 86400) {
+            $dias[] = date('Y-m-d', $t);
+        }
+
+        return $dias;
     }
 
     /**
@@ -161,6 +280,12 @@ class SlotOffer
         // ⚠️ La ventana de horario del producto SÍ sigue mandando, y el corte intra-día de arriba
         // también: aquello es el parque y esto es el tiempo, ninguna de las dos las decide quien
         // vende.
+        // El PRECIO del día es parte de «se ofrece» (`#429`): un producto sin tarifa ese día no se
+        // vende, y ofrecerlo termina en un «no disponible» al pagar que no explica nada.
+        if (! $this->hasPriceOn($type, $ymd)) {
+            return false;
+        }
+
         return $this->productWindow->allowsStart($type, $date, $startTime)
             && ($sale->ignoresMinAdvance() || $type->meetsMinAdvance($ymd, $startTime, $now));
     }
@@ -240,6 +365,12 @@ class SlotOffer
         $dias = [];
         $fecha = null;      // el `Carbon` del día en curso, reutilizado por todas sus franjas
         $ymd = null;
+
+        // Las tarifas de todo el horizonte, en UNA consulta (ver `primeRates`) — y **solo si este
+        // producto las necesita**: el catálogo normal no mira el precio por día.
+        if ($this->needsPriceCheck($type)) {
+            $this->primeRates($this->daysBetween($from, $to));
+        }
 
         foreach ($this->offeredSlotQuery($type, $from, $to)->toBase()->get(['date', 'start_time']) as $fila) {
             // ⚠️ El driver devuelve `date` como cadena en MySQL y puede traer la hora en SQLite: se

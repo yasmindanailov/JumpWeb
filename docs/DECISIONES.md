@@ -24511,3 +24511,47 @@ ampliar al añadir un escenario con complemento. Verificado: tras una corrida, *
 
 ⚠️ Las zonas y las franjas **sí** se limpiaban: el barrido por zona funcionaba. Lo que se escapaba era
 justo lo que no tiene zona — que es la razón de ser de esa rama.
+
+## #429 · 2026-09-06 · `[DECIDIDO owner]` Un producto SIN precio para la tarifa del día deja de ofrecerse — y el caso que afirmaba lo contrario, reescrito
+
+**El owner cierra la ficha de `#428` eligiendo el mecanismo**: *«la kids ilimitada no se vende fin de
+semana»*. El dato estaba bien —sin precio en la tarifa `special`—; lo que estaba mal es que **se
+ofreciera igual**. Hoy «sin precio ese día» significa «ese día no se vende», que es como ya
+funcionaba la oferta de COMPLEMENTOS desde `#410`.
+
+▶ **Medido antes**: 10 horas ofrecidas el sábado y `tickets.errors.unavailable` al pagar. **Después**:
+0 horas el sábado, 4 el martes.
+
+### ⚠️⚠️ Había una decisión escrita que decía lo contrario, y su propio argumento la desmiente
+
+`AvailabilityReaderTest` afirmaba que *«un día se ofrece porque tiene franjas, no porque tenga
+precio»*, razonando que el calendario lo enseña con `priceCents` nulo y que **romper la pantalla
+dejaría al cliente sin poder avanzar ni entender por qué**. ▶ **La intención era buena y el resultado
+observable la contradice**: medido en `calendar.js`, un día sin precio **es seleccionable**
+(`selectable: offer !== null`, y el `offer` existe aunque su precio sea nulo), así que el cliente
+avanza, elige hora y **es al pagar** cuando recibe un «no disponible» sin explicación — exactamente lo
+que ese razonamiento quería evitar, un paso más tarde. ⚠️ Y `PAY-12`, que se citaba de respaldo,
+**habla del precio en SERVIDOR**, no de ofrecer días sin él. El caso se **reescribió con su premisa
+nueva**, con el porqué delante.
+
+### El coste, y el atajo que lo devuelve a cero
+
+⚠️⚠️ La primera versión costaba **resolver ~180 días por llamada** (`RateResolver::for()` consulta
+`special_dates` en cada una) y **lo delató `ApiOverheadTest`** —40 consultas donde su presupuesto son
+22— antes de llegar a ninguna pantalla. Dos correcciones: las tarifas del horizonte se resuelven **en
+lote** (`forDates`, una consulta) y, sobre todo, **un producto con precio en TODAS las tarifas activas
+ni siquiera entra en la rama** — que es el catálogo entero salvo los que usan la tarifa como
+interruptor de calendario. Medido: `offerableDates` vuelve a **18 ms**, el número que `#465` dejó.
+
+⚠️ **Los TRAMOS de cantidad cuentan como precio** (`#324`): un producto que solo se tarifica por
+tramos es vendible sin fila en `prices`, y dejarlo fuera lo habría escondido del calendario entero.
+
+**Verificación**: **4/4 mutaciones** (`scripts/mutar-oferta-sin-precio.sh`) · suite **4.358 verde** ·
+los OCHO escenarios de `purchase:verify-oversell` sobre InnoDB · Pint ✓ · docs-check ✓.
+
+⚠️⚠️ **Dos casos nacieron sin medir nada y hubo que arreglarlos**: el de los tramos no existía (la
+mutación lo dijo), y el del coste **tenía franjas de UN solo día** — con uno, resolver «una a una»
+cuesta lo mismo que en lote y la mutación pasaba en verde. *Medir donde el fallo puede aparecer*, la
+lección de `#238`, ahora en un test de presupuesto.
+
+▶ **Fichas retiradas de `DEUDA.md`**: la ALTA de `#428` queda cerrada por el mecanismo.
