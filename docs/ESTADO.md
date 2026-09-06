@@ -106,6 +106,11 @@
 >    oportunidad de §10.4 delante: si todas la compran, el sábado pasa de 15 fiestas a 9), el
 >    `max_qty` del enganche y si el mostrador lleva las mismas cotas. **El mecanismo está completo**:
 >    lo que falta es configurar el complemento en el panel y el OJO del owner.
+>    ⚠️⚠️ **Y la puerta del PANEL estuvo a punto de quedarse fuera**: el interruptor existía en el
+>    dominio y **no en el formulario del catálogo**, y el saneo del alta borra `duration_min` de
+>    todo complemento salvo el que la necesita —conocía solo al ocupante—. *El defecto que `#410`
+>    arregló para el hermano, esperando a repetirse.* Hoy el toggle está, excluyente y con su
+>    candado con ventas.
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -1574,13 +1579,13 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4353 en verde** (27.104 aserciones, 1 skipped a propósito), medida el **2026-09-06** sobre el
+> Suite **4356 en verde** (27.108 aserciones, 1 skipped a propósito), medida el **2026-09-06** sobre el
 > árbol con **LOS DOS CARRILES FUSIONADOS**: las siete tandas del panel (`#461` +12 · `#462` +13 ·
 > `#463` +10 · `#464` +13 · `#465` +8 · `#466` +6 · `#467`, y **siete casos re-apuntados por sujeto**
 > al retirarse la tira de días y el *toast* del desenlace) **más las del carril de complementos**
 > (`#415` +6 · `#417` +12 · `#418` +1), **`#468` +1** (la guarda de tokens, que dependía de un
-> fichero gitignorado), **`#420` +11** (`OverlappingSlotGridTest`, la rejilla solapada) **y `#424`→`#426` +29**
-> (la hora extra de un pack: `PackStayExtensionTest` 18 + `StayExtensionGuardsTest` 10 + 1 de `OrderItemStatusTest`).
+> fichero gitignorado), **`#420` +11** (`OverlappingSlotGridTest`, la rejilla solapada) **y `#424`→`#426` +32**
+> (la hora extra de un pack: `PackStayExtensionTest` 18 + `StayExtensionGuardsTest` 13 + 1 de `OrderItemStatusTest`).
 > **JS 951** (`node --test`).
 > ⚠️⚠️ **Con dos carriles vivos esta cifra CADUCA al fusionar, y el hook lo dice antes que nadie**:
 > si el push sale rechazado por aquí, no es un fallo — es que el otro carril trajo casos. Se remide

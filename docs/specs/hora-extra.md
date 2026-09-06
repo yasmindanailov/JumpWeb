@@ -1294,6 +1294,21 @@ abierta desde `#413`. Con ella se mueven a la vez el `readonly` del post-form, e
 panel, la ventana de dinero del suplemento mixto, el `$finished` del libro y «Mis reservas» — y por eso
 se corrieron también los verificadores de esos dos subsistemas.
 
+### T4·bis · La puerta del PANEL, que estuvo a punto de quedarse fuera
+
+⚠️⚠️ **El interruptor existía en el dominio y NO en el formulario del catálogo**, así que el owner no
+habría podido crear el complemento — el mecanismo entero habría quedado inalcanzable. Peor: el saneo
+del alta (`CreateCatalog::normalizeByType`) **borra `duration_min` de todo complemento** salvo el que
+la necesita, y solo conocía al ocupante. *Es exactamente el defecto que `#410` arregló para el
+hermano —«el panel borraba el dato del que depende el interruptor»— esperando a repetirse.*
+
+▶ Entra el toggle **excluyente** (cada uno se esconde cuando el otro está puesto: la combinación no
+existe y el dominio la rechaza, así que ofrecerla solo produciría un error al guardar), su duración
+con rótulo propio («cuánto **alarga** cada bloque»), y el **candado con ventas hechas** — que aquí
+tiene un motivo distinto al del ocupante: los minutos ya están materializados en cada línea, así que
+el aforo de lo vendido no se re-interpreta; **lo que se rompe es la EDICIÓN**, porque el editor
+reconoce a sus hijas por este interruptor y apagarlo acortaría la fiesta en el siguiente guardado.
+
 ### Lo que queda de §10
 
 Solo las tres decisiones de §10.6 que **no bloquean el código**: el precio de la hora extra (con el

@@ -5,6 +5,7 @@ namespace Tests\Feature\Sales;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Filament\Resources\Catalog\Pages\CreateCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
 use Tests\TestCase;
@@ -159,7 +160,48 @@ class StayExtensionGuardsTest extends TestCase
         $neutral->update(['extends_parent_stay' => true]);
     }
 
+    // ─── Las dos páginas del catálogo: la puerta por la que el dato entra ────────────
+
+    public function test_the_create_page_keeps_the_duration_of_an_extender(): void
+    {
+        // ⚠️⚠️ **Es el defecto que `#410` arregló para el ocupante, esperando al hermano**: el saneo
+        // del alta borra `duration_min` de todo complemento salvo el que la necesita. Sin esta rama
+        // el diseño sería coherente y **no se podría encender desde el panel** — el dato se perdería
+        // entre el formulario y el modelo, y el guard rechazaría la fila con un error incomprensible.
+        $data = $this->normalizeByType(TicketType::TYPE_ADDON, [
+            'extends_parent_stay' => true, 'duration_min' => 60, 'zone_id' => $this->zone->id,
+        ]);
+
+        $this->assertSame(60, $data['duration_min'] ?? null);
+        $this->assertNull($data['zone_id'], 'un complemento no tiene zona propia');
+    }
+
+    public function test_the_create_page_drops_the_duration_of_a_neutral_addon(): void
+    {
+        // CONTROL del anterior: sin ninguno de los dos interruptores, la duración se va — que es la
+        // política del alta y lo que hace que la rama de arriba signifique algo.
+        $data = $this->normalizeByType(TicketType::TYPE_ADDON, ['duration_min' => 60]);
+
+        $this->assertArrayNotHasKey('duration_min', $data);
+    }
+
+    public function test_a_non_addon_never_extends(): void
+    {
+        $data = $this->normalizeByType(TicketType::TYPE_PACK, ['extends_parent_stay' => true]);
+
+        $this->assertFalse($data['extends_parent_stay']);
+    }
+
     // ─── helpers ─────────────────────────────────────────────────────────────────────
+
+    /** Conduce el saneo real del ALTA (`CreateCatalog::normalizeByType`). */
+    private function normalizeByType(string $type, array $data): array
+    {
+        $method = new \ReflectionMethod(CreateCatalog::class, 'normalizeByType');
+        $method->setAccessible(true);
+
+        return $method->invoke(new CreateCatalog, $type, $data);
+    }
 
     private function makeExtender(?int $duration = 60): TicketType
     {

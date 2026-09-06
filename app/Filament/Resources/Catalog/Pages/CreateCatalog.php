@@ -138,17 +138,22 @@ class CreateCatalog extends CreateRecord
         // nula a propósito también para él (la hija hereda la de la franja que ocupa).
         if ($type === TicketType::TYPE_ADDON) {
             $data['zone_id'] = null;
-            $occupies = (bool) ($data['occupies_after_parent'] ?? false);
+            // ⚠️ **Los DOS interruptores conservan `duration_min`**, que es CUÁNTO ocupa o CUÁNTO
+            // alarga — y para el extensor (§10.3.1) el olvido sería el mismo defecto que `#410`
+            // arregló para el ocupante: el diseño coherente y la puerta de entrada tapiada.
+            $keepsDuration = (bool) ($data['occupies_after_parent'] ?? false)
+                || (bool) ($data['extends_parent_stay'] ?? false);
             foreach (['duration_min', 'available_after_open_min', 'available_before_close_min'] as $key) {
-                if ($key === 'duration_min' && $occupies) {
+                if ($key === 'duration_min' && $keepsDuration) {
                     continue;
                 }
                 unset($data[$key]);
             }
         } else {
-            // Solo un COMPLEMENTO puede ocupar detrás de un padre (regla 12; el guard del modelo
-            // lo rechazaría con excepción — aquí se normaliza antes de que llegue).
+            // Solo un COMPLEMENTO puede ocupar detrás de un padre o alargar su estancia (regla 12;
+            // los guards del modelo lo rechazarían con excepción — aquí se normaliza antes).
             $data['occupies_after_parent'] = false;
+            $data['extends_parent_stay'] = false;
         }
 
         // Un pack es «1 niño = 1 plaza» (auditoría Fase 1 · L2): `seats_per_unit` SIEMPRE 1. Con >1

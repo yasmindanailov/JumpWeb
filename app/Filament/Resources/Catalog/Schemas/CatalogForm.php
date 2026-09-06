@@ -219,6 +219,15 @@ class CatalogForm
             && $record->occupies_after_parent === true
             && CatalogResource::hasSales($record);
 
+        // Su hermano (`specs/hora-extra.md` §10.3.1): con ventas hechas el interruptor tampoco se
+        // apaga, y el motivo es OTRO —los minutos ya están materializados en cada línea, así que el
+        // aforo de lo vendido no se re-interpreta—: lo que se rompe es la EDICIÓN. El editor
+        // reconoce a sus hijas por este interruptor, así que apagarlo haría que el siguiente
+        // guardado del padre las diera por inexistentes y **acortara la fiesta sin que nadie lo pida**.
+        $lockedAsExtender = fn (?TicketType $record): bool => $record !== null
+            && $record->extends_parent_stay === true
+            && CatalogResource::hasSales($record);
+
         return Section::make(__('admin.catalog.section_occupancy'))
             ->description(__('admin.catalog.section_occupancy_hint'))
             ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ADDON)
@@ -234,19 +243,43 @@ class CatalogForm
                             ? __('admin.catalog.occupancy_locked_sold')
                             : __('admin.catalog.occupies_after_parent_hint')),
 
+                    // La hora extra de un PACK (§10): el hermano EXCLUYENTE del de arriba. Los dos
+                    // «prolongan la estancia», pero el ocupante se vende por PERSONA y éste por
+                    // BLOQUE DE TIEMPO — por eso son dos productos y no uno con dos modos. Cada uno
+                    // se esconde cuando el otro está puesto: la combinación no existe y el dominio
+                    // la rechaza, así que ofrecerla en pantalla solo produciría un error al guardar.
+                    Toggle::make('extends_parent_stay')
+                        ->label(__('admin.catalog.field_extends_parent_stay'))
+                        ->default(false)
+                        ->live()
+                        ->visible(fn (Get $get): bool => ! (bool) $get('occupies_after_parent'))
+                        ->disabled($lockedAsExtender)
+                        ->dehydrated(fn (?TicketType $record): bool => ! $lockedAsExtender($record))
+                        ->helperText(fn (?TicketType $record): string => $lockedAsExtender($record)
+                            ? __('admin.catalog.stay_extension_locked_sold')
+                            : __('admin.catalog.extends_parent_stay_hint')),
+                ]),
+
+                Grid::make(['default' => 1, 'sm' => 2])->schema([
                     // El MISMO `duration_min` de la operativa (una columna, dos puertas excluyentes
-                    // por tipo): aquí es «cuánto ocupa» y solo existe si el interruptor está puesto.
+                    // por tipo): aquí es «cuánto ocupa» —o «cuánto alarga»— y solo existe si uno de
+                    // los dos interruptores está puesto.
                     TextInput::make('duration_min')
-                        ->label(__('admin.catalog.field_occupies_duration_min'))
+                        ->label(fn (Get $get): string => (bool) $get('extends_parent_stay')
+                            ? __('admin.catalog.field_extends_duration_min')
+                            : __('admin.catalog.field_occupies_duration_min'))
                         ->numeric()
                         ->minValue(1)
-                        ->visible(fn (Get $get): bool => (bool) $get('occupies_after_parent'))
-                        ->required(fn (Get $get): bool => (bool) $get('occupies_after_parent'))
-                        ->disabled($lockedAsOccupant)
-                        ->dehydrated(fn (?TicketType $record): bool => ! $lockedAsOccupant($record))
-                        ->helperText(fn (?TicketType $record): string => $lockedAsOccupant($record)
-                            ? __('admin.catalog.occupancy_locked_sold')
-                            : __('admin.catalog.occupies_duration_min_hint')),
+                        ->visible(fn (Get $get): bool => (bool) $get('occupies_after_parent') || (bool) $get('extends_parent_stay'))
+                        ->required(fn (Get $get): bool => (bool) $get('occupies_after_parent') || (bool) $get('extends_parent_stay'))
+                        ->disabled(fn (?TicketType $record): bool => $lockedAsOccupant($record) || $lockedAsExtender($record))
+                        ->dehydrated(fn (?TicketType $record): bool => ! $lockedAsOccupant($record) && ! $lockedAsExtender($record))
+                        ->helperText(fn (?TicketType $record, Get $get): string => match (true) {
+                            $lockedAsOccupant($record) => __('admin.catalog.occupancy_locked_sold'),
+                            $lockedAsExtender($record) => __('admin.catalog.stay_extension_locked_sold'),
+                            (bool) $get('extends_parent_stay') => __('admin.catalog.extends_duration_min_hint'),
+                            default => __('admin.catalog.occupies_duration_min_hint'),
+                        }),
                 ]),
             ]);
     }

@@ -1880,6 +1880,14 @@ return [
         'field_occupies_duration_min' => 'Cuánto ocupa (minutos)',
         'occupies_duration_min_hint' => 'La duración de la estancia extra (60 = una hora). Obligatoria si ocupa: sin ella no se puede ofrecer.',
         'occupancy_locked_sold' => 'No se puede cambiar: hay ventas hechas con esta configuración y el aforo de lo vendido se re-interpretaría.',
+        // La hora extra de un PACK (`specs/hora-extra.md` §10): el hermano del de arriba. Su rótulo
+        // dice «alarga la fiesta» y no «ocupa» a propósito: lo que se vende es tiempo de SALA, no
+        // plazas para quien se queda — y de esa diferencia sale que su cantidad sean horas.
+        'field_extends_parent_stay' => 'Alarga la fiesta (hora extra de sala)',
+        'extends_parent_stay_hint' => 'Solo para complementos de un PACK. Encendido: cada unidad vendida alarga la fiesta —la sala sigue ocupada por ese grupo—, así que la cantidad son BLOQUES DE TIEMPO, no personas. No se puede combinar con «Ocupa la franja siguiente», que se vende por persona.',
+        'field_extends_duration_min' => 'Cuánto alarga cada bloque (minutos)',
+        'extends_duration_min_hint' => 'Lo que alarga UNA unidad (60 = una hora). Obligatoria: sin ella se estaría vendiendo una hora extra que no ocupa nada.',
+        'stay_extension_locked_sold' => 'No se puede cambiar: hay fiestas vendidas con esta hora extra, y apagarla acortaría su duración en la siguiente edición.',
         'field_seats_per_unit' => 'Plazas por unidad',
         'seats_per_unit_hint' => 'Plazas de aforo que consume cada unidad vendida.',
         'field_available_after_open_min' => 'Disponible tras la apertura',

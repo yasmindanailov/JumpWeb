@@ -191,7 +191,27 @@ class EditCatalog extends EditRecord
     private function normalizeAddonOccupancyOnEdit(TicketType $record, array $data): array
     {
         if (! $record->isAddon()) {
-            unset($data['occupies_after_parent']);
+            unset($data['occupies_after_parent'], $data['extends_parent_stay']);
+
+            return $data;
+        }
+
+        // La hora extra de un PACK (§10.3.1): el mismo candado para su hermano, por un motivo
+        // distinto — los minutos ya están materializados en cada línea, así que el aforo de lo
+        // vendido no se re-interpreta; lo que se rompe es la EDICIÓN, porque el editor reconoce a
+        // sus hijas por este interruptor y apagarlo acortaría la fiesta en el siguiente guardado.
+        $extends = (bool) ($data['extends_parent_stay'] ?? $record->extends_parent_stay);
+        if ($record->extends_parent_stay && ! $extends && CatalogResource::hasSales($record)) {
+            AuditLogger::log('catalog.update_blocked', $record, [
+                'reason' => 'stay_extension_change_forbidden_sold',
+            ]);
+            $extends = true;
+            unset($data['duration_min']); // conserva la del registro
+        }
+        $data['extends_parent_stay'] = $extends;
+        if ($extends) {
+            // Excluyentes por construcción: el dominio rechaza los dos a la vez.
+            $data['occupies_after_parent'] = false;
 
             return $data;
         }

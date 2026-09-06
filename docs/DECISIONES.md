@@ -24423,5 +24423,16 @@ de la franja**, con un pack de 2 h en una franja de 1 h y su hora extra encima.
 el `$finished` del libro y «Mis reservas»: por eso se corrieron también los verificadores de esos dos
 subsistemas, y por eso fue tanda propia y la última.
 
+### ⚠️⚠️ Y la puerta del PANEL estuvo a punto de quedarse fuera
+
+El interruptor existía en el dominio y **no en el formulario del catálogo**: el owner no habría podido
+crear el complemento y el mecanismo entero habría quedado inalcanzable. Peor: el saneo del alta
+**borra `duration_min` de todo complemento** salvo el que la necesita, y solo conocía al ocupante.
+*Es el defecto que `#410` arregló para el hermano —«el panel borraba el dato del que depende el
+interruptor»— esperando a repetirse.* Entra el toggle excluyente, su duración con rótulo propio y el
+candado con ventas, cuyo motivo aquí es **otro**: los minutos ya están materializados, así que lo que
+se rompe al apagarlo no es el aforo de lo vendido sino la EDICIÓN —el editor reconoce a sus hijas por
+ese interruptor y acortaría la fiesta en el siguiente guardado—.
+
 ▶ **Queda solo lo que no bloquea el código**: el precio de la hora extra, el `max_qty` del enganche y
 las cotas del mostrador (§10.6).
