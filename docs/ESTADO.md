@@ -93,10 +93,19 @@
 >    tiene que caer FUERA y chocar solo por la ventana alargada. Al rehacerlo salió lo que faltaba:
 >    la lista de HORAS del modal pasa por **otra vía** (`displayAvailableFor`) y solo una estaba
 >    arreglada. Suite **4.351** · **18/18 mutaciones** · los OCHO escenarios en verde.
->    ▶ **LO SIGUIENTE: T4** (superficies: ventana mostrada, hoja de sala, puerta, correos) y **T5**
->    (`isFinishedInPractice()`, los dos defectos a la vez — arreglar uno solo EMPEORA). Las tres
->    decisiones de §10.6 que quedan **no bloquean el código**: el precio, el `max_qty` del enganche y
->    las cotas del mostrador.
+>    ▶ ✅ **T4 y T5 HECHAS: LAS CINCO TANDAS ESTÁN EN EL ÁRBOL** (`#426`, §10.11). **T4**: la ventana
+>    que se lee sale de la duración EFECTIVA —hoja de sala, resumen del día, puerta, correos y «Mis
+>    reservas» por fuente única, y el calendario del panel aparte, que pintaba la del PRODUCTO—.
+>    **T5**: `isFinishedInPractice()` compara **inicio + duración efectiva en hora del parque**, y
+>    con ella **cierra la ficha ALTA de `DEUDA.md`** abierta desde `#413`. ⚠️⚠️ **Un test cementaba
+>    la premisa vieja y se REESCRIBIÓ** (viajaba a «las 10:30 UTC» creyendo que la franja de las
+>    10:00 era UTC: son las 12:30 del parque, hora y media después de terminar la visita).
+>    Suite **4.353** · **22/22 mutaciones** · los OCHO escenarios + `postform:verify-concurrency` y
+>    `mixed-party:verify-concurrency`, que cuelgan del predicado tocado.
+>    ▶ **QUEDA SOLO LO QUE NO BLOQUEA EL CÓDIGO** (§10.6): el precio de la hora extra (con el coste de
+>    oportunidad de §10.4 delante: si todas la compran, el sábado pasa de 15 fiestas a 9), el
+>    `max_qty` del enganche y si el mostrador lleva las mismas cotas. **El mecanismo está completo**:
+>    lo que falta es configurar el complemento en el panel y el OJO del owner.
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -379,7 +388,7 @@
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
 > ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
-> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#425`**. Las
+> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#426`**. Las
 > otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está
@@ -1565,13 +1574,13 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4351 en verde** (27.099 aserciones, 1 skipped a propósito), medida el **2026-09-06** sobre el
+> Suite **4353 en verde** (27.104 aserciones, 1 skipped a propósito), medida el **2026-09-06** sobre el
 > árbol con **LOS DOS CARRILES FUSIONADOS**: las siete tandas del panel (`#461` +12 · `#462` +13 ·
 > `#463` +10 · `#464` +13 · `#465` +8 · `#466` +6 · `#467`, y **siete casos re-apuntados por sujeto**
 > al retirarse la tira de días y el *toast* del desenlace) **más las del carril de complementos**
 > (`#415` +6 · `#417` +12 · `#418` +1), **`#468` +1** (la guarda de tokens, que dependía de un
-> fichero gitignorado), **`#420` +11** (`OverlappingSlotGridTest`, la rejilla solapada) **y `#424`+`#425` +27**
-> (la hora extra de un pack: `PackStayExtensionTest` 17 + `StayExtensionGuardsTest` 10).
+> fichero gitignorado), **`#420` +11** (`OverlappingSlotGridTest`, la rejilla solapada) **y `#424`→`#426` +29**
+> (la hora extra de un pack: `PackStayExtensionTest` 18 + `StayExtensionGuardsTest` 10 + 1 de `OrderItemStatusTest`).
 > **JS 951** (`node --test`).
 > ⚠️⚠️ **Con dos carriles vivos esta cifra CADUCA al fusionar, y el hook lo dice antes que nadie**:
 > si el push sale rechazado por aquí, no es un fallo — es que el otro carril trajo casos. Se remide

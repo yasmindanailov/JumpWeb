@@ -125,10 +125,13 @@ class CalendarEventsController extends Controller
         $startTime = substr((string) $slot->start_time, 0, 8) ?: '00:00:00';
         $start = $date.'T'.$startTime;
 
-        // Fin = inicio + duración del producto; si es ilimitada (entrada sin
-        // duración), cae a la hora de cierre de la franja.
-        if (! empty($type->duration_min)) {
-            $end = CarbonImmutable::parse($start)->addMinutes((int) $type->duration_min)->format('Y-m-d\TH:i:s');
+        // Fin = inicio + duración EFECTIVA de la reserva (`specs/hora-extra.md` §10.3: la del
+        // producto más lo que la alarguen sus horas extra); si es ilimitada (entrada sin duración),
+        // cae a la hora de cierre de la franja. ⚠️ El bloque del calendario es donde el operador ve
+        // de un vistazo qué salas están ocupadas: pintarlo corto enseña un hueco que no existe.
+        $effective = $item->occupiedMinutes();
+        if (! empty($effective)) {
+            $end = CarbonImmutable::parse($start)->addMinutes((int) $effective)->format('Y-m-d\TH:i:s');
         } else {
             $endTime = substr((string) $slot->end_time, 0, 8) ?: $startTime;
             $end = $date.'T'.$endTime;

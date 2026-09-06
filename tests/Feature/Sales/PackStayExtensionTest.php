@@ -411,6 +411,20 @@ class PackStayExtensionTest extends TestCase
         $this->assertContains('15:00:00', $horas, 'la hora actual siempre se ofrece');
     }
 
+    // ─── Lo que se LEE: la ventana de la reserva (T4) ────────────────────────────────
+
+    public function test_the_displayed_window_includes_the_extra_hour(): void
+    {
+        // ⚠️ Esta ventana es la que el operador lee en la hoja de sala y el cliente en su reserva, y
+        // sale de UN sitio para todas las superficies. Decir «15:00–17:00» de una fiesta que acaba a
+        // las 18:00 no es un detalle de estilo: es la sala dada por libre una hora antes de tiempo.
+        $conExtra = $this->buy('15:00:00', 20, 1)->items()->whereNull('parent_item_id')->firstOrFail();
+        $sinExtra = $this->buy('18:00:00', 20, 0)->items()->whereNull('parent_item_id')->firstOrFail();
+
+        $this->assertSame('15:00–18:00', $conExtra->fresh('ticketType')->displayTimeWindow());
+        $this->assertSame('18:00–20:00', $sinExtra->fresh('ticketType')->displayTimeWindow());
+    }
+
     // ─── helpers ─────────────────────────────────────────────────────────────────────
 
     /**

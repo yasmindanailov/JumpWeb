@@ -8,6 +8,7 @@ use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Services\AuditLogger;
+use App\Domain\Platform\Services\DisplayTime;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -101,8 +102,9 @@ class OrderItem extends Model
 
     /**
      * Ventana horaria a MOSTRAR para esta línea: hora de entrada → entrada + la
-     * **duración del producto** (p. ej. un pack de 2h entrando a las 10:00 →
-     * "10:00–12:00"). Las franjas de aforo son siempre de 60 min (rejilla horaria),
+     * **duración EFECTIVA de la reserva** ({@see occupiedMinutes()}: la del producto más lo que la
+     * alarguen sus horas extra), p. ej. un pack de 2h entrando a las 10:00 → "10:00–12:00", y
+     * "10:00–13:00" si compró una hora extra. Las franjas de aforo son siempre de 60 min (rejilla horaria),
      * así que `slot->end_time` NO refleja la duración real del producto — por eso se
      * calcula aquí desde `duration_min`. Para productos ilimitados (sin duración) se
      * muestra solo la hora de entrada (la etiqueta de duración ya dice "Ilimitada").
@@ -116,7 +118,12 @@ class OrderItem extends Model
         }
 
         $start = CarbonImmutable::createFromFormat('H:i:s', substr((string) $slot->start_time, 0, 8));
-        $duration = $this->ticketType?->duration_min;
+        // ⚠️ La duración EFECTIVA, no la del producto (`specs/hora-extra.md` §10.3): una fiesta con
+        // hora extra dura más, y esta ventana es lo que el operador lee en la hoja de sala y el
+        // cliente en su reserva. Decir «15:00–17:00» de una fiesta que acaba a las 18:00 no es un
+        // detalle de estilo: es la sala vacía una hora antes de tiempo, o el grupo dentro cuando el
+        // parque cree que ya se ha ido.
+        $duration = $this->occupiedMinutes();
 
         // Ilimitada: hora de entrada + marca explícita de que no hay fin ("10:00 – sin límite"),
         // en paralelo a la franja con duración ("10:00–12:00").
@@ -355,12 +362,29 @@ class OrderItem extends Model
     }
 
     /**
-     * ¿Este item ya pasó su slot (= "finalizado")? Lectura pura — no toca BD.
+     * ¿Este item ya TERMINÓ de verdad? Lectura pura — no toca BD.
+     *
+     * ❗❗❗ **Tenía DOS defectos, y en direcciones OPUESTAS** (`DECISIONES #423` · A1,
+     * `specs/hora-extra.md` §10.8): comparaba el fin de la **FRANJA** —que con la rejilla de 60 min
+     * se queda corto para todo lo que dure más, una fiesta de 2 h incluida— y lo parseaba en
+     * `config('app.timezone')` = **UTC**, cuando las franjas guardan **hora de pared del parque**.
+     * Uno adelantaba ~1 h y el otro atrasaba 1–2 h, así que **se compensaban por accidente**: medido
+     * sobre una fiesta de 2 h que empieza a las 15:00 y acaba a las 17:00 del parque, se declaraba
+     * terminada a las **18:00**; arreglando solo la duración habría pasado a las **19:00**. *Un
+     * defecto que se compensa con otro no se arregla por mitades.*
      *
      * Reglas:
-     *  - Si tiene `parent_item_id` (= es un addon): hereda el estado del parent.
-     *  - Si tiene `slot_id`: compara `slot.end_time < now()` (UTC, coherente con BD).
-     *  - Sin slot ni parent (caso teórico, no esperado en v1): devuelve false.
+     *  - Si tiene `parent_item_id` (= es un addon): hereda el estado del padre.
+     *  - Si tiene franja: **inicio + duración EFECTIVA** ({@see occupiedMinutes()}, que incluye las
+     *    horas extra), en la zona OPERATIVA del parque (`AFORO-09`).
+     *  - **Duración ilimitada** → cae al fin de la franja, que es lo único que hay; también en hora
+     *    del parque.
+     *  - Sin franja ni padre (caso teórico, no esperado en v1): devuelve false.
+     *
+     * ⚠️ De este predicado cuelgan el `readonly` del post-form (web y API), el `item_finished` del
+     * gate de edición del panel, la ventana de dinero del suplemento mixto, el `$finished` del LIBRO
+     * (`OrderBook`, la liquidación implícita) y «Mis reservas»: mover esta frontera los mueve a
+     * todos, y por eso el arreglo fue tanda propia.
      */
     public function isFinishedInPractice(): bool
     {
@@ -369,14 +393,28 @@ class OrderItem extends Model
         }
 
         $slot = $this->slot;
-        if ($slot === null || $slot->end_time === null || $slot->date === null) {
+        if ($slot === null || $slot->date === null) {
             return false;
         }
 
-        // Combinar fecha + hora del slot. `end_time` viene como 'HH:MM:SS' string.
-        $endsAt = CarbonImmutable::parse($slot->date->format('Y-m-d').' '.$slot->end_time);
+        $minutes = $this->occupiedMinutes();
+        $day = $slot->date->format('Y-m-d');
+        $zone = DisplayTime::timezone();
 
-        return $endsAt->isPast();
+        // Ilimitada (sin duración propia): lo único que acota es el fin de su franja.
+        if ($minutes === null) {
+            return $slot->end_time === null
+                ? false
+                : CarbonImmutable::parse($day.' '.$slot->end_time, $zone)->isPast();
+        }
+
+        if ($slot->start_time === null) {
+            return false;
+        }
+
+        return CarbonImmutable::parse($day.' '.$slot->start_time, $zone)
+            ->addMinutes($minutes)
+            ->isPast();
     }
 
     /**

@@ -24393,3 +24393,35 @@ los OCHO escenarios sobre InnoDB con 12 workers · Pint ✓ · docs-check ✓.
 
 ▶ **Queda**: T4 (superficies: ventana mostrada, hoja de sala, puerta, correos) y T5
 (`isFinishedInPractice()`, los dos defectos a la vez).
+
+## #426 · 2026-09-06 · T4 y T5: la ventana que se lee y cuándo termina de verdad una fiesta — dos defectos que se compensaban
+
+Con esto **las cinco tandas de la hora extra en packs están en el árbol** (`hora-extra.md` §10.11).
+Suite **4.353 verde** · **22/22 mutaciones** · los OCHO escenarios de sobreventa más
+`postform:verify-concurrency` y `mixed-party:verify-concurrency`, que cuelgan del predicado que la T5
+mueve.
+
+▶ **T4**: `displayTimeWindow()` pasa a la duración EFECTIVA y con ella todas las superficies que la
+consumen (hoja de sala, resumen del día, puerta, correos, «Mis reservas»), porque es fuente única; el
+calendario del panel se arregla aparte, que pintaba el bloque con la duración del PRODUCTO. ⚠️ Decir
+«15:00–17:00» de una fiesta que acaba a las 18:00 no es estilo: es la sala dada por libre una hora
+antes de tiempo.
+
+▶ **T5**: `isFinishedInPractice()` compara **inicio + duración efectiva en la zona del parque**, en
+vez de el fin de la FRANJA parseado como UTC. ❗❗❗ **Los dos defectos iban en direcciones opuestas y
+se compensaban por accidente** —lo que hacía peligroso arreglar uno solo (`#423` · A1: habría llevado
+el desfase de 18:00 a 19:00 cuando la fiesta acaba a las 17:00)—.
+
+⚠️⚠️ **Un test cementaba la premisa vieja y se REESCRIBIÓ**: viajaba a las «10:30 UTC» dando por hecho
+que una franja de las 10:00 era UTC, cuando son las 12:30 del parque — hora y media después de que la
+visita hubiera terminado. *El caso afirmaba lo contrario de lo que quería afirmar.* Hoy viaja a las
+08:30 UTC (10:30 del parque) y hay uno nuevo que fija la otra mitad: **el fin sale de la duración, no
+de la franja**, con un pack de 2 h en una franja de 1 h y su hora extra encima.
+
+▶ **Cierra la ficha ALTA de `DEUDA.md`** abierta desde `#413`. Con ella se mueven a la vez el
+`readonly` del post-form, el `item_finished` del panel, la **ventana de dinero** del suplemento mixto,
+el `$finished` del libro y «Mis reservas»: por eso se corrieron también los verificadores de esos dos
+subsistemas, y por eso fue tanda propia y la última.
+
+▶ **Queda solo lo que no bloquea el código**: el precio de la hora extra, el `max_qty` del enganche y
+las cotas del mostrador (§10.6).

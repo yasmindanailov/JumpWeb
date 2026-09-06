@@ -122,12 +122,45 @@ class OrderItemStatusTest extends TestCase
      */
     public function test_item_with_today_slot_still_running_is_not_finished(): void
     {
-        $this->travelTo('2026-05-14 10:30:00');
+        // ⚠️⚠️ **ESTE CASO CAMBIÓ DE PREMISA** (`DECISIONES #426`, `specs/hora-extra.md` §10.8·A1):
+        // afirmaba que las franjas se interpretan en UTC, y lo que guardan es **hora de pared del
+        // parque** — el defecto que `isFinishedInPractice()` arrastraba. `travelTo()` mueve el reloj
+        // en la zona de la app (UTC), así que las 08:30 UTC son **las 10:30 del parque** en mayo:
+        // media hora dentro de una franja que va de 10:00 a 11:00. Con la hora anterior (10:30 UTC =
+        // 12:30 del parque) la visita llevaba una hora y media terminada.
+        $this->travelTo('2026-05-14 08:30:00');
 
         $slot = $this->makeSlot('2026-05-14', '10:00:00', '11:00:00');
         $item = $this->makeItem($this->makeOrder(), $slot);
 
         $this->assertFalse($item->isFinishedInPractice());
+    }
+
+    public function test_the_end_is_the_products_duration_and_not_the_slots(): void
+    {
+        // La otra mitad de `#426`: el fin sale de la duración EFECTIVA de la reserva, no del fin de
+        // la FRANJA. Una entrada de 1 h en una franja de 1 h coincide; lo que no coincidía —y es lo
+        // que este caso fija— es todo lo que dura más que su franja, empezando por un pack de 2 h.
+        $this->travelTo('2026-05-14 09:30:00');   // 11:30 del parque
+
+        $pack = TicketType::create([
+            'name' => ['es' => 'Cumple 2h'], 'zone_id' => $this->zone->id, 'type' => TicketType::TYPE_PACK,
+            'duration_min' => 120, 'min_qty' => 1, 'max_qty' => 20,
+            'is_sellable' => true, 'is_active' => true, 'seats_per_unit' => 1, 'position' => 2,
+        ]);
+        $slot = $this->makeSlot('2026-05-14', '10:00:00', '11:00:00');
+        $item = $this->makeItem($this->makeOrder(), $slot);
+        $item->forceFill(['ticket_type_id' => $pack->id])->save();
+
+        // La franja acabó a las 11:00 del parque, pero la fiesta dura hasta las 12:00: sigue viva.
+        $this->assertFalse($item->fresh('ticketType')->isFinishedInPractice());
+
+        // Y con una hora extra comprada, hasta las 13:00.
+        $item->forceFill(['extra_minutes' => 60])->save();
+        $this->travelTo('2026-05-14 10:30:00');   // 12:30 del parque
+        $this->assertFalse($item->fresh('ticketType')->isFinishedInPractice());
+        $this->travelTo('2026-05-14 11:30:00');   // 13:30 del parque
+        $this->assertTrue($item->fresh('ticketType')->isFinishedInPractice());
     }
 
     public function test_addon_inherits_finished_state_from_parent(): void

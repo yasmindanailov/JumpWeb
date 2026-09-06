@@ -1257,3 +1257,45 @@ lección (`#238`).
 ⚠️ Y ese mismo caso destapó que **tocar `slotMeetsItemRequirements` no bastaba**: `times()` —la lista
 de HORAS, que es la que usa el modal— pasa por `displayAvailableFor`, otra vía. Las dos hacían la
 misma pregunta y solo una estaba arreglada.
+
+
+## 10.11 · Lo EJECUTADO — T4 y T5: lo que se LEE y cuándo termina la fiesta (`#426`, 2026-09-06)
+
+Con esto **las cinco tandas de §10 están en el árbol**. Suite **4.353** · **22/22 mutaciones** · los
+OCHO escenarios de sobreventa + `postform:verify-concurrency` y `mixed-party:verify-concurrency`, que
+cuelgan del predicado que la T5 mueve.
+
+### T4 · La ventana que se lee
+
+`OrderItem::displayTimeWindow()` pasa a la **duración efectiva**, y con ella todas las superficies que
+la consumen —hoja de sala, resumen del día, puerta, correos, «Mis reservas»—, porque es fuente única.
+El **calendario del panel** se arregla aparte: pintaba el bloque con `ticket_types.duration_min` y
+ahora usa la de la reserva. ⚠️ Decir «15:00–17:00» de una fiesta que acaba a las 18:00 no es un
+detalle de estilo: es la sala dada por libre una hora antes de tiempo.
+
+### T5 · Cuándo termina una fiesta — los DOS defectos a la vez
+
+`isFinishedInPractice()` compara ahora **inicio + duración efectiva, en la zona operativa del parque**
+(`AFORO-09`), en vez de el fin de la FRANJA parseado como UTC.
+
+❗❗❗ **Los dos iban en direcciones opuestas y se compensaban por accidente**, que es lo que hacía
+peligroso arreglar uno solo (medido en §10.8·A1: 18:00 → 19:00 en vez de 17:00). Con los dos, el
+predicado dice la verdad.
+
+⚠️⚠️ **Un test cementaba la premisa vieja y se REESCRIBIÓ**: `test_item_with_today_slot_still_running`
+viajaba a las 10:30 «UTC» dando por hecho que la franja de las 10:00 era UTC. Son las 12:30 del
+parque, o sea hora y media DESPUÉS de que la visita terminara — el caso afirmaba lo contrario de lo
+que quería afirmar. Hoy viaja a las 08:30 UTC (10:30 del parque) y hay un caso nuevo que fija la otra
+mitad: **el fin sale de la duración, no de la franja**, con un pack de 2 h en una franja de 1 h y su
+hora extra encima.
+
+▶ **Cierra la ficha ALTA de `DEUDA.md`** («declara terminada una reserva 1–2 horas tarde»), que estaba
+abierta desde `#413`. Con ella se mueven a la vez el `readonly` del post-form, el `item_finished` del
+panel, la ventana de dinero del suplemento mixto, el `$finished` del libro y «Mis reservas» — y por eso
+se corrieron también los verificadores de esos dos subsistemas.
+
+### Lo que queda de §10
+
+Solo las tres decisiones de §10.6 que **no bloquean el código**: el precio de la hora extra (con el
+coste de oportunidad de §10.4 delante), el `max_qty` del enganche y si el mostrador lleva las mismas
+cotas (suelo propuesto: sí). El mecanismo está completo y verificado.

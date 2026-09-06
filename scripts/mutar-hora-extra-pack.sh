@@ -12,7 +12,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='PackStayExtensionTest|StayExtensionGuardsTest|OverlappingSlotGridTest|PackAvailabilityTest|SlotAvailabilityTest'
+FILTER='PackStayExtensionTest|StayExtensionGuardsTest|OverlappingSlotGridTest|PackAvailabilityTest|SlotAvailabilityTest|OrderItemStatusTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="$(mktemp -d)"
@@ -27,6 +27,7 @@ FICHEROS=(
     app/Domain/Booking/Services/ItemRescheduleOffer.php
     app/Domain/Booking/Models/ProductAddon.php
     app/Domain/Booking/Models/TicketType.php
+    app/Domain/Booking/Models/OrderItem.php
 )
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
@@ -71,6 +72,7 @@ OE=app/Domain/Booking/Services/OrderItemEditor.php
 IRO=app/Domain/Booking/Services/ItemRescheduleOffer.php
 PAD=app/Domain/Booking/Models/ProductAddon.php
 TT=app/Domain/Booking/Models/TicketType.php
+OI=app/Domain/Booking/Models/OrderItem.php
 
 # ── El hueco de §10.1: el aforo tiene que VER la extensión ────────────────────────────────────
 mutar "el cupo de SALA vuelve a ignorar los minutos extra (el hueco medido)" "$PA" \
@@ -166,6 +168,28 @@ mutar "los dos interruptores dejan de ser excluyentes" "$TT" \
   "            if (false) {
                 throw new \\InvalidArgumentException(
                     'Un complemento no puede EXTENDER y OCUPAR a la vez"
+
+# ── El FIN de la fiesta (T5): los DOS defectos, que se compensaban ────────────────────────────
+mutar "el fin vuelve a salir de la FRANJA y no de la duración" "$OI" \
+  "        return CarbonImmutable::parse(\$day.' '.\$slot->start_time, \$zone)
+            ->addMinutes(\$minutes)
+            ->isPast();" \
+  "        return \$slot->end_time !== null
+            && CarbonImmutable::parse(\$day.' '.\$slot->end_time, \$zone)->isPast();"
+
+mutar "el fin vuelve a leerse en UTC en vez de en hora del parque" "$OI" \
+  "        return CarbonImmutable::parse(\$day.' '.\$slot->start_time, \$zone)
+            ->addMinutes(\$minutes)" \
+  "        return CarbonImmutable::parse(\$day.' '.\$slot->start_time)
+            ->addMinutes(\$minutes)"
+
+mutar "la ventana MOSTRADA se queda en la duración del producto" "$OI" \
+  "        \$duration = \$this->occupiedMinutes();" \
+  "        \$duration = \$this->ticketType?->duration_min;"
+
+mutar "la duración efectiva ignora los minutos comprados" "$OI" \
+  "        return \$base === null ? null : (int) \$base + (int) (\$this->extra_minutes ?? 0);" \
+  "        return \$base === null ? null : (int) \$base;"
 
 echo
 echo "mutaciones que muerden: ${muerden}/${total}"
