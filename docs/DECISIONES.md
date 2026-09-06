@@ -24487,3 +24487,27 @@ queda ocupado a las 17:00 y 18:00 y libre a las 19:00.
 ▶ **Pendiente de tu confirmación**: «Hora extra · KIDS» sigue colgando de la entrada «Kids · 2 horas».
 Si la hora extra de ENTRADA es solo para JUMP, hay que retirar ese enganche — no se ha tocado porque
 retirar un complemento con ventas hechas no es inocuo.
+
+
+## #428 · 2026-09-06 · Dos defectos que salieron al revisar el catálogo: uno del dato y otro MÍO
+
+Al resumir cómo quedaba el catálogo aparecieron dos cosas que no se estaban buscando.
+
+▶ **`Kids · Ilimitada` se OFRECE los fines de semana y el checkout la RECHAZA.** No tiene precio en la
+tarifa `special`, y `SlotOffer::passesOffer()` mira franja, horario y antelación **pero no el precio**
+— a diferencia de la oferta de COMPLEMENTOS, donde «sin tarifa ese día no se ofrece» es regla desde
+`#410`. Medido: 10 horas ofrecidas el sábado, `tickets.errors.unavailable` al pagar. *El cliente elige
+día y hora y se lo tumban al final sin decirle por qué.* ▶ Ficha ALTA en `DEUDA.md` con **dos salidas**
+—el dato o el mecanismo— y la primera es del owner: si la ilimitada se vende los findes, le falta el
+precio; si no se vende, hoy no hay forma de decirlo salvo desactivarla.
+
+▶ **Y el escenario `stay-extension` de `#424` dejaba basura**: **12 «Hora extra Probe» huérfanos** en la
+BD de desarrollo. ⚠️⚠️ Lo caro es *dónde* estaba el fallo: el comando **ya tenía** esa limpieza, con un
+comentario que explica exactamente por qué hace falta («el complemento tiene zona NULA, el barrido por
+zona no lo vería»)… y **miraba solo la clave `seed['addon']`**, mientras mi escenario guarda el suyo en
+`seed['extender']`. *Una limpieza que enumera claves a mano se queda corta en silencio, y el comentario
+que la justifica no la actualiza.* Hoy recorre las dos y la lista está señalada como lo que hay que
+ampliar al añadir un escenario con complemento. Verificado: tras una corrida, **0 huérfanos**.
+
+⚠️ Las zonas y las franjas **sí** se limpiaban: el barrido por zona funcionaba. Lo que se escapaba era
+justo lo que no tiene zona — que es la razón de ser de esa rama.

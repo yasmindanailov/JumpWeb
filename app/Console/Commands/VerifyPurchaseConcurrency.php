@@ -1428,11 +1428,20 @@ class VerifyPurchaseConcurrency extends Command
         OrderItem::whereIn('order_id', $orderIds)->delete();
         Order::whereIn('id', $orderIds)->delete();
 
-        // `extra-hour` crea además el COMPLEMENTO, que tiene zona NULA a propósito (la hija hereda
-        // la de la franja que ocupa): el barrido por zona de abajo no lo vería y quedaría en la BD
-        // de desarrollo tras cada ejecución, con su precio y su enganche.
-        if (isset($seed['addon'])) {
-            $addon = TicketType::find($seed['addon']->id);
+        // `extra-hour` y `stay-extension` crean además un COMPLEMENTO, que tiene zona NULA a
+        // propósito (la hija hereda la de la franja que ocupa, y un extensor ni siquiera tiene
+        // franja): el barrido por zona de abajo no lo vería y quedaría en la BD de desarrollo tras
+        // cada ejecución, con su precio y su enganche.
+        //
+        // ⚠️⚠️ **Se recorren las DOS claves**, y esa lista es la que hay que ampliar al añadir un
+        // escenario con complemento: `stay-extension` guardaba el suyo en `extender` y esta limpieza
+        // solo miraba `addon`, así que dejó **12 «Hora extra Probe» huérfanos** en la BD local antes
+        // de que nadie lo notara. *Una limpieza que enumera claves a mano se queda corta en silencio.*
+        foreach (['addon', 'extender'] as $clave) {
+            if (! isset($seed[$clave])) {
+                continue;
+            }
+            $addon = TicketType::find($seed[$clave]->id);
             if ($addon !== null) {
                 $addon->prices()->delete();
                 DB::table('product_addons')->where('addon_id', $addon->id)->delete();

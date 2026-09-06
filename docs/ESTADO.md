@@ -117,7 +117,14 @@
 >    precio vive en el PRODUCTO y el pivote no tiene columna de precio — fusionarlos iguala los
 >    dos packs sin que falle nada. ⚠️ **Menú 1 y Menú 2 no pueden ir al post-form** (grupo
 >    excluyente + incluido: se auto-inyectaría un cargo que nadie pidió). ▶ **Falta replicarlo en
->    PRODUCCIÓN por el panel**, y confirmar si se retira «Hora extra · KIDS» de la entrada de 2 h.
+>    PRODUCCIÓN por el panel**. ✅ `[owner]`: la hora extra de ENTRADA se queda en **KIDS y JUMP**,
+>    solo en el producto de 2 h y solo con tarifa especial — no se retira nada.
+>    ⚠️⚠️ **Y al revisar el catálogo salieron DOS defectos** (`#428`): **«Kids · Ilimitada» se
+>    OFRECE los fines de semana y el checkout la RECHAZA** —no tiene precio en `special` y
+>    `passesOffer()` no mira el precio, a diferencia de la oferta de complementos— (ficha ALTA en
+>    `DEUDA.md`, con dos salidas y la primera es del owner); y el escenario `stay-extension` de
+>    `#424` **dejaba 12 «Hora extra Probe» huérfanos** porque la limpieza que ya existía miraba
+>    solo la clave `addon` y mi escenario usa `extender`. Arreglado y verificado: 0 huérfanos.
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -400,7 +407,7 @@
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
 > ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
-> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#427`**. Las
+> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#428`**. Las
 > otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está
