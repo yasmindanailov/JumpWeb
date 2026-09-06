@@ -24555,3 +24555,42 @@ cuesta lo mismo que en lote y la mutación pasaba en verde. *Medir donde el fall
 lección de `#238`, ahora en un test de presupuesto.
 
 ▶ **Fichas retiradas de `DEUDA.md`**: la ALTA de `#428` queda cerrada por el mecanismo.
+
+## #430 · 2026-09-06 · El TERCER despliegue, preparado: 79 commits, cuatro migraciones aditivas — y un catálogo que el script NO configura
+
+Preparación del despliegue a producción de todo lo hecho desde el 2026-09-02 (`ENTORNOS.md` §6).
+**Nada desplegado todavía**: esto es el plan, medido contra la máquina real.
+
+▶ **79 commits**: complementos de venta posterior (`#413`→`#419`), hora extra de entrada (`#410`), **la
+hora extra de un pack** (`#421`→`#427`), la rejilla de media hora (`#420`), el arreglo de la oferta sin
+precio (`#429`) y **el panel de admin** (`#460`→`#467`).
+
+▶ **Las CUATRO migraciones son puramente ADITIVAS** —columnas nuevas con default seguro— y **con esos
+valores por defecto no cambia la conducta de nada vendido**. Comprobado leyendo las cuatro, no
+suponiéndolo.
+
+### ❗❗❗ Lo que el despliegue NO hace, medido en la máquina
+
+Consultada producción por SSH (**solo lectura**): **no existe ninguna hora extra** —ni de entrada ni de
+sala— y los siete complementos de comida están enganchados **sin fase**, así que tras migrar quedarían
+**todos en «al reservar»**, que es el valor por defecto de la columna nueva. *Desplegar el código y
+dar el catálogo por hecho habría dejado el post-form vacío y la hora extra inexistente, con todo
+«verde».*
+
+▶ Para eso queda preparado un script **idempotente** (fuera del repo, bajo `storage/`, porque es
+catálogo de cliente y no producto): crea las dos horas extra de entrada —**solo tarifa especial**, que
+es lo que las esconde de lunes a jueves—, las dos de sala con su precio por tarifa, y pasa los siete de
+comida a post-form con corte de 48 h. Probado **dos veces seguidas en local**: misma salida, nada
+duplicado.
+
+⚠️ **Y el paquete del cliente sigue pendiente desde `#434`/`#436`**: medido, el `client.css` de
+producción **no tiene ninguna** de las cinco líneas (`--on-ok`, `--on-err`, las tres de
+`--interactive`). No viaja por rsync.
+
+⚠️ `deploy.sh` **no hace copia de la base de datos** y corre `migrate --force`: la copia va antes, a
+mano, como en los dos despliegues anteriores (ficha viva en `DEUDA.md`).
+
+▶ **El orden importa y está escrito**: copia → `deploy.sh` → configurar catálogo (las columnas tienen
+que existir antes) → las cinco líneas del `client.css` → verificación. ▶ **La compra online sigue
+CERRADA** (`sales.online_enabled = 0`), así que nada de esto se le enseña a un cliente todavía: es la
+ventana para verificarlo sin prisa.

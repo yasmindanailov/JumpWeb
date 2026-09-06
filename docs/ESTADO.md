@@ -134,6 +134,14 @@
 >    su premisa nueva. ⚠️ **El coste lo delató `ApiOverheadTest`** (40 consultas de presupuesto 22)
 >    antes de llegar a ninguna pantalla: hoy las tarifas van en LOTE y **el catálogo normal ni
 >    entra en la rama**, así que `offerableDates` vuelve a los **18 ms** de `#465`. 4/4 mutaciones.
+>    ▶ 🚀 **EL TERCER DESPLIEGUE ESTÁ PREPARADO Y PENDIENTE DEL OWNER** (`#430`, `ENTORNOS.md` §6):
+>    79 commits, **cuatro migraciones puramente ADITIVAS** (nada vendido cambia de conducta).
+>    ❗❗❗ **El despliegue NO configura el catálogo, y eso se midió en la máquina**: en producción
+>    **no existe ninguna hora extra** y los siete complementos de comida quedarían **todos en «al
+>    reservar»** tras migrar. Hay un script idempotente preparado (fuera del repo) que lo deja
+>    todo, probado dos veces en local. ⚠️ El `client.css` de producción **sigue sin las cinco
+>    líneas** de `#434`/`#436` (medido). ▶ Orden: copia de BD → `deploy.sh` → catálogo → CSS →
+>    verificación. La compra online sigue CERRADA, que es la ventana para verificar sin prisa.
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -416,7 +424,7 @@
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
 > ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
-> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#429`**. Las
+> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#430`**. Las
 > otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está

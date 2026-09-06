@@ -360,6 +360,39 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 
 ## 6 · PRODUCCIÓN · playjump.es, MEDIDO (2026-09-01, `DECISIONES #325`)
 
+> 🚀 **TERCER DESPLIEGUE · PREPARADO Y PENDIENTE DEL OWNER** (2026-09-06, `DECISIONES #430`).
+> **79 commits** desde el segundo (`64ff3b6`): los complementos de venta posterior (`#413`→`#419`), la
+> hora extra de entrada (`#410`), **la hora extra de un pack** (`#421`→`#427`), la rejilla de media
+> hora (`#420`), el arreglo de la oferta sin precio (`#429`) y **el panel de admin** (`#460`→`#467`:
+> el shell nuevo y el asistente de «Crear pedido» en siete pasos).
+>
+> ▶ **Las CUATRO migraciones son puramente ADITIVAS** —columnas nuevas con valor por defecto seguro
+> (`occupies_after_parent` false, `stage` 'booking', `extends_parent_stay` false, `extra_minutes` 0,
+> `guest_form_link_version`)—: **ninguna reescribe ni borra nada, y con sus valores por defecto la
+> conducta de lo que ya está vendido no cambia**. Comprobado leyendo las cuatro.
+>
+> ❗❗❗ **EL DESPLIEGUE NO BASTA: el catálogo hay que CONFIGURARLO, y son 4 productos y 14 enganches.**
+> Medido en producción por SSH (solo lectura, 2026-09-06): **no existe ninguna hora extra** —ni de
+> entrada ni de sala— y los siete complementos de comida están enganchados **sin fase**, así que tras
+> migrar quedarían todos en «al reservar» (el valor por defecto). ▶ Para eso está el script
+> **`configurar-catalogo.php`**, que vive **fuera del repo** —bajo `storage/`, gitignorado, porque es
+> catálogo de un cliente y no producto (`DECISIONES #1`)— y se sube por `scp`: **idempotente**,
+> no borra nada, y deja las dos horas extra de entrada (solo tarifa especial), las dos de sala (precio
+> por tarifa) y los siete de comida en post-form con corte de 48 h. Probado dos veces en local con el
+> mismo resultado.
+>
+> ▶ **Y el paquete del cliente sigue pendiente**: medido, `public/css/client.css` de producción **no
+> tiene ninguna** de las cinco líneas de `#434`/`#436` (`--on-ok`, `--on-err` y las tres de
+> `--interactive`). No viaja por rsync — se edita a mano o se sube por `scp`.
+>
+> ⚠️ **`deploy.sh` NO hace copia de la base de datos** y corre `migrate --force`: la copia va antes, a
+> mano (`mysqldump --single-transaction`), como en los dos despliegues anteriores.
+>
+> **El orden, y por qué**: copia → `deploy.sh` (código + migraciones) → `configurar-catalogo.php` (las
+> columnas tienen que existir antes) → las cinco líneas del `client.css` → verificación. La compra
+> online sigue **cerrada** (`sales.online_enabled = 0`), así que nada de esto se le enseña todavía a
+> un cliente: es exactamente la ventana para verificarlo sin prisa.
+
 > 🚀 **SEGUNDO DESPLIEGUE, 2026-09-02** (`DECISIONES #353`): commit `64ff3b6`, con las cuatro
 > migraciones de Google auth y del justificante. Estado tras él, medido:
 > `sales.online_enabled = 0` (compra cerrada, decisión del owner hasta tener Redsys de producción) ·
