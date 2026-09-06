@@ -1053,13 +1053,16 @@ al diseño —el owner puede quererlo igual—, es un número que debe estar sob
 
 ## 10.7 Las tandas propuestas
 
+> ⚠️⚠️ **ESTE PLAN ESTÁ CORREGIDO POR LA REVISIÓN ADVERSARIAL DE §10.8.** La versión anterior tenía
+> **T1 y T2 separadas** (ventana de sobreventa) y una **T2bis que empeoraba producción**. Lee §10.8
+> antes que esta tabla.
+
 | # | Qué | Por qué en este orden |
 |---|---|---|
-| T1 | El eje y sus guardas (`extends_parent_stay`, migración, guards en las dos direcciones, `AddonResolver`) | sin él no hay nada que enganchar, y las guardas son lo que impide que el hueco de §10.1 entre por la puerta de atrás |
-| T2 | `extra_minutes` + los **dos** mapas de ocupación + `CartOccupants` + `OrderCreator` bajo lock | el núcleo de aforo; **no se toca ninguna superficie hasta que esto cierre** |
-| **T2bis** | **`isFinishedInPractice()` pasa a la duración EFECTIVA** (decisión 4, cerrada) | ⚠️⚠️ **tanda PROPIA, y el motivo es que no es de esta feature**: ese predicado gobierna hoy TODAS las reservas, así que arreglarlo **cambia la conducta de fiestas que ya existen** —una de 2 h deja de darse por terminada una hora antes—, y con ella el post-form editable, el cierre de los extras y la **ventana de dinero** del suplemento mixto. Mezclarlo con la extensión haría imposible saber cuál de las dos cosas movió un número |
-| T3 | La oferta (`AddonOfferReader`), el editor y el reconciliador de fechas | ya con el aforo diciendo la verdad |
+| **T1+T2** | El eje (`extends_parent_stay`, migración, guardas en las dos direcciones), `extra_minutes`, los **dos** mapas de ocupación, `CartOccupants` y `OrderCreator` bajo lock | ❗❗❗ **NO se pueden separar** (A2 de §10.8): en cuanto `AddonResolver` deja de rechazar extensores hay venta, y hasta que los mapas sepan contarla **cada venta es una sobreventa**. Si se quiere partir, la mitad de arriba tiene que dejar el extensor **invendible por construcción** |
+| T3 | La oferta (`AddonOfferReader` **y `viewModel`**), el editor (**la familia extensora**), el tope propio y el reconciliador de fechas | ya con el aforo diciendo la verdad. ⚠️ Los tres primeros son hallazgos A3/A4/A5/A6: el plan viejo decía «`AddonOfferReader`» y no decía que **su filtro está escrito sobre `occupiesAfterParent()`**, que un extensor atraviesa sin que nadie lo mire |
 | T4 | Las superficies: ventana mostrada, hoja de sala, puerta, correos | lo último, como en `#410` |
+| **T5** | **`isFinishedInPractice()`: los DOS defectos a la vez** (decisión 4) | ⚠️⚠️ **la última y suelta, no «T2bis»**: no es de esta feature —gobierna TODAS las reservas y toca DINERO (`OrderBook`)— y **arreglar uno solo empeora producción** (A1). Va al final para que ningún número de las tandas anteriores se mezcle con el suyo |
 
 ▶ **Verificación exigida** (no negociable, `INVARIANTES §6`): `PackAvailability`, `SlotAvailability`,
 `CartOccupants`, `AddonResolver` y `OrderCreator` están **todos** en el `CRITICAL_RE`, así que cada
@@ -1067,3 +1070,86 @@ tanda va con `VERIFY_CONC=1` y **los siete escenarios** de `purchase:verify-over
 **octavo escenario**: la última plaza de sala disputada entre una fiesta nueva y **la extensión de la
 fiesta anterior** — el equivalente de `extra-hour` para el pool de packs, visto FALLAR sin la
 validación antes de darlo por bueno.
+
+
+## 10.8 · La revisión ADVERSARIAL del diseño y de las tandas (`#423`, 2026-09-06)
+
+Nueve lentes sobre §10.3–§10.7 **antes de escribir una línea**. Lo que sigue son los hallazgos
+**reproducidos o confirmados en el código**, no sospechas; los descartados van con su motivo, para que
+nadie los vuelva a levantar.
+
+### Confirmados
+
+**A1 · CRÍTICO — la T2bis, tal como estaba escrita, EMPEORABA producción.** `isFinishedInPractice()`
+tiene **DOS** defectos, no uno, y **van en direcciones opuestas**: usa `slot.end_time` (adelanta ~1 h
+en una fiesta de 2 h) y parsea la hora de pared del parque **como UTC** (atrasa 1–2 h; medido en
+`complementos-post-reserva.md` §4.9). Hoy **se compensan por accidente**. Medido sobre una fiesta de
+2 h que empieza a las 15:00 y acaba de verdad a las 17:00 (hora del parque):
+
+| | se declara terminada a las |
+|---|---|
+| hoy | **18:00** (1 h tarde) |
+| arreglando **solo** la duración — el plan viejo | **19:00** (2 h tarde) — **peor** |
+| arreglando duración **y** huso | **17:00** — exacto |
+
+▶ **Se arreglan los dos a la vez o ninguno.** Y no es una tanda pequeña: son **9 ficheros / 12
+llamadas** (la lista viva es la ficha de `DEUDA.md`), entre ellas **`OrderBook`** —de su `$finished`
+cuelga la liquidación «Liquidado / Devuelto en el parque», que es **DINERO**— y
+`AuthorizableReservationsReader`. Pasa a ser **T5, la última y suelta**.
+
+**A2 · CRÍTICO — T1 y T2 separadas abren una ventana de sobreventa.** La T1 del plan viejo incluía
+`AddonResolver`, que es **la autoridad del cobro**: en cuanto deja de rechazar extensores, se puede
+vender uno — y hasta que la T2 enseñe a los mapas a contarlo, **cada venta es exactamente el hueco de
+§10.1**, que es lo que esta feature viene a cerrar. Se fusionan; si alguien las parte, la primera mitad
+tiene que dejar el extensor **invendible por construcción**, no por olvido.
+
+**A3 · MAYOR — un extensor atraviesa el filtro de la oferta sin que nadie lo mire.**
+`AddonOfferReader` retira de la oferta a los ocupantes que no aterrizan, y su filtro es
+`! $addon->occupiesAfterParent() || tiene landing`. Un extensor devuelve **`false`** en ese predicado,
+así que **pasa siempre** — se ofrecería aunque su ventana no quepa, y el checkout lo rechazaría. Es el
+primo de `AFORO-02` y **justo lo que §4.5 existe para evitar**.
+
+**A4 · MAYOR — falta la rama SIMÉTRICA en el modelo de vista.** `AddonResolver::viewModel()` oculta un
+ocupante cuando el padre es un pack (`|| $isPack`). El extensor necesita la contraria —ocultarse cuando
+el padre **no** es un pack—, o un enganche torcido por la puerta de atrás se ofrecería.
+
+**A5 · MAYOR — el editor no revalidaría aforo al añadir una hora extra a una fiesta ya vendida.** La
+familia que aterriza bajo el lock (`landOccupyingFamily`) se compone filtrando por
+`occupiesAfterParent()`, así que **un extensor no entra en la lista**: añadirlo desde el panel alargaría
+la fiesta **sin comprobar** que la franja siguiente está libre. Sobreventa desde el mostrador, que es
+justo donde nadie la ve.
+
+**A6 · MAYOR — el tope del resolutor no significa nada para el extensor.** Hoy es
+`Σ cantidad ≤ lineQuantity` («no se quedan más de los que entran»), y en un extensor la cantidad son
+**bloques de tiempo**: con 20 invitados dejaría pedir **20 horas**. Necesita tope propio (la rejilla y
+el cupo lo cortarían, pero *fallar hacia el rechazo no es tener un tope*), y **`max_qty` del enganche
+pasa a OBLIGATORIO** para extensores — la misma regla que `#413` impuso a los `postform`.
+
+**A7 · MENOR (heredado) — bajar de 2 h a 1 h está BLOQUEADO.**
+`addon_partial_reduce_unsupported`: la reducción parcial de un complemento no existe sin reembolso.
+Quitar la extensión entera sí. El operador tendrá que quitar y volver a añadir —y eso **re-tarifica**.
+Es una limitación de **dinero**, no de aforo (bajar libera sala), pero en un cumpleaños «déjalo en una
+hora» es una petición normal: **decirlo antes de que lo descubra el mostrador**.
+
+**A8 · MENOR — `AddonOfferReader` no está en el `CRITICAL_RE`** y con el extensor pasa a decidir sobre
+ocupación de sala. Ya hoy decide sobre ocupantes; con esto, entra.
+
+**A9 · MENOR — el octavo escenario de sobreventa que proponía §10.7 es insuficiente.** No basta con dos
+compras: el caso que muerde es el **CRUCE** —el panel **añadiendo la extensión** a una fiesta mientras
+la web compra la franja siguiente—, que es `panel-edit` × `extra-hour` sobre el pool de packs. Y hay que
+**verlo FALLAR** sin la validación antes de darlo por bueno, como se hizo con `extra-hour` en `#410`.
+
+### Descartados, con su motivo
+
+- ~~«una hija sin `slot_id` romperá las superficies»~~ — **no**: casi todo el código filtra
+  `whereNull('parent_item_id')` (censadas 28 apariciones), y `TicketIssuer` además exige
+  `whereNotNull('slot_id')`. La hija extensora es invisible donde debe serlo.
+- ~~«cancelar una hija desincroniza `extra_minutes`»~~ — **no se puede**: `item_is_addon` bloquea tanto
+  la cancelación (`HasItemActionGuards`) como el reembolso (`GuardsItemRefunds`) de una línea hija. El
+  único camino es el editor con `q = 0`, que es precisamente el punto de sincronización previsto.
+- ~~«cancelar el padre deja la extensión contando»~~ — **no**: los dos mapas excluyen
+  `cancelled_at` y `extra_minutes` vive en la línea del padre, que sale del recuento con él.
+- ~~«`duration_min` NULL + `extra_minutes` da un número raro»~~ — **no**: en SQL `NULL + n = NULL`, que
+  aquí significa «hasta el cierre», que es lo correcto; y la guarda prohíbe extender lo ilimitado.
+- ~~«la rejilla de `#420` complica esto»~~ — al revés: con inicios cada 30 min hay **más** franjas donde
+  aterrizar una fiesta alargada (medido: un pack de 3 h pasa de 2 a 5 horas de inicio en diario).

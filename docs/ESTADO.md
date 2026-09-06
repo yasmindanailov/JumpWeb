@@ -55,10 +55,24 @@
 >    ventana de dinero del suplemento mixto) — mezclarlo con la extensión haría imposible saber cuál de
 >    las dos movió un número. ▶ **Quedan tres decisiones y ninguna bloquea el código**: el precio, el
 >    `max_qty` del enganche y si el mostrador lleva las mismas cotas (suelo propuesto: sí).
->    ▶ **LO SIGUIENTE, si el owner lo arranca: T1 (el eje y sus guardas) + T2 (el núcleo de aforo)**,
->    con `VERIFY_CONC=1`, los siete escenarios de `purchase:verify-oversell` **y un OCTAVO** (la última
->    plaza de sala disputada entre una fiesta nueva y la extensión de la anterior), visto FALLAR sin la
->    validación antes de darlo por bueno.
+>    ▶ ❗❗❗ **REVISADO DE FORMA ADVERSARIAL ANTES DE CONSTRUIR** (`#423`, §10.8): nueve lentes, **9
+>    hallazgos confirmados y 5 descartados**, y **el plan quedó reescrito**. ⚠️⚠️ **El peor era MÍO**:
+>    la «T2bis» que el owner aprobó **habría empeorado producción** — `isFinishedInPractice()` tiene
+>    DOS defectos en direcciones OPUESTAS (la franja adelanta ~1 h, el huso atrasa 1–2 h) que **hoy se
+>    compensan**, así que arreglar solo la duración lleva el desfase de **18:00 a 19:00** cuando la
+>    fiesta acaba a las 17:00. Se arreglan **los dos o ninguno**, y va **al final (T5), suelta**,
+>    porque toca 9 ficheros y DINERO (`OrderBook`). ⚠️⚠️ **Y T1+T2 NO se pueden separar**: `AddonResolver`
+>    es la autoridad del cobro, así que en cuanto deja de rechazar extensores hay venta, y hasta que
+>    los mapas sepan contarla **cada venta es el hueco que la feature viene a cerrar**.
+>    ▶ **Los cuatro mayores son el MISMO error de lectura**: el mecanismo está escrito sobre
+>    `occupiesAfterParent()` y un extensor devuelve **`false`** ahí, así que atraviesa el filtro de la
+>    oferta (A3), el modelo de vista (A4), la familia que aterriza bajo el lock del editor —**añadir
+>    una hora extra a una fiesta vendida no revalidaría aforo**, A5— y el tope (A6, que para bloques de
+>    tiempo no significa nada: con 20 invitados dejaría pedir 20 horas).
+>    ▶ **LO SIGUIENTE: T1+T2 fusionadas** (el eje + `extra_minutes` + los dos mapas + `CartOccupants` +
+>    `OrderCreator` bajo lock), con `VERIFY_CONC=1`, los siete escenarios **y un OCTAVO que es el
+>    CRUCE** panel↔web (el panel añadiendo la extensión mientras la web compra la franja siguiente),
+>    visto FALLAR sin la validación antes de darlo por bueno.
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -341,7 +355,7 @@
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
 > ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
-> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#422`**. Las
+> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#423`**. Las
 > otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está

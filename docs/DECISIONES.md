@@ -24231,3 +24231,64 @@ extensión haría imposible saber cuál de las dos cosas movió un número.*
 el coste de oportunidad de §10.4 delante), cuántos bloques admite el enganche (`max_qty`) y si el
 mostrador tiene las mismas cotas —suelo propuesto: **sí**, porque el aforo no lo relaja nadie
 (`AFORO-01`) y lo que `#330` desató del mostrador fue la antelación mínima, no el cupo—.
+
+## #423 · 2026-09-06 · La revisión adversarial de la hora extra en packs: dos críticos, y uno era que MI PROPIO PLAN empeoraba producción
+
+Nueve lentes sobre el diseño de `#421` y sus tandas **antes de escribir una línea** (`hora-extra.md`
+§10.8). **Nueve hallazgos confirmados** —dos críticos, cuatro mayores, tres menores— y **cinco
+descartados con su motivo**. El plan de tandas queda reescrito.
+
+### El peor era mío
+
+**A1 · La «T2bis» que el owner acababa de aprobar habría EMPEORADO producción.** `isFinishedInPractice()`
+no tiene un defecto: tiene **dos, y en direcciones opuestas** — usa `slot.end_time` (adelanta ~1 h en
+una fiesta de 2 h) y parsea la hora de pared del parque **como UTC** (atrasa 1–2 h, medido en
+`complementos-post-reserva.md` §4.9). **Hoy se compensan por accidente.** Medido sobre una fiesta de 2 h
+que empieza a las 15:00 y acaba de verdad a las 17:00 hora del parque: hoy se declara terminada a las
+**18:00**; arreglando **solo** la duración —lo que decía el plan—, a las **19:00**; arreglando las dos
+cosas, a las **17:00**.
+
+▶ *Un defecto que se compensa con otro no se arregla por mitades.* Y no es una tanda pequeña: son **9
+ficheros / 12 llamadas**, entre ellas `OrderBook` —de su `$finished` cuelga la liquidación «Liquidado /
+Devuelto en el parque», que es **DINERO**—. Pasa a ser **T5, la última y suelta**.
+
+**A2 · T1 y T2 separadas abrían una ventana de sobreventa.** La T1 incluía `AddonResolver`, que es la
+autoridad del **cobro**: en cuanto deja de rechazar extensores hay venta, y hasta que la T2 enseñe a los
+mapas a contarla **cada venta es exactamente el hueco que la feature viene a cerrar**. Se fusionan.
+
+### Los cuatro mayores, todos del mismo patrón
+
+Los cuatro son **el mismo error de lectura**: el mecanismo actual está escrito sobre
+`occupiesAfterParent()`, y un extensor devuelve **`false`** ahí, así que **atraviesa las defensas sin
+que nadie lo mire**.
+
+- **A3**: el filtro de oferta de `AddonOfferReader` (`! occupiesAfterParent() || tiene landing`) lo deja
+  pasar siempre → se ofrecería una hora extra que no cabe, y el checkout la rechazaría (el primo de
+  `AFORO-02`, justo lo que §4.5 existe para evitar).
+- **A4**: falta la rama **simétrica** en `AddonResolver::viewModel()` (ocultar el extensor cuando el
+  padre NO es pack).
+- **A5**: la familia que aterriza bajo el lock del editor se compone filtrando por
+  `occupiesAfterParent()`, así que **añadir una hora extra a una fiesta ya vendida no revalidaría
+  aforo** → sobreventa desde el mostrador, que es donde nadie la ve.
+- **A6**: el tope del resolutor es `Σ cantidad ≤ lineQuantity` («no se quedan más de los que entran») y
+  para bloques de tiempo **no significa nada**: con 20 invitados dejaría pedir 20 horas. Tope propio, y
+  `max_qty` del enganche **obligatorio** para extensores (la regla que `#413` impuso a los `postform`).
+
+### Menores
+
+**A7** (heredado): bajar de 2 h a 1 h está **bloqueado** (`addon_partial_reduce_unsupported`); hay que
+quitar y volver a añadir, y eso re-tarifica. Es limitación de dinero, no de aforo — **se dice antes de
+que lo descubra el mostrador**. **A8**: `AddonOfferReader` entra en el `CRITICAL_RE`. **A9**: el octavo
+escenario de sobreventa no es «dos compras», es el **CRUCE** panel↔web (el panel añadiendo la extensión
+mientras la web compra la franja siguiente), y hay que **verlo fallar** sin la validación.
+
+### Lo descartado (para que nadie lo vuelva a levantar)
+
+Una hija sin `slot_id` **no** rompe superficies (casi todo filtra `whereNull('parent_item_id')`, y
+`TicketIssuer` además exige `whereNotNull('slot_id')`) · una hija **no** se puede cancelar ni reembolsar
+suelta (`item_is_addon` en las dos guardas) · cancelar el padre **no** deja la extensión contando (los
+mapas excluyen `cancelled_at`) · `NULL + n = NULL` en SQL, que aquí significa «hasta el cierre», que es
+lo correcto · y la rejilla de `#420` **ayuda**: un pack de 3 h pasa de 2 a 5 horas de inicio en diario.
+
+**Verificación**: A1 reproducido con el reloj real del contenedor · A3/A4/A5/A6 confirmados en el código
+citado con línea · los descartes, por censo (28 apariciones de `parent_item_id`) · sin tocar `app/`.
