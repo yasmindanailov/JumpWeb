@@ -24594,3 +24594,38 @@ mano, como en los dos despliegues anteriores (ficha viva en `DEUDA.md`).
 que existir antes) → las cinco líneas del `client.css` → verificación. ▶ **La compra online sigue
 CERRADA** (`sales.online_enabled = 0`), así que nada de esto se le enseña a un cliente todavía: es la
 ventana para verificarlo sin prisa.
+
+## #431 · 2026-09-06 · El tercer despliegue, HECHO — y el paso que se comprobó antes de dar
+
+Desplegado `612989a` a `playjump.es` siguiendo el plan de `#430`, con el owner autorizando y pidiendo
+cuidado *«hay datos de clientes»*. Evidencia completa en `ENTORNOS.md` §6.
+
+▶ **La copia de la base de datos, primero y a mano** (`deploy.sh` no la hace): 255 KB, 50 tablas,
+gzip verificado. Se queda **en el servidor**: no se trae a local un volcado con datos personales.
+
+▶ **`deploy.sh --go`**: las cuatro migraciones aplicadas y **6.760 franjas regeneradas con 0
+CERRADAS** — o sea, ninguna reserva existente quedó fuera de horario ni perdió su franja (`AFORO-04`).
+Las nueve comprobaciones de salud, en verde.
+
+▶ **El catálogo, después** (las columnas tienen que existir): 4 complementos creados y 14 enganches a
+post-form. Sin el script, el despliegue habría dejado **la hora extra inexistente y el post-form
+vacío**, con todo verde — el hallazgo de `#430`.
+
+### ⚠️⚠️ El paso que se comprobó ANTES de darlo
+
+El `client.css` de producción es el paquete del cliente y **no viaja por rsync**: subir el local
+encima es pisar un fichero que podría llevar cambios propios. Se **descargó y se comparó primero**, y
+la diferencia eran **exactamente** las cinco líneas pendientes y sus comentarios — ningún cambio del
+owner. Con eso, copia previa a `~/backups/` y subida; hash idéntico al local. *Comparar costó un
+minuto; sobrescribir a ciegas habría costado un fichero de un cliente sin forma de saber qué había.*
+
+**Verificado en la máquina**: hora extra de sala **KIDS 3/5 €** y **JUMP 5/8 €** según la tarifa del
+día · **«Kids · Ilimitada» 9 horas entre semana y 0 el sábado** (el arreglo de `#429` funcionando
+sobre datos reales) · `/`, `/entradas`, `/admin/login` y `/up` → 200 · **0 errores** en el log.
+
+**Estado**: 4 zonas · 25 productos · 16 complementos · 29 enganches (14 en post-form) · 6.871 franjas ·
+14 pedidos · 163 clientes · **`sales.online_enabled = 0`** (la compra sigue cerrada: es la ventana para
+verificar sin prisa).
+
+▶ **Queda del owner**: las tres pasadas de la **rejilla de media hora** en el panel de producción
+(`PANEL-ADMIN.md` §4.1) — es configuración y no viaja en el despliegue.

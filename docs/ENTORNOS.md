@@ -360,7 +360,7 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 
 ## 6 · PRODUCCIÓN · playjump.es, MEDIDO (2026-09-01, `DECISIONES #325`)
 
-> 🚀 **TERCER DESPLIEGUE · PREPARADO Y PENDIENTE DEL OWNER** (2026-09-06, `DECISIONES #430`).
+> 🚀 **TERCER DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-06, commit `612989a`, `DECISIONES #430`/`#431`).
 > **79 commits** desde el segundo (`64ff3b6`): los complementos de venta posterior (`#413`→`#419`), la
 > hora extra de entrada (`#410`), **la hora extra de un pack** (`#421`→`#427`), la rejilla de media
 > hora (`#420`), el arreglo de la oferta sin precio (`#429`) y **el panel de admin** (`#460`→`#467`:
@@ -392,6 +392,22 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > columnas tienen que existir antes) → las cinco líneas del `client.css` → verificación. La compra
 > online sigue **cerrada** (`sales.online_enabled = 0`), así que nada de esto se le enseña todavía a
 > un cliente: es exactamente la ventana para verificarlo sin prisa.
+>
+> ### Lo EJECUTADO, con su evidencia (2026-09-06)
+>
+> | paso | resultado |
+> |---|---|
+> | Copia de la BD | `~/backups/playjump2_main-20260906-104459.sql.gz` · **255 KB · 50 tablas** · gzip íntegro. **Se queda en el servidor**: no se trae a local un volcado con datos personales |
+> | `deploy.sh --go` | commit `612989a`; las **4 migraciones** aplicadas; **6.760 franjas** generadas y **0 CERRADAS** (ninguna reserva tocada, `AFORO-04`); las 9 comprobaciones de salud ✓ |
+> | Catálogo | script idempotente: **4 complementos creados** (2 horas extra de entrada, 2 de sala) y **14 enganches** a post-form |
+> | `client.css` | ⚠️⚠️ **se comparó ANTES de subir**: el remoto difería **exactamente** en esas 5 líneas y sus comentarios, sin ningún cambio propio. Copia previa en `~/backups/` y hash idéntico al local tras subirlo |
+> | Verificación | hora extra de sala **KIDS 3/5 €** y **JUMP 5/8 €** por tarifa · **«Kids · Ilimitada» 9 horas entre semana y 0 el sábado** · `/`, `/entradas`, `/admin/login` y `/up` → **200** · **0 errores** en el log |
+>
+> **Estado tras el despliegue**: 4 zonas · 25 productos · 16 complementos · 29 enganches (**14 en
+> post-form**) · 6.871 franjas · 14 pedidos · 163 clientes · `sales.online_enabled = 0`.
+>
+> ⚠️ **El aviso del cron del panel sigue saliendo** (`#115`): el script no ve un demonio cron en el
+> servidor y lo dice. Es el mismo de siempre — las dos líneas viven en el cron del PANEL.
 
 > 🚀 **SEGUNDO DESPLIEGUE, 2026-09-02** (`DECISIONES #353`): commit `64ff3b6`, con las cuatro
 > migraciones de Google auth y del justificante. Estado tras él, medido:

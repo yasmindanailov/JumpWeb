@@ -142,6 +142,14 @@
 >    todo, probado dos veces en local. ⚠️ El `client.css` de producción **sigue sin las cinco
 >    líneas** de `#434`/`#436` (medido). ▶ Orden: copia de BD → `deploy.sh` → catálogo → CSS →
 >    verificación. La compra online sigue CERRADA, que es la ventana para verificar sin prisa.
+>    ▶ ✅ **DESPLEGADO Y VERIFICADO EL 2026-09-06** (`#431`, commit `612989a`): copia de BD primero
+>    (255 KB, 50 tablas) · las 4 migraciones · **6.760 franjas regeneradas con 0 CERRADAS**
+>    (ninguna reserva tocada) · 4 complementos creados y 14 enganches a post-form · las 5 líneas
+>    del `client.css`. ⚠️⚠️ **El `client.css` se comparó ANTES de subirlo**: difería exactamente
+>    en esas 5 líneas, sin cambios propios del owner. Verificado en la máquina: hora extra KIDS
+>    3/5 € y JUMP 5/8 €, «Kids · Ilimitada» 0 horas el sábado, las cuatro URL a 200 y **0 errores**
+>    en el log. ▶ **Queda del owner**: las tres pasadas de la rejilla de media hora en el panel de
+>    PRODUCCIÓN (`PANEL-ADMIN.md` §4.1) — es configuración y no viaja en el despliegue.
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -424,7 +432,7 @@
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
 > ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
-> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#430`**. Las
+> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#431`**. Las
 > otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está
