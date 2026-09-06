@@ -923,8 +923,9 @@ distintas detrás de la misma frase, y cada una es un mecanismo distinto:
 | **(2) Algunos invitados se quedan a saltar** | la sala se libera; los niños pasan a la zona de salto | plazas de **JUMP/KIDS**, no de sala |
 | **(3) La fiesta entera se queda saltando** | la sala se libera; el grupo entero pasa a la zona de salto | plazas de JUMP/KIDS por el grupo entero |
 
-▶ **La aclaración que el owner dio en D2 —*«el complemento de hora extra es para todos los
-invitados»*— apunta a (1)**, y es lo que este diseño resuelve. **(2) y (3) son otra feature**: hoy
+✅ **`[DECIDIDO owner, 2026-09-06]`: es (1) — la fiesta sigue en su sala.** Coincide con la
+aclaración que él mismo dio en D2 (*«el complemento de hora extra es para todos los invitados»*), y es
+lo que este diseño resuelve. **(2) y (3) son otra feature**: hoy
 `AddonOccupancy::childSlotAmong()` exige que la franja de la hija sea de **la misma zona del padre**,
 así que ocupar otra zona no existe como mecanismo (`#151` decidió además que los pools son POR ZONA:
 un cumpleaños no resta plazas de JUMP hoy). Si lo que se quiere es (2) o (3), **esto no vale y hay que
@@ -1038,15 +1039,17 @@ al diseño —el owner puede quererlo igual—, es un número que debe estar sob
 
 ## 10.6 Lo que hay que decidir antes de construir — es del owner
 
-1. **¿Es (1), (2) o (3) de §10.2?** Si lo que se queda es la fiesta en su sala, este diseño vale. Si lo
-   que se queda son niños saltando en JUMP/KIDS, **hace falta otro mecanismo** (ocupar otra zona) y este
-   diseño no sirve.
-2. **¿Cuánto cuesta?** Con el coste de oportunidad de §10.4 delante: media fiesta el sábado.
-3. **¿Se puede comprar más de una hora extra?** (`max_qty` del enganche.)
-4. **¿Arreglamos `isFinishedInPractice()` en la misma tanda** —para que una fiesta con extensión no se
-   dé por terminada dos horas antes— o se deja la ficha de deuda como está?
-5. **¿La hora extra de sala se ofrece también en el mostrador** (`CounterSale`) sin las cotas que ata la
-   venta online, o con ellas?
+1. ✅ **`[DECIDIDO owner, 2026-09-06]`: es (1) de §10.2 — la fiesta sigue en su sala.** Este diseño
+   vale tal cual. (2) y (3) habrían necesitado ocupación **cross-zona**, que no existe.
+2. ⬜ **¿Cuánto cuesta?** Con el coste de oportunidad de §10.4 delante: media fiesta el sábado. Es un
+   dato de catálogo: **no bloquea el código**, sí el despliegue.
+3. ⬜ **¿Se puede comprar más de una hora extra?** (`max_qty` del enganche.) Configuración; el código
+   soporta N por construcción, con el tope por SUMA.
+4. ✅ **`[DECIDIDO owner, 2026-09-06]`: sí, `isFinishedInPractice()` se arregla en la misma tanda** —ver
+   §10.7·T2bis, que es **tanda propia y no un apéndice**, por el motivo de abajo.
+5. ⬜ **¿La hora extra de sala se ofrece también en el mostrador** (`CounterSale`) sin las cotas que ata
+   la venta online, o con ellas? Suelo propuesto mientras no se decida: **con ellas** — el aforo no lo
+   relaja nadie (`AFORO-01`), y lo que `#330` desató del mostrador fue la antelación mínima, no el cupo.
 
 ## 10.7 Las tandas propuestas
 
@@ -1054,8 +1057,9 @@ al diseño —el owner puede quererlo igual—, es un número que debe estar sob
 |---|---|---|
 | T1 | El eje y sus guardas (`extends_parent_stay`, migración, guards en las dos direcciones, `AddonResolver`) | sin él no hay nada que enganchar, y las guardas son lo que impide que el hueco de §10.1 entre por la puerta de atrás |
 | T2 | `extra_minutes` + los **dos** mapas de ocupación + `CartOccupants` + `OrderCreator` bajo lock | el núcleo de aforo; **no se toca ninguna superficie hasta que esto cierre** |
+| **T2bis** | **`isFinishedInPractice()` pasa a la duración EFECTIVA** (decisión 4, cerrada) | ⚠️⚠️ **tanda PROPIA, y el motivo es que no es de esta feature**: ese predicado gobierna hoy TODAS las reservas, así que arreglarlo **cambia la conducta de fiestas que ya existen** —una de 2 h deja de darse por terminada una hora antes—, y con ella el post-form editable, el cierre de los extras y la **ventana de dinero** del suplemento mixto. Mezclarlo con la extensión haría imposible saber cuál de las dos cosas movió un número |
 | T3 | La oferta (`AddonOfferReader`), el editor y el reconciliador de fechas | ya con el aforo diciendo la verdad |
-| T4 | Las superficies: ventana mostrada, hoja de sala, puerta, correos — y la decisión 4 de §10.6 | lo último, como en `#410` |
+| T4 | Las superficies: ventana mostrada, hoja de sala, puerta, correos | lo último, como en `#410` |
 
 ▶ **Verificación exigida** (no negociable, `INVARIANTES §6`): `PackAvailability`, `SlotAvailability`,
 `CartOccupants`, `AddonResolver` y `OrderCreator` están **todos** en el `CRITICAL_RE`, así que cada

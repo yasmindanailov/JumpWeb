@@ -47,6 +47,18 @@
 >    pasa de **15 fiestas a 9** y el martes de **6 a 3**, medido. ❗ **La decisión 1 manda sobre el
 >    resto**: «una hora más» son TRES cosas y **solo «la fiesta sigue en su sala» encaja** con este
 >    diseño; que los niños se queden SALTANDO ocupa otra zona, y eso no existe como mecanismo hoy.
+>    ▶ ✅ **LAS DOS DECISIONES QUE BLOQUEABAN, CONTESTADAS** (`#422`, `[DECIDIDO owner, 2026-09-06]`):
+>    **es «la fiesta sigue en su sala»** —así que el diseño de §10 vale tal cual— y
+>    **`isFinishedInPractice()` se arregla**, pero en **tanda PROPIA (T2bis)**: ese predicado gobierna
+>    TODAS las reservas, así que tocarlo **cambia la conducta de fiestas que ya existen** (una de 2 h
+>    deja de darse por terminada una hora antes, y con ella el post-form, el cierre de extras y la
+>    ventana de dinero del suplemento mixto) — mezclarlo con la extensión haría imposible saber cuál de
+>    las dos movió un número. ▶ **Quedan tres decisiones y ninguna bloquea el código**: el precio, el
+>    `max_qty` del enganche y si el mostrador lleva las mismas cotas (suelo propuesto: sí).
+>    ▶ **LO SIGUIENTE, si el owner lo arranca: T1 (el eje y sus guardas) + T2 (el núcleo de aforo)**,
+>    con `VERIFY_CONC=1`, los siete escenarios de `purchase:verify-oversell` **y un OCTAVO** (la última
+>    plaza de sala disputada entre una fiesta nueva y la extensión de la anterior), visto FALLAR sin la
+>    validación antes de darlo por bueno.
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -329,7 +341,7 @@
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
 > ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
-> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#421`**. Las
+> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#422`**. Las
 > otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está

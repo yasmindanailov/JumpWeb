@@ -24206,3 +24206,28 @@ extras y la ventana de dinero del suplemento mixto.
 **Verificación de este trabajo**: el hueco reproducido en MySQL con rollback y las guardas restauradas
 (árbol limpio, comprobado) · el coste de capacidad medido con el mismo instrumento que `#420` · suite
 4.324 verde · Pint ✓ · docs-check ✓. **Sin una línea de código de producto**: esto es diseño.
+
+## #422 · 2026-09-06 · `[DECIDIDO owner]` La hora extra de un pack es «la fiesta sigue en su sala» — y el fin de la fiesta se arregla en tanda PROPIA
+
+Las dos decisiones que bloqueaban el diseño de `#421`, contestadas con las tres formas y sus
+consecuencias delante (`hora-extra.md` §10.2 y §10.6).
+
+▶ **(1) Es «la fiesta sigue en su sala».** El grupo entero se queda donde está y la sala no se libera,
+así que lo que consume es **cupo de sala una hora más** — exactamente lo que §10.3 modela alargando la
+ventana de la fiesta. ⚠️ Las otras dos lecturas de «una hora más» —*algunos niños se quedan saltando* y
+*el grupo entero se queda saltando*— **habrían tirado el diseño entero**: las dos ocupan **JUMP/KIDS y
+no la sala**, y hoy `AddonOccupancy::childSlotAmong()` exige que la franja de la hija sea de **la misma
+zona del padre**. Ocupar otra zona **no existe como mecanismo**, y además `#151` dejó los pools
+independientes por zona a propósito. Preguntarlo antes de construir ahorró la feature entera.
+
+▶ **(2) `isFinishedInPractice()` se arregla, y va en tanda PROPIA (T2bis), no como apéndice.**
+⚠️⚠️ **El motivo es que ese predicado no es de esta feature**: lee `slot.end_time` y gobierna **todas**
+las reservas, así que arreglarlo **cambia la conducta de fiestas que ya existen hoy** —una de 2 h deja
+de declararse terminada una hora antes— y con ella el post-form editable, el cierre de los extras
+(`complementos-post-reserva.md`) y la **ventana de dinero** del suplemento mixto. *Mezclarlo con la
+extensión haría imposible saber cuál de las dos cosas movió un número.*
+
+▶ Quedan **tres** decisiones abiertas y **ninguna bloquea el código**: el precio (dato de catálogo, con
+el coste de oportunidad de §10.4 delante), cuántos bloques admite el enganche (`max_qty`) y si el
+mostrador tiene las mismas cotas —suelo propuesto: **sí**, porque el aforo no lo relaja nadie
+(`AFORO-01`) y lo que `#330` desató del mostrador fue la antelación mínima, no el cupo—.
