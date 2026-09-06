@@ -1218,9 +1218,42 @@ AUSENCIA). Su guarda del instrumento es a la vez su **control**: la franja vende
 la fiesta y cierra **después** — y con el cupo ciego a `extra_minutes` esa guarda aborta diciendo que
 la segunda hora «sigue ofreciendo 20».
 
-### Lo que queda
+### Lo que queda tras la T1+T2
 
-**T3** (el editor, `ItemRescheduleOffer` y `AddonDateReconciler` — y con ella el cruce panel↔web del
-escenario), **T4** (superficies: ventana mostrada, hoja de sala, puerta, correos) y **T5**
+**T4** (superficies: ventana mostrada, hoja de sala, puerta, correos) y **T5**
 (`isFinishedInPractice()`, **los dos defectos a la vez**). Y las tres decisiones de §10.6 que no
 bloquean el código: el precio, el `max_qty` del enganche y las cotas del mostrador.
+
+## 10.10 · Lo EJECUTADO — la T3: el editor y la re-programación (`#425`, 2026-09-06)
+
+**La puerta que la T1+T2 dejó cerrada, abierta con su red**: el panel ya puede añadir, subir y quitar
+una hora extra sobre una fiesta vendida, y mover esa fiesta de día u hora. Suite **4.351** ·
+**18/18 mutaciones** · los OCHO escenarios en verde.
+
+### Lo que entra
+
+- **`OrderItemEditor::resultingStayMinutes()`** — la derivación ÚNICA de «cuántos minutos quedará
+  alargada la fiesta DESPUÉS de este guardado»: hijas extensoras vivas (con su cantidad editada si
+  sube) + las que se añaden aquí − las que el día nuevo no vende. La usan los **dos** caminos
+  (`edit()` y `changeSlot()`), y de ella salen las dos cosas que la edición tiene que decir igual que
+  la compra: **el cupo que se revalida** y **el hecho que se escribe**, en la misma sentencia.
+- **El ORDEN**, que es la propiedad: el plan de fechas (`AddonDateReconciler::plan`) se adelanta a la
+  validación del aforo del padre en los dos caminos. ⚠️⚠️ Es la lección de `#417` §9.8·H1 aplicada a
+  la extensión — *los minutos que una extensión retirada iba a ocupar no pueden contar contra el cupo
+  que se pide*, o una fiesta no se podría mover a un día en el que su hora extra ni siquiera se vende.
+  El plan es lectura pura, así que adelantarlo no cambia nada más.
+- **`ItemRescheduleOffer`** ofrece con la ventana alargada, en sus **DOS** vías
+  (`slotMeetsItemRequirements` para los días y `displayAvailableFor` para las horas).
+
+### Lo que enseñó la ejecución
+
+⚠️⚠️ **El primer caso de la re-programación pasaba con el arreglo REVERTIDO**, y el motivo es fino: la
+oferta **cuenta la huella propia a propósito** (`#173`), así que cualquier hora **dentro del tramo
+actual** de la fiesta sale excluida con extensión o sin ella. Para que el caso discrimine, la hora
+candidata tiene que caer **fuera** de ese tramo y chocar solo por la ventana alargada. *Un caso que
+mide donde el defecto no puede aparecer no mide nada* — la cuarta vez que este proyecto paga esa
+lección (`#238`).
+
+⚠️ Y ese mismo caso destapó que **tocar `slotMeetsItemRequirements` no bastaba**: `times()` —la lista
+de HORAS, que es la que usa el modal— pasa por `displayAvailableFor`, otra vía. Las dos hacían la
+misma pregunta y solo una estaba arreglada.

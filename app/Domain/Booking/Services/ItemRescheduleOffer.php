@@ -174,7 +174,11 @@ class ItemRescheduleOffer
                 // incluye en las opciones (mantenerlo es no-op). El excluir la
                 // huella propia para crecer/recolocar es de la VALIDACIÓN bajo
                 // lock (AFORO-06), no de la oferta.
-                $available = $this->displayAvailableFor($slot, $ticketType);
+                // ⚠️ La HORA EXTRA DE UN PACK (§10.3): la fiesta se movería ALARGADA, así que las
+                // plazas que se muestran son las de su ventana entera. Sin esto la lista ofrece horas
+                // que el editor rechaza bajo el lock, y **la exclusión por huella propia no lo tapa**:
+                // solo cubre las horas dentro del tramo actual, no las de más allá.
+                $available = $this->displayAvailableFor($slot, $ticketType, (int) ($item->extra_minutes ?? 0));
                 $isCurrentSlot = $currentSlot !== null && $currentSlot->id === $slot->id;
                 if (($available < $seatsNeeded || ! $this->occupyingChildrenFitAfter($item, $slot)) && ! $isCurrentSlot) {
                     continue;
@@ -217,11 +221,11 @@ class ItemRescheduleOffer
      * para permitir crecer/recolocar el item) se abordará en la fase de
      * gestión/edición de reservas.
      */
-    public function displayAvailableFor(Slot $slot, TicketType $ticketType): int
+    public function displayAvailableFor(Slot $slot, TicketType $ticketType, int $extraMinutes = 0): int
     {
         if ($ticketType->isPack()) {
-            return $this->packAvailability->freeGuestSlots($slot, $ticketType)
-                ?? $this->packAvailability->availableGuestsFor($slot, $ticketType);
+            return $this->packAvailability->freeGuestSlots($slot, $ticketType, [], null, $extraMinutes)
+                ?? $this->packAvailability->availableGuestsFor($slot, $ticketType, [], null, $extraMinutes);
         }
 
         return $this->slotAvailability->availableFor($slot, $ticketType->duration_min);
@@ -242,8 +246,12 @@ class ItemRescheduleOffer
             return false;
         }
         $seatsNeeded = (int) $item->seats;
+        // La HORA EXTRA DE UN PACK (`specs/hora-extra.md` §10.3): una fiesta ALARGADA se mueve
+        // alargada, así que la hora destino tiene que admitirla con su ventana entera. Sin esto el
+        // modal ofrecería horas que el editor rechaza bajo el lock — el primo de `AFORO-02` por la
+        // puerta de la re-programación, que es justo lo que este servicio existe para no hacer.
         $available = $ticketType->isPack()
-            ? $this->packAvailability->availableGuestsFor($slot, $ticketType)
+            ? $this->packAvailability->availableGuestsFor($slot, $ticketType, [], null, (int) ($item->extra_minutes ?? 0))
             : $this->slotAvailability->availableFor($slot, $ticketType->duration_min);
         // Sub-fase 7.2e.2bis10 (#164 del origen): el slot ACTUAL del item
         // siempre cumple los requisitos (mantenerlo es no-op, no consume

@@ -1519,9 +1519,6 @@ return [
                 'addon_already_added' => 'ese complemento ya está en el producto',
                 'addon_quantity_invalid' => 'la cantidad del complemento no es válida',
                 'addon_partial_reduce_unsupported' => 'para reducir un complemento, quítalo (cantidad 0) y vuelve a añadirlo con la cantidad deseada; el reembolso se hace aparte',
-                // `specs/hora-extra.md` §10 (T3 pendiente): la hora extra de un pack cambia la
-                // ventana de la fiesta, y el editor todavía no revalida el cupo alargado.
-                'addon_stay_extension_unsupported' => 'la hora extra de un cumpleaños todavía no se puede añadir ni cambiar desde aquí: cambia la duración de la fiesta y hay que revalidar la sala',
                 'addon_locked' => 'ese complemento viene incluido en el producto y no se puede quitar ni reducir (cambia el menú eligiendo otra opción del grupo)',
                 'addon_no_extra' => 'ese complemento viene incluido y no admite unidades de pago por encima de lo incluido',
                 'addon_group_conflict' => 'solo se puede elegir un complemento de cada grupo',

@@ -24,6 +24,7 @@ FICHEROS=(
     app/Domain/Booking/Services/CartOccupants.php
     app/Domain/Booking/Services/OrderCreator.php
     app/Domain/Booking/Services/OrderItemEditor.php
+    app/Domain/Booking/Services/ItemRescheduleOffer.php
     app/Domain/Booking/Models/ProductAddon.php
     app/Domain/Booking/Models/TicketType.php
 )
@@ -67,6 +68,7 @@ AO=app/Domain/Booking/Services/AddonOfferReader.php
 CO=app/Domain/Booking/Services/CartOccupants.php
 OC=app/Domain/Booking/Services/OrderCreator.php
 OE=app/Domain/Booking/Services/OrderItemEditor.php
+IRO=app/Domain/Booking/Services/ItemRescheduleOffer.php
 PAD=app/Domain/Booking/Models/ProductAddon.php
 TT=app/Domain/Booking/Models/TicketType.php
 
@@ -120,11 +122,31 @@ mutar "A4 · el modelo de vista pierde la rama simétrica" "$AR" \
             }" \
   ""
 
-mutar "A5 · el editor deja pasar una extensión sin revalidar aforo" "$OE" \
-  "            if (\$child->ticketType?->extendsParentStay() === true) {
-                return 'addon_stay_extension_unsupported';
+# ── El EDITOR y la re-programación (T3) ───────────────────────────────────────────────────────
+mutar "el editor revalida el cupo SIN la ventana alargada" "$OE" \
+  "                ? \$this->packAvailability->availableGuestsFor(\$effectiveSlot, \$newType, [], \$locked->id, \$stayMinutes)" \
+  "                ? \$this->packAvailability->availableGuestsFor(\$effectiveSlot, \$newType, [], \$locked->id)"
+
+mutar "el editor no reescribe los minutos de la fiesta" "$OE" \
+  "                'extra_minutes' => \$stayMinutes,
+            ] + \$this->sealUpdateFor(\$locked, \$newType, \$effectiveSlot))->save();" \
+  "            ] + \$this->sealUpdateFor(\$locked, \$newType, \$effectiveSlot))->save();"
+
+mutar "los minutos que se AÑADEN en el guardado no cuentan" "$OE" \
+  "            \$minutes += AddonOccupancy::extraMinutes(
+                \$addType, (int) (\$addQuantities[\$addTypeId] ?? \$add['quantity']),
+            );" \
+  "            \$minutes += 0;"
+
+mutar "una extensión RETIRADA por el día nuevo sigue contando (el orden de #417)" "$OE" \
+  "            if (\$survivingChildIds !== null && ! in_array((int) \$child->id, \$survivingChildIds, true)) {
+                continue; // el día nuevo no vende esta hora extra: se retira y deja de alargar
             }" \
   ""
+
+mutar "la oferta de re-programación ignora la ventana alargada" "$IRO" \
+  "                \$available = \$this->displayAvailableFor(\$slot, \$ticketType, (int) (\$item->extra_minutes ?? 0));" \
+  "                \$available = \$this->displayAvailableFor(\$slot, \$ticketType);"
 
 # ── Las guardas de configuración ──────────────────────────────────────────────────────────────
 mutar "el pivote deja colgar un extensor de algo que no es un pack" "$PAD" \

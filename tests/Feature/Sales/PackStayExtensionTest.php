@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Sales;
 
+use App\Domain\Booking\Contracts\ItemActionOutcome;
 use App\Domain\Booking\Contracts\ResolvedAddon;
 use App\Domain\Booking\Contracts\ResolvedAddons;
 use App\Domain\Booking\Exceptions\ReservationException;
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
@@ -13,11 +15,16 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\AddonOfferReader;
 use App\Domain\Booking\Services\CartOccupants;
+use App\Domain\Booking\Services\ItemRescheduleOffer;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\PackAvailability;
 use App\Domain\Booking\Services\SlotAvailability;
+use App\Domain\Identity\Models\Permission;
+use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
+use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -66,6 +73,8 @@ class PackStayExtensionTest extends TestCase
         $this->user = User::factory()->create();
         $this->date = Carbon::today()->addDays(3)->toDateString();
 
+        $this->seed(RoleSeeder::class);
+        $this->seed(PermissionSeeder::class);
         RateType::create(['key' => RateType::KEY_NORMAL, 'label' => ['es' => 'Normal'], 'weekdays' => null, 'priority' => 0, 'is_active' => true]);
 
         // Los topes van por ZONA para no depender del memo de `Setting`.
@@ -289,26 +298,117 @@ class PackStayExtensionTest extends TestCase
         $this->assertNull($this->extraHourRow($sinHora), 'tampoco sin fecha ni hora');
     }
 
-    // ─── La puerta del editor hasta la T3 (`#423` · A5) ──────────────────────────────
+    // ─── El editor del panel: la ventana se revalida y el hecho se reescribe (T3) ────
 
-    public function test_the_panel_editor_refuses_to_touch_a_stay_extension_for_now(): void
+    public function test_the_panel_can_remove_an_extra_hour_and_the_room_frees_up(): void
     {
-        // Añadir una hora extra a una fiesta ya vendida alarga su ventana, y la familia que aterriza
-        // bajo el lock del editor se compone filtrando por `occupiesAfterParent()` — donde un
-        // extensor no entra. Hasta que la T3 revalide el cupo alargado, la puerta se cierra
-        // EXPLÍCITAMENTE: dejarlo pasar no falla, sobrevende.
         $order = $this->buy('15:00:00', 20, 1);
-        $parent = $order->items()->whereNull('parent_item_id')->firstOrFail()->load('children.ticketType');
-        $child = $parent->children->first();
+        $parent = $order->items()->whereNull('parent_item_id')->firstOrFail();
+        $child = $parent->children()->firstOrFail();
+        $this->assertSame(0, $this->packs->availableGuestsFor($this->slot('17:00:00'), $this->pack));
 
-        $editor = app(OrderItemEditor::class);
+        $outcome = $this->edit($order, $parent, ['edits' => [['child_id' => (int) $child->id, 'quantity' => 0]], 'adds' => []]);
 
-        $this->assertSame('addon_stay_extension_unsupported', $editor->validateAddonEdits(
-            $parent, $this->pack, [['child_id' => (int) $child->id, 'quantity' => 0]], [],
-        ));
-        $this->assertSame('addon_stay_extension_unsupported', $editor->validateAddonEdits(
-            $parent, $this->pack, [], [['ticket_type_id' => $this->extraHour->id, 'quantity' => 1]],
-        ));
+        $this->assertFalse($outcome->isBlocked(), 'quitar una hora extra siempre cabe: libera sala');
+        $this->assertSame(0, (int) $parent->fresh()->extra_minutes);
+        $this->assertSame(20, $this->packs->availableGuestsFor($this->slot('17:00:00'), $this->pack));
+    }
+
+    public function test_the_panel_can_add_an_extra_hour_and_the_room_gets_busy(): void
+    {
+        $order = $this->buy('15:00:00', 20, 0);
+        $parent = $order->items()->whereNull('parent_item_id')->firstOrFail();
+        $this->assertSame(20, $this->packs->availableGuestsFor($this->slot('17:00:00'), $this->pack));
+
+        $outcome = $this->edit($order, $parent, ['edits' => [], 'adds' => [['ticket_type_id' => (int) $this->extraHour->id, 'quantity' => 1]]]);
+
+        $this->assertFalse($outcome->isBlocked());
+        $this->assertSame(60, (int) $parent->fresh()->extra_minutes);
+        $this->assertSame(0, $this->packs->availableGuestsFor($this->slot('17:00:00'), $this->pack));
+    }
+
+    public function test_the_panel_cannot_add_an_extra_hour_that_does_not_fit(): void
+    {
+        // ⚠️⚠️ EL CASO QUE JUSTIFICA LA TANDA (`#423` · A5): sin revalidar la ventana alargada bajo
+        // el lock, esto **no falla** — alarga la fiesta encima de otra y sobrevende la sala desde el
+        // mostrador, que es donde nadie lo ve.
+        $order = $this->buy('15:00:00', 20, 0);
+        $parent = $order->items()->whereNull('parent_item_id')->firstOrFail();
+        $this->buy('17:00:00', 20, 0); // la sala queda tomada justo después
+
+        $outcome = $this->edit($order, $parent, ['edits' => [], 'adds' => [['ticket_type_id' => (int) $this->extraHour->id, 'quantity' => 1]]]);
+
+        $this->assertTrue($outcome->isBlocked(), 'la hora extra no cabe: el editor tiene que bloquearla');
+        $this->assertSame(0, (int) $parent->fresh()->extra_minutes, 'y no puede quedar escrita a medias');
+        $this->assertSame(0, $parent->fresh()->children()->whereNull('cancelled_at')->count());
+    }
+
+    public function test_moving_the_party_to_a_day_that_does_not_sell_the_extra_hour_shortens_it(): void
+    {
+        // ⚠️⚠️ **EL ORDEN es la propiedad** (la lección de `#417` §9.8·H1 aplicada a la extensión):
+        // si el día nuevo no vende la hora extra, esos minutos **no pueden contar contra el cupo**
+        // que se pide — la reserva se estaría bloqueando por un aforo que nadie iba a consumir.
+        // Por eso el plan de fechas se calcula ANTES de validar, y no después.
+        $manana = Carbon::parse($this->date)->addDay();
+        foreach (range(15, 20) as $hour) {
+            Slot::create([
+                'zone_id' => $this->zone->id, 'date' => $manana->toDateString(),
+                'start_time' => sprintf('%02d:00:00', $hour),
+                'end_time' => sprintf('%02d:00:00', $hour + 1),
+                'capacity' => 200, 'online_capacity' => 200,
+            ]);
+        }
+        // Ese día manda otra tarifa, y el pack la tiene… pero la hora extra no: no se vende.
+        $special = RateType::create([
+            'key' => 'special', 'label' => ['es' => 'Especial'],
+            'weekdays' => [$manana->dayOfWeek], 'priority' => 10, 'is_active' => true,
+        ]);
+        $this->pack->prices()->create(['rate_type_id' => $special->id, 'amount_cents' => 1500]);
+
+        $order = $this->buy('15:00:00', 20, 1);
+        $parent = $order->items()->whereNull('parent_item_id')->firstOrFail();
+        $this->assertSame(60, (int) $parent->extra_minutes);
+
+        // Y la sala del día nuevo está ocupada a partir de las 17:00: con la hora extra la fiesta
+        // NO cabría… pero es que la hora extra no viaja a ese día.
+        $this->buyOn($manana->toDateString(), '17:00:00', 20);
+
+        $outcome = $this->edit($order, $parent, ['edits' => [], 'adds' => []], $manana->toDateString());
+
+        $this->assertFalse($outcome->isBlocked(), 'la fiesta cabe sin su hora extra, que ese día no se vende');
+        $this->assertSame(0, (int) $parent->fresh()->extra_minutes);
+        $this->assertSame(0, $parent->fresh()->children()->whereNull('cancelled_at')->count());
+    }
+
+    public function test_the_reschedule_offer_does_not_offer_hours_where_the_extended_party_would_not_fit(): void
+    {
+        // ⚠️⚠️ **La hora candidata tiene que caer FUERA del tramo propio actual**, o el caso no mide
+        // nada: la oferta cuenta la huella propia a propósito (`#173`), así que cualquier hora dentro
+        // del tramo de la fiesta sale excluida con o sin extensión. La primera versión de este caso
+        // usaba las 16:00 y **pasaba con el cambio revertido**.
+        foreach ([21, 22] as $hour) {
+            Slot::create([
+                'zone_id' => $this->zone->id, 'date' => $this->date,
+                'start_time' => sprintf('%02d:00:00', $hour),
+                'end_time' => sprintf('%02d:00:00', $hour + 1),
+                'capacity' => 200, 'online_capacity' => 200,
+            ]);
+        }
+
+        $order = $this->buy('15:00:00', 20, 1);   // 15:00 → 18:00 con su hora extra
+        $parent = $order->items()->whereNull('parent_item_id')->firstOrFail();
+        $this->buy('21:00:00', 20, 0);            // la sala se ocupa de 21:00 a 23:00
+
+        $horas = array_column(app(ItemRescheduleOffer::class)->times($parent->fresh(), $this->date), 'time');
+
+        // Mover la fiesta a las 19:00 la llevaría hasta las 22:00 y pisaría a la otra: no se ofrece.
+        // Sin contar la extensión esa hora parecería libre (19:00 → 21:00 no toca nada), y el editor
+        // la rechazaría bajo el lock — el primo de `AFORO-02` por la puerta de la re-programación.
+        $this->assertNotContains('19:00:00', $horas);
+        // CONTROL: a las 18:00 SÍ cabe alargada (18:00 → 21:00, justo antes de la otra), así que la
+        // ausencia de arriba no es que la oferta se haya vaciado.
+        $this->assertContains('18:00:00', $horas);
+        $this->assertContains('15:00:00', $horas, 'la hora actual siempre se ofrece');
     }
 
     // ─── helpers ─────────────────────────────────────────────────────────────────────
@@ -338,6 +438,38 @@ class PackStayExtensionTest extends TestCase
             ->firstOrFail();
     }
 
+    /**
+     * Conduce el editor del panel sobre la reserva, con el operador con permisos.
+     *
+     * @param  array{edits: array<int, array{child_id:int, quantity:int}>, adds: array<int, array{ticket_type_id:int, quantity:int}>}  $addonEdits
+     */
+    private function edit(Order $order, OrderItem $item, array $addonEdits, ?string $date = null): ItemActionOutcome
+    {
+        // El editor solo opera sobre pedidos FIRMES: los de `createPendingOrder` nacen `pending`
+        // (con su retención de aforo), que es correcto para medir cupo pero no para editar.
+        $order->forceFill(['status' => Order::STATUS_PAID, 'expires_at' => null])->save();
+
+        $operator = User::factory()->create();
+        $operator->roles()->sync([Role::where('name', 'staff')->value('id')]);
+        $operator->roles->first()->permissions()->sync(
+            Permission::whereIn('name', ['orders.view', 'orders.edit_item'])->pluck('id'),
+        );
+
+        return app(OrderItemEditor::class)->edit(
+            $order->fresh(),
+            $item->fresh(),
+            $date ?? $this->date,
+            (string) $item->slot->start_time,
+            $date !== null && $date !== $this->date,
+            (int) $item->ticket_type_id,
+            (int) $item->quantity,
+            null,
+            $addonEdits,
+            (string) $order->fresh()->updated_at?->timestamp,
+            $operator,
+        );
+    }
+
     /** @return array<string, mixed> */
     private function line(string $time, int $guests, int $extraBlocks): array
     {
@@ -358,5 +490,13 @@ class PackStayExtensionTest extends TestCase
             User::factory()->create(),
             [$this->line($time, $guests, $extraBlocks)],
         );
+    }
+
+    private function buyOn(string $date, string $time, int $guests): Order
+    {
+        return $this->creator->createPendingOrder(User::factory()->create(), [[
+            'ticket_type_id' => $this->pack->id, 'date' => $date, 'time' => $time,
+            'qty' => $guests, 'event_data' => [],
+        ]]);
     }
 }

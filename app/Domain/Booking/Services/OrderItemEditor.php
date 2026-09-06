@@ -167,21 +167,28 @@ class OrderItemEditor
             $family = $this->liveOccupyingChildren($locked);
             $excludeIds = array_merge([(int) $locked->id], $family->pluck('id')->map(fn ($id) => (int) $id)->all());
 
+            // ⚠️⚠️ **PRIMERO se decide QUIÉN sobrevive al día nuevo, y DESPUÉS se valida** (
+            // `specs/hora-extra.md` §9.8·H1, `#417`). El orden es la propiedad: con la validación
+            // delante, una reserva no se podía mover a un día en que su hora extra **no se vende** si
+            // la franja de aterrizaje estaba llena — bloqueada por un aforo que nadie iba a consumir,
+            // porque esa hija se retiraba de todas formas. Medido antes de invertirlo.
+            //
+            // ▶ Desde la T3 de §10 el plan va también delante del **aforo del padre**, por lo mismo:
+            // los minutos que una extensión retirada iba a ocupar no pueden contar contra el cupo.
+            $datePlan = $this->addonDates->plan($locked, $newSlot->date);
+            $surviving = $datePlan->survivingChildIds;
+
+            // La HORA EXTRA DE UN PACK (§10.3): mover la fiesta la mueve ALARGADA, así que lo que se
+            // revalida es su ventana resultante — la de después del plan, no la de antes.
+            $stayMinutes = $this->resultingStayMinutes($locked, [], collect(), $surviving);
+
             // Aforo del padre revalidado DENTRO del lock, EXCLUYENDO la huella familiar (AFORO-06 + borde 1).
             $available = $locked->ticketType?->isPack()
-                ? $this->packAvailability->availableGuestsFor($newSlot, $locked->ticketType, [], $locked->id)
+                ? $this->packAvailability->availableGuestsFor($newSlot, $locked->ticketType, [], $locked->id, $stayMinutes)
                 : $this->slotAvailability->availableFor($newSlot, $locked->ticketType?->duration_min, [], $excludeIds);
             if ($available < (int) $locked->seats) {
                 return false; // → `insufficient_capacity_at_save`, decidido tras la txn.
             }
-
-            // ⚠️⚠️ **PRIMERO se decide QUIÉN sobrevive al día nuevo, y DESPUÉS se valida su
-            // aterrizaje** (`specs/hora-extra.md` §9.8·H1, `#417`). El orden es la propiedad: con la
-            // validación delante, una reserva no se podía mover a un día en que su hora extra **no se
-            // vende** si la franja de aterrizaje estaba llena — bloqueada por un aforo que nadie iba
-            // a consumir, porque esa hija se retiraba de todas formas. Medido antes de invertirlo.
-            $datePlan = $this->addonDates->plan($locked, $newSlot->date);
-            $surviving = $datePlan->survivingChildIds;
 
             $resulting = $family
                 ->filter(fn (OrderItem $child): bool => in_array((int) $child->id, $surviving, true))
@@ -197,7 +204,12 @@ class OrderItemEditor
             // El sello de condiciones se RE-PRECIA para el día nuevo en el MISMO `forceFill` que
             // mueve la franja (`specs/cumple-mixto.md` §21.4): si fuera en el post-commit, la
             // reconciliación —que relee la fila bloqueada— derivaría de un sello del día viejo.
-            $locked->forceFill(['slot_id' => $newSlot->id] + $this->sealUpdateFor($locked, $locked->ticketType, $newSlot))->save();
+            $locked->forceFill([
+                'slot_id' => $newSlot->id,
+                // El HECHO de la ventana con la que la fiesta aterriza en su día nuevo (§10.3.2):
+                // exactamente el número con el que se acaba de validar el cupo.
+                'extra_minutes' => $stayMinutes,
+            ] + $this->sealUpdateFor($locked, $locked->ticketType, $newSlot))->save();
 
             // La MUTACIÓN de los complementos va dentro del lock —retirar es aforo— y su DINERO
             // fuera, tras el commit (`#417`, §9.8·H3: la doctrina §4.3 de este mismo fichero).
@@ -681,19 +693,28 @@ class OrderItemEditor
                 $this->liveOccupyingChildren($locked)->pluck('id')->map(fn ($id) => (int) $id)->all(),
             );
 
+            // ⚠️⚠️ **QUIÉN sobrevive al día nuevo se decide ANTES de validar NADA**
+            // (`specs/hora-extra.md` §9.8·H1, `#417`): con el orden al revés, una reserva no se podía
+            // mover a un día en que su hora extra **no se vende** si la franja de aterrizaje estaba
+            // llena — bloqueada por un aforo que nadie iba a consumir. Medido antes de invertirlo.
+            //
+            // ▶ Desde la T3 de §10 el plan va también delante del **aforo del padre**, y por la misma
+            // razón exacta: los minutos que una extensión retirada iba a ocupar no pueden contar
+            // contra el cupo que se pide. El plan es lectura pura, así que adelantarlo no cambia nada
+            // más.
+            $datePlan = $this->addonDates->plan($locked, $effectiveSlot->date);
+            $surviving = $datePlan->survivingChildIds;
+
+            // La HORA EXTRA DE UN PACK (§10.3): la fiesta se revalida con la ventana que va a tener
+            // DESPUÉS de este guardado, no con la que tenía.
+            $stayMinutes = $this->resultingStayMinutes($locked, $addonEdits, $offeredAddons, $surviving, $addonAddQuantities);
+
             $available = $newType->isPack()
-                ? $this->packAvailability->availableGuestsFor($effectiveSlot, $newType, [], $locked->id)
+                ? $this->packAvailability->availableGuestsFor($effectiveSlot, $newType, [], $locked->id, $stayMinutes)
                 : $this->slotAvailability->availableFor($effectiveSlot, $newType->duration_min, [], $familyIds);
             if ($available < $newSeats) {
                 return false;
             }
-
-            // ⚠️⚠️ **QUIÉN sobrevive al día nuevo se decide ANTES de validar su aterrizaje**
-            // (`specs/hora-extra.md` §9.8·H1, `#417`): con el orden al revés, una reserva no se podía
-            // mover a un día en que su hora extra **no se vende** si la franja de aterrizaje estaba
-            // llena — bloqueada por un aforo que nadie iba a consumir. Medido antes de invertirlo.
-            $datePlan = $this->addonDates->plan($locked, $effectiveSlot->date);
-            $surviving = $datePlan->survivingChildIds;
 
             // Las hijas AÑADIDAS en este mismo guardado (`child_id === null`) no pasan por el plan:
             // se están comprando ahora, ya tarificadas al día nuevo por `ItemEditPricing`.
@@ -728,6 +749,11 @@ class OrderItemEditor
                 'unit_price' => $newUnit,
                 'seats' => $newSeats,
                 'slot_id' => $effectiveSlot->id,
+                // La HORA EXTRA DE UN PACK (§10.3.2): el HECHO de cuánto queda alargada esta fiesta,
+                // en la misma sentencia que la mueve — el hermano de `seats`, que va dos líneas
+                // arriba por lo mismo. Es EXACTAMENTE el número con el que se acaba de validar el
+                // cupo: si se recalculara aquí, la validación y el hecho podrían separarse.
+                'extra_minutes' => $stayMinutes,
             ] + $this->sealUpdateFor($locked, $newType, $effectiveSlot))->save();
 
             // Sub-fase 7.2e.4 (#170): complementos en la misma txn — neutros al aforo salvo la HORA
@@ -1049,6 +1075,81 @@ class OrderItemEditor
     }
 
     /**
+     * Las hijas VIVAS que EXTIENDEN la estancia del padre (la hora extra de un pack, §10).
+     *
+     * ⚠️ Su filtro es el ESPEJO del de {@see liveOccupyingChildren()} y por eso no se pueden
+     * fusionar: una hija ocupante se reconoce por tener **franja y plazas**, y una extensora
+     * precisamente por **no tenerlas** — lo que la identifica es el interruptor de su producto.
+     */
+    private function liveStayExtendingChildren(OrderItem $item): \Illuminate\Database\Eloquent\Collection
+    {
+        return $item->children()
+            ->whereNull('cancelled_at')
+            ->whereHas('ticketType', fn ($q) => $q->where('extends_parent_stay', true))
+            ->with('ticketType')
+            ->get();
+    }
+
+    /**
+     * **Los minutos que la fiesta quedará alargada DESPUÉS de este guardado** (§10.3).
+     *
+     * Hermana de la composición de `$resultingOccupying`, y con la misma forma: las hijas
+     * extensoras vivas que no se cancelan aquí (con su cantidad editada si sube) más las que se
+     * añaden en este mismo guardado. De ella salen las dos cosas que la edición tiene que decir
+     * igual que la compra: **el cupo que se revalida bajo el lock** y **el hecho que se escribe**.
+     *
+     * ⚠️ `$survivingChildIds` a `null` = «todas sobreviven» (el caso normal, sin cambio de día).
+     * Cuando el día cambia, el plan de `AddonDateReconciler` decide quién se queda **y esos minutos
+     * se descuentan ANTES de validar** — la lección de `#417` (§9.8·H1) aplicada a la extensión: con
+     * el orden al revés, una reserva no se podría mover a un día en que su hora extra no se vende si
+     * la sala está ocupada después, *bloqueada por un aforo que nadie iba a consumir*.
+     *
+     * @param  array{edits?: array<int, array{child_id:int, quantity:int}>, adds?: array<int, array{ticket_type_id:int, quantity:int}>}  $addonEdits
+     * @param  Collection<int, TicketType>  $offeredAddons
+     * @param  array<int, int>|null  $survivingChildIds
+     * @param  array<int, int>  $addQuantities  cantidades efectivas de los `adds`, por id de producto
+     */
+    private function resultingStayMinutes(
+        OrderItem $item,
+        array $addonEdits,
+        $offeredAddons,
+        ?array $survivingChildIds = null,
+        array $addQuantities = [],
+    ): int {
+        $editByChildId = [];
+        foreach ($addonEdits['edits'] ?? [] as $edit) {
+            $editByChildId[(int) $edit['child_id']] = (int) $edit['quantity'];
+        }
+
+        $minutes = 0;
+        foreach ($this->liveStayExtendingChildren($item) as $child) {
+            if ($survivingChildIds !== null && ! in_array((int) $child->id, $survivingChildIds, true)) {
+                continue; // el día nuevo no vende esta hora extra: se retira y deja de alargar
+            }
+            $edited = $editByChildId[(int) $child->id] ?? null;
+            if ($edited === 0) {
+                continue; // se quita en este mismo guardado
+            }
+            $qty = ($edited !== null && $edited > (int) $child->quantity) ? $edited : (int) $child->quantity;
+            $minutes += AddonOccupancy::extraMinutes($child->ticketType, $qty);
+        }
+
+        foreach ($addonEdits['adds'] ?? [] as $add) {
+            $addTypeId = (int) $add['ticket_type_id'];
+            /** @var TicketType|null $addType */
+            $addType = $offeredAddons->get($addTypeId);
+            if ($addType === null || ! AddonOccupancy::sellableStayExtension($addType)) {
+                continue;
+            }
+            $minutes += AddonOccupancy::extraMinutes(
+                $addType, (int) ($addQuantities[$addTypeId] ?? $add['quantity']),
+            );
+        }
+
+        return $minutes;
+    }
+
+    /**
      * Dónde ATERRIZA la familia ocupante detrás de la posición (nueva) del padre, validando que
      * CABE — `[franja de la hija, null]` o `[null, motivo de bloqueo]` (`specs/hora-extra.md`
      * §4.4·3 + borde 4).
@@ -1221,15 +1322,6 @@ class OrderItemEditor
             if ($q > 0 && $q < (int) $child->quantity) {
                 return 'addon_partial_reduce_unsupported';
             }
-            // LA HORA EXTRA DE UN PACK (`specs/hora-extra.md` §10, `#423` · A5): tocar una línea que
-            // EXTIENDE la estancia cambia la ventana de la fiesta, así que exige revalidar el cupo
-            // bajo el lock — y la familia que aterriza aquí se compone filtrando por
-            // `occupiesAfterParent()`, donde un extensor devuelve `false`. Hasta que la T3 lo
-            // soporte, la puerta se cierra EXPLÍCITAMENTE: dejarlo pasar sería alargar una fiesta
-            // vendida sin mirar si la sala está libre después, y eso no falla — sobrevende.
-            if ($child->ticketType?->extendsParentStay() === true) {
-                return 'addon_stay_extension_unsupported';
-            }
         }
 
         $allowedAddonIds = array_map('intval', $newType->addons()->pluck('ticket_types.id')->all());
@@ -1247,11 +1339,6 @@ class OrderItemEditor
         $seen = [];
         $seenGroups = [];
         foreach ($adds as $add) {
-            // La otra mitad de la puerta de arriba: tampoco se AÑADE una hora extra desde el panel
-            // hasta que la T3 revalide el cupo de la ventana alargada bajo el lock.
-            if (TicketType::query()->whereKey((int) $add['ticket_type_id'])->value('extends_parent_stay')) {
-                return 'addon_stay_extension_unsupported';
-            }
             $typeId = (int) $add['ticket_type_id'];
             if ((int) $add['quantity'] < 1) {
                 return 'addon_quantity_invalid';

@@ -24356,3 +24356,40 @@ veredicto por código de salida · **los OCHO escenarios** de `purchase:verify-o
 escenario), T4 (superficies) y T5 (`isFinishedInPractice()`, los dos defectos a la vez). Y las tres
 decisiones de §10.6 que no bloquean el código: el precio, el `max_qty` del enganche y las cotas del
 mostrador.
+
+## #425 · 2026-09-06 · La T3 de la hora extra en packs: el editor y la re-programación — y un caso que pasaba con el arreglo revertido
+
+**La puerta que la T1+T2 dejó cerrada a propósito, abierta con su red** (`hora-extra.md` §10.10): el
+panel ya puede añadir, subir y quitar una hora extra sobre una fiesta vendida, y moverla de día u
+hora. Suite **4.351 verde** · **18/18 mutaciones** · los **OCHO** escenarios de sobreventa en verde.
+
+▶ **Una derivación ÚNICA** (`resultingStayMinutes()`): los minutos que la fiesta quedará alargada
+DESPUÉS del guardado — hijas extensoras vivas con su cantidad editada, más las que se añaden aquí,
+menos las que el día nuevo no vende. La usan los dos caminos del editor, y de ella salen **el cupo que
+se revalida y el hecho que se escribe**, en la misma sentencia: si se recalculara al escribir, la
+validación y el hecho podrían separarse.
+
+▶ **El ORDEN es la propiedad**: el plan de fechas se adelanta a la validación del aforo del padre.
+⚠️⚠️ Es la lección de `#417` §9.8·H1 aplicada a la extensión — *los minutos que una extensión retirada
+iba a ocupar no pueden contar contra el cupo que se pide*, o una fiesta no se podría mover a un día en
+el que su hora extra ni siquiera se vende. El plan es lectura pura; adelantarlo no cambia nada más.
+
+### ⚠️⚠️ Un caso pasaba con el arreglo REVERTIDO, y el motivo es fino
+
+El primer caso de la re-programación comprobaba que una hora **dentro del tramo actual** de la fiesta
+no se ofrece. Pasaba igual con el cambio deshecho: la oferta **cuenta la huella propia a propósito**
+(`#173`), así que cualquier hora de ese tramo sale excluida con extensión o sin ella. Para discriminar,
+la candidata tiene que caer **fuera** del tramo y chocar **solo** por la ventana alargada.
+
+▶ *Un caso que mide donde el defecto no puede aparecer no mide nada* — la misma lección que `#238`
+(«no basta con medir: hay que medir DONDE el fallo puede aparecer»), ahora en un test.
+
+⚠️ Y al rehacerlo apareció lo que faltaba: **tocar `slotMeetsItemRequirements` no bastaba**. La lista
+de HORAS del modal (`times()`) pasa por `displayAvailableFor`, **otra vía** — las dos hacen la misma
+pregunta y solo una estaba arreglada. Con el caso bien apuntado salió en rojo y se vio.
+
+**Verificación**: suite 4.351 · 18/18 mutaciones con control previo y veredicto por código de salida ·
+los OCHO escenarios sobre InnoDB con 12 workers · Pint ✓ · docs-check ✓.
+
+▶ **Queda**: T4 (superficies: ventana mostrada, hoja de sala, puerta, correos) y T5
+(`isFinishedInPractice()`, los dos defectos a la vez).

@@ -83,10 +83,20 @@
 >    porque el comprador con extensión hace más trabajo y llega tarde al lock). Rediseñado a medir
 >    una **AUSENCIA** —la primera hora sembrada ya alargada, los 12 pujan por la segunda y nadie debe
 >    ganar—, con su guarda del instrumento haciendo de CONTROL.
->    ▶ **LO SIGUIENTE: la T3** (el editor, `ItemRescheduleOffer` y `AddonDateReconciler` — y con ella
->    el cruce panel↔web del escenario), luego **T4** (superficies) y **T5** (`isFinishedInPractice()`,
->    los dos defectos a la vez). Las tres decisiones de §10.6 que quedan **no bloquean el código**:
->    el precio, el `max_qty` del enganche y las cotas del mostrador.
+>    ▶ ✅ **T3 HECHA TAMBIÉN** (`#425`, §10.10): el panel ya añade, sube y quita una hora extra sobre
+>    una fiesta vendida, y la mueve de día u hora. **Una derivación ÚNICA** (`resultingStayMinutes()`)
+>    da a la vez el cupo que se revalida y el hecho que se escribe, en la misma sentencia. ⚠️⚠️ **El
+>    ORDEN es la propiedad**: el plan de fechas se adelanta a la validación del aforo — la lección de
+>    `#417` aplicada a la extensión, o una fiesta no se podría mover a un día en el que su hora extra
+>    ni se vende. ⚠️⚠️ **Un caso pasaba con el arreglo REVERTIDO**: la oferta cuenta la huella propia
+>    a propósito (`#173`), así que una hora DENTRO del tramo actual sale excluida igual — la candidata
+>    tiene que caer FUERA y chocar solo por la ventana alargada. Al rehacerlo salió lo que faltaba:
+>    la lista de HORAS del modal pasa por **otra vía** (`displayAvailableFor`) y solo una estaba
+>    arreglada. Suite **4.351** · **18/18 mutaciones** · los OCHO escenarios en verde.
+>    ▶ **LO SIGUIENTE: T4** (superficies: ventana mostrada, hoja de sala, puerta, correos) y **T5**
+>    (`isFinishedInPractice()`, los dos defectos a la vez — arreglar uno solo EMPEORA). Las tres
+>    decisiones de §10.6 que quedan **no bloquean el código**: el precio, el `max_qty` del enganche y
+>    las cotas del mostrador.
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -369,7 +379,7 @@
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
 > ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
-> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#424`**. Las
+> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#425`**. Las
 > otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está
@@ -1555,13 +1565,13 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4347 en verde** (27.083 aserciones, 1 skipped a propósito), medida el **2026-09-06** sobre el
+> Suite **4351 en verde** (27.099 aserciones, 1 skipped a propósito), medida el **2026-09-06** sobre el
 > árbol con **LOS DOS CARRILES FUSIONADOS**: las siete tandas del panel (`#461` +12 · `#462` +13 ·
 > `#463` +10 · `#464` +13 · `#465` +8 · `#466` +6 · `#467`, y **siete casos re-apuntados por sujeto**
 > al retirarse la tira de días y el *toast* del desenlace) **más las del carril de complementos**
 > (`#415` +6 · `#417` +12 · `#418` +1), **`#468` +1** (la guarda de tokens, que dependía de un
-> fichero gitignorado), **`#420` +11** (`OverlappingSlotGridTest`, la rejilla solapada) **y `#424` +23**
-> (la hora extra de un pack: `PackStayExtensionTest` 13 + `StayExtensionGuardsTest` 10).
+> fichero gitignorado), **`#420` +11** (`OverlappingSlotGridTest`, la rejilla solapada) **y `#424`+`#425` +27**
+> (la hora extra de un pack: `PackStayExtensionTest` 17 + `StayExtensionGuardsTest` 10).
 > **JS 951** (`node --test`).
 > ⚠️⚠️ **Con dos carriles vivos esta cifra CADUCA al fusionar, y el hook lo dice antes que nadie**:
 > si el push sale rechazado por aquí, no es un fallo — es que el otro carril trajo casos. Se remide
