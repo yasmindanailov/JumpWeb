@@ -24436,3 +24436,54 @@ ese interruptor y acortaría la fiesta en el siguiente guardado—.
 
 ▶ **Queda solo lo que no bloquea el código**: el precio de la hora extra, el `max_qty` del enganche y
 las cotas del mostrador (§10.6).
+
+## #427 · 2026-09-06 · `[DECIDIDO owner]` La hora extra de sala: precio por pack y por tarifa — y por qué son DOS complementos y no uno
+
+Configuración acordada para la feature de `#421`→`#426`, montada y verificada en local.
+
+| complemento | de lunes a jueves | festivos · fin de semana · vísperas |
+|---|---|---|
+| Hora extra de sala · **JUMP** (pack Cumpleaños Jump) | **5,00 €** | **8,00 €** |
+| Hora extra de sala · **KIDS** (pack Cumpleaños KIDS) | **3,00 €** | **5,00 €** |
+
+❗❗ **Son DOS productos de catálogo y no uno enganchado a los dos packs, y no es una preferencia: es
+estructural.** El precio de un complemento vive en `prices` **del producto**, y el pivote
+`product_addons` **no tiene columna de precio** — así que un mismo complemento no puede costar 5 €
+colgado de un pack y 3 € del otro. Es el mismo motivo por el que ya existen «Hora extra · JUMP» y
+«Hora extra · KIDS» separadas para las entradas. ⚠️ **Si alguien intenta «simplificar» fusionándolas,
+los dos packs pasan a costar lo mismo sin que falle nada.**
+
+▶ **La diferencia entre diario y festivo NO se configura en el complemento**: sale de que cada uno
+tenga precio en las **dos tarifas** (`normal` y `special`). La tarifa `special` son hoy viernes,
+sábado y domingo (`rate_types.weekdays = [5,6,0]`), y **los festivos y vísperas sueltos se declaran
+como fecha especial con `special_dates.rate_type_id`** — verificado: un martes declarado así pasa a
+cobrar la tarifa de festivo.
+
+⚠️ **El caso contrario también es mecanismo, y es el que gobierna las entradas**: «Hora extra · JUMP»
+de la entrada de 2 h tiene precio **solo en `special`**, y por eso **de lunes a jueves ni siquiera se
+ofrece**. Medido día a día. Un complemento de pago sin precio ese día no se ofrece — es la regla que
+ya existía, usada como interruptor de calendario.
+
+### Las otras dos decisiones del mismo encargo
+
+- **La TARTA pasa al post-form** (corte **48 h**, el mismo que Combos y Cubos, máximo 5). El plazo lo
+  puse por coherencia con los otros complementos de comida: si la tarta necesita más margen de
+  encargo, es cambiar un número.
+- **Los CALCETINES se quedan en la reserva** (`booking`), a propósito: son requisito para saltar y se
+  compran con la entrada.
+- ⚠️ **Menú 1 y Menú 2 NO pueden ir al post-form** y el motivo es bueno: son un **grupo excluyente** y
+  uno de ellos va **incluido** — un grupo siempre elige uno por defecto, así que en el post-form se
+  auto-inyectaría un cargo que el cliente no ha pedido (`complementos-post-reserva.md` §4.3).
+
+⚠️ **`max_qty = 1` lo puse yo** (una hora extra por fiesta), que es lo conservador y lo que la sala
+aguanta mejor; subirlo a 2 es cambiar un número en el enganche. ⚠️ Y ojo al presentarlo: con cualquier
+máximo se pinta con **contador**, no con interruptor (`can_toggle` solo se activa para complementos
+por-invitado, prohibidos aquí), así que se lee «0 / 1».
+
+**Verificado en local sobre el catálogo real**: los cuatro precios salen por pack y por día; la fiesta
+de las 16:00 de un sábado con hora extra se vende a 8,00 €, su ventana dice **16:00–19:00** y el cupo
+queda ocupado a las 17:00 y 18:00 y libre a las 19:00.
+
+▶ **Pendiente de tu confirmación**: «Hora extra · KIDS» sigue colgando de la entrada «Kids · 2 horas».
+Si la hora extra de ENTRADA es solo para JUMP, hay que retirar ese enganche — no se ha tocado porque
+retirar un complemento con ventas hechas no es inocuo.

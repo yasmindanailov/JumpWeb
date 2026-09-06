@@ -1309,6 +1309,31 @@ tiene un motivo distinto al del ocupante: los minutos ya están materializados e
 el aforo de lo vendido no se re-interpreta; **lo que se rompe es la EDICIÓN**, porque el editor
 reconoce a sus hijas por este interruptor y apagarlo acortaría la fiesta en el siguiente guardado.
 
+## 10.12 · La CONFIGURACIÓN acordada (`#427`, 2026-09-06)
+
+`[DECIDIDO owner]`, montada y verificada en local sobre el catálogo real:
+
+| complemento | lun–jue | festivos · finde · vísperas |
+|---|---|---|
+| Hora extra de sala · **JUMP** | 5,00 € | 8,00 € |
+| Hora extra de sala · **KIDS** | 3,00 € | 5,00 € |
+
+❗❗ **DOS productos y no uno, y es estructural**: el precio vive en `prices` **del producto** y el
+pivote **no tiene columna de precio**, así que un mismo complemento no puede costar distinto en cada
+pack. Mismo motivo por el que las horas extra de ENTRADA ya están separadas por zona. *Fusionarlas
+«para simplificar» iguala los dos precios sin que falle nada.*
+
+▶ **Diario vs festivo no es un ajuste del complemento**: sale de tener precio en las **dos** tarifas.
+Y su contrario es el interruptor de calendario que gobierna las entradas — «Hora extra · JUMP» de la
+entrada de 2 h tiene precio **solo en `special`**, así que de lunes a jueves **ni se ofrece**. Los
+festivos y vísperas sueltos se declaran con `special_dates.rate_type_id` (verificado).
+
+▶ **Tarta → post-form** (corte 48 h, máx 5). **Calcetines → se quedan en la reserva.** ⚠️ **Menú 1 y
+Menú 2 NO pueden ir al post-form**: son grupo excluyente y uno va incluido, así que allí se
+auto-inyectaría un cargo que nadie pidió.
+
+⚠️ `max_qty = 1` por defecto; con cualquier máximo se pinta con **contador** y no con interruptor.
+
 ### Lo que queda de §10
 
 Solo las tres decisiones de §10.6 que **no bloquean el código**: el precio de la hora extra (con el

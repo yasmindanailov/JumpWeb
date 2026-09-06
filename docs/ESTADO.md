@@ -111,6 +111,13 @@
 >    todo complemento salvo el que la necesita —conocía solo al ocupante—. *El defecto que `#410`
 >    arregló para el hermano, esperando a repetirse.* Hoy el toggle está, excluyente y con su
 >    candado con ventas.
+>    ▶ ✅ **CONFIGURACIÓN ACORDADA Y MONTADA EN LOCAL** (`#427`): hora extra de sala **JUMP 5 €
+>    diario / 8 € festivo** y **KIDS 3 € / 5 €**; la **Tarta** pasa al post-form (corte 48 h) y los
+>    **Calcetines** se quedan en la reserva. ❗❗ **Son DOS complementos y es estructural**: el
+>    precio vive en el PRODUCTO y el pivote no tiene columna de precio — fusionarlos iguala los
+>    dos packs sin que falle nada. ⚠️ **Menú 1 y Menú 2 no pueden ir al post-form** (grupo
+>    excluyente + incluido: se auto-inyectaría un cargo que nadie pidió). ▶ **Falta replicarlo en
+>    PRODUCCIÓN por el panel**, y confirmar si se retira «Hora extra · KIDS» de la entrada de 2 h.
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -393,7 +400,7 @@
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
 > ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
-> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#426`**. Las
+> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#427`**. Las
 > otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está
