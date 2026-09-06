@@ -24292,3 +24292,67 @@ lo correcto · y la rejilla de `#420` **ayuda**: un pack de 3 h pasa de 2 a 5 ho
 
 **Verificación**: A1 reproducido con el reloj real del contenedor · A3/A4/A5/A6 confirmados en el código
 citado con línea · los descartes, por censo (28 apariciones de `parent_item_id`) · sin tocar `app/`.
+
+## #424 · 2026-09-06 · La hora extra de un PACK, vendible: el eje y el núcleo de aforo (T1+T2) — y el octavo escenario que nació inútil
+
+**El camino de COMPRA, completo** (`hora-extra.md` §10.9): se vende una hora extra de sala y los dos
+mapas de aforo la cuentan. El hueco medido en §10.1 —una fiesta de 20 con hora extra dejaba el cupo de
+las 17:00 en `fiestas=0 ninos=0` y aceptaba otra encima— queda cerrado en las dos mitades.
+
+▶ **El modelo, en una frase**: se vende como complemento y **se modela como duración**. La hora extra
+no añade un ocupante: **alarga la ventana de esa misma fiesta**. Una fiesta, sus invitados, más rato.
+
+▶ **T1 y T2 van FUNDIDAS**, como exigía `#423` · A2: `AddonResolver` es la autoridad del cobro, así que
+en cuanto deja de rechazar extensores hay venta — y hasta que los mapas sepan contarla, cada venta es
+el hueco que la feature viene a cerrar.
+
+### La decisión de alcance que evita deuda entre tandas
+
+⚠️⚠️ **El editor del panel RECHAZA tocar un extensor** (`addon_stay_extension_unsupported`) hasta que
+la T3 revalide el cupo alargado bajo el lock. Es **A5** cerrado con una puerta explícita en vez de con
+un olvido: sin ella, añadir una hora extra a una fiesta ya vendida la alargaría **sin mirar si la sala
+está libre después**, y eso no falla — sobrevende, y desde el mostrador, que es donde nadie lo ve.
+
+### Lo que enseñó la ejecución
+
+⚠️⚠️ **Tres guardas del repo cazaron lo que faltaba, y ninguna era de esta feature**:
+`ReservationErrorMapTest` (un código de reserva sin `ApiErrorCode` deja al cliente sin saber qué
+hacer), `SidebarPayParityTest` (el cajón no sabía traducirlo) y `SidebarDomContractTest` — **el bundle
+SSR quedó rancio** al tocar `pay.js`, y ese test compara el bundle: sin esa guarda habría medido código
+viejo y salido verde.
+
+⚠️⚠️ **Una aserción mía pasaba EN VACÍO**: buscaba la fila de la oferta por `id` y el DTO publica
+`productId`, así que «la hora extra no se ofrece» habría pasado igual con la oferta rota del todo. **Lo
+delató su CONTROL**, el caso gemelo que exige que SÍ se ofrezca cuando cabe. *Un caso negativo sin su
+positivo no prueba nada.*
+
+⚠️ **La rama simétrica del modelo de vista (A4) no mordía**, y eso era información, no un fallo: por la
+vía con fecha y hora la tapa el filtro de A3. Solo defiende el modo **sin `date`/`time`** —que el
+contrato declara— y el enganche imposible metido por `Query\Builder`. Su caso tiene las dos mitades.
+
+### ❗❗❗ Y el octavo escenario de concurrencia NACIÓ INÚTIL
+
+La primera versión repartía los 12 workers entre las dos horas: los pares compraban la primera **con**
+extensión y los impares la segunda a secas. Con el defecto puesto salió **verde 4 de 4**. El motivo:
+el comprador con extensión hace más trabajo —resolver el complemento y su precio— y **llegaba siempre
+tarde al lock**, así que ganaba el otro y nunca había dos fiestas.
+
+▶ *Un escenario cuyo veredicto depende de quién gane la carrera no es un escenario: es una moneda.*
+
+▶ **Rediseñado**: la primera hora se siembra **ya vendida y alargada**, los 12 pujan por la segunda y
+**nadie debe ganar** — `expected_winners = 0`, el primero del verificador que mide una **AUSENCIA**. Y
+su guarda del instrumento es a la vez su **CONTROL**: la franja vende ANTES de alargar la fiesta y
+cierra DESPUÉS. Con el cupo ciego a `extra_minutes`, esa guarda **aborta** diciendo que la segunda hora
+«sigue ofreciendo 20», que es el defecto con nombre.
+
+⚠️ `AFORO-01` y `SUITE-04` pasan a **OCHO** escenarios; `AddonOfferReader` entra en el `CRITICAL_RE`
+(A8): con los extensores pasa a leer el cupo de SALA para decidir qué ofrece.
+
+**Verificación**: suite **4.347 verde** (27.083 aserciones) · **14/14 mutaciones** con control previo y
+veredicto por código de salida · **los OCHO escenarios** de `purchase:verify-oversell` sobre InnoDB con
+12 workers · el nuevo **visto FALLAR** sin la corrección · Pint ✓ · docs-check ✓.
+
+▶ **Queda**: T3 (editor, re-programación y reconciliador de fechas — y con ella el cruce panel↔web del
+escenario), T4 (superficies) y T5 (`isFinishedInPractice()`, los dos defectos a la vez). Y las tres
+decisiones de §10.6 que no bloquean el código: el precio, el `max_qty` del enganche y las cotas del
+mostrador.

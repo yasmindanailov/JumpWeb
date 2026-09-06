@@ -1221,6 +1221,15 @@ class OrderItemEditor
             if ($q > 0 && $q < (int) $child->quantity) {
                 return 'addon_partial_reduce_unsupported';
             }
+            // LA HORA EXTRA DE UN PACK (`specs/hora-extra.md` §10, `#423` · A5): tocar una línea que
+            // EXTIENDE la estancia cambia la ventana de la fiesta, así que exige revalidar el cupo
+            // bajo el lock — y la familia que aterriza aquí se compone filtrando por
+            // `occupiesAfterParent()`, donde un extensor devuelve `false`. Hasta que la T3 lo
+            // soporte, la puerta se cierra EXPLÍCITAMENTE: dejarlo pasar sería alargar una fiesta
+            // vendida sin mirar si la sala está libre después, y eso no falla — sobrevende.
+            if ($child->ticketType?->extendsParentStay() === true) {
+                return 'addon_stay_extension_unsupported';
+            }
         }
 
         $allowedAddonIds = array_map('intval', $newType->addons()->pluck('ticket_types.id')->all());
@@ -1238,6 +1247,11 @@ class OrderItemEditor
         $seen = [];
         $seenGroups = [];
         foreach ($adds as $add) {
+            // La otra mitad de la puerta de arriba: tampoco se AÑADE una hora extra desde el panel
+            // hasta que la T3 revalide el cupo de la ventana alargada bajo el lock.
+            if (TicketType::query()->whereKey((int) $add['ticket_type_id'])->value('extends_parent_stay')) {
+                return 'addon_stay_extension_unsupported';
+            }
             $typeId = (int) $add['ticket_type_id'];
             if ((int) $add['quantity'] < 1) {
                 return 'addon_quantity_invalid';

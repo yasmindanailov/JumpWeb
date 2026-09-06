@@ -124,6 +124,17 @@ enum ApiErrorCode: string
      */
     case LineAddonOverQuantity = 'line_addon_over_quantity';
 
+    /**
+     * 422 — la fiesta cabe, pero **alargada no** (la hora extra de un pack,
+     * `specs/hora-extra.md` §10): la sala está ocupada después, o la extensión se sale del horario.
+     * Lleva `params.product`/`params.when`.
+     *
+     * ⚠️ Es un código PROPIO y no `line_pack_sold_out` a propósito: el remedio es distinto y sólo el
+     * cliente puede elegirlo — **quitar la hora extra conserva la reserva**, cambiar de franja la
+     * mueve. Un código que no distingue las dos acciones obliga a adivinar.
+     */
+    case LineStayExtension = 'line_stay_extension';
+
     // ── Negocio: la reserva no se admite, o el cobro no se puede abrir ───────────────────────
 
     /**

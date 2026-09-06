@@ -39,6 +39,7 @@ return [
         'line_pack_guests_range' => 'El número de invitados no es válido para ese servicio.',
         'line_event_required' => 'Faltan datos obligatorios de la reserva.',
         'line_addon_occupancy' => 'La hora extra ya no cabe: la franja siguiente está completa o cerrada.',
+        'line_stay_extension' => 'La fiesta no cabe con la hora extra: la sala está ocupada después. Quita la hora extra o elige otra franja.',
         'line_addon_over_quantity' => 'No pueden quedarse más personas de las que entran.',
         'reservations_paused' => 'Las reservas online están cerradas temporalmente.',
         'too_many_pending_orders' => 'Ya tienes varias reservas pendientes de pago. Complétalas o espera a que caduquen.',

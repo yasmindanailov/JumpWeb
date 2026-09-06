@@ -104,17 +104,22 @@ class CartOccupants
                 continue;
             }
 
+            // ⚠️ La duración es la EFECTIVA: si la línea lleva complementos que extienden la
+            // estancia (la hora extra de un pack, §10.3), esta misma línea ocupa más rato. La
+            // aritmética es la de `OrderItem::occupiedMinutes()` y la del `SELECT` de los mapas —
+            // tres sitios que suman lo mismo porque son la misma regla.
             $occupants[] = [
                 'entry_start' => (string) $line['time'],
-                'duration_min' => $type->duration_min,
+                'duration_min' => self::effectiveDurationOf($type, $line),
                 'seats' => (int) $line['qty'] * (int) ($type->seats_per_unit ?? 1),
                 'line' => $i,
                 'addon' => null,
             ];
 
-            // Un pack no puede llevar complementos que ocupen (D2 de §7: en un pack «la fiesta dura
-            // más» es otro mecanismo) — el pivote lo impide y `AddonResolver` lo rechaza; aquí,
-            // coherentes con eso, sus complementos no aportan ocupantes.
+            // Un pack no puede llevar complementos que OCUPEN —una línea hija con franja y plazas
+            // propias— (D2 de §7): el pivote lo impide y `AddonResolver` lo rechaza. Lo que sí puede
+            // llevar desde §10 son complementos que EXTIENDEN, y ésos no aportan un ocupante nuevo:
+            // ya han alargado la duración de la línea base, dos líneas más arriba.
             if ($type->isPack()) {
                 continue;
             }
@@ -164,13 +169,55 @@ class CartOccupants
             $occupants[] = [
                 'start' => (string) $line['time'],
                 'prep_before_min' => (int) $type->prep_before_min,
-                'duration_min' => $type->duration_min,
+                // La hora extra alarga la ventana de ESTA fiesta (§10.3): sigue siendo UNA fiesta con
+                // SUS invitados, sólo que durante más rato. Si esto se quedara en la duración base,
+                // la oferta enseñaría horas que el checkout rechaza — el primo de `AFORO-02`.
+                'duration_min' => self::effectiveDurationOf($type, $line),
                 'prep_after_min' => (int) $type->prep_after_min,
                 'guests' => (int) $line['qty'] * (int) ($type->seats_per_unit ?? 1),
             ];
         }
 
         return $occupants;
+    }
+
+    /**
+     * **La duración con la que esta línea de la CESTA ocupa**: la de su producto más lo que la
+     * alargan los complementos que extienden la estancia (`specs/hora-extra.md` §10.3).
+     *
+     * Es la mitad PROVISIONAL de lo que `OrderItem::occupiedMinutes()` es para una línea guardada y
+     * lo que `duration_min + extra_minutes` es en los dos mapas. **Las tres tienen que dar el mismo
+     * número**: una cesta que cuente distinto ofrece horas que el cobro rechaza.
+     *
+     * ⚠️ `null` (producto ilimitado) se queda en `null`: lo que ya llega al cierre no se alarga.
+     *
+     * @param  array{qty:int, time:string, addons?:array<int, array{ticket_type_id:int, qty:int}>}  $line
+     */
+    private static function effectiveDurationOf(TicketType $type, array $line): ?int
+    {
+        if ($type->duration_min === null) {
+            return null;
+        }
+
+        $extra = 0;
+        foreach ($line['addons'] ?? [] as $request) {
+            $id = (int) ($request['ticket_type_id'] ?? 0);
+            $qty = (int) ($request['qty'] ?? 0);
+            if ($id <= 0 || $qty <= 0) {
+                continue;
+            }
+
+            /** @var TicketType|null $addon */
+            $addon = $type->addons->firstWhere('id', $id);
+            if (! $addon || ! AddonOccupancy::sellableStayExtension($addon)) {
+                continue; // no ofrecido, neutro, o config rota: no alargará porque no se venderá
+            }
+
+            $effective = AddonResolver::effectiveQuantity($addon->pivot, $qty, (int) $line['qty']);
+            $extra += AddonOccupancy::extraMinutes($addon, max(0, $effective));
+        }
+
+        return (int) $type->duration_min + $extra;
     }
 
     /**

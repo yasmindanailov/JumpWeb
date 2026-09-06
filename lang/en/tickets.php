@@ -241,6 +241,7 @@ return [
         'addon_occupancy_line' => '“:addon” for “:product” on :when no longer fits: the next slot is full or closed. Remove it or pick another time.',
         'addon_over_line' => 'More people cannot stay (:staying) than are coming in (:entering). Review the extra hours in your selection.',
         'pack_sold_out_line' => 'Pack “:product” on :when has no capacity left. Remove it from the cart and try another slot.',
+        'stay_extension_line' => 'Pack “:product” on :when does not fit with the extra hour: the room is taken afterwards. Remove the extra hour or pick another slot.',
         'pack_guests_range_line' => 'Number of guests for “:product” must be between :min and :max.',
         'event_required_line' => 'Missing birthday details for “:product”. Go back and fill them in.',
         'too_many_pending' => 'You have :max pending bookings (the maximum). If you need to cancel one, write to us from Contact and we will help you.',

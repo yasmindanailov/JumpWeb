@@ -44,6 +44,8 @@ final class ReservationErrorMap
         // de ocupantes pide que se queden más de los que entran.
         'tickets.errors.addon_occupancy_line' => ApiErrorCode::LineAddonOccupancy,
         'tickets.errors.addon_over_line' => ApiErrorCode::LineAddonOverQuantity,
+        // La hora extra de un PACK (§10): la fiesta no cabe con la extensión.
+        'tickets.errors.stay_extension_line' => ApiErrorCode::LineStayExtension,
     ];
 
     /** El status de TODOS los rechazos de reserva. Ver el docblock de la clase. */

@@ -267,7 +267,61 @@ class ProductAddon extends Pivot
             if ($parent !== null && $parent->isPack()) {
                 throw new \InvalidArgumentException(
                     'Un complemento que OCUPA (hora extra) no puede colgar de un PACK: en un pack '
-                    .'«quedarse más» es que la fiesta dura más — otro mecanismo (`specs/hora-extra.md` §7·D2).'
+                    .'«quedarse más» es que la fiesta dura más — otro mecanismo (`specs/hora-extra.md` §7·D2). '
+                    .'Para eso está `extends_parent_stay` (§10).'
+                );
+            }
+        });
+
+        // LA HORA EXTRA DE UN PACK (`specs/hora-extra.md` §10.3.1): el guard ESPEJO del de arriba.
+        // Donde el ocupante tiene prohibido colgar de un pack, el extensor tiene prohibido colgar de
+        // cualquier otra cosa — y las dos prohibiciones son la misma idea vista desde sus dos lados:
+        // «quedarse más» significa cosas distintas en una entrada y en una fiesta.
+        static::saving(function (self $pivot): void {
+            $addon = TicketType::query()->find($pivot->addon_id);
+            if ($addon === null || ! $addon->extendsParentStay()) {
+                return;
+            }
+
+            $parent = TicketType::query()->find($pivot->product_id);
+            if ($parent !== null && ! $parent->isPack()) {
+                throw new \InvalidArgumentException(
+                    'Un complemento que EXTIENDE la estancia solo puede colgar de un PACK: en una '
+                    .'entrada, «quedarse más» son personas que se quedan y eso es `occupies_after_parent` '
+                    .'(`specs/hora-extra.md` §10.3.1).'
+                );
+            }
+
+            // Mismos motivos que en el ocupante (§4.4·5), más uno propio: un INCLUIDO se auto-inyecta
+            // con su `included_quantity`, así que **toda fiesta nacería alargada** sin que nadie lo
+            // pida — y una fiesta que dura más de serie no es un complemento incluido: es un pack más
+            // largo (que es justo lo que §7·D2 dice, y sigue siendo cierto).
+            if ($pivot->isPerGuest() || $pivot->is_mandatory || $pivot->is_included) {
+                throw new \InvalidArgumentException(
+                    'Un complemento que EXTIENDE la estancia no puede ser por-invitado, obligatorio ni '
+                    .'incluido: alargaría la fiesta sin que el cliente lo pida, y una fiesta que dura '
+                    .'más de serie es un PACK más largo (`specs/hora-extra.md` §10.3.1).'
+                );
+            }
+
+            // Vender aforo DESPUÉS de reservar exige el lock de zona/día y una revalidación que esta
+            // fase no tiene (`complementos-post-reserva.md` §4.3·5, la misma puerta que el ocupante).
+            if ($pivot->stage === self::STAGE_POSTFORM) {
+                throw new \InvalidArgumentException(
+                    'Un complemento que EXTIENDE la estancia no puede venderse DESPUÉS de reservar: '
+                    .'mueve aforo, y esa fase no revalida cupo (`specs/hora-extra.md` §10.5·6).'
+                );
+            }
+
+            // `#423` · A6: el tope del resolutor («no se quedan más de los que entran») no significa
+            // nada para bloques de tiempo —con 20 invitados dejaría pedir 20 horas—, así que el tope
+            // de un extensor es SUYO y tiene que existir. Es la misma regla que `#413` impuso a los
+            // `postform` por el mismo motivo: sin tope declarado, el único freno sería el rechazo.
+            if ($pivot->max_qty === null || (int) $pivot->max_qty < 1) {
+                throw new \InvalidArgumentException(
+                    'Un complemento que EXTIENDE la estancia necesita un máximo por reserva '
+                    .'(`max_qty` >= 1): sin él, el único freno sería que el aforo lo rechace '
+                    .'(`specs/hora-extra.md` §10.5·2).'
                 );
             }
         });

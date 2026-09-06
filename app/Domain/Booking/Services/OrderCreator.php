@@ -346,6 +346,39 @@ class OrderCreator
                     $resolved['rows'][$k]['slot_id'] = $childSlot->id;
                 }
 
+                // LA HORA EXTRA DE UN PACK (`specs/hora-extra.md` §10.3): extender NO es ocupar, así
+                // que aquí no aterriza ninguna hija — lo que cambia es que **esta misma fiesta dura
+                // más**, y por tanto hay que volver a preguntar por su cupo con la ventana ALARGADA.
+                //
+                // ⚠️⚠️ **Es una SEGUNDA pregunta y no una repetición**: la de arriba mide si la fiesta
+                // cabe; ésta, si cabe alargada. Y las dos tienen que pasar **bajo el mismo lock**, que
+                // ya cubre la zona/día entera (`ZoneDaySlotLock`) precisamente porque la ocupación se
+                // cuenta por tramo (`AFORO-01`/`AFORO-05`). Sin ella, la extensión se vendería sin que
+                // nadie mirase la franja siguiente: el hueco medido en §10.1.
+                //
+                // ⚠️ `availableGuestsFor` con minutos extra comprueba **las dos cosas** —que la ventana
+                // alargada CABE en la rejilla (si no, 0) y que hay cupo en todas sus franjas—, así que
+                // no hacen falta dos controles.
+                $extraMinutes = (int) ($resolved['extra_minutes'] ?? 0);
+                if ($extraMinutes > 0) {
+                    $extendedAvailable = $this->packAvailability->availableGuestsFor(
+                        $slot,
+                        $type,
+                        $this->otherPackOccupants($cart, $i, $types),
+                        null,
+                        $extraMinutes,
+                    );
+                    if ($line['qty'] > $extendedAvailable) {
+                        throw ReservationException::withContext('tickets.errors.stay_extension_line', $context);
+                    }
+                }
+
+                // El HECHO de cuánto se alargó esta reserva, en la línea del padre y en la misma
+                // sentencia que la crea (§10.3.2): es el hermano de `seats` —un derivado
+                // materializado que los dos mapas de ocupación leen sin recalcular— y **el único
+                // dato que une la aritmética viva con la almacenada**.
+                $product['extra_minutes'] = $extraMinutes;
+
                 // Señal/depósito (#225): la parte del valor base de ESTA línea que NO se cobra
                 // online queda como ajuste `deposit_remainder` (a cobrar presencialmente en el
                 // parque). `depositCents` es data-driven: `none` → resto 0 (las entradas pagan el

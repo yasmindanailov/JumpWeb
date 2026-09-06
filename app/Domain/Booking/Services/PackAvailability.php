@@ -65,13 +65,13 @@ class PackAvailability
      *
      * @param  array<int, array{start:string, prep_before_min:int, duration_min:int|null, prep_after_min:int, guests:int}>  $cartOccupants
      */
-    public function availableGuestsFor(Slot $slot, TicketType $pack, array $cartOccupants = [], ?int $excludeItemId = null): int
+    public function availableGuestsFor(Slot $slot, TicketType $pack, array $cartOccupants = [], ?int $excludeItemId = null, int $extraMinutes = 0): int
     {
         if ($slot->online_sales_open === false || $slot->status === Slot::STATUS_CLOSED) {
             return 0;
         }
 
-        $spanned = $this->spannedSlots($slot, $pack);
+        $spanned = $this->spannedSlots($slot, $pack, $extraMinutes);
         if ($spanned->isEmpty()) {
             return 0;
         }
@@ -80,8 +80,9 @@ class PackAvailability
         // fin. Si la rejilla se queda corta (un pack que empieza demasiado tarde → la franja siguiente
         // fue recortada por el cierre), NO cabe → 0 (no se vende tiempo fuera de horario). El montaje/
         // limpieza (prep) NO se valida aquí: es operación de la casa, no «venta fuera de horario».
-        if ($pack->duration_min !== null && ! $this->spanCoversDuration(
-            $spanned, (string) $slot->start_time, $this->spanEnd((string) $slot->start_time, (int) $pack->duration_min),
+        $stay = self::stayMinutes($pack, $extraMinutes);
+        if ($stay !== null && ! $this->spanCoversDuration(
+            $spanned, (string) $slot->start_time, $this->spanEnd((string) $slot->start_time, $stay),
         )) {
             return 0;
         }
@@ -132,7 +133,7 @@ class PackAvailability
      *
      * @param  array<int, array{start:string, prep_before_min:int, duration_min:int|null, prep_after_min:int, guests:int}>  $cartOccupants
      */
-    public function freeGuestSlots(Slot $slot, TicketType $pack, array $cartOccupants = [], ?int $excludeItemId = null): ?int
+    public function freeGuestSlots(Slot $slot, TicketType $pack, array $cartOccupants = [], ?int $excludeItemId = null, int $extraMinutes = 0): ?int
     {
         if ($slot->online_sales_open === false || $slot->status === Slot::STATUS_CLOSED) {
             return 0;
@@ -143,15 +144,16 @@ class PackAvailability
             return null; // sin tope de invitados → no hay "plazas" que mostrar
         }
 
-        $spanned = $this->spannedSlots($slot, $pack);
+        $spanned = $this->spannedSlots($slot, $pack, $extraMinutes);
         if ($spanned->isEmpty()) {
             return 0;
         }
 
         // Misma garantía que `availableGuestsFor`: la fiesta no se ofrece si su duración no cabe en la
         // rejilla (no se vende tiempo fuera de horario).
-        if ($pack->duration_min !== null && ! $this->spanCoversDuration(
-            $spanned, (string) $slot->start_time, $this->spanEnd((string) $slot->start_time, (int) $pack->duration_min),
+        $stay = self::stayMinutes($pack, $extraMinutes);
+        if ($stay !== null && ! $this->spanCoversDuration(
+            $spanned, (string) $slot->start_time, $this->spanEnd((string) $slot->start_time, $stay),
         )) {
             return 0;
         }
@@ -177,12 +179,12 @@ class PackAvailability
      *
      * @return Collection<int, Slot>
      */
-    public function spannedSlots(Slot $slot, TicketType $pack): Collection
+    public function spannedSlots(Slot $slot, TicketType $pack, int $extraMinutes = 0): Collection
     {
         [$windowStart, $windowEnd] = $this->window(
             $slot->start_time,
             (int) $pack->prep_before_min,
-            $pack->duration_min,
+            self::stayMinutes($pack, $extraMinutes),
             (int) $pack->prep_after_min,
             $this->prepBlocksCupo($slot->zone),
         );
@@ -216,10 +218,15 @@ class PackAvailability
             ->select(
                 'order_items.seats as guests',
                 'entry.start_time as start',
-                'ticket_types.duration_min',
                 'ticket_types.prep_before_min',
                 'ticket_types.prep_after_min',
             )
+            // ⚠️⚠️ **La hora extra de un pack alarga la VENTANA de esta misma fiesta** — no añade una
+            // fiesta nueva (`specs/hora-extra.md` §10.3): sigue contando **1** en `parties` y **sus**
+            // invitados en `guests`, sólo que durante más rato. Modelarlo como un ocupante aparte era
+            // el defecto (b) de §10.1: una línea hija que dice «1 persona» donde hay veinte.
+            // Se suma en SQL por lo mismo que en `SlotAvailability`: este mapa es la vía caliente.
+            ->selectRaw('(ticket_types.duration_min + order_items.extra_minutes) as duration_min')
             ->join('slots as entry', 'entry.id', '=', 'order_items.slot_id')
             ->join('ticket_types', 'ticket_types.id', '=', 'order_items.ticket_type_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
@@ -349,6 +356,23 @@ class PackAvailability
         }
 
         return false;
+    }
+
+    /**
+     * **Los minutos que ocupa la fiesta que se está evaluando**: su duración más lo que la alargan
+     * los complementos que extienden la estancia (`specs/hora-extra.md` §10.3).
+     *
+     * ⚠️ Es la mitad VIVA de la aritmética —la de una compra que aún no existe—; la mitad ALMACENADA
+     * la suma `occupancyMaps()` en SQL (`duration_min + extra_minutes`). Las dos tienen que decir lo
+     * mismo, y por eso las dos suman en el mismo sitio conceptual: la duración del producto más los
+     * minutos comprados.
+     *
+     * ⚠️ `null` (pack ilimitado) se queda en `null`: lo que ya llega al cierre no se alarga, y el
+     * guard del pivote impide venderle una extensión.
+     */
+    private static function stayMinutes(TicketType $pack, int $extraMinutes): ?int
+    {
+        return $pack->duration_min === null ? null : (int) $pack->duration_min + max(0, $extraMinutes);
     }
 
     /** Fin [exclusivo] de la fiesta en H:i:s, clampado al día (igual que {@see SlotAvailability::spanEnd}). */

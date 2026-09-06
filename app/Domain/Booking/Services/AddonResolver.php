@@ -70,7 +70,7 @@ class AddonResolver
      * @param  array<int, array{ticket_type_id:int, qty:int}>  $requested  selección del cliente
      * @param  string  $stage  la FASE de venta ({@see forStage}); `booking` por defecto, para que las
      *                         cuatro superficies de venta de hoy no cambien ni una línea
-     * @return array{rows: array<int, array<string, mixed>>, subtotal: int}
+     * @return array{rows: array<int, array<string, mixed>>, subtotal: int, extra_minutes: int}
      */
     public function resolve(TicketType $product, int $lineQuantity, array $requested, CarbonInterface $date, string $stage = ProductAddon::STAGE_BOOKING): array
     {
@@ -140,6 +140,7 @@ class AddonResolver
         $rows = [];
         $subtotal = 0;
         $occupyingQuantity = 0; // Σ de entradas que SE QUEDAN (hora extra, `specs/hora-extra.md` §4.4·5)
+        $extraMinutes = 0;      // Σ de minutos que alargan la fiesta (la hora extra de un PACK, §10.3)
         foreach ($offered as $id => $addon) {
             $id = (int) $id;
             if (! array_key_exists($id, $selected)) {
@@ -177,6 +178,39 @@ class AddonResolver
                 $occupyingQuantity += $qty;
             }
 
+            // LA HORA EXTRA DE UN PACK (§10.3): EXTENDER no es ocupar. Su línea no lleva franja ni
+            // plazas —las lleva el padre, alargado—, y su cantidad son BLOQUES DE TIEMPO, así que
+            // **no entra en `$occupyingQuantity`**: ese tope significa «no se quedan más de los que
+            // entran» y aquí mezclaría horas con personas (`#423` · A6). Su tope es el `max_qty` del
+            // enganche, que para un extensor es OBLIGATORIO y ya aplica `effectiveQuantity()`.
+            $extends = $addon->extendsParentStay();
+            if ($extends) {
+                // Los cinturones, re-validados aquí porque ésta es la autoridad del cobro (regla 12)
+                // y una fila torcida por `Query\Builder::update()` no la ven los guards del modelo.
+                // §10.3.1: sólo de un PACK — en una entrada «quedarse más» son personas, y eso es el
+                // otro interruptor.
+                if (! $product->isPack()) {
+                    throw new ReservationException('tickets.errors.unavailable');
+                }
+                // §10.3.1: «extiende y no dice cuánto» — sin duración alargaría CERO y se habría
+                // vendido una hora extra que no ocupa nada: se sobrevendería la sala sin que falle nada.
+                if (! AddonOccupancy::sellableStayExtension($addon)) {
+                    throw new ReservationException('tickets.errors.unavailable');
+                }
+                // Un INCLUIDO se auto-inyecta y alargaría TODA fiesta sin que nadie lo pida; por-invitado
+                // y obligatorio, lo mismo por otras puertas. Una fiesta que dura más de serie es un pack
+                // más largo (§7·D2, que sigue siendo cierto).
+                if ($pivot->isPerGuest() || $pivot->is_mandatory || $pivot->is_included) {
+                    throw new ReservationException('tickets.errors.unavailable');
+                }
+                // Vender aforo DESPUÉS de reservar exige lock y revalidación que esa fase no tiene.
+                if ($pivot->stage === ProductAddon::STAGE_POSTFORM) {
+                    throw new ReservationException('tickets.errors.unavailable');
+                }
+
+                $extraMinutes += AddonOccupancy::extraMinutes($addon, $qty);
+            }
+
             $free = self::freeUnits($pivot, $qty);
 
             $price = $this->rates->priceCents($addon, $date);
@@ -197,6 +231,9 @@ class AddonResolver
                 'quantity' => $qty,
                 'free_quantity' => $free,
                 'unit_price' => $unit,
+                // Un EXTENSOR se queda en 0 plazas a propósito (§10.3.1): las plazas de la fiesta
+                // son las del padre y siguen siendo suyas — dárselas a la hija sería contar «1
+                // persona» donde hay veinte, que es el defecto (b) de §10.1.
                 'seats' => $occupies ? AddonOccupancy::seats($addon, $qty) : 0,
                 'event_data' => null,
             ];
@@ -215,7 +252,7 @@ class AddonResolver
             ]);
         }
 
-        return ['rows' => $rows, 'subtotal' => $subtotal];
+        return ['rows' => $rows, 'subtotal' => $subtotal, 'extra_minutes' => $extraMinutes];
     }
 
     /**
@@ -459,6 +496,13 @@ class AddonResolver
             // rota, o colgado de un pack (§7·D2), NO SE OFRECE — el mismo cinturón que `resolve()`
             // aplica al cobro, aquí fallando hacia invisible (ofrecerlo terminaría en rechazo).
             if ($addon->occupiesAfterParent() && (! $addon->hasSaneOccupancyConfig() || $isPack)) {
+                continue;
+            }
+            // Y su ESPEJO (§10.3.1, `#423` · A4): un extensor con configuración rota, o colgado de
+            // algo que NO es un pack, tampoco se ofrece. Sin esta rama la simetría se rompe justo
+            // donde no se ve —el modelo de vista— y un enganche torcido por la puerta de atrás
+            // aparecería en la web para terminar en rechazo.
+            if ($addon->extendsParentStay() && (! $addon->hasSaneStayExtensionConfig() || ! $isPack)) {
                 continue;
             }
             // "Sin precio" (null = no vendible esa tarifa) ≠ "0 € explícito" (gratis): un complemento

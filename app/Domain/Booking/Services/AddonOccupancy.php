@@ -90,4 +90,33 @@ class AddonOccupancy
     {
         return max(0, $quantity) * (int) ($addon->seats_per_unit ?? 1);
     }
+
+    // ─── La hora extra de un PACK (§10): EXTENDER, que no es ocupar ──────────────────────────
+
+    /**
+     * ¿Este complemento se puede VENDER como extensor de estancia? El interruptor declarado + su
+     * cinturón, exactamente como {@see sellableOccupant()} para el ocupante.
+     *
+     * `false` con el interruptor puesto significa configuración ROTA (metida por
+     * `Query\Builder::update()`, que los guards de Eloquent no ven): el que llama tiene que
+     * RECHAZAR la venta. **Jamás degradar a complemento neutro**, que sería vender una hora extra
+     * que no ocupa — el modo de fallo caro, porque no falla nada: solo se sobrevende la sala.
+     */
+    public static function sellableStayExtension(TicketType $addon): bool
+    {
+        return $addon->extendsParentStay() && $addon->hasSaneStayExtensionConfig();
+    }
+
+    /**
+     * Minutos que esta compra alarga la fiesta: `cantidad × duración del bloque`.
+     *
+     * ⚠️ **La cantidad son BLOQUES DE TIEMPO, no personas** (§10.3.1), y por eso este método es el
+     * hermano de {@see seats()} y no una variante suya: dos unidades distintas para dos preguntas
+     * distintas. Mezclarlas es exactamente el defecto (b) de §10.1 —la línea que dice «1 persona»
+     * donde hay veinte—.
+     */
+    public static function extraMinutes(TicketType $addon, int $quantity): int
+    {
+        return max(0, $quantity) * (int) ($addon->duration_min ?? 0);
+    }
 }

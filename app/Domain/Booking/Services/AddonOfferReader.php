@@ -42,6 +42,7 @@ class AddonOfferReader implements AddonOffer
     public function __construct(
         private AddonResolver $resolver,
         private SlotAvailability $slotAvailability,
+        private PackAvailability $packAvailability,
     ) {}
 
     public function resolve(int $productId, int $quantity, array $quantities = [], array $choices = [], ?string $date = null, ?string $time = null): ?ResolvedAddons
@@ -64,10 +65,17 @@ class AddonOfferReader implements AddonOffer
         // igual que con un complemento de pago sin tarifa. Ofrecerlo sería ofrecer lo que el
         // checkout rechaza (el primo de `AFORO-02`, la trampa exacta que motivó §4.5).
         $landing = $this->occupantLanding($product, $offered, $date, $time);
+        // LA HORA EXTRA DE UN PACK (§10.3): su hermano, y **hace falta porque un extensor devuelve
+        // `false` en `occupiesAfterParent()`** — o sea que atravesaría el filtro de abajo sin que
+        // nadie mirase si la fiesta cabe alargada (`#423` · A3). Ofrecer lo que el checkout rechaza
+        // es el primo de `AFORO-02`, la trampa exacta que §4.5 existe para evitar.
+        $stayCaps = $this->stayExtensionCaps($product, $offered, $date, $time, $guests);
         if ($date !== null && $time !== null) {
             $offered = $offered->filter(
-                fn (TicketType $addon): bool => ! $addon->occupiesAfterParent()
-                    || array_key_exists((int) $addon->id, $landing)
+                fn (TicketType $addon): bool => (! $addon->occupiesAfterParent()
+                    || array_key_exists((int) $addon->id, $landing))
+                    && (! $addon->extendsParentStay()
+                        || ($stayCaps[(int) $addon->id] ?? 0) > 0)
             )->values();
         }
 
@@ -98,6 +106,7 @@ class AddonOfferReader implements AddonOffer
         // más de los que entran» (§4.4·5) — el mismo tope que `AddonResolver::resolve()` impone al
         // cobrar, dicho aquí en `max`/`can_inc` para que el stepper pare ANTES del rechazo.
         $this->capOccupantRows($view, $landing, $guests);
+        $this->capStayExtensionRows($view, $stayCaps);
 
         return new ResolvedAddons(
             groups: array_map(static fn (array $group): AddonChoiceGroup => new AddonChoiceGroup(
@@ -215,6 +224,104 @@ class AddonOfferReader implements AddonOffer
             $row['max'] = $row['max'] === null ? $cap : min((int) $row['max'], $cap);
             $row['can_inc'] = (bool) $row['can_inc'] && (int) $row['qty'] < (int) $row['max'];
         });
+    }
+
+    /**
+     * **Cuántos BLOQUES de hora extra caben en esta fiesta a esta hora**: `addonId → máximo`
+     * (`specs/hora-extra.md` §10.3). Es el hermano de {@see occupantLanding()} y responde la misma
+     * pregunta para el otro mecanismo — con la diferencia de que aquí no hay «franja siguiente» que
+     * mirar: lo que se pregunta es si **la fiesta entera cabe alargada**, cupo de sala incluido.
+     *
+     * Vacío sin fecha/hora, o si el producto no es un pack: sin hora no hay ventana que medir, y un
+     * extensor colgado de algo que no es un pack no debería existir (lo impiden los dos guards).
+     *
+     * ⚠️ La búsqueda es LINEAL y se para en el primer bloque que no cabe, porque la disponibilidad
+     * es monótona: si no caben 2 horas, tampoco caben 3. El techo lo pone el `max_qty` del enganche,
+     * que para un extensor es obligatorio, así que el bucle está acotado por configuración.
+     *
+     * ⚠️ Se calcula SIN los ocupantes provisionales de la cesta —igual que `occupantLanding()`, y por
+     * el mismo motivo: este endpoint no la recibe—, así que puede quedar un punto OPTIMISTA. Ese
+     * borde lo cierra el checkout bajo lock con `stay_extension_line`.
+     *
+     * @param  Collection<int, TicketType>  $offered
+     * @return array<int, int>
+     */
+    private function stayExtensionCaps(TicketType $product, $offered, ?string $date, ?string $time, int $guests): array
+    {
+        if ($date === null || $time === null || ! $product->isPack() || $product->zone_id === null) {
+            return [];
+        }
+
+        $extending = $offered->filter(fn (TicketType $addon): bool => AddonOccupancy::sellableStayExtension($addon));
+        if ($extending->isEmpty()) {
+            return [];
+        }
+
+        $time = strlen($time) === 5 ? $time.':00' : $time;
+        $slot = Slot::query()->with('zone')
+            ->where('zone_id', $product->zone_id)
+            ->where('date', $date)
+            ->where('start_time', $time)
+            ->first();
+        if ($slot === null) {
+            return [];
+        }
+
+        $caps = [];
+        foreach ($extending as $addon) {
+            $ceiling = max(1, (int) ($addon->pivot->max_qty ?? 1));
+            $fits = 0;
+            for ($blocks = 1; $blocks <= $ceiling; $blocks++) {
+                $available = $this->packAvailability->availableGuestsFor(
+                    $slot, $product, [], null, AddonOccupancy::extraMinutes($addon, $blocks),
+                );
+                if ($available < max(1, $guests)) {
+                    break;
+                }
+                $fits = $blocks;
+            }
+            if ($fits > 0) {
+                $caps[(int) $addon->id] = $fits;
+            }
+        }
+
+        return $caps;
+    }
+
+    /**
+     * Capa `max`/`can_inc` de las filas que EXTIENDEN: no se puede pedir más hora extra de la que
+     * cabe. Gemelo de {@see capOccupantRows()} sin su parte de «no se quedan más de los que entran»,
+     * que aquí no significa nada: la cantidad son bloques de tiempo, no personas.
+     *
+     * @param  array{singles: array<int, array<string, mixed>>, groups: array<int, array{options: array<int, array<string, mixed>>}>}  $view
+     * @param  array<int, int>  $caps
+     */
+    private function capStayExtensionRows(array &$view, array $caps): void
+    {
+        if ($caps === []) {
+            return;
+        }
+
+        $apply = function (array &$row) use ($caps): void {
+            $cap = $caps[(int) $row['id']] ?? null;
+            if ($cap === null) {
+                return;
+            }
+            $row['max'] = $row['max'] === null ? $cap : min((int) $row['max'], $cap);
+            $row['can_inc'] = (bool) $row['can_inc'] && (int) $row['qty'] < (int) $row['max'];
+        };
+
+        foreach ($view['singles'] as &$row) {
+            $apply($row);
+        }
+        unset($row);
+        foreach ($view['groups'] as &$group) {
+            foreach ($group['options'] as &$row) {
+                $apply($row);
+            }
+            unset($row);
+        }
+        unset($group);
     }
 
     /**

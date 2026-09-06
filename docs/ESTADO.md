@@ -69,10 +69,24 @@
 >    oferta (A3), el modelo de vista (A4), la familia que aterriza bajo el lock del editor —**añadir
 >    una hora extra a una fiesta vendida no revalidaría aforo**, A5— y el tope (A6, que para bloques de
 >    tiempo no significa nada: con 20 invitados dejaría pedir 20 horas).
->    ▶ **LO SIGUIENTE: T1+T2 fusionadas** (el eje + `extra_minutes` + los dos mapas + `CartOccupants` +
->    `OrderCreator` bajo lock), con `VERIFY_CONC=1`, los siete escenarios **y un OCTAVO que es el
->    CRUCE** panel↔web (el panel añadiendo la extensión mientras la web compra la franja siguiente),
->    visto FALLAR sin la validación antes de darlo por bueno.
+>    ▶ ✅ **T1+T2 HECHAS Y EN EL ÁRBOL** (`#424`, §10.9): **el camino de COMPRA, completo** — se vende
+>    una hora extra de sala y los dos mapas de aforo la cuentan. Suite **4.347** · **14/14
+>    mutaciones** · **los OCHO escenarios** de sobreventa sobre InnoDB. ⚠️⚠️ **El editor del panel
+>    RECHAZA tocar un extensor** (`addon_stay_extension_unsupported`) hasta la T3: es el hallazgo A5
+>    cerrado con una PUERTA en vez de con un olvido — sin ella, añadir una hora extra a una fiesta
+>    vendida la alargaría sin mirar si la sala está libre después, y eso no falla: sobrevende.
+>    ⚠️⚠️ **TRES guardas del repo cazaron lo que faltaba** (el código de API sin `ApiErrorCode`, el
+>    cajón sin traducción y **el bundle SSR rancio** al tocar `pay.js`), y **una aserción mía pasaba
+>    EN VACÍO** —buscaba `id` donde el DTO publica `productId`— y la delató su propio CONTROL.
+>    ❗❗❗ **Y el octavo escenario NACIÓ INÚTIL**: repartir los workers entre las dos horas hacía que
+>    el veredicto dependiera de quién ganara la carrera (verde **4 de 4** con el defecto puesto,
+>    porque el comprador con extensión hace más trabajo y llega tarde al lock). Rediseñado a medir
+>    una **AUSENCIA** —la primera hora sembrada ya alargada, los 12 pujan por la segunda y nadie debe
+>    ganar—, con su guarda del instrumento haciendo de CONTROL.
+>    ▶ **LO SIGUIENTE: la T3** (el editor, `ItemRescheduleOffer` y `AddonDateReconciler` — y con ella
+>    el cruce panel↔web del escenario), luego **T4** (superficies) y **T5** (`isFinishedInPractice()`,
+>    los dos defectos a la vez). Las tres decisiones de §10.6 que quedan **no bloquean el código**:
+>    el precio, el `max_qty` del enganche y las cotas del mostrador.
 >
 > **0. EL PANEL DE ADMIN — 🟦 EN CURSO. El ASISTENTE de «Crear pedido» está COMPLETO en código
 >    (T1→T4); lo siguiente son los tres críticos que quedan de la auditoría: C2, C3 y C4.**
@@ -355,7 +369,7 @@
 > colisiones, todas al cerrar. Los huecos entre bandas son deliberados y `docs-check` no valida
 > continuidad.
 > ▶ **La `#400`–`#419` (producto/reservas) se AGOTÓ en `#419`.** La sucesora es **`#420`–`#429`**,
-> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#423`**. Las
+> reservada aquí el 2026-09-06 antes de usarla, como manda la regla — **último usado: `#424`**. Las
 > otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está
@@ -1541,12 +1555,13 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4324 en verde** (27.031 aserciones, 1 skipped a propósito), medida el **2026-09-06** sobre el
+> Suite **4347 en verde** (27.083 aserciones, 1 skipped a propósito), medida el **2026-09-06** sobre el
 > árbol con **LOS DOS CARRILES FUSIONADOS**: las siete tandas del panel (`#461` +12 · `#462` +13 ·
 > `#463` +10 · `#464` +13 · `#465` +8 · `#466` +6 · `#467`, y **siete casos re-apuntados por sujeto**
 > al retirarse la tira de días y el *toast* del desenlace) **más las del carril de complementos**
 > (`#415` +6 · `#417` +12 · `#418` +1), **`#468` +1** (la guarda de tokens, que dependía de un
-> fichero gitignorado) **y `#420` +11** (`OverlappingSlotGridTest`, la rejilla solapada).
+> fichero gitignorado), **`#420` +11** (`OverlappingSlotGridTest`, la rejilla solapada) **y `#424` +23**
+> (la hora extra de un pack: `PackStayExtensionTest` 13 + `StayExtensionGuardsTest` 10).
 > **JS 951** (`node --test`).
 > ⚠️⚠️ **Con dos carriles vivos esta cifra CADUCA al fusionar, y el hook lo dice antes que nadie**:
 > si el push sale rechazado por aquí, no es un fallo — es que el otro carril trajo casos. Se remide

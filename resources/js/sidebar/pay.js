@@ -52,6 +52,8 @@ export const ERROR_KEYS = {
     // La HORA EXTRA (`specs/hora-extra.md`): un complemento que OCUPA la franja siguiente.
     line_addon_occupancy: 'errors.addon_occupancy_line',
     line_addon_over_quantity: 'errors.addon_over_line',
+    // Y la hora extra de un PACK (§10): la fiesta cabe, pero alargada no.
+    line_stay_extension: 'errors.stay_extension_line',
     // Los de admisión, que `POST /orders` puede devolver porque consume ficha al crear.
     too_many_pending_orders: 'errors.too_many_pending',
     too_many_requests: 'errors.try_later',

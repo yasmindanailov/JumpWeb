@@ -207,6 +207,7 @@ class TicketType extends Model
         'is_sellable' => 'boolean',
         'is_active' => 'boolean',
         'occupies_after_parent' => 'boolean',
+        'extends_parent_stay' => 'boolean',
     ];
 
     /**
@@ -378,6 +379,42 @@ class TicketType extends Model
         return $this->duration_min !== null
             && (int) $this->duration_min > 0
             && (int) ($this->seats_per_unit ?? 1) >= 1;
+    }
+
+    /**
+     * ¿Este complemento EXTIENDE la estancia de su padre? (la hora extra de un PACK,
+     * `specs/hora-extra.md` §10.3.1). Es el hermano de {@see occupiesAfterParent()} y **excluyente**
+     * con él, no un modo suyo: los dos «prolongan la estancia», pero su UNIDAD es distinta —el
+     * ocupante se vende por PERSONA y éste por BLOQUE DE TIEMPO—, y reinterpretar el mismo
+     * complemento según el tipo del padre haría que su precio cambiara de unidad sin que nada lo
+     * diga (`prices` es una tabla sola).
+     *
+     * ⚠️ Lo que extiende NO es «una franja más»: es la VENTANA de la fiesta, que sigue siendo UNA
+     * —una sola fiesta, los mismos invitados, más rato—. Por eso su línea hija no lleva franja
+     * propia ni plazas propias: las lleva el padre, alargado ({@see OrderItem::occupiedMinutes()}).
+     */
+    public function extendsParentStay(): bool
+    {
+        return $this->isAddon() && $this->extends_parent_stay === true;
+    }
+
+    /**
+     * ¿La configuración de EXTENSOR es sana? Solo pide duración positiva: es CUÁNTO alarga, y una
+     * duración nula significaría «alarga nada» —vender una hora extra que no ocupa— o, peor, entrar
+     * en la aritmética de la ventana como `null`.
+     *
+     * ⚠️ **`seats_per_unit` no entra a propósito**, y ésa es la diferencia con
+     * {@see hasSaneOccupancyConfig()}: un extensor no se queda con plazas propias, se queda con las
+     * del padre durante más rato. Pedirle plazas sería la puerta al defecto (b) de §10.1 —la línea
+     * hija que dice «1 persona» donde hay veinte—.
+     *
+     * Fuente ÚNICA de la regla: la usan el guard de `booted()` y el cinturón del punto de
+     * composición (`AddonOccupancy::sellableStayExtension()`), para lo que entre por
+     * `Query\Builder::update()`, que los eventos del modelo no ven.
+     */
+    public function hasSaneStayExtensionConfig(): bool
+    {
+        return $this->duration_min !== null && (int) $this->duration_min > 0;
     }
 
     /**
@@ -777,6 +814,18 @@ class TicketType extends Model
                 );
             }
 
+            // Los dos interruptores son EXCLUYENTES (`specs/hora-extra.md` §10.3.1): ocupar es
+            // quedarse en la franja siguiente con plazas propias y extender es alargar la ventana
+            // del padre sin plazas. Un complemento con los dos encendidos no tiene unidad —¿su
+            // cantidad son personas u horas?— y su precio no significaría nada.
+            if ($type->extends_parent_stay === true) {
+                throw new \InvalidArgumentException(
+                    'Un complemento no puede OCUPAR y EXTENDER a la vez (`occupies_after_parent` + '
+                    .'`extends_parent_stay`): su cantidad serían personas y bloques de tiempo al '
+                    .'mismo tiempo (`specs/hora-extra.md` §10.3.1).'
+                );
+            }
+
             if (! $type->hasSaneOccupancyConfig()) {
                 throw new \InvalidArgumentException(
                     'Un complemento que OCUPA tiene que decir cuánto (`duration_min` > 0) y cuántas '
@@ -812,6 +861,68 @@ class TicketType extends Model
                         .'obligatorio, de venta POSTERIOR, o cuelga de un pack — deshaz esos enganches '
                         .'primero (`specs/hora-extra.md` §4.4·5 y §7·D2, '
                         .'`specs/complementos-post-reserva.md` §4.3·5).'
+                    );
+                }
+            }
+        });
+
+        // LA HORA EXTRA DE UN PACK (`specs/hora-extra.md` §10.3.1): el guard hermano del de arriba,
+        // con la MISMA forma a propósito —valida al tocar los términos, corre en `saving` y su
+        // límite es el mismo (`Query\Builder::update()` no dispara eventos; ese hueco lo tapa el
+        // cinturón de `AddonOccupancy::sellableStayExtension()`)—. Lo que cambia son las reglas,
+        // porque un extensor no es un ocupante: no pide plazas y **solo puede colgar de un PACK**.
+        static::saving(function (self $type): void {
+            $termsTouched = ! $type->exists
+                || $type->isDirty(['extends_parent_stay', 'occupies_after_parent', 'duration_min', 'type']);
+            if (! $termsTouched || $type->extends_parent_stay !== true) {
+                return;
+            }
+
+            if ($type->type !== self::TYPE_ADDON) {
+                throw new \InvalidArgumentException(
+                    'Solo un COMPLEMENTO puede extender la estancia de su padre '
+                    .'(`extends_parent_stay`): una entrada o un pack no tienen padre al que alargar.'
+                );
+            }
+
+            if ($type->occupies_after_parent === true) {
+                throw new \InvalidArgumentException(
+                    'Un complemento no puede EXTENDER y OCUPAR a la vez (`extends_parent_stay` + '
+                    .'`occupies_after_parent`): su cantidad serían bloques de tiempo y personas al '
+                    .'mismo tiempo (`specs/hora-extra.md` §10.3.1).'
+                );
+            }
+
+            if (! $type->hasSaneStayExtensionConfig()) {
+                throw new \InvalidArgumentException(
+                    'Un complemento que EXTIENDE la estancia tiene que decir cuánto alarga '
+                    .'(`duration_min` > 0): sin eso vendería una hora extra que no ocupa nada '
+                    .'(`specs/hora-extra.md` §10.3.1).'
+                );
+            }
+
+            // La OTRA dirección de la guarda del pivote (la lección de `#324`, aplicada al espejo):
+            // encender el interruptor a un complemento YA enganchado a algo que no es un pack —o
+            // como por-invitado, obligatorio, incluido o de venta posterior— dejaría en pie una
+            // configuración que el pivote rechaza al revés.
+            if ($type->exists) {
+                $conflicting = ProductAddon::query()
+                    ->where('addon_id', $type->getKey())
+                    ->where(fn ($q) => $q
+                        ->where('quantity_mode', ProductAddon::MODE_PER_GUEST)
+                        ->orWhere('is_mandatory', true)
+                        ->orWhere('is_included', true)
+                        ->orWhere('stage', ProductAddon::STAGE_POSTFORM))
+                    ->exists();
+                $offPack = ProductAddon::query()
+                    ->where('addon_id', $type->getKey())
+                    ->whereNotIn('product_id', self::query()->select('id')->where('type', self::TYPE_PACK))
+                    ->exists();
+                if ($conflicting || $offPack) {
+                    throw new \InvalidArgumentException(
+                        'Este complemento no puede pasar a EXTENDER la estancia: está enganchado a '
+                        .'algo que no es un PACK, o como por-invitado/obligatorio/incluido/de venta '
+                        .'POSTERIOR — deshaz esos enganches primero (`specs/hora-extra.md` §10.3.1).'
                     );
                 }
             }

@@ -120,6 +120,11 @@ class CriticalPathGateTest extends TestCase
         'app/Domain/Booking/Services/CartOccupants.php',
         'app/Domain/Booking/Services/AddonOccupancy.php',
         'app/Domain/Booking/Services/AddonResolver.php',
+        //  · `AddonOfferReader` entra con la hora extra de un PACK (`#423` · A8): decide QUÉ se
+        //    ofrece mirando el aforo —si la fiesta cabe alargada y cuántos bloques caben—, así que
+        //    un fallo suyo ofrece lo que el cobro rechaza (`AFORO-02` por la puerta de la oferta).
+        //    Ya decidía sobre ocupantes; con los extensores pasa a leer el cupo de SALA.
+        'app/Domain/Booking/Services/AddonOfferReader.php',
         'app/Domain/Booking/Services/PostFormAddons.php',
         'app/Domain/Booking/Services/AddonDateReconciler.php',
     ];

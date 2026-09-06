@@ -86,11 +86,11 @@ class VerifyPurchaseConcurrency extends Command
      * Se separan a propósito: un cupo de fiestas correcto no dice nada sobre el de invitados, y
      * viceversa. En un escenario único, el que se rompiera se escondería detrás del que aguantara.
      */
-    private const SCENARIOS = ['entry', 'pack', 'pack-guests', 'pack-prep', 'mixed', 'panel-edit', 'extra-hour'];
+    private const SCENARIOS = ['entry', 'pack', 'pack-guests', 'pack-prep', 'mixed', 'panel-edit', 'extra-hour', 'stay-extension'];
 
     protected $signature = 'purchase:verify-oversell
         {--workers=8 : Nº de compras concurrentes (procesos)}
-        {--scenario=entry : Qué aforo se prueba: entry | pack | pack-guests | pack-prep | mixed | panel-edit | extra-hour}
+        {--scenario=entry : Qué aforo se prueba: entry | pack | pack-guests | pack-prep | mixed | panel-edit | extra-hour | stay-extension}
         {--keep : No borrar los datos de prueba al terminar}';
 
     protected $description = 'Verifica empíricamente (fork real + MySQL InnoDB) que N compras simultáneas de la ÚLTIMA plaza no sobrevenden: solo una gana. Cubre los tres aforos: entradas, cupo de fiestas y cupo de invitados. Solo dev/local.';
@@ -199,6 +199,13 @@ class VerifyPurchaseConcurrency extends Command
             return $this->probeExtraHourActs($seed);
         }
 
+        // La HORA EXTRA DE UN PACK mide una AUSENCIA —que nadie pueda comprar—, así que su guarda
+        // tiene que demostrar que el hueco EXISTÍA antes de alargar la fiesta. Es el control del
+        // escenario, y sin él «12 rechazos» se leería como éxito con la siembra rota.
+        if ($scenario === 'stay-extension') {
+            return $this->probeStayExtensionActs($seed);
+        }
+
         // ⚠️ Se comprueba CADA pool que el escenario pone en juego, no «el» hueco. En `mixed` hay
         // dos —asientos y cupo de fiestas— y con uno solo verificado el otro podría estar cerrado
         // sin que se notara: sus compradores serían rechazados por siembra, no por la carrera.
@@ -220,7 +227,7 @@ class VerifyPurchaseConcurrency extends Command
         // ⚠️ Y en `pack-prep` los compradores piden DOS horas distintas: si la segunda no vendiera
         // (rejilla corta, fuera de horario), la mitad de los workers serían rechazados por siembra
         // y el resultado —«1 ganador»— saldría verde por el motivo equivocado.
-        if ($scenario === 'pack-prep') {
+        if ($scenario === 'pack-prep' || $scenario === 'stay-extension') {
             $second = Carbon::parse($seed['time'])->addHour()->format('H:i:s');
             $slot2 = Slot::where('zone_id', $seed['zone']->id)
                 ->where('date', $seed['date'])->where('start_time', $second)->first();
@@ -432,6 +439,51 @@ class VerifyPurchaseConcurrency extends Command
      *
      * @param  array{slot:Slot, users:array<int,User>, carts:array<int,array<int,array<string,mixed>>>}  $seed
      */
+    /**
+     * **Guarda del instrumento de `stay-extension`, y a la vez su CONTROL** (`specs/hora-extra.md`
+     * §10): la segunda hora tiene que estar VENDIBLE con la fiesta anterior sin alargar, y dejar de
+     * estarlo en cuanto se le compra la hora extra. Las dos mitades importan — la primera dice que
+     * la siembra no está rota, y la segunda que lo que cierra la franja es la EXTENSIÓN y no otra
+     * cosa; sin ella, «los 12 rechazados» saldría verde con el cupo mal configurado.
+     *
+     * @param  array<string, mixed>  $seed
+     */
+    private function probeStayExtensionActs(array $seed): bool
+    {
+        $second = Carbon::parse($seed['time'])->addHour()->format('H:i:s');
+        $slot2 = Slot::where('zone_id', $seed['zone']->id)
+            ->where('date', $seed['date'])->where('start_time', $second)->first()?->fresh('zone');
+        $needed = (int) $seed['probe_qty'];
+
+        $antes = $slot2 === null ? 0 : app(PackAvailability::class)->availableGuestsFor($slot2, $seed['type']);
+        if ($antes < $needed) {
+            $this->error("Guarda del instrumento · la segunda hora ofrece {$antes} y se pedirán {$needed} ANTES de alargar la fiesta: siembra rota.");
+
+            return false;
+        }
+        $this->line("<fg=gray>Guarda del instrumento · la segunda hora admite {$antes} con la fiesta anterior sin alargar. ✓</>");
+
+        // Se alarga la fiesta ya vendida. Se escribe el HECHO directamente porque esto es siembra y
+        // no una venta: el camino de compra ya lo cubren los casos de `PackStayExtensionTest`, y el
+        // editor del panel rechaza tocar extensiones hasta la T3 a propósito.
+        $seed['seeded_item']->forceFill([
+            'extra_minutes' => (int) $seed['extender']->duration_min,
+        ])->save();
+
+        $despues = app(PackAvailability::class)->availableGuestsFor($slot2, $seed['type']);
+        if ($despues !== 0) {
+            $this->error(
+                "Guarda del instrumento · tras comprar la hora extra la segunda hora sigue ofreciendo {$despues}.\n".
+                '▶ El escenario NO mide la extensión: los 12 rechazos vendrían de otra cosa.'
+            );
+
+            return false;
+        }
+        $this->line('<fg=gray>Guarda del instrumento · con la hora extra comprada, la segunda hora cierra (0). ✓</>');
+
+        return true;
+    }
+
     private function probeExtraHourActs(array $seed): bool
     {
         $direct = app(SlotAvailability::class)->availableFor($seed['slot'], 60);
@@ -504,6 +556,16 @@ class VerifyPurchaseConcurrency extends Command
             //                    más 60 de montaje y 60 de limpieza. Ver el docblock del método.
             $isGuests = $scenario === 'pack-guests';
             $isPrep = $scenario === 'pack-prep';
+            //  · `stay-extension` → LA HORA EXTRA DE UN PACK (`specs/hora-extra.md` §10). Es el
+            //    gemelo de `pack-prep` con otro mecanismo: los compradores piden HORAS DISTINTAS que
+            //    **solo colisionan por la extensión** —la fiesta de las 11:00 con una hora extra
+            //    ocupa hasta las 13:00 y pisa a la de las 12:00—. ⚠️⚠️ Sin la extensión las dos
+            //    caben (60 min cada una, franjas contiguas y disjuntas), así que un solo ganador
+            //    aquí demuestra que la ventana ALARGADA entra en el cupo bajo el lock. Es el
+            //    escenario que la revisión adversarial pidió (`#423` · A9) acotado a lo que esta
+            //    tanda hace vendible: el cruce con el PANEL llegará con la T3, porque hoy el editor
+            //    rechaza tocar una extensión a propósito.
+            $isStay = $scenario === 'stay-extension';
 
             $guestsPerBuyer = $isGuests ? 6 : 8;
             $zone = Zone::create([
@@ -554,6 +616,25 @@ class VerifyPurchaseConcurrency extends Command
                 $type->prices()->create(['rate_type_id' => $rateId, 'amount_cents' => 15000]);
             }
 
+            $extender = null;
+            if ($isStay) {
+                $extender = TicketType::create([
+                    'name' => ['es' => 'Hora extra Probe'], 'type' => TicketType::TYPE_ADDON,
+                    'duration_min' => 60, 'extends_parent_stay' => true,
+                    'is_sellable' => true, 'is_active' => true, 'position' => 2,
+                ]);
+                $extender->prices()->create(['rate_type_id' => $dayRateId, 'amount_cents' => 5000]);
+                if ($dayRateId !== $rateId) {
+                    $extender->prices()->create(['rate_type_id' => $rateId, 'amount_cents' => 5000]);
+                }
+                $type->addons()->attach($extender->id, [
+                    'position' => 1, 'stage' => ProductAddon::STAGE_BOOKING,
+                    'quantity_mode' => ProductAddon::MODE_FIXED, 'allow_extra' => true,
+                    'included_quantity' => 1, 'is_included' => false, 'is_mandatory' => false,
+                    'max_qty' => 1,
+                ]);
+            }
+
             $users = [];
             for ($i = 0; $i < $workers; $i++) {
                 $users[] = User::forceCreate([
@@ -563,10 +644,17 @@ class VerifyPurchaseConcurrency extends Command
                 ]);
             }
 
-            $line = fn (string $at): array => [[
-                'ticket_type_id' => $type->id, 'date' => $date, 'time' => $at,
-                'qty' => $guestsPerBuyer, 'event_data' => [],
-            ]];
+            $line = function (string $at, bool $withExtension = false) use ($type, $date, $guestsPerBuyer, $extender): array {
+                $row = [
+                    'ticket_type_id' => $type->id, 'date' => $date, 'time' => $at,
+                    'qty' => $guestsPerBuyer, 'event_data' => [],
+                ];
+                if ($withExtension && $extender !== null) {
+                    $row['addons'] = [['ticket_type_id' => $extender->id, 'qty' => 1]];
+                }
+
+                return [$row];
+            };
 
             // ⚠️⚠️ **En `pack-prep` los compradores piden HORAS DISTINTAS.** Una fiesta de las 11:00
             // ocupa de 10:00 a 14:00 (montaje + 2 h + limpieza) y otra de las 12:00 ocuparía de 11:00
@@ -575,7 +663,32 @@ class VerifyPurchaseConcurrency extends Command
             $secondTime = Carbon::parse($time)->addHour()->format('H:i:s');
             $carts = [];
             for ($i = 0; $i < $workers; $i++) {
-                $carts[$i] = $line($isPrep && $i % 2 === 1 ? $secondTime : $time);
+                // ⚠️⚠️ En `stay-extension` **todos** pujan por la SEGUNDA hora, y la primera ya está
+                // vendida con su extensión (se siembra abajo). La primera versión repartía los
+                // workers entre las dos horas y **no medía nada**: el que compraba la extensión hace
+                // más trabajo —resolver el complemento y su precio— y llegaba SIEMPRE tarde al lock,
+                // así que con el defecto puesto salía verde **4 de 4 veces**. Un escenario cuyo
+                // veredicto depende de quién gane la carrera no es un escenario: es una moneda.
+                $carts[$i] = $isStay ? $line($secondTime) : $line($isPrep && $i % 2 === 1 ? $secondTime : $time);
+            }
+
+            // La fiesta que YA está vendida en la primera hora, con su hora extra. Se siembra sin
+            // extensión y se alarga después (`probeStayExtensionActs`), para poder medir el hueco
+            // ANTES y DESPUÉS: ése es el control que demuestra que lo que cierra la franja es la
+            // extensión y no la siembra.
+            $seededItem = null;
+            if ($isStay) {
+                $seededOrder = Order::create([
+                    'user_id' => $users[0]->id,
+                    'code' => 'PROBE-'.Str::upper(Str::random(6)),
+                    'status' => Order::STATUS_PAID,
+                    'total' => 15000,
+                ]);
+                $seededItem = $seededOrder->items()->create([
+                    'ticket_type_id' => $type->id, 'slot_id' => $slot->id,
+                    'quantity' => $guestsPerBuyer, 'unit_price' => 15000,
+                    'seats' => $guestsPerBuyer, 'extra_minutes' => 0,
+                ]);
             }
 
             return [
@@ -583,7 +696,12 @@ class VerifyPurchaseConcurrency extends Command
                 'date' => $date, 'time' => $time, 'cart' => $line($time), 'carts' => $carts,
                 'scenario' => $scenario,
                 'probe_qty' => $guestsPerBuyer,
-                'expected_winners' => 1,
+                'seeded_item' => $seededItem,
+                'extender' => $extender,
+                // ⚠️ En `stay-extension` NADIE debe ganar: la sala está ocupada por la extensión de
+                // la fiesta anterior. El «alguien vendió» que exigen los demás escenarios lo aporta
+                // aquí la guarda del instrumento, que mide el hueco ANTES de alargar la fiesta.
+                'expected_winners' => $isStay ? 0 : 1,
             ];
         });
     }
@@ -841,6 +959,16 @@ class VerifyPurchaseConcurrency extends Command
             // verde con DOS fiestas vendidas. Se cuentan las de todo el DÍA en la zona.
             'pack-prep' => [
                 'Fiestas vivas en el día (se pisan por el montaje)',
+                1,
+                $this->livePackLinesInZoneDay($seed['zone']->id, $seed['date']),
+            ],
+            // ⚠️⚠️ Mismo razonamiento que `pack-prep`, con el otro mecanismo: aquí las fiestas se
+            // pisan **por la EXTENSIÓN** y tampoco comparten hora de inicio, así que contar solo la
+            // franja sembrada dejaría fuera a la ganadora de la hora siguiente y el invariante daría
+            // verde con DOS fiestas vendidas — que es exactamente el hueco de `specs/hora-extra.md`
+            // §10.1. Se cuentan las del DÍA en la zona.
+            'stay-extension' => [
+                'Fiestas vivas en el día (la sembrada, y ninguna más)',
                 1,
                 $this->livePackLinesInZoneDay($seed['zone']->id, $seed['date']),
             ],

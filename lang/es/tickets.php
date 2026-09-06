@@ -287,6 +287,10 @@ return [
         'addon_occupancy_line' => '«:addon» de «:product» del :when ya no cabe: la franja siguiente está completa o cerrada. Quítalo o elige otra hora.',
         'addon_over_line' => 'No pueden quedarse más personas (:staying) de las que entran (:entering). Revisa las horas extra de tu selección.',
         'pack_sold_out_line' => 'El pack «:product» del :when ya no tiene cupo. Quítalo del carrito y prueba con otra franja.',
+        // La hora extra de un PACK (`specs/hora-extra.md` §10): la fiesta cabe, pero ALARGADA no.
+        // Dice qué quitar —la hora extra, no la fiesta— porque las dos son quitables y sólo una
+        // salva la reserva.
+        'stay_extension_line' => 'El pack «:product» del :when no cabe con la hora extra: la sala está ocupada después. Quita la hora extra o elige otra franja.',
         'pack_guests_range_line' => 'El nº de invitados de «:product» debe estar entre :min y :max.',
         'event_required_line' => 'Faltan datos del cumpleaños para «:product». Vuelve atrás y rellénalos.',
         'too_many_pending' => 'Tienes :max reservas pendientes (el máximo). Si necesitas cancelar alguna, escríbenos desde Contacto y te ayudamos.',

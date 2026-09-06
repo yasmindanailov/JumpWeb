@@ -58,6 +58,7 @@ class OrderItem extends Model
         'unit_price' => 'integer',
         'is_credit' => 'boolean',
         'seats' => 'integer',
+        'extra_minutes' => 'integer',
         'event_data' => 'array',
         'guest_data' => 'array',
         'guest_form_completed_at' => 'datetime',
@@ -332,6 +333,25 @@ class OrderItem extends Model
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_item_id');
+    }
+
+    /**
+     * **Los minutos que esta reserva OCUPA de verdad**: la duración de su producto más lo que se
+     * alargó con complementos que extienden la estancia (`specs/hora-extra.md` §10.3.2).
+     *
+     * Fuente ÚNICA para quien tenga el modelo cargado. Los dos mapas de ocupación NO pasan por
+     * aquí a propósito —son SQL puro por rendimiento (`#465`) y suman la columna en el `SELECT`—,
+     * pero la aritmética es la misma y **`extra_minutes` es el único dato que las une**.
+     *
+     * ⚠️ `null` (producto ilimitado) se queda en `null`: lo que ya llega al cierre no se puede
+     * alargar, y sumarle minutos daría un número donde el aforo espera «hasta el cierre». El guard
+     * del pivote impide vender una extensión sobre un producto sin duración.
+     */
+    public function occupiedMinutes(): ?int
+    {
+        $base = $this->ticketType?->duration_min;
+
+        return $base === null ? null : (int) $base + (int) ($this->extra_minutes ?? 0);
     }
 
     /**

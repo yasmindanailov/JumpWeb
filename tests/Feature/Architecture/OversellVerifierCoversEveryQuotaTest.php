@@ -49,6 +49,12 @@ class OversellVerifierCoversEveryQuotaTest extends TestCase
             'disputada entre entradas directas y la línea HIJA que ocupa de un complemento con '.
             '`occupies_after_parent` — visto FALLAR con la validación de la hija desactivada '.
             '(5 asientos escritos en una franja de 1, SIN necesitar carrera) y pasar con ella (1 de 8)',
+        'stay-extension' => 'el cupo de SALA frente a una fiesta ALARGADA: la hora extra de un pack '.
+            '(`extends_parent_stay`, `specs/hora-extra.md` §10) no añade un ocupante, alarga la '.
+            'ventana de la fiesta — y el mapa de cupo tiene que verlo. Mide una AUSENCIA (nadie '.
+            'compra la hora siguiente), así que su guarda del instrumento es a la vez su CONTROL: '.
+            'la franja vende ANTES de alargar la fiesta y cierra DESPUÉS. Visto FALLAR con el cupo '.
+            'ciego a `extra_minutes` (la segunda hora seguía ofreciendo 20)',
     ];
 
     public function test_the_verifier_declares_a_scenario_for_every_quota(): void

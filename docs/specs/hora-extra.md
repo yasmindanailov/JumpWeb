@@ -1153,3 +1153,74 @@ la web compra la franja siguiente—, que es `panel-edit` × `extra-hour` sobre 
   aquí significa «hasta el cierre», que es lo correcto; y la guarda prohíbe extender lo ilimitado.
 - ~~«la rejilla de `#420` complica esto»~~ — al revés: con inicios cada 30 min hay **más** franjas donde
   aterrizar una fiesta alargada (medido: un pack de 3 h pasa de 2 a 5 horas de inicio en diario).
+
+
+## 10.9 · Lo EJECUTADO — la T1+T2, en el árbol (`#424`, 2026-09-06)
+
+**El camino de COMPRA, completo**: se puede vender una hora extra de sala y los dos mapas de aforo la
+cuentan. Suite **4.347 verde** · **14/14 mutaciones** (`scripts/mutar-hora-extra-pack.sh`) · **los
+OCHO escenarios** de `purchase:verify-oversell` sobre InnoDB, incluido el nuevo visto FALLAR sin la
+corrección.
+
+### Lo que entra
+
+- **Migración** `2026_09_06_100000`: `ticket_types.extends_parent_stay` + `order_items.extra_minutes`
+  (bool false / int 0 → **con los valores por defecto no cambia la conducta de nada**).
+- **Guards en las dos direcciones**: `TicketType::booted()` (solo addon · duración > 0 · excluyente
+  con `occupies_after_parent` · y el interruptor no se enciende sobre un enganche prohibido) y
+  `ProductAddon::booted()` (**solo packs** · ni por-invitado, ni obligatorio, ni **incluido**, ni
+  `postform` · **`max_qty` OBLIGATORIO**).
+- **`AddonOccupancy`**: `sellableStayExtension()` (el cinturón) y `extraMinutes()` (cantidad × bloque).
+- **`AddonResolver`**: el extensor no entra en `$occupyingQuantity` (esa suma es de personas), no
+  lleva franja ni plazas, y `resolve()` devuelve `extra_minutes`.
+- **Los dos mapas** suman `duration_min + extra_minutes` en el `SELECT`; `PackAvailability` acepta
+  `$extraMinutes` para la fiesta que se evalúa (`stayMinutes()`), y `CartOccupants` emite la ventana
+  ya extendida — **tres sitios que suman lo mismo porque son la misma regla**.
+- **`OrderCreator`**: una SEGUNDA pregunta bajo el mismo lock (`stay_extension_line`), porque la de
+  arriba mide si la fiesta cabe y ésta si cabe **alargada**. Y escribe el hecho en el padre.
+- **A3/A4/A6 de §10.8** cerrados: `AddonOfferReader` no ofrece lo que no cabe y capa el `max` a los
+  bloques que caben; `viewModel()` gana su rama simétrica; el tope es el `max_qty` obligatorio.
+- **Contrato**: `ApiErrorCode::LineStayExtension` (`line_stay_extension`) + `openapi/v1.yaml` + los
+  mensajes en es/en/fr + el mapa del cajón. **Código propio y no `line_pack_sold_out`**: el remedio
+  es otro — quitar la hora extra CONSERVA la reserva.
+
+### La decisión de alcance que evita deuda entre tandas
+
+⚠️⚠️ **El editor del panel RECHAZA tocar un extensor** (`addon_stay_extension_unsupported`) hasta que
+la T3 revalide el cupo alargado bajo el lock. Es el hallazgo **A5** cerrado con una puerta explícita
+en vez de con un olvido: sin ella, añadir una hora extra a una fiesta vendida la alargaría **sin
+mirar si la sala está libre después**, y eso no falla — sobrevende.
+
+### Lo que enseñó la ejecución
+
+⚠️⚠️ **Tres guardas del repo cazaron lo que faltaba, y ninguna era mía**: `ReservationErrorMapTest`
+(un código de reserva sin `ApiErrorCode` deja al cliente sin saber qué hacer), `SidebarPayParityTest`
+(el cajón no sabía traducirlo) y `SidebarDomContractTest` (**el bundle SSR quedó rancio** al tocar
+`pay.js`, y ese test compara el bundle: sin la guarda habría medido código viejo y salido verde).
+
+⚠️⚠️ **Una aserción mía pasaba EN VACÍO**: buscaba la fila de la oferta por `id` y el DTO publica
+`productId`, así que «la hora extra no se ofrece» habría pasado igual con la oferta rota del todo.
+**Lo delató su CONTROL** —el caso gemelo que exige que sí se ofrezca cuando cabe—, que es exactamente
+para lo que está.
+
+⚠️⚠️ **La rama simétrica de `viewModel()` (A4) no mordía**, y el motivo es información: por la vía con
+fecha y hora la tapa el filtro de A3. Solo defiende el modo **sin `date`/`time`** —que el contrato
+declara— y el enganche imposible metido por `Query\Builder`. Su caso tiene las dos mitades.
+
+❗❗❗ **Y el octavo escenario de concurrencia NACIÓ INÚTIL.** La primera versión repartía los 12
+workers entre las dos horas: los pares compraban la primera **con** extensión y los impares la
+segunda. Con el defecto puesto salió **verde 4 de 4** — el comprador con extensión hace más trabajo
+(resolver el complemento y su precio) y **llegaba siempre tarde al lock**, así que ganaba el otro y
+nunca había dos. *Un escenario cuyo veredicto depende de quién gane la carrera no es un escenario: es
+una moneda.* ▶ Rediseñado: la primera hora se siembra **ya vendida y alargada**, los 12 pujan por la
+segunda y **nadie debe ganar** (`expected_winners = 0`, el primero del verificador que mide una
+AUSENCIA). Su guarda del instrumento es a la vez su **control**: la franja vende **antes** de alargar
+la fiesta y cierra **después** — y con el cupo ciego a `extra_minutes` esa guarda aborta diciendo que
+la segunda hora «sigue ofreciendo 20».
+
+### Lo que queda
+
+**T3** (el editor, `ItemRescheduleOffer` y `AddonDateReconciler` — y con ella el cruce panel↔web del
+escenario), **T4** (superficies: ventana mostrada, hoja de sala, puerta, correos) y **T5**
+(`isFinishedInPractice()`, **los dos defectos a la vez**). Y las tres decisiones de §10.6 que no
+bloquean el código: el precio, el `max_qty` del enganche y las cotas del mostrador.

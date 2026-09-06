@@ -2600,6 +2600,10 @@ components:
                 # segundo, `params.staying`/`params.entering`.
                 - line_addon_occupancy
                 - line_addon_over_quantity
+                # La hora extra de un PACK (`specs/hora-extra.md` §10): la fiesta cabe, pero
+                # alargada no. Código propio y no `line_pack_sold_out` porque el remedio es otro:
+                # quitar la hora extra CONSERVA la reserva. Lleva `params.product`/`params.when`.
+                - line_stay_extension
                 # Negocio — la reserva no se admite (409) o el cobro no se abre (502).
                 - reservations_paused
                 - too_many_pending_orders

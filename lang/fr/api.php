@@ -37,6 +37,7 @@ return [
         'line_pack_guests_range' => "Ce nombre d'invités n'est pas valide pour ce service.",
         'line_event_required' => 'Il manque des informations obligatoires pour la réservation.',
         'line_addon_occupancy' => "L'heure supplémentaire ne rentre plus : le créneau suivant est complet ou fermé.",
+        'line_stay_extension' => "La fête ne rentre pas avec l'heure supplémentaire : la salle est occupée ensuite. Retire l'heure supplémentaire ou choisis un autre créneau.",
         'line_addon_over_quantity' => 'Il ne peut pas rester plus de personnes que celles qui entrent.',
         'reservations_paused' => 'La réservation en ligne est temporairement fermée.',
         'too_many_pending_orders' => 'Vous avez déjà plusieurs réservations en attente de paiement. Terminez-les ou attendez leur expiration.',

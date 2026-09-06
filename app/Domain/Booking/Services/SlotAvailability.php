@@ -134,7 +134,15 @@ class SlotAvailability
         $excludeIds = $excludeItemId === null ? [] : array_values(array_map('intval', (array) $excludeItemId));
 
         $stored = OrderItem::query()
-            ->select('order_items.seats', 'entry.start_time as entry_start', 'ticket_types.duration_min')
+            // ⚠️ **`duration_min + extra_minutes` es la duración con la que la línea OCUPA de verdad**
+            // (la hora extra de un pack, `specs/hora-extra.md` §10.3.2). Se suma aquí y no con el
+            // modelo cargado porque este mapa es SQL puro por rendimiento (`#465`), y `extra_minutes`
+            // es un hecho de la línea igual que `seats` —el de al lado— que ya se lee así.
+            // ⚠️ Con `duration_min` nula (producto ilimitado) la suma da **NULL**, que es exactamente
+            // lo que este mapa entiende por «hasta el cierre»: lo ilimitado sigue siéndolo, y el guard
+            // del pivote impide venderle una extensión.
+            ->select('order_items.seats', 'entry.start_time as entry_start')
+            ->selectRaw('(ticket_types.duration_min + order_items.extra_minutes) as duration_min')
             ->join('slots as entry', 'entry.id', '=', 'order_items.slot_id')
             ->join('ticket_types', 'ticket_types.id', '=', 'order_items.ticket_type_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
