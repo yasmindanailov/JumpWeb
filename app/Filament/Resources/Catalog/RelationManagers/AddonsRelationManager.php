@@ -234,6 +234,27 @@ class AddonsRelationManager extends RelationManager
             return $id > 0 && (bool) TicketType::query()->find($id)?->occupiesAfterParent();
         };
 
+        // Su espejo (`#443`, §11.5.3): un EXTENSOR sí admite «por invitado» —es el encargo—, pero la
+        // opción significa allí otra cosa, así que necesita su propio rótulo.
+        $extendingAddon = function (Get $get) use ($selfAddonId): bool {
+            $id = $selfAddonId ?? (int) $get('recordId');
+
+            return $id > 0 && (bool) TicketType::query()->find($id)?->extendsParentStay();
+        };
+
+        // El candado del MODO con reservas vivas todavía editables (§11.11·A1). En el ALTA no puede
+        // haber ninguna (el enganche aún no existe), así que solo mira en «Configurar».
+        $modeLocked = function () use ($selfAddonId): bool {
+            if ($selfAddonId === null) {
+                return false;
+            }
+
+            return (bool) ProductAddon::query()
+                ->where('product_id', $this->getOwnerRecord()->getKey())
+                ->where('addon_id', $selfAddonId)
+                ->first()?->hasEditableSoldLines();
+        };
+
         // La FASE de venta (`specs/complementos-post-reserva.md` §4.1, `#413`). ⚠️ `->live()` no es
         // opcional: de él dependen las `visible()` de abajo, que son la CARA AMABLE de los guards del
         // pivote — sin reactividad el operador marcaría una combinación prohibida y se llevaría una
@@ -275,17 +296,33 @@ class AddonsRelationManager extends RelationManager
 
             Select::make('quantity_mode')
                 ->label(__('admin.catalog.addons.quantity_mode'))
-                ->helperText(__('admin.catalog.addons.quantity_mode_hint'))
+                // ⚠️ El rótulo de la opción cambia con el complemento (`#443`, §11.5.3): en un
+                // extensor «por invitado» no significa «una unidad por invitado» —una hora es una
+                // hora— sino **«se cobra por invitado»**. La misma casilla, dos lecturas, y el
+                // catálogo tiene que decir la correcta o el operador configura a ciegas.
+                ->helperText(fn (Get $get): string => match (true) {
+                    $modeLocked() => __('admin.catalog.addons.quantity_mode_locked_sold'),
+                    $extendingAddon($get) => __('admin.catalog.addons.quantity_mode_stay_hint'),
+                    default => __('admin.catalog.addons.quantity_mode_hint'),
+                })
                 // §4.3·3: `per_guest` ataría la cantidad al nº de INVITADOS (los niños) y el caso del
                 // owner es *para los adultos* — un número equivocado con aspecto de correcto.
                 ->options(fn (Get $get): array => ($occupyingAddon($get) || $postForm($get))
                     ? [ProductAddon::MODE_FIXED => __('admin.catalog.addons.mode_fixed')]
                     : [
                         ProductAddon::MODE_FIXED => __('admin.catalog.addons.mode_fixed'),
-                        ProductAddon::MODE_PER_GUEST => __('admin.catalog.addons.mode_per_guest'),
+                        ProductAddon::MODE_PER_GUEST => $extendingAddon($get)
+                            ? __('admin.catalog.addons.mode_per_guest_stay')
+                            : __('admin.catalog.addons.mode_per_guest'),
                     ])
                 ->default(ProductAddon::MODE_FIXED)
                 ->selectablePlaceholder(false)
+                // El candado de §11.11·A1: la AUTORIDAD es el guard de `ProductAddon::booted()`; esto
+                // es la cara amable que evita llegar a él. ⚠️ **`dehydrated` se queda en `true` a
+                // propósito**: `sanitizePivotData()` reconstruye el array entero, así que una clave
+                // ausente NO conserva su valor — cae a `fixed` y **revierte el enganche al guardar**.
+                // Es la tercera lista blanca de `#413` §4.7·ter, y aquí muerde al revés.
+                ->disabled(fn (): bool => $modeLocked())
                 ->live(),
 
             TextInput::make('included_quantity')

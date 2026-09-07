@@ -5,6 +5,7 @@ namespace Tests\Feature\Sales;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\AddonOccupancy;
 use App\Filament\Resources\Catalog\Pages\CreateCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
@@ -111,11 +112,17 @@ class StayExtensionGuardsTest extends TestCase
         $this->assertDatabaseHas('product_addons', ['product_id' => $this->pack->id, 'addon_id' => $extender->id]);
     }
 
-    public function test_an_extender_cannot_be_included_mandatory_or_per_guest(): void
+    public function test_an_extender_cannot_be_included_or_mandatory(): void
     {
         // Un INCLUIDO se auto-inyecta con su `included_quantity`: **toda fiesta nacería alargada**
         // sin que nadie lo pida — y una fiesta que dura más de serie es un pack más largo.
-        foreach ([['is_included' => true], ['is_mandatory' => true], ['quantity_mode' => ProductAddon::MODE_PER_GUEST]] as $bad) {
+        //
+        // ⚠️⚠️ **Este caso CAMBIÓ DE PREMISA en `#443` y se reescribió, no se borró**: hasta el
+        // 2026-09-07 exigía además que `per_guest` se rechazara, y esa premisa dejó de ser cierta
+        // cuando los BLOQUES salieron de la cantidad (`AddonOccupancy::blocksFor()`). Lo que sostenía
+        // aquella prohibición no era el modo: era que los minutos se derivaban de la cantidad. El
+        // caso que ocupa su sitio es `test_an_extender_can_be_charged_per_guest()`.
+        foreach ([['is_included' => true], ['is_mandatory' => true]] as $bad) {
             $extender = $this->makeExtender();
             try {
                 $this->pack->addons()->attach($extender->id, $this->pivot($bad));
@@ -124,6 +131,55 @@ class StayExtensionGuardsTest extends TestCase
                 $this->assertTrue(true);
             }
         }
+    }
+
+    public function test_an_extender_can_be_charged_per_guest(): void
+    {
+        // LA HORA EXTRA COBRADA POR INVITADO (`#443`, §11.5): la combinación que §10.3.1 prohibía es
+        // hoy el caso de uso. Y lo que la hace posible se comprueba aquí mismo, en la misma vuelta:
+        // los BLOQUES son 1 aunque la cantidad sean quince personas.
+        $extender = $this->makeExtender();
+        $this->pack->addons()->attach($extender->id, $this->pivot(['quantity_mode' => ProductAddon::MODE_PER_GUEST]));
+
+        $pivot = ProductAddon::query()
+            ->where('product_id', $this->pack->id)->where('addon_id', $extender->id)->firstOrFail();
+
+        $this->assertTrue($pivot->isPerGuest());
+        $this->assertSame(1, AddonOccupancy::blocksFor($pivot, 15));
+        $this->assertSame(60, AddonOccupancy::extraMinutes($extender, $pivot, 15));
+        $this->assertSame(1, AddonOccupancy::maxBlocks($pivot));
+    }
+
+    public function test_a_fixed_extender_still_counts_its_quantity_as_blocks(): void
+    {
+        // CONTROL del caso de arriba, y es el que impide «arreglarlo» de más: sin `per_guest` la
+        // cantidad SIGUE siendo bloques de tiempo (§10.3.1), que es de lo que vive el aforo de una
+        // fiesta con dos horas extra.
+        $extender = $this->makeExtender();
+        $this->pack->addons()->attach($extender->id, $this->pivot(['max_qty' => 3]));
+
+        $pivot = ProductAddon::query()
+            ->where('product_id', $this->pack->id)->where('addon_id', $extender->id)->firstOrFail();
+
+        $this->assertSame(2, AddonOccupancy::blocksFor($pivot, 2));
+        $this->assertSame(120, AddonOccupancy::extraMinutes($extender, $pivot, 2));
+        $this->assertSame(3, AddonOccupancy::maxBlocks($pivot));
+    }
+
+    public function test_a_per_guest_extender_does_not_need_a_maximum(): void
+    {
+        // §11.5.2: el `max_qty` obligatorio de `#423`·A6 decae en por-invitado porque
+        // `effectiveQuantity()` **sale por `per_guest` antes de mirarlo**, así que no lo lee nadie.
+        // El tope real pasa a ser el `max_qty` del PACK. *Exigir un número que nadie mira es peor que
+        // no exigirlo: parece una defensa.*
+        $extender = $this->makeExtender();
+        $this->pack->addons()->attach($extender->id, $this->pivot([
+            'quantity_mode' => ProductAddon::MODE_PER_GUEST, 'max_qty' => null,
+        ]));
+
+        $this->assertDatabaseHas('product_addons', [
+            'product_id' => $this->pack->id, 'addon_id' => $extender->id, 'max_qty' => null,
+        ]);
     }
 
     public function test_an_extender_cannot_be_sold_after_booking(): void

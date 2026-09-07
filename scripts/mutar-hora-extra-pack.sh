@@ -12,7 +12,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='PackStayExtensionTest|StayExtensionGuardsTest|OverlappingSlotGridTest|PackAvailabilityTest|SlotAvailabilityTest|OrderItemStatusTest'
+FILTER='PackStayExtensionTest|StayExtensionGuardsTest|StayExtensionPerGuestTest|OverlappingSlotGridTest|PackAvailabilityTest|SlotAvailabilityTest|OrderItemStatusTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="$(mktemp -d)"
@@ -104,7 +104,7 @@ mutar "la hija extensora se lleva plazas propias (una persona donde hay veinte)"
   "                'seats' => (\$occupies || \$extends) ? AddonOccupancy::seats(\$addon, \$qty) : 0,"
 
 mutar "los minutos comprados no se suman" "$AR" \
-  "                \$extraMinutes += AddonOccupancy::extraMinutes(\$addon, \$qty);" \
+  "                \$extraMinutes += AddonOccupancy::extraMinutes(\$addon, \$pivot, \$qty);" \
   "                \$extraMinutes += 0;"
 
 # ── La cesta cuenta lo mismo que el cobro ─────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ mutar "el editor no reescribe los minutos de la fiesta" "$OE" \
 
 mutar "los minutos que se AÑADEN en el guardado no cuentan" "$OE" \
   "            \$minutes += AddonOccupancy::extraMinutes(
-                \$addType, (int) (\$addQuantities[\$addTypeId] ?? \$add['quantity']),
+                \$addType, \$addType->pivot, (int) (\$addQuantities[\$addTypeId] ?? \$add['quantity']),
             );" \
   "            \$minutes += 0;"
 
@@ -158,8 +158,14 @@ mutar "el pivote deja colgar un extensor de algo que no es un pack" "$PAD" \
             if (false) {"
 
 mutar "A6 · el extensor deja de necesitar tope propio" "$PAD" \
-  "            if (\$pivot->max_qty === null || (int) \$pivot->max_qty < 1) {" \
-  "            if (false) {"
+  "            if (\$pivot->isPerGuest()) {
+                return;
+            }
+            if (\$pivot->max_qty === null || (int) \$pivot->max_qty < 1) {" \
+  "            if (true) {
+                return;
+            }
+            if (\$pivot->max_qty === null || (int) \$pivot->max_qty < 1) {"
 
 mutar "los dos interruptores dejan de ser excluyentes" "$TT" \
   "            if (\$type->occupies_after_parent === true) {

@@ -71,7 +71,17 @@ return [
     'addon_stay_price' => ':price por entrada que se queda',
     'addon_stay_selected' => 'Para 1 entrada que se queda · :price|Para :count entradas que se quedan · :price',
     'addon_per_guest_qty' => ':count (uno por invitado)',
-    'addon_per_guest_add' => 'Añadir · uno por invitado',
+    // ⚠️ El rótulo es un VERBO NEUTRO a propósito (`#443`, `specs/hora-extra.md` §11.11·A3): esta
+    // casilla la comparten «un menú por invitado» y «una hora más para toda la fiesta, cobrada por
+    // invitado», y el HECHO lo dice la nota, que la compone el dominio. «Uno por invitado» era
+    // falso para la segunda, y una hora no es «uno».
+    'addon_per_guest_add' => 'Añadir',
+    // La hora extra de un PACK cobrada POR INVITADO (`#443`, §11.5.4): con la fila elegida dice
+    // para CUÁNTOS y a cuánto. Sin ella, la nota decía «4,00 €/invitado» sobre un cargo de 60,00 €.
+    // ⚠️ Forma `singular|plural` y NO la de RANGOS de Laravel: el cajón SPA resuelve el plural con
+    // su propio módulo (`resources/js/sidebar/i18n.js`), que no entiende `{1}…|[2,*]…` — lo cazó
+    // `SidebarTextParityTest` con la clave ya escrita. Es la misma forma que `addon_stay_selected`.
+    'addon_stay_per_guest_selected' => 'Una hora más para 1 invitado · :price/invitado|Una hora más para los :count invitados · :price/invitado',
     'addon_requires' => 'Requiere: :name',
     'from' => 'desde',
     'qty_less' => 'Quitar uno',

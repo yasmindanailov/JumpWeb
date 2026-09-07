@@ -182,6 +182,11 @@ class SidebarTextParityTest extends TestCase
         // quedan» la compone `AddonResolver::viewModel()` con `trans_choice` y viaja resuelta en el
         // `note` de cada fila de complemento — el cajón la pinta como texto, sin nombrar la clave.
         'addon_stay_selected',
+        // Su hermana de la hora extra COBRADA POR INVITADO (`specs/hora-extra.md` §11.5.4, `#443`):
+        // «Una hora más para los N invitados» sale del MISMO `trans_choice` de
+        // `AddonResolver::viewModel()` y viaja resuelta en el `note` de la fila. El cajón la pinta
+        // como texto y no nombra la clave — lo comprueba la aserción de abajo, no este comentario.
+        'addon_stay_per_guest_selected',
         'gate_mixed_party_credit_line', 'gate_mixed_party_credit_line_named',
     ];
 

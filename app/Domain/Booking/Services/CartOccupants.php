@@ -214,7 +214,7 @@ class CartOccupants
             }
 
             $effective = AddonResolver::effectiveQuantity($addon->pivot, $qty, (int) $line['qty']);
-            $extra += AddonOccupancy::extraMinutes($addon, max(0, $effective));
+            $extra += AddonOccupancy::extraMinutes($addon, $addon->pivot, max(0, $effective));
         }
 
         return (int) $type->duration_min + $extra;

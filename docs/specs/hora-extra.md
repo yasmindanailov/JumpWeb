@@ -1339,3 +1339,377 @@ auto-inyectaría un cargo que nadie pidió.
 Solo las tres decisiones de §10.6 que **no bloquean el código**: el precio de la hora extra (con el
 coste de oportunidad de §10.4 delante), el `max_qty` del enganche y si el mostrador lleva las mismas
 cotas (suelo propuesto: sí). El mecanismo está completo y verificado.
+
+---
+
+# 11 · LA HORA EXTRA COBRADA POR INVITADO — reapertura de §10.3.1 ⬜ **DISEÑO** (`#443`, 2026-09-07)
+
+> ❗❗❗ **ESTA SECCIÓN CORRIGE A §10.3.1 Y VA ANTES QUE AQUELLA TABLA.** §10.3.1 declaró que la
+> cantidad de un extensor **son bloques de tiempo** y prohibió `per_guest` sobre él. La prohibición
+> era correcta *con la derivación que existía*; el owner reabre el caso el 2026-09-07:
+> *«permitir que la hora extra de cumpleaños pueda cobrarse por invitado»*, y con la pregunta de
+> §10.2 delante: **`[DECIDIDO owner, 2026-09-07]` es la opción A — «la hora extra para todos los
+> invitados, pero se cobra por invitado»**.
+>
+> ▶ **Lo que cambia no es el guard: es de dónde salen los MINUTOS.**
+
+## 11.1 · Lo MEDIDO antes de diseñar (producción, 2026-09-07, solo lectura)
+
+| | |
+|---|---|
+| Fiestas vivas | **16**, todas pagadas, ninguna cancelada |
+| Tamaño | min **8** · max **20** · media **12,9** · mediana **13** · 2 ya en el techo |
+| Horas extra de sala vendidas | **2**: 8 invitados → 5,00 € · 15 invitados → 4,00 € |
+| Lo cobrado por ellas | **9,00 €**. Por invitado al mismo precio habría sido **100,00 €** (11×) |
+| Enganches | `max_qty = 1` · `quantity_mode = fixed` · `stage = booking` · `duration_min = 60` |
+
+❗❗ **Y la hora extra de sala NO se vende viernes, sábado ni domingo, y eso es DECISIÓN, no defecto.**
+Medido de punta a punta: `Hora extra de sala · JUMP` y `· KIDS` tienen precio **solo en la tarifa
+`normal`**, y la tarifa `special` cubre `[5,6,0]`. Un complemento sin precio para la tarifa del día
+**no se ofrece** ({@see AddonResolver::viewModel}, el `continue` de «sin precio ≠ 0 € explícito»), así
+que la oferta real del Pack JUMP un sábado son Calcetines y el grupo de menús, sin hora extra. El
+rastro dice quién y cuándo: `catalog.prices_updated` del **2026-09-06 15:21**, `{"2":{"from":500,"to":null}}`
+y `{"2":{"from":800,"to":null}}`. ▶ `[DECIDIDO owner, 2026-09-07]`: **se queda así.** La hora extra de
+sala es un producto de entre semana. ⚠️ **`ENTORNOS.md` §6 registra lo contrario** («KIDS 3/5 € y JUMP
+5/8 € por tarifa»): esa nota caducó esa misma tarde y se corrige con esta tanda. **No lo "arregles"
+devolviendo el precio especial.**
+
+## 11.2 · Por qué hoy está prohibido — y por qué la prohibición era CORRECTA
+
+`per_guest` sobre un extensor está bloqueado en **tres** sitios, y ninguno sobra:
+`TicketType::booted()`, `ProductAddon::booted()` y el cinturón de `AddonResolver::resolve()`.
+
+El motivo, con el número delante: `AddonOccupancy::extraMinutes()` es `cantidad × duration_min`, y
+`AddonResolver::effectiveQuantity()` devuelve **el nº de invitados** en modo `per_guest`. Una fiesta
+de 15 alargaría la sala **900 minutos**. ⚠️ Y el tope no lo frenaría: `effectiveQuantity()` **sale por
+`per_guest` ANTES de aplicar `max_qty`**, así que el `max_qty` que §10.5·2 hizo obligatorio para un
+extensor no se mira siquiera.
+
+▶ **La raíz: `per_guest` dice hoy DOS cosas a la vez** —*cuántas unidades hay* y *cuánto se cobra*—
+y para un extensor sólo la segunda tiene sentido. La primera la contesta el producto: **una hora es
+una hora, la compren 8 invitados o 20.**
+
+## 11.3 · Un defecto PREEXISTENTE que esto cierra por construcción (REPRODUCIDO)
+
+El formulario del catálogo **ofrece hoy «por invitado» sobre una hora extra de sala**: sus `options()`
+sólo esconden el modo cuando `occupiesAfterParent()` o la fase es `postform`, y un extensor no es ni
+lo uno ni lo otro. Al guardar, el dominio contesta con una `InvalidArgumentException` **sin capturar**
+— o sea una pantalla de error de Filament, no un aviso.
+
+```
+pivote 106→316: mode=fixed max_qty=1
+guardar con quantity_mode=per_guest  →  InvalidArgumentException
+   «Un complemento que EXTIENDE la estancia no puede ser por-invitado…»
+```
+
+*La cara amable del guard del extensor nunca se escribió; la del ocupante sí.* Con esta tanda la
+combinación pasa a ser **legal**, así que el defecto se va con su causa — pero queda escrito porque
+la lección no es el bug, es que **un guard sin cara amable en el formulario es una pantalla de error
+esperando a que alguien elija la opción que el propio formulario ofrece**.
+
+## 11.4 · Opciones consideradas
+
+| | Modelo | Por qué NO / SÍ |
+|---|---|---|
+| **D1** | `quantity` sigue siendo **bloques** y `unit_price` nace ya multiplicado (`precio × invitados`) | ⛔ **Descartada.** El aforo no se toca, pero `unit_price` deja de ser «lo que cuesta UNA unidad» y pasa a depender de la cantidad de OTRA línea. Todas las superficies imprimen `cantidad × unit_price`, así que el cliente y el mostrador leerían **«1 unidad · 60,00 €»** y el hecho «por invitado» sería invisible. Y re-preciar al cambiar los invitados exigiría **recuperar la base dividiendo** `unit_price / invitados_viejos`: exacto por construcción, pero es un precio histórico derivado de un divisor que se mueve — justo lo que este proyecto no hace con el dinero |
+| **D2** | `quantity` = **bloques × invitados** | ⛔ **Descartada.** `extra_minutes` volvería a salir de la cantidad y habría que **dividir dentro del camino del aforo** para recuperar los bloques. Un aforo que depende de una división cuyo divisor vive en otra fila es el defecto (b) de §10.1 por otra puerta |
+| **D3** | **Se reutiliza `quantity_mode = per_guest` tal cual, y los MINUTOS dejan de salir de la cantidad** | ✅ **Elegida.** Ver §11.5 |
+
+## 11.5 · Diseño elegido — D3: los minutos salen del BLOQUE, no de la cantidad
+
+**Una sola regla nueva, en una sola función:**
+
+> Los **bloques** que compra una cantidad son `1` si el enganche es por-invitado, y la cantidad si no.
+> Los minutos son `bloques × duration_min`.
+
+Con eso, un extensor `per_guest` encaja sin inventar nada:
+
+| pieza | qué pasa | por qué encaja |
+|---|---|---|
+| `quantity` de la hija | **= los invitados** (`effectiveQuantity` ya lo hace) | el cliente no elige un número: la hora extra es para toda la fiesta (opción A) |
+| `unit_price` | **= el precio por invitado**, histórico | `PAY-19` intacto: lo que se vendió ayer no lo reescribe el catálogo de mañana |
+| `chargedSubtotalCents()` | `invitados × precio` | **el núcleo del dinero no se toca**: ni el libro, ni `LineFacts`, ni las cuatro identidades |
+| `extra_minutes` del padre | **= 1 bloque**, siempre | el aforo no cambia de magnitud: la sala se ocupa una hora, la compren 8 o 20 |
+| `seats` de la hija | **0**, como todo extensor | el defecto (b) de §10.1 sigue cerrado: las plazas son del padre |
+| re-preciar al cambiar los invitados | **el `perGuestRescales` que YA existe** en `OrderItemEditor` | mecanismo cero: recalcula cantidad, escribe `recordEdit(±Δ)` y su contexto |
+| el control en la web | **casilla**, no contador (`can_toggle` ya lo decide para `per_guest`) | «una hora más para la fiesta» es un sí/no, no una cantidad |
+| el tope | el del **pack** (`max_qty` = 20 invitados) | ya no hace falta `max_qty` en el enganche: la cantidad no la elige nadie |
+
+### 11.5.1 · La firma cambia, y el parámetro es OBLIGATORIO a propósito
+
+```
+AddonOccupancy::blocksFor(ProductAddon $pivot, int $quantity): int
+AddonOccupancy::maxBlocks(ProductAddon $pivot): int
+AddonOccupancy::minutesForBlocks(TicketType $addon, int $blocks): int
+AddonOccupancy::extraMinutes(TicketType $addon, ProductAddon $pivot, int $quantity): int
+```
+
+⚠️⚠️ **Sin valor por defecto.** Son **cinco** los sitios que derivan minutos (`AddonResolver::resolve`,
+`CartOccupants::effectiveDurationOf`, `AddonOfferReader` en su barrido de bloques y
+`OrderItemEditor::resultingStayMinutes` **dos veces**), y con un `?ProductAddon $pivot = null` el que
+se olvide **multiplica por los invitados en silencio**. Es la lección de `#329` —«un parámetro con
+valor por defecto no avisa de que hacía falta», 140,00 € de desfase— aplicada a algo que no es dinero
+sino **aforo**. Con el parámetro obligatorio, PHP encuentra los cinco.
+
+⚠️ `resultingStayMinutes()` es el único que hoy **no tiene el pivote a mano**: sus hijas salen de
+`liveStayExtendingChildren()`. Lo resuelve `addonPivotsFor($item)`, que ya existe y ya es «la misma
+autoridad que la compra pública».
+
+### 11.5.2 · Lo que se RELAJA, y lo que NO
+
+**Se relaja** (los tres guards del extensor dejan de rechazar `per_guest`):
+
+- `TicketType::booted()`, `ProductAddon::booted()` y el cinturón de `AddonResolver::resolve()`.
+- El `max_qty` **obligatorio** deja de exigirse **cuando el enganche es `per_guest`**: `#423`·A6 lo
+  impuso porque «no se quedan más de los que entran» no significa nada para bloques de tiempo — con
+  la cantidad atada a los invitados, el tope es el `max_qty` **del pack** y el del enganche no lo
+  mira nadie (`effectiveQuantity` sale antes). **Exigir un número que nadie lee es peor que no
+  exigirlo: parece una defensa.**
+
+**NO se relaja nada más, y cada una sigue teniendo su motivo:**
+
+- **`is_included` sigue prohibido**: un incluido se auto-inyecta y **toda fiesta nacería alargada**.
+- **`is_mandatory` sigue prohibido**: mismo motivo por otra puerta.
+- **`stage = postform` sigue prohibido**: vender aforo después de reservar exige el lock y la
+  revalidación que esa fase no tiene (§10.5·6).
+- **Colgar de algo que no sea un pack sigue prohibido** (§10.3.1).
+- **`duration_min > 0` sigue obligatorio**: sin duración alargaría cero y se habría vendido una hora
+  extra que no ocupa nada.
+
+### 11.5.3 · La cara amable del panel, que faltaba
+
+El `Select` de modo esconde hoy `per_guest` para el ocupante y para `postform`. Con esta tanda:
+
+- para un **extensor** el modo se ofrece (es el caso de uso nuevo);
+- `max_qty` deja de ser obligatorio en un extensor por-invitado y se **oculta**, porque no lo lee nadie;
+- y el rótulo del modo dice lo que significa **aquí**: no «una unidad por invitado» sino
+  **«se cobra por invitado»** — la misma casilla, dos lecturas, y el catálogo tiene que decir la
+  correcta o el operador configura a ciegas.
+
+### 11.5.4 · Lo que ve el cliente
+
+`AddonResolver::viewModel()` no tiene hoy rama para el extensor: cae en `$note = $priceStr` («5,00 €»),
+que con precio por invitado sería **una mentira de 60,00 €**. Gana su rama, hermana de la del ocupante
+(§8.6): con la fila elegida dice **para cuántos**, y sin elegir dice el precio unitario.
+
+```
+sin elegir:  «4,00 € por invitado»
+elegida:     «Una hora más para los 15 invitados · 60,00 €»
+```
+
+⚠️ Se compone **en el dominio y no en el cliente**: la heredan el cajón, la API y el alta manual del
+panel sin una línea suya, exactamente como la nota del ocupante.
+
+## 11.6 · Lo que este diseño NO cambia (y por eso es barato)
+
+- **Ni una migración.** No hay columna nueva: el eje ya existe (`product_addons.quantity_mode`).
+- **Ni una línea del libro.** `chargedSubtotalCents()` es `(cantidad − gratis) × unit_price` y sigue
+  siéndolo; `LineFacts`, `OrderBook` y las cuatro identidades no se enteran.
+- **Ni un cambio de magnitud en el aforo.** Los dos mapas suman `duration_min + extra_minutes` y
+  `extra_minutes` sigue valiendo un bloque.
+- **Nada de lo ya vendido se mueve.** Las dos horas extra vividas en producción tienen
+  `quantity_mode = fixed`; el modo es del ENGANCHE y sus líneas guardan su `unit_price` histórico.
+  ⚠️ **Esto es el criterio de éxito 4 de §11.7 y hay caso de CONTROL**: cambiar el modo en el
+  catálogo **no puede** re-precias una fiesta vendida.
+
+## 11.7 · Criterios de éxito medibles
+
+1. Un extensor `per_guest` sobre un pack **se guarda** desde el panel (hoy: pantalla de error).
+2. Comprado en una fiesta de N invitados, la línea nace con `quantity = N`, `unit_price` = el precio
+   por invitado, `seats = 0`, y el pedido cobra `N × precio`.
+3. `order_items.extra_minutes` del padre vale **`duration_min`**, no `N × duration_min` — verificado
+   con N = 15 y con el control de un extensor `fixed`, que sigue valiendo `cantidad × duration_min`.
+4. **Cambiar el modo del enganche NO mueve una fiesta ya vendida** (control con las dos horas extra
+   reales de producción replicadas en fixture).
+5. Subir los invitados de la fiesta **re-precia la hora extra** y escribe su `recordEdit(+Δ)`;
+   bajarlos, el simétrico.
+6. Los **ocho** escenarios de `purchase:verify-oversell` siguen verdes, y `stay-extension` —el que
+   mide una AUSENCIA— sigue midiendo cero ganadores **con el extensor en modo por-invitado**.
+7. Un extensor `per_guest` **sigue sin poder** ser incluido, obligatorio, `postform` ni colgar de una
+   entrada: cuatro casos, uno por guard.
+
+**Fuera de alcance, a propósito:**
+
+- **Cobrar más de un bloque por invitado.** Con `per_guest` la cantidad son personas, así que «dos
+  horas extra» exige un producto propio de `duration_min = 120` — que es cómo el catálogo ya resuelve
+  que KIDS y JUMP cuesten distinto (§10.12: el pivote no tiene columna de precio). Se dice aquí para
+  que nadie lo descubra al configurarlo.
+- **El precio.** `[DECIDIDO owner, 2026-09-07]`: «lo que configure el dueño». Es catálogo, no código.
+- **La venta de fin de semana.** Ver §11.1: se queda sin precio especial a propósito.
+
+## 11.8 · Impacto en invariantes
+
+| ID | Qué le pasa |
+|---|---|
+| `AFORO-01` / `AFORO-05` | **Sin cambio**: el lock y su receta no se tocan. La derivación de minutos cambia de fórmula, no de sitio |
+| `AFORO-12` | **Sin cambio**: la rejilla solapada y el conteo por PRESENCIA siguen igual |
+| `PAY-19` | **Se refuerza**: el precio por invitado vive en `unit_price` de la línea, histórico, y el modo del enganche no reescribe lo vendido |
+| `PAY-16` / `PAY-17` | **Sin cambio**: no se toca `chargedSubtotalCents()` ni ningún compositor del libro |
+| `SUITE-…` | `AddonOccupancy`, `AddonResolver`, `CartOccupants`, `OrderItemEditor`, `PackAvailability` y `OrderCreator` están en el `CRITICAL_RE`: la tanda va con `VERIFY_CONC=1` y los ocho escenarios |
+
+## 11.9 · Plan de verificación empírica
+
+- **Casos nuevos** en `tests/Feature/Sales/PackStayExtensionTest.php` y
+  `tests/Feature/Sales/StayExtensionGuardsTest.php` (los siete criterios de §11.7).
+- **Guarda de identidad**: `extra_minutes` del padre == Σ (bloques de sus hijas extensoras vivas ×
+  su `duration_min`) — con el caso por-invitado y su CONTROL fijo.
+- **Mutación**: guion propio (`scripts/mutar-hora-extra-por-invitado.sh`), con al menos
+  (a) `blocks()` devolviendo la cantidad en modo por-invitado, (b) el guard relajado de más
+  (`is_included`), (c) `viewModel` sin su rama nueva y (d) el `max_qty` obligatorio restaurado.
+- **Concurrencia**: `php artisan purchase:verify-oversell` — los ocho escenarios de siempre **más un
+  NOVENO**, `stay-extension-per-guest`. ⚠️⚠️ **No es una variante del octavo: mide otra cosa y por otro
+  camino.** Allí la extensión se SIEMBRA y nadie debe ganar; aquí los 12 COMPRAN la misma sala con su
+  hora extra en modo por-invitado y **uno solo debe ganar** — y si los minutos volvieran a salir de la
+  cantidad, cada compra pediría `8 × 60 = 480` min, la ventana no cabría en la rejilla y ganaría CERO.
+  *Un escenario que distingue «uno gana» de «no gana nadie» mide la derivación a través del checkout y
+  bajo el lock, que es donde la suite es ciega.*
+- **Navegador**: la casilla de la web y el modal del panel, con el importe delante.
+
+## 11.10 · Revisión y decisión
+
+Diseño del agente sobre encargo del owner (2026-09-07). `[DECIDIDO owner]`: la opción A de §10.2 con
+cobro por invitado · la hora extra **no se vende el fin de semana** · el precio lo pone el dueño.
+Entrada final en `DECISIONES.md` **`#443`** al aprobarse.
+
+## 11.11 · La revisión ADVERSARIAL del diseño (2026-09-07, antes de escribir código)
+
+Seis lentes sobre §11.5, con el código delante. **Un bloqueante, dos correcciones de diseño, dos
+confirmaciones y un descarte.**
+
+### ❌ A1 · BLOQUEANTE — cambiar el MODO re-preciaría en silencio una fiesta ya vendida
+
+`OrderItemEditor` re-escala los complementos por-invitado leyendo **el pivote VIVO**
+(`$pivotByAddonId->get(...)->pivot->isPerGuest()`). Con el enganche cambiado de `fixed` a
+`per_guest`, la hija vendida como **1 bloque a 5,00 €** pasaría, en la primera edición de cantidad de
+esa fiesta, a **N unidades a 5,00 €** — con su `recordEdit(+Δ)` y su correo. En las dos horas extra
+reales de producción eso son **+35,00 €** y **+56,00 €** que nadie vendió.
+
+▶ Es `PAY-19` roto por la puerta de la configuración: *lo que se compró ayer no lo reescribe el
+catálogo de mañana*. ⚠️⚠️ **Y no lo trae esta feature: existe hoy** para cualquier complemento normal
+que alguien pase de `fixed` a `per_guest`. Lo que hace esta feature es darle un sujeto caro.
+
+▶ **Cierre: el `quantity_mode` de un enganche se BLOQUEA mientras tenga líneas vivas en reservas que
+todavía se pueden editar** — que son exactamente las que el re-escalado puede alcanzar (`item_finished`
+bloquea el editor, así que una fiesta pasada ya no se re-escala). Misma forma y mismo sitio que el
+candado de `extends_parent_stay` de §10.11·T4·bis, y se suelta solo cuando esas fiestas pasan.
+⚠️ **La salida para el owner, si lo quiere YA, es la que `#427` ya estableció: un producto nuevo** —
+que además es lo natural, porque el precio cambia de unidad. ▶ Editar el PRECIO sigue siendo seguro:
+`unit_price` es histórico en la línea.
+
+### ❌ A2 · La oferta itera BLOQUES y los pasa donde se espera una CANTIDAD
+
+`AddonOfferReader::stayExtensionCaps()` recorre `for ($blocks = 1; $blocks <= $ceiling; $blocks++)` y
+llama a `extraMinutes($addon, $blocks)`. Con la regla nueva, un extensor por-invitado devolvería **los
+mismos minutos en cada vuelta** y `$fits` treparía hasta el `max_qty` del enganche ofreciendo bloques
+que nadie puede comprar.
+
+▶ **Cierre: la unidad va en el NOMBRE**, no en el comentario —
+
+```
+AddonOccupancy::blocksFor(ProductAddon $pivot, int $quantity): int
+AddonOccupancy::maxBlocks(ProductAddon $pivot): int
+AddonOccupancy::minutesForBlocks(TicketType $addon, int $blocks): int
+AddonOccupancy::extraMinutes(TicketType $addon, ProductAddon $pivot, int $quantity): int
+```
+
+La oferta usa `maxBlocks()` + `minutesForBlocks()` (que es lo que tiene: bloques); los otros cuatro
+llamantes usan `extraMinutes()` (que es lo que tienen: una cantidad). *Una función que recibe «un
+número» y no dice de qué es el número es la forma de este defecto.*
+
+### ❌ A3 · El rótulo de la casilla del cajón dice lo que NO es
+
+La SPA ya pinta un por-invitado opcional como **casilla** (`can_toggle` → `addons__perguest-toggle`),
+así que no hace falta ni un componente nuevo. Pero su rótulo es `tickets.addon_per_guest_add` =
+**«Añadir · uno por invitado»**, y una hora extra no es «uno por invitado»: **es una hora para todos**.
+
+▶ **Cierre**: el rótulo pasa a ser un VERBO neutro y **el hecho lo dice la nota, que la compone el
+dominio** (`addon_per_unit` = «:price/invitado» ya lo hace para el caso normal). Así no hay campo
+nuevo en el contrato, ni una segunda copia de la regla en el cliente. Es el criterio de `#410`: el
+texto se compone donde se sabe, y el cajón, la API y el alta manual lo heredan.
+
+⚠️⚠️ **Y esto obliga a mirarlo en NAVEGADOR, no es opcional**: medido en producción, **hay CERO
+enganches `per_guest`**, así que ese camino de la casilla —el que esta feature estrena— no lo ha
+ejercitado nunca ningún dato real.
+
+### ✓ A4 · Confirmado: el editor ya no rechaza al extensor
+
+`addon_stay_extension_unsupported` **no existe en el árbol**: la puerta que la T1+T2 cerró la abrió la
+T3 (`#425`). No hay nada que reabrir.
+
+### ✓ A5 · Confirmado: los mapas de aforo NO ven la cantidad de una hija extensora
+
+`PackAvailability::occupancyMaps()` y `SlotAvailability::occupancyMap()` cruzan por
+`join slots on slots.id = order_items.slot_id`, y un extensor nace **sin franja**. Verificado además
+por censo: los **cinco** únicos sitios que leen la cantidad de una hija extensora son los cinco
+llamantes de `extraMinutes`. ▶ Por eso cambiar el significado de esa cantidad es seguro: **solo hay
+una derivación que la mira**.
+
+### ✗ A6 · Descartado — `validateAddonEdits()` sí protege a una hija bloqueada
+
+La hipótesis era que un edit forjado podría mover la cantidad de una hija por-invitado desde el panel.
+**Es falsa**: el validador lee `childAddonMeta()` y devuelve **`addon_locked`** si la fila está
+bloqueada y la cantidad cambia. *Un resultado negativo también es una medida.*
+
+### Lo que la revisión añade al plan
+
+- El **candado del modo** con líneas vivas (A1) entra en la misma tanda: sin él, la feature abre un
+  agujero de dinero mayor que el que cierra.
+- `max_qty` del enganche se **oculta** en un extensor por-invitado (§11.5.3): dejar un campo que nadie
+  lee da sensación de defensa sin defender nada — la lección de `#464` sobre `$calMonth`.
+
+## 11.12 · Lo EJECUTADO (2026-09-07, `#443`)
+
+**El diseño de §11.5 entero, sin migración y sin tocar el núcleo del dinero.**
+
+### Lo que entra
+
+| Pieza | Qué cambia |
+|---|---|
+| `AddonOccupancy` | **la regla nueva, sola**: `blocksFor()` · `maxBlocks()` · `minutesForBlocks()` · `extraMinutes()` con el **pivote obligatorio** |
+| `AddonResolver` | el cinturón deja de rechazar `per_guest` (siguen incluido, obligatorio, `postform` y no-pack) · la nota de la oferta gana su rama |
+| `AddonOfferReader` | el barrido de bloques usa `maxBlocks()` + `minutesForBlocks()`: **la unidad va en el nombre** |
+| `CartOccupants` · `OrderItemEditor` | pasan el pivote; el editor lo resuelve con `addonPivotsFor()` y prefiere el del producto NUEVO |
+| `ProductAddon` | `per_guest` fuera de la lista prohibida · `max_qty` deja de exigirse en por-invitado · **el candado del modo** (`hasEditableSoldLines()`) |
+| `TicketType` | `per_guest` fuera de la consulta de enganches en conflicto |
+| Panel | el modo se ofrece en un extensor con **rótulo propio** («Se cobra por invitado»), su ayuda propia y el candado con su explicación |
+| i18n | `addon_stay_per_guest_selected` (es/en/fr) y `addon_per_guest_add` pasa a **verbo neutro** |
+
+### Lo verificado
+
+- **`StayExtensionPerGuestTest`, 19 casos** — el cobro, las plazas y la franja de la hija, el bloque
+  único frente al control de cantidad fija, el re-precio al subir y al bajar, el candado con sus
+  **tres** controles, los dos cinturones y lo que ve el cliente.
+- **`scripts/mutar-hora-extra-por-invitado.sh` · 12/12 muerden.**
+- **`scripts/mutar-hora-extra-pack.sh` · 22/22 muerden** tras actualizarlo a la firma nueva: la red de
+  §10 sigue entera.
+- **Un NOVENO escenario de concurrencia**, `stay-extension-per-guest`, **visto FALLAR sin la
+  derivación**: con `blocksFor()` devolviendo la cantidad, **0 de 12** compras salen adelante (la
+  ventana de 480 min no cabe en la rejilla); con ella, **1 de 12** y once `sold_out`. Registrado en el
+  inventario de `OversellVerifierCoversEveryQuotaTest`, que exige que cada escenario diga qué aforo
+  cubre.
+
+### ❗❗ Lo que enseñó la ejecución
+
+⚠️⚠️ **La primera vuelta de mutación dio 8/12, y los cuatro fallos eran DOS cosas distintas** — que es
+justo por lo que se mutan las guardas en vez de contarlas:
+
+- **DOS mutaciones DÉBILES** (el instrumento, no la red). «La oferta vuelve a preguntar por cantidad»
+  no mordía porque el fixture tenía `max_qty = null`, y ahí el techo viejo y el nuevo **valen lo
+  mismo**; «el candado ignora las canceladas» no mordía porque el caso cancelaba la reserva **y** su
+  hija, y el filtro hermano la tapaba. Se re-apuntaron los casos —`max_qty = 3` y cancelar **solo la
+  reserva**— y las dos muerden.
+- **DOS HUECOS reales.** El **cinturón del cobro** no tenía red: existe exactamente para lo que los
+  guards de Eloquent no ven, así que **ningún caso que pase por Eloquent puede ejercitarlo** — hay
+  ahora uno que tuerce la fila con `DB::table()->update()`. Y **encender el interruptor sobre un
+  enganche INCLUIDO** no estaba cubierto: el caso que existía solo probaba la dirección «cuelga de una
+  entrada».
+
+*Una mutación que no muerde dice una de dos cosas, y hay que averiguar cuál antes de tocar nada: o la
+red tiene un hueco, o la mutación no distingue nada en ese fixture.*
+
+### Lo que queda de §11
+
+Solo lo que no bloquea el código y es del owner: **configurar el complemento** (poner el modo «Se
+cobra por invitado» y el precio por invitado) — con el candado de §11.11·A1 delante, porque las dos
+horas extra vendidas en producción son de fiestas del **21/09** y hasta que pasen el modo de ese
+enganche está bloqueado. ▶ **La salida, si lo quiere antes: un producto nuevo** (`#427`).

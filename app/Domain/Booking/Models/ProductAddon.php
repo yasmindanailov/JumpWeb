@@ -201,6 +201,36 @@ class ProductAddon extends Pivot
      */
     protected static function booted(): void
     {
+        // ❗❗❗ **EL CANDADO DEL MODO** (`specs/hora-extra.md` §11.11·A1, `#443`). Cambiar
+        // `quantity_mode` con líneas vivas en reservas todavía editables **re-precia una fiesta ya
+        // vendida en la primera edición de cantidad**: `OrderItemEditor` re-escala los por-invitado
+        // leyendo el pivote VIVO, así que una hija vendida como 1 bloque a 5,00 € pasaría a N
+        // unidades a 5,00 € con su `recordEdit(+Δ)`. Es `PAY-19` («lo que se compró ayer no lo
+        // reescribe el catálogo de mañana») roto por la puerta de la configuración.
+        //
+        // ⚠️⚠️ **Va en el DOMINIO y no solo en el formulario** (`SEC-04`): el candado de la pantalla
+        // es la cara amable, pero el estado de un campo deshabilitado de Filament vive en el servidor
+        // y se puede mover por Livewire. Quien decide es este guard.
+        //
+        // ⚠️ **No lo trae esta feature**: el agujero existe hoy para cualquier complemento que alguien
+        // pase de `fixed` a `per_guest`. La hora extra por invitado solo le da un sujeto caro.
+        //
+        // ▶ La salida cuando hace falta cambiarlo YA es la que `#427` estableció: **un producto
+        // nuevo** (que además es lo natural, porque el precio cambia de unidad). Editar el PRECIO
+        // sigue siendo seguro: `unit_price` es histórico en la línea.
+        static::saving(function (self $pivot): void {
+            if (! $pivot->exists || ! $pivot->isDirty('quantity_mode')) {
+                return;
+            }
+            if ($pivot->hasEditableSoldLines()) {
+                throw new \InvalidArgumentException(
+                    'Este enganche tiene reservas vendidas que todavía se pueden editar: cambiarle el '
+                    .'modo de cantidad re-preciaría esas fiestas en el siguiente guardado del panel. '
+                    .'Crea un complemento nuevo (`specs/hora-extra.md` §11.11·A1).'
+                );
+            }
+        });
+
         // La FASE de venta (`specs/complementos-post-reserva.md` §4.3, `#413`): las nueve reglas de
         // {@see postFormProblem} en su cara dura. La amable —esconder lo prohibido en el formulario—
         // la pone `AddonsRelationManager`, porque esto es una `InvalidArgumentException` y el
@@ -292,15 +322,21 @@ class ProductAddon extends Pivot
                 );
             }
 
-            // Mismos motivos que en el ocupante (§4.4·5), más uno propio: un INCLUIDO se auto-inyecta
-            // con su `included_quantity`, así que **toda fiesta nacería alargada** sin que nadie lo
-            // pida — y una fiesta que dura más de serie no es un complemento incluido: es un pack más
-            // largo (que es justo lo que §7·D2 dice, y sigue siendo cierto).
-            if ($pivot->isPerGuest() || $pivot->is_mandatory || $pivot->is_included) {
+            // Un INCLUIDO se auto-inyecta con su `included_quantity`, así que **toda fiesta nacería
+            // alargada** sin que nadie lo pida — y una fiesta que dura más de serie no es un
+            // complemento incluido: es un pack más largo (§7·D2, que sigue siendo cierto).
+            // `is_mandatory` es lo mismo por otra puerta.
+            //
+            // ⚠️⚠️ **`per_guest` YA NO está aquí** (`#443`, §11.5.2): desde que los BLOQUES salen de
+            // {@see \App\Domain\Booking\Services\AddonOccupancy::blocksFor()} y no de la cantidad, un
+            // extensor por-invitado significa «una hora para toda la fiesta, cobrada por invitado» —
+            // que es el encargo. Lo que hacía imposible la combinación no era el modo: era que los
+            // minutos se derivaban de la cantidad, y una fiesta de 15 habría alargado la sala 900.
+            if ($pivot->is_mandatory || $pivot->is_included) {
                 throw new \InvalidArgumentException(
-                    'Un complemento que EXTIENDE la estancia no puede ser por-invitado, obligatorio ni '
-                    .'incluido: alargaría la fiesta sin que el cliente lo pida, y una fiesta que dura '
-                    .'más de serie es un PACK más largo (`specs/hora-extra.md` §10.3.1).'
+                    'Un complemento que EXTIENDE la estancia no puede ser obligatorio ni incluido: '
+                    .'alargaría la fiesta sin que el cliente lo pida, y una fiesta que dura más de '
+                    .'serie es un PACK más largo (`specs/hora-extra.md` §10.3.1).'
                 );
             }
 
@@ -317,6 +353,15 @@ class ProductAddon extends Pivot
             // nada para bloques de tiempo —con 20 invitados dejaría pedir 20 horas—, así que el tope
             // de un extensor es SUYO y tiene que existir. Es la misma regla que `#413` impuso a los
             // `postform` por el mismo motivo: sin tope declarado, el único freno sería el rechazo.
+            //
+            // ⚠️ **Salvo por-invitado** (`#443`, §11.5.2): allí la cantidad no la elige nadie —la fija
+            // el nº de invitados— y `AddonResolver::effectiveQuantity()` **sale por `per_guest` ANTES
+            // de mirar `max_qty`**, así que este tope no lo leería nadie. El tope real pasa a ser el
+            // `max_qty` del PACK. *Exigir un número que nadie mira es peor que no exigirlo: parece
+            // una defensa.*
+            if ($pivot->isPerGuest()) {
+                return;
+            }
             if ($pivot->max_qty === null || (int) $pivot->max_qty < 1) {
                 throw new \InvalidArgumentException(
                     'Un complemento que EXTIENDE la estancia necesita un máximo por reserva '
@@ -337,6 +382,55 @@ class ProductAddon extends Pivot
         $id = (int) ($this->requires_addon_id ?? 0);
 
         return $id > 0 ? $id : null;
+    }
+
+    /**
+     * ¿Tiene este enganche líneas VIVAS en reservas que todavía se pueden editar?
+     *
+     * ❗❗❗ **Es el candado del MODO** (`specs/hora-extra.md` §11.11·A1, `#443`), y el agujero que
+     * cierra está medido: `OrderItemEditor` re-escala los complementos por-invitado leyendo **el
+     * pivote VIVO**, así que pasar un enganche de `fixed` a `per_guest` haría que la primera edición
+     * de cantidad de una fiesta ya vendida convirtiera su hija de **1 bloque a 5,00 €** en **N
+     * unidades a 5,00 €**, con su `recordEdit(+Δ)` y su correo. Sobre las dos horas extra reales de
+     * producción eso son **+35,00 €** y **+56,00 €** que nadie vendió: `PAY-19` roto por la puerta de
+     * la configuración.
+     *
+     * ⚠️⚠️ **El agujero NO lo trae la hora extra por invitado: existe hoy** para cualquier
+     * complemento que alguien pase de `fixed` a `per_guest`. Lo que la feature le da es un sujeto caro.
+     *
+     * ⚠️ **«Editable» y no «vendida», y la diferencia es la que hace que el candado se suelte solo**:
+     * el editor rechaza una reserva ya celebrada (`editItemBlockedReason` → `item_finished`), así que
+     * una fiesta pasada ya no puede re-escalarse. El candado alcanza EXACTAMENTE a las líneas que el
+     * re-escalado puede tocar, ni una más — y desaparece cuando esas fiestas pasan.
+     *
+     * ⚠️ El predicado del fin es de dominio y vive en PHP (`isFinishedInPractice()`, que desde `#426`
+     * mira inicio + duración efectiva en hora del parque): traducirlo a SQL sería una segunda copia
+     * de la regla más delicada del calendario. Los candidatos son pocos —las fiestas vivas de UN
+     * producto con ESE complemento— y se evalúan en memoria.
+     */
+    public function hasEditableSoldLines(): bool
+    {
+        $addonId = (int) $this->addon_id;
+        $productId = (int) $this->product_id;
+        if ($addonId <= 0 || $productId <= 0) {
+            return false;
+        }
+
+        $parents = OrderItem::query()
+            ->whereNull('cancelled_at')
+            ->whereNull('parent_item_id')
+            ->where('ticket_type_id', $productId)
+            ->whereHas('children', fn ($q) => $q->whereNull('cancelled_at')->where('ticket_type_id', $addonId))
+            ->with(['ticketType', 'slot'])
+            ->get();
+
+        foreach ($parents as $parent) {
+            if (! $parent->isFinishedInPractice()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** Clave de grupo de elección excluyente (o null si el complemento es independiente). */

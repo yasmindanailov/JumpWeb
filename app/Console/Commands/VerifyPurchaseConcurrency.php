@@ -86,11 +86,25 @@ class VerifyPurchaseConcurrency extends Command
      * Se separan a propósito: un cupo de fiestas correcto no dice nada sobre el de invitados, y
      * viceversa. En un escenario único, el que se rompiera se escondería detrás del que aguantara.
      */
-    private const SCENARIOS = ['entry', 'pack', 'pack-guests', 'pack-prep', 'mixed', 'panel-edit', 'extra-hour', 'stay-extension'];
+    private const SCENARIOS = ['entry', 'pack', 'pack-guests', 'pack-prep', 'mixed', 'panel-edit', 'extra-hour', 'stay-extension', 'stay-extension-per-guest'];
+
+    /**
+     * Los DOS escenarios de la hora extra de un pack: el mismo aforo con las dos unidades de
+     * cantidad que el enganche puede declarar (`specs/hora-extra.md` §11, `#443`).
+     *
+     * ⚠️⚠️ **El de por-invitado no es una variante cosmética**: ahí la cantidad de la hija son
+     * PERSONAS y los minutos salen de `AddonOccupancy::blocksFor()`, así que es el único que mide
+     * bajo carrera que **el precio escala con los invitados y la ventana NO**. Si esa derivación se
+     * rompiera, la fiesta ocuparía `invitados × 60` minutos y la sala se cerraría sola — verde en la
+     * suite, porque SQLite no ejerce el lock.
+     *
+     * @var list<string>
+     */
+    private const STAY_SCENARIOS = ['stay-extension', 'stay-extension-per-guest'];
 
     protected $signature = 'purchase:verify-oversell
         {--workers=8 : Nº de compras concurrentes (procesos)}
-        {--scenario=entry : Qué aforo se prueba: entry | pack | pack-guests | pack-prep | mixed | panel-edit | extra-hour | stay-extension}
+        {--scenario=entry : Qué aforo se prueba: entry | pack | pack-guests | pack-prep | mixed | panel-edit | extra-hour | stay-extension | stay-extension-per-guest}
         {--keep : No borrar los datos de prueba al terminar}';
 
     protected $description = 'Verifica empíricamente (fork real + MySQL InnoDB) que N compras simultáneas de la ÚLTIMA plaza no sobrevenden: solo una gana. Cubre los tres aforos: entradas, cupo de fiestas y cupo de invitados. Solo dev/local.';
@@ -566,6 +580,16 @@ class VerifyPurchaseConcurrency extends Command
             //    tanda hace vendible: el cruce con el PANEL llegará con la T3, porque hoy el editor
             //    rechaza tocar una extensión a propósito.
             $isStay = $scenario === 'stay-extension';
+            //  · `stay-extension-per-guest` → LA HORA EXTRA COBRADA POR INVITADO (§11, `#443`), y
+            //    **NO es una variante cosmética del anterior: mide otra cosa y por otro camino**.
+            //    Aquí NO hay fiesta sembrada: los 12 compran la MISMA sala **con** su hora extra,
+            //    en modo por-invitado, y **uno solo debe ganar**. Lo que lo hace valioso es el modo
+            //    de fallo: si los minutos volvieran a salir de la cantidad, cada compra pediría
+            //    `invitados × 60` = 480 min, la ventana no cabría en la rejilla y **ganaría CERO**.
+            //    Un escenario que distingue «uno gana» de «no gana nadie» mide la derivación a
+            //    través del checkout y bajo el lock, que es donde la suite es ciega (SQLite).
+            $isStayPerGuest = $scenario === 'stay-extension-per-guest';
+            $needsExtender = $isStay || $isStayPerGuest;
 
             $guestsPerBuyer = $isGuests ? 6 : 8;
             $zone = Zone::create([
@@ -617,7 +641,7 @@ class VerifyPurchaseConcurrency extends Command
             }
 
             $extender = null;
-            if ($isStay) {
+            if ($needsExtender) {
                 $extender = TicketType::create([
                     'name' => ['es' => 'Hora extra Probe'], 'type' => TicketType::TYPE_ADDON,
                     'duration_min' => 60, 'extends_parent_stay' => true,
@@ -629,9 +653,10 @@ class VerifyPurchaseConcurrency extends Command
                 }
                 $type->addons()->attach($extender->id, [
                     'position' => 1, 'stage' => ProductAddon::STAGE_BOOKING,
-                    'quantity_mode' => ProductAddon::MODE_FIXED, 'allow_extra' => true,
+                    'quantity_mode' => $isStayPerGuest ? ProductAddon::MODE_PER_GUEST : ProductAddon::MODE_FIXED,
+                    'allow_extra' => true,
                     'included_quantity' => 1, 'is_included' => false, 'is_mandatory' => false,
-                    'max_qty' => 1,
+                    'max_qty' => $isStayPerGuest ? null : 1,
                 ]);
             }
 
@@ -669,7 +694,12 @@ class VerifyPurchaseConcurrency extends Command
                 // más trabajo —resolver el complemento y su precio— y llegaba SIEMPRE tarde al lock,
                 // así que con el defecto puesto salía verde **4 de 4 veces**. Un escenario cuyo
                 // veredicto depende de quién gane la carrera no es un escenario: es una moneda.
-                $carts[$i] = $isStay ? $line($secondTime) : $line($isPrep && $i % 2 === 1 ? $secondTime : $time);
+                $carts[$i] = match (true) {
+                    $isStay => $line($secondTime),
+                    // Todos a la MISMA sala y a la misma hora, cada uno con su hora extra.
+                    $isStayPerGuest => $line($time, withExtension: true),
+                    default => $line($isPrep && $i % 2 === 1 ? $secondTime : $time),
+                };
             }
 
             // La fiesta que YA está vendida en la primera hora, con su hora extra. Se siembra sin
@@ -967,7 +997,7 @@ class VerifyPurchaseConcurrency extends Command
             // franja sembrada dejaría fuera a la ganadora de la hora siguiente y el invariante daría
             // verde con DOS fiestas vendidas — que es exactamente el hueco de `specs/hora-extra.md`
             // §10.1. Se cuentan las del DÍA en la zona.
-            'stay-extension' => [
+            'stay-extension', 'stay-extension-per-guest' => [
                 'Fiestas vivas en el día (la sembrada, y ninguna más)',
                 1,
                 $this->livePackLinesInZoneDay($seed['zone']->id, $seed['date']),

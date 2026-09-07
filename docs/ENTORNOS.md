@@ -403,6 +403,15 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > | `client.css` | ⚠️⚠️ **se comparó ANTES de subir**: el remoto difería **exactamente** en esas 5 líneas y sus comentarios, sin ningún cambio propio. Copia previa en `~/backups/` y hash idéntico al local tras subirlo |
 > | Verificación | hora extra de sala **KIDS 3/5 €** y **JUMP 5/8 €** por tarifa · **«Kids · Ilimitada» 9 horas entre semana y 0 el sábado** · `/`, `/entradas`, `/admin/login` y `/up` → **200** · **0 errores** en el log |
 >
+> ⚠️⚠️ **ESA FILA DE PRECIOS CADUCÓ LA MISMA TARDE, y el rastro dice cuándo** (`#443`, medido en
+> producción el 2026-09-07): el **2026-09-06 a las 15:21** se cambió KIDS de 3,00 → **4,00 €** y se
+> **borró el precio de la tarifa `special` de las dos** (`catalog.prices_updated`,
+> `{"2":{"from":500,"to":null}}` y `{"2":{"from":800,"to":null}}`). Como un complemento sin precio
+> para la tarifa del día **no se ofrece**, hoy **la hora extra de sala no se vende viernes, sábado ni
+> domingo** — verificado de punta a punta: la oferta del Pack JUMP un sábado son Calcetines y el grupo
+> de menús, sin hora extra. ▶ `[DECIDIDO owner, 2026-09-07]`: **se queda así**, es un producto de entre
+> semana. **No lo «arregles» devolviendo el precio especial.**
+>
 > **Estado tras el despliegue**: 4 zonas · 25 productos · 16 complementos · 29 enganches (**14 en
 > post-form**) · 6.871 franjas · 14 pedidos · 163 clientes · `sales.online_enabled = 0`.
 >

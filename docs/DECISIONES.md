@@ -24961,3 +24961,67 @@ de verdad exige un titular con TODOS sus menores firmados y hay que buscarlo por
 ⚠️ Sigue el aviso conocido de `#115`: el script no ve demonio cron y las dos líneas viven en el cron
 del panel. ▶ Queda el **OJO del owner** por navegador y las tres pasadas de la rejilla de media hora,
 pendientes desde el 06-09.
+
+## #443 · 2026-09-07 · `[DECIDIDO owner]` La HORA EXTRA de un pack se cobra POR INVITADO — y lo que cambia no es el guard, es de dónde salen los MINUTOS
+
+Encargo del owner: *«permitir que la hora extra de cumpleaños pueda cobrarse por invitado»*. Con la
+pregunta de `specs/hora-extra.md` §10.2 delante eligió la **opción A**: *«la hora extra para todos los
+invitados, pero se cobra por invitado»*. Diseño completo en **`specs/hora-extra.md` §11**.
+
+### Lo MEDIDO en producción antes de diseñar (2026-09-07, solo lectura)
+
+16 fiestas vivas · tamaño 8–20, mediana **13**, dos ya en el techo · **2 horas extra de sala
+vendidas**: 8 invitados → 5,00 € y 15 invitados → 4,00 €. **Lo cobrado por las dos: 9,00 €. Por
+invitado habrían sido 100,00 €** (11×).
+
+### ❗❗ La hora extra NO se vende viernes, sábado ni domingo, y es DECISIÓN
+
+Medido de punta a punta: los dos productos de sala tienen precio **solo en la tarifa `normal`**, y
+`special` cubre `[5,6,0]`; un complemento sin precio para la tarifa del día **no se ofrece**, así que
+un sábado la oferta del Pack JUMP son Calcetines y el grupo de menús, sin hora extra. El rastro dice
+quién y cuándo: `catalog.prices_updated` del **2026-09-06 15:21** (`{"2":{"from":500,"to":null}}` y
+`{"2":{"from":800,"to":null}}`). ▶ `[DECIDIDO owner]`: **se queda así** — es un producto de entre
+semana. ⚠️ `ENTORNOS.md` §6 registraba lo contrario («KIDS 3/5 € y JUMP 5/8 € por tarifa»): esa nota
+caducó esa misma tarde y se corrige aquí. **No lo «arregles» devolviendo el precio especial.**
+
+### La raíz, y por qué la prohibición de §10.3.1 era CORRECTA
+
+`per_guest` dice hoy **dos cosas a la vez**: cuántas unidades hay y cuánto se cobra. Para un extensor
+sólo la segunda tiene sentido — *una hora es una hora, la compren 8 invitados o 20*. Con la
+derivación que existía, `extraMinutes = cantidad × duration_min` habría alargado la sala **900
+minutos** en una fiesta de 15; y el tope no lo frenaba, porque `effectiveQuantity()` **sale por
+`per_guest` ANTES de aplicar `max_qty`**.
+
+▶ **Lo que cambia es UNA regla en UNA función**: los **bloques** que compra una cantidad son `1` si el
+enganche es por-invitado y la cantidad si no; los minutos son `bloques × duration_min`. Con eso la
+cantidad de la hija pasa a ser los invitados, su `unit_price` es el precio **por invitado** (histórico,
+`PAY-19`), `chargedSubtotalCents()` cobra `invitados × precio` **sin tocar el núcleo del dinero**, y
+`extra_minutes` sigue valiendo un bloque — el aforo no cambia de magnitud.
+
+⚠️⚠️ **El pivote entra en la firma SIN valor por defecto**, y no es estilo: son **cinco** los sitios
+que derivan minutos, y un `?ProductAddon $pivot = null` haría que el que se olvide **multiplicara por
+los invitados en silencio**. Es la lección de `#329` aplicada a algo que no es dinero, sino **aforo**.
+
+### Un defecto PREEXISTENTE que esto cierra por construcción (reproducido)
+
+El formulario del catálogo **ofrece hoy «por invitado» sobre una hora extra de sala** —sus opciones
+sólo lo esconden para el ocupante y para `postform`— y el dominio contesta con una
+`InvalidArgumentException` **sin capturar**: pantalla de error de Filament. *La cara amable del guard
+del extensor nunca se escribió; la del ocupante sí.* Con esta tanda la combinación es legal y el
+defecto se va con su causa.
+
+### Lo que NO se relaja
+
+Incluido, obligatorio, `postform`, colgar de algo que no sea un pack y `duration_min > 0` **siguen
+prohibidos**, cada uno con su motivo escrito. Lo único que además decae es el `max_qty` **obligatorio**
+del enganche cuando es por-invitado: `#423`·A6 lo impuso porque «no se quedan más de los que entran»
+no significa nada para bloques de tiempo, y con la cantidad atada a los invitados **el tope es el
+`max_qty` del pack** y el del enganche no lo lee nadie. *Exigir un número que nadie mira es peor que
+no exigirlo: parece una defensa.*
+
+### Fuera de alcance, dicho
+
+**Cobrar más de un bloque por invitado**: con `per_guest` la cantidad son personas, así que «dos horas
+extra» exige un producto propio de `duration_min = 120` — que es cómo el catálogo ya resuelve que KIDS
+y JUMP cuesten distinto (`#427`: el pivote no tiene columna de precio). **El precio**: `[DECIDIDO
+owner]` «lo que configure el dueño» — es catálogo, no código.

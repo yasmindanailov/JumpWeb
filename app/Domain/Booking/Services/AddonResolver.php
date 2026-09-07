@@ -197,10 +197,12 @@ class AddonResolver
                 if (! AddonOccupancy::sellableStayExtension($addon)) {
                     throw new ReservationException('tickets.errors.unavailable');
                 }
-                // Un INCLUIDO se auto-inyecta y alargaría TODA fiesta sin que nadie lo pida; por-invitado
-                // y obligatorio, lo mismo por otras puertas. Una fiesta que dura más de serie es un pack
+                // Un INCLUIDO se auto-inyecta y alargaría TODA fiesta sin que nadie lo pida;
+                // obligatorio, lo mismo por otra puerta. Una fiesta que dura más de serie es un pack
                 // más largo (§7·D2, que sigue siendo cierto).
-                if ($pivot->isPerGuest() || $pivot->is_mandatory || $pivot->is_included) {
+                // ⚠️ `per_guest` salió de este cinturón en `#443` (§11.5.2): con los BLOQUES fuera de
+                // la cantidad, es la forma de cobrar la hora extra por invitado.
+                if ($pivot->is_mandatory || $pivot->is_included) {
                     throw new ReservationException('tickets.errors.unavailable');
                 }
                 // Vender aforo DESPUÉS de reservar exige lock y revalidación que esa fase no tiene.
@@ -208,7 +210,7 @@ class AddonResolver
                     throw new ReservationException('tickets.errors.unavailable');
                 }
 
-                $extraMinutes += AddonOccupancy::extraMinutes($addon, $qty);
+                $extraMinutes += AddonOccupancy::extraMinutes($addon, $pivot, $qty);
             }
 
             $free = self::freeUnits($pivot, $qty);
@@ -553,7 +555,15 @@ class AddonResolver
                     ? trans_choice('tickets.addon_stay_selected', $qty, ['count' => $qty, 'price' => $priceStr])
                     : __('tickets.addon_stay_price', ['price' => $priceStr]);
             } elseif ($pivot->isPerGuest()) {
-                $note = __('tickets.addon_per_unit', ['price' => $priceStr]);
+                // LA HORA EXTRA COBRADA POR INVITADO (`#443`, §11.5.4). Sin esta rama, un extensor
+                // por-invitado caía en el precio pelado —«4,00 €/invitado» sobre un cargo de 60,00 €—
+                // y la nota prometía una cifra que no era la que se cobra. Con la fila elegida dice
+                // para CUÁNTOS es la hora y a cuánto sale cada uno; el TOTAL lo pone la superficie
+                // (es el patrón del ocupante, §8.6). Se compone aquí y no en el cliente: la heredan
+                // el cajón, la API y el alta manual del panel sin una línea suya.
+                $note = ($qty > 0 && $addon->extendsParentStay())
+                    ? trans_choice('tickets.addon_stay_per_guest_selected', $qty, ['count' => $qty, 'price' => $priceStr])
+                    : __('tickets.addon_per_unit', ['price' => $priceStr]);
             } else {
                 $note = $priceStr;
             }

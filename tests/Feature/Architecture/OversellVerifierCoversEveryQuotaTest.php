@@ -55,6 +55,17 @@ class OversellVerifierCoversEveryQuotaTest extends TestCase
             'compra la hora siguiente), así que su guarda del instrumento es a la vez su CONTROL: '.
             'la franja vende ANTES de alargar la fiesta y cierra DESPUÉS. Visto FALLAR con el cupo '.
             'ciego a `extra_minutes` (la segunda hora seguía ofreciendo 20)',
+
+        // La hora extra COBRADA POR INVITADO (`specs/hora-extra.md` §11, `#443`). ⚠️⚠️ **No es una
+        // variante del anterior: mide otra cosa y por otro camino.** Allí la extensión se SIEMBRA y
+        // nadie debe ganar; aquí los 12 COMPRAN la misma sala con su hora extra en modo por-invitado
+        // y **uno solo debe ganar**. Lo que lo hace un instrumento y no un adorno es su modo de
+        // fallo: si los minutos volvieran a salir de la cantidad, cada compra pediría 8 × 60 = 480
+        // min, la ventana no cabría en la rejilla y ganaría CERO — **visto FALLAR exactamente así**
+        // (0 de 12 con `blocksFor()` devolviendo la cantidad).
+        'stay-extension-per-guest' => 'la DERIVACIÓN de la ventana con la cantidad en PERSONAS: '.
+            'el precio escala con los invitados y los minutos NO, comprobado a través del checkout '.
+            'y bajo el lock, que es donde la suite es ciega (SQLite)',
     ];
 
     public function test_the_verifier_declares_a_scenario_for_every_quota(): void

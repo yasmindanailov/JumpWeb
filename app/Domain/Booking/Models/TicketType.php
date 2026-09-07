@@ -903,14 +903,17 @@ class TicketType extends Model
 
             // La OTRA dirección de la guarda del pivote (la lección de `#324`, aplicada al espejo):
             // encender el interruptor a un complemento YA enganchado a algo que no es un pack —o
-            // como por-invitado, obligatorio, incluido o de venta posterior— dejaría en pie una
-            // configuración que el pivote rechaza al revés.
+            // como obligatorio, incluido o de venta posterior— dejaría en pie una configuración que
+            // el pivote rechaza al revés.
+            //
+            // ⚠️ `per_guest` SALIÓ de esta lista en `#443` (§11.5.2): desde que los minutos salen del
+            // BLOQUE y no de la cantidad, un extensor por-invitado es la forma de cobrar la hora
+            // extra por invitado — el caso de uso, no una configuración imposible.
             if ($type->exists) {
                 $conflicting = ProductAddon::query()
                     ->where('addon_id', $type->getKey())
                     ->where(fn ($q) => $q
-                        ->where('quantity_mode', ProductAddon::MODE_PER_GUEST)
-                        ->orWhere('is_mandatory', true)
+                        ->where('is_mandatory', true)
                         ->orWhere('is_included', true)
                         ->orWhere('stage', ProductAddon::STAGE_POSTFORM))
                     ->exists();
@@ -921,8 +924,8 @@ class TicketType extends Model
                 if ($conflicting || $offPack) {
                     throw new \InvalidArgumentException(
                         'Este complemento no puede pasar a EXTENDER la estancia: está enganchado a '
-                        .'algo que no es un PACK, o como por-invitado/obligatorio/incluido/de venta '
-                        .'POSTERIOR — deshaz esos enganches primero (`specs/hora-extra.md` §10.3.1).'
+                        .'algo que no es un PACK, o como obligatorio/incluido/de venta POSTERIOR — '
+                        .'deshaz esos enganches primero (`specs/hora-extra.md` §10.3.1 y §11.5.2).'
                     );
                 }
             }

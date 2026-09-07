@@ -1121,6 +1121,15 @@ class OrderItemEditor
             $editByChildId[(int) $edit['child_id']] = (int) $edit['quantity'];
         }
 
+        // El pivote de cada complemento, que es quien dice si su cantidad son BLOQUES o PERSONAS
+        // (`specs/hora-extra.md` §11.5, `#443`). Manda el del producto NUEVO cuando el guardado
+        // cambia de producto —es el que gobernará la línea a partir de ahora—, y el del actual
+        // cuando no (el camino de `changeSlot`, que llega con la colección vacía).
+        $pivots = $this->addonPivotsFor($item);
+        foreach ($offeredAddons as $offeredAddon) {
+            $pivots[(int) $offeredAddon->id] = $offeredAddon->pivot;
+        }
+
         $minutes = 0;
         foreach ($this->liveStayExtendingChildren($item) as $child) {
             if ($survivingChildIds !== null && ! in_array((int) $child->id, $survivingChildIds, true)) {
@@ -1131,7 +1140,13 @@ class OrderItemEditor
                 continue; // se quita en este mismo guardado
             }
             $qty = ($edited !== null && $edited > (int) $child->quantity) ? $edited : (int) $child->quantity;
-            $minutes += AddonOccupancy::extraMinutes($child->ticketType, $qty);
+            $pivot = $pivots[(int) $child->ticket_type_id] ?? null;
+            // Sin pivote la línea es HUÉRFANA y el guardado ya está bloqueado más arriba
+            // (`orphan_addons`), así que esto es inalcanzable; se cae al lado que NO sobrevende
+            // —tratar la cantidad como bloques reserva igual o más sala— en vez de suponer un modo.
+            $minutes += $pivot !== null
+                ? AddonOccupancy::extraMinutes($child->ticketType, $pivot, $qty)
+                : AddonOccupancy::minutesForBlocks($child->ticketType, $qty);
         }
 
         foreach ($addonEdits['adds'] ?? [] as $add) {
@@ -1142,7 +1157,7 @@ class OrderItemEditor
                 continue;
             }
             $minutes += AddonOccupancy::extraMinutes(
-                $addType, (int) ($addQuantities[$addTypeId] ?? $add['quantity']),
+                $addType, $addType->pivot, (int) ($addQuantities[$addTypeId] ?? $add['quantity']),
             );
         }
 

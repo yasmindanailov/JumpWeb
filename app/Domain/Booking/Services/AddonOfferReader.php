@@ -269,11 +269,16 @@ class AddonOfferReader implements AddonOffer
 
         $caps = [];
         foreach ($extending as $addon) {
-            $ceiling = max(1, (int) ($addon->pivot->max_qty ?? 1));
+            // ⚠️ Aquí la variable del bucle son BLOQUES, no una cantidad — y desde `#443` esas dos
+            // cosas se separaron: un extensor por-invitado vende SIEMPRE un bloque (la cantidad son
+            // personas), así que su techo es 1 y sus minutos salen de los bloques directamente. Con
+            // `extraMinutes()` aquí, ese enganche repetiría el mismo cálculo `max_qty` veces y
+            // ofrecería bloques que nadie puede comprar (§11.11 · A2).
+            $ceiling = AddonOccupancy::maxBlocks($addon->pivot);
             $fits = 0;
             for ($blocks = 1; $blocks <= $ceiling; $blocks++) {
                 $available = $this->packAvailability->availableGuestsFor(
-                    $slot, $product, [], null, AddonOccupancy::extraMinutes($addon, $blocks),
+                    $slot, $product, [], null, AddonOccupancy::minutesForBlocks($addon, $blocks),
                 );
                 if ($available < max(1, $guests)) {
                     break;

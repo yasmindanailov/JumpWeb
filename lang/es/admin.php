@@ -2034,6 +2034,12 @@ return [
             'quantity_mode_hint' => 'Fija = el cliente elige cuántas. Por invitado = una por cada invitado del pack.',
             'mode_fixed' => 'Cantidad fija (+ extras)',
             'mode_per_guest' => 'Una por invitado',
+            // La HORA EXTRA cobrada POR INVITADO (`#443`, `specs/hora-extra.md` §11.5.3). En un
+            // extensor la misma opción significa otra cosa: la fiesta se alarga UNA hora —una hora es
+            // una hora, la compren 8 invitados o 20— y lo que escala con los invitados es el PRECIO.
+            'mode_per_guest_stay' => 'Se cobra por invitado',
+            'quantity_mode_stay_hint' => 'Fija = precio por cada hora extra. Se cobra por invitado = una hora más para toda la fiesta, al precio del complemento por cada invitado.',
+            'quantity_mode_locked_sold' => 'No se puede cambiar: este complemento tiene reservas vendidas que todavía se pueden editar, y cambiar el modo las re-preciaría. Crea un complemento nuevo.',
             'allow_extra' => 'Permitir añadir más (a precio normal)',
             'allow_extra_hint' => 'Si está activo, el cliente puede añadir unidades por encima de las incluidas.',
             'max_qty' => 'Máximo por reserva',

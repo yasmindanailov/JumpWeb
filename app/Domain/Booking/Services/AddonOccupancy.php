@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Services;
 
+use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use Illuminate\Support\Collection;
@@ -108,15 +109,61 @@ class AddonOccupancy
     }
 
     /**
-     * Minutos que esta compra alarga la fiesta: `cantidad × duración del bloque`.
+     * **Los BLOQUES de tiempo que compra una cantidad** (§11.5, `#443`).
      *
-     * ⚠️ **La cantidad son BLOQUES DE TIEMPO, no personas** (§10.3.1), y por eso este método es el
-     * hermano de {@see seats()} y no una variante suya: dos unidades distintas para dos preguntas
-     * distintas. Mezclarlas es exactamente el defecto (b) de §10.1 —la línea que dice «1 persona»
-     * donde hay veinte—.
+     * ❗❗❗ **Ésta es LA regla que hace posible cobrar la hora extra por invitado, y vive aquí sola.**
+     * §10.3.1 declaró que la cantidad de un extensor «son bloques de tiempo» y prohibió `per_guest`
+     * por eso: con `extraMinutes = cantidad × duración`, una fiesta de 15 habría alargado la sala
+     * **900 minutos**. Lo que cambia no es el guard, es de dónde salen los minutos —
+     *
+     *  - enganche **por-invitado**: la cantidad son PERSONAS y los bloques son **1**. *Una hora es
+     *    una hora, la compren 8 invitados o 20*; lo que escala con los invitados es el PRECIO, y eso
+     *    lo resuelve `chargedSubtotalCents()` sin enterarse de nada (`cantidad × unit_price`).
+     *  - enganche **de cantidad fija**: la cantidad SON los bloques, como siempre (§10.3.1).
+     *
+     * ⚠️ Es lo único que separa las dos lecturas de `per_guest`, que hoy dice DOS cosas a la vez:
+     * *cuántas unidades hay* y *cuánto se cobra*. Para un extensor solo la segunda tiene sentido.
      */
-    public static function extraMinutes(TicketType $addon, int $quantity): int
+    public static function blocksFor(ProductAddon $pivot, int $quantity): int
     {
-        return max(0, $quantity) * (int) ($addon->duration_min ?? 0);
+        return $pivot->isPerGuest() ? 1 : max(0, $quantity);
+    }
+
+    /**
+     * El máximo de BLOQUES que este enganche puede vender: `1` por-invitado (la cantidad no la elige
+     * nadie), y su `max_qty` si la cantidad es fija.
+     *
+     * Existe para {@see AddonOfferReader::stayExtensionCaps()}, que barre bloques 1..N preguntando
+     * si la fiesta cabe alargada. Sin este tope, un extensor por-invitado repetiría el mismo cálculo
+     * `max_qty` veces y ofrecería bloques que nadie puede comprar (`#443` · A2).
+     */
+    public static function maxBlocks(ProductAddon $pivot): int
+    {
+        return $pivot->isPerGuest() ? 1 : max(1, (int) ($pivot->max_qty ?? 1));
+    }
+
+    /** Minutos que alargan N BLOQUES de este complemento. La aritmética, sin la regla. */
+    public static function minutesForBlocks(TicketType $addon, int $blocks): int
+    {
+        return max(0, $blocks) * (int) ($addon->duration_min ?? 0);
+    }
+
+    /**
+     * Minutos que esta compra alarga la fiesta: `bloques(cantidad) × duración del bloque`.
+     *
+     * ⚠️⚠️ **El pivote es OBLIGATORIO y no tiene valor por defecto, a propósito.** Son CINCO los
+     * sitios que derivan minutos (el resolutor, la cesta, la oferta y el editor dos veces), y con un
+     * `?ProductAddon $pivot = null` el que se olvidara **multiplicaría por los invitados en
+     * silencio** — la lección de `#329` («un parámetro con valor por defecto no avisa de que hacía
+     * falta», 140,00 € de desfase) aplicada a algo que no es dinero, sino AFORO. Con el parámetro
+     * obligatorio, el que falte no compila.
+     *
+     * ⚠️ Sigue siendo el hermano de {@see seats()} y no una variante suya: dos unidades distintas
+     * para dos preguntas distintas. Mezclarlas es el defecto (b) de §10.1 —la línea que dice «1
+     * persona» donde hay veinte—.
+     */
+    public static function extraMinutes(TicketType $addon, ProductAddon $pivot, int $quantity): int
+    {
+        return self::minutesForBlocks($addon, self::blocksFor($pivot, $quantity));
     }
 }
