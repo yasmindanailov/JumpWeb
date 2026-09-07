@@ -18,10 +18,12 @@ use App\Domain\Booking\Services\SlotAvailability;
 use App\Domain\Booking\Services\SlotOffer;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\CheckoutDuties;
 use App\Domain\Identity\Services\CustomerRegistrar;
 use App\Domain\Identity\Services\DependentAssigner;
 use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\WaiverSettings;
+use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Filament\Resources\Orders\OrderResource;
 use BackedEnum;
@@ -311,7 +313,11 @@ class CreateManualOrderPage extends Page
     public function canAdvance(): bool
     {
         return match ($this->step) {
-            self::STEP_CUSTOMER => filled($this->data['customer_id'] ?? null),
+            // ⚠️ El teléfono que falta RETIENE aquí (`#440`): el operador lo tiene delante y es el
+            // único momento en que puede pedírselo. Basta con haberlo ESCRITO —lo guarda
+            // {@see next()}—, o el botón quedaría muerto sin decir qué falta.
+            self::STEP_CUSTOMER => filled($this->data['customer_id'] ?? null)
+                && (! $this->customerNeedsPhone() || filled($this->data['customer_phone'] ?? null)),
             self::STEP_PRODUCT => filled($this->data['sel_product_id'] ?? null),
             self::STEP_WHEN => filled($this->data['sel_date'] ?? null) && filled($this->data['sel_time'] ?? null),
             self::STEP_DETAILS, self::STEP_EXTRAS => true,
@@ -322,7 +328,18 @@ class CreateManualOrderPage extends Page
 
     public function next(): void
     {
-        if ($this->isDone() || ! $this->canAdvance()) {
+        if ($this->isDone()) {
+            return;
+        }
+
+        // El teléfono escrito en el paso del cliente se salda AQUÍ, que es el único momento
+        // definido: ni en cada tecla, ni al perder el foco. Si no había nada que saldar, no hace
+        // nada (`CheckoutDuties::recordPhone()` no pisa lo que ya existe).
+        if ($this->step === self::STEP_CUSTOMER) {
+            $this->saveMissingPhone();
+        }
+
+        if (! $this->canAdvance()) {
             return;
         }
 
@@ -459,6 +476,72 @@ class CreateManualOrderPage extends Page
 
     // ─── Paso 1: cliente ──────────────────────────────────────────────────
 
+    /**
+     * ¿Al cliente ELEGIDO le falta el teléfono? (`#440`, `specs/telefono-del-cliente.md` §4.1)
+     *
+     * ⚠️⚠️ **La autoridad es `CheckoutDuties::pendingFor()` y NUNCA una segunda copia.** El docblock
+     * de ese servicio cuenta por qué existe: la pregunta *«¿qué le falta a esta cuenta?»* se estaba
+     * respondiendo en dos sitios, cada uno con su `trim($user->phone) === ''`, y divergir significa
+     * **pedir un campo que el servidor no pide, o al revés**.
+     *
+     * Sin cliente elegido devuelve `false`: no se afirma lo que todavía no se sabe (la lección de
+     * `#462` con el indicador de pasos, que decía «sin nada que rellenar» antes de elegir producto).
+     */
+    public function customerNeedsPhone(): bool
+    {
+        $customer = $this->selectedCustomer();
+
+        return $customer !== null && app(CheckoutDuties::class)->pendingFor($customer)['phone'];
+    }
+
+    /** El cliente elegido, o `null`. Memo por petición: lo consultan la puerta, el campo y la vista. */
+    private function selectedCustomer(): ?User
+    {
+        $id = (int) ($this->data['customer_id'] ?? 0);
+
+        if ($id <= 0) {
+            $this->selectedCustomerMemo = null;
+            $this->selectedCustomerFor = null;
+
+            return null;
+        }
+
+        if ($this->selectedCustomerFor !== $id) {
+            $this->selectedCustomerMemo = User::find($id);
+            $this->selectedCustomerFor = $id;
+        }
+
+        return $this->selectedCustomerMemo;
+    }
+
+    private ?User $selectedCustomerMemo = null;
+
+    private ?int $selectedCustomerFor = null;
+
+    /**
+     * Salda el teléfono que el operador acaba de escribir. Escribe el MÓDULO, no esta página.
+     *
+     * ⚠️⚠️ **`ApiBoundariesTest` ya puso en rojo exactamente esta escritura** cuando vivía en el
+     * controlador del checkout: un `save()` de dominio en la capa de entrega. De ahí nació
+     * `CheckoutDuties`, y por eso aquí solo se pregunta y se pasa lo que el operador tecleó.
+     */
+    private function saveMissingPhone(): void
+    {
+        $customer = $this->selectedCustomer();
+        $typed = trim((string) ($this->data['customer_phone'] ?? ''));
+
+        if ($customer === null || $typed === '') {
+            return;
+        }
+
+        if (app(CheckoutDuties::class)->recordPhone($customer, $typed)) {
+            $this->selectedCustomerFor = null;   // el memo tiene la foto de antes de escribir
+            $this->data['customer_phone'] = null;
+
+            AuditLogger::log('orders.manual_customer_phone_added', $customer);
+        }
+    }
+
     private function customerStep(): Group
     {
         return Group::make()
@@ -488,6 +571,21 @@ class CreateManualOrderPage extends Page
                                 $this->advanceAfterChoice();
                             })
                             ->required(),
+
+                        // `#440` · el teléfono que falta se pide AQUÍ, con el cliente al teléfono o
+                        // delante del mostrador. Solo se pinta cuando de verdad falta: a un cliente
+                        // completo no se le enseña un campo vacío que no hay que rellenar.
+                        //
+                        // ⚠️ `live(onBlur: true)` y no en cada tecla: lo que tiene que reaccionar es
+                        // el botón de avanzar (`canAdvance()`), y hacerlo por pulsación sería una
+                        // petición por letra sobre una página que ya es grande.
+                        TextInput::make('customer_phone')
+                            ->label(__('admin.orders.create_manual.customer_phone'))
+                            ->helperText(__('admin.orders.create_manual.customer_phone_help'))
+                            ->tel()
+                            ->maxLength(30)
+                            ->live(onBlur: true)
+                            ->visible(fn (): bool => $this->customerNeedsPhone()),
 
                         SchemaActions::make([
                             Action::make('registerCustomer')
@@ -776,6 +874,19 @@ class CreateManualOrderPage extends Page
     /** Añade la selección en curso al carrito (validación real de aforo = al cobrar). */
     public function addLineToCart(): void
     {
+        // ⚠️⚠️ **La puerta del paso 1 NO basta, y está medido** (`#440`, spec §4.3): este método es
+        // PÚBLICO y no mira en qué paso está el asistente, así que desde el paso del cliente una
+        // llamada suelta aterriza la línea en el carrito **y mueve `step` a `STEP_CART` ella misma**
+        // (línea de abajo). Es la lección de `#464` con `$calMonth`: la propiedad pública no era el
+        // agujero — el agujero es que el paso 1 no sea precondición de nada aguas abajo.
+        if ($this->customerNeedsPhone()) {
+            Notification::make()->warning()
+                ->title(__('admin.orders.create_manual.customer_phone_required'))
+                ->send();
+
+            return;
+        }
+
         $type = $this->selectedProduct();
         $date = $this->data['sel_date'] ?? null;
         $time = $this->data['sel_time'] ?? null;
@@ -1252,9 +1363,14 @@ class CreateManualOrderPage extends Page
 
     private function customerDisplay(User $u): string
     {
+        // ⚠️ `#440` · el «tiene teléfono» lo decide la MISMA autoridad que la puerta del paso 1, no
+        // una tercera redacción: con un teléfono de espacios, el rótulo del cliente y el aviso del
+        // paso se contradecían («Nombre · <espacios>» mientras el asistente decía que faltaba).
+        $hasPhone = ! app(CheckoutDuties::class)->pendingFor($u)['phone'];
+
         $contact = filled($u->email)
             ? (string) $u->email
-            : ((string) ($u->phone ?? '') !== '' ? (string) $u->phone : __('admin.orders.create_manual.customer_no_email'));
+            : ($hasPhone ? trim((string) $u->phone) : __('admin.orders.create_manual.customer_no_email'));
 
         return "{$u->name} · {$contact}";
     }
@@ -1300,6 +1416,23 @@ class CreateManualOrderPage extends Page
             Notification::make()->danger()->title(__('admin.orders.create_manual.cart_empty'))->send();
 
             return;
+        }
+
+        // ❗❗ `#440`, `[DECIDIDO owner]` — **una venta NUNCA se bloquea por el teléfono.**
+        // Llegar aquí sin él exige haber esquivado las tres puertas de arriba (una pestaña vieja, un
+        // estado desincronizado, un refactor que llame a `addLineToCart()` desde otra puerta), así
+        // que es raro; pero con el cliente delante y el carrito montado, **negarse a cobrar por un
+        // número es peor que vender sin él**. Se avisa y se deja rastro, y se sigue.
+        //
+        // ⚠️⚠️ **Esto es deliberado: NO lo conviertas en un `return`.** Sería lo primero en la
+        // historia del panel capaz de tumbar una venta de mostrador por un teléfono que falta.
+        if (app(CheckoutDuties::class)->pendingFor($customer)['phone']) {
+            Notification::make()->warning()
+                ->persistent()
+                ->title(__('admin.orders.create_manual.customer_phone_missing_warning'))
+                ->send();
+
+            AuditLogger::log('orders.manual_created_without_phone', $customer);
         }
 
         $method = (string) ($this->data['payment_method'] ?? '');

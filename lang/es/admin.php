@@ -306,6 +306,10 @@ return [
             'customer_search_placeholder' => 'Busca por email, teléfono o nombre',
             'customer_help' => 'Selecciona al cliente para el que creas el pedido. Si tiene email, recibirá la confirmación por correo.',
             'customer_no_email' => '(sin email)',
+            'customer_phone' => 'Teléfono del cliente',
+            'customer_phone_help' => 'Esta cuenta no tiene teléfono. Pídeselo al cliente y escríbelo: es como el parque contacta con él el día de la visita.',
+            'customer_phone_required' => 'Antes de añadir nada al carrito, escribe el teléfono del cliente en el primer paso.',
+            'customer_phone_missing_warning' => 'El pedido se ha creado, pero este cliente sigue sin teléfono. Si puedes, pídeselo: es como el parque contacta con él el día de la visita.',
             'register_cta' => '¿No tiene cuenta? Registrar al cliente',
             'register_heading' => 'Registrar cliente nuevo',
             'register_description' => 'Crea la cuenta del cliente al momento. El email es opcional: si lo indicas, le llegará un correo con una contraseña temporal para ver sus pedidos. Sin email, la reserva queda guardada en el panel con su teléfono (no recibe correos).',
@@ -1055,6 +1059,11 @@ return [
                     'guest_form_link_rotated' => 'Enlace del formulario rotado',
                     'guest_form_link_rotate_blocked' => 'Rotación del enlace bloqueada',
                     'guest_form_submitted' => 'Formulario de invitados enviado',
+                    // `#440` · el teléfono del cliente en el mostrador. El primero es el rastro de que
+                    // se vendió sin él —que se avisa pero NO se bloquea, `[DECIDIDO owner]`— y el
+                    // segundo, el de que el operador lo consiguió y lo escribió.
+                    'manual_created_without_phone' => 'Pedido creado sin teléfono del cliente',
+                    'manual_customer_phone_added' => 'Teléfono del cliente añadido en el mostrador',
                     'payment_init_failed' => 'No se pudo iniciar el cobro',
                     'postform_addons_changed' => 'Extras del formulario actualizados',
                     'slip_printed' => 'Hoja de reserva impresa',

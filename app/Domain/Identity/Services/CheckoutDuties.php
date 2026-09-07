@@ -59,12 +59,35 @@ final class CheckoutDuties
     {
         $pending = $this->pendingFor($user);
 
-        if ($pending['phone'] && is_string($phone) && trim($phone) !== '') {
-            $user->forceFill(['phone' => trim($phone)])->save();
-        }
+        $this->recordPhone($user, $phone);
 
         if ($pending['terms'] && $acceptedTerms) {
             $this->terms->accept($user, $ip);
         }
+    }
+
+    /**
+     * Escribe el teléfono **solo si de verdad faltaba**, y devuelve si lo escribió.
+     *
+     * ⚠️⚠️ **Es el ÚNICO escritor de `users.phone` fuera del alta**, y existe separado de
+     * {@see settle()} porque tiene DOS llamantes que no se parecen: el checkout —donde lo teclea el
+     * cliente— y el asistente de pedido manual, donde lo teclea el OPERADOR con el cliente delante
+     * (`specs/telefono-del-cliente.md` §4.5). Lo que comparten es la única regla que importa aquí:
+     * *no se pisa un teléfono que ya existe*. Una segunda copia de esa frase es exactamente lo que
+     * este servicio nació para evitar — su propia cabecera lo cuenta.
+     *
+     * ⚠️ **El número se guarda TAL CUAL, recortado.** `CustomerRegistrar::normalizePhone()` NO vale
+     * para almacenar: su docblock dice que es «para COMPARAR, no para mostrar» y **quita el `+`**,
+     * así que guardar su salida dejaría el número fuera del alcance de la búsqueda de la puerta.
+     */
+    public function recordPhone(User $user, ?string $phone): bool
+    {
+        if (! $this->pendingFor($user)['phone'] || ! is_string($phone) || trim($phone) === '') {
+            return false;
+        }
+
+        $user->forceFill(['phone' => trim($phone)])->save();
+
+        return true;
     }
 }
