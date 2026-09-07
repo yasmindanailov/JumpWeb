@@ -107,7 +107,10 @@ class MeAccountContextTest extends ApiTestCase
                 'next_reservation' => null,
                 'pending_forms' => [],
                 'pending_forms_count' => 0,
-                'waiver' => ['mode' => 'externo', 'required' => false, 'pending' => false, 'outdated' => false, 'document_id' => null],
+                // `#441` · `dependents_pending` viaja SIEMPRE, y fuera del modo interno es `false`: la forma
+                // del contexto no cambia según el estado, que es lo que permite que el cliente la lea sin
+                // defenderse de claves ausentes.
+                'waiver' => ['mode' => 'externo', 'required' => false, 'pending' => false, 'outdated' => false, 'document_id' => null, 'dependents_pending' => false],
                 // `#349`: si le faltan las CONDICIONES antes de contratar. ⚠️ Aquí es `false` porque
                 // esta instalación **no ha publicado ninguna versión** — sin versión no hay nada que
                 // aceptar y la venta sigue. El caso que lo pone a `true` publica una.
@@ -136,7 +139,7 @@ class MeAccountContextTest extends ApiTestCase
         $user = $this->verifiedUser('Grace Hopper');
 
         $this->actingAs($user)->getJson(self::PATH)->assertOk()->assertValidResponse(200)
-            ->assertJsonPath('waiver', ['mode' => 'interno', 'required' => true, 'pending' => false, 'outdated' => false, 'document_id' => $document->id]);
+            ->assertJsonPath('waiver', ['mode' => 'interno', 'required' => true, 'pending' => false, 'outdated' => false, 'document_id' => $document->id, 'dependents_pending' => false]);
 
         app(WaiverSigner::class)->sign($user, $document, WaiverSignatureRequest::web('10.0.0.1', 'test'));
         // El servicio es un singleton memoizado POR PETICIÓN; en el test las tres peticiones
@@ -151,7 +154,7 @@ class MeAccountContextTest extends ApiTestCase
         ])->first();
         app()->forgetInstance(CustomerAccountContext::class);
         $this->actingAs($user)->getJson(self::PATH)->assertOk()
-            ->assertJsonPath('waiver', ['mode' => 'interno', 'required' => false, 'pending' => false, 'outdated' => true, 'document_id' => $v2->id]);
+            ->assertJsonPath('waiver', ['mode' => 'interno', 'required' => false, 'pending' => false, 'outdated' => true, 'document_id' => $v2->id, 'dependents_pending' => false]);
     }
 
     /** Un pack sin rellenar publica su formulario pendiente, con producto y destino. */

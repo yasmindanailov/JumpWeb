@@ -561,6 +561,13 @@ class SidebarMountTest extends TestCase
                 // su cuenta atrás y su límite, vive en el índice de la cuenta y NO se duplica
                 // (`#331`, «para no saturar»: son dos hechos y una sola acción del cliente).
                 'waiver_awaiting_verification',
+                // `#441` · el aviso del ÍNDICE cuando le falta la firma de un menor. ⚠️ Vive en este
+                // subgrupo y no en `privacy.waiver.*` porque su destino es la zona de MENORES: el de
+                // Privacidad lleva a donde el titular firma LA SUYA, y mandarle allí sería el
+                // callejón de `#329` por la otra puerta. ⚠️ El CTA NO tiene clave propia: reutiliza
+                // `title`, que ya viaja — el botón y la pantalla a la que lleva se llaman igual, y el
+                // presupuesto de textos lo paga cada página con sesión.
+                'waiver_pending_notice',
                 'waiver_current', 'waiver_outdated',
                 // Fase 6 · tanda 4 (`DECISIONES #202`): lo que la tarjeta de «Mis reservas» pinta de
                 // la asignación —el «Para:» y el despliegue—. ⚠️ Los rótulos del EMBUDO (el selector
@@ -850,8 +857,17 @@ class SidebarMountTest extends TestCase
         // rótulo del botón ya lo dice—. Los **12 B** que quedan por encima no salen de acortar el
         // rótulo a algo peor: eso sería pagar la claridad de una frase con doce bytes.
         // **10.050 deja 38 B**, la estrechez de siempre.
+        //
+        // ▶ **10.150 (`#441`)**: medido **10.101 B**. Entran TRES frases y las tres las lee el
+        // cliente: el aviso de que podrá firmar cuando verifique su correo (la que cierra el botón
+        // que solo podía dar 409), la CASILLA del alta —que es lo que convierte «declarar» y
+        // «aceptar» en un gesto— y el aviso del índice cuando le falta la firma de un menor.
+        // ⚠️ **Se PODÓ antes de subir**, como manda la línea de arriba: el CTA del aviso no tiene
+        // clave propia y reutiliza `dependents.title`, que ya viajaba (−35 B). Lo que queda no se
+        // acorta sin empeorarlo, que es exactamente lo que el párrafo anterior dice que no se hace.
+        // Deja **49 B**.
         $this->assertLessThan(
-            10050, $bytes,
+            10150, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

@@ -437,4 +437,42 @@ escenarios de `waiver:verify-chain` sobre InnoDB · Pint ✓ · `docs-check` ✓
    serie no aceptaba la exención. Actualizado, ahora mide **dos cosas** —el tope y que la firma se
    escriba DENTRO de la transacción del alta—: `firmas de menor: 2 (esperadas 2)`.
 
-▶ **Lo que queda**: T2 (el aviso del índice) y T3 (los dos plazos de retención).
+### 8.4 · ▶ T2 y T3 EJECUTADAS — el carril está CERRADO en código
+
+**T2 · el aviso del índice.** `account-context` gana `waiver.dependents_pending` y el cajón estrena un
+**TERCER estado** (`WAIVER_NOTICE_DEPENDENTS`) con destino a la zona de MENORES.
+
+⚠️⚠️ **No es una variante del `sign`, y el motivo es el destino**: aquél lleva a Privacidad, que es
+donde el titular firma LA SUYA. Mandarle allí por la de un menor sería el callejón de `#329`
+reconstruido por la otra puerta. ⚠️ Va **después** de la suya (`#331`, «para no saturar»): lo primero
+que tiene que resolver es su propia exención.
+
+⚠️ **Coste medido**: el contexto pasa de **7 a 8** consultas en cada página con sesión. Es **UNA**
+consulta (`EXISTS`, y solo en modo `interno`); la alternativa evidente —`WaiverStatus::forDependents()`—
+cuesta cuatro. ⚠️⚠️ **La vigencia no se redacta dos veces**: sale del mismo documento que el resto del
+bloque ya calcula.
+
+**T3 · los plazos.** `[DECIDIDO owner]` **60 y 60 meses** (art. 1964 CC; en el menor desde su 18.º
+cumpleaños, porque hasta entonces el plazo no corre). ⚠️ **No se siembran en el producto**: el plazo
+es criterio jurídico de cada instalación. Queda como **paso de despliegue** en
+`INSTALACION-CLIENTE.md`, y el `[PENDIENTE: owner]` de `WaiverSettings` se retira.
+
+**Verificación del carril completo**: suite **4.392** (27.197) · `DependentWaiverAtSignupTest` **19
+casos** · `dependents.test.js` **34** · `waiver.test.js` con el tercer estado ·
+`scripts/mutar-firma-al-declarar.sh` **19/19 muerden** · los TRES escenarios de `waiver:verify-chain`
+sobre InnoDB · Pint ✓ · `docs-check` ✓ · build ✓.
+
+⚠️⚠️ **Dos casos más nacieron sin morder y los dos los dijo la MUTACIÓN**, no la lectura:
+ · **el menor RETIRADO**: sin el filtro de activos, quien quitara a un menor sin firma se quedaría con
+   el aviso encendido **para siempre y sin forma de apagarlo** — la pantalla a la que le manda ya no
+   lo enseña;
+ · **la VIGENCIA del aviso**: sin ella, una firma de una versión anterior lo apagaría, que es
+   exactamente el caso recurrente que el aviso existe para cubrir.
+
+⚠️ **Trampa del arnés pagada**: `CustomerAccountContext` es SINGLETON y **memoiza por usuario**, así
+que dos peticiones del mismo caso comparten instancia y el CONTROL fallaba con el producto sano. En
+producción da igual —cada petición levanta su contenedor—. Es la trampa de `OperatingSchedule` de
+`#465`: *un caso que pregunta antes de sembrar mide el estado de antes.*
+
+▶ **Lo que queda del carril: nada de código.** Solo el OJO del owner y, al desplegar, las cuatro
+lecturas de §7 más los dos ajustes de retención.

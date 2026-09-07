@@ -5,6 +5,7 @@ import {
     WAIVER_NOTICE_VERIFY,
     waiverAwaitsVerification,
     waiverNeedsSignature,
+    WAIVER_NOTICE_DEPENDENTS,
     accountNoticeFrom,
     waiverStatusKey,
 } from './waiver.js';
@@ -130,6 +131,20 @@ describe('el aviso ÚNICO del índice, desde el contexto de cuenta', () => {
 
     test('y calla en el resto de casos, incluido un contexto sin waiver', () => {
         assert.equal(accountNoticeFrom({ email_verified: true, waiver: { mode: 'interno', required: false, outdated: false } }), null);
+
+        // `#441` · el TERCER estado: su exención está al día pero le falta la de un MENOR.
+        assert.deepEqual(
+            accountNoticeFrom({ email_verified: true, waiver: { mode: 'interno', required: false, outdated: false, dependents_pending: true } }),
+            { kind: WAIVER_NOTICE_DEPENDENTS, withWaiver: true },
+        );
+        // ⚠️ Y va DESPUÉS de la suya: con las dos pendientes gana la del titular, que es la que se
+        // resuelve en la pantalla desde la que luego llegará a sus menores (`#331`, «para no saturar»).
+        assert.equal(
+            accountNoticeFrom({ email_verified: true, waiver: { mode: 'interno', required: true, dependents_pending: true } }).kind,
+            'sign',
+        );
+        // ⚠️ Fuera del modo interno no dice nada, aunque el servidor mandara el campo.
+        assert.equal(accountNoticeFrom({ email_verified: true, waiver: { mode: 'externo', dependents_pending: true } }), null);
         assert.equal(accountNoticeFrom({ email_verified: true, waiver: { mode: 'externo', required: true } }), null);
         assert.equal(accountNoticeFrom({ email_verified: true }), null);
         assert.equal(accountNoticeFrom(null), null);

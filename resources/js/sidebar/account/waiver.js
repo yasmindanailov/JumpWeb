@@ -32,6 +32,16 @@ export const WAIVER_NOTICE_SIGN = 'sign';
 export const WAIVER_NOTICE_VERIFY = 'verify';
 
 /**
+ * ❗ `#441` · **falta la firma de un MENOR, no la del titular.**
+ *
+ * Es un TERCER estado y no una variante del `sign`, y el motivo es el destino: `sign` lleva a
+ * Privacidad, que es donde el titular firma LA SUYA. Reutilizarlo para un menor mandaría al cliente a
+ * una pantalla donde no está lo que le falta — y si además su correo no estuviera verificado, a una
+ * en la que tampoco puede hacer nada: **el callejón de `#329` reconstruido por la otra puerta**.
+ */
+export const WAIVER_NOTICE_DEPENDENTS = 'dependents';
+
+/**
  * La clave de `account.privacy.waiver.*` que describe el estado.
  *
  *  · `externo` → «lo gestiona el parque» (aquí solo hay sello, no hay nada que firmar);
@@ -122,7 +132,14 @@ export function accountNoticeFrom(context) {
 
     if (waiver?.mode !== 'interno') return null;
 
-    return (waiver.required === true || waiver.outdated === true)
-        ? { kind: WAIVER_NOTICE_SIGN, withWaiver: true }
+    if (waiver.required === true || waiver.outdated === true) {
+        return { kind: WAIVER_NOTICE_SIGN, withWaiver: true };
+    }
+
+    // ⚠️ **Va DESPUÉS de la suya y es un solo aviso, no dos** (`#331`, `[owner]`: «para no
+    // saturar»): lo primero que tiene que resolver es su propia exención, y quien la tenga
+    // pendiente la firma en la misma pantalla desde la que llegará a sus menores.
+    return waiver.dependents_pending === true
+        ? { kind: WAIVER_NOTICE_DEPENDENTS, withWaiver: true }
         : null;
 }

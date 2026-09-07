@@ -8,10 +8,12 @@ use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Identity\Services\CustomerAccountContext;
 use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\WaiverAcceptance;
 use App\Domain\Identity\Services\WaiverSignatureRequest;
+use App\Domain\Identity\Services\WaiverSigner;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
 use Illuminate\Auth\Events\Verified;
@@ -64,6 +66,18 @@ class DependentWaiverAtSignupTest extends TestCase
     private function request(): WaiverSignatureRequest
     {
         return WaiverSignatureRequest::web('10.0.0.7', 'test-agent');
+    }
+
+    /**
+     * ⚠️⚠️ **TRAMPA DEL ARNÉS, no del producto**: `CustomerAccountContext` se registra como SINGLETON
+     * y **memoiza por usuario**. En producción da igual —cada petición HTTP levanta su contenedor—,
+     * pero dentro de un caso las dos peticiones comparten instancia, así que la segunda devolvía la
+     * foto de ANTES de firmar y el CONTROL fallaba con el producto sano. Es la trampa de
+     * `OperatingSchedule` en `#465`: *un caso que pregunta antes de sembrar mide el estado de antes.*
+     */
+    private function forgetAccountContext(): void
+    {
+        $this->app->forgetInstance(CustomerAccountContext::class);
     }
 
     // ── 1 · Sin aceptar no se crea NADA ──────────────────────────────────────────────────────
@@ -336,7 +350,98 @@ class DependentWaiverAtSignupTest extends TestCase
         $this->assertSame(['dependent_id' => $dependent->id], $log->payload);
     }
 
-    // ── 6 · El sujeto que sobrevive: el menor HEREDADO ───────────────────────────────────────
+    // ── 6 · El aviso del índice (T2) ─────────────────────────────────────────────────────────
+
+    public function test_the_account_context_says_when_a_dependent_is_missing_its_signature(): void
+    {
+        // Hasta `#441` el índice miraba SOLO el waiver del titular, así que un menor sin firma no
+        // generaba aviso en ninguna parte: el cliente se enteraba al intentar asignarle una entrada
+        // o en la puerta del parque.
+        $this->mode('externo');
+        $holder = User::factory()->create(['email_verified_at' => now()]);
+        $heredado = $this->registry()->add($holder, 'Heredado', '2017-03-12', 'Gil', 'father');
+
+        $this->mode('interno');
+        $version = $this->publish();
+        // El titular firma la SUYA: sin esto ganaría su aviso, que va primero.
+        app(WaiverSigner::class)->sign($holder, $version, $this->request());
+
+        $this->actingAs($holder, 'sanctum')
+            ->getJson('/api/v1/me/account-context')
+            ->assertOk()
+            ->assertJsonPath('waiver.dependents_pending', true);
+
+        // CONTROL: en cuanto firma la del menor, el aviso se apaga. Sin esta mitad, un campo clavado
+        // a `true` pasaría el caso de arriba.
+        app(WaiverAcceptance::class)->acceptForDependent($holder, $heredado, (int) $version->id, $this->request());
+        $this->forgetAccountContext();
+
+        $this->actingAs($holder, 'sanctum')
+            ->getJson('/api/v1/me/account-context')
+            ->assertJsonPath('waiver.dependents_pending', false);
+    }
+
+    public function test_a_republished_text_makes_the_dependents_pending_again(): void
+    {
+        // ⚠️ **El caso RECURRENTE, y el que de verdad justifica el aviso**: publicar una versión
+        // nueva deja a TODOS los menores `outdated`, y `DependentAssigner` exige firma VIGENTE — así
+        // que ese día dejan de poder asignarse. Sin el aviso, el cliente lo descubre en el embudo.
+        $this->mode('interno');
+        $v1 = $this->publish();
+        $holder = User::factory()->create(['email_verified_at' => now()]);
+        $this->registry()->add($holder, 'Lior', '2017-03-12', 'Gil', 'father', $v1, $this->request());
+        app(WaiverSigner::class)->sign($holder, $v1, $this->request());
+
+        $this->actingAs($holder, 'sanctum')
+            ->getJson('/api/v1/me/account-context')
+            ->assertJsonPath('waiver.dependents_pending', false);
+
+        $this->publish();
+        $this->forgetAccountContext();
+
+        $this->actingAs($holder, 'sanctum')
+            ->getJson('/api/v1/me/account-context')
+            ->assertJsonPath('waiver.dependents_pending', true);
+    }
+
+    public function test_a_removed_dependent_never_keeps_the_notice_on(): void
+    {
+        // ⚠️⚠️ **El caso que faltaba, y lo dijo la MUTACIÓN.** Sin el filtro de activos, quien
+        // quitara a un menor sin firma se quedaría con el aviso encendido **para siempre y sin forma
+        // de apagarlo**: la pantalla a la que le manda ya no lo enseña, porque está retirado.
+        $this->mode('externo');
+        $holder = User::factory()->create(['email_verified_at' => now()]);
+        $heredado = $this->registry()->add($holder, 'Heredado', '2017-03-12', 'Gil', 'father');
+
+        $this->mode('interno');
+        $version = $this->publish();
+        app(WaiverSigner::class)->sign($holder, $version, $this->request());
+
+        // Con él activo el aviso está encendido: eso es lo que hace que la mitad de abajo signifique algo.
+        $this->actingAs($holder, 'sanctum')
+            ->getJson('/api/v1/me/account-context')
+            ->assertJsonPath('waiver.dependents_pending', true);
+
+        $heredado->unlink();
+        $this->forgetAccountContext();
+
+        $this->actingAs($holder, 'sanctum')
+            ->getJson('/api/v1/me/account-context')
+            ->assertJsonPath('waiver.dependents_pending', false);
+    }
+
+    public function test_outside_internal_mode_the_notice_never_fires(): void
+    {
+        $this->mode('externo');
+        $holder = User::factory()->create(['email_verified_at' => now()]);
+        $this->registry()->add($holder, 'Lior', '2017-03-12', 'Gil', 'father');
+
+        $this->actingAs($holder, 'sanctum')
+            ->getJson('/api/v1/me/account-context')
+            ->assertJsonPath('waiver.dependents_pending', false);
+    }
+
+    // ── 7 · El sujeto que sobrevive: el menor HEREDADO ───────────────────────────────────────
 
     public function test_a_dependent_declared_before_this_change_can_still_be_signed_later(): void
     {

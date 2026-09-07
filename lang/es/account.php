@@ -157,6 +157,7 @@ return [
             'remove_confirm' => '¿Quitar a :name de tu cuenta? Si firmaste el descargo en su nombre, ese registro se conserva.',
             'waiver_unsigned' => 'Descargo sin firmar en su nombre.',
             'waiver_awaiting_verification' => 'Podrás firmar su descargo en cuanto verifiques tu correo.',
+            'waiver_pending_notice' => 'Alguno de tus menores no tiene el descargo firmado.',
             'waiver_current' => 'Descargo firmado en su nombre, versión vigente (v:version).',
             'waiver_outdated' => 'versión anterior',
             // La asignación de ENTRADAS a menores en el embudo (tanda 4, `specs/menores-a-cargo.md`

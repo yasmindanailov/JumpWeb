@@ -16,11 +16,20 @@ use App\Domain\Platform\Models\Setting;
  * instalación existente no cambia de conducta al desplegar.
  *
  * `waiver.retention_months` — el plazo de conservación del registro firmado, también tras borrar la
- * cuenta. ❗ `[PENDIENTE: owner]` (criterio jurídico): sin valor NO se poda nada.
+ * cuenta. **Sin valor NO se poda nada**, y eso es lo correcto como default del PRODUCTO: el plazo es
+ * criterio jurídico de cada instalación, no una constante del software.
  *
  * `waiver.dependent_retention_months` — el plazo de la firma de un MENOR a cargo, contado desde su
- * 18.º cumpleaños (`DECISIONES #197`, `menores-a-cargo.md` §9.5·3). ❗ `[PENDIENTE: owner]` igual:
- * sin valor, ninguna firma de menor se poda.
+ * 18.º cumpleaños (`DECISIONES #197`, `menores-a-cargo.md` §9.5·3). Mismo criterio.
+ *
+ * ▶ **`[DECIDIDO owner, 2026-09-06]` para `playjump.es`: 60 y 60** (`#441`) — cinco años desde la
+ * firma, y en el menor cinco años desde que cumple 18. Se apoya en el plazo general de acciones
+ * personales del art. 1964 CC; en menores el plazo no corre hasta la mayoría de edad, que es
+ * exactamente por lo que esa columna se cuenta desde los 18.
+ * ⚠️⚠️ **Y pasó de deuda de fondo a REQUISITO DE SALIDA con `#441`**: desde que declarar un menor
+ * firma su exención, en modo `interno` **todo menor nuevo deja registro**, así que sin plazo la
+ * feature conserva datos de niños **sin fecha de caducidad**. Es un paso de despliegue por
+ * instalación, no un valor que el producto pueda dar por supuesto.
  */
 final class WaiverSettings
 {

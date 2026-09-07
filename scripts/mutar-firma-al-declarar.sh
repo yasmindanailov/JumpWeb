@@ -28,6 +28,7 @@ FICHEROS=(
     app/Domain/Identity/Models/Dependent.php
     app/Domain/Identity/Listeners/SignPendingWaiverOnVerification.php
     app/Http/Controllers/Api/V1/MeDependentsController.php
+    app/Domain/Identity/Services/CustomerAccountContext.php
 )
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
@@ -73,6 +74,7 @@ R=app/Domain/Identity/Services/DependentRegistry.php
 D=app/Domain/Identity/Models/Dependent.php
 L=app/Domain/Identity/Listeners/SignPendingWaiverOnVerification.php
 K=app/Http/Controllers/Api/V1/MeDependentsController.php
+X=app/Domain/Identity/Services/CustomerAccountContext.php
 
 # ── 1 · La decisión de QUÉ ofrecer ────────────────────────────────────────────────────────────
 mutar "la acción ignora el correo verificado (el defecto original)" "$M" \
@@ -168,6 +170,20 @@ mutar "la API acepta un texto CADUCADO (no comprueba vigencia)" "$K" \
   '            $waiver = \App\Domain\Identity\Models\LegalDocumentVersion::find((int) $data['"'"'waiver_document_id'"'"']);
 
             if (false) {'
+
+# ── T2 · el aviso del ÍNDICE ──────────────────────────────────────────────────────────────────
+mutar "el índice deja de mirar a los menores (el aviso no existe)" "$X" \
+  "                'dependentsPending' => \$vigente !== null && \$this->hasUnsignedDependents(\$user, \$vigente)," \
+  "                'dependentsPending' => false,"
+
+mutar "el aviso ignora la VIGENCIA: una firma vieja lo apaga" "$X" \
+  "                    ->where('waiver_signatures.legal_document_version_id', \$vigente->getKey());" \
+  "                    ->whereNotNull('waiver_signatures.legal_document_version_id');"
+
+mutar "el aviso cuenta también a los menores RETIRADOS" "$X" \
+  '            ->active()
+            ->whereNotExists(' \
+  '            ->whereNotExists('
 
 echo
 echo "── Veredicto: ${muerden}/${total} mutaciones muerden ──"

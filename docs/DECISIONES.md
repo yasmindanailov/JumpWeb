@@ -24890,4 +24890,31 @@ arnés: el `catch (Throwable)` deliberado absorbe el caso y solo cambia el log. 
 puso **ROJO al terminar la T1 y era correcto** — su sonda no aceptaba la exención; ahora mide también
 que la firma se escriba DENTRO de la transacción del alta.
 
-▶ **Quedan T2 (el aviso del índice) y T3 (los plazos de retención).**
+### ▶ T2 y T3 EJECUTADAS — el carril queda CERRADO en código
+
+**T2**: `account-context` gana `waiver.dependents_pending` y el cajón estrena un **TERCER estado** con
+destino a la zona de MENORES. ⚠️⚠️ **No es una variante del `sign`**: aquél lleva a Privacidad, donde
+el titular firma LA SUYA — mandarle allí por la de un menor sería el callejón de `#329` por la otra
+puerta. ⚠️ Coste medido: el contexto pasa de **7 a 8** consultas por página con sesión; es UNA
+(`EXISTS`, solo en `interno`) contra las cuatro de la alternativa evidente, y **la vigencia no se
+redacta dos veces**.
+
+**T3**: `[DECIDIDO owner]` **60 y 60 meses** (art. 1964 CC; en el menor desde los 18, porque hasta
+entonces el plazo no corre). ⚠️ **No se siembran en el producto** —el plazo es criterio jurídico de
+cada instalación— y quedan como paso de despliegue; el `[PENDIENTE: owner]` de `WaiverSettings` se
+retira.
+
+Suite **4.392** (27.197) · `DependentWaiverAtSignupTest` **19** · **19/19 mutaciones muerden** · los
+TRES escenarios sobre InnoDB · Pint · docs-check · build.
+
+⚠️⚠️ **Dos casos más nacieron sin morder y los dijo la mutación**: el menor **RETIRADO** —sin el
+filtro de activos, quien quitara a un menor sin firma se quedaba con el aviso encendido para siempre
+y sin forma de apagarlo— y la **VIGENCIA** del aviso, sin la cual una firma vieja lo apagaba, que es
+justo el caso recurrente que existe para cubrir.
+
+⚠️ **Trampa del arnés**: `CustomerAccountContext` es SINGLETON y memoiza por usuario, así que dos
+peticiones del mismo caso comparten instancia y el CONTROL fallaba con el producto sano. En producción
+da igual. Es la trampa de `OperatingSchedule` de `#465`.
+
+▶ **Del carril no queda código**: solo el OJO del owner y, al desplegar, las cuatro lecturas en
+producción más los dos ajustes de retención.

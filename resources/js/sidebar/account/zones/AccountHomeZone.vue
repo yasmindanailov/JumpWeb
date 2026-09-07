@@ -2,7 +2,7 @@
 import { useReservationsStore } from '../../stores/reservations.js';
 import { useAccountContextStore } from '../../stores/accountContext.js';
 import { HOME_ENTRIES, ZONES, titleKeyOf } from '../navigation.js';
-import { WAIVER_NOTICE_VERIFY, accountNoticeFrom } from '../waiver.js';
+import { WAIVER_NOTICE_DEPENDENTS, WAIVER_NOTICE_VERIFY, accountNoticeFrom } from '../waiver.js';
 import { useAuthStore } from '../../stores/auth.js';
 import { resendGate } from '../verify.js';
 import { signOut } from '../sign-out.js';
@@ -117,6 +117,19 @@ const leave = async () => {
 
         <p v-if="notice.withWaiver" class="auth__sub">{{ translate(account, 'account.privacy.waiver.status_awaiting_verification') }}</p>
     </template>
+
+    <!--
+      `#441` · falta la firma de un MENOR. ⚠️ **Va a la zona de MENORES y no a Privacidad**: allí
+      está la suya, no la de ellos — mandarle a una pantalla donde no está lo que le falta es el
+      callejón de `#329` por la otra puerta.
+    -->
+    <p v-else-if="notice?.kind === WAIVER_NOTICE_DEPENDENTS" class="auth__switch">
+        {{ translate(account, 'account.dependents.waiver_pending_notice') }}
+        <!-- ⚠️ El rótulo es el TÍTULO de la zona a la que lleva, que ya viaja en el montaje: el
+             botón y la pantalla a la que va se llaman igual (la regla del atajo «Mi QR») y el
+             presupuesto de textos no paga una clave más. -->
+        <button type="button" @click="emit('go', ZONES.DEPENDENTS)">{{ translate(account, 'account.dependents.title') }}</button>
+    </p>
 
     <p v-else-if="notice" class="auth__switch">
         {{ translate(account, 'account.privacy.waiver.pending_notice') }}

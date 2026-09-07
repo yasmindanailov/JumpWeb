@@ -3428,8 +3428,9 @@ components:
 
             `required`: modo interno y sin ninguna firma · `outdated`: firmado en una versión anterior
             del texto (en la puerta se deja pasar) · `document_id`: el texto vigente en este idioma,
-            para `POST /me/waiver` — el mismo id que publica `GET /legal/waiver`.
-          required: [mode, required, pending, outdated, document_id]
+            para `POST /me/waiver` — el mismo id que publica `GET /legal/waiver` ·
+            `dependents_pending`: le queda algún MENOR sin firma vigente (`#441`).
+          required: [mode, required, pending, outdated, document_id, dependents_pending]
           additionalProperties: false
           properties:
             mode:
@@ -3445,6 +3446,19 @@ components:
             document_id:
               type: integer
               nullable: true
+            dependents_pending:
+              type: boolean
+              description: |
+                `#441` — ¿le queda algún menor a cargo ACTIVO **sin firma de la versión vigente**?
+
+                Hasta esta tanda el índice de la cuenta miraba solo el waiver del TITULAR, así que un
+                menor sin firma no generaba aviso en ninguna parte: el cliente se enteraba al intentar
+                asignarle una entrada, o en la puerta del parque.
+
+                ⚠️ Cubre los dos casos que el producto deja vivos —el menor declarado antes de que
+                declarar exigiera aceptar, y el que queda `outdated` al publicarse un texto nuevo, que
+                es el recurrente porque el asignador exige firma VIGENTE—. Siempre `false` fuera del
+                modo `interno`.
         terms_pending:
           type: boolean
           description: |

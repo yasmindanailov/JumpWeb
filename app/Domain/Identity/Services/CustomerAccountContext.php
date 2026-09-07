@@ -5,7 +5,10 @@ namespace App\Domain\Identity\Services;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\PendingGuestForm;
 use App\Domain\Booking\Contracts\UpcomingReservation;
+use App\Domain\Identity\Models\Dependent;
+use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Models\WaiverSignature;
 
 /**
  * Contexto de cuenta del cliente para la web pública (#221): saludo, próxima reserva, número de
@@ -60,8 +63,34 @@ class CustomerAccountContext
      * ⚠️ Es una PISTA para saber qué pintar, nunca la autoridad: quien decide es el servidor al crear
      * el pedido (`OrdersController`), y por eso el cliente sabe además reaccionar a su 422.
      *
-     * @return array{firstName: string, emailVerified: bool, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, extrasInvite: ?array{productName: string, url: string}, waiver: array{mode: string, required: bool, pending: bool, outdated: bool, documentId: ?int}, termsPending: bool, termsUpdated: bool, phoneMissing: bool}
+     * @return array{firstName: string, emailVerified: bool, upcomingCount: int, nextReservation: ?UpcomingReservation, pendingForms: list<array{productName: string, url: string}>, pendingFormsCount: int, hasPendingForm: bool, extrasInvite: ?array{productName: string, url: string}, waiver: array{mode: string, required: bool, pending: bool, outdated: bool, documentId: ?int, dependentsPending: bool}, termsPending: bool, termsUpdated: bool, phoneMissing: bool}
      */
+    /**
+     * ¿Le queda algún menor ACTIVO sin firma de la versión vigente? (`#441`)
+     *
+     * Cubre los dos casos que el producto deja vivos: el menor declarado **antes** de que declarar
+     * exigiera aceptar, y el que queda `outdated` cuando se publica un texto nuevo —que es el
+     * recurrente, porque `DependentAssigner` exige firma VIGENTE y ese día los rechaza a todos—.
+     *
+     * ⚠️ `EXISTS` y no un recuento: la pregunta es «¿alguno?», y contar veinte menores para
+     * responderla sería trabajo que nadie mira.
+     */
+    private function hasUnsignedDependents(User $user, LegalDocumentVersion $vigente): bool
+    {
+        return Dependent::query()
+            ->where('user_id', $user->getKey())
+            ->active()
+            ->whereNotExists(function ($query) use ($user, $vigente): void {
+                $query->selectRaw('1')
+                    ->from('waiver_signatures')
+                    ->whereColumn('waiver_signatures.subject_id', 'dependents.id')
+                    ->where('waiver_signatures.subject_type', WaiverSignature::SUBJECT_DEPENDENT)
+                    ->where('waiver_signatures.user_id', $user->getKey())
+                    ->where('waiver_signatures.legal_document_version_id', $vigente->getKey());
+            })
+            ->exists();
+    }
+
     public function for(User $user): array
     {
         return $this->cache[$user->id] ??= $this->build($user);
@@ -81,7 +110,7 @@ class CustomerAccountContext
             'pendingFormsCount' => 0,
             'extrasInvite' => null,
             'hasPendingForm' => false,
-            'waiver' => ['mode' => WaiverSettings::MODE_EXTERNAL, 'required' => false, 'pending' => false, 'outdated' => false, 'documentId' => null],
+            'waiver' => ['mode' => WaiverSettings::MODE_EXTERNAL, 'required' => false, 'pending' => false, 'outdated' => false, 'documentId' => null, 'dependentsPending' => false],
             // ⚠️ **`false` es el respaldo SEGURO y no el cómodo** (`#349`): si el contexto se cae, el
             // cliente no pinta la casilla — y el pedido lo rechaza igualmente el SERVIDOR, que dice
             // qué falta. Al revés —pintarla por si acaso— se le pediría aceptar a quien ya aceptó.
@@ -95,14 +124,30 @@ class CustomerAccountContext
 
         try {
             $status = WaiverStatus::for($user);
+            $vigente = $status->mode === WaiverSettings::MODE_INTERNAL
+                ? LegalDocuments::current(WaiverSettings::SLUG, app()->getLocale())
+                : null;
+
             $context['waiver'] = [
                 'mode' => $status->mode,
                 'required' => $status->mode === WaiverSettings::MODE_INTERNAL && ! $status->signed,
                 'pending' => $user->waiver_pending_document_id !== null,
                 'outdated' => $status->isOutdated(),
-                'documentId' => $status->mode === WaiverSettings::MODE_INTERNAL
-                    ? LegalDocuments::current(WaiverSettings::SLUG, app()->getLocale())?->getKey()
-                    : null,
+                'documentId' => $vigente?->getKey(),
+                // `#441` · **si alguno de sus MENORES sigue sin firma vigente.** Hasta hoy el índice
+                // de la cuenta miraba solo el waiver del TITULAR, así que un menor sin firma no
+                // generaba ningún aviso en ninguna parte: el cliente se enteraba en el embudo —al
+                // intentar asignarle una entrada— o en la puerta del parque.
+                //
+                // ⚠️ **UNA consulta y solo en modo `interno`** (medido: el contexto pasa de 7 a 8 en
+                // cada página con sesión). La alternativa evidente, `WaiverStatus::forDependents()`,
+                // cuesta tres más el `SELECT` de los menores: cuatro sobre siete, en cada página, para
+                // un aviso.
+                // ⚠️⚠️ **La vigencia NO se redacta aquí**: sale de `$vigente`, que es el mismo
+                // documento que el resto del bloque usa. Una segunda definición de «firma al día»
+                // divergiría el día que alguien toque una — y aquí divergir significa avisar de algo
+                // que no pasa, o callar algo que sí.
+                'dependentsPending' => $vigente !== null && $this->hasUnsignedDependents($user, $vigente),
             ];
 
             // ⚠️ **La MISMA fuente que el controlador de pedidos** (`CheckoutDuties`): si esto y el

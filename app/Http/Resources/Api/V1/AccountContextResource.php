@@ -78,6 +78,11 @@ class AccountContextResource extends JsonResource
                 'pending' => (bool) ($context['waiver']['pending'] ?? false),
                 'outdated' => (bool) $context['waiver']['outdated'],
                 'document_id' => $context['waiver']['documentId'] === null ? null : (int) $context['waiver']['documentId'],
+                // `#441` · si alguno de sus MENORES sigue sin firma vigente. Va DENTRO de `waiver`
+                // porque es del mismo hecho —qué le falta a esta cuenta de la exención— y porque así
+                // el cliente lo lee del mismo sitio que el resto; el aviso del índice lo compone
+                // `account/waiver.js`.
+                'dependents_pending' => (bool) ($context['waiver']['dependentsPending'] ?? false),
             ],
             // `#349`: si le faltan las CONDICIONES antes de poder contratar. Es el mismo tipo de hecho
             // que `waiver.pending` y viaja por el mismo sitio.
