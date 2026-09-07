@@ -25025,3 +25025,61 @@ no exigirlo: parece una defensa.*
 extra» exige un producto propio de `duration_min = 120` — que es cómo el catálogo ya resuelve que KIDS
 y JUMP cuesten distinto (`#427`: el pivote no tiene columna de precio). **El precio**: `[DECIDIDO
 owner]` «lo que configure el dueño» — es catálogo, no código.
+
+## #444 · 2026-09-07 · `[DECIDIDO owner]` El cliente cambia el número de INVITADOS desde su post-formulario — subir Y bajar, con plazo, y el aforo se revalida bajo el mismo lock
+
+Encargo del owner, abierto desde el 2026-09-07 y diagnosticado en `ESTADO.md`: *«el cliente no puede
+añadir invitados desde el post-form»*. Diseño completo en **`specs/invitados-en-post-form.md`**.
+⬜ **Aquí se registran las DECISIONES; el código no está escrito.**
+
+### El hueco, reproducido
+
+Un `PUT` con 12 fichas sobre una línea de 8 **guarda 8 y descarta 4 en silencio**
+(`TicketType::sanitizeGuestData()` recorta a `quantity`), y la vista pinta exactamente `quantity`
+fichas sin botón de añadir. ⚠️ **Y no hay ni una frase que lo explique**: el post-form tiene
+«llámanos» para CINCO situaciones y ninguna para ésta.
+
+### Las cuatro del owner
+
+1. **Se puede SUBIR y BAJAR.** *«No hay arbitraje, no es un negocio de este estilo para que hagan
+   arbitraje; aparte lo ve el operador y hará algo al respecto.»*
+2. **Plazo**: hasta el que impone el parte de celebración, **un día antes como mínimo**.
+3. **Techo**: el `max_qty` del pack.
+4. **Basta con el libro**: sin correo al operador por ahora.
+
+### ❗❗❗ Lo que hace esto distinto de todo lo anterior del post-form
+
+**Es la primera vez que el cliente mueve AFORO por su cuenta.** `complementos-post-reserva.md` §4.3·5
+dejó fuera *a propósito* todo lo que ocupa —«esta feature no toca aforo, y esa es la mitad de su
+coste»—. Aquí no hay escapatoria, así que la revalidación va bajo el **MISMO `ZoneDaySlotLock`** que
+la compra y el panel, con el lock como **primera sentencia** (`AFORO-01`) y la secuencia financiera
+POST-COMMIT (la forma de `OrderItemEditor`, no la de `PostFormAddons`, que toma `orders` primero
+porque no toca aforo).
+
+⚠️⚠️ **Y eso mete un TERCER orden de bloqueo en el mismo guardado**, que ya encadena dos
+—`MixedPartySurcharge` (`order_items`→`orders`) y `PostFormAddons` (`orders`→`order_items`)—, **que ya
+se cruzan hoy sin esta feature**. Requisito de la primera tanda: **reproducirlo o descartarlo con dos
+conexiones reales antes de construir encima**, que es exactamente lo que `#413` tuvo que hacer cuando
+su spec afirmó que no había inversión posible.
+
+### El SUELO son TRES cosas y no una
+
+`max(min_qty del pack, menores a cargo asignados + justificantes firmados)`. Lo segundo cierra por su
+lado una ficha viva: bajar sin mirarlo deja la **hoja de sala imprimiendo plazas negativas**
+(reproducido: cantidad 1 con 3 menores asignados → **−2**). ⚠️ Y bajar del `min_qty` es una excepción
+del OPERADOR con permiso propio y rastro (`orders.edit_item_below_minimum`): **al cliente no se le da**.
+
+### Lo medido, que dice dónde está el valor y dónde el riesgo
+
+16 fiestas vivas · 8–20 invitados, mediana **13**, **2 ya en el techo** · **0 ediciones de cantidad**
+en seis días de operación real · 3 de 16 post-forms completos · **todos los pedidos son manuales**
+(la venta online está cerrada). ▶ **El valor está en cuando se abra la venta online; el riesgo es de
+hoy.** Por eso se construye entera y con su red —escenario propio de `purchase:verify-oversell` visto
+FALLAR— y no a medias.
+
+### Una corrección de `ESTADO.md` que salió al medir
+
+Decía que subir la cantidad desde el panel *«re-tarifica por `PAY-18`»*. **Medido: no.** Subir sin
+mover el día conserva la tarifa histórica de la línea, que es justo lo que `PAY-19` decidió («14,00 €
+y no 24,00 €»); la única excepción son los productos con **tramos de cantidad** (`#324`), y los dos
+packs de hoy tienen cero.
