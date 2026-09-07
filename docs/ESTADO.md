@@ -1,6 +1,49 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🚀 **EL 2026-09-06 SE DESPLEGÓ A PRODUCCIÓN** (`#431`, commit `612989a`): todo lo de septiembre está EN `playjump.es` —complementos de venta posterior, hora extra de entrada **y de pack**, el panel de admin nuevo y el arreglo de la oferta sin precio—, con la **compra online todavía CERRADA** (`sales.online_enabled = 0`), que es la ventana para verificar sin prisa. ▶ **LO QUE QUEDA ES DEL OWNER, y son TRES cosas, todas en el panel de PRODUCCIÓN**: **(1)** las **tres pasadas de la rejilla de media hora** (`PANEL-ADMIN.md` §4.1: los 7 días, `10:00`→`21:30`, duración **60**, cada **30**, «reemplazar» apagado) — es configuración y **no viaja en el despliegue**; **(2)** su **✅ por navegador** de la hora extra en el embudo, del post-form con la Tarta y del panel nuevo; **(3)** confirmar en el panel del hosting que **las dos líneas del cron siguen activas** (`#115`: el script avisa de que no ve demonio cron, y de ellas dependen los correos y la regeneración diaria de franjas). ▶ **NO hay nada a medias en el árbol**: las cinco tandas de la hora extra de pack están cerradas, la suite está verde y el despliegue, verificado. ▶ El detalle de la sesión, en el **punto A**; los dos carriles anteriores —**PANEL DE ADMIN** (`#460`–`#469`) y **COMPLEMENTOS / HORA EXTRA** (`#400`–`#419`)— en los puntos 0, 1 y 2; el carril de diseño sigue PARADO por el owner (`#452`). ⚠️ **La banda de este ordenador es ahora `#420`–`#429`, AGOTADA en `#429`; los `#430`/`#431` se tomaron del hueco siguiente — quien retome RESERVA banda antes de numerar** (`CONVENCIONES §10.6`).
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🚀 **EL 2026-09-07 SE DESPLEGÓ LA SESIÓN DE HOY** (`#440` + `#441`): el mostrador ya pide el teléfono que falta y **declarar un menor y aceptar su exención son un solo gesto**. ▶ **LO QUE QUEDA ES DEL OWNER, y son TRES cosas**: **(1)** su **✅ por navegador** de las dos features en `playjump.es` —el paso 1 del pedido manual con un cliente sin teléfono, y el alta de un menor con su casilla—; **(2)** las **tres pasadas de la rejilla de media hora** que siguen pendientes desde el 06-09 (`PANEL-ADMIN.md` §4.1); **(3)** confirmar que las dos líneas del cron del panel siguen activas (`#115`). ▶ ❗❗❗ **Y HAY UN ENCARGO ABIERTO, DIAGNOSTICADO Y SIN CONSTRUIR: el cliente NO puede añadir invitados desde el post-form.** Reproducido: manda 12 fichas para una línea de 10 y **se guardan 10, las dos de más se descartan en silencio** (`sanitizeGuestData()` recorta a `quantity` y la vista pinta exactamente `quantity` fichas, sin botón de añadir). ⚠️ **Lo que se resolvió en `#413` fueron los COMPLEMENTOS, no los invitados.** ⚠️⚠️ **Y no hay ni una frase que le diga qué hacer**: el post-form tiene «Llámanos» para CINCO situaciones (las tres de edad sin producto, el extra fuera de plazo y el que no se pudo cambiar) y ninguna para ésta. ▶ El camino existe pero pasa por el operador (subir la cantidad desde «Gestionar producto», que re-tarifica por `PAY-18` y revalida aforo). **`[owner, 2026-09-07]`: se itera el DISEÑO en otro chat**; ⚠️ ojo, la versión cara **es DINERO y AFORO** y choca con `#244` («cualquier gestión de dinero post-reserva ya cobrada se hace en las instalaciones»), así que es spec propia, no una pantalla.
+>
+> **A.0 · LA SESIÓN DEL 2026-09-07 — EL TELÉFONO EN EL MOSTRADOR Y LA EXENCIÓN AL DECLARAR UN MENOR**
+>    ▶ **Dos encargos del owner, los dos cerrados en código y desplegados** (`#440`, `#441`; banda
+>    `#440`–`#449`). Suite **4.392** · **11/11 y 19/19 mutaciones** · los TRES escenarios de
+>    `waiver:verify-chain` sobre InnoDB, **con el nuevo visto FALLAR**.
+>
+>    ⛔ **`#440` · CONSEGUIR EL TELÉFONO DE GOOGLE SE DESCARTA, y §3 de su spec conserva la medición**
+>    para que nadie lo relitigue: el `id_token` **no trae ningún claim de teléfono**, el ámbito que lo
+>    daría (`user.phonenumbers.read`) es **SENSIBLE** —verificación con vídeo, y mientras tanto
+>    pantalla de «app no verificada» y tope de 100 usuarios— y **el dato puede venir VACÍO**.
+>    ⚠️⚠️ **Además el mecanismo que se había escrito NO era implementable**: hay UNA sola ida a Google
+>    y login y registro **comparten botón** (`#350`), el ámbito es una **constante** que
+>    `authorizationUrl()` no recibe, y alta-vs-entrada **solo se sabe tras el canje**.
+>    ▶ **Lo que se construyó es el MOSTRADOR**: al elegir un cliente sin teléfono el paso 1 **retiene**
+>    y lo pide, y lo escrito se guarda **en la cuenta**. ⚠️⚠️ **Las puertas son CUATRO y lo midió la
+>    revisión**: `addLineToCart()` es público y **no mira el paso del cliente**, así que desde el paso 1
+>    metía la línea en el carrito **y movía `step` él mismo**. ⚠️ **`create()` AVISA Y COBRA, NO
+>    RECHAZA** (`[DECIDIDO owner]`, con caso propio): sería lo primero en la historia del panel capaz de
+>    tumbar una venta de mostrador por un teléfono. ▶ **Medido en producción: 75 de 229 clientes sin
+>    teléfono.** ⚠️ **No cierra el hueco de `EditUser`** —el panel sigue sin poder editar la ficha de un
+>    cliente—: ficha en `DEUDA.md`.
+>
+>    ❗❗❗ **`#441` · LA EXENCIÓN SE ACEPTA AL DECLARAR AL MENOR — y la revisión adversarial evitó un
+>    daño real.** La primera versión del diseño proponía RELAJAR la regla del correo verificado
+>    (`#179`) y la revisión **reprodujo el escenario**: un tercero abre cuenta con el correo de otra
+>    persona, declara **20 menores REALES** y los firma; cuando la víctima reclama su cuenta la defensa
+>    de `#342`/`#347` funciona **y le entrega los 20 con sus firmas intactas**, y **no puede
+>    deshacerlo** (con firma detrás `remove()` solo desvincula y `anonymize()` conserva, art. 17.3.e).
+>    **CONTROL: hoy, sin firma, se borran de verdad.** ▶ `[DECIDIDO owner]` se hace con la **ACEPTACIÓN
+>    RETENIDA**: si el correo está verificado se firma en el acto y si no **se retiene en la fila del
+>    menor** y se sella al verificar. **`#179` NO se relaja: se REUTILIZA**, y hay caso de CONTROL que
+>    lo fija.
+>    ▶ **Medido en producción ANTES de desplegar**: modo **`interno`**, v1 publicada, **243 menores
+>    activos, 94 SIN firma, de 60 titulares** — el encargo tenía sujeto real y grande. Esos 60 verán el
+>    aviso nuevo del índice; **nadie más entrará ya sin firmar**.
+>    ⚠️⚠️ **`waiver.retention_months` y `waiver.dependent_retention_months` SIGUEN EN `NULL` EN
+>    PRODUCCIÓN** y `[DECIDIDO owner]` valen **60 y 60**: es **REQUISITO DE SALIDA** de esta feature —
+>    sin ellos, cada menor declarado deja registro **sin fecha de caducidad** (`prunable()` devuelve
+>    literalmente `where 1 = 0`). **PASO MANUAL PENDIENTE.**
+>    ⚠️ **`DependentRegistry` entró en el `CRITICAL_RE`**: tocarlo exige ya `VERIFY_CONC=1`.
+>    ▶ **Y su lock sostenía un invariante que nadie había medido desde `#191`**: sin él, doce altas
+>    simultáneas dejan **31 menores con un tope de 20** (visto fallar; la suite es ciega porque SQLite
+>    no implementa locks).
 >
 > **A. LA SESIÓN DEL 2026-09-06 — REJILLA DE MEDIA HORA · HORA EXTRA DE PACK · DESPLIEGUE**
 >    ▶ **Resumen en tres líneas, por si no lees el resto**: (1) la rejilla de media hora está lista y
@@ -1640,7 +1683,10 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4358 en verde** (27.111 aserciones, 1 skipped a propósito), medida el **2026-09-06** sobre el
+> Suite **4392 en verde** (27.197 aserciones, 1 skipped a propósito), medida el **2026-09-07** sobre el
+> árbol con los dos carriles de esta sesión —**`#440` el teléfono en el mostrador (+10)** y **`#441`
+> la exención al declarar un menor (+24 PHP y +9 JS)**— encima de lo del 06-09, que es lo que sigue:
+> el mismo recuento de antes era **4358** (27.111) sobre el
 > árbol con **LOS DOS CARRILES FUSIONADOS**: las siete tandas del panel (`#461` +12 · `#462` +13 ·
 > `#463` +10 · `#464` +13 · `#465` +8 · `#466` +6 · `#467`, y **siete casos re-apuntados por sujeto**
 > al retirarse la tira de días y el *toast* del desenlace) **más las del carril de complementos**
