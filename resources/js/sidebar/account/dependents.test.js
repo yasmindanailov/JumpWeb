@@ -1,8 +1,10 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    DEPENDENTS_PER_PAGE, bornOnLabel, clampPage, coverageKey, dependentForm, dependentNeedsSignature,
-    dependentWaiverKey, dependentsPager, dependentsView, lastPageOf, pageSlice, replaceDependent,
+    DEPENDENTS_PER_PAGE, DEPENDENT_WAIVER_SIGN, DEPENDENT_WAIVER_VERIFY,
+    bornOnLabel, clampPage, coverageKey, dependentForm, dependentNeedsSignature,
+    dependentWaiverAction, dependentWaiverKey, dependentsPager, dependentsView, lastPageOf,
+    pageSlice, replaceDependent,
 } from './dependents.js';
 
 /**
@@ -56,6 +58,35 @@ describe('cuándo se ofrece firmar en su nombre', () => {
         assert.equal(dependentNeedsSignature(minor({ mode: 'externo' })), false);
         assert.equal(dependentNeedsSignature({ ...minor(), is_minor: false }), false);
         assert.equal(dependentNeedsSignature(null), false);
+    });
+});
+
+/**
+ * `#441` · **«falta firma» y «puede firmarla» no son la misma pregunta**, y confundirlas fue el
+ * defecto: `WaiverSigner` exige el correo del titular verificado para firmar por un menor a cargo,
+ * así que con el correo sin verificar la tarjeta ofrecía un botón que **solo podía devolver 409**.
+ * Es el mismo defecto que `#329` arregló para el TITULAR, que no pasó por esta puerta.
+ */
+describe('qué se le OFRECE en la tarjeta', () => {
+    test('con el correo verificado, firmar', () => {
+        assert.equal(dependentWaiverAction(minor(), true), DEPENDENT_WAIVER_SIGN);
+    });
+
+    test('❗ sin el correo verificado, VERIFICAR — nunca firmar', () => {
+        assert.equal(dependentWaiverAction(minor(), false), DEPENDENT_WAIVER_VERIFY);
+        assert.equal(dependentWaiverAction(minor({ signed: true, outdated: true }), false), DEPENDENT_WAIVER_VERIFY);
+    });
+
+    test('⚠️ sin contexto cargado (undefined) se ofrece FIRMAR: esconderlo a quien sí puede es peor', () => {
+        assert.equal(dependentWaiverAction(minor(), undefined), DEPENDENT_WAIVER_SIGN);
+    });
+
+    test('y si no falta firma, no se ofrece nada — tampoco verificar', () => {
+        // ⚠️ CONTROL: sin esta rama, un menor ya firmado le pediría al titular verificar su correo
+        // por una firma que no hace falta.
+        assert.equal(dependentWaiverAction(minor({ signed: true }), false), null);
+        assert.equal(dependentWaiverAction(minor({ mode: 'externo' }), false), null);
+        assert.equal(dependentWaiverAction(null, false), null);
     });
 });
 

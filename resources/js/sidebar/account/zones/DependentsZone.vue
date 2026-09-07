@@ -1,5 +1,6 @@
 <script setup>
 import { computed, nextTick, reactive, ref } from 'vue';
+import { useAccountContextStore } from '../../stores/accountContext.js';
 import { useDependentsStore } from '../../stores/dependents.js';
 import { useWaiverStore } from '../../stores/waiver.js';
 import ZoneLoading from '../ZoneLoading.vue';
@@ -70,10 +71,13 @@ store.ensure();
 const waiver = useWaiverStore();
 waiver.ensureLegal();
 
+// ⚠️ `#441` · si el titular puede FIRMAR depende de su correo verificado, y eso lo dice el contexto
+// de cuenta —el mismo que gobierna el aviso del índice—, no la respuesta de menores. Sin él, la
+// tarjeta ofrecía casilla y botón a quien solo podía recibir un 409.
+const context = useAccountContextStore();
+
 /** Página y formulario desplegado, con sus transiciones (`account/dependents.js`). */
 const view = reactive(dependentsView());
-/** Sube cada vez que el texto se relee tras un 409: las tarjetas desmarcan su casilla al verlo cambiar. */
-const rereadToken = ref(0);
 const nameInput = ref(null);
 
 const a = (key) => translate(props.account, key);
@@ -107,7 +111,7 @@ async function remove(dependent) {
 async function sign(dependent) {
     const { ok, stale } = await store.signWaiver({ id: dependent.id, documentId: waiver.currentDocumentId }, ctx());
 
-    if (! ok && stale) { await waiver.reloadLegal(); rereadToken.value += 1; }
+    if (! ok && stale) { await waiver.reloadLegal(); view.rereadDocument(); }
 }
 </script>
 
@@ -206,7 +210,8 @@ async function sign(dependent) {
                 :signing="store.signingId === dependent.id"
                 :removing="store.removingId === dependent.id"
                 :signed-ok="store.signedId === dependent.id"
-                :reread="rereadToken"
+                :reread="view.reread"
+                :email-verified="context.emailVerified"
                 @remove="remove(dependent)"
                 @sign="sign(dependent)" />
 

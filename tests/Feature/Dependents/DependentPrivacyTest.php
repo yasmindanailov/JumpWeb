@@ -17,6 +17,7 @@ use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\WaiverSignatureRequest;
 use App\Domain\Identity\Services\WaiverSigner;
+use App\Domain\Platform\Models\Setting;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Console\Scheduling\Schedule;
@@ -46,6 +47,13 @@ class DependentPrivacyTest extends TestCase
     private function add(User $holder, string $name, string $bornOn): Dependent
     {
         return app(DependentRegistry::class)->add($holder, $name, $bornOn);
+    }
+
+    /** El modo del subsistema. Sin fila, `WaiverSettings::mode()` cae a `externo`. */
+    private function mode(string $mode): void
+    {
+        Setting::updateOrCreate(['key' => 'waiver.mode'], ['value' => $mode, 'group' => 'waiver']);
+        Setting::flushMemo();
     }
 
     private function signFor(User $holder, Dependent $dependent): WaiverSignature
@@ -164,6 +172,39 @@ class DependentPrivacyTest extends TestCase
         $this->assertSame(0, $anonymised->dependents()->active()->count());
         $this->assertFalse($anonymised->anonymize(), 'sigue siendo idempotente');
         $this->assertDatabaseHas('dependents', ['id' => $signed->id]);
+    }
+
+    /**
+     * ❗❗ **`#441` · EL MISMO CASO EN MODO `interno`, QUE ES EL DE PRODUCCIÓN.**
+     *
+     * ⚠️⚠️ **Este fichero nunca fijaba `waiver.mode`, y sin fila `WaiverSettings::mode()` cae a
+     * `externo`** — así que todo lo que mide se medía en un mundo que no es el de la instalación
+     * real. La rama «sin firma → se borra» seguiría en VERDE mientras producción se comporta al
+     * revés. Es el modo de fallo de `#329`: *el defecto vive en el estado que la suite no monta.*
+     *
+     * ▶ **Y este caso está escrito para CAMBIAR con la T1**, a propósito. Hoy declarar un menor no
+     * acepta nada, así que «lo declaré por error y lo quito» **no deja ni un byte**. Cuando el alta
+     * acepte la exención, en `interno` con versión publicada todo menor nuevo tendrá firma detrás y
+     * esta rama dejará de alcanzarse por ese camino: el caso tendrá que **reescribirse con su
+     * premisa nueva** —no borrarse— y ese es justo el momento en que alguien tiene que mirar de
+     * frente el cambio de POBLACIÓN del art. 17.3.e que `#441` §5.1 describe.
+     */
+    public function test_today_declaring_and_removing_leaves_nothing_even_in_internal_mode(): void
+    {
+        $this->mode('interno');
+        app(LegalDocumentPublisher::class)->publish('waiver', [
+            'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
+        ]);
+
+        $holder = User::factory()->create();
+        $porError = $this->add($holder, 'Declarado por error', '2017-03-12');
+
+        // Ninguna firma nace del alta: es lo que la T1 cambia.
+        $this->assertSame(0, WaiverSignature::query()->where('subject_id', $porError->id)->count());
+
+        app(DependentRegistry::class)->remove($holder, (int) $porError->getKey());
+
+        $this->assertDatabaseMissing('dependents', ['id' => $porError->id]);
     }
 
     /** `RGPD-04` / spec §5 — el documento de portabilidad lleva las activas, y solo las activas. */

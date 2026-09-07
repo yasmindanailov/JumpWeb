@@ -80,6 +80,39 @@ export function dependentNeedsSignature(dependent) {
         && (waiver.signed !== true || waiver.outdated === true);
 }
 
+/** Hay algo que firmar y esta cuenta PUEDE firmarlo. */
+export const DEPENDENT_WAIVER_SIGN = 'sign';
+
+/** Hay algo que firmar y primero hay que verificar el correo. */
+export const DEPENDENT_WAIVER_VERIFY = 'verify';
+
+/**
+ * ❗❗❗ **QUÉ SE LE OFRECE al titular en la tarjeta de un menor — `#441`, y es un ESTADO, no un
+ * booleano.**
+ *
+ * `dependentNeedsSignature()` contesta *«¿falta firma?»*, que no es lo mismo que *«¿puede firmarla
+ * ahora?»*: `WaiverSigner` exige el correo del titular verificado para firmar por un menor a cargo,
+ * y hasta hoy esta pantalla no lo miraba. **Reproducido con control**: la tarjeta ofrecía casilla y
+ * botón, y el `POST` respondía **409 `waiver_email_unverified`**; con el correo verificado, 201.
+ *
+ * ▶ *Es el mismo defecto que `#329` arregló para el waiver del TITULAR* —«un botón que no puede
+ * funcionar»— **vivo en la tarjeta del MENOR**, que es la puerta por la que aquella corrección no
+ * pasó. Y no es una ventana de dos minutos: se puede iniciar sesión sin verificar, así que quien no
+ * abre el correo lo ve cada vez que entra.
+ *
+ * ⚠️ **`=== false` y no `!`**, igual que {@link accountNoticeFrom}: con el contexto aún sin cargar
+ * (`undefined`) se ofrece FIRMAR. Suponer lo peor escondería la acción a quien sí puede hacerla.
+ *
+ * @param {{is_minor?: boolean, waiver?: object}|null} dependent
+ * @param {boolean|undefined} emailVerified  el `email_verified` del contexto de cuenta
+ * @returns {'sign'|'verify'|null}
+ */
+export function dependentWaiverAction(dependent, emailVerified) {
+    if (! dependentNeedsSignature(dependent)) return null;
+
+    return emailVerified === false ? DEPENDENT_WAIVER_VERIFY : DEPENDENT_WAIVER_SIGN;
+}
+
 /**
  * La clave del aviso de COBERTURA, o `''`. Hoy solo uno: «ya tiene 18 años» (§4.1: la fila
  * sobrevive a la mayoría de edad y se MARCA, no se borra).
@@ -252,6 +285,22 @@ export function dependentsView(perPage = DEPENDENTS_PER_PAGE) {
 
         /** Lo que se está tecleando. Vive aquí y no en el store: no es del servidor. */
         form: dependentForm(),
+
+        /**
+         * Sube cada vez que el texto firmable se RELEE tras un 409: las tarjetas desmarcan su
+         * casilla al verlo cambiar (CAJ-3, `#175`) — lo que se leyó ya no es lo que se firma.
+         *
+         * ⚠️ Vive aquí y no como un `ref()` suelto en la zona porque **es estado de la PANTALLA**,
+         * como la página y el formulario desplegado; y porque el componente tiene techo de líneas
+         * (`CE-6`) y un `ref` más lo pasaba. *Subir el techo en vez de colocar el estado donde le
+         * toca es exactamente lo que ese gate existe para impedir.*
+         */
+        reread: 0,
+
+        /** El texto se releyó: las casillas marcadas dejan de valer. */
+        rereadDocument() {
+            this.reread += 1;
+        },
 
         /** Despliega el alta con el formulario limpio. */
         open() {

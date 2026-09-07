@@ -51,6 +51,15 @@ export const useAccountContextStore = defineStore('accountContext', {
          */
         termsPending: (state) => state.context?.terms_pending === true,
         phoneMissing: (state) => state.context?.phone_missing === true,
+
+        /**
+         * ⚠️ `#441` · **TRES estados, no dos**, y por eso NO sigue el `=== true` de sus hermanos:
+         * `undefined` («aún no hay contexto») tiene que poder distinguirse de `false` («el correo no
+         * está verificado»). Quien lo consume ofrece la acción cuando no lo sabe —esconderla a quien
+         * sí puede firmar es peor que enseñarla a quien no—, que es el mismo criterio de
+         * `accountNoticeFrom()`.
+         */
+        emailVerified: (state) => state.context?.email_verified,
     },
 
     actions: {

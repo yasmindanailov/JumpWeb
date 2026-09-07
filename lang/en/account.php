@@ -138,6 +138,7 @@ return [
             'removing' => 'Removing…',
             'remove_confirm' => 'Remove :name from your account? If you signed the waiver on their behalf, that record is kept.',
             'waiver_unsigned' => 'Waiver not signed on their behalf.',
+            'waiver_awaiting_verification' => 'You will be able to sign their waiver as soon as you verify your email.',
             'waiver_current' => 'Waiver signed on their behalf, current version (v:version).',
             'waiver_outdated' => 'earlier version',
             // Assigning TICKETS to minors in the funnel (batch 4): the picker in steps 3 and 4, the

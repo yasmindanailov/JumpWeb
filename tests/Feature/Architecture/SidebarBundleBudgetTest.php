@@ -702,8 +702,18 @@ class SidebarBundleBudgetTest extends TestCase
      * ajusta cuando el gasto baja no es un presupuesto, es un techo histórico.* Quedan **0,53 KiB**.
      * ⚠️ Y se mide **después del último cambio**, que es la lección de `#349` de aquí arriba: la
      * cifra sale de reconstruir los dos bundles con el árbol tal y como se empuja.
+     *
+     * ▶ **276 (`#441`, la T0 del waiver del menor)**: medido **275,27 KiB**. Lo que entra es el
+     * estado que faltaba en la tarjeta de un menor —`dependentWaiverAction()` con sus dos
+     * constantes, el getter `emailVerified` del contexto y el aviso— para dejar de ofrecer un botón
+     * que **solo podía devolver 409**.
+     * ⚠️⚠️ **Se PODÓ antes de subir, y la poda la exigió otro gate**: `SidebarComponentBudgetTest`
+     * puso la zona en **41 líneas sobre un techo de 40**, y la respuesta no fue subir aquel techo
+     * sino mudar el `rereadToken` —que es estado de PANTALLA— al `dependentsView()` del módulo
+     * plano, donde ya viven la página y el formulario desplegado. *Subir un techo después de extraer
+     * no es lo mismo que subirlo en vez de extraer* (`#349`). Quedan **0,73 KiB**.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 275;
+    private const SIDEBAR_CHUNK_MAX_KB = 276;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

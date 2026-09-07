@@ -2,11 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Identity\Exceptions\DependentsLimitReachedException;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\GuardianAuthorization;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Identity\Services\DependentRegistry;
+use App\Domain\Identity\Services\DependentSettings;
 use App\Domain\Identity\Services\GuardianAuthorizationSigner;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\LegalDocuments;
@@ -15,6 +18,7 @@ use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Identity\Services\WaiverSignatureRequest;
 use App\Domain\Identity\Services\WaiverSigner;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -38,6 +42,14 @@ use Illuminate\Support\Str;
  *    `GuardianAuthorizationSigner`. Fuerza DOS cosas a la vez: la idempotencia de la firma **y** la
  *    carrera contra el `UNIQUE (order_item_id, minor_key)` de la autorización, que sin el lock daría un
  *    error de clave duplicada en vez de encontrar la fila.
+ *  - **`dependent`** (`#441`): N ALTAS simultáneas de menores del mismo titular **contra el último
+ *    hueco del tope**. ⚠️⚠️ **Su propiedad NO es la idempotencia, es la EXCLUSIÓN**: exactamente uno
+ *    entra y los demás reciben el tope. Sin el lock de `DependentRegistry::add()` todos leen el mismo
+ *    recuento, todos lo pasan y la cuenta acaba **por encima del máximo** — sin error y sin aviso.
+ *    ▶ Entra ahora porque **el tope de menores nunca se había medido sobre InnoDB** (deuda desde
+ *    `#191`: la suite es ciega por construcción, `SQLiteGrammar::compileLock()` devuelve cadena
+ *    vacía), y porque la T1 de `#441` va a meter la FIRMA dentro de esa misma transacción: el
+ *    instrumento tiene que existir ANTES del cambio o mediría el reposo, no el efecto.
  *
  * ⚠️⚠️ **El escenario obvio para el sujeto nuevo NO MUERDE, y es la trampa que este fichero ya
  * documentaba en `#197` para el caso anterior**: N padres DISTINTOS del mismo pedido son N cadenas de
@@ -50,11 +62,11 @@ use Illuminate\Support\Str;
  */
 class VerifyWaiverChainConcurrency extends Command
 {
-    private const SCENARIOS = ['holder', 'guest'];
+    private const SCENARIOS = ['holder', 'guest', 'dependent'];
 
     protected $signature = 'waiver:verify-chain
         {--workers=8 : Nº de firmas concurrentes (procesos) del MISMO sujeto}
-        {--scenario=holder : holder | guest — qué sujeto firman los procesos}
+        {--scenario=holder : holder | guest | dependent — qué hacen los procesos a la vez}
         {--keep : No borrar los datos de prueba al terminar}';
 
     protected $description = 'Verifica empíricamente (fork real + MySQL InnoDB) que N firmas simultáneas del mismo sujeto producen UNA sola fila (idempotencia bajo el lock) y cadenas lineales por sujeto. Dos escenarios: `holder` y `guest` (justificante de menor invitado). Solo dev/local.';
@@ -92,24 +104,39 @@ class VerifyWaiverChainConcurrency extends Command
             .($seed['order_item_id'] !== null ? " · reserva #{$seed['order_item_id']}" : '')
             ." · versión firmable v{$seed['version']->version}·{$seed['version']->locale} (#{$seed['version']->getKey()}).");
 
-        // La guarda del instrumento: una firma EN SERIE tiene que funcionar. Si no, lo que fallara
-        // abajo no sería la carrera, y el verificador estaría midiendo otra cosa. Se firma en nombre
-        // del MENOR A CARGO: así la cadena del sujeto de la carrera parte de cero, y la del menor
-        // queda aparte para comprobar que las cadenas verifican por separado.
+        // La guarda del instrumento: el gesto que se va a correr en paralelo tiene que funcionar EN
+        // SERIE. Si no, lo que fallara abajo no sería la carrera, y el verificador estaría midiendo
+        // otra cosa.
+        //
+        // ⚠️ **Y el gesto NO es el mismo en los tres escenarios.** En `holder`/`guest` se firma en
+        // nombre del MENOR A CARGO —así la cadena del sujeto de la carrera parte de cero y la del
+        // menor queda aparte—; en `dependent` se DECLARA un menor, que además **consume el penúltimo
+        // hueco del tope y deja exactamente uno** para que los workers se lo disputen. Una sonda que
+        // no gaste el hueco dejaría a la carrera sin nada que disputar.
         try {
-            app(WaiverSigner::class)->sign(
-                $seed['user'],
-                $seed['version'],
-                WaiverSignatureRequest::api('127.0.0.1', 'waiver:verify-chain/probe')->forDependent((int) $seed['dependent']->getKey()),
-            );
+            if ($scenario === 'dependent') {
+                app(DependentRegistry::class)->add(
+                    $seed['user'],
+                    'Sonda en serie',
+                    now()->subYears(7)->toDateString(),
+                );
+            } else {
+                app(WaiverSigner::class)->sign(
+                    $seed['user'],
+                    $seed['version'],
+                    WaiverSignatureRequest::api('127.0.0.1', 'waiver:verify-chain/probe')->forDependent((int) $seed['dependent']->getKey()),
+                );
+            }
         } catch (\Throwable $e) {
-            $this->error('El escenario NO permite firmar ni una vez: '.$e->getMessage());
+            $this->error('El escenario NO permite hacer el gesto ni una vez EN SERIE: '.$e->getMessage());
             $this->cleanup($seed, $resultsDir);
 
             return self::FAILURE;
         }
 
-        $this->line("Disparando <fg=yellow>{$workers}</> firmas <options=bold>CONCURRENTES</> del mismo sujeto sobre {$driver}…");
+        $gesto = $scenario === 'dependent' ? 'altas de menor' : 'firmas';
+        $sujeto = $scenario === 'dependent' ? 'del mismo TITULAR contra el último hueco del tope' : 'del mismo sujeto';
+        $this->line("Disparando <fg=yellow>{$workers}</> {$gesto} <options=bold>CONCURRENTES</> {$sujeto} sobre {$driver}…");
 
         try {
             $this->forkWorkers($seed, $scenario, $workers, microtime(true) + 0.5, $resultsDir);
@@ -157,6 +184,21 @@ class VerifyWaiverChainConcurrency extends Command
                 'name' => 'Menor del verificador',
                 'born_on' => now()->subYears(9)->toDateString(),
             ]);
+
+            // `dependent` (`#441`): se rellena la cuenta hasta dejar **DOS** huecos — la sonda en
+            // serie gasta uno y la carrera se disputa el último. ⚠️ El número sale del AJUSTE, no de
+            // un literal: si el parque baja el tope, el escenario se adapta en vez de sembrar de más
+            // y medir el rechazo del cupo en vez de la carrera.
+            if ($scenario === 'dependent') {
+                $relleno = max(0, DependentSettings::maxPerAccount() - 3);   // −1 el menor base, −2 los huecos
+                for ($n = 0; $n < $relleno; $n++) {
+                    Dependent::create([
+                        'user_id' => (int) $user->getKey(),
+                        'name' => 'Relleno '.$n,
+                        'born_on' => now()->subYears(10)->toDateString(),
+                    ]);
+                }
+            }
 
             $reservationId = null;
             if ($scenario === 'guest') {
@@ -234,7 +276,17 @@ class VerifyWaiverChainConcurrency extends Command
                     $version = LegalDocumentVersion::findOrFail($seed['version']->getKey());
                     $request = WaiverSignatureRequest::web('127.0.0.1', "waiver:verify-chain/{$i}");
 
-                    if ($scenario === 'guest') {
+                    if ($scenario === 'dependent') {
+                        // Cada proceso intenta declarar un menor DISTINTO: lo que se disputan no es
+                        // una fila concreta, es **el último hueco del tope**. Por eso el desenlace
+                        // esperado no es «todos devuelven lo mismo» sino «solo uno entra».
+                        $nuevo = app(DependentRegistry::class)->add(
+                            $holder,
+                            'Carrera '.$i,
+                            now()->subYears(6)->toDateString(),
+                        );
+                        $outcome = 'added:'.$nuevo->getKey();
+                    } elseif ($scenario === 'guest') {
                         // El MISMO menor y el MISMO adulto en todos los procesos: la propiedad es que
                         // solo se cree UNA autorización y se escriba UNA firma. Sin el lock, unos se
                         // estrellan contra el UNIQUE y otros bifurcan la cadena.
@@ -260,6 +312,10 @@ class VerifyWaiverChainConcurrency extends Command
                         $signature = app(WaiverSigner::class)->sign($holder, $version, $request);
                         $outcome = 'signed:'.$signature->getKey();
                     }
+                } catch (DependentsLimitReachedException) {
+                    // El desenlace CORRECTO para los que pierden la carrera del tope: no es un error
+                    // del instrumento, es la propiedad que se está midiendo.
+                    $outcome = 'limit';
                 } catch (\Throwable $e) {
                     $outcome = 'EXCEPTION: '.$e->getMessage();
                 }
@@ -281,6 +337,10 @@ class VerifyWaiverChainConcurrency extends Command
     {
         $outcomes = collect(File::files($resultsDir))
             ->map(fn ($file): string => trim(File::get($file->getPathname())));
+
+        if ($scenario === 'dependent') {
+            return $this->evaluateDependentRace($seed, $workers, $outcomes);
+        }
         $signed = $outcomes->filter(fn (string $o): bool => str_starts_with($o, 'signed:'));
         $errors = $outcomes->reject(fn (string $o): bool => str_starts_with($o, 'signed:'));
         $distinctIds = $signed->map(fn (string $o): string => mb_substr($o, 7))->unique();
@@ -332,6 +392,56 @@ class VerifyWaiverChainConcurrency extends Command
             $this->info("✅ PASA ({$scenario}): bajo {$workers} firmas concurrentes del mismo sujeto hay UNA sola fila —idempotencia bajo el lock— y las {$expectedChains} cadenas verifican. Verificado sobre InnoDB real.");
         } else {
             $this->error('❌ FALLA: firmas duplicadas, autorización duplicada o cadena rota. Revisar que el lockForUpdate() de la fila del titular sea la PRIMERA sentencia de la transacción de WaiverSigner (y de GuardianAuthorizationSigner).');
+        }
+
+        return $ok;
+    }
+
+    /**
+     * **La carrera por el ÚLTIMO HUECO del tope** (`#441`), que mide una propiedad DISTINTA de las
+     * otras dos: no idempotencia —cada proceso declara un menor distinto—, sino **EXCLUSIÓN**.
+     *
+     * ⚠️⚠️ **Sin el `lockForUpdate()` de `DependentRegistry::add()` esto no falla, SOBREVENDE**: los N
+     * procesos leen el mismo recuento, los N lo comparan contra el mismo máximo, los N lo pasan y la
+     * cuenta acaba por encima del tope. No hay excepción, no hay log y la fila de más es válida —
+     * exactamente la familia de `AFORO-01`, aplicada a una tabla que no es aforo.
+     *
+     * ⚠️ El veredicto mira el ESTADO FINAL y no solo los desenlaces: un `add()` que devolviera sin
+     * escribir daría «1 entra, N-1 al tope» y estaría igual de roto.
+     *
+     * @param  array{user:User, dependent:Dependent}  $seed
+     * @param  Collection<int, string>  $outcomes
+     */
+    private function evaluateDependentRace(array $seed, int $workers, $outcomes): bool
+    {
+        $added = $outcomes->filter(fn (string $o): bool => str_starts_with($o, 'added:'));
+        $limited = $outcomes->filter(fn (string $o): bool => $o === 'limit');
+        $errors = $outcomes->reject(fn (string $o): bool => str_starts_with($o, 'added:') || $o === 'limit');
+
+        $max = DependentSettings::maxPerAccount();
+        $final = Dependent::query()->where('user_id', $seed['user']->getKey())->active()->count();
+        $chain = WaiverChain::verify(User::findOrFail($seed['user']->getKey()));
+
+        $this->newLine();
+        $this->line('<options=bold>Resultados de las altas concurrentes:</>');
+        $this->line('  '.$added->count().'× declaran un menor (esperado 1) · '.$limited->count().'× reciben el tope (esperado '.($workers - 1).')');
+        if ($errors->isNotEmpty()) {
+            $this->line('  <fg=red>'.$errors->count().'× desenlace inesperado</>');
+            $errors->each(fn (string $e) => $this->line('     '.$e));
+        }
+        $this->line("  menores ACTIVOS al terminar: {$final} · tope: {$max} · cadena del titular: ".($chain['ok'] ? 'OK' : 'ROTA'));
+
+        $ok = $added->count() === 1
+            && $limited->count() === $workers - 1
+            && $errors->isEmpty()
+            && $final === $max
+            && $chain['ok'];
+
+        $this->newLine();
+        if ($ok) {
+            $this->info("✅ PASA (dependent): con {$workers} altas simultáneas por el ÚLTIMO hueco entra UNA sola y la cuenta queda exactamente en el tope ({$max}). Verificado sobre InnoDB real.");
+        } else {
+            $this->error("❌ FALLA: la cuenta quedó en {$final} con un tope de {$max}, o los desenlaces no cuadran. Revisar que el lockForUpdate() de la fila del titular sea la PRIMERA sentencia de la transacción de DependentRegistry::add().");
         }
 
         return $ok;

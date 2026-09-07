@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { bornOnLabel, coverageKey, dependentNeedsSignature, dependentWaiverKey } from '../dependents.js';
+import { DEPENDENT_WAIVER_SIGN, DEPENDENT_WAIVER_VERIFY, bornOnLabel, coverageKey, dependentWaiverAction, dependentWaiverKey } from '../dependents.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 
 /**
@@ -26,6 +26,11 @@ const props = defineProps({
     removing: { type: Boolean, default: false },
     signedOk: { type: Boolean, default: false },
     reread: { type: Number, default: 0 },
+    /**
+     * ⚠️ `#441` · si el correo del titular está verificado. Lo dice el CONTEXTO DE CUENTA, no esta
+     * tarjeta: sin él se ofrecía un botón que solo podía devolver 409.
+     */
+    emailVerified: { type: Boolean, default: undefined },
 });
 
 const emit = defineEmits(['remove', 'sign']);
@@ -36,7 +41,9 @@ watch(() => props.reread, () => { accept.value = false; });
 const a = (key) => translate(props.account, key);
 const waiverText = computed(() => translateWith(props.account, dependentWaiverKey(props.dependent), { version: props.dependent.waiver?.version ?? '' }));
 const coverage = computed(() => coverageKey(props.dependent));
-const canSign = computed(() => dependentNeedsSignature(props.dependent) && props.document !== null);
+const action = computed(() => dependentWaiverAction(props.dependent, props.emailVerified));
+const canSign = computed(() => action.value === DEPENDENT_WAIVER_SIGN && props.document !== null);
+const mustVerify = computed(() => action.value === DEPENDENT_WAIVER_VERIFY);
 </script>
 
 <template>
@@ -50,6 +57,14 @@ const canSign = computed(() => dependentNeedsSignature(props.dependent) && props
         <p v-if="coverage" class="auth__errors" role="status">{{ a(coverage) }}</p>
 
         <p v-if="waiverText" class="account__card-sub">{{ waiverText }}</p>
+
+        <!--
+          `#441` · Falta su firma y esta cuenta todavía no puede darla: se DICE, y no se ofrece un
+          formulario que solo puede acabar en 409. El bloque de reenviar el correo vive en el índice
+          de la cuenta y **no se duplica aquí**: son dos hechos y una sola acción del cliente
+          (`#331`, «para no saturar»).
+        -->
+        <p v-if="mustVerify" class="auth__sub" role="status">{{ a('account.dependents.waiver_awaiting_verification') }}</p>
 
         <form v-if="canSign" class="form auth__form" novalidate @submit.prevent="emit('sign')">
             <details class="form__hint">

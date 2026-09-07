@@ -546,7 +546,16 @@ class SidebarMountTest extends TestCase
                 // `add_title` —el mismo texto que titula lo que abre— y `add_cancel` lo pliega.
                 'add_cancel',
                 'age', 'adult', 'remove', 'removing', 'remove_confirm',
-                'waiver_unsigned', 'waiver_current', 'waiver_outdated',
+                'waiver_unsigned',
+                // `#441` · el estado que faltaba, y va PEGADO a «sin firmar» porque es su matiz:
+                // falta su firma **y esta cuenta todavía no puede darla**. Hasta hoy la tarjeta
+                // ofrecía casilla y botón a quien solo podía recibir un 409
+                // (`waiver_email_unverified`) — el defecto que `#329` cerró para el TITULAR y que
+                // seguía vivo aquí. ⚠️ Es **un rótulo y no un bloque**: el de reenviar el correo, con
+                // su cuenta atrás y su límite, vive en el índice de la cuenta y NO se duplica
+                // (`#331`, «para no saturar»: son dos hechos y una sola acción del cliente).
+                'waiver_awaiting_verification',
+                'waiver_current', 'waiver_outdated',
                 // Fase 6 · tanda 4 (`DECISIONES #202`): lo que la tarjeta de «Mis reservas» pinta de
                 // la asignación —el «Para:» y el despliegue—. ⚠️ Los rótulos del EMBUDO (el selector
                 // de los pasos 3 y 4, el aviso de la puerta 2, el «Para:» del resumen) NO van aquí:

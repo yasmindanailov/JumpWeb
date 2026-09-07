@@ -174,6 +174,24 @@ class CriticalPathGateTest extends TestCase
         // obliga a meterlo en el gate a conciencia, no por inercia. Su lock (la fila del titular) lo
         // comparte con `WaiverSigner`, que SÍ está en el gate por la cadena de hashes.
         'app/Domain/Identity/Services/DependentAssigner.php',
+        // ❗❗ `#441` · **el ESCRITOR de menores, declarado aquí a propósito y con fecha de caducidad.**
+        // Hasta hoy no estaba en NINGUNA de las tres listas —ni crítico, ni control negativo, ni en el
+        // patrón del hook—, que es el peor de los tres estados: nadie había decidido nada sobre él.
+        //
+        // Hoy NO es crítico: `add()` escribe una ficha de menor, no dinero ni plazas, y la cadena de
+        // hashes la escribe `WaiverSigner`, que sí está en el gate.
+        //
+        // ⚠️⚠️ **Pero su lock SÍ sostiene un invariante, y ahora está MEDIDO**: `waiver:verify-chain
+        // --scenario=dependent` reproduce que sin el `lockForUpdate()` de la fila del titular doce
+        // altas simultáneas dejan **31 menores con un tope de 20** — sobreventa sin error y sin aviso,
+        // la familia de `AFORO-01` sobre una tabla que no es aforo. Ese instrumento no existía (deuda
+        // desde `#191`: la suite es ciega por construcción).
+        //
+        // ▶ **La T1 de `#441` lo MUEVE a `CRITICAL_FILES` y al patrón del hook**, porque entonces la
+        // firma se escribe DENTRO de esta misma transacción y el fichero pasa a ser co-dueño de la
+        // cadena. Cuando eso pase, este renglón se retira: dejarlo aquí sería afirmar lo contrario de
+        // lo que hace.
+        'app/Domain/Identity/Services/DependentRegistry.php',
     ];
 
     /**

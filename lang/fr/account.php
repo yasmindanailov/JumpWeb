@@ -138,6 +138,7 @@ return [
             'removing' => 'Retrait…',
             'remove_confirm' => 'Retirer :name de votre compte ? Si vous avez signé la décharge en son nom, ce registre est conservé.',
             'waiver_unsigned' => 'Décharge non signée en son nom.',
+            'waiver_awaiting_verification' => 'Vous pourrez signer sa décharge dès que vous aurez vérifié votre e-mail.',
             'waiver_current' => 'Décharge signée en son nom, version en vigueur (v:version).',
             'waiver_outdated' => 'Vous avez signé en son nom une version antérieure du texte : merci d\'accepter la nouvelle.',
             // L'attribution de BILLETS aux mineurs dans le parcours (lot 4) : le sélecteur des étapes 3

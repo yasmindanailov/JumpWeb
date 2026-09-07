@@ -9582,6 +9582,12 @@ Pint ✓ · docs-check ✓.
 
 ## #179 · 2026-08-26 · Tanda 4 · el waiver se firma con el correo VERIFICADO: el alta deja la aceptación pendiente y la firma nace al verificar — la guarda vive en el dominio
 
+> **VIGENTE, y REFORZADA por `#441` (2026-09-06).** La primera versión de `#441` proponía exceptuar
+> de esta regla al **menor a cargo**; la revisión adversarial reprodujo el daño —declarar 20 menores
+> reales con la cuenta de un tercero y firmarlos convierte fichas borrables en PII indeleble— y
+> `[DECIDIDO owner]` se retiró la excepción. `#441` **reutiliza** el mecanismo de aquí (la aceptación
+> retenida), no lo relaja. Hay caso de CONTROL que lo fija.
+
 **Qué se hizo** (carril A; spec **§7·5**, `[DECIDIDO owner, 2026-08-26]`; §9.11): la revisión `#169`
 §10.2·3 midió que la firma del alta nacía con `email_verified_at = null` —§4.7 decía «cuenta con
 correo verificado» y era falso— y que cualquiera podía aceptar «en nombre» del correo de un tercero.
@@ -24653,3 +24659,208 @@ de `#404` dice reservar ANTES de usar, y esta sesión la estiró.
 **Verificación del cierre**: suite **4.358 verde** (27.111 aserciones) · **auditoría del reloj: las 12
 fronteras en verde** (con el ✗ del SSR reproducido y descartado) · Pint ✓ · docs-check ✓ · los ocho
 escenarios de `purchase:verify-oversell` sobre InnoDB · producción desplegada y verificada (`#431`).
+
+## #440 · 2026-09-06 · `[DECIDIDO owner]` El TELÉFONO del cliente: el carril de GOOGLE se DESCARTA con su medición — lo que se arregla es el MOSTRADOR, y sin bloquear nunca una venta
+
+Encargo del owner, sus dos primeros puntos: *«Al registrarse un usuario con google no tenemos su
+numero, hay manera de intentar conseguir con google?»* y *«Si no tiene numero, en la creacion de
+pedido manual desde el panel de admin debemos pedirlo al operador»*. Diseño en
+`docs/specs/telefono-del-cliente.md`, **revisado de forma adversarial ANTES de escribir código**
+(7 lentes, 29 agentes). **Nada implementado todavía.**
+
+### ❗❗❗ La primera pregunta tiene respuesta: SÍ SE PUEDE, Y SE DESCARTA
+
+▶ **Google NO da el teléfono con lo que pedimos hoy**, verificado contra su documentación: el
+`id_token` **no tiene ningún claim de teléfono** y los únicos ámbitos OIDC que soporta son `openid`,
+`email` y `profile`. Lo daría `user.phonenumbers.read` (People API), que es **ámbito sensible**:
+verificación con justificación y **vídeo**, 3-5 días hábiles, y mientras tanto **pantalla de «app no
+verificada» y tope de 100 usuarios nuevos**. Y aun así **el dato solo existe si esa persona lo añadió
+a su perfil**: el de recuperación de cuenta **no se expone**.
+
+⚠️⚠️ **Y el mecanismo que se había escrito NO era implementable, lo midió la revisión**: «el ámbito
+viaja solo en el camino de alta» es **falso** — hay **UNA sola** ida a Google, `LoginForm` y
+`RegisterForm` pintan **el mismo botón con la misma URL** (es `#350`), el ámbito es una **constante**
+que `authorizationUrl()` no recibe por parámetro, y alta-vs-entrada **solo se sabe después del
+canje**. ⚠️ El atajo aparente tampoco vale y **no avisa**: `GoogleAuthSession::consumeChallenge():129`
+colapsa en silencio toda intención que no sea «vincular».
+
+▶ Las tres salidas reales quedan escritas en la spec §3.3 con su coste. `[DECIDIDO owner]` **ninguna
+se construye**, y **tampoco** volver a pedir el campo en la pantalla de alta (revertiría la T8·c de
+`#350`, de cuatro días antes): **quien se registre con Google sigue dando el teléfono en el
+checkout** (`#349`, `CheckoutDuties`), que es donde ya se pide.
+
+### El hueco REAL estaba en el mostrador
+
+⚠️⚠️ Al **crear** un cliente el teléfono ya es obligatorio, pero al **elegir** uno existente no se
+comprueba nada — y `customerDisplay()` pinta el correo cuando lo hay, así que **un cliente sin
+teléfono se ve igual que uno completo**. Peor: **no hay ninguna forma en el panel de ponérselo
+después** (`UserResource` solo registra `index` y `view`; sus cinco acciones son carné, prueba de
+waiver, roles, reset de contraseña y anonimizar) **y el recurso es admin-only**, así que el `staff`
+de mostrador no tiene vía ninguna. Ficha en `DEUDA.md`.
+
+⚠️ **Cifras corregidas por la revisión**: son **3 de 22 cuentas de CLIENTE** sin teléfono (2 de
+Google); el «5 de 25» inicial mezclaba admin y staff. Hay una instancia real: el pedido pagado
+`R-OXQJWM`.
+
+▶ El teléfono es **operativo** y lo leen cinco superficies (hoja de sala, resumen del día, tabla de
+pedidos, la puerta y la deduplicación de mostrador) — ⚠️ pero **ninguna ROMPE con `null`: todas
+degradan**, y eso separa «urgente porque se cae» de «operativo y molesta», que es lo que es.
+
+### Lo que se construye
+
+**El paso 1 del asistente pregunta a `CheckoutDuties::pendingFor()`** —la autoridad única, nunca una
+segunda copia— y si falta el teléfono **no auto-avanza**: lo pide con el aviso para que el operador
+se lo pida al cliente. Escribe el módulo (`settle()`), **no el componente de Filament**
+(`ApiBoundariesTest` ya puso en rojo ese mismo `save()` en el checkout).
+
+⚠️⚠️ **Las puertas son CUATRO, no dos**, y lo midió la revisión reproduciéndolo: `addLineToCart()`
+(`:777`) es **público y no mira el paso del cliente**, así que desde el paso 1 mete la línea en el
+carrito **y mueve `step` él mismo**. El paso 1 no era precondición de nada aguas abajo.
+
+▶ **`[DECIDIDO owner]`: una venta NUNCA se bloquea por el teléfono.** `create()` avisa y deja
+constancia, pero cobra: con el cliente delante y el carrito montado, negarse a cobrar por un número
+es peor que vender sin él. **Va escrito en el código**, o el siguiente lo «arregla» convirtiéndolo en
+un rechazo — sería lo primero en la historia del panel capaz de tumbar una venta de mostrador por un
+teléfono.
+
+⚠️ **`normalizePhone()` NO valida**: su docblock dice que es «para COMPARAR, no para mostrar» y quita
+el `+`. Se guarda el número **tal cual**; el normalizado solo dedupica.
+
+### ▶ EJECUTADO EL MISMO DÍA
+
+Suite **4.368** · `CreateManualOrderCustomerPhoneTest` **10 casos** ·
+`scripts/mutar-telefono-mostrador.sh` **11/11 mutaciones muerden** · Pint ✓ · `docs-check` ✓.
+
+⚠️⚠️ **DOS casos nacieron sin morder y lo dijo la MUTACIÓN, no la lectura** —los dos, la misma
+familia: *un caso que ejercita el camino feliz no vigila la guarda que hace falta cuando el camino
+feliz no ocurre*—. (1) «retiene aunque ya lo haya escrito» no mordía porque el caso llamaba a
+`next()`, **que guarda el teléfono antes de comprobar nada**: el defecto real es **el botón muerto**,
+y solo se ve midiendo `canAdvance()` ANTES de avanzar. (2) «`recordPhone()` pisa» no mordía porque un
+cliente **con** teléfono **auto-avanza al elegirlo**, así que `saveMissingPhone()` ni corría — el
+caso pasaba por el motivo equivocado.
+
+⚠️ **Y una afirmación de la spec era falsa**: `CreateManualOrderPage` **no** está en el `CRITICAL_RE`,
+así que esto **no** dispara `VERIFY_CONC=1` (verificado leyendo el hook). Corregida.
+
+⚠️ `AuditActionCatalogTest` puso en rojo las dos acciones nuevas antes de que llegaran a ninguna
+parte: en este repo una acción de auditoría sin catalogar **lanza**.
+
+⚠️ **Dos cosas que la revisión retiró del plan**: el criterio de éxito «no se puede llegar al carrito
+sin teléfono» (incompatible con no bloquear la venta) y el caso «el atajo por `wire:click` se rechaza
+en el servidor», que era **verde eterno** — `goToStep(2)` desde el paso 1 ya se rechaza siempre, con
+puerta o sin ella. *La cláusula escrita para vigilar el atajo vigilaba la única puerta que nunca fue
+el agujero.*
+
+## #441 · 2026-09-06 · `[DECIDIDO owner]` La EXENCIÓN se acepta AL DECLARAR al menor — y la firma nace con el buzón PROBADO: se reutiliza `#179`, no se relaja
+
+Tercer punto del encargo: *«Al añadir un menor a cargo, es obligatorio firmar el waiver, actualmente
+muchos clientes añaden un menor primero y despues se les pide firmar waiver, pero no lo firman y lo
+dejan asi.»* Diseño en `docs/specs/firma-al-declarar-menor.md`, **revisado de forma adversarial ANTES
+de escribir código**. **Nada implementado todavía.**
+
+### El diagnóstico del owner es correcto — y además hay un DEFECTO
+
+▶ **Cinco puertas y ninguna obliga**: `DependentRegistry::add()` no menciona el waiver; la firma se
+ofrece después en la tarjeta; el texto es informativo y sin consecuencia; `accountNoticeFrom()` mira
+**solo el waiver del titular**; y asignar es **opcional**, así que el menor **llega a la puerta sin
+exención**.
+
+▶ ❗❗❗ **Y a una parte de los clientes el botón no le puede funcionar.** `WaiverSigner:89-92` exige
+correo verificado para firmar por un menor a cargo, pero `dependentNeedsSignature()` **no lo mira** y
+ofrece el formulario igual. **Reproducido con control**: alta OK · `signed:false` · **409
+`waiver_email_unverified`** · **201** con el correo verificado. *El mismo defecto que `#329` arregló
+para el TITULAR, vivo en la tarjeta del MENOR.* ⚠️ No afecta a quien entra con Google
+(`GoogleSignup:95` verifica en el acto), sino a quien se registró con contraseña: **17 de 25 cuentas
+locales**.
+
+### ❗❗❗ La corrección que trajo la revisión: NO se relaja `#179`
+
+La primera versión proponía exceptuar `SUBJECT_DEPENDENT` de la regla del correo verificado. **La
+revisión reprodujo el daño de punta a punta**: un tercero abre cuenta con el correo de otra persona
+(sin verificar, hoy ya puede), declara **20 menores reales** con nombre, apellidos y fecha de
+nacimiento y **los firma**; cuando la víctima reclama su cuenta por P12, la defensa de `#342`/`#347`
+funciona **y le entrega los 20 menores con sus firmas intactas**; y **no puede deshacerlo**, porque
+con firma detrás `remove()` solo desvincula y `anonymize()` conserva a propósito (art. 17.3.e).
+**CONTROL medido: hoy, sin firma, esos menores se borran de verdad (0 filas).**
+
+⚠️⚠️ **La honestidad del análisis**: ese estado ya es alcanzable hoy **pagando** —`autoVerifyBuyer`
+verifica el buzón con un cobro real—. La relajación no inventaba la amenaza: **le retiraba el
+peaje**, y eso importa porque `#342` aceptó ese residuo con el argumento textual «esa cuenta está
+vacía en la práctica, dejar reservas exige pagarlas». *Declarar menores no cuesta nada.*
+⚠️ **Y el precedente de `#347` no sostenía la extensión**: allí la firma del menor invitado nace
+atada a un **pedido pagado** y a una **URL firmada**; aquí no hay ninguna otra prueba.
+
+### La decisión
+
+`[DECIDIDO owner, 2026-09-06]`, con el escenario delante: **al declarar un menor se acepta su
+exención; si el correo del titular está verificado se firma en el acto, y si no la aceptación queda
+RETENIDA y se convierte en firma al verificar** — el mecanismo que `#179` construyó exactamente para
+esto. **Sigue siendo un solo gesto de pantalla y ninguna firma nace sobre un buzón sin demostrar.**
+Lo único que se aplaza es el efecto probatorio.
+
+▶ La aceptación retenida vive **en la fila del menor** (cuatro columnas nullable en `dependents`,
+hermanas de las de `users`): hoy solo hay **una ranura por cuenta** y un titular puede tener N
+menores pendientes.
+
+### Lo que la revisión corrigió además
+
+⚠️⚠️ **«Esta transacción no puede fallar después de crear nada» era FALSO**: la garantía se tomaba
+prestada de `SelfSignup`, que **no firma** desde `#179`. `WaiverSigner` re-comprueba la vigencia
+**bajo el lock** y lanza desde dentro (S-3 de `#181`) → **500 `server_error`** medido, donde sus tres
+hermanos devuelven **409**. `store()` captura `WaiverDocumentStaleException`.
+
+⚠️⚠️ **«`RGPD-01`: ninguno» era FALSO**: no cambia la conducta, **cambia la POBLACIÓN**. Una firma es
+una referencia, así que «declaro a mi hijo por error y lo quito» —que hoy **no deja ni un byte**—
+pasaría a dejar firma con nombre completo, fecha de nacimiento, IP y navegador. **Y hoy no se poda
+nada**: `WaiverSignature::prunable()` devuelve `where 1 = 0` mientras los plazos sigan en `NULL`.
+▶ **`[DECIDIDO owner]`: los plazos pasan a REQUISITO DE SALIDA** — `waiver.retention_months = 60` y
+`waiver.dependent_retention_months = 60` (**5 años**, en el menor desde su 18.º cumpleaños; art. 1964
+CC, y en menores el plazo no corre hasta la mayoría de edad, que es por lo que esa columna se cuenta
+desde los 18).
+
+⚠️ **El CONTRATO no se nombraba ni una vez** y hay tres cambios: `DependentCreateRequest` es
+`additionalProperties: false` (los campos nuevos serían **422 por esquema**), hay que declararlos en
+`OPTIONAL_BY_DESIGN` con su porqué, y `POST /me/dependents` **no declara 409**. Van **dos** campos, no
+uno (`accept_waiver` + `waiver_document_id`), como las dos altas de cuenta: *la casilla es la
+aceptación; el identificador solo dice cuál*.
+
+⚠️⚠️ **Sin el censo, la suite saldría verde sin ejercitar el invariante ni una vez**: **15 ficheros /
+28 métodos** pierden su premisa (necesitan un menor **sin** firma) y ~32 más sobreviven **por orden
+accidental**. ⚠️ **`DependentPrivacyTest` nunca fija `waiver.mode`** y sin fila el fallback es
+**`externo`**: su caso «sin firma → se borra» seguiría verde mientras producción hace lo contrario.
+⚠️ **`VerifyWaiverChainConcurrency` no menciona `DependentRegistry`**: correrlo tras esto da verde sin
+tocar `add()`, **y el hook te manda correr exactamente ese comando**. ⚠️ **`DependentRegistry` no está
+ni en `CRITICAL_RE` ni en `CRITICAL_FILES` ni en `NON_CRITICAL_FILES`** — el peor de los tres estados.
+
+⚠️ **El aviso del índice necesita un TERCER estado con destino a la zona de menores**: reutilizar el
+`sign` actual lleva a Privacidad, donde el titular sin verificar sigue sin poder firmar la suya —
+reconstruiría el callejón de `#329` por la otra puerta.
+
+⚠️⚠️ **ANTES de desplegar hay que MEDIR EN PRODUCCIÓN**: el síntoma del owner **no está medido en
+ninguna instalación** (la BD local está en `interno` con la v1 publicada pero tiene **CERO menores**),
+y **el síntoma solo puede darse en modo `interno`**. Cuatro lecturas: modo, versión publicada, número
+de menores y cuántos con firma. **Si sale `externo`, esta feature no se activa allí.**
+
+❗ Queda `[PENDIENTE: owner]`: si un menor sin firma debe **bloquear** algo más allá de lo que ya
+bloquea el asignador. Recomendación: **no**.
+
+### ▶ T0 EJECUTADA EL MISMO DÍA — el arreglo del 409
+
+La tarjeta deja de ofrecer un botón que solo podía fallar: `dependentWaiverAction()` devuelve un
+**ESTADO** (`sign` · `verify` · `null`) y el dato sale del **contexto de cuenta**, no de la respuesta
+de menores. ⚠️ `=== false` y no `!`: con el contexto sin cargar se ofrece **firmar** — esconder la
+acción a quien sí puede hacerla es peor que enseñarla a quien no.
+
+Suite **4.372** (27.137) · `dependents.test.js` **32** · `SidebarDependentWaiverOfferTest` **4** ·
+`scripts/mutar-firma-al-declarar.sh` **7/7 muerden** · Pint ✓ · build ✓.
+
+⚠️⚠️ **`SidebarComponentBudgetTest` cambió el diseño y no se subió su techo**: la zona quedó en **41
+líneas sobre 40**, y la respuesta fue mudar el `rereadToken` —estado de PANTALLA— al
+`dependentsView()` del módulo plano, donde ya viven la página y el formulario. *Subir un techo
+después de extraer no es lo mismo que subirlo en vez de extraer.* Con la poda, el chunk sube
+**275 → 276** (medido 275,27). ⚠️ `SidebarMountTest` exige la lista exacta de rótulos **y su orden**:
+el aviso nuevo no podía entrar en silencio.
+
+▶ **Quedan T0.b (la red), T1 (el alta acepta), T2 (el aviso del índice) y T3 (los plazos)**, en ese
+orden y por el motivo escrito arriba: sin la red, la suite sale verde sin ejercitar el invariante
+nuevo ni una vez.
