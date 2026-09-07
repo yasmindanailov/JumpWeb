@@ -124,6 +124,35 @@ trait AuthorizesGuestForm
     }
 
     /**
+     * **Cuántos invitados pide el cliente que tenga su reserva** (`specs/invitados-en-post-form.md`
+     * §4.7·3, `#444`), o `null` si no lo pide.
+     *
+     * ⚠️⚠️ **Ausente = «no lo toques», y NUNCA un `?? $quantity`.** Es la misma semántica que
+     * `guests` y `general` ({@see submittedGuestFormArray}), y por el mismo motivo: aquella se
+     * escribió después de MEDIR que un cuerpo parcial borraba los nombres y las edades de ocho
+     * menores. Aquí el daño gemelo sería más silencioso todavía —un `PUT` sin la clave dejaría la
+     * cantidad *igual* por accidente y no por regla—, y el día que un cliente mande `0` o basura, un
+     * `?? ` la convertiría en un cambio que nadie pidió.
+     *
+     * ⚠️ Un valor no numérico se trata como AUSENTE, no como 0: conservar es la única respuesta
+     * segura ante un cuerpo malformado, y aquí «0» significaría vaciar una fiesta.
+     *
+     * @param  array<string, mixed>|null  $validated  el `validate()` de la API; `null` en la web
+     */
+    protected function submittedGuestCount(Request $request, ?array $validated = null): ?int
+    {
+        $source = $validated ?? $request->all();
+
+        if (! array_key_exists('guest_count', $source)) {
+            return null;
+        }
+
+        $value = $source['guest_count'];
+
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
      * **El testigo optimista que se le pasa al reconciliador de extras, ajustado a NUESTRA propia
      * escritura** (T3 de `specs/complementos-post-reserva.md`).
      *

@@ -10,6 +10,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\GuestCountAdjuster;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\OrderCreator;
 use App\Domain\Booking\Services\OrderItemEditor;
@@ -86,7 +87,7 @@ class VerifyPurchaseConcurrency extends Command
      * Se separan a propósito: un cupo de fiestas correcto no dice nada sobre el de invitados, y
      * viceversa. En un escenario único, el que se rompiera se escondería detrás del que aguantara.
      */
-    private const SCENARIOS = ['entry', 'pack', 'pack-guests', 'pack-prep', 'mixed', 'panel-edit', 'extra-hour', 'stay-extension', 'stay-extension-per-guest'];
+    private const SCENARIOS = ['entry', 'pack', 'pack-guests', 'pack-prep', 'mixed', 'panel-edit', 'extra-hour', 'stay-extension', 'stay-extension-per-guest', 'guest-count'];
 
     /**
      * Los DOS escenarios de la hora extra de un pack: el mismo aforo con las dos unidades de
@@ -104,7 +105,7 @@ class VerifyPurchaseConcurrency extends Command
 
     protected $signature = 'purchase:verify-oversell
         {--workers=8 : Nº de compras concurrentes (procesos)}
-        {--scenario=entry : Qué aforo se prueba: entry | pack | pack-guests | pack-prep | mixed | panel-edit | extra-hour | stay-extension | stay-extension-per-guest}
+        {--scenario=entry : Qué aforo se prueba: entry | pack | pack-guests | pack-prep | mixed | panel-edit | extra-hour | stay-extension | stay-extension-per-guest | guest-count}
         {--keep : No borrar los datos de prueba al terminar}';
 
     protected $description = 'Verifica empíricamente (fork real + MySQL InnoDB) que N compras simultáneas de la ÚLTIMA plaza no sobrevenden: solo una gana. Cubre los tres aforos: entradas, cupo de fiestas y cupo de invitados. Solo dev/local.';
@@ -143,6 +144,7 @@ class VerifyPurchaseConcurrency extends Command
             'entry' => $this->seedEntryScenario($workers),
             'mixed' => $this->seedMixedScenario($workers),
             'panel-edit' => $this->seedPanelEditScenario($workers),
+            'guest-count' => $this->seedGuestCountScenario($workers),
             'extra-hour' => $this->seedExtraHourScenario($workers),
             default => $this->seedPackScenario($workers, $scenario),
         };
@@ -901,6 +903,8 @@ class VerifyPurchaseConcurrency extends Command
                 try {
                     if (($seed['scenario'] ?? '') === 'panel-edit') {
                         $outcome = $this->panelEditMove($seed, $i);
+                    } elseif (($seed['scenario'] ?? '') === 'guest-count') {
+                        $outcome = $this->guestCountRaise($seed, $i);
                     } else {
                         $buyer = User::find($user->id);
                         $order = app(OrderCreator::class)->createPendingOrder($buyer, $seed['carts'][$i]);
@@ -1001,6 +1005,14 @@ class VerifyPurchaseConcurrency extends Command
                 'Fiestas vivas en el día (la sembrada, y ninguna más)',
                 1,
                 $this->livePackLinesInZoneDay($seed['zone']->id, $seed['date']),
+            ],
+            // ❗❗ El CLIENTE subiendo invitados desde su post-form (`#444`): el mismo cupo que
+            // `pack-guests`, pero movido por otra puerta. Con 12 fiestas de 2 y el cupo en 30 quedan
+            // 6 plazas: cada worker pide +6 sobre SU reserva y **solo una puede caber**.
+            'guest-count' => [
+                'Invitados vivos en la franja',
+                (int) $seed['zone']->max_guests_per_slot,
+                $this->livePackGuestsInSlot($seed['slot']),
             ],
             // Cupo de INVITADOS: suma de `quantity` de las fiestas vivas ≤ `zones.max_guests_per_slot`.
             'pack-guests' => [
@@ -1156,6 +1168,138 @@ class VerifyPurchaseConcurrency extends Command
             ->where(fn ($q) => $q->where('orders.status', Order::STATUS_PAID)
                 ->orWhere(fn ($q2) => $q2->where('orders.status', Order::STATUS_PENDING)
                     ->where(fn ($q3) => $q3->whereNull('orders.expires_at')->orWhere('orders.expires_at', '>', now()))));
+    }
+
+    // ─── Escenario `guest-count`: el CLIENTE subiendo invitados bajo carrera (AFORO-01) ───────
+    // Instrumento exigido por `specs/invitados-en-post-form.md` §6 (`#444`). Es la PRIMERA puerta por
+    // la que el cliente mueve aforo, y la suite corre en SQLite: sin esto, la revalidación bajo el
+    // lock no la ejerce nadie (`SUITE-04`).
+
+    /**
+     * Siembra: **W fiestas VIVAS de 2 invitados en la MISMA franja**, con el cupo de invitados de la
+     * zona en `2·W + 6`. Cada worker sube LA SUYA en +6 desde el post-form, así que **solo una cabe**.
+     *
+     * ⚠️⚠️ **La geometría es lo que hace que el escenario mida algo**: si cada uno subiera «hasta el
+     * tope» la carrera la ganaría quien llegara primero y el resto se rechazaría por su propia
+     * siembra. Pidiendo todos el MISMO hueco de 6, un solo ganador demuestra que la revalidación
+     * corre **dentro** del lock — sin ella, los doce leen «6 libres» a la vez y suben los doce.
+     *
+     * ⚠️ La fecha va a **+7 días** y no a la primera franja abierta: el ajuste tiene un PLAZO (24 h
+     * por defecto) y con una franja de hoy los doce serían rechazados por el corte, no por la
+     * carrera — el escenario saldría «verde» sin haber probado nada, que es justo lo que la guarda
+     * del instrumento existe para impedir.
+     *
+     * @return array<string, mixed>
+     */
+    private function seedGuestCountScenario(int $workers): array
+    {
+        return DB::transaction(function () use ($workers): array {
+            $rateId = (int) RateType::query()->orderBy('priority')->value('id');
+
+            $zone = Zone::create([
+                'slug' => 'gc-probe-'.Str::lower(Str::random(6)),
+                'name' => ['es' => 'GuestCount Probe'],
+                'is_active' => true,
+                'max_per_slot' => 0,                       // el cupo bajo prueba es el de INVITADOS
+                'max_guests_per_slot' => 2 * $workers + 6, // 6 plazas libres: cabe UNA subida de +6
+                'prep_blocks_cupo' => false,
+            ]);
+
+            $schedule = app(OperatingSchedule::class);
+            [$date, $time] = $this->firstOpenSlotMoment($schedule);
+            $date = Carbon::parse($date)->addDays(7)->toDateString(); // fuera del plazo de corte
+
+            $slot = null;
+            foreach ([0, 1] as $h) {
+                $start = Carbon::parse($time)->addHours($h)->format('H:i:s');
+                $created = Slot::create([
+                    'zone_id' => $zone->id, 'date' => $date,
+                    'start_time' => $start,
+                    'end_time' => Carbon::parse($start)->addHour()->format('H:i:s'),
+                    'capacity' => 500, 'online_capacity' => 500,
+                ]);
+                if ($h === 0) {
+                    $slot = $created;
+                }
+            }
+
+            $type = TicketType::create([
+                'name' => ['es' => 'Cumple GC Probe'], 'type' => TicketType::TYPE_PACK, 'zone_id' => $zone->id,
+                'duration_min' => 60, 'is_sellable' => true, 'is_active' => true,
+                'seats_per_unit' => 1, 'position' => 1,
+                'min_qty' => 1, 'max_qty' => 20,
+                'prep_before_min' => 0, 'prep_after_min' => 0,
+                'event_fields' => [],
+                // Sin `guest_fields` la reserva NO tiene post-form y el ajuste responde `closed`:
+                // el escenario mediría el cierre, no la carrera.
+                'guest_fields' => [
+                    ['key' => 'name', 'type' => 'text', 'required' => true, 'label' => ['es' => 'Nombre']],
+                ],
+            ]);
+            $dayRateId = (int) app(RateResolver::class)->for(Carbon::parse($date))->id;
+            $type->prices()->create(['rate_type_id' => $dayRateId, 'amount_cents' => 1500]);
+            if ($dayRateId !== $rateId) {
+                $type->prices()->create(['rate_type_id' => $rateId, 'amount_cents' => 1500]);
+            }
+
+            $users = [];
+            $itemIds = [];
+            for ($i = 0; $i < $workers; $i++) {
+                $buyer = User::forceCreate([
+                    'name' => 'GC Holder '.$i,
+                    'email' => 'gc-holder-'.Str::random(8).'@deleted.local',
+                    'password' => bcrypt(Str::random(32)),
+                ]);
+                $order = Order::create([
+                    'user_id' => $buyer->id,
+                    'code' => 'GC-'.Str::upper(Str::random(6)),
+                    'status' => Order::STATUS_PAID,
+                    'subtotal' => 3000, 'total' => 3000, 'currency' => 'EUR',
+                    'paid_at' => now(),
+                ]);
+                $item = OrderItem::create([
+                    'order_id' => $order->id,
+                    'parent_item_id' => null,
+                    'ticket_type_id' => $type->id,
+                    'slot_id' => $slot->id,
+                    'quantity' => 2, 'seats' => 2, 'unit_price' => 1500,
+                ]);
+                $users[] = $buyer;
+                $itemIds[] = $item->id;
+            }
+
+            return [
+                'scenario' => 'guest-count',
+                'zone' => $zone->fresh(), 'type' => $type, 'slot' => $slot->fresh('zone'),
+                'date' => $date, 'time' => $time,
+                'users' => $users, 'item_ids' => $itemIds,
+                'probe_qty' => 6,
+                'target' => 8,
+                'extra_user_ids' => [],
+            ];
+        });
+    }
+
+    /**
+     * El ACTO: el cliente sube SU reserva a `target` invitados por la misma puerta que el post-form.
+     *
+     * ⚠️ Se conduce el SERVICIO real y no una consulta a mano: lo que se mide es que la revalidación
+     * viva **dentro** del lock que él toma, no que una consulta suelta sepa contar.
+     *
+     * @param  array<string, mixed>  $seed
+     */
+    private function guestCountRaise(array $seed, int $i): string
+    {
+        $item = OrderItem::with(['ticketType', 'slot', 'order'])->find($seed['item_ids'][$i]);
+        if ($item === null) {
+            return 'EXCEPTION: la reserva sembrada no existe';
+        }
+
+        $change = app(GuestCountAdjuster::class)->adjust($item, (int) $seed['target'], 'signed_link');
+
+        return $change->applied
+            ? 'created:'.$item->id
+            : 'sold_out:'.($change->reason ?? '—');
     }
 
     // ─── Escenario `panel-edit`: el lock zona/día de las EDICIONES bajo carrera (AFORO-05) ────

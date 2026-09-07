@@ -251,5 +251,142 @@ su entrada en `openapi/v1.yaml` y su caso de `ApiContractTest`.
 Diseño del agente sobre encargo del owner (2026-09-07). `[DECIDIDO owner]`: **subir y bajar** ·
 **plazo de un día como mínimo** · **techo el `max_qty` del pack** · **basta con el libro**.
 
-⬜ **Pendiente: la revisión adversarial de este documento antes de escribir código** (`CONVENCIONES
-§5`), con el requisito de §4.2 —el orden de locks— como primer punto.
+### 7.1 · La revisión adversarial — primera pasada (2026-09-07, sobre el código)
+
+**Cinco hallazgos por lectura. El primero es el bloqueante y hay que REPRODUCIRLO, no razonarlo.**
+
+#### ❌ A1 · El cruce de locks del post-form existe HOY, y esta feature aterriza encima
+
+Leído en el código, no supuesto:
+
+```
+MixedPartySurcharge::reconcile()  →  order_items FOR UPDATE … luego recordEdit → orders FOR UPDATE
+PostFormAddons::reconcile()       →  orders FOR UPDATE      … luego order_items FOR UPDATE
+```
+
+Los dos los dispara **el mismo guardado del post-form**, en ese orden. Con **dos peticiones
+simultáneas sobre la MISMA reserva** el ciclo se cierra: la que va por delante sujeta `orders` y pide
+el ítem; la de detrás sujeta el ítem y pide `orders`. ⚠️ Es estrecho —`MixedPartySurcharge` solo llega
+a `orders` **si el suplemento cambia**— pero no es imposible.
+
+▶ **MEDIDO el 2026-09-07, y el veredicto tiene tres partes:**
+
+1. **La FORMA se interbloquea, y está reproducida sobre InnoDB**: el control negativo que `#413` ya
+   dejó escrito —`postform:verify-concurrency --scenario=cross --control`, que hace exactamente
+   `order_items → orders` contra `orders → order_items` sobre el mismo pedido— da **4 interbloqueos de
+   8 procesos**. Sin `--control`, **0 de 8**. *El instrumento ve el rojo.*
+2. **Los dos órdenes están en el código real**, leídos: `MixedPartySurcharge::reconcile()` bloquea el
+   ítem como primera sentencia y llega a `orders` por el `recordEdit` anidado;
+   `PostFormAddons::reconcile()` bloquea `orders` primero por decisión explícita (D11).
+3. ⚠️ **Lo que lo hace ESTRECHO, y hay que decirlo**: `MixedPartySurcharge` solo alcanza `orders`
+   **cuando el suplemento se mueve de verdad** (`recordEdit` lanza con delta 0, así que solo se llama
+   con un cambio real). Es un reconciliador: en dos guardados seguidos, el segundo no escribe. La
+   ventana es «una petición cuyo suplemento cambia» contra «otra que toca extras», sobre la misma
+   reserva y a la vez.
+
+▶ **Y la conclusión que importa para ESTA feature: `slots → order_items` NO añade ninguna arista
+nueva al grafo.** Las aristas son `slots→items`, `items→orders` y `orders→items`; el único ciclo es
+`items→orders→items`, que es **el par preexistente**. El ajuste de cantidad se pone al lado, no
+dentro. ▶ El par preexistente queda con **ficha propia en `DEUDA.md`** y no se arregla en esta tanda:
+tocar el orden de `MixedPartySurcharge` mueve dinero y merece su propia red.
+
+#### ❌ A2 · El testigo de los extras se rompe si el ajuste se hace en el sitio equivocado
+
+`AuthorizesGuestForm::addonsExpectedVersion()` sustituye lo que el cliente vio por la versión de
+DESPUÉS **solo si coincide con la de antes de nuestra propia escritura** (`$before`, capturado al
+entrar en `store()`). Su regla es *«nuestra propia escritura no es un tercero»*.
+
+▶ Si el ajuste de cantidad corriera **antes** de esa captura, `$seen !== $before` y **ningún guardado
+normal compraría un extra**: el cliente vería «la reserva ha cambiado mientras tenías esta página
+abierta» en cada guardado. Es **exactamente el defecto que `#413` §9.4 pagó** con `updated_at`, por
+otra puerta. ▶ El orden queda escrito: **capturar `$before` → ajustar la cantidad → `submitGuestForm`
+→ extras.**
+
+#### ❌ A3 · La instancia en memoria recortaría las fichas contra la cantidad VIEJA
+
+`submitGuestForm()` sanea con `(int) $this->quantity` de **la instancia que recibe**. Si el ajuste
+sube de 10 a 12 y después se llama sobre el mismo objeto sin refrescar, **se guardan 10 fichas y las
+dos nuevas se descartan** — el hueco original, reproducido dentro de su propio arreglo. ▶ La reserva
+se **re-lee** entre las dos escrituras, y hay caso que lo fija.
+
+#### ❌ A4 · El aviso de «se perderán N fichas» tiene que contar las RELLENAS
+
+Contar filas del array diría «se perderán 5» cuando las cinco están vacías. El aviso cuenta las que
+tienen algún dato — que es lo que el cliente reconoce como suyo.
+
+#### ⚠️ A5 · Un docblock que cita un defecto ya arreglado
+
+`PostFormAddons::isWithinWindow()` justifica su aritmética diciendo que `isFinishedInPractice()`
+«declara terminada una reserva 1–2 h TARDE». **`#426` (T5) lo arregló**: hoy compara inicio + duración
+efectiva en hora del parque. El párrafo se corrige al pasar por ahí — el plazo sigue necesitando su
+propia aritmética, pero **por otro motivo**: es otra pregunta, no un reloj torcido.
+
+### 7.2 · Lo que queda antes de escribir código
+
+✅ **A1 medido** (§4.2): la forma se interbloquea, los dos órdenes existen, y el ajuste de cantidad
+**no añade arista**. Queda la ficha del par preexistente y el resto del plan de §6.
+
+⬜ **Lo que sigue**: la segunda pasada adversarial sobre §4.6 y §4.7 (las escrituras y los bordes),
+y después la T0.
+
+
+## 8. Lo EJECUTADO (2026-09-07, `#444`)
+
+**El dominio, sus dos superficies y la red entera.** Sin migración: el único dato nuevo es un ajuste
+del parque.
+
+### 8.1 · Lo que entra
+
+| Pieza | Qué es |
+|---|---|
+| `Booking\Services\GuestCountAdjuster` | **la puerta**: lock de zona/día como PRIMERA sentencia, todo re-validado dentro, dinero POST-COMMIT |
+| `Booking\Services\GuestCountPolicy` | **la fuente única** de los límites y el plazo, compartida por la pantalla y el escritor |
+| `Booking\Contracts\GuestCountChange` | el resultado con su MOTIVO — devuelve, no lanza: el rechazo no puede tumbar el guardado de las fichas |
+| `Booking\Contracts\ReservationPlacesTaken` | el contrato por el que Booking pregunta lo que sabe Identity, con `GuardianPlaces` implementándolo |
+| `GuestFormController` (web) y `Api\V1\GuestFormController` | la misma secuencia en las dos, y el desenlace que DICE el motivo |
+| `GuestFormResource` + `openapi/v1.yaml` | los límites y el corte, ya resueltos, en el contrato |
+| Ajustes → Horarios y aforo | `packs.guest_count_cutoff_hours` (vacío = 24 h) |
+
+⚠️ **El binding del contrato vive en `AppServiceProvider` y no en `BookingServiceProvider`**: Booking
+no puede nombrar a Identity (`ModuleBoundariesTest`), así que tampoco puede hacerlo su proveedor. La
+capa de ENTREGA es el composition root y sí ve a los dos.
+
+### 8.2 · Lo verificado
+
+- **`GuestCountTest`, 18 casos** (el dominio) y **`GuestCountSurfacesTest`, 10** (web + API).
+- **`scripts/mutar-invitados-post-form.sh` · 16 mutaciones.**
+- **Un escenario NUEVO de concurrencia**, `guest-count`, **visto FALLAR**: doce clientes subiendo +6
+  a la vez sobre un cupo de 30 dejaron **96 invitados vivos en la franja** sin la revalidación, y
+  **30** con ella. Registrado en el inventario de `OversellVerifierCoversEveryQuotaTest`.
+
+### 8.3 · ❗❗ Lo que enseñó la ejecución
+
+⚠️⚠️ **Un fixture mío era ILEGAL y el rojo no era del servicio.** Un caso de dinero salía en rojo y la
+causa estaba antes de tocar nada: el pedido no tenía `paid_at`, y el libro lo lee como «¿se cobró?» —
+sin él `online_nac` vale 0 en todas las líneas («sin cobro no hay cobro»), la identidad de CAJA falla
+y el pedido sale «en revisión». **Se legaliza el fixture, nunca se excepciona la identidad** (`#311`).
+
+⚠️⚠️ **Dos mutaciones no mordían y eran DÉBILES, no huecos** — y la distinción es la que evita
+«arreglar» código sano:
+
+- *«la revalidación deja de excluir la huella propia»*: con la sala vacía, 10 propios + 20 pedidos
+  **caben igual** en un cupo de 30, así que excluir o no daba el mismo veredicto. Se añadió una fiesta
+  compañera y entonces discrimina (18 + 20 = 38 contra 8 + 20 = 28).
+- *«la revalidación olvida los minutos de la hora extra»*: ningún caso tenía una fiesta CON hora
+  extra. Hay ahora uno con la geometría que lo hace visible —A de 15:00 a 18:00 con su extensión, B a
+  las 17:00— y el crecimiento se rechaza solo por la ventana larga.
+
+⚠️ **Y una tercera lección de instrumento, barata pero real**: el arnés llevaba un nombre de mutación
+con acentos graves y **bash lo ejecutó como comando**. El veredicto seguía siendo bueno, pero el
+rótulo salía mutilado: en un guion que se lee para decidir, eso es ruido en la señal.
+
+⚠️ **Tres guardas del repo cazaron trabajo mío**: la acción de auditoría sin catalogar
+(`AuditActionCatalogTest`), el contrato `additionalProperties: false` y `ApiContractTest` exigiendo
+que `guest_count` declarara **por qué** es opcional.
+
+### 8.4 · Lo que queda
+
+- El **OJO del owner** en navegador: el control con sus tres estados y el aviso de pérdida de fichas.
+- El aviso de «se perderán N fichas» **antes** de guardar: el dato ya viaja (`discardedForms`) y la
+  pantalla aún no lo pinta.
+- **Un paso de despliegue, y es de DATO**: nada más. El plazo cae a 24 h sin configurar.

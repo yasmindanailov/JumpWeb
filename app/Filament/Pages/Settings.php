@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Domain\Booking\Services\AvailabilitySettings;
 use App\Domain\Booking\Services\CatalogSettings;
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Identity\Services\DependentSettings;
@@ -169,6 +170,7 @@ class Settings extends Page
         'packs.max_per_slot' => 'packs',
         'packs.max_guests_per_slot' => 'packs',
         'packs.prep_blocks_cupo' => 'packs',
+        'packs.guest_count_cutoff_hours' => 'packs',
         // Pagos / Redsys (NO secreto)
         'redsys_environment' => 'payment',
         'redsys_merchant_code' => 'payment',
@@ -920,6 +922,16 @@ class Settings extends Page
                 Toggle::make('packs.prep_blocks_cupo')
                     ->label(__('admin.settings.packs_prep_blocks_cupo'))
                     ->helperText(__('admin.settings.packs_prep_blocks_cupo_hint')),
+                // El plazo para que el CLIENTE cambie sus invitados desde el post-form
+                // (`specs/invitados-en-post-form.md` §4.5, `#444`). ⚠️ Va aquí y no en el enganche
+                // porque esto no es un complemento: es una regla de la casa —lo que el parte de
+                // celebración necesita saber con antelación—. Vacío = el suelo del producto (24 h).
+                TextInput::make(GuestCountPolicy::SETTING_CUTOFF_HOURS)
+                    ->label(__('admin.settings.packs_guest_count_cutoff_hours'))
+                    ->helperText(__('admin.settings.packs_guest_count_cutoff_hours_hint'))
+                    ->integer()
+                    ->minValue(0)
+                    ->maxValue(2160),
             ]);
     }
 

@@ -137,7 +137,11 @@ class ApiContractTest extends TestCase
         // `expected_version` es opcional porque el testigo es una DEFENSA que el cliente elige usar:
         // exigirlo rompería a quien guarda sin haber leído antes, y su ausencia no destruye nada —
         // solo renuncia a que el servidor le avise de que el parque movió algo entre medias.
-        'GuestFormRequest' => ['guests', 'general', 'addons', 'expected_version'],
+        // ▶ Y `guest_count` entra con la MISMA regla (`#444`), donde importa el doble: un valor por
+        // defecto convertiría una petición que **no habla de invitados** en un cambio de aforo y de
+        // dinero que nadie pidió. Ausente = no se toca; lo decide `submittedGuestCount()` con
+        // `array_key_exists`, igual que sus tres hermanas.
+        'GuestFormRequest' => ['guests', 'general', 'addons', 'expected_version', 'guest_count'],
     ];
 
     /** @var array<string, mixed>|null */

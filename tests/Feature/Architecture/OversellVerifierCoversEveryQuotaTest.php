@@ -63,6 +63,15 @@ class OversellVerifierCoversEveryQuotaTest extends TestCase
         // fallo: si los minutos volvieran a salir de la cantidad, cada compra pediría 8 × 60 = 480
         // min, la ventana no cabría en la rejilla y ganaría CERO — **visto FALLAR exactamente así**
         // (0 de 12 con `blocksFor()` devolviendo la cantidad).
+        // ❗❗ El CLIENTE subiendo invitados desde su post-form (`specs/invitados-en-post-form.md` §6,
+        // `#444`). ⚠️ **No lo cubre `pack-guests`**, y la diferencia es la que le da sentido: allí el
+        // cupo se disputa COMPRANDO y aquí EDITANDO una reserva ya vendida, por un servicio distinto
+        // (`GuestCountAdjuster`) con su propio lock. Es la primera puerta por la que el cliente mueve
+        // aforo, y la suite es ciega a los locks. **Visto FALLAR** sin la revalidación: 12 subidas de
+        // +6 sobre un cupo de 30 dejaron **96 invitados vivos en la franja**.
+        'guest-count' => 'el cupo de INVITADOS movido por el CLIENTE desde el post-form: doce '.
+            'subidas concurrentes al mismo hueco y una sola cabe',
+
         'stay-extension-per-guest' => 'la DERIVACIÓN de la ventana con la cantidad en PERSONAS: '.
             'el precio escala con los invitados y los minutos NO, comprobado a través del checkout '.
             'y bajo el lock, que es donde la suite es ciega (SQLite)',

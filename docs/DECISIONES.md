@@ -25030,7 +25030,10 @@ owner]` «lo que configure el dueño» — es catálogo, no código.
 
 Encargo del owner, abierto desde el 2026-09-07 y diagnosticado en `ESTADO.md`: *«el cliente no puede
 añadir invitados desde el post-form»*. Diseño completo en **`specs/invitados-en-post-form.md`**.
-⬜ **Aquí se registran las DECISIONES; el código no está escrito.**
+✅ **CONSTRUIDO el mismo día** (§8 de la spec): el dominio, sus dos superficies y la red entera —29
+casos, **16/16 mutaciones** y un escenario NUEVO de `purchase:verify-oversell` (`guest-count`) **visto
+FALLAR**: doce clientes subiendo +6 a la vez sobre un cupo de 30 dejaron **96 invitados vivos en la
+franja** sin la revalidación, y **30** con ella.
 
 ### El hueco, reproducido
 

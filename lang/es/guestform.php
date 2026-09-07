@@ -50,6 +50,26 @@ return [
     'extras_blocked' => 'Tus datos se han guardado, pero alguno de los extras no se ha podido cambiar: puede que ya haya pasado su plazo. Llámanos si lo necesitas.',
     'extras_stale' => 'Tus datos se han guardado, pero los extras no: la reserva ha cambiado mientras tenías esta página abierta. Vuelve a cargarla y revísalos.',
 
+    // El cliente cambia sus invitados desde aquí (`specs/invitados-en-post-form.md`, `#444`).
+    // ⚠️ Los textos de RECHAZO son cinco y distinguen el remedio: el techo se resuelve llamando, el
+    // suelo del pack también, pero «alguien ya tiene esa plaza» se resuelve quitándolo de la lista.
+    'count_label' => 'Número de invitados',
+    'count_hint' => 'Puedes cambiarlo hasta el :when (máximo :max).',
+    'count_closed_cutoff' => 'Ya no se puede cambiar el número de invitados: ha pasado el plazo.',
+    'count_closed' => 'El número de invitados ya no se puede cambiar.',
+    // ⚠️ UNA sola forma, sin plural: la pinta el JS sustituyendo dos marcadores, y `trans_choice`
+    // no existe en el navegador — una cadena con `|` habría llegado entera a la pantalla.
+    'count_warn_discard' => 'Al bajar a :count invitados se perderán los datos ya rellenados de :discarded fichas.',
+    'count_saved_up' => 'Tus datos se han guardado y tu reserva pasa a :count invitados. La diferencia se abona en el parque.',
+    'count_saved_down' => 'Tus datos se han guardado y tu reserva pasa a :count invitados.',
+    'count_error_above_max' => 'Tus datos se han guardado, pero el número de invitados no: es más de lo que admite este cumpleaños. Llámanos y lo vemos contigo.',
+    'count_error_below_min' => 'Tus datos se han guardado, pero el número de invitados no: es menos del mínimo de este cumpleaños. Llámanos y lo vemos contigo.',
+    'count_error_below_assigned' => 'Tus datos se han guardado, pero el número de invitados no: ya has asignado más plazas de las que quieres dejar. Quita a alguien de la lista y vuelve a intentarlo.',
+    'count_error_sold_out' => 'Tus datos se han guardado, pero el número de invitados no: ya no queda sitio para tantos a esa hora. Llámanos y lo vemos contigo.',
+    'count_error_cutoff' => 'Tus datos se han guardado, pero el número de invitados no: ha pasado el plazo para cambiarlo.',
+    'count_error_closed' => 'Tus datos se han guardado, pero el número de invitados no se ha podido cambiar. Llámanos y lo vemos contigo.',
+    'count_error_stale' => 'Tus datos se han guardado, pero el número de invitados no: la reserva ha cambiado mientras tenías esta página abierta. Vuelve a cargarla.',
+
     'submit' => 'Guardar',
     'hint' => 'Si aún no los sabes todos, guarda lo que tengas y vuelve más adelante.',
     'back' => 'Volver a mis reservas',

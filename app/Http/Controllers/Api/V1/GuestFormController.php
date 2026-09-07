@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Services\GuestCountAdjuster;
 use App\Domain\Booking\Services\PostFormAddonChanges;
 use App\Domain\Booking\Services\PostFormAddons;
 use App\Http\Api\ApiErrorCode;
@@ -86,12 +87,33 @@ class GuestFormController extends Controller
             'addons.*.product_id' => ['required', 'integer', 'min:1'],
             'addons.*.quantity' => ['required', 'integer', 'min:0'],
             'expected_version' => ['sometimes', 'string', 'max:32'],
+            // Los INVITADOS (`specs/invitados-en-post-form.md`, `#444`). Aquí solo la FORMA: el
+            // techo, los DOS suelos, el plazo y el aforo los decide el dominio bajo el lock — igual
+            // que con los extras, y por el mismo motivo (`SEC-04`: la autoridad no es la petición).
+            'guest_count' => ['sometimes', 'integer', 'min:1', 'max:'.self::MAX_GUESTS],
         ]);
 
         // El estado ANTES de nuestra propia escritura ({@see addonsExpectedVersion}): `submitGuestForm()`
         // mueve `updated_at`, así que comparar el testigo del cliente contra el de después haría
         // que un `PUT` normal —fichas y extras a la vez— nunca comprara nada.
         $before = PostFormAddons::versionOf($item);
+
+        // ❗❗ **La cantidad va DESPUÉS de `$before` y ANTES del saneo de las fichas, y con la reserva
+        // re-leída en medio** (`specs/invitados-en-post-form.md` §7.1·A2/A3): capturarla antes deja el
+        // testigo de los extras fuera de sitio, hacerlo después recortaría las fichas contra la
+        // cantidad VIEJA —el hueco original dentro de su propio arreglo— y sin re-leer, el saneo mira
+        // la instancia en memoria. La web hace exactamente esto, así que las dos no pueden divergir.
+        $countChange = null;
+        $desiredCount = $this->submittedGuestCount($request, $validated);
+        if ($desiredCount !== null) {
+            $countChange = app(GuestCountAdjuster::class)->adjust(
+                $item,
+                $desiredCount,
+                $this->guestFormVia($request),
+                $validated['expected_version'] ?? null,
+            );
+            $item = $item->fresh(['ticketType', 'slot', 'order', 'children']) ?? $item;
+        }
 
         // ⚠️⚠️ La ausencia de una clave significa «no la toques», NUNCA «vacíala». El `?? []` que
         // había aquí hacía que un `PUT` con solo `general` **borrara las fichas de los menores**

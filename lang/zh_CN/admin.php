@@ -1898,6 +1898,8 @@ return [
         'packs_max_per_slot' => '每时段生日会（上限）',
         'packs_cap_hint' => '0 = 无上限。',
         'packs_max_guests_per_slot' => '每时段宾客总数（上限）',
+        'packs_guest_count_cutoff_hours' => '更改宾客人数的截止时间（小时）',
+        'packs_guest_count_cutoff_hours_hint' => '派对开始前多少小时起，客户不能再从表单更改宾客人数。留空 = 24 小时。',
         'packs_prep_blocks_cupo' => '布置/清洁占用名额',
         'packs_prep_blocks_cupo_hint' => '启用后，布置和清洁的时间窗会占用相邻时段的名额（不仅是开始时段）。',
 

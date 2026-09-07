@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Booking\Contracts\GuestCountChange;
 use App\Domain\Booking\Contracts\PostFormAddonView;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestAgeMixReader;
+use App\Domain\Booking\Services\GuestCountAdjuster;
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\MixedPartySettings;
 use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Domain\Booking\Services\PostFormAddons;
+use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
 use App\Http\Concerns\AuthorizesGuestForm;
 use Illuminate\Http\RedirectResponse;
@@ -105,6 +109,10 @@ class GuestFormController extends Controller
                 $reservation->order?->currency ?? 'EUR',
             ),
             'version' => PostFormAddons::versionOf($reservation),
+            // El control de invitados (`specs/invitados-en-post-form.md` §4.8, `#444`): sus límites y
+            // su plazo salen de `GuestCountPolicy`, que es la MISMA fuente que revalida bajo el lock.
+            // ⚠️ La pantalla no es la autoridad (`SEC-04`): esto decide qué se OFRECE.
+            'guestCount' => $this->guestCountView($reservation),
             // ⚠️ La firma la compone el DOMINIO (`guestFormSignedStoreUrl`), no esta capa: desde D14
             // toda URL firmada del post-form lleva además la VERSIÓN del enlace, y una compuesta a
             // mano aquí sería la que se queda sin ella.
@@ -132,6 +140,31 @@ class GuestFormController extends Controller
         // ({@see addonsExpectedVersion}).
         $before = PostFormAddons::versionOf($reservation);
 
+        // ❗❗❗ **LA CANTIDAD DE INVITADOS VA PRIMERO, Y EL ORDEN ES LA PROPIEDAD**
+        // (`specs/invitados-en-post-form.md` §4.7·2 y §7.1·A2/A3, `#444`). Son tres reglas, y las
+        // tres se pagaron por adelantado leyendo el código en vez de descubrirlas:
+        //
+        //  1. **Después de `$before`**: el testigo de los extras sustituye lo que el cliente vio por
+        //     la versión de DESPUÉS *solo si coincide con la de antes de nuestra propia escritura*
+        //     ({@see addonsExpectedVersion}). Ajustar antes de capturarlo dejaría a `$seen` fuera de
+        //     sitio y **ningún guardado normal podría comprar un extra**.
+        //  2. **Antes de `submitGuestForm`**: aquél sanea las fichas contra la cantidad ACTUAL, así
+        //     que con el orden al revés un cliente que sube a 12 guardaría 10 fichas — el hueco
+        //     original, reproducido dentro de su propio arreglo.
+        //  3. **Con la reserva RE-LEÍDA en medio**: el saneo mira `$this->quantity` de la INSTANCIA
+        //     que recibe, y la de esta capa sigue teniendo la cantidad vieja en memoria.
+        $countChange = null;
+        $desiredCount = $this->submittedGuestCount($request);
+        if ($desiredCount !== null) {
+            $countChange = app(GuestCountAdjuster::class)->adjust(
+                $reservation,
+                $desiredCount,
+                $this->guestFormVia($request),
+                is_string($request->input('expected_version')) ? $request->input('expected_version') : null,
+            );
+            $reservation = $reservation->fresh(['ticketType', 'slot', 'order', 'children']) ?? $reservation;
+        }
+
         // Qué se persiste de un formulario con datos de MENORES lo decide el dominio, no esta capa
         // (Fase 3 · paso 5): saneado contra el esquema, mezcla que preserva los datos de la fase de
         // reserva, sello de completado y rastro de auditoría, en una sola operación. La API hace
@@ -148,7 +181,12 @@ class GuestFormController extends Controller
         // Los extras van DESPUÉS y en su propia transacción (§4.5.3): un id que dejó de ofrecerse no
         // puede tumbar el guardado de los nombres y las alergias, que es la razón de ser de esta
         // página. La no-atomicidad es deliberada, y por eso el desenlace la DICE.
-        $status = 'guest-form-saved';
+        // El desenlace lo DICE: un cambio de invitados rechazado no puede irse en silencio — es
+        // exactamente el modo de fallo que esta feature viene a cerrar (12 fichas para una línea de
+        // 10, y dos se pierden sin que nadie avise).
+        $status = ($countChange !== null && ! $countChange->applied && $countChange->reason !== GuestCountChange::REASON_NOOP)
+            ? 'guest-count-'.$countChange->reason
+            : 'guest-form-saved';
         $desired = $this->submittedGuestFormArray($request, 'addons');
         if ($desired !== null) {
             $fresh = $reservation->fresh(['ticketType.addons', 'order', 'slot', 'children']);
@@ -217,6 +255,41 @@ class GuestFormController extends Controller
             static fn (string $reason): string => MixedPartySettings::noProductText($reason),
             array_keys($reasons),
         );
+    }
+
+    /**
+     * Lo que la pantalla necesita para pintar el control de invitados, ya resuelto.
+     *
+     * ⚠️ **La PISTA se compone aquí y no en el Blade**: es la que dice el plazo, el techo o por qué
+     * está cerrado, y una plantilla que la recomponga es una segunda copia de la regla.
+     *
+     * @return array{editable:bool, min:int, max:?int, locked_reason:?string, hint:string}
+     */
+    private function guestCountView(OrderItem $reservation): array
+    {
+        $policy = app(GuestCountPolicy::class);
+        $reason = $policy->lockedReason($reservation);
+        $deadline = $policy->deadlineFor($reservation);
+        $max = $policy->maxFor($reservation);
+
+        $hint = match ($reason) {
+            GuestCountChange::REASON_CUTOFF => __('guestform.count_closed_cutoff'),
+            null => $deadline === null
+                ? ''
+                : __('guestform.count_hint', [
+                    'max' => $max ?? '—',
+                    'when' => DisplayTime::dayLabel($deadline),
+                ]),
+            default => __('guestform.count_closed'),
+        };
+
+        return [
+            'editable' => $reason === null,
+            'min' => $policy->floorFor($reservation),
+            'max' => $max,
+            'locked_reason' => $reason,
+            'hint' => $hint,
+        ];
     }
 
     /** Tras guardar: "Mis pedidos" si está autenticado; si vino por enlace firmado, recarga firmada. */

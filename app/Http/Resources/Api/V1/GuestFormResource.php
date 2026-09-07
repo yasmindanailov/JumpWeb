@@ -4,6 +4,7 @@ namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PostFormAddons;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -39,6 +40,10 @@ class GuestFormResource extends JsonResource
         $item = $this->resource;
         $type = $item->ticketType;
         $progress = $item->guestFormProgress();
+        // La MISMA política que revalida bajo el lock (`GuestCountAdjuster`): publicar límites
+        // calculados aquí sería una segunda copia de la regla, y la app enseñaría un número que el
+        // servidor rechaza — la trampa que `AFORO-02` existe para evitar en la oferta.
+        $policy = app(GuestCountPolicy::class);
 
         return [
             'reservation_id' => (int) $item->id,
@@ -71,6 +76,15 @@ class GuestFormResource extends JsonResource
             // El TESTIGO de la reserva: hay que devolverlo al guardar. Sin él, un envío hecho con la
             // pantalla vieja pisaría en silencio lo que el operador acabara de cambiar por teléfono.
             'version' => PostFormAddons::versionOf($item),
+            // Los INVITADOS que el cliente puede pedir (`specs/invitados-en-post-form.md` §4.8,
+            // `#444`): los límites YA RESUELTOS y por qué está cerrado si lo está. ⚠️ Viajan hechos
+            // para que ningún cliente —ni la app— recomponga la regla: el mínimo son DOS preguntas
+            // (el del pack y lo que ya tiene dueño) y el plazo se mide en hora del parque.
+            'guest_count_editable' => $policy->isEditableBy($item),
+            'guest_count_min' => $policy->floorFor($item),
+            'guest_count_max' => $policy->maxFor($item),
+            'guest_count_locked_reason' => $policy->lockedReason($item),
+            'guest_count_deadline' => $policy->deadlineFor($item)?->toIso8601String(),
         ];
     }
 

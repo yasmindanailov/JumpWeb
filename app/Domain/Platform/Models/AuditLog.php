@@ -140,6 +140,7 @@ class AuditLog extends Model
         'orders.item_slot_changed',
         'orders.manual_created_without_phone',  // `#440`: se vendió sin teléfono — se avisa, no se bloquea
         'orders.manual_customer_phone_added',   // `#440`: el operador escribió el teléfono que faltaba
+        'orders.guest_count_changed',   // `#444`: el CLIENTE movió los invitados de su reserva
         'orders.mixed_party_surcharge_synced',
         'orders.payment_init_failed',
         'orders.postform_addons_changed',

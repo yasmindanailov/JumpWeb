@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Booking\Contracts\ReservationPlacesTaken;
 use App\Domain\Booking\Models\OpeningHour;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderAdjustment;
@@ -43,6 +44,7 @@ use App\Domain\Identity\Models\UserIdentity;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\CookieConsent;
 use App\Domain\Identity\Services\CustomerAccountContext;
+use App\Domain\Identity\Services\GuardianPlaces;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\PaymentSettings;
@@ -73,6 +75,14 @@ class AppServiceProvider extends ServiceProvider
         // Contexto de cuenta del cliente (#221): singleton para memoizar por petición — el nav
         // (puntito de aviso) y el sidebar lo piden por separado y comparten una única consulta.
         $this->app->singleton(CustomerAccountContext::class);
+
+        // ⚠️⚠️ **El binding vive AQUÍ y no en `BookingServiceProvider`, y es una consecuencia de la
+        // frontera, no una preferencia** (`specs/invitados-en-post-form.md` §4.4, `#444`): Booking
+        // pregunta cuántas plazas de una reserva ya tienen dueño —menores a cargo asignados y
+        // justificantes firmados— y **Booking no puede mirar a Identity**
+        // (`ModuleBoundariesTest`), así que su propio proveedor tampoco puede nombrar al
+        // implementador. La capa de ENTREGA es el composition root y sí puede ver a los dos.
+        $this->app->bind(ReservationPlacesTaken::class, GuardianPlaces::class);
 
         // El icono que va DENTRO del QR del carné (`identidad-qr-puerta.md` §9.7 C·3): singleton
         // para que el rasterizado del SVG de la instalación se haga UNA vez por petición. El memo

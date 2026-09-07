@@ -3,6 +3,7 @@
 namespace App\Domain\Identity\Services;
 
 use App\Domain\Booking\Contracts\AuthorizableReservation;
+use App\Domain\Booking\Contracts\ReservationPlacesTaken;
 use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\GuardianAuthorization;
 
@@ -32,7 +33,13 @@ use App\Domain\Identity\Models\GuardianAuthorization;
  * propósito**: el tope existe para que nadie autorice a más gente de la que se ha comprado, no para
  * adivinar la composición del grupo.
  */
-final class GuardianPlaces
+/**
+ * ▶ **Y desde `#444` es además el implementador de {@see ReservationPlacesTaken}**, el contrato por el
+ * que Booking pregunta lo mismo sin poder mirar a Identity: es uno de los dos suelos de una bajada de
+ * invitados desde el post-formulario. La frontera no cambia —sigue siendo Identity quien sabe de
+ * menores—; lo que se publica es la RESPUESTA, no la consulta.
+ */
+final class GuardianPlaces implements ReservationPlacesTaken
 {
     /** Plazas de la reserva que todavía podrían recibir un menor invitado. Nunca negativo. */
     public function freeIn(AuthorizableReservation $reservation): int

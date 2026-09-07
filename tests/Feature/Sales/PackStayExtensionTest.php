@@ -322,7 +322,7 @@ class PackStayExtensionTest extends TestCase
 
         $outcome = $this->edit($order, $parent, ['edits' => [], 'adds' => [['ticket_type_id' => (int) $this->extraHour->id, 'quantity' => 1]]]);
 
-        $this->assertFalse($outcome->isBlocked());
+        $this->assertFalse($outcome->isBlocked(), 'el editor bloqueó: '.($outcome->reason ?? '—'));
         $this->assertSame(60, (int) $parent->fresh()->extra_minutes);
         $this->assertSame(0, $this->packs->availableGuestsFor($this->slot('17:00:00'), $this->pack));
     }

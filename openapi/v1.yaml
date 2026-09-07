@@ -4414,6 +4414,11 @@ components:
         - save_url
         - addons
         - version
+        - guest_count_editable
+        - guest_count_min
+        - guest_count_max
+        - guest_count_locked_reason
+        - guest_count_deadline
       additionalProperties: false
       properties:
         reservation_id:
@@ -4506,6 +4511,37 @@ components:
             al guardar: si el parque movió algo entre medias, el servidor responde 409 en vez de
             dejar que un envío con la pantalla vieja pise su trabajo.
 
+        guest_count_editable:
+          type: boolean
+          description: |
+            Si el titular puede cambiar ahora mismo cuántos invitados tiene su reserva
+            (`DECISIONES #444`). `false` no es «no existe»: viene con `guest_count_locked_reason`,
+            porque un control que desaparece sin explicación deja al cliente sin saber qué hacer.
+        guest_count_min:
+          type: integer
+          description: |
+            El suelo EFECTIVO, que son **dos preguntas resueltas en una**: el mínimo contratable del
+            pack y las plazas que ya tienen dueño (menores a cargo asignados + justificantes
+            firmados). Viaja resuelto para que ningún cliente recomponga la regla.
+        guest_count_max:
+          type: integer
+          nullable: true
+          description: El máximo del producto. `null` = solo lo limita el aforo de la sala.
+        guest_count_locked_reason:
+          type: string
+          nullable: true
+          enum: [closed, cutoff, null]
+          description: |
+            Por qué no se puede cambiar: `cutoff` (pasó el plazo) o `closed` (la reserva ya no
+            admite cambios). `null` cuando sí se puede.
+        guest_count_deadline:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            El instante EXACTO del corte, en la zona del parque. Se mide contra la hora de PARED de
+            la franja, no contra el fin de la visita: son preguntas distintas.
+
     GuestFormField:
       type: object
       description: Una columna del formulario, tal y como la configuró la instalación.
@@ -4572,6 +4608,23 @@ components:
             El `version` que traía el `GET`. Si el parque movió la reserva entre medias, el servidor
             responde **409 `guest_form_stale`** y no escribe nada, en vez de dejar que un envío hecho
             con la pantalla vieja pise el trabajo del operador.
+        guest_count:
+          type: integer
+          minimum: 1
+          maximum: 200
+          description: |
+            Cuántos invitados quieres que tenga la reserva (`DECISIONES #444`). **Ausente = no se
+            toca**, con la misma regla que las otras claves — y aquí importa el doble: un `?? ` la
+            convertiría en un cambio que nadie pidió.
+
+            ⚠️ Aquí solo se valida la FORMA. El techo, los **dos** suelos (el mínimo del pack y lo
+            que ya tiene dueño), el plazo y el AFORO los decide el servidor **bajo el lock de la
+            zona y el día**, con la misma receta que la compra: es la primera puerta por la que el
+            cliente mueve aforo.
+
+            ▶ **Un cambio rechazado NO tumba el guardado del resto**: las fichas y los extras se
+            guardan igual. La respuesta trae el estado nuevo, así que `guest_count` de la reserva
+            dice si se aplicó.
 
     PaymentStatus:
       type: object

@@ -1065,6 +1065,7 @@ return [
                     'manual_created_without_phone' => 'Pedido creado sin teléfono del cliente',
                     'manual_customer_phone_added' => 'Teléfono del cliente añadido en el mostrador',
                     'payment_init_failed' => 'No se pudo iniciar el cobro',
+                    'guest_count_changed' => 'Invitados de la reserva actualizados',
                     'postform_addons_changed' => 'Extras del formulario actualizados',
                     'slip_printed' => 'Hoja de reserva impresa',
 
@@ -2357,6 +2358,8 @@ return [
         'packs_max_per_slot' => 'Cumpleaños por franja (máx.)',
         'packs_cap_hint' => '0 = sin tope.',
         'packs_max_guests_per_slot' => 'Invitados totales por franja (máx.)',
+        'packs_guest_count_cutoff_hours' => 'Plazo para cambiar invitados (horas)',
+        'packs_guest_count_cutoff_hours_hint' => 'Cuántas horas antes del inicio de la fiesta deja de poder cambiarse el número de invitados desde el formulario del cliente. Vacío = 24 h.',
         'packs_prep_blocks_cupo' => 'El montaje/limpieza bloquea el cupo',
         'packs_prep_blocks_cupo_hint' => 'Si está activo, la ventana de montaje y limpieza ocupa cupo en las franjas vecinas (no solo la de inicio).',
 

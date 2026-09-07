@@ -79,7 +79,34 @@
                     @endif
                     <div class="gf-stub__cell">
                         <span class="k">{{ __('guestform.fact_guests') }}</span>
-                        <span class="v">{{ __('tickets.guests_count', ['count' => $reservation->quantity]) }}</span>
+                        {{-- El cliente cambia sus invitados desde aquí (`specs/invitados-en-post-form.md`,
+                             `#444`). ⚠️ Los límites y el plazo salen de `GuestCountPolicy`, la MISMA
+                             fuente que revalida bajo el lock: una copia aquí enseñaría un número que el
+                             servidor rechaza. Y cuando NO se puede, el control **no desaparece: se
+                             deshabilita con su motivo** — un control que se esconde sin explicación es
+                             cómo el hueco original estuvo meses sin que nadie lo viera. --}}
+                        @if ($guestCount['editable'] && ! $readonly)
+                            <label class="gf-stub__count">
+                                <span class="sr-only">{{ __('guestform.count_label') }}</span>
+                                <input type="number" name="guest_count" inputmode="numeric"
+                                       value="{{ $reservation->quantity }}"
+                                       min="{{ $guestCount['min'] }}"
+                                       @if ($guestCount['max'] !== null) max="{{ $guestCount['max'] }}" @endif
+                                       data-guest-count
+                                       data-current="{{ $reservation->quantity }}">
+                            </label>
+                            <span class="gf-stub__hint">{{ $guestCount['hint'] }}</span>
+                            {{-- El aviso de pérdida lo rellena el JS con el número REAL de fichas
+                                 rellenas que se perderían; sin JS no se pinta, y el servidor sigue
+                                 devolviendo cuántas se perdieron de verdad. --}}
+                            <span class="gf-stub__warn" id="gf-count-warn" role="alert" hidden
+                                  data-tpl="{{ __('guestform.count_warn_discard', ['count' => ':count', 'discarded' => ':discarded']) }}"></span>
+                        @else
+                            <span class="v">{{ __('tickets.guests_count', ['count' => $reservation->quantity]) }}</span>
+                            @if ($guestCount['locked_reason'] !== null)
+                                <span class="gf-stub__hint">{{ $guestCount['hint'] }}</span>
+                            @endif
+                        @endif
                     </div>
                     <div class="gf-stub__cell">
                         <span class="k">{{ __('guestform.fact_ref') }}</span>
@@ -465,6 +492,20 @@
         </div>
     @endif
 
+    {{-- ⚠️⚠️ Y cuando lo que no se pudo aplicar es el número de INVITADOS, también se dice
+         (`specs/invitados-en-post-form.md` §4.7·1, `#444`). El motivo viaja en el flash porque el
+         REMEDIO de cada uno es distinto: el techo y el suelo del pack se resuelven llamando; «ya has
+         asignado más plazas» se resuelve quitando a alguien de la lista. Fundirlos en «no se pudo»
+         deja al cliente sin saber qué hacer, que es el mismo modo de fallo que esta tanda cierra. --}}
+    @php($countStatus = is_string(session('status')) && str_starts_with(session('status'), 'guest-count-')
+        ? substr(session('status'), strlen('guest-count-'))
+        : null)
+    @if ($countStatus !== null)
+        <div class="guestform__readonly gf-extras__warn" role="alert">
+            {{ __('guestform.count_error_'.$countStatus) }}
+        </div>
+    @endif
+
     {{-- Acordeón (JS plano; mejora progresiva: sin JS las fichas salen abiertas y el form funciona). --}}
     <script>
         (function () {
@@ -625,6 +666,32 @@
                 sync();
             });
             refreshExtrasTotal();
+
+            // ⚠️⚠️ **BAJAR INVITADOS DESTRUYE FICHAS, y se dice ANTES de guardar**
+            // (`specs/invitados-en-post-form.md` §4.7·1, `#444`). Hoy el panel hace exactamente lo
+            // mismo en silencio; aquí no, porque quien pierde los nombres y las alergias que ya
+            // escribió es la persona que los escribió. ⚠️ Se cuentan las fichas **RELLENAS** y no las
+            // filas: «se perderán 5» de cinco fichas vacías es ruido que enseña a ignorar el aviso.
+            var countInput = form.querySelector('[data-guest-count]');
+            var countWarn = document.getElementById('gf-count-warn');
+            if (countInput && countWarn) {
+                var countWarnTpl = countWarn.getAttribute('data-tpl') || '';
+                countInput.addEventListener('input', function () {
+                    var wanted = parseInt(countInput.value, 10);
+                    var current = parseInt(countInput.getAttribute('data-current'), 10) || 0;
+                    if (!wanted || wanted >= current) { countWarn.hidden = true; return; }
+                    var lost = 0;
+                    for (var i = wanted; i < fiches.length; i++) {
+                        var any = Array.prototype.slice.call(fiches[i].querySelectorAll('input, textarea'))
+                            .some(function (el) { return (el.value || '').trim() !== ''; });
+                        if (any) lost++;
+                    }
+                    countWarn.hidden = lost === 0;
+                    countWarn.textContent = countWarnTpl
+                        .replace(':count', String(wanted))
+                        .replace(':discarded', String(lost));
+                });
+            }
 
             // Acordeón ya cableado → activar modo JS (las fichas no-abiertas se colapsan). La clase `js`
             // se marca AQUÍ, AL FINAL: si algo de arriba hubiera fallado, el documento se queda en
