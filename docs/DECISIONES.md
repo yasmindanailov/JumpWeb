@@ -24918,3 +24918,46 @@ da igual. Es la trampa de `OperatingSchedule` de `#465`.
 
 ▶ **Del carril no queda código**: solo el OJO del owner y, al desplegar, las cuatro lecturas en
 producción más los dos ajustes de retención.
+
+## #442 · 2026-09-07 · El CUARTO despliegue, hecho y verificado — y la poda que se comprobó ANTES de encenderla
+
+Desplegado `b442168` a `playjump.es` con `deploy.sh --go`: `#440` (el teléfono en el mostrador) y
+`#441` (la exención al declarar un menor). Copia de la BD previa —318 K, gzip íntegro— porque el
+script **no la hace** y eso sigue siendo ficha viva de `DEUDA.md`. Una migración, aditiva.
+
+### Lo MEDIDO en producción ANTES de desplegar, que es lo que decidía si esto hacía algo
+
+modo waiver **`interno`** · v1 publicada · **243 menores activos** · **94 SIN firma, de 60 titulares**
+· **75 de 229 clientes sin teléfono**. ▶ **El encargo del owner tenía sujeto real y grande**: esos 60
+titulares ven desde hoy el aviso nuevo, y **nadie más declara un menor sin firmar**.
+
+⚠️ Si hubiera salido `externo`, `#441` no habría hecho nada allí y encenderlo habría sido decisión
+suya **con la consecuencia** de que el asignador pasa a exigir firma a los ya declarados. Salió
+`interno`: por eso se desplegó tal cual.
+
+### ❗❗ La poda se comprobó ANTES de encender los plazos
+
+`[DECIDIDO owner]` `waiver.retention_months = 60` y `waiver.dependent_retention_months = 60` (art.
+1964 CC; en el menor desde los 18, porque hasta entonces el plazo no corre). Eran **requisito de
+salida** de `#441`: sin ellos `prunable()` devuelve literalmente `where 1 = 0` y cada menor declarado
+quedaba sin fecha de caducidad.
+
+⚠️⚠️ **Pero ponerlos ENCIENDE un mecanismo dormido desde `#160`, así que se midió qué se llevaría por
+delante ANTES de que corriera el cron**: con los dos plazos puestos, la poda borraría **0 firmas de
+345 y 0 menores de 243**. *Activar una poda sin mirar su alcance es pérdida de datos con permiso.*
+
+### Verificación POST-despliegue, sobre datos reales
+
+El aviso ENCIENDE con un titular al que le falta una firma y está APAGADO en tres titulares con todos
+sus menores firmados · `CheckoutDuties::pendingFor()` responde `true` para un cliente sin teléfono ·
+`/` y `/up` en 200 · migraciones pendientes 0 · `failed_jobs` 0 · y el chunk del cajón se sirve por
+HTTP **conteniendo `accept_waiver`**, o sea que la casilla nueva llegó de verdad.
+
+⚠️⚠️ **La primera sonda del control dio un FALSO POSITIVO y era del INSTRUMENTO**: cogía al titular
+del primer menor FIRMADO, que resultó tener OTROS sin firmar, así que el `true` que devolvía era
+correcto. *Si tu instrumento acusa a lo que ya estaba bien, el defecto es del instrumento.* El control
+de verdad exige un titular con TODOS sus menores firmados y hay que buscarlo por SQL agregado.
+
+⚠️ Sigue el aviso conocido de `#115`: el script no ve demonio cron y las dos líneas viven en el cron
+del panel. ▶ Queda el **OJO del owner** por navegador y las tres pasadas de la rejilla de media hora,
+pendientes desde el 06-09.

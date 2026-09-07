@@ -1,6 +1,6 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🚀 **EL 2026-09-07 SE DESPLEGÓ LA SESIÓN DE HOY** (`#440` + `#441`): el mostrador ya pide el teléfono que falta y **declarar un menor y aceptar su exención son un solo gesto**. ▶ **LO QUE QUEDA ES DEL OWNER, y son TRES cosas**: **(1)** su **✅ por navegador** de las dos features en `playjump.es` —el paso 1 del pedido manual con un cliente sin teléfono, y el alta de un menor con su casilla—; **(2)** las **tres pasadas de la rejilla de media hora** que siguen pendientes desde el 06-09 (`PANEL-ADMIN.md` §4.1); **(3)** confirmar que las dos líneas del cron del panel siguen activas (`#115`). ▶ ❗❗❗ **Y HAY UN ENCARGO ABIERTO, DIAGNOSTICADO Y SIN CONSTRUIR: el cliente NO puede añadir invitados desde el post-form.** Reproducido: manda 12 fichas para una línea de 10 y **se guardan 10, las dos de más se descartan en silencio** (`sanitizeGuestData()` recorta a `quantity` y la vista pinta exactamente `quantity` fichas, sin botón de añadir). ⚠️ **Lo que se resolvió en `#413` fueron los COMPLEMENTOS, no los invitados.** ⚠️⚠️ **Y no hay ni una frase que le diga qué hacer**: el post-form tiene «Llámanos» para CINCO situaciones (las tres de edad sin producto, el extra fuera de plazo y el que no se pudo cambiar) y ninguna para ésta. ▶ El camino existe pero pasa por el operador (subir la cantidad desde «Gestionar producto», que re-tarifica por `PAY-18` y revalida aforo). **`[owner, 2026-09-07]`: se itera el DISEÑO en otro chat**; ⚠️ ojo, la versión cara **es DINERO y AFORO** y choca con `#244` («cualquier gestión de dinero post-reserva ya cobrada se hace en las instalaciones»), así que es spec propia, no una pantalla.
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🚀 **EL 2026-09-07 SE DESPLEGÓ LA SESIÓN DE HOY Y ESTÁ VERIFICADO EN PRODUCCIÓN** (`#440` + `#441`, commit `b442168`; copia de la BD previa en `~/backups/playjump2_main-20260907-182903.sql.gz`, 318 K, gzip íntegro): el mostrador ya pide el teléfono que falta y **declarar un menor y aceptar su exención son un solo gesto**. ▶ **LO QUE QUEDA ES DEL OWNER, y son TRES cosas**: **(1)** su **✅ por navegador** de las dos features en `playjump.es` —el paso 1 del pedido manual con un cliente sin teléfono, y el alta de un menor con su casilla—; **(2)** las **tres pasadas de la rejilla de media hora** que siguen pendientes desde el 06-09 (`PANEL-ADMIN.md` §4.1); **(3)** confirmar que las dos líneas del cron del panel siguen activas (`#115`). ▶ ❗❗❗ **Y HAY UN ENCARGO ABIERTO, DIAGNOSTICADO Y SIN CONSTRUIR: el cliente NO puede añadir invitados desde el post-form.** Reproducido: manda 12 fichas para una línea de 10 y **se guardan 10, las dos de más se descartan en silencio** (`sanitizeGuestData()` recorta a `quantity` y la vista pinta exactamente `quantity` fichas, sin botón de añadir). ⚠️ **Lo que se resolvió en `#413` fueron los COMPLEMENTOS, no los invitados.** ⚠️⚠️ **Y no hay ni una frase que le diga qué hacer**: el post-form tiene «Llámanos» para CINCO situaciones (las tres de edad sin producto, el extra fuera de plazo y el que no se pudo cambiar) y ninguna para ésta. ▶ El camino existe pero pasa por el operador (subir la cantidad desde «Gestionar producto», que re-tarifica por `PAY-18` y revalida aforo). **`[owner, 2026-09-07]`: se itera el DISEÑO en otro chat**; ⚠️ ojo, la versión cara **es DINERO y AFORO** y choca con `#244` («cualquier gestión de dinero post-reserva ya cobrada se hace en las instalaciones»), así que es spec propia, no una pantalla.
 >
 > **A.0 · LA SESIÓN DEL 2026-09-07 — EL TELÉFONO EN EL MOSTRADOR Y LA EXENCIÓN AL DECLARAR UN MENOR**
 >    ▶ **Dos encargos del owner, los dos cerrados en código y desplegados** (`#440`, `#441`; banda
@@ -36,14 +36,26 @@
 >    ▶ **Medido en producción ANTES de desplegar**: modo **`interno`**, v1 publicada, **243 menores
 >    activos, 94 SIN firma, de 60 titulares** — el encargo tenía sujeto real y grande. Esos 60 verán el
 >    aviso nuevo del índice; **nadie más entrará ya sin firmar**.
->    ⚠️⚠️ **`waiver.retention_months` y `waiver.dependent_retention_months` SIGUEN EN `NULL` EN
->    PRODUCCIÓN** y `[DECIDIDO owner]` valen **60 y 60**: es **REQUISITO DE SALIDA** de esta feature —
->    sin ellos, cada menor declarado deja registro **sin fecha de caducidad** (`prunable()` devuelve
->    literalmente `where 1 = 0`). **PASO MANUAL PENDIENTE.**
+>    ✅ **Los dos plazos YA ESTÁN PUESTOS en producción** (`waiver.retention_months = 60` y
+>    `waiver.dependent_retention_months = 60`, `[DECIDIDO owner]`, art. 1964 CC). Eran **requisito de
+>    salida**: sin ellos `prunable()` devuelve literalmente `where 1 = 0` y cada menor declarado
+>    quedaba **sin fecha de caducidad**. ⚠️⚠️ **Y se comprobó que activarlos NO borra nada**: con los
+>    plazos puestos, la poda borraría **0 firmas de 345 y 0 menores de 243** — activar un mecanismo que
+>    llevaba dormido desde `#160` sin mirar qué se llevaría por delante habría sido pérdida de datos.
 >    ⚠️ **`DependentRegistry` entró en el `CRITICAL_RE`**: tocarlo exige ya `VERIFY_CONC=1`.
 >    ▶ **Y su lock sostenía un invariante que nadie había medido desde `#191`**: sin él, doce altas
 >    simultáneas dejan **31 menores con un tope de 20** (visto fallar; la suite es ciega porque SQLite
 >    no implementa locks).
+>
+>    ▶ **VERIFICADO EN PRODUCCIÓN tras desplegar** (solo lectura, sobre datos reales): el aviso
+>    ENCIENDE con un titular al que le falta una firma y está APAGADO en tres titulares con todos sus
+>    menores firmados (control); `CheckoutDuties::pendingFor()` responde `true` para un cliente sin
+>    teléfono; `/` y `/up` en 200; y el chunk del cajón se sirve por HTTP **conteniendo `accept_waiver`**
+>    —o sea, la casilla nueva llegó de verdad—.
+>    ⚠️⚠️ **La primera sonda del control dio un FALSO POSITIVO y era del INSTRUMENTO**: cogía al titular
+>    del primer menor FIRMADO, que resultó tener OTROS sin firmar, así que el `true` era correcto. *Si
+>    tu instrumento acusa a lo que ya estaba bien, el defecto es del instrumento* — el control de verdad
+>    exige un titular con TODOS sus menores firmados, y hay que buscarlo por SQL agregado.
 >
 > **A. LA SESIÓN DEL 2026-09-06 — REJILLA DE MEDIA HORA · HORA EXTRA DE PACK · DESPLIEGUE**
 >    ▶ **Resumen en tres líneas, por si no lees el resto**: (1) la rejilla de media hora está lista y
