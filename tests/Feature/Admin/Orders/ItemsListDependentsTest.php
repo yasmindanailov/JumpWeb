@@ -28,6 +28,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
+use Tests\Support\DeclaresDependents;
 use Tests\TestCase;
 
 /**
@@ -36,6 +37,7 @@ use Tests\TestCase;
  */
 class ItemsListDependentsTest extends TestCase
 {
+    use DeclaresDependents;
     use RefreshDatabase;
 
     private const VISIT = '2026-09-05';
@@ -117,7 +119,7 @@ class ItemsListDependentsTest extends TestCase
 
     protected function add(User $holder, string $name, string $bornOn): Dependent
     {
-        return app(DependentRegistry::class)->add($holder, $name, $bornOn);
+        return $this->declareLegacyDependent($holder, $name, $bornOn);
     }
 
     /** Un pedido PAGADO con las líneas dadas, en orden. @return array{0: Order, 1: list<OrderItem>} */

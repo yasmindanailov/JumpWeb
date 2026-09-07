@@ -110,11 +110,24 @@ class DependentRegistryTest extends TestCase
         sort($columns);
 
         $this->assertSame(
-            ['born_on', 'created_at', 'id', 'name', 'relationship', 'removed_at', 'surname', 'updated_at', 'user_id'],
+            [
+                'born_on', 'created_at', 'id', 'name', 'relationship', 'removed_at', 'surname',
+                'updated_at', 'user_id',
+                // `#441` · la ACEPTACIÓN RETENIDA de su exención, hermana exacta de la del titular
+                // (`#179` y su S-1 de `#181`). Son cuatro columnas y las cuatro se justifican: sin
+                // ellas, declarar un menor con el correo del titular sin verificar obligaría a
+                // FIRMAR sobre un buzón que nadie ha demostrado — el escenario que la revisión
+                // adversarial reprodujo y que `[DECIDIDO owner]` cerró eligiendo retener.
+                // ⚠️ Viven en la fila del MENOR porque en `users` es UNA sola ranura y un titular
+                // puede tener N menores pendientes a la vez.
+                'waiver_pending_channel', 'waiver_pending_document_id', 'waiver_pending_ip',
+                'waiver_pending_user_agent',
+            ],
             $columns,
-            'la tabla tiene exactamente las columnas de la spec §4.2 más las dos de `#236` (apellidos '
-            .'y relación con el titular); lo que sigue sin existir —y es lo que mide este caso— es una '
-            .'columna de EDAD: guardarla sería una mentira con caducidad',
+            'la tabla tiene exactamente las columnas de la spec §4.2, las dos de `#236` (apellidos '
+            .'y relación) y las cuatro de la aceptación retenida de `#441`; lo que sigue sin existir '
+            .'—y es lo que mide este caso— es una columna de EDAD: guardarla sería una mentira con '
+            .'caducidad',
         );
 
         $this->assertNotContains('age', $columns, 'la edad se deriva de `born_on`, nunca se persiste');

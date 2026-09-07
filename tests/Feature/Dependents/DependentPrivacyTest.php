@@ -24,6 +24,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\DeclaresDependents;
 use Tests\TestCase;
 
 /**
@@ -35,6 +36,7 @@ use Tests\TestCase;
  */
 class DependentPrivacyTest extends TestCase
 {
+    use DeclaresDependents;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -46,7 +48,7 @@ class DependentPrivacyTest extends TestCase
 
     private function add(User $holder, string $name, string $bornOn): Dependent
     {
-        return app(DependentRegistry::class)->add($holder, $name, $bornOn);
+        return $this->declareLegacyDependent($holder, $name, $bornOn);
     }
 
     /** El modo del subsistema. Sin fila, `WaiverSettings::mode()` cae a `externo`. */

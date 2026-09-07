@@ -17,7 +17,6 @@ use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\CardToken;
 use App\Domain\Identity\Services\CustomerCards;
 use App\Domain\Identity\Services\DependentAssigner;
-use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\PuertaSettings;
 use App\Domain\Identity\Services\WaiverSignatureRequest;
@@ -32,6 +31,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
+use Tests\Support\DeclaresDependents;
 use Tests\TestCase;
 
 /**
@@ -42,6 +42,7 @@ use Tests\TestCase;
  */
 class ValidarRegistroProfileTest extends TestCase
 {
+    use DeclaresDependents;
     use RefreshDatabase;
 
     private const TODAY = '2026-09-05';
@@ -126,8 +127,8 @@ class ValidarRegistroProfileTest extends TestCase
         $holder->roles()->sync([Role::where('name', 'customer')->value('id')]);
         $this->signFor($holder);
         // `#236`: nombre de pila + apellidos. El nombre SE PINTA en la puerta; los apellidos NO.
-        $lucas = app(DependentRegistry::class)->add($holder, 'Lucas', '2017-03-12', self::MINOR, 'mother');
-        app(DependentRegistry::class)->add($holder, 'Vilma', '2019-11-02', 'Retamocho Secreto', 'father');
+        $lucas = $this->declareLegacyDependent($holder, 'Lucas', '2017-03-12', self::MINOR, 'mother');
+        $this->declareLegacyDependent($holder, 'Vilma', '2019-11-02', 'Retamocho Secreto', 'father');
         $this->signFor($holder, $lucas);
 
         $order = Order::create([

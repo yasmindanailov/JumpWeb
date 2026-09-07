@@ -42,9 +42,28 @@ class MeDependentWaiverTest extends ApiTestCase
         ])->first();
     }
 
+    /**
+     * Un menor **SIN firma**, que es el sujeto de todos los casos de este fichero: sin él, el
+     * endpoint que se prueba aquí no tendría nada que firmar.
+     *
+     * ⚠️ **Desde `#441` ese estado solo nace donde no había nada que aceptar** —el menor declarado
+     * antes de esta tanda, o con el waiver en `externo`—, así que el helper lo reproduce apagando el
+     * modo durante el alta y devolviéndolo. No es un truco del arnés: es exactamente la ficha
+     * heredada que este endpoint sigue existiendo para atender, junto a la re-firma cuando se publica
+     * una versión nueva.
+     */
     private function add(User $holder, string $name = 'Lior', string $bornOn = '2017-03-12'): Dependent
     {
-        return app(DependentRegistry::class)->add($holder, $name, $bornOn);
+        $antes = Setting::query()->where('key', 'waiver.mode')->value('value');
+        $this->mode('externo');
+        Setting::flushMemo();
+
+        try {
+            return app(DependentRegistry::class)->add($holder, $name, $bornOn);
+        } finally {
+            $this->mode(is_string($antes) ? $antes : 'externo');
+            Setting::flushMemo();
+        }
     }
 
     private function path(int $dependentId): string

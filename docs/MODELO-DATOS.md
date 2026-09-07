@@ -404,11 +404,20 @@ las fichas anteriores a `#236` no los tienen y no hay de dónde sacarlos — inv
 sería meter un dato falso en una tabla que alimenta una FIRMA legal. Se exigen en el ALTA NUEVA (la
 validación de `POST /me/dependents`), no en el esquema. ⚠️ `relationship` es una cadena corta y **no un
 enum de BD**: el catálogo vive en `Dependent::RELATIONSHIPS` y añadir una opción no puede pedir una
-migración. **Y nada más**: la EDAD no existe
+migración. ▶ **`#441`: cuatro columnas más, la ACEPTACIÓN RETENIDA de su exención** —
+`waiver_pending_document_id` (FK **RESTRICT** a `legal_document_versions`), `waiver_pending_channel`
+(8), `waiver_pending_ip` (45) y `waiver_pending_user_agent` (512), todas nullable—, hermanas exactas
+de las de `users` (`#179` + S-1 de `#181`). ⚠️ **Viven aquí y no en `users` porque allí es UNA sola
+ranura** y un titular puede tener N menores pendientes a la vez. Las llena `add()` cuando el titular
+declara con el correo sin verificar, las convierte en firma `SignPendingWaiverOnVerification` al
+verificar —descartándolas si el texto se republicó— y **las limpia `unlink()`**: una aceptación de un
+menor retirado no puede sellarse después. **Y nada más**: la EDAD no existe
 como columna, se deriva (`ageOn()`/`isMinor()`/`adultFrom()`, fecha contra fecha en el «hoy» del
 parque) y la fila sobrevive a la mayoría de edad. Único escritor `Identity\Services\DependentRegistry`
 (solo menores; tope `dependents.max_per_account` —vacío = 20— bajo el `lockForUpdate()` de la fila del
-titular). **Quitar es desvincular si hay un waiver firmado detrás** (`removed_at`; `deleting` LANZA) y
+titular; y desde `#441` **el alta EXIGE la aceptación de la exención** donde el modo es `interno` y
+hay versión publicada: sin ella la transacción se deshace y el menor no se crea). **Quitar es
+desvincular si hay un waiver firmado detrás** (`removed_at`; `deleting` LANZA) y
 borrar de verdad si no. `anonymize()`: con firma → desvincula; sin ella → borra. Poda (`model:prune`,
 detrás de `waiver_signatures`): las desvinculadas que ya no tienen ninguna firma. Desde la tanda 2
 (`#198`) `waiver_signatures.subject_id` es FK **RESTRICT** a esta tabla, y la firma en nombre de un menor

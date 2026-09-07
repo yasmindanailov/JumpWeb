@@ -127,6 +127,7 @@ return [
             'relationship_grandparent' => 'Grand-parent',
             'relationship_other' => 'Autre',
             'born_on' => 'Date de naissance',
+            'accept_waiver' => 'J\'ai lu et j\'accepte la décharge de responsabilité en son nom.',
             'add' => 'Ajouter',
             'adding' => 'Ajout…',
             // Le formulaire d'ajout se DÉPLIE depuis un bouton (owner, 2026-08-28) : `add_title`

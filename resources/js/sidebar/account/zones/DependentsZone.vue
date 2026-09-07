@@ -6,7 +6,7 @@ import { useWaiverStore } from '../../stores/waiver.js';
 import ZoneLoading from '../ZoneLoading.vue';
 import DependentCard from './DependentCard.vue';
 import { fieldError } from '../form-outcome.js';
-import { RELATIONSHIPS, dependentsPager, dependentsView } from '../dependents.js';
+import { RELATIONSHIPS, dependentsPager, dependentsView, signupNeedsWaiver } from '../dependents.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 
 /**
@@ -81,7 +81,10 @@ const view = reactive(dependentsView());
 const nameInput = ref(null);
 
 const a = (key) => translate(props.account, key);
-const ctx = () => ({ messages: props.messages, auth: props.auth });
+// ⚠️ `#441` · el `document_id` viaja en el CONTEXTO y no como argumento de `add()`: es del mismo
+// tipo que `messages` y `auth` —lo que la pantalla sabe y el store necesita—, y así la acción sigue
+// siendo una línea. Las otras dos que lo reciben lo ignoran.
+const ctx = () => ({ messages: props.messages, auth: props.auth, documentId: waiver.currentDocumentId });
 const pager = computed(() => dependentsPager(store.items.length, view.page, props.account));
 
 // ⚠️ `store.forget()` ANTES de abrir, y no `store.reset()`: si el intento anterior falló y el cliente
@@ -183,6 +186,32 @@ async function sign(dependent) {
                         <input id="acct-dep-born" v-model="view.form.born_on" type="date" required>
                         <span v-if="fieldError(store.fields, 'born_on')" class="form__error">{{ fieldError(store.fields, 'born_on') }}</span>
                     </div>
+
+                    <!--
+                      ❗ `#441` · **DECLARAR Y ACEPTAR SON UN SOLO GESTO** (`[DECIDIDO owner]`): el
+                      encargo era que «muchos clientes añaden un menor y después no firman», y la
+                      respuesta no es insistir más tarde sino que el estado intermedio no exista.
+                      ⚠️ Se pinta SOLO si el servidor sirve texto firmable: en modo `externo` o sin
+                      versión publicada no hay nada que aceptar y el alta funciona como siempre.
+                      ⚠️ Es el MISMO tratamiento que la tarjeta y que el alta de la cuenta —`<details>`
+                      con el texto y `.check`—: un cuarto tratamiento para lo mismo es como murió el
+                      sistema de sombras de `#196`.
+                    -->
+                    <template v-if="signupNeedsWaiver(waiver.document)">
+                        <details class="form__hint">
+                            <summary>{{ a('register.waiver_read') }}</summary>
+                            <p v-for="(section, i) in waiver.document.sections" :key="i">
+                                <strong v-if="section.h">{{ section.h }}</strong> {{ section.p }}
+                            </p>
+                        </details>
+                        <div class="form__checks">
+                            <label class="check">
+                                <input v-model="view.form.accept_waiver" type="checkbox" required>
+                                <span>{{ a('account.dependents.accept_waiver') }}</span>
+                            </label>
+                            <span v-if="fieldError(store.fields, 'accept_waiver')" class="form__error">{{ fieldError(store.fields, 'accept_waiver') }}</span>
+                        </div>
+                    </template>
 
                     <!-- Guardar y cancelar juntos y en ese orden: la fila que estrenó la confirmación
                          del QR, para que las dos decisiones del área se ofrezcan igual. -->

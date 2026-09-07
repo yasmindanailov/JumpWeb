@@ -115,7 +115,7 @@ export const useDependentsStore = defineStore('dependents', {
         },
 
         /** Declara un menor. Devuelve si salió. La respuesta ES el menor, y se añade al final. */
-        async add(form, { api = httpClient, messages = {}, auth = {} } = {}) {
+        async add(form, { api = httpClient, messages = {}, auth = {}, documentId = null } = {}) {
             this.signedId = null;
 
             return runForm(
@@ -123,11 +123,20 @@ export const useDependentsStore = defineStore('dependents', {
                 // `#236`: apellidos y relación viajan con el alta. Se mandan TAL CUAL los teclea el
                 // titular; el saneo y la lista cerrada de relaciones los cierra el servidor, que es
                 // quien puede (`CE-4`: el cliente no decide nada sobre un menor).
+                //
+                // ❗ `#441`: y con ellos la ACEPTACIÓN de su exención, porque declarar y aceptar son
+                // un solo gesto. ⚠️ Los dos campos se omiten cuando no hay texto que firmar —modo
+                // `externo` o sin versión publicada—: el esquema es `additionalProperties: false`, así
+                // que mandarlos a `null` sería un 422 en una instalación que no los pide.
+                // ⚠️⚠️ **El `document_id` es el del texto SERVIDO**, no una constante: si se
+                // republicó mientras se rellenaba, el servidor responde 409 y la pantalla lo relee —
+                // no se firma un texto que no se ha leído.
                 () => api.post('/me/dependents', {
                     name: form.name,
                     surname: form.surname,
                     relationship: form.relationship,
                     born_on: form.born_on,
+                    ...(documentId === null ? {} : { accept_waiver: true, waiver_document_id: documentId }),
                 }),
                 { messages, auth },
                 (response) => { this.list = replaceDependent(this.list, response.data); },

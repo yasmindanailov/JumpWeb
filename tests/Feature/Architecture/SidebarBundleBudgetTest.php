@@ -712,8 +712,16 @@ class SidebarBundleBudgetTest extends TestCase
      * sino mudar el `rereadToken` —que es estado de PANTALLA— al `dependentsView()` del módulo
      * plano, donde ya viven la página y el formulario desplegado. *Subir un techo después de extraer
      * no es lo mismo que subirlo en vez de extraer* (`#349`). Quedan **0,73 KiB**.
+     *
+     * ▶ **277 (`#441`, la T1)**: medido **276,15 KiB**. Entra la CASILLA de la exención en el alta —el
+     * `<details>` con el texto servido, el `.check` y su error por campo—, que es lo que convierte
+     * «declarar» y «aceptar» en un solo gesto.
+     * ⚠️⚠️ **Y otra vez se PODÓ antes de subir, con el mismo gate de por medio**: `#441` dejó el
+     * componente en **42 líneas sobre 40**, y en lugar de subir aquel techo el `document_id` se mudó
+     * al CONTEXTO —es del mismo tipo que `messages` y `auth`: lo que la pantalla sabe y el store
+     * necesita—, así que la acción volvió a ser una línea. Quedan **0,85 KiB**.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 276;
+    private const SIDEBAR_CHUNK_MAX_KB = 277;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

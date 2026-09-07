@@ -14,7 +14,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-PHPT='SidebarDependentWaiverOfferTest|MeDependentWaiverTest'
+PHPT='SidebarDependentWaiverOfferTest|MeDependentWaiverTest|DependentWaiverAtSignupTest|DependentPrivacyTest'
 RUN_PHP="docker compose exec -u sail -T laravel.test php artisan test --filter=${PHPT}"
 RUN_JS="docker compose exec -u sail -T laravel.test node --test resources/js/sidebar/account/dependents.test.js"
 
@@ -24,6 +24,10 @@ FICHEROS=(
     resources/js/sidebar/account/zones/DependentCard.vue
     resources/js/sidebar/account/zones/DependentsZone.vue
     app/Domain/Identity/Services/WaiverSigner.php
+    app/Domain/Identity/Services/DependentRegistry.php
+    app/Domain/Identity/Models/Dependent.php
+    app/Domain/Identity/Listeners/SignPendingWaiverOnVerification.php
+    app/Http/Controllers/Api/V1/MeDependentsController.php
 )
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
@@ -65,6 +69,10 @@ M=resources/js/sidebar/account/dependents.js
 C=resources/js/sidebar/account/zones/DependentCard.vue
 Z=resources/js/sidebar/account/zones/DependentsZone.vue
 W=app/Domain/Identity/Services/WaiverSigner.php
+R=app/Domain/Identity/Services/DependentRegistry.php
+D=app/Domain/Identity/Models/Dependent.php
+L=app/Domain/Identity/Listeners/SignPendingWaiverOnVerification.php
+K=app/Http/Controllers/Api/V1/MeDependentsController.php
 
 # ── 1 · La decisión de QUÉ ofrecer ────────────────────────────────────────────────────────────
 mutar "la acción ignora el correo verificado (el defecto original)" "$M" \
@@ -100,6 +108,66 @@ mutar "WaiverSigner deja de exigir el correo verificado al menor a cargo" "$W" \
   '            $needsVerifiedEmail = $request->declaredBy === null
                 && $request->subjectType !== WaiverSignature::SUBJECT_GUEST_MINOR
                 && $request->subjectType !== WaiverSignature::SUBJECT_DEPENDENT;'
+
+# ── T1 · declarar y aceptar son UN SOLO GESTO ─────────────────────────────────────────────────
+mutar "el alta deja de EXIGIR la aceptación (el encargo del owner, deshecho)" "$R" \
+  '        if ($exigible && $waiver === null) {
+            throw new DependentWaiverRequiredException;
+        }' \
+  '        if (false) {
+            throw new DependentWaiverRequiredException;
+        }'
+
+mutar "se EXIGE también donde no hay nada que firmar (externo se queda sin altas)" "$R" \
+  '        $exigible = WaiverSettings::isInternal()
+            && LegalDocuments::latestVersionNumber(WaiverSettings::SLUG) !== null;' \
+  '        $exigible = true;'
+
+mutar "❗ FIRMA aunque el correo no esté verificado (el escenario P12)" "$R" \
+  '                if ($locked->email_verified_at !== null) {' \
+  '                if (true) {'
+
+mutar "la aceptación NO se retiene: se pierde en silencio" "$R" \
+  '                } else {
+                    // La aceptación RETENIDA, hermana exacta de la del titular' \
+  '                } elseif (false) {
+                    // La aceptación RETENIDA, hermana exacta de la del titular'
+
+mutar "verificar el correo NO sella las aceptaciones de los menores" "$L" \
+  '        $this->signPendingDependents($user);' \
+  '        // sin sellar'
+
+# ⚠️ **Una mutación retirada, y por qué**: cambiar el `if ($document === null)` del listener por
+# `if (false)` NO muerde, y **no es un hueco de la guarda**: el `sign()` recibiría `null`, lanzaría, y
+# el `catch (Throwable)` —deliberado desde `#181`: «un fallo aquí NO puede impedir la verificación»—
+# lo absorbe. El efecto observable es el MISMO (cero firmas), así que es una mutación EQUIVALENTE en
+# el dominio: lo único que cambia es si el log dice `pending_dropped` o `pending_failed`. Atar un caso
+# al texto de un log para matarla sería vigilar el instrumento en vez de la regla.
+
+mutar "la pendiente NO se limpia antes de sellar (una 2.ª verificación firmaría dos veces)" "$L" \
+  '            $dependent->forceFill([
+                '"'"'waiver_pending_document_id'"'"' => null,
+                '"'"'waiver_pending_channel'"'"' => null,
+                '"'"'waiver_pending_ip'"'"' => null,
+                '"'"'waiver_pending_user_agent'"'"' => null,
+            ])->save();' \
+  '            // sin limpiar'
+
+mutar "retirar un menor DEJA su aceptación pendiente viva" "$D" \
+  "                'waiver_pending_document_id' => null," \
+  "                'waiver_pending_document_id' => \$this->waiver_pending_document_id,"
+
+mutar "la API deja de pedir la casilla" "$K" \
+  "            'accept_waiver' => \$exigible ? ['required', 'accepted'] : ['nullable', 'boolean']," \
+  "            'accept_waiver' => ['nullable', 'boolean'],"
+
+mutar "la API acepta un texto CADUCADO (no comprueba vigencia)" "$K" \
+  '            $waiver = WaiverAcceptance::currentDocument((int) $data['"'"'waiver_document_id'"'"']);
+
+            if ($waiver === null) {' \
+  '            $waiver = \App\Domain\Identity\Models\LegalDocumentVersion::find((int) $data['"'"'waiver_document_id'"'"']);
+
+            if (false) {'
 
 echo
 echo "── Veredicto: ${muerden}/${total} mutaciones muerden ──"

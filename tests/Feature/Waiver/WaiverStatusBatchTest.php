@@ -6,7 +6,6 @@ use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
-use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Identity\Services\WaiverSignatureRequest;
@@ -16,6 +15,7 @@ use App\Domain\Platform\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\DeclaresDependents;
 use Tests\TestCase;
 
 /**
@@ -27,6 +27,7 @@ use Tests\TestCase;
  */
 class WaiverStatusBatchTest extends TestCase
 {
+    use DeclaresDependents;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -61,7 +62,11 @@ class WaiverStatusBatchTest extends TestCase
 
     private function add(User $holder, string $name): Dependent
     {
-        return app(DependentRegistry::class)->add($holder, $name, '2017-03-12');
+        // ⚠️ `#441` · el sujeto de este fichero es un menor SIN firma —asevera
+        // `[false,true,false,true,false,true]`—, y desde que declarar exige aceptar, ese estado solo
+        // nace donde no había nada que aceptar. `DeclaresDependents` reproduce la ficha heredada
+        // pasando por el escritor de verdad, no saltándoselo.
+        return $this->declareLegacyDependent($holder, $name, '2017-03-12');
     }
 
     public function test_for_dependents_matches_for_dependent_one_by_one_in_internal_mode(): void

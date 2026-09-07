@@ -262,7 +262,17 @@ class Dependent extends Model
     public function unlink(): void
     {
         if ($this->removed_at === null) {
-            $this->forceFill(['removed_at' => now()])->save();
+            // ⚠️ `#441` · con la fila se retira su ACEPTACIÓN RETENIDA: una aceptación de un menor
+            // que ya no está no puede convertirse en firma cuando el titular verifique su correo
+            // —firmaría por alguien retirado— y su IP no tiene por qué quedarse guardada. Lo que se
+            // conserva es lo FIRMADO, que es prueba; lo pendiente no lo es todavía.
+            $this->forceFill([
+                'removed_at' => now(),
+                'waiver_pending_document_id' => null,
+                'waiver_pending_channel' => null,
+                'waiver_pending_ip' => null,
+                'waiver_pending_user_agent' => null,
+            ])->save();
         }
     }
 

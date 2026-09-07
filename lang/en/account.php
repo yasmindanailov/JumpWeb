@@ -127,6 +127,7 @@ return [
             'relationship_grandparent' => 'Grandparent',
             'relationship_other' => 'Other',
             'born_on' => 'Date of birth',
+            'accept_waiver' => 'I have read and accept the liability waiver on their behalf.',
             'add' => 'Add',
             'adding' => 'Adding…',
             // The add form is now DISCLOSED by a button (owner, 2026-08-28): `add_title` labels both

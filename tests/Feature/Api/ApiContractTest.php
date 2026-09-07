@@ -66,6 +66,15 @@ class ApiContractTest extends TestCase
         // OpenAPI 3.0 no sabe decir «obligatorio si el servidor dice que falta», así que lo decide el
         // servidor: `account-context.terms_pending` es la pista y el 422 por campo es la autoridad.
         'CreateOrderRequest' => ['accept_terms', 'phone'],
+        // `#441` · MISMO patrón, tercera vez: cuerpo de PETICIÓN con opcionalidad CONDICIONAL. La
+        // exención del menor solo se acepta **si esta instalación la gestiona dentro** (`waiver.mode
+        // = interno`) **y** hay una versión publicada; en `externo`, o sin publicar, no hay nada que
+        // aceptar y exigir los dos campos dejaría a esa instalación **sin poder declarar un menor**.
+        // ⚠️ Van los DOS y no uno: la casilla es el acto afirmativo del art. 7.1 y el identificador
+        // solo dice qué texto se sirvió — un `document_id` suelto no prueba que nadie aceptara nada.
+        // Quien lo decide es el servidor: 422 sobre `accept_waiver` cuando falta, 409 si el texto se
+        // republicó. Lo que sigue mordiendo aquí es `additionalProperties: false`.
+        'DependentCreateRequest' => ['accept_waiver', 'waiver_document_id'],
         // Mismo caso: cuerpo de PETICIÓN. `context` tiene valor por defecto, y los dos anti-bot solo
         // los envía quien los tiene: el señuelo `website` lo rellenan los bots y `turnstile_token`
         // solo existe si la instalación configuró claves. Obligarlos convertiría en 422 a un cliente

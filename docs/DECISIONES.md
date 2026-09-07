@@ -24861,6 +24861,33 @@ después de extraer no es lo mismo que subirlo en vez de extraer.* Con la poda, 
 **275 → 276** (medido 275,27). ⚠️ `SidebarMountTest` exige la lista exacta de rótulos **y su orden**:
 el aviso nuevo no podía entrar en silencio.
 
-▶ **Quedan T0.b (la red), T1 (el alta acepta), T2 (el aviso del índice) y T3 (los plazos)**, en ese
-orden y por el motivo escrito arriba: sin la red, la suite sale verde sin ejercitar el invariante
-nuevo ni una vez.
+### ▶ T0.b y T1 EJECUTADAS — la red y el gesto único
+
+**T0.b · la red, ANTES de la T1.** Escenario `dependent` en `waiver:verify-chain`, cuya propiedad no
+es la idempotencia de los otros dos sino la **EXCLUSIÓN**: N altas contra el último hueco del tope.
+▶ **VISTO FALLAR**: sin el `lockForUpdate()` de `add()`, doce altas dejan **31 menores con un tope de
+20**. Ese lock llevaba desde `#191` sosteniendo un invariante que **nadie había medido** (la suite es
+ciega: SQLite no implementa locks). Además `DependentPrivacyTest` nunca fijaba el modo —y el fallback
+es `externo`—, y `DependentRegistry` no estaba en ninguna de las tres listas del gate.
+⚠️ **Censo MEDIDO con sonda**: **31 casos en CUATRO ficheros**, no «15 ficheros / 28 métodos».
+
+**T1 · declarar y aceptar son un solo gesto.** Contrato primero (los dos campos en
+`OPTIONAL_BY_DESIGN`, el 409 nuevo), migración aditiva de cuatro columnas, `add()` que exige y firma
+o **retiene**, el listener que sella las de los menores al verificar, `unlink()` que limpia la
+pendiente, y la casilla en el formulario del cajón. `DependentRegistry` pasa a `CRITICAL_FILES` y al
+patrón del hook: ahora es co-dueño de la cadena.
+
+Suite **4.388** (27.189) · `DependentWaiverAtSignupTest` **15** · `dependents.test.js` **34** ·
+**16/16 mutaciones muerden** · los TRES escenarios sobre InnoDB · Pint · docs-check · build.
+
+⚠️⚠️ **Cuatro cosas que enseñó la ejecución**: (1) **`accepted` es una regla IMPLÍCITA** y falla con
+el campo AUSENTE aunque lleve `nullable` — con ella, una instalación en `externo` recibía 422 al
+declarar un menor, o sea el defecto que el diseño existe para impedir, colado por la validación.
+(2) ⚠️ **Un caso de vigencia con el titular VERIFICADO no mide nada** (dos capas lo tapan): la rama de
+RETENCIÓN no re-comprueba, así que ahí la del controlador es la única — sin ella se retendría un texto
+caducado para sellarlo semanas después. (3) Una mutación **retirada por equivalente**, dicho en el
+arnés: el `catch (Throwable)` deliberado absorbe el caso y solo cambia el log. (4) El verificador se
+puso **ROJO al terminar la T1 y era correcto** — su sonda no aceptaba la exención; ahora mide también
+que la firma se escriba DENTRO de la transacción del alta.
+
+▶ **Quedan T2 (el aviso del índice) y T3 (los plazos de retención).**

@@ -30,7 +30,27 @@ export const RELATIONSHIPS = ['father', 'mother', 'legal_guardian', 'grandparent
  * de colar un valor por defecto que nadie ha mirado.
  */
 export function dependentForm() {
-    return { name: '', surname: '', relationship: '', born_on: '' };
+    return { name: '', surname: '', relationship: '', born_on: '', accept_waiver: false };
+}
+
+/**
+ * ❗ `#441` · **¿este alta tiene que aceptar la exención?** Lo dice el TEXTO SERVIDO, no el cliente:
+ * si el servidor no sirve documento firmable —modo `externo`, o `interno` sin versión publicada— no
+ * hay nada que aceptar y el formulario no pinta la casilla.
+ *
+ * ⚠️ La autoridad sigue siendo el servidor, que responde 422 sobre `accept_waiver` si falta. Esto
+ * solo decide qué se PINTA: si la decisión viviera aquí, se declararía sin aceptar quitando un
+ * `input` del DOM — el defecto que `#400` documenta para el justificante.
+ *
+ * @param {{id?: number}|null} document  `stores/waiver.js::document`
+ */
+export function signupNeedsWaiver(document) {
+    return typeof document?.id === 'number';
+}
+
+/** El `document_id` que viaja con el alta, o `null` cuando no hay nada que firmar. */
+export function signupWaiverDocumentId(document) {
+    return signupNeedsWaiver(document) ? document.id : null;
 }
 
 /**

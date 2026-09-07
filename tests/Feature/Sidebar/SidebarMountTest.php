@@ -541,7 +541,13 @@ class SidebarMountTest extends TestCase
                 'surname', 'relationship', 'relationship_choose', 'relationship_hint',
                 'relationship_father', 'relationship_mother', 'relationship_legal_guardian',
                 'relationship_grandparent', 'relationship_other',
-                'born_on', 'add', 'adding',
+                'born_on',
+                // `#441` · la casilla de la exención EN EL ALTA: declarar y aceptar son un solo gesto,
+                // así que el texto vive junto a los campos y no en una pantalla posterior. El del
+                // `<details>` que lo despliega se REUTILIZA de `register.waiver_read`, como en la
+                // tarjeta — un cuarto tratamiento para lo mismo es como murió el sistema de sombras.
+                'accept_waiver',
+                'add', 'adding',
                 // El alta se DESPLIEGA desde un botón (2026-08-28): el disparador se rotula con
                 // `add_title` —el mismo texto que titula lo que abre— y `add_cancel` lo pliega.
                 'add_cancel',

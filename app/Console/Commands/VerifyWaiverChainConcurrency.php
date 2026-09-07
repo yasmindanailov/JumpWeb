@@ -115,10 +115,18 @@ class VerifyWaiverChainConcurrency extends Command
         // no gaste el hueco dejaría a la carrera sin nada que disputar.
         try {
             if ($scenario === 'dependent') {
+                // ⚠️ `#441` · el alta ACEPTA la exención en el mismo gesto, así que el documento viaja
+                // con ella. Y como el titular del `seed` tiene el correo verificado, cada alta que
+                // entre **firmará dentro de su propia transacción**: eso es lo que hace que este
+                // escenario mida ahora el lock ALARGADO y no solo el tope.
                 app(DependentRegistry::class)->add(
                     $seed['user'],
                     'Sonda en serie',
                     now()->subYears(7)->toDateString(),
+                    '',
+                    null,
+                    $seed['version'],
+                    WaiverSignatureRequest::api('127.0.0.1', 'waiver:verify-chain/probe'),
                 );
             } else {
                 app(WaiverSigner::class)->sign(
@@ -284,6 +292,10 @@ class VerifyWaiverChainConcurrency extends Command
                             $holder,
                             'Carrera '.$i,
                             now()->subYears(6)->toDateString(),
+                            '',
+                            null,
+                            $version,
+                            $request,
                         );
                         $outcome = 'added:'.$nuevo->getKey();
                     } elseif ($scenario === 'guest') {
@@ -422,6 +434,15 @@ class VerifyWaiverChainConcurrency extends Command
         $final = Dependent::query()->where('user_id', $seed['user']->getKey())->active()->count();
         $chain = WaiverChain::verify(User::findOrFail($seed['user']->getKey()));
 
+        // ⚠️ `#441` · **DOS firmas y no más**: la de la sonda en serie y la del único alta que gana la
+        // carrera. Cada `add()` que entrara de más traería la suya, así que este contador es la
+        // segunda mitad del veredicto — y la que mide que la firma va DENTRO de la transacción del
+        // alta: si se escribiera fuera, una carrera perdida dejaría firma sin menor.
+        $firmas = WaiverSignature::query()
+            ->where('user_id', $seed['user']->getKey())
+            ->where('subject_type', WaiverSignature::SUBJECT_DEPENDENT)
+            ->count();
+
         $this->newLine();
         $this->line('<options=bold>Resultados de las altas concurrentes:</>');
         $this->line('  '.$added->count().'× declaran un menor (esperado 1) · '.$limited->count().'× reciben el tope (esperado '.($workers - 1).')');
@@ -429,17 +450,19 @@ class VerifyWaiverChainConcurrency extends Command
             $this->line('  <fg=red>'.$errors->count().'× desenlace inesperado</>');
             $errors->each(fn (string $e) => $this->line('     '.$e));
         }
-        $this->line("  menores ACTIVOS al terminar: {$final} · tope: {$max} · cadena del titular: ".($chain['ok'] ? 'OK' : 'ROTA'));
+        $this->line("  menores ACTIVOS al terminar: {$final} · tope: {$max} · firmas de menor: {$firmas} (esperadas 2)"
+            .' · cadena del titular: '.($chain['ok'] ? 'OK' : 'ROTA'));
 
         $ok = $added->count() === 1
             && $limited->count() === $workers - 1
             && $errors->isEmpty()
             && $final === $max
+            && $firmas === 2
             && $chain['ok'];
 
         $this->newLine();
         if ($ok) {
-            $this->info("✅ PASA (dependent): con {$workers} altas simultáneas por el ÚLTIMO hueco entra UNA sola y la cuenta queda exactamente en el tope ({$max}). Verificado sobre InnoDB real.");
+            $this->info("✅ PASA (dependent): con {$workers} altas simultáneas por el ÚLTIMO hueco entra UNA sola, la cuenta queda exactamente en el tope ({$max}) y hay {$firmas} firmas de menor —una por alta que entró, escritas DENTRO de su transacción—. Verificado sobre InnoDB real.");
         } else {
             $this->error("❌ FALLA: la cuenta quedó en {$final} con un tope de {$max}, o los desenlaces no cuadran. Revisar que el lockForUpdate() de la fila del titular sea la PRIMERA sentencia de la transacción de DependentRegistry::add().");
         }

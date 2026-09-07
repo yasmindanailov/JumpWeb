@@ -17,7 +17,6 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\CustomerCards;
 use App\Domain\Identity\Services\DependentAssigner;
-use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\GateProfile;
 use App\Domain\Identity\Services\GateVisits;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
@@ -30,6 +29,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\DeclaresDependents;
 use Tests\TestCase;
 
 /**
@@ -39,6 +39,7 @@ use Tests\TestCase;
  */
 class GateProfileTest extends TestCase
 {
+    use DeclaresDependents;
     use RefreshDatabase;
 
     protected const TODAY = '2026-09-05';
@@ -291,8 +292,8 @@ class GateProfileTest extends TestCase
     public function test_minors_travel_with_their_first_name_but_never_their_surname(): void
     {
         $holder = $this->holder();
-        $lucas = app(DependentRegistry::class)->add($holder, 'Lucas', '2017-03-12', 'Zorrocotroco Único', 'mother'); // 9 hoy
-        $vera = app(DependentRegistry::class)->add($holder, 'Vilma', '2019-11-02', 'Retamocho Raro', 'father');       // 6, sin firma
+        $lucas = $this->declareLegacyDependent($holder, 'Lucas', '2017-03-12', 'Zorrocotroco Único', 'mother'); // 9 hoy
+        $vera = $this->declareLegacyDependent($holder, 'Vilma', '2019-11-02', 'Retamocho Raro', 'father');       // 6, sin firma
         $this->signFor($holder, $lucas);
         [$order, [$item]] = $this->paidOrder($holder, [[$this->entry, 2, self::TODAY], [$this->pack, 4, self::TODAY]]);
         $this->mode('externo');
@@ -361,7 +362,7 @@ class GateProfileTest extends TestCase
         // CARDINALIDAD: Eloquent omite la carga eager de una relación sin filas padre, así que comparar
         // «con complementos» contra «sin complementos» mediría la forma, no el crecimiento.
         $small = $this->holder();
-        $kid = app(DependentRegistry::class)->add($small, 'Uno', '2017-03-12');
+        $kid = $this->declareLegacyDependent($small, 'Uno', '2017-03-12');
         $this->signFor($small, $kid);
         [$o1, [$i1]] = $this->paidOrder($small, [[$this->entry, 1, self::TODAY]]);
         OrderItem::create(['order_id' => $o1->id, 'parent_item_id' => $i1->id, 'ticket_type_id' => $this->addon->id, 'quantity' => 1, 'unit_price' => 0, 'seats' => 0]);
@@ -372,7 +373,7 @@ class GateProfileTest extends TestCase
         $big = $this->holder();
         $kids = [];
         foreach (['A', 'B', 'C', 'D'] as $i => $n) {
-            $kids[] = $k = app(DependentRegistry::class)->add($big, "Menor {$n}", '201'.(5 + $i).'-03-12');
+            $kids[] = $k = $this->declareLegacyDependent($big, "Menor {$n}", '201'.(5 + $i).'-03-12');
             $this->signFor($big, $k);
         }
         [$o2, [$a, $b, $c]] = $this->paidOrder($big, [[$this->entry, 2, self::TODAY], [$this->entry, 2, '2026-09-04'], [$this->pack, 4, '2026-09-06']]);

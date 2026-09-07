@@ -141,6 +141,7 @@ return [
             'relationship_grandparent' => 'Abuelo o abuela',
             'relationship_other' => 'Otra',
             'born_on' => 'Fecha de nacimiento',
+            'accept_waiver' => 'He leído y acepto el descargo de responsabilidad en su nombre.',
             'add' => 'Añadir',
             'adding' => 'Añadiendo…',
             // ── El alta se DESPLIEGA desde un botón (encargo del owner, 2026-08-28) ───────────

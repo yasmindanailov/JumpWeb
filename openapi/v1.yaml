@@ -2142,10 +2142,23 @@ paths:
                 $ref: '#/components/schemas/Dependent'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '409':
+          description: |
+            `waiver_document_stale` — el texto del descargo se republicó entre que la pantalla lo
+            sirvió y el momento de escribir. Se comprueba **bajo el lock** (`#181` S-3), así que puede
+            saltar aunque la pantalla acabara de leerlo. **El menor NO se crea**: la transacción se
+            deshace entera.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '422':
           description: |
             `validation_failed` (con `fields`) · `dependent_not_minor` — ya tiene 18 o más ·
             `dependents_limit_reached` — la cuenta está en su tope (`params.max`).
+
+            ⚠️ Desde `#441`, `validation_failed` incluye `accept_waiver` cuando la instalación pide
+            la exención y no llega aceptada: declarar sin aceptar **no crea nada**.
           content:
             application/json:
               schema:
@@ -6123,6 +6136,17 @@ components:
 
         ⚠️ Los tres son **obligatorios al declarar**, aunque en la tabla los dos nuevos sean
         nulables: las fichas de antes de `#236` no los tienen y no se inventan.
+
+        ❗❗ **La EXENCIÓN se acepta aquí** (`#441`): declarar un menor y aceptar su descargo son un
+        solo gesto. Los dos campos son **condicionalmente obligatorios** —solo cuando el modo del
+        waiver es `interno` y hay una versión publicada—, y eso no se puede expresar en el esquema:
+        **la autoridad es el SERVIDOR**, que responde `422 validation_failed` sobre `accept_waiver`
+        cuando falta. Si estuvieran en `required`, una instalación en modo `externo` no podría
+        declarar un menor.
+
+        ⚠️ Van **DOS y no uno**, como las dos altas de cuenta: la casilla es el acto afirmativo del
+        art. 7.1 RGPD y el identificador solo dice **qué texto** se sirvió. Un `document_id` suelto
+        no prueba que nadie aceptara nada.
       required: [name, surname, relationship, born_on]
       additionalProperties: false
       properties:
@@ -6142,6 +6166,17 @@ components:
           type: string
           format: date
           description: '`Y-m-d`, no futura y de un menor (hoy, menos de 18 años).'
+        accept_waiver:
+          type: boolean
+          description: |
+            El titular acepta el descargo EN NOMBRE del menor. Obligatorio cuando el servidor sirve
+            un texto firmable; ignorado cuando no lo hay.
+        waiver_document_id:
+          type: integer
+          description: |
+            El identificador de la versión que la pantalla SIRVIÓ. El servidor comprueba que sigue
+            siendo la vigente —también bajo el lock, al escribir— y responde `409` si se republicó
+            mientras se rellenaba: **no se firma un texto que no se ha leído**.
 
     EmailRequest:
       type: object

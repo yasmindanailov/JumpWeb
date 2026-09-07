@@ -26,6 +26,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Log;
+use Tests\Support\DeclaresDependents;
 use Tests\TestCase;
 
 /**
@@ -39,6 +40,7 @@ use Tests\TestCase;
  */
 class DependentAssignerTest extends TestCase
 {
+    use DeclaresDependents;
     use RefreshDatabase;
 
     private const VISIT = '2026-09-05';
@@ -80,7 +82,7 @@ class DependentAssignerTest extends TestCase
 
     private function add(User $holder, string $name = 'Lior', string $bornOn = '2017-03-12'): Dependent
     {
-        return app(DependentRegistry::class)->add($holder, $name, $bornOn);
+        return $this->declareLegacyDependent($holder, $name, $bornOn);
     }
 
     private function mode(string $mode): void

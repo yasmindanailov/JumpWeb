@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
+use Tests\Support\DeclaresDependents;
 use Tests\TestCase;
 
 /**
@@ -42,6 +43,7 @@ use Tests\TestCase;
  */
 class UserDependentsInfolistTest extends TestCase
 {
+    use DeclaresDependents;
     use RefreshDatabase;
 
     protected ?LegalDocumentVersion $version = null;
@@ -79,7 +81,7 @@ class UserDependentsInfolistTest extends TestCase
 
     private function add(User $holder, string $name, string $bornOn): Dependent
     {
-        return app(DependentRegistry::class)->add($holder, $name, $bornOn);
+        return $this->declareLegacyDependent($holder, $name, $bornOn);
     }
 
     private function signFor(User $holder, Dependent $dependent): void

@@ -394,4 +394,47 @@ teniendo sujeto**. Con la relajación descartada de §1.3 habrían perdido su pr
 ⚠️ Eso **acota** además el cambio de población de §5.1: solo deja PII el menor de un titular ya
 verificado.
 
-▶ **Lo que queda**: T1 (el alta declara y acepta), T2 (el aviso del índice) y T3 (los dos plazos).
+### 8.3 · ▶ T1 EJECUTADA — declarar y aceptar son un solo gesto
+
+**Contrato primero, como manda §4.4**: `DependentCreateRequest` gana `accept_waiver` y
+`waiver_document_id` (declarados en `OPTIONAL_BY_DESIGN` con su porqué: son condicionalmente
+obligatorios y OpenAPI 3.0 no sabe decirlo), y `POST /me/dependents` estrena el **409**.
+
+**Migración aditiva**: cuatro columnas nullable en `dependents` (§4.2). El trinquete de columnas de
+`DependentRegistryTest` saltó, que es exactamente para lo que existe: cada columna en esa tabla es
+dato de un menor y hay que justificarla.
+
+**Dominio**: `add()` exige la aceptación cuando hay algo que aceptar —y **la comprueba el escritor**,
+no el llamante, para que ningún llamante futuro nazca por fuera—; firma si el correo está verificado
+y **retiene** si no. `SignPendingWaiverOnVerification` sella las de los menores al verificar,
+**cada una por su cuenta**, y `unlink()` limpia la pendiente de un menor retirado.
+
+**Verificación**: suite **4.388** (27.189) · `DependentWaiverAtSignupTest` **15 casos** ·
+`dependents.test.js` **34** · `scripts/mutar-firma-al-declarar.sh` **16/16 muerden** · los TRES
+escenarios de `waiver:verify-chain` sobre InnoDB · Pint ✓ · `docs-check` ✓ · build ✓.
+
+⚠️⚠️ **Lo que enseñó la ejecución, y que no estaba en el plan:**
+
+1. **`accepted` es una regla IMPLÍCITA de Laravel**: falla también con el campo AUSENTE, aunque vaya
+   con `nullable`. Con ella en la rama de «no exigible», una instalación en modo `externo` recibía
+   **422 al declarar un menor** — justo el defecto que §4.5 existe para impedir, colado por la puerta
+   de la validación. Tiene caso propio.
+2. ⚠️ **Un caso de vigencia con el titular VERIFICADO no mide nada**, y lo dijo la mutación: ahí hay
+   DOS capas (el controlador y la re-comprobación de `WaiverSigner` bajo el lock), así que quitar la
+   primera pasa en verde. **La rama de RETENCIÓN no re-comprueba**, así que para un titular sin
+   verificar la del controlador es la ÚNICA — y sin ella se guardaría como pendiente un texto que ya
+   nadie puede leer, para sellarlo semanas después. Caso añadido.
+3. **Una mutación retirada por EQUIVALENTE**, dicho en el arnés: el `catch (Throwable)` deliberado del
+   listener absorbe el texto caducado, así que el efecto observable es el mismo (cero firmas) y solo
+   cambia qué dice el log. *Atar un caso al texto de un log sería vigilar el instrumento, no la regla.*
+4. **El censo se resolvió con un TRAIT** (`Tests\Support\DeclaresDependents`) en vez de ocho copias
+   del mismo bloque: reproduce la ficha HEREDADA —el menor declarado antes de esta tanda— **pasando
+   por el escritor de verdad**, así que el tope, el lock y la minoría se siguen ejerciendo.
+5. **Los presupuestos del cajón volvieron a cambiar el diseño y otra vez sin subir su techo**: el
+   componente llegó a 42/40 y el `document_id` se mudó al CONTEXTO —es del mismo tipo que `messages`
+   y `auth`—, con lo que la acción volvió a una línea. El chunk sube **276 → 277** (medido 276,15).
+6. ⚠️ **El verificador de concurrencia se puso ROJO al terminar la T1, y era correcto**: su sonda en
+   serie no aceptaba la exención. Actualizado, ahora mide **dos cosas** —el tope y que la firma se
+   escriba DENTRO de la transacción del alta—: `firmas de menor: 2 (esperadas 2)`.
+
+▶ **Lo que queda**: T2 (el aviso del índice) y T3 (los dos plazos de retención).

@@ -4,10 +4,10 @@ namespace Tests\Feature\Sidebar;
 
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\User;
-use App\Domain\Identity\Services\DependentRegistry;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Platform\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\DeclaresDependents;
 use Tests\TestCase;
 
 /**
@@ -40,6 +40,7 @@ use Tests\TestCase;
  */
 class SidebarDependentWaiverOfferTest extends TestCase
 {
+    use DeclaresDependents;
     use RefreshDatabase;
 
     private const CARD = 'resources/js/sidebar/account/zones/DependentCard.vue';
@@ -103,7 +104,7 @@ class SidebarDependentWaiverOfferTest extends TestCase
         ])->first();
 
         $holder = User::factory()->create(['email_verified_at' => null]);
-        $dep = app(DependentRegistry::class)->add($holder, 'Sonda', '2018-05-05', 'Menor', 'father');
+        $dep = $this->declareLegacyDependent($holder, 'Sonda', '2018-05-05', 'Menor', 'father');
 
         $this->actingAs($holder, 'sanctum');
 

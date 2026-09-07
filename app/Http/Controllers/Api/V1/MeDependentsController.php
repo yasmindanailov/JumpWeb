@@ -11,7 +11,9 @@ use App\Domain\Identity\Exceptions\WaiverNotInternalException;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\DependentRegistry;
+use App\Domain\Identity\Services\LegalDocuments;
 use App\Domain\Identity\Services\WaiverAcceptance;
+use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Http\Api\ApiCollection;
 use App\Http\Api\ApiErrorCode;
@@ -66,12 +68,42 @@ class MeDependentsController extends Controller
         // tabla sean nulables: las fichas anteriores a esa tanda no los tienen y no se inventan,
         // pero a partir de ahora no se declara a nadie sin ellos. La relación se cierra contra el
         // catálogo —es lo que sostiene que este adulto pueda firmar por el menor—.
+        // ❗❗ `#441` · **la exención se acepta AQUÍ, en el mismo gesto.** Los dos campos son
+        // obligatorios SOLO si esta instalación tiene algo que firmar: en modo `externo`, o sin
+        // versión publicada, exigirlos dejaría a esa instalación sin poder declarar un menor
+        // (`specs/firma-al-declarar-menor.md` §4.5, la doctrina de `#348`).
+        //
+        // ⚠️⚠️ **La autoridad es el SERVIDOR y no la casilla**: si la decisión viviera en el cliente
+        // se declararía sin aceptar quitando un `input` del DOM — el defecto que `#400` documenta
+        // para el justificante. Aquí se decide, y `DependentRegistry::add()` lo vuelve a exigir como
+        // cinturón para que ningún llamante futuro nazca por fuera.
+        $exigible = WaiverSettings::isInternal()
+            && LegalDocuments::latestVersionNumber(WaiverSettings::SLUG) !== null;
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:'.Dependent::NAME_MAX],
             'surname' => ['required', 'string', 'max:'.Dependent::SURNAME_MAX],
             'relationship' => ['required', 'string', Rule::in(Dependent::RELATIONSHIPS)],
             'born_on' => ['required', 'date_format:Y-m-d', 'before_or_equal:'.DisplayTime::today()->toDateString()],
+            // ⚠️ La rama de «no exigible» NO puede llevar `accepted`: es una regla IMPLÍCITA de
+            // Laravel y falla también con el campo AUSENTE, aunque vaya junto a `nullable`. Con ella,
+            // una instalación en modo `externo` recibía 422 al declarar un menor — o sea, el defecto
+            // que §4.5 existe para impedir, colado por la puerta de la validación.
+            'accept_waiver' => $exigible ? ['required', 'accepted'] : ['nullable', 'boolean'],
+            'waiver_document_id' => [$exigible ? 'required' : 'nullable', 'integer', 'min:1'],
         ]);
+
+        // ⚠️ El texto se resuelve contra la versión VIGENTE —`currentDocument()` devuelve `null` si el
+        // identificador no es el que manda hoy—, así que una pantalla que llevara abierta desde antes
+        // de una republicación recibe un 409 en vez de firmar algo que su dueño no leyó.
+        $waiver = null;
+        if ($exigible) {
+            $waiver = WaiverAcceptance::currentDocument((int) $data['waiver_document_id']);
+
+            if ($waiver === null) {
+                return ApiErrorResponse::make(ApiErrorCode::WaiverDocumentStale, 409);
+            }
+        }
 
         try {
             $dependent = $registry->add(
@@ -80,7 +112,13 @@ class MeDependentsController extends Controller
                 (string) $data['born_on'],
                 (string) $data['surname'],
                 (string) $data['relationship'],
+                $waiver,
+                $this->signatureRequest($request),
             );
+        } catch (WaiverDocumentStaleException) {
+            // Se republicó entre la comprobación de arriba y la escritura bajo el lock (S-3 de `#181`).
+            // El menor NO se ha creado: la transacción se deshizo entera.
+            return ApiErrorResponse::make(ApiErrorCode::WaiverDocumentStale, 409);
         } catch (DependentNotMinorException) {
             return ApiErrorResponse::make(ApiErrorCode::DependentNotMinor, 422);
         } catch (DependentsLimitReachedException $e) {

@@ -76,6 +76,13 @@ class CriticalPathGateTest extends TestCase
         // cadena de firmas por titular solo es lineal por el `lockForUpdate()` de este fichero, la
         // suite corre en SQLite —que NO emite `FOR UPDATE`— y el verificador es `waiver:verify-chain`.
         'app/Domain/Identity/Services/WaiverSigner.php',
+        // ❗❗ `#441` · **el escritor de menores pasa a ser co-dueño de la cadena de hashes.** Hasta la
+        // T1 solo escribía una ficha y estaba declarado como control negativo; desde que declarar y
+        // aceptar son un solo gesto, `add()` firma DENTRO de su propia transacción y bajo el mismo
+        // lock del titular que usa `WaiverSigner`. ⚠️ Y su lock sostiene además un invariante MEDIDO:
+        // sin él, doce altas simultáneas dejan 31 menores con un tope de 20
+        // (`waiver:verify-chain --scenario=dependent`, visto fallar).
+        'app/Domain/Identity/Services/DependentRegistry.php',
         // Extracción 4b del desmontaje de `ViewOrder` (2026-08-27, spec §9.6·4, `#186`). El primero ES la
         // receta anti-sobreventa de `AFORO-01`/`AFORO-05`, que hasta hoy vivía DOS veces (compra y
         // panel) y ahora vive una: literales fuera de la txn, `orderBy('id')`, `FOR UPDATE` primero. El
@@ -174,24 +181,6 @@ class CriticalPathGateTest extends TestCase
         // obliga a meterlo en el gate a conciencia, no por inercia. Su lock (la fila del titular) lo
         // comparte con `WaiverSigner`, que SÍ está en el gate por la cadena de hashes.
         'app/Domain/Identity/Services/DependentAssigner.php',
-        // ❗❗ `#441` · **el ESCRITOR de menores, declarado aquí a propósito y con fecha de caducidad.**
-        // Hasta hoy no estaba en NINGUNA de las tres listas —ni crítico, ni control negativo, ni en el
-        // patrón del hook—, que es el peor de los tres estados: nadie había decidido nada sobre él.
-        //
-        // Hoy NO es crítico: `add()` escribe una ficha de menor, no dinero ni plazas, y la cadena de
-        // hashes la escribe `WaiverSigner`, que sí está en el gate.
-        //
-        // ⚠️⚠️ **Pero su lock SÍ sostiene un invariante, y ahora está MEDIDO**: `waiver:verify-chain
-        // --scenario=dependent` reproduce que sin el `lockForUpdate()` de la fila del titular doce
-        // altas simultáneas dejan **31 menores con un tope de 20** — sobreventa sin error y sin aviso,
-        // la familia de `AFORO-01` sobre una tabla que no es aforo. Ese instrumento no existía (deuda
-        // desde `#191`: la suite es ciega por construcción).
-        //
-        // ▶ **La T1 de `#441` lo MUEVE a `CRITICAL_FILES` y al patrón del hook**, porque entonces la
-        // firma se escribe DENTRO de esta misma transacción y el fichero pasa a ser co-dueño de la
-        // cadena. Cuando eso pase, este renglón se retira: dejarlo aquí sería afirmar lo contrario de
-        // lo que hace.
-        'app/Domain/Identity/Services/DependentRegistry.php',
     ];
 
     /**

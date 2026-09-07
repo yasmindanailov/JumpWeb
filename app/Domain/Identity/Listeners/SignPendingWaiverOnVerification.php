@@ -2,6 +2,7 @@
 
 namespace App\Domain\Identity\Listeners;
 
+use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\WaiverAcceptance;
@@ -37,7 +38,16 @@ class SignPendingWaiverOnVerification
     {
         $user = $event->user;
 
-        if (! $user instanceof User || $user->waiver_pending_document_id === null) {
+        if (! $user instanceof User) {
+            return;
+        }
+
+        // `#441` · **las de sus MENORES A CARGO, primero y por separado.** Cada una es su propia
+        // aceptación, en su propia fila, y una que falle no puede impedir las demás ni la del
+        // titular. Se hace aunque el titular no tenga ninguna pendiente: son hechos distintos.
+        $this->signPendingDependents($user);
+
+        if ($user->waiver_pending_document_id === null) {
             return;
         }
 
@@ -82,5 +92,71 @@ class SignPendingWaiverOnVerification
                 Log::warning('waiver.pending_failed', ['user_id' => $userId, 'document_id' => $documentId, 'error' => $e->getMessage()]);
             }
         });
+    }
+
+    /**
+     * `#441` — las aceptaciones RETENIDAS de los menores a cargo, que nacieron al declararlos con el
+     * correo del titular sin verificar (`DependentRegistry::add()`).
+     *
+     * ⚠️ **Cada menor va por su cuenta**: se limpia su fila ANTES de firmar —una segunda verificación
+     * no puede firmar dos veces ni dejar la aceptación colgada— y un fallo se registra sin arrastrar a
+     * los demás ni al titular. Mismo criterio que la del titular, aplicado N veces.
+     *
+     * ⚠️ **Solo los ACTIVOS**: `unlink()` ya limpia la pendiente al retirar a un menor, así que un
+     * retirado no debería tener ninguna; el filtro es el cinturón de que nunca se firme por alguien
+     * que ya no está.
+     */
+    private function signPendingDependents(User $user): void
+    {
+        $pendientes = Dependent::query()
+            ->where('user_id', $user->getKey())
+            ->active()
+            ->whereNotNull('waiver_pending_document_id')
+            ->get();
+
+        foreach ($pendientes as $dependent) {
+            $dependentId = (int) $dependent->getKey();
+            $documentId = (int) $dependent->waiver_pending_document_id;
+            $channel = in_array($dependent->waiver_pending_channel, WaiverSignature::CHANNELS, true)
+                ? $dependent->waiver_pending_channel
+                : WaiverSignature::CHANNEL_WEB;
+            $ip = $dependent->waiver_pending_ip ?? request()?->ip();
+            $userAgent = $dependent->waiver_pending_user_agent ?? request()?->userAgent();
+            $userId = (int) $user->getKey();
+
+            $dependent->forceFill([
+                'waiver_pending_document_id' => null,
+                'waiver_pending_channel' => null,
+                'waiver_pending_ip' => null,
+                'waiver_pending_user_agent' => null,
+            ])->save();
+
+            DB::afterCommit(function () use ($userId, $dependentId, $documentId, $channel, $ip, $userAgent): void {
+                try {
+                    $document = WaiverAcceptance::currentDocument($documentId);
+
+                    if ($document === null) {
+                        Log::info('waiver.pending_dropped', [
+                            'user_id' => $userId, 'dependent_id' => $dependentId,
+                            'document_id' => $documentId, 'reason' => 'stale',
+                        ]);
+
+                        return;
+                    }
+
+                    app(WaiverSigner::class)->sign(
+                        User::findOrFail($userId),
+                        $document,
+                        (new WaiverSignatureRequest(channel: $channel, ip: $ip, userAgent: $userAgent))
+                            ->forDependent($dependentId),
+                    );
+                } catch (Throwable $e) {
+                    Log::warning('waiver.pending_failed', [
+                        'user_id' => $userId, 'dependent_id' => $dependentId,
+                        'document_id' => $documentId, 'error' => $e->getMessage(),
+                    ]);
+                }
+            });
+        }
     }
 }

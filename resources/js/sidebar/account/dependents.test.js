@@ -4,7 +4,7 @@ import {
     DEPENDENTS_PER_PAGE, DEPENDENT_WAIVER_SIGN, DEPENDENT_WAIVER_VERIFY,
     bornOnLabel, clampPage, coverageKey, dependentForm, dependentNeedsSignature,
     dependentWaiverAction, dependentWaiverKey, dependentsPager, dependentsView, lastPageOf,
-    pageSlice, replaceDependent,
+    pageSlice, replaceDependent, signupNeedsWaiver, signupWaiverDocumentId,
 } from './dependents.js';
 
 /**
@@ -17,8 +17,30 @@ const minor = (waiver = {}) => ({ id: 1, name: 'Lucas', born_on: '2017-03-12', a
 describe('el formulario de alta', () => {
     // `#236`: eran dos campos y ahora son CUATRO. `relationship` nace vacío a propósito para que
     // el desplegable obligue a elegir, en vez de colar un valor por defecto que nadie ha mirado.
-    test('nace vacío, con los cuatro campos que el servidor acepta', () => {
-        assert.deepEqual(dependentForm(), { name: '', surname: '', relationship: '', born_on: '' });
+    // `#441`: y la CASILLA de la exención, desmarcada — declarar y aceptar son un solo gesto.
+    test('nace vacío, con los campos que el servidor acepta y la casilla SIN marcar', () => {
+        assert.deepEqual(dependentForm(), { name: '', surname: '', relationship: '', born_on: '', accept_waiver: false });
+    });
+});
+
+/**
+ * `#441` · qué decide si el alta PINTA la casilla. ⚠️ Lo dice el TEXTO SERVIDO y no el cliente: sin
+ * documento firmable —modo `externo`, o `interno` sin versión publicada— no hay nada que aceptar y
+ * exigirlo dejaría a esa instalación sin poder declarar un menor.
+ */
+describe('la exención en el alta', () => {
+    test('con texto servido se pide, y su id viaja con el alta', () => {
+        assert.equal(signupNeedsWaiver({ id: 7, sections: [] }), true);
+        assert.equal(signupWaiverDocumentId({ id: 7, sections: [] }), 7);
+    });
+
+    test('⚠️ sin texto servido NO se pide nada, y no viaja ningún id', () => {
+        // Los dos campos se OMITEN del cuerpo: el esquema es `additionalProperties: false`, así que
+        // mandarlos a `null` sería un 422 en una instalación que no los pide.
+        for (const vacio of [null, undefined, {}, { id: null }]) {
+            assert.equal(signupNeedsWaiver(vacio), false);
+            assert.equal(signupWaiverDocumentId(vacio), null);
+        }
     });
 });
 
@@ -208,7 +230,7 @@ describe('el estado de la pantalla', () => {
 
         assert.equal(view.page, 1);
         assert.equal(view.adding, false);
-        assert.deepEqual(view.form, { name: '', surname: '', relationship: '', born_on: '' });
+        assert.deepEqual(view.form, dependentForm());
     });
 
     test('abrir despliega con el formulario limpio; cancelar pliega y tira lo tecleado', () => {
@@ -217,12 +239,12 @@ describe('el estado de la pantalla', () => {
         view.form.name = 'a medias';
         view.open();
         assert.equal(view.adding, true);
-        assert.deepEqual(view.form, { name: '', surname: '', relationship: '', born_on: '' });
+        assert.deepEqual(view.form, dependentForm());
 
         view.form.name = 'otra vez';
         view.cancel();
         assert.equal(view.adding, false);
-        assert.deepEqual(view.form, { name: '', surname: '', relationship: '', born_on: '' });
+        assert.deepEqual(view.form, dependentForm());
     });
 
     test('⚠️ tras AÑADIR salta a la página donde ha caído el nuevo, que es la última', () => {
@@ -232,7 +254,7 @@ describe('el estado de la pantalla', () => {
         view.added(7);
 
         assert.equal(view.adding, false, 'el alta se pliega sola al guardar bien');
-        assert.deepEqual(view.form, { name: '', surname: '', relationship: '', born_on: '' });
+        assert.deepEqual(view.form, dependentForm());
         assert.equal(view.page, 2, 'con seis por página, el séptimo está en la 2 — si no se salta, no se ve');
     });
 
