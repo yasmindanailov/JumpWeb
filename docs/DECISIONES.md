@@ -25165,3 +25165,71 @@ Los dos enganches (`#121` JUMP y `#122` KIDS, los dos `fixed`, `max_qty = 1`, fa
 ▶ Único sitio con ese patrón en toda la suite (comprobado por `grep`). Ficha de `DEUDA.md` **cerrada**.
 
 ⚠️⚠️ **La lección de método, que es la cara de `#445`**: llevaba tres sesiones diciendo «sin causa atribuida», y era lo correcto —no había medida que sostuviera ninguna hipótesis—, pero *lo que faltaba no era pensar más, era que el rojo hablara*. Un intermitente sin instrumento se investiga; con instrumento, se lee. ⚠️ Y corrige de paso una clasificación: este caso estaba agrupado con el de `AuthSessionTest` como «rojo por carga», y **no lo era** — la carga solo destapaba un defecto del arnés que estaba ahí siempre. *No todo rojo bajo carga es un problema de carga.*
+
+
+## #448 · 2026-09-08 · `[DECIDIDO owner]` El SELLO DEL MODO de un complemento: la unidad se escribe en la línea, y el candado se re-apunta en vez de retirarse
+
+El owner intentó poner la hora extra de sala en «se cobra por invitado» y el panel lo rechazó. **No era un fallo: era el candado de `#443`** (`specs/hora-extra.md` §11.11·A1). Pero al mirarlo dijo lo que aquel diseño no vio:
+
+> *«esa ventana no se abre nunca»* — con venta continua siempre hay una fiesta viva por delante.
+
+Es literal, y ahora está medido: llamando al método real sobre producción, el candado **bloquea 9 de 29 enganches**, y entre ellos los menús, que **toda fiesta vendida lleva** porque `AddonResolver::groupDefault()` siempre elige un miembro del grupo excluyente. Ese conjunto se rellena con cada venta.
+
+▶ **La comparación que lo explica entero, y es del owner**: *el PRECIO ya está sellado, y lo está porque vive en la línea* (`order_items.unit_price`); **el MODO no se guarda en ninguna parte de la línea, y por eso se escapa**. La salida es `PAY-19` con el precedente exacto de `#288`: **escribir la unidad en la línea al nacer**.
+
+Diseño completo en **`specs/hora-extra.md` §12**. Aquí, lo que decide y lo que corrige.
+
+### Lo que la medición de producción cambió respecto al diagnóstico heredado
+
+Medido el 2026-09-08 por SSH, **solo lectura** —`tinker` por stdin, sin subir un fichero y sin escribir una fila—, llamando al código real en vez de reimplementar sus reglas:
+
+1. ❗❗❗ **NO es solo dinero: la otra mitad es AFORO, y no estaba escrita en ningún sitio.** El docblock del candado, el mensaje del panel y §11.11·A1 hablan **solo de re-precio**. Pero el modo también gobierna `AddonOccupancy::blocksFor()` → `extraMinutes()` → `OrderItemEditor::resultingStayMinutes()` → el **`extra_minutes` del PADRE**. Con la cantidad re-escalada a 15 y un bloque de 60 min, la fiesta pediría **900 minutos de sala**.
+2. ❗❗ **El disparador es más ancho que «editar la cantidad».** El re-escalado de dinero exige `$newQty !== $oldQty`; el de aforo **no**: `changeSlot()` llama a `resultingStayMinutes()` en `:183` y escribe en `:211`. **Mover el día de una fiesta, sin tocar nada más, la re-alarga con el modo de hoy.** ⚠️ Y en ese mismo `forceFill`, la línea siguiente re-precia correctamente el sello de EDADES: *la doctrina ya está aplicada justo al lado de la línea que la ignora*.
+3. ⚠️ **La configuración de un complemento vive en DOS tablas.** `extends_parent_stay`, `occupies_after_parent`, `duration_min` y `seats_per_unit` **no están en `product_addons`**: son de `ticket_types`. **Sellar el enganche no las alcanza** (deuda propia, §12.15·3).
+4. ⚠️⚠️ **CADUCA una afirmación de §11.11·A3**: decía «medido en producción, hay **CERO** enganches `per_guest`». **Hay cuatro.** *La medición del 07 fue correcta para lo que miró; no vio que el cambio ya se había hecho el 06.*
+
+### ❗❗❗ El daño que esto previene YA OCURRIÓ, y el rastro lo fecha entero
+
+| | |
+|---|---|
+| línea hija **#5** · «Menú 2» | creada **2026-09-01 16:18**, `qty = 1` a 2,00 € |
+| enganche **#37** (Pack Jump → Menú 2) | pasado a `per_guest` el **2026-09-06 10:49**, usuario 33 |
+| el candado de `#443` | desplegado el **2026-09-08** |
+
+Pedido **`R-BOMAZH`** (273,15 €, `paid`), Pack Cumpleaños Jump de **17 invitados**, fiesta el **21/09 a las 17:00**, sin celebrar. Esa línea se vendió como *un menú extra* y hoy vive bajo un enganche que dice *uno por invitado*: en la primera edición de cantidad pasaría a **34,00 €**, o sea **+32,00 € que nadie vendió**.
+
+⚠️ **Es la ÚNICA, y hay control**: el barrido de las 27 hijas vivas da **1 descuadre**; las otras seis `per_guest` nacieron después del cambio y están coherentes. ▶ Se le escribe `fixed` **en la migración de relleno, nominada y con su motivo** — es una corrección de dato de un cliente real y se declara como tal, no como efecto colateral.
+
+### La línea divisoria, que es lo que decide el alcance
+
+Del censo columna a columna de las 11 de configuración:
+
+> **`quantity_mode` es la ÚNICA que cambia lo que un número YA GUARDADO *significa*. Las demás cambian lo que te dejan *hacer a continuación* — y ésas fallan RUIDOSAMENTE, con un motivo en pantalla que detiene el guardado.**
+
+Reinterpretar en silencio es un defecto de dinero y de aforo; bloquear es de usabilidad. **Son dos problemas y no se arreglan con el mismo mecanismo** — por eso `is_included`, que es el mismo daño por otra columna y **hoy no tiene candado ninguno**, queda fuera con ficha propia.
+
+### Las cinco decisiones (`[DECIDIDO owner, 2026-09-08]`)
+
+- **D1 · Se sellan TODOS los complementos**, no solo los extensores: hacerlo solo para ellos sale **más caro** (obliga a mantener los dos caminos en los tres lectores y devuelve a `null` dos significados incompatibles). Coste marginal: **cero líneas**.
+- **D2 · El relleno cubre SOLO los extensores** (`#121`/`#122`, **una hija viva cada uno: dos líneas**). ⚠️⚠️ **Y su prueba no es el candado —que nació el 08— sino el RASTRO**: las 4 filas de `audit_logs` tocan `108` y `110`, **nunca `121` ni `122`**. `fixed` es un hecho copiado, no adivinado. ▶ **Rellenar todo desde el pivote vivo está DESCARTADO**: convertiría un error hoy autocorregible en un hecho inmutable, y sobre la línea de `R-BOMAZH` escribiría una mentira.
+- **D3 · La línea de `R-BOMAZH` se sella como `fixed`.**
+- **D4 · El candado se RE-APUNTA, no se retira**: pasa a preguntar «¿hay líneas vivas editables **sin sello**?», un conjunto que **solo encoge**. Las dos horas extra se desbloquean el día del despliegue, el resto se suelta solo, y **no hay ni un instante sin defensa**.
+- **D5 · Spec antes del código**: hay una conjetura de relleno y una corrección de dato de un cliente, y las dos quedan escritas **antes** de tocarlas.
+
+### El diseño, en una línea
+
+Una columna escalar `order_items.addon_quantity_mode` **nullable y sin default** —`null` significa SILENCIO, y un `default('fixed')` afirmaría un modo que nadie midió—, escrita en **tres de las cinco** puertas de nacimiento (los dos portadores de fiesta mixta quedan `null` **a propósito y con el motivo escrito junto al `create()`**, porque su producto sale de un `Setting` y no tiene enganche), y leída en **tres sitios y ninguno más**: dinero, aforo y permiso. Todo lo demás es OFERTA y **debe seguir leyendo el catálogo de hoy** — *un sello que gobernara la oferta congelaría el escaparate*.
+
+⚠️⚠️ **NO es un JSON como `age_family_seal`**: aquel congela precios que el catálogo mueve solos; aquí solo hay **una unidad de medida**, y un documento invita a meter dentro cosas que no cambian de significado.
+
+⚠️⚠️ **Y el sello del editor NO sale de `$offeredAddons`**: en una sola llamada a `edit()` hay **tres lecturas distintas** del pivote y solo una está dentro de la transacción. Sale de `ItemEditPricing::computeAddonPricing()`, del **mismo `$pivot`** que ya define la cantidad — cero consultas nuevas, y el sello atado **por construcción** al número que describe.
+
+### Tres cosas que la medición destapó y que NO son de esta tanda
+
+- ⚠️⚠️ **El candado tiene un punto ciego propio**: filtra `cancelled_at` pero **no mira el estado del PEDIDO**, mientras el editor sí lo exige (`order_not_operational`). **Un carrito abandonado en `pending` cierra el candado sobre una línea que el editor jamás podrá tocar.** Hoy no muerde (las 27 hijas vivas están en pedidos `paid`), pero su docblock afirma que alcanza «exactamente a las líneas que el re-escalado puede tocar, ni una más» y **es falso**.
+- **Un comentario que declara cerrado un camino abierto**: el comentario de `OrderItemEditor::resultingStayMinutes()` da por inalcanzable la rama sin pivote «porque ya lo bloquea `orphan_addons`», y `orphan_addons` solo se devuelve **dentro de `if ($productChanged)`**.
+- ⚠️⚠️ **`GuestCountAdjuster` NO re-escala las hijas por-invitado, y `invitados-en-post-form.md` afirma dos veces que sí.** Hoy no muerde porque ningún extensor es `per_guest` — **y se activa EXACTAMENTE con el cambio que el owner quiere hacer**: un cliente que suba de 15 a 20 invitados desde el post-form se quedaría con la hora extra cobrada a 15. **Conviene cerrarla ANTES de configurar el modo nuevo.**
+
+⚠️ **`ProductAddon` entra en el `CRITICAL_RE` y en `CriticalPathGateTest` en el MISMO commit que toca su guard** (hoy no está en ninguna de las listas), cerrando su ficha de `DEUDA.md`.
+
+⚠️ **El método de la medición, que es reutilizable**: `ssh … 'php artisan tinker --no-interaction' < script.php`. No sube nada al servidor, no deja residuo y **llama al código real** —`hasEditableSoldLines()`, `isFinishedInPractice()`— en vez de reimplementar en SQL las reglas más delicadas del calendario. *Verificado después que no quedó ni un fichero.*

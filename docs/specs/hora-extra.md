@@ -1713,3 +1713,372 @@ Solo lo que no bloquea el código y es del owner: **configurar el complemento** 
 cobra por invitado» y el precio por invitado) — con el candado de §11.11·A1 delante, porque las dos
 horas extra vendidas en producción son de fiestas del **21/09** y hasta que pasen el modo de ese
 enganche está bloqueado. ▶ **La salida, si lo quiere antes: un producto nuevo** (`#427`).
+
+⚠️⚠️ **CADUCADO POR §12**: el owner intentó hacer exactamente eso el 2026-09-08 y descubrió lo que
+este diseño no vio — **esa ventana no se abre nunca**. Lo que sigue es la salida definitiva.
+
+---
+
+# 12 · EL SELLO DEL MODO de un complemento (`#448`, 2026-09-08)
+
+> 🟦 **SPEC APROBADA POR EL OWNER, CÓDIGO NO EMPEZADO.** Las cinco decisiones de §12.12 están
+> tomadas (`[DECIDIDO owner, 2026-09-08]`). Producción medida el mismo día, **solo lectura**.
+
+## 12.1 · El síntoma, y por qué la ventana NO se abre nunca
+
+El owner intentó poner la hora extra de sala en modo «se cobra por invitado» y el panel lo rechazó.
+**No es un fallo: es el candado de `#443`** (§11.11·A1). Pero al mirarlo dijo lo que el diseño no
+había visto:
+
+> *«esa ventana no se abre nunca»* — con venta continua siempre hay una fiesta viva por delante.
+
+Y es literal. El candado (`ProductAddon::hasEditableSoldLines()`) exige
+que **ninguna** línea viva de ese enganche cuelgue de una fiesta sin celebrar. Medido en producción
+el 2026-09-08 llamando al método real: **bloquea 9 de 29 enganches**, no los 2 que la §11.12 daba
+por supuestos. Y entre ellos están los menús, que **toda fiesta vendida lleva** porque
+`AddonResolver::groupDefault()` siempre elige un miembro del grupo excluyente: ese conjunto se
+rellena con cada venta.
+
+▶ **La comparación que lo explica entero, y es del owner**: *el PRECIO ya está sellado, y lo está
+porque vive en la línea* (`order_items.unit_price`), así que tocar el catálogo no mueve lo vendido;
+**el MODO no se guarda en ninguna parte de la línea, y por eso se escapa**.
+
+## 12.2 · Lo MEDIDO en producción (2026-09-08, solo lectura, `playjump.es`)
+
+Ejecutado por SSH con `php artisan tinker` **por stdin** —no se subió ni un fichero al servidor y no
+se escribió ni una fila—, llamando al código real de la app en vez de reimplementar sus reglas.
+
+| medida | valor |
+|---|---|
+| enganches (`product_addons`) | **29** — 25 `fixed`, **4 `per_guest`** |
+| enganches que el candado bloquea HOY | **9 de 29** |
+| líneas hijas vivas | **27**, todas en pedidos `paid` |
+| hijas con `quantity > 1` · `free_quantity > 0` · `seats > 0` | 6 · 18 · **0** |
+| padres con `extra_minutes > 0` | **2** (las dos fiestas del 21/09) |
+| productos con `extends_parent_stay` | **2** (`#121` JUMP, `#122` KIDS), **1 hija viva cada uno** |
+| padres con ≥2 hijas extensoras | **0** |
+| huérfanas vivas | **1** — y es un PORTADOR de fiesta mixta (§12.8) |
+| filas `audit_logs` `catalog.addon*` | **4**, todas del 2026-09-06, usuario 33, sobre `108` (Menú 2) y `110` (Calcetines) |
+
+❗❗ **Y esto CADUCA una afirmación de §11.11·A3**: decía «medido en producción, hay **CERO**
+enganches `per_guest`». **Hay cuatro** — Menú 2 en los dos packs y Calcetines en los dos packs.
+*La medición del 07 fue correcta para lo que miró; lo que no vio es que el cambio ya se había hecho
+el 06.*
+
+### El daño de cambiar HOY los dos enganches que el owner quiere
+
+| enganche | hoy | con `per_guest`, tras la 1.ª edición | delta |
+|---|---|---|---|
+| `#60` · Hora extra sala **JUMP** (hija #42, padre 8 invitados) | 1 × 5,00 € = **5,00 €** | 8 × 5,00 € = **40,00 €** | **+35,00 €** |
+| `#61` · Hora extra sala **KIDS** (hija #32, padre 15 invitados) | 1 × 4,00 € = **4,00 €** | 15 × 4,00 € = **60,00 €** | **+56,00 €** |
+
+Son exactamente las dos cifras que §11.11·A1 predijo, **confirmadas sobre los datos reales de hoy**.
+
+## 12.3 · La raíz — y las TRES correcciones al diagnóstico heredado
+
+> **`order_items.quantity` de una línea hija significa dos cosas distintas —BLOQUES o PERSONAS— y
+> quién lo decide es una columna de la CONFIGURACIÓN, no un hecho de la línea.**
+
+**(a) NO es solo dinero: la otra mitad es AFORO, y no estaba escrita en ningún sitio.** El docblock
+del candado, el mensaje del panel y §11.11·A1 hablan **solo de re-precio**. Pero el modo también
+gobierna `AddonOccupancy::blocksFor()` (`isPerGuest() ? 1 : max(0,$quantity)`) →
+`AddonOccupancy::extraMinutes()` → `OrderItemEditor::resultingStayMinutes()` → el
+**`order_items.extra_minutes` del PADRE**. Con la cantidad re-escalada a 15 y un bloque de 60 min,
+la fiesta pediría **900 minutos de sala**: quince horas.
+
+**(b) El disparador es MÁS ancho que «editar la cantidad».** El re-escalado de dinero sí exige
+`if ($newQty !== $oldQty)` (en `OrderItemEditor::edit()`). El de aforo **no**: `OrderItemEditor::changeSlot()` llama a `resultingStayMinutes()` y escribe `extra_minutes` en el mismo `forceFill`. **Mover el día de una fiesta, sin tocar nada más, la re-alarga con el modo de hoy.**
+⚠️ Y hay ironía en ese mismo `forceFill`: la clave de al lado re-precia correctamente el sello de
+EDADES (`OrderItemEditor::sealUpdateFor()`). *La doctrina que esta sección pide ya está aplicada
+justo al lado de la línea que la ignora.*
+
+**(c) La configuración de un complemento vive en DOS tablas, no en una.** `SHOW COLUMNS` da 14
+columnas en `product_addons`, y `extends_parent_stay`, `occupies_after_parent`, `duration_min` y
+`seats_per_unit` **no están ahí**: son de `ticket_types`. **Sellar el enganche no las alcanza** —y
+por eso `#448` no cierra la deuda de §12.15·3.
+
+## 12.4 · El censo: qué configuración reinterpreta lo VENDIDO
+
+De las 11 columnas de configuración del enganche (`TicketType::ADDON_PIVOT_COLUMNS`):
+
+| columna | ¿toca una línea VENDIDA? | qué hace | ¿avisa? |
+|---|---|---|---|
+| **`quantity_mode`** | **SÍ — DINERO y AFORO** | `effectiveQuantity()` (`AddonResolver::effectiveQuantity()`) re-escala y cobra; `blocksFor()` (`AddonOccupancy::blocksFor()`) multiplica los minutos de sala | **NO. Silencio total** |
+| `is_included` + `included_quantity` | SÍ — DINERO | `freeUnits()` (`AddonResolver::freeUnits()`) es todo-o-nada en `per_guest` | NO. **Sin candado hoy** |
+| `choice_group` | SÍ — puede **CANCELAR** la línea | el mapa sale del pivote vivo y cancela al hermano de grupo | NO |
+| `max_qty` | SÍ — **recorta** en post-form | `PostFormAddons::apply()` capa la cantidad deseada: un reenvío sin cambios reduce la línea | NO |
+| `is_mandatory` · `allow_extra` · `requires_addon_id` | SÍ — **BLOQUEAN** la edición | `addon_locked` · `addon_no_extra` · `addon_requires_missing` | **SÍ, en pantalla** |
+| `stage` | NO — tiene respuesta propia | su frontera es un HECHO: `LineFacts::birthValue() === 0` (`#413` D9) | — |
+| `postform_cutoff_hours` | NO — mueve una ventana FUTURA | derecho comunicado, no unidad de medida | — |
+| `position` | **NO. La única inerte** | `orderBy` y desempate, solo en ventas nuevas | — |
+
+❗❗❗ **LA LÍNEA DIVISORIA, Y ES LA QUE DECIDE EL ALCANCE:**
+
+> **`quantity_mode` es la ÚNICA columna que cambia lo que un número YA GUARDADO *significa*. Las
+> demás cambian lo que te dejan *hacer a continuación* — y ésas fallan RUIDOSAMENTE, con un motivo
+> en pantalla que detiene el guardado.**
+
+Reinterpretar en silencio es un defecto de dinero y de aforo. Bloquear es de usabilidad. **Son dos
+problemas y no se arreglan con el mismo mecanismo** — por eso `is_included` queda fuera (§12.15·1).
+
+## 12.5 · El diseño — `order_items.addon_quantity_mode`
+
+Una columna escalar, **no un JSON**. El precedente `age_family_seal` (`#288`) congela *precios que
+el catálogo mueve solos*; aquí solo hay **una unidad de medida**, y un documento invita a meter
+dentro cosas que no cambian de significado.
+
+```
+$table->string('addon_quantity_mode', 20)->nullable()->after('free_quantity');
+```
+
+- **`varchar(20)`**, como `product_addons.stage` — no `string` a secas, que es lo que tiene
+  `quantity_mode` (`varchar(255)`, sin lista cerrada).
+- ⚠️⚠️ **NULLABLE y SIN DEFAULT, y no es preferencia**: `null` tiene que significar **silencio**, y
+  hay dos poblaciones legítimas — los **portadores de fiesta mixta** (§12.8) y las líneas anteriores
+  al mecanismo. Un `default('fixed')` **afirmaría un modo que nadie midió**.
+- Sin índice. `down()` = `dropColumn`, como los dos precedentes de esta misma tabla.
+- **NOT NULL descartado a sabiendas**: hay ficheros de `tests/` que fabrican hijas a mano saltándose
+  las cinco puertas. La compensación es que los casos del sello compren **por la puerta real**, que
+  es como se probó `age_family_seal`.
+
+**El vocabulario va en lista cerrada**, hermano de `saleStage()`:
+
+```
+ProductAddon::MODES = [MODE_FIXED, MODE_PER_GUEST];
+ProductAddon::quantityUnit(): string   // sanea lo desconocido a MODE_FIXED
+```
+
+⚠️ **`quantityUnit()` y no `quantityMode()`**: un método homónimo de una columna hace que Eloquent
+lo tome por relación. ⚠️ Hoy `isPerGuest()` compara la cadena cruda (`:65-67`), así que un valor
+torcido por `Query\Builder::update()` se lee como `fixed` **en silencio** — y `fixed` es justo el
+lado que multiplica los minutos de sala.
+
+## 12.6 · Quién ESCRIBE — CINCO puertas, y solo tres sellan
+
+Censo verificado (`children()->create` sobre `app/`). **Son cinco, no tres**: `ESTADO.md` se
+quedaba corto.
+
+| puerta | dónde | qué |
+|---|---|---|
+| 1 · la venta | `AddonResolver::resolve()` → persiste `OrderCreator::create()` | una clave más en el array. Cubre web, API y **mostrador** (`ManualOrderFulfiller` → `OrderCreator`). Ya dentro del lock de zona/día |
+| 2 · el editor | `OrderItemEditor::edit()` | **el valor NO sale de `$offeredAddons`: ver §12.6.1** |
+| 3 · el post-form | `PostFormAddons::write()` | siempre `fixed` (`per_guest` está prohibido en esa fase). Se sella igual: su caso es de **CONTROL** |
+| 4 y 5 · fiesta mixta | `MixedPartySurcharge::apply()` y `::applyCredit()` | **NO se sellan, y va escrito junto al `create()`** |
+
+### 12.6.1 · La puerta 2: el sello sale de `ItemEditPricing`, no de `$offeredAddons`
+
+En una sola llamada a `edit()` hay **tres lecturas distintas** de `product_addons`, y solo una está
+dentro de la transacción. Sellar desde `$offeredAddons` ataría el sello a una lectura *autocommit*
+separada de la que define la cantidad por trabajo de validación y por una espera de lock de hasta
+50 s.
+
+▶ **`ItemEditPricing::computeAddonPricing()` devuelve `add_quantity_modes[$typeId]` desde el MISMO
+`$pivot`** que ya alimenta `add_quantities` y `add_free_quantities`
+— cero consultas nuevas, y el sello queda atado **por construcción** a la cantidad que
+describe.
+⚠️ Sus **dos salidas tempranas** (`invalid_product` y `addon_unavailable_on_date`)
+enumeran el contrato a mano: la clave tiene que ir en las dos, y hay guarda.
+⚠️ `ItemEditPricing` **sigue fuera del `CRITICAL_RE`**: devuelve un valor, no escribe.
+
+## 12.7 · Quién LEE — TRES sitios, y ninguno más
+
+1. **DINERO** — `OrderItemEditor::edit()` (el bloque `addon_per_guest_rescale`), con su
+   `recordEdit(±Δ, 'addon_per_guest_rescale')`.
+2. **AFORO** — `OrderItemEditor::resultingStayMinutes()` → `AddonOccupancy::extraMinutes()` → `blocksFor()`,
+   materializado en el `extra_minutes` del padre.
+3. **PERMISO** — `OrderItemEditor::childAddonMeta()`, que gobierna `addon_locked` y el modal «Gestionar».
+
+▶ **El lector vive en `AddonResolver::soldQuantityUnit(OrderItem $child): ?string`**, y **no** en un
+método de `OrderItem`: `AddonResolver` está en el `CRITICAL_RE` y `OrderItem` **no**. La única
+decisión que traduce el sello a conducta —y que gobierna dinero y aforo a la vez— tiene que estar
+gateada.
+
+⚠️ **Todo lo demás es OFERTA y debe seguir leyendo el catálogo de hoy**: `AddonResolver::resolve()`,
+`CartOccupants`, `AddonOfferReader`, `CreateManualOrderPage`, el catálogo público. **Un sello que
+gobernara la oferta congelaría el escaparate.**
+
+## 12.8 · Qué pasa al faltar el sello — TRES estados, no dos
+
+| estado | conducta | por qué |
+|---|---|---|
+| **ausente** (`null`) | **el pivote VIVO — exactamente la conducta de hoy** | Nunca un `?? MODE_FIXED`: **no hay lado seguro único** —para AFORO lo conservador es tratarla como bloques; para DINERO es lo contrario—, así que cualquier default es un defecto en una de las dos mitades. ▶ **De aquí sale la regla que ata la tanda: mientras existan hijas vivas sin sello, el candado no se puede retirar** |
+| **sello == pivote vivo** | idéntico a hoy, sin ramas nuevas | el caso normal mientras nadie cambie un modo |
+| **sello ≠ pivote vivo** | **manda el sello para el MODO, y los topes e inclusiones del pivote NO se aplican a esa línea**: el máximo cae a su cantidad actual (se puede bajar o quitar, no subir) y el re-escalado conserva su propia proporción de gratis | ver abajo |
+
+❗❗ **Por qué la tercera fila es obligatoria.** Dejar el tope en el pivote vivo crearía un estado que
+**hoy no existe en ninguna configuración**: al pasar un enganche a `per_guest` el panel **borra el
+tope** (`AddonsRelationManager`, «el tope solo aplica a cantidad fija»), así que una hija sellada
+`fixed` bajo un enganche `per_guest` saldría **editable y sin techo**. Hoy o está acotada por
+`max_qty` o está congelada por `locked`.
+▶ `max_qty` **no es una regla independiente: es la mitad del modo** — el propio panel la borra al
+cambiarlo. Partirlos entre sello y catálogo produce una configuración que el dominio nunca acepta
+escribir.
+
+▶ **Y la divergencia, al ser detectable, se PINTA**: nota en la línea ↳ de la ficha del pedido, con
+el molde de `$mixStale`/`$mixOrphaned` de `items-list.blade.php`. **Al cliente no llega nada**:
+`OrderItemAddon` (`openapi/v1.yaml`) es `additionalProperties: false` y no publica el modo. **El
+contrato no se toca.**
+
+⚠️ **Los portadores de fiesta mixta quedan `null` a propósito, y va escrito junto a su `create()`**:
+su producto sale de un `Setting` y no tiene fila en `product_addons`, así que `null` significa aquí
+«no la gobierna ningún enganche». **Sin ese comentario, el siguiente lo toma por olvido.** Medido:
+la única huérfana viva de producción (línea #31, «Descuento fiesta mixta» bajo una fiesta ya
+celebrada) es exactamente este caso — *el dato confirma el diseño en vez de contradecirlo*.
+
+## 12.9 · El RELLENO, con su conjetura DECLARADA
+
+**El modo NO es recuperable de la fila.** Medido: `free_quantity == quantity` no distingue nada (un
+`fixed` incluido da la misma firma que un `per_guest` incluido); `seats` es **0 en las 27 hijas
+vivas**; `extra_minutes` vive en el PADRE y es una **suma** sobre la familia. **No hay derivador**:
+la única fuente posible es el pivote de hoy.
+
+❗❗❗ **Y por eso el relleno NO puede ser general.** Rellenar todo desde el pivote vivo convertiría un
+error de configuración **hoy autocorregible** (los tres lectores leen el catálogo, así que arreglar
+el enganche arregla las líneas) en un **hecho inmutable**. Y sobre la línea de §12.10 escribiría
+`per_guest`, que es **falso**.
+
+▶ **Se rellena SOLO donde la conjetura es demostrable: los EXTENSORES** (`#121` y `#122`, **una hija
+viva cada uno: dos líneas**). Su prueba no es el candado —que nació el 08— sino el **rastro**: las
+4 filas de `audit_logs` tocan `108` y `110`, **nunca `121` ni `122`**. A las horas extra de sala
+**nadie les ha cambiado el modo jamás**, así que `fixed` es un hecho copiado, no adivinado.
+⚠️ **Con su límite dicho**: los eventos de Eloquent no ven `Query\Builder::update()`, y
+`ProductionSeeder` escribe el pivote exactamente por esa puerta — el rastro cubre el panel, no el
+seeder.
+
+▶ **Todo lo demás se queda en `null` = silencio**, que es la conducta de hoy: **cero regresión**, y
+el error de configuración sigue siendo corregible desde el panel.
+
+**Forma de la migración**: ALTER + relleno en el mismo `up()`, autocontenido (sin clases de la app),
+idempotente, y **en PHP con `chunkById`, no en un `UPDATE … JOIN`** — no porque MySQL lo prohíba,
+sino porque **la suite corre en SQLite** y esa forma no es portable.
+⚠️ El JOIN va contra `product_addons` **en crudo**, no contra `TicketType::addons()`, que filtra
+`is_sellable`+`is_active` y dejaría fuera un complemento despublicado cuya fila de pivote sigue ahí.
+**Evidencia de despliegue: dos números** — filas selladas, y **cuántas hijas vivas quedan sin sello**
+(que es exactamente el conjunto que el candado sigue protegiendo).
+
+## 12.10 · La línea de `R-BOMAZH` — la corrección de dato
+
+❗❗❗ **EL DAÑO QUE ESTA SECCIÓN PREVIENE YA OCURRIÓ, y el rastro lo fecha entero.**
+
+| | |
+|---|---|
+| línea hija **#5** · «Menú 2» | creada **2026-09-01 16:18**, `qty = 1` a 2,00 € |
+| enganche **#37** (Pack Jump → Menú 2) | pasado a `per_guest` el **2026-09-06 10:49**, usuario 33 |
+| el candado de `#443` | desplegado el **2026-09-08** |
+
+Pedido **`R-BOMAZH`** (273,15 €, `paid`), Pack Cumpleaños Jump de **17 invitados**, fiesta el
+**21/09 a las 17:00**, sin celebrar. Esa línea se vendió como *un menú extra* y hoy vive bajo un
+enganche que dice *uno por invitado*: **en la primera edición de cantidad pasaría a 17 × 2,00 € =
+34,00 €, o sea +32,00 € que nadie vendió**.
+
+⚠️ **Es la ÚNICA**, y hay control: el barrido de las 27 hijas vivas da **1 descuadre**. Las otras
+seis hijas `per_guest` nacieron *después* del cambio de modo y están coherentes.
+
+▶ `[DECIDIDO owner, 2026-09-08]`: **se le escribe `fixed`** — que es lo que de verdad se vendió, y
+las fechas lo demuestran. Va **en la migración de relleno**, nominada y con su motivo, no como un
+`UPDATE` suelto a mano.
+⚠️ **Y se declara como lo que es: una corrección de dato de un cliente real, con nombre y fecha**,
+no un efecto colateral del relleno.
+
+## 12.11 · El candado: se RE-APUNTA, no se retira
+
+`hasEditableSoldLines()` pasa de **«¿hay líneas vivas editables?»** a **«¿hay líneas vivas editables
+SIN SELLO?»**. Ese conjunto **solo encoge**, porque toda venta nueva nace sellada:
+
+- **las dos horas extra de sala se desbloquean el día del despliegue** (sus dos líneas quedan
+  selladas por el relleno);
+- el resto se desbloquea **solo**, cuando pasen las fiestas vendidas antes del despliegue — días,
+  no «nunca», y ya no vuelve a cerrarse jamás;
+- **no hay ni un instante sin defensa**: el candado muere por vaciamiento, no por decreto.
+
+**En el MISMO commit que toca el guard, `ProductAddon` entra en el gate.** Verificado ejecutando el
+`CRITICAL_RE` real: hoy `app/Domain/Booking/Models/ProductAddon.php` **sale libre**, y tampoco
+figura en las listas de `CriticalPathGateTest` — no está en ninguna. Van **los dos sitios a la vez**
+(el propio test declara, medido por mutación, que añadirlo solo al regex deja el gate sin red).
+Cierra la ficha de `DEUDA.md` sobre este fichero.
+
+### Lo que el sello cierra y el candado nunca cerró
+
+1. `updateExistingPivot` desde «Configurar» — lo único que el candado ve.
+2. **Detach + Attach**: el guard sale por su primera línea si `! $pivot->exists`, y `DetachAction`
+   no consulta ventas.
+3. **Seeder / SQL crudo**: los eventos de Eloquent no ven `Query\Builder::update()`.
+4. **Despublicar el complemento**: `addons()` filtra `is_sellable`+`is_active`, así que la hija se
+   queda sin pivote y cae al fallback de bloques.
+5. ⚠️⚠️ **Y un punto ciego propio, medido**: el candado filtra `cancelled_at` pero **no mira el
+   estado del PEDIDO**, mientras el editor sí lo exige (`HasItemActionGuards::editItemBlockedReason()`,
+   `order_not_operational`). **Un carrito abandonado en `pending` cierra el candado sobre una línea
+   que el editor jamás podrá tocar** — y `ExpireOrders` solo escribe `orders.status`, así que esas
+   hijas conservan `cancelled_at` nulo para siempre. Hoy no muerde en producción (las 27 hijas vivas
+   están en pedidos `paid`), pero el docblock que afirma que alcanza «exactamente a las líneas que
+   el re-escalado puede tocar, ni una más» **es falso** y se corrige.
+
+▶ **De paso se corrige un comentario falso**: el comentario de `OrderItemEditor::resultingStayMinutes()` declara inalcanzable
+la rama sin pivote «porque el guardado ya está bloqueado por `orphan_addons`». `orphan_addons` solo
+se devuelve **dentro de `if ($productChanged)`**: cualquier edición que no cambie de producto llega
+ahí. *Un comentario que declara cerrado un camino abierto es peor que no tenerlo.*
+
+## 12.12 · Las decisiones del owner (`[DECIDIDO owner, 2026-09-08]`)
+
+| # | decisión | tomada | consecuencia asumida |
+|---|---|---|---|
+| **D1** | **Se sellan TODOS los complementos**, no solo los extensores | sí | hacerlo solo para extensores sale **más caro**: obliga a mantener los dos caminos en los tres lectores y devuelve a `null` dos significados incompatibles. Coste marginal de sellarlos todos: **cero líneas** |
+| **D2** | **El relleno cubre SOLO los extensores** (2 líneas) | sí | lo demás queda `null` = conducta de hoy. Se renuncia a sellar el corpus a cambio de **no fabricar ni un hecho falso** |
+| **D3** | **La línea de `R-BOMAZH` se sella como `fixed`** | sí | corrección de dato de un cliente real, nominada en la migración. Cierra los +32,00 € latentes |
+| **D4** | **El candado se RE-APUNTA, no se retira** | sí | las dos horas extra se desbloquean el día del despliegue; el resto, solo. Sin ventana sin defensa |
+| **D5** | **Spec antes del código** (esta sección) | sí | hay una conjetura de relleno y una corrección de dato de un cliente: las dos quedan escritas **antes** de tocarlas |
+
+▶ **El puente, si hiciera falta antes**: crear **un complemento nuevo** ya en `per_guest` y
+engancharlo al pack. Verificado sobre los datos de hoy: **no toca ninguna línea vendida**, y el
+`unique(product_id, addon_id)` permite tener los dos colgando. ⚠️ **No desenganchar el viejo**: el
+detach afloja el tope de las líneas vivas y las manda al fallback de bloques. **No sustituye a la
+tanda.**
+
+## 12.13 · Impacto en invariantes
+
+- **`PAY-19` se AMPLÍA**: hoy dice que una fiesta conserva las condiciones con las que se vendió y lo
+  ejerce sobre `age_family_seal`. Pasa a cubrir también **la unidad de cantidad de cada complemento**
+  (`order_items.addon_quantity_mode`), con las mismas dos reglas derivadas: **producto nuevo → sello
+  nuevo** (otros enganches) y **día nuevo → el MISMO sello** (la fecha re-precia, `PAY-18`, pero no
+  cambia la unidad).
+- **`AFORO-01`/`AFORO-06`**: la mitad de aforo de §12.3(a) queda dentro de la regla; los minutos del
+  padre pasan a derivarse de un hecho, no del catálogo.
+- **`SEC-04`**: el candado re-apuntado sigue siendo **de dominio**, no de formulario.
+
+## 12.14 · Plan por tandas
+
+| tanda | qué | `CRITICAL_RE` | verificadores |
+|---|---|---|---|
+| **T1** | **El hecho, sin leerlo.** Migración (columna + relleno de extensores + la línea de `R-BOMAZH`) · `MODES` + `quantityUnit()` · escritura en las tres puertas · `add_quantity_modes` en `ItemEditPricing` con sus dos salidas · el comentario del `null` en los dos portadores. **Ninguna lectura cambia: la suite sale verde sin tocar un caso** | **SÍ** (`AddonResolver`, `OrderCreator`, `OrderItemEditor`, `PostFormAddons`, `MixedPartySurcharge`) | `VERIFY_CONC=1` · `purchase:verify-oversell` (`stay-extension`, `guest-count`, `panel-edit`, `extra-hour`) · `postform:verify-concurrency` (`addons`, `cross`) · `mixed-party:verify-concurrency` |
+| **T2** | **Las tres lecturas + la regla de divergencia.** `AddonResolver::soldQuantityUnit()` · las tres sustituciones (el re-escalado de `edit()`, `resultingStayMinutes()` y `childAddonMeta()`) · retirada del fallback y reescritura de su comentario falso · **guarda de lista cerrada** de llamantes de `isPerGuest()`, en dos listas declaradas (OFERTA, que puede crecer; LÍNEA VENDIDA, que tiene que ser **cero**), con el molde de `LedgerSingleSourceTest` | **SÍ** (`AddonOccupancy`, `AddonResolver`, `OrderItemEditor`) | ídem |
+| **T3** | **El candado re-apuntado** + `ProductAddon` en el hook **y** en `CriticalPathGateTest` + la nota de divergencia en `items-list.blade.php` con sus claves `es`/`zh_CN` | **SÍ** (`ProductAddon` entra aquí) | ídem |
+| **T4** | **Doc + OJO del owner**: `PAY-19` · `MODELO-DATOS.md` · `GLOSARIO.md` · la fila de `CLAUDE.md` · `DECISIONES #448` · `DEUDA` (cerrar la de `ProductAddon`, abrir las de §12.15) | no | — |
+| **arnés** | `scripts/mutar-sello-modo.sh`. **Deben morder**: `resolve()` deja de sellar · el re-escalado vuelve al pivote · `resultingStayMinutes` vuelve al pivote (**900 vs 60**) · `childAddonMeta` vuelve al pivote · el saneo devuelve `per_guest` ante lo desconocido · el sello se lee de `$offeredAddons` en vez de `ItemEditPricing` · la puerta 2 no sella. **Dos CONTROLES declarados**: el post-form sella siempre `fixed`, y los portadores quedan `null` —esta segunda **no muerde por conducta** y hay que decir que es una aserción de intención | | |
+
+⚠️⚠️ **El caso que hoy no siembra ni la suite ni el verificador**: una hija sellada `fixed` bajo un
+enganche `per_guest`. Es el **único sujeto** de la regla de divergencia de §12.8, y hay que
+fabricarlo a mano. **Una guarda que no lo siembre nace ciega.**
+
+## 12.15 · Lo que NO entra — deuda declarada
+
+1. **`is_included` es el mismo daño por otra columna y hoy NO tiene candado ninguno.** Queda fuera a
+   propósito: meterlo obliga a decidir qué pasa cuando el parque legítimamente deja de incluir algo,
+   que es una decisión de negocio distinta. **Ficha propia.**
+2. **`max_qty` recorta en el post-form** (`PostFormAddons::apply()` capa la cantidad deseada del cliente
+   contra el tope vivo): bajar el tope hace que un reenvío sin cambios **reduzca** la línea y mueva
+   dinero. El arreglo no es sellar el tope: es que **un techo no pueda REDUCIR una línea ya
+   vendida** — la regla R1 del propio reconciliador aplicada al techo. **Ficha propia.**
+3. **`liveStayExtendingChildren()` reconoce a las extensoras por el catálogo VIVO**
+   (`OrderItemEditor::liveStayExtendingChildren()`) mientras su hermana `liveOccupyingChildren()` lo hace por HECHOS de
+   la fila y su docblock invoca «la doctrina del sello». **La doctrina está aplicada a la mitad** — y
+   por eso `extends_parent_stay` necesita un cerrojo permanente que no se abre nunca. Lo mismo vale
+   para `duration_min` y `seats_per_unit`, que además **viven en `ticket_types`** (§12.3·c) y este
+   sello no los alcanza. **Es la siguiente pared. Ficha propia.**
+4. ⚠️⚠️ **`GuestCountAdjuster` NO re-escala las hijas por-invitado, y `invitados-en-post-form.md`
+   afirma dos veces que sí.** Verificado: el fichero no menciona `isPerGuest`, ni `AddonResolver`, ni
+   `free_quantity`; su única escritura toca el PADRE. **Hoy no muerde porque ningún extensor es
+   `per_guest` — y se activa EXACTAMENTE con el cambio que el owner quiere hacer**: un cliente que
+   suba de 15 a 20 invitados desde el post-form se quedaría con la hora extra cobrada a 15, y el
+   desfase lo absorbería el siguiente `recordEdit` del operador como si fuera suyo. `GuestCountTest`
+   no tiene ni un caso con complemento hijo. **Ficha propia, y conviene cerrarla ANTES de configurar
+   el modo nuevo.**
