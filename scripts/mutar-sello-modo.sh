@@ -223,6 +223,29 @@ mutar "el saneo aplasta también los modos VÁLIDOS" "$PIV" \
   "        return self::MODE_FIXED;"
 
 echo
+echo '── T3 · el CANDADO re-apuntado ──'
+
+# El candado vuelve a mirar TODA venta viva: se cierra para siempre otra vez (la ventana que el
+# owner midió que no se abre nunca).
+mutar "el candado vuelve a bloquear toda venta viva, sellada o no" "$PIV" \
+  "                ->whereNull('addon_quantity_mode'))" \
+  "                )"
+
+# El espejo: si dejara de mirar el sello en la otra dirección —soltando también lo NO sellado—, el
+# agujero se reabre en silencio para las líneas anteriores al despliegue.
+mutar "el candado se suelta también con líneas SIN sellar" "$PIV" \
+  "        foreach (\$parents as \$parent) {
+            if (! \$parent->isFinishedInPractice()) {
+                return true;
+            }
+        }" \
+  "        foreach (\$parents as \$parent) {
+            if (false) {
+                return true;
+            }
+        }"
+
+echo
 echo '── El RELLENO de la migración ──'
 
 # 8 · el relleno A tiene que alcanzar SOLO a los extensores.

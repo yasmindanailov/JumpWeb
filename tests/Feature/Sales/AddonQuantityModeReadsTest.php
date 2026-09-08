@@ -246,6 +246,60 @@ class AddonQuantityModeReadsTest extends TestCase
         );
     }
 
+    // ─── T3 · el CANDADO re-apuntado ─────────────────────────────────────────────────
+
+    public function test_a_sealed_line_no_longer_locks_the_hookup(): void
+    {
+        // ❗❗ **Éste es el desbloqueo.** Antes, una sola fiesta viva impedía cambiar el modo del
+        // enganche — y con venta continua esa ventana no se abría nunca. Ahora la línea declara su
+        // unidad, así que cambiar el catálogo ya no puede reinterpretarla: no hay nada que candar.
+        $this->hookExtraHour(ProductAddon::MODE_FIXED);
+        $order = $this->buyWithExtraHour(guests: 15);
+
+        $this->assertNotNull($this->child($order)->addon_quantity_mode, 'la venta nueva nace sellada');
+
+        $pivot = $this->pack->addons()->where('ticket_types.id', $this->extraHour->id)->firstOrFail()->pivot;
+        $this->assertFalse(
+            $pivot->hasEditableSoldLines(),
+            'con la línea sellada el candado se suelta: es lo que desbloquea al operador',
+        );
+    }
+
+    public function test_control_an_unsealed_line_still_locks_the_hookup(): void
+    {
+        // CONTROL, y es la mitad que impide que esto sea «retirar el candado»: una línea SIN sello
+        // —las vendidas antes de `#448`— sigue bloqueando, porque a ella sí la reinterpretaría un
+        // cambio de catálogo. El candado muere por VACIAMIENTO, no por decreto.
+        $this->hookExtraHour(ProductAddon::MODE_FIXED);
+        $order = $this->buyWithExtraHour(guests: 15);
+
+        DB::table('order_items')->where('id', $this->child($order)->id)
+            ->update(['addon_quantity_mode' => null]);
+
+        $pivot = $this->pack->addons()->where('ticket_types.id', $this->extraHour->id)->firstOrFail()->pivot;
+        $this->assertTrue(
+            $pivot->hasEditableSoldLines(),
+            'sin sello la línea sigue expuesta al pivote vivo: el candado tiene que seguir cerrado',
+        );
+    }
+
+    public function test_a_finished_party_never_locked_and_still_does_not(): void
+    {
+        // Control del OTRO eje, para que el caso de arriba no pase por el motivo equivocado: una
+        // fiesta ya celebrada no la puede re-escalar nadie (`item_finished`), así que nunca contó.
+        $this->hookExtraHour(ProductAddon::MODE_FIXED);
+        $order = $this->buyWithExtraHour(guests: 15);
+
+        DB::table('order_items')->where('id', $this->child($order)->id)
+            ->update(['addon_quantity_mode' => null]);
+        // La fiesta se movió al pasado: sigue viva y sin sello, pero ya no es editable.
+        DB::table('slots')->where('date', $this->date)
+            ->update(['date' => Carbon::today()->subDays(5)->toDateString()]);
+
+        $pivot = $this->pack->addons()->where('ticket_types.id', $this->extraHour->id)->firstOrFail()->pivot;
+        $this->assertFalse($pivot->hasEditableSoldLines());
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────────────
 
     private function hookExtraHour(string $mode): void

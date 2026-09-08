@@ -33,6 +33,13 @@ class CriticalPathGateTest extends TestCase
      * @var list<string>
      */
     private const CRITICAL_FILES = [
+        // `#448` · el SELLO DEL MODO. Es un MODELO y no un servicio, y aun así es núcleo: aquí viven
+        // los guards del pivote —el candado del modo entre ellos— y `quantityUnit()`, que es de donde
+        // las tres puertas COPIAN la unidad al sellar. Un cambio ahí decide si una configuración
+        // puede reinterpretar dinero y aforo de reservas ya hechas.
+        // ⚠️ Entró en el MISMO commit que re-apuntó el candado, y a las dos listas a la vez: este
+        // test declara —y su mutación lo demuestra— que añadirlo solo al regex deja el gate sin red.
+        'app/Domain/Booking/Models/ProductAddon.php',
         'app/Domain/Booking/Services/OrderCreator.php',
         'app/Domain/Booking/Services/SlotGenerator.php',
         'app/Domain/Payments/Services/RedsysReturnHandler.php',

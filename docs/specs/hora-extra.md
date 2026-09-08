@@ -1723,8 +1723,8 @@ este diseño no vio — **esa ventana no se abre nunca**. Lo que sigue es la sal
 
 > 🟦 **SPEC APROBADA Y LA T1 EN EL ÁRBOL** (`#448`, 2026-09-08; ejecución en **§12.16**). Las cinco
 > decisiones de §12.12 están tomadas (`[DECIDIDO owner, 2026-09-08]`) y producción está medida el
-> mismo día, **solo lectura**. ▶ **T1 en §12.16 y T2 en §12.17. Quedan la T3 (el candado
-> re-apuntado) y la T4 (doc + OJO del owner).**
+> mismo día, **solo lectura**. ▶ **T1 en §12.16, T2 en §12.17 y T3 en §12.18. Queda la T4 (doc +
+> OJO del owner).** ⚠️ Nada de esto está DESPLEGADO todavía: producción sigue en `200b019a`.
 
 ## 12.1 · El síntoma, y por qué la ventana NO se abre nunca
 
@@ -2053,7 +2053,7 @@ tanda.**
 |---|---|---|---|
 | ✅ **T1** | **HECHA** (§12.16). **El hecho, sin leerlo.** Migración (columna + relleno de extensores + la línea de `R-BOMAZH`) · `MODES` + `quantityUnit()` · escritura en las tres puertas · `add_quantity_modes` en `ItemEditPricing` con sus dos salidas · el comentario del `null` en los dos portadores. **Ninguna lectura cambia: la suite sale verde sin tocar un caso** | **SÍ** (`AddonResolver`, `OrderCreator`, `OrderItemEditor`, `PostFormAddons`, `MixedPartySurcharge`) | `VERIFY_CONC=1` · `purchase:verify-oversell` (`stay-extension`, `guest-count`, `panel-edit`, `extra-hour`) · `postform:verify-concurrency` (`addons`, `cross`) · `mixed-party:verify-concurrency` |
 | ✅ **T2** | **HECHA** (§12.17). **Las tres lecturas + la regla de divergencia.** `AddonResolver::soldQuantityUnit()` · las tres sustituciones (el re-escalado de `edit()`, `resultingStayMinutes()` y `childAddonMeta()`) · retirada del fallback y reescritura de su comentario falso · **guarda de lista cerrada** de llamantes de `isPerGuest()`, en dos listas declaradas (OFERTA, que puede crecer; LÍNEA VENDIDA, que tiene que ser **cero**), con el molde de `LedgerSingleSourceTest` | **SÍ** (`AddonOccupancy`, `AddonResolver`, `OrderItemEditor`) | ídem |
-| **T3** | **El candado re-apuntado** + `ProductAddon` en el hook **y** en `CriticalPathGateTest` + la nota de divergencia en `items-list.blade.php` con sus claves `es`/`zh_CN` | **SÍ** (`ProductAddon` entra aquí) | ídem |
+| ✅ **T3** | **HECHA** (§12.18). **El candado re-apuntado** + `ProductAddon` en el hook **y** en `CriticalPathGateTest` + la nota de divergencia en `items-list.blade.php` con sus claves `es`/`zh_CN` | **SÍ** (`ProductAddon` entra aquí) | ídem |
 | **T4** | **Doc + OJO del owner**: `PAY-19` · `MODELO-DATOS.md` · `GLOSARIO.md` · la fila de `CLAUDE.md` · `DECISIONES #448` · `DEUDA` (cerrar la de `ProductAddon`, abrir las de §12.15) | no | — |
 | **arnés** | `scripts/mutar-sello-modo.sh`. **Deben morder**: `resolve()` deja de sellar · el re-escalado vuelve al pivote · `resultingStayMinutes` vuelve al pivote (**900 vs 60**) · `childAddonMeta` vuelve al pivote · el saneo devuelve `per_guest` ante lo desconocido · el sello se lee de `$offeredAddons` en vez de `ItemEditPricing` · la puerta 2 no sella. **Dos CONTROLES declarados**: el post-form sella siempre `fixed`, y los portadores quedan `null` —esta segunda **no muerde por conducta** y hay que decir que es una aserción de intención | | |
 
@@ -2227,3 +2227,42 @@ siguiente borra la rama por muerta.
 niños son **60 minutos** de sala; con el enganche volteado a `fixed` y sin sello, la misma línea pide
 **900**. Los dos casos están escritos, y el segundo es el que demuestra que lo arregla el sello y no
 otra cosa.
+
+## 12.18 · Lo EJECUTADO — la T3: el candado re-apuntado (`#448`, 2026-09-08)
+
+`ProductAddon::hasEditableSoldLines()` deja de preguntar **«¿hay ventas vivas?»** y pregunta
+**«¿hay ventas vivas que aún no declaren su unidad?»** — un conjunto que **solo puede encoger**,
+porque toda venta nueva nace sellada por las tres puertas.
+
+▶ **Con esto se desbloquea el encargo del owner**: las dos horas extra de sala quedan libres el día
+del despliegue (sus líneas las sella el relleno de la T1), y el resto de enganches se sueltan solos
+cuando pasen las fiestas vendidas antes. **El candado muere por VACIAMIENTO, no por decreto**: no hay
+ni un instante sin defensa, y cuando el conjunto quede vacío no vuelve a cerrarse jamás.
+
+⚠️⚠️ **Y cierra por sí solo el punto ciego que el candado tenía**: filtraba `cancelled_at` pero no
+miraba el estado del PEDIDO, mientras el editor sí lo exige (`order_not_operational`), así que un
+carrito abandonado en `pending` cerraba el candado sobre una línea que el editor jamás podría tocar.
+Ya no hace falta mirar el estado — **esos carritos nacen sellados y dejan de contar por su cuenta**.
+▶ Y **NO se añade un filtro por estado**, que además sería un error: un `pending` puede pagarse
+después y volverse editable.
+
+▶ **`ProductAddon` entra en el gate, en el hook Y en `CriticalPathGateTest`, en el MISMO commit**
+(el propio test declara, medido por mutación, que añadirlo solo al regex deja el gate sin red).
+Verificado ejecutando el `CRITICAL_RE` real: casa `ProductAddon.php` y **no arrastra a sus vecinos**
+(`ItemEditPricing` y `TicketType` siguen fuera). Cierra su ficha de `DEUDA.md`.
+
+### Lo que enseñó la ejecución
+
+⚠️⚠️ **DOS casos de `#443` cambiaron de premisa y se REESCRIBIERON, no se parchearon.**
+`StayExtensionPerGuestTest` compraba una línea y aseveraba que el candado bloqueaba; con el sello,
+esa línea nace sellada y **el candado ya no tiene nada que proteger en ella**. Su sujeto pasa a ser
+una línea SIN sello —el estado de lo vendido antes del despliegue, que es justo lo que el candado
+sigue existiendo para proteger—. Es el precedente del `SlotOfferTest` de `#324`: *un caso que
+cementa una premisa que una feature posterior invierte a propósito se reescribe con la premisa
+nueva, y se dice por qué.*
+
+⚠️ El arnés cubre las **dos direcciones** del candado: que vuelva a bloquear lo sellado (se cierra
+para siempre otra vez) y que se suelte con lo NO sellado (el agujero se reabre en silencio). Sin las
+dos, media regla quedaría sin red.
+
+**Verificación**: suite **4.473** · mutación **22/22** · `panel-edit` y `extra-hour` sobre InnoDB.

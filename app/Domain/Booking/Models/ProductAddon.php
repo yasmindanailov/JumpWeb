@@ -413,28 +413,42 @@ class ProductAddon extends Pivot
     }
 
     /**
-     * ¿Tiene este enganche líneas VIVAS en reservas que todavía se pueden editar?
+     * ¿Tiene este enganche líneas VIVAS **SIN SELLO** en reservas que todavía se pueden editar?
      *
-     * ❗❗❗ **Es el candado del MODO** (`specs/hora-extra.md` §11.11·A1, `#443`), y el agujero que
-     * cierra está medido: `OrderItemEditor` re-escala los complementos por-invitado leyendo **el
-     * pivote VIVO**, así que pasar un enganche de `fixed` a `per_guest` haría que la primera edición
-     * de cantidad de una fiesta ya vendida convirtiera su hija de **1 bloque a 5,00 €** en **N
-     * unidades a 5,00 €**, con su `recordEdit(+Δ)` y su correo. Sobre las dos horas extra reales de
-     * producción eso son **+35,00 €** y **+56,00 €** que nadie vendió: `PAY-19` roto por la puerta de
-     * la configuración.
+     * ❗❗❗ **Es el candado del MODO** (`#443`), **RE-APUNTADO por el sello** (`specs/hora-extra.md`
+     * §12.11, `#448`). El agujero que cerraba está medido: `OrderItemEditor` re-escalaba los
+     * complementos por-invitado leyendo **el pivote VIVO**, así que pasar un enganche de `fixed` a
+     * `per_guest` convertía la hija de una fiesta ya vendida de **1 bloque a 5,00 €** en **N unidades
+     * a 5,00 €** en su primera edición de cantidad. Sobre las dos horas extra reales de producción,
+     * **+35,00 €** y **+56,00 €** que nadie vendió: `PAY-19` roto por la puerta de la configuración.
      *
-     * ⚠️⚠️ **El agujero NO lo trae la hora extra por invitado: existe hoy** para cualquier
-     * complemento que alguien pase de `fixed` a `per_guest`. Lo que la feature le da es un sujeto caro.
+     * ▶ **Desde la T2 ese agujero ya no existe para una línea SELLADA**: las tres lecturas le
+     * preguntan a la línea, no al catálogo. Así que el candado deja de preguntar «¿hay ventas vivas?»
+     * y pregunta **«¿hay ventas vivas que aún no declaren su unidad?»** — un conjunto que **solo
+     * puede encoger**, porque toda venta nueva nace sellada por las tres puertas.
      *
-     * ⚠️ **«Editable» y no «vendida», y la diferencia es la que hace que el candado se suelte solo**:
-     * el editor rechaza una reserva ya celebrada (`editItemBlockedReason` → `item_finished`), así que
-     * una fiesta pasada ya no puede re-escalarse. El candado alcanza EXACTAMENTE a las líneas que el
-     * re-escalado puede tocar, ni una más — y desaparece cuando esas fiestas pasan.
+     * ❗❗ **Por qué se RE-APUNTA en vez de retirarse** (`[DECIDIDO owner, 2026-09-08]`): retirarlo
+     * dejaría a las líneas sin sello —las vendidas antes del despliegue— expuestas al pivote vivo, y
+     * el agujero se reabriría para ellas **en silencio**. Re-apuntado, el candado muere por
+     * VACIAMIENTO y no por decreto: no hay ni un instante sin defensa, y cuando el conjunto quede
+     * vacío no vuelve a cerrarse jamás.
+     *
+     * ⚠️⚠️ **Y esto cierra por sí solo el punto ciego que el candado tenía y nadie había escrito**:
+     * filtraba `cancelled_at` pero **no miraba el estado del PEDIDO**, mientras el editor sí lo exige
+     * (`editItemBlockedReason` → `order_not_operational`). Un carrito abandonado en `pending` cerraba
+     * el candado sobre una línea que el editor jamás podría tocar —y `ExpireOrders` solo escribe
+     * `orders.status`, así que esas hijas conservan `cancelled_at` nulo para siempre—. Ya no hace
+     * falta mirar el estado: **esos carritos nacen sellados y dejan de contar por su cuenta**.
+     * ▶ Y por eso NO se añade un filtro por estado, que además sería un error: un `pending` puede
+     * pagarse después y volverse editable.
+     *
+     * ⚠️ **«Editable» y no «vendida»**: el editor rechaza una reserva ya celebrada (`item_finished`),
+     * así que una fiesta pasada no puede re-escalarse.
      *
      * ⚠️ El predicado del fin es de dominio y vive en PHP (`isFinishedInPractice()`, que desde `#426`
      * mira inicio + duración efectiva en hora del parque): traducirlo a SQL sería una segunda copia
-     * de la regla más delicada del calendario. Los candidatos son pocos —las fiestas vivas de UN
-     * producto con ESE complemento— y se evalúan en memoria.
+     * de la regla más delicada del calendario. Los candidatos son pocos —y desde `#448`, cada vez
+     * menos— y se evalúan en memoria.
      */
     public function hasEditableSoldLines(): bool
     {
@@ -448,7 +462,12 @@ class ProductAddon extends Pivot
             ->whereNull('cancelled_at')
             ->whereNull('parent_item_id')
             ->where('ticket_type_id', $productId)
-            ->whereHas('children', fn ($q) => $q->whereNull('cancelled_at')->where('ticket_type_id', $addonId))
+            ->whereHas('children', fn ($q) => $q
+                ->whereNull('cancelled_at')
+                ->where('ticket_type_id', $addonId)
+                // La mitad que el sello añade: una hija que declara su unidad ya no la reinterpreta
+                // nadie, así que no hay nada que proteger en ella.
+                ->whereNull('addon_quantity_mode'))
             ->with(['ticketType', 'slot'])
             ->get();
 

@@ -227,8 +227,17 @@ class StayExtensionPerGuestTest extends TestCase
         // ❗❗❗ Sin este candado, pasar el enganche de `fixed` a `per_guest` haría que la primera
         // edición de cantidad de una fiesta YA VENDIDA convirtiera su hija de 1 bloque a N unidades:
         // `PAY-19` roto por la puerta de la configuración.
+        //
+        // ⚠️⚠️ **ESTE CASO CAMBIÓ DE PREMISA EN `#448` y se reescribió, no se parcheó.** El candado
+        // ya no protege «toda venta viva», sino **las que aún no declaran su unidad**: una línea
+        // SELLADA no la reinterpreta ningún cambio de catálogo, así que no hay nada que candar. Por
+        // eso el sujeto tiene que quedarse sin sello — que es el estado de lo vendido ANTES del
+        // despliegue, y exactamente lo que el candado sigue existiendo para proteger.
+        // ▶ Es el precedente del `SlotOfferTest` de `#324`: *un caso que cementa una premisa que una
+        // feature posterior invierte a propósito se reescribe con la premisa nueva.*
         $this->hookFixed();
-        $this->buy('15:00:00', 15, blocks: 1);
+        $order = $this->buy('15:00:00', 15, blocks: 1);
+        $this->unseal($order);
 
         $pivot = $this->pivot();
         $this->assertTrue($pivot->hasEditableSoldLines());
@@ -266,8 +275,11 @@ class StayExtensionPerGuestTest extends TestCase
         // «tener ventas», es tener ventas que TODAVÍA SE PUEDEN EDITAR: el editor rechaza una reserva
         // ya celebrada (`item_finished`), así que una fiesta pasada no puede re-escalarse y no hay
         // nada que proteger. Sin este caso, el candado sería un cerrojo permanente y nadie lo notaría.
+        // ⚠️ Mismo cambio de premisa que el caso de arriba (`#448`): el sujeto se queda sin sello,
+        // porque es lo único que el candado sigue protegiendo.
         $this->hookFixed();
-        $this->buy('15:00:00', 15, blocks: 1);
+        $order = $this->buy('15:00:00', 15, blocks: 1);
+        $this->unseal($order);
 
         $this->assertTrue($this->pivot()->hasEditableSoldLines(), 'antes de la fiesta, bloqueado');
 
@@ -277,6 +289,18 @@ class StayExtensionPerGuestTest extends TestCase
         $this->assertFalse($this->pivot()->hasEditableSoldLines(), 'pasada la fiesta, libre');
         $this->pivot()->fill(['quantity_mode' => ProductAddon::MODE_PER_GUEST])->save();
         $this->assertTrue($this->pivot()->isPerGuest());
+    }
+
+    /**
+     * Deja las hijas del pedido SIN sello de modo, o sea en el estado de lo vendido antes de `#448`.
+     * Es lo que da sujeto a los casos del candado: lo sellado ya no bloquea nada.
+     */
+    private function unseal(Order $order): void
+    {
+        DB::table('order_items')
+            ->where('order_id', $order->id)
+            ->whereNotNull('parent_item_id')
+            ->update(['addon_quantity_mode' => null]);
     }
 
     // ─── Lo que ve el cliente ────────────────────────────────────────────────────────
