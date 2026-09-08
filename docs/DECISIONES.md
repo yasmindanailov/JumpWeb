@@ -25233,3 +25233,32 @@ Una columna escalar `order_items.addon_quantity_mode` **nullable y sin default**
 ⚠️ **`ProductAddon` entra en el `CRITICAL_RE` y en `CriticalPathGateTest` en el MISMO commit que toca su guard** (hoy no está en ninguna de las listas), cerrando su ficha de `DEUDA.md`.
 
 ⚠️ **El método de la medición, que es reutilizable**: `ssh … 'php artisan tinker --no-interaction' < script.php`. No sube nada al servidor, no deja residuo y **llama al código real** —`hasEditableSoldLines()`, `isFinishedInPractice()`— en vez de reimplementar en SQL las reglas más delicadas del calendario. *Verificado después que no quedó ni un fichero.*
+
+
+## #449 · 2026-09-08 · Los complementos POR-INVITADO no seguían a los invitados desde el post-form, y su spec decía tres veces que sí
+
+`GuestCountAdjuster` (`#444`) deja que el CLIENTE cambie cuántos invitados tiene su reserva. Su spec describe, en §4.1 y en su tabla de pasos, un «re-escalado de los complementos **por-invitado**, el mismo bucle que el editor, incluida la hora extra por invitado de `#443`».
+
+**No existía.** Verificado: el servicio no mencionaba `isPerGuest`, ni `AddonResolver`, ni `free_quantity`; cargaba `children` en el eager-load y **su única escritura era el principal**. *Una tabla de pasos que describe un paso que el código no da es peor que no tenerla, porque el siguiente construye encima.*
+
+⚠️⚠️ **No mordía porque no existía ningún enganche `per_guest` con hijas vivas — y se activa EXACTAMENTE con el cambio que el owner quiere hacer**: con la hora extra «por invitado» configurada, un cliente que suba de 15 a 20 invitados desde su post-form se queda con la hora extra cobrada a 15, y el desfase lo absorbe el siguiente `recordEdit` del operador **como si fuera suyo**. El panel SÍ re-escalaba (`OrderItemEditor`): eran **dos puertas al mismo hecho y solo una lo mantenía**.
+
+▶ **Por eso va ANTES que la T4 de `#448`**: aquélla es doc y el ojo del owner; ésta es lo que hace seguro el paso que él quiere dar.
+
+### Lo hecho
+
+`GuestCountAdjuster::rescalePerGuestChildren()`, con la MISMA regla y la misma aritmética que el editor: la unidad sale del **SELLO** (`#448`), no del catálogo, y la cantidad se calcula **con esa misma unidad** —decidir con el sello y calcular con el pivote deja la línea en CERO, la lección que la T2 ya pagó—. El dinero va **POST-COMMIT y atado a cada hija** (`#170`), no fundido en el movimiento del principal: es lo que permite al libro decir de qué línea sale cada euro y lo que hace que al cancelar ese complemento su cargo se anule solo.
+
+⚠️ **El AFORO no se revalida, y es correcto**: un extensor por-invitado ocupa **1 bloque** pase lo que pase con la cantidad (`AddonOccupancy::blocksForUnit`), así que re-escalarlo no mueve `extra_minutes` ni un minuto. Lo que cambia es el PRECIO.
+
+⚠️ La guarda `AddonStageTest` **lo cazó al entrar** y obligó a declarar su decisión sobre la fase: **GESTIONA, no filtra** — la línea ya existe, y el eje gobierna la venta. Filtrar habría dejado fuera a una hija `postform` nacida por-invitado, con su cantidad clavada al número viejo sin que nada fallara.
+
+### ❗❗❗ El arnés de mutación dejó el árbol MUTADO otra vez, y esta vez fue un defecto MÍO
+
+Se añadió la variable con la ruta del fichero nuevo **pero no se metió en el array `FICHEROS`**. Consecuencia en cadena: no se copió → el `cp` de restauración falló **en silencio** → **las tres mutaciones se ACUMULARON** en el árbol de trabajo → y la comprobación final de integridad dijo «árbol idéntico» porque **solo recorre `FICHEROS`**.
+
+⚠️⚠️ **Y lo peor no es el fichero sucio: es que el veredicto dejó de valer.** Cada mutación posterior corrió sobre código ya mutado. Salió **«25/25»** y no significaba nada.
+
+▶ `mutar()` **ABORTA** ahora si el fichero no tiene copia, en vez de avisar: *un arnés que sigue tras perder su red da un número peor que no dar ninguno.* Es la segunda vez en esta banda que este instrumento deja el árbol tocado (la primera, `#448`: un `trap … EXIT` que no corre con SIGKILL) — y las dos veces lo cazó volver a correr la suite ENTERA antes de commitear, no el propio arnés.
+
+**Verificación**: suite **4.477** · **25/25** mutaciones re-ejecutadas con la red puesta · `purchase:verify-oversell --scenario=guest-count` sobre InnoDB (38 invitados vivos, 15 rechazos, 0 errores).

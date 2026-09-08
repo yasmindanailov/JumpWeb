@@ -25,7 +25,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='AddonQuantityModeSealTest|AddonQuantityModeReadsTest|SoldLineUnitHasOneSourceTest|AddonQuantityModeBackfillTest|PostFormAddonsTest|MixedPartySurchargeTest'
+FILTER='GuestCountTest|AddonQuantityModeSealTest|AddonQuantityModeReadsTest|SoldLineUnitHasOneSourceTest|AddonQuantityModeBackfillTest|PostFormAddonsTest|MixedPartySurchargeTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 # Ruta FIJA y gitignorada (`storage/` no viaja), para que un corte sea REPARABLE.
@@ -38,6 +38,7 @@ FICHEROS=(
     app/Domain/Booking/Services/MixedPartySurcharge.php
     app/Domain/Booking/Models/ProductAddon.php
     database/migrations/2026_09_08_120000_add_addon_quantity_mode_to_order_items.php
+    app/Domain/Booking/Services/GuestCountAdjuster.php
 )
 # Solo restaura lo que TIENE copia: un corte a mitad del arranque deja la carpeta incompleta, y sin
 # esta guarda la reparación escupe seis `cannot stat` que tapan el aviso que sí importa.
@@ -82,6 +83,20 @@ muerden=0; total=0
 mutar() {
     local nombre="$1" fichero="$2" buscar="$3" poner="$4"
     total=$((total + 1))
+
+    # ❗❗❗ **MUTAR UN FICHERO SIN COPIA LO DEJA MUTADO PARA SIEMPRE, y pasó de verdad** (`#449`):
+    # se añadió una variable con la ruta pero se olvidó meterla en `FICHEROS`, así que no se copió,
+    # el `cp` de restauración falló en silencio, **las tres mutaciones se ACUMULARON** en el árbol —y
+    # la comprobación final de integridad dijo «árbol idéntico» porque solo recorre `FICHEROS`—.
+    # ⚠️⚠️ Y lo peor no es el fichero sucio: es que **el veredicto deja de valer**, porque cada
+    # mutación posterior corre sobre código ya mutado. Salió «25/25» y no significaba nada.
+    # ▶ Por eso esto ABORTA en vez de avisar: un arnés que sigue tras perder su red da un número
+    # peor que no dar ninguno.
+    if [ ! -f "$TMP/$(basename "$fichero")" ]; then
+        echo "✗ «$nombre» quiere mutar «$fichero», que NO está en FICHEROS: sin copia no hay" >&2
+        echo "  restauración, y el veredicto de toda la tanda deja de valer. Añádelo al array." >&2
+        exit 1
+    fi
     python3 -c 'import sys; p=sys.argv[1]; s=open(p,encoding="utf-8").read(); open(p,"w",encoding="utf-8").write(s.replace(sys.argv[2], sys.argv[3], 1))' \
         "$fichero" "$buscar" "$poner"
     if cmp -s "$fichero" "$TMP/$(basename "$fichero")"; then
@@ -105,6 +120,7 @@ PFA=app/Domain/Booking/Services/PostFormAddons.php
 MIX=app/Domain/Booking/Services/MixedPartySurcharge.php
 PIV=app/Domain/Booking/Models/ProductAddon.php
 MIG=database/migrations/2026_09_08_120000_add_addon_quantity_mode_to_order_items.php
+GCA=app/Domain/Booking/Services/GuestCountAdjuster.php
 
 echo '── Las tres PUERTAS que sellan ──'
 
@@ -244,6 +260,24 @@ mutar "el candado se suelta también con líneas SIN sellar" "$PIV" \
                 return true;
             }
         }"
+
+echo
+echo '── `#449` · los por-invitado siguen a los INVITADOS ──'
+
+# El post-form vuelve a no tocar las hijas: el defecto original.
+mutar "el post-form deja de re-escalar los por-invitado" "$GCA" \
+  "            addonRescales: \$this->rescalePerGuestChildren(\$item, \$desired)," \
+  "            addonRescales: [],"
+
+# CONTROL: re-escalar TODA hija multiplicaría cada complemento de la reserva.
+mutar "re-escala también los de cantidad FIJA" "$GCA" \
+  "            if (\$pivot === null || ! AddonResolver::wasSoldPerGuest(\$child, \$pivot)) {" \
+  "            if (\$pivot === null) {"
+
+# El dinero deja de atarse a su hija: el libro se queda sin saber de qué línea sale.
+mutar "el dinero del re-escalado no se escribe" "$GCA" \
+  "                if (\$rescale['delta'] === 0) {" \
+  "                if (true) {"
 
 echo
 echo '── El RELLENO de la migración ──'

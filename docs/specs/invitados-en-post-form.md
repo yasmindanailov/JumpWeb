@@ -176,7 +176,7 @@ arregló** (dice que aquel predicado declara terminada una reserva 1–2 h tarde
 | paso | dónde | qué |
 |---|---|---|
 | 1 | **bajo el lock** | `quantity` y `seats` nuevos. **El sello NO se toca** (`PAY-19`: solo re-sella un cambio de producto o de día) |
-| 2 | **bajo el lock** | re-escalado de los complementos **por-invitado** (el mismo bucle que el editor), incluida **la hora extra por invitado de `#443`** |
+| 2 | **bajo el lock** | re-escalado de los complementos **por-invitado** (el mismo bucle que el editor), incluida **la hora extra por invitado de `#443`**. ⚠️⚠️ **ESTO SE ESCRIBIÓ AQUÍ Y NO SE IMPLEMENTÓ: lo cerró `#449`** — el servicio cargaba `children` y no las tocaba, y su única escritura era el principal. No mordía porque no existía ningún enganche `per_guest` con hijas vivas. *Una tabla de pasos que describe un paso que el código no da es peor que no tenerla.* |
 | 3 | post-commit | `Order::recordEdit(±Δ)` sobre la línea, con `changes.quantity_change` — que es lo que el libro convierte en «Cantidad: 8 → 12» |
 | 4 | post-commit | un `recordEdit` por cada complemento re-escalado, **atado a su hija** (`#170`) |
 | 5 | post-commit | `AuditLogger::log('orders.guest_count_changed')` **sin PII** (`RGPD-02`): qué reserva, por dónde entró y el delta |

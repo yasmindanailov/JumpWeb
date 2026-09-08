@@ -52,6 +52,17 @@ final class GuestCountChange
         public readonly int $deltaCents = 0,
         /** Fichas RELLENAS que se perdieron al bajar (0 al subir). */
         public readonly int $discardedForms = 0,
+        /**
+         * Los complementos POR-INVITADO que se re-escalaron con la cantidad, para canalizar su
+         * dinero POST-COMMIT y **atado a su hija** (`#170`), como hace el editor del panel.
+         *
+         * ⚠️ Su delta va aparte de {@see deltaCents} a propósito: aquél es el del PRINCIPAL, y
+         * fundirlos dejaría un solo movimiento sin decir de qué línea sale — el libro necesita saber
+         * a qué reserva atribuir cada euro (`specs/desglose-libro.md` §4.2).
+         *
+         * @var array<int, array{delta:int, old_qty:int, new_qty:int, name:string}>
+         */
+        public readonly array $addonRescales = [],
     ) {}
 
     public static function noop(): self

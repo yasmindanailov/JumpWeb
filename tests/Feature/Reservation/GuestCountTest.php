@@ -4,7 +4,9 @@ namespace Tests\Feature\Reservation;
 
 use App\Domain\Booking\Contracts\GuestCountChange;
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
@@ -364,6 +366,127 @@ class GuestCountTest extends TestCase
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────────────
+
+    // ─── Los complementos POR-INVITADO siguen a los invitados (`#449`) ───────────────
+
+    public function test_raising_the_guest_count_rescales_a_per_guest_addon(): void
+    {
+        // ❗❗❗ **El defecto que esta tanda cierra, y su spec afirmaba en TRES sitios que no existía.**
+        // `GuestCountAdjuster` cargaba `children` y no las tocaba: solo escribía el principal. No
+        // mordía porque no había ningún enganche `per_guest` con hijas vivas — y se activa
+        // EXACTAMENTE con la hora extra «por invitado» que el owner quiere configurar.
+        $menu = $this->perGuestAddon();
+        $item = $this->reservationWith($menu, guests: 15);
+
+        $this->assertSame(15, (int) $this->child($item, $menu)->quantity);
+
+        $change = $this->adjust($item, 20);
+        $this->assertTrue($change->applied, 'el ajuste debía aplicarse: '.($change->reason ?? '—'));
+
+        $this->assertSame(
+            20,
+            (int) $this->child($item->fresh(), $menu)->fresh()->quantity,
+            'un complemento por-invitado sigue al número de invitados: si no, se cobran 15 menús para 20',
+        );
+    }
+
+    public function test_lowering_the_guest_count_rescales_it_down_too(): void
+    {
+        // La otra dirección, y es la cara CARA del defecto: sin ella el cliente baja a 10 y sigue
+        // pagando 15 menús — de forma invisible, porque nadie mira la hija.
+        $menu = $this->perGuestAddon();
+        $item = $this->reservationWith($menu, guests: 15);
+
+        $this->adjust($item, 10);
+
+        $this->assertSame(10, (int) $this->child($item->fresh(), $menu)->fresh()->quantity);
+    }
+
+    public function test_the_money_of_the_rescale_is_tied_to_its_own_line(): void
+    {
+        // ⚠️ **Atado a la HIJA y no al principal** (`#170`): es lo que permite al libro decir de qué
+        // línea sale cada euro, y lo que hace que al cancelar ese complemento su cargo se anule solo.
+        $menu = $this->perGuestAddon();
+        $item = $this->reservationWith($menu, guests: 15);
+        $child = $this->child($item, $menu);
+
+        $change = $this->adjust($item, 20);
+        $this->assertNotSame([], $change->addonRescales, 'el cambio tiene que declarar lo re-escalado');
+
+        $ajuste = OrderAdjustment::query()
+            ->where('order_item_id', $child->id)
+            ->orderByDesc('id')
+            ->first();
+
+        $this->assertNotNull($ajuste, 'el re-escalado escribe su hecho atado a la hija');
+        // 5 invitados más × 2,00 € = 10,00 €.
+        $this->assertSame(1000, (int) $ajuste->amount_cents);
+    }
+
+    public function test_control_a_fixed_addon_is_not_touched_by_the_guest_count(): void
+    {
+        // CONTROL: lo que sigue a los invitados es lo VENDIDO por invitados. Una tarta de 2 unidades
+        // no se convierte en 20 porque vengan 20 niños. Sin este caso, «re-escalar todo» pasaría en
+        // verde y multiplicaría cada complemento de la reserva.
+        $tarta = $this->fixedAddon();
+        $item = $this->reservationWith($tarta, guests: 15, addonQty: 2);
+
+        $this->adjust($item, 20);
+
+        $this->assertSame(2, (int) $this->child($item->fresh(), $tarta)->fresh()->quantity);
+    }
+
+    private function perGuestAddon(): TicketType
+    {
+        return $this->addon(ProductAddon::MODE_PER_GUEST, 'Menú');
+    }
+
+    private function fixedAddon(): TicketType
+    {
+        return $this->addon(ProductAddon::MODE_FIXED, 'Tarta');
+    }
+
+    private function addon(string $mode, string $nombre): TicketType
+    {
+        $addon = TicketType::create([
+            'name' => ['es' => $nombre], 'type' => TicketType::TYPE_ADDON,
+            'is_sellable' => true, 'is_active' => true, 'position' => 7,
+        ]);
+        $addon->prices()->create([
+            'rate_type_id' => RateType::where('key', 'normal')->value('id'), 'amount_cents' => 200,
+        ]);
+        $this->pack->addons()->attach($addon->id, [
+            'position' => 1, 'stage' => ProductAddon::STAGE_BOOKING,
+            'quantity_mode' => $mode, 'allow_extra' => true,
+            'included_quantity' => 1, 'is_included' => false, 'is_mandatory' => false,
+        ]);
+
+        return $addon;
+    }
+
+    private function child(OrderItem $item, TicketType $addon): OrderItem
+    {
+        return $item->children()->where('ticket_type_id', $addon->id)->whereNull('cancelled_at')->firstOrFail();
+    }
+
+    /** Una reserva PAGADA con ese complemento dentro. */
+    private function reservationWith(TicketType $addon, int $guests, int $addonQty = 1): OrderItem
+    {
+        $order = $this->creator->createPendingOrder($this->holder, [[
+            'ticket_type_id' => $this->pack->id, 'date' => $this->date, 'time' => '15:00:00',
+            'qty' => $guests, 'event_data' => [],
+            'addons' => [['ticket_type_id' => $addon->id, 'qty' => $addonQty]],
+        ]]);
+        $order->forceFill(['status' => Order::STATUS_PAID, 'expires_at' => null, 'paid_at' => now()])->save();
+        Payment::create([
+            'payable_type' => $order->getMorphClass(), 'payable_id' => $order->id,
+            'amount' => (int) $order->total, 'currency' => 'EUR', 'provider' => 'redsys',
+            'status' => Payment::STATUS_PAID, 'paid_at' => now(),
+            'gateway_order' => str_pad((string) (500000 + $order->id), 10, '0', STR_PAD_LEFT),
+        ]);
+
+        return $order->items()->whereNull('parent_item_id')->with(['ticketType', 'slot', 'order'])->firstOrFail();
+    }
 
     private function adjust(OrderItem $item, int $desired): GuestCountChange
     {

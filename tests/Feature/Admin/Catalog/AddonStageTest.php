@@ -558,6 +558,12 @@ class AddonStageTest extends TestCase
             // venta, no la capacidad del operador sobre lo ya vendido.
             'app/Domain/Booking/Services/OrderItemEditor.php' => 'gestiona: mueve líneas existentes',
             'app/Domain/Booking/Services/ItemEditPricing.php' => 'gestiona: tarifica una edición',
+            // `#449` · re-escala los por-invitado cuando el CLIENTE cambia sus invitados. NO filtra
+            // por fase, y es deliberado por el mismo motivo que sus vecinos: la línea YA existe, así
+            // que el eje —que gobierna la VENTA— no tiene nada que decir sobre ella. ⚠️ Filtrar aquí
+            // dejaría fuera a una hija de fase `postform` que hubiera nacido por-invitado, y su
+            // cantidad se quedaría clavada al número de invitados viejo sin que nada fallara.
+            'app/Domain/Booking/Services/GuestCountAdjuster.php' => 'gestiona: re-escala lo ya vendido',
             'app/Filament/Resources/Orders/Pages/ViewOrder.php' => 'gestiona: «Gestionar → Complementos»',
 
             // LEEN lo vendido (aforo, impresión, puerta) o son DTO/serializadores: la fase no aplica.

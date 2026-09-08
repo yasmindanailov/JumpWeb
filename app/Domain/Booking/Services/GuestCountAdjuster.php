@@ -119,6 +119,31 @@ final class GuestCountAdjuster
             );
         }
 
+        // El dinero de los complementos re-escalados, **uno por hija** (`#449`, `#170`): atarlo a su
+        // línea es lo que permite al libro decir de qué reserva sale cada euro, y lo que hace que al
+        // cancelar ese complemento su cargo se anule solo. Un movimiento único sobre el principal
+        // sería más corto de escribir y dejaría el desglose mudo.
+        if ($actor !== null) {
+            foreach ($change->addonRescales as $childId => $rescale) {
+                if ($rescale['delta'] === 0) {
+                    continue;
+                }
+                $child = OrderItem::find($childId);
+                if ($child === null) {
+                    continue;
+                }
+                $order->recordEdit(
+                    $child,
+                    $rescale['delta'],
+                    $actor,
+                    $rescale['delta'] > 0 ? 'addon_per_guest_rescale' : 'addon_per_guest_rescale_reduction',
+                    ['changes' => ['addon_change' => ['added' => [], 'removed' => [], 'updated' => [[
+                        'name' => $rescale['name'], 'old' => $rescale['old_qty'], 'new' => $rescale['new_qty'],
+                    ]]]]],
+                );
+            }
+        }
+
         // `RGPD-02`: el rastro NO lleva PII — ni un nombre ni una edad. Solo qué reserva, por dónde
         // entró quien la tocó y cuánto se movió.
         AuditLogger::log('orders.guest_count_changed', $order, [
@@ -220,7 +245,73 @@ final class GuestCountAdjuster
             to: $desired,
             deltaCents: (int) $pricing['diff'],
             discardedForms: $discarded,
+            addonRescales: $this->rescalePerGuestChildren($item, $desired),
         );
+    }
+
+    /**
+     * **Los complementos POR-INVITADO siguen al número de invitados** (`#449`), con la MISMA regla y
+     * la misma aritmética que el editor del panel: su cantidad efectiva ES la cantidad de la reserva.
+     *
+     * ❗❗❗ **Esto FALTABA, y su spec afirmaba en tres sitios que estaba** (`#444`,
+     * `specs/invitados-en-post-form.md` §4.1 y su tabla de pasos). El servicio cargaba `children` y
+     * no las tocaba: su única escritura era el principal. *Una doc que describe una conducta que el
+     * código no tiene es peor que no tenerla, porque el siguiente construye encima.*
+     *
+     * ⚠️⚠️ **No mordía porque no existía ningún enganche `per_guest` con hijas vivas — y se activa
+     * EXACTAMENTE con el cambio que el owner quiere hacer**: con la hora extra «por invitado», un
+     * cliente que suba de 15 a 20 desde el post-form se quedaría con la hora extra cobrada a 15, y el
+     * desfase lo absorbería el siguiente `recordEdit` del operador **como si fuera suyo**. El panel sí
+     * re-escalaba (`OrderItemEditor`): eran dos puertas al mismo hecho y solo una lo mantenía.
+     *
+     * ⚠️ **La unidad sale del SELLO, no del catálogo** (`#448`): esta línea sigue a los invitados si
+     * se VENDIÓ así, no si el enganche lo dice hoy. Y la cantidad se calcula con **esa misma
+     * unidad** — decidir con el sello y calcular con el pivote deja la línea en CERO.
+     *
+     * ⚠️ **El AFORO no se revalida y es correcto**: un extensor por-invitado ocupa **1 bloque** pase
+     * lo que pase con la cantidad (`AddonOccupancy::blocksForUnit`), así que re-escalarlo no mueve
+     * `extra_minutes` ni un minuto. Lo que cambia es el PRECIO.
+     *
+     * @return array<int, array{delta:int, old_qty:int, new_qty:int, name:string}>
+     */
+    private function rescalePerGuestChildren(OrderItem $item, int $desired): array
+    {
+        $type = $item->ticketType;
+        if ($type === null) {
+            return [];
+        }
+
+        $pivotByAddonId = $type->addons()->get()->keyBy('id');
+        $rescales = [];
+
+        foreach ($item->children()->whereNull('cancelled_at')->get() as $child) {
+            $pivot = $pivotByAddonId->get($child->ticket_type_id)?->pivot;
+            if ($pivot === null || ! AddonResolver::wasSoldPerGuest($child, $pivot)) {
+                continue;
+            }
+
+            $unidad = AddonResolver::soldQuantityUnit($child, $pivot);
+            $oldQty = (int) $child->quantity;
+            $oldFree = (int) $child->free_quantity;
+            $newQty = AddonResolver::effectiveQuantityForUnit($pivot, $unidad, 0, $desired);
+            $newFree = AddonResolver::freeUnitsForUnit($pivot, $unidad, $newQty);
+            if ($newQty === $oldQty && $newFree === $oldFree) {
+                continue;
+            }
+
+            $oldCharged = max(0, $oldQty - $oldFree) * (int) $child->unit_price;
+            $newCharged = max(0, $newQty - $newFree) * (int) $child->unit_price;
+            $child->forceFill(['quantity' => $newQty, 'free_quantity' => $newFree])->save();
+
+            $rescales[(int) $child->id] = [
+                'delta' => $newCharged - $oldCharged,
+                'old_qty' => $oldQty,
+                'new_qty' => $newQty,
+                'name' => $child->ticketType?->tr('name') ?? ('#'.$child->id),
+            ];
+        }
+
+        return $rescales;
     }
 
     /** Fichas CON algún dato por encima de la cantidad nueva: las que el cliente reconocería como suyas. */

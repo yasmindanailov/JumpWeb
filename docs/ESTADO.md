@@ -512,7 +512,7 @@
 > sesión (`#430` el plan de despliegue, `#431` su ejecución y `#432` el cierre) se tomaron del **hueco siguiente**, así
 > que **`#432`–`#439` queda RESERVADA para este carril** y quien retome numera ahí. ⚠️ **Reserva la
 > banda ANTES de usarla**, no después: es la regla de `#404` y esta sesión la estiró dos números.
-> ▶ **Último usado: `#448`** (sub-banda `#440`–`#449`, la de este carril; **queda UNO: `#449`**). ⚠️ **La sucesora se reserva AQUÍ antes de gastar el `#449`**, no después — es la regla de `#404` y ya se estiró dos números una vez. Otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y
+> ▶ **Último usado: `#449`** (sub-banda `#440`–`#449`, la de este carril: **AGOTADA**). ▶ **SUCESORA RESERVADA AQUÍ ANTES DE GASTAR EL ÚLTIMO, que es la regla de `#404`: `#470`–`#489`** para el carril de producto/reservas — se salta la `#450`–`#469` porque esas dos están vivas (diseño y panel) y los huecos entre bandas son deliberados. Quien retome numera desde **`#470`**. Otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y
 > `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está
@@ -1705,7 +1705,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4473 en verde** (27.425 aserciones, 1 skipped a propósito), medida el **2026-09-08** sobre el
+> Suite **4477 en verde** (27.433 aserciones, 1 skipped a propósito), medida el **2026-09-08** sobre el
 > árbol con **`#444`** —el cliente cambiando sus invitados desde el post-form (**+29**: 18 de
 > `GuestCountTest` y 11 de `GuestCountSurfacesTest`)— encima de **`#443`**
 > —la hora extra cobrada POR INVITADO (**+22**: 19 casos nuevos de
