@@ -1521,7 +1521,9 @@ class OrderItemEditor
             $perGuest = AddonResolver::wasSoldPerGuest($child, $pivot);
             // ⚠️⚠️ **DIVERGENCIA: el sello dice una unidad y el enganche vivo dice otra.** Entonces
             // los topes e inclusiones del pivote NO describen a esta línea y no se le aplican
-            // (§12.8) — su techo pasa a ser su propia cantidad: se puede bajar o quitar, nunca subir.
+            // (§12.8) — su techo pasa a ser su propia cantidad. ⚠️ Eso es lo que este `max` hace;
+            // **no** significa que se pueda bajar: `addon_partial_reduce_unsupported` prohíbe bajar
+            // parcialmente TODA hija, y una vendida por-invitado sale además `locked`.
             //
             // No es celo: sin esta regla se crea un estado que **hoy no existe en ninguna
             // configuración**. Al pasar un enganche a `per_guest` el panel BORRA su tope

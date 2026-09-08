@@ -289,6 +289,12 @@ mutar "re-escala también los de cantidad FIJA" "$GCA" \
   "            if (\$pivot === null || ! AddonResolver::wasSoldPerGuest(\$child, \$pivot)) {" \
   "            if (\$pivot === null) {"
 
+# `#448` §12.20 · m4: la lectura del cliente vuelve al catálogo. ANTES de añadir su caso de
+# divergencia esta mutación NO mordía — el fichero salía 22 passed.
+mutar "el re-escalado del CLIENTE vuelve a calcular con el catálogo" "$GCA" \
+  "            \$newQty = AddonResolver::effectiveQuantityForUnit(\$pivot, \$unidad, 0, \$desired);" \
+  "            \$newQty = AddonResolver::effectiveQuantity(\$pivot, 0, \$desired);"
+
 # El dinero deja de atarse a su hija: el libro se queda sin saber de qué línea sale.
 mutar "el dinero del re-escalado no se escribe" "$GCA" \
   "                if (\$rescale['delta'] === 0) {" \

@@ -1705,7 +1705,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4479 en verde** (27.436 aserciones, 1 skipped a propósito), medida el **2026-09-08** sobre el
+> Suite **4481 en verde** (27.440 aserciones, 1 skipped a propósito), medida el **2026-09-08** sobre el
 > árbol con **`#444`** —el cliente cambiando sus invitados desde el post-form (**+29**: 18 de
 > `GuestCountTest` y 11 de `GuestCountSurfacesTest`)— encima de **`#443`**
 > —la hora extra cobrada POR INVITADO (**+22**: 19 casos nuevos de

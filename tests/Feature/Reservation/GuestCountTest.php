@@ -423,6 +423,48 @@ class GuestCountTest extends TestCase
         $this->assertSame(1000, (int) $ajuste->amount_cents);
     }
 
+    public function test_the_rescale_follows_the_seal_and_not_the_catalogue(): void
+    {
+        // ❗❗ **El caso que FALTABA, y lo dijo la revisión adversarial** (`#448` §12.20 · m4): los
+        // cuatro casos de arriba escriben el enganche UNA sola vez, así que sello y pivote coinciden
+        // por construcción y dan el mismo resultado leyendo cualquiera de los dos. Verificado: con
+        // `effectiveQuantity($pivot, …)` en vez de la variante sellada, el fichero salía **22 passed**.
+        // *Un caso que no puede distinguir las dos fuentes no prueba cuál manda.*
+        $menu = $this->perGuestAddon();
+        $item = $this->reservationWith($menu, guests: 15);
+
+        // El catálogo cambia de opinión DESPUÉS de vender, por la puerta que Eloquent no ve.
+        DB::table('product_addons')
+            ->where('product_id', $this->pack->id)->where('addon_id', $menu->id)
+            ->update(['quantity_mode' => ProductAddon::MODE_FIXED]);
+
+        $change = $this->adjust($item, 20);
+        $this->assertTrue($change->applied, 'el ajuste debía aplicarse: '.($change->reason ?? '—'));
+
+        $this->assertSame(
+            20,
+            (int) $this->child($item->fresh(), $menu)->fresh()->quantity,
+            'se VENDIÓ por invitados: sigue a los invitados aunque el enganche diga hoy otra cosa',
+        );
+    }
+
+    public function test_control_the_rescale_ignores_a_line_sold_as_fixed(): void
+    {
+        // El ESPEJO del anterior, y el que impide que «re-escala siempre» pase en verde: vendida como
+        // cantidad fija, no la mueve que el enganche pase a por-invitado. Es el defecto medido en
+        // producción (`R-BOMAZH`) por la puerta del cliente.
+        $menu = $this->fixedAddon();
+        $item = $this->reservationWith($menu, guests: 15, addonQty: 1);
+
+        DB::table('product_addons')
+            ->where('product_id', $this->pack->id)->where('addon_id', $menu->id)
+            ->update(['quantity_mode' => ProductAddon::MODE_PER_GUEST]);
+
+        $this->adjust($item, 20);
+
+        $this->assertSame(1, (int) $this->child($item->fresh(), $menu)->fresh()->quantity);
+    }
+
     public function test_control_a_fixed_addon_is_not_touched_by_the_guest_count(): void
     {
         // CONTROL: lo que sigue a los invitados es lo VENDIDO por invitados. Una tarta de 2 unidades

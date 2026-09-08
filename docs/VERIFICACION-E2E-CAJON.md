@@ -2568,9 +2568,12 @@ es exactamente el defecto de los **900 minutos** que esta tanda cierra.
 ### Lo que este guion NO cubre, y se dice
 
 - **El relleno de producción**: al desplegar, las dos horas extra de sala y la línea de `R-BOMAZH`
-  quedan selladas por la migración. Eso se comprueba **en el despliegue**, con las dos cifras que la
-  migración deja en el log (filas selladas · hijas vivas que siguen sin sello).
-- **La divergencia en pantalla**: cuando el sello y el enganche declaran unidades distintas, la línea
-  queda acotada a su propia cantidad. Hoy eso **no se pinta** en la ficha —está en el plan y no se
-  construyó— así que el operador lo nota al no poder subirla, sin que nada se lo explique. Es deuda
-  declarada, no un olvido.
+  quedan selladas por la migración. Eso se comprueba **en el despliegue**, y lo que la migración deja
+  en el log es **una línea por relleno con las filas tocadas** (`info()`), incluidos **los ids** del
+  relleno B. ⚠️ **No cuenta las hijas vivas que quedan SIN sello**, que es el número que dice qué
+  sigue protegiendo el candado: eso se mide aparte, con el SELECT del paso de despliegue.
+- **La pastilla de divergencia SÍ está construida** (`OrderItem::addonUnitDivergesFromCatalogue()` +
+  «Vendido con otra unidad» en la línea ↳). ⚠️⚠️ Lo que no tiene es red automática: **ningún test
+  renderiza esa insignia** —borrar su `@if` del blade deja la suite verde—, así que **es justo la
+  pieza que conviene mirar con los ojos**. Aparece cuando el sello y el enganche declaran unidades
+  distintas: provócala cambiando el modo de un enganche con una línea ya sellada debajo.

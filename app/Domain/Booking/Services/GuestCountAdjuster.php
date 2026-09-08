@@ -137,9 +137,19 @@ final class GuestCountAdjuster
                     $rescale['delta'],
                     $actor,
                     $rescale['delta'] > 0 ? 'addon_per_guest_rescale' : 'addon_per_guest_rescale_reduction',
-                    ['changes' => ['addon_change' => ['added' => [], 'removed' => [], 'updated' => [[
-                        'name' => $rescale['name'], 'old' => $rescale['old_qty'], 'new' => $rescale['new_qty'],
-                    ]]]]],
+                    // ⚠️⚠️ **Van las DOS claves, y `quantity_change` no es decoración**:
+                    // `MovementLabel::edit()` solo compone la frase desde `addon_change` cuando el
+                    // delta es POSITIVO, así que una BAJADA caía a `edit_fallback` y el cliente leía
+                    // «Cambios en Menú» junto a −10,00 € donde el panel dice «Menú: 20 → 15».
+                    // Reproducido con el compositor real; es el mismo defecto que el docblock de
+                    // {@see PostFormAddons::recordMove()} documenta haber medido. El importe, su
+                    // signo y su atadura a la hija ya eran correctos: lo que faltaba era el TEXTO.
+                    ['changes' => [
+                        'addon_change' => ['added' => [], 'removed' => [], 'updated' => [[
+                            'name' => $rescale['name'], 'old' => $rescale['old_qty'], 'new' => $rescale['new_qty'],
+                        ]]],
+                        'quantity_change' => ['old' => $rescale['old_qty'], 'new' => $rescale['new_qty']],
+                    ]],
                 );
             }
         }

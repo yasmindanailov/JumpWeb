@@ -1884,13 +1884,19 @@ describe.
 enumeran el contrato a mano: la clave tiene que ir en las dos, y hay guarda.
 ⚠️ `ItemEditPricing` **sigue fuera del `CRITICAL_RE`**: devuelve un valor, no escribe.
 
-## 12.7 · Quién LEE — TRES sitios, y ninguno más
+## 12.7 · Quién LEE — CUATRO sitios, y ninguno más
 
 1. **DINERO** — `OrderItemEditor::edit()` (el bloque `addon_per_guest_rescale`), con su
    `recordEdit(±Δ, 'addon_per_guest_rescale')`.
 2. **AFORO** — `OrderItemEditor::resultingStayMinutes()` → `AddonOccupancy::extraMinutes()` → `blocksFor()`,
    materializado en el `extra_minutes` del padre.
 3. **PERMISO** — `OrderItemEditor::childAddonMeta()`, que gobierna `addon_locked` y el modal «Gestionar».
+4. **DINERO, por la puerta del CLIENTE** — `GuestCountAdjuster::rescalePerGuestChildren()` (`#449`).
+
+⚠️⚠️ **Este cuarto llegó después, y la spec dijo «TRES» durante todo el rango**: el editor del panel
+y el post-form del cliente son **dos puertas al mismo hecho**, y contar solo la del operador es
+exactamente cómo se quedó sin construir la del cliente. *Si mañana aparece una quinta, este número
+vuelve a mentir: lo que manda es el censo de `SoldLineUnitHasOneSourceTest`, no la prosa.*
 
 ▶ **El lector vive en `AddonResolver::soldQuantityUnit(OrderItem $child): ?string`**, y **no** en un
 método de `OrderItem`: `AddonResolver` está en el `CRITICAL_RE` y `OrderItem` **no**. La única
@@ -1907,7 +1913,7 @@ gobernara la oferta congelaría el escaparate.**
 |---|---|---|
 | **ausente** (`null`) | **el pivote VIVO — exactamente la conducta de hoy** | Nunca un `?? MODE_FIXED`: **no hay lado seguro único** —para AFORO lo conservador es tratarla como bloques; para DINERO es lo contrario—, así que cualquier default es un defecto en una de las dos mitades. ▶ **De aquí sale la regla que ata la tanda: mientras existan hijas vivas sin sello, el candado no se puede retirar** |
 | **sello == pivote vivo** | idéntico a hoy, sin ramas nuevas | el caso normal mientras nadie cambie un modo |
-| **sello ≠ pivote vivo** | **manda el sello para el MODO, y los topes e inclusiones del pivote NO se aplican a esa línea**: el máximo cae a su cantidad actual (se puede bajar o quitar, no subir) y el re-escalado conserva su propia proporción de gratis | ver abajo |
+| **sello ≠ pivote vivo** | **manda el sello para el MODO, y los topes e inclusiones del pivote NO se aplican a esa línea**: el máximo cae a su cantidad actual —lo que impide SUBIRLA; bajar parcialmente ya lo prohíbe `addon_partial_reduce_unsupported` para toda hija— y el re-escalado conserva su propia proporción de gratis | ver abajo |
 
 ❗❗ **Por qué la tercera fila es obligatoria.** Dejar el tope en el pivote vivo crearía un estado que
 **hoy no existe en ninguna configuración**: al pasar un enganche a `per_guest` el panel **borra el
@@ -2078,14 +2084,13 @@ fabricarlo a mano. **Una guarda que no lo siembre nace ciega.**
    por eso `extends_parent_stay` necesita un cerrojo permanente que no se abre nunca. Lo mismo vale
    para `duration_min` y `seats_per_unit`, que además **viven en `ticket_types`** (§12.3·c) y este
    sello no los alcanza. **Es la siguiente pared. Ficha propia.**
-4. ⚠️⚠️ **`GuestCountAdjuster` NO re-escala las hijas por-invitado, y `invitados-en-post-form.md`
-   afirma dos veces que sí.** Verificado: el fichero no menciona `isPerGuest`, ni `AddonResolver`, ni
-   `free_quantity`; su única escritura toca el PADRE. **Hoy no muerde porque ningún extensor es
-   `per_guest` — y se activa EXACTAMENTE con el cambio que el owner quiere hacer**: un cliente que
-   suba de 15 a 20 invitados desde el post-form se quedaría con la hora extra cobrada a 15, y el
-   desfase lo absorbería el siguiente `recordEdit` del operador como si fuera suyo. `GuestCountTest`
-   no tiene ni un caso con complemento hijo. **Ficha propia, y conviene cerrarla ANTES de configurar
-   el modo nuevo.**
+4. ~~⚠️⚠️ **`GuestCountAdjuster` NO re-escala las hijas por-invitado**~~ ✅ **CERRADO POR `#449`, EL
+   MISMO DÍA — y esta entrada estuvo CADUCADA dentro de su propio commit.** Decía, además, «conviene
+   cerrarla ANTES de configurar el modo nuevo»: leída hoy, **le diría al owner que no haga justo lo
+   que estas tandas desbloquean**. ▶ Era cierto al escribirla —el servicio cargaba `children` y solo
+   escribía el padre— y dejó de serlo unas horas después. *Una ficha de deuda es una foto con fecha:
+   al cerrarla hay que tachar el texto, no solo apuntar el cierre en `DEUDA.md`.* Lo cazó la revisión
+   adversarial de §12.20, y es el tercer caso del mismo patrón en esta banda.
 
 ## 12.16 · Lo EJECUTADO — la T1 (`#448`, 2026-09-08)
 
@@ -2287,7 +2292,9 @@ una conducta que el código no tiene— y por eso se construyó en vez de rebaja
 `OrderItem::addonUnitDivergesFromCatalogue()` (comparación de PRESENTACIÓN, no decisión: quien decide
 sigue siendo `AddonResolver::soldQuantityUnit()`), la pastilla «Vendido con otra unidad» en la línea
 ↳ de la ficha y sus dos claves en los dos `admin.php`. El texto dice la **consecuencia práctica**
-—«se puede bajar o quitar, pero no subir»— porque es la que el operador se encuentra.
+—que su cantidad ya no se ajusta a la configuración de hoy— sin prometer una salida que el dominio
+puede no dar: **la redacción inicial decía «se puede bajar o quitar, pero no subir» y era falsa en
+las DOS mitades**; lo cazó la revisión de §12.20.
 
 ### Lo que enseñó la ejecución
 
@@ -2304,3 +2311,84 @@ esta banda que lo que cierra el hueco es **volver a correr la suite entera antes
 
 **Verificación**: suite **4.479** · mutación **27/27** (las dos direcciones de la divergencia
 incluidas) · árbol íntegro tras el arnés.
+
+## 12.20 · La REVISIÓN ADVERSARIAL, y el paso de despliegue que exige (`#448`/`#449`, 2026-09-08)
+
+Siete lentes sobre el rango entero, con un refutador independiente por hallazgo: **42 brutos → 25
+confirmados → CERO bloqueantes**. Los 17 descartados lo fueron **por medición**, y tres de ellos
+apuntaban a defectos de dinero o aforo que resultaron ser estados no alcanzables, conducta idéntica a
+la de hoy, o el comportamiento correcto descrito al revés.
+
+### ❗❗❗ M1 · El PASO DE DESPLIEGUE: correr este SELECT antes de `migrate --force`
+
+**El criterio del relleno B se validó con una foto del 08, y el defecto que fabrica falsos positivos
+sigue VIVO en producción hasta que se despliegue este mismo commit.** Producción va en `200b019a`,
+donde `GuestCountAdjuster` **no** re-escala —eso llega en `#449`— pero `#444` **sí** está desplegado:
+el cliente ya puede mover sus invitados. Con **4 enganches `per_guest`** allí y un menú en cada
+fiesta (`groupDefault()` siempre elige uno), cualquiera que hoy cambie 17 → 20 deja su Menú 2 en 17
+con el padre en 20 — **una divergencia NUEVA que el relleno B leería y sellaría `fixed`**, un hecho
+falso sobre la línea de un cliente real.
+
+```sql
+SELECT c.id, c.quantity, p.quantity AS padre, pa.quantity_mode
+FROM order_items c
+JOIN order_items p     ON p.id = c.parent_item_id
+JOIN product_addons pa ON pa.product_id = p.ticket_type_id AND pa.addon_id = c.ticket_type_id
+WHERE c.cancelled_at IS NULL AND c.addon_quantity_mode IS NULL
+  AND pa.quantity_mode = 'per_guest' AND c.quantity <> p.quantity;
+```
+
+▶ **Una fila** (la #5 de `R-BOMAZH`) → se despliega tal cual. **Más de una** → esas líneas se
+sellarían mal: hay que devolver su sello a `NULL` antes de que el operador las toque. La mitad
+posterior ya está construida: el relleno B **imprime los ids**.
+⚠️ El mismo SELECT cierra el hueco simétrico del relleno A (m7): con `extends_parent_stay = 1` y
+`quantity_mode = 'per_guest'`, cero filas confirma que ningún extensor vendido por-invitado se
+sellaría como `fixed`.
+
+*No es un parche pendiente: es que el corpus se mueve. La cifra «1 de 27» era una medición, no una
+propiedad — y entre las dos veces que se midió ese día ya había subido a 28 hijas vivas.*
+
+### Lo que se arregló en el acto
+
+- **La doc que inducía a la acción equivocada** (m10): §12.15·4 seguía diciendo que
+  `GuestCountAdjuster` no re-escala **y que «conviene cerrarlo ANTES de configurar el modo nuevo»** —
+  o sea, le decía al owner que no hiciera justo lo que estas tandas desbloquean. *Una ficha de deuda
+  es una foto con fecha: al cerrarla se tacha el texto, no solo se apunta el cierre en `DEUDA.md`.*
+- **«Tres lecturas» eran CUATRO** (§12.7, §12.17 y la prosa de `PAY-19`): el editor y el post-form son
+  **dos puertas al mismo hecho**, y contar solo la del operador es exactamente cómo se quedó sin
+  construir la del cliente. La lista positiva del censo cubre ya las cuatro.
+- **El texto del operador prometía dos cosas que el dominio prohíbe** (m8): «se puede bajar o quitar,
+  pero no subir» — bajar parcialmente lo rechaza `addon_partial_reduce_unsupported` para **toda**
+  hija, y en una de las dos direcciones la línea sale además `locked`. Ahora dice el hecho y no
+  promete salida.
+- **`#449` no tenía ni un caso de DIVERGENCIA** (m4): sus cuatro casos escribían el enganche una sola
+  vez, así que sello y pivote coincidían **por construcción** y daban el mismo resultado leyendo
+  cualquiera de los dos — verificado: con el método sin sello el fichero salía **22 passed**. Entran
+  dos casos (el par y su espejo) y **la mutación que antes no mordía**.
+- **La bajada perdía la frase del libro** (m9): el contexto solo llevaba `addon_change`, y
+  `MovementLabel::edit()` solo compone desde ahí con delta POSITIVO — así que el cliente leía
+  «Cambios en Menú» junto a −10,00 €. Va también `quantity_change`.
+- **El guion del OJO** prometía cifras que la migración no da y declaraba «no construida» una pieza
+  que sí lo está — y que es **justo la única sin red automática**.
+
+### Lo que se decidió NO arreglar, y por qué
+
+Seis fichas en `DEUDA.md`, **ninguna alcanzable con el catálogo de hoy**: el N+1 de la pastilla (hoy
+cuesta cero, la regresión llega con las ventas nuevas), el orden del re-sello frente a
+`extra_minutes` (no es regresión y `orphan_addons` lo para), las tres agujas que le faltan al censo,
+la idempotencia del relleno B sin sujeto, el orden de los dos bucles del editor y el literal `fixed`
+del relleno A. *Fichar lo que no tiene sujeto es más honesto que construir a ciegas contra un caso
+que nadie puede alcanzar.*
+
+### Lo que la revisión CONFIRMÓ (un resultado negativo también es una medida)
+
+La oferta sigue leyendo el catálogo de hoy (los diez consumidores censados) · `null` es silencio en
+las tres capas · **cinco** puertas de creación, sin segunda costura (`$guarded = []`, sin lista
+blanca: la trampa de `#400` no se repite) · el candado solo encoge · el aforo de `#449` no se mueve
+**por dos razones independientes** · la derivación de aforo es una · el re-sello no pisa el sello en
+una edición corriente · el sello del panel sale del mismo `$pivot` que la cantidad · la migración es
+idempotente y portable, con la mitad de lectura de B corrida contra **MySQL 8.4.9 real** · el gate
+está bien puesto en las dos listas · **el contrato no cambia** · la regla de divergencia es defensa
+de servidor (un `wire:click` forjado tampoco sube una línea divergente) · `#449` no añade arista al
+grafo de bloqueos · `AddonDateReconciler`, `OrderItemCanceller` y `markCancelled()` no invalidan el
+sello.

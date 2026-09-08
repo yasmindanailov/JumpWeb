@@ -114,24 +114,31 @@ class SoldLineUnitHasOneSourceTest extends TestCase
         // el sello. Sin este caso, alguien podría devolver `OrderItemEditor` al pivote vivo y la
         // guarda de arriba seguiría en verde — porque `isPerGuest()` volvería a aparecer en un
         // fichero que no está en OFERTA... y entonces fallaría. Pero si lo AÑADE a OFERTA, no.
-        $editor = (string) file_get_contents(base_path('app/Domain/Booking/Services/OrderItemEditor.php'));
-        $editor = $this->sinComentarios($editor);
+        // ⚠️⚠️ **Son CUATRO lectores, no tres, y esta lista lo dice.** El cuarto —la puerta del
+        // CLIENTE— llegó en `#449`, y durante todo `#448` la spec dijo «tres»: el editor del panel y
+        // el post-form son **dos puertas al mismo hecho**, y contar solo la del operador es cómo se
+        // quedó sin construir la del cliente. Lo cazó la revisión adversarial (§12.20 · m3).
+        $lectores = [
+            'app/Domain/Booking/Services/OrderItemEditor.php' => 'dinero, aforo y permiso',
+            'app/Domain/Booking/Services/GuestCountAdjuster.php' => 'dinero, por la puerta del cliente',
+        ];
 
-        foreach (['wasSoldPerGuest', 'soldQuantityUnit'] as $puerta) {
-            $this->assertStringContainsString(
-                $puerta,
-                $editor,
-                "`OrderItemEditor` dejó de preguntar por el sello (`{$puerta}`): las tres lecturas de "
-                .'línea vendida —dinero, aforo y permiso— tienen que salir de ahí.',
+        foreach ($lectores as $ruta => $que) {
+            $codigo = $this->sinComentarios((string) file_get_contents(base_path($ruta)));
+
+            $this->assertTrue(
+                str_contains($codigo, 'wasSoldPerGuest') || str_contains($codigo, 'soldQuantityUnit'),
+                "`{$ruta}` dejó de preguntar por el sello: su lectura de línea vendida ({$que}) "
+                .'tiene que salir de `AddonResolver::soldQuantityUnit()`.',
+            );
+
+            $this->assertStringNotContainsString(
+                '->isPerGuest()',
+                $codigo,
+                "`{$ruta}` volvió a leer el modo del PIVOTE. Ahí solo hay líneas YA VENDIDAS: "
+                .'tiene que preguntarle al sello.',
             );
         }
-
-        $this->assertStringNotContainsString(
-            '->isPerGuest()',
-            $editor,
-            '`OrderItemEditor` volvió a leer el modo del PIVOTE. Ahí solo hay líneas YA VENDIDAS: '
-            .'tiene que preguntarle al sello.',
-        );
     }
 
     /** @return list<string> */
