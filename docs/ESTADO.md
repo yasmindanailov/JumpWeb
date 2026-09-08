@@ -510,7 +510,7 @@
 > sesión (`#430` el plan de despliegue, `#431` su ejecución y `#432` el cierre) se tomaron del **hueco siguiente**, así
 > que **`#432`–`#439` queda RESERVADA para este carril** y quien retome numera ahí. ⚠️ **Reserva la
 > banda ANTES de usarla**, no después: es la regla de `#404` y esta sesión la estiró dos números.
-> ▶ **Último usado: `#443`** (sub-banda `#440`–`#449`, la de este carril). Otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y
+> ▶ **Último usado: `#446`** (sub-banda `#440`–`#449`, la de este carril; **quedan tres: `#447`–`#449`**). Otras sub-bandas vivas: `#450`–`#459` (diseño, último `#452`) y
 > `#460`–`#469` (panel, último `#468`).
 >
 > ⚠️ **El pre-push puede caer por un timeout del renderizador SSR** si la máquina está cargada. Está
