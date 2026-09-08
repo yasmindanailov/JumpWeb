@@ -122,9 +122,20 @@ class ItemEditPricing
      * movimiento (refund manual aparte). Compartido por el guardado y la
      * preview reactiva (lo que ve el operador == lo que se cobra).
      *
+     * ▶ **`add_quantity_modes` es el SELLO DEL MODO** (`specs/hora-extra.md` §12.6.1, `#448`), y sale
+     * de AQUÍ y no de `$offeredAddons` a propósito: en una sola llamada a `OrderItemEditor::edit()`
+     * hay TRES lecturas distintas de `product_addons` y solo una está dentro de la transacción.
+     * Sellar desde otra ataría el sello a una lectura *autocommit* separada de la que define la
+     * cantidad por trabajo de validación y por una espera de lock de hasta 50 s. Sale del **MISMO
+     * `$pivot`** que ya produce `add_quantities` y `add_free_quantities`: cero consultas nuevas, y el
+     * sello queda atado por construcción al número que describe.
+     *
+     * ⚠️ `null` cuando no hay pivote (el complemento no está enganchado al producto nuevo): no lo
+     * gobierna ningún enganche, y eso es SILENCIO, no `fixed`.
+     *
      * @param  array<int, array{child_id:int, quantity:int}>  $edits
      * @param  array<int, array{ticket_type_id:int, quantity:int}>  $adds
-     * @return array{upcharge:int, changes:array<string,mixed>, add_unit_prices:array<int,int>, add_quantities:array<int,int>, add_free_quantities:array<int,int>, charges:array<int, array{child_id:?int, type_id:?int, amount:int, context:array<string,mixed>}>, error:?string}
+     * @return array{upcharge:int, changes:array<string,mixed>, add_unit_prices:array<int,int>, add_quantities:array<int,int>, add_free_quantities:array<int,int>, add_quantity_modes:array<int,?string>, charges:array<int, array{child_id:?int, type_id:?int, amount:int, context:array<string,mixed>}>, error:?string}
      */
     public function computeAddonPricing(OrderItem $item, TicketType $newType, array $edits, array $adds, ?string $dateStr): array
     {
@@ -136,6 +147,7 @@ class ItemEditPricing
         $addUnitPrices = [];
         $addQuantities = [];
         $addFreeQuantities = [];
+        $addQuantityModes = [];
         // Cargos por complemento, cada uno ATADO a su child (no al principal): así, al
         // cancelar un complemento, su cargo se anula solo (el libro retira el valor del child).
         $charges = [];
@@ -172,7 +184,7 @@ class ItemEditPricing
             $typeId = (int) $add['ticket_type_id'];
             $addonType = TicketType::find($typeId);
             if ($addonType === null) {
-                return ['upcharge' => 0, 'changes' => [], 'add_unit_prices' => [], 'add_quantities' => [], 'add_free_quantities' => [], 'charges' => [], 'error' => 'invalid_product'];
+                return ['upcharge' => 0, 'changes' => [], 'add_unit_prices' => [], 'add_quantities' => [], 'add_free_quantities' => [], 'add_quantity_modes' => [], 'charges' => [], 'error' => 'invalid_product'];
             }
 
             // Config del pivote (incluido / por-invitado / extras): MISMA autoridad que la compra
@@ -181,7 +193,7 @@ class ItemEditPricing
             $pivot = $newType->addons()->where('ticket_types.id', $typeId)->first()?->pivot;
             $resolved = $this->rates->priceCents($addonType, $date);
             if ($resolved === null && ! ($pivot?->is_included)) {
-                return ['upcharge' => 0, 'changes' => [], 'add_unit_prices' => [], 'add_quantities' => [], 'add_free_quantities' => [], 'charges' => [], 'error' => 'addon_unavailable_on_date'];
+                return ['upcharge' => 0, 'changes' => [], 'add_unit_prices' => [], 'add_quantities' => [], 'add_free_quantities' => [], 'add_quantity_modes' => [], 'charges' => [], 'error' => 'addon_unavailable_on_date'];
             }
             $unit = (int) ($resolved ?? 0);
 
@@ -194,6 +206,9 @@ class ItemEditPricing
             $addUnitPrices[$typeId] = $unit;
             $addQuantities[$typeId] = $effQty;
             $addFreeQuantities[$typeId] = $free;
+            // El SELLO DEL MODO (`#448`), del MISMO `$pivot` del que salen las dos líneas de
+            // arriba: la unidad y el número que describe no pueden venir de lecturas distintas.
+            $addQuantityModes[$typeId] = $pivot?->quantityUnit();
             $addonName = $addonType->tr('name');
             $added[] = ['name' => $addonName, 'qty' => $effQty];
             if ($thisUpcharge > 0) {
@@ -217,6 +232,7 @@ class ItemEditPricing
             'add_unit_prices' => $addUnitPrices,
             'add_quantities' => $addQuantities,
             'add_free_quantities' => $addFreeQuantities,
+            'add_quantity_modes' => $addQuantityModes,
             'charges' => $charges,
             'error' => null,
         ];

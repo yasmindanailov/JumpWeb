@@ -201,6 +201,27 @@ class PostFormAddonsTest extends TestCase
         $this->assertSame(2400, $book->balance->cents);
     }
 
+    /**
+     * CONTROL del SELLO DEL MODO (`specs/hora-extra.md` §12.6, `#448`).
+     *
+     * Esta fase solo admite `fixed` —`per_guest` está prohibido aquí (§4.3·3: ataría el extra de los
+     * ADULTOS al número de NIÑOS)—, así que el sello sale siempre igual. Se escribe de todas formas,
+     * y este caso fija por qué: **si esa prohibición cayera algún día, la línea seguiría diciendo con
+     * qué unidad se vendió**. Es el control declarado del arnés de mutación: no distingue conducta
+     * hoy, vigila que la puerta no deje de sellar.
+     */
+    public function test_a_post_form_line_is_sealed_with_the_unit_it_was_sold_with(): void
+    {
+        $this->attach($this->drinks);
+        $item = $this->party();
+
+        $this->service()->reconcile($item, [$this->drinks->id => 2], 'signed_link');
+
+        $child = $this->liveChild($item, $this->drinks);
+        $this->assertNotNull($child);
+        $this->assertSame(ProductAddon::MODE_FIXED, $child->addon_quantity_mode);
+    }
+
     /** SUBIR: se escribe el delta, y `nac` sigue en 0. */
     public function test_raising_writes_its_delta_and_the_book_still_closes(): void
     {

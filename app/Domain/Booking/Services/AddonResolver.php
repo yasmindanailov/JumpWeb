@@ -237,6 +237,12 @@ class AddonResolver
                 // son las del padre y siguen siendo suyas — dárselas a la hija sería contar «1
                 // persona» donde hay veinte, que es el defecto (b) de §10.1.
                 'seats' => $occupies ? AddonOccupancy::seats($addon, $qty) : 0,
+                // El SELLO DEL MODO (`specs/hora-extra.md` §12, `#448`): la UNIDAD en la que se está
+                // contando esta cantidad, escrita en la línea al nacer. Sin ella, `quantity` significa
+                // BLOQUES o PERSONAS según diga el catálogo de MAÑANA, y cambiar el enganche
+                // reinterpreta lo ya vendido — `PAY-19` roto por la puerta de la configuración.
+                // Es el hermano de `unit_price`: el precio ya estaba a salvo por vivir aquí.
+                'addon_quantity_mode' => $pivot->quantityUnit(),
                 'event_data' => null,
             ];
             $subtotal += max(0, $qty - $free) * $unit;

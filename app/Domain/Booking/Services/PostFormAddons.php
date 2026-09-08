@@ -461,6 +461,12 @@ final class PostFormAddons
                 'free_quantity' => $free,
                 'unit_price' => $unit,
                 'seats' => 0,
+                // El SELLO DEL MODO (`specs/hora-extra.md` §12, `#448`). Aquí sale SIEMPRE `fixed`
+                // porque `per_guest` está prohibido en esta fase (§4.3·3: ataría el extra de los
+                // ADULTOS al número de NIÑOS), y se escribe igual en vez de darlo por supuesto: si
+                // esa prohibición cayera algún día, esta línea seguiría diciendo con qué unidad se
+                // vendió. Su caso es de CONTROL en el arnés de mutación.
+                'addon_quantity_mode' => $addon->pivot->quantityUnit(),
                 'event_data' => null,
             ]);
             $this->recordMove($order, $child, $newCharged, $addon, 0, $target, $actor);

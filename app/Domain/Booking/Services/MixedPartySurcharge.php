@@ -386,6 +386,12 @@ class MixedPartySurcharge
 
             // ⚠️ `slot_id` a null y `seats` a 0, como cualquier complemento que crea el editor: es
             // lo que mantiene la línea FUERA de toda consulta de aforo (todas cruzan por `slots`).
+            //
+            // ⚠️⚠️ **Y NO lleva `addon_quantity_mode`, que es a propósito** (`specs/hora-extra.md`
+            // §12.6, `#448`): el producto PORTADOR sale de un `Setting` y no está enganchado a nada,
+            // así que `TicketType::addons()` nunca lo devuelve y **no hay pivote cuyo modo copiar**.
+            // `null` significa aquí «no la gobierna ningún enganche», que es la verdad de esta línea
+            // — no es un olvido, y no es `fixed`.
             $child = $principal->children()->create([
                 'order_id' => $principal->order_id,
                 'ticket_type_id' => $carrierId,
@@ -557,6 +563,9 @@ class MixedPartySurcharge
         }
 
         // ⚠️ `slot_id` a null y `seats` a 0, como el cargo: fuera de toda consulta de aforo.
+        //
+        // ⚠️⚠️ **Y sin `addon_quantity_mode`, igual que su gemelo de arriba** (`#448`): el portador
+        // del crédito tampoco tiene enganche del que copiar el modo. `null` = SILENCIO.
         $child = $principal->children()->create([
             'order_id' => $principal->order_id,
             'ticket_type_id' => $carrier->id,

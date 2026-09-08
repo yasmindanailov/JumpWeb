@@ -29,6 +29,12 @@ class ProductAddon extends Pivot
     public const MODE_PER_GUEST = 'per_guest'; // una unidad por invitado del pack (p. ej. el menú)
 
     /**
+     * @var list<string> Lista CERRADA, hermana de {@see STAGES} y por el mismo motivo: es lo que
+     *                   permite sanear un valor desconocido en vez de propagarlo (`#448`).
+     */
+    public const MODES = [self::MODE_FIXED, self::MODE_PER_GUEST];
+
+    /**
      * FASE de venta de este enganche (`specs/complementos-post-reserva.md` §4.1, `#413`).
      *
      * Dice **cuándo se VENDE**, no «dónde lo ve el cliente», y esa precisión es la que hace
@@ -64,7 +70,29 @@ class ProductAddon extends Pivot
     /** ¿La cantidad sigue al nº de invitados del pack (no la toca el cliente)? */
     public function isPerGuest(): bool
     {
-        return $this->quantity_mode === self::MODE_PER_GUEST;
+        return $this->quantityUnit() === self::MODE_PER_GUEST;
+    }
+
+    /**
+     * La UNIDAD en la que se cuenta este complemento, saneada contra la lista cerrada
+     * (`specs/hora-extra.md` §12.5, `#448`). Desconocida o ausente → `fixed`.
+     *
+     * ⚠️⚠️ **Se llama `quantityUnit()` y no `quantityMode()` por la misma razón que `saleStage()` no
+     * se llama `stage()`**: un método homónimo de una columna hace que Eloquent lo tome por relación
+     * al resolver el atributo, y un pivote construido con atributos parciales —lo que hace `attach()`
+     * con `newPivot(..., false)`— revienta. Por eso también se lee de `getAttributes()`.
+     *
+     * ⚠️ **El saneo importa**: hasta `#448`, `isPerGuest()` comparaba la cadena CRUDA, así que un
+     * valor torcido por `Query\Builder::update()` —la puerta que los eventos de Eloquent no ven— se
+     * leía como `fixed` **en silencio**. Sigue cayendo a `fixed`, pero ahora por decisión escrita: es
+     * el lado que trata la cantidad como BLOQUES, o sea el que reserva igual o más sala.
+     */
+    public function quantityUnit(): string
+    {
+        $mode = $this->getAttributes()['quantity_mode'] ?? '';
+        $mode = is_string($mode) ? $mode : '';
+
+        return in_array($mode, self::MODES, true) ? $mode : self::MODE_FIXED;
     }
 
     /**

@@ -236,6 +236,13 @@ class MixedPartySurchargeTest extends TestCase
         $this->assertSame(0, (int) $lines[0]->seats);
         $this->assertNull($lines[0]->slot_id);
 
+        // ⚠️⚠️ **Y SIN sello de modo, que es una aserción de INTENCIÓN** (`specs/hora-extra.md`
+        // §12.6, `#448`): el producto portador sale de un `Setting` y no está enganchado a nada, así
+        // que no hay pivote cuyo modo copiar — `null` significa «no la gobierna ningún enganche».
+        // Se asevera porque el modo de fallo es que alguien lo lea como un olvido y le ponga `fixed`,
+        // afirmando de esta línea algo que nadie midió.
+        $this->assertNull($lines[0]->addon_quantity_mode);
+
         $adjustment = OrderAdjustment::where('order_item_id', $lines[0]->id)->firstOrFail();
         $this->assertSame(OrderAdjustment::TYPE_MIXED, $adjustment->type);
         $this->assertSame(700, (int) $adjustment->amount_cents);

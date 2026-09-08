@@ -568,6 +568,9 @@ class OrderItemEditor
         $addonAddUnitPrices = $addonPricing['add_unit_prices'];
         $addonAddQuantities = $addonPricing['add_quantities'] ?? [];
         $addonAddFreeQuantities = $addonPricing['add_free_quantities'] ?? [];
+        // El SELLO DEL MODO (`specs/hora-extra.md` §12, `#448`): viaja junto a la cantidad que
+        // describe y desde la MISMA lectura del pivote, no desde `$offeredAddons` (§12.6.1).
+        $addonAddQuantityModes = $addonPricing['add_quantity_modes'] ?? [];
         $addonCharges = $addonPricing['charges'] ?? [];
         // typeId → id del child creado en la txn (para atar el extra_due del add a SU child).
         $addonAddChildIds = [];
@@ -679,7 +682,7 @@ class OrderItemEditor
         // El plan de complementos APLICADO sale del lock por referencia: su dinero se escribe
         // POST-COMMIT, y hace falta saber qué se aplicó DENTRO, no lo que se previó fuera (`#417`).
         $appliedDatePlan = null;
-        $committed = $this->withZoneDayLock($effectiveSlot, function ($lockedSlots) use ($item, $effectiveSlot, $newType, $newQty, $oldQty, $newUnit, $newSeats, $addonEdits, $addonAddUnitPrices, $addonAddQuantities, $addonAddFreeQuantities, $addonGroupByTypeId, $offeredAddons, $resultingOccupying, $by, &$addonAddChildIds, &$perGuestRescales, &$appliedDatePlan): bool|string {
+        $committed = $this->withZoneDayLock($effectiveSlot, function ($lockedSlots) use ($item, $effectiveSlot, $newType, $newQty, $oldQty, $newUnit, $newSeats, $addonEdits, $addonAddUnitPrices, $addonAddQuantities, $addonAddFreeQuantities, $addonAddQuantityModes, $addonGroupByTypeId, $offeredAddons, $resultingOccupying, $by, &$addonAddChildIds, &$perGuestRescales, &$appliedDatePlan): bool|string {
             /** @var OrderItem $locked */
             $locked = OrderItem::query()->lockForUpdate()->findOrFail($item->id);
             if ($locked->isCancelled()) {
@@ -824,6 +827,10 @@ class OrderItemEditor
                     'free_quantity' => (int) ($addonAddFreeQuantities[$typeId] ?? 0),
                     'unit_price' => (int) ($addonAddUnitPrices[$typeId] ?? 0),
                     'seats' => $occupies ? AddonOccupancy::seats($addType, $addQty) : 0,
+                    // El SELLO DEL MODO (`#448`): la unidad de `quantity`, escrita al nacer igual
+                    // que en la venta pública. `null` si el complemento no cuelga de este producto
+                    // —no lo gobierna ningún enganche—, que es SILENCIO y no `fixed`.
+                    'addon_quantity_mode' => $addonAddQuantityModes[$typeId] ?? null,
                     'event_data' => null,
                 ]);
                 $addonAddChildIds[$typeId] = (int) $created->id;

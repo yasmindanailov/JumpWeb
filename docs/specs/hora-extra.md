@@ -1721,8 +1721,10 @@ este diseño no vio — **esa ventana no se abre nunca**. Lo que sigue es la sal
 
 # 12 · EL SELLO DEL MODO de un complemento (`#448`, 2026-09-08)
 
-> 🟦 **SPEC APROBADA POR EL OWNER, CÓDIGO NO EMPEZADO.** Las cinco decisiones de §12.12 están
-> tomadas (`[DECIDIDO owner, 2026-09-08]`). Producción medida el mismo día, **solo lectura**.
+> 🟦 **SPEC APROBADA Y LA T1 EN EL ÁRBOL** (`#448`, 2026-09-08; ejecución en **§12.16**). Las cinco
+> decisiones de §12.12 están tomadas (`[DECIDIDO owner, 2026-09-08]`) y producción está medida el
+> mismo día, **solo lectura**. ▶ **Quedan la T2 (las tres lecturas), la T3 (el candado re-apuntado)
+> y la T4 (doc + OJO del owner).**
 
 ## 12.1 · El síntoma, y por qué la ventana NO se abre nunca
 
@@ -2049,7 +2051,7 @@ tanda.**
 
 | tanda | qué | `CRITICAL_RE` | verificadores |
 |---|---|---|---|
-| **T1** | **El hecho, sin leerlo.** Migración (columna + relleno de extensores + la línea de `R-BOMAZH`) · `MODES` + `quantityUnit()` · escritura en las tres puertas · `add_quantity_modes` en `ItemEditPricing` con sus dos salidas · el comentario del `null` en los dos portadores. **Ninguna lectura cambia: la suite sale verde sin tocar un caso** | **SÍ** (`AddonResolver`, `OrderCreator`, `OrderItemEditor`, `PostFormAddons`, `MixedPartySurcharge`) | `VERIFY_CONC=1` · `purchase:verify-oversell` (`stay-extension`, `guest-count`, `panel-edit`, `extra-hour`) · `postform:verify-concurrency` (`addons`, `cross`) · `mixed-party:verify-concurrency` |
+| ✅ **T1** | **HECHA** (§12.16). **El hecho, sin leerlo.** Migración (columna + relleno de extensores + la línea de `R-BOMAZH`) · `MODES` + `quantityUnit()` · escritura en las tres puertas · `add_quantity_modes` en `ItemEditPricing` con sus dos salidas · el comentario del `null` en los dos portadores. **Ninguna lectura cambia: la suite sale verde sin tocar un caso** | **SÍ** (`AddonResolver`, `OrderCreator`, `OrderItemEditor`, `PostFormAddons`, `MixedPartySurcharge`) | `VERIFY_CONC=1` · `purchase:verify-oversell` (`stay-extension`, `guest-count`, `panel-edit`, `extra-hour`) · `postform:verify-concurrency` (`addons`, `cross`) · `mixed-party:verify-concurrency` |
 | **T2** | **Las tres lecturas + la regla de divergencia.** `AddonResolver::soldQuantityUnit()` · las tres sustituciones (el re-escalado de `edit()`, `resultingStayMinutes()` y `childAddonMeta()`) · retirada del fallback y reescritura de su comentario falso · **guarda de lista cerrada** de llamantes de `isPerGuest()`, en dos listas declaradas (OFERTA, que puede crecer; LÍNEA VENDIDA, que tiene que ser **cero**), con el molde de `LedgerSingleSourceTest` | **SÍ** (`AddonOccupancy`, `AddonResolver`, `OrderItemEditor`) | ídem |
 | **T3** | **El candado re-apuntado** + `ProductAddon` en el hook **y** en `CriticalPathGateTest` + la nota de divergencia en `items-list.blade.php` con sus claves `es`/`zh_CN` | **SÍ** (`ProductAddon` entra aquí) | ídem |
 | **T4** | **Doc + OJO del owner**: `PAY-19` · `MODELO-DATOS.md` · `GLOSARIO.md` · la fila de `CLAUDE.md` · `DECISIONES #448` · `DEUDA` (cerrar la de `ProductAddon`, abrir las de §12.15) | no | — |
@@ -2082,3 +2084,68 @@ fabricarlo a mano. **Una guarda que no lo siembre nace ciega.**
    desfase lo absorbería el siguiente `recordEdit` del operador como si fuera suyo. `GuestCountTest`
    no tiene ni un caso con complemento hijo. **Ficha propia, y conviene cerrarla ANTES de configurar
    el modo nuevo.**
+
+## 12.16 · Lo EJECUTADO — la T1 (`#448`, 2026-09-08)
+
+**El hecho se escribe y no lo lee nadie todavía**, que es exactamente el contrato de esta tanda:
+**la suite entera salió verde sin tocar un solo caso existente** (4.445 → 4.460, los 15 nuevos).
+
+| pieza | dónde |
+|---|---|
+| la columna + los dos rellenos | `2026_09_08_120000_add_addon_quantity_mode_to_order_items.php` |
+| el vocabulario | `ProductAddon::MODES` + `ProductAddon::quantityUnit()`; `isPerGuest()` delega |
+| puerta 1 · la venta | `AddonResolver::resolve()` (cubre web, API y mostrador) |
+| puerta 2 · el editor | `ItemEditPricing::computeAddonPricing()` → `OrderItemEditor::edit()` |
+| puerta 3 · el post-form | `PostFormAddons::write()` |
+| los dos silencios | `MixedPartySurcharge::apply()` y `::applyCredit()`, con el motivo escrito junto al `create()` |
+| la red | `AddonQuantityModeSealTest` (8) · `AddonQuantityModeBackfillTest` (6) · +1 en `PostFormAddonsTest` · +1 aserción en `MixedPartySurchargeTest` |
+| el arnés | `scripts/mutar-sello-modo.sh` — **12/12 muerden** |
+
+**Verificación empírica**: suite **4.460** · mutación **12/12** · y los **ocho** verificadores de
+concurrencia sobre InnoDB real (`purchase:verify-oversell` en `stay-extension`, `guest-count`,
+`panel-edit` y `extra-hour`; `postform:verify-concurrency` en `addons` y `cross`;
+`mixed-party:verify-concurrency` en `charge` y `credit`).
+
+### Lo que enseñó la ejecución
+
+⚠️⚠️ **Una mutación no mordió, y el hueco era del CASO, no del código.** «El relleno A sella todo
+complemento, no solo los extensores» pasaba en VERDE porque el control usaba **solo** una tarta: sin
+ningún extensor en el escenario, `backfillStayExtensions()` sale por su `return` temprano y nunca
+llega a la línea mutada. *Un control sin el sujeto de la regla no controla nada* — es la lección de
+§11.12 por otra puerta. El caso pasó a tener los dos complementos conviviendo, y muerde.
+
+⚠️⚠️ **El verificador `extra-hour` se paró con su GUARDA DE INSTRUMENTO en vez de dar un falso
+verde**: la BD MySQL de desarrollo no tenía la columna (la suite corre en SQLite y crea el esquema
+desde cero, así que la migración no se había aplicado allí). Dijo «la compra con hora extra no se
+pudo crear ni una vez» con el `SQLSTATE` entero. *Sin esa guarda, el escenario habría contado cero
+compras con éxito y algún día alguien lo habría leído como «no sobrevende».*
+
+⚠️ **Un fixture pedía un estado que el dominio prohíbe**: un extensor sin `max_qty`. Se **legalizó el
+fixture**, no se excepcionó el guard — un caso que necesita una configuración imposible prueba un
+mundo que no existe (la lección de `#299`).
+
+⚠️ **La firma de `OrderItemEditor::edit()` tiene once parámetros y no se adivina**: el helper del
+caso se copió del que `#447` ya había dejado correcto, incluida la relectura del testigo optimista
+—que es de la RESERVA y no del PEDIDO, con precisión de SEGUNDO—. Y su aserto **imprime el motivo**:
+un `assertFalse` mudo aquí costó cuatro rojos intermitentes.
+
+▶ **Lo que el arnés NO puede mutar, y se dice**: que el sello del editor salga de `ItemEditPricing` y
+no de `$offeredAddons` (§12.6.1). Con el catálogo quieto las dos lecturas devuelven el mismo pivote,
+así que la diferencia solo aparece bajo una carrera y **no hay mutación mecánica que la distinga**.
+Lo sostiene la revisión, no un caso.
+
+❗❗❗ **Y LA TANDA DEJÓ UN HALLAZGO QUE NO ES DE ESTA FEATURE: EL ARNÉS PUEDE DEJAR EL ÁRBOL MUTADO.**
+El molde de la casa —`mktemp -d` + `trap … EXIT`— **no restaura si el proceso muere sin ejecutar el
+trap**. Pasó de verdad aquí: una ejecución quedó a medias y `PostFormAddons` e `ItemEditPricing` se
+quedaron **con la mutación puesta en el árbol de trabajo**, con la copia buena en un temporal que ya
+nadie sabía encontrar. Lo cazó la suite completa con **1 fallo de 4.460**, y solo porque se volvió a
+correr entera antes de commitear.
+
+▶ `mutar-sello-modo.sh` queda **endurecido y sirve de molde**: copia en **ruta fija y gitignorada**
+(`storage/app/mutaciones/<arnés>/`), **reparación al ARRANCAR** —si encuentra una copia huérfana,
+restaura y lo dice—, `trap` también en `INT`/`TERM`, y **comprobación final de integridad** que sale
+con código ≠ 0 si algún fichero quedó distinto del original. ⚠️ **La reparación se verificó con el
+fallo REAL puesto** (corte simulado → avisa y repara), que es la regla de la casa: *una guarda no se
+sabe si sirve hasta que se ejerce con el defecto que la motivó*.
+⚠️ **Los otros 13 arneses con el mismo patrón siguen expuestos** (medido: 14 de 22): ficha en
+`DEUDA.md`, y es tanda propia porque toca ficheros de otros carriles.
