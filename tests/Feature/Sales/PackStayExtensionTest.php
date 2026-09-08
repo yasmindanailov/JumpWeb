@@ -469,9 +469,18 @@ class PackStayExtensionTest extends TestCase
             Permission::whereIn('name', ['orders.view', 'orders.edit_item'])->pluck('id'),
         );
 
+        // ⚠️⚠️ **El testigo optimista es el de la RESERVA, no el del PEDIDO** (`#447`): el editor lo
+        // compara contra `$item->updated_at`, y aquí se le pasaba `$order->updated_at` — dos filas
+        // distintas que coinciden **solo si se escriben dentro del mismo segundo**, porque
+        // `updated_at` tiene precisión de SEGUNDO. Con la máquina libre coincidían siempre; bajo la
+        // suite en paralelo el `save()` de arriba cruzaba el segundo y el editor respondía
+        // `stale_item_version` **con razón**. Cuatro rojos intermitentes en dos métodos distintos,
+        // los dos por este helper. Control: `travel(2)->seconds()` antes del `save()` lo reproduce.
+        $fresh = $item->fresh();
+
         return app(OrderItemEditor::class)->edit(
             $order->fresh(),
-            $item->fresh(),
+            $fresh,
             $date ?? $this->date,
             (string) $item->slot->start_time,
             $date !== null && $date !== $this->date,
@@ -479,7 +488,7 @@ class PackStayExtensionTest extends TestCase
             (int) $item->quantity,
             null,
             $addonEdits,
-            (string) $order->fresh()->updated_at?->timestamp,
+            (string) $fresh->updated_at?->timestamp,
             $operator,
         );
     }

@@ -25142,3 +25142,26 @@ Los dos enganches (`#121` JUMP y `#122` KIDS, los dos `fixed`, `max_qty = 1`, fa
 ⚠️ Sigue el aviso conocido de `#115`: el script no ve demonio cron y lo dice; las dos líneas viven en el cron del PANEL.
 
 ▶ **Lo que queda es del owner**: configurar modo y precio cuando el cerrojo lo permita, y la pasada de ojo de `VERIFICACION-E2E-CAJON.md` §5.octies.
+
+## #447 · 2026-09-08 · El intermitente que llevaba cuatro rojos tenía nombre en cuanto el aserto lo dijo: `stale_item_version`
+
+`PackStayExtensionTest` llevaba **cuatro apariciones en rojo bajo `--parallel`, en dos métodos distintos**, ninguna reproducible: verde en el fichero solo (3/3), en paralelo, en tres suites completas y en el método suelto. Se habían descartado por medida dos hipótesis (el día de la semana y el memo `once()` de `RateResolver::forDates()`).
+
+▶ **Lo que lo cerró no fue una hipótesis mejor: fue el INSTRUMENTO.** En `#444`/`#445` los tres asertos de `isBlocked()` pasaron a imprimir `$outcome->reason`. La cuarta aparición llegó diciendo **`stale_item_version`**, y con eso el diagnóstico fue directo.
+
+### La causa, y es del ARNÉS
+
+`OrderItemEditor` compara el testigo optimista contra **`$item->updated_at`** (la RESERVA). El helper `edit()` del test le pasaba **`$order->updated_at`** (el PEDIDO). **Dos filas distintas**, y `updated_at` tiene **precisión de SEGUNDO**: coinciden mientras la reserva y el pedido se escriban dentro del mismo segundo, que con la máquina libre pasaba siempre.
+
+⚠️ **Y el propio helper abre el hueco**: hace `$order->forceFill(['status' => …])->save()` —que pone el `updated_at` del PEDIDO en «ahora»— mientras el de la RESERVA se queda en su creación; entre medias crea un usuario y sincroniza roles y permisos. Bajo la suite en paralelo eso cruza el segundo, los dos sellos divergen y **el editor responde `stale_item_version` con toda la razón**. *El producto nunca estuvo en duda.*
+
+### Reproducida con CONTROL, y arreglada con el mismo control delante
+
+- **Control**: `travel(2)->seconds()` **antes** del `save()` → **3 rojos deterministas**, incluidos los dos métodos exactos que aparecieron en el gate (líneas 325 y 378).
+- ⚠️ **El primer control no reprodujo nada y estaba mal puesto**: viajar *después* del `save()` no mueve ninguno de los dos sellos —`travel()` cambia «ahora», no lo ya escrito—. *El hueco que importa está entre la creación de la reserva y el toque del pedido, no después.*
+- **Arreglo**: el testigo pasa a ser el de la reserva (`$fresh = $item->fresh()`, usado a la vez como sujeto y como sello, para que no puedan divergir).
+- **Verificado**: con el control a **2 s** y a **90 s**, 18/18 verde.
+
+▶ Único sitio con ese patrón en toda la suite (comprobado por `grep`). Ficha de `DEUDA.md` **cerrada**.
+
+⚠️⚠️ **La lección de método, que es la cara de `#445`**: llevaba tres sesiones diciendo «sin causa atribuida», y era lo correcto —no había medida que sostuviera ninguna hipótesis—, pero *lo que faltaba no era pensar más, era que el rojo hablara*. Un intermitente sin instrumento se investiga; con instrumento, se lee. ⚠️ Y corrige de paso una clasificación: este caso estaba agrupado con el de `AuthSessionTest` como «rojo por carga», y **no lo era** — la carga solo destapaba un defecto del arnés que estaba ahí siempre. *No todo rojo bajo carga es un problema de carga.*
