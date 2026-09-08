@@ -309,7 +309,7 @@ class PackStayExtensionTest extends TestCase
 
         $outcome = $this->edit($order, $parent, ['edits' => [['child_id' => (int) $child->id, 'quantity' => 0]], 'adds' => []]);
 
-        $this->assertFalse($outcome->isBlocked(), 'quitar una hora extra siempre cabe: libera sala');
+        $this->assertFalse($outcome->isBlocked(), 'quitar una hora extra siempre cabe: libera sala; el editor dijo: '.($outcome->reason ?? '—'));
         $this->assertSame(0, (int) $parent->fresh()->extra_minutes);
         $this->assertSame(20, $this->packs->availableGuestsFor($this->slot('17:00:00'), $this->pack));
     }
@@ -375,7 +375,7 @@ class PackStayExtensionTest extends TestCase
 
         $outcome = $this->edit($order, $parent, ['edits' => [], 'adds' => []], $manana->toDateString());
 
-        $this->assertFalse($outcome->isBlocked(), 'la fiesta cabe sin su hora extra, que ese día no se vende');
+        $this->assertFalse($outcome->isBlocked(), 'la fiesta cabe sin su hora extra, que ese día no se vende; el editor dijo: '.($outcome->reason ?? '—'));
         $this->assertSame(0, (int) $parent->fresh()->extra_minutes);
         $this->assertSame(0, $parent->fresh()->children()->whereNull('cancelled_at')->count());
     }
