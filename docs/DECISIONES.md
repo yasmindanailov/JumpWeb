@@ -25109,3 +25109,36 @@ packs de hoy tienen cero.
 ⚠️⚠️ **Una mutación que no muerde puede ser una mutación DÉBIL, y aquí lo fue**: sustituir `warnOnce()` por un método inexistente daba verde porque **esta clase se traga todo `Throwable` a propósito** (la llama el correo de un pedido ya cobrado), así que cambiaba un aviso por otro. Con la mutación correcta —borrar la línea— muerden **3/3**.
 
 ⚠️ **Lo que esto NO cierra**: la intermitencia sigue sin atribuirse. El tope de 2,0 s es el candidato, no la causa medida. Ficha en `DEUDA.md`.
+
+## #446 · 2026-09-08 · El QUINTO despliegue — el primero SIN migraciones, y el cerrojo del modo confirmado en caliente
+
+Desplegado `200b019a` a `playjump.es` con `deploy.sh --go`: `#443` (la hora extra de un pack se cobra por invitado), `#444` (el cliente cambia sus invitados desde el post-form) y `#445` (las salidas mudas del icono del QR).
+
+**Copia previa** —`~/backups/playjump2_main-20260908-091304.sql.gz`, **323 K · 50 tablas**, gzip verificado— porque el script sigue sin hacerla (ficha viva en `DEUDA.md`). Se queda en el servidor: no se trae a local un volcado con datos personales.
+
+### Lo que hace distinto a este despliegue
+
+**CERO migraciones**, y es el primero de los cinco. Comprobado en las dos direcciones: `git diff --name-only` sobre `database/migrations/` en todo el rango sale vacío, y producción declaraba **0 pendientes antes y después**. Tampoco cambia nada de `config/` ni del `.env`. Es solo código, así que el modo de fallo posible era mucho más estrecho de lo habitual.
+
+⚠️ El ensayo en seco pedía enviar **5 ficheros que no habían cambiado** (`OrderItem`, `ItemRescheduleOffer`, `OrderCreator`, `PackAvailability`, `SlotAvailability`): rsync los marcaba por FECHA (`..t`), no por contenido — son los `touch` que dejan los arneses de mutación al restaurar. Se comprobó contra `git` antes de dar el `--go` en vez de suponerlo.
+
+### Verificado EN CALIENTE, sobre datos reales
+
+| qué | resultado |
+|---|---|
+| Salud del script | **9/9** · `/`, `/entradas`, `/precios`, `/admin/login`, `/up` → **200** · `failed_jobs` 0 · 0 jobs varados |
+| Log de producción | **ni una línea escrita hoy** (sin fichero = cero errores) |
+| Aforo intacto | **6.959 franjas · 0 CERRADAS** (`AFORO-04`) · 18 pedidos · 43 reservas vivas · `sales.online_enabled = 0` |
+| Las cinco piezas nuevas | `AddonOccupancy::blocksFor`, `ProductAddon::hasEditableSoldLines`, `GuestCountPolicy`, `GuestCountAdjuster` ✓ y **`ReservationPlacesTaken` resuelve a `GuardianPlaces`** — el enlace del *composition root*, que es lo único que no puede comprobar un `class_exists` |
+| La regla, ejercitada | con el modo REAL (`fixed`) y 12 invitados la hora extra calcula **720 min**; con `per_guest`, **60**. Eso es exactamente la confusión que `#443` deshace — y lo que hoy la tapa es `max_qty = 1`, no el modelo |
+| El plazo, sobre reservas reales | corte **24 h** · tres fiestas editables con **min 8** (el mínimo contratable) y **max 20**, con su corte al día anterior en hora del parque |
+
+### ❗❗ El cerrojo del modo BLOQUEA al owner hoy, y está medido
+
+Los dos enganches (`#121` JUMP y `#122` KIDS, los dos `fixed`, `max_qty = 1`, fase `booking`) tienen **una fiesta viva cada uno el 2026-09-21** (18:00 y 17:30). Hasta que pasen, el panel **rechaza** el cambio de `quantity_mode` — que es justo para lo que se construyó: cambiarlo con esas líneas vendidas las re-tarificaría en la siguiente edición de cantidad.
+
+▶ Se midió **antes** del despliegue calculando la condición a mano (el método aún no existía allí) y se confirmó **después** llamando ya al método real. Las tres salidas quedaron dichas al owner: esperar al 22/09, crear un complemento nuevo, o tocar esas dos reservas —lo último desaconsejado, son de cliente—.
+
+⚠️ Sigue el aviso conocido de `#115`: el script no ve demonio cron y lo dice; las dos líneas viven en el cron del PANEL.
+
+▶ **Lo que queda es del owner**: configurar modo y precio cuando el cerrojo lo permita, y la pasada de ojo de `VERIFICACION-E2E-CAJON.md` §5.octies.

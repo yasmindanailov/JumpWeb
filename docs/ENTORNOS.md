@@ -360,6 +360,31 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 
 ## 6 · PRODUCCIÓN · playjump.es, MEDIDO (2026-09-01, `DECISIONES #325`)
 
+> 🚀 **QUINTO DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-08, commit `200b019a`, `DECISIONES #446`).
+> `#443` (la hora extra de un pack se cobra **por invitado**), `#444` (el cliente cambia sus
+> **invitados** desde el post-form) y `#445` (las salidas mudas del icono del QR).
+>
+> ▶ **El primero de los cinco SIN NINGUNA MIGRACIÓN**, y comprobado en las dos direcciones: el rango
+> no toca `database/migrations/` y producción declaraba **0 pendientes antes y después**. Tampoco
+> cambia `config/` ni el `.env`. Solo código.
+>
+> ⚠️ **El ensayo en seco pedía enviar 5 ficheros que NO habían cambiado** (`OrderItem`,
+> `ItemRescheduleOffer`, `OrderCreator`, `PackAvailability`, `SlotAvailability`): rsync los marca por
+> **fecha** (`..t`), no por contenido — son los `touch` que dejan los arneses de mutación al
+> restaurar. *Se comprobó contra `git` antes del `--go` en vez de suponerlo.*
+>
+> **Verificado en caliente**: salud 9/9 · `/`, `/entradas`, `/precios`, `/admin/login`, `/up` → 200 ·
+> **ni una línea en el log de hoy** · **6.959 franjas y 0 CERRADAS** (`AFORO-04`) · 18 pedidos · 43
+> reservas vivas · `sales.online_enabled = 0`. Las cinco piezas nuevas responden y
+> **`ReservationPlacesTaken` resuelve a `GuardianPlaces`** —el enlace del *composition root*, lo único
+> que no comprueba un `class_exists`—. La regla, ejercitada: con el modo real (`fixed`) y 12
+> invitados la hora extra calcula **720 min**; con `per_guest`, **60**.
+>
+> ❗❗ **El cerrojo del modo BLOQUEA hoy al owner y está medido**: los enganches `#121` (JUMP) y `#122`
+> (KIDS) tienen **una fiesta viva cada uno el 2026-09-21** (18:00 y 17:30), así que el panel rechaza
+> el cambio de `quantity_mode` hasta que pasen. Es para lo que se construyó. Copia previa de la BD:
+> **323 K · 50 tablas**, gzip verificado, **en el servidor**.
+
 > 🚀 **TERCER DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-06, commit `612989a`, `DECISIONES #430`/`#431`).
 > **79 commits** desde el segundo (`64ff3b6`): los complementos de venta posterior (`#413`→`#419`), la
 > hora extra de entrada (`#410`), **la hora extra de un pack** (`#421`→`#427`), la rejilla de media
