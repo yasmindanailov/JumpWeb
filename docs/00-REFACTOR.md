@@ -1856,6 +1856,13 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       revocación están hechas y probadas desde Fase 3 · paso 3a (`DECISIONES #29`).
 - [ ] Congelar contrato API v1; guía de integración móvil (auth, refresh, push, deep-links a pago).
 - [ ] Features nuevas y modificaciones sobre el sistema actual (backlog a definir con el owner).
+      ▶ **Cerrado y EN PRODUCCIÓN el 2026-09-08: el SELLO DEL MODO de un complemento** (`#448`/`#449`,
+      `specs/hora-extra.md` §12, sexto despliegue). La casilla sigue abierta porque el backlog lo
+      está; esto es una entrada suya. **La regla que deja**: la unidad con la que se contó una
+      cantidad viaja en la LÍNEA, no en el catálogo — el hermano de `unit_price`, que ya estaba a
+      salvo por vivir ahí. Con ella, el owner pudo por fin poner la hora extra «por invitado» sin que
+      se moviera un céntimo ni un minuto de lo ya vendido (verificado en producción sobre las dos
+      reservas reales del 21/09).
 
 #### La VISIÓN DE PRODUCTO de la app: cuatro subsistemas 🟦 — diseñados; **B (waiver) y C (menores a cargo) en ejecución**
 
