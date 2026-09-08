@@ -209,6 +209,46 @@ class QrLogoTest extends TestCase
         $this->assertCount(2, Storage::disk('local')->files('qr-logo'));
     }
 
+    // ─── Las dos salidas que eran MUDAS ───────────────────────────────────────────────────────
+
+    /**
+     * ⚠️⚠️ **Hasta el `#445` estas dos salidas devolvían `null` sin dejar rastro**, contradiciendo lo
+     * que la propia clase promete («`null` = QR liso, con un `Log::warning`»). Y no son exóticas: son
+     * justo las que la presión de procesos dispara — un `/tmp` que no admite escritura y un `fork`
+     * que no sale. Una degradación sin rastro es indistinguible de que no haya pasado nada.
+     */
+    public function test_a_temp_file_that_cannot_be_written_warns_instead_of_failing_in_silence(): void
+    {
+        Log::spy();
+
+        $logo = $this->fake([
+            'svg' => $this->svgFile(),
+            'imagick' => false,
+            'rsvgPath' => '/usr/bin/rsvg-convert',
+            'rsvgReal' => true,
+            'tmpFails' => true,
+        ]);
+
+        $this->assertNull($logo->png());
+        Log::shouldHaveReceived('warning')->once();
+    }
+
+    /** Y si el proceso no se puede lanzar siquiera, lo mismo: se dice, no se calla. */
+    public function test_a_process_that_cannot_be_spawned_warns_instead_of_failing_in_silence(): void
+    {
+        Log::spy();
+
+        $logo = $this->fake([
+            'svg' => $this->svgFile(),
+            'imagick' => false,
+            'rsvgPath' => '/no/existe/rsvg-convert',
+            'rsvgReal' => true,
+        ]);
+
+        $this->assertNull($logo->png());
+        Log::shouldHaveReceived('warning')->once();
+    }
+
     // ─── El camino de verdad ──────────────────────────────────────────────────────────────────
 
     /**
@@ -218,6 +258,12 @@ class QrLogoTest extends TestCase
      *
      * ⚠️ Se salta si esta máquina no tiene NINGUNO de los dos, que es un estado legítimo del sistema
      * (entonces el QR sale liso) y no un fallo de la suite.
+     *
+     * ⚠️⚠️ **Es el único caso del fichero que depende de la MÁQUINA, así que su rojo tiene que decir
+     * cuál de los seis eslabones cedió** (`#445`): en local el único camino es `rsvg-convert` por
+     * `proc_open` con tope de **2,0 s**, y bajo la suite en paralelo compiten 20 procesos por la CPU.
+     * Sin el aviso capturado, el fallo solo sabe decir «null no es string» y no se puede diagnosticar
+     * — que es exactamente como llegó la primera vez.
      */
     public function test_the_real_rasterizer_of_this_machine_turns_an_svg_into_a_256px_png(): void
     {
@@ -227,9 +273,22 @@ class QrLogoTest extends TestCase
             $this->markTestSkipped('esta máquina no tiene ni Imagick con SVG ni rsvg-convert: el QR saldría liso, que es la conducta correcta.');
         }
 
-        $png = $logo->png();
+        $avisos = [];
+        Log::listen(function ($registro) use (&$avisos): void {
+            $avisos[] = $registro->message;
+        });
 
-        $this->assertIsString($png);
+        $empezado = microtime(true);
+        $png = $logo->png();
+        $tardo = microtime(true) - $empezado;
+
+        $this->assertIsString($png, sprintf(
+            'el rasterizador real no devolvió PNG tras %.3f s (Imagick lee SVG: %s · rsvg: %s) — avisos: %s',
+            $tardo,
+            $logo->canImagick() ? 'sí' : 'no',
+            $logo->binary() ?? 'no hay',
+            $avisos === [] ? 'NINGUNO (salida muda)' : implode(' · ', $avisos),
+        ));
         $this->assertStringStartsWith("\x89PNG", $png);
 
         $size = getimagesizefromstring($png);
@@ -294,6 +353,10 @@ class QrLogoTest extends TestCase
 
             protected function rsvgBinary(): ?string
             {
+                if (isset($this->o['rsvgPath'])) {
+                    return $this->o['rsvgPath'];
+                }
+
                 if ($this->o['real'] ?? false) {
                     return parent::rsvgBinary();
                 }
@@ -301,11 +364,18 @@ class QrLogoTest extends TestCase
                 return ($this->o['rsvg'] ?? false) ? '/usr/bin/rsvg-convert' : null;
             }
 
+            protected function tempSvgPath()
+            {
+                return ($this->o['tmpFails'] ?? false) ? false : parent::tempSvgPath();
+            }
+
             protected function rasterizeWithRsvg(string $binary, string $svg): ?string
             {
                 $this->calls['rsvg']++;
 
-                return ($this->o['real'] ?? false)
+                // `rsvgReal` corre el eslabón de verdad SIN encender `real`, que arrastraría también
+                // a Imagick — y en staging Imagick sí lee SVG, así que rsvg no llegaría a correr.
+                return (($this->o['real'] ?? false) || ($this->o['rsvgReal'] ?? false))
                     ? parent::rasterizeWithRsvg($binary, $svg)
                     : ($this->o['rsvgPng'] ?? null);
             }

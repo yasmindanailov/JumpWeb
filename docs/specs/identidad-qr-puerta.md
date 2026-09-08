@@ -932,3 +932,34 @@ cierto**: la ficha lleva el **nombre de pila** del menor junto a su edad.
 El porqué es operativo y la versión anterior no lo resolvía: con tres niños y una firma que falta,
 «7 años ✗» **no dice a cuál**. ▶ **Los APELLIDOS siguen fuera y eso es estructural**: `GateProfileData`
 no tiene campo para ellos. Detalle y las guardas re-apuntadas: `specs/menores-a-cargo.md` §11.
+
+## 9.9 El icono del QR: toda degradación deja RASTRO (2026-09-08, `DECISIONES #445`)
+
+`[DECIDIDO agente, 2026-09-08]` — reversible, y el porqué va delante:
+
+`QrLogo` promete en su propio docblock que *«`null` = QR liso, con un `Log::warning` deduplicado una
+hora»*. **Dos de sus seis salidas a `null` no cumplían esa promesa**: el fichero temporal que no se
+puede escribir y el proceso que no se puede lanzar volvían `null` **en silencio**. No son salidas
+exóticas: son justo las dos que dispara la presión de procesos (un `/tmp` que no admite escritura, un
+`fork` que no sale), y por eso el rojo del `pre-push` llegó sabiendo decir solo **«null no es
+string»**.
+
+▶ **La regla que queda: una causa, una línea.** Avisa el eslabón que sabe cuál cedió; el punto que no
+lo sabe **calla**. El aviso genérico de `resolve()` se retira porque **afirmaba algo falso** — con
+`rsvg-convert` instalado y el tope de 2,0 s agotado decía *«no hay rasterizador disponible»*, que
+manda al operador a instalar un paquete que ya tiene. La frase verdadera vive ahora en
+`rasterize()`, donde sí es cierta (`raster-missing`).
+
+⚠️ **El fichero temporal pasa a costura** (`tempSvgPath()`), como ya lo eran las dos rutas y el
+binario: sin ella era la única salida a `null` que **ningún caso podía ejercitar** — `TMPDIR` no
+mueve `sys_get_temp_dir()` en este PHP, comprobado.
+
+⚠️⚠️ **Si mutas algo de esta clase, la mutación obvia es DÉBIL**: sustituir un `warnOnce()` por una
+llamada inexistente sale VERDE, porque la clase **se traga todo `Throwable` a propósito** (la llama
+el correo de un pedido ya cobrado) y el `catch` de `png()` deja su propio aviso — o sea que la
+mutación cambia un aviso por otro en vez de quitarlo. La que vale es **borrar la línea**: así,
+3/3 muerden.
+
+⚠️ **Lo que esto NO cierra**: el caso del rasterizador REAL sigue dependiendo de la máquina y puede
+caer bajo carga. Ahora al menos dice qué eslabón cedió y cuánto tardó. Ficha en `DEUDA.md` con las
+cifras (reposo 34–125 ms · peor bajo suite completa 571 ms · tope 2,0 s).

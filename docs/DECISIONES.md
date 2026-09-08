@@ -25086,3 +25086,26 @@ Decía que subir la cantidad desde el panel *«re-tarifica por `PAY-18`»*. **Me
 mover el día conserva la tarifa histórica de la línea, que es justo lo que `PAY-19` decidió («14,00 €
 y no 24,00 €»); la única excepción son los productos con **tramos de cantidad** (`#324`), y los dos
 packs de hoy tienen cero.
+
+## #445 · 2026-09-08 · Una degradación SIN RASTRO no es una degradación: las dos salidas mudas del icono del QR
+
+**Contexto.** El `pre-push` de `#444` se puso rojo en `QrLogoTest::test_the_real_rasterizer_of_this_machine_turns_an_svg_into_a_256px_png` con un mensaje que solo sabía decir **«Failed asserting that null is of type string»**. Ese caso es el único del fichero que depende de la MÁQUINA: en local el único eslabón es `rsvg-convert` por `proc_open` con tope de **2,0 s**, y la suite en paralelo pone 20 procesos a competir por la CPU.
+
+**Lo medido** (2026-09-08, este contenedor):
+- Imagick está cargada y **no lee SVG**; `rsvg-convert` sí está → el único camino local es el segundo.
+- `rsvg-convert` en reposo: **34–125 ms**. Con la suite completa encima, 40 muestras: **peor 571 ms**, ninguna por encima del tope. O sea: el tope es **candidato plausible y NO reproducido**.
+- La suite completa, verde y sin tocar nada: **4443 · 27.359 aserciones**. La pasada roja dio **27.357** — dos aserciones menos, que son justo las que el caso no llegó a ejecutar.
+
+**El hallazgo, que es del PRODUCTO y no del test.** `QrLogo` promete en su propio docblock que *«`null` = QR liso, con un `Log::warning` deduplicado una hora»*. **Dos de sus seis salidas a `null` no avisaban de nada**: el fichero temporal que no se puede escribir y el proceso que no se puede lanzar — y son precisamente las dos que dispara la presión de procesos. Una degradación sin rastro es indistinguible de que no haya pasado nada, y por eso el rojo llegó mudo.
+
+**Y un aviso que AFIRMABA algo falso.** Con `rsvg-convert` instalado y el tope agotado, el log decía *«no hay rasterizador de SVG disponible (ni Imagick con SVG ni rsvg-convert)»* — eso manda al operador a instalar un paquete que ya tiene. La regla que queda escrita es **una causa, una línea**: avisa el eslabón que sabe cuál cedió, y el punto que no lo sabe **calla**.
+
+**Lo hecho.**
+1. `rsvg-tmp` y `rsvg-spawn` avisan (las dos salidas mudas).
+2. El aviso genérico de `resolve()` **se retira**; nace `raster-missing` dentro de `rasterize()`, donde la frase sí es cierta.
+3. El fichero temporal pasa a **costura** (`tempSvgPath()`), como ya lo eran las dos rutas y el binario: sin ella, esa salida era la única que **ningún caso podía ejercitar** (`TMPDIR` no mueve `sys_get_temp_dir()`, comprobado).
+4. El caso del rasterizador real **dice cuál de los seis eslabones cedió** y cuánto tardó — verificado EN ROJO bajando el tope a 0,0001 s.
+
+⚠️⚠️ **Una mutación que no muerde puede ser una mutación DÉBIL, y aquí lo fue**: sustituir `warnOnce()` por un método inexistente daba verde porque **esta clase se traga todo `Throwable` a propósito** (la llama el correo de un pedido ya cobrado), así que cambiaba un aviso por otro. Con la mutación correcta —borrar la línea— muerden **3/3**.
+
+⚠️ **Lo que esto NO cierra**: la intermitencia sigue sin atribuirse. El tope de 2,0 s es el candidato, no la causa medida. Ficha en `DEUDA.md`.

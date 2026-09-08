@@ -34,6 +34,11 @@ use Throwable;
  *   3. `null` = QR liso, con un `Log::warning` **deduplicado una hora** (un correo de confirmación
  *      por cliente inundaría el log con la misma línea).
  *
+ * ⚠️ **Toda salida a `null` deja aviso, y eso no era cierto hasta el `#445`**: escribir el SVG
+ * temporal y lanzar el proceso fallaban **en silencio**, que son justo las dos que la presión de
+ * procesos dispara — una degradación sin rastro es indistinguible de que no haya pasado nada, y en
+ * la suite en paralelo llegó como un rojo que solo sabía decir «null no es string».
+ *
  * ⚠️⚠️ **Nada de aquí puede lanzar.** Esta clase la llama el correo de confirmación de un pedido ya
  * cobrado: un icono mal subido no puede costar un 500 ni un correo sin enviar. Todo `Throwable` se
  * traga, se anota una vez y se sigue sin icono.
@@ -132,9 +137,11 @@ class QrLogo
 
         $png = $this->rasterize($svg);
 
+        // ⚠️ Aquí NO se avisa, y es deliberado: este punto no sabe POR QUÉ falló. El mensaje que
+        // había afirmaba que no hay rasterizador, y con `rsvg-convert` instalado y un tope de tiempo
+        // agotado eso manda al operador a instalar un paquete que ya tiene. **Una causa, una línea**:
+        // avisa el eslabón que sabe cuál cedió, y son los seis.
         if ($png === null) {
-            $this->warnOnce('raster', 'no hay rasterizador de SVG disponible (ni Imagick con SVG ni rsvg-convert): el QR sale sin icono');
-
             return null;
         }
 
@@ -172,6 +179,9 @@ class QrLogo
         if ($binary !== null) {
             return $this->rasterizeWithRsvg($binary, $svg);
         }
+
+        // Y aquí sí es cierto: esta máquina no tiene con qué, que es un estado legítimo del sistema.
+        $this->warnOnce('raster-missing', 'no hay rasterizador de SVG en esta máquina (ni Imagick con SVG ni rsvg-convert): el QR sale sin icono');
 
         return null;
     }
@@ -235,6 +245,18 @@ class QrLogo
     }
 
     /**
+     * El fichero temporal donde aterriza el SVG. Es un ESLABÓN DE ENTORNO más —como las dos rutas y
+     * el binario— y por eso es sustituible: sin la costura, «el disco temporal dijo que no» sería la
+     * única salida a `null` de esta clase que ningún caso puede ejercitar.
+     *
+     * @return string|false
+     */
+    protected function tempSvgPath()
+    {
+        return @tempnam(sys_get_temp_dir(), 'qr-logo-');
+    }
+
+    /**
      * Rutas absolutas y `is_executable()`: nada de `command -v`, que sería abrir una shell para
      * preguntar si hay que abrir un proceso.
      */
@@ -259,9 +281,11 @@ class QrLogo
      */
     protected function rasterizeWithRsvg(string $binary, string $svg): ?string
     {
-        $tmp = @tempnam(sys_get_temp_dir(), 'qr-logo-');
+        $tmp = $this->tempSvgPath();
 
         if ($tmp === false || @file_put_contents($tmp, $svg) === false) {
+            $this->warnOnce('rsvg-tmp', 'no se pudo escribir el SVG temporal en '.sys_get_temp_dir().': el QR sale sin icono');
+
             return null;
         }
 
@@ -274,6 +298,7 @@ class QrLogo
 
         if (! is_resource($process)) {
             @unlink($tmp);
+            $this->warnOnce('rsvg-spawn', 'no se pudo lanzar '.$binary.' (sin procesos o sin memoria): el QR sale sin icono');
 
             return null;
         }
