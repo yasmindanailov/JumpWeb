@@ -2098,10 +2098,10 @@ fabricarlo a mano. **Una guarda que no lo siembre nace ciega.**
 | puerta 2 · el editor | `ItemEditPricing::computeAddonPricing()` → `OrderItemEditor::edit()` |
 | puerta 3 · el post-form | `PostFormAddons::write()` |
 | los dos silencios | `MixedPartySurcharge::apply()` y `::applyCredit()`, con el motivo escrito junto al `create()` |
-| la red | `AddonQuantityModeSealTest` (8) · `AddonQuantityModeBackfillTest` (6) · +1 en `PostFormAddonsTest` · +1 aserción en `MixedPartySurchargeTest` |
-| el arnés | `scripts/mutar-sello-modo.sh` — **12/12 muerden** |
+| la red | `AddonQuantityModeSealTest` (10) · `AddonQuantityModeBackfillTest` (6) · +1 en `PostFormAddonsTest` · +1 aserción en `MixedPartySurchargeTest` |
+| el arnés | `scripts/mutar-sello-modo.sh` — **14/14 muerden** |
 
-**Verificación empírica**: suite **4.460** · mutación **12/12** · y los **ocho** verificadores de
+**Verificación empírica**: suite **4.462** · mutación **14/14** · y los **ocho** verificadores de
 concurrencia sobre InnoDB real (`purchase:verify-oversell` en `stay-extension`, `guest-count`,
 `panel-edit` y `extra-hour`; `postform:verify-concurrency` en `addons` y `cross`;
 `mixed-party:verify-concurrency` en `charge` y `credit`).
@@ -2133,6 +2133,36 @@ un `assertFalse` mudo aquí costó cuatro rojos intermitentes.
 no de `$offeredAddons` (§12.6.1). Con el catálogo quieto las dos lecturas devuelven el mismo pivote,
 así que la diferencia solo aparece bajo una carrera y **no hay mutación mecánica que la distinga**.
 Lo sostiene la revisión, no un caso.
+
+### El CENSO DE PUERTAS, y lo que encontró
+
+Cerrado antes de empezar la T2 a propósito: si faltara una puerta por sellar, la T2 leería un sello
+que a veces no existe, y eso cae por el camino `null` → «lee el catálogo». *El agujero se volvería
+invisible justo cuando empieza a mover dinero y aforo.*
+
+▶ **Creación: CINCO, las declaradas** (barrido de `children()->create|createMany|save` y
+`'parent_item_id' =>` sobre `app/`, `database/` y `routes/`; las dos de `VerifyPurchaseConcurrency`
+son `parent_item_id => null`, o sea líneas PADRE). **Mutación de la cantidad de una hija: TRES**, las
+tres en clases que ya sellan — y mover la cantidad **no cambia la unidad**, así que el sello
+sobrevive correcto por construcción. **Escritores del sello: TRES**, exactamente los previstos.
+
+❗❗❗ **Pero el censo encontró un hueco REAL, y era de la T1: al CAMBIAR DE PRODUCTO no se
+re-sellaba.** Una hija cuyo complemento cuelga **también** del producto nuevo **sobrevive** al cambio
+—`orphanAddonsForNewProduct()` solo bloquea las que no cuelgan— y desde ese instante la gobierna
+**otra fila de `product_addons`**, independiente y con su propio `quantity_mode`. El re-escalado ya
+lo asumía (lee `$newType->addons()`), así que el sello se quedaba describiendo un enganche que ya no
+la gobernaba.
+
+▶ Es `PAY-19` con el precedente al lado: **`sealUpdateFor()` re-sella `age_family_seal` en ese mismo
+punto** («producto nuevo → sello nuevo»), y el sello del modo no tenía equivalente. Corregido dentro
+del lock y desde el mismo pivote que gobierna el re-escalado, **fuera del `if ($newQty !== $oldQty)`**
+porque cambiar de producto conservando la cantidad es un camino normal.
+
+⚠️⚠️ **Y el CONTROL de ese arreglo nació faltando, lo dijo el arnés**: la mutación «re-sella aunque
+el producto NO cambie» **no mordía**, porque no había caso que probara la propiedad central de toda
+la feature — que una edición corriente **no pisa** el sello con el modo de hoy. Sin él, «re-sellar
+siempre» habría pasado en verde, y eso es exactamente el daño que el sello existe para evitar.
+*Una mutación que no muerde señala un hueco en la red tan a menudo como un fallo del instrumento.*
 
 ❗❗❗ **Y LA TANDA DEJÓ UN HALLAZGO QUE NO ES DE ESTA FEATURE: EL ARNÉS PUEDE DEJAR EL ÁRBOL MUTADO.**
 El molde de la casa —`mktemp -d` + `trap … EXIT`— **no restaura si el proceso muere sin ejecutar el

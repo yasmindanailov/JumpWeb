@@ -129,6 +129,22 @@ mutar "el POST-FORM deja de sellar" "$PFA" \
   "                'addon_quantity_mode' => \$addon->pivot->quantityUnit()," \
   "                'addon_quantity_mode' => null,"
 
+# 3 bis · el RE-SELLO al cambiar de producto (`PAY-19`: pack nuevo → sello nuevo). Una hija que
+#         sobrevive al cambio la gobierna OTRA fila de pivote, que puede declarar otro modo.
+mutar "cambiar de PRODUCTO no re-sella las hijas que sobreviven" "$EDI" \
+  "            if (\$productChanged) {
+                foreach (\$locked->children()->whereNull('cancelled_at')->get() as \$child) {" \
+  "            if (false) {
+                foreach (\$locked->children()->whereNull('cancelled_at')->get() as \$child) {"
+
+# 3 ter · CONTROL del anterior: re-sellar SIEMPRE (aunque el producto no cambie) pisaría el sello de
+#         una hija cuyo enganche cambió de modo por detrás — que es justo lo que el sello evita.
+mutar "el re-sello se dispara aunque el producto NO cambie" "$EDI" \
+  "            if (\$productChanged) {
+                foreach (\$locked->children()->whereNull('cancelled_at')->get() as \$child) {" \
+  "            if (true) {
+                foreach (\$locked->children()->whereNull('cancelled_at')->get() as \$child) {"
+
 echo
 echo '── Los dos SILENCIOS legítimos ──'
 

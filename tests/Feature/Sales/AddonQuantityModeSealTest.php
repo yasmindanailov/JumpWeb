@@ -186,6 +186,71 @@ class AddonQuantityModeSealTest extends TestCase
         $this->assertSame(12, (int) $child->quantity, 'el sello describe la cantidad que viaja con él');
     }
 
+    public function test_changing_the_product_re_seals_the_surviving_children(): void
+    {
+        // ❗❗ `PAY-19` con el precedente de `sealUpdateFor()`: **pack nuevo → sello nuevo**. Una hija
+        // cuyo complemento cuelga TAMBIÉN del producto nuevo sobrevive al cambio y desde ese instante
+        // la gobierna OTRA fila de `product_addons`, que puede declarar otro modo — el re-escalado ya
+        // lo asume (lee `$newType->addons()`). Sin el re-sello, su sello describiría un enganche que
+        // ya no la gobierna, y la T2 lo leería como una divergencia del catálogo que no existe.
+        $otroPack = TicketType::create([
+            'name' => ['es' => 'Cumpleaños XL'], 'zone_id' => $this->zone->id, 'type' => TicketType::TYPE_PACK,
+            'duration_min' => 120, 'prep_before_min' => 0, 'prep_after_min' => 0,
+            'min_qty' => 8, 'max_qty' => 20, 'seats_per_unit' => 1,
+            'is_sellable' => true, 'is_active' => true, 'position' => 4,
+        ]);
+        $otroPack->prices()->create([
+            'rate_type_id' => RateType::where('key', 'normal')->value('id'), 'amount_cents' => 1800,
+        ]);
+        // El MISMO complemento, enganchado al otro pack con la unidad CONTRARIA. Son filas
+        // independientes: que hoy coincidan en producción es un dato, no una garantía.
+        $otroPack->addons()->attach($this->menu->id, [
+            'position' => 1, 'stage' => ProductAddon::STAGE_BOOKING,
+            'quantity_mode' => ProductAddon::MODE_FIXED, 'allow_extra' => true,
+            'included_quantity' => 1, 'is_included' => false, 'is_mandatory' => false,
+        ]);
+
+        $order = $this->buy('15:00:00', 12, extraBlocks: 0, withMenu: true);
+        $item = $order->items()->whereNull('parent_item_id')->firstOrFail();
+        $this->assertSame(ProductAddon::MODE_PER_GUEST, $this->child($order, $this->menu)->addon_quantity_mode);
+
+        $outcome = $this->editTo($order, $item, $otroPack);
+        $this->assertFalse($outcome->isBlocked(), 'el editor rechazó el cambio de producto: '.($outcome->reason ?? '—'));
+
+        $this->assertSame(
+            ProductAddon::MODE_FIXED,
+            $this->child($order->fresh(), $this->menu)->fresh()->addon_quantity_mode,
+            'la hija la gobierna ahora el enganche del producto nuevo, y el sello tiene que decirlo',
+        );
+    }
+
+    public function test_control_editing_without_changing_product_never_overwrites_the_seal(): void
+    {
+        // CONTROL del anterior, y es la propiedad CENTRAL de toda la feature: el catálogo no
+        // reescribe lo vendido. Sin este caso, «re-sellar siempre» pasaría en verde — y entonces
+        // cualquier edición de la reserva pisaría el sello con el modo de hoy, que es exactamente el
+        // daño que el sello existe para evitar. Lo dijo el arnés: la mutación no mordía.
+        $order = $this->buy('15:00:00', 12, extraBlocks: 0, withMenu: true);
+        $item = $order->items()->whereNull('parent_item_id')->firstOrFail();
+        $this->assertSame(ProductAddon::MODE_PER_GUEST, $this->child($order, $this->menu)->addon_quantity_mode);
+
+        // El catálogo cambia de opinión DESPUÉS de la venta, por la puerta que los eventos de
+        // Eloquent no ven.
+        DB::table('product_addons')
+            ->where('product_id', $this->pack->id)->where('addon_id', $this->menu->id)
+            ->update(['quantity_mode' => ProductAddon::MODE_FIXED]);
+
+        // Una edición corriente: sube la cantidad, sin tocar el producto.
+        $outcome = $this->edit($order, $item, ['edits' => [], 'adds' => []], null, newQuantity: 14);
+        $this->assertFalse($outcome->isBlocked(), 'el editor rechazó la subida: '.($outcome->reason ?? '—'));
+
+        $this->assertSame(
+            ProductAddon::MODE_PER_GUEST,
+            $this->child($order->fresh(), $this->menu)->fresh()->addon_quantity_mode,
+            'lo que se vendió no lo reescribe una edición posterior (PAY-19)',
+        );
+    }
+
     // ─── Los dos SILENCIOS legítimos ─────────────────────────────────────────────────
 
     public function test_a_line_without_a_hookup_is_silence_and_not_fixed(): void
@@ -331,10 +396,16 @@ class AddonQuantityModeSealTest extends TestCase
         return $this->creator->createPendingOrder($this->user, [$line]);
     }
 
+    /** Conduce el editor cambiando el PRODUCTO de la reserva y conservando la cantidad. */
+    private function editTo(Order $order, OrderItem $item, TicketType $nuevo): ItemActionOutcome
+    {
+        return $this->edit($order, $item, ['edits' => [], 'adds' => []], (int) $nuevo->id);
+    }
+
     /**
      * @param  array{edits: array<int, array{child_id:int, quantity:int}>, adds: array<int, array{ticket_type_id:int, quantity:int}>}  $addonEdits
      */
-    private function edit(Order $order, OrderItem $item, array $addonEdits): ItemActionOutcome
+    private function edit(Order $order, OrderItem $item, array $addonEdits, ?int $newProductId = null, ?int $newQuantity = null): ItemActionOutcome
     {
         $order->forceFill(['status' => Order::STATUS_PAID, 'expires_at' => null])->save();
 
@@ -356,8 +427,8 @@ class AddonQuantityModeSealTest extends TestCase
             $this->date,
             (string) $item->slot->start_time,
             false,
-            (int) $item->ticket_type_id,
-            (int) $item->quantity,
+            $newProductId ?? (int) $item->ticket_type_id,
+            $newQuantity ?? (int) $item->quantity,
             null,
             $addonEdits,
             (string) $fresh->updated_at?->timestamp,

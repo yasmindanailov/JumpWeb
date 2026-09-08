@@ -682,7 +682,7 @@ class OrderItemEditor
         // El plan de complementos APLICADO sale del lock por referencia: su dinero se escribe
         // POST-COMMIT, y hace falta saber qué se aplicó DENTRO, no lo que se previó fuera (`#417`).
         $appliedDatePlan = null;
-        $committed = $this->withZoneDayLock($effectiveSlot, function ($lockedSlots) use ($item, $effectiveSlot, $newType, $newQty, $oldQty, $newUnit, $newSeats, $addonEdits, $addonAddUnitPrices, $addonAddQuantities, $addonAddFreeQuantities, $addonAddQuantityModes, $addonGroupByTypeId, $offeredAddons, $resultingOccupying, $by, &$addonAddChildIds, &$perGuestRescales, &$appliedDatePlan): bool|string {
+        $committed = $this->withZoneDayLock($effectiveSlot, function ($lockedSlots) use ($item, $effectiveSlot, $newType, $newQty, $oldQty, $newUnit, $newSeats, $addonEdits, $addonAddUnitPrices, $addonAddQuantities, $addonAddFreeQuantities, $addonAddQuantityModes, $productChanged, $addonGroupByTypeId, $offeredAddons, $resultingOccupying, $by, &$addonAddChildIds, &$perGuestRescales, &$appliedDatePlan): bool|string {
             /** @var OrderItem $locked */
             $locked = OrderItem::query()->lockForUpdate()->findOrFail($item->id);
             if ($locked->isCancelled()) {
@@ -860,8 +860,39 @@ class OrderItemEditor
             // SOBRE-cobra (de forma invisible) al bajar. Recogemos el delta por child para
             // canalizarlo financieramente FUERA de la txn con el MISMO criterio que el principal.
             // Los children per-invitado están bloqueados en la UI → nunca llegan por `addonEdits`.
+            //
+            // ❗❗❗ **EL RE-SELLO DEL MODO al CAMBIAR DE PRODUCTO** (`specs/hora-extra.md` §12,
+            // `#448`), que es `PAY-19` con el precedente de {@see sealUpdateFor}: *«solo cambia de
+            // condiciones lo que cambia de producto — pack nuevo, sello nuevo»*.
+            //
+            // Una hija cuyo complemento TAMBIÉN cuelga del producto nuevo **sobrevive** al cambio
+            // ({@see orphanAddonsForNewProduct} solo bloquea las que no cuelgan), y desde ese
+            // instante la gobierna **otra fila de `product_addons`** —la del par (producto nuevo,
+            // complemento)—, que es independiente y puede declarar otro `quantity_mode`. El
+            // re-escalado de abajo ya lo asume: lee `$newType->addons()`. Así que el sello tiene que
+            // decir el modo del enganche NUEVO, o describiría un enganche que ya no la gobierna.
+            //
+            // ⚠️ Va FUERA del `if ($newQty !== $oldQty)`: cambiar de producto conservando la cantidad
+            // es un camino normal, y ahí el re-escalado no corre pero el enganche sí ha cambiado.
+            // ⚠️ Y solo toca a las hijas con pivote en el destino: sin él la línea es huérfana —el
+            // guardado ya está bloqueado arriba— y `null` seguiría siendo la verdad («no la gobierna
+            // ningún enganche»).
+            $pivotByAddonId = $newType->addons()->get()->keyBy('id');
+
+            if ($productChanged) {
+                foreach ($locked->children()->whereNull('cancelled_at')->get() as $child) {
+                    $pivot = $pivotByAddonId->get($child->ticket_type_id)?->pivot;
+                    if ($pivot === null) {
+                        continue;
+                    }
+                    $sellado = $pivot->quantityUnit();
+                    if ($child->addon_quantity_mode !== $sellado) {
+                        $child->forceFill(['addon_quantity_mode' => $sellado])->save();
+                    }
+                }
+            }
+
             if ($newQty !== $oldQty) {
-                $pivotByAddonId = $newType->addons()->get()->keyBy('id');
                 foreach ($locked->children()->whereNull('cancelled_at')->get() as $child) {
                     $pivot = $pivotByAddonId->get($child->ticket_type_id)?->pivot;
                     if ($pivot === null || ! $pivot->isPerGuest()) {
