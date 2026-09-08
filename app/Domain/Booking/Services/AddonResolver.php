@@ -3,6 +3,7 @@
 namespace App\Domain\Booking\Services;
 
 use App\Domain\Booking\Exceptions\ReservationException;
+use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
 use Carbon\CarbonInterface;
@@ -290,6 +291,41 @@ class AddonResolver
     }
 
     /**
+     * **LA UNIDAD CON LA QUE SE VENDIÓ una línea hija** (`specs/hora-extra.md` §12.7, `#448`), y es
+     * la ÚNICA traducción de sello a conducta: la regla vive aquí y no se copia.
+     *
+     * ❗❗❗ **Esto SOLO se pregunta por una línea YA VENDIDA.** La OFERTA —el catálogo, la cesta, el
+     * escaparate, el alta manual— sigue leyendo el pivote de hoy, y tiene que seguir haciéndolo:
+     * *un sello que gobernara la oferta congelaría el escaparate*, y un cliente vería para siempre
+     * las condiciones con las que compró otro.
+     *
+     * ⚠️⚠️ **Vive en `AddonResolver` y no en `OrderItem` a propósito**: esta clase está en el
+     * `CRITICAL_RE` del `pre-push` y `OrderItem` no. La única decisión que traduce el sello a
+     * conducta gobierna DINERO y AFORO a la vez, así que tiene que estar gateada.
+     *
+     * ▶ **Sin sello devuelve el pivote vivo, que es EXACTAMENTE la conducta anterior a `#448`** —no
+     * un default—. Y no puede ser un `?? MODE_FIXED` puesto aquí arriba: **no hay lado seguro
+     * único**, porque para AFORO lo conservador es tratar la cantidad como bloques y para DINERO es
+     * lo contrario. Cuando tampoco hay pivote (línea huérfana, portador de fiesta mixta) sí cae a
+     * `fixed`, que es el lado que reserva igual o más sala.
+     */
+    public static function soldQuantityUnit(OrderItem $child, ?ProductAddon $pivot): string
+    {
+        $sealed = $child->addon_quantity_mode;
+        if (is_string($sealed) && in_array($sealed, ProductAddon::MODES, true)) {
+            return $sealed;
+        }
+
+        return $pivot?->quantityUnit() ?? ProductAddon::MODE_FIXED;
+    }
+
+    /** ¿Esta línea VENDIDA se contó por invitados? El predicado hermano de {@see soldQuantityUnit}. */
+    public static function wasSoldPerGuest(OrderItem $child, ?ProductAddon $pivot): bool
+    {
+        return self::soldQuantityUnit($child, $pivot) === ProductAddon::MODE_PER_GUEST;
+    }
+
+    /**
      * Cantidad EFECTIVA de un complemento:
      *  - `per_guest` → nº de invitados de la línea (no la toca el cliente).
      *  - `fixed`     → la pedida, nunca por debajo del mínimo obligatorio (lo incluido si es
@@ -297,7 +333,22 @@ class AddonResolver
      */
     public static function effectiveQuantity(ProductAddon $pivot, int $requestedQty, int $lineQuantity): int
     {
-        if ($pivot->isPerGuest()) {
+        return self::effectiveQuantityForUnit($pivot, $pivot->quantityUnit(), $requestedQty, $lineQuantity);
+    }
+
+    /**
+     * La MISMA regla sobre una unidad ya resuelta (`#448`), hermana de
+     * {@see AddonOccupancy::blocksForUnit}.
+     *
+     * ⚠️⚠️ **Existe porque decidir CON el sello y calcular CON el catálogo es peor que no sellar.**
+     * Lo cazó su propio caso: el re-escalado del editor preguntaba al sello *si* la línea sigue a los
+     * invitados y luego pedía la cantidad a `effectiveQuantity($pivot, 0, …)` — con el enganche ya en
+     * `fixed` y cantidad pedida 0, eso devuelve **0**, o sea que la línea se quedaba vacía. *Una regla
+     * partida entre dos fuentes no es media regla: es un defecto nuevo.*
+     */
+    public static function effectiveQuantityForUnit(ProductAddon $pivot, string $unit, int $requestedQty, int $lineQuantity): int
+    {
+        if ($unit === ProductAddon::MODE_PER_GUEST) {
             return max(0, $lineQuantity);
         }
 
@@ -320,10 +371,16 @@ class AddonResolver
     /** Unidades GRATIS de una cantidad efectiva (las INCLUIDAS): per_guest → todas; fija → lo incluido. */
     public static function freeUnits(ProductAddon $pivot, int $effectiveQty): int
     {
+        return self::freeUnitsForUnit($pivot, $pivot->quantityUnit(), $effectiveQty);
+    }
+
+    /** Las unidades gratis con una unidad ya resuelta (`#448`): el gemelo de {@see effectiveQuantityForUnit}. */
+    public static function freeUnitsForUnit(ProductAddon $pivot, string $unit, int $effectiveQty): int
+    {
         if (! $pivot->is_included) {
             return 0;
         }
-        if ($pivot->isPerGuest()) {
+        if ($unit === ProductAddon::MODE_PER_GUEST) {
             return max(0, $effectiveQty);
         }
 

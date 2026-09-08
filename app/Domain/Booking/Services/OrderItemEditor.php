@@ -895,13 +895,24 @@ class OrderItemEditor
             if ($newQty !== $oldQty) {
                 foreach ($locked->children()->whereNull('cancelled_at')->get() as $child) {
                     $pivot = $pivotByAddonId->get($child->ticket_type_id)?->pivot;
-                    if ($pivot === null || ! $pivot->isPerGuest()) {
+                    // El SELLO manda sobre el catálogo (`#448`, T2): esta línea se re-escala si se
+                    // VENDIÓ por invitados, no si el enganche lo dice HOY. Es el punto exacto donde
+                    // un cambio de configuración re-preciaba una fiesta ya vendida —medido en
+                    // producción: 5,00 € → 40,00 € y 4,00 € → 60,00 €—.
+                    // ⚠️ El pivote sigue haciendo falta: de él salen la cantidad efectiva y las
+                    // unidades gratis. Lo que ya no decide es la UNIDAD.
+                    if ($pivot === null || ! AddonResolver::wasSoldPerGuest($child, $pivot)) {
                         continue;
                     }
                     $oldChildQty = (int) $child->quantity;
                     $oldChildFree = (int) $child->free_quantity;
-                    $newChildQty = AddonResolver::effectiveQuantity($pivot, 0, $newQty);
-                    $newChildFree = AddonResolver::freeUnits($pivot, $newChildQty);
+                    // ⚠️⚠️ La cantidad y las gratis se calculan con **la MISMA unidad** con la que se
+                    // decidió re-escalar, no con la del catálogo: decidir con el sello y calcular con
+                    // el pivote dejaba la línea en CERO (con el enganche ya en `fixed` y cantidad
+                    // pedida 0, `effectiveQuantity` devuelve 0). Lo cazó su propio caso.
+                    $unidad = AddonResolver::soldQuantityUnit($child, $pivot);
+                    $newChildQty = AddonResolver::effectiveQuantityForUnit($pivot, $unidad, 0, $newQty);
+                    $newChildFree = AddonResolver::freeUnitsForUnit($pivot, $unidad, $newChildQty);
                     if ($newChildQty === $oldChildQty && $newChildFree === $oldChildFree) {
                         continue;
                     }
@@ -1179,12 +1190,25 @@ class OrderItemEditor
             }
             $qty = ($edited !== null && $edited > (int) $child->quantity) ? $edited : (int) $child->quantity;
             $pivot = $pivots[(int) $child->ticket_type_id] ?? null;
-            // Sin pivote la línea es HUÉRFANA y el guardado ya está bloqueado más arriba
-            // (`orphan_addons`), así que esto es inalcanzable; se cae al lado que NO sobrevende
-            // —tratar la cantidad como bloques reserva igual o más sala— en vez de suponer un modo.
-            $minutes += $pivot !== null
-                ? AddonOccupancy::extraMinutes($child->ticketType, $pivot, $qty)
-                : AddonOccupancy::minutesForBlocks($child->ticketType, $qty);
+            // El SELLO manda (`#448`, T2): los minutos que esta fiesta ya alarga salen de la unidad
+            // con la que se VENDIÓ, no de la que el enganche declare hoy. Es la mitad de AFORO del
+            // agujero, y la que no estaba escrita en ningún sitio: con la cantidad re-escalada a 15
+            // y bloques de 60 min, la sala pediría **900 minutos**.
+            //
+            // ⚠️⚠️ **Y aquí NO había que corregir solo la lectura, sino un comentario FALSO.** Decía
+            // que sin pivote la línea es huérfana y «el guardado ya está bloqueado más arriba por
+            // `orphan_addons`, así que esto es inalcanzable». Medido: `orphan_addons` solo se
+            // devuelve **dentro de `if ($productChanged)`**, así que cualquier edición que no cambie
+            // de producto llega hasta aquí. *Un comentario que declara cerrado un camino abierto es
+            // peor que no tenerlo*, porque el siguiente borra la rama por muerta.
+            //
+            // ▶ Sin pivote la unidad la pone el sello, y si tampoco lo hay cae a bloques — el lado
+            // que reserva igual o más sala, que es el que NO sobrevende.
+            $minutes += AddonOccupancy::minutesForUnit(
+                $child->ticketType,
+                AddonResolver::soldQuantityUnit($child, $pivot),
+                $qty,
+            );
         }
 
         foreach ($addonEdits['adds'] ?? [] as $add) {
@@ -1491,7 +1515,23 @@ class OrderItemEditor
         $meta = [];
         foreach ($item->children as $child) {
             $pivot = $pivots[(int) $child->ticket_type_id] ?? null;
-            $perGuest = $pivot?->isPerGuest() ?? false;
+            // El SELLO manda sobre el catálogo (`#448`, T2): lo que se puede hacer con esta línea
+            // depende de cómo se VENDIÓ. Una hija por-invitado no tiene cantidad que editar —la
+            // manda el nº de invitados—, y eso sigue siendo cierto aunque el enganche haya cambiado.
+            $perGuest = AddonResolver::wasSoldPerGuest($child, $pivot);
+            // ⚠️⚠️ **DIVERGENCIA: el sello dice una unidad y el enganche vivo dice otra.** Entonces
+            // los topes e inclusiones del pivote NO describen a esta línea y no se le aplican
+            // (§12.8) — su techo pasa a ser su propia cantidad: se puede bajar o quitar, nunca subir.
+            //
+            // No es celo: sin esta regla se crea un estado que **hoy no existe en ninguna
+            // configuración**. Al pasar un enganche a `per_guest` el panel BORRA su tope
+            // (`AddonsRelationManager`: «el tope solo aplica a cantidad fija»), así que una hija
+            // sellada `fixed` bajo un enganche hoy `per_guest` saldría `locked = false` **y
+            // `max = null`**: editable y sin techo. Hoy toda hija está o acotada por `max_qty` o
+            // congelada por `locked`. ▶ `max_qty` no es una regla independiente: **es la mitad del
+            // modo**, y el propio panel lo demuestra al borrarlo. Partirlos entre sello y catálogo
+            // produce una configuración que el dominio nunca acepta escribir.
+            $divergente = $pivot !== null && $pivot->quantityUnit() !== AddonResolver::soldQuantityUnit($child, $pivot);
             $group = $pivot?->choiceGroup();
             $locked = $perGuest || $group !== null;
             $min = $locked
@@ -1515,6 +1555,11 @@ class OrderItemEditor
                 if (($pivot?->max_qty ?? null) !== null) { // P9: tope por complemento
                     $caps[] = (int) $pivot->max_qty;
                 }
+            }
+            // La otra mitad de la regla de divergencia: con el enganche describiendo otra unidad, su
+            // techo no gobierna esta línea — el techo es lo que ya tiene.
+            if ($divergente) {
+                $caps[] = (int) $child->quantity;
             }
             $max = $caps === [] ? null : min($caps);
 

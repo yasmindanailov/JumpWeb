@@ -1723,8 +1723,8 @@ este diseño no vio — **esa ventana no se abre nunca**. Lo que sigue es la sal
 
 > 🟦 **SPEC APROBADA Y LA T1 EN EL ÁRBOL** (`#448`, 2026-09-08; ejecución en **§12.16**). Las cinco
 > decisiones de §12.12 están tomadas (`[DECIDIDO owner, 2026-09-08]`) y producción está medida el
-> mismo día, **solo lectura**. ▶ **Quedan la T2 (las tres lecturas), la T3 (el candado re-apuntado)
-> y la T4 (doc + OJO del owner).**
+> mismo día, **solo lectura**. ▶ **T1 en §12.16 y T2 en §12.17. Quedan la T3 (el candado
+> re-apuntado) y la T4 (doc + OJO del owner).**
 
 ## 12.1 · El síntoma, y por qué la ventana NO se abre nunca
 
@@ -2052,7 +2052,7 @@ tanda.**
 | tanda | qué | `CRITICAL_RE` | verificadores |
 |---|---|---|---|
 | ✅ **T1** | **HECHA** (§12.16). **El hecho, sin leerlo.** Migración (columna + relleno de extensores + la línea de `R-BOMAZH`) · `MODES` + `quantityUnit()` · escritura en las tres puertas · `add_quantity_modes` en `ItemEditPricing` con sus dos salidas · el comentario del `null` en los dos portadores. **Ninguna lectura cambia: la suite sale verde sin tocar un caso** | **SÍ** (`AddonResolver`, `OrderCreator`, `OrderItemEditor`, `PostFormAddons`, `MixedPartySurcharge`) | `VERIFY_CONC=1` · `purchase:verify-oversell` (`stay-extension`, `guest-count`, `panel-edit`, `extra-hour`) · `postform:verify-concurrency` (`addons`, `cross`) · `mixed-party:verify-concurrency` |
-| **T2** | **Las tres lecturas + la regla de divergencia.** `AddonResolver::soldQuantityUnit()` · las tres sustituciones (el re-escalado de `edit()`, `resultingStayMinutes()` y `childAddonMeta()`) · retirada del fallback y reescritura de su comentario falso · **guarda de lista cerrada** de llamantes de `isPerGuest()`, en dos listas declaradas (OFERTA, que puede crecer; LÍNEA VENDIDA, que tiene que ser **cero**), con el molde de `LedgerSingleSourceTest` | **SÍ** (`AddonOccupancy`, `AddonResolver`, `OrderItemEditor`) | ídem |
+| ✅ **T2** | **HECHA** (§12.17). **Las tres lecturas + la regla de divergencia.** `AddonResolver::soldQuantityUnit()` · las tres sustituciones (el re-escalado de `edit()`, `resultingStayMinutes()` y `childAddonMeta()`) · retirada del fallback y reescritura de su comentario falso · **guarda de lista cerrada** de llamantes de `isPerGuest()`, en dos listas declaradas (OFERTA, que puede crecer; LÍNEA VENDIDA, que tiene que ser **cero**), con el molde de `LedgerSingleSourceTest` | **SÍ** (`AddonOccupancy`, `AddonResolver`, `OrderItemEditor`) | ídem |
 | **T3** | **El candado re-apuntado** + `ProductAddon` en el hook **y** en `CriticalPathGateTest` + la nota de divergencia en `items-list.blade.php` con sus claves `es`/`zh_CN` | **SÍ** (`ProductAddon` entra aquí) | ídem |
 | **T4** | **Doc + OJO del owner**: `PAY-19` · `MODELO-DATOS.md` · `GLOSARIO.md` · la fila de `CLAUDE.md` · `DECISIONES #448` · `DEUDA` (cerrar la de `ProductAddon`, abrir las de §12.15) | no | — |
 | **arnés** | `scripts/mutar-sello-modo.sh`. **Deben morder**: `resolve()` deja de sellar · el re-escalado vuelve al pivote · `resultingStayMinutes` vuelve al pivote (**900 vs 60**) · `childAddonMeta` vuelve al pivote · el saneo devuelve `per_guest` ante lo desconocido · el sello se lee de `$offeredAddons` en vez de `ItemEditPricing` · la puerta 2 no sella. **Dos CONTROLES declarados**: el post-form sella siempre `fixed`, y los portadores quedan `null` —esta segunda **no muerde por conducta** y hay que decir que es una aserción de intención | | |
@@ -2179,3 +2179,51 @@ fallo REAL puesto** (corte simulado → avisa y repara), que es la regla de la c
 sabe si sirve hasta que se ejerce con el defecto que la motivó*.
 ⚠️ **Los otros 13 arneses con el mismo patrón siguen expuestos** (medido: 14 de 22): ficha en
 `DEUDA.md`, y es tanda propia porque toca ficheros de otros carriles.
+
+## 12.17 · Lo EJECUTADO — la T2: las TRES lecturas (`#448`, 2026-09-08)
+
+**La tanda que cambia la conducta.** Los tres únicos sitios que preguntaban al catálogo por la unidad
+de una línea YA VENDIDA se lo preguntan a la línea.
+
+| pieza | dónde |
+|---|---|
+| el lector, y la regla en UN sitio | `AddonResolver::soldQuantityUnit()` + `wasSoldPerGuest()` |
+| DINERO | el re-escalado de `OrderItemEditor::edit()` |
+| AFORO | `OrderItemEditor::resultingStayMinutes()` → `AddonOccupancy::minutesForUnit()` |
+| PERMISO + divergencia | `OrderItemEditor::childAddonMeta()` |
+| la guarda de censo | `SoldLineUnitHasOneSourceTest` (dos listas con reglas distintas) |
+| la red | `AddonQuantityModeReadsTest` (6 casos, cada uno con su control) |
+
+**Verificación**: suite **4.470** · mutación **20/20** · `panel-edit`, `extra-hour`, `stay-extension`
+y `guest-count` sobre InnoDB.
+
+▶ **El patrón que ordena la tanda: la REGLA es una; de dónde sale el dato, no.** Por eso cada
+derivación gana una variante que recibe la unidad ya resuelta —`blocksForUnit`, `minutesForUnit`,
+`effectiveQuantityForUnit`, `freeUnitsForUnit`— y la de siempre delega pasándole el pivote. Sin ese
+corte habría que elegir UN origen para los dos usos, y **cualquiera de los dos elegidos es un
+defecto**: con el catálogo, cambiarlo re-alarga fiestas vendidas; con el sello, el escaparate se
+congela y un cliente ve para siempre las condiciones con las que compró otro.
+
+### ❗❗❗ Lo que enseñó la ejecución
+
+⚠️⚠️ **Decidir CON el sello y calcular CON el catálogo es peor que no sellar, y lo cazó su propio
+caso.** La primera versión preguntaba al sello *si* la línea sigue a los invitados y luego pedía la
+cantidad a `effectiveQuantity($pivot, 0, …)`: con el enganche ya en `fixed` y cantidad pedida 0, eso
+devuelve **0** — la línea se quedaba vacía. *Una regla partida entre dos fuentes no es media regla:
+es un defecto nuevo.* De ahí salen `effectiveQuantityForUnit` y `freeUnitsForUnit`.
+
+⚠️⚠️ **La guarda de censo nació IMPRECISA y lo demostró acusando a tres ficheros sanos**: buscaba
+`isPerGuest()` y `quantityUnit()` juntos, pero son preguntas distintas — el primero **decide** sobre
+una línea, el segundo **copia la unidad** para sellarla. Van en dos listas con reglas propias: OFERTA
+puede crecer; SELLADORES es cerrada. *Buscar un nombre no es buscar un uso.*
+
+⚠️ **El comentario falso de `resultingStayMinutes` está corregido**: declaraba inalcanzable la rama
+sin pivote «porque el guardado ya está bloqueado por `orphan_addons`», y `orphan_addons` solo se
+devuelve **dentro de `if ($productChanged)`**. Cualquier edición que no cambie de producto llegaba
+ahí. *Un comentario que declara cerrado un camino abierto es peor que no tenerlo*, porque el
+siguiente borra la rama por muerta.
+
+▶ **El caso que da sentido a la tanda, con su control**: una hora extra vendida por invitados a 15
+niños son **60 minutos** de sala; con el enganche volteado a `fixed` y sin sello, la misma línea pide
+**900**. Los dos casos están escritos, y el segundo es el que demuestra que lo arregla el sello y no
+otra cosa.

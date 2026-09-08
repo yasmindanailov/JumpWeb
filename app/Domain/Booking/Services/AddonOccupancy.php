@@ -126,7 +126,28 @@ class AddonOccupancy
      */
     public static function blocksFor(ProductAddon $pivot, int $quantity): int
     {
-        return $pivot->isPerGuest() ? 1 : max(0, $quantity);
+        return self::blocksForUnit($pivot->quantityUnit(), $quantity);
+    }
+
+    /**
+     * La MISMA regla sobre una unidad ya resuelta, venga de donde venga (`#448`).
+     *
+     * ⚠️⚠️ **Existe porque la unidad tiene DOS orígenes legítimos y no se pueden confundir**: la
+     * OFERTA la saca del pivote de hoy ({@see blocksFor}) y una línea YA VENDIDA, de su sello
+     * ({@see AddonResolver::soldQuantityUnit}). *La regla es una; de dónde sale el dato, no.* Sin
+     * este corte habría que elegir un origen para los dos —y cualquiera de los dos elegidos es un
+     * defecto: con el catálogo, cambiarlo re-alarga fiestas vendidas; con el sello, el escaparate
+     * se congela—.
+     */
+    public static function blocksForUnit(string $unit, int $quantity): int
+    {
+        return $unit === ProductAddon::MODE_PER_GUEST ? 1 : max(0, $quantity);
+    }
+
+    /** Minutos que alarga una línea VENDIDA, con la unidad que ella misma declara (`#448`). */
+    public static function minutesForUnit(TicketType $addon, string $unit, int $quantity): int
+    {
+        return self::minutesForBlocks($addon, self::blocksForUnit($unit, $quantity));
     }
 
     /**

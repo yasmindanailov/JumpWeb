@@ -25,7 +25,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='AddonQuantityModeSealTest|AddonQuantityModeBackfillTest|PostFormAddonsTest|MixedPartySurchargeTest'
+FILTER='AddonQuantityModeSealTest|AddonQuantityModeReadsTest|SoldLineUnitHasOneSourceTest|AddonQuantityModeBackfillTest|PostFormAddonsTest|MixedPartySurchargeTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 # Ruta FIJA y gitignorada (`storage/` no viaja), para que un corte sea REPARABLE.
@@ -163,6 +163,50 @@ mutar "un PORTADOR de fiesta mixta pasa a sellarse como fixed" "$MIX" \
 mutar "sin enganche el compositor inventa fixed en vez de callar" "$PRI" \
   "            \$addQuantityModes[\$typeId] = \$pivot?->quantityUnit();" \
   "            \$addQuantityModes[\$typeId] = \$pivot?->quantityUnit() ?? 'fixed';"
+
+echo
+echo '── T2 · LAS TRES LECTURAS ──'
+
+# El lector: si el sello deja de mandar, todo vuelve al catálogo vivo.
+mutar "el LECTOR ignora el sello y devuelve el catálogo vivo" "$RES" \
+  "        \$sealed = \$child->addon_quantity_mode;" \
+  "        \$sealed = null;"
+
+# DINERO: el re-escalado vuelve a decidir con el pivote.
+mutar "el re-escalado de DINERO vuelve a preguntar al pivote" "$EDI" \
+  "if (\$pivot === null || ! AddonResolver::wasSoldPerGuest(\$child, \$pivot)) {" \
+  "if (\$pivot === null || ! \$pivot->isPerGuest()) {"
+
+# DINERO · la segunda mitad: decidir con el sello y CALCULAR con el catálogo (el defecto que el
+# propio caso cazó: la línea se quedaba en CERO).
+mutar "decide con el sello pero calcula con el catálogo" "$EDI" \
+  "                    \$newChildQty = AddonResolver::effectiveQuantityForUnit(\$pivot, \$unidad, 0, \$newQty);" \
+  "                    \$newChildQty = AddonResolver::effectiveQuantity(\$pivot, 0, \$newQty);"
+
+# AFORO: los minutos vuelven al catálogo — el caso de los 900 minutos.
+mutar "los MINUTOS vuelven a salir del catálogo (900 vs 60)" "$EDI" \
+  "            \$minutes += AddonOccupancy::minutesForUnit(
+                \$child->ticketType,
+                AddonResolver::soldQuantityUnit(\$child, \$pivot),
+                \$qty,
+            );" \
+  "            \$minutes += \$pivot !== null
+                ? AddonOccupancy::extraMinutes(\$child->ticketType, \$pivot, \$qty)
+                : AddonOccupancy::minutesForBlocks(\$child->ticketType, \$qty);"
+
+# PERMISO: el bloqueo vuelve al catálogo.
+mutar "el PERMISO vuelve a preguntar al pivote" "$EDI" \
+  "            \$perGuest = AddonResolver::wasSoldPerGuest(\$child, \$pivot);" \
+  "            \$perGuest = \$pivot?->isPerGuest() ?? false;"
+
+# La regla de DIVERGENCIA: sin ella, la línea queda editable y SIN TECHO.
+mutar "la DIVERGENCIA deja la línea sin techo" "$EDI" \
+  "            if (\$divergente) {
+                \$caps[] = (int) \$child->quantity;
+            }" \
+  "            if (false) {
+                \$caps[] = (int) \$child->quantity;
+            }"
 
 echo
 echo '── El SANEO del vocabulario ──'
