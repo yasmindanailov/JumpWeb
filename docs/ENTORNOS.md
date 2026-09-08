@@ -360,6 +360,42 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 
 ## 6 · PRODUCCIÓN · playjump.es, MEDIDO (2026-09-01, `DECISIONES #325`)
 
+> 🚀 **SEXTO DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-08, commit `e76d6f2a`, `DECISIONES #448`/`#449`).
+> El **SELLO DEL MODO** de un complemento: T1–T4 más el re-escalado por-invitado del post-form.
+>
+> ❗❗❗ **ES EL PRIMERO DE LA SERIE QUE CAMBIA CONDUCTA**, y por eso llevó un paso propio: **el SELECT
+> de control de `hora-extra.md` §12.20·M1, en solo lectura, JUSTO ANTES de migrar**. La razón no es
+> ceremonia: el criterio del relleno se validó con una foto del día 8, y **el corpus se mueve** — entre
+> dos mediciones de esa misma tarde las hijas vivas pasaron de 27 a 28. Salió **1 fila** (la prevista)
+> y **0** en el hueco simétrico: verde para migrar.
+>
+> ▶ **Copia previa**: `~/backups/playjump2_pre448-20260908-211055.sql.gz` · **364 K · 50 tablas** ·
+> gzip verificado · **se queda en el servidor** (no se trae a local un volcado con datos personales).
+>
+> **Resultado medido tras migrar, y coincide con la simulación previa al dígito**: **3 filas selladas**
+> (las dos horas extra de sala y la línea del «Menú 2» de `R-BOMAZH`, que evita que 2,00 € pasen a
+> 34,00 € en la primera edición) · **25 hijas vivas sin sello**, que es lo que el candado sigue
+> protegiendo · el candado baja de **9 a 7** enganches · y **`#60` y `#61` quedan LIBRES**, que era el
+> encargo del owner. Control: una hija sin sello resuelve su unidad al mismo valor que el pivote vivo
+> —conducta intacta—.
+>
+> **Salud**: 9/9 · `/`, `/entradas`, `/precios`, `/admin/login`, `/up` → 200 · **ni una línea en el log
+> de hoy** · 6.760 franjas y **0 CERRADAS** (`AFORO-04`) · migración en 19,84 ms.
+>
+> ⚠️⚠️ **El ensayo en seco enseñó un cambio de CSS que NO era del encargo, y se midió antes de
+> aceptarlo**: `public/build` está **gitignorado**, así que rsync envía el build de la máquina que
+> despliega. El delta resultó ser **una sola regla** (`.ps-3`, 52 bytes) que **no usa nadie en el
+> repo** —viene del escaneo de `vendor`—, y se comprobó una a una que **las doce clases de la pastilla
+> nueva ya estaban en el CSS de producción**. *Un ensayo en seco que enseña algo inesperado no es una
+> molestia: es la única oportunidad de medirlo antes de que sea irreversible.*
+>
+> ⚠️ El aviso del cron sigue igual que en los cinco anteriores (`DECISIONES #115`): el crontab del
+> usuario no corre; scheduler y `queue:work` viven en el cron del PANEL.
+>
+> ▶ **Queda el OJO del owner** (`VERIFICACION-E2E-CAJON.md` §5.nonies) **y configurar el modo**, que
+> ya no lo impide nada.
+
+
 > 🚀 **QUINTO DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-08, commit `200b019a`, `DECISIONES #446`).
 > `#443` (la hora extra de un pack se cobra **por invitado**), `#444` (el cliente cambia sus
 > **invitados** desde el post-form) y `#445` (las salidas mudas del icono del QR).
