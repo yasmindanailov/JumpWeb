@@ -568,6 +568,11 @@ class AddonStageTest extends TestCase
 
             // LEEN lo vendido (aforo, impresión, puerta) o son DTO/serializadores: la fase no aplica.
             'app/Domain/Booking/Services/CartOccupants.php' => 'aforo: lee la línea, no la ofrece',
+            // `#448` · `OrderItem::addonUnitDivergesFromCatalogue()` compara el sello de una línea
+            // VENDIDA con el modo del enganche de hoy, para que la ficha lo diga. No ofrece nada, así
+            // que la fase no aplica — filtrar aquí solo escondería la discrepancia de una hija
+            // `postform`, que es justo donde el operador necesita verla.
+            'app/Domain/Booking/Models/OrderItem.php' => 'compara lo vendido con el catálogo: no ofrece',
             'app/Domain/Booking/Services/ReservationSlip.php' => 'imprime lo vendido',
             'app/Domain/Identity/Services/GateProfile.php' => 'puerta: lee lo vendido',
             'app/Domain/Booking/Contracts/CartQuoteLine.php' => 'DTO: propiedad, no la relación',

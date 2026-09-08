@@ -25235,6 +25235,28 @@ Una columna escalar `order_items.addon_quantity_mode` **nullable y sin default**
 ⚠️ **El método de la medición, que es reutilizable**: `ssh … 'php artisan tinker --no-interaction' < script.php`. No sube nada al servidor, no deja residuo y **llama al código real** —`hasEditableSoldLines()`, `isFinishedInPractice()`— en vez de reimplementar en SQL las reglas más delicadas del calendario. *Verificado después que no quedó ni un fichero.*
 
 
+### ✅ LO EJECUTADO (2026-09-08): T1, T2 y T3 en el árbol
+
+| tanda | qué | verificación |
+|---|---|---|
+| **T1** (§12.16) | el HECHO, sin leerlo: columna + dos rellenos, vocabulario, sello en las tres puertas, los dos silencios anotados | **la suite entera verde SIN tocar un caso** (4.445 → 4.460): ése era su contrato, y es lo que la hace desplegable sola |
+| **T2** (§12.17) | las TRES lecturas + la regla de divergencia + la guarda de censo en dos listas | 4.470 · 20/20 mutaciones · cuatro verificadores sobre InnoDB |
+| **T3** (§12.18) | el candado RE-APUNTADO + `ProductAddon` al gate (hook **y** test, mismo commit) | 4.473 · 22/22 · las dos direcciones del candado |
+
+▶ **Entre la T1 y la T2 se cerró el CENSO DE PUERTAS**, y encontró un hueco que era de la T1: **al cambiar de PRODUCTO no se re-sellaba**. Una hija cuyo complemento cuelga también del producto nuevo sobrevive al cambio y pasa a gobernarla **otra fila de pivote**; el re-escalado ya lo asumía (`$newType->addons()`), así que el sello describía un enganche que ya no la gobierna. El precedente estaba a doscientas líneas: `sealUpdateFor()` re-sella `age_family_seal` en ese mismo punto. *Hacerlo antes de la T2 fue lo correcto: hoy no muerde porque nadie lee el sello; con las lecturas puestas, esa línea habría entrado por la rama de «el catálogo cambió bajo ella».*
+
+### Las cuatro lecciones que dejó la ejecución
+
+1. ⚠️⚠️ **Decidir CON el sello y calcular CON el catálogo es peor que no sellar.** El re-escalado preguntaba al sello *si* la línea sigue a los invitados y luego pedía la cantidad a `effectiveQuantity($pivot, …)`: con el enganche ya en `fixed` y cantidad pedida 0, eso devuelve **0** — la línea se quedaba vacía. Lo cazó **su propio caso**. De ahí sale el patrón que ordena la tanda: **la REGLA es una; de dónde sale el dato, no**, y por eso cada derivación tiene su variante `…ForUnit()`.
+2. ⚠️⚠️ **Dos controles nacieron faltando y lo dijo la MUTACIÓN, no una revisión**: «el relleno sella todo complemento» no mordía porque el caso no tenía ningún extensor —el método salía por su `return` temprano—, y «el re-sello se dispara aunque el producto no cambie» no mordía porque **no había caso que probara la propiedad central de la feature**: que una edición corriente NO pisa el sello. *Una mutación que no muerde señala un hueco en la red tan a menudo como un fallo del instrumento.*
+3. ⚠️ **La guarda de censo nació IMPRECISA y lo demostró acusando a tres ficheros sanos**: buscaba `isPerGuest()` y `quantityUnit()` juntos, y son preguntas distintas —uno DECIDE sobre una línea, el otro COPIA la unidad para sellarla—. *Buscar un nombre no es buscar un uso.*
+4. ⚠️ **Dos casos de `#443` cambiaron de premisa y se REESCRIBIERON, no se parchearon** (el precedente del `SlotOfferTest` de `#324`): aseveraban que el candado bloquea con una venta viva, y con el sello esa línea nace sellada. Su sujeto pasa a ser una línea SIN sello, que es lo que el candado sigue existiendo para proteger.
+
+⚠️⚠️ **Y el instrumento falló DOS VECES en esta banda, las dos dejando el árbol MUTADO**: un `trap … EXIT` que no corre con SIGKILL (`#448`) y un fichero mutado que no estaba en `FICHEROS` (`#449`, donde además el «25/25» dejó de significar nada porque cada mutación posterior corría sobre código ya mutado). **Las dos las cazó volver a correr la suite ENTERA antes de commitear** — no el arnés, que en los dos casos declaró el árbol limpio. `mutar-sello-modo.sh` queda endurecido y sirve de molde; **los otros 13 con el mismo patrón siguen expuestos** (ficha en `DEUDA.md`).
+
+▶ **Queda la T4** (esta doc) **y el OJO del owner**, más el DESPLIEGUE — que no es de corrido: la T2 y `#449` **sí** cambian conducta.
+
+
 ## #449 · 2026-09-08 · Los complementos POR-INVITADO no seguían a los invitados desde el post-form, y su spec decía tres veces que sí
 
 `GuestCountAdjuster` (`#444`) deja que el CLIENTE cambie cuántos invitados tiene su reserva. Su spec describe, en §4.1 y en su tabla de pasos, un «re-escalado de los complementos **por-invitado**, el mismo bucle que el editor, incluida la hora extra por invitado de `#443`».

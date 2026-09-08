@@ -65,6 +65,12 @@ class SoldLineUnitHasOneSourceTest extends TestCase
         'app/Domain/Booking/Services/OrderItemEditor.php',    // re-sella al cambiar de producto + divergencia
         'app/Domain/Booking/Services/AddonOccupancy.php',     // la oferta, vía `blocksFor()`
         'app/Domain/Booking/Models/ProductAddon.php',         // donde vive
+        // ⚠️ `OrderItem` COMPARA para poder CONTARLO —`addonUnitDivergesFromCatalogue()`, que es lo
+        // que hace que la ficha del pedido diga «vendido con otra unidad»—, y no decide nada: quien
+        // decide sigue siendo `AddonResolver::soldQuantityUnit()`. Entra aquí y **no** en OFERTA
+        // porque no pregunta «¿qué se puede vender hoy?»: pregunta si lo vendido y el catálogo
+        // discrepan. Lo cazó esta misma guarda al añadirlo, que es exactamente para lo que está.
+        'app/Domain/Booking/Models/OrderItem.php',
     ];
 
     public function test_no_new_reader_asks_the_catalogue_about_a_sold_line(): void

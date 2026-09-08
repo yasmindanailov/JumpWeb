@@ -2511,3 +2511,66 @@ nadie lo viera.
   se ha visto FALLAR sin la revalidación (**96 invitados donde caben 30**).
 - **El plazo con el reloj del parque**: se puede mirar cambiando `packs.guest_count_cutoff_hours` en
   Ajustes, pero el borde exacto lo fija la suite con el tiempo congelado.
+
+
+## 5.nonies · EL SELLO DEL MODO DE UN COMPLEMENTO — guion del OJO del owner (`DECISIONES #448` y `#449`)
+
+> **Qué se mira aquí**: que **ya se pueda cambiar el modo de un enganche** —el encargo del owner— y
+> que hacerlo **no mueva ni un céntimo ni un minuto** de lo ya vendido. Está verificado por suite
+> (4.477), mutación (25/25) y los verificadores de concurrencia sobre InnoDB; lo que falta es lo
+> único que un test no ve: que la pantalla diga lo que tiene que decir y que el operador lo entienda.
+>
+> ⚠️⚠️ **ANTES DE EMPEZAR: esto exige la migración aplicada.** En local,
+> `docker compose exec -u sail laravel.test php artisan migrate`. Si la columna no existe, el
+> escenario B falla con un `SQLSTATE … Unknown column 'addon_quantity_mode'` — que es el instrumento
+> avisando, no el producto.
+
+### A · Sembrar (una vez)
+
+1. **Catálogo → «Pack Cumpleaños Jump» → Complementos → «Menú 2» → Configurar**: dejarlo en
+   **«Se cobra por invitado»**.
+2. Vender una fiesta de **12 invitados** con ese menú (web o «Crear pedido»), y dejarla **pagada**.
+3. Comprobar en la ficha del pedido que la línea del menú dice **12**.
+
+### B · El desbloqueo, que es el encargo
+
+| # | qué haces | qué tiene que pasar |
+|---|---|---|
+| **B1** | Vuelve a **Configurar** ese mismo enganche y cámbialo a **«Cantidad fija»** | **Guarda sin protestar.** Antes esto lo rechazaba el candado, y esa ventana no se abría nunca |
+| **B2** | Abre la ficha del pedido de A | La línea del menú **sigue diciendo 12**, y el total del pedido **no ha cambiado** |
+| **B3** | «Gestionar» esa reserva y **sube los invitados a 16**, guarda | El menú pasa a **16** — porque se VENDIÓ por invitados, aunque el enganche diga hoy otra cosa |
+| **B4** | Mira el desglose del pedido | Hay **una línea propia** por el menú (+8,00 €), **atada a esa reserva** y no fundida con el resto |
+
+⚠️ **B3 es el corazón de la feature.** Si el menú se hubiera quedado en 12, el cliente pagaría doce
+menús para dieciséis personas; si hubiera saltado a un número raro, el catálogo estaría mandando
+sobre lo vendido. Lo que se comprueba es que **manda cómo se vendió**.
+
+### C · La hora extra, que es lo que el owner quería configurar
+
+| # | qué haces | qué tiene que pasar |
+|---|---|---|
+| **C1** | **Catálogo → «Pack Cumpleaños Jump» → «Hora extra de sala · JUMP» → Configurar** → «Se cobra por invitado» | **Guarda.** Es el encargo original, el que el candado bloqueaba |
+| **C2** | Ponle precio **por invitado** en su ficha de precios | — |
+| **C3** | Vende una fiesta nueva de 15 con hora extra | Se cobra **15 × el precio**, y la sala queda ocupada **una hora más**, no quince |
+| **C4** | En el calendario, mira la franja siguiente a esa fiesta | Ocupada **una sola hora** después del fin normal |
+
+❗❗ **C3 y C4 juntas son la comprobación que más importa**: el precio escala con los invitados y el
+**aforo no**. Una hora es una hora, la compren 8 o 20. Si la sala apareciera bloqueada muchas horas,
+es exactamente el defecto de los **900 minutos** que esta tanda cierra.
+
+### D · Lo que NO debe pasar (los controles)
+
+| # | qué haces | qué tiene que pasar |
+|---|---|---|
+| **D1** | Sube los invitados de una fiesta que lleve una **tarta** (cantidad fija, 2 unidades) | La tarta **sigue en 2**. No todo sigue a los invitados: solo lo vendido por invitados |
+| **D2** | Busca una reserva **anterior al despliegue** con complementos y cambia el modo de su enganche | El candado **sigue bloqueando**, y con razón: esa línea no declara su unidad. Se suelta sola cuando pase la fiesta |
+
+### Lo que este guion NO cubre, y se dice
+
+- **El relleno de producción**: al desplegar, las dos horas extra de sala y la línea de `R-BOMAZH`
+  quedan selladas por la migración. Eso se comprueba **en el despliegue**, con las dos cifras que la
+  migración deja en el log (filas selladas · hijas vivas que siguen sin sello).
+- **La divergencia en pantalla**: cuando el sello y el enganche declaran unidades distintas, la línea
+  queda acotada a su propia cantidad. Hoy eso **no se pinta** en la ficha —está en el plan y no se
+  construyó— así que el operador lo nota al no poder subirla, sin que nada se lo explique. Es deuda
+  declarada, no un olvido.

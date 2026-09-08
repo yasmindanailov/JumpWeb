@@ -1723,8 +1723,10 @@ este diseño no vio — **esa ventana no se abre nunca**. Lo que sigue es la sal
 
 > 🟦 **SPEC APROBADA Y LA T1 EN EL ÁRBOL** (`#448`, 2026-09-08; ejecución en **§12.16**). Las cinco
 > decisiones de §12.12 están tomadas (`[DECIDIDO owner, 2026-09-08]`) y producción está medida el
-> mismo día, **solo lectura**. ▶ **T1 en §12.16, T2 en §12.17 y T3 en §12.18. Queda la T4 (doc +
-> OJO del owner).** ⚠️ Nada de esto está DESPLEGADO todavía: producción sigue en `200b019a`.
+> mismo día, **solo lectura**. ▶ **T1 en §12.16, T2 en §12.17, T3 en §12.18 y T4 en §12.19.**
+> **Solo queda el OJO del owner** (guion cerrado en `VERIFICACION-E2E-CAJON.md` §5.nonies) **y el
+> DESPLIEGUE**. ⚠️⚠️ Nada de esto está desplegado: producción sigue en `200b019a`, y la T2 y `#449`
+> **sí cambian conducta**.
 
 ## 12.1 · El síntoma, y por qué la ventana NO se abre nunca
 
@@ -2266,3 +2268,39 @@ para siempre otra vez) y que se suelte con lo NO sellado (el agujero se reabre e
 dos, media regla quedaría sin red.
 
 **Verificación**: suite **4.473** · mutación **22/22** · `panel-edit` y `extra-hour` sobre InnoDB.
+
+## 12.19 · Lo EJECUTADO — la T4: la doc, y lo que faltaba de la T3 (`#448`, 2026-09-08)
+
+`PAY-19` **ampliada** (la regla cubre ahora la unidad de un complemento, con sus dos reglas derivadas,
+el silencio del `null` y la divergencia) · `MODELO-DATOS.md` · `GLOSARIO.md` (entrada propia:
+**sello del modo**) · la fila de `CLAUDE.md` · `DECISIONES #448` con lo ejecutado y sus cuatro
+lecciones · y el **guion del OJO del owner** en `VERIFICACION-E2E-CAJON.md` §5.nonies, con su
+escenario sembrado, sus controles y **lo que ese guion NO cubre, dicho**.
+
+❗❗❗ **Y la T4 destapó que la T3 se dio por HECHA sin una de sus piezas.** §12.8 y la tabla de §12.14
+declaraban «la nota de divergencia en `items-list.blade.php` con sus claves `es`/`zh_CN`», y **no
+estaba construida**. Se vio al escribir el guion del owner: al listar lo que no se cubre, la nota
+aparecía como deuda… en una spec que la daba por hecha.
+
+▶ **Es exactamente el defecto que `#449` acababa de cerrar en la spec de `#444`** —doc que describe
+una conducta que el código no tiene— y por eso se construyó en vez de rebajar la spec:
+`OrderItem::addonUnitDivergesFromCatalogue()` (comparación de PRESENTACIÓN, no decisión: quien decide
+sigue siendo `AddonResolver::soldQuantityUnit()`), la pastilla «Vendido con otra unidad» en la línea
+↳ de la ficha y sus dos claves en los dos `admin.php`. El texto dice la **consecuencia práctica**
+—«se puede bajar o quitar, pero no subir»— porque es la que el operador se encuentra.
+
+### Lo que enseñó la ejecución
+
+⚠️⚠️ **Las guardas de censo cazaron el método nuevo DOS veces, y las dos tenían razón**:
+`SoldLineUnitHasOneSourceTest` (que es de esta misma tanda) porque `OrderItem` pasaba a comparar con
+`quantityUnit()`, y `AddonStageTest` porque pasaba a consumir `addons()`. Las dos obligaron a
+declarar por escrito qué hace esa pieza —**compara, no decide; y no ofrece, así que la fase no
+aplica**—. *Un censo que te obliga a justificar cada entrada nueva es lo que impide que la doctrina
+se erosione sin que nadie lo note.*
+
+⚠️ **El arnés dio 27/27 con la suite completa en ROJO**, y no es contradicción: su filtro no incluye
+`AddonStageTest`. *Un arnés mide su propio subconjunto; verde ahí no es verde.* Es la tercera vez en
+esta banda que lo que cierra el hueco es **volver a correr la suite entera antes de commitear**.
+
+**Verificación**: suite **4.479** · mutación **27/27** (las dos direcciones de la divergencia
+incluidas) · árbol íntegro tras el arnés.

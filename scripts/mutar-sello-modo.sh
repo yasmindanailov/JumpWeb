@@ -39,6 +39,7 @@ FICHEROS=(
     app/Domain/Booking/Models/ProductAddon.php
     database/migrations/2026_09_08_120000_add_addon_quantity_mode_to_order_items.php
     app/Domain/Booking/Services/GuestCountAdjuster.php
+    app/Domain/Booking/Models/OrderItem.php
 )
 # Solo restaura lo que TIENE copia: un corte a mitad del arranque deja la carpeta incompleta, y sin
 # esta guarda la reparación escupe seis `cannot stat` que tapan el aviso que sí importa.
@@ -119,6 +120,7 @@ EDI=app/Domain/Booking/Services/OrderItemEditor.php
 PFA=app/Domain/Booking/Services/PostFormAddons.php
 MIX=app/Domain/Booking/Services/MixedPartySurcharge.php
 PIV=app/Domain/Booking/Models/ProductAddon.php
+ITM=app/Domain/Booking/Models/OrderItem.php
 MIG=database/migrations/2026_09_08_120000_add_addon_quantity_mode_to_order_items.php
 GCA=app/Domain/Booking/Services/GuestCountAdjuster.php
 
@@ -237,6 +239,19 @@ mutar "un modo desconocido se lee como per_guest" "$PIV" \
 mutar "el saneo aplasta también los modos VÁLIDOS" "$PIV" \
   "        return in_array(\$mode, self::MODES, true) ? \$mode : self::MODE_FIXED;" \
   "        return self::MODE_FIXED;"
+
+echo
+echo '── La DIVERGENCIA se DICE ──'
+
+# Si deja de detectarse, la línea queda acotada y nadie lo explica.
+mutar "la divergencia deja de detectarse" "$ITM" \
+  "        return \$pivot !== null && \$pivot->quantityUnit() !== \$sealed;" \
+  "        return false;"
+
+# CONTROL: el silencio (sin sello) NO es divergencia — si no, se marcaría toda línea vieja.
+mutar "una línea SIN sello se marca como divergente" "$ITM" \
+  "        if (\$this->parent_item_id === null || ! is_string(\$sealed) || \$sealed === '') {" \
+  "        if (\$this->parent_item_id === null) {"
 
 echo
 echo '── T3 · el CANDADO re-apuntado ──'

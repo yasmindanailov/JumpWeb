@@ -1412,6 +1412,13 @@ return [
             'total' => 'Total del producto',
         ],
 
+        // El SELLO DEL MODO (`specs/hora-extra.md` §12.8, `#448`): la línea se vendió con una unidad
+        // —bloques o personas— distinta de la que su enganche declara hoy. No es un error: es lo que
+        // protege a esa reserva de un cambio de catálogo. Lo que hay que decir es la CONSECUENCIA
+        // práctica, porque es la que el operador se encuentra: no puede subirla.
+        'addon_unit_diverges' => 'Vendido con otra unidad',
+        'addon_unit_diverges_hint' => 'Este complemento se vendió con una unidad distinta de la que tiene ahora el catálogo, así que conserva la suya. Se puede bajar o quitar, pero no subir.',
+
         // Sub-fase 7.2e.1bis5 (decisión #158, punto 4 feedback): bloque
         // compacto de totales DEL PEDIDO al final de la card Resumen,
         // diferenciado del "item_financial" del sub-card de cada producto.

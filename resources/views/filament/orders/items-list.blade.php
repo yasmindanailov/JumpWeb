@@ -539,6 +539,14 @@
                                 <span class="text-gray-600 dark:text-gray-400">
                                     {{ $child->ticketType?->tr('name') }}@if ($cBadge) <span class="inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700 no-underline dark:bg-emerald-400/10 dark:text-emerald-300">{{ __('tickets.addon_badge_'.$cBadge) }}</span>@endif
                                     · {{ $child->quantity }} × {{ $fmt($child->unit_price) }}@if ($cNote) <span class="text-xs text-gray-400 dark:text-gray-500">({{ $cNote }})</span>@endif
+                                    {{-- El SELLO DEL MODO (`specs/hora-extra.md` §12.8, `#448`): esta
+                                         línea se vendió con una unidad distinta de la que su enganche
+                                         declara HOY, así que queda acotada a su propia cantidad. Sin
+                                         decirlo, el operador lo descubre al no poder subirla y nada
+                                         se lo explica. --}}
+                                    @if ($child->addonUnitDivergesFromCatalogue())
+                                        <span class="ml-1 inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-amber-700 no-underline dark:bg-amber-400/10 dark:text-amber-300" title="{{ __('admin.orders.addon_unit_diverges_hint') }}">{{ __('admin.orders.addon_unit_diverges') }}</span>
+                                    @endif
                                 </span>
                                 <span class="whitespace-nowrap text-gray-800 dark:text-gray-200">{{ $fmt($child->chargedSubtotalCents()) }}</span>
                             </div>

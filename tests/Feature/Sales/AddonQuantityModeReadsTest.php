@@ -246,6 +246,39 @@ class AddonQuantityModeReadsTest extends TestCase
         );
     }
 
+    // ─── La DIVERGENCIA se DICE, no solo se aplica ───────────────────────────────────
+
+    public function test_a_diverging_line_says_so(): void
+    {
+        // La mitad de PRESENTACIÓN de §12.8: con el sello y el enganche declarando unidades
+        // distintas la línea queda acotada a su propia cantidad, y sin decirlo el operador lo
+        // descubre al no poder subirla — sin que nada se lo explique.
+        $this->hookMenu(ProductAddon::MODE_FIXED);
+        $order = $this->buyWithMenu(guests: 12, menuQty: 2);
+        $child = $this->child($order, $this->menu);
+
+        $this->assertFalse($child->addonUnitDivergesFromCatalogue(), 'sin divergencia no se dice nada');
+
+        $this->flipHookup(ProductAddon::MODE_PER_GUEST, $this->menu);
+
+        $this->assertTrue($child->fresh()->addonUnitDivergesFromCatalogue());
+    }
+
+    public function test_control_silence_is_not_divergence(): void
+    {
+        // CONTROL: una línea SIN sello no diverge de nada — no declara unidad, así que no hay
+        // discrepancia que afirmar. Sin este caso, «lo que no coincide, diverge» pasaría en verde y
+        // marcaría toda línea anterior al despliegue.
+        $this->hookMenu(ProductAddon::MODE_FIXED);
+        $order = $this->buyWithMenu(guests: 12, menuQty: 2);
+        $child = $this->child($order, $this->menu);
+
+        DB::table('order_items')->where('id', $child->id)->update(['addon_quantity_mode' => null]);
+        $this->flipHookup(ProductAddon::MODE_PER_GUEST, $this->menu);
+
+        $this->assertFalse($child->fresh()->addonUnitDivergesFromCatalogue());
+    }
+
     // ─── T3 · el CANDADO re-apuntado ─────────────────────────────────────────────────
 
     public function test_a_sealed_line_no_longer_locks_the_hookup(): void

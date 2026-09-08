@@ -195,6 +195,35 @@ class OrderItem extends Model
     }
 
     /**
+     * ¿Esta línea HIJA se vendió con una unidad distinta de la que su enganche declara hoy?
+     * (`specs/hora-extra.md` §12.8, `#448`.)
+     *
+     * ▶ Existe para que la ficha del pedido lo DIGA: con divergencia, la línea queda acotada a su
+     * propia cantidad —no se puede subir— y sin este aviso el operador lo descubre al no poder
+     * hacerlo, **sin que nada se lo explique**. Es la mitad de presentación de la regla.
+     *
+     * ⚠️ Devuelve `false` en cuanto falta algo (no es hija, no hay sello, no hay enganche): el
+     * silencio no es divergencia, y afirmar una discrepancia que no se sabe sería peor que callar.
+     *
+     * ⚠️ **Es de PRESENTACIÓN, y por eso vive aquí y no en el `CRITICAL_RE`**: quien DECIDE sobre la
+     * unidad de una línea vendida es `AddonResolver::soldQuantityUnit()`, y este método no gobierna
+     * nada — solo compara para poder contarlo.
+     */
+    public function addonUnitDivergesFromCatalogue(): bool
+    {
+        $sealed = $this->addon_quantity_mode;
+        if ($this->parent_item_id === null || ! is_string($sealed) || $sealed === '') {
+            return false;
+        }
+
+        $pivot = $this->parent?->ticketType?->addons()
+            ->where('ticket_types.id', $this->ticket_type_id)
+            ->first()?->pivot;
+
+        return $pivot !== null && $pivot->quantityUnit() !== $sealed;
+    }
+
+    /**
      * El nombre del producto de ESTA reserva, con la etiqueta «MIXTA» si lo es.
      *
      * ▶ **Existe por la misma razón que sus hermanas** `displayTimeWindow()` y
