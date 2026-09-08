@@ -134,6 +134,17 @@ class CriticalPathGateTest extends TestCase
         'app/Domain/Booking/Services/AddonOfferReader.php',
         'app/Domain/Booking/Services/PostFormAddons.php',
         'app/Domain/Booking/Services/AddonDateReconciler.php',
+        // ❗❗❗ `#444` · **la PRIMERA puerta por la que el CLIENTE mueve AFORO**
+        // (`specs/invitados-en-post-form.md`). Reúne las dos cosas que esta lista protege y por
+        // primera vez desde una superficie PÚBLICA y sin sesión: toma el lock de zona/día como
+        // primera sentencia (`AFORO-01`), revalida el cupo dentro de él —excluyendo su propia huella
+        // y contando los minutos de la hora extra— y escribe el hecho del que vive el LIBRO.
+        //
+        // ⚠️⚠️ Sus dos modos de fallo son MUDOS: sin la revalidación se sobrevende sin que nada falle
+        // (medido: **96 invitados donde caben 30**), y sin el `recordEdit` el pedido pasa a «en
+        // revisión» y al cliente se le oculta su desglose. La suite corre en SQLite y no ejerce el
+        // lock; el verificador es `purchase:verify-oversell --scenario=guest-count`.
+        'app/Domain/Booking/Services/GuestCountAdjuster.php',
     ];
 
     /**

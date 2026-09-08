@@ -55,6 +55,11 @@ datos**. Pedirlo todo en la compra satura el flujo. Solución: **formulario post
    order_items.quantity`), las columnas `required` de `guest_fields` están rellenas. Estado
    **derivado en vivo** contra `quantity`: si sube la cantidad tras enviar, el badge vuelve
    solo a «pendiente» (los datos rellenos se conservan). No toca aforo ni cobro.
+   ⚠️⚠️ **«Si sube la cantidad» ya no significa «si la sube el OPERADOR»** (2026-09-07, `#444`,
+   `specs/invitados-en-post-form.md`): **el propio cliente puede subirla y bajarla** desde este
+   formulario, dentro de un plazo. La derivación de arriba no cambia —sigue siendo contra `quantity`—
+   pero la frase «no toca aforo ni cobro» describe **el estado del formulario**, no el cambio de
+   cantidad: ése sí mueve las dos cosas, y por eso tiene su propio servicio con el lock de zona/día.
 5. **«Menú especial» por-invitado = texto libre** (no acoplado a `product_addons`).
 6. **Granularidad: por OrderItem-pack**, no por pedido.
 7. **Acceso del cliente**: «Mis pedidos» (autenticado) + **signed URL de larga vida** en el
@@ -224,6 +229,34 @@ seed siempre incluye `guest_fields`).
 - Vista delgada: toda la lógica en el presenter. Labels en `admin.orders.slip.*` (hay test que
   prohíbe claves i18n crudas en el HTML). Nunca PII de pago. Verificar el PDF real renderizado
   (gs→PNG): dompdf rompe en silencio.
+
+## 4.4 El cliente cambia CUÁNTOS invitados (2026-09-07, `#444`)
+
+Desde el post-form, el titular **sube y baja** los invitados de su reserva. Lo decide
+`Booking\Services\GuestCountAdjuster`, y lo que se OFRECE lo dice `GuestCountPolicy`, que es la misma
+fuente que revalida bajo el lock — pantalla y escritor no pueden divergir.
+
+❗❗❗ **Es la primera puerta por la que el cliente mueve AFORO**, y por eso NO reutiliza
+`OrderItemEditor::edit()`: aquél exige `orders.edit_item` y además mueve producto, fecha y
+complementos. Su receta de lock **sí** se reutiliza —`slots` → `order_items`, dinero POST-COMMIT—
+porque `AFORO-01` exige el lock de franjas como primera sentencia.
+
+▶ **Lo que hay que saber al tocar esta pantalla:**
+
+- **El ORDEN del guardado es la propiedad**: testigo → cantidad → **RE-LEER la reserva** → fichas →
+  extras. Ajustar antes de capturar el testigo deja los extras sin poder comprarse; ajustar sin
+  re-leer recorta las fichas contra la cantidad VIEJA.
+- **`guest_count` ausente = no lo toques**, como `guests` y `general` (`#413` T0).
+- **El suelo son DOS motivos** —el mínimo del pack y lo que ya tiene dueño (menores asignados +
+  justificantes firmados)— y **no se funden**: el remedio de cada uno es distinto.
+- **El plazo** es `packs.guest_count_cutoff_hours` (Ajustes → Horarios y aforo; vacío = 24 h), medido
+  con `DisplayTime::now()` contra la hora de PARED de la franja.
+- **Bajar destruye fichas**, y la pantalla lo dice antes de guardar contando las RELLENAS.
+- Un rechazo **no tumba** el guardado de los nombres y las alergias: son transacciones distintas a
+  propósito, y el desenlace lo DICE con el motivo.
+
+⚠️ Contrato: `GuestForm` publica `guest_count_editable`, `_min`, `_max`, `_locked_reason` y
+`_deadline`, ya resueltos; `GuestFormRequest` acepta `guest_count`.
 
 ## 5. Nombre de cara al usuario
 

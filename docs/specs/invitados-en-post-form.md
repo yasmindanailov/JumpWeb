@@ -1,6 +1,7 @@
 # [SPEC] El cliente cambia el número de INVITADOS desde su post-formulario
 
-> Estado: ⬜ **borrador** · Última actualización: 2026-09-07 · Decisión asociada: `DECISIONES #444`.
+> Estado: 🟦 **código completo en el árbol; queda el OJO del owner** · Última actualización: 2026-09-07
+> · Decisión asociada: `DECISIONES #444`. ▶ **Lo ejecutado está en §8.**
 >
 > ❗❗❗ **Esto NO es «una pantalla»: es la primera vez que el cliente mueve AFORO y DINERO por su
 > cuenta.** `complementos-post-reserva.md` §4.3·5 dejó fuera *a propósito* todo lo que ocupa
@@ -324,10 +325,12 @@ propia aritmética, pero **por otro motivo**: es otra pregunta, no un reloj torc
 ### 7.2 · Lo que queda antes de escribir código
 
 ✅ **A1 medido** (§4.2): la forma se interbloquea, los dos órdenes existen, y el ajuste de cantidad
-**no añade arista**. Queda la ficha del par preexistente y el resto del plan de §6.
+**no añade arista**. El par preexistente quedó con ficha propia en `DEUDA.md`.
 
-⬜ **Lo que sigue**: la segunda pasada adversarial sobre §4.6 y §4.7 (las escrituras y los bordes),
-y después la T0.
+✅ **Y el resto del plan también está hecho**: §8 es la ejecución, con sus 29 casos, sus 16 mutaciones
+y el escenario de concurrencia visto fallar. ⚠️ *Esta sección decía «lo que sigue… y después la T0»
+hasta que se construyó; se corrige aquí en vez de borrarse, porque el orden en que se supo cada cosa
+es parte de lo que el siguiente necesita.*
 
 
 ## 8. Lo EJECUTADO (2026-09-07, `#444`)
@@ -387,6 +390,11 @@ que `guest_count` declarara **por qué** es opcional.
 ### 8.4 · Lo que queda
 
 - El **OJO del owner** en navegador: el control con sus tres estados y el aviso de pérdida de fichas.
-- El aviso de «se perderán N fichas» **antes** de guardar: el dato ya viaja (`discardedForms`) y la
-  pantalla aún no lo pinta.
+- ~~El aviso de «se perderán N fichas» antes de guardar~~ **HECHO** (`gf-count-warn` + su JS): el
+  dato ya viajaba en `discardedForms` y la pantalla lo pinta contando las fichas **RELLENAS**.
+  ⚠️ *Esta línea decía que no estaba pintado hasta que se pintó, unas horas después de escribirla: se
+  corrige y no se borra, porque una spec que se contradice a sí misma es peor que una incompleta.*
+  ▶ Y trajo su propia guarda: la primera versión del texto venía con la **sintaxis de plural de
+  Laravel**, que el navegador no resuelve — ninguna guarda del repo mira `guestform`, así que hay una
+  nueva que exige una sola forma con sus dos marcadores.
 - **Un paso de despliegue, y es de DATO**: nada más. El plazo cae a 24 h sin configurar.

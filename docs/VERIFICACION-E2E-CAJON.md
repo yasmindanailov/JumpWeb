@@ -2446,3 +2446,68 @@ ssh jumpweb-staging "cd ~/public_html && php artisan tinker --execute=\"
   dominios de Workspace y no se puede provocar a mano. Lo cubre la suite con un token fabricado.
 - **La pantalla de consentimiento publicada**: en «Testing» solo entran los usuarios de prueba que se
   añadan a mano en la consola. Si Google dice «esta app no está verificada», es eso.
+
+---
+
+## 5.octies · LOS DOS ENCARGOS DEL 2026-09-07 — guion del OJO del owner (`DECISIONES #443` y `#444`)
+
+> **Qué se mira aquí**: que la hora extra de un pack se pueda **cobrar por invitado** (`#443`) y que
+> el cliente pueda **subir y bajar sus invitados** desde el post-form (`#444`). Las dos están
+> verificadas por suite, mutación y concurrencia; lo que falta es lo único que un test no ve.
+
+### A · Sembrar el escenario (una vez)
+
+En el panel, **Catálogo → «Pack Cumpleaños Jump» → Complementos → «Hora extra de sala · JUMP» →
+Configurar**: poner **Cantidad = «Se cobra por invitado»** y guardar.
+
+⚠️⚠️ **Si el guardado se niega, NO es un fallo: es el candado de `#443`** (§11.11·A1 de
+`specs/hora-extra.md`). Un enganche con reservas vivas **todavía editables** no puede cambiar de modo
+porque re-preciaría esas fiestas en el siguiente guardado del panel (medido: **+35,00 €** y
+**+56,00 €** sobre las dos horas extra reales de producción). ▶ **Se comprueba que el mensaje lo
+explica y propone crear un producto nuevo.** En local, cancela o deja pasar esas reservas primero.
+
+Después, **Catálogo → «Hora extra de sala · JUMP» → precios**: poner el precio **por invitado**.
+
+### B · La hora extra por invitado (`#443`)
+
+| # | Qué se hace | Qué tiene que verse |
+|---|---|---|
+| B1 | Comprar un cumpleaños JUMP de **15** invitados y llegar al paso de complementos | La hora extra se ofrece con **una CASILLA, no un contador** — su cantidad no la elige nadie |
+| B2 | Sin marcarla | La nota dice el precio **por invitado** (p. ej. «5,00 €/invitado») |
+| B3 | Marcarla | La nota pasa a decir **para cuántos** («Una hora más para los 15 invitados») y el importe del pie sube en `15 × precio` |
+| B4 | Terminar la compra y abrir la ficha del pedido en el panel | La línea dice **15 unidades** al precio por invitado, y la ventana de la fiesta es **una hora más larga**, no quince |
+| B5 | En «Gestionar producto», subir los invitados de 15 a 18 | La hora extra **se re-precia sola** a 18 y el libro lo dice con su línea |
+
+⚠️ **El número que decide la feature es el de B4**: si la fiesta apareciera alargada quince horas en
+vez de una, el aforo estaría contando personas donde debe contar bloques.
+
+### C · Los invitados desde el post-form (`#444`)
+
+Abrir el enlace del formulario de invitados de una reserva **de dentro de más de 24 h**.
+
+| # | Qué se hace | Qué tiene que verse |
+|---|---|---|
+| C1 | Mirar la cabecera | Junto a «Invitados» hay un **campo numérico** con su mínimo y su máximo, y una pista con **hasta cuándo** se puede cambiar |
+| C2 | Subir el número y guardar | La reserva pasa a esa cantidad, **aparecen fichas nuevas vacías** y el saldo del pedido sube. **Se paga en el parque**: no se pide tarjeta |
+| C3 | Rellenar dos fichas del final y **bajar** el número por debajo de ellas | Antes de guardar, un aviso dice **cuántas fichas ya rellenadas se perderán** — y cuenta las rellenas, no las vacías |
+| C4 | Pedir **más** de los que admite el pack | Los datos **sí se guardan** y un aviso dice que el número no: *«es más de lo que admite este cumpleaños»* |
+| C5 | Pedir **menos** del mínimo del pack | Mismo comportamiento, con **otro** texto: el del mínimo |
+| C6 | Con menores a cargo o justificantes ya asignados, bajar por debajo de ellos | **Un TERCER texto**, distinto de los dos anteriores: *«ya has asignado más plazas de las que quieres dejar»* |
+| C7 | Abrir el formulario de una reserva de **mañana** (dentro del plazo de 24 h) | El campo **no se ofrece**, pero **el número sigue viéndose** y hay una frase que dice que ha pasado el plazo |
+
+❗❗ **C4, C5 y C6 son el corazón de la pasada, y por eso son tres filas y no una**: los tres rechazos
+tienen que decir cosas DISTINTAS, porque el remedio de cada uno lo es —los dos primeros se resuelven
+llamando al parque; el tercero, quitando a alguien de la lista—. Si los tres dijeran lo mismo, el
+cliente se quedaría sin saber qué hacer, que es justo el modo de fallo que esta tanda cierra.
+
+⚠️ **C7 comprueba que el control NO desaparece.** Un control que se esconde sin explicación es cómo
+el hueco original —12 fichas para una línea de 10, y dos se pierden en silencio— estuvo meses sin que
+nadie lo viera.
+
+### Lo que NO se puede comprobar aquí
+
+- **La carrera por la última plaza**: dos clientes subiendo invitados a la vez sobre la misma sala.
+  No se provoca a mano; lo cubre `php artisan purchase:verify-oversell --scenario=guest-count`, que
+  se ha visto FALLAR sin la revalidación (**96 invitados donde caben 30**).
+- **El plazo con el reloj del parque**: se puede mirar cambiando `packs.guest_count_cutoff_hours` en
+  Ajustes, pero el borde exacto lo fija la suite con el tiempo congelado.
