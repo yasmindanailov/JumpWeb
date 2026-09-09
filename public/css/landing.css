@@ -349,6 +349,77 @@
   --fs-20: calc(var(--fs-unit) * 20);
   --fs-22: calc(var(--fs-unit) * 22);
 
+  /* ── LA ESCALA TIPOGRÁFICA DEL SISTEMA · los DIEZ niveles con nombre ──────────────────────
+     `DECISIONES #474` · carril de diseño, Fase 1 · T1g. Los valores son los del canvas del
+     2.º cliente (`tokens-pjp.js` v1.10, `tipo.escala`), que es la fuente.
+
+     ❗❗ **Esto NO sustituye a `--fs-9..22` de arriba: convive con ellos** (`[DECIDIDO owner]`).
+     Aquélla es una lista por PÍXEL —un token por talla, que es lo que el propio canvas ficha
+     como su grieta «00 bis»: *«las dos escalas no son escalas: son un token por píxel»*—; ésta
+     nombra el PAPEL del texto, que es lo que impide que alguien estrene el escalón 19. Los
+     `--fs-N` mueren superficie a superficie según se vaya vistiendo cada una (Fase 2 la web
+     pública, Fase 4 el cajón, Fase 5 el post-form), no de golpe.
+
+     ▶ **Cada nivel es un `clamp` entre sus DOS tallas** (`[DECIDIDO owner]`): el canvas declara
+     una talla móvil y una de escritorio por nivel, y aquí se interpolan en vez de saltar en un
+     punto de corte. El motivo es que **el punto de corte está APARCADO sin decidir** (`#473`,
+     T1f: el canvas declara tres y el producto tiene catorce), así que un `@media` tendría que
+     elegir hoy un número que se decide en la Fase 2 con el armazón delante.
+     La recta va de **390** (`reticula.referencia`) a **1024** (`reticula.puntos.escritorio`), y
+     de ahí salen las constantes: `B = (E − M) / 6,34` en vw y `A = M − 390·(E − M)/634` en px.
+     La propiedad comprobable, y la que vigila `TypeScaleTest`, es que **a 390 px cada nivel vale
+     su talla móvil y a 1024 la de escritorio** — aritmética pura, sin navegador.
+
+     ⚠️ **Los tres de talla ÚNICA no llevan `clamp`** (Cuerpo S · Botón · Etiqueta): el canvas les
+     da el mismo valor en las dos superficies, y un `clamp` de extremos iguales sería ruido que
+     hace creer que ahí hay un tramo fluido.
+
+     ⚠️ **El mando `--fs-unit` alcanza los EXTREMOS, no el tramo fluido.** Un término en `vw` es
+     relativo al viewport y no a la unidad, y CSS no deja multiplicar longitud por longitud para
+     derivarlo de los propios tokens. O sea: una instalación que mueva `--fs-unit` mueve lo que se
+     ve en móvil y en escritorio —que son los topes— y deja el tramo intermedio ligeramente
+     desplazado. Está medido y aceptado; escribirlo de otra forma exigiría `@property`.
+
+     ⚠️⚠️ **NACEN SIN CONSUMIDOR, y eso es deliberado y acotado** (`[DECIDIDO owner]`). Al medirlo
+     resultó que **ninguna regla del producto coincide con su nivel en talla Y en papel a la vez**
+     —las cuatro reglas de mono a 12 no son etiquetas (un glifo de 6 px, un precio, un número en
+     círculo), los `--fs-15` son campos y botones, el eslogan está a 18 y 22 contra 24/30—, así que
+     no había ni una sustitución que no afirmara un rol falso o moviera geometría.
+     ▶ **No contradice a `#287` ni al `barra: 1400` que `#473` rechazó**: aquella duración no tiene
+     consumidor **ni lo tendrá** (no existe ninguna barra indeterminada); estos diez lo tienen
+     fechado y son la razón de la tanda — la escala va ANTES de vestir las secciones, igual que la
+     columna, el aire, los radios y el táctil.
+
+     ▶ **La tabla completa del canvas, que es lo que la Fase 2 tiene que respetar al aplicarlos**
+     (aquí solo vive la talla; peso, familia e interletraje se escriben en la regla de cada nivel):
+
+       nivel        familia          peso   móvil→escr.   line-height   letter-spacing
+       Display XL   --font-display    —      42 → 76         .92          -.015em
+       Display L    --font-display    —      34 → 52         .95          -.01em
+       Título       --font-display    —      26 → 36        1.05           0
+       Subtítulo    --font-body      700     22 → 26        1.25           0
+       Entradilla   --font-body      500     18 → 21        1.5            0
+       Cuerpo       --font-body      400     16 → 17        1.6            0
+       Cuerpo S     --font-body      400     15 → 15        1.55           0
+       Botón        --font-body      800     16 → 16        1             .01em
+       Etiqueta     --font-mono       —      12 → 12        1.2           .16em   (mayúsculas)
+       Eslogan      --font-accent     —      24 → 30        1.15           0      (girado −2°)
+
+     ⚠️ Reglas duras del canvas que van con la escala: **el botón NUNCA es `--font-display` y nunca
+     baja de 16** · **Display XL es UNO por página** (solo el hero) · **el Eslogan es uno por página
+     y solo eso: en cuanto informa, deja de ser un guiño** · **el titular de una SECCIÓN es Display
+     L**, y el Título es el de un bloque DENTRO de ella. */
+  --fs-display-xl: clamp(calc(var(--fs-unit) * 42), calc(var(--fs-unit) * 21.0852 + 5.3628vw), calc(var(--fs-unit) * 76));
+  --fs-display-l:  clamp(calc(var(--fs-unit) * 34), calc(var(--fs-unit) * 22.9274 + 2.8391vw), calc(var(--fs-unit) * 52));
+  --fs-title:      clamp(calc(var(--fs-unit) * 26), calc(var(--fs-unit) * 19.8486 + 1.5773vw), calc(var(--fs-unit) * 36));
+  --fs-subtitle:   clamp(calc(var(--fs-unit) * 22), calc(var(--fs-unit) * 19.5394 + 0.6309vw), calc(var(--fs-unit) * 26));
+  --fs-lede:       clamp(calc(var(--fs-unit) * 18), calc(var(--fs-unit) * 16.1546 + 0.4732vw), calc(var(--fs-unit) * 21));
+  --fs-body:       clamp(calc(var(--fs-unit) * 16), calc(var(--fs-unit) * 15.3849 + 0.1577vw), calc(var(--fs-unit) * 17));
+  --fs-slogan:     clamp(calc(var(--fs-unit) * 24), calc(var(--fs-unit) * 20.3091 + 0.9464vw), calc(var(--fs-unit) * 30));
+  --fs-body-s:     calc(var(--fs-unit) * 15);
+  --fs-button:     calc(var(--fs-unit) * 16);
+  --fs-label:      calc(var(--fs-unit) * 12);
+
   /* **EL AIRE DE LA PRIMERA SECCIÓN BAJO EL HERO.**
      ⚠️⚠️ **Empezó siendo una compensación y acabó siendo una decisión, y conviene saber cuál es
      cuál.** Nació en **32 px**, que es exactamente lo que ocupaba la etiqueta retirada en `#303`

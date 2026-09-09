@@ -64,6 +64,31 @@ class SidebarTokenBudgetTest extends TestCase
     private const MIN_TOKENISED_PERCENT = 72;
 
     /**
+     * **Los diez niveles de la escala tipográfica del sistema, declarados y todavía sin estrenar**
+     * (`DECISIONES #474` · `specs/rediseno-desde-canvas.md` §5.3, T1g).
+     *
+     * ⚠️⚠️ **Esto es una excepción a la regla de al lado y se declara como lo que es: deuda con
+     * fecha.** La escala nombra el texto por su PAPEL —lo que el canvas del 2.º cliente publica y el
+     * producto no tenía— y va ANTES de vestir las secciones, igual que fueron antes la columna, el
+     * aire, los radios y el táctil. Al medirlo resultó que **ninguna regla del producto coincide hoy
+     * con su nivel en talla Y en papel a la vez**, así que estrenarlos exigía afirmar un rol falso o
+     * mover geometría sin poder verla (no hay navegador instalado). `[DECIDIDO owner]`: se declaran
+     * ahora y los consume la Fase 2.
+     *
+     * ▶ **No es el caso que esta guarda persigue.** Un escalón muerto es el que sobra porque su uso
+     * desapareció; éstos son lo contrario — el uso llega en la tanda siguiente. La diferencia la
+     * hace `test_the_unreleased_scale_levels_are_still_unreleased`, que obliga a que la lista
+     * **solo encoja**.
+     *
+     * ⚠️ Y sí distingue del `barra: 1400` que `#473` rechazó: aquella duración no tenía consumidor
+     * **ni lo tendrá** (no existe ninguna barra indeterminada en el producto).
+     */
+    private const SIN_ESTRENAR = [
+        '--fs-display-xl', '--fs-display-l', '--fs-title', '--fs-subtitle', '--fs-lede',
+        '--fs-body', '--fs-body-s', '--fs-button', '--fs-label', '--fs-slogan',
+    ];
+
+    /**
      * Colores CRUDOS que quedan en el sidebar (`#rrggbb`, `rgba(...)`). **Solo puede bajar**: son
      * los que impiden que una instalación cambie de paleta de verdad.
      *
@@ -336,10 +361,50 @@ class SidebarTokenBudgetTest extends TestCase
         // Las unidades son el punto de control de cada escala: existen para que las use quien
         // instala, no las reglas, así que no cuentan como «definidas sin usar».
         $this->assertSame(
-            [], array_values(array_diff($defined, $used, ['--fs-unit', '--sp-unit'])),
+            [], array_values(array_diff($defined, $used, ['--fs-unit', '--sp-unit'], self::SIN_ESTRENAR)),
             'Tokens de escala definidos que no usa nadie. Una escala con escalones muertos describe '.
             'un sistema que el producto no tiene; si un valor dejó de usarse, se retira el token.'
         );
+    }
+
+    /**
+     * **El trinquete que hace que `SIN_ESTRENAR` SOLO PUEDA ENCOGER.**
+     *
+     * Una lista de excepciones que nadie limpia deja de ser deuda declarada y pasa a ser un agujero:
+     * el día que la Fase 2 estrene `--fs-body`, la lista seguiría diciendo que no lo usa nadie y la
+     * guarda de arriba tendría un hueco permanente. Aquí se comprueba lo contrario: **cada nombre de
+     * la lista tiene que seguir estando definido y seguir sin usarse**. En cuanto uno se estrena,
+     * esto se pone rojo y obliga a sacarlo — que es exactamente el gesto que cierra la deuda.
+     */
+    public function test_the_unreleased_scale_levels_are_still_unreleased(): void
+    {
+        $defined = [];
+        $used = [];
+
+        foreach (['landing.css', 'site.css'] as $file) {
+            $css = (string) file_get_contents(public_path('css/'.$file));
+
+            preg_match_all('/^\s*(--(?:fs|sp)-[\w-]+)\s*:/m', $css, $matches);
+            $defined = array_merge($defined, $matches[1]);
+
+            preg_match_all('/var\((--(?:fs|sp)-[\w-]+)\)/', $css, $matches);
+            $used = array_merge($used, $matches[1]);
+        }
+
+        foreach (self::SIN_ESTRENAR as $token) {
+            $this->assertContains(
+                $token, $defined,
+                "`{$token}` está en la lista de niveles sin estrenar pero ya no se declara: si se ".
+                'ha retirado, sale también de la lista.'
+            );
+
+            $this->assertNotContains(
+                $token, $used,
+                "`{$token}` YA SE USA: sácalo de `SIN_ESTRENAR`. La lista existe para nombrar lo que ".
+                'todavía no tiene consumidor, y solo puede encoger — mientras un nivel estrenado siga '.
+                'dentro, la guarda de escalones muertos tiene un hueco que nadie ve.'
+            );
+        }
     }
 
     /**

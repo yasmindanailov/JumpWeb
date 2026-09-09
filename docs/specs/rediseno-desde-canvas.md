@@ -2,7 +2,9 @@
 
 > **Estado:** 🟦 Fase 0 · inventario hecho, código NO empezado
 > **Banda de decisiones:** 470–499 (la reapertura es `#469`)
-> **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.9**
+> **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
+> ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
+> fuente se mueve sola, así que **se relee antes de cada tanda, no una vez por carril** (`#474`).
 > **Copia local:** `mockup_playjumppark_v2/` (gitignorada) · ⚠️ ver §1.2
 
 ---
@@ -72,6 +74,14 @@ existir sin que nada falle**.
 `client-kit.svg`, con gramática **cerrada** (`slot-*` los declara el producto, `zone-<slug>` sale de
 `zones.slug`). Toda pieza gráfica del canvas entra **por ahí** o no entra.
 
+⚠️⚠️ **Y el filtro corta en las DOS direcciones: el canvas nos cazó siete hexadecimales del PRIMER
+cliente vivos en el producto** (`#474`). Los nombra la v1.10 de sus tokens al explicar por qué nacen
+las superficies de aviso sobre papel: los cuatro avisos del sistema solo existían sobre tinta y el
+cajón es papel de arriba abajo, así que el hueco lo rellenaban `#fbeaea`, `#e3b5b0`, `#8a2b22`,
+`#a93226`, `#e7f6ec`, `#b45309` y `#92400e`. **Verificado aquí y están**: 7 usos en `site.css`, y
+además en los **correos**, en la **hoja de sala** y en el **PDF del justificante** — o sea en
+superficies que ni las guardas de la landing ni las del cajón miran. Ficha en `DEUDA.md`.
+
 ---
 
 ## 3 · Las seis cifras del sistema · contraste MEDIDO
@@ -102,6 +112,13 @@ cazado por su cuenta: es su **grieta 05**.
   sistema son **16**; las notas del dinero van a **11** y hay un tamaño de **9**. Subirlo crece el
   texto un 23 % y obliga a revisar el reflujo de **25 pantallas**. Es la única que el cliente nota
   en todas. **Decisión del owner, abierta.**
+  ⚠️⚠️ **MEDIDA en `#474`, y es MÁS GRANDE FUERA del cajón que dentro** — el canvas no podía verlo
+  porque solo auditó el cajón. Las declaraciones por debajo del suelo de 15 son **281 de 412**, y se
+  reparten en **124 del cajón · 125 de la web pública · 32 del post-form y el justificante**. Su
+  cifra sí queda confirmada al dígito: `--fs-13` tiene **59** usos.
+  ⚠️ Y el reparto salió de cruzar cada selector con **las clases que el cajón emite de verdad**: el
+  primer clasificador, por prefijo del nombre, **daba 226/55 y era falso** — lo dijo su control, que
+  enseñó `.account__*`, `.bk-*` y `.cal__*` clasificados como públicos siendo del cajón.
 - **Grieta 01 · la que más importa.** El botón que avanza la compra se pinta con
   **`var(--zone-1)`** — la paleta de una zona del parque, que llega desde los DATOS. O sea que el
   color del botón de comprar depende de una zona, y si se retiñe entre Kids y Jump el mismo botón
@@ -214,8 +231,34 @@ Cada tanda se cierra con suite verde antes de la siguiente.
 | T1d | Ancho de columna **1120** | hueco nuevo + paquete | ✅ `#472` |
 | T1e | Movimiento | — | ✅ `#473` · **divergencia declarada**, sin código |
 | T1f | Punto de corte **1024** | producto | ⏸️ `#473` · **aparcada hasta la Fase 2** |
-| T1g | La escala tipográfica del canvas | producto + paquete | ⬜ |
+| T1g | La escala tipográfica del canvas | producto | ✅ `#474` · declarada, **sin estrenar** |
 | T1h | Los **65 iconos** | producto | ⬜ |
+
+✅ **T1g, la escala tipográfica** (`#474`). Entran los **diez niveles con nombre** —Display XL/L ·
+Título · Subtítulo · Entradilla · Cuerpo · Cuerpo S · Botón · Etiqueta · Eslogan— en el `:root` de
+`landing.css`, cada uno como un `clamp` entre su talla móvil y la de escritorio. **No sustituyen a
+`--fs-9…22`: conviven** (`[DECIDIDO owner]`), y los `--fs-N` mueren superficie a superficie según se
+viste cada una.
+
+❗❗❗ **NACEN SIN CONSUMIDOR, y es lo que la medición obligó a decidir.** Se buscó una sustitución de
+reflujo cero y **no existe ninguna**: ni una regla del producto coincide con su nivel en talla **y**
+en papel a la vez. Las cuatro reglas de mono a 12 no son «Etiqueta» (un glifo de 6 px, un precio, un
+número en círculo); los `--fs-15` son campos y botones; el eslogan está a 18 y 22 contra 24/30.
+▶ Se distingue del `barra: 1400` que `#473` rechazó: **aquél no tendrá consumidor nunca; éstos lo
+tienen en la Fase 2**. La excepción está nominada en `SidebarTokenBudgetTest::SIN_ESTRENAR` con un
+trinquete que **solo la deja encoger** — estrenar un nivel sin sacarlo de la lista pone rojo.
+
+⚠️⚠️ **Un `clamp` tiene TRES partes y cada una manda en un tramo de ancho distinto**, así que
+`TypeScaleTest` mide en **cuatro** anchos (320 · 390 · 707 · 1920) y no en uno. Nació con dos huecos
+simétricos que **encontró la mutación, no una relectura**: torcer el tramo interpolado salía verde
+midiendo en los extremos (ahí capa el `clamp`), y cambiar los extremos no movía nada entre 390 y
+1024 (ahí manda el tramo). *Una medida en un punto no vigila una función.*
+
+▶ **Lo que la Fase 2 tiene que mover, ya medido**: el titular de sección va hoy a
+`clamp(48px, 7vw, **108px**)` y su nivel es **Display L, 52** — otro diseño, no un ajuste · el botón
+está a **14 con peso 600** contra 16 y 800 · los campos a 15 contra 16 · **35 reglas usan la mono a
+10, 11 o 14** contra el 12 de Etiqueta · y **el cuerpo de texto no lo declara nadie**, hereda los 16
+del navegador, contra el 16/17 del sistema.
 
 ✅ **T1e, resuelta midiendo** (`#473`): lo que parecía «7 duraciones contra 8 y 4 curvas contra 5»
 eran **tres diferencias**, no dos escalas distintas — **siete de las ocho duraciones ya son

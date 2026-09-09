@@ -624,3 +624,26 @@ significado con tres decisiones distintas.
 | **Media · `max_qty` RECORTA una línea ya vendida desde el post-form** (2026-09-08, `#448`) | `PostFormAddons::apply()` capa la cantidad **deseada** del cliente contra el `max_qty` vivo. Bajar el tope hace que **un reenvío sin cambios REDUZCA la línea** y mueva dinero — el cliente no pidió nada y su pedido encoge | Estrecho pero silencioso: solo en complementos de fase `postform` cuyo tope baje entre dos guardados. Medido: **18 de 29 enganches tienen `max_qty`**, 14 de ellos en `postform` | El arreglo **no es sellar el tope**: es que **un techo no pueda REDUCIR una línea ya vendida** — la regla R1 del propio reconciliador (el estado deseado gobierna solo lo OFRECIDO) aplicada al techo. Una tanda pequeña, pero es dinero |
 | ❗ **ALTA · 14 de los 22 arneses de mutación DEJAN EL ÁRBOL MUTADO si el proceso muere** (2026-09-08, `#448`, **reproducido de verdad, no en teoría**) | El molde de la casa es `TMP="$(mktemp -d)"` + `trap 'restaurar; rm -rf "$TMP"' EXIT`. Un `trap EXIT` **no corre con SIGKILL, ni si se cae la sesión, ni si el contenedor se va** — y entonces quedan (a) ficheros del producto con la mutación puesta y (b) la copia buena en un temporal que ya nadie sabe encontrar. Medido: `for f in scripts/mutar-*.sh` → **14 con el patrón, 8 sin él**. ▶ **PASÓ**: un agente ejecutó `mutar-sello-modo.sh`, la sesión murió, y `PostFormAddons` e `ItemEditPricing` se quedaron **mutados en el árbol de trabajo**. Lo cazó la suite completa con **1 fallo de 4.460** — y solo porque se volvió a correr entera antes de commitear | Silencioso y caro: el árbol queda con una mutación de dinero puesta y **`git status` la enseña como si fuera trabajo tuyo**. Si el corte ocurre en un fichero que la suite del filtro no toca, el `pre-push` es la última red — y si la mutación está en algo que el gate no cubre, no hay red | ✅ **`mutar-sello-modo.sh` YA está endurecido** y sirve de molde: copia en **ruta FIJA y gitignorada** (`storage/app/mutaciones/<arnés>/`) en vez de `mktemp`, **reparación al ARRANCAR** (si hay copia huérfana, restaura y lo dice), `trap` también en `INT`/`TERM`, y **comprobación final de integridad** que sale con código ≠ 0 si algún fichero quedó distinto del original. Verificado con el fallo real puesto: simulado el corte, el arnés avisa y repara. ▶ Queda **portar el molde a los otros 13**, que es mecánico pero toca ficheros de otros carriles: tanda propia |
 | **Media · la doctrina del sello está aplicada A LA MITAD en las extensoras** (2026-09-08, `#448`) | `liveStayExtendingChildren()` (`OrderItemEditor::liveStayExtendingChildren()`) reconoce a las extensoras por el **catálogo VIVO** (`whereHas('ticketType', extends_parent_stay = true)`), mientras su hermana `liveOccupyingChildren()` lo hace por **HECHOS de la fila** y su docblock invoca «la doctrina del sello». ⚠️ Y el problema es más ancho: `extends_parent_stay`, `occupies_after_parent`, `duration_min` y `seats_per_unit` **viven en `ticket_types`, no en `product_addons`** (verificado con `SHOW COLUMNS`: el pivote tiene 14 columnas y ninguna es ésas), **así que el sello del modo NO las alcanza** | Obliga a un cerrojo permanente sobre `extends_parent_stay` que **no se abre nunca** — exactamente el problema que `#448` resuelve para el modo, por la otra puerta. **Es la siguiente pared contra la que se choca** | La misma doctrina llevada a `ticket_types`: o un segundo sello para lo que define la FORMA de la ocupación, o reconocer a las extensoras por un hecho de la fila (`extra_minutes > 0` no basta: vive en el padre y es una suma). ⚠️ No se coló en `#448` porque es **otro alcance**, no un remate |
+
+## ▶ Media · SIETE colores del PRIMER cliente vivos en el producto, y los cazó el canvas del segundo (2026-09-09, `DECISIONES #474`)
+
+**Qué es.** `#fbeaea` · `#e3b5b0` · `#8a2b22` · `#a93226` · `#e7f6ec` · `#b45309` · `#92400e` son
+hexadecimales heredados del cliente de origen. Los nombra la v1.10 de los tokens del canvas al
+explicar por qué crea las superficies de aviso **sobre papel**: los cuatro avisos del sistema solo
+existían sobre tinta y el cajón es papel de arriba abajo, así que en sus 25 pantallas no había
+ninguno que usar **y el hueco lo rellenaron éstos**, que no son de esta marca.
+
+**Verificado aquí, y están**: 7 usos en `public/css/site.css`, más
+`resources/views/emails/partials/book.blade.php` (4), `resources/views/pdf/reservation-slip.blade.php`
+(8), `resources/views/pdf/waiver-proof.blade.php` (2) y el tema del panel.
+
+⚠️⚠️ **Lo que lo hace deuda y no un descuido**: viven en **correos y PDF**, o sea en las superficies
+que **ninguna guarda de color mira** — `SidebarTokenBudgetTest` vigila el cajón y las de la landing
+vigilan las hojas públicas, y un correo no pasa por ninguna de las dos. Por eso llevan ahí desde el
+desbrandeo sin que nada fallara, y por eso lo vio un tercero antes que nosotros.
+
+**Salida.** El canvas ya publica el reemplazo con su receta (`tintePapel`: el color al 14 % sobre
+papel para el fondo y al 30 % para el borde, con **cuerpo y título en tinta** porque sobre una
+superficie teñida solo aguanta la tinta). Entra con la Fase 4 (el cajón) o antes si se toca un
+correo. ⚠️ Y conviene que salga con **una guarda que alcance correos y PDF**, o el siguiente los
+vuelve a meter por la misma puerta.
