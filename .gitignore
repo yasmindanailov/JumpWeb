@@ -107,7 +107,10 @@ storage/ssr
 # ⚠️ Y como `public/uploads/`, NO basta con ignorarla: el `rsync` de `deploy.sh` sincroniza el
 # árbol de TRABAJO, no lo que git sigue, así que una carpeta ignorada pero presente SÍ se sube.
 # Por eso lleva además su `--exclude` en `RSYNC_EXCLUDES`.
-/mockup_playjumppark/
+# ⚠️ El patrón lleva `*` a propósito: el 2026-09-09 la copia del canvas se rehizo entera en
+# `mockup_playjumppark_v2/` (la vieja pasó a ser el ARCHIVO, `DECISIONES #469`) y esa carpeta
+# NO estaba cubierta — 3 MB de material de un cliente a punto de entrar en el repo del producto.
+/mockup_playjumppark*/
 
 # Credenciales de OAuth descargadas de Google Cloud Console (`specs/auth-con-google.md` §10.1).
 # La consola las descarga con ESTE nombre exacto y el navegador las deja en la carpeta del proyecto:

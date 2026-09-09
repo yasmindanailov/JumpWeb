@@ -378,7 +378,7 @@ RSYNC_EXCLUDES=(
     --exclude='/phpunit.xml'
     --exclude='/package-lock.json'
     --exclude='/design_mockup/'
-    --exclude='/mockup_playjumppark/'  # canvas de diseño del 2º cliente (3 MB): material de un
+    --exclude='/mockup_playjumppark*/'  # canvas de diseño del 2º cliente (3 MB): material de un
                                        # cliente, y el servidor no lo necesita para nada.
                                        # ⚠️ Está gitignorado, pero eso NO basta: el rsync sincroniza
                                        # el árbol de TRABAJO, no lo que git sigue. Sin esta línea
