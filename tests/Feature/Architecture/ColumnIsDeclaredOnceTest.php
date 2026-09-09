@@ -8,8 +8,16 @@ use Tests\TestCase;
 /**
  * **LA COLUMNA DEL SITIO SE ESCRIBE UNA VEZ** (`docs/specs/tema-por-instalacion.md` §18).
  *
- * `[DECIDIDO owner, 2026-08-28]`: la columna es la del mockup — **1176 px de contenido** con un
+ * `[DECIDIDO owner, 2026-08-28]`: la columna del PRODUCTO es **1176 px de contenido** con un
  * sangrado de 32 · 24 · 16, o sea la caja de 1240 que dibujan todas sus secciones.
+ *
+ * ⚠️⚠️ **Y una instalación PUEDE traer la suya** (`#472`). Hasta entonces no podía, y no por
+ * decisión: esta guarda contaba las declaraciones sobre TODAS las hojas —la del cliente incluida—
+ * así que un paquete que declarara su columna ponía la suite roja. El ancho de la columna es
+ * sistema visual del cliente, no arquitectura del producto: el 2.º la tiene en **1120** y el 3.º
+ * tendrá otra. Lo que se sigue vigilando es lo que de verdad importa: **una sola declaración por
+ * capa** y **cero anchos de columna escritos a mano**, que es de donde salieron las dos columnas
+ * de `#238`.
  *
  * El sitio necesita expresar ese mismo número de **tres formas distintas**, y ahí está el peligro:
  *
@@ -87,10 +95,22 @@ class ColumnIsDeclaredOnceTest extends TestCase
     /** **El ancho de la columna se escribe una vez, y es `--col-max`.** */
     public function test_the_column_width_is_written_in_exactly_one_place(): void
     {
-        $token = preg_match_all('/--col-max:\s*(\d+)px\s*;/', implode("\n", $this->siteSheets()), $m);
+        $enProducto = preg_match_all('/--col-max:\s*(\d+)px\s*;/', implode("\n", $this->siteSheets()), $m);
 
-        $this->assertSame(1, $token, '`--col-max` tiene que declararse exactamente una vez en las hojas del producto');
-        $this->assertSame('1176', $m[1][0], 'la columna del mockup son 1176 px de contenido; cambiarla es una decisión del owner, no un arreglo');
+        $this->assertSame(1, $enProducto, '`--col-max` tiene que declararse exactamente una vez en las hojas del producto');
+        $this->assertSame('1176', $m[1][0], 'la columna del producto son 1176 px de contenido; cambiarla es una decisión del owner, no un arreglo');
+
+        /* El paquete de instalación PUEDE traer su columna —es sistema visual del cliente— pero
+           una sola vez: dos declaraciones suyas son el mismo defecto de `#238` dentro del paquete,
+           y la que gane dependerá del orden en que estén escritas. */
+        $enPaquete = preg_match_all('/--col-max:\s*(\d+)px\s*;/', $this->installationPackage(), $mp);
+
+        $this->assertLessThanOrEqual(
+            1, $enPaquete,
+            'el paquete de instalación declara `--col-max` '.$enPaquete.' veces: '.
+            implode(' · ', $mp[1] ?? []).'. Traer la columna propia está permitido; traerla dos '.
+            'veces es crear dos columnas dentro del mismo paquete.',
+        );
 
         $offenders = [];
 
@@ -152,5 +172,24 @@ class ColumnIsDeclaredOnceTest extends TestCase
     private function declarationBody(string $css, string $property): string
     {
         return preg_match('/'.preg_quote($property, '/').':([^;}]+)/', $css, $m) === 1 ? $m[1] : '';
+    }
+
+    /**
+     * El paquete de instalación, leído DIRECTAMENTE del disco.
+     *
+     * ⚠️⚠️ **No sale de `siteSheets()` y esto costó una mutación que no mordía.** El trait **excluye
+     * `client.css` a propósito** —lo dice su docblock: «no es del producto, y existe precisamente
+     * para declarar valores literales»—, así que una aserción que lo buscara ahí estaría vigilando
+     * una cadena vacía y pasaría siempre. *Un caso sin sujeto no vigila nada, y no se nota hasta
+     * que se muta.*
+     *
+     * Devuelve cadena vacía si no hay paquete, que es lo correcto: en un clon limpio no existe
+     * (`DECISIONES #1`) y entonces no hay nada que validar (`#468`).
+     */
+    private function installationPackage(): string
+    {
+        $ruta = base_path('public/css/client.css');
+
+        return is_file($ruta) ? (string) file_get_contents($ruta) : '';
     }
 }

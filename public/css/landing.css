@@ -362,6 +362,20 @@
      número «correcto», estará deshaciendo una decisión. */
   --hero-air: 64px;
 
+  /* ── EL AIRE ENTRE SECCIONES ──────────────────────────────────────────────────────────────
+     ⚠️⚠️ **Es el hueco ENTRE dos secciones, no el relleno de una** — y la diferencia es el doble.
+     El CSS pensaba en relleno (`padding: 120px 0`, o sea 240 de aire) y el sistema de diseño
+     piensa en aire (`ritmo.seccion`), así que el token dice lo que el sistema quiere decir y la
+     mitad se hace visible en la regla. Escribir «aire 120» habría hecho que el siguiente leyera
+     240 donde pone 120.
+     ▶ **Son DOS tokens y no uno redefinido en una media query, a propósito**: con uno solo, un
+     paquete de instalación que sobreescriba únicamente el valor base **se lleva por delante el
+     escalón de móvil sin que nada falle** —la regla del cliente va después y gana en los dos
+     anchos—. Es la trampa de `#314` por otra puerta. Dos tokens obligan a decidir los dos.
+     ▶ El defecto es el valor de HOY (240 · 160): el primer cliente no se mueve. `#470`. */
+  --sec-air: 240px;
+  --sec-air-mobile: 160px;
+
   --sp-unit: 1px;
   --sp-1: calc(var(--sp-unit) * 1);
   --sp-2: calc(var(--sp-unit) * 2);
@@ -501,7 +515,7 @@ img { display: block; max-width: 100%; }
    **193 px**, pero alrededor de cumpleaños **96 y 110** — porque `.bd-sec1` no es un `.section`,
    llevaba `64px 0 0` y su relleno inferior era CERO. Al pasar cumpleaños a segunda posición ese
    salto quedaba justo donde más se ve. */
-.section { padding: 120px 0; position: relative; }
+.section { padding: calc(var(--sec-air) / 2) 0; position: relative; }
 .section + .section { border-top: 1px solid var(--line); }
 
 /* ⚠️⚠️ **EL AIRE QUE PERDIÓ LA PRIMERA SECCIÓN AL RETIRAR LA ETIQUETA** (`[DECIDIDO owner]`: «añade
@@ -518,7 +532,7 @@ img { display: block; max-width: 100%; }
    ⚠️ **El selector cuelga del HERO** (`.hero + .section`), así que la corrección solo existe en las
    páginas que tienen hero — que son las que tenían el problema. Una página sin hero no gana aire de
    la nada. */
-.hero + .section { padding-top: calc(120px + var(--hero-air)); }
+.hero + .section { padding-top: calc(var(--sec-air) / 2 + var(--hero-air)); }
 
 /* ---------- nav ---------- */
 /* **LA BARRA SE DISUELVE EN DOS RACIMOS** (armazón · tanda 2c·2).
@@ -765,7 +779,7 @@ img { display: block; max-width: 100%; }
   padding-bottom: var(--sp-8);
 }
 .mob-menu__close {
-  width: var(--tap-min); height: var(--tap-min); border-radius: 50%;   /* Lote 9: objetivo táctil 44px */
+  width: var(--tap-min); height: var(--tap-min); border-radius: 50%;   /* Lote 9: objetivo táctil `--tap-min` */
   display: grid; place-items: center;
   border: 1px solid var(--line); background: var(--bg-card);
   transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
@@ -2383,8 +2397,8 @@ select:focus-visible {
 }
 
 @media (max-width: 768px) {
-  .section { padding: 80px 0; }
-  .hero + .section { padding-top: calc(80px + var(--hero-air)); }
+  .section { padding: calc(var(--sec-air-mobile) / 2) 0; }
+  .hero + .section { padding-top: calc(var(--sec-air-mobile) / 2 + var(--hero-air)); }
 
   .nav__brand { font-size: var(--fs-18); }
   /* hero */

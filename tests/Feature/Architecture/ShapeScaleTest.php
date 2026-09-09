@@ -250,6 +250,76 @@ class ShapeScaleTest extends TestCase
     }
 
     /**
+     * **Un paquete de instalación puede COLAPSAR escalones, pero no INVENTAR valores.**
+     *
+     * Salió al adoptar el sistema del 2.º cliente (`#470`): su `client.css` declaraba
+     * `--r-xs: 6px` y `--r-lg: 24px`, y **ni el 6 ni el 24 existen en la escala del producto**
+     * (`5·8·10·14·16·28·999`). Nadie lo veía, porque un canto inventado **no rompe nada**: solo
+     * hace que esa instalación deje de cumplir el sistema que dice cumplir — y el siguiente que
+     * mire ese paquete aprende de él un valor que no existe.
+     *
+     * ▶ **Lo que SÍ puede hacer un paquete es colapsar**: mandar dos roles del producto al mismo
+     * escalón porque su sistema no los distingue. Eso no es una violación, es la mitad del
+     * mecanismo white-label — el producto tiene SIETE roles de canto y un cliente puede tener
+     * cuatro. Lo que no puede es traerse un octavo valor.
+     *
+     * ⚠️⚠️ **Es CONDICIONAL a propósito, y NO es un agujero** — la lección de `#468`, que quemó con
+     * una guarda que leía este mismo fichero: el sujeto es `public/css/client.css`, **gitignorado**
+     * porque es de un cliente y no puede viajar en el producto (`DECISIONES #1`). Sin paquete no
+     * hay nada que validar. Y saltarla no la deja muerta, que es el riesgo que `CacheTaggingContractTest`
+     * documenta: en este proyecto **el CI es el gate local** (`CLAUDE.md`), así que la máquina que
+     * empuja tiene su paquete puesto y aquí siempre se ejecuta.
+     */
+    public function test_an_installation_package_only_collapses_steps_it_never_invents_values(): void
+    {
+        $paquete = base_path('public/css/client.css');
+
+        if (! is_file($paquete)) {
+            $this->markTestSkipped(
+                'sin paquete de instalación: en un clon limpio no existe `public/css/client.css` '.
+                'y no hay nada que validar (`#468`).',
+            );
+        }
+
+        /* La escala del producto, escrita como se escribe en CSS. Sale de la constante y no de una
+           lista propia: dos listas del mismo hecho divergen. */
+        $escala = array_map(
+            static fn (int $px): string => $px.'px',
+            array_values(self::RADIUS_SCALE),
+        );
+
+        preg_match_all(
+            '/(--r(?:-[a-z]+)?)\s*:\s*([^;}]+)/',
+            file_get_contents($paquete) ?: '',
+            $m,
+            PREG_SET_ORDER,
+        );
+
+        $inventados = [];
+
+        foreach ($m as [, $token, $valor]) {
+            $valor = trim($valor);
+
+            if (! array_key_exists($token, self::RADIUS_SCALE)) {
+                continue;   // no es un escalón de la escala: no es asunto de esta guarda
+            }
+
+            if (! in_array($valor, $escala, true)) {
+                $inventados[] = "{$token}: {$valor}";
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $inventados,
+            'el paquete de instalación declara cantos que NO están en la escala del producto ('.
+            implode(' · ', $escala).'): '.implode(', ', $inventados).'. Colapsar escalones está '.
+            'permitido; inventar un valor nuevo no, porque entonces esa instalación deja de '.
+            'cumplir el sistema sin que nada falle.',
+        );
+    }
+
+    /**
      * **Todo `border-radius` en literal pertenece a una de las tres familias declaradas.**
      *
      * Ésta es la aserción con más valor del fichero, y la que muerde al escribir un canto nuevo a

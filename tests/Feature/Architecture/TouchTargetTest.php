@@ -11,7 +11,12 @@ use Tests\Support\ReadsSiteStylesheets;
 use Tests\TestCase;
 
 /**
- * **EL OBJETIVO TÁCTIL MÍNIMO — 44×44 AL DEDO** (`docs/specs/tema-por-instalacion.md` §26).
+ * **EL OBJETIVO TÁCTIL MÍNIMO — 48×48 AL DEDO** (`docs/specs/tema-por-instalacion.md` §26 ·
+ * `docs/specs/rediseno-desde-canvas.md` §3).
+ *
+ * ⚠️⚠️ **Subió de 44 a 48 en `#470`** (`[DECIDIDO owner]`). Las cifras de más abajo son las
+ * MEDIDAS de `#264`, cuando el mínimo valía 44: se conservan porque describen lo que se midió
+ * entonces, no lo que vale hoy. El valor vigente lo dice el token, y esta guarda lo asevera.
  *
  * Medido a 390 px sobre las siete vistas públicas renderizables: **51 controles distintos** por
  * debajo del mínimo (30 enlaces, 15 botones, los dos interruptores del panel de cookies y los
@@ -19,7 +24,7 @@ use Tests\TestCase;
  * decisiones que ordenan todo lo demás.
  *
  * ▶ **1. Donde el dibujo está ajustado 1:1 con el mockup, el objetivo crece AL DEDO y NO A LA
- * VISTA**: `[data-tap]` pone un pseudo-elemento absoluto centrado que lleva el área a 44 sin mover
+ * VISTA**: `[data-tap]` pone un pseudo-elemento absoluto centrado que lleva el área al mínimo sin mover
  * un píxel. Donde crecer no daña —los chips del menú, «Reservar», el desplegable de idioma— se
  * crece de verdad con `min-height`, que se lee mucho mejor en el CSS.
  *
@@ -28,7 +33,7 @@ use Tests\TestCase;
  * mover el pie —apilarlo lo hacía crecer 54 px; la tira lo deja en 44 y el pie **encoge 34**—.
  *
  * ⚠️⚠️ **Lo que esta guarda NO puede hacer, y hay que saberlo antes de confiar en ella**: no mide
- * píxeles. Que un control lleve el marcador no demuestra que su área acabe midiendo 44 —puede
+ * píxeles. Que un control lleve el marcador no demuestra que su área acabe midiendo el mínimo —puede
  * recortarla un ancestro con `overflow`, o puede solaparse con la del vecino—. Eso solo lo dice
  * una sonda en navegador, y la de esta tanda vive en `VERIFICACION-E2E-CAJON.md` §5.vicies.
  * Lo que esta guarda fija es lo que la sonda **no puede** vigilar en cada push: que el mecanismo
@@ -108,8 +113,16 @@ class TouchTargetTest extends TestCase
     //  El mecanismo
     // ─────────────────────────────────────────────────────────────────────────────────
 
-    /** El mínimo es un TOKEN, vale 44 px y se declara una sola vez. */
-    public function test_the_minimum_is_a_token_declared_once_and_worth_44(): void
+    /**
+     * El mínimo es un TOKEN, vale 48 px y se declara una sola vez.
+     *
+     * ⚠️⚠️ **Aquí se escribió una afirmación FALSA y la cazó una mutación que no mordía**: decía que
+     * el «una sola vez» se mide sobre `siteSheets()` «que incluye `client.css`, o sea que un
+     * cliente no puede bajarse el suelo». El trait **excluye `client.css` a propósito** —lo dice su
+     * docblock—, así que este caso no ve el paquete y un cliente **sí podía** bajarlo. Lo impide el
+     * caso de abajo, que lee el fichero directamente (`#472`).
+     */
+    public function test_the_minimum_is_a_token_declared_once_and_worth_48(): void
     {
         $declaraciones = [];
 
@@ -126,7 +139,49 @@ class TouchTargetTest extends TestCase
             $declaraciones,
             'el mínimo táctil se declara en '.count($declaraciones).' sitios: '.json_encode($declaraciones),
         );
-        $this->assertSame('44px', $declaraciones[0][1], 'el mínimo táctil ya no vale 44 px');
+        $this->assertSame('48px', $declaraciones[0][1], 'el mínimo táctil ya no vale 48 px');
+    }
+
+    /**
+     * **El paquete de una instalación puede SUBIR el suelo táctil, nunca bajarlo.**
+     *
+     * `#470` decidió que el mínimo sube en el PRODUCTO porque es accesibilidad y no marca: WCAG
+     * 2.5.5 lo pone en 44 y el sistema del 2.º cliente lo pide en 48 «sin excepciones». La
+     * consecuencia es ésta — un paquete puede ser más estricto que el producto, jamás menos.
+     *
+     * ⚠️⚠️ **Lee `client.css` DIRECTAMENTE y no por `siteSheets()`**, que lo excluye a propósito.
+     * La primera versión de esta regla se escribió apoyada en el trait y **habría vigilado una
+     * cadena vacía**: verde siempre, con el cliente pudiendo bajarse a 24. Lo cazó una mutación que
+     * no mordía, no una lectura.
+     */
+    public function test_an_installation_package_may_raise_the_touch_floor_never_lower_it(): void
+    {
+        $ruta = base_path('public/css/client.css');
+
+        if (! is_file($ruta)) {
+            $this->markTestSkipped(
+                'sin paquete de instalación: en un clon limpio no existe `public/css/client.css` (`#468`).',
+            );
+        }
+
+        if (! preg_match_all('/--tap-min\s*:\s*(\d+)px/', (string) file_get_contents($ruta), $m)) {
+            $this->addToAssertionCount(1);   // no lo toca: el suelo del producto manda, que es lo normal
+
+            return;
+        }
+
+        $suelo = 48;
+
+        foreach ($m[1] as $valor) {
+            $this->assertGreaterThanOrEqual(
+                $suelo,
+                (int) $valor,
+                "el paquete de instalación baja el objetivo táctil a {$valor}px, por debajo de los ".
+                "{$suelo} del producto. Crecer está permitido —un cliente puede ser más estricto—; ".
+                'encoger no, porque entonces esa instalación deja de cumplir la accesibilidad que el '.
+                'producto garantiza y no falla nada.',
+            );
+        }
     }
 
     /**

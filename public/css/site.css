@@ -107,8 +107,13 @@
        transparente), salvo donde subir el visible es trivial (burger, cerrar drawer).
        ▶ **Desde `#264` es también el mínimo de la LANDING entera**, por dos vías: `[data-tap]`
        (el área crece sin mover el dibujo) y `min-height` donde crecer no daña. El número vive
-       aquí y solo aquí — `TouchTargetTest` pone la suite roja si aparece un segundo. */
-    --tap-min: 44px;
+       aquí y solo aquí — `TouchTargetTest` pone la suite roja si aparece un segundo.
+       ⚠️⚠️ **Sube de 44 a 48 en `#470`** (`[DECIDIDO owner]`: el sistema del 2.º cliente lo pide
+       «sin excepciones»). Y sube en el PRODUCTO y no en el paquete del cliente, porque esto es
+       ACCESIBILIDAD y no marca: WCAG 2.5.5 pone el suelo en 44, crecer está permitido y encoger
+       no. Que un cliente NO pueda bajarlo está garantizado por construcción — `siteSheets()`
+       incluye `client.css`, así que la aserción de «declarado una sola vez» lo impide. */
+    --tap-min: 48px;
     /* Colores SEMÁNTICOS de estado (Lote 12): éxito / error / señal·depósito / reembolso.
        Consolidan ~25 hex con deriva (verdes/rojos/ámbares casi-idénticos) en un set único; el
        valor es el dominante de cada rol (antes repartidos por badges, estados de pedido,
@@ -202,17 +207,17 @@
 
 /* ====================================================================
    Lote 9 — Objetivos táctiles (WCAG 2.5.5). Ampliamos el ÁREA de toque a
-   `--tap-min` (44px) SIN cambiar el tamaño visible, para no alterar el diseño
+   `--tap-min` (48px) SIN cambiar el tamaño visible, para no alterar el diseño
    ya validado: un pseudo-elemento transparente y centrado capta el toque
    alrededor del icono pequeño. (Los ✕ de esquina usan una caja transparente de
-   44px con el glifo anclado —junto a su regla—; burger/cerrar-drawer suben el
-   visible por ser ya casi 44; el chip de cuenta usa `min-height`.) Sin coste
+   `--tap-min` con el glifo anclado —junto a su regla—; burger/cerrar-drawer suben el
+   visible por estar ya cerca; el chip de cuenta usa `min-height`.) Sin coste
    visual: el pseudo-elemento no pinta nada. Requiere `position` no estático. */
 .entry__stepper button,
 .cal__nav,
 .cart__remove,
 .bk-foot__info-btn { position: relative; }
-/* ⚠️⚠️ **Era `width: var(--tap-min)` a secas y eso ENCOGE** (`#264`): un área de 44 px centrada
+/* ⚠️⚠️ **Era `width: var(--tap-min)` a secas y eso ENCOGE** (`#264`): un área del mínimo —entonces 44— centrada
    sobre un control que ya mide 60 le quita 8 px por lado, y el defecto es invisible —el control
    sigue funcionando, solo que su borde deja de responder—. Con `max()` la regla solo puede
    ampliar, que es lo único que un mínimo debería hacer. Es la misma forma del `[data-tap]` del
@@ -1138,7 +1143,7 @@
    cliente que quiera el cajón un 15 % más aireado cambia `--sp-unit` y se mueve todo a la vez
    (`landing.css` §312). El botón de un tercero no puede moverse con eso, porque entonces la
    instalación que retoca su tema deja de cumplir la guía de Google **sin que nada falle**.
-   ▶ Lo que SÍ es nuestro es el suelo táctil: `--tap-min` (44 px, `#264`), por encima de los 40 de
+   ▶ Lo que SÍ es nuestro es el suelo táctil: `--tap-min` (48 px desde `#470`), por encima de los 40 de
    sus ejemplos. Crecer está permitido; encoger no.
 
    ⚠️ **`--r-pill` sobre un botón contradice la prosa de la escala de forma** («ONLY decorative
