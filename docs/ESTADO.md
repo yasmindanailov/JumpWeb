@@ -1728,7 +1728,14 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4481 en verde** (27.440 aserciones, 1 skipped a propósito), medida el **2026-09-08** sobre el
+> Suite **4486 en verde** (27.453 aserciones, 1 skipped a propósito), medida el **2026-09-09** sobre el
+> árbol con las cuatro primeras tandas del carril de diseño (`#469`→`#473`, **+5**: la guarda de
+> escalones inventados de `ShapeScaleTest`, los tres casos de `RhythmScaleTest` y el suelo táctil
+> que un paquete no puede bajar). ⚠️⚠️ **En un CLON LIMPIO el total NO cambia pero los saltados sí**:
+> medido escondiendo el paquete, **TRES casos se saltan** —los que aseveran algo de `client.css`, que
+> está gitignorado— así que ahí `Skipped` vale **4** y no 1. El total se queda en 4.486 porque
+> PHPUnit cuenta los saltados. Antes de esto la suite
+> estaba en **4481** (27.440), medida el 2026-09-08 sobre el
 > árbol con **`#444`** —el cliente cambiando sus invitados desde el post-form (**+29**: 18 de
 > `GuestCountTest` y 11 de `GuestCountSurfacesTest`)— encima de **`#443`**
 > —la hora extra cobrada POR INVITADO (**+22**: 19 casos nuevos de
