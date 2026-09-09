@@ -1750,8 +1750,12 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4540 en verde** (28.186 aserciones, 1 skipped a propósito), medida el **2026-09-09** sobre el
-> árbol con la **Fase 1 completa** del carril de diseño (`#469`→`#475`, **+14**: la guarda de
+> Suite **4545 en verde** (28.253 aserciones, 1 skipped a propósito, **0 risky**), medida el
+> **2026-09-10** sobre el árbol con la **T2d** del carril de diseño (`#481`+`#482`). ⚠️ El neto es
+> **+5** y esconde mucho movimiento: entran los **9** de `AttractionsPageTest` y los **7** de
+> `RideMosaicSectionTest`, y salen los **4** de `AttractionComplementLandingTest`, los **4** del
+> selector y la tarjeta de `ZonesSectionTest` y los **2** del dibujo de zona — todos con su sujeto.
+> Antes, medida el **2026-09-09** sobre el árbol con la **Fase 1 completa** del carril de diseño (`#469`→`#475`, **+14**: la guarda de
 > escalones inventados de `ShapeScaleTest`, los tres casos de `RhythmScaleTest`, el suelo táctil
 > que un paquete no puede bajar, los **siete** de `TypeScaleTest`, el trinquete que obliga a
 > `SidebarTokenBudgetTest::SIN_ESTRENAR` a encoger y el rótulo de toda opción de icono ofrecida). ⚠️⚠️ **En un CLON LIMPIO el total NO cambia pero los saltados sí**:
