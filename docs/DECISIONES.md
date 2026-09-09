@@ -25531,4 +25531,26 @@ La **T2b** del carril de diseño: la primera de las ocho secciones de la portada
 
 ▶ **Pendiente del owner, y son de DATO, no de código**: el rótulo de la tarifa especial es «Viernes, findes y festivos» y en el sello queda largo (el mockup escribe «finde») · el **orden** de las tarjetas lo manda `zones.position` y hoy sale Jump primero, mientras el canvas ordena Kids · Jump · y **la limpieza del `age_range`** en producción, para que la altura no salga dos veces.
 
-**Verificación**: suite **4.510** en verde · `ZoneCardsSectionTest` con 8 casos y **6/6 mutaciones** que muerden, árbol idéntico · verificado en navegador a 390 y 1280 (una columna y dos, pegatina con su keyline y su sombra, sello girado, cero desborde horizontal).
+❗❗❗ **Y ENTONCES EL OWNER MIRÓ LA PANTALLA: «las cards no tienen nada que ver con el mockup».** Tenía razón — lo construido era la ESTRUCTURA, no el artboard: faltaban la foto, el sello girado, el eje de altura, la frontera y el velo. La sección se rehízo **leyendo el artboard**, y de ahí salieron cinco correcciones suyas seguidas, todas ciertas.
+
+▶ **Lo que la tanda aprendió, y es la lección de método**: «idéntico al mockup» **no se comprueba mirando**. Se construyó `scripts/comparar-con-mockup.mjs`, que **renderiza el marcado del propio artboard** y compara pieza por pieza contra el producto. Dio **40 divergencias en móvil** y **29 en escritorio** donde el ojo veía «parecido».
+
+⚠️⚠️ **Lo que encontró y no se veía leyendo el código:**
+- **La opacidad del velo CAMBIA por zona**: el artboard usa **22 %** en el cian y **24 %** en el lima. Es compensación óptica —el lima es más claro y necesita más velo para pesar igual—. **No se copiaron los dos números**: se deriva de la luminancia del color (`ZoneCards::tintOpacity`), así que cualquier zona con cualquier color obtiene la suya. La fórmula reproduce 0,22 y 0,24 al dígito.
+- **El nombre iba en peso 700 y Bungee tiene UN solo peso**, así que el navegador lo **sintetizaba**: engordaba los trazos y el nombre dejaba de ser el mismo dibujo que el resto de titulares.
+- **El sangrado del eje estaba en el CUERPO y no en cada pieza**, y arrastraba a todo lo que cuelga de él: en escritorio el **velo empezaba en 90 en vez de en 2** —dejaba de ser el tramo de la escala y se leía como una columna de color— y **la línea del 1,30 tampoco llegaba a la regla**.
+- **El bloque teñido crecía** (`flex: 1 1 auto`), absorbiendo el sobrante de `align-items: stretch`: **68 px de color vacío bajo el texto** donde el mockup no deja ninguno.
+- **El hueco de la vecina es ASIMÉTRICO en el artboard**, y eso no se deduce: cuando va ENCIMA mide **60** y deja **8 px** antes de la línea; cuando va DEBAJO, **56** y pegada. Con 56 simétricos la frontera subía 23 px y **la chapa del 1,30 tapaba el rótulo «altura · 1,90 m»**.
+- **El gap de escritorio son 32 y no 20**: con 20 la tarjeta medía 550 sobre la columna de 1120 y el mockup la pone en **544**.
+
+❗❗ **TRES trampas del propio comparador, y las tres daban falsos:** el **puntero virtual arranca en (0,0)**, así que una tarjeta quedaba en HOVER y su sombra salía como divergencia · **el mismo ROL vive en soportes distintos** (en el artboard el eje y el hueco son un contenedor sin texto propio, y aquí al revés), así que comparar su tipografía empareja elementos que no son el mismo · y **el ancho del sello lo manda el DATO**, no el diseño. Con las tres declaradas, el informe pasó de 40 a **4 divergencias**.
+
+⚠️⚠️ **Dos guardas del repo cazaron daño que el ojo no veía**: `ShapeScaleTest` vio su corpus de radios caer de 200 a **185** porque al rehacer la media query **me llevé una llave de más** —el CSS quedaba con balance −1, leyéndose a medias sin fallar—, que es literalmente la trampa de `#293`; y `ScaleTokensAreUsedTest`, un `8px` literal teniendo token.
+
+⚠️ **Y una guarda MÍA nació laxa**: aseverar `inset: 0` casa también con `inset: 0 0 0 76px`, que es justo la forma que deja el velo sin llegar a la regla. Pasaba en verde con el defecto puesto; lo dijo la mutación. Hoy exige el `;`.
+
+▶ **Divergencias que quedan, y son decisiones, no defectos**: el fondo del hueco de foto es una **mezcla del sistema** y no el hex del cliente (`rgb(43,47,50)` contra su `rgb(42,49,56)`, imperceptible) · el nombre va a **26 y no a 24**, porque el propio canvas corrigió esa cifra al cerrar su escala («24 → 26 · los nombres de zona de 01 · Título móvil») — y con eso **`--fs-title` estrena su primer consumidor y sale de `SIN_ESTRENAR`**, que es la primera vez que esa lista encoge · y **1 px** en el sello y el precio de escritorio, por el redondeo de la rotación de −6°.
+
+⚠️ **El gesto de la pegatina es el del mockup por decisión del owner** («el efecto al poner el ratón encima y darle clic no es como en el mockup»), y es **excepción declarada a `#435`**: aquellos 19 hovers **levitaban** —se apartaban del puntero— y éste **se hunde**, con la suma de sombra y desplazamiento constante, así que el keyline no se mueve. Nace `--shadow-float-hover` / `--shadow-float-press`, declarados **los dos** como el par de `RhythmScaleTest`.
+
+**Verificación**: suite **4.512** en verde · `ZoneCardsSectionTest` con 11 casos y **9/9 mutaciones** que muerden, árbol idéntico · `scripts/comparar-con-mockup.mjs` en **4 divergencias** por superficie, todas declaradas · medido a 390 y a 1280 contra el artboard renderizado.

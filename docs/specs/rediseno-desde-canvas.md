@@ -1,6 +1,6 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** 🟦 Fase 0 · inventario hecho, código NO empezado
+> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 en curso** (armazón + sección 01)
 > **Banda de decisiones:** 470–499 (la reapertura es `#469`)
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
@@ -398,6 +398,26 @@ la **grieta 01** que el propio canvas nos reportó.
 **lanza** (31 casos en rojo, invisible en local porque aquí sí hay tarifa de finde) · el sello salía
 sin rótulo porque `rate_types` tiene `label` y no `name` · y la altura salía **duplicada** porque el
 texto libre ya la llevaba.
+
+❗❗❗ **Y LA LECCIÓN QUE DEJA LA TANDA, que vale para las siete secciones que quedan: «idéntico al
+mockup» NO se comprueba mirando.** La primera versión tenía la estructura y le faltaba el artboard
+entero —foto, sello girado, eje de altura, frontera y velo—, y el owner lo vio en un vistazo. Se
+construyó **`scripts/comparar-con-mockup.mjs`**, que renderiza el marcado del propio artboard y
+compara pieza por pieza: dio **40 divergencias en móvil y 29 en escritorio** donde el ojo veía
+«parecido». ▶ **Úsalo antes de dar una sección por buena.**
+
+⚠️⚠️ **Lo que encontró y no se ve leyendo el código**: la **opacidad del velo cambia por zona** (22 %
+el cian, 24 % el lima — compensación óptica, hoy derivada de la luminancia) · el nombre iba en peso
+**700** y Bungee tiene uno solo, así que el navegador lo **sintetizaba** · el **sangrado del eje
+estaba en el cuerpo** y arrastraba al velo y a la línea, que en escritorio empezaban en 90 en vez de
+en 2 · el bloque teñido **crecía** y dejaba **68 px de color vacío** bajo el texto · y el **hueco de
+la vecina es ASIMÉTRICO** en el artboard (60 arriba con 8 de margen, 56 abajo), sin lo cual **la
+chapa del 1,30 tapa el rótulo «altura · 1,90 m»**.
+
+❗❗ **Y TRES trampas del comparador, ya declaradas dentro de él**: el puntero virtual arranca en
+(0,0) y deja una tarjeta en HOVER · el mismo ROL vive en soportes distintos en los dos marcados ·
+y el ancho del sello lo manda el DATO, no el diseño. Con las tres, el informe baja a **4
+divergencias por superficie**, todas decisiones declaradas.
 
 ▶ **El armazón coincidía con el marco aprobado del canvas en SIETE de diez** —hero y armazón como un
 mecanismo, el par doble, el logo botando una vez, idioma y teléfono en menú y pie—, así que la tanda

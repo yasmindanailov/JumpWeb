@@ -84,7 +84,9 @@ class SidebarTokenBudgetTest extends TestCase
      * **ni lo tendrá** (no existe ninguna barra indeterminada en el producto).
      */
     private const SIN_ESTRENAR = [
-        '--fs-display-xl', '--fs-display-l', '--fs-title', '--fs-subtitle', '--fs-lede',
+        // ⚠️ `--fs-title` SALIÓ de aquí en `#478`: lo estrena el nombre de zona de la sección
+        // «Para quién». La lista solo encoge, y ésta es la primera vez que lo hace.
+        '--fs-display-xl', '--fs-display-l', '--fs-subtitle', '--fs-lede',
         '--fs-body', '--fs-body-s', '--fs-button', '--fs-label', '--fs-slogan',
     ];
 

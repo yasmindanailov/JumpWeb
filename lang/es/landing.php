@@ -100,6 +100,9 @@ return [
         ],
     ],
     'zones' => [
+        'axis_label' => 'altura',
+        'below_is' => 'debajo, :zone',
+        'above_is' => 'encima, :zone',
         /*
          * La sección «Para quién» (`#478`). ⚠️ El RÓTULO no lleva número: el canvas lo decidió así
          * (`[DECIDIDO owner]` suyo) y aquí ya se había llegado a lo mismo en `#303`, que retiró la

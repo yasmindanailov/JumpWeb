@@ -72,6 +72,9 @@ return [
         ],
     ],
     'zones' => [
+        'axis_label' => 'height',
+        'below_is' => 'below, :zone',
+        'above_is' => 'above, :zone',
         'eyebrow' => 'Who it is for',
         'title' => 'Everyone has their zone',
         'rule' => 'Age decides. If it does not fit, height decides.',

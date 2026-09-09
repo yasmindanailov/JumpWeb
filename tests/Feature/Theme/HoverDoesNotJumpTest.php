@@ -31,6 +31,23 @@ class HoverDoesNotJumpTest extends TestCase
 {
     private const SHEETS = ['public/css/landing.css', 'public/css/site.css'];
 
+    /**
+     * **La pegatina que se APRIETA** (`#478`, `[DECIDIDO owner]`: «el efecto al poner el ratón encima
+     * y darle clic no es como en el mockup»).
+     *
+     * ⚠️⚠️ **No es el hover que `#435` retiró, y la diferencia es la dirección.** Aquellos 19
+     * **levitaban**: subían, y un elemento que sube se aparta del puntero que lo está señalando.
+     * Éste hace lo contrario — se **hunde** 3 px y su sombra se acorta a 2, así que **la suma sigue
+     * siendo 5 y el keyline no se mueve de sitio**. Es la física de apretar algo, y es lo que el
+     * artboard dibuja.
+     * ▶ Va aquí y no en `CAJON_QUE_SALTA` porque aquella lista es de deuda del cajón aparcado y solo
+     * encoge; ésta es una conducta **querida** del sistema de diseño.
+     */
+    private const PEGATINA_QUE_SE_APRIETA = [
+        '.zone-card:hover',
+        '.zone-card:active',
+    ];
+
     /** El cajón SPA (aparcado, `[DECIDIDO owner, 2026-09-01]`): sus botones siguen subiendo 2 px. Solo encoge. */
     private const CAJON_QUE_SALTA = [
         '.bk-cta:hover',
@@ -44,6 +61,13 @@ class HoverDoesNotJumpTest extends TestCase
     {
         $rules = $this->rules();
         $this->assertGreaterThan(1500, count($rules), 'el localizador de reglas se ha roto');
+        foreach (self::PEGATINA_QUE_SE_APRIETA as $selector) {
+            $this->assertTrue(
+                $this->selectorExists($selector, $rules),
+                "`{$selector}` ya no existe: retíralo de la excepción, o estará tapando un hover que "
+                .'nadie declaró.',
+            );
+        }
         foreach (self::CAJON_QUE_SALTA as $selector) {
             $this->assertTrue(
                 $this->selectorExists($selector, $rules),
@@ -61,7 +85,9 @@ class HoverDoesNotJumpTest extends TestCase
                 continue;
             }
             foreach (array_map('trim', explode(',', $selector)) as $part) {
-                if (! preg_match('/:hover$/', $part) || in_array($part, self::CAJON_QUE_SALTA, true)) {
+                if (! preg_match('/:hover$/', $part)
+                    || in_array($part, self::CAJON_QUE_SALTA, true)
+                    || in_array($part, self::PEGATINA_QUE_SE_APRIETA, true)) {
                     continue;
                 }
                 $culpables[] = $part;

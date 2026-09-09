@@ -288,33 +288,97 @@
                          canvas —el color de un DATO decidiendo el aspecto de un componente—. --}}
                     <a class="zone-card" href="{{ route('precios') }}#zona-{{ $card['slug'] }}"
                        data-zone="{{ $card['slug'] }}"
-                       @if ($i % 2 === 1) data-surface="ink" @endif>
-                        {{-- El SELLO de precio, girado. ⚠️ Solo si la zona tiene entrada vendible:
-                             sin precio no se pinta un sello vacío ni un «consultar». --}}
-                        @if ($card['from'] !== null)
-                            <p class="zone-card__seal">
-                                <span class="zone-card__from">{{ __('landing.zones.from') }}</span>
-                                <span class="zone-card__price">{{ $card['from'] }}</span>
-                                @if ($card['special'] !== null)
-                                    <span class="zone-card__special">{{ $card['special'] }} {{ $card['specialLabel'] }}</span>
-                                @endif
-                            </p>
-                        @endif
+                       @if ($card['tint']) style="--zone-tint: {{ $card['tint'] }}; --zone-tint-op: {{ $card['tintOpacity'] }};" @endif>
 
-                        <h3 class="zone-card__name">{{ $card['name'] }}</h3>
-
-                        {{-- ⚠️ Edad y altura van en la MISMA línea y separadas por un punto medio:
-                             son las dos mitades de una sola regla, no dos datos sueltos. --}}
-                        <p class="zone-card__who">
-                            <span class="zone-card__age">{{ $card['age'] }}</span>
-                            @if ($card['height'])
-                                <span class="zone-card__height">{{ $card['height'] }}</span>
+                        {{-- ── LA FOTO, a 16:9, con el SELLO asomando por su borde ─────────────
+                             ⚠️ El hueco existe aunque no haya foto: sin él, el sello —que va
+                             ANCLADO a su borde inferior— se quedaría flotando sobre el texto. El
+                             fondo es el mismo relleno oscuro que usa el artboard mientras no hay
+                             imagen, no un hueco vacío.
+                             ⚠️ **`zones.image` recupera consumidor aquí**: se quedó sin ninguno en
+                             `#302` y era una de las tres salidas anotadas en `DEUDA.md`. --}}
+                        <div class="zone-card__viz">
+                            @if ($card['image'])
+                                {{-- ⚠️ `aria-hidden` y `alt` vacío: la foto es DECORACIÓN. El nombre de la zona,
+                                     su edad y qué hay dentro ya están en texto justo debajo, así que
+                                     describirla otra vez sería leer la tarjeta dos veces. --}}
+                                <img src="{{ $card['image'] }}" alt="" aria-hidden="true" loading="lazy" decoding="async" width="800" height="450">
                             @endif
-                        </p>
 
-                        @if ($card['description'])
-                            <p class="zone-card__what">{{ $card['description'] }}</p>
-                        @endif
+                            {{-- El SELLO de precio. ⚠️ Solo si la zona tiene entrada vendible: sin
+                                 precio no se pinta un sello vacío ni un «consultar». --}}
+                            @if ($card['from'] !== null)
+                                <p class="zone-card__seal">
+                                    <span class="zone-card__from">{{ __('landing.zones.from') }}</span>
+                                    <span class="zone-card__price">{{ $card['from'] }}</span>
+                                    @if ($card['special'] !== null)
+                                        <span class="zone-card__special">{{ $card['special'] }} {{ $card['specialLabel'] }}</span>
+                                    @endif
+                                </p>
+                            @endif
+                        </div>
+
+                        {{-- ── EL CUERPO: una ESCALA DE ESTATURA, no un bloque de texto ────────
+                             ❗❗❗ **Ésta es la idea de la sección y sin ella la tarjeta solo se
+                             parece al mockup.** El cuerpo se parte en dos por la frontera de altura,
+                             y **el velo de color tiñe SOLO el tramo que le toca a esta zona**: la de
+                             «desde 1,30 m» colorea de la línea hacia arriba, y la de «hasta 1,30 m»
+                             de la línea hacia abajo. Al otro lado queda el hueco con el nombre de la
+                             vecina. Por eso las dos tarjetas se leen juntas como **una sola escala**.
+                             ⚠️ El ORDEN de los bloques sale del lado, y el lado sale de qué columna
+                             lleva el umbral (`height_min_cm` o `height_max_cm`) — nunca de adivinar
+                             qué zona es. --}}
+                        <div class="zone-card__body"
+                             @if ($card['heightAxis'])
+                                 data-axis data-side="{{ $card['heightAxis']['side'] }}"
+                             @endif>
+                            @if ($card['heightAxis'])
+                                {{-- El EJE: la línea con sus dos extremos. ⚠️ `aria-hidden` porque es
+                                     el DIBUJO de una regla que el texto de al lado ya dice; y una
+                                     escala de estatura no se recorre con un lector de pantalla. --}}
+                                <div class="zone-card__axis" aria-hidden="true">
+                                    <span class="zone-card__axis-top">
+                                        <b>{{ __('landing.zones.axis_label') }}</b>
+                                        <i>{{ $zoneAxisCeiling }}</i>
+                                    </span>
+                                    <span class="zone-card__axis-zero">{{ $zoneAxisFloor }}</span>
+                                </div>
+                            @endif
+
+                            {{-- El hueco de la VECINA, al otro lado de la línea. Va antes o después
+                                 del bloque teñido según el lado, y por eso está dos veces: es la
+                                 misma pieza en dos sitios, no dos piezas. --}}
+                            @if ($card['heightAxis'] && $card['heightAxis']['side'] === 'below' && $card['heightAxis']['neighbour'])
+                                <p class="zone-card__neighbour">{{ __('landing.zones.above_is', ['zone' => $card['heightAxis']['neighbour']]) }}</p>
+                                <p class="zone-card__border"><span class="zone-card__chip">{{ $card['heightAxis']['label'] }}</span></p>
+                            @endif
+
+                            <div class="zone-card__text">
+                                {{-- El VELO. ⚠️⚠️ **Aquí el color de zona SÍ va, y no contradice a
+                                     `#436`**: aquélla sacó `--zone-*` de los CONTROLES —la grieta 01
+                                     del canvas era el botón de comprar teñido por un dato— y lo dejó
+                                     «para lo que IDENTIFICA una zona». Esto es exactamente eso, y
+                                     además **dice cuánto mide**: el color ocupa su tramo. --}}
+                                <span class="zone-card__tint" aria-hidden="true"></span>
+                                <span class="zone-card__inner">
+                                    <h3 class="zone-card__name">{{ $card['name'] }}</h3>
+                                    <span class="zone-card__who">
+                                        <span>{{ $card['age'] }}</span>
+                                        @if ($card['height'])
+                                            <span>{{ $card['height'] }}</span>
+                                        @endif
+                                        @if ($card['description'])
+                                            <span class="zone-card__what">{{ $card['description'] }}</span>
+                                        @endif
+                                    </span>
+                                </span>
+                            </div>
+
+                            @if ($card['heightAxis'] && $card['heightAxis']['side'] === 'above' && $card['heightAxis']['neighbour'])
+                                <p class="zone-card__border"><span class="zone-card__chip">{{ $card['heightAxis']['label'] }}</span></p>
+                                <p class="zone-card__neighbour">{{ __('landing.zones.below_is', ['zone' => $card['heightAxis']['neighbour']]) }}</p>
+                            @endif
+                        </div>
 
                         {{-- ⚠️ **No es un botón**: la tarjeta entera ya es el enlace, y meter un
                              control dentro de un `<a>` es marcado inválido además de dos dianas para

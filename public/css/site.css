@@ -42,6 +42,12 @@
        paleta de esa zona repintaba el calendario y el estado de un pedido sin que nadie lo pidiera.
        Un color con significado no puede vivir en la paleta de una zona. */
     --attn: #FFE14A;
+    /* ⚠️ **El PAR lo declara quien declara el color** (`#434`: no se deriva, se escribe). El resalte
+       es un amarillo claro, así que encima siempre va TINTA — y tenerlo escrito es lo que impide que
+       la próxima pieza que lo use elija el suyo a ojo, que es como nacieron los cuatro contrastes
+       que aquella tanda tuvo que arreglar. Su primer consumidor es el sello de precio de la sección
+       «Para quién» (`#478`). */
+    --on-attn: var(--fg);
 
     /* ⚠️⚠️ **`--wrap-gutter` es el sangrado de un elemento A SANGRE COMPLETA, y solo sirve ahí.**
        Su `100%` es un porcentaje: se resuelve contra el CONTENEDOR del elemento, no contra el

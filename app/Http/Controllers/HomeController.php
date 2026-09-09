@@ -52,7 +52,11 @@ class HomeController extends Controller
              * cruzar zonas con entradas, elegir la más barata y redactar la regla de altura es
              * lógica, y en Blade se convierte en seis copias de la misma regla.
              */
-            'zoneCards' => (new ZoneCards)->compose($zones, $entradas),
+            'zoneCards' => ($zoneCards = new ZoneCards)->compose($zones, $entradas),
+            // Los dos extremos de la escala de altura, escritos en el idioma que toca. Van aparte
+            // porque son de la ESCALA y no de una zona: las dos tarjetas rotulan el mismo techo.
+            'zoneAxisCeiling' => $zoneCards->ceilingLabel(),
+            'zoneAxisFloor' => $zoneCards->floorLabel(),
             // ⚠️ **`heroStatus` se fue al payload compartido en `#230`** y por eso ya no está aquí:
             // su consumidor dejó de ser el chip del hero —que `#226` retiró— y pasó a ser el bloque
             // de datos del MENÚ, que vive en las doce vistas. Calcularlo también aquí sería

@@ -194,25 +194,145 @@ class ZoneCardsSectionTest extends TestCase
     }
 
     /**
-     * **Las tarjetas alternan SUPERFICIE, no color de zona.**
+     * **Cada zona tiñe SU velo con SU color, y el color no sale de ningún control.**
      *
-     * ⚠️⚠️ Pintarlas con la paleta de la zona sería la **grieta 01** que el propio canvas nos
-     * reportó: un color que llega desde los DATOS decidiendo el aspecto de un componente. La
-     * alternancia papel/tinta es un mecanismo del producto y funciona con dos zonas o con cinco.
+     * ⚠️⚠️ **Esta guarda afirmaba lo contrario y estaba equivocada.** La primera versión hacía
+     * alternar papel/tinta e impedía todo uso del color de zona, «por la grieta 01». Al leer el
+     * artboard resultó que **el mockup sí tiñe con el color de la zona** —un velo al 24 % detrás del
+     * nombre— y que eso es exactamente para lo que `#436` dejó `--zone-*`: *«lo que IDENTIFICA una
+     * zona»*. La grieta 01 era otra cosa: el **botón de comprar** pintado con la paleta de un dato.
+     * ▶ Lo que se vigila, entonces, es la frontera correcta: el color de zona puede estar en el
+     * VELO y no puede estar en el enlace ni en ningún control.
+     *
+     * ⚠️ Y el color sale de `zones.color`, no de un token `--zone-N`: ésos los reparte el JS por
+     * posición, y las dos tarjetas caían al mismo fallback — medido, el velo salía cian en las dos.
      */
-    public function test_the_cards_alternate_surface_and_do_not_use_the_zone_palette(): void
+    public function test_each_zone_tints_its_own_veil_and_no_control(): void
     {
         $seccion = $this->seccion();
 
-        $this->assertStringContainsString(
-            'data-surface="ink"', $seccion,
-            'las tarjetas ya no alternan superficie: el contraste del mockup lo da eso.',
+        preg_match_all('/--zone-tint:\s*(#[0-9a-f]{3,6})/i', $seccion, $tintes);
+        $this->assertGreaterThan(
+            1, count($tintes[1]),
+            'las tarjetas no traen su color de zona: el velo del mockup lo da eso.',
+        );
+        $this->assertSame(
+            count($tintes[1]), count(array_unique($tintes[1])),
+            'dos zonas comparten velo: el color sale de un token repartido por posición en vez de '.
+            'del dato de cada zona, que es como salía cian en las dos.',
         );
 
+        // El velo es lo ÚNICO teñido: la afordancia de destino lee el rol de enlace.
+        $this->assertMatchesRegularExpression(
+            '/\.zone-card__go\s*\{[^}]*color:\s*var\(--interactive\)/s',
+            (string) file_get_contents(base_path('public/css/landing.css')),
+            'el enlace de la tarjeta dejó de leer `--interactive`. Pintarlo con el color de la zona '.
+            'sería la grieta 01 del canvas: un dato decidiendo el aspecto de un control.',
+        );
+    }
+
+    /**
+     * **La tarjeta trae las cuatro piezas del mockup**: foto, sello, eje de altura y frontera.
+     *
+     * ⚠️ La primera versión de esta sección tenía solo texto, y «se parecía» sin serlo. Éstas son
+     * las piezas que la hacen la del artboard, y cada una se cae sola si su dato falta.
+     */
+    public function test_the_card_carries_the_pieces_of_the_mockup(): void
+    {
+        // ⚠️ **El eje y la frontera necesitan SUJETO**: sin altura en la BD no se pintan —y eso es
+        // correcto—, así que sin sembrarla esta guarda comprobaría que no está lo que no puede
+        // estar. Es el caso «un test sin sujeto no vigila nada» de `#302`.
+        $zonas = Zone::where('show_in_landing', true)->orderBy('position')->take(2)->get();
+        $zonas[0]->forceFill(['height_min_cm' => 130])->save();
+        $zonas[1]?->forceFill(['height_max_cm' => 130])->save();
+
+        $seccion = $this->seccion();
+
+        foreach ([
+            'zone-card__viz' => 'el hueco de la foto a 16:9',
+            'zone-card__seal' => 'el sello de precio',
+            'zone-card__axis' => 'el eje de altura',
+            'zone-card__border' => 'la frontera con su chapa',
+        ] as $clase => $que) {
+            $this->assertStringContainsString($clase, $seccion, "falta {$que} en la tarjeta.");
+        }
+    }
+
+    /**
+     * **Las cuatro reglas de geometría que costaron cuatro rondas con el owner delante.**
+     *
+     * ⚠️⚠️ Ninguna se ve leyendo el código y ninguna rompe nada: la tarjeta sigue pintándose. Se
+     * encontraron **comparando contra el artboard renderizado** (`scripts/comparar-con-mockup.mjs`),
+     * y por eso se fijan aquí — el siguiente que toque esta sección no va a repetir esa comparación.
+     */
+    public function test_the_geometry_rules_that_the_mockup_comparison_pinned_down(): void
+    {
+        $css = (string) file_get_contents(base_path('public/css/landing.css'));
+
+        // 1 · El velo cubre su bloque ENTERO. Con un margen negativo se salía 74 px de la tarjeta;
+        //     con el sangrado del eje encima, empezaba en 90 y dejaba de ser el tramo de la escala.
+        $this->assertMatchesRegularExpression(
+            // ⚠️ El `;` final NO sobra: sin él, `inset: 0 0 0 76px` —la forma que deja el velo sin
+            //    llegar a la regla— casa igual, y la mutación lo demostró pasando en VERDE.
+            '/\.zone-card__tint\s*\{[^}]*inset:\s*0\s*;/s', $css,
+            'el velo dejó de cubrir su bloque entero: o se sale de la tarjeta, o no llega a la regla.',
+        );
+
+        // 2 · El bloque teñido NO crece. Con `flex: 1 1 auto` absorbía el sobrante de `stretch` y
+        //     dejaba 68 px de color vacío bajo el texto.
+        $this->assertMatchesRegularExpression(
+            '/\.zone-card__text\s*\{\s*flex:\s*0 0 auto/s', $css,
+            'el bloque teñido vuelve a crecer: el velo se estira bajo el texto y aparece color vacío.',
+        );
+
+        // 3 · El sangrado del eje va en cada PIEZA, nunca en el cuerpo: ahí arrastra al velo y a la
+        //     línea, y las dos dejan de llegar al borde.
+        $this->assertDoesNotMatchRegularExpression(
+            '/\.zone-card__body\[data-axis\]\s*\{[^}]*padding-left/s', $css,
+            'el sangrado del eje volvió al cuerpo: arrastra al velo y a la línea del 1,30, y las dos '.
+            'dejan de llegar al borde de la tarjeta.',
+        );
+
+        // 4 · El hueco de la vecina es ASIMÉTRICO, y es del artboard: 60 arriba con 8 de margen
+        //     antes de la línea, 56 abajo. Con 56 simétricos la chapa tapaba el rótulo del eje.
+        $this->assertMatchesRegularExpression(
+            '/data-side="below"\]\s*>\s*\.zone-card__neighbour\s*\{[^}]*min-height:\s*60px/s', $css,
+            'el hueco de la vecina perdió su asimetría: cuando va ENCIMA mide 60 y deja 8 px antes '.
+            'de la línea. Con 56 la frontera sube y la chapa del 1,30 tapa el «altura · 1,90 m».',
+        );
+    }
+
+    /**
+     * **La frontera CRUZA la regla vertical**, que es como el artboard la dibuja.
+     *
+     * ⚠️⚠️ Se comprobó **renderizando el marcado del propio mockup** y comparando la misma zona: su
+     * línea de puntos es hija directa del cuerpo, sin sangrado, así que va de canto a canto y pasa
+     * por debajo del eje, con la chapa encima de la intersección.
+     * ▶ Hubo dos intentos de colocarla por porcentaje del umbral. El primero la separaba **124 px**
+     * de la marca del eje en cuanto el texto no cabía en su tramo —la zona de «desde 1,30 m» tiene
+     * el 31,6 % de la escala y su descripción ocupa el doble—; el segundo dejaba el hueco de la
+     * vecina tan corto que **se montaba encima del CTA**. *Dos piezas que tienen que coincidir no se
+     * calculan dos veces: se dibujan una dentro de la otra.*
+     */
+    public function test_the_border_line_crosses_the_vertical_rule(): void
+    {
+        Zone::where('show_in_landing', true)->orderBy('position')->firstOrFail()
+            ->forceFill(['height_min_cm' => 130])->save();
+
+        $css = (string) file_get_contents(base_path('public/css/landing.css'));
+
+        // La frontera no lleva sangrado: si lo llevara, dejaría de tocar la regla.
+        $this->assertMatchesRegularExpression(
+            '/\.zone-card__border\s*\{(?:(?!padding)[^}])*\}/s', $css,
+            'la frontera ganó sangrado: así ya no cruza la regla vertical, que es lo que el mockup '.
+            'dibuja y lo que hace que la línea y la escala se lean como una sola cosa.',
+        );
+
+        // Y no vuelve una segunda marca calculada aparte, que es de donde salía la desalineación.
         $this->assertStringNotContainsString(
-            '--zone-', $seccion,
-            'la sección volvió a pintarse con la paleta de una zona, que es la grieta 01 del canvas: '.
-            'un dato decidiendo el aspecto de un componente.',
+            '--axis-pct', $this->seccion(),
+            'volvió el porcentaje del umbral: la frontera es la costura entre los dos bloques y no '.
+            'necesita un segundo número que pueda discrepar del primero.',
         );
     }
 }

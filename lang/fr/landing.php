@@ -72,6 +72,9 @@ return [
         ],
     ],
     'zones' => [
+        'axis_label' => 'taille',
+        'below_is' => 'en dessous, :zone',
+        'above_is' => 'au-dessus, :zone',
         'eyebrow' => 'Pour qui',
         'title' => 'Chacun a sa zone',
         'rule' => "L'âge décide. Si ça ne colle pas, c'est la taille.",

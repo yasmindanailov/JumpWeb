@@ -455,6 +455,10 @@ class ShapeScaleTest extends TestCase
             // El mobiliario flotante (`#217`): tres pesos y dos alturas, todos del mismo rol.
             'var(--shadow-nav)', 'var(--shadow-nav-ghost)', 'var(--shadow-nav-ghost-lift)',
             'var(--shadow-nav-fill)', 'var(--shadow-nav-fill-lift)',
+            // Los dos ESTADOS de `--shadow-float` (`#478`): una pegatina que se aprieta acorta su
+            // sombra y luego la pierde. ⚠️ No son una escala nueva: son el mismo rol respondiendo,
+            // y por eso llevan su nombre. Se declaran **los dos**, como el par de `RhythmScaleTest`.
+            'var(--shadow-float-hover)', 'var(--shadow-float-press)',
         ];
         $offenders = [];
         $seen = 0;
@@ -529,6 +533,11 @@ class ShapeScaleTest extends TestCase
 
         foreach ([
             '--shadow-lift', '--shadow-float', '--shadow-modal',
+            // ⚠️ `--shadow-float-hover` entra aquí y `--shadow-float-press` NO, y no es un olvido:
+            // el segundo vale `none`. **Una ausencia de sombra no es una sombra**, así que exigirle
+            // que lea la tinta sería obligarle a pintar algo — que es justo lo contrario de lo que
+            // significa. Sigue en la lista de roles válidos de arriba, que es donde importa.
+            '--shadow-float-hover',
             '--shadow-nav', '--shadow-nav-ghost', '--shadow-nav-ghost-lift',
             '--shadow-nav-fill', '--shadow-nav-fill-lift',
         ] as $token) {

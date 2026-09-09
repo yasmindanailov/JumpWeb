@@ -228,6 +228,22 @@
   --shadow-float: 0 16px 36px -10px color-mix(in srgb, var(--paper-fg) 50%, transparent);
   --shadow-modal: 0 30px 64px -20px color-mix(in srgb, var(--paper-fg) 50%, transparent);
 
+  /* ── LOS DOS ESTADOS DE UNA PEGATINA QUE SE APRIETA (`#478`) ────────────────────────────
+     ⚠️⚠️ **Se declaran los DOS o ninguno**, que es la lección de `RhythmScaleTest`: un paquete que
+     sobreescriba solo uno deja la pieza con media respuesta y **no falla nada**.
+     ▶ La receta la escriben los propios tokens del canvas: al apretar, la sombra se ACORTA a 2 y la
+     pieza baja 3 — **la suma sigue siendo 5, así que el keyline no cambia de sitio**. Eso es lo que
+     distingue apretar de saltar.
+     ⚠️ Aquí van los valores del PRODUCTO (sombra difusa, como sus tres hermanas); el paquete de una
+     instalación con sombra dura pone `2px 2px 0` y `0 0 0`. */
+  --shadow-float-hover: 0 6px 14px -8px color-mix(in srgb, var(--paper-fg) 40%, transparent);
+  --shadow-float-press: none;
+
+  /* Cuánto se hunde una pegatina al apretarla. Sale del sistema del canvas
+     (`movimiento.desplazamiento.hover`), y va en un token porque lo usan la sombra y el
+     desplazamiento a la vez: si se separan, el keyline deja de cuadrar. */
+  --press-shift: 3px;
+
   /* ── LA SOMBRA DEL MOBILIARIO FLOTANTE (`#217`) ─────────────────────────────────────────
      ❗ **Un CUARTO rol, y hace falta porque los tres de arriba no describen esta pieza.** El
      armazón no está «apoyado» (no lleva sombra), ni «se despega al pasar el ratón» (`lift`), ni
@@ -1300,71 +1316,291 @@ img { display: block; max-width: 100%; }
   .zone-cards { grid-template-columns: 1fr 1fr; gap: var(--sp-20); }
 }
 
-/* ❗ **LA TARJETA ENTERA ES EL ENLACE, sin botón dentro** (marco aprobado del canvas). Es la
-   PEGATINA de `#323` —borde de tinta y sombra dura—, que es el nivel que este sistema reserva a lo
-   que se elige o se compra; el apoyo va sin sombra.
-   ⚠️ **Lee `--paper-fg` y no `--fg`**: dentro de `[data-surface="ink"]` el segundo vale claro, y la
-   tarjeta en tinta se quedaría sin keyline (la nota que ya está escrita en `landing.css:221`). */
+/* ❗ **LA TARJETA ENTERA ES EL ENLACE, sin botón dentro** (marco aprobado del canvas).
+   Es la PEGATINA del sistema —keyline de 2 y sombra dura de 5— y **su hover se HUNDE**: baja 3 px y
+   la sombra se acorta a 2, así que **la suma sigue siendo 5 y el keyline no cambia de sitio**. Es la
+   receta que los propios tokens del canvas escriben (`sombra.duraHover`), y la razón de que la
+   pegatina no «levite»: responde como algo que se aprieta.
+   ⚠️ Lee `--paper-fg` y no `--fg`: dentro de una superficie de tinta el segundo vale claro y la
+   tarjeta se quedaría sin borde (la nota que ya está en `landing.css:221`). */
 .zone-card {
-  display: flex; flex-direction: column; gap: var(--sp-12);
-  padding: var(--sp-20);
-  border: 1px solid var(--paper-fg);
-  border-radius: var(--r-lg);
+  display: flex; flex-direction: column;
   background: var(--bg-card);
+  border: 2px solid var(--paper-fg);
+  border-radius: var(--r-lg);
   box-shadow: var(--shadow-float);
   color: var(--fg); text-decoration: none;
-  position: relative; overflow: hidden;
+  overflow: hidden;
   height: 100%;
-  transition: box-shadow var(--dur-estado) var(--ease-sale);
+  transition: transform var(--dur-toque) var(--ease-sale), box-shadow var(--dur-toque) var(--ease-sale);
 }
-/* ⚠️ **Responde la SOMBRA, no la posición** (`#303`, `#217`): la pegatina se apoya al pulsarla en
-   vez de levitar. Un salto en `transform` aquí sería el hover que `#435` retiró de 19 sitios. */
-.zone-card:hover { box-shadow: none; }
+/* ❗❗ **EL GESTO ES EL DEL MOCKUP, y es una EXCEPCIÓN declarada a `#435`** (`[DECIDIDO owner]`:
+   «el efecto al poner el ratón encima y darle clic no es como en el mockup»).
+   ▶ **Por qué no es el hover que aquella tanda retiró.** Los 19 que se fueron **levitaban**: subían,
+   y un elemento que sube se aparta del puntero que lo señala. Éste hace lo contrario — se **hunde**
+   3 px y su sombra se acorta a 2, así que **la suma sigue siendo 5 y el keyline no se mueve de
+   sitio**. Es la física de una pegatina que se aprieta, no un salto.
+   ⚠️ Los dos estados son los del sistema del canvas (`sombra.duraHover` y el desplazamiento de 3),
+   y por eso salen de tokens y no de literales: un paquete de instalación con otra sombra los mueve
+   con ella. */
+.zone-card:hover {
+  transform: translate(var(--press-shift), var(--press-shift));
+  box-shadow: var(--shadow-float-hover);
+}
+.zone-card:active {
+  transform: translate(calc(var(--press-shift) + 2px), calc(var(--press-shift) + 2px));
+  box-shadow: var(--shadow-float-press);
+}
 
-/* El SELLO de precio, girado. ⚠️ Es el ÚNICO giro de la tarjeta: el sistema limita el gesto a las
-   piezas que se pegan encima de algo, y dos cosas torcidas en la misma caja se leen como un error. */
+/* ── LA FOTO, a 16:9 ──────────────────────────────────────────────────────────────────────
+   ⚠️ El hueco existe **aunque no haya foto**: el sello va anclado a su borde inferior y sin él se
+   quedaría flotando encima del texto. El relleno es la superficie oscura del sistema, que es lo que
+   el artboard pinta mientras no hay imagen. */
+.zone-card__viz {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  /* El relleno mientras no hay foto. ⚠️ El artboard usa el escalón de **bordes y divisores** de la
+     escala de tinta, que es dos pasos más claro que el fondo base — no la superficie de tarjeta, que
+     se queda casi negra. Se compone con la mezcla del sistema para que siga al paquete. */
+  background: color-mix(in srgb, var(--bg) 12%, var(--fg));
+}
+.zone-card__viz img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ── EL SELLO DE PRECIO ───────────────────────────────────────────────────────────────────
+   Asoma por el borde inferior de la foto y va girado. ⚠️ **El amarillo es un ROL, no un hex**: es
+   el resalte del sistema (`--attn`), el mismo que el canvas reserva para «marcador» y que su propia
+   norma prohíbe usar como fondo de BOTÓN — esto no lo es. Su texto va en tinta por el mismo rol. */
 .zone-card__seal {
-  align-self: flex-start;
+  position: absolute; right: var(--sp-12); bottom: -16px;
   margin: 0;
   display: flex; flex-direction: column; gap: var(--sp-2);
   padding: var(--sp-8) var(--sp-12);
-  background: var(--fg); color: var(--bg);
-  border-radius: var(--r-sm);
-  transform: rotate(-2deg);
+  background: var(--attn); color: var(--on-attn);
+  border: 2px solid var(--paper-fg);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-float);
+  transform: rotate(-6deg);
+  text-align: center;
+  /* ⚠️⚠️ **El sello se ACOTA, y no es estética: es robustez.** Su tercera línea la escribe el DATO
+     («Viernes, findes y festivos» en esta instalación, donde el mockup pone «finde»), y sin tope se
+     salía de la tarjeta por la derecha — medido en captura. Un dato largo no puede romper la
+     maqueta: se acota el ancho y el texto envuelve. */
+  max-width: min(62%, 220px);
+  /* ⚠️ Por encima de todo lo de la tarjeta: el velo y la foto van detrás, y sin esto el sello
+     quedaba TAPADO (lo vio el owner en la captura). */
+  z-index: 3;
 }
 .zone-card__from {
   font-family: var(--font-mono); font-size: var(--fs-10);
-  text-transform: uppercase; letter-spacing: 0.16em;
+  letter-spacing: 0.1em; text-transform: uppercase;
 }
 .zone-card__price { font-family: var(--font-display); font-size: var(--fs-22); line-height: 1; }
-.zone-card__special { font-size: var(--fs-11); opacity: 0.86; }
+.zone-card__special {
+  font-family: var(--font-mono); font-size: var(--fs-10); line-height: 1.4;
+  /* Envuelve en vez de empujar: es la línea que trae el rótulo de la tarifa desde la BD. */
+  white-space: normal; text-wrap: balance;
+}
 
+/* ── EL CUERPO: UNA ESCALA DE ESTATURA DE VERDAD ──────────────────────────────────────────
+   ❗❗❗ **La frontera cae DONDE CAE el umbral en la regla, y eso es lo que hace que la tarjeta no se
+   contradiga.** El cuerpo es la escala completa (0,00 → 1,90) y se parte en dos tramos que reparten
+   por `--axis-pct`, que sale de dividir el umbral entre el techo. La línea de puntos es la frontera
+   entre los dos, y la marca del eje lee **el mismo número**: por construcción están a la misma
+   altura.
+   ⚠️⚠️ Hubo una versión que dejaba la línea donde acabara el texto. Coincidía con la marca por
+   casualidad, y el owner lo vio en pantalla: *«lo de 1,30 no coincide con la regla»*. Una tarjeta
+   que dibuja una escala y la desmiente es peor que una que no la dibuja.
+   ⚠️ El sangrado izquierdo (76 px) es el carril del eje: 16 de margen + 56 de escala + aire. */
+.zone-card__body { position: relative; }
+/* ⚠️ **Sin `padding-top`: el aire superior lo pone el BLOQUE de la zona, no el cuerpo.** Estuvo en
+   los dos y el contenido salía **20 px más abajo** que el mockup (medido contra su marcado
+   renderizado). El eje sí arranca a 20 —igual que en el artboard—, pero eso es su `top` propio, no
+   un sangrado del cuerpo. */
+.zone-card__body[data-axis] {
+  display: flex; flex-direction: column;
+  /* Alto mínimo de la escala: por debajo, los dos tramos no caben y el reparto deja de leerse. */
+  min-height: 320px;
+}
+
+.zone-card__axis {
+  position: absolute; left: var(--sp-16); top: var(--sp-20); bottom: 0; width: 56px;
+  /* ⚠️ El artboard mide **58**: 56 de carril MÁS los 2 del trazo. Con `box-sizing: border-box`
+     heredado, el borde se comía dos píxeles del carril y el texto entraba desplazado. */
+  box-sizing: content-box;
+  border-left: 2px solid var(--paper-fg);
+  font-family: var(--font-mono); font-size: var(--fs-10); line-height: 1.3;
+  color: var(--fg-mute);
+  z-index: 2;
+}
+.zone-card__axis-top { position: absolute; left: 4px; top: 0; white-space: nowrap; display: block; }
+.zone-card__axis-top b {
+  display: block; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--paper-fg);
+}
+.zone-card__axis-top i { font-style: normal; }
+.zone-card__axis-zero { position: absolute; left: 4px; bottom: 0; white-space: nowrap; }
+/* ⚠️⚠️ **La muesca del umbral vive EN la frontera, no en el eje**, y por eso coinciden **por
+   construcción** en vez de por aritmética. Estuvo colocada al porcentaje del umbral y se separaba de
+   la línea hasta **124 px** en la tarjeta cuyo texto no cabía en su tramo — la sonda lo midió. *Dos
+   piezas que tienen que estar a la misma altura no se calculan dos veces: se dibujan una dentro de
+   la otra.* */
+.zone-card__axis-mark { display: none; }
+
+/* ── LOS DOS TRAMOS ───────────────────────────────────────────────────────────────────────
+   El de la zona lleva su velo y su texto; el otro, el nombre de la vecina. Reparten por el mismo
+   porcentaje que coloca la marca del eje, así que la costura entre ambos ES la frontera. */
+/* ⚠️ **Alineado ARRIBA, no centrado.** Un `justify-content: center` dejaba el nombre **38 px más
+   abajo** que el mockup (medido contra su marcado renderizado): el bloque de la zona empieza donde
+   empieza, y su aire superior es el padding. */
+.zone-card__text {
+  position: relative; isolation: isolate;
+  padding: var(--sp-20) var(--sp-16) var(--sp-16) 76px;
+  display: flex; flex-direction: column;
+}
+/* ⚠️⚠️ **El tramo de la zona lo manda su TEXTO, y el de la vecina es un hueco fijo** — que es lo
+   que hace el artboard (40 px). Hubo una versión que repartía los dos por el porcentaje del umbral y
+   **no cabía**: la zona de «desde 1,30 m» tiene el tramo pequeño de la escala (31,6 %) y su
+   descripción ocupa el doble, así que el hueco de la vecina colapsaba y **se montaba encima del
+   CTA** (visto en captura).
+   ▶ La proporción no se pierde: la frontera sigue separando los dos tramos y la muesca del eje va
+   DENTRO de ella, así que lo que el ojo compara —dónde corta la línea— sigue siendo una sola cosa. */
+/* ⚠️⚠️ **El bloque teñido NO CRECE, y esto se vio en pantalla antes que en ningún número.** Con
+   `flex: 1 1 auto` absorbía el sobrante que deja `align-items: stretch` —las dos tarjetas miden lo
+   mismo y la más corta estira algo—, y ese algo era el VELO: **68 px de color vacío bajo el texto**,
+   donde el mockup no deja ninguno. El sobrante lo absorbe el CTA con su `margin-top: auto`, que es
+   quien debe hacerlo: es lo único que puede crecer sin significar nada. */
+.zone-card__text { flex: 0 0 auto; }
+
+/* ⚠️⚠️ **El velo va a TODO EL ANCHO de la tarjeta, y `inset: 0` YA lo hace** (`[DECIDIDO owner]`,
+   viéndolo en pantalla). El sangrado de 76 px es del CONTENIDO —para dejar sitio a la regla—, no del
+   bloque: el bloque ya va de canto a canto, así que un margen negativo lo sacaba **74 px fuera de la
+   tarjeta**, medido comparándolo con el mockup renderizado (430 px de ancho contra sus 354).
+   ▶ *Antes de compensar un sangrado, mide si el elemento lo tiene de verdad.* */
+.zone-card__tint {
+  position: absolute; inset: 0;
+  background: var(--zone-tint, transparent);
+  /* ⚠️ La opacidad viene COMPENSADA por la luminancia del color (`ZoneCards::tintOpacity`): el
+     artboard usa 22 % en el cian y 24 % en el lima para que los dos velos pesen lo mismo. El 0.24 de
+     aquí es solo el suelo por si una zona no trae color. */
+  opacity: var(--zone-tint-op, 0.24);
+  pointer-events: none;
+}
+.zone-card__inner { position: relative; display: block; }
+
+/* ⚠️⚠️ **El nombre de la zona es el nivel TÍTULO del sistema, y aquí estrena su primer consumidor**
+   (`#474`). El artboard 4a lo dibuja a 24, pero el propio canvas corrigió esa cifra al cerrar su
+   escala —«24 → 26 · los nombres de zona de 01 · Título móvil»—, así que **el valor bueno es el del
+   sistema y no el del dibujo**: 26 en móvil y 36 en escritorio, sin media query, porque el nivel ya
+   interpola entre sus dos tallas. */
 .zone-card__name {
-  margin: 0;
-  font-family: var(--font-display); font-size: var(--fs-title, var(--fs-22));
-  line-height: 1.05;
+  display: block; margin: 0;
+  font-family: var(--font-display); font-size: var(--fs-title); line-height: 1;
+  /* ⚠️ **Peso 400 y no el 700 que traen los `h3` del sitio.** La fuente de rótulo tiene un solo
+     peso, así que pedirle negrita hace que el navegador la SINTETICE —engorda los trazos a mano— y
+     el nombre deja de ser el mismo dibujo que el resto de titulares. Medido contra el mockup: 400. */
+  font-weight: 400;
 }
-
-/* Edad y altura son las DOS MITADES de una regla, no dos datos: van en la misma línea, separadas
-   por un punto medio que pinta el pseudo — así el separador no viaja en la traducción. */
 .zone-card__who {
-  margin: 0;
-  font-size: var(--fs-15); color: var(--fg-mute);
-  display: flex; flex-wrap: wrap; gap: var(--sp-8);
+  margin-top: var(--sp-12);
+  display: flex; flex-direction: column; gap: var(--sp-4);
+  font-size: var(--fs-16); line-height: 1.45; color: var(--fg);
 }
-.zone-card__height::before { content: '·'; margin-right: var(--sp-8); }
+.zone-card__what { color: var(--fg-mute); }
 
-.zone-card__what { margin: 0; font-size: var(--fs-15); line-height: 1.55; color: var(--fg-mute); }
+/* ── LA FRONTERA y el HUECO DE LA VECINA ──────────────────────────────────────────────────
+   La línea de puntos es el borde superior del tramo de abajo, así que **está exactamente en la
+   costura** — no es una regla suelta que haya que colocar dos veces. */
+.zone-card__border { position: relative; margin: 0; height: 0; border-top: 2px dashed var(--paper-fg); z-index: 2; }
+/* ⚠️ **Sin muesca: el artboard no la tiene.** La línea de puntos **cruza la regla vertical** y la
+   chapa se pone encima de esa intersección — medido en el marcado del mockup: la frontera es hija
+   directa del cuerpo, sin sangrado, así que va de canto a canto y pasa por debajo del eje. */
+.zone-card__chip {
+  position: absolute; left: var(--sp-16); top: -12px;
+  padding: var(--sp-4) var(--sp-8);
+  background: var(--bg-card);
+  border: 2px solid var(--paper-fg); border-radius: var(--r-md);
+  font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 700; line-height: 1.2;
+  color: var(--paper-fg); white-space: nowrap;
+}
+/* ⚠️⚠️ **Son 16 de aire MÁS 40 de hueco, no 40 en total**, y la diferencia se ve: con 40 contando el
+   relleno el hueco medía **35 px** y la frontera subía 23, así que **la chapa del 1,30 se montaba
+   encima del rótulo «altura · 1,90 m»** y lo tapaba. Medido contra el artboard: su hueco va de 201 a
+   259 y el nuestro llegaba a 236.
+   ▶ El relleno inferior es CERO: la línea de puntos es el suelo del hueco, y cualquier aire ahí la
+   separa de lo que separa. */
+.zone-card__neighbour {
+  margin: 0;
+  padding: var(--sp-16) var(--sp-16) 0 76px;
+  min-height: 56px;
+  display: flex; align-items: flex-end; justify-content: flex-end;
+  flex: 0 0 auto;
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-mute);
+}
+/* El hueco de la vecina ocupa el tramo COMPLEMENTARIO: lo que la zona no cubre. */
+/* El hueco de la vecina: alto fijo, como el artboard. No crece ni se encoge. */
+/* ⚠️⚠️ **El hueco NO mide lo mismo arriba que abajo, y es del artboard, no un descuido.** Medido
+   sobre su marcado renderizado: cuando la vecina va ENCIMA lleva 20 de aire, **60 de alto** y deja
+   **8 px** antes de la línea; cuando va DEBAJO, 16 de aire y **56**, pegada a ella.
+   ▶ Sin esa asimetría el hueco de arriba se quedaba en 35 px, la frontera subía y **la chapa del
+   1,30 tapaba el rótulo «altura · 1,90 m»** — que es justo lo que se veía en pantalla. */
+.zone-card__body[data-side="below"] > .zone-card__neighbour {
+  padding-top: var(--sp-20); min-height: 60px; margin-bottom: var(--sp-8);
+}
 
 /* La afordancia de destino. **No es un botón**: la tarjeta ya es el enlace, y un control dentro de
-   un `<a>` es marcado inválido además de dos dianas para el mismo sitio. */
+   un `<a>` es marcado inválido además de dos dianas para el mismo sitio.
+   ⚠️ Va en `--interactive`, que es el rol del enlace en papel (`#436`), no en el color de la zona. */
+/* ⚠️ **El CTA está FUERA de la escala, así que no lleva su sangrado.** Con los 76 px del eje se
+   quedaba metido hacia dentro y descolgado del resto de la tarjeta; su aire es el normal de la
+   pegatina, el mismo por los dos lados. */
 .zone-card__go {
   margin-top: auto;
-  display: inline-flex; align-items: center; gap: var(--sp-8);
-  font-weight: 700; font-size: var(--fs-15);
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-8);
+  padding: var(--sp-16);
+  font-weight: 800; font-size: var(--fs-16);
   color: var(--interactive);
 }
 .zone-card:hover .zone-card__go { text-decoration: underline; }
+
+/* ── ESCRITORIO ───────────────────────────────────────────────────────────────────────────
+   «Solo se ensancha» (artboard `Escritorio PJP`, opción 1c): la misma tarjeta con las tallas
+   subidas y las dos columnas a la MISMA altura, que es lo que deja comparar las dos zonas de un
+   vistazo.
+
+   ❗❗❗ **El sangrado del eje va en CADA PIEZA, nunca en el cuerpo, y esto costó cuatro defectos a
+   la vez.** Estuvo en `.zone-card__body` y arrastró a todo lo que cuelga de él: **el velo empezaba
+   en 90 en vez de en 2** —o sea que dejaba de ser el tramo de la escala y se leía como una columna
+   de color—, **la línea del 1,30 tampoco llegaba a la regla**, el nombre salía 76 px adentro y la
+   chapa se iba al centro. Medido contra el artboard renderizado: velo `l=2 w=540` contra nuestro
+   `l=90 w=458`.
+   ▶ En el artboard **la frontera no tiene sangrado en ninguna superficie**: va de canto a canto y
+   cruza la regla. El sangrado es solo del TEXTO y del hueco de la vecina. */
+@media (min-width: 768px) {
+  /* El hueco entre columnas es 32, que es lo que hace que la tarjeta mida 544 sobre la columna de
+     1120 — con 20 medía 550 y las dos zonas dejaban de caer donde el mockup las pone. */
+  .zone-cards { grid-template-columns: 1fr 1fr; gap: 32px; align-items: stretch; }
+
+  .zone-card__axis { left: 24px; }
+  .zone-card__text { padding: var(--sp-20) 24px var(--sp-20) 88px; }
+  .zone-card__neighbour { padding: var(--sp-20) 24px 0 88px; min-height: 60px; }
+  .zone-card__go { padding: var(--sp-16) 24px var(--sp-20); }
+  .zone-card__chip { left: 24px; top: -13px; }
+  /* ⚠️ El rótulo del eje se separa 6 de su trazo en escritorio y 4 en móvil (artboard). Dos píxeles
+     que solo se ven comparando, y que dejan el «1,90 m» desalineado con el «0,00» de abajo. */
+  .zone-card__axis-top,
+  .zone-card__axis-zero { left: 6px; }
+
+  .zone-card__axis-top,
+  .zone-card__axis-zero,
+  .zone-card__chip,
+  .zone-card__neighbour,
+  .zone-card__from,
+  .zone-card__special { font-size: var(--fs-12); }
+  .zone-card__seal { right: var(--sp-16); padding: var(--sp-10) var(--sp-14); }
+  .zone-card__price { font-size: var(--fs-30, 30px); }
+  .zone-card__who { font-size: var(--fs-17); }
+}
 /* ⚠️⚠️ **`isolation: isolate` + `z-index: -1`, y NO «subir el contenido con `position: relative`».**
    Esa fue la primera solución y ROMPIÓ cosas: `> :not(.ilu) { position: relative }
 
