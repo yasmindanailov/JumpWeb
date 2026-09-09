@@ -3,6 +3,13 @@
 return [
     'nav' => [
         // Items "viejos" que aún se usan en algún punto (footer, drawer mob): los conservamos.
+        /*
+         * Los DOS grupos del menú (`#477`). El rótulo dice a dónde te lleva el destino: bajar por
+         * esta misma página o cambiar de página. ⚠️ Se escriben en minúscula porque el estilo los
+         * pone en mayúsculas (`text-transform`): guardarlos ya en mayúsculas rompe el idioma de
+         * quien no las use y deja el texto sin poder cambiarse desde aquí.
+         */
+        'menu_group' => ['section' => 'En esta página', 'page' => 'Otras páginas'],
         'zones' => 'Zonas', 'rides' => 'Atracciones', 'pricing' => 'Precios',
         'events' => 'Cumpleaños', 'info' => 'Visítanos', 'reserve' => 'Registrarse',
         'reserve_tickets_aria' => 'Reservar entradas y cumpleaños',

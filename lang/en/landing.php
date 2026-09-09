@@ -2,6 +2,7 @@
 
 return [
     'nav' => [
+        'menu_group' => ['section' => 'On this page', 'page' => 'Other pages'],
         'zones' => 'Zones', 'rides' => 'Rides', 'pricing' => 'Pricing',
         'events' => 'Birthdays', 'info' => 'Visit', 'reserve' => 'Sign up',
         'reserve_tickets_aria' => 'Book tickets and birthdays',

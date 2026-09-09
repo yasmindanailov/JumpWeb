@@ -25467,3 +25467,37 @@ Requisito de entrada de la Fase 2, no una tanda más: `#470`→`#474` movieron e
 ⚠️ `/servicios` responde **503 a propósito** —está en mantenimiento por dato, no es un fallo— y la sonda la salta diciéndolo.
 
 **Verificación**: suite **4.495** en verde · **4/4 mutaciones** muerden sobre `TouchTargetTest::GROWS` con el árbol restaurado · la sonda pasa su propio control a 44 reproduciendo el hallazgo de `#264`.
+
+## #477 · 2026-09-09 · `[DECIDIDO owner]` El menú pasa a DOS grupos y el eslogan entra en el cierre — la primera tanda de la Fase 2, con el navegador ya puesto
+
+La **T2a · el armazón**, primera tanda de la Fase 2 del carril de diseño. Antes de tocarla se contrastaron las **diez afirmaciones del marco aprobado** del canvas contra el código, y la noticia es buena: **siete ya coincidían**.
+
+| Marco del canvas | Producto | |
+|---|---|---|
+| Hero y armazón, un mecanismo · sin logo/menú/barra en «Entrada» · el hero lleva las dos puertas | `#216` · `#252` | ✅ |
+| El par doble abre «Reservar» · el par **no** entra en el menú | `#205` · `#217` | ✅ |
+| El logo bota **una vez**, sin bucle | `brand-hop … both`, sin `infinite` | ✅ |
+| Idioma en menú **y** pie · teléfono en menú **y** pie | los dos, en los dos | ✅ |
+| El eslogan al **cierre** y al menú | solo en el menú | ⚠️ |
+| Menú en **dos grupos** | lista **plana** (`#211`) | ❌ |
+| Alto del par en teléfono | **56** | el canvas lo tenía **sin decidir** |
+
+▶ **`[DECIDIDO owner]` · el menú va en DOS grupos** —«En esta página» y «Otras páginas»—, lo que **sustituye a la lista plana de `#211`**, decisión suya que él mismo reabrió con el canvas delante. Bajar por la misma página y cambiar de página no son el mismo gesto, y el menú ahora lo dice antes de que pulses: el rótulo lo nombra y **la flecha lo repite donde el ojo ya está mirando** (chevron abajo · flecha a la derecha).
+
+❗❗❗ **El grupo se DEDUCE de la URL: no es un campo, ni de BD ni de panel.** Un destino es «sección» si apunta a la portada con ancla y «página» en cualquier otro caso. *Un dato derivable de un hecho no se guarda*: guardarlo abre la puerta a que los dos digan cosas distintas y a mantenerlo a mano en cada alta — que es lo que este repo ya pagó con `accent` (`#295`) y con la edad de la zona.
+
+▶ **Y con eso se disuelven LAS DOS CRUCES que el canvas dejaba pendientes del dueño** (Tarifas y Cumpleaños son sección **y** página): el menú ya enlazaba a su **página**, así que caen ahí sin que nadie elija. *La pregunta no se contesta: se disuelve al mirar a qué enlaza de verdad.*
+
+⚠️ **El scroll se mudó de la lista a la COLUMNA.** Con la lista plana daba igual; con dos grupos, dejarlo en `.menu__list` le da a cada uno su barra **y** reparte el alto con `flex: 1`, así que un grupo de dos destinos ocuparía media pantalla y el otro se desplazaría por dentro. ⚠️ Y el índice de cada destino sigue siendo el **global**: es la clave con la que la vista previa sabe qué se está mirando, y renumerar por grupo enseñaría la foto equivocada sin fallar.
+
+▶ **`[DECIDIDO owner]` · el eslogan a rotulador entra también en el cierre**, que es una vez por **superficie** y no por página: el menú es `inset: 0` y tapa la portada entera, así que nunca se ven a la vez. Comparte la clave `landing.hero.kicker` con el del menú a propósito — es el mismo eslogan, y dos claves invitan a que un día digan cosas distintas.
+
+❗❗❗ **Y AHÍ ESTÁ EL HALLAZGO DE LA TANDA, que solo vio el NAVEGADOR con la suite en verde**: el eslogan del cierre se pintaba **como un párrafo cualquiera girado dos grados**. Es un `<p>` dentro de `.reserve`, y la regla `.reserve p` tiene más especificidad (0,1,1 contra 0,1,0), así que le imponía su **16,5 px**, el gris de `--fg-mute` y un margen de 22. Medido y corregido acotando la regla; el CONTROL es el párrafo de al lado, que sigue en 16,5 y gris mientras el eslogan va a 18 en Permanent Marker y lima. ▶ *Un elemento nuevo dentro de un bloque que ya estila su etiqueta no estrena estilo: lo hereda.*
+
+▶ **`[DECIDIDO owner]` · el alto del par en teléfono se confirma en 56**, sin código: es lo que `#265` ya midió y decidió —arriba baja a 48 al compartir fila con el logotipo—, y coincide con lo que el propio guion del canvas midió. **Cierra un pendiente suyo sin tocar nada.**
+
+⚠️⚠️ **TRES trampas de Blade pagadas en una sola tanda, y las tres estaban ya escritas en el repo.** (1) Un cierre de bloque PHP **cierra el `@php(` con paréntesis que la plantilla ya tenía abierto**, no el propio: 53 casos en rojo con «Undefined variable $grupos». (2) La forma con paréntesis **no admite una closure multilínea**: el compilador corta donde no debe y la plantilla dejó de publicar sus destinos. (3) ❗ **Citar las directivas EN PROSA dentro de un comentario las COMPILA** — el comentario escrito para advertir de (1) y (2) abrió un bloque que se tragó media plantilla y dejó el `x-data` sin compilar. Es literalmente la trampa de `#307`, que ya avisaba de que *«volvió a caer en él el comentario escrito para advertirlo»*: **tercera vez**. ▶ Regla que queda: **en un comentario Blade las directivas se describen con palabras, nunca con su arroba**.
+
+⚠️ **Y una cuarta, de `#287`**: la clase del modificador se emitía **compuesta** (`menu__list--` más una variable) y ningún inventario de CSS ve una clase interpolada, así que `ArmazonCssHasNoOrphansTest` la dio por huérfana. Aquí no aportaba —los dos grupos se pintan igual, lo que los distingue es el rótulo y la flecha—, así que se retiró con su regla en vez de excepcionarla.
+
+**Verificación**: suite **4.502** en verde · `MenuGroupsTest` con 7 casos y **5/5 mutaciones** que muerden, árbol idéntico · verificado en navegador a 390 y 1280: dos grupos con 4 + 2 destinos, scroll en la columna, seis flechas y el eslogan a 18 px en Permanent Marker contra su control.

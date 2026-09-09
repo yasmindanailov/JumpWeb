@@ -2,6 +2,7 @@
 
 return [
     'nav' => [
+        'menu_group' => ['section' => 'Sur cette page', 'page' => 'Autres pages'],
         'zones' => 'Zones', 'rides' => 'Attractions', 'pricing' => 'Tarifs',
         'events' => 'Anniversaires', 'info' => 'Nous visiter', 'reserve' => "S'inscrire",
         'reserve_tickets_aria' => 'Réserver billets et anniversaires',

@@ -2572,6 +2572,26 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
    condiciones que viven en otro fichero. Con el texto encima, el solape deja de importar. */
 .reserve__body { position: relative; z-index: 3; text-align: center; }
 
+/* **EL ESLOGAN A ROTULADOR DEL CIERRE** (`#477`). Mismo ROL que el del menú —guiño de marca, una
+   vez por superficie— así que lee los mismos tokens: la familia de acento, el giro de −2° que el
+   sistema fija para el eslogan y el color de la segunda zona.
+   ⚠️ **No se copia el valor de `.menu__slogan`, se comparte el rol**: si el eslogan cambiara de
+   talla, dos literales se separarían sin que nada fallara. Lo único propio es el aire de debajo,
+   que aquí lo separa del titular y allí no tiene nada detrás. */
+/* ⚠️⚠️ **Va acotado a `.reserve` y no suelto, y lo dijo el NAVEGADOR con la suite en verde**: el
+   eslogan es un `<p>` dentro del cierre, y `.reserve p` —que existe unas líneas más abajo— tiene
+   más especificidad (0,1,1 contra 0,1,0), así que le imponía su talla de **16,5**, el gris apagado
+   de `--fg-mute` y un margen superior de 22. Se veía un párrafo cualquiera girado 2°.
+   ▶ *Un elemento nuevo dentro de un bloque que ya estila su etiqueta no estrena estilo: lo hereda.* */
+.reserve .reserve__slogan {
+    margin: 0 0 var(--sp-12);
+    max-width: none;
+    font-family: var(--font-accent);
+    font-size: var(--fs-18); line-height: 1;
+    color: var(--zone-2);
+    transform: rotate(-2deg);
+}
+
 /* ⚠️ El titular CRECE con la tarjeta, igual que el del hero encoge con él (`#222`). Sin esto, la
    tarjeta se hace pantalla completa y el texto se queda del tamaño de una tarjeta pequeña. */
 .reserve h2 {
@@ -5511,15 +5531,12 @@ html:not(.js) .gf-fiche__foot { display: none; }
    ▶ `safe` centra mientras quepa y se comporta como `start` en cuanto desborda, que es exactamente
    la regla que el `@media` intentaba escribir. Se declara **después** del `center` de reserva: donde
    no se entienda la palabra clave, la línea entera se descarta y queda la conducta de hoy. */
+/* ⚠️ **El scroll y el centrado se mudaron a `.menu__col-list` en `#477`**, al partir la lista en
+   dos grupos: ver la nota de esa regla. Aquí queda lo que es de la LISTA y no del carril. */
 .menu__list {
     list-style: none; margin: 0; padding: 0;
-    flex: 1; min-height: 0;
-    overflow-y: auto; overflow-x: hidden;
-    display: flex; flex-direction: column; justify-content: center;
-    justify-content: safe center;
-    scrollbar-width: none;
+    display: flex; flex-direction: column;
 }
-.menu__list::-webkit-scrollbar { width: 0; }
 
 .menu__item { border-bottom: 1px solid var(--line); }
 .menu__item a {
@@ -5708,8 +5725,31 @@ html:not(.js) .gf-fiche__foot { display: none; }
         white-space: normal;
     }
 }
-.menu__col-list { position: relative; flex: 1 1 560px; min-width: 0; display: flex; }
-.menu__col-list > .menu__list { flex: 1; }
+/* ❗❗ **EL SCROLL VIVE EN LA COLUMNA, NO EN CADA LISTA** (`#477`). Con la lista plana daba igual
+   dónde estuviera; con los DOS grupos, dejarlo en `.menu__list` le da a cada uno su propia barra y
+   además reparte el alto entre ambos con `flex: 1`, así que un grupo de dos destinos ocuparía media
+   pantalla y el otro se desplazaría por dentro. La columna se desplaza ENTERA, con los dos grupos y
+   sus rótulos dentro, que es lo que hace que «otras páginas» se lea como continuación y no como un
+   panel aparte. */
+.menu__col-list {
+    position: relative; flex: 1 1 560px; min-width: 0;
+    display: flex; flex-direction: column; justify-content: safe center;
+    min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none;
+}
+.menu__col-list::-webkit-scrollbar { width: 0; }
+
+/* El rótulo de cada grupo es el nivel **Etiqueta** del sistema: mono, mayúsculas y `.16em`
+   (`tokens-pjp.js` · `tipo.escala.etiqueta`). No es un titular: nombra la naturaleza del destino. */
+.menu__group {
+    margin: 0 0 var(--sp-8);
+    font-family: var(--font-mono); font-size: var(--fs-12);
+    text-transform: uppercase; letter-spacing: 0.16em;
+    color: var(--fg-mute);
+}
+/* El aire ENTRE los dos grupos. El último no lo lleva: dentro de un carril centrado, un margen al
+   final descentra la columna sin que nada lo pida. */
+.menu__group + .menu__list { margin-bottom: var(--sp-28); }
+.menu__col-list > .menu__list:last-child { margin-bottom: 0; }
 
 /* ⚠️ Entra DESPUÉS que la lista, a propósito: la lista escalona sus filas desde los 120 ms y esta
    columna espera a que el escalonado esté en marcha. Si entraran a la vez, el ojo tendría dos

@@ -196,7 +196,7 @@ sistema y dicen cosas distintas.
 |---|---|---|---|
 | **0** | Base: Docker · las seis cifras · este inventario | esta spec | todas |
 | **1** | ✅ **El sistema**: tokens (color · tipo · espacio · forma · elevación · movimiento) + los 65 iconos | `site.css` y `client.css` a v1.10, el set con su guarda | 2, 3, 4 |
-| **2** | **El armazón + las 8 secciones**, móvil y escritorio | la portada entera, vestida con BD | 3 |
+| **2** | 🟦 **El armazón + las 8 secciones**, móvil y escritorio | la portada entera, vestida con BD | 3 |
 | **3** | **Las páginas**: 2 nuevas + 5 rehechas con el armazón de `Layout Paginas` | las siete del inventario | — |
 | **4** | **El SPA**: las 9 grietas + las 5 paradas del canvas | el cajón | 5 |
 | **5** | **Post-form y justificante digital** | lo que hoy es funcional y no está vestido | — |
@@ -366,6 +366,25 @@ cifras plausibles** (áreas negativas por recortar en coordenadas de viewport; a
 navegador instalado**.
 
 ---
+
+### 5.4 · Estado de la Fase 2
+
+| | Tanda | Estado |
+|---|---|---|
+| T2a | **El armazón**: menú en dos grupos · eslogan en el cierre · el alto del par confirmado | ✅ `#477` |
+| T2b–T2i | Las **ocho secciones** de la portada (§5.1) | ⬜ |
+
+▶ **El armazón coincidía con el marco aprobado del canvas en SIETE de diez** —hero y armazón como un
+mecanismo, el par doble, el logo botando una vez, idioma y teléfono en menú y pie—, así que la tanda
+fue pequeña: dos cambios y una confirmación.
+
+❗ **Lo único del armazón que queda pendiente**: el **logotipo mide 46 y el táctil es 48**. Se deja a
+propósito porque su alto entra en el cálculo aritmético del racimo (`#252`) y **la Fase 2 lo toca al
+rehacer el armazón**; tocarlo suelto es descuadrar un cálculo que se va a rehacer.
+
+⚠️ **Divergencia detectada y NO resuelta**: el canvas dice que *«el teléfono y el WhatsApp salen del
+cierre»* y hoy el cierre tiene un `tel:` en su segundo CTA (`.reserve__act--alt`). No se tocó porque
+no estaba entre lo preguntado — **es decisión del owner** y va con la sección del cierre.
 
 ### 5.2 · Las cuatro excepciones del owner
 

@@ -93,29 +93,89 @@
              ser una unidad.
              ⚠️ La columna **desaparece por debajo de 1100 px** —el mismo corte que el racimo—, y
              ahí la lista recupera todo el ancho, que es lo que hace el mockup. --}}
+        {{-- ❗❗❗ **LOS DOS GRUPOS DEL MENÚ** (`DECISIONES #477`, carril de diseño Fase 2 · T2a,
+             `[DECIDIDO owner]`). El menú separa lo que te lleva **DENTRO de la portada** de lo que
+             te lleva a **otra página**, que es lo que el marco aprobado del canvas pide y lo que el
+             visitante necesita saber ANTES de pulsar: bajar por la misma página y cambiar de página
+             no son el mismo gesto.
+             ▶ **Sustituye a la lista PLANA de `#211`**, que era decisión del owner y él mismo
+             reabrió con el canvas delante.
+
+             ⚠️⚠️ **El grupo se DEDUCE de la URL, no es un campo nuevo**, y por eso la lista la sigue
+             mandando la BD sin migración ni panel: un destino es «sección» si apunta a la portada
+             con ancla, y «página» en cualquier otro caso. Un dato que se puede derivar de un hecho
+             no se guarda: guardarlo abre la puerta a que los dos digan cosas distintas.
+
+             ⚠️⚠️ **Y con esto se resuelven solas las DOS CRUCES que el canvas dejaba pendientes**
+             —Tarifas y Cumpleaños son sección Y página a la vez—: el menú ya enlazaba a su
+             **página** (`route('precios')`, `route('cumpleanos')`), no a su ancla, así que caen en
+             «página» sin que nadie tenga que elegir. *La pregunta no se contesta: se disuelve al
+             mirar a qué enlaza de verdad.*
+
+             ⚠️ **El índice `$i` sigue siendo el GLOBAL**, no el de dentro de su grupo: es la clave
+             con la que la vista previa de al lado sabe qué destino está mirando (`vistas[mira]`).
+             Renumerar por grupo haría que señalar el segundo destino de «páginas» enseñara la foto
+             del segundo de «secciones», y no fallaría nada. --}}
+        {{-- ⚠️⚠️ **TRES trampas de Blade pagadas aquí, y la tercera fue este mismo comentario.**
+             (1) Esta plantilla ya abre arriba un bloque PHP en su forma con paréntesis, así que un
+             cierre de bloque **cierra AQUÉL** y no el propio: salió «Undefined variable $grupos» en
+             53 casos. (2) La forma con paréntesis **no admite una closure multilínea**: el
+             compilador corta donde no debe y la plantilla deja de publicar sus destinos.
+             (3) ⚠️⚠️ **Y citar las directivas EN PROSA dentro de un comentario las COMPILA**, así que
+             la primera versión de este aviso abrió un bloque que se tragó media plantilla y dejó el
+             `x-data` sin compilar. Es la trampa de `#307`, que ya avisaba de que *«volvió a caer en
+             él el comentario escrito para advertirlo»* — tercera vez en el repo. **Aquí no se
+             escribe ninguna directiva con su arroba: se describen con palabras.**
+             ▶ Por eso el grupo se calcula **donde se componen los ítems** (`nav.blade.php`) y aquí
+             solo se agrupa por una clave, que es una expresión de una línea. El segundo argumento
+             preserva las claves: el índice global es lo que la vista previa necesita para saber qué
+             se está mirando. --}}
+        @php($grupos = collect($items)->groupBy('grupo', true))
+
         <div class="menu__cols">
             <div class="menu__col-list">
-                <ul class="menu__list">
-                    @foreach ($items as $i => $item)
-                        <li class="menu__item" style="--i: {{ $i }}">
-                            {{-- ⚠️ `mouseenter` **y** `focus`: la vista previa tiene que seguir
-                                 también a quien navega con teclado, o la columna se queda
-                                 contando algo que no es lo que el usuario está mirando. --}}
-                            <a href="{{ $item['url'] }}" @click="menuOpen = false"
-                               @mouseenter="mira = {{ $i }}" @focus="mira = {{ $i }}">
-                                {{-- Los números «01…» de cada destino se RETIRARON (`[DECIDIDO owner, 2026-09-01]`,
-                                     lanzamiento): eran decoración y el owner los quiso fuera. --}}
-                                <span class="menu__t">{{ $item['t'] }}</span>
-                                @if (! empty($item['s']))
-                                    <span class="menu__s">{{ $item['s'] }}</span>
-                                @endif
-                                <span class="menu__arrow" aria-hidden="true">
-                                    <x-icons.arrow-right :width="20" :height="20" />
-                                </span>
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
+                {{-- El ORDEN es fijo y del sistema —primero lo de esta página, luego lo que te saca
+                     de ella—, no el que devuelva la agrupación: con `groupBy` el orden lo decide
+                     cuál aparezca antes en la lista, y eso cambia con la BD. --}}
+                @foreach (['section', 'page'] as $clave)
+                    @php($delGrupo = $grupos->get($clave, collect())->all())
+                    @continue (empty($delGrupo))
+                    {{-- El rótulo es Etiqueta del sistema: mono, mayúsculas, `.16em`. --}}
+                    <p class="menu__group" id="menu-group-{{ $clave }}">{{ __('landing.nav.menu_group.'.$clave) }}</p>
+                    {{-- ⚠️ **Sin modificador por grupo, y es deliberado**: una clase COMPUESTA
+                         (`menu__list--` más una variable) no la ve ningún inventario de CSS —la
+                         trampa de `#287`— y aquí no aportaría nada, porque los dos grupos se pintan
+                         igual: lo que los distingue es su rótulo y su flecha. --}}
+                    <ul class="menu__list" aria-labelledby="menu-group-{{ $clave }}">
+                        @foreach ($delGrupo as $i => $item)
+                            <li class="menu__item" style="--i: {{ $i }}">
+                                {{-- ⚠️ `mouseenter` **y** `focus`: la vista previa tiene que seguir
+                                     también a quien navega con teclado, o la columna se queda
+                                     contando algo que no es lo que el usuario está mirando. --}}
+                                <a href="{{ $item['url'] }}" @click="menuOpen = false"
+                                   @mouseenter="mira = {{ $i }}" @focus="mira = {{ $i }}">
+                                    {{-- Los números «01…» de cada destino se RETIRARON (`[DECIDIDO owner, 2026-09-01]`,
+                                         lanzamiento): eran decoración y el owner los quiso fuera. --}}
+                                    <span class="menu__t">{{ $item['t'] }}</span>
+                                    @if (! empty($item['s']))
+                                        <span class="menu__s">{{ $item['s'] }}</span>
+                                    @endif
+                                    {{-- ⚠️ La flecha DICE el grupo: hacia abajo si te lleva dentro de
+                                         esta misma página, hacia la derecha si te saca de ella. Es la
+                                         misma distinción del rótulo, dicha en el sitio donde el ojo ya
+                                         está mirando al pulsar. --}}
+                                    <span class="menu__arrow" aria-hidden="true">
+                                        @if ($clave === 'section')
+                                            <x-icons.chevron-down :width="20" :height="20" />
+                                        @else
+                                            <x-icons.arrow-right :width="20" :height="20" />
+                                        @endif
+                                    </span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endforeach
             </div>
 
             <aside class="menu__aside">

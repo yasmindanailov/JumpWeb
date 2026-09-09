@@ -68,9 +68,23 @@
     // URL— y en una lista plana sería el mismo destino dos veces; pero «Zona Kids» y «Zona
     // Jump» **comparten ancla** (`/#zones`) y son dos destinos distintos. Deduplicar por URL
     // se habría comido uno de los dos sin avisar.
+    // ── El GRUPO de cada destino (`DECISIONES #477`) ────────────────────────────────────────
+    // El menú se pinta en DOS grupos —lo que te lleva dentro de esta página y lo que te saca de
+    // ella—, y el grupo **se DEDUCE de la URL**: no es un campo, ni de la BD ni del panel. Un dato
+    // derivable de un hecho no se guarda; guardarlo abre la puerta a que los dos digan cosas
+    // distintas y a que alguien tenga que mantenerlo a mano en cada alta.
+    // ⚠️ Y con esto se resuelven **las dos cruces** que el canvas dejaba pendientes (Tarifas y
+    // Cumpleaños son sección Y página): el menú ya enlaza a su PÁGINA, así que caen ahí solas.
+    $grupoDeUrl = static function (string $url): string {
+        $partes = parse_url($url);
+        $ruta = $partes['path'] ?? '/';
+
+        return ($ruta === '/' || $ruta === '') && ! empty($partes['fragment']) ? 'section' : 'page';
+    };
+
     $menuItems = [];
     foreach (array_merge($simpleLinks, $parkItems, $servicesItems) as $item) {
-        $menuItems[$item['t'].'|'.$item['url']] ??= $item;
+        $menuItems[$item['t'].'|'.$item['url']] ??= $item + ['grupo' => $grupoDeUrl($item['url'])];
     }
     $menuItems = array_values($menuItems);
 @endphp

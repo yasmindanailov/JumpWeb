@@ -646,6 +646,16 @@
             <span class="reserve__tag" aria-hidden="true"></span>
 
             <div class="reserve__body">
+                {{-- ❗ **EL ESLOGAN A ROTULADOR, EN EL CIERRE** (`DECISIONES #477`, `[DECIDIDO owner]`).
+                     El marco aprobado del canvas lo manda al cierre **y** al menú, o sea una vez por
+                     SUPERFICIE y no una vez por página — y las dos superficies nunca se ven a la vez,
+                     porque el menú es `inset: 0` y tapa la portada entera (el mismo razonamiento que
+                     ya está escrito en `menu.blade.php`).
+                     ⚠️ Va **antes** del titular y no después: es el guiño que presenta la última
+                     pantalla antes de comprar, no un pie de página del bloque.
+                     ⚠️ Comparte la clave con el menú (`landing.hero.kicker`) a propósito: es el MISMO
+                     eslogan, y tenerlo en dos claves invita a que un día digan cosas distintas. --}}
+                <p class="reserve__slogan">{{ __('landing.hero.kicker') }}</p>
                 <h2>
                     {{ __('landing.reserve.title') }}<br />
                     <span class="stroke">{{ __('landing.reserve.stroke') }}</span>
