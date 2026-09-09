@@ -100,7 +100,26 @@ return [
         ],
     ],
     'zones' => [
-        'title' => 'Dos zonas',
+        /*
+         * La sección «Para quién» (`#478`). ⚠️ El RÓTULO no lleva número: el canvas lo decidió así
+         * (`[DECIDIDO owner]` suyo) y aquí ya se había llegado a lo mismo en `#303`, que retiró la
+         * etiqueta de toda vista pública.
+         * ⚠️ La REGLA es la frase del parque y va entera: «manda la edad» primero y la altura como
+         * desempate. Partirla en dos líneas la convierte en dos reglas.
+         */
+        'eyebrow' => 'Para quién',
+        'title' => 'Cada uno tiene su zona',
+        'rule' => 'Manda la edad. Si no cuadra, manda la altura.',
+        'from' => 'desde',
+        'see_zone' => 'Ver la zona :zone',
+        /*
+         * La regla de altura, redactada por `ZoneCards`. ⚠️ Son TRES formas y no una con un valor
+         * opcional: «hasta 1,30 m» y «desde 1,30 m» dicen lo contrario, y una sola frase con el
+         * número dentro obligaría a que el idioma adivinara el sentido.
+         */
+        'height_up_to' => 'hasta :h m',
+        'height_from' => 'desde :h m',
+        'height_between' => 'de :a a :b m',
         'intro' => 'Diseñamos dos universos diferentes: uno para los que vuelan sin frenos y otro para los que están descubriendo el salto. Elige el tuyo.',
     ],
     'rides' => [

@@ -322,6 +322,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T1b (`#470`) | `--r-xs` y `--r-sm`: `6px` → **`10px`** · `--r-lg`: `24px` → **`16px`** |
 | T1c (`#471`) | añadir `--sec-air: 144px` y `--sec-air-mobile: 96px` — **los dos o ninguno**, lo vigila `RhythmScaleTest` |
 | T1d (`#472`) | añadir `--col-max: 1120px` |
+| T2b (`#478`) | **DATO, desde el panel** — Zonas: poner la **altura** de cada zona (Kids «máxima 130», Jump «mínima 130») y **quitar la altura del texto libre** de su edad, o saldrá dos veces («+8 años · +1,30 m desde 1,30 m», medido). ⚠️ Y decidir dos cosas suyas: el rótulo de la tarifa especial es «Viernes, findes y festivos» y en el sello queda largo (el mockup escribe «finde»), y el **orden** de las tarjetas lo manda `zones.position` —hoy sale Jump primero y el canvas ordena Kids · Jump—. |
 
 ⚠️ Y arrastra las **cinco líneas** que ya venían pendientes de `auditoria-diseno.md` (`#434` dos,
 `#436` tres): comprobar que están puestas antes de dar por buena una verificación visual en
@@ -372,7 +373,31 @@ navegador instalado**.
 | | Tanda | Estado |
 |---|---|---|
 | T2a | **El armazón**: menú en dos grupos · eslogan en el cierre · el alto del par confirmado | ✅ `#477` |
-| T2b–T2i | Las **ocho secciones** de la portada (§5.1) | ⬜ |
+| T2b | **01 · Para quién**: dos tarjetas de zona · la altura pasa a DATO · 03 se separa | ✅ `#478` |
+| T2c–T2i | Las **siete secciones** restantes (§5.1) | ⬜ |
+
+✅ **T2b · «Para quién»** (`#478`). Rótulo · titular · **la regla del parque en una frase** · dos
+tarjetas donde **la tarjeta entera es el enlace**, con el sello de precio girado. `[DECIDIDO owner]`:
+se **separa** 01 de 03 —la tarjeta *navega* a la tarifa y las pestañas *eligen* tarifa, así que no
+vuelve el defecto de `#295`—, la **altura pasa a dos columnas** de `zones` (nullable: sin dato no se
+pinta regla) y **manda la BD** en las edades.
+
+❗❗❗ **Hallazgo: el canvas está equivocado sobre las edades, y su propia advertencia también.** Dice
+Kids **2–6** / Jump **7+** y avisa de un conflicto con un catálogo que, según él, usa «1–6 / 7–99».
+**Medido**: `zones.age_range` dice **4–7** y **+8**, y `ticket_types.guest_age_min/max` —el que
+**cobra** el suplemento mixto— dice **lo mismo**. Los dos datos del producto coinciden; el que
+diverge es el mockup, con una tercera cifra que no es la de nadie.
+
+⚠️ **Las tarjetas alternan SUPERFICIE, no color de zona**: pintarlas con la paleta de la zona sería
+la **grieta 01** que el propio canvas nos reportó.
+
+⚠️ **`ZoneCards` vive en Booking**, y lo dijo `ModuleBoundariesTest`: `Content` solo puede ver
+`Booking\Contracts`. No se tocó el grafo, se movió la clase.
+
+⚠️⚠️ **Tres defectos que solo vieron la suite y el navegador**: `$especial['rate']` sobre `null`
+**lanza** (31 casos en rojo, invisible en local porque aquí sí hay tarifa de finde) · el sello salía
+sin rótulo porque `rate_types` tiene `label` y no `name` · y la altura salía **duplicada** porque el
+texto libre ya la llevaba.
 
 ▶ **El armazón coincidía con el marco aprobado del canvas en SIETE de diez** —hero y armazón como un
 mecanismo, el par doble, el logo botando una vez, idioma y teléfono en menú y pie—, así que la tanda

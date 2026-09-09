@@ -72,7 +72,14 @@ return [
         ],
     ],
     'zones' => [
-        'title' => 'Two zones',
+        'eyebrow' => 'Who it is for',
+        'title' => 'Everyone has their zone',
+        'rule' => 'Age decides. If it does not fit, height decides.',
+        'from' => 'from',
+        'see_zone' => 'See the :zone zone',
+        'height_up_to' => 'up to :h m',
+        'height_from' => 'from :h m',
+        'height_between' => 'from :a to :b m',
         'intro' => 'We built two different worlds — one for the kids who fly without brakes, one for those just learning to jump. Pick yours.',
     ],
     'rides' => [

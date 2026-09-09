@@ -101,6 +101,35 @@ class ZoneForm
                     self::translatableTab('fr', __('admin.zones.lang.fr')),
                 ]),
 
+                /*
+                 * **LA REGLA DE ALTURA** (`#478`, carril de diseño Fase 2). La sección «Para quién»
+                 * de la portada dice la regla del parque en dos mitades —manda la edad, y si no
+                 * cuadra manda la altura— y **dibuja** la segunda con su umbral colocado. Para eso
+                 * hace falta el número, no la frase.
+                 * ⚠️ **Vacío es una RESPUESTA, no una falta**: sin altura, esa zona no pinta la
+                 * barra. Es lo que permite que una instalación que no restringe por altura no tenga
+                 * que inventarse un valor.
+                 */
+                Section::make(__('admin.zones.section_height'))
+                    ->description(__('admin.zones.section_height_hint'))
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('height_min_cm')
+                            ->label(__('admin.zones.field_height_min_cm'))
+                            ->helperText(__('admin.zones.field_height_min_hint'))
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(250)
+                            ->suffix('cm'),
+                        TextInput::make('height_max_cm')
+                            ->label(__('admin.zones.field_height_max_cm'))
+                            ->helperText(__('admin.zones.field_height_max_hint'))
+                            ->numeric()
+                            ->minValue(1)
+                            ->maxValue(250)
+                            ->suffix('cm'),
+                    ]),
+
                 Section::make(__('admin.zones.section_cupo'))
                     ->description(__('admin.zones.section_cupo_hint'))
                     ->columns(2)

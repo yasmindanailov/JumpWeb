@@ -2653,6 +2653,18 @@ return [
         'field_age_label' => 'Etiqueta de edad',
         'field_age_range' => 'Rango de edad',
 
+        /*
+         * La REGLA DE ALTURA (`#478`). ⚠️ El texto de ayuda dice que vacío es una respuesta, porque
+         * un campo numérico en blanco se lee como «se me ha olvidado» y aquí significa «esta zona no
+         * restringe por altura» — que es el caso normal fuera de un parque de saltos.
+         */
+        'section_height' => 'Regla de altura',
+        'section_height_hint' => 'La portada dice «manda la edad; si no cuadra, manda la altura» y dibuja este umbral. Déjalo vacío si esta zona no restringe por altura: entonces no se pinta nada.',
+        'field_height_min_cm' => 'Altura mínima',
+        'field_height_min_hint' => 'Hay que medir al menos esto para entrar. Ej.: 130.',
+        'field_height_max_cm' => 'Altura máxima',
+        'field_height_max_hint' => 'No se puede pasar de aquí. Ej.: 130 en la zona pequeña.',
+
         'section_cupo' => 'Aforo de packs (cupo) por zona',
         'section_cupo_hint' => 'Solo aplica si la zona aloja packs (cumpleaños). Vacío = usa el valor global de Configuración; un valor manda sobre el global. La ocupación se cuenta por zona.',
         'field_max_per_slot' => 'Fiestas por franja',

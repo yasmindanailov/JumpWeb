@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\ZoneCards;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\VenueRule;
@@ -37,18 +38,31 @@ class HomeController extends Controller
                 <=> [$complements->isPurchasable($b) ? 0 : 1, $b->position])
             ->values()));
 
+        // Las entradas activas de zona operativa, que alimentan a la vez la sección de tarifas y el
+        // sello de precio de las tarjetas de zona. Se resuelven UNA vez.
+        $entradas = TicketType::with(['prices.rateType', 'addons.prices.rateType'])
+            ->ofType(TicketType::TYPE_ENTRY)
+            ->where('is_active', true)->inOperationalZone()->orderBy('position')->get();
+
         return view('home', [
             'zones' => $zones,
             'complements' => $complements,
+            /*
+             * Las tarjetas de «Para quién» (`#478`). Se componen en el dominio y no en la vista:
+             * cruzar zonas con entradas, elegir la más barata y redactar la regla de altura es
+             * lógica, y en Blade se convierte en seis copias de la misma regla.
+             */
+            'zoneCards' => (new ZoneCards)->compose($zones, $entradas),
             // ⚠️ **`heroStatus` se fue al payload compartido en `#230`** y por eso ya no está aquí:
             // su consumidor dejó de ser el chip del hero —que `#226` retiró— y pasó a ser el bloque
             // de datos del MENÚ, que vive en las doce vistas. Calcularlo también aquí sería
             // ejecutar el mismo servicio dos veces en la misma petición.
             // `inOperationalZone()`: NO pintar entradas de una zona desactivada con CTA «Reservar»
             // que el flujo de compra no puede vender (espejo de packs/sidebar; Sistema 6 · W4).
-            'tickets' => TicketType::with(['prices.rateType', 'addons.prices.rateType'])
-                ->ofType(TicketType::TYPE_ENTRY)
-                ->where('is_active', true)->inOperationalZone()->orderBy('position')->get(),
+            // ⚠️ La MISMA colección que alimenta las tarjetas de zona: se resolvía aquí y volver a
+            // consultarla para el sello de precio habría sido la misma consulta dos veces por
+            // petición, con el riesgo de que las dos secciones ofrecieran precios distintos.
+            'tickets' => $entradas,
             // Cumpleaños = productos `pack` (#70/#87). El selector de la landing soporta N packs
             // por id único (#194). Cada pack muestra sus complementos (pivote) bajo la tarjeta.
             // Landing de packs: VISIBLE en la web (`is_active`) Y en venta online (`sellable()`).

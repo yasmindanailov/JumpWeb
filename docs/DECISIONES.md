@@ -25501,3 +25501,34 @@ La **T2a · el armazón**, primera tanda de la Fase 2 del carril de diseño. Ant
 ⚠️ **Y una cuarta, de `#287`**: la clase del modificador se emitía **compuesta** (`menu__list--` más una variable) y ningún inventario de CSS ve una clase interpolada, así que `ArmazonCssHasNoOrphansTest` la dio por huérfana. Aquí no aportaba —los dos grupos se pintan igual, lo que los distingue es el rótulo y la flecha—, así que se retiró con su regla en vez de excepcionarla.
 
 **Verificación**: suite **4.502** en verde · `MenuGroupsTest` con 7 casos y **5/5 mutaciones** que muerden, árbol idéntico · verificado en navegador a 390 y 1280: dos grupos con 4 + 2 destinos, scroll en la columna, seis flechas y el eslogan a 18 px en Permanent Marker contra su control.
+
+## #478 · 2026-09-09 · `[DECIDIDO owner]` La sección «Para quién»: dos tarjetas de zona, la altura pasa a ser un DATO, y el canvas resulta estar equivocado sobre las edades
+
+La **T2b** del carril de diseño: la primera de las ocho secciones de la portada. El encargo del owner fue *«idéntico al mockup, pero respetando nuestro data-driven»*, y esa frase es la que ordena toda la tanda — **idéntico en FORMA, data-driven en CONTENIDO**.
+
+▶ **Tres decisiones suyas, las tres con lo medido delante.**
+
+**1 · Se SEPARA lo que estaba unificado.** El canvas parte 01 «Para quién» (dos tarjetas de zona) de 03 «Qué hay dentro» (las atracciones), y hoy vivían en una sola sección con pestañas (`#302`). ⚠️ **Esto no reintroduce el defecto de `#295`**, que era tener dos superficies haciendo la MISMA elección: la tarjeta **navega** a la tarifa de su zona y las pestañas de tarifas **eligen tarifa** — son eslabones del mismo camino, no dos puertas a lo mismo. La sección de atracciones solo cambia de sitio; su rediseño es tanda aparte.
+
+**2 · La ALTURA pasa a ser un dato estructurado** (`zones.height_min_cm` / `height_max_cm`, nullable). Hoy vivía dentro del texto libre de la edad —medido: `"+8 años · 1,30 m+"`— y con una frase no se puede **dibujar** la regla. ⚠️ **Son DOS columnas y no una porque la misma cifra significa lo contrario según la zona**: 130 es «hasta» en la pequeña y «a partir de» en la grande; deducir el sentido de qué zona sea es el tipo de regla implícita que luego nadie encuentra. ⚠️ `null` significa **«esta zona no restringe por altura»**, no cero — es el caso normal fuera de un parque de saltos, y sin dato **no se pinta nada**.
+
+**3 · Manda la BD para las edades**, y ahí está el hallazgo. ❗❗❗ **El canvas está equivocado, y su propia nota también.** Dice que las zonas deberían ser Kids **2–6** y Jump **7+**, y advierte de un conflicto con el catálogo, que según él usa «1–6 / 7–99». **Medido**: `zones.age_range` dice **4–7** y **+8**, y `ticket_types.guest_age_min/max` —el que **cobra** el suplemento de fiesta mixta— dice **exactamente lo mismo**. O sea que los dos datos del producto **coinciden entre sí** y el que diverge es el mockup, con una tercera cifra que no es la de nadie. La sección lee la BD, así que el día que el owner cambie el dato cambiará sola; no se ha tocado un céntimo.
+
+▶ **Lo que se construyó.** Rótulo en Etiqueta · titular en Display L · **la regla del parque en una frase** —«manda la edad; si no cuadra, manda la altura»—, que sustituye a la entradilla larga cuya última frase («Elige el tuyo») tenía como sujeto el selector que esta tanda retira. Debajo, **dos tarjetas donde la tarjeta ENTERA es el enlace, sin botón**: es la pegatina de `#323`, con el sello de precio girado, edad y altura en una sola línea, y el destino escrito.
+
+⚠️ **Las tarjetas alternan SUPERFICIE, no color de zona.** El artboard pinta una en papel y otra en tinta, y `data-surface` ya es un mecanismo del producto: con dos zonas sale el mockup y con cinco sigue teniendo sentido. **Pintarlas con la paleta de la zona sería la grieta 01 que el propio canvas nos reportó** — un color que llega desde los DATOS decidiendo el aspecto de un componente.
+
+⚠️ **`ZoneCards` vive en Booking y no en Content, y lo dijo la guarda de fronteras**: compone zonas, entradas y precios, y `Content` solo puede mirar a `Booking\Contracts`. Meterlo en Content obligaba a inventar un contrato para lo que es presentación de este módulo, o a debilitar el grafo. **No se tocó el grafo: se movió la clase.**
+
+❗❗❗ **TRES defectos que la SUITE Y EL NAVEGADOR cazaron, y ninguno se veía leyendo el código.**
+1. **`$especial['rate']` sobre `null` no devuelve `null`: lanza.** Una zona sin tarifa especial —el caso normal fuera de este parque— tumbaba la portada entera: **31 casos en rojo**. No salió en local porque los datos de aquí sí tienen tarifa de finde. *Un dato presente en tu BD no es un dato que exista.*
+2. **El sello pintaba «14 €» sin rótulo**: `rate_types` no tiene columna `name` —es `label`—, así que `tr('name')` devolvía cadena vacía. **No fallaba nada**: un rótulo ausente se ve igual que un rótulo que no toca.
+3. **La altura salía DUPLICADA** —«+8 años · +1,30 m desde 1,30 m»— porque el texto libre ya la llevaba escrita. Es dato del cliente: **paso de despliegue**, no código.
+
+⚠️⚠️ **Y la mutación encontró una guarda MÍA laxa**: comprobar que el nombre de la zona *aparece* pasaba en verde con la plantilla escribiendo «KIDS» delante del dato. *Que el dato salga no es que salga SOLO el dato* — hoy se compara el contenido exacto del elemento.
+
+⚠️ **`ZonesSectionTest` se re-apuntó, no se relajó**: cinco de sus casos miran al selector de zona y a las tarjetas de atracción, que **cambiaron de sitio sin cambiar de naturaleza**. El localizador nuevo acota igual de estrecho —al ELEMENTO, nunca «hasta la siguiente sección», que es la lección de `#314`— y su caso de control comprueba ahora **los dos** recortes por separado, más que de verdad sean dos secciones distintas.
+
+▶ **Pendiente del owner, y son de DATO, no de código**: el rótulo de la tarifa especial es «Viernes, findes y festivos» y en el sello queda largo (el mockup escribe «finde») · el **orden** de las tarjetas lo manda `zones.position` y hoy sale Jump primero, mientras el canvas ordena Kids · Jump · y **la limpieza del `age_range`** en producción, para que la altura no salga dos veces.
+
+**Verificación**: suite **4.510** en verde · `ZoneCardsSectionTest` con 8 casos y **6/6 mutaciones** que muerden, árbol idéntico · verificado en navegador a 390 y 1280 (una columna y dos, pegatina con su keyline y su sombra, sello girado, cero desborde horizontal).

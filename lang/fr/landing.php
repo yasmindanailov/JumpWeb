@@ -72,7 +72,14 @@ return [
         ],
     ],
     'zones' => [
-        'title' => 'Deux zones',
+        'eyebrow' => 'Pour qui',
+        'title' => 'Chacun a sa zone',
+        'rule' => "L'âge décide. Si ça ne colle pas, c'est la taille.",
+        'from' => 'à partir de',
+        'see_zone' => 'Voir la zone :zone',
+        'height_up_to' => "jusqu'à :h m",
+        'height_from' => 'à partir de :h m',
+        'height_between' => 'de :a à :b m',
         'intro' => 'On a conçu deux univers différents — un pour ceux qui sautent déjà sans freins, un pour ceux qui apprennent. Choisis le tien.',
     ],
     'rides' => [

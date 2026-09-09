@@ -249,13 +249,91 @@
                  ▶ *Un ajuste sobrevive a la razón que lo justificaba si nadie lo revisa al cambiar
                  lo que hay alrededor.* Anclada al titular, su sitio ya no depende de cuánto texto
                  tenga la sección. --}}
+            {{-- ⚠️ El RÓTULO vuelve, y no contradice a `#303`. Aquélla retiró la etiqueta genérica
+                 («ZONAS», que repetía el titular); ésta dice **a quién va dirigida** la sección, que
+                 es información que el titular no da. Es el molde del canvas: rótulo en Etiqueta ·
+                 titular en Display L · la regla debajo. --}}
+            <p class="zones__eyebrow">{{ __('landing.zones.eyebrow') }}</p>
             <div class="zones__titulo">
                 <x-site.ilu clave="slot-zonas" class="zones__mancha" />
                 <h2 class="zones__title">{{ __('landing.zones.title') }}</h2>
             </div>
-            <p class="zones__intro">{{ __('landing.zones.intro') }}</p>
+            {{-- ⚠️⚠️ **La REGLA va entera y en una frase.** Es la del parque —manda la edad, y la
+                 altura desempata— y partirla en dos líneas la convierte en dos reglas, que es justo
+                 lo que la sección existe para evitar: que el visitante llegue a la puerta sin saber
+                 cuál manda. Sustituye a la entradilla larga, cuya última frase («Elige el tuyo»)
+                 tenía como sujeto el selector de pestañas que esta tanda retira. --}}
+            <p class="zones__rule">{{ __('landing.zones.rule') }}</p>
         </div>
 
+        {{-- ══ LAS DOS TARJETAS DE ZONA ═══════════════════════════════════════════════════════
+             `DECISIONES #478` · Fase 2 · T2b. **La tarjeta ENTERA es el enlace, sin botón** (marco
+             aprobado del canvas), y lleva a la TARIFA de esa zona: elegir zona y ver su precio es
+             un solo recorrido.
+             ⚠️⚠️ **Esto no reintroduce el defecto de `#295`**, que era tener dos superficies
+             haciendo la MISMA elección: aquéllas saltaban a la sección donde unas pestañas volvían
+             a elegir zona. Aquí la tarjeta **navega** y las pestañas de tarifas **eligen tarifa** —
+             son eslabones del mismo camino, no dos puertas a lo mismo.
+             ⚠️ Todo el contenido sale de la BD (`ZoneCards`): nombre, descripción y edad son campos
+             traducibles de `zones`, la altura sus dos columnas nuevas, y el precio, del catálogo por
+             los mismos métodos que usa el resto de la landing. **Lo que no hay, no se pinta.** --}}
+        <ul class="zone-cards" role="list">
+            @foreach ($zoneCards as $i => $card)
+                <li class="zone-cards__item">
+                    {{-- ⚠️⚠️ **Las tarjetas ALTERNAN superficie, y eso es un mecanismo, no el color de
+                         esta marca.** El artboard pinta una en papel y otra en tinta, y `data-surface`
+                         es el interruptor que el producto ya tiene (`tema-por-instalacion.md`): con
+                         dos zonas sale exactamente el mockup, y con tres o con una sigue teniendo
+                         sentido. Pintarlas con el color de la zona sería la grieta 01 del propio
+                         canvas —el color de un DATO decidiendo el aspecto de un componente—. --}}
+                    <a class="zone-card" href="{{ route('precios') }}#zona-{{ $card['slug'] }}"
+                       data-zone="{{ $card['slug'] }}"
+                       @if ($i % 2 === 1) data-surface="ink" @endif>
+                        {{-- El SELLO de precio, girado. ⚠️ Solo si la zona tiene entrada vendible:
+                             sin precio no se pinta un sello vacío ni un «consultar». --}}
+                        @if ($card['from'] !== null)
+                            <p class="zone-card__seal">
+                                <span class="zone-card__from">{{ __('landing.zones.from') }}</span>
+                                <span class="zone-card__price">{{ $card['from'] }}</span>
+                                @if ($card['special'] !== null)
+                                    <span class="zone-card__special">{{ $card['special'] }} {{ $card['specialLabel'] }}</span>
+                                @endif
+                            </p>
+                        @endif
+
+                        <h3 class="zone-card__name">{{ $card['name'] }}</h3>
+
+                        {{-- ⚠️ Edad y altura van en la MISMA línea y separadas por un punto medio:
+                             son las dos mitades de una sola regla, no dos datos sueltos. --}}
+                        <p class="zone-card__who">
+                            <span class="zone-card__age">{{ $card['age'] }}</span>
+                            @if ($card['height'])
+                                <span class="zone-card__height">{{ $card['height'] }}</span>
+                            @endif
+                        </p>
+
+                        @if ($card['description'])
+                            <p class="zone-card__what">{{ $card['description'] }}</p>
+                        @endif
+
+                        {{-- ⚠️ **No es un botón**: la tarjeta entera ya es el enlace, y meter un
+                             control dentro de un `<a>` es marcado inválido además de dos dianas para
+                             el mismo destino. Es la afordancia que dice a dónde lleva. --}}
+                        <span class="zone-card__go">
+                            {{ __('landing.zones.see_zone', ['zone' => $card['name']]) }}
+                            <x-icons.arrow-right :width="18" :height="18" />
+                        </span>
+                    </a>
+                </li>
+            @endforeach
+        </ul>
+    </section>
+
+    {{-- ══ QUÉ HAY DENTRO · las atracciones ════════════════════════════════════════════════════
+         `#478`: sale de dentro de «Para quién» y pasa a ser sección propia, que es lo que el canvas
+         declara (01 presenta las zonas · 03 enseña lo que hay dentro). Su rediseño —el mosaico de
+         cinco fotos— es tanda aparte; aquí solo cambia de sitio, con su selector intacto. --}}
+    <section id="rides-section" class="section wrap">
         <div id="rides" class="zones__juegos">
             {{-- EL SELECTOR. Antes era una fila de palabras; ahora cada pestaña dice **quién es** la
                  zona: su dibujo del kit, su nombre y su edad.

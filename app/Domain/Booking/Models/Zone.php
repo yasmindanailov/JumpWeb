@@ -21,6 +21,15 @@ class Zone extends Model
         'description' => 'array',
         'age_label' => 'array',
         'age_range' => 'array',
+        /*
+         * La REGLA DE ALTURA (`#478`). Enteros en centímetros, y **`null` significa «esta zona no
+         * restringe por altura»**, no cero: es el caso normal fuera de un parque de saltos, y la
+         * sección pregunta por el dato antes de dibujar la barra.
+         * ⚠️ Dos columnas porque la misma cifra significa lo contrario según la zona: 130 es «al
+         * menos» en la grande y «hasta» en la pequeña.
+         */
+        'height_min_cm' => 'integer',
+        'height_max_cm' => 'integer',
         'is_active' => 'boolean',
         'show_in_landing' => 'boolean',
         // Cupo de packs POR ZONA (override del ajuste global; null = usa el global).

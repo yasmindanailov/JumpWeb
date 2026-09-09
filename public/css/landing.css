@@ -1268,6 +1268,103 @@ img { display: block; max-width: 100%; }
   color: var(--fg-mute); max-width: 56ch;
   margin: 0;
 }
+
+/* ══ SECCIÓN «PARA QUIÉN» · el rótulo, la regla y las dos tarjetas ═══════════════════════════
+   `DECISIONES #478` · carril de diseño Fase 2 · T2b. Molde del canvas: rótulo en **Etiqueta**,
+   titular en Display L y la regla del parque debajo, en **Entradilla**. */
+
+/* ⚠️ El rótulo VUELVE y no contradice a `#303`: aquélla retiró la etiqueta que repetía el titular
+   («ZONAS» sobre «Dos zonas»); ésta dice a QUIÉN va dirigida la sección, que el titular no dice. */
+.zones__eyebrow {
+  margin: 0 0 var(--sp-8);
+  font-family: var(--font-mono); font-size: var(--fs-12);
+  text-transform: uppercase; letter-spacing: 0.16em;
+  color: var(--fg-mute);
+}
+
+/* La REGLA del parque. Es una frase, no una entradilla larga: manda la edad y la altura desempata. */
+.zones__rule {
+  margin: var(--sp-12) 0 0;
+  font-size: var(--fs-18); line-height: 1.5; font-weight: 500;
+  color: var(--fg); max-width: 46ch;
+}
+
+/* Las dos tarjetas. **Rejilla, no carril**: son dos y caben — un carril con dos piezas obliga a
+   arrastrar para ver la segunda, que es esconder la mitad de la respuesta. */
+.zone-cards {
+  list-style: none; margin: var(--sp-28) 0 0; padding: 0;
+  display: grid; gap: var(--sp-16);
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .zone-cards { grid-template-columns: 1fr 1fr; gap: var(--sp-20); }
+}
+
+/* ❗ **LA TARJETA ENTERA ES EL ENLACE, sin botón dentro** (marco aprobado del canvas). Es la
+   PEGATINA de `#323` —borde de tinta y sombra dura—, que es el nivel que este sistema reserva a lo
+   que se elige o se compra; el apoyo va sin sombra.
+   ⚠️ **Lee `--paper-fg` y no `--fg`**: dentro de `[data-surface="ink"]` el segundo vale claro, y la
+   tarjeta en tinta se quedaría sin keyline (la nota que ya está escrita en `landing.css:221`). */
+.zone-card {
+  display: flex; flex-direction: column; gap: var(--sp-12);
+  padding: var(--sp-20);
+  border: 1px solid var(--paper-fg);
+  border-radius: var(--r-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-float);
+  color: var(--fg); text-decoration: none;
+  position: relative; overflow: hidden;
+  height: 100%;
+  transition: box-shadow var(--dur-estado) var(--ease-sale);
+}
+/* ⚠️ **Responde la SOMBRA, no la posición** (`#303`, `#217`): la pegatina se apoya al pulsarla en
+   vez de levitar. Un salto en `transform` aquí sería el hover que `#435` retiró de 19 sitios. */
+.zone-card:hover { box-shadow: none; }
+
+/* El SELLO de precio, girado. ⚠️ Es el ÚNICO giro de la tarjeta: el sistema limita el gesto a las
+   piezas que se pegan encima de algo, y dos cosas torcidas en la misma caja se leen como un error. */
+.zone-card__seal {
+  align-self: flex-start;
+  margin: 0;
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  padding: var(--sp-8) var(--sp-12);
+  background: var(--fg); color: var(--bg);
+  border-radius: var(--r-sm);
+  transform: rotate(-2deg);
+}
+.zone-card__from {
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  text-transform: uppercase; letter-spacing: 0.16em;
+}
+.zone-card__price { font-family: var(--font-display); font-size: var(--fs-22); line-height: 1; }
+.zone-card__special { font-size: var(--fs-11); opacity: 0.86; }
+
+.zone-card__name {
+  margin: 0;
+  font-family: var(--font-display); font-size: var(--fs-title, var(--fs-22));
+  line-height: 1.05;
+}
+
+/* Edad y altura son las DOS MITADES de una regla, no dos datos: van en la misma línea, separadas
+   por un punto medio que pinta el pseudo — así el separador no viaja en la traducción. */
+.zone-card__who {
+  margin: 0;
+  font-size: var(--fs-15); color: var(--fg-mute);
+  display: flex; flex-wrap: wrap; gap: var(--sp-8);
+}
+.zone-card__height::before { content: '·'; margin-right: var(--sp-8); }
+
+.zone-card__what { margin: 0; font-size: var(--fs-15); line-height: 1.55; color: var(--fg-mute); }
+
+/* La afordancia de destino. **No es un botón**: la tarjeta ya es el enlace, y un control dentro de
+   un `<a>` es marcado inválido además de dos dianas para el mismo sitio. */
+.zone-card__go {
+  margin-top: auto;
+  display: inline-flex; align-items: center; gap: var(--sp-8);
+  font-weight: 700; font-size: var(--fs-15);
+  color: var(--interactive);
+}
+.zone-card:hover .zone-card__go { text-decoration: underline; }
 /* ⚠️⚠️ **`isolation: isolate` + `z-index: -1`, y NO «subir el contenido con `position: relative`».**
    Esa fue la primera solución y ROMPIÓ cosas: `> :not(.ilu) { position: relative }
 

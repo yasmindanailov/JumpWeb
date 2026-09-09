@@ -100,11 +100,31 @@ class ZonesSectionTest extends TestCase
      */
     private function seccion(): string
     {
+        return $this->acota('zones', 'la portada ya no tiene la sección `#zones`');
+    }
+
+    /**
+     * **La sección de ATRACCIONES, que desde `#478` es una sección propia.**
+     *
+     * ⚠️⚠️ Hasta esa tanda el selector de zona y las tarjetas de atracción vivían DENTRO de
+     * `#zones`, así que `seccion()` los alcanzaba. Al separar 01 («Para quién», dos tarjetas de
+     * zona) de 03 («Qué hay dentro»), el sujeto de cinco casos **cambió de sitio sin cambiar de
+     * naturaleza** — y eso es re-apuntar, no relajar: el localizador nuevo acota igual de estrecho,
+     * al ELEMENTO y no a un tramo de página, que es la lección de `#314`.
+     */
+    private function seccionRides(): string
+    {
+        return $this->acota('rides-section', 'la portada ya no tiene la sección de atracciones');
+    }
+
+    /** Acota una `<section>` por su id, al elemento y nunca «hasta la siguiente». */
+    private function acota(string $id, string $mensaje): string
+    {
         $html = $this->home();
 
-        $this->assertStringContainsString('<section id="zones"', $html, 'la portada ya no tiene la sección `#zones`');
+        $this->assertStringContainsString('<section id="'.$id.'"', $html, $mensaje);
 
-        preg_match('#<section id="zones".*?</section>#s', $html, $m);
+        preg_match('#<section id="'.preg_quote($id, '#').'".*?</section>#s', $html, $m);
 
         $this->assertNotEmpty($m, 'no encuentro dónde acaba la sección: ha cambiado el marcado');
 
@@ -124,16 +144,29 @@ class ZonesSectionTest extends TestCase
      */
     public function test_the_probe_frames_a_real_section(): void
     {
-        $seccion = $this->seccion();
+        $zonas = $this->seccion();
+        $rides = $this->seccionRides();
 
         $this->assertGreaterThan(
-            2000, strlen($seccion),
-            'la sección acotada es sospechosamente corta: el localizador probablemente no está '.
-            'midiendo lo que cree.',
+            600, strlen($zonas),
+            'la sección de zonas acotada es sospechosamente corta: el localizador probablemente no '.
+            'está midiendo lo que cree.',
+        );
+        $this->assertGreaterThan(
+            2000, strlen($rides),
+            'la sección de atracciones acotada es sospechosamente corta.',
         );
 
-        $this->assertStringContainsString('zone-pick__tab', $seccion, 'no hay selector de zona dentro');
-        $this->assertStringContainsString('ride-card', $seccion, 'no hay tarjetas de atracción dentro');
+        // ⚠️ Cada localizador se comprueba con SU sujeto, y por separado. Antes los dos vivían en
+        // la misma sección, así que un solo bloque bastaba; desde `#478` mirar el sujeto equivocado
+        // dejaría uno de los dos recortes sin validar y sus casos pasarían en el vacío.
+        $this->assertStringContainsString('zone-card__name', $zonas, 'no hay tarjetas de zona dentro de `#zones`');
+        $this->assertStringContainsString('zone-pick__tab', $rides, 'no hay selector de zona dentro de la sección de atracciones');
+        $this->assertStringContainsString('ride-card', $rides, 'no hay tarjetas de atracción dentro');
+
+        // Y que de verdad son DOS secciones distintas: si alguien las volviera a fundir, los dos
+        // recortes devolverían el mismo texto y todo lo de arriba seguiría pasando.
+        $this->assertNotSame($zonas, $rides, 'zonas y atracciones vuelven a ser la misma sección');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -195,7 +228,7 @@ class ZonesSectionTest extends TestCase
             'name' => ['es' => 'NombreQueSiSaleZZ'],
         ]);
 
-        $seccion = $this->seccion();
+        $seccion = $this->seccionRides();
 
         $this->assertStringContainsString(
             'NombreQueSiSaleZZ', $seccion,
@@ -226,7 +259,7 @@ class ZonesSectionTest extends TestCase
      */
     public function test_every_ride_card_offers_a_way_in_and_only_the_sellable_shows_a_price(): void
     {
-        $seccion = $this->seccion();
+        $seccion = $this->seccionRides();
 
         // ⚠️ Acotado al ELEMENTO: `class="ride-card` casa también con `ride-card__viz`, `__img`,
         // `__name`… La primera versión contó **115 tarjetas donde hay 23** y acusó al producto de un
@@ -259,7 +292,7 @@ class ZonesSectionTest extends TestCase
         Zone::where('slug', 'jump')->update(['age_range' => ['es' => 'EdadDeZonaZZ']]);
         Zone::where('slug', 'kids')->update(['age_range' => null]);
 
-        $seccion = $this->seccion();
+        $seccion = $this->seccionRides();
 
         $this->assertMatchesRegularExpression(
             '/<span class="zone-pick__age">\s*EdadDeZonaZZ\s*<\/span>/', $seccion,
@@ -295,7 +328,7 @@ class ZonesSectionTest extends TestCase
             'color' => '#0000FF', 'position' => 98, 'is_active' => true, 'show_in_landing' => true,
         ]);
 
-        $seccion = $this->seccion();
+        $seccion = $this->seccionRides();
 
         $this->assertStringContainsString(
             'Kids gemela', $seccion,
