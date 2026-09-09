@@ -41,9 +41,15 @@ class TagSystemTest extends TestCase
         // tarjetas de zona. **Se van con su sujeto** (`#302`): las tarjetas se retiraron y la EDAD
         // subió al selector, donde no es una etiqueta sino un dato de la pestaña (`.zone-pick__age`,
         // en el registro mono). El sistema de etiquetas sigue con sus otros consumidores.
+        // ⚠️⚠️ Y aquí estaba `.price__special-chip`, que **se va con su sujeto** (`#479`): la tarifa
+        // especial dejó de publicarse como un recargo dentro de una cápsula («Suplemento +2 €») y
+        // pasó a ser una FRASE con su precio entero («10 € en tarifa especial»),
+        // `[DECIDIDO owner, 2026-09-09]` sobre la regla dura del canvas. *Una frase en el flujo del
+        // texto no es una etiqueta*, así que exigirle la forma del sistema sería obligarla a ser
+        // una cápsula por inercia de lo que fue. La clase se llama ya `.price__special-line`, para
+        // que el nombre no siga prometiendo un chip.
         '.ride-card__badge' => ['tag', 'tag--senal', 'tag--punteada'],
         '.price__badge' => ['tag', 'tag--senal', 'tag--tinta'],
-        '.price__special-chip' => ['tag', 'tag--senal', 'tag--punteada'],
         '.svc-photo__tag' => ['tag', 'tag--senal', 'tag--punteada'],
     ];
 

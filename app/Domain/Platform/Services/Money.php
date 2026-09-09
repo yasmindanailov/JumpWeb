@@ -34,6 +34,26 @@ class Money
         return number_format($cents / 100, 2, ',', '.');
     }
 
+    /**
+     * **Importe de ESCAPARATE**: sin decimales cuando son cero y con el separador del IDIOMA.
+     *
+     * ⚠️⚠️ **No compite con `amount()`: es el otro registro del mismo idioma.** Aquélla escribe
+     * importes de TRANSACCIÓN —carrito, pedido, libro, factura— y por eso lleva siempre dos
+     * decimales y separadores fijos: en una liquidación «10 €» sería una cifra a medio escribir.
+     * Ésta escribe los del CATÁLOGO, que se leen de un vistazo y donde dos ceros a la derecha solo
+     * añaden ruido. *El mismo número no se escribe igual en un precio anunciado que en uno cobrado.*
+     *
+     * ⚠️ El separador decimal es del idioma —«14,95» en español y francés, «14.95» en inglés—, no
+     * del dato. Nació en `#478` dentro de `ZoneCards` y sube aquí en `#479` al ganar el segundo y el
+     * tercer consumidor: **el sitio donde se decide cómo se escribe un importe es UNO**.
+     */
+    public static function showcase(int $cents): string
+    {
+        $coma = app()->getLocale() === 'en' ? '.' : ',';
+
+        return number_format($cents / 100, $cents % 100 === 0 ? 0 : 2, $coma, '.');
+    }
+
     /** Símbolo a mostrar para una moneda: € para EUR, el propio código en otro caso. */
     public static function symbol(string $currency): string
     {

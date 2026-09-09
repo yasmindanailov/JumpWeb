@@ -58,8 +58,15 @@ class HomePageTest extends TestCase
         $response = $this->get('/');
 
         $response->assertSee('Mesa reservada para el grupo'); // feature del producto pack (ES, #87/3c)
-        $response->assertSee('Jump · 2 horas');          // entrada destacada (ES)
         $response->assertSee('hola@saltopark.example');    // setting de contacto
+
+        // ⚠️ **La entrada destacada ya NO se anuncia con su nombre completo** (`#479`): la sección
+        // «Cuánto» retira el prefijo de la zona —la dice la pestaña, y el botón la repite donde
+        // cuesta dinero equivocarse—, así que aquí se busca «2 horas» y no «Jump · 2 horas».
+        // ▶ Acotado a la sección: «2 horas» suelto casaría con cualquier texto de la página.
+        preg_match('#<section id="pricing".*?</section>#s', $response->getContent(), $m);
+        $this->assertNotEmpty($m, 'la sección de tarifas perdió su `id`.');
+        $this->assertStringContainsString('<span class="rate-card__name">2 horas</span>', $m[0]);
     }
 
     public function test_landing_hides_a_non_sellable_pack_from_its_cta_section(): void
@@ -722,15 +729,27 @@ class HomePageTest extends TestCase
         // W4 (low): las entradas de una zona desactivada no se pintan con CTA «Reservar» que el flujo de
         // compra no puede vender (espejo de packs e `inOperationalZone()`). La zona kids sigue en la
         // landing (`show_in_landing`), pero sus ENTRADAS desaparecen de la rejilla de precios.
-        $this->get('/')->assertSee('Kids · 1 hora'); // estado por defecto: la entrada se anuncia
+        // ⚠️ **Se mira el PANEL de la zona, no su nombre completo** (`#479`): la sección «Cuánto»
+        // retira el prefijo de la zona del nombre de la tarjeta, así que «Kids · 1 hora» ya no
+        // existe en la portada. Lo que sigue significando lo mismo —y mejor— es cuántas tarjetas
+        // tiene el panel de esa zona: con la zona desactivada, ninguna.
+        $tarjetasDeKids = function (): int {
+            preg_match('#<div class="rates__panel"[^>]*id="rate-panel-kids".*?</div>\s*</div>#s',
+                (string) $this->get('/')->assertOk()->getContent(), $m);
+
+            return $m ? substr_count($m[0], 'class="rate-card"') : 0;
+        };
+
+        $this->assertGreaterThan(0, $tarjetasDeKids(), 'la zona kids no anuncia ninguna entrada: este caso miraría el vacío.');
 
         Zone::where('slug', 'kids')->update(['is_active' => false]);
 
-        foreach (['/', '/precios'] as $url) {
-            $this->get($url)->assertOk()
-                ->assertSee('Jump · 1 hora')       // entrada de zona operativa: sigue
-                ->assertDontSee('Kids · 1 hora');  // entrada de zona desactivada: fuera
-        }
+        $this->assertSame(0, $tarjetasDeKids(), 'una zona desactivada sigue anunciando entradas que el flujo no puede vender.');
+
+        // Y `/precios`, que conserva el catálogo con su nombre completo, se comporta igual.
+        $this->get('/precios')->assertOk()
+            ->assertSee('Jump · 1 hora')       // entrada de zona operativa: sigue
+            ->assertDontSee('Kids · 1 hora');  // entrada de zona desactivada: fuera
     }
 
     /* ====================================================================

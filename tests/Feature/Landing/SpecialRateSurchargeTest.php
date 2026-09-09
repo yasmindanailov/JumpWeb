@@ -9,11 +9,17 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Suplemento de TARIFA ESPECIAL en la card de la landing (presentación «+X€»).
+ * **LA TARIFA ESPECIAL EN LA LANDING: su PRECIO ENTERO, nunca su recargo.**
  *
- * Cubre las reglas de robustez de {@see TicketType::specialRateSurcharges()} (data-driven,
- * N tarifas, base `normal`, delta por producto/tarifa, signo no garantizado) y su render en
- * la card (recargo vs importe absoluto + etiqueta i18n de la tarifa + nota «entre semana»).
+ * Cubre las dos mitades, que son de naturaleza distinta:
+ *  · el DOMINIO — las reglas de robustez de {@see TicketType::specialRateSurcharges()}: data-driven,
+ *    N tarifas, base `normal`, delta por producto y tarifa, signo no garantizado. **Ahí sigue
+ *    calculándose el recargo y no se ha tocado**: lo necesitan el panel y los informes.
+ *  · la PRESENTACIÓN — desde `#479` la web publica `priceCents` y **nunca** `surchargeCents`
+ *    (`[DECIDIDO owner, 2026-09-09]`), y los días se escriben una vez por sección.
+ *
+ * ⚠️ *Que el dominio siga sabiendo el recargo no es un resto: es la separación correcta.* Lo que
+ * cambió es a quién se le enseña.
  */
 class SpecialRateSurchargeTest extends TestCase
 {
@@ -124,36 +130,93 @@ class SpecialRateSurchargeTest extends TestCase
         $this->assertSame(500, $rows[1]['surchargeCents']);
     }
 
-    public function test_home_card_renders_period_surcharge_chip_and_label(): void
+    /**
+     * ❗❗❗ **LA REGLA CAMBIÓ EN `#479` Y ESTOS TRES CASOS LO FIJAN: nunca un recargo.**
+     *
+     * `[DECIDIDO owner, 2026-09-09]` sobre una regla dura del sistema del canvas: *«un recargo no se
+     * publica como recargo. Y menos si no es plano: en cumpleaños es +2 € en Kids y +4 € en Jump,
+     * así que el cliente tendría que recordar cuál le toca. El precio, entero»*.
+     *
+     * ⚠️⚠️ **La aserción que de verdad protege esto es la NEGATIVA.** Que salga «14 €» es fácil de
+     * conseguir por accidente —la tarjeta escribe varios importes—; lo que no puede volver es el
+     * «+», y por eso cada caso lo prohíbe explícitamente. *Un caso que solo comprueba lo que SÍ se
+     * ve deja entrar de nuevo lo que se acaba de retirar.*
+     */
+    public function test_the_home_section_writes_the_whole_special_price_and_never_a_surcharge(): void
     {
-        $res = $this->get('/');
+        $html = (string) $this->get('/')->assertOk()->getContent();
 
-        $res->assertOk();
-        $res->assertSee('por persona');       // unidad (mismo estilo/texto que «por niño» del pack)
-        $res->assertSee('+2,00');             // recargo del fixture (normal+200)
-        $res->assertSee('Findes y festivos'); // etiqueta i18n de la tarifa (label sembrado)
-        $res->assertDontSee('entre semana');  // nota retirada
+        $this->assertStringContainsString('por persona', $html);                       // la unidad
+        $this->assertStringContainsString(__('landing.rates.special_suffix'), $html);
+        $this->assertStringNotContainsString('entre semana', $html);                   // nota vieja
+
+        /*
+         * ⚠️⚠️ **La negativa se acota a la LÍNEA de tarifa especial, y no al documento.** Un
+         * `assertDontSee('+2,00')` sobre la página entera sale rojo con el producto SANO: los
+         * complementos escriben su precio con «+» —«+ Calcetines · 2,00 €»— y ése es un signo
+         * legítimo, porque un complemento **sí** se suma a lo que compras. Lo que no puede llevar
+         * signo es la tarifa especial, que es un precio alternativo y no un añadido.
+         * *Aseverar sobre el documento entero mide el ruido de al lado, no la regla.*
+         */
+        preg_match_all('#<p class="rate-card__special">(.*?)</p>#s', $html, $m);
+        $this->assertNotEmpty($m[1], 'ninguna tarjeta pinta tarifa especial: este caso miraría el vacío.');
+
+        foreach ($m[1] as $linea) {
+            $this->assertStringNotContainsString('+', $linea, 'la tarifa especial ha vuelto a publicarse como recargo.');
+        }
     }
 
-    public function test_pack_card_renders_the_same_surcharge_chip(): void
+    /**
+     * **Los días se escriben UNA vez por sección, no dentro de cada tarjeta.**
+     *
+     * ⚠️ Es la otra mitad de la regla: al sacar los días del chip, «en tarifa especial» se queda sin
+     * significado si nadie lo define. La nota lo define — y **una sola vez**, que es lo que este
+     * caso cuenta. Con la etiqueta repetida por tarjeta volvería el ruido que la regla quita.
+     */
+    public function test_the_special_rate_days_are_written_once_per_section(): void
     {
-        // Packs (cumpleaños) reutilizan el MISMO chip (componente compartido, «solo el chip»).
-        $res = $this->get('/cumpleanos');
+        $html = (string) $this->get('/')->assertOk()->getContent();
 
-        $res->assertOk();
-        $res->assertSee('+3,00');             // recargo del pack en el fixture (1800 − 1500)
-        $res->assertSee('Findes y festivos'); // misma etiqueta i18n que en entradas
+        preg_match('#<section id="pricing".*?</section>#s', $html, $m);
+        $this->assertNotEmpty($m, 'la sección de tarifas perdió su `id`: este caso miraría el vacío.');
+
+        // El rótulo de la tarifa aparece EXACTAMENTE una vez por panel de zona, dentro de su nota.
+        $this->assertStringContainsString('Findes y festivos', $m[0]);
+        $this->assertSame(
+            substr_count($m[0], 'rates__note'),
+            substr_count($m[0], 'Findes y festivos'),
+            'el nombre de la tarifa especial se escribe fuera de su nota: han vuelto los días por tarjeta.',
+        );
     }
 
-    public function test_cheaper_special_renders_absolute_amount_not_a_surcharge(): void
+    public function test_pack_card_writes_the_whole_special_price_too(): void
     {
-        // Especial MÁS BARATA que la normal → la card muestra el importe ABSOLUTO, sin «+».
+        // Packs (cumpleaños) reutilizan el MISMO componente, así que heredan la regla entera.
+        $html = (string) $this->get('/cumpleanos')->assertOk()->getContent();
+
+        // ⚠️ «18» y no «18,00»: los importes de ESCAPARATE se escriben sin ceros a la derecha
+        // (`Money::showcase()`), al revés que los de transacción. Es la diferencia que `#479`
+        // subió a esa clase para que no hubiera dos formas sueltas de escribir un precio.
+        preg_match_all('#<span class="price__special-line">(.*?)</span>\s*</span>#s', $html, $m);
+        $this->assertNotEmpty($m[1], 'el pack no pinta tarifa especial: este caso miraría el vacío.');
+
+        $this->assertStringContainsString('18', $m[1][0]);
+        $this->assertStringContainsString(__('landing.rates.special_suffix'), $m[1][0]);
+        $this->assertStringNotContainsString('+', $m[1][0], 'el pack ha vuelto a publicar su recargo.');
+    }
+
+    public function test_cheaper_special_renders_its_own_amount_too(): void
+    {
+        // Una especial MÁS BARATA que la normal ya no era un caso aparte desde `#479` —todas se
+        // escriben enteras—, pero se conserva porque es el borde donde el signo tentaba: si alguien
+        // reintrodujera el recargo, aquí saldría un «−» o un «+» sobre un número negativo.
         $this->reprice($this->anEntry(), ['normal' => 1777, 'special' => 1499]);
 
         $res = $this->get('/precios');
 
         $res->assertOk();
-        $res->assertSee('14,99');       // importe absoluto de la especial
-        $res->assertDontSee('+14,99');  // NUNCA como recargo
+        $res->assertSee('14,99');
+        $res->assertDontSee('+14,99');
+        $res->assertDontSee('-2,78');
     }
 }

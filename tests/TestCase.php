@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Domain\Booking\Models\RateType;
 use App\Domain\Identity\Services\GoogleAuth;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Turnstile;
@@ -100,6 +101,12 @@ abstract class TestCase extends BaseTestCase
         // «entrar con Google» activado para los siguientes del mismo proceso, y el resultado
         // dependería del ORDEN. `SUITE-02` lo exige para todo memo estático nuevo.
         GoogleAuth::flushCache();
+
+        // Y el de `RateType::firstSpecial()` (`#479`), que es el mismo patrón con la tarifa que la
+        // web nombra: sin esta purga, una tarifa especial creada por un test seguiría contestando a
+        // los siguientes del mismo proceso — apuntando además a una fila que `RefreshDatabase` ya
+        // ha revertido—. `SUITE-02` lo exige para todo memo estático nuevo.
+        RateType::forgetSpecialMemo();
 
         $this->applyAuditClock();
     }

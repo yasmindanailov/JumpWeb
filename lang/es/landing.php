@@ -134,10 +134,50 @@ return [
     'pricing' => [
         'title' => 'Tarifas',
         'intro' => 'Elige tu zona y mira los precios. Hoy las entradas se compran en taquilla o por teléfono.',
-        // Puente a la sección de normas (`#309`): lo que hay que traer y hacer ANTES de venir.
-        'rules_cta' => 'Conoce las reglas para venir',
         'from' => 'desde', 'pick_zone' => 'Elige la zona', 'tab' => 'Entradas',
         'book' => 'Reservar', 'call' => 'Llamar',
+    ],
+
+    /*
+     * ══ SECCIÓN 02 DE LA PORTADA · «CUÁNTO» ══════════════════════════════════════════════════
+     * `DECISIONES #479` · carril de diseño Fase 2 · T2c.
+     *
+     * ⚠️⚠️ **BLOQUE PROPIO, y no una ampliación de `pricing`.** Ese bloque lo comparte la PÁGINA
+     * `/precios`, que tiene artboard propio y se rehace en la Fase 3: reutilizar sus claves habría
+     * puesto el titular de una sección de portada —«Una hora, dos o el día»— como `<h1>` de una
+     * página que se llama «Tarifas», y como `<meta description>` de esa misma página. *Dos
+     * superficies distintas no comparten copy solo porque hablen del mismo tema.*
+     */
+    'rates' => [
+        // Rótulo y titular del canvas: los ocho titulares son FRASES de 3 a 6 palabras y los
+        // rótulos van SIN número.
+        'eyebrow' => 'Cuánto',
+        'title' => 'Una hora, dos o el día',
+        // ⚠️ El precio va INTERPOLADO y no escrito: es el más barato del catálogo, con el criterio
+        // de `#324` («desde» anuncia el precio real más bajo que existe). Sin catálogo vendible se
+        // usa `intro_plain`, porque una entradilla que promete un precio que no hay miente.
+        'intro' => 'Eliges la zona y cuánto rato. Desde :from.',
+        'intro_plain' => 'Eliges la zona y cuánto rato.',
+        'pick_zone' => 'Elige la zona',
+
+        // ── Los DÍAS de cada tarifa ────────────────────────────────────────────────────────
+        // Los nombres de día los pone Carbon; aquí solo va la FORMA de la frase.
+        'days_range' => 'de :from a :to',
+        'days_list' => ':days',
+        // ⚠️ «solo» NO es un adorno: marca la entrada que ese día **no se vende** —el dominio
+        // devuelve `null`—, no una que cueste menos. Ver `RateCards::card()`.
+        'days_only' => 'solo :days',
+
+        // La tarifa especial: su precio ENTERO y el nombre igual en todas las superficies.
+        'special_suffix' => 'en tarifa especial',
+        // Los días de la especial, UNA vez por sección. `:label` es el rótulo de la tarifa tal y
+        // como lo escribe el panel — hoy «Viernes, findes y festivos».
+        'special_note' => 'Tarifa especial: :label.',
+
+        // ❗ **La ZONA va en el rótulo del botón** (`Precios PJP` 9a): se dice una vez por
+        // tarjeta y en el único sitio donde equivocarse cuesta dinero. Por eso el nombre de arriba
+        // va limpio, sin el prefijo de la zona.
+        'book_in' => 'Reservar :name en :zone',
     ],
     'registration' => [
         'title' => 'Completa tu registro en casa',

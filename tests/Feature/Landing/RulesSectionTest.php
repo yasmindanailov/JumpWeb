@@ -101,19 +101,33 @@ class RulesSectionTest extends TestCase
         return $m[0];
     }
 
-    public function test_el_ancla_de_normas_y_su_cta_de_tarifas_viajan_juntos(): void
+    /**
+     * **El ancla de normas sigue existiendo, y HOY NO LA ENLAZA NADIE. Queda dicho.**
+     *
+     * ⚠️⚠️ Aquí se comprobaba que el ancla y su CTA de tarifas viajaran juntos. El CTA se retira en
+     * `#479` (`[DECIDIDO owner, 2026-09-09]`: la sección «Cuánto» del canvas no ofrece más salida
+     * que comprar, y lo que hay que traer vive en la sección 05 «Antes de venir»), y **era el ÚNICO
+     * enlace a `#rules` de toda la web** — medido: el menú ofrece `#zones`, `#rides` e `#info`, y
+     * ninguno lleva a normas.
+     *
+     * ▶ **El caso se conserva invertido a propósito.** El ancla se queda —la sección existe y sigue
+     * siendo destino directo desde fuera—, pero a la sección de normas **ya no se llega navegando**.
+     * Es una deuda declarada con dos salidas escritas en `DEUDA.md` (entrar en el menú, o esperar a
+     * la sección 05), y este caso es lo que impide que se olvide: el día que alguien vuelva a
+     * enlazarla, se pone rojo y obliga a cerrar la ficha.
+     */
+    public function test_el_ancla_de_normas_existe_y_hoy_nadie_la_enlaza(): void
     {
         $html = $this->home();
 
-        // El ancla existe…
         $this->assertStringContainsString('<section id="rules"', $html);
 
-        // …y alguien la usa. ⚠️ Acotado a la sección de TARIFAS: un `href="#rules"` suelto en
-        // cualquier otro sitio del documento dejaría este caso verde con el CTA borrado.
-        preg_match('#<section id="pricing".*?</section>#s', $html, $m);
-        $this->assertNotEmpty($m, 'La sección de tarifas perdió su `id`.');
-        $this->assertStringContainsString('href="#rules"', $m[0]);
-        $this->assertStringContainsString(__('landing.pricing.rules_cta'), $m[0]);
+        $this->assertStringNotContainsString(
+            'href="#rules"', $html,
+            "Alguien ha vuelto a enlazar la sección de normas.\n".
+            "▶ Es buena noticia: cierra la deuda que `#479` dejó abierta al retirar el CTA de\n".
+            '  tarifas. Retira esta comprobación y su ficha de `DEUDA.md`, y di desde dónde se llega.',
+        );
     }
 
     public function test_los_dos_requisitos_se_pintan_con_su_cta(): void
@@ -173,14 +187,28 @@ class RulesSectionTest extends TestCase
         $this->assertStringContainsString(__('landing.rules.socks_title'), $seccion);
     }
 
-    public function test_el_friso_de_tarifas_se_pide_al_kit(): void
+    /**
+     * **La sección de tarifas NO pide ninguna pieza de dibujo, y eso es lo que se vigila ahora.**
+     *
+     * ⚠️⚠️ Aquí había el caso contrario —que el friso `slot-tarifas` se pidiera al kit— y **se
+     * retira CON SU SUJETO** (`#479`, `[DECIDIDO owner, 2026-09-09]`): el artboard de la sección 02
+     * no lleva ilustración, así que el friso sale y su ranura se retira de `IllustrationKit::SLOTS`.
+     *
+     * ▶ **No se borra el caso: se le da la vuelta.** Un `assertStringNotContains` aquí no es celo:
+     * la ranura vive en una constante y la sección en una plantilla, y **volver a pintar el friso
+     * sin volver a declarar la ranura deja el `<use>` apuntando a un símbolo que el kit ya no
+     * construye** — un dibujo vacío de 190×150, que es exactamente el defecto que `#287` midió.
+     */
+    public function test_la_seccion_de_tarifas_no_pide_ningun_dibujo_al_kit(): void
     {
-        $this->instalarKit('slot-tarifas');
+        $this->instalarKit('slot-zonas');
 
         $html = $this->home();
         preg_match('#<section id="pricing".*?</section>#s', $html, $m);
 
-        $this->assertStringContainsString('#slot-tarifas', $m[0]);
+        $this->assertNotEmpty($m, 'la sección de tarifas perdió su `id`: este caso miraría el vacío.');
+        $this->assertStringNotContainsString('slot-tarifas', $m[0]);
+        $this->assertStringNotContainsString('<use', $m[0]);
     }
 
     public function test_la_seccion_en_directo_ya_no_existe_ni_su_enlace(): void

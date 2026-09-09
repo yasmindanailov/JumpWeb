@@ -323,6 +323,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T1c (`#471`) | añadir `--sec-air: 144px` y `--sec-air-mobile: 96px` — **los dos o ninguno**, lo vigila `RhythmScaleTest` |
 | T1d (`#472`) | añadir `--col-max: 1120px` |
 | T2b (`#478`) | **DATO, desde el panel** — Zonas: poner la **altura** de cada zona (Kids «máxima 130», Jump «mínima 130») y **quitar la altura del texto libre** de su edad, o saldrá dos veces («+8 años · +1,30 m desde 1,30 m», medido). ⚠️ Y decidir dos cosas suyas: el rótulo de la tarifa especial es «Viernes, findes y festivos» y en el sello queda largo (el mockup escribe «finde»), y el **orden** de las tarjetas lo manda `zones.position` —hoy sale Jump primero y el canvas ordena Kids · Jump—. |
+| T2c (`#479`) | añadir **`--money`** al paquete: `#627411` en `:root` y en `[data-surface="paper"]`, `#A3C21C` en `[data-surface="ink"]`. Es el rol de CIFRA; **sin él los precios salen en tinta**, que es la conducta anterior — no se rompe nada, solo se pierde el color. ⚠️ Y **DATO, desde el panel**: el **orden** de las pestañas lo manda `zones.position` (el canvas ordena Kids · Jump y aquí sale Jump primero, la misma decisión pendiente de T2b), y **`ticket_types.featured` está a cero en las cinco entradas** — sin ninguna destacada, el carril abre por la primera y no hay tarjeta ancha ni chip. Es una elección suya, no un defecto. |
 
 ⚠️ Y arrastra las **cinco líneas** que ya venían pendientes de `auditoria-diseno.md` (`#434` dos,
 `#436` tres): comprobar que están puestas antes de dar por buena una verificación visual en
@@ -374,7 +375,48 @@ navegador instalado**.
 |---|---|---|
 | T2a | **El armazón**: menú en dos grupos · eslogan en el cierre · el alto del par confirmado | ✅ `#477` |
 | T2b | **01 · Para quién**: dos tarjetas de zona · la altura pasa a DATO · 03 se separa | ✅ `#478` |
-| T2c–T2i | Las **siete secciones** restantes (§5.1) | ⬜ |
+| T2c | **02 · Cuánto**: carril con foco · el nombre manda · la tarifa especial, entera | ✅ `#479` |
+| T2d–T2i | Las **seis secciones** restantes (§5.1) | ⬜ |
+
+✅ **T2c · «Cuánto»** (`#479`). Rótulo · titular · entradilla que vende con una cifra del catálogo ·
+pestañas del sistema · **carril con foco** en móvil y **rejilla de tres pistas con foco** en
+escritorio. Medido en escritorio: **352×397** contra los **351×398** que el canvas escribió.
+
+❗❗❗ **EL ARTBOARD CAMBIÓ A MITAD DE LA TANDA, y eso vuelve a probar la regla de la cabecera de esta
+spec**: se empezó sobre `Precios PJP` 6a y el owner aprobó **10a** mientras se construía —el nombre
+del producto pasa de etiqueta mono a **rótulo**, la zona se va al botón, la cifra baja de 44 a 38 y
+la tarjeta sube de 262 a 352—. *Esta fuente se mueve sola: se relee antes de cada tanda, y conviene
+volver a mirarla antes de dar una sección por cerrada.*
+
+❗❗❗ **La regla del nombre NO se pudo copiar tal cual, y ahí está el filtro de §2 en acción.** El
+mockup parte `{nombre} · {matiz}` («1 hora · 60 min») y el catálogo de esta instalación escribe
+`{ZONA} · {nombre}` («Jump · 1 hora»): su `split` daba nombre «Jump» y matiz «1 hora», o sea justo lo
+contrario. ▶ Se retira el prefijo **cuando es exactamente el nombre de la zona** —una comprobación,
+no una adivinanza— y solo después se aplica su regla. Con eso funciona sobre los dos formatos y una
+instalación que no meta la zona en el nombre no nota nada.
+
+❗❗ **LOS DÍAS SE DERIVAN DE `rate_types.weekdays`, y una entrada sin tarifa especial dice «solo».**
+Lo segundo tiene motivo medido: `RateResolver::priceCents()` devuelve **`null`** un sábado para una
+entrada sin precio especial — ese día **no se vende**, no es que cueste lo mismo.
+
+⚠️⚠️ **El ancho de 352 del artboard NO cierra con su propio asoma a 390 px** (16 + 352 + 12 + los
+10 px que desplaza la escala del 94 % = **390,6**): a la anchura de referencia del sistema se veía
+UNA tarjeta y nada detrás, y eso rompe una regla suya —en 02 la entradilla dejó de decir «arrastra si
+quieres más» *porque la señal la da la tarjeta que asoma*—. ▶ `min(352px, calc(100vw - 58px))`:
+desde ~414 px mide los 352 dibujados y por debajo encoge lo justo. Medido en seis anchos, asoma
+22 · 20 · 23 px y desborde **0**.
+
+⚠️⚠️ **Dos defectos de REPO que no venían en el encargo.** `.rides__title` pedía `font-weight: 800` y
+`font-stretch: 75%` sobre Bungee, **que trae una sola cara**: el navegador falsificaba negrita y
+condensada en el titular de cuatro secciones (verificado con `[...document.fonts]`). Son **77 reglas**
+en todo el repo; aquí se arreglan las cinco cabeceras. Y **`SectionHeadlineTest` se había quedado sin
+sujeto**: vigila `class="eyebrow"` exacta, y `#478` reintrodujo el rótulo como `zones__eyebrow`.
+
+⚠️ **`Booking` no puede mirar a `Content`** y lo dijo `ModuleBoundariesTest`: los complementos los
+resuelve la vista, no el presentador de dominio. Por eso la tarjeta lleva el `ticket` entero.
+
+❗ **Queda un agujero de navegación**: el CTA retirado era el **único** enlace a `#rules` de toda la
+web. El ancla se queda pero hoy no se llega a Normas navegando (ficha en `DEUDA.md`, dos salidas).
 
 ✅ **T2b · «Para quién»** (`#478`). Rótulo · titular · **la regla del parque en una frase** · dos
 tarjetas donde **la tarjeta entera es el enlace**, con el sello de precio girado. `[DECIDIDO owner]`:

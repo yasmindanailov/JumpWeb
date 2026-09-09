@@ -74,6 +74,14 @@
         </div>
     @endif
 
+    {{-- **Los días de la tarifa especial, una vez.** `#479` sacó los días de dentro de cada chip
+         —donde se repetían tantas veces como tarifas hubiera— y los dejó aquí, que es lo que hace
+         que «en tarifa especial» signifique algo. Sin esta línea la cifra se queda con un nombre
+         que el visitante no ha aprendido en ninguna parte. --}}
+    @if ($tickets->isNotEmpty())
+        <x-site.special-rate-note />
+    @endif
+
     {{-- Nota general (no por zona): calcetines antideslizantes obligatorios. Debajo de las cards;
          solo con catálogo (acompaña al grid de precios, no aparece suelta si no hay entradas). --}}
     @if ($socks && $tickets->isNotEmpty())

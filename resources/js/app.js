@@ -1203,6 +1203,72 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
+    /**
+     * **EL CARRIL DE TARIFAS DE LA SECCIÓN «CUÁNTO»** (`#479`, carril de diseño Fase 2 · T2c).
+     *
+     * Dos cosas y ninguna más: qué zona se está mirando, y **cuál de sus tarjetas tiene el foco**.
+     * El foco es la pieza del diseño: la tarjeta viva va a tamaño natural con su sombra y las
+     * vecinas en Nube al 94 %, con el relleno de acción viajando con ella.
+     *
+     * ⚠️⚠️ **En móvil el foco lo pone el ARRASTRE y en escritorio el CURSOR o el Tab**, y por eso
+     * hay dos entradas (`mira` y `enfoca`) y no una. Son la misma decisión dicha con el gesto que
+     * cada superficie tiene: en un teléfono no existe `hover`, y en un escritorio sin carril no
+     * existe el arrastre.
+     *
+     * ⚠️⚠️ **El foco se MIDE sobre los hijos, nunca con un paso fijo.** La tarjeta destacada es más
+     * ancha que las demás (302 contra 262), así que dividir `scrollLeft` entre un ancho supuesto
+     * miente en cuanto hay una destacada — que es el caso normal. Es la misma trampa que el propio
+     * mockup dejó anotada en su carril.
+     *
+     * ⚠️ **El CSS no puede resolverlo solo.** `scroll-snap` deja la tarjeta en su sitio pero no dice
+     * CUÁL quedó centrada, y `:hover` no existe con el dedo. Sin este puñado de líneas la sección
+     * se queda con todas las tarjetas iguales, que es justo la opción que el canvas descartó.
+     *
+     * @param {string} inicial  slug de la zona que abre la sección
+     * @param {Record<string, number>} destacadas  índice de la tarjeta destacada de cada zona
+     */
+    window.Alpine.data('rateRail', (inicial, destacadas = {}) => ({
+        zone: inicial,
+        /** Índice de la tarjeta enfocada, POR ZONA: cambiar de pestaña no reinicia la otra. */
+        foco: { ...destacadas },
+
+        pick(slug) {
+            this.zone = slug;
+        },
+
+        /** Foco por puntero o por teclado (escritorio, y también el Tab en móvil). */
+        enfoca(slug, i) {
+            if (this.foco[slug] !== i) this.foco[slug] = i;
+        },
+
+        /**
+         * Foco por arrastre (móvil). Se mide cuál de las tarjetas arranca más cerca del borde
+         * izquierdo del carril, sumándole su propio sangrado.
+         *
+         * ⚠️ El sangrado se LEE del elemento (`padding-left`) en vez de escribirse aquí: vive en la
+         * hoja, y un número repetido en el JS se separa del CSS en cuanto alguien toca el carril.
+         */
+        mira(slug) {
+            const carril = this.$refs['rail-' + slug];
+            if (!carril || !carril.children.length) return;
+
+            const sangrado = parseFloat(getComputedStyle(carril).paddingLeft) || 0;
+            const x = carril.scrollLeft + sangrado;
+
+            let mejor = Infinity;
+            let cual = 0;
+            for (let k = 0; k < carril.children.length; k++) {
+                const d = Math.abs(carril.children[k].offsetLeft - carril.offsetLeft - x);
+                if (d < mejor) {
+                    mejor = d;
+                    cual = k;
+                }
+            }
+
+            this.enfoca(slug, cual);
+        },
+    }));
+
     // Interacciones de la landing (zona activa, menú móvil, dropdown, slider, FAQ).
     window.Alpine.data('landing', () => ({
         /**

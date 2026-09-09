@@ -81,7 +81,13 @@ class TouchTargetTest extends TestCase
      */
     private const TAPPED = [
         'faq__q' => ['/', 'acordeón de 28 px: crecerlo subiría la sección 96'],
-        'zone-tab' => ['/', 'pestaña de zona, 37 px, con la rejilla del mockup detrás'],
+        // ⚠️ **Se mira en `/precios` y ya no en `/`** (`#479`): la sección «Cuánto» de la portada
+        // estrena la pestaña del SISTEMA (`.tabset__tab`, con su propio `min-height`) y la cápsula
+        // vieja se queda donde aún vive —la página de tarifas y `/servicios`—. La guarda seguía
+        // buscándola en la portada y **se puso roja diciendo que vigilaba el vacío**, que es
+        // exactamente lo que tenía que hacer: sin ese aviso, el día que `.zone-tab` desapareciera
+        // del todo este caso pasaría en verde sin mirar nada.
+        'zone-tab' => ['/precios', 'pestaña de zona, 37 px, con la rejilla del mockup detrás'],
         'bd-tab' => ['/', 'pestaña de cumpleaños, 41'],
         'bd-invite-cta' => ['/', 'el enlace de la invitación, 17 px de alto'],
         'cookie__config' => ['/', 'el «Configurar» del banner, 17'],

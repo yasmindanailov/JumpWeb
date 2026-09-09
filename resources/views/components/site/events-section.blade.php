@@ -206,6 +206,10 @@
                         </div>
                     @endforeach
                 </div>
+                {{-- **Los días de la tarifa especial, una vez por sección** (`#479`). Los chips de
+                     cada pack dejaron de repetirlos al pasar del recargo al precio entero, así que
+                     el término se define aquí — que es la otra mitad de la misma regla. --}}
+                <x-site.special-rate-note />
                 @unless ($showInvite)
                     {{-- En la landing, JUSTO DEBAJO de la card del cumpleaños: pregunta + enlace
                          sutil a la tarjeta de invitación de /cumpleanos (no se satura la home con

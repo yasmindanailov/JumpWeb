@@ -3,6 +3,7 @@
 namespace App\Domain\Content\Services;
 
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Platform\Services\Money;
 
 /**
  * Presentación (solo lectura) de los COMPLEMENTOS aplicables a un producto para la LANDING.
@@ -86,6 +87,20 @@ class LandingAddonPresenter
                 'name' => (string) $addon->tr('name'),
                 'badge' => $badge,
                 'note' => $note,
+                /*
+                 * **El precio SUELTO, en registro de escaparate** (`#479`). `note` lleva el importe
+                 * con su signo y su matiz ya pegados —«+2,00 €», «desde +2,00 €/invitado»— porque
+                 * así lo pinta la lista de complementos de la tarjeta antigua. La píldora de la
+                 * sección «Cuánto» escribe otra frase, «+ Calcetines · 2 €», y necesita el número
+                 * a secas.
+                 * ⚠️ **No es un segundo cálculo: es el MISMO `$priceCents`.** Lo que cambia es cómo
+                 * se escribe — `Money::showcase()` para el escaparate, dos decimales fijos para
+                 * `note`, que es el registro que ese consumidor ya tenía.
+                 * ⚠️ `null` cuando no hay coste (incluido o gratis): ahí lo que se dice es el badge,
+                 * no una cifra.
+                 */
+                'price' => ($included || $priceCents === 0) ? null : Money::showcase($priceCents),
+                'perGuest' => $perGuest,
                 'features' => $features,
                 'group' => $pivot->choiceGroup(),
             ];

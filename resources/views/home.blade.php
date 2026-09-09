@@ -177,34 +177,43 @@
     </header>
 
 
-    {{-- ===================== PRECIOS ===================== --}}
-    <section id="pricing" class="section wrap pricing-sec">
-        {{-- ▶ **EL FRISO FAMILIAR** (`slot-tarifas`, `#309`): tres poses del artboard compuestas en
-             un símbolo, con los pies en la misma línea. `[DECIDIDO owner]`: «en tarifas pon también
-             una silueta de varias personas».
-             ⚠️ Va DENTRO de la cabecera y anclada a ella —no a la sección— por lo mismo que la
-             mancha de zonas: un `top` porcentual colgado de un contenedor que cambia de alto se
-             descoloca solo cuando alguien acorta un texto (`#303`). --}}
-        <div class="rides__head pricing__head">
-            <div>
-                <h2 class="rides__title">{{ __('landing.pricing.title') }}</h2>
-            </div>
-            <p>{{ __('landing.pricing.intro') }}</p>
-            <x-site.ilu clave="slot-tarifas" class="pricing__friso" />
-        </div>
-        {{-- ⚠️ **Sin la nota de calcetines** (`[DECIDIDO owner]`: «quita la card de calcetines
-             antideslizantes de ahí»): el dato se va a la sección de normas, con su propio CTA de
-             compra. `/precios` la CONSERVA —es la otra vista que usa este componente y allí no hay
-             sección de normas que la recoja—, así que la decisión viaja por prop y no borrando el
-             componente. --}}
-        <x-site.ticket-prices :tickets="$tickets" :zones="$zones" :socks="false" />
+    {{-- ═══════════════ 02 · CUÁNTO ═══════════════════════════════════════════════════════════
+         `DECISIONES #479` · carril de diseño Fase 2 · T2c. Artboard `Precios PJP` 6a (móvil) y
+         `Escritorio PJP` 2a (escritorio).
 
-        {{-- El puente a las normas. `[DECIDIDO owner]`: «pon un cta, conoce las reglas para venir, y
-             al darle clic baja al cliente a la sección de las reglas». Es un ancla dentro de la
-             misma página, no una ruta. --}}
-        <p class="pricing__rules">
-            <a class="btn btn--ghost" href="#rules" data-tap>{{ __('landing.pricing.rules_cta') }}</a>
-        </p>
+         ⚠️⚠️ **TRES PIEZAS SALEN DE AQUÍ Y LAS TRES REVIERTEN ALGO** (`[DECIDIDO owner, 2026-09-09]`,
+         preguntadas con su coste delante):
+          · **el friso `slot-tarifas`** (`#309`, «en tarifas pon también una silueta de varias
+            personas») — el artboard no lleva ninguna pieza de dibujo en esta sección, así que la
+            portada recupera una de sus tres colocaciones;
+          · **el CTA «Conoce las reglas para venir»** (`#309`) — en el canvas esta sección no ofrece
+            más salida que comprar, y lo que hay que traer vive en la sección 05 «Antes de venir»;
+          · **la tarjeta del QR de registro**, que el canvas lleva entera a esa misma 05.
+         ❗ **Y el CTA era el ÚNICO enlace a `#rules` de toda la web** (medido). El ancla se queda
+         —la sección existe y sigue siendo destino directo— pero **hoy no se llega a ella navegando**:
+         o entra en el menú, o espera a la sección 05. Ficha en `DEUDA.md`.
+
+         ⚠️ `/precios` NO cambia: sigue con `<x-site.ticket-prices>` y con sus propios textos. Es una
+         PÁGINA, tiene artboard propio (`Precios Pagina PJP`) y se rehace en la Fase 3. --}}
+    <section id="pricing" class="section wrap">
+        {{-- ⚠️⚠️ **`.sec-head` y no `.rides__head`, y lo dijo la sonda.** La cabecera vieja estiliza
+             a sus párrafos por ELEMENTO (`.rides__head > p`), así que el rótulo —que también es un
+             `<p>`— salía a 21 px en Hanken en vez de a 12 en mono: un selector con más
+             especificidad ganándole a la clase, **con el marcado correcto y sin fallar nada**. Es
+             la trampa de cascada de `#314` por otra puerta.
+             ▶ `.sec-head` es la cabecera que el canvas cierra para las ocho secciones; las otras
+             siete la adoptan al rehacerse y `.rides__head` se retira con la última. --}}
+        <div class="sec-head">
+            <p class="sec-head__eyebrow">{{ __('landing.rates.eyebrow') }}</p>
+            <h2 class="sec-head__title">{{ __('landing.rates.title') }}</h2>
+            {{-- ⚠️ La entradilla **vende con una cifra**, y la cifra es del catálogo: sin entradas
+                 vendibles cae a la variante sin precio, porque un «desde» que no existe miente. --}}
+            <p class="sec-head__lede">{{ $ratesFrom === null
+                ? __('landing.rates.intro_plain')
+                : __('landing.rates.intro', ['from' => $ratesFrom]) }}</p>
+        </div>
+
+        <x-site.rate-rail :zones="$rateCards" :special-label="$ratesSpecialLabel" />
     </section>
 
     {{-- ===================== CUMPLEAÑOS (#231) ===================== --}}
@@ -643,7 +652,11 @@
     <section class="section wrap">
         <div class="faq">
             <div>
-                <h2 class="rides__title" style="font-size:clamp(48px, 6vw, 96px)">{{ __('landing.faq.title') }}</h2>
+                {{-- ⚠️ Sin talla en línea (`#479`): era un TERCER tamaño de titular de sección
+                     escrito a mano —48→96 frente a los 48→108 de la clase— y un `style` gana a la
+                     hoja siempre, así que la cabecera de Dudas quedaba fuera del sistema sin que
+                     nada lo dijera. El nivel es Display L, como en las otras siete. --}}
+                <h2 class="rides__title">{{ __('landing.faq.title') }}</h2>
             </div>
             <div class="faq__list">
                 @foreach ($faqs as $i => $faq)

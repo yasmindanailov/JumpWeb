@@ -86,8 +86,13 @@ class SidebarTokenBudgetTest extends TestCase
     private const SIN_ESTRENAR = [
         // ⚠️ `--fs-title` SALIÓ de aquí en `#478`: lo estrena el nombre de zona de la sección
         // «Para quién». La lista solo encoge, y ésta es la primera vez que lo hace.
-        '--fs-display-xl', '--fs-display-l', '--fs-subtitle', '--fs-lede',
-        '--fs-body', '--fs-body-s', '--fs-button', '--fs-label', '--fs-slogan',
+        // ⚠️⚠️ Y en `#479` salen CUATRO DE GOLPE —`--fs-display-l`, `--fs-lede`, `--fs-label` y
+        // `--fs-body`—: los estrenan **la cabecera de sección**, que el canvas cierra como una sola
+        // pieza para las ocho, y **la tarjeta de tarifa**. El trinquete hizo su trabajo: se puso
+        // rojo al usarlos y obligó a este borrado.
+        // ⚠️ `--fs-button` sigue aquí y con motivo: el nivel Botón es 16/800 y la familia `.btn`
+        // está a 14/600. Estrenarlo obliga a mover la familia ENTERA, que llega al cajón (Fase 4).
+        '--fs-display-xl', '--fs-subtitle', '--fs-body-s', '--fs-button', '--fs-slogan',
     ];
 
     /**

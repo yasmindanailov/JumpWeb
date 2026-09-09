@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Services;
 
+use App\Domain\Booking\Concerns\WritesLandingValues;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use Illuminate\Support\Collection;
@@ -35,6 +36,8 @@ use Illuminate\Support\Collection;
  */
 final class ZoneCards
 {
+    use WritesLandingValues;
+
     /**
      * **El techo de la escala de altura, en centímetros.**
      *
@@ -48,6 +51,19 @@ final class ZoneCards
     public const ESCALA_CM = 190;
 
     /**
+     * **Las zonas que TIENEN regla de altura**, que son las que pueden nombrarse como vecinas al
+     * otro lado de la frontera. La tarjeta dice qué hay arriba o abajo de su línea, y eso solo se
+     * sabe mirando a las demás — por eso se resuelve fuera del `map`, que solo ve una.
+     *
+     * @param  Collection<int, Zone>  $zones
+     * @return Collection<int, Zone>
+     */
+    private static function withHeightRule(Collection $zones): Collection
+    {
+        return $zones->filter(fn (Zone $z): bool => $z->height_min_cm !== null || $z->height_max_cm !== null);
+    }
+
+    /**
      * @param  Collection<int, Zone>  $zones  las zonas de la landing, en su orden
      * @param  Collection<int, TicketType>  $tickets  las entradas activas con `prices.rateType`
      * @return list<array<string, mixed>>
@@ -55,11 +71,7 @@ final class ZoneCards
     public function compose(Collection $zones, Collection $tickets): array
     {
         $porZona = $tickets->groupBy('zone_id');
-
-        // La zona VECINA al otro lado de la frontera de altura. La tarjeta dice qué hay arriba o
-        // abajo de su línea, y eso solo se sabe mirando a las demás — por eso se resuelve aquí y no
-        // dentro del `map`, que solo ve una.
-        $conAltura = $zones->filter(fn (Zone $z): bool => $z->height_min_cm !== null || $z->height_max_cm !== null);
+        $conAltura = self::withHeightRule($zones);
 
         return $zones->map(function (Zone $zone) use ($porZona, $conAltura): array {
             /** @var Collection<int, TicketType> $entradas */
@@ -118,7 +130,7 @@ final class ZoneCards
                 // `DEUDA.md` con tres salidas. Ésta es una de ellas: vuelve a tener pantalla.
                 'image' => $zone->image ? asset($zone->image) : null,
                 // Las tres piezas del EJE DE ALTURA, o `null` si esta zona no tiene regla.
-                'heightAxis' => $this->axis($zone, $conAltura),
+                'heightAxis' => $this->axisFor($zone, $conAltura),
             ];
         })->values()->all();
     }
@@ -140,7 +152,7 @@ final class ZoneCards
      * @param  Collection<int, Zone>  $conAltura  las zonas que tienen regla, para nombrar la vecina
      * @return array{cm: int, label: string, side: string, neighbour: ?string}|null
      */
-    private function axis(Zone $zone, Collection $conAltura): ?array
+    private function axisFor(Zone $zone, Collection $conAltura): ?array
     {
         $min = $zone->height_min_cm;
         $max = $zone->height_max_cm;
@@ -267,43 +279,5 @@ final class ZoneCards
         return $min !== null
             ? __('landing.zones.height_from', ['h' => $this->metros($min)])
             : __('landing.zones.height_up_to', ['h' => $this->metros($max)]);
-    }
-
-    /**
-     * Centímetros enteros → metros escritos en el idioma que toca.
-     *
-     * ⚠️ **El separador decimal es del IDIOMA, no del dato**: «1,30 m» en español y en francés,
-     * «1.30 m» en inglés. Escribirlo siempre con coma deja el inglés mal, y dejarlo al
-     * `number_format` por defecto lo deja mal en los otros dos. Es un mapa de tres entradas porque
-     * el sitio tiene tres idiomas; el día que entre un cuarto, se añade aquí y no en seis vistas.
-     */
-    private function metros(int $cm): string
-    {
-        return number_format($cm / 100, 2, $this->coma(), '');
-    }
-
-    /**
-     * Céntimos → importe escrito, **sin decimales cuando son cero**.
-     *
-     * ⚠️ «10 €» y no «10,00 €»: el sello de la tarjeta es una cifra de escaparate, y dos decimales
-     * a cero solo añaden ruido a un número que se lee de un vistazo. Cuando los hay —14,95— se
-     * escriben, porque ahí sí dicen algo.
-     */
-    private function euros(int $cents): string
-    {
-        $decimales = $cents % 100 === 0 ? 0 : 2;
-
-        return number_format($cents / 100, $decimales, $this->coma(), '.').' €';
-    }
-
-    /**
-     * El separador decimal del idioma.
-     *
-     * ⚠️ Es del IDIOMA, no del dato: «1,30 m» en español y en francés, «1.30 m» en inglés. Dejarlo
-     * al `number_format` por defecto lo deja mal en dos de los tres idiomas del sitio.
-     */
-    private function coma(): string
-    {
-        return app()->getLocale() === 'en' ? '.' : ',';
     }
 }

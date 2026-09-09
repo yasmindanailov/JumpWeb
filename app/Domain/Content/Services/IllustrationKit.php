@@ -70,13 +70,15 @@ class IllustrationKit
         // tarjetas de normas y en cumpleaños. La regla que SIGUE en pie es la que vigila
         // `FacadeDecorationIsPerScreenTest`: ninguna pieza dentro de un bucle.
         //
-        // `slot-tarifas` es la única que NO es una mancha: es el friso familiar del artboard (`G3`),
-        // tres poses compuestas en un símbolo con `transform` y los pies en la misma línea.
-        // ⚠️ Se compone con `<g transform>` y NO con `<use href="#pose">` internos: un `<use>`
-        // interno dentro de un `<symbol>` que a su vez se referencia por `<use>` EXTERNO no resuelve
-        // igual en todos los motores, y aquí solo hay Chrome para medirlo (`hueco-ilustracion.md`
-        // §2.3). Un `transform` no tiene esa duda.
-        'slot-tarifas',
+        // ⚠️⚠️ **`slot-tarifas` SE RETIRA en `#479`, y es la cuarta vez que esta lista encoge por la
+        // misma regla: una ranura vive exactamente lo que vive su consumidor.** Era el friso
+        // familiar (`G3`) de la sección de tarifas, y el rediseño de esa sección desde el canvas la
+        // deja sin ninguna pieza de dibujo (`[DECIDIDO owner, 2026-09-09]`: el artboard de 02 no
+        // lleva ilustración, así que el friso sale). Dejarla declarada habría hecho que
+        // `kit:build` siguiera exigiendo un dibujo que ya no pinta nadie **y que la guarda de
+        // paridad se pusiera roja con el producto sano**.
+        // ▶ Con esto la portada vuelve a gastar TRES de sus colocaciones de dibujo, que es el
+        // presupuesto que `#292` fijó y que `#309` había subido a cuatro.
         'slot-normas-registro',
         'slot-normas-calcetines',
     ];

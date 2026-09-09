@@ -302,6 +302,25 @@
      chips, su tarjeta, la tira. Lo vigila `InteractionColourIsNotAZoneTest`. */
   --interactive: var(--fg);
 
+  /* ── LA CIFRA ──────────────────────────────────────────────────────────────────────────
+     `DECISIONES #479`. **El color de un número que es DINERO**: el precio de una tarifa, un
+     importe cobrado, una confirmación. El sistema del 2.º cliente lo tiene como rol propio
+     («Precios, cifras, confirmación»), y el producto no tenía ninguno: el precio se pintaba con
+     la tinta o, peor, con el color de la zona.
+
+     ⚠️⚠️ **Nace en `var(--fg)` y eso NO es un hueco a medio hacer: es la conducta correcta.** Una
+     instalación que no declare color de cifra escribe sus precios en tinta, que es lo que hacía
+     antes de existir este token — o sea que estrenarlo no mueve un píxel en nadie. El mecanismo
+     es el mismo de `--action` (`#209`) y `--interactive` (`#436`): el rol lo declara el producto,
+     el valor lo pone el paquete, y **vacío es una respuesta**.
+
+     ⚠️ Se re-declara en las dos superficies por lo mismo que `--interactive`: `var(--fg)` tiene
+     que evaluarse con el `--fg` de cada una, o una cifra sobre tinta saldría en tinta.
+     ⚠️ **No puede ser un `--zone-*`**: sería la grieta 01 del canvas —el color de un dato
+     decidiendo el aspecto de un componente— con el agravante de que aquí el componente es un
+     precio. Lo vigila `InteractionColourIsNotAZoneTest` junto al resto. */
+  --money: var(--fg);
+
   /* ── LA TIRA DE MARCA ──────────────────────────────────────────────────────────────────
      Cinco franjas de color que rematan el pie. Es la pieza «C2 · tiras» del sistema del
      segundo cliente, y por eso son cinco: su marca tiene cinco colores.
@@ -510,6 +529,7 @@
   --line: var(--ink-line);
   --line-strong: var(--ink-line-strong);
   --interactive: var(--fg);   /* tinta → aquí es papel; el paquete lo fija por superficie (`#436`) */
+  --money: var(--fg);         /* ídem: la cifra sigue a la tinta de SU superficie (`#479`) */
 
   /* El rol de ACCIÓN se re-declara para que su fallback se evalúe con el `--fg`/`--bg` de ESTA
      superficie. Sin estas cuatro líneas el botón primario dejaría de invertirse dentro del menú
@@ -531,6 +551,7 @@
   --line: var(--paper-line);
   --line-strong: var(--paper-line-strong);
   --interactive: var(--fg);   /* de vuelta a papel: tinta (`#436`) */
+  --money: var(--fg);         /* ídem (`#479`) */
 
   /* El rol de ACCIÓN se re-declara para que su fallback se evalúe con el `--fg`/`--bg` de ESTA
      superficie. Sin estas cuatro líneas el botón primario dejaría de invertirse dentro del menú
@@ -1273,35 +1294,30 @@ img { display: block; max-width: 100%; }
   --ilu-fg: var(--zone-1);
   opacity: 0.30;
 }
-.zones__title {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(48px, 7vw, 108px);
-  line-height: 0.88; letter-spacing: -0.035em; margin: 0;
-}
-.zones__title em { font-style: normal; color: var(--zone-1); }
-.zones__intro {
-  font-size: var(--fs-18); line-height: 1.5;
-  color: var(--fg-mute); max-width: 56ch;
-  margin: 0;
-}
+/* El titular de «Para quién» comparte declaración con el resto: ver «LA CABECERA DE SECCIÓN». */
 
 /* ══ SECCIÓN «PARA QUIÉN» · el rótulo, la regla y las dos tarjetas ═══════════════════════════
    `DECISIONES #478` · carril de diseño Fase 2 · T2b. Molde del canvas: rótulo en **Etiqueta**,
    titular en Display L y la regla del parque debajo, en **Entradilla**. */
 
 /* ⚠️ El rótulo VUELVE y no contradice a `#303`: aquélla retiró la etiqueta que repetía el titular
-   («ZONAS» sobre «Dos zonas»); ésta dice a QUIÉN va dirigida la sección, que el titular no dice. */
+   («ZONAS» sobre «Dos zonas»); ésta dice a QUIÉN va dirigida la sección, que el titular no dice.
+   ▶ Comparte declaración con el molde nuevo: es el nivel **Etiqueta** del canvas, y `--fs-label` es
+   el token que lo nombra (`--fs-12` valía lo mismo, pero no decía qué era). */
+.sec-head__eyebrow,
 .zones__eyebrow {
   margin: 0 0 var(--sp-8);
-  font-family: var(--font-mono); font-size: var(--fs-12);
+  font-family: var(--font-mono); font-size: var(--fs-label);
   text-transform: uppercase; letter-spacing: 0.16em;
   color: var(--fg-mute);
 }
 
-/* La REGLA del parque. Es una frase, no una entradilla larga: manda la edad y la altura desempata. */
+/* La REGLA del parque. Es una frase, no una entradilla larga: manda la edad y la altura desempata.
+   ⚠️ Va en Entradilla como la del molde, pero en TINTA y más estrecha: no presenta la sección,
+   es la regla que el visitante tiene que llevarse. */
 .zones__rule {
   margin: var(--sp-12) 0 0;
-  font-size: var(--fs-18); line-height: 1.5; font-weight: 500;
+  font-size: var(--fs-lede); line-height: 1.5; font-weight: 500;
   color: var(--fg); max-width: 46ch;
 }
 
@@ -1690,32 +1706,342 @@ img { display: block; max-width: 100%; }
   max-width: 920px;
 }
 
-/* ══ TARIFAS · el friso familiar y el puente a las normas (`#309`) ═════════════════════════════
-   ⚠️ El friso se ancla a la SECCIÓN y no a `.rides__head`, que es donde vive en el marcado: la
-   cabecera está acotada a 920 px y el hueco que la figura ocupa son los ~256 px que quedan a su
-   derecha dentro de la columna. Anclarla a la cabecera la habría metido dentro del texto.
-   ⚠️⚠️ Y se ancla ARRIBA, a la altura del titular. Es lo que la hace inmune a lo que descolocó la
-   mancha de zonas en `#303`: el párrafo de la cabecera lo escribe el PANEL y puede crecer, pero
-   esta figura no cuelga de su alto — se queda junto al titular, que es donde tiene sentido. */
-.pricing-sec { position: relative; isolation: isolate; }
-.pricing__friso {
-  position: absolute; z-index: -1; pointer-events: none;
-  right: 0; top: 0;
-  width: min(300px, 28%); height: auto;
-  --ilu-fg: var(--zone-1);
-  opacity: 0.85;
+/* ══ LA CABECERA DE SECCIÓN · UNA PARA LAS OCHO ═══════════════════════════════════════════
+   `DECISIONES #479` · carril de diseño Fase 2 · T2c. El canvas la cierra en un turno propio
+   (`Escritorio PJP` 1a, «la cabecera de sección: una para las ocho»): **rótulo en Etiqueta ·
+   titular en Display L · entradilla en Entradilla**, y el nivel «Título» (36/26) deja de ser el
+   titular de una sección para ser lo que de verdad es, el de un bloque DENTRO de ella.
+
+   ❗❗❗ **EL TITULAR ENCOGE, y es el diseño adoptado, no un descuido.** Medido antes: 100,8 px en
+   escritorio y 50,7 en móvil; Display L son **52 y 34**. `[DECIDIDO owner, 2026-09-09]` se adopta
+   el sistema del canvas entero, y este nivel es lo que la Fase 2 tenía escrito que iba a mover.
+
+   ⚠️⚠️ **Y con él se retiran el PESO y el `font-stretch`, que el navegador estaba FALSIFICANDO.**
+   `--font-display` lo rellena `client.css` con **Bungee, que trae UNA sola cara (400)** —verificado
+   en navegador: `[...document.fonts]` devuelve tres entradas y las tres son peso 400—, así que
+   `font-weight: 800` y `font-stretch: 75%` no eligen una cara: le piden al motor que invente una
+   negrita y una condensada. Es la trampa que `#478` pagó DENTRO de la tarjeta de zona, viva desde
+   siempre en la cabecera de cuatro secciones.
+   ▶ **Es un defecto de repo, no de esta sección**: son **77 reglas** las que lo hacen (censo y
+   comando en `DEUDA.md`). Aquí se arreglan las cinco cabeceras, que es el alcance de la tanda;
+   las otras 72 alcanzan al cajón (Fase 4) y al panel, y van en tanda propia.
+
+   ⚠️ **Las tres declaraciones viven juntas a propósito.** `.rides__title` la comparten Tarifas,
+   Visítanos, Normas y Dudas; `.zones__title` es «Para quién»; `.sec-head__title` es el molde nuevo
+   que estrena Tarifas y que las demás adoptan al rehacerse. Separarlas es cómo la portada acaba
+   con dos tamaños de titular sin que nadie lo decida. */
+.sec-head__title,
+.rides__title,
+.zones__title {
+  font-family: var(--font-display);
+  /* ⚠️ 400 EXPLÍCITO, no ausente: sin la declaración un `<h2>` hereda el `bold` del navegador y
+     vuelve la síntesis por la puerta de atrás, que es peor porque no se ve en la hoja. */
+  font-weight: 400;
+  font-size: var(--fs-display-l);
+  line-height: 0.95; letter-spacing: -0.01em; margin: 0;
 }
-/* El puente a las normas: un CTA suelto, centrado bajo el catálogo. */
-.pricing__rules { margin: var(--sp-28) 0 0; text-align: center; }
+
+/* La ENTRADILLA de la cabecera. `max-width: 52ch` es el del artboard de escritorio; el canvas
+   escribe «máx. 65 caracteres» para el nivel, y 52 es lo que la cabecera usa de verdad. */
+.sec-head__lede,
 .rides__head > p {
-  font-size: var(--fs-18); line-height: 1.5;
-  color: var(--fg-mute); max-width: 56ch;
+  font-size: var(--fs-lede); line-height: 1.5; font-weight: 500;
+  color: var(--fg-mute); max-width: 52ch;
   margin: 0;
 }
-.rides__title {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(48px, 7vw, 108px); line-height: 0.88; letter-spacing: -0.035em; margin: 0;
+
+/* El BLOQUE de la cabecera. Su ritmo sale del sistema —`ritmo.titular` 16/20 entre titular y
+   entradilla, `ritmo.cabecera` 28/40 antes del contenido—, no de un ojo.
+   ⚠️⚠️ **Existe porque `.rides__head` estiliza por ELEMENTO** (`> p`), y con un rótulo que también
+   es un `<p>` esa regla le ganaba por especificidad: el rótulo salía a 21 px en Hanken en vez de a
+   12 en mono, con el marcado correcto y sin que fallara nada. Lo vio la sonda, no una relectura. */
+.sec-head { margin: 0 0 var(--sp-28); }
+.sec-head__lede { margin-top: var(--sp-16); }
+@media (min-width: 1024px) {
+  .sec-head { margin-bottom: 40px; }
+  .sec-head__lede { margin-top: var(--sp-20); }
+  /* El titular se acota para que no se estire de lado a lado de la columna: es un rótulo, no un
+     párrafo. 16ch es lo que usa el artboard de escritorio. */
+  .sec-head__title { max-width: 16ch; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   SECCIÓN 02 · «CUÁNTO» · EL CARRIL DE TARIFAS
+   `DECISIONES #479` · Fase 2 · T2c. Artboards `Precios PJP` 6a y `Escritorio PJP` 2a.
+   ══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ── LA PESTAÑA DEL SISTEMA ────────────────────────────────────────────────────────────────
+   ⚠️⚠️ **Clase propia y NO `.zone-tab`.** Aquélla la comparten `/servicios` y **el cajón en Vue**
+   (`IdentifyStep`, `AuthTabs`), que es Fase 4: retocarla desde una tanda de la portada habría
+   cambiado el embudo de compra. `.tabset` es el componente del canvas y las demás superficies lo
+   adoptan al rehacerse, que es como este carril migra las piezas compartidas.
+   ⚠️ Radios CONCÉNTRICOS: 16 fuera y el escalón inmediatamente inferior dentro, 10. No se inventa
+   un 8 — la escala tiene cuatro peldaños y ninguno más. */
+.tabset {
+  display: flex; gap: var(--sp-4);
+  background: var(--bg-soft);
+  padding: var(--sp-4);
+  border-radius: var(--r-lg);
+}
+.tabset__tab {
+  flex: 1; min-height: var(--tap-min);
+  border: 0; border-radius: var(--r-btn);
+  background: transparent; color: var(--fg-mute);
+  font-family: var(--font-body); font-weight: 800; font-size: var(--fs-15);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-estado) var(--ease-sale),
+    color var(--dur-estado) var(--ease-sale);
+}
+/* La activa se LEVANTA a blanco. ⚠️ La inactiva es Humo sobre Nube y da 4,50 calculado, justo el
+   umbral de texto normal: ese gris no se aclara ni un paso. */
+.tabset__tab.is-active { background: var(--bg-card); color: var(--fg); }
+
+/* ── EL CARRIL ─────────────────────────────────────────────────────────────────────────────
+   ⚠️⚠️ **Va A SANGRE por la derecha y sangrado por la izquierda, y el asoma es la señal.** Lo que
+   dice «hay más tarifas» no es un texto —la entradilla de escritorio ya no lo dice— sino la
+   tarjeta siguiente **cortada por el borde**. Por eso el relleno derecho es mayor que el
+   izquierdo: reserva el hueco por el que asoma.
+   ⚠️ El sangrado se declara AQUÍ y lo lee el JS (`rateRail.mira`), que necesita saber dónde
+   empieza la primera tarjeta para decir cuál está enfocada. Un número repetido en el `.js` se
+   separa de la hoja en cuanto alguien toca el carril. */
+.rates__rail {
+  list-style: none;
+  display: flex; gap: var(--sp-12); align-items: stretch;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  /* ❗❗❗ **EL CARRIL SALE A SANGRE POR LA DERECHA, y sin eso la sección MIENTE.** Lo que dice «hay
+     más tarifas» no es un texto —la entradilla ya no lo dice— sino **la tarjeta siguiente cortada
+     por el borde de la pantalla**. Dentro de la columna, con la tarjeta a 352 y el carril a 358, no
+     asomaba nada: se veía una lista de una tarjeta y la segunda solo aparecía al arrastrar a ciegas.
+     ▶ El margen negativo es `--col-gutter`, el canal REAL de la columna en cada ancho (16 · 24 ·
+     32), y el relleno izquierdo lo devuelve para que la primera tarjeta siga alineada con el
+     titular. **No es `--wrap-gutter`**: aquél solo vale en un elemento a sangre COMPLETA, y dentro
+     de una caja acotada estrangula la columna — la trampa medida de `#238`.
+     ⚠️ El relleno derecho (64) es el ASOMA del sistema: reserva el hueco por el que se ve la vecina.
+     ⚠️ El de abajo reserva el sitio de la SOMBRA de la pegatina, que proyecta 5 px. */
+  margin: var(--sp-16) calc(var(--col-gutter) * -1) 0;
+  padding: var(--sp-6) 64px var(--sp-20) var(--col-gutter);
+}
+.rates__rail::-webkit-scrollbar { display: none; }
+/* ⚠️ Sin el ajuste, arrastrar deja la tarjeta a medio camino y el foco salta de una a otra mientras
+   se suelta el dedo. Con `prefers-reduced-motion` el ajuste sigue: no es movimiento decorativo. */
+
+/* ── LA TARJETA ────────────────────────────────────────────────────────────────────────────
+   Es la PEGATINA del sistema —keyline de 2 y sombra dura de 5—, la misma que ya usan las
+   tarjetas de atracción y de zona. Aquí no nace un cuarto tratamiento. */
+/* ❗❗❗ **352 ES EL ANCHO DEL ARTBOARD, Y A 390 px NO CABE CON SU ASOMA. Divergencia declarada.**
+   Lo subió el turno 10a al pasar el nombre a rótulo —con 262 el titular se partía en dos—, pero la
+   aritmética de su propio marco no cierra: tarjeta en 16, ancho 352, hueco 12 y la vecina **al
+   94 %**, que la desplaza otros 10 px hacia dentro → su borde cae en **390,6**, o sea **fuera de la
+   pantalla de referencia del sistema**. Medido en navegador: a 390 px se ve UNA tarjeta y nada
+   detrás.
+   ▶ Y eso rompe una regla suya escrita en `doc/voz.md`: en 02 la entradilla dejó de decir «arrastra
+   si quieres más» **porque la señal la da la tarjeta que asoma**. Sin asoma, la sección promete tres
+   tarifas y enseña una, sin nada que invite a arrastrar.
+   ▶ Por eso el ancho es `min(352px, …)`: **a partir de ~410 px de ventana la tarjeta mide los 352
+   dibujados**, y por debajo encoge lo justo para que la vecina asome ~20 px. La resta son el
+   sangrado (16), el hueco (12), el desplazamiento de la escala (~10) y el asoma (20).
+   ⚠️ Es `100vw` y no `100%`: el porcentaje mediría la caja de contenido del carril —que ya tiene
+   descontados sus 80 px de relleno— y daría una tarjeta mucho más estrecha. La trampa de `#238`,
+   que aquí muerde al revés. */
+.rate-card {
+  flex: none; width: min(352px, calc(100vw - 58px));
+  scroll-snap-align: center;
+  display: flex; flex-direction: column; gap: var(--sp-10);
+  padding: var(--sp-14);
+  background: var(--bg-soft);
+  border: 2px solid var(--line-strong);
+  border-radius: var(--r-lg);
+  box-shadow: none;
+  /* ⚠️⚠️ **EL VELO ES NUBE, NUNCA `opacity`.** La opacidad mueve el fondo, la tinta y el gris a la
+     vez: el sistema lo tiene medido —una cifra a media opacidad cae a 2,4 de contraste— y aquí la
+     vecina tiene que seguir siendo legible, no insinuada. Con Nube al 100 % el precio velado da
+     4,28 calculado y pasa por ser cifra grande, no por ser texto. Es una decisión declarada. */
+  transform: scale(0.94); transform-origin: center;
+  transition:
+    transform var(--dur-estado) var(--ease-entra),
+    background-color var(--dur-estado) var(--ease-sale),
+    border-color var(--dur-estado) var(--ease-sale),
+    box-shadow var(--dur-estado) var(--ease-sale);
+}
+/* La tarjeta VIVA: a tamaño natural, en blanco y con su sombra. */
+.rate-card.is-focus {
+  background: var(--bg-card);
+  border-color: var(--fg);
+  box-shadow: var(--shadow-float);
+  transform: scale(1);
+}
+.rate-card__head {
+  display: flex; align-items: baseline; gap: var(--sp-8);
+  flex-wrap: wrap; margin: 0;
+}
+/* ❗❗ **EL NOMBRE DEL PRODUCTO MANDA** (`Precios PJP` 10a): pasa de etiqueta mono a **rótulo**, que
+   es el nivel «Título» del sistema —el titular de un bloque DENTRO de una sección—. Es lo primero
+   que se lee de la tarjeta, y por eso la zona pudo salir de aquí e irse al botón. */
+.rate-card__name {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: var(--fs-title); line-height: 1.05;
+  color: var(--fg);
+}
+/* El MATIZ del nombre: solo aparece cuando añade un dato. La regla vive en el dominio. */
+.rate-card__nuance {
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--fg-mute);
+}
+/* El chip del catálogo (`ticket_types.badge`). Cápsula de tinta, texto en papel. */
+.rate-card__badge {
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  letter-spacing: 0.06em;
+  background: var(--fg); color: var(--bg);
+  border-radius: var(--r-pill);
+  padding: var(--sp-4) var(--sp-10);
+}
+
+/* La CIFRA. ⚠️ La unidad es HERMANA del número: dentro heredaría su interlineado y se partiría en
+   dos renglones — el defecto que `#309` arregló en la tarjeta vieja.
+   ⚠️⚠️ **El tamaño lo lleva el PÁRRAFO y el «€» es media cifra**, no un valor suyo. En el artboard
+   la pareja es 38/20 en móvil y 52/26 en escritorio: no son cuatro números, es **una talla y una
+   proporción**. Escritos como dos tallas independientes, el día que la cifra cambie el símbolo se
+   queda donde estaba y nadie lo nota.
+   ⚠️ **La cifra ya NO es lo más grande de la tarjeta**: desde 10a la manda el nombre. Baja de 44 a
+   38 en móvil, que es lo que deja sitio al rótulo sin que la tarjeta crezca. */
+.rate-card__price {
+  display: flex; align-items: baseline; gap: var(--sp-6);
+  flex-wrap: wrap; margin: 0;
+  font-size: var(--fs-display-l);
+}
+.rate-card__num {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 1em; line-height: 0.9;
+  /* La cifra es LIMA, que es el rol del sistema para precios y confirmaciones — sobre papel, su
+     variante oscura, que es la única que puede ser texto. */
+  color: var(--money);
+}
+.rate-card__cur {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 0.5em; color: var(--fg);
+}
+.rate-card__unit {
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  line-height: 1.4; color: var(--fg-mute); white-space: nowrap;
+}
+
+/* ⚠️ Cuerpo, o sea **16 en móvil y 17 en escritorio**, y no los 15 que dibuja el artboard: su
+   propio pliego de reglas duras dice «texto de cuerpo 16px en móvil», así que ahí el dibujo se
+   contradice con la norma y manda la norma. Divergencia declarada. */
+.rate-card__days { margin: 0; font-size: var(--fs-body); line-height: 1.4; color: var(--fg); }
+
+/* La tarifa especial: precio ENTERO en negrita y su nombre en gris. Los días NO se repiten aquí. */
+.rate-card__special {
+  display: flex; align-items: baseline; gap: var(--sp-6);
+  flex-wrap: wrap; margin: 0;
+  font-size: var(--fs-body); line-height: 1.4;
+}
+.rate-card__special b { font-weight: 700; color: var(--fg); white-space: nowrap; }
+.rate-card__special span { color: var(--fg-mute); }
+
+/* ── LOS COMPLEMENTOS, EN PÍLDORAS ────────────────────────────────────────────────────────
+   ❗❗ **La forma es la del artboard 10a**: cápsula con borde de 1,5, «+ nombre · precio» y la unidad
+   en mono al lado. Sustituye —**solo aquí**— a la lista de `.addons-mini`, que gastaba un rótulo,
+   un enlace «Más info» y una fila por complemento para decir que puedes añadir unos calcetines.
+   ⚠️ `/precios` y la banda de cumpleaños **siguen con la lista**: tienen artboards propios y se
+   rehacen en su fase. Dos formas conviviendo es lo correcto mientras dos superficies estén en
+   fases distintas; lo que no puede haber son dos FUENTES, y el dato es el mismo presentador. */
+.rate-card__addons {
+  display: flex; flex-wrap: wrap; gap: var(--sp-6);
+  margin-top: var(--sp-4); padding-top: var(--sp-14);
+  border-top: 1.5px solid var(--line);
+}
+.addon-pill {
+  display: inline-flex; align-items: baseline; gap: var(--sp-6);
+  padding: var(--sp-6) var(--sp-11);
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-pill);
+}
+.addon-pill__t { font-weight: 600; font-size: var(--fs-13); color: var(--fg); }
+.addon-pill__u {
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  color: var(--fg-mute); white-space: nowrap;
+}
+/* Los EXCLUYENTES viajan juntos y con su rótulo: pintarlos sueltos diría que se pueden sumar. */
+.rate-card__addon-group { display: inline-flex; align-items: baseline; flex-wrap: wrap; gap: var(--sp-6); }
+.rate-card__addon-choose {
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute);
+}
+
+/* El CTA, pegado abajo para que las tarjetas de una fila alineen sus botones aunque su texto mida
+   distinto. ⚠️ `margin-top: auto` y no un alto fijo: el contenido lo manda la BD. */
+.rate-card__cta { margin: auto 0 0; padding-top: var(--sp-20); }
+/* ❗❗❗ **52 Y NO 48, y no es un número a ojo: es lo que la ESCALA obliga.** La tarjeta vecina va al
+   94 %, y una escala encoge también el área de pulsación — con el mínimo en 48 el botón velado
+   medía **45 px reales**, por debajo del objetivo táctil, y no lo veía ninguna guarda porque la
+   suite no mide píxeles y el token sí valía 48. Lo cazó la sonda. 52 × 0,94 = 48,9, así que el
+   mínimo se cumple **también apagado**, que es cuando de verdad hay que poder pulsarlo. */
+.rate-card__btn { width: 100%; justify-content: center; min-height: 52px; }
+
+/* ❗❗❗ **EL RELLENO DE ACCIÓN VIAJA CON EL FOCO, y es el mapa del naranja del sistema.**
+   Un solo relleno de acción por pantalla: la tarjeta viva lo lleva y las vecinas se quedan en
+   control inerte. No es decoración — es lo que dice cuál es la compra que estás mirando.
+   ⚠️ El inerte SIGUE SIENDO PULSABLE: cambia el aspecto, no la conducta. Un botón que solo
+   funcionara al enfocarlo obligaría a dos gestos para comprar la tarifa de al lado. */
+.rate-card:not(.is-focus) .rate-card__btn {
+  background: transparent;
+  color: var(--fg-mute);
+  border: 1.5px solid var(--line-strong);
+}
+.rate-card:not(.is-focus) .rate-card__btn:hover {
+  background: transparent;
+  color: var(--fg);
+  border-color: var(--fg);
+}
+
+/* Los días de la tarifa especial, UNA vez por sección. */
+.rates__note {
+  margin: var(--sp-4) 0 0;
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  color: var(--fg-mute);
+}
+
+/* ══ ESCRITORIO · EL CARRIL DEJA DE SER CARRIL ═════════════════════════════════════════════
+   `Escritorio PJP` 2a (aprobada). ⚠️⚠️ **No hay carril, pero SÍ hay foco**: la lista cabe en la
+   columna, así que las piezas pasan a pistas de rejilla — pero la tarjeta viva sigue siéndolo y el
+   naranja sigue viajando con ella. La opción sin velo (2b) está descartada en el propio artboard.
+   ⚠️ El corte es **1024**, que es el punto de escritorio del canvas y el único que su sistema
+   declara. Es el primer consumidor del valor nuevo; los catorce cortes que el producto ya tiene
+   los revisa la tanda del armazón (T1f, aparcada). */
+@media (min-width: 1024px) {
+  .tabset { width: 352px; }
+
+  /* ⚠️ **Tres pistas SIEMPRE, y las manda la zona con más tarifas.** Si la rejilla se ajustara al
+     número de tarjetas de la zona activa, cambiar de pestaña cambiaría el ANCHO de las tarjetas y
+     la sección daría un salto. Con un número fijo, la zona que tiene menos deja el hueco. */
+  .rates__rail {
+    display: grid;
+    grid-template-columns: repeat(var(--rates-tracks, 3), 1fr);
+    gap: 32px;
+    overflow: visible;
+    /* ⚠️ Sin carril no hay sangre: la rejilla vuelve dentro de la columna. Y el relleno inferior no
+       es aire decorativo: **es el sitio de la SOMBRA**. La pegatina proyecta 5 px hacia abajo y sin
+       esta reserva la nota de la tarifa especial se le montaba encima. Lo vio la captura, no la
+       medida — una sombra no entra en `getBoundingClientRect()`. */
+    margin: 32px 0 0;
+    padding: var(--sp-6) 0 var(--sp-8);
+  }
+  /* Sin carril no hay ajuste ni asoma, y el ancho lo pone la pista. */
+  .rate-card,
+  .rate-card[data-featured] { width: auto; scroll-snap-align: none; }
+  .rate-card { padding: var(--sp-20); gap: var(--sp-12); }
+
+  /* ⚠️ **Aquí NO se reescribe ninguna talla, y eso es la prueba de que la escala está bien puesta.**
+     Los seis niveles que la tarjeta usa son `clamp`, así que crecen solos con el ancho: la cifra va
+     de 34 a 52, el cuerpo de 16 a 17 y la etiqueta se queda en 12 porque su nivel es fijo. Escribir
+     aquí un tamaño sería desactivar el tramo interpolado justo donde el sistema lo diseñó. */
+}
+
 .zone-tabs {
   display: inline-flex;
   background: var(--bg-card);
@@ -2017,20 +2343,22 @@ img { display: block; max-width: 100%; }
    En la card DESTACADA (fondo = color de zona) el chip usa `--on-brand` (contraste white-label WCAG,
    como el resto de textos de `.price--feat`, #232/L4), nunca blanco fijo. Ver price-card.blade.php. */
 .price__special { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
-/* ⚠️ Va en el FLUJO del texto, así que NO se gira: el ángulo es de las que se pegan encima de algo.
-   Y baja de relleno a contorno — es un dato que se lee, no una señal. */
-.price__special-chip {
-  gap: var(--sp-7); line-height: 1.25; color: var(--fg-mute);
+/* ❗❗ **DEJÓ DE SER UNA CÁPSULA en `#479`, y por eso ya no se llama chip.** La tarifa especial se
+   publicaba como recargo dentro de una etiqueta punteada («Suplemento +2 €») y ahora es una FRASE
+   con su precio entero («10 € en tarifa especial»), que es la regla dura del canvas: *un recargo no
+   se publica como recargo*. Con ella salió del sistema de etiquetas —`TagSystemTest` la tenía
+   registrada— porque una frase en el flujo del texto no es una etiqueta.
+   ⚠️ Los DÍAS ya no van aquí: van una vez por sección (`<x-site.special-rate-note>`). */
+.price__special-line {
+  display: inline-flex; align-items: baseline; gap: var(--sp-6);
+  flex-wrap: wrap; line-height: 1.35; color: var(--fg-mute);
 }
-/* ⚠️ El importe solo se distingue por COLOR. Antes se distinguía también por tipografía —mono
-   600 a 12,5px— dentro de una cápsula que ahora ya es mono de 10,5: eran dos tallas dentro de
-   la misma etiqueta. Lo cazó `TagSystemTest`, que es para lo que está. */
-.price__special-chip b { color: var(--fg); white-space: nowrap; }
-.price--feat .price__special-chip {
-  background: color-mix(in srgb, var(--on-brand) 15%, transparent);
-  color: color-mix(in srgb, var(--on-brand) 88%, transparent);
-}
-.price--feat .price__special-chip b { color: var(--on-brand); }
+/* El importe se distingue por COLOR y por PESO; el resto de la frase es texto secundario. */
+.price__special-line b { color: var(--fg); font-weight: 700; white-space: nowrap; }
+/* En la card destacada (fondo = color de zona) la frase sigue al color de contraste calculado, no a
+   un blanco fijo (`#232`/L4). */
+.price--feat .price__special-line { color: color-mix(in srgb, var(--on-brand) 88%, transparent); }
+.price--feat .price__special-line b { color: var(--on-brand); }
 /* Forma del sistema (`.tag--senal .tag--tinta`); aquí, colocación. ⚠️ Su giro era **+6°**, el más
    fuerte de los cuatro que había: pasa al ángulo único. */
 .price__badge {
@@ -2830,13 +3158,12 @@ select:focus-visible {
   .hero__stage-content { padding: 22px 20px 24px; }  /* el corte de móvil lo afina `site.css` */
   .hero__title--onvideo { font-size: clamp(56px, 18vw, 96px); }
   .hero__stage-label { display: none; }
-  /* zones intro */
-  .zones__title { font-size: clamp(44px, 13vw, 80px); }
-  .zones__intro { font-size: var(--fs-16); }
+  /* ⚠️⚠️ **AQUÍ NO SE REESCALA EL TITULAR NI LA ENTRADILLA, y es la mitad del arreglo de `#479`.**
+     Display L y Entradilla son `clamp` de TRES tramos —móvil, interpolado y escritorio—, así que
+     una regla de móvil que fije otro tamaño **gana al clamp entero** y deja el nivel del sistema
+     sin efecto justo en el ancho para el que se diseñó (390). Es la lección de `TypeScaleTest`:
+     *una medida en un punto no vigila una función*, y una excepción en un punto la desactiva. */
   .zones__head, .rides__head { margin-bottom: 36px; gap: var(--sp-16); }
-  .zones__intro, .rides__head > p { font-size: var(--fs-16); }
-  /* rides */
-  .rides__title { font-size: clamp(44px, 13vw, 80px); }
   .rides__head { flex-direction: column; align-items: flex-start; gap: var(--sp-16); }
   /* #232: el switcher de zonas `.zone-tabs` a ANCHO COMPLETO en móvil — tanto en Atracciones
      (#rides) como en Entradas (#pricing, donde su contenedor `.ticket-prices__tabs` lo centraba a

@@ -25554,3 +25554,99 @@ La **T2b** del carril de diseño: la primera de las ocho secciones de la portada
 ⚠️ **El gesto de la pegatina es el del mockup por decisión del owner** («el efecto al poner el ratón encima y darle clic no es como en el mockup»), y es **excepción declarada a `#435`**: aquellos 19 hovers **levitaban** —se apartaban del puntero— y éste **se hunde**, con la suma de sombra y desplazamiento constante, así que el keyline no se mueve. Nace `--shadow-float-hover` / `--shadow-float-press`, declarados **los dos** como el par de `RhythmScaleTest`.
 
 **Verificación**: suite **4.512** en verde · `ZoneCardsSectionTest` con 11 casos y **9/9 mutaciones** que muerden, árbol idéntico · `scripts/comparar-con-mockup.mjs` en **4 divergencias** por superficie, todas declaradas · medido a 390 y a 1280 contra el artboard renderizado.
+
+## #479 · 2026-09-09 · `[DECIDIDO owner]` La sección «Cuánto»: el nombre manda, la zona se dice una vez en el botón, y la tarifa especial deja de publicarse como recargo
+
+**Contexto.** Segunda tanda de secciones de la Fase 2 (T2c) del carril de diseño. Artboards
+`Precios PJP` **10a** —✅ aprobada y aplicada por el owner **durante** esta tanda, que reemplaza a la
+6a con la que se empezó— y `Escritorio PJP` **2a**.
+
+**Las cuatro decisiones del owner**, preguntadas antes de escribir código:
+
+1. **La cabecera de sección se unifica en las CINCO a la vez** (no solo en Tarifas). El canvas la
+   cierra como una pieza única para las ocho secciones —rótulo en Etiqueta, titular en **Display L**,
+   entradilla— y `.rides__title` la comparten Tarifas, Visítanos, Normas y Dudas.
+2. **La tarifa especial se publica con su PRECIO ENTERO** y los días **una vez por sección**. Regla
+   dura del canvas: *«un recargo no se publica como recargo… y menos si no es plano»*. Alcanza al
+   componente compartido, o sea también a la banda de cumpleaños y a `/precios`.
+3. **Salen tres piezas de la sección**: el friso `slot-tarifas`, el CTA «Conoce las reglas para
+   venir» y la tarjeta del QR de registro — las tres revierten decisiones de `#309`, y la tercera se
+   va a la sección 05 «Antes de venir» cuando exista.
+4. **La chapa de zona NO entra** (`[owner]`: *«ese card negro lo quitamos, no es necesario»*). Se
+   construyó primero —el owner la había pedido entera— y se retiró al ver el artboard 10a, cuya
+   propia meta dice *«sin la chapa de zona»*: el recorte de presupuesto del 7 sep la dejó detrás de
+   un interruptor apagado.
+
+**Lo que se construyó.** `Booking\Services\RateCards` compone una entrada por zona con sus tarjetas
+ya redactadas; `<x-site.rate-rail>` las pinta en un **carril con foco** en móvil y en una **rejilla
+de tres pistas con foco** en escritorio (`Escritorio PJP` 2b, «las tres enteras y sin velo», está
+⛔ **descartada** en el propio artboard — y el comentario de `tokens-pjp.js` que la cita quedó
+caducado). El velo es **Nube, nunca opacidad**. `rateRail` (Alpine) mide el foco **sobre los hijos**,
+nunca con un paso fijo.
+
+❗❗❗ **EL NOMBRE MANDA Y LA ZONA SE DICE UNA VEZ, EN EL BOTÓN** (turnos 9a y 10a). El nombre pasa de
+etiqueta mono a **rótulo** y el botón dice «Reservar 1 hora en JUMP» — *«se dice una vez por tarjeta,
+y en el único sitio donde equivocarse cuesta dinero»*.
+⚠️⚠️ **Y su regla no se pudo copiar tal cual, porque la cadena de esta instalación va al revés.** El
+mockup parte `{nombre} · {matiz}` («1 hora · 60 min») y aquí el catálogo escribe `{ZONA} · {nombre}`
+(«Jump · 1 hora»): aplicar su `split` daba nombre «Jump» y matiz «1 hora». Se retira el prefijo
+**cuando es exactamente el nombre de la zona** —una comprobación, no una adivinanza— y solo después
+se parte. El matiz **solo se pinta cuando añade un dato**: «120 min» es «2 horas» dicho otra vez, y
+por eso el artboard lo descarta con `!/min$/`.
+
+❗❗❗ **LOS DÍAS SE DERIVAN, NO SE ESCRIBEN.** `rate_types.weekdays` guarda el conjunto especial
+(aquí `[5,6,0]`) y los días normales son **su complemento**: «de lunes a jueves». Se escriben como
+RANGO solo si son contiguos; con agujeros se enumeran, porque «de lunes a domingo» sobre un conjunto
+roto **es literalmente falso**.
+⚠️⚠️ **Y una entrada SIN precio en la tarifa especial dice «solo», con motivo medido**: llamando al
+dominio, `RateResolver::priceCents()` devuelve **`null`** un sábado — o sea que ese día **no se
+vende**, no es que cueste lo mismo. Escribir la misma frase en los dos casos publicaría un precio
+para un día en el que no se puede comprar.
+
+❗❗❗ **DOS DEFECTOS DE REPO QUE NO VENÍAN EN EL ENCARGO.**
+▶ **`.rides__title` sintetizaba la fuente**: declaraba `font-weight: 800` y `font-stretch: 75%` sobre
+`--font-display`, que en esta instalación es **Bungee, con UNA sola cara** —verificado en navegador:
+`[...document.fonts]` devuelve tres entradas y las tres son peso 400—. O sea que el navegador
+falsificaba negrita y condensada en el titular de cuatro secciones. Es la trampa que `#478` pagó
+DENTRO de la tarjeta, viva desde siempre en la cabecera. **Son 77 reglas en todo el repo** (censo en
+`DEUDA.md`); aquí se arreglan las cinco cabeceras, que es el alcance acordado.
+▶ **`SectionHeadlineTest` se había quedado sin sujeto**: vigila `class="eyebrow"` exacta y `#478`
+reintrodujo el rótulo como `zones__eyebrow`, así que pasaba en verde protegiendo una decisión
+(`#303`) que el canvas ya había revertido.
+
+❗❗ **EL ANCHO DE 352 NO CIERRA CON SU PROPIO ASOMA, y es divergencia declarada.** El turno 10a subió
+la tarjeta a 352 px; con el sangrado (16), el hueco (12) y la vecina **al 94 %** —que la desplaza
+otros 10— su borde cae en **390,6**, o sea fuera de la pantalla de referencia del sistema. Medido: a
+390 px se veía UNA tarjeta y nada detrás, y eso rompe una regla suya escrita en `doc/voz.md` —en 02
+la entradilla dejó de decir «arrastra si quieres más» **porque la señal la da la tarjeta que asoma**.
+▶ El ancho es `min(352px, calc(100vw - 58px))`: **desde ~414 px mide los 352 dibujados** y por debajo
+encoge lo justo para que la vecina asome ~20 px. Medido en seis anchos: 22 · 20 · 23 px de asoma y
+desborde **0**.
+
+⚠️ **`Booking` no puede mirar a `Content`, y lo dijo `ModuleBoundariesTest`**: los complementos los
+resuelve la VISTA con `LandingAddonPresenter`, no el presentador de dominio. Por eso la tarjeta lleva
+el `ticket` entero — no es comodidad, es lo que permite que la presentación pregunte lo suyo sin que
+el dominio cruce una frontera.
+
+⚠️ **Nace `--money`, el rol de CIFRA**, que el producto no tenía: el precio se pintaba con la tinta
+o, peor, con el color de una zona. Vale `var(--fg)` por defecto —o sea que estrenarlo **no mueve un
+píxel** en ninguna instalación— y el paquete pone el par por superficie (Lima 800 en papel, Lima Bote
+en tinta). Mismo mecanismo que `--action` (`#209`) y `--interactive` (`#436`).
+
+⚠️ **`Money::showcase()`**: el importe de ESCAPARATE —sin ceros a la derecha y con el separador del
+idioma— sube de `ZoneCards` a la clase que ya sabe escribir dinero. No compite con `amount()`: *el
+mismo número no se escribe igual en un precio anunciado que en uno cobrado*.
+
+⚠️ **`.price__special-chip` pasa a `.price__special-line` y SALE del sistema de etiquetas**: dejó de
+ser una cápsula para ser una frase, y exigirle la forma del sistema la obligaría a seguir siendo un
+chip por inercia de lo que fue.
+
+❗ **Y queda un agujero de navegación, dicho**: el CTA retirado era el **único** enlace a `#rules` de
+toda la web (medido: el menú ofrece `#zones`, `#rides` e `#info`). El ancla se queda, pero hoy **no
+se llega a Normas navegando**. Ficha en `DEUDA.md` con sus dos salidas, y un caso invertido en
+`RulesSectionTest` que se pondrá rojo el día que alguien la vuelva a enlazar.
+
+**Verificación**: suite **4.530** en verde · Pint · `npm run build` · `RateRailSectionTest` con **16
+casos** y **15/15 mutaciones que muerden** (`scripts/mutar-seccion-tarifas.sh`), árbol idéntico ·
+sonda de navegador en seis anchos con desborde 0 · medido en escritorio **352×397** contra los
+**351×398** que el canvas escribió en `Escritorio PJP` 2a.

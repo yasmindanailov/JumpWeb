@@ -94,9 +94,23 @@ return [
     'pricing' => [
         'title' => 'Tarifs',
         'intro' => "Choisis ta zone et vois les prix. Pour le moment, les billets s'achètent à la billetterie ou par téléphone.",
-        'rules_cta' => 'Ce qu\'il faut savoir avant de venir',
         'from' => 'dès', 'pick_zone' => 'Choisis ta zone', 'tab' => 'Billets',
         'book' => 'Réserver', 'call' => 'Appeler',
+    ],
+
+    /* Section 02 de la page d'accueil. Voir le fichier espagnol pour le motif du bloc à part. */
+    'rates' => [
+        'eyebrow' => 'Combien',
+        'title' => 'Une heure, deux ou la journée',
+        'intro' => 'Tu choisis la zone et la durée. Dès :from.',
+        'intro_plain' => 'Tu choisis la zone et la durée.',
+        'pick_zone' => 'Choisis ta zone',
+        'days_range' => 'du :from au :to',
+        'days_list' => ':days',
+        'days_only' => ':days uniquement',
+        'special_suffix' => 'en tarif spécial',
+        'special_note' => 'Tarif spécial : :label.',
+        'book_in' => 'Réserver :name en :zone',
     ],
     'registration' => [
         'title' => 'Finalise ton inscription à la maison',

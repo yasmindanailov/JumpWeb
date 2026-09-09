@@ -13,6 +13,15 @@ use Tests\TestCase;
  * Card «Regístrate antes de venir» (QR + CTA): bajo la sección de entradas SOLO con registro EXTERNO
  * (`registration.url`). QR y CTA apuntan a la MISMA URL; el QR es SVG inline server-side. Entra como
  * COLUMNA del grid (≤3 entradas en la zona) o como BANDA debajo (≥4). Ver `<x-site.registration-qr>`.
+ *
+ * ⚠️⚠️ **DESDE `#479` ESTA CARD YA NO ESTÁ EN LA PORTADA, y por eso todos los casos miran
+ * `/precios`.** El rediseño de la sección 02 desde el canvas la retira de la home
+ * (`[DECIDIDO owner, 2026-09-09]`): allí el registro es la sección 05 «Antes de venir», que dice
+ * *«el registro ES el QR»* y la trata entera. Hasta que esa sección exista, la card vive **solo** en
+ * la página de tarifas, que sigue usando `<x-site.ticket-prices>`.
+ * ▶ Los casos NO se han borrado: se han re-apuntado. La card sigue teniendo pantalla y sus reglas
+ * —inline contra banda, la URL compartida, el rechazo de un esquema no http— siguen valiendo. Lo
+ * que cambió es dónde se pinta.
  */
 class RegistrationQrCardTest extends TestCase
 {
@@ -43,11 +52,11 @@ class RegistrationQrCardTest extends TestCase
             ->each(fn ($group) => $group->skip($keep)->each->delete());
     }
 
-    public function test_card_shows_on_home_with_external_registration_url(): void
+    public function test_card_shows_on_pricing_with_external_registration_url(): void
     {
         $this->setRegistrationUrl('https://registro.example.test/alta');
 
-        $res = $this->get('/');
+        $res = $this->get('/precios');
 
         $res->assertOk();
         $res->assertSee('reg-cta', false);      // el CTA de la card (presente en inline y en banda)
@@ -56,11 +65,11 @@ class RegistrationQrCardTest extends TestCase
         $res->assertSee(__('landing.registration.title'));
     }
 
-    public function test_card_hidden_on_home_without_external_registration_url(): void
+    public function test_card_hidden_on_pricing_without_external_registration_url(): void
     {
         $this->setRegistrationUrl(null); // registro INTERNO (modal): sin URL externa
 
-        $res = $this->get('/');
+        $res = $this->get('/precios');
 
         $res->assertOk();
         $res->assertDontSee('reg-cta', false);
@@ -83,7 +92,7 @@ class RegistrationQrCardTest extends TestCase
         $this->trimEntriesPerZoneTo(2);
         $this->setRegistrationUrl('https://registro.example.test/alta');
 
-        $this->get('/')->assertOk()->assertSee('regcard--inline', false);
+        $this->get('/precios')->assertOk()->assertSee('regcard--inline', false);
     }
 
     public function test_card_is_band_when_the_grid_is_full(): void
@@ -92,7 +101,7 @@ class RegistrationQrCardTest extends TestCase
         // visible por zona activa (`includes(priceZone)`).
         $this->setRegistrationUrl('https://registro.example.test/alta');
 
-        $res = $this->get('/');
+        $res = $this->get('/precios');
 
         $res->assertOk();
         $res->assertDontSee('regcard--inline', false);
@@ -103,7 +112,7 @@ class RegistrationQrCardTest extends TestCase
     {
         $this->setRegistrationUrl('https://registro.example.test/alta');
 
-        $res = $this->get('/');
+        $res = $this->get('/precios');
 
         // El CTA es un enlace real (funciona sin escanear) y el QR se genera de la MISMA URL.
         $res->assertSee('<a class="reg-cta" href="https://registro.example.test/alta"', false);
@@ -125,6 +134,6 @@ class RegistrationQrCardTest extends TestCase
         // safeExternalUrl bloquea esquemas no http(s) → registration_url = null → card oculta.
         $this->setRegistrationUrl('javascript:alert(1)');
 
-        $this->get('/')->assertOk()->assertDontSee('reg-cta', false);
+        $this->get('/precios')->assertOk()->assertDontSee('reg-cta', false);
     }
 }

@@ -94,9 +94,23 @@ return [
     'pricing' => [
         'title' => 'Pricing',
         'intro' => 'Pick your zone and see the prices. For now, tickets are bought at the box office or by phone.',
-        'rules_cta' => 'What you need to know before coming',
         'from' => 'from', 'pick_zone' => 'Choose a zone', 'tab' => 'Tickets',
         'book' => 'Book', 'call' => 'Call',
+    ],
+
+    /* Section 02 of the home page. See the Spanish file for why this is its own block. */
+    'rates' => [
+        'eyebrow' => 'How much',
+        'title' => 'An hour, two or all day',
+        'intro' => 'Pick your zone and how long. From :from.',
+        'intro_plain' => 'Pick your zone and how long.',
+        'pick_zone' => 'Choose a zone',
+        'days_range' => ':from to :to',
+        'days_list' => ':days',
+        'days_only' => ':days only',
+        'special_suffix' => 'on the special rate',
+        'special_note' => 'Special rate: :label.',
+        'book_in' => 'Book :name in :zone',
     ],
     'registration' => [
         'title' => 'Complete your registration at home',

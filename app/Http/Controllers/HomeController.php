@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\RateCards;
 use App\Domain\Booking\Services\ZoneCards;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Models\Faq;
@@ -57,6 +58,18 @@ class HomeController extends Controller
             // porque son de la ESCALA y no de una zona: las dos tarjetas rotulan el mismo techo.
             'zoneAxisCeiling' => $zoneCards->ceilingLabel(),
             'zoneAxisFloor' => $zoneCards->floorLabel(),
+            /*
+             * Las tarifas de «Cuánto» (`#479`). ⚠️ **Reciben el MISMO `ZoneCards` que ya se ha
+             * construido**, no uno propio: de él sale el eje de altura que la chapa vuelve a
+             * dibujar, y dos instancias serían dos derivaciones del mismo umbral.
+             * ⚠️ Y las MISMAS colecciones: `$zones` trae ya sus atracciones cargadas —de ahí sale el
+             * recuento de la chapa— y `$entradas` sus precios. Volver a consultarlas sería la misma
+             * consulta dos veces por petición, con el riesgo de que dos secciones de la misma
+             * página ofrecieran precios distintos.
+             */
+            'rateCards' => ($rateCards = new RateCards($zoneCards))->compose($zones, $entradas),
+            'ratesFrom' => $rateCards->cheapest($entradas),
+            'ratesSpecialLabel' => $rateCards->specialLabel(),
             // ⚠️ **`heroStatus` se fue al payload compartido en `#230`** y por eso ya no está aquí:
             // su consumidor dejó de ser el chip del hero —que `#226` retiró— y pasó a ser el bloque
             // de datos del MENÚ, que vive en las doce vistas. Calcularlo también aquí sería
