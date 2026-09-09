@@ -25756,3 +25756,82 @@ en el sitio.*
 casos** y **26/26 mutaciones que muerden** (`scripts/mutar-seccion-tarifas.sh`), árbol idéntico ·
 `scripts/sonda-carril-tarifas.mjs` en seis anchos sin problemas · las piezas nuevas medidas en
 navegador: chapa, marcador de ahorro, keyline del botón y ficha de complemento a una fila.
+
+## #481 · 2026-09-09 · `[DECIDIDO owner]` Nace `/atracciones`, la página que dos secciones cerradas ya prometían — y el color de una zona aprende a ser texto
+
+**Contexto.** La T2d es la sección 03 de la portada, «Qué hay dentro», que pasa de un carrusel con
+las **23** atracciones a un **mosaico de cinco** y delega el resto en `/atracciones`. Esa página
+**no existía**, y una regla dura del canvas dice: *«si dos secciones cerradas apuntan al mismo
+destino inexistente, ese destino existe: hay que escribirlo»*. Medido antes de tocar nada: la
+sección de hoy son **893 px en móvil** y **1.151 en escritorio**, con las 23 en carril.
+
+**La decisión del owner sobre el alcance:** se adelanta `/atracciones` de la Fase 3 y se construye
+**en la misma tanda que el mosaico**, para que en ningún momento haya 18 atracciones que dejen de
+verse ni una puerta colgando. Su artboard estaba cerrado (`Atracciones PJP` **1a** móvil + **1c**
+escritorio) y el dato estaba **completo**: 23 fichas con nombre, descripción, edad, zona y **las 23
+fotos en disco**, verificado.
+
+**Y otras dos decisiones suyas que gobiernan la tanda:** el **bar NO entra todavía** en 03 —no
+existe en ninguna parte del producto y su tarjeta es un enlace a `/bar`, que tampoco—, y **la foto
+del mosaico lleva a `/atracciones`** en vez de abrir una ficha flotante: una sola forma de
+profundizar, ninguna pieza flotante que mantener.
+
+**❗❗❗ EL HALLAZGO QUE CAMBIÓ EL DISEÑO, y lo encontró la guarda con la suite en verde.** La cifra
+grande de cada zona («15 atracciones para +8 años») se pinta con el color de esa zona, que llega
+**desde el panel**. Medido: sobre papel, el lima de Jump da **1,85** y el cian de Kids **2,45**,
+contra el 3,0 que es el suelo de cualquier texto — o sea que el color de zona **casi nunca puede ser
+texto**, que es exactamente lo que el sistema tiene escrito.
+
+▶ La primera implementación fue `color-mix(in srgb, var(--zone-1) 55%, var(--fg))`, con los tres
+colores de **esta** instalación medidos y pasando. **La guarda la tumbó**: el `#C6FF3A` que el
+PRODUCTO trae por defecto para Kids se quedaba en **3,14**. *Un color más claro necesita más
+oscurecimiento, y eso no lo puede saber una constante.* (Antes de eso hubo un 60 % que ni siquiera
+cubría a Jump: **4,23**. Lo cazó calcular el contraste del color que el navegador computa de verdad
+—mezclar con `--fg` **no es multiplicar por 0,6**, porque la tinta de esta marca no es negro puro.)
+
+▶ **La salida es `ThemeSettings::zoneInk()`**, un rol nuevo (`--zone-ink`) que `zoneStyle()` compone
+junto al resto de la paleta: el color de la zona **oscurecido por pasos hasta pasar el umbral**.
+⚠️⚠️ **El paso no es un número nuevo**: es el mismo **0,88** de `actionHover()` (`#209`). Y por eso
+la derivación es defendible — **reproduce las variantes oscuras del propio sistema**: cuatro pasos
+sobre el Lima Bote dan **`#627411`, que es EXACTAMENTE el Lima 800 que el artboard escribe a mano**
+para esta misma cifra (verificado en el navegador), y tres sobre el cian dan `#127397`, a un dígito
+de su Cian 800. Hay caso que lo fija, otro que comprueba que el mecanismo **actúa** sobre un color
+pálido, y otro que exige que el token **llegue a la página** —derivarlo bien y no emitirlo pinta la
+cifra con el respaldo y no se entera nadie—.
+
+**⚠️⚠️ LA ZONA DE LLEGADA VIAJA EN `?zona=`, NO EN EL HASH**, y es divergencia declarada con el
+artboard, que escribe `#atracciones-jump`. Un hash **no llega al servidor**, así que una pestaña
+elegida por ancla solo funciona con JavaScript. **El precedente roto está al lado y está medido**:
+`#478` enlazó la tarjeta de zona a `/precios#zona-<slug>` y `/precios` emite **cero** `id="zona-…"`
+— ese ancla lleva al principio de la página sin que nada falle. Ficha en `DEUDA.md`. ⚠️ Y un valor
+desconocido **no es un error**: es la primera zona.
+
+**Lo que se copia del artboard y lo que no.**
+
+- **Sí**: rótulo con la RUTA · titular Display L (**34 / 52**, medidos en navegador) · entradilla
+  (18 / 21) · pestaña del sistema `.tabset` a **352** en escritorio · cifra Display L al lado del
+  control · foto **cuadrada** (256×256 exactos en escritorio, con el canal de 32 de la retícula:
+  `(1120 − 3 × 32) / 4`) · nombre en Hanken **800** y no en Bungee · chip `chipDato` con el color de
+  zona **al 14 %** y su texto en tinta.
+- **No, con motivo**: la entradilla dice «con su edad» y no «con su edad y su altura» —el propio
+  canvas retiró la altura por atracción y aquí no hay columna que la guarde—; y el pie usa **la
+  regla del parque** (`landing.zones.rule`, la MISMA cadena que la sección 01) en vez de la nota
+  cruzada de 1a, que supone exactamente dos zonas y nombra la otra: las zonas las pone el panel.
+- **El nombre queda en el nivel Cuerpo** (16 / 17) contra el 17 / 19 del artboard: el sistema no
+  tiene ese escalón y un nivel con nombre vale más que dos píxeles copiados.
+
+**⚠️ La edad SÍ se pinta aquí y NO contradice a `#302`.** Aquella dejó la tarjeta de la PORTADA en
+«foto + título + tag» y el owner rechazó la edad *ahí*. Esto es **capa 3** —«quien llega aquí ha
+querido llegar»— y el dato de esta instalación es más rico que el del mockup: allí el chip repetía
+la edad de la ZONA 23 veces (su propia nota lo llamaba saturación) y aquí **cada atracción declara
+la suya**, 23 de 23.
+
+**⚠️ Tres guardas del repo se pusieron rojas y las tres tenían razón**: `ArmazonContractTest` (una
+página nueva que no declara el armazón se queda sin navegación), `ScaleTokensAreUsedTest` (tres
+literales con token) y `UsedTokenIsDeclaredTest` (escribí `--dur-instante`, que es el nombre del
+sistema del canvas; el del producto es **`--dur-toque`**).
+
+**Verificación**: suite **4.549** en verde · sonda de navegador en 390 y 1280 con las fuentes
+cargadas, desborde **0** en las dos · `AttractionsPageTest`, **9 casos**.
+
+**Queda para la T2d·2**: la sección 03 de la portada, que es la que estrena la puerta.

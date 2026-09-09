@@ -36,6 +36,20 @@ class ThemeSettings
     /** Defaults del mockup para los acentos por zona (landing.css), si una zona no tiene color. */
     private const ZONE_DEFAULTS = ['jump' => '#FF5B22', 'kids' => '#C6FF3A'];
 
+    /**
+     * El PAPEL y la TINTA del producto, tal y como los declara el `:root` de `landing.css`.
+     *
+     * ⚠️ Son literales por la misma razón que los de `onBrand()`/`onAction()`: aquí se calcula un
+     * color autocontenido, y una doble indirección a `var(--bg)` no se puede resolver en PHP. Un
+     * paquete de instalación puede aclarar el papel —el de PlayJump es `#F4F4F1`, más claro—, y
+     * aclararlo solo SUBE el contraste: derivar contra el papel del producto es el lado seguro.
+     * ▶ Quien quiera el número contra el papel REAL lo tiene en
+     * `AttractionsPageTest::test_the_zone_figure_is_legible_on_paper`, que lee el paquete si existe.
+     */
+    private const PRODUCT_PAPER = '#F4EFE3';
+
+    private const PRODUCT_INK = '#14130F';
+
     /** Color de marca global (panel, emails y elementos genéricos de la web). */
     public static function brand(): string
     {
@@ -156,7 +170,60 @@ class ThemeSettings
         $primary = self::colorForAccent($color, $accent);
         $second = self::secondaryForAccent($secondary, $accent, $primary);
 
-        return "--zone-1:{$primary};--zone-2:{$second};--on-brand:".self::onBrand($primary).';';
+        return "--zone-1:{$primary};--zone-2:{$second};--on-brand:".self::onBrand($primary)
+            .';--zone-ink:'.self::zoneInk($primary).';';
+    }
+
+    /**
+     * **EL COLOR DE UNA ZONA CUANDO TIENE QUE SER TEXTO SOBRE PAPEL** (`--zone-ink`).
+     *
+     * `--zone-1` sirve para RELLENAR —una banda, una pastilla, un punto— y para eso su luminancia da
+     * igual. Como TEXTO no sirve casi nunca: medido sobre esta instalación, el lima de Jump da
+     * **1,85** sobre papel y el cian de Kids **2,45**, contra el 3,0 que es el suelo de cualquier
+     * texto y el 4,5 del texto normal. El sistema lo dice con todas las letras: *«cian, naranja,
+     * lima, amarillo y verde no pueden ser texto sobre claro; sobre papel se usa su variante
+     * oscura»*.
+     *
+     * ⚠️⚠️ **La variante oscura NO puede ser una tabla**: los colores de zona los pone el PANEL, así
+     * que una instalación puede estrenar mañana una zona con un color que nadie ha tabulado. Aquí se
+     * DERIVA: se oscurece por pasos hasta que la cifra pasa el umbral.
+     *
+     * ▶ **Y el paso no es un número nuevo**: es el mismo `0,88` de `actionHover()` (`#209`), que se
+     * eligió porque reproduce los hover que el sistema del cliente ya tenía escritos. Aquí reproduce
+     * también sus variantes oscuras: **cuatro pasos sobre el lima `#A3C21C` dan `#627411`, que es
+     * EXACTAMENTE el Lima 800 que el artboard escribe** para esta misma cifra; tres sobre el cian
+     * `#1AA9DE` dan `#127397`, a un dígito de su Cian 800 declarado.
+     *
+     * ⚠️ **Un porcentaje FIJO de mezcla no vale, y lo demostró la guarda antes que ninguna
+     * relectura**: con `color-mix(… 55%, var(--fg))` el lima de esta instalación pasaba (4,76) y el
+     * `#C6FF3A` que el PRODUCTO trae por defecto para Kids se quedaba en **3,14**. Un color más
+     * claro necesita más pasos, y eso no lo puede saber una constante.
+     *
+     * ⚠️ Si tras doce pasos no llega —un color que ya es casi tinta, o un papel imposible— devuelve
+     * la TINTA: la cifra pierde el color de su zona y se lee, que es el fallo correcto.
+     */
+    public static function zoneInk(string $hex): string
+    {
+        $color = self::hex($hex, self::DEFAULT_BRAND);
+
+        for ($paso = 0; $paso < 12; $paso++) {
+            if (self::contrastRatio($color, self::PRODUCT_PAPER) >= 4.5) {
+                return $color;
+            }
+
+            $color = self::shade($color, 0.88);
+        }
+
+        return self::PRODUCT_INK;
+    }
+
+    /** Ratio de contraste WCAG entre dos hex. */
+    private static function contrastRatio(string $a, string $b): float
+    {
+        $x = self::luminance($a);
+        $y = self::luminance($b);
+
+        return (max($x, $y) + 0.05) / (min($x, $y) + 0.05);
     }
 
     /**
@@ -171,7 +238,8 @@ class ThemeSettings
     {
         $primary = self::zoneColor($accent);
 
-        return "--zone-1:{$primary};--zone-2:{$primary};--on-brand:".self::onBrand($primary).';';
+        return "--zone-1:{$primary};--zone-2:{$primary};--on-brand:".self::onBrand($primary)
+            .';--zone-ink:'.self::zoneInk($primary).';';
     }
 
     /**

@@ -3890,3 +3890,140 @@ select:focus-visible {
   /* En teléfono la niebla compite con los campos: se baja, no se retira. */
   .form { --spray: 0.55; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   `/atracciones` · LAS 23, CON SU ZONA EN LA PESTAÑA
+   Carril de diseño Fase 2 · T2d. Artboard `Atracciones PJP` **1a** (móvil) + **1c** (escritorio).
+
+   ⚠️⚠️ **LOS SELECTORES VAN COMPUESTOS (`.page--rides .page__…`) Y NO ES CELO.** `site.css` se
+   carga DESPUÉS que esta hoja, así que a igual especificidad gana la suya: un `.page__title` a secas
+   escrito aquí no pintaría nada. Es la trampa de cascada de `#314` con los dos ficheros de por
+   medio, y `.page--rules` (línea 3845) ya la resolvió igual.
+
+   ⚠️ **Y con el compuesto se arregla de paso la SÍNTESIS de la fuente en esta página**:
+   `site.css` pide `font-weight: 800` y `font-stretch: 75%` sobre `--font-display`, que es Bungee y
+   **trae una sola cara**, así que el navegador falsifica negrita y condensada. Son las 77 reglas
+   fichadas en `DEUDA.md` por `#479`; aquí se corrige la de esta página, que es la única que la tanda
+   toca. El `400` va EXPLÍCITO: sin declararlo, un `<h1>` hereda el `bold` del navegador y la
+   síntesis vuelve por la puerta de atrás.
+   ══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* LA CABECERA DE PÁGINA del canvas: rótulo con la ruta · titular Display L · entradilla.
+   La estrena esta página; las otras cinco la adoptan en la Fase 3 con el armazón entero. */
+.page--rides .page__head { max-width: 52ch; }
+.page--rides .page__eyebrow {
+  margin: 0;
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  text-transform: uppercase; letter-spacing: 0.16em;
+  color: var(--fg-mute);
+}
+.page--rides .page__title {
+  font-family: var(--font-display);
+  font-weight: 400; font-stretch: normal;
+  font-size: var(--fs-display-l);
+  line-height: 0.95; letter-spacing: -0.01em;
+  margin: var(--sp-8) 0 0;
+}
+.page--rides .page__lede {
+  margin: var(--sp-16) 0 0;
+  font-size: var(--fs-lede); line-height: 1.5; font-weight: 500;
+  color: var(--fg-mute);
+}
+
+/* LA FILA de control. En móvil es flujo de bloque —pestañas, cifra, rejilla, el orden del
+   artboard— y en escritorio pasa a una fila con el control a la izquierda y su consecuencia al
+   lado. Por eso la cifra vive AQUÍ y no dentro del panel de su zona. */
+.rides-page__tabs { margin-top: var(--sp-28); }
+
+/* LA CIFRA de la zona y su frase. La cifra es DATO del panel; el número es lo que se lee primero.
+   ⚠️⚠️ **EL COLOR DE LA CIFRA NO ES `--zone-1` A SECAS, Y ES ARITMÉTICA.** Medido sobre el papel de
+   esta instalación, los dos colores de zona fallan como TEXTO: lima 1,85 y cian 2,45, contra el 3,0
+   que el sistema exige («cian, naranja, lima, amarillo y verde no pueden ser texto sobre claro»).
+   ▶ Se usa **`--zone-ink`**, que compone `ThemeSettings::zoneStyle()` junto al resto de la paleta:
+   el mismo color oscurecido por pasos hasta que pasa el umbral. Cuatro pasos sobre el lima de Jump
+   dan `#627411`, que es EXACTAMENTE el Lima 800 que el artboard escribe para esta misma cifra.
+   ⚠️⚠️ **Aquí hubo un `color-mix` con porcentaje FIJO y estaba MAL.** Al 55 % el lima de esta
+   instalación pasaba (4,76) y el `#C6FF3A` que el producto trae por defecto para Kids se quedaba en
+   **3,14** — y antes de eso escribí un 60 % que ni siquiera cubría a Jump (4,23). *Un color más
+   claro necesita más oscurecimiento, y eso no lo puede saber una constante.* Lo cazó la guarda con
+   los datos del PRODUCTO, no una relectura. */
+.rides-zone__count {
+  display: flex; align-items: baseline; gap: var(--sp-8);
+  margin: var(--sp-16) 0 0;
+}
+.rides-zone__n {
+  font-family: var(--font-display);
+  font-weight: 400; font-size: var(--fs-display-l);
+  line-height: 1;
+  color: var(--zone-ink, var(--fg));
+}
+.rides-zone__phrase { font-size: var(--fs-17); line-height: 1.4; color: var(--fg-mute); }
+
+/* LA REJILLA. Dos columnas en móvil y cuatro en escritorio: el reparto de la retícula, no un
+   número elegido. La foto es CUADRADA —el artboard calcula 172 en móvil y 256 en escritorio— y
+   aquí sale del ancho disponible, que es lo mismo dicho sin teclear la cifra. */
+.rides-grid {
+  list-style: none; margin: var(--sp-20) 0 0; padding: 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-12);
+}
+.ride-tile { display: flex; flex-direction: column; gap: var(--sp-8); align-items: flex-start; }
+.ride-tile__img {
+  width: 100%; aspect-ratio: 1 / 1; object-fit: cover;
+  border-radius: var(--r-md); background: var(--bg-soft);
+  display: block;
+}
+/* ⚠️ Hanken 800 y NO Bungee: el rótulo no baja de 20 px y a 171 de ancho «Piscina de bolas» en
+   Bungee se parte en tres líneas. Es la razón que el propio artboard escribe. */
+.ride-tile__name {
+  margin: 0;
+  font-family: var(--font-body); font-weight: 800;
+  font-size: var(--fs-body); line-height: 1.2; color: var(--fg);
+}
+/* El chip `chipDato` del sistema: cápsula, mono 11 y el color de la zona AL 14 %.
+   ⚠️ **Nunca a color pleno**: un chip que informa no es un control. Y su texto es TINTA, así que se
+   lee sea cual sea el color que el panel le ponga a la zona. */
+.ride-tile__age {
+  display: inline-flex; align-items: center;
+  border-radius: var(--r-pill); padding: var(--sp-6) var(--sp-11);
+  font-family: var(--font-mono); font-size: var(--fs-11); line-height: 1.2;
+  background: color-mix(in srgb, var(--zone-1) 14%, transparent);
+  color: var(--fg);
+}
+
+/* EL PIE de la página: la regla del parque y la vuelta a las zonas. */
+.page--rides .page__foot {
+  margin-top: var(--sp-28); padding-top: var(--sp-18);
+  border-top: 1.5px solid var(--line-strong);
+}
+.page--rides .page__foot-rule { margin: 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute); }
+.page--rides .page__foot-link {
+  display: inline-flex; align-items: center; gap: var(--sp-8);
+  min-height: var(--tap-min);
+  font-family: var(--font-body); font-weight: 800; font-size: var(--fs-16);
+  color: var(--interactive);
+  transition: color var(--dur-toque) var(--ease-sale);
+}
+.page--rides .page__foot-link:hover { color: var(--fg); }
+
+@media (min-width: 1024px) {
+  /* ⚠️ El carril de pestañas **NO se estira** a la columna: se queda en 352, que es lo que el
+     artboard escribe y lo que el sistema declara para la pestaña en escritorio. Un control de dos
+     opciones a lo ancho de 1120 px es un blanco enorme para dos palabras.
+     ▶ Y la cifra sube A SU LADO, no debajo: en escritorio la fila de arriba tiene sitio para el
+     control y su consecuencia a la vez. */
+  /* ⚠️ **32 y no 28, y el número lo comprueba la propia rejilla**: el canal de escritorio de la
+     retícula son 32, y con él las cuatro fichas caen en `(1120 − 3 × 32) / 4 = 256` exactos, que es
+     la foto que el artboard dibuja. Con 28 salían 259 — tres píxeles que nadie ve y que delatan que
+     el canal no era el del sistema. No hay escalón de 32 en la escala de espacio, así que va en
+     literal: es la regla de `#437` (lo que no tiene token no se fabrica con un `calc()`). */
+  .rides-page__head { display: flex; gap: 32px; align-items: flex-end; }
+  .rides-page__tabs { margin-top: 40px; width: 352px; flex: none; }
+  .rides-page__counts { flex: 1; min-width: 0; }
+  .rides-zone__count { margin-top: 0; }
+  .rides-grid { grid-template-columns: repeat(4, 1fr); gap: 32px; margin-top: 32px; }
+  .ride-tile { gap: var(--sp-10); }
+  .page--rides .page__foot {
+    margin-top: 40px; padding-top: var(--sp-20);
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  }
+}

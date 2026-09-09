@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DailySummaryController;
 use App\Http\Controllers\Admin\PanelLocaleController;
 use App\Http\Controllers\Admin\ReservationSlipController;
 use App\Http\Controllers\Admin\WaiverProofController;
+use App\Http\Controllers\AttractionsController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -143,6 +144,12 @@ Route::get('/normas', [PageController::class, 'rules'])->name('normas');
 // Páginas de catálogo (contenido desde la BD).
 Route::get('/precios', PricingController::class)->name('precios');
 Route::get('/cumpleanos', EventsController::class)->name('cumpleanos');
+
+// Las 23 atracciones, con su zona en la pestaña (carril de diseño, T2d · `Atracciones PJP` 1a/1c).
+// ⚠️ La sección 03 de la portada enseña CINCO y su única puerta lleva aquí: esta ruta es el destino
+// que la regla del canvas exige («si dos secciones cerradas apuntan al mismo destino inexistente,
+// ese destino existe: hay que escribirlo»). La zona de llegada va en `?zona=`, no en el hash.
+Route::get('/atracciones', AttractionsController::class)->name('atracciones');
 
 // Servicios: página data-driven (#256, modelo A). Las secciones editoriales salen de la entidad CMS
 // `LandingService` (panel); cada una conserva su anchor estable (el nav enlaza a /servicios#slug).

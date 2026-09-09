@@ -48,6 +48,9 @@ class ArmazonContractTest extends TestCase
         'errors/404',
         'errors/page-maintenance',
         'home',
+        // `/atracciones` (carril de diseño, T2d·1): la página de las 23, destino de la única puerta
+        // de la sección 03. Se añade a sabiendas — sin armazón se quedaría sin vuelta.
+        'pages/attractions',
         'pages/contact',
         'pages/events',
         'pages/pricing',
@@ -65,7 +68,7 @@ class ArmazonContractTest extends TestCase
      * cobertura es la aserción estática de arriba, que es la que de verdad las vigila.
      */
     private const RENDERABLE = [
-        '/', '/precios', '/cumpleanos', '/servicios', '/contacto', '/normas', '/aviso-legal',
+        '/', '/atracciones', '/precios', '/cumpleanos', '/servicios', '/contacto', '/normas', '/aviso-legal',
     ];
 
     /** Destinos que el menú ofrece hoy y que la 2c no puede perder. `ruta#ancla`. */

@@ -91,6 +91,16 @@ return [
         'book_zone' => 'Réserver :zone',
         'buy' => 'Acheter',
     ],
+    // `/atracciones` (carril de diseño, T2d). El rótulo es la RUTA y no se traduce: es la URL.
+    'attractions' => [
+        'eyebrow' => '/atracciones',
+        'title' => 'Tout ce qu’il y a dedans',
+        'intro' => 'Les :count attractions du parc, avec leur âge.',
+        'zone_tablist' => 'Zone',
+        'count_phrase' => 'attractions pour :age',
+        'count_phrase_plain' => 'attractions dans :zone',
+        'see_zones' => 'Voir les zones',
+    ],
     'pricing' => [
         'title' => 'Tarifs',
         'intro' => "Choisis ta zone et vois les prix. Pour le moment, les billets s'achètent à la billetterie ou par téléphone.",

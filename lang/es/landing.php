@@ -131,6 +131,29 @@ return [
         'book_zone' => 'Reservar :zone',
         'buy' => 'Comprar',
     ],
+    /*
+     * `/atracciones` — la página de las 23 (carril de diseño, T2d · `Atracciones PJP` 1a/1c).
+     * ⚠️ El RÓTULO es la RUTA, que es la cabecera de página que el canvas cierra en
+     * `Layout Paginas PJP`. Es la primera página que la estrena; las otras cinco la adoptan en la
+     * Fase 3, igual que `.sec-head` estrenó en Tarifas y las demás secciones la adoptan al
+     * rehacerse (`#479`).
+     * ⚠️⚠️ La entradilla dice «con su edad» y NO «con su edad y su altura», que es lo que escribe el
+     * artboard: el propio canvas retiró la altura por atracción —«el único dato de altura del
+     * sistema es el 1,30 y es de la ZONA»— y aquí no hay columna que la guarde. Prometer un dato
+     * que la ficha no puede pintar es la avería que `#309` describe con las anclas.
+     */
+    'attractions' => [
+        'eyebrow' => '/atracciones',
+        'title' => 'Todo lo que hay dentro',
+        // `:count` es el recuento de lo que la PÁGINA enseña, no `Attraction::count()`.
+        'intro' => 'Las :count atracciones del parque, con su edad.',
+        'zone_tablist' => 'Zona',
+        // La cifra grande y su frase. `:count` va en un `<span>` aparte —es la cifra en rótulo—, así
+        // que aquí solo viaja la parte de texto.
+        'count_phrase' => 'atracciones para :age',
+        'count_phrase_plain' => 'atracciones en :zone',
+        'see_zones' => 'Ver las zonas',
+    ],
     'pricing' => [
         'title' => 'Tarifas',
         'intro' => 'Elige tu zona y mira los precios. Hoy las entradas se compran en taquilla o por teléfono.',
