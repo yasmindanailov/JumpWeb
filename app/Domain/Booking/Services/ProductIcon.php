@@ -45,6 +45,14 @@ final class ProductIcon
         // ⚠️ `pack`, `party` y `school-trip` salen del LOTE 2 del artboard, que el cliente dibujó y
         // **nunca cerró**; la variante la elige su propio texto, no nosotros (ver cada componente).
         'ticket', 'gift', 'pack', 'party', 'school-trip',
+        // ── Los cinco COMPLEMENTOS del lote de `#475`, también en la rejilla de 24 ───────────
+        // Son los complementos que el catálogo vende de verdad —la tarta, el cubo de refrescos, las
+        // tapas, la bebida y la hora extra—, que hasta ahora se marcaban con la entrada genérica.
+        // ⚠️ **`cake` NO sustituye a `ic-b1`, que también es una tarta**: aquélla es la ilustración
+        // del cliente de origen en su propia escala y **retirarla degradaría en silencio** todo
+        // producto que la tenga guardada (la regla de `#258`, de arriba). Conviven, y el rótulo del
+        // panel dice cuál es cuál — el del set es «Tarta» y el heredado, «ilustración clásica».
+        'cake', 'ice-bucket', 'snacks', 'drink', 'clock-plus',
     ];
 
     /**

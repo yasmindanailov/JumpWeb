@@ -129,6 +129,36 @@ class ProductIconSingleSourceTest extends TestCase
     }
 
     /**
+     * **Y TODAS las que se ofrecen tienen NOMBRE en el panel.**
+     *
+     * ⚠️⚠️ **Defecto REPRODUCIDO, no hipotético** (`#475`): cuatro de las once opciones —`ticket`,
+     * `gift`, `party` y `school-trip`— salían en el desplegable del catálogo como su clave cruda,
+     * `admin.catalog.icon_option.ticket`. Llegó con `#258`, que amplió `CHOICES` de 6 a 11 y no tocó
+     * la lista de rótulos, y **llevaba ahí desde entonces**: las dos guardas de al lado comprueban
+     * que el icono EXISTE y que el cajón sabe DIBUJARLO, y las dos pasan en verde con el selector
+     * enseñando una clave de traducción al operador.
+     * ▶ *Que una opción se pueda elegir y se pueda pintar no es que se pueda leer.*
+     */
+    public function test_every_offered_icon_has_a_label(): void
+    {
+        $mudos = [];
+
+        foreach (ProductIcon::CHOICES as $clave) {
+            $rotulo = __('admin.catalog.icon_option.'.$clave);
+
+            if (! is_string($rotulo) || str_starts_with($rotulo, 'admin.catalog.')) {
+                $mudos[] = $clave;
+            }
+        }
+
+        $this->assertSame(
+            [], $mudos,
+            'opciones del selector de icono SIN rótulo: el panel enseña la clave de traducción en '.
+            "crudo al operador. Falta `admin.catalog.icon_option.<clave>` para: \n  ".implode("\n  ", $mudos),
+        );
+    }
+
+    /**
      * **Y el cajón sabe dibujar TODAS las que se ofrecen.**
      *
      * ⚠️ Ésta es la que de verdad protege, y no la cubre la paridad de iconos: aquélla comprueba que

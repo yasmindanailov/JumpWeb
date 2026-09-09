@@ -1876,13 +1876,42 @@ return [
         'field_icon' => 'Icono del producto',
         'icon_placeholder' => 'El que le toca por su tipo',
         'icon_hint' => 'Marca el producto en la cesta, en el resumen y en «Mis pedidos». Si lo dejas vacío se usa el de su tipo: tarta para los packs y entrada para el resto.',
+        /*
+         * ⚠️⚠️ **CUATRO de las once opciones NO tenían rótulo y el selector enseñaba la CLAVE CRUDA**
+         * (`admin.catalog.icon_option.ticket`, y lo mismo `gift`, `party` y `school-trip`).
+         * Llegó con `#258`, que amplió `ProductIcon::CHOICES` de 6 a 11 sin tocar esta lista, y **no
+         * lo veía ninguna guarda**: `ProductIconSingleSourceTest` comprobaba que el icono existe y
+         * que el cajón sabe dibujarlo, nunca que tuviera nombre. Reproducido y corregido en
+         * `#475`, con guarda (`test_every_offered_icon_has_a_label`).
+         *
+         * ▶ Los rótulos separan las DOS familias, porque hay dos tartas y dos entradas: las
+         * `ic-*`/`socks`/`ticket-tear-off` son ILUSTRACIONES del cliente de origen en su propia
+         * escala, y el resto son glifos del set de diseño en la rejilla de 24. No se retira ninguna
+         * (`#258`: retirar una clave degradaría en silencio todo producto que la tuviera guardada).
+         *
+         * ⚠️ No se traducen a `zh_CN` a propósito: ese idioma existe para el EMPLEADO DE MOSTRADOR
+         * (`AdminPanelProvider`), y el catálogo es admin-only, así que nadie con ese idioma abre
+         * esta pantalla. Inventar la traducción sería mantener texto que no lee nadie.
+         */
         'icon_option' => [
-            'ic-b1' => 'Tarta de cumpleaños',
+            // Ilustraciones heredadas, en su propia escala.
+            'ic-b1' => 'Tarta de cumpleaños (ilustración clásica)',
             'ic-b7' => 'Cañón de confeti',
             'ic-e2' => 'Par de entradas',
             'ic-e5' => 'Taco de entradas',
             'ticket-tear-off' => 'Entrada troquelada',
             'socks' => 'Calcetines',
+            // Set de diseño, rejilla 24.
+            'ticket' => 'Entrada',
+            'gift' => 'Regalo',
+            'pack' => 'Pack',
+            'party' => 'Fiesta',
+            'school-trip' => 'Excursión de colegio',
+            'cake' => 'Tarta',
+            'ice-bucket' => 'Cubo de refrescos',
+            'snacks' => 'Tapas',
+            'drink' => 'Bebida',
+            'clock-plus' => 'Hora extra',
         ],
 
         'zone_hint' => 'Zona a la que da acceso.',

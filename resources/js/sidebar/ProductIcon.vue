@@ -167,6 +167,48 @@ const key = computed(() => (KNOWN.includes(props.icon) ? props.icon : 'ticket'))
 
     <!-- La entrada troquelada: el respaldo del dominio para lo que no es pack, y también el
          destino de una clave desconocida (normalizada arriba). Rama EXPLÍCITA, no `v-else`. -->
+    <span v-else-if="key === 'cake'" class="prod-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <circle cx="12" cy="2.2" r="1.4" />
+            <rect x="10.9" y="4" width="2.2" height="4.4" rx="1.1" />
+            <path d="M6.6 9h10.8a2 2 0 0 1 2 2v1.6H4.6V11a2 2 0 0 1 2-2z" />
+            <path d="M4.2 14.2h15.6a2.4 2.4 0 0 1 2.4 2.4v2.8a2.4 2.4 0 0 1-2.4 2.4H4.2a2.4 2.4 0 0 1-2.4-2.4v-2.8a2.4 2.4 0 0 1 2.4-2.4z" />
+        </svg>
+    </span>
+
+    <span v-else-if="key === 'ice-bucket'" class="prod-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <rect x="6.6" y="0.8" width="2.8" height="4.2" rx="1.2" />
+            <rect x="13.8" y="0.8" width="2.8" height="4.2" rx="1.2" />
+            <rect x="2.2" y="5.4" width="19.6" height="2.8" rx="1.4" />
+            <path d="M3.8 9.4h16.4l-1.6 10.6a2.4 2.4 0 0 1-2.4 2.1H7.8a2.4 2.4 0 0 1-2.4-2.1z" />
+        </svg>
+    </span>
+
+    <span v-else-if="key === 'snacks'" class="prod-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <circle cx="12" cy="3.6" r="1.4" />
+            <path d="M12 5.8a8.4 8.4 0 0 1 8.4 8.4H3.6A8.4 8.4 0 0 1 12 5.8z" />
+            <rect x="1.8" y="15.8" width="20.4" height="2.6" rx="1.3" />
+        </svg>
+    </span>
+
+    <span v-else-if="key === 'drink'" class="prod-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M17.6 1l2.4 1.3-4.2 5.4-2.4-1.3z" />
+            <rect x="5.4" y="6.6" width="13.2" height="2.8" rx="1.4" />
+            <path d="M6.6 10h10.8l-1.3 10.4a2.4 2.4 0 0 1-2.4 2.1h-3.4a2.4 2.4 0 0 1-2.4-2.1z" />
+        </svg>
+    </span>
+
+    <span v-else-if="key === 'clock-plus'" class="prod-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M10.4 2.4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1.2 3.2v4.6l3.4 2-1.2 2-4.6-2.7V5.6z" />
+            <rect x="17.8" y="14.6" width="2.6" height="8" rx="1.3" />
+            <rect x="15.4" y="17.4" width="8" height="2.6" rx="1.3" />
+        </svg>
+    </span>
+
     <span v-else-if="key === 'ticket-tear-off'" class="tk prod-ico" aria-hidden="true">
         <svg viewBox="0 0 60 36" width="22" height="13" fill="none">
             <g class="body">

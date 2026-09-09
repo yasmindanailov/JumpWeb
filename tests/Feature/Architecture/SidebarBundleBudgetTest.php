@@ -720,8 +720,21 @@ class SidebarBundleBudgetTest extends TestCase
      * componente en **42 líneas sobre 40**, y en lugar de subir aquel techo el `document_id` se mudó
      * al CONTEXTO —es del mismo tipo que `messages` y `auth`: lo que la pantalla sabe y el store
      * necesita—, así que la acción volvió a ser una línea. Quedan **0,85 KiB**.
+     *
+     * ▶ **279 (`#475`, los cinco marcadores de complemento)**: medido **278,58 KiB**, y el coste
+     * está aislado — **276,48 antes y 278,58 después**, o sea **+2,10 KiB** por cinco dibujos, unos
+     * **430 B cada uno**. Entran `cake`, `ice-bucket`, `snacks`, `drink` y `clock-plus`: los
+     * complementos que el catálogo vende de verdad y que hasta ahora se marcaban con la entrada
+     * genérica. Quedan **0,42 KiB**.
+     * ⚠️⚠️ **Aquí NO se podó antes de subir, y conviene decir por qué en vez de callarlo.** Las dos
+     * subidas anteriores podaron porque tenían dónde: un estado de pantalla que vivía en el sitio
+     * equivocado. Esto es geometría, y **la geometría es el consumidor mismo de la tanda** — si se
+     * quita, el cajón deja de saber dibujar lo que el panel ofrece y `ProductIconSingleSourceTest`
+     * muerde con razón. La poda que sí existiría es estructural (la geometría vive DUPLICADA en
+     * Blade y en Vue, que es el precio del mecanismo de paridad de `#140`), y rediseñar eso a ciegas
+     * —sin navegador instalado— para ganar 2 KiB sería cambiar una certeza por un ahorro.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 277;
+    private const SIDEBAR_CHUNK_MAX_KB = 279;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

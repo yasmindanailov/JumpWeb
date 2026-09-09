@@ -195,7 +195,7 @@ sistema y dicen cosas distintas.
 | | Qué | Qué produce | Bloquea a |
 |---|---|---|---|
 | **0** | Base: Docker · las seis cifras · este inventario | esta spec | todas |
-| **1** | **El sistema**: tokens (color · tipo · espacio · forma · elevación · movimiento) + los 65 iconos | `site.css` y `client.css` a v1.9, el set con su guarda | 2, 3, 4 |
+| **1** | ✅ **El sistema**: tokens (color · tipo · espacio · forma · elevación · movimiento) + los 65 iconos | `site.css` y `client.css` a v1.10, el set con su guarda | 2, 3, 4 |
 | **2** | **El armazón + las 8 secciones**, móvil y escritorio | la portada entera, vestida con BD | 3 |
 | **3** | **Las páginas**: 2 nuevas + 5 rehechas con el armazón de `Layout Paginas` | las siete del inventario | — |
 | **4** | **El SPA**: las 9 grietas + las 5 paradas del canvas | el cajón | 5 |
@@ -232,7 +232,43 @@ Cada tanda se cierra con suite verde antes de la siguiente.
 | T1e | Movimiento | — | ✅ `#473` · **divergencia declarada**, sin código |
 | T1f | Punto de corte **1024** | producto | ⏸️ `#473` · **aparcada hasta la Fase 2** |
 | T1g | La escala tipográfica del canvas | producto | ✅ `#474` · declarada, **sin estrenar** |
-| T1h | Los **65 iconos** | producto | ⬜ |
+| T1h | Los **65 iconos** | producto | ✅ `#475` · **63 de 65**; los 2 restantes, al kit |
+
+✅ **T1h, el set de iconos** (`#475`). El canvas publica **65** y el producto tenía **50 alineados**
+(los trajo `#257`). El cruce se hizo **por el código que cada componente cita en su docblock**, no
+por el nombre del fichero: 50 alineados · 2 propios declarados · 2 de línea heredada que el artboard
+sigue sin dibujar · 7 que no son del set. **Ninguno nuestro sobra.**
+
+▶ **Los 19 que faltaban se parten por el filtro de §2**: **6 son de PlayJump** (los cinco «Del
+parque» de `#257` más `calcetines`) y **13 son del producto**, que entran. ⚠️ **No son los mismos 19
+de la ficha de `#257`** aunque el número coincida: los suyos eran 5 «Del parque» + **14 de zona** en
+rejilla 64, que ni siquiera están en este set. *Dos cifras iguales no son la misma cifra.*
+
+❗❗ **Y eso CADUCA la ficha de `#257`**, que decía que *«no existe mecanismo para que una instalación
+sustituya el DIBUJO de un icono»*: **ya existe** desde `#286`/`#287` (`IllustrationKit`, `<use>`
+externo sobre `client-kit.svg`, gramática cerrada). `[DECIDIDO owner]`: los seis salen por ahí, cada
+uno el día que tenga pantalla.
+
+▶ **Cinco de los trece estrenan en el acto** en `ProductIcon::CHOICES` —`cake`, `ice-bucket`,
+`snacks`, `drink`, `clock-plus`—, que son complementos que el catálogo vende de verdad. ⚠️ `cake` no
+retira a `ic-b1`, que también es una tarta: aquélla es la ilustración del cliente de origen y
+retirarla degradaría en silencio todo producto que la tenga guardada (`#258`).
+
+❗❗❗ **Defecto preexistente cazado al montarlo**: cuatro de las once opciones del selector de icono
+del catálogo enseñaban su **clave de traducción en crudo** al operador (`…icon_option.ticket`, y
+`gift`, `party`, `school-trip`). Vino con `#258` y **no lo miraba ninguna guarda** — las dos que hay
+comprueban que el icono existe y que el cajón lo dibuja, y pasan en verde con eso puesto. *Que una
+opción se pueda elegir y se pueda pintar no es que se pueda leer.*
+
+⚠️ **El extractor de `#257` no se versionó**; ahora es `scripts/extraer-iconos.py`, **validado con
+control** (se extrajo `ui/menu`, ya en el repo, y la geometría salió idéntica). Sus dos defectos
+propios están escritos dentro, y el primero es la trampa de `#298`: `str.format` colapsa `{{` en `{`
+y dejaba el comentario Blade **sin abrir**, o sea el docblock renderizado como texto visible.
+
+⚠️⚠️ **Los ocho de sección quedan sin guarda de consumidor porque NO es medible**: un `grep` de
+`<x-icons.NOMBRE>` da 51 «huérfanos» de 74 y es falso — los marcadores se sirven con
+`<x-dynamic-component :component="'icons.'.$key">`, por clave. *Una guarda que no distingue un icono
+muerto de uno servido por clave no es una red: es ruido con autoridad.*
 
 ✅ **T1g, la escala tipográfica** (`#474`). Entran los **diez niveles con nombre** —Display XL/L ·
 Título · Subtítulo · Entradilla · Cuerpo · Cuerpo S · Botón · Etiqueta · Eslogan— en el `:root` de
