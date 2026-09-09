@@ -440,7 +440,9 @@ distintivo ocupa ese hueco.
 y se retiraron con su nota las que perdieron el sujeto. ⚠️⚠️ Y una salió **«risky»**: un caso que
 solo asevera dentro de un bucle **deja de vigilar en cuanto el bucle se vacía, y lo hace en verde**.
 
-⚠️⚠️ **Y dos trampas del instrumento de poda de CSS, las dos con la hoja cuadrando de llaves**: esta
+▶ **El guion de poda VIAJA EN EL REPO** (`scripts/podar-css-huerfano.py`), por la lección de
+`#475`: las cinco secciones que le quedan a la Fase 2 van a retirar CSS igual, y reescribirlo es
+volver a pagar sus trampas. ⚠️⚠️ **Y dos de ellas, las dos con la hoja cuadrando de llaves**: esta
 hoja tiene **llaves y nombres de clase dentro de comentarios** (un analizador que no los enmascara
 abre reglas donde no las hay y salva reglas que debían irse — con la máscara aparecieron seis más), y
 la primera versión iba a **borrar el foco de teclado de casillas y radios**, porque
