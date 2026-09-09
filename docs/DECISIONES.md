@@ -25352,3 +25352,19 @@ Tercera tanda de la Fase 1 (T1d). El ancho de columna pasa a poder declararse en
 ⚠️ **Lo que NO se toca, y es correcto que no muerda**: un ancho de columna escrito a mano DENTRO del paquete. El trait ya razona que el paquete existe para declarar literales; extender ahí la regla del producto sería prohibirle su función. Lo que sí se vigila del paquete es lo estrecho: que no invente escalones de una escala cerrada (`#470`), que no declare media mitad de un par (`#471`) y que no baje un suelo de accesibilidad.
 
 **Verificación**: suite completa verde · mutaciones re-ejecutadas con el instrumento arreglado (columna 1/1 · táctil 1/1) · integridad del árbol comprobada byte a byte · Pint · docs-check.
+
+## #473 · 2026-09-09 · `[DECIDIDO owner]` El movimiento se queda en CUATRO curvas — y el punto de corte se aparca hasta tener el armazón delante
+
+Dos tandas de la Fase 1 que se cierran **sin una línea de código**, y las dos porque medirlas cambió la pregunta.
+
+▶ **T1e · el movimiento casi no era conflicto.** Comparadas una a una, **siete de las ocho duraciones del canvas ya son idénticas** a las nuestras (120 · 180 · 240 · 320 · 420 · 620 · 900) y dos de las cuatro curvas también, al dígito. Lo que parecía «7 contra 8 y 4 contra 5» eran **tres diferencias**, no dos escalas distintas.
+
+▶ **La quinta curva NO entra** (`[DECIDIDO owner]`): `#262` decidió expresamente no estrenarla —midió que la del artboard y `--ease-entra` se separan **0,50 px** a la talla del hero y que hacerlo deshacía la tanda 2d— y esa decisión sigue en pie. Queda **divergencia declarada** con el canvas, que sí la formaliza como `caída`. ⚠️ Con ella se queda también el segundo valor en disputa: nuestra `--ease-cae` conserva su sobreimpulso **1.56** frente al **1.81** de su `lona`.
+
+▶ **Y la octava duración tampoco** (`barra: 1400`, para una barra indeterminada): **no tenemos ninguna**. Un token sin consumidor es lo que `#287` prohíbe expresamente —*«una pieza nace en el MISMO cambio que su consumidor»*—, así que entrará el día que exista la barra, no antes.
+
+▶ **T1f · el punto de corte se APARCA hasta la Fase 2** (`[DECIDIDO owner]`), y el motivo es que al medirlo dejó de ser un cambio de número. El canvas declara **tres** puntos (390 · 768 · 1024, y es explícito: *«el 900 no existe en el sistema»*) y el producto tiene **CATORCE**: 768 ×8 · 1080 ×7 · 560 ×6 · 720 ×5 · 619 ×5 · 900 ×3 · 719 ×3 · 1099 ×3 y seis sueltos.
+
+⚠️⚠️ **Y los siete `1080` no son un límite del sistema**: son siete reflujos de componentes distintos que comparten número —la banda del QR, la landing, el carrito, el post-form—. Lo único que el canvas nombra de verdad es `componente.barra.retiraEn`, y **en nuestro código esa barra aparece a ≤720, no a 1080**: moverla a 1024 significa que **en tableta el cliente pasa de ver el racimo a ver la barra flotante**. Eso toca `#232` (la puerta es un kiosco de tablet) y el armazón de `#252`, y **decidirlo sin el armazón rehecho arriesga un cambio que luego se deshace**. Se decide en la Fase 2, con el racimo y la barra delante.
+
+**Verificación**: sin código. Las siete duraciones y las dos curvas coincidentes están comparadas una a una contra `tokens-pjp.js` v1.9; los catorce puntos de ruptura, contados sobre `site.css` y `landing.css`.

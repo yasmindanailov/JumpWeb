@@ -212,16 +212,23 @@ Cada tanda se cierra con suite verde antes de la siguiente.
 | T1b | Radios colapsados a **0 · 10 · 16 · 999** | paquete | ✅ `#470` |
 | T1c | Aire entre secciones **144 / 96** | token nuevo + paquete | ✅ `#471` |
 | T1d | Ancho de columna **1120** | hueco nuevo + paquete | ✅ `#472` |
-| T1e | Movimiento: **+1 duración, +1 curva** y reconciliar `--ease-cae` | producto | ⬜ |
-| T1f | Punto de corte **1024** | producto | ⬜ |
+| T1e | Movimiento | — | ✅ `#473` · **divergencia declarada**, sin código |
+| T1f | Punto de corte **1024** | producto | ⏸️ `#473` · **aparcada hasta la Fase 2** |
 | T1g | La escala tipográfica del canvas | producto + paquete | ⬜ |
 | T1h | Los **65 iconos** | producto | ⬜ |
 
-⚠️ **T1e trae una decisión del owner**: el canvas declara **cinco** curvas y nosotros cuatro, y
-`#262` decidió expresamente **no estrenar una quinta** —midió que la del artboard y `--ease-entra`
-se separan **0,50 px** a la talla del hero y que hacerlo deshacía la tanda 2d—. El canvas ha
-formalizado esa quinta (`caída`, la única que acelera) en su fichero de tokens, y además su `lona`
-tiene sobreimpulso **1.81** donde nuestra `--ease-cae` tiene **1.56**. Se pregunta antes de tocar.
+✅ **T1e, resuelta midiendo** (`#473`): lo que parecía «7 duraciones contra 8 y 4 curvas contra 5»
+eran **tres diferencias**, no dos escalas distintas — **siete de las ocho duraciones ya son
+idénticas** (120 · 180 · 240 · 320 · 420 · 620 · 900) y dos de las cuatro curvas también, al dígito.
+`[DECIDIDO owner]`: **la quinta curva NO entra** —`#262` sigue en pie— y con ella se queda nuestro
+sobreimpulso **1.56** frente al **1.81** de su `lona`. La octava duración (`barra 1400`) tampoco:
+**no tenemos ninguna barra indeterminada**, y un token sin consumidor es lo que `#287` prohíbe.
+
+⏸️ **T1f, aparcada** (`#473`): al medirla dejó de ser un cambio de número. El canvas declara **tres**
+puntos y el producto tiene **catorce**; los siete `1080` **no son un límite del sistema** sino siete
+reflujos de componentes que comparten número, y lo único que el canvas nombra —la barra flotante—
+**aparece hoy a ≤720**, así que moverla a 1024 cambia lo que ve una tableta. Toca `#232` y `#252`, y
+se decide en la Fase 2 con el armazón delante.
 
 ---
 
